@@ -1,5 +1,7 @@
 import React from 'react';
 import styled, { css } from 'styled-components';
+import Tour from "./tour"
+
 require('typeface-inter')
 
 const Container = styled.div`
@@ -69,9 +71,12 @@ export const HeaderComponent = () => {
         </Link>
       
       </Group>
+      <Group>
+      <Tour />
       <Link cheatSheetStyle href="https://ligolang.org/docs/api/cheat-sheet" target="_blank">
           Cheat Sheet
         </Link>
+      </Group>
     </Container>
   );
 };

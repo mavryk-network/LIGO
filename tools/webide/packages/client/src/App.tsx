@@ -21,6 +21,7 @@ import OutputTab from './components/output/output-tab';
 import configureStore from './configure-store';
 import ViewSharedFile from './components/view-shared-file'
 import ViewExampleFile from './components/view-example-file'
+import Tour from './components/tour'
 
 const store = configureStore();
 
@@ -85,12 +86,13 @@ const App: React.FC = () => {
   const [topPaneHeight, setTopPaneHeight] = useState(700)
 
   return (
+    <div className="app">
     <Provider store={store}>
       <Router>
         <Wrapper>
         <HeaderComponent />
         <Container>
-        <div className="col-sm-12 col-md-2 order-md-1"><Examples /></div>
+        <div className="col-sm-12 col-md-2 order-md-1 examples"><Examples /></div>
           <SplitPane onChange={size => setTopPaneHeight(size)} style={{ position: 'relative', display: 'flex' }} split="horizontal" defaultSize="75%" >
             <EditorComponentWrapper height={topPaneHeight} className="col-sm-12 col-md-7 order-md-2"><EditorComponent editorHeight={topPaneHeight} /></EditorComponentWrapper>
             <OutputTab />
@@ -121,6 +123,7 @@ const App: React.FC = () => {
       </Switch>
       </Router>
     </Provider>
+    </div>
   );
 };
 
