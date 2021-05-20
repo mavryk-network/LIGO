@@ -27,10 +27,13 @@ const TOUR_STEPS = [
     {
       target: '.navbar',
       content: 'This is the nav bar!',
+      disableBeacon: true
     },
     {
       target: '.examples',
       content: 'These are the examples!',
+      disableBeacon: true
+
     }
   ]
 
@@ -101,6 +104,8 @@ const Tour = () => {
       </button>
       <JoyRide
         {...tourState}
+        autoStart
+        showStepsProgress
         callback={callback}
         showSkipButton={true}
         styles={{
