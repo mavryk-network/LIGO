@@ -74,10 +74,19 @@ module type PAR_ERR =
     val message : int -> string
   end
 
+module type EXT_TOKEN = 
+  sig
+    type t
+    type message = string Region.reg
+    val scan : Lexing.lexbuf -> (t, message) Stdlib.result
+  end
+
+
 (* The functor integrating the parser with its errors *)
 
 module Make (Lexer: LEXER)
-            (Parser: PARSER with type token = Lexer.Token.token) =
+            (ExtToken : EXT_TOKEN)
+            (Parser: PARSER with type token = ExtToken.t) =
   struct
     module Token = Lexer.Token
     type token = Lexer.token
@@ -111,7 +120,7 @@ module Make (Lexer: LEXER)
 
     let mono_menhir lexbuf_of source =
       let lexbuf = lexbuf_of source in
-      let menhir_lexer = mk_menhir_lexer Lexer.scan in
+      let menhir_lexer = mk_menhir_lexer ExtToken.scan in
       try Stdlib.Ok (Parser.main menhir_lexer lexbuf) with
         (* See [mk_menhir_lexer]: *)
         LexingError msg -> Stdlib.Error msg
@@ -196,7 +205,7 @@ module Make (Lexer: LEXER)
 
     let incr_menhir lexbuf_of (module ParErr : PAR_ERR) source =
       let lexbuf       = lexbuf_of source
-      and menhir_lexer = mk_menhir_lexer Lexer.scan in
+      and menhir_lexer = mk_menhir_lexer ExtToken.scan in
       let supplier     = Inter.lexer_lexbuf_to_supplier menhir_lexer lexbuf
       and failure      = failure (module ParErr) in
       let interpreter  = Inter.loop_handle success failure supplier in

@@ -87,6 +87,8 @@ type t =
 
   | EOF of ExtRegion.t
 
+type token = t
+
 let to_t = function
   Token.ARROW region -> ARROW {t_region=region;markup=[]}
 | CONS region  -> CONS {t_region=region;markup=[]}

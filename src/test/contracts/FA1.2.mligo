@@ -122,6 +122,8 @@ let getTotalSupply (param, storage : getTotalSupply * storage) : operation list 
   let total = storage.total_supply in
   [Tezos.transaction total 0mutez param.callback]
 
+
+(* mangooo *)
 let main (param, storage : parameter * storage) : result =
   begin
     if Tezos.amount <> 0mutez

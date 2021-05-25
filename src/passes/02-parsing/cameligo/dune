@@ -4,7 +4,7 @@
   (merge_into Parser)
   (modules ParToken Parser)
   (flags -la 1 --table --strict --explain
-         --external-tokens Lexing_cameligo.Token))
+         --external-tokens Lexing_cameligo.Comments))
 
 ;; Build of the CameLIGO parser as a library
 

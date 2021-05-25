@@ -102,7 +102,7 @@ module MakeParser
          (ParErr      : PAR_ERR)
          (Self_tokens : SELF_TOKENS with type token = Token.t)
          (CST         : sig type tree end)
-         (Parser      : PARSER with type token = Token.t
+         (Parser      : PARSER with type token = Self_tokens.token_next
                                 and type tree = CST.tree) =
   struct
     type file_path = string list
@@ -134,8 +134,20 @@ module MakeParser
       let module MainLexer =
         LexerMainGen.Make
           (File) (Token) (CLI.Lexer_CLI) (Self_tokens) in
+      let module ExtToken = 
+        struct
+          type t = Self_tokens.token_next
+          type message = string Region.reg
+          let scan a =
+            match MainLexer.scan a with 
+              Ok a -> 
+                Ok (Self_tokens.to_token_next a)
+            | Error e -> 
+              Error e
+        end 
+      in
       let module MainParser =
-        ParserLib.API.Make (MainLexer) (Parser) in
+        ParserLib.API.Make (MainLexer) (ExtToken) (Parser) in
       let tree =
         let string = Buffer.contents buffer in
         if CLI.Preprocessor_CLI.show_pp then
@@ -162,8 +174,20 @@ module MakeParser
       let module MainLexer =
         LexerMainGen.Make
           (File) (Token) (CLI.Lexer_CLI) (Self_tokens) in
+      let module ExtToken = 
+        struct
+          type t = Self_tokens.token_next
+          type message = string Region.reg
+          let scan a =
+            match MainLexer.scan a with 
+              Ok a -> 
+                Ok (Self_tokens.to_token_next a)
+            | Error e -> 
+              Error e
+        end 
+      in
       let module MainParser =
-        ParserLib.API.Make (MainLexer) (Parser) in
+        ParserLib.API.Make (MainLexer) (ExtToken) (Parser) in
       let tree =
         let string = Buffer.contents buffer in
         if CLI.Preprocessor_CLI.show_pp then
@@ -232,7 +256,7 @@ module MakeTwoParsers
          (ParErr      : PAR_ERR)
          (Self_tokens : SELF_TOKENS with type token = Token.t)
          (CST         : sig type t type expr end)
-         (Parser      : LIGO_PARSER with type token = Token.t
+         (Parser      : LIGO_PARSER with type token = Self_tokens.token_next
                                      and module CST = CST) =
   struct
     type file_path = string

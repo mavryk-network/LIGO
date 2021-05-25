@@ -75,10 +75,18 @@ module type PAR_ERR =
     val message : int -> string
   end
 
+module type EXT_TOKEN = 
+  sig
+    type t
+    type message = string Region.reg
+    val scan : Lexing.lexbuf -> (t, message) Stdlib.result
+  end
+
 (* The functor integrating the parser with its errors *)
 
 module Make (Lexer  : LEXER)
-            (Parser : PARSER with type token = Lexer.token) :
+            (ExtToken : EXT_TOKEN)
+            (Parser : PARSER with type token = ExtToken.t) :
   sig
     type token = Lexer.token
 

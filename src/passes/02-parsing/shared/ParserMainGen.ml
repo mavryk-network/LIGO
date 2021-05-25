@@ -48,7 +48,7 @@ module Make
          (ParErr      : sig val message : int -> string end)
          (Self_tokens : SELF_TOKENS with type token = Token.t)
          (CST         : sig type t end)
-         (Parser      : PARSER with type token = Token.t
+         (Parser      : PARSER with type token = Self_tokens.token_next
                                 and type tree = CST.t)
          (Printer     : PRINTER with type tree = CST.t)
          (Pretty      : PRETTY with type tree = CST.t)
@@ -100,7 +100,62 @@ module Make
 
     (* Main *)
 
-    module MainParser = ParserLib.API.Make (MainLexer) (Parser)
+    module ToExtRegion = 
+      struct
+        module Token = struct
+          type token = Self_tokens.token_next
+          type t = token
+
+          let to_lexeme a = Token.to_lexeme (Self_tokens.to_token a)
+          let to_string ~offsets b t =
+            Token.to_string ~offsets b (Self_tokens.to_token t)
+          let to_region a = Token.to_region (Self_tokens.to_token a)
+          let is_eof a = Token.is_eof (Self_tokens.to_token a)
+          
+          let eof a     = Self_tokens.to_token_next (Token.eof a)
+        end
+        type token = Token.t
+        
+        type message = string Region.reg
+
+        let scan a = 
+          match MainLexer.scan a with 
+            Ok a -> Ok (Self_tokens.to_token_next a)
+          | Error e -> Error e
+
+        type window = <
+          last_token    : token option;
+          current_token : token           (* Including EOF *)
+        >
+
+        let get_window a = 
+          let w = MainLexer.get_window a in 
+          match w with 
+            Some w -> 
+              Some (object
+                method last_token = (match w#last_token with 
+                  Some s -> 
+                    Some (Self_tokens.to_token_next s) 
+                | None -> None)
+                method current_token = Self_tokens.to_token_next w#current_token
+              end)
+          | None -> 
+              None
+      end
+
+    module ExtToken = 
+      struct
+        type t = Self_tokens.token_next
+        type message = string Region.reg
+        let scan a =
+          match MainLexer.scan a with 
+            Ok a -> 
+              Ok (Self_tokens.to_token_next a)
+          | Error e -> 
+            Error e
+      end 
+
+    module MainParser = ParserLib.API.Make (ToExtRegion) (ExtToken) (Parser)
 
     let wrap : (Parser.tree, MainParser.message) result -> unit =
       function
