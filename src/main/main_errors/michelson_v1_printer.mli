@@ -23,11 +23,43 @@
 (*                                                                           *)
 (*****************************************************************************)
 
-open Protocol
+open Tezos_protocol_008_PtEdo2Zk.Protocol
+open Alpha_context
+open Tezos_micheline
 
-(** Returns a fresh nonce and its corresponding hash (and stores them). *)
-val generate : unit -> Nonce_hash.t * Alpha_context.Nonce.t
+val print_expr : Format.formatter -> Script_repr.expr -> unit
 
-val get : Nonce_hash.t -> Alpha_context.Nonce.t option
+val print_expr_unwrapped : Format.formatter -> Script_repr.expr -> unit
 
-val forget_all : unit -> unit
+val print_execution_trace :
+  Format.formatter ->
+  (Script.location * Gas.t * (Script.expr * string option) list) list ->
+  unit
+
+val print_big_map_diff : Format.formatter -> Lazy_storage.diffs -> unit
+
+(** Insert the type map returned by the typechecker as comments in a
+    printable Micheline AST. *)
+val inject_types :
+  Script_tc_errors.type_map ->
+  Michelson_v1_parser.parsed ->
+  Micheline_printer.node
+
+(** Unexpand the macros and produce the result of parsing an
+    intermediate pretty printed source. Useful when working with
+    contracts extracted from the blockchain and not local files. *)
+val unparse_toplevel :
+  ?type_map:Script_tc_errors.type_map ->
+  Script.expr ->
+  Michelson_v1_parser.parsed
+
+val unparse_expression : Script.expr -> Michelson_v1_parser.parsed
+
+(** Unexpand the macros and produce the result of parsing an
+    intermediate pretty printed source. Works on generic trees,for
+    programs that fail to be converted to a specific script version. *)
+val unparse_invalid : string Micheline.canonical -> Michelson_v1_parser.parsed
+
+val ocaml_constructor_of_prim : Michelson_v1_primitives.prim -> string
+
+val micheline_string_of_expression : zero_loc:bool -> Script.expr -> string

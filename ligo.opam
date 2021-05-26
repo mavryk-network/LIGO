@@ -20,7 +20,6 @@ depends: [
   "ppx_expect"
   "tezos-utils"
   "proto-alpha-utils"
-  "ligo-009-PsFLoren-test-helpers"
   "yojson"
   "alcotest" { with-test & >= "1.0" & < "1.1" }
   "getopt"

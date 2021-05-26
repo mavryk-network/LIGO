@@ -1,7 +1,7 @@
 (*****************************************************************************)
 (*                                                                           *)
 (* Open Source License                                                       *)
-(* Copyright (c) 2020 Nomadic Labs. <contact@nomadic-labs.com>               *)
+(* Copyright (c) 2018 Dynamic Ledger Solutions, Inc. <contact@tezos.com>     *)
 (*                                                                           *)
 (* Permission is hereby granted, free of charge, to any person obtaining a   *)
 (* copy of this software and associated documentation files (the "Software"),*)
@@ -23,16 +23,65 @@
 (*                                                                           *)
 (*****************************************************************************)
 
-let contract : Protocol.Alpha_context.Contract.t Alcotest.testable =
-  let open Protocol in
-  let open Alpha_context in
-  Alcotest.testable Contract.pp Contract.( = )
+open Tezos_micheline
+open Tezos_base__TzPervasives
 
-let script_expr : Protocol.Alpha_context.Script.expr Alcotest.testable =
-  Alcotest.testable Michelson_v1_printer.print_expr ( = )
+type 'l node = ('l, string) Micheline.node
 
-let trace : tztrace Alcotest.testable = Alcotest.testable pp_print_error ( = )
+type error += Unexpected_macro_annotation of string
 
-let protocol_error : Environment.Error_monad.error Alcotest.testable =
-  let open Environment.Error_monad in
-  Alcotest.testable pp ( = )
+type error += Sequence_expected of string
+
+type error += Invalid_arity of string * int * int
+
+val expand : 'l node -> 'l node tzresult
+
+val expand_rec : 'l node -> 'l node * error list
+
+val expand_caddadr : 'l node -> 'l node option tzresult
+
+val expand_set_caddadr : 'l node -> 'l node option tzresult
+
+val expand_map_caddadr : 'l node -> 'l node option tzresult
+
+val expand_deprecated_dxiiivp : 'l node -> 'l node option tzresult
+
+val expand_pappaiir : 'l node -> 'l node option tzresult
+
+val expand_deprecated_duuuuup : 'l node -> 'l node option tzresult
+
+val expand_compare : 'l node -> 'l node option tzresult
+
+val expand_asserts : 'l node -> 'l node option tzresult
+
+val expand_unpappaiir : 'l node -> 'l node option tzresult
+
+val expand_if_some : 'l node -> 'l node option tzresult
+
+val expand_if_right : 'l node -> 'l node option tzresult
+
+val unexpand : 'l node -> 'l node
+
+val unexpand_rec : 'l node -> 'l node
+
+val unexpand_caddadr : 'l node -> 'l node option
+
+val unexpand_set_caddadr : 'l node -> 'l node option
+
+val unexpand_map_caddadr : 'l node -> 'l node option
+
+val unexpand_deprecated_dxiiivp : 'l node -> 'l node option
+
+val unexpand_pappaiir : 'l node -> 'l node option
+
+val unexpand_deprecated_duuuuup : 'l node -> 'l node option
+
+val unexpand_compare : 'l node -> 'l node option
+
+val unexpand_asserts : 'l node -> 'l node option
+
+val unexpand_unpappaiir : 'l node -> 'l node option
+
+val unexpand_if_some : 'l node -> 'l node option
+
+val unexpand_if_right : 'l node -> 'l node option

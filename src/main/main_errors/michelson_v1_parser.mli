@@ -23,42 +23,33 @@
 (*                                                                           *)
 (*****************************************************************************)
 
-open Protocol
+open Tezos_protocol_008_PtEdo2Zk.Protocol
 open Alpha_context
+open Tezos_micheline
 
-type t
+(** The result of parsing and expanding a Michelson V1 script or data. *)
+type parsed = {
+  source : string;  (** The original source code. *)
+  unexpanded : string Micheline.canonical;
+      (** Original expression with macros. *)
+  expanded : Script.expr;  (** Expression with macros fully expanded. *)
+  expansion_table : (int * (Micheline_parser.location * int list)) list;
+      (** Associates unexpanded nodes to their parsing locations and
+        the nodes expanded from it in the expanded expression. *)
+  unexpansion_table : (int * int) list;
+      (** Associates an expanded node to its source in the unexpanded
+        expression. *)
+}
 
-type incremental = t
+val compare_parsed : parsed -> parsed -> int
 
-val predecessor : incremental -> Block.t
+val parse_toplevel :
+  ?check:bool -> string -> parsed Micheline_parser.parsing_result
 
-val header : incremental -> Block_header.t
+val parse_expression :
+  ?check:bool -> string -> parsed Micheline_parser.parsing_result
 
-val rev_tickets : incremental -> operation_receipt list
-
-val validation_state : incremental -> validation_state
-
-val level : incremental -> int32
-
-val begin_construction :
-  ?priority:int ->
-  ?timestamp:Time.Protocol.t ->
-  ?seed_nonce_hash:Nonce_hash.t ->
-  ?policy:Block.baker_policy ->
-  Block.t ->
-  incremental tzresult Lwt.t
-
-val get_last_operation_result : incremental -> operation_receipt tzresult Lwt.t
-
-val add_operation :
-  ?expect_apply_failure:(error list -> unit tzresult Lwt.t) ->
-  ?expect_failure:(error list -> unit tzresult Lwt.t) ->
-  incremental ->
-  Operation.packed ->
-  incremental tzresult Lwt.t
-
-val finalize_block : incremental -> Block.t tzresult Lwt.t
-
-val rpc_ctxt : incremental Environment.RPC_context.simple
-
-val alpha_ctxt : incremental -> Alpha_context.context
+val expand_all :
+  source:string ->
+  original:Micheline_parser.node ->
+  parsed Micheline_parser.parsing_result

@@ -23,39 +23,43 @@
 (*                                                                           *)
 (*****************************************************************************)
 
-open Protocol
+open Tezos_protocol_008_PtEdo2Zk.Protocol
 open Alpha_context
+open Tezos_micheline
 
-type t = {
-  pkh : Signature.Public_key_hash.t;
-  pk : Signature.Public_key.t;
-  sk : Signature.Secret_key.t;
-}
+val print_expr : Format.formatter -> Script_repr.expr -> unit
 
-type account = t
+val print_expr_unwrapped : Format.formatter -> Script_repr.expr -> unit
 
-val known_accounts : t Signature.Public_key_hash.Table.t
+val print_execution_trace :
+  Format.formatter ->
+  (Script.location * Gas.t * (Script.expr * string option) list) list ->
+  unit
 
-val activator_account : account
+val print_big_map_diff : Format.formatter -> Lazy_storage.diffs -> unit
 
-val dummy_account : account
+(** Insert the type map returned by the typechecker as comments in a
+    printable Micheline AST. *)
+val inject_types :
+  Script_tc_errors.type_map ->
+  Michelson_v1_parser.parsed ->
+  Micheline_printer.node
 
-val new_account : ?seed:Bytes.t -> unit -> account
+(** Unexpand the macros and produce the result of parsing an
+    intermediate pretty printed source. Useful when working with
+    contracts extracted from the blockchain and not local files. *)
+val unparse_toplevel :
+  ?type_map:Script_tc_errors.type_map ->
+  Script.expr ->
+  Michelson_v1_parser.parsed
 
-val add_account : t -> unit
+val unparse_expression : Script.expr -> Michelson_v1_parser.parsed
 
-val find : Signature.Public_key_hash.t -> t tzresult Lwt.t
+(** Unexpand the macros and produce the result of parsing an
+    intermediate pretty printed source. Works on generic trees,for
+    programs that fail to be converted to a specific script version. *)
+val unparse_invalid : string Micheline.canonical -> Michelson_v1_parser.parsed
 
-val find_alternate : Signature.Public_key_hash.t -> t
+val ocaml_constructor_of_prim : Michelson_v1_primitives.prim -> string
 
-(** [generate_accounts ?initial_balances n] : generates [n] random
-    accounts with the initial balance of the [i]th account given by the
-    [i]th value in the list [initial_balances] or otherwise
-    4.000.000.000 tz (if the list is too short); and add them to the
-    global account state *)
-val generate_accounts : ?initial_balances:int64 list -> int -> (t * Tez.t) list
-
-val commitment_secret : Blinded_public_key_hash.activation_code
-
-val new_commitment :
-  ?seed:Bytes.t -> unit -> (account * Commitment.t) tzresult Lwt.t
+val micheline_string_of_expression : zero_loc:bool -> Script.expr -> string
