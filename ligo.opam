@@ -20,6 +20,7 @@ depends: [
   "ppx_expect"
   "tezos-utils"
   "proto-alpha-utils"
+  "client_utils-009-PsFLoren"
   "yojson"
   "alcotest" { with-test & >= "1.0" & < "1.1" }
   "getopt"

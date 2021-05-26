@@ -42,6 +42,7 @@ depends: [
   "tezos-stdlib-unix"
   "tezos-protocol-environment"
   "tezos-protocol-009-PsFLoren" {= "9.7"}
+  "client_utils-009-PsFLoren"
   "tezos-memory-proto-alpha"
   "simple-utils"
   "tezos-utils"

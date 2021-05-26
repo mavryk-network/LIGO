@@ -23,8 +23,6 @@
 (*                                                                           *)
 (*****************************************************************************)
 
-open Tezos_base__TzPervasives
-
 module Tezos_List = struct
   let rev_map2 ~when_different_lengths f xs ys =
     let open List in

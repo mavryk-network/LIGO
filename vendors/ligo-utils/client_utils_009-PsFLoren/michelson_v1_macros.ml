@@ -26,7 +26,6 @@
 
 open Tezos_micheline
 open Micheline
-open Tezos_base__TzPervasives
 module IntMap = Map.Make (Compare.Int)
 
 type 'l node = ('l, string) Micheline.node

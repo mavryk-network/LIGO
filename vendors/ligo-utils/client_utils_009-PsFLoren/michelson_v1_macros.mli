@@ -24,7 +24,6 @@
 (*****************************************************************************)
 
 open Tezos_micheline
-open Tezos_base__TzPervasives
 
 type 'l node = ('l, string) Micheline.node
 
