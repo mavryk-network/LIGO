@@ -15,7 +15,7 @@ depends: [
   "tezos-protocol-009-PsFLoren"
   "tezos-protocol-009-PsFLoren-parameters"
   "tezos-memory-proto-alpha"
-  # "tezos-client-009-PsFLoren"
+  "tezos-client-base"
   "alcotest-lwt" {with-test}
 ]
 build: [
