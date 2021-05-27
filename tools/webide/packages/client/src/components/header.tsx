@@ -61,19 +61,19 @@ export const HeaderComponent = () => {
         </a>
         
         <Link href="https://ligolang.org/docs/intro/installation">Install</Link>
-        <Link href="https://ligolang.org/docs/intro/introduction">Docs</Link>
-        <Link href="https://ligolang.org/docs/tutorials/get-started/tezos-taco-shop-smart-contract">
+        <Link className="docs" href="https://ligolang.org/docs/intro/introduction">Docs</Link>
+        <Link className="tutorial" href="https://ligolang.org/docs/tutorials/get-started/tezos-taco-shop-smart-contract">
           Tutorials
         </Link>
         <Link href="https://forum.tezosagora.org/tag/ligo" target="_blank">Blog</Link>
-        <Link href="https://ligolang.org/contact">
+        <Link className="askQuestions" href="https://ligolang.org/contact">
           Ask Questions
         </Link>
       
       </Group>
       <Group>
       <Tour />
-      <Link cheatSheetStyle href="https://ligolang.org/docs/api/cheat-sheet" target="_blank">
+      <Link className="cheatSheet" cheatSheetStyle href="https://ligolang.org/docs/api/cheat-sheet" target="_blank">
           Cheat Sheet
         </Link>
       </Group>

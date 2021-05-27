@@ -57,7 +57,7 @@ export const TabsPanelComponent = () => {
           </Tab>
         ))}
       </Header>
-      <Content>
+      <Content className="configure">
         <ConfigureTabComponent
           selected={true}
           onRun={() => {

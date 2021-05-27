@@ -132,7 +132,7 @@ export const ShareComponent = () => {
 
   return (
     <OutsideClickHandler onOutsideClick={() => setInitialState()}>
-      <Container>
+      <Container className="share-link">
         <Input
           id="share-link"
           visible={!!shareLink && clicked}

@@ -101,11 +101,13 @@ const App: React.FC = () => {
         </Container>
         <FeedbackContainer>
           <FloatButtonComponent
+          className="report"
             tooltip="Report an issue"
             text="!"
             href="https://gitlab.com/ligolang/ligo/-/issues/new?issue%5Bassignee_id%5D=&issue%5Bmilestone_id%5D="
           ></FloatButtonComponent>
           <FloatButtonComponent
+            className="question"
             tooltip="Ask a question"
             text="?"
             href="https://t.me/LigoLang"

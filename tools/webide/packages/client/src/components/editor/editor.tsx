@@ -70,11 +70,12 @@ export const EditorComponent = ({editorHeight}) => {
   
 
   return (
-    <Container>
+    <Container className="editor">
       <Header>
         <LeftActions>
           <ShareComponent></ShareComponent>
           <StyledEditableTitleComponent
+          className="editor-title"
             id="editor-title"
             title={title}
             onChanged={value => {
@@ -84,6 +85,7 @@ export const EditorComponent = ({editorHeight}) => {
         </LeftActions>
         <LeftActions >
           <SelectLanguage
+          className="synyax-select"
             id="syntax-select"
             value={language}
             onChange={language => {

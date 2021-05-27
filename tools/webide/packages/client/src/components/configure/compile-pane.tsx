@@ -28,6 +28,7 @@ export const CompilePaneComponent = () => {
       <Group>
         <AccessFunctionLabel htmlFor="entrypoint"></AccessFunctionLabel>
         <Input
+          className="entrypoint"
           id="entrypoint"
           value={entrypoint}
           onChange={ev =>
