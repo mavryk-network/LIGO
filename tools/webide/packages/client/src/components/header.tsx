@@ -72,8 +72,12 @@ export const HeaderComponent = ({onThemeChange}) => {
     <Container className="navbar navbar-default navbar-fixed-top">
       <Group className="navbar-header">
         <a href="https://ligolang.org" style={{margin: "1em"}}>
-          <Logo src="/logo.svg" />
-          <Logo src="./icons/logo-night.svg" />
+          {!isSwitchChecked &&
+            <Logo src="/logo.svg" />
+          }
+          {isSwitchChecked &&
+            <Logo src="/night-logo.svg" />
+          }
         </a>
         
         <Link className="headerLink" href="https://ligolang.org/docs/intro/installation">Install</Link>
