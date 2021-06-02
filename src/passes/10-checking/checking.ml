@@ -133,6 +133,7 @@ and evaluate_type (e:environment) (t:I.type_expression) : (O.type_expression, ty
     in
     return @@ T_record record
   )
+  | T_axiom -> todo
   | T_variable variable ->
     (* Check that the variable is in the environment *)
     let name : O.type_variable = Var.todo_cast variable in

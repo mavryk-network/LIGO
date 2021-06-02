@@ -231,7 +231,7 @@ let module_access f {module_name;element} =
   ]
 let t_app f {type_operator ; arguments } =
   `Assoc [
-    ("type_operator", type_variable_to_yojson type_operator) ;
+    ("type_operator", f type_operator) ;
     ("arguments", (list f arguments))
   ]
 

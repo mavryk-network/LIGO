@@ -47,12 +47,12 @@ let layout a b = Int.compare (layout_tag a) (layout_tag b)
 let type_expression_tag ty_cont =
   match ty_cont with
     T_variable        _ -> 1
-  | T_sum             _ -> 2
+(*  | T_sum             _ -> 2
   | T_record          _ -> 3
-  | T_arrow           _ -> 4
+  | T_arrow           _ -> 4*)
   | T_app             _ -> 5
   | T_module_accessor _ -> 6
-  | T_singleton       _ -> 7
+  | T_axiom           _ -> 7
 
 let rec constant_tag (ct : constant_tag) =
   match ct with
@@ -86,15 +86,27 @@ and type_expression a b =
 and type_content a b =
   match a, b with
     T_variable a, T_variable b -> type_variable a b
-  | T_sum      a, T_sum      b -> rows a b
+  (*| T_sum      a, T_sum      b -> rows a b
   | T_record   a, T_record   b -> rows a b
-  | T_arrow    a, T_arrow    b -> arrow a b
+  | T_arrow    a, T_arrow    b -> arrow a b*)
   | T_app      a, T_app      b -> app a b
   | T_module_accessor a, T_module_accessor b -> module_access type_expression a b
-  | T_singleton a , T_singleton b -> literal a b
-  | (T_variable _| T_sum _| T_record _| T_arrow _ | T_app _ | T_module_accessor _ | T_singleton _),
-    (T_variable _| T_sum _| T_record _| T_arrow _ | T_app _ | T_module_accessor _ | T_singleton _) ->
+  | T_axiom a , T_axiom b -> type_injection a b
+  | (T_variable _| (*T_sum _| T_record _| T_arrow _ |*) T_app _ | T_module_accessor _ | T_axiom _),
+    (T_variable _| (*T_sum _| T_record _| T_arrow _ |*) T_app _ | T_module_accessor _ | T_axiom _) ->
     Int.compare (type_expression_tag a) (type_expression_tag b)
+
+and type_injection {language=la;injection=ia;kind=ka} {language=lb;injection=ib;kind=kb} =
+  cmp3
+    String.compare la lb
+    Ligo_string.compare ia ib
+    kind ka kb
+
+and kind a b = match a,b with
+| K_type, K_type -> 0
+| K_arrow (a1, a2), K_arrow (b1, b2) -> cmp2 kind a1 b1 kind a2 b2
+| K_higher, K_higher -> 0
+| (K_type | K_arrow _ | K_higher), (K_type | K_arrow _ | K_higher) -> 0
 
 
 and rows {fields=ca; layout=la} {fields=cb; layout=lb} =

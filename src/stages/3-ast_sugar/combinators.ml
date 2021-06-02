@@ -13,7 +13,10 @@ let tuple_to_record lst =
   lst
 
 let t_variable ?loc variable : type_expression = make_t ?loc @@ T_variable variable
-let t_app ?loc type_operator arguments : type_expression = make_t ?loc @@ T_app {type_operator ; arguments}
+let t_app ?loc type_operator arguments : type_expression = make_t ?loc @@ T_app {
+  type_operator = make_t ?loc @@ T_variable type_operator ;
+  arguments ;
+}
 
 let t_bool ?loc ()        : type_expression = t_variable ?loc v_bool
 let t_string ?loc ()      : type_expression = t_variable ?loc v_string

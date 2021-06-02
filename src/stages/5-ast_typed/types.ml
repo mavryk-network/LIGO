@@ -20,7 +20,6 @@ and type_content =
   | T_record   of rows
   | T_arrow    of ty_expr arrow
   | T_module_accessor of ty_expr module_access
-  | T_singleton of literal
 
 and type_injection = {
   language : string ;

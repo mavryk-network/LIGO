@@ -9,7 +9,10 @@ let t_variable ?loc variable  = make_t ?loc @@ T_variable variable
 let t_singleton ?loc x = make_t ?loc @@ T_singleton x
 let t_variable_ez ?loc n     : type_expression = t_variable ?loc (Var.of_name n)
 
-let t_app ?loc type_operator arguments : type_expression = make_t ?loc @@ T_app {type_operator ; arguments}
+let t_app ?loc type_operator arguments : type_expression = make_t ?loc @@ T_app {
+  type_operator = make_t ?loc @@ T_variable type_operator ;
+  arguments ;
+}
 
 let t_bool ?loc ()        : type_expression = t_variable ?loc v_bool
 let t_string ?loc ()      : type_expression = t_variable ?loc v_string

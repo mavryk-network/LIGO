@@ -41,14 +41,32 @@ and declaration =
 
 and type_content =
   | T_variable        of type_variable
-  | T_sum             of rows
-  | T_record          of rows
-  | T_arrow           of ty_expr arrow
-  | T_app             of ty_expr type_app
+  | T_axiom           of type_injection
+  (*
+  | T_sum             of rows          => T_app { type_operator = axiom "sum", type_arguments = row }
+  | T_record          of rows          => T_app { type_operator = axiom "record", type_arguments = row }
+  | T_arrow           of ty_expr arrow => T_app { type_operator = axiom "arrow", type_arguments = [from; to] }
+  *)
+  | T_label           of label (* TODO: remove: this is essentially a type-level string *)
+  | T_string          of string
+  | T_int             of int
   | T_module_accessor of ty_expr module_access
-  | T_singleton       of literal
+  | T_app             of ty_expr type_app
 
-and rows = { fields : row_element label_map ; layout : layout option }
+and type_injection = {
+  language : string ;
+  injection : Ligo_string.t ;
+  kind : kind ;
+}
+
+(* TODO: this is an incorrect, simplistic implementation of kinds above * and ->.
+   The kind of * and -> is K_higher. *)
+and kind =
+| K_axiom of type_injection (* axiom "star", axiom "arrow", axiom "row", axiom "int", axiom "constraint" *)
+| K_app of kind kind_app
+| K_higher (* star : k_higher, arrow : k_higher, row : k_higher, K_axiom int : k_higher … *)
+
+and row_ = { fields : row_element label_map ; layout : layout option }
 
 and row_element = ty_expr row_element_mini_c
 
@@ -208,10 +226,11 @@ type type_value_ =
   | P_variable     of type_variable
   | P_row          of p_row
   | P_constant     of p_constant (* TODO: split into P_singleton and P_apply *)
+  (*| P_singleton    of p_singleton*)
   | P_forall       of p_forall
+  | P_apply        of p_apply   (* This is not used yet (waiting on a kinding system and appropriate evaluation heuristics similar to eval_beta_root in src/stages/typesystem/misc.ml) *)
   | P_abs          of p_abs
   | P_constraint   of p_constraint
-  | P_apply        of p_apply   (* This is not used yet (waiting on a kinding system and appropriate evaluation heuristics similar to eval_beta_root in src/stages/typesystem/misc.ml) *)
 
 and type_value = type_value_ location_wrap
 

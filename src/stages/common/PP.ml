@@ -84,7 +84,7 @@ let module_access f ppf = fun {module_name;element} ->
 (* Types *)
 
 let type_app type_expression ppf ({type_operator ; arguments}: 'a type_app) : unit =
-  fprintf ppf "%a%a" type_variable type_operator (list_sep_d_par type_expression) arguments
+  fprintf ppf "%a%a" type_expression type_operator (list_sep_d_par type_expression) arguments
 
 let sum type_expression ppf = fun sum ->
   fprintf ppf "@[<hv 4>sum[%a]@]" (variant_sep_d type_expression) sum
