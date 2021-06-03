@@ -35,16 +35,6 @@ let tuple_sep value sep ppf m =
   let new_pp ppf (_, {associated_type;_}) = fprintf ppf "%a" value associated_type in
   fprintf ppf "%a" (list_sep new_pp sep) lst
 
-let layout ppf layout = match layout with
-  | L_tree -> fprintf ppf "tree"
-  | L_comb -> fprintf ppf "comb"
-
-let option_layout ppf l = match l with
-  | Some l -> fprintf ppf "[layout:%a]" layout l
-  | None   -> fprintf ppf ""
-
-let layout_option = option layout
-
 let record_sep_expr value sep ppf (m : 'a label_map) =
   let lst = LMap.to_kv_list m in
   let lst = List.sort_uniq (fun (Label a,_) (Label b,_) -> String.compare a b) lst in

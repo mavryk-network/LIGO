@@ -169,6 +169,15 @@ module Option_ = struct
     | _ -> None
 end
 
+(* some type used for combinators only *)
+type layout =
+| L_comb
+| L_tree
+
+type row_element = ty_expr row_element_mini_c
+type row_ = { fields : row_element label_map ; layout : layout option }
+
+
 module Layout_ = struct
   let k_name = Stage_common.Constant.layout_name
   let k_constructor = k_axiom k_name K_higher
@@ -237,6 +246,7 @@ module Fields_ = struct
 end
 
 module Row_ = struct
+
   let k_name = Stage_common.Constant.row_name
   let k_constructor = k_axiom k_name K_higher
   let k = List_.k Row_element_.k_ -*> Layout_.k_ -*> k_constructor
@@ -332,8 +342,6 @@ let get_t_bool (t:type_expression) : unit option = match t.type_content with
 
 let tuple_of_record ({fields; layout = _} : row_) : type_expression list option =
   (* Returns Some [type_expression;…] if the row uses only numeric strings as indices, None otherwise *)
-  let aux i (Label label, associated_type, _michelson_annotation, _decl_pos) =
-    if String.equal label (string_of_int i) then Some associated_type else None in
   let l = List.map (fun i -> LMap.find_opt (Label (string_of_int i)) fields) (Base.List.range 0 (LMap.cardinal fields)) in
   Base.Option.all l >? (fun l -> Some (List.map (fun { associated_type; michelson_annotation=_; decl_pos=_ } -> associated_type) l))
 

@@ -38,22 +38,20 @@ let module_access f {module_name=mna; element=ea}
     module_variable mna mnb
     f ea eb
 
-let layout_tag = function
-  | L_comb -> 1
-  | L_tree -> 2
-
-let layout a b = Int.compare (layout_tag a) (layout_tag b)
-
 let type_expression_tag ty_cont =
   match ty_cont with
     T_variable        _ -> 1
-(*  | T_sum             _ -> 2
-  | T_record          _ -> 3
-  | T_arrow           _ -> 4*)
+  | T_label           _ -> 2
+  | T_string          _ -> 3
+  | T_int             _ -> 4
   | T_app             _ -> 5
   | T_module_accessor _ -> 6
   | T_axiom           _ -> 7
-
+let kind_tag k =
+  match k with
+  | K_axiom _ -> 0
+  | K_app   _ -> 1
+  | K_higher  -> 2
 let rec constant_tag (ct : constant_tag) =
   match ct with
     C_arrow        ->  1
@@ -86,14 +84,14 @@ and type_expression a b =
 and type_content a b =
   match a, b with
     T_variable a, T_variable b -> type_variable a b
-  (*| T_sum      a, T_sum      b -> rows a b
-  | T_record   a, T_record   b -> rows a b
-  | T_arrow    a, T_arrow    b -> arrow a b*)
+  | T_label a , T_label b -> label a b
+  | T_string a, T_string b -> String.compare a b
+  | T_int a, T_int b -> Int.compare a b
   | T_app      a, T_app      b -> app a b
   | T_module_accessor a, T_module_accessor b -> module_access type_expression a b
   | T_axiom a , T_axiom b -> type_injection a b
-  | (T_variable _| (*T_sum _| T_record _| T_arrow _ |*) T_app _ | T_module_accessor _ | T_axiom _),
-    (T_variable _| (*T_sum _| T_record _| T_arrow _ |*) T_app _ | T_module_accessor _ | T_axiom _) ->
+  | (T_variable _| T_app _ | T_module_accessor _ | T_axiom _ | T_label _ | T_string _ | T_int _),
+    (T_variable _| T_app _ | T_module_accessor _ | T_axiom _ | T_label _ | T_string _ | T_int _) ->
     Int.compare (type_expression_tag a) (type_expression_tag b)
 
 and type_injection {language=la;injection=ia;kind=ka} {language=lb;injection=ib;kind=kb} =
@@ -103,16 +101,14 @@ and type_injection {language=la;injection=ia;kind=ka} {language=lb;injection=ib;
     kind ka kb
 
 and kind a b = match a,b with
-| K_type, K_type -> 0
-| K_arrow (a1, a2), K_arrow (b1, b2) -> cmp2 kind a1 b1 kind a2 b2
-| K_higher, K_higher -> 0
-| (K_type | K_arrow _ | K_higher), (K_type | K_arrow _ | K_higher) -> 0
-
-
-and rows {fields=ca; layout=la} {fields=cb; layout=lb} =
-  cmp2
-    (label_map ~compare:row_element) ca cb
-    (Option.compare layout) la lb
+  | K_higher, K_higher -> 0
+  | K_axiom x, K_axiom y -> type_injection x y
+  | K_app {kind_operator=op_a;kind_arguments=args_a}, K_app {kind_operator=op_b;kind_arguments=args_b} ->
+    cmp2
+      kind op_a op_b
+      (List.compare ~compare:kind) args_a args_b
+  | (K_higher | K_axiom _ | K_app _), (K_higher | K_axiom _ | K_app _) ->
+    Int.compare (kind_tag a) (kind_tag b)
 
 and constraint_identifier (ConstraintIdentifier.T a) (ConstraintIdentifier.T b) =
   cmp2
@@ -135,7 +131,7 @@ and arrow {type1=ta1;type2=tb1} {type1=ta2;type2=tb2} =
 
 and app {type_operator=ta;arguments=aa} {type_operator=tb;arguments=ab} =
   cmp2
-    type_variable ta tb
+    type_expression ta tb
     (List.compare ~compare:type_expression) aa ab
 
 let constant_tag (ct : constant_tag) (ct2 : constant_tag) =

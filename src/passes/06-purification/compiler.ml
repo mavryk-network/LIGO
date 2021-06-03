@@ -137,27 +137,33 @@ let rec compile_type_expression : I.type_expression -> (O.type_expression,Errors
       let* arr = arrow self arr in
       return @@ T_arrow arr
     | I.T_variable type_variable -> return @@ T_variable type_variable
-    | I.T_app {type_operator;arguments=[l;r]} when Var.equal Stage_common.Constant.v_michelson_or type_operator ->
-      let* (l, l_ann) = trace_option (Errors.corner_case "not an annotated type") @@ I.get_t_annoted l in
-      let* (r, r_ann) = trace_option (Errors.corner_case "not an annotated type") @@ I.get_t_annoted r in
-      let* (l,r) = bind_map_pair compile_type_expression (l,r) in
-      let sum : (O.label * _ O.row_element) list = [
-        (O.Label "M_left" , {associated_type = l ; attributes = [ "annot:"^l_ann ] ; decl_pos = 0});
-        (O.Label "M_right", {associated_type = r ; attributes = [ "annot:"^r_ann ] ; decl_pos = 1}); ]
-      in
-      return @@ O.T_sum { fields = O.LMap.of_list sum ; attributes = [] }
-    | I.T_app {type_operator;arguments=[l;r]} when Var.equal Stage_common.Constant.v_michelson_pair type_operator ->
-      let* (l, l_ann) = trace_option (Errors.corner_case "not an annotated type") @@ I.get_t_annoted l in
-      let* (r, r_ann) = trace_option (Errors.corner_case "not an annotated type") @@ I.get_t_annoted r in
-      let* (l,r) = bind_map_pair compile_type_expression (l,r) in
-      let sum : (O.label * _ O.row_element) list = [
-        (O.Label "0", {associated_type = l ; attributes = [ "annot:"^l_ann ] ; decl_pos = 0});
-        (O.Label "1", {associated_type = r ; attributes = [ "annot:"^r_ann ] ; decl_pos = 1}); ]
-      in
-      return @@ O.T_record { fields = (O.LMap.of_list sum) ; attributes = [] }
-    | I.T_app c ->
-      let* c = type_app self c in
-      return @@ T_app c
+    | I.T_app c -> (
+      match c.type_operator.type_content, c with
+      | T_variable v , {arguments=[l;r];_} when Var.equal Stage_common.Constant.v_michelson_or v -> (
+        let* (l, l_ann) = trace_option (Errors.corner_case "not an annotated type") @@ I.get_t_annoted l in
+        let* (r, r_ann) = trace_option (Errors.corner_case "not an annotated type") @@ I.get_t_annoted r in
+        let* (l,r) = bind_map_pair compile_type_expression (l,r) in
+        let sum : (O.label * _ O.row_element) list = [
+          (O.Label "M_left" , {associated_type = l ; attributes = [ "annot:"^l_ann ] ; decl_pos = 0});
+          (O.Label "M_right", {associated_type = r ; attributes = [ "annot:"^r_ann ] ; decl_pos = 1}); ]
+        in
+        return @@ O.T_sum { fields = O.LMap.of_list sum ; attributes = [] }
+      )
+      | T_variable v, {arguments=[l;r];_} when Var.equal Stage_common.Constant.v_michelson_pair v -> (
+        let* (l, l_ann) = trace_option (Errors.corner_case "not an annotated type") @@ I.get_t_annoted l in
+        let* (r, r_ann) = trace_option (Errors.corner_case "not an annotated type") @@ I.get_t_annoted r in
+        let* (l,r) = bind_map_pair compile_type_expression (l,r) in
+        let sum : (O.label * _ O.row_element) list = [
+          (O.Label "0", {associated_type = l ; attributes = [ "annot:"^l_ann ] ; decl_pos = 0});
+          (O.Label "1", {associated_type = r ; attributes = [ "annot:"^r_ann ] ; decl_pos = 1}); ]
+        in
+        return @@ O.T_record { fields = (O.LMap.of_list sum) ; attributes = [] }
+      )
+      | _ -> (
+        let* c = type_app self c in
+        return @@ O.T_app c
+      )
+    )
     | I.T_module_accessor ma ->
       let* ma = module_access self ma in
       return @@ O.T_module_accessor ma

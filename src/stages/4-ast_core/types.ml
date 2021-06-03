@@ -62,13 +62,10 @@ and type_injection = {
 (* TODO: this is an incorrect, simplistic implementation of kinds above * and ->.
    The kind of * and -> is K_higher. *)
 and kind =
-| K_axiom of type_injection (* axiom "star", axiom "arrow", axiom "row", axiom "int", axiom "constraint" *)
-| K_app of kind kind_app
-| K_higher (* star : k_higher, arrow : k_higher, row : k_higher, K_axiom int : k_higher … *)
+  | K_axiom of type_injection (* axiom "star", axiom "arrow", axiom "row", axiom "int", axiom "constraint" *)
+  | K_app of kind kind_app
+  | K_higher (* star : k_higher, arrow : k_higher, row : k_higher, K_axiom int : k_higher … *)
 
-and row_ = { fields : row_element label_map ; layout : layout option }
-
-and row_element = ty_expr row_element_mini_c
 
 and type_expression = {
   type_content  : type_content ;

@@ -48,9 +48,9 @@ type 'ty_exp type_app = {
 }
 
 (* TODO: this will probably be merged with type_app eventually. *)
-type 'ty_exp kind_app = {
-  kind_operator  : 'ty_exp ;
-  kind_arguments : 'ty_exp list ;
+type 'kind kind_app = {
+  kind_operator  : 'kind ;
+  kind_arguments : 'kind list ;
 }
 
 type 'ty_expr row_element = {

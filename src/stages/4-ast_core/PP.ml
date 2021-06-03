@@ -75,10 +75,10 @@ and type_content : formatter -> type_content -> unit =
   fun ppf te ->
   match te with
   | T_variable        tv -> type_variable ppf tv
-  | T_axiom            x  -> type_injection ppf x
-  (*| T_sum              m -> fprintf ppf "@[<h>sum[%a]@]" (lmap_sep_d row) (LMap.to_kv_list_rev m.fields)
-  | T_record           m -> fprintf ppf "%a" (tuple_or_record_sep_type row) m.fields
-  | T_arrow            a -> arrow         type_expression ppf a*)
+  | T_axiom           x  -> type_injection ppf x
+  | T_label            l -> fprintf ppf "%a" label l
+  | T_string           s -> fprintf ppf "%s" s
+  | T_int              i -> fprintf ppf "%d" i
   | T_module_accessor ma -> module_access type_expression ppf ma
   | T_app              a -> type_app type_expression ppf a
 
@@ -87,16 +87,9 @@ and type_injection ppf {language;injection;kind=k} =
   fprintf ppf "(%s : %a)" (Ligo_string.extract injection) kind k
 
 and kind ppf = function
-| K_type -> fprintf ppf "type"
-| K_app { K_axiom _; kind_arguments } -> fprintf ppf "%a -> %a" kind_parentheses a kind b
-| K_app { kind_operator; kind_arguments } -> fprintf ppf "%a -> %a" kind_parentheses a kind b
+| K_app { kind_operator ; kind_arguments } -> fprintf ppf "%a -> %a" kind kind_operator (list_sep_d kind) kind_arguments
 | K_higher -> fprintf ppf "higher_kind"
-| K_axiom _ -> (??)
-
-and kind_parentheses ppf = function
-| K_type -> fprintf ppf "🞶"
-| K_arrow (a, b) -> fprintf ppf "(%a -> %a)" kind_parentheses a kind b
-| K_higher -> fprintf ppf "higher_kind"
+| K_axiom inj -> type_injection ppf inj
 
 let expression_variable ppf (ev : expression_variable) : unit =
   fprintf ppf "%a" Var.pp ev.wrap_content

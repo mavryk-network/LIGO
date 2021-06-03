@@ -13,9 +13,9 @@ let [@warning "-32"] z_of_yojson x =
 
 let bytes_to_yojson b = `String (Bytes.to_string b)
 
-type layout =
+(* type layout =
   | L_comb
-  | L_tree
+  | L_tree *)
 
 type literal =
   | Literal_unit

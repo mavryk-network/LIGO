@@ -229,6 +229,13 @@ let module_access f {module_name;element} =
     ("module_name", module_variable_to_yojson module_name) ;
     ("element", f element) ;
   ]
+
+let kind_app kind_ {kind_operator ; kind_arguments} =
+  `Assoc [
+    ("kind_operator", kind_ kind_operator) ;
+    ("kind_arguments", list kind_ kind_arguments)
+  ]
+
 let t_app f {type_operator ; arguments } =
   `Assoc [
     ("type_operator", f type_operator) ;

@@ -21,11 +21,6 @@ let label_map f lmap =
   in
   `Assoc lst'
 
-let layout = function
-  | L_comb -> `List [ `String "L_comb"; `Null ]
-  | L_tree -> `List [ `String "L_tree"; `Null ]
-
-
 let rec type_expression {type_content=tc;sugar;location} =
   `Assoc [
     ("type_content", type_content tc);
@@ -35,25 +30,24 @@ let rec type_expression {type_content=tc;sugar;location} =
 
 and type_content = function
   | T_variable        t -> `List [ `String "t_variable"; type_variable_to_yojson t]
-  | T_sum             t -> `List [ `String "t_sum"; rows t]
-  | T_record          t -> `List [ `String "t_record"; rows t]
-  | T_arrow           t -> `List [ `String "t_arrow"; arrow t]
+  | T_axiom           t -> `List [ `String "t_axiom"   ; type_injection t]
   | T_app             t -> `List [ `String "t_app";      t_app type_expression t]
   | T_module_accessor t -> `List [ `String "t_module_accessor"; module_access type_expression t]
-  | T_singleton       t -> `List [ `String "t_singleton" ; literal t ]
+  | T_label           t -> `List [ `String "t_label" ; label t ]
+  | T_string          t -> `List [ `String "t_singleton" ; `String t ]
+  | T_int             t -> `List [ `String "t_singleton" ; `Int t ]
 
+and type_injection {language;injection;kind} =
+  `Assoc [
+    ("language", `String language);
+    ("injection", `String (Ligo_string.extract injection));
+    ("kind", kind_ kind)
+  ]
 
-and rows {fields; layout = l } =
-  `Assoc [
-    ("content", label_map row_element fields);
-    ("layout", option layout l);
-  ]
-and row_element {associated_type; michelson_annotation; decl_pos} =
-  `Assoc [
-    ("associated_type", type_expression associated_type);
-    ("michelson_annotation", option (fun s -> `String s) michelson_annotation);
-    ("decl_pos", `Int decl_pos);
-  ]
+and kind_ = function
+  | K_axiom x -> `List [`String "k_axiom" ; type_injection x ]
+  | K_app x -> `List [`String "k_app" ; kind_app kind_ x ]
+  | K_higher -> `List [`String "k_higher"; `Null]
 
 and arrow {type1;type2} =
   `Assoc [
