@@ -1,28 +1,6 @@
 import React, { useReducer, useEffect } from "react";
 import JoyRide, { ACTIONS, EVENTS, STATUS } from "react-joyride";
 
-// Define the steps
-// const TOUR_STEPS = [
-//   {
-//     target: ".tour-logo",
-//     content: "This is our tour’s logo.",
-//     disableBeacon: true,
-//   },
-//   {
-//     target: ".tour-cart",
-//     content:
-//       "View the cart you’ve added here",
-//   },
-//   {
-//     target: ".tour-contact",
-//     content: "Contact the developer",
-//   },
-//   {
-//     target: ".tour-policy",
-//     content: "We accept returns after 14 days max",
-//   },
-// ];
-
 const TOUR_STEPS = [
   {
     target: '.editor',
@@ -66,17 +44,17 @@ const TOUR_STEPS = [
     content: 'Detailed documentation from installation and language basics to advanced concepts and cli commands.',
     disableBeacon: true
   },{
+    target: '.tutorial',
+    title: 'Tutorials',
+    content: 'Learn how to set up and interact with the LIGO CLI and get started with a Taco Shop smart contract. Help the owner of Taco Shop, Pedro, receive or donate his profits.',
+    disableBeacon: true
+  },{
     target: '.cheatSheet',
     title: 'Cheat Sheet',
     content: 'Quick LIGO language reference.',
     disableBeacon: true
   },
   {
-    target: '.tutorial',
-    title: 'Tutorials',
-    content: 'Learn how to set up and interact with the LIGO CLI and get started with a Taco Shop smart contract. Help the owner of Taco Shop, Pedro, receive or donate his profits.',
-    disableBeacon: true
-  },{
     target: '.askQuestions',
     title: 'Ask Questions',
     content: 'Ask us questions and follow us on other social media platforms.',
