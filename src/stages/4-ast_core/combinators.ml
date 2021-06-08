@@ -125,7 +125,8 @@ module List_ = struct
   let k_name = Stage_common.Constant.list_name
   let k_constructor ?loc ?sugar () = k_axiom ?loc ?sugar k_name K_higher
   (* The kind of type-level lists *)
-  let k a = k_constructor () @* [a]
+  let k ?loc ?sugar a = k_constructor ?loc ?sugar () @* [a]
+
   let t ?loc ?sugar a = t_axiom ?loc ?sugar Stage_common.Constant.list_name (k a)
 
   let get_t = is_type_expression @@ function
@@ -205,8 +206,13 @@ module Row_element_ = struct
   let k () = k_constructor
   let k_ = Label_.k_ -*> Star_.k_ -*> List_.k String_.k_ -*> Int_.k_ -*> k ()
   let t = t_axiom Stage_common.Constant.row_element_name k_
-  let t_ label associated_type attributes decl_pos =
-    t @. [label; associated_type; attributes; decl_pos]
+  let t_ label {associated_type; attributes; decl_pos} =
+    t @. [
+      (Label_.t label);
+      associated_type;
+      (List_.t String_.k_ @. (List.map (fun a -> String_.t a) attributes));
+      (Int_.t decl_pos);
+    ]
 
   let get_t = is_type_expression @@ function
     | T_app { type_operator; arguments = [label; associated_type; attributes; decl_pos] }
@@ -216,32 +222,19 @@ module Row_element_ = struct
       let attributes = List_.get_t attributes >? aux in
       let decl_pos = Int_.get_t decl_pos in
       (match label, associated_type, attributes, decl_pos with
-         Some label, associated_type, Some attributes, Some decl_pos -> Some (label, associated_type, attributes, decl_pos)
+         Some label, associated_type, Some attributes, Some decl_pos -> Some (label, {associated_type; attributes; decl_pos})
        | _ -> None)
     | _ -> None
-end
-
-module Field_ = struct
-  let t label associated_type attributes decl_pos =
-    Row_element_.t_
-      (Label_.t label)
-      associated_type
-      (List_.t String_.k_ @. (List.map (fun a -> String_.t a) attributes))
-      (Int_.t decl_pos)
-  let get_t : type_expression -> _ option =
-    (* TODO: (label,{associated_type; michelson_annotation; decl_pos}) *)
-    Row_element_.get_t
 end
 
 module Fields_ = struct
   let t fields =
     let fields = LMap.to_kv_list fields in
-    let fields = List.map (fun (label,{associated_type; attributes; decl_pos}) ->
-                            Field_.t label associated_type attributes decl_pos) fields in
+    let fields = List.map (fun (label,row_element) -> Row_element_.t_ label row_element) fields in
     List_.t Row_element_.k_ @. fields
 
   let get_t : type_expression -> _ option =
-    fun x -> x |> List_.get_t >? (fun l -> List.map Field_.get_t l |> Base.Option.all)
+    fun x -> x |> List_.get_t >? (fun l -> List.map Row_element_.get_t l |> Base.Option.all)
 end
 
 module Row_ = struct
@@ -249,19 +242,20 @@ module Row_ = struct
   let k_name = Stage_common.Constant.row_name
   let k_constructor = k_axiom k_name K_higher
   let k = List_.k Row_element_.k_ -*> Layout_.k_ -*> k_constructor
+
   let t_name = Stage_common.Constant.row_name
   let t_constructor = t_axiom t_name k
   let t elements layout = t_constructor @. [elements; layout]
   let t_ ?(layout : layout option) (fields : ty_expr row_element label_map) : type_expression =
     t (Fields_.t fields) (Layout_.t layout)
+
   let get_t : _ -> row_ option = is_type_expression @@ function
   | T_app { type_operator = row_op; arguments = [elements; layout]}
     when is_t_axiom Stage_common.Constant.row_name row_op ->
     let elements = List_.get_t elements >? (fun l -> List.map Row_element_.get_t l |> Base.Option.all) in
     let layout = Layout_.get_t layout in
-    let aux = fun (a,associated_type,attributes,decl_pos) -> (a,{associated_type;attributes;decl_pos}) in
     (match elements, layout with
-     | Some fields, Some layout -> Some { fields = LMap.of_list (List.map aux fields); layout }
+     | Some fields, Some layout -> Some { fields = LMap.of_list fields; layout }
      | _ -> None)
   | _ -> None
 end
@@ -270,12 +264,14 @@ module Record_ = struct
   let k_name = Stage_common.Constant.record_name
   let k_constructor = k_axiom k_name K_higher
   let k = Row_.k -*> k_constructor
+
   let t_name = Stage_common.Constant.record_name
   let t_constructor ?loc ?sugar () = t_axiom ?loc ?sugar t_name k
   let t ?loc ?sugar row = t_constructor ?loc ?sugar () @. [ row ]
   let t_ ?loc ?sugar ?(layout : layout option) (fields : ty_expr row_element label_map) : type_expression =
     t ?loc ?sugar @@ Row_.t_ ?layout fields
-  let get_t : _ -> _ option = is_type_expression @@ function
+  
+  let get_t : type_expression -> _ option = is_type_expression @@ function
   | T_app { type_operator = record_op; arguments = [row]}
     when is_t_axiom Stage_common.Constant.record_name record_op ->
     Row_.get_t row
@@ -286,11 +282,13 @@ module Sum_ = struct
   let k_name = Stage_common.Constant.sum_name
   let k_constructor = k_axiom k_name K_higher
   let k = Row_.k -*> k_constructor
+
   let t_name = Stage_common.Constant.sum_name
   let t_constructor ?loc ?sugar () = t_axiom ?loc ?sugar t_name k
   let t ?loc ?sugar row = t_constructor ?loc ?sugar () @. [ row ]
   let t_ ?loc ?sugar ?(layout : layout option) (fields : ty_expr row_element label_map) : type_expression =
     t ?loc ?sugar @@ Row_.t_ ?layout fields
+  
   let get_t : _ -> _ option = is_type_expression @@ function
   | T_app { type_operator = sum_op; arguments = [row]}
     when is_t_axiom Stage_common.Constant.sum_name sum_op ->
