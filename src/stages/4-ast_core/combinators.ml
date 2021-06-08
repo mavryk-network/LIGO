@@ -174,8 +174,7 @@ type layout =
 | L_comb
 | L_tree
 
-type row_element = ty_expr row_element_mini_c
-type row_ = { fields : row_element label_map ; layout : layout option }
+type row_ = { fields : ty_expr row_element label_map ; layout : layout option }
 
 
 module Layout_ = struct
@@ -204,30 +203,30 @@ end
 module Row_element_ = struct
   let k_constructor = k_axiom Stage_common.Constant.row_element_name K_higher
   let k () = k_constructor
-  let k_ = Label_.k_ -*> Star_.k_ -*> Option_.k String_.k_ -*> Int_.k_ -*> k ()
+  let k_ = Label_.k_ -*> Star_.k_ -*> List_.k String_.k_ -*> Int_.k_ -*> k ()
   let t = t_axiom Stage_common.Constant.row_element_name k_
-  let t_ label associated_type michelson_annotation decl_pos =
-    t @. [label; associated_type; michelson_annotation; decl_pos]
+  let t_ label associated_type attributes decl_pos =
+    t @. [label; associated_type; attributes; decl_pos]
 
   let get_t = is_type_expression @@ function
-    | T_app { type_operator; arguments = [label; associated_type; michelson_annotation; decl_pos] }
+    | T_app { type_operator; arguments = [label; associated_type; attributes; decl_pos] }
       when is_t_axiom Stage_common.Constant.row_element_name type_operator ->
       let label = Label_.get_t label in
-      let aux = function Some x -> (String_.get_t x >? (fun s -> Some (Some s))) | None -> Some None in
-      let michelson_annotation = Option_.get_t michelson_annotation >? aux in
+      let aux = fun x -> List.map String_.get_t x |> Base.Option.all in
+      let attributes = List_.get_t attributes >? aux in
       let decl_pos = Int_.get_t decl_pos in
-      (match label, associated_type, michelson_annotation, decl_pos with
-         Some label, associated_type, Some michelson_annotation, Some decl_pos -> Some (label, associated_type, michelson_annotation, decl_pos)
+      (match label, associated_type, attributes, decl_pos with
+         Some label, associated_type, Some attributes, Some decl_pos -> Some (label, associated_type, attributes, decl_pos)
        | _ -> None)
     | _ -> None
 end
 
 module Field_ = struct
-  let t label associated_type michelson_annotation decl_pos =
+  let t label associated_type attributes decl_pos =
     Row_element_.t_
       (Label_.t label)
       associated_type
-      (Option_.t String_.k_ (match michelson_annotation with Some a -> Some (String_.t a) | None -> None))
+      (List_.t String_.k_ @. (List.map (fun a -> String_.t a) attributes))
       (Int_.t decl_pos)
   let get_t : type_expression -> _ option =
     (* TODO: (label,{associated_type; michelson_annotation; decl_pos}) *)
@@ -237,8 +236,8 @@ end
 module Fields_ = struct
   let t fields =
     let fields = LMap.to_kv_list fields in
-    let fields = List.map (fun (label,{associated_type; michelson_annotation; decl_pos}) ->
-                            Field_.t label associated_type michelson_annotation decl_pos) fields in
+    let fields = List.map (fun (label,{associated_type; attributes; decl_pos}) ->
+                            Field_.t label associated_type attributes decl_pos) fields in
     List_.t Row_element_.k_ @. fields
 
   let get_t : type_expression -> _ option =
@@ -253,14 +252,14 @@ module Row_ = struct
   let t_name = Stage_common.Constant.row_name
   let t_constructor = t_axiom t_name k
   let t elements layout = t_constructor @. [elements; layout]
-  let t_ ?(layout : layout option) (fields : row_element label_map) : type_expression =
+  let t_ ?(layout : layout option) (fields : ty_expr row_element label_map) : type_expression =
     t (Fields_.t fields) (Layout_.t layout)
   let get_t : _ -> row_ option = is_type_expression @@ function
   | T_app { type_operator = row_op; arguments = [elements; layout]}
     when is_t_axiom Stage_common.Constant.row_name row_op ->
     let elements = List_.get_t elements >? (fun l -> List.map Row_element_.get_t l |> Base.Option.all) in
     let layout = Layout_.get_t layout in
-    let aux = fun (a,associated_type,michelson_annotation,decl_pos) -> (a,{associated_type;michelson_annotation;decl_pos}) in
+    let aux = fun (a,associated_type,attributes,decl_pos) -> (a,{associated_type;attributes;decl_pos}) in
     (match elements, layout with
      | Some fields, Some layout -> Some { fields = LMap.of_list (List.map aux fields); layout }
      | _ -> None)
@@ -274,7 +273,7 @@ module Record_ = struct
   let t_name = Stage_common.Constant.record_name
   let t_constructor ?loc ?sugar () = t_axiom ?loc ?sugar t_name k
   let t ?loc ?sugar row = t_constructor ?loc ?sugar () @. [ row ]
-  let t_ ?loc ?sugar ?(layout : layout option) (fields : row_element label_map) : type_expression =
+  let t_ ?loc ?sugar ?(layout : layout option) (fields : ty_expr row_element label_map) : type_expression =
     t ?loc ?sugar @@ Row_.t_ ?layout fields
   let get_t : _ -> _ option = is_type_expression @@ function
   | T_app { type_operator = record_op; arguments = [row]}
@@ -290,7 +289,7 @@ module Sum_ = struct
   let t_name = Stage_common.Constant.sum_name
   let t_constructor ?loc ?sugar () = t_axiom ?loc ?sugar t_name k
   let t ?loc ?sugar row = t_constructor ?loc ?sugar () @. [ row ]
-  let t_ ?loc ?sugar ?(layout : layout option) (fields : row_element label_map) : type_expression =
+  let t_ ?loc ?sugar ?(layout : layout option) (fields : ty_expr row_element label_map) : type_expression =
     t ?loc ?sugar @@ Row_.t_ ?layout fields
   let get_t : _ -> _ option = is_type_expression @@ function
   | T_app { type_operator = sum_op; arguments = [row]}
@@ -299,12 +298,12 @@ module Sum_ = struct
   | _ -> None
 end
 
-let t_record ?loc ?sugar ?(layout : layout option) (fields : row_element label_map) = Record_.t_ ?loc ?sugar ?layout fields
-let t_sum ?loc ?sugar ?(layout : layout option) (fields : row_element label_map) = Sum_.t_ ?loc ?sugar ?layout fields
+let t_record ?loc ?sugar ?(layout : layout option) (fields : ty_expr row_element label_map) = Record_.t_ ?loc ?sugar ?layout fields
+let t_sum ?loc ?sugar ?(layout : layout option) (fields : ty_expr row_element label_map) = Sum_.t_ ?loc ?sugar ?layout fields
 
 let default_layout = L_tree
 let make_t_ez_record ?loc ?sugar ?layout (lst:(string * type_expression) list) : type_expression =
-  let lst = List.mapi (fun i (x,y) -> (Label x, ({associated_type=y;michelson_annotation=None;decl_pos=i} : row_element)) ) lst in
+  let lst = List.mapi (fun i (x,y) -> (Label x, ({associated_type=y;attributes=[];decl_pos=i} : ty_expr row_element)) ) lst in
   let map = LMap.of_list lst in
   t_record ?loc ?sugar ?layout map
 
@@ -313,12 +312,12 @@ let ez_t_record ?loc ?sugar ?(layout=default_layout) lst : type_expression =
   t_record ?loc ?sugar ~layout m
 let t_pair ?loc ?sugar a b : type_expression =
   ez_t_record ?loc ?sugar [
-    (Label "0",{associated_type=a;michelson_annotation=None ; decl_pos = 0}) ;
-    (Label "1",{associated_type=b;michelson_annotation=None ; decl_pos = 1}) ]
+    (Label "0",{associated_type=a;attributes=[] ; decl_pos = 0}) ;
+    (Label "1",{associated_type=b;attributes=[] ; decl_pos = 1}) ]
 
 let t_sum ?loc ?sugar ?layout fields : type_expression = t_sum ?loc ?sugar fields ?layout
 let t_sum_ez ?loc ?sugar ?layout (lst:(string * type_expression) list) : type_expression =
-  let lst = List.mapi (fun i (x,y) -> (Label x, ({associated_type=y;michelson_annotation=None;decl_pos=i}:row_element)) ) lst in
+  let lst = List.mapi (fun i (x,y) -> (Label x, ({associated_type=y;attributes=[];decl_pos=i}:ty_expr row_element)) ) lst in
   let map = LMap.of_list lst in
   t_sum ?loc ?sugar ?layout map
 
@@ -343,7 +342,7 @@ let get_t_bool (t:type_expression) : unit option = match t.type_content with
 let tuple_of_record ({fields; layout = _} : row_) : type_expression list option =
   (* Returns Some [type_expression;…] if the row uses only numeric strings as indices, None otherwise *)
   let l = List.map (fun i -> LMap.find_opt (Label (string_of_int i)) fields) (Base.List.range 0 (LMap.cardinal fields)) in
-  Base.Option.all l >? (fun l -> Some (List.map (fun { associated_type; michelson_annotation=_; decl_pos=_ } -> associated_type) l))
+  Base.Option.all l >? (fun l -> Some (List.map (fun { associated_type; attributes=_; decl_pos=_ } -> associated_type) l))
 
 let get_t_tuple (t:type_expression) : type_expression list option = match Record_.get_t t with
   | Some row ->
