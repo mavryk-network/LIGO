@@ -223,10 +223,11 @@ let assign expression ppf = fun {variable; access_path; expression=e} ->
     (list_sep (access expression) (const ".")) access_path
     expression e
 
-let simple_assign expression ppf = fun {lvalue; value} ->
-  fprintf ppf "%a := %a"
+let simple_assign expression ppf = fun {lvalue; value; next} ->
+  fprintf ppf "%a := %a; %a"
     expression_variable lvalue
     expression value
+    expression next
 
 let for_ expression ppf = fun {binder; start; final; incr; f_body} ->
   fprintf ppf "for %a from %a to %a by %a do %a"

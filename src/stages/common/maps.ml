@@ -147,9 +147,10 @@ let assign : ('a -> ('b,_) result) -> 'a assign -> ('b assign, _) result
   ok @@ {variable; access_path; expression}
 
 let simple_assign : ('a -> ('b,_) result) -> 'a simple_assign -> ('b simple_assign, _) result
-= fun f {lvalue; value} ->
+= fun f {lvalue; value;next} ->
   let* value  = f value in
-  ok @@ {lvalue;value}
+  let* next   = f next in
+  ok @@ {lvalue;value;next}
 
 let for_
 = fun f {binder; start; final; incr; f_body} ->

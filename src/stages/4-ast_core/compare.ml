@@ -38,11 +38,12 @@ let module_access f {module_name=mna; element=ea}
     module_variable mna mnb
     f ea eb
 
-let simple_assign f {lvalue=mna; value=ea}
-                    {lvalue=mnb; value=eb} =
-  cmp2
+let simple_assign f {lvalue=mna; value=ea; next=na}
+                    {lvalue=mnb; value=eb; next=nb} =
+  cmp3
     expression_variable mna mnb
     f ea eb
+    f na nb
 
 let layout_tag = function
   | L_comb -> 1

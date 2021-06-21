@@ -149,8 +149,9 @@ let assign : ('acc -> 'a -> ('b,_) result) -> 'acc -> 'a assign -> ('acc, _) res
   ok @@ acc
 
 let simple_assign : ('acc -> 'a -> ('b,_) result) -> 'acc -> 'a simple_assign -> ('acc, _) result
-= fun f acc {lvalue=_; value=expression} ->
+= fun f acc {lvalue=_; value=expression; next} ->
   let* acc = f acc expression in
+  let* acc = f acc next in
   ok @@ acc
 
 let for_ : ('acc -> 'a -> ('b,_) result) -> 'acc -> 'a for_ -> ('acc, _) result

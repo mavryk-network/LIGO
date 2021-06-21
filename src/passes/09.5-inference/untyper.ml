@@ -108,10 +108,11 @@ let rec untype_expression (e:O.expression) : (I.expression, typer_error) result 
     let* anno_expr = untype_expression anno_expr in
     let* type_annotation = untype_type_expression type_annotation in
     return @@ E_ascription {anno_expr;type_annotation}
-  | E_assign {lvalue; value} ->
+  | E_assign {lvalue; value; next} ->
     let lvalue = Location.map Var.todo_cast lvalue in
     let* value = untype_expression value in
-    return @@ E_assign {lvalue; value}
+    let* next = untype_expression next in
+    return @@ E_assign {lvalue; value; next}
 
 and untype_lambda {binder; output_type; result} : (_ O.lambda, typer_error) result =
     let* binder = Stage_common.Maps.binder untype_type_expression binder in

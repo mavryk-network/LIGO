@@ -530,13 +530,16 @@ and type_expression' : environment -> ?tv_opt:O.type_expression -> I.expression 
     in
     let* element = type_expression' ?tv_opt module_env element in
     return (E_module_accessor {module_name; element}) element.type_expression
-  | E_assign {lvalue = var ; value = rhs} ->
-    (* let* rhs_tv_opt = bind_map_option (evaluate_type e) ascr in *)
-    let* rhs = type_expression' e rhs in
+  | E_assign {lvalue = var ; value = rhs; next} ->
+    let name = cast_var var in
+    let* tv' =
+        trace_option (unbound_variable e name ae.location)
+        @@ Environment.get_opt name e in
+    let* rhs = type_expression' ~tv_opt:tv'.type_value e rhs in
     let binder = cast_var var in
-    (* let e' = Environment.add_ez_declaration binder rhs e in *)
-    (* let* let_result = type_expression' e' let_result in *)
-    return (E_assign {lvalue = binder; value = rhs}) (t_unit ())
+    let e' = Environment.add_ez_declaration binder rhs e in
+    let* next = type_expression' e' next in
+    return (E_assign {lvalue = binder; value = rhs; next}) (next.type_expression)
 
 
 and type_lambda e {

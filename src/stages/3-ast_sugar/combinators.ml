@@ -96,6 +96,7 @@ let e_recursive ?loc fun_name fun_type lambda = make_e ?loc @@ E_recursive {fun_
 let e_let_in    ?loc let_binder mut attributes rhs let_result = make_e ?loc @@ E_let_in { let_binder ; rhs ; let_result; attributes; mut }
 let e_let_in_ez ?loc var ?ascr ?const_or_var mut attributes rhs let_result = e_let_in ?loc {var;ascr;attributes={const_or_var}} mut attributes rhs let_result
 let e_raw_code ?loc language code = make_e ?loc @@ E_raw_code {language; code}
+let e_assign ?loc lvalue value next = make_e ?loc @@ E_assign {lvalue; value; next}
 
 let e_constructor ?loc s a : expression = make_e ?loc @@ E_constructor { constructor = s; element = a}
 let e_matching ?loc a b : expression = make_e ?loc @@ E_matching {matchee=a;cases=b}

@@ -156,6 +156,7 @@ and 'exp assign = {
 and 'exp simple_assign = {
   lvalue    : expression_variable ;
   value  : 'exp ;
+  next   : 'exp ;
   }
 
 and 'exp for_ = {
