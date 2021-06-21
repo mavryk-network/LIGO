@@ -202,11 +202,10 @@ module Substitution = struct
         let* anno_expr = s_expression ~substs anno_expr in
         let* type_annotation = s_type_expression ~substs type_annotation in
         ok @@ T.E_ascription {anno_expr; type_annotation}
-      | T.E_assign {lvalue; value; next} ->
+      | T.E_assign {lvalue; value} ->
         let* lvalue = s_variable ~substs lvalue in
         let* value = s_expression ~substs value in
-        let* next = s_expression ~substs next in
-        ok @@ T.E_assign {lvalue; value; next}
+        ok @@ T.E_assign {lvalue; value}
 
     and s_expression : (T.expression,_) w = fun ~(substs:substs) { expression_content; sugar; location } ->
       let* expression_content = s_expression_content ~substs expression_content in

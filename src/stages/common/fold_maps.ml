@@ -150,10 +150,9 @@ let assign : ('acc -> 'a -> ('acc * 'b,_) result) -> 'acc -> 'a assign -> ('acc 
   ok @@ (acc, {variable; access_path; expression})
 
 let simple_assign : ('acc -> 'a -> ('acc * 'b,_) result) -> 'acc -> 'a simple_assign -> ('acc * 'b simple_assign, _) result
-= fun f acc {lvalue; value; next} ->
+= fun f acc {lvalue; value} ->
   let* acc,value  = f acc value in
-  let* acc,next   = f acc next in
-  ok @@ (acc, {lvalue; value; next})
+  ok @@ (acc, {lvalue; value})
 
 let for_
 = fun f acc {binder; start; final; incr; f_body} ->

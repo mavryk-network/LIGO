@@ -361,11 +361,10 @@ let assign expression {variable; access_path; expression=e} =
     ("expression", expression e);
   ]
 
-let simple_assign expression {lvalue=variable; value=e; next} =
+let simple_assign expression {lvalue=variable; value=e} =
   `Assoc [
     ("lvalue", expression_variable_to_yojson variable);
     ("value", expression e);
-    ("next", expression next);
   ]
 
 let for_ expression {binder; start; final; incr; f_body} =
