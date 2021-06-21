@@ -86,6 +86,7 @@ and expression_content =
   | E_record_update   of expr record_update
   | E_ascription      of (expr,ty_expr) ascription
   | E_module_accessor of expr module_access
+  | E_assign of expr simple_assign
 
 and type_expression_option = type_expression option
 

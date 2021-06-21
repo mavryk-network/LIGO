@@ -116,6 +116,7 @@ and expression_content ppf (ec : expression_content) =
   | E_raw_code r -> raw_code expression ppf r
   | E_ascription a -> ascription expression type_expression ppf a
   | E_module_accessor ma -> module_access expression ppf ma
+  | E_assign     a -> simple_assign expression ppf a
 
 and declaration ppf (d : declaration) =
   match d with

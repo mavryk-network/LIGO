@@ -20,6 +20,9 @@ let scopes : with_types:bool -> options:Compiler_options.t -> Ast_core.module_ -
       let all_defs = merge_defs env all_defs in
       find_scopes' (i,all_defs,env,scopes,let_result.location) bindings let_result
     )
+    | E_assign _ -> (
+      failwith "completeme"
+    )
     | E_type_in { type_binder; rhs ; let_result } -> (
       let def = make_t_def (get_binder_name type_binder) e.location rhs in
       let (i,env) = add_shadowing_def (i,type_binder) def env in

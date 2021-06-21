@@ -149,6 +149,11 @@ let assign : ('acc -> 'a -> ('acc * 'b,_) result) -> 'acc -> 'a assign -> ('acc 
   let* acc,expression  = f acc expression in
   ok @@ (acc, {variable; access_path; expression})
 
+let simple_assign : ('acc -> 'a -> ('acc * 'b,_) result) -> 'acc -> 'a simple_assign -> ('acc * 'b simple_assign, _) result
+= fun f acc {lvalue; value} ->
+  let* acc,value  = f acc value in
+  ok @@ (acc, {lvalue; value})
+
 let for_
 = fun f acc {binder; start; final; incr; f_body} ->
   let* acc,f_body = f acc f_body in

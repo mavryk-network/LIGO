@@ -39,6 +39,7 @@ let rec fold_expression : ('a, 'err) folder -> 'a -> expression -> ('a, 'err) re
   | E_update u -> Folds.update self init' u
   | E_accessor a -> Folds.accessor self init' a
   | E_tuple t -> Folds.tuple self init' t
+  | E_assign a -> Folds.simple_assign self init' a
   | E_let_in { let_binder = _ ; rhs ; let_result } -> (
       let* res = self init' rhs in
       let* res = self res let_result in
@@ -152,6 +153,10 @@ let rec map_expression : 'err exp_mapper -> expression -> (expression, 'err) res
     let* t' = bind_map_list self t in
     return @@ E_tuple t'
   )
+  | E_assign a -> (
+      let* a = Maps.simple_assign self a in
+      return @@ E_assign a
+  )
   | E_module_accessor { module_name; element } -> (
     let* element = self element in
     return @@ E_module_accessor { module_name; element }
@@ -253,6 +258,9 @@ let rec fold_map_expression : ('a, 'err) fold_mapper -> 'a -> expression -> ('a 
     let* (res, t') = bind_fold_map_list self init' t in
     ok (res, return @@ E_tuple t')
   )
+  | E_assign a ->
+      let* res,a = Fold_maps.simple_assign self init' a in
+      ok (res, return @@ E_assign a)
   | E_constructor c -> (
       let* (res,c) = Fold_maps.constructor self init' c in
       ok (res, return @@ E_constructor c)

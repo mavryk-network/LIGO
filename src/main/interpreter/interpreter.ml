@@ -642,6 +642,8 @@ and eval_ligo : Ast_typed.expression -> env -> value Monad.t
     | E_module_accessor {module_name=_; element=_} ->
        fail @@
          Errors.modules_not_supported term.location
+    | E_assign _ ->
+       failwith "E_assign not supported"
 
 let ( let>>= ) o f = Trace.bind f o
 

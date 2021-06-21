@@ -139,6 +139,8 @@ and expression_content ppf (ec: expression_content) =
         type_expression fun_type
         expression_content (E_lambda lambda)
   | E_module_accessor ma -> module_access expression ppf ma
+  | E_assign     a -> simple_assign expression ppf a
+
 
 and assoc_expression ppf : map_kv -> unit =
  fun {key ; value} -> fprintf ppf "%a -> %a" expression key expression value

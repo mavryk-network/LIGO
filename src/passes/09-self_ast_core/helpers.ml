@@ -54,6 +54,8 @@ let rec fold_expression : ('a, 'err) folder -> 'a -> expression -> ('a,'err) res
     let* res = self init' element in
     ok res
   )
+  | E_assign a -> Folds.simple_assign self init' a
+
 
 type 'err exp_mapper = expression -> (expression , 'err) result
 type 'err ty_exp_mapper = type_expression -> (type_expression , 'err) result
@@ -134,6 +136,10 @@ let rec map_expression : 'err exp_mapper -> expression -> (expression , 'err) re
   | E_module_accessor { module_name; element } -> (
     let* element = self element in
     return @@ E_module_accessor { module_name; element }
+  )
+  | E_assign a -> (
+      let* a = Maps.simple_assign self a in
+      return @@ E_assign a
   )
   | E_literal _ | E_variable _ | E_raw_code _ as e' -> return e'
 
@@ -257,4 +263,7 @@ let rec fold_map_expression : ('a , 'err) fold_mapper -> 'a -> expression -> ('a
     let* (res,element) = self init' element in
     ok (res, return @@ E_module_accessor { module_name; element })
   )
+  | E_assign a ->
+      let* res,a = Fold_maps.simple_assign self init' a in
+      ok (res, return @@ E_assign a)
   | E_literal _ | E_variable _ | E_raw_code _ as e' -> ok (init', return e')

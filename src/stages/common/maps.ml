@@ -146,6 +146,11 @@ let assign : ('a -> ('b,_) result) -> 'a assign -> ('b assign, _) result
   let* expression  = f expression in
   ok @@ {variable; access_path; expression}
 
+let simple_assign : ('a -> ('b,_) result) -> 'a simple_assign -> ('b simple_assign, _) result
+= fun f {lvalue; value} ->
+  let* value  = f value in
+  ok @@ {lvalue;value}
+
 let for_
 = fun f {binder; start; final; incr; f_body} ->
   let* f_body = f f_body in

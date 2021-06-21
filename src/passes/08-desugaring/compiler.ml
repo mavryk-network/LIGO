@@ -255,6 +255,10 @@ let rec compile_expression : I.expression -> (O.expression , desugaring_error) r
       let* (_, lst ) = bind_fold_list aux (0,[]) t in
       let m = O.LMap.of_list lst in
       return @@ O.E_record m
+    | I.E_assign a ->
+      let* a = simple_assign self a in
+      return @@ O.E_assign a
+
 
 and compile_declaration : I.declaration -> (O.declaration , desugaring_error) result =
   fun declaration ->

@@ -60,6 +60,7 @@ and expression_content = function
   | E_sequence        e -> `List [ `String "E_sequence";        sequence    expression e ]
   | E_skip              -> `List [ `String "E_skip"; `Null ]
   | E_tuple           e -> `List [ `String "E_tuple"; list expression e ]
+  | E_assign      e -> `List [ `String "E_assign"; simple_assign expression e ]
   (* Data Structures *)
   | E_map         e -> `List [ `String "E_map"; list (fun (k,v) -> `List [ expression k; expression v]) e ]
   | E_big_map     e -> `List [ `String "E_big_map"; list (fun (k,v) -> `List [ expression k; expression v]) e ]

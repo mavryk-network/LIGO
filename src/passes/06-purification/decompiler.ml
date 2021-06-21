@@ -98,6 +98,9 @@ let rec decompile_expression : O.expression -> (I.expression, Errors.purificatio
   | O.E_tuple tuple ->
     let* tuple = bind_map_list self tuple in
     return @@ I.E_tuple tuple
+  | O.E_assign assign ->
+    let* {lvalue;value} = Stage_common.Maps.simple_assign self assign in
+    return @@ I.E_assign {variable=lvalue;expression=value;access_path=[]}
   | O.E_ascription ascr ->
     let* ascr = ascription self self_type ascr in
     return @@ I.E_ascription ascr

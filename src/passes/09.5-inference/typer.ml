@@ -56,6 +56,7 @@ end = struct
     | O.E_record_update   { record; path=_; update } -> let* () = expression record in expression update
     | O.E_module_accessor { module_name=_; element} -> expression element
     | O.E_ascription      { anno_expr; type_annotation} -> let* () = expression anno_expr in te where type_annotation
+    | O.E_assign          { lvalue=_; value} -> expression value
   and re where : O.row_element -> _ = function { associated_type; michelson_annotation=_; decl_pos=_ } ->
     te where associated_type
   and tc where : O.type_content -> _ = function
@@ -533,6 +534,9 @@ and type_expression' : ?tv_opt:O.type_expression -> environment -> _ O'.typer_st
     let* (e,state,element,t),constraints = self ?tv_opt module_env state element in
     let wrapped = Wrap.module_access t in
     return_wrapped (e_module_accessor module_name element) e state constraints wrapped
+  | E_assign {lvalue=_; value=_} ->
+     failwith "checking e_assign, completeme"
+
 
 and type_lambda e state {
       binder ;

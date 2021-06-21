@@ -45,7 +45,7 @@ let repair_mutable_variable_in_matching (match_body : O.expression) (element_nam
       | E_type_in _ | E_mod_in _ |  E_mod_alias _
       | E_application _ | E_lambda _| E_recursive _ | E_raw_code _
       | E_constructor _ | E_record _| E_accessor _|E_update _
-      | E_ascription _  | E_sequence _ | E_tuple _
+      | E_ascription _  | E_sequence _ | E_tuple _ | E_assign _
       | E_map _ | E_big_map _ |E_list _ | E_set _
       | E_module_accessor _
        -> ok (true, (decl_var, free_var),ass_exp)
@@ -94,7 +94,7 @@ and repair_mutable_variable_in_loops (for_body : O.expression) (element_names : 
       | E_type_in _ | E_mod_in _ | E_mod_alias _
       | E_application _ | E_lambda _| E_recursive _ | E_raw_code _
       | E_constructor _ | E_record _| E_accessor _| E_update _
-      | E_ascription _  | E_sequence _ | E_tuple _
+      | E_ascription _  | E_sequence _ | E_tuple _ | E_assign _
       | E_map _ | E_big_map _ |E_list _ | E_set _
       | E_module_accessor _
        -> ok (true, (decl_var, free_var),ass_exp)
@@ -288,9 +288,11 @@ and compile_expression' : I.expression -> (O.expression option -> O.expression, 
       let rhs = match access_path with
         [] -> expression
       | _  -> O.e_update ~loc (O.e_variable ~loc variable) access_path expression in
-      ok @@ fun expr ->
-        O.e_let_in_ez ~loc variable true [] rhs
-        @@ Option.value ~default:(O.e_skip ()) expr
+      return @@ E_assign {lvalue=variable; value=rhs}
+      (* ok @@ fun expr ->
+       *       O.e_assign ~loc variable 
+       *   O.e_let_in_ez ~loc variable true [] rhs
+       *   @@ Option.value ~default:(O.e_skip ()) expr *)
     | I.E_for f ->
       let* f = compile_for f in
       ok @@ f

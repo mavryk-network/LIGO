@@ -40,6 +40,9 @@ module Free_variables = struct
       let b' = union (singleton fun_name) b in
       expression_content b' @@ E_lambda lambda
     | E_module_accessor {element;_} -> self element
+    | E_assign {value=expr;lvalue;_} ->
+       let b' = union (singleton lvalue) b in
+       expression b' expr
 
   and lambda : bindings -> lambda -> bindings = fun b l ->
     let b' = union (singleton l.binder) b in
@@ -218,7 +221,7 @@ let rec assert_value_eq (a, b: (expression*expression)) : unit option =
   | (E_lambda _, _) | (E_let_in _, _) | (E_raw_code _, _) | (E_recursive _, _)
   | (E_type_in _, _)| (E_mod_in _, _) | (E_mod_alias _,_)
   | (E_record_accessor _, _) | (E_record_update _,_)
-  | (E_matching _, _)
+  | (E_matching _, _) | (E_assign _, _)
   | E_module_accessor _, _
   -> None
 

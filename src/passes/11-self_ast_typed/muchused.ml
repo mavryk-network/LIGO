@@ -141,6 +141,8 @@ let rec muchuse_of_expr expr : muchuse =
      muchuse_of_expr let_result
   | E_mod_alias {result;_} ->
      muchuse_of_expr result
+  | E_assign {value;_} ->
+     muchuse_of_expr value
   | E_module_accessor {element;module_name} ->
      match element.expression_content with
      | E_variable v ->

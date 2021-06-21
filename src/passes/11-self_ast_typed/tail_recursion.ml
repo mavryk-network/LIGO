@@ -61,6 +61,9 @@ let rec check_recursive_call : expression_variable -> bool -> expression -> (uni
   | E_module_accessor {element; _} ->
     let* _ = check_recursive_call n false element in
     ok ()
+  | E_assign {value;_} ->
+    let* _ = check_recursive_call n false value in
+    ok ()
 
 and check_recursive_call_in_matching = fun n final_path c ->
   match c with

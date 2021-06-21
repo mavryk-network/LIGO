@@ -109,6 +109,8 @@ and expression_content ppf (ec : expression_content) =
       fprintf ppf "skip"
   | E_tuple t ->
       fprintf ppf "(%a)" (list_sep_d expression) t
+  | E_assign     a -> simple_assign expression ppf a
+
 
 
 and accessor ppf a =

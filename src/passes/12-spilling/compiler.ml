@@ -379,6 +379,10 @@ and compile_expression ?(module_env = SMap.empty) (ae:AST.expression) : (express
     let* rhs' = self rhs in
     let* result' = self let_result in
     return (E_let_in (rhs', inline, ((Location.map Var.todo_cast let_binder, rhs'.type_expression), result')))
+  | E_assign {lvalue=_; value=_} ->
+     failwith "should be removed already"
+    (* let* rhs' = self value in
+     * return (E_let_in (rhs', false, ((Location.map Var.todo_cast lvalue, rhs'.type_expression), e_unit ()))) *)
   | E_type_in {type_binder=_; rhs=_; let_result} ->
     let* result' = self let_result in
     ok result'

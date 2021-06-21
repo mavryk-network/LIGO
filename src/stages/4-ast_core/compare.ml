@@ -38,6 +38,12 @@ let module_access f {module_name=mna; element=ea}
     module_variable mna mnb
     f ea eb
 
+let simple_assign f {lvalue=mna; value=ea}
+                    {lvalue=mnb; value=eb} =
+  cmp2
+    expression_variable mna mnb
+    f ea eb
+
 let layout_tag = function
   | L_comb -> 1
   | L_tree -> 2
@@ -164,6 +170,8 @@ let expression_tag expr =
   | E_record_update   _ -> 16
   | E_module_accessor _ -> 17
   | E_ascription      _ -> 18
+  (* Imperative *)
+  | E_assign          _ -> 19
 
 and pattern_tag = function
 | P_unit -> 1
@@ -199,8 +207,9 @@ let rec expression a b =
   | E_record_update  a, E_record_update b -> record_update a b
   | E_module_accessor a, E_module_accessor b -> module_access expression a b
   | E_ascription a, E_ascription b -> ascription a b
-  | (E_literal _| E_constant _| E_variable _| E_application _| E_lambda _| E_recursive _| E_let_in _| E_type_in _| E_mod_in _| E_mod_alias _| E_raw_code _| E_constructor _| E_matching _| E_record _| E_record_accessor _| E_record_update _ | E_module_accessor _ | E_ascription _),
-    (E_literal _| E_constant _| E_variable _| E_application _| E_lambda _| E_recursive _| E_let_in _| E_type_in _| E_mod_in _| E_mod_alias _| E_raw_code _| E_constructor _| E_matching _| E_record _| E_record_accessor _| E_record_update _ | E_module_accessor _ | E_ascription _) ->
+  | E_assign a, E_assign b -> simple_assign expression a b
+  | (E_literal _| E_constant _| E_variable _| E_application _| E_lambda _| E_recursive _| E_let_in _| E_type_in _| E_mod_in _| E_mod_alias _| E_raw_code _| E_constructor _| E_matching _| E_record _| E_record_accessor _| E_record_update _ | E_module_accessor _ | E_ascription _ | E_assign _),
+    (E_literal _| E_constant _| E_variable _| E_application _| E_lambda _| E_recursive _| E_let_in _| E_type_in _| E_mod_in _| E_mod_alias _| E_raw_code _| E_constructor _| E_matching _| E_record _| E_record_accessor _| E_record_update _ | E_module_accessor _ | E_ascription _ | E_assign _) ->
     Int.compare (expression_tag a) (expression_tag b)
 
 and constant ({cons_name=ca;arguments=a}: _ constant) ({cons_name=cb;arguments=b}: _ constant) =

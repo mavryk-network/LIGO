@@ -530,6 +530,13 @@ and type_expression' : environment -> ?tv_opt:O.type_expression -> I.expression 
     in
     let* element = type_expression' ?tv_opt module_env element in
     return (E_module_accessor {module_name; element}) element.type_expression
+  | E_assign {lvalue = var ; value = rhs} ->
+    (* let* rhs_tv_opt = bind_map_option (evaluate_type e) ascr in *)
+    let* rhs = type_expression' e rhs in
+    let binder = cast_var var in
+    (* let e' = Environment.add_ez_declaration binder rhs e in *)
+    (* let* let_result = type_expression' e' let_result in *)
+    return (E_assign {lvalue = binder; value = rhs}) (t_unit ())
 
 
 and type_lambda e {
@@ -718,6 +725,9 @@ and untype_expression_content ty (ec:O.expression_content) : (I.expression , typ
   | E_module_accessor ma ->
     let* ma = Stage_common.Maps.module_access untype_expression ma in
     return @@ I.make_e @@ E_module_accessor ma
+  | E_assign a ->
+    let* a = Stage_common.Maps.simple_assign untype_expression a in
+    return @@ I.make_e @@ E_assign a
 
 and untype_declaration : O.declaration -> (I.declaration, typer_error) result =
 let return (d: I.declaration) = ok @@ d in

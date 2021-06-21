@@ -148,6 +148,11 @@ let assign : ('acc -> 'a -> ('b,_) result) -> 'acc -> 'a assign -> ('acc, _) res
   let* acc = f acc expression in
   ok @@ acc
 
+let simple_assign : ('acc -> 'a -> ('b,_) result) -> 'acc -> 'a simple_assign -> ('acc, _) result
+= fun f acc {lvalue=_; value=expression} ->
+  let* acc = f acc expression in
+  ok @@ acc
+
 let for_ : ('acc -> 'a -> ('b,_) result) -> 'acc -> 'a for_ -> ('acc, _) result
 = fun f acc {binder=_;start;final;incr;f_body} ->
   let* acc = f acc start in

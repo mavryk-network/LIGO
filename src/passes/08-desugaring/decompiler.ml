@@ -138,6 +138,9 @@ let rec decompile_expression : O.expression -> (I.expression, desugaring_error) 
     | O.E_module_accessor ma ->
       let* ma = module_access self ma in
       return @@ E_module_accessor ma
+    | O.E_assign a ->
+      let* a = simple_assign self a in
+      return @@ E_assign a
 
 and decompile_lambda : _ O.lambda -> (_ I.lambda, desugaring_error) result =
   fun {binder=b;output_type;result}->

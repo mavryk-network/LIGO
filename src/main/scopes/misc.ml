@@ -39,6 +39,8 @@ let extract_variable_types :
         return [ (fun_name , fun_type) ; (binder , in_t) ]
       | E_let_in { let_binder ; rhs ; _ } ->
         return @@ [(let_binder,rhs.type_expression)]
+      | E_assign _ ->
+        return @@ []
       | E_matching {matchee ; cases } -> (
         match cases with
         | Match_variant {cases ; tv=_} -> (

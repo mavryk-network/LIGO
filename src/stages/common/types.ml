@@ -153,6 +153,11 @@ and 'exp assign = {
   expression  : 'exp ;
   }
 
+and 'exp simple_assign = {
+  lvalue    : expression_variable ;
+  value  : 'exp ;
+  }
+
 and 'exp for_ = {
   binder : expression_variable ;
   start  : 'exp ;

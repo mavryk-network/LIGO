@@ -164,6 +164,8 @@ and expression_content =
   | E_record_accessor of record_accessor
   | E_record_update   of record_update
   | E_module_accessor of expression module_access
+  (* Imperative *)
+  | E_assign of expr simple_assign
 
 and constant = {
     cons_name: constant' ;

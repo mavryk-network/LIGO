@@ -50,6 +50,7 @@ and expression_content =
   | E_ascription of (expr, ty_expr) ascription
   | E_module_accessor of expr module_access
   (* Sugar *)
+  | E_assign   of expr simple_assign
   | E_cond of expr conditional
   | E_sequence of expr sequence
   | E_skip
