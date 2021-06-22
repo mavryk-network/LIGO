@@ -534,8 +534,11 @@ and type_expression' : ?tv_opt:O.type_expression -> environment -> _ O'.typer_st
     let* (e,state,element,t),constraints = self ?tv_opt module_env state element in
     let wrapped = Wrap.module_access t in
     return_wrapped (e_module_accessor module_name element) e state constraints wrapped
-  | E_assign {lvalue=_; value=_} ->
-     failwith "checking e_assign, completeme"
+  | E_assign {lvalue; value} ->
+    (* TODO-er: check if this makes any sense *)
+    let* (e,state,expr',_t),constraints = self e state value in
+    let wrapped = Wrap.simple_assign (t_unit ())
+    in return_wrapped (e_assign lvalue expr') e state constraints wrapped
 
 
 and type_lambda e state {

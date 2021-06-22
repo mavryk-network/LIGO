@@ -173,6 +173,7 @@ let e_type_in type_binder rhs let_result = make_e @@ E_type_in { type_binder ; r
 let e_mod_in      ?loc ?sugar module_binder rhs let_result         = make_e ?loc ?sugar @@ E_mod_in { module_binder ; rhs ; let_result }
 let e_mod_alias  ?loc ?sugar  alias binders result = make_e ?loc ?sugar @@ E_mod_alias { alias ; binders ; result }
 let e_raw_code    ?loc ?sugar language code                       = make_e ?loc ?sugar @@ E_raw_code {language; code}
+let e_assign ?loc lvalue value = make_e ?loc @@ E_assign {lvalue;value}
 
 let e_constructor constructor element: expression = make_e @@ E_constructor {constructor;element}
 let e_matching    ?loc ?sugar a b : expression = make_e ?loc ?sugar @@ E_matching {matchee=a;cases=b}

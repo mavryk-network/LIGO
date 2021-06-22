@@ -4,6 +4,7 @@ module Helpers = Helpers
 
 let all_module_passes = [
   Helpers.map_module Assignment.replace_assign ;
+  (* Assignment.transform_module ; *)
   Unused.unused_map_module ;
   Muchused.muchused_map_module ;
   Helpers.map_module Tail_recursion.peephole_expression ;
@@ -13,6 +14,7 @@ let all_module_passes = [
 
 let all_expression_passes = [
   Helpers.map_expression Assignment.replace_assign ;
+  (* Assignment.transform ; *)
   Helpers.map_expression Tail_recursion.peephole_expression ;
   Helpers.map_expression Michelson_layout.peephole_expression ;
   Pattern_matching_simpl.peephole_expression ;

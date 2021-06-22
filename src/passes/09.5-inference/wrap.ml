@@ -163,6 +163,11 @@ let module_access (expr : T.type_expression) : (constraints * T.type_variable) =
   let whole_expr = Core.fresh_type_variable ~name:"module_acces" () in
   [c_equation (T.Reasons.wrap (Todo "wrap: module: whole") @@ T.P_variable whole_expr) expr' "wrap: module: whole"] , whole_expr
 
+let simple_assign (expr : T.type_expression) : (constraints * T.type_variable) =
+  let expr' = type_expression_to_type_value expr in
+  let whole_expr = Core.fresh_type_variable ~name:"assign" () in
+  [c_equation (T.Reasons.wrap (Todo "wrap: module: whole") @@ T.P_variable whole_expr) expr' "wrap: module: whole"] , whole_expr
+
 let let_in : T.type_variable -> T.type_expression -> T.type_expression option -> T.type_expression -> (constraints * T.type_variable) =
   fun binder rhs rhs_tv_opt result ->
   let rhs'        = type_expression_to_type_value rhs in
