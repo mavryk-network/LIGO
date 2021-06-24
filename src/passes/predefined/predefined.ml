@@ -370,23 +370,7 @@ module Tree_abstraction = struct
       | "ediv"             -> some_const C_EDIV
       | "unit"             -> some_const C_UNIT
 
-      | "NEG"              -> some_const C_NEG
-      | "ADD"              -> some_const C_ADD
-      | "SUB"              -> some_const C_SUB
-      | "TIMES"            -> some_const C_MUL
-      | "DIV"              -> some_const C_DIV
-      | "MOD"              -> some_const C_MOD
-      | "EQ"               -> some_const C_EQ
-      | "NOT"              -> some_const C_NOT
-      | "AND"              -> some_const C_AND
-      | "OR"               -> some_const C_OR
-      | "GT"               -> some_const C_GT
-      | "GE"               -> some_const C_GE
-      | "LT"               -> some_const C_LT
-      | "LE"               -> some_const C_LE
-      | "CONS"             -> some_const C_CONS
       | "cons"             -> some_deprecated C_CONS (* Deprecated *)
-      | "NEQ"              -> some_const C_NEQ
 
       (* Crypto module *)
 
@@ -542,23 +526,6 @@ module Tree_abstraction = struct
       | "ediv"             -> some_const C_EDIV
       | "unit"             -> some_const C_UNIT
 
-      | "NEG"              -> some_const C_NEG
-      | "ADD"              -> some_const C_ADD
-      | "SUB"              -> some_const C_SUB
-      | "TIMES"            -> some_const C_MUL
-      | "DIV"              -> some_const C_DIV
-      | "MOD"              -> some_const C_MOD
-      | "EQ"               -> some_const C_EQ
-      | "NOT"              -> some_const C_NOT
-      | "AND"              -> some_const C_AND
-      | "OR"               -> some_const C_OR
-      | "GT"               -> some_const C_GT
-      | "GE"               -> some_const C_GE
-      | "LT"               -> some_const C_LT
-      | "LE"               -> some_const C_LE
-      | "CONS"             -> some_const C_CONS
-      | "NEQ"              -> some_const C_NEQ
-
       (* Bytes module *)
 
       | "Bytes.size"   -> some_deprecated C_SIZE       (* Deprecated *)
@@ -668,23 +635,6 @@ module Tree_abstraction = struct
       | "abs"              -> some_const C_ABS
       | "ediv"             -> some_const C_EDIV
       | "unit"             -> some_const C_UNIT
-
-      | "NEG"              -> some_const C_NEG
-      | "ADD"              -> some_const C_ADD
-      | "SUB"              -> some_const C_SUB
-      | "TIMES"            -> some_const C_MUL
-      | "DIV"              -> some_const C_DIV
-      | "MOD"              -> some_const C_MOD
-      | "EQ"               -> some_const C_EQ
-      | "NOT"              -> some_const C_NOT
-      | "AND"              -> some_const C_AND
-      | "OR"               -> some_const C_OR
-      | "GT"               -> some_const C_GT
-      | "GE"               -> some_const C_GE
-      | "LT"               -> some_const C_LT
-      | "LE"               -> some_const C_LE
-      | "CONS"             -> some_const C_CONS
-      | "NEQ"              -> some_const C_NEQ
 
       (* Bytes module *)
 
