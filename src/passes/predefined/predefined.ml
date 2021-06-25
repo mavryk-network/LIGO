@@ -194,6 +194,25 @@ module Tree_abstraction = struct
     | "Test.to_contract" -> some_const C_TEST_TO_CONTRACT
     | "Test.to_entrypoint" -> some_const C_TEST_TO_ENTRYPOINT
 
+    (* Operation module *)
+
+    | "Operation.neg"   -> some_const C_NEG
+    | "Operation.add"   -> some_const C_ADD
+    | "Operation.sub"   -> some_const C_SUB
+    | "Operation.times" -> some_const C_MUL
+    | "Operation.div"   -> some_const C_DIV
+    | "Operation.mod"   -> some_const C_MOD
+    | "Operation.eq"    -> some_const C_EQ
+    | "Operation.not"   -> some_const C_NOT
+    | "Operation.and"   -> some_const C_AND
+    | "Operation.or"    -> some_const C_OR
+    | "Operation.gt"    -> some_const C_GT
+    | "Operation.ge"    -> some_const C_GE
+    | "Operation.lt"    -> some_const C_LT
+    | "Operation.le"    -> some_const C_LE
+    | "Operation.cons"  -> some_const C_CONS
+    | "Operation.neq"   -> some_const C_NEQ
+
     | _ -> None
 
 
@@ -217,6 +236,25 @@ module Tree_abstraction = struct
     | C_CONTRACT                -> "Tezos.get_contract"
     | C_CONTRACT_ENTRYPOINT     -> "Tezos.get_entrypoint"
     | C_NEVER                   -> "Tezos.never"
+
+    (* Operation module *)
+
+    | C_NEG  -> "Operation.neg"
+    | C_ADD  -> "Operation.add"
+    | C_SUB  -> "Operation.sub"
+    | C_MUL  -> "Operation.times"
+    | C_DIV  -> "Operation.div"
+    | C_MOD  -> "Operation.mod"
+    | C_EQ   -> "Operation.eq"
+    | C_NOT  -> "Operation.not"
+    | C_AND  -> "Operation.and"
+    | C_OR   -> "Operation.or"
+    | C_GT   -> "Operation.gt"
+    | C_GE   -> "Operation.ge"
+    | C_LT   -> "Operation.lt"
+    | C_LE   -> "Operation.le"
+    | C_CONS -> "Operation.cons"
+    | C_NEQ  -> "Operation.neq"
 
     (* Crypto module *)
 
@@ -286,8 +324,8 @@ module Tree_abstraction = struct
 
     (* Bitwise module *)
 
-    | C_OR  -> "Bitwise.or"
-    | C_AND -> "Bitwise.and"
+    (* | C_OR  -> "Bitwise.or" (* will never trigger *)
+     * | C_AND -> "Bitwise.and" *)
     | C_XOR -> "Bitwise.xor"
     | C_LSL -> "Bitwise.shift_left"
     | C_LSR -> "Bitwise.shift_right"
@@ -456,23 +494,6 @@ module Tree_abstraction = struct
       | C_UNIT       -> "unit"
       | C_LIST_EMPTY -> "nil"
 
-      | C_NEG  -> "NEG"
-      | C_ADD  -> "ADD"
-      | C_SUB  -> "SUB"
-      | C_MUL  -> "TIMES"
-      | C_DIV  -> "DIV"
-      | C_MOD  -> "MOD"
-      | C_EQ   -> "EQ"
-      | C_NOT  -> "NOT"
-      | C_AND  -> "AND"
-      | C_OR   -> "OR"
-      | C_GT   -> "GT"
-      | C_GE   -> "GE"
-      | C_LT   -> "LT"
-      | C_LE   -> "LE"
-      | C_CONS -> "CONS"
-      | C_NEQ  -> "NEQ"
-
       (*->  Others *)
 
       | C_ASSERTION   -> "assert"
@@ -569,23 +590,6 @@ module Tree_abstraction = struct
       | C_UNIT       -> "unit"
       | C_LIST_EMPTY -> "[]"
 
-      | C_NEG  -> "NEG"
-      | C_ADD  -> "ADD"
-      | C_SUB  -> "SUB"
-      | C_MUL  -> "TIMES"
-      | C_DIV  -> "DIV"
-      | C_MOD  -> "MOD"
-      | C_EQ   -> "EQ"
-      | C_NOT  -> "NOT"
-      | C_AND  -> "AND"
-      | C_OR   -> "OR"
-      | C_GT   -> "GT"
-      | C_GE   -> "GE"
-      | C_LT   -> "LT"
-      | C_LE   -> "LE"
-      | C_CONS -> "CONS"
-      | C_NEQ  -> "NEQ"
-
       (* Others *)
 
       | C_ASSERTION   -> "assert"
@@ -678,23 +682,6 @@ module Tree_abstraction = struct
       | C_EDIV       -> "ediv"
       | C_UNIT       -> "unit"
       | C_LIST_EMPTY -> "[]"
-
-      | C_NEG  -> "NEG"
-      | C_ADD  -> "ADD"
-      | C_SUB  -> "SUB"
-      | C_MUL  -> "TIMES"
-      | C_DIV  -> "DIV"
-      | C_MOD  -> "MOD"
-      | C_EQ   -> "EQ"
-      | C_NOT  -> "NOT"
-      | C_AND  -> "AND"
-      | C_OR   -> "OR"
-      | C_GT   -> "GT"
-      | C_GE   -> "GE"
-      | C_LT   -> "LT"
-      | C_LE   -> "LE"
-      | C_CONS -> "CONS"
-      | C_NEQ  -> "NEQ"
 
       (* Others *)
 
