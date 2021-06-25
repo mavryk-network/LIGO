@@ -4,9 +4,6 @@ module O = Ast_sugar
 open Trace
 open Stage_common.Maps
 
-let equal_var = Location.equal_content ~equal:Var.equal
-(* let compare_var = Location.compare_content ~compare:Var.compare *)
-
 let rec add_to_end (expression: O.expression) to_add =
   match expression.expression_content with
   | O.E_let_in lt ->
@@ -17,21 +14,10 @@ let rec add_to_end (expression: O.expression) to_add =
     {expression with expression_content = O.E_sequence seq}
   | _ -> O.e_sequence expression to_add
 
-and store_mutable_variable (free_vars : I.expression_variable list) =
-  if (List.length free_vars == 0) then
-    O.e_unit ()
-  else
-    let aux (var:I.expression_variable) = (O.Label (Var.to_name var.wrap_content), O.e_variable var) in
-    O.e_record @@ O.LMap.of_list (List.map ~f:aux free_vars)
-
-and restore_mutable_variable (expr : O.expression->O.expression) (free_vars : O.expression_variable list) (env : O.expression_variable) =
-  let aux (f: O.expression -> O.expression) (ev: O.expression_variable) =
-    fun expr -> f (O.e_let_in_ez ev true [] (O.e_accessor (O.e_variable env) [O.Access_record (Var.to_name ev.wrap_content)]) expr)
-  in
-  let ef = List.fold_left ~f:aux ~init:(fun e -> e) free_vars in
+and restore_mutable_variable (expr : O.expression->O.expression) =
   fun e -> match e with
-    | None -> expr (ef (O.e_skip ()))
-    | Some e -> expr (ef e)
+    | None -> expr (O.e_skip ())
+    | Some e -> expr e
 
 
 let rec compile_type_expression : I.type_expression -> (O.type_expression,Errors.purification_error) result =
@@ -226,7 +212,7 @@ and compile_while I.{cond;body} =
   let aux name expr=
     O.e_let_in_ez name false [] (O.e_accessor (O.e_variable binder) [Access_tuple Z.zero; Access_record (Var.to_name name.wrap_content)]) expr
   in
-  let init_rec = O.e_tuple [store_mutable_variable @@ []] in
+  let init_rec = O.e_tuple [O.e_unit ()] in
   let restore = fun expr -> List.fold_right ~f:aux [] ~init:expr in
   let continue_expr = O.e_constant C_FOLD_CONTINUE [for_body] in
   let stop_expr = O.e_constant C_FOLD_STOP [O.e_variable binder] in
@@ -241,7 +227,7 @@ and compile_while I.{cond;body} =
     O.e_let_in_ez env_rec false [] (O.e_accessor (O.e_variable env_rec) [Access_tuple Z.zero]) @@
     expr
   in
-  ok @@ restore_mutable_variable return_expr [] env_rec
+  ok @@ restore_mutable_variable return_expr
 
 
 and compile_for I.{binder;start;final;incr;f_body} =
@@ -259,15 +245,9 @@ and compile_for I.{binder;start;final;incr;f_body} =
   in
   (* Modify the body loop*)
   let* body = compile_expression f_body in
-  let captured_name_list = [] in
   let for_body = add_to_end body ctrl in
 
-  let aux name expr=
-    O.e_let_in_ez name false [] (O.e_accessor (O.e_variable loop_binder) [Access_tuple Z.zero; Access_record (Var.to_name name.wrap_content)]) expr
-  in
-
-  (* restores the initial value of the free_var*)
-  let restore = fun expr -> List.fold_right ~f:aux captured_name_list ~init:expr in
+  let restore = fun expr -> expr in
 
   (*Prep the lambda for the fold*)
   let stop_expr = O.e_constant C_FOLD_STOP [O.e_variable loop_binder] in
@@ -277,7 +257,7 @@ and compile_for I.{binder;start;final;incr;f_body} =
 
   (* Make the fold_while en precharge the vakye *)
   let loop = O.e_constant C_FOLD_WHILE [aux_func; O.e_variable env_rec] in
-  let init_rec = O.e_pair (store_mutable_variable captured_name_list) @@ O.e_variable binder in
+  let init_rec = O.e_pair (O.e_unit ()) @@ O.e_variable binder in
 
   let* start = compile_expression start in
   let return_expr = fun expr ->
@@ -287,7 +267,7 @@ and compile_for I.{binder;start;final;incr;f_body} =
     O.e_let_in_ez env_rec false [] (O.e_accessor (O.e_variable env_rec) [Access_tuple Z.zero]) @@
     expr
   in
-  ok @@ restore_mutable_variable return_expr captured_name_list env_rec
+  ok @@ restore_mutable_variable return_expr
 
 and compile_for_each I.{fe_binder;collection;collection_type; fe_body} =
   let env_rec = Location.wrap @@ Var.fresh ~name:"env_rec" () in
@@ -297,7 +277,7 @@ and compile_for_each I.{fe_binder;collection;collection_type; fe_body} =
   let free_vars = [] in
   let for_body = add_to_end body @@ (O.e_accessor (O.e_variable args) [Access_tuple Z.zero]) in
 
-  let init_record = store_mutable_variable free_vars in
+  let init_record = O.e_unit () in
   let* collect = compile_expression collection in
   let aux name expr=
     O.e_let_in_ez name false [] (O.e_accessor (O.e_variable args) [Access_tuple Z.zero; Access_record (Var.to_name name.wrap_content)]) expr
@@ -318,7 +298,7 @@ and compile_for_each I.{fe_binder;collection;collection_type; fe_body} =
   let fold = fun expr ->
     O.e_let_in_ez env_rec false [] (O.e_constant op_name [lambda; collect ; init_record]) expr
   in
-  ok @@ restore_mutable_variable fold free_vars env_rec
+  ok @@ restore_mutable_variable fold
 
 and compile_declaration : I.declaration Location.wrap -> _ =
   fun {wrap_content=declaration;location} ->
