@@ -17,119 +17,6 @@ let rec add_to_end (expression: O.expression) to_add =
     {expression with expression_content = O.E_sequence seq}
   | _ -> O.e_sequence expression to_add
 
-let repair_mutable_variable_in_matching (match_body : O.expression) (element_names : O.expression_variable list) (env : I.expression_variable) =
-  let rec foo (a, b) v =
-    Self_ast_sugar.fold_map_expression
-    (* TODO : these should use Variables sets *)
-    (fun (decl_var,free_var : O.expression_variable list * O.expression_variable list) (ass_exp : O.expression) ->
-      match ass_exp.expression_content with
-        | E_let_in {let_binder;mut=false;rhs;let_result} ->
-          ok (true,(let_binder.var::decl_var, free_var),O.e_let_in let_binder false [] rhs let_result)
-        | E_let_in {let_binder;mut=true; rhs;let_result} ->
-          let name = let_binder.var in
-          if List.mem ~equal:equal_var decl_var name then
-            ok (true,(decl_var, free_var), O.e_let_in let_binder false [] rhs let_result)
-          else(
-            let free_var = if (List.mem ~equal:equal_var free_var name) then free_var else name::free_var in
-            let expr = O.e_let_in_ez env false [] (O.e_update (O.e_variable env) [O.Access_record (Var.to_name name.wrap_content)] (O.e_variable name)) let_result in
-            ok (true,(decl_var, free_var), O.e_let_in let_binder false [] rhs expr)
-          )
-        | E_assign {lvalue=let_binder;value=rhs} ->
-          let let_result = O.e_unit () in
-          let name = let_binder in
-          let e_assign lvalue value = O.make_e (E_assign {lvalue;value}) in
-          if List.mem ~equal:equal_var decl_var name then
-            ok (true,(decl_var, free_var), e_assign let_binder rhs)
-          else(
-            let free_var = if (List.mem ~equal:equal_var free_var name) then free_var else name::free_var in
-            let expr = O.e_let_in_ez env false [] (O.e_update (O.e_variable env) [O.Access_record (Var.to_name name.wrap_content)] (O.e_variable name)) let_result in
-            let* ((decl_var,free_var), expr) = foo (decl_var, free_var) expr in
-            ok (false,(decl_var, free_var), O.e_let_in ({var=(Location.wrap (Var.of_name "_wo"));ascr=None;attributes=Stage_common.Helpers.empty_attribute}) false [] (e_assign let_binder rhs) expr)
-          )
-        | E_constant {cons_name=C_MAP_FOLD;arguments= _}
-        | E_constant {cons_name=C_SET_FOLD;arguments= _}
-        | E_constant {cons_name=C_LIST_FOLD;arguments= _}
-        | E_constant {cons_name=C_FOLD;arguments= _}
-        | E_cond _
-        | E_matching _ -> ok @@ (false, (decl_var,free_var),ass_exp)
-      | E_constant _
-      | E_skip
-      | E_literal _ | E_variable _
-      | E_type_in _ | E_mod_in _ |  E_mod_alias _
-      | E_application _ | E_lambda _| E_recursive _ | E_raw_code _
-      | E_constructor _ | E_record _| E_accessor _|E_update _
-      | E_ascription _  | E_sequence _ | E_tuple _
-      | E_map _ | E_big_map _ |E_list _ | E_set _
-      | E_module_accessor _
-       -> ok (true, (decl_var, free_var),ass_exp)
-    )
-      (a, b) v in
-  let* ((dv,fv),mb) = foo (element_names,[]) match_body in
-  ok @@ ((dv,fv),mb)
-
-and repair_mutable_variable_in_loops (for_body : O.expression) (element_names : O.expression_variable list) (env : O.expression_variable) =
-  let rec foo (a,b) c = Self_ast_sugar.fold_map_expression
-    (* TODO : these should use Variables sets *)
-    (fun (decl_var,free_var : O.expression_variable list * O.expression_variable list) (ass_exp : O.expression) ->
-      (* Format.printf "debug: dv:%a; fv:%a; expr:%a \n%!"
-        (I.PP.list_sep_d I.PP.expression_variable) decl_var
-        (I.PP.list_sep_d I.PP.expression_variable) decl_var
-        O.PP.expression ass_exp
-      ;*)
-      match ass_exp.expression_content with
-        | E_let_in {let_binder;mut=false;} ->
-          let {var;ascr=_} : _ O.binder = let_binder in
-          ok (true,(var::decl_var, free_var),ass_exp)
-        | E_let_in {let_binder;mut=true; rhs;let_result} ->
-          let name = let_binder.var in
-          if List.mem ~equal:equal_var decl_var name then
-            ok (true,(decl_var, free_var), O.e_let_in let_binder false [] rhs let_result)
-          else(
-            let free_var =
-              if (List.mem ~equal:equal_var free_var name)
-              then free_var
-              else name::free_var in
-            let expr = O.e_let_in_ez env false [] (
-              O.e_update (O.e_variable env) [O.Access_tuple Z.zero; O.Access_record (Var.to_name name.wrap_content)] (O.e_variable name)
-              )
-              let_result in
-            ok (true,(decl_var, free_var), O.e_let_in let_binder false  [] rhs expr)
-          )
-        | E_assign {lvalue=let_binder;value=rhs} ->
-          let let_result = O.e_unit () in
-          let name = let_binder in
-          let e_assign lvalue value = O.make_e (E_assign {lvalue;value}) in
-          if List.mem ~equal:equal_var decl_var name then
-            ok (true,(decl_var, free_var), e_assign let_binder rhs)
-          else(
-            let free_var = if (List.mem ~equal:equal_var free_var name) then free_var else name::free_var in
-            let expr = O.e_let_in_ez env false [] (
-              O.e_update (O.e_variable env) [O.Access_tuple Z.zero; O.Access_record (Var.to_name name.wrap_content)] (O.e_variable name)
-              )
-              let_result in
-            let* ((decl_var,free_var), expr) = foo (decl_var, free_var) expr in
-            ok (false,(decl_var, free_var), O.e_let_in ({var=(Location.wrap (Var.of_name "_wo"));ascr=None;attributes=Stage_common.Helpers.empty_attribute}) false [] (e_assign let_binder rhs) expr)
-          )
-        | E_constant {cons_name=C_MAP_FOLD;arguments= _}
-        | E_constant {cons_name=C_SET_FOLD;arguments= _}
-        | E_constant {cons_name=C_LIST_FOLD;arguments= _}
-        | E_constant {cons_name=C_FOLD;arguments= _}
-        | E_cond _
-        | E_matching _ -> ok @@ (false,(decl_var,free_var),ass_exp)
-      | E_constant _
-      | E_skip
-      | E_literal _ | E_variable _
-      | E_type_in _ | E_mod_in _ | E_mod_alias _
-      | E_application _ | E_lambda _| E_recursive _ | E_raw_code _
-      | E_constructor _ | E_record _| E_accessor _| E_update _
-      | E_ascription _  | E_sequence _ | E_tuple _
-      | E_map _ | E_big_map _ |E_list _ | E_set _
-      | E_module_accessor _
-       -> ok (true, (decl_var, free_var),ass_exp)
-    ) (a, b) c in
-  let* ((dv,fv),fb) =  foo (element_names,[]) for_body in
-  ok @@ ((dv,fv),fb)
-
 and store_mutable_variable (free_vars : I.expression_variable list) =
   if (List.length free_vars == 0) then
     O.e_unit ()
@@ -300,10 +187,6 @@ and compile_expression' : I.expression -> (O.expression option -> O.expression, 
         [] -> expression
       | _  -> O.e_update ~loc (O.e_variable ~loc variable) access_path expression in
       return @@ E_assign {lvalue=variable; value=rhs}
-      (* ok @@ fun expr ->
-       *       O.e_assign ~loc variable 
-       *   O.e_let_in_ez ~loc variable true [] rhs
-       *   @@ Option.value ~default:(O.e_skip ()) expr *)
     | I.E_for f ->
       let* f = compile_for f in
       ok @@ f
@@ -338,14 +221,13 @@ and compile_while I.{cond;body} =
   in
 
   let* for_body = compile_expression body in
-  let* ((_,captured_name_list),for_body) = repair_mutable_variable_in_loops for_body [] binder in
   let for_body = add_to_end for_body ctrl in
 
   let aux name expr=
     O.e_let_in_ez name false [] (O.e_accessor (O.e_variable binder) [Access_tuple Z.zero; Access_record (Var.to_name name.wrap_content)]) expr
   in
-  let init_rec = O.e_tuple [store_mutable_variable @@ captured_name_list] in
-  let restore = fun expr -> List.fold_right ~f:aux captured_name_list ~init:expr in
+  let init_rec = O.e_tuple [store_mutable_variable @@ []] in
+  let restore = fun expr -> List.fold_right ~f:aux [] ~init:expr in
   let continue_expr = O.e_constant C_FOLD_CONTINUE [for_body] in
   let stop_expr = O.e_constant C_FOLD_STOP [O.e_variable binder] in
   let aux_func =
@@ -359,7 +241,7 @@ and compile_while I.{cond;body} =
     O.e_let_in_ez env_rec false [] (O.e_accessor (O.e_variable env_rec) [Access_tuple Z.zero]) @@
     expr
   in
-  ok @@ restore_mutable_variable return_expr captured_name_list env_rec
+  ok @@ restore_mutable_variable return_expr [] env_rec
 
 
 and compile_for I.{binder;start;final;incr;f_body} =
@@ -377,8 +259,8 @@ and compile_for I.{binder;start;final;incr;f_body} =
   in
   (* Modify the body loop*)
   let* body = compile_expression f_body in
-  let* ((_,captured_name_list),for_body) = repair_mutable_variable_in_loops body [binder] loop_binder in
-  let for_body = add_to_end for_body ctrl in
+  let captured_name_list = [] in
+  let for_body = add_to_end body ctrl in
 
   let aux name expr=
     O.e_let_in_ez name false [] (O.e_accessor (O.e_variable loop_binder) [Access_tuple Z.zero; Access_record (Var.to_name name.wrap_content)]) expr
@@ -411,13 +293,8 @@ and compile_for_each I.{fe_binder;collection;collection_type; fe_body} =
   let env_rec = Location.wrap @@ Var.fresh ~name:"env_rec" () in
   let args    = Location.wrap @@ Var.fresh ~name:"args" () in
 
-  let* element_names = ok @@ match snd fe_binder with
-    | Some v -> [fst fe_binder;v]
-    | None -> [fst fe_binder]
-  in
-
   let* body = compile_expression fe_body in
-  let* ((_,free_vars), body) = repair_mutable_variable_in_loops body element_names args in
+  let free_vars = [] in
   let for_body = add_to_end body @@ (O.e_accessor (O.e_variable args) [Access_tuple Z.zero]) in
 
   let init_record = store_mutable_variable free_vars in
