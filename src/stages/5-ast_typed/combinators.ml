@@ -286,6 +286,8 @@ let assert_t_list : type_expression -> unit option = fun v -> Option.map ~f:(fun
 let assert_t_unit : type_expression -> unit option = fun v -> get_t_unit v
 
 let e_record map : expression_content = E_record map
+let e_record_update record path update : expression_content = E_record_update {record; path; update}
+let e_record_accessor record path : expression_content = E_record_accessor {record; path}
 let ez_e_record (lst : (label * expression) list) : expression_content =
   let aux prev (k, v) = LMap.add k v prev in
   let map = List.fold_left ~f:aux ~init:LMap.empty lst in
@@ -328,6 +330,7 @@ let e_application lamb args : expression_content = E_application {lamb;args}
 let e_raw_code language code : expression_content = E_raw_code { language ; code }
 let e_variable v : expression_content = E_variable v
 let e_let_in let_binder rhs let_result inline = E_let_in { let_binder ; rhs ; let_result; inline }
+let e_matching matchee cases = E_matching { matchee; cases }
 
 let e_constructor constructor element: expression_content = E_constructor {constructor;element}
 
