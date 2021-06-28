@@ -1,3 +1,4 @@
+open Helpers
 open Ast_typed
 open Trace
 
@@ -27,18 +28,33 @@ let rec lift_to_module : _ -> module_fully_typed -> (module_fully_typed, 'err) r
   let* p = bind_map_list (bind_map_location aux) p in
   ok @@ Module_Fully_Typed p
 
+let has_assign : expression -> (bool, _) result =
+  fun e -> let* b, _ = fold_map_expression (fun b e ->
+                           match e.expression_content with
+                           | E_assign _ ->
+                              ok @@ (false, true, e)
+                           | _ ->
+                              ok @@ (true, b, e)) false e in
+           ok @@ b
+
 type env_type = (expression_variable * type_expression) list
 
 let rec sp_expression : expression -> (expression , _) result =
   fun e ->
-  match e.expression_content with
-  | E_lambda { binder ; result } ->
-    let* result,_ = sp_expression' result in
-    let result = make_e (e_record_accessor result (Label "0")) e.type_expression in
-    ok @@ make_e (E_lambda { binder ; result }) e.type_expression
-  | _ ->
-     let* e, _ = sp_expression' e in
-     ok @@ make_e (e_record_accessor e (Label "0")) e.type_expression
+  let* b = has_assign e in
+  if b then
+    begin
+      match e.expression_content with
+      | E_lambda { binder ; result } ->
+         let* result,_ = sp_expression' result in
+         let result = make_e (e_record_accessor result (Label "0")) e.type_expression in
+         ok @@ make_e (E_lambda { binder ; result }) e.type_expression
+      | _ ->
+         let* e, _ = sp_expression' e in
+         ok @@ make_e (e_record_accessor e (Label "0")) e.type_expression
+    end
+  else
+    ok e
 
 and sp_expression' : expression -> (expression * env_type, _) result =
   fun e ->

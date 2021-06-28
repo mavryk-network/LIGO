@@ -47,6 +47,7 @@ let replace_opt k x m =
 let add_if_not_generated ?forbidden x xs b =
   let v = Location.unwrap x in
   let sv = Format.asprintf "%a" Var.pp v in
+  let b = Option.value b ~default:false in
   if not b && not (Var.is_generated v)
      && (String.get sv 0) <> '_'
      && Stdlib.Option.fold ~none:true ~some:(fun x -> x <> sv) forbidden
@@ -55,14 +56,14 @@ let add_if_not_generated ?forbidden x xs b =
 let remove_defined_var_after defuse binder f expr =
   let old_binder = M.find_opt binder defuse in
   let defuse,unused = f (M.add binder false defuse) expr in
-  let unused = add_if_not_generated binder unused (M.find binder defuse) in
+  let unused = add_if_not_generated binder unused (M.find_opt binder defuse) in
   replace_opt binder old_binder defuse, unused
 
 let add_if_unused unused binder defuse =
   match find_opt binder defuse with
   | None -> unused
   | Some (_,b) ->
-     add_if_not_generated binder unused b
+     add_if_not_generated binder unused (Some b)
 
 (* Return a def-use graph + a list of unused variables *)
 let rec defuse_of_expr defuse expr : defuse =
@@ -128,7 +129,7 @@ and defuse_of_record defuse {body;fields;_} =
   let map = List.fold_left ~f:(fun m v -> M.add v false m) ~init:defuse vars in
   let vars' = List.map ~f:(fun v -> (v, M.find_opt v defuse)) vars in
   let defuse,unused = defuse_of_expr map body in
-  let unused = List.fold_left ~f:(fun m v -> add_if_not_generated v m (M.find v defuse)) ~init:unused vars in
+  let unused = List.fold_left ~f:(fun m v -> add_if_not_generated v m (M.find_opt v defuse)) ~init:unused vars in
   let defuse = List.fold_left ~f:(fun m (v, v') -> replace_opt v v' m) ~init:defuse vars' in
   (defuse, unused)
 
