@@ -1,227 +1,174 @@
-open Cmdliner
+open Core_kernel
+open Command
 open Cli_helpers
 
 let version = Version.version
 
-let main =
-  let man =
-    [ `S "MORE HELP";
-      `P "Use `$(mname) $(i,COMMAND) --help' for help on a single command.";
-      `S "DOCUMENTATION";
-      `P "https://ligolang.org/docs/intro/introduction";
-      `S "ASK A QUESTION";
-      `P "https://discord.gg/9rhYaEt";
-      `S "OPEN AN ISSUE";
-      `P "https://gitlab.com/ligolang/ligo/issues/new"
-      ]
-    in
-    (Term.(ret (const (`Help (`Auto, None)))), Term.info "ligo" ~version ~man)
+let source_file =
+  let docv = "SOURCE_FILE" in
+  let _doc = "$(docv) is the path to the smart contract file." in
+  Param.(anon (docv %: string))
 
-let source_file n =
-  let open Arg in
-  let info =
-    let docv = "SOURCE_FILE" in
-    let doc = "$(docv) is the path to the smart contract file." in
+(*  let info =
     info ~docv ~doc [] in
   required @@ pos n (some non_dir_file) None info
+*)
+let entry_point =
+  let docv = "ENTRY_POINT" in
+  let _doc = "$(docv) is entry-point that will be compiled." in
+  let open Param in
+  maybe_with_default "main" (docv %: string)
 
-let entry_point n =
-  let open Arg in
-  let info =
-    let docv = "ENTRY_POINT" in
-    let doc = "$(docv) is entry-point that will be compiled." in
-    info ~docv ~doc [] in
-  required @@ pos n (some string) (Some "main") info
-
-let expression purpose n =
-  let open Arg in
+let expression purpose =
+  let open Param in
   let docv = purpose ^ "_EXPRESSION" in
-  let doc = "$(docv) is the expression that will be compiled." in
-  let info = info ~docv ~doc [] in
-  required @@ pos n (some string) None info
+  let _doc = "$(docv) is the expression that will be compiled." in
+  anon (docv %: string)
 
 let libraries =
-  let open Arg in
+  let open Param in
   let docv = "LIBRARY" in
-  let doc = "$(docv) is a path to a directory containing included files" in
-  let info = info ~docv ~doc ["lib" ; "l"] in
-  value @@ opt_all string [] info
+  let doc = docv ^ " is a path to a directory containing included files" in
+  flag ~aliases:["lib"] "l" (listed string) ~doc
 
 let syntax =
-  let open Arg in
-  let info =
-    let docv = "SYNTAX" in
-    let doc = "$(docv) is the syntax that will be used. Currently supported syntaxes are \"pascaligo\", \"cameligo\", \"reasonligo\" and \"jsligo\". By default, the syntax is guessed from the extension (.ligo, .mligo, .religo, and .jsligo respectively)." in
-    info ~docv ~doc ["syntax" ; "s"] in
-  value @@ opt string "auto" info
+  let open Param in
+  let docv = "SYNTAX" in
+  let doc = docv ^ " is the syntax that will be used. Currently supported syntaxes are \"pascaligo\", \"cameligo\", \"reasonligo\" and \"jsligo\". By default, the syntax is guessed from the extension (.ligo, .mligo, .religo, and .jsligo respectively)." in
+  flag ~aliases:["syntax"] "s" (optional_with_default "auto" string) ~doc
+
 
 let protocol_version =
-  let open Arg in
+  let open Param in
   let open Environment.Protocols in
   let plist = Format.asprintf "%a" (Simple_utils.PP_helpers.list_sep_d_par Format.pp_print_string) protocols_str in
-  let info =
-    let docv = "PROTOCOL_VERSION" in
-    let doc = Format.asprintf "$(docv) will decide protocol's types/values pre-loaded into the LIGO environment %s. \
-                               By default, the current protocol (%s) will be used" plist (variant_to_string current) in
-    info ~docv ~doc ["protocol" ; "p"] in
-  value @@ opt string "current" info
+  let docv = "PROTOCOL_VERSION" in
+  let doc = Format.asprintf "%s will decide protocol's types/values pre-loaded into the LIGO environment %s. \
+                            By default, the current protocol (%s) will be used" docv plist (variant_to_string current) in
+  flag ~aliases:["protocol"] "p"  (optional_with_default "current" string) ~doc
 
 let dialect =
-  let open Arg in
-  let info =
-    let docv = "PASCALIGO_DIALECT" in
-    let doc = "$(docv) is the pascaligo dialect that will be used. Currently supported dialects are \"terse\" and \"verbose\". By default the dialect is \"terse\"." in
-    info ~docv ~doc ["dialect" ; "d"] in
-  value @@ opt string "terse" info
+  let open Param in
+  let docv = "PASCALIGO_DIALECT" in
+  let doc = docv ^ " is the pascaligo dialect that will be used. Currently supported dialects are \"terse\" and \"verbose\". By default the dialect is \"terse\"." in
+  flag ~aliases:["dialect"] "d" (optional_with_default "terse" string) ~doc
 
-let req_syntax n =
-  let open Arg in
-  let info =
-    let docv = "SYNTAX" in
-    let doc = "$(docv) is the syntax that will be used. Currently supported syntaxes are \"pascaligo\", \"cameligo\" and \"reasonligo\". By default, the syntax is guessed from the extension (.ligo, .mligo, .religo, .jsligo respectively)." in
-    info ~docv ~doc [] in
-  required @@ pos n (some string) None info
+let req_syntax =
+  let open Param in
+  let docv = "SYNTAX" in
+  let _doc = docv ^ " is the syntax that will be used. Currently supported syntaxes are \"pascaligo\", \"cameligo\" and \"reasonligo\". By default, the syntax is guessed from the extension (.ligo, .mligo, .religo, .jsligo respectively)." in
+  anon (docv %: string)
 
 let init_file =
-  let open Arg in
-  let info =
-    let docv = "INIT_FILE" in
-    let doc = "$(docv) is the path to smart contract file to be used for context initialization." in
-    info ~docv ~doc ["init-file"] in
-  value @@ opt (some string) None info
+  let open Param in
+  let docv = "INIT_FILE" in
+  let doc = docv ^ " is the path to smart contract file to be used for context initialization." in
+  flag "init-file" (optional string) ~doc
 
 let amount =
-  let open Arg in
-  let info =
-    let docv = "AMOUNT" in
-    let doc = "$(docv) is the amount the Michelson interpreter will use for the transaction." in
-    info ~docv ~doc ["amount"] in
-  value @@ opt string "0" info
+  let open Param in
+  let docv = "AMOUNT" in
+  let doc = docv ^ " is the amount the Michelson interpreter will use for the transaction." in
+  flag "amount" (optional_with_default "0" string) ~doc
 
 let balance =
-  let open Arg in
-  let info =
-    let docv = "BALANCE" in
-    let doc = "$(docv) is the balance the Michelson interpreter will use for the contract balance." in
-    info ~docv ~doc ["balance"] in
-  value @@ opt string "0" info
+  let open Param in
+  let docv = "BALANCE" in
+  let doc = docv ^ " is the balance the Michelson interpreter will use for the contract balance." in
+  flag "balance" (optional_with_default "0" string) ~doc
 
 let sender =
-  let open Arg in
-  let info =
-    let docv = "SENDER" in
-    let doc = "$(docv) is the sender the Michelson interpreter transaction will use." in
-    info ~docv ~doc ["sender"] in
-  value @@ opt (some string) None info
+  let open Param in
+  let docv = "SENDER" in
+  let doc = docv ^ " is the sender the Michelson interpreter transaction will use." in
+  flag "sender" (optional string) ~doc
 
 let source =
-  let open Arg in
-  let info =
-    let docv = "SOURCE" in
-    let doc = "$(docv) is the source the Michelson interpreter transaction will use." in
-    info ~docv ~doc ["source"] in
-  value @@ opt (some string) None info
+  let open Param in
+  let docv = "SOURCE" in
+  let doc = docv ^ " is the source the Michelson interpreter transaction will use." in
+  flag "source" (optional string) ~doc
 
 let disable_michelson_typechecking =
-  let open Arg in
-  let info =
-    let doc = "disable Michelson typecking, this might produce ill-typed Michelson code." in
-    info ~doc ["disable-michelson-typechecking"] in
-  value @@ flag info
+  let open Param in
+  let doc = "disable Michelson typecking, this might produce ill-typed Michelson code." in
+  flag "disable-michelson-typechecking" no_arg ~doc
+
 
 let with_types =
-  let open Arg in
-  let info =
-    let doc = "tries to infer types for all named expressions" in
-    info ~doc ["with-types"] in
-  value @@ flag info
+  let open Param in
+  let doc = "tries to infer types for all named expressions" in
+  flag "with-types" no_arg ~doc
 
 let now =
-  let open Arg in
-  let info =
-    let docv = "NOW" in
-    let doc = "$(docv) is the NOW value the Michelson interpreter will use (e.g. '2000-01-01T10:10:10Z')" in
-    info ~docv ~doc ["now"] in
-  value @@ opt (some string) None info
+  let open Param in
+  let docv = "NOW" in
+  let doc = docv ^ " is the NOW value the Michelson interpreter will use (e.g. '2000-01-01T10:10:10Z')" in
+  flag "now" (optional string) ~doc
 
 let display_format =
-  let open Arg in
+  let open Param in
   let open Display in
-  let info  =
-    let docv = "DISPLAY_FORMAT" in
-    let doc = "$(docv) is the format that will be used by the CLI. Available formats are 'dev', 'json', and 'human-readable' (default). When human-readable lacks details (we are still tweaking it), please contact us and use another format in the meanwhile." in
-    info ~docv ~doc ["format" ; "display-format"] in
-  value @@
-  opt
-    (enum [("human-readable", human_readable); ("dev", dev); ("json", json)])
-    human_readable
-    info
+  let enum = Arg_type.of_map @@
+    String.Map.of_alist_exn [("human-readable", human_readable); ("dev", dev); ("json", json)] in
+  let docv = "DISPLAY_FORMAT" in
+  let doc = docv ^ " is the format that will be used by the CLI. Available formats are 'dev', 'json', and 'human-readable' (default). When human-readable lacks details (we are still tweaking it), please contact us and use another format in the meanwhile." in
+  flag ~aliases:["format"] "display-format" (optional_with_default human_readable enum) ~doc
 
 let output_file =
-  let open Arg in
-  let info  =
-    let docv = "OUTPUT_FILE" in
-    let doc = "$(docv) if used, prints the output into the specified file instead of stdout" in
-    info ~docv ~doc ["output" ; "output-file"] in
-  value @@ opt (some string) None info
+  let open Param in
+  let docv = "OUTPUT_FILE" in
+  let doc = docv ^ " if used, prints the output into the specified file instead of stdout" in
+  flag ~aliases:["output"] "output-file" (optional string) ~doc
 
 let michelson_code_format =
-  let open Arg in
-  let info  =
-    let docv = "MICHELSON_FORMAT" in
-    let doc = "$(docv) is the format that will be used by compile-contract for the resulting Michelson. Available formats are 'text' (default), 'json' and 'hex'." in
-    info ~docv ~doc ["michelson-format"] in
-  value @@
-  opt
-    (enum [("text", `Text); ("json", `Json); ("hex", `Hex)])
-    `Text info
+  let open Param in
+  let enum = Arg_type.of_map @@
+    String.Map.of_alist_exn  [("text", `Text); ("json", `Json); ("hex", `Hex)] in
+  let docv = "MICHELSON_FORMAT" in
+  let doc = docv ^ " is the format that will be used by compile-contract for the resulting Michelson. Available formats are 'text' (default), 'json' and 'hex'." in
+  flag "michelson-format" (optional_with_default `Text enum ) ~doc
 
 let optimize =
-  let open Arg in
-  let docv = "ENTRY_POINT" in
+  let open Param in
+  let _docv = "ENTRY_POINT" in
   let doc = "Apply Mini-C optimizations as if compiling $(docv)" in
-  let info =
-    info ~docv ~doc ["optimize"] in
-  value @@ opt (some string) None info
+  flag "optimize" (optional string) ~doc
 
 let infer =
-  let open Arg in
-  let info =
-    let doc = "enable type inference" in
-    info ~doc ["infer"] in
-    value @@ flag info
+  let open Param in
+  let doc = "enable type inference" in
+  flag "infer" no_arg ~doc
 
 let warn =
-  let open Arg in
-  let info =
-    let docv = "BOOL" in
-    let doc = "$(docv) indicates whether warning messages should be printed in stderr or not" in
-    info ~docv ~doc ["warn"] in
-    value @@ opt bool true info
+  let open Param in
+  let docv = "BOOL" in
+  let doc = docv ^ " indicates whether warning messages should be printed in stderr or not" in
+  flag "warn" (optional_with_default true bool) ~doc
 
 let werror =
-  let open Arg in
-  let info =
-    let docv = "BOOL" in
-    let doc = "$(docv) indicates whether warning messages should be treated as errors or not" in
-    info ~docv ~doc ["werror"] in
-    value @@ opt bool false info
+  let open Param in
+  let docv = "BOOL" in
+  let doc = docv ^ " indicates whether warning messages should be treated as errors or not" in
+  flag "werror" (optional_with_default false bool) ~doc
 
 
 let compile_file =
   let f source_file entry_point syntax infer protocol_version display_format disable_typecheck michelson_format output_file warn werror =
     return_result ~warn ?output_file @@ 
     Api.Compile.contract ~werror source_file entry_point syntax infer protocol_version display_format disable_typecheck michelson_format in
-  let term = Term.(const f $ source_file 0 $ entry_point 1 $ syntax $ infer $ protocol_version $ display_format $ disable_michelson_typechecking $ michelson_code_format $ output_file $ warn $ werror) in
-  let cmdname = "compile-contract" in
-  let doc = "Subcommand: Compile a contract." in
-  let man = [`S Manpage.s_description;
-             `P "This sub-command compiles a contract to Michelson \
+  basic 
+    ~summary:"Subcommand: Compile a contract."
+    ~readme:(fun () -> 
+             "This sub-command compiles a contract to Michelson \
                  code. It expects a source file and an entrypoint \
                  function that has the type of a contract: \"parameter \
-                 * storage -> operations list * storage\"."]
-  in (Term.ret term , Term.info ~man ~doc cmdname)
-
+                 * storage -> operations list * storage\"."
+      )
+    Let_syntax.(
+      let%map_open source_file = source_file in
+      fun () -> f source_file entry_point syntax infer protocol_version display_format disable_typecheck michelson_format output_file warn werror
+    )
 let preprocess =
   let f source_file syntax display_format =
     return_result @@
@@ -637,6 +584,9 @@ let repl =
 
 let buffer = Buffer.create 100
 
+
+let run () = 
+  run ~version main
 
 let run ?argv () =
   let err = Format.formatter_of_buffer buffer in

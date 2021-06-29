@@ -3,7 +3,7 @@
   (instrumentation (backend bisect_ppx))
   (libraries
     simple-utils
-    cmdliner
+    core_kernel
     ligo
     ligo_compile
     build
@@ -11,7 +11,6 @@
     api
   )
   (modules cli cli_helpers version)
-  (flags (:standard -open Simple_utils -open Ligo))
 )
 
 (library

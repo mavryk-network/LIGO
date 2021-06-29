@@ -13,7 +13,6 @@
      lexing_shared
      cst_reasonligo
      ;; Third party
-     getopt
      zarith
      str
      menhirLib
