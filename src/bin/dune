@@ -3,6 +3,7 @@
   (instrumentation (backend bisect_ppx))
   (libraries
     simple-utils
+    core
     core_kernel
     ligo
     ligo_compile

@@ -1,3 +1,4 @@
+open Simple_utils
 open Core_kernel
 open Command
 open Cli_helpers
@@ -17,15 +18,15 @@ let entry_point =
   let docv = "ENTRY_POINT" in
   let _doc = "$(docv) is entry-point that will be compiled." in
   let open Param in
-  maybe_with_default "main" (docv %: string)
+  anon @@ maybe_with_default "main" (docv %: string)
 
-let expression purpose =
+let _expression purpose =
   let open Param in
   let docv = purpose ^ "_EXPRESSION" in
   let _doc = "$(docv) is the expression that will be compiled." in
   anon (docv %: string)
 
-let libraries =
+let _libraries =
   let open Param in
   let docv = "LIBRARY" in
   let doc = docv ^ " is a path to a directory containing included files" in
@@ -47,43 +48,43 @@ let protocol_version =
                             By default, the current protocol (%s) will be used" docv plist (variant_to_string current) in
   flag ~aliases:["protocol"] "p"  (optional_with_default "current" string) ~doc
 
-let dialect =
+let _dialect =
   let open Param in
   let docv = "PASCALIGO_DIALECT" in
   let doc = docv ^ " is the pascaligo dialect that will be used. Currently supported dialects are \"terse\" and \"verbose\". By default the dialect is \"terse\"." in
   flag ~aliases:["dialect"] "d" (optional_with_default "terse" string) ~doc
 
-let req_syntax =
+let _req_syntax =
   let open Param in
   let docv = "SYNTAX" in
   let _doc = docv ^ " is the syntax that will be used. Currently supported syntaxes are \"pascaligo\", \"cameligo\" and \"reasonligo\". By default, the syntax is guessed from the extension (.ligo, .mligo, .religo, .jsligo respectively)." in
   anon (docv %: string)
 
-let init_file =
+let _init_file =
   let open Param in
   let docv = "INIT_FILE" in
   let doc = docv ^ " is the path to smart contract file to be used for context initialization." in
   flag "init-file" (optional string) ~doc
 
-let amount =
+let _amount =
   let open Param in
   let docv = "AMOUNT" in
   let doc = docv ^ " is the amount the Michelson interpreter will use for the transaction." in
   flag "amount" (optional_with_default "0" string) ~doc
 
-let balance =
+let _balance =
   let open Param in
   let docv = "BALANCE" in
   let doc = docv ^ " is the balance the Michelson interpreter will use for the contract balance." in
   flag "balance" (optional_with_default "0" string) ~doc
 
-let sender =
+let _sender =
   let open Param in
   let docv = "SENDER" in
   let doc = docv ^ " is the sender the Michelson interpreter transaction will use." in
   flag "sender" (optional string) ~doc
 
-let source =
+let _source =
   let open Param in
   let docv = "SOURCE" in
   let doc = docv ^ " is the source the Michelson interpreter transaction will use." in
@@ -95,12 +96,12 @@ let disable_michelson_typechecking =
   flag "disable-michelson-typechecking" no_arg ~doc
 
 
-let with_types =
+let _with_types =
   let open Param in
   let doc = "tries to infer types for all named expressions" in
   flag "with-types" no_arg ~doc
 
-let now =
+let _now =
   let open Param in
   let docv = "NOW" in
   let doc = docv ^ " is the NOW value the Michelson interpreter will use (e.g. '2000-01-01T10:10:10Z')" in
@@ -129,7 +130,7 @@ let michelson_code_format =
   let doc = docv ^ " is the format that will be used by compile-contract for the resulting Michelson. Available formats are 'text' (default), 'json' and 'hex'." in
   flag "michelson-format" (optional_with_default `Text enum ) ~doc
 
-let optimize =
+let _optimize =
   let open Param in
   let _docv = "ENTRY_POINT" in
   let doc = "Apply Mini-C optimizations as if compiling $(docv)" in
@@ -154,10 +155,10 @@ let werror =
 
 
 let compile_file =
-  let f source_file entry_point syntax infer protocol_version display_format disable_typecheck michelson_format output_file warn werror =
+  let f source_file entry_point syntax infer protocol_version display_format disable_typecheck michelson_format output_file warn werror () =
     return_result ~warn ?output_file @@ 
     Api.Compile.contract ~werror source_file entry_point syntax infer protocol_version display_format disable_typecheck michelson_format in
-  basic 
+  basic_spec 
     ~summary:"Subcommand: Compile a contract."
     ~readme:(fun () -> 
              "This sub-command compiles a contract to Michelson \
@@ -165,41 +166,67 @@ let compile_file =
                  function that has the type of a contract: \"parameter \
                  * storage -> operations list * storage\"."
       )
-    Let_syntax.(
-      let%map_open source_file = source_file in
-      fun () -> f source_file entry_point syntax infer protocol_version display_format disable_typecheck michelson_format output_file warn werror
+    Spec.(
+      empty +> source_file +> entry_point +> syntax +> infer +> protocol_version +> display_format +> disable_michelson_typechecking +> michelson_code_format +> output_file +> warn +> werror
     )
+    f
+
 let preprocess =
-  let f source_file syntax display_format =
+  let f source_file syntax display_format () =
     return_result @@
-      Api.Print.preprocess source_file syntax display_format in
-  let term = Term.(const f $ source_file 0 $ syntax $ display_format) in
-  let cmdname = "preprocess" in
-  let doc = "Subcommand: Preprocess the source file.\nWarning: Intended for development of LIGO and can break at any time." in
-  let man = [`S Manpage.s_description;
-             `P "This sub-command runs the pre-processor on a LIGO \
+    Api.Print.preprocess source_file syntax display_format in
+  basic_spec 
+    ~summary:"Subcommand: Preprocess the source file.\nWarning: Intended for development of LIGO and can break at any time."
+    ~readme:(fun () ->
+             "This sub-command runs the pre-processor on a LIGO \
                  source file and outputs the result. The directive \
                  `#include` directly inlines the included file and \
                  therefore its content appears in the output. In \
                  contrast, the directive `#import` includes the file \
                  as a module and therefore the content of the imported \
-                 file is not printed by this sub-command."]
-  in (Term.ret term, Term.info ~man ~doc cmdname)
+                 file is not printed by this sub-command.")
+    Spec.(
+      empty +> source_file +> syntax +> display_format
+    )
+    f
 
 let pretty_print =
-  let f source_file syntax display_format =
+  let f source_file syntax display_format () =
     return_result @@ 
     Api.Print.pretty_print source_file syntax display_format in
-  let term = Term.(const f $ source_file 0 $ syntax $ display_format) in
-  let cmdname = "pretty-print" in
-  let doc = "Subcommand: Pretty-print the source file." in
-  let man = [`S Manpage.s_description;
-             `P "This sub-command pretty-prints a source file in \
+  basic_spec
+    ~summary:"Subcommand: Pretty-print the source file."
+    ~readme:( fun () -> "This sub-command pretty-prints a source file in \
                  LIGO. The width of the pretty-printed text is \
                  adjusted to the number of columns in the terminal (or \
-                 60 if it cannot be determined)."]
-  in (Term.ret term, Term.info ~man ~doc cmdname)
+                 60 if it cannot be determined).")
+    Spec.( empty +> source_file +> syntax +> display_format)
+    f
 
+let compile =
+  Command.group
+    ~summary:"compile"
+    [
+      ("file",compile_file);
+    ]
+let print = 
+  Command.group 
+    ~summary:"print" 
+    [
+      ("preprocess",preprocess);
+      ("pretty_print",pretty_print);
+    ]
+
+let main =
+  Command.group
+    ~summary:"ligo"
+    [
+      ("compile",compile);
+      ("print",print);
+    ]
+let buffer = Buffer.create 100
+let run ?argv () = Core.Command.run ~version ?argv main
+(*
 let print_graph =
   let f source_file syntax display_format =
     return_result @@
@@ -582,7 +609,6 @@ let repl =
   (Term.ret term , Term.info ~doc cmdname)
 
 
-let buffer = Buffer.create 100
 
 
 let run () = 
@@ -620,3 +646,4 @@ let run ?argv () =
     get_scope;
     repl;
   ]
+*)

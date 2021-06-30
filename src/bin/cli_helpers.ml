@@ -1,15 +1,15 @@
-let return_good v = Ok v
+let return_good v = v
 let return_bad v = (
   if v.[String.length v - 1] = '\n' then
     Format.eprintf "%s" v
   else
     Format.eprintf "%s\n" v;
   Format.pp_print_flush Format.err_formatter ();
-  Error ()
+  ()
   )
 
 
-let return_result : ?warn:bool -> ?output_file:string -> ('value, _) result -> (unit,unit) result =
+let return_result : ?warn:bool -> ?output_file:string -> ('value, _) result -> unit =
   fun ?(warn=false) ?output_file value ->
     let return_with_warn warns f =
           if not (String.length warns = 0) && warn then
