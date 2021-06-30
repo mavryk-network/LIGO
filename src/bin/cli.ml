@@ -130,7 +130,7 @@ let michelson_code_format =
   let doc = docv ^ " is the format that will be used by compile-contract for the resulting Michelson. Available formats are 'text' (default), 'json' and 'hex'." in
   flag "michelson-format" (optional_with_default `Text enum ) ~doc
 
-let _optimize =
+let optimize =
   let open Param in
   let _docv = "ENTRY_POINT" in
   let doc = "Apply Mini-C optimizations as if compiling $(docv)" in
@@ -203,6 +203,112 @@ let pretty_print =
     Spec.( empty +> source_file +> syntax +> display_format)
     f
 
+let print_graph =
+  let f source_file syntax display_format () =
+    return_result @@
+    Api.Print.dependency_graph source_file syntax display_format
+  in
+  basic_spec
+    ~summary:"Subcommand: Print the dependency graph.\nWarning: Intended for development of LIGO and can break at any time."
+    ~readme:(fun () -> "This sub-command prints the dependency graph created \
+                 by the module system. It explores all imported source \
+                 files (recursively) following a DFS strategy.")
+    Spec.(empty +> source_file +> syntax +> display_format)
+    f
+
+let print_cst =
+  let f source_file syntax display_format () =
+    return_result @@
+    Api.Print.cst source_file syntax display_format
+  in
+  basic_spec
+    ~summary:"Subcommand: Print the CST.\nWarning: Intended for development of LIGO and can break at any time."
+    ~readme:(fun () -> "This sub-command prints the source file in the CST \
+                 stage, obtained after preprocessing and parsing.")
+  Spec.(empty +> source_file +> syntax +> display_format)
+  f
+
+let print_ast =
+  let f source_file syntax display_format () =
+    return_result@@
+    Api.Print.ast source_file syntax display_format
+  in
+  basic_spec
+    ~summary:"Subcommand: Print the AST.\n Warning: Intended for development of LIGO and can break at any time."
+    ~readme:(fun () -> "This sub-command prints the source file in the AST \
+                 imperative stage, before sugaring step is applied.")
+  Spec.(empty +> source_file +> syntax +> display_format)
+  f
+
+
+let print_ast_sugar =
+  let f source_file syntax display_format () =
+    return_result @@
+    Api.Print.ast_sugar source_file syntax display_format
+  in
+  basic_spec
+    ~summary:"Subcommand: Print the AST.\n Warning: Intended for development of LIGO and can break at any time."
+    ~readme:(fun () -> "This sub-command prints the source file in the AST \
+                 stage, after sugaring step is applied.")
+  Spec.(empty +> source_file +> syntax +> display_format) 
+  f
+
+let print_ast_core =
+  let f source_file syntax infer protocol_version display_format () =
+    return_result @@
+    Api.Print.ast_core source_file syntax infer protocol_version display_format
+  in
+  basic_spec
+    ~summary:"Subcommand: Print the AST.\n Warning: Intended for development of LIGO and can break at any time."
+    ~readme:(fun () ->"This sub-command prints the source file in the AST \
+                 core stage.")
+    Spec.(empty +> source_file +> syntax +> infer +> protocol_version +> display_format)
+    f
+
+let print_ast_typed =
+  let f source_file syntax infer protocol_version display_format () =
+    return_result @@
+    Api.Print.ast_typed source_file syntax infer protocol_version display_format
+  in
+  basic_spec
+    ~summary:"Subcommand: Print the typed AST.\n Warning: Intended for development of LIGO and can break at any time."
+    ~readme:(fun () ->
+              "This sub-command prints the source file in the AST \
+                 typed stage. Internally, it uses the build system to \
+                 type the contract, but the contract is not combined \
+                 with imported modules.")
+    Spec.(empty +> source_file +> syntax +> infer +> protocol_version +> display_format)
+    f
+
+let print_ast_combined =
+  let f source_file syntax infer protocol_version display_format () =
+    return_result @@
+    Api.Print.ast_combined source_file syntax infer protocol_version display_format
+  in
+  basic_spec
+    ~summary:"Subcommand: Print the contract after combination with the build system.\n Warning: Intended for development of LIGO and can break at any time."
+    ~readme:(fun () ->
+                "This sub-command prints the source file in the AST \
+                 typed stage. Internally, it uses the build system to \
+                 type the contract, and the contract is combined with \
+                 the imported modules.")
+    Spec.(empty +> source_file +> syntax +> infer +> protocol_version +> display_format)
+    f
+
+let print_mini_c =
+  let f source_file syntax infer protocol_version display_format optimize () =
+    return_result @@
+    Api.Print.mini_c source_file syntax infer protocol_version display_format optimize
+  in
+  basic_spec
+    ~summary:"Subcommand: Print Mini-C. Warning: Intended for development of LIGO and can break at any time."
+    ~readme:(fun () ->
+                "This sub-command prints the source file in the Mini-C \
+                 stage. Internally, it uses the build system to type \
+                 and compile the contract. Compilation is applied \
+                 after combination in the AST typed stage.")
+    Spec.(empty +> source_file +> syntax +> infer +> protocol_version +> display_format +> optimize)
+    f
 let compile =
   Command.group
     ~summary:"compile"
@@ -214,7 +320,15 @@ let print =
     ~summary:"print" 
     [
       ("preprocess",preprocess);
-      ("pretty_print",pretty_print);
+      ("pretty-print",pretty_print);
+      ("graph",print_graph);
+      ("cst",print_cst);
+      ("ast-imperative",print_ast);
+      ("ast-sugar",print_ast_sugar);
+      ("ast-core",print_ast_core);
+      ("ast-typed",print_ast_typed);
+      ("ast-combined",print_ast_combined);
+      ("mini-c",print_mini_c);
     ]
 
 let main =
@@ -227,117 +341,6 @@ let main =
 let buffer = Buffer.create 100
 let run ?argv () = Core.Command.run ~version ?argv main
 (*
-let print_graph =
-  let f source_file syntax display_format =
-    return_result @@
-    Api.Print.dependency_graph source_file syntax display_format
-  in
-  let term = Term.(const f $ source_file 0  $ syntax $ display_format) in
-  let cmdname = "print-graph" in
-  let doc = "Subcommand: Print the dependency graph.\nWarning: Intended for development of LIGO and can break at any time." in
-  let man = [`S Manpage.s_description;
-             `P "This sub-command prints the dependency graph created \
-                 by the module system. It explores all imported source \
-                 files (recursively) following a DFS strategy."]
-  in (Term.ret term, Term.info ~man ~doc cmdname)
-
-let print_cst =
-  let f source_file syntax display_format =
-    return_result @@
-    Api.Print.cst source_file syntax display_format
-  in
-  let term = Term.(const f $ source_file 0  $ syntax $ display_format) in
-  let cmdname = "print-cst" in
-  let doc = "Subcommand: Print the CST.\nWarning: Intended for development of LIGO and can break at any time." in
-  let man = [`S Manpage.s_description;
-             `P "This sub-command prints the source file in the CST \
-                 stage, obtained after preprocessing and parsing."]
-  in (Term.ret term, Term.info ~man ~doc cmdname)
-
-let print_ast =
-  let f source_file syntax display_format =
-    return_result@@
-    Api.Print.ast source_file syntax display_format
-  in
-  let term = Term.(const f $ source_file 0 $ syntax $ display_format) in
-  let cmdname = "print-ast" in
-  let doc = "Subcommand: Print the AST.\n Warning: Intended for development of LIGO and can break at any time." in
-  let man = [`S Manpage.s_description;
-             `P "This sub-command prints the source file in the AST \
-                 imperative stage, before sugaring step is applied."]
-  in (Term.ret term, Term.info ~man ~doc cmdname)
-
-
-let print_ast_sugar =
-  let f source_file syntax display_format =
-    return_result @@
-    Api.Print.ast_sugar source_file syntax display_format
-  in
-  let term = Term.(const f $ source_file 0  $ syntax $ display_format) in
-  let cmdname = "print-ast-sugar" in
-  let doc = "Subcommand: Print the AST.\n Warning: Intended for development of LIGO and can break at any time." in
-  let man = [`S Manpage.s_description;
-             `P "This sub-command prints the source file in the AST \
-                 stage, after sugaring step is applied."]
-  in (Term.ret term, Term.info ~man ~doc cmdname)
-
-let print_ast_core =
-  let f source_file syntax infer protocol_version display_format =
-    return_result @@
-    Api.Print.ast_core source_file syntax infer protocol_version display_format
-  in
-  let term = Term.(const f $ source_file 0  $ syntax $ infer $ protocol_version $ display_format) in
-  let cmdname = "print-ast-core" in
-  let doc = "Subcommand: Print the AST.\n Warning: Intended for development of LIGO and can break at any time." in
-  let man = [`S Manpage.s_description;
-             `P "This sub-command prints the source file in the AST \
-                 core stage."]
-  in (Term.ret term, Term.info ~man ~doc cmdname)
-
-let print_ast_typed =
-  let f source_file syntax infer protocol_version display_format =
-    return_result @@
-    Api.Print.ast_typed source_file syntax infer protocol_version display_format
-  in
-  let term = Term.(const f $ source_file 0  $ syntax $ infer $ protocol_version $ display_format) in
-  let cmdname = "print-ast-typed" in
-  let doc = "Subcommand: Print the typed AST.\n Warning: Intended for development of LIGO and can break at any time." in
-  let man = [`S Manpage.s_description;
-             `P "This sub-command prints the source file in the AST \
-                 typed stage. Internally, it uses the build system to \
-                 type the contract, but the contract is not combined \
-                 with imported modules."]
-  in (Term.ret term, Term.info ~man ~doc cmdname)
-
-let print_ast_combined =
-  let f source_file syntax infer protocol_version display_format =
-    return_result @@
-    Api.Print.ast_combined source_file syntax infer protocol_version display_format
-  in
-  let term = Term.(const f $ source_file 0  $ syntax $ infer $ protocol_version $ display_format) in
-  let cmdname = "print-ast-combined" in
-  let doc = "Subcommand: Print the contract after combination with the build system.\n Warning: Intended for development of LIGO and can break at any time." in
-  let man = [`S Manpage.s_description;
-             `P "This sub-command prints the source file in the AST \
-                 typed stage. Internally, it uses the build system to \
-                 type the contract, and the contract is combined with \
-                 the imported modules."]
-  in (Term.ret term, Term.info ~man ~doc cmdname)
-
-let print_mini_c =
-  let f source_file syntax infer protocol_version display_format optimize =
-    return_result @@
-    Api.Print.mini_c source_file syntax infer protocol_version display_format optimize
-  in
-  let term = Term.(const f $ source_file 0 $ syntax $ infer $ protocol_version $ display_format $ optimize) in
-  let cmdname = "print-mini-c" in
-  let doc = "Subcommand: Print Mini-C. Warning: Intended for development of LIGO and can break at any time." in
-  let man = [`S Manpage.s_description;
-             `P "This sub-command prints the source file in the Mini-C \
-                 stage. Internally, it uses the build system to type \
-                 and compile the contract. Compilation is applied \
-                 after combination in the AST typed stage."]
-  in (Term.ret term, Term.info ~man ~doc cmdname)
 
 let measure_contract =
   let f source_file entry_point syntax infer protocol_version display_format warn werror =
