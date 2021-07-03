@@ -10,7 +10,7 @@ let generate_cameligo_syntax_highlighting output_directory =
   let open SyntaxHighlighting.Textmate in
   match CameLIGO.syntax_highlighting () with 
     Ok s -> 
-      let fmt = Format.formatter_of_out_channel (open_out @@ Filename.concat output_directory "religo.tmLanguage.json") in
+      let fmt = Format.formatter_of_out_channel (open_out @@ Filename.concat output_directory "mligo.tmLanguage.json") in
       Format.fprintf fmt "%s" s
   | Error Referenced_rule_does_not_exist s -> Format.printf "Referenced rule '%s' does not exist." s
   | Error Not_a_valid_reference s -> Format.printf "Not a valid reference: '%s'." s
