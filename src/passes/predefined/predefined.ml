@@ -194,24 +194,24 @@ module Tree_abstraction = struct
     | "Test.to_contract" -> some_const C_TEST_TO_CONTRACT
     | "Test.to_entrypoint" -> some_const C_TEST_TO_ENTRYPOINT
 
-    (* Operation module *)
+    (* Operator module *)
 
-    | "Operation.neg"   -> some_const C_NEG
-    | "Operation.add"   -> some_const C_ADD
-    | "Operation.sub"   -> some_const C_SUB
-    | "Operation.times" -> some_const C_MUL
-    | "Operation.div"   -> some_const C_DIV
-    | "Operation.mod"   -> some_const C_MOD
-    | "Operation.eq"    -> some_const C_EQ
-    | "Operation.not"   -> some_const C_NOT
-    | "Operation.and"   -> some_const C_AND
-    | "Operation.or"    -> some_const C_OR
-    | "Operation.gt"    -> some_const C_GT
-    | "Operation.ge"    -> some_const C_GE
-    | "Operation.lt"    -> some_const C_LT
-    | "Operation.le"    -> some_const C_LE
-    | "Operation.cons"  -> some_const C_CONS
-    | "Operation.neq"   -> some_const C_NEQ
+    | "Operator.neg"   -> some_const C_NEG
+    | "Operator.add"   -> some_const C_ADD
+    | "Operator.sub"   -> some_const C_SUB
+    | "Operator.times" -> some_const C_MUL
+    | "Operator.div"   -> some_const C_DIV
+    | "Operator.mod"   -> some_const C_MOD
+    | "Operator.eq"    -> some_const C_EQ
+    | "Operator.not"   -> some_const C_NOT
+    | "Operator.and"   -> some_const C_AND
+    | "Operator.or"    -> some_const C_OR
+    | "Operator.gt"    -> some_const C_GT
+    | "Operator.ge"    -> some_const C_GE
+    | "Operator.lt"    -> some_const C_LT
+    | "Operator.le"    -> some_const C_LE
+    | "Operator.cons"  -> some_const C_CONS
+    | "Operator.neq"   -> some_const C_NEQ
 
     | _ -> None
 
@@ -237,24 +237,24 @@ module Tree_abstraction = struct
     | C_CONTRACT_ENTRYPOINT     -> "Tezos.get_entrypoint"
     | C_NEVER                   -> "Tezos.never"
 
-    (* Operation module *)
+    (* Operator module *)
 
-    | C_NEG  -> "Operation.neg"
-    | C_ADD  -> "Operation.add"
-    | C_SUB  -> "Operation.sub"
-    | C_MUL  -> "Operation.times"
-    | C_DIV  -> "Operation.div"
-    | C_MOD  -> "Operation.mod"
-    | C_EQ   -> "Operation.eq"
-    | C_NOT  -> "Operation.not"
-    | C_AND  -> "Operation.and"
-    | C_OR   -> "Operation.or"
-    | C_GT   -> "Operation.gt"
-    | C_GE   -> "Operation.ge"
-    | C_LT   -> "Operation.lt"
-    | C_LE   -> "Operation.le"
-    | C_CONS -> "Operation.cons"
-    | C_NEQ  -> "Operation.neq"
+    | C_NEG  -> "Operator.neg"
+    | C_ADD  -> "Operator.add"
+    | C_SUB  -> "Operator.sub"
+    | C_MUL  -> "Operator.times"
+    | C_DIV  -> "Operator.div"
+    | C_MOD  -> "Operator.mod"
+    | C_EQ   -> "Operator.eq"
+    | C_NOT  -> "Operator.not"
+    | C_AND  -> "Operator.and"
+    | C_OR   -> "Operator.or"
+    | C_GT   -> "Operator.gt"
+    | C_GE   -> "Operator.ge"
+    | C_LT   -> "Operator.lt"
+    | C_LE   -> "Operator.le"
+    | C_CONS -> "Operator.cons"
+    | C_NEQ  -> "Operator.neq"
 
     (* Crypto module *)
 

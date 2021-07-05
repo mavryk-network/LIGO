@@ -55,7 +55,7 @@ let%expect_test _ =
                   (failwith ("transfer_single: No card.")
                    : card)
               ];
-            if Operation.neq (card.card_owner, Tezos.sender)
+            if Operator.neq (card.card_owner, Tezos.sender)
             then failwith ("This card doesn't belong to you")
             else skip;
             card.card_owner := action.destination;
@@ -75,7 +75,7 @@ let%expect_test _ =
               | None ->
                   (failwith ("sell_single: No card.") : card)
               ];
-            if Operation.neq (card.card_owner, Tezos.sender)
+            if Operator.neq (card.card_owner, Tezos.sender)
             then failwith ("This card doesn't belong to you")
             else skip;
             const card_pattern : card_pattern
@@ -86,7 +86,7 @@ let%expect_test _ =
                    : card_pattern)
               ];
             card_pattern.quantity :=
-              abs (Operation.sub (card_pattern.quantity, 1n));
+              abs (Operator.sub (card_pattern.quantity, 1n));
             const card_patterns : card_patterns
             = s.card_patterns;
             card_patterns [card.card_pattern] := card_pattern;
@@ -96,7 +96,7 @@ let%expect_test _ =
             = Map.remove (action.card_to_sell, cards);
             s.cards := cards;
             const price : tez
-            = Operation.times
+            = Operator.times
                 (card_pattern.coefficient, card_pattern.quantity);
             const receiver : contract (unit)
             = case (Tezos.get_contract_opt (Tezos.sender)
@@ -126,14 +126,14 @@ let%expect_test _ =
                    : card_pattern)
               ];
             const price : tez
-            = Operation.times
+            = Operator.times
                 (card_pattern.coefficient,
-                 Operation.add (card_pattern.quantity, 1n));
-            if Operation.gt (price, Tezos.amount)
+                 Operator.add (card_pattern.quantity, 1n));
+            if Operator.gt (price, Tezos.amount)
             then failwith ("Not enough money")
             else skip;
             card_pattern.quantity :=
-              Operation.add (card_pattern.quantity, 1n);
+              Operator.add (card_pattern.quantity, 1n);
             const card_patterns : card_patterns
             = s.card_patterns;
             card_patterns [action.card_to_buy] := card_pattern;
@@ -145,7 +145,7 @@ let%expect_test _ =
                 card_pattern = action.card_to_buy
               ];
             s.cards := cards;
-            s.next_id := Operation.add (s.next_id, 1n)
+            s.next_id := Operator.add (s.next_id, 1n)
           } with ((list [] : list (operation)), s)
       ]
 
@@ -211,7 +211,7 @@ let%expect_test _ =
                   ((failwith ("transfer_single: No card."))
                    : card) in
             begin
-              if (Operation.neq (card.card_owner) (Tezos.sender)) then
+              if (Operator.neq (card.card_owner) (Tezos.sender)) then
                 (failwith ("This card doesn't belong to you"))
               else ();
               let card =
@@ -233,7 +233,7 @@ let%expect_test _ =
               | None ->
                   ((failwith ("sell_single: No card.")) : card) in
             begin
-              if (Operation.neq (card.card_owner) (Tezos.sender)) then
+              if (Operator.neq (card.card_owner) (Tezos.sender)) then
                 (failwith ("This card doesn't belong to you"))
               else ();
               let card_pattern[@var] : card_pattern =
@@ -250,7 +250,7 @@ let%expect_test _ =
                   {
                     quantity =
                       (abs
-                        ((Operation.sub
+                        ((Operator.sub
                           (card_pattern.quantity)
                           (1n))))
                   }} in
@@ -267,7 +267,7 @@ let%expect_test _ =
                 (Map.remove (action.card_to_sell) (cards)) in
               let s = {s with { cards = cards }} in
               let price : tez =
-                (Operation.times
+                (Operator.times
                   (card_pattern.coefficient)
                   (card_pattern.quantity)) in
               let receiver : unit contract =
@@ -298,20 +298,18 @@ let%expect_test _ =
                   ((failwith ("buy_single: No card pattern."))
                    : card_pattern) in
             let price : tez =
-              (Operation.times
+              (Operator.times
                 (card_pattern.coefficient)
-                ((Operation.add (card_pattern.quantity) (1n)))) in
+                ((Operator.add (card_pattern.quantity) (1n)))) in
             begin
-              if (Operation.gt (price) (Tezos.amount)) then
+              if (Operator.gt (price) (Tezos.amount)) then
                 (failwith ("Not enough money"))
               else ();
               let card_pattern =
                 {card_pattern with
                   {
                     quantity =
-                      (Operation.add
-                        (card_pattern.quantity)
-                        (1n))
+                      (Operator.add (card_pattern.quantity) (1n))
                   }} in
               let card_patterns[@var] : card_patterns =
                 s.card_patterns in
@@ -333,7 +331,7 @@ let%expect_test _ =
               let s = {s with { cards = cards }} in
               let s =
                 {s with
-                  { next_id = (Operation.add (s.next_id) (1n)) }} in
+                  { next_id = (Operator.add (s.next_id) (1n)) }} in
               ([] : operation list), s
             end)
 
@@ -397,7 +395,7 @@ let transfer_single
            };
          {
            if ((
-            Operation.neq((card.card_owner), (Tezos.sender)))) {
+            Operator.neq((card.card_owner), (Tezos.sender)))) {
              (failwith(("This card doesn't belong to you")))
            } else {
              ()
@@ -424,7 +422,7 @@ let sell_single: (action_sell_single, storage) => return =
            };
          {
            if ((
-            Operation.neq((card.card_owner), (Tezos.sender)))) {
+            Operator.neq((card.card_owner), (Tezos.sender)))) {
              (failwith(("This card doesn't belong to you")))
            } else {
              ()
@@ -444,7 +442,7 @@ let sell_single: (action_sell_single, storage) => return =
                  quantity:
                    (
                     abs(((
-                        Operation.sub((card_pattern.quantity),
+                        Operator.sub((card_pattern.quantity),
                            (1n))))))
                }};
            let card_patterns[@var]: card_patterns =
@@ -461,7 +459,7 @@ let sell_single: (action_sell_single, storage) => return =
            let s = {...s, {cards: cards }};
            let price: tez =
              (
-              Operation.times((card_pattern.coefficient),
+              Operator.times((card_pattern.coefficient),
                  (card_pattern.quantity)));
            let receiver: contract(unit) =
              switch((Tezos.get_contract_opt((Tezos.sender)))
@@ -492,11 +490,10 @@ let buy_single: (action_buy_single, storage) => return =
            };
          let price: tez =
            (
-            Operation.times((card_pattern.coefficient),
-               ((
-                Operation.add((card_pattern.quantity), (1n))))));
+            Operator.times((card_pattern.coefficient),
+               ((Operator.add((card_pattern.quantity), (1n))))));
          {
-           if ((Operation.gt((price), (Tezos.amount)))) {
+           if ((Operator.gt((price), (Tezos.amount)))) {
              (failwith(("Not enough money")))
            } else {
              ()
@@ -506,7 +503,7 @@ let buy_single: (action_buy_single, storage) => return =
                {
                  quantity:
                    (
-                    Operation.add((card_pattern.quantity),
+                    Operator.add((card_pattern.quantity),
                        (1n)))
                }};
            let card_patterns[@var]: card_patterns =
@@ -529,9 +526,7 @@ let buy_single: (action_buy_single, storage) => return =
            let s = {...s, {cards: cards }};
            let s =
              {...s,
-               {
-                 next_id: (Operation.add((s.next_id), (1n)))
-               }};
+               {next_id: (Operator.add((s.next_id), (1n))) }};
            ([] : list(operation)), s
          }
      });
@@ -568,9 +563,9 @@ let%expect_test _ =
     block {
       const tuple : int * int * int * int = (0, (1, (2, 3)))
     } with
-        Operation.add
-          (Operation.add
-             (Operation.add (tuple.0, tuple.1.0), tuple.1.1.0),
+        Operator.add
+          (Operator.add
+             (Operator.add (tuple.0, tuple.1.0), tuple.1.1.0),
            tuple.1.1.1)
 
     type nested_record_t is
@@ -603,9 +598,9 @@ let%expect_test _ =
     let asymetric_tuple_access : unit -> int =
       (fun (foo : unit) ->
         let tuple[@var] : int * int * int * int = 0, 1, 2, 3 in
-        (Operation.add
-          ((Operation.add
-            ((Operation.add (tuple.0) (tuple.1.0)))
+        (Operator.add
+          ((Operator.add
+            ((Operator.add (tuple.0) (tuple.1.0)))
             (tuple.1.1.0)))
           (tuple.1.1.1)))
 
@@ -641,9 +636,9 @@ let asymetric_tuple_access: unit => int =
   ((foo: unit): int =>
      let tuple[@var]: (int, (int, (int, int))) = 0, 1, 2, 3;
      (
-      Operation.add(((
-          Operation.add(((
-              Operation.add((tuple[0]), (tuple[1][0])))),
+      Operator.add(((
+          Operator.add(((
+              Operator.add((tuple[0]), (tuple[1][0])))),
              (tuple[1][1][0])))),
          (tuple[1][1][1]))));
 
@@ -848,7 +843,7 @@ let transferContentsIterator =
                   ((failwith (errorTokenUndefined))
                    : tokenOwner)
               | Some tokenOwner ->
-                  if (Operation.eq (tokenOwner) (from_)) then
+                  if (Operator.eq (tokenOwner) (from_)) then
                     tokenOwner
                   else
                     ((failwith (errorInsufficientBalance))
@@ -862,7 +857,7 @@ let transferContentsIterator =
 
 let allowOnlyOwnTransfer =
   (fun (from : tokenOwner) ->
-    if (Operation.neq (from) (Tezos.sender)) then
+    if (Operator.neq (from) (Tezos.sender)) then
       (failwith (errorNotOwner))
     else ())
 
@@ -972,7 +967,7 @@ let transferContentsIterator =
                    ((failwith((errorTokenUndefined)))
                      : tokenOwner)
                | Some tokenOwner =>
-                   if ((Operation.eq((tokenOwner), (from_)))) {
+                   if ((Operator.eq((tokenOwner), (from_)))) {
                      tokenOwner
                    } else {
 
@@ -991,7 +986,7 @@ let transferContentsIterator =
 
 let allowOnlyOwnTransfer =
   ((from: tokenOwner): unit =>
-     if ((Operation.neq((from), (Tezos.sender)))) {
+     if ((Operator.neq((from), (Tezos.sender)))) {
        (failwith((errorNotOwner)))
      } else {
        ()
@@ -1053,11 +1048,11 @@ let%expect_test _ =
           block {
             case p of [
               Zero (n) ->
-                if Operation.gt (n, 0n)
+                if Operator.gt (n, 0n)
                 then failwith ("fail")
                 else skip
             | Pos (n) ->
-                if Operation.gt (n, 0n)
+                if Operator.gt (n, 0n)
                 then skip
                 else failwith ("fail")
             ]
@@ -1069,14 +1064,14 @@ let%expect_test _ =
       const p : parameter = (Zero (42n));
       const gen__env8 = record [i = i];
       const gen__env8
-      = if Operation.gt (i, 0)
+      = if Operator.gt (i, 0)
         then
           block {
-            const i = Operation.add (i, 1);
+            const i = Operator.add (i, 1);
             gen__env8.i := i;
             const gen__env6 = record [i = i];
             const gen__env6
-            = if Operation.gt (i, 10)
+            = if Operator.gt (i, 10)
               then
                 block {
                   const i = 20;
@@ -1110,7 +1105,7 @@ let%expect_test _ =
 
     function failer (const p : int) is
     block {
-      if Operation.eq (p, 1) then failwith (42) else skip
+      if Operator.eq (p, 1) then failwith (42) else skip
     } with p |}];
   run_ligo_good [ "transpile-contract" ; "../../test/contracts/failwith.ligo" ; "cameligo" ] ;
   [%expect {|
@@ -1127,11 +1122,11 @@ let%expect_test _ =
             begin
               match p with
                 Zero n ->
-                  if (Operation.gt (n) (0n)) then
+                  if (Operator.gt (n) (0n)) then
                     (failwith ("fail"))
                   else ()
               | Pos n ->
-                  if (Operation.gt (n) (0n)) then ()
+                  if (Operator.gt (n) (0n)) then ()
                   else (failwith ("fail"));
               ([] : operation list), s
             end)
@@ -1141,12 +1136,12 @@ let%expect_test _ =
         let p[@var] : parameter = (Zero 42n) in
         let gen__env8 = { i = i } in
         let gen__env8 =
-          if (Operation.gt (i) (0)) then
-            let i = (Operation.add (i) (1)) in
+          if (Operator.gt (i) (0)) then
+            let i = (Operator.add (i) (1)) in
             let gen__env8 = {gen__env8 with { i = i }} in
             let gen__env6 = { i = i } in
             let gen__env6 =
-              if (Operation.gt (i) (10)) then
+              if (Operator.gt (i) (10)) then
                 let i = 20 in
                 let gen__env6 = {gen__env6 with { i = i }} in
                 begin
@@ -1184,7 +1179,7 @@ let%expect_test _ =
     let failer : int -> int =
       (fun (p : int) ->
         begin
-          if (Operation.eq (p) (1)) then (failwith (42)) else ();
+          if (Operator.eq (p) (1)) then (failwith (42)) else ();
           p
         end) |}];
   run_ligo_good [ "transpile-contract" ; "../../test/contracts/failwith.ligo" ; "reasonligo" ] ;
@@ -1202,13 +1197,13 @@ let main: (parameter, storage) => return =
          {
            switch p{
            | Zero n =>
-               if ((Operation.gt((n), (0n)))) {
+               if ((Operator.gt((n), (0n)))) {
                  (failwith(("fail")))
                } else {
                  ()
                }
            | Pos n =>
-               if ((Operation.gt((n), (0n)))) {
+               if ((Operator.gt((n), (0n)))) {
                  ()
                } else {
                  (failwith(("fail")))
@@ -1225,15 +1220,15 @@ let foobar: int => int =
        i: i
      };
      let gen__env8 =
-       if ((Operation.gt((i), (0)))) {
+       if ((Operator.gt((i), (0)))) {
 
-         let i = (Operation.add((i), (1)));
+         let i = (Operator.add((i), (1)));
          let gen__env8 = {...gen__env8, {i: i }};
          let gen__env6 = {
            i: i
          };
          let gen__env6 =
-           if ((Operation.gt((i), (10)))) {
+           if ((Operator.gt((i), (10)))) {
 
              let i = 20;
              let gen__env6 = {...gen__env6, {i: i }};
@@ -1277,7 +1272,7 @@ let foobar: int => int =
 
 let failer: int => int =
   ((p: int): int => {
-     if ((Operation.eq((p), (1)))) {
+     if ((Operator.eq((p), (1)))) {
        (failwith((42)))
      } else {
        ()
@@ -1291,22 +1286,20 @@ let%expect_test _ =
     recursive function sum (const gen__parameters1 : int * int) is
       case gen__parameters1 of [
         (n, acc) ->
-          if Operation.lt (n, 1)
+          if Operator.lt (n, 1)
           then acc
-          else
-            sum (Operation.sub (n, 1), Operation.add (acc, n))
+          else sum (Operator.sub (n, 1), Operator.add (acc, n))
       ]
 
     recursive function fibo
       (const gen__parameters2 : int * int * int) is
       case gen__parameters2 of [
         (n, n_1, n_0) ->
-          if Operation.lt (n, 2)
+          if Operator.lt (n, 2)
           then n_1
           else
             fibo
-              (Operation.sub (n, 1), Operation.add (n_1, n_0),
-               n_1)
+              (Operator.sub (n, 1), Operator.add (n_1, n_0), n_1)
       ] |}];
   run_ligo_good [ "transpile-contract" ; "../../test/contracts/recursion.ligo" ; "cameligo" ] ;
   [%expect {|
@@ -1314,21 +1307,21 @@ let%expect_test _ =
       (fun (gen__parameters1 : int * int) ->
         match gen__parameters1 with
           n, acc ->
-            if (Operation.lt (n) (1)) then acc
+            if (Operator.lt (n) (1)) then acc
             else
               sum
-                (Operation.sub (n) (1))
-                (Operation.add (acc) (n)))
+                (Operator.sub (n) (1))
+                (Operator.add (acc) (n)))
 
     let rec fibo : int * int * int -> int =
       (fun (gen__parameters2 : int * int * int) ->
         match gen__parameters2 with
           n, n_1, n_0 ->
-            if (Operation.lt (n) (2)) then n_1
+            if (Operator.lt (n) (2)) then n_1
             else
               fibo
-                (Operation.sub (n) (1))
-                (Operation.add (n_1) (n_0))
+                (Operator.sub (n) (1))
+                (Operator.add (n_1) (n_0))
                 n_1) |}];
   run_ligo_good [ "transpile-contract" ; "../../test/contracts/recursion.ligo" ; "reasonligo" ] ;
   [%expect {|
@@ -1336,13 +1329,13 @@ let%expect_test _ =
       ((gen__parameters1: (int, int)): int =>
          switch gen__parameters1{
          | n, acc =>
-             if ((Operation.lt((n), (1)))) {
+             if ((Operator.lt((n), (1)))) {
                acc
              } else {
 
 
-               sum((Operation.sub((n), (1))),
-                  (Operation.add((acc), (n))))
+               sum((Operator.sub((n), (1))),
+                  (Operator.add((acc), (n))))
              }
          });
 
@@ -1350,13 +1343,13 @@ let%expect_test _ =
       ((gen__parameters2: (int, int, int)): int =>
          switch gen__parameters2{
          | n, n_1, n_0 =>
-             if ((Operation.lt((n), (2)))) {
+             if ((Operator.lt((n), (2)))) {
                n_1
              } else {
 
 
-               fibo((Operation.sub((n), (1))),
-                  (Operation.add((n_1), (n_0))),
+               fibo((Operator.sub((n), (1))),
+                  (Operator.add((n_1), (n_0))),
                   n_1)
              }
          }); |}]
