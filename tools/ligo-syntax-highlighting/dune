@@ -1,6 +1,5 @@
 (executable
  (name LigoSyntaxHighlighting)
- (link_deps Parser.cmly)
  (libraries 
   ligo
   ligo.lexing.cameligo
