@@ -199,7 +199,7 @@ let%expect_test _ =
 
     let transfer_single :
       action_transfer_single * storage -> return =
-      (fun gen__parameters1 : action_transfer_single * storage ->
+      (fun (gen__parameters1 : action_transfer_single * storage) ->
         match gen__parameters1 with
           action, s[@var] ->
             let cards[@var] : cards = s.cards in
@@ -223,7 +223,7 @@ let%expect_test _ =
             end)
 
     let sell_single : action_sell_single * storage -> return =
-      (fun gen__parameters2 : action_sell_single * storage ->
+      (fun (gen__parameters2 : action_sell_single * storage) ->
         match gen__parameters2 with
           action, s[@var] ->
             let card : card =
@@ -285,7 +285,7 @@ let%expect_test _ =
             end)
 
     let buy_single : action_buy_single * storage -> return =
-      (fun gen__parameters3 : action_buy_single * storage ->
+      (fun (gen__parameters3 : action_buy_single * storage) ->
         match gen__parameters3 with
           action, s[@var] ->
             let card_pattern[@var] : card_pattern =
@@ -338,7 +338,7 @@ let%expect_test _ =
             end)
 
     let main : parameter * storage -> return =
-      (fun gen__parameters4 : parameter * storage ->
+      (fun (gen__parameters4 : parameter * storage) ->
         match gen__parameters4 with
           action, s ->
             match action with
@@ -593,7 +593,7 @@ let%expect_test _ =
     type ppp = ppi * ppi
 
     let main : unit -> int =
-      (fun toto : unit ->
+      (fun (toto : unit) ->
         let a[@var] : ppp =
           { x = 0, 1; y = 10, 11 },
           { x = 100, 101; y = 110, 111 } in
@@ -601,7 +601,7 @@ let%expect_test _ =
         a.0.x.0)
 
     let asymetric_tuple_access : unit -> int =
-      (fun foo : unit ->
+      (fun (foo : unit) ->
         let tuple[@var] : int * int * int * int = 0, 1, 2, 3 in
         (Operation.add
           ((Operation.add
@@ -614,7 +614,7 @@ let%expect_test _ =
     }
 
     let nested_record : nested_record_t -> string =
-      (fun nee[@var] : nested_record_t ->
+      (fun (nee[@var] : nested_record_t) ->
         let nee = Map.add "one" 1 nesty.mymap in
         match Map.find_opt 1 nee.nesty.mymap with
           Some s -> s
@@ -828,9 +828,9 @@ type transferContentsIteratorAccumulator = storage *
 tokenOwner
 
 let transferContentsIterator =
-  (fun gen__1 :
+  (fun (gen__1 :
       transferContentsIteratorAccumulator *
-      transferContentsMichelson ->
+      transferContentsMichelson) ->
     match gen__1 with
       accumulator, transferContentsMichelson ->
         match accumulator with
@@ -861,13 +861,13 @@ let transferContentsIterator =
             storage, from_)
 
 let allowOnlyOwnTransfer =
-  (fun from : tokenOwner ->
+  (fun (from : tokenOwner) ->
     if (Operation.neq (from) (Tezos.sender)) then
       (failwith (errorNotOwner))
     else ())
 
 let transferIterator =
-  (fun gen__2 : storage * transferMichelson ->
+  (fun (gen__2 : storage * transferMichelson) ->
     match gen__2 with
       storage, transferMichelson ->
         let transferAuxiliary2 : transferAuxiliary =
@@ -885,7 +885,7 @@ let transferIterator =
         end)
 
 let transfer =
-  (fun gen__3 : transferParameter * storage ->
+  (fun (gen__3 : transferParameter * storage) ->
     match gen__3 with
       transferParameter, storage ->
         let storage =
@@ -896,7 +896,7 @@ let transfer =
         ([] : operation list), storage)
 
 let main =
-  (fun gen__4 : entrypointParameter ->
+  (fun (gen__4 : entrypointParameter) ->
     match gen__4 with
       parameter, storage ->
         match parameter with
@@ -1121,7 +1121,7 @@ let%expect_test _ =
     type return = operation list * storage
 
     let main : parameter * storage -> return =
-      (fun gen__parameters1 : parameter * storage ->
+      (fun (gen__parameters1 : parameter * storage) ->
         match gen__parameters1 with
           p, s ->
             begin
@@ -1137,7 +1137,7 @@ let%expect_test _ =
             end)
 
     let foobar : int -> int =
-      (fun i[@var] : int ->
+      (fun (i[@var] : int) ->
         let p[@var] : parameter = (Zero 42n) in
         let gen__env8 = { i = i } in
         let gen__env8 =
@@ -1182,7 +1182,7 @@ let%expect_test _ =
         | Pos n -> ((failwith ("waaaa")) : int))
 
     let failer : int -> int =
-      (fun p : int ->
+      (fun (p : int) ->
         begin
           if (Operation.eq (p) (1)) then (failwith (42)) else ();
           p
@@ -1311,7 +1311,7 @@ let%expect_test _ =
   run_ligo_good [ "transpile-contract" ; "../../test/contracts/recursion.ligo" ; "cameligo" ] ;
   [%expect {|
     let rec sum : int * int -> int =
-      (fun gen__parameters1 : int * int ->
+      (fun (gen__parameters1 : int * int) ->
         match gen__parameters1 with
           n, acc ->
             if (Operation.lt (n) (1)) then acc
@@ -1321,7 +1321,7 @@ let%expect_test _ =
                 (Operation.add (acc) (n)))
 
     let rec fibo : int * int * int -> int =
-      (fun gen__parameters2 : int * int * int ->
+      (fun (gen__parameters2 : int * int * int) ->
         match gen__parameters2 with
           n, n_1, n_0 ->
             if (Operation.lt (n) (2)) then n_1
@@ -1364,7 +1364,7 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_good [ "transpile-contract" ; "../../test/contracts/transpiler_nested.ligo" ; "cameligo" ] ;
   [%expect {|
-    let f : nat -> nat = (fun x : nat -> x)
+    let f : nat -> nat = (fun (x : nat) -> x)
 
-    let bar : nat -> nat = (fun x : nat -> f (f x))
+    let bar : nat -> nat = (fun (x : nat) -> f (f x))
   |}]
