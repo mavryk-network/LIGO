@@ -26,14 +26,14 @@ let rec is_closed ~loc (t : O.type_content) =
   match t with
   | O.T_constant {injection;parameters} ->
      let arg_len = List.length parameters in
-     let arg_actual = List.filter is_not_will_be_ignored parameters |>  List.length in
+     let arg_actual = List.filter ~f:is_not_will_be_ignored parameters |>  List.length in
      let name = injection |> Ligo_string.extract |> Var.of_name in
      if arg_len <> arg_actual then
        fail @@ type_constant_wrong_number_of_arguments name arg_len arg_actual loc
      else
        ok ()
   | O.T_sum rows | O.T_record rows ->
-     self_list (O.LMap.to_list rows.content |> List.map (fun v -> v.O.associated_type))
+     self_list (O.LMap.to_list rows.content |> List.map ~f:(fun v -> v.O.associated_type))
   | O.T_arrow {type1;type2} ->
      self_list [type1; type2]
   | _ -> ok @@ ()
@@ -103,7 +103,7 @@ and evaluate_type (e:environment) (t:I.type_expression) : (O.type_expression, ty
     in
     let sum : O.rows  = match Environment.get_sum lmap e with
       | None ->
-        let layout = Option.unopt ~default:default_layout m.layout in
+        let layout = Option.value ~default:default_layout m.layout in
         {content = lmap; layout}
       | Some r -> r
     in
@@ -127,7 +127,7 @@ and evaluate_type (e:environment) (t:I.type_expression) : (O.type_expression, ty
     let* lmap = Stage_common.Helpers.bind_map_lmap aux m.fields in
     let record : O.rows = match Environment.get_record lmap e with
     | None ->
-      let layout = Option.unopt ~default:default_layout m.layout in
+      let layout = Option.value ~default:default_layout m.layout in
       {content=lmap;layout}
     | Some (_,r) ->  r
     in
@@ -353,7 +353,7 @@ and type_expression' : environment -> ?tv_opt:O.type_expression -> I.expression 
       let output_type = body.type_expression in
       let lambda' = make_e (E_lambda {binder = lname ; result=body}) (t_function input_type output_type ()) in
       let lst' = [lambda'; v_col; v_initr] in
-      let tv_lst = List.map get_type_expression lst' in
+      let tv_lst = List.map ~f:get_type_expression lst' in
       let* (opname', tv) =
         type_constant opname ae.location tv_lst tv_opt in
       return (E_constant {cons_name=opname';arguments=lst'}) tv
@@ -374,20 +374,20 @@ and type_expression' : environment -> ?tv_opt:O.type_expression -> I.expression 
       let output_type = body.type_expression in
       let lambda' = make_e (E_lambda {binder = lname ; result=body}) (t_function input_type output_type ()) in
       let lst' = [lambda';v_initr] in
-      let tv_lst = List.map get_type_expression lst' in
+      let tv_lst = List.map ~f:get_type_expression lst' in
       let* (opname',tv) = type_constant opname ae.location tv_lst tv_opt in
       return (E_constant {cons_name=opname';arguments=lst'}) tv
   | E_constant {cons_name=C_CREATE_CONTRACT as cons_name;arguments} ->
-      let* lst' = bind_list @@ List.map (type_expression' e) arguments in
+      let* lst' = bind_list @@ List.map ~f:(type_expression' e) arguments in
       let* () = match lst' with
         | { expression_content = O.E_lambda l ; _ } :: _ ->
           let open Ast_typed.Misc in
           let fvs = Free_variables.lambda [] l in
           if List.length fvs = 0 then ok ()
-          else fail @@ fvs_in_create_contract_lambda ae (List.hd fvs)
+          else fail @@ fvs_in_create_contract_lambda ae (List.hd_exn fvs)
         | _ -> fail @@ create_contract_lambda C_CREATE_CONTRACT ae
       in
-      let tv_lst = List.map get_type_expression lst' in
+      let tv_lst = List.map ~f:get_type_expression lst' in
       let* (name', tv) =
         type_constant cons_name ae.location tv_lst tv_opt in
       return (E_constant {cons_name=name';arguments=lst'}) tv
@@ -421,8 +421,8 @@ and type_expression' : environment -> ?tv_opt:O.type_expression -> I.expression 
       let* (name', tv) = type_constant cst ae.location tv_lst tv_opt in
       return (E_constant {cons_name=name';arguments=[key';val';map']}) tv
   | E_constant {cons_name = C_POLYMORPHIC_ADD;arguments} ->
-      let* lst' = bind_list @@ List.map (type_expression' e) arguments in
-      let tv_lst = List.map get_type_expression lst' in
+      let* lst' = bind_list @@ List.map ~f:(type_expression' e) arguments in
+      let tv_lst = List.map ~f:get_type_expression lst' in
       let cst = (match lst' with 
         | {expression_content = E_literal (Literal_string _); _ } :: _ -> S.C_CONCAT
         | {expression_content = E_constant {cons_name = C_ADD; _ }; _ } :: _ -> C_ADD
@@ -439,8 +439,8 @@ and type_expression' : environment -> ?tv_opt:O.type_expression -> I.expression 
         type_constant cst ae.location tv_lst tv_opt in
       return (E_constant {cons_name=name';arguments=lst'}) tv
   | E_constant {cons_name;arguments} ->
-      let* lst' = bind_list @@ List.map (type_expression' e) arguments in
-      let tv_lst = List.map get_type_expression lst' in
+      let* lst' = bind_list @@ List.map ~f:(type_expression' e) arguments in
+      let tv_lst = List.map ~f:get_type_expression lst' in
       let* (name', tv) =
         type_constant cons_name ae.location tv_lst tv_opt in
       return (E_constant {cons_name=name';arguments=lst'}) tv
@@ -464,7 +464,7 @@ and type_expression' : environment -> ?tv_opt:O.type_expression -> I.expression 
     let aux : (I.expression, I.type_expression) I.match_case -> ((I.type_expression I.pattern * O.type_expression) list * (I.expression * O.environment)) =
       fun {pattern ; body} -> ([(pattern,matchee'.type_expression)], (body,e))
     in
-    let eqs = List.map aux cases in
+    let eqs = List.map ~f:aux cases in
     let* case_exp = Pattern_matching.compile_matching ~err_loc:ae.location ~type_f:(type_expression') ~body_t:(tv_opt) matcheevar eqs in
     let case_exp = { case_exp with location = ae.location } in
     let x = O.e_let_in matcheevar matchee' case_exp false in
@@ -632,7 +632,7 @@ and untype_expression_content ty (ec:O.expression_content) : (I.expression , typ
       let* (input_type , output_type) =
         bind_map_pair Untyper.untype_type_expression io in
       let* result = untype_expression result in
-      return (e_lambda {var=binder;ascr=Some input_type} (Some output_type) result)
+      return (e_lambda {var=binder;ascr=Some input_type;attributes=Stage_common.Helpers.empty_attribute} (Some output_type) result)
     )
   | E_constructor {constructor; element} ->
       let* p' = untype_expression element in
@@ -661,7 +661,7 @@ and untype_expression_content ty (ec:O.expression_content) : (I.expression , typ
           let pattern =
             match tv with
             | _ ->
-              let proj = Location.wrap @@ P_var { ascr = None ; var = (cast_var pattern) } in
+              let proj = Location.wrap @@ P_var { ascr = None ; var = (cast_var pattern) ; attributes = Stage_common.Helpers.empty_attribute } in
               Location.wrap @@ P_variant (constructor, proj)
           in
           let* body = untype_expression body in
@@ -673,11 +673,11 @@ and untype_expression_content ty (ec:O.expression_content) : (I.expression , typ
     | Match_record {fields ; body ; tv=_} -> (
       let aux : (Ast_typed.label * (Ast_typed.expression_variable * _)) -> label * Ast_core.type_expression pattern =
         fun (Ast_typed.Label label, (proj,_)) -> (
-          let proj = Location.wrap @@ P_var { ascr = None ; var = (cast_var proj) } in
+          let proj = Location.wrap @@ P_var { ascr = None ; var = (cast_var proj) ; attributes = Stage_common.Helpers.empty_attribute } in
           (Label label, proj)
         )
       in
-      let (labels,patterns) = List.split @@ List.map aux (LMap.to_kv_list fields) in
+      let (labels,patterns) = List.unzip @@ List.map ~f:aux (LMap.to_kv_list fields) in
       let* body = untype_expression body in
       let case = match Ast_typed.Helpers.is_tuple_lmap fields with
         | false ->
@@ -695,7 +695,7 @@ and untype_expression_content ty (ec:O.expression_content) : (I.expression , typ
       let* tv = Untyper.untype_type_expression rhs.type_expression in
       let* rhs = untype_expression rhs in
       let* result = untype_expression let_result in
-      return (e_let_in {var=let_binder ; ascr=(Some tv)} rhs result inline)
+      return (e_let_in {var=let_binder ; ascr=(Some tv) ; attributes = Stage_common.Helpers.empty_attribute} rhs result inline)
   | E_type_in ti ->
     let* ti = Stage_common.Maps.type_in untype_expression Untyper.untype_type_expression ti in
     return @@ make_e @@ E_type_in ti
@@ -729,7 +729,7 @@ function
   let* ty = untype_type_expression expr.type_expression in
   let var = Location.map Var.todo_cast binder in
   let* expr = untype_expression expr in
-  return @@ Declaration_constant {name; binder={var;ascr=Some ty};expr;attr={inline}}
+  return @@ Declaration_constant {name; binder={var;ascr=Some ty;attributes = Stage_common.Helpers.empty_attribute};expr;attr={inline}}
 | Declaration_module {module_binder;module_} ->
   let* module_ = untype_module_fully_typed module_ in
   return @@ Declaration_module {module_binder;module_}

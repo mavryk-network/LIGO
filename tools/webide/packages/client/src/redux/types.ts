@@ -7,12 +7,12 @@ export enum Language {
 
 export enum CommandType {
   Compile = 'compile',
+  CompileFunction = 'compile-function',
   DryRun = 'dry-run',
-  EvaluateValue = 'evaluate-value',
+  EvaluateValue = 'evaluate-expr',
   EvaluateFunction = 'evaluate-function',
   Deploy = 'deploy',
   GenerateDeployScript = 'generate-deploy-script',
-  CompileFunction = 'compile-function',
 }
 
 export enum Tool {

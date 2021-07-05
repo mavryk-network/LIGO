@@ -25,13 +25,13 @@ module ParseTree
   where
 
 import Data.ByteString (ByteString)
-import qualified Data.ByteString as BS
+import Data.ByteString qualified as BS
 import Data.Map
 import Data.String (IsString (..))
 import Data.Text (Text)
-import qualified Data.Text as Text
-import qualified Data.Text.Encoding as Text
-import qualified Data.Text.IO as Text
+import Data.Text qualified as Text
+import Data.Text.Encoding qualified as Text
+import Data.Text.IO qualified as Text
 import Data.Traversable (for)
 
 import Control.Monad ((>=>))
@@ -45,13 +45,11 @@ import TreeSitter.Node
 import TreeSitter.Parser
 import TreeSitter.Tree hiding (Tree)
 
-import System.FilePath (takeFileName)
-
 import Duplo.Pretty as PP
 import Duplo.Tree
 
 import Extension
-import qualified Log
+import Log qualified
 import Product
 import Range
 
@@ -63,6 +61,7 @@ data Source
   = Path       { srcPath :: FilePath }
   | Text       { srcPath :: FilePath, srcText :: Text }
   | ByteString { srcPath :: FilePath, srcBS   :: ByteString }
+  deriving stock (Eq, Ord)
 
 instance IsString Source where
   fromString = Path
@@ -126,14 +125,13 @@ instance Pretty1 ParseTree where
       )
 
 -- | Feed file contents into PascaLIGO grammar recogniser.
-toParseTree :: Source -> IO SomeRawTree
-toParseTree input = do
+toParseTree :: Lang -> Source -> IO SomeRawTree
+toParseTree dialect input = do
   Log.debug "TS" [Log.i|Reading #{input}|]
-  (language, dialect) <- onExt ElimExt
-    { eePascal = (tree_sitter_PascaLigo, Pascal)
-    , eeCaml   = (tree_sitter_CameLigo, Caml)
-    , eeReason = (tree_sitter_ReasonLigo, Reason)
-    } (srcPath input)
+  let language = case dialect of
+        Pascal -> tree_sitter_PascaLigo
+        Caml   -> tree_sitter_CameLigo
+        Reason -> tree_sitter_ReasonLigo
 
   SomeRawTree dialect <$> withParser language \parser -> do
     src <- srcToBytestring input
@@ -189,7 +187,7 @@ toParseTree input = do
                   , i $ pointColumn finish2D + 1
                   , i $ nodeEndByte node
                   )
-              , rFile = takeFileName $ srcPath fin
+              , rFile = srcPath fin
               }
 
           return $ make

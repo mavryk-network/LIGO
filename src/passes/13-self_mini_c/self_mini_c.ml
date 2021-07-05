@@ -24,7 +24,7 @@ let map_expression :
    assuming arguments are pure *)
 let is_pure_constant : constant' -> bool =
   function
-  | C_UNIT
+  | C_UNIT | C_NEVER
   | C_CAR | C_CDR | C_PAIR
   | C_NIL | C_CONS
   | C_NEG | C_OR | C_AND | C_XOR | C_NOT
@@ -108,12 +108,15 @@ let is_pure_constant : constant' -> bool =
   (* Test - ligo interpreter, should never end up here *)
   | C_TEST_ORIGINATE
   | C_TEST_GET_STORAGE
+  | C_TEST_GET_STORAGE_OF_ADDRESS
   | C_TEST_GET_BALANCE
   | C_TEST_SET_NOW
   | C_TEST_SET_SOURCE
   | C_TEST_SET_BAKER
-  | C_TEST_EXTERNAL_CALL
-  | C_TEST_EXTERNAL_CALL_EXN
+  | C_TEST_EXTERNAL_CALL_TO_CONTRACT
+  | C_TEST_EXTERNAL_CALL_TO_CONTRACT_EXN
+  | C_TEST_EXTERNAL_CALL_TO_ADDRESS
+  | C_TEST_EXTERNAL_CALL_TO_ADDRESS_EXN
   | C_TEST_MICHELSON_EQUAL
   | C_TEST_GET_NTH_BS
   | C_TEST_LOG
@@ -122,6 +125,13 @@ let is_pure_constant : constant' -> bool =
   | C_TEST_STATE_RESET
   | C_TEST_LAST_ORIGINATIONS
   | C_TEST_COMPILE_META_VALUE
+  | C_TEST_RUN
+  | C_TEST_EVAL
+  | C_TEST_COMPILE_CONTRACT
+  | C_TEST_TO_CONTRACT
+  | C_TEST_TO_ENTRYPOINT
+  | C_TEST_ORIGINATE_FROM_FILE
+  | C_BIG_MAP_IDENTIFIER
     -> false
 
 let rec is_pure : expression -> bool = fun e ->
@@ -136,22 +146,22 @@ let rec is_pure : expression -> bool = fun e ->
   | E_if_none (cond, bt, (_, bf))
   | E_if_cons (cond, bt, (_, bf))
   | E_if_left (cond, (_, bt), (_, bf))
-    -> List.for_all is_pure [ cond ; bt ; bf ]
+    -> List.for_all ~f:is_pure [ cond ; bt ; bf ]
 
   | E_let_in (e1, _, (_, e2))
-    -> List.for_all is_pure [ e1 ; e2 ]
+    -> List.for_all ~f:is_pure [ e1 ; e2 ]
 
   | E_tuple exprs
-    -> List.for_all is_pure exprs
+    -> List.for_all ~f:is_pure exprs
   | E_let_tuple (e1, (_, e2))
-    -> List.for_all is_pure [ e1 ; e2 ]
+    -> List.for_all ~f:is_pure [ e1 ; e2 ]
   | E_proj (e, _i, _n)
     -> is_pure e
   | E_update (expr, _i, update, _n)
-    -> List.for_all is_pure [ expr ; update ]
+    -> List.for_all ~f:is_pure [ expr ; update ]
 
   | E_constant (c)
-    -> is_pure_constant c.cons_name && List.for_all is_pure c.arguments
+    -> is_pure_constant c.cons_name && List.for_all ~f:is_pure c.arguments
 
   (* I'm not sure about these. Maybe can be tested better? *)
   | E_application _
@@ -163,7 +173,7 @@ let rec is_pure : expression -> bool = fun e ->
 let occurs_in : expression_variable -> expression -> bool =
   fun x e ->
   let fvs = Free_variables.expression [] e in
-  Free_variables.mem x fvs
+  Free_variables.mem fvs x
 
 let occurs_count : expression_variable -> expression -> int =
   fun x e ->
@@ -247,8 +257,8 @@ let beta : bool ref -> expression -> expression =
 
   (* (e0, e1, ...).(i) ↦ ei  (only if all ei are pure) *)
   | E_proj ({ content = E_tuple es; _ }, i, _n) ->
-    if List.for_all is_pure es
-    then List.nth es i
+    if List.for_all ~f:is_pure es
+    then List.nth_exn es i
     else e
 
   (* let (x0, x1, ...) = (e0, e1, ...) in body ↦
@@ -257,11 +267,11 @@ let beta : bool ref -> expression -> expression =
      *)
   | E_let_tuple ({ content = E_tuple es; _ }, (vars, body)) ->
     List.fold_left
-      (fun body (e, (v, t)) ->
+      ~f:(fun body (e, (v, t)) ->
          { content = E_let_in (e, false, ((v, t), body));
            location = Location.generated;
            type_expression = body.type_expression })
-      body (List.combine es vars)
+      ~init:body (List.zip_exn es vars)
   | _ -> e
 
 let betas : bool ref -> expression -> expression =
@@ -286,7 +296,7 @@ let eta : bool ref -> expression -> expression =
     let count = List.length es in
     let projs =
       List.mapi
-        (fun i e ->
+        ~f:(fun i e ->
            match e.content with
            | E_proj (e', j, n) ->
              if i = j && n = count
@@ -297,12 +307,12 @@ let eta : bool ref -> expression -> expression =
              else None
            | _ -> None)
         es in
-    (match Option.bind_list projs with
+    (match Option.all projs with
      | None -> e
      | Some vars ->
        match vars with
        | var :: _ ->
-         if List.for_all (Var.equal var) vars
+         if List.for_all ~f:(Var.equal var) vars
          then { e with content = E_variable (Location.wrap var) }
          else e
        | _ -> e)
@@ -314,7 +324,7 @@ let etas : bool ref -> expression -> expression =
 
 let contract_check =
   let all = [Michelson_restrictions.self_in_lambdas] in
-  let all_e = List.map Helpers.map_sub_level_expression all in
+  let all_e = List.map ~f:Helpers.map_sub_level_expression all in
   bind_chain all_e
 
 let rec all_expression : expression -> expression =

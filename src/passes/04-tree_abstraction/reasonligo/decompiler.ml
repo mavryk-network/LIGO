@@ -11,21 +11,21 @@ let ghost = Region.ghost
 
 let wrap = Region.wrap_ghost
 
-let decompile_attributes = List.map wrap
+let decompile_attributes = List.map ~f:wrap
 
 let list_to_sepseq lst =
   match lst with
     [] -> None
   |  hd :: lst ->
       let aux e = (ghost, e) in
-      Some (hd, List.map aux lst)
+      Some (hd, List.map ~f:aux lst)
 
 let list_to_nsepseq lst =
   match list_to_sepseq lst with
     Some s -> ok @@ s
   | None   -> failwith "List is empty"
 
-let nelist_to_npseq (hd, lst) = (hd, List.map (fun e -> (ghost, e)) lst)
+let nelist_to_npseq (hd, lst) = (hd, List.map ~f:(fun e -> (ghost, e)) lst)
 
 let npseq_cons hd lst = hd,(ghost, fst lst)::(snd lst)
 
@@ -90,7 +90,7 @@ let rec decompile_type_expr : AST.type_expression -> _ result = fun te ->
        ok @@ wrap field in
      let* record = bind_map_list aux record in
      let* record = list_to_nsepseq record in
-    let attributes = List.map (fun el -> wrap el) attributes in
+    let attributes = List.map ~f:(fun el -> wrap el) attributes in
      return @@ CST.TRecord (wrap @@ ne_inject braces record ~attr:attributes)
   | T_tuple tuple ->
     let* tuple = bind_map_list decompile_type_expr tuple in
@@ -143,10 +143,11 @@ let get_e_tuple : AST.expression -> _ result = fun expr ->
     Format.asprintf "%a should be a tuple expression"
     AST.PP.expression expr
 
-let pattern_type ({var;ascr}: _ AST.binder) =
-  let var = CST.PVar (decompile_variable var.wrap_content) in
+let pattern_type ({var;ascr;attributes}: _ AST.binder) =
+  let attributes = attributes |> Tree_abstraction_shared.Helpers.strings_of_binder_attributes `ReasonLIGO |> decompile_attributes in
+  let var = CST.PVar {var = decompile_variable var.wrap_content; attributes } in
   let* type_expr = bind_map_option decompile_type_expr ascr in
-  let type_expr = Option.unopt ~default:(CST.TWild ghost) type_expr in
+  let type_expr = Option.value ~default:(CST.TWild ghost) type_expr in
   ok @@ CST.PTyped (wrap @@ CST.{pattern=var;colon=ghost;type_expr})
 
 let rec decompile_expression : AST.expression -> _ result = fun expr ->
@@ -162,10 +163,10 @@ let rec decompile_expression : AST.expression -> _ result = fun expr ->
       [] -> return_expr @@ expr
     | _ ->
        let* arguments =
-        map (fun xs -> CST.Multiple (wrap (par xs))) @@
-        map (fun (hd,tl) -> hd,List.map (fun x -> ghost,x) tl) @@
-        map List.Ne.of_list @@
-        map (List.map (fun x -> CST.EPar (wrap @@ par @@ x))) @@
+        Trace.map ~f:(fun xs -> CST.Multiple (wrap (par xs))) @@
+        Trace.map ~f:(fun (hd,tl) -> hd,List.map ~f:(fun x -> ghost,x) tl) @@
+        Trace.map ~f:List.Ne.of_list @@
+        Trace.map ~f:(List.map ~f:(fun x -> CST.EPar (wrap @@ par @@ x))) @@
         bind_map_list decompile_expression arguments in
       let const = wrap (expr, arguments) in
       return_expr_with_par @@ CST.ECall const
@@ -212,9 +213,9 @@ let rec decompile_expression : AST.expression -> _ result = fun expr ->
   | E_application {lamb;args} ->
     let* lamb = decompile_expression lamb in
     let* args =
-      map (fun xs -> CST.Multiple (wrap (par xs))) @@
-      map (fun (hd,tl) -> hd,List.map (fun x -> ghost,x) tl) @@
-      map List.Ne.of_list @@
+      Trace.map ~f:(fun xs -> CST.Multiple (wrap (par xs))) @@
+      Trace.map ~f:(fun (hd,tl) -> hd,List.map ~f:(fun x -> ghost,x) tl) @@
+      Trace.map ~f:List.Ne.of_list @@
       bind (bind_map_list decompile_expression) @@
       get_e_tuple args
     in
@@ -225,8 +226,9 @@ let rec decompile_expression : AST.expression -> _ result = fun expr ->
     return_expr_with_par @@ CST.EFun (wrap @@ fun_expr)
   | E_recursive _ ->
     failwith "corner case : annonymous recursive function"
-  | E_let_in {let_binder={var;ascr};rhs;let_result;attributes} ->
-    let var = CST.PVar (decompile_variable @@ var.wrap_content) in
+  | E_let_in {let_binder={var;ascr;attributes=var_attributes};rhs;let_result;attributes} ->
+    let var_attributes = var_attributes |> Tree_abstraction_shared.Helpers.strings_of_binder_attributes `ReasonLIGO |> decompile_attributes in
+    let var = CST.PVar {var = decompile_variable @@ var.wrap_content; attributes = var_attributes } in
     let binders = var in
     let* lhs_type = bind_map_option (bind_compose (ok <@ prefix_colon) decompile_type_expr) ascr in
     let* let_rhs = decompile_expression rhs in
@@ -302,14 +304,14 @@ let rec decompile_expression : AST.expression -> _ result = fun expr ->
     | Access_map e :: lst ->
       let path = List.rev lst in
       let* field_path = bind list_to_nsepseq @@ bind_map_list decompile_to_selection path in
-      let* struct_name = map (decompile_variable) @@ get_e_variable record in
+      let* struct_name = Trace.map ~f:(decompile_variable) @@ get_e_variable record in
       let proj : CST.projection = {struct_name;selector=ghost;field_path} in
       let* e = decompile_expression e in
       let arg =  CST.Multiple (wrap (par (e,[ghost, CST.EProj (wrap proj)]))) in
       return_expr @@ CST.ECall( wrap (CST.EVar (wrap "Map.find_opt"), arg))
     | _ ->
       let* field_path = bind list_to_nsepseq @@ bind_map_list decompile_to_selection path in
-       let* struct_name = map (decompile_variable) @@ get_e_variable record in
+       let* struct_name = Trace.map ~f:(decompile_variable) @@ get_e_variable record in
       let proj : CST.projection = {struct_name;selector=ghost;field_path} in
       return_expr @@ CST.EProj (wrap proj)
     )
@@ -333,7 +335,7 @@ let rec decompile_expression : AST.expression -> _ result = fun expr ->
     let update : CST.update = {lbrace=ghost;record;ellipsis=ghost;comma=ghost;updates;rbrace=ghost} in
     return_expr @@ CST.EUpdate (wrap @@ update)
   | E_update {record; path; update} ->
-    let* record = map (decompile_variable) @@ get_e_variable record in
+    let* record = Trace.map ~f:decompile_variable @@ get_e_variable record in
     let* field_expr = decompile_expression update in
     let (struct_name,field_path) = List.Ne.of_list path in
     (match field_path with
@@ -414,23 +416,23 @@ let rec decompile_expression : AST.expression -> _ result = fun expr ->
   | E_map map ->
     let* map = bind_map_list (bind_map_pair decompile_expression) map in
     let aux (k,v) = CST.ETuple (wrap (k,[(ghost,v)])) in
-    let map = List.map aux map in
+    let map = List.map ~f:aux map in
     (match map with
       [] -> return_expr @@ CST.EVar (wrap "Big_map.empty")
     | hd::tl  ->
        let var = CST.EVar (wrap "Map.literal") in
-       let args = CST.Multiple (wrap (par (hd,List.map (fun x -> ghost,x) tl))) in
+       let args = CST.Multiple (wrap (par (hd,List.map ~f:(fun x -> ghost,x) tl))) in
       return_expr @@ CST.ECall (wrap @@ (var, args))
     )
   | E_big_map big_map ->
     let* big_map = bind_map_list (bind_map_pair decompile_expression) big_map in
     let aux (k,v) = CST.ETuple (wrap (k,[(ghost,v)])) in
-    let big_map = List.map aux big_map in
+    let big_map = List.map ~f:aux big_map in
     (match big_map with
       [] -> return_expr @@ CST.EVar (wrap "Big_map.empty")
     | hd::tl  ->
       let var = CST.EVar (wrap "Big_map.literal") in
-      let args = CST.Multiple (wrap (par (hd,List.map (fun x -> ghost,x) tl))) in
+      let args = CST.Multiple (wrap (par (hd,List.map ~f:(fun x -> ghost,x) tl))) in
       return_expr @@ CST.ECall (wrap @@ (var, args))
     )
   | E_list lst ->
@@ -441,7 +443,7 @@ let rec decompile_expression : AST.expression -> _ result = fun expr ->
     let* set = bind_map_list decompile_expression set in
     let hd,tl = List.Ne.of_list @@ set in
     let var = CST.EVar (wrap "Set.literal") in
-    let args = CST.Multiple (wrap (par (hd,List.map (fun x -> ghost,x) tl))) in
+    let args = CST.Multiple (wrap (par (hd,List.map ~f:(fun x -> ghost,x) tl))) in
     return_expr @@ CST.ECall (wrap @@ (var,args))
     (* We should avoid to generate skip instruction*)
   | E_skip -> return_expr @@ CST.EUnit (wrap (ghost,ghost))
@@ -487,7 +489,8 @@ and decompile_declaration : AST.declaration Location.wrap -> (CST.declaration, _
     ok @@ CST.TypeDecl (wrap (CST.{kwd_type=ghost; name; eq=ghost; type_expr}))
   | Declaration_constant {binder;attr;expr}-> (
     let attributes : CST.attributes = decompile_attributes attr in
-    let var = CST.PVar (decompile_variable binder.var.wrap_content) in
+    let var_attributes = binder.attributes |> Tree_abstraction_shared.Helpers.strings_of_binder_attributes `ReasonLIGO |> decompile_attributes in
+    let var = CST.PVar { var = decompile_variable binder.var.wrap_content; attributes = var_attributes } in
     let binders = var in
     let* lhs_type = bind_map_option (bind_compose (ok <@ prefix_colon) decompile_type_expr) binder.ascr in
     match expr.expression_content with
@@ -522,7 +525,8 @@ and decompile_pattern : AST.type_expression AST.pattern -> (CST.pattern,_) resul
     | AST.P_unit -> ok @@ CST.PUnit (wrap (ghost, ghost))
     | AST.P_var v ->
       let name = (decompile_variable v.var.wrap_content).value in
-      ok @@ CST.PVar (wrap name)
+      let attributes = v.attributes |> Tree_abstraction_shared.Helpers.strings_of_binder_attributes `ReasonLIGO |> decompile_attributes in
+      ok @@ CST.PVar {var = wrap name; attributes }
     | AST.P_list pl -> (
       let ret x = ok (CST.PList x) in
       match pl with
@@ -570,11 +574,11 @@ and decompile_pattern : AST.type_expression AST.pattern -> (CST.pattern,_) resul
       ok @@ CST.PTuple (wrap pl)
     | AST.P_record (llst,lst) ->
       let* pl = bind_map_list decompile_pattern lst in
-      let fields_name = List.map (fun (AST.Label x) -> wrap x) llst in
+      let fields_name = List.map ~f:(fun (AST.Label x) -> wrap x) llst in
       let field_patterns =
         List.map
-          (fun (field_name,pattern) -> wrap ({ field_name ; eq = ghost ; pattern }:CST.field_pattern))
-          (List.combine fields_name pl)
+          ~f:(fun (field_name,pattern) -> wrap ({ field_name ; eq = ghost ; pattern }:CST.field_pattern))
+          (List.zip_exn fields_name pl)
       in
       let* field_patterns = list_to_nsepseq field_patterns in
       let inj = ne_inject braces field_patterns ~attr:[] in

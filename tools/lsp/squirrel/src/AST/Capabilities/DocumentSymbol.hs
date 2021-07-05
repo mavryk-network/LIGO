@@ -1,4 +1,9 @@
-{-# LANGUAGE RecordWildCards #-}
+-- We need this pragma because of the following situation:
+-- * If we remove this pragma, GHC will warn that `_deprecated` from the
+--   `SymbolInformation` type is deprecated and CI will fail.
+-- * If we remove `_deprecated`, it will complain that such strict field was not
+--   initialized and build will fail.
+{-# OPTIONS_GHC -Wno-deprecations #-}
 
 module AST.Capabilities.DocumentSymbol where
 
@@ -9,7 +14,7 @@ import Data.Maybe (fromMaybe)
 import Data.Text
 import Duplo (match)
 import Language.LSP.Types (SymbolInformation (..))
-import qualified Language.LSP.Types as J
+import Language.LSP.Types qualified as J
 
 import AST.Capabilities.Find
 import AST.Scope
@@ -65,13 +70,38 @@ extractDocumentSymbols uri tree =
               J.SkConstant
               (\ScopedDecl {_sdName} -> Just ("const " <> _sdName))
 
+          (BConst p _ _) -> collectDecl p
+
           (BVar (match @NameDecl -> Just (getElem @Range -> r, _)) _ _) ->
             tellScopedDecl
               r
-              J.SkVariable
-              (\ScopedDecl {_sdName} -> Just ("var " <> _sdName))
+              J.SkConstant
+              (\ScopedDecl {_sdName} -> Just ("const " <> _sdName))
 
           _ -> pure ()
+
+    collectDecl (match @Pattern -> Just (_, pat)) = case pat of
+          (IsAnnot p _) -> collectDecl p
+          (IsRecord xs) -> mapM_ collectDecl xs
+          (IsTuple xs) -> mapM_ collectDecl xs
+          (IsVar (match @NameDecl -> Just (getElem @Range -> r, _))) ->
+            tellScopedDecl
+              r
+              J.SkConstant
+              (\ScopedDecl {_sdName} -> Just ("const " <> _sdName))
+
+          _ -> pure ()
+
+    collectDecl (match @RecordFieldPattern -> Just (_, rfpattern)) = case rfpattern of
+          (IsRecordField _ pat) -> collectDecl pat
+          (IsRecordCapture (match @NameDecl -> Just (getElem @Range -> r, _))) ->
+            tellScopedDecl
+              r
+              J.SkConstant
+              (\ScopedDecl {_sdName} -> Just ("const " <> _sdName))
+
+          _ -> pure ()
+
     collectDecl _ = pure ()
 
     -- | Tries to find scoped declaration and apply continuation to it or
@@ -98,6 +128,7 @@ extractDocumentSymbols uri tree =
               , _kind = kind'
               , _containerName = matchContainerName kind'
               , _location = J.Location uri $ toLspRange range
+              , _tags = Nothing
               }
           ]
 
@@ -117,6 +148,7 @@ extractDocumentSymbols uri tree =
               , _kind = kind'
               , _containerName = matchContainerName kind'
               , _location = J.Location uri $ toLspRange range
+              , _tags = Nothing
               }
           ]
 
