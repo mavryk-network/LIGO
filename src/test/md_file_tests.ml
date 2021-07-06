@@ -28,7 +28,7 @@ let get_groups md_file : snippetsmap =
       match el.header  with
       | Some ("pascaligo" as s) | Some ("cameligo" as s) | Some ("reasonligo" as s) | Some ("jsligo" as s) -> (
         let () = (*sanity check*)
-          List.iter
+          List.iter ~f:
             (fun arg ->
               match arg with
               | Md.Field "" | Md.Field "skip" | Md.NameValue ("group",_) | Md.Field "test-ligo" -> ()
@@ -68,16 +68,16 @@ let get_groups md_file : snippetsmap =
             grp_map
         )
         | args ->
-          let () = List.iter (function Md.NameValue (x,y) -> Format.printf "NamedValue %s %s\n" x y | Md.Field x -> Format.printf "%s\n" x) args in
+          let () = List.iter ~f: (function Md.NameValue (x,y) -> Format.printf "NamedValue %s %s\n" x y | Md.Field x -> Format.printf "%s\n" x) args in
           failwith "Block arguments (above) not supported"
       )
       | None | Some _ -> grp_map
   in
-  List.fold_left aux SnippetsGroup.empty code_blocks
+  List.fold_left ~f:aux ~init:SnippetsGroup.empty code_blocks
 
 (**
   if Meta : evaluate each expression in each programs from the snippets group map
-  if Object : run the ligo test framework for entrypoint "test"
+  if Object : run the ligo test framework
 **)
 let compile_groups filename grp_list =
   let aux : (syntax * group_name) * (lang * string) -> (unit, all) result =
@@ -95,7 +95,7 @@ let compile_groups filename grp_list =
         let init_env = Environment.default_with_test options.protocol_version in
         let options = { options with init_env } in
         let* typed,_    = Ligo_compile.Of_core.typecheck ~options Env inferred in
-        let* _ = Interpreter.eval_test typed "test" in
+        let* _ = Interpreter.eval_test typed in
         ok ()
       | Object ->
         let* typed,_    = Ligo_compile.Of_core.typecheck ~options Env inferred in
@@ -126,7 +126,7 @@ let get_all_md_files () =
     try
       while true do
         let md_file = input_line ic in
-        if not (List.exists (String.equal md_file) exclude_files) then
+        if not (List.exists ~f:(String.equal md_file) exclude_files) then
           let grp = get_groups md_file in
           if not (SnippetsGroup.is_empty grp) then
             all_input := md_file :: !all_input
@@ -141,7 +141,7 @@ let main =
   Sys.chdir "../.." ;
   test_suite "Markdown files" @@
     List.map
-      (fun md_file ->
+      ~f:(fun md_file ->
         let test_name = "File : "^md_file^"\"" in
         test test_name (compile md_file)
       )

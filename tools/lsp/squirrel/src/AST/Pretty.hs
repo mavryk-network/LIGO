@@ -18,7 +18,7 @@ import Data.Kind (Type)
 import Data.Maybe (isJust)
 import Data.Sum
 import Data.Text (Text)
-import qualified Data.Text as Text (pack)
+import Data.Text qualified as Text (pack)
 import Duplo (Cofree ((:<)), Layers)
 import Duplo.Pretty as Exports
   (Doc, Modifies (..), PP (PP), Pretty (..), Pretty1 (..), above, brackets, empty, fsep, indent,
@@ -26,7 +26,7 @@ import Duplo.Pretty as Exports
 import Duplo.Tree (Tree)
 
 import AST.Skeleton hiding (Type)
-import qualified AST.Skeleton as AST
+import AST.Skeleton qualified as AST
 import Parser (ShowRange)
 import Product (Contains)
 import Range (Range)
@@ -75,7 +75,7 @@ deriving via PP (ModuleAccess it) instance Pretty it => Show (ModuleAccess it)
 deriving via PP (QualifiedName it) instance Pretty it => Show (QualifiedName it)
 deriving via PP (Name it) instance Pretty it => Show (Name it)
 deriving via PP (NameDecl it) instance Pretty it => Show (NameDecl it)
-deriving via PP (NameModule it) instance Pretty it => Show (NameModule it)
+deriving via PP (ModuleName it) instance Pretty it => Show (ModuleName it)
 deriving via PP (TypeName it) instance Pretty it => Show (TypeName it)
 deriving via PP (Ctor it) instance Pretty it => Show (Ctor it)
 deriving via PP (FieldName it) instance Pretty it => Show (FieldName it)
@@ -250,6 +250,7 @@ instance Pretty1 FieldAssignment where
   pp1 = \case
     FieldAssignment accessors e -> sexpr ".=" (accessors <> [e])
     Spread n -> sexpr "..." [n]
+    Capture accessors -> sexpr ".=" accessors
 
 instance Pretty1 Constant where
   pp1 = \case
@@ -284,6 +285,7 @@ instance Pretty1 Pattern where
 instance Pretty1 RecordFieldPattern where
   pp1 = \case
     IsRecordField l b -> sexpr "rec_field?" [l, b]
+    IsRecordCapture l -> sexpr "rec_capture?" [l]
 
 instance Pretty1 Preprocessor where
   pp1 = \case
@@ -301,9 +303,9 @@ instance Pretty1 NameDecl where
   pp1 = \case
     NameDecl     raw -> pp raw
 
-instance Pretty1 NameModule where
+instance Pretty1 ModuleName where
   pp1 = \case
-    NameModule   raw -> pp raw
+    ModuleName   raw -> pp raw
 
 instance Pretty1 TypeName where
   pp1 = \case
@@ -354,9 +356,9 @@ instance LPP1 d NameDecl where
   lpp1 = \case
     NameDecl     raw -> lpp raw
 
-instance LPP1 d NameModule where
+instance LPP1 d ModuleName where
   lpp1 = \case
-    NameModule   raw -> lpp raw
+    ModuleName   raw -> lpp raw
 
 instance LPP1 d TypeName where
   lpp1 = \case
@@ -483,6 +485,7 @@ instance LPP1 'Pascal FieldAssignment where
   lpp1 = \case
     FieldAssignment n e -> lpp n <+> "=" <+> lpp e
     Spread n -> "..." <+> n
+    Capture n -> lpp n
 
 instance LPP1 'Pascal Constant where
   lpp1 = \case
@@ -506,7 +509,8 @@ instance LPP1 'Pascal Pattern where
 
 instance LPP1 'Pascal RecordFieldPattern where
   lpp1 = \case
-    IsRecordField _ _ -> error "unexpected `RecordFieldPattern` node in pascaligo dialect"
+    IsRecordField name body -> name <+> "=" <+> body
+    IsRecordCapture name -> name
 
 instance LPP1 'Pascal TField where
   lpp1 = \case
@@ -581,6 +585,7 @@ instance LPP1 'Reason FieldAssignment where
   lpp1 = \case
     FieldAssignment n e -> lpp n <+> "=" <+> lpp e
     Spread n -> "..." <.> n
+    Capture n -> lpp n
 
 instance LPP1 'Reason Constant where
   lpp1 = \case
@@ -606,6 +611,7 @@ instance LPP1 'Reason Pattern where
 instance LPP1 'Reason RecordFieldPattern where
   lpp1 = \case
     IsRecordField name body -> name <+> "=" <+> body
+    IsRecordCapture name -> name
 
 instance LPP1 'Reason TField where
   lpp1 = \case
@@ -688,6 +694,7 @@ instance LPP1 'Caml FieldAssignment where
   lpp1 = \case
     FieldAssignment n e -> lpp n <+> "=" <+> lpp e
     Spread n -> "..." <.> n
+    Capture n -> lpp n
 
 instance LPP1 'Caml Constant where
   lpp1 = \case
@@ -714,6 +721,7 @@ instance LPP1 'Caml Pattern where
 instance LPP1 'Caml RecordFieldPattern where
   lpp1 = \case
     IsRecordField name body -> name <+> "=" <+> body
+    IsRecordCapture name -> name
 
 instance LPP1 'Caml TField where
   lpp1 = \case

@@ -71,6 +71,7 @@ recognise (SomeRawTree dialect rawTree)
         "list_pattern"        -> IsList   <$> fields "element"
         "cons_pattern"        -> IsCons   <$> field  "head"   <*> field "tail"
         "var_pattern"         -> IsVar    <$> field  "name"
+        "record_pattern"      -> IsRecord <$> fields "field"
         _                     -> fallthrough
 
     -- Irrefutable tuple
@@ -78,6 +79,13 @@ recognise (SomeRawTree dialect rawTree)
       boilerplate $ \case
         "irrefutable_tuple" -> IsTuple <$> fields "item"
         _                   -> fallthrough
+
+    -- RecordFieldPattern
+  , Descent do
+      boilerplate $ \case
+        "record_field_pattern"   -> IsRecordField <$> field "name" <*> field "body"
+        "record_capture_pattern" -> IsRecordCapture <$> field "name"
+        _                        -> fallthrough
 
     -- Alt
   , Descent do
@@ -105,7 +113,7 @@ recognise (SomeRawTree dialect rawTree)
   , Descent do
       boilerplate \case
         "field_path_assignment" -> FieldAssignment <$> fields "accessor" <*> field "_rhs"
-        _ -> fallthrough
+        _                       -> fallthrough
 
     -- MapBinding
   , Descent do
@@ -126,9 +134,9 @@ recognise (SomeRawTree dialect rawTree)
   , Descent do
       boilerplate \case
         "data_projection" -> QualifiedName <$> field "struct" <*> fields "accessor"
-        "map_lookup" -> QualifiedName <$> field "container" <*> fields "index"
-        "module_field" -> QualifiedName <$> field "module" <*> fields "method"
-        _ -> fallthrough
+        "map_lookup"      -> QualifiedName <$> field "container" <*> fields "index"
+        "module_field"    -> QualifiedName <$> field "module" <*> fields "method"
+        _                 -> fallthrough
 
     -- Literal
   , Descent do
@@ -166,11 +174,11 @@ recognise (SomeRawTree dialect rawTree)
     -- Name
   , Descent do
       boilerplate' \case
-        ("Name", n) -> return $ Name n
-        ("and", _)  -> return $ Name "and"
-        ("or", _)   -> return $ Name "or"
+        ("Name", n)     -> return $ Name n
+        ("and", _)      -> return $ Name "and"
+        ("or", _)       -> return $ Name "or"
         ("contains", _) -> return $ Name "contains"
-        _           -> fallthrough
+        _               -> fallthrough
 
     -- NameDecl
   , Descent do
@@ -178,10 +186,10 @@ recognise (SomeRawTree dialect rawTree)
         ("NameDecl", n) -> return $ NameDecl n
         _               -> fallthrough
 
-    -- NameModule
+    -- ModuleName
   , Descent do
       boilerplate' $ \case
-        ("NameModule", n) -> return $ NameModule n
+        ("ModuleName", n) -> return $ ModuleName n
         _                 -> fallthrough
 
     -- Type
@@ -196,7 +204,7 @@ recognise (SomeRawTree dialect rawTree)
         "michelsonTypeAnd" -> TAnd     <$> field "left_type" <*> field "left_type_name" <*> field "right_type" <*> field "right_type_name"
         "type_group"       -> TProduct <$> (pure <$> field "type")
         "TypeWildcard"     -> pure TWildcard
-        _                 -> fallthrough
+        _                  -> fallthrough
 
     -- Module access:
   , Descent do
@@ -232,14 +240,14 @@ recognise (SomeRawTree dialect rawTree)
     -- Ctor
   , Descent do
       boilerplate' \case
-        ("NameConstr", name) -> return $ Ctor name
-        ("NameModule", name) -> return $ Ctor name
-        ("None", _)            -> return $ Ctor "None"
-        ("True", _)            -> return $ Ctor "True"
-        ("False", _)           -> return $ Ctor "False"
-        ("Unit", _)            -> return $ Ctor "Unit"
-        ("constr", n)          -> return $ Ctor n
-        _                      -> fallthrough
+        ("ConstrName", name) -> return $ Ctor name
+        ("ModuleName", name) -> return $ Ctor name
+        ("None", _)          -> return $ Ctor "None"
+        ("True", _)          -> return $ Ctor "True"
+        ("False", _)         -> return $ Ctor "False"
+        ("Unit", _)          -> return $ Ctor "Unit"
+        ("constr", n)        -> return $ Ctor n
+        _                    -> fallthrough
 
     -- FieldName
   , Descent do

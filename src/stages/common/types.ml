@@ -32,7 +32,7 @@ type 'a label_map = 'a LMap.t
 let const_name = function
   | Deprecated {const;_} -> const
   | Const      const     -> const
-let bindings_to_yojson f g xs = `List (List.map (fun (x,y) -> `List [f x; g y]) xs)
+let bindings_to_yojson f g xs = `List (List.map ~f:(fun (x,y) -> `List [f x; g y]) xs)
 let label_map_to_yojson row_elem_to_yojson m =
   bindings_to_yojson label_to_yojson row_elem_to_yojson (LMap.bindings m)
 
@@ -70,9 +70,14 @@ type 'ty_exp arrow = {
   }
 
 (* Expression level types *)
+type binder_attributes = {
+    const_or_var : [`Const | `Var] option;
+  }
+
 type 'ty_exp binder = {
   var  : expression_variable ;
   ascr : 'ty_exp option;
+  attributes : binder_attributes ;
   }
 
 

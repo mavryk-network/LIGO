@@ -7,8 +7,8 @@ import System.FilePath ((</>))
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit (testCase)
 
-import Test.Util (contractsDir, getContractsWithExtension, supportedExtensions)
-import Test.Util.Parsers (checkFile)
+import Test.Common.Util (contractsDir, getContractsWithExtension, supportedExtensions)
+import Test.Common.Util.Parsers (checkFile)
 
 okayIgnoreContracts :: [FilePath]
 okayIgnoreContracts = (contractsDir </>) <$> ignore
@@ -21,11 +21,10 @@ okayIgnoreContracts = (contractsDir </>) <$> ignore
       , "protocol_dalphanet.mligo"
       , "modules.mligo"
       , "heap.ligo"
+      , "heap-instance.ligo"
       , "modules.ligo"
       , "assert.religo"
-      , "let_multiple.mligo"
-      , "let_destructuring.ligo"
-      , "let_destructuring.mligo"
+      , "warning_duplicate.mligo"
       ]
 
 okayContractsDirs :: [FilePath]

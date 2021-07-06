@@ -11,20 +11,20 @@ let ghost = Region.ghost
 
 let wrap = Region.wrap_ghost
 
-let decompile_attributes = List.map wrap
+let decompile_attributes = List.map ~f:wrap
 
 let list_to_sepseq lst =
   match lst with
     [] -> None
   |  hd :: lst ->
       let aux e = (ghost, e) in
-      Some (hd, List.map aux lst)
+      Some (hd, List.map ~f:aux lst)
 
 let list_to_nsepseq lst =
   match list_to_sepseq lst with
     Some s -> ok @@ s
   | None   -> failwith "List is not a non_empty list"
-let nelist_to_npseq (hd, lst) = (hd, List.map (fun e -> (ghost, e)) lst)
+let nelist_to_npseq (hd, lst) = (hd, List.map ~f:(fun e -> (ghost, e)) lst)
 let npseq_cons hd lst = hd,(ghost, fst lst)::(snd lst)
 
 let par a = CST.{lpar=ghost;inside=a;rpar=ghost}
@@ -265,13 +265,13 @@ and decompile_pattern : dialect -> AST.type_expression AST.pattern -> (CST.patte
           let field_name = wrap label in
           ok @@ wrap ({ field_name ; eq = ghost ; pattern } : CST.field_pattern)
       in
-      let* field_patterns = bind_map_list aux (List.combine labels patterns) in
+      let* field_patterns = bind_map_list aux (List.zip_exn labels patterns) in
       let inj = inject dialect (InjRecord ghost) (list_to_sepseq field_patterns) in
       ok @@ CST.PRecord (wrap inj)
 
 and decompile_to_block : dialect -> AST.expression -> _ result = fun dialect expr ->
   let* (stats,next) = decompile_eos dialect Expression expr in
-  let block = Option.map (to_block dialect <@ nelist_to_npseq) stats in
+  let block = Option.map ~f:(to_block dialect <@ nelist_to_npseq) stats in
   ok @@ (block, next)
 
 and decompile_to_tuple_expr : dialect -> AST.expression list -> (CST.tuple_expr,_) result = fun dialect expr ->
@@ -357,29 +357,6 @@ and decompile_eos : dialect -> eos -> AST.expression -> ((CST.statement List.Ne.
     return_expr_with_par @@ CST.EFun (wrap @@ fun_expr)
   | E_recursive _ ->
     failwith "corner case : annonymous recursive function"
-  | E_let_in {let_binder={var;_};rhs={expression_content=E_update {record={expression_content=E_variable v;_};path;update};_};let_result;attributes=_}
-      when Var.equal var.wrap_content v.wrap_content ->
-    let* lhs = (match List.rev path with
-      Access_map e :: path ->
-      let* path  = decompile_to_path var @@ List.rev path in
-      let* index = map (wrap <@ brackets) @@ decompile_expression ~dialect e in
-      let mlu : CST.map_lookup = {path; index} in
-      ok @@ CST.MapPath (wrap @@ mlu)
-    | _ ->
-      let* path  = decompile_to_path var @@ path in
-      ok @@ (CST.Path (path) : CST.lhs)
-    )
-    in
-    let* rhs = decompile_expression ~dialect update in
-    let assign : CST.assignment = {lhs;assign=ghost;rhs} in
-    let assign = CST.Instr (CST.Assign (wrap @@ assign)) in
-    let* (stat,expr) = decompile_eos dialect output let_result in
-    let stat = (match stat with
-      Some (stat) -> Some (List.Ne.cons assign stat)
-    | None -> Some (assign,[])
-    )
-    in
-    return @@ (stat,expr)
   | E_let_in {let_binder;rhs;let_result;attributes} ->
     let* lin = decompile_to_data_decl dialect let_binder rhs attributes in
     let* (lst, expr) = decompile_eos dialect Expression let_result in
@@ -484,7 +461,7 @@ and decompile_eos : dialect -> eos -> AST.expression -> ((CST.statement List.Ne.
     | Access_map e :: lst ->
       let path = List.rev lst in
       let* field_path = bind list_to_nsepseq @@ bind_map_list decompile_to_selection path in
-      let* struct_name = map (decompile_variable) @@ get_e_variable record in
+      let* struct_name = Trace.map ~f:decompile_variable @@ get_e_variable record in
       let proj : CST.projection = {struct_name;selector=ghost;field_path} in
       let path : CST.path = CST.Path (wrap proj) in
       let* e = decompile_expression ~dialect e in
@@ -493,7 +470,7 @@ and decompile_eos : dialect -> eos -> AST.expression -> ((CST.statement List.Ne.
       return_expr @@ CST.EMap(MapLookUp (wrap @@ mlu))
     | _ ->
       let* field_path = bind list_to_nsepseq @@ bind_map_list decompile_to_selection path in
-       let* struct_name = map (decompile_variable) @@ get_e_variable record in
+       let* struct_name = Trace.map ~f:decompile_variable @@ get_e_variable record in
       let proj : CST.projection = {struct_name;selector=ghost;field_path} in
       return_expr @@ CST.EProj (wrap proj)
     )
@@ -517,7 +494,7 @@ and decompile_eos : dialect -> eos -> AST.expression -> ((CST.statement List.Ne.
     let update : CST.update = {record;kwd_with=ghost;updates} in
     return_expr @@ CST.EUpdate (wrap @@ update)
   | E_update {record; path; update} ->
-    let* record = map (decompile_variable) @@ get_e_variable record in
+    let* record = Trace.map ~f:decompile_variable @@ get_e_variable record in
     let* field_expr = decompile_expression ~dialect update in
     let (struct_name,field_path) = List.Ne.of_list path in
     (match field_path with
@@ -589,8 +566,8 @@ and decompile_eos : dialect -> eos -> AST.expression -> ((CST.statement List.Ne.
     )
   | E_sequence {expr1;expr2} ->
     let* expr1 = decompile_statements dialect expr1 in
-    let* (expr2,next) = decompile_eos dialect Statements expr2 in
-    let expr1 = Option.unopt ~default:expr1 @@ Option.map (List.Ne.append expr1) expr2 in
+    let* (expr2,next) = decompile_eos dialect output expr2 in
+    let expr1 = Option.value ~default:expr1 @@ Option.map ~f:(List.Ne.append expr1) expr2 in
     return @@ (Some expr1, next)
   | E_skip -> return_inst @@ CST.Skip ghost
   | E_tuple tuple ->
@@ -603,7 +580,7 @@ and decompile_eos : dialect -> eos -> AST.expression -> ((CST.statement List.Ne.
       let binding : CST.binding = {source=k;arrow=ghost;image=v} in
       wrap @@ binding
     in
-    let map = list_to_sepseq @@ List.map aux map in
+    let map = list_to_sepseq @@ List.map ~f:aux map in
     return_expr @@ CST.EMap (MapInj (wrap @@ inject dialect (InjMap ghost) @@ map))
   | E_big_map big_map ->
     let* big_map = bind_map_list (bind_map_pair (decompile_expression ~dialect)) big_map in
@@ -611,7 +588,7 @@ and decompile_eos : dialect -> eos -> AST.expression -> ((CST.statement List.Ne.
       let binding : CST.binding = {source=k;arrow=ghost;image=v} in
       wrap @@ binding
     in
-    let big_map = list_to_sepseq @@ List.map aux big_map in
+    let big_map = list_to_sepseq @@ List.map ~f:aux big_map in
     return_expr @@ CST.EMap (BigMapInj (wrap @@ inject dialect (InjBigMap ghost) @@ big_map))
   | E_list lst ->
     let* lst = bind_map_list (decompile_expression ~dialect) lst in
@@ -633,23 +610,23 @@ and decompile_eos : dialect -> eos -> AST.expression -> ((CST.statement List.Ne.
     let* step  = decompile_expression ~dialect incr  in
     let step       = Some (ghost, step) in
     let* (block,_next) = decompile_to_block dialect f_body in
-    let block = wrap @@ Option.unopt ~default:(empty_block dialect) block in
+    let block = wrap @@ Option.value ~default:(empty_block dialect) block in
     let fl : CST.for_int = {kwd_for=ghost;binder;assign=ghost;init;kwd_to=ghost;bound;step;block} in
     return_inst @@ CST.Loop (For (ForInt (wrap fl)))
   | E_for_each {fe_binder;collection;collection_type;fe_body} ->
     let var = decompile_variable @@ (fst fe_binder).wrap_content in
-    let bind_to = Option.map (fun (x:AST.expression_variable) -> (ghost,decompile_variable x.wrap_content)) @@ snd fe_binder in
+    let bind_to = Option.map ~f:(fun (x:AST.expression_variable) -> (ghost,decompile_variable x.wrap_content)) @@ snd fe_binder in
     let* expr = decompile_expression ~dialect collection in
     let collection = match collection_type with
       Map -> CST.Map ghost | Set -> Set ghost | List -> List ghost | Any -> failwith "TODO : have the type of the collection propagated from AST_typed" in
     let* (block,_next) = decompile_to_block dialect fe_body in
-    let block = wrap @@ Option.unopt ~default:(empty_block dialect) block in
+    let block = wrap @@ Option.value ~default:(empty_block dialect) block in
     let fc : CST.for_collect = {kwd_for=ghost;var;bind_to;kwd_in=ghost;collection;expr;block} in
     return_inst @@ CST.Loop (For (ForCollect (wrap fc)))
   | E_while {cond;body} ->
     let* cond  = decompile_expression ~dialect cond in
     let* (block,_next) = decompile_to_block dialect body in
-    let block = wrap @@ Option.unopt ~default:(empty_block dialect) block in
+    let block = wrap @@ Option.value ~default:(empty_block dialect) block in
     let loop : CST.while_loop = {kwd_while=ghost;cond;block} in
     return_inst @@ CST.Loop (While (wrap loop))
 
@@ -695,7 +672,7 @@ and decompile_to_lhs : dialect -> AST.expression_variable -> _ AST.access list -
     match hd with
     | AST.Access_map e ->
       let* path = decompile_to_path var @@ List.rev tl in
-      let* index = map (wrap <@ brackets) @@ decompile_expression ~dialect e in
+      let* index = Trace.map ~f:(wrap <@ brackets) @@ decompile_expression ~dialect e in
       let mlu: CST.map_lookup = {path;index} in
       ok @@ CST.MapPath (wrap @@ mlu)
     | _ ->

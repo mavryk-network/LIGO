@@ -5,6 +5,18 @@ let good_test s = (test "")^"/deep_pattern_matching/"^s
 
 (* Negatives *)
 
+(* wrong unit pattern in a let destructuring *)
+let%expect_test _ =
+  run_ligo_bad [ "print-ast-typed" ; (bad_test "pm_fail14.mligo") ] ;
+  [%expect{|
+    File "../../test/contracts/negative//deep_pattern_matching/pm_fail14.mligo", line 2, characters 6-8:
+      1 | let main (_ : unit * unit) : operation list * unit =
+      2 |   let () = 42n in
+      3 |   (([] : operation list), ())
+
+    Variant pattern argument is expected of type nat but is of type unit. |}]
+
+
 (* Trying to match on values *)
 let%expect_test _ =
   run_ligo_bad [ "print-ast-typed" ; (bad_test "pm_fail10.mligo") ] ;
@@ -331,8 +343,10 @@ let%expect_test _ =
   [%expect{|
     File "../../test/contracts//deep_pattern_matching/pm_ticket.mligo", line 5, characters 18-19:
     Warning: unused variable "s".
+    Hint: replace it by "_s" to prevent this warning.
     File "../../test/contracts//deep_pattern_matching/pm_ticket.mligo", line 7, characters 14-17:
     Warning: unused variable "myt".
+    Hint: replace it by "_myt" to prevent this warning.
 
     { parameter (pair (pair (nat %mynat) (ticket %myt int)) (option nat)) ;
       storage nat ;
