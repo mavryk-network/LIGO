@@ -1,16 +1,16 @@
 (library
-  (name proto_alpha_utils)
-  (public_name proto-alpha-utils)
-  (libraries
-    tezos-base
-    tezos-stdlib-unix
-    tezos-protocol-009-PsFLoren
-    tezos-protocol-009-PsFLoren-parameters
-    tezos-protocol-environment
-    tezos-memory-proto-alpha
-    data-encoding
-    simple-utils
-    tezos-utils
-  )
- (flags (:standard -open Simple_utils))
-)
+ (name proto_alpha_utils)
+ (public_name proto-alpha-utils)
+ (libraries
+  tezos-base
+  tezos-stdlib-unix
+  tezos-protocol-009-PsFLoren
+  tezos-protocol-009-PsFLoren-parameters
+  tezos-protocol-environment
+  tezos-memory-proto-alpha
+  client_utils-009-PsFLoren
+  data-encoding
+  simple-utils
+  tezos-utils)
+ (flags
+  (:standard -open Simple_utils -open Client_utils_009_PsFLoren)))

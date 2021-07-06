@@ -18,7 +18,6 @@ depends: [
   "cstruct"
   "ezjsonm"
   "hex"
-  # "hidapi"
   "ipaddr"
   "macaddr"
   "irmin"
