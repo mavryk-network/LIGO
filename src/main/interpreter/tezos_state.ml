@@ -5,10 +5,13 @@ open Ligo_interpreter_exc
 
 type block = Tezos_alpha_test_helpers.Block.t
 type last_originations = (Memory_proto_alpha.Protocol.Alpha_context.Contract.t * Memory_proto_alpha.Protocol.Alpha_context.Contract.t list) list
+type storage_tys = (Tezos_protocol_008_PtEdo2Zk.Protocol.Alpha_context.Contract.t * Ast_typed.type_expression) list
 
 type context = {
+  alpha_context : Memory_proto_alpha.Protocol.Alpha_context.t option;
   threaded_context : block ;
   last_originations : last_originations ;
+  storage_tys : storage_tys ;
   baker : Memory_proto_alpha.Protocol.Alpha_context.Contract.t ;
   source : Memory_proto_alpha.Protocol.Alpha_context.Contract.t ;
   bootstrapped : Memory_proto_alpha.Protocol.Alpha_context.Contract.t list ;
@@ -19,32 +22,83 @@ type add_operation_outcome =
   | Success of context
   | Fail of state_error
 
-
-let compare_account a b = Memory_proto_alpha.Protocol.Alpha_context.Contract.compare a b = 0
+let compare_account_ = Memory_proto_alpha.Protocol.Alpha_context.Contract.compare
+let compare_account a b = (compare_account_ a b) = 0
 let ligo_to_canonical ~loc (x: unit Tezos_utils.Michelson.michelson) =
   let open Tezos_micheline.Micheline in
   let x = inject_locations (fun _ -> 0) (strip_locations x) in
   let x = strip_locations x in
-  let%bind x = Trace.trace_alpha_tzresult (throw_obj_exc loc) @@
+  let* x = Trace.trace_alpha_tzresult (throw_obj_exc loc) @@
     Tezos_protocol_008_PtEdo2Zk.Protocol.Michelson_v1_primitives.prims_of_strings x
   in
   ok (Tezos_protocol_008_PtEdo2Zk.Protocol.Alpha_context.Script.lazy_expr x)
+
+let ligo_to_precanonical ~loc (x: unit Tezos_utils.Michelson.michelson) =
+  let open Tezos_micheline.Micheline in
+  let x = inject_locations (fun _ -> 0) (strip_locations x) in
+  let x = strip_locations x in
+  let* x = Trace.trace_alpha_tzresult (throw_obj_exc loc) @@
+    Tezos_protocol_008_PtEdo2Zk.Protocol.Michelson_v1_primitives.prims_of_strings x in
+  ok x
 
 let canonical_to_ligo x =
   x |> Tezos_protocol_008_PtEdo2Zk.Protocol.Michelson_v1_primitives.strings_of_prims
     |> Tezos_micheline.Micheline.inject_locations (fun _ -> ())
 
+
+let get_alpha_context (ctxt : context) =
+  ctxt.alpha_context
+
+let get_timestamp (ctxt : context) =
+  ctxt.threaded_context.header.shell.timestamp
+
+let get_big_map ~loc (ctxt : context) id key key_ty  =
+  let open Tezos_raw_protocol_008_PtEdo2Zk in
+  let id = Alpha_context.Big_map.Id.parse_z id in
+  let* key_ty_michelson =
+    Trace.trace_tzresult_lwt Main_errors.parsing_input_tracer @@
+    Memory_proto_alpha.prims_of_strings key_ty in
+  let* (Ex_ty key_ty) =
+    Trace.trace_tzresult_lwt Main_errors.parsing_input_tracer @@
+    Memory_proto_alpha.parse_michelson_ty key_ty_michelson in
+  let* key_michelson =
+    Trace.trace_tzresult_lwt Main_errors.parsing_input_tracer @@
+    Memory_proto_alpha.prims_of_strings key in
+  let* key =
+    Trace.trace_tzresult_lwt Main_errors.parsing_input_tracer @@
+    Memory_proto_alpha.parse_michelson_data key_michelson key_ty in
+  let* fctxt = Trace.trace_option (Errors.generic_error loc "Not an alpha context yet?") @@ get_alpha_context ctxt in
+  let* hash,_ = Trace.trace_alpha_tzresult_lwt (throw_obj_exc loc) @@ Script_ir_translator.hash_data fctxt key_ty key in
+  let exec_get = Lwt_main.run @@
+                 Tezos_protocol_008_PtEdo2Zk.Protocol.Alpha_services.Contract.big_map_get Tezos_alpha_test_helpers.Block.rpc_ctxt ctxt.threaded_context id hash in
+  let error = Errors.generic_error loc "Unexpected response when accessing element from big_map identifier" in
+  match exec_get with
+  | Ok x -> ok (Some x)
+  | Error [err] ->
+     begin
+     let err = Error_monad.json_of_error err in
+     match err with
+     | `O kvs ->
+        begin
+        match List.Assoc.find kvs "id" ~equal:String.equal with
+        | Some (`String id) when String.equal id "RPC_context.Not_found" -> ok None
+        | _ -> fail @@ error
+        end
+     | _ -> fail @@ error
+     end
+  | Error _ ->  fail @@ error
+
 let get_storage ~loc ctxt addr =
-  let%bind st_v = Trace.trace_tzresult_lwt (throw_obj_exc loc) @@
+  let* st_v = Trace.trace_tzresult_lwt (throw_obj_exc loc) @@
     Tezos_protocol_008_PtEdo2Zk.Protocol.Alpha_services.Contract.storage Tezos_alpha_test_helpers.Block.rpc_ctxt ctxt.threaded_context addr
   in
-  let%bind st_ty = Trace.trace_tzresult_lwt (throw_obj_exc loc) @@
+  let* st_ty = Trace.trace_tzresult_lwt (throw_obj_exc loc) @@
     Tezos_protocol_008_PtEdo2Zk.Protocol.Alpha_services.Contract.script Tezos_alpha_test_helpers.Block.rpc_ctxt ctxt.threaded_context addr
   in
-  let%bind (x,_) = Trace.trace_alpha_tzresult (throw_obj_exc loc) @@
+  let* (x,_) = Trace.trace_alpha_tzresult (throw_obj_exc loc) @@
     Memory_proto_alpha.Protocol.Script_repr.force_decode st_ty.code
   in
-  let%bind (_parameter_ty, storage_ty, _, _) = Trace.trace_alpha_tzresult (throw_obj_exc loc) @@
+  let* (_parameter_ty, storage_ty, _, _) = Trace.trace_alpha_tzresult (throw_obj_exc loc) @@
     Tezos_protocol_008_PtEdo2Zk.Protocol.Script_ir_translator.parse_toplevel ~legacy:false x
   in
   let storage_ty = Tezos_micheline.Micheline.(inject_locations (fun _ -> ()) (strip_locations storage_ty)) in
@@ -55,14 +109,14 @@ let get_storage ~loc ctxt addr =
 let get_balance ~loc (ctxt :context) addr =
   Trace.trace_tzresult_lwt (throw_obj_exc loc) @@
     Tezos_alpha_test_helpers.Context.Contract.balance (B ctxt.threaded_context) addr
-(*   
+(*
 let decode_op ~loc : bytes -> (Memory_proto_alpha.Protocol.Alpha_context.packed_internal_operation,_) result = fun b ->
   Trace.trace_decoding_error (fun _ -> Errors.generic_error loc "Error while decoding operation") @@
   Data_encoding.Binary.of_bytes Memory_proto_alpha.Protocol.Alpha_context.Operation.internal_operation_encoding b *)
 
 let get_contract_rejection_data :
   state_error -> (Memory_proto_alpha.Protocol.Alpha_context.Contract.t * unit Tezos_utils.Michelson.michelson) option =
-  fun errs -> 
+  fun errs ->
     let open Tezos_protocol_008_PtEdo2Zk.Protocol in
     let open Script_interpreter in
     let open Environment in
@@ -71,14 +125,14 @@ let get_contract_rejection_data :
       let x = canonical_to_ligo x in
       Some (contract,x)
     | _ -> None
-  
+
 let unwrap_baker ~loc : Memory_proto_alpha.Protocol.Alpha_context.Contract.t -> (Tezos_crypto.Signature.Public_key_hash.t , _ ) result =
   fun x ->
     Trace.trace_option (Errors.generic_error loc "The baker is not an implicit account") @@ Memory_proto_alpha.Protocol.Alpha_context.Contract.is_implicit x
 
 let script_of_compiled_code ~loc (contract : unit Tezos_utils.Michelson.michelson) (storage : unit Tezos_utils.Michelson.michelson) : (Tezos_protocol_008_PtEdo2Zk.Protocol.Alpha_context.Script.t, _) result  =
-  let%bind contract = ligo_to_canonical ~loc contract in
-  let%bind storage = ligo_to_canonical ~loc storage in
+  let* contract = ligo_to_canonical ~loc contract in
+  let* storage = ligo_to_canonical ~loc storage in
   ok @@ Tezos_protocol_008_PtEdo2Zk.Protocol.Alpha_context.Script.{
     code = contract ;
     storage = storage ;
@@ -86,15 +140,15 @@ let script_of_compiled_code ~loc (contract : unit Tezos_utils.Michelson.michelso
 
 let set_timestamp ~loc ({threaded_context;baker;_} as context :context) (timestamp:Z.t) =
   let open Tezos_alpha_test_helpers in
-  let%bind baker = unwrap_baker ~loc baker in
+  let* baker = unwrap_baker ~loc baker in
   let (timestamp:Time.Protocol.t) = Time.Protocol.of_seconds (Z.to_int64 timestamp) in
-  let%bind incr = Trace.trace_tzresult_lwt (throw_obj_exc loc) @@
+  let* incr = Trace.trace_tzresult_lwt (throw_obj_exc loc) @@
     Incremental.begin_construction ~timestamp ~policy:Block.(By_account baker) threaded_context
   in
-  let%bind threaded_context = Trace.trace_tzresult_lwt (throw_obj_exc loc) @@
+  let* threaded_context = Trace.trace_tzresult_lwt (throw_obj_exc loc) @@
     Incremental.finalize_block incr
   in
-  ok { context with threaded_context }
+  ok { context with threaded_context; alpha_context = Some (Incremental.alpha_ctxt incr) }
 
 let extract_origination_from_result :
   type a .
@@ -110,7 +164,7 @@ let extract_origination_from_result :
       | Internal_operation_result ({source ; _},Applied (Origination_result x)) -> [(source, x.originated_contracts)]
       | _ -> []
     in
-    List.flatten @@ List.map aux internal_operation_results
+    List.concat @@ List.map ~f:aux internal_operation_results
   | Manager_operation_result { operation_result = Applied (Origination_result x) ; internal_operation_results=_ } ->
     [(src, x.originated_contracts)]
   | _ -> []
@@ -138,49 +192,51 @@ let get_last_originations : Memory_proto_alpha.Protocol.Alpha_context.Contract.t
 
 let bake_op ~loc (ctxt:context) operation =
   let open Tezos_alpha_test_helpers in
-  let%bind baker = unwrap_baker ~loc ctxt.baker in
-  let%bind incr = Trace.trace_tzresult_lwt (throw_obj_exc loc) @@
+  let* baker = unwrap_baker ~loc ctxt.baker in
+  let* incr = Trace.trace_tzresult_lwt (throw_obj_exc loc) @@
     Incremental.begin_construction ~policy:Block.(By_account baker) ctxt.threaded_context
   in
   let incr = Incremental.add_operation incr operation in
   match Lwt_main.run @@ incr with
   | Ok incr ->
-    let%bind last_op = Trace.trace_tzresult_lwt (throw_obj_exc loc) @@
+    let* last_op = Trace.trace_tzresult_lwt (throw_obj_exc loc) @@
       Incremental.get_last_operation_result incr
     in
     let last_originations = get_last_originations ctxt.source last_op in
-    let%bind threaded_context = Trace.trace_tzresult_lwt (throw_obj_exc loc) @@
+    let* threaded_context = Trace.trace_tzresult_lwt (throw_obj_exc loc) @@
       Incremental.finalize_block incr
     in
-    ok (Success {ctxt with threaded_context ; last_originations })
+    ok (Success {ctxt with threaded_context ; last_originations ; alpha_context = Some (Incremental.alpha_ctxt incr) })
   | Error errs -> ok (Fail errs)
 
 
-let transfer ~loc (ctxt:context) dst parameter amt : (add_operation_outcome, _) result =
+let transfer ~loc (ctxt:context) ?entrypoint dst parameter amt : (add_operation_outcome, _) result =
   let open Tezos_alpha_test_helpers in
-  let%bind parameters = ligo_to_canonical ~loc parameter in
-  let%bind operation = Trace.trace_tzresult_lwt (throw_obj_exc loc) @@
-    (*REMITODO, fee? *)
-    Op.transaction ~fee:(Test_tez.Tez.of_int 23) ~parameters (B ctxt.threaded_context) ctxt.source dst (Test_tez.Tez.of_int (Z.to_int amt))
+  let* parameters = ligo_to_canonical ~loc parameter in
+  let* operation = Trace.trace_tzresult_lwt (throw_obj_exc loc) @@
+    (* TODO: fee? *)
+    let amt = Int64.of_int (Z.to_int amt) in
+    Op.transaction ~fee:(Test_tez.Tez.of_int 23) ~parameters ?entrypoint (B ctxt.threaded_context) ctxt.source dst (Test_tez.Tez.of_mutez_exn amt)
   in
   bake_op ~loc ctxt operation
 
-let originate_contract ~loc (ctxt :context) (contract : unit Tezos_utils.Michelson.michelson) (storage : unit Tezos_utils.Michelson.michelson) =
+let originate_contract ~loc (ctxt :context) (contract : unit Tezos_utils.Michelson.michelson) (storage : unit Tezos_utils.Michelson.michelson) (amt : Z.t) =
   let open Tezos_alpha_test_helpers in
-  let%bind script = script_of_compiled_code ~loc contract storage in
-  let%bind (operation, dst) = Trace.trace_tzresult_lwt (throw_obj_exc loc) @@
-    (* REMITODO , fee ? *)
-    Op.origination (B ctxt.threaded_context) ctxt.source ~fee:(Test_tez.Tez.of_int 10) ~script
+  let amt = Test_tez.Tez.of_mutez (Int64.of_int (Z.to_int amt)) in
+  let* script = script_of_compiled_code ~loc contract storage in
+  let* (operation, dst) = Trace.trace_tzresult_lwt (throw_obj_exc loc) @@
+    (* TODO : fee ? *)
+    Op.origination (B ctxt.threaded_context) ctxt.source ?credit:amt ~fee:(Test_tez.Tez.of_int 10) ~script
   in
-  let%bind res = bake_op ~loc ctxt operation in
+  let* res = bake_op ~loc ctxt operation in
   ok (dst, res)
 
 let init_ctxt ?(loc=Location.generated) ?(initial_balances=[]) ?(n=2) ()  =
-  let%bind (threaded_context, acclst) = Trace.trace_tzresult_lwt (throw_obj_exc loc) @@
+  let* (threaded_context, acclst) = Trace.trace_tzresult_lwt (throw_obj_exc loc) @@
     Tezos_alpha_test_helpers.Context.init ~initial_balances n
   in
   match acclst with
   | baker::source::_ ->
-    ok { threaded_context ; baker ; source ; bootstrapped = acclst ; last_originations = [] }
+    ok { threaded_context ; baker ; source ; bootstrapped = acclst ; last_originations = [] ; storage_tys = [] ; alpha_context = None }
   | _ ->
     fail (Errors.bootstrap_not_enough loc)

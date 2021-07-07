@@ -1,11 +1,11 @@
 open Types
-open Yojson_helpers
 
 type json = Yojson.Safe.t
 
 let constant' = function
   | C_INT                -> `List [`String "C_INT"; `Null ]
   | C_UNIT               -> `List [`String "C_UNIT"; `Null ]
+  | C_NEVER              -> `List [`String "C_NEVER"; `Null ]
   | C_NIL                -> `List [`String "C_NIL"; `Null ]
   | C_NOW                -> `List [`String "C_NOW"; `Null ]
   | C_IS_NAT             -> `List [`String "C_IS_NAT"; `Null ]
@@ -106,6 +106,7 @@ let constant' = function
   | C_BIG_MAP_EMPTY      -> `List [`String "C_BIG_MAP_EMPTY"; `Null ]
   | C_BIG_MAP_LITERAL    -> `List [`String "C_BIG_MAP_LITERAL"; `Null ]
   | C_BIG_MAP_GET_AND_UPDATE -> `List [`String "C_BIG_MAP_GET_AND_UPDATE"; `Null ]
+  | C_BIG_MAP_IDENTIFIER -> `List [`String "C_BIG_MAP_IDENTIFIER"; `Null ]
   (* Crypto *)
   | C_SHA256             -> `List [`String "C_SHA256"; `Null ]
   | C_SHA512             -> `List [`String "C_SHA512"; `Null ]
@@ -135,12 +136,16 @@ let constant' = function
   | C_CONVERT_FROM_LEFT_COMB   -> `List [`String "C_CONVERT_FROM_LEFT_COMB"; `Null ]
   | C_CONVERT_FROM_RIGHT_COMB  -> `List [`String "C_CONVERT_FROM_RIGHT_COMB"; `Null ]
   | C_TEST_ORIGINATE           -> `List [`String "TEST_ORIGINATE"; `Null ]
+  | C_TEST_ORIGINATE_FROM_FILE -> `List [`String "TEST_ORIGINATE_FROM_FILE"; `Null ]
   | C_TEST_SET_NOW             -> `List [`String "TEST_SET_NOW"; `Null ]
   | C_TEST_SET_SOURCE          -> `List [`String "TEST_SET_SOURCE"; `Null ]
   | C_TEST_SET_BAKER           -> `List [`String "TEST_SET_BAKER"; `Null ]
-  | C_TEST_EXTERNAL_CALL       -> `List [`String "TEST_EXTERNAL_CALL"; `Null ]
-  | C_TEST_EXTERNAL_CALL_EXN   -> `List [`String "TEST_EXTERNAL_CALL_EXN"; `Null ]
+  | C_TEST_EXTERNAL_CALL_TO_CONTRACT -> `List [`String "TEST_EXTERNAL_CALL_TO_CONTRACT"; `Null ]
+  | C_TEST_EXTERNAL_CALL_TO_CONTRACT_EXN -> `List [`String "TEST_EXTERNAL_CALL_TO_CONTRACT_EXN"; `Null ]
+  | C_TEST_EXTERNAL_CALL_TO_ADDRESS -> `List [`String "TEST_EXTERNAL_CALL_TO_ADDRESS"; `Null ]
+  | C_TEST_EXTERNAL_CALL_TO_ADDRESS_EXN   -> `List [`String "TEST_EXTERNAL_CALL_TO_ADDRESS_EXN"; `Null ]
   | C_TEST_GET_STORAGE         -> `List [`String "TEST_GET_STORAGE"; `Null ]
+  | C_TEST_GET_STORAGE_OF_ADDRESS -> `List [`String "TEST_GET_STORAGE_OF_ADDRESS"; `Null ]
   | C_TEST_GET_BALANCE         -> `List [`String "TEST_GET_BALANCE"; `Null ]
   | C_TEST_COMPILE_EXPRESSION  -> `List [`String "TEST_COMPILE_EXPRESSION"; `Null]
   | C_TEST_MICHELSON_EQUAL        -> `List [`String "TEST_ASSERT_FAILURE"; `Null ]
@@ -150,10 +155,15 @@ let constant' = function
   | C_TEST_LAST_ORIGINATIONS   -> `List [`String "TEST_LAST_ORIGINATIONS"; `Null ]
   | C_TEST_COMPILE_META_VALUE  -> `List [`String "TEST_COMPILE_META_VALUE"; `Null ]
   | C_TEST_COMPILE_EXPRESSION_SUBST -> `List [`String "TEST_COMPILE_EXPRESSION_SUBST"; `Null ]
+  | C_TEST_RUN                 -> `List [`String "TEST_RUN"; `Null ]
+  | C_TEST_EVAL                -> `List [`String "TEST_EVAL"; `Null ]
+  | C_TEST_COMPILE_CONTRACT    -> `List [`String "TEST_COMPILE_CONTRACT"; `Null ]
+  | C_TEST_TO_CONTRACT         -> `List [`String "TEST_TO_CONTRACT"; `Null ]
+  | C_TEST_TO_ENTRYPOINT         -> `List [`String "TEST_TO_ENTRYPOINT"; `Null ]
   | C_SHA3                     -> `List [`String "SHA3"; `Null ]
   | C_KECCAK                   -> `List [`String "KECCAK"; `Null ]
   | C_LEVEL                    -> `List [`String "LEVEL"; `Null ]
-  | C_VOTING_POWER             -> `List [`String "VOTING_POWER"; `Null ]   
+  | C_VOTING_POWER             -> `List [`String "VOTING_POWER"; `Null ]
   | C_TOTAL_VOTING_POWER       -> `List [`String "TOTAL_VOTING_POWER"; `Null ]
   | C_TICKET                   -> `List [`String "TICKET"; `Null ]
   | C_READ_TICKET              -> `List [`String "READ_TICKET"; `Null ]
@@ -193,25 +203,29 @@ let option' f o =
 
 let string s = `String s
 
-let list f lst = `List (List.map f lst)
+let list f lst = `List (List.map ~f:f lst)
 
 let label_map f lmap =
-  let lst = List.sort (fun (Label a, _) (Label b, _) -> String.compare a b) (LMap.bindings lmap) in
+  let lst = List.sort ~compare:(fun (Label a, _) (Label b, _) -> String.compare a b) (LMap.bindings lmap) in
   let lst' = List.fold_left
-      (fun acc (Label k, v) -> (k , f v)::acc)
-      [] lst
+      ~f:(fun acc (Label k, v) -> (k , f v)::acc)
+      ~init:[] lst
   in
   `Assoc lst'
 
 let attributes attr =
-  let list = List.map (fun string -> `String string) attr
+  let list = List.map ~f:(fun string -> `String string) attr
   in `Assoc [("attributes", `List list)]
 
-let binder type_expression {var;ascr} =
-  `Assoc [
+let binder type_expression {var;ascr;attributes} =
+  let attributes = match attributes.const_or_var with
+        | None -> []
+        | Some `Var -> [("const_or_var", `String "var")]
+        | Some `Const -> [("const_or_var", `String "const")] in
+  `Assoc ([
     ("var", expression_variable_to_yojson var);
-    ("ty", yojson_opt type_expression ascr);
-  ]
+    ("ty", option' type_expression ascr);
+    ] @ attributes)
 
 let row_element g {associated_type; michelson_annotation; decl_pos} =
   `Assoc [
@@ -252,7 +266,7 @@ let application expression {lamb;args} =
 let lambda expression type_expression {binder=b;output_type;result} : json =
   `Assoc [
     ("binder", binder type_expression b);
-    ("output_type", yojson_opt type_expression output_type);
+    ("output_type", option' type_expression output_type);
     ("result", expression result);
   ]
 
@@ -386,9 +400,9 @@ and pattern type_expression p =
   | P_unit -> `List [`String "Unit" ; `Null]
   | P_var b -> `List [`String "Var"; binder type_expression b]
   | P_list lp -> `List [`String "List" ; list_pattern type_expression lp]
-  | P_variant (l,popt) -> `List [`String "Variant" ; label l ; option (pattern type_expression) popt ]
-  | P_tuple lp -> `List [`String "Tuple" ; list (pattern type_expression) lp ]
-  | P_record (ll,lp) -> `List [`String "Record" ; list label ll ; list (pattern type_expression) lp ]
+  | P_variant (l,p) -> `List [`String "Variant" ; label l ; (pattern type_expression) p]
+  | P_tuple lp -> `List [`String "Tuple" ; list (pattern type_expression) lp]
+  | P_record (ll,lp) -> `List [`String "Record" ; list label ll ; list (pattern type_expression) lp]
 
 and match_case expression type_expression {pattern=p ; body } =
   `Assoc [

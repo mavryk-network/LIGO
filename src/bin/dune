@@ -1,5 +1,6 @@
 (library
   (name cli)
+  (instrumentation (backend bisect_ppx))
   (libraries
     simple-utils
     cmdliner
@@ -7,16 +8,15 @@
     ligo_compile
     build
     repl
+    ligo_api
   )
-  (modules cli cli_helpers formatter version changelog)
-  (preprocess
-    (pps ppx_let bisect_ppx --conditional)
-  )
+  (modules cli cli_helpers version)
   (flags (:standard -open Simple_utils -open Ligo))
 )
 
 (library
   (name repl)
+  (instrumentation (backend bisect_ppx))
   (libraries
     simple-utils
     cmdliner
@@ -25,9 +25,6 @@
     linenoise
   )
   (modules repl)
-  (preprocess
-    (pps ppx_let bisect_ppx --conditional)
-  )
   (flags (:standard -open Simple_utils))
 )
 
@@ -38,12 +35,6 @@
           (run "sh" "-c"
                "printf 'let version = \"%s\"' \"${LIGO_VERSION}\""))))
 
-(rule
- (targets changelog.ml)
- (deps (env_var CHANGELOG_PATH))
- (action (with-stdout-to
-          changelog.ml
-          (run "sh" "-c" "printf 'let changelog = {changelog|%s|changelog}' \"$(cat ${CHANGELOG_PATH:-../../gitlab-pages/docs/intro/changelog.md})\""))))
 
 ; build static executable with --profile static
 (env
@@ -52,6 +43,7 @@
 (executable
   (name runligo)
   (public_name ligo)
+  (instrumentation (backend bisect_ppx))
   (libraries
     simple-utils
     cmdliner
@@ -60,8 +52,5 @@
   )
   (modules runligo)
   (package ligo)
-  (preprocess
-    (pps ppx_let bisect_ppx --conditional)
-  )
   (flags (:standard -open Simple_utils))
 )
