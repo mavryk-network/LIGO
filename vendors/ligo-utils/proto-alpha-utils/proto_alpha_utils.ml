@@ -7,3 +7,4 @@ module Memory_proto_alpha = X_memory_proto_alpha
 module Error_monad = X_error_monad
 module Trace = Trace
 module Measure = Measure
+module Tezos_alpha_test_helpers = Tezos_alpha_test_helpers

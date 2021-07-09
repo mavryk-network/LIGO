@@ -8,6 +8,7 @@
     tezos-protocol-008-PtEdo2Zk-parameters
     tezos-client-008-PtEdo2Zk
     tezos-memory-proto-alpha
+    tezos-alpha-test-helpers
     data-encoding
     simple-utils
     tezos-utils
