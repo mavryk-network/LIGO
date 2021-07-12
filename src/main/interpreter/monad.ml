@@ -36,6 +36,7 @@ module Command = struct
     | Get_balance : Location.t * LT.value -> LT.value t
     | Get_last_originations : unit -> LT.value t
     | Pack : Location.t * LT.value * Ast_typed.type_expression -> bytes t
+    | Implicit_account : Tezos_crypto.Signature.Public_key_hash.t -> Tezos_raw_protocol_008_PtEdo2Zk.Alpha_context.Contract.t t
     | Check_obj_ligo : LT.expression -> unit t
     | Compile_expression : Location.t * LT.value * string * string * LT.value option -> LT.value t
     | Mutate_expression : Location.t * Z.t * string * string -> (string * string) t
@@ -49,6 +50,7 @@ module Command = struct
     | Compile_contract : Location.t * LT.value * Ast_typed.type_expression -> LT.value t
     | To_contract : Location.t * LT.value * string option * Ast_typed.type_expression -> LT.value t
     | Keygen : Location.t -> (Tezos_crypto.Signature.public_key * Tezos_crypto.Signature.public_key_hash) t
+    | Register_delegate : Location.t * Tezos_crypto.Signature.public_key_hash -> unit t
     | Sign : Location.t * Tezos_crypto.Signature.public_key_hash * bytes  -> LT.value t
     | Inject_script : Location.t * LT.value * LT.value * Z.t -> LT.value t
     | Set_now : Location.t * Z.t -> unit t
@@ -279,10 +281,16 @@ module Command = struct
                      "Should be caught by the typer"
       end
     | Keygen _loc ->
-      let raw_pkh, raw_pk, raw_sk = Tezos_state.gen_keys () in
+      let pkh, pk, sk = Tezos_state.gen_keys () in
       let ctxt =
-        { ctxt with storage_keys = List.Assoc.add ctxt.storage_keys ~equal:Tezos_crypto.Signature.Public_key_hash.(=) raw_pkh (raw_pk, raw_sk) } in
-      ok ((raw_pk, raw_pkh), ctxt)
+        { ctxt with storage_keys = List.Assoc.add ctxt.storage_keys ~equal:Tezos_crypto.Signature.Public_key_hash.(=) pkh (pk, sk) } in
+      let () = Ligo_008_PtEdo2Zk_test_helpers.Account.add_account {pkh;pk;sk} in
+      ok ((pk, pkh), ctxt)
+    | Register_delegate (loc, pkh) ->
+      let* x = Tezos_state.register_delegate ~loc ctxt pkh in
+      (match x with
+       | Success ctxt -> ok ((), ctxt)
+       | Fail errs -> raise (Exc.Exc (Object_lang_ex (loc,errs))))
     | Sign (loc, pkh, bytes) ->
       let* _, sk = trace_option (Errors.generic_error loc "Key not available in store") @@
                      List.Assoc.find ctxt.storage_keys ~equal:Tezos_crypto.Signature.Public_key_hash.(=) pkh in
@@ -431,6 +439,9 @@ module Command = struct
       let* value,value_ty,_ = Michelson_backend.compile_simple_value ~ctxt ~loc value value_ty in
       let* bytes, alpha_context = Tezos_state.value_to_bytes ~loc ctxt value value_ty in
       ok (bytes, { ctxt with alpha_context = Some alpha_context })
+    | Implicit_account (pkh) ->
+      let contract = Tezos_raw_protocol_008_PtEdo2Zk.Alpha_context.Contract.implicit_contract pkh in
+      ok (contract, ctxt)
     | Int_compare_wrapped (x, y) ->
       ok (wrap_compare Int_repr.compare x y, ctxt)
     | Int_compare (x, y) -> ok (Int_repr.compare x y, ctxt)

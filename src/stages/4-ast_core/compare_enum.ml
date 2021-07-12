@@ -178,6 +178,7 @@ let constant'_tag = function
   | C_TEST_MUTATION_TEST_ALL  -> 164
   | C_TEST_KEYGEN             -> 165
   | C_TEST_SIGN               -> 166
+  | C_TEST_DELEGATE           -> 167
 
 let constant' a b = Int.compare (constant'_tag a) (constant'_tag b)
 

@@ -200,6 +200,7 @@ module Tree_abstraction = struct
     | "Test.to_entrypoint" -> some_const C_TEST_TO_ENTRYPOINT
     | "Test.keygen" -> some_const C_TEST_KEYGEN
     | "Test.sign" -> some_const C_TEST_SIGN
+    | "Test.delegate" -> some_const C_TEST_DELEGATE
 
     | _ -> None
 
@@ -350,6 +351,7 @@ module Tree_abstraction = struct
     | C_TEST_TO_ENTRYPOINT -> "Test.to_entrypoint"
     | C_TEST_KEYGEN -> "Test.keygen"
     | C_TEST_SIGN -> "Test.sign"
+    | C_TEST_DELEGATE -> "Test.delegate"
 
     | _ as c -> failwith @@ Format.asprintf "Constant not handled : %a" Stage_common.PP.constant' c
 

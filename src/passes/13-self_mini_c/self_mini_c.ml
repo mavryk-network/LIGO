@@ -139,6 +139,7 @@ let is_pure_constant : constant' -> bool =
   | C_BIG_MAP_IDENTIFIER
   | C_TEST_KEYGEN
   | C_TEST_SIGN
+  | C_TEST_DELEGATE
     -> false
 
 let rec is_pure : expression -> bool = fun e ->

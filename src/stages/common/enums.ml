@@ -199,6 +199,7 @@ type constant' =
   | C_TEST_ORIGINATE_FROM_FILE
   | C_TEST_KEYGEN
   | C_TEST_SIGN
+  | C_TEST_DELEGATE
   (* New with EDO*)
   | C_SHA3
   | C_KECCAK

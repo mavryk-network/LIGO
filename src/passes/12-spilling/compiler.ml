@@ -186,6 +186,7 @@ let compile_constant' : AST.constant' -> constant' = function
       | C_TEST_TO_ENTRYPOINT
       | C_TEST_KEYGEN
       | C_TEST_SIGN
+      | C_TEST_DELEGATE
       | C_TEST_ORIGINATE_FROM_FILE
       | C_BIG_MAP_IDENTIFIER
       | C_TEST_COMPILE_META_VALUE

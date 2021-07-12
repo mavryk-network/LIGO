@@ -233,6 +233,13 @@ let originate_contract ~loc (ctxt :context) (contract : unit Tezos_utils.Michels
   let* res = bake_op ~loc ctxt operation in
   ok (dst, res)
 
+let register_delegate ~loc (ctxt :context) pkh =
+  let open Tezos_alpha_test_helpers in
+  let contract = Tezos_raw_protocol_008_PtEdo2Zk.Alpha_context.Contract.implicit_contract pkh in
+  let* operation = Trace.trace_tzresult_lwt (throw_obj_exc loc) @@ Op.delegation (B ctxt.threaded_context) contract (Some pkh) in
+  let* res = bake_op ~loc ctxt operation in
+  ok res
+
 let init_ctxt ?(loc=Location.generated) ?(initial_balances=[]) ?(n=2) ()  =
   let* (threaded_context, acclst) = Trace.trace_tzresult_lwt (throw_obj_exc loc) @@
     Tezos_alpha_test_helpers.Context.init ~initial_balances n
