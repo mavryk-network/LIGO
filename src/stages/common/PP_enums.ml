@@ -170,6 +170,7 @@ let constant' ppf : constant' -> unit = function
   | C_TEST_KEYGEN -> fprintf ppf "TEST_KEYGEN"
   | C_TEST_SIGN -> fprintf ppf "TEST_SIGN"
   | C_TEST_DELEGATE -> fprintf ppf "TEST_DELEGATE"
+  | C_TEST_REGISTER_DELEGATE -> fprintf ppf "TEST_REGISTER_DELEGATE"
   | C_SHA3 -> fprintf ppf "SHA3"
   | C_KECCAK -> fprintf ppf "KECCAK"
   | C_LEVEL -> fprintf ppf "LEVEL"

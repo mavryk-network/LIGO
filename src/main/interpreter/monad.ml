@@ -51,6 +51,7 @@ module Command = struct
     | To_contract : Location.t * LT.value * string option * Ast_typed.type_expression -> LT.value t
     | Keygen : Location.t -> (Tezos_crypto.Signature.public_key * Tezos_crypto.Signature.public_key_hash) t
     | Register_delegate : Location.t * Tezos_crypto.Signature.public_key_hash -> unit t
+    | Get_delegate : Location.t * Tezos_raw_protocol_008_PtEdo2Zk.Alpha_context.Contract.t -> (Tezos_crypto.Signature.public_key_hash option) t
     | Sign : Location.t * Tezos_crypto.Signature.public_key_hash * bytes  -> LT.value t
     | Inject_script : Location.t * LT.value * LT.value * Z.t -> LT.value t
     | Set_now : Location.t * Z.t -> unit t
@@ -291,6 +292,9 @@ module Command = struct
       (match x with
        | Success ctxt -> ok ((), ctxt)
        | Fail errs -> raise (Exc.Exc (Object_lang_ex (loc,errs))))
+    | Get_delegate (loc, contract) ->
+      let* x = Tezos_state.get_delegate ~loc ctxt contract in
+      ok (x, ctxt)
     | Sign (loc, pkh, bytes) ->
       let* _, sk = trace_option (Errors.generic_error loc "Key not available in store") @@
                      List.Assoc.find ctxt.storage_keys ~equal:Tezos_crypto.Signature.Public_key_hash.(=) pkh in

@@ -475,7 +475,14 @@ let rec apply_operator : Location.t -> env -> Ast_typed.constant' -> (value * As
     | ( C_TEST_KEYGEN , [ V_Ct (C_unit) ] ) ->
        let>> (pk, pkh) = Keygen loc in
        return @@ LT.V_Record (LMap.of_list [ (Label "0", LT.V_Ct (LT.C_key pk)) ; (Label "1", LT.V_Ct (LT.C_key_hash pkh)) ])
-    | ( C_TEST_DELEGATE , [ V_Ct (C_key_hash pkh) ] ) ->
+    | ( C_TEST_DELEGATE , [ V_Ct (C_contract {address;_}) ] ) ->
+       let>> x = Get_delegate (loc, address) in
+       (match x with
+        | None ->
+           return (v_none ())
+        | Some pkh ->
+           return (v_some (V_Ct (C_key_hash pkh))))
+    | ( C_TEST_REGISTER_DELEGATE , [ V_Ct (C_key_hash pkh) ] ) ->
        let>> () = Register_delegate (loc, pkh) in
        return (V_Ct (C_unit))
     | ( C_TEST_SIGN , [ V_Ct (C_key_hash pkh) ; V_Ct (C_bytes bytes) ] ) ->

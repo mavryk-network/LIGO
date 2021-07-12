@@ -168,6 +168,7 @@ let constant' = function
   | C_TEST_KEYGEN              -> `List [`String "TEST_KEYGEN"; `Null ]
   | C_TEST_SIGN                -> `List [`String "TEST_SIGN"; `Null ]
   | C_TEST_DELEGATE            -> `List [`String "TEST_DELEGATE"; `Null ]
+  | C_TEST_REGISTER_DELEGATE   -> `List [`String "TEST_REGISTER_DELEGATE"; `Null ]
   | C_SHA3                     -> `List [`String "SHA3"; `Null ]
   | C_KECCAK                   -> `List [`String "KECCAK"; `Null ]
   | C_LEVEL                    -> `List [`String "LEVEL"; `Null ]
