@@ -36,6 +36,7 @@ module Command = struct
     | Get_balance : Location.t * LT.value -> LT.value t
     | Get_last_originations : unit -> LT.value t
     | Pack : Location.t * LT.value * Ast_typed.type_expression -> bytes t
+    | Unpack : Location.t * bytes * Ast_typed.type_expression -> LT.value t
     | Implicit_account : Tezos_crypto.Signature.Public_key_hash.t -> Tezos_raw_protocol_008_PtEdo2Zk.Alpha_context.Contract.t t
     | Check_obj_ligo : LT.expression -> unit t
     | Compile_expression : Location.t * LT.value * string * string * LT.value option -> LT.value t
@@ -443,6 +444,20 @@ module Command = struct
       let* value,value_ty,_ = Michelson_backend.compile_simple_value ~ctxt ~loc value value_ty in
       let* bytes, alpha_context = Tezos_state.value_to_bytes ~loc ctxt value value_ty in
       ok (bytes, { ctxt with alpha_context = Some alpha_context })
+    | Unpack (loc, bytes, v_ty) ->
+      let* value = Tezos_state.bytes_to_value ~loc ctxt bytes in
+      let value = value
+        |> Tezos_protocol_008_PtEdo2Zk.Protocol.Michelson_v1_primitives.strings_of_prims
+        |> Tezos_micheline.Micheline.inject_locations (fun _ -> ())
+      in
+      let* none_compiled = Michelson_backend.compile_value (Ast_typed.e_a_none v_ty) in
+      let val_ty = clean_locations none_compiled.expr_ty in
+      let inner_ty = match val_ty with
+        | Prim (_, "option", [l], _) ->
+           l
+        | _ -> failwith "None has a non-option type?" in
+      let ret = LT.V_Michelson (Ty_code (value,inner_ty,v_ty)) in
+      ok (ret, ctxt)
     | Implicit_account (pkh) ->
       let contract = Tezos_raw_protocol_008_PtEdo2Zk.Alpha_context.Contract.implicit_contract pkh in
       ok (contract, ctxt)

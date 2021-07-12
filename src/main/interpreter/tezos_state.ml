@@ -94,13 +94,13 @@ let get_storage ~loc ctxt addr =
   let* st_v = Trace.trace_tzresult_lwt (throw_obj_exc loc) @@
     Tezos_protocol_008_PtEdo2Zk.Protocol.Alpha_services.Contract.storage Tezos_alpha_test_helpers.Block.rpc_ctxt ctxt.threaded_context addr
   in
-  let* st_ty = Trace.trace_tzresult_lwt (throw_obj_exc loc) @@
+  let* script_ty = Trace.trace_tzresult_lwt (throw_obj_exc loc) @@
     Tezos_protocol_008_PtEdo2Zk.Protocol.Alpha_services.Contract.script Tezos_alpha_test_helpers.Block.rpc_ctxt ctxt.threaded_context addr
   in
   let* (x,_) = Trace.trace_alpha_tzresult (throw_obj_exc loc) @@
-    Memory_proto_alpha.Protocol.Script_repr.force_decode st_ty.code
+    Memory_proto_alpha.Protocol.Script_repr.force_decode script_ty.code
   in
-  let* (_parameter_ty, storage_ty, _, _) = Trace.trace_alpha_tzresult (throw_obj_exc loc) @@
+  let* (_, storage_ty, _, _) = Trace.trace_alpha_tzresult (throw_obj_exc loc) @@
     Tezos_protocol_008_PtEdo2Zk.Protocol.Script_ir_translator.parse_toplevel ~legacy:false x
   in
   let storage_ty = Tezos_micheline.Micheline.(inject_locations (fun _ -> ()) (strip_locations storage_ty)) in
@@ -264,6 +264,10 @@ let sign_message (packed_payload : bytes) sk : (string,_) result =
   let signed_data = Signature.sign sk packed_payload in
   let signature_str = Signature.to_b58check signed_data in
   ok signature_str
+
+let bytes_to_value ~loc (_ctxt : context) (bytes) =
+  let* x = Trace.trace_decoding_error (fun _ -> Errors.generic_error loc "Error while unpacking data") @@ Data_encoding.Binary.of_bytes Tezos_protocol_008_PtEdo2Zk.Protocol.Script_repr.expr_encoding bytes in
+  ok x
 
 let value_to_bytes ~loc (ctxt : context) (value) (val_ty) =
   let* val_ty_michelson =

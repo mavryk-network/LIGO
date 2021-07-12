@@ -130,8 +130,8 @@ let rec apply_comparison : Location.t -> Ast_typed.constant' -> value list -> va
        print_endline (Format.asprintf "%a" (PP_helpers.list_sep_d Ligo_interpreter.PP.pp_value) l);
        raise (Exc (Meta_lang_ex {location = loc ; reason = Reason "Not comparable" }))
 
-let rec apply_operator : Location.t -> env -> Ast_typed.constant' -> (value * Ast_typed.type_expression) list -> value Monad.t =
-  fun loc _env c operands ->
+let rec apply_operator : Location.t -> Ast_typed.type_expression -> env -> Ast_typed.constant' -> (value * Ast_typed.type_expression) list -> value Monad.t =
+  fun loc ty _env c operands ->
   let open Monad in
   let types = List.map ~f:snd operands in
   let operands = List.map ~f:fst operands in
@@ -344,6 +344,10 @@ let rec apply_operator : Location.t -> env -> Ast_typed.constant' -> (value * As
       let value_ty = List.nth_exn types 0 in
       let>> code = Pack (loc, value, value_ty) in
       return (V_Ct (C_bytes code))
+    | ( C_BYTES_UNPACK , [ V_Ct (C_bytes bytes) ] ) ->
+      let value_ty = ty in
+      let>> value = Unpack (loc, bytes, value_ty) in
+      return value
     | ( C_IMPLICIT_ACCOUNT , [ V_Ct (C_key_hash kh) ] ) ->
       let>> contract = Implicit_account kh in
       return (V_Ct (C_contract {address = contract; entrypoint = None}))
@@ -634,7 +638,7 @@ and eval_ligo : Ast_typed.expression -> env -> value Monad.t
           let* value = eval_ligo ae env in
           return @@ (value, ae.type_expression))
         arguments in
-      apply_operator term.location env cons_name arguments'
+      apply_operator term.location term.type_expression env cons_name arguments'
     )
     | E_constructor { constructor = Label c ; element } when (String.equal c "true" || String.equal c "false")
      && element.expression_content = Ast_typed.e_unit () -> return @@ V_Ct (C_bool (bool_of_string c))
