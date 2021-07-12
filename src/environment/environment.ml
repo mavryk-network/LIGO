@@ -60,6 +60,7 @@ let meta_ligo_types : (type_variable * type_expression) list =
     (v_time , t_constant time_name []) ;
     (v_mutation, t_constant mutation_name []);
     (v_failure, t_constant failure_name []);
+    (v_secret_key, t_constant secret_key_name []);
   ]
 
 let default : Protocols.t -> environment = function

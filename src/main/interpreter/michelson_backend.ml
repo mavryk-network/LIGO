@@ -8,6 +8,7 @@ let int_of_mutez t = Z.of_int64 @@ Memory_proto_alpha.Protocol.Alpha_context.Tez
 
 let string_of_contract t = Format.asprintf "%a" Tezos_protocol_008_PtEdo2Zk.Protocol.Alpha_context.Contract.pp t
 let string_of_key_hash t = Format.asprintf "%a" Tezos_crypto.Signature.Public_key_hash.pp t
+let string_of_key t = Format.asprintf "%a" Tezos_crypto.Signature.Public_key.pp t
 
 let compile_contract source_file entry_point =
   let open Ligo_compile in
@@ -201,10 +202,19 @@ let rec val_to_ast ~loc ?(toplevel = true) : Ligo_interpreter.Types.value ->
   | V_Ct (C_contract _) ->
      fail @@ (Errors.generic_error loc "Expected contract")
   | V_Ct (C_key_hash kh) ->
-     let* () = trace_option (Errors.generic_error loc "Expected timestamp")
+     let* () = trace_option (Errors.generic_error loc "Expected key hash")
                  (get_t_key_hash ty) in
      let x = string_of_key_hash kh in
      ok @@ e_a_key_hash x
+  | V_Ct (C_signature s) ->
+     let* () = trace_option (Errors.generic_error loc "Expected signature")
+                 (get_t_signature ty) in
+     ok @@ e_a_signature s
+  | V_Ct (C_key k) ->
+     let* () = trace_option (Errors.generic_error loc "Expected public key")
+                 (get_t_key ty) in
+     let x = string_of_key k in
+     ok @@ e_a_key x
   | V_Construct (ctor, arg) when is_t_option ty ->
      let* ty' = trace_option (Errors.generic_error loc "Expected option") @@ get_t_option ty in
      if String.equal ctor "Some" then
@@ -344,7 +354,7 @@ and make_subst_ast_env_exp ?(toplevel = true) env fv =
   let op (l, fv) (evl, v : _ * Ligo_interpreter.Types.value_expr) =
     let loc = Location.get_location evl in
     let ev = Location.unwrap evl in
-    if not (List.mem fv evl ~equal:Self_ast_typed.Helpers.eq_vars) then
+    if not (List.mem fv evl ~equal:Self_ast_typed.Helpers.eq_vars) || List.mem (List.map ~f:fst l) (Var.to_name ev) ~equal:String.equal then
       ok (l, fv)
     else
       match v with

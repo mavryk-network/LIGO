@@ -6,6 +6,7 @@ open Ligo_interpreter_exc
 type block = Tezos_alpha_test_helpers.Block.t
 type last_originations = (Memory_proto_alpha.Protocol.Alpha_context.Contract.t * Memory_proto_alpha.Protocol.Alpha_context.Contract.t list) list
 type storage_tys = (Tezos_protocol_008_PtEdo2Zk.Protocol.Alpha_context.Contract.t * Ast_typed.type_expression) list
+type key_store = (Tezos_crypto.Signature.public_key_hash * (Tezos_crypto.Signature.public_key * Tezos_crypto.Signature.secret_key)) list
 
 type context = {
   alpha_context : Memory_proto_alpha.Protocol.Alpha_context.t option;
@@ -15,6 +16,7 @@ type context = {
   baker : Memory_proto_alpha.Protocol.Alpha_context.Contract.t ;
   source : Memory_proto_alpha.Protocol.Alpha_context.Contract.t ;
   bootstrapped : Memory_proto_alpha.Protocol.Alpha_context.Contract.t list ;
+  storage_keys : key_store
 }
 
 type state_error = Tezos_error_monad.TzCore.error list
@@ -237,6 +239,34 @@ let init_ctxt ?(loc=Location.generated) ?(initial_balances=[]) ?(n=2) ()  =
   in
   match acclst with
   | baker::source::_ ->
-    ok { threaded_context ; baker ; source ; bootstrapped = acclst ; last_originations = [] ; storage_tys = [] ; alpha_context = None }
+    ok { threaded_context ; baker ; source ; bootstrapped = acclst ; last_originations = [] ; storage_tys = [] ; alpha_context = None ; storage_keys = [] }
   | _ ->
     fail (Errors.bootstrap_not_enough loc)
+
+(* Helpers for key manipulation *)
+let gen_keys = fun () ->
+  let open Tezos_crypto in
+  let (raw_pkh,raw_pk,raw_sk) = Signature.generate_key () in
+  (raw_pkh,raw_pk,raw_sk)
+
+let sign_message (packed_payload : bytes) sk : (string,_) result =
+  let open Tezos_crypto in
+  let signed_data = Signature.sign sk packed_payload in
+  let signature_str = Signature.to_b58check signed_data in
+  ok signature_str
+
+let value_to_bytes ~loc (ctxt : context) (value) (val_ty) =
+  let* val_ty_michelson =
+    Trace.trace_tzresult_lwt Main_errors.parsing_input_tracer @@
+    Memory_proto_alpha.prims_of_strings val_ty in
+  let* (Ex_ty value_ty) =
+    Trace.trace_tzresult_lwt Main_errors.parsing_input_tracer @@
+    Memory_proto_alpha.parse_michelson_ty val_ty_michelson in
+  let* value_michelson =
+    Trace.trace_tzresult_lwt Main_errors.parsing_input_tracer @@
+    Memory_proto_alpha.prims_of_strings value in
+  let* value =
+    Trace.trace_tzresult_lwt Main_errors.parsing_input_tracer @@
+    Memory_proto_alpha.parse_michelson_data value_michelson value_ty in
+  let* alpha_ctxt = trace_option (Errors.generic_error loc "Not valid thing to bytes") @@ ctxt.alpha_context in
+  Trace.trace_alpha_tzresult_lwt (throw_obj_exc loc) @@ Tezos_protocol_008_PtEdo2Zk.Protocol.Script_ir_translator.pack_data alpha_ctxt value_ty value

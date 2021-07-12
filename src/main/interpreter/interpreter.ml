@@ -340,6 +340,10 @@ let rec apply_operator : Location.t -> env -> Ast_typed.constant' -> (value * As
     | ( C_SET_REMOVE , [ v ; V_Set (elts) ] ) -> return @@ V_Set (List.filter ~f:(fun el -> not (el = v)) elts)
     | ( C_ADDRESS , [ V_Ct (C_contract { address }) ] ) ->
       return (V_Ct (C_address address))
+    | ( C_BYTES_PACK , [ value ] ) ->
+      let value_ty = List.nth_exn types 0 in
+      let>> code = Pack (loc, value, value_ty) in
+      return (V_Ct (C_bytes code))
     (*
     >>>>>>>>
       Test operators
@@ -464,6 +468,12 @@ let rec apply_operator : Location.t -> env -> Ast_typed.constant' -> (value * As
     | ( C_TEST_TO_ENTRYPOINT , [ V_Ct (C_string ent) ; addr ] ) ->
        let contract_ty = List.nth_exn types 0 in
        let>> code = To_contract (loc, addr, Some ent, contract_ty) in
+       return code
+    | ( C_TEST_KEYGEN , [ V_Ct (C_unit) ] ) ->
+       let>> (pk, pkh) = Keygen loc in
+       return @@ LT.V_Record (LMap.of_list [ (Label "0", LT.V_Ct (LT.C_key pk)) ; (Label "1", LT.V_Ct (LT.C_key_hash pkh)) ])
+    | ( C_TEST_SIGN , [ V_Ct (C_key_hash pkh) ; V_Ct (C_bytes bytes) ] ) ->
+       let>> code = Sign (loc, pkh, bytes) in
        return code
     | ( C_TEST_RUN , [ V_Func_val f ; v ] ) ->
        let* () = check_value (V_Func_val f) in

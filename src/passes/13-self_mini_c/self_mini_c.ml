@@ -137,6 +137,8 @@ let is_pure_constant : constant' -> bool =
   | C_TEST_TO_ENTRYPOINT
   | C_TEST_ORIGINATE_FROM_FILE
   | C_BIG_MAP_IDENTIFIER
+  | C_TEST_KEYGEN
+  | C_TEST_SIGN
     -> false
 
 let rec is_pure : expression -> bool = fun e ->

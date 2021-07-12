@@ -1067,6 +1067,15 @@ let test_originate_from_file loc = typer_4 loc "TEST_ORIGINATE_FROM_FILE" @@ fun
   let* () = assert_eq loc balance (t_mutez ()) in
   ok (t_triplet (t_address ()) (t_michelson_code ()) (t_int ()))
 
+let test_keygen loc = typer_1 loc "TEST_KEYGEN" @@ fun unit ->
+  let* () = trace_option (expected_unit loc unit) @@ assert_t_unit unit in
+  ok (t_pair (t_key ()) (t_key_hash ()))
+
+let test_sign loc = typer_2 loc "TEST_SIGN" @@ fun key_hash bytes ->
+  let* () = trace_option (expected_key_hash loc key_hash) @@ assert_t_key_hash key_hash in
+  let* () = trace_option (expected_bytes loc bytes) @@ assert_t_bytes bytes in
+  ok (t_signature ())
+
 let test_compile_contract loc = typer_1 loc "TEST_COMPILE_CONTRACT" @@ fun _ ->
   ok (t_michelson_code ())
 
@@ -1219,6 +1228,8 @@ let constant_typers loc c : (typer , typer_error) result = match c with
   | C_TEST_TO_CONTRACT -> ok @@ test_to_contract loc ;
   | C_TEST_TO_ENTRYPOINT -> ok @@ test_to_entrypoint loc ;
   | C_TEST_ORIGINATE_FROM_FILE -> ok @@ test_originate_from_file loc ;
+  | C_TEST_KEYGEN -> ok @@ test_keygen loc ;
+  | C_TEST_SIGN -> ok @@ test_sign loc ;
   (* JsLIGO *)
   | C_POLYMORPHIC_ADD  -> ok @@ polymorphic_add loc ;
   | _ as cst -> fail (corner_case @@ Format.asprintf "typer not implemented for constant %a" PP.constant' cst)

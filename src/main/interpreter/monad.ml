@@ -35,6 +35,7 @@ module Command = struct
     | Get_size : LT.value -> LT.value t
     | Get_balance : Location.t * LT.value -> LT.value t
     | Get_last_originations : unit -> LT.value t
+    | Pack : Location.t * LT.value * Ast_typed.type_expression -> bytes t
     | Check_obj_ligo : LT.expression -> unit t
     | Compile_expression : Location.t * LT.value * string * string * LT.value option -> LT.value t
     | Mutate_expression : Location.t * Z.t * string * string -> (string * string) t
@@ -47,6 +48,8 @@ module Command = struct
     | Eval : Location.t * LT.value * Ast_typed.type_expression -> LT.value t
     | Compile_contract : Location.t * LT.value * Ast_typed.type_expression -> LT.value t
     | To_contract : Location.t * LT.value * string option * Ast_typed.type_expression -> LT.value t
+    | Keygen : Location.t -> (Tezos_crypto.Signature.public_key * Tezos_crypto.Signature.public_key_hash) t
+    | Sign : Location.t * Tezos_crypto.Signature.public_key_hash * bytes  -> LT.value t
     | Inject_script : Location.t * LT.value * LT.value * Z.t -> LT.value t
     | Set_now : Location.t * Z.t -> unit t
     | Set_source : LT.value -> unit t
@@ -275,6 +278,16 @@ module Command = struct
            fail @@ Errors.generic_error loc
                      "Should be caught by the typer"
       end
+    | Keygen _loc ->
+      let raw_pkh, raw_pk, raw_sk = Tezos_state.gen_keys () in
+      let ctxt =
+        { ctxt with storage_keys = List.Assoc.add ctxt.storage_keys ~equal:Tezos_crypto.Signature.Public_key_hash.(=) raw_pkh (raw_pk, raw_sk) } in
+      ok ((raw_pk, raw_pkh), ctxt)
+    | Sign (loc, pkh, bytes) ->
+      let* _, sk = trace_option (Errors.generic_error loc "Key not available in store") @@
+                     List.Assoc.find ctxt.storage_keys ~equal:Tezos_crypto.Signature.Public_key_hash.(=) pkh in
+      let* signed_data = Tezos_state.sign_message bytes sk in
+      ok (LT.V_Ct (LT.C_signature signed_data), ctxt)
     | Inject_script (loc, code, storage, amt) -> (
       let* contract_code = trace_option (corner_case ()) @@ LC.get_michelson_contract code in
       let* (storage,_,ligo_ty) = trace_option (corner_case ()) @@ LC.get_michelson_expr storage in
@@ -414,6 +427,10 @@ module Command = struct
       in
       let v = LT.V_Map (List.map ~f:aux ctxt.last_originations) in
       ok (v,ctxt)
+    | Pack (loc, value, value_ty) ->
+      let* value,value_ty,_ = Michelson_backend.compile_simple_value ~ctxt ~loc value value_ty in
+      let* bytes, alpha_context = Tezos_state.value_to_bytes ~loc ctxt value value_ty in
+      ok (bytes, { ctxt with alpha_context = Some alpha_context })
     | Int_compare_wrapped (x, y) ->
       ok (wrap_compare Int_repr.compare x y, ctxt)
     | Int_compare (x, y) -> ok (Int_repr.compare x y, ctxt)

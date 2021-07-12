@@ -35,7 +35,8 @@ and constant_val =
   | C_address of Tezos_protocol_008_PtEdo2Zk.Protocol.Alpha_context.Contract.t (*should be represented as michelson data ? not convenient *)
   | C_contract of contract
   | C_key_hash of Tezos_protocol_008_PtEdo2Zk.Protocol.Alpha_context.public_key_hash
-
+  | C_signature of string
+  | C_key of Tezos_protocol_008_PtEdo2Zk.Protocol.Alpha_context.public_key
 
 and micheline_value = (unit, string) Tezos_micheline.Micheline.node *
                         (unit, string) Tezos_micheline.Micheline.node

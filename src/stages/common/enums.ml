@@ -197,6 +197,8 @@ type constant' =
   | C_TEST_TO_CONTRACT
   | C_TEST_TO_ENTRYPOINT
   | C_TEST_ORIGINATE_FROM_FILE
+  | C_TEST_KEYGEN
+  | C_TEST_SIGN
   (* New with EDO*)
   | C_SHA3
   | C_KECCAK
