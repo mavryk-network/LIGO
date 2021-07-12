@@ -1,0 +1,1203 @@
+\section{Theory of lexical analysis}
+
+In this section, we explain how lexing works based on an input buffer
+of characters and a transition diagram (a special case of finite
+automaton). The usual presentation uses two buffers, but ours only
+one, at the expense of one more pointer to buffer characters. Through
+examples and visual representations, we hope it will contribute to
+building a good mental model when writing lexers.
+
+\paragraph{Input buffer}
+
+The stream of characters that provides the input to the lexer comes
+usually from a file. For efficiency reasons, when this file is opened,
+a \emph{buffer} is associated, so the lexer actually reads its
+characters from this buffer in memory. A buffer is like a
+\emph{queue}, or \emph{FIFO} (\emph{First in, First out}), that is, a
+list whose one end is used to put elements in and whose other end is
+used to get elements out, one at a time. The only difference is that a
+buffer has a \emph{fixed size} (hence a buffer can be full). An empty
+buffer of size three is depicted as follows:
+\begin{center}
+output side
+\(\longleftarrow\)
+\begin{tabular}{|@{\,}c@{\,}|@{\,}c@{\,}|@{\,}c@{\,}|}
+  \hline
+  \phantom{=}
+& \phantom{=}
+& \phantom{=}\\
+  \hline
+\end{tabular}
+\(\longleftarrow\)
+input side
+\end{center}
+If we input characters \exc{A} then \exc{B} in this buffer, we draw
+\begin{center}
+\begin{tabular}{rcc@{\,}@{\,}c@{\,}@{\,}ccl}
+  \cline{3-5}
+  lexer
+& \(\longleftarrow\)
+& \multicolumn{1}{|@{\,}c@{\,}|}{\phantom{=}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{A}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{B}}
+& \(\longleftarrow\)
+& file\\
+  \cline{3-5}
+&
+&
+& \multicolumn{1}{@{\,}c@{\,}}{\(\upharpoonright\)}
+\end{tabular}
+\end{center}
+The symbol~\(\upharpoonright\) is a pointer to the next character
+available for output. Let us keep in mind that the blank character
+will now be noted ``\texttt{\char`\ }'', in order to avoid confusion
+with an empty cell in a buffer. So, if we input now a blank in our
+buffer from the file, we get the full buffer
+\begin{center}
+\begin{tabular}{rcc@{\,}@{\,}c@{\,}@{\,}ccl}
+  \cline{3-5}
+  lexer
+& \(\longleftarrow\)
+& \multicolumn{1}{|@{\,}c@{\,}|}{\exc{A}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{B}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\texttt{\char`\ }}
+& \(\longleftarrow\)
+& file\\
+  \cline{3-5}
+&
+& \multicolumn{1}{@{\,}c@{\,}}{\(\upharpoonright\)}
+\end{tabular}
+\end{center}
+and no more inputs are possible until at least one output is done. Let
+us be careful: a buffer is full if and only if~\(\upharpoonright\)
+points to the leftmost character. For example,
+\begin{center}
+\begin{tabular}{rcc@{\,}@{\,}c@{\,}@{\,}ccl}
+  \cline{3-5}
+  lexer
+& \(\longleftarrow\)
+& \multicolumn{1}{|@{\,}c@{\,}|}{\exc{A}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{B}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\texttt{\char`\ }}
+& \(\longleftarrow\)
+& file\\
+  \cline{3-5}
+&
+&
+& \multicolumn{1}{@{\,}c@{\,}}{\(\upharpoonright\)}
+\end{tabular}
+\end{center}
+is \emph{not} a full buffer: there is still room for one character. If
+we input~\exc{C}, it becomes
+\begin{center}
+\begin{tabular}{rcc@{\,}@{\,}c@{\,}@{\,}ccl}
+  \cline{3-5}
+  lexer
+& \(\longleftarrow\)
+& \multicolumn{1}{|@{\,}c@{\,}|}{\exc{B}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\texttt{\char`\ }}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{C}}
+
+& \(\longleftarrow\)
+& file\\
+  \cline{3-5}
+&
+& \multicolumn{1}{@{\,}c@{\,}}{\(\upharpoonright\)}
+\end{tabular}
+\end{center}
+which is now a full buffer. The overflowing character \exc{A} has been
+discarded. Now, if we output a character (or, equivalently, the lexer
+inputs a character) we get
+\begin{center}
+\begin{tabular}{rcc@{\,}@{\,}c@{\,}@{\,}ccl}
+  \cline{3-5}
+  lexer
+& \(\longleftarrow\)
+& \multicolumn{1}{|@{\,}c@{\,}|}{\exc{B}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\texttt{\char`\ }}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{C}}
+
+& \(\longleftarrow\)
+& file\\
+  \cline{3-5}
+&
+&
+& \multicolumn{1}{@{\,}c@{\,}}{\(\upharpoonright\)}
+\end{tabular}
+\end{center}
+Let us output another character:
+\begin{center}
+\begin{tabular}{rcc@{\,}@{\,}c@{\,}@{\,}ccl}
+  \cline{3-5}
+  lexer
+& \(\longleftarrow\)
+& \multicolumn{1}{|@{\,}c@{\,}|}{\exc{B}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\texttt{\char`\ }}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{C}}
+
+& \(\longleftarrow\)
+& file\\
+  \cline{3-5}
+&
+&
+&
+& \multicolumn{1}{@{\,}c@{\,}}{\(\upharpoonright\)}
+\end{tabular}
+\end{center}
+Now, if the lexer needs a character, \exc{C} is output and some
+routine automatically reads some more characters from the disk and
+fill them in order into the buffer. This happens when we output the
+rightmost character. Assuming the next character in the file is
+\exc{D}, after outputting \exc{C} we get
+\begin{center}
+\begin{tabular}{rcc@{\,}@{\,}c@{\,}@{\,}ccl}
+  \cline{3-5}
+  lexer
+& \(\longleftarrow\)
+& \multicolumn{1}{|@{\,}c@{\,}|}{\texttt{\char`\ }}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{C}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{D}}
+& \(\longleftarrow\)
+& file\\
+  \cline{3-5}
+&
+&
+&
+& \multicolumn{1}{@{\,}c@{\,}}{\(\upharpoonright\)}
+\end{tabular}
+\end{center}
+If the buffer only contains the \emph{end-of-file} character (noted
+here \eof), it means that no more characters are available from the
+file. So, if we have the situation
+\begin{center}
+\begin{tabular}{rcc@{\,}@{\,}ccl}
+  \cline{3-4}
+  lexer
+& \(\longleftarrow\)
+& \multicolumn{1}{@{\,}c@{\,}|}{\(\cdots\)}
+& \multicolumn{1}{@{\,}c@{\,}|}{\eof}
+& \(\longleftarrow\)
+& empty file\\
+  \cline{3-4}
+&
+&
+& \multicolumn{1}{@{\,}c@{\,}}{\(\upharpoonright\)}
+\end{tabular}
+\end{center}
+in which the lexer requests a character, it would get \eof and
+subsequent requests would fail, because both the buffer and the file
+would be empty.
+
+\mypar{Transition diagrams}
+
+As an intermediary step in the construction of a lexical
+analyser,\label{transition} we introduce another concept, called
+\emph{transition diagram}. Transition diagrams depict the actions that
+take place when a lexer is called by a parser to get the next token.
+\emph{States} in a transition diagram are drawn as circles. Some
+states have double circles, with or without an
+asterisk~\textsc{*}. States are connected by arrows, called
+\emph{edges}, each one carrying an input character as \emph{label}, or
+the special label~\other. An example of such transition diagram is
+given in \fig~\vref{fig:dfa_geq}.
+\begin{figure}
+\centering
+\includegraphics[bb=60 660 190 730]{dfa_geq}
+\caption{A transition diagram\label{fig:dfa_geq}}
+\end{figure}
+Double-circled states are called \emph{final states}. The special
+arrow which does not connect two states points to the \emph{initial
+  state}. A state in the transition diagram corresponds to the state
+of the input buffer, \emph{i.e.,} its contents and the output pointer
+at a given moment. At the initial state, the buffer contains at least
+one character. If the only one remaining character is \eof, the lexer
+returns a special token \term{\$} to the parser and stops. Let us
+assume that the character~\(c\) is pointed by~\(\upharpoonright\) in
+the input buffer and that \(c\)~is not \eof, depicted as follows:
+\begin{center}
+\begin{tabular}{rcc@{\,}@{\,}c@{\,}@{\,}ccl}
+  \cline{3-5}
+  lexer
+& \(\longleftarrow\)
+& \multicolumn{1}{@{\,}c@{\,}|}{\(\cdots\)}
+& \multicolumn{1}{@{\,}c@{\,}|}{\(c\)}
+& \multicolumn{1}{@{\,}c@{\,}}{\(\cdots\)}
+& \(\longleftarrow\)
+& file\\
+  \cline{3-5}
+&
+&
+& \multicolumn{1}{@{\,}c@{\,}}{\(\upharpoonright\)}
+\end{tabular}
+\end{center}
+When the parser requests a token, if an edge to the state~\(s\) has a
+label with character~\(c\), then the current state in the transition
+diagram becomes~\(s\), and \(c\)~is removed from the buffer. This is
+repeated until a final state is reached or we get stuck. If a final
+state is reached, it means the lexer recognised a token --~which is in
+turn returned to the parser. Otherwise a lexical error occurred.
+
+Let us consider again the diagram in \fig~\vref{fig:dfa_geq} and let
+us assume that the initial input buffer is
+\begin{center}
+\begin{tabular}{rcc@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}ccl}
+  \cline{3-7}
+  lexer
+& \(\longleftarrow\)
+& \multicolumn{1}{|@{\,}c@{\,}|}{\phantom{=}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{>}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{=}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\texttt{\char`\ }}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{1}}
+& \(\longleftarrow\)
+& file\\
+  \cline{3-7}
+&
+&
+& \multicolumn{1}{@{\,}c@{\,}}{\(\upharpoonright\)}
+\end{tabular}
+\end{center}
+From the initial state~\(1\) to the state~\(2\) there is an arrow with
+the label ``\exc{>}''. Because this label is present at the output
+position of the buffer, we can change the diagram state to~\(2\) and
+remove ``\exc{<}'' from the buffer, which becomes
+\begin{center}
+\begin{tabular}{rcc@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}ccl}
+  \cline{3-7}
+  lexer
+& \(\longleftarrow\)
+& \multicolumn{1}{|@{\,}c@{\,}|}{\phantom{=}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{>}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{=}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\texttt{\char`\ }}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{1}}
+& \(\longleftarrow\)
+& file\\
+  \cline{3-7}
+&
+&
+&
+& \multicolumn{1}{@{\,}c@{\,}}{\(\upharpoonright\)}
+\end{tabular}
+\end{center}
+From state~\(2\) to state~\(3\) there is an arrow with label
+``\exc{=}'', so we remove it:
+\begin{center}
+\begin{tabular}{rcc@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}ccl}
+  \cline{3-7}
+  lexer
+& \(\longleftarrow\)
+& \multicolumn{1}{|@{\,}c@{\,}|}{\phantom{=}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{>}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{=}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\texttt{\char`\ }}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{1}}
+& \(\longleftarrow\)
+& file\\
+  \cline{3-7}
+&
+&
+&
+&
+& \multicolumn{1}{@{\,}c@{\,}}{\(\upharpoonright\)}
+\end{tabular}
+\end{center}
+and we move to state~\(3\). Since state~\(3\) is a final state, we are
+done: we recognised the token \token{relop}{>=}. Let us imagine now
+the input buffer is
+\begin{center}
+\begin{tabular}{rcc@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}ccl}
+  \cline{3-7}
+  lexer
+& \(\longleftarrow\)
+& \multicolumn{1}{|@{\,}c@{\,}|}{\phantom{=}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{>}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{1}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{+}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{2}}
+& \(\longleftarrow\)
+& file\\
+  \cline{3-7}
+&
+&
+& \multicolumn{1}{@{\,}c@{\,}}{\(\upharpoonright\)}
+\end{tabular}
+\end{center}
+In this case, we will move from the initial state to state~\(2\):
+\begin{center}
+\begin{tabular}{rcc@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}ccl}
+  \cline{3-7}
+  lexer
+& \(\longleftarrow\)
+& \multicolumn{1}{|@{\,}c@{\,}|}{\phantom{=}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{>}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{1}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{+}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{2}}
+& \(\longleftarrow\)
+& file\\
+  \cline{3-7}
+&
+&
+&
+& \multicolumn{1}{@{\,}c@{\,}}{\(\upharpoonright\)}
+\end{tabular}
+\end{center}
+We cannot use the edge with label ``\exc{=}'', but we can use the one
+with ``\other''. Indeed, the ``\other'' label refers to any character
+that is not indicated by any of the edges leaving the state. Hence, we
+move to state~\(4\) and the input buffer becomes
+\begin{center}
+\begin{tabular}{rcc@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}ccl}
+  \cline{3-7}
+  lexer
+& \(\longleftarrow\)
+& \multicolumn{1}{|@{\,}c@{\,}|}{\phantom{=}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{>}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{1}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{+}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{2}}
+& \(\longleftarrow\)
+& file\\
+  \cline{3-7}
+&
+&
+&
+&
+& \multicolumn{1}{@{\,}c@{\,}}{\(\upharpoonright\)}
+\end{tabular}
+\end{center}
+and the lexer emits the token \token{relop}{>}. But there is a problem
+here: if the parser requests another token, we have to start again
+with this buffer but we already skipped the character
+\begin{tabular}{|@{\,}c@{\,}|}
+\hline
+\exc{1}\\
+\hline
+\end{tabular}
+and we forgot where the recognised lexeme starts. The idea is to use
+another arrow to mark the starting position when we try to recognise a
+token. Let~\(\upharpoonleft\) be this new pointer. Then the initial
+buffer of our previous example would be depicted as
+\begin{center}
+\begin{tabular}{rcc@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}ccl}
+  \cline{3-7}
+  lexer
+& \(\longleftarrow\)
+& \multicolumn{1}{|@{\,}c@{\,}|}{\phantom{=}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{>}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{1}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{+}}
+& \multicolumn{1}{@{\,}c@{\,}}{\(\cdots\)}
+& \(\longleftarrow\)
+& file\\
+  \cline{3-7}
+&
+&
+& \multicolumn{1}{@{}c@{}}{\(\upharpoonleft \upharpoonright\)}
+\end{tabular}
+\end{center}
+When the lexer reads the next available character, the
+pointer~\(\upharpoonright\) is shifted to the right of one position.
+\begin{center}
+\begin{tabular}{rcc@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}ccl}
+  \cline{3-7}
+  lexer
+& \(\longleftarrow\)
+& \multicolumn{1}{|@{\,}c@{\,}|}{\phantom{=}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{>}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{1}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{+}}
+& \multicolumn{1}{@{\,}c@{\,}}{\(\cdots\)}
+& \(\longleftarrow\)
+& file\\
+  \cline{3-7}
+&
+&
+& \multicolumn{1}{@{\,}c@{\,}}{\(\upharpoonleft\)}
+& \multicolumn{1}{@{\,}c@{\,}}{\(\upharpoonright\)}
+\end{tabular}
+\end{center}
+We are now at state~\(2\) and the current character, that is, pointed
+by~\(\upharpoonright\), is~\exc{1}. The only way to continue is to go
+to state~\(4\), using the special label \other. The pointer of the
+secondary buffer shifts to the right and, since it points to the last
+position, we input one character from the primary buffer:
+\begin{center}
+\begin{tabular}{rcc@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}ccl}
+  \cline{3-7}
+  lexer
+& \(\longleftarrow\)
+& \multicolumn{1}{|@{\,}c@{\,}|}{\phantom{=}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{>}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{1}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{+}}
+& \multicolumn{1}{@{\,}c@{\,}}{\(\cdots\)}
+& \(\longleftarrow\)
+& file\\
+  \cline{3-7}
+&
+&
+& \multicolumn{1}{@{\,}c@{\,}}{\(\upharpoonleft\)}
+&
+& \multicolumn{1}{@{\,}c@{\,}}{\(\upharpoonright\)}
+\end{tabular}
+\end{center}
+State~\(4\) is a final state a bit special: it is marked with
+`\emph{\textsc{*}}'. This means that before emitting the recognised
+lexeme we have to shift the current pointer by one position \emph{to
+  the left}:
+\begin{center}
+\begin{tabular}{rcc@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}ccl}
+  \cline{3-7}
+  lexer
+& \(\longleftarrow\)
+& \multicolumn{1}{|@{\,}c@{\,}|}{\phantom{=}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{>}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{1}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{+}}
+& \multicolumn{1}{@{\,}c@{\,}}{\(\cdots\)}
+& \(\longleftarrow\)
+& file\\
+  \cline{3-7}
+&
+&
+& \multicolumn{1}{@{\,}c@{\,}}{\(\upharpoonleft\)}
+& \multicolumn{1}{@{\,}c@{\,}}{\(\upharpoonright\)}
+\end{tabular}
+\end{center}
+\emph{This allows to recover the character}
+\begin{tabular}{|@{\,}c@{\,}|}
+\hline
+\exc{1}\\
+\hline
+\end{tabular}
+\emph{as current character.} Moreover, the recognised lexeme now
+always starts at the pointer~\(\upharpoonleft\) and ends one position
+before the pointer~\(\upharpoonright\). So, here, the lexer outputs
+the lexeme `\exc{>}'. Actually, we can complete our token
+specification by adding some extra information that are useful for the
+recognition process, as just described. First, it is convenient for
+some tokens, like \tokenName{relop}, not to carry the lexeme verbatim,
+but a symbolic name instead, which is independent of the actual size
+of the lexeme. For instance, we shall write \itoken{relop}{gt} instead
+of \token{relop}{>}. Second, it is useful to write the recognised
+token and the lexeme close to the final state in the transition
+diagram itself. See \fig~\vref{fig:dfa_geq_completed}.
+\begin{figure}
+\centering
+\includegraphics[bb=55 660 224 730]{dfa_geq_completed}
+\caption{Completion of \fig~\vref{fig:dfa_geq}
+\label{fig:dfa_geq_completed}}
+\end{figure}
+Similarly, \fig~\vref{fig:dfa_relop}
+\begin{figure}
+\centering
+\includegraphics[bb=50 600 265 745]{dfa_relop}
+\caption{Relational operators\label{fig:dfa_relop}}
+\end{figure}
+shows all the relational operators.
+
+\mypar{Identifiers and longest prefix match}
+
+A transition diagram for specifying identifiers is given in \fig~\vref{fig:dfa_ident}.
+\begin{figure}
+\centering
+\includegraphics[bb=48 684 260 755]{dfa_ident}
+\caption{Transition diagram for identifiers\label{fig:dfa_ident}}
+\end{figure}
+\texttt{lexeme} is a function call which returns the recognised
+lexeme, as found in the \texttt{buffer}. The \other label on the last
+step to final state force the identifier to be of \emph{maximal
+  length}. For instance, given \texttt{counter+1}, the lexer will
+recognise \texttt{counter} as identifier and not just
+\texttt{count}. This is called \emph{the longest prefix} property.
+
+\mypar{Keywords}
+
+Since keywords are sequences of letters, they are exceptions to the
+rule that a sequence of letters and digits starting with a letter is
+an identifier. One solution for specifying keywords is to use
+dedicated transition diagrams, one for each keyword. For example, the
+\term{if} keyword is simply specified in \fig~\vref{fig:dfa_if}.
+\begin{figure}[b]
+\centering
+\includegraphics[bb=47 711 192 730]{dfa_if}
+\caption{Transition diagram for \term{if}\label{fig:dfa_if}}
+\end{figure}
+If one keyword diagram succeeds, \emph{i.e.,} the lexer reaches a
+final state, then the corresponding keyword is transmitted to the
+parser; otherwise, another keyword diagram is tried after shifting the
+current pointer~\(\upharpoonright\) in the input buffer back to the
+starting position, \emph{i.e.,} pointed by~\(\upharpoonleft\).
+
+There is a problem, though. Consider the \OCaml language, where there
+are two keywords \term{fun} and \term{function}. If the diagram of
+\term{fun} is tried successfully on the input \texttt{function} and
+then the diagram for identifiers, the lexer outputs the lexemes
+\term{fun} and \token{id}{ction} instead of one keyword
+\term{function}. As for identifiers, we want the longest prefix
+property to hold for keywords too and this is simply achieved by
+\emph{ordering the transition diagrams}. For example, the diagram of
+\term{function} must be tried before the one for \term{fun} because
+\term{fun} is a prefix of \term{function}. This strategy implies that
+the diagram for the identifiers (given in \fig~\ref{fig:dfa_ident} on
+page~\pageref{fig:dfa_ident}) must appear \emph{after} the diagrams
+for the keywords.
+
+There are still several drawbacks with this technique, though. The
+first problem is that if we indeed have the longest prefix property
+among keywords, it does not hold with respect to the identifiers. For
+instance, \texttt{iff} would lead to the keyword \term{if} and the
+identifier \texttt{f}, instead of the (longest and sole) identifier
+\texttt{iff}. This can be remedied by forcing the keyword diagram to
+recognise a keyword and not an identifier. This is done by failing if
+the keyword is followed by a letter or a digit (remember we try the
+longest keywords first, otherwise we would miss some keywords --- the
+ones which have prefix keywords). The way to specify this is to use a
+special label \compl such that \compl \(c\) denotes the set of
+characters which are \emph{not} \(c\). Actually, the special label
+\other can always be represented using this \compl label because
+\other means `not the others labels.' Therefore, the completed
+\term{if} transition diagram would be as found in
+\fig~\vref{fig:dfa_if_completed}.
+\begin{figure}
+\centering
+\includegraphics[bb=48 711 261 738]{dfa_if_completed}
+\caption{Completion of \fig~\vref{fig:dfa_if}
+\label{fig:dfa_if_completed}}
+\end{figure}
+where \term{alpha} is either \term{letter} or \term{digit}.
+
+The second problem with this approach is that we have to create a
+transition diagram for each keyword and a state for each of their
+letters. In real programming languages, this means that we get
+hundreds of states only for the keywords. This problem can be avoided
+if we change our technique and give up the specification of keywords
+with transition diagrams.
+\begin{center}
+\begin{tabular}{>{\tt}ll}
+\toprule
+  \multicolumn{2}{c}{Keywords}\\
+\midrule
+  \multicolumn{1}{c}{Lexeme}
+& \multicolumn{1}{c}{Token}\\
+\hline \hline
+if   & \tokenName{if}\\
+then & \tokenName{then}\\
+else & \tokenName{else}\\
+\bottomrule
+\end{tabular}
+\end{center}
+Since keywords are a strict subset of identifiers, let us use only the
+identifier diagram but \emph{we change the action at the final state},
+\emph{i.e.,} instead of always returning an~\tokenName{id} token, we
+lookup the recognised string in the table of keywords: if not found,
+it is an identifier. Let us call \texttt{switch} the function which
+makes this decision based on the buffer (equivalently, the current
+diagram state) and a table of keywords. The specification is shown in
+\fig~\vref{fig:dfa_id_kwd}.
+\begin{figure}[b]
+\centering
+\includegraphics[bb=48 684 285 755]{dfa_id_kwd}
+\caption{Transition diagram for keywords\label{fig:dfa_id_kwd}}
+\end{figure}
+
+In the same vein, let us consider now the numbers as specified by the
+transition diagram in \fig~\vref{fig:dfa_num}
+\begin{figure}
+\centering
+\includegraphics[bb=47 627 320 746]{dfa_num}
+\caption{Transition diagram for numbers\label{fig:dfa_num}}
+\end{figure}
+and white space specified by the transition diagram in
+\fig~\vref{fig:dfa_ws}.
+\begin{figure}
+\centering
+\includegraphics[bb=48 711 190 755]{dfa_ws}
+\caption{Transition diagram for white space\label{fig:dfa_ws}}
+\end{figure}
+The specificity of the latter diagram is that there is no action
+associated to the final state: no token is emitted.
+
+\paragraph{A simplification}
+
+There is a simple away to reduce the size of the diagrams used to
+specify the tokens while retaining the longest prefix property: allow
+to pass through several final states. This way, we can actually also
+get rid of the `\emph{\textsc{*}}' marker on final states. Coming back
+to the first example in \fig~\vref{fig:dfa_geq_completed}, we would
+alternatively make up \fig~\vref{fig:dfa_geq_opt}.
+\begin{figure}
+\centering
+\includegraphics[bb=48 702 220 730]{dfa_geq_opt}
+\caption{Alternative to \fig~\vref{fig:dfa_geq_completed}
+\label{fig:dfa_geq_opt}}
+\end{figure}
+But we have to change the recognition process a little bit here in
+order to keep the longest prefix match: we do not want to stop at
+state~\(2\) if we could recognise `\texttt{>=}'.
+
+The simplified complete version with respect to the one given in
+\fig~\vref{fig:dfa_relop} is found in \fig~\vref{fig:dfa_relop_opt}.
+\begin{figure}
+\centering
+\includegraphics[bb=25 600 200 745]{dfa_relop_opt}
+\caption{Simplification of \fig~\vref{fig:dfa_relop}
+\label{fig:dfa_relop_opt}}
+\end{figure}
+The transition diagram for specifying identifiers \emph{and} keywords
+looks now like \fig~\vref{fig:dfa_id_kwd_opt}.
+\begin{figure}
+\centering
+\includegraphics[bb=48 682 208 756]{dfa_id_kwd_opt}
+\caption{Simplification of \fig~\vref{fig:dfa_id_kwd}
+\label{fig:dfa_id_kwd_opt}}
+\end{figure}
+The transition diagram for specifying numbers is simpler now, as seen
+in \fig~\vref{fig:dfa_num_opt}.
+\begin{figure}
+\centering
+\includegraphics[bb=48 632 320 758]{dfa_num_opt}
+\caption{Simplification of \fig~\vref{fig:dfa_num}
+\label{fig:dfa_num_opt}}
+\end{figure}
+
+How do we interpret these new transition diagrams, where the final
+states may have out\hyp{}going edges (and the initial state have
+incoming edges)? For example, let us consider the recognition of a
+number:
+\begin{center}
+\begin{tabular}{rcc@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}ccl}
+  \cline{3-10}
+  lexer
+& \(\longleftarrow\)
+& \multicolumn{1}{|@{\,}c@{\,}|}{\exc{a}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{=}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{1}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{5}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{3}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{+}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{6}}
+& \multicolumn{1}{@{\,}c@{\,}}{\(\cdots\)}
+& \(\longleftarrow\)
+& file\\
+  \cline{3-10}
+&
+&
+&
+& \multicolumn{1}{@{\,}c@{\,}}{\(\upharpoonleft\upharpoonright\)}
+\end{tabular}
+\end{center}
+As usual, if there is a label of an edge going out of the current
+state which matches the current character in the buffer, the
+pointer~\(\upharpoonright\) is shifted to the right of one
+position. The new feature here is about final states. When the current
+state is final
+\begin{enumerate*}
+
+  \item the current position in the buffer is pointed to with a new
+  pointer~\(\Uparrow\);
+
+  \item if there is an out-going edge which carries a matching
+  character, we try to recognise a longer lexeme;
+  \begin{enumerate*}
+
+    \item if we fail, \emph{i.e.,} if we cannot go further in the
+      diagram and the current state is not final, then we shift back
+      the current pointer~\(\upharpoonright\) to the position pointed
+      by~\(\Uparrow\);
+
+    \item and return the then-recognised token and lexeme;
+
+  \end{enumerate*}
+
+  \item if not, we return the recognised token and lexeme associated
+  to the current final state.
+
+\end{enumerate*}
+Following our example of number recognition:
+\begin{itemize}
+
+  \item The label \term{digit} matches the current character in the
+  buffer, \emph{i.e.,} the one pointed by~\(\upharpoonright\), so we move to
+  state~\(2\) and we shift right by one the
+  pointer~\(\upharpoonright\).
+\begin{center}
+\begin{tabular}{rcc@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}ccl}
+  \cline{3-10}
+  lexer
+& \(\longleftarrow\)
+& \multicolumn{1}{|@{\,}c@{\,}|}{\exc{a}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{=}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{1}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{5}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{3}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{+}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{6}}
+& \multicolumn{1}{@{\,}c@{\,}}{\(\cdots\)}
+& \(\longleftarrow\)
+& file\\
+  \cline{3-10}
+&
+&
+&
+& \multicolumn{1}{@{\,}c@{\,}}{\(\upharpoonleft\)}
+& \multicolumn{1}{@{\,}c@{\,}}{\(\upharpoonright\)}
+\end{tabular}
+\end{center}
+  \item The state~\(2\) is final, so we set the pointer~\(\Uparrow\)
+  to the current position in the buffer
+\begin{center}
+\begin{tabular}{rcc@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}ccl}
+  \cline{3-10}
+  lexer
+& \(\longleftarrow\)
+& \multicolumn{1}{|@{\,}c@{\,}|}{\exc{a}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{=}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{1}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{5}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{3}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{+}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{6}}
+& \multicolumn{1}{@{\,}c@{\,}}{\(\cdots\)}
+& \(\longleftarrow\)
+& file\\
+  \cline{3-10}
+&
+&
+&
+& \multicolumn{1}{@{\,}c@{\,}}{\(\upharpoonleft\)}
+& \multicolumn{1}{@{}c@{}}{\(\Uparrow\upharpoonright\)}
+\end{tabular}
+\end{center}
+
+  \item We shift right by one the current pointer and stay in
+  state~\(2\) because the matching edge is a loop (notice that we did
+  not stop here).
+\begin{center}
+\begin{tabular}{rcc@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}ccl}
+  \cline{3-10}
+  lexer
+& \(\longleftarrow\)
+& \multicolumn{1}{|@{\,}c@{\,}|}{\exc{a}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{=}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{1}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{5}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{3}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{+}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{6}}
+& \multicolumn{1}{@{\,}c@{\,}}{\(\cdots\)}
+& \(\longleftarrow\)
+& file\\
+  \cline{3-10}
+&
+&
+&
+& \multicolumn{1}{@{\,}c@{\,}}{\(\upharpoonleft\)}
+& \multicolumn{1}{@{\,}c@{\,}}{\(\Uparrow\)}
+& \multicolumn{1}{@{\,}c@{\,}}{\(\upharpoonright\)}
+\end{tabular}
+\end{center}
+
+  \item The state~\(2\) is final so we set pointer~\(\Uparrow\) to point to
+    the current position:
+\begin{center}
+\begin{tabular}{rcc@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}ccl}
+  \cline{3-10}
+  lexer
+& \(\longleftarrow\)
+& \multicolumn{1}{|@{\,}c@{\,}|}{\exc{a}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{=}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{1}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{5}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{3}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{+}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{6}}
+& \multicolumn{1}{@{\,}c@{\,}}{\(\cdots\)}
+& \(\longleftarrow\)
+& file\\
+  \cline{3-10}
+&
+&
+&
+& \multicolumn{1}{@{\,}c@{\,}}{\(\upharpoonleft\)}
+&
+& \multicolumn{1}{@{}c@{}}{\(\Uparrow\upharpoonright\)}
+\end{tabular}
+\end{center}
+
+  \item The \term{digit} label of the loop matches again the current
+  character (here \exc{3}), so we shift right by one the current
+  pointer.
+\begin{center}
+\begin{tabular}{rcc@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}ccl}
+  \cline{3-10}
+  lexer
+& \(\longleftarrow\)
+& \multicolumn{1}{|@{\,}c@{\,}|}{\exc{a}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{=}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{1}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{5}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{3}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{+}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{6}}
+& \multicolumn{1}{@{\,}c@{\,}}{\(\cdots\)}
+& \(\longleftarrow\)
+& file\\
+  \cline{3-10}
+&
+&
+&
+& \multicolumn{1}{@{\,}c@{\,}}{\(\upharpoonleft\)}
+&
+& \multicolumn{1}{@{\,}c@{\,}}{\(\Uparrow\)}
+& \multicolumn{1}{@{\,}c@{\,}}{\(\upharpoonright\)}
+\end{tabular}
+\end{center}
+
+  \item Because state~\(2\) is final we set the pointer~\(\Uparrow\)
+    to the current pointer~\(\upharpoonright\):
+\begin{center}
+\begin{tabular}{rcc@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}ccl}
+  \cline{3-10}
+  lexer
+& \(\longleftarrow\)
+& \multicolumn{1}{|@{\,}c@{\,}|}{\exc{a}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{=}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{1}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{5}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{3}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{+}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{6}}
+& \multicolumn{1}{@{\,}c@{\,}}{\(\cdots\)}
+& \(\longleftarrow\)
+& file\\
+  \cline{3-10}
+&
+&
+&
+& \multicolumn{1}{@{\,}c@{\,}}{\(\upharpoonleft\)}
+&
+&
+& \multicolumn{1}{@{}c@{}}{\(\Uparrow\upharpoonright\)}
+\end{tabular}
+\end{center}
+
+  \item State~\(2\) is final, so it means that we succeeded in
+    recognising the token associated with state~\(2\):
+    \token{num}{lexeme(buffer)}, whose lexeme is between
+    \(\upharpoonleft\)~included and~\(\upharpoonright\) excluded,
+    \emph{i.e.,} \texttt{153}.
+
+\end{itemize}
+Let us consider the following initial buffer:
+\begin{center}
+\begin{tabular}{rcc@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}ccl}
+  \cline{3-10}
+  lexer
+& \(\longleftarrow\)
+& \multicolumn{1}{|@{\,}c@{\,}|}{\exc{a}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{=}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{1}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{5}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{.}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{+}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{6}}
+& \multicolumn{1}{@{\,}c@{\,}}{\(\cdots\)}
+& \(\longleftarrow\)
+& file\\
+  \cline{3-10}
+&
+&
+&
+& \multicolumn{1}{@{\,}c@{\,}}{\(\upharpoonleft\upharpoonright\)}
+\end{tabular}
+\end{center}
+Character~\texttt{1} is read and we arrive at state~\(2\) with the
+following situation:
+\begin{center}
+\begin{tabular}{rcc@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}ccl}
+  \cline{3-10}
+  lexer
+& \(\longleftarrow\)
+& \multicolumn{1}{|@{\,}c@{\,}|}{\exc{a}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{=}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{1}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{5}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{.}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{+}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{6}}
+& \multicolumn{1}{@{\,}c@{\,}}{\(\cdots\)}
+& \(\longleftarrow\)
+& file\\
+  \cline{3-10}
+&
+&
+&
+& \multicolumn{1}{@{\,}c@{\,}}{\(\upharpoonleft\)}
+& \multicolumn{1}{@{}c@{}}{\(\Uparrow\upharpoonright\)}
+\end{tabular}
+\end{center}
+Then \texttt{5}~is read and we arrive again at state~\(2\) but we
+encounter a different situation:
+\begin{center}
+\begin{tabular}{rcc@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}ccl}
+  \cline{3-10}
+  lexer
+& \(\longleftarrow\)
+& \multicolumn{1}{|@{\,}c@{\,}|}{\exc{a}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{=}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{1}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{5}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{.}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{+}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{6}}
+& \multicolumn{1}{@{\,}c@{\,}}{\(\cdots\)}
+& \(\longleftarrow\)
+& file\\
+  \cline{3-10}
+&
+&
+&
+& \multicolumn{1}{@{\,}c@{\,}}{\(\upharpoonleft\)}
+&
+& \multicolumn{1}{@{}c@{}}{\(\Uparrow\upharpoonright\)}
+\end{tabular}
+\end{center}
+The label on the edge from state~\(2\) to~\(3\) matches `\exc{.}' so we
+move to state~\(3\), shift by one the current pointer in the buffer:
+\begin{center}
+\begin{tabular}{rcc@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}ccl}
+  \cline{3-10}
+  lexer
+& \(\longleftarrow\)
+& \multicolumn{1}{|@{\,}c@{\,}|}{\exc{a}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{=}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{1}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{5}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{.}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{+}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{6}}
+& \multicolumn{1}{@{\,}c@{\,}}{\(\cdots\)}
+& \(\longleftarrow\)
+& file\\
+  \cline{3-10}
+&
+&
+&
+& \multicolumn{1}{@{\,}c@{\,}}{\(\upharpoonleft\)}
+&
+& \multicolumn{1}{@{\,}c@{\,}}{\(\Uparrow\)}
+& \multicolumn{1}{@{\,}c@{\,}}{\(\upharpoonright\)}
+\end{tabular}
+\end{center}
+Now we are stuck at state~\(3\). Because this is not a final state, we
+should fail, \emph{i.e.,} report a lexical error, but because the
+pointer~\(\Uparrow\) has been set (\emph{i.e.,} we met a final state),
+we shift the current pointer back to the position of the
+pointer~\(\Uparrow\) and return the corresponding lexeme~\texttt{15}:
+\begin{center}
+\begin{tabular}{rcc@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}c@{\,}@{\,}ccl}
+  \cline{3-10}
+  lexer
+& \(\longleftarrow\)
+& \multicolumn{1}{|@{\,}c@{\,}|}{\exc{a}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{=}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{1}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{5}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{.}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{+}}
+& \multicolumn{1}{@{\,}c@{\,}|}{\exc{6}}
+& \multicolumn{1}{@{\,}c@{\,}}{\(\cdots\)}
+& \(\longleftarrow\)
+& file\\
+  \cline{3-10}
+&
+&
+&
+& \multicolumn{1}{@{\,}c@{\,}}{\(\upharpoonleft\)}
+&
+& \multicolumn{1}{@{}c@{}}{\(\Uparrow\upharpoonright\)}
+\end{tabular}
+\end{center}
+
+\section{Diagrams with \(\epsilon\)-transitions}
+
+Transition diagrams as shown in \fig~\vref{fig:dfa_num} are relatively
+complex to design. We often, at a given state, ``jump'' to another
+without consuming any character in the character input buffer. We also
+want to compose in parallel diagrams, meaning that, in a given state,
+we either want to use this diagram, or this one, or that one,
+etc. This can be achieved by introducting a special kind of character,
+noted \(\epsilon\), as a label on the transitions. The interpretation
+of this new kind of transition, called \(\epsilon\)-transition, is
+that the current state changes by following this transition
+\emph{without reading any input}. This is sometimes referred as a
+\emph{spontaneous transition}.
+
+For example, the \fig~\vref{fig:enfa_num} specifies signed natural and
+decimal numbers by means of an \(\epsilon\)-diagram.
+\begin{figure}
+\centering
+\includegraphics[bb=49 660 288 758]{enfa_num}
+\caption{Signed natural and decimal numbers\label{fig:enfa_num}}
+\end{figure}
+This is not the simplest \(\epsilon\)-diagram we can imagine for these
+numbers, but note the utility of the \(\epsilon\)-transition
+from~\(q_4\) to~\(q_3\) (a jump).
+
+In the case of lexers, \(\epsilon\)-transitions enable the separate
+design of a diagram for each token, then the creating of an initial
+(respectively, final) state connected to all their initial
+(respectively, final) states with an \(\epsilon\)-transition.  As an
+example of parallel composition, consider for instance the case of the
+keywords \term{fun} and \term{function}, as well as identifiers:
+\begin{center}
+\includegraphics[bb=48 630 421 732,scale=0.88]{enfa_kwd_id}
+\end{center}
+
+
+
+The theory of automata tells us that, given a diagram with
+\(\epsilon\)-transitions, there always exists an equivalent diagram
+without \(\epsilon\)-transitions. There are some algorithms that
+constitute a constructive proof of that theorem. The downside is that
+the number of states in the resulting diagram is often greater than in
+the \(\epsilon\)-diagram.\footnote{In theory, exponentially as many,
+  but those cases are very rare in practice.} In some simple cases,
+though, the number of states is smaller, as in
+\fig~\vref{fig:nfa_num}.
+\begin{figure}
+\centering
+\includegraphics[bb=49 610 208 758]{dfa_from_enfa_num}
+\caption{\(\epsilon\)-free diagram equivalent to \fig~\vref{fig:enfa_num}
+\label{fig:nfa_num}}
+\end{figure}
+
+
+\section{From regular expressions to transition diagrams}
+
+In section~\vref{transition}, we mentioned that transitions diagrams
+are an intermediary step in the construction of lexers. Indeed, those
+diagrams are graphical and graphical tools for building lexers are
+lacking. Instead, we could textually define the diagrams by means of
+transition tables, where each entry is a state and each column is a
+character to be read in the input buffer. The issue would then be the
+maintenance of such tables in a text format (think adding a row or a
+column): this is really the realm of relational databases.
+
+The prefered method is to define a transition diagram by means of a
+\emph{regular expression}. A regular expression can be thought as a
+program belonging to a language (a regular language), whose meaning is
+(in this presentation) a transition diagram. There are multiple
+syntaxes for thoses languages, so we will use minimal and abstract
+syntax here. For example, the following regular expression
+\begin{align*}
+\text{\term{digit}\plus{} \lparen\exc{.}
+  \term{digit}\plus\rparen\opt{} \lparen\exc{E} \lparen\exc{+} \disj
+  \exc{-}\rparen\opt{} \term{digit}\plus\rparen\opt}
+\end{align*}
+specifies the transition diagram for numbers
+in~\fig~\vref{fig:dfa_num}.
+
+We do not claim that large regular expressions are easy to maintain,
+simply that the difficulty in maintaining them is somewhat lesser than
+with tables in text format. Also, one advantage of regular expressions
+with respect to tables, is that they can be read from left to right on
+a line ---~their complexity stems from the flattening of the second
+dimension found in the 2D nature of transition diagrams.
+
+If regular expressions are programs, this entails that a lexer and a
+parser have to be built to process them, a compilation process whose
+output would be a transition table. We can define regular expressions
+with regular expressions, and then use a lexer generator based on
+regular expressions to generate a lexer for regular expressions, but
+our method would become circular and meaningless as a
+definition. Fortunately, it is not too difficult to write by hand a
+lexer and a parser for simple regular expressions.
+
+We need now a way to build transition diagrams from regular
+expressions.
+
+The construction we present here to build a transition diagram from a
+regular expression is called \emph{Thompson's construction}. Let us
+first associate a transition diagram to the basic (atomic) regular
+expressions.
+\begin{itemize}
+
+  \item For the expression \(\epsilon\), construct the following
+    diagram, where~\(i\) and~\(f\) are new states:
+  \begin{center}
+    \includegraphics[bb=48 710 135 730]{thompson_epsilon}
+  \end{center}
+
+  \item For \(a \in \Sigma\), construct the following diagram,
+    where~\(i\) and~\(f\) are new states:
+  \begin{center}
+    \includegraphics[bb=48 710 135 730]{thompson_symbol}
+  \end{center}
+
+\end{itemize}
+Now let us associate transition diagrams to complex regular
+expressions. In the following, let us assume that~\(\mathcal{D}(s)\)
+and~\(\mathcal{D}(t)\) are the diagrams for regular expressions
+\(s\)~and~\(t\).
+\begin{itemize}
+
+  \item For the regular expression \(st\), construct the following
+    diagram \(\mathcal{D}(st)\), where no new state is created:
+\begin{center}
+\includegraphics[bb=65 660 295 714]{thompson_conc}
+\end{center}
+  The final state of \(\mathcal{D}(s)\) becomes a normal state, as
+  well as the initial state of \(\mathcal{D}(t)\). This way only
+  remains a unique initial state~\(i\) and a unique final state~\(f\).
+
+  \item For the regular expression \(s\) \disj \(t\), construct the
+    following diagram \(\mathcal{D}(s \, \text{\disj} \, t)\)
+\begin{center}
+\includegraphics[bb=65 590 272 715,scale=0.9]{thompson_disj}
+\end{center}
+where \(i\) and \(f\) are new states. Initial and final states of
+\(\mathcal{D}(s)\) and \(\mathcal{D}(t)\) become normal.
+
+  \item For the regular expression \(s\)\kleene, construct the
+    following diagram \(\mathcal{D}(s\text{\kleene})\), where~\(i\)
+    and~\(f\) are new states:
+\begin{center}
+\includegraphics[bb=50 620 255 718]{thompson_kleene}
+\end{center}
+Note that we added two \(\epsilon\) transitions and that the initial
+and final states of \(\mathcal{D}(s)\) become normal states.
+
+\end{itemize}
+How do we apply these simple rules when we have a complex regular
+expression, having many level of nested parentheses and other
+constructs? Actually, the abstract syntax tree of the regular
+expression directs the application of the rules. If the syntax tree
+has the shape shown in \fig~\vref{fig:re_ast_conc},
+\begin{figure}[b]
+\centering
+\subfloat[\(s \cdot t\)\label{fig:re_ast_conc}]{
+  \includegraphics{re_ast_conc}
+}
+\qquad
+\subfloat[\(s \,\text{\disj}\, t\)\label{fig:re_ast_disj}]{
+\includegraphics{re_ast_disj}
+}
+\qquad
+\subfloat[\(s\text{\kleene}\)\label{fig:re_ast_kleene}]{
+\includegraphics{re_ast_kleene}
+}
+\caption{Three tree patterns for three regular expressions}
+\end{figure}
+then we construct first \(\mathcal{D}(s)\), \(\mathcal{D}(t)\) and
+finally \(\mathcal{D}(s \cdot t)\). If the syntax tree has the shape
+found in \fig~\vref{fig:re_ast_disj}, then we construct first
+\(\mathcal{D}(s)\), \(\mathcal{D}(t)\) and finally \(\mathcal{D} (s
+\, \text{\disj} \, t)\). If the syntax tree has the shape shown in
+\fig~\vref{fig:re_ast_kleene}, then we construct first \({\mathcal
+  D}(s)\) and finally \(\mathcal{D}(s\text{\kleene})\). These pattern
+matchings are applied first at the root of the abstract syntax tree of
+the regular expression.
