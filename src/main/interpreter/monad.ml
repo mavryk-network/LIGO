@@ -36,7 +36,7 @@ module Command = struct
     | Get_balance : Location.t * LT.value -> LT.value t
     | Get_last_originations : unit -> LT.value t
     | Pack : Location.t * LT.value * Ast_typed.type_expression -> bytes t
-    | Unpack : Location.t * bytes * Ast_typed.type_expression -> LT.value t
+    | Unpack : Location.t * bytes * Ast_typed.type_expression -> Ast_typed.expression t
     | Implicit_account : Tezos_crypto.Signature.Public_key_hash.t -> Tezos_raw_protocol_008_PtEdo2Zk.Alpha_context.Contract.t t
     | Check_obj_ligo : LT.expression -> unit t
     | Compile_expression : Location.t * LT.value * string * string * LT.value option -> LT.value t
@@ -457,6 +457,7 @@ module Command = struct
            l
         | _ -> failwith "None has a non-option type?" in
       let ret = LT.V_Michelson (Ty_code (value,inner_ty,v_ty)) in
+      let* ret = Michelson_backend.val_to_ast ~loc ret v_ty in
       ok (ret, ctxt)
     | Implicit_account (pkh) ->
       let contract = Tezos_raw_protocol_008_PtEdo2Zk.Alpha_context.Contract.implicit_contract pkh in

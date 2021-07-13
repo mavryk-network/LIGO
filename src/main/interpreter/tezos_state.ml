@@ -244,12 +244,16 @@ let get_delegate ~loc (ctxt :context) contract =
   Trace.trace_tzresult_lwt (throw_obj_exc loc) @@ Tezos_protocol_008_PtEdo2Zk.Protocol.Alpha_services.Contract.delegate_opt Tezos_alpha_test_helpers.Block.rpc_ctxt ctxt.threaded_context contract
 
 let init_ctxt ?(loc=Location.generated) ?(initial_balances=[]) ?(n=2) ()  =
+  let open Tezos_alpha_test_helpers in
   let* (threaded_context, acclst) = Trace.trace_tzresult_lwt (throw_obj_exc loc) @@
     Tezos_alpha_test_helpers.Context.init ~initial_balances n
   in
+  let* incr = Trace.trace_tzresult_lwt (throw_obj_exc loc) @@
+    Incremental.begin_construction threaded_context
+  in
   match acclst with
   | baker::source::_ ->
-    ok { threaded_context ; baker ; source ; bootstrapped = acclst ; last_originations = [] ; storage_tys = [] ; alpha_context = None ; storage_keys = [] }
+    ok { threaded_context ; baker ; source ; bootstrapped = acclst ; last_originations = [] ; storage_tys = [] ; alpha_context = Some (Incremental.alpha_ctxt incr) ; storage_keys = [] }
   | _ ->
     fail (Errors.bootstrap_not_enough loc)
 
@@ -266,6 +270,7 @@ let sign_message (packed_payload : bytes) sk : (string,_) result =
   ok signature_str
 
 let bytes_to_value ~loc (_ctxt : context) (bytes) =
+  let bytes = Bytes.sub bytes 1 (Bytes.length bytes - 1) in
   let* x = Trace.trace_decoding_error (fun _ -> Errors.generic_error loc "Error while unpacking data") @@ Data_encoding.Binary.of_bytes Tezos_protocol_008_PtEdo2Zk.Protocol.Script_repr.expr_encoding bytes in
   ok x
 
@@ -282,5 +287,5 @@ let value_to_bytes ~loc (ctxt : context) (value) (val_ty) =
   let* value =
     Trace.trace_tzresult_lwt Main_errors.parsing_input_tracer @@
     Memory_proto_alpha.parse_michelson_data value_michelson value_ty in
-  let* alpha_ctxt = trace_option (Errors.generic_error loc "Not valid thing to bytes") @@ ctxt.alpha_context in
+  let* alpha_ctxt = trace_option (Errors.generic_error loc "Not an alpha context yet?") @@ get_alpha_context ctxt in
   Trace.trace_alpha_tzresult_lwt (throw_obj_exc loc) @@ Tezos_protocol_008_PtEdo2Zk.Protocol.Script_ir_translator.pack_data alpha_ctxt value_ty value

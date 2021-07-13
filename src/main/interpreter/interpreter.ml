@@ -346,7 +346,8 @@ let rec apply_operator : Location.t -> Ast_typed.type_expression -> env -> Ast_t
       return (V_Ct (C_bytes code))
     | ( C_BYTES_UNPACK , [ V_Ct (C_bytes bytes) ] ) ->
       let value_ty = ty in
-      let>> value = Unpack (loc, bytes, value_ty) in
+      let>> typed_exp = Unpack (loc, bytes, value_ty) in
+      let* value = eval_ligo typed_exp _env in
       return value
     | ( C_IMPLICIT_ACCOUNT , [ V_Ct (C_key_hash kh) ] ) ->
       let>> contract = Implicit_account kh in
