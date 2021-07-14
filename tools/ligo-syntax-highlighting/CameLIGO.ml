@@ -3,337 +3,318 @@ module Helpers = Textmate.Helpers
 
 let (let*) = Result.bind
 
+module Name = struct
+  let string                    = "string"
+  let comment                   = "comment"
+  let single_quotes             = "single-quotes"
+  let macro                     = "macro"
+  let list_cons                 = "list-cons"
+  let let_binding               = "let-binding"
+  let lambda                    = "lambda"
+  let type_definition           = "type-definition"
+  let type_annotation           = "type-annotation"
+  let control_keywords          = "control-keywords"
+  let other_keywords            = "other-keywords"
+  let numeric_literals          = "numeric-literals"
+  let operators                 = "operators"
+  let identifier_constructor    = "identifier-constructor"
+  let identifier_lower          = "identifier-lower"
+  let let_rec                   = "let-rec"
+  let let_function              = "let-function"
+  let let_constant              = "let-constant"
+  let parameter_list            = "parameter-list"
+  let identifier_parameter      = "identifier-parameter"
+  let parenthesized_definition  = "parenthesized-definition"
+  let type_expression           = "type-expression"
+  let identifier_variable_decl  = "identifier-variable-decl"
+  let struct_type               = "struct-type"
+  let sum_type                  = "sum-type"
+  let type_alias                = "type-alias"
+end
+
 let syntax_highlighting () =
-  let* json = Textmate.to_json {
+  let* json = Textmate.to_json "mligo" {
     syntax_name          = "mligo";
     scope_name           = "source.mligo";
     file_types           = [];
     folding_start_marker = None;
     folding_stop_marker  = None;
     syntax_patterns      = [
-      Reference "#string";
-      Reference "#single-quotes";
-      Reference "#comment";
-      Reference "#macro";
-      Reference "#list-cons";
-      Reference "#let-binding";
-      Reference "#lambda";
-      Reference "#type-definition";
-      Reference "#type-annotation"; 
-      Reference "#control-keywords";
-      Reference "#other-keywords";
-      Reference "#numeric-literals";
-      Reference "#operators";
-      Reference "#identifier-constructor";
-      Reference "#identifier-lower"
+      Reference Name.string;
+      Reference Name.single_quotes;
+      Reference Name.comment;
+      Reference Name.macro;
+      Reference Name.list_cons;
+      Reference Name.let_binding;
+      Reference Name.lambda;
+      Reference Name.type_definition;
+      Reference Name.type_annotation; 
+      Reference Name.control_keywords;
+      Reference Name.other_keywords;
+      Reference Name.numeric_literals;
+      Reference Name.operators;
+      Reference Name.identifier_constructor;
+      Reference Name.identifier_lower
     ];
     repository           = [
-      Helpers.macro "mligo";
+      Helpers.macro;
       {
-        name = "let-binding";
+        name = Name.let_binding;
         kind = Begin_end {
           meta_name = None;
-          begin_ = "\\b(let)\\b";
-          begin_captures = [
-            (1, "keyword.other.let-binding.mligo")
-          ];
-          end_ = "(\\=)";
-          end_captures = [
-            (1, "keyword.operator.eq.mligo")
-          ];
+          begin_ = [("\\b(let)\\b", Some Function)];
+          end_ = [("(\\=)", Some Operator)];
           patterns = [
-            Reference "#comment";
-            Reference "#let-rec";
-            Reference "#let-function";
-            Reference "#let-constant";
+            Name.comment;
+            Name.let_rec;
+            Name.let_function;
+            Name.let_constant;
           ]
         }
       };
       {
-        name = "let-rec";
+        name = Name.let_rec;
         kind = Match {
           match_ = "\\b(rec)\\b";
           captures = [];
-          match_name = Some "keyword.other.recursive.mligo"
+          match_name = Some StorageClass
         }
       };
       {
-        name = "let-function";
+        name = Name.let_function;
         kind = Begin_end {
           meta_name = None;
-          begin_ = "\\G\\s*([a-zA-Z_]\\w*)\\b(?=\\s*\\()";
-          begin_captures = [
-            (1, "entity.name.function.mligo");
-          ];
-          end_ = "(?=\\=)";
-          end_captures = [];
+          begin_ = [("\\G\\s*([a-zA-Z_]\\w*)\\b(?=\\s*\\()", Some Function)];
+          end_ = [("(?=\\=)", None)];
           patterns = [
-            Reference "#comment";
-            Reference "#parameter-list";
-            Reference "#type-annotation"
+            Name.comment;
+            Name.parameter_list;
+            Name.type_annotation
           ]
         }
       };
       {
-        name = "parameter-list";
+        name = Name.parameter_list;
         kind = Begin_end {
           meta_name = None;
-          begin_ = "\\(";
-          begin_captures = [
-            (1, "keyword.operator.parenthesis.mligo")
-          ];
-          end_ = "\\)";
-          end_captures = [
-            (1, "keyword.operator.parenthesis.mligo")
-          ];
+          begin_ = [("\\(", Some Operator)];
+          end_ = [("\\)", Some Operator)];
           patterns = [
-            Reference "#comment";
-            Reference "#identifier-parameter";
-            Reference "#type-annotation"
+            Name.comment;
+            Name.identifier_parameter;
+            Name.type_annotation
           ]
         }
       };
       {
-        name = "parenthesized-definition";
+        name = Name.parenthesized_definition;
         kind = Begin_end {
           meta_name = None;
-          begin_ = "\\(";
-          begin_captures = [
-            (1, "keyword.operator.parenthesis.mligo")
-          ];
-          end_ = "\\)";
-          end_captures = [
-            (1, "keyword.operator.parenthesis.mligo")
-          ];
+          begin_ = [("\\(", Some Operator)];
+          end_ = [("\\)", Some Operator)];
           patterns = [
-            Reference "#comment";
-            Reference "#identifier-variable-decl";
-            Reference "#type-annotation"
+            Name.comment;
+            Name.identifier_variable_decl;
+            Name.type_annotation
           ]
         }
       };
       {
-        name = "type-annotation";
+        name = Name.type_annotation;
         kind = Begin_end {
           meta_name = None;
-          begin_ = "(:)\\s*";
-          begin_captures = [
-            (1, "keyword.operator.type.mligo")
+          begin_ = [("(:)\\s*", Some Type)];
+          end_ = [("(?:[;|]|(?=[)=}])|$)", None)];
+          patterns = [
+            Name.comment;
+            Name.type_expression
+          ]
+        }
+      };
+      {
+        name = Name.type_expression;
+        kind = Patterns [
+          Begin_end {
+            meta_name = None;
+            begin_ = [("\\(", None)];
+            end_ = [("\\)", None)];
+            patterns = [
+              Name.comment;
+              Name.type_expression
+            ]
+          };
+          Match {
+            match_ = "([^=()|;}/]+)";
+            match_name = None;
+            captures = [
+              (1, Type)
+            ]
+          }
+        ]
+      };
+      {
+        name = Name.let_constant;
+        kind = Begin_end {
+          meta_name = None;
+          begin_ = [("\\G", None)];
+          end_ = [("(?=\\=)", None)];
+          patterns = [
+            Name.comment;
+            Name.type_annotation;
+            Name.parenthesized_definition;
+            Name.identifier_variable_decl
+          ]
+        }
+      };
+      {
+        name = Name.lambda;
+        kind = Begin_end {
+          meta_name = None;
+          begin_ = [("\\b(fun)\\b", Some Statement)];
+          end_ = [("(->)", Some Operator)];
+          patterns = [
+            Name.comment;
+            Name.parameter_list
+          ]
+        }
+      };
+      {
+        name = Name.type_definition;
+        kind = Begin_end {
+          meta_name = None;
+          begin_ = [
+            ("\\b(type)", Some Type);
+            ("\\s+([a-zA-Z_]\\w*)\\b", Some Identifier)];
+          end_ = [("(?=(?:\\blet\\b|\\btype\\b|^\\s*#\\w+))", None)];
+          patterns = [
+            Name.comment;
+            Name.struct_type;
+            Name.sum_type;
+            Name.type_alias
+          ]
+        }
+      };
+      {
+        name = Name.struct_type;
+        kind = Begin_end {
+          meta_name = None;
+          begin_ = [("\\{", None)];
+          end_ = [("\\}", None)];
+          patterns = [
+            Name.comment;
+            Name.identifier_variable_decl;
+            Name.type_annotation
+          ]
+        }
+      };
+      {
+        name = Name.sum_type;
+        kind = Begin_end {
+          meta_name = None;
+          begin_ = [
+            ("\\b([A-Z]\\w*)", Some Label);
+            ("\\s+(of)?", Some Statement);
           ];
-          end_ = "(?:[;|]|(?=[)=}])|$)";
-          end_captures = [];
+          end_ = [("(\\||(?=\\blet\\b|\\btype\\b|^\\s*#\\w+))", None)];
           patterns = [
-            Reference "#comment";
-            Reference "#type-expression"
+            Name.comment;
+            Name.type_expression
           ]
         }
       };
       {
-        name = "type-expression";
-        kind = Patterns {
-          p_name = None;
-          p_kind = [
-            Begin_end {
-              meta_name = None;
-              begin_ = "\\(";
-              begin_captures = [];
-              end_ = "\\)";
-              end_captures = [];
-              patterns = [
-                Reference "#comment";
-                Reference "#type-expression"
-              ]
-            };
-            Match {
-              match_ = "([^=()|;}/]+)";
-              match_name = None;
-              captures = [
-                (1, "entity.name.type.mligo")
-              ]
-            }
-          ]
-        }
-      };
-      {
-        name = "let-constant";
+        name = Name.type_alias;
         kind = Begin_end {
           meta_name = None;
-          begin_ = "\\G";
-          begin_captures = [];
-          end_ = "(?=\\=)";
-          end_captures = [];
+          begin_ = [("\\G\\s*=\\s*(?=[(a-z])", None)];
+          end_ = [("(?=\\blet\\b|\\btype\\b|^\\s*#\\w+)", None)];
           patterns = [
-            Reference "#comment";
-            Reference "#type-annotation";
-            Reference "#parenthesized-definition";
-            Reference "#identifier-variable-decl";
+            Name.comment;
+            Name.type_expression
           ]
         }
-      };
-      {
-        name = "lambda";
+      }]
+      @
+      Helpers.string
+      @
+      [{
+        name = Name.single_quotes;
         kind = Begin_end {
-          meta_name = None;
-          begin_ = "\\b(fun)\\b";
-          begin_captures = [
-            (1, "keyword.other.lambda.mligo")
-          ];
-          end_ = "(->)";
-          end_captures = [
-            (1, "keyword.operator.lambda.mligo")
-          ];
-          patterns = [
-            Reference "#comment";
-            Reference "#parameter-list"
-          ]
-        }
-      };
-      {
-        name = "type-definition";
-        kind = Begin_end {
-          meta_name = None;
-          begin_ = "\\b(type)\\s+([a-zA-Z_]\\w*)\\b";
-          begin_captures = [
-            (1, "keyword.other.typedef.mligo");
-            (2, "entity.name.type.mligo")
-          ];
-          end_ = "(?=(?:\\blet\\b|\\btype\\b|^\\s*#\\w+))";
-          end_captures = [];
-          patterns = [
-            Reference "#comment";
-            Reference "#struct-type";
-            Reference "#sum-type";
-            Reference "#type-alias"
-          ]
-        }
-      };
-      {
-        name = "struct-type";
-        kind = Begin_end {
-          meta_name = None;
-          begin_ = "\\{";
-          begin_captures = [];
-          end_ = "\\}";
-          end_captures = [];
-          patterns = [
-            Reference "#comment";
-            Reference "#identifier-variable-decl";
-            Reference "#type-annotation"
-          ]
-        }
-      };
-      {
-        name = "sum-type";
-        kind = Begin_end {
-          meta_name = None;
-          begin_ = "\\b([A-Z]\\w*)\\s+(of)?";
-          begin_captures = [
-            (1, "entity.name.function.mligo");
-            (2, "keyword.other.of.mligo")
-          ];
-          end_ = "(\\||(?=\\blet\\b|\\btype\\b|^\\s*#\\w+))";
-          end_captures = [];
-          patterns = [
-            Reference "#comment";
-            Reference "#type-expression"
-          ]
-        }
-      };
-      {
-        name = "type-alias";
-        kind = Begin_end {
-          meta_name = None;
-          begin_ = "\\G\\s*=\\s*(?=[(a-z])";
-          begin_captures = [];
-          end_ = "(?=\\blet\\b|\\btype\\b|^\\s*#\\w+)";
-          end_captures = [];
-          patterns = [
-            Reference "#comment";
-            Reference "#type-expression"
-          ]
-        }
-      };
-      Helpers.string "mligo";
-      {
-        name = "single-quotes";
-        kind = Begin_end {
-          meta_name = Some "string.quoted.single.mligo";
-          begin_ = "\\'";
-          begin_captures = [];
-          end_ = "\\'";
-          end_captures = [];
+          meta_name = Some String;
+          begin_ = [("\\'", None)];
+          end_ = [("\\'", None)];
           patterns = []
         }
       };
-      Helpers.ocaml_comment "mligo";      
+      Helpers.ocaml_comment;      
       {
-        name = "list-cons";
+        name = Name.list_cons;
         kind = Match {
-          match_name = Some "keyword.operator.cons.mligo";
+          match_name = Some Operator;
           match_ = "::";
           captures = []
         }
       };
       {
-        name = "control-keywords";
+        name = Name.control_keywords;
         kind = Match {
-          match_name = Some "keyword.control.mligo";
+          match_name = Some Conditional;
           match_ = "\\b(match|with|if|then|else|assert|failwith|begin|end)\\b";
           captures = []
         }
       };
       {
-        name = "other-keywords";
+        name = Name.other_keywords;
         kind = Match {
-          match_name = Some "keyword.other.mligo";
+          match_name = Some Statement;
           match_ = "\\b(in)\\b";
           captures = []
         }
       };
-      Helpers.numeric_literals "mligo";
+      Helpers.numeric_literals;
       {
-        name = "operators";
+        name = Name.operators;
         kind = Match {
-          match_name = Some "keyword.operator.other.mligo";
+          match_name = Some Operator;
           match_ = "([-+*/])";
           captures = []
         }
       };
       {
-        name = "identifier-lower";
+        name = Name.identifier_lower;
         kind = Match {
           match_name = None;
           match_ = "\\b([a-z_]\\w*)\\b";
           captures = [
-            (1, "entity.name.variable.mligo")
+            (1, Identifier)
           ]
         }
       };
       {
-        name = "identifier-constructor";
+        name = Name.identifier_constructor;
         kind = Match {
           match_name = None;
           match_ = "\\b([A-Z]\\w*)\\b";
           captures = [
-            (1, "entity.name.function.constructor.mligo")
+            (1, Label)
           ]
         }
       };
       {
-        name = "identifier-parameter";
+        name = Name.identifier_parameter;
         kind = Match {
           match_name = None;
           match_ = "\\b([a-zA-Z_]\\w*)\\b";
-          captures = [(1, "support.variable.parameter.mligo")]          
+          captures = [(1, Identifier)]          
         }
       };
       {
-        name = "identifier-variable-decl";
+        name = Name.identifier_variable_decl;
         kind = Match {
           match_name = None;
           match_ = "\\b([a-zA-Z_]\\w*)\\b";
           captures = [
-            (1, "support.variable.mligo")
+            (1, Identifier)
           ]
         }
       }

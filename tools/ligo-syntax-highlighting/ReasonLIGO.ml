@@ -3,8 +3,45 @@ module Helpers = Textmate.Helpers
 
 let (let*) = Result.bind
 
+module Name = struct
+  let macro               = "macro"
+  let type_declaration    = "type-decl"
+  let let_declaration     = "let-decl"
+  let comment             = "comment"
+  let let_name            = "let-name"
+  let expr                = "expr"
+  let type_annotation     = "type_annotation"
+  let pattern             = "pattern"
+  let operators           = "operators"
+  let record_expression   = "record_expr"
+  let tuple_record_name   = "tuple_record_name"
+  let tuple_arg_annot_type = "tuple_arg_annot_type"
+  let if_or_switch_block   = "if-or-switch-block"
+  let constructor          = "constructor"
+  let string               = "string"
+  let builtin_modules      = "builtin-modules"
+  let type_identifier      = "type-identifier"
+  let type_decl_identifier = "type-decl-identifier"
+  let builtin_types        = "builtin-types"
+  let pattern_record_item  = "pattern-record-item"
+  let pattern_record       = "pattern-record"
+  let builtin_big_map      = "builtin-big-map"
+  let builtin_bitwise      = "builtin-bitwise"
+  let builtin_bytes        = "builtin-bytes"
+  let builtin_crypto       = "builtin-crypto"
+  let builtin_list         = "builtin-list"
+  let builtin_map          = "builtin-map"
+  let builtin_set          = "builtin-set"
+  let builtin_string       = "builtin-string"
+  let builtin_tezos        = "builtin-tezos"
+  let builtin_test         = "builtin-test"
+  let builtin_toplevel     = "builtin-toplevel"
+  let pattern_par          = "pattern-par"
+  let pattern_sum          = "pattern-sum"
+end
+
 let syntax_highlighting () = 
-  let* json = Textmate.to_json {
+  let* json = Textmate.to_json "religo" {
     syntax_name = "ReasonLIGO";
     scope_name = "source.religo";
     file_types = [
@@ -14,449 +51,408 @@ let syntax_highlighting () =
     folding_start_marker = Some "{";
     folding_stop_marker = Some "}";
     syntax_patterns = [
-      Reference "#macro";
-      Reference "#type-decl";
-      Reference "#let-decl";
-      Reference "#comment"
+      Reference Name.macro;
+      Reference Name.type_declaration;
+      Reference Name.let_declaration;
+      Reference Name.comment
     ];
     repository = [
-      Helpers.macro "religo";
+      Helpers.macro;
       {
-        name = "let-decl";
+        name = Name.let_declaration;
         kind = Begin_end {
           meta_name = None;
-          begin_ = "\\b(let)\\b";
-          begin_captures = [
-            (1, "keyword.other.let-binding.religo")
-          ];
-          end_ = "(?=let|type|\\[@|\\/\\*|\\/\\/)";
-          end_captures = [];
+          begin_ = [("\\b(let)\\b", Some Function)];
+          end_ = [("(?=let|type|\\[@|\\/\\*|\\/\\/)", None)];
           patterns = [
-            Reference "#let-name";
-            Reference "#expr";
-            Reference "#comment";
+            Name.let_name;
+            Name.expr;
+            Name.comment;
           ]
         }
       };
       {
-        name = "let-name";
+        name = Name.let_name;
         kind = Begin_end {
           meta_name = None;
-          begin_ = "\\G[ ]*(\\b(rec)\\b\\s\\b)?([a-z_][A-Za-z0-9_]*)\\b";
-          begin_captures = [
-            (2, "storage.modifier.recursive.religo");
-            (3, "entity.name.variable.religo");
-          ];
-          end_ = "(\\=)";
-          end_captures = [
-            (1, "keyword.operator.assignment.religo")
-          ];
+          begin_ = [
+            ("\\G[ ]*(\\b(rec)\\b\\s\\b)?", Some StorageClass);
+            ("([a-z_][A-Za-z0-9_]*)\\b", Some Identifier)
+          ];          
+          end_ = [("(\\=)", Some Operator)];
           patterns = [
-            Reference "#type_annotation";
-            Reference "#comment"
+            Name.type_annotation;
+            Name.comment
           ]
         };
       };
       {
-        name = "type_annotation";
+        name = Name.type_annotation;
         kind = Begin_end {
           meta_name = None;
-          begin_ = "\\G[ ]*(\\:)";
-          begin_captures = [];
-          end_ = "(?=\\=)";
-          end_captures = [];
+          begin_ = [("\\G[ ]*(\\:)", None)];
+          end_ = [("(?=\\=)", None)];
           patterns = [
-            Reference "#pattern";
-            Reference "#comment"
+            Name.pattern;
+            Name.comment
           ]
         }
       };
       {
-        name = "operators";
+        name = Name.operators;
         kind = Match {
-          match_name = Some "keyword.operator.religo";
+          match_name = Some Operator;
           match_ = "\\b(mod|ediv)\\b|(\\+|\\-|\\*|\\/|==|\\|\\||\\&\\&)";
           captures = [];
         }
-      };
-      Helpers.string "religo";
+      }] 
+      @
+      Helpers.string
+      @ 
+      [
       {
-        name = "record_expr";
+        name = Name.record_expression;
         kind = Begin_end {
           meta_name = None;
-          begin_ = "(?<=\\=)\\s*\\{";
-          begin_captures = [];
-          end_ = "\\}";
-          end_captures = [];
+          begin_ = [("(?<=\\=)\\s*\\{", None)];
+          end_ = [("\\}", None)];
           patterns = [
-            Reference "#tuple_record_name";
-            Reference "#expr"
+            Name.tuple_record_name;
+            Name.expr
           ]
         }
       };
       {
-        name = "tuple_record_name";
+        name = Name.tuple_record_name;
         kind = Begin_end {
           meta_name = None;
-          begin_ = "(?<=\\(|,|\\{)\\s*([a-z][A-Za-z0-9_]*)\\s*(?=\\,|:|\\)|\\})";
-          begin_captures = [
-            (1, "variable.parameter.religo")
+          begin_ = [("(?<=\\(|,|\\{)\\s*([a-z][A-Za-z0-9_]*)\\s*(?=\\,|:|\\)|\\})", Some Identifier)];
+          end_ = [("(?!\\,|\\)|\\})", None)];
+          patterns = [
+            Name.comment
+          ]
+        }
+      };
+      {
+        name = Name.tuple_arg_annot_type;
+        kind = Begin_end {
+          meta_name = None;
+          begin_ = [("\\:[ ]*", None)];
+          end_ = [("(?=,|\\)|\\=\\>|\\})", None)];
+          patterns = [
+            Name.pattern
+          ]
+        }
+      };
+      {
+        name = Name.if_or_switch_block;
+        kind = Begin_end {
+          meta_name = None;
+          begin_ = [
+            ("\\b(if|switch)\\b", Some Conditional);
+            ("[ ]*(\\(|[a-z_])", None)
           ];
-          end_ = "(?!\\,|\\)|\\})";
-          end_captures = [];
+          end_ = [("\\)", None)];
           patterns = [
-            Reference "#comment"
+            Name.expr
           ]
         }
       };
       {
-        name = "tuple_arg_annot_type";
-        kind = Begin_end {
-          meta_name = None;
-          begin_ = "\\:[ ]*";
-          begin_captures = [];
-          end_ = "(?=,|\\)|\\=\\>|\\})";
-          end_captures = [];
-          patterns = [
-            Reference "#pattern"
-          ]
-        }
-      };
-      {
-        name = "if-or-switch-block";
-        kind = Begin_end {
-          meta_name = None;
-          begin_ = "\\b(if|switch)\\b[ ]*(\\(|[a-z_])";
-          begin_captures = [
-            (1, "keyword.control.religo") 
-          ];
-          end_ = "\\)";
-          end_captures = [];
-          patterns = [
-            Reference "#expr"
-          ]
-        }
-      };
-      {
-        name = "constructor";
+        name = Name.constructor;
         kind = Match {
           match_ = "(\\b[A-Z][a-zA-Z0-9_]*(\\b|\\())";
-          match_name = Some "variable.other.enummember";
+          match_name = Some Label;
           captures = []
         }
       };
       {
-        name = "expr";
-        kind = Patterns {
-          p_name = None;
-          p_kind = [
-            Reference "#string";
-            Reference "#comment";
-            Reference "#if-or-switch-block";
+        name = Name.expr;
+        kind = Patterns [
+            Reference Name.string;
+            Reference Name.comment;
+            Reference Name.if_or_switch_block;
             Match {
-              match_name = Some "keyword.control.else.religo";
+              match_name = Some Conditional;
               match_ = "\\b(else)\\b";
               captures = []
             };
-            Reference "#record_expr";
-            Reference "#tuple_record_name";
-            Reference "#tuple_arg_annot_type";
-            Reference "#builtin-modules";
-            Reference "#operators";
+            Reference Name.record_expression;
+            Reference Name.tuple_record_name;
+            Reference Name.tuple_arg_annot_type;
+            Reference Name.builtin_modules;
+            Reference Name.operators;
             Match {
               match_name = None;
               match_ = "\\b([A-Z][a-zA-Z0-9_]+)\\.\\b";
               captures = [
-                (1, "storage.class.religo")
+                (1, Structure)
               ]
             };
             Match {
               match_name = None;
               match_ = "\\b([a-z_][a-zA-Z0-9_]*)\\b";
               captures = [
-                (1, "storage.var.religo")
+                (1, Identifier)
               ]
             };
-            Reference "#constructor";
+            Reference Name.constructor;
             Match {
-              match_name = Some "constant.numeric.religo";
+              match_name = Some Number;
               match_ = "\\b([0-9_]+)(tez|mutez|n)?\\b";
               captures = []
             };
             Match {
-              match_name = Some "constant.numeric.religo";
+              match_name = Some Number;
               match_ = "\\b0x([0-9_]+)?\\b";
               captures = []
             };
             Match {
-              match_name = Some "constant.language.religo";
+              match_name = Some Boolean;
               match_ = "\\b(true|false)\\b";
               captures = []
             }
           ]
-        }
       };
       {
-        name = "type-decl";
+        name = Name.type_declaration;
         kind = Begin_end {
           meta_name = None; 
-          begin_ = "\\b(type)\\b";
-          begin_captures = [
-            (1, "keyword.other.type.religo")
-          ];
-          end_ = "(?=let|type|\\[@|\\/\\*|\\/\\/)";
-          end_captures = [];
+          begin_ = [("\\b(type)\\b", Some Type)];
+          end_ = [("(?=let|type|\\[@|\\/\\*|\\/\\/)", None)];
           patterns = [
-            Reference "#comment";
-            Reference "#type-identifier";
-            Reference "#type-decl-identifier"
+            Name.comment;
+            Name.type_identifier;
+            Name.type_decl_identifier
           ]
         }
       };
       {
-        name = "type-decl-identifier";
+        name = Name.type_decl_identifier;
         kind = Begin_end {
           meta_name = None;
-          begin_ = "(=)";
-          begin_captures = [
-            (1, "keyword.operator.assignment.religo")
-          ];
-          end_ = "(?=let|type|\\[@|\\/\\*|\\/\\/)";
-          end_captures = [];
+          begin_ = [("(=)", Some Operator)];
+          end_ = [("(?=let|type|\\[@|\\/\\*|\\/\\/)", None)];
           patterns = [
-            Reference "#comment";
-            Reference "#pattern"
+            Name.comment;
+            Name.pattern
           ]
         }
       };
       {
-        name = "builtin-types";
+        name = Name.builtin_types;
         kind = Match {
-          match_name = Some "support.type.religo"; 
+          match_name = Some Builtin_type; 
           match_ = "\\b(int|nat|address|tez|contract|list|option|unit|bool|signature|bytes|big_map|chain_id|key|key_hash|map|operation|set|string|timestamp)\\b";
           captures = [];
         }
       };
       {
-        name = "builtin-big-map";
+        name = Name.builtin_big_map;
         kind = Match {
           match_name = None;
           match_ = "\\b(Big_map)\\.(empty|literal|find_opt|mem|update|add|remove|get_and_update|identifier)\\b";
           captures = [
-            (1, "support.class.religo");
-            (2, "support.function.religo")
+            (1, Builtin_module);
+            (2, Builtin_function)
           ]
         }
       };
       {
-        name = "builtin-bitwise";
+        name = Name.builtin_bitwise;
         kind = Match {
           match_name = None;
           match_ = "\\b(Bitwise)\\.(and|or|xor|shift_left|shift_right)\\b";
           captures = [
-            (1, "support.class.religo");
-            (2, "support.function.religo")
+            (1, Builtin_module);
+            (2, Builtin_function)
           ]
         }
       };
       {
-        name = "builtin-bytes";
+        name = Name.builtin_bytes;
         kind = Match {
           match_name = None;
           match_ = "\\b(Bytes)\\.(concat|sub|pack|unpack|length)\\b";
           captures = [
-            (1, "support.class.religo");
-            (2, "support.function.religo")
+            (1, Builtin_module);
+            (2, Builtin_function)
           ]
         }
       };
       {
-        name = "builtin-crypto";
+        name = Name.builtin_crypto;
         kind = Match {
           match_name = None;
           match_ = "\\b(Crypto)\\.(blake2b|sha256|sha512|hash_key|check)\\b";
           captures = [
-            (1, "support.class.religo");
-            (2, "support.function.religo")
+            (1, Builtin_module);
+            (2, Builtin_function)
           ]
         }
       };
       {
-        name = "builtin-list";
+        name = Name.builtin_list;
         kind = Match {
           match_name = None;
           match_ = "\\b(List)\\.(length|size|head_opt|tail_opt|iter|map|fold|fold_left|fold_right)\\b";
           captures = [
-            (1, "support.class.religo");
-            (2, "support.function.religo")
+            (1, Builtin_module);
+            (2, Builtin_function)
           ]
         }
       };
       {
-        name = "builtin-map";
+        name = Name.builtin_map;
         kind = Match {
           match_name = None;
           match_ = "\\b(Map)\\.(empty|literal|find_opt|update|add|remove|iter|map|fold|size|mem|get_and_update)\\b";
           captures = [
-            (1, "support.class.religo");
-            (2, "support.function.religo")
+            (1, Builtin_module);
+            (2, Builtin_function)
           ]
         }
       };
       {
-        name = "builtin-set";
+        name = Name.builtin_set;
         kind = Match {
           match_name = None;
           match_ = "\\b(Set)\\.(empty|literal|mem|cardinal|add|remove|iter|fold|fold_desc)\\b";
           captures = [
-            (1, "support.class.religo");
-            (2, "support.function.religo")
+            (1, Builtin_module);
+            (2, Builtin_function)
           ]
         }
       };
       {
-        name = "builtin-string";
+        name = Name.builtin_string;
         kind = Match {
           match_name = None;
           match_ = "\\b(String)\\.(length|sub|concat)\\b";
           captures = [
-            (1, "support.class.religo");
-            (2, "support.function.religo")
+            (1, Builtin_module);
+            (2, Builtin_function)
           ]
         }
       };
       {
-        name = "builtin-tezos";
+        name = Name.builtin_tezos;
         kind = Match {
           match_name = None;
           match_ = "\\b(Tezos)\\.(now|balance|amount|sender|address|self_address|self|source|implicit_account|create_contract|failwith|chain_id|transaction|set_delegate|get_contract_opt|get_entrypoint_opt|level|pairing_check|sapling_empty_state|sapling_verify_update|create_ticket|read_ticket|split_ticket|join_tickets|level|pairing_check|never)\\b";
           captures = [
-            (1, "support.class.religo");
-            (2, "support.function.religo")
+            (1, Builtin_module);
+            (2, Builtin_function)
           ]
         }
       };
       {
-        name = "builtin-test";
+        name = Name.builtin_test;
         kind = Match {
           match_name = None;
           match_ = "\\b(Test)\\.(originate|set_now|set_source|set_baker|transfer|transfer_exn|get_storage|get_balance|michelson_equal|log|reset_state|nth_bootstrap_account|last_originations|compile_expression|compile_expression_subst|compile_value)\\b";
           captures = [
-            (1, "support.class.religo");
-            (2, "support.function.religo")
+            (1, Builtin_module);
+            (2, Builtin_function)
           ]
         }
       };
       {
-        name = "builtin-toplevel";
+        name = Name.builtin_toplevel;
         kind = Match {
           match_name = None;
           match_ = "\\b(is_nat|abs|int|failwith|assert|ediv)\\b";
           captures = [
-            (1, "support.class.religo");
-            (2, "support.function.religo")
+            (1, Builtin_module);
+            (2, Builtin_function)
           ]
         }
       };
       {
-        name = "builtin-modules";
-        kind = Patterns {
-          p_name = None;
-          p_kind = [
-            Reference "#builtin-big-map";
-            Reference "#builtin-bitwise";
-            Reference "#builtin-bytes";
-            Reference "#builtin-crypto";
-            Reference "#builtin-list";
-            Reference "#builtin-map";
-            Reference "#builtin-set";
-            Reference "#builtin-string";
-            Reference "#builtin-tezos";
-            Reference "#builtin-test";
-            Reference "#builtin-toplevel";
-          ]
-        }
+        name = Name.builtin_modules;
+        kind = Patterns [
+          Reference Name.builtin_big_map;
+          Reference Name.builtin_bitwise;
+          Reference Name.builtin_bytes;
+          Reference Name.builtin_crypto;
+          Reference Name.builtin_list;
+          Reference Name.builtin_map;
+          Reference Name.builtin_set;
+          Reference Name.builtin_string;
+          Reference Name.builtin_tezos;
+          Reference Name.builtin_test;
+          Reference Name.builtin_toplevel;
+        ]
       };
       {
-        name = "pattern";
-        kind = Patterns {
-          p_name = None;
-          p_kind = [
-            Reference "#pattern-par";
-            Reference "#pattern-record";
-            Reference "#pattern-sum";
-            Reference "#builtin-types";
-            Match {
-              match_name = Some "storage.type.religo";
-              match_ = "\\b([_a-z][a-zA-Z0-9$_]*)\\b";
-              captures = [];
-            }
-          ]
-        }
+        name = Name.pattern;
+        kind = Patterns [
+          Reference Name.pattern_par;
+          Reference Name.pattern_record;
+          Reference Name.pattern_sum;
+          Reference Name.builtin_types;
+          Match {
+            match_name = Some Builtin_type;
+            match_ = "\\b([_a-z][a-zA-Z0-9$_]*)\\b";
+            captures = [];
+          }
+        ]
       };
       {
-        name = "pattern-par";
+        name = Name.pattern_par;
         kind = Begin_end {
           meta_name = None;
-          begin_ = "\\(";
-          begin_captures = [];
-          end_ = "\\)";
-          end_captures = [];
+          begin_ = [("\\(", None)];
+          end_ = [("\\)", None)];
           patterns = [
-            Reference "#pattern"
+            Name.pattern
           ]
         }
       };
       {
-        name = "pattern-sum";
+        name = Name.pattern_sum;
         kind = Match {
           match_name = None;
           match_ = "\\b(\\|?[A-Z][a-zA-Z0-9_]*)+\\b";
           captures = [
-            (1, "variable.other.enummember")
+            (1, Label)
           ]
         }
       };
       {
-        name = "pattern-record";
+        name = Name.pattern_record;
         kind = Begin_end {
           meta_name = None;
-          begin_ = "{";
-          begin_captures = [];
-          end_ = "}";
-          end_captures = [];
+          begin_ = [("{", None)];
+          end_ = [("}", None)];
           patterns = [
-            Reference "#comment";
-            Reference "#pattern-record-item"
+            Name.comment;
+            Name.pattern_record_item
           ]
         }
       };
       {
-        name = "pattern-record-item";
+        name = Name.pattern_record_item;
         kind = Begin_end {
           meta_name = None;
-          begin_ = "([a-z_][A-Za-z0-9_]*)";
-          begin_captures = [
-            (1, "entity.name.type.religo")
-          ];
-          end_ = "(?=\\,|\\})";
-          end_captures = [];
+          begin_ = [("([a-z_][A-Za-z0-9_]*)", Some Type)];
+          end_ = [("(?=\\,|\\})", None)];
           patterns = [
-            Reference "#comment";
-            Reference "#pattern"
+            Name.comment;
+            Name.pattern
           ]
         }
       };
       {
-        name = "type-identifier";
+        name = Name.type_identifier;
         kind = Match {
           match_name = None;
           match_ = "\\b([_a-z][a-zA-Z0-9$_]*)\\b";
-          captures = [1, "entity.name.type.religo"]
+          captures = [1, Type]
         }
       };
-      (* TODO FIX COMMENTS PROPERLY! *)
-      Helpers.c_comment "religo";
+      
+      Helpers.c_comment;
       
     ]
   } in

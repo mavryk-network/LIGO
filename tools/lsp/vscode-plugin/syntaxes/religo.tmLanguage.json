@@ -15,10 +15,7 @@
       "name": "string.quoted.double.religo",
       "begin": "^\\s*((#)\\w+)",
       "end": "$",
-      "beginCaptures": {
-        "1": { "name": "meta.preprocessor.religo" },
-        "2": { "name": "punctuation.definition.directive.religo" }
-      },
+      "beginCaptures": { "1": { "name": "meta.preprocessor.religo" } },
       "endCaptures": {},
       "patterns": [ { "include": "#string" }, { "include": "#comment" } ]
     },
@@ -39,12 +36,10 @@
       "begin": "\\G[ ]*(\\b(rec)\\b\\s\\b)?([a-z_][A-Za-z0-9_]*)\\b",
       "end": "(\\=)",
       "beginCaptures": {
-        "2": { "name": "storage.modifier.recursive.religo" },
-        "3": { "name": "entity.name.variable.religo" }
+        "2": { "name": "storage.var.religo" },
+        "1": { "name": "storage.modifier.religo" }
       },
-      "endCaptures": {
-        "1": { "name": "keyword.operator.assignment.religo" }
-      },
+      "endCaptures": { "1": { "name": "keyword.operator.religo" } },
       "patterns": [
         { "include": "#type_annotation" },
         { "include": "#comment" }
@@ -62,19 +57,18 @@
       "match": "\\b(mod|ediv)\\b|(\\+|\\-|\\*|\\/|==|\\|\\||\\&\\&)",
       "captures": {}
     },
+    "string_specialchar": {
+      "name": "constant.character.religo",
+      "match": "\\\\.",
+      "captures": {}
+    },
     "string": {
       "name": "string.quoted.double.religo",
       "begin": "\"",
       "end": "\"",
       "beginCaptures": {},
       "endCaptures": {},
-      "patterns": [
-        {
-          "name": "constant.character.escape.religo",
-          "match": "\\\\.",
-          "captures": {}
-        }
-      ]
+      "patterns": [ { "include": "#string_specialchar" } ]
     },
     "record_expr": {
       "begin": "(?<=\\=)\\s*\\{",
@@ -89,7 +83,7 @@
     "tuple_record_name": {
       "begin": "(?<=\\(|,|\\{)\\s*([a-z][A-Za-z0-9_]*)\\s*(?=\\,|:|\\)|\\})",
       "end": "(?!\\,|\\)|\\})",
-      "beginCaptures": { "1": { "name": "variable.parameter.religo" } },
+      "beginCaptures": { "1": { "name": "storage.var.religo" } },
       "endCaptures": {},
       "patterns": [ { "include": "#comment" } ]
     },
@@ -108,7 +102,7 @@
       "patterns": [ { "include": "#expr" } ]
     },
     "constructor": {
-      "name": "variable.other.enummember",
+      "name": "variable.other.enummember.religo",
       "match": "(\\b[A-Z][a-zA-Z0-9_]*(\\b|\\())",
       "captures": {}
     },
@@ -118,7 +112,7 @@
         { "include": "#comment" },
         { "include": "#if-or-switch-block" },
         {
-          "name": "keyword.control.else.religo",
+          "name": "keyword.control.religo",
           "match": "\\b(else)\\b",
           "captures": {}
         },
@@ -156,7 +150,7 @@
     "type-decl": {
       "begin": "\\b(type)\\b",
       "end": "(?=let|type|\\[@|\\/\\*|\\/\\/)",
-      "beginCaptures": { "1": { "name": "keyword.other.type.religo" } },
+      "beginCaptures": { "1": { "name": "storage.typereligo" } },
       "endCaptures": {},
       "patterns": [
         { "include": "#comment" },
@@ -167,9 +161,7 @@
     "type-decl-identifier": {
       "begin": "(=)",
       "end": "(?=let|type|\\[@|\\/\\*|\\/\\/)",
-      "beginCaptures": {
-        "1": { "name": "keyword.operator.assignment.religo" }
-      },
+      "beginCaptures": { "1": { "name": "keyword.operator.religo" } },
       "endCaptures": {},
       "patterns": [ { "include": "#comment" }, { "include": "#pattern" } ]
     },
@@ -284,7 +276,7 @@
         { "include": "#pattern-sum" },
         { "include": "#builtin-types" },
         {
-          "name": "storage.type.religo",
+          "name": "support.type.religo",
           "match": "\\b([_a-z][a-zA-Z0-9$_]*)\\b",
           "captures": {}
         }
@@ -299,7 +291,7 @@
     },
     "pattern-sum": {
       "match": "\\b(\\|?[A-Z][a-zA-Z0-9_]*)+\\b",
-      "captures": { "1": { "name": "variable.other.enummember" } }
+      "captures": { "1": { "name": "variable.other.enummember.religo" } }
     },
     "pattern-record": {
       "begin": "{",
@@ -314,21 +306,17 @@
     "pattern-record-item": {
       "begin": "([a-z_][A-Za-z0-9_]*)",
       "end": "(?=\\,|\\})",
-      "beginCaptures": { "1": { "name": "entity.name.type.religo" } },
+      "beginCaptures": { "1": { "name": "storage.typereligo" } },
       "endCaptures": {},
       "patterns": [ { "include": "#comment" }, { "include": "#pattern" } ]
     },
     "type-identifier": {
       "match": "\\b([_a-z][a-zA-Z0-9$_]*)\\b",
-      "captures": { "1": { "name": "entity.name.type.religo" } }
+      "captures": { "1": { "name": "storage.typereligo" } }
     },
     "comment": {
       "patterns": [
-        {
-          "name": "comment.line.double-slash.religo",
-          "match": "(//.*)",
-          "captures": {}
-        },
+        { "name": "comment.block.religo", "match": "(//.*)", "captures": {} },
         {
           "name": "comment.block.religo",
           "begin": "\\/\\*",

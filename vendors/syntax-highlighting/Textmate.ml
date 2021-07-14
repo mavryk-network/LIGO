@@ -12,9 +12,40 @@ type t = {
   repository:                 pattern list;
 }
 
+and highlight_name = 
+  Comment
+| Constant
+| String
+| Character
+| Number
+| Boolean
+| Float
+| Identifier
+| Function
+| Statement
+| Conditional
+| Repeat
+| Label
+| Operator
+| Keyword
+| Exception
+| PreProc
+| Type
+| StorageClass
+| Structure
+| Typedef
+| SpecialChar
+| SpecialComment
+| Underlined
+| Error
+| Todo
+
+| Builtin_type
+| Builtin_module
+| Builtin_function
+
 and error = 
   Referenced_rule_does_not_exist of string
-| Not_a_valid_reference of string
 | Meta_name_some_but_empty of string
 | Begin_cant_be_empty of string
 | End_cant_be_empty of string
@@ -32,85 +63,128 @@ and pattern_kind =
 | Patterns  of patterns 
 | Reference of string
 
-and patterns = {
-  p_name: string option;
-  p_kind: pattern_kind list
-}
+and patterns = pattern_kind list
 
 and begin_end_pattern = {
-  meta_name:      string option;
-  begin_:         regexp;
-  begin_captures: (int * string) list;
-  end_:           regexp;
-  end_captures:   (int * string) list;
-  patterns:       pattern_kind list;
+  meta_name:      highlight_name option;
+  begin_:         (regexp * highlight_name option) list;
+  end_:           (regexp * highlight_name option) list;
+  patterns:       string list;
 }
 
 and match_pattern = {
   match_:   regexp;
-  match_name: string option;
-  captures: (int * string) list
+  match_name: highlight_name option;
+  captures: (int * highlight_name) list
 }
 
 module JSON = struct 
-  
+ 
+  let highlight_to_textmate:string -> highlight_name -> string = fun syntax -> function
+    Comment           -> "comment.block." ^ syntax
+  | Constant          -> "constant.language." ^ syntax
+  | String            -> "string.quoted.double." ^ syntax
+  | Character         -> "constant.character." ^ syntax
+  | Number            -> "constant.numeric." ^ syntax
+  | Boolean           -> "constant.language." ^ syntax
+  | Float             -> "constant.numeric." ^ syntax
+  | Identifier        -> "storage.var." ^ syntax
+  | Function          -> "keyword.other.let-binding." ^ syntax
+  | Statement         -> "keyword.other." ^ syntax
+  | Conditional       -> "keyword.control." ^ syntax
+  | Repeat            -> "keyword.control." ^ syntax
+  | Label             -> "variable.other.enummember." ^ syntax
+  | Operator          -> "keyword.operator." ^ syntax
+  | Keyword           -> "keyword.other." ^ syntax
+  | Exception         -> "keyword.control." ^ syntax
+  | PreProc           -> "meta.preprocessor." ^ syntax
+  | Type              -> "storage.type." ^ syntax
+  | StorageClass      -> "storage.modifier." ^ syntax
+  | Structure         -> "storage.class." ^ syntax
+  | Typedef           -> "storage.type." ^ syntax
+  | SpecialChar       -> "constant.character." ^ syntax
+  | SpecialComment    -> "comment.other." ^ syntax
+  | Underlined        -> "markup.underline." ^ syntax
+  | Error             -> "invalid.illegal." ^ syntax
+  | Todo              -> "meta.todo." ^ syntax
 
+  | Builtin_type      -> "support.type." ^ syntax
+  | Builtin_module    -> "support.class." ^ syntax
+  | Builtin_function  -> "support.function." ^ syntax 
 
-  let rec capture i = 
-    (string_of_int (fst i), `Assoc [("name", `String (snd i))])
+  let rec capture syntax (i: int * highlight_name) = 
+    (string_of_int (fst i), `Assoc [("name", `String (highlight_to_textmate syntax (snd i)))])
 
-  and captures l = 
-    `Assoc (List.map capture l)
+  and captures syntax (l: (int * highlight_name) list) = 
+    `Assoc (List.map (capture syntax) l)
 
-  and pattern_kind = function 
+  and pattern_kind (syntax: string) = function 
     Begin_end { 
       meta_name;
       begin_; 
-      begin_captures; 
       end_; 
-      end_captures; 
       patterns
     } -> 
+      let (_, begin_captures) = 
+        List.fold_left 
+          (fun (n, result) c -> 
+            let _, highlight_name = c in
+            match highlight_name with 
+              None -> (n + 1, result)
+            | Some s -> (n + 1, (n, s) :: result)
+          ) 
+          (1, []) 
+          begin_ 
+      in
+      let (_, end_captures) = 
+        List.fold_left 
+          (fun (n, result) c -> 
+            let _, highlight_name = c in
+            match highlight_name with 
+              None -> (n + 1, result)
+            | Some s -> (n + 1, (n, s) :: result)
+          ) 
+          (1, []) 
+          end_ 
+      in
+      let begin_ = String.concat "" (List.map fst begin_) in
+      let end_ = String.concat "" (List.map fst end_) in
       (match meta_name with 
-        Some s -> [("name", `String s)];
+        Some s -> [("name", `String (highlight_to_textmate syntax s))];
       | None -> [])
       @
       [
         ("begin", `String begin_);
         ("end", `String end_);
-        ("beginCaptures", captures begin_captures);
-        ("endCaptures", captures end_captures);
-        ("patterns", `List (List.map (fun a -> `Assoc (pattern_kind a)) patterns))
+        ("beginCaptures", captures syntax begin_captures);
+        ("endCaptures", captures syntax end_captures);
+        ("patterns", `List (List.map (fun reference -> `Assoc [("include", `String ("#" ^ reference))]) patterns))
       ]
   | Match {match_; captures=c; match_name} -> 
     (match match_name with 
-      Some s -> [("name", `String s)]
+      Some s -> [("name", `String (highlight_to_textmate syntax s))]
     | None -> [])
     @
     [
       ("match", `String match_);      
-      ("captures", captures c)
+      ("captures", captures syntax c)
     ] 
-  | Patterns {p_name; p_kind} ->
-    (match p_name with 
-      Some s -> [("name", `String s)]
-    | None -> [])
-    @
+  | Patterns patterns ->
     [
-      ("patterns", `List (List.map (fun a -> `Assoc (pattern_kind a)) p_kind))
+      ("patterns", `List (List.map (fun a -> `Assoc (pattern_kind syntax a)) patterns))
     ]
   | Reference s -> 
-      [("include", `String s)]
+      [("include", `String ("#" ^ s))]
 
-  and pattern {name; kind} = 
+  and pattern syntax {name; kind} = 
     `Assoc ([
       ("name", `String name);
-    ] @ pattern_kind kind)
+    ] @ pattern_kind syntax kind)
 
-  and repository r : Yojson.Safe.t = 
-    `Assoc (List.map (fun i -> (i.name, `Assoc (pattern_kind i.kind))) r)
+  and repository syntax r : Yojson.Safe.t = 
+    `Assoc (List.map (fun i -> (i.name, `Assoc (pattern_kind syntax i.kind))) r)
     
-  and to_yojson: t -> (Yojson.Safe.t, error) result = fun s -> 
+  and to_yojson: string -> t -> (Yojson.Safe.t, error) result = fun syntax s -> 
     ok @@ `Assoc
     ((match s.folding_start_marker, s.folding_stop_marker with 
         Some folding_start_marker, Some folding_stop_marker -> [
@@ -123,43 +197,39 @@ module JSON = struct
       ("name", `String s.syntax_name);
       ("scopeName", `String s.scope_name);
       ("fileTypes", `List (List.map (fun s -> `String s) s.file_types));
-      ("patterns", `List (List.map (fun a -> `Assoc (pattern_kind a)) s.syntax_patterns));
-      ("repository", repository s.repository)
+      ("patterns", `List (List.map (fun a -> `Assoc (pattern_kind syntax a)) s.syntax_patterns));
+      ("repository", repository syntax s.repository)
     ])
 
 end
 
 module Validate = struct
-  
+
   let rec check_reference repository r =
     if r = "$self" then 
       ok true
-    else if String.length r > 1 && r.[0] = '#' then
-      let repository_item = String.sub r 1 (String.length r - 1) in
-      let exists = List.exists (fun i -> i.name = repository_item) repository in 
+    else 
+      let exists = List.exists (fun i -> i.name = r) repository in 
       if exists then 
         ok true
       else 
         error (Referenced_rule_does_not_exist r)
-    else 
-      error (Not_a_valid_reference r)
         
   and pattern_kind name repository = function 
-    Begin_end {meta_name; begin_; end_; patterns; _} -> 
-      let* _ = match meta_name with 
-        Some s when String.trim s = "" -> error (Meta_name_some_but_empty name)
-      | _ -> ok true
-      in
+    Begin_end {begin_; end_; patterns; _} -> 
+      let begin_ = String.concat "" (List.map fst begin_) in
+      let end_ = String.concat "" (List.map fst end_) in
       if String.trim begin_ = "" then 
         error (Begin_cant_be_empty name)
       else if String.trim end_ = "" then
         error (End_cant_be_empty name)
       else
-        let patterns = List.fold_left (fun a c -> if is_error a then a else pattern_kind name repository c) (ok true) patterns in
+        let patterns = List.fold_left (fun a c -> if is_error a then a else (
+          check_reference repository c)) (ok true) patterns in
         fold ~ok ~error patterns
   | Match _m -> ok true  
   | Patterns patterns -> 
-    let patterns = List.fold_left (fun a c -> if is_error a then a else pattern_kind name repository c) (ok true) patterns.p_kind in
+    let patterns = List.fold_left (fun a c -> if is_error a then a else pattern_kind name repository c) (ok true) patterns in
     fold ~ok ~error patterns
   | Reference s -> check_reference repository s
 
@@ -171,118 +241,89 @@ module Validate = struct
     let patterns = List.fold_left (fun a c -> if is_error a then a else pattern_kind "@syntax_patterns" repository c) curr s.syntax_patterns in
     fold ~ok ~error patterns
 
-  (* let check: t -> (bool, validation_error) result  *)
 end
 
-let to_json: t -> (Yojson.Safe.t, error) result = fun s ->
+let to_json: string -> t -> (Yojson.Safe.t, error) result = fun syntax s ->
   let* _ = Validate.syntax s in
-  JSON.to_yojson s
+  JSON.to_yojson syntax s
 
 module Helpers = struct 
-  let macro syntax = {
+  let macro = {
     name = "macro";
     kind = Begin_end {
-      meta_name = Some ("string.quoted.double." ^ syntax);
-      begin_ = "^\\s*((#)\\w+)";
-      begin_captures = [
-        (1, "meta.preprocessor." ^ syntax);
-        (2, "punctuation.definition.directive." ^ syntax)
-      ];
-      end_ = "$";
-      end_captures = [];
+      meta_name = Some String;
+      begin_ = [("^\\s*((#)\\w+)", Some PreProc)];
+      end_ = [("$", None)];
       patterns = [
-        Reference "#string";
-        Reference "#comment"
+        "string";
+        "comment"
       ]
     }
   }
-  let string syntax = {
+
+  (*  *)
+  let string = [
+    {
+      name = "string_specialchar";
+      kind = Match {
+        match_ = "\\\\.";
+        match_name = Some SpecialChar;
+        captures = []
+      }
+    };
+    {
       name = "string";
       kind = Begin_end {
-        meta_name = Some ("string.quoted.double." ^ syntax);
-        begin_ = "\"";
-        begin_captures = [];
-        end_ = "\"";
-        end_captures = [];
+        meta_name = Some String;
+        begin_ = [("\"", None)];
+        end_ = [("\"", None)];
         patterns = [
-          Match {
-            match_ = "\\\\.";
-            match_name = Some ("constant.character.escape." ^ syntax);
-            captures = []
-          }
+          "string_specialchar"
         ]
       }
     }
-
-    let ocaml_comment syntax = {
+  ]
+    let ocaml_comment = {
       name = "comment";
-      kind = Patterns {
-        p_name = None;
-        p_kind = [
-          Match {
-            match_name = Some ("comment.line.double-slash." ^ syntax);
-            match_ = "(//.*)";
-            captures = []
-          };
-          Begin_end {
-            meta_name = Some ("comment.block." ^ syntax);
-            begin_ = "\\(\\*";
-            begin_captures = [];
-            end_ = "\\*\\)";
-            end_captures = [];
-            patterns = []
-          }
-        ]
-      }
+      kind = Patterns [
+        Match {
+          match_name = Some Comment;
+          match_ = "(//.*)";
+          captures = []
+        };
+        Begin_end {
+          meta_name = Some Comment;
+          begin_ = [("\\(\\*", None)];
+          end_ = [("\\*\\)", None)];
+          patterns = []
+        }
+      ]
     }
 
-    let c_comment syntax = {
+    let c_comment = {
       name = "comment";
-      kind = Patterns {
-        p_name = None;
-        p_kind = [
-          Match {
-            match_name = Some ("comment.line.double-slash." ^ syntax);
-            match_ = "(//.*)";
-            captures = []
-          };
-          Begin_end {
-            meta_name = Some ("comment.block." ^ syntax);
-            begin_ = "\\/\\*";
-            begin_captures = [];
-            end_ = "\\*\\/";
-            end_captures = [];
-            patterns = []
-          }
-        ]
-      }
+      kind = Patterns [
+        Match {
+          match_name = Some Comment;
+          match_ = "(//.*)";
+          captures = []
+        };
+        Begin_end {
+          meta_name = Some Comment;
+          begin_ = [("\\/\\*", None)];
+          end_ = [("\\*\\/", None)];
+          patterns = []
+        }
+      ]
     }
 
-    let numeric_literals syntax = {
+    let numeric_literals = {
       name = "numeric-literals";
       kind = Match {
-        match_name = Some ("constant.numeric." ^ syntax);
+        match_name = Some Number;
         match_ = "\\b\\d+";
         captures = []
       }
     }
-
-
-  let ident_regexp = ""
-  let small_ident_regexp = ""
-  let capitalized_ident_regexp = ""
-  let byte_regexp = ""
-  let tez_regexp = ""
-  let nat_regexp = ""
-  let attribute_regexp = ""
-  let verbatim_ocaml_regexp = ""
-  let verbatim_js_regexp = ""
-
-  let c_line_comment = "" 
-  let c_block_comment = ""
-  let ocaml_block_comment = ""
-  let double_quoted_string = "" 
-  let single_quoted_string = ""
-  let preprocessor_include = ""
   
 end

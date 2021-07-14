@@ -3,267 +3,233 @@ module Helpers = Textmate.Helpers
 
 let (let*) = Result.bind
 
+module Name = struct
+  let string                = "string"
+  let single_quotes         = "single-quotes"
+  let comment               = "comment"
+  let macro                 = "macro"
+  let function_             = "function"
+  let binding               = "binding"
+  let type_annotation       = "type-annotation"
+  let type_definition       = "type-definition"
+  let control_keywords      = "control-keywords"
+  let other_keywords        = "other-keywords"
+  let operators             = "operators"
+  let function_application  = "function-application"
+  let identifiers           = "identifiers"
+  let type_expression       = "type-expression"
+  let struct_type           = "struct-type"
+  let sum_type              = "sum-type"
+  let type_alias            = "type-alias"
+end
+
 let syntax_highlighting () = 
-  let* json = Textmate.to_json {
+  let* json = Textmate.to_json "ligo" {
     syntax_name          = "ligo";
     scope_name           = "source.ligo";
     file_types           = [];
     folding_start_marker = None;
     folding_stop_marker = None;
     syntax_patterns = [
-      Reference "#string";
-      Reference "#single-quotes";
-      Reference "#comment";
-      Reference "#macro";
-      Reference "#function";
-      Reference "#binding";
-      Reference "#type-annotation";
-      Reference "#type-definition";
-      Reference "#control-keywords";
-      Reference "#other-keywords";
-      Reference "#operators";
-      Reference "#function-application";
-      Reference "#identifiers";
+      Reference Name.string;
+      Reference Name.single_quotes;
+      Reference Name.comment;
+      Reference Name.macro;
+      Reference Name.function_;
+      Reference Name.binding;
+      Reference Name.type_annotation;
+      Reference Name.type_definition;
+      Reference Name.control_keywords;
+      Reference Name.other_keywords;
+      Reference Name.operators;
+      Reference Name.function_application;
+      Reference Name.identifiers;
     ];
     repository = [
+      Helpers.macro;
       {
-        name = "function";
+        name = Name.function_;
         kind = Begin_end {
           meta_name = None;
-          begin_ = "\\b(recursive\\s+)?(function)\\s+([a-zA-Z_]\\w*)\\b";
-          begin_captures = [
-            (1, "keyword.other.recursive.ligo");
-            (2, "keyword.other.function.ligo");
-            (3, "entity.name.function");
-          ];
-          end_ = "\\b(is)\\b";
-          end_captures = [
-            (1, "keyword.operator.is.ligo")
-          ];
+          begin_ = [
+            ("\\b(recursive\\s+)?", Some StorageClass);
+            ("(function)\\s+", Some Function); 
+            ("([a-zA-Z_]\\w*)\\b", Some Identifier)];
+          end_ = [("\\b(is)\\b", Some Operator)];
           patterns = [
-            Reference "#comment";
-            Reference "#type-annotation";
-            Reference "#binding";
+            Name.comment;
+            Name.type_annotation;
+            Name.binding;
           ]
         }
       };
       { 
-        name = "binding";
+        name = Name.binding;
         kind = Begin_end {
           meta_name = None;
-          begin_ = "\\b(var|const)\\s+([a-zA-Z_]\\w*)\\b";
-          begin_captures = [
-            (1, "keyword.other.binding.ligo");
-            (2, "entity.name.variable")
+          begin_ = [
+            ("\\b(var|const)\\s+", Some Statement);
+            ("([a-zA-Z_]\\w*)\\b", Some Identifier)];
+          end_ = [
+            ("(?=[=),;]|:=)", None)
           ];
-          end_ = "(?=[=),;]|:=)";
-          end_captures = [];
           patterns = [
-            Reference "#comment";
-            Reference "#type-annotation"
+            Name.comment;
+            Name.type_annotation
         ]}
       };
-      { 
-        name = "macro";
+      {
+        name = Name.type_annotation;
         kind = Begin_end {
           meta_name = None;
-          begin_ = "^\\s*((#)\\w+)";
-          begin_captures = [
-              (1, "meta.preprocessor.ligo");
-              (2, "punctuation.definition.directive.ligo")
-          ];
-          end_ = "$";
-          end_captures = [];
+          begin_ = [("(:(?!=))\\s*", Some Operator)];
+          end_ = [("(?:\\||(?=[;)=}\\]]|\\bis\\b|:=)|$)", None)];
           patterns = [
-            Reference "#string";
-            Reference "#comment"
+              Name.comment;
+              Name.type_expression
           ]
         }
       };
       {
-        name = "type-annotation";
-        kind = Begin_end {
-          meta_name = None;
-          begin_ = "(:(?!=))\\s*";
-          begin_captures = [
-              (1, "keyword.operator.type.ligo" )
+        name = Name.type_expression;
+        kind = Patterns [
+          Begin_end {
+            meta_name = None;
+            begin_ = [("\\(", None)];
+            end_ = [("\\)", None)];
+            patterns = [
+                Name.comment;
+                Name.type_expression
+            ]
+          };
+          Match {
+            match_name = None;
+            match_ = "((?:(?!\\bis\\b|:=)[^=()|;}/\\]])*)";
+            captures = [
+                (1, Type)
+            ]
+          }
+      ]
+    };
+    {
+      name = Name.type_definition;
+      kind = Begin_end {
+        meta_name = None;
+        begin_ = 
+          [("\\b(type)", Some Type);
+           ("\\s+([a-zA-Z_]\\w*)", Some Identifier);
+           ("\\s+(is)\\b", Some Statement);
           ];
-          end_ = "(?:\\||(?=[;)=}\\]]|\\bis\\b|:=)|$)";
-          end_captures = [];
-          patterns = [
-              Reference "#comment";
-              Reference "#type-expression"
-          ]
-        }
-      };
-      {
-        name = "type-expression";
-        kind = Patterns {
-          p_name = None;
-          p_kind = [
-            Begin_end {
-              meta_name = None;
-              begin_ = "\\(";
-              begin_captures = [];
-              end_ = "\\)";
-              end_captures = [];
-              patterns = [
-                  Reference "#comment";
-                  Reference "#type-expression"
-              ]
-            };
-            Match {
-              match_name = None;
-              match_ = "((?:(?!\\bis\\b|:=)[^=()|;}/\\]])*)";
-              captures = [
-                  (1, "entity.name.type.ligo")
-              ]
-            }
+        end_ = [("(?=\\b(?:function|type|const|var)\\b|^\\s*#\\w+)", None)];
+        patterns = [
+            Name.comment;
+            Name.struct_type;
+            Name.sum_type;
+            Name.type_alias
         ]
       }
     };
     {
-      name = "type-definition";
+      name = Name.struct_type;
       kind = Begin_end {
         meta_name = None;
-        begin_ = "\\b(type)\\s+([a-zA-Z_]\\w*)\\s+(is)\\b";
-        begin_captures = [
-            (1, "keyword.other.typedef.ligo");
-            (2, "entity.name.type.ligo");
-            (3, "keyword.other.is.ligo")
+        begin_ = [
+          ("\\b(record)\\s*", Some Statement);
+          ("(\\[?)", Some Statement)
         ];
-        end_ = "(?=\\b(?:function|type|const|var)\\b|^\\s*#\\w+)";
-        end_captures = [];
+        end_ = [("(\\]|\\bend\\b)", Some Statement)];
         patterns = [
-            Reference "#comment";
-            Reference "#struct-type";
-            Reference "#sum-type";
-            Reference "#type-alias"
+            Name.comment;
+            Name.identifiers;
+            Name.type_annotation
         ]
       }
     };
     {
-      name = "struct-type";
+      name = Name.sum_type;
       kind = Begin_end {
         meta_name = None;
-        begin_ = "\\b(record)\\s*(\\[?)";
-        begin_captures = [
-            (1, "keyword.other.record.ligo");
-            (2, "keyword.other.begin.ligo")
+        begin_ = [
+          ("\\b([A-Z]\\w*)\\s+", Some Label); 
+          ("(of)?", Some Statement)
         ];
-        end_ = "(\\]|\\bend\\b)";
-        end_captures = [
-            (1, "keyword.other.end.ligo")
+        end_ = [
+          ("(\\||(?=\\b(?:function|type|const|var)\\b|^\\s*#\\w+))", None)
         ];
         patterns = [
-            Reference "#comment";
-            Reference "#identifiers";
-            Reference "#type-annotation"
+            Name.comment;
+            Name.type_expression
         ]
       }
     };
     {
-      name = "sum-type";
+      name = Name.type_alias;
       kind = Begin_end {
         meta_name = None;
-        begin_ = "\\b([A-Z]\\w*)\\s+(of)?";
-        begin_captures = [
-            (1, "entity.name.function.ligo");
-            (2, "keyword.other.of.ligo")
-        ];
-        end_ = "(\\||(?=\\b(?:function|type|const|var)\\b|^\\s*#\\w+))";
-        end_captures = [];
+        begin_ = [("\\G\\s*(?!record\\b)(?=[(a-z])", None)];
+        end_ = [("(?=\\b(?:function|type|const|var)\\b|^\\s*#\\w+)", None)];
         patterns = [
-            Reference "#comment";
-            Reference "#type-expression"
+            Name.comment;
+            Name.type_expression
         ]
       }
     };
+    ]
+    @
+    Helpers.string
+    @
+    [
     {
-      name = "type-alias";
+      name = Name.single_quotes;
       kind = Begin_end {
-        meta_name = None;
-        begin_ = "\\G\\s*(?!record\\b)(?=[(a-z])";
-        begin_captures = [];
-        end_ = "(?=\\b(?:function|type|const|var)\\b|^\\s*#\\w+)";
-        end_captures = [];
-        patterns = [
-            Reference "#comment";
-            Reference "#type-expression"
-        ]
-      }
-    };
-    Helpers.string "ligo";
-
-    {
-      name = "single-quotes";
-      kind = Begin_end {
-        meta_name = Some "string.quoted.single.ligo";
-        begin_ = "\\'";
-        begin_captures = [];
-        end_ = "\\'";
-        end_captures = [];
+        meta_name = Some String;
+        begin_ = [("\\'", None)];
+        end_ = [("\\'", None)];
         patterns = []
       }
     };
-    Helpers.ocaml_comment "ligo";
+    Helpers.ocaml_comment;
     {
-      name = "list-cons";
+      name = Name.control_keywords;
       kind = Match {
-        match_ = "::";
-        match_name = Some "keyword.operator.cons.ligo";
-        captures = []
-      }
-    };
-    {
-      name = "control-keywords";
-      kind = Match {
-        match_name = Some "keyword.control.ligo";
+        match_name = Some Conditional;
         match_ = "\\b(case|of|if|then|else|for|in|step|to|skip|assert|failwith|begin|end|contains)\\b";
         captures = []
       }
     };
     {
-      name = "other-keywords";
+      name = Name.other_keywords;
       kind = Match {
-        match_name = Some "keyword.other.ligo";
+        match_name = Some Statement;
         match_ = "\\b(block|with|record|set|map|list)\\b";
         captures = []
       }
     };
     {
-      name = "numeric-literals";
+      name = Name.operators;
       kind = Match {
-        match_name = Some "constant.numeric.ligo";
-        match_ = "\\b\\d+";
-        captures = []
-      }
-    };
-    {
-      name = "operators";
-      kind = Match {
-        match_name = Some "keyword.operator.other.ligo";
+        match_name = Some Operator;
         match_ = "([-+*/=]|->|:=)";
         captures = []
       }
     };
     {
-      name = "function-application";
+      name = Name.function_application;
       kind = Match {
         match_name = None;
         match_ = "\\b([a-zA-Z_]\\w*)\\s+\\(";
         captures = [
-            (1, "entity.name.function")
+            (1, Identifier)
         ]
       }
     };
     {
-      name = "identifiers";
+      name = Name.identifiers;
       kind = Match {
         match_name = None;
         match_ = "\\b([a-zA-Z_]\\w*)\\b";
         captures = [
-            (1, "entity.name.variable")
+            (1, Identifier)
         ]
       }
     }
