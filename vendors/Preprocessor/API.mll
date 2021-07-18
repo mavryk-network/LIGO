@@ -1,4 +1,4 @@
-(* Simple preprocessor based on C#, to be processed by [ocamllex]. *)
+(* Simple preprocessor based on cpp, to be processed by [ocamllex]. *)
 
 {
 (* START OF HEADER *)
@@ -48,21 +48,32 @@ type trace = cond list
 
 (* The type [state] groups the information that needs to be
    threaded along the scanning functions:
-     * the field [cfg] records the source configuration;
-     * the field [dirs] contains the file paths given in "-I";
-     * the field [env] records the symbols defined;
+
+     * the field [config] records the source configuration;
+
+     * the field [env] records the symbols defined by #define and not
+       undefined by #undef;
+
      * the field [mode] informs whether the preprocessor is in
        copying or skipping mode;
+
      * the field [trace] is a stack of previous, still active
-       conditional directives;
+       conditional directives (this is support the parsing of
+       conditionals without resorting to a parser generator like
+       [menhir]);
+
      * the field [out] keeps the output buffer;
-     * the field [chans] is a list of opened input channels
-       (#include);
-     * the field [incl] is the file system's path to the the
-       current input file;
+
+     * the field [chans] is a list of opened input channels (this is
+       to keep track of embedded file inclusions by #include and close
+       them when we are done);
+
+     * the field [incl] is isomorphic to the file system path to the
+       current input file, and it is changed to that of any included
+       file;
+
      * the field [import] is a list of (filename, module) imports
-       (#import);
-     *)
+       (#import) *)
 
 type line_comment  = string (* Opening of a line comment *)
 type block_comment = <opening : string; closing : string>
@@ -86,7 +97,7 @@ type state = {
   out    : Buffer.t;
   chans  : in_channel list;
   incl   : file_path list;
-  import : (file_path * module_name) list;
+  import : (file_path * module_name) list
 }
 
 (* Directories *)
@@ -269,7 +280,7 @@ let find dir file dirs =
 
 (* PRINTING *)
 
-(* Copying the current lexeme to [stdout] *)
+(* Copying the current lexeme to the buffer *)
 
 let copy state buffer =
   Buffer.add_string state.out (Lexing.lexeme buffer)
@@ -373,24 +384,12 @@ let line_comments =
 
 (* The rule [scan] scans the input buffer for directives, strings,
    comments, blanks, new lines and end of file characters. As a
-   result, either the matched input is copied to [stdout] or not,
-   depending on the compilation directives. If not copied, new line
-   characters are output.
+   result, either the matched input is copied to the buffer or not,
+   depending on the compilation directives. Even if not in copy mode,
+   new line characters are output.
 
-   Scanning is triggered by the function call [scan env mode trace
-   lexbuf], where [env] is the set of defined symbols (introduced by
-   `#define'), [mode] specifies whether we are copying or skipping the
-   input, and [trace] is the stack of conditional directives read so
-   far.
-
-   The first call is [scan {env=Env.empty; mode=Copy; trace=[];
-   incl=[]}], meaning that we start with an empty environment, that
-   copying the input is enabled by default, and that we are at the
-   start of a line and no previous conditional directives have been
-   read yet.
-
-   When an "#if" is matched, the trace is extended by the call [extend
-   lexbuf (If mode) trace], during the evaluation of which the
+   When an "#if" is found, the trace is extended by calling [extend
+   (If state.mode) state region], during the evaluation of which the
    syntactic validity of having encountered an "#if" is checked (for
    example, it would be invalid had an "#elif" been last read). Note
    that the current mode is stored in the trace with the current
@@ -424,73 +423,74 @@ let line_comments =
    Consider the following four cases, where the modes (Copy/Skip) are
    located between the lines:
 
-                    Copy ----+                          Copy ----+
-   #if true                  |       #if true                    |
-                    Copy     |                          Copy     |
-   #else                     |       #else                       |
-                +-- Skip --+ |                      +-- Skip --+ |
-     #if true   |          | |         #if false    |          | |
-                |   Skip   | |                      |   Skip   | |
-     #else      |          | |         #else        |          | |
-                +-> Skip   | |                      +-> Skip   | |
-     #endif                | |         #endif                  | |
-                    Skip <-+ |                          Skip <-+ |
-   #endif                    |       #endif                      |
-                    Copy <---+                          Copy <---+
+                    Copy ────┐                          Copy ────┐
+   #if true                  │       #if true                    │
+                    Copy     │                          Copy     │
+   #else                     │       #else                       │
+                ┌── Skip ──┐ │                      ┌── Skip ──┐ │
+     #if true   │          │ │         #if false    │          │ │
+                │   Skip   │ │                      │   Skip   │ │
+     #else      │          │ │         #else        │          │ │
+                └─> Skip   │ │                      └─> Skip   │ │
+     #endif                │ │         #endif                  │ │
+                    Skip <─┘ │                          Skip <─┘ │
+   #endif                    │       #endif                      │
+                    Copy <───┘                          Copy <───┘
 
 
-                +-- Copy ----+                          Copy --+-+
-   #if false    |            |       #if false                 | |
-                |   Skip     |                          Skip   | |
-   #else        |            |       #else                     | |
-                +-> Copy --+ |                    +-+-- Copy <-+ |
-     #if true              | |         #if false  | |            |
-                    Copy   | |                    | |   Skip     |
-     #else                 | |         #else      | |            |
-                    Skip   | |                    | +-> Copy     |
-     #endif                | |         #endif     |              |
-                    Copy <-+ |                    +---> Copy     |
-   #endif                    |       #endif                      |
-                    Copy <---+                          Copy <---+
+                ┌── Copy ────┐                          Copy ──┬─┐
+   #if false    │            │       #if false                 │ │
+                │   Skip     │                          Skip   │ │
+   #else        │            │       #else                     │ │
+                └─> Copy ──┐ │                    ┌─┬── Copy <─┘ │
+     #if true              │ │         #if false  │ │            │
+                    Copy   │ │                    │ │   Skip     │
+     #else                 │ │         #else      │ │            │
+                    Skip   │ │                    │ └─> Copy     │
+     #endif                │ │         #endif     │              │
+                    Copy <─┘ │                    └───> Copy     │
+   #endif                    │       #endif                      │
+                    Copy <───┘                          Copy <───┘
 
    The following four cases feature #elif. Note that we put between
    brackets the mode saved for the #elif, which is sometimes restored
    later.
 
-                    Copy --+                            Copy --+
-   #if true                |         #if true                  |
-                    Copy   |                            Copy   |
-   #elif true   +--[Skip]  |         #elif false    +--[Skip]  |
-                |   Skip   |                        |   Skip   |
-   #else        |          |         #else          |          |
-                +-> Skip   |                        +-> Skip   |
-   #endif                  |         #endif                    |
-                    Copy <-+                            Copy <-+
+                    Copy ──┐                            Copy ──┐
+   #if true                │         #if true                  │
+                    Copy   │                            Copy   │
+   #elif true   ┌──[Skip]  │         #elif false    ┌──[Skip]  │
+                │   Skip   │                        │   Skip   │
+   #else        │          │         #else          │          │
+                └─> Skip   │                        └─> Skip   │
+   #endif                  │         #endif                    │
+                    Copy <─┘                            Copy <─┘
 
 
-                +-- Copy --+-+                      +-- Copy ----+
-   #if false    |          | |       #if false      |            |
-                |   Skip   | |                      |   Skip     |
-   #elif true   +->[Copy]  | |       #elif false    +->[Copy]--+ |
-                    Copy <-+ |                          Skip   | |
-   #else                     |       #else                     | |
-                    Skip     |                          Copy <-+ |
-   #endif                    |       #endif                      |
-                    Copy <---+                          Copy <---+
+                ┌── Copy ──┬─┐                      ┌── Copy ────┐
+   #if false    │          │ │       #if false      │            │
+                │   Skip   │ │                      │   Skip     │
+   #elif true   └─>[Copy]  │ │       #elif false    └─>[Copy]──┐ │
+                    Copy <─┘ │                          Skip   │ │
+   #else                     │       #else                     │ │
+                    Skip     │                          Copy <─┘ │
+   #endif                    │       #endif                      │
+                    Copy <───┘                          Copy <───┘
 
    Note how "#elif" indeed behaves like an "#else" followed by an
    "#if", and the mode stored with the data constructor [Elif]
    corresponds to the mode before the virtual "#if".
 
-   Important note: Comments and strings are recognised as such only in
-   copy mode, which is a different behaviour from the preprocessor of
-   GNU GCC, which always does.
- *)
+   Important note: Comments and strings are recognised both in
+   copy and skip mode, as GNU GCC does. *)
 
 rule scan state = parse
-  nl    { proc_nl state lexbuf; scan state lexbuf }
-| blank { if state.mode = Copy then copy state lexbuf;
-          scan state lexbuf }
+  nl? eof { if state.trace = [] then state
+            else stop state lexbuf Missing_endif }
+| nl      { proc_nl state lexbuf; scan state lexbuf }
+| blank   { if state.mode = Copy then copy state lexbuf;
+            scan state lexbuf }
+
 | directive {
     let  region = mk_reg lexbuf in
     if   not (List.mem id directives)
@@ -538,7 +538,9 @@ rule scan state = parse
             match find path import_file state.config#dirs with
               Some p -> fst p
             | None -> fail state reg (File_not_found import_file) in
-          let state  = {state with import = (import_path, imported_module)::state.import}
+          let state  =
+            {state with
+               import = (import_path, imported_module) :: state.import}
           in (proc_nl state lexbuf; scan state lexbuf)
         else (proc_nl state lexbuf; scan state lexbuf)
     | "if" ->
@@ -598,15 +600,8 @@ rule scan state = parse
     | _ -> assert false
   }
 
-| eof { if state.trace = [] then state
-        else stop state lexbuf Missing_endif }
-
-| '"' { if state.mode = Copy then
-          begin
-            copy state lexbuf;
-            scan (in_string (mk_reg lexbuf) state lexbuf) lexbuf
-          end
-        else scan state lexbuf }
+| '"' { if state.mode = Copy then copy state lexbuf;
+        scan (in_string (mk_reg lexbuf) state lexbuf) lexbuf }
 
 | block_comment_openings {
     let lexeme = Lexing.lexeme lexbuf in
@@ -667,9 +662,9 @@ and symbol state = parse
 (* Skipping all characters until the end of line or end of file. *)
 
 and skip_line state = parse
-  nl     { proc_nl state lexbuf   }
-| eof    { rollback lexbuf        }
-| _      { skip_line state lexbuf }
+  nl  { proc_nl state lexbuf   }
+| eof { rollback lexbuf        }
+| _   { skip_line state lexbuf }
 
 (* For #error, #region and #endregion *)
 
@@ -685,7 +680,7 @@ and message acc = parse
 
 and in_line_com state = parse
   nl  { proc_nl state lexbuf; state                  }
-| eof { rollback lexbuf; state              }
+| eof { rollback lexbuf; state                       }
 | _   { if state.mode = Copy then copy state lexbuf;
         in_line_com state lexbuf                     }
 
