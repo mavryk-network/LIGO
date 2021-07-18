@@ -1,0 +1,801 @@
+%%%-*-latex-*-
+
+\documentclass[12pt,a4paper]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+%\usepackage[charter]{mathdesign}
+\usepackage{hyphenat}
+\usepackage{mdwlist}              % Tight vertical spacing of list items
+\usepackage{url}
+\usepackage{microtype}
+\usepackage{framed}
+
+\frenchspacing  % Follow French conventions after a period
+\hfuzz 2pt      % Do not report overhang less than 2pt
+
+% Figures/Graphics
+%
+\usepackage{graphicx}   % Inclusion
+\usepackage{float}      % Before package `wrapfig'
+\usepackage[justification=raggedleft]{caption}
+\usepackage{subfig}     % Subfigures
+\captionsetup[subfloat]{justification=raggedleft}
+\usepackage{wrapfig}    % Wrapping text around figures
+
+% Maths & Logic
+%
+\usepackage{amsmath,amssymb,amsthm,stmaryrd}
+
+% Bibliographic style
+%
+\usepackage[comma]{natbib}
+\bibliographystyle{plainnat}
+\usepackage{etoolbox}
+\apptocmd{\thebibliography}{\raggedright}{}{} % No Underfull \hbox
+
+% Verbatim and tty
+%
+\usepackage{verbatim} % Inputting in verbatim environment
+\usepackage{alltt}    % Extended verbatim environment
+
+% Tables
+%
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{tabulary}
+\usepackage{hhline}
+
+% Miscellanea
+%
+\usepackage{xspace}    % Automatic insertion of a space after a macro
+\usepackage{varioref}  % Qualifying references with page numbers
+\usepackage{booktabs}
+\usepackage{clrscode}
+
+% Commands
+%
+\input{commands}
+\input{ocaml_syntax}
+\input{ocaml_macros}
+%\input{comp_macros}
+\input{token}
+%\input{grammar}
+%\input{dfa_macros}
+
+% Title
+%
+\title{Introduction to \ocamllex}
+\author{\Large Christian Rinderknecht}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+%% \begin{abstract}
+%%   This article belongs to a series aimed at presenting the
+%%   architecture, concepts, techniques and features of the
+%%   front\hyp{}end of the LIGO compiler. It also aims at explaining some
+%%   of the theoretical background and the tools used in making up the
+%%   front\hyp{}end.
+%% \end{abstract}
+
+\section{An overview of compilation}
+
+Generally speaking, a \emph{compiler} maps programs written in a
+\emph{source language} into programs written in a \emph{target
+  language}. If the source and the target are ascribed meaning of
+their programs, then compilation is expected to preserve the meaning
+of the source. Meaning is understood here as behaviour, therefore
+compilation entails that the outputs of the execution of the source
+program are the same as the outputs of the execution of the target
+program, given the same inputs.\footnote{There are other ways to
+  define the semantics of a programming language, like denotational
+  semantics or axiomatic semantics.} If the target language has some
+semantics but the source language has none, then compilation actually
+gives meaning to the source by translation.
+
+A peculiarity of LIGO is that it features multiple source languages
+which are all translated to the same internal representation (IR). One
+could actually argue that LIGO as a language \emph{is} that IR, and
+that the different source languages are pure syntax being given
+meaning by translation to the IR, whose semantics is, in turn, given
+by translation up to Michelson. The target language of the LIGO
+compiler is Michelson, used to write \emph{smart contracts} for the
+Tezos blockchain. Michelson itself is \emph{interpreted}, that is, the
+meaning of a smart contract is its execution by another program,
+called an \emph{interpreter}, instead of a direct execution by the
+computer's hardware. Some languages can be both compiled or
+interpreted, or both. One of such languages is OCaml, whose programs
+are compiled to a low-level language like Michelson, called
+\emph{bytecode}, which is then either compiled to native code or
+interpreted. Another example of such a language is Java.
+
+A \emph{transpiler} is a compiler whose target language is of the same
+\emph{level of abstraction} as the source language, that is, it
+features almost the same constructs or concepts, like loops,
+functions, data types, modules etc., as the source language, even if
+the concrete syntax is different. For example, a compiler from a a
+dialect of Lisp to another is likely to be a transpiler because both
+languages likely feature almost the same kind of constructs. But
+Pascal and Ada are essentially different because Ada features tasks,
+which have no equivalent in Pascal by translation.\footnote{This
+  notion of level of abstraction cannot be taken too seriously,
+  though, as, in the end, we are dealing here with
+  Turing\hyp{}complete languages, so we can theoretically always
+  interpret in a language the programs of another.}
+
+There are currently four concrete syntax to the LIGO compiler, each
+based on an existing programming language: PascaLIGO, CameLIGO,
+ReasonLIGO and JsLIGO (respectively based on Pascal, OCaml, ReasonML
+and JavaScript). Another peculiarity of LIGO is that one can transpile
+a program in any of those syntaxes into any of the other. Technically
+speaking, a bit of compilation is involved sometimes, that is, more
+than a syntactical transformation, for example when the source
+language features loops, like JsLIGO, and the target language does
+not, like CameLIGO. We will call this process transpilation
+nonetheless.
+
+From a theoretical point of view, a compiler for a general language is
+only one link in a chain of tools, as shown in
+\fig~\vref{fig:compilation_chain}.
+\begin{figure}
+\centering
+\includegraphics[bb=71 587 405 721]{compilation_chain}
+\caption{Compilation chain for~C\label{fig:compilation_chain}}
+\end{figure}
+Let us consider the example of the C~language. A widely used
+open\hyp{}source compiler is GNU GCC. In reality, GCC is a host of
+tools making up a complete compilation chain, not just a naked
+C~compiler\footnote{and not just for~C either: Ada too, for example.}:
+\begin{itemize*}
+
+  \item to only preprocess the sources: \texttt{gcc -E prog.c}
+  (standard output) (the C~preprocessor \texttt{cpp} can also be
+  called directly);
+
+  \item to preprocess and compile: \texttt{gcc -S prog.c}
+  (output \texttt{prog.s});
+
+  \item to preprocess, compile and assemble: \texttt{gcc -c prog.c}
+  (out: \texttt{prog.o});
+
+  \item to preprocess, compile, assemble and link: \texttt{gcc -o prog
+    prog.c} (output \texttt{prog}). Linking can be directly called
+    using~\texttt{ld}.
+
+\end{itemize*}
+Like GCC, the LIGO compiler actually contains several tools, not just
+a compiler. It is simpler though, because there is neither need for an
+assembler nor a linker, as Michelson is interpreted and not further
+lowered down. As we shall see, LIGO features a preprocessor modelled
+on that of~C, also integrated into the ``compiler'' and can be invoked
+independently of the rest of the compiler, just like transpilation
+between concrete syntaxes.
+
+There are two parts to compilation: \emph{analysis} and
+\emph{synthesis}.
+\begin{enumerate*}
+
+  \item The analysis part breaks up the source program into
+  constituent pieces of an intermediary representation of the
+  program.
+
+  \item The synthesis part constructs the target program from this
+  intermediary representation.
+
+\end{enumerate*}
+In practice, there are more than one IR, and the LIGO compiler
+internally defines more than five IR at the time of writing.
+
+
+Here, we shall concern ourselves only with analysis, which can itself
+be divided into three successive stages:
+\begin{enumerate*}
+
+  \item \emph{linear analysis}, also commonly called lexical analysis
+    or lexing, in which the stream of characters making up the source
+    program is read and grouped into \emph{lexemes}, that is,
+    sequences of characters having a collective meaning: sets of
+    lexemes with a common interpretation are called \emph{tokens}.
+    Note that ``token'' is often used when ``lexeme'' would be
+    correct, but the confusion is minimal and we will rely on it to
+    make the presentation better flow: lexers will output streams of
+    tokens.
+
+  \item \emph{hierarchical analysis}, also commonly called syntactical
+    analysis or parsing, in which tokens are grouped hierarchically
+    into nested collections (trees) with a collective meaning;
+
+  \item \emph{semantic analysis}, also commonly called type inference
+    of type checking, in which certain checks are performed on the
+    previous hierarchy to ensure that the components of a program fit
+    together meaningfully.
+
+\end{enumerate*}
+
+In LIGO, the \emph{front\hyp{}end} is the part of the compiler dealing
+with preprocessing, lexing and parsing, as well as transpilation
+between the concrete syntaxes. Type inference and checking is
+considered part of the middle\hyp{}end of the LIGO compiler, before
+optimisation and code generation.
+
+\paragraph{Lexical analysis}
+
+In a compiler, linear analysis is called \emph{lexing} or
+\emph{scanning}. During lexical analysis, the characters in the
+following PascaLIGO assignment
+\begin{verbatim}
+position := initial + rate * 60
+\end{verbatim}
+\noindent would be grouped into the following lexemes and tokens (see
+table). The blanks separating the characters of these tokens are
+normally discarded.
+\begin{center}
+\begin{tabular}{l|>{\tt}l}
+\toprule
+  \multicolumn{1}{c}{\textsc{Token}}
+& \multicolumn{1}{c}{\textsc{Lexeme}}\\
+\midrule
+identifier & position\\
+assignment symbol & :=\\
+identifier & initial\\
+plus sign & +\\
+identifier & rate\\
+multiplication sign & *\\
+number & 60\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\paragraph{Syntax analysis}
+
+Hierarchical analysis is called \emph{parsing} or \emph{syntax
+  analysis}. It involves grouping the tokens of the source program
+into grammatical phrases that are used by the compiler to synthesise
+the output. Usually, the grammatical phrases of the source are
+represented by a \emph{parse tree} such as in
+\fig~\vref{fig:parse_tree_eg}.
+\begin{figure}[b]
+\centering
+\includegraphics[bb=71 603 338 721]{parse_tree_eg}
+\caption{Parse tree of \texttt{position := initial + rate * 60}\label{fig:parse_tree_eg}}
+\end{figure}
+In the expression ``\texttt{initial + rate * 60}'', the phrase
+``\texttt{rate * 60}'' is a logical unit because the usual conventions
+of arithmetic expressions tell us that multiplication is performed
+prior to addition. Thus, because the expression ``\texttt{initial +
+  rate}'' is followed by a ``\verb+*+'', it is \emph{not} grouped into
+the same subtree.
+
+The hierarchical structure of a program is usually expressed by
+\emph{recursive rules}. For instance, an expression can be defined by
+a set of cases as follows:
+\begin{enumerate*}
+
+  \item any \emph{identifier} is an expression;\label{rule_id_is_expr}
+
+  \item any \emph{number} is an expression;\label{rule_num_is_expr}
+
+  \item if \emph{expression}\(_1\) and \emph{expression}\(_2\) are
+  expressions, then so are
+   \begin{enumerate*}
+
+     \item \emph{expression}\(_1\) \verb|+|
+       \emph{expression}\(_2\), \label{rule_add_is_expr}
+
+     \item \emph{expression}\(_1\) \verb|*|
+       \emph{expression}\(_2\), \label{rule_mult_is_expr}
+
+     \item (\emph{expression\(_1\)}).
+
+   \end{enumerate*}
+
+\end{enumerate*}
+Rules~\ref{rule_id_is_expr} and~\ref{rule_num_is_expr} are
+non-recursive base rules, while the others define expressions in terms
+of operators applied to other expressions:
+\begin{itemize*}
+
+  \item ``\texttt{initial}'' and ``\texttt{rate}'' are identifiers,
+    therefore, by rule~\ref{rule_id_is_expr}, they are expressions;
+
+  \item ``\texttt{60}'' is a number, thus, by
+    rule~\ref{rule_num_is_expr}, it is an expression.
+
+\end{itemize*}
+Next, by rule~\ref{rule_mult_is_expr}, we infer that ``\texttt{rate *
+  60}'' is an expression. Finally, by rule~\ref{rule_add_is_expr}, we
+conclude that ``\texttt{initial + rate * 60}'' is an
+expression. Similarly, many programming languages define statements
+recursively by rules such as:
+\begin{itemize}
+
+  \item if \emph{identifier} is an identifier and
+    \emph{expression} is an expression, then we can form the statement
+    \begin{center}
+      \emph{identifier} \texttt{:=} \emph{expression}
+    \end{center}
+
+  \item if \emph{expression} is an expression and \emph{statement} is
+    a statement, then we can create the statements
+    \begin{center}
+     \tt while (\emph{expression}) do \emph{statement}\\
+     if (\emph{expression}) then \emph{statement}
+    \end{center}
+
+\end{itemize}
+Let us keep in mind that the distinction between lexical and syntactic
+analysis is somewhat arbitrary. For instance, we could define the
+integer numbers by means of the following recursive rules:
+\begin{itemize*}
+
+  \item a \emph{digit} is a \emph{number} (base rule),
+
+  \item a \emph{digit} followed by a \emph{number} is a \emph{number}
+    (recursive rule).
+
+\end{itemize*}
+Imagine now that the lexer does \emph{not} recognise numbers, only
+digits. The parser therefore would use the previous recursive rules to
+group in a parse tree the digits which form a number. For instance,
+the parse tree for the number \texttt{1234}, following these rules, is
+shown in \fig~\vref{fig:num_parse_tree}.
+\begin{figure}
+\centering
+\subfloat[Parse tree\label{fig:num_parse_tree}]{
+  \includegraphics[bb=71 602 218 721]{num_parse_tree}}
+\quad
+\subfloat[Abstract syntax tree\label{fig:ast_eg}]{
+  \includegraphics[bb=71 602 187 721]{ast_eg}
+}
+\caption{Parse tree vs. abstract syntax tree}
+\end{figure}
+Notice how that tree actually is isomorphic to a list and the
+structure, \emph{i.e.,} the embedding of trees, reflects the
+distinction of thousands, hundreds, tens and units. This level of
+detail is usually not necessary, as it can be obtained by purely
+arithmetic means from a number (as opposed to a tree). Nevertheless,
+there is an obvious benefit to using the parser for the lexical
+analysis. As we shall see in the case of the LIGO compiler (but not
+the Michelson interpreter), the source code of lexers is often
+generated from a higher\hyp{}level description of what it does, and
+partly how. So there is a practical and theoretical benefit to
+\emph{scannerless parsing} in using only one framework. Currently,
+though, the LIGO compiler currently only uses a lexer generator called
+\ocamllex.
+
+Pragmatically, the best division between the lexer and the parser is
+the one that simplifies the overall task of analysis. One factor in
+determining the distinction is whether a source language construct
+requires general recursion, as opposed to \emph{tail recursion}
+(see~\cite{Rinderknecht_2014a}) or if it features some internal
+structure: lexical constructs do not require general recursion to be
+defined, and tokens are usually considered atomic. This distinction
+may seem like hair splitting, but it became relevant in the LIGO
+compiler with respect to the embedding of Michelson code.
+
+On the other hand, the kind of linear scanning described above is not
+powerful enough to analyse expressions or statements, like matching
+parentheses in expressions, or matching braces in block statements: a
+nesting structure is compulsory, as seen earlier in
+\fig~\vref{fig:parse_tree_eg}. The internal representation of this
+syntactic structure is called an \emph{abstract syntax tree} (or
+simply \emph{syntax tree}), an example of which can be seen in
+\fig~\vref{fig:ast_eg}. It is a compressed version of the parse tree,
+where only the most important elements are retained for the semantic
+analysis.
+
+\paragraph{Phases}
+
+Conceptually, a compiler operates in \emph{phases}, also called
+\emph{passes}, each transforming the program from one representation
+to the next, each step closer to the target program and thereby
+generating a \emph{pipeline architecture}. This decomposition is shown
+in \fig~\vref{fig:phases}.
+\begin{figure}
+\centering
+\includegraphics[bb=71 618 408 721]{phases}
+\caption{Decomposition of a compiler into phases\label{fig:phases}}
+\end{figure}
+The first row makes up the analysis and the second is the synthesis.
+
+\paragraph{Lexing}
+
+Let us revisit the analysis phase and its sub-phases, following up on
+a previous example. Consider the following character string:
+\begin{center}
+\(\longleftarrow\)
+\texttt{
+  \begin{tabular}{|@{\,}c@{\,}|@{\,}c@{\,}|@{\,}c@{\,}|@{\,}c@{\,}|@{\,}c@{\,}|@{\,}c@{\,}|@{\,}c@{\,}|@{\,}c@{\,}|@{\,}c@{\,}|@{\,}c@{\,}|@{\,}c@{\,}|@{\,}c@{\,}|@{\,}c@{\,}|@{\,}c@{\,}|@{\,}c@{\,}|@{\,}c@{\,}|@{\,}c@{\,}|@{\,}c@{\,}|@{\,}c@{\,}|@{\,}c@{\,}|@{\,}c@{\,}|@{\,}c@{\,}|@{\,}c@{\,}|@{\,}c@{\,}|@{\,}c@{\,}|@{\,}c@{\,}|@{\,}c@{\,}|@{\,}c@{\,}|@{\,}c@{\,}|@{\,}c@{\,}|@{\,}c@{\,}|}
+    \hline
+    p&o&s&i&t&i&o&n&\phantom{=}&:&=&\phantom{=}&i&n&i&t&i&a&l&
+    \phantom{=}&+&\phantom{=}&r&a&t&e&\phantom{=}&*&\phantom{=}&6&0\\
+    \hline
+  \end{tabular}
+}
+\(\longleftarrow\)
+\end{center}
+First, as we stated earlier, lexical analysis recognises the tokens of
+this character string, which can be stored in a file. Lexing results
+in a stream of tokens like
+\begin{center}
+\raggedleft
+\boxedToken{ID}{position} \boxedToken{SYM}{:=}
+\boxedToken{ID}{initial} \boxedToken{OP}{+} \boxedToken{ID}{rate}
+\boxedToken{OP}{*} \boxedToken{NUM}{60}
+\end{center}
+where \tokenName{ID} (\emph{identifier}), \tokenName{SYM}
+(\emph{symbol}), \tokenName{OP} (\emph{operator}) and \tokenName{NUM}
+(\emph{number}) are the token names and between brackets are the
+\emph{lexemes}. Each token also includes the \emph{region} of the
+corresponding lexeme in the input string. Such a region is made of a
+couple of character location. A location is either determined by the
+number of characters since the beginning of the input string, or the
+line number and offset on the line (or column number).
+
+\paragraph{Parsing}
+
+The parser takes this token stream and outputs the corresponding
+syntax tree and/or report errors. In \fig~\vref{fig:ast_eg}, we gave a
+simplified version of this syntax tree. A refined version is given in
+the facing column.
+\begin{center}
+  \includegraphics[bb=71 619 218 721]{refined_ast_eg}
+\end{center}
+The parse tree can be considered as a \emph{trace} of the parsing
+pass: it summarises all the recognition work done by the parser. It
+depends on the syntax rules (\emph{i.e.,} the grammar) and the input
+stream of tokens.
+\begin{center}
+\includegraphics[bb=71 605 377 721]{refined_parse_tree_eg}
+\end{center}
+
+\section{Lexing with \ocamllex}
+
+In this section we show how to use \ocamllex, a tool distributed with
+the compiler for \OCaml, which takes a specification for a lexer and
+outputs \OCaml code implementing that specification. In a forthcoming
+section we will explain how the LIGO compiler uses \ocamllex to
+generate its preprocessor and lexer. But, first, some basics.
+
+With \ocamllex, the regular expressions defining the lexemes have a
+traditional form, but characters occur between quotes, after the
+convention of \OCaml, for example,
+\begin{center}
+  \textsf{['a'-'z']\texttt{+} ['a'-'z' 'A'-'Z' '0'-'9' '\_']*}
+\end{center}
+instead of the usual
+\begin{center}
+  \textsf{[a-z]\texttt{+} [a-zA-Z0-9\_]*}
+\end{center}
+The \OCaml type representing internally the tokens is generally not
+defined in the lexer specification, which has the file extension
+\texttt{.mll}. For instance, that type could be
+\begin{tabbing}
+ \Xtype \type{token} \= \equal \= \Tint \Xof \type{int} \vbar{}
+ \Tident \Xof \type{string} \vbar{} \Ttrue \vbar{} \Tfalse\\
+ \> \vbar \> \Tplus \vbar{} \Tminus \vbar{} \Ttimes \vbar{} \Tslash
+ \vbar{} \Tequal \vbar{} \Tarrow\\
+ \> \vbar \> \Tlpar \vbar{} \Trpar \vbar{} \Tlet \vbar{} \Tin \vbar{} \Trec\\
+ \> \vbar \> \Tfun \vbar{}
+ \Tif \vbar{} \Tthen \vbar{} \Telse \vbar{} \Tand \vbar{} \Tor \vbar{}
+ \Tnot \vbar{} \Teof
+\end{tabbing}
+Note that it is a good practice to always use a special token \Teof to
+denote the end of the file. The specification of a lexer in \ocamllex
+follows the general shape
+\begin{tabbing}
+\{ \emph{Optional \OCaml code as a prologue} \}\\
+\Xlet \(r\sb{1}\) \equal \emph{regexp}\\
+\ldots\\
+\Xlet \(r\sb{p}\) \equal \emph{regexp}\\
+\Xrule \= \emph{rule}\(\sb{1}\) \(x\sb{1,1} \dots\, x\sb{1,m}\) \equal \Xparse\\
+\> \ \ \ \emph{regexp}\(\sb{1,1}\) \{ \emph{\OCaml code known as
+  \emph{action}} \}\\
+\> \vbar{} \ \ldots\\
+\> \vbar{} \ \emph{regexp}\(\sb{1,n}\) \{ \emph{\OCaml code known as \emph{action}} \}\\
+\Xand \= \emph{rule}\(\sb{2}\) \(x\sb{2,1} \dots\, x\sb{2,m}\) \equal \Xparse\\
+\> \ldots\\
+\Xand \ldots\\
+\{ \emph{Optional \OCaml code as an epilogue} \}
+\end{tabbing}
+Consider the following example:
+\begin{tabbing}
+\{ \= \Xopen \cst{Parser}\\
+   \> \Xexception \cst{Illegal\_char} \Xof \type{string} \}\\
+\\
+\Xlet \ident{ident} \equal \textsf{['a'-'z'] ['\_' 'A'-'Z' 'a'-'z' '0'-'9']*}\\
+\Xrule \= \ident{token} \equal \Xparse\\
+  \> \ \ \textsf{['{\tt\char`\ }' '\(\backslash\)n' '\(\backslash\)t'
+   '\(\backslash\)r']} \= \{ \ident{token} \ident{lexbuf} \}\\
+  \> \vbar{} \str{let} \> \{ \Tlet \}\\
+  \> \vbar{} \str{rec} \> \{ \Trec \}\\
+  \> \vbar{} \str{=}   \> \{ \Tequal \}\\
+  \> \ldots \\
+  \> \vbar{} \ident{ident} \Xas \ident{id} \> \{ \Tident \ident{id} \}\\
+  \> \vbar{} \textsf{['0'-'9']\texttt{+}} \Xas \ident{n} \> \{ \Tint
+     \lpar\ident{int\_of\_string} \ident{n}\rpar{} \}\\
+  \> \vbar{} \ident{eof} \> \{ \Teof \}\\
+  \> \vbar{} {\large \_} \Xas \ident{c} \> \{ \ident{raise}
+     \lpar\cst{Illegal\_char} \ident{c} \rpar{} \}
+\end{tabbing}
+The prologue opens the module \textsf{Parser} because it contains the
+definition of the type \textsf{token}, whose data constructors are
+applied in the actions (\cst{LET}, \cst{REC}, etc.). This style is
+often used in conjunction with the parsers produced by \menhir. If we
+specify a standalone lexer (for example, for performing unit testing),
+we then would have a module \textsf{Token} containing the definition
+of the tokens.
+
+Exceptions used in the actions and/or the epilogue are declared in the
+prologue ---~here we have \textsf{Illegal\_char}.
+
+A regular expression called \textsf{ident} is defined, as well as a
+unique parser \textsf{token}. Note that, although the \ocamllex
+keyword is \textbf{\textsf{parse}}, it declares a lexer. The rules are
+introduced by the keyword \textbf{\textsf{rule}} and, in the actions,
+the rules are seen to be functions whose first arguments, like
+\(x_{1,1} \dots x_{1,m}\), are arbitrary \OCaml values, then the next
+argument is the lexing buffer (matched after the keyword
+\textbf{\textsf{parse}}), always implicitly called \textsf{lexbuf}. An
+example of this is the action \texttt{\{token lexbuf\}}, which is
+typical when we want to skip some characters from the input. This
+recursive call does not loop forever because, in the action, the
+characters recognised by the corresponding regular expression have
+been implicitly removed from the input stream.
+
+The module \textsf{Lexing} of the standard library of \OCaml contains
+some functions whose aim is to manipulate the input stream of
+characters. For example, to create an input stream of characters from
+the standard input, we would write: \Xlet \ident{char\_flow} \equal{}
+\ident{Lexing.from\_channel} \ident{stdin} \Xin{} \ldots
+
+There is a built\hyp{}in regular expression named \ident{eof} which
+filters the end of file. It is recommended to match it in order to
+produce an End\hyp{}Of\hyp{}File token \Teof because the implicit
+behaviours of the applications with respect to the end of file may
+vary from one operating system to another. (See below for another
+reason.)
+
+Notice also a special regular expression `\textsf{\large \_}' which
+matches any kind of character. The order of the regular expressions
+matters, therefore this particular expression must be the last one,
+otherwise any subsequent expression would be ignored.
+
+If the \ocamllex specification is a file named \textsf{lexer.mll},
+then the compilation will take place in two steps:
+\begin{enumerate*}
+
+   \item \texttt{ocamllex lexer.mll} will generate either an error or
+     \textsf{lexer.ml}; then
+
+   \item \texttt{ocamlc -c lexer.ml} will produce either an error or
+     the compiled units \textsf{lexer.cmo} and \textsf{lexer.cmi}, the
+     latter only if there is no interface \textsf{lexer.mli} for the
+     lexer.
+
+\end{enumerate*}
+In theory, the actions associated with the regular expressions are not
+compelled to return a lexeme, as the programmer may seek to write a
+standalone preprocessor, for example, instead of the combination of a
+lexer and a parser. As a matter of fact, the LIGO compiler defines a
+preprocessor using \ocamllex, as well as a lexer, also based on
+\ocamllex. In any case, the resulting \OCaml code has the shape
+\begin{tabbing}
+\emph{Prologue}\\
+\Xlet \= \Xrec \emph{rule}\(\sb{1}\) \(x\sb{1,1} \dots\, x\sb{1,m}\) \ident{lexbuf} \equal\\
+\> \ldots{} \= \Xmatch \ldots{} \Xwith\\
+\>\> \; \ldots{} \(\rightarrow\) \emph{action}\\
+\>\> \vbar{} \ldots{}\\
+\>\> \vbar{} \ldots{} \(\rightarrow\) \emph{action}\\
+\Xand \emph{rule}\(\sb{2}\) \(x\sb{2,1} \dots\, x\sb{2,m}\)
+\ident{lexbuf} \equal\\
+\> \ldots\\
+\Xand \ldots\\
+\emph{Epilogue}
+\end{tabbing}
+where \texttt{lexbuf} has the type \textsf{Lexing.lexbuf}.
+
+\paragraph{Lexing inline comments}
+
+Comments are recognised during lexical analysis, but they are usually
+discarded. Some lexers examine the contents of comments, looking for
+instance for metadata or embedded comments, and thus may signal errors
+inside those. The simplest type of comments is that of~\Cpp{}, whose
+scope is the rest of the line after it starts:
+\begin{tabbing}
+\Xrule \= \ident{token} \equal \Xparse\\
+\> \ \ \ \ldots\\
+\> \vbar{} \textsf{"//"\ \ \ [\symbol{94} '\(\backslash\)n']*
+  \ \ (\ident{eof} \vbar{} '\(\backslash\)n')?} \{ \ident{token} \ident{lexbuf} \}
+\end{tabbing}
+The regular expression identifies the comment opening, then skips any
+character different from an end of line, and finally terminates by
+reading an optional end\hyp{}of\hyp{}line or end\hyp{}of\hyp{}file
+character.
+
+\paragraph{Lexing non-nested block comments}
+
+In order to analyse non\hyp{}embedded block comments, we need a more
+complex specification:
+\begin{tabbing}
+\{ \ldots{} \Xexception \cst{Open\_comment} \}\\
+\\
+\Xrule \= \ident{token} \equal \Xparse\\
+\> \ \ \ \ldots\\
+\> \vbar{} \str{/*} \{ \ident{in\_comment} \ident{lexbuf} \}\\
+\Xand \= \ident{in\_comment} \equal \Xparse\\
+\> \ \ \ \str{*/} \= \{ \ident{token} \ident{lexbuf} \}\\
+\> \vbar{} \ident{eof} \> \{ \ident{raise} \cst{Open\_comment} \}\\
+\> \vbar{} {\large \_} \> \{ \ident{in\_comment} \ident{lexbuf} \}
+\end{tabbing}
+The rule \textsf{token} recognises the comment opening and its action
+calls the additional rule \textsf{in\_comment}, which skips all
+characters until the closing of the block and signals an error if the
+closing is missing (open comment). When the block is closed, and since
+a comment does not yield a lexeme in our context, we need to perform a
+recursive call to \textsf{token} to get one ---~This is the other
+reason why we need the virtual token \Teof, as alluded to previously.
+
+\paragraph{Lexing nested block comments}
+
+Comments in the language~\Clang can be nested, which allows the
+programmer to temporarily comment out pieces of source code that may
+already contain block comments. If these comments were not nestable,
+we could write a single regular expression to recognise them, but,
+above, we chose not to do so for readability's sake and to easily
+signal the lack of a proper closing. In the nested case, no such
+expression can exist, on theoretical grounds: regular languages cannot
+be well parenthesised. Informally, this can be understood as: `Regular
+expressions cannot count.', in particular, the current level of
+nesting cannot be maintained throughout block openings and
+closings. To achieve this, we need to rely on the actions, where
+function calls are available. The technique consists in modifying the
+rule \textsf{in\_comment} in such a manner that the actions become
+functions whose argument is the current depth of nesting.
+\begin{tabbing}
+\Xrule \= \ident{token} \equal \Xparse\\
+\> \ \ \ \ldots\\
+\> \vbar{} \str{/*} \{ \ident{in\_comment} \ident{lexbuf} \underline{\num{1}} \}\\
+\Xand \= \ident{in\_comment} \equal \Xparse\\
+\> \ \ \ \str{*/} \= \{ \underline{\Xfun \ident{depth} \(\rightarrow\)} \=
+\underline{\Xif \ident{depth} \equal \num{1} \Xthen} \ident{token} \ident{lexbuf}\\
+\> \> \> \underline{\Xelse \ident{in\_comment} \ident{lexbuf}
+\lpar\ident{depth}\texttt{-}\num{1}\rpar{}} \}\\
+\> \underline{\vbar{} \str{/*}} \> \underline{\{ \Xfun \ident{depth}
+  \(\rightarrow\) \ident{in\_comment} \ident{lexbuf}
+  \lpar\ident{depth}\texttt{+}\num{1}\rpar{} \}}\\
+\> \vbar{} \ident{eof} \> \{ \ident{raise} \cst{Open\_comment} \}\\
+\> \vbar{} {\LARGE \_} \> \{ \ident{in\_comment} \ident{lexbuf} \}
+\end{tabbing}
+Note that \Xfun \ident{depth} \(\rightarrow\) \ident{raise}
+\cst{Open\_comment} would be less efficient, and the call
+\ident{in\_comment} \ident{lexbuf} is equivalent to \Xfun
+\ident{depth} \(\rightarrow\) \ident{in\_comment} \ident{lexbuf}
+\ident{depth}.
+
+\paragraph{Finite automata}
+
+Lexer generators like \ocamllex work by combining the regular
+expressions of the specification, and translating them into a program
+expressed in the target language. In order to do so, these have to be
+translated first into a formalism of same level of expressivity, but
+more intuitive: finite automata. Then, the automaton resulting from
+combining several automata is compiled into source code.
+\begin{itemize}
+
+   \item a keyword:
+     \begin{center}
+       \includegraphics[bb=48 710 198 730]{mots_cles}
+     \end{center}
+
+  \item an integer
+    \begin{center}
+      \includegraphics[bb=47 709 216 738]{entiers}
+    \end{center}
+
+  \item either a keyword or an integer:
+    \begin{center}
+      \includegraphics[bb=47 687 216 730]{mots_cles_ou_entiers}
+    \end{center}
+
+\end{itemize}
+If a final state (doubly\hyp{}circled) is reached from the initial
+state, the lexeme is recognised, like \Tlet and \Tint.
+
+The lexer considers at all times two pieces of information:
+the current state in the specified automaton, and the character at the
+head of the input stream.
+\begin{itemize*}
+
+  \item If there exists a transition for the head character at the
+    current state, then
+    \begin{itemize*}
+
+      \item it is withdrawn from the input stream and discarded;
+
+      \item the current state becomes the one pointed to by the
+        transition;
+
+      \item the process resumes by considering the new state and the
+        new character at the head of the input;
+
+    \end{itemize*}
+
+  \item otherwise, if there is no transition (the state is blocking),
+    then
+    \begin{itemize*}
+
+      \item if the current state is final, then the associated lexeme
+        is emitted;
+
+      \item else, an error is signalled (invalid character).
+
+    \end{itemize*}
+
+\end{itemize*}
+Some ambiguity may occur, like
+\begin{itemize*}
+
+   \item the input string \str{let} being recognised as a variable
+     instead of a keyword,
+
+   \item the input string \str{letrec} being recognised as the
+     following lists of lexemes: \lbra\Tlet; \Tident \str{rec}\rbra{}
+     or \lbra\Tlet; \Trec\rbra{} or \lbra\Tident \str{letrec}\rbra{}
+     etc.
+
+\end{itemize*}
+The general solution consists in establishing rules of priority:
+\begin{itemize}
+
+   \item when several lexemes are possible prefixes of the input, chose
+     the longest;
+
+   \item otherwise, follow the order of definition of the tokens, for
+     example, in the \ocamllex specification given earlier, the rule
+     for \Tlet is written \emph{before} that for \ident{ident}.
+
+\end{itemize}
+This way, the sentence
+\begin{center}
+  \texttt{let letrec = 3 in 1 + funny}
+\end{center}
+is recognised as the list
+\begin{center}
+  \lbra\Tlet; \Tident \str{letrec}; \Tequal;
+  \Tint \num{3}; \Tin; \Tint \num{1}; \Tplus; \Tident \str{funny}\rbra.
+\end{center}
+
+To implement this ``longest\hyp{}match rule'', we need to add a
+structure: an initially empty buffer of characters, and resume the
+previous algorithm. When the current state is final and a transition
+is enabled, instead of discarding the corresponding character, we save
+it in that extra buffer until a blocking state. If that state is
+final, we return the associated lexeme, else we emit the lexeme of the
+last final state encountered, the characters of the buffer are placed
+back into the entrant stream, and we loop back to the initial state.
+\begin{center}
+\begin{minipage}{0.45\linewidth}
+\includegraphics[bb=48 658 198 738]{lexeme_long}
+\end{minipage}
+\hspace*{15mm}
+\begin{minipage}{0.4\linewidth}
+$\begin{aligned}
+  e_1 &= \texttt{['a'-'k' 'n'-'z']}\\
+  e_2 &= \texttt{['a'-'d' 'f'-'z']}\\
+  e_3 &= \texttt{['a'-'s' 'u'-'z']}\\
+  e_4 &= \texttt{['a'-'z]}
+\end{aligned}$
+\end{minipage}
+\end{center}
+
+% Bibliographical references
+
+\bibliography{intros}
+\nocite*{}
+
+\end{document}
