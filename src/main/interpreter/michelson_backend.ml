@@ -344,7 +344,8 @@ and make_subst_ast_env_exp ?(toplevel = true) env fv =
   let op (l, fv) (evl, v : _ * Ligo_interpreter.Types.value_expr) =
     let loc = Location.get_location evl in
     let ev = Location.unwrap evl in
-    if not (List.mem fv evl ~equal:Self_ast_typed.Helpers.eq_vars) then
+    if not (List.mem fv evl ~equal:Self_ast_typed.Helpers.eq_vars)
+       || List.mem (List.map ~f:fst l) (Var.to_name ev) ~equal:String.equal then
       ok (l, fv)
     else
       match v with
