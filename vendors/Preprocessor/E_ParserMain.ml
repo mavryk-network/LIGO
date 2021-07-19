@@ -5,12 +5,6 @@
 
 module Region = Simple_utils.Region
 
-(* Internal dependencies *)
-
-module E_Lexer  = Preprocessor.E_Lexer
-module E_Parser = Preprocessor.E_Parser
-module E_AST    = Preprocessor.E_AST
-
 (* All exits *)
 
 let red_exit msg =
@@ -43,7 +37,7 @@ module Comments =
     let block = None
   end
 
-module CLI = Preprocessor.CLI.Make (Comments)
+module CLI = CLI.Make (Comments)
 
 (* Checking for errors and valid exits *)
 

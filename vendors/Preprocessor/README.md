@@ -1,15 +1,15 @@
 # The Preprocessor Library and Standalone Executable
 
-A preprocessor is a tool that reads a text file and copies it. If some
-special intructions, called _preprocessing directives_, are found in
-the input, the output may not be an identical copy, for example some
-parts can be skipped. We document here the preprocessor shipped with
-the LIGO compiler.
+A preprocessor is a tool that reads a text file and, if some special
+intructions, called _preprocessing directives_, are found in the
+input, the output may not be an identical copy, for example some parts
+can be skipped. We document here the preprocessor shipped with the
+LIGO compiler.
 
 ## Contents
 
-This directory is located in the `vendors` directory of the `git`
-repository of LIGO `ligo`. As such, it is distributed with the LIGO
+This directory is located in the `vendors` directory of the repository
+of LIGO, here `ligo/vendors`. As such, it is distributed with the LIGO
 compiler which uses it as a library. Nevertheless, a standalone
 preprocessor can also be built and used either as an interactive way
 to test the library, or for uses independent of LIGO. The directory
@@ -36,8 +36,6 @@ Preprocessor
 ├── PreprocMainGen.mli
 ├── PreprocMain.ml
 ├── README.md
-├── Stubs
-│   └── Preprocessor.ml
 └── Tests
      ├── ...
      ...
@@ -47,33 +45,31 @@ Here is a short description of those files:
 
   * The OCaml module `API` is the heart of the preprocessor.
 
+  * The modules whose names start with `E_` are used by `API` to parse
+    the boolean expression of conditional directives `#if` and
+    `#elif`.
+
   * The modules `CLI` and `PreprocMainGen` deal with command-line
     options for the standalone preprocessor, and also export data
     structures about the configuration meant for the library client,
     for example, the LIGO compiler.
 
-  * The modules whose names start with `E_` are used by `API` to parse
-    the boolean expression of conditional directives like `#if`.
-
   * The module `PreprocMain` is the standalone preprocessor.
+
+  * The directory `Tests` is used for unit tests of the standalone
+    preprocessor.
 
   * The file `README.md` is the present file.
 
   * The `LICENSE` file must contain the MIT license.
 
-  * The directory `Tests` is used for unit tests of the standalone
-    preprocessor.
-
-The following files and directories are meant to be used only by a
-special Makefile to build the standalone preprocessor. See
+The following files are meant to be used only by a special Makefile to
+build the standalone preprocessor. See
 [how to build with the Makefile](#makefile).
 
   * Hidden files prefixed by `.`.
 
-  * The directory `Stubs` is for the build of the standalone
-    preprocessor using a Makefile.
-
-  * The file `Makefile.cfg` configure the Makefile.
+  * The file `Makefile.cfg` configures the Makefile.
 
 ## Builds
 
@@ -105,11 +101,11 @@ repositories first, outside the LIGO working directory:
 > $ git clone https://github.com/rinderknecht/OCaml-build.git
 
 Make sure the directory to the scripts is in your `PATH` shell
-variable. Then, back in `ligo/Preprocessor`:
+variable. Then, back in `ligo/vendors/Preprocessor`, run
 
 > $ setup.sh
 
-should create symbolic links or report some errors. Running
+which should create symbolic links or report some errors. Running
 
 > $ make conf
 
@@ -119,31 +115,40 @@ should at least find `ocamlc`, `ocamldep`, `menhir`, `grep`, `sed` and
 Then run
 
 > $ make sync
+
 > $ make
 
-This should build `PreprocMain.byte` in the directory `./_x86_64/`,
-whose name is made by prefixing with `_` the result of the output of
-the shell command
+which is expected to build `PreprocMain.byte` in the directory
+`./_x86_64/`, whose name is made by prefixing with `_` the result of
+the output of the shell command
 
-> $ uname -a
+> $ uname --machine
 
-Note: the Makefile relies on the `opam` database installed by running
+Note: the Makefile relies on the `opam` database installed by
+previously running
 
-> $ dune build
+> $ make
 
-at the root of the LIGO working directory `ligo`.
+at the root of the LIGO working directory `ligo`, or, at least,
+
+> $ install_vendors_deps.sh
+
+in `ligo/scripts`.
+
 
 ## The Preprocessing Directives
 
-This preprocessor features different kinds of directives.
+This preprocessor features different kinds of directives:
 
-  * directives found in the standard preprocessor for the language C#,
-    except about strings.
+  * directives found in the standard preprocessor for the language C#;
 
   * a directive from `cpp`, the `C` preprocessor, enabling the textual
-    inclusion of files.
+    inclusion of files;
 
   * a directive specific to LIGO to support a minimal module system.
+
+Importantly, [strings](#strings) are handled the way `cpp` does, not
+`C#`.
 
 In the following subsections, we shall briefly present those
 directives. Here, we state some properties which hold for all of
@@ -151,7 +156,12 @@ them.
 
   * They must start with a `#` symbol at the beginning of a line.
 
-  * They can have arguments in the form of free text or strings.
+  * Wrongly spelled directives or unsupported ones are ignored without
+    warning, and therefore will appear in the output.
+
+  * They can have arguments in the form of free text or
+    strings. (Anything after the directive name is considered a
+    potential argument.)
 
   * Strings arguments must be enclosed between double quotes and
     cannot span over two or more lines.
@@ -159,6 +169,9 @@ them.
   * The valid preprocessing of a directive leaves in its place an
     empty line (that is, a newline character) or another directive, to
     be picked up by other tools, like lexers.
+
+  * Newline characters are never discarded, to preserve the line
+    numbers of copied text.
 
 ### Conditional Directives and Symbol Definition
 
@@ -168,9 +181,24 @@ input are copied to the output. Conditional directives enable another
 mode: _skip_, by means of which the following characters are
 discarded, and only newline characters are copied.
 
-The conditional directives are `#if`, taking a boolean expression as
-argument, and `#endif`, which closes the conditional. We can also make
-use of an `#else` directive. The minimal example would be as follows:
+Conditional directives follow the familiar syntax of some of their
+cousins in programming languages. At the very least,
+
+  1. they start with the `#if` directive, followed by a boolean
+     expression as argument,
+
+  2. and they are closed by `#endif`.
+
+It is also possible to use
+
+  * one `#else` directive before `#endif`;
+
+  * a series of `#elif` directive after `#if` (as a short-hand for a
+    `#else` immediately followed by an `#if`, except that only one
+    `#endif` will close the conditional).
+
+A trivial example would be:
+
 
 ```
 #if false
@@ -189,11 +217,11 @@ output is
 
 ```
 
-Note what looks like an anonymous preprocessing directive. We will
-explain its meaning when presenting
-[The Inclusion Directive](#include). The blank lines differ from the
-output of `cpp`. Their use is clearer if we add text before and after
-the conditional, like so:
+Note what looks like an anonymous preprocessing directive `# 1
+"Tests/test.txt"`. We will explain its meaning when presenting
+[The Inclusion Directive](#include). (Remark: `cpp` would not output
+blank lines followed by the end of the file.) Their use is clearer if
+we add text before and after the conditional, like so:
 
 ```
 ---
@@ -225,20 +253,20 @@ This IS copied to the output.
 ```
 
 The booleans `false` and `true` are predefined. The way to define
-symbols (that is the traditional name of those identifiers) consists
+_symbols_ (that is the traditional name of those identifiers) consists
 in using the `#define` directive, followed by the symbol, like so:
 
 ```
-#define MY_FALSE
+#define SYM
 
-#if MY_FALSE
-This is NOT copied to the output, except the newline character.
-#else
+#if SYM
 This IS copied to the output.
+#else
+This is NOT copied to the output, except the newline character.
 #endif
 ```
 
-This opens the possibiliy to boolean expression made of
+This opens the possibiliy to use boolean expressions made of
   * `true` and `false` already mentioned;
   * `||` for the disjunction ("or");
   * `&&` for the conjunction ("and");
@@ -247,8 +275,23 @@ This opens the possibiliy to boolean expression made of
   * `!` for negation;
   * `(` and `)` around expressions to specify priorities.
 
-When we want to write a cascade of if-then-else, the preprocessor a
-shortcut by means of the `#elif` directive, like so:
+Directives are processed in sequence in the input file. This
+preprocessor, like that of `C#`, allows us to _undefine_ a symbol,
+that is, giving it the boolean value `false`, like so:
+
+```
+#define SYM
+#undef SYM
+
+#if SYM
+This is NOT copied to the output, except the newline character.
+#else
+This IS copied to the output.
+#endif
+```
+
+When we want to write a cascade of conditionals, the preprocessor
+enables a shortcut by means of the `#elif` directive, like so:
 
 ```
 #if ...
@@ -265,12 +308,25 @@ Basically, a `#elif` directive is equivalent to `#else` followed by
 
 ### The Error Directive
 
+When debugging or putting in place directives in an already existing
+input, it is sometimes useful to force the preprocessor to stop and
+emit an error. This is possible thanks to the `#error` directive,
+which is followed by an error message as free text until the end of
+the line, like so:
+
+```
+#error Not implemented/tested yet
+```
+
 ### The Inclusion Directive {#include}
 
-### The Import Directive
 
 
-## Preprocessing Strings and Comments
+
+### The Import Directive {#import}
+
+
+## Preprocessing Strings and Comments {#strings}
 
 
 ## Documenting the Modules

@@ -9,9 +9,7 @@ module Comments =
     let line  = None
   end
 
-module CLI     = Preprocessor.CLI.Make (Comments)
-module MainGen = Preprocessor.PreprocMainGen
-module Main    = MainGen.Make (CLI)
+module Main = PreprocMainGen.Make (CLI.Make (Comments))
 
 let () = Main.check_cli ()
 let () = Main.preprocess () |> ignore
