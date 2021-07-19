@@ -1,1 +1,3 @@
-C
+Start of "b.txt"
+#include "c.txt"
+End of "b.txt"

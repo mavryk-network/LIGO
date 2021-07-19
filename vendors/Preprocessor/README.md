@@ -65,7 +65,7 @@ Here is a short description of those files:
 
 The following files are meant to be used only by a special Makefile to
 build the standalone preprocessor. See
-[how to build with the Makefile](#makefile).
+[how to build with the Makefile](#the-standalone-preprocessor-with-make).
 
   * Hidden files prefixed by `.`.
 
@@ -91,13 +91,14 @@ is to be run in the directory `ligo/vendors/Preprocessor`. As usual
 with `dune`, the executable is found in the mirror directory tree
 `ligo/_build/default/vendors/Preprocessor`.
 
-### The Standalone Preprocessor with Make {#makefile}
+### The Standalone Preprocessor with Make
 
 It is possible to build the standalone preprocessor with a Makefile
 instead of `dune`, in which case you need to clone the following `git`
 repositories first, outside the LIGO working directory:
 
 > $ git clone https://github.com/rinderknecht/Scripts.git
+
 > $ git clone https://github.com/rinderknecht/OCaml-build.git
 
 Make sure the directory to the scripts is in your `PATH` shell
@@ -135,20 +136,60 @@ at the root of the LIGO working directory `ligo`, or, at least,
 
 in `ligo/scripts`.
 
+## The Standalone Preprocessor
+
+Let us assume here that the standalone preprocessor has been [built
+with `dune`](#the-standalone-preprocessor-with-dune), therefore the
+executable is `PreprocMain.exe`. We can obtain the available
+command-line options like so:
+
+    $ PreprocMain.exe --help
+
+resulting in the output
+
+```
+Usage: PreprocMain.exe [<option> ...] -- [<input>]
+where <input> is the source file (default: stdin),
+and each <option> (if any) is one of the following:
+  -I <paths>       Inclusion paths (colon-separated)
+  -h, --help       This help
+  -v, --version    Commit hash on stdout
+      --cli        Print given options (debug)
+      --columns    Columns for source locations
+      --show-pp    Print result of preprocessing
+```
+
+First, we see that the preprocessor follows the
+[GNU getopt](https://www.gnu.org/software/libc/manual/html_node/Getopt.html)
+conventions on short and long option names. The input is an anonymous
+argument that must be preceeded by `--`. The options are
+
+  * `-I <paths>` for finding files given to the directive `#include`
+    which are not found by appending their path to the current
+    directory.
+
+  * `--columns` for using column numbers instead of horizontal
+    offsets when reporting errors in the input (the first character
+    on a line is on the column 1, but has offset 0).
+
+  * `--show-pp` for actually printing on `stdin` the result of
+    preprocessing the input. If not given this option, the
+    preprocessor will only print on `stderr` errors, if any.
 
 ## The Preprocessing Directives
 
 This preprocessor features different kinds of directives:
 
-  * directives found in the standard preprocessor for the language C#;
+  * directives found in the standard preprocessor for the language
+    `C#`;
 
   * a directive from `cpp`, the `C` preprocessor, enabling the textual
     inclusion of files;
 
   * a directive specific to LIGO to support a minimal module system.
 
-Importantly, [strings](#strings) are handled the way `cpp` does, not
-`C#`.
+Importantly, [strings](#preprocessing-strings-and-comments) are
+handled the way `cpp` does, not `C#`.
 
 In the following subsections, we shall briefly present those
 directives. Here, we state some properties which hold for all of
@@ -172,6 +213,18 @@ them.
 
   * Newline characters are never discarded, to preserve the line
     numbers of copied text.
+
+### The Error Directive
+
+When debugging or putting in place directives in an already existing
+input, it is sometimes useful to force the preprocessor to stop and
+emit an error. This is possible thanks to the `#error` directive,
+which is followed by an error message as free text until the end of
+the line, like so:
+
+```
+#error Not implemented/tested yet
+```
 
 ### Conditional Directives and Symbol Definition
 
@@ -219,9 +272,10 @@ output is
 
 Note what looks like an anonymous preprocessing directive `# 1
 "Tests/test.txt"`. We will explain its meaning when presenting
-[The Inclusion Directive](#include). (Remark: `cpp` would not output
-blank lines followed by the end of the file.) Their use is clearer if
-we add text before and after the conditional, like so:
+[The Inclusion Directive](#the-inclusion-directive). (Remark: `cpp`
+would not output blank lines followed by the end of the file.) Their
+use is clearer if we add text before and after the conditional, like
+so:
 
 ```
 ---
@@ -306,27 +360,136 @@ enables a shortcut by means of the `#elif` directive, like so:
 Basically, a `#elif` directive is equivalent to `#else` followed by
 `#if`, but we only need to close with only one `#endif`.
 
-### The Error Directive
-
-When debugging or putting in place directives in an already existing
-input, it is sometimes useful to force the preprocessor to stop and
-emit an error. This is possible thanks to the `#error` directive,
-which is followed by an error message as free text until the end of
-the line, like so:
+The rationale for using conditional directives in LIGO is to enable in
+a single smart contract several versions of a standard.
 
 ```
-#error Not implemented/tested yet
+#if STANDARD_1
+...
+#elif STANDARD_2
+...
+#else
+#error Standard not implemented
+#endif
 ```
 
-### The Inclusion Directive {#include}
+A real life example could be
+[Dexter](https://gitlab.com/dexter2tz/dexter2tz/-/blob/febd360cf6df6e090dedbf21b27538681246f980/dexter.mligo#L52). It
+provides another interesting use of a conditional directive, where
+[a record type depends on the version of the standard](https://gitlab.com/dexter2tz/dexter2tz/-/blob/febd360cf6df6e090dedbf21b27538681246f980/dexter.mligo#L84).
+
+### The Inclusion Directive
+
+The solution provided by the conditional directives with symbol
+definition to manage several standards is improved upon by physically
+separating the input into different files. This is where the
+`#include` directive comes handy. Basically, it takes an argument made
+of a string containing a path to the file to be textually included,
+like so:
+
+```
+#include "path/to/standard_1.ligo`
+```
+
+and the preprocessor replaces the directive with the contents of the
+file `path/to/standard_1.ligo`, whose contents is then preprocessed as
+well. This can in theory create a loop, for example, if two files try
+to include each other.
+
+In fact, the preprocessor does more than simply include the given
+file. To enable the consumer of the output to keep track of
+inclusions, in particular, to maintain the line numbers of the input
+that has been copied, the preprocessor inserts two special directives
+in the output, called
+[linemarkers](https://gcc.gnu.org/onlinedocs/cpp/Preprocessor-Output.html),
+one in the stead of the `#include` directive and one after the
+inclusion. Let us consider the following example where `a.txt`
+includes `b.txt`, which, in turn, includes `c.txt`. Here is the
+contents of `a.txt`:
+
+```
+Start of "a.txt"
+#include "b.txt"
+End of "a.txt"
+```
+
+Then `b.txt`:
+
+```
+Start of "b.txt"
+#include "c.txt"
+End of "b.txt"
+```
+
+and, finally, `c.txt`:
+
+```
+Start of "c.txt"
+End of "c.txt"
+```
+
+If we gather the files in a `Tests` directory and run the
+[standalone preprocessor built with `dune`](#the-standalone-preprocessor-with-dune)
+like so
+
+> $ PreprocMain.exe --show-pp -- Tests/a.txt
+
+we obtain on `stdout`:
+
+```
+# 1 "Tests/a.txt"
+Start of "a.txt"
+
+# 1 "Tests/b.txt" 1
+Start of "b.txt"
+
+# 1 "Tests/c.txt" 1
+Start of "c.txt"
+End of "c.txt"
+# 3 "Tests/b.txt" 2
+End of "b.txt"
+# 3 "Tests/a.txt" 2
+End of "a.txt"
+```
+
+There are three forms of linemarkers:
+
+  1. `# <line number> "path/to/file"`
+  2. `# <line number> "path/to/file" 1`
+  2. `# <line number> "path/to/file" 2`
+
+The first kind is used only at the start of the output file and states
+that the line after the linemarker has number `<line number>` and
+belongs to the file `path/to/file`. Therefore `Start of "a.txt"` has
+line number `1` in file `Tests/a.txt`.
+
+The second kind is used when including a file. The `#include`
+directive is discarded in the output, except the newline character,
+which explains the empty line after `Start of "a.txt"`. Then a
+linemarker ending in `1` is printed, which means that we went to the
+file `path/to/file` when processing the input.
+
+The third kind is inserted in the output upon returning from an
+included file. For example, `# 3 "Tests/b.txt" 2` means that the next
+line has number `3` and we return to file `Tests/b.txt`.
+
+Linemarkers need to be handled by the consumer of the output. In the
+context of the LIGO compiler, the lexer reads the output of the
+preprocessor, therefore scans for linemarkers.
+
+When using the preprocessor with the LIGO compiler, the `#include`
+directive can only occur at the top level according to the grammar,
+that is, either at the beginning of the smart contract, in between
+file-level declarations or at the end. (This property is checked by
+the parser.) The rationale for this restriction is to avoid fragments
+of smart contracts that are syntactically incorrect, and yet assembled
+into a correct one.
 
 
+### The Import Directive
 
 
-### The Import Directive {#import}
-
-
-## Preprocessing Strings and Comments {#strings}
+## Preprocessing Strings and Comments
 
 
 ## Documenting the Modules
@@ -340,7 +503,7 @@ the line, like so:
 ### PreprocMain
 
 
-## Maintaining the Preprocessor {#maintenance}
+## Maintaining the Preprocessor
 
 ### Adding a Command-Line Option
 
