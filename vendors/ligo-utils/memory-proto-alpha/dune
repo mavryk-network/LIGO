@@ -4,5 +4,6 @@
   (libraries
     tezos-protocol-environment
     tezos-protocol-008-PtEdo2Zk
+    tezos-protocol-alpha
   )
 )

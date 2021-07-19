@@ -1,6 +1,6 @@
 include Tezos_error_monad.Error_monad
 include Tezos_utils.Error_monad
-open Memory_proto_alpha
+open Memory_proto_alpha.Protocol_alpha
 
 let (>>??) = Alpha_environment.Error_monad.(>>?)
 
