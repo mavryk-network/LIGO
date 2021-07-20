@@ -485,11 +485,13 @@ let line_comments =
    copy and skip mode, as GNU GCC does. *)
 
 rule scan state = parse
-  nl? eof { if state.trace = [] then state
-            else stop state lexbuf Missing_endif }
-| nl      { proc_nl state lexbuf; scan state lexbuf }
-| blank   { if state.mode = Copy then copy state lexbuf;
-            scan state lexbuf }
+  eof   { if state.trace = [] then state
+          else stop state lexbuf Missing_endif }
+| nl    { proc_nl state lexbuf; scan state lexbuf }
+| blank { if state.mode = Copy then copy state lexbuf;
+          scan state lexbuf }
+| '"'   { if state.mode = Copy then copy state lexbuf;
+          scan (in_string (mk_reg lexbuf) state lexbuf) lexbuf }
 
 | directive {
     let  region = mk_reg lexbuf in
@@ -599,9 +601,6 @@ rule scan state = parse
            scan (reduce_region state region) lexbuf
     | _ -> assert false
   }
-
-| '"' { if state.mode = Copy then copy state lexbuf;
-        scan (in_string (mk_reg lexbuf) state lexbuf) lexbuf }
 
 | block_comment_openings {
     let lexeme = Lexing.lexeme lexbuf in

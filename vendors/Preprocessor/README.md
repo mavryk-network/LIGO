@@ -485,22 +485,99 @@ the parser.) The rationale for this restriction is to avoid fragments
 of smart contracts that are syntactically incorrect, and yet assembled
 into a correct one.
 
-
 ### The Import Directive
+
+The `#import` directive is specific to the LIGO compiler. It provides
+the support for a
+[minimal module system](https://ligolang.org/docs/language-basics/modules#modules-and-imports-build-system).
 
 
 ## Preprocessing Strings and Comments
 
+Strings and comments are recognised by the preprocessor, even in
+pieces of the input that are not copied. (This last point is a
+difference between `cpp` and the `C#` preprocessor.) The rationale for
+doing so is twofold:
+
+  1. We do not want the preprocessor to interpret a directive that is
+     actually in a comment. This can happen when commenting out a
+     piece of the source code that contains a preprocessing directive:
+     we do not want that directive to be interpreted.
+
+  2. We do not want the preprocessor to interpret a directive that is
+     actually in a string. This can happen if the source code is that
+     of a bootstrapped compiler, that is, a compiler for its own
+     language. Another scenario is that of a test: the source code is
+     actually printing what is happening.
 
 ## Documenting the Modules
 
 ### CLI
+
+As we explained in section [Contents](#contents), the module `CLI` has
+a twofold purpose: to deal with command-line options for the
+standalone preprocessor, and also export data structures about the
+configuration meant for the library client, for example, the LIGO
+compiler.
+
+The module signature
+[COMMENTS](https://gitlab.com/ligolang/ligo/-/blob/998107d5f0098c8acc86f8950f2a0f9fc5836f5d/vendors/Preprocessor/CLI.mli#L10)
+exports optional values denoting two kinds of comments: one-line
+comments and block comments (that is, multi-line comments). Due to the
+use of metaprogramming by means of `ocamllex` to implement the module
+`API`, where comments are defined as regular expressions, the client
+of `CLI` must make sure to choose line and block comments that are
+actually recognised by `API`.
+
+The module signature
+[CLI.S](https://gitlab.com/ligolang/ligo/-/blob/998107d5f0098c8acc86f8950f2a0f9fc5836f5d/vendors/Preprocessor/CLI.mli#L23)
+gathers data structures parameterising the behaviour of the
+preprocessor. If building the standalone preprocessor, those data will
+come from the command-line. They are
+
+```
+    val input     : string option (* input file             *)
+    val extension : string option (* file extension         *)
+    val dirs      : string list   (* -I                     *)
+    val show_pp   : bool          (* --show-pp              *)
+    val offsets   : bool          (* negation of --columns  *)
+```
+
+So, for example, if `offsets` is `true`, error messages will report
+regions of the input with horizontal offsets (a la Emacs) instead of
+column numbers (a la Vim).
+
+Information about how the parsing of command-line options went is
+given by the type and value `status`:
+
+```
+    type status = [
+      `Done
+    | `Version      of string
+    | `Help         of Buffer.t
+    | `CLI          of Buffer.t
+    | `SyntaxError  of string
+    | `FileNotFound of string
+    ]
+
+    val status : status
+```
+
+The constructor `` `Version`` carries the commit hash of the source
+code, as shown about
+[the standalone preprocessor](#the-standalone-preprocessor). The ``
+`Help`` constructor carries the help displayed by `--help`.
 
 ### API
 
 ### PreprocMainGen
 
 ### PreprocMain
+
+
+## Error messages
+
+
 
 
 ## Maintaining the Preprocessor
