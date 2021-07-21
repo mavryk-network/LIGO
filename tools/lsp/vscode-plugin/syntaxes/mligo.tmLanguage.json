@@ -5,7 +5,8 @@
   "patterns": [
     { "include": "#string" },
     { "include": "#single-quotes" },
-    { "include": "#comment" },
+    { "include": "#line_comment" },
+    { "include": "#block_comment" },
     { "include": "#macro" },
     { "include": "#list-cons" },
     { "include": "#let-binding" },
@@ -26,7 +27,11 @@
       "end": "$",
       "beginCaptures": { "1": { "name": "meta.preprocessor.mligo" } },
       "endCaptures": {},
-      "patterns": [ { "include": "#string" }, { "include": "#comment" } ]
+      "patterns": [
+        { "include": "#string" },
+        { "include": "#line_comment" },
+        { "include": "#block_comment" }
+      ]
     },
     "let-binding": {
       "begin": "\\b(let)\\b",
@@ -34,7 +39,8 @@
       "beginCaptures": { "1": { "name": "keyword.other.let-binding.mligo" } },
       "endCaptures": { "1": { "name": "keyword.operator.mligo" } },
       "patterns": [
-        { "include": "#comment" },
+        { "include": "#line_comment" },
+        { "include": "#block_comment" },
         { "include": "#let-rec" },
         { "include": "#let-function" },
         { "include": "#let-constant" }
@@ -51,7 +57,8 @@
       "beginCaptures": { "1": { "name": "keyword.other.let-binding.mligo" } },
       "endCaptures": {},
       "patterns": [
-        { "include": "#comment" },
+        { "include": "#line_comment" },
+        { "include": "#block_comment" },
         { "include": "#parameter-list" },
         { "include": "#type-annotation" }
       ]
@@ -62,7 +69,8 @@
       "beginCaptures": { "1": { "name": "keyword.operator.mligo" } },
       "endCaptures": { "1": { "name": "keyword.operator.mligo" } },
       "patterns": [
-        { "include": "#comment" },
+        { "include": "#line_comment" },
+        { "include": "#block_comment" },
         { "include": "#identifier-parameter" },
         { "include": "#type-annotation" }
       ]
@@ -73,7 +81,8 @@
       "beginCaptures": { "1": { "name": "keyword.operator.mligo" } },
       "endCaptures": { "1": { "name": "keyword.operator.mligo" } },
       "patterns": [
-        { "include": "#comment" },
+        { "include": "#line_comment" },
+        { "include": "#block_comment" },
         { "include": "#identifier-variable-decl" },
         { "include": "#type-annotation" }
       ]
@@ -81,30 +90,30 @@
     "type-annotation": {
       "begin": "(:)\\s*",
       "end": "(?:[;|]|(?=[)=}])|$)",
-      "beginCaptures": { "1": { "name": "storage.typemligo" } },
+      "beginCaptures": { "1": { "name": "storage.type.mligo" } },
       "endCaptures": {},
       "patterns": [
-        { "include": "#comment" },
-        { "include": "#type-expression" }
+        { "include": "#line_comment" },
+        { "include": "#block_comment" },
+        { "include": "#par-type" },
+        { "include": "#type-equals" }
       ]
     },
-    "type-expression": {
+    "par-type": {
+      "begin": "\\(",
+      "end": "\\)",
+      "beginCaptures": {},
+      "endCaptures": {},
       "patterns": [
-        {
-          "begin": "\\(",
-          "end": "\\)",
-          "beginCaptures": {},
-          "endCaptures": {},
-          "patterns": [
-            { "include": "#comment" },
-            { "include": "#type-expression" }
-          ]
-        },
-        {
-          "match": "([^=()|;}/]+)",
-          "captures": { "1": { "name": "storage.typemligo" } }
-        }
+        { "include": "#line_comment" },
+        { "include": "#block_comment" },
+        { "include": "#par-type" },
+        { "include": "#type-equals" }
       ]
+    },
+    "type-equals": {
+      "match": "([^=()|;}/]+)",
+      "captures": { "1": { "name": "storage.type.mligo" } }
     },
     "let-constant": {
       "begin": "\\G",
@@ -112,7 +121,8 @@
       "beginCaptures": {},
       "endCaptures": {},
       "patterns": [
-        { "include": "#comment" },
+        { "include": "#line_comment" },
+        { "include": "#block_comment" },
         { "include": "#type-annotation" },
         { "include": "#parenthesized-definition" },
         { "include": "#identifier-variable-decl" }
@@ -124,7 +134,8 @@
       "beginCaptures": { "1": { "name": "keyword.other.mligo" } },
       "endCaptures": { "1": { "name": "keyword.operator.mligo" } },
       "patterns": [
-        { "include": "#comment" },
+        { "include": "#line_comment" },
+        { "include": "#block_comment" },
         { "include": "#parameter-list" }
       ]
     },
@@ -133,11 +144,12 @@
       "end": "(?=(?:\\blet\\b|\\btype\\b|^\\s*#\\w+))",
       "beginCaptures": {
         "2": { "name": "storage.var.mligo" },
-        "1": { "name": "storage.typemligo" }
+        "1": { "name": "storage.type.mligo" }
       },
       "endCaptures": {},
       "patterns": [
-        { "include": "#comment" },
+        { "include": "#line_comment" },
+        { "include": "#block_comment" },
         { "include": "#struct-type" },
         { "include": "#sum-type" },
         { "include": "#type-alias" }
@@ -149,7 +161,8 @@
       "beginCaptures": {},
       "endCaptures": {},
       "patterns": [
-        { "include": "#comment" },
+        { "include": "#line_comment" },
+        { "include": "#block_comment" },
         { "include": "#identifier-variable-decl" },
         { "include": "#type-annotation" }
       ]
@@ -163,8 +176,10 @@
       },
       "endCaptures": {},
       "patterns": [
-        { "include": "#comment" },
-        { "include": "#type-expression" }
+        { "include": "#line_comment" },
+        { "include": "#block_comment" },
+        { "include": "#par-type" },
+        { "include": "#type-equals" }
       ]
     },
     "type-alias": {
@@ -173,8 +188,10 @@
       "beginCaptures": {},
       "endCaptures": {},
       "patterns": [
-        { "include": "#comment" },
-        { "include": "#type-expression" }
+        { "include": "#line_comment" },
+        { "include": "#block_comment" },
+        { "include": "#par-type" },
+        { "include": "#type-equals" }
       ]
     },
     "string_specialchar": {
@@ -198,18 +215,18 @@
       "endCaptures": {},
       "patterns": []
     },
-    "comment": {
-      "patterns": [
-        { "name": "comment.block.mligo", "match": "(//.*)", "captures": {} },
-        {
-          "name": "comment.block.mligo",
-          "begin": "\\(\\*",
-          "end": "\\*\\)",
-          "beginCaptures": {},
-          "endCaptures": {},
-          "patterns": []
-        }
-      ]
+    "line_comment": {
+      "name": "comment.block.mligo",
+      "match": "(//.*)",
+      "captures": {}
+    },
+    "block_comment": {
+      "name": "comment.block.mligo",
+      "begin": "\\(\\*",
+      "end": "\\*\\)",
+      "beginCaptures": {},
+      "endCaptures": {},
+      "patterns": []
     },
     "list-cons": {
       "name": "keyword.operator.mligo",

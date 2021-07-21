@@ -1,47 +1,53 @@
 module Textmate = SyntaxHighlighting.Textmate
 module Helpers = Textmate.Helpers
 
-let (let*) = Result.bind
-
 module Name = struct
   let macro               = "macro"
-  let type_declaration    = "type-decl"
-  let let_declaration     = "let-decl"
-  let comment             = "comment"
-  let let_name            = "let-name"
+  let type_declaration    = "type_decl"
+  let let_declaration     = "let_decl"
+  let block_comment       = "block_comment"
+  let line_comment        = "line_comment"
+  let let_name            = "let_name"
   let expr                = "expr"
   let type_annotation     = "type_annotation"
-  let pattern             = "pattern"
   let operators           = "operators"
   let record_expression   = "record_expr"
   let tuple_record_name   = "tuple_record_name"
   let tuple_arg_annot_type = "tuple_arg_annot_type"
-  let if_or_switch_block   = "if-or-switch-block"
+  let if_or_switch_block   = "if_or_switch_block"
   let constructor          = "constructor"
   let string               = "string"
-  let builtin_modules      = "builtin-modules"
-  let type_identifier      = "type-identifier"
-  let type_decl_identifier = "type-decl-identifier"
-  let builtin_types        = "builtin-types"
-  let pattern_record_item  = "pattern-record-item"
-  let pattern_record       = "pattern-record"
-  let builtin_big_map      = "builtin-big-map"
-  let builtin_bitwise      = "builtin-bitwise"
-  let builtin_bytes        = "builtin-bytes"
-  let builtin_crypto       = "builtin-crypto"
-  let builtin_list         = "builtin-list"
-  let builtin_map          = "builtin-map"
-  let builtin_set          = "builtin-set"
-  let builtin_string       = "builtin-string"
-  let builtin_tezos        = "builtin-tezos"
-  let builtin_test         = "builtin-test"
-  let builtin_toplevel     = "builtin-toplevel"
-  let pattern_par          = "pattern-par"
-  let pattern_sum          = "pattern-sum"
+  let builtin_modules      = "builtin_modules"
+  let type_identifier      = "type_identifier"
+  let type_decl_identifier = "type_decl_identifier"
+  let builtin_types        = "builtin_types"
+  let pattern_record_item  = "pattern_record_item"
+  let pattern_record       = "pattern_record"
+  let builtin_big_map      = "builtin_big_map"
+  let builtin_bitwise      = "builtin_bitwise"
+  let builtin_bytes        = "builtin_bytes"
+  let builtin_crypto       = "builtin_crypto"
+  let builtin_list         = "builtin_list"
+  let builtin_map          = "builtin_map"
+  let builtin_set          = "builtin_set"
+  let builtin_string       = "builtin_string"
+  let builtin_tezos        = "builtin_tezos"
+  let builtin_test         = "builtin_test"
+  let builtin_toplevel     = "builtin_toplevel"
+  let pattern_par          = "pattern_par"
+  let pattern_sum          = "pattern_sum"
+  let else_block           = "else_block"
+  let module_name          = "module_name"
+  let variable_name        = "variable_name"
+  let tez_numeral          = "tez_numeral"
+  let byte_literal         = "byte_literal"
+  let boolean              = "boolean"
+  let pattern_type_name    = "pattern_type_name"
 end
 
-let syntax_highlighting () = 
-  let* json = Textmate.to_json "religo" {
+let syntax_highlighting = 
+  let open Textmate in
+  {
     syntax_name = "ReasonLIGO";
     scope_name = "source.religo";
     file_types = [
@@ -51,10 +57,11 @@ let syntax_highlighting () =
     folding_start_marker = Some "{";
     folding_stop_marker = Some "}";
     syntax_patterns = [
-      Reference Name.macro;
-      Reference Name.type_declaration;
-      Reference Name.let_declaration;
-      Reference Name.comment
+      Name.macro;
+      Name.type_declaration;
+      Name.let_declaration;
+      Name.line_comment;
+      Name.block_comment;
     ];
     repository = [
       Helpers.macro;
@@ -66,8 +73,32 @@ let syntax_highlighting () =
           end_ = [("(?=let|type|\\[@|\\/\\*|\\/\\/)", None)];
           patterns = [
             Name.let_name;
-            Name.expr;
-            Name.comment;
+            Name.string;
+            Name.line_comment;
+            Name.block_comment;
+            Name.if_or_switch_block;
+            Name.else_block;
+            Name.record_expression;
+            Name.tuple_record_name;
+            Name.tuple_arg_annot_type;
+            Name.builtin_big_map;
+            Name.builtin_bitwise;
+            Name.builtin_bytes;
+            Name.builtin_crypto;
+            Name.builtin_list;
+            Name.builtin_map;
+            Name.builtin_set;
+            Name.builtin_string;
+            Name.builtin_tezos;
+            Name.builtin_test;
+            Name.builtin_toplevel;
+            Name.operators;
+            Name.module_name;
+            Name.variable_name;
+            Name.constructor;
+            Name.tez_numeral;
+            Name.byte_literal;
+            Name.boolean;
           ]
         }
       };
@@ -82,7 +113,8 @@ let syntax_highlighting () =
           end_ = [("(\\=)", Some Operator)];
           patterns = [
             Name.type_annotation;
-            Name.comment
+            Name.line_comment;
+            Name.block_comment;
           ]
         };
       };
@@ -93,8 +125,13 @@ let syntax_highlighting () =
           begin_ = [("\\G[ ]*(\\:)", None)];
           end_ = [("(?=\\=)", None)];
           patterns = [
-            Name.pattern;
-            Name.comment
+            Name.pattern_par;
+            Name.pattern_record;
+            Name.pattern_sum;
+            Name.builtin_types;
+            Name.pattern_type_name;
+            Name.line_comment;
+            Name.block_comment;
           ]
         }
       };
@@ -118,7 +155,32 @@ let syntax_highlighting () =
           end_ = [("\\}", None)];
           patterns = [
             Name.tuple_record_name;
-            Name.expr
+            Name.string;
+            Name.line_comment;
+            Name.block_comment;
+            Name.if_or_switch_block;
+            Name.else_block;
+            Name.record_expression;
+            Name.tuple_record_name;
+            Name.tuple_arg_annot_type;
+            Name.builtin_big_map;
+            Name.builtin_bitwise;
+            Name.builtin_bytes;
+            Name.builtin_crypto;
+            Name.builtin_list;
+            Name.builtin_map;
+            Name.builtin_set;
+            Name.builtin_string;
+            Name.builtin_tezos;
+            Name.builtin_test;
+            Name.builtin_toplevel;
+            Name.operators;
+            Name.module_name;
+            Name.variable_name;
+            Name.constructor;
+            Name.tez_numeral;
+            Name.byte_literal;
+            Name.boolean
           ]
         }
       };
@@ -129,7 +191,8 @@ let syntax_highlighting () =
           begin_ = [("(?<=\\(|,|\\{)\\s*([a-z][A-Za-z0-9_]*)\\s*(?=\\,|:|\\)|\\})", Some Identifier)];
           end_ = [("(?!\\,|\\)|\\})", None)];
           patterns = [
-            Name.comment
+            Name.line_comment;
+            Name.block_comment;
           ]
         }
       };
@@ -140,7 +203,11 @@ let syntax_highlighting () =
           begin_ = [("\\:[ ]*", None)];
           end_ = [("(?=,|\\)|\\=\\>|\\})", None)];
           patterns = [
-            Name.pattern
+            Name.pattern_par;
+            Name.pattern_record;
+            Name.pattern_sum;
+            Name.builtin_types;
+            Name.pattern_type_name
           ]
         }
       };
@@ -154,7 +221,32 @@ let syntax_highlighting () =
           ];
           end_ = [("\\)", None)];
           patterns = [
-            Name.expr
+            Name.string;
+            Name.line_comment;
+            Name.block_comment;
+            Name.if_or_switch_block;
+            Name.else_block;
+            Name.record_expression;
+            Name.tuple_record_name;
+            Name.tuple_arg_annot_type;
+            Name.builtin_big_map;
+            Name.builtin_bitwise;
+            Name.builtin_bytes;
+            Name.builtin_crypto;
+            Name.builtin_list;
+            Name.builtin_map;
+            Name.builtin_set;
+            Name.builtin_string;
+            Name.builtin_tezos;
+            Name.builtin_test;
+            Name.builtin_toplevel;
+            Name.operators;
+            Name.module_name;
+            Name.variable_name;
+            Name.constructor;
+            Name.tez_numeral;
+            Name.byte_literal;
+            Name.boolean
           ]
         }
       };
@@ -167,52 +259,52 @@ let syntax_highlighting () =
         }
       };
       {
-        name = Name.expr;
-        kind = Patterns [
-            Reference Name.string;
-            Reference Name.comment;
-            Reference Name.if_or_switch_block;
-            Match {
-              match_name = Some Conditional;
-              match_ = "\\b(else)\\b";
-              captures = []
-            };
-            Reference Name.record_expression;
-            Reference Name.tuple_record_name;
-            Reference Name.tuple_arg_annot_type;
-            Reference Name.builtin_modules;
-            Reference Name.operators;
-            Match {
-              match_name = None;
-              match_ = "\\b([A-Z][a-zA-Z0-9_]+)\\.\\b";
-              captures = [
-                (1, Structure)
-              ]
-            };
-            Match {
-              match_name = None;
-              match_ = "\\b([a-z_][a-zA-Z0-9_]*)\\b";
-              captures = [
-                (1, Identifier)
-              ]
-            };
-            Reference Name.constructor;
-            Match {
-              match_name = Some Number;
-              match_ = "\\b([0-9_]+)(tez|mutez|n)?\\b";
-              captures = []
-            };
-            Match {
-              match_name = Some Number;
-              match_ = "\\b0x([0-9_]+)?\\b";
-              captures = []
-            };
-            Match {
-              match_name = Some Boolean;
-              match_ = "\\b(true|false)\\b";
-              captures = []
-            }
+        name = Name.else_block;
+        kind = Match {
+          match_name = Some Conditional;
+          match_ = "\\b(else)\\b";
+          captures = []
+        };
+      };
+      {
+        name = Name.module_name;
+        kind = Match {
+          match_name = None;
+          match_ = "\\b([A-Z][a-zA-Z0-9_]+)\\.\\b";
+          captures = [
+            (1, Structure)
           ]
+        };
+      };
+      { name = Name.variable_name;
+        kind = Match {
+          match_name = None;
+          match_ = "\\b([a-z_][a-zA-Z0-9_]*)\\b";
+          captures = [
+            (1, Identifier)
+          ]
+        }
+      };
+      { name = Name.tez_numeral;
+        kind = Match {
+          match_name = Some Number;
+          match_ = "\\b([0-9_]+)(tez|mutez|n)?\\b";
+          captures = []
+        }
+      };
+      { name = Name.byte_literal;
+        kind = Match {
+          match_name = Some Number;
+          match_ = "\\b0x([0-9_]+)?\\b";
+          captures = []
+        }
+      };
+      { name = Name.boolean;
+        kind = Match {
+          match_name = Some Boolean;
+          match_ = "\\b(true|false)\\b";
+          captures = []
+        }
       };
       {
         name = Name.type_declaration;
@@ -221,7 +313,8 @@ let syntax_highlighting () =
           begin_ = [("\\b(type)\\b", Some Type)];
           end_ = [("(?=let|type|\\[@|\\/\\*|\\/\\/)", None)];
           patterns = [
-            Name.comment;
+            Name.line_comment;
+            Name.block_comment;
             Name.type_identifier;
             Name.type_decl_identifier
           ]
@@ -234,8 +327,13 @@ let syntax_highlighting () =
           begin_ = [("(=)", Some Operator)];
           end_ = [("(?=let|type|\\[@|\\/\\*|\\/\\/)", None)];
           patterns = [
-            Name.comment;
-            Name.pattern
+            Name.line_comment;
+            Name.block_comment;
+            Name.pattern_par;
+            Name.pattern_record;
+            Name.pattern_sum;
+            Name.builtin_types;
+            Name.pattern_type_name
           ]
         }
       };
@@ -368,35 +466,12 @@ let syntax_highlighting () =
           ]
         }
       };
-      {
-        name = Name.builtin_modules;
-        kind = Patterns [
-          Reference Name.builtin_big_map;
-          Reference Name.builtin_bitwise;
-          Reference Name.builtin_bytes;
-          Reference Name.builtin_crypto;
-          Reference Name.builtin_list;
-          Reference Name.builtin_map;
-          Reference Name.builtin_set;
-          Reference Name.builtin_string;
-          Reference Name.builtin_tezos;
-          Reference Name.builtin_test;
-          Reference Name.builtin_toplevel;
-        ]
-      };
-      {
-        name = Name.pattern;
-        kind = Patterns [
-          Reference Name.pattern_par;
-          Reference Name.pattern_record;
-          Reference Name.pattern_sum;
-          Reference Name.builtin_types;
-          Match {
-            match_name = Some Builtin_type;
-            match_ = "\\b([_a-z][a-zA-Z0-9$_]*)\\b";
-            captures = [];
-          }
-        ]
+      { name = Name.pattern_type_name;
+        kind = Match {
+          match_name = Some Builtin_type;
+          match_ = "\\b([_a-z][a-zA-Z0-9$_]*)\\b";
+          captures = [];
+        }
       };
       {
         name = Name.pattern_par;
@@ -405,7 +480,11 @@ let syntax_highlighting () =
           begin_ = [("\\(", None)];
           end_ = [("\\)", None)];
           patterns = [
-            Name.pattern
+            Name.pattern_par;
+            Name.pattern_record;
+            Name.pattern_sum;
+            Name.builtin_types;
+            Name.pattern_type_name
           ]
         }
       };
@@ -426,7 +505,8 @@ let syntax_highlighting () =
           begin_ = [("{", None)];
           end_ = [("}", None)];
           patterns = [
-            Name.comment;
+            Name.line_comment;
+            Name.block_comment;
             Name.pattern_record_item
           ]
         }
@@ -438,23 +518,25 @@ let syntax_highlighting () =
           begin_ = [("([a-z_][A-Za-z0-9_]*)", Some Type)];
           end_ = [("(?=\\,|\\})", None)];
           patterns = [
-            Name.comment;
-            Name.pattern
+            Name.line_comment;
+            Name.block_comment;
+            Name.pattern_par;
+            Name.pattern_record;
+            Name.pattern_sum;
+            Name.builtin_types;
+            Name.pattern_type_name
           ]
         }
       };
       {
         name = Name.type_identifier;
         kind = Match {
-          match_name = None;
+          match_name = Some Type;
           match_ = "\\b([_a-z][a-zA-Z0-9$_]*)\\b";
           captures = [1, Type]
         }
-      };
+      }] 
+      @
       
-      Helpers.c_comment;
-      
-    ]
-  } in
-  let s = Yojson.Safe.pretty_to_string json in
-  Result.ok s
+      Helpers.c_comment
+  }

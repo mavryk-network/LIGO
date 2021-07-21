@@ -8,7 +8,7 @@ type t = {
   scope_name:                 string;
   folding_start_marker:       regexp option;
   folding_stop_marker:        regexp option;
-  syntax_patterns:            pattern_kind list;
+  syntax_patterns:            string list;
   repository:                 pattern list;
 }
 
@@ -60,10 +60,6 @@ and regexp = string
 and pattern_kind = 
   Begin_end of begin_end_pattern
 | Match     of match_pattern
-| Patterns  of patterns 
-| Reference of string
-
-and patterns = pattern_kind list
 
 and begin_end_pattern = {
   meta_name:      highlight_name option;
@@ -169,13 +165,7 @@ module JSON = struct
       ("match", `String match_);      
       ("captures", captures syntax c)
     ] 
-  | Patterns patterns ->
-    [
-      ("patterns", `List (List.map (fun a -> `Assoc (pattern_kind syntax a)) patterns))
-    ]
-  | Reference s -> 
-      [("include", `String ("#" ^ s))]
-
+  
   and pattern syntax {name; kind} = 
     `Assoc ([
       ("name", `String name);
@@ -197,7 +187,7 @@ module JSON = struct
       ("name", `String s.syntax_name);
       ("scopeName", `String s.scope_name);
       ("fileTypes", `List (List.map (fun s -> `String s) s.file_types));
-      ("patterns", `List (List.map (fun a -> `Assoc (pattern_kind syntax a)) s.syntax_patterns));
+      ("patterns", `List (List.map (fun reference -> `Assoc [("include", `String ("#" ^ reference))]) s.syntax_patterns));
       ("repository", repository syntax s.repository)
     ])
 
@@ -228,17 +218,12 @@ module Validate = struct
           check_reference repository c)) (ok true) patterns in
         fold ~ok ~error patterns
   | Match _m -> ok true  
-  | Patterns patterns -> 
-    let patterns = List.fold_left (fun a c -> if is_error a then a else pattern_kind name repository c) (ok true) patterns in
-    fold ~ok ~error patterns
-  | Reference s -> check_reference repository s
-
-
+  
   let syntax s = 
     let repository = s.repository in
     let patterns = List.fold_left (fun a c -> if is_error a then a else pattern_kind c.name repository c.kind) (ok true) repository in
     let curr = fold ~ok ~error patterns in
-    let patterns = List.fold_left (fun a c -> if is_error a then a else pattern_kind "@syntax_patterns" repository c) curr s.syntax_patterns in
+    let patterns = List.fold_left (fun a c -> if is_error a then a else check_reference repository c) curr s.syntax_patterns in
     fold ~ok ~error patterns
 
 end
@@ -256,12 +241,12 @@ module Helpers = struct
       end_ = [("$", None)];
       patterns = [
         "string";
-        "comment"
+        "line_comment";
+        "block_comment"
       ]
     }
   }
 
-  (*  *)
   let string = [
     {
       name = "string_specialchar";
@@ -283,39 +268,42 @@ module Helpers = struct
       }
     }
   ]
-    let ocaml_comment = {
-      name = "comment";
-      kind = Patterns [
-        Match {
+    let ocaml_comment = [
+      {
+        name = "line_comment";
+        kind = Match {
           match_name = Some Comment;
           match_ = "(//.*)";
           captures = []
         };
-        Begin_end {
+      };
+      { name = "block_comment";
+        kind = Begin_end {
           meta_name = Some Comment;
           begin_ = [("\\(\\*", None)];
           end_ = [("\\*\\)", None)];
           patterns = []
         }
-      ]
-    }
+      }
+    ]
 
-    let c_comment = {
-      name = "comment";
-      kind = Patterns [
-        Match {
+    let c_comment = [
+      { name = "line_comment";
+        kind = Match {
           match_name = Some Comment;
           match_ = "(//.*)";
           captures = []
-        };
-        Begin_end {
+        }
+      };
+      { name = "block_comment";
+        kind = Begin_end {
           meta_name = Some Comment;
           begin_ = [("\\/\\*", None)];
           end_ = [("\\*\\/", None)];
           patterns = []
         }
-      ]
-    }
+      }
+    ]
 
     let numeric_literals = {
       name = "numeric-literals";

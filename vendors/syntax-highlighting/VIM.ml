@@ -6,6 +6,7 @@ type 'a command = {
   value: 'a;
   contained: bool;
   contained_in: string list;
+  next_groups: string list
 }
 
 type keyword = string list command 
@@ -22,15 +23,13 @@ type region_inside = {
   start: string option;
   end_: string option;
   contains: string list;
-  match_groups: match_group list;
-  next_groups: string list
+  match_groups: match_group list
 }
 
 type region = region_inside command
 
 type syntax = 
-  Keyword of keyword
-| Match of match_
+  Match of match_
 | Region of region
 
 type link = {
@@ -51,7 +50,6 @@ type t = item list
 module Print = struct 
   open Format
 
-  
   let print_list fmt prefix = function 
       [] -> ()
     | _ as l ->
@@ -60,41 +58,44 @@ module Print = struct
       fprintf fmt " "
 
   let rec print_syntax fmt = function
-    Keyword {group_name; value=keywords; contained; contained_in} -> 
+    (* Keyword {group_name; value=keywords; contained; contained_in; } -> 
       fprintf fmt "syntax keyword %s %s " group_name (String.concat " " keywords);
       if contained then 
         fprintf fmt "contained ";
       print_list fmt "containedin=" contained_in;
       fprintf fmt "\n"
-  | Match {group_name; value=regexp; contained; contained_in} ->
-      fprintf fmt "syntax match %s \"%s\"" group_name regexp;
+  |  *)
+    Match {group_name; value=regexp; contained; contained_in; next_groups} ->
+      fprintf fmt "syntax match %s \"%s\" " group_name regexp;
       if contained then 
         fprintf fmt "contained ";
       print_list fmt "containedin=" contained_in;
+      print_list fmt "nextgroup=" next_groups;
       fprintf fmt "\n"
-  | Region {group_name; value={start; end_; contains; match_groups; next_groups}; contained; contained_in; } ->
+  | Region {group_name; value={start; end_; contains; match_groups}; next_groups; contained; contained_in; } ->
       fprintf fmt "syntax region %s " group_name;
+      print_match_groups fmt match_groups;
       (match start with 
-        Some start -> fprintf fmt "start=%s " start;
+        Some start -> fprintf fmt "start=\"%s\" " start;
       | None -> ());
       (match end_ with 
-        Some end_ -> fprintf fmt "end=%s " end_;
+        Some end_ -> fprintf fmt "end=\"%s\" " end_;
       | None -> ());
       if contained then 
         fprintf fmt "contained ";
       print_list fmt "containedin=" contained_in;
       print_list fmt "contains=" contains;
-      print_list fmt "next_group=" next_groups;
-      fprintf fmt "\n"
+      print_list fmt "nextgroup=" next_groups;
+      fprintf fmt "\n"  
 
     and print_match_groups fmt = function 
       {match_group_name; start; end_} :: rest -> 
         fprintf fmt "matchgroup=%s " match_group_name;
         (match start with 
-          Some s -> fprintf fmt "start=%s " s
+          Some s -> fprintf fmt "start=\"%s\" " s
         | None -> ());
         (match end_ with 
-          Some s -> fprintf fmt "end=%s " s
+          Some s -> fprintf fmt "end=\"%s\" " s
         | None -> ());
         print_match_groups fmt rest
     | [] -> ()
@@ -134,139 +135,169 @@ module Print = struct
       Link {group_name; highlight} ->
         fprintf fmt "highlight link %s %s \n" group_name (highlight_to_string highlight)
 
+    let print_comment fmt comment = 
+      fprintf fmt "\n\" %s\n" comment
+
+    let print fmt v = 
+      List.iter (fun i -> 
+        match i with 
+          VIMComment c -> print_comment fmt c
+        | Syntax s -> print_syntax fmt s
+        | Highlight h -> print_highlight fmt h
+      ) v
 end
 
 module Convert = struct 
+  let regexp_lookbehind     = Str.regexp "?<="
+  let regexp_lookahead      = Str.regexp "?="
+  let regexp_lookahead_neg  = Str.regexp "?!"
+  let regexp_at             = Str.regexp "@"
+  let regexp_word_boundary  = Str.regexp "\\\\b"
+  let regexp_lbrace         = Str.regexp "{"
+  let regexp_quote          = Str.regexp "\""
+  let regexp_equals         = Str.regexp "="
+  (* let g = Str.regexp "\\\\b"
+  let temp = Str.regexp "\\\\("
+  let lpar = Str.regexp "("
+  let temp_lpar = Str.regexp "TEMP_LPAR"
+  let temp2 = Str.regexp "\\\\)"
+  let rpar = Str.regexp ")"
+  let temp_rpar = Str.regexp "TEMP_RPAR" *)
 
   let textmate_regexp_to_vim_regexp = fun r -> 
-    None
+    let r = Str.global_replace regexp_word_boundary "" r in
+    let r = Str.global_replace regexp_lookbehind "@<=" r in
+    let r = Str.global_replace regexp_lookahead "@=" r in
+    let r = Str.global_replace regexp_lookahead_neg "@!" r in
+    let r = Str.global_replace regexp_at "\\@" r in
+    let r = Str.global_replace regexp_lbrace "\\{" r in
+    let r = Str.global_replace regexp_quote "\\\"" r in
+    (* ?= -> \?= *)
+    (* @ -> \@ *)
 
-  let rec pattern_to_vim: Textmate.pattern -> item list = function
+    "\\v" ^ r
+    (* this is dumb *)
+    (* let r = Str.global_replace g "" r in
+    let r = Str.global_replace temp "TEMP_LPAR" r in
+    let r = Str.global_replace lpar "\\(" r in
+    let r = Str.global_replace temp_lpar "(" r in
+    let r = Str.global_replace temp2 "TEMP_RPAR" r in
+    let r = Str.global_replace rpar "\\)" r in
+    let r = Str.global_replace temp_rpar ")" r in *)
+    (* r *)
+
+  let pattern_to_vim: string list -> Textmate.pattern -> item list = fun toplevel -> function
     {name; kind = Begin_end {meta_name=highlight; begin_; end_; patterns}} ->
-      let start_name = name in
-      let (name, before) : (string * item list) = List.fold_left (fun (name, before) c -> 
-        let regexp, highlight = c in
-        let next_name = name ^ "_" in
-        (next_name,
-          [Syntax (Region {
-            group_name = name;
-            value = {
-              start = Some regexp;
-              end_ = None;
-              contains = patterns;
-              match_groups = [];
-              next_groups = [next_name]
-            };
-            contained = false;
-            contained_in = [];
-          })] 
+    let rec aux name result begin_ end_ = (
+      match begin_, end_ with 
+        (start, highlight_start) :: [], (end_, highlight_end) :: rest ->
+          aux 
+            (match rest with [] -> name | _ -> name ^ "___") 
+            (
+              (match highlight_end with Some highlight -> 
+                [Highlight (Link {group_name = name ^ "__"; highlight})]
+              | None -> []) @
+              (match highlight_start with Some highlight -> 
+                [Highlight (Link {group_name = name ^ "_"; highlight})]
+              | None -> []) @
+              (match highlight with Some highlight -> 
+                [Highlight (Link {group_name = name; highlight})]
+              | None -> []) @
+              Syntax (Region {
+              group_name = name;
+              value = ({                
+                start = (match highlight_start with Some _ -> None | None -> Some (textmate_regexp_to_vim_regexp start));
+                end_ = (match highlight_end with Some _ -> None | None -> Some (textmate_regexp_to_vim_regexp end_));
+                contains = patterns;
+                match_groups = 
+                  (match highlight_start with 
+                    Some _ -> [{
+                      match_group_name = name ^ "_";
+                      start =  Some (textmate_regexp_to_vim_regexp start);
+                      end_  =   None
+                    }]
+                  | None -> [])
+                  @
+                  (match highlight_end with 
+                    Some _ -> [{
+                      match_group_name = name ^ "__";
+                      start =  None; 
+                      end_  =  Some (textmate_regexp_to_vim_regexp end_);
+                    }]
+                  | None -> [])
+              }: region_inside);
+              next_groups = (match rest with [] -> [] | _ -> [name ^ "___"]);
+              contained = not (List.mem name toplevel);
+              contained_in = [];
+            }) :: 
+          result) [] rest
+      | (match_, highlight) :: rest, end_ -> 
+          aux 
+            (name ^ "___" )
+            (
+              (match highlight with Some highlight -> [Highlight (Link {group_name = name; highlight})] | None -> [])
+              @ 
+              Syntax (Match {
+                group_name = name;
+                value = textmate_regexp_to_vim_regexp match_;
+                next_groups = [name ^ "___"];
+                contained = not (List.mem name toplevel);
+                contained_in = []; 
+              })
+              :: 
+             result
+            ) rest end_
+      | [], (match_, highlight) :: rest_e -> 
+        aux 
+        (name ^ "___" )
+        (
+          (match highlight with Some highlight -> [Highlight (Link {group_name = name; highlight})] | None -> [])
           @ 
-          (match highlight with 
-          Some highlight ->
-            [Highlight (Link {group_name = name; highlight})]
-          | None -> [])
-          @
-         before)
-      ) (name, []) begin_ in
-      let curr = [
-        Syntax (Region {
-          group_name = name;
-          value      = {
-            start = textmate_regexp_to_vim_regexp begin_;
-            end_ =  textmate_regexp_to_vim_regexp end_;
-            contains = patterns;
-            match_groups = [];
-            next_groups = match end_ with | [] -> [] | _ -> [name ^ "_"]
-          };
-          contained  = false;
-          contained_in = []
-        })]
-        @ (match highlight with 
-          Some highlight ->
-            [Highlight (Link {group_name = name; highlight})]
-        | None -> [])
-       in
-      let (_, after) : (string * item list) = List.fold_left (fun (name, after) c -> 
-        let regexp, highlight = c in
-        let next_name = name ^ "_" in
-        (next_name,
-          [Syntax (Region {
+          Syntax (Match {
             group_name = name;
-            value = {
-              start = Some regexp;
-              end_ = None;
-              contains = [];
-              match_groups = [];
-              next_groups = match after with [] -> [] | _ -> [next_name]
-            };
-            contained = false;
-            contained_in = [];
-          })] 
-          @ 
-          (match highlight with 
-          Some highlight ->
-            [Highlight (Link {group_name = name; highlight})]
-          | None -> [])
-          @
-         before)
-      ) (name ^ "_", []) end_
+            value = textmate_regexp_to_vim_regexp match_;
+            next_groups = (match rest_e with [] -> [] | _ -> [name ^ "___"]);
+            contained = not (List.mem name toplevel);
+            contained_in = []; 
+          })
+          :: 
+          result
+        )
+        [] 
+        rest_e
+      | [], [] -> 
+        List.rev result
+    )
       in
-      [VIMComment start_name]
-      @
-      before
-      @
-      curr 
-      @ 
-      after
-      
+    [
+      VIMComment name;
+    ]
+    @ 
+    aux name [] begin_ end_
   | {name; kind = Match {match_; match_name; captures}} -> 
     [VIMComment name;
     Syntax (Match {
       group_name = name;
-      value = match_;
-      contained = false;
+      value = textmate_regexp_to_vim_regexp match_;
+      contained = not (List.mem name toplevel);
       contained_in = [];
+      next_groups = []
     })]
     @
     (match match_name with 
       Some highlight -> [Highlight (Link {group_name = name; highlight})]
     | None -> [])
-  | {name; kind = Patterns patterns} ->
-    let start_name = name in
-    let (name, children) = List.fold_left (fun (name, a) c -> (name ^ "_", pattern_to_vim ({name = name ^ "_" ; kind = c}) :: a)) (name, []) patterns in
-    [VIMComment start_name;
-     Syntax (Region {
-       group_name = start_name;
-       value = {
-        start = None;
-        end_ = None;
-        contains = List.fold_left (fun a c -> 
-          (match a with 
-            [] -> name ^ "_"
-          | hd :: _ -> hd ^ "_") :: a
-          ) [] children;
-        match_groups = [];
-        next_groups = [];
-       };
-       contained = false;
-       contained_in = []
-     })
-    ]
+
+  let to_vim: Textmate.t -> t = fun t ->
+    let toplevel = t.syntax_patterns in
+    List.fold_left (fun a c -> (pattern_to_vim toplevel c) @ a ) [] t.repository
     
-  | {name; kind = Reference r} -> 
-    [
-      VIMComment name;
-      Syntax (Region {
-        group_name = name;
-        value = {
-          start = None;
-          end_ = None;
-          contains = [];
-          match_groups = [];
-          next_groups = [r]
-        };
-        contained = false;
-        contained_in = []
-      })
-    ]
 end
+  
+let to_vim: Textmate.t -> string = fun t ->
+  let v = Convert.to_vim t in
+  let buffer = Buffer.create 100 in
+  let formatter = Format.formatter_of_buffer buffer in
+  Print.print formatter v;
+  Buffer.contents buffer
+

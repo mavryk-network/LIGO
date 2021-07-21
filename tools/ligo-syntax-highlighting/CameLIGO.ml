@@ -1,11 +1,10 @@
 module Textmate = SyntaxHighlighting.Textmate
 module Helpers = Textmate.Helpers
 
-let (let*) = Result.bind
-
 module Name = struct
   let string                    = "string"
-  let comment                   = "comment"
+  let block_comment             = "block_comment"
+  let line_comment              = "line_comment"
   let single_quotes             = "single-quotes"
   let macro                     = "macro"
   let list_cons                 = "list-cons"
@@ -25,36 +24,39 @@ module Name = struct
   let parameter_list            = "parameter-list"
   let identifier_parameter      = "identifier-parameter"
   let parenthesized_definition  = "parenthesized-definition"
-  let type_expression           = "type-expression"
   let identifier_variable_decl  = "identifier-variable-decl"
   let struct_type               = "struct-type"
   let sum_type                  = "sum-type"
   let type_alias                = "type-alias"
+  let par_type                  = "par-type"
+  let type_equals               = "type-equals"
 end
 
-let syntax_highlighting () =
-  let* json = Textmate.to_json "mligo" {
+let syntax_highlighting =
+  let open Textmate in
+  {
     syntax_name          = "mligo";
     scope_name           = "source.mligo";
     file_types           = [];
     folding_start_marker = None;
     folding_stop_marker  = None;
     syntax_patterns      = [
-      Reference Name.string;
-      Reference Name.single_quotes;
-      Reference Name.comment;
-      Reference Name.macro;
-      Reference Name.list_cons;
-      Reference Name.let_binding;
-      Reference Name.lambda;
-      Reference Name.type_definition;
-      Reference Name.type_annotation; 
-      Reference Name.control_keywords;
-      Reference Name.other_keywords;
-      Reference Name.numeric_literals;
-      Reference Name.operators;
-      Reference Name.identifier_constructor;
-      Reference Name.identifier_lower
+      Name.string;
+      Name.single_quotes;
+      Name.line_comment;
+      Name.block_comment;
+      Name.macro;
+      Name.list_cons;
+      Name.let_binding;
+      Name.lambda;
+      Name.type_definition;
+      Name.type_annotation; 
+      Name.control_keywords;
+      Name.other_keywords;
+      Name.numeric_literals;
+      Name.operators;
+      Name.identifier_constructor;
+      Name.identifier_lower
     ];
     repository           = [
       Helpers.macro;
@@ -65,7 +67,8 @@ let syntax_highlighting () =
           begin_ = [("\\b(let)\\b", Some Function)];
           end_ = [("(\\=)", Some Operator)];
           patterns = [
-            Name.comment;
+            Name.line_comment;
+            Name.block_comment;
             Name.let_rec;
             Name.let_function;
             Name.let_constant;
@@ -87,7 +90,8 @@ let syntax_highlighting () =
           begin_ = [("\\G\\s*([a-zA-Z_]\\w*)\\b(?=\\s*\\()", Some Function)];
           end_ = [("(?=\\=)", None)];
           patterns = [
-            Name.comment;
+            Name.line_comment;
+            Name.block_comment;
             Name.parameter_list;
             Name.type_annotation
           ]
@@ -100,7 +104,8 @@ let syntax_highlighting () =
           begin_ = [("\\(", Some Operator)];
           end_ = [("\\)", Some Operator)];
           patterns = [
-            Name.comment;
+            Name.line_comment;
+            Name.block_comment;
             Name.identifier_parameter;
             Name.type_annotation
           ]
@@ -113,7 +118,8 @@ let syntax_highlighting () =
           begin_ = [("\\(", Some Operator)];
           end_ = [("\\)", Some Operator)];
           patterns = [
-            Name.comment;
+            Name.line_comment;
+            Name.block_comment;
             Name.identifier_variable_decl;
             Name.type_annotation
           ]
@@ -126,31 +132,34 @@ let syntax_highlighting () =
           begin_ = [("(:)\\s*", Some Type)];
           end_ = [("(?:[;|]|(?=[)=}])|$)", None)];
           patterns = [
-            Name.comment;
-            Name.type_expression
+            Name.line_comment;
+            Name.block_comment;
+            Name.par_type;
+            Name.type_equals;
           ]
         }
       };
-      {
-        name = Name.type_expression;
-        kind = Patterns [
-          Begin_end {
+      { name = Name.par_type;
+        kind = Begin_end {
             meta_name = None;
             begin_ = [("\\(", None)];
             end_ = [("\\)", None)];
             patterns = [
-              Name.comment;
-              Name.type_expression
+              Name.line_comment;
+              Name.block_comment;
+              Name.par_type;
+              Name.type_equals
             ]
           };
-          Match {
+      };
+      { name = Name.type_equals;
+        kind = Match {
             match_ = "([^=()|;}/]+)";
             match_name = None;
             captures = [
               (1, Type)
             ]
           }
-        ]
       };
       {
         name = Name.let_constant;
@@ -159,7 +168,8 @@ let syntax_highlighting () =
           begin_ = [("\\G", None)];
           end_ = [("(?=\\=)", None)];
           patterns = [
-            Name.comment;
+            Name.line_comment;
+            Name.block_comment;
             Name.type_annotation;
             Name.parenthesized_definition;
             Name.identifier_variable_decl
@@ -173,7 +183,8 @@ let syntax_highlighting () =
           begin_ = [("\\b(fun)\\b", Some Statement)];
           end_ = [("(->)", Some Operator)];
           patterns = [
-            Name.comment;
+            Name.line_comment;
+            Name.block_comment;
             Name.parameter_list
           ]
         }
@@ -187,7 +198,8 @@ let syntax_highlighting () =
             ("\\s+([a-zA-Z_]\\w*)\\b", Some Identifier)];
           end_ = [("(?=(?:\\blet\\b|\\btype\\b|^\\s*#\\w+))", None)];
           patterns = [
-            Name.comment;
+            Name.line_comment;
+            Name.block_comment;
             Name.struct_type;
             Name.sum_type;
             Name.type_alias
@@ -201,7 +213,8 @@ let syntax_highlighting () =
           begin_ = [("\\{", None)];
           end_ = [("\\}", None)];
           patterns = [
-            Name.comment;
+            Name.line_comment;
+            Name.block_comment;
             Name.identifier_variable_decl;
             Name.type_annotation
           ]
@@ -217,8 +230,10 @@ let syntax_highlighting () =
           ];
           end_ = [("(\\||(?=\\blet\\b|\\btype\\b|^\\s*#\\w+))", None)];
           patterns = [
-            Name.comment;
-            Name.type_expression
+            Name.line_comment;
+            Name.block_comment;
+            Name.par_type;
+            Name.type_equals
           ]
         }
       };
@@ -229,8 +244,10 @@ let syntax_highlighting () =
           begin_ = [("\\G\\s*=\\s*(?=[(a-z])", None)];
           end_ = [("(?=\\blet\\b|\\btype\\b|^\\s*#\\w+)", None)];
           patterns = [
-            Name.comment;
-            Name.type_expression
+            Name.line_comment;
+            Name.block_comment;
+            Name.par_type;
+            Name.type_equals
           ]
         }
       }]
@@ -245,9 +262,11 @@ let syntax_highlighting () =
           end_ = [("\\'", None)];
           patterns = []
         }
-      };
-      Helpers.ocaml_comment;      
-      {
+      }]
+      @
+      Helpers.ocaml_comment     
+      @
+      [{
         name = Name.list_cons;
         kind = Match {
           match_name = Some Operator;
@@ -319,6 +338,4 @@ let syntax_highlighting () =
         }
       }
     ]
-  } in
-  let s = Yojson.Safe.pretty_to_string json in
-  Result.ok s
+  }

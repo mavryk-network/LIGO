@@ -5,7 +5,8 @@
   "patterns": [
     { "include": "#string" },
     { "include": "#single-quotes" },
-    { "include": "#comment" },
+    { "include": "#line_comment" },
+    { "include": "#block_comment" },
     { "include": "#macro" },
     { "include": "#function" },
     { "include": "#binding" },
@@ -24,7 +25,11 @@
       "end": "$",
       "beginCaptures": { "1": { "name": "meta.preprocessor.ligo" } },
       "endCaptures": {},
-      "patterns": [ { "include": "#string" }, { "include": "#comment" } ]
+      "patterns": [
+        { "include": "#string" },
+        { "include": "#line_comment" },
+        { "include": "#block_comment" }
+      ]
     },
     "function": {
       "begin": "\\b(recursive\\s+)?(function)\\s+([a-zA-Z_]\\w*)\\b",
@@ -36,7 +41,8 @@
       },
       "endCaptures": { "1": { "name": "keyword.operator.ligo" } },
       "patterns": [
-        { "include": "#comment" },
+        { "include": "#line_comment" },
+        { "include": "#block_comment" },
         { "include": "#type-annotation" },
         { "include": "#binding" }
       ]
@@ -50,7 +56,8 @@
       },
       "endCaptures": {},
       "patterns": [
-        { "include": "#comment" },
+        { "include": "#line_comment" },
+        { "include": "#block_comment" },
         { "include": "#type-annotation" }
       ]
     },
@@ -60,27 +67,27 @@
       "beginCaptures": { "1": { "name": "keyword.operator.ligo" } },
       "endCaptures": {},
       "patterns": [
-        { "include": "#comment" },
-        { "include": "#type-expression" }
+        { "include": "#line_comment" },
+        { "include": "#block_comment" },
+        { "include": "#type-par" },
+        { "include": "#type-equals" }
       ]
     },
-    "type-expression": {
+    "type-par": {
+      "begin": "\\(",
+      "end": "\\)",
+      "beginCaptures": {},
+      "endCaptures": {},
       "patterns": [
-        {
-          "begin": "\\(",
-          "end": "\\)",
-          "beginCaptures": {},
-          "endCaptures": {},
-          "patterns": [
-            { "include": "#comment" },
-            { "include": "#type-expression" }
-          ]
-        },
-        {
-          "match": "((?:(?!\\bis\\b|:=)[^=()|;}/\\]])*)",
-          "captures": { "1": { "name": "storage.typeligo" } }
-        }
+        { "include": "#line_comment" },
+        { "include": "#block_comment" },
+        { "include": "#type-par" },
+        { "include": "#type-equals" }
       ]
+    },
+    "type-equals": {
+      "match": "((?:(?!\\bis\\b|:=)[^=()|;}/\\]])*)",
+      "captures": { "1": { "name": "storage.type.ligo" } }
     },
     "type-definition": {
       "begin": "\\b(type)\\s+([a-zA-Z_]\\w*)\\s+(is)\\b",
@@ -88,11 +95,12 @@
       "beginCaptures": {
         "3": { "name": "keyword.other.ligo" },
         "2": { "name": "storage.var.ligo" },
-        "1": { "name": "storage.typeligo" }
+        "1": { "name": "storage.type.ligo" }
       },
       "endCaptures": {},
       "patterns": [
-        { "include": "#comment" },
+        { "include": "#line_comment" },
+        { "include": "#block_comment" },
         { "include": "#struct-type" },
         { "include": "#sum-type" },
         { "include": "#type-alias" }
@@ -107,7 +115,8 @@
       },
       "endCaptures": { "1": { "name": "keyword.other.ligo" } },
       "patterns": [
-        { "include": "#comment" },
+        { "include": "#line_comment" },
+        { "include": "#block_comment" },
         { "include": "#identifiers" },
         { "include": "#type-annotation" }
       ]
@@ -121,8 +130,10 @@
       },
       "endCaptures": {},
       "patterns": [
-        { "include": "#comment" },
-        { "include": "#type-expression" }
+        { "include": "#line_comment" },
+        { "include": "#block_comment" },
+        { "include": "#type-par" },
+        { "include": "#type-equals" }
       ]
     },
     "type-alias": {
@@ -131,8 +142,10 @@
       "beginCaptures": {},
       "endCaptures": {},
       "patterns": [
-        { "include": "#comment" },
-        { "include": "#type-expression" }
+        { "include": "#line_comment" },
+        { "include": "#block_comment" },
+        { "include": "#type-par" },
+        { "include": "#type-equals" }
       ]
     },
     "string_specialchar": {
@@ -156,18 +169,18 @@
       "endCaptures": {},
       "patterns": []
     },
-    "comment": {
-      "patterns": [
-        { "name": "comment.block.ligo", "match": "(//.*)", "captures": {} },
-        {
-          "name": "comment.block.ligo",
-          "begin": "\\(\\*",
-          "end": "\\*\\)",
-          "beginCaptures": {},
-          "endCaptures": {},
-          "patterns": []
-        }
-      ]
+    "line_comment": {
+      "name": "comment.block.ligo",
+      "match": "(//.*)",
+      "captures": {}
+    },
+    "block_comment": {
+      "name": "comment.block.ligo",
+      "begin": "\\(\\*",
+      "end": "\\*\\)",
+      "beginCaptures": {},
+      "endCaptures": {},
+      "patterns": []
     },
     "control-keywords": {
       "name": "keyword.control.ligo",
