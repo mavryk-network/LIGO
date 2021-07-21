@@ -510,6 +510,19 @@ doing so is twofold:
      language. Another scenario is that of a test: the source code is
      actually printing what is happening.
 
+Strings are enclosed between double quotes.
+
+Comments can follow one of the following combinations:
+
+  * `(*` and `*)` for blocks, and `//` for lines;
+
+  * `/*` and `*/` for blocks, and `//` for lines;
+
+  * `/*` and `*/` for blocks, and `#` for lines
+
+See section [Adding a Comment or String](#adding-a-comment-or-string)
+for new combinations.
+
 ## Documenting the Modules
 
 ### CLI
@@ -533,7 +546,7 @@ The module signature
 [CLI.S](https://gitlab.com/ligolang/ligo/-/blob/998107d5f0098c8acc86f8950f2a0f9fc5836f5d/vendors/Preprocessor/CLI.mli#L23)
 gathers data structures parameterising the behaviour of the
 preprocessor. If building the standalone preprocessor, those data will
-come from the command-line. They are
+come from the command-line. They are as follows:
 
 ```
     val input     : string option (* input file             *)
@@ -563,27 +576,469 @@ given by the type and value `status`:
     val status : status
 ```
 
-The constructor `` `Version`` carries the commit hash of the source
-code, as shown about
-[the standalone preprocessor](#the-standalone-preprocessor). The ``
-`Help`` constructor carries the help displayed by `--help`.
+  * The constructor `` `Done`` means that no error occurred.
+
+  * The constructor `` `Version`` carries the commit hash of the source
+    code, as shown about
+    [the standalone preprocessor](#the-standalone-preprocessor).
+
+  * The `` `Help`` constructor carries the help displayed by `--help`.
+
+  * The constructor `` `CLI`` carries a string buffer containing the
+    internal values of the command-line options which were given. This
+    is used for debugging the module `CLI`. See `--cli`.
+
+  * The constructor `` `SyntaxError`` reports an error when parsing the
+    command-line options.
+
+  * The constructor `` `FileNotFound`` denotes the input file not being
+    found.
+
+The rationale for this structure is to enable the CLI to be augmented
+when composing the preprocessor with another tool that consumes its
+output. For example, the lexing library in `vendors/LexerLib` features
+its own `CLI` module, exporting its own type
+[status](https://gitlab.com/ligolang/ligo/-/blob/d490176ef5dd7e6c825a8a7bd04ab56108889ce0/vendors/LexerLib/CLI.mli#L71),
+which reuses the one in `vendors/Preprocessor/CLI.mli`.
 
 ### API
 
-### PreprocMainGen
+#### The Interface
+
+The `API` module is the heart of the preprocessor. Perhaps it is best
+to start from its interface. The type of a preprocessor is
+
+```
+type 'src preprocessor = config -> 'src -> result
+```
+
+Clearly, the type parameter `'src` is the kind of input. The type
+[config](https://gitlab.com/ligolang/ligo/-/blob/d490176ef5dd7e6c825a8a7bd04ab56108889ce0/vendors/Preprocessor/API.mli#L41)
+is an object type gathering information about the input and how the
+preprocessor is parameterised by the user. It could be that this
+information comes from the module `CLI` if building the standalone
+preprocessor, but it could come from the LIGO compiler, which uses the
+preprocessor as a library and has its own command-line interface. The
+type `result` is
+
+```
+type result = (success, Buffer.t option * message) Stdlib.result
+```
+
+In case of error, the preprocessor (as a function) returns an error
+message and an optional string buffer. That buffer contains the output
+up to when the error occurred. This can be used to debug the
+preprocessor. In case of success,
+
+```
+type module_deps = (file_path * module_name) list
+type success     = Buffer.t * module_deps
+```
+
+the preprocessor returns a string buffer containing the output and a
+list of module dependencies, directly gathered from the `#import`
+directives.
+
+Finally, different preprocessing functions are exported, according to
+the type parameter `'src'`:
+
+```
+val from_lexbuf  : Lexing.lexbuf preprocessor
+val from_channel : in_channel    preprocessor
+val from_string  : string        preprocessor
+val from_file    : file_path     preprocessor
+```
+
+#### The State
+
+Let us turn our focus now on the implementation. We shall not explain
+how `ocamllex` works. For that, please refer to its
+[official documentation](https://ocaml.org/manual/lexyacc.html).
+
+First of all, we decided to have one automaton. A preprocessor has
+basically two fundamental states: at a given position in the input,
+either the current character is copied to the output, or it is
+discarded. This fact could have led to two automata, each state having
+a dual in the other (copy versus skip). We decided not to do that and
+only have one automaton, and this is why we have the type `mode`:
+
+```
+type mode = Copy | Skip
+```
+
+The mode will be threaded along the states of the automaton, which
+will be therefore not duplicated.
+
+In the same vein, checking the well-formedness of conditional
+directives require to remember what kind of clause is valid at any
+time. For example, when finding an `#elif` directive, it can only be
+correct if either the previous conditional directive was another
+`#elif` of an `#if`. This could be checked by an automaton that
+duplicate its states according to what is valid (that is, was read
+before). Just like with the modes above, we decided to have unique
+states and instead keep track of the syntax of the conditional
+directive with an argument to the scanner, of type `trace`:
+
+```
+type cond  = If of mode | Elif of mode | Else
+type trace = cond list
+```
+
+It is a stack of previously encountered conditional directives, and
+their modes (because even if they occur in regions of the input that
+are skipped, they have to be well formed).
+
+Already, we have seen two kind of information (modes, conditionals)
+that need to be threaded along the states of the automaton. There is
+actually more that needs threading, all gathered in the
+[state](https://gitlab.com/ligolang/ligo/-/blob/d490176ef5dd7e6c825a8a7bd04ab56108889ce0/vendors/Preprocessor/API.mll#L81):
+
+```
+type state = {
+  config : config;
+  env    : E_AST.Env.t;
+  mode   : mode;
+  trace  : trace;
+  out    : Buffer.t;
+  chans  : in_channel list;
+  incl   : file_path list;
+  import : (file_path * module_name) list
+}
+```
+
+We find the fields `config`, `mode` and `trace` we considered earlier,
+but also additional information.
+
+  * The field `env` records the symbols defined by `#define` and not
+    undefined by `#undef`. It acts as a value environment when
+    computing the boolean expressions of `#if` and `#elif`.
+
+  * The field `out` is the output buffer.
+
+  * The field `chans` is the list of input channels opened when
+    processing an `#include` directive, in order to close them when we
+    are done, and thus avoid a memory leak (channels are not collected
+    by the OCaml collector).
+
+  * The field `incl` is isomorphic to the file system path to the
+    current input file, and it is changed to that of any included
+    file. More precisely, its a stack on top of which [directories are pushed](https://gitlab.com/ligolang/ligo/-/blob/d490176ef5dd7e6c825a8a7bd04ab56108889ce0/vendors/Preprocessor/API.mll#L94)
+    and from which a [path can be obtained back](https://gitlab.com/ligolang/ligo/-/blob/d490176ef5dd7e6c825a8a7bd04ab56108889ce0/vendors/Preprocessor/API.mll#L97).
+
+  * The field `import` is the list of modules from their defining
+    file, as given by the `#import`
+
+The entry point in the automaton is
+[scan](https://gitlab.com/ligolang/ligo/-/blob/d490176ef5dd7e6c825a8a7bd04ab56108889ce0/vendors/Preprocessor/API.mll#L490):
+
+```
+rule scan state = parse
+
+```
+
+We can see the parameter `state` that will be treaded along the
+scanning rules.
+
+#### Copying
+
+There are two functions to copy input characters to the output buffer:
+
+  1. [copy](https://gitlab.com/ligolang/ligo/-/blob/dev/vendors/Preprocessor/API.mll#L274)
+
+  2. [proc_nl](https://gitlab.com/ligolang/ligo/-/blob/dev/vendors/Preprocessor/API.mll#L279)
+
+It is necessary to call `proc_nl` when copying newline
+characters. Remember too that newline characters are always copied,
+independent of the mode.
+
+#### Scanning Conditional Directives
+
+
+When an `#if` directive is found, the trace is extended by calling
+
+```
+extend (If state.mode) state region
+```
+
+during the evaluation of which the syntactic validity of having
+encountered an `#if` is checked (for example, it would be invalid had
+an `#elif` been last read). Note that the current mode is stored in
+the trace with the current directive --- that mode may be later
+restored (see below for some examples). Moreover, the directive would
+be deemed invalid if its current position within the line (that is,
+its offset) were not preceeded by blanks or nothing, otherwise the
+function
+[expr](https://gitlab.com/ligolang/ligo/-/blob/d490176ef5dd7e6c825a8a7bd04ab56108889ce0/vendors/Preprocessor/API.mll#L297)
+is called to scan the boolean expression associated with the `#if`: if
+it evaluates to `true`, then the resulting mode is `Copy`, meaning
+that we may copy what follows, otherwise we skip it --- the actual
+decision depending on the current mode. That new mode is used if we
+were in copy mode, and the offset is reset to the start of a new line
+(as we read a new line in `expr`); otherwise we were in skipping mode
+and the value of the conditional expression must be ignored (but not
+its syntax), and we continue skipping the input.
+
+When an `#else` is matched,
+[the trace is extended](https://gitlab.com/ligolang/ligo/-/blob/d490176ef5dd7e6c825a8a7bd04ab56108889ce0/vendors/Preprocessor/API.mll#L233)
+with `Else`:
+
+```
+extend Else state region
+```
+
+amd then the rest of the line is scanned and discarded by means of
+[skip_line](https://gitlab.com/ligolang/ligo/-/blob/d490176ef5dd7e6c825a8a7bd04ab56108889ce0/vendors/Preprocessor/API.mll#L669). (Keep
+in mind that newline characters are always copied.) If we were in copy
+mode, the new mode toggles to skipping mode; otherwise, the trace is
+searched for the last encountered `#if` of `#elif` and the associated
+mode is restored.
+
+The case of `#elif` is the result of the fusion (in the technical
+sense of functional programming) of the code for dealing with an
+`#else` followed by an `#if`.
+
+When an `#endif` is matched, the trace is reduced, that is, all
+conditional directives are popped until an `If mode` is found and its
+`mode` is restored as the current mode.
+
+Consider the following four cases, where the modes (`Copy`/`Skip`) are
+located between the lines:
+
+```
+                    Copy ────┐                          Copy ────┐
+   #if true                  │       #if true                    │
+                    Copy     │                          Copy     │
+   #else                     │       #else                       │
+                ┌── Skip ──┐ │                      ┌── Skip ──┐ │
+     #if true   │          │ │         #if false    │          │ │
+                │   Skip   │ │                      │   Skip   │ │
+     #else      │          │ │         #else        │          │ │
+                └─> Skip   │ │                      └─> Skip   │ │
+     #endif                │ │         #endif                  │ │
+                    Skip <─┘ │                          Skip <─┘ │
+   #endif                    │       #endif                      │
+                    Copy <───┘                          Copy <───┘
+
+
+                ┌── Copy ────┐                          Copy ──┬─┐
+   #if false    │            │       #if false                 │ │
+                │   Skip     │                          Skip   │ │
+   #else        │            │       #else                     │ │
+                └─> Copy ──┐ │                    ┌─┬── Copy <─┘ │
+     #if true              │ │         #if false  │ │            │
+                    Copy   │ │                    │ │   Skip     │
+     #else                 │ │         #else      │ │            │
+                    Skip   │ │                    │ └─> Copy     │
+     #endif                │ │         #endif     │              │
+                    Copy <─┘ │                    └───> Copy     │
+   #endif                    │       #endif                      │
+                    Copy <───┘                          Copy <───┘
+```
+
+The following four cases feature `#elif`. Note that we put between
+brackets the mode saved for the `#elif`, which is sometimes restored
+later.
+
+```
+                    Copy ──┐                            Copy ──┐
+   #if true                │         #if true                  │
+                    Copy   │                            Copy   │
+   #elif true   ┌──[Skip]  │         #elif false    ┌──[Skip]  │
+                │   Skip   │                        │   Skip   │
+   #else        │          │         #else          │          │
+                └─> Skip   │                        └─> Skip   │
+   #endif                  │         #endif                    │
+                    Copy <─┘                            Copy <─┘
+
+
+                ┌── Copy ──┬─┐                      ┌── Copy ────┐
+   #if false    │          │ │       #if false      │            │
+                │   Skip   │ │                      │   Skip     │
+   #elif true   └─>[Copy]  │ │       #elif false    └─>[Copy]──┐ │
+                    Copy <─┘ │                          Skip   │ │
+   #else                     │       #else                     │ │
+                    Skip     │                          Copy <─┘ │
+   #endif                    │       #endif                      │
+                    Copy <───┘                          Copy <───┘
+
+```
+
+Note how `#elif` indeed behaves like an `#else` followed by an `#if`,
+and the mode stored with the data constructor `Elif` corresponds to
+the mode before the virtual `#if`.
+
+#### Scanning File Inclusions
+
+The handling of the `#include` directive features a unique feature:
+[a reentrant call](https://gitlab.com/ligolang/ligo/-/blob/d490176ef5dd7e6c825a8a7bd04ab56108889ce0/vendors/Preprocessor/API.mll#L526). The
+preprocessor could detect if it is going to enter a loop (for example,
+a file including itself directly, or transitively), but it does not,
+so the user has to be
+careful. [When returning from a file inclusion](https://gitlab.com/ligolang/ligo/-/blob/d490176ef5dd7e6c825a8a7bd04ab56108889ce0/vendors/Preprocessor/API.mll#L527),
+two pieces of informations are worth updating: the environment of
+defined symbols and the output channels. Indeed, the included file may
+contain `#define` or `#undef` directives, for instance to avoid double
+inclusions.
+
+Note as well how the files to be included are searched:
+
+```
+          let incl_dir = Filename.dirname incl_file in
+          let path = mk_path state in
+          let incl_path, incl_chan =
+            match find path incl_file state.config#dirs with
+              Some p -> p
+            |   None -> fail state reg (File_not_found incl_file) in
+```
+
+In particular, if you build the standalone preprocessor, the search
+behaviour is influenced by the `-I` command-line option. The search
+algorithm was empirically designed to mimick that of `cpp`. See also
+[the linemarker when going to the included file](https://gitlab.com/ligolang/ligo/-/blob/d490176ef5dd7e6c825a8a7bd04ab56108889ce0/vendors/Preprocessor/API.mll#L518)
+and
+[the linemarker when returning](https://gitlab.com/ligolang/ligo/-/blob/d490176ef5dd7e6c825a8a7bd04ab56108889ce0/vendors/Preprocessor/API.mll#L530).
+
+#### Rollback
+
+Across the semantic actions of the `ocamllex` specification `API.mll`,
+we see calls to the function `rollback`:
+
+```
+let rollback buffer =
+  let open Lexing in
+  let len = String.length (lexeme buffer) in
+  let pos_cnum = buffer.lex_curr_p.pos_cnum - len in
+  buffer.lex_curr_pos <- buffer.lex_curr_pos - len;
+  buffer.lex_curr_p <- {buffer.lex_curr_p with pos_cnum}
+```
+
+That function restores the logical view of lexer engine over the
+lexing buffer so that it would appear that its contents has not been
+read. When called in a semantic action, it applies to the lexing
+buffer that was matched by the corresponding regular expression.
+
+##### Scannning Comments and Strings
+
+As we saw in the section about
+[preprocessing strings and comments](#preprocessing-strings-and-comments),
+several combinations of block and line comments are possible. We also
+saw above how the type
+[config](https://gitlab.com/ligolang/ligo/-/blob/d490176ef5dd7e6c825a8a7bd04ab56108889ce0/vendors/Preprocessor/API.mli#L41),
+in the section [The Interface](#the-interface), gathers parametric
+information about the behaviour of the preprocessor. In particular, we
+saw the
+[COMMENTS](https://gitlab.com/ligolang/ligo/-/blob/998107d5f0098c8acc86f8950f2a0f9fc5836f5d/vendors/Preprocessor/CLI.mli#L10)
+in the section [CLI](#cli) signature that gathers the comment opening
+and closing markers from the client's perspective. It is therefore
+important that what the client request is actually possible according
+to the regular expressions.
+
+The regular expression
+[block_comment_openings](https://gitlab.com/ligolang/ligo/-/blob/ec968c65dbcef7e0da9561aa0b2fdcd341200b28/vendors/Preprocessor/API.mll#L354)
+matches all the statically possible opening markers for block
+comments. The regular expression
+[line_comments](https://gitlab.com/ligolang/ligo/-/blob/ec968c65dbcef7e0da9561aa0b2fdcd341200b28/vendors/Preprocessor/API.mll#L366)
+gather the valid opening markers for line comments.
+
+After matching all possible block comment openings
+(*block_comments_openings*), we need to check whether the matched
+opening is the one requested by the client:
+
+```
+| block_comment_openings {
+    let lexeme = Lexing.lexeme lexbuf in
+    match state.config#block with
+```
+
+If not, we [rollback](#rollback) the lexing buffer state and rescan
+the characters that were matched (`scan_n_char n state lexbuf`), and
+then resume scanning with `scan`:
+
+```
+    | Some _ | None ->
+        let n = String.length lexeme in
+          begin
+            rollback lexbuf;
+            assert (n > 0);
+            scan (scan_n_char n state lexbuf) lexbuf
+          end }
+```
+
+For example, if the client specifies that block comments start with
+the sequence `(*` and we matched `/*`, we cannot consider the string
+`/*` as a whole (a comment opening), but, instead as a normal
+input. It has length `2`, so
+[scan_n_char 2](https://gitlab.com/ligolang/ligo/-/blob/dev/vendors/Preprocessor/API.mll#L653)
+will scan `2` characters without trying to match a comment opening.
+
+If the matched comment opening is the one expected by the client,
+then, if in copy mode, the opening is copied and a scanning rule is
+called, depending on the kind of comment:
+[in_block](https://gitlab.com/ligolang/ligo/-/blob/dev/vendors/Preprocessor/API.mll#L618)
+for block comments,
+or
+[in_line](https://gitlab.com/ligolang/ligo/-/blob/dev/vendors/Preprocessor/API.mll#L637)
+for line comments.
+
+If we consider the definition of
+[in_block](https://gitlab.com/ligolang/ligo/-/blob/dev/vendors/Preprocessor/API.mll#L692),
+we see that it tries to match three regular expressions on the lexing
+buffer:
+
+  1. a string delimiter (it is an opening, but opening and closing are
+     expected to be the same);
+
+  2. a block comment opening;
+
+  3. [a block comment closing](https://gitlab.com/ligolang/ligo/-/blob/dev/vendors/Preprocessor/API.mll#L708).
+
+Actually, string delimiters and block comment opening share
+[the same semantic action](https://gitlab.com/ligolang/ligo/-/blob/dev/vendors/Preprocessor/API.mll#L693)
+because comments can contain strings and strings comments. The idea
+here is to scan a string or a sub-comment, or to treat the matched
+string as regular comment contents. Since comments can be nested, we
+need, in case of error, like an open comment, to refer the user to the
+opening of the comment. This is the purpose of the `opening`
+parameter:
+
+```
+and in_block block opening state = parse
+```
+
+
+## PreprocMainGen
+
+The module `PreprocMainGen` exports a functor which consumes a module
+of signature
+[CLI.S](https://gitlab.com/ligolang/ligo/-/blob/ec968c65dbcef7e0da9561aa0b2fdcd341200b28/vendors/Preprocessor/CLI.mli#L23)
+and returns a signature
+
+```
+    val check_cli  : unit -> unit
+    val config     : API.config
+    val preprocess : unit -> API.result
+```
+
+This signature packages the command-line options as defined by the
+module `CLI` into an `API` version, both suitable for the standalone
+preprocessor, and also for any library client, for example, the LIGO
+compiler. This signature also provides two ready-made functions
+`check_cli` and `preprocess` to check the command-line options and run
+the preprocessor (on the input specified in the argument `CLI`),
+respectively.
 
 ### PreprocMain
 
-
-## Error messages
-
-
-
+The module `PreprocMain` is only used as the entry point of the
+standalone preprocessor, that is, `PreprocMain.exe`, if using `dune`,
+or `PreprocMain.byte`, if using the Makefile. A such, it assumes there
+are no comments and no strings, so it may be run on all texts that are
+not programming languages, to be tested.
 
 ## Maintaining the Preprocessor
 
 ### Adding a Command-Line Option
 
-### Adding a Preprocessing Directive
+### Adding a Preprocessing Directive and/or Errors
 
 ### Adding a Comment or String
