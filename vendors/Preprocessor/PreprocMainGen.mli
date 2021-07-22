@@ -6,6 +6,6 @@
 module Make (CLI : CLI.S) :
   sig
     val check_cli  : unit -> unit
-    val config     : API.config
+    val config     : State.config
     val preprocess : unit -> API.result
   end

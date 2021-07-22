@@ -344,6 +344,8 @@ This IS copied to the output.
 #endif
 ```
 
+Note: If you wish to redefine a symbol, you must undefine it first.
+
 When we want to write a cascade of conditionals, the preprocessor
 enables a shortcut by means of the `#elif` directive, like so:
 
@@ -875,10 +877,14 @@ preprocessor could detect if it is going to enter a loop (for example,
 a file including itself directly, or transitively), but it does not,
 so the user has to be
 careful. [When returning from a file inclusion](https://gitlab.com/ligolang/ligo/-/blob/d490176ef5dd7e6c825a8a7bd04ab56108889ce0/vendors/Preprocessor/API.mll#L527),
-two pieces of informations are worth updating: the environment of
-defined symbols and the output channels. Indeed, the included file may
-contain `#define` or `#undef` directives, for instance to avoid double
-inclusions.
+three pieces of informations need updating:
+
+  1. the environment of defined symbols, possibly defined in included
+     files (e.g. to avoid double inclusions);
+
+  2. the output channels of any possibly further included files;
+
+  3. the list of imported modules and their corresponding files.
 
 Note as well how the files to be included are searched:
 

@@ -8,6 +8,17 @@
 module Region = Simple_utils.Region
 module Pos    = Simple_utils.Pos
 
+(* Local dependencies *)
+
+open State
+
+(* Extracting the region matched in a lexing buffer *)
+
+let mk_reg buffer =
+  let start = Lexing.lexeme_start_p buffer |> Pos.from_byte
+  and stop  = Lexing.lexeme_end_p buffer |> Pos.from_byte
+  in Region.make ~start ~stop
+
 (* Rolling back one lexeme _within the current semantic action_ *)
 
 let rollback buffer =
@@ -35,159 +46,12 @@ let mk_str (len: int) (p: char list) : string =
   | char::l -> Bytes.set bytes i char; fill (i-1) l
   in fill (len-1) p |> Bytes.to_string
 
-(* The type [mode] defines the two scanning modes of the preprocessor:
-   either we copy the current characters or we skip them. *)
-
-type mode = Copy | Skip
-
-(* Trace of directives. We keep track of directives #if, #elif, #else,
-   #region and #endregion. *)
-
-type cond  = If of mode | Elif of mode | Else | Region
-type trace = cond list
-
-(* The type [state] groups the information that needs to be
-   threaded along the scanning functions:
-
-     * the field [config] records the source configuration;
-
-     * the field [env] records the symbols defined by #define and not
-       undefined by #undef;
-
-     * the field [mode] informs whether the preprocessor is in
-       copying or skipping mode;
-
-     * the field [trace] is a stack of previous, still active
-       conditional directives (this is support the parsing of
-       conditionals without resorting to a parser generator like
-       [menhir]);
-
-     * the field [out] keeps the output buffer;
-
-     * the field [chans] is a list of opened input channels (this is
-       to keep track of embedded file inclusions by #include and close
-       them when we are done);
-
-     * the field [incl] is isomorphic to the file system path to the
-       current input file, and it is changed to that of any included
-       file;
-
-     * the field [import] is a list of (filename, module) imports
-       (#import) *)
-
-type line_comment  = string (* Opening of a line comment *)
-type block_comment = <opening : string; closing : string>
-
-type file_path = string
-type module_name = string
-
-type config = <
-  block   : block_comment option;
-  line    : line_comment option;
-  input   : file_path option;
-  offsets : bool;
-  dirs    : file_path list (* Directories to search for #include files *)
->
-
-type state = {
-  config : config;
-  env    : E_AST.Env.t;
-  mode   : mode;
-  trace  : trace;
-  out    : Buffer.t;
-  chans  : in_channel list;
-  incl   : file_path list;
-  import : (file_path * module_name) list
-}
-
-(* Directories *)
-
-let push_dir dir state =
-  if dir = "." then state else {state with incl = dir :: state.incl}
-
-let mk_path state =
-  String.concat Filename.dir_sep (List.rev state.incl)
-
 (* ERRORS *)
 
-type error =
-  Directive_inside_line
-| Missing_endif
-| Newline_in_string
-| Unterminated_string
-| Dangling_endif
-| Open_region_in_conditional
-| Dangling_endregion
-| Conditional_in_region
-| If_follows_elif
-| Else_follows_else
-| Dangling_else
-| Elif_follows_else
-| Dangling_elif
-| Reserved_symbol of string
-| Multiply_defined_symbol of string
-| Error_directive of string           (* #error ONLY *)
-| Parse_error
-| Invalid_symbol
-| File_not_found of string
-| Unterminated_comment of string
-| Missing_filename                    (* #include *)
-| Unexpected_argument                 (* #include and #import *)
+(* IMPORTANT : Make sure the functions [fail] and [expr] remain the
+   only ones raising [Error]. *)
 
-let error_to_string = function
-  Directive_inside_line ->
-    sprintf "Directive inside a line."
-| Missing_endif ->
-    sprintf "Missing #endif directive."
-| Newline_in_string ->
-    sprintf "Invalid newline character in string."
-| Unterminated_string ->
-    sprintf "Unterminated string.\n\
-             Hint: Close with double quotes."
-| Dangling_endif ->
-    sprintf "Dangling #endif directive.\n\
-             Hint: Remove it or add a #if before."
-| Open_region_in_conditional ->
-    sprintf "Unterminated of #region in conditional.\n\
-             Hint: Close with #endregion before #endif."
-| Dangling_endregion ->
-   sprintf "Dangling #endregion directive.\n\
-            Hint: Remove it or use #region before."
-| Conditional_in_region ->
-    sprintf "Conditional in region.\n\
-             Hint: Remove the conditional or the region."
-| If_follows_elif ->
-    sprintf "Directive #if found in a clause #elif."
-| Else_follows_else ->
-    sprintf "Directive #else found in a clause #else."
-| Dangling_else ->
-    sprintf "Directive #else without #if."
-| Elif_follows_else ->
-    sprintf "Directive #elif found in a clause #else."
-| Dangling_elif ->
-    sprintf "Dangling #elif directive.\n\
-             Hint: Remove it or add a #if before."
-| Reserved_symbol sym ->
-    sprintf "Reserved symbol %S.\n\
-             Hint: Use another symbol." sym
-| Multiply_defined_symbol sym ->
-    sprintf "Multiply-defined symbol %S.\n\
-             Hint: Change the name or remove one definition." sym
-| Error_directive msg ->
-    if msg = "" then sprintf "Directive #error reached." else msg
-| Parse_error ->
-    "Parse error in expression."
-| Invalid_symbol ->
-   "Expected a symbol (identifier)."
-| File_not_found name ->
-    sprintf "File %S to include not found." name
-| Unterminated_comment ending ->
-    sprintf "Unterminated comment.\n\
-             Hint: Close with %S." ending
-| Missing_filename ->
-    sprintf "Filename expected in a string literal."
-| Unexpected_argument ->
-    sprintf "Unexpected argument."
+exception Error of (Buffer.t * string Region.reg)
 
 let format_error config ~msg (region: Region.t) =
   let file  = config#input <> None in
@@ -198,101 +62,23 @@ let format_error config ~msg (region: Region.t) =
   let value = sprintf "%s:\n%s\n" reg msg
   in Region.{value; region}
 
-(* IMPORTANT : Make sure the functions [fail] and [expr] remain the
-   only ones raising [Error]. *)
-
-exception Error of (Buffer.t * string Region.reg)
-
 let fail state region error =
-  let msg = error_to_string error in
+  let msg = Error.to_string error in
   let msg = format_error state.config ~msg region
   in List.iter close_in state.chans;
      raise (Error (state.out, msg))
 
-let mk_reg buffer =
-  let start = Lexing.lexeme_start_p buffer |> Pos.from_byte
-  and stop  = Lexing.lexeme_end_p buffer |> Pos.from_byte
-  in Region.make ~start ~stop
-
 let stop state buffer = fail state (mk_reg buffer)
 
-(* The function [reduce_cond] is called when a #endif directive is
-   found, and the trace (see type [trace] above) needs updating. *)
+let apply transform region state =
+  match transform state with
+    Stdlib.Ok state  -> state
+  | Stdlib.Error err -> fail state region err
 
-let reduce_cond state region =
-  let rec reduce = function
-                [] -> fail state region Dangling_endif
-  | If mode::trace -> {state with mode; trace}
-  |      Region::_ -> fail state region Open_region_in_conditional
-  |       _::trace -> reduce trace
-  in reduce state.trace
-
-(* The function [reduce_region] is called when a #endregion directive
-   is read, and the trace needs updating. *)
-
-let reduce_region state region =
-  match state.trace with
-    [] -> fail state region Dangling_endregion
-  | Region::trace -> {state with trace}
-  |             _ -> fail state region Conditional_in_region
-
-(* The function [extend] is called when encountering conditional
-   directives #if, #else and #elif. As its name suggests, it extends
-   the current trace with the current conditional directive, whilst
-   performing some validity checks. *)
-
-let extend cond state region =
-  match cond, state.trace with
-    If _, Elif _::_ -> fail state region If_follows_elif
-  | Else,   Else::_ -> fail state region Else_follows_else
-  | Else,        [] -> fail state region Dangling_else
-  | Elif _, Else::_ -> fail state region Elif_follows_else
-  | Elif _,      [] -> fail state region Dangling_elif
-  |     hd,     tl  -> hd::tl
-
-(* The function [last_mode] seeks the last mode as recorded in the
-   trace (see type [trace] above). *)
-
-let rec last_mode = function
-                        [] -> assert false
-| (If mode | Elif mode)::_ -> mode
-|                 _::trace -> last_mode trace
-
-(* Finding a file to #include *)
-
-let rec find file_path = function
-         [] -> None
-| dir::dirs ->
-    let path =
-      if dir = "." || dir = "" then file_path
-      else dir ^ Filename.dir_sep ^ file_path in
-    try Some (path, open_in path) with
-      Sys_error _ -> find file_path dirs
-
-let find dir file dirs =
-  let path =
-    if dir = "." || dir = "" then file
-    else dir ^ Filename.dir_sep ^ file in
-  try Some (path, open_in path) with
-    Sys_error _ ->
-      let base = Filename.basename file in
-      if base = file then find file dirs else None
-
-(* PRINTING *)
-
-(* Copying the current lexeme to the buffer *)
-
-let copy state buffer =
-  Buffer.add_string state.out (Lexing.lexeme buffer)
-
-(* End of lines are always copied. ALWAYS AND ONLY USE AFTER SCANNING nl. *)
-
-let proc_nl state buffer =
-  Lexing.new_line buffer; copy state buffer
-
-(* Copying a string *)
-
-let print state string = Buffer.add_string state.out string
+let find dir file    = apply (State.find dir file)
+let reduce_cond      = apply State.reduce_cond
+let reduce_region    = apply State.reduce_region
+let extend cond mode = apply (State.extend cond mode)
 
 (* Evaluating a preprocessor expression
 
@@ -309,8 +95,8 @@ let expr state buffer : mode =
   let ast =
     try E_Parser.expr E_Lexer.scan buffer with
       E_Lexer.Error e -> raise (Error (state.out, e))
-    | E_Parser.Error  -> stop state buffer Parse_error in
-  let () = print state "\n" in
+    | E_Parser.Error  -> stop state buffer Error.Parse_error in
+  let () = State.print state "\n" in
   if E_AST.eval state.env ast then Copy else Skip
 
 (* DIRECTIVES *)
@@ -394,7 +180,7 @@ let line_comments =
 
 rule scan state = parse
   eof   { if state.trace = [] then state
-          else stop state lexbuf Missing_endif }
+          else stop state lexbuf Error.Missing_endif }
 | nl    { proc_nl state lexbuf; scan state lexbuf }
 | blank { if state.mode = Copy then copy state lexbuf;
           scan state lexbuf }
@@ -410,7 +196,7 @@ rule scan state = parse
          end
     else
     if   region#start#offset `Byte > 0
-    then stop state lexbuf Directive_inside_line
+    then stop state lexbuf Error.Directive_inside_line
     else
     match id with
       "include" ->
@@ -421,20 +207,18 @@ rule scan state = parse
         if state.mode = Copy then
           let incl_dir = Filename.dirname incl_file in
           let path = mk_path state in
-          let incl_path, incl_chan =
-            match find path incl_file state.config#dirs with
-              Some p -> p
-            |   None -> fail state reg (File_not_found incl_file) in
+          let incl_path, incl_chan, state = find path incl_file reg state in
           let () = print state (sprintf "\n# 1 %S 1\n" incl_path) in
           let incl_buf = Lexing.from_channel incl_chan in
           let () =
             let open Lexing in
             incl_buf.lex_curr_p <-
               {incl_buf.lex_curr_p with pos_fname = incl_file} in
-          let state  = {state with chans = incl_chan::state.chans} in
           let state' = {state with mode=Copy; trace=[]} in
           let state' = scan (push_dir incl_dir state') incl_buf in
-          let state  = {state with env=state'.env; chans=state'.chans} in
+          let state  = {state with env    = state'.env;
+                                   chans  = state'.chans;
+                                   import = state'.import} in
           let path   = if path = "" || path = "." then base
                        else path ^ Filename.dir_sep ^ base in
           let ()     = print state (sprintf "\n# %i %S 2\n" (line+1) path)
@@ -442,62 +226,49 @@ rule scan state = parse
         else scan state lexbuf
     | "import" ->
         let reg, import_file, imported_module = scan_import state lexbuf in
-        if state.mode = Copy then
-          let path = mk_path state in
-          let import_path =
-            match find path import_file state.config#dirs with
-              Some p -> fst p
-            | None -> fail state reg (File_not_found import_file) in
-          let state  =
-            {state with
-               import = (import_path, imported_module) :: state.import}
-          in (proc_nl state lexbuf; scan state lexbuf)
-        else (proc_nl state lexbuf; scan state lexbuf)
+        let state =
+          if state.mode = Copy then
+            let path = mk_path state in
+            let import_path, _, state = find path import_file reg state
+            in State.push_import import_path imported_module state
+          else state
+        in (proc_nl state lexbuf; scan state lexbuf)
     | "if" ->
         let mode  = expr state lexbuf in
         let mode  = if state.mode = Copy then mode else Skip in
-        let trace = extend (If state.mode) state region in
-        let state = {state with mode; trace}
+        let state = extend (If state.mode) mode region state
         in scan state lexbuf
     | "else" ->
         let ()    = skip_line state lexbuf in
         let mode  = match state.mode with
                       Copy -> Skip
                     | Skip -> last_mode state.trace in
-        let trace = extend Else state region
-        in scan {state with mode; trace} lexbuf
+        let state = extend Else mode region state
+        in scan state lexbuf
     | "elif" ->
         let mode = expr state lexbuf in
-        let trace, mode =
+        let state =
           match state.mode with
-            Copy -> extend (Elif Skip) state region, Skip
-          | Skip -> let old_mode = last_mode state.trace
-                    in extend (Elif old_mode) state region,
-                       if old_mode = Copy then mode else Skip
-        in scan {state with mode; trace} lexbuf
+            Copy -> extend (Elif Skip) Skip region state
+          | Skip -> let old_mode = last_mode state.trace in
+                    let new_mode = if old_mode = Copy then mode else Skip
+                    in extend (Elif old_mode) new_mode region state
+        in scan state lexbuf
     | "endif" ->
         skip_line state lexbuf;
-        scan (reduce_cond state region) lexbuf
+        scan (reduce_cond region state) lexbuf
     | "define" ->
-        let id, region = variable state lexbuf in
-        if state.mode = Copy then
-          if id="true" || id="false"
-          then fail state region (Reserved_symbol id)
-          else
-            if E_AST.Env.mem id state.env
-            then fail state region (Multiply_defined_symbol id)
-            else
-              let state = {state with env = E_AST.Env.add id state.env}
-              in scan state lexbuf
+        let id, _ = variable state lexbuf in
+        if state.mode = Copy
+        then scan (env_add id state) lexbuf
         else scan state lexbuf
     | "undef" ->
         let id, _ = variable state lexbuf in
-        if state.mode = Copy then
-          let state = {state with env = E_AST.Env.remove id state.env}
-          in scan state lexbuf
+        if   state.mode = Copy
+        then scan (env_rem id state) lexbuf
         else scan state lexbuf
     | "error" ->
-        fail state region (Error_directive (message [] lexbuf))
+        fail state region (Error.Error_directive (message [] lexbuf))
     | "region" ->
         let msg = message [] lexbuf
         in print state ("#" ^ space ^ "region" ^ msg ^ "\n");
@@ -506,7 +277,7 @@ rule scan state = parse
     | "endregion" ->
         let msg = message [] lexbuf
         in print state ("#" ^ space ^ "endregion" ^ msg ^ "\n");
-           scan (reduce_region state region) lexbuf
+           scan (reduce_region region state) lexbuf
     | _ -> assert false
   }
 
@@ -563,8 +334,8 @@ and variable state = parse
            in skip_line state lexbuf; id }
 
 and symbol state = parse
-  ident as id { id, mk_reg lexbuf                }
-| _           { stop state lexbuf Invalid_symbol }
+  ident as id { id, mk_reg lexbuf                      }
+| _           { stop state lexbuf Error.Invalid_symbol }
 
 (* Skipping all characters until the end of line or end of file. *)
 
@@ -618,7 +389,7 @@ and in_block block opening state = parse
          in in_block block opening state lexbuf }
 
 | nl   { proc_nl state lexbuf; in_block block opening state lexbuf }
-| eof  { let err = Unterminated_comment block#closing
+| eof  { let err = Error.Unterminated_comment block#closing
          in fail state opening err                                 }
 | _    { copy state lexbuf; in_block block opening state lexbuf    }
 
@@ -627,44 +398,44 @@ and in_block block opening state = parse
 and scan_include state = parse
   blank+ { scan_include state lexbuf                    }
 | '"'    { in_include (mk_reg lexbuf) [] 0 state lexbuf }
-| _      { stop state lexbuf Missing_filename           }
+| _      { stop state lexbuf Error.Missing_filename     }
 
 and in_include opening acc len state = parse
   '"'    { let region = Region.cover opening (mk_reg lexbuf)
            in region, end_include acc len state lexbuf       }
-| nl     { stop state lexbuf Newline_in_string               }
-| eof    { fail state opening Unterminated_string            }
+| nl     { stop state lexbuf Error.Newline_in_string         }
+| eof    { fail state opening Error.Unterminated_string      }
 | _ as c { in_include opening (c::acc) (len+1) state lexbuf  }
 
 and end_include acc len state = parse
-  nl     { Lexing.new_line lexbuf; mk_str len acc         }
-| eof    { mk_str len acc                                 }
-| blank+ { end_include acc len state lexbuf               }
-| _      { fail state (mk_reg lexbuf) Unexpected_argument }
+  nl     { Lexing.new_line lexbuf; mk_str len acc      }
+| eof    { mk_str len acc                              }
+| blank+ { end_include acc len state lexbuf            }
+| _      { stop state lexbuf Error.Unexpected_argument }
 
 (* #import *)
 
 and scan_import state = parse
   blank+ { scan_import state lexbuf                    }
 | '"'    { in_import (mk_reg lexbuf) [] 0 state lexbuf }
-| _      { stop state lexbuf Missing_filename          }
+| _      { stop state lexbuf Error.Missing_filename    }
 
 and in_import opening acc len state = parse
   '"'    { let imp_path = mk_str len acc
            in scan_module opening imp_path state lexbuf    }
-| nl     { stop state lexbuf Newline_in_string             }
-| eof    { fail state opening Unterminated_string          }
+| nl     { stop state lexbuf Error.Newline_in_string       }
+| eof    { fail state opening Error.Unterminated_string    }
 | _ as c { in_import opening (c::acc) (len+1) state lexbuf }
 
 and scan_module opening imp_path state = parse
   blank+ { scan_module opening imp_path state lexbuf    }
 | '"'    { in_module opening imp_path [] 0 state lexbuf }
-| _      { stop state lexbuf Missing_filename           }
+| _      { stop state lexbuf Error.Missing_filename     }
 
 and in_module opening imp_path acc len state = parse
   '"'    { end_module opening (mk_reg lexbuf) imp_path acc len state lexbuf }
-| nl     { stop state lexbuf Newline_in_string                              }
-| eof    { fail state opening Unterminated_string                           }
+| nl     { stop state lexbuf Error.Newline_in_string                        }
+| eof    { fail state opening Error.Unterminated_string                     }
 | _ as c { in_module opening imp_path (c::acc) (len+1) state lexbuf         }
 
 
@@ -673,7 +444,7 @@ and end_module opening closing imp_path acc len state = parse
            Region.cover opening closing, imp_path, mk_str len acc   }
 | eof    { Region.cover opening closing, imp_path, mk_str len acc   }
 | blank+ { end_module opening closing imp_path acc len state lexbuf }
-| _      { fail state (mk_reg lexbuf) Unexpected_argument           }
+| _      { stop state lexbuf Error.Unexpected_argument              }
 
 (* Strings *)
 
@@ -699,13 +470,16 @@ and preproc state = parse
    that the trace is empty at the end.  Note that we discard the state
    at the end. *)
 
+type file_path   = string
+type module_name = string
+
 type module_deps = (file_path * module_name) list
 type success     = Buffer.t * module_deps
 type message     = string Region.reg
 
 type result = (success, Buffer.t option * message) Stdlib.result
 
-type 'src preprocessor = config -> 'src -> result
+type 'src preprocessor = State.config -> 'src -> result
 
 (* Preprocessing from various sources *)
 

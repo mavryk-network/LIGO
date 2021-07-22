@@ -1,5 +1,8 @@
 (* Standalone preprocessor with default settings *)
 
+module CLI = Preprocessor.CLI
+module PreprocMainGen = Preprocessor.PreprocMainGen
+
 module Comments =
   struct
     type line_comment  = string (* Opening of a line comment *)

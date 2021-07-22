@@ -31,10 +31,7 @@ module Region = Simple_utils.Region
    If the field [offsets] is [true], then error messages will include
    horizontal offsets (a la Emacs) instead of column numbers (a la
    Vim). *)
-
-type file_path = string
-type module_name = string
-
+(*
 type line_comment  = string (* Opening of a line comment *)
 type block_comment = <opening : string; closing : string>
 
@@ -45,11 +42,14 @@ type config = <
   offsets : bool;          (* [true] for horizontal offsets *)
   dirs    : file_path list (* Directories to search for #include files *)
 >
-
+ *)
 (* In case of success, a buffer containing the preprocessed input is
    returned, together with the list of imported modules and their
    locations on the file system. In case of an error, we return the
    preprocessed buffer so far. *)
+
+type file_path   = string
+type module_name = string
 
 type module_deps = (file_path * module_name) list
 type success     = Buffer.t * module_deps
@@ -57,7 +57,7 @@ type message     = string Region.reg
 
 type result = (success, Buffer.t option * message) Stdlib.result
 
-type 'src preprocessor = config -> 'src -> result
+type 'src preprocessor = State.config -> 'src -> result
 
 (* Preprocessing from various sources *)
 
