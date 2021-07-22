@@ -58,13 +58,6 @@ module Print = struct
       fprintf fmt " "
 
   let rec print_syntax fmt = function
-    (* Keyword {group_name; value=keywords; contained; contained_in; } -> 
-      fprintf fmt "syntax keyword %s %s " group_name (String.concat " " keywords);
-      if contained then 
-        fprintf fmt "contained ";
-      print_list fmt "containedin=" contained_in;
-      fprintf fmt "\n"
-  |  *)
     Match {group_name; value=regexp; contained; contained_in; next_groups} ->
       fprintf fmt "syntax match %s \"%s\" " group_name regexp;
       if contained then 
@@ -156,13 +149,6 @@ module Convert = struct
   let regexp_lbrace         = Str.regexp "{"
   let regexp_quote          = Str.regexp "\""
   let regexp_equals         = Str.regexp "="
-  (* let g = Str.regexp "\\\\b"
-  let temp = Str.regexp "\\\\("
-  let lpar = Str.regexp "("
-  let temp_lpar = Str.regexp "TEMP_LPAR"
-  let temp2 = Str.regexp "\\\\)"
-  let rpar = Str.regexp ")"
-  let temp_rpar = Str.regexp "TEMP_RPAR" *)
 
   let textmate_regexp_to_vim_regexp = fun r -> 
     let r = Str.global_replace regexp_word_boundary "" r in
@@ -172,19 +158,7 @@ module Convert = struct
     let r = Str.global_replace regexp_at "\\@" r in
     let r = Str.global_replace regexp_lbrace "\\{" r in
     let r = Str.global_replace regexp_quote "\\\"" r in
-    (* ?= -> \?= *)
-    (* @ -> \@ *)
-
     "\\v" ^ r
-    (* this is dumb *)
-    (* let r = Str.global_replace g "" r in
-    let r = Str.global_replace temp "TEMP_LPAR" r in
-    let r = Str.global_replace lpar "\\(" r in
-    let r = Str.global_replace temp_lpar "(" r in
-    let r = Str.global_replace temp2 "TEMP_RPAR" r in
-    let r = Str.global_replace rpar "\\)" r in
-    let r = Str.global_replace temp_rpar ")" r in *)
-    (* r *)
 
   let pattern_to_vim: string list -> Textmate.pattern -> item list = fun toplevel -> function
     {name; kind = Begin_end {meta_name=highlight; begin_; end_; patterns}} ->
@@ -297,7 +271,16 @@ end
 let to_vim: Textmate.t -> string = fun t ->
   let v = Convert.to_vim t in
   let buffer = Buffer.create 100 in
-  let formatter = Format.formatter_of_buffer buffer in
-  Print.print formatter v;
+  let open Format in
+  let fmt = formatter_of_buffer buffer in
+  fprintf fmt "if exists(\"b:current_syntax\")\n";
+  fprintf fmt "    finish\n";
+  fprintf fmt "endif\n";
+  Print.print fmt v;
+  let name = match Filename.extension t.scope_name with 
+      "" -> t.scope_name
+    | a -> String.sub a 1 (String.length a - 1)
+  in
+  fprintf fmt "\nlet b:current_syntax = \"%s\"" name;
   Buffer.contents buffer
 
