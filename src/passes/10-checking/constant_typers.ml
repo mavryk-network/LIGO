@@ -954,6 +954,17 @@ let test_state_reset loc = typer_2 loc "TEST_STATE_RESET" @@ fun n amts ->
   let* () = trace_option (expected_nat loc n) @@ get_t_nat n in
   ok (t_unit ())
 
+let test_bootstrap_contract loc = typer_3 loc "TEST_BOOTSTRAP_CONTRACT" @@ fun balance main storage ->
+  let* in_ty,_ = trace_option (expected_function loc main) @@ get_t_function main in
+  let* _,storage_ty = trace_option (expected_pair loc in_ty) @@ get_t_pair in_ty in
+  let* () = assert_eq loc balance (t_mutez ()) in
+  let* () = assert_eq loc storage storage_ty in
+  ok (t_unit ())
+
+let test_nth_bootstrap_contract loc = typer_1 loc "TEST_NTH_BOOTSTRAP_CONTRACT" @@ fun n ->
+  let* () = assert_eq loc n (t_nat ()) in
+  ok (t_address ())
+
 let test_set_now loc = typer_1 loc "TEST_SET_NOW" @@ fun time ->
   let* () = assert_eq loc time (t_timestamp ()) in
   ok (t_unit ())
@@ -1015,6 +1026,29 @@ let test_last_originations loc = typer_1 loc "TEST_LAST_ORIGINATIONS" @@ fun u -
 
 let test_compile_meta_value loc = typer_1 loc "TEST_LAST_ORIGINATIONS" @@ fun _ ->
   ok (t_michelson_code ())
+
+let test_mutate_expression loc = typer_2 loc "TEST_MUTATE_EXPRESSION" @@ fun n expr ->
+  let* () = assert_eq loc n (t_nat ()) in
+  let* () = assert_eq loc expr (t_ligo_code ()) in
+  ok (t_ligo_code ())
+
+let test_mutate_value loc = typer_2 loc "TEST_MUTATE_VALUE" @@ fun n expr ->
+  let* () = assert_eq loc n (t_nat ()) in
+  ok (t_option (t_pair expr (t_mutation ())))
+
+let test_mutation_test loc = typer_2 loc "TEST_MUTATION_TEST" @@ fun expr tester ->
+  let* (arg , res) = trace_option (expected_function loc tester) @@ get_t_function tester in
+  let* () = assert_eq loc arg expr in
+  ok (t_option (t_pair res (t_mutation ())))
+
+let test_mutation_test_all loc = typer_2 loc "TEST_MUTATION_TEST_ALL" @@ fun expr tester ->
+  let* (arg , res) = trace_option (expected_function loc tester) @@ get_t_function tester in
+  let* () = assert_eq loc arg expr in
+  ok (t_list (t_pair res (t_mutation ())))
+
+let test_mutate_count loc = typer_1 loc "TEST_MUTATE_COUNT" @@ fun expr ->
+  let* () = assert_eq loc expr (t_ligo_code ()) in
+  ok (t_nat ())
 
 let test_run loc = typer_2 loc "TEST_RUN" @@ fun _ _ ->
   ok (t_michelson_code ())
@@ -1183,8 +1217,15 @@ let constant_typers loc c : (typer , typer_error) result = match c with
   | C_TEST_COMPILE_EXPRESSION -> ok @@ test_compile_expression loc ;
   | C_TEST_COMPILE_EXPRESSION_SUBST -> ok @@ test_compile_expression_subst loc ;
   | C_TEST_STATE_RESET -> ok @@ test_state_reset loc ;
+  | C_TEST_BOOTSTRAP_CONTRACT -> ok @@ test_bootstrap_contract loc ;
+  | C_TEST_NTH_BOOTSTRAP_CONTRACT -> ok @@ test_nth_bootstrap_contract loc ;
   | C_TEST_LAST_ORIGINATIONS -> ok @@ test_last_originations loc ;
   | C_TEST_COMPILE_META_VALUE -> ok @@ test_compile_meta_value loc ;
+  | C_TEST_MUTATE_EXPRESSION -> ok @@ test_mutate_expression loc ;
+  | C_TEST_MUTATE_COUNT -> ok @@ test_mutate_count loc ;
+  | C_TEST_MUTATE_VALUE -> ok @@ test_mutate_value loc ;
+  | C_TEST_MUTATION_TEST -> ok @@ test_mutation_test loc ;
+  | C_TEST_MUTATION_TEST_ALL -> ok @@ test_mutation_test_all loc ;
   | C_TEST_RUN -> ok @@ test_run loc ;
   | C_TEST_EVAL -> ok @@ test_eval loc ;
   | C_TEST_COMPILE_CONTRACT -> ok @@ test_compile_contract loc ;

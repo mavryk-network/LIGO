@@ -13,7 +13,7 @@ let map_expression :
   (expression -> expression) -> (expression -> expression) =
   fun f e ->
   match to_stdlib_result @@ Helpers.map_expression (fun e -> ok (f e)) e with
-  | Ok (e, _) -> e
+  | Ok (e) -> e
   | Error _ -> assert false (* impossible *)
 
 
@@ -123,8 +123,15 @@ let is_pure_constant : constant' -> bool =
   | C_TEST_COMPILE_EXPRESSION
   | C_TEST_COMPILE_EXPRESSION_SUBST
   | C_TEST_STATE_RESET
+  | C_TEST_BOOTSTRAP_CONTRACT
+  | C_TEST_NTH_BOOTSTRAP_CONTRACT
   | C_TEST_LAST_ORIGINATIONS
   | C_TEST_COMPILE_META_VALUE
+  | C_TEST_MUTATE_EXPRESSION
+  | C_TEST_MUTATE_COUNT
+  | C_TEST_MUTATE_VALUE
+  | C_TEST_MUTATION_TEST
+  | C_TEST_MUTATION_TEST_ALL
   | C_TEST_RUN
   | C_TEST_EVAL
   | C_TEST_COMPILE_CONTRACT

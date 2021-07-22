@@ -137,6 +137,37 @@ let%expect_test _ =
   Everything at the top-level was executed.
   - test exited with value (). |}]
 
+let%expect_test _ =
+  run_ligo_good [ "test" ; test "test_mutate_example.mligo" ] ;
+  [%expect {|
+    Increment (0)
+    10
+    Increment (-32)
+    -22
+    Increment (33)
+    43
+    Increment (31)
+    41
+    Increment (64)
+    74
+    Everything at the top-level was executed.
+    - testme_test exited with value "./testme.mligo".
+    - test_prg exited with value <fun>.
+    - test exited with value true. |}]
+
+let%expect_test _ =
+  run_ligo_good [ "test" ; test "bootstrapped_contracts.mligo" ] ;
+  [%expect {|
+    "Initial states:"
+    (Pair "KT1CSKPf2jeLpMmrgKquN2bCjBTkAcAdRVDy" 12)
+    (Pair "KT1QuofAgnsWffHzLA7D78rxytJruGHDe7XG" 9)
+    "Final states:"
+    (Pair "KT1CSKPf2jeLpMmrgKquN2bCjBTkAcAdRVDy" 3)
+    (Pair "KT1QuofAgnsWffHzLA7D78rxytJruGHDe7XG" 0)
+    Everything at the top-level was executed.
+    - test_transfer exited with value ().
+            |}]
+
 (* do not remove that :) *)
 let () = Sys.chdir pwd
 
