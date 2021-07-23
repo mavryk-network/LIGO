@@ -200,30 +200,128 @@ rule scan state = parse
     else
     match id with
       "include" ->
+        (* We first extract info about the current file so we can
+           restore it after the #include is complete. *)
+
         let line = Lexing.(lexbuf.lex_curr_p.pos_lnum)
-        and file = Lexing.(lexbuf.lex_curr_p.pos_fname) in
-        let base = Filename.basename file
+        and base = Filename.basename Lexing.(lexbuf.lex_curr_p.pos_fname)
+
+        (* We read the string containing the name of the file to
+           include. Note the first component [reg], which is the
+           region in the file corresponding to the string, in case we
+           will need to format an error message when the file is not
+           found on the filesystem. *)
+
         and reg, incl_file = scan_include state lexbuf in
+
         if state.mode = Copy then
+          (* If in copy mode, we establish the directory where the
+             file to include is expected to reside. This directory may
+             be relative to the current directory or not. See
+             [incl_path] below. *)
+
           let incl_dir = Filename.dirname incl_file in
+
+          (* We form the filesystem path to the current file. *)
+
           let path = mk_path state in
+
+          (* We try to find the file to include. If missing, the
+             exception [Error] is raised, with the value
+             [Error.File_not_found]. Otherwise, we obtain a
+             triplet. The first component [incl_path] may be different
+             from [incl_dir] if the preprocessor is standalone, was
+             given a list of directories with the command-line option
+             [-I], and the file to include was not found relatively to
+             the current directy, but from one of those given with
+             [-I]. This is consistent with the behaviour of [cpp],
+             insofar as we proofed it. The second component
+             [incl_chan] is an input channel of type [in_channel],
+             which has been registered with the [state], so we can
+             close it when done. Finally, the last component is the
+             new state to thread along. *)
+
           let incl_path, incl_chan, state = find path incl_file reg state in
+
+          (* We are ready now to output the linemarker before
+             including the file (as the rightmost flag [1] states). Of
+             course we start at line 1 in the included file (as the
+             leftmost flag [1] states). *)
+
           let () = print state (sprintf "\n# 1 %S 1\n" incl_path) in
+
+          (* We prepare a lexing buffer from the input channel bound
+             to the file to include. *)
+
           let incl_buf = Lexing.from_channel incl_chan in
+
+          (* We instruct the lexing buffer just created that the
+             corresponding file name is [incl_file] (recall that this
+             may not be the fully qualified name, but the one given
+             after #include. *)
+
           let () =
             let open Lexing in
             incl_buf.lex_curr_p <-
               {incl_buf.lex_curr_p with pos_fname = incl_file} in
+
+          (* We make a variant copy of the current state meant to scan
+             the file to include: we force the copy mode from the
+             start, and we set an empty trace for conditional
+             directives, so a conditional directive opened in the
+             current file cannot be closed in the included file. *)
+
           let state' = {state with mode=Copy; trace=[]} in
+
+          (* We perform a recursive call which will preprocess the
+             file to include, because we thread the new state [state']
+             we just created, after saving the include directory in
+             it with a call to [push_dir]. *)
+
           let state' = scan (push_dir incl_dir state') incl_buf in
-          let state  = {state with env    = state'.env;
-                                   chans  = state'.chans;
-                                   import = state'.import} in
-          let path   = if path = "" || path = "." then base
-                       else path ^ Filename.dir_sep ^ base in
-          let ()     = print state (sprintf "\n# %i %S 2\n" (line+1) path)
+
+          (* After returning from the recursive call, we restore the
+             state before the call, but we retain and commit some
+             information from the state returned by the call: the
+             symbol environment, the opened channels and the imports
+             (#import of modules). The first because we want to enable
+             an included file to contain #define and #undef
+             directives, typically following the traditional design
+             pattern to avoid double inclusions. The second because
+             the included file may contain its own #include directives
+             and therefore open new input channels, which will need
+             closing when we are done. The third because the included
+             file may contain dependencies from #import directives. *)
+
+          let state = {state with env    = state'.env;
+                                  chans  = state'.chans;
+                                  import = state'.import} in
+
+          (* We now have to prepare the linemarker that indicates that
+             we returned from a file inclusion. First, we need the
+             filesystem path to the current file [path], which we used
+             earlier to locate the file to include. We format it to
+             conform to the convention of [cpp]. *)
+
+          let path = if path = "" || path = "." then base
+                     else path ^ Filename.dir_sep ^ base in
+
+          (* Finally we can output the linemarker. The rightmost flag
+             is 2, to specify a return from an #include. The leftmost
+             flag is the line number [line+1], which we extracted and
+             kept safe earlier, before doing anything. *)
+
+          let () = print state (sprintf "\n# %i %S 2\n" (line+1) path)
+
+          (* We can now resume preprocessing the current file. *)
+
           in scan state lexbuf
+
+        (* If in skip mode, we resume scanning. The #include and its
+           argument will be missing in the output. *)
+
         else scan state lexbuf
+
     | "import" ->
         let reg, import_file, imported_module = scan_import state lexbuf in
         let state =
@@ -233,11 +331,13 @@ rule scan state = parse
             in State.push_import import_path imported_module state
           else state
         in (proc_nl state lexbuf; scan state lexbuf)
+
     | "if" ->
         let mode  = expr state lexbuf in
         let mode  = if state.mode = Copy then mode else Skip in
         let state = extend (If state.mode) mode region state
         in scan state lexbuf
+
     | "else" ->
         let ()    = skip_line state lexbuf in
         let mode  = match state.mode with
@@ -245,6 +345,7 @@ rule scan state = parse
                     | Skip -> last_mode state.trace in
         let state = extend Else mode region state
         in scan state lexbuf
+
     | "elif" ->
         let mode = expr state lexbuf in
         let state =
@@ -254,21 +355,26 @@ rule scan state = parse
                     let new_mode = if old_mode = Copy then mode else Skip
                     in extend (Elif old_mode) new_mode region state
         in scan state lexbuf
+
     | "endif" ->
         skip_line state lexbuf;
         scan (reduce_cond region state) lexbuf
+
     | "define" ->
         let id, _ = variable state lexbuf in
         if state.mode = Copy
         then scan (env_add id state) lexbuf
         else scan state lexbuf
+
     | "undef" ->
         let id, _ = variable state lexbuf in
         if   state.mode = Copy
         then scan (env_rem id state) lexbuf
         else scan state lexbuf
+
     | "error" ->
         fail state region (Error.Error_directive (message [] lexbuf))
+
     | "region" ->
         let msg = message [] lexbuf
         in print state ("#" ^ space ^ "region" ^ msg ^ "\n");
@@ -278,6 +384,7 @@ rule scan state = parse
         let msg = message [] lexbuf
         in print state ("#" ^ space ^ "endregion" ^ msg ^ "\n");
            scan (reduce_region region state) lexbuf
+
     | _ -> assert false
   }
 

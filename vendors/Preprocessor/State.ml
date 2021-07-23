@@ -132,12 +132,12 @@ let open_file path state =
 
 let find file_path state =
   let rec aux = function
-         [] -> Stdlib.Error (Error.File_not_found file_path)
-| dir::dirs -> let path =
+           [] -> Stdlib.Error (Error.File_not_found file_path)
+  | dir::dirs -> let path =
                 if dir = "." || dir = "" then file_path
                 else dir ^ Filename.dir_sep ^ file_path in
-              try Stdlib.Ok (open_file path state) with
-                Sys_error _ -> aux dirs
+                try Stdlib.Ok (open_file path state) with
+                  Sys_error _ -> aux dirs
   in aux state.config#dirs
 
 let find dir file state =

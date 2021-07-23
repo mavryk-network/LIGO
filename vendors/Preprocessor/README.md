@@ -1,7 +1,7 @@
 # The Preprocessor Library and Standalone Executable
 
 A preprocessor is a tool that reads a text file and, if some special
-intructions, called _preprocessing directives_, are found in the
+instructions, called _preprocessing directives_, are found in the
 input, the output may not be an identical copy, for example some parts
 can be skipped. We document here the preprocessor shipped with the
 LIGO compiler.
@@ -29,6 +29,8 @@ Preprocessor
 ├── E_Lexer.mll
 ├── E_ParserMain.ml
 ├── E_Parser.mly
+├── Error.ml
+├── Error.mli
 ├── LICENSE
 ├── Makefile.cfg
 ├── Preprocessor.opam
@@ -36,6 +38,8 @@ Preprocessor
 ├── PreprocMainGen.mli
 ├── PreprocMain.ml
 ├── README.md
+├── State.ml
+├── State.mli
 └── Tests
      ├── ...
      ...
@@ -49,6 +53,11 @@ Here is a short description of those files:
     the boolean expression of conditional directives `#if` and
     `#elif`.
 
+  * The module `Error` defines the errors that the preprocessor may
+    emit.
+
+  * The `LICENSE` file must contain the MIT license.
+
   * The modules `CLI` and `PreprocMainGen` deal with command-line
     options for the standalone preprocessor, and also export data
     structures about the configuration meant for the library client,
@@ -61,7 +70,8 @@ Here is a short description of those files:
 
   * The file `README.md` is the present file.
 
-  * The `LICENSE` file must contain the MIT license.
+  * The module `State` defines a type and related functions used for
+    preprocessing.
 
 The following files are meant to be used only by a special Makefile to
 build the standalone preprocessor. See
@@ -162,7 +172,7 @@ and each <option> (if any) is one of the following:
 First, we see that the preprocessor follows the
 [GNU getopt](https://www.gnu.org/software/libc/manual/html_node/Getopt.html)
 conventions on short and long option names. The input is an anonymous
-argument that must be preceeded by `--`. The options are
+argument that must be preceded by `--`. The options are
 
   * `-I <paths>` for finding files given to the directive `#include`
     which are not found by appending their path to the current
@@ -237,7 +247,7 @@ discarded, and only newline characters are copied.
 Conditional directives follow the familiar syntax of some of their
 cousins in programming languages. At the very least,
 
-  1. they start with the `#if` directive, followed by a boolean
+  1. they start with the `#if` directive, followed by a Boolean
      expression as argument,
 
   2. and they are closed by `#endif`.
@@ -259,7 +269,7 @@ This is NOT copied to the output, except the newline character
 #endif
 ```
 
-where `false` is a predefined symbol acting like a boolean value. The
+where `false` is a predefined symbol acting like a Boolean value. The
 output is
 
 ```
@@ -320,7 +330,7 @@ This is NOT copied to the output, except the newline character.
 #endif
 ```
 
-This opens the possibiliy to use boolean expressions made of
+This opens the possibility to use Boolean expressions made of
   * `true` and `false` already mentioned;
   * `||` for the disjunction ("or");
   * `&&` for the conjunction ("and");
@@ -331,7 +341,7 @@ This opens the possibiliy to use boolean expressions made of
 
 Directives are processed in sequence in the input file. This
 preprocessor, like that of `C#`, allows us to _undefine_ a symbol,
-that is, giving it the boolean value `false`, like so:
+that is, giving it the Boolean value `false`, like so:
 
 ```
 #define SYM
@@ -713,7 +723,7 @@ but also additional information.
 
   * The field `env` records the symbols defined by `#define` and not
     undefined by `#undef`. It acts as a value environment when
-    computing the boolean expressions of `#if` and `#elif`.
+    computing the Boolean expressions of `#if` and `#elif`.
 
   * The field `out` is the output buffer.
 
@@ -738,7 +748,7 @@ rule scan state = parse
 
 ```
 
-We can see the parameter `state` that will be treaded along the
+We can see the parameter `state` that will be threaded along the
 scanning rules.
 
 #### Copying
@@ -768,10 +778,10 @@ an `#elif` been last read). Note that the current mode is stored in
 the trace with the current directive --- that mode may be later
 restored (see below for some examples). Moreover, the directive would
 be deemed invalid if its current position within the line (that is,
-its offset) were not preceeded by blanks or nothing, otherwise the
+its offset) were not preceded by blanks or nothing, otherwise the
 function
 [expr](https://gitlab.com/ligolang/ligo/-/blob/d490176ef5dd7e6c825a8a7bd04ab56108889ce0/vendors/Preprocessor/API.mll#L297)
-is called to scan the boolean expression associated with the `#if`: if
+is called to scan the Boolean expression associated with the `#if`: if
 it evaluates to `true`, then the resulting mode is `Copy`, meaning
 that we may copy what follows, otherwise we skip it --- the actual
 decision depending on the current mode. That new mode is used if we
@@ -788,7 +798,7 @@ with `Else`:
 extend Else state region
 ```
 
-amd then the rest of the line is scanned and discarded by means of
+and then the rest of the line is scanned and discarded by means of
 [skip_line](https://gitlab.com/ligolang/ligo/-/blob/d490176ef5dd7e6c825a8a7bd04ab56108889ce0/vendors/Preprocessor/API.mll#L669). (Keep
 in mind that newline characters are always copied.) If we were in copy
 mode, the new mode toggles to skipping mode; otherwise, the trace is
@@ -871,38 +881,8 @@ the mode before the virtual `#if`.
 
 #### Scanning File Inclusions
 
-The handling of the `#include` directive features a unique feature:
-[a reentrant call](https://gitlab.com/ligolang/ligo/-/blob/d490176ef5dd7e6c825a8a7bd04ab56108889ce0/vendors/Preprocessor/API.mll#L526). The
-preprocessor could detect if it is going to enter a loop (for example,
-a file including itself directly, or transitively), but it does not,
-so the user has to be
-careful. [When returning from a file inclusion](https://gitlab.com/ligolang/ligo/-/blob/d490176ef5dd7e6c825a8a7bd04ab56108889ce0/vendors/Preprocessor/API.mll#L527),
-three pieces of informations need updating:
-
-  1. the environment of defined symbols, possibly defined in included
-     files (e.g. to avoid double inclusions);
-
-  2. the output channels of any possibly further included files;
-
-  3. the list of imported modules and their corresponding files.
-
-Note as well how the files to be included are searched:
-
-```
-          let incl_dir = Filename.dirname incl_file in
-          let path = mk_path state in
-          let incl_path, incl_chan =
-            match find path incl_file state.config#dirs with
-              Some p -> p
-            |   None -> fail state reg (File_not_found incl_file) in
-```
-
-In particular, if you build the standalone preprocessor, the search
-behaviour is influenced by the `-I` command-line option. The search
-algorithm was empirically designed to mimick that of `cpp`. See also
-[the linemarker when going to the included file](https://gitlab.com/ligolang/ligo/-/blob/d490176ef5dd7e6c825a8a7bd04ab56108889ce0/vendors/Preprocessor/API.mll#L518)
-and
-[the linemarker when returning](https://gitlab.com/ligolang/ligo/-/blob/d490176ef5dd7e6c825a8a7bd04ab56108889ce0/vendors/Preprocessor/API.mll#L530).
+For a step-by-step explanation of how file inclusion works, please
+refer to the source code.
 
 #### Rollback
 
@@ -923,7 +903,7 @@ lexing buffer so that it would appear that its contents has not been
 read. When called in a semantic action, it applies to the lexing
 buffer that was matched by the corresponding regular expression.
 
-##### Scannning Comments and Strings
+##### Scanning Comments and Strings
 
 As we saw in the section about
 [preprocessing strings and comments](#preprocessing-strings-and-comments),
@@ -956,7 +936,7 @@ opening is the one requested by the client:
     match state.config#block with
 ```
 
-If not, we [rollback](#rollback) the lexing buffer state and rescan
+If not, we [rollback](#rollback) the lexing buffer state and scan again
 the characters that were matched (`scan_n_char n state lexbuf`), and
 then resume scanning with `scan`:
 
@@ -1043,8 +1023,55 @@ not programming languages, to be tested.
 
 ## Maintaining the Preprocessor
 
+This section explains how to perform some maintenance tasks aiming at
+adding new features.
+
 ### Adding a Command-Line Option
 
+When using the standalone preprocessor, we may want to add
+[another command-line option](#the-standalone-preprocessor), for
+example to dump debug information. For that purpose, the module `CLI`
+needs to be considered. The new option needs to be added to the
+signature `CLI.S`. If it is a debug option, it should not lead to an
+error by being incompatible with other options, therefore there is not
+need to extend the type `status` and the variant `` `Done`` will
+do. The function [make_help] needs to be emended so `--help` displays
+the new option. If it is for debugging, the description could be `For
+debugging.` or `Not documented.` A global reference needs to be
+created, which will hold the OCaml value corresponding to the option,
+and it must be initialised with a default value, so an `option` may be
+handy sometimes. See for example the reference `input`. If your option
+is without arguments, add it to the value `opt_wo_arg`, like
+`--show-pp` is added, for instance. If it has an argument, then add it
+to `opt_with_arg`, like `-I`. Then re-export the OCaml value without a
+reference, for example see
+
+```
+let dirs = !dirs
+```
+to comply with the signature `CLI.S`, where no reference escapes to
+the client. You may want the new option to be debugged itself, by
+adding a string to the value `options`:
+
+```
+      let options = [
+        "CLI options";
+        sprintf "input      = %s" (string_of_opt (fun x -> x) !input);
+        sprintf "dirs       = %s" string_of_dirs;
+        sprintf "show-pp    = %b" show_pp;
+        sprintf "columns    = %b" (not offsets)
+      ] in
+```
+
+If the new option could cause new errors to occur, then the type
+`status` may had to be extended with another variant. Those variants
+are polymorphic because they enable such an extension.
+
 ### Adding a Preprocessing Directive and/or Errors
+
+It is more likely that you may want to add a new preprocessing
+directive. In that case, you need first to think of its arguments and
+ask yourself: How many? Any optional? Of what type?
+
 
 ### Adding a Comment or String
