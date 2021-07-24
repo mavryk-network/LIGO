@@ -30,6 +30,8 @@ changelog:
     - /^.*-run-dev$/
     - /[0-9]+\.[0-9]+\.[0-9]+/
   script:
+    - scripts/add-changelog-entry.sh ${CI_MERGE_REQUEST_LABELS[0]} $CI_MERGE_REQUEST_IID ${CI_MERGE_REQUEST_ASSIGNEES[0]} 
+      $CI_MERGE_REQUEST_TITLE
     - nix-build nix -A ligo-changelog
     - cp -L result/* .
   artifacts:
