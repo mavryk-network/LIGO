@@ -3,6 +3,7 @@ variables:
   LIGO_REGISTRY_IMAGE_BASE_NAME: "${CI_PROJECT_PATH}/${CI_PROJECT_NAME}"
   WEBIDE_IMAGE_TAG: "registry.gitlab.com/${CI_PROJECT_PATH}/ligo_webide:${CI_COMMIT_SHORT_SHA}"
   LIGO_IMAGE_TAG: "ligo:${CI_COMMIT_SHORT_SHA}-${CI_PIPELINE_ID}"
+  AUTHORIZED_CHANGELOG_TYPES: ("added" "fixed" "changed" "deprecated" "removed" "performance" "internal")
 
 stages:
   - pretooling                      # changelog
@@ -30,8 +31,10 @@ changelog:
     - /^.*-run-dev$/
     - /[0-9]+\.[0-9]+\.[0-9]+/
   script:
-    - scripts/add-changelog-entry.sh ${CI_MERGE_REQUEST_LABELS[0]} $CI_MERGE_REQUEST_IID ${CI_MERGE_REQUEST_ASSIGNEES[0]} 
-      $CI_MERGE_REQUEST_TITLE
+    - scripts/add-changelog-entry.sh
+      ${CI_MERGE_REQUEST_LABEL[@]:-"other"}
+      $CI_MERGE_REQUEST_IID ${CI_MERGE_REQUEST_ASSIGNEES[0]:-"unknown"} "$CI_MERGE_REQUEST_TITLE"
+    - git add changelog/ && git commit --amend -C HEAD
     - nix-build nix -A ligo-changelog
     - cp -L result/* .
   artifacts:
