@@ -1071,7 +1071,7 @@ are polymorphic because they enable such an extension.
 
 It is more likely that you may want to add a new preprocessing
 directive. In that case, you need first to think of its arguments and
-ask yourself: How many? Any optional? Of what type?
+ask yourself: How many? Any optional? Of what type? Can it fail?
 
 
 ### Adding a Comment or String
