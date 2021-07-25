@@ -1071,7 +1071,109 @@ are polymorphic because they enable such an extension.
 
 It is more likely that you may want to add a new preprocessing
 directive. In that case, you need first to think of its arguments and
-ask yourself: How many? Any optional? Of what type? Can it fail?
+ask yourself: How many? Any optional? Of what OCaml type? Can it fail?
 
+The first step is to insert the name of the directive in the list
+`directives`, in alphabetic order. Next, you need to add the
+corresponding case to the pattern matching `match id with`. If the new
+directive needs an argument, you can follow the example of another
+directive that has a similar one. For example, if a string is
+expected, you might considier how `#include` works. Anyway, the
+general idea is that you want an error if the string is not valid or
+missing (assuming it is not optional here). That is why you need a
+scanning rule for the arguments. This is why, for instance, the
+handling of `#include` needs calling `scan_include`:
 
-### Adding a Comment or String
+```
+        and reg, incl_file = scan_include state lexbuf in
+```
+
+and `#import` features a call to `scan_import`, like so:
+
+```
+        let reg, import_file, imported_module = scan_import state lexbuf in
+```
+
+In those rules, always have a catch-all clause and, if the argument is
+the last, a clause matching `eof`, lile so:
+
+```
+and new_rule state = parse
+  ...
+| eof { ... }  (* If parsing the last argument *)
+| _   { ... }
+```
+
+Assuming the new rule might raise en error, you need to add it to the
+type `Error.t`, both the implementation and the interface. You need
+then to add a case for it in `Error.to_string`. In the semantic
+actions of `new_rule`, **always** fail by calling either the function
+`fail` or `stop`. In particular, _do not raise your own exception or
+even the local exception `Error`_.
+
+If the new directive is expected to gather information during the
+preprocessing, you then need to extend the type `State.t` with
+dedicated accumulators, and add functions to `State` to operate on
+those accumulators. See the simplest examples, like `push_import`. The
+rationale for modules `Error` and `State` is to limit the clutter of
+`API`, which is the heart of the preprocessor. When the preprocessor
+finished scanning the input, you need a way to export the new
+information. Consider then the module `API` and the type `result`
+there. At least, you need to augment the type `success` to return the
+data gathered by the new directive in case of success, but you might
+also return it in case of error, in which case you need to augment the
+type `error`.
+
+If the new directive opens input channels, make sure to register them
+(push them) in the field `chans` of the `state`, so they are closed
+and no memory leak occurs (see function `from_lexbuf`, which is called
+by all the `from_` exported functions).
+
+### Adding a New Kind of Comment
+
+If you use the preprocessor for a language whose comments follow a
+convention that is different from the one already implemented in the
+preprocessor, here is what to do. First, create your own combination
+of block and line comment. Perhaps it is useful you look at how the
+convention for Michelson is implemented:
+
+```
+let michelson_block_comment_opening = "/*"
+let michelson_block_comment_closing = "*/"
+let michelson_line_comment          = "#"
+```
+
+Then
+
+```
+let block_comment_openings =
+ ...
+| michelson_block_comment_opening
+```
+
+and
+
+```
+let block_comment_closings =
+  ...
+| michelson_block_comment_closing
+```
+
+and
+
+```
+let line_comments =
+  ...
+| michelson_line_comment
+```
+
+That is all, as far as the library is concerned. The caller needs to
+be made aware of the new convention in the documentation, so values of
+the type `State.config` are valid (see methods `block` and `line`).
+
+### Adding a New Kind of String
+
+The preprocessor is aware of strings as being enclosed between double
+quotes. If you consider adding a new kind of string, for example,
+enclosed between simple quotes, a substantial change is needed. Please
+talk to the maintainer.
