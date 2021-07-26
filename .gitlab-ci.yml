@@ -326,7 +326,7 @@ build-preview-ligo-webide-front-end:
     - export NETLIFY_DEPLOY_LOGS=$(jq -r .logs netlify.json)
     - echo "The URL for this deployment is $NETLIFY_DEPLOY_URL"
     - echo "Logs for this deployment can be found at $NETLIFY_DEPLOY_LOGS"
-    - '[ ! -z "$CI_MERGE_REQUEST_IID" ] && curl POST https://gitlab.com/api/v4/projects/$CI_PROJECT_ID/merge_requests/$CI_MERGE_REQUEST_IID/notes -d "{\"body\": \"A new deploy preview is available on Netlify at $NETLIFY_DEPLOY_URL, you can view the logs at $NETLIFY_DEPLOY_LOGS\"}" --header "Content-Type: application/json" --header "Private-Token: $GITLAB_PERSONAL_API_PRIVATE_TOKEN"'
+    - '[ ! -z "$CI_MERGE_REQUEST_IID" ] && curl -X POST https://gitlab.com/api/v4/projects/$CI_PROJECT_ID/merge_requests/$CI_MERGE_REQUEST_IID/notes -d "{\"body\": \"A new deploy preview is available on Netlify at $NETLIFY_DEPLOY_URL, you can view the logs at $NETLIFY_DEPLOY_LOGS\"}" --header "Content-Type: application/json" --header "Private-Token: $GITLAB_PERSONAL_API_PRIVATE_TOKEN"'
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       changes:
@@ -347,11 +347,6 @@ downstream-webide-removal-handoff:
   rules:
     # When there is a merge request there will be a manual job to remove feature branch containers
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH == "ligolang/ligo"'
-      changes:
-        - tools/webide/**/*
-      when: manual
-    # After a MR merges and is committed to the default branch, the removal job will be triggered
-    - if: '$CI_COMMIT_REF_NAME == "dev" && $CI_PROJECT_PATH == "ligolang/ligo" && $CI_MERGE_REQUEST_IID != null'
       changes:
         - tools/webide/**/*
       when: always
