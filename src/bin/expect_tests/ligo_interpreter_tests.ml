@@ -155,6 +155,26 @@ let%expect_test _ =
     - test_prg exited with value <fun>.
     - test exited with value true. |}]
 
+let%expect_test _ =
+  run_ligo_good [ "test" ; test "bootstrapped_contracts.mligo" ] ;
+  [%expect {|
+    "Initial states:"
+    (Pair "KT1CSKPf2jeLpMmrgKquN2bCjBTkAcAdRVDy" 12)
+    (Pair "KT1QuofAgnsWffHzLA7D78rxytJruGHDe7XG" 9)
+    "Final states:"
+    (Pair "KT1CSKPf2jeLpMmrgKquN2bCjBTkAcAdRVDy" 3)
+    (Pair "KT1QuofAgnsWffHzLA7D78rxytJruGHDe7XG" 0)
+    Everything at the top-level was executed.
+    - test_transfer exited with value ().
+            |}]
+
+let%expect_test _ =
+  run_ligo_good [ "test" ; test "override_function.mligo" ] ;
+  [%expect {|
+    4
+    Everything at the top-level was executed.
+    - test exited with value (). |}]
+
 (* do not remove that :) *)
 let () = Sys.chdir pwd
 
@@ -186,5 +206,5 @@ let%expect_test _ =
       2 |   let ut = Test.reset_state 2n [1n;1n] in
       3 |   let f = (fun (_ : (unit * unit)) -> ()) in
 
-    An uncaught error occured in the object language:
+    An uncaught error occured:
     Insufficient tokens in initial accounts to create one roll |}]
