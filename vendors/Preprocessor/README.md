@@ -400,7 +400,7 @@ of a string containing a path to the file to be textually included,
 like so:
 
 ```
-#include "path/to/standard_1.ligo`
+#include "path/to/standard_1.ligo"
 ```
 
 and the preprocessor replaces the directive with the contents of the
@@ -414,7 +414,7 @@ inclusions, in particular, to maintain the line numbers of the input
 that has been copied, the preprocessor inserts two special directives
 in the output, called
 [linemarkers](https://gcc.gnu.org/onlinedocs/cpp/Preprocessor-Output.html),
-one in the stead of the `#include` directive and one after the
+one instead of the `#include` directive and one after the
 inclusion. Let us consider the following example where `a.txt`
 includes `b.txt`, which, in turn, includes `c.txt`. Here is the
 contents of `a.txt`:
@@ -863,10 +863,10 @@ later.
                     Copy <─┘                            Copy <─┘
 
 
-                ┌── Copy ──┬─┐                      ┌── Copy ────┐
-   #if false    │          │ │       #if false      │            │
-                │   Skip   │ │                      │   Skip     │
-   #elif true   └─>[Copy]  │ │       #elif false    └─>[Copy]──┐ │
+                ┌── Copy ────┐                      ┌── Copy ────┐
+   #if false    │            │       #if false      │            │
+                │   Skip     │                      │   Skip     │
+   #elif true   └─>[Copy]──┐ │       #elif false    └─>[Copy]──┐ │
                     Copy <─┘ │                          Skip   │ │
    #else                     │       #else                     │ │
                     Skip     │                          Copy <─┘ │
@@ -916,7 +916,7 @@ saw the
 [COMMENTS](https://gitlab.com/ligolang/ligo/-/blob/998107d5f0098c8acc86f8950f2a0f9fc5836f5d/vendors/Preprocessor/CLI.mli#L10)
 in the section [CLI](#cli) signature that gathers the comment opening
 and closing markers from the client's perspective. It is therefore
-important that what the client request is actually possible according
+important that what the client requests is actually possible according
 to the regular expressions.
 
 The regular expression
@@ -1017,7 +1017,7 @@ respectively.
 
 The module `PreprocMain` is only used as the entry point of the
 standalone preprocessor, that is, `PreprocMain.exe`, if using `dune`,
-or `PreprocMain.byte`, if using the Makefile. A such, it assumes there
+or `PreprocMain.byte`, if using the Makefile. As such, it assumes there
 are no comments and no strings, so it may be run on all texts that are
 not programming languages, to be tested.
 
@@ -1064,7 +1064,7 @@ adding a string to the value `options`:
 ```
 
 If the new option could cause new errors to occur, then the type
-`status` may had to be extended with another variant. Those variants
+`status` may have to be extended with another variant. Those variants
 are polymorphic because they enable such an extension.
 
 ### Adding a Preprocessing Directive and/or Errors
@@ -1095,7 +1095,7 @@ and `#import` features a call to `scan_import`, like so:
 ```
 
 In those rules, always have a catch-all clause and, if the argument is
-the last, a clause matching `eof`, lile so:
+the last, a clause matching `eof`, like so:
 
 ```
 and new_rule state = parse
