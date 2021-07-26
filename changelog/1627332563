@@ -1,0 +1,4 @@
+author: er433
+merge_request: '1221'
+title: 'Testing framework: added support for key generation and signing of data'
+type: added
