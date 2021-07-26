@@ -332,4 +332,5 @@ let value_to_bytes ~loc (ctxt : context) (value) (val_ty) =
     Trace.trace_tzresult_lwt Main_errors.parsing_input_tracer @@
     Memory_proto_alpha.parse_michelson_data value_michelson value_ty in
   let alpha_ctxt = get_alpha_context ctxt in
-  Trace.trace_alpha_tzresult_lwt (throw_obj_exc loc) @@ Tezos_protocol_008_PtEdo2Zk.Protocol.Script_ir_translator.pack_data alpha_ctxt value_ty value
+  let* bytes, _ = Trace.trace_alpha_tzresult_lwt (throw_obj_exc loc) @@ Tezos_protocol_008_PtEdo2Zk.Protocol.Script_ir_translator.pack_data alpha_ctxt value_ty value in
+  ok bytes

@@ -54,7 +54,7 @@ module Command = struct
     | Eval : Location.t * LT.value * Ast_typed.type_expression -> LT.value t
     | Compile_contract : Location.t * LT.value * Ast_typed.type_expression -> LT.value t
     | To_contract : Location.t * LT.value * string option * Ast_typed.type_expression -> LT.value t
-    | Keygen : Location.t -> (Tezos_crypto.Signature.public_key * Tezos_crypto.Signature.public_key_hash) t
+    | Keygen : (Tezos_crypto.Signature.public_key * Tezos_crypto.Signature.public_key_hash) t
     | Register_delegate : Location.t * Tezos_crypto.Signature.public_key_hash -> unit t
     | Get_delegate : Location.t * Tezos_raw_protocol_008_PtEdo2Zk.Alpha_context.Contract.t -> (Tezos_crypto.Signature.public_key_hash option) t
     | Sign : Location.t * Tezos_crypto.Signature.public_key_hash * bytes  -> LT.value t
@@ -309,7 +309,7 @@ module Command = struct
            fail @@ Errors.generic_error loc
                      "Should be caught by the typer"
       end
-    | Keygen _loc ->
+    | Keygen ->
       let pkh, pk, sk = Tezos_state.gen_keys () in
       let ctxt =
         { ctxt with storage_keys = List.Assoc.add ctxt.storage_keys ~equal:Tezos_crypto.Signature.Public_key_hash.(=) pkh (pk, sk) } in
@@ -482,8 +482,8 @@ module Command = struct
       ok (v,ctxt)
     | Pack (loc, value, value_ty) ->
       let* value,value_ty,_ = Michelson_backend.compile_simple_value ~ctxt ~loc value value_ty in
-      let* bytes, alpha_context = Tezos_state.value_to_bytes ~loc ctxt value value_ty in
-      ok (bytes, { ctxt with alpha_context })
+      let* bytes = Tezos_state.value_to_bytes ~loc ctxt value value_ty in
+      ok (bytes, ctxt)
     | Unpack (loc, bytes, v_ty) ->
       let* value = Tezos_state.bytes_to_value ~loc ctxt bytes in
       let value = value

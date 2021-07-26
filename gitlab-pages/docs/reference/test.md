@@ -660,3 +660,69 @@ mutations of it, passing each one to the function (second argument).
 In case no failure arises when running the function on a mutation, the
 failure and mutation involved will be added to the list to be
 returned.
+
+
+<SyntaxTitle syntax="pascaligo">
+function keygen : unit -> key * key_hash
+</SyntaxTitle>
+<SyntaxTitle syntax="cameligo">
+val keygen : unit -> key * key_hash
+</SyntaxTitle>
+<SyntaxTitle syntax="reasonligo">
+let keygen : unit => (key, key_hash)
+</SyntaxTitle>
+<SyntaxTitle syntax="jsligo">
+let keygen : (u : unit) => [key, key_hash];
+</SyntaxTitle>
+
+Generates a key pair, and returns the `key` and `key_hash` associated
+to it.
+
+
+<SyntaxTitle syntax="pascaligo">
+function sign : key_hash -> bytes -> signature
+</SyntaxTitle>
+<SyntaxTitle syntax="cameligo">
+val sign : key_hash -> bytes -> signature
+</SyntaxTitle>
+<SyntaxTitle syntax="reasonligo">
+let sign : (key_hash, bytes) => signature
+</SyntaxTitle>
+<SyntaxTitle syntax="jsligo">
+let sign : (kh : key_hash, data: bytes) => signature
+</SyntaxTitle>
+
+Signs data with the secret key corresponding to the key hash passed
+(previously generated with `Test.keygen`).
+
+
+<SyntaxTitle syntax="pascaligo">
+function register_delegate : key_hash -> unit
+</SyntaxTitle>
+<SyntaxTitle syntax="cameligo">
+val register_delegate : key_hash -> unit
+</SyntaxTitle>
+<SyntaxTitle syntax="reasonligo">
+let register_delegate : key_hash => unit
+</SyntaxTitle>
+<SyntaxTitle syntax="jsligo">
+let register_delegate : (kh : key_hash) => unit
+</SyntaxTitle>
+
+Registers a `key_hash` as a valid delegate.
+
+
+<SyntaxTitle syntax="pascaligo">
+function delegate : contract 'p -> option (key_hash)
+</SyntaxTitle>
+<SyntaxTitle syntax="cameligo">
+val delegate : 'p contract -> key_hash option
+</SyntaxTitle>
+<SyntaxTitle syntax="reasonligo">
+let delegate : contract 'p => option (key_hash)
+</SyntaxTitle>
+<SyntaxTitle syntax="jsligo">
+let delegate : (contract : contract 'p) => option&lt;key_hash&gt;
+</SyntaxTitle>
+
+Returns the delegate of a contract (if it has one).

@@ -502,7 +502,7 @@ let rec apply_operator : Location.t -> Ast_typed.type_expression -> env -> Ast_t
        let>> code = To_contract (loc, addr, Some ent, contract_ty) in
        return code
     | ( C_TEST_KEYGEN , [ V_Ct (C_unit) ] ) ->
-       let>> (pk, pkh) = Keygen loc in
+       let>> (pk, pkh) = Keygen in
        return @@ LT.V_Record (LMap.of_list [ (Label "0", LT.V_Ct (LT.C_key pk)) ; (Label "1", LT.V_Ct (LT.C_key_hash pkh)) ])
     | ( C_TEST_DELEGATE , [ V_Ct (C_contract {address;_}) ] ) ->
        let>> x = Get_delegate (loc, address) in
