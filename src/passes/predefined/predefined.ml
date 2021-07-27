@@ -78,6 +78,8 @@ module Tree_abstraction = struct
     | "Crypto.blake2b"  -> some_const C_BLAKE2b
     | "Crypto.sha256"   -> some_const C_SHA256
     | "Crypto.sha512"   -> some_const C_SHA512
+    | "Crypto.sha3"     -> some_const C_SHA3
+    | "Crypto.keccak"   -> some_const C_KECCAK
 
     (* Bytes module *)
 
@@ -183,16 +185,25 @@ module Tree_abstraction = struct
     | "Test.michelson_equal" -> some_const C_TEST_MICHELSON_EQUAL
     | "Test.log" -> some_const C_TEST_LOG
     | "Test.reset_state" -> some_const C_TEST_STATE_RESET
+    | "Test.bootstrap_contract" -> some_const C_TEST_BOOTSTRAP_CONTRACT
+    | "Test.nth_bootstrap_contract" -> some_const C_TEST_NTH_BOOTSTRAP_CONTRACT
     | "Test.compile_expression" -> some_const C_TEST_COMPILE_EXPRESSION
     | "Test.compile_expression_subst" -> some_const C_TEST_COMPILE_EXPRESSION_SUBST
     | "Test.nth_bootstrap_account" -> some_const C_TEST_GET_NTH_BS
     | "Test.last_originations" -> some_const C_TEST_LAST_ORIGINATIONS
     | "Test.compile_value" -> some_const C_TEST_COMPILE_META_VALUE
+    | "Test.mutate_expression" -> some_const C_TEST_MUTATE_EXPRESSION
+    | "Test.mutate_count" -> some_const C_TEST_MUTATE_COUNT
+    | "Test.mutate_value" -> some_const C_TEST_MUTATE_VALUE
+    | "Test.mutation_test" -> some_const C_TEST_MUTATION_TEST
+    | "Test.mutation_test_all" -> some_const C_TEST_MUTATION_TEST_ALL
     | "Test.run" -> some_const C_TEST_RUN
     | "Test.eval" -> some_const C_TEST_EVAL
     | "Test.compile_contract" -> some_const C_TEST_COMPILE_CONTRACT
     | "Test.to_contract" -> some_const C_TEST_TO_CONTRACT
+    | "Test.nth_bootstrap_typed_address" -> some_const C_TEST_NTH_BOOTSTRAP_TYPED_ADDRESS
     | "Test.to_entrypoint" -> some_const C_TEST_TO_ENTRYPOINT
+    | "Test.to_typed_address" -> some_const C_TEST_TO_TYPED_ADDRESS
 
     | _ -> None
 
@@ -326,16 +337,25 @@ module Tree_abstraction = struct
     | C_TEST_MICHELSON_EQUAL -> "Test.michelson_equal"
     | C_TEST_LOG -> "Test.log"
     | C_TEST_STATE_RESET -> "Test.reset_state"
+    | C_TEST_BOOTSTRAP_CONTRACT -> "Test.bootstrap_contract"
+    | C_TEST_NTH_BOOTSTRAP_CONTRACT -> "Test.nth_bootstrap_contract"
     | C_TEST_COMPILE_EXPRESSION -> "Test.compile_expression"
     | C_TEST_COMPILE_EXPRESSION_SUBST -> "Test.compile_expression_subst"
     | C_TEST_GET_NTH_BS -> "Test.nth_bootstrap_account"
     | C_TEST_LAST_ORIGINATIONS -> "Test.last_originations"
     | C_TEST_COMPILE_META_VALUE -> "Test.compile_value"
+    | C_TEST_MUTATE_EXPRESSION -> "Test.mutate_expression"
+    | C_TEST_MUTATE_COUNT -> "Test.mutate_count"
+    | C_TEST_MUTATE_VALUE -> "Test.mutate_value"
+    | C_TEST_MUTATION_TEST -> "Test.mutation_test"
+    | C_TEST_MUTATION_TEST_ALL -> "Test.mutation_test_all"
     | C_TEST_RUN -> "Test.run"
     | C_TEST_EVAL -> "Test.eval"
     | C_TEST_COMPILE_CONTRACT -> "Test.compile_contract"
     | C_TEST_TO_CONTRACT -> "Test.to_contract"
+    | C_TEST_NTH_BOOTSTRAP_TYPED_ADDRESS -> "Test.nth_bootstrap_typed_address"
     | C_TEST_TO_ENTRYPOINT -> "Test.to_entrypoint"
+    | C_TEST_TO_TYPED_ADDRESS -> "Test.to_typed_address"
 
     | _ as c -> failwith @@ Format.asprintf "Constant not handled : %a" Stage_common.PP.constant' c
 

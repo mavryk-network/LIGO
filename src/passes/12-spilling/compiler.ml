@@ -178,15 +178,24 @@ let compile_constant' : AST.constant' -> constant' = function
       | C_TEST_COMPILE_EXPRESSION_SUBST
       | C_TEST_GET_NTH_BS
       | C_TEST_STATE_RESET
+      | C_TEST_BOOTSTRAP_CONTRACT
+      | C_TEST_NTH_BOOTSTRAP_CONTRACT
       | C_TEST_LAST_ORIGINATIONS
       | C_TEST_RUN
       | C_TEST_EVAL
       | C_TEST_COMPILE_CONTRACT
       | C_TEST_TO_CONTRACT
       | C_TEST_TO_ENTRYPOINT
+      | C_TEST_TO_TYPED_ADDRESS
+      | C_TEST_NTH_BOOTSTRAP_TYPED_ADDRESS
       | C_TEST_ORIGINATE_FROM_FILE
       | C_BIG_MAP_IDENTIFIER
-      | C_TEST_COMPILE_META_VALUE ) as c ->
+      | C_TEST_COMPILE_META_VALUE
+      | C_TEST_MUTATE_EXPRESSION
+      | C_TEST_MUTATE_COUNT
+      | C_TEST_MUTATE_VALUE
+      | C_TEST_MUTATION_TEST
+      | C_TEST_MUTATION_TEST_ALL) as c ->
     failwith (Format.asprintf "%a is only available for LIGO interpreter" PP.constant c)
 
 let rec compile_type (t:AST.type_expression) : (type_expression, spilling_error) result =

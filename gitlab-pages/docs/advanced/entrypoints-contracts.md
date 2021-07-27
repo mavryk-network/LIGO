@@ -282,8 +282,6 @@ function deny (const action : parameter; const store : storage) : return is
   else ((nil : list (operation)), store)
 ```
 
-> Note that `amount` is *deprecated*. Please use `Tezos.amount`.
-
 </Syntax>
 
 <Syntax syntax="cameligo">
@@ -299,7 +297,6 @@ let deny (action, store : parameter * storage) : return =
   else (([] : operation list), store)
 ```
 
-> Note that `amount` is *deprecated*. Please use `Tezos.amount`.
 
 </Syntax>
 <Syntax syntax="reasonligo">
@@ -316,8 +313,6 @@ let deny = ((action, store): (parameter, storage)) : return => {
 };
 ```
 
-> Note that `amount` is *deprecated*. Please use `Tezos.amount`.
-
 </Syntax>
 <Syntax syntax="jsligo">
 
@@ -328,7 +323,7 @@ type return_ = [list<operation>, storage];
 
 let deny = ([action, store]: [parameter, storage]): return_ => {
   if (Tezos.amount > (0 as tez)) {
-    return (failwith("This contract does not accept tokens.") as return_); 
+    failwith("This contract does not accept tokens.") as return_;
   }
   else { 
     return [list([]) as list<operation>, store]; 
@@ -336,8 +331,6 @@ let deny = ([action, store]: [parameter, storage]): return_ => {
 };
 ```
 
-> Note that `amount` is *deprecated*. Please use `Tezos.amount`.
-
 </Syntax>
 <Syntax syntax="jsligo">
 
@@ -348,7 +341,7 @@ type return_ = [list<operation>, storage];
 
 let deny = ([action, store]: [parameter, storage]): return_ => {
   if (Tezos.amount > (0 as tez)) {
-    return (failwith("This contract does not accept tokens.") as return_); 
+    failwith("This contract does not accept tokens.") as return_;
   }
   else { 
     return [(list([]) as list<operation>), store]; 
@@ -376,8 +369,6 @@ function main (const action : parameter; const store : storage) : return is
   else ((nil : list (operation)), store)
 ```
 
-> Note that `source` is *deprecated*. Please use `Tezos.source`.
-
 </Syntax>
 <Syntax syntax="cameligo">
 
@@ -388,8 +379,6 @@ let main (action, store: parameter * storage) : return =
   if Tezos.source <> owner then (failwith "Access denied." : return)
   else (([] : operation list), store)
 ```
-
-> Note that `source` is *deprecated*. Please use `Tezos.source`.
 
 </Syntax>
 <Syntax syntax="reasonligo">
@@ -403,8 +392,6 @@ let main = ((action, store) : (parameter, storage)) : return => {
 };
 ```
 
-> Note that `source` is *deprecated*. Please use `Tezos.source`.
-
 </Syntax>
 <Syntax syntax="jsligo">
 
@@ -412,12 +399,10 @@ let main = ((action, store) : (parameter, storage)) : return => {
 let owner: address = "tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" as address;
 
 let main = ([action, store]: [parameter, storage]): return_ => {
-  if(Tezos.source != owner) { return (failwith("Access denied.") as return_); }
+  if(Tezos.source != owner) { failwith("Access denied.") as return_; }
   else { return [list([]) as list<operation>, store]; };
 };
 ```
-
-> Note that `source` is *deprecated*. Please use `Tezos.source`.
 
 </Syntax>
 
@@ -531,9 +516,6 @@ let proxy (action, store : parameter * storage) : return =
   in [op], store
 ```
 
-> Note that `Operation.get_contract` and `Operation.transaction` are
-> *deprecated*.
-
 </Syntax>
 <Syntax syntax="reasonligo">
 
@@ -576,9 +558,6 @@ let proxy = ((action, store): (parameter, storage)) : return => {
 };
 ```
 
-> Note that `Operation.get_contract` and `Operation.transaction` are
-> *deprecated*.
-
 </Syntax>
 <Syntax syntax="jsligo">
 
@@ -620,8 +599,5 @@ let proxy = ([action, store]: [parameter, storage]): return_ => {
   return [list([op]), store];
 };
 ```
-
-> Note that `Operation.get_contract` and `Operation.transaction` are
-> *deprecated*.
 
 </Syntax>
