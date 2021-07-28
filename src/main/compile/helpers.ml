@@ -172,7 +172,7 @@ let parse_and_abstract_expression_jsligo ~raise buffer =
     Tree_abstraction.Jsligo.compile_expression applied
   in imperative
 
-let parse_and_abstract ~raise ~meta ~add_warning buffer file_path
+let parse_and_abstract_w ~raise ~meta buffer file_path
     : Ast_imperative.module_ =
   let parse_and_abstract =
     match meta.syntax with
@@ -184,7 +184,7 @@ let parse_and_abstract ~raise ~meta ~add_warning buffer file_path
     parse_and_abstract ~raise buffer file_path in
   let applied =
     trace ~raise self_ast_imperative_tracer @@
-    Self_ast_imperative.all_module abstracted ~add_warning in
+    Self_ast_imperative.all_module_w abstracted in
   applied
 
 let parse_and_abstract_expression ~raise ~meta buffer =
@@ -240,7 +240,7 @@ let parse_and_abstract_string_jsligo ~raise buffer =
     Tree_abstraction.Jsligo.compile_module raw
   in imperative
 
-let parse_and_abstract_string ~raise ~add_warning syntax buffer =
+let parse_and_abstract_string_w ~raise syntax buffer =
   let parse_and_abstract =
     match syntax with
       PascaLIGO ->
@@ -255,7 +255,7 @@ let parse_and_abstract_string ~raise ~add_warning syntax buffer =
     parse_and_abstract ~raise buffer in
   let applied =
     trace ~raise self_ast_imperative_tracer @@
-    Self_ast_imperative.all_module abstracted ~add_warning
+    Self_ast_imperative.all_module_w abstracted
   in applied
 
 let pretty_print_pascaligo_cst =

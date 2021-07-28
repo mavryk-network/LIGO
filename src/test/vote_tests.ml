@@ -2,7 +2,7 @@ open Trace
 open Test_helpers
 open Main_errors
 
-let get_program = get_program "./contracts/vote.mligo" (Contract "main")
+let get_program_w = get_program_w "./contracts/vote.mligo" (Contract "main")
 
 open Ast_imperative
 
@@ -24,8 +24,8 @@ let reset title start_time finish_time =
 
 let yea = e_constructor "Vote" (e_constructor "Yea" (e_unit ()))
 
-let init_vote ~raise ~add_warning () =
-  let (program, env) = get_program ~raise ~add_warning () in
+let init_vote_w ~raise () =
+  let (program, env) = get_program_w ~raise () in
   let result =
     Test_helpers.run_typed_program_with_imperative_input ~raise
       (program, env) "main" (e_pair yea (init_storage "basic")) in
@@ -39,5 +39,5 @@ let init_vote ~raise ~add_warning () =
   ()
 
 let main = test_suite "Vote" [
-    test_w "type" init_vote;
+    test_ww "type" init_vote_w;
   ]

@@ -7,17 +7,17 @@ let all_expression_mapper ~raise = [
   None_variant.peephole_expression ;
   Literals.peephole_expression ~raise ;
 ]
-let all_type_expression_mapper ~raise ~add_warning = [
+let all_type_expression_mapper_w ~raise = [
   Entrypoints_length_limit.peephole_type_expression ~raise ;
-  Layout_check.layout_type_expression ~add_warning;
+  (fun x -> Layout_check.layout_type_expression_w x);
 ]
 
 let all_exp ~raise = List.map ~f:(fun el -> Helpers.Expression el) (all_expression_mapper ~raise)
-let all_ty ~raise ~add_warning = List.map ~f:(fun el -> Helpers.Type_expression el) @@ all_type_expression_mapper ~raise ~add_warning
+let all_ty_w ~raise = List.map ~f:(fun el -> Helpers.Type_expression el) @@ all_type_expression_mapper_w ~raise
 
-let all_module ~raise ~add_warning  init =
+let all_module_w ~raise init =
   let all_p  = List.map ~f:Helpers.map_module @@ all_exp ~raise in
-  let all_p2 = List.map ~f:Helpers.map_module @@ all_ty ~raise ~add_warning in
+  let all_p2 = List.map ~f:Helpers.map_module @@ all_ty_w ~raise in
   List.fold ~f:(|>) (List.append all_p all_p2) ~init
 
 let all_expression ~raise init =

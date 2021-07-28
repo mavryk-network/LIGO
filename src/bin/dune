@@ -23,9 +23,11 @@
     ligo
     build
     linenoise
+    ppx_postfix
   )
   (modules repl)
   (flags (:standard -open Simple_utils))
+  (preprocess (pps ppx_postfix))
 )
 
 (rule

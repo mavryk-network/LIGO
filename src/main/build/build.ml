@@ -110,24 +110,24 @@ let add_deps_to_env ~raise ~(options:Compiler_options.t) asts_typed (_file_name,
   let env_with_deps = add_modules_in_env options.init_env deps in
   env_with_deps
 
-let infer_file_with_deps ~raise ~add_warning ~(options:Compiler_options.t) asts_typed (file_name, (meta,form,c_unit,deps)) =
+let infer_file_with_deps_w ~raise ~(options:Compiler_options.t) asts_typed (file_name, (meta,form,c_unit,deps)) =
   let env_with_deps = add_deps_to_env ~raise  ~options asts_typed (file_name, (meta,form,c_unit,deps)) in
   let options = {options with init_env = env_with_deps } in
   
-  let ast_core = Ligo_compile.Utils.to_core ~raise ~add_warning ~options ~meta c_unit file_name in
+  let ast_core = Ligo_compile.Utils.to_core_w ~raise ~options ~meta c_unit file_name in
   let inferred = Ligo_compile.Of_core.infer ~raise ~options ast_core in
   (inferred, env_with_deps)
 
-let typecheck_file_with_deps ~raise ~add_warning ~(options:Compiler_options.t) asts_typed (file_name, (_meta,form,_c_unit,_deps)) ast_core_inferred =
-  let ast_typed,ast_typed_env = Ligo_compile.Of_core.typecheck ~raise ~add_warning ~options form ast_core_inferred in
+let typecheck_file_with_deps_w ~raise ~(options:Compiler_options.t) asts_typed (file_name, (_meta,form,_c_unit,_deps)) ast_core_inferred =
+  let ast_typed,ast_typed_env = Ligo_compile.Of_core.typecheck_w ~raise ~options form ast_core_inferred in
   SMap.add file_name (ast_typed,ast_typed_env) asts_typed
 
-let infer_and_typecheck_file_with_deps ~raise ~add_warning ~(options:Compiler_options.t) asts_typed (file_name, (meta,form,c_unit,deps)) =
-  let (ast_core_inferred, env_with_deps) = infer_file_with_deps ~raise ~add_warning ~options asts_typed (file_name, (meta, form, c_unit, deps)) in
+let infer_and_typecheck_file_with_deps_w ~raise ~(options:Compiler_options.t) asts_typed (file_name, (meta,form,c_unit,deps)) =
+  let (ast_core_inferred, env_with_deps) = infer_file_with_deps_w ~raise ~options asts_typed (file_name, (meta, form, c_unit, deps)) in
   let options = { options with init_env = env_with_deps } in
-  typecheck_file_with_deps ~raise ~add_warning ~options asts_typed (file_name, (meta, form, c_unit, deps)) ast_core_inferred
+  typecheck_file_with_deps_w ~raise ~options asts_typed (file_name, (meta, form, c_unit, deps)) ast_core_inferred
 
-let infer_contract ~raise ~add_warning : options:Compiler_options.t -> string -> Ligo_compile.Of_core.form -> file_name -> _ =
+let infer_contract_w ~raise : options:Compiler_options.t -> string -> Ligo_compile.Of_core.form -> file_name -> _ =
   fun ~options syntax entry_point main_file_name ->
     let deps = dependency_graph ~raise syntax ~options entry_point main_file_name in
     let ordered_deps = solve_graph ~raise deps main_file_name in
@@ -135,48 +135,48 @@ let infer_contract ~raise ~add_warning : options:Compiler_options.t -> string ->
        Dependency cycles are not supported anyway. *)
     let mains, ordered_deps_only = List.partition_tf ~f:(fun (this_file_name, _) -> String.equal this_file_name main_file_name) ordered_deps in
     let main = assert (List.length mains == 1); List.hd_exn mains in
-    let asts_typed = List.fold ~f:(infer_and_typecheck_file_with_deps ~raise ~add_warning ~options) ~init:(SMap.empty) ordered_deps_only in
-    let (inferred_main, env_with_deps_of_main) = infer_file_with_deps ~raise ~add_warning ~options asts_typed main in
+    let asts_typed = List.fold ~f:(infer_and_typecheck_file_with_deps_w ~raise ~options) ~init:(SMap.empty) ordered_deps_only in
+    let (inferred_main, env_with_deps_of_main) = infer_file_with_deps_w ~raise ~options asts_typed main in
     (main, inferred_main, env_with_deps_of_main, asts_typed)
 
-let type_contract ~raise ~add_warning : options:Compiler_options.t -> string -> Ligo_compile.Of_core.form -> file_name -> _ =
+let type_contract_w ~raise : options:Compiler_options.t -> string -> Ligo_compile.Of_core.form -> file_name -> _ =
   fun ~options syntax entry_point file_name ->
-    let (main, inferred_main, env_with_deps_of_main, asts_typed) = infer_contract ~raise ~add_warning ~options syntax entry_point file_name in
+    let (main, inferred_main, env_with_deps_of_main, asts_typed) = infer_contract_w ~raise ~options syntax entry_point file_name in
     let options = { options with init_env = env_with_deps_of_main } in
-    let asts_typed = typecheck_file_with_deps ~raise ~add_warning ~options asts_typed main inferred_main in
+    let asts_typed = typecheck_file_with_deps_w ~raise ~options asts_typed main inferred_main in
     SMap.find file_name asts_typed
 
-let combined_contract ~raise ~add_warning : options:Compiler_options.t -> _ -> _ -> file_name -> _ =
+let combined_contract_w ~raise : options:Compiler_options.t -> _ -> _ -> file_name -> _ =
   fun ~options syntax entry_point file_name ->
     let deps = dependency_graph ~raise syntax ~options entry_point file_name in
     let order_deps = solve_graph ~raise deps file_name in
-    let asts_typed = List.fold ~f:(infer_and_typecheck_file_with_deps ~raise ~add_warning ~options) ~init:(SMap.empty) order_deps in
+    let asts_typed = List.fold ~f:(infer_and_typecheck_file_with_deps_w ~raise ~options) ~init:(SMap.empty) order_deps in
     let contract = aggregate_contract ~raise order_deps asts_typed in
     (contract, snd @@ SMap.find file_name asts_typed)
 
-let build_mini_c ~raise ~add_warning : options:Compiler_options.t -> _ -> _ -> file_name -> _ =
+let build_mini_c_w ~raise : options:Compiler_options.t -> _ -> _ -> file_name -> _ =
   fun ~options syntax entry_point file_name ->
-    let contract,env = combined_contract ~raise ~add_warning ~options syntax entry_point file_name in
+    let contract,env = combined_contract_w ~raise ~options syntax entry_point file_name in
     let mini_c       = trace ~raise build_error_tracer @@ Ligo_compile.Of_typed.compile contract in
     (mini_c,env)
 
-let build_contract ~raise ~add_warning : options:Compiler_options.t -> string -> _ -> file_name -> _ =
+let build_contract_w ~raise : options:Compiler_options.t -> string -> _ -> file_name -> _ =
   fun ~options syntax entry_point file_name ->
-    let mini_c,_   = build_mini_c ~raise ~add_warning ~options syntax (Contract entry_point) file_name in
+    let mini_c,_   = build_mini_c_w ~raise ~options syntax (Contract entry_point) file_name in
     let michelson  = trace ~raise build_error_tracer @@ Ligo_compile.Of_mini_c.aggregate_and_compile_contract ~options mini_c entry_point in
     michelson
 
-let build_contract_use ~raise ~add_warning : options:Compiler_options.t -> string -> file_name -> _ =
+let build_contract_use_w ~raise : options:Compiler_options.t -> string -> file_name -> _ =
   fun ~options syntax file_name ->
-    let contract,env = combined_contract ~raise ~add_warning ~options syntax Ligo_compile.Of_core.Env file_name in
+    let contract,env = combined_contract_w ~raise ~options syntax Ligo_compile.Of_core.Env file_name in
     let mini_c,map = trace ~raise build_error_tracer @@ Ligo_compile.Of_typed.compile_with_modules contract in
     (mini_c, map, contract, env)
 
-let build_contract_module ~raise ~add_warning : options:Compiler_options.t -> string -> _ -> file_name -> module_name -> _ =
+let build_contract_module_w ~raise : options:Compiler_options.t -> string -> _ -> file_name -> module_name -> _ =
   fun ~options syntax entry_point file_name module_name ->
   let deps = dependency_graph ~raise syntax ~options entry_point file_name in
   let order_deps = solve_graph ~raise deps file_name in
-  let asts_typed = List.fold ~f:(infer_and_typecheck_file_with_deps ~raise ~add_warning ~options) ~init:(SMap.empty) order_deps in
+  let asts_typed = List.fold ~f:(infer_and_typecheck_file_with_deps_w ~raise ~options) ~init:(SMap.empty) order_deps in
   let _, env = SMap.find file_name asts_typed in
   let contract = aggregate_contract ~raise order_deps asts_typed in
   let module_contract = Ast_typed.Declaration_module { module_binder = module_name;

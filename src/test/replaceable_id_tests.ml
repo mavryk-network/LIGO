@@ -1,9 +1,9 @@
 open Test_helpers
 
-let get_program = get_program "./contracts/replaceable_id.ligo" (Contract "main")
-      
-let compile_main ~raise ~add_warning () =
-  let typed_prg,_     = get_program ~raise ~add_warning () in
+let get_program_w = get_program_w "./contracts/replaceable_id.ligo" (Contract "main")
+
+let compile_main ~add_warning ~raise () =
+  let typed_prg,_     = get_program_w ~raise () in
   let mini_c_prg      = Ligo_compile.Of_typed.compile ~raise typed_prg in
   let michelson_prg   = Ligo_compile.Of_mini_c.aggregate_and_compile_contract ~raise ~options mini_c_prg "main" in
   let _contract =
@@ -25,8 +25,8 @@ let entry_change_addr id = e_constructor "Change_address"
 let entry_pass_message = e_constructor "Pass_message"
   @@ empty_message
 
-let change_addr_success ~raise ~add_warning () =
-  let (program, env) = get_program ~raise ~add_warning () in
+let change_addr_success ~add_warning ~raise () =
+  let (program, env) = get_program_w ~raise () in
   let init_storage = storage 1 in
   let param = entry_change_addr 2 in
   let options =
@@ -35,8 +35,8 @@ let change_addr_success ~raise ~add_warning () =
   expect_eq ~raise ~options (program,env) "main"
     (e_pair param init_storage) (e_pair empty_op_list (storage 2))
 
-let change_addr_fail ~raise ~add_warning () =
-  let (program,env) = get_program ~raise ~add_warning () in
+let change_addr_fail ~add_warning ~raise () =
+  let (program,env) = get_program_w ~raise () in
   let init_storage = storage 1 in
   let param = entry_change_addr 2 in
   let options =
@@ -46,8 +46,8 @@ let change_addr_fail ~raise ~add_warning () =
   expect_string_failwith ~raise ~options (program,env) "main"
     (e_pair param init_storage) exp_failwith
 
-let pass_message_success ~raise ~add_warning () =
-  let (program,env) = get_program ~raise ~add_warning () in
+let pass_message_success ~add_warning ~raise () =
+  let (program,env) = get_program_w ~raise () in
   let init_storage = storage 1 in
   let param = entry_pass_message in
   let options =
@@ -56,8 +56,8 @@ let pass_message_success ~raise ~add_warning () =
   expect_eq ~raise ~options (program,env) "main"
     (e_pair param init_storage) (e_pair empty_op_list init_storage)
 
-let pass_message_fail ~raise ~add_warning () =
-  let (program,env) = get_program ~raise ~add_warning () in
+let pass_message_fail ~add_warning ~raise () =
+  let (program,env) = get_program_w ~raise () in
   let init_storage = storage 1 in
   let param = entry_pass_message in
   let options =
@@ -68,9 +68,9 @@ let pass_message_fail ~raise ~add_warning () =
     (e_pair param init_storage) exp_failwith
 
 let main = test_suite "Replaceable ID" [
-    test_w "compile"              (compile_main        ) ;
-    test_w "change_addr_success"  (change_addr_success ) ;
-    test_w "change_addr_fail"     (change_addr_fail    ) ;
-    test_w "pass_message_success" (pass_message_success) ;
-    test_w "pass_message_fail"    (pass_message_fail   ) ;
+    test_ww "compile"              (compile_main        ) ;
+    test_ww "change_addr_success"  (change_addr_success ) ;
+    test_ww "change_addr_fail"     (change_addr_fail    ) ;
+    test_ww "pass_message_success" (pass_message_success) ;
+    test_ww "pass_message_fail"    (pass_message_fail   ) ;
   ]

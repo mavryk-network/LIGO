@@ -8,7 +8,7 @@ let measure_contract source_file entry_point syntax infer protocol_version displ
       fun ~raise ->
       let init_env   = Helpers.get_initial_env ~raise protocol_version in
       let options = Compiler_options.make ~infer ~init_env () in
-      let michelson =  Build.build_contract ~raise ~add_warning ~options syntax entry_point source_file in
+      let michelson =  Build.build_contract_w ~raise ~options syntax entry_point source_file in
       let contract = Compile.Of_michelson.build_contract ~raise michelson in
       Compile.Of_michelson.measure ~raise contract
 
@@ -19,7 +19,7 @@ let list_declarations source_file syntax display_format =
       let options       = Compiler_options.make () in
       let meta     = Compile.Of_source.extract_meta ~raise syntax source_file in
       let c_unit,_ = Compile.Utils.to_c_unit ~raise ~options ~meta source_file in
-      let core_prg = Compile.Utils.to_core ~raise ~add_warning ~options ~meta c_unit source_file in
+      let core_prg = Compile.Utils.to_core_w ~raise ~options ~meta c_unit source_file in
       let declarations  = Compile.Of_core.list_declarations core_prg in
       (source_file, declarations)
 
@@ -31,5 +31,5 @@ let get_scope source_file syntax infer protocol_version libs display_format with
       let options       = Compiler_options.make ~infer ~init_env ~libs () in
       let meta     = Compile.Of_source.extract_meta ~raise syntax source_file in
       let c_unit,_ = Compile.Utils.to_c_unit ~raise ~options ~meta source_file in
-      let core_prg = Compile.Utils.to_core ~raise ~add_warning ~options ~meta c_unit source_file in
-      Scopes.scopes ~add_warning ~with_types ~options core_prg
+      let core_prg = Compile.Utils.to_core_w ~raise ~options ~meta c_unit source_file in
+      Scopes.scopes_w ~with_types ~options core_prg

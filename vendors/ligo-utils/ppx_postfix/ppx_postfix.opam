@@ -1,0 +1,13 @@
+opam-version : "2.0"
+name         : "ppx_postfix"
+version      : "dev"
+synopsis     : "LIGO ppx for warnings"
+maintainer   : "LIGO Lang"
+authors      : "LIGO Lang"
+license      : "MIT"
+homepage     : "https://gitlab.com/ligolang/ligo-utils"
+bug-reports  : "https://gitlab.com/ligolang/ligo-utils/issues"
+# If you change the dependencies, run `opam lock` in the root
+depends      : ["ocaml"
+                "ocamlfind"]
+build        : [["dune" "build" "-p" name]]

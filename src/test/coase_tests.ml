@@ -5,10 +5,10 @@ open Test_helpers
 open Main_errors
 
 
-let get_program = get_program "./contracts/coase.ligo" (Contract "main")
+let get_program_w = get_program_w "./contracts/coase.ligo" (Contract "main")
 
-let compile_main ~raise ~add_warning () = 
-  let typed_prg, _env = get_program ~raise ~add_warning () in
+let compile_main ~add_warning ~raise () =
+  let typed_prg, _env = get_program_w ~raise () in
   let mini_c_prg         = Ligo_compile.Of_typed.compile ~raise typed_prg in
   let michelson_prg      = Ligo_compile.Of_mini_c.aggregate_and_compile_contract ~raise ~options mini_c_prg "main" in
   let _contract =
@@ -90,8 +90,8 @@ let basic a b cards next_id =
   ] in
   storage_ez card_patterns cards next_id
 
-let buy ~raise ~add_warning () =
-  let program = get_program ~raise ~add_warning () in
+let buy ~add_warning ~raise () =
+  let program = get_program_w ~raise () in
   let () =
     let make_input = fun n ->
       let buy_action = e_record_ez [
@@ -127,8 +127,8 @@ let buy ~raise ~add_warning () =
   in
   ()
 
-let dispatch_buy ~raise ~add_warning () =
-  let program = get_program ~raise ~add_warning () in
+let dispatch_buy ~add_warning ~raise () =
+  let program = get_program_w ~raise () in
   let () =
     let make_input = fun n ->
       let buy_action = e_record_ez [
@@ -165,8 +165,8 @@ let dispatch_buy ~raise ~add_warning () =
   in
   ()
 
-let transfer ~raise ~add_warning () =
-  let program = get_program ~raise ~add_warning () in
+let transfer ~add_warning ~raise () =
+  let program = get_program_w ~raise () in
   let () =
     let make_input = fun n ->
       let transfer_action = e_record_ez [
@@ -196,8 +196,8 @@ let transfer ~raise ~add_warning () =
   in
   ()
 
-let sell ~raise ~add_warning () =
-  let program = get_program ~raise ~add_warning () in
+let sell ~add_warning ~raise () =
+  let program = get_program_w ~raise () in
   let () =
     let make_input = fun n ->
       let sell_action = e_record_ez [
@@ -232,9 +232,9 @@ let sell ~raise ~add_warning () =
 
 
 let main = test_suite "Coase (End to End)" [
-    test_w "compile"      (compile_main ) ;
-    test_w "buy"          (buy          ) ;
-    test_w "dispatch buy" (dispatch_buy ) ;
-    test_w "transfer"     (transfer     ) ;
-    test_w "sell"         (sell         ) ;
+    test_ww "compile"      (compile_main ) ;
+    test_ww "buy"          (buy          ) ;
+    test_ww "dispatch buy" (dispatch_buy ) ;
+    test_ww "transfer"     (transfer     ) ;
+    test_ww "sell"         (sell         ) ;
   ]

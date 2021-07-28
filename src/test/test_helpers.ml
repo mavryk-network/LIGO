@@ -16,13 +16,13 @@ let test_format : 'a Simple_utils.Display.format = {
   to_json = (fun _ -> (`Null:Display.json)) ;
 }
 
-let wrap_test_w name f =
+let wrap_test_ww name f =
   warning_with @@ fun add_warning get_warning ->
   try_with (fun ~raise ->
   let () =
-    f ~raise ~add_warning () in
-    List.iter ~f:(fun w -> 
-      Format.printf "%a\n" (Main_warnings.pp ~display_format:Dev) w ; 
+    f ~add_warning ~raise () in
+    List.iter ~f:(fun w ->
+      Format.printf "%a\n" (Main_warnings.pp ~display_format:Dev) w ;
     ) @@ get_warning () ;
   )
   (fun error ->
@@ -30,20 +30,20 @@ let wrap_test_w name f =
      let format = Display.bind_format test_format Formatter.error_format in
      let disp = Simple_utils.Display.Displayable {value ; format} in
      let s = Simple_utils.Display.convert ~display_format:(Dev) disp in
-    List.iter ~f:(fun w -> 
-      Format.printf "%a\n" (Main_warnings.pp ~display_format:Dev) w ; 
+    List.iter ~f:(fun w ->
+      Format.printf "%a\n" (Main_warnings.pp ~display_format:Dev) w ;
     ) @@ get_warning () ;
      Format.printf "%s\n" s ;
      raise Alcotest.Test_error
   )
 
-let test_w name f =
+let test_ww name f =
   Test (
     Alcotest.test_case name `Quick @@ fun () ->
-    wrap_test_w name f
+    wrap_test_ww name f
   )
 let wrap_test name f =
-    try_with (fun ~raise -> f ~raise ()) 
+    try_with (fun ~raise -> f ~raise ())
     (fun error ->
     let value = Error (test_tracer name error) in
      let format = Display.bind_format test_format Formatter.error_format in
@@ -96,20 +96,20 @@ let rec run_test ?(prefix = "") : test -> unit = fun t ->
 let wrap_ref file f =
   let s = ref None in
   fun () -> match !s with
-    | Some (a,file') -> 
+    | Some (a,file') ->
       if file' = file then
         a else f s
     | None -> f s
 
 (* Common functions used in tests *)
 
-let type_file ~raise ?(st = "auto") f entry options =
-  Ligo_compile.Utils.type_file ~raise ~options f st entry
+let type_file_w ~raise ?(st = "auto") f entry options =
+  Ligo_compile.Utils.type_file_w ~raise ~options f st entry
 
-let get_program ~raise ~add_warning ?(st = "auto") f entry =
+let get_program_w ~raise ?(st = "auto") f entry =
   wrap_ref f (fun s ->
       let options = Compiler_options.make () in
-      let program = type_file ~raise ~add_warning ~st f entry options in
+      let program = type_file_w ~raise ~st f entry options in
       s := Some (program,f) ;
       program
     )

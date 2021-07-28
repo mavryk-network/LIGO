@@ -1,10 +1,10 @@
 open Main_errors
 open Test_helpers
 
-let get_program = get_program "./contracts/time-lock.ligo" (Contract "main")
+let get_program_w = get_program_w "./contracts/time-lock.ligo" (Contract "main")
 
-let compile_main ~raise ~add_warning () =
-  let typed_prg,_   = type_file ~raise ~add_warning "./contracts/time-lock.ligo" (Contract "main") options in
+let compile_main ~add_warning ~raise () =
+  let typed_prg,_   = type_file_w ~raise "./contracts/time-lock.ligo" (Contract "main") options in
   let mini_c_prg    = Ligo_compile.Of_typed.compile ~raise typed_prg in
   let michelson_prg = Ligo_compile.Of_mini_c.aggregate_and_compile_contract ~raise ~options mini_c_prg "main" in
   let _contract =
@@ -28,8 +28,8 @@ let mk_time ~(raise:'a Trace.raise) st =
 let to_sec t = Memory_proto_alpha.Protocol.Alpha_context.Script_timestamp.to_zint t
 let storage st = e_timestamp_z (to_sec st)
 
-let early_call ~raise ~add_warning () =
-  let (program, env) = get_program ~raise ~add_warning () in
+let early_call ~add_warning ~raise () =
+  let (program, env) = get_program_w ~raise () in
   let now = mk_time ~raise "2000-01-01T00:10:10Z" in
   let lock_time = mk_time ~raise "2000-01-01T10:10:10Z" in
   let init_storage = storage lock_time in
@@ -39,8 +39,8 @@ let early_call ~raise ~add_warning () =
   expect_string_failwith ~raise ~options (program, env) "main"
     (e_pair (call empty_message)  init_storage) exp_failwith
 
-let call_on_time ~raise ~add_warning () =
-  let (program, env) = get_program ~raise ~add_warning () in
+let call_on_time ~add_warning ~raise () =
+  let (program, env) = get_program_w ~raise () in
   let now = mk_time ~raise "2000-01-01T10:10:10Z" in
   let lock_time = mk_time ~raise "2000-01-01T00:10:10Z" in
   let init_storage = storage lock_time in
@@ -50,7 +50,7 @@ let call_on_time ~raise ~add_warning () =
     (e_pair (call empty_message) init_storage) (e_pair empty_op_list init_storage)
 
 let main = test_suite "Time lock" [
-    test_w "compile"      (compile_main ) ;
-    test_w "early call"   (early_call   ) ;
-    test_w "call on time" (call_on_time ) ;
+    test_ww "compile"      (compile_main ) ;
+    test_ww "early call"   (early_call   ) ;
+    test_ww "call on time" (call_on_time ) ;
   ]

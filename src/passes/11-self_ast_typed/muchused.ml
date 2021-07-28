@@ -225,7 +225,7 @@ let rec muchused_helper (muchuse : muchuse) : module_fully_typed -> muchuse =
   in
   List.fold_right ~f:aux (List.map ~f:Location.unwrap p) ~init:muchuse
 
-let muchused_map_module ~add_warning : module_fully_typed -> module_fully_typed = function module' ->
+let muchused_map_module_w : module_fully_typed -> module_fully_typed = function module' ->
   let update_annotations annots =
     List.iter ~f:(fun a -> add_warning a) annots in
   let _,muchused = muchused_helper muchuse_neutral module' in

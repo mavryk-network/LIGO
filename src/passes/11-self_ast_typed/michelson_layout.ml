@@ -43,7 +43,7 @@ let rec to_left_comb_record' first prev l conv_map =
   | [] -> conv_map
   | (label_l, {associated_type=t_l}) :: (label_r, {associated_type=t_r})::tl when first ->
     let exp_l = accessor prev label_l t_l in
-    let exp_r = accessor prev label_r t_r in
+    let [@pure]exp_r = accessor prev label_r t_r in
     let conv_map' = LMap.add_bindings [ (Label "0" , exp_l) ; (Label "1" , exp_r) ] LMap.empty in
     to_left_comb_record' false prev tl conv_map'
   | (label, {associated_type=t})::tl ->
@@ -103,7 +103,7 @@ let rec to_right_comb_record
   | [] -> conv_map, prev.type_expression
   | [ (label_l,tl) ; (label_r,tr) ] ->
     let exp_l = accessor prev label_l tl.associated_type in
-    let exp_r = accessor prev label_r tr.associated_type in
+    let [@pure]exp_r = accessor prev label_r tr.associated_type in
     let lmap = LMap.add_bindings [ (Label "0" , exp_l) ; (Label "1" , exp_r) ] conv_map in
     let t = ez_t_record [ (Label "0", tl) ; (Label "1", tr) ] in
     (lmap,t)

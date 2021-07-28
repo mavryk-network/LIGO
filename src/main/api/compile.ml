@@ -12,7 +12,7 @@ let contract ?werror source_file entry_point syntax infer protocol_version displ
           let protocol_version = Helpers.protocol_to_variant ~raise protocol_version in
           Compiler_options.make  ~init_env ~infer ~protocol_version ()
       in
-      let michelson =  Build.build_contract ~raise ~add_warning ~options syntax entry_point source_file in
+      let michelson =  Build.build_contract_w ~raise ~options syntax entry_point source_file in
       Ligo_compile.Of_michelson.build_contract ~raise ~disable_typecheck michelson
 
 let expression expression syntax infer protocol_version init_file display_format michelson_format werror =
@@ -23,7 +23,7 @@ let expression expression syntax infer protocol_version init_file display_format
       let options = Compiler_options.make ~infer ~init_env () in
       let (decl_list,env) = match init_file with
         | Some init_file ->
-           let mini_c_prg,env  = Build.build_mini_c ~raise ~add_warning ~options syntax Env init_file  in
+           let mini_c_prg,env  = Build.build_mini_c_w ~raise ~options syntax Env init_file  in
            (mini_c_prg,env)
         | None -> ([],init_env) in
 
@@ -38,7 +38,7 @@ let parameter source_file entry_point expression syntax infer protocol_version a
       fun ~raise ->
       let init_env = Helpers.get_initial_env ~raise protocol_version in
       let options = Compiler_options.make ~infer ~init_env () in
-      let typed_prg,env   = Build.combined_contract ~raise ~add_warning ~options syntax (Contract entry_point) source_file in
+      let typed_prg,env   = Build.combined_contract_w ~raise ~options syntax (Contract entry_point) source_file in
       let mini_c_prg      = Ligo_compile.Of_typed.compile ~raise typed_prg in
       let michelson_prg   = Ligo_compile.Of_mini_c.aggregate_and_compile_contract ~raise ~options mini_c_prg entry_point in
       let _contract =
@@ -58,7 +58,7 @@ let storage source_file entry_point expression syntax infer protocol_version amo
       fun ~raise ->
       let init_env   = Helpers.get_initial_env ~raise protocol_version in
       let options = Compiler_options.make ~infer ~init_env () in
-      let typed_prg,env       = Build.combined_contract ~raise ~add_warning ~options syntax (Contract entry_point) source_file in
+      let typed_prg,env       = Build.combined_contract_w ~raise ~options syntax (Contract entry_point) source_file in
       let mini_c_prg          = Ligo_compile.Of_typed.compile ~raise typed_prg in
       let michelson_prg       = Ligo_compile.Of_mini_c.aggregate_and_compile_contract ~raise ~options  mini_c_prg entry_point in
       let _contract =

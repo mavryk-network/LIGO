@@ -6,10 +6,10 @@ let file = "./contracts/pledge.ligo"
 let mfile = "./contracts/pledge.mligo" 
 let refile = "./contracts/pledge.religo" 
 
-let get_program f = get_program f Env
+let get_program_w f = get_program_w f Env
 
-let compile_main ~raise ~add_warning f () =
-  let typed_prg,_    = get_program ~raise ~add_warning f () in
+let compile_main ~add_warning ~raise f () =
+  let typed_prg,_    = get_program_w ~raise f () in
   let mini_c_prg     = Ligo_compile.Of_typed.compile ~raise typed_prg in
   let michelson_prg  = Ligo_compile.Of_mini_c.aggregate_and_compile_contract ~raise ~options mini_c_prg "main" in
   let _contract =
@@ -36,8 +36,8 @@ let empty_message = e_lambda_ez (Location.wrap @@ Var.of_name "arguments")
   empty_op_list
 
 
-let pledge  ~raise~add_warning f () =
-  let (program,env) = get_program  ~raise~add_warning f() in
+let pledge ~add_warning ~raise f () =
+  let (program,env) = get_program_w ~raise f() in
   let storage = e_address oracle_addr in
   let parameter = e_unit () in
   let options = Proto_alpha_utils.Memory_proto_alpha.make_options
@@ -48,8 +48,8 @@ let pledge  ~raise~add_warning f () =
     (e_pair parameter storage)
     (e_pair (e_list []) storage)
 
-let distribute ~raise ~add_warning f () =
-  let (program,env) = get_program ~raise ~add_warning f () in
+let distribute ~add_warning ~raise f () =
+  let (program,env) = get_program_w ~raise f () in
   let storage = e_address oracle_addr in
   let parameter =  empty_message in
   let options = Proto_alpha_utils.Memory_proto_alpha.make_options
@@ -59,8 +59,8 @@ let distribute ~raise ~add_warning f () =
     (e_pair parameter storage)
     (e_pair (e_list []) storage)
 
-let distribute_unauthorized ~raise ~add_warning f () =
-  let (program,env) = get_program ~raise ~add_warning f () in
+let distribute_unauthorized ~add_warning ~raise f () =
+  let (program,env) = get_program_w ~raise f () in
   let storage = e_address oracle_addr in
   let parameter =  empty_message in
   let options = Proto_alpha_utils.Memory_proto_alpha.make_options
@@ -71,13 +71,13 @@ let distribute_unauthorized ~raise ~add_warning f () =
     "You're not the oracle for this distribution."
 
 let main = test_suite "Pledge & Distribute" [
-    test_w "donate"                    (pledge                  file) ;
-    test_w "distribute"                (distribute              file) ;
-    test_w "distribute (unauthorized)" (distribute_unauthorized file) ;
-    test_w "donate"                    (pledge                  mfile) ;
-    test_w "distribute"                (distribute              mfile) ;
-    test_w "distribute (unauthorized)" (distribute_unauthorized mfile) ;
-    test_w "donate"                    (pledge                  refile) ;
-    test_w "distribute"                (distribute              refile) ;
-    test_w "distribute (unauthorized)" (distribute_unauthorized refile) ;
+    test_ww "donate"                    (pledge                  file) ;
+    test_ww "distribute"                (distribute              file) ;
+    test_ww "distribute (unauthorized)" (distribute_unauthorized file) ;
+    test_ww "donate"                    (pledge                  mfile) ;
+    test_ww "distribute"                (distribute              mfile) ;
+    test_ww "distribute (unauthorized)" (distribute_unauthorized mfile) ;
+    test_ww "donate"                    (pledge                  refile) ;
+    test_ww "distribute"                (distribute              refile) ;
+    test_ww "distribute (unauthorized)" (distribute_unauthorized refile) ;
 ]

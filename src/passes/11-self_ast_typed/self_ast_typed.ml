@@ -1,9 +1,9 @@
 module Errors = Errors
 module Helpers = Helpers
 
-let all_module_passes ~add_warning ~raise = [
-  Unused.unused_map_module ~add_warning;
-  Muchused.muchused_map_module ~add_warning;
+let all_module_passes_w ~raise = [
+  (fun x -> Unused.unused_map_module_w x);
+  (fun x -> Muchused.muchused_map_module_w x);
   Helpers.map_module @@ Tail_recursion.peephole_expression ~raise ;
   Helpers.map_module @@ Michelson_layout.peephole_expression ~raise ;
   Helpers.map_module @@ Pattern_matching_simpl.peephole_expression ~raise ;
@@ -21,8 +21,8 @@ let contract_passes ~raise = [
   Contract_passes.entrypoint_typing ~raise ;
 ]
 
-let all_module ~add_warning ~raise init =
-  List.fold ~f:(|>) (all_module_passes ~add_warning ~raise) ~init
+let all_module_w ~raise init =
+  List.fold ~f:(|>) (all_module_passes_w ~raise) ~init
 
 let all_expression ~raise init =
   List.fold ~f:(|>) (all_expression_passes ~raise) ~init

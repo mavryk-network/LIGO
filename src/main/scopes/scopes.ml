@@ -5,10 +5,10 @@ module Formatter = Formatter
 
 type sub_module = { m : Ast_core.module_  ; bindings : bindings_map }
 
-let scopes ~add_warning : with_types:bool -> options:Compiler_options.t -> Ast_core.module_ -> (def_map * scopes) = fun ~with_types ~options core_prg ->
+let scopes_w : with_types:bool -> options:Compiler_options.t -> Ast_core.module_ -> (def_map * scopes) = fun ~with_types ~options core_prg ->
   let make_v_def_from_core = make_v_def_from_core ~with_types  in
   let make_v_def_option_type = make_v_def_option_type ~with_types in
-  let compile ~raise m = Ligo_compile.Of_core.infer ~raise ~options m |> Ligo_compile.Of_core.typecheck ~raise ~add_warning ~options Env in
+  let compile ~raise m = Ligo_compile.Of_core.infer ~raise ~options m |> Ligo_compile.Of_core.typecheck_w ~raise ~options Env in
 
   let rec find_scopes' = fun (i,all_defs,env,scopes,lastloc) (bindings:bindings_map) (e : Ast_core.expression) ->
     match e.expression_content with

@@ -3,10 +3,10 @@ open Ast_imperative
 
 
 
-let get_program = get_program "./contracts/id.ligo" (Contract "main")
+let get_program_w = get_program_w "./contracts/id.ligo" (Contract "main")
 
-let compile_main ~raise ~add_warning () =
-  let typed_prg,_   = get_program ~raise ~add_warning () in
+let compile_main ~add_warning ~raise () =
+  let typed_prg,_   = get_program_w ~raise () in
   let mini_c_prg      = Ligo_compile.Of_typed.compile ~raise typed_prg in
   let michelson_prg   = Ligo_compile.Of_mini_c.aggregate_and_compile_contract ~raise ~options mini_c_prg "main" in
   let _contract =
@@ -20,8 +20,8 @@ let (first_owner , first_contract) =
   let kt = id.implicit_contract in
   Protocol.Alpha_context.Contract.to_b58check kt , kt
 
-let buy_id ~raise ~add_warning () =
-  let program, env = get_program ~raise ~add_warning () in
+let buy_id ~add_warning ~raise () =
+  let program, env = get_program_w ~raise () in
   let owner_addr = addr 5 in
   let owner_website = e_bytes_string "ligolang.org" in
   let id_details_1 = e_record_ez [("owner", e_address owner_addr) ;
@@ -57,8 +57,8 @@ let buy_id ~raise ~add_warning () =
       (e_pair (e_list []) new_storage)
   in ()
 
-let buy_id_sender_addr ~raise ~add_warning () =
-  let program = get_program ~raise ~add_warning () in
+let buy_id_sender_addr ~add_warning ~raise () =
+  let program = get_program_w ~raise () in
   let owner_addr = addr 5 in
   let owner_website = e_bytes_string "ligolang.org" in
   let id_details_1 = e_record_ez [("owner", e_address owner_addr) ;
@@ -94,8 +94,8 @@ let buy_id_sender_addr ~raise ~add_warning () =
   in ()
 
 (* Test that contract fails if we attempt to buy an ID for the wrong amount *)
-let buy_id_wrong_amount ~raise ~add_warning () =
-  let program = get_program ~raise ~add_warning () in
+let buy_id_wrong_amount ~add_warning ~raise () =
+  let program = get_program_w ~raise () in
   let owner_addr = addr 5 in
   let owner_website = e_bytes_string "ligolang.org" in
   let id_details_1 = e_record_ez [("owner", e_address owner_addr) ;
@@ -119,8 +119,8 @@ let buy_id_wrong_amount ~raise ~add_warning () =
       "Incorrect amount paid."
   in ()
 
-let update_details_owner ~raise ~add_warning () =
-  let program = get_program ~raise ~add_warning () in
+let update_details_owner ~add_warning ~raise () =
+  let program = get_program_w ~raise () in
   let owner_addr = addr 5 in
   let owner_website = e_bytes_string "ligolang.org" in
   let id_details_1 = e_record_ez [("owner", e_address owner_addr) ;
@@ -163,8 +163,8 @@ let update_details_owner ~raise ~add_warning () =
       (e_pair (e_list []) new_storage)
   in ()
 
-let update_details_controller ~raise ~add_warning () =
-  let program = get_program ~raise ~add_warning () in
+let update_details_controller ~add_warning ~raise () =
+  let program = get_program_w ~raise () in
   let owner_addr = addr 5 in
   let owner_website = e_bytes_string "ligolang.org" in
   let id_details_1 = e_record_ez [("owner", e_address owner_addr) ;
@@ -209,8 +209,8 @@ let update_details_controller ~raise ~add_warning () =
   in ()
 
 (* Test that contract fails when we attempt to update details of nonexistent ID *)
-let update_details_nonexistent ~raise ~add_warning () = 
-  let program = get_program ~raise ~add_warning () in
+let update_details_nonexistent ~add_warning ~raise () = 
+  let program = get_program_w ~raise () in
   let owner_addr = addr 5 in
   let owner_website = e_bytes_string "ligolang.org" in
   let id_details_1 = e_record_ez [("owner", e_address owner_addr) ;
@@ -245,8 +245,8 @@ let update_details_nonexistent ~raise ~add_warning () =
   in ()
 
 (* Test that contract fails when we attempt to update details from wrong addr *)
-let update_details_wrong_addr ~raise ~add_warning () =
-  let program = get_program ~raise ~add_warning () in
+let update_details_wrong_addr ~add_warning ~raise () =
+  let program = get_program_w ~raise () in
   let owner_addr = addr 5 in
   let owner_website = e_bytes_string "ligolang.org" in
   let id_details_1 = e_record_ez [("owner", e_address owner_addr) ;
@@ -280,8 +280,8 @@ let update_details_wrong_addr ~raise ~add_warning () =
   in ()
 
 (* Test that giving none on both profile and controller address is a no-op *)
-let update_details_unchanged ~raise ~add_warning () =
-  let program = get_program ~raise ~add_warning () in
+let update_details_unchanged ~add_warning ~raise () =
+  let program = get_program_w ~raise () in
   let owner_addr = addr 5 in
   let owner_website = e_bytes_string "ligolang.org" in
   let id_details_1 = e_record_ez [("owner", e_address owner_addr) ;
@@ -314,8 +314,8 @@ let update_details_unchanged ~raise ~add_warning () =
       (e_pair (e_list []) storage)
   in ()
 
-let update_owner ~raise ~add_warning () =
-  let program = get_program ~raise ~add_warning () in
+let update_owner ~add_warning ~raise () =
+  let program = get_program_w ~raise () in
   let owner_addr = addr 5 in
   let owner_website = e_bytes_string "ligolang.org" in
   let id_details_1 = e_record_ez [("owner", e_address owner_addr) ;
@@ -358,8 +358,8 @@ let update_owner ~raise ~add_warning () =
   in ()
 
 (* Test that contract fails when we attempt to update owner of nonexistent ID *)
-let update_owner_nonexistent ~raise ~add_warning () =
-  let program = get_program ~raise ~add_warning () in
+let update_owner_nonexistent ~add_warning ~raise () =
+  let program = get_program_w ~raise () in
   let owner_addr = addr 5 in
   let owner_website = e_bytes_string "ligolang.org" in
   let id_details_1 = e_record_ez [("owner", e_address owner_addr) ;
@@ -392,8 +392,8 @@ let update_owner_nonexistent ~raise ~add_warning () =
   in ()
 
 (* Test that contract fails when we attempt to update owner from non-owner addr *)
-let update_owner_wrong_addr ~raise ~add_warning () =
-  let program = get_program ~raise ~add_warning () in
+let update_owner_wrong_addr ~add_warning ~raise () =
+  let program = get_program_w ~raise () in
   let owner_addr = addr 5 in
   let owner_website = e_bytes_string "ligolang.org" in
   let id_details_1 = e_record_ez [("owner", e_address owner_addr) ;
@@ -425,8 +425,8 @@ let update_owner_wrong_addr ~raise ~add_warning () =
       "You are not the owner of this ID."
   in ()
 
-let skip ~raise ~add_warning () =
-  let program = get_program ~raise ~add_warning () in
+let skip ~add_warning ~raise () =
+  let program = get_program_w ~raise () in
   let owner_addr = addr 5 in
   let owner_website = e_bytes_string "ligolang.org" in
   let id_details_1 = e_record_ez [("owner", e_address owner_addr) ;
@@ -463,8 +463,8 @@ let skip ~raise ~add_warning () =
   in ()
 
 (* Test that contract fails if we try to skip without paying the right amount *)
-let skip_wrong_amount ~raise ~add_warning () =
-  let program = get_program ~raise ~add_warning () in
+let skip_wrong_amount ~add_warning ~raise () =
+  let program = get_program_w ~raise () in
   let owner_addr = addr 5 in
   let owner_website = e_bytes_string "ligolang.org" in
   let id_details_1 = e_record_ez [("owner", e_address owner_addr) ;
@@ -494,17 +494,17 @@ let skip_wrong_amount ~raise ~add_warning () =
   in ()
 
 let main = test_suite "ID Layer (PascaLIGO)" [
-    test_w "buy"                         (buy_id ) ;
-    test_w "buy (sender addr)"           (buy_id_sender_addr) ;
-    test_w "buy (wrong amount)"          (buy_id_wrong_amount) ;
-    test_w "update_details (owner)"      (update_details_owner) ;
-    test_w "update_details (controller)" (update_details_controller) ;
-    test_w "update_details_nonexistent"  (update_details_nonexistent) ;
-    test_w "update_details_wrong_addr"   (update_details_wrong_addr) ;
-    test_w "update_details_unchanged"    (update_details_unchanged ) ;
-    test_w "update_owner"                (update_owner) ;
-    test_w "update_owner_nonexistent"    (update_owner_nonexistent) ;
-    test_w "update_owner_wrong_addr"     (update_owner_wrong_addr) ;
-    test_w "skip"                        (skip) ;
-    test_w "skip (wrong amount)"         (skip_wrong_amount) ;
+    test_ww "buy"                         (buy_id ) ;
+    test_ww "buy (sender addr)"           (buy_id_sender_addr) ;
+    test_ww "buy (wrong amount)"          (buy_id_wrong_amount) ;
+    test_ww "update_details (owner)"      (update_details_owner) ;
+    test_ww "update_details (controller)" (update_details_controller) ;
+    test_ww "update_details_nonexistent"  (update_details_nonexistent) ;
+    test_ww "update_details_wrong_addr"   (update_details_wrong_addr) ;
+    test_ww "update_details_unchanged"    (update_details_unchanged ) ;
+    test_ww "update_owner"                (update_owner) ;
+    test_ww "update_owner_nonexistent"    (update_owner_nonexistent) ;
+    test_ww "update_owner_wrong_addr"     (update_owner_wrong_addr) ;
+    test_ww "skip"                        (skip) ;
+    test_ww "skip (wrong amount)"         (skip_wrong_amount) ;
 ]

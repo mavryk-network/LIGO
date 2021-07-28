@@ -6,7 +6,9 @@
   simple-utils 
   ligo
   build
+  ppx_postfix
  )
+ (preprocess (pps ppx_postfix))
 )
 
 (rule

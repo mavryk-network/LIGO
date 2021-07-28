@@ -1,9 +1,9 @@
 open Test_helpers
 
-let get_program = get_program "./contracts/multisig-v2.ligo" (Contract "main")
+let get_program_w = get_program_w "./contracts/multisig-v2.ligo" (Contract "main")
 
-let compile_main ~raise ~add_warning () =
-  let typed_prg,_   = get_program ~raise ~add_warning () in
+let compile_main ~add_warning ~raise () =
+  let typed_prg,_   = get_program_w ~raise () in
   let mini_c_prg    = Ligo_compile.Of_typed.compile ~raise typed_prg in
   let michelson_prg = Ligo_compile.Of_mini_c.aggregate_and_compile_contract ~raise ~options mini_c_prg "main" in
   let _contract =
@@ -51,8 +51,8 @@ let storage {state_hash ; threshold ; max_proposal ; max_msg_size ; id_counter_l
   ]
 
 (* sender not stored in the authorized set *)
-let wrong_addr ~raise ~add_warning () =
-  let (program,env) = get_program ~raise ~add_warning () in
+let wrong_addr ~add_warning ~raise () =
+  let (program,env) = get_program_w ~raise () in
   let init_storage = storage {
     threshold = 1 ; max_proposal = 1 ; max_msg_size = 1 ; state_hash = Bytes.empty ;
     id_counter_list = [1,0 ; 2,0] ;
@@ -67,8 +67,8 @@ let wrong_addr ~raise ~add_warning () =
   ()
 
 (* send a message which exceed the size limit *)
-let message_size_exceeded ~raise ~add_warning () =
-  let (program,env) = get_program ~raise ~add_warning () in
+let message_size_exceeded ~add_warning ~raise () =
+  let (program,env) = get_program_w ~raise () in
   let init_storage = storage {
     threshold = 1 ; max_proposal = 1 ; max_msg_size = 1 ; state_hash = Bytes.empty ;
     id_counter_list = [1,0] ;
@@ -83,8 +83,8 @@ let message_size_exceeded ~raise ~add_warning () =
   ()
 
 (* sender has already has reached maximum number of proposal *)
-let maximum_number_of_proposal ~raise ~add_warning () =
-  let (program,env) = get_program ~raise ~add_warning () in
+let maximum_number_of_proposal ~add_warning ~raise () =
+  let (program,env) = get_program_w ~raise () in
   let packed_payload1 = pack_payload ~raise env (send_param empty_message) in
   let bytes1 = e_bytes_raw packed_payload1 in
   let init_storage = storage {
@@ -101,8 +101,8 @@ let maximum_number_of_proposal ~raise ~add_warning () =
   ()
 
 (* sender message is already stored in the message store *)
-let send_already_accounted ~raise ~add_warning () =
-  let (program,env) = get_program ~raise ~add_warning () in
+let send_already_accounted ~add_warning ~raise () =
+  let (program,env) = get_program_w ~raise () in
   let packed_payload = pack_payload ~raise env empty_message in
   let bytes = e_bytes_raw packed_payload in
   let init_storage = storage {
@@ -117,8 +117,8 @@ let send_already_accounted ~raise ~add_warning () =
     (e_pair (send_param empty_message) init_storage) (e_pair empty_op_list init_storage)
 
 (* sender message isn't stored in the message store *)
-let send_never_accounted ~raise ~add_warning () =
-  let (program,env) = get_program ~raise ~add_warning () in
+let send_never_accounted ~add_warning ~raise () =
+  let (program,env) = get_program_w ~raise () in
   let packed_payload = pack_payload ~raise env empty_message in
   let bytes = e_bytes_raw packed_payload in
   let init_storage' = {
@@ -138,8 +138,8 @@ let send_never_accounted ~raise ~add_warning () =
     (e_pair (send_param empty_message) init_storage) (e_pair empty_op_list final_storage)
 
 (* sender withdraw message is already binded to one address in the message store *)
-let withdraw_already_accounted_one ~raise ~add_warning () =
-  let (program,env) = get_program ~raise ~add_warning () in
+let withdraw_already_accounted_one ~add_warning ~raise () =
+  let (program,env) = get_program_w ~raise () in
   let packed_payload = pack_payload ~raise env empty_message in
   let bytes = e_bytes_raw packed_payload in
   let param = withdraw_param in
@@ -159,8 +159,8 @@ let withdraw_already_accounted_one ~raise ~add_warning () =
     (e_pair param init_storage) (e_pair empty_op_list final_storage)
 
 (* sender withdraw message is already binded to two addresses in the message store *)
-let withdraw_already_accounted_two ~raise ~add_warning () =
-  let (program,env) = get_program ~raise ~add_warning () in
+let withdraw_already_accounted_two ~add_warning ~raise () =
+  let (program,env) = get_program_w ~raise () in
   let packed_payload = pack_payload ~raise env empty_message in
   let bytes = e_bytes_raw packed_payload in
   let param = withdraw_param in
@@ -180,8 +180,8 @@ let withdraw_already_accounted_two ~raise ~add_warning () =
     (e_pair param init_storage) (e_pair empty_op_list final_storage)
 
 (* triggers the threshold and check that all the participants get their counters decremented *)
-let counters_reset ~raise ~add_warning () =
-  let (program,env) = get_program ~raise ~add_warning () in
+let counters_reset ~add_warning ~raise () =
+  let (program,env) = get_program_w ~raise () in
   let packed_payload = pack_payload ~raise env empty_message in
   let bytes = e_bytes_raw packed_payload in
   let param = send_param empty_message in
@@ -203,8 +203,8 @@ let counters_reset ~raise ~add_warning () =
     (e_pair param init_storage) (e_pair empty_op_list final_storage)
 
 (* sender withdraw message was never accounted *)
-let withdraw_never_accounted ~raise ~add_warning () =
-  let (program,env) = get_program ~raise ~add_warning () in
+let withdraw_never_accounted ~add_warning ~raise () =
+  let (program,env) = get_program_w ~raise () in
   let param = withdraw_param in
   let init_storage = storage {
     threshold = 2 ; max_proposal = 1 ;  max_msg_size = 1 ; state_hash = Bytes.empty ;
@@ -218,8 +218,8 @@ let withdraw_never_accounted ~raise ~add_warning () =
     (e_pair param init_storage) (e_pair empty_op_list init_storage)
 
 (* successful storing in the message store *)
-let succeeded_storing ~raise ~add_warning () =
-  let (program,env) = get_program ~raise ~add_warning () in
+let succeeded_storing ~add_warning ~raise () =
+  let (program,env) = get_program_w ~raise () in
   let packed_payload = pack_payload ~raise env empty_message in
   let bytes = e_bytes_raw packed_payload in
   let init_storage th = {
@@ -250,14 +250,14 @@ let succeeded_storing ~raise ~add_warning () =
   ()
 
 let main = test_suite "Multisig v2" [
-    test_w "compile"                        (compile_main                  ) ;
-    test_w "wrong_addr"                     (wrong_addr                    ) ;
-    test_w "message_size_exceeded"          (message_size_exceeded         ) ;
-    test_w "maximum_number_of_proposal"     (maximum_number_of_proposal    ) ;
-    test_w "send_already_accounted"         (send_already_accounted        ) ;
-    test_w "send_never_accounted"           (send_never_accounted          ) ;
-    test_w "succeeded_storing"              (succeeded_storing             ) ;
-    test_w "withdraw_already_accounted_one" (withdraw_already_accounted_one) ;
-    test_w "withdraw_already_accounted_two" (withdraw_already_accounted_two) ;
-    test_w "counters_reset"                 (counters_reset                ) ;
+    test_ww "compile"                        (compile_main                  ) ;
+    test_ww "wrong_addr"                     (wrong_addr                    ) ;
+    test_ww "message_size_exceeded"          (message_size_exceeded         ) ;
+    test_ww "maximum_number_of_proposal"     (maximum_number_of_proposal    ) ;
+    test_ww "send_already_accounted"         (send_already_accounted        ) ;
+    test_ww "send_never_accounted"           (send_never_accounted          ) ;
+    test_ww "succeeded_storing"              (succeeded_storing             ) ;
+    test_ww "withdraw_already_accounted_one" (withdraw_already_accounted_one) ;
+    test_ww "withdraw_already_accounted_two" (withdraw_already_accounted_two) ;
+    test_ww "counters_reset"                 (counters_reset                ) ;
   ]

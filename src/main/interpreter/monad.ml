@@ -220,7 +220,7 @@ module Command = struct
         Str.substitute_first (Str.regexp ("\\$"^s)) (fun _ -> Michelson_backend.subst_vname s) exp_str
       in
       let exp_as_string' = List.fold_left ~f:aux ~init:exp_as_string substs in
-      let (mich_v, mich_ty, object_ty) = Michelson_backend.compile_expression ~raise ~loc ~add_warning syntax exp_as_string' file_opt substs in
+      let (mich_v, mich_ty, object_ty) = Michelson_backend.compile_expression_w ~raise ~loc syntax exp_as_string' file_opt substs in
       (LT.V_Michelson (LT.Ty_code (mich_v, mich_ty, object_ty)), ctxt)
     | Compile_meta_value (loc,x,ty) ->
       let x = Michelson_backend.compile_simple_value ~raise ~ctxt ~loc x ty in
@@ -236,7 +236,7 @@ module Command = struct
        end
     | Compile_contract_from_file (source_file, entrypoint) ->
       let contract_code =
-        Michelson_backend.compile_contract ~raise ~add_warning source_file entrypoint in
+        Michelson_backend.compile_contract_w ~raise source_file entrypoint in
       let size =
         let s = Ligo_compile.Of_michelson.measure ~raise contract_code in
         LT.V_Ct (C_int (Z.of_int s))

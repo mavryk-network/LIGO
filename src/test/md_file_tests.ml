@@ -79,7 +79,7 @@ let get_groups md_file : snippetsmap =
   if Meta : evaluate each expression in each programs from the snippets group map
   if Object : run the ligo test framework
 **)
-let compile_groups ~raise ~add_warning filename grp_list =
+let compile_groups_w ~raise filename grp_list =
   let aux : (syntax * group_name) * (lang * string) -> unit =
     fun ((syntax , grp) , (lang , contents)) ->
       trace ~raise (test_md_file filename syntax grp contents) @@
@@ -87,7 +87,7 @@ let compile_groups ~raise ~add_warning filename grp_list =
       let options         = Compiler_options.make () in
       let meta       = Ligo_compile.Of_source.make_meta ~raise syntax None in
       let c_unit,_   = Ligo_compile.Of_source.compile_string ~raise ~options ~meta contents in
-      let imperative = Ligo_compile.Of_c_unit.compile ~raise ~add_warning ~meta c_unit filename in
+      let imperative = Ligo_compile.Of_c_unit.compile_w ~raise ~meta c_unit filename in
       let sugar      = Ligo_compile.Of_imperative.compile ~raise imperative in
       let core       = Ligo_compile.Of_sugar.compile sugar in
       let inferred   = Ligo_compile.Of_core.infer  ~raise~options core in
@@ -95,11 +95,11 @@ let compile_groups ~raise ~add_warning filename grp_list =
       | Meta ->
         let init_env = Environment.default_with_test options.protocol_version in
         let options = { options with init_env } in
-        let typed,_    = Ligo_compile.Of_core.typecheck ~raise ~add_warning ~options Env inferred in
+        let typed,_    = Ligo_compile.Of_core.typecheck_w ~raise ~options Env inferred in
         let _ = Interpreter.eval_test ~raise typed in
         ()
       | Object ->
-        let typed,_    = Ligo_compile.Of_core.typecheck ~raise ~add_warning ~options Env inferred in
+        let typed,_    = Ligo_compile.Of_core.typecheck_w ~raise ~options Env inferred in
         let mini_c     = Ligo_compile.Of_typed.compile ~raise typed in
         let (_michelsons : Stacking.compiled_expression list) =
           List.map ~f:
@@ -111,10 +111,10 @@ let compile_groups ~raise ~add_warning filename grp_list =
   let () = List.iter ~f:aux grp_list in
   ()
 
-let compile ~raise ~add_warning filename () =
+let compile ~add_warning ~raise filename () =
   let groups = get_groups filename in
   let groups_map = SnippetsGroup.bindings groups in
-  let () = compile_groups ~raise ~add_warning filename groups_map in
+  let () = compile_groups_w ~raise filename groups_map in
   ()
 
 let get_all_md_files () =
@@ -144,6 +144,6 @@ let main =
     List.map
       ~f:(fun md_file ->
         let test_name = "File : "^md_file^"\"" in
-        test_w test_name (compile md_file)
+        test_ww test_name (compile md_file)
       )
       (get_all_md_files ())

@@ -1,0 +1,7 @@
+(library
+ (name ppx_postfix)
+ (public_name ppx_postfix)
+ (kind ppx_rewriter)
+ (libraries ppxlib
+            simple-utils)
+ (preprocess (pps ppxlib.metaquot)))

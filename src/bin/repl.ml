@@ -105,7 +105,7 @@ let try_contract ~raise state s =
   try
     try_with (fun ~raise ->
       let typed_prg,core_prg,env =
-      Ligo_compile.Utils.type_contract_string ~raise ~add_warning ~options:options state.syntax s state.env in
+      Ligo_compile.Utils.type_contract_string_w ~raise ~options:options state.syntax s state.env in
       let mini_c,mods =
         Ligo_compile.Of_typed.compile_with_modules ~raise ~module_env:state.mod_types typed_prg in
       let mod_types = Ast_core.SMap.union (fun _ _ a -> Some a) state.mod_types mods in
@@ -125,7 +125,7 @@ let try_contract ~raise state s =
 
 let import_file ~raise state file_name module_name =
   let options = Compiler_options.make ~init_env:state.env ~infer:state.infer ~protocol_version:state.protocol () in
-  let mini_c,mod_types,_,env = Build.build_contract_module ~raise ~add_warning ~options (variant_to_syntax state.syntax) Ligo_compile.Of_core.Env file_name module_name in
+  let mini_c,mod_types,_,env = Build.build_contract_module_w ~raise ~options (variant_to_syntax state.syntax) Ligo_compile.Of_core.Env file_name module_name in
   let env = Ast_typed.Environment.add_module module_name env state.env in
   let mod_env = Ast_core.SMap.find module_name mod_types in
   let mod_types = Ast_core.SMap.add module_name mod_env state.mod_types in
@@ -135,7 +135,7 @@ let import_file ~raise state file_name module_name =
 let use_file ~raise state s =
   let options = Compiler_options.make ~init_env:state.env ~infer:state.infer ~protocol_version:state.protocol () in
   (* Missing typer environment? *)
-  let mini_c,mod_types,(Ast_typed.Module_Fully_Typed module'),env = Build.build_contract_use ~raise ~add_warning ~options (variant_to_syntax state.syntax) s in
+  let mini_c,mod_types,(Ast_typed.Module_Fully_Typed module'),env = Build.build_contract_use_w ~raise ~options (variant_to_syntax state.syntax) s in
   let mod_types = Ast_core.SMap.union (fun _ _ a -> Some a) state.mod_types mod_types in
   let state = { state with env = env;
                            decl_list = state.decl_list @ mini_c;
