@@ -9,5 +9,6 @@ homepage     : "https://gitlab.com/ligolang/ligo-utils"
 bug-reports  : "https://gitlab.com/ligolang/ligo-utils/issues"
 # If you change the dependencies, run `opam lock` in the root
 depends      : ["ocaml"
-                "ocamlfind"]
+                "ocamlfind"
+                "simple-utils"]
 build        : [["dune" "build" "-p" name]]
