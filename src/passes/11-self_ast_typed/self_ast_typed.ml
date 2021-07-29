@@ -1,13 +1,13 @@
-module Errors = Errors
-module Helpers = Helpers
-
 let all_module_passes_w ~raise = [
-  (fun x -> Unused.unused_map_module_w x);
-  (fun x -> Muchused.muchused_map_module_w x);
+  Unused.unused_map_module_w [@impure];
+  Muchused.muchused_map_module_w [@impure];
   Helpers.map_module @@ Tail_recursion.peephole_expression ~raise ;
   Helpers.map_module @@ Michelson_layout.peephole_expression ~raise ;
   Helpers.map_module @@ Pattern_matching_simpl.peephole_expression ~raise ;
 ]
+
+module Errors = Errors
+module Helpers = Helpers
 
 let all_expression_passes ~raise = [
   Helpers.map_expression @@ Tail_recursion.peephole_expression ~raise ;

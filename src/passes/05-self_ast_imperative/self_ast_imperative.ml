@@ -9,7 +9,7 @@ let all_expression_mapper ~raise = [
 ]
 let all_type_expression_mapper_w ~raise = [
   Entrypoints_length_limit.peephole_type_expression ~raise ;
-  (fun x -> Layout_check.layout_type_expression_w x);
+  Layout_check.layout_type_expression_w [@impure];
 ]
 
 let all_exp ~raise = List.map ~f:(fun el -> Helpers.Expression el) (all_expression_mapper ~raise)

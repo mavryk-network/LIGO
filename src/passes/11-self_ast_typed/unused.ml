@@ -129,7 +129,7 @@ and defuse_of_record defuse {body;fields;_} =
   (defuse, unused)
 
 let rec unused_map_module_w : module_fully_typed -> module_fully_typed = function (Module_Fully_Typed p) ->
-  let self = fun x -> unused_map_module_w x in
+  let self = unused_map_module_w [@impure] in
   let update_annotations annots =
     List.iter ~f:add_warning annots in
   let aux = fun (x : declaration Location.wrap) ->

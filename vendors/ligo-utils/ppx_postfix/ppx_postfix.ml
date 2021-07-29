@@ -59,6 +59,30 @@ let map_exprs = object
         | _ -> expr)
     | _ -> expr
 
+  method! expression expr =
+    let expr = super#expression expr in
+    match expr.pexp_desc with
+    | Pexp_ident id ->
+       let id_id = extract_ident id.txt in
+       if List.mem (List.map ~f:(fun {attr_name;_} -> attr_name.txt) expr.pexp_attributes) "impure" ~equal:String.equal then
+         match postfix id_id with
+         | Some "w" ->
+            let loc = id.loc in
+            let expr' = [%expr [%e expr] ~add_warning] in
+            expr'
+         | Some "r" ->
+            let loc = id.loc in
+            let expr' = [%expr [%e expr] ~raise] in
+            expr'
+         | Some "rw" ->
+            let loc = id.loc in
+            let expr' = [%expr [%e expr] ~raise ~add_warning] in
+            expr'
+         | _ -> expr
+       else expr
+    | _ -> expr
+
+
   method! expression_desc expr =
     let expr = super#expression_desc expr in
     match expr with
