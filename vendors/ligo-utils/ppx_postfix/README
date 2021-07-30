@@ -1,0 +1,19 @@
+This ppx expands definitions / applications ending with specific postfixes.
+
+For the postfix `w`, we have:
+
+1. Let definitions ending with `_w` will expand to an additional argument `~add_warning`:
+`let foo_w = ...` becomes `let foo_w ~add_warning = ...`.
+
+2. Application of identifiers ending in `_w` are passed the additional argument:
+`foo_w arg` becomes `foo_w ~add_warning arg`.
+
+For the postfix `r`, we have a similar behavior, but with argument `~raise` instead of `~add_warning`.
+
+For the postfix `rw`, we have a similar behavior again, but with both arguments `~raise` and `~add_warning`.
+
+Extra annotations:
+
+1. A `[@pure]` annotation prevents the first behavior, i.e. `let foo_w [@pure] = ...` won't be changed.
+
+2. An `[@impure]` annotation forces expansion on identifiers (not applied), i.e. `let x = foo_w [@impure]` becomes `let x = foo_w ~add_warning`.
