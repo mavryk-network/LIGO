@@ -43,7 +43,7 @@ depends: [
   "tezos-protocol-environment" {>= "8.0" & < "9.0"}
   "tezos-protocol-008-PtEdo2Zk" {>= "8.0" & < "9.0"}
   "tezos-client-008-PtEdo2Zk" {>= "8.0" & < "9.0"}
-  "tezos-memory-proto-alpha" {>= "8.0" & < "9.0"}
+  "tezos-memory-proto-alpha" # not really a tezos lib
   "simple-utils"
   "tezos-utils"
 ]
