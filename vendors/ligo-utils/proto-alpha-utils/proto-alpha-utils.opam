@@ -37,12 +37,12 @@ depends: [
   "zarith" {= "1.11"}
   "ocplib-json-typed"
   "ocplib-json-typed-bson"
-  "tezos-crypto" {>= "8.0" & < "9.0"}
-  "tezos-error-monad" {>= "8.0" & < "9.0"}
-  "tezos-stdlib-unix" {>= "8.0" & < "9.0"}
-  "tezos-protocol-environment" {>= "8.0" & < "9.0"}
-  "tezos-protocol-008-PtEdo2Zk" {>= "8.0" & < "9.0"}
-  "tezos-client-008-PtEdo2Zk" {>= "8.0" & < "9.0"}
+  "tezos-crypto" {>= "9.0" & < "10.0"}
+  "tezos-error-monad" {>= "9.0" & < "10.0"}
+  "tezos-stdlib-unix" {>= "9.0" & < "10.0"}
+  "tezos-protocol-environment" {>= "9.0" & < "10.0"}
+  "tezos-protocol-008-PtEdo2Zk" {>= "9.0" & < "10.0"}
+  "tezos-client-008-PtEdo2Zk" {>= "9.0" & < "10.0"}
   "tezos-memory-proto-alpha" # not really a tezos lib
   "simple-utils"
   "tezos-utils"

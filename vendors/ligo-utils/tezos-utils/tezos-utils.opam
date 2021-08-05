@@ -33,10 +33,10 @@ depends: [
   "zarith"
   "ocplib-json-typed"
   "ocplib-json-typed-bson"
-  "tezos-crypto" {>= "8.0" & < "9.0"}
-  "tezos-stdlib-unix" {>= "8.0" & < "9.0"}
-  "tezos-micheline" {>= "8.0" & < "9.0"}
-  "tezos-base" {>= "8.0" & < "9.0"}
+  "tezos-crypto" {>= "9.0" & < "10.0"}
+  "tezos-stdlib-unix" {>= "9.0" & < "10.0"}
+  "tezos-micheline" {>= "9.0" & < "10.0"}
+  "tezos-base" {>= "9.0" & < "10.0"}
   "data-encoding"
   "simple-utils"
 ]
