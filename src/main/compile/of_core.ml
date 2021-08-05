@@ -24,11 +24,11 @@ let typecheck_w ~raise ~(options: Compiler_options.t) (cform : form) (m : Ast_co
 let compile_expression ~raise ?(infer = false) ~(env : Ast_typed.environment) (e : Ast_core.expression)
     : Ast_typed.expression * Ast_typed.environment =
   let env_inf = Checking.decompile_env env in
-  let inferred = match infer with 
+  let inferred = match infer with
     | true  -> let (_,e,_,_) =
       trace ~raise inference_tracer @@ Inference.type_expression_subst env_inf Inference.Solver.initial_state e in
       e
-    | false -> e 
+    | false -> e
   in
   (* let inferred = trace ~raise self_Ast_core_tracer @@ Self_Ast_core.all_expression inferred in *)
   let e,typed = trace ~raise checking_tracer @@ Checking.type_expression env inferred in

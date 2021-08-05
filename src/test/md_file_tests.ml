@@ -94,7 +94,7 @@ let compile_groups_w ~raise filename grp_list =
       match lang with
       | Meta ->
         let init_env = Environment.default_with_test options.protocol_version in
-        let options = { options with init_env } in
+        let options = { options with init_env ; test = true } in
         let typed,_    = Ligo_compile.Of_core.typecheck_w ~raise ~options Env inferred in
         let _ = Interpreter.eval_test ~raise typed in
         ()
