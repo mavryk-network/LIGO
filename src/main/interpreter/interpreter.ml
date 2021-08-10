@@ -356,12 +356,12 @@ let rec apply_operator : Location.t -> calltrace -> Ast_typed.type_expression ->
       return (V_Ct (C_address address))
     | ( C_BYTES_PACK , [ value ] ) ->
       let value_ty = List.nth_exn types 0 in
-      let>> code = Pack (loc, value, value_ty) in
+      let>> code = Pack (loc, calltrace, value, value_ty) in
       return (V_Ct (C_bytes code))
     | ( C_BYTES_UNPACK , [ V_Ct (C_bytes bytes) ] ) ->
       let value_ty = expr_ty in
       let>> typed_exp = Unpack (loc, bytes, value_ty) in
-      let* value = eval_ligo typed_exp _env in
+      let* value = eval_ligo typed_exp calltrace env in
       return value
     | ( C_IMPLICIT_ACCOUNT , [ V_Ct (C_key_hash kh) ] ) ->
       let>> contract = Implicit_account kh in
@@ -505,14 +505,14 @@ let rec apply_operator : Location.t -> calltrace -> Ast_typed.type_expression ->
        let>> (pk, pkh) = Keygen in
        return @@ LT.V_Record (LMap.of_list [ (Label "0", LT.V_Ct (LT.C_key pk)) ; (Label "1", LT.V_Ct (LT.C_key_hash pkh)) ])
     | ( C_TEST_DELEGATE , [ V_Ct (C_contract {address;_}) ] ) ->
-       let>> x = Get_delegate (loc, address) in
+       let>> x = Get_delegate (loc, calltrace, address) in
        (match x with
         | None ->
            return (v_none ())
         | Some pkh ->
            return (v_some (V_Ct (C_key_hash pkh))))
     | ( C_TEST_REGISTER_DELEGATE , [ V_Ct (C_key_hash pkh) ] ) ->
-       let>> () = Register_delegate (loc, pkh) in
+       let>> () = Register_delegate (loc, calltrace, pkh) in
        return (V_Ct (C_unit))
     | ( C_TEST_SIGN , [ V_Ct (C_key_hash pkh) ; V_Ct (C_bytes bytes) ] ) ->
        let>> code = Sign (loc, pkh, bytes) in

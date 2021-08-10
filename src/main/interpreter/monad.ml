@@ -36,7 +36,7 @@ module Command = struct
     | Get_size : LT.value -> LT.value t
     | Get_balance : Location.t * Ligo_interpreter.Types.calltrace * LT.value -> LT.value t
     | Get_last_originations : unit -> LT.value t
-    | Pack : Location.t * LT.value * Ast_typed.type_expression -> bytes t
+    | Pack : Location.t * LT.calltrace * LT.value * Ast_typed.type_expression -> bytes t
     | Unpack : Location.t * bytes * Ast_typed.type_expression -> Ast_typed.expression t
     | Implicit_account : Tezos_crypto.Signature.Public_key_hash.t -> Tezos_raw_protocol_008_PtEdo2Zk.Alpha_context.Contract.t t
     | Check_obj_ligo : LT.expression -> unit t
@@ -52,8 +52,8 @@ module Command = struct
     | Compile_contract : Location.t * LT.value * Ast_typed.type_expression -> LT.value t
     | To_contract : Location.t * LT.value * string option * Ast_typed.type_expression -> LT.value t
     | Keygen : (Tezos_crypto.Signature.public_key * Tezos_crypto.Signature.public_key_hash) t
-    | Register_delegate : Location.t * Tezos_crypto.Signature.public_key_hash -> unit t
-    | Get_delegate : Location.t * Tezos_raw_protocol_008_PtEdo2Zk.Alpha_context.Contract.t -> (Tezos_crypto.Signature.public_key_hash option) t
+    | Register_delegate : Location.t * LT.calltrace * Tezos_crypto.Signature.public_key_hash -> unit t
+    | Get_delegate : Location.t * LT.calltrace * Tezos_raw_protocol_008_PtEdo2Zk.Alpha_context.Contract.t -> (Tezos_crypto.Signature.public_key_hash option) t
     | Sign : Location.t * Tezos_crypto.Signature.public_key_hash * bytes  -> LT.value t
     | Check_storage_address : Location.t * Tezos_protocol_008_PtEdo2Zk.Protocol.Alpha_context.Contract.t * Ast_typed.type_expression -> unit t
     | Contract_exists : Location.t * LT.calltrace * LT.value -> bool t
@@ -312,20 +312,20 @@ module Command = struct
       let ctxt =
         { ctxt with storage_keys = List.Assoc.add ctxt.storage_keys ~equal:Tezos_crypto.Signature.Public_key_hash.(=) pkh (pk, sk) } in
       let () = Ligo_008_PtEdo2Zk_test_helpers.Account.add_account {pkh;pk;sk} in
-      ok ((pk, pkh), ctxt)
-    | Register_delegate (loc, pkh) ->
-      let* x = Tezos_state.register_delegate ~loc ctxt pkh in
+      ((pk, pkh), ctxt)
+    | Register_delegate (loc, calltrace, pkh) ->
+      let x = Tezos_state.register_delegate ~raise ~loc ~calltrace ctxt pkh in
       (match x with
-       | Success ctxt -> ok ((), ctxt)
-       | Fail errs -> fail @@ Errors.target_lang_error loc errs)
-    | Get_delegate (loc, contract) ->
-      let* x = Tezos_state.get_delegate ~loc ctxt contract in
-      ok (x, ctxt)
+       | Tezos_state.Success ctxt -> ((), ctxt)
+       | Fail errs -> raise.raise @@ Errors.target_lang_error loc calltrace errs)
+    | Get_delegate (loc, calltrace, contract) ->
+      let x = Tezos_state.get_delegate ~raise ~loc ~calltrace ctxt contract in
+      (x, ctxt)
     | Sign (loc, pkh, bytes) ->
-      let* _, sk = trace_option (Errors.generic_error loc "Key not available in store") @@
+      let _, sk = trace_option ~raise (Errors.generic_error loc "Key not available in store") @@
                      List.Assoc.find ctxt.storage_keys ~equal:Tezos_crypto.Signature.Public_key_hash.(=) pkh in
-      let* signed_data = Tezos_state.sign_message bytes sk in
-      ok (LT.V_Ct (LT.C_signature signed_data), ctxt)
+      let signed_data = Tezos_state.sign_message bytes sk in
+      (LT.V_Ct (LT.C_signature signed_data), ctxt)
     | Check_storage_address (loc, addr, ty) ->
       let ligo_ty =
         trace_option ~raise (Errors.generic_error loc "Not supported (yet) when the provided account has been fetched from Test.get_last_originations" ) @@
@@ -474,28 +474,28 @@ module Command = struct
       in
       let v = LT.V_Map (List.map ~f:aux ctxt.last_originations) in
       (v,ctxt)
-    | Pack (loc, value, value_ty) ->
-      let* value,value_ty,_ = Michelson_backend.compile_simple_value ~ctxt ~loc value value_ty in
-      let* bytes = Tezos_state.value_to_bytes ~loc ctxt value value_ty in
-      ok (bytes, ctxt)
+    | Pack (loc, calltrace, value, value_ty) ->
+      let value,value_ty,_ = Michelson_backend.compile_simple_value ~raise ~ctxt ~loc value value_ty in
+      let bytes = Tezos_state.value_to_bytes ~raise ~loc ~calltrace ctxt value value_ty in
+      (bytes, ctxt)
     | Unpack (loc, bytes, v_ty) ->
-      let* value = Tezos_state.bytes_to_value ~loc ctxt bytes in
+      let value = Tezos_state.bytes_to_value ~raise ~loc bytes in
       let value = value
         |> Tezos_protocol_008_PtEdo2Zk.Protocol.Michelson_v1_primitives.strings_of_prims
         |> Tezos_micheline.Micheline.inject_locations (fun _ -> ())
       in
-      let* none_compiled = Michelson_backend.compile_value (Ast_typed.e_a_none v_ty) in
+      let none_compiled = Michelson_backend.compile_value ~raise (Ast_typed.e_a_none v_ty) in
       let val_ty = clean_locations none_compiled.expr_ty in
       let inner_ty = match val_ty with
         | Prim (_, "option", [l], _) ->
            l
         | _ -> failwith "None has a non-option type?" in
       let ret = LT.V_Michelson (Ty_code (value,inner_ty,v_ty)) in
-      let* ret = Michelson_backend.val_to_ast ~loc ret v_ty in
-      ok (ret, ctxt)
+      let ret = Michelson_backend.val_to_ast ~raise ~loc ret v_ty in
+      (ret, ctxt)
     | Implicit_account (pkh) ->
       let contract = Tezos_raw_protocol_008_PtEdo2Zk.Alpha_context.Contract.implicit_contract pkh in
-      ok (contract, ctxt)
+      (contract, ctxt)
     | Int_compare_wrapped (x, y) ->
       (wrap_compare Int_repr.compare x y, ctxt)
     | Int_compare (x, y) -> (Int_repr.compare x y, ctxt)

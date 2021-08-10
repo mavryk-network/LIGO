@@ -207,15 +207,14 @@ let rec val_to_ast ~raise ~loc ?(toplevel = true) : Ligo_interpreter.Types.value
      let x = string_of_key_hash kh in
      e_a_key_hash x
   | V_Ct (C_signature s) ->
-     let* () = trace_option (Errors.generic_error loc "Expected signature")
+     let () = trace_option ~raise (Errors.generic_error loc "Expected signature")
                  (get_t_signature ty) in
-     ok @@ e_a_signature s
+     e_a_signature s
   | V_Ct (C_key k) ->
-     let* () = trace_option (Errors.generic_error loc "Expected public key")
+     let () = trace_option ~raise (Errors.generic_error loc "Expected public key")
                  (get_t_key ty) in
      let x = string_of_key k in
-     ok @@ e_a_key x
->>>>>>> dev
+     e_a_key x
   | V_Construct (ctor, arg) when is_t_option ty ->
      let ty' = trace_option ~raise (Errors.generic_error loc "Expected option") @@ get_t_option ty in
      if String.equal ctor "Some" then

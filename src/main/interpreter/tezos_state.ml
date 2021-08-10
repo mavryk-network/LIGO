@@ -264,7 +264,7 @@ let register_delegate ~raise ~loc ~calltrace (ctxt :context) pkh =
   let open Tezos_alpha_test_helpers in
   let contract = Tezos_raw_protocol_008_PtEdo2Zk.Alpha_context.Contract.implicit_contract pkh in
   let operation = Trace.trace_tzresult_lwt ~raise (throw_obj_exc loc calltrace) @@ Op.delegation (B ctxt.threaded_context) contract (Some pkh) in
-  let res = bake_op ~loc ctxt operation in
+  let res = bake_op ~raise ~loc ~calltrace ctxt operation in
   res
 
 let get_delegate ~raise ~loc ~calltrace (ctxt :context) contract =
@@ -307,30 +307,33 @@ let gen_keys = fun () ->
   let (raw_pkh,raw_pk,raw_sk) = Signature.generate_key () in
   (raw_pkh,raw_pk,raw_sk)
 
-let sign_message (packed_payload : bytes) sk : (string,_) result =
+let sign_message (packed_payload : bytes) sk : string =
   let open Tezos_crypto in
   let signed_data = Signature.sign sk packed_payload in
   let signature_str = Signature.to_b58check signed_data in
-  ok signature_str
+  signature_str
 
-let bytes_to_value ~loc (_ctxt : context) (bytes) =
+let bytes_to_value ~raise ~loc bytes =
   let bytes = Bytes.sub bytes 1 (Bytes.length bytes - 1) in
-  let* x = Trace.trace_decoding_error (fun _ -> Errors.generic_error loc "Error while unpacking data") @@ Data_encoding.Binary.of_bytes Tezos_protocol_008_PtEdo2Zk.Protocol.Script_repr.expr_encoding bytes in
-  ok x
+  let x = Trace.trace_decoding_error (fun _ -> Errors.generic_error loc "Error while unpacking data") @@ Data_encoding.Binary.of_bytes Tezos_protocol_008_PtEdo2Zk.Protocol.Script_repr.expr_encoding bytes in
+  match x with
+  | Ok v -> v
+  | Error err ->
+     raise.raise err
 
-let value_to_bytes ~loc (ctxt : context) (value) (val_ty) =
-  let* val_ty_michelson =
-    Trace.trace_tzresult_lwt Main_errors.parsing_input_tracer @@
-    Memory_proto_alpha.prims_of_strings val_ty in
-  let* (Ex_ty value_ty) =
-    Trace.trace_tzresult_lwt Main_errors.parsing_input_tracer @@
-    Memory_proto_alpha.parse_michelson_ty val_ty_michelson in
-  let* value_michelson =
-    Trace.trace_tzresult_lwt Main_errors.parsing_input_tracer @@
+let value_to_bytes ~raise ~loc ~calltrace (ctxt : context) value value_ty =
+  let value_ty_michelson =
+    Trace.trace_tzresult_lwt ~raise Main_errors.parsing_input_tracer @@
+    Memory_proto_alpha.prims_of_strings value_ty in
+  let (Ex_ty ex_value_ty) =
+    Trace.trace_tzresult_lwt ~raise Main_errors.parsing_input_tracer @@
+    Memory_proto_alpha.parse_michelson_ty value_ty_michelson in
+  let value_michelson =
+    Trace.trace_tzresult_lwt ~raise Main_errors.parsing_input_tracer @@
     Memory_proto_alpha.prims_of_strings value in
-  let* value =
-    Trace.trace_tzresult_lwt Main_errors.parsing_input_tracer @@
-    Memory_proto_alpha.parse_michelson_data value_michelson value_ty in
+  let value =
+    Trace.trace_tzresult_lwt ~raise Main_errors.parsing_input_tracer @@
+    Memory_proto_alpha.parse_michelson_data value_michelson ex_value_ty in
   let alpha_ctxt = get_alpha_context ctxt in
-  let* bytes, _ = Trace.trace_alpha_tzresult_lwt (throw_obj_exc loc) @@ Tezos_protocol_008_PtEdo2Zk.Protocol.Script_ir_translator.pack_data alpha_ctxt value_ty value in
-  ok bytes
+  let bytes, _ = Trace.trace_alpha_tzresult_lwt ~raise (throw_obj_exc loc calltrace) @@ Tezos_protocol_008_PtEdo2Zk.Protocol.Script_ir_translator.pack_data alpha_ctxt ex_value_ty value in
+  bytes

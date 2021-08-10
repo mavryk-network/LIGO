@@ -1079,22 +1079,22 @@ let test_originate_from_file ~raise loc = typer_4 ~raise loc "TEST_ORIGINATE_FRO
   let () = assert_eq_1 ~raise ~loc balance (t_mutez ()) in
   (t_triplet (t_address ()) (t_michelson_code ()) (t_int ()))
 
-let test_keygen loc = typer_1 loc "TEST_KEYGEN" @@ fun unit ->
-  let* () = trace_option (expected_unit loc unit) @@ assert_t_unit unit in
-  ok (t_pair (t_key ()) (t_key_hash ()))
+let test_keygen ~raise loc = typer_1 ~raise loc "TEST_KEYGEN" @@ fun unit ->
+  let () = trace_option ~raise (expected_unit loc unit) @@ assert_t_unit unit in
+  (t_pair (t_key ()) (t_key_hash ()))
 
-let test_delegate loc = typer_1 loc "TEST_DELEGATE" @@ fun contract ->
-  let* () = trace_option (expected_contract loc contract) @@ assert_t_contract contract in
-  ok (t_option (t_key_hash ()))
+let test_delegate ~raise loc = typer_1 ~raise loc "TEST_DELEGATE" @@ fun contract ->
+  let () = trace_option ~raise (expected_contract loc contract) @@ assert_t_contract contract in
+  t_option (t_key_hash ())
 
-let test_register_delegate loc = typer_1 loc "TEST_REGISTER_DELEGATE" @@ fun pkh ->
-  let* () = trace_option (expected_key_hash loc pkh) @@ assert_t_key_hash pkh in
-  ok (t_unit ())
+let test_register_delegate ~raise loc = typer_1 ~raise loc "TEST_REGISTER_DELEGATE" @@ fun pkh ->
+  let () = trace_option ~raise (expected_key_hash loc pkh) @@ assert_t_key_hash pkh in
+  t_unit ()
 
-let test_sign loc = typer_2 loc "TEST_SIGN" @@ fun key_hash bytes ->
-  let* () = trace_option (expected_key_hash loc key_hash) @@ assert_t_key_hash key_hash in
-  let* () = trace_option (expected_bytes loc bytes) @@ assert_t_bytes bytes in
-  ok (t_signature ())
+let test_sign ~raise loc = typer_2 ~raise loc "TEST_SIGN" @@ fun key_hash bytes ->
+  let () = trace_option ~raise (expected_key_hash loc key_hash) @@ assert_t_key_hash key_hash in
+  let () = trace_option ~raise (expected_bytes loc bytes) @@ assert_t_bytes bytes in
+  t_signature ()
 
 let test_compile_contract ~raise loc = typer_1 ~raise loc "TEST_COMPILE_CONTRACT" @@ fun _ ->
   (t_michelson_code ())
@@ -1254,7 +1254,7 @@ let constant_typers ~raise loc c : typer = match c with
   | C_TEST_ORIGINATE_FROM_FILE -> test_originate_from_file ~raise loc ;
   | C_TEST_KEYGEN -> test_keygen ~raise loc ;
   | C_TEST_SIGN -> test_sign ~raise loc ;
-  | C_TEST_DELEGATE -> test_delegate ~raise loc ;\
+  | C_TEST_DELEGATE -> test_delegate ~raise loc ;
   | C_TEST_REGISTER_DELEGATE -> test_register_delegate ~raise loc ;
   (* JsLIGO *)
   | C_POLYMORPHIC_ADD  -> polymorphic_add ~raise loc ;
