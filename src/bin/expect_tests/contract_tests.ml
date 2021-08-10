@@ -2009,3 +2009,53 @@ let%expect_test _ =
 
     Invalid entrypoint value.
     The entrypoint value does not match a constructor of the contract parameter. |}]
+
+(* entrypoint check *)
+let%expect_test _ =
+  run_ligo_bad [ "compile-contract" ; bad_contract "bad_get_entrypoint.mligo" ; "main" ] ;
+  [%expect {|
+    File "../../test/contracts/negative/bad_get_entrypoint.mligo", line 3, characters 11-16:
+      2 |   let v = (Tezos.get_entrypoint_opt
+      3 |            "foo"
+      4 |            ("tz1fakefakefakefakefakefakefakcphLA5" : address) : unit contract option) in
+
+    Invalid entrypoint "foo".
+    One of the following patterns is expected:
+      * "%bar" is expected for entrypoint "Bar"
+      * "%default" when no entrypoint is used. |}]
+
+(* using test in compilation *)
+let%expect_test _ =
+  run_ligo_bad [ "compile-contract" ; bad_contract "compile_test.mligo" ; "main" ] ;
+  [%expect{|
+    File "../../test/contracts/negative/compile_test.mligo", line 15, characters 28-42:
+     14 |  (match action with
+     15 |    Increment (n) -> let _ = Test.log "foo" in add (store, n)
+     16 |  | Decrement (n) -> sub (store, n)
+
+    Invalid call to Test primitive. |}]
+
+(* remove unused declarations *)
+let%expect_test _ =
+  run_ligo_good [ "compile-contract" ; contract "remove_unused_module.mligo" ; "main" ] ;
+  [%expect {|
+    { parameter unit ;
+      storage unit ;
+      code { DROP ; PUSH unit Unit ; NIL operation ; PAIR } } |}]
+
+let%expect_test _ =
+  run_ligo_good [ "compile-contract" ; contract "remove_unused_toptup.mligo" ; "main" ] ;
+  [%expect {|
+    { parameter unit ;
+      storage int ;
+      code { CDR ; PUSH nat 2 ; PUSH nat 1 ; DIG 2 ; ADD ; ADD ; NIL operation ; PAIR } } |}]
+
+(* wrong annotation in Bytes.unpack *)
+let%expect_test _ =
+  run_ligo_bad [ "compile-expression" ; "--init-file" ; bad_contract "bad_annotation_unpack.mligo" ; "cameligo" ; "x" ] ;
+  [%expect {|
+    File "../../test/contracts/negative/bad_annotation_unpack.mligo", line 1, characters 9-42:
+      1 | let x = (Bytes.unpack (Bytes.pack "hello") : string)
+
+    Incorrect argument.
+    Expected an option, but got an argument of type "string". |}]
