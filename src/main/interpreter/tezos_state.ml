@@ -313,27 +313,13 @@ let sign_message (packed_payload : bytes) sk : string =
   let signature_str = Signature.to_b58check signed_data in
   signature_str
 
-let bytes_to_value ~raise ~loc bytes =
+let bytes_to_value bytes =
   let bytes = Bytes.sub bytes 1 (Bytes.length bytes - 1) in
-  let x = Trace.trace_decoding_error (fun _ -> Errors.generic_error loc "Error while unpacking data") @@ Data_encoding.Binary.of_bytes Tezos_protocol_008_PtEdo2Zk.Protocol.Script_repr.expr_encoding bytes in
-  match x with
-  | Ok v -> v
-  | Error err ->
-     raise.raise err
+  Data_encoding.Binary.of_bytes_opt Tezos_protocol_008_PtEdo2Zk.Protocol.Script_repr.expr_encoding bytes
 
-let value_to_bytes ~raise ~loc ~calltrace (ctxt : context) value value_ty =
-  let value_ty_michelson =
-    Trace.trace_tzresult_lwt ~raise Main_errors.parsing_input_tracer @@
-    Memory_proto_alpha.prims_of_strings value_ty in
-  let (Ex_ty ex_value_ty) =
-    Trace.trace_tzresult_lwt ~raise Main_errors.parsing_input_tracer @@
-    Memory_proto_alpha.parse_michelson_ty value_ty_michelson in
-  let value_michelson =
-    Trace.trace_tzresult_lwt ~raise Main_errors.parsing_input_tracer @@
-    Memory_proto_alpha.prims_of_strings value in
-  let value =
-    Trace.trace_tzresult_lwt ~raise Main_errors.parsing_input_tracer @@
-    Memory_proto_alpha.parse_michelson_data value_michelson ex_value_ty in
-  let alpha_ctxt = get_alpha_context ctxt in
-  let bytes, _ = Trace.trace_alpha_tzresult_lwt ~raise (throw_obj_exc loc calltrace) @@ Tezos_protocol_008_PtEdo2Zk.Protocol.Script_ir_translator.pack_data alpha_ctxt ex_value_ty value in
-  bytes
+let value_to_bytes ~raise ~loc value =
+  let value = Trace.trace_alpha_tzresult ~raise (fun _ -> Errors.generic_error loc "Error while packing data") @@ (value
+               |> Tezos_micheline.Micheline.strip_locations
+               |> Tezos_protocol_008_PtEdo2Zk.Protocol.Michelson_v1_primitives.prims_of_strings) in
+  let bytes = Trace.trace_option ~raise (Errors.generic_error loc "Error while packing data") @@ Data_encoding.Binary.to_bytes_opt Tezos_protocol_008_PtEdo2Zk.Protocol.Script_repr.expr_encoding value in
+  Bytes.cat (Bytes.of_string "\005") bytes

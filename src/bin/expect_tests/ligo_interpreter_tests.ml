@@ -186,7 +186,9 @@ let%expect_test _ =
   [%expect {|
     Everything at the top-level was executed.
     - test_string exited with value ().
-    - test_int exited with value (). |}]
+    - test_int exited with value ().
+    - test_string_int exited with value ().
+    - test_string_string exited with value (). |}]
 
 let%expect_test _ =
   run_ligo_good [ "test" ; test "test_delegate.mligo" ] ;

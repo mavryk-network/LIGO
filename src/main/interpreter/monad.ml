@@ -36,7 +36,7 @@ module Command = struct
     | Get_size : LT.value -> LT.value t
     | Get_balance : Location.t * Ligo_interpreter.Types.calltrace * LT.value -> LT.value t
     | Get_last_originations : unit -> LT.value t
-    | Pack : Location.t * LT.calltrace * LT.value * Ast_typed.type_expression -> bytes t
+    | Pack : Location.t * LT.value * Ast_typed.type_expression -> bytes t
     | Unpack : Location.t * bytes * Ast_typed.type_expression -> Ast_typed.expression t
     | Implicit_account : Tezos_crypto.Signature.Public_key_hash.t -> Tezos_raw_protocol_008_PtEdo2Zk.Alpha_context.Contract.t t
     | Check_obj_ligo : LT.expression -> unit t
@@ -474,25 +474,32 @@ module Command = struct
       in
       let v = LT.V_Map (List.map ~f:aux ctxt.last_originations) in
       (v,ctxt)
-    | Pack (loc, calltrace, value, value_ty) ->
-      let value,value_ty,_ = Michelson_backend.compile_simple_value ~raise ~ctxt ~loc value value_ty in
-      let bytes = Tezos_state.value_to_bytes ~raise ~loc ~calltrace ctxt value value_ty in
+    | Pack (loc, value, value_ty) ->
+      let value, _,_ = Michelson_backend.compile_simple_value ~raise ~ctxt ~loc value value_ty in
+      let bytes = Tezos_state.value_to_bytes ~raise ~loc value in
       (bytes, ctxt)
     | Unpack (loc, bytes, v_ty) ->
-      let value = Tezos_state.bytes_to_value ~raise ~loc bytes in
-      let value = value
-        |> Tezos_protocol_008_PtEdo2Zk.Protocol.Michelson_v1_primitives.strings_of_prims
-        |> Tezos_micheline.Micheline.inject_locations (fun _ -> ())
-      in
-      let none_compiled = Michelson_backend.compile_value ~raise (Ast_typed.e_a_none v_ty) in
-      let val_ty = clean_locations none_compiled.expr_ty in
-      let inner_ty = match val_ty with
-        | Prim (_, "option", [l], _) ->
-           l
-        | _ -> failwith "None has a non-option type?" in
-      let ret = LT.V_Michelson (Ty_code (value,inner_ty,v_ty)) in
-      let ret = Michelson_backend.val_to_ast ~raise ~loc ret v_ty in
-      (ret, ctxt)
+      let open Tezos_micheline.Micheline in
+      let inner_ty = trace_option ~raise (Errors.generic_error loc "Expected return type is not an option" ) @@ Ast_typed.get_t_option v_ty in
+      let value_opt = Tezos_state.bytes_to_value bytes in
+      let none_compiled = Michelson_backend.compile_value ~raise (Ast_typed.e_a_none inner_ty) in
+      let Stacking.{expr_ty = none_ty} = none_compiled in
+      let none_ty = clean_locations none_ty in
+      (match value_opt with
+      | None ->
+         let none_value = Prim((), "None", [], []) in
+         let ret = LT.V_Michelson (Ty_code (none_value,none_ty,v_ty)) in
+         let ret = Michelson_backend.val_to_ast ~raise ~loc ret v_ty in
+         (ret, ctxt)
+      | Some value ->
+         let value = value
+                     |> Tezos_protocol_008_PtEdo2Zk.Protocol.Michelson_v1_primitives.strings_of_prims
+                     |> Tezos_micheline.Micheline.inject_locations (fun _ -> ()) in
+         let some_value = Prim((), "Some", [value], []) in
+         let ret = LT.V_Michelson (Ty_code (some_value,none_ty,v_ty)) in
+         let ret = try_with (fun ~raise -> Michelson_backend.val_to_ast ~raise ~loc ret v_ty)
+                     (fun _ -> Ast_typed.e_a_none inner_ty) in
+         (ret, ctxt))
     | Implicit_account (pkh) ->
       let contract = Tezos_raw_protocol_008_PtEdo2Zk.Alpha_context.Contract.implicit_contract pkh in
       (contract, ctxt)

@@ -356,7 +356,7 @@ let rec apply_operator : Location.t -> calltrace -> Ast_typed.type_expression ->
       return (V_Ct (C_address address))
     | ( C_BYTES_PACK , [ value ] ) ->
       let value_ty = List.nth_exn types 0 in
-      let>> code = Pack (loc, calltrace, value, value_ty) in
+      let>> code = Pack (loc, value, value_ty) in
       return (V_Ct (C_bytes code))
     | ( C_BYTES_UNPACK , [ V_Ct (C_bytes bytes) ] ) ->
       let value_ty = expr_ty in
