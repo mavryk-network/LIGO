@@ -18,6 +18,7 @@ import { HeaderComponent } from './components/header';
 import { TabsPanelComponent } from './components/tabs-panel';
 import { TooltipContainer } from './components/tooltip';
 import OutputTab from './components/output/output-tab';
+import Page from './components/tray/page';
 import configureStore from './configure-store';
 import ViewSharedFile from './components/view-shared-file'
 import ViewExampleFile from './components/view-example-file'
@@ -87,15 +88,17 @@ const App: React.FC = () => {
   return (
     <Provider store={store}>
       <Router>
+      <Page>
+      <Page.Tray />
         <Wrapper>
         <HeaderComponent />
         <Container>
-        <div className="col-sm-12 col-md-2 order-md-1"><Examples /></div>
-          <SplitPane onChange={size => setTopPaneHeight(size)} style={{ position: 'relative', display: 'flex' }} split="horizontal" defaultSize="75%" >
+        {/* <div className="col-sm-12 col-md-2 order-md-1"><Examples /></div> */}
+          {/* <SplitPane onChange={size => setTopPaneHeight(size)} style={{ position: 'relative', display: 'flex' }} split="horizontal" defaultSize="75%" > */}
             <EditorComponentWrapper height={topPaneHeight} className="col-sm-12 col-md-7 order-md-2"><EditorComponent editorHeight={topPaneHeight} /></EditorComponentWrapper>
-            <OutputTab />
-          </SplitPane>
-          <div className="col-sm-12 col-md-3 order-md-3"><TabsPanelComponent /></div>
+            {/* <OutputTab /> */}
+          {/* </SplitPane> */}
+          {/* <div className="col-sm-12 col-md-3 order-md-3"><TabsPanelComponent /></div> */}
         </Container>
         <FeedbackContainer>
           <FloatButtonComponent
@@ -119,6 +122,7 @@ const App: React.FC = () => {
         <ViewExampleFile />
       </Route>
       </Switch>
+      </Page>
       </Router>
     </Provider>
   );

@@ -41,6 +41,10 @@ const MenuItem = styled.span`
   }
 `;
 
+interface propTypes {
+  onSelect?: () => any;
+}
+
 interface stateTypes {
   isEditorDirty?: boolean;
 }
@@ -50,9 +54,9 @@ interface dispatchTypes {
   getExample: (id) => any
 }
 
-const Examples:FC<stateTypes&dispatchTypes> = (props) => {
+const Examples:FC<stateTypes&dispatchTypes&propTypes> = (props) => {
   
-  const { isEditorDirty } = props
+  const { isEditorDirty, onSelect } = props
   const [exampleList, setExampleList] = useState<ExampleItem[]>([]);
   const dispatch = useDispatch();
 
