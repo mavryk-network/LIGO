@@ -5,22 +5,22 @@ const TOUR_STEPS = [
   {
     target: '.editor',
     title: 'Smart Contract Editor',
-    content: 'This is where code can be created and edited.',
+    content: 'When you write in LIGO, you’re writing high level code that’s easy to learn',
     disableBeacon: true
   },
   {
     target: '.synyax-select',
-    title: 'Language Selector',
-    content: 'Select preferred LIGO language flavor. Selections include PascaLIGO, CameLIGO, ReasonLIGO.',
+    title: 'Syntax Selector',
+    content: 'Choose a familiar LIGO syntax based on what you already know',
     disableBeacon: true
   },{
     target: '.examples',
-    title: 'Contract Examples',
-    content: 'Select a contract example.',
+    title: 'Examples',
+    content: 'Not sure what to write? Check out our example contracts',
     disableBeacon: true
   },{
     target: '.configure',
-    title: 'Actions',
+    title: 'Configure',
     content: 'Select your action: Evaluate Function, Compile, Compile Function, Deploy, Dry Run, Evaluate Value, Generate Deploy Script.',
     disableBeacon: true
   },{
@@ -51,7 +51,7 @@ const TOUR_STEPS = [
   },{
     target: '.cheatSheet',
     title: 'Cheat Sheet',
-    content: 'Quick LIGO language reference.',
+    content: 'Check out our Cheatsheet for coding help',
     disableBeacon: true
   },
   {
@@ -62,7 +62,7 @@ const TOUR_STEPS = [
   },{
     target: '.question',
     title: '?',
-    content: 'Ask us questions on the Telegram Channel.',
+    content: 'If you get stuck, don’t hesitate to ask us questions. We’re here to help',
     disableBeacon: true
   },{
     target: '.report',
