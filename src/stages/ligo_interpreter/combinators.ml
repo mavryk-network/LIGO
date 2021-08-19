@@ -9,6 +9,9 @@ let v_bool : bool -> value =
 let v_unit : unit -> value =
   fun () -> V_Ct (C_unit)
 
+let v_string : string -> value =
+  fun s -> V_Ct (C_string s)
+
 let v_some : value -> value =
   fun v -> V_Construct ("Some", v)
 
@@ -73,6 +76,12 @@ let get_nat : value -> Z.t option =
   | V_Ct ( C_nat x) -> Some x
   | _ -> None
 
+let get_nat_option : value -> z option option =
+  function
+  | V_Construct ("Some", V_Ct (C_nat x)) -> Some (Some x)
+  | V_Construct ("None", V_Ct C_unit) -> Some (None)
+  | _ -> None
+
 let get_int : value -> Z.t option =
   function
   | V_Ct ( C_int x) -> Some x
@@ -102,7 +111,6 @@ let get_pair : value -> (value * value) option =
       let x = LMap.to_kv_list lm in
       match x with
       | [ (Label "0", x ) ; (Label "1", y) ] -> Some (x,y)
-      | _ -> None 
+      | _ -> None
     )
     | _ -> None
-      

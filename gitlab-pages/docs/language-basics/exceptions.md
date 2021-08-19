@@ -44,7 +44,7 @@ let main (p, store : unit * storage) : operation list * storage =
   (failwith "This contract always fails" : operation list * storage)
 ```
 
-The call to failwith should be annoted with a type as the typechecker cannot infer the correct type yet.
+The call to failwith should be annotated with a type as the type-checker cannot infer the correct type yet.
 
 </Syntax>
 <Syntax syntax="reasonligo">
@@ -56,7 +56,7 @@ let main = (p : unit, s : unit) =>
   };
 ```
 
-The call to failwith should be annoted with a type as the typechecker cannot infer the correct type yet.
+The call to failwith should be annotated with a type as the type-checker cannot infer the correct type yet.
 
 </Syntax>
 <Syntax syntax="jsligo">
@@ -64,12 +64,12 @@ The call to failwith should be annoted with a type as the typechecker cannot inf
 ```jsligo group=failwith
 let main = (p: unit, s: unit): unit => {
   if (true) { 
-    return failwith("This contract always fails"); 
+    failwith("This contract always fails"); 
   };
 }
 ```
 
-The call to failwith should be annoted with a type as the typechecker cannot infer the correct type yet.
+The call to failwith should be annotated with a type as the type-checker cannot infer the correct type yet.
 
 </Syntax>
 
