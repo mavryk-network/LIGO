@@ -161,13 +161,6 @@ module Tree_abstraction = struct
     | "String.sub"      -> some_const C_SLICE
     | "String.concat"   -> some_const C_CONCAT
 
-    (* michelson pair/or type converter module *)
-
-    | "Layout.convert_to_right_comb" -> some_const C_CONVERT_TO_RIGHT_COMB
-    | "Layout.convert_to_left_comb" -> some_const C_CONVERT_TO_LEFT_COMB
-    | "Layout.convert_from_right_comb" -> some_const C_CONVERT_FROM_RIGHT_COMB
-    | "Layout.convert_from_left_comb" -> some_const C_CONVERT_FROM_LEFT_COMB
-
     (* Testing module *)
 
     | "Test.originate" -> some_const C_TEST_ORIGINATE
@@ -197,6 +190,7 @@ module Tree_abstraction = struct
     | "Test.mutate_value" -> some_const C_TEST_MUTATE_VALUE
     | "Test.mutation_test" -> some_const C_TEST_MUTATION_TEST
     | "Test.mutation_test_all" -> some_const C_TEST_MUTATION_TEST_ALL
+    | "Test.save_mutation" -> some_const C_TEST_SAVE_MUTATION
     | "Test.run" -> some_const C_TEST_RUN
     | "Test.eval" -> some_const C_TEST_EVAL
     | "Test.compile_contract" -> some_const C_TEST_COMPILE_CONTRACT
@@ -204,6 +198,25 @@ module Tree_abstraction = struct
     | "Test.nth_bootstrap_typed_address" -> some_const C_TEST_NTH_BOOTSTRAP_TYPED_ADDRESS
     | "Test.to_entrypoint" -> some_const C_TEST_TO_ENTRYPOINT
     | "Test.to_typed_address" -> some_const C_TEST_TO_TYPED_ADDRESS
+
+    (* Operator module *)
+
+    | "Operator.neg"   -> some_const C_NEG
+    | "Operator.add"   -> some_const C_ADD
+    | "Operator.sub"   -> some_const C_SUB
+    | "Operator.times" -> some_const C_MUL
+    | "Operator.div"   -> some_const C_DIV
+    | "Operator.modulus" -> some_const C_MOD
+    | "Operator.eq"    -> some_const C_EQ
+    | "Operator.not"   -> some_const C_NOT
+    | "Operator.and"   -> some_const C_AND
+    | "Operator.or"    -> some_const C_OR
+    | "Operator.gt"    -> some_const C_GT
+    | "Operator.ge"    -> some_const C_GE
+    | "Operator.lt"    -> some_const C_LT
+    | "Operator.le"    -> some_const C_LE
+    | "Operator.cons"  -> some_const C_CONS
+    | "Operator.neq"   -> some_const C_NEQ
 
     | _ -> None
 
@@ -228,6 +241,25 @@ module Tree_abstraction = struct
     | C_CONTRACT                -> "Tezos.get_contract"
     | C_CONTRACT_ENTRYPOINT     -> "Tezos.get_entrypoint"
     | C_NEVER                   -> "Tezos.never"
+
+    (* Operator module *)
+
+    | C_NEG  -> "Operator.neg"
+    | C_ADD  -> "Operator.add"
+    | C_SUB  -> "Operator.sub"
+    | C_MUL  -> "Operator.times"
+    | C_DIV  -> "Operator.div"
+    | C_MOD  -> "Operator.modulus"
+    | C_EQ   -> "Operator.eq"
+    | C_NOT  -> "Operator.not"
+    | C_AND  -> "Operator.and"
+    | C_OR   -> "Operator.or"
+    | C_GT   -> "Operator.gt"
+    | C_GE   -> "Operator.ge"
+    | C_LT   -> "Operator.lt"
+    | C_LE   -> "Operator.le"
+    | C_CONS -> "Operator.cons"
+    | C_NEQ  -> "Operator.neq"
 
     (* Crypto module *)
 
@@ -297,8 +329,8 @@ module Tree_abstraction = struct
 
     (* Bitwise module *)
 
-    | C_OR  -> "Bitwise.or"
-    | C_AND -> "Bitwise.and"
+    (* | C_OR  -> "Bitwise.or" (* will never trigger *)
+     * | C_AND -> "Bitwise.and" *)
     | C_XOR -> "Bitwise.xor"
     | C_LSL -> "Bitwise.shift_left"
     | C_LSR -> "Bitwise.shift_right"
@@ -308,13 +340,6 @@ module Tree_abstraction = struct
     (*  | C_SIZE   -> "String.length" (* will never trigger, rename size *)
         | C_SLICE  -> "String.sub"
         | C_CONCAT -> "String.concat" *)
-
-    (* michelson pair/or type converter module *)
-
-    | C_CONVERT_TO_RIGHT_COMB   -> "Layout.convert_to_right_comb"
-    | C_CONVERT_TO_LEFT_COMB    -> "Layout.convert_to_left_comb"
-    | C_CONVERT_FROM_RIGHT_COMB -> "Layout.convert_from_right_comb"
-    | C_CONVERT_FROM_LEFT_COMB  -> "Layout.convert_from_left_comb"
 
     (* Not parsed *)
     | C_SOME -> "Some"
@@ -349,6 +374,7 @@ module Tree_abstraction = struct
     | C_TEST_MUTATE_VALUE -> "Test.mutate_value"
     | C_TEST_MUTATION_TEST -> "Test.mutation_test"
     | C_TEST_MUTATION_TEST_ALL -> "Test.mutation_test_all"
+    | C_TEST_SAVE_MUTATION -> "Test.save_mutation"
     | C_TEST_RUN -> "Test.run"
     | C_TEST_EVAL -> "Test.eval"
     | C_TEST_COMPILE_CONTRACT -> "Test.compile_contract"
@@ -390,23 +416,7 @@ module Tree_abstraction = struct
       | "ediv"             -> some_const C_EDIV
       | "unit"             -> some_const C_UNIT
 
-      | "NEG"              -> some_const C_NEG
-      | "ADD"              -> some_const C_ADD
-      | "SUB"              -> some_const C_SUB
-      | "TIMES"            -> some_const C_MUL
-      | "DIV"              -> some_const C_DIV
-      | "MOD"              -> some_const C_MOD
-      | "EQ"               -> some_const C_EQ
-      | "NOT"              -> some_const C_NOT
-      | "AND"              -> some_const C_AND
-      | "OR"               -> some_const C_OR
-      | "GT"               -> some_const C_GT
-      | "GE"               -> some_const C_GE
-      | "LT"               -> some_const C_LT
-      | "LE"               -> some_const C_LE
-      | "CONS"             -> some_const C_CONS
       | "cons"             -> some_deprecated C_CONS (* Deprecated *)
-      | "NEQ"              -> some_const C_NEQ
 
       (* Crypto module *)
 
@@ -476,9 +486,6 @@ module Tree_abstraction = struct
       | "assert_some"     -> some_const C_ASSERT_SOME
       | "size"            -> some_deprecated C_SIZE (* Deprecated *)
 
-      | "Layout.convert_to_right_comb" -> some_const C_CONVERT_TO_RIGHT_COMB
-      | "Layout.convert_to_left_comb" -> some_const C_CONVERT_TO_LEFT_COMB
-
       | _ as c            -> pseudo_modules c
 
     let constant'_to_string = function
@@ -492,30 +499,10 @@ module Tree_abstraction = struct
       | C_UNIT       -> "unit"
       | C_LIST_EMPTY -> "nil"
 
-      | C_NEG  -> "NEG"
-      | C_ADD  -> "ADD"
-      | C_SUB  -> "SUB"
-      | C_MUL  -> "TIMES"
-      | C_DIV  -> "DIV"
-      | C_MOD  -> "MOD"
-      | C_EQ   -> "EQ"
-      | C_NOT  -> "NOT"
-      | C_AND  -> "AND"
-      | C_OR   -> "OR"
-      | C_GT   -> "GT"
-      | C_GE   -> "GE"
-      | C_LT   -> "LT"
-      | C_LE   -> "LE"
-      | C_CONS -> "CONS"
-      | C_NEQ  -> "NEQ"
-
       (*->  Others *)
 
       | C_ASSERTION   -> "assert"
       | C_ASSERT_SOME -> "assert_some"
-
-      | C_CONVERT_TO_RIGHT_COMB -> "Layout.convert_to_right_comb"
-      | C_CONVERT_TO_LEFT_COMB  -> "Layout.convert_to_left_comb"
 
       | _ as c            -> pseudo_module_to_string c
 
@@ -562,23 +549,6 @@ module Tree_abstraction = struct
       | "ediv"             -> some_const C_EDIV
       | "unit"             -> some_const C_UNIT
 
-      | "NEG"              -> some_const C_NEG
-      | "ADD"              -> some_const C_ADD
-      | "SUB"              -> some_const C_SUB
-      | "TIMES"            -> some_const C_MUL
-      | "DIV"              -> some_const C_DIV
-      | "MOD"              -> some_const C_MOD
-      | "EQ"               -> some_const C_EQ
-      | "NOT"              -> some_const C_NOT
-      | "AND"              -> some_const C_AND
-      | "OR"               -> some_const C_OR
-      | "GT"               -> some_const C_GT
-      | "GE"               -> some_const C_GE
-      | "LT"               -> some_const C_LT
-      | "LE"               -> some_const C_LE
-      | "CONS"             -> some_const C_CONS
-      | "NEQ"              -> some_const C_NEQ
-
       (* Bytes module *)
 
       | "Bytes.size"   -> some_deprecated C_SIZE       (* Deprecated *)
@@ -608,6 +578,8 @@ module Tree_abstraction = struct
 
       | "assert"       -> some_const C_ASSERTION
       | "assert_some"  -> some_const C_ASSERT_SOME
+      | "true"         -> some_const C_TRUE
+      | "false"        -> some_const C_FALSE
 
       | _ as c -> pseudo_modules c
 
@@ -622,27 +594,12 @@ module Tree_abstraction = struct
       | C_UNIT       -> "unit"
       | C_LIST_EMPTY -> "[]"
 
-      | C_NEG  -> "NEG"
-      | C_ADD  -> "ADD"
-      | C_SUB  -> "SUB"
-      | C_MUL  -> "TIMES"
-      | C_DIV  -> "DIV"
-      | C_MOD  -> "MOD"
-      | C_EQ   -> "EQ"
-      | C_NOT  -> "NOT"
-      | C_AND  -> "AND"
-      | C_OR   -> "OR"
-      | C_GT   -> "GT"
-      | C_GE   -> "GE"
-      | C_LT   -> "LT"
-      | C_LE   -> "LE"
-      | C_CONS -> "CONS"
-      | C_NEQ  -> "NEQ"
-
       (* Others *)
 
       | C_ASSERTION   -> "assert"
       | C_ASSERT_SOME -> "assert_some"
+      | C_TRUE -> "true"
+      | C_FALSE -> "false"
 
       | _ as c -> pseudo_module_to_string c
 
@@ -689,23 +646,6 @@ module Tree_abstraction = struct
       | "ediv"             -> some_const C_EDIV
       | "unit"             -> some_const C_UNIT
 
-      | "NEG"              -> some_const C_NEG
-      | "ADD"              -> some_const C_ADD
-      | "SUB"              -> some_const C_SUB
-      | "TIMES"            -> some_const C_MUL
-      | "DIV"              -> some_const C_DIV
-      | "MOD"              -> some_const C_MOD
-      | "EQ"               -> some_const C_EQ
-      | "NOT"              -> some_const C_NOT
-      | "AND"              -> some_const C_AND
-      | "OR"               -> some_const C_OR
-      | "GT"               -> some_const C_GT
-      | "GE"               -> some_const C_GE
-      | "LT"               -> some_const C_LT
-      | "LE"               -> some_const C_LE
-      | "CONS"             -> some_const C_CONS
-      | "NEQ"              -> some_const C_NEQ
-
       (* Bytes module *)
 
       | "Bytes.size"   -> some_deprecated C_SIZE       (* Deprecated *)
@@ -735,6 +675,8 @@ module Tree_abstraction = struct
 
       | "assert"      -> some_const C_ASSERTION
       | "assert_some" -> some_const C_ASSERT_SOME
+      | "true"         -> some_const C_TRUE
+      | "false"        -> some_const C_FALSE
 
       | _ as c -> pseudo_modules c
 
@@ -749,27 +691,12 @@ module Tree_abstraction = struct
       | C_UNIT       -> "unit"
       | C_LIST_EMPTY -> "[]"
 
-      | C_NEG  -> "NEG"
-      | C_ADD  -> "ADD"
-      | C_SUB  -> "SUB"
-      | C_MUL  -> "TIMES"
-      | C_DIV  -> "DIV"
-      | C_MOD  -> "MOD"
-      | C_EQ   -> "EQ"
-      | C_NOT  -> "NOT"
-      | C_AND  -> "AND"
-      | C_OR   -> "OR"
-      | C_GT   -> "GT"
-      | C_GE   -> "GE"
-      | C_LT   -> "LT"
-      | C_LE   -> "LE"
-      | C_CONS -> "CONS"
-      | C_NEQ  -> "NEQ"
-
       (* Others *)
 
       | C_ASSERTION   -> "assert"
       | C_ASSERT_SOME -> "assert_some"
+      | C_TRUE -> "true"
+      | C_FALSE -> "false"
 
       | _ as c -> pseudo_module_to_string c
 
