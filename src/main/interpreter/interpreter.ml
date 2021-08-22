@@ -466,6 +466,15 @@ let rec apply_operator ~raise ~steps ~protocol_version : Location.t -> calltrace
           eval_ligo body calltrace env'
         )
         (V_Ct C_unit) elts
+    | ( C_SET_MAP , [ V_Func_val {arg_binder ; body ; env} ; V_Set (elts) ] ) ->
+      let* elts =
+        Monad.bind_map_list
+          (fun elt ->
+            let env' = Env.extend env (arg_binder,elt) in
+            eval_ligo body calltrace env')
+          elts
+      in
+      return (V_Set elts)
     | ( C_SET_MEM    , [ v ; V_Set (elts) ] ) -> return @@ v_bool (List.mem ~equal:LC.equal_value elts v)
     | ( C_SET_REMOVE , [ v ; V_Set (elts) ] ) -> return @@ V_Set (List.filter ~f:(fun el -> not (el = v)) elts)
     | ( C_SET_UPDATE , [ v ; b ; V_Set elts ] ) ->

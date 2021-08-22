@@ -71,9 +71,20 @@ let constant'_tag = function
   | C_SET_REMOVE              ->  60
   | C_SET_UPDATE              ->  61
   | C_SET_ITER                ->  62
+  | C_SET_MAP                 -> 177
   | C_SET_FOLD                ->  63
   | C_SET_FOLD_DESC           ->  64
   | C_SET_MEM                 ->  65
+  | C_SET_EMPTY               ->  54
+  | C_SET_LITERAL             ->  55
+  | C_SET_ADD                 ->  56
+  | C_SET_REMOVE              ->  57
+  | C_SET_UPDATE              ->  58
+  | C_SET_ITER                ->  59
+
+  | C_SET_FOLD                ->  60
+  | C_SET_FOLD_DESC           ->  61
+  | C_SET_MEM                 ->  62
   (* List *)
   | C_LIST_EMPTY              ->  66
   | C_LIST_LITERAL            ->  67
