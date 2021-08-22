@@ -8,5 +8,13 @@
     ast_sugar
     UnionFind
   )
+  (modules ast_core combinators types helpers misc reasons compare compare_enum to_yojson PP environment formatter)
+  (preprocess (pps ppx_incr))
   (flags (:standard -open Simple_utils ))
 )
+
+(library
+ (name ppx_incr)
+ (kind ppx_rewriter)
+ (modules ppx_incr)
+ (libraries ppxlib))
