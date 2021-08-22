@@ -17,6 +17,9 @@ type layout =
   | L_comb
   | L_tree
 
+let compare_ligo_string = Simple_utils.Ligo_string.compare
+let compare_z = Z.compare
+
 type literal =
   | Literal_unit
   | Literal_int of z
@@ -210,6 +213,7 @@ type constant' =
   | C_SAPLING_EMPTY_STATE
   (* JsLIGO *)
   | C_POLYMORPHIC_ADD
+[@@deriving ord]
 
 type deprecated = {
   name : string ;
