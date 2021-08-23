@@ -183,7 +183,19 @@ let rec apply_operator ~raise : Location.t -> calltrace -> Ast_typed.type_expres
       | None -> fail @@ Errors.meta_lang_eval loc calltrace (Predefined.Tree_abstraction.pseudo_module_to_string c)
     )
     (* binary *)
-    | ( (C_EQ | C_NEQ | C_LT | C_LE | C_GT | C_GE) , _ ) -> apply_comparison loc calltrace c operands
+    | ( C_EQ     , [ v ; v' ] ) ->
+       let v_type = List.nth_exn types 0 in
+       let v'_type = List.nth_exn types 1 in
+       let v = Michelson_backend.val_to_ast ~loc ~raise v v_type in
+       let v' = Michelson_backend.val_to_ast ~loc ~raise v' v'_type in
+       let eq_expr = Ast_typed.e_a_eq v v' in
+       let eq_compiled = Michelson_backend.compile_value ~raise eq_expr in
+       let (ra, rb) = Michelson_backend.run_expression_unwrap ~raise eq_compiled in
+       let ret = LT.V_Michelson (Ty_code (ra, rb, Ast_typed.t_bool ())) in
+       let ret = Michelson_backend.val_to_ast ~raise ~loc ret (Ast_typed.t_bool ()) in
+       let* value = eval_ligo ret calltrace env in
+       return @@ value
+    | ( (C_NEQ | C_LT | C_LE | C_GT | C_GE) , _ ) -> apply_comparison loc calltrace c operands
     | ( C_SUB    , [ V_Ct (C_int a' | C_nat a') ; V_Ct (C_int b' | C_nat b') ] ) -> return_ct @@ C_int (Z.sub a' b')
     | ( C_CONS   , [ v                  ; V_List vl          ] ) -> return @@ V_List (v::vl)
     | ( C_ADD    , [ V_Ct (C_int a'  )  ; V_Ct (C_int b'  )  ] )
