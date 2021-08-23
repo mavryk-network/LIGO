@@ -774,6 +774,7 @@ let simple_comparator ~raise : Location.t -> string -> typer = fun loc s -> type
       t_timestamp () ;
       t_unit ();
       t_never ();
+      t_michelson_code () ;
     ] in
   t_bool ()
 

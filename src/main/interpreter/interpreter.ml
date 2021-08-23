@@ -23,6 +23,9 @@ let rec apply_comparison : Location.t -> calltrace -> Ast_typed.constant' -> val
   fun loc calltrace c operands ->
     let open Monad in
     match (c,operands) with
+    | (C_EQ  , [ (V_Michelson _) as a ; (V_Michelson _) as b ] ) ->
+      let>> b = Michelson_equal (loc,a,b) in
+      return @@ v_bool b
     | ( comp , [ V_Ct (C_int a'      ) ; V_Ct (C_int b'      ) ] )
     | ( comp , [ V_Ct (C_mutez a'    ) ; V_Ct (C_mutez b'    ) ] )
     | ( comp , [ V_Ct (C_timestamp a') ; V_Ct (C_timestamp b') ] )
