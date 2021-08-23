@@ -360,8 +360,9 @@ let rec apply_operator ~raise : Location.t -> calltrace -> Ast_typed.type_expres
       return (V_Ct (C_address address))
     | ( C_BYTES_PACK , [ value ] ) ->
       let value_ty = List.nth_exn types 0 in
-      let>> code = Pack (loc, value, value_ty) in
-      return (V_Ct (C_bytes code))
+      let>> ret = Pack (loc, value, value_ty) in
+      let* value = eval_ligo ret calltrace env in
+      return value
     | ( C_BYTES_UNPACK , [ V_Ct (C_bytes bytes) ] ) ->
       let value_ty = expr_ty in
       let>> typed_exp = Unpack (loc, bytes, value_ty) in

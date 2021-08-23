@@ -36,7 +36,7 @@ module Command = struct
     | Get_size : LT.value -> LT.value t
     | Get_balance : Location.t * Ligo_interpreter.Types.calltrace * LT.value -> LT.value t
     | Get_last_originations : unit -> LT.value t
-    | Pack : Location.t * LT.value * Ast_typed.type_expression -> bytes t
+    | Pack : Location.t * LT.value * Ast_typed.type_expression -> Ast_typed.expression t
     | Unpack : Location.t * bytes * Ast_typed.type_expression -> Ast_typed.expression t
     | Implicit_account : Tezos_crypto.Signature.Public_key_hash.t -> Tezos_raw_protocol_008_PtEdo2Zk.Alpha_context.Contract.t t
     | Check_obj_ligo : LT.expression -> unit t
@@ -354,9 +354,13 @@ module Command = struct
       let v = LT.V_Map (List.map ~f:aux ctxt.last_originations) in
       (v,ctxt)
     | Pack (loc, value, value_ty) ->
-      let value, _,_ = Michelson_backend.compile_simple_value ~raise ~ctxt ~loc value value_ty in
-      let bytes = Tezos_state.value_to_bytes ~raise ~loc value in
-      (bytes, ctxt)
+      let expr = Michelson_backend.val_to_ast ~raise ~loc value value_ty in
+      let expr = Ast_typed.e_a_pack expr in
+      let mich = Michelson_backend.compile_value ~raise expr in
+      let (ret_co, ret_ty) = Michelson_backend.run_expression_unwrap ~raise ~ctxt ~loc mich in
+      let ret = LT.V_Michelson (Ty_code (ret_co, ret_ty, Ast_typed.t_bytes ())) in
+      let ret = Michelson_backend.val_to_ast ~raise ~loc ret (Ast_typed.t_bytes ()) in
+      (ret, ctxt)
     | Unpack (loc, bytes, v_ty) ->
       let open Tezos_micheline.Micheline in
       let inner_ty = trace_option ~raise (Errors.generic_error loc "Expected return type is not an option" ) @@ Ast_typed.get_t_option v_ty in
