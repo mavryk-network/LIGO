@@ -327,3 +327,5 @@ let test_list_fold_left_sum =
   let xs = [1;2;3] in
   let sum = List.fold_left (fun (x,acc : (int * int)) -> x + acc) 0 xs in
   assert (sum = 6)
+
+(* Add set.map tests here *)

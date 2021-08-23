@@ -864,6 +864,40 @@ let set_arithmetic_jsligo ~raise ~add_warning () : unit =
   in
   ()
 
+let set_iterators_mligo ~raise ~add_warning () : unit = 
+  let program = type_file ~raise ~add_warning "./contracts/set_iterators.mligo" in
+  let () =
+    expect_eq ~raise program "map_incr_op"
+      (e_set [e_int 1; e_int 2; e_int 3; e_int 4; e_int 5])
+      (e_set [e_int 2; e_int 3; e_int 4; e_int 5; e_int 6])
+  in
+  let () =
+    expect_eq ~raise program "map_conv_op"
+      (e_set [e_nat 1; e_nat 2; e_nat 3; e_nat 4; e_nat 5])
+      (e_set [e_int 1; e_int 2; e_int 3; e_int 4; e_int 5])
+  in
+  let () =
+    expect_eq ~raise program "fold_sum_op"
+      (e_set [e_int 1; e_int 2; e_int 3; e_int 4; e_int 5])
+      (e_int 15)
+  in
+  let () =
+    expect_eq ~raise program "fold_string_concat_op"
+      (e_set [e_string "a"; e_string "b"; e_string "c"; e_string "d"; e_string "e"])
+      (e_string "abcde")
+  in
+  let () =
+    expect_eq ~raise program "fold_desc_sum_op"
+      (e_set [e_int 1; e_int 2; e_int 3; e_int 4; e_int 5])
+      (e_int 15)
+  in
+  let () =
+    expect_eq ~raise program "fold_desc_string_concat_op"
+      (e_set [e_string "a"; e_string "b"; e_string "c"; e_string "d"; e_string "e"])
+      (e_string "abcde")
+  in
+  ()
+
 let unit_expression ~raise ~add_warning () : unit =
   let program = type_file ~raise ~add_warning "./contracts/unit.ligo" in
   expect_eq_evaluate ~raise program "u" (e_unit ())
@@ -3492,7 +3526,8 @@ let tuple_fun_religo ~raise ~add_warning () : unit =
 
 let main = test_suite "Integration (End to End)"
   [
-    test_w "simple1" simple1 ;
+    test_w "set iterators (mligo)" set_iterators_mligo ;
+    (* test_w "simple1" simple1 ;
     test_w "simple2" simple2 ;
     test_w "simple3" simple3 ;
     test_w "chain id" chain_id ;
@@ -3776,4 +3811,5 @@ let main = test_suite "Integration (End to End)"
     test_w "if_if_return (jsligo)" if_if_return_jsligo;
     test_w "switch case (jsligo)" switch_cases_jsligo;
     test_w "tuple fun (religo)" tuple_fun_religo
+    *)
   ]
