@@ -26,59 +26,45 @@ type michelson_program
 A type for code that's compiled to Michelson.
 
 <SyntaxTitle syntax="pascaligo">
-type ligo_program
-</SyntaxTitle>
-<SyntaxTitle syntax="cameligo">
-type ligo_program
-</SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-type ligo_program
-</SyntaxTitle>
-<SyntaxTitle syntax="jsligo">
-type ligo_program
-</SyntaxTitle>
-A type for code insertions in the test file.
-
-<SyntaxTitle syntax="pascaligo">
-type test_exec_error = 
-  Rejected of (michelson_program * address) 
+type test_exec_error =
+  Rejected of (michelson_program * address)
 | Other
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
-type test_exec_error = 
-  Rejected of (michelson_program * address) 
+type test_exec_error =
+  Rejected of (michelson_program * address)
 | Other
 </SyntaxTitle>
 <SyntaxTitle syntax="reasonligo">
-type test_exec_error = 
-  Rejected(michelson_program, address) 
+type test_exec_error =
+  Rejected(michelson_program, address)
 | Other
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
-type test_exec_error = 
-  ["Rejected", michelson_program, address] 
+type test_exec_error =
+  ["Rejected", michelson_program, address]
 | ["Other"]
 </SyntaxTitle>
 A test error.
 
 <SyntaxTitle syntax="pascaligo">
-type test_exec_result = 
+type test_exec_result =
   Success
 | Fail of test_exec_error
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
-type test_exec_result = 
+type test_exec_result =
   Success
 | Fail of test_exec_error
 </SyntaxTitle>
 <SyntaxTitle syntax="reasonligo">
-type test_exec_result = 
+type test_exec_result =
   Success
 | Fail(test_exec_error)
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 type test_exec_result =
-  ["Success"] 
+  ["Success"]
 | ["Fail", test_exec_error]
 </SyntaxTitle>
 A test execution result.
@@ -395,6 +381,53 @@ let nth_bootstrap_account = (nth: int) => address
 Returns the address of the nth bootstrapped account.
 
 <SyntaxTitle syntax="pascaligo">
+function nth_bootstrap_contract : nat -> address
+</SyntaxTitle>
+<SyntaxTitle syntax="cameligo">
+val nth_bootstrap_contract : nat -> address
+</SyntaxTitle>
+<SyntaxTitle syntax="reasonligo">
+let nth_bootstrap_contract: nat => address
+</SyntaxTitle>
+<SyntaxTitle syntax="jsligo">
+let nth_bootstrap_contract = (nth: nat) => address
+</SyntaxTitle>
+Returns the address corresponding to the nth bootstrapped contract.
+
+<SyntaxTitle syntax="pascaligo">
+function bootstrap_contract : tez -> ('parameter * 'storage -> list (operation) * 'storage) -> 'storage -> unit
+</SyntaxTitle>
+<SyntaxTitle syntax="cameligo">
+val bootstrap_contract : tez -> ('parameter * 'storage -> operation list * 'storage) -> 'storage -> unit
+</SyntaxTitle>
+<SyntaxTitle syntax="reasonligo">
+let bootstrap_contract : tez => (('parameter, 'storage) -> (list(operation), 'storage)) => 'storage => unit
+</SyntaxTitle>
+<SyntaxTitle syntax="jsligo">
+let bootstrap_contract = (balance: tez, contract: ('parameter, 'storage) => (list &lt;operation&gt;, &apos;storage), init: 'storage) => unit
+</SyntaxTitle>
+
+Setup a bootstrap contract with an entrypoint function, initial
+storage and initial balance. Bootstrap contracts will be loaded in
+order, and they will be available only after reset.
+
+<SyntaxTitle syntax="pascaligo">
+function nth_bootstrap_typed_address : nat -> typed_address ('p, 's)
+</SyntaxTitle>
+<SyntaxTitle syntax="cameligo">
+val nth_bootstrap_typed_address : int -> ('p, 's) typed_address
+</SyntaxTitle>
+<SyntaxTitle syntax="reasonligo">
+let nth_bootstrap_typed_address: int => typed_address ('p, 's)
+</SyntaxTitle>
+<SyntaxTitle syntax="jsligo">
+let nth_bootstrap_typed_address = (nth: int) => typed_address &lt;&apos;p, &apos;s&gt;
+</SyntaxTitle>
+Returns the typed address corresponding to the nth bootstrapped
+contract currently loaded. The types are inferred from those contracts
+loaded with `Test.bootstrap_contract` (before reset).
+
+<SyntaxTitle syntax="pascaligo">
 function last_originations : unit -> map (address * list(address))
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
@@ -406,128 +439,8 @@ let last_originations: unit => map (address , list(address))
 <SyntaxTitle syntax="jsligo">
 let last_originations = (_: unit) => map&lt;address , address list&gt;
 </SyntaxTitle>
-Returns the address of the nth bootstrapped account.
-
-
-<SyntaxTitle syntax="pascaligo">
-function compile_expression : option(string) -> ligo_program -> michelson_program
-</SyntaxTitle>
-<SyntaxTitle syntax="cameligo">
-val compile_expression : string option -> ligo_program -> michelson_program
-</SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let compile_expression: (option(string), ligo_program) => michelson_program
-</SyntaxTitle>
-<SyntaxTitle syntax="jsligo">
-let compile_expression = (filepath: option&lt;string&gt;, code: ligo_program) => michelson_program
-</SyntaxTitle>
-Compile an expression to Michelson and evaluate it.
-
-<Syntax syntax="pascaligo">
-
-```pascaligo skip
-const expr = Test.compile_expression(Some("filename"), [%pascaligo ({| (42: int) |} : ligo_program)]);
-```
-
-</Syntax>
-<Syntax syntax="cameligo">
-
-```cameligo skip
-let expr = Test.compile_expression (Some("filename")) ([%cameligo ({| (42: int) |} : ligo_program)]) in
-...
-```
-
-</Syntax>
-<Syntax syntax="reasonligo">
-
-```reasonligo skip
-let expr = Test.compile_expression(Some("filename"), ([%reasonligo ({| (42: int) |} : ligo_program)]));
-```
-
-</Syntax>
-<Syntax syntax="jsligo">
-
-```jsligo skip
-let expr = Test.compile_expression(Some("filename"), jsligo`42 as int` as ligo_program);
-```
-
-</Syntax>
-
-<SyntaxTitle syntax="pascaligo">
-function compile_expression_subst : option(string) -> ligo_program -> list (string * michelson_program) -> michelson_program
-</SyntaxTitle>
-<SyntaxTitle syntax="cameligo">
-val compile_expression_subst : string option -> ligo_program -> (string * michelson_program) list -> michelson_program
-</SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let compile_expression_subst: (option(string), ligo_program, list((string, michelson_program))) => michelson_program
-</SyntaxTitle>
-<SyntaxTitle syntax="jsligo">
-let compile_expression_subst = (filepath: option&lt;string&gt;, code: ligo_program, subst_list: list&lt;[string, michelson_program]&gt;]) => michelson_program
-</SyntaxTitle>
-
-<Syntax syntax="pascaligo">
-
-```pascaligo skip
-const example = Test.compile_expression_subst (Some(under_test),
-    [%pascaligo ({| {one = $one ; two = $two ; three = $three ; four = $four ; five = $five} |} : ligo_program)],
-    list [
-      ("one", d_one );
-      ("two", Test.compile_value (1n + 2n)) ;
-      ("three", Test.compile_value ("a"^"b")) ;
-      ("four", Test.compile_value (0xFF00)) ;
-      ("five", Test.compile_value ()) ;
-    ]);
-```
-
-</Syntax>
-<Syntax syntax="cameligo">
-
-```cameligo skip
-let example = Test.compile_expression_subst (Some under_test)
-    [%cameligo ({| {one = $one ; two = $two ; three = $three ; four = $four ; five = $five} |} : ligo_program)]
-    [
-      ("one", d_one );
-      ("two", Test.compile_value (1n + 2n)) ;
-      ("three", Test.compile_value ("a"^"b")) ;
-      ("four", Test.compile_value (0xFF00)) ;
-      ("five", Test.compile_value ()) ;
-    ]
-  in
-  ...
-```
-
-</Syntax>
-<Syntax syntax="reasonligo">
-
-```reasonligo skip
-let example = Test.compile_expression_subst (Some (under_test),
-    [%reasonligo ({| {one: $one, two: $two, three: $three, four: $four, five: $five} |} : ligo_program)],
-    [
-      ("one", d_one ),
-      ("two", Test.compile_value (1n + 2n)) ,
-      ("three", Test.compile_value ("a"^"b")) ,
-      ("four", Test.compile_value (0xFF00)) ,
-      ("five", Test.compile_value ())
-    ]); 
-```
-
-</Syntax>
-<Syntax syntax="jsligo">
-
-```jsligo skip
-let example = Test.compile_expression_subst (Some (under_test),
-    jsligo`{one: $one, two: $two, three: $three, four: $four, five: $five}` as ligo_program,
-    list([
-      ["one", d_one],
-      ["two", Test.compile_value ((1 as nat) + (2 as nat))] ,
-      ["three", Test.compile_value ("a" + "b")] ,
-      ["four", Test.compile_value (0xFF00)],
-      ["five", Test.compile_value ()]
-    ])); 
-```
-
-</Syntax>
+Returns addresses of orginated accounts in the last transfer.
+It is given in the form of a map binding the address of the source of the origination operation to the addresses of newly originated accounts.
 
 <SyntaxTitle syntax="pascaligo">
 function compile_value : 'a -> michelson_program
@@ -576,36 +489,55 @@ a) compiles the function argument to Michelson `f_mich`;
 b) compiles the value argument (which was evaluated already) to Michelson `v_mich`;
 c) runs the Michelson interpreter on the code `f_mich` with starting stack `[ v_mich ]`.
 
-<SyntaxTitle syntax="pascaligo">
-function mutate_count : ligo_program -> nat
-</SyntaxTitle>
-<SyntaxTitle syntax="cameligo">
-val mutate_count : ligo_program -> nat
-</SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let mutate_count : ligo_program => nat
-</SyntaxTitle>
-<SyntaxTitle syntax="jsligo">
-let mutate_count = (prog: ligo_program) => nat
-</SyntaxTitle>
+<Syntax syntax="pascaligo">
 
-Counts the number of available mutations for a `ligo_program` (CST).
+```pascaligo test-ligo group=test_run
+type some_r is [@layout:comb] record [ one : int ; two : nat ; three : string ; four : bytes ; five : unit ]
+function f(const x : some_r) is x.one
 
-<SyntaxTitle syntax="pascaligo">
-function mutate_expression : nat -> ligo_program -> nat
-</SyntaxTitle>
-<SyntaxTitle syntax="cameligo">
-val mutate_expression : nat -> ligo_program -> nat
-</SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let mutate_expression : (nat, ligo_program) => nat
-</SyntaxTitle>
-<SyntaxTitle syntax="jsligo">
-let mutate_expression = (index: nat, prog: ligo_program) => nat
-</SyntaxTitle>
+const test_example = block {
+  function aux(const x : int * nat * string * bytes * unit) is
+    f(record [ one = x.0 ; two = x.1 ; three = x.2 ; four = x.3 ; five = x.4 ]);
+} with Test.run(aux, (1 + 3 + 2, 1n + 2n, "a" ^ "b", 0xFF00, unit))
+```
 
-Mutates a `ligo_program` (CST) using a natural number as an index for the
-available mutations (see `mutate_count`).
+</Syntax>
+<Syntax syntax="cameligo">
+
+```cameligo test-ligo group=test_run
+type some_r = [@layout:comb] { one : int ; two : nat ; three : string ; four : bytes ; five : unit }
+let f = fun (x:some_r) -> x.one
+
+let test_example =
+  Test.run (fun (x : (int * nat * string * bytes * unit)) -> f ({ one = x.0 ; two = x.1 ; three = x.2 ; four = x.3 ; five = x.4 } : some_r))
+           (1 + 3 + 2, 1n + 2n, "a" ^ "b", 0xFF00, ())
+```
+
+</Syntax>
+<Syntax syntax="reasonligo">
+
+```reasonligo test-ligo group=test_run
+type some_r = [@layout:comb] { one : int , two : nat , three : string , four : bytes , five : unit };
+let f = (x:some_r) => x.one;
+
+let test_example =
+  Test.run (((x : (int, nat, string, bytes, unit)) => f ({ one : x[0] , two : x[1] , three : x[2] , four : x[3] , five : x[4] } : some_r)),
+           (1 + 3 + 2, 1n + 2n, ("a" ++ "b"), 0xFF00, ()));
+```
+
+</Syntax>
+<Syntax syntax="jsligo">
+
+```jsligo test-ligo group=test_run
+type some_r = [@layout:comb] { one : int , two : nat , three : string , four : bytes , five : unit };
+let f = (x:some_r) : int => x.one;
+
+let test_example =
+  Test.run (((x : [int, nat, string, bytes, unit]) => f ({ one : x[0] , two : x[1] , three : x[2] , four : x[3] , five : x[4] })),
+           [1 + 3 + 2, ((1 as nat) + (2 as nat)), ("a" + "b"), 0xFF00, unit]);
+```
+
+</Syntax>
 
 <SyntaxTitle syntax="pascaligo">
 function mutate_value : nat -> 'a -> option ('a * mutation)

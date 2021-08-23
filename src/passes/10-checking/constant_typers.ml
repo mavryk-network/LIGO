@@ -291,6 +291,8 @@ let implicit_account ~raise loc = typer_1 ~raise loc "IMPLICIT_ACCOUNT" @@ fun k
   t_contract (t_unit () )
 
 let now ~raise loc = constant' ~raise loc "NOW" @@ t_timestamp ()
+let ctrue ~raise loc = constant' ~raise loc "TRUE" @@ t_bool ()
+let cfalse ~raise loc = constant' ~raise loc "FALSE" @@ t_bool ()
 
 let transaction ~raise loc = typer_3 ~raise loc "CALL" @@ fun param amount contract ->
   let () = trace_option ~raise (expected_mutez loc amount) @@ assert_t_mutez amount in
@@ -754,60 +756,6 @@ let cons ~raise loc = typer_2 ~raise loc "CONS" @@ fun hd tl ->
   let () = assert_eq_1 ~raise ~loc hd elt in
   tl
 
-let convert_to_right_comb ~raise loc = typer_1 ~raise loc "CONVERT_TO_RIGHT_COMB" @@ fun t ->
-  match t.type_content with
-  | T_record lmap ->
-    let kvl = LMap.to_kv_list_rev lmap.content in
-    let () = Michelson_type_converter.field_checks ~raise kvl loc in
-    let pair = Michelson_type_converter.convert_pair_to_right_comb kvl in
-    {t with type_content = pair}
-  | T_sum cmap ->
-    let kvl = LMap.to_kv_list_rev cmap.content in
-    let () = Michelson_type_converter.field_checks ~raise kvl loc in
-    let michelson_or = Michelson_type_converter.convert_variant_to_right_comb kvl in
-    {t with type_content = michelson_or}
-  | _ -> raise.raise @@ wrong_converter t
-
-let convert_to_left_comb ~raise loc = typer_1 ~raise loc "CONVERT_TO_LEFT_COMB" @@ fun t ->
-  match t.type_content with
-  | T_record lmap ->
-    let kvl =  LMap.to_kv_list_rev lmap.content in
-    let () = Michelson_type_converter.field_checks ~raise kvl loc in
-    let pair = Michelson_type_converter.convert_pair_to_left_comb kvl in
-    {t with type_content = pair}
-  | T_sum cmap ->
-    let kvl = LMap.to_kv_list_rev cmap.content in
-    let () = Michelson_type_converter.field_checks ~raise kvl loc in
-    let michelson_or = Michelson_type_converter.convert_variant_to_left_comb kvl in
-    {t with type_content = michelson_or}
-  | _ -> raise.raise @@ wrong_converter t
-
-let convert_from_right_comb ~raise loc = typer_1_opt ~raise loc "CONVERT_FROM_RIGHT_COMB" @@ fun t opt ->
-  let dst_t = trace_option ~raise (not_annotated loc) opt in
-  match t.type_content with
-  | T_record {content=src_lmap;_} ->
-    let dst_lmap = trace_option ~raise (expected_record loc dst_t) @@ get_t_record dst_t in
-    let record = Michelson_type_converter.convert_pair_from_right_comb ~raise src_lmap dst_lmap.content in
-    {t with type_content = record}
-  | T_sum src_cmap ->
-    let dst_cmap = trace_option ~raise (expected_variant loc dst_t) @@ get_t_sum dst_t in
-    let variant = Michelson_type_converter.convert_variant_from_right_comb ~raise src_cmap.content dst_cmap.content in
-    {t with type_content = variant}
-  | _ -> raise.raise @@ wrong_converter t
-
-let convert_from_left_comb ~raise loc = typer_1_opt ~raise loc "CONVERT_FROM_LEFT_COMB" @@ fun t opt ->
-  let dst_t = trace_option ~raise (not_annotated loc) opt in
-  match t.type_content with
-  | T_record {content=src_lmap;_} ->
-    let dst_lmap = trace_option ~raise (expected_record loc dst_t) @@ get_t_record dst_t in
-    let record = Michelson_type_converter.convert_pair_from_left_comb ~raise src_lmap dst_lmap.content in
-    {t with type_content = record}
-  | T_sum src_cmap ->
-    let dst_cmap = trace_option ~raise (expected_variant loc dst_t) @@ get_t_sum dst_t in
-    let variant = Michelson_type_converter.convert_variant_from_left_comb ~raise src_cmap.content dst_cmap.content in
-    {t with type_content = variant}
-  | _ -> raise.raise @@ wrong_converter t
-
 let simple_comparator ~raise : Location.t -> string -> typer = fun loc s -> typer_2 ~raise loc s @@ fun a b ->
   let () =
     Assert.assert_true ~raise (uncomparable_types loc a b) @@
@@ -919,22 +867,6 @@ let test_originate ~raise loc = typer_3 ~raise loc "TEST_ORIGINATE" @@ fun main 
   let () = assert_eq_1 ~raise ~loc storage storage_ty in
   (t_triplet (t_typed_address param_ty storage_ty) (t_michelson_code ()) (t_int ()))
 
-let test_compile_expression_subst ~raise loc = typer_3 ~raise loc "TEST_COMPILE_EXPRESSION_SUBST" @@ fun source_file_opt ligo_insertion subst_list ->
-  let subst_pair = trace_option ~raise (expected_list loc subst_list) @@ get_t_list subst_list in
-  let (str,code) = trace_option ~raise (expected_pair loc subst_pair) @@ get_t_pair subst_pair in
-  let source_file = trace_option ~raise (expected_option loc source_file_opt) @@ get_t_option source_file_opt in
-  let () = trace_option ~raise (expected_michelson_code loc code) @@ get_t_michelson_code code in
-  let () = trace_option ~raise (expected_string loc str) @@ get_t_string str in
-  let () = trace_option ~raise (expected_string loc source_file) @@ assert_t_string source_file in
-  let () = trace_option ~raise (expected_ligo_code loc ligo_insertion) @@ assert_t_ligo_code ligo_insertion in
-  (t_michelson_code ())
-
-let test_compile_expression ~raise loc = typer_2 ~raise loc "TEST_COMPILE_EXPRESSION" @@ fun source_file_opt ligo_insertion ->
-  let source_file = trace_option ~raise (expected_option loc source_file_opt) @@ get_t_option source_file_opt in
-  let () = trace_option ~raise (expected_string loc source_file) @@ assert_t_string source_file in
-  let () = trace_option ~raise (expected_ligo_code loc ligo_insertion) @@ assert_t_ligo_code ligo_insertion in
-  (t_michelson_code ())
-
 let test_state_reset ~raise loc = typer_2 ~raise loc "TEST_STATE_RESET" @@ fun n amts ->
   let amt = trace_option ~raise (expected_list loc amts) @@ get_t_list amts in
   let () = trace_option ~raise (expected_nat loc amt) @@ get_t_nat amt in
@@ -1014,11 +946,6 @@ let test_last_originations ~raise loc = typer_1 ~raise loc "TEST_LAST_ORIGINATIO
 let test_compile_meta_value ~raise loc = typer_1 ~raise loc "TEST_LAST_ORIGINATIONS" @@ fun _ ->
   (t_michelson_code ())
 
-let test_mutate_expression ~raise loc = typer_2 ~raise loc "TEST_MUTATE_EXPRESSION" @@ fun n expr ->
-  let () = assert_eq_1 ~raise ~loc n (t_nat ()) in
-  let () = assert_eq_1 ~raise ~loc expr (t_ligo_code ()) in
-  (t_ligo_code ())
-
 let test_mutate_value ~raise loc = typer_2 ~raise loc "TEST_MUTATE_VALUE" @@ fun n expr ->
   let () = assert_eq_1 ~raise ~loc n (t_nat ()) in
   (t_option (t_pair expr (t_mutation ())))
@@ -1033,9 +960,10 @@ let test_mutation_test_all ~raise loc = typer_2 ~raise loc "TEST_MUTATION_TEST_A
   let () = assert_eq_1 ~raise ~loc arg expr in
   (t_list (t_pair res (t_mutation ())))
 
-let test_mutate_count ~raise loc = typer_1 ~raise loc "TEST_MUTATE_COUNT" @@ fun expr ->
-  let () = assert_eq_1 ~raise ~loc expr (t_ligo_code ()) in
-  (t_nat ())
+let test_save_mutation ~raise loc = typer_2 ~raise loc "TEST_SAVE_MUTATION" @@ fun dir mutation ->
+  let () = assert_eq_1 ~raise ~loc mutation (t_mutation ()) in
+  let () = assert_eq_1 ~raise ~loc dir (t_string ()) in
+  (t_option (t_string ()))
 
 let test_run ~raise loc = typer_2 ~raise loc "TEST_RUN" @@ fun _ _ ->
   (t_michelson_code ())
@@ -1104,6 +1032,8 @@ let constant_typers ~raise loc c : typer = match c with
   | C_UNIT                -> unit ~raise loc ;
   | C_NEVER               -> never ~raise loc ;
   | C_NOW                 -> now ~raise loc ;
+  | C_TRUE                -> ctrue ~raise loc ;
+  | C_FALSE               -> cfalse ~raise loc ;
   | C_IS_NAT              -> is_nat ~raise loc ;
   | C_SOME                -> some ~raise loc ;
   | C_NONE                -> none ~raise loc ;
@@ -1186,7 +1116,7 @@ let constant_typers ~raise loc c : typer = match c with
   | C_HASH_KEY            -> hash_key ~raise loc ;
   | C_CHECK_SIGNATURE     -> check_signature ~raise loc ;
   | C_CHAIN_ID            -> chain_id ~raise loc;
-    (*BLOCKCHAIN *)
+  (* BLOCKCHAIN *)
   | C_CONTRACT            -> get_contract ~raise loc ;
   | C_CONTRACT_OPT        -> get_contract_opt ~raise loc ;
   | C_CONTRACT_ENTRYPOINT -> get_entrypoint ~raise loc ;
@@ -1202,10 +1132,6 @@ let constant_typers ~raise loc c : typer = match c with
   | C_IMPLICIT_ACCOUNT    -> implicit_account ~raise loc ;
   | C_SET_DELEGATE        -> set_delegate ~raise loc ;
   | C_CREATE_CONTRACT     -> create_contract ~raise loc ;
-  | C_CONVERT_TO_RIGHT_COMB -> convert_to_right_comb ~raise loc ;
-  | C_CONVERT_TO_LEFT_COMB  -> convert_to_left_comb ~raise loc ;
-  | C_CONVERT_FROM_RIGHT_COMB -> convert_from_right_comb ~raise loc ;
-  | C_CONVERT_FROM_LEFT_COMB  -> convert_from_left_comb ~raise loc ;
   | C_SHA3              -> sha3 ~raise loc ;
   | C_KECCAK            -> keccak ~raise loc ;
   | C_LEVEL             -> level ~raise loc ;
@@ -1218,6 +1144,7 @@ let constant_typers ~raise loc c : typer = match c with
   | C_PAIRING_CHECK -> pairing_check ~raise loc ;
   | C_SAPLING_VERIFY_UPDATE -> sapling_verify_update ~raise loc ;
   | C_SAPLING_EMPTY_STATE -> sapling_empty_state ~raise loc ;
+  (* TEST *)
   | C_TEST_ORIGINATE -> test_originate ~raise loc ;
   | C_TEST_SET_NOW -> test_set_now ~raise loc ;
   | C_TEST_SET_SOURCE -> test_set_source ~raise loc ;
@@ -1232,15 +1159,11 @@ let constant_typers ~raise loc c : typer = match c with
   | C_TEST_MICHELSON_EQUAL -> test_michelson_equal ~raise loc ;
   | C_TEST_GET_NTH_BS -> test_get_nth ~raise loc ;
   | C_TEST_LOG -> test_log ~raise loc ;
-  | C_TEST_COMPILE_EXPRESSION -> test_compile_expression ~raise loc ;
-  | C_TEST_COMPILE_EXPRESSION_SUBST -> test_compile_expression_subst ~raise loc ;
   | C_TEST_STATE_RESET -> test_state_reset ~raise loc ;
   | C_TEST_BOOTSTRAP_CONTRACT -> test_bootstrap_contract ~raise loc ;
   | C_TEST_NTH_BOOTSTRAP_CONTRACT -> test_nth_bootstrap_contract ~raise loc ;
   | C_TEST_LAST_ORIGINATIONS -> test_last_originations ~raise loc ;
   | C_TEST_COMPILE_META_VALUE -> test_compile_meta_value ~raise loc ;
-  | C_TEST_MUTATE_EXPRESSION -> test_mutate_expression ~raise loc ;
-  | C_TEST_MUTATE_COUNT -> test_mutate_count ~raise loc ;
   | C_TEST_MUTATE_VALUE -> test_mutate_value ~raise loc ;
   | C_TEST_MUTATION_TEST -> test_mutation_test ~raise loc ;
   | C_TEST_MUTATION_TEST_ALL -> test_mutation_test_all ~raise loc ;
@@ -1256,6 +1179,7 @@ let constant_typers ~raise loc c : typer = match c with
   | C_TEST_SIGN -> test_sign ~raise loc ;
   | C_TEST_DELEGATE -> test_delegate ~raise loc ;
   | C_TEST_REGISTER_DELEGATE -> test_register_delegate ~raise loc ;
+  | C_TEST_SAVE_MUTATION -> test_save_mutation ~raise loc ;
   (* JsLIGO *)
   | C_POLYMORPHIC_ADD  -> polymorphic_add ~raise loc ;
   | _ as cst -> raise.raise (corner_case @@ Format.asprintf "typer not implemented for constant %a" PP.constant' cst)
