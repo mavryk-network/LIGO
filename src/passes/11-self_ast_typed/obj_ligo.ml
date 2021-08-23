@@ -36,6 +36,10 @@ let invalid_constants = function
   | C_TEST_ORIGINATE_FROM_FILE -> true
   | C_TEST_TO_TYPED_ADDRESS -> true
   | C_TEST_NTH_BOOTSTRAP_TYPED_ADDRESS -> true
+  | C_TEST_KEYGEN -> true
+  | C_TEST_SIGN -> true
+  | C_TEST_DELEGATE -> true
+  | C_TEST_REGISTER_DELEGATE -> true
   | C_INT -> false
   | C_UNIT -> false
   | C_NEVER -> false
