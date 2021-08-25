@@ -18,13 +18,14 @@ let contract source_file new_syntax syntax new_dialect display_format =
       buffer
 
 let expression expression new_syntax syntax new_dialect display_format =
+    Trace.warning_with @@ fun add_warning get_warnings ->
     format_result ~display_format (Parsing.Formatter.ppx_format) (fun _ -> []) @@
       fun ~raise ->
       (* Compiling chain *)
       let options            = Compiler_options.make () in
       let meta          = Compile.Of_source.make_meta ~raise syntax None in
       let c_unit_expr,_ = Compile.Of_source.compile_string ~raise ~options ~meta expression in
-      let imperative    = Compile.Of_c_unit.compile_expression ~raise ~meta c_unit_expr in
+      let imperative    = Compile.Of_c_unit.compile_expression ~raise ~meta ~add_warning c_unit_expr in
       let sugar         = Compile.Of_imperative.compile_expression ~raise imperative in
       let core          = Compile.Of_sugar.compile_expression sugar in
       (* Decompiling chain *)

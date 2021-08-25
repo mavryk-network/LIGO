@@ -261,7 +261,7 @@ let rec peephole_statement ~raise : unit -> statement -> unit = fun _ s ->
   | SImport _
   | SSwitch _ -> ()
 
-let peephole ~raise : (unit,'err) Helpers.folder = {
+let peephole ~raise ~add_warning : (unit,'err) Helpers.folder = {
   t = peephole_type ~raise;
   e = peephole_expression;
   d = peephole_statement ~raise;

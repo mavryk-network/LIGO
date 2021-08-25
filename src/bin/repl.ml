@@ -87,7 +87,7 @@ type state = { env : Ast_typed.environment;
 let try_eval ~raise state s =
   let options = Compiler_options.make ~init_env:state.env ~infer:state.infer ~protocol_version:state.protocol () in
 
-  let typed_exp,env = Ligo_compile.Utils.type_expression_string ~raise ~options:options state.syntax s state.env in
+  let typed_exp,env = Ligo_compile.Utils.type_expression_string ~raise ~add_warning ~options:options state.syntax s state.env in
   let mini_c_exp = Ligo_compile.Of_typed.compile_expression ~raise ~module_env:state.mod_types typed_exp in
   let compiled_exp = Ligo_compile.Of_mini_c.aggregate_and_compile_expression ~raise ~options:options state.decl_list mini_c_exp in
   let options = state.dry_run_opts in

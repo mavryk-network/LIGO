@@ -118,7 +118,7 @@ let compile_expression ~raise ~add_warning ~loc ~calltrace syntax exp_as_string 
   let typed_exp =
     match subst_lst with
     | [] ->
-      let typed_exp,_  = Utils.type_expression ~raise ~options source_file syntax exp_as_string env in
+      let typed_exp,_  = Utils.type_expression ~raise ~options ~add_warning source_file syntax exp_as_string env in
       typed_exp
     (* this handle $-substitution by prepeding `let test_gen_x = [%Micheson {| some_code |}] () in ..` to the compiled expression *)
     | lst ->
@@ -129,7 +129,7 @@ let compile_expression ~raise ~add_warning ~loc ~calltrace syntax exp_as_string 
         Ast_typed.Environment.add_ez_binder v t env
       in
       let env' = List.fold_left ~f:aux ~init:env lst in
-      let (typed_exp,_) = Utils.type_expression ~raise ~options source_file syntax exp_as_string env' in
+      let (typed_exp,_) = Utils.type_expression ~raise ~options ~add_warning source_file syntax exp_as_string env' in
       let aux (s,(mv,mt,t)) exp : expression =
         let s = subst_vname s in
         let let_binder = Location.wrap @@ Var.of_name s in

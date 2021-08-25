@@ -262,7 +262,7 @@ let peephole_declaration ~raise : unit -> declaration -> unit =
     ()
   | Directive _ -> ()
 
-let peephole : raise: Errors.self_cst_reasonligo_error raise -> unit Helpers.folder = fun ~raise -> {
+let peephole : add_warning : _ ->  raise: Errors.self_cst_reasonligo_error raise -> unit Helpers.folder = fun ~add_warning ~raise -> {
   t = peephole_type ~raise ;
   e = peephole_expression ~raise ;
   d = peephole_declaration ~raise ;

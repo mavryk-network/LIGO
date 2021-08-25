@@ -269,7 +269,7 @@ let peephole_declaration ~raise : unit -> declaration -> unit =
       in ()
   | Directive _ -> ()
 
-let peephole ~raise : unit Helpers.folder = {
+let peephole ~raise ~add_warning : unit Helpers.folder = {
   t = peephole_type ~raise;
   e = peephole_expression ~raise;
   d = peephole_declaration ~raise;

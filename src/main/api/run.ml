@@ -28,7 +28,7 @@ let dry_run source_file entry_point input storage amount balance sender source n
         Option.map ~f:fst @@ Self_michelson.fetch_contract_inputs michelson_prg.expr_ty
       in
 
-      let compiled_params   = Compile.Utils.compile_storage ~raise ~options input storage source_file syntax env mini_c_prg in
+      let compiled_params   = Compile.Utils.compile_storage ~raise ~options ~add_warning input storage source_file syntax env mini_c_prg in
       let args_michelson    = Run.evaluate_expression ~raise compiled_params.expr compiled_params.expr_ty in
 
       let options           = Run.make_dry_run_options ~raise {now ; amount ; balance ; sender ; source ; parameter_ty } in
@@ -47,7 +47,7 @@ let interpret expression init_file syntax infer protocol_version amount balance 
            let mini_c_prg,mods,_,env = Build.build_contract_use ~raise ~add_warning ~options syntax init_file in
            (mini_c_prg,mods,env)
         | None -> ([],Ast_core.SMap.empty,init_env) in
-      let typed_exp,_    = Compile.Utils.type_expression ~raise ~options init_file syntax expression env in
+      let typed_exp,_    = Compile.Utils.type_expression ~raise ~options ~add_warning init_file syntax expression env in
       let mini_c_exp     = Compile.Of_typed.compile_expression ~raise ~module_env:mods typed_exp in
       let compiled_exp   = Compile.Of_mini_c.aggregate_and_compile_expression ~raise ~options decl_list mini_c_exp in
       let options        = Run.make_dry_run_options ~raise {now ; amount ; balance ; sender ; source ; parameter_ty = None } in
@@ -64,7 +64,7 @@ let evaluate_call source_file entry_point parameter amount balance sender source
       let mini_c_prg,mods,typed_prg,env = Build.build_contract_use ~raise ~add_warning ~options syntax source_file in
       let meta             = Compile.Of_source.extract_meta ~raise syntax source_file in
       let c_unit_param,_   = Compile.Of_source.compile_string ~raise ~options ~meta parameter in
-      let imperative_param = Compile.Of_c_unit.compile_expression ~raise ~meta c_unit_param in
+      let imperative_param = Compile.Of_c_unit.compile_expression ~raise ~meta ~add_warning c_unit_param in
       let sugar_param      = Compile.Of_imperative.compile_expression ~raise imperative_param in
       let core_param       = Compile.Of_sugar.compile_expression sugar_param in
       let app              = Compile.Of_core.apply entry_point core_param in

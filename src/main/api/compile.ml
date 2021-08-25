@@ -27,7 +27,7 @@ let expression expression syntax infer protocol_version init_file display_format
            (mini_c_prg,env)
         | None -> ([],init_env) in
 
-      let typed_exp,_    = Ligo_compile.Utils.type_expression ~raise ~options init_file syntax expression env in
+      let typed_exp,_    = Ligo_compile.Utils.type_expression ~raise ~options ~add_warning init_file syntax expression env in
       let mini_c_exp     = Ligo_compile.Of_typed.compile_expression ~raise typed_exp in
       let compiled_exp   = Ligo_compile.Of_mini_c.aggregate_and_compile_expression ~raise ~options decl_list mini_c_exp in
       if without_run then
@@ -48,7 +48,7 @@ let parameter source_file entry_point expression syntax infer protocol_version a
        (* fails if the given entry point is not a valid contract *)
         Ligo_compile.Of_michelson.build_contract ~raise michelson_prg in
 
-      let typed_param,_    = Ligo_compile.Utils.type_expression ~raise ~options (Some source_file) syntax expression env in
+      let typed_param,_    = Ligo_compile.Utils.type_expression ~raise ~options ~add_warning (Some source_file) syntax expression env in
       let mini_c_param     = Ligo_compile.Of_typed.compile_expression ~raise typed_param in
       let compiled_param   = Ligo_compile.Of_mini_c.aggregate_and_compile_expression ~raise ~options mini_c_prg mini_c_param in
       let ()               = Ligo_compile.Of_typed.assert_equal_contract_type ~raise Check_parameter entry_point typed_prg typed_param in
@@ -68,7 +68,7 @@ let storage source_file entry_point expression syntax infer protocol_version amo
         (* fails if the given entry point is not a valid contract *)
         Ligo_compile.Of_michelson.build_contract ~raise michelson_prg in
 
-      let typed_param,_    = Ligo_compile.Utils.type_expression ~raise ~options (Some source_file) syntax expression env in
+      let typed_param,_    = Ligo_compile.Utils.type_expression ~raise ~options ~add_warning (Some source_file) syntax expression env in
       let mini_c_param     = Ligo_compile.Of_typed.compile_expression ~raise typed_param in
       let compiled_param   = Ligo_compile.Of_mini_c.aggregate_and_compile_expression ~raise ~options mini_c_prg mini_c_param in
       let ()               = Ligo_compile.Of_typed.assert_equal_contract_type ~raise Check_storage entry_point typed_prg typed_param in
