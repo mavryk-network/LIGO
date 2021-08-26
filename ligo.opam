@@ -11,7 +11,7 @@ license: "MIT"
 depends: [
   "odoc" { build }
   "ocamlfind" { build }
-  "dune" { build & >= "2.7.1" & < "2.9" }
+  "dune" 
   "menhir" { = "20200624" }
   "ocamlgraph"
   "coq" { build & >= "8.12" & < "8.14" }
