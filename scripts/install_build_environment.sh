@@ -56,18 +56,18 @@ else
     else
         echo "unknown distro"
         #I'm going to assume here that we're on x86_64, 32-bit users should be basically
-        #extinct at this point right?
-        curl -L https://github.com/ocaml/opam/releases/download/2.0.4/opam-2.0.4-x86_64-linux \
-            --output opam_temp_version_2_0_4.bin
-        if [ "`openssl sha256 -r opam_temp_version_2_0_4.bin`" = "373e34f92f282273d482537f8103caad0d17b6f2699ff504bed77f474cb0c951 *opam_temp_version_2_0_4.bin" ]
+        #extinct at this point right?&;
+        curl -L https://github.com/ocaml/opam/releases/download/2.1.0/opam-2.1.0-x86_64-linux \
+            --output opam_temp_version_2_1_0.bin
+        if [ "`openssl sha256 -r opam_temp_version_2_1_0.bin`" = "373e34f92f282273d482537f8103caad0d17b6f2699ff504bed77f474cb0c951 *opam_temp_version_2_1_0.bin" ]
         then
             # Stay paranoid, in case other checks fail don't want to overrwrite
             # user's opam on accident
-            chmod +x opam_temp_version_2_0_4.bin # Set execute so we can get version
+            chmod +x opam_temp_version_2_1_0.bin # Set execute so we can get version
             if [ -e /usr/local/bin/opam ]
             then
                 opam_old_v=`/usr/local/bin/opam --version`
-                opam_new_v=`opam_temp_version_2_0_4.bin --version`
+                opam_new_v=`opam_temp_version_2_1_0.bin --version`
                 read -p "This will overrwrite the opam you have in /usr/local/bin (version $opam_old_v) with version $opam_new_v, do you actually want to do that? Type yes. (yes/n)" choice2
             else
                 choice2="yes"
