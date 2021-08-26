@@ -98,17 +98,18 @@ let reserved_ctors =
   |> add "Some"
   |> add "Unit"
 
-  let check_reserved_names ~raise vars =
+let check_reserved_names ~add_warning vars =
   let is_reserved elt = SSet.mem elt.value reserved in
   let inter = VarSet.filter is_reserved vars in
   if not (VarSet.is_empty inter) then
-    let clash = VarSet.choose inter in
-    raise.raise @@ reserved_name clash
+    (* let clash = VarSet.choose inter in *)
+    let () = add_warning `Self_cst_warning_shadow in
+    vars
   else vars
 
-let check_reserved_name ~raise var =
+let check_reserved_name ~add_warning var =
   if SSet.mem var.value reserved then
-    raise.raise @@ reserved_name var
+    add_warning `Self_cst_warning_shadow
   else ()
 
 let is_wildcard var =
@@ -133,12 +134,12 @@ let check_linearity_type_vars ~raise : CST.type_vars -> unit =
 
 open! CST
 
-let rec vars_of_pattern ~raise env = function
-  PConstr p -> vars_of_pconstr ~raise env p
+let rec vars_of_pattern ~raise ~add_warning env = function
+  PConstr p -> vars_of_pconstr ~raise ~add_warning env p
 | PInt _ | PNat _ | PBytes _ | PString _ -> env
-| PList l -> vars_of_plist ~raise env l
-| PTuple t -> vars_of_ptuple ~raise env t.value
-| PRecord p -> vars_of_fields ~raise env p.value.elements
+| PList l -> vars_of_plist ~raise ~add_warning env l
+| PTuple t -> vars_of_ptuple ~raise ~add_warning env t.value
+| PRecord p -> vars_of_fields ~raise ~add_warning env p.value.elements
 | PVar var ->
     let var = var.value.variable in
     if VarSet.mem var env then
@@ -149,10 +150,10 @@ let rec vars_of_pattern ~raise env = function
       else
         (VarSet.add var env)
 
-and vars_of_fields ~raise env fields =
-  Helpers.bind_fold_pseq (vars_of_field_pattern ~raise) env fields
+and vars_of_fields ~raise ~add_warning env fields =
+  Helpers.bind_fold_pseq (vars_of_field_pattern ~raise ~add_warning) env fields
   
-and vars_of_field_pattern ~raise env field =
+and vars_of_field_pattern ~raise ~add_warning env field =
 
   (* TODO: Hmm, not really sure
   let var = field.value.field_name in
@@ -161,38 +162,38 @@ and vars_of_field_pattern ~raise env field =
   else
   *)
   let p = field.value.pattern in
-  vars_of_pattern ~raise env p
+  vars_of_pattern ~raise ~add_warning env p
 
 
-and vars_of_pconstr ~raise env = function
+and vars_of_pconstr ~raise ~add_warning env = function
   | {value=(_, Some pattern); _} ->
-    Helpers.fold_npseq (vars_of_pattern ~raise) env pattern.value.inside
+    Helpers.fold_npseq (vars_of_pattern ~raise ~add_warning) env pattern.value.inside
   | {value=(_, None); _} -> env
 
-and vars_of_plist ~raise env = function
+and vars_of_plist ~raise ~add_warning env = function
   PListComp {value; _} ->
-    vars_of_pinj ~raise env value
+    vars_of_pinj ~raise ~add_warning env value
 | PNil _ ->
     env
 | PParCons {value={inside; _}; _} ->
     let head, _, tail = inside in
-    let env = vars_of_pattern ~raise env head in
-    vars_of_pattern ~raise env tail
+    let env = vars_of_pattern ~raise ~add_warning env head in
+    vars_of_pattern ~raise ~add_warning env tail
 | PCons {value; _} ->
-    Helpers.fold_npseq (vars_of_pattern ~raise) env value
+    Helpers.fold_npseq (vars_of_pattern ~raise ~add_warning) env value
 
-and vars_of_pinj ~raise env inj =
-  Helpers.bind_fold_pseq (vars_of_pattern ~raise) env inj.elements
+and vars_of_pinj ~raise ~add_warning env inj =
+  Helpers.bind_fold_pseq (vars_of_pattern ~raise ~add_warning) env inj.elements
 
-and vars_of_ptuple ~raise env {inside; _} =
-  Helpers.fold_npseq (vars_of_pattern ~raise) env inside
+and vars_of_ptuple ~raise ~add_warning env {inside; _} =
+  Helpers.fold_npseq (vars_of_pattern ~raise ~add_warning) env inside
 
-let check_linearity ~raise = vars_of_pattern ~raise VarSet.empty
+let check_linearity ~raise ~add_warning = vars_of_pattern ~raise ~add_warning VarSet.empty
 
 (* Checking patterns *)
 
-let check_pattern ~raise p =
-  check_linearity ~raise p |> check_reserved_names ~raise |> ignore
+let check_pattern ~raise ~add_warning p =
+  check_linearity ~raise ~add_warning p |> check_reserved_names ~add_warning |> ignore
 
 (* Checking variants for duplicates *)
 
@@ -216,11 +217,11 @@ let check_reserved_constructors ~raise (vars : variant reg list) =
 
 (* Checking parameters *)
 
-let check_parameters ~raise params =
+let check_parameters ~raise ~add_warning params =
   let add acc = function
   | ParamConst {value; _} ->
     let var_name = value.var.value.variable in
-    let () = check_reserved_name ~raise var_name in
+    let () = check_reserved_name ~add_warning var_name in
     if is_wildcard var_name then
       acc
     else if VarSet.mem var_name acc then
@@ -228,7 +229,7 @@ let check_parameters ~raise params =
     else VarSet.add var_name acc
   | ParamVar {value; _} ->
     let var_name = value.var.value.variable in
-    let () = check_reserved_name ~raise var_name in
+    let () = check_reserved_name ~add_warning var_name in
     if is_wildcard var_name then
       acc
     else if VarSet.mem var_name acc then
@@ -270,13 +271,13 @@ let peephole_type ~raise : unit -> type_expr -> unit =
   | TString {value=_;region=_} -> ()
   | TInt    {value=_;region=_} -> ()
 
-let peephole_expression ~raise : unit -> expr -> unit = fun () e ->
+let peephole_expression ~raise ~add_warning : unit -> expr -> unit = fun () e ->
   match e with
     ECase    {value;region=_}   ->
     let () =
       List.iter
         ~f:(fun ({value;region=_}: _ case_clause reg) ->
-           check_pattern ~raise value.pattern)
+           check_pattern ~raise ~add_warning value.pattern)
         (Utils.nsepseq_to_list value.cases.value) in
     ()
   | ECond    {value=_;region=_} -> ()
@@ -301,70 +302,70 @@ let peephole_expression ~raise : unit -> expr -> unit = fun () e ->
   | ECodeInj {value=_;region=_} -> ()
   | EBlock   {value=_;region=_} -> ()
 
-let peephole_statement ~raise : unit -> statement -> unit = fun _ s ->
+let peephole_statement ~raise ~add_warning : unit -> statement -> unit = fun _ s ->
   match s with
     Instr Loop For ForCollect  {value;region=_} ->
-    let () = check_reserved_name ~raise value.var in
-    let _ = Option.map ~f:Function.(check_reserved_name ~raise <@  snd) value.bind_to in
+    let () = check_reserved_name ~add_warning value.var in
+    let _ = Option.map ~f:Function.(check_reserved_name ~add_warning <@  snd) value.bind_to in
     ()
   | Instr Loop For ForInt {value;region=_} ->
-    let () = check_reserved_name ~raise value.binder in
+    let () = check_reserved_name ~add_warning value.binder in
     ()
   | Instr _ -> ()
   | Data LocalConst {value;region=_} ->
     let {kwd_const=_;pattern;const_type=_;equal=_;init=_;terminator=_;attributes=_} = value in
-    let () = check_pattern ~raise pattern in
+    let () = check_pattern ~raise ~add_warning pattern in
     ()
   | Data LocalVar {value;region=_} ->
     let {kwd_var=_;pattern;var_type=_;assign=_;init=_;terminator=_} = value in
-    let () = check_pattern ~raise pattern in
+    let () = check_pattern ~raise ~add_warning pattern in
     ()
   | Data LocalFun {value;region=_}  ->
     let {kwd_recursive=_;kwd_function=_;fun_name;param;ret_type=_;kwd_is=_;return=_;terminator=_;attributes=_} = value in
-    let () = check_parameters ~raise @@ Utils.nsepseq_to_list param.value.inside in
-    let () = check_reserved_name ~raise fun_name in
+    let () = check_parameters ~raise ~add_warning @@ Utils.nsepseq_to_list param.value.inside in
+    let () = check_reserved_name ~add_warning fun_name in
     ()
   | Data LocalType  {value;region=_} ->
     let {kwd_type=_;name;kwd_is=_;type_expr=_;terminator=_} = value in
-    let () = check_reserved_name ~raise name in
+    let () = check_reserved_name ~add_warning name in
     ()
   | Data LocalModule {value;region=_} ->
     let {kwd_module=_;name;kwd_is=_;enclosing=_;module_=_;terminator=_} = value in
-    let () = check_reserved_name ~raise name in
+    let () = check_reserved_name ~add_warning name in
     ()
   | Data LocalModuleAlias {value;region=_} ->
     let {kwd_module=_;alias;kwd_is=_;binders=_;terminator=_} = value in
-    let () = check_reserved_name ~raise alias in
+    let () = check_reserved_name ~add_warning alias in
     ()
 
-let peephole_declaration ~raise : unit -> declaration -> unit = fun _ d ->
+let peephole_declaration ~raise ~add_warning : unit -> declaration -> unit = fun _ d ->
   match d with
   | TypeDecl  {value;region=_} ->
     let () = Option.value_map ~default:() ~f:(check_linearity_type_vars ~raise) value.params in
-    let () = check_reserved_name ~raise value.name in
+    let () = check_reserved_name ~add_warning value.name in
     ()
   | ConstDecl {value;region=_} ->
     let {kwd_const=_;pattern;const_type=_;equal=_;init=_;terminator=_;attributes=_} = value in
-    let () = check_pattern ~raise pattern in
+    let () = check_pattern ~raise ~add_warning pattern in
     ()
   | FunDecl {value;region=_} ->
      let {kwd_recursive=_; kwd_function=_; fun_name; param; ret_type=_;
           kwd_is=_; return=_; terminator=_; attributes=_} = value in
-    let () = check_parameters ~raise @@ Utils.nsepseq_to_list param.value.inside in
-    let () = check_reserved_name ~raise fun_name in
+    let () = check_parameters ~raise ~add_warning @@ Utils.nsepseq_to_list param.value.inside in
+    let () = check_reserved_name ~add_warning fun_name in
     ()
   | ModuleDecl  {value;region=_} ->
-    let () = check_reserved_name ~raise value.name in
+    let () = check_reserved_name ~add_warning value.name in
     ()
   | ModuleAlias {value;region=_} ->
-    let () = check_reserved_name ~raise value.alias in
+    let () = check_reserved_name ~add_warning value.alias in
     ()
   | Directive _ -> ()
 
 
 let peephole ~raise ~add_warning : (unit,'err) Helpers.folder = {
   t = peephole_type ~raise;
-  e = peephole_expression ~raise;
-  s = peephole_statement ~raise;
-  d = peephole_declaration ~raise;
+  e = peephole_expression ~raise ~add_warning;
+  s = peephole_statement ~raise ~add_warning;
+  d = peephole_declaration ~raise ~add_warning;
 }

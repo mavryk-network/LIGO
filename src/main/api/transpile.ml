@@ -18,7 +18,7 @@ let contract source_file new_syntax syntax new_dialect display_format =
       buffer
 
 let expression expression new_syntax syntax new_dialect display_format =
-    Trace.warning_with @@ fun add_warning get_warnings ->
+    Trace.warning_with @@ fun add_warning _get_warnings ->
     format_result ~display_format (Parsing.Formatter.ppx_format) (fun _ -> []) @@
       fun ~raise ->
       (* Compiling chain *)

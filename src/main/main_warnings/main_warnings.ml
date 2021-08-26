@@ -6,6 +6,7 @@ type all =
   | `Self_ast_typed_warning_unused of Location.t * string
   | `Self_ast_typed_warning_muchused of Location.t * string
   | `Self_ast_imperative_warning_layout of (Location.t * Ast_imperative.label)
+  | `Self_cst_warning_shadow
 ]
 
 let warn_layout loc lab = `Self_ast_imperative_warning_layout (loc,lab)
@@ -28,6 +29,10 @@ let pp : display_format:string display_format ->
         Format.fprintf f
           "@[<hv>%a@ Warning: layout attribute only applying to %s, probably ignored.@.@]"
           Snippet.pp loc s
+    | `Self_cst_warning_shadow ->
+        Format.fprintf f
+          "@[<hv>@ Warning: <shadowing warning>@.@]"
+          
   )
 let to_json : all -> Yojson.Safe.t = fun a ->
   let json_warning ~stage ~content =
@@ -68,5 +73,12 @@ let to_json : all -> Yojson.Safe.t = fun a ->
       ("location", loc);
     ] in
     json_warning ~stage ~content
+  | `Self_cst_warning_shadow ->
+      let  stage = "self_cst" in
+      let content = `Assoc [
+        ("message", `String "Fix this...");
+        ("location", `String "Fix this...");
+      ] in
+      json_warning ~stage ~content
 
 let format = {pp;to_json}

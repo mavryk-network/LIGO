@@ -34,7 +34,7 @@ let mutate_ast source_file syntax infer protocol_version libs display_format see
     buffer
 
 let mutate_cst source_file syntax infer protocol_version libs display_format seed generator =
-  Trace.warning_with @@ fun add_warning get_warnings ->
+  Trace.warning_with @@ fun add_warning _get_warnings ->
   format_result ~display_format (Parsing.Formatter.ppx_format) (fun () -> []) @@
     fun ~raise ->
     let generator = generator_to_variant ~raise generator in

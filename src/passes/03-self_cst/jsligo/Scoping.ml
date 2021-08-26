@@ -82,17 +82,18 @@ let reserved_ctors =
   |> add "None"
   |> add "Some"
 
-let check_reserved_names ~raise vars =
+let check_reserved_names ~add_warning vars =
   let is_reserved elt = SSet.mem elt.value reserved in
   let inter = VarSet.filter is_reserved vars in
   if not (VarSet.is_empty inter) then
-    let clash = VarSet.choose inter in
-    raise.raise @@ reserved_name clash
+    (* let clash = VarSet.choose inter in *)
+    let () = add_warning `Self_cst_warning_shadow in
+    vars
   else vars
 
-let check_reserved_name ~raise var =
+let check_reserved_name ~add_warning var =
   if SSet.mem var.value reserved then
-    raise.raise @@ reserved_name var
+    add_warning `Self_cst_warning_shadow
   else ()
 
 (* Check linearty of quoted variable in parametric types *)
@@ -113,7 +114,7 @@ let check_linearity_type_vars ~raise : CST.type_vars -> unit =
 
 open! CST
 
-let rec vars_of_pattern ~raise env = function
+let rec vars_of_pattern ~raise ~add_warning env = function
   PVar {value={variable; _}; _} ->
     if VarSet.mem variable env then
       raise.raise (non_linear_pattern variable)
@@ -126,11 +127,11 @@ let rec vars_of_pattern ~raise env = function
     if VarSet.mem property env then
       raise.raise (non_linear_pattern property)
     else
-      let env = vars_of_pattern ~raise env binders in
+      let env = vars_of_pattern ~raise ~add_warning env binders in
       VarSet.add property env
 | PObject   {value = {inside; _}; _}
 | PArray    {value = {inside; _}; _} ->
-    Utils.nsepseq_to_list inside |> check_patterns ~raise
+    Utils.nsepseq_to_list inside |> check_patterns ~raise ~add_warning
 | PAssign {value = {property; _}; _} ->
     if VarSet.mem property env then
       raise.raise (non_linear_pattern property)
@@ -143,12 +144,12 @@ and check_linearity p = vars_of_pattern VarSet.empty p
 
 (* Checking patterns *)
 
-and check_pattern ~raise p =
-  check_linearity ~raise p |> check_reserved_names ~raise
+and check_pattern ~raise ~add_warning p =
+  check_linearity ~raise ~add_warning p |> check_reserved_names ~add_warning
 
-and check_patterns ~raise patterns =
+and check_patterns ~raise ~add_warning patterns =
   let add _acc p =
-    let env = check_pattern ~raise p in
+    let env = check_pattern ~raise ~add_warning p in
     env
   in List.fold ~f:add ~init:VarSet.empty patterns
 
@@ -221,38 +222,38 @@ let peephole_type ~raise : unit -> type_expr -> unit = fun _ t ->
 
 let peephole_expression : unit -> expr -> unit = fun () _ -> ()
 
-let check_binding ~raise ({value = {binders; _}; _}: CST.val_binding Region.reg) =
-  let () = ignore (check_pattern ~raise binders) in
+let check_binding ~raise ~add_warning ({value = {binders; _}; _}: CST.val_binding Region.reg) =
+  let () = ignore (check_pattern ~raise ~add_warning binders) in
   ()
 
-let check_bindings ~raise bindings =
+let check_bindings ~raise ~add_warning bindings =
   let add _acc b =
-    let () = check_binding ~raise b in
+    let () = check_binding ~raise ~add_warning b in
     ()
   in List.fold ~f:add ~init:() bindings
 
-let rec peephole_statement ~raise : unit -> statement -> unit = fun _ s ->
+let rec peephole_statement ~raise ~add_warning : unit -> statement -> unit = fun _ s ->
   match s with
     SExpr e -> 
     let () = peephole_expression () e in
     ()
   | SNamespace {value = (_, name, _); _} ->
-    let () = check_reserved_name ~raise name in 
+    let () = check_reserved_name ~add_warning name in 
     ()
   | SExport {value = (_, e); _} -> 
-    peephole_statement ~raise () e
+    peephole_statement ~raise ~add_warning () e
   | SLet   {value = {bindings; _}; _}
   | SConst {value = {bindings; _}; _} ->
-    let () = Utils.nsepseq_to_list bindings |> check_bindings ~raise in 
+    let () = Utils.nsepseq_to_list bindings |> check_bindings ~raise ~add_warning in 
     ()
   | SType  {value = {name; params; _}; _} ->
     let () = Option.value_map ~default:() ~f:(check_linearity_type_vars ~raise) params in
-    let () = check_reserved_name ~raise name in 
+    let () = check_reserved_name ~add_warning name in 
     ()
   | SWhile {value = {expr; statement; _}; _}
   | SForOf {value = {expr; statement; _}; _} ->
     let () = peephole_expression () expr in
-    let () = peephole_statement ~raise () statement in
+    let () = peephole_statement ~raise ~add_warning () statement in
     ()
   | SBlock  _
   | SCond   _
@@ -264,5 +265,5 @@ let rec peephole_statement ~raise : unit -> statement -> unit = fun _ s ->
 let peephole ~raise ~add_warning : (unit,'err) Helpers.folder = {
   t = peephole_type ~raise;
   e = peephole_expression;
-  d = peephole_statement ~raise;
+  d = peephole_statement ~raise ~add_warning;
 }
