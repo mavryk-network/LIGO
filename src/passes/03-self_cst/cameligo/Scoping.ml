@@ -64,14 +64,14 @@ let check_reserved_names ~add_warning vars =
   let is_reserved elt = SSet.mem elt.value reserved in
   let inter = VarSet.filter is_reserved vars in
   if not (VarSet.is_empty inter) then
-    (* let clash = VarSet.choose inter in *)
-    let () = add_warning `Self_cst_warning_shadow in
+    let clash = VarSet.choose inter in
+    let () = add_warning (`Self_cst_warning_shadow (Location.r_extract clash, clash.value)) in
     vars
   else vars
 
 let check_reserved_name ~add_warning var =
   if SSet.mem var.value reserved then
-    add_warning `Self_cst_warning_shadow
+    add_warning (`Self_cst_warning_shadow (Location.r_extract var, var.value))
   else ()
 
 let is_wildcard var =
