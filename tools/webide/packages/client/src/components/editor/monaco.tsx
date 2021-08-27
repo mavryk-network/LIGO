@@ -29,7 +29,7 @@ const Container = styled.div<TopPaneStyled>`
 
 // export const MonacoComponent = ({editorHeight, isDarkMode}) => {
 const MonacoComponent = (props) => {
-  const { editorHeight, code, language, getDeclarationList, setCompileFunction, setError } = props
+  const { editorHeight, code, language, getDeclarationList, setCompileFunction, setError, isDarkMode, isEditorDirty } = props
   let containerRef = useRef(null);
   const store = useStore();
   const dispatch = useDispatch();
@@ -68,6 +68,7 @@ const MonacoComponent = (props) => {
     // }
 
   const getColors = () => {
+    console.log('ppp', isDarkMode)
     if(isDarkMode) {
       return {
         'editor.background': '#191a1b',
@@ -106,7 +107,10 @@ const MonacoComponent = (props) => {
       .getComputedStyle(htmlElement, null)
       .getPropertyValue('font-size');
 
-    const editor = monaco.editor
+let editor
+
+      if(!isEditorDirty) {
+    editor = monaco.editor
     .create(htmlElement, {
       fontSize: parseFloat(fontSize),
       model: model,
@@ -115,6 +119,7 @@ const MonacoComponent = (props) => {
         enabled: false
       }
     })
+  }
 
     // const m = editor.getModel()
     // editor.addAction(onRightClickAction(m))
@@ -159,10 +164,9 @@ const MonacoComponent = (props) => {
     return function cleanUp() {
       cleanupFunc.forEach(f => f());
     };
-  }, []);
+  });
 
   useEffect(() => { compileFunctionHandler(currentLineText) }, [currentLineText]);
-
 
   return (
   <Container id="editor" ref={containerRef} editorHeight={editorHeight}></Container>
@@ -172,7 +176,8 @@ const mapStateToProps = state => {
   const { editor } = state
   return { 
     code : editor.code,
-    language: editor.language
+    language: editor.language,
+    isEditorDirty: editor.dirty
    }
 }
 
