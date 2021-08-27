@@ -6,8 +6,16 @@ type all =
   | `Self_ast_typed_warning_unused of Location.t * string
   | `Self_ast_typed_warning_muchused of Location.t * string
   | `Self_ast_imperative_warning_layout of (Location.t * Ast_imperative.label)
-  | `Self_cst_warning_shadow of Location.t * string
+  | `Main_self_cst_pascaligo of Self_cst.Pascaligo.Warnings.self_cst_pascaligo_warning
+  | `Main_self_cst_cameligo of Self_cst.Cameligo.Warnings.self_cst_cameligo_warning
+  | `Main_self_cst_reasonligo of Self_cst.Reasonligo.Warnings.self_cst_reasonligo_warning
+  | `Main_self_cst_jsligo of Self_cst.Jsligo.Warnings.self_cst_jsligo_warning
 ]
+
+let self_cst_pascaligo_warning_tracer (e:Self_cst.Pascaligo.Warnings.self_cst_pascaligo_warning) : all = `Main_self_cst_pascaligo e
+let self_cst_cameligo_warning_tracer (e:Self_cst.Cameligo.Warnings.self_cst_cameligo_warning) : all = `Main_self_cst_cameligo e
+let self_cst_reasonligo_warning_tracer (e:Self_cst.Reasonligo.Warnings.self_cst_reasonligo_warning) : all = `Main_self_cst_reasonligo e
+let self_cst_jsligo_warning_tracer (e:Self_cst.Jsligo.Warnings.self_cst_jsligo_warning) : all = `Main_self_cst_jsligo e
 
 let warn_layout loc lab = `Self_ast_imperative_warning_layout (loc,lab)
 
@@ -29,10 +37,10 @@ let pp : display_format:string display_format ->
         Format.fprintf f
           "@[<hv>%a@ Warning: layout attribute only applying to %s, probably ignored.@.@]"
           Snippet.pp loc s
-    | `Self_cst_warning_shadow (loc, s) ->
-        Format.fprintf f
-          "@[<hv>%a@ Warning: <shadowing warning %S >@.@]"
-          Snippet.pp loc s
+    | `Main_self_cst_pascaligo e -> Self_cst.Pascaligo.Warnings.error_ppformat ~display_format f e
+    | `Main_self_cst_cameligo e -> Self_cst.Cameligo.Warnings.error_ppformat ~display_format f e
+    | `Main_self_cst_reasonligo e -> Self_cst.Reasonligo.Warnings.error_ppformat ~display_format f e
+    | `Main_self_cst_jsligo e -> Self_cst.Pascaligo.Warnings.error_ppformat ~display_format f e
   )
 let to_json : all -> Yojson.Safe.t = fun a ->
   let json_warning ~stage ~content =
@@ -73,12 +81,9 @@ let to_json : all -> Yojson.Safe.t = fun a ->
       ("location", loc);
     ] in
     json_warning ~stage ~content
-  | `Self_cst_warning_shadow _ ->
-      let  stage = "self_cst" in
-      let content = `Assoc [
-        ("message", `String "Fix this...");
-        ("location", `String "Fix this...");
-      ] in
-      json_warning ~stage ~content
+  | `Main_self_cst_pascaligo e -> Self_cst.Pascaligo.Warnings.error_jsonformat e
+  | `Main_self_cst_cameligo e -> Self_cst.Cameligo.Warnings.error_jsonformat e
+  | `Main_self_cst_reasonligo e -> Self_cst.Reasonligo.Warnings.error_jsonformat e
+  | `Main_self_cst_jsligo e -> Self_cst.Jsligo.Warnings.error_jsonformat e
 
 let format = {pp;to_json}

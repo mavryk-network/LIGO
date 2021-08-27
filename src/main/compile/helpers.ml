@@ -77,6 +77,7 @@ let preprocess_string ~raise ~(options:options) ~meta file_path =
 type file_path = string
 
 let parse_and_abstract_pascaligo ~raise ~add_warning buffer file_path =
+  let add_warning w = add_warning @@ Main_warnings.self_cst_pascaligo_warning_tracer w in
   let raw =
     trace ~raise parser_tracer @@
     Parsing.Pascaligo.parse_file buffer file_path in
@@ -89,6 +90,7 @@ let parse_and_abstract_pascaligo ~raise ~add_warning buffer file_path =
   in imperative
 
 let parse_and_abstract_expression_pascaligo ~raise ~add_warning buffer =
+  let add_warning w = add_warning @@ Main_warnings.self_cst_pascaligo_warning_tracer w in
   let raw =
     trace ~raise parser_tracer @@
     Parsing.Pascaligo.parse_expression buffer in
@@ -101,6 +103,7 @@ let parse_and_abstract_expression_pascaligo ~raise ~add_warning buffer =
   in imperative
 
 let parse_and_abstract_cameligo ~raise ~add_warning buffer file_path =
+  let add_warning w = add_warning @@ Main_warnings.self_cst_cameligo_warning_tracer w in
   let raw =
     trace ~raise parser_tracer @@
     Parsing.Cameligo.parse_file buffer file_path in
@@ -113,6 +116,7 @@ let parse_and_abstract_cameligo ~raise ~add_warning buffer file_path =
   in imperative
 
 let parse_and_abstract_expression_cameligo ~raise ~add_warning buffer =
+  let add_warning w = add_warning @@ Main_warnings.self_cst_cameligo_warning_tracer w in
   let raw =
     trace ~raise parser_tracer @@
     Parsing.Cameligo.parse_expression buffer in
@@ -125,6 +129,7 @@ let parse_and_abstract_expression_cameligo ~raise ~add_warning buffer =
   in imperative
 
 let parse_and_abstract_reasonligo ~raise ~add_warning buffer file_path =
+  let add_warning w = add_warning @@ Main_warnings.self_cst_reasonligo_warning_tracer w in
   let raw =
     trace ~raise parser_tracer @@
     Parsing.Reasonligo.parse_file buffer file_path in
@@ -137,6 +142,7 @@ let parse_and_abstract_reasonligo ~raise ~add_warning buffer file_path =
   in imperative
 
 let parse_and_abstract_expression_reasonligo ~raise ~add_warning buffer =
+  let add_warning w = add_warning @@ Main_warnings.self_cst_reasonligo_warning_tracer w in
   let raw =
     trace ~raise parser_tracer @@
     Parsing.Reasonligo.parse_expression buffer in
@@ -149,6 +155,7 @@ let parse_and_abstract_expression_reasonligo ~raise ~add_warning buffer =
   in imperative
 
 let parse_and_abstract_jsligo ~raise ~add_warning buffer file_path =
+  let add_warning w = add_warning @@ Main_warnings.self_cst_jsligo_warning_tracer w in
   let raw =
     trace ~raise parser_tracer @@
     Parsing.Jsligo.parse_file buffer file_path in
@@ -161,6 +168,7 @@ let parse_and_abstract_jsligo ~raise ~add_warning buffer file_path =
   in imperative
 
 let parse_and_abstract_expression_jsligo ~raise ~add_warning buffer =
+  let add_warning w = add_warning @@ Main_warnings.self_cst_jsligo_warning_tracer w in
   let raw =
     trace ~raise parser_tracer @@
     Parsing.Jsligo.parse_expression buffer in

@@ -1,4 +1,5 @@
 module Errors = Errors
+module Warnings = Warnings
 
 let all_mapper ~raise ~add_warning = [
   Helpers.fold_to_map () @@ Scoping.peephole ~raise ~add_warning
