@@ -46,7 +46,7 @@ export class DeployAction extends CancellableAction {
         network: {
           type: NetworkType.GRANADANET,
           name: 'Granadanet',
-          rpcUrl: `https://api.tez.ie/rpc/granadanet`,
+          rpcUrl: `https://granadanet.api.tez.ie`,
         },
       });
     } else if (launchNetwork === NetworkType.FLORENCENET) {
@@ -54,7 +54,7 @@ export class DeployAction extends CancellableAction {
         network: {
           type: NetworkType.FLORENCENET,
           name: 'Florencenet',
-          rpcUrl: `https://api.tez.ie/rpc/florencenet`,
+          rpcUrl: `https://florencenet.api.tez.ie`,
         },
       });
     } else if (launchNetwork === NetworkType.MAINNET) {
@@ -62,7 +62,7 @@ export class DeployAction extends CancellableAction {
         network: {
           type: NetworkType.MAINNET,
           name: 'Mainnet',
-          rpcUrl: `https://api.tez.ie/rpc/mainnet`,
+          rpcUrl: `https://mainnet.api.tez.ie`,
         },
       });
     }
@@ -88,14 +88,14 @@ export class DeployAction extends CancellableAction {
       MichelsonFormat.Json
     );
 
-    let networkURL = 'https://api.tez.ie/rpc/florencenet';
+    let networkURL = 'https://florencenet.api.tez.ie';
     let network = { type: NetworkType.FLORENCENET };
 
     if (deployState.network === 'granadanet') {
-      networkURL = 'https://api.tez.ie/rpc/granadanet';
+      networkURL = 'https://granadanet.api.tez.ie';
       network = { type: NetworkType.GRANADANET };
     } else if (deployState.network === NetworkType.MAINNET) {
-      networkURL = 'https://api.tez.ie/rpc/mainnet';
+      networkURL = 'https://mainnet.api.tez.ie';
       network = { type: NetworkType.MAINNET };
     }
 
