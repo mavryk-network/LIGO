@@ -22,6 +22,7 @@ const Pre = styled.pre`
   margin: 0;
   width: -webkit-fill-available;
   padding-bottom: 20px;
+  white-space: break-spaces;
 `;
 
 
