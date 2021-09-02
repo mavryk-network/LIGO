@@ -103,29 +103,31 @@ let parse_and_abstract_expression_pascaligo ~raise ~add_warning buffer =
   in imperative
 
 let parse_and_abstract_cameligo ~raise ~add_warning buffer file_path =
-  let add_warning w = add_warning @@ Main_warnings.self_cst_cameligo_warning_tracer w in
+  let add_warning_ w = add_warning @@ Main_warnings.self_cst_cameligo_warning_tracer w in
   let raw =
     trace ~raise parser_tracer @@
     Parsing.Cameligo.parse_file buffer file_path in
   let applied =
     trace ~raise self_cst_cameligo_tracer @@
-    Self_cst.Cameligo.all_module ~add_warning raw in
+    Self_cst.Cameligo.all_module ~add_warning:add_warning_ raw in
+  let add_warning_ w = add_warning @@ Main_warnings.cit_cameligo_warning_tracer w in
   let imperative =
     trace ~raise cit_cameligo_tracer @@
-    Tree_abstraction.Cameligo.compile_module applied
+    Tree_abstraction.Cameligo.compile_module ~add_warning:add_warning_ applied
   in imperative
 
 let parse_and_abstract_expression_cameligo ~raise ~add_warning buffer =
-  let add_warning w = add_warning @@ Main_warnings.self_cst_cameligo_warning_tracer w in
+  let add_warning_ w = add_warning @@ Main_warnings.self_cst_cameligo_warning_tracer w in
   let raw =
     trace ~raise parser_tracer @@
     Parsing.Cameligo.parse_expression buffer in
   let applied =
     trace ~raise self_cst_cameligo_tracer @@
-    Self_cst.Cameligo.all_expression ~add_warning raw in
+    Self_cst.Cameligo.all_expression ~add_warning:add_warning_ raw in
+  let add_warning_ w = add_warning @@ Main_warnings.cit_cameligo_warning_tracer w in
   let imperative =
     trace ~raise cit_cameligo_tracer @@
-    Tree_abstraction.Cameligo.compile_expression applied
+    Tree_abstraction.Cameligo.compile_expression ~add_warning:add_warning_ applied
   in imperative
 
 let parse_and_abstract_reasonligo ~raise ~add_warning buffer file_path =
@@ -230,13 +232,13 @@ let parse_and_abstract_string_pascaligo ~raise buffer =
     Tree_abstraction.Pascaligo.compile_module raw
   in imperative
 
-let parse_and_abstract_string_cameligo ~raise buffer =
+let parse_and_abstract_string_cameligo ~raise ~add_warning buffer =
   let raw =
     trace ~raise parser_tracer @@
     Parsing.Cameligo.parse_string buffer in
   let imperative =
     trace ~raise cit_cameligo_tracer @@
-    Tree_abstraction.Cameligo.compile_module raw
+    Tree_abstraction.Cameligo.compile_module ~add_warning raw
   in imperative
 
 let parse_and_abstract_string_jsligo ~raise buffer =
@@ -254,7 +256,8 @@ let parse_and_abstract_string ~raise ~add_warning syntax buffer =
       PascaLIGO ->
         parse_and_abstract_string_pascaligo
     | CameLIGO ->
-        parse_and_abstract_string_cameligo
+      let add_warning w = add_warning @@ Main_warnings.cit_cameligo_warning_tracer w in
+        parse_and_abstract_string_cameligo ~add_warning
     | ReasonLIGO ->
         parse_and_abstract_string_reasonligo
     | JsLIGO ->

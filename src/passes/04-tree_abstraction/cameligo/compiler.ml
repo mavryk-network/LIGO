@@ -182,8 +182,8 @@ let compile_selection (selection : CST.selection) =
     let ((_,index), loc) = r_split comp in
     (Access_tuple index, loc)
 
-let rec compile_expression ~raise : CST.expr -> AST.expr = fun e ->
-  let self = compile_expression ~raise in
+let rec compile_expression ~raise ~add_warning : CST.expr -> AST.expr = fun e ->
+  let self = compile_expression ~raise ~add_warning in
   let return e = e in
   let compile_tuple_expression ?loc tuple_expr =
     let lst = List.map ~f:self @@ nseq_to_list tuple_expr in
@@ -218,6 +218,9 @@ let rec compile_expression ~raise : CST.expr -> AST.expr = fun e ->
     EVar var -> (
     let (var, loc) = r_split var in
     match constants var with
+      Some ((Deprecated _) as const) ->
+      let () = add_warning @@ Warnings.deprecated_constant_used var loc in
+      return @@ e_constant ~loc const []  
     | Some const ->
       return @@ e_constant ~loc const []
     | None -> return @@ e_variable_ez ~loc var
@@ -291,7 +294,11 @@ let rec compile_expression ~raise : CST.expr -> AST.expr = fun e ->
     let loc = Location.lift region in
     let (var, loc_var) = r_split var in
     (match constants var with
-      Some const ->
+      Some ((Deprecated _) as const) ->
+      let () = add_warning @@ Warnings.deprecated_constant_used var loc in
+      let args = List.map ~f:self @@ nseq_to_list args in
+      return @@ e_constant ~loc const args  
+    | Some const ->
       let args = List.map ~f:self @@ nseq_to_list args in
       return @@ e_constant ~loc const args
     | None ->
@@ -312,7 +319,11 @@ let rec compile_expression ~raise : CST.expr -> AST.expr = fun e ->
     in
     let var = module_name.value ^ "." ^ fun_name in
     (match constants var with
-      Some const ->
+      Some ((Deprecated _) as const) ->
+      let () = add_warning @@ Warnings.deprecated_constant_used var loc in
+      let args = List.map ~f:self @@ nseq_to_list args in
+      return @@ e_constant ~loc const args  
+    | Some const ->
       let args = List.map ~f:self @@ nseq_to_list args in
       return @@ e_constant ~loc const args
     | None ->
@@ -358,7 +369,10 @@ let rec compile_expression ~raise : CST.expr -> AST.expr = fun e ->
       in
       let var = module_name ^ "." ^ fun_name in
       (match constants var with
-        Some const -> return @@ e_constant ~loc const []
+        Some ((Deprecated _) as const) ->
+        let () = add_warning @@ Warnings.deprecated_constant_used var loc in
+        return @@ e_constant ~loc const []  
+      | Some const -> return @@ e_constant ~loc const []
       | None -> return @@ e_variable_ez ~loc var
       )
     else
@@ -415,7 +429,7 @@ let rec compile_expression ~raise : CST.expr -> AST.expr = fun e ->
     let matchee = self case.expr in
     let (cases, loc2) = r_split case.cases in
     let loc = Location.cover loc1 loc2 in (* TODO: locations are weird here *)
-    let cases = compile_matching_expr ~raise @@ npseq_to_ne_list cases in
+    let cases = compile_matching_expr ~raise ~add_warning @@ npseq_to_ne_list cases in
     return @@ e_matching ~loc matchee cases
   | EAnnot annot ->
     let (annot, loc) = r_split annot in
@@ -454,7 +468,7 @@ let rec compile_expression ~raise : CST.expr -> AST.expr = fun e ->
       let (pattern,_) = binders in
       match (unepar pattern) with
       | CST.PVar _ -> (
-        let lst = compile_let_binding ~raise ?kwd_rec attributes binding in
+        let lst = compile_let_binding ~raise ~add_warning ?kwd_rec attributes binding in
         let aux (_name,binder,attr,rhs) expr = e_let_in ~loc binder attr rhs expr in
         return @@ List.fold_right ~f:aux lst ~init:body
       )
@@ -483,7 +497,7 @@ let rec compile_expression ~raise : CST.expr -> AST.expr = fun e ->
     let (mi, loc) = r_split mi in
     let ({mod_decl={name;module_;_};kwd_in=_;body} : CST.mod_in) = mi in
     let module_binder = name.value in
-    let rhs = compile_module ~raise module_ in
+    let rhs = compile_module ~raise ~add_warning module_ in
     let body = self body in
     return @@ e_mod_in ~loc module_binder rhs body
   | EModAlias ma ->
@@ -580,11 +594,11 @@ and conv ~raise : CST.pattern -> AST.ty_expr AST.pattern =
     Location.wrap ~loc @@ P_unit
   | _ -> raise.raise @@ unsupported_pattern_type [p]
 
-and compile_matching_expr ~raise : 'a CST.case_clause CST.reg List.Ne.t -> (AST.expression, AST.ty_expr) AST.match_case list =
+and compile_matching_expr ~raise ~add_warning : 'a CST.case_clause CST.reg List.Ne.t -> (AST.expression, AST.ty_expr) AST.match_case list =
   fun cases ->
     let aux (case : 'a CST.case_clause CST.reg) =
       let (case, _loc) = r_split case in
-      let expr    = compile_expression ~raise case.rhs in
+      let expr    = compile_expression ~raise ~add_warning case.rhs in
       (case.pattern, expr)
     in
     let cases = List.Ne.map aux cases in
@@ -623,13 +637,13 @@ and check_annotation ~raise = function
   | _ -> ())
 | _ -> ()
 
-and compile_let_binding ~raise ?kwd_rec attributes binding =
+and compile_let_binding ~raise ~add_warning ?kwd_rec attributes binding =
   let return lst = lst in
   let return_1 a = return [a] in
   let ({binders; lhs_type; let_rhs; _} : CST.let_binding) = binding in
   let attributes = compile_attributes attributes in
   let lhs_type = Option.map ~f:(compile_type_expression ~raise <@ snd) lhs_type in
-  let expr = compile_expression ~raise let_rhs in
+  let expr = compile_expression ~raise ~add_warning let_rhs in
   let rec aux = function
   | CST.PPar par, [] ->
     let par, _ = r_split par in
@@ -708,7 +722,7 @@ and compile_parameter ~raise : CST.pattern -> _ binder * (_ -> _) =
     return ~ascr ~attributes loc exprs @@ Location.unwrap var
   | _ -> raise.raise @@ unsupported_pattern_type [pattern]
 
-and compile_declaration ~raise : CST.declaration -> _ = fun decl ->
+and compile_declaration ~raise ~add_warning : CST.declaration -> _ = fun decl ->
   let return reg decl =
     List.map ~f:(Location.wrap ~loc:(Location.lift reg)) decl in
   let return_1 reg decl = return reg [decl] in
@@ -736,7 +750,7 @@ and compile_declaration ~raise : CST.declaration -> _ = fun decl ->
 
   | ModuleDecl {value={name; module_; _};region} ->
       let name, _ = r_split name in
-      let module_ = compile_module ~raise module_ in
+      let module_ = compile_module ~raise ~add_warning module_ in
       let ast = AST.Declaration_module  {module_binder=name; module_}
       in return_1 region ast
 
@@ -751,7 +765,7 @@ and compile_declaration ~raise : CST.declaration -> _ = fun decl ->
       match (unepar pattern,arg) with
       | CST.PTuple tuple , [] ->
         let attributes = compile_attributes attributes in
-        let matchee = compile_expression ~raise let_rhs in
+        let matchee = compile_expression ~raise ~add_warning let_rhs in
         let tuple,_loc = r_split tuple in
         let lst = List.map ~f:(compile_parameter ~raise) @@ npseq_to_list tuple in
         let (lst, exprs) = List.unzip lst in
@@ -762,7 +776,7 @@ and compile_declaration ~raise : CST.declaration -> _ = fun decl ->
         return region @@ List.map ~f:aux lst
       | CST.PRecord record , [] ->
         let attributes = compile_attributes attributes in
-        let matchee = compile_expression ~raise let_rhs in
+        let matchee = compile_expression ~raise ~add_warning let_rhs in
         let record,_loc = r_split record in
         let aux ({value={field_name;eq=_;pattern};_}:CST.field_pattern CST.reg) =
           let field_name = field_name.value in
@@ -777,13 +791,13 @@ and compile_declaration ~raise : CST.declaration -> _ = fun decl ->
         let aux (name, binder,attr, expr) =  AST.Declaration_constant {name; binder; attr; expr} in
         return region @@ List.map ~f:aux lst
       | _ -> (
-        let lst = compile_let_binding ~raise ?kwd_rec attributes let_binding in
+        let lst = compile_let_binding ~raise ~add_warning ?kwd_rec attributes let_binding in
         let aux (name, binder,attr, expr) =  AST.Declaration_constant {name; binder; attr; expr} in
         return region @@ List.map ~f:aux lst
       )
     )
 
-and compile_module ~raise : CST.ast -> _  =
+and compile_module ~raise ~add_warning : CST.ast -> _  =
   fun t ->
-    let lst = List.map ~f:(compile_declaration ~raise) @@ nseq_to_list t.decl in
+    let lst = List.map ~f:(compile_declaration ~raise ~add_warning) @@ nseq_to_list t.decl in
     List.concat lst
