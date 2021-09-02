@@ -218,9 +218,11 @@ let rec compile_expression ~raise ~add_warning : CST.expr -> AST.expr = fun e ->
     EVar var -> (
     let (var, loc) = r_split var in
     match constants var with
-      Some ((Deprecated _) as const) ->
-      let () = add_warning @@ Warnings.deprecated_constant_used var loc in
-      return @@ e_constant ~loc const []  
+      Some ((Deprecated { const }) as const') ->
+      let deprecated = var in
+      let latest = Predefined.Tree_abstraction.pseudo_module_to_string const in
+      let () = add_warning @@ Warnings.deprecated_constant_used ~deprecated ~latest loc in
+      return @@ e_constant ~loc const' []  
     | Some const ->
       return @@ e_constant ~loc const []
     | None -> return @@ e_variable_ez ~loc var
@@ -294,10 +296,12 @@ let rec compile_expression ~raise ~add_warning : CST.expr -> AST.expr = fun e ->
     let loc = Location.lift region in
     let (var, loc_var) = r_split var in
     (match constants var with
-      Some ((Deprecated _) as const) ->
-      let () = add_warning @@ Warnings.deprecated_constant_used var loc in
+      Some ((Deprecated { const }) as const') ->
+      let deprecated = var in
+      let latest = Predefined.Tree_abstraction.pseudo_module_to_string const in
+      let () = add_warning @@ Warnings.deprecated_constant_used ~deprecated ~latest loc in
       let args = List.map ~f:self @@ nseq_to_list args in
-      return @@ e_constant ~loc const args  
+      return @@ e_constant ~loc const' args  
     | Some const ->
       let args = List.map ~f:self @@ nseq_to_list args in
       return @@ e_constant ~loc const args
@@ -319,10 +323,12 @@ let rec compile_expression ~raise ~add_warning : CST.expr -> AST.expr = fun e ->
     in
     let var = module_name.value ^ "." ^ fun_name in
     (match constants var with
-      Some ((Deprecated _) as const) ->
-      let () = add_warning @@ Warnings.deprecated_constant_used var loc in
+      Some ((Deprecated { const }) as const') ->
+      let deprecated = var in
+      let latest = Predefined.Tree_abstraction.pseudo_module_to_string const in
+      let () = add_warning @@ Warnings.deprecated_constant_used ~deprecated ~latest loc in
       let args = List.map ~f:self @@ nseq_to_list args in
-      return @@ e_constant ~loc const args  
+      return @@ e_constant ~loc const' args  
     | Some const ->
       let args = List.map ~f:self @@ nseq_to_list args in
       return @@ e_constant ~loc const args
@@ -369,9 +375,11 @@ let rec compile_expression ~raise ~add_warning : CST.expr -> AST.expr = fun e ->
       in
       let var = module_name ^ "." ^ fun_name in
       (match constants var with
-        Some ((Deprecated _) as const) ->
-        let () = add_warning @@ Warnings.deprecated_constant_used var loc in
-        return @@ e_constant ~loc const []  
+        Some ((Deprecated { const }) as const') ->
+        let deprecated = var in
+        let latest = Predefined.Tree_abstraction.pseudo_module_to_string const in
+        let () = add_warning @@ Warnings.deprecated_constant_used ~deprecated ~latest loc in
+        return @@ e_constant ~loc const' []  
       | Some const -> return @@ e_constant ~loc const []
       | None -> return @@ e_variable_ez ~loc var
       )
