@@ -117,4 +117,11 @@ code {
   overflow: auto;
 }
 
+/***
+Styles specific to interactive tour functionality
+****/
+#react-joyride-step-3 div:first {
+  top: -10px;
+}
+
 
