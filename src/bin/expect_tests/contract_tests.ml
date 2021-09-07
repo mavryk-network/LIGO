@@ -1098,7 +1098,7 @@ let%expect_test _ =
 
 let%expect_test _ =
   run_ligo_good [ "print-ast-typed" ; contract "sequence.mligo" ; ];
-  [%expect {| const y = lambda (#1) return let x = +1 in let _ = let x = +2 in UNIT() in let _ = let x = +23 in UNIT() in let _ = let x = +42 in UNIT() in x |}]
+  [%expect {| const y = lambda (#1) return let _x = +1 in let _ = let _x = +2 in UNIT() in let _ = let _x = +23 in UNIT() in let _ = let _x = +42 in UNIT() in _x |}]
 
 let%expect_test _ =
   run_ligo_bad [ "compile-contract" ; contract "bad_type_operator.ligo" ; "main" ] ;
@@ -1256,30 +1256,6 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_good [ "compile-storage" ; contract "big_map.ligo" ; "main" ; "(big_map1,unit)" ] ;
   [%expect {|
-    File "../../test/contracts/big_map.ligo", line 8, characters 4-19:
-      7 |     var toto : option (int) := Some (0);
-      8 |     toto := s.0[23];
-      9 |     s.0[2] := 444
-    :
-    Warning: unused variable "toto".
-    Hint: replace it by "_toto" to prevent this warning.
-
-    File "../../test/contracts/big_map.ligo", line 7, characters 8-12:
-      6 |   block {
-      7 |     var toto : option (int) := Some (0);
-      8 |     toto := s.0[23];
-    :
-    Warning: unused variable "toto".
-    Hint: replace it by "_toto" to prevent this warning.
-
-    File "../../test/contracts/big_map.ligo", line 5, characters 21-22:
-      4 |
-      5 | function main (const p : parameter; var s : storage) : return is
-      6 |   block {
-    :
-    Warning: unused variable "p".
-    Hint: replace it by "_p" to prevent this warning.
-
     (Pair { Elt 23 0 ; Elt 42 0 } Unit) |}]
 
 let%expect_test _ =
