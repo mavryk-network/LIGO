@@ -23,12 +23,6 @@
 (*                                                                           *)
 (*****************************************************************************)
 
-open Tezos_protocol_009_PsFLoren.Protocol
-open Alpha_context
-open Tezos_micheline
-open Micheline
-open Micheline_printer
-
 let rec assoc ~equal k = function
   | [] ->
       None
@@ -36,6 +30,12 @@ let rec assoc ~equal k = function
       if equal k kk then Some v else assoc ~equal k kvs
 
 let hd = function x :: _ -> Some x | [] -> None
+
+open Tezos_protocol_009_PsFLoren.Protocol
+open Alpha_context
+open Tezos_micheline
+open Micheline
+open Micheline_printer
 
 let anon = {comment = None}
 

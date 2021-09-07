@@ -23,6 +23,12 @@
 (*                                                                           *)
 (*****************************************************************************)
 
+let rec assoc ~equal k = function
+| [] ->
+    None
+| (kk, v) :: kvs ->
+    if equal k kk then Some v else assoc ~equal k kvs
+
 open Tezos_protocol_009_PsFLoren.Protocol
 open Alpha_context
 open Tezos_micheline
@@ -30,12 +36,6 @@ open Script_tc_errors
 open Script_interpreter
 open Michelson_v1_printer
 open Tezos_base__TzPervasives
-
-let rec assoc ~equal k = function
-  | [] ->
-      None
-  | (kk, v) :: kvs ->
-      if equal k kk then Some v else assoc ~equal k kvs
 
 let print_ty ppf ty = Michelson_v1_printer.print_expr_unwrapped ppf ty
 
