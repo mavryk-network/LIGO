@@ -12,26 +12,10 @@ let%expect_test _ =
 
   run_ligo_good [ "measure-contract" ; contract "multisig.ligo" ; "main" ] ;
   [%expect {|
-    File "../../test/contracts/multisig.ligo", line 49, characters 10-20:
-     48 |       | key # tl -> block {
-     49 |           keys := tl;
-     50 |           if pkh_sig.0 = Crypto.hash_key (key) then
-    :
-    Warning: unused variable "keys".
-    Hint: replace it by "_keys" to prevent this warning.
-
     569 bytes |}] ;
 
   run_ligo_good [ "measure-contract" ; contract "multisig-v2.ligo" ; "main" ] ;
   [%expect {|
-    File "../../test/contracts/multisig-v2.ligo", line 135, characters 24-25:
-    134 |
-    135 | function default (const p : default_pt; const s : storage) : return is
-    136 |     ((nil : list (operation)), s)
-    :
-    Warning: unused variable "p".
-    Hint: replace it by "_p" to prevent this warning.
-
     1541 bytes |}] ;
 
   run_ligo_good [ "measure-contract" ; contract "vote.mligo" ; "main" ] ;
@@ -327,14 +311,6 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_good [ "compile-contract" ; contract "multisig.ligo" ; "main" ] ;
   [%expect {|
-File "../../test/contracts/multisig.ligo", line 49, characters 10-20:
- 48 |       | key # tl -> block {
- 49 |           keys := tl;
- 50 |           if pkh_sig.0 = Crypto.hash_key (key) then
-:
-Warning: unused variable "keys".
-Hint: replace it by "_keys" to prevent this warning.
-
 { parameter
     (pair (pair (nat %counter) (lambda %message unit (list operation)))
           (list %signatures (pair key_hash signature))) ;
@@ -440,14 +416,6 @@ Hint: replace it by "_keys" to prevent this warning.
 let%expect_test _ =
   run_ligo_good [ "compile-contract" ; contract "multisig-v2.ligo" ; "main" ] ;
   [%expect {|
-File "../../test/contracts/multisig-v2.ligo", line 135, characters 24-25:
-134 |
-135 | function default (const p : default_pt; const s : storage) : return is
-136 |     ((nil : list (operation)), s)
-:
-Warning: unused variable "p".
-Hint: replace it by "_p" to prevent this warning.
-
 { parameter
     (or (or (unit %default) (lambda %send bytes (list operation)))
         (lambda %withdraw bytes (list operation))) ;
@@ -1790,13 +1758,14 @@ let%expect_test _ =
   let output = String.concat "\n" lines in
   print_string output;
   [%expect {|
-    File "../../test/contracts/uncurry_contract.mligo", line 5, characters 41-51:
-      4 |
-      5 | let foo (x : unit) (y : unit) (z : unit) (w : unit) : unit = ()
-      6 |
-    :
-    Warning: unused variable "w".
-    Hint: replace it by "_w" to prevent this warning. |}]
+    { parameter unit ;
+      storage unit ;
+      code { LAMBDA
+               (pair unit (pair unit (pair unit unit)))
+               unit
+               { UNPAIR 4 ; DROP 4 ; PUSH unit Unit } ;
+             LAMBDA (pair nat nat) nat { UNPAIR ; MUL } ;
+             DIG 2 ; |}]
 
 (* old uncurry bugs: *)
 let%expect_test _ =
