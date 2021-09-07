@@ -20,14 +20,6 @@ let%expect_test _ =
 
   run_ligo_good [ "measure-contract" ; contract "vote.mligo" ; "main" ] ;
   [%expect {|
-    File "../../test/contracts/vote.mligo", line 34, characters 6-9:
-     33 | let vote (vote, store : vote * storage) : return =
-     34 |   let now = Tezos.now in
-     35 |   (* let _ =
-    :
-    Warning: unused variable "now".
-    Hint: replace it by "_now" to prevent this warning.
-
     430 bytes |}] ;
 
   run_ligo_good [ "compile-parameter" ; contract "coase.ligo" ; "main" ; "Buy_single (record card_to_buy = 1n end)" ] ;
@@ -800,14 +792,6 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_good [ "compile-contract" ; contract "vote.mligo" ; "main" ] ;
   [%expect {|
-File "../../test/contracts/vote.mligo", line 34, characters 6-9:
- 33 | let vote (vote, store : vote * storage) : return =
- 34 |   let now = Tezos.now in
- 35 |   (* let _ =
-:
-Warning: unused variable "now".
-Hint: replace it by "_now" to prevent this warning.
-
 { parameter
     (or (pair %reset (pair (timestamp %finish_time) (timestamp %start_time)) (string %title))
         (or %vote (unit %nay) (unit %yea))) ;
