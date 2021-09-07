@@ -1654,9 +1654,9 @@ const main : (int , storage) -> (list (operation) , storage) =
   storage) return let x : (int , int) =
                     let x : int = 7 in (ADD(x , n.0) , ADD(n.1.0 , n.1.1)) in
                   (list[] : list (operation) , x)
-const f0 = lambda (a : string) return TRUE()
-const f1 = lambda (a : string) return TRUE()
-const f2 = lambda (a : string) return TRUE()
+const f0 = lambda (_a : string) return TRUE()
+const f1 = lambda (_a : string) return TRUE()
+const f2 = lambda (_a : string) return TRUE()
 const letin_nesting =
   lambda (#1 : unit) return let s = "test" in
                             let p0 = (f0)@(s) in { ASSERTION(p0);
@@ -1676,9 +1676,9 @@ const main = lambda (n : (int , storage)) : (list (operation) ,
   storage) return let x : (int , int) =
                     let x : int = 7 in (ADD(x , n.0) , ADD(n.1.0 , n.1.1)) in
                   (list[] : list (operation) , x)
-const f0 = lambda (a : string) return TRUE()
-const f1 = lambda (a : string) return TRUE()
-const f2 = lambda (a : string) return TRUE()
+const f0 = lambda (_a : string) return TRUE()
+const f1 = lambda (_a : string) return TRUE()
+const f2 = lambda (_a : string) return TRUE()
 const letin_nesting =
   lambda (#1 : unit) return let s = "test" in
                             let p0 = (f0)@(s) in { ASSERTION(p0);
