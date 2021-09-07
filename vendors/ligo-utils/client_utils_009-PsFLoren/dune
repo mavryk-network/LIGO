@@ -1,13 +1,12 @@
 ; This library is vendored bits and pieces of the tezos client to reduce footprint
 
 (library
- (name client_utils_008_PtEdo2Zk)
+ (name client_utils_009_PsFLoren)
  (public_name client_utils-009-PsFLoren)
  (libraries
   tezos-base
   tezos-stdlib-unix
   tezos-protocol-009-PsFLoren
-  tezos-protocol-009-PsFLoren-parameters
   tezos-protocol-environment
   tezos-memory-proto-alpha
   tezos-lwt-result-stdlib

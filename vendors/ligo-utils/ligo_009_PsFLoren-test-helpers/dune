@@ -9,11 +9,11 @@
             tezos-protocol-environment
             tezos-protocol-009-PsFLoren
             tezos-protocol-009-PsFLoren-parameters
-            tezos-client-009-PsFLoren)
+            client_utils-009-PsFLoren)
  (flags (:standard -open Tezos_base__TzPervasives
                    -open Tezos_micheline
                    -open Tezos_stdlib_unix
                    -open Tezos_protocol_009_PsFLoren
-                   -open Tezos_client_009_PsFLoren
+                   -open Client_utils_009_PsFLoren
                    -open Tezos_protocol_environment_009_PsFLoren
                    -open Tezos_shell_services)))

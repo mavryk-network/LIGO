@@ -1,0 +1,1 @@
+let tez_sym = "\xEA\x9C\xA9"

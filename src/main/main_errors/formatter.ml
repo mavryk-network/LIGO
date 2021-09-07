@@ -183,11 +183,11 @@ let rec error_ppformat : display_format:string display_format ->
     | `Main_interpret_target_lang_error (loc, [], errs) ->
       Format.fprintf f "@[<v 4>%a@.An uncaught error occured:@.%a@]"
         Snippet.pp loc
-        (Tezos_client_009_PsFLoren.Michelson_v1_error_reporter.report_errors ~details:true ~show_source:true ?parsed:(None)) errs
+        (Client_utils_009_PsFLoren.Michelson_v1_error_reporter.report_errors ~details:true ~show_source:true ?parsed:(None)) errs
     | `Main_interpret_target_lang_error (loc, calltrace, errs) ->
       Format.fprintf f "@[<v 4>%a@.An uncaught error occured:@.%a@.Trace:@.%a@]"
         Snippet.pp loc
-        (Tezos_client_009_PsFLoren.Michelson_v1_error_reporter.report_errors ~details:true ~show_source:true ?parsed:(None)) errs
+        (Client_utils_009_PsFLoren.Michelson_v1_error_reporter.report_errors ~details:true ~show_source:true ?parsed:(None)) errs
         (PP_helpers.list_sep_d Location.pp) calltrace
     | `Main_interpret_target_lang_failwith (loc, Failwith_int n) ->
       Format.fprintf f "@[<v 4>%a@.An uncaught error occured:@.Failwith (int): %d@]"

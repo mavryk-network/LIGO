@@ -2,7 +2,6 @@ open Trace
 open Proto_alpha_utils
 module Tezos_alpha_test_helpers = Ligo_009_PsFLoren_test_helpers
 open Ligo_interpreter_exc
-module Tezos_client = Tezos_client_009_PsFLoren
 module Tezos_protocol = Tezos_protocol_009_PsFLoren
 module Tezos_raw_protocol = Tezos_raw_protocol_009_PsFLoren
 

@@ -5,7 +5,7 @@ let init_environment = Init_proto_alpha.init_environment
 let dummy_environment = Init_proto_alpha.dummy_environment
 
 
-open Tezos_protocol_008_PtEdo2Zk.Protocol
+open Tezos_protocol_009_PsFLoren.Protocol
 open Script_typed_ir
 open Script_ir_translator
 open Script_interpreter

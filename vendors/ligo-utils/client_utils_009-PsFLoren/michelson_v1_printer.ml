@@ -23,7 +23,7 @@
 (*                                                                           *)
 (*****************************************************************************)
 
-open Tezos_protocol_008_PtEdo2Zk.Protocol
+open Tezos_protocol_009_PsFLoren.Protocol
 open Alpha_context
 open Tezos_micheline
 open Micheline

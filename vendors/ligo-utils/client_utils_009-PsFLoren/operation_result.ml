@@ -23,42 +23,42 @@
 (*                                                                           *)
 (*****************************************************************************)
 
-open Tezos_protocol_008_PtEdo2Zk.Protocol
+open Tezos_protocol_009_PsFLoren.Protocol
 open Alpha_context
 open Apply_results
 
 let pp_manager_operation_content (type kind) source internal pp_result ppf
     ((operation, result) : kind manager_operation * _) =
   Format.fprintf ppf "@[<v 0>" ;
-  ( match operation with
+  (match operation with
   | Transaction {destination; amount; parameters; entrypoint} ->
       Format.fprintf
         ppf
         "@[<v 2>%s:@,Amount: %s%a@,From: %a@,To: %a"
         (if internal then "Internal transaction" else "Transaction")
-        "\xEA\x9C\xA9"
+        Client_proto_args.tez_sym
         Tez.pp
         amount
         Contract.pp
         source
         Contract.pp
         destination ;
-      ( match entrypoint with
-      | "default" ->
-          ()
-      | _ ->
-          Format.fprintf ppf "@,Entrypoint: %s" entrypoint ) ;
-      ( if not (Script_repr.is_unit_parameter parameters) then
-        let expr =
-          Option.get
-            (Data_encoding.force_decode parameters)
-        in
-        Format.fprintf
-          ppf
-          "@,Parameter: @[<v 0>%a@]"
-          Michelson_v1_printer.print_expr
-          expr ) ;
-      pp_result ppf result ; Format.fprintf ppf "@]"
+      (match entrypoint with
+      | "default" -> ()
+      | _ -> Format.fprintf ppf "@,Entrypoint: %s" entrypoint) ;
+      (if not (Script_repr.is_unit_parameter parameters) then
+       let expr =
+         WithExceptions.Option.to_exn
+           ~none:(Failure "ill-serialized argument")
+           (Data_encoding.force_decode parameters)
+       in
+       Format.fprintf
+         ppf
+         "@,Parameter: @[<v 0>%a@]"
+         Michelson_v1_printer.print_expr
+         expr) ;
+      pp_result ppf result ;
+      Format.fprintf ppf "@]"
   | Origination {delegate; credit; script = {code; storage}; preorigination = _}
     ->
       Format.fprintf
@@ -67,14 +67,16 @@ let pp_manager_operation_content (type kind) source internal pp_result ppf
         (if internal then "Internal origination" else "Origination")
         Contract.pp
         source
-        "\xEA\x9C\xA9"
+        Client_proto_args.tez_sym
         Tez.pp
         credit ;
       let code =
-        Option.get
+        WithExceptions.Option.to_exn
+          ~none:(Failure "ill-serialized code")
           (Data_encoding.force_decode code)
       and storage =
-        Option.get
+        WithExceptions.Option.to_exn
+          ~none:(Failure "ill-serialized storage")
           (Data_encoding.force_decode storage)
       in
       let {Michelson_v1_parser.source; _} =
@@ -87,16 +89,16 @@ let pp_manager_operation_content (type kind) source internal pp_result ppf
         source
         Michelson_v1_printer.print_expr
         storage ;
-      ( match delegate with
-      | None ->
-          Format.fprintf ppf "@,No delegate for this contract"
+      (match delegate with
+      | None -> Format.fprintf ppf "@,No delegate for this contract"
       | Some delegate ->
           Format.fprintf
             ppf
             "@,Delegate: %a"
             Signature.Public_key_hash.pp
-            delegate ) ;
-      pp_result ppf result ; Format.fprintf ppf "@]"
+            delegate) ;
+      pp_result ppf result ;
+      Format.fprintf ppf "@]"
   | Reveal key ->
       Format.fprintf
         ppf
@@ -127,14 +129,13 @@ let pp_manager_operation_content (type kind) source internal pp_result ppf
         Signature.Public_key_hash.pp
         delegate
         pp_result
-        result ) ;
+        result) ;
   Format.fprintf ppf "@]"
 
 let pp_balance_updates ppf = function
-  | [] ->
-      ()
+  | [] -> ()
   | balance_updates ->
-      let open Delegate in
+      let open Receipt in
       (* For dry runs, the baker's key is zero
          (tz1Ke2h7sDdakHJQh8WX4Z372du1KChsksyU). Instead of printing this
          key hash, we want to make the result more informative. *)
@@ -145,17 +146,21 @@ let pp_balance_updates ppf = function
       in
       let balance_updates =
         List.map
-          (fun (balance, update) ->
+          (fun (balance, update, origin) ->
             let balance =
               match balance with
-              | Contract c ->
-                  Format.asprintf "%a" Contract.pp c
+              | Contract c -> Format.asprintf "%a" Contract.pp c
               | Rewards (pkh, l) ->
                   Format.asprintf "rewards(%a,%a)" pp_baker pkh Cycle.pp l
               | Fees (pkh, l) ->
                   Format.asprintf "fees(%a,%a)" pp_baker pkh Cycle.pp l
               | Deposits (pkh, l) ->
                   Format.asprintf "deposits(%a,%a)" pp_baker pkh Cycle.pp l
+            in
+            let balance =
+              match origin with
+              | Block_application -> balance
+              | Protocol_migration -> Format.asprintf "migration %s" balance
             in
             (balance, update))
           balance_updates
@@ -168,9 +173,9 @@ let pp_balance_updates ppf = function
       in
       let pp_update ppf = function
         | Credited amount ->
-            Format.fprintf ppf "+%s%a" "\xEA\x9C\xA9" Tez.pp amount
+            Format.fprintf ppf "+%s%a" Client_proto_args.tez_sym Tez.pp amount
         | Debited amount ->
-            Format.fprintf ppf "-%s%a" "\xEA\x9C\xA9" Tez.pp amount
+            Format.fprintf ppf "-%s%a" Client_proto_args.tez_sym Tez.pp amount
       in
       let pp_one ppf (balance, update) =
         let to_fill = column_size + 3 - String.length balance in
@@ -189,51 +194,49 @@ let pp_manager_operation_contents_and_result ppf
       Manager_operation_result
         {balance_updates; operation_result; internal_operation_results} ) =
   let pp_lazy_storage_diff = function
-    | None ->
-        ()
+    | None -> ()
     | Some lazy_storage_diff -> (
         let big_map_diff =
           Contract.Legacy_big_map_diff.of_lazy_storage_diff lazy_storage_diff
         in
         match (big_map_diff :> Contract.Legacy_big_map_diff.item list) with
-        | [] ->
-            ()
+        | [] -> ()
         | _ :: _ ->
             (* TODO: print all lazy storage diff *)
             Format.fprintf
               ppf
               "@,@[<v 2>Updated big_maps:@ %a@]"
               Michelson_v1_printer.print_big_map_diff
-              lazy_storage_diff )
+              lazy_storage_diff)
   in
   let pp_transaction_result
       (Transaction_result
-        { balance_updates;
+        {
+          balance_updates;
           consumed_gas;
           storage;
           originated_contracts;
           storage_size;
           paid_storage_size_diff;
           lazy_storage_diff;
-          allocated_destination_contract = _ }) =
-    ( match originated_contracts with
-    | [] ->
-        ()
+          allocated_destination_contract = _;
+        }) =
+    (match originated_contracts with
+    | [] -> ()
     | contracts ->
         Format.fprintf
           ppf
           "@,@[<v 2>Originated contracts:@,%a@]"
           (Format.pp_print_list Contract.pp)
-          contracts ) ;
-    ( match storage with
-    | None ->
-        ()
+          contracts) ;
+    (match storage with
+    | None -> ()
     | Some expr ->
         Format.fprintf
           ppf
           "@,@[<hv 2>Updated storage:@ %a@]"
           Michelson_v1_printer.print_expr
-          expr ) ;
+          expr) ;
     pp_lazy_storage_diff lazy_storage_diff ;
     if storage_size <> Z.zero then
       Format.fprintf ppf "@,Storage size: %s bytes" (Z.to_string storage_size) ;
@@ -244,8 +247,7 @@ let pp_manager_operation_contents_and_result ppf
         (Z.to_string paid_storage_size_diff) ;
     Format.fprintf ppf "@,Consumed gas: %a" Gas.Arith.pp consumed_gas ;
     match balance_updates with
-    | [] ->
-        ()
+    | [] -> ()
     | balance_updates ->
         Format.fprintf
           ppf
@@ -255,21 +257,22 @@ let pp_manager_operation_contents_and_result ppf
   in
   let pp_origination_result
       (Origination_result
-        { lazy_storage_diff;
+        {
+          lazy_storage_diff;
           balance_updates;
           consumed_gas;
           originated_contracts;
           storage_size;
-          paid_storage_size_diff }) =
-    ( match originated_contracts with
-    | [] ->
-        ()
+          paid_storage_size_diff;
+        }) =
+    (match originated_contracts with
+    | [] -> ()
     | contracts ->
         Format.fprintf
           ppf
           "@,@[<v 2>Originated contracts:@,%a@]"
           (Format.pp_print_list Contract.pp)
-          contracts ) ;
+          contracts) ;
     if storage_size <> Z.zero then
       Format.fprintf ppf "@,Storage size: %s bytes" (Z.to_string storage_size) ;
     pp_lazy_storage_diff lazy_storage_diff ;
@@ -280,8 +283,7 @@ let pp_manager_operation_contents_and_result ppf
         (Z.to_string paid_storage_size_diff) ;
     Format.fprintf ppf "@,Consumed gas: %a" Gas.Arith.pp consumed_gas ;
     match balance_updates with
-    | [] ->
-        ()
+    | [] -> ()
     | balance_updates ->
         Format.fprintf
           ppf
@@ -292,10 +294,8 @@ let pp_manager_operation_contents_and_result ppf
   let pp_result (type kind) ppf (result : kind manager_operation_result) =
     Format.fprintf ppf "@," ;
     match result with
-    | Skipped _ ->
-        Format.fprintf ppf "This operation was skipped"
-    | Failed (_, _errs) ->
-        Format.fprintf ppf "This operation FAILED."
+    | Skipped _ -> Format.fprintf ppf "This operation was skipped"
+    | Failed (_, _errs) -> Format.fprintf ppf "This operation FAILED."
     | Applied (Reveal_result {consumed_gas}) ->
         Format.fprintf ppf "This revelation was successfully applied" ;
         Format.fprintf ppf "@,Consumed gas: %a" Gas.Arith.pp consumed_gas
@@ -341,22 +341,21 @@ let pp_manager_operation_contents_and_result ppf
      Storage limit: %s bytes"
     Signature.Public_key_hash.pp
     source
-    "\xEA\x9C\xA9"
+    Client_proto_args.tez_sym
     Tez.pp
     fee
     (Z.to_string counter)
     Gas.Arith.pp_integral
     gas_limit
     (Z.to_string storage_limit) ;
-  ( match balance_updates with
-  | [] ->
-      ()
+  (match balance_updates with
+  | [] -> ()
   | balance_updates ->
       Format.fprintf
         ppf
         "@,Balance updates:@,  %a"
         pp_balance_updates
-        balance_updates ) ;
+        balance_updates) ;
   Format.fprintf
     ppf
     "@,%a"
@@ -365,9 +364,8 @@ let pp_manager_operation_contents_and_result ppf
        false
        pp_result)
     (operation, operation_result) ;
-  ( match internal_operation_results with
-  | [] ->
-      ()
+  (match internal_operation_results with
+  | [] -> ()
   | _ :: _ ->
       Format.fprintf
         ppf
@@ -379,7 +377,7 @@ let pp_manager_operation_contents_and_result ppf
                pp_result
                ppf
                (op.operation, res)))
-        internal_operation_results ) ;
+        internal_operation_results) ;
   Format.fprintf ppf "@]"
 
 let rec pp_contents_and_result_list :
@@ -417,7 +415,7 @@ let rec pp_contents_and_result_list :
         pp_balance_updates
         bus
   | Single_and_result
-      ( Double_endorsement_evidence {op1; op2},
+      ( Double_endorsement_evidence {op1; op2; slot = _},
         Double_endorsement_evidence_result bus ) ->
       Format.fprintf
         ppf
@@ -432,8 +430,7 @@ let rec pp_contents_and_result_list :
         (Operation.hash op2)
         pp_balance_updates
         bus
-  | Single_and_result (Activate_account {id; _}, Activate_account_result bus)
-    ->
+  | Single_and_result (Activate_account {id; _}, Activate_account_result bus) ->
       Format.fprintf
         ppf
         "@[<v 2>Genesis account activation:@,\
@@ -444,6 +441,15 @@ let rec pp_contents_and_result_list :
         id
         pp_balance_updates
         bus
+  | Single_and_result
+      ( Endorsement_with_slot
+          {
+            endorsement =
+              {protocol_data = {contents = Single (Endorsement {level}); _}; _};
+            _;
+          },
+        Endorsement_with_slot_result
+          (Endorsement_result {balance_updates; delegate; slots}) )
   | Single_and_result
       ( Endorsement {level},
         Endorsement_result {balance_updates; delegate; slots} ) ->
@@ -466,11 +472,7 @@ let rec pp_contents_and_result_list :
     ->
       Format.fprintf
         ppf
-        "@[<v 2>Proposals:@,\
-         From: %a@,\
-         Period: %ld@,\
-         Protocols:@,\
-        \  @[<v 0>%a@]@]"
+        "@[<v 2>Proposals:@,From: %a@,Period: %ld@,Protocols:@,  @[<v 0>%a@]@]"
         Signature.Public_key_hash.pp
         source
         period
@@ -488,6 +490,9 @@ let rec pp_contents_and_result_list :
         proposal
         Data_encoding.Json.pp
         (Data_encoding.Json.construct Vote.ballot_encoding ballot)
+  | Single_and_result (Failing_noop _arbitrary, _) ->
+      (* the Failing_noop operation always fails and can't have result *)
+      .
   | Single_and_result
       ((Manager_operation _ as op), (Manager_operation_result _ as res)) ->
       Format.fprintf ppf "%a" pp_manager_operation_contents_and_result (op, res)

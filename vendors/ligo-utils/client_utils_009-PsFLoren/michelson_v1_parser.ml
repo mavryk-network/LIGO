@@ -23,26 +23,7 @@
 (*                                                                           *)
 (*****************************************************************************)
 
-module Tezos_List = struct
-  let rev_map2 ~when_different_lengths f xs ys =
-    let open List in
-    let rec aux zs xs ys =
-      match (xs, ys) with
-      | ([], []) ->
-          Ok zs
-      | ([], _ :: _) | (_ :: _, []) ->
-          Error when_different_lengths
-      | (x :: xs, y :: ys) ->
-          let z = f x y in
-          (aux [@ocaml.tailcall]) (z :: zs) xs ys
-    in
-    aux [] xs ys
-
-  let map2 ~when_different_lengths f xs ys =
-    rev_map2 ~when_different_lengths f xs ys >|? List.rev
-end
-
-open Tezos_protocol_008_PtEdo2Zk.Protocol
+open Tezos_protocol_009_PsFLoren.Protocol
 open Tezos_micheline
 open Micheline_parser
 open Micheline
@@ -70,10 +51,8 @@ let expand_all source ast errors =
     in
     let grouped =
       let rec group = function
-        | (acc, []) ->
-            acc
-        | ([], (u, e) :: r) ->
-            group ([(e, [u])], r)
+        | (acc, []) -> acc
+        | ([], (u, e) :: r) -> group ([(e, [u])], r)
         | (((pe, us) :: racc as acc), (u, e) :: r) ->
             if e = pe then group ((e, u :: us) :: racc, r)
             else group ((e, [u]) :: acc, r)
@@ -81,7 +60,7 @@ let expand_all source ast errors =
       group ([], sorted)
     in
     match
-      Tezos_List.map2
+      List.map2
         ~when_different_lengths:()
         (fun (l, ploc) (l', elocs) ->
           assert (l = l') ;
@@ -89,18 +68,15 @@ let expand_all source ast errors =
         (List.sort Stdlib.compare loc_table)
         (List.sort Stdlib.compare grouped)
     with
-    | Ok v ->
-        v
-    | Error () ->
-        invalid_arg "Michelson_v1_parser.expand_all"
+    | Ok v -> v
+    | Error () -> invalid_arg "Michelson_v1_parser.expand_all"
   in
-  match
-    Environment.wrap_error (Michelson_v1_primitives.prims_of_strings expanded)
-  with
+  match Michelson_v1_primitives.prims_of_strings expanded with
   | Ok expanded ->
       ( {source; unexpanded; expanded; expansion_table; unexpansion_table},
         errors @ expansion_errors )
   | Error errs ->
+      let errs = Environment.wrap_tztrace errs in
       ( {
           source;
           unexpanded;
@@ -121,9 +97,7 @@ let parse_toplevel ?check source =
 
 let parse_expression ?check source =
   let (tokens, lexing_errors) = Micheline_parser.tokenize source in
-  let (ast, parsing_errors) =
-    Micheline_parser.parse_expression ?check tokens
-  in
+  let (ast, parsing_errors) = Micheline_parser.parse_expression ?check tokens in
   expand_all source ast (lexing_errors @ parsing_errors)
 
 let expand_all ~source ~original = expand_all source original []

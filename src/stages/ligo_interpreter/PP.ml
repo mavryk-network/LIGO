@@ -51,7 +51,7 @@ let rec pp_value : Format.formatter -> value -> unit = fun ppf v ->
      | Object_lang_ex {location;errors;calltrace = _} ->
         Format.fprintf ppf "@[<v 4>%a@.An uncaught error occured:@.%a@]"
           Snippet.pp location
-          (Tezos_client_009_PsFLoren.Michelson_v1_error_reporter.report_errors ~details:true ~show_source:true ?parsed:(None)) errors
+          (Client_utils_009_PsFLoren.Michelson_v1_error_reporter.report_errors ~details:true ~show_source:true ?parsed:(None)) errors
      | Meta_lang_ex {location;reason = Reason s;calltrace = _} ->
         Format.fprintf ppf "@[<v 4>%a@.An uncaught error occured:@.%s@]" Snippet.pp location s
      | Meta_lang_ex {location;reason = Val s;calltrace = _} ->
