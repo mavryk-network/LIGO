@@ -39,7 +39,7 @@ const Content = styled.div`
 
 export const TabsPanelComponent = () => {
   const TABS = [
-    { index: 0, label: 'Configure', id: 'configure-tab' }
+    { index: 0, label: 'Action', id: 'configure-tab' }
   ];
 
   const [selectedTab, selectTab] = useState(TABS[0]);

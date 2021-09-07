@@ -1,5 +1,15 @@
-import React, { useReducer, useEffect } from "react";
+import React, { useReducer } from "react";
 import JoyRide, { ACTIONS, EVENTS, STATUS } from "react-joyride";
+import styled from 'styled-components'
+
+const ActionHelp = styled.div`
+  font-size: smaller;
+  color: slategray;
+  line-height: 0.98;
+  margin-top: 5px;
+  margin-left: 5px;
+  margin-bottom: 10px;
+`
 
 const TOUR_STEPS = [
   {
@@ -19,9 +29,38 @@ const TOUR_STEPS = [
     content: 'Not sure what to write? Check out our example contracts',
     disableBeacon: true
   },{
-    target: '.configure',
-    title: 'Configure',
-    content: 'Select your action: Evaluate Function, Compile, Compile Function, Deploy, Dry Run, Evaluate Value, Generate Deploy Script.',
+    target: '#command-select',
+    title: 'Actions',
+    content: (
+      <>
+        <ul>
+          <li>
+            Compile Contract
+            <ActionHelp>Compile your LIGO coded contract to Michelson</ActionHelp>
+          </li>
+          <li>
+            Evaluate Value
+            <ActionHelp>Evaluate and print the last expression in your source code</ActionHelp>
+          </li>
+          <li>
+            Evalute Function
+            <ActionHelp>Call and evaluate a function in your LIGO contract with the given input</ActionHelp>
+          </li>
+          <li>
+            Dry Run
+            <ActionHelp>Run the smart contract with the given storage and input</ActionHelp>
+          </li>
+          <li>
+            Generate Deployment Script
+            <ActionHelp>Generate a script to deploy your smart contract to a network</ActionHelp>
+          </li>
+          <li>
+            Deploy
+            <ActionHelp>Deploy the smart contract to a Tezos network</ActionHelp>
+          </li>
+        </ul>
+      </>
+    ),
     disableBeacon: true
   },{
     target: '.entrypoint',
@@ -61,7 +100,7 @@ const TOUR_STEPS = [
     disableBeacon: true
   },{
     target: '.question',
-    title: '?',
+    title: "We're here to help",
     content: 'If you get stuck, don’t hesitate to ask us questions. We’re here to help',
     disableBeacon: true
   },{
@@ -75,45 +114,52 @@ const TOUR_STEPS = [
 // Define our state
 const INITIAL_STATE = {
   key: new Date(),
-  run: false,
+  run: true,
   continuous: true,
   loading: false,
   stepIndex: 0,
   steps: TOUR_STEPS,
 };
 
+const getInitialState = () => {
+  const retval = localStorage.getItem('tour')
+  return retval ? JSON.parse(retval) : INITIAL_STATE
+}
+
 // Set up the reducer function
-const reducer = (state = INITIAL_STATE, action) => {
-  switch (action.type) {
-    case "START":
-      return { ...state, run: true };
-    case "RESET":
-      return { ...state, stepIndex: 0 };
-    case "STOP":
-      return { ...state, run: false };
-    case "NEXT_OR_PREV":
-      return { ...state, ...action.payload };
-    case "RESTART":
-      return {
-        ...state,
-        stepIndex: 0,
-        run: true,
-        loading: false,
-        key: new Date(),
-      };
-    default:
-      return state;
-  }
+const reducer = (state = getInitialState(), action) => {
+  const retval = (function(){
+    switch (action.type) {
+      case "START":
+        return { ...state, run: true };
+      case "RESET":
+        return { ...state, stepIndex: 0 };
+      case "STOP":
+        return { ...state, run: false };
+      case "NEXT_OR_PREV":
+        return { ...state, ...action.payload };
+      case "RESTART":
+        return {
+          ...state,
+          stepIndex: 0,
+          run: true,
+          loading: false,
+          key: new Date(),
+        };
+      default:
+        return state;
+    }
+  })()
+
+  localStorage.setItem('tour', JSON.stringify(retval))
+
+  return retval
 };
 
 // Define the Tour component
 const Tour = () => {
-  const [tourState, dispatch] = useReducer(reducer, INITIAL_STATE);
-  useEffect(() => {
-    if (!localStorage.getItem("tour")) {
-      dispatch({ type: "START" });
-    }
-  }, []);
+  const [tourState, dispatch] = useReducer(reducer, getInitialState());
+
   const callback = (data) => {
     const { action, index, type, status } = data;
     if (
