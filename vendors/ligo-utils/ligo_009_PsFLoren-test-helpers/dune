@@ -14,6 +14,6 @@
                    -open Tezos_micheline
                    -open Tezos_stdlib_unix
                    -open Tezos_protocol_009_PsFLoren
-                   -open client_utils-009-PsFLoren
+                   -open Client_utils_009_PsFLoren
                    -open Tezos_protocol_environment_009_PsFLoren
                    -open Tezos_shell_services)))
