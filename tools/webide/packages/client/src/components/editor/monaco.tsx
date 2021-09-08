@@ -107,19 +107,19 @@ const MonacoComponent = (props) => {
       .getComputedStyle(htmlElement, null)
       .getPropertyValue('font-size');
 
-let editor
+    let editor
 
       if(!isEditorDirty) {
-    editor = monaco.editor
-    .create(htmlElement, {
-      fontSize: parseFloat(fontSize),
-      model: model,
-      automaticLayout: true,
-      minimap: {
-        enabled: false
-      }
-    })
-  }
+      editor = monaco.editor
+      .create(htmlElement, {
+        fontSize: parseFloat(fontSize),
+        model: model,
+        automaticLayout: true,
+        minimap: {
+          enabled: false
+        }
+      })
+    }
 
     // const m = editor.getModel()
     // editor.addAction(onRightClickAction(m))
