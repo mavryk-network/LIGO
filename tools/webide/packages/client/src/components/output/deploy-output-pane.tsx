@@ -22,7 +22,7 @@ const Pre = styled.pre`
   overflow: hidden;
   height: 100%;
   width: -webkit-fill-available;
-  white-space: normal;
+  white-space: break-spaces;
 `;
 
 const DeployOutputPane = (props) => {
