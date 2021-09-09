@@ -30,7 +30,7 @@ COPY vendors/Preprocessor/Preprocessor.opam /ligo/vendors/Preprocessor/Preproces
 COPY vendors/Michelson/Michelson.opam /ligo/vendors/Michelson/Michelson.opam
 COPY vendors/LexerLib/LexerLib.opam /ligo/vendors/LexerLib/LexerLib.opam
 COPY vendors/ligo-utils/proto-alpha-utils/proto-alpha-utils.opam /ligo/vendors/ligo-utils/proto-alpha-utils/proto-alpha-utils.opam
-COPY vendors/ligo-utils/client_utils_009-PsFLoren/client_utils-009-PsFLoren.opam /ligo/vendors/ligo-utils/client_utils_009-PsFLoren/client_utils-009-PsFLoren.opam
+COPY vendors/ligo-utils/client_utils-009-PsFLoren/client_utils-009-PsFLoren.opam /ligo/vendors/ligo-utils/client_utils-009-PsFLoren/client_utils-009-PsFLoren.opam
 COPY vendors/ligo-utils/tezos-utils/tezos-utils.opam /ligo/vendors/ligo-utils/tezos-utils/tezos-utils.opam
 COPY vendors/ligo-utils/memory-proto-alpha/tezos-memory-proto-alpha.opam /ligo/vendors/ligo-utils/memory-proto-alpha/tezos-memory-proto-alpha.opam
 COPY vendors/ligo-utils/simple-utils/simple-utils.opam /ligo/vendors/ligo-utils/simple-utils/simple-utils.opam
