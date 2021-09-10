@@ -8,7 +8,8 @@ import { AccessFunctionLabel, Group, Input, Label, Textarea } from '../form/inpu
 
 const Container = styled.div``;
 
-export const DryRunPaneComponent = () => {
+export const DryRunPaneComponent = (props: {theme: 'light' | 'dark'}) => {
+  const isDark = props.theme === 'dark';
   const dispatch = useDispatch();
   const entrypoint = useSelector<AppState, DryRunState['entrypoint']>(
     state => state.dryRun && state.dryRun.entrypoint
@@ -25,6 +26,7 @@ export const DryRunPaneComponent = () => {
       <Group>
         <AccessFunctionLabel htmlFor="entrypoint"></AccessFunctionLabel>
         <Input
+          dark={isDark}
           id="entrypoint"
           value={entrypoint}
           onChange={ev =>
@@ -35,6 +37,7 @@ export const DryRunPaneComponent = () => {
       <Group>
         <Label htmlFor="parameters">Parameters</Label>
         <Textarea
+          dark={isDark}
           id="parameters"
           rows={5}
           value={parameters}
@@ -46,6 +49,7 @@ export const DryRunPaneComponent = () => {
       <Group>
         <Label htmlFor="storage">Storage</Label>
         <Textarea
+          dark={isDark}
           id="storage"
           rows={5}
           value={storage}

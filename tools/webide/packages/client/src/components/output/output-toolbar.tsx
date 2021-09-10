@@ -23,6 +23,7 @@ const Link = styled.a`
 `;
 
 interface propsTypes {
+    theme: 'light' | 'dark',
     showTryMichelson?: boolean;
     onCopy?: () => void;
     onDownload?: () => void;
@@ -42,7 +43,7 @@ const OutputToolbarComponent: FC<propsTypes & stateTypes> = (props) => {
   const renderResult = () => {
     if(!hasError) {
       return (
-        <Toolbar>
+        <Toolbar isDark={props.theme === 'dark'}>
           <Item onClick={() => onCopy && onCopy()}>
             <FontAwesomeIcon icon={faCopy}></FontAwesomeIcon>
             <Tooltip>Copy</Tooltip>

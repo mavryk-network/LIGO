@@ -13,7 +13,8 @@ const Checkbox = styled(CheckboxComponent)`
   margin-right: 0.3em;
 `;
 
-export const CompilePaneComponent = () => {
+export const CompilePaneComponent = (props: {theme: "light" | "dark"}) => {
+  const isDark = props.theme === 'dark';
   const dispatch = useDispatch();
   const entrypoint = useSelector<AppState, CompileState['entrypoint']>(
     state => state.compile && state.compile.entrypoint
@@ -28,6 +29,7 @@ export const CompilePaneComponent = () => {
       <Group>
         <AccessFunctionLabel htmlFor="entrypoint"></AccessFunctionLabel>
         <Input
+          dark={isDark}
           id="entrypoint"
           value={entrypoint}
           onChange={ev =>

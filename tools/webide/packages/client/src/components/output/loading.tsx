@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { PushSpinner } from 'react-spinners-kit';
-import styled from 'styled-components';
+import styled, {css} from 'styled-components';
 
 import { AppState } from '../../redux/app';
 import { CommandState } from '../../redux/command';
@@ -16,6 +16,11 @@ const Container = styled.div`
 
   /* This font size is used to calcuate spinner size */
   font-size: 1em;
+
+  ${(props: {isDark: boolean}) => props.isDark && css`
+    background-color: black;
+    color: white;
+  `}
 `;
 
 const Cancel = styled.div`
@@ -34,8 +39,9 @@ const Message = styled.div`
   padding: 1em 0;
 `;
 
-export const Loading = (props: { onCancel?: () => void }) => {
+export const Loading = (props: { onCancel?: () => void, theme: 'light' | 'dark' }) => {
   const loading = useSelector<AppState, LoadingState>(state => state.loading);
+  const isDark = props.theme === 'dark'
 
   const dispatchedAction = useSelector<
     AppState,
@@ -58,7 +64,7 @@ export const Loading = (props: { onCancel?: () => void }) => {
   }, [setSpinnerSize]);
 
   return (
-    <Container ref={containerRef}>
+    <Container ref={containerRef} isDark>
       <PushSpinner size={spinnerSize} color="#fa6f41" />
       <Message>{loading.message}</Message>
       <Cancel

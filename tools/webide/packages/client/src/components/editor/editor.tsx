@@ -68,9 +68,6 @@ export const EditorComponent = ({editorHeight, theme}) => {
       return `Line ${cursorPosition.lineNumber}, Column ${cursorPosition.column}`
     }
   }
-  
-  const isDarkMode = theme === 'dark'
-  console.log('aaa', isDarkMode)
 
   return (
     <Container>
@@ -99,7 +96,7 @@ export const EditorComponent = ({editorHeight, theme}) => {
           </SelectLanguage>
         </LeftActions>
       </Header>
-      <MonacoComponent editorHeight={editorHeight} isDarkMode={isDarkMode}></MonacoComponent>
+      <MonacoComponent editorHeight={editorHeight} theme={theme}></MonacoComponent>
       <CursorPosition>{getCursorPosition()}</CursorPosition>
     </Container>
   );

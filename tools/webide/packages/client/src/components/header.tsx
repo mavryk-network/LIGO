@@ -39,8 +39,8 @@ const Link = styled.a`
     text-decoration: none;
   }
 
-  ${(props: { cheatSheetStyle?: boolean }) =>
-    props.cheatSheetStyle &&
+  ${(props: { cheatSheetStyle?: boolean, dark?: boolean}) =>
+    props.cheatSheetStyle && !props.dark &&
     css`
       background-color: #efefef;
       margin-left: 3em;
@@ -48,7 +48,18 @@ const Link = styled.a`
       &:hover {
         color: black;
       }
-    `}
+    `
+    || props.cheatSheetStyle && css`
+      background-color: #007bff;
+      margin-left: 3em;
+      border-radius: 25px;
+      &:hover {
+        color: black;
+        background-color: white;
+      }
+      color: white;
+    `
+  }
 `;
 
 const SwitchOptions = styled.div`
@@ -76,7 +87,7 @@ export const HeaderComponent = ({onThemeChange}) => {
             <Logo src="/logo.svg" />
           }
           {isSwitchChecked &&
-            <Logo src="/night-logo.svg" />
+            <Logo src="/dark-logo.svg" />
           }
         </a>
         
@@ -98,7 +109,7 @@ export const HeaderComponent = ({onThemeChange}) => {
         offColor="#4d4d4d"
         onColor="#4d4d4d"
         />
-        <Link cheatSheetStyle href="https://ligolang.org/docs/api/cheat-sheet" target="_blank">
+        <Link cheatSheetStyle dark={isSwitchChecked} href="https://ligolang.org/docs/api/cheat-sheet" target="_blank">
           Cheat Sheet
         </Link>
       </Group>

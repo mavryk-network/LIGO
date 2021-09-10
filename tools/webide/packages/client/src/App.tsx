@@ -80,9 +80,10 @@ const EditorComponentWrapper = styled.div<TopPaneStyled>`
   display: flex;
   min-width: 100%;
 `
+type theme = 'light' | 'dark'
 
 const App: React.FC = () => {
-  const [theme, setTheme] = useState('light');
+  const [theme, setTheme] = useState<theme>('light');
   const themeToggler = () => {
     theme === 'light' ? setTheme('dark') : setTheme('light')
 }
@@ -100,9 +101,9 @@ const App: React.FC = () => {
         <div className="col-sm-12 col-md-2 order-md-1"><Examples /></div>
           <SplitPane onChange={size => setTopPaneHeight(size)} style={{ position: 'relative', display: 'flex' }} split="horizontal" defaultSize="75%" >
             <EditorComponentWrapper height={topPaneHeight} className="col-sm-12 col-md-7 order-md-2"><EditorComponent theme={theme} editorHeight={topPaneHeight} /></EditorComponentWrapper>
-            <OutputTab />
+            <OutputTab theme={theme} />
           </SplitPane>
-          <div className="col-sm-12 col-md-3 order-md-3"><TabsPanelComponent /></div>
+          <div className="col-sm-12 col-md-3 order-md-3"><TabsPanelComponent theme={theme}/></div>
         </Container>
         <FeedbackContainer>
           <FloatButtonComponent

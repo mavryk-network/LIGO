@@ -27,9 +27,30 @@ const Container = styled.div<TopPaneStyled>`
   font-size: 0.8em;
 `;
 
-// export const MonacoComponent = ({editorHeight, isDarkMode}) => {
+const ligoTheme: monaco.editor.IStandaloneThemeData = {
+  base: 'vs',
+  inherit: true,
+  rules: [],
+  colors: {
+    'editor.background': '#eff7ff',
+    'editor.lineHighlightBackground': '#cee3ff',
+    'editorLineNumber.foreground': '#888'
+  }
+}
+
+const ligoDarkTheme: monaco.editor.IStandaloneThemeData = {
+  base: 'vs-dark',
+  inherit: true,
+  rules: [],
+  colors: {
+    // 'editor.background': '#191a1b',
+    'editor.lineHighlightBackground': '#1a293f',
+    // 'editorLineNumber.foreground': '#1a293f'
+  }
+}
+
 const MonacoComponent = (props) => {
-  const { editorHeight, code, language, getDeclarationList, setCompileFunction, setError, isDarkMode, isEditorDirty } = props
+  const { editorHeight, code, language, getDeclarationList, setCompileFunction, setError, theme } = props
   let containerRef = useRef(null);
   const store = useStore();
   const dispatch = useDispatch();
@@ -67,23 +88,9 @@ const MonacoComponent = (props) => {
     //   }
     // }
 
-  const getColors = () => {
-    console.log('ppp', isDarkMode)
-    if(isDarkMode) {
-      return {
-        'editor.background': '#191a1b',
-        'editor.lineHighlightBackground': '#1a293f',
-        'editorLineNumber.foreground': '#1a293f'
-      }
-    }
-    return {
-        'editor.background': '#eff7ff',
-        'editor.lineHighlightBackground': '#cee3ff',
-        'editorLineNumber.foreground': '#888'
-    }
-  }
-
-  const getTheme = isDarkMode? 'vs-dark': 'vs'
+  useEffect(() => {
+    monaco.editor.setTheme(theme === 'dark' ? 'ligoDarkTheme' : 'ligoTheme');
+  }, [theme])
 
   useEffect(() => {
     const cleanupFunc: Array<() => void> = [];
@@ -93,33 +100,25 @@ const MonacoComponent = (props) => {
       editorState && editorState.language
     );
 
-    monaco.editor.defineTheme('ligoTheme', {
-      base: getTheme,
-      inherit: true,
-      rules: [],
-      colors: getColors()
-    });
+    monaco.editor.defineTheme('ligoTheme', ligoTheme);
+    monaco.editor.defineTheme('ligoDarkTheme', ligoDarkTheme);
 
-    monaco.editor.setTheme('ligoTheme');
+    monaco.editor.setTheme(theme === 'dark' ? 'ligoDarkTheme' : 'ligoTheme');
 
     const htmlElement = (containerRef.current as unknown) as HTMLElement;
     const fontSize = window
       .getComputedStyle(htmlElement, null)
       .getPropertyValue('font-size');
 
-    let editor
-
-      if(!isEditorDirty) {
-      editor = monaco.editor
-      .create(htmlElement, {
-        fontSize: parseFloat(fontSize),
-        model: model,
-        automaticLayout: true,
-        minimap: {
-          enabled: false
-        }
-      })
-    }
+    const editor = monaco.editor
+    .create(htmlElement, {
+      fontSize: parseFloat(fontSize),
+      model: model,
+      automaticLayout: true,
+      minimap: {
+        enabled: false
+      }
+    })
 
     // const m = editor.getModel()
     // editor.addAction(onRightClickAction(m))
@@ -164,9 +163,10 @@ const MonacoComponent = (props) => {
     return function cleanUp() {
       cleanupFunc.forEach(f => f());
     };
-  });
+  }, []);
 
   useEffect(() => { compileFunctionHandler(currentLineText) }, [currentLineText]);
+
 
   return (
   <Container id="editor" ref={containerRef} editorHeight={editorHeight}></Container>
@@ -176,8 +176,7 @@ const mapStateToProps = state => {
   const { editor } = state
   return { 
     code : editor.code,
-    language: editor.language,
-    isEditorDirty: editor.dirty
+    language: editor.language
    }
 }
 
