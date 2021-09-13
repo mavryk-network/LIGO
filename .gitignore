@@ -17,3 +17,8 @@ version.ml
 /_coverage_*/
 .history
 /to-dos.html
+
+# esy build metadata
+_esy
+# We want this folder if esy will be a first class tool but we ignore it for now
+esy.lock
