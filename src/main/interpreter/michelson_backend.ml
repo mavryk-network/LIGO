@@ -6,7 +6,7 @@ let subst_vname s = "test_gen_"^s
 
 let int_of_mutez t = Z.of_int64 @@ Memory_proto_alpha.Protocol.Alpha_context.Tez.to_mutez t
 
-let string_of_contract t = Format.asprintf "%a" Tezos_protocol_008_PtEdo2Zk.Protocol.Alpha_context.Contract.pp t
+let string_of_contract t = Format.asprintf "%a" Tezos_protocol_009_PsFLoren.Protocol.Alpha_context.Contract.pp t
 let string_of_key_hash t = Format.asprintf "%a" Tezos_crypto.Signature.Public_key_hash.pp t
 
 let compile_contract ~raise ~add_warning source_file entry_point =
@@ -30,14 +30,14 @@ let simple_val_insertion ~raise ~loc ~calltrace michelson_ty michelson_value lig
     let x = Tezos_micheline.Micheline.strip_locations
               (clean_location_with 0 x) in
     let x = Proto_alpha_utils.Trace.trace_alpha_tzresult ~raise (throw_obj_exc loc calltrace) @@
-      Tezos_protocol_008_PtEdo2Zk.Protocol.Michelson_v1_primitives.prims_of_strings x (* feels wrong ... *)
+      Tezos_protocol_009_PsFLoren.Protocol.Michelson_v1_primitives.prims_of_strings x (* feels wrong ... *)
     in
     x
   in
   let code = Tezos_utils.Michelson.(seq [i_drop ; (i_push michelson_ty michelson_value)]) in
   let expr = cano code in
   let u = Format.asprintf "%a" Micheline_printer.print_expr
-            (Micheline_printer.printable Tezos_protocol_008_PtEdo2Zk.Protocol.Michelson_v1_primitives.string_of_prim expr)
+            (Micheline_printer.printable Tezos_protocol_009_PsFLoren.Protocol.Michelson_v1_primitives.string_of_prim expr)
   in
   let type_annotation = t_function (t_unit ()) ligo_obj_ty () in
   let code_block = make_e (e_string (Ligo_string.verbatim u)) type_annotation in
@@ -92,12 +92,14 @@ let compile_value ~raise typed_exp =
   let compiled_exp   = Of_mini_c.aggregate_and_compile_expression ~raise ~options [] mini_c_exp in
   compiled_exp
 
-let compile_contract_ ~raise subst_lst arg_binder in_ty out_ty typed_exp =
+let compile_contract_ ~raise subst_lst arg_binder rec_name in_ty out_ty typed_exp =
   let open Ligo_compile in
   let options = Compiler_options.make () in
   let subst_lst = List.rev subst_lst in
   let typed_exp' = add_ast_env subst_lst arg_binder typed_exp in
-  let typed_exp = Ast_typed.e_a_lambda {result=typed_exp'; binder=arg_binder} in_ty out_ty in
+  let typed_exp = match rec_name with
+    | None -> Ast_typed.e_a_lambda { result = typed_exp'; binder = arg_binder } in_ty out_ty
+    | Some fun_name -> Ast_typed.e_a_recursive { fun_name ; fun_type  = (Ast_typed.t_function in_ty out_ty ()) ; lambda = { result = typed_exp';binder = arg_binder } } in
   let mini_c_exp     = Of_typed.compile_expression ~raise typed_exp in
   let compiled_exp   = Of_mini_c.aggregate_and_compile ~raise ~options [] (ContractForm mini_c_exp) in
   compiled_exp

@@ -48,7 +48,9 @@ let%expect_test _ =
     - test_set_add exited with value ().
     - test_set_mem exited with value ().
     - test_recursion_let_rec_in exited with value ().
-    - test_top_level_recursion exited with value (). |}]
+    - test_top_level_recursion exited with value ().
+    - test_bitwise_ops exited with value ().
+    - test_bitwise_module exited with value (). |}]
 
 let%expect_test _ =
   run_ligo_good [ "test" ; test "interpret_test_log.mligo" ] ;
@@ -78,6 +80,7 @@ let%expect_test _ =
     "storage after calling"
     "2010-01-01T10:10:11Z"
     Everything at the top-level was executed.
+    - test_ts exited with value timestamp(946721410).
     - test exited with value true. |}]
 
 let%expect_test _ =
@@ -138,24 +141,6 @@ let%expect_test _ =
   - test exited with value (). |}]
 
 let%expect_test _ =
-  run_ligo_good [ "test" ; test "test_mutate_example.mligo" ] ;
-  [%expect{|
-    Increment (0)
-    10
-    Increment (-32)
-    -22
-    Increment (33)
-    43
-    Increment (31)
-    41
-    Increment (64)
-    74
-    Everything at the top-level was executed.
-    - testme_test exited with value "./testme.mligo".
-    - test_prg exited with value <fun>.
-    - test exited with value true. |}]
-
-let%expect_test _ =
   run_ligo_good [ "test" ; test "bootstrapped_contracts.mligo" ] ;
   [%expect {|
     "Initial states:"
@@ -179,6 +164,12 @@ let%expect_test _ =
   run_ligo_good [ "test" ; test "test_fresh.mligo" ] ;
   [%expect {|
     Everything at the top-level was executed. |}]
+
+let%expect_test _ =
+  run_ligo_good [ "test" ; test "test_rec_contract.mligo" ] ;
+  [%expect {|
+    Everything at the top-level was executed.
+    - test exited with value (). |}]
 
 (* do not remove that :) *)
 let () = Sys.chdir pwd
