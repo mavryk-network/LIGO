@@ -233,6 +233,7 @@ and type_expression' ~raise : ?tv_opt:O.type_expression -> environment -> _ O'.t
 
   (* Basic *)
   | E_variable name -> (
+    (* When does this get called ?? *)
     (* Check that the variable exist in the environment and add a new constraint *)
     let (tv' : Environment.element) =
       trace_option ~raise (unbound_variable e name ae.location)

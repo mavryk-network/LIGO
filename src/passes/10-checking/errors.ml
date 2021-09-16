@@ -227,7 +227,7 @@ let rec error_ppformat : display_format:string display_format ->
         Ast_typed.PP.type_variable tv
     | `Typer_unbound_variable (_env,v,loc) ->
       Format.fprintf f
-        "@[<hv>%a@.Variable \"%a\" not found. @]"
+        "@[<hv>%a@.10. Variable \"%a\" not found. @]"
         Snippet.pp loc
         Ast_typed.PP.expression_variable v
     | `Typer_match_missing_case (m, v, loc) ->

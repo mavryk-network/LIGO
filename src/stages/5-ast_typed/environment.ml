@@ -13,23 +13,27 @@ let make_element_declaration = fun (expr : expression) ->
   let free_variables = Misc.Free_variables.(expression empty expr) in
   make_element (get_type_expression expr) (ED_declaration {expression=expr ; free_variables})
 
-let empty : t = { expression_environment = [] ; type_environment = [] ; module_environment = [] }
+let empty : t = { expression_environment = [] ; type_environment = [] ; module_environment = [] ; value_environment = [] }
 
-let get_expr_environment : t -> expression_environment = fun { expression_environment ; type_environment=_ ; module_environment=_ } -> expression_environment
+let get_expr_environment : t -> expression_environment = fun { expression_environment } -> expression_environment
 (* TODO: generate *)
-let get_type_environment : t -> type_environment = fun { expression_environment=_ ; type_environment ; module_environment=_} -> type_environment
+let get_type_environment : t -> type_environment = fun { type_environment } -> type_environment
 (* TODO: generate *)
-let get_module_environment : t -> module_environment = fun { expression_environment=_ ; type_environment=_ ; module_environment} -> module_environment
+let get_module_environment : t -> module_environment = fun { module_environment} -> module_environment
+let get_value_environment : t -> value_environment = fun { value_environment } -> value_environment
 
-let map_expr_environment : _ -> t -> t = fun f { expression_environment ; type_environment ; module_environment } -> { expression_environment = f expression_environment ; type_environment ; module_environment }
-let map_type_environment : _ -> t -> t = fun f { expression_environment ; type_environment ; module_environment } -> { expression_environment ; type_environment = f type_environment ; module_environment }
-let map_module_environment : _ -> t -> t = fun f { expression_environment ; type_environment ; module_environment } -> { expression_environment ; type_environment ; module_environment = f module_environment }
+
+let map_expr_environment : _ -> t -> t = fun f { expression_environment ; type_environment ; module_environment ; value_environment } -> { expression_environment = f expression_environment ; type_environment ; module_environment ; value_environment }
+let map_type_environment : _ -> t -> t = fun f { expression_environment ; type_environment ; module_environment ; value_environment } -> { expression_environment ; type_environment = f type_environment ; module_environment ; value_environment }
+let map_module_environment : _ -> t -> t = fun f { expression_environment ; type_environment ; module_environment ; value_environment } -> { expression_environment ; type_environment ; module_environment = f module_environment ; value_environment }
+let map_value_environment : _ -> t -> t = fun f { expression_environment ; type_environment ; module_environment ; value_environment } -> { expression_environment ; type_environment ; module_environment ; value_environment = f value_environment }
 
 let add_expr   : expression_variable -> element -> t -> t = fun expr_var env_elt -> map_expr_environment (fun x -> {expr_var ; env_elt} :: x)
 let add_type   : type_variable -> type_expression -> t -> t = fun type_variable type_ -> map_type_environment (fun x -> { type_variable ; type_ = Ty { type_ with orig_var = Some type_variable } } :: x)
 let add_kind   : type_variable -> unit -> t -> t = fun type_variable () -> map_type_environment (fun x -> { type_variable ; type_ = Kind () } :: x)
 let add_module : module_variable -> environment -> t -> t = fun module_variable module_ -> map_module_environment (fun x -> { module_variable ; module_ } :: x)
 (* TODO: generate : these are now messy, clean them up. *)
+let add_value : string -> constant' -> t -> t = fun name c -> map_value_environment (fun x -> (Var.of_name name,c) :: x)
 
 let of_list_type : (type_variable * type_expression) list -> t = fun tvlist -> List.fold_left ~f:(fun acc (t,v) -> add_type t v acc) ~init:empty tvlist
 
@@ -45,6 +49,10 @@ let get_kind_opt : type_variable -> t -> unit option = fun k x ->
 let get_module_opt : module_variable -> t -> environment option = fun k x ->
   Option.bind ~f: (fun {module_variable=_ ; module_} -> Some module_) @@
     List.find ~f:(fun {module_variable; module_=_} -> String.equal module_variable k) (get_module_environment x)
+let get_value_opt : expression_variable -> t -> constant' option = fun k x ->
+  Option.bind ~f: (fun (_,c) -> Some c) @@
+    List.find ~f:(fun (v,_) -> Var.equal v k.wrap_content) (get_value_environment x)
+    
 
 let add_ez_binder : expression_variable -> type_expression -> t -> t = fun k v e ->
   add_expr k (make_element_binder v) e

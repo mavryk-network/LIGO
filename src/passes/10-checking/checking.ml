@@ -272,11 +272,20 @@ and type_expression' ~raise ~test : environment -> ?tv_opt:O.type_expression -> 
   fun ~raise -> match ae.expression_content with
   (* Basic *)
   | E_variable name' ->
+      let e = Environment.add_value "amount" C_AMOUNT e in
       let name = cast_var name' in
-      let tv' =
-        trace_option ~raise (unbound_variable e name ae.location)
-        @@ Environment.get_opt name e in
-      return (E_variable name) tv'.type_value
+      let tv' =  
+        (match Environment.get_opt name e with
+        | Some tv' -> tv'.type_value
+        | None -> 
+          let c = trace_option ~raise (unbound_variable e name ae.location) @@ 
+            Environment.get_value_opt name e in
+          let (_name', tv) =
+            type_constant ~raise ~test c ae.location [] tv_opt in
+          tv
+        )
+      in
+      return (E_variable name) tv'
   | E_literal Literal_unit ->
       return (E_literal (Literal_unit)) (t_unit ())
   | E_literal (Literal_string s) ->
@@ -813,6 +822,7 @@ let rec decompile_env (env : Ast_typed.environment) =
   let expression_environment = List.map ~f:decompile_binding env.expression_environment in
   let type_environment       = List.map ~f:decompile_type_binding env.type_environment in
   let module_environment     = List.map ~f:decompile_module_binding env.module_environment in
+  (* TODO: [value-environment] proper value here *)
   Ast_core.{expression_environment; type_environment; module_environment}
 
 and decompile_binding Ast_typed.{expr_var;env_elt} =

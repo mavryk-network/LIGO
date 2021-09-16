@@ -268,10 +268,14 @@ and module_environment_binding = {
   module_variable : module_variable ;
   module_ : environment ;
 }
+
+and value_environment = (expression_ Var.t * constant') list 
+
 and environment = {
   expression_environment: expression_environment ;
   type_environment: type_environment ;
   module_environment : module_environment ;
+  value_environment : value_environment ;
   }
 
 (* Solver types
