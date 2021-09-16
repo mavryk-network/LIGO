@@ -19,5 +19,4 @@ The server source code is located under `packages/server/`. Please see README un
 
 The client source code is located under `packages/client/`.  See the README under the `packages/client/` for information about how to get started on the client development.
 
-
 [install-ligo]: https://ligolang.org/docs/intro/installation/
