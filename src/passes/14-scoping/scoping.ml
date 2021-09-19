@@ -80,13 +80,6 @@ and tuple_comb_ann ts =
 and tuple_comb ts =
   snd (tuple_comb_ann ts)
 
-let translate_var (m : meta) (x : I.var_name) (env : I.environment) =
-  let (_, idx) = I.Environment.Environment.get_i x env in
-  let usages = List.repeat idx Drop
-               @ [ Keep ]
-               @ List.repeat (List.length env - idx - 1) Drop in
-  (O.E_var m, usages)
-
 let use_nothing env = List.repeat (List.length env) Drop
 
 (* probably should use result monad for conformity? but all errors
@@ -117,7 +110,7 @@ let rec translate_expression (expr : I.expression) (env : I.environment) =
   | E_literal lit ->
     (O.E_literal (meta, lit), use_nothing env)
   | E_variable x ->
-    translate_var meta x env
+    translate_var meta x env ty
   | E_closure { binder; body } ->
     let (binder_type, return_type) =
       (* TODO move binder type to the binder, like all other binders? *)
@@ -216,7 +209,17 @@ let rec translate_expression (expr : I.expression) (env : I.environment) =
       | None -> internal_error __LOC__ "type of Michelson insertion ([%Michelson ...]) is not a function type"
       | Some (a, b) -> (a, b) in
     (E_raw_michelson (meta, translate_type a, translate_type b, code), use_nothing env)
-
+and translate_var (m : meta) (x : I.var_name) (env : I.environment) (ty : I.type_expression) =
+  if Var.equal x.wrap_content (Var.of_name "amount")
+  then 
+    let ((cons_name, static_args, args), usages) = translate_constant { cons_name=C_AMOUNT; arguments=[] } ty env in
+    (O.E_operator (m, cons_name, static_args, args), usages)
+  else
+  let (_, idx) = I.Environment.Environment.get_i x env in
+  let usages = List.repeat idx Drop
+               @ [ Keep ]
+               @ List.repeat (List.length env - idx - 1) Drop in
+  (O.E_var m, usages)
 and translate_binder (binder, body) env =
   let env' = I.Environment.add binder env in
   let (body, usages) = translate_expression body env' in
