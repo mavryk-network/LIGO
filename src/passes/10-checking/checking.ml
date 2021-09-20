@@ -525,6 +525,24 @@ and type_expression' ~raise ~test : environment -> ?tv_opt:O.type_expression -> 
         type_constant ~raise ~test cons_name ae.location tv_lst tv_opt in
       return (E_constant {cons_name=name';arguments=lst'}) tv
   | E_application {lamb; args} ->
+      (* print_endline @@ Format.asprintf "%a" Ast_core.PP.expression lamb; *)
+      (match lamb with
+      | {expression_content=E_application 
+          {lamb={expression_content=E_module_accessor 
+            {module_name;element={expression_content=E_variable v}}};args=args1}} 
+        when module_name = "List" && Var.equal v.wrap_content (Var.of_name "map") ->
+          let e1 = type_expression' ~raise ~test e args in
+          let e2 = type_expression' ~raise ~test e args1 in
+          let ty1 = get_type_expression e1 in
+          let ty2 = get_type_expression e2 in
+          let (_name', tv) =
+            type_constant ~raise ~test C_LIST_MAP ae.location [ty2;ty1] tv_opt in
+          let inner = t_function (get_t_list_exn ty1) (get_t_list_exn tv) () in
+          return (E_application {lamb=return (
+              E_application {lamb= return (
+                E_module_accessor {module_name; element= return (
+                  E_variable v) inner }) inner ; args=e2}) ty1 ; args=e1}) tv
+      | _ ->
       let lamb' = type_expression' ~raise ~test e lamb in
       let args' = type_expression' ~raise ~test e args in
       let tv = match lamb'.type_expression.type_content with
@@ -536,7 +554,7 @@ and type_expression' ~raise ~test : environment -> ?tv_opt:O.type_expression -> 
             ~expression:lamb
             ~actual:lamb'.type_expression
       in
-      return (E_application {lamb=lamb'; args=args'}) tv
+      return (E_application {lamb=lamb'; args=args'}) tv)
   (* Advanced *)
   | E_matching {matchee;cases} -> (
     let matchee' = type_expression' ~raise ~test e matchee in

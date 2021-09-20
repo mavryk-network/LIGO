@@ -375,6 +375,14 @@ let rec compile_literal : AST.literal -> value = fun l -> match l with
   | Literal_chain_id s -> D_string s
   | Literal_operation op -> D_operation op
   | Literal_unit -> D_unit
+and expression_to_iterator_body ~raise self  (f : AST.expression) =
+  let (input , output) = trace_option ~raise (corner_case ~loc:__LOC__ "expected function type") @@ AST.get_t_function f.type_expression in
+  let f' = self f in
+  let input' = compile_type ~raise input in
+  let output' = compile_type ~raise output in
+  let binder = Location.wrap @@ Var.fresh ~name:"iterated" () in
+  let application = Mini_c.Combinators.e_application f' output' (Mini_c.Combinators.e_var binder input') in
+  ((binder , input'), application)
 
 and compile_expression ~raise ?(module_env = SMap.empty) (ae:AST.expression) : expression =
   let tv = compile_type ~raise ae.type_expression in
@@ -411,6 +419,15 @@ and compile_expression ~raise ?(module_env = SMap.empty) (ae:AST.expression) : e
   | E_variable name -> (
       return @@ E_variable (Location.map Var.todo_cast name)
     )
+  | E_application {lamb={expression_content=
+      E_application {lamb={expression_content=
+        E_module_accessor{module_name;element={expression_content=
+          E_variable v}} };args=inner}};args=outer} 
+    when module_name = "List" && Var.equal (Var.of_name "map") v.wrap_content->
+
+              let f' = expression_to_iterator_body ~raise self inner in
+              let i' = self outer in
+              return @@ E_iterator (C_MAP , f' , i')
   | E_application {lamb; args} ->
       let a = self lamb in
       let b = self args in
@@ -525,35 +542,26 @@ and compile_expression ~raise ?(module_env = SMap.empty) (ae:AST.expression) : e
   )
   | E_constant {cons_name=name; arguments=lst} -> (
       let iterator_generator iterator_name =
-        let expression_to_iterator_body (f : AST.expression) =
-          let (input , output) = trace_option ~raise (corner_case ~loc:__LOC__ "expected function type") @@ AST.get_t_function f.type_expression in
-          let f' = self f in
-          let input' = compile_type ~raise input in
-          let output' = compile_type ~raise output in
-          let binder = Location.wrap @@ Var.fresh ~name:"iterated" () in
-          let application = Mini_c.Combinators.e_application f' output' (Mini_c.Combinators.e_var binder input') in
-          ((binder , input'), application)
-        in
         fun (lst : AST.expression list) -> match (lst , iterator_name) with
           | [f ; i] , C_ITER | [f ; i] , C_MAP -> (
-              let f' = expression_to_iterator_body f in
+              let f' = expression_to_iterator_body ~raise self f in
               let i' = self i in
               return @@ E_iterator (iterator_name , f' , i')
             )
           | [ f ; collection ; initial ] , C_FOLD -> (
-              let f' = expression_to_iterator_body f in
+              let f' = expression_to_iterator_body ~raise self f in
               let initial' = self initial in
               let collection' = self collection in
               return @@ E_fold (f' , collection' , initial')
             )
           | [ f ; initial ; collection ], C_FOLD_LEFT -> (
-              let f' = expression_to_iterator_body f in
+              let f' = expression_to_iterator_body ~raise self f in
               let initial' = self initial in
               let collection' = self collection in
               return @@ E_fold (f' , collection' , initial')
             )
           | [ f ; collection ; initial ], C_FOLD_RIGHT -> (
-              let f' = expression_to_iterator_body f in
+              let f' = expression_to_iterator_body ~raise self f in
               let initial' = self initial in
               let elem_type = 
                 (trace_option ~raise (corner_case ~loc:__LOC__ "Wrong type : expecting collection")) @@

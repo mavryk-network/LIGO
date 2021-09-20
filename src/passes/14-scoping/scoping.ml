@@ -128,7 +128,7 @@ let rec translate_expression (expr : I.expression) (env : I.environment) =
   | E_application (f, x) ->
     (match f with
     | {content=E_application ({content=E_variable v},y)} when Var.equal v.wrap_content (Var.of_name "or")->
-      let ((cons_name, static_args, args), usages) = translate_constant { cons_name=C_OR; arguments=[x;y] } ty env in
+      let ((cons_name, static_args, args), usages) = translate_constant { cons_name=C_OR; arguments=[y;x] } ty env in
       (O.E_operator (meta, cons_name, static_args, args), usages)
     | _ ->
       let (args, us) = translate_args [f; x] env in
