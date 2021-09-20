@@ -12,6 +12,7 @@ and expression_variable = expression_ Var.t Location.wrap
 let expression_variable_to_yojson var = Location.wrap_to_yojson (Var.to_yojson) var
 let expression_variable_of_yojson var = Location.wrap_of_yojson (Var.of_yojson) var
 let equal_expression_variable t1 t2 = Location.equal_content ~equal:Var.equal t1 t2
+let compare_expression_variable t1 t2 = Location.compare_content ~compare:Var.compare t1 t2
 
 type type_
 and type_variable = type_ Var.t
