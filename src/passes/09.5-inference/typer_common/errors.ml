@@ -407,7 +407,7 @@ let rec error_ppformat : display_format:string display_format ->
         Ast_core.PP.type_expression t
     | `Typer_wrong_param_number (loc,name,expected,actual) ->
       Format.fprintf f
-        "@[<hv>%a@.Function \"%s\" called with wrong number of arguments.@.Expected %d arguments, got %d arguments. @]"
+        "@[<hv>%a@.9.5 Function \"%s\" called with wrong number of arguments.@.Expected %d arguments, got %d arguments. @]"
         Snippet.pp loc
         name
         expected (List.length actual)

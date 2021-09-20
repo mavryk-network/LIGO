@@ -352,7 +352,7 @@ let rec compile_expression ~raise : CST.expr -> AST.expr = fun e ->
     let (module_name, _) = r_split ma.module_name in
     let element = self ma.field in
     (*TODO: move to proper module*)
-    if List.mem ~equal:Caml.(=) build_ins module_name then
+    (* if List.mem ~equal:Caml.(=) build_ins module_name then
       let fun_name = match ma.field with
         EVar v -> v.value
       | EModA _ -> raise.raise @@ unknown_constant module_name loc
@@ -366,7 +366,7 @@ let rec compile_expression ~raise : CST.expr -> AST.expr = fun e ->
       | None -> return @@ e_variable_ez ~loc var
       ) *)
       return @@ e_variable_ez ~loc var
-    else
+    else *)
       return @@ e_module_accessor ~loc module_name element
   | EUpdate update ->
     let (update, _loc) = r_split update in

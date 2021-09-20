@@ -287,7 +287,7 @@ let rec error_ppformat : display_format:string display_format ->
       let aux : Format.formatter -> Ast_core.type_variable option -> unit =
         fun ppf operator_opt ->
           match operator_opt with
-          | Some v -> Format.fprintf ppf " %a" Ast_core.PP.type_variable v
+          | Some v -> Format.fprintf ppf "10. %a" Ast_core.PP.type_variable v
           | None -> ()
       in
       Format.fprintf f
@@ -427,7 +427,7 @@ let rec error_ppformat : display_format:string display_format ->
         Ast_typed.PP.type_expression t
     | `Typer_wrong_param_number (loc,name,expected,actual) ->
       Format.fprintf f
-        "@[<hv>%a@.Function \"%s\" called with wrong number of arguments.@.Expected %d arguments, got %d arguments. @]"
+        "@[<hv>%a@.10. Function \"%s\" called with wrong number of arguments.@.Expected %d arguments, got %d arguments. @]"
         Snippet.pp loc
         name
         expected (List.length actual)

@@ -202,6 +202,7 @@ and evaluate_type ~raise (e:environment) (t:I.type_expression) : O.type_expressi
           fun (t,i) -> match t.type_content with T_abstraction x -> aux (x.type_,i+1) | _ -> (t,i)
         in
         let expected = snd @@ aux (x.type_,1) in
+        print_endline "is_fully_applied??";
         raise.raise (type_constant_wrong_number_of_arguments None expected 0 location)
       | _ -> ()
     in
@@ -219,6 +220,7 @@ and evaluate_type ~raise (e:environment) (t:I.type_expression) : O.type_expressi
       | Unequal_lengths ->
         let actual = List.length arguments in
         let expected = List.length vars in
+        print_endline "vargs??";
         raise.raise (type_constant_wrong_number_of_arguments (Some name) expected actual t.location)
       | Ok x -> x
     in
@@ -274,6 +276,7 @@ and type_expression' ~raise ~test : environment -> ?tv_opt:O.type_expression -> 
   | E_variable name' ->
       let e = Environment.add_value "amount" C_AMOUNT e in
       let name = cast_var name' in
+      (* print_endline @@ Format.asprintf "%a" Var.pp name.wrap_content; *)
       let tv' =  
         (match Environment.get_opt name e with
         | Some tv' -> tv'.type_value
@@ -602,7 +605,11 @@ and type_expression' ~raise ~test : environment -> ?tv_opt:O.type_expression -> 
   | E_module_accessor {module_name; element} ->
     let module_env = match Environment.get_module_opt module_name e with
       Some m -> m
-    | None   -> raise.raise @@ unbound_module_variable e module_name ae.location
+    | None   -> 
+      if module_name = "Bitwise"
+      then 
+        Environment.add_value "or" C_OR Environment.empty
+      else raise.raise @@ unbound_module_variable e module_name ae.location
     in
     let element = type_expression' ~raise ~test ?tv_opt module_env element in
     return (E_module_accessor {module_name; element}) element.type_expression

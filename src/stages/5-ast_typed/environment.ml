@@ -51,7 +51,12 @@ let get_module_opt : module_variable -> t -> environment option = fun k x ->
     List.find ~f:(fun {module_variable; module_=_} -> String.equal module_variable k) (get_module_environment x)
 let get_value_opt : expression_variable -> t -> constant' option = fun k x ->
   Option.bind ~f: (fun (_,c) -> Some c) @@
-    List.find ~f:(fun (v,_) -> Var.equal v k.wrap_content) (get_value_environment x)
+    List.find ~f:(fun (v,_) -> 
+      let s1 = Format.asprintf "%a" Var.pp v in
+      let s2 = Format.asprintf "%a" Var.pp k.wrap_content in
+      print_endline @@ s1 ^ s2;
+      Var.equal v k.wrap_content
+    ) (get_value_environment x)
     
 
 let add_ez_binder : expression_variable -> type_expression -> t -> t = fun k v e ->

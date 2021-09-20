@@ -675,6 +675,8 @@ let not_ ~raise loc = typer_1 ~raise loc "NOT" @@ fun elt ->
   else if eq_1 elt (t_nat ()) || eq_1 elt (t_int ())
   then t_int ()
   else raise.raise @@ wrong_not loc elt
+  
+let _or ~raise loc = constant' ~raise loc "OR" @@ t_function (t_nat ()) (t_function (t_nat ()) (t_nat ()) ()) ()
 
 let or_ ~raise loc = typer_2 ~raise loc "OR" @@ fun a b ->
   if eq_2 (a , b) (t_bool ())
@@ -1080,7 +1082,7 @@ let constant_typers ~raise ~test loc c : typer = match c with
     (* LOGIC *)
   | C_NOT                 -> not_ ~raise loc ;
   | C_AND                 -> and_ ~raise loc ;
-  | C_OR                  -> or_ ~raise loc ;
+  | C_OR                  -> _or ~raise loc ;
   | C_XOR                 -> xor ~raise loc ;
   | C_LSL                 -> lsl_ ~raise loc;
   | C_LSR                 -> lsr_ ~raise loc;
