@@ -2,6 +2,9 @@ open Types
 module S = Ast_core
 open Stage_common.Constant
 
+type expression_content = [%import: Types.expression_content] [@@deriving ez]
+type expression = [%import: Types.expression] [@@deriving ez]
+
 let make_t_orig_var ?(loc = Location.generated) type_content core orig_var = {type_content; location=loc; type_meta = core ; orig_var}
 let make_t ?(loc = Location.generated) type_content core = {type_content; location=loc; type_meta = core ; orig_var = None}
 let make_e ?(location = Location.generated) expression_content type_expression = {
@@ -35,11 +38,11 @@ let t_bls12_381_g2 ?loc ?core () : type_expression = t_constant ?loc ?core bls12
 let t_bls12_381_fr ?loc ?core () : type_expression = t_constant ?loc ?core bls12_381_fr_name []
 let t_never       ?loc ?core () : type_expression = t_constant ?loc ?core never_name []
 
-let t_abstraction1 ?loc name kind : type_expression = 
+let t_abstraction1 ?loc name kind : type_expression =
   let ty_binder = Location.wrap @@ Var.fresh () in
   let type_ = t_constant name [t_variable ~core:(Ast_core.t_variable ty_binder.wrap_content) ty_binder.wrap_content] in
   t_abstraction ?loc ty_binder kind type_
-let t_abstraction2 ?loc name kind_l kind_r : type_expression = 
+let t_abstraction2 ?loc name kind_l kind_r : type_expression =
   let ty_binder_l = Location.wrap @@ Var.fresh () in
   let ty_binder_r = Location.wrap @@ Var.fresh () in
   let type_ = t_constant name
@@ -320,28 +323,24 @@ let e_contract_entrypoint_opt e v : expression_content = E_constant {cons_name=C
 
 let e_failwith e : expression_content = E_constant {cons_name=C_FAILWITH ; arguments=[e]}
 
-let e_literal l : expression_content =     E_literal l
-let e_unit () : expression_content =     E_literal (Literal_unit)
-let e_int n : expression_content = E_literal (Literal_int n)
-let e_nat n : expression_content = E_literal (Literal_nat n)
-let e_mutez n : expression_content = E_literal (Literal_mutez n)
-let e_string s : expression_content = E_literal (Literal_string s)
-let e_bytes s : expression_content = E_literal (Literal_bytes s)
-let e_timestamp s : expression_content = E_literal (Literal_timestamp s)
-let e_address s : expression_content = E_literal (Literal_address s)
-let e_signature s : expression_content = E_literal (Literal_signature s)
-let e_key s : expression_content = E_literal (Literal_key s)
-let e_key_hash s : expression_content = E_literal (Literal_key_hash s)
-let e_chain_id s : expression_content = E_literal (Literal_chain_id s)
-let e_operation s : expression_content = E_literal (Literal_operation s)
-let e_lambda l : expression_content = E_lambda l
-let e_recursive l : expression_content = E_recursive l
+let e_unit () : expression_content = e_literal (Literal_unit)
+let e_int n : expression_content = e_literal (Literal_int n)
+let e_nat n : expression_content = e_literal (Literal_nat n)
+let e_mutez n : expression_content = e_literal (Literal_mutez n)
+let e_string s : expression_content = e_literal (Literal_string s)
+let e_bytes s : expression_content = e_literal (Literal_bytes s)
+let e_timestamp s : expression_content = e_literal (Literal_timestamp s)
+let e_address s : expression_content = e_literal (Literal_address s)
+let e_signature s : expression_content = e_literal (Literal_signature s)
+let e_key s : expression_content = e_literal (Literal_key s)
+let e_key_hash s : expression_content = e_literal (Literal_key_hash s)
+let e_chain_id s : expression_content = e_literal (Literal_chain_id s)
+let e_operation s : expression_content = e_literal (Literal_operation s)
 let e_pair a b : expression_content = ez_e_record [(Label "0",a);(Label "1", b)]
-let e_application lamb args : expression_content = E_application {lamb;args}
-let e_raw_code language code : expression_content = E_raw_code { language ; code }
-let e_variable v : expression_content = E_variable v
-let e_let_in let_binder rhs let_result inline = E_let_in { let_binder ; rhs ; let_result; inline }
-let e_mod_in module_binder rhs let_result = E_mod_in { module_binder ; rhs ; let_result }
+let e_application lamb args : expression_content = e_application {lamb;args}
+let e_raw_code language code : expression_content = e_raw_code { language ; code }
+let e_let_in let_binder rhs let_result inline = e_let_in { let_binder ; rhs ; let_result; inline }
+let e_mod_in module_binder rhs let_result = e_mod_in { module_binder ; rhs ; let_result }
 
 let e_constructor constructor element: expression_content = E_constructor {constructor;element}
 

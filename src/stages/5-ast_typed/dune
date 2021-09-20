@@ -8,6 +8,18 @@
     stage_common
     UnionFind
   )
+  (modules ast_typed combinators compare compare_enum environment formatter helpers misc reasons to_yojson types PP PP_annotated)
 ;;  (modules_without_implementation generated_fold_x)
   (flags (:standard -open Simple_utils))
+  (preprocess (staged_pps ppx_import ppx_woo))
+)
+
+(library
+  (name ppx_woo)
+  (kind ppx_deriver)
+  (libraries
+    base
+    ppxlib)
+  (modules ppx_woo)
+  (preprocess (pps ppxlib.metaquot))
 )

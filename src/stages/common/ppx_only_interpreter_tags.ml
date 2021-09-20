@@ -18,7 +18,7 @@ let constructor_impl (cd : constructor_declaration) =
       | _ -> Some (ppat_any ~loc) in
   case ~lhs:(ppat_construct ~loc {loc=cloc;txt=(Lident txt)} pat) ~guard:None ~rhs
 
-let func_of_cases ~loc (cs : cases) =
+let func_of_cases ~loc (cs : case list) =
   pstr_value ~loc Nonrecursive
     [ { pvb_pat = ppat_var ~loc {loc; txt = func_name}
       ; pvb_expr =
