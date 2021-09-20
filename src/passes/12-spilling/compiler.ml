@@ -713,6 +713,14 @@ and compile_expression ~raise ?(module_env = SMap.empty) (ae:AST.expression) : e
     )
   | E_module_accessor {module_name; element} -> (
     let module_var = module_name in
+    if module_name = "Bitwise"
+    then 
+      let name =  match element.expression_content with
+        | E_variable var -> var
+        | _ -> raise.raise @@ corner_case ~loc:__LOC__ "The parser shouldn't allowed this construct"
+      in
+      return @@ E_variable (Location.map Var.todo_cast name)
+    else
     let module_ =
       trace_option ~raise (corner_case ~loc:__LOC__ "Module_accessor: This program shouldn't type")
       @@ SMap.find_opt module_var module_env in

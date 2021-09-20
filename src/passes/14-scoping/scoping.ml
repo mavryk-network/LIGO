@@ -126,8 +126,13 @@ let rec translate_expression (expr : I.expression) (env : I.environment) =
     let ((cons_name, static_args, args), usages) = translate_constant constant expr.type_expression env in
     (O.E_operator (meta, cons_name, static_args, args), usages)
   | E_application (f, x) ->
-    let (args, us) = translate_args [f; x] env in
-    (E_app (meta, args), us)
+    (match f with
+    | {content=E_application ({content=E_variable v},y)} when Var.equal v.wrap_content (Var.of_name "or")->
+      let ((cons_name, static_args, args), usages) = translate_constant { cons_name=C_OR; arguments=[x;y] } ty env in
+      (O.E_operator (meta, cons_name, static_args, args), usages)
+    | _ ->
+      let (args, us) = translate_args [f; x] env in
+      (E_app (meta, args), us))
   | E_iterator (name, body, expr) ->
     let (body, body_usages) = translate_binder body env in
     let (expr, expr_usages) = translate_expression expr env in

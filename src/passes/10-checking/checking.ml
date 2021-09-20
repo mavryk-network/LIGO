@@ -275,6 +275,7 @@ and type_expression' ~raise ~test : environment -> ?tv_opt:O.type_expression -> 
   (* Basic *)
   | E_variable name' ->
       let e = Environment.add_value "amount" C_AMOUNT e in
+      (* print_endline @@ Format.asprintf "%a" Var.pp name'.wrap_content; *)
       let name = cast_var name' in
       (* print_endline @@ Format.asprintf "%a" Var.pp name.wrap_content; *)
       let tv' =  
