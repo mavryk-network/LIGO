@@ -19,65 +19,46 @@ let monad_option error = fun v ->
       None -> fail error
     | Some s -> return s
 
-let rec apply_comparison : Location.t -> calltrace -> Ast_typed.constant' -> value list -> value Monad.t =
-  fun loc calltrace c operands ->
-    let open Monad in
-    match (c,operands) with
-    | ( comp , [ V_Ct (C_int a'      ) ; V_Ct (C_int b'      ) ] )
-    | ( comp , [ V_Ct (C_mutez a'    ) ; V_Ct (C_mutez b'    ) ] )
-    | ( comp , [ V_Ct (C_timestamp a') ; V_Ct (C_timestamp b') ] )
-    | ( comp , [ V_Ct (C_nat a'      ) ; V_Ct (C_nat b'      ) ] ) ->
+let wrap_compare_result comp cmpres loc calltrace =
+  let open Monad in
+  match comp with
+  | C_EQ -> return (cmpres = 0)
+  | C_NEQ -> return (cmpres <> 0)
+  | C_LT -> return (cmpres < 0)
+  | C_LE -> return (cmpres <= 0)
+  | C_GT -> return (cmpres > 0)
+  | C_GE -> return (cmpres >= 0)
+  | _ -> fail @@ Errors.meta_lang_eval loc calltrace "Not comparable"
+
+let compare_constants c o1 o2 loc calltrace =
+  let open Monad in
+  match (c, [o1; o2]) with
+  | (comp, [V_Ct (C_int a'); V_Ct (C_int b')])
+  | (comp, [V_Ct (C_mutez a'); V_Ct (C_mutez b')])
+  | (comp, [V_Ct (C_timestamp a'); V_Ct (C_timestamp b')])
+  | (comp, [V_Ct (C_nat a'); V_Ct (C_nat b')]) ->
       let>> i = Int_compare_wrapped (a', b') in
       let>> cmpres = Int_of_int i in
-      let>> cmpres = Int_compare (cmpres, Ligo_interpreter.Int_repr_copied.zero) in
-      let* x = match comp with
-        | C_EQ -> return (cmpres = 0)
-        | C_NEQ -> return (cmpres <> 0)
-        | C_LT -> return (cmpres < 0)
-        | C_LE -> return (cmpres <= 0)
-        | C_GT -> return (cmpres > 0)
-        | C_GE -> return (cmpres >= 0)
-        | _ -> fail @@ Errors.meta_lang_eval loc calltrace "Not comparable"
+      let>> cmpres =
+        Int_compare (cmpres, Ligo_interpreter.Int_repr_copied.zero)
       in
+      let* x = wrap_compare_result comp cmpres loc calltrace in
       return @@ v_bool x
-    | ( comp     , [ V_Ct (C_bool b ) ; V_Ct (C_bool a ) ] ) ->
+  | (comp, [V_Ct (C_bool b); V_Ct (C_bool a)]) ->
       let cmpres = Bool.compare b a in
-      let* x = match comp with
-        | C_EQ -> return (cmpres = 0)
-        | C_NEQ -> return (cmpres <> 0)
-        | C_LT -> return (cmpres < 0)
-        | C_LE -> return (cmpres <= 0)
-        | C_GT -> return (cmpres > 0)
-        | C_GE -> return (cmpres >= 0)
-        | _ -> fail @@ Errors.meta_lang_eval loc calltrace "Not comparable"
-      in
+      let* x = wrap_compare_result comp cmpres loc calltrace in
       return @@ v_bool x
-    | ( comp     , [ V_Ct (C_address b ) ; V_Ct (C_address a ) ] ) ->
+  | (comp, [V_Ct (C_address b); V_Ct (C_address a)]) ->
       let cmpres = Tezos_state.compare_account_ b a in
-      let* x = match comp with
-        | C_EQ -> return (cmpres = 0)
-        | C_NEQ -> return (cmpres <> 0)
-        | C_LT -> return (cmpres < 0)
-        | C_LE -> return (cmpres <= 0)
-        | C_GT -> return (cmpres > 0)
-        | C_GE -> return (cmpres >= 0)
-        | _ -> fail @@ Errors.meta_lang_eval loc calltrace "Not comparable"
-      in
+      let* x = wrap_compare_result comp cmpres loc calltrace in
       return @@ v_bool x
-    | ( comp     , [ V_Ct (C_key_hash b ) ; V_Ct (C_key_hash a ) ] ) ->
+  | (comp, [V_Ct (C_key_hash b); V_Ct (C_key_hash a)]) ->
       let cmpres = Tezos_crypto.Signature.Public_key_hash.compare b a in
-      let* x = match comp with
-        | C_EQ -> return (cmpres = 0)
-        | C_NEQ -> return (cmpres <> 0)
-        | C_LT -> return (cmpres < 0)
-        | C_LE -> return (cmpres <= 0)
-        | C_GT -> return (cmpres > 0)
-        | C_GE -> return (cmpres >= 0)
-        | _ -> fail @@ Errors.meta_lang_eval loc calltrace "Not comparable"
-      in
+      let* x = wrap_compare_result comp cmpres loc calltrace in
       return @@ v_bool x
-    | ( comp     , [ V_Ct (C_unit ) ; V_Ct (C_unit ) ] ) ->
-      let* x = match comp with
+  | (comp, [V_Ct C_unit; V_Ct C_unit]) ->
+      let* x =
+        match comp with
         | C_EQ -> return true
         | C_NEQ -> return false
         | C_LT -> return false
@@ -87,46 +68,103 @@ let rec apply_comparison : Location.t -> calltrace -> Ast_typed.constant' -> val
         | _ -> fail @@ Errors.meta_lang_eval loc calltrace "Not comparable"
       in
       return @@ v_bool x
-    | ( comp     , [ V_Ct (C_string a'  ) ; V_Ct (C_string b'  ) ] ) ->
-      let* f_op = match comp with
-        | C_EQ -> return @@ fun a b -> (String.compare a b = 0)
-        | C_NEQ -> return @@ fun a b -> (String.compare a b != 0)
-        | C_LT -> return @@ fun a b -> (String.compare a b < 0)
-        | C_LE -> return @@ fun a b -> (String.compare a b <= 0)
-        | C_GT -> return @@ fun a b -> (String.compare a b > 0)
-        | C_GE -> return @@ fun a b -> (String.compare a b >= 0)
-        | _ -> fail @@ Errors.meta_lang_eval loc calltrace "Not comparable" in
-      Monad.return @@ v_bool (f_op a' b')
+  | (comp, [V_Ct (C_string a'); V_Ct (C_string b')]) ->
+      let* f_cmp = return @@ fun a b -> String.compare a b in
+      let* cmpres = return @@ f_cmp a' b' in
+      let* x = wrap_compare_result comp cmpres loc calltrace in
+      Monad.return @@ v_bool x
+  | (comp, [V_Ct (C_bytes a'); V_Ct (C_bytes b')]) ->
+      let* f_cmp = return @@ fun a b -> Bytes.compare a b in
+      let* cmpres = return @@ f_cmp a' b' in
+      let* x = wrap_compare_result comp cmpres loc calltrace in
+      Monad.return @@ v_bool x
+  | ( comp,
+      [
+        V_Ct (C_contract {address = addr1; entrypoint = entr1});
+        V_Ct (C_contract {address = addr2; entrypoint = entr2});
+      ] ) ->
+      let compare_opt_strings o1 o2 =
+        match (o1, o2) with (Some s1, Some s2) -> s1 = s2 | _ -> false
+      in
+      let cmpres = Tezos_state.compare_account_ addr1 addr2 in
+      let* x =
+        match comp with
+        | C_EQ -> return (cmpres = 0 && compare_opt_strings entr1 entr2)
+        | C_NEQ -> return (cmpres <> 0 && compare_opt_strings entr1 entr2)
+        | _ -> fail @@ Errors.meta_lang_eval loc calltrace "Not comparable"
+      in
+      return @@ v_bool x
+  | (_, l) ->
+      print_endline
+        (Format.asprintf
+            "%a"
+            (PP_helpers.list_sep_d Ligo_interpreter.PP.pp_value)
+            l) ;
+      fail @@ Errors.meta_lang_eval loc calltrace "Not comparable"
 
-    | ( comp     , [ V_Ct (C_bytes a'  ) ; V_Ct (C_bytes b'  ) ] ) ->
-      let* f_op = match comp with
-        | C_EQ -> return @@ fun a b -> (Bytes.compare a b = 0)
-        | C_NEQ -> return @@ fun a b -> (Bytes.compare a b != 0)
-        | C_LT -> return @@ fun a b -> (Bytes.compare a b < 0)
-        | C_LE -> return @@ fun a b -> (Bytes.compare a b <= 0)
-        | C_GT -> return @@ fun a b -> (Bytes.compare a b > 0)
-        | C_GE -> return @@ fun a b -> (Bytes.compare a b >= 0)
-        | _ -> fail @@ Errors.meta_lang_eval loc calltrace "Not comparable" in
-      Monad.return @@ v_bool (f_op a' b')
-    | ( comp , [ V_Construct (ctor_a, args_a) ; V_Construct (ctor_b, args_b ) ] ) -> (
-       match comp with
-       | C_EQ ->
-          if (String.equal ctor_a ctor_b) then
-            let* r = apply_comparison loc calltrace c [ args_a ;  args_b ] in
+let rec apply_comparison :
+    Location.t ->
+    calltrace ->
+    Ast_typed.constant' ->
+    value list ->
+    value Monad.t =
+  fun loc calltrace c operands ->
+  let open Monad in
+  match (c, operands) with
+  | (C_EQ  , [ (V_Michelson _) as a ; (V_Michelson _) as b ] ) ->
+    let>> b = Michelson_equal (loc,a,b) in
+    return @@ v_bool b
+  | (C_NEQ  , [ (V_Michelson _) as a ; (V_Michelson _) as b ] ) ->
+    let>> b = Michelson_equal (loc,a,b) in
+    return @@ v_bool (not b)
+  | (comp, [(V_Ct _ as v1); (V_Ct _ as v2)]) ->
+      compare_constants comp v1 v2 loc calltrace
+  | (comp, [V_Ligo (a1, b1); V_Ligo (a2, b2)]) ->
+      let* x =
+        match comp with
+        | C_EQ -> return (a1 = a2 && b1 = b2)
+        | C_NEQ -> return (a1 = a2 && b1 = b2)
+        | _ -> fail @@ Errors.meta_lang_eval loc calltrace "Not comparable"
+      in
+      return @@ v_bool x
+  | (comp, [V_List   _ as xs; V_List   _ as ys])
+  | (comp, [V_Set    _ as xs; V_Set    _ as ys]) 
+  | (comp, [V_Map    _ as xs; V_Map    _ as ys])
+  | (comp, [V_Record _ as xs; V_Record _ as ys]) ->
+    let c = Ligo_interpreter.Combinators.equal_value xs ys in
+    let* v =
+      match comp with
+      | C_EQ  -> return @@ v_bool c
+      | C_NEQ -> return @@ v_bool (not c)
+      | _ -> fail @@ Errors.meta_lang_eval loc calltrace "Not comparable"
+    in
+    return v
+  | (comp, [V_Construct (ctor_a, args_a); V_Construct (ctor_b, args_b)]) -> (
+      match comp with
+      | C_EQ ->
+          if String.equal ctor_a ctor_b then
+            let* r = apply_comparison loc calltrace c [args_a; args_b] in
             Monad.return @@ v_bool @@ is_true r
+          else Monad.return @@ v_bool false
+      | C_NEQ ->
+          if not (String.equal ctor_a ctor_b) then Monad.return @@ v_bool true
           else
-            Monad.return @@ v_bool false
-       | C_NEQ ->
-          if (not (String.equal ctor_a ctor_b)) then
-            Monad.return @@ v_bool true
-          else
-            let* r = apply_comparison loc calltrace c [ args_a ;  args_b ] in
+            let* r = apply_comparison loc calltrace c [args_a; args_b] in
             Monad.return @@ v_bool @@ is_true r
-       | _ -> fail @@ Errors.meta_lang_eval loc calltrace "Not comparable"
-    )
-    | ( _ , l ) ->
-       print_endline (Format.asprintf "%a" (PP_helpers.list_sep_d Ligo_interpreter.PP.pp_value) l);
-       fail @@ Errors.meta_lang_eval loc calltrace "Not comparable"
+      | _ -> fail @@ Errors.meta_lang_eval loc calltrace "Not comparable")
+  | (_, l) ->
+    (* TODO: Don't know how to compare these *)
+      (* V_Func_val *)
+      (* V_Mutation *)
+      (* V_Failure *)
+      (* V_Michelson *)
+      (* V_BigMap *)
+      print_endline
+        (Format.asprintf
+            "%a"
+            (PP_helpers.list_sep_d Ligo_interpreter.PP.pp_value)
+            l) ;
+      fail @@ Errors.meta_lang_eval loc calltrace "Not comparable"
 
 let rec apply_operator ~raise : Location.t -> calltrace -> Ast_typed.type_expression -> env -> Ast_typed.constant' -> (value * Ast_typed.type_expression) list -> value Monad.t =
   fun loc calltrace expr_ty env c operands ->
@@ -167,18 +205,6 @@ let rec apply_operator ~raise : Location.t -> calltrace -> Ast_typed.type_expres
       | Some v -> return @@ v_some v
       | None -> return @@ v_none ()
     )
-    | C_MAP_FIND_OPT , [ k ; V_BigMap (id, kvs) ] ->
-       (match List.Assoc.find kvs ~equal:Caml.(=) k with
-        | Some (Some v) -> return @@ v_some v
-        | Some None -> return @@ v_none ()
-        | None ->
-           let* ty = monad_option (Errors.generic_error loc "Could not recover types") @@ List.nth types 1 in
-           let* key_ty, val_ty =
-             monad_option (Errors.generic_error loc "Not a big-map") @@ Ast_typed.get_t_big_map ty in
-           let>> typed_exp = Get_big_map (loc, calltrace, key_ty, val_ty, k, id) in
-           let* v = eval_ligo typed_exp calltrace env in
-           return @@ v
-       )
     | C_MAP_FIND , [ k ; V_Map l ] -> ( match List.Assoc.find ~equal:Caml.(=) l k with
       | Some v -> return @@ v
       | None -> fail @@ Errors.meta_lang_eval loc calltrace (Predefined.Tree_abstraction.pseudo_module_to_string c)
@@ -333,8 +359,6 @@ let rec apply_operator ~raise : Location.t -> calltrace -> Ast_typed.type_expres
         )
         init elts
     | ( C_BIG_MAP_EMPTY , []) -> return @@ V_Map ([])
-    | ( C_BIG_MAP_IDENTIFIER , [ V_Ct (C_nat n) ]) ->
-       return @@ V_BigMap (n, [])
     | ( C_MAP_EMPTY , []) -> return @@ V_Map ([])
     | ( C_MAP_FOLD , [ V_Func_val {arg_binder ; body ; env}  ; V_Map kvs ; init ] ) ->
       let* map_ty = monad_option (Errors.generic_error loc "Could not recover types") @@ List.nth types 1 in
@@ -348,30 +372,12 @@ let rec apply_operator ~raise : Location.t -> calltrace -> Ast_typed.type_expres
         )
         init kvs
     | ( C_MAP_MEM , [k ; V_Map kvs]) -> return @@ v_bool (List.Assoc.mem ~equal:Caml.(=) kvs k)
-    | ( C_MAP_MEM , [k ; V_BigMap (m, kvs) ]) ->
-          ( match List.Assoc.find kvs ~equal:(=) k with
-            | Some (Some _) -> return @@ v_bool true
-            | Some None -> return @@ v_bool false
-            | None ->
-               let* ty = monad_option (Errors.generic_error loc "Could not recover types") @@ List.nth types 1 in
-               let* key_ty, val_ty =
-                 monad_option (Errors.generic_error loc "Not a big-map") @@ Ast_typed.get_t_big_map ty in
-               let>> b = Mem_big_map (loc, calltrace, key_ty, val_ty, k, m) in
-               return @@ v_bool b
-          )
     | ( C_MAP_ADD , [ k ; v ; V_Map kvs] ) -> return (V_Map ((k,v) :: List.Assoc.remove ~equal:Caml.(=) kvs k))
-    | ( C_MAP_ADD , [ k ; v ; V_BigMap (id, kvs) ]) -> return (V_BigMap (id, (k, Some v) :: kvs))
     | ( C_MAP_REMOVE , [ k ; V_Map kvs] ) -> return @@ V_Map (List.Assoc.remove ~equal:Caml.(=) kvs k)
-    | ( C_MAP_REMOVE , [ k ; V_BigMap (id, kvs) ] ) -> return (V_BigMap (id, (k, None) :: kvs))
     | ( C_MAP_UPDATE , [ k ; V_Construct (option,v) ; V_Map kvs] ) -> (match option with
       | "Some" -> return @@ V_Map ((k,v)::(List.Assoc.remove ~equal:Caml.(=) kvs k))
       | "None" -> return @@ V_Map (List.Assoc.remove ~equal:Caml.(=) kvs k)
       | _ -> assert false
-    )
-    | ( C_MAP_UPDATE , [ k ; V_Construct (option,v) ; V_BigMap (id, kvs) ] ) -> (match option with
-         | "Some" -> return @@ V_BigMap (id, (k, Some v)::(List.Assoc.remove ~equal:Caml.(=) kvs k))
-         | "None" -> return @@ V_BigMap (id, (k, None)::(List.Assoc.remove ~equal:Caml.(=) kvs k))
-         | _ -> assert false
     )
     | ( C_SET_EMPTY, []) -> return @@ V_Set ([])
     | ( C_SET_ADD , [ v ; V_Set l ] ) -> return @@ V_Set (List.dedup_and_sort ~compare (v::l))
@@ -569,8 +575,7 @@ let rec apply_operator ~raise : Location.t -> calltrace -> Ast_typed.type_expres
        let storage_ty = match Ast_typed.get_t_typed_address typed_address_ty with
          | Some (_, storage_ty) -> storage_ty
          | _ -> failwith "Expecting typed_address" in
-       let>> typed_exp = Get_storage(loc, calltrace, addr, storage_ty) in
-       let* value = eval_ligo typed_exp calltrace env in
+       let>> value = Get_storage(loc, calltrace, addr, storage_ty) in
        return value
     | ( C_TEST_ORIGINATE , [ contract ; storage ; V_Ct ( C_mutez amt ) ] ) ->
        let* contract_ty = monad_option (Errors.generic_error loc "Could not recover types") @@ List.nth types 0 in
@@ -612,6 +617,10 @@ let rec apply_operator ~raise : Location.t -> calltrace -> Ast_typed.type_expres
       let* () = monad_option (Errors.generic_error loc "Storage in bootstrap contract does not match") @@
                    Ast_typed.assert_type_expression_eq (storage_ty, storage_ty') in
       return_ct (C_address address)
+    | ( C_TEST_SET_BIG_MAP , [ V_Ct (C_int n) ; V_Map kv ] ) ->
+      let bigmap_ty = List.nth_exn types 1 in
+      let>> () = Set_big_map (n, kv, bigmap_ty) in
+      return_ct (C_unit)
     | ( C_FAILWITH , [ a ] ) ->
       fail @@ Errors.meta_lang_failwith loc calltrace a
     | _ -> fail @@ Errors.generic_error loc "Unbound primitive."
@@ -653,11 +662,14 @@ and eval_ligo ~raise : Ast_typed.expression -> calltrace -> env -> value Monad.t
             let in_ty, _ = Ast_typed.get_t_function_exn orig_lambda.type_expression in
             let f_env' = Env.extend env arg_binder (in_ty, args') in
             eval_ligo body (term.location :: calltrace) f_env'
-          | V_Func_val {arg_binder ; body ; env; rec_name = Some fun_name; orig_lambda } ->
+          | V_Func_val {arg_binder ; body ; env; rec_name = Some fun_name; orig_lambda} ->
             let in_ty, _ = Ast_typed.get_t_function_exn orig_lambda.type_expression in
             let f_env' = Env.extend env arg_binder (in_ty, args') in
             let f_env'' = Env.extend f_env' fun_name (orig_lambda.type_expression, f') in
             eval_ligo body (term.location :: calltrace) f_env''
+          | V_Ligo (_, code) ->
+            let>> ctxt = Get_state () in
+            return @@ Michelson_backend.run_michelson_code ~raise ~loc:term.location ctxt code term.type_expression args' args.type_expression
           | _ -> fail @@ Errors.generic_error term.location "Trying to apply on something that is not a function?"
       )
     | E_lambda {binder; result;} ->
