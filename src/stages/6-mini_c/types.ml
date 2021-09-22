@@ -45,7 +45,11 @@ and type_base =
   | TB_bls12_381_fr
   | TB_never
 
-and environment_element = expression_variable * type_expression
+and environment_element_type_expression =
+  | Expr of type_expression
+  | Predefined of constant'
+
+and environment_element = expression_variable * environment_element_type_expression
 
 and environment = environment_element list
 

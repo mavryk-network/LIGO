@@ -53,7 +53,7 @@ let type_expression_tag ty_cont =
   | T_arrow           _ -> 5
   | T_module_accessor _ -> 6
   | T_singleton       _ -> 7
-  | T_abstraction         _ -> 8
+  | T_abstraction     _ -> 8
 
 let rec constant_tag (ct : constant_tag) =
   match ct with
@@ -367,10 +367,15 @@ let environment_element_definition a b = match a,b with
   | ED_declaration _, ED_binder -> 1
   | ED_declaration a, ED_declaration b -> environment_element_definition_declaration a b
 
-let rec environment_element {type_value=ta;definition=da} {type_value=tb;definition=db} =
-  cmp2
-    type_expression ta tb
-    environment_element_definition da db
+let rec environment_element ela elb =
+  match ela, elb with
+  | Expr {type_value=ta;definition=da}, Expr {type_value=tb;definition=db} ->
+    cmp2
+      type_expression ta tb
+      environment_element_definition da db
+  | Predefined _ , Expr _ -> -1
+  | Expr _, Predefined _ -> 1
+  | Predefined a, Predefined b -> failwith "[value-environment] not implemented: Compare.environment_element"
 
 and environment_binding {expr_var=eva;env_elt=eea} {expr_var=evb;env_elt=eeb} =
   cmp2

@@ -26,7 +26,9 @@ and annotated ppf : type_expression annotated -> _ = function
   | (None, a) -> type_variable ppf a
 
 and environment_element ppf ((n, tv) : environment_element) =
-  Format.fprintf ppf "%a : %a" Var.pp n.wrap_content type_variable tv
+  match tv with
+  | Expr tv -> Format.fprintf ppf "%a : %a" Var.pp n.wrap_content type_variable tv
+  | Predefined _ -> failwith "[value-environment] not implemented"
 
 and environment ppf (x:environment) =
   fprintf ppf "Env[%a]" (list_sep_d environment_element) x

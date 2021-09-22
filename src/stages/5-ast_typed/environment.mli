@@ -11,6 +11,7 @@ val add_module : module_variable -> environment -> t -> t
 val add_type : type_variable -> type_expression -> t -> t
 val add_kind : type_variable -> unit -> t -> t
 val of_list_type : (type_variable * type_expression) list -> t
+val of_list_values : (expression_variable * environment_element) list -> t -> t
 val get_opt : expression_variable -> t -> element option
 val get_type_opt : type_variable -> t -> type_expression option
 val get_kind_opt : type_variable -> t -> unit option 

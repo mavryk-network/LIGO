@@ -65,6 +65,11 @@ let variable : I.expression_variable -> T.type_expression -> (constraints * T.ty
   let aval = T.Reasons.(wrap (Todo "wrap: variable: whole") (T.P_variable type_name)) in
   [{ c = C_equation { aval ; bval = pattern } ; reason = "wrap: variable" }] , type_name
 
+let predefined : I.expression_variable -> O.type_value -> (constraints * T.type_variable) = fun name expr ->
+  let type_name = Core.fresh_for_expr_var name in
+  let aval = T.Reasons.(wrap (Todo "wrap: variable: whole") (T.P_variable type_name)) in
+  [{ c = C_equation { aval ; bval = expr } ; reason = "wrap: variable" }] , type_name
+
 let literal : string -> T.type_expression -> (constraints * T.type_variable) = fun name t ->
   let pattern = type_expression_to_type_value t in
   let type_name = Core.fresh_type_variable ~name:("literal_" ^ name) () in

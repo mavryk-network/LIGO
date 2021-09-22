@@ -25,7 +25,7 @@ let get_value : 'a Raw.reg -> 'a = fun x -> x.value
 let build_ins = ["Operator";"Test";"Tezos";"Crypto";"Bytes";"List";"Set";"Map";"Big_map";"Bitwise";"String";"Layout";"option"]
   @ ["Michelson";"Loop";"Current"]
 
-open Predefined.Tree_abstraction.Cameligo
+(* open Predefined.Tree_abstraction.Cameligo *)
 
 let r_split = Location.r_split
 
@@ -217,10 +217,11 @@ let rec compile_expression ~raise : CST.expr -> AST.expr = fun e ->
   match e with
     EVar var -> (
     let (var, loc) = r_split var in
-    match constants var with
+    (* match constants var with
     | Some const ->
       return @@ e_constant ~loc const []
-    | None -> return @@ e_variable_ez ~loc var
+    | None -> return @@ e_variable_ez ~loc var *)
+    return @@ e_variable_ez ~loc var
   )
   | EPar par -> self par.value.inside
   | EUnit the_unit ->
@@ -290,7 +291,7 @@ let rec compile_expression ~raise : CST.expr -> AST.expr = fun e ->
   | ECall {value=(EVar var,args);region} ->
     let loc = Location.lift region in
     let (var, loc_var) = r_split var in
-    (match constants var with
+    (* (match constants var with
       Some const ->
       let args = List.map ~f:self @@ nseq_to_list args in
       return @@ e_constant ~loc const args
@@ -298,9 +299,12 @@ let rec compile_expression ~raise : CST.expr -> AST.expr = fun e ->
       let func = e_variable_ez ~loc:loc_var var in
       let args = List.map ~f:self @@ nseq_to_list args in
       return @@ List.fold_left ~f:(e_application ~loc) ~init:func @@ args
-    )
+    ) *)
+    let func = e_variable_ez ~loc:loc_var var in
+    let args = List.map ~f:self @@ nseq_to_list args in
+    return @@ List.fold_left ~f:(e_application ~loc) ~init:func @@ args
   (*TODO: move to proper module*)
-  | ECall {value=(EModA {value={module_name;field};region=_},args);region} when
+  (* | ECall {value=(EModA {value={module_name;field};region=_},args);region} when
     List.mem ~equal:Caml.(=) build_ins module_name.value ->
     let loc = Location.lift region in
     let fun_name = match field with
@@ -317,7 +321,7 @@ let rec compile_expression ~raise : CST.expr -> AST.expr = fun e ->
       return @@ e_constant ~loc const args
     | None ->
       raise.raise @@ unknown_constant var loc
-      )
+      ) *)
   | ECall call ->
     let ((func, args), loc) = r_split call in
     let func = self func in
@@ -348,7 +352,7 @@ let rec compile_expression ~raise : CST.expr -> AST.expr = fun e ->
     let (module_name, _) = r_split ma.module_name in
     let element = self ma.field in
     (*TODO: move to proper module*)
-    if List.mem ~equal:Caml.(=) build_ins module_name then
+    (* if List.mem ~equal:Caml.(=) build_ins module_name then
       let fun_name = match ma.field with
         EVar v -> v.value
       | EModA _ -> raise.raise @@ unknown_constant module_name loc
@@ -361,8 +365,8 @@ let rec compile_expression ~raise : CST.expr -> AST.expr = fun e ->
         Some const -> return @@ e_constant ~loc const []
       | None -> return @@ e_variable_ez ~loc var
       )
-    else
-      return @@ e_module_accessor ~loc module_name element
+    else *)
+    return @@ e_module_accessor ~loc module_name element
   | EUpdate update ->
     let (update, _loc) = r_split update in
     let record = compile_path update.record in

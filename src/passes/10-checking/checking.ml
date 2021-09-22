@@ -276,7 +276,11 @@ and type_expression' ~raise ~test : environment -> ?tv_opt:O.type_expression -> 
       let tv' =
         trace_option ~raise (unbound_variable e name ae.location)
         @@ Environment.get_opt name e in
-      return (E_variable name) tv'.type_value
+      (match tv' with
+      | Expr tv' -> return (E_variable name) tv'.type_value
+      | Predefined c -> 
+        let (_name', tv') = type_constant ~raise ~test c ae.location [] tv_opt in
+        return (E_variable name) tv')
   | E_literal Literal_unit ->
       return (E_literal (Literal_unit)) (t_unit ())
   | E_literal (Literal_string s) ->
@@ -816,14 +820,18 @@ let rec decompile_env (env : Ast_typed.environment) =
   Ast_core.{expression_environment; type_environment; module_environment}
 
 and decompile_binding Ast_typed.{expr_var;env_elt} =
-  let type_value = untype_type_expression env_elt.type_value in
-  let definition = match env_elt.definition with
-    ED_binder -> Ast_core.ED_binder
-  | ED_declaration {expression;free_variables} ->
-    let expression = untype_expression expression in
-    Ast_core.ED_declaration {expression;free_variables}
-  in
-  Ast_core.{expr_var;env_elt = {type_value;definition}}
+  match env_elt with
+  | Expr env_elt ->
+    let type_value = untype_type_expression env_elt.type_value in
+    let definition = match env_elt.definition with
+      ED_binder -> Ast_core.ED_binder
+    | ED_declaration {expression;free_variables} ->
+      let expression = untype_expression expression in
+      Ast_core.ED_declaration {expression;free_variables}
+    in
+    Ast_core.{expr_var;env_elt = Expr {type_value;definition}}
+  | Predefined c -> 
+    Ast_core.{expr_var;env_elt = Predefined c }
 
 and decompile_type_binding Ast_typed.{type_variable;type_} =
   let type_ =

@@ -122,10 +122,12 @@ and environment_element_definition_declaration = {
 
 and free_variables = expression_variable list
 
-and environment_element = {
-    type_value: type_expression ;
-    definition: environment_element_definition ;
-  }
+and environment_element = 
+  | Expr of {
+      type_value: type_expression ;
+      definition: environment_element_definition ;
+    }
+  | Predefined of constant'
 
 and expression_environment = environment_binding list
 

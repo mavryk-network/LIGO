@@ -21,10 +21,13 @@ module Substitution = struct
         let free_variables = List.map ~f:(s_variable ~substs) free_variables in
         T.ED_declaration {expression ; free_variables}
     and s_expr_environment : (T.expression_environment,_) w = fun ~substs env ->
-      List.map ~f:(fun T.{expr_var=variable ; env_elt={ type_value; definition }} ->
+      List.map ~f:(fun T.{expr_var=variable ; env_elt } ->
+        match env_elt with
+        | Expr { type_value; definition } ->
           let type_value = s_type_expression ~substs type_value in
           let definition = s_environment_element_definition ~substs definition in
-          T.{expr_var=variable ; env_elt={ type_value; definition }}) env
+          T.{expr_var=variable ; env_elt=Expr { type_value; definition }}
+        | Predefined _ -> failwith "[value-environment] not implemented") env
     and s_type_environment : (T.type_environment,_) w = fun ~substs tenv ->
       List.map ~f:(fun T.{type_variable ; type_} ->
         let type_ = s_type_expression ~substs type_ in

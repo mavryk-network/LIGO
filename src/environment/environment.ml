@@ -58,8 +58,26 @@ let meta_ligo_types : (type_variable * type_expression) list =
     (v_failure, t_constant failure_name []);
   ]
 
+let location_wraped_var s = Location.wrap @@ Var.of_name s
+
+let tezos_module env = Environment.add_module "Tezos" (Environment.of_list_values [
+  (location_wraped_var "amount", Predefined C_AMOUNT)
+] Environment.empty) env
+
+let list_module env = Environment.add_module "List" (Environment.of_list_values [
+  (location_wraped_var "map", Predefined C_LIST_MAP)
+] Environment.empty) env
+
+let bitwise_module env = Environment.add_module "Bitwise" (Environment.of_list_values [
+  (location_wraped_var "or", Predefined C_OR)
+] Environment.empty) env
+
+
 let default : Protocols.t -> environment = function
   | Protocols.Edo -> Environment.of_list_type edo_types
+    |> tezos_module 
+    |> list_module
+    |> bitwise_module
 
 let default_with_test : Protocols.t -> environment = function
   | Protocols.Edo -> Environment.of_list_type meta_ligo_types

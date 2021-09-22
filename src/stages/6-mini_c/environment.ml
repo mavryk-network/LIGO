@@ -25,12 +25,12 @@ module Environment (* : ENVIRONMENT *) = struct
   let empty : t = []
   let add : element -> t -> t  = List.cons
   let concat : t list -> t  = List.concat
-  let get_opt : expression_variable -> t -> type_expression option = fun e lst -> List.Assoc.find ~equal:var_equal lst e
+  let get_opt : expression_variable -> t -> environment_element_type_expression option = fun e lst -> List.Assoc.find ~equal:var_equal lst e
   let has : expression_variable -> t -> bool = fun s t ->
     match get_opt s t with
     | None -> false
     | Some _ -> true
-  let get_i : expression_variable -> t -> (type_expression * int) =fun x lst -> List.find_mapi_exn ~f:(fun i (e,t) -> if var_equal e x then Some (t,i) else None) lst
+  let get_i : expression_variable -> t -> (environment_element_type_expression * int) =fun x lst -> List.find_mapi_exn ~f:(fun i (e,t) -> if var_equal e x then Some (t,i) else None) lst
   let of_list : element list -> t = fun x -> x
   let to_list : t -> element list = fun x -> x
   let get_names : t -> expression_variable list = List.map ~f:fst
@@ -59,5 +59,8 @@ module Environment (* : ENVIRONMENT *) = struct
   let fold : _ -> 'a -> t -> 'a = fun f init -> List.fold_left ~f ~init
   let filter : _ -> t -> t = fun f -> List.filter ~f
 end
+
+let initial_module_env = SMap.empty
+  |> SMap.add "amount" (Predefined C_AMOUNT) 
 
 include Environment

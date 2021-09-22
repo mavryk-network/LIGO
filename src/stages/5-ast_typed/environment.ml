@@ -5,7 +5,7 @@ type t = environment
 type element = environment_element
 
 let make_element : type_expression -> environment_element_definition -> element =
-  fun type_value definition -> {type_value ; definition}
+  fun type_value definition -> Expr {type_value ; definition}
 
 let make_element_binder = fun t -> make_element t ED_binder
 
@@ -32,6 +32,9 @@ let add_module : module_variable -> environment -> t -> t = fun module_variable 
 (* TODO: generate : these are now messy, clean them up. *)
 
 let of_list_type : (type_variable * type_expression) list -> t = fun tvlist -> List.fold_left ~f:(fun acc (t,v) -> add_type t v acc) ~init:empty tvlist
+
+let of_list_values : (expression_variable * environment_element) list -> t -> t = 
+  fun values env -> List.fold_left ~f:(fun acc (v,e) -> add_expr v e acc) ~init:env values
 
 let get_opt : expression_variable -> t -> element option = fun k x ->
   Option.bind ~f: (fun {expr_var=_ ; env_elt} -> Some env_elt) @@
@@ -143,7 +146,10 @@ module PP = struct
   let list_sep_scope x = list_sep x (const " | ")
 
   let rec environment_element = fun ppf {expr_var ; env_elt} ->
-    fprintf ppf "%a -> %a \n" PP.expression_variable expr_var PP.type_expression env_elt.type_value
+    match env_elt with
+    | Expr env_elt ->
+      fprintf ppf "%a -> %a \n" PP.expression_variable expr_var PP.type_expression env_elt.type_value
+    | Predefined _ -> failwith "[value-environment] not implemented"
 
   and type_environment_element = fun ppf {type_variable ; type_} ->
     fprintf ppf "%a -> %a" PP.type_variable type_variable PP.type_or_kind type_
