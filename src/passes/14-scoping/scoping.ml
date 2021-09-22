@@ -218,16 +218,13 @@ let rec translate_expression (expr : I.expression) (env : I.environment) =
     (E_raw_michelson (meta, translate_type a, translate_type b, code), use_nothing env)
 
 and translate_binder (binder, body) env =
-  let (b,t) = binder in
-  let env' = I.Environment.add (b,I.Types.Expr t) env in
+  let env' = I.Environment.add binder env in
   let (body, usages) = translate_expression body env' in
   let (_, binder_type) = binder in
   (O.Binds ([List.hd_exn usages], [translate_type binder_type], body), List.tl_exn usages)
 
 and translate_binder2 ((binder1, binder2), body) env =
-  let (b1,t1) = binder1 in
-  let (b2,t2) = binder2 in
-  let env' = I.Environment.add (b1, I.Types.Expr t1) (I.Environment.add (b2,I.Types.Expr t2) env) in
+  let env' = I.Environment.add binder1 (I.Environment.add binder2 env) in
   let (body, usages) = translate_expression body env' in
   let (_, binder1_type) = binder1 in
   let (_, binder2_type) = binder2 in
@@ -237,8 +234,7 @@ and translate_binder2 ((binder1, binder2), body) env =
    List.tl_exn (List.tl_exn usages))
 
 and translate_binderN (vars, body) env =
-  let vars' = List.map ~f:(fun (b,t) -> (b,I.Types.Expr t)) vars in
-  let env' = List.fold_right ~f:I.Environment.add vars' ~init:env in
+  let env' = List.fold_right ~f:I.Environment.add vars ~init:env in
   let (body, usages) = translate_expression body env' in
   let var_types = List.map ~f:snd vars in
   let n = List.length vars in
@@ -355,5 +351,5 @@ and translate_constant (expr : I.constant) (ty : I.type_expression) env :
   ((expr.cons_name, static_args, arguments), usages)
 
 and translate_closed_function ({ binder ; body } : I.anon_function) input_ty : _ O.binds =
-  let (body, usages) = translate_expression body (Mini_c.Environment.add (binder, I.Types.Expr input_ty) []) in
+  let (body, usages) = translate_expression body (Mini_c.Environment.add (binder, input_ty) []) in
   Binds (usages, [translate_type input_ty], body)

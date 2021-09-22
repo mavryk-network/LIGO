@@ -897,13 +897,13 @@ and compile_declaration ~raise module_env env (d:AST.declaration) : (toplevel_st
     let expression = compile_expression ~raise ~module_env expr in
     let binder = Location.map Var.todo_cast binder in
     let tv = Combinators.Expression.get_type expression in
-    let env' = Environment.add (binder, Expr tv) env in
+    let env' = Environment.add (binder, tv) env in
     Some (((binder, inline, expression), environment_wrap env env'), module_env)
   | Declaration_module {module_binder; module_} ->
     let record,module_env = compile_module_as_record ~raise module_binder module_env module_ in
     let binder = Location.wrap @@ Var.of_name module_binder in
     let tv = Combinators.Expression.get_type record in
-    let env' = Environment.add (binder, Expr tv) env in
+    let env' = Environment.add (binder, tv) env in
     Some (((binder, false, record), environment_wrap env env'), module_env)
   | Module_alias {alias; binders} ->
     let module_var, access = binders in
@@ -916,7 +916,7 @@ and compile_declaration ~raise module_env env (d:AST.declaration) : (toplevel_st
     let module_expr = compile_expression ~raise ~module_env module_expr in
     let module_env  = SMap.add alias module_ module_env in
     let module_type = compile_type ~raise module_ in
-    let env' = Environment.add (Location.wrap @@ Var.of_name alias, Expr module_type) env in
+    let env' = Environment.add (Location.wrap @@ Var.of_name alias, module_type) env in
     Some ((((Location.wrap @@ Var.of_name alias),true,module_expr),environment_wrap env env'),module_env)
 
 
