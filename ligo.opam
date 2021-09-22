@@ -34,8 +34,6 @@ depends: [
   "linenoise"
   "qcheck"
   "tezos-clic"
-  # work around upstream in-place update
-  "ocaml-migrate-parsetree" { = "1.8.0" }
   # work around tezos' failure to constrain
   "lwt" { = "5.4.2" }
   "bisect_ppx" {dev & >= "2.5.0"}
