@@ -437,7 +437,7 @@ module Make(Params : PARAMS) = struct
       in
       let itemss = List.map aux tds' in
       let items = List.concat itemss in
-      let outf = open_out "/tmp/local.txt" in
+      let outf = open_out_gen [Open_append; Open_creat] 0o666 "/tmp/local.txt" in
       let s = (Format.asprintf "ITEMS %d:\n %a" (! counter) (Format.pp_print_list P.Pprintast.structure_item) items) in
       let () = counter := ! counter + 1 in
       let () = Printf.fprintf outf "%s" s in

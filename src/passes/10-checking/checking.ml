@@ -12,6 +12,7 @@ type environment = Environment.t
 
 let cast_var (orig: 'a Var.t Location.wrap) = { orig with wrap_content = Var.todo_cast orig.wrap_content}
 let assert_type_expression_eq = Helpers.assert_type_expression_eq
+let get_type_expression = Ast_typed.Combinators.type_expression
 
 let rec type_module ~raise ~test ~init_env (p:I.module_) : environment * O.module_fully_typed =
   let aux (e, acc:(environment * O.declaration Location.wrap list)) (d:I.declaration Location.wrap) =

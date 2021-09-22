@@ -15,6 +15,7 @@ module SMap = Map.Make(String)
 
 let temp_unwrap_loc = Location.unwrap
 let temp_unwrap_loc_list = List.map ~f:Location.unwrap
+let get_type_expression = Ast_typed.Combinators.type_expression
 
 let compile_constant' : AST.constant' -> constant' = function
   | C_INT -> C_INT

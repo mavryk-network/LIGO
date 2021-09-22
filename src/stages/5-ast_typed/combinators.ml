@@ -4,6 +4,7 @@ open Stage_common.Constant
 
 type expression_content = [%import: Types.expression_content] [@@deriving ez]
 type expression = [%import: Types.expression] [@@deriving ez]
+(* type type_expression = [%import: Types.type_expression] [@@deriving ez] *)
 
 let make_t_orig_var ?(loc = Location.generated) type_content core orig_var = {type_content; location=loc; type_meta = core ; orig_var}
 let make_t ?(loc = Location.generated) type_content core = {type_content; location=loc; type_meta = core ; orig_var = None}
@@ -103,17 +104,9 @@ let t_test_exec_result ?loc ?core () : type_expression = t_sum_ez ?loc ?core
 let t_function param result ?loc ?s () : type_expression = make_t ?loc (T_arrow {type1=param; type2=result}) s
 let t_shallow_closure param result ?loc ?s () : type_expression = make_t ?loc (T_arrow {type1=param; type2=result}) s
 
-let get_type_expression (x:expression) = x.type_expression
-let get_type' (x:type_expression) = x.type_content
-let get_expression (x:expression) = x.expression_content
-
-let get_variable e : expression_variable option = match e.expression_content with
-  | E_variable v -> Some v
-  | _ -> None
-
-let get_lambda e : lambda option = match e.expression_content with
-  | E_lambda l -> Some l
-  | _ -> None
+(* let get_type_expression (x:expression) = x.type_expression
+ * let get_type' (x:type_expression) = x.type_content
+ * let get_expression (x:expression) = x.expression_content *)
 
 let get_lambda_with_type e =
   match (e.expression_content , e.type_expression.type_content) with
@@ -372,14 +365,14 @@ let e_a_none t = make_e (e_none ()) (t_option t)
 let e_a_record ?(layout=default_layout) r = make_e (e_record r) (t_record ~layout
   (LMap.map
     (fun t ->
-      let associated_type = get_type_expression t in
+      let associated_type = type_expression t in
       {associated_type ; michelson_annotation=None ; decl_pos = 0} )
     r ))
 let e_a_application a b t = make_e (e_application a b) t
 let e_a_variable v ty = make_e (e_variable v) ty
 let ez_e_a_record ?layout r = make_e (ez_e_record r) (ez_t_record ?layout (List.mapi ~f:(fun i (x, y) -> x, {associated_type = y.type_expression ; michelson_annotation = None ; decl_pos = i}) r))
-let e_a_let_in binder expr body attributes = make_e (e_let_in binder expr body attributes) (get_type_expression body)
-let e_a_mod_in module_binder rhs let_result = make_e (e_mod_in module_binder rhs let_result) (get_type_expression let_result)
+let e_a_let_in binder expr body attributes = make_e (e_let_in binder expr body attributes) (type_expression body)
+let e_a_mod_in module_binder rhs let_result = make_e (e_mod_in module_binder rhs let_result) (type_expression let_result)
 let e_a_raw_code l c t = make_e (e_raw_code l c) t
 let e_a_nil t = make_e (e_nil ()) (t_list t)
 let e_a_cons hd tl = make_e (e_cons hd tl) (t_list hd.type_expression)
