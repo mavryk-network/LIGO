@@ -13,24 +13,28 @@ type environment = Environment.t
 let cast_var (orig: 'a Var.t Location.wrap) = { orig with wrap_content = Var.todo_cast orig.wrap_content}
 let assert_type_expression_eq = Helpers.assert_type_expression_eq
 
-let rec is_lambda_constant (e : I.expression_content) env = 
-  match e with
-  | E_variable name ->
-    let tv' = Environment.get_opt name env in
-    (match tv' with
-    | Some tv' -> 
-      (match tv'.definition with
-      | ED_declaration { expression = { expression_content = E_constant _ } } -> true
-      | _ -> false)
-    | None -> false)
-  | E_module_accessor { module_name ; element } -> 
-    let module_env = match Environment.get_module_opt module_name env with
-      Some m -> m
-    | None   -> Environment.empty
-    in
-    is_lambda_constant element.expression_content module_env
-  | E_application { lamb } -> is_lambda_constant lamb.expression_content env
-  | _ -> false
+let extract_lambda_constant' e env = 
+  let rec aux (e : I.expression_content) env args = 
+    match e with
+    | E_variable name ->
+      let tv' = Environment.get_opt name env in
+      let loc = Location.get_location name in
+      (match tv' with
+      | Some tv' -> 
+        (match tv'.definition with
+        | ED_declaration { expression = { expression_content = E_constant { cons_name } } } -> Some (cons_name,loc,args)
+        | _ -> None)
+      | None -> None)
+    | E_module_accessor { module_name ; element } -> 
+      let module_env = match Environment.get_module_opt module_name env with
+        Some m -> m
+      | None   -> Environment.empty
+      in
+      aux element.expression_content module_env args
+    | E_application { lamb ; args=arg } -> aux lamb.expression_content env (arg::args)
+    | _ -> None
+  in
+  aux e env []
 
 let extract_constant' (e : I.expression_content) env = 
   match e with
@@ -414,20 +418,27 @@ and type_expression' ~raise ~test : environment -> ?tv_opt:O.type_expression -> 
      let (lambda,lambda_type) = type_lambda ~raise ~test e lambda in
      return (E_lambda lambda ) lambda_type
   | E_constant _ -> handle_constant ~raise ~test ?tv_opt e ae
-  | E_application {lamb; args} ->
-      
-      let lamb' = type_expression' ~raise ~test e lamb in
-      let args' = type_expression' ~raise ~test e args in
-      let tv = match lamb'.type_expression.type_content with
-        | T_arrow {type1;type2} ->
-            let () = assert_type_expression_eq ~raise args'.location (type1, args'.type_expression) in
-            type2
-        | _ ->
-          raise.raise @@ type_error_approximate
-            ~expression:lamb
-            ~actual:lamb'.type_expression
-      in
-      return (E_application {lamb=lamb'; args=args'}) tv
+  | E_application {lamb; args} as app ->
+      (match extract_lambda_constant' app e with
+      | Some (cons_name,loc,arguments) ->
+        let lst' = List.map ~f:(type_expression' ~raise ~test e) arguments in
+        let tv_lst = List.map ~f:get_type_expression lst' in
+        let (name', tv) =
+          type_constant ~raise ~test cons_name loc tv_lst tv_opt in
+        return (E_constant {cons_name=name';arguments=lst'}) tv
+      | None ->
+        let lamb' = type_expression' ~raise ~test e lamb in
+        let args' = type_expression' ~raise ~test e args in
+        let tv = match lamb'.type_expression.type_content with
+          | T_arrow {type1;type2} ->
+              let () = assert_type_expression_eq ~raise args'.location (type1, args'.type_expression) in
+              type2
+          | _ ->
+            raise.raise @@ type_error_approximate
+              ~expression:lamb
+              ~actual:lamb'.type_expression
+        in
+        return (E_application {lamb=lamb'; args=args'}) tv)
   (* Advanced *)
   | E_matching {matchee;cases} -> (
     let matchee' = type_expression' ~raise ~test e matchee in
