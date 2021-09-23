@@ -881,7 +881,7 @@ and decompile_binding Ast_typed.{expr_var;env_elt} =
     let expression = untype_expression expression in
     Ast_core.ED_declaration {expression;free_variables}
   in
-  Ast_core.{expr_var;env_elt = Expr {type_value;definition}}
+  Ast_core.{expr_var;env_elt = {type_value;definition}}
 
 and decompile_type_binding Ast_typed.{type_variable;type_} =
   let type_ =

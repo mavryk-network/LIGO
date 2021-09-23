@@ -237,21 +237,13 @@ and type_expression' ~raise : ?tv_opt:O.type_expression -> environment -> _ O'.t
     let (tv' : Environment.element) =
       trace_option ~raise (unbound_variable e name ae.location)
       @@ Environment.get_opt name e in
-    match tv' with
-    | Expr tv' ->
       Format.eprintf "wrap variable : %a, %a\n%!"
         O.PP.expression_variable name
-        O.PP.environment_element (Expr tv')
+        O.PP.environment_element tv'
         ;
       let wrapped = Wrap.variable name tv'.type_value in
       let expr' = e_variable name in
-      return_wrapped expr' e state [] wrapped
-    | Predefined cons_name -> 
-      let t = Typer_common.Constant_typers_new.Operators_types.constant_type ~raise cons_name in
-      let wrapped = Wrap.predefined name t in
-      let expr' = e_variable name in
-      return_wrapped expr' e state [] wrapped
-  )
+      return_wrapped expr' e state [] wrapped)
 
   | E_literal (Literal_string s) -> (
       return_wrapped (e_string s) e state [] @@ Wrap.literal "string" (t_string ())

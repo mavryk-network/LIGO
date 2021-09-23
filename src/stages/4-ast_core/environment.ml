@@ -4,7 +4,7 @@ type t = environment
 type element = environment_element
 
 let make_element : type_expression -> environment_element_definition -> element =
-  fun type_value definition -> Expr {type_value ; definition}
+  fun type_value definition -> {type_value ; definition}
 
 let make_element_binder = fun t -> make_element t ED_binder
 
@@ -128,10 +128,7 @@ module PP = struct
   let list_sep_scope x = list_sep x (const " | ")
 
   let rec environment_element = fun ppf {expr_var ; env_elt} ->
-    match env_elt with
-    | Expr env_elt ->
-      fprintf ppf "%a -> %a \n" PP.expression_variable expr_var PP.type_expression env_elt.type_value
-    | Predefined _ -> failwith "[value-environment] not implemented"
+    fprintf ppf "%a -> %a \n" PP.expression_variable expr_var PP.type_expression env_elt.type_value
 
   and type_environment_element = fun ppf {type_variable ; type_} ->
     fprintf ppf "%a -> %a" PP.type_variable type_variable PP.type_expression type_
