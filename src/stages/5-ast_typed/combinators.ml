@@ -258,29 +258,32 @@ let ez_e_record (lst : (label * expression) list) : expression_content =
   let aux prev (k, v) = LMap.add k v prev in
   let map = List.fold_left ~f:aux ~init:LMap.empty lst in
   e_record map
-let e_some s : expression_content = E_constant {cons_name=C_SOME;arguments=[s]}
+
 let e_none (): expression_content = E_constant {cons_name=C_NONE; arguments=[]}
-let e_cons hd tl : expression_content = E_constant {cons_name=C_CONS;arguments=[hd;tl]}
 let e_nil (): expression_content = E_constant {cons_name=C_LIST_EMPTY; arguments=[]}
-let e_set_add hd tl : expression_content = E_constant {cons_name=C_SET_ADD;arguments=[hd;tl]}
 let e_set_empty (): expression_content = E_constant {cons_name=C_SET_EMPTY; arguments=[]}
-let e_map_add k v tl : expression_content = E_constant {cons_name=C_MAP_ADD;arguments=[k;v;tl]}
 let e_map_empty (): expression_content = E_constant {cons_name=C_MAP_EMPTY; arguments=[]}
 let e_big_map_empty (): expression_content = E_constant {cons_name=C_BIG_MAP_EMPTY; arguments=[]}
-let e_map_remove k tl : expression_content = E_constant {cons_name=C_MAP_REMOVE; arguments=[k; tl]}
+
+let e_some s : expression_content = E_constant {cons_name=C_SOME;arguments=[s]}
 let e_contract_opt v : expression_content = E_constant {cons_name=C_CONTRACT_OPT; arguments=[v]}
 let e_contract v : expression_content = E_constant {cons_name=C_CONTRACT; arguments=[v]}
+let e_failwith e : expression_content = E_constant {cons_name=C_FAILWITH ; arguments=[e]}
+
+let e_cons hd tl : expression_content = E_constant {cons_name=C_CONS;arguments=[hd;tl]}
+let e_set_add hd tl : expression_content = E_constant {cons_name=C_SET_ADD;arguments=[hd;tl]}
+let e_map_remove k tl : expression_content = E_constant {cons_name=C_MAP_REMOVE; arguments=[k; tl]}
 let e_contract_entrypoint e v : expression_content = E_constant {cons_name=C_CONTRACT_ENTRYPOINT; arguments=[e; v]}
 let e_contract_entrypoint_opt e v : expression_content = E_constant {cons_name=C_CONTRACT_ENTRYPOINT_OPT; arguments=[e; v]}
 
-let e_failwith e : expression_content = E_constant {cons_name=C_FAILWITH ; arguments=[e]}
+let e_map_add k v tl : expression_content = E_constant {cons_name=C_MAP_ADD;arguments=[k;v;tl]}
 
 let e__type_ p : expression_content = e_literal (Literal__type_ p)
 [@@map (_type_, (int, nat, mutez, string, bytes, timestamp, address, signature, key, key_hash, chain_id, operation))]
 
 let e_unit () : expression_content = e_literal (Literal_unit)
 let e_pair a b : expression_content = ez_e_record [(Label "0",a);(Label "1", b)]
-let e_application lamb args : expression_content = e_application {lamb;args}
+let e_application lamb args : expression_content = e_application { lamb ; args }
 let e_raw_code language code : expression_content = e_raw_code { language ; code }
 let e_let_in let_binder rhs let_result inline = e_let_in { let_binder ; rhs ; let_result; inline }
 let e_mod_in module_binder rhs let_result = e_mod_in { module_binder ; rhs ; let_result }
@@ -293,12 +296,10 @@ let e_bool b : expression_content =
   else
     e_constructor (Label "False") (make_e (e_unit ())(t_unit()))
 
-let e_a_unit = make_e (e_unit ()) (t_unit ())
-let e_a_int n = make_e (e_int n) (t_int ())
 let e_a_literal l t = make_e (e_literal l) t
 
 let e_a__type_ p = make_e (e__type_ p) (t__type_ ())
-[@@map (_type_, (nat, mutez, timestamp, key_hash, bool, string, bytes, address))]
+[@@map (_type_, (unit, int, nat, mutez, timestamp, key_hash, bool, string, bytes, address))]
 
 let e_a_pair a b = make_e (e_pair a b)
   (t_pair a.type_expression b.type_expression )
