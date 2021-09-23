@@ -13,6 +13,38 @@ type environment = Environment.t
 let cast_var (orig: 'a Var.t Location.wrap) = { orig with wrap_content = Var.todo_cast orig.wrap_content}
 let assert_type_expression_eq = Helpers.assert_type_expression_eq
 
+let rec is_lambda_constant (e : I.expression_content) env = 
+  match e with
+  | E_variable name ->
+    let tv' = Environment.get_opt name env in
+    (match tv' with
+    | Some tv' -> 
+      (match tv'.definition with
+      | ED_declaration { expression = { expression_content = E_constant _ } } -> true
+      | _ -> false)
+    | None -> false)
+  | E_module_accessor { module_name ; element } -> 
+    let module_env = match Environment.get_module_opt module_name env with
+      Some m -> m
+    | None   -> Environment.empty
+    in
+    is_lambda_constant element.expression_content module_env
+  | E_application { lamb } -> is_lambda_constant lamb.expression_content env
+  | _ -> false
+
+let extract_constant' (e : I.expression_content) env = 
+  match e with
+    | E_variable name ->
+      let loc = Location.get_location name in
+      let tv' = Environment.get_opt name env in
+      (match tv' with
+      | Some tv' -> 
+        (match tv'.definition with
+        | ED_declaration { expression = { expression_content = E_constant { cons_name } } } -> Some (cons_name, loc)
+        | _ -> None)
+      | None -> None)
+    | _ -> None
+
 let rec type_module ~raise ~test ~init_env (p:I.module_) : environment * O.module_fully_typed =
   let aux (e, acc:(environment * O.declaration Location.wrap list)) (d:I.declaration Location.wrap) =
     let (e', d') = type_declaration ~raise ~test e d in
@@ -383,6 +415,7 @@ and type_expression' ~raise ~test : environment -> ?tv_opt:O.type_expression -> 
      return (E_lambda lambda ) lambda_type
   | E_constant _ -> handle_constant ~raise ~test ?tv_opt e ae
   | E_application {lamb; args} ->
+      
       let lamb' = type_expression' ~raise ~test e lamb in
       let args' = type_expression' ~raise ~test e args in
       let tv = match lamb'.type_expression.type_content with
@@ -466,8 +499,14 @@ and type_expression' ~raise ~test : environment -> ?tv_opt:O.type_expression -> 
       Some m -> m
     | None   -> raise.raise @@ unbound_module_variable e module_name ae.location
     in
-    let element = type_expression' ~raise ~test ?tv_opt module_env element in
-    return (E_module_accessor {module_name; element}) element.type_expression
+    let c = extract_constant' element.expression_content module_env in
+    match c with
+    | Some (cons_name,loc) ->
+      let (_,tv) = type_constant ~raise ~test cons_name loc [] tv_opt in
+      return (E_constant { cons_name ; arguments = [] }) tv
+    | None ->
+      let element = type_expression' ~raise ~test ?tv_opt module_env element in
+      return (E_module_accessor {module_name; element}) element.type_expression
 
 
 and type_lambda ~raise ~test e {
@@ -488,6 +527,7 @@ and type_lambda ~raise ~test e {
       (({binder; result=body}:O.lambda),(t_function input_type output_type ()))
 
 and handle_constant ~raise ~test ?tv_opt e ae = 
+  (* TODO: remove this re-defintion of return*)
   let return expr tv =
     let () =
       match tv_opt with
