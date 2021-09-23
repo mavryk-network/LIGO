@@ -36,13 +36,18 @@ match Location.unwrap d with
     let env' = Environment.add_type type_binder tv env in
     return env' @@ Declaration_type { type_binder ; type_expr = tv }
   )
-  | Declaration_constant {name ; binder ; attr={inline} ; expr} -> (
+  | Declaration_constant {name ; binder ; attr={inline; public} ; expr} -> (
     let tv'_opt = Option.map ~f:(evaluate_type ~raise env) binder.ascr in
     let expr =
       trace ~raise (constant_declaration_error_tracer binder.var expr tv'_opt) @@
       type_expression' ~test ?tv_opt:tv'_opt env expr in
     let binder : O.expression_variable = cast_var binder.var in
-    let post_env = Environment.add_ez_declaration binder expr env in
+    let post_env = 
+      if public then
+        Environment.add_ez_declaration binder expr env
+      else
+        env
+    in
     return post_env @@ Declaration_constant { name ; binder ; expr ; inline}
   )
   | Declaration_module {module_binder;module_} -> (
@@ -799,7 +804,7 @@ function
   let ty = untype_type_expression expr.type_expression in
   let var = Location.map Var.todo_cast binder in
   let expr = untype_expression expr in
-  return @@ Declaration_constant {name; binder={var;ascr=Some ty;attributes = Stage_common.Helpers.empty_attribute};expr;attr={inline}}
+  return @@ Declaration_constant {name; binder={var;ascr=Some ty;attributes = Stage_common.Helpers.empty_attribute};expr;attr={inline;public=true}} (* TODO: fixme *)
 | Declaration_module {module_binder;module_} ->
   let module_ = untype_module_fully_typed module_ in
   return @@ Declaration_module {module_binder;module_}

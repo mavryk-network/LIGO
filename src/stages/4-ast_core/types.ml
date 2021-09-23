@@ -13,6 +13,7 @@ let location_to_yojson loc = Location.to_yojson loc
 
 type attribute = {
   inline: bool ;
+  public: bool ;
 }
 
 

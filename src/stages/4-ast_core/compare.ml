@@ -316,12 +316,13 @@ and ascription {anno_expr=aa; type_annotation=ta} {anno_expr=ab; type_annotation
     expression aa ab
     type_expression ta tb
 
-and declaration_constant {name=na;binder=ba;expr=ea;attr={inline=ia}} {name=nb;binder=bb;expr=eb;attr={inline=ib}} =
-  cmp4
+and declaration_constant {name=na;binder=ba;expr=ea;attr={inline=ia;public=ip}} {name=nb;binder=bb;expr=eb;attr={inline=ib;public=iq}} =
+  cmp5
     (Option.compare String.compare) na nb
     (binder type_expression) ba bb
     expression ea eb
     bool ia ib
+    bool ip iq
 
 and declaration_type {type_binder=tba;type_expr=tea} {type_binder=tbb;type_expr=teb} =
   cmp2

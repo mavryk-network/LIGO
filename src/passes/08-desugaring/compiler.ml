@@ -40,7 +40,7 @@ let get_layout : (string list) -> O.layout option = fun attributes ->
   aux attributes
 
 let get_inline : (string list) -> bool = List.exists ~f:is_inline
-
+let get_public: (string list) -> bool = fun attr -> not (List.mem attr "private" ~equal:String.equal)
 
 let rec compile_type_expression : I.type_expression -> O.type_expression =
   fun te ->
@@ -268,7 +268,8 @@ and compile_declaration : I.declaration -> O.declaration =
     let binder = compile_binder binder in
     let expr = compile_expression expr in
     let inline = get_inline attr in
-    return @@ O.Declaration_constant {name; binder; attr={inline}; expr}
+    let public = get_public attr in
+    return @@ O.Declaration_constant {name; binder; attr={inline; public}; expr}
   | I.Declaration_module {module_binder;module_} ->
     let module_ = compile_module module_ in
     return @@ O.Declaration_module {module_binder;module_}

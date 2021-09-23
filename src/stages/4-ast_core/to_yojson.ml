@@ -169,12 +169,13 @@ and declaration_type {type_binder;type_expr} =
     ("type_expr", type_expression type_expr);
   ]
 
-and declaration_constant {name; binder=b;attr={inline};expr} =
+and declaration_constant {name; binder=b;attr={inline;public};expr} =
   `Assoc [
     ("name", option' string name);
     ("binder",binder type_expression b);
     ("expr", expression expr);
     ("attribute", `Bool inline);
+    ("public", `Bool public);
   ]
 
 and declaration_module {module_binder;module_=m} =

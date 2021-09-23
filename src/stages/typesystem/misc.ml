@@ -217,7 +217,7 @@ module Substitution = struct
       | T.Declaration_constant {name ; binder ; expr ; attr={inline}} ->
         let binder = s_binder ~substs binder in
         let expr = s_expression ~substs expr in
-        return @@ Declaration_constant {name; binder; expr; attr={inline}}
+        return @@ Declaration_constant {name; binder; expr; attr={inline; public=true}} (* TODO: fix me *)
       | T.Declaration_type t -> return @@ Declaration_type t
       | T.Declaration_module {module_binder;module_} ->
         let module_       = s_module' ~substs module_ in

@@ -7,7 +7,8 @@ namespace A {
     export namespace C {
         export let toto: titi = 42;
     };
-    export let add = (a: titi, b: titi) : titi => a + b;
+    
+    export /* @private */ let add = (a: titi, b: titi) : titi => a + b;
 };
 
 import D = A;
