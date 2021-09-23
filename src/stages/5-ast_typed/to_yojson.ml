@@ -242,14 +242,11 @@ let environment_element_definition = function
   | ED_binder  -> `List [ `String "ED_binder"; `Null]
   | ED_declaration ed -> `List [ `String "ED_declaration"; environment_element_definition_declaration ed]
 
-let rec environment_element env_elt =
-  match env_elt with
-  | Expr {type_value;definition} ->
-    `Assoc [
-      ("type_value", type_expression type_value);
-      ("definition", environment_element_definition definition);
-    ]
-  | Predefined _ -> failwith "[value-environtment] not implemented"
+let rec environment_element {type_value;definition} =  
+  `Assoc [
+    ("type_value", type_expression type_value);
+    ("definition", environment_element_definition definition);
+  ]
 
 and environment_binding {expr_var;env_elt} =
   `Assoc [

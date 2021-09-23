@@ -58,18 +58,34 @@ let meta_ligo_types : (type_variable * type_expression) list =
     (v_failure, t_constant failure_name []);
   ]
 
-let location_wraped_var s = Location.wrap @@ Var.of_name s
+let wrap_var s = Location.wrap @@ Var.of_name s
+
+let wrap_constant' c = {
+  type_value = t_unit () ;
+  definition = ED_declaration {
+    expression = {
+      expression_content= E_constant {
+        cons_name = c ;
+        arguments = [] ;
+      } ;
+      location = Location.generated ;
+      type_expression = t_unit () ;
+    } ;
+    free_variables = [] ;
+  } ;
+}
+  
 
 let tezos_module env = Environment.add_module "Tezos" (Environment.of_list_values [
-  (location_wraped_var "amount", Predefined C_AMOUNT)
+  (wrap_var "amount", wrap_constant' C_AMOUNT)
 ] Environment.empty) env
 
 let list_module env = Environment.add_module "List" (Environment.of_list_values [
-  (location_wraped_var "map", Predefined C_LIST_MAP)
+  (wrap_var "map", wrap_constant' C_LIST_MAP)
 ] Environment.empty) env
 
 let bitwise_module env = Environment.add_module "Bitwise" (Environment.of_list_values [
-  (location_wraped_var "or", Predefined C_OR)
+  (wrap_var "or", wrap_constant' C_OR)
 ] Environment.empty) env
 
 

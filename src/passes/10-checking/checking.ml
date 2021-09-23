@@ -276,11 +276,7 @@ and type_expression' ~raise ~test : environment -> ?tv_opt:O.type_expression -> 
       let tv' =
         trace_option ~raise (unbound_variable e name ae.location)
         @@ Environment.get_opt name e in
-      (match tv' with
-      | Expr tv' -> return (E_variable name) tv'.type_value
-      | Predefined c -> 
-        let (_name', tv') = type_constant ~raise ~test c ae.location [] tv_opt in
-        return (E_variable name) tv')
+      return (E_variable name) tv'.type_value
   | E_literal Literal_unit ->
       return (E_literal (Literal_unit)) (t_unit ())
   | E_literal (Literal_string s) ->
@@ -385,6 +381,121 @@ and type_expression' ~raise ~test : environment -> ?tv_opt:O.type_expression -> 
                | Some _ -> lambda in
      let (lambda,lambda_type) = type_lambda ~raise ~test e lambda in
      return (E_lambda lambda ) lambda_type
+  | E_constant _ -> handle_constant ~raise ~test ?tv_opt e ae
+  | E_application {lamb; args} ->
+      let lamb' = type_expression' ~raise ~test e lamb in
+      let args' = type_expression' ~raise ~test e args in
+      let tv = match lamb'.type_expression.type_content with
+        | T_arrow {type1;type2} ->
+            let () = assert_type_expression_eq ~raise args'.location (type1, args'.type_expression) in
+            type2
+        | _ ->
+          raise.raise @@ type_error_approximate
+            ~expression:lamb
+            ~actual:lamb'.type_expression
+      in
+      return (E_application {lamb=lamb'; args=args'}) tv
+  (* Advanced *)
+  | E_matching {matchee;cases} -> (
+    let matchee' = type_expression' ~raise ~test e matchee in
+    let matcheevar = Location.wrap (Var.fresh ()) in
+    let aux : (I.expression, I.type_expression) I.match_case -> ((I.type_expression I.pattern * O.type_expression) list * (I.expression * O.environment)) =
+      fun {pattern ; body} -> ([(pattern,matchee'.type_expression)], (body,e))
+    in
+    let eqs = List.map ~f:aux cases in
+    let case_exp = Pattern_matching.compile_matching ~raise ~err_loc:ae.location ~type_f:(type_expression' ~test) ~body_t:(tv_opt) matcheevar eqs in
+    let case_exp = { case_exp with location = ae.location } in
+    let x = O.e_let_in matcheevar matchee' case_exp false in
+    return x case_exp.type_expression
+  )
+  | E_let_in {let_binder = {var ; ascr} ; rhs ; let_result; inline} ->
+    let rhs_tv_opt = Option.map ~f:(evaluate_type ~raise e) ascr in
+    let rhs = type_expression' ~raise ~test ?tv_opt:rhs_tv_opt e rhs in
+    let binder = cast_var var in
+    let e' = Environment.add_ez_declaration binder rhs e in
+    let let_result = type_expression' ~raise ~test e' let_result in
+    return (E_let_in {let_binder = binder; rhs; let_result; inline}) let_result.type_expression
+  | E_type_in {type_binder; rhs ; let_result} ->
+    let rhs = evaluate_type ~raise e rhs in
+    let e' = Environment.add_type type_binder rhs e in
+    let let_result = type_expression' ~raise ~test e' let_result in
+    return (E_type_in {type_binder; rhs; let_result}) let_result.type_expression
+  | E_mod_in {module_binder; rhs; let_result} ->
+    let env,rhs = type_module ~raise ~test ~init_env:e rhs in
+    let e' = Environment.add_module module_binder env e in
+    let let_result = type_expression' ~raise ~test e' let_result in
+    return (E_mod_in {module_binder; rhs; let_result}) let_result.type_expression
+  | E_mod_alias {alias; binders; result} ->
+    let aux e binder =
+      trace_option ~raise (unbound_module_variable e binder ae.location) @@
+      Environment.get_module_opt binder e in
+    let env = List.Ne.fold_left aux e binders in
+    let e' = Environment.add_module alias env e in
+    let result = type_expression' ~raise ~test e' result in
+    return (E_mod_alias {alias; binders; result}) result.type_expression
+  | E_raw_code {language;code} ->
+    let (code,type_expression) = trace_option ~raise (expected_ascription code) @@
+      I.get_e_ascription code.expression_content in
+    let code = type_expression' ~raise ~test e code in
+    let type_expression = evaluate_type ~raise e type_expression in
+    let code = {code with type_expression} in
+    return (E_raw_code {language;code}) code.type_expression
+  | E_recursive {fun_name; fun_type; lambda} ->
+    let fun_name = cast_var fun_name in
+    let fun_type = evaluate_type ~raise e fun_type in
+    let e' = Environment.add_ez_binder fun_name fun_type e in
+    let (lambda,_) = type_lambda ~raise ~test e' lambda in
+    return (E_recursive {fun_name;fun_type;lambda}) fun_type
+  | E_ascription {anno_expr; type_annotation} ->
+    let tv = evaluate_type ~raise e type_annotation in
+    let expr' = type_expression' ~raise ~test ~tv_opt:tv e anno_expr in
+    let type_annotation =
+      trace_option ~raise (corner_case "merge_annotations (Some ...) (Some ...) failed") @@
+      O.merge_annotation
+        (Some tv)
+        (Some expr'.type_expression)
+        O.assert_type_expression_eq in
+    (* check type annotation of the expression as a whole (e.g. let x : t = (v : t') ) *)
+    let () =
+      match tv_opt with
+      | None -> ()
+      | Some tv' -> assert_type_expression_eq ~raise anno_expr.location (tv' , type_annotation) in
+    {expr' with type_expression=type_annotation}
+  | E_module_accessor {module_name; element} ->
+    let module_env = match Environment.get_module_opt module_name e with
+      Some m -> m
+    | None   -> raise.raise @@ unbound_module_variable e module_name ae.location
+    in
+    let element = type_expression' ~raise ~test ?tv_opt module_env element in
+    return (E_module_accessor {module_name; element}) element.type_expression
+
+
+and type_lambda ~raise ~test e {
+      binder ;
+      output_type ;
+      result ;
+    } =
+      let input_type =
+        Option.map ~f:(evaluate_type ~raise e) binder.ascr in
+      let output_type =
+        Option.map ~f:(evaluate_type ~raise e) output_type
+      in
+      let binder = cast_var binder.var in
+      let input_type = trace_option ~raise (missing_funarg_annotation binder) input_type in
+      let e' = Environment.add_ez_binder binder input_type e in
+      let body = type_expression' ~raise ~test ?tv_opt:output_type e' result in
+      let output_type = body.type_expression in
+      (({binder; result=body}:O.lambda),(t_function input_type output_type ()))
+
+and handle_constant ~raise ~test ?tv_opt e ae = 
+  let return expr tv =
+    let () =
+      match tv_opt with
+      | None -> ()
+      | Some tv' -> assert_type_expression_eq ~raise ae.location (tv' , tv) in
+    let location = ae.location in
+    make_e ~location expr tv in
+  match ae.expression_content with
   | E_constant {cons_name=( C_LIST_FOLD | C_MAP_FOLD | C_SET_FOLD | C_FOLD) as opname ;
                 arguments=[
                     ( { expression_content = (I.E_lambda { binder = {var=lname ; ascr = None};
@@ -515,112 +626,7 @@ and type_expression' ~raise ~test : environment -> ?tv_opt:O.type_expression -> 
       let (name', tv) =
         type_constant ~raise ~test cons_name ae.location tv_lst tv_opt in
       return (E_constant {cons_name=name';arguments=lst'}) tv
-  | E_application {lamb; args} ->
-      let lamb' = type_expression' ~raise ~test e lamb in
-      let args' = type_expression' ~raise ~test e args in
-      let tv = match lamb'.type_expression.type_content with
-        | T_arrow {type1;type2} ->
-            let () = assert_type_expression_eq ~raise args'.location (type1, args'.type_expression) in
-            type2
-        | _ ->
-          raise.raise @@ type_error_approximate
-            ~expression:lamb
-            ~actual:lamb'.type_expression
-      in
-      return (E_application {lamb=lamb'; args=args'}) tv
-  (* Advanced *)
-  | E_matching {matchee;cases} -> (
-    let matchee' = type_expression' ~raise ~test e matchee in
-    let matcheevar = Location.wrap (Var.fresh ()) in
-    let aux : (I.expression, I.type_expression) I.match_case -> ((I.type_expression I.pattern * O.type_expression) list * (I.expression * O.environment)) =
-      fun {pattern ; body} -> ([(pattern,matchee'.type_expression)], (body,e))
-    in
-    let eqs = List.map ~f:aux cases in
-    let case_exp = Pattern_matching.compile_matching ~raise ~err_loc:ae.location ~type_f:(type_expression' ~test) ~body_t:(tv_opt) matcheevar eqs in
-    let case_exp = { case_exp with location = ae.location } in
-    let x = O.e_let_in matcheevar matchee' case_exp false in
-    return x case_exp.type_expression
-  )
-  | E_let_in {let_binder = {var ; ascr} ; rhs ; let_result; inline} ->
-    let rhs_tv_opt = Option.map ~f:(evaluate_type ~raise e) ascr in
-    let rhs = type_expression' ~raise ~test ?tv_opt:rhs_tv_opt e rhs in
-    let binder = cast_var var in
-    let e' = Environment.add_ez_declaration binder rhs e in
-    let let_result = type_expression' ~raise ~test e' let_result in
-    return (E_let_in {let_binder = binder; rhs; let_result; inline}) let_result.type_expression
-  | E_type_in {type_binder; rhs ; let_result} ->
-    let rhs = evaluate_type ~raise e rhs in
-    let e' = Environment.add_type type_binder rhs e in
-    let let_result = type_expression' ~raise ~test e' let_result in
-    return (E_type_in {type_binder; rhs; let_result}) let_result.type_expression
-  | E_mod_in {module_binder; rhs; let_result} ->
-    let env,rhs = type_module ~raise ~test ~init_env:e rhs in
-    let e' = Environment.add_module module_binder env e in
-    let let_result = type_expression' ~raise ~test e' let_result in
-    return (E_mod_in {module_binder; rhs; let_result}) let_result.type_expression
-  | E_mod_alias {alias; binders; result} ->
-    let aux e binder =
-      trace_option ~raise (unbound_module_variable e binder ae.location) @@
-      Environment.get_module_opt binder e in
-    let env = List.Ne.fold_left aux e binders in
-    let e' = Environment.add_module alias env e in
-    let result = type_expression' ~raise ~test e' result in
-    return (E_mod_alias {alias; binders; result}) result.type_expression
-  | E_raw_code {language;code} ->
-    let (code,type_expression) = trace_option ~raise (expected_ascription code) @@
-      I.get_e_ascription code.expression_content in
-    let code = type_expression' ~raise ~test e code in
-    let type_expression = evaluate_type ~raise e type_expression in
-    let code = {code with type_expression} in
-    return (E_raw_code {language;code}) code.type_expression
-  | E_recursive {fun_name; fun_type; lambda} ->
-    let fun_name = cast_var fun_name in
-    let fun_type = evaluate_type ~raise e fun_type in
-    let e' = Environment.add_ez_binder fun_name fun_type e in
-    let (lambda,_) = type_lambda ~raise ~test e' lambda in
-    return (E_recursive {fun_name;fun_type;lambda}) fun_type
-  | E_ascription {anno_expr; type_annotation} ->
-    let tv = evaluate_type ~raise e type_annotation in
-    let expr' = type_expression' ~raise ~test ~tv_opt:tv e anno_expr in
-    let type_annotation =
-      trace_option ~raise (corner_case "merge_annotations (Some ...) (Some ...) failed") @@
-      O.merge_annotation
-        (Some tv)
-        (Some expr'.type_expression)
-        O.assert_type_expression_eq in
-    (* check type annotation of the expression as a whole (e.g. let x : t = (v : t') ) *)
-    let () =
-      match tv_opt with
-      | None -> ()
-      | Some tv' -> assert_type_expression_eq ~raise anno_expr.location (tv' , type_annotation) in
-    {expr' with type_expression=type_annotation}
-  | E_module_accessor {module_name; element} ->
-    let module_env = match Environment.get_module_opt module_name e with
-      Some m -> m
-    | None   -> raise.raise @@ unbound_module_variable e module_name ae.location
-    in
-    let element = type_expression' ~raise ~test ?tv_opt module_env element in
-    return (E_module_accessor {module_name; element}) element.type_expression
-
-
-and type_lambda ~raise ~test e {
-      binder ;
-      output_type ;
-      result ;
-    } =
-      let input_type =
-        Option.map ~f:(evaluate_type ~raise e) binder.ascr in
-      let output_type =
-        Option.map ~f:(evaluate_type ~raise e) output_type
-      in
-      let binder = cast_var binder.var in
-      let input_type = trace_option ~raise (missing_funarg_annotation binder) input_type in
-      let e' = Environment.add_ez_binder binder input_type e in
-      let body = type_expression' ~raise ~test ?tv_opt:output_type e' result in
-      let output_type = body.type_expression in
-      (({binder; result=body}:O.lambda),(t_function input_type output_type ()))
-
-
+  | _ -> failwith "only constants handled here"
 
 and type_constant ~raise ~test (name:I.constant') (loc:Location.t) (lst:O.type_expression list) (tv_opt:O.type_expression option) : O.constant' * O.type_expression =
   let typer = Constant_typers.constant_typers ~raise ~test loc name in
@@ -820,18 +826,14 @@ let rec decompile_env (env : Ast_typed.environment) =
   Ast_core.{expression_environment; type_environment; module_environment}
 
 and decompile_binding Ast_typed.{expr_var;env_elt} =
-  match env_elt with
-  | Expr env_elt ->
-    let type_value = untype_type_expression env_elt.type_value in
-    let definition = match env_elt.definition with
-      ED_binder -> Ast_core.ED_binder
-    | ED_declaration {expression;free_variables} ->
-      let expression = untype_expression expression in
-      Ast_core.ED_declaration {expression;free_variables}
-    in
-    Ast_core.{expr_var;env_elt = Expr {type_value;definition}}
-  | Predefined c -> 
-    Ast_core.{expr_var;env_elt = Predefined c }
+  let type_value = untype_type_expression env_elt.type_value in
+  let definition = match env_elt.definition with
+    ED_binder -> Ast_core.ED_binder
+  | ED_declaration {expression;free_variables} ->
+    let expression = untype_expression expression in
+    Ast_core.ED_declaration {expression;free_variables}
+  in
+  Ast_core.{expr_var;env_elt = Expr {type_value;definition}}
 
 and decompile_type_binding Ast_typed.{type_variable;type_} =
   let type_ =
