@@ -123,6 +123,9 @@ let bytes_module = make_module "Bytes" [
   (wrap_var "length",  wrap_constant' C_SIZE) ;
   (wrap_var "concat",  wrap_constant' C_CONCAT) ;
   (wrap_var "sub"   ,  wrap_constant' C_SLICE) ;
+
+  (wrap_var "size" , wrap_constant' C_SIZE) ;
+  (wrap_var "slice", wrap_constant' C_SLICE) ;
 ]
 
 let list_module = make_module "List" [
@@ -143,6 +146,10 @@ let bitwise_module = make_module "Bitwise" [
   (wrap_var "xor"        , wrap_constant' C_XOR) ;
   (wrap_var "shift_left" , wrap_constant' C_LSL) ;
   (wrap_var "shift_right", wrap_constant' C_LSR) ;
+
+  (wrap_var "lor" , wrap_constant' C_OR) ; 
+  (wrap_var "land", wrap_constant' C_AND) ;
+  (wrap_var "lxor", wrap_constant' C_XOR) ;
 ]
 
 let string_module = make_module "String" [
@@ -189,6 +196,8 @@ let set_module = make_module "Set" [
   (wrap_var "fold_asc" ,  wrap_constant' C_SET_FOLD) ;
   (wrap_var "fold_desc",  wrap_constant' C_SET_FOLD_DESC) ;
   (wrap_var "update"   ,  wrap_constant' C_SET_UPDATE) ;
+
+  (wrap_var "size", wrap_constant' C_SIZE) ;
 ]
 
 let map_module = make_module "Map" [
@@ -204,6 +213,8 @@ let map_module = make_module "Map" [
   (wrap_var "empty"         , wrap_constant' C_MAP_EMPTY) ;
   (wrap_var "literal"       , wrap_constant' C_MAP_LITERAL) ;
   (wrap_var "get_and_update", wrap_constant' C_MAP_GET_AND_UPDATE) ;
+
+  (wrap_var "find", wrap_constant' C_MAP_FIND) ;
 ]
 
 let big_map_module = make_module "Big_map" [
@@ -251,6 +262,64 @@ let test_module = make_module "Test" [
   (wrap_var "to_entrypoint"              , wrap_constant' C_TEST_TO_ENTRYPOINT) ;
   (wrap_var "to_typed_address"           , wrap_constant' C_TEST_TO_TYPED_ADDRESS) ;
   (wrap_var "set_big_map"                , wrap_constant' C_TEST_SET_BIG_MAP) ;
+]
+
+let loop_module = make_module "Loop" [
+  (wrap_var "fold_while", wrap_constant' C_FOLD_WHILE) ;    
+  (wrap_var "resume"    , wrap_constant' C_FOLD_CONTINUE) ; 
+  (wrap_var "stop"      , wrap_constant' C_FOLD_STOP) ;     
+]
+
+let current_module = make_module "Current" [
+  (wrap_var "balance"         , wrap_constant' C_BALANCE) ;             
+  (wrap_var "time"            , wrap_constant' C_NOW) ;                 
+  (wrap_var "amount"          , wrap_constant' C_AMOUNT) ;              
+  (wrap_var "sender"          , wrap_constant' C_SENDER) ;              
+  (wrap_var "address"         , wrap_constant' C_ADDRESS) ;             
+  (wrap_var "self_address"    , wrap_constant' C_SELF_ADDRESS) ;        
+  (wrap_var "implicit_account", wrap_constant' C_IMPLICIT_ACCOUNT) ;    
+  (wrap_var "source"          , wrap_constant' C_SOURCE) ;              
+  (wrap_var "failwith"        , wrap_constant' C_FAILWITH) ;            
+]
+
+let operation_module = make_module "Operation" [
+  (wrap_var "transaction"       , wrap_constant' C_CALL) ;                    
+  (wrap_var "set_delegate"      , wrap_constant' C_SET_DELEGATE) ;            
+  (wrap_var "get_contract"      , wrap_constant' C_CONTRACT) ;                
+  (wrap_var "get_contract_opt"  , wrap_constant' C_CONTRACT_OPT) ;            
+  (wrap_var "get_entrypoint"    , wrap_constant' C_CONTRACT_ENTRYPOINT) ;     
+  (wrap_var "get_entrypoint_opt", wrap_constant' C_CONTRACT_ENTRYPOINT_OPT) ; 
+]
+
+let michelson_module = make_module "Michelson" [
+  (wrap_var "is_nat", wrap_constant' C_IS_NAT) ;
+]
+
+let top_level e = List.fold_left ~f:(fun e (v,c) -> Environment.add_expr v c e) ~init:e [
+  (wrap_var "assert"                ,  wrap_constant' C_ASSERTION) ;
+  (wrap_var "assert_with_error"     ,  wrap_constant' C_ASSERTION_WITH_ERROR) ;
+  (wrap_var "assert_some"           ,  wrap_constant' C_ASSERT_SOME) ;
+  (wrap_var "assert_some_with_error",  wrap_constant' C_ASSERT_SOME_WITH_ERROR) ;
+  (wrap_var "true"                  ,  wrap_constant' C_TRUE) ;
+  (wrap_var "false"                 ,  wrap_constant' C_FALSE) ;
+
+  
+
+  (wrap_var "chain_id", wrap_constant' C_CHAIN_ID) ;                
+  (wrap_var "balance" , wrap_constant' C_BALANCE) ;             
+  (wrap_var "time"    , wrap_constant' C_NOW) ;                 
+  (wrap_var "amount"  , wrap_constant' C_AMOUNT) ;              
+  (wrap_var "sender"  , wrap_constant' C_SENDER) ;              
+  (wrap_var "source"  , wrap_constant' C_SOURCE) ;              
+  (wrap_var "failwith", wrap_constant' C_FAILWITH) ;
+  (wrap_var "is_nat"  , wrap_constant' C_IS_NAT) ;
+  (wrap_var "int"     , wrap_constant' C_INT) ;
+  (wrap_var "abs"     , wrap_constant' C_ABS) ;
+  (wrap_var "ediv"    , wrap_constant' C_EDIV) ;
+  (wrap_var "unit"    , wrap_constant' C_UNIT) ;
+  (wrap_var "continue", wrap_constant' C_FOLD_CONTINUE) ; 
+  (wrap_var "stop"    , wrap_constant' C_FOLD_STOP) ;     
+
 ]
 
 let default : Protocols.t -> environment = function
