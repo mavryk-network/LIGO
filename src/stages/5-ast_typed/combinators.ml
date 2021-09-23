@@ -121,13 +121,8 @@ let get_t__type_ (t : type_expression) : unit option = get_t_base_inj t _type__n
 let get_t_mutez (t:type_expression) : unit option = get_t_tez t
 let get_t_michelson_code (t:type_expression) : unit option = get_t_base_inj t test_michelson_name
 
-let get_t_contract (t:type_expression) : type_expression option = get_t_unary_inj t contract_name
-let get_t_option (t:type_expression) : type_expression option = get_t_unary_inj t option_name
-let get_t_list (t:type_expression) : type_expression option = get_t_unary_inj t list_name
-let get_t_set (t:type_expression) : type_expression option = get_t_unary_inj t set_name
-let get_t_ticket (t:type_expression) : type_expression option = get_t_unary_inj t ticket_name
-let get_t_sapling_state (t:type_expression) : type_expression option = get_t_unary_inj t sapling_state_name
-let get_t_sapling_transaction (t:type_expression) : type_expression option = get_t_unary_inj t sapling_transaction_name
+let get_t__type_ (t : type_expression) : type_expression option = get_t_unary_inj t _type__name
+[@@map (_type_, (contract, option, list, set, ticket, sapling_state, sapling_transaction))]
 
 let tuple_of_record (m: _ LMap.t) =
   let aux i =
@@ -240,17 +235,10 @@ let assert_t_contract (t:type_expression) : unit option = match get_t_unary_inj 
   | Some _ -> Some ()
   | _ -> None
 
-let is_t_list t = Option.is_some (get_t_list t)
-let is_t_set t = Option.is_some (get_t_set t)
-let is_t_nat t = Option.is_some (get_t_nat t)
-let is_t_string t = Option.is_some (get_t_string t)
-let is_t_bytes t = Option.is_some (get_t_bytes t)
-let is_t_int t = Option.is_some (get_t_int t)
-let is_t_bool t = Option.is_some (get_t_bool t)
-let is_t_unit t = Option.is_some (get_t_unit t)
-let is_t_address t = Option.is_some (get_t_address t)
-let is_t_mutez t = Option.is_some (get_t_mutez t)
-let is_t_contract t = Option.is_some (get_t_contract t)
+let is_t__type_ t = Option.is_some (get_t__type_ t)
+[@@map (_type_, (list, set, nat, string, bytes, int, bool, unit, address, tez, contract))]
+
+let is_t_mutez t = is_t_tez t
 
 let assert_t_list_operation (t : type_expression) : unit option =
   match get_t_list t with
@@ -287,19 +275,10 @@ let e_contract_entrypoint_opt e v : expression_content = E_constant {cons_name=C
 
 let e_failwith e : expression_content = E_constant {cons_name=C_FAILWITH ; arguments=[e]}
 
+let e__type_ p : expression_content = e_literal (Literal__type_ p)
+[@@map (_type_, (int, nat, mutez, string, bytes, timestamp, address, signature, key, key_hash, chain_id, operation))]
+
 let e_unit () : expression_content = e_literal (Literal_unit)
-let e_int n : expression_content = e_literal (Literal_int n)
-let e_nat n : expression_content = e_literal (Literal_nat n)
-let e_mutez n : expression_content = e_literal (Literal_mutez n)
-let e_string s : expression_content = e_literal (Literal_string s)
-let e_bytes s : expression_content = e_literal (Literal_bytes s)
-let e_timestamp s : expression_content = e_literal (Literal_timestamp s)
-let e_address s : expression_content = e_literal (Literal_address s)
-let e_signature s : expression_content = e_literal (Literal_signature s)
-let e_key s : expression_content = e_literal (Literal_key s)
-let e_key_hash s : expression_content = e_literal (Literal_key_hash s)
-let e_chain_id s : expression_content = e_literal (Literal_chain_id s)
-let e_operation s : expression_content = e_literal (Literal_operation s)
 let e_pair a b : expression_content = ez_e_record [(Label "0",a);(Label "1", b)]
 let e_application lamb args : expression_content = e_application {lamb;args}
 let e_raw_code language code : expression_content = e_raw_code { language ; code }
@@ -317,14 +296,10 @@ let e_bool b : expression_content =
 let e_a_unit = make_e (e_unit ()) (t_unit ())
 let e_a_int n = make_e (e_int n) (t_int ())
 let e_a_literal l t = make_e (e_literal l) t
-let e_a_nat n = make_e (e_nat n) (t_nat ())
-let e_a_mutez n = make_e (e_mutez n) (t_tez ())
-let e_a_timestamp n = make_e (e_timestamp n) (t_timestamp ())
-let e_a_key_hash n = make_e (e_key_hash n) (t_key_hash ())
-let e_a_bool b = make_e (e_bool b) (t_bool ())
-let e_a_string s = make_e (e_string s) (t_string ())
-let e_a_bytes b = make_e (e_bytes b) (t_bytes ())
-let e_a_address s = make_e (e_address s) (t_address ())
+
+let e_a__type_ p = make_e (e__type_ p) (t__type_ ())
+[@@map (_type_, (nat, mutez, timestamp, key_hash, bool, string, bytes, address))]
+
 let e_a_pair a b = make_e (e_pair a b)
   (t_pair a.type_expression b.type_expression )
 let e_a_constructor c e t = make_e (e_constructor (Label c) e) t
