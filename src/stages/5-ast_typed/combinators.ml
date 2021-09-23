@@ -224,13 +224,6 @@ let is_t_option t = Option.is_some (get_t_option t)
 let is_t_sum t = Option.is_some (get_t_sum t)
 
 let is_e_matching e = match e.expression_content with | E_matching _ -> true | _ -> false
-let assert_t_mutez : type_expression -> unit option = get_t_mutez
-let assert_t_key = get_t_key
-let assert_t_signature = get_t_signature
-let assert_t_key_hash = get_t_key_hash
-let assert_t_bytes = get_t_bytes
-let assert_t_string = get_t_string
-let assert_t_michelson_code = get_t_michelson_code
 let assert_t_contract (t:type_expression) : unit option = match get_t_unary_inj t contract_name with
   | Some _ -> Some ()
   | _ -> None
@@ -245,13 +238,11 @@ let assert_t_list_operation (t : type_expression) : unit option =
   | Some t' -> get_t_base_inj t' operation_name
   | None -> None
 
-let assert_t_int : type_expression -> unit option = fun t -> get_t_base_inj t int_name
-let assert_t_nat : type_expression -> unit option = fun t -> get_t_base_inj t nat_name
-let assert_t_bool : type_expression -> unit option = fun v -> get_t_bool v
-let assert_t_option : type_expression -> unit option = fun v -> Option.map ~f:(fun _ -> ()) @@ get_t_option v
-let assert_t_set : type_expression -> unit option = fun v -> Option.map ~f:(fun _ -> ()) @@ get_t_set v
-let assert_t_list : type_expression -> unit option = fun v -> Option.map ~f:(fun _ -> ()) @@ get_t_list v
-let assert_t_unit : type_expression -> unit option = fun v -> get_t_unit v
+let assert_t__type_ : type_expression -> unit option = fun t -> get_t__type_ t
+[@@map (_type_, (int, nat, bool, unit, mutez, key, signature, key_hash, bytes, string, michelson_code))]
+
+let assert_t__type_ : type_expression -> unit option = fun v -> Option.map ~f:(fun _ -> ()) @@ get_t__type_ v
+[@@map (_type_, (option, set, list))]
 
 let e_record map : expression_content = E_record map
 let ez_e_record (lst : (label * expression) list) : expression_content =
@@ -259,22 +250,14 @@ let ez_e_record (lst : (label * expression) list) : expression_content =
   let map = List.fold_left ~f:aux ~init:LMap.empty lst in
   e_record map
 
-let e_none (): expression_content = E_constant {cons_name=C_NONE; arguments=[]}
-let e_nil (): expression_content = E_constant {cons_name=C_LIST_EMPTY; arguments=[]}
-let e_set_empty (): expression_content = E_constant {cons_name=C_SET_EMPTY; arguments=[]}
-let e_map_empty (): expression_content = E_constant {cons_name=C_MAP_EMPTY; arguments=[]}
-let e_big_map_empty (): expression_content = E_constant {cons_name=C_BIG_MAP_EMPTY; arguments=[]}
+let e__ct_ () : expression_content = E_constant { cons_name = C__CT_; arguments = [] }
+[@@map (_ct_, (none, nil, set_empty, map_empty, big_map_empty))]
 
-let e_some s : expression_content = E_constant {cons_name=C_SOME;arguments=[s]}
-let e_contract_opt v : expression_content = E_constant {cons_name=C_CONTRACT_OPT; arguments=[v]}
-let e_contract v : expression_content = E_constant {cons_name=C_CONTRACT; arguments=[v]}
-let e_failwith e : expression_content = E_constant {cons_name=C_FAILWITH ; arguments=[e]}
+let e__ct_ p : expression_content = E_constant { cons_name = C__CT_; arguments = [p] }
+[@@map (_ct_, (some, contract_opt, contract, failwith))]
 
-let e_cons hd tl : expression_content = E_constant {cons_name=C_CONS;arguments=[hd;tl]}
-let e_set_add hd tl : expression_content = E_constant {cons_name=C_SET_ADD;arguments=[hd;tl]}
-let e_map_remove k tl : expression_content = E_constant {cons_name=C_MAP_REMOVE; arguments=[k; tl]}
-let e_contract_entrypoint e v : expression_content = E_constant {cons_name=C_CONTRACT_ENTRYPOINT; arguments=[e; v]}
-let e_contract_entrypoint_opt e v : expression_content = E_constant {cons_name=C_CONTRACT_ENTRYPOINT_OPT; arguments=[e; v]}
+let e__ct_ p p' : expression_content = E_constant { cons_name = C__CT_; arguments = [p; p']}
+[@@map (_ct_, (cons, set_add, map_remove, contract_entrypoint, contract_entrypoint_opt))]
 
 let e_map_add k v tl : expression_content = E_constant {cons_name=C_MAP_ADD;arguments=[k;v;tl]}
 
@@ -287,8 +270,7 @@ let e_application lamb args : expression_content = e_application { lamb ; args }
 let e_raw_code language code : expression_content = e_raw_code { language ; code }
 let e_let_in let_binder rhs let_result inline = e_let_in { let_binder ; rhs ; let_result; inline }
 let e_mod_in module_binder rhs let_result = e_mod_in { module_binder ; rhs ; let_result }
-
-let e_constructor constructor element: expression_content = E_constructor {constructor;element}
+let e_constructor constructor element: expression_content = e_constructor {constructor;element}
 
 let e_bool b : expression_content =
   if b then

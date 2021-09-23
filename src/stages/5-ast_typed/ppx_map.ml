@@ -32,7 +32,10 @@ let extract_payload = function
   | _ -> None
 
 let replace_exprs id new_id =
-  let replace l = Str.global_replace (Str.regexp_string id) new_id l in
+  let replace l =
+    let l = Str.global_replace (Str.regexp_string id) new_id l in
+    let l = Str.global_replace (Str.regexp_string (String.uppercase_ascii id)) (String.uppercase_ascii new_id) l in
+    l in
   object
     inherit Ast_traverse.map as super
 
