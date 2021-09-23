@@ -11,7 +11,7 @@
   (modules ast_typed combinators compare compare_enum environment formatter helpers misc reasons to_yojson types PP PP_annotated)
 ;;  (modules_without_implementation generated_fold_x)
   (flags (:standard -open Simple_utils))
-  (preprocess (staged_pps ppx_import ppx_woo))
+  (preprocess (staged_pps ppx_import ppx_woo ppx_map))
 )
 
 (library
@@ -21,5 +21,16 @@
     base
     ppxlib)
   (modules ppx_woo)
+  (preprocess (pps ppxlib.metaquot))
+)
+
+(library
+  (name ppx_map)
+  (kind ppx_rewriter)
+  (libraries
+    base
+    simple-utils
+    ppxlib)
+  (modules ppx_map)
   (preprocess (pps ppxlib.metaquot))
 )
