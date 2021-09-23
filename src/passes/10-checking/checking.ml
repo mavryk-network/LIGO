@@ -417,15 +417,12 @@ and type_expression' ~raise ~test : environment -> ?tv_opt:O.type_expression -> 
                | Some _ -> lambda in
      let (lambda,lambda_type) = type_lambda ~raise ~test e lambda in
      return (E_lambda lambda ) lambda_type
-  | E_constant _ -> handle_constant ~raise ~test ?tv_opt e ae
+  | E_constant _ -> handle_constant ~raise ~test ?tv_opt ae e
   | E_application {lamb; args} as app ->
       (match extract_lambda_constant' app e with
       | Some (cons_name,loc,arguments) ->
-        let lst' = List.map ~f:(type_expression' ~raise ~test e) arguments in
-        let tv_lst = List.map ~f:get_type_expression lst' in
-        let (name', tv) =
-          type_constant ~raise ~test cons_name loc tv_lst tv_opt in
-        return (E_constant {cons_name=name';arguments=lst'}) tv
+        let ae = { I.expression_content = E_constant { cons_name ; arguments } ; location = loc ; sugar = None } in
+        handle_constant ~raise ~test ?tv_opt ae e
       | None ->
         let lamb' = type_expression' ~raise ~test e lamb in
         let args' = type_expression' ~raise ~test e args in
@@ -513,8 +510,8 @@ and type_expression' ~raise ~test : environment -> ?tv_opt:O.type_expression -> 
     let c = extract_constant' element.expression_content module_env in
     match c with
     | Some (cons_name,loc) ->
-      let (_,tv) = type_constant ~raise ~test cons_name loc [] tv_opt in
-      return (E_constant { cons_name ; arguments = [] }) tv
+      let ae = { I.expression_content = E_constant { cons_name ; arguments = [] } ; location = loc ; sugar = None } in
+      handle_constant ~raise ~test ?tv_opt ae e
     | None ->
       let element = type_expression' ~raise ~test ?tv_opt module_env element in
       return (E_module_accessor {module_name; element}) element.type_expression
@@ -537,7 +534,7 @@ and type_lambda ~raise ~test e {
       let output_type = body.type_expression in
       (({binder; result=body}:O.lambda),(t_function input_type output_type ()))
 
-and handle_constant ~raise ~test ?tv_opt e ae = 
+and handle_constant ~raise ~test ?tv_opt ae e = 
   (* TODO: remove this re-defintion of return*)
   let return expr tv =
     let () =
