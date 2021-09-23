@@ -336,6 +336,11 @@ let default : Protocols.t -> environment = function
     |> map_module
     |> big_map_module
     |> test_module
+    |> michelson_module
+    |> operation_module
+    |> current_module
+    |> loop_module
+    |> top_level
 
 let default_with_test : Protocols.t -> environment = function
   | Protocols.Edo -> Environment.of_list_type meta_ligo_types
@@ -351,3 +356,8 @@ let default_with_test : Protocols.t -> environment = function
     |> map_module
     |> big_map_module
     |> test_module
+    |> michelson_module
+    |> operation_module
+    |> current_module
+    |> loop_module
+    |> top_level
