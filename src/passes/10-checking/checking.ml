@@ -22,7 +22,7 @@ let extract_lambda_constant' e env =
       (match tv' with
       | Some tv' -> 
         (match tv'.definition with
-        | ED_declaration { expression = { expression_content = E_constant { cons_name } } } -> Some (cons_name,loc,args)
+        | ED_declaration { expression = { expression_content = E_constant { cons_name } } } -> Some (cons_name,loc,List.rev args)
         | _ -> None)
       | None -> None)
     | E_module_accessor { module_name ; element } -> 
@@ -44,7 +44,10 @@ let extract_constant' (e : I.expression_content) env =
       (match tv' with
       | Some tv' -> 
         (match tv'.definition with
-        | ED_declaration { expression = { expression_content = E_constant { cons_name } } } -> Some (cons_name, loc)
+        | ED_declaration { expression = { expression_content = E_constant { cons_name ; arguments } } } -> 
+          if List.length arguments = 0
+          then Some (cons_name, loc)
+          else None 
         | _ -> None)
       | None -> None)
     | _ -> None
