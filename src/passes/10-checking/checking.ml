@@ -680,7 +680,7 @@ and handle_constant ~raise ~test ?tv_opt ae e =
   | _ -> failwith "only constants handled here"
 
 and type_constant ~raise ~test (name:I.constant') (loc:Location.t) (lst:O.type_expression list) (tv_opt:O.type_expression option) : O.constant' * O.type_expression =
-  let typer = Constant_typers.constant_typers ~raise ~test loc name in
+  let typer = Constant_typers.constant_typers ~raise ~test loc name in (* create special type & pat-ma on it *)
   let tv = typer lst tv_opt in
   (name, tv)
 

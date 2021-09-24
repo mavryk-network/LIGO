@@ -142,7 +142,12 @@ module Tree_abstraction = struct
     | "Big_map.find"     -> some_const C_MAP_FIND
     | "Big_map.find_opt" -> some_const C_MAP_FIND_OPT
     | "Big_map.update"   -> some_const C_MAP_UPDATE
+
+
+    (* maybe remove handling of big map this way *)
     | "Big_map.literal"  -> some_const C_BIG_MAP_LITERAL
+    
+    
     | "Big_map.empty"    -> some_const C_BIG_MAP_EMPTY
     | "Big_map.mem"      -> some_const C_MAP_MEM
     | "Big_map.remove"   -> some_const C_MAP_REMOVE

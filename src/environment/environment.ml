@@ -76,6 +76,9 @@ let constant_type c =
   
   | _                    -> t_unit ()
 
+  (* maybe add lambda in env *)
+  (* take number or args *)
+  (* imbricated functions *)
 let wrap_constant' c = {
   type_value = constant_type c ;
   definition = ED_declaration {
@@ -183,7 +186,7 @@ let option_module = make_module "Option" [
 
 let operator_module = make_module "Operator" [
   (wrap_var "neg"    ,  wrap_constant' C_NEG) ;
-  (wrap_var "add"    ,  wrap_constant' C_ADD) ;
+  (wrap_var "add"    ,  wrap_constant' C_ADD) ; (* maybe new type for these? special typer*)
   (wrap_var "sub"    ,  wrap_constant' C_SUB) ;
   (wrap_var "times"  ,  wrap_constant' C_MUL) ;
   (wrap_var "div"    ,  wrap_constant' C_DIV) ;
