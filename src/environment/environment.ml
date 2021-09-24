@@ -60,8 +60,24 @@ let meta_ligo_types : (type_variable * type_expression) list =
 
 let wrap_var s = Location.wrap @@ Var.of_name s
 
+let constant_type c =
+  match c with
+  | C_SENDER             -> t_address ()
+  | C_SOURCE             -> t_address ()
+  | C_UNIT               -> t_unit ()
+  | C_AMOUNT             -> t_mutez ()
+  | C_BALANCE            -> t_mutez ()
+  | C_CHAIN_ID           -> t_chain_id ()
+  | C_LEVEL              -> t_nat ()
+  | C_TOTAL_VOTING_POWER -> t_nat ()
+  | C_NOW                -> t_timestamp ()
+  | C_TRUE               -> t_bool ()
+  | C_FALSE              -> t_bool ()
+  
+  | _                    -> t_unit ()
+
 let wrap_constant' c = {
-  type_value = t_unit () ;
+  type_value = constant_type c ;
   definition = ED_declaration {
     expression = {
       expression_content= E_constant {
@@ -69,7 +85,7 @@ let wrap_constant' c = {
         arguments = [] ;
       } ;
       location = Location.generated ;
-      type_expression = t_unit () ;
+      type_expression = constant_type c ;
     } ;
     free_variables = [] ;
   } ;
@@ -230,7 +246,7 @@ let big_map_module = make_module "Big_map" [
 ]
 
 let test_module = make_module "Test" [
-  (wrap_var "Test.originate"             ,  wrap_constant' C_TEST_ORIGINATE);
+  (wrap_var "originate"                  , wrap_constant' C_TEST_ORIGINATE);
   (wrap_var "originate_from_file"        , wrap_constant' C_TEST_ORIGINATE_FROM_FILE) ;
   (wrap_var "set_now"                    , wrap_constant' C_TEST_SET_NOW) ;
   (wrap_var "set_source"                 , wrap_constant' C_TEST_SET_SOURCE) ;
