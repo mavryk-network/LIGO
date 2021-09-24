@@ -678,12 +678,13 @@ and compile_expression ~raise : CST.expr -> AST.expr = fun e ->
       return @@ e_module_accessor ~loc module_name element
   | EFun func ->
     let (func, loc) = r_split func in
+    (* let () = let x = Format.asprintf "%a" Location.pp loc in failwith x in *)
     let ({parameters; lhs_type; body} : CST.fun_expr) = func in
     let lhs_type = Option.map ~f:(compile_type_expression ~raise <@ snd) lhs_type in
     let (binder,exprs) = compile_parameter ~raise parameters in
     let body = compile_function_body_to_expression ~raise body in
     let aux (binder,attr,rhs) expr = e_let_in binder attr rhs expr in
-    let expr = List.fold_right ~f:aux exprs ~init:body  in
+    let expr = List.fold_right ~f:aux exprs ~init:body in
     return @@ e_lambda ~loc binder lhs_type expr
   | EAnnot {value = (EArith(Int i), _, TVar {value = "nat"; _}); region } ->
     let ((_,i), loc) = r_split i in
@@ -1082,7 +1083,7 @@ and compile_statement ?(wrap=false) ~raise : CST.statement -> statement_result =
   let binding e = Binding (fun f -> e f) in
   let expr e = Expr e in
   let return r = Return r in
-  let compile_initializer ~const attributes ({value = {binders; lhs_type; expr = let_rhs}; region} : CST.val_binding Region.reg) : expression -> expression =
+  let compile_initializer ~const ~loc attributes ({value = {binders; lhs_type; expr = let_rhs}; region} : CST.val_binding Region.reg) : expression -> expression =
     match binders with
       PArray array ->
       let matchee = compile_expression ~raise let_rhs in
@@ -1090,23 +1091,30 @@ and compile_statement ?(wrap=false) ~raise : CST.statement -> statement_result =
     | PObject o ->
       let matchee = compile_expression ~raise let_rhs in
       compile_object_let_destructuring ~raise ~const matchee o
-    | _ ->
+    | _ -> (
       let lst = compile_let_binding ~raise ~const attributes let_rhs lhs_type binders region in
-      let aux (_name,binder,attr,rhs) expr = 
+      let aux (_name,binder,attr,rhs) (expr : AST.expression) = 
         match rhs.expression_content with  
-          E_assign {variable; _} -> 
-            let var = {expression_content = E_variable variable; location = rhs.location} in
-            let e2 = e_let_in ~loc: (Location.lift region) binder attr var expr in
-            e_sequence rhs e2
-        | _ -> 
-          e_let_in ~loc: (Location.lift region) binder attr rhs expr 
-        in
-      fun init -> List.fold_right ~f:aux ~init lst
+        | E_assign {variable; _} ->
+          let var = {expression_content = E_variable variable; location = rhs.location} in
+          let e2 = e_let_in ~loc:(Location.cover var.location expr.location) binder attr var expr in
+          e_sequence ~loc:(Location.cover rhs.location expr.location) rhs e2
+        | _ ->
+          let () = Format.eprintf "expr: %a \n rhs: %a\n----\n" AST.PP.expression expr AST.PP.expression rhs in
+          e_let_in ~loc:(Location.cover rhs.location  expr.location) binder attr rhs expr 
+      in
+      (* (fun init -> List.fold_right ~f:aux ~init lst) *)
+      (* (fun init -> List.fold_right ~f:aux ~init:({init with location = loc}) lst) *)
+      (fun init ->
+        let res = (List.fold_right ~f:aux ~init lst) in
+        { res with location = Location.cover loc res.location})
+    )
   in
   let rec initializers ~const (result: expression -> expression) (rem: (Region.t * CST.val_binding Region.reg) list) : expression -> expression =
     match rem with
-    | (_, hd) :: tl -> 
-      let init = compile_initializer ~const [] hd in
+    | (reg, hd) :: tl -> 
+      let loc = Location.lift reg in
+      let init = compile_initializer ~const ~loc [] hd in
       let new_result = result <@ init in
       initializers ~const new_result tl
     | [] -> result
@@ -1152,6 +1160,7 @@ and compile_statement ?(wrap=false) ~raise : CST.statement -> statement_result =
     ) in
     m (e_cond ~loc test then_clause else_clause)
   | SReturn {value = {expr; _}; region} -> (
+    let () = Format.eprintf "Sreturn .. \n" in
     match expr with 
       Some v -> 
         let expr = compile_expression ~raise v in
@@ -1165,7 +1174,7 @@ and compile_statement ?(wrap=false) ~raise : CST.statement -> statement_result =
     let {bindings; attributes; _} : CST.let_decl = li in
     let hd = fst bindings in
     let tl = snd bindings in
-    let init = compile_initializer ~const:false [] hd in
+    let init = compile_initializer ~loc ~const:false [] hd in
     let initializers' = initializers ~const:false init tl in 
     binding initializers'
   | SConst li ->
@@ -1173,7 +1182,7 @@ and compile_statement ?(wrap=false) ~raise : CST.statement -> statement_result =
     let {bindings; attributes; _} : CST.const_decl = li in
     let hd = fst bindings in
     let tl = snd bindings in
-    let init = compile_initializer ~const:true [] hd in
+    let init = compile_initializer ~const:true ~loc [] hd in
     let initializers' = initializers ~const:true init tl in 
     binding initializers'
   | SSwitch s -> raise.raise @@ switch_not_supported s
@@ -1219,13 +1228,15 @@ and compile_statement ?(wrap=false) ~raise : CST.statement -> statement_result =
 and statement_result_to_expression: statement_result -> AST.expression = fun statement_result ->
   match statement_result with 
   | Binding b -> b (e_unit ())
-  | Expr e -> e_sequence e (e_unit ())
+  | Expr e -> e_sequence ~loc:e.location e (e_unit ())
   | Break r
   | Return r -> r
 
 and compile_statements_to_expression ~raise : CST.statements -> AST.expression = fun statements ->
   let statement_result = compile_statements ~raise statements in
-  statement_result_to_expression statement_result
+  let exp = statement_result_to_expression statement_result in
+  let () = Format.eprintf "compile_statements_to_expression : %a\n" AST.PP.expression exp in
+  exp
 
 and compile_statement_to_declaration ~raise : CST.statement -> AST.declaration list = fun statement ->
   match statement with

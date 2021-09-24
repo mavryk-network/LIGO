@@ -1,0 +1,6 @@
+let toto = (): bool => {
+    let owner = "yay";
+    let init_storage = [owner, 0 as nat, owner];
+    let [addr, _, _] = init_storage ;
+    return 1;
+}
