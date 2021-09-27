@@ -132,7 +132,6 @@ let tuple_of_record (m: _ LMap.t) =
   let l = Base.Sequence.to_list @@ Base.Sequence.unfold ~init:0 ~f:aux in
   List.map ~f:(fun {associated_type;_} -> associated_type) l
 
-
 let get_t_tuple (t:type_expression) : type_expression list option = match t.type_content with
   | T_record record -> Some (tuple_of_record record.content)
   | _ -> None
@@ -217,19 +216,10 @@ let get_t_big_map_value : type_expression -> type_expression option = fun t ->
   | Some (_,value) -> Some value
   | None -> None
 
-let is_t_map t = Option.is_some (get_t_map t)
-let is_t_big_map t = Option.is_some (get_t_big_map t)
-let is_t_record t = Option.is_some (get_t_record t)
-let is_t_option t = Option.is_some (get_t_option t)
-let is_t_sum t = Option.is_some (get_t_sum t)
-
 let is_e_matching e = match e.expression_content with | E_matching _ -> true | _ -> false
-let assert_t_contract (t:type_expression) : unit option = match get_t_unary_inj t contract_name with
-  | Some _ -> Some ()
-  | _ -> None
 
 let is_t__type_ t = Option.is_some (get_t__type_ t)
-[@@map (_type_, (list, set, nat, string, bytes, int, bool, unit, address, tez, contract))]
+[@@map (_type_, (list, set, nat, string, bytes, int, bool, unit, address, tez, contract, map, big_map, record, option, sum))]
 
 let is_t_mutez t = is_t_tez t
 
@@ -237,6 +227,10 @@ let assert_t_list_operation (t : type_expression) : unit option =
   match get_t_list t with
   | Some t' -> get_t_base_inj t' operation_name
   | None -> None
+
+let assert_t_contract (t:type_expression) : unit option = match get_t_unary_inj t contract_name with
+  | Some _ -> Some ()
+  | _ -> None
 
 let assert_t__type_ : type_expression -> unit option = fun t -> get_t__type_ t
 [@@map (_type_, (int, nat, bool, unit, mutez, key, signature, key_hash, bytes, string, michelson_code))]
@@ -317,7 +311,6 @@ let e_a_contract a t = make_e (e_contract a) (t_contract t)
 let e_a_contract_entrypoint e a t = make_e (e_contract_entrypoint e a) (t_contract t)
 let e_a_contract_entrypoint_opt e a t = make_e (e_contract_entrypoint_opt e a) (t_option (t_contract t))
 
-
 let get_a_int (t:expression) =
   match t.expression_content with
   | E_literal (Literal_int n) -> Some n
@@ -349,7 +342,6 @@ let get_a_bool (t:expression) =
     && element.expression_content = e_unit () ->
       Some false
   | _ -> None
-
 
 let get_a_record = fun t ->
   match t.expression_content with
