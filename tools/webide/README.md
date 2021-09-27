@@ -7,6 +7,10 @@
 1. Run `yarn start` to start the development server
 1. Open http://localhost:8080
 
+```
+NOTE: Do not use npm to manage this project. Use yarn.
+```
+
 # Dependency on Examples
 
 Examples that are displayed in the Web IDE are curated from `/src/test/examples` folder and packaged during the build of the client. To add a new example to the Web IDE, first add the example file to `/src/test/examples` folder; it may live under any level of subdirectories. Then, add the path to the example to the `CURATED_EXAMPLES` array in the `packages/client/package-examples.js` script. The path has to be relative to `/src/test/examples`.
