@@ -50,7 +50,14 @@ let%expect_test _ =
     - test_recursion_let_rec_in exited with value ().
     - test_top_level_recursion exited with value ().
     - test_bitwise_ops exited with value ().
-    - test_bitwise_module exited with value (). |}]
+    - test_bitwise_module exited with value ().
+    - test_list_concat exited with value ().
+    - test_list_head_opt exited with value ().
+    - test_list_tail_opt exited with value ().
+    - test_list_reverse exited with value ().
+    - test_set_fold_desc exited with value ().
+    - test_set_update exited with value ().
+    - test_map_get_and_update exited with value (). |}]
 
 let%expect_test _ =
   run_ligo_good ["run"; "test" ; test "interpret_test_log.mligo" ] ;
@@ -213,6 +220,13 @@ let%expect_test _ =
     - test exited with value ().
     - test_equal exited with value ().
     - test_not_equal exited with value (). |}]
+
+let%expect_test _ =
+  run_ligo_good [ "run" ; "test" ; test "test_no_mutation.mligo" ] ;
+  [%expect {|
+    Everything at the top-level was executed.
+    - test exited with value ().
+    - test_mutation exited with value (). |}]
 
 (* do not remove that :) *)
 let () = Sys.chdir pwd
