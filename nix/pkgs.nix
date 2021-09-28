@@ -4,7 +4,7 @@ let
   ocaml-overlay = import ./ocaml-overlay.nix { inherit sources; };
   static-overlay = import ./static-overlay.nix;
   mac-overlay = import ./mac-overlay.nix;
-  nodejs-overlay = import ./nodejs-overlay.nix;
+  # nodejs-overlay = import ./nodejs-overlay.nix;
   nix-npm-buildpackage = pkgs.callPackage sources.nix-npm-buildpackage { };
 
   pkgs = import sources.nixpkgs {
