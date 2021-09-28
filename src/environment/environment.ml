@@ -2,9 +2,7 @@ open Ast_typed
 open Stage_common.Constant
 module Protocols = Protocols
 let star = ()
-(*
-  Make sure all the type value laoded in the environment have a `Ast_core` value attached to them (`type_meta` field of `type_expression`)
-*)
+
 let basic_types : (type_variable * type_expression) list = [
     (v_bool , t_bool ()) ;
     (v_string , t_string ()) ;
