@@ -17,7 +17,7 @@ let typecheck ~raise ~add_warning ~(options: Compiler_options.t) (cform : form) 
   let e,typed = trace ~raise checking_tracer @@ Checking.type_module ~test:options.test ~init_env:options.init_env ~protocol_version:options.protocol_version m in
   let applied = trace ~raise self_ast_typed_tracer @@
     fun ~raise ->
-    let selfed = Self_ast_typed.all_module ~raise ~add_warning typed in
+    let selfed = Self_ast_typed.all_module ~raise ~add_warning typed e in
     match cform with
     | Contract entrypoint -> Self_ast_typed.all_contract ~raise entrypoint selfed
     | View (view_name,main_name) -> Self_ast_typed.all_view ~raise view_name main_name selfed
