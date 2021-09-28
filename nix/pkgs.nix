@@ -8,7 +8,7 @@ let
   nix-npm-buildpackage = pkgs.callPackage sources.nix-npm-buildpackage { };
 
   pkgs = import sources.nixpkgs {
-    overlays = [ ocaml-overlay nodejs-overlay ];
+    overlays = [ ocaml-overlay ];
   };
 
   # Takes $pkg/ligo and creates a new package with $pkg/bin/ligo
