@@ -1,4 +1,4 @@
-{ stdenv, lib, mkYarnPackage, nodejs-16x, python2, ligo-bin, coreutils
+{ stdenv, lib, mkYarnPackage, nodejs, python2, ligo-bin, coreutils
 , writeShellScriptBin, makeFontsConf, buildEnv, rsync, sources
 , chromium ? null }:
 let
