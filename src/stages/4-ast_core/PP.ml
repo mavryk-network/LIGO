@@ -11,16 +11,22 @@ let lmap_sep value sep ppf m =
   let new_pp ppf (k, v) = fprintf ppf "@[<h>%a -> %a@]" label k value v in
   fprintf ppf "%a" (list_sep new_pp sep) lst
 
-let record_sep value sep ppf (m : 'a label_map) =
+let record_sep_val (value: formatter -> row_value -> unit) sep ppf (m : 'a label_map) =
   let lst = LMap.to_kv_list m in
   let lst = List.dedup_and_sort ~compare:(fun (Label a,_) (Label b,_) -> String.compare a b) lst in
   let new_pp ppf (k, v) = fprintf ppf "@[<h>%a -> %a@]" label k value v in
   fprintf ppf "%a" (list_sep new_pp sep) lst
 
+let record_sep (value: formatter -> row_element -> unit) sep ppf (m : 'a label_map) =
+  let lst = LMap.to_kv_list m in
+  let lst = List.dedup_and_sort ~compare:(fun (Label a,_) (Label b,_) -> String.compare a b) lst in
+  let new_pp ppf (k, v) = fprintf ppf "@[<h>%a -> %a%a@]" label k value v michelson_annotation v.michelson_annotation in
+  fprintf ppf "%a" (list_sep new_pp sep) lst
+
 let tuple_sep value sep ppf m =
   assert (Helpers.is_tuple_lmap m);
   let lst = Helpers.tuple_of_record m in
-  let new_pp ppf (_, v) = fprintf ppf "%a" value v in
+  let new_pp ppf (_, (v:row_element)) = fprintf ppf "%a%a" value v michelson_annotation v.michelson_annotation in
   fprintf ppf "%a" (list_sep new_pp sep) lst
 
 let tuple_or_record_sep_t value format_record sep_record format_tuple sep_tuple ppf m =

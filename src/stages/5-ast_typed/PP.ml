@@ -26,13 +26,13 @@ let tuple_sep value sep ppf m =
 let record_sep_t value sep ppf (m : 'a label_map) =
   let lst = LMap.to_kv_list m in
   let lst = List.dedup_and_sort ~compare:(fun (Label a,_) (Label b,_) -> String.compare a b) lst in
-  let new_pp ppf (k, {associated_type;_}) = fprintf ppf "@[<h>%a -> %a@]" label k value associated_type in
+  let new_pp ppf (k, {associated_type;michelson_annotation=ma;_}) = fprintf ppf "@[<h>%a -> %a%a@]" label k value associated_type michelson_annotation ma in
   fprintf ppf "%a" (list_sep new_pp sep) lst
 
 let tuple_sep_t value sep ppf m =
   assert (Helpers.is_tuple_lmap m);
   let lst = Helpers.tuple_of_record m in
-  let new_pp ppf (_, {associated_type;_}) = fprintf ppf "%a" value associated_type in
+  let new_pp ppf (_, {associated_type;michelson_annotation=ma;_}) = fprintf ppf "%a%a" value associated_type michelson_annotation ma in
   fprintf ppf "%a" (list_sep new_pp sep) lst
 
 (* Prints records which only contain the consecutive fields
@@ -105,9 +105,10 @@ let rec type_content : formatter -> type_content -> unit =
   | T_abstraction     x  -> abstraction   type_expression ppf x
 
 and row : formatter -> row_element -> unit =
-  fun ppf { associated_type ; michelson_annotation=_ ; decl_pos=_ } ->
-    fprintf ppf "%a"
+  fun ppf { associated_type ; michelson_annotation = ma ; decl_pos=_ } ->
+    fprintf ppf "%a%a"
       type_expression associated_type
+      michelson_annotation ma
 
 and type_injection ppf {language;injection;parameters} =
   (* fprintf ppf "[%s {| %s %a |}]" language (Ligo_string.extract injection) (list_sep_d_par type_expression) parameters *)

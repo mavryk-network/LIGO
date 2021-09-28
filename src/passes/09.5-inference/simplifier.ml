@@ -44,7 +44,7 @@ let rec type_constraint_simpl : type_constraint -> type_constraint_simpl list =
     let fresh_eqns, fresh_vars = LMap.fold_map ~f:aux ~init:[] args in
     let recur = List.map ~f:type_constraint_simpl fresh_eqns in
     let id_row_simpl = ConstraintIdentifier.fresh () in
-    [SC_Row {id_row_simpl;original_id=None;tv=a;r_tag;tv_map=fresh_vars;reason_row_simpl=Format.asprintf "simplifier: split constant %a = %a (%a)" Var.pp a Ast_core.PP.row_tag r_tag (Ast_core.PP.record_sep Ast_core.PP.row_value (fun ppf () -> Format.fprintf ppf ", ")) args}] @ List.concat recur in
+    [SC_Row {id_row_simpl;original_id=None;tv=a;r_tag;tv_map=fresh_vars;reason_row_simpl=Format.asprintf "simplifier: split constant %a = %a (%a)" Var.pp a Ast_core.PP.row_tag r_tag (Ast_core.PP.record_sep_val Ast_core.PP.row_value (fun ppf () -> Format.fprintf ppf ", ")) args}] @ List.concat recur in
   let gather_forall a forall = 
     let id_poly_simpl = ConstraintIdentifier.fresh () in
     [SC_Poly {id_poly_simpl; original_id=None; tv=a; forall ; reason_poly_simpl="simplifier: gather_forall"}] in

@@ -3,6 +3,11 @@ open Format
 open PP_helpers
 include PP_enums
 
+let michelson_annotation ppf ma =
+  match ma with
+  | Some x -> fprintf ppf "%%%s" x
+  | None -> ()
+
 let option_inline ppf inline =
   if inline then
     fprintf ppf "[@@inline]"
