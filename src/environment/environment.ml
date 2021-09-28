@@ -77,7 +77,7 @@ let constant_type c =
   | _                    -> t_unit ()
 
   (* maybe add lambda in env *)
-  (* take number or args *)
+  (* take number of args *)
   (* imbricated functions *)
 let wrap_constant' c = {
   type_value = constant_type c ;
