@@ -134,7 +134,7 @@ let build_mini_c ~raise ~add_warning : options:Compiler_options.t -> _ -> _ -> f
     | View (view_name,main_name) ->
       trace ~raise self_ast_typed_tracer @@ Self_ast_typed.all_view view_name main_name contract
     | Env -> contract in
-    let mini_c       = Ligo_compile.Of_typed.compile ~raise applied in
+    let mini_c       = Ligo_compile.Of_typed.compile ~raise applied env in
     (mini_c,env)
 
 let build_expression ~raise ~add_warning : options:Compiler_options.t -> string -> string -> file_name option -> _ =
@@ -191,7 +191,7 @@ let build_contract_use ~raise ~add_warning : options:Compiler_options.t -> strin
       let options = options
     end) in
     let contract,env = trace ~raise build_error_tracer @@ Trace.from_result (compile_combined file_name) in
-    let mini_c,map   = Ligo_compile.Of_typed.compile_with_modules ~raise (Ast_typed.Module_Fully_Typed contract) in
+    let mini_c,map   = Ligo_compile.Of_typed.compile_with_modules ~raise (Ast_typed.Module_Fully_Typed contract) env in
     (mini_c, map, Ast_typed.Module_Fully_Typed contract, env)
 
 let build_contract_module ~raise ~add_warning : options:Compiler_options.t -> string -> _ -> file_name -> file_name -> _ =
@@ -214,5 +214,5 @@ let build_contract_module ~raise ~add_warning : options:Compiler_options.t -> st
                                                       module_ = applied;
                                                       module_attr = {public = true} } in
   let contract = Ast_typed.Module_Fully_Typed [Location.wrap module_contract] in
-  let mini_c,map = Ligo_compile.Of_typed.compile_with_modules ~raise contract in
+  let mini_c,map = Ligo_compile.Of_typed.compile_with_modules ~raise contract env in
   (mini_c, map, contract, env)
