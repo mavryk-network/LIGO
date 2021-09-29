@@ -72,6 +72,6 @@ let
     LIGO_CMD=${../ligo} \
     STATIC_ASSETS=${client} \
     DATA_DIR=/tmp \
-    ${nodejs-16_x}/bin/node ${server}/node_modules/server/dist/src/index.js
+    node ${server}/node_modules/server/dist/src/index.js
   '';
 in ligo-editor // { inherit e2e; }
