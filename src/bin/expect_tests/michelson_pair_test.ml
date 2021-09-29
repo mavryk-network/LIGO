@@ -4,6 +4,12 @@ let contract basename =
   "../../test/contracts/" ^ basename
 
 let%expect_test _ =
+  run_ligo_good [ "print"; "ast-typed"; contract "michelson_annotation_no_shadow_pair.ligo"] ;
+  [%expect {|
+  type type_decl1_pair = ( int%one * nat%two )
+  type type_decl2_pair = ( int%three * nat%four ) |}]
+
+let%expect_test _ =
   run_ligo_good [ "compile" ; "contract" ; contract "michelson_pair_tree.ligo" ] ;
   [%expect {|
     File "../../test/contracts/michelson_pair_tree.ligo", line 6, characters 21-27:

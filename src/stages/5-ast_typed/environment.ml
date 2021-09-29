@@ -74,7 +74,15 @@ let get_constructor : label -> t -> (type_expression * type_expression) option =
       ) ~init:None modules
   in rec_aux x
 
-let get_record : _ label_map -> t -> (type_variable option * rows) option = fun lmap e ->
+let michelson_annotation_eq ma mb =
+  match (ma,mb) with
+  | Some x , Some y when String.equal x y -> Some ()
+  | Some "", None -> Some ()
+  | None , Some "" -> Some ()
+  | None , None -> Some ()
+  | _ -> None
+
+let get_record : ?check_annot:bool -> _ label_map -> t -> (type_variable option * rows) option = fun ?(check_annot=false) lmap e ->
   let rec rec_aux e =
     let aux = fun {type_variable=_ ; type_} ->
       match type_ with
@@ -89,6 +97,7 @@ let get_record : _ label_map -> t -> (type_variable option * rows) option = fun 
               let Label ka = ka in
               let Label kb = kb in
               let* () = Misc.assert_eq ka kb in
+              let* () = if check_annot then michelson_annotation_eq va.michelson_annotation vb.michelson_annotation else Some () in
               Misc.assert_type_expression_eq (va.associated_type, vb.associated_type)
             ) lst_kv lst_kv' in
           map ~f:(fun m -> (type_.orig_var,m)) @@ m
@@ -105,7 +114,7 @@ let get_record : _ label_map -> t -> (type_variable option * rows) option = fun 
   in rec_aux e
 
 
-let get_sum : _ label_map -> t -> rows option = fun lmap e ->
+let get_sum : ?check_annot:bool -> _ label_map -> t -> rows option = fun ?(check_annot=false) lmap e ->
   let rec rec_aux e =
     let aux = fun {type_variable=_ ; type_} ->
       match type_ with
@@ -120,6 +129,7 @@ let get_sum : _ label_map -> t -> rows option = fun lmap e ->
               let Label ka = ka in
               let Label kb = kb in
               let* () = Misc.assert_eq ka kb in
+              let* () = if check_annot then michelson_annotation_eq va.michelson_annotation vb.michelson_annotation else Some () in
               Misc.assert_type_expression_eq (va.associated_type, vb.associated_type)
           ) lst_kv lst_kv'
         )

@@ -79,7 +79,7 @@ and evaluate_otype ~raise (e:environment) (t:O.type_expression) : O.type_express
       in
       O.LMap.map aux m.content
     in
-    let sum : O.rows  = match Environment.get_sum lmap e with
+    let sum : O.rows  = match Environment.get_sum ~check_annot:true lmap e with
       | None ->
         let layout = m.layout in
         {content = lmap; layout}
@@ -103,7 +103,7 @@ and evaluate_otype ~raise (e:environment) (t:O.type_expression) : O.type_express
       ({associated_type;michelson_annotation;decl_pos} : O.row_element)
     in
     let lmap = O.LMap.map aux m.content in
-    let record : O.rows = match Environment.get_record lmap e with
+    let record : O.rows = match Environment.get_record ~check_annot:true lmap e with
     | None ->
       let layout = m.layout in
       {content=lmap;layout}
@@ -148,7 +148,7 @@ and evaluate_type ~raise (e:environment) (t:I.type_expression) : O.type_expressi
       in
       O.LMap.map aux m.fields
     in
-    let sum : O.rows  = match Environment.get_sum lmap e with
+    let sum : O.rows  = match Environment.get_sum ~check_annot:true lmap e with
       | None ->
         let layout = Option.value ~default:default_layout m.layout in
         {content = lmap; layout}
@@ -172,7 +172,7 @@ and evaluate_type ~raise (e:environment) (t:I.type_expression) : O.type_expressi
       ({associated_type;michelson_annotation;decl_pos} : O.row_element)
     in
     let lmap = O.LMap.map aux m.fields in
-    let record : O.rows = match Environment.get_record lmap e with
+    let record : O.rows = match Environment.get_record ~check_annot:true lmap e with
     | None ->
       let layout = Option.value ~default:default_layout m.layout in
       {content=lmap;layout}

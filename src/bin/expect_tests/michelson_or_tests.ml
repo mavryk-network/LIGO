@@ -9,6 +9,13 @@ let bad_contract basename =
 let () = Unix.putenv "TERM" "dumb"
 
 let%expect_test _ =
+  run_ligo_good [ "print"; "ast-typed"; contract "michelson_annotation_no_shadow_or.ligo"] ;
+  [%expect {|
+
+  type type_decl1_or = sum[M_left -> int%one , M_right -> nat%two]
+  type type_decl2_or = sum[M_left -> int%three , M_right -> nat%four] |}]
+
+let%expect_test _ =
   run_ligo_good [ "run"; "dry-run" ; contract "double_michelson_or.mligo" ; "unit" ; "(M_left (1) : storage)" ] ;
   [%expect {|
     File "../../test/contracts/double_michelson_or.mligo", line 8, characters 6-9:

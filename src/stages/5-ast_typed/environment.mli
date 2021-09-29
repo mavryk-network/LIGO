@@ -16,8 +16,8 @@ val get_type_opt : type_variable -> t -> type_expression option
 val get_kind_opt : type_variable -> t -> unit option 
 val get_module_opt : module_variable -> t -> environment option
 val get_constructor : label -> t -> (type_expression * type_expression) option
-val get_record : row_element label_map -> t -> (type_variable option * rows) option
-val get_sum : row_element label_map -> t -> rows option
+val get_record : ?check_annot:bool -> row_element label_map -> t -> (type_variable option * rows) option
+val get_sum : ?check_annot:bool -> row_element label_map -> t -> rows option
 
 module PP : sig
   open Format

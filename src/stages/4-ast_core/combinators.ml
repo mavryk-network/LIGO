@@ -135,7 +135,9 @@ let get_t_record (t:type_expression) : rows option = match t.type_content with
   | T_record m -> Some m
   | _ -> None
 
-
+let get_t_record_exn (t:type_expression) : rows = match t.type_content with
+  | T_record m -> m
+  | _ -> raise (Failure ("Internal error: broken invariant at " ^ __LOC__))
 
 let e_record map : expression = make_e @@ E_record map
 let ez_e_record (lst : (label * expression) list) : expression =
