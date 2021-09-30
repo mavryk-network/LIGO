@@ -37,11 +37,7 @@ let compare_constants c o1 o2 loc calltrace =
   | (comp, [V_Ct (C_mutez a'); V_Ct (C_mutez b')])
   | (comp, [V_Ct (C_timestamp a'); V_Ct (C_timestamp b')])
   | (comp, [V_Ct (C_nat a'); V_Ct (C_nat b')]) ->
-      let>> i = Int_compare_wrapped (a', b') in
-      let>> cmpres = Int_of_int i in
-      let>> cmpres =
-        Int_compare (cmpres, Ligo_interpreter.Int_repr_copied.zero)
-      in
+      let cmpres = Z.compare a' b' in
       let* x = wrap_compare_result comp cmpres loc calltrace in
       return @@ v_bool x
   | (comp, [V_Ct (C_bool b); V_Ct (C_bool a)]) ->
@@ -212,42 +208,58 @@ let rec apply_operator ~raise ~steps : Location.t -> calltrace -> Ast_typed.type
     (* binary *)
     | ( (C_EQ | C_NEQ | C_LT | C_LE | C_GT | C_GE) , _ ) -> apply_comparison loc calltrace c operands
     | ( C_SUB    , [ V_Ct (C_int a' | C_nat a') ; V_Ct (C_int b' | C_nat b') ] ) -> return_ct @@ C_int (Z.sub a' b')
+    | ( C_SUB    , [ V_Ct (C_int a' | C_timestamp a') ; V_Ct (C_timestamp b' | C_int b') ] ) ->
+      let res = Michelson_backend.Tezos_eq.timestamp_sub a' b' in
+      return_ct @@ C_timestamp res
+    | ( C_SUB    , [ V_Ct (C_mutez a') ; V_Ct (C_mutez b') ] ) -> (
+      match Michelson_backend.Tezos_eq.mutez_sub a' b' with
+      | Some res -> return_ct @@ C_mutez res
+      | None -> fail (Errors.meta_lang_eval loc calltrace "Mutez underflow/overflow")
+    )
     | ( C_CONS   , [ v                  ; V_List vl          ] ) -> return @@ V_List (v::vl)
-    | ( C_ADD    , [ V_Ct (C_int a'  )  ; V_Ct (C_int b'  )  ] )
-    | ( C_ADD    , [ V_Ct (C_nat a'  )  ; V_Ct (C_int b'  )  ] )
-    | ( C_ADD    , [ V_Ct (C_int a'  )  ; V_Ct (C_nat b'  )  ] ) -> let>> r = Int_add (a',b') in return_ct (C_int r)
-    | ( C_ADD    , [ V_Ct (C_nat a'  )  ; V_Ct (C_nat b'  )  ] ) -> let>> r = Int_add_n (a',b') in return_ct (C_nat r)
-    | ( C_MUL    , [ V_Ct (C_int a'  )  ; V_Ct (C_int b'  )  ] )
-    | ( C_MUL    , [ V_Ct (C_nat a'  )  ; V_Ct (C_int b'  )  ] )
-    | ( C_MUL    , [ V_Ct (C_int a'  )  ; V_Ct (C_nat b'  )  ] ) -> let>> r = Int_mul (a',b') in return_ct (C_int r)
-    | ( C_MUL    , [ V_Ct (C_nat a'  )  ; V_Ct (C_nat b'  )  ] ) -> let>> r = Int_mul_n (a',b') in return_ct (C_nat r)
-    | ( C_MUL    , [ V_Ct (C_nat a'  )  ; V_Ct (C_mutez b')  ] ) -> let>> r = Int_mul_n (a',b') in return_ct (C_mutez r)
-    | ( C_MUL    , [ V_Ct (C_mutez a')  ; V_Ct (C_nat b'  )  ] ) -> let>> r = Int_mul_n (a',b') in return_ct (C_mutez r)
+    | ( C_ADD    , [ V_Ct (C_int a  )  ; V_Ct (C_int b  )  ] )
+    | ( C_ADD    , [ V_Ct (C_nat a  )  ; V_Ct (C_int b  )  ] )
+    | ( C_ADD    , [ V_Ct (C_int a  )  ; V_Ct (C_nat b  )  ] ) -> let r = Z.add a b in return_ct (C_int r)
+    | ( C_ADD    , [ V_Ct (C_nat a  )  ; V_Ct (C_nat b  )  ] ) -> let r = Z.add a b in return_ct (C_nat r)
+    | ( C_ADD    , [ V_Ct (C_int a' | C_timestamp a') ; V_Ct (C_timestamp b' | C_int b') ] ) ->
+      let res = Michelson_backend.Tezos_eq.timestamp_add a' b' in
+      return_ct @@ C_timestamp res
+    | ( C_ADD    , [ V_Ct (C_mutez a') ; V_Ct (C_mutez b') ] ) -> (
+      match Michelson_backend.Tezos_eq.mutez_add a' b' with
+      | Some res -> return_ct @@ C_mutez res
+      | None -> fail (Errors.meta_lang_eval loc calltrace "Mutez underflow/overflow")
+    )
+    | ( C_MUL    , [ V_Ct (C_int a  )  ; V_Ct (C_int b  )  ] )
+    | ( C_MUL    , [ V_Ct (C_nat a  )  ; V_Ct (C_int b  )  ] )
+    | ( C_MUL    , [ V_Ct (C_int a  )  ; V_Ct (C_nat b  )  ] ) -> let r = Z.mul a b in return_ct (C_int r)
+    | ( C_MUL    , [ V_Ct (C_nat a  )  ; V_Ct (C_nat b  )  ] ) -> let r = Z.mul a b in return_ct (C_nat r)
+    | ( C_MUL    , [ V_Ct (C_nat a  )  ; V_Ct (C_mutez b)  ] ) -> let r = Z.mul a b in return_ct (C_mutez r)
+    | ( C_MUL    , [ V_Ct (C_mutez a)  ; V_Ct (C_nat b  )  ] ) -> let r = Z.mul a b in return_ct (C_mutez r)
     | ( C_DIV    , [ V_Ct (C_int a'  )  ; V_Ct (C_int b'  )  ] )
     | ( C_DIV    , [ V_Ct (C_int a'  )  ; V_Ct (C_nat b'  )  ] )
     | ( C_DIV    , [ V_Ct (C_nat a'  )  ; V_Ct (C_int b'  )  ] ) ->
-      let>> a = Int_ediv (a',b') in
+      let a = Michelson_backend.Tezos_eq.int_ediv a' b' in
       begin
         match a with
         | Some (res,_) -> return_ct @@ C_int res
         | None -> fail @@ Errors.meta_lang_eval loc calltrace "Dividing by zero"
       end
     | ( C_DIV    , [ V_Ct (C_nat a')  ; V_Ct (C_nat b')  ] ) ->
-      let>> a = Int_ediv_n (a',b') in
+      let a = Michelson_backend.Tezos_eq.int_ediv a' b' in
       begin
         match a with
         | Some (res,_) -> return_ct @@ C_nat res
         | None -> fail @@ Errors.meta_lang_eval loc calltrace "Dividing by zero"
       end
     | ( C_DIV    , [ V_Ct (C_mutez a')  ; V_Ct (C_mutez b')  ] ) ->
-      let>> a = Int_ediv_n (a',b') in
+      let a = Michelson_backend.Tezos_eq.int_ediv a' b' in
       begin
         match a with
         | Some (res,_) -> return_ct @@ C_nat res
         | None -> fail @@ Errors.meta_lang_eval loc calltrace "Dividing by zero"
       end
     | ( C_DIV    , [ V_Ct (C_mutez a')  ; V_Ct (C_nat b')  ] ) ->
-      let>> a = Int_ediv_n (a',b') in
+      let a = Michelson_backend.Tezos_eq.int_ediv a' b' in
       begin
         match a with
         | Some (res,_) -> return_ct @@ C_mutez res
@@ -256,13 +268,13 @@ let rec apply_operator ~raise ~steps : Location.t -> calltrace -> Ast_typed.type
     | ( C_MOD    , [ V_Ct (C_int a')    ; V_Ct (C_int b')    ] )
     | ( C_MOD    , [ V_Ct (C_int a')    ; V_Ct (C_nat b')    ] )
     | ( C_MOD    , [ V_Ct (C_nat a')    ; V_Ct (C_int b')    ] ) -> (
-      let>> a = Int_ediv (a',b') in
+      let a = Michelson_backend.Tezos_eq.int_ediv a' b' in
       match a with
       | Some (_,r) -> return_ct @@ C_nat r
       | None -> fail @@ Errors.meta_lang_eval loc calltrace "Dividing by zero"
     )
     | ( C_MOD    , [ V_Ct (C_nat a')    ; V_Ct (C_nat b')    ] ) -> (
-      let>> a = Int_ediv_n (a',b') in
+      let a = Michelson_backend.Tezos_eq.int_ediv a' b' in
       match a with
       | Some (_,r) -> return_ct @@ C_nat r
       | None -> fail @@ Errors.meta_lang_eval loc calltrace "Dividing by zero"
@@ -273,19 +285,19 @@ let rec apply_operator ~raise ~steps : Location.t -> calltrace -> Ast_typed.type
     | ( C_AND    , [ V_Ct (C_bool a'  ) ; V_Ct (C_bool b'  ) ] ) -> return_ct @@ C_bool   (a' && b')
     | ( C_XOR    , [ V_Ct (C_bool a'  ) ; V_Ct (C_bool b'  ) ] ) -> return_ct @@ C_bool   ( (a' || b') && (not (a' && b')) )
     (* Bitwise operators *)
-    | ( C_AND    , [ V_Ct (C_int a'  ) ; V_Ct (C_nat b'  ) ] ) -> let>> v = Int_logand (a',b') in return_ct @@ C_nat v
-    | ( C_AND    , [ V_Ct (C_nat a'  ) ; V_Ct (C_nat b'  ) ] ) -> let>> v = Int_logand (a',b') in return_ct @@ C_nat v
-    | ( C_OR     , [ V_Ct (C_nat a'  ) ; V_Ct (C_nat b'  ) ] ) -> let>> v = Int_logor (a',b') in return_ct @@ C_nat v
-    | ( C_XOR    , [ V_Ct (C_nat a'  ) ; V_Ct (C_nat b'  ) ] ) -> let>> v = Int_logxor (a',b') in return_ct @@ C_nat v
+    | ( C_AND    , [ V_Ct (C_int a'  ) ; V_Ct (C_nat b'  ) ] ) -> let v = Z.logand a' b' in return_ct @@ C_nat v
+    | ( C_AND    , [ V_Ct (C_nat a'  ) ; V_Ct (C_nat b'  ) ] ) -> let v = Z.logand a' b' in return_ct @@ C_nat v
+    | ( C_OR     , [ V_Ct (C_nat a'  ) ; V_Ct (C_nat b'  ) ] ) -> let v = Z.logor a' b' in return_ct @@ C_nat v
+    | ( C_XOR    , [ V_Ct (C_nat a'  ) ; V_Ct (C_nat b'  ) ] ) -> let v = Z.logxor a' b' in return_ct @@ C_nat v
     | ( C_LSL    , [ V_Ct (C_nat a'  ) ; V_Ct (C_nat b'  ) ] ) ->
-      let>> v = Int_shift_left (a',b') in
+      let v = Michelson_backend.Tezos_eq.nat_shift_left a' b' in
       begin
         match v with
         | Some v -> return_ct @@ C_nat v
         | None -> fail @@ Errors.meta_lang_eval loc calltrace "Overflow"
       end
     | ( C_LSR    , [ V_Ct (C_nat a'  ) ; V_Ct (C_nat b'  ) ] ) ->
-      let>> v = Int_shift_right (a',b') in
+      let v = Michelson_backend.Tezos_eq.nat_shift_right a' b' in
       begin
         match v with
         | Some v -> return_ct @@ C_nat v
@@ -347,6 +359,7 @@ let rec apply_operator ~raise ~steps : Location.t -> calltrace -> Ast_typed.type
     | ( C_SLICE , [ V_Ct (C_nat st) ; V_Ct (C_nat ed) ; V_Ct (C_string s) ] ) ->
       (*TODO : allign with tezos*)
       return @@ V_Ct (C_string (String.sub s (Z.to_int st) (Z.to_int ed)))
+    | ( C_FOLD , [ V_Func_val {arg_binder ; body ; env}  ; V_List elts ; init ] )
     | ( C_LIST_FOLD_LEFT , [ V_Func_val {arg_binder ; body ; env}  ; init ; V_List elts ] )
     | ( C_LIST_FOLD , [ V_Func_val {arg_binder ; body ; env}  ; V_List elts ; init ] ) ->
       let* lst_ty = monad_option (Errors.generic_error loc "Could not recover types") @@ List.nth types 1 in
@@ -411,6 +424,7 @@ let rec apply_operator ~raise ~steps : Location.t -> calltrace -> Ast_typed.type
       | _ -> assert false)
     | ( C_SET_EMPTY, []) -> return @@ V_Set ([])
     | ( C_SET_ADD , [ v ; V_Set l ] ) -> return @@ V_Set (List.dedup_and_sort ~compare (v::l))
+    | ( C_FOLD , [ V_Func_val {arg_binder ; body ; env}  ; V_Set elts ; init ] )
     | ( C_SET_FOLD , [ V_Func_val {arg_binder ; body ; env}  ; V_Set elts ; init ] ) ->
       let* set_ty = monad_option (Errors.generic_error loc "Could not recover types") @@ List.nth types 1 in
       let* acc_ty = monad_option (Errors.generic_error loc "Could not recover types") @@ List.nth types 2 in

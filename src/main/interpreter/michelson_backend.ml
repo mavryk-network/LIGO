@@ -4,6 +4,67 @@ let int_of_mutez t = Z.of_int64 @@ Memory_proto_alpha.Protocol.Alpha_context.Tez
 let string_of_contract t = Format.asprintf "%a" Tezos_protocol_010_PtGRANAD.Protocol.Alpha_context.Contract.pp t
 let string_of_key_hash t = Format.asprintf "%a" Tezos_crypto.Signature.Public_key_hash.pp t
 
+module Tezos_eq = struct
+  (* behavior should be equivalent to the one in the tezos codebase *)
+  let nat_shift_left x y =
+    if Z.compare y (Z.of_int 256) > 0 then None
+    else
+      let y = Z.to_int y in
+      Some (Z.shift_left x y)
+
+  let nat_shift_right x y =
+    if Z.compare y (Z.of_int 256) > 0 then None
+    else
+      let y = Z.to_int y in
+      Some (Z.shift_right x y)
+
+  let int_ediv x y =
+      try
+        let (q, r) = Z.ediv_rem x y in
+        Some (q, r)
+      with _ -> None
+
+  let timestamp_add : Z.t -> Z.t-> Z.t =
+    fun tz n ->
+      let open Memory_proto_alpha.Protocol.Alpha_context.Script_timestamp in
+      let t = of_zint tz in
+      add_delta t (Memory_proto_alpha.Protocol.Alpha_context.Script_int.of_zint n) |> to_zint
+
+  let timestamp_sub : Z.t -> Z.t-> Z.t =
+    fun tz n ->
+      let open Memory_proto_alpha.Protocol.Alpha_context.Script_timestamp in
+      let t = of_zint tz in
+      add_delta t (Memory_proto_alpha.Protocol.Alpha_context.Script_int.of_zint n) |> to_zint
+
+  let mutez_add : Z.t -> Z.t -> Z.t option = fun x y ->
+    let open Memory_proto_alpha.Protocol.Alpha_context.Tez in
+    let open Option in
+    try
+      let x = Z.to_int64 x in
+      let y = Z.to_int64 y in
+      let* x = of_mutez x in
+      let* y = of_mutez y in
+      match x +? y with
+      | Ok t -> some @@ Z.of_int64 (to_mutez t)
+      | _ -> None
+    with
+      Z.Overflow -> None
+
+  let mutez_sub : Z.t -> Z.t -> Z.t option = fun x y ->
+    let open Memory_proto_alpha.Protocol.Alpha_context.Tez in
+    let open Option in
+    try
+      let x = Z.to_int64 x in
+      let y = Z.to_int64 y in
+      let* x = of_mutez x in
+      let* y = of_mutez y in
+      match x -? y with
+      | Ok t -> some @@ Z.of_int64 (to_mutez t)
+      | _ -> None
+    with
+      Z.Overflow -> None
+
+end
 let compile_contract ~raise ~add_warning source_file entry_point =
   let open Ligo_compile in
   let syntax = "auto" in
@@ -45,12 +106,20 @@ let make_options ~raise ?param ctxt =
   match ctxt with
   | None ->
      make_dry_run_options ~raise default
-  | Some ctxt ->
-     let tezos_context = Tezos_state.get_alpha_context ctxt in
-     let source = string_of_contract ctxt.source in
-     let options = make_dry_run_options ~raise ~tezos_context { default with source = Some source } in
-     let timestamp = Timestamp.of_zint (Z.of_int64 (Proto_alpha_utils.Time.Protocol.to_seconds (Tezos_state.get_timestamp ctxt))) in
-     { options with now = timestamp }
+  | Some (ctxt: Tezos_state.context) ->
+    let source = ctxt.internals.source in
+    let timestamp = Timestamp.of_zint (Z.of_int64 (Proto_alpha_utils.Time.Protocol.to_seconds (Tezos_state.get_timestamp ctxt))) in
+    Proto_alpha_utils.Memory_proto_alpha.make_options
+      ?tezos_context:None
+      ~now:timestamp
+      ~source:source
+      ~sender:source (* debatable *)
+      ~self:source (* debatable *)
+      ?parameter_ty:None
+      ~amount:Memory_proto_alpha.Protocol.Alpha_context.Tez.zero
+      ~balance:Memory_proto_alpha.Protocol.Alpha_context.Tez.zero
+      ~chain_id:Memory_proto_alpha.Protocol.Environment.Chain_id.zero
+      ()
 
 let run_expression_unwrap ~raise ?ctxt ?(loc = Location.generated) (c_expr : Stacking.compiled_expression) =
   let options = make_options ~raise ctxt in
@@ -368,6 +437,6 @@ let run_michelson_code ~raise ~loc (ctxt : Tezos_state.context) code func_ty arg
   let r = Ligo_run.Of_michelson.run_expression ~raise func func_ty in
   match r with
   | Success (a, b) ->
-      Michelson_to_value.decompile_to_untyped_value ~raise ~bigmaps:ctxt.bigmaps a b
+      Michelson_to_value.decompile_to_untyped_value ~raise ~bigmaps:ctxt.transduced.bigmaps a b
   | _ ->
      raise.raise (Errors.generic_error loc "Could not execute Michelson function")
