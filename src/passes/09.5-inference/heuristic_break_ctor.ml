@@ -161,7 +161,14 @@ let propagator : (selector_output, _) Type_variable_abstraction.Solver_types.pro
     match a , b with
     | `Row a , `Row b ->
       let aux = fun ((la,{associated_variable=aa;_}),(lb,{associated_variable=bb;})) ->
-        let () = Trace.Assert.assert_true ~raise (corner_case "TODO: different labels la lb") (Type_variable_abstraction.Compare.label la lb = 0) in
+        let debug =
+          let open Type_variable_abstraction.PP in
+          Format.asprintf "different labels:\n%a\n%a\n in:\n%a\n%a\n"
+              label la 
+              label lb
+              c_row_simpl_short a c_row_simpl_short b
+        in
+        let () = Trace.Assert.assert_true ~raise (corner_case debug) (Type_variable_abstraction.Compare.label la lb = 0) in
         c_equation
           (wrap (Propagator_break_ctor "a") @@ P_variable (repr aa))
           (wrap (Propagator_break_ctor "b") @@ P_variable (repr bb))
@@ -169,7 +176,13 @@ let propagator : (selector_output, _) Type_variable_abstraction.Solver_types.pro
       in
       let bindings =  
         match List.map2 ~f:(fun x y -> (x,y)) (LMap.bindings a.tv_map) (LMap.bindings b.tv_map)
-        with Ok a -> a | List.Or_unequal_lengths.Unequal_lengths -> raise.raise @@ (corner_case "TODO: different number of labels (List.length a.tv_map) (List.length b.tv_map)")
+        with Ok a -> a | List.Or_unequal_lengths.Unequal_lengths ->
+          let open Type_variable_abstraction.PP in
+          let x = Format.asprintf "TODO: different number of labels:\n %a\nVS\n%a\n"
+            (lmap_sep_d row_variable) (LMap.to_kv_list a.tv_map)
+            (lmap_sep_d row_variable) (LMap.to_kv_list b.tv_map)
+          in
+          raise.raise @@ (corner_case x)
       in
       List.map ~f:aux bindings
     | `Constructor a , `Constructor b -> (

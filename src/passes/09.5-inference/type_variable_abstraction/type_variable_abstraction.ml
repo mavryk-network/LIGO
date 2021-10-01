@@ -246,6 +246,9 @@ module TYPE_VARIABLE_ABSTRACTION = functor (Type_variable : sig type t end) -> s
       val type_value_short : type_value pretty_printer
       val type_constraint : type_constraint pretty_printer
       val type_constraint_simpl_short : type_constraint_simpl pretty_printer
+      val label : label pretty_printer
+      val lmap_sep_d : (Format.formatter -> 'a -> unit) -> Format.formatter -> (label * 'a) list -> unit
+      val row_variable : row_variable pretty_printer
     end
 
     module Yojson : sig

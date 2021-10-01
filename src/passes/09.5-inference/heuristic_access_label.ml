@@ -119,9 +119,14 @@ let propagator : (selector_output, typer_error) Type_variable_abstraction.Solver
 
   let field_type =
     match LMap.find_opt a_var_l.label a_r_map.tv_map with
-    | None -> raise.raise @@ corner_case "Type error: label {a_var_l.label} does not exist in record {a_r_map.tv_map}"
+    | None ->
+      let open Type_variable_abstraction.PP in
+      let x = Format.asprintf "Type error: label %a does not exist in record %a"
+        label a_var_l.label
+        (lmap_sep_d row_variable) @@ LMap.to_kv_list a_r_map.tv_map
+      in
+      raise.raise @@ corner_case x
     | Some field_type -> repr field_type.associated_variable
-      
   in
 
   (* Produce constraint a_r_map.tv_map[label] = a_var_l.tv *)
