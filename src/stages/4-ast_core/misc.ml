@@ -322,3 +322,19 @@ let reason_simpl_ : type_constraint_simpl -> string = function
 
 let reason_simpl : type_constraint_simpl -> string = fun c -> reason_simpl_ c
 
+(*
+  `t_is_nominal rows` returns true if the type from which those rows are extracted are
+  to be considered nominal.
+  For now, types holding `layout`/`michelson_annotation` [@ .. ]-annotations have to be
+  nominal (i.e. the rows labels must be disjoint from all other T_record/T_sum types)
+*)
+let t_is_nominal : rows -> bool =
+  fun x ->
+    match x with
+    | { fields ; layout = Some _ } -> (
+      let lst = LMap.to_kv_list fields in
+      List.exists
+        ~f:(function (_label, { michelson_annotation=Some _ ; _ }) -> true | _ -> false)
+        lst 
+    )
+    | _ -> false

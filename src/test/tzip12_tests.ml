@@ -37,13 +37,13 @@ let transfer ~raise ~add_warning f s () =
   let (program, env) = get_program ~raise ~add_warning f s () in
   let storage = e_record_ez [
     ("tokens", e_big_map [(sender, e_nat 100); (from_, e_nat 100); (to_, e_nat 100)]);
-    ("allowances", e_big_map [(e_record_ez [("owner", from_); ("spender", sender)], e_nat 100)]);
+    ("allowances", e_big_map [(e_record_ez [("owner_a", from_); ("spender", sender)], e_nat 100)]);
     ("total_supply",e_nat 300);
   ] in
-  let parameter = e_record_ez [("address_from", from_);("address_to",to_); ("value",e_nat 10)] in
+  let parameter = e_record_ez [("address_from", from_);("address_to",to_); ("vt",e_nat 10)] in
   let new_storage = e_record_ez [
     ("tokens", e_big_map [(sender, e_nat 100); (from_, e_nat 90); (to_, e_nat 110)]);
-    ("allowances", e_big_map [(e_record_ez [("owner", from_); ("spender", sender)], e_nat 90)]);
+    ("allowances", e_big_map [(e_record_ez [("owner_a", from_); ("spender", sender)], e_nat 90)]);
     ("total_supply",e_nat 300);
   ] in
   let input = e_pair parameter storage in
@@ -55,10 +55,10 @@ let transfer_not_e_allowance ~raise ~add_warning f s () =
   let (program, env) = get_program ~raise ~add_warning f s () in
   let storage = e_record_ez [
     ("tokens", e_big_map [(sender, e_nat 100); (from_, e_nat 100); (to_, e_nat 100)]);
-    ("allowances", e_big_map [(e_record_ez [("owner", from_); ("spender", sender)], e_nat 0)]);
+    ("allowances", e_big_map [(e_record_ez [("owner_a", from_); ("spender", sender)], e_nat 0)]);
     ("total_supply",e_nat 300);
   ] in
-  let parameter = e_record_ez [("address_from", from_);("address_to",to_); ("value",e_nat 10)] in
+  let parameter = e_record_ez [("address_from", from_);("address_to",to_); ("vt",e_nat 10)] in
   let input = e_pair parameter storage in
   let options = Proto_alpha_utils.Memory_proto_alpha.make_options () in
   expect_string_failwith ~raise ~options (program, env) "transfer" input
@@ -68,10 +68,10 @@ let transfer_not_e_balance ~raise ~add_warning f s () =
   let (program, env) = get_program ~raise ~add_warning f s () in
   let storage = e_record_ez [
     ("tokens", e_big_map [(sender, e_nat 100); (from_, e_nat 0); (to_, e_nat 100)]);
-    ("allowances", e_big_map [(e_record_ez [("owner", from_); ("spender", sender)], e_nat 100)]);
+    ("allowances", e_big_map [(e_record_ez [("owner_a", from_); ("spender", sender)], e_nat 100)]);
     ("total_supply",e_nat 300);
   ] in
-  let parameter = e_record_ez [("address_from", from_);("address_to",to_); ("value",e_nat 10)] in
+  let parameter = e_record_ez [("address_from", from_);("address_to",to_); ("vt",e_nat 10)] in
   let input = e_pair parameter storage in
   let options = Proto_alpha_utils.Memory_proto_alpha.make_options () in
   expect_string_failwith ~raise ~options (program, env) "transfer" input
@@ -81,13 +81,13 @@ let approve ~raise ~add_warning f s () =
   let (program, env) = get_program ~raise ~add_warning f s () in
   let storage = e_record_ez [
     ("tokens", e_big_map [(sender, e_nat 100); (from_, e_nat 100); (to_, e_nat 100)]);
-    ("allowances", e_big_map [(e_record_ez [("owner", sender); ("spender", from_)], e_nat 0)]);
+    ("allowances", e_big_map [(e_record_ez [("owner_a", sender); ("spender", from_)], e_nat 0)]);
     ("total_supply",e_nat 300);
   ] in
-  let parameter = e_record_ez [("spender", from_);("value",e_nat 100)] in
+  let parameter = e_record_ez [("spender_ap", from_);("value",e_nat 100)] in
   let new_storage = e_record_ez [
     ("tokens", e_big_map [(sender, e_nat 100); (from_, e_nat 100); (to_, e_nat 100)]);
-    ("allowances", e_big_map [(e_record_ez [("owner", sender); ("spender", from_)], e_nat 100)]);
+    ("allowances", e_big_map [(e_record_ez [("owner_a", sender); ("spender", from_)], e_nat 100)]);
     ("total_supply",e_nat 300);
   ] in
   let input = e_pair parameter storage in
@@ -99,10 +99,10 @@ let approve_unsafe ~raise ~add_warning f s () =
   let (program, env) = get_program ~raise ~add_warning f s () in
   let storage = e_record_ez [
     ("tokens", e_big_map [(sender, e_nat 100); (from_, e_nat 100); (to_, e_nat 100)]);
-    ("allowances", e_big_map [(e_record_ez [("owner", sender); ("spender", from_)], e_nat 100)]);
+    ("allowances", e_big_map [(e_record_ez [("owner_a", sender); ("spender", from_)], e_nat 100)]);
     ("total_supply",e_nat 300);
   ] in
-  let parameter = e_record_ez [("spender", from_);("value",e_nat 100)] in
+  let parameter = e_record_ez [("spender_ap", from_);("value",e_nat 100)] in
   let input = e_pair parameter storage in
   let options = Proto_alpha_utils.Memory_proto_alpha.make_options () in
   expect_string_failwith ~raise ~options (program, env) "approve" input
@@ -112,7 +112,7 @@ let get_allowance ~raise ~add_warning f s () =
   let (program, env) = get_program ~raise ~add_warning f s () in
   let storage = e_record_ez [
     ("tokens", e_big_map [(sender, e_nat 100); (from_, e_nat 100); (to_, e_nat 100)]);
-    ("allowances", e_big_map [(e_record_ez [("owner", sender); ("spender", from_)], e_nat 100)]);
+    ("allowances", e_big_map [(e_record_ez [("owner_a", sender); ("spender", from_)], e_nat 100)]);
     ("total_supply",e_nat 300);
   ] in
   let parameter = e_record_ez [("owner", from_);("spender",sender); ("callback", external_contract)] in
@@ -125,7 +125,7 @@ let get_balance ~raise ~add_warning f s () =
   let (program, env) = get_program ~raise ~add_warning f s () in
   let storage = e_record_ez [
     ("tokens", e_big_map [(sender, e_nat 100); (from_, e_nat 100); (to_, e_nat 100)]);
-    ("allowances", e_big_map [(e_record_ez [("owner", sender); ("spender", from_)], e_nat 100)]);
+    ("allowances", e_big_map [(e_record_ez [("owner_a", sender); ("spender", from_)], e_nat 100)]);
     ("total_supply",e_nat 300);
   ] in
   let parameter = e_record_ez [("owner", from_);("callback", external_contract)] in

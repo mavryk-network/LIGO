@@ -2,16 +2,16 @@ type transfer =
   [@layout:comb]
   { [@annot:from] address_from : address;
     [@annot:to] address_to : address;
-    value : nat }
+    vt : nat }
 
 type approve =
   [@layout:comb]
-  { spender : address;
+  { spender_ap : address;
     value : nat }
 
 type allowance_key =
   [@layout:comb]
-  { owner : address;
+  { owner_a : address;
     spender : address }
 
 type getAllowance =
@@ -60,13 +60,13 @@ let transfer (param, storage : transfer * storage) : result =
     if Tezos.sender = param.address_from
     then allowances
     else
-      let allowance_key = { owner = param.address_from ; spender = Tezos.sender } in
+      let allowance_key = { owner_a = param.address_from ; spender = Tezos.sender } in
       let authorized_value =
         match Big_map.find_opt allowance_key allowances with
         | Some value -> value
         | None -> 0n in
       let authorized_value =
-        match is_nat (authorized_value - param.value) with
+        match is_nat (authorized_value - param.vt) with
         | None -> (failwith "NotEnoughAllowance" : nat)
         | Some authorized_value -> authorized_value in
       Big_map.update allowance_key (positive authorized_value) allowances in
@@ -76,7 +76,7 @@ let transfer (param, storage : transfer * storage) : result =
       | Some value -> value
       | None -> 0n in
     let from_balance =
-      match is_nat (from_balance - param.value) with
+      match is_nat (from_balance - param.vt) with
       | None -> (failwith "NotEnoughBalance" : nat)
       | Some from_balance -> from_balance in
     Big_map.update param.address_from (positive from_balance) tokens in
@@ -85,13 +85,13 @@ let transfer (param, storage : transfer * storage) : result =
       match Big_map.find_opt param.address_to tokens with
       | Some value -> value
       | None -> 0n in
-    let to_balance = to_balance + param.value in
+    let to_balance = to_balance + param.vt in
     Big_map.update param.address_to (positive to_balance) tokens in
   (([] : operation list), { storage with tokens = tokens; allowances = allowances })
 
 let approve (param, storage : approve * storage) : result =
   let allowances = storage.allowances in
-  let allowance_key = { owner = Tezos.sender ; spender = param.spender } in
+  let allowance_key = { owner_a = Tezos.sender ; spender = param.spender_ap } in
   let previous_value =
     match Big_map.find_opt allowance_key allowances with
     | Some value -> value
@@ -134,3 +134,11 @@ let main (param, storage : parameter * storage) : result =
     | GetBalance param -> (getBalance (param, storage), storage)
     | GetTotalSupply param -> (getTotalSupply (param, storage), storage)
   end
+
+let op = { address_from = sender ; address_to = sender ; vt = 1n }
+let os = {
+  tokens = (Big_map.empty : tokens) ;
+  allowances = Big_map.literal [({owner_a = sender ; spender = sender},0n)] ;
+  total_supply = 300n
+}
+let ops  = transfer (op,os)

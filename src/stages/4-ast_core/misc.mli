@@ -45,4 +45,4 @@ val layout_eq : layout -> layout -> bool
 
 val assert_eq : 'a -> 'a -> unit option
 val assert_list_eq : ('a -> 'a -> unit option) -> 'a list -> 'a list -> unit option
-
+val t_is_nominal : rows -> bool

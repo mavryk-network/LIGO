@@ -1,4 +1,9 @@
 let all_expression_mapper = [
+  (*
+    REMITODO:
+    is nominal <- Environment.is_nominal 
+    map over decl and look for clashing nomimal types
+  *)
 ]
 let all_type_expression_mapper = [
 ]

@@ -66,33 +66,52 @@ let get_constructor : label -> t -> (type_expression * type_expression) option =
       ) ~init:None modules
   in rec_aux x
 
-let get_record : _ label_map -> t -> (rows) option = fun lmap e ->
+let get_nominal_record : (rows -> bool) -> t -> rows option = fun predicate e ->
   let rec rec_aux e =
     let aux = fun {type_variable=_ ; type_} ->
       match type_.type_content with
-      | T_record m -> Option.(
-        let lst_kv  = LMap.to_kv_list_rev lmap in
-        let lst_kv' = LMap.to_kv_list_rev m.fields in
-        let m = map ~f:(fun () -> m) @@ Misc.assert_list_eq
-          ( fun (ka,va) (kb,vb) ->
-            let Label ka = ka in
-            let Label kb = kb in
-            let* () = Misc.assert_eq ka kb in
-            Misc.assert_type_expression_eq (va.associated_type, vb.associated_type)
-          ) lst_kv lst_kv' in
-        m
-      )
+      | T_record x ->
+        if (Misc.t_is_nominal x && predicate x) then Some x else None
       | _ -> None
     in
     match List.find_map ~f:aux (get_type_environment e) with
       Some _ as s -> s
     | None ->
       let modules = get_module_environment e in
-      List.fold_left ~f:(fun res {module_variable=_;module_} ->
-        match res with Some _ as s -> s | None -> rec_aux module_
-      ) ~init:None modules
-  in rec_aux e
-
+      List.fold_left
+        ~f:(fun res {module_variable=_;module_} ->
+            match res with
+            | Some _ as s ->
+              (*REMITODO:
+                add a warning: used a nominal record which was declared in another module
+                please declare an alias for this type
+              *)
+              s
+            | None -> rec_aux module_
+        )
+        ~init:None
+        modules
+  in
+  rec_aux e
+let get_nominal_record_from_row lmap e =
+  let row_match (y: row_element label_map) (x: rows) : bool =
+    let lstx = LMap.keys x.fields in
+    let lsty = LMap.keys y in
+    let res = List.for_all2
+      ~f:(fun la lb -> (Compare.label la lb) = 0)
+      lstx lsty
+    in
+    match res with
+    | Ok label_equal -> label_equal
+    | Unequal_lengths -> false
+  in
+  get_nominal_record (row_match lmap) e
+let get_nominal_record_from_label x e =
+  let label_match (y: label) (x:rows) : bool =
+    let lst = LMap.keys x.fields in
+    List.exists ~f:(fun cl -> Compare.label cl y = 0) lst 
+  in
+  get_nominal_record (label_match x) e
 
 let get_sum : _ label_map -> t -> rows option = fun lmap e ->
   let rec rec_aux e =

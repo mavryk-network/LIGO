@@ -443,26 +443,25 @@ and type_expression' ~raise : ?tv_opt:O.type_expression -> environment -> _ O'.t
       ((e,state,constraints@c), (expr,t))
     in
     let (e,state',constraints), m' = O.LMap.fold_map ~f:aux ~init:(e,state,[]) m in
-    (* Do we need row_element for Ast_core ? *)
     let lmap = O.LMap.map (fun (_e,t) -> ({associated_type = t ; michelson_annotation = None ; decl_pos = 0}: O.row_element)) m' in
-    let record_type = match Environment.get_record lmap e with
+    let record_type = match Environment.get_nominal_record_from_row lmap e with
+      | Some x -> x
       | None -> O.{fields=lmap;layout= Some default_layout}
-      | Some r -> r
     in
     let wrapped = Wrap.record record_type in
     return_wrapped (e_record @@ O.LMap.map fst m') e state' constraints wrapped
 
   | E_record_accessor {record;path} -> (
-      let (e,state,base,t),constraints = self e state record in
-      let wrapped = Wrap.access_label ~base:t ~label:path in
-      return_wrapped (e_record_accessor base path) e state constraints wrapped
-    )
-
+    let (e,state,base,t),constraints = self e state record in
+    let nominal : I.rows option = Environment.get_nominal_record_from_label path e in
+    let wrapped = Wrap.access_label ~base:t ~nominal ~label:path in
+    return_wrapped (e_record_accessor base path) e state constraints wrapped
+  )
   | E_record_update {record; path; update} ->
     let (e,state,record,t_r),c1 = self e state record in
     let (e,state,update,t_u),c2 = self e state update in
-    (* TODO: wrap.record_update *)
-    let wrapped = Wrap.record_update  ~base:t_r ~label:path @@ t_u in
+    let nominal : I.rows option = Environment.get_nominal_record_from_label path e in
+    let wrapped = Wrap.record_update ~base:t_r ~nominal ~label:path @@ t_u in
     return_wrapped (e_record_update record path update) e state (c1@c2) wrapped
 
   (* Advanced *)
@@ -663,11 +662,11 @@ and type_module ~raise ~init_env (p : I.module_) : environment * O.module_ * O.t
     (init_env , empty_state , p)
     Typesystem.Misc.Substitution.Pattern.s_module
     (type_module_returns_env ~raise) in
-  Format.eprintf "Charcking for uni_vars\n%!";
+  if Ast_core.Debug.json_new_typer then Format.eprintf "Checking for uni_vars\n%!" ;
   let p = Check.check_has_no_unification_vars p in
   let () = (if Ast_core.Debug.json_new_typer then Printf.eprintf "%!\"end of JSON\"],\n###############################END_OF_JSON\n%!") in
   let () = Pretty_print_variables.flush_pending_print state in
-  Format.eprintf "module typed\n\n%!";
+  if Ast_core.Debug.json_new_typer then Format.eprintf "module typed\n\n%!";
   (env, p,t, state)
 
 and type_expression_subst ~raise (env : environment) (state : _ O'.typer_state) ?(tv_opt : O.type_expression option) (e : I.expression) : O.environment * O.expression * O.type_expression * _ O'.typer_state =

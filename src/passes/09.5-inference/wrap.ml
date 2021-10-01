@@ -144,23 +144,48 @@ let record : T.rows -> (constraints * T.type_variable) = fun {fields;layout} ->
   let whole_expr = Core.fresh_type_variable ~name:"record" () in
   [c_equation (T.Reasons.wrap (Todo "wrap: record: whole") @@ T.P_variable whole_expr) record_type "wrap: record: whole"] , whole_expr
 
-let access_label ~(base : T.type_expression) ~(label : O.accessor) : (constraints * T.type_variable) =
+let access_label ~(base : T.type_expression) ~(label : O.accessor) ~(nominal : I.rows option) : (constraints * T.type_variable) =
   let base' = type_expression_to_type_value base in
   let Label l = label in
   let expr_type = Core.fresh_type_variable ~name:("acc_fl_"^l) () in
-  [{ c = C_access_label { c_access_label_record_type = base' ; accessor = label ; c_access_label_tvar = expr_type } ; reason = "wrap: access_label" }] , expr_type
+  let c_base : O.type_constraint = {
+    c = C_access_label {
+      c_access_label_record_type = base' ;
+      accessor = label ;
+      c_access_label_tvar = expr_type
+    } ;
+    reason = "wrap: access_label"
+  }
+  in
+  let cs : constraints =
+    match nominal with
+    | None -> [ c_base ]
+    | Some r ->
+      let r' = type_expression_to_type_value ({ type_content = T_record r ; location = Location.generated ; sugar = None}) in
+      [ c_base ; c_equation r' base' "wrap: record: nominal"]
+  in
+  cs , expr_type
 
-let record_update ~(base : T.type_expression) ~(label : O.accessor) (update : T.type_expression) : (constraints * T.type_variable) =
+let record_update ~(base : T.type_expression) ~(label : O.accessor) ~(nominal : I.rows option) (update : T.type_expression) : (constraints * T.type_variable) =
   let base' = type_expression_to_type_value base in
   let update = type_expression_to_type_value update in
   let Label l = label in
   let update_var = Core.fresh_type_variable ~name:("up_fld_"^l) () in
   let whole_expr = Core.fresh_type_variable ~name:"update" () in
-  [
+  let cs : constraints = [
     { c = C_access_label { c_access_label_record_type = base' ; accessor = label ; c_access_label_tvar = update_var } ; reason = "wrap: access_label" };
     c_equation update (T.Reasons.wrap (Todo "wrap: record_update: update") @@ T.P_variable update_var) "wrap: record_update: update";
     c_equation base' (T.Reasons.wrap (Todo "wrap: record_update: whole") @@ T.P_variable whole_expr) "wrap: record_update: record (whole)"
-  ] , whole_expr
+  ]
+  in
+  let cs : constraints =
+    match nominal with
+    | None -> cs
+    | Some r ->
+      let r' = type_expression_to_type_value ({ type_content = T_record r ; location = Location.generated ; sugar = None}) in
+      ( c_equation r' base' "wrap: record: nominal" )::cs
+  in
+  cs, whole_expr
 
 let module_access (expr : T.type_expression) : (constraints * T.type_variable) =
   let expr' = type_expression_to_type_value expr in
