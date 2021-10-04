@@ -419,22 +419,12 @@ module Tree_abstraction = struct
       | "get_entrypoint"         -> some_deprecated C_CONTRACT_ENTRYPOINT     (* Deprecated *)
       | "get_entrypoint_opt"     -> some_deprecated C_CONTRACT_ENTRYPOINT_OPT (* Deprecated *)
 
-      | "Michelson.is_nat" -> some_deprecated C_IS_NAT  (* Deprecated *)
-      | "is_nat"           -> some_const C_IS_NAT
-      | "int"              -> some_const C_INT
-      | "abs"              -> some_const C_ABS
       | "ediv"             -> some_const C_EDIV
       | "unit"             -> some_const C_UNIT
 
       | "cons"             -> some_deprecated C_CONS (* Deprecated *)
 
-      (* Crypto module *)
 
-      | "crypto_check"    -> some_deprecated C_CHECK_SIGNATURE       (* Deprecated *)
-      | "crypto_hash_key" -> some_deprecated C_HASH_KEY              (* Deprecated *)
-      (*| "blake2b"         -> some_deprecated C_BLAKE2b               (* Deprecated *)*)
-      | "sha_256"         -> some_deprecated C_SHA256                (* Deprecated *)
-      | "sha_512"         -> some_deprecated C_SHA512                (* Deprecated *)
 
       (* Bytes module *)
 
@@ -484,11 +474,6 @@ module Tree_abstraction = struct
       | "bitwise_xor"         -> some_deprecated C_XOR     (* Deprecated *)
       | "bitwise_lsl"         -> some_deprecated C_LSL     (* Deprecated *)
       | "bitwise_lsr"         -> some_deprecated C_LSR     (* Deprecated *)
-
-      (* String module *)
-
-      | "string_slice"    -> some_deprecated C_SLICE    (* Deprecated *)
-      | "string_concat"   -> some_deprecated C_CONCAT   (* Deprecated *)
 
       (* Others *)
 

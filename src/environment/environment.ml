@@ -64,6 +64,22 @@ let meta_ligo_types : (type_variable * type_expression) list -> (type_variable *
     (v_failure, t_constant failure_name []);
   ]
 
+let toplevel e = add_bindings_in_env [
+  ("blake2b"        , e_raw_code "{ BLAKE2B  }" (t_function (t_bytes ()) (t_bytes    ()) ())) ;
+  ("sha256"         , e_raw_code "{ SHA256   }" (t_function (t_bytes ()) (t_bytes    ()) ())) ;
+  ("sha512"         , e_raw_code "{ SHA512   }" (t_function (t_bytes ()) (t_bytes    ()) ())) ;
+  ("crypto_hash_key", e_raw_code "{ HASH_KEY }" (t_function (t_key   ()) (t_key_hash ()) ())) ;
+  ("crypto_check"   , e_raw_code "{ UNPAIR ; UNPAIR ; CHECK_SIGNATURE }" (t_function (t_triplet (t_key ()) (t_signature ()) (t_bytes ())) (t_bool ()) ())) ;
+
+  ("string_slice" , e_raw_code michelson_slice slice_type) ;
+  ("string_concat", e_raw_code "{ UNPAIR ; CONCAT }" (t_function (t_pair (t_string ()) (t_string ())) (t_string ()) ())) ; 
+
+  ("is_nat", e_raw_code "{ ISNAT }" (t_function (t_int ()) (t_option (t_nat ())) ())) ;
+  ("int"   , e_raw_code "{ INT }" (t_function (t_nat ()) (t_int ()) ())) ;
+  ("abs"   , e_raw_code "{ ABS }" (t_function (t_int ()) (t_nat ()) ())) ;
+
+] e
+
 let default : Protocols.t -> environment = function
   | Protocols.Edo -> Environment.of_list_type edo_types
   | Protocols.Hangzhou -> Environment.of_list_type hangzhou_types
