@@ -39,3 +39,30 @@ let format_result : ?werror:bool -> display_format:ex_display_format -> 'value f
     let format = bind_format value_format Main_errors.Formatter.error_format in
     let value = Trace.to_stdlib_result value in
     toplevel ~werror ~display_format (Displayable {value ; format}) warns value
+
+module ModuleResolutions = struct
+  type t = (string * string) list
+
+  let get_module_name m = 
+    let parts = String.split_on_char '@' m in 
+    if m.[0] = '@'
+    then "@" ^ Stdlib.List.nth parts 1 (* npm scope *)
+    else Stdlib.List.nth parts 0
+
+  let clean (json : Yojson.Basic.t) : t =
+    match json with
+    | `Assoc obj ->
+      Stdlib.List.map (fun (k,path: string * Yojson.Basic.t) ->
+        match path with
+        | `String path ->
+          let module_name = get_module_name k in 
+          (module_name, path)
+        | _ -> failwith "invalid installation.json"
+      ) obj
+    | _ -> failwith "invalid installation.json"
+    
+  let make path =
+    let json = Yojson.Basic.from_file path in
+    clean json
+
+end

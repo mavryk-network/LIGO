@@ -3,33 +3,6 @@ open Api_helpers
 module Helpers   = Ligo_compile.Helpers
 module Run = Ligo_run.Of_michelson
 
-module ModuleResolutions = struct
-  type t = (string * string) list
-
-  let get_module_name m = 
-    let parts = String.split_on_char '@' m in 
-    if m.[0] = '@'
-    then "@" ^ List.nth parts 1 (* npm scope *)
-    else List.nth parts 0
-
-  let clean (json : Yojson.Basic.t) : t =
-    match json with
-    | `Assoc obj ->
-      List.map (fun (k,path: string * Yojson.Basic.t) ->
-        match path with
-        | `String path ->
-          let module_name = get_module_name k in 
-          (module_name, path)
-        | _ -> failwith "invalid installation.json"
-      ) obj
-    | _ -> failwith "invalid installation.json"
-    
-  let make path =
-    let json = Yojson.Basic.from_file path in
-    clean json
-
-end
-
 let contract ?werror source_file entry_point syntax infer protocol_version display_format disable_typecheck michelson_format module_resolutions =
     Trace.warning_with @@ fun add_warning get_warnings ->
     format_result ?werror ~display_format (Formatter.Michelson_formatter.michelson_format michelson_format) get_warnings @@

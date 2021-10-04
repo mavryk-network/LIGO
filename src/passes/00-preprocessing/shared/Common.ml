@@ -48,12 +48,12 @@ module Config (File : FILE) (Comments : Comments.S) =
 
     let preprocessor =
       object
-        method block   = Preprocessor_CLI.block
-        method line    = Preprocessor_CLI.line
-        method input   = Preprocessor_CLI.input
-        method offsets = Preprocessor_CLI.offsets
-        method dirs    = Preprocessor_CLI.dirs
-        method module_resolutions = []
+        method block              = Preprocessor_CLI.block
+        method line               = Preprocessor_CLI.line
+        method input              = Preprocessor_CLI.input
+        method offsets            = Preprocessor_CLI.offsets
+        method dirs               = Preprocessor_CLI.dirs
+        method module_resolutions = File.module_resolutions (* Fix this: add module_resolutions to CLI *)
       end
   end
 

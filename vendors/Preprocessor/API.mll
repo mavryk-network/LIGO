@@ -228,12 +228,24 @@ let rec last_mode = function
 
 (* Finding a file to #include *)
 
-let find file_path module_resolutions = 
-  let module_name = List.hd @@ String.split_on_char '/' file_path in
-  None
+let resolve file_path module_resolutions = 
+  (* let _ = print_endline "resolve" in *)
+  (* TODO: use FPath to deal with paths *)
+  let parts = String.split_on_char '/' file_path in
+  let module_name = List.hd parts in
+  let file_path = String.concat Filename.dir_sep (List.tl parts) in
+  let path = List.assoc_opt module_name module_resolutions in
+
+  (* Printf.printf "a = %s\nb = %s\n\n" module_name file_path; *)
+  Option.bind path (fun path ->
+    (* Printf.printf "a = %s\n" path; *)
+    let path = path ^ Filename.dir_sep ^ file_path in
+    try Some (path, open_in path) with
+      Sys_error _ -> None
+  )
 
 let rec find file_path module_resolutions = function
-         [] -> None
+  [] -> None
 | dir::dirs ->
     let path =
       if dir = "." || dir = "" then file_path
@@ -242,13 +254,17 @@ let rec find file_path module_resolutions = function
       Sys_error _ -> find file_path module_resolutions dirs
 
 let find dir file dirs module_resolutions =
-  let path =
-    if dir = "." || dir = "" then file
-    else dir ^ Filename.dir_sep ^ file in
-  try Some (path, open_in path) with
-    Sys_error _ ->
-      let base = Filename.basename file in
-      if base = file then find file module_resolutions dirs else None
+  let found = resolve file module_resolutions in
+  match found with
+  | Some path -> Some path
+  | None ->
+    let path =
+      if dir = "." || dir = "" then file
+      else dir ^ Filename.dir_sep ^ file in
+    try Some (path, open_in path) with
+      Sys_error _ ->
+        let base = Filename.basename file in
+        if base = file then find file module_resolutions dirs else None
 
 (* PRINTING *)
 

@@ -618,12 +618,12 @@ let get_scope =
   in (Term.ret term , Term.info ~man ~doc cmdname)
 
 let test =
-  let f source_file syntax steps infer protocol_version display_format =
+  let f source_file syntax steps infer protocol_version display_format module_resolutions =
     return_result @@
-    Api.Run.test source_file syntax steps infer protocol_version display_format
+    Api.Run.test source_file syntax steps infer protocol_version display_format module_resolutions
   in
   let term =
-    Term.(const f $ source_file 0 $ syntax $ steps $ infer $ protocol_version $ display_format) in
+    Term.(const f $ source_file 0 $ syntax $ steps $ infer $ protocol_version $ display_format $ module_resolutions) in
   let cmdname = "test" in
   let doc = "Subcommand: Test a contract with the LIGO test framework (BETA)." in
   let man = [`S Manpage.s_description;

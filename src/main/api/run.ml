@@ -5,12 +5,13 @@ module Compile = Ligo_compile
 module Helpers   = Ligo_compile.Helpers
 module Run = Ligo_run.Of_michelson
 
-let test source_file syntax steps infer protocol_version display_format =
+let test source_file syntax steps infer protocol_version display_format module_resolutions =
     Trace.warning_with @@ fun add_warning get_warnings ->
     format_result ~display_format (Ligo_interpreter.Formatter.tests_format) get_warnings @@
       fun ~raise ->
       let init_env   = Helpers.get_initial_env ~raise ~test_env:true protocol_version in
-      let options = Compiler_options.make ~infer ~init_env ~test:true () in
+      let module_resolutions = Stdlib.Option.map ModuleResolutions.make module_resolutions in
+      let options = Compiler_options.make ~infer ~init_env ~test:true () ?module_resolutions in
       let typed,_    = Build.combined_contract ~raise ~add_warning ~options syntax Env source_file in
       let steps = int_of_string steps in
       Interpreter.eval_test ~raise ~steps typed
