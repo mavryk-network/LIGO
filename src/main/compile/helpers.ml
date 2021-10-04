@@ -57,7 +57,7 @@ let preprocess_file ~raise ~(options:options) ~(meta: meta) file_path
     | ReasonLIGO -> Reasonligo.preprocess_file
     | JsLIGO     -> Jsligo.preprocess_file
   in trace ~raise preproc_tracer @@
-      Trace.from_result (preprocess_file options.libs file_path)
+      Trace.from_result (preprocess_file options.libs options.module_resolutions file_path)
 
 let preprocess_string ~raise ~(options:options) ~(meta: meta) file_path =
   let open Preprocessing in
@@ -68,7 +68,7 @@ let preprocess_string ~raise ~(options:options) ~(meta: meta) file_path =
     | ReasonLIGO -> Reasonligo.preprocess_string
     | JsLIGO     -> Jsligo.preprocess_string
   in trace ~raise preproc_tracer @@
-     from_result (preprocess_string options.libs file_path)
+     from_result (preprocess_string options.libs options.module_resolutions file_path)
 
 (* Front-end compilation *)
 

@@ -71,11 +71,12 @@ type file_path = string
 type module_name = string
 
 type config = <
-  block   : block_comment option;
-  line    : line_comment option;
-  input   : file_path option;
-  offsets : bool;
-  dirs    : file_path list (* Directories to search for #include files *)
+  block              : block_comment option;
+  line               : line_comment option;
+  input              : file_path option;
+  offsets            : bool;
+  dirs               : file_path list; (* Directories to search for #include files *)
+  module_resolutions : (module_name * file_path) list
 >
 
 type state = {
@@ -227,23 +228,27 @@ let rec last_mode = function
 
 (* Finding a file to #include *)
 
-let rec find file_path = function
+let find file_path module_resolutions = 
+  let module_name = List.hd @@ String.split_on_char '/' file_path in
+  None
+
+let rec find file_path module_resolutions = function
          [] -> None
 | dir::dirs ->
     let path =
       if dir = "." || dir = "" then file_path
       else dir ^ Filename.dir_sep ^ file_path in
     try Some (path, open_in path) with
-      Sys_error _ -> find file_path dirs
+      Sys_error _ -> find file_path module_resolutions dirs
 
-let find dir file dirs =
+let find dir file dirs module_resolutions =
   let path =
     if dir = "." || dir = "" then file
     else dir ^ Filename.dir_sep ^ file in
   try Some (path, open_in path) with
     Sys_error _ ->
       let base = Filename.basename file in
-      if base = file then find file dirs else None
+      if base = file then find file module_resolutions dirs else None
 
 (* PRINTING *)
 
@@ -488,7 +493,7 @@ rule scan state = parse
           let incl_dir = Filename.dirname incl_file in
           let path = mk_path state in
           let incl_path, incl_chan =
-            match find path incl_file state.config#dirs with
+            match find path incl_file state.config#dirs state.config#module_resolutions with
               Some p -> p
             |   None -> fail state reg (File_not_found incl_file) in
           let () = print state (sprintf "\n# 1 %S 1\n" incl_path) in
@@ -511,7 +516,7 @@ rule scan state = parse
         if state.mode = Copy then
           let path = mk_path state in
           let import_path =
-            match find path import_file state.config#dirs with
+            match find path import_file state.config#dirs state.config#module_resolutions with
               Some p -> fst p
             | None -> fail state reg (File_not_found import_file) in
           let state  = {state with

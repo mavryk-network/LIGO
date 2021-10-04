@@ -125,9 +125,10 @@ module MakeParser
     let from_file ~raise buffer file_path : CST.tree =
       let module File =
         struct
-          let input     = Some file_path
-          let extension = File.extension
-          let dirs      = []
+          let input              = Some file_path
+          let extension          = File.extension
+          let dirs               = []
+          let module_resolutions = []
         end in
       let module CLI = CLI (File) (Comments) in
       let module MainLexer =
@@ -153,9 +154,10 @@ module MakeParser
     let from_string ~raise buffer : CST.tree =
       let module File =
         struct
-          let input     = None
-          let extension = File.extension
-          let dirs      = []
+          let input              = None
+          let extension          = File.extension
+          let dirs               = []
+          let module_resolutions = []
         end in
       let module CLI = CLI (File) (Comments) in
       let module MainLexer =

@@ -38,11 +38,12 @@ module Make (CLI : CLI.S) =
 
     let config =
       object
-        method block   = CLI.block
-        method line    = CLI.line
-        method input   = CLI.input
-        method offsets = CLI.offsets
-        method dirs    = CLI.dirs
+        method block              = CLI.block
+        method line               = CLI.line
+        method input              = CLI.input
+        method offsets            = CLI.offsets
+        method dirs               = CLI.dirs
+        method module_resolutions = []
       end
 
     let preprocess () : API.result =

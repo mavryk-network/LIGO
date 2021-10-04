@@ -5,11 +5,15 @@
 type file_path = string
 type dirs = file_path list (* #include and #import *)
 
+type module_name = string
+type module_resolutions = (module_name * file_path) list
+
 module type FILE =
   sig
     include File.S
     val input : file_path option
     val dirs  : dirs
+    val module_resolutions : module_resolutions
   end
 
 module Config (File : FILE) (Comments : Comments.S) =
@@ -20,11 +24,12 @@ module Config (File : FILE) (Comments : Comments.S) =
       struct
         include Comments
 
-        let input     = File.input
-        let extension = Some File.extension
-        let dirs      = File.dirs
-        let show_pp   = false
-        let offsets   = true  (* TODO: Should flow from CLI *)
+        let input              = File.input
+        let extension          = Some File.extension
+        let dirs               = File.dirs
+        let module_resolutions = File.module_resolutions
+        let show_pp            = false
+        let offsets            = true  (* TODO: Should flow from CLI *)
 
         type status = [
           `Done
@@ -48,6 +53,7 @@ module Config (File : FILE) (Comments : Comments.S) =
         method input   = Preprocessor_CLI.input
         method offsets = Preprocessor_CLI.offsets
         method dirs    = Preprocessor_CLI.dirs
+        method module_resolutions = []
       end
   end
 
@@ -59,6 +65,9 @@ module Make (File : File.S) (Comments : Comments.S) =
 
     type nonrec file_path = file_path
     type nonrec dirs = dirs
+
+    type nonrec module_name = module_name
+    type nonrec module_resolutions = module_resolutions
 
     (* Results *)
 
@@ -80,12 +89,13 @@ module Make (File : File.S) (Comments : Comments.S) =
 
     (* Preprocessing a file *)
 
-    let from_file dirs file_path =
+    let from_file dirs module_resolutions file_path =
       let module File : FILE =
         struct
-          let extension = File.extension
-          let input     = Some file_path
-          let dirs      = dirs
+          let extension          = File.extension
+          let input              = Some file_path
+          let dirs               = dirs
+          let module_resolutions = module_resolutions
         end in
       let module Config = Config (File) (Comments) in
       let config = Config.preprocessor in
@@ -97,12 +107,13 @@ module Make (File : File.S) (Comments : Comments.S) =
 
     (* Preprocessing a string *)
 
-    let from_string dirs string =
+    let from_string dirs module_resolutions string =
       let module File : FILE =
         struct
-          let extension = File.extension
-          let input     = None
-          let dirs      = dirs
+          let extension          = File.extension
+          let input              = None
+          let dirs               = dirs
+          let module_resolutions = module_resolutions
         end in
       let module Config = Config (File) (Comments) in
       let config = Config.preprocessor in
@@ -114,12 +125,13 @@ module Make (File : File.S) (Comments : Comments.S) =
 
     (* Preprocessing a channel *)
 
-    let from_channel dirs channel =
+    let from_channel dirs module_resolutions channel =
       let module File : FILE =
         struct
-          let extension = File.extension
-          let input     = None
-          let dirs      = dirs
+          let extension          = File.extension
+          let input              = None
+          let dirs               = dirs
+          let module_resolutions = module_resolutions
         end in
       let module Config = Config (File) (Comments) in
       let config = Config.preprocessor in

@@ -194,15 +194,22 @@ let generator =
   Clic.parameter @@
   fun _ s -> Proto_alpha_utils.Error_monad.return s
 
+let module_resolutions =
+  let docv = "MODULE_RESOLUTIONS" in
+  let doc = "The path to module resolutions." in
+  Clic.arg ~doc ~long:"module_resolutions" ~placeholder:docv @@
+  Clic.parameter @@
+  fun _ s -> Proto_alpha_utils.Error_monad.return s
+
 let global_options = Clic.no_options
 
 module Api = Ligo_api
 
 let compile_group = Clic.{name="compile";title="Commands for compiling from Ligo to Michelson"}
 let compile_file =
-  let f (entry_point, syntax, infer, protocol_version, display_format, disable_typecheck, michelson_format, output_file, warn, werror) source_file () =
+  let f (entry_point, syntax, infer, protocol_version, display_format, disable_typecheck, michelson_format, output_file, warn, werror, module_resolver) source_file () =
     return_result ~warn ?output_file @@ 
-    Api.Compile.contract ~werror source_file entry_point syntax infer protocol_version display_format disable_typecheck michelson_format in
+    Api.Compile.contract ~werror source_file entry_point syntax infer protocol_version display_format disable_typecheck michelson_format module_resolver in
   let _doc = "Subcommand: Compile a contract." in
   let desc =     "This sub-command compiles a contract to Michelson \
                  code. It expects a source file and an entrypoint \
@@ -212,7 +219,7 @@ let compile_file =
 
     ~group:compile_group
     ~desc
-    Clic.(args10 entry_point syntax infer protocol_version display_format disable_michelson_typechecking michelson_code_format output_file warn werror)
+    Clic.(args11 entry_point syntax infer protocol_version display_format disable_michelson_typechecking michelson_code_format output_file warn werror module_resolutions)
     Clic.(prefixes ["compile"; "contract"] @@ source_file @@ stop)
     f
 

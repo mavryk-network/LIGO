@@ -3,14 +3,43 @@ open Api_helpers
 module Helpers   = Ligo_compile.Helpers
 module Run = Ligo_run.Of_michelson
 
-let contract ?werror source_file entry_point syntax infer protocol_version display_format disable_typecheck michelson_format =
+module ModuleResolutions = struct
+  type t = (string * string) list
+
+  let get_module_name m = 
+    let parts = String.split_on_char '@' m in 
+    if m.[0] = '@'
+    then "@" ^ List.nth parts 1 (* npm scope *)
+    else List.nth parts 0
+
+  let clean (json : Yojson.Basic.t) : t =
+    match json with
+    | `Assoc obj ->
+      List.map (fun (k,path: string * Yojson.Basic.t) ->
+        match path with
+        | `String path ->
+          let module_name = get_module_name k in 
+          (module_name, path)
+        | _ -> failwith "invalid installation.json"
+      ) obj
+    | _ -> failwith "invalid installation.json"
+    
+  let make path =
+    let json = Yojson.Basic.from_file path in
+    clean json
+
+end
+
+let contract ?werror source_file entry_point syntax infer protocol_version display_format disable_typecheck michelson_format module_resolutions =
     Trace.warning_with @@ fun add_warning get_warnings ->
     format_result ?werror ~display_format (Formatter.Michelson_formatter.michelson_format michelson_format) get_warnings @@
       fun ~raise ->
+      let _ = Option.map (fun module_resolver -> print_endline module_resolver) module_resolutions in
       let options =
           let init_env = Helpers.get_initial_env ~raise protocol_version in
           let protocol_version = Helpers.protocol_to_variant ~raise protocol_version in
-          Compiler_options.make  ~init_env ~infer ~protocol_version ()
+          let module_resolutions = Option.map ModuleResolutions.make module_resolutions in
+          Compiler_options.make  ~init_env ~infer ~protocol_version ?module_resolutions ()
       in
       let michelson =  Build.build_contract ~raise ~add_warning ~options syntax entry_point source_file in
       Ligo_compile.Of_michelson.build_contract ~raise ~disable_typecheck michelson

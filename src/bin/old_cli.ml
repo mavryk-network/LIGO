@@ -238,12 +238,20 @@ let generator =
     info ~docv ~doc ["generator" ; "g"] in
   value @@ opt string "random" info
 
+let module_resolutions = 
+  let open Arg in
+  let info =
+    let docv = "MODULE_RESOLUTIONS" in
+    let doc = "$(docv) is path to module resolutions." in
+    info ~docv ~doc ["module-resolutions"] in
+  value @@ opt (some string) None info
+
 module Api = Ligo_api
 let compile_file =
-  let f source_file entry_point syntax infer protocol_version display_format disable_typecheck michelson_format output_file warn werror =
+  let f source_file entry_point syntax infer protocol_version display_format disable_typecheck michelson_format output_file warn werror module_resolver =
     return_result ~warn ?output_file @@
-    Api.Compile.contract ~werror source_file entry_point syntax infer protocol_version display_format disable_typecheck michelson_format in
-  let term = Term.(const f $ source_file 0 $ entry_point 1 $ syntax $ infer $ protocol_version $ display_format $ disable_michelson_typechecking $ michelson_code_format $ output_file $ warn $ werror) in
+    Api.Compile.contract ~werror source_file entry_point syntax infer protocol_version display_format disable_typecheck michelson_format module_resolver in
+  let term = Term.(const f $ source_file 0 $ entry_point 1 $ syntax $ infer $ protocol_version $ display_format $ disable_michelson_typechecking $ michelson_code_format $ output_file $ warn $ werror $ module_resolutions) in
   let cmdname = "compile-contract" in
   let doc = "Subcommand: Compile a contract." in
   let man = [`S Manpage.s_description;
