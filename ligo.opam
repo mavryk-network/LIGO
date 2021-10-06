@@ -18,7 +18,7 @@ depends: [
   "ppx_deriving"
   "ppx_deriving_yojson"
   "ppx_expect"
-  "tezos-010-PtGRANAD-test-helpers"
+  "tezos-011-PtHangzH-test-helpers"
   "yojson"
   "alcotest" { with-test & >= "1.0" & < "1.1" }
   "getopt"

@@ -1,12 +1,12 @@
 open Trace
 open Proto_alpha_utils
-module Tezos_alpha_test_helpers = Tezos_010_PtGRANAD_test_helpers
+module Tezos_alpha_test_helpers = Tezos_011_PtHangzH_test_helpers
 open Errors
 open Ligo_interpreter_exc
 open Ligo_interpreter.Types
 open Ligo_interpreter.Combinators
-module Tezos_protocol = Tezos_protocol_010_PtGRANAD
-module Tezos_raw_protocol = Tezos_raw_protocol_010_PtGRANAD
+module Tezos_protocol = Tezos_protocol_011_PtHangzH
+module Tezos_raw_protocol = Tezos_raw_protocol_011_PtHangzH
 
 type r = Errors.interpreter_error raise
 
@@ -83,7 +83,7 @@ let canonical_to_ligo : canonical_repr -> ligo_repr =
 let get_contract_rejection_data :
   state_error -> (Memory_proto_alpha.Protocol.Alpha_context.Contract.t * unit Tezos_utils.Michelson.michelson) option =
   fun errs ->
-    let open Tezos_protocol_010_PtGRANAD.Protocol in
+    let open Tezos_protocol.Protocol in
     let open Script_interpreter in
     let open Environment in
     match errs with
@@ -103,11 +103,11 @@ let set_big_map ~raise (ctxt : context) id version k_ty v_ty =
   let key_type = strip_locations k_ty in
   let key_type = Proto_alpha_utils.Trace.trace_alpha_tzresult ~raise
                    (fun _ -> generic_error Location.generated "Cannot extract key type") @@
-                   Tezos_protocol_010_PtGRANAD.Protocol.Michelson_v1_primitives.prims_of_strings key_type in
+                   Tezos_protocol.Protocol.Michelson_v1_primitives.prims_of_strings key_type in
   let value_type = strip_locations v_ty in
   let value_type = Proto_alpha_utils.Trace.trace_alpha_tzresult ~raise
                      (fun _ -> generic_error Location.generated "Cannot extract value type") @@
-                     Tezos_protocol_010_PtGRANAD.Protocol.Michelson_v1_primitives.prims_of_strings value_type in
+                     Tezos_protocol.Protocol.Michelson_v1_primitives.prims_of_strings value_type in
   let data : Ligo_interpreter.Types.bigmap_data = { key_type ; value_type ; version } in
   let transduced = { ctxt.transduced with bigmaps = List.Assoc.add ctxt.transduced.bigmaps ~equal:(=) id data } in
   { ctxt with transduced }
@@ -134,7 +134,7 @@ let unwrap_baker ~raise ~loc : Memory_proto_alpha.Protocol.Alpha_context.Contrac
   fun x ->
     Trace.trace_option ~raise (generic_error loc "The baker is not an implicit account") @@ Memory_proto_alpha.Protocol.Alpha_context.Contract.is_implicit x
 
-let script_of_compiled_code ~raise ~loc ~calltrace (contract : unit Tezos_utils.Michelson.michelson) (storage : unit Tezos_utils.Michelson.michelson) : Tezos_protocol_010_PtGRANAD.Protocol.Alpha_context.Script.t  =
+let script_of_compiled_code ~raise ~loc ~calltrace (contract : unit Tezos_utils.Michelson.michelson) (storage : unit Tezos_utils.Michelson.michelson) : Tezos_protocol.Protocol.Alpha_context.Script.t  =
   let open! Tezos_protocol.Protocol.Alpha_context.Script in
   let code = ligo_to_canonical ~raise ~loc ~calltrace contract in
   let storage = ligo_to_canonical ~raise ~loc ~calltrace storage in
@@ -173,10 +173,10 @@ let extract_origination_from_result :
 
 let extract_lazy_storage_diff_from_result :
   type a .
-    a Tezos_raw_protocol_010_PtGRANAD.Apply_results.contents_result ->
-    Tezos_raw_protocol_010_PtGRANAD.Alpha_context.Lazy_storage.diffs option list =
+    a Tezos_raw_protocol.Apply_results.contents_result ->
+    Tezos_raw_protocol.Alpha_context.Lazy_storage.diffs option list =
   fun x ->
-  let open Tezos_raw_protocol_010_PtGRANAD in
+  let open Tezos_raw_protocol in
   match x with
   | Manager_operation_result { operation_result = Applied (Transaction_result y) ; internal_operation_results } ->
     let aux (x:Apply_results.packed_internal_operation_result) =
@@ -212,7 +212,7 @@ let get_last_originations : Memory_proto_alpha.Protocol.Alpha_context.Contract.t
     )
 
 let get_lazy_storage_diffs : Tezos_protocol.Protocol.operation_receipt ->
-                             Tezos_raw_protocol_010_PtGRANAD.Alpha_context.Lazy_storage.diffs option list =
+                             Tezos_raw_protocol.Alpha_context.Lazy_storage.diffs option list =
   fun x ->
     let open Tezos_raw_protocol in
     match x with
@@ -233,7 +233,7 @@ let get_lazy_storage_diffs : Tezos_protocol.Protocol.operation_receipt ->
       aux [] contents
     )
 
-let convert_lazy_storage_diffs (lazy_storage_diffs : Tezos_raw_protocol_010_PtGRANAD.Alpha_context.Lazy_storage.diffs) =
+let convert_lazy_storage_diffs (lazy_storage_diffs : Tezos_raw_protocol.Alpha_context.Lazy_storage.diffs) =
   let enc = Data_encoding.Binary.to_bytes_exn Tezos_raw_protocol.Alpha_context.Lazy_storage.encoding lazy_storage_diffs in
   Data_encoding.Binary.of_bytes_exn Tezos_raw_protocol.Lazy_storage_diff.encoding enc
 
@@ -241,7 +241,7 @@ let upd_bigmaps : raise:r -> bigmaps -> Tezos_raw_protocol.Apply_results.packed_
   let lazy_storage_diffs = get_lazy_storage_diffs op in
   let lazy_storage_diffs = List.concat @@ List.filter_opt lazy_storage_diffs in
   let lazy_storage_diffs = convert_lazy_storage_diffs lazy_storage_diffs in
-  let get_id id = Z.to_int (Tezos_raw_protocol_010_PtGRANAD.Lazy_storage_kind.Big_map.Id.unparse_to_z id) in
+  let get_id id = Z.to_int (Tezos_raw_protocol.Lazy_storage_kind.Big_map.Id.unparse_to_z id) in
   List.fold lazy_storage_diffs
     ~init:bigmaps
     ~f:(
@@ -332,7 +332,7 @@ let bake_op : raise:r -> loc:Location.t -> calltrace:calltrace -> context -> tez
 let transfer ~raise ~loc ~calltrace (ctxt:context) ?entrypoint dst parameter amt : add_operation_outcome =
   let open Tezos_alpha_test_helpers in
   let parameters = ligo_to_canonical ~raise ~loc ~calltrace parameter in
-  let operation : Tezos_raw_protocol_010_PtGRANAD__Alpha_context.packed_operation = Trace.trace_tzresult_lwt ~raise (throw_obj_exc loc calltrace) @@
+  let operation : Tezos_raw_protocol.Alpha_context.packed_operation = Trace.trace_tzresult_lwt ~raise (throw_obj_exc loc calltrace) @@
     (* TODO: fee? *)
     let amt = Int64.of_int (Z.to_int amt) in
     Op.transaction ~fee:(Test_tez.Tez.of_int 23) ~parameters ?entrypoint (B ctxt.raw) ctxt.internals.source dst (Test_tez.Tez.of_mutez_exn amt)
@@ -375,7 +375,7 @@ let init_ctxt ~raise ?(loc=Location.generated) ?(calltrace=[]) ?(initial_balance
     match initial_balances with
     | [] -> () (* if empty list: will be defaulted with coherent values*)
     | baker::_ -> (
-      let max = Tezos_protocol_010_PtGRANAD_parameters.Default_parameters.constants_test.tokens_per_roll in
+      let max = Tezos_protocol_011_PtHangzH_parameters.Default_parameters.constants_test.tokens_per_roll in
       if (Alpha_context.Tez.of_mutez_exn baker < max) then raise.raise (Errors.not_enough_initial_accounts loc max) else ()
     )
   in
