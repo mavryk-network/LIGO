@@ -1,5 +1,5 @@
 
-module Compare = Tezos_protocol_environment_010_PtGRANAD__Environment.Compare
+module Compare = Tezos_protocol_environment_011_PtHangzH__Environment.Compare
 (*
 
   To work with the free monad introduced for better compatibility with Michelson,
