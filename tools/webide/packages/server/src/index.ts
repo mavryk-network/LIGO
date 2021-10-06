@@ -49,11 +49,12 @@ app.use(
     metricsApp: metrics,
   })
 );
+app.use(cors(corsOptions))
 
 app.use(express.static(appBundleDirectory));
 
-app.options('/api/share', cors(corsOptions));
-app.options('/api/compile-contract', cors(corsOptions));
+app.options('/api/share');
+app.options('/api/compile-contract');
 
 app.get(`/api/share/:hash([0-9a-zA-Z\-\_]+)`, sharedLinkHandler());
 app.post('/api/compile-contract', cors(corsOptions), compileContractHandler);
