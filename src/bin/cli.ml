@@ -33,6 +33,12 @@ let syntax =
   Clic.parameter @@
   fun _ s -> Proto_alpha_utils.Error_monad.return s
 
+let steps =
+  let docv = "STEPS" in
+  let doc = "a bound in the number of steps to be done by the interpreter." in
+  Clic.default_arg ~doc ~short:'n' ~long:"steps" ~placeholder:docv ~default:"1000000" @@
+  Clic.parameter @@
+  fun _ s -> Proto_alpha_utils.Error_monad.return s
 
 let protocol_version =
   let open Environment.Protocols in
@@ -330,9 +336,9 @@ let mutate_ast =
 (** Run commands *)
 let run_group = Clic.{name="run";title="Commands for executing Ligo code"}
 let test =
-  let f (syntax, infer, protocol_version, display_format) source_file () =
+  let f (syntax, steps, infer, protocol_version, display_format) source_file () =
     return_result @@
-    Api.Run.test source_file syntax infer protocol_version display_format
+    Api.Run.test source_file syntax steps infer protocol_version display_format
   in
   let _doc = "Subcommand: Test a contract with the LIGO test framework (BETA)." in
   let desc =    "This sub-command tests a LIGO contract using a LIGO \
@@ -362,7 +368,7 @@ let test =
              `P "Test.log x : prints x into the console." *)
   in
   Clic.command ~group:run_group ~desc
-    Clic.(args4 syntax infer protocol_version display_format)
+    Clic.(args5 syntax steps infer protocol_version display_format)
     Clic.(prefixes ["run";"test"] @@ source_file @@ stop)
     f
 
@@ -489,11 +495,11 @@ let get_scope =
 
 (** Print commands *)
 let print_group = Clic.{name="print";title="print title"}
-let preprocess =
+let preprocessed =
   let f (syntax, display_format) source_file () =
     return_result @@
       Api.Print.preprocess source_file syntax display_format in
-  let _cmdname = "preprocess" in
+  let _cmdname = "preprocessed" in
   let _doc = "Subcommand: Preprocess the source file.\nWarning: Intended for development of LIGO and can break at any time." in
   let desc =    "This sub-command runs the pre-processor on a LIGO \
                  source file and outputs the result. The directive \
@@ -506,7 +512,7 @@ let preprocess =
     ~group:print_group
     ~desc
     Clic.(args2 syntax display_format)
-    Clic.(prefixes ["print"; "preprocess"] @@ source_file @@ stop)
+    Clic.(prefixes ["print"; "preprocessed"] @@ source_file @@ stop)
     f
 
 let pretty_print =
@@ -709,7 +715,7 @@ let main = [
     list_declarations ;
     measure_contract ;
     get_scope;
-    preprocess;
+    preprocessed;
     print_graph ;
     pretty_print;
     print_cst ;
