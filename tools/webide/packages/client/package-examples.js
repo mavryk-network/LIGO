@@ -4,7 +4,6 @@ const {join, basename} = require('path')
 const fs = require('fs');
 const YAML = require('yamljs');
 
-
 function urlFriendlyHash(content) {
   const hash = createHash('md5');
   hash.update(content);
@@ -27,7 +26,7 @@ function convertToJson(content, path) {
     const config = YAML.parse(match[1]);
     config.editor = {
       language: config.language,
-      code: content.replace(METADATA_REGEX, '')
+      code: content.replace(METADATA_REGEX, ''),
     };
     delete config.language;
 
@@ -51,7 +50,7 @@ function readFile(path) {
 
 function writeFile(path, config) {
   return new Promise((resolve, reject) => {
-    fs.writeFile(path, JSON.stringify(config), error => {
+    fs.writeFile(path, JSON.stringify(config), (error) => {
       if (error) {
         reject(error);
       } else {
@@ -91,6 +90,10 @@ async function processExamples(srcDir, exclusions, destDir) {
   const src = join(srcDir, "/**/*.*ligo")
   const retval = (await globPromise(src))
     .sort((a, b) => basename(a).localeCompare(basename(b)))
+    .map(item => {
+      console.log(item);
+      return item;
+    })
     .reduce(
       (retval, abspath) => {
         const relpath = basename(abspath)
@@ -104,11 +107,13 @@ async function processExamples(srcDir, exclusions, destDir) {
 }
 
 async function main() {
-  process.on('unhandledRejection', error => {
+  process.on('unhandledRejection', (error) => {
     throw error;
   });
 
-  const EXAMPLES_DIR = process.env['EXAMPLES_DIR'] || join(process.cwd(), '../../../../src/test/examples');
+  const EXAMPLES_DIR =
+    process.env['EXAMPLES_DIR'] ||
+    join(process.cwd(), '../../../../src/test/examples');
 
   const EXAMPLES_DEST_DIR = join(process.cwd(), 'build', 'static', 'examples');
   fs.mkdirSync(EXAMPLES_DEST_DIR, { recursive: true });
