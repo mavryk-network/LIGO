@@ -67,8 +67,9 @@ export async function deployHandler(req: Request, res: Response) {
       if (ex instanceof CompilerError) {
         res.status(400).json({ error: ex.message });
       } else {
-        logger.error(ex);
-        res.status(500).json({ error: ex.message });
+        const err = (ex as Error)
+        logger.error(err.message);
+        res.status(500).json({ error: err.message });
       }
     }
   }
