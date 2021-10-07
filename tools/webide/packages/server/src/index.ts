@@ -50,9 +50,12 @@ app.use(
     metricsApp: metrics,
   })
 );
+app.use(cors(corsOptions))
 
 app.use(express.static(appBundleDirectory));
-app.use(cors(corsOptions))
+
+app.options('/api/share');
+app.options('/api/compile-contract');
 
 app.get(`/api/share/:hash([0-9a-zA-Z\-\_]+)`, sharedLinkHandler());
 app.post('/api/compile-contract', compileContractHandler);

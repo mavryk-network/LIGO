@@ -1,9 +1,70 @@
 open Trace
 
 let int_of_mutez t = Z.of_int64 @@ Memory_proto_alpha.Protocol.Alpha_context.Tez.to_mutez t
-let string_of_contract t = Format.asprintf "%a" Tezos_protocol_009_PsFLoren.Protocol.Alpha_context.Contract.pp t
+let string_of_contract t = Format.asprintf "%a" Tezos_protocol_010_PtGRANAD.Protocol.Alpha_context.Contract.pp t
 let string_of_key_hash t = Format.asprintf "%a" Tezos_crypto.Signature.Public_key_hash.pp t
 
+module Tezos_eq = struct
+  (* behavior should be equivalent to the one in the tezos codebase *)
+  let nat_shift_left x y =
+    if Z.compare y (Z.of_int 256) > 0 then None
+    else
+      let y = Z.to_int y in
+      Some (Z.shift_left x y)
+
+  let nat_shift_right x y =
+    if Z.compare y (Z.of_int 256) > 0 then None
+    else
+      let y = Z.to_int y in
+      Some (Z.shift_right x y)
+
+  let int_ediv x y =
+      try
+        let (q, r) = Z.ediv_rem x y in
+        Some (q, r)
+      with _ -> None
+
+  let timestamp_add : Z.t -> Z.t-> Z.t =
+    fun tz n ->
+      let open Memory_proto_alpha.Protocol.Alpha_context.Script_timestamp in
+      let t = of_zint tz in
+      add_delta t (Memory_proto_alpha.Protocol.Alpha_context.Script_int.of_zint n) |> to_zint
+
+  let timestamp_sub : Z.t -> Z.t-> Z.t =
+    fun tz n ->
+      let open Memory_proto_alpha.Protocol.Alpha_context.Script_timestamp in
+      let t = of_zint tz in
+      add_delta t (Memory_proto_alpha.Protocol.Alpha_context.Script_int.of_zint n) |> to_zint
+
+  let mutez_add : Z.t -> Z.t -> Z.t option = fun x y ->
+    let open Memory_proto_alpha.Protocol.Alpha_context.Tez in
+    let open Option in
+    try
+      let x = Z.to_int64 x in
+      let y = Z.to_int64 y in
+      let* x = of_mutez x in
+      let* y = of_mutez y in
+      match x +? y with
+      | Ok t -> some @@ Z.of_int64 (to_mutez t)
+      | _ -> None
+    with
+      Z.Overflow -> None
+
+  let mutez_sub : Z.t -> Z.t -> Z.t option = fun x y ->
+    let open Memory_proto_alpha.Protocol.Alpha_context.Tez in
+    let open Option in
+    try
+      let x = Z.to_int64 x in
+      let y = Z.to_int64 y in
+      let* x = of_mutez x in
+      let* y = of_mutez y in
+      match x -? y with
+      | Ok t -> some @@ Z.of_int64 (to_mutez t)
+      | _ -> None
+    with
+      Z.Overflow -> None
+
+end
 let compile_contract ~raise ~add_warning source_file entry_point =
   let open Ligo_compile in
   let syntax = "auto" in
@@ -22,9 +83,9 @@ let add_ast_env ~raise ?(name = Location.wrap (Var.fresh ())) env binder body =
   let open Ast_typed in
   let aux (ei : declaration) (e : expression) =
     match ei with
-    | Declaration_constant { binder = let_binder ; expr } ->
+    | Declaration_constant { binder = let_binder ; expr ; attr } ->
        if Var.compare let_binder.wrap_content binder.Location.wrap_content <> 0 && Var.compare let_binder.wrap_content name.wrap_content <> 0 then
-         e_a_let_in let_binder expr e false
+         e_a_let_in let_binder expr e attr
        else
          e
     | Declaration_module { module_binder ; module_ } ->
@@ -45,12 +106,20 @@ let make_options ~raise ?param ctxt =
   match ctxt with
   | None ->
      make_dry_run_options ~raise default
-  | Some ctxt ->
-     let tezos_context = Tezos_state.get_alpha_context ctxt in
-     let source = string_of_contract ctxt.source in
-     let options = make_dry_run_options ~raise ~tezos_context { default with source = Some source } in
-     let timestamp = Timestamp.of_zint (Z.of_int64 (Proto_alpha_utils.Time.Protocol.to_seconds (Tezos_state.get_timestamp ctxt))) in
-     { options with now = timestamp }
+  | Some (ctxt: Tezos_state.context) ->
+    let source = ctxt.internals.source in
+    let timestamp = Timestamp.of_zint (Z.of_int64 (Proto_alpha_utils.Time.Protocol.to_seconds (Tezos_state.get_timestamp ctxt))) in
+    Proto_alpha_utils.Memory_proto_alpha.make_options
+      ?tezos_context:None
+      ~now:timestamp
+      ~source:source
+      ~sender:source (* debatable *)
+      ~self:source (* debatable *)
+      ?parameter_ty:None
+      ~amount:Memory_proto_alpha.Protocol.Alpha_context.Tez.zero
+      ~balance:Memory_proto_alpha.Protocol.Alpha_context.Tez.zero
+      ~chain_id:Memory_proto_alpha.Protocol.Environment.Chain_id.zero
+      ()
 
 let run_expression_unwrap ~raise ?ctxt ?(loc = Location.generated) (c_expr : Stacking.compiled_expression) =
   let options = make_options ~raise ctxt in
@@ -209,12 +278,12 @@ and env_to_ast ~raise ~loc : Ligo_interpreter.Types.env ->
   let open! Ast_typed in
   let rec aux = function
     | [] -> []
-    | Expression { name; item } :: tl ->
+    | Expression { name; item ; no_mutation } :: tl ->
        let binder = name in
        let name = None in
        let expr = val_to_ast ~raise ~toplevel:false ~loc:binder.location item.eval_term item.ast_type in
        let inline = false in
-       Ast_typed.Declaration_constant { name ; binder ; expr ; inline } :: aux tl
+       Ast_typed.Declaration_constant { name ; binder ; expr ; attr = { inline ; no_mutation } } :: aux tl
     | Module { name; item } :: tl ->
        let module_binder = name in
        let module_ = env_to_ast ~raise ~loc item in
@@ -286,22 +355,22 @@ and make_subst_ast_env_exp ~raise ?(toplevel = true) env expr =
                 env
              else
                [] in
-  let get_fv expr = List.map ~f:(fun v -> v.Location.wrap_content) @@ 
+  let get_fv expr = List.map ~f:(fun v -> v.Location.wrap_content) @@
    snd @@ Self_ast_typed.Helpers.Free_variables.expression expr in
-  let get_fmv_expr expr = 
+  let get_fmv_expr expr =
    fst @@ Self_ast_typed.Helpers.Free_module_variables.expression expr in
-  let get_fmv_mod module' = 
+  let get_fmv_mod module' =
    fst @@ Self_ast_typed.Helpers.Free_module_variables.module' module' in
   let rec aux (fv, fmv) acc = function
     | [] -> acc
-    | Expression { name; item } :: tl ->
+    | Expression { name; item ; no_mutation } :: tl ->
        let binder = Location.unwrap name in
        if List.mem fv binder ~equal:Var.equal then
          let expr = val_to_ast ~raise ~toplevel:false ~loc:name.location item.eval_term item.ast_type in
          let expr_fv = get_fv expr in
          let fv = List.remove_element ~compare:Var.compare binder fv in
          let fv = List.dedup_and_sort ~compare:Var.compare (fv @ expr_fv) in
-         aux (fv, fmv) (Declaration_constant { binder = name ; name = None ; expr ; inline = false} :: acc) tl
+         aux (fv, fmv) (Declaration_constant { binder = name ; name = None ; expr ; attr = { inline = false ; no_mutation } } :: acc) tl
        else
          aux (fv, fmv) acc tl
     | Module { name; item } :: tl ->
@@ -368,6 +437,6 @@ let run_michelson_code ~raise ~loc (ctxt : Tezos_state.context) code func_ty arg
   let r = Ligo_run.Of_michelson.run_expression ~raise func func_ty in
   match r with
   | Success (a, b) ->
-      Michelson_to_value.decompile_to_untyped_value ~raise ~bigmaps:ctxt.bigmaps a b
+      Michelson_to_value.decompile_to_untyped_value ~raise ~bigmaps:ctxt.transduced.bigmaps a b
   | _ ->
      raise.raise (Errors.generic_error loc "Could not execute Michelson function")
