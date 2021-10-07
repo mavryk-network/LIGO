@@ -10,13 +10,12 @@ function urlFriendlyHash(content) {
 
   return hash
     .digest('base64')
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=/g, '');
+    .replace(/\+|\/|=|\s|'|"/g, '-')
+    .replace(/-+$/, '')
 }
 
 function convertToJson(content, path) {
-  const METADATA_REGEX = /\(\*_\*([^]*?)\*_\*\)\s*/;
+  const METADATA_REGEX = /\(\*_\*(.*)\*_\*\)/ms;
   const match = content.match(METADATA_REGEX);
 
   if (!match || !match[1]) {
@@ -35,18 +34,6 @@ function convertToJson(content, path) {
   } catch (ex) {
     throw new Error(`${path} doesn't contain valid metadata. ${ex}`);
   }
-}
-
-function findFiles(pattern, dir) {
-  return new Promise((resolve, reject) => {
-    glob(pattern, { cwd: dir }, (error, files) => {
-      if (error) {
-        reject(error);
-      } else {
-        resolve(files);
-      }
-    });
-  });
 }
 
 function readFile(path) {
@@ -78,8 +65,9 @@ async function processExample(abspath, destDir) {
   console.log(`Processing ${abspath}`);
 
   const content = await readFile(abspath);
-  const config = convertToJson(content, abspath);
+  const config = convertToJson(content, basename(abspath));
   const id = urlFriendlyHash(basename(abspath));
+  console.log(id)
 
   config.id = id;
 
@@ -102,6 +90,10 @@ async function processExamples(srcDir, exclusions, destDir) {
   const src = join(srcDir, "/**/*.*ligo")
   const retval = (await globPromise(src))
     .sort((a, b) => basename(a).localeCompare(basename(b)))
+    .map(item => {
+      console.log(item);
+      return item;
+    })
     .reduce(
       (retval, abspath) => {
         const relpath = basename(abspath)
