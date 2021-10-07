@@ -1,15 +1,9 @@
 import React, { useRef } from 'react';
 import { connect } from 'react-redux';
-import styled from 'styled-components';
+import styled, {css} from 'styled-components';
 
 import OutputToolbarComponent from './output-toolbar';
 import { copyOutput, downloadOutput } from './utils';
-
-const Container = styled.div<{ visible?: boolean }>`
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-`;
 
 const Output = styled.div`
   flex: 1;
@@ -25,19 +19,35 @@ const Pre = styled.pre`
   white-space: break-spaces;
 `;
 
+const Container = styled.div<{ visible?: boolean, isDark?: boolean}>`
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 
-const CompileOutputPane = (props) => {
+  & * {
+    ${props => props.isDark && css`
+      background-color: rgb(25, 26, 27);
+      color: white !important;
+  `}
+  }
+`;
+
+
+const CompileOutputPane = (props: {theme: 'light' | 'dark', output?: string}) => {
   // var parse = require('shell-quote').parse;
-  const { output } = props
+  const { output, theme } = props
+  const isDark = theme === 'dark'
+
 
   const preRef = useRef<HTMLPreElement>(null);
 
   return (
-    <Container>
+    <Container isDark>
       <OutputToolbarComponent
+        theme={theme}
         showTryMichelson={true}
         onCopy={() => copyOutput(preRef.current)}
-        onDownload={() => downloadOutput(output)}
+        onDownload={() => downloadOutput(output || '')}
       ></OutputToolbarComponent>
       <Output id="output">
         <Pre ref={preRef}>{output}</Pre>

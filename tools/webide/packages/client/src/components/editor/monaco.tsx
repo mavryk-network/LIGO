@@ -27,8 +27,30 @@ const Container = styled.div<TopPaneStyled>`
   font-size: 0.8em;
 `;
 
+const ligoTheme: monaco.editor.IStandaloneThemeData = {
+  base: 'vs',
+  inherit: true,
+  rules: [],
+  colors: {
+    'editor.background': '#eff7ff',
+    'editor.lineHighlightBackground': '#cee3ff',
+    'editorLineNumber.foreground': '#888'
+  }
+}
+
+const ligoDarkTheme: monaco.editor.IStandaloneThemeData = {
+  base: 'vs-dark',
+  inherit: true,
+  rules: [],
+  colors: {
+    // 'editor.background': '#191a1b',
+    'editor.lineHighlightBackground': '#1a293f',
+    // 'editorLineNumber.foreground': '#1a293f'
+  }
+}
+
 const MonacoComponent = (props) => {
-  const { editorHeight, code, language, getDeclarationList, setCompileFunction, setError } = props
+  const { editorHeight, code, language, getDeclarationList, setCompileFunction, setError, theme } = props
   let containerRef = useRef(null);
   const store = useStore();
   const dispatch = useDispatch();
@@ -67,6 +89,10 @@ const MonacoComponent = (props) => {
     // }
 
   useEffect(() => {
+    monaco.editor.setTheme(theme === 'dark' ? 'ligoDarkTheme' : 'ligoTheme');
+  }, [theme])
+
+  useEffect(() => {
     const cleanupFunc: Array<() => void> = [];
     const { editor: editorState } = store.getState();
     const model = monaco.editor.createModel(
@@ -74,18 +100,10 @@ const MonacoComponent = (props) => {
       editorState && editorState.language
     );
 
-    monaco.editor.defineTheme('ligoTheme', {
-      base: 'vs',
-      inherit: true,
-      rules: [],
-      colors: {
-        'editor.background': '#eff7ff',
-        'editor.lineHighlightBackground': '#cee3ff',
-        'editorLineNumber.foreground': '#888'
-      }
-    });
+    monaco.editor.defineTheme('ligoTheme', ligoTheme);
+    monaco.editor.defineTheme('ligoDarkTheme', ligoDarkTheme);
 
-    monaco.editor.setTheme('ligoTheme');
+    monaco.editor.setTheme(theme === 'dark' ? 'ligoDarkTheme' : 'ligoTheme');
 
     const htmlElement = (containerRef.current as unknown) as HTMLElement;
     const fontSize = window

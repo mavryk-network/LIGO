@@ -1,5 +1,5 @@
 import React from 'react';
-import styled from 'styled-components';
+import styled, {css} from 'styled-components';
 
 const Container = styled.div`
   display: flex;
@@ -7,6 +7,12 @@ const Container = styled.div`
   padding: 0.2em 0.5em;
   z-index: 3;
   background-color: var(--blue_trans1);
+
+  ${(props: {isDark?: boolean}) => props.isDark && css`
+    background-color: gb(25, 26, 27);
+    color: white;
+    border: 1px solid var(--blue_trans1);  
+  `}
 `;
 
 export const Group = styled.div`
@@ -61,6 +67,6 @@ export const Item = styled.div`
   }
 `;
 
-export const Toolbar = (props: any) => {
-  return <Container>{props.children}</Container>;
+export const Toolbar = (props: {isDark: boolean, children: any}) => {
+  return <Container isDark={props.isDark}>{props.children}</Container>;
 };

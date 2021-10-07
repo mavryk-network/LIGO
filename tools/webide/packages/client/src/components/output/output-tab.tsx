@@ -35,10 +35,12 @@ const Container = styled.div<{ visible?: boolean }>`
     : css`
     visibility: hidden;
     transform: translateX(0px);
+    1px solid var(--blue_trans1);
   `}
 `;
 
 interface propTypes {
+  theme: 'light' | 'dark'
   selected?: boolean;
   onCancel?: () => void;
 }
@@ -51,7 +53,7 @@ interface stateTypes {
 }
 
 const OutputTab: FC<propTypes & stateTypes> = (props) => {
-  const { selected, onCancel, output, hasError, loading, command } = props
+  const { selected, onCancel, output, hasError, loading, command, theme } = props
   
   let visible = selected;
 
@@ -61,18 +63,18 @@ const OutputTab: FC<propTypes & stateTypes> = (props) => {
 
   const renderResult = () => {
     if (loading) {
-      return <><Statusbar error={false} /><Loading onCancel={onCancel}></Loading></>;
+      return <><Statusbar error={false} /><Loading theme={theme} onCancel={onCancel}></Loading></>;
       } else if (!output) {
       return <></>;
     } else if (command === CommandType.Compile) {
-      return <CompileOutputPane></CompileOutputPane>;
+      return <CompileOutputPane theme={theme}></CompileOutputPane>;
     } else if (command === CommandType.Deploy) {
-      return <><Statusbar error={hasError} /><DeployOutputPane></DeployOutputPane></>;
+      return <><Statusbar error={hasError} /><DeployOutputPane theme={theme}></DeployOutputPane></>;
     } else if (command === CommandType.GenerateDeployScript) {
-      return <GenerateDeployScriptOutputPane></GenerateDeployScriptOutputPane>;
+      return <GenerateDeployScriptOutputPane theme={theme}></GenerateDeployScriptOutputPane>;
     }
 
-    return <><Statusbar error={hasError}/><OutputPane></OutputPane></>;
+    return <><Statusbar error={hasError}/><OutputPane theme={theme}></OutputPane></>;
   };
 
   return <Container visible={visible}>{renderResult()}</Container>;

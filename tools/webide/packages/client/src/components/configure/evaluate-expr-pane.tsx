@@ -8,7 +8,8 @@ import { Group, Input, Label } from '../form/inputs';
 
 const Container = styled.div``;
 
-export const EvaluateValuePaneComponent = () => {
+export const EvaluateValuePaneComponent = (props: {theme: 'light' | 'dark'}) => {
+  const isDark = props.theme === 'dark'
   const dispatch = useDispatch();
   const entrypoint = useSelector<AppState, EvaluateValueState['entrypoint']>(
     state => state.evaluateValue && state.evaluateValue.entrypoint
@@ -19,6 +20,7 @@ export const EvaluateValuePaneComponent = () => {
       <Group>
         <Label htmlFor="entrypoint">Expression</Label>
         <Input
+          dark={isDark}
           id="entrypoint"
           value={entrypoint}
           onChange={ev =>

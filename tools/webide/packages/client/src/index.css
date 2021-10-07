@@ -117,4 +117,7 @@ code {
   overflow: auto;
 }
 
-
+/**
+Adjustment to react-dark-toggle
+**/
+.react-switch-bg div div { display: none}

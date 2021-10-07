@@ -27,13 +27,14 @@ const SelectCommand = styled(Select)`
 `;
 
 interface stateTypes {
+  theme: 'dark' | 'light'
   entrypoint?: string;
   storage?: string;
   useNetwork?: string
 }
 
 const DeployPaneComponent:FC<stateTypes> = (props) => {
-
+  const isDark = props.theme === 'dark';
   const {entrypoint, storage} = props
   let {useNetwork} = props
 
@@ -70,6 +71,7 @@ const DeployPaneComponent:FC<stateTypes> = (props) => {
         </SelectCommand>
         <AccessFunctionLabel htmlFor="entrypoint"></AccessFunctionLabel>
         <Input
+          dark={isDark}
           id="entrypoint"
           value={entrypoint}
           onChange={ev =>
@@ -80,6 +82,7 @@ const DeployPaneComponent:FC<stateTypes> = (props) => {
       <Group>
         <Label htmlFor="storage">Storage</Label>
         <Textarea
+          dark={isDark}
           id="storage"
           rows={9}
           value={storage}

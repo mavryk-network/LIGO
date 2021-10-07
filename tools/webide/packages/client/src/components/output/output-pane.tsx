@@ -1,12 +1,8 @@
 import React, {FC} from 'react';
 import { connect } from 'react-redux';
-import styled from 'styled-components';
+import styled, {css} from 'styled-components';
 
-const Container = styled.div<{ visible?: boolean }>`
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-`;
+type props = {isDark?: boolean}
 
 const Output = styled.div`
   flex: 1;
@@ -19,17 +15,36 @@ const Pre = styled.pre`
   margin: 0;
   width: -webkit-fill-available;
   white-space: break-spaces;
-`;
+`; 
+
+const Container = styled.div<props>`
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  ${props => props.isDark && css`
+    background-color: rgb(25, 26, 27);
+    color: white;
+  `}
+
+  & > * {
+    ${(props:any) => props.isDark && css`
+      background-color: rgb(25, 26, 27);
+      color: white;
+    `}
+  }
+`
 
 interface stateTypes {
+  theme: 'light' | 'dark'
   output?: string;
 }
 
 const OutputPane: FC<stateTypes> = (props) => {
-  const { output } = props
+  const { output, theme } = props
+  const isDark = theme === 'dark'
 
   return (
-    <Container>
+    <Container isDark>
       <Output id="output">
         <Pre>{output}</Pre>
       </Output>

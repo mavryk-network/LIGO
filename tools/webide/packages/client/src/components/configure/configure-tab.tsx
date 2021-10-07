@@ -99,6 +99,7 @@ function createAction(command: CommandType) {
 
 export const ConfigureTabComponent = (props: {
   selected?: boolean;
+  theme: "light" | "dark",
   onRun?: () => void;
 }) => {
   const dispatchedAction = useSelector<
@@ -148,25 +149,25 @@ export const ConfigureTabComponent = (props: {
         </RunButton>
       </CommonActionsGroup>
       {(command === CommandType.Compile && (
-        <CompilePaneComponent></CompilePaneComponent>
+        <CompilePaneComponent theme={props.theme}></CompilePaneComponent>
         )) ||
         (command === CommandType.CompileFunction && (
-          <CompileFunctionPaneComponent></CompileFunctionPaneComponent>
+          <CompileFunctionPaneComponent theme={props.theme}></CompileFunctionPaneComponent>
         )) ||
         (command === CommandType.DryRun && (
-          <DryRunPaneComponent></DryRunPaneComponent>
+          <DryRunPaneComponent theme={props.theme}></DryRunPaneComponent>
         )) ||
         (command === CommandType.Deploy && (
-          <DeployPaneComponent></DeployPaneComponent>
+          <DeployPaneComponent theme={props.theme}></DeployPaneComponent>
         )) ||
         (command === CommandType.EvaluateFunction && (
-          <EvaluateFunctionPaneComponent></EvaluateFunctionPaneComponent>
+          <EvaluateFunctionPaneComponent theme={props.theme}></EvaluateFunctionPaneComponent>
         )) ||
         (command === CommandType.EvaluateValue && (
-          <EvaluateValuePaneComponent></EvaluateValuePaneComponent>
+          <EvaluateValuePaneComponent theme={props.theme}></EvaluateValuePaneComponent>
         )) ||
         (command === CommandType.GenerateDeployScript && (
-          <GenerateDeployScriptPane></GenerateDeployScriptPane>
+          <GenerateDeployScriptPane theme={props.theme}></GenerateDeployScriptPane>
         ))}
     </Container>
   );

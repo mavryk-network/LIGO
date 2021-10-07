@@ -52,7 +52,7 @@ const CursorPosition = styled.div`
 `;
 
 
-export const EditorComponent = ({editorHeight}) => {
+export const EditorComponent = ({editorHeight, theme}) => {
   const dispatch = useDispatch();
   const title = useSelector<AppState, string>(state => state.editor && state.editor.title);
   const language = useSelector<AppState, EditorState['language']>(
@@ -98,7 +98,7 @@ export const EditorComponent = ({editorHeight}) => {
           </SelectLanguage>
         </LeftActions>
       </Header>
-      <MonacoComponent editorHeight={editorHeight}></MonacoComponent>
+      <MonacoComponent editorHeight={editorHeight} theme={theme}></MonacoComponent>
       <CursorPosition>{getCursorPosition()}</CursorPosition>
     </Container>
   );
