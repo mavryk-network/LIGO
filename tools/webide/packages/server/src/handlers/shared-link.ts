@@ -23,6 +23,8 @@ export function sharedLinkHandler() {
 
       res.send(JSON.stringify(content));
     } catch (ex) {
+      logger.error((ex as Error).message);
+
       if (ex instanceof FileNotFoundError) {
         res.send(ex);
       } else {
