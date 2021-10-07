@@ -118,7 +118,10 @@ async function main() {
   const EXAMPLES_DEST_DIR = join(process.cwd(), 'build', 'static', 'examples');
   fs.mkdirSync(EXAMPLES_DEST_DIR, { recursive: true });
 
-  const EXCLUSIONS=[]
+  const EXCLUSIONS=[
+    "0-increment.jsligo",
+    "id.jsligo"
+  ]
 
   const examples = await processExamples(
     EXAMPLES_DIR,
