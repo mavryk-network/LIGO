@@ -4,11 +4,11 @@ let
   ocaml-overlay = import ./ocaml-overlay.nix { inherit sources; };
   static-overlay = import ./static-overlay.nix;
   mac-overlay = import ./mac-overlay.nix;
-  nodejs-overlay = import ./nodejs-overlay.nix;
+  # nodejs-overlay = import ./nodejs-overlay.nix;
   nix-npm-buildpackage = pkgs.callPackage sources.nix-npm-buildpackage { };
 
   pkgs = import sources.nixpkgs {
-    overlays = [ ocaml-overlay nodejs-overlay ];
+    overlays = [ ocaml-overlay ];
   };
 
   # Takes $pkg/ligo and creates a new package with $pkg/bin/ligo

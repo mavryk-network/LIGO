@@ -1,5 +1,5 @@
 import React from 'react';
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 
 export const Group = styled.div`
   display: flex;
@@ -48,6 +48,15 @@ export const Input = styled.input`
   &:focus {
     background-color: #e1f1ff;
   }
+
+  ${(props: {dark?: boolean}) => props.dark && css`
+    background-color: transparent;
+    border: 1px solid var(--blue_trans1);
+    color: white;
+    &:focus {
+      background-color: black;
+    }
+  `}
 `;
 
 export const Textarea = styled.textarea`
@@ -64,4 +73,13 @@ export const Textarea = styled.textarea`
   &:focus {
     background-color: #e1f1ff;
   }
+
+  ${(props: {dark? : boolean}) => props.dark && css`
+    background-color: transparent;
+    border: 1px solid var(--blue_trans1);
+    color: white;
+    &:focus {
+      background-color: black;
+    }   
+  `}
 `;

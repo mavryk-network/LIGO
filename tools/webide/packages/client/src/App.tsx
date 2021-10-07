@@ -5,11 +5,12 @@ import {
   Switch,
   Route,
 } from "react-router-dom";
-
+import {ThemeProvider} from "styled-components";
+import { GlobalStyles } from "./globalStyles";
+import { lightTheme, darkTheme } from "./theme";
 import styled from 'styled-components';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import SplitPane from 'react-split-pane';
-import './index.css'
 
 import { EditorComponent } from './components/editor/editor';
 import Examples from './components/examples';
@@ -79,23 +80,30 @@ const EditorComponentWrapper = styled.div<TopPaneStyled>`
   display: flex;
   min-width: 100%;
 `
+type theme = 'light' | 'dark'
 
 const App: React.FC = () => {
-
+  const [theme, setTheme] = useState<theme>('light');
+  const themeToggler = () => {
+    theme === 'light' ? setTheme('dark') : setTheme('light')
+}
   const [topPaneHeight, setTopPaneHeight] = useState(700)
 
   return (
+    <ThemeProvider theme={theme === 'light' ? lightTheme : darkTheme}>
+      <>
+      <GlobalStyles/>
     <Provider store={store}>
       <Router>
         <Wrapper>
-        <HeaderComponent />
+        <HeaderComponent onThemeChange={themeToggler}/>
         <Container>
         <div className="col-sm-12 col-md-2 order-md-1"><Examples /></div>
           <SplitPane onChange={size => setTopPaneHeight(size)} style={{ position: 'relative', display: 'flex' }} split="horizontal" defaultSize="75%" >
-            <EditorComponentWrapper height={topPaneHeight} className="col-sm-12 col-md-7 order-md-2"><EditorComponent editorHeight={topPaneHeight} /></EditorComponentWrapper>
-            <OutputTab />
+            <EditorComponentWrapper height={topPaneHeight} className="col-sm-12 col-md-7 order-md-2"><EditorComponent theme={theme} editorHeight={topPaneHeight} /></EditorComponentWrapper>
+            <OutputTab theme={theme} />
           </SplitPane>
-          <div className="col-sm-12 col-md-3 order-md-3"><TabsPanelComponent /></div>
+          <div className="col-sm-12 col-md-3 order-md-3"><TabsPanelComponent theme={theme}/></div>
         </Container>
         <FeedbackContainer>
           <FloatButtonComponent
@@ -121,6 +129,8 @@ const App: React.FC = () => {
       </Switch>
       </Router>
     </Provider>
+    </>
+    </ThemeProvider>
   );
 };
 

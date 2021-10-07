@@ -1,13 +1,6 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import styled from 'styled-components';
-
-const Container = styled.div<{ visible?: boolean }>`
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  overflow: auto;
-`;
+import styled, {css} from 'styled-components';
 
 const Output = styled.div`
   flex: 1;
@@ -16,7 +9,7 @@ const Output = styled.div`
   flex-direction: column;
 `;
 
-const Pre = styled.pre`
+const Pre = styled.pre<{isDark?: boolean}>`
   padding: 0.5em;
   margin: 0 -0.5em;
   overflow: hidden;
@@ -25,11 +18,26 @@ const Pre = styled.pre`
   white-space: break-spaces;
 `;
 
-const DeployOutputPane = (props) => {
-const {contract, output, network} = props
+const Container = styled.div<{ visible?: boolean, isDark?: boolean }>`
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: auto;
+
+  & div, & pre {
+    ${props => props.isDark && css`
+      background-color: rgb(25, 26, 27);
+      color: white;
+  `}
+  }
+`;
+
+const DeployOutputPane = (props: {theme: 'light' | 'dark', contract?: string, output?: string, network?: string}) => {
+const {contract, output, network, theme} = props
+const isDark = theme === 'dark'
 let networkUrlPart = network
   return (
-    <Container>
+    <Container isDark>
       <Output id="output">
         {contract && (
           <div>

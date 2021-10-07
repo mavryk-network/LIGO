@@ -37,7 +37,7 @@ const Content = styled.div`
   overflow: hidden;
 `;
 
-export const TabsPanelComponent = () => {
+export const TabsPanelComponent = (props: {theme: "light" | "dark"}) => {
   const TABS = [
     { index: 0, label: 'Configure', id: 'configure-tab' }
   ];
@@ -59,6 +59,7 @@ export const TabsPanelComponent = () => {
       </Header>
       <Content>
         <ConfigureTabComponent
+          theme={props.theme}
           selected={true}
           onRun={() => {
             selectTab(TABS[1]);

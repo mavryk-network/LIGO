@@ -8,7 +8,8 @@ import { Group, Input, Label, Textarea } from '../form/inputs';
 
 const Container = styled.div``;
 
-export const EvaluateFunctionPaneComponent = () => {
+export const EvaluateFunctionPaneComponent = (props: {theme: 'light' | 'dark'}) => {
+  const isDark = props.theme === 'dark'
   const dispatch = useDispatch();
   const entrypoint = useSelector<AppState, EvaluateFunctionState['entrypoint']>(
     state => state.evaluateFunction && state.evaluateFunction.entrypoint
@@ -22,6 +23,7 @@ export const EvaluateFunctionPaneComponent = () => {
       <Group>
         <Label htmlFor="entrypoint">Function name</Label>
         <Input
+          dark={isDark}
           id="entrypoint"
           value={entrypoint}
           onChange={ev =>
@@ -32,6 +34,7 @@ export const EvaluateFunctionPaneComponent = () => {
       <Group>
         <Label htmlFor="parameters">Parameters</Label>
         <Textarea
+          dark={isDark}
           id="parameters"
           rows={9}
           value={parameters}
