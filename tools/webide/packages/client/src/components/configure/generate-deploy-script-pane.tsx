@@ -17,7 +17,8 @@ const Container = styled.div`
   overflow: auto;
 `;
 
-export const GenerateDeployScriptPane = () => {
+export const GenerateDeployScriptPane = (props: {theme: 'light' | 'dark'}) => {
+  const isDark = props.theme === 'dark'
   const dispatch = useDispatch();
 
   const tool = useSelector<AppState, GenerateDeployScriptState['tool']>(
@@ -47,6 +48,7 @@ export const GenerateDeployScriptPane = () => {
       <Group>
         <AccessFunctionLabel htmlFor="entrypoint"></AccessFunctionLabel>
         <Input
+          dark={isDark}
           id="entrypoint"
           value={entrypoint}
           onChange={ev =>
@@ -57,6 +59,7 @@ export const GenerateDeployScriptPane = () => {
       <Group>
         <Label htmlFor="storage">Storage</Label>
         <Textarea
+          dark={isDark}
           id="storage"
           rows={9}
           value={storage}
