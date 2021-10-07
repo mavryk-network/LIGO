@@ -119,8 +119,8 @@ async function main() {
   fs.mkdirSync(EXAMPLES_DEST_DIR, { recursive: true });
 
   const EXCLUSIONS=[
-    "0-increment.jsligo",
-    "id.jsligo"
+    // "0-increment.jsligo",
+    // "id.jsligo"
   ]
 
   const examples = await processExamples(
