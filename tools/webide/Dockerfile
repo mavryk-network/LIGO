@@ -1,4 +1,4 @@
-FROM node:12-alpine as builder
+FROM node:14-alpine as builder
 
 ARG EXAMPLES_DIR_SRC
 ARG EXAMPLES_DIR_DEST=packages/client/examples
@@ -17,7 +17,7 @@ ENV EXAMPLES_DIR=/app/$EXAMPLES_DIR_DEST
 RUN yarn install
 RUN yarn workspaces run build
 
-FROM node:12-buster
+FROM node:14-buster
 
 WORKDIR /app
 
