@@ -42,7 +42,7 @@ const CompileOutputPane = (props: {theme: 'light' | 'dark', output?: string}) =>
   const preRef = useRef<HTMLPreElement>(null);
 
   return (
-    <Container isDark>
+    <Container isDark={isDark}>
       <OutputToolbarComponent
         theme={theme}
         showTryMichelson={true}

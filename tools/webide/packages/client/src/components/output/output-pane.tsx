@@ -44,7 +44,7 @@ const OutputPane: FC<stateTypes> = (props) => {
   const isDark = theme === 'dark'
 
   return (
-    <Container isDark>
+    <Container isDark={isDark}>
       <Output id="output">
         <Pre>{output}</Pre>
       </Output>

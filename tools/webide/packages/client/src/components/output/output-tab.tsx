@@ -54,6 +54,7 @@ interface stateTypes {
 
 const OutputTab: FC<propTypes & stateTypes> = (props) => {
   const { selected, onCancel, output, hasError, loading, command, theme } = props
+  console.log(props)
   
   let visible = selected;
 
