@@ -1,4 +1,4 @@
-{ stdenv, lib, mkYarnPackage, nodejs-16_x, python2, ligo-bin, coreutils
+{ stdenv, lib, mkYarnPackage, nodejs, python2, ligo-bin, coreutils
 , writeShellScriptBin, makeFontsConf, buildEnv, rsync, sources
 , chromium ? null }:
 let
@@ -72,6 +72,6 @@ let
     LIGO_CMD=${../ligo} \
     STATIC_ASSETS=${client} \
     DATA_DIR=/tmp \
-    node ${server}/node_modules/server/dist/src/index.js
+    ${nodejs}/bin/node ${server}/node_modules/server/dist/src/index.js
   '';
 in ligo-editor // { inherit e2e; }
