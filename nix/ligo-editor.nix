@@ -33,11 +33,7 @@ let
       find deps/client/build -type f -exec sed -r "s,/nix/store/[a-z0-9]{32}-[^/]*,$out,g" -i '{}' \;
     '';
     distPhase = "true";
-    installPhase = ''
-      mkdir -p /build/client/deps/client/node_modules/.cache
-      mkdir $out
-      cp -Lr deps/client/build $out"
-    '';
+    installPhase = "mkdir $out; cp -Lr deps/client/build $out";
     inherit yarnLock;
     # Downloads node-sass from the official github repo
     # Uncomment the commented lines if you wish to build it from source
