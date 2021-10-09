@@ -37,7 +37,7 @@ const {contract, output, network, theme} = props
 const isDark = theme === 'dark'
 let networkUrlPart = network
   return (
-    <Container isDark>
+    <Container isDark={isDark}>
       <Output id="output">
         {contract && (
           <div>

@@ -64,7 +64,7 @@ export const Loading = (props: { onCancel?: () => void, theme: 'light' | 'dark' 
   }, [setSpinnerSize]);
 
   return (
-    <Container ref={containerRef} isDark>
+    <Container ref={containerRef} isDark={isDark}>
       <PushSpinner size={spinnerSize} color="#fa6f41" />
       <Message>{loading.message}</Message>
       <Cancel

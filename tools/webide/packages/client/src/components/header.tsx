@@ -40,7 +40,7 @@ const Link = styled.a`
   }
 
   ${(props: { cheatSheetStyle?: boolean, dark?: boolean}) =>
-    props.cheatSheetStyle && !props.dark &&
+    (props.cheatSheetStyle && !props.dark &&
     css`
       background-color: #efefef;
       margin-left: 3em;
@@ -48,8 +48,8 @@ const Link = styled.a`
       &:hover {
         color: black;
       }
-    `
-    || props.cheatSheetStyle && css`
+    `)
+    || (props.cheatSheetStyle && css`
       background-color: #007bff;
       margin-left: 3em;
       border-radius: 25px;
@@ -58,7 +58,7 @@ const Link = styled.a`
         background-color: white;
       }
       color: white;
-    `
+    `)
   }
 `;
 

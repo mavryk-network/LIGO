@@ -41,10 +41,9 @@ const CompileFunctionPaneComponent = (props) => {
   const [declaration, setDeclaration] = useState<string[]>([]);
   const [functionName, setFunctionName] = useState<string>('');
   const [showSpinner, setShowSpinner] = useState<boolean>(false);
-  let timeout;
-
 
   useEffect(() => {
+    let timeout;
     const lastLoadedTime = lastEditedTime
       ? Math.ceil(
           Math.abs(new Date().getTime() - lastEditedTime.getTime()) / 1000
@@ -87,7 +86,7 @@ const CompileFunctionPaneComponent = (props) => {
           setShowSpinner(false);
         });
     }
-  }, [lastEditedTime]);
+  }, [lastEditedTime, getDeclarationList, language, setCompileFunction, setError, showSpinner, code]);
 
   return (
     <Container>

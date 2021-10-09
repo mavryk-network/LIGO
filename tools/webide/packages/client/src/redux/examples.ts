@@ -30,8 +30,6 @@ export class ClearSelectedAction {
   public readonly type = ActionType.ClearSelected;
 }
 
-type Action = ChangeSelectedAction | ClearSelectedAction;
-
 const DEFAULT_STATE = {
   selected: null,
   list: [],

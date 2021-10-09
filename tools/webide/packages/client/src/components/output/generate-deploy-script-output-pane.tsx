@@ -43,7 +43,7 @@ const GenerateDeployScriptOutputPane: FC<stateTypes> = (props) => {
   const preRef = useRef<HTMLPreElement>(null);
 
   return (
-    <Container isDark>
+    <Container isDark={isDark}>
       <OutputToolbarComponent
         onCopy={() => copyOutput(preRef.current)}
         onDownload={() => downloadOutput(downloadResult)}

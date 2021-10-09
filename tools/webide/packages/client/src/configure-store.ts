@@ -1,11 +1,8 @@
 import { applyMiddleware, createStore, Middleware } from 'redux';
 import ReduxThunk from 'redux-thunk';
 
-import rootReducer, { AppState } from './redux/app';
-
-declare var defaultServerState: AppState | undefined;
+import rootReducer from './redux/app';
  
-
 export default function configureStore() {
   const store = createStore(
     rootReducer,

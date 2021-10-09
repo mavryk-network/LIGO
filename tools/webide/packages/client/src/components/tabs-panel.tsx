@@ -42,7 +42,7 @@ export const TabsPanelComponent = (props: {theme: "light" | "dark"}) => {
     { index: 0, label: 'Configure', id: 'configure-tab' }
   ];
 
-  const [selectedTab, selectTab] = useState(TABS[0]);
+  const [selectedTab, selectTab] = useState(TABS[0].id);
 
   return (
     <Container>
@@ -51,9 +51,9 @@ export const TabsPanelComponent = (props: {theme: "light" | "dark"}) => {
           <Tab
             key={tab.id}
             id={tab.id}
-            selected={true}
+            selected={selectedTab === tab.id}
           >
-            <Label onClick={() => selectTab(tab)}>{tab.label}</Label>
+            <Label onClick={() => selectTab(tab.id)}>{tab.label}</Label>
           </Tab>
         ))}
       </Header>
@@ -62,7 +62,7 @@ export const TabsPanelComponent = (props: {theme: "light" | "dark"}) => {
           theme={props.theme}
           selected={true}
           onRun={() => {
-            selectTab(TABS[1]);
+            selectTab(TABS[1].id);
           }}
         ></ConfigureTabComponent>
         {/* <OutputTab

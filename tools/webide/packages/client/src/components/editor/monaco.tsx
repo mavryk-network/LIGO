@@ -54,24 +54,7 @@ const MonacoComponent = (props) => {
   let containerRef = useRef(null);
   const store = useStore();
   const dispatch = useDispatch();
-  const [currentLineText, setCurrentLineText] = useState('')
-
-  const compileFunctionHandler = (currentLine) => {
-    if(code==='') {return}
-    getDeclarationList(language, code).then((method: MethodType) => {
-      method.declarations.forEach(d => {
-        if (currentLine.indexOf(d) !== -1) {
-          setCompileFunction(d)
-          dispatch( new CompileFunctionAction().getAction());
-        } else {
-          setError('Function not found in the selected line.')
-        }
-        setCompileFunction('')
-      });
-    }).catch((error) => {
-      setError(error)
-    })
-  }
+  const [currentLineText] = useState('')
 
     // const onRightClickAction = (model) => {
     //   return {
@@ -163,9 +146,27 @@ const MonacoComponent = (props) => {
     return function cleanUp() {
       cleanupFunc.forEach(f => f());
     };
-  }, []);
+  }, [dispatch, store, theme]);
 
-  useEffect(() => { compileFunctionHandler(currentLineText) }, [currentLineText]);
+  useEffect(() => { 
+    const compileFunctionHandler = (currentLine) => {
+      if(code==='') {return}
+      getDeclarationList(language, code).then((method: MethodType) => {
+        method.declarations.forEach(d => {
+          if (currentLine.indexOf(d) !== -1) {
+            setCompileFunction(d)
+            dispatch( new CompileFunctionAction().getAction());
+          } else {
+            setError('Function not found in the selected line.')
+          }
+          setCompileFunction('')
+        });
+      }).catch((error) => {
+        setError(error)
+      })
+    }
+    compileFunctionHandler(currentLineText) 
+  }, [currentLineText, code, getDeclarationList, setCompileFunction, dispatch, language, setError]);
 
 
   return (
