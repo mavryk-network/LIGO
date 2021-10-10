@@ -157,7 +157,7 @@ webide-docker:
     - dev
     - /^.*-run-dev$/
   script:
-    - nix-build nix -A ligo-editor
+    - nix-build nix -A ligo-editor-docker
     - cp -L result webide.tar.gz
   artifacts:
     paths:
