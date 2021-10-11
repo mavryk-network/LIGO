@@ -3,6 +3,7 @@ module Helpers = Helpers
 
 let module_obj ~raise = Helpers.map_module @@ Obj_ligo.check_obj_ligo ~raise
 let expression_obj ~raise = Obj_ligo.check_obj_ligo ~raise
+let anf_module = Anf.transform_module
 
 let all_module_passes ~add_warning ~raise = [
   Unused.unused_map_module ~add_warning;
@@ -10,6 +11,7 @@ let all_module_passes ~add_warning ~raise = [
   Helpers.map_module @@ Recursion.check_tail_expression ~raise ;
   Helpers.map_module @@ Recursion.remove_rec_expression ;
   Helpers.map_module @@ Pattern_matching_simpl.peephole_expression ~raise ;
+  anf_module ;
 ]
 
 let all_expression_passes ~raise = [

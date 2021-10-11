@@ -298,6 +298,9 @@ let assert_t_set : type_expression -> unit option = fun v -> Option.map ~f:(fun 
 let assert_t_list : type_expression -> unit option = fun v -> Option.map ~f:(fun _ -> ()) @@ get_t_list v
 let assert_t_unit : type_expression -> unit option = fun v -> get_t_unit v
 
+let e_record_accessor record path : expression_content = E_record_accessor { record ; path }
+let e_record_update record path update : expression_content = E_record_update { record ; path ; update }
+let e_type_in type_binder rhs let_result : expression_content = E_type_in { type_binder ; rhs ; let_result }
 let e_record map : expression_content = E_record map
 let ez_e_record (lst : (label * expression) list) : expression_content =
   let aux prev (k, v) = LMap.add k v prev in
@@ -338,12 +341,13 @@ let e_lambda l : expression_content = E_lambda l
 let e_recursive l : expression_content = E_recursive l
 let e_pair a b : expression_content = ez_e_record [(Label "0",a);(Label "1", b)]
 let e_application lamb args : expression_content = E_application {lamb;args}
+let e_matching matchee cases = E_matching { matchee ; cases }
 let e_raw_code language code : expression_content = E_raw_code { language ; code }
 let e_variable v : expression_content = E_variable v
 let e_let_in let_binder rhs let_result attr = E_let_in { let_binder ; rhs ; let_result; attr }
 let e_mod_in module_binder rhs let_result = E_mod_in { module_binder ; rhs ; let_result }
-
-let e_constructor constructor element: expression_content = E_constructor {constructor;element}
+let e_constant cons_name arguments : expression_content = E_constant { cons_name ; arguments }
+let e_constructor constructor element : expression_content = E_constructor { constructor ; element }
 
 let e_bool b : expression_content =
   if b then
@@ -365,11 +369,15 @@ let e_a_address s = make_e (e_address s) (t_address ())
 let e_a_pair a b = make_e (e_pair a b)
   (t_pair a.type_expression b.type_expression )
 let e_a_constructor c e t = make_e (e_constructor (Label c) e) t
+let e_a_constant c args t = make_e (e_constant c args) t
 let e_a_some s = make_e (e_some s) (t_constant option_name [s.type_expression])
 
 let e_a_lambda l in_ty out_ty = make_e (e_lambda l) (t_function in_ty out_ty ())
-let e_a_recursive l= make_e (e_recursive l) l.fun_type
+let e_a_recursive l = make_e (e_recursive l) l.fun_type
 let e_a_none t = make_e (e_none ()) (t_option t)
+let e_a_record_accessor e l t = make_e (e_record_accessor e l) t
+let e_a_record_update e l u t = make_e (e_record_update e l u) t
+let e_a_type_in b r l t = make_e (e_type_in b r l) t
 let e_a_record ?(layout=default_layout) r = make_e (e_record r) (t_record ~layout
   (LMap.map
     (fun t ->
@@ -377,6 +385,7 @@ let e_a_record ?(layout=default_layout) r = make_e (e_record r) (t_record ~layou
       {associated_type ; michelson_annotation=None ; decl_pos = 0} )
     r ))
 let e_a_application a b t = make_e (e_application a b) t
+let e_a_matching matchee cases t = make_e (e_matching matchee cases) t
 let e_a_variable v ty = make_e (e_variable v) ty
 let ez_e_a_record ?layout r = make_e (ez_e_record r) (ez_t_record ?layout (List.mapi ~f:(fun i (x, y) -> x, {associated_type = y.type_expression ; michelson_annotation = None ; decl_pos = i}) r))
 let e_a_let_in binder expr body attr = make_e (e_let_in binder expr body attr) (get_type_expression body)
