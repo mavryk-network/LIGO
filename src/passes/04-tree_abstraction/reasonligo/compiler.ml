@@ -19,7 +19,7 @@ let pseq_to_list = function
 
 let get_value : 'a Raw.reg -> 'a = fun x -> x.value
 
-let build_ins = ["Operator";"Test";"Tezos";"Crypto";"Bytes";"List";"Set";"Map";"Big_map";"Bitwise";"String";"Layout"]
+let build_ins = ["Operator";"Test";"Tezos";"Crypto";"Bytes";"List";"Set";"Map";"Big_map";"Bitwise";"String";"Layout";"Option"]
   @ ["Michelson"]
 
 open Predefined.Tree_abstraction.Cameligo
@@ -519,7 +519,10 @@ and conv ~raise : CST.pattern -> AST.ty_expr AST.pattern =
     let attributes = attributes |> List.map ~f:(fun x -> x.Region.value) |>
                        Tree_abstraction_shared.Helpers.binder_attributes_of_strings in
     let b =
-      let var = Location.wrap ~loc @@ Var.of_name var in
+      let var = Location.wrap ~loc @@ match var with
+        | "_" -> Var.fresh ()
+        | var -> Var.of_name var
+      in
       { var ; ascr = None ; attributes }
     in
     Location.wrap ~loc @@ P_var b

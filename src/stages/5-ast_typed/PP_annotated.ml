@@ -71,6 +71,7 @@ let rec type_content : formatter -> type_content -> unit =
   | T_module_accessor ma -> module_access type_expression ppf ma
   | T_singleton       x  -> literal       ppf             x
   | T_abstraction     x  -> abstraction   type_expression ppf x
+  | T_for_all         x  -> for_all       type_expression ppf x
 
 and row_element : formatter -> row_element -> unit =
   fun ppf { associated_type ; michelson_annotation=_ ; decl_pos } ->
@@ -122,9 +123,9 @@ and expression_content ppf (ec: expression_content) =
         expression result
   | E_matching {matchee; cases;} ->
       fprintf ppf "match %a with %a" expression matchee (matching expression) cases
-  | E_let_in {let_binder; rhs; let_result; inline} ->
-      fprintf ppf "let %a = %a%a in %a" expression_variable let_binder expression
-        rhs option_inline inline expression let_result
+  | E_let_in {let_binder; rhs; let_result; attr = { inline; no_mutation } } ->
+      fprintf ppf "let %a = %a%a%a in %a" expression_variable let_binder expression
+        rhs option_inline inline option_no_mutation no_mutation expression let_result
   | E_type_in   ti -> type_in expression type_expression ppf ti
   | E_mod_in {module_binder; rhs; let_result} ->
       fprintf ppf "let %a = %a in %a"
@@ -140,6 +141,8 @@ and expression_content ppf (ec: expression_content) =
         type_expression fun_type
         expression_content (E_lambda lambda)
   | E_module_accessor ma -> module_access expression ppf ma
+  | E_type_inst {forall;type_} ->
+      fprintf ppf "%a@[%a]" expression forall type_expression type_
 
 and assoc_expression ppf : map_kv -> unit =
  fun {key ; value} -> fprintf ppf "%a -> %a" expression key expression value
@@ -168,8 +171,8 @@ and matching : (formatter -> expression -> unit) -> _ -> matching_expr -> unit =
 
 and declaration ppf (d : declaration) =
   match d with
-  | Declaration_constant {name = _; binder; expr; inline} ->
-      fprintf ppf "const %a = %a%a" expression_variable binder expression expr option_inline inline
+  | Declaration_constant {name = _; binder; expr; attr = { inline; no_mutation } } ->
+      fprintf ppf "const %a = %a%a%a" expression_variable binder expression expr option_inline inline option_no_mutation no_mutation
   | Declaration_type {type_binder; type_expr} ->
       fprintf ppf "type %a = %a" type_variable type_binder type_expression type_expr
   | Declaration_module {module_binder; module_} ->

@@ -1273,6 +1273,10 @@ let option ~raise ~add_warning () : unit =
     expect_eq_evaluate ~raise program "n" expected
   in
   let () =
+    let expected = e_int 42 in
+    expect_eq_evaluate ~raise program "i" expected
+  in
+  let () =
     let expected = e_typed_none (t_int ()) in
     expect_eq ~raise program "assign" (e_int 12) expected
   in
@@ -3333,6 +3337,29 @@ let chained_assignment_jsligo ~raise ~add_warning () : unit =
   let program = type_file ~raise ~add_warning "./contracts/chained_assignment.jsligo" in
   expect_eq ~raise program "bar" (e_unit ()) (e_int 9) 
 
+let no_arg_func_religo ~raise ~add_warning () : unit = 
+  let program = type_file ~raise ~add_warning "./contracts/no_arg_func.religo" in
+  expect_eq ~raise program "no_arg_func2" (e_unit ()) (e_int 2) 
+
+let block_scope_jsligo ~raise ~add_warning () : unit =
+  let program = type_file ~raise ~add_warning "./contracts/block_scope.jsligo" in
+  let _ = expect_eq ~raise program "test_1" (e_unit ()) (e_int 3) in
+  let _ = expect_eq ~raise program "test_2" (e_unit ()) (e_int 3) in
+  let _ = expect_eq ~raise program "test_3" (e_unit ()) (e_int 3) in
+  let _ = expect_eq ~raise program "test_4" (e_unit ()) (e_int 3) in
+  let _ = expect_eq ~raise program "test_5" (e_unit ()) (e_int 2) in
+  let _ = expect_eq ~raise program "test_6" (e_unit ()) (e_int 2) in
+  ()
+
+let assignment_operators_jsligo ~raise ~add_warning () : unit =
+  let program = type_file ~raise ~add_warning "./contracts/assignment_operators.jsligo" in
+  let _ = expect_eq ~raise program "addeq" (e_unit ()) (e_tuple [(e_int 11) ; (e_int 9) ; (e_int 5)  ]) in
+  let _ = expect_eq ~raise program "mineq" (e_unit ()) (e_tuple [(e_int 15) ; (e_int 15) ; (e_int 1)  ]) in
+  let _ = expect_eq ~raise program "diveq" (e_unit ()) (e_tuple [(e_int 5) ; (e_int 4) ; (e_int 3)  ]) in
+  let _ = expect_eq ~raise program "multeq" (e_unit ()) (e_tuple [(e_int 2000) ; (e_int 100) ; (e_int 12)  ]) in
+  let _ = expect_eq ~raise program "resteq" (e_unit ()) (e_tuple [(e_nat 2) ; (e_nat 3) ; (e_nat 1)  ]) in
+  ()
+
 let main = test_suite "Integration (End to End)"
   [
     test_w "simple1" simple1 ;
@@ -3613,4 +3640,7 @@ let main = test_suite "Integration (End to End)"
     test_w "if no else (jsligo)" if_no_else_jsligo;
     test_w "tuple_assignment (jsligo)" tuple_assignment_jsligo;
     test_w "chained_assignment (jsligo)" chained_assignment_jsligo;
+    test_w "no_arg_func (religo)" no_arg_func_religo;
+    test_w "block_scope (jsligo)" block_scope_jsligo;
+    test_w "assignment_operators (jsligo)" assignment_operators_jsligo;
   ]

@@ -1642,7 +1642,7 @@ const letin_nesting =
 const letin_nesting2 =
   lambda (x : int) return let y = 2 in let z = 3 in ADD(ADD(x , y) , z)
 const x =  match (+1 , (+2 , +3)) with
-            | (_,(x,_)) -> x
+            | (#2,(x,#3)) -> x
     |}];
 
   run_ligo_good ["print" ; "ast"; contract "letin.religo"];
@@ -1664,7 +1664,7 @@ const letin_nesting =
 const letin_nesting2 =
   lambda (x : int) return let y = 2 in let z = 3 in ADD(ADD(x , y) , z)
 const x =  match (+1 , (+2 , +3)) with
-            | (_,(x,_)) -> x
+            | (#2,(x,#3)) -> x
     |}];
 
   run_ligo_bad ["print" ; "ast-typed"; contract "existential.mligo"];
@@ -2004,3 +2004,51 @@ let%expect_test _ =
               (h)@(SUB(n ,
               1)) | True unit_proj#8 ->
                     1 ) in h) ) |}]
+
+let%expect_test _ =
+  run_ligo_bad [ "compile" ; "contract" ; bad_contract "reuse_variable_name_top.jsligo" ] ;
+  [%expect{|
+    File "../../test/contracts/negative/reuse_variable_name_top.jsligo", line 2, characters 0-14:
+      1 | let dog = 1;
+      2 | let dog = true;
+
+    Cannot redeclare block-scoped variable. |}]
+
+let%expect_test _ =
+  run_ligo_bad [ "compile" ; "contract" ; bad_contract "reuse_variable_name_block.jsligo" ] ;
+  [%expect{|
+    File "../../test/contracts/negative/reuse_variable_name_block.jsligo", line 3, characters 8-13:
+      2 |     let x = 2;
+      3 |     let x = 2;
+      4 |     return x;
+
+    Cannot redeclare block-scoped variable. |}]
+
+let%expect_test _ =
+  run_ligo_good [ "run"; "run-function"; contract "assert.mligo"; "(false, ())"; "-e"; "with_error"];
+  [%expect {| failwith("my custom error") |}]
+
+let%expect_test _ =
+  run_ligo_good [ "run"; "run-function"; contract "assert.mligo"; "(None: unit option)"; "-e"; "some_with_error"];
+  [%expect {| failwith("my custom error") |}]
+
+let%expect_test _ =
+  run_ligo_good [ "print" ; "ast-typed" ; contract "attributes.jsligo" ] ;
+  [%expect {|
+    const x = 1[@inline]
+    const foo = lambda (a) return let test = ADD(2 ,
+    a)[@inline] in test[@inline]
+    const y = 1
+    const bar = lambda (b) return let test = lambda (z) return ADD(ADD(2 ,
+    b) ,
+    z)[@inline] in (test)@(b)
+    const check = 4 |}]
+
+(* literal type "casting" inside modules *)
+let%expect_test _ =
+  run_ligo_good [ "compile" ; "contract" ; contract "literal_type_cast.mligo" ] ;
+  [%expect {|
+    { parameter unit ;
+      storage timestamp ;
+      code { DROP ; PUSH timestamp 0 ; NIL operation ; PAIR } }
+  |}]

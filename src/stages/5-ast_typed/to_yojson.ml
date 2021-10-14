@@ -43,6 +43,7 @@ and type_content = function
   | T_module_accessor t -> `List [ `String "t_module_accessor"; module_access type_expression t]
   | T_singleton       t -> `List [ `String "t_singleton" ; literal t ]
   | T_abstraction         t -> `List [ `String "t_abstraction" ; for_all type_expression t]
+  | T_for_all         t -> `List [ `String "t_for_all" ; for_all type_expression t]
 
 and type_injection {language;injection;parameters} =
   `Assoc [
@@ -97,11 +98,18 @@ and expression_content = function
   | E_record_accessor e -> `List [ `String "E_record_accessor"; record_accessor e ]
   | E_record_update   e -> `List [ `String "E_record_update"; record_update e ]
   | E_module_accessor e -> `List [ `String "E_module_accessor"; module_access expression e]
+  | E_type_inst       e -> `List [ `String "E_type_inst"; type_inst e ]
 
 and constant {cons_name;arguments} =
   `Assoc [
     ("cons_name", constant' cons_name);
     ("arguments", list expression arguments);
+  ]
+
+and type_inst {forall;type_} =
+  `Assoc [
+    ("forall", expression forall);
+    ("type_", type_expression type_);
   ]
 
 and application {lamb;args} =
@@ -123,12 +131,18 @@ and recursive {fun_name;fun_type;lambda=l} =
     ("lambda", lambda l)
   ]
 
-and let_in {let_binder;rhs;let_result;inline} =
+and attribute {inline;no_mutation} =
+  `Assoc [
+    ("inline", `Bool inline);
+    ("no_mutation", `Bool no_mutation);
+  ]
+
+and let_in {let_binder;rhs;let_result;attr} =
   `Assoc [
     ("let_binder", expression_variable_to_yojson let_binder);
     ("rhs", expression rhs);
     ("let_result", expression let_result);
-    ("inline", `Bool inline);
+    ("attr", attribute attr);
   ]
 
 and mod_in {module_binder;rhs;let_result} =
@@ -201,12 +215,12 @@ and declaration_type {type_binder;type_expr} =
     ("type_expr", type_expression type_expr);
   ]
 
-and declaration_constant {name; binder;inline;expr} =
+and declaration_constant {name; binder;expr;attr} =
   `Assoc [
     ("name", option' string name);
     ("binder",expression_variable_to_yojson binder);
     ("expr", expression expr);
-    ("attribute", `Bool inline);
+    ("attr", attribute attr);
   ]
 
 and declaration_module {module_binder;module_} =

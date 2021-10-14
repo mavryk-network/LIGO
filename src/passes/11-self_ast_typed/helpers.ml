@@ -38,6 +38,7 @@ let rec fold_expression : ('a , 'err) folder -> 'a -> expression -> 'a = fun f i
     let res = Pair.fold ~f:self ~init ab in
     res
   )
+  | E_type_inst { forall = e; type_ = _}
   | E_lambda { binder = _ ; result = e }
   | E_recursive {lambda= {result=e}}
   | E_constructor {element=e} -> (
@@ -102,7 +103,7 @@ and fold_module : ('a,'err) folder -> 'a -> module_fully_typed -> 'a = fun f ini
   let aux = fun acc (x : declaration Location.wrap) ->
     let return (d : 'a) = d in
     match Location.unwrap x with
-    | Declaration_constant {binder=_; expr ; inline=_} -> (
+    | Declaration_constant {binder=_; expr ; attr = { inline=_ ; no_mutation = _ }} -> (
         let res = fold_expression f acc expr in
         return @@ res
     )
@@ -148,10 +149,10 @@ let rec map_expression : 'err mapper -> expression -> expression = fun f e ->
     let (a,b) = Pair.map ~f:self ab in
     return @@ E_application {lamb=a;args=b}
   )
-  | E_let_in { let_binder ; rhs ; let_result; inline } -> (
+  | E_let_in { let_binder ; rhs ; let_result; attr } -> (
     let rhs = self rhs in
     let let_result = self let_result in
-    return @@ E_let_in { let_binder ; rhs ; let_result; inline }
+    return @@ E_let_in { let_binder ; rhs ; let_result; attr }
   )
   | E_type_in ti -> (
     let ti = Maps.type_in self (fun x -> x) ti in
@@ -169,6 +170,10 @@ let rec map_expression : 'err mapper -> expression -> expression = fun f e ->
   | E_lambda { binder ; result } -> (
     let result = self result in
     return @@ E_lambda { binder ; result }
+  )
+  | E_type_inst { forall ; type_ } -> (
+    let forall = self forall in
+    return @@ E_type_inst { forall ; type_ }
   )
   | E_recursive { fun_name; fun_type; lambda = {binder;result}} -> (
     let result = self result in
@@ -203,9 +208,9 @@ and map_module : 'err mapper -> module_fully_typed -> module_fully_typed = fun m
   let aux = fun (x : declaration) ->
     let return (d : declaration) = d in
     match x with
-    | Declaration_constant {name; binder; expr ; inline} -> (
+    | Declaration_constant {name; binder; expr ; attr} -> (
         let expr = map_expression m expr in
-        return @@ Declaration_constant {name; binder; expr ; inline}
+        return @@ Declaration_constant {name; binder; expr ; attr}
     )
     | Declaration_type t -> return @@ Declaration_type t
     | Declaration_module {module_binder;module_} ->
@@ -251,10 +256,10 @@ let rec fold_map_expression : ('a , 'err) fold_mapper -> 'a -> expression -> 'a 
       let (res,(a,b)) = Pair.fold_map ~f:self ~init ab in
       (res, return @@ E_application {lamb=a;args=b})
     )
-  | E_let_in { let_binder ; rhs ; let_result; inline } -> (
+  | E_let_in { let_binder ; rhs ; let_result; attr } -> (
       let (res,rhs) = self init rhs in
       let (res,let_result) = self res let_result in
-      (res, return @@ E_let_in { let_binder ; rhs ; let_result ; inline })
+      (res, return @@ E_let_in { let_binder ; rhs ; let_result ; attr })
     )
   | E_type_in { type_binder ; rhs ; let_result } -> (
       let (res,let_result) = self init let_result in
@@ -269,6 +274,10 @@ let rec fold_map_expression : ('a , 'err) fold_mapper -> 'a -> expression -> 'a 
       let (res,result) = self init result in
       (res, return @@ E_mod_alias { alias ; binders ; result })
     )
+  | E_type_inst { forall ; type_ } -> (
+    let (res, forall) = self init forall in
+    ( res, return @@ E_type_inst { forall ; type_ })
+  )
   | E_lambda { binder ; result } -> (
       let (res,result) = self init result in
       ( res, return @@ E_lambda { binder ; result })
@@ -285,7 +294,10 @@ let rec fold_map_expression : ('a , 'err) fold_mapper -> 'a -> expression -> 'a 
     let (res,element) = self init element in
     (res, return @@ E_module_accessor { module_name; element })
   )
-  | E_literal _ | E_variable _ | E_raw_code _ as e' -> (init, return e')
+  | E_raw_code {language;code} -> (
+    let (res,code) = self init code in
+    (res, return @@ E_raw_code { language ; code }))
+  | E_literal _ | E_variable _ as e' -> (init, return e')
 
 and fold_map_cases : ('a , 'err) fold_mapper -> 'a -> matching_expr -> 'a * matching_expr = fun f init m ->
   match m with
@@ -304,9 +316,9 @@ and fold_map_cases : ('a , 'err) fold_mapper -> 'a -> matching_expr -> 'a * matc
 and fold_map_module : ('a, 'err) fold_mapper -> 'a -> module_fully_typed -> 'a * module_fully_typed = fun m init (Module_Fully_Typed p) ->
   let aux = fun acc (x : declaration Location.wrap) ->
     match Location.unwrap x with
-    | Declaration_constant {name; binder ; expr ; inline} -> (
+    | Declaration_constant {name; binder ; expr ; attr } -> (
       let (acc', expr) = fold_map_expression m acc expr in
-      let wrap_content : declaration = Declaration_constant {name; binder ; expr ; inline} in
+      let wrap_content : declaration = Declaration_constant {name; binder ; expr ; attr} in
       (acc', {x with wrap_content})
     )
     | Declaration_type t -> (
@@ -326,7 +338,7 @@ and fold_map_module : ('a, 'err) fold_mapper -> 'a -> module_fully_typed -> 'a *
 and fold_module_decl : ('a, 'err) folder -> ('a, 'err) decl_folder -> 'a -> module_fully_typed -> 'a = fun m m_decl init (Module_Fully_Typed p) ->
   let aux = fun acc (x : declaration Location.wrap) ->
       match Location.unwrap x with
-      | Declaration_constant {binder=_ ; expr ; inline=_} as d ->
+      | Declaration_constant {binder=_ ; expr ; attr=_} as d ->
         let acc = m_decl acc d in
         fold_expression m acc expr
       | Declaration_type _t -> acc
@@ -342,7 +354,7 @@ type contract_type = {
 
 let fetch_contract_type ~raise : string -> module_fully_typed -> contract_type = fun main_fname (Module_Fully_Typed m) ->
   let aux (declt : declaration Location.wrap) = match Location.unwrap declt with
-    | Declaration_constant ({ binder ; expr=_ ; inline=_ } as p) ->
+    | Declaration_constant ({ binder ; expr=_ ; attr=_ } as p) ->
        if Var.equal binder.wrap_content (Var.of_name main_fname)
        then Some p
        else None
@@ -355,7 +367,7 @@ let fetch_contract_type ~raise : string -> module_fully_typed -> contract_type =
     trace_option ~raise (corner_case ("Entrypoint '"^main_fname^"' does not exist")) @@
       main_decl_opt
     in
-  let { binder=_ ; expr ; inline=_ } = main_decl in
+  let { binder=_ ; expr ; attr=_ } = main_decl in
   match expr.type_expression.type_content with
   | T_arrow {type1 ; type2} -> (
     match type1.type_content , type2.type_content with
@@ -527,6 +539,8 @@ module Free_variables :
       let fmv1, fv1 = (self lamb) in
       let fmv2, fv2 = (self args) in
       (ModVarSet.union fmv1 fmv2, VarSet.union fv1 fv2)
+    | E_type_inst {forall} ->
+      self forall
     | E_lambda {binder ; result} ->
       let fmv, fv = self result in
       (fmv, VarSet.remove binder @@ fv)
@@ -582,7 +596,7 @@ module Free_variables :
   and get_fv_module : module_fully_typed -> (ModVarSet.t * VarSet.t) = fun (Module_Fully_Typed p) ->
     let aux = fun (x : declaration Location.wrap) ->
       match Location.unwrap x with
-      | Declaration_constant {binder=_; expr ; inline=_} ->
+      | Declaration_constant {binder=_; expr ; attr=_} ->
         get_fv_expr expr
       | Declaration_module {module_binder=_;module_} ->
         get_fv_module module_
@@ -643,6 +657,8 @@ module Free_module_variables :
     | E_recursive {fun_name; lambda = {binder;result}} ->
       let fmv, fv = self result in
       (fmv, VarSet.remove fun_name @@ VarSet.remove binder fv)
+    | E_type_inst {forall} ->
+      self forall
     | E_constructor {element} ->
       self element
     | E_matching {matchee; cases} ->
@@ -689,7 +705,7 @@ module Free_module_variables :
   and get_fv_module : module_fully_typed -> (ModVarSet.t * VarSet.t) = fun (Module_Fully_Typed p) ->
     let aux = fun (x : declaration Location.wrap) ->
       match Location.unwrap x with
-      | Declaration_constant {binder=_; expr ; inline=_} ->
+      | Declaration_constant {binder=_; expr ; attr=_} ->
         get_fv_expr expr
       | Declaration_module {module_binder=_;module_} ->
         get_fv_module module_

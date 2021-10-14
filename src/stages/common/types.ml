@@ -23,15 +23,19 @@ let module_variable_to_yojson var = `String var
 let module_variable_of_yojson var = `String var
 let compare_module_variable = String.compare
 let equal_module_variable = String.equal
+type kind = unit
+let equal_kind = Unit.equal
+let compare_kind = Unit.compare
 
 type label = Label of string
 let label_to_yojson (Label l) = `List [`String "Label"; `String l]
 let label_of_yojson = function
   | `List [`String "Label"; `String l] -> Ok (Label l)
   | _ -> Utils.error_yojson_format "Label of string"
+let equal_label (Label a) (Label b) = String.equal a b
+let compare_label (Label a) (Label b) = String.compare a b
 
-
-module LMap = Map.Make( struct type t = label let compare (Label a) (Label b) = String.compare a b end)
+module LMap = Map.Make(struct type t = label let compare = compare_label end)
 type 'a label_map = 'a LMap.t
 
 let const_name = function
@@ -65,8 +69,8 @@ type 'a module_access = {
 
 (* Type level types *)
 type 'ty_exp abstraction = {
-  ty_binder : type_variable Location.wrap ; 
-  kind : unit ;
+  ty_binder : type_variable Location.wrap ;
+  kind : kind ;
   type_ : 'ty_exp ;
 }
 

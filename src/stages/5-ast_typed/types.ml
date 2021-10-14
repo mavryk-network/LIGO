@@ -22,6 +22,7 @@ and type_content =
   | T_module_accessor of ty_expr module_access
   | T_singleton of literal
   | T_abstraction of ty_expr abstraction
+  | T_for_all of ty_expr abstraction
 
 and type_injection = {
   language : string ;
@@ -92,6 +93,8 @@ and module_with_unification_vars = Module_With_Unification_Vars of module'
 
 and module_fully_typed = Module_Fully_Typed of module'
 
+and attribute = { inline: bool ; no_mutation: bool }
+
 (* A Declaration_constant is described by
  *   a name + a type-annotated expression
  *   a boolean indicating whether it should be inlined
@@ -101,7 +104,7 @@ and declaration_constant = {
     name : string option ;
     binder : expression_variable ;
     expr : expression ;
-    inline : bool ;
+    attr : attribute ;
   }
 
 and declaration_type = {
@@ -156,6 +159,7 @@ and expression_content =
   | E_mod_in of mod_in
   | E_mod_alias of expr mod_alias
   | E_raw_code of raw_code
+  | E_type_inst of type_inst
   (* Variant *)
   | E_constructor of constructor (* For user defined constructors *)
   | E_matching of matching
@@ -164,6 +168,11 @@ and expression_content =
   | E_record_accessor of record_accessor
   | E_record_update   of record_update
   | E_module_accessor of expression module_access
+
+and type_inst = {
+    forall: expression ;
+    type_: type_expression ;
+  }
 
 and constant = {
     cons_name: constant' ;
@@ -184,7 +193,7 @@ and let_in = {
     let_binder: expression_variable ;
     rhs: expression ;
     let_result: expression ;
-    inline : bool ;
+    attr: attribute ;
   }
 
 and mod_in = {

@@ -13,6 +13,7 @@ let location_to_yojson loc = Location.to_yojson loc
 
 type attribute = {
   inline: bool ;
+  no_mutation: bool;
 }
 
 
@@ -48,6 +49,7 @@ and type_content =
   | T_module_accessor of ty_expr module_access
   | T_singleton       of literal
   | T_abstraction     of ty_expr abstraction
+  | T_for_all         of ty_expr abstraction
 
 and rows = { fields : row_element label_map ; layout : layout option }
 
@@ -94,7 +96,7 @@ and let_in = {
     let_binder: ty_expr binder ;
     rhs: expression ;
     let_result: expression ;
-    inline: bool ;
+    attr: attribute ;
   }
 
 and mod_in = {
