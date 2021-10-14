@@ -419,6 +419,8 @@ module Free_longident :
     match e.expression_content with
     | E_variable variable ->
       VarSet.singleton (make_v variable)
+    | E_type_inst { forall; type_ = _ } ->
+      self path forall
     | E_literal _ | E_raw_code _ ->
       VarSet.empty
     | E_constant {arguments} ->
@@ -480,7 +482,7 @@ module Free_longident :
   and get_fv_module : _ -> module_fully_typed -> VarSet.t = fun path (Module_Fully_Typed p) ->
     let aux = fun (x : declaration Location.wrap) ->
       match Location.unwrap x with
-      | Declaration_constant {binder=_; expr ; inline=_} ->
+      | Declaration_constant {binder=_; expr ; attr=_} ->
         get_fv_expr path expr
       | Declaration_module {module_binder=_;module_} ->
         get_fv_module path module_
