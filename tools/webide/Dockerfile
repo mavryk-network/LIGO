@@ -1,36 +1,47 @@
-FROM node:12-alpine as builder
+# How to build:
+#
+# docker build ../../ -f Dockerfile --build-arg EXAMPLES_DIR_SRC=src/test/examples
+FROM node:16-buster-slim as stage1
 
 ARG EXAMPLES_DIR_SRC
 ARG EXAMPLES_DIR_DEST=packages/client/examples
+ARG GITLAB_TOKEN="AKeHhbr-3_2p-mkaah3C"
 
+RUN apt-get update && apt-get -y install perl6 libev-dev perl pkg-config libgmp-dev libhidapi-dev m4 libcap-dev bubblewrap rsync jq curl
+
+
+# Download the past 5 releases
+FROM stage1 as stage2
 WORKDIR /app
+COPY tools/webide/bin/fetch_ligo_releases.sh fetch_ligo_releases.sh
+ENV GITLAB_TOKEN=$GITLAB_TOKEN
+ENV WORKING_DIR="/app"
+RUN /app/fetch_ligo_releases.sh
+RUN rm /app/fetch_ligo_releases.sh
 
-COPY package.json package.json
-COPY yarn.lock yarn.lock
-COPY tsconfig.json tsconfig.json
-COPY packages/client packages/client
-COPY packages/server packages/server
+# Copy source
+FROM stage2 as stage3
+COPY tools/webide/package.json package.json
+COPY tools/webide/yarn.lock yarn.lock
+COPY tools/webide/tsconfig.json tsconfig.json
+COPY tools/webide/packages/client packages/client
+COPY tools/webide/packages/server packages/server
 COPY $EXAMPLES_DIR_SRC $EXAMPLES_DIR_DEST
 
+# Build
+FROM stage3 as stage4
 ENV EXAMPLES_DIR=/app/$EXAMPLES_DIR_DEST
-
-RUN yarn install
+RUN yarn
+FROM stage4 as stage5
 RUN yarn workspaces run build
 
-FROM node:12-buster
+# Copy build to app
+FROM stage5 as stage6
+COPY --from=stage5 /app/packages/client/build /app/client/build
+COPY --from=stage5 /app/packages/server/dist/src /app/server/dist
 
-WORKDIR /app
-
-RUN apt-get update && apt-get -y install perl6 libev-dev perl pkg-config libgmp-dev libhidapi-dev m4 libcap-dev bubblewrap rsync
-
-COPY ligo_deb10.deb /tmp/ligo_deb10.deb
-RUN dpkg -i /tmp/ligo_deb10.deb && rm /tmp/ligo_deb10.deb
-
-COPY --from=builder /app/packages/client/build /app/client/build
-COPY --from=builder /app/node_modules /app/node_modules
-COPY --from=builder /app/packages/server/dist/src /app/server/dist
-
+# Run the backend server
+EXPOSE 8080
 ENV STATIC_ASSETS /app/client
 ENV LIGO_CMD /bin/ligo
-
-ENTRYPOINT [ "node", "server/dist/index.js" ]
+ENTRYPOINT [ "node", "/app/server/dist/index.js" ]

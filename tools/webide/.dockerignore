@@ -1,0 +1,17 @@
+.git
+.devcontainer
+changelog
+docker
+gitlab-pages
+nix
+scripts
+tools/compact-ligo-ide
+tools/emacs
+tools/instant-editor
+tools/ligo-snippets
+tools/lsp
+tools/vim
+tools/webide/node_modules
+tools/webide/packages/client/node_modules
+tools/webide/packages/server/node_modules
+vendors

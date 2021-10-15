@@ -1,13 +1,15 @@
 # Quick Start
 
+> NOTE: This project uses Yarn workspaces: https://classic.yarnpkg.com/en/docs/cli/workspace
+> As such, please do NOT use npm. Also, use the "yarn workspace" command when working with
+> the client or server packages
+
 1. Install `yarn`
 1. Run `yarn` to install dependencies
 1. Install Ligo compiler by following [Ligo installation instructions][install-ligo]
 1. Go to `packages/server/` directory
 1. Run `yarn start` to start the development server
 1. Open http://localhost:8080
-
-> NOTE: Its important NOT to use NPM for this project. You've been warned. :)
 
 # Dependency on Examples
 
