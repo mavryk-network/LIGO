@@ -775,6 +775,47 @@ let force_access = ([key, moves]: [address, register]): move => {
 
 </Syntax>
 
+There is another way to read a value from a map using the `find` function.
+This is not safe because `find` raises an exception if key is not found in the map,
+Use this function with care, use it only if you are sure that the key will be present in the map.
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=maps
+
+const unsafe_access : move = Map.find (key, moves) // This raises an exception if key is not present in map
+
+```
+
+</Syntax>
+<Syntax syntax="cameligo">
+
+```cameligo group=maps
+
+let unsafe_access : move = Map.find key moves // This raises an exception if key is not present in map
+
+```
+
+</Syntax>
+<Syntax syntax="reasonligo">
+
+```reasonligo group=maps
+
+let unsafe_access : move = Map.find (key, moves); // This raises an exception if key is not present in map
+
+```
+
+</Syntax>
+<Syntax syntax="jsligo">
+
+```jsligo group=maps
+
+let unsafe_access : move = Map.find (key, moves); // This raises an exception if key is not present in map 
+
+```
+
+</Syntax>
+
 
 ### Updating a Map
 
@@ -1263,7 +1304,7 @@ value>" as address)` means that we cast a string into an address.
 ### Accessing Values
 
 If we want to access a move from our `register` above, we can use the
-postfix `[]` operator to read the associated `move` value. However,
+`find_opt` function to read the associated `move` value. However,
 the value we read is an optional value (in our case, of type `option
 (move)`), to account for a missing key. Here is an example:
 
@@ -1272,7 +1313,14 @@ the value we read is an optional value (in our case, of type `option
 <Syntax syntax="pascaligo">
 
 ```pascaligo group=big_maps
-const my_balance : option (move) =
+const my_balance_opt : option (move) =
+  Big_map.find_opt (("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address), moves)
+```
+
+We can use the postfix `[]` operator also
+
+```pascaligo group=big_maps
+const my_balance_opt : option (move) =
   moves [("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address)]
 ```
 
@@ -1280,7 +1328,7 @@ const my_balance : option (move) =
 <Syntax syntax="cameligo">
 
 ```cameligo group=big_maps
-let my_balance : move option =
+let my_balance_opt : move option =
   Big_map.find_opt ("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address) moves
 ```
 
@@ -1288,7 +1336,7 @@ let my_balance : move option =
 <Syntax syntax="reasonligo">
 
 ```reasonligo group=big_maps
-let my_balance : option (move) =
+let my_balance_opt : option (move) =
   Big_map.find_opt ("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address, moves);
 ```
 
@@ -1296,12 +1344,48 @@ let my_balance : option (move) =
 <Syntax syntax="jsligo">
 
 ```jsligo group=big_maps
-let my_balance: option<move> =
+let my_balance_opt: option<move> =
   Big_map.find_opt("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" as address, moves);
 ```
 
 </Syntax>
 
+We can also use the `find` function to read a value from big map.
+The `find` function is not safe because it raises an exception if key is not found in the big map,
+Use this function with care, use it only if you are sure that the key will be present in the big map.
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=big_maps
+const my_balance :  move =
+  Big_map.find (("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address), moves) // This raises an exception if key is not present in map
+```
+
+</Syntax>
+<Syntax syntax="cameligo">
+
+```cameligo group=big_maps
+let my_balance : move =
+  Big_map.find ("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address) moves // This raises an exception if key is not present in map
+```
+
+</Syntax>
+<Syntax syntax="reasonligo">
+
+```reasonligo group=big_maps
+let my_balance : move =
+  Big_map.find ("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address, moves); // This raises an exception if key is not present in map
+```
+
+</Syntax>
+<Syntax syntax="jsligo">
+
+```jsligo group=big_maps
+let my_balance: move =
+  Big_map.find("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" as address, moves); // This raises an exception if key is not present in map
+```
+
+</Syntax>
 
 ### Updating Big Maps
 

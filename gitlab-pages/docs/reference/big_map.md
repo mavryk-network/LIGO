@@ -166,6 +166,24 @@ Because the key may be missing in the big map, the result is an
 *optional value*.
 
 
+<SyntaxTitle syntax="pascaligo">
+function find : 'key -> big_map ('key, 'value) -> 'value
+</SyntaxTitle>
+<SyntaxTitle syntax="cameligo">
+val find : 'key -> ('key, 'value) big_map -> 'value
+</SyntaxTitle>
+<SyntaxTitle syntax="reasonligo">
+let find: ('key, big_map ('key, 'value)) => 'value
+</SyntaxTitle>
+<SyntaxTitle syntax="jsligo">
+let find: (key: &apos;key, big_map: big_map &lt;&apos;key, &apos;value&gt;) => &apos;value
+</SyntaxTitle>
+
+Retrieve a value from a big map with the given key. 
+
+Note: This function raises an exception if key is not found in the big map
+
+
 <Syntax syntax="pascaligo">
 
 ```pascaligo group=big_map

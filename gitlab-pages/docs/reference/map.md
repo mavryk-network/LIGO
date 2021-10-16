@@ -154,6 +154,23 @@ Retrieve a (option) value from a map with the given key. Returns `None` if the
 key is missing and the value otherwise.
 
 
+<SyntaxTitle syntax="pascaligo">
+function find : 'key -> map ('key, 'value) -> 'value
+</SyntaxTitle>
+<SyntaxTitle syntax="cameligo">
+val find : 'key -> ('key, 'value) map -> 'value
+</SyntaxTitle>
+<SyntaxTitle syntax="reasonligo">
+let find : ('key, map ('key, 'value)) => 'value
+</SyntaxTitle>
+<SyntaxTitle syntax="jsligo">
+let find : (key: 'key, map: map &lt;'key, 'value&gt;) => 'value
+</SyntaxTitle>
+
+Retrieve a value from a map with the given key. 
+Note: This function raises an exception if key is not found in the map
+
+
 <Syntax syntax="pascaligo">
 
 ```pascaligo group=maps
