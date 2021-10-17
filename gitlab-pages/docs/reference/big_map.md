@@ -166,6 +166,46 @@ Because the key may be missing in the big map, the result is an
 *optional value*.
 
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=big_map
+const my_balance_opt : option (move) =
+  Big_map.find_opt (("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address), moves)
+```
+
+Alternatively:
+
+```pascaligo group=big_map
+const my_balance_alternative : option (move) =
+  moves [("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address)];
+```
+
+</Syntax>
+<Syntax syntax="cameligo">
+
+```cameligo group=big_map
+let my_balance_opt : move option =
+  Big_map.find_opt ("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address) moves
+```
+
+</Syntax>
+<Syntax syntax="reasonligo">
+
+```reasonligo group=big_map
+let my_balance_opt: option (move) =
+  Big_map.find_opt("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN": address, moves);
+```
+
+</Syntax>
+<Syntax syntax="jsligo">
+
+```jsligo group=big_map
+let my_balance_opt: option <move> =
+  Big_map.find_opt(("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" as address), moves);
+```
+
+</Syntax>
+
 <SyntaxTitle syntax="pascaligo">
 function find : 'key -> big_map ('key, 'value) -> 'value
 </SyntaxTitle>
@@ -183,43 +223,35 @@ Retrieve a value from a big map with the given key.
 
 Note: This function raises an exception if key is not found in the big map
 
-
 <Syntax syntax="pascaligo">
 
 ```pascaligo group=big_map
-const my_balance : option (move) =
-  Big_map.find_opt (("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address), moves)
-```
-
-Alternatively:
-
-```pascaligo group=big_map
-const my_balance_alternative : option (move) =
-  moves [("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address)];
+const my_balance : move =
+  Big_map.find (("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address), moves)
 ```
 
 </Syntax>
 <Syntax syntax="cameligo">
 
 ```cameligo group=big_map
-let my_balance : move option =
-  Big_map.find_opt ("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address) moves
+let my_balance : move =
+  Big_map.find ("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address) moves
 ```
 
 </Syntax>
 <Syntax syntax="reasonligo">
 
 ```reasonligo group=big_map
-let my_balance: option (move) =
-  Big_map.find_opt("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN": address, moves);
+let my_balance: move =
+  Big_map.find("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN": address, moves);
 ```
 
 </Syntax>
 <Syntax syntax="jsligo">
 
 ```jsligo group=big_map
-let my_balance: option <move> =
-  Big_map.find_opt(("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" as address), moves);
+let my_balance: move =
+  Big_map.find(("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" as address), moves);
 ```
 
 </Syntax>

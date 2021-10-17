@@ -776,13 +776,14 @@ let force_access = ([key, moves]: [address, register]): move => {
 </Syntax>
 
 There is another way to read a value from a map using the `find` function.
-This is not safe because `find` raises an exception if key is not found in the map,
-Use this function with care, use it only if you are sure that the key will be present in the map.
+This is not safe because `find` raises an exception if key is not found in the map.
+> ⚠️ Use it only if you are sure that the key will be present in the big map.
 
 <Syntax syntax="pascaligo">
 
 ```pascaligo group=maps
 
+const key : address = ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address)
 const unsafe_access : move = Map.find (key, moves) // This raises an exception if key is not present in map
 
 ```
@@ -792,6 +793,7 @@ const unsafe_access : move = Map.find (key, moves) // This raises an exception i
 
 ```cameligo group=maps
 
+let key : address = ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address)
 let unsafe_access : move = Map.find key moves // This raises an exception if key is not present in map
 
 ```
@@ -801,6 +803,7 @@ let unsafe_access : move = Map.find key moves // This raises an exception if key
 
 ```reasonligo group=maps
 
+let key : address = ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address);
 let unsafe_access : move = Map.find (key, moves); // This raises an exception if key is not present in map
 
 ```
@@ -810,6 +813,7 @@ let unsafe_access : move = Map.find (key, moves); // This raises an exception if
 
 ```jsligo group=maps
 
+let key : address = ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" as address);
 let unsafe_access : move = Map.find (key, moves); // This raises an exception if key is not present in map 
 
 ```
@@ -1351,14 +1355,14 @@ let my_balance_opt: option<move> =
 </Syntax>
 
 We can also use the `find` function to read a value from big map.
-The `find` function is not safe because it raises an exception if key is not found in the big map,
-Use this function with care, use it only if you are sure that the key will be present in the big map.
+The `find` function is not safe because it raises an exception if key is not found in the big map.
+> ⚠️ Use it only if you are sure that the key will be present in the big map.
 
 <Syntax syntax="pascaligo">
 
 ```pascaligo group=big_maps
 const my_balance :  move =
-  Big_map.find (("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address), moves) // This raises an exception if key is not present in map
+  Big_map.find (("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address), moves) // This raises an exception if key is not present in big map
 ```
 
 </Syntax>
@@ -1366,7 +1370,7 @@ const my_balance :  move =
 
 ```cameligo group=big_maps
 let my_balance : move =
-  Big_map.find ("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address) moves // This raises an exception if key is not present in map
+  Big_map.find ("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address) moves // This raises an exception if key is not present in big map
 ```
 
 </Syntax>
@@ -1374,7 +1378,7 @@ let my_balance : move =
 
 ```reasonligo group=big_maps
 let my_balance : move =
-  Big_map.find ("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address, moves); // This raises an exception if key is not present in map
+  Big_map.find ("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address, moves); // This raises an exception if key is not present in big map
 ```
 
 </Syntax>
@@ -1382,7 +1386,7 @@ let my_balance : move =
 
 ```jsligo group=big_maps
 let my_balance: move =
-  Big_map.find("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" as address, moves); // This raises an exception if key is not present in map
+  Big_map.find("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" as address, moves); // This raises an exception if key is not present in big map
 ```
 
 </Syntax>

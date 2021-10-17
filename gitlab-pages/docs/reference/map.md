@@ -154,6 +154,46 @@ Retrieve a (option) value from a map with the given key. Returns `None` if the
 key is missing and the value otherwise.
 
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=maps
+const my_balance_opt : option (move) =
+  Map.find_opt (("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address), moves)
+```
+
+Alternatively:
+
+```pascaligo group=maps
+const my_balance_alternative_opt : option (move) =
+  moves [("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address)];
+```
+
+</Syntax>
+<Syntax syntax="cameligo">
+
+```cameligo group=maps
+let my_balance_opt : move option =
+  Map.find_opt ("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address) moves
+```
+
+</Syntax>
+<Syntax syntax="reasonligo">
+
+```reasonligo group=maps
+let my_balance_opt : option (move) =
+  Map.find_opt ("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address, moves);
+```
+
+</Syntax>
+<Syntax syntax="jsligo">
+
+```jsligo group=maps
+let my_balance_opt: option<move> =
+  Map.find_opt(("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" as address), moves);
+```
+
+</Syntax>
+
 <SyntaxTitle syntax="pascaligo">
 function find : 'key -> map ('key, 'value) -> 'value
 </SyntaxTitle>
@@ -168,45 +208,38 @@ let find : (key: 'key, map: map &lt;'key, 'value&gt;) => 'value
 </SyntaxTitle>
 
 Retrieve a value from a map with the given key. 
-Note: This function raises an exception if key is not found in the map
 
+Note: This function raises an exception if key is not found in the map
 
 <Syntax syntax="pascaligo">
 
 ```pascaligo group=maps
-const my_balance : option (move) =
-  Map.find_opt (("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address), moves)
-```
-
-Alternatively:
-
-```pascaligo group=maps
-const my_balance_alternative : option (move) =
-  moves [("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address)];
+const my_balance : move =
+  Map.find (("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address), moves)
 ```
 
 </Syntax>
 <Syntax syntax="cameligo">
 
 ```cameligo group=maps
-let my_balance : move option =
-  Map.find_opt ("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address) moves
+let my_balance : move =
+  Map.find ("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address) moves
 ```
 
 </Syntax>
 <Syntax syntax="reasonligo">
 
 ```reasonligo group=maps
-let my_balance : option (move) =
-  Map.find_opt ("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address, moves);
+let my_balance : move =
+  Map.find ("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address, moves);
 ```
 
 </Syntax>
 <Syntax syntax="jsligo">
 
 ```jsligo group=maps
-let my_balance: option<move> =
-  Map.find_opt(("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" as address), moves);
+let my_balance: move =
+  Map.find(("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" as address), moves);
 ```
 
 </Syntax>

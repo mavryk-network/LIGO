@@ -465,6 +465,7 @@ module Tree_abstraction = struct
       | "map_fold"     -> some_deprecated C_MAP_FOLD      (* Deprecated *)
       | "map_mem"      -> some_deprecated C_MAP_MEM       (* Deprecated *)
       | "map_size"     -> some_deprecated C_SIZE          (* Deprecated *)
+      | "Map.find"     -> some_deprecated C_MAP_FIND     (* Deprecated *)
 
 
       (* Bitwise module *)
