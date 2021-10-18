@@ -191,10 +191,6 @@ docker-push:
 webide-push:
   extends: .docker-image
   stage: push
-  dependencies:
-    - webide-docker
-  needs:
-    - webide-docker
   rules:
     # Only deploy docker when from the dev branch or a merge request AND on the canonical ligolang/ligo repository
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH == "ligolang/ligo"'
