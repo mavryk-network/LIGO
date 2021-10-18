@@ -14,4 +14,4 @@ done
 LATEST=`cat ${WORKING_DIR}/ligo-releases.json | head -1`
 LIGO_VERSION=`echo ${LATEST} | jq -r .version`
 LIGO_CMD="/bin/ligo-${LIGO_VERSION}"
-ln -sf LIGO_CMD /bin/ligo
+ln -sf $LIGO_CMD /bin/ligo

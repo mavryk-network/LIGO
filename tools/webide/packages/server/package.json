@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "nodemon -r @ts-tools/node/r -r tsconfig-paths/register ./src/index.ts",
-    "build": "tsc",
+    "build": "tsc --outDir dist",
     "test": "export DATA_DIR=/tmp && jest"
   },
   "devDependencies": {

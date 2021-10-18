@@ -37,7 +37,7 @@ const corsOptions: CorsOptions  = {
 const appRootDirectory =
   process.env['STATIC_ASSETS'] ||
   dirname(require.resolve('../../client/package.json'));
-const appBundleDirectory = join(appRootDirectory, 'build');
+  const appBundleDirectory = join(appRootDirectory, 'build');
 
 app.use(bodyParser.json());
 app.use(loggerMiddleware);

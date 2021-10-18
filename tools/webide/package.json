@@ -8,8 +8,10 @@
   ],
   "description": "",
   "scripts": {
-    "prestart": "cd packages/client && npm run build",
-    "start": ""
+    "start": "",
+    "build-docker": "docker build ../../ -f Dockerfile --build-arg EXAMPLES_DIR_SRC=src/test/examples -t ligo-webide",
+    "start-docker": "yarn run clean-docker && docker run -p 127.0.0.1:8080:8080 --name ligo-webide -it ligo-webide",
+    "clean-docker": "docker rm ligo-webide || true"
   },
   "repository": {
     "type": "git",

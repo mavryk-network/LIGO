@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { connect } from 'react-redux';
 import styled from 'styled-components';
 import { PushSpinner } from 'react-spinners-kit';
@@ -86,7 +86,7 @@ const CompileFunctionPaneComponent = (props) => {
           setShowSpinner(false);
         });
     }
-  }, [lastEditedTime, getDeclarationList, language, setCompileFunction, setError, showSpinner, code]);
+  }, [lastEditedTime]);
 
   return (
     <Container>

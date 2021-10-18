@@ -2,6 +2,7 @@ import { getListDeclaration } from '../../services/api';
 import { ActionType } from '../list-declaration';
 
 export const ListDeclarationAction = (syntax, code) => {
+  debugger
   return (dispatch) =>
     new Promise((resolve) => {
       getListDeclaration(syntax, code)

@@ -148,7 +148,7 @@ const MonacoComponent = (props) => {
     };
   }, [dispatch, store, theme]);
 
-  useEffect(() => { 
+  useEffect(() => {
     const compileFunctionHandler = (currentLine) => {
       if(code==='') {return}
       getDeclarationList(language, code).then((method: MethodType) => {
@@ -166,7 +166,7 @@ const MonacoComponent = (props) => {
       })
     }
     compileFunctionHandler(currentLineText) 
-  }, [currentLineText, code, getDeclarationList, setCompileFunction, dispatch, language, setError]);
+  }, []);
 
 
   return (
