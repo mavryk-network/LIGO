@@ -189,7 +189,7 @@ docker-push:
 #     - docker push "${LIGO_REGISTRY_FULL_NAME}"
 
 webide-push:
-  extends: .docker-image
+  image: docker:stable
   stage: push
   rules:
     # Only deploy docker when from the dev branch or a merge request AND on the canonical ligolang/ligo repository
@@ -201,7 +201,7 @@ webide-push:
       when: always
   script:
     - echo "${CI_BUILD_TOKEN}" | docker login -u gitlab-ci-token --password-stdin registry.gitlab.com
-    - yarn run build-docker
+    - docker build ../../ -f Dockerfile --build-arg EXAMPLES_DIR_SRC=src/test/examples -t "${WEBIDE_IMAGE_TAG}"
     - docker push "${WEBIDE_IMAGE_TAG}"
   after_script:
     - docker image rm "${WEBIDE_IMAGE_TAG}" >/dev/null 2>&1 || true
