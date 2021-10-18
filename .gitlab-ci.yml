@@ -147,22 +147,6 @@ docker:
     paths:
       - ligo.tar.gz
 
-webide-docker:
-  extends: .nix
-  stage: tooling
-  dependencies:
-    - docker_extract
-  only:
-    - merge_requests
-    - dev
-    - /^.*-run-dev$/
-  script:
-    - nix-build nix -A ligo-editor-docker
-    - cp -L result webide.tar.gz
-  artifacts:
-    paths:
-      - webide.tar.gz
-
 .docker-image:
   stage: push
   image: docker:19.03.5
@@ -221,8 +205,7 @@ webide-push:
       when: always
   script:
     - echo "${CI_BUILD_TOKEN}" | docker login -u gitlab-ci-token --password-stdin registry.gitlab.com
-    - docker load -i=./webide.tar.gz
-    - docker tag ligo-editor "${WEBIDE_IMAGE_TAG}"
+    - yarn run build-docker
     - docker push "${WEBIDE_IMAGE_TAG}"
   after_script:
     - docker image rm "${WEBIDE_IMAGE_TAG}" >/dev/null 2>&1 || true
