@@ -1,3 +1,4 @@
+module H = Helpers
 module FV = Helpers.Free_variables
 
 open Ast_typed
@@ -59,16 +60,32 @@ and check_recursive_call_in_matching ~raise = fun n final_path c ->
   | Match_record {fields = _; body; tv = _} ->
     check_recursive_call ~raise n final_path body
 
-
-let check_tail_expression ~raise : expression -> expression = fun e ->
+let check_tail_expression' ~raise : expression -> expression = fun e ->
   let return expression_content = { e with expression_content } in
   match e.expression_content with
-  | E_recursive {fun_name; lambda} as e-> (
-    let () = check_recursive_call ~raise fun_name true lambda.result in
-    return e
-    )
+  | E_recursive { fun_name ; lambda } as ec ->
+     let () = check_recursive_call ~raise fun_name true lambda.result in
+     return ec
   | e -> return e
 
+let rec mapper ~raise = (fun () e -> match e.expression_content with
+  | E_recursive {fun_name; lambda} -> (
+    let e = try_with (fun ~raise -> let () = check_recursive_call ~raise fun_name true lambda.result in e)
+              (function
+               | `Self_ast_typed_rec_call (_name, _loc) ->
+                  let e = Anf.transform_recursive e in
+                  H.map_expression (check_tail_expression' ~raise) e
+               | t -> (raise.raise t : expression)) in
+    (false, (), e))
+  | _ -> (true, (), e))
+
+and check_tail_expression ~raise : expression -> expression = fun e ->
+  let (), e = H.fold_map_expression (mapper ~raise) () e in
+  e
+
+and check_tail_module ~raise : module_fully_typed -> module_fully_typed = fun m ->
+  let (), m = H.fold_map_module (mapper ~raise) () m in
+  m
 
 let remove_rec_expression : expression -> expression = fun e ->
   let return expression_content = { e with expression_content } in

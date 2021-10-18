@@ -6,10 +6,10 @@ let expression_obj ~raise = Obj_ligo.check_obj_ligo ~raise
 let anf_module = Anf.transform_module
 
 let all_module_passes ~add_warning ~raise = [
-  anf_module ;
+  (* anf_module ; *)
   Unused.unused_map_module ~add_warning;
   Muchused.muchused_map_module ~add_warning;
-  Helpers.map_module @@ Recursion.check_tail_expression ~raise ;
+  Recursion.check_tail_module ~raise ;
   Helpers.map_module @@ Recursion.remove_rec_expression ;
   Helpers.map_module @@ Pattern_matching_simpl.peephole_expression ~raise ;
 ]

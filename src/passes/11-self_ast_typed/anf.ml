@@ -259,7 +259,7 @@ let  rec transform_recursive (expr : expression) : expression =
      let in_type, out_type = get_t_function_exn fun_type in
      answer_type_cell := out_type;
      let result = transform_expression result in
-     print_endline (Format.asprintf "t: %a" PP.expression (reduce result));
+     (* print_endline (Format.asprintf "t: %a" PP.expression (reduce result)); *)
      let k_binder, result, pre_type, post_type = match result.expression_content, result.type_expression.type_content with
        | E_lambda { binder ; result }, T_arrow { type1 = pre_type; type2 = post_type } -> binder, result, pre_type, post_type
        | _ -> failwith "cont expected" in
@@ -272,8 +272,8 @@ let  rec transform_recursive (expr : expression) : expression =
      let transform = e_a_recursive { fun_name ; fun_type ; lambda = { binder = pair_binder ; result } } in
      let out_binder = var_name () in
      let id_binder = var_name () in
-     print_endline (Format.asprintf "pt: %a" PP.type_expression pre_type);
-     print_endline (Format.asprintf "ot: %a" PP.type_expression out_type);
+     (* print_endline (Format.asprintf "pt: %a" PP.type_expression pre_type);
+      * print_endline (Format.asprintf "ot: %a" PP.type_expression out_type); *)
      let id_expr = e_a_lambda { binder = id_binder ; result = e_a_variable id_binder out_type } out_type out_type in
      let transform = e_a_lambda { binder = out_binder ; result = e_a_let_in fun_name transform
                                                                    (e_a_application (e_a_variable fun_name fun_type)
@@ -287,9 +287,9 @@ let  rec transform_recursive (expr : expression) : expression =
      (* let binder = var_name () in
       * let transform = e_a_application transform (e_a_lambda { binder ; result = e_a_variable binder expr.type_expression } expr.type_expression expr.type_expression) expr.type_expression in *)
      (* let transform = reduce (reduce (reduce (reduce (reduce (reduce (reduce (reduce (reduce (reduce (reduce transform)))))))))) in *)
-     print_endline (Format.asprintf "before: %a" Ast_typed.PP.type_expression expr_type);
+     (* print_endline (Format.asprintf "before: %a" Ast_typed.PP.type_expression expr_type); *)
      let transform = { transform with type_expression = expr_type } in
-     print_endline (Format.asprintf "after : %a %a" Ast_typed.PP.type_expression transform.type_expression Ast_typed.PP.expression transform);
+     (* print_endline (Format.asprintf "after : %a %a" Ast_typed.PP.type_expression transform.type_expression Ast_typed.PP.expression transform); *)
      (false, (), transform)
      (* failwith "foo" *)
   | _ -> (true, (), expr)) () expr in

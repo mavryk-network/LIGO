@@ -31,11 +31,6 @@ let%expect_test _ =
 
   run_ligo_bad [ "compile" ; "contract" ; "../../test/contracts/negative/error_no_tail_recursive_function.mligo"; "--entry-point"; "unvalid"];
   [%expect {|
-    File "../../test/contracts/negative/error_no_tail_recursive_function.mligo", line 2, characters 14-21:
-      1 | let rec unvalid (n:int):int =
-      2 |     let res = unvalid (n) in
-      3 |     res + 1
-
     Recursive call not in tail position.
     The value of a recursive call must be immediately returned by the defined function. |}];
 

@@ -2052,3 +2052,16 @@ let%expect_test _ =
       storage timestamp ;
       code { DROP ; PUSH timestamp 0 ; NIL operation ; PAIR } }
   |}]
+
+(* CPS translation on rec. functions *)
+let%expect_test _ =
+  run_ligo_good [ "compile" ; "expression" ; "cameligo" ; "zip ([1;2;3], [\"A\"; \"B\"; \"C\"])" ; "--init-file" ; contract "cps_for_rec.mligo" ] ;
+  [%expect {|
+    { Pair 1 "A" ; Pair 2 "B" ; Pair 3 "C" }
+  |}]
+
+let%expect_test _ =
+  run_ligo_good [ "compile" ; "expression" ; "cameligo" ; "fact 5" ; "--init-file" ; contract "cps_for_rec.mligo" ] ;
+  [%expect {|
+    120
+  |}]
