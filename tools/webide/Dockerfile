@@ -7,7 +7,7 @@ ARG EXAMPLES_DIR_SRC
 ARG EXAMPLES_DIR_DEST=packages/client/examples
 ARG GITLAB_TOKEN="AKeHhbr-3_2p-mkaah3C"
 
-RUN apt-get update && apt-get -y install perl6 libev-dev perl pkg-config libgmp-dev libhidapi-dev m4 libcap-dev bubblewrap rsync jq curl python3
+RUN apt-get update && apt-get -y install perl6 libev-dev perl pkg-config libgmp-dev libhidapi-dev m4 libcap-dev bubblewrap rsync jq curl python3 build-essential
 
 # Download the past 5 releases
 FROM stage1 as stage2
