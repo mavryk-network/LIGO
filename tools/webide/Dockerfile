@@ -28,7 +28,7 @@ COPY tools/webide/packages/server packages/server
 COPY $EXAMPLES_DIR_SRC $EXAMPLES_DIR_DEST
 
 # Build
-FROM stage3 as stage
+FROM stage3 as stage4
 RUN yarn
 FROM stage4 as stage5
 ENV EXAMPLES_DIR=/app/$EXAMPLES_DIR_DEST
