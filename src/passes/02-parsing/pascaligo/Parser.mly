@@ -155,11 +155,9 @@ brackets(X):
    latter returns a pair made of the first parsed item (the parameter
    [X]) and the rest of the sequence (possibly empty). This way, the
    OCaml typechecker can keep track of this information along the
-   static control-flow graph. The rule [sepseq] parses possibly empty
-   sequences of items separated by some token (e.g., a comma), and
-   rule [nsepseq] is for non-empty such sequences. See module [Utils]
-   for the types corresponding to the semantic actions of those rules.
- *)
+   static control-flow graph. The rule [nsepseq] is for non-empty such
+   sequences. See module [Utils] for the types corresponding to the
+   semantic actions of those rules.  *)
 
 (* Possibly empty sequence of items *)
 
@@ -178,12 +176,6 @@ nseq(X):
 nsepseq(X,Sep):
   X                    {                 $1,        [] }
 | X Sep nsepseq(X,Sep) { let h,t = $3 in $1, ($2,h)::t }
-
-(* Possibly empy separated sequence of items *)
-
-sepseq(X,Sep):
-  (**)           {    None }
-| nsepseq(X,Sep) { Some $1 }
 
 (* Inlines *)
 
@@ -222,7 +214,8 @@ open_type_decl:
   "type" type_name type_params? "is" type_expr {
     let stop   = type_expr_to_region $5 in
     let region = cover $1 stop in
-    let value  = {kwd_type   = $1;
+    let value  = {
+                  kwd_type   = $1;
                   name       = $2;
                   params     = $3;
                   kwd_is     = $4;

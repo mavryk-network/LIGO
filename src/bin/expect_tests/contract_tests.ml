@@ -1642,7 +1642,7 @@ const letin_nesting =
 const letin_nesting2 =
   lambda (x : int) return let y = 2 in let z = 3 in ADD(ADD(x , y) , z)
 const x =  match (+1 , (+2 , +3)) with
-            | (_,(x,_)) -> x
+            | (#2,(x,#3)) -> x
     |}];
 
   run_ligo_good ["print" ; "ast"; contract "letin.religo"];
@@ -1664,7 +1664,7 @@ const letin_nesting =
 const letin_nesting2 =
   lambda (x : int) return let y = 2 in let z = 3 in ADD(ADD(x , y) , z)
 const x =  match (+1 , (+2 , +3)) with
-            | (_,(x,_)) -> x
+            | (#2,(x,#3)) -> x
     |}];
 
   run_ligo_bad ["print" ; "ast-typed"; contract "existential.mligo"];
@@ -2031,3 +2031,48 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_good [ "run"; "run-function"; contract "assert.mligo"; "(None: unit option)"; "-e"; "some_with_error"];
   [%expect {| failwith("my custom error") |}]
+
+let%expect_test _ =
+  run_ligo_good [ "print" ; "ast-typed" ; contract "attributes.jsligo" ] ;
+  [%expect {|
+    const x = 1[@inline][@private]
+    const foo = lambda (a) return let test = ADD(2 ,
+    a)[@inline] in test[@inline][@private]
+    const y = 1[@private]
+    const bar = lambda (b) return let test = lambda (z) return ADD(ADD(2 ,
+    b) ,
+    z)[@inline] in (test)@(b)[@private]
+    const check = 4[@private] |}]
+
+(* literal type "casting" inside modules *)
+let%expect_test _ =
+  run_ligo_good [ "compile" ; "contract" ; contract "literal_type_cast.mligo" ] ;
+  [%expect {|
+    { parameter unit ;
+      storage timestamp ;
+      code { DROP ; PUSH timestamp 0 ; NIL operation ; PAIR } }
+  |}]
+
+(* JsLIGO export testing *)
+let%expect_test _ =
+  run_ligo_bad [ "compile" ; "contract" ; bad_contract "modules_export_type.jsligo" ] ;
+    [%expect {|
+      File "../../test/contracts/negative/modules_export_type.jsligo", line 5, characters 13-16:
+        4 |
+        5 | type a = Bar.foo
+
+      Type "foo" not found. |}];
+  run_ligo_bad [ "compile" ; "contract" ; bad_contract "modules_export_const.jsligo" ] ;
+    [%expect {|
+      File "../../test/contracts/negative/modules_export_const.jsligo", line 5, characters 12-15:
+        4 |
+        5 | let a = Bar.foo;
+
+      Variable "foo" not found. |}];
+  run_ligo_bad [ "compile" ; "contract" ; bad_contract "modules_export_namespace.jsligo" ] ;
+    [%expect {|
+      File "../../test/contracts/negative/modules_export_namespace.jsligo", line 7, characters 0-20:
+        6 |
+        7 | import Foo = Bar.Foo
+
+      Module "Foo" not found. |}]

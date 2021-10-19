@@ -22,6 +22,7 @@ and type_content =
   | T_module_accessor of ty_expr module_access
   | T_singleton of literal
   | T_abstraction of ty_expr abstraction
+  | T_for_all of ty_expr abstraction
 
 and type_injection = {
   language : string ;
@@ -92,7 +93,11 @@ and module_with_unification_vars = Module_With_Unification_Vars of module'
 
 and module_fully_typed = Module_Fully_Typed of module'
 
-and attribute = { inline: bool ; no_mutation: bool }
+and attribute = { inline: bool ; no_mutation: bool; public : bool }
+
+and type_attribute = { public : bool }
+
+and module_attribute = { public : bool }
 
 (* A Declaration_constant is described by
  *   a name + a type-annotated expression
@@ -109,11 +114,13 @@ and declaration_constant = {
 and declaration_type = {
     type_binder : type_variable ;
     type_expr   : type_expression ;
+    type_attr   : type_attribute
   }
 
 and declaration_module = {
     module_binder : module_variable ;
     module_       : module_fully_typed ;
+    module_attr   : module_attribute
   }
 
 and declaration' =
@@ -158,6 +165,7 @@ and expression_content =
   | E_mod_in of mod_in
   | E_mod_alias of expr mod_alias
   | E_raw_code of raw_code
+  | E_type_inst of type_inst
   (* Variant *)
   | E_constructor of constructor (* For user defined constructors *)
   | E_matching of matching
@@ -166,6 +174,11 @@ and expression_content =
   | E_record_accessor of record_accessor
   | E_record_update   of record_update
   | E_module_accessor of expression module_access
+
+and type_inst = {
+    forall: expression ;
+    type_: type_expression ;
+  }
 
 and constant = {
     cons_name: constant' ;
@@ -253,6 +266,7 @@ and expression_environment = environment_binding list
 and environment_binding = {
     expr_var: expression_variable ;
     env_elt: environment_element ;
+    public: bool;
   }
 
 and type_environment = type_environment_binding list
@@ -262,6 +276,7 @@ and type_or_kind = Ty of type_expression | Kind of unit
 and type_environment_binding = {
     type_variable: type_variable ;
     type_: type_or_kind ;
+    public: bool;
   }
 
 and module_environment = module_environment_binding list
@@ -269,6 +284,7 @@ and module_environment = module_environment_binding list
 and module_environment_binding = {
   module_variable : module_variable ;
   module_ : environment ;
+  public: bool;
 }
 and environment = {
   expression_environment: expression_environment ;

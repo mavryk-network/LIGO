@@ -60,7 +60,8 @@ let%expect_test _ =
     - test_map_get_and_update exited with value ().
     - test_add_mutez exited with value ().
     - test_sub_mutez exited with value ().
-    - test_div_mutez exited with value (). |}]
+    - test_div_mutez exited with value ().
+    - test_list_fold_left_sum exited with value (). |}]
 
 let%expect_test _ =
   run_ligo_good ["run"; "test" ; test "interpret_test_log.mligo" ] ;
@@ -201,6 +202,12 @@ let%expect_test _ =
     Everything at the top-level was executed.
     - test exited with value (). |}]
 
+let%expect_test _ =
+  run_ligo_good [ "run" ; "test" ; test "test_bigmap_compare.mligo" ] ;
+  [%expect {|
+    Everything at the top-level was executed.
+    - test exited with value (). |}]
+
 (* DEPRECATED
 let%expect_test _ =
   run_ligo_good [ "run" ; "test" ; test "test_bigmap_set.mligo" ] ;
@@ -320,7 +327,6 @@ let%expect_test _ =
     Trace:
     File "../../test/contracts/negative//interpreter_tests/test_trace2.mligo", line 12, characters 2-33 |}]
 
-
 let%expect_test _ =
   run_ligo_bad [ "run" ; "test" ; bad_test "test_mutation_loop.mligo" ; "--steps" ; "1000" ] ;
   [%expect {|
@@ -336,3 +342,25 @@ let%expect_test _ =
      18 |                                     failwith "Some mutation also passes the tests!"
 
     Test failed with "Some mutation also passes the tests!" |}]
+
+let%expect_test _ =
+  run_ligo_bad [ "run" ; "test" ; bad_test "test_source1.mligo" ] ;
+  [%expect {|
+    File "../../test/contracts/negative//interpreter_tests/test_source1.mligo", line 10, characters 18-45:
+      9 |   let () = Test.set_source addr in
+     10 |   let (_, _, _) = Test.originate main () 0tez in
+     11 |   ()
+
+    The source address is not an implicit account
+    KT1DStcZ1kqKBupmwQ23aRXeJ5cEXYbqATEe |}]
+
+let%expect_test _ =
+  run_ligo_bad [ "run" ; "test" ; bad_test "test_source2.mligo" ] ;
+  [%expect {|
+    File "../../test/contracts/negative//interpreter_tests/test_source2.mligo", line 10, characters 11-53:
+      9 |   let () = Test.set_source addr in
+     10 |   let () = Test.transfer_exn addr (Test.eval ()) 0tez in
+     11 |   ()
+
+    The source address is not an implicit account
+    KT1DStcZ1kqKBupmwQ23aRXeJ5cEXYbqATEe |}]

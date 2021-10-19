@@ -10,6 +10,8 @@ type file_name = string
 type module_name = string
 type graph = G.t * (Ligo_compile.Helpers.meta * Ligo_compile.Of_core.form * Buffer.t * (string * string) list) SMap.t
 
+module TopSort = Graph.Topological.Make(G)
+
 type 'a build_error = 'a 
 (* Build system *)
 
@@ -50,12 +52,12 @@ let solve_graph ~raise : graph -> file_name -> _ list =
       let elem = SMap.find v vertices in
       (v,elem)::order
     in
-    let order = Dfs.fold_component aux [] dep_g file_name in
+    let order = TopSort.fold aux dep_g [] in
     order
 
 let add_modules_in_env env deps =
   let aux env (module_name, (_,ast_typed_env)) = Ast_typed.(
-    let env = Environment.add_module module_name ast_typed_env env in
+    let env = Environment.add_module ~public:true module_name ast_typed_env env in
     env
   )
   in
@@ -90,7 +92,7 @@ let aggregate_contract ~raise order_deps asts_typed =
     let ast_typed =
       trace_option ~raise (build_corner_case __LOC__ "raise.raise to find typed module") @@
       SMap.find_opt file_name asts_typed in
-    (dep_types,Some (Location.wrap @@ (Ast_typed.Declaration_module {module_binder;module_=Ast_typed.Module_Fully_Typed ast_typed}: Ast_typed.declaration)))
+    (dep_types,Some (Location.wrap @@ (Ast_typed.Declaration_module {module_binder;module_=(Ast_typed.Module_Fully_Typed ast_typed);module_attr={public=true}}: Ast_typed.declaration)))
   in
   let _,header_list = List.fold_map_right ~f:add_modules ~init:(SMap.empty) @@ order_deps in
   let contract = List.fold_left ~f:(fun c a -> match a with Some a -> a::c | None -> c)
@@ -160,6 +162,20 @@ let build_mini_c ~raise ~add_warning : options:Compiler_options.t -> _ -> _ -> f
     let mini_c       = trace ~raise build_error_tracer @@ Ligo_compile.Of_typed.compile contract in
     (mini_c,env)
 
+let build_expression ~raise ~add_warning : options:Compiler_options.t -> string -> _ -> file_name option -> _ =
+  fun ~options syntax expression file_name ->
+    let (module_,env) = match file_name with
+      | Some init_file ->
+         let contract, env = combined_contract ~raise ~add_warning ~options syntax Env init_file in
+         (contract, env)
+      | None -> (Module_Fully_Typed [],options.init_env) in
+    let typed_exp,_     = Ligo_compile.Utils.type_expression ~raise ~options file_name syntax expression env in
+    let data, typed_exp = Self_ast_typed.monomorphise_expression typed_exp in
+    let _, module_      = Self_ast_typed.monomorphise_module_data data module_ in
+    let decl_list       = trace ~raise build_error_tracer @@ Ligo_compile.Of_typed.compile module_ in
+    let mini_c_exp      = Ligo_compile.Of_typed.compile_expression ~raise typed_exp in
+    mini_c_exp, decl_list
+
 let build_contract ~raise ~add_warning : options:Compiler_options.t -> string -> _ -> file_name -> _ =
   fun ~options syntax entry_point file_name ->
     let mini_c,_   = build_mini_c ~raise ~add_warning ~options syntax (Contract entry_point) file_name in
@@ -180,7 +196,8 @@ let build_contract_module ~raise ~add_warning : options:Compiler_options.t -> st
   let _, env = SMap.find file_name asts_typed in
   let contract = aggregate_contract ~raise order_deps asts_typed in
   let module_contract = Ast_typed.Declaration_module { module_binder = module_name;
-                                                       module_ = contract } in
+                                                       module_ = contract;
+                                                       module_attr = {public = true} } in
   let contract = Ast_typed.Module_Fully_Typed [Location.wrap module_contract] in
   let mini_c,map = trace ~raise build_error_tracer @@ Ligo_compile.Of_typed.compile_with_modules contract in
   (mini_c, map, contract, env)

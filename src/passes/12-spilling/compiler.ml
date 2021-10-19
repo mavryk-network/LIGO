@@ -306,6 +306,8 @@ let rec compile_type ~raise (t:AST.type_expression) : type_expression =
   | T_singleton _ ->
     raise.raise @@ corner_case ~loc:__LOC__ "Singleton uncaught"
   | T_abstraction _ ->
+    raise.raise @@ corner_case ~loc:__LOC__ "Abstraction type uncaught"
+  | T_for_all _ ->
     raise.raise @@ corner_case ~loc:__LOC__ "For all type uncaught"
 
 (* probably should use result monad for conformity? but these errors
@@ -341,9 +343,15 @@ let compile_record_matching ~raise expr' return k ({ fields; body; tv } : Ast_ty
     let fields =
       List.map
         ~f:(fun (l, (row_element : _ row_element_mini_c)) ->
-           let t = compile_type ~raise row_element.associated_type in
-           (fst (LMap.find l fields), t))
-        record_fields in
+          let t = compile_type ~raise row_element.associated_type in
+          let x = trace_option ~raise
+            (corner_case ~loc:__LOC__ ("missing label in record"))
+            (LMap.find_opt l fields)
+          in
+          (fst x, t)
+        )
+        record_fields
+    in
     let body = k body in
     return (E_let_tuple (expr', (fields, body)))
   | _ ->
@@ -352,7 +360,11 @@ let compile_record_matching ~raise expr' return k ({ fields; body; tv } : Ast_ty
     let rec aux expr (tree : Layout.record_tree) body =
       match tree.content with
       | Field l ->
-        let var = fst (LMap.find l fields) in
+        let x = trace_option ~raise
+          (corner_case ~loc:__LOC__ ("missing label in record"))
+          (LMap.find_opt l fields)
+        in
+        let var = fst x in
         return @@ E_let_in (expr, false, ((var, tree.type_), body))
       | Pair (x, y) ->
         let x_var = Location.wrap (Var.fresh ()) in
@@ -388,6 +400,8 @@ and compile_expression ~raise ?(module_env = SMap.empty) (ae:AST.expression) : e
   let return ?(tv = tv) expr =
     Combinators.Expression.make_tpl ~loc:ae.location (expr, tv) in
   match ae.expression_content with
+  | E_type_inst _ ->
+    raise.raise @@ corner_case ~loc:__LOC__ (Format.asprintf "Type instance: This program should be monomorphised")
   | E_let_in {let_binder; rhs; let_result; attr = { inline } } ->
     let rhs' = self rhs in
     let result' = self let_result in
@@ -730,7 +744,7 @@ and compile_expression ~raise ?(module_env = SMap.empty) (ae:AST.expression) : e
         let module_names = aux element in
         (module_var :: module_names)
       | E_variable var ->
-        [Var.to_name @@ Location.unwrap @@ var]
+        [Format.asprintf "%a" Var.pp @@ Location.unwrap var]
       | E_record_accessor {record; path} ->
         let module_names = aux record in
         let Label module_var = path in
@@ -938,15 +952,15 @@ and compile_module_as_record ~raise module_name (module_env : _ SMap.t) (lst : A
     let aux (r,env) (cur : AST.declaration ) =
       match cur with
       | Declaration_constant { binder ; expr; attr=_ } ->
-        let l = Var.to_name @@ Location.unwrap binder in
-        let attr : AST.attribute = { inline = false ; no_mutation = false } in
+        let l = Format.asprintf "%a" Var.pp @@ Location.unwrap binder in
+        let attr : AST.attribute = { inline = false ; no_mutation = false; public = true } in
         ((Label l,(expr,attr))::r,env)
       | Declaration_type _ty -> (r,env)
       | Declaration_module {module_binder; module_} ->
         let l = module_binder in
         let r',_ = module_as_record env ~raise module_ in
         let env = SMap.add l (get_type_expression r') env in
-        let attr : AST.attribute = { inline = false ; no_mutation = false } in
+        let attr : AST.attribute = { inline = false ; no_mutation = false; public = true } in
         ((Label l,(r',attr))::r,env)
       | Module_alias {alias; binders} ->
         let l = alias in
@@ -959,7 +973,7 @@ and compile_module_as_record ~raise module_name (module_env : _ SMap.t) (lst : A
         let module_type = get_type_expression module_expr in
         let env = SMap.add l module_type env in
         let r' = module_expr in
-        let attr : AST.attribute = { inline = true ; no_mutation = false } in
+        let attr : AST.attribute = { inline = true ; no_mutation = false ; public = true } in
         ((Label l,(r',attr))::r,env)
 
     in
