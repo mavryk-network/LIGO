@@ -31,7 +31,7 @@ COPY $EXAMPLES_DIR_SRC $EXAMPLES_DIR_DEST
 FROM stage3 as stage4
 RUN yarn
 FROM stage4 as stage5
-ENV EXAMPLES_DIR=/app/$EXAMPLES_DIR_DEST
+ENV EXAMPLES_DIR="/app/${EXAMPLES_DIR_DEST}"
 RUN echo "EXAMPLES_DIR = ${EXAMPLES_DIR}"
 RUN yarn workspaces run build
 
