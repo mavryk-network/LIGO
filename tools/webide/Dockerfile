@@ -25,14 +25,13 @@ COPY tools/webide/yarn.lock yarn.lock
 COPY tools/webide/tsconfig.json tsconfig.json
 COPY tools/webide/packages/client packages/client
 COPY tools/webide/packages/server packages/server
-COPY $EXAMPLES_DIR_SRC $EXAMPLES_DIR_DEST
+COPY $EXAMPLES_DIR_SRC packages/client/examples
 
 # Build
 FROM stage3 as stage4
 RUN yarn
 FROM stage4 as stage5
-ENV EXAMPLES_DIR="/app/${EXAMPLES_DIR_DEST}"
-RUN echo "EXAMPLES_DIR = ${EXAMPLES_DIR}"
+ENV EXAMPLES_DIR="/app/packages/client/examples"
 RUN yarn workspaces run build
 
 # Copy build to app
