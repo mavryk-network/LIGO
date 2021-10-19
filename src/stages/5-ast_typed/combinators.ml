@@ -381,8 +381,8 @@ let e_a_constructor c e t = make_e (e_constructor (Label c) e) t
 let e_a_constant c args t = make_e (e_constant c args) t
 let e_a_some s = make_e (e_some s) (t_constant option_name [s.type_expression])
 
-let e_a_lambda l in_ty out_ty = make_e (e_lambda l) (t_function in_ty out_ty ())
-let e_a_recursive l = make_e (e_recursive l) l.fun_type
+let e_a_lambda ?location l in_ty out_ty = make_e ?location (e_lambda l) (t_function in_ty out_ty ())
+let e_a_recursive ?location l = make_e ?location (e_recursive l) l.fun_type
 let e_a_none t = make_e (e_none ()) (t_option t)
 let e_a_record_accessor e l t = make_e (e_record_accessor e l) t
 let e_a_record_update e l u t = make_e (e_record_update e l u) t
@@ -393,9 +393,9 @@ let e_a_record ?(layout=default_layout) r = make_e (e_record r) (t_record ~layou
       let associated_type = get_type_expression t in
       {associated_type ; michelson_annotation=None ; decl_pos = 0} )
     r ))
-let e_a_application a b t = make_e (e_application a b) t
+let e_a_application ?location a b t = make_e ?location (e_application a b) t
 let e_a_matching matchee cases t = make_e (e_matching matchee cases) t
-let e_a_variable v ty = make_e (e_variable v) ty
+let e_a_variable ?location v ty = make_e ?location (e_variable v) ty
 let ez_e_a_record ?layout r = make_e (ez_e_record r) (ez_t_record ?layout (List.mapi ~f:(fun i (x, y) -> x, {associated_type = y.type_expression ; michelson_annotation = None ; decl_pos = i}) r))
 let e_a_let_in binder expr body attr = make_e (e_let_in binder expr body attr) (get_type_expression body)
 let e_a_mod_in module_binder rhs let_result = make_e (e_mod_in module_binder rhs let_result) (get_type_expression let_result)
