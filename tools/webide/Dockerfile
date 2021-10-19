@@ -7,7 +7,7 @@ ARG EXAMPLES_DIR_SRC
 ARG EXAMPLES_DIR_DEST=packages/client/examples
 ARG GITLAB_TOKEN="AKeHhbr-3_2p-mkaah3C"
 
-RUN apt-get update && apt-get -y install perl6 libev-dev perl pkg-config libgmp-dev libhidapi-dev m4 libcap-dev bubblewrap rsync jq curl
+RUN apt-get update && apt-get -y install perl6 libev-dev perl pkg-config libgmp-dev libhidapi-dev m4 libcap-dev bubblewrap rsync jq curl python3
 
 # Download the past 5 releases
 FROM stage1 as stage2
@@ -28,10 +28,11 @@ COPY tools/webide/packages/server packages/server
 COPY $EXAMPLES_DIR_SRC $EXAMPLES_DIR_DEST
 
 # Build
-FROM stage3 as stage4
-ENV EXAMPLES_DIR=/app/$EXAMPLES_DIR_DEST
+FROM stage3 as stage
 RUN yarn
 FROM stage4 as stage5
+ENV EXAMPLES_DIR=/app/$EXAMPLES_DIR_DEST
+RUN echo "EXAMPLES_DIR = ${EXAMPLES_DIR}"
 RUN yarn workspaces run build
 
 # Copy build to app
