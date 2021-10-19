@@ -205,14 +205,21 @@ let subst_expr (v : expression_variable) (u : expression) (t : expression) : exp
       | E_variable v' when equal_expression_variable v v' -> u
       | _ -> expr) t
 
+module CMap = Map.Make(struct type t = string let compare = String.compare end)
+
+let table : ((expression_variable list * expression) CMap.t) ref = ref CMap.empty
+
 let fix_app (fun_name : expression_variable)(t : expression) : expression =
   let (), expr = H.fold_map_expression (fun () expr ->
       match expr.expression_content with
+      | E_lambda { binder ; _ } when equal_expression_variable binder fun_name ->
+         (false, (), expr)
+      | E_recursive { fun_name = fun_name' ; lambda = { binder ; _ } ; _ } when equal_expression_variable binder fun_name || equal_expression_variable fun_name' fun_name ->
+         (false, (), expr)
       | E_application { lamb = { expression_content = E_application { lamb = { expression_content = E_variable _v ; type_expression }
                                                                       ; args = x0 } } ;
                         args = x1 } when equal_expression_variable _v fun_name ->
-         ignore x1; ignore fun_name;
-         (* (true, (), e_a_application (e_a_variable fun_name expr.type_expression) x1 expr.type_expression) *)
+         (* let _, fv = H.Free_variables.expression x1 in *)
          (true, (), e_a_application (e_a_variable fun_name type_expression) (e_a_pair x0 x1) expr.type_expression)
       | _ -> (true, (), expr)) () t in
   expr
@@ -259,6 +266,8 @@ let  rec transform_recursive (expr : expression) : expression =
      let in_type, out_type = get_t_function_exn fun_type in
      answer_type_cell := out_type;
      let result = transform_expression result in
+     let result = reduce result in
+     let result = fix_app fun_name result in
      (* print_endline (Format.asprintf "t: %a" PP.expression (reduce result)); *)
      let k_binder, result, pre_type, post_type = match result.expression_content, result.type_expression.type_content with
        | E_lambda { binder ; result }, T_arrow { type1 = pre_type; type2 = post_type } -> binder, result, pre_type, post_type
@@ -277,12 +286,12 @@ let  rec transform_recursive (expr : expression) : expression =
      let id_expr = e_a_lambda { binder = id_binder ; result = e_a_variable id_binder out_type } out_type out_type in
      let transform = e_a_lambda { binder = out_binder ; result = e_a_let_in fun_name transform
                                                                    (e_a_application (e_a_variable fun_name fun_type)
-                       (e_a_pair (e_a_variable out_binder in_type) id_expr) out_type) { inline = false ; no_mutation = false } }
+                       (e_a_pair (e_a_variable out_binder in_type) id_expr) out_type) { inline = false ; no_mutation = false ; public = true } }
                        in_type out_type in
      (* let transform = e_a_let_in out_binder transform (e_a_application (e_a_variable fun_name fun_type) (e_a_variable out_binder in_type) out_type){inline = false ; no_mutation = false; } in *)
      let transform = reduce transform in
      let transform = fix_app fun_name transform in
-     let transform = fix_match transform in
+     (* let transform = fix_match transform in *)
      (* let transform = reduce (reduce (reduce (reduce (reduce (reduce (reduce (reduce (reduce (reduce (reduce transform)))))))))) in *)
      (* let binder = var_name () in
       * let transform = e_a_application transform (e_a_lambda { binder ; result = e_a_variable binder expr.type_expression } expr.type_expression expr.type_expression) expr.type_expression in *)
@@ -306,7 +315,7 @@ and transform_module : module_fully_typed -> module_fully_typed = fun (Module_Fu
     | Declaration_type t -> return @@ Declaration_type t
     | Declaration_module {module_binder;module_} ->
       let module_ = transform_module module_ in
-      return @@ Declaration_module {module_binder; module_}
+      return @@ Declaration_module {module_binder; module_ ; module_attr = { public = true } }
     | Module_alias _ -> return x
   in
   let p = List.map ~f:(Location.map aux) p in
