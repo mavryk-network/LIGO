@@ -25,7 +25,7 @@ COPY tools/webide/yarn.lock yarn.lock
 COPY tools/webide/tsconfig.json tsconfig.json
 COPY tools/webide/packages/client packages/client
 COPY tools/webide/packages/server packages/server
-COPY $EXAMPLES_DIR_SRC packages/client/examples
+COPY $EXAMPLES_DIR_SRC/ packages/client/examples
 
 # Build
 FROM stage3 as stage4
