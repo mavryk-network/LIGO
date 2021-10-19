@@ -118,20 +118,6 @@ xrefcheck:
     - xrefcheck/bin/xrefcheck
   allow_failure: true #TODO could be better if we do not allow failure for realeases
 
-
-# Strange race conditions, disable for now
-.webide-e2e:
-  stage: tooling
-  extends: .nix
-  only:
-    # Disabled for now unless the branch name contains webide, because a test in this job fails randomly
-    - /.*webide.*/
-    #- merge_requests
-    #- dev
-    #- /^.*-run-dev$/
-  script:
-    - nix-build nix -A ligo-editor.e2e
-
 docker:
   stage: tooling
   dependencies:
