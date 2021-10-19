@@ -32,10 +32,12 @@ FROM stage3 as stage4
 RUN yarn
 FROM stage4 as stage5
 ENV EXAMPLES_DIR="/app/packages/client/examples"
-RUN yarn workspaces run build
+RUN yarn workspace client run build
+FROM stage5 as stage6
+RUN yarn workspace server run build
 
 # Copy build to app
-FROM stage5 as stage6
+FROM stage6 as stage7
 COPY --from=stage5 /app/packages/client/build /app/client/build
 COPY --from=stage5 /app/packages/server/dist/src /app/server/dist
 
