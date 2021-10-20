@@ -26,8 +26,8 @@ let contract_passes ~raise = [
 ]
 
 let all_module ~add_warning ~raise init env =
-  let init = Built_in.add_built_in_modules ~raise init env in
-  List.fold ~f:(|>) (all_module_passes ~add_warning ~raise) ~init
+  let module_fully_typed = List.fold ~f:(|>) (all_module_passes ~add_warning ~raise) ~init in
+  Built_in.add_built_in_modules ~raise module_fully_typed env
 
 let all_expression ~raise init =
   List.fold ~f:(|>) (all_expression_passes ~raise) ~init

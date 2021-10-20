@@ -87,7 +87,6 @@ let rec get_all_module_accesses_expr (module_name : string) (expr : Ast_typed.ex
       let arg = get_all_module_accesses_expr module_name arg in
       AccessSet.union s arg)
   | E_variable v -> 
-    print_endline @@ Format.asprintf "var = %a" Var.pp v.wrap_content;
     AccessSet.singleton (module_name, v)
   | E_application { lamb ; args } -> 
     let lamb = get_all_module_accesses_expr module_name lamb in
@@ -103,7 +102,6 @@ let rec get_all_module_accesses_expr (module_name : string) (expr : Ast_typed.ex
     let result = AccessSet.remove (module_name, binder) result in
     result
   | E_let_in { let_binder ; rhs ; let_result } ->
-    print_endline @@ Format.asprintf "%a" Var.pp let_binder.wrap_content;
     let rhs        = get_all_module_accesses_expr module_name rhs in
     let let_result = get_all_module_accesses_expr module_name let_result in
     let let_result = AccessSet.remove (module_name, let_binder) let_result in
@@ -129,11 +127,15 @@ let rec get_all_module_accesses_expr (module_name : string) (expr : Ast_typed.ex
     let cases   = 
       match cases with
       | Match_variant { cases } ->
-          List.fold_left cases ~init:AccessSet.empty ~f:(fun s { body } ->
+          List.fold_left cases ~init:AccessSet.empty ~f:(fun s { body; pattern } ->
             let body = get_all_module_accesses_expr module_name body in
+            let body = AccessSet.remove (module_name, pattern) body in
             AccessSet.union s body)
-      | Match_record { body } -> 
+      | Match_record { body; fields } -> 
         let body = get_all_module_accesses_expr module_name body in
+        let body = Stage_common.Types.LMap.fold 
+          (fun _ (v,_) body -> AccessSet.remove (module_name, v) body) 
+          fields body in 
         body in
     AccessSet.union matchee cases
   | E_record fields ->
@@ -152,6 +154,7 @@ let rec get_all_module_accesses_expr (module_name : string) (expr : Ast_typed.ex
     let module_name = module_name ^ "." ^ module_name' in
     let element     = get_all_module_accesses_expr module_name element in
     element
+  | E_type_inst { forall } -> get_all_module_accesses_expr module_name forall
 and get_all_module_accesses (module_name : string) (Module_Fully_Typed decls : Ast_typed.module_fully_typed) =
   List.fold_left decls ~init:AccessSet.empty ~f:(fun s decl ->
     let decl = Location.unwrap decl in
@@ -194,7 +197,7 @@ let get_declaration_from_env ~raise var expressions err =
   let { expr_var ; env_elt } = environment_binding in
   (match env_elt.definition with 
   | ED_declaration {expression} -> 
-    let attr : attribute = { inline = false ; no_mutation = false } in
+    let attr : attribute = { inline = false ; no_mutation = false ; public = true } in
     Location.wrap @@ Declaration_constant { binder = expr_var; expr = expression ; attr ; name = None }
   | ED_binder -> 
     raise.raise @@ Errors.corner_case "Built-in: No declaration found")
@@ -206,7 +209,8 @@ let get_missing_module_declarations ~raise (used_vars : expression_variable list
     let err = fun var -> (Format.asprintf "No Binding found %s.%a in the environment" module_binder Var.pp var) in
     get_declaration_from_env ~raise used_var expressions err
   )) in
-  [Location.wrap @@ Declaration_module {module_binder;module_}]
+  let module_attr : module_attribute = { public=true } in
+  [Location.wrap @@ Declaration_module {module_binder;module_;module_attr}]
 
 let get_missing_top_level_declarations ~raise (toplevel_vars : expression_variable list) env =
   let expressions = Environment.get_expr_environment env in
@@ -226,6 +230,23 @@ let trim_leading_dot s =
   if len = 0 then s
   else String.sub s 1 (len - 1)
 
+let rec remove ~equal item xs =
+  match xs with
+  | [] -> []
+  | x::xs -> if equal item x then remove ~equal item xs else x :: remove ~equal item xs
+
+let remove_bound_top_level_vars decls vars = 
+  List.fold_left decls ~init:vars
+    ~f:(fun vars decl ->
+      match (Location.unwrap decl) with
+      | Declaration_constant { binder } -> 
+        remove ~equal:(fun a b -> Var.equal (Location.unwrap a) (Location.unwrap b)) 
+          binder vars
+      | Declaration_type _  
+      | Declaration_module _ 
+      | Module_alias _ -> vars
+    )
+
 let add_built_in_modules ~raise ((Module_Fully_Typed lst) : module_fully_typed) env = 
   let module_accesses = get_all_module_accesses "" (Module_Fully_Typed lst) in
   let module_declarations = get_all_module_declarations (Module_Fully_Typed lst) in
@@ -237,7 +258,6 @@ let add_built_in_modules ~raise ((Module_Fully_Typed lst) : module_fully_typed) 
     | Some (ModuleRef m) ->
       (match resolve_module m module_declarations with
       | Some m -> 
-        print_endline m;
         (match SMap.find_opt m xs with
         | Some vars -> SMap.add m (e :: vars) xs
         | None -> SMap.add m [e] xs)
@@ -261,9 +281,10 @@ let add_built_in_modules ~raise ((Module_Fully_Typed lst) : module_fully_typed) 
     ) in
 
   (* let free_variables = get_all_free_variables (Module_Fully_Typed lst) in *)
-  let free_variables = Stdlib.Option.value ~default:[] @@ SMap.find_opt "" built_in_modules_map in
+  let free_variables = remove_bound_top_level_vars lst @@ Stdlib.Option.value ~default:[] @@ SMap.find_opt "" built_in_modules_map in
   (* List.iter free_variables ~f:(fun fv -> print_endline @@ Format.asprintf "free var = %a" Var.pp fv.wrap_content); *)
   let top_level_decls = get_missing_top_level_declarations ~raise free_variables env in
+  (* Format.printf "module_decls %d top_level_decls %d \n" (List.length module_decls) (List.length top_level_decls); *)
   
   let lst = top_level_decls @ module_decls @ lst in
   Module_Fully_Typed lst
