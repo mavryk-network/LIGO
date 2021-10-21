@@ -16,7 +16,7 @@ let%expect_test _ =
 
   run_ligo_good [ "info" ; "measure-contract" ; contract "multisig-v2.ligo" ] ;
   [%expect {|
-    1541 bytes |}] ;
+    1606 bytes |}] ;
 
   run_ligo_good [ "info" ; "measure-contract" ; contract "vote.mligo" ] ;
   [%expect {|
@@ -432,10 +432,12 @@ let%expect_test _ =
                 (pair (nat %max_proposal) (map %message_store bytes (set address))))
           (pair (pair (map %proposal_counters address nat) (bytes %state_hash))
                 (nat %threshold))) ;
-  code { UNPAIR ;
+  code { LAMBDA int nat { ABS } ;
+         SWAP ;
+         UNPAIR ;
          IF_LEFT
            { IF_LEFT
-               { DROP ; NIL operation ; PAIR }
+               { DIG 2 ; DROP 2 ; NIL operation ; PAIR }
                { SWAP ;
                  DUP ;
                  DUG 2 ;
@@ -652,7 +654,9 @@ let%expect_test _ =
                                   CDR ;
                                   CDR ;
                                   SUB ;
-                                  ABS ;
+                                  DUP 9 ;
+                                  SWAP ;
+                                  EXEC ;
                                   DIG 4 ;
                                   SWAP ;
                                   SOME ;
@@ -665,11 +669,13 @@ let%expect_test _ =
                                   PAIR }
                                 { DIG 2 ; DROP 2 } } ;
                       DIG 2 ;
-                      DROP ;
+                      DIG 3 ;
+                      DROP 2 ;
                       SWAP ;
                       PAIR }
                     { DIG 3 ;
-                      DROP ;
+                      DIG 4 ;
+                      DROP 2 ;
                       DUP ;
                       CDR ;
                       SWAP ;
@@ -708,7 +714,7 @@ let%expect_test _ =
              DUG 2 ;
              GET ;
              IF_NONE
-               { DROP }
+               { DIG 2 ; DROP 2 }
                { DUP ;
                  PUSH bool False ;
                  SENDER ;
@@ -739,7 +745,9 @@ let%expect_test _ =
                       GET ;
                       IF_NONE { PUSH string "MAP FIND" ; FAILWITH } {} ;
                       SUB ;
-                      ABS ;
+                      DIG 7 ;
+                      SWAP ;
+                      EXEC ;
                       SOME ;
                       SENDER ;
                       UPDATE ;
@@ -748,7 +756,7 @@ let%expect_test _ =
                       DIG 3 ;
                       CAR ;
                       PAIR }
-                    { DIG 2 } ;
+                    { DIG 3 ; DROP ; DIG 2 } ;
                  PUSH nat 0 ;
                  DUP 3 ;
                  SIZE ;

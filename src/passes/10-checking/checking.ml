@@ -46,8 +46,8 @@ let rec infer_type_application ~raise ~loc ?(default_error = fun loc t t' -> ass
      if layout_eq layout layout' &&
           List.equal equal_label (List.map content_kv ~f:fst) (List.map content'_kv ~f:fst) then
        let elements = List.zip_exn content_kv content'_kv in
-       let aux ((_, {associated_type;michelson_annotation;decl_pos}), (_, {associated_type=associated_type';michelson_annotation=michelson_annotation';decl_pos=decl_pos'})) table =
-         if Int.equal decl_pos decl_pos' && Option.equal String.equal michelson_annotation michelson_annotation' then
+       let aux ((_, {associated_type;michelson_annotation}), (_, {associated_type=associated_type';michelson_annotation=michelson_annotation'})) table =
+         if Option.equal String.equal michelson_annotation michelson_annotation' then
            self table associated_type associated_type'
          else
            raise.raise default_error in
@@ -61,8 +61,8 @@ let rec infer_type_application ~raise ~loc ?(default_error = fun loc t t' -> ass
      if layout_eq layout layout' &&
           List.equal equal_label (List.map content_kv ~f:fst) (List.map content'_kv ~f:fst) then
        let elements = List.zip_exn content_kv content'_kv in
-       let aux ((_, {associated_type;michelson_annotation;decl_pos}), (_, {associated_type=associated_type';michelson_annotation=michelson_annotation';decl_pos=decl_pos'})) table =
-         if Int.equal decl_pos decl_pos' && Option.equal String.equal michelson_annotation michelson_annotation' then
+       let aux ((_, {associated_type;michelson_annotation}), (_, {associated_type=associated_type';michelson_annotation=michelson_annotation'})) table =
+         if Option.equal String.equal michelson_annotation michelson_annotation' then
            self table associated_type associated_type'
          else
            raise.raise default_error in
