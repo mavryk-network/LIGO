@@ -63,7 +63,10 @@ let rec pp_env : Format.formatter -> env -> unit = fun ppf env ->
     function | Expression {name;item;no_mutation=_} ->
                 Format.fprintf ppf "%a -> %a" Var.pp name.wrap_content pp_value_expr item
              | Module {name;item} ->
-                Format.fprintf ppf "%a -> %a" Ast_typed.PP.module_variable name pp_env item in
+                Format.fprintf ppf "%a -> %a" Ast_typed.PP.module_variable name pp_env item
+             | Module_rename { name ; binders = _ } ->
+                Format.fprintf ppf "%a" Ast_typed.PP.module_variable name
+  in
   Format.fprintf ppf "@[<v 2>%i bindings in environment:@ %a@]"
     (List.length env)
     (list_sep aux (tag "@ "))

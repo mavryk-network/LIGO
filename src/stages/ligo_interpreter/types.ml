@@ -9,8 +9,9 @@ type mcontract = Tezos_protocol_010_PtGRANAD.Protocol.Alpha_context.Contract.t
 type mutation = Location.t * Ast_typed.expression
 
 type env_item =
-  | Expression of { name: expression_variable ; item: value_expr ; no_mutation : bool }
-  | Module of { name: module_variable ; item: env }
+  | Expression of { name : expression_variable ; item : value_expr ; no_mutation : bool }
+  | Module of { name : module_variable ; item : env }
+  | Module_rename of { name : module_variable ; binders : module_variable List.Ne.t }
 
 and env = env_item list
 

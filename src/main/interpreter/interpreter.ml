@@ -759,8 +759,7 @@ and eval_ligo ~raise ~steps : Ast_typed.expression -> calltrace -> env -> value 
        let>> () = Put_state state in
        eval_ligo (let_result) calltrace (Env.extend_mod env module_binder module_env)
     | E_mod_alias {alias;binders;result} ->
-       let module_env = resolve_module_path ~raise ~loc:term.location binders env in
-       eval_ligo (result) calltrace (Env.extend_mod env alias module_env)
+       eval_ligo (result) calltrace (Env.extend_mod_alias env alias binders)
     | E_literal l ->
       eval_literal l
     | E_variable var ->
@@ -909,7 +908,7 @@ and eval_ligo ~raise ~steps : Ast_typed.expression -> calltrace -> env -> value 
                 return a
              | _ -> raise.raise @@ Errors.generic_error term.location "Error resolving module path")
          | E_module_accessor {module_name;element} ->
-            let module_env =  match List.Assoc.find (Ligo_interpreter.Environment.modules env) ~equal:String.equal module_name with
+            let module_env =  match Ligo_interpreter.Environment.lookup_mod env module_name with
               | None -> raise.raise @@ Errors.generic_error term.location "Error resolving module path"
               | Some e -> e in
             aux module_env element
@@ -917,13 +916,6 @@ and eval_ligo ~raise ~steps : Ast_typed.expression -> calltrace -> env -> value 
        in aux env term
 
 and try_eval ~raise ~steps expr env state r = Monad.eval ~raise (eval_ligo ~raise ~steps expr [] env) state r
-
-and resolve_module_path ~raise ~loc binders env =
-  let aux (e : env) (m : module_variable) =
-    match List.Assoc.find (Ligo_interpreter.Environment.modules e) ~equal:String.equal m with
-    | None -> raise.raise @@ Errors.generic_error loc "Error resolving module path"
-    | Some e -> e in
-  List.Ne.fold_left aux env binders
 
 and eval_module ~raise ~steps : Ast_typed.module_fully_typed * Tezos_state.context * env -> env * Tezos_state.context =
   fun (Module_Fully_Typed prg, initial_state, env) ->
@@ -941,8 +933,7 @@ and eval_module ~raise ~steps : Ast_typed.module_fully_typed * Tezos_state.conte
           let top_env' = Env.extend_mod top_env module_binder module_env in
           (top_env',state)
         | Ast_typed.Module_alias {alias;binders} ->
-          let module_env = resolve_module_path ~raise ~loc:el.location binders top_env in
-          let top_env' = Env.extend_mod top_env alias module_env in
+          let top_env' = Env.extend_mod_alias top_env alias binders in
           (top_env',state)
     in
     let (env,state) = List.fold ~f:aux ~init:(env, initial_state) prg in

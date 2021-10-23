@@ -90,6 +90,8 @@ let add_ast_env ~raise ?(name = Location.wrap (Var.fresh ())) env binder body =
          e
     | Declaration_module { module_binder ; module_ } ->
        e_a_mod_in module_binder module_ e
+    | Module_alias { alias ; binders } ->
+       e_a_mod_alias alias binders e
     | _ -> raise.raise (Errors.generic_error binder.location "Cannot re-construct module") in
     let typed_exp' = List.fold_right ~f:aux ~init:body env in
     typed_exp'
@@ -274,6 +276,7 @@ let rec val_to_ast ~raise ~loc : Ligo_interpreter.Types.value ->
 and env_to_ast ~raise ~loc : Ligo_interpreter.Types.env ->
                              Ast_typed.module_fully_typed =
   fun env ->
+  ignore loc;
   let open Ligo_interpreter.Types in
   let open! Ast_typed in
   let rec aux = function
@@ -284,15 +287,15 @@ and env_to_ast ~raise ~loc : Ligo_interpreter.Types.env ->
        let expr = val_to_ast ~raise ~loc:binder.location item.eval_term item.ast_type in
        let inline = false in
        Ast_typed.Declaration_constant { name ; binder ; expr ; attr = { inline ; no_mutation; public = true} } :: aux tl
-    | Module { name; item } :: tl ->
-       let module_binder = name in
-       let module_ = env_to_ast ~raise ~loc item in
-       Ast_typed.Declaration_module { module_binder ; module_; module_attr = {public = true} } :: aux tl in
+    | Module _ :: tl ->
+       aux tl
+    | Module_rename { name; binders } :: tl ->
+       Ast_typed.Module_alias { alias = name ; binders } :: aux tl in
   Module_Fully_Typed (List.map (aux (List.rev env)) ~f:Location.wrap)
 
-and make_ast_func ~raise ?name env arg body orig =
+and make_ast_func ~raise ?name _env arg body orig =
   let open Ast_typed in
-  let env = make_subst_ast_env_exp ~raise env orig in
+  let env = make_subst_ast_env_exp ~raise _env orig in
   let typed_exp' = add_ast_env ~raise ?name:name env arg body in
   let lambda = { result=typed_exp' ; binder=arg} in
   let typed_exp' = match name with
@@ -377,8 +380,34 @@ and make_subst_ast_env_exp ~raise env expr =
          let fmv = List.dedup_and_sort ~compare:compare_module_variable (fmv @ expr_fv) in
          aux (fv, fmv) (Declaration_module { module_binder = name ; module_; module_attr={public=true} } :: acc) tl
        else
-         aux (fv, fmv) acc tl in
+         aux (fv, fmv) acc tl
+    | Module_rename { name ; binders } :: tl ->
+       let (hd, _) = binders in
+       let fmv = List.dedup_and_sort ~compare:compare_module_variable (fmv @ [hd]) in
+       if List.mem fmv name ~equal:equal_module_variable then
+         aux (fv, fmv) (Module_alias { alias = name ; binders } :: acc) tl
+       else
+         aux (fv, fmv) acc tl
+
+  in
   aux (get_fv expr, get_fmv_expr expr) [] env
+
+and env_to_module ~raise env =
+  let open Ligo_interpreter.Types in
+  let data = List.fold_right (env) ~f:(fun item m ->
+      match item with
+      | Expression { name ; item ; no_mutation } ->
+         let expr = val_to_ast ~raise ~loc:name.location item.eval_term item.ast_type in
+         Declaration_constant { binder = name ; name = None ; expr ; attr = { public = true ; no_mutation ; inline = false } } :: m
+      | Module { name ; item } ->
+         Declaration_module { module_binder = name ; module_ = env_to_module ~raise item ; module_attr = { public = true } } :: m
+      | Module_rename { name ; binders } ->
+         let module_ = Ligo_interpreter.Environment.lookup_binders binders env in
+         let module_ = env_to_module ~raise module_ in
+         Declaration_module { module_binder = name ; module_ ; module_attr = { public = true } } :: m)
+               ~init:[] in
+  let data = List.map ~f:Location.wrap data in
+  Module_Fully_Typed data
 
 let get_literal_type : Ast_typed.literal -> Ast_typed.type_expression =
   fun t ->
