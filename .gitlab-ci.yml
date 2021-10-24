@@ -187,7 +187,6 @@ webide-push:
       when: always
   script:
     - echo "${CI_BUILD_TOKEN}" | docker login -u gitlab-ci-token --password-stdin registry.gitlab.com
-    - echo `pwd`
     - docker build . -f tools/webide/Dockerfile --build-arg EXAMPLES_DIR_DEST=packages/client/examples -t "${WEBIDE_IMAGE_TAG}"
     - docker push "${WEBIDE_IMAGE_TAG}"
   after_script:

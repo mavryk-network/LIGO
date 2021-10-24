@@ -25,7 +25,6 @@ COPY tools/webide/tsconfig.json tsconfig.json
 COPY tools/webide/packages/client packages/client
 COPY tools/webide/packages/server packages/server
 COPY src/test/examples packages/client/examples
-RUN find /app/packages/client/examples
 
 # Build
 FROM stage3 as stage4
@@ -38,8 +37,8 @@ RUN yarn workspace server run build
 
 # Copy build to app
 FROM stage6 as stage7
-COPY --from=stage5 /app/packages/client/build /app/client/build
-COPY --from=stage5 /app/packages/server/dist/src /app/server/dist
+COPY --from=stage6 /app/packages/client/build /app/client/build
+COPY --from=stage6 /app/packages/server/dist/ /app/server/dist
 
 # Run the backend server
 EXPOSE 8080
