@@ -35,7 +35,9 @@ let compile_type = fun e ->
 let aggregate_and_compile ~raise : options:Compiler_options.t -> program -> form_t -> Stacking.compiled_expression =
     fun ~options program form ->
   let aggregated = trace ~raise self_mini_c_tracer @@ Self_mini_c.aggregate_entry program form in
+  Printf.printf "Bef all expr: %fs\n" (Sys.time());
   let aggregated' = Self_mini_c.all_expression ~raise aggregated in
+  Printf.printf "Aft all expr: %fs\n" (Sys.time());
   match form with
   | ContractForm _ -> compile_contract ~raise ~options aggregated'
   | ExpressionForm _ -> compile_expression ~options aggregated'

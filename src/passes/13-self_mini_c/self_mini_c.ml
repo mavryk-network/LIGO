@@ -334,14 +334,18 @@ let contract_check ~raise init =
 let rec all_expression ~raise : expression -> expression =
   fun e ->
   let changed = ref false in
+  Printf.printf "Bef all inline: %fs\n" (Sys.time());
   let e = inline_lets ~raise changed e in
+  Printf.printf "Bef all beta: %fs\n" (Sys.time());
   let e = betas ~raise changed e in
+  Printf.printf "Bef all eta: %fs\n" (Sys.time());
   let e = etas ~raise changed e in
   if !changed
   then all_expression ~raise e
   else e
 
 let all_expression ~raise e =
+  Printf.printf "uncurry: %fs\n" (Sys.time());
   let e = Uncurry.uncurry_expression ~raise e in
   let e = all_expression ~raise e in
   e

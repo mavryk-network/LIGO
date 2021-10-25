@@ -146,13 +146,20 @@ let compile_type ~raise type_exp =
 
 let compile_contract_ ~raise subst_lst arg_binder rec_name in_ty out_ty typed_exp =
   let open Ligo_compile in
+  let open Ast_typed in
   let options = Compiler_options.make () in
+  let subst_lst = List.map ~f:(fun v -> Location.wrap v) subst_lst in
+  let (Module_Fully_Typed subst_lst) = Self_ast_typed__.Contract_passes.remove_unused' typed_exp (Module_Fully_Typed (List.rev subst_lst)) in
+  let subst_lst = List.map ~f:(fun v -> v.Location.wrap_content) subst_lst in
   let typed_exp' = add_ast_env ~raise subst_lst arg_binder typed_exp in
   let typed_exp = match rec_name with
     | None -> Ast_typed.e_a_lambda { result = typed_exp'; binder = arg_binder } in_ty out_ty
     | Some fun_name -> Ast_typed.e_a_recursive { fun_name ; fun_type  = (Ast_typed.t_function in_ty out_ty ()) ; lambda = { result = typed_exp';binder = arg_binder } } in
+  Printf.printf "Before minic: %fs\n" (Sys.time());
   let mini_c_exp     = Of_typed.compile_expression ~raise typed_exp in
+  Printf.printf "After minic: %fs\n" (Sys.time());
   let compiled_exp   = Of_mini_c.aggregate_and_compile ~raise ~options [] (ContractForm mini_c_exp) in
+  Printf.printf "After final comp: %fs\n" (Sys.time());
   compiled_exp
 
 let make_function ~raise in_ty out_ty arg_binder body subst_lst =
@@ -290,6 +297,73 @@ and env_to_ast ~raise ~loc : Ligo_interpreter.Types.env ->
        Ast_typed.Declaration_module { module_binder ; module_; module_attr = {public = true} } :: aux tl in
   Module_Fully_Typed (List.map (aux (List.rev env)) ~f:Location.wrap)
 
+(* let remove_unused' : _ -> Ligo_interpreter.Types.env -> Ligo_interpreter.Types.env = fun expr env ->
+ *   let open Ligo_interpreter.Types in
+ *   let get_fv expr =
+ *     let fmv, fv = Self_ast_typed.Helpers.Free_variables.expression expr in
+ *     let fv = List.map ~f:(fun v -> v.Location.wrap_content) fv in
+ *     (fmv, fv)
+ *   in
+ *   let get_fmv_expr expr = Self_ast_typed.Helpers.Free_module_variables.expression expr in
+ *   let get_fmv_mod module' = Self_ast_typed.Helpers.Free_module_variables.module' module' in
+ *   let rec aux (fv, fmv) acc = function
+ *     | [] -> acc
+ *     | Expression { name ; item ; no_mutation }  as hd :: tl ->
+ *        let binder = binder.wrap_content in
+ *        if List.mem fv binder ~equal:Var.equal then
+ *          let (expr_fmv, expr_fv) = get_fv expr in
+ *          let fv = List.remove_element ~compare:Var.compare binder fv in
+ *          let fv = List.dedup_and_sort ~compare:Var.compare (fv @ expr_fv) in
+ *          let fmv = List.dedup_and_sort ~compare:compare_module_variable (fmv @ expr_fmv) in
+ *          aux (fv, fmv) (hd :: acc) tl
+ *        else
+ *          let () = print_endline "remov" in
+ *          aux (fv, fmv) acc tl
+ *     | Module { name ; item } as hd :: tl ->
+ *        if List.mem fmv name ~equal:equal_module_variable then
+ *          let (expr_fmv, expr_fv) = get_fmv_mod module_ in
+ *          let expr_fv = List.map ~f:(fun v -> v.Location.wrap_content) expr_fv in
+ *          let fmv = List.remove_element ~compare:compare_module_variable name fmv in
+ *          let fmv = List.dedup_and_sort ~compare:compare_module_variable (fmv @ expr_fmv) in
+ *          let fv = List.dedup_and_sort ~compare:Var.compare (fv @ expr_fv) in
+ *          aux (fv, fmv) (hd :: acc) tl
+ *        else
+ *          let () = print_endline "remov" in
+ *          aux (fv, fmv) acc tl
+ *     | hd :: tl ->
+ *        aux (fv, fmv) (hd :: acc) tl in
+ *        
+ *   let (fmvs, fvs) = get_fmv_expr main_expr in
+ *   let fvs = List.map ~f:(fun v -> v.Location.wrap_content) fvs in
+ *   let (fmvs1, fvs1) = get_fv main_expr in
+ *   let fvs = List.dedup_and_sort ~compare:Var.compare (fvs @ fvs1) in
+ *   let fmvs = List.dedup_and_sort ~compare:compare_module_variable (fmvs @ fmvs1) in
+ *   Module_Fully_Typed (aux (fvs, fmvs) [] prg_decls) *)
+
+(* and env_clean env term =
+ *   let open Ligo_interpreter.Types in
+ *   let get_fv expr = List.map ~f:(fun v -> v) @@
+ *    snd @@ Self_ast_typed.Helpers.Free_variables.expression expr in
+ *   let get_fmv_expr expr =
+ *    fst @@ Self_ast_typed.Helpers.Free_module_variables.expression expr in
+ *   let fv = get_fv term in
+ *   let fmv = get_fmv_expr term in
+ *   print_endline (Format.asprintf "entering %d %a" (List.length env) (PP_helpers.list_sep_d PP_helpers.string) fmv);
+ *   (\* env *\)
+ *   let data = List.fold_right (List.rev env) ~f:(fun item m ->
+ *       match item with
+ *       | Expression { name ; item ; no_mutation } when List.mem fv name ~equal:equal_expression_variable ->
+ *          Expression { name ; item ; no_mutation } :: m
+ *       | Module { name ; item } when List.mem fmv name ~equal:equal_module_variable ->
+ *          let item = env_clean item in
+ *          Module { name ; item } :: m
+ *       | _ -> print_endline "throwing"; m) ~init:[] in
+ *   data
+ *   (\* let data = List.map ~f:Location.wrap data in
+ *    * print_endline "outing";
+ *    * 
+ *    * Module_Fully_Typed data *\) *)
+
 and make_ast_func ~raise ?name env arg body orig =
   let open Ast_typed in
   let env = make_subst_ast_env_exp ~raise env orig in
@@ -351,34 +425,49 @@ and compile_simple_value ~raise ?ctxt ~loc : Ligo_interpreter.Types.value ->
 
 and make_subst_ast_env_exp ~raise env expr =
   let open Ligo_interpreter.Types in
-  let get_fv expr = List.map ~f:(fun v -> v.Location.wrap_content) @@
-   snd @@ Self_ast_typed.Helpers.Free_variables.expression expr in
+  let get_fv expr = (* List.map ~f:(fun (w, v) -> (w, v.Location.wrap_content)) @@ *)
+   Self_ast_typed.Helpers.Free_variables.expression expr in
   let get_fmv_expr expr =
-   fst @@ Self_ast_typed.Helpers.Free_module_variables.expression expr in
+   Self_ast_typed.Helpers.Free_module_variables.expression expr in
   let get_fmv_mod module' =
-   fst @@ Self_ast_typed.Helpers.Free_module_variables.module' module' in
+   Self_ast_typed.Helpers.Free_module_variables.module' module' in
   let rec aux (fv, fmv) acc = function
     | [] -> acc
     | Expression { name; item ; no_mutation } :: tl ->
        let binder = Location.unwrap name in
        if List.mem fv binder ~equal:Var.equal then
          let expr = val_to_ast ~raise ~loc:name.location item.eval_term item.ast_type in
-         let expr_fv = get_fv expr in
+         let (expr_fmv, expr_fv) = get_fv expr in
+         let expr_fv = List.map ~f:(fun v -> v.Location.wrap_content) expr_fv in
          let fv = List.remove_element ~compare:Var.compare binder fv in
          let fv = List.dedup_and_sort ~compare:Var.compare (fv @ expr_fv) in
+         let fmv = List.dedup_and_sort ~compare:compare_module_variable (fmv @ expr_fmv) in
+         (* let expr_fv = get_fv expr in
+          * let fv = List.remove_element ~compare:Var.compare binder fv in
+          * let fv = List.dedup_and_sort ~compare:Var.compare (fv @ expr_fv) in *)
          aux (fv, fmv) (Declaration_constant { binder = name ; name = None ; expr ; attr = { inline = false ; no_mutation; public = true } } :: acc) tl
        else
          aux (fv, fmv) acc tl
     | Module { name; item } :: tl ->
        if List.mem fmv name ~equal:equal_module_variable then
          let module_ = env_to_ast ~raise ~loc:Location.generated item in
-         let expr_fv = get_fmv_mod module_ in
+         let (expr_fmv, expr_fv) = get_fmv_mod module_ in
+         let expr_fv = List.map ~f:(fun v -> v.Location.wrap_content) expr_fv in
          let fmv = List.remove_element ~compare:compare_module_variable name fmv in
-         let fmv = List.dedup_and_sort ~compare:compare_module_variable (fmv @ expr_fv) in
+         let fmv = List.dedup_and_sort ~compare:compare_module_variable (fmv @ expr_fmv) in
+         let fv = List.dedup_and_sort ~compare:Var.compare (fv @ expr_fv) in
+         (* let fmv = List.remove_element ~compare:compare_module_variable name fmv in
+          * let fmv = List.dedup_and_sort ~compare:compare_module_variable (fmv @ expr_fv) in *)
          aux (fv, fmv) (Declaration_module { module_binder = name ; module_; module_attr={public=true} } :: acc) tl
        else
          aux (fv, fmv) acc tl in
-  aux (get_fv expr, get_fmv_expr expr) [] env
+  let (fmvs, fvs) = get_fmv_expr expr in
+  let fvs = List.map ~f:(fun v -> v.Location.wrap_content) fvs in
+  let (fmvs1, fvs1) = get_fv expr in
+  let fvs1 = List.map ~f:(fun v -> v.Location.wrap_content) fvs1 in
+  let fvs = List.dedup_and_sort ~compare:Var.compare (fvs @ fvs1) in
+  let fmvs = List.dedup_and_sort ~compare:compare_module_variable (fmvs @ fmvs1) in
+  aux (fvs, fmvs) [] env
 
 let get_literal_type : Ast_typed.literal -> Ast_typed.type_expression =
   fun t ->
