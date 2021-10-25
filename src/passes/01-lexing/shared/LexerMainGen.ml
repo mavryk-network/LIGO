@@ -133,6 +133,10 @@ module Make (File        : FILE)
     type message = string Region.reg
     type menhir_lexer = Lexing.lexbuf -> (token, message) Stdlib.result
 
+    
+    let comments_ref = ref []
+    let comments () = !comments_ref 
+
     let rec scan : menhir_lexer =
       let store : token list ref = ref [] in
       fun lexbuf ->
@@ -152,8 +156,9 @@ module Make (File        : FILE)
         else
           let lex_units = Scan.LexUnits.from_lexbuf config lexbuf
           in match Self_tokens.filter lex_units with
-               Stdlib.Ok tokens ->
+               Stdlib.Ok (tokens, comments) ->
                  store  := tokens;
+                 comments_ref := comments;
                  called := true;
                  scan lexbuf
              | Error _ as err -> err

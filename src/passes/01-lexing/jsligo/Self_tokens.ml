@@ -21,18 +21,15 @@ module type S =
     type message = string Region.reg
 
     val filter :
-      (lex_unit list, message) result -> (token list, message) result
+      (lex_unit list, message) result -> (token list * Markup.t list, message) result
   end
 
 (* Utilities *)
 
 let (<@) = Utils.(<@)
 
-let ok x = Stdlib.Ok x
-
-let apply filter = function
-  Stdlib.Ok tokens -> filter tokens |> ok
-| Error _ as err   -> err
+let (let*) = Result.bind
+let ok     = Result.ok
 
 type message = string Region.reg
 
@@ -42,16 +39,16 @@ type lex_unit = token Core.lex_unit
 
 (* Filtering out the markup *)
 
-let tokens_of = function
-  Stdlib.Ok lex_units ->
-    let apply tokens = function
-      Core.Token token -> token::tokens
-    | Core.Markup (Markup.BlockCom c) -> Token.BlockCom c :: tokens
-    | Core.Markup (Markup.LineCom c) -> Token.LineCom c :: tokens
-    | Core.Markup _ -> tokens
-    | Core.Directive d -> Token.Directive d :: tokens
-    in List.fold_left apply [] lex_units |> List.rev |> ok
-| Error _ as err -> err
+let tokens_of lex_units =
+  let apply (tokens, comments) = function
+    Core.Token token -> (token::tokens, comments)
+  | Core.Markup (Markup.BlockCom bc as c) -> (Token.BlockCom bc :: tokens, c :: comments)
+  | Core.Markup (Markup.LineCom lc as c) -> (Token.BlockCom lc :: tokens, c :: comments)
+  | Core.Markup _ -> (tokens, comments)
+  | Core.Directive d -> (Token.Directive d :: tokens, comments)
+  in 
+  List.fold_left apply ([], []) lex_units |> (fun (a, b) -> (List.rev a, List.rev b)) |> ok
+
 
 (* Automatic Semicolon Insertion *)
 
@@ -96,9 +93,6 @@ let automatic_semicolon_insertion tokens =
   in
   inner [] tokens
 
-let automatic_semicolon_insertion units =
-  apply automatic_semicolon_insertion units
-
 (* Attributes *)
 
 let attribute_regexp = Str.regexp "@\\([a-zA-Z:0-9_]+\\)"
@@ -131,8 +125,6 @@ let attributes tokens =
   in
   inner [] tokens
 
-let attributes units = apply attributes units
-
 (* Injection of Zero-Width Spaces *)
 
 let inject_zwsp lex_units =
@@ -142,9 +134,8 @@ let inject_zwsp lex_units =
   | (Core.Token GT _ as gt1)::(Core.Token GT reg :: _ as units) ->
       aux (Core.Token (ZWSP reg) :: gt1 :: acc) units
   | unit::units -> aux (unit::acc) units
-  in aux [] lex_units
-
-let inject_zwsp units = apply inject_zwsp units
+  in 
+  ok @@ aux [] lex_units
 
 (* DEBUG *)
 
@@ -158,17 +149,10 @@ let print_unit = function
 | Core.Directive d ->
     Printf.printf "%s\n" (Directive.to_string ~offsets:true `Point d)
 
-let print_units units =
-  apply (fun units -> List.iter print_unit units; units) units
-
 (* Printing tokens *)
 
 let print_token token =
   Printf.printf "%s\n" (Token.to_string ~offsets:true `Point token)
-
-let print_tokens tokens =
-  apply (fun tokens -> List.iter print_token tokens; tokens) tokens
-
 
 (* insert vertical bar for sum type *)
 
@@ -202,16 +186,16 @@ let vertical_bar_insert tokens =
   | [] -> List.rev acc
   in aux [] tokens
 
-let vertical_bar_insert units = apply vertical_bar_insert units
-
 (* COMPOSING FILTERS (exported) *)
 
-let filter =
-  attributes
-  <@ automatic_semicolon_insertion
-  <@ vertical_bar_insert
-  (*  <@ print_tokens*)
-  <@ tokens_of
-  (*  <@ print_units*)
-  <@ inject_zwsp
-  <@ Style.check
+let filter tokens =
+  let* tokens = Style.check tokens in
+  let* tokens = inject_zwsp tokens in
+  let* (tokens, comments) = tokens_of tokens in
+  let tokens = 
+    (attributes
+    <@ automatic_semicolon_insertion
+    <@ vertical_bar_insert)
+    tokens
+  in
+  ok (tokens, comments)

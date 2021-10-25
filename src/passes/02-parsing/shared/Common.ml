@@ -4,6 +4,7 @@
 
 module Region = Simple_utils.Region
 module Trace  = Simple_utils.Trace
+module Markup = LexerLib.Markup
 
 (* Internal dependencies *)
 
@@ -122,7 +123,7 @@ module MakeParser
 
     (* Parsing a file *)
 
-    let from_file ~raise buffer file_path : CST.tree =
+    let from_file ~raise buffer file_path : CST.tree * Markup.t list =
       let module File =
         struct
           let input     = Some file_path
@@ -143,8 +144,15 @@ module MakeParser
         let     () = LexerLib.Core.reset ~file:file_path lexbuf in
         let     () = MainLexer.clear () in
         let parser = MainParser.incr_from_lexbuf in
-        parser (module ParErr: PAR_ERR) lexbuf
-      in lift ~raise tree
+        
+        let result = parser (module ParErr: PAR_ERR) lexbuf in
+        let comments = MainLexer.comments () in
+        (* print_endline ("Amount of comments:" ^ (string_of_int (List.length test))); *)
+        result, comments
+
+      in 
+      let tree, comments = tree in
+      (lift ~raise tree, comments)
 
     let parse_file = from_file
 
@@ -319,7 +327,7 @@ module MakePretty (CST    : CST)
         | Some c -> c
       in width, buffer
 
-    let pretty_print cst =
+    let pretty_print (cst, _comments) = (* TODO: pass comments *)
       let width, buffer = set () in
       let doc = Pretty.print cst in
       let () = PPrint.ToBuffer.pretty 1.0 width buffer doc

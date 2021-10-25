@@ -42,4 +42,7 @@ module Make (File        : FILE)
     (* Check the CLI *)
 
     val check_cli : unit -> unit
+
+    val comments : unit -> LexerLib.Markup.t list
+
   end with module Token = Token'

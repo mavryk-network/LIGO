@@ -75,7 +75,7 @@ let preprocess_string ~raise ~(options:options) ~(meta: meta) file_path =
 type file_path = string
 
 let parse_and_abstract_pascaligo ~raise buffer file_path =
-  let raw =
+  let (raw, _comments) = (* TODO: pass comments *)
     trace ~raise parser_tracer @@
     Parsing.Pascaligo.parse_file buffer file_path in
   let applied =
@@ -99,7 +99,7 @@ let parse_and_abstract_expression_pascaligo ~raise buffer =
   in imperative
 
 let parse_and_abstract_cameligo ~raise buffer file_path =
-  let raw =
+  let (raw, _comments) = (*  TODO: pass comments *)
     trace ~raise parser_tracer @@
     Parsing.Cameligo.parse_file buffer file_path in
   let applied =
@@ -123,7 +123,7 @@ let parse_and_abstract_expression_cameligo ~raise buffer =
   in imperative
 
 let parse_and_abstract_reasonligo ~raise buffer file_path =
-  let raw =
+  let (raw, _comments) = (* TODO: pass comments *)
     trace ~raise parser_tracer @@
     Parsing.Reasonligo.parse_file buffer file_path in
   let applied =
@@ -147,7 +147,7 @@ let parse_and_abstract_expression_reasonligo ~raise buffer =
   in imperative
 
 let parse_and_abstract_jsligo ~raise buffer file_path =
-  let raw =
+  let (raw, _comments) = (* TODO: pass comments *)
     trace ~raise parser_tracer @@
     Parsing.Jsligo.parse_file buffer file_path in
   let applied =

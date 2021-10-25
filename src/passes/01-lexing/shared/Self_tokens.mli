@@ -13,5 +13,5 @@ module type S =
     type message = string Region.reg
 
     val filter :
-      (lex_unit list, message) result -> (token list, message) result
+      (lex_unit list, message) result -> (token list * LexerLib.Markup.t list, message) result
   end

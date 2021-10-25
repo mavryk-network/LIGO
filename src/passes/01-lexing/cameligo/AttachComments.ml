@@ -106,13 +106,13 @@ let rec lex_unit_to_closest_token_region2 = function
 
 let attach = function
   Stdlib.Ok lex_units ->
-    let rec apply_comment create_comment (region: Region.t) (value: string) result rest markup_queue =
+    let rec apply_comment create_comment (region: Region.t) (value: string) (result, comments) rest markup_queue =
       (match result, rest with
         _, [] ->
-          apply (set_markup (create_comment (({region; value}: _ Region.reg), Region.Before) :: markup_queue) result) rest []
+          apply (set_markup (create_comment (({region; value}: _ Region.reg), Region.Before) :: markup_queue) result, comments) rest []
       | [], Core.Token hd :: rest ->
-        apply (hd :: result) rest []
-      | [], _ -> apply (set_markup (create_comment ({region; value}, Region.After) :: markup_queue) result) rest []
+        apply (hd :: result, comments) rest []
+      | [], _ -> apply (set_markup (create_comment ({region; value}, Region.After) :: markup_queue) result, comments) rest []
       | next_token :: _, (prev_token :: prev_rest) ->
         let token = Token.to_region next_token in
         let comment_stop_line = region#stop#line in
@@ -126,7 +126,7 @@ let attach = function
         if comment_stop_line + 1 = next_line && previous_line < comment_stop_line then
           (* before next token *)
 
-          apply (set_markup (create_comment ({region; value}, Region.Before) :: token#markup) result) rest []
+          apply (set_markup (create_comment ({region; value}, Region.Before) :: token#markup) result, comments) rest []
         else  (
           let r = lex_unit_to_closest_token_region rest in
           let pos = if r#start#line = region#stop#line then
@@ -136,24 +136,24 @@ let attach = function
           in
           match prev_token with
             Core.Token token ->
-              apply (set_markup (create_comment ({region; value}, pos) :: markup_queue) (token :: result)) prev_rest []
+              apply (set_markup (create_comment ({region; value}, pos) :: markup_queue) (token :: result), comments) prev_rest []
           | _ ->
-            apply result prev_rest ((create_comment ({region; value}, pos)) :: markup_queue)
+            apply (result, comments) prev_rest ((create_comment ({region; value}, pos)) :: markup_queue)
         )
       )
-    and apply result tokens markup_queue =
+    and apply (result, comments) tokens markup_queue =
       match tokens with
         Core.Token token :: rest ->
-          apply (set_markup markup_queue (token::result)) rest []
+          apply (set_markup markup_queue (token::result), comments) rest []
       | Core.Markup (BlockCom c) :: rest ->
         let value = String.sub c.value 2 (String.length c.value - 4) in
-        apply_comment (fun (a, b) -> Region.BlockCom (a, b)) c.region value result rest markup_queue
+        apply_comment (fun (a, b) -> Region.BlockCom (a, b)) c.region value (result, comments) rest markup_queue
       | Core.Markup (LineCom c) :: rest ->
         let value = String.sub c.value 2 (String.length c.value - 2) in
-        apply_comment (fun (a, b) -> Region.LineCom (a, b)) c.region value result rest markup_queue
-      | Core.Markup _  :: rest -> apply result rest markup_queue
-      | Core.Directive d  :: rest -> apply (Token.Directive d :: result) rest markup_queue
-      | [] -> result
+        apply_comment (fun (a, b) -> Region.LineCom (a, b)) c.region value (result, comments) rest markup_queue
+      | Core.Markup _  :: rest -> apply (result, comments) rest markup_queue
+      | Core.Directive d  :: rest -> apply (Token.Directive d :: result, comments) rest markup_queue
+      | [] -> (result, comments)
     in
-    ok @@ apply [] (List.rev lex_units) []
+    ok @@ apply ([], []) (List.rev lex_units) []
   | Error _ as err -> err

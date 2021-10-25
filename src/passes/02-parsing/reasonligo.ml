@@ -36,7 +36,7 @@ let pretty_print_file ~raise buffer file_path =
   ContractParser.parse_file ~raise buffer file_path |> pretty_print
 
 let pretty_print_cst ~raise buffer file_path =
-  let cst = parse_file ~raise buffer file_path in
+  let (cst, _comments) = parse_file ~raise buffer file_path in (* TODO: pass comments *)
   let buffer = Buffer.create 59 in
   let state =
     Cst_reasonligo.Printer.mk_state

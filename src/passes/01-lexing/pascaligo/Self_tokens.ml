@@ -4,6 +4,7 @@
 (* Vendor dependencies *)
 
 module Core   = LexerLib.Core
+module Markup = LexerLib.Markup
 module Region = Simple_utils.Region
 module Utils  = Simple_utils.Utils
 
@@ -17,12 +18,13 @@ module type S =
     type message = string Region.reg
 
     val filter :
-      (lex_unit list, message) result -> (token list, message) result
+      (lex_unit list, message) result -> (token list * Markup.t list, message) result
   end
 
 (* Filters *)
 
-let ok x = Stdlib.Ok x
+let (let*) = Result.bind
+let ok     = Result.ok
 
 type message = string Region.reg
 
@@ -31,15 +33,18 @@ type lex_unit = token Core.lex_unit
 
 (* Filtering out the markup *)
 
-let tokens_of = function
-  Stdlib.Ok lex_units ->
-    let apply tokens = function
-      Core.Token token -> token::tokens
-    | Core.Markup    _ -> tokens
-    | Core.Directive d -> Token.Directive d :: tokens
-    in List.fold_left apply [] lex_units |> List.rev |> ok
-| Error _ as err -> err
+let tokens_of lex_units =
+  let apply (tokens, comments) = function
+    Core.Token token -> (token::tokens, comments)
+  | Markup (LineCom _ as l) -> (tokens, l :: comments)
+  | Markup (BlockCom _ as l) -> (tokens, l :: comments)
+  | Markup    _ -> (tokens, comments)
+  | Directive d -> (Token.Directive d :: tokens, comments)
+  in List.fold_left apply ([], []) lex_units |> (fun (a, b) -> (List.rev a, List.rev b)) |> ok
 
 (* Exported *)
 
-let filter = Utils.(tokens_of <@ Style.check)
+let filter tokens = 
+  let* tokens = Style.check tokens in
+  let* (tokens, comments) = tokens_of tokens in
+  ok (tokens, comments)

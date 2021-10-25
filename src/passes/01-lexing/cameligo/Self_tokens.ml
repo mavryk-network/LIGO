@@ -4,9 +4,11 @@
 (* Vendor dependencies *)
 
 module Core   = LexerLib.Core
+module Markup = LexerLib.Markup
 module Region = Simple_utils.Region
-module Pos = Simple_utils.Pos
+module Pos    = Simple_utils.Pos
 module Utils  = Simple_utils.Utils
+
 
 (* Signature *)
 
@@ -18,12 +20,13 @@ module type S =
     type message = string Region.reg
 
     val filter :
-      (lex_unit list, message) result -> (token list, message) result
+      (lex_unit list, message) result -> (token list * Markup.t list, message) result
   end
 
 (* Filters *)
 
-let ok x = Stdlib.Ok x
+let (let*) = Result.bind
+let ok     = Result.ok
 
 type message = string Region.reg
 
