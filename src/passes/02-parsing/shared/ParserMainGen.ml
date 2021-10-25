@@ -33,7 +33,7 @@ module type PRINTER =
 module type PRETTY =
   sig
     type tree
-    val print : tree -> PPrint.document
+    val print : tree * LexerLib.Markup.t list -> PPrint.document
   end
 
 type 'token window = <
@@ -107,7 +107,7 @@ module Make
       function
         Stdlib.Ok tree ->
           if CLI.pretty then
-            let doc = Pretty.print tree in
+            let doc = Pretty.print (tree, []) in
             let width =
               match Terminal_size.get_columns () with
                 None -> 60

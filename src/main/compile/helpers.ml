@@ -75,12 +75,12 @@ let preprocess_string ~raise ~(options:options) ~(meta: meta) file_path =
 type file_path = string
 
 let parse_and_abstract_pascaligo ~raise buffer file_path =
-  let (raw, _comments) = (* TODO: pass comments *)
+  let (raw, comments) =
     trace ~raise parser_tracer @@
     Parsing.Pascaligo.parse_file buffer file_path in
   let applied =
     trace ~raise self_cst_pascaligo_tracer @@
-    Self_cst.Pascaligo.all_module raw in
+    Self_cst.Pascaligo.all_module (raw, comments) in
   let imperative =
     trace ~raise cit_pascaligo_tracer @@
     Tree_abstraction.Pascaligo.compile_module applied
@@ -99,12 +99,12 @@ let parse_and_abstract_expression_pascaligo ~raise buffer =
   in imperative
 
 let parse_and_abstract_cameligo ~raise buffer file_path =
-  let (raw, _comments) = (*  TODO: pass comments *)
+  let (raw, comments) =
     trace ~raise parser_tracer @@
     Parsing.Cameligo.parse_file buffer file_path in
   let applied =
     trace ~raise self_cst_cameligo_tracer @@
-    Self_cst.Cameligo.all_module raw in
+    Self_cst.Cameligo.all_module (raw, comments) in
   let imperative =
     trace ~raise cit_cameligo_tracer @@
     Tree_abstraction.Cameligo.compile_module applied
@@ -123,12 +123,12 @@ let parse_and_abstract_expression_cameligo ~raise buffer =
   in imperative
 
 let parse_and_abstract_reasonligo ~raise buffer file_path =
-  let (raw, _comments) = (* TODO: pass comments *)
+  let (raw, comments) =
     trace ~raise parser_tracer @@
     Parsing.Reasonligo.parse_file buffer file_path in
   let applied =
     trace ~raise self_cst_reasonligo_tracer @@
-    Self_cst.Reasonligo.all_module raw in
+    Self_cst.Reasonligo.all_module (raw, comments) in
   let imperative =
     trace ~raise cit_reasonligo_tracer @@
     Tree_abstraction.Reasonligo.compile_module applied
@@ -147,12 +147,12 @@ let parse_and_abstract_expression_reasonligo ~raise buffer =
   in imperative
 
 let parse_and_abstract_jsligo ~raise buffer file_path =
-  let (raw, _comments) = (* TODO: pass comments *)
+  let (raw, comments) =
     trace ~raise parser_tracer @@
     Parsing.Jsligo.parse_file buffer file_path in
   let applied =
     trace ~raise self_cst_jsligo_tracer @@
-    Self_cst.Jsligo.all_module raw in
+    Self_cst.Jsligo.all_module (raw, comments) in
   let imperative =
     trace ~raise cit_jsligo_tracer @@
     Tree_abstraction.Jsligo.compile_module applied

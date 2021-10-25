@@ -16,7 +16,7 @@ let pp_braces printer (node : 'a braces reg) =
   let inside = node.value.inside
   in string "{" ^^ nest 1 (printer inside ^^ string "}")
 
-let rec print ast =
+let rec print (ast, _comments) =
   let decl = Utils.nseq_to_list ast.decl in
   let decl = List.filter_map pp_declaration decl
   in separate_map (hardline ^^ hardline) group decl
@@ -173,7 +173,7 @@ and pp_quoted_param param =
 and pp_module_decl decl =
   let {name; module_; _} = decl.value in
   string "module " ^^ pp_ident name ^^ string " = "
-  ^^ group (print module_) ^^ string ";"
+  ^^ group (print (module_, [])) ^^ string ";" (* TODO: pass comments *)
 
 and pp_module_alias decl =
   let {alias; binders; _} = decl.value in
@@ -437,7 +437,7 @@ and pp_mod_in {value; _} =
   let {name; module_; _} = mod_decl
   in string "module"
      ^^ prefix 2 1 (pp_ident name ^^ string "= {")
-                   (print module_)
+                   (print (module_, [])) (* TODO: pass comments *)
      ^^ string " }"
      ^^ string ";" ^^ hardline ^^ group (pp_expr body)
 

@@ -1,11 +1,13 @@
 (* A pretty printer for JsLIGO *)
 
-type cst       = Cst_jsligo.CST.t
-type expr      = Cst_jsligo.CST.expr
-type type_expr = Cst_jsligo.CST.type_expr
-type pattern   = Cst_jsligo.CST.pattern
+module CST = Cst_jsligo.CST
 
-val print           : cst -> PPrint.document
+type cst       = CST.t
+type expr      = CST.expr
+type type_expr = CST.type_expr
+type pattern   = CST.pattern
+
+val print           : cst * LexerLib.Markup.t list -> PPrint.document
 val print_expr      : expr -> PPrint.document
 val print_type_expr : type_expr -> PPrint.document
 val print_pattern   : pattern -> PPrint.document

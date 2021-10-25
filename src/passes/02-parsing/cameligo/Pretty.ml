@@ -57,7 +57,7 @@ let pp_par printer {value; _} =
   (pp_region_t lparen value.lpar) ^^ printer value.inside ^^ (pp_region_t rparen value.rpar)
 
 
-let rec print ast =
+let rec print (ast, _comments) =
   let decl = Utils.nseq_to_list ast.decl in
   let decl = List.filter_map pp_declaration decl
   in separate_map (hardline ^^ hardline) group decl ^^ pp_region_t (empty) ast.eof
@@ -221,7 +221,7 @@ and pp_quoted_params_nsepseq seq = pp_nsepseq "," pp_quoted_param seq
 and pp_module_decl decl =
   let {kwd_module; name; module_; eq; kwd_struct; kwd_end} = decl.value in
   (pp_region_t (string "module ") kwd_module) ^^ pp_region_reg pp_ident name ^^ pp_region_t (string " =") eq ^^ pp_region_t (string " struct") kwd_struct
-  ^^ group (nest 0 (break 1 ^^ print module_))
+  ^^ group (nest 0 (break 1 ^^ print (module_, []))) (* TODO: pass comments *)
   ^^ pp_region_t (string " end") kwd_end
 
 and pp_module_alias decl =
@@ -493,7 +493,7 @@ and pp_mod_in {value; _} =
   let {kwd_module; name; eq; kwd_struct; module_; kwd_end} = mod_decl
   in pp_region_t (string "module") kwd_module
      ^^ prefix 2 1 (pp_region_reg pp_ident name ^^ pp_region_t (string "=") eq ^^ pp_region_t (string "struct") kwd_struct)
-                   (print module_)
+                   (print (module_, [])) (* TODO: pass comments *)
      ^^ pp_region_t (string " end") kwd_end
      ^^ pp_region_t (string " in") kwd_in ^^ hardline ^^ group (pp_expr body)
 
