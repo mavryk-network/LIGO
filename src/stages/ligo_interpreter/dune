@@ -7,6 +7,7 @@
     proto-alpha-utils
     tezos-utils
     ast_typed
+    self_ast_typed
     stage_common
   )
   (flags (:standard -open Simple_utils))

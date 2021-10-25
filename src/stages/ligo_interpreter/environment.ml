@@ -40,3 +40,59 @@ let filter :
     | Expression {name = _; item; no_mutation = _} :: xs when not (pred item) -> aux xs
     | x :: xs -> x :: aux xs in
   aux env
+
+module Free_variables :
+  sig
+    val value : value -> (module_variable list * expression_variable list)
+  end
+  = struct
+
+  let get_fv_value : value -> _ = fun v ->
+    match v with
+    | V_Func_val { orig_lambda ; _ } -> Self_ast_typed.Helpers.Free_variables.expression orig_lambda
+    | _ -> ([], [])
+
+  let value v =
+    let fmv, fv = get_fv_value v in
+    (fmv, fv)
+end
+
+module Free_module_variables :
+  sig
+    val value : value -> (module_variable list * expression_variable list)
+    val env : env -> (module_variable list * expression_variable list)
+  end
+  = struct
+
+  let unions xss =
+    let (a, b) = List.fold_right ~init:([], []) ~f:(fun (xs, ys) (rs, ss) -> (xs @ rs, ys @ ss)) xss in
+    (List.dedup_and_sort ~compare:compare_module_variable a, List.dedup_and_sort ~compare:(Location.compare_content ~compare:Var.compare) b)
+
+  let rec get_fv_value : value -> _ = fun v ->
+    match v with
+    | V_Func_val { orig_lambda ; _ } -> Self_ast_typed.Helpers.Free_module_variables.expression orig_lambda
+    | _ -> ([], [])
+
+  and get_fv_env : env -> _ = fun env ->
+    let aux = fun x ->
+      match x with
+      | Expression {name = _ ; item ; no_mutation = _} ->
+        get_fv_value item.eval_term
+      | Module {name=_ ; item} ->
+        get_fv_env item
+    in
+    unions @@ List.map ~f:aux env
+
+
+  let get_fv_value : value -> _ = fun v ->
+    match v with
+    | V_Func_val { orig_lambda ; _ } -> Self_ast_typed.Helpers.Free_module_variables.expression orig_lambda
+    | _ -> ([], [])
+
+  let value v =
+    let fmvs, fvs = get_fv_value v in
+    (fmvs, fvs)
+  let env e =
+    let fmvs, fvs = get_fv_env e in
+    (fmvs, fvs)
+end

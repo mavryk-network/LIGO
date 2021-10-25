@@ -224,9 +224,21 @@ let inline_let : bool ref -> expression -> expression =
       e
   | _ -> e
 
+let inline_letb : bool ref -> expression -> expression * bool =
+  fun changed e ->
+  match e.content with
+  | E_let_in (e1, should_inline_here, ((x, _a), e2)) ->
+    if is_pure e1 && (should_inline_here || should_inline x e1 e2)
+    then
+      let e2' = Subst.subst_expression ~body:e2 ~x:x ~expr:e1 in
+      (changed := true ; (e2', true))
+    else
+      (e, false)
+  | _ -> (e, false)
+
 let inline_lets ~raise : bool ref -> expression -> expression =
   fun changed ->
-  map_expression ~raise (fun ~raise:_ -> inline_let changed)
+  Helpers.map_expression ~raise (fun ~raise:_ -> inline_let changed)
 
 
 (* Let "beta" mean transforming the code:

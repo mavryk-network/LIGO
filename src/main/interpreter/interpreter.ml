@@ -745,7 +745,7 @@ and eval_ligo ~raise ~steps : Ast_typed.expression -> calltrace -> env -> value 
           | _ -> fail @@ Errors.generic_error term.location "Trying to apply on something that is not a function?"
       )
     | E_lambda {binder; result;} ->
-      return @@ V_Func_val {rec_name = None; orig_lambda = term ; arg_binder=binder ; body=result ; env}
+      return @@ V_Func_val {rec_name = None; orig_lambda = term ; arg_binder=binder ; body=result ; env = Michelson_backend.env_clean term env}
     | E_let_in {let_binder ; rhs; let_result; attr = { no_mutation }} -> (
       let* rhs' = eval_ligo rhs calltrace env in
       eval_ligo (let_result) calltrace (Env.extend env let_binder ~no_mutation (rhs.type_expression,rhs'))
@@ -877,7 +877,7 @@ and eval_ligo ~raise ~steps : Ast_typed.expression -> calltrace -> env -> value 
                              orig_lambda = term ;
                              arg_binder = lambda.binder ;
                              body = lambda.result ;
-                             env = env }
+                             env = Michelson_backend.env_clean (* ~raise ~loc:term.location  *) term env }
     | E_raw_code {language ; code} -> (
       let open Ast_typed in
       match code.expression_content with
