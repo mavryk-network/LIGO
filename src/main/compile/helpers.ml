@@ -1,6 +1,8 @@
 open Trace
 open Main_errors
 
+let (let*) = Result.bind
+
 type s_syntax = Syntax_name of string
 type v_syntax = Self_ast_imperative.Syntax.v_syntax
 
@@ -277,23 +279,47 @@ let pretty_print_cst ~raise ~(meta: meta) buffer file_path=
     | JsLIGO     -> pretty_print_jsligo_cst
   in trace ~raise parser_tracer @@ print buffer file_path
 
-let pretty_print_pascaligo =
-  Parsing.Pascaligo.pretty_print_file
+let pretty_print_pascaligo ~raise buffer file_path =
+  let (raw, comments) =
+    trace ~raise parser_tracer @@
+    Parsing.Pascaligo.parse_file buffer file_path in
+  let applied =
+    trace ~raise self_cst_pascaligo_tracer @@
+    Self_cst.Pascaligo.all_module (raw, comments) in
+  Parsing.Pascaligo.pretty_print applied
 
-let pretty_print_cameligo =
-  Parsing.Cameligo.pretty_print_file
+let pretty_print_cameligo ~raise buffer file_path =
+  let (raw, comments) =
+    trace ~raise parser_tracer @@
+    Parsing.Cameligo.parse_file buffer file_path in
+  let applied =
+    trace ~raise self_cst_cameligo_tracer @@
+    Self_cst.Cameligo.all_module (raw, comments) in
+  Parsing.Cameligo.pretty_print applied
 
-let pretty_print_reasonligo =
-  Parsing.Reasonligo.pretty_print_file
+let pretty_print_reasonligo ~raise buffer file_path =
+  let (raw, comments) =
+    trace ~raise parser_tracer @@
+    Parsing.Reasonligo.parse_file buffer file_path in
+  let applied =
+    trace ~raise self_cst_reasonligo_tracer @@
+    Self_cst.Reasonligo.all_module (raw, comments) in
+  Parsing.Reasonligo.pretty_print applied
 
-let pretty_print_jsligo =
-  Parsing.Jsligo.pretty_print_file
+let pretty_print_jsligo ~raise buffer file_path =
+  let (raw, comments) =
+    trace ~raise parser_tracer @@
+    Parsing.Jsligo.parse_file buffer file_path in
+  let applied =
+    trace ~raise self_cst_jsligo_tracer @@
+    Self_cst.Jsligo.all_module (raw, comments) in
+  Parsing.Jsligo.pretty_print applied
 
 let pretty_print ~raise ~(meta: meta) buffer file_path =
   let print =
     match meta.syntax with
-      PascaLIGO  -> pretty_print_pascaligo
-    | CameLIGO   -> pretty_print_cameligo
-    | ReasonLIGO -> pretty_print_reasonligo
-    | JsLIGO     -> pretty_print_jsligo
-  in trace ~raise parser_tracer @@ print buffer file_path
+      PascaLIGO  -> pretty_print_pascaligo ~raise
+    | CameLIGO   -> pretty_print_cameligo ~raise
+    | ReasonLIGO -> pretty_print_reasonligo ~raise
+    | JsLIGO     -> pretty_print_jsligo ~raise
+  in print buffer file_path
