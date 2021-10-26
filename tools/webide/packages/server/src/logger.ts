@@ -11,7 +11,7 @@ interface Logger {
 
 const config = {
   format: combine(timestamp(), simple()),
-  transports: [new transports.Console()]
+  transports: [new transports.Console({level: 'info'})]
 };
 
 export const logger: Logger = createLogger(config);
