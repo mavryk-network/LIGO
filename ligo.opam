@@ -86,4 +86,6 @@ pin-depends: [
   [ "tezos-test-helpers.dev" "./vendors/tezos/src/lib_test" ]
   [ "tezos-version.dev" "./vendors/tezos/src/lib_version" ]
   [ "tezos-workers.dev" "./vendors/tezos/src/lib_workers" ]
+  [ "bls12-381.1.0.1" "./vendors/ocaml-bls12-381" ]
+  [ "bls12-381-unix.1.0.1" "./vendors/ocaml-bls12-381" ]
 ]
