@@ -56,7 +56,7 @@ let mutate_cst source_file syntax infer protocol_version libs display_format see
            trace ~raise Main_errors.self_cst_cameligo_tracer @@
              Self_cst.Cameligo.all_module (raw, comments) in
          let _, mutated_prg = Fuzzer.mutate_module_ ?n:seed applied in
-         let buffer = (Parsing.Cameligo.pretty_print (mutated_prg, comments)) in
+         let buffer = (Parsing.Cameligo.pretty_print mutated_prg) in
          buffer
        end
       | {syntax = ReasonLIGO} ->
@@ -69,7 +69,7 @@ let mutate_cst source_file syntax infer protocol_version libs display_format see
              trace ~raise Main_errors.self_cst_reasonligo_tracer @@
                Self_cst.Reasonligo.all_module (raw, comments) in
            let _, mutated_prg = Fuzzer.mutate_module_ ?n:seed applied in
-           let buffer = (Parsing.Reasonligo.pretty_print (mutated_prg, comments)) in
+           let buffer = (Parsing.Reasonligo.pretty_print mutated_prg) in
            buffer
          end
       | {syntax = PascaLIGO} ->
@@ -82,7 +82,7 @@ let mutate_cst source_file syntax infer protocol_version libs display_format see
              trace ~raise Main_errors.self_cst_pascaligo_tracer @@
                Self_cst.Pascaligo.all_module (raw, comments) in
            let _, mutated_prg = Fuzzer.mutate_module_ ?n:seed applied in
-           let buffer = (Parsing.Pascaligo.pretty_print (mutated_prg, comments)) in
+           let buffer = (Parsing.Pascaligo.pretty_print mutated_prg) in
            buffer
          end
       | {syntax = JsLIGO} ->
@@ -95,6 +95,6 @@ let mutate_cst source_file syntax infer protocol_version libs display_format see
              trace ~raise Main_errors.self_cst_jsligo_tracer @@
                Self_cst.Jsligo.all_module (raw, comments) in
            let _, mutated_prg = Fuzzer.mutate_module_ ?n:seed applied in
-           let buffer = (Parsing.Jsligo.pretty_print (mutated_prg, comments)) in
+           let buffer = (Parsing.Jsligo.pretty_print mutated_prg) in
            buffer
          end

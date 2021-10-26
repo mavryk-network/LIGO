@@ -23,7 +23,7 @@ let pp_braces : ('a -> document) -> 'a braces reg -> document =
     string "{" ^^ nest 1 (printer value.inside ^^ string "}")
  *)
 
-let rec print (ast, _comments) =
+let rec print ast =
   let decl = Utils.nseq_to_list ast.decl in
   let decl = List.filter_map pp_declaration decl
   in separate_map (hardline ^^ hardline) group decl
@@ -81,7 +81,7 @@ and pp_type_params = function
 and pp_module_decl decl =
   let {name; module_; enclosing; _} = decl.value in
   string "module " ^^ pp_ident name ^^ string " is {"
-  ^^ group (nest 2 (break 1 ^^ print (module_, []))) (* TODO: pass comments*)
+  ^^ group (nest 2 (break 1 ^^ print module_))
   ^^ string "}"
 
 and pp_module_alias decl =

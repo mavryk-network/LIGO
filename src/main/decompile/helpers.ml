@@ -41,7 +41,7 @@ let syntax_to_variant ~raise ?dialect (Syntax_name syntax) source =
 let specialise_and_print_pascaligo dialect m =
   let ast = Self_ast_imperative.decompile_imperative m in
   let cst = Tree_abstraction.Pascaligo.decompile_module ?dialect ast in
-  let source = (Parsing.Pascaligo.pretty_print (cst, [])) (* TODO: get comments from decompilation *)
+  let source = (Parsing.Pascaligo.pretty_print cst)
   in source
 
 let specialise_and_print_expression_pascaligo dialect expression =
@@ -52,7 +52,7 @@ let specialise_and_print_expression_pascaligo dialect expression =
 
 let specialise_and_print_cameligo m =
   let cst = Tree_abstraction.Cameligo.decompile_module m in
-  let source = (Parsing.Cameligo.pretty_print (cst, [])) (* TODO: pass comments from decompilation *)
+  let source = (Parsing.Cameligo.pretty_print cst)
   in source
 
 let specialise_and_print_expression_cameligo expression =
@@ -62,7 +62,7 @@ let specialise_and_print_expression_cameligo expression =
 
 let specialise_and_print_reasonligo m =
   let cst = Tree_abstraction.Reasonligo.decompile_module m in
-  let source = (Parsing.Reasonligo.pretty_print (cst, [])) (* TODO: pass comments from decompilation *)
+  let source = (Parsing.Reasonligo.pretty_print cst)
   in source
 
 let specialise_and_print_expression_reasonligo expression =
@@ -78,7 +78,7 @@ let specialise_and_print_jsligo m =
   let cst =
     Tree_abstraction.Jsligo.decompile_module ast in
   let source =
-    (Parsing.Jsligo.pretty_print (cst, [])) (* TODO: pass comments from decompilation *)
+    (Parsing.Jsligo.pretty_print cst)
   in source
 
 let specialise_and_print_expression_jsligo expression =

@@ -70,7 +70,7 @@ module type PRETTY =
     type type_expr
     type pattern
 
-    val print           : cst * Markup.t list -> PPrint.document
+    val print           : cst       -> PPrint.document
     val print_expr      : expr      -> PPrint.document
     val print_type_expr : type_expr -> PPrint.document
     val print_pattern   : pattern   -> PPrint.document
@@ -327,9 +327,9 @@ module MakePretty (CST    : CST)
         | Some c -> c
       in width, buffer
 
-    let pretty_print (cst, comments) =
+    let pretty_print cst =
       let width, buffer = set () in
-      let doc = Pretty.print (cst, comments) in
+      let doc = Pretty.print cst in
       let () = PPrint.ToBuffer.pretty 1.0 width buffer doc
       in buffer
 

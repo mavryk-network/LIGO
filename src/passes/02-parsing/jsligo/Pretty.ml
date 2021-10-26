@@ -23,7 +23,7 @@ let pp_nsepseq :
     in separate_map sep printer elems
 
 
-let rec print (ast, _comments) =
+let rec print ast =
   let stmt     = Utils.nseq_to_list ast.statements in
   let stmt     = List.filter_map pp_toplevel_statement stmt in
   let app stmt = group (stmt ^^ string ";")

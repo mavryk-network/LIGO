@@ -33,7 +33,7 @@ include Parsing_shared.Common.MakeTwoParsers
 include Parsing_shared.Common.MakePretty (CST) (Pretty)
 
 let pretty_print_file ~raise buffer file_path =
-  ContractParser.parse_file ~raise buffer file_path |> pretty_print
+  ContractParser.parse_file ~raise buffer file_path |> fst |> pretty_print
 
 let pretty_print_cst ~raise buffer file_path =
   let (cst, _comments) = parse_file ~raise buffer file_path in

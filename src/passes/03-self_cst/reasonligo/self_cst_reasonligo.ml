@@ -1,9 +1,9 @@
 module Errors = Errors
 
 let all_mapper ~raise ~comments = 
-  ignore comments;
   [
-    Helpers.fold_to_map () @@ Scoping.peephole ~raise
+    Helpers.fold_to_map () @@ Scoping.peephole ~raise;
+    Comments.peephole ~raise ~comments
   ]
 
 let all_module ~raise (init, comments) =
