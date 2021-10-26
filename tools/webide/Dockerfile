@@ -38,7 +38,7 @@ RUN yarn workspace server run build
 # Copy build to app
 FROM stage6 as stage7
 COPY --from=stage6 /app/packages/client/build /app/client/build
-COPY --from=stage6 /app/packages/server/dist/ /app/server/dist
+COPY --from=stage6 /app/packages/server/dist/src/ /app/server/dist
 
 # Run the backend server
 EXPOSE 8080
