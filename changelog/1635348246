@@ -1,0 +1,5 @@
+author: er433
+merge_request: '1386'
+title: 'Binaries: replace to custom bls12-381 build process to not emit mulx (and
+  similar) instructions'
+type: internal
