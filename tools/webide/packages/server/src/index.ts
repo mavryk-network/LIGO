@@ -13,7 +13,7 @@ import { runFunctionHandler } from './handlers/evaluate-call';
 import { shareHandler } from './handlers/share';
 import { sharedLinkHandler } from './handlers/shared-link';
 import { listDeclarationHandler } from './handlers/list-declaration';
-import { errorLoggerMiddleware, loggerMiddleware } from './logger';
+import { loggerMiddleware } from './logger';
 require('./metrics');
 
 const bodyParser = require('body-parser');
@@ -67,8 +67,6 @@ app.post('/api/evaluate-expr', evaluateValueHandler);
 app.post('/api/evaluate-call', runFunctionHandler);
 app.post('/api/deploy', deployHandler);
 app.post('/api/list-declaration', listDeclarationHandler);
-
-app.use(errorLoggerMiddleware);
 
 app.listen(APP_PORT, () => {
   console.log(`API listening on: ${APP_PORT}`);

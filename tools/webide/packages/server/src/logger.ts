@@ -1,5 +1,4 @@
 import { createLogger, format, transports } from 'winston';
-const { combine, timestamp, simple } = format;
 import expressWinston from 'express-winston';
 
 interface Logger {
@@ -10,15 +9,20 @@ interface Logger {
 }
 
 const config = {
-  format: combine(timestamp(), simple()),
-  transports: [new transports.Console({level: 'info'})]
+  format: format.combine(
+    format.colorize(),
+    format.json()
+  ),
+  transports: [
+    new transports.Console({level: 'info'}),
+    new transports.File({level: 'info', filename: 'access.log'})
+  ]
 };
 
 export const logger: Logger = createLogger(config);
 export const loggerMiddleware = expressWinston.logger({
   ...config,
-  msg: 'HTTP {{req.method}} {{req.url}}',
-  requestWhitelist: [...expressWinston.requestWhitelist, 'body'],
-  responseWhitelist: [...expressWinston.responseWhitelist, 'body']
-});
-export const errorLoggerMiddleware = expressWinston.errorLogger(config);
+  meta:true,
+  expressFormat: true,
+  colorize: true
+})
