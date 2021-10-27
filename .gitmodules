@@ -2,7 +2,3 @@
 	path = vendors/tezos
 	url = https://gitlab.com/tezos/tezos.git
 	branch = tags/v11.0-rc1
-[submodule "vendors/ocaml-bls12-381"]
-	path = vendors/ocaml-bls12-381
-	url = https://github.com/erivas/ocaml-bls12-381.git
-	branch = no-adx
