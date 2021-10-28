@@ -121,6 +121,7 @@ let infer_file_with_deps ~raise ~add_warning ~(options:Compiler_options.t) asts_
 
 let typecheck_file_with_deps ~raise ~add_warning ~(options:Compiler_options.t) asts_typed (file_name, (_meta,form,_c_unit,_deps)) ast_core_inferred =
   let ast_typed,ast_typed_env = Ligo_compile.Of_core.typecheck ~raise ~add_warning ~options form ast_core_inferred in
+  let ast_typed = Self_ast_typed.monomorphise_module ast_typed in
   SMap.add file_name (ast_typed,ast_typed_env) asts_typed
 
 let infer_and_typecheck_file_with_deps ~raise ~add_warning ~(options:Compiler_options.t) asts_typed (file_name, (meta,form,c_unit,deps)) =

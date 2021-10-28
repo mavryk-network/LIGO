@@ -49,12 +49,12 @@ let interpret expression init_file syntax infer protocol_version amount balance 
            (mini_c_prg,mods,env)
         | None -> ([],Ast_core.SMap.empty,options.init_env) in
       let typed_exp,_    = Compile.Utils.type_expression ~raise ~options init_file syntax expression env in
+      let _data, typed_exp = Self_ast_typed.monomorphise_expression typed_exp in
       let mini_c_exp     = Compile.Of_typed.compile_expression ~raise ~module_env:mods typed_exp in
       let compiled_exp   = Compile.Of_mini_c.aggregate_and_compile_expression ~raise ~options decl_list mini_c_exp in
       let options        = Run.make_dry_run_options ~raise {now ; amount ; balance ; sender ; source ; parameter_ty = None } in
       let runres         = Run.run_expression ~raise ~options compiled_exp.expr compiled_exp.expr_ty in
       Decompile.Of_michelson.decompile_expression ~raise typed_exp.type_expression runres
-
 
 let evaluate_call source_file entry_point parameter amount balance sender source now syntax infer protocol_version display_format werror =
     Trace.warning_with @@ fun add_warning get_warnings ->
