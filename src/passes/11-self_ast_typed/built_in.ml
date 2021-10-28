@@ -197,7 +197,7 @@ let get_declaration_from_env ~raise var expressions err =
   let { expr_var ; env_elt } = environment_binding in
   (match env_elt.definition with 
   | ED_declaration {expression} -> 
-    let attr : attribute = { inline = true ; no_mutation = true ; public = true } in
+    let attr : known_attributes = { inline = true ; no_mutation = true ; public = true ; view = false } in
     Location.wrap @@ Declaration_constant { binder = expr_var; expr = expression ; attr ; name = None }
   | ED_binder -> 
     raise.raise @@ Errors.corner_case "Built-in: No declaration found")

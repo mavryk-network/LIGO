@@ -64,6 +64,54 @@ let meta_ligo_types : (type_variable * type_expression) list -> (type_variable *
     (v_failure, t_constant failure_name []);
   ]
 
+let e_raw_code = Ast_typed.Combinators.e_raw_code_of_michelson
+
+let wrap_var s = Location.wrap @@ Var.of_name s
+
+let add_bindings_in_env bs env =
+  List.fold_left bs ~init:env ~f:(fun env (v,e) -> 
+    let attr = { inline = false ; no_mutation = false; public = true; view = false } in
+    Environment.add_ez_declaration ~public:true (wrap_var v) e attr env)
+
+let add_types_in_module_env ts env = 
+  List.fold_left ts ~init:env ~f:(fun env (v,t) -> 
+    Environment.add_type ~public:true v t env)
+
+let make_module parent_env module_name bindings = 
+  let module_env = add_bindings_in_env bindings parent_env in
+  Environment.add_module ~public:true module_name module_env parent_env 
+
+(* TODO: organize these in a better way maybe a new file/module *)
+
+let michelson_slice = "{ UNPAIR ;
+UNPAIR ;
+SLICE ;
+IF_NONE { PUSH string \"SLICE\" ; FAILWITH } {} }"
+
+let slice_type = t_function (t_triplet (t_nat ()) (t_nat ()) (t_string ())) (t_string ()) ()
+
+let string_module e = make_module e "String" [
+  ("length", e_raw_code "{ SIZE }" (t_function (t_string ()) (t_nat ()) ()) ) ;
+  ("size"  , e_raw_code "{ SIZE }" (t_function (t_string ()) (t_nat ()) ())) ;
+  ("slice" , e_raw_code michelson_slice slice_type) ;
+  ("sub"   , e_raw_code michelson_slice slice_type) ;
+  ("concat", e_raw_code "{ UNPAIR ; CONCAT }" (t_function (t_pair (t_string ()) (t_string ())) (t_string ()) ())) ; 
+]
+
+let crypto_module e = make_module e "Crypto" [
+  ("blake2b" , e_raw_code "{ BLAKE2B  }" (t_function (t_bytes ()) (t_bytes    ()) ())) ;
+  ("sha256"  , e_raw_code "{ SHA256   }" (t_function (t_bytes ()) (t_bytes    ()) ())) ;
+  ("sha512"  , e_raw_code "{ SHA512   }" (t_function (t_bytes ()) (t_bytes    ()) ())) ;
+  ("sha3"    , e_raw_code "{ SHA3     }" (t_function (t_bytes ()) (t_bytes    ()) ())) ;
+  ("keccak"  , e_raw_code "{ KECCAK   }" (t_function (t_bytes ()) (t_bytes    ()) ())) ;
+  ("hash_key", e_raw_code "{ HASH_KEY }" (t_function (t_key   ()) (t_key_hash ()) ())) ;
+  ("check"   , e_raw_code "{ UNPAIR ; UNPAIR ; CHECK_SIGNATURE }" (t_function (t_triplet (t_key ()) (t_signature ()) (t_bytes ())) (t_bool ()) ()))
+]
+
+let michelson_module e = make_module e "Michelson" [
+  ("is_nat", e_raw_code "{ ISNAT }" (t_function (t_int ()) (t_option (t_nat ())) ())) ;
+]
+
 let toplevel e = add_bindings_in_env [
   ("blake2b"        , e_raw_code "{ BLAKE2B  }" (t_function (t_bytes ()) (t_bytes    ()) ())) ;
   ("sha256"         , e_raw_code "{ SHA256   }" (t_function (t_bytes ()) (t_bytes    ()) ())) ;
@@ -80,10 +128,17 @@ let toplevel e = add_bindings_in_env [
 
 ] e
 
+let add_build_in_values e = 
+  e
+  |> string_module
+  |> crypto_module
+  |> michelson_module
+  |> toplevel
+
 let default : Protocols.t -> environment = function
-  | Protocols.Edo -> Environment.of_list_type edo_types
-  | Protocols.Hangzhou -> Environment.of_list_type hangzhou_types
+  | Protocols.Edo -> Environment.of_list_type edo_types |> add_build_in_values
+  | Protocols.Hangzhou -> Environment.of_list_type hangzhou_types |> add_build_in_values
 
 let default_with_test : Protocols.t -> environment = function
-  | Protocols.Edo -> Environment.of_list_type (meta_ligo_types edo_types)
-  | Protocols.Hangzhou -> Environment.of_list_type (meta_ligo_types hangzhou_types)
+  | Protocols.Edo -> Environment.of_list_type (meta_ligo_types edo_types) |> add_build_in_values
+  | Protocols.Hangzhou -> Environment.of_list_type (meta_ligo_types hangzhou_types) |> add_build_in_values
