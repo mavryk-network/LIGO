@@ -204,6 +204,17 @@ let literal = function
   | Literal_operation l -> `List [`String "Literal_operation"; bytes_to_yojson l ]
 
 let label (Label l) = `List [`String "Label"; `String l]
+let label_to_yojson (Label l) = `List [`String "Label"; `String l]
+let label_of_yojson = function
+  | `List [`String "Label"; `String l] -> Ok (Label l)
+  | _ -> Utils.error_yojson_format "Label of string"
+let bindings_to_yojson f g xs = `List (List.map ~f:(fun (x,y) -> `List [f x; g y]) xs)
+let label_map_to_yojson row_elem_to_yojson m =
+  bindings_to_yojson label_to_yojson row_elem_to_yojson (LMap.bindings m)
+let type_variable_to_yojson var = Var.to_yojson var
+let module_variable_to_yojson var = `String var
+let expression_variable_to_yojson var = Location.wrap_to_yojson (Var.to_yojson) var
+let expression_variable_of_yojson var = Location.wrap_of_yojson (Var.of_yojson) var
 let option f o =
   match o with
   | None   -> `List [ `String "None" ; `Null ]

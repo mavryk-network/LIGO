@@ -68,7 +68,7 @@ let rec def_to_yojson : def -> Yojson.Safe.t = function
       ("name", `String name);
       ("range", Location.to_yojson range);
       ("body_range", Location.to_yojson body_range);
-      ("content", Stage_common.To_yojson.list Ast_core.module_variable_to_yojson @@ List.Ne.to_list content );
+      ("content", Stage_common.To_yojson.(list module_variable_to_yojson) @@ List.Ne.to_list content );
     ]
 
 and defs_json d : Yojson.Safe.t =

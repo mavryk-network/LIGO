@@ -15,18 +15,12 @@ type known_attributes = {
 
 type expression_
 type expression_variable = expression_ Var.t Location.wrap
-let expression_variable_to_yojson var = Location.wrap_to_yojson (Var.to_yojson) var
-let expression_variable_of_yojson var = Location.wrap_of_yojson (Var.of_yojson) var
 let equal_expression_variable t1 t2 = Location.equal_content ~equal:Var.equal t1 t2
 let compare_expression_variable t1 t2 = Location.compare_content ~compare:Var.compare t1 t2
 
 type type_
 type type_variable = type_ Var.t
-let type_variable_to_yojson var = Var.to_yojson var
-let type_variable_of_yojson var = Var.of_yojson var
 type module_variable = string
-let module_variable_to_yojson var = `String var
-let module_variable_of_yojson var = `String var
 let compare_module_variable = String.compare
 let equal_module_variable = String.equal
 type kind = unit
@@ -34,10 +28,6 @@ let equal_kind = Unit.equal
 let compare_kind = Unit.compare
 
 type label = Label of string
-let label_to_yojson (Label l) = `List [`String "Label"; `String l]
-let label_of_yojson = function
-  | `List [`String "Label"; `String l] -> Ok (Label l)
-  | _ -> Utils.error_yojson_format "Label of string"
 let equal_label (Label a) (Label b) = String.equal a b
 let compare_label (Label a) (Label b) = String.compare a b
 
@@ -47,9 +37,7 @@ type 'a label_map = 'a LMap.t
 let const_name = function
   | Deprecated {const;_} -> const
   | Const      const     -> const
-let bindings_to_yojson f g xs = `List (List.map ~f:(fun (x,y) -> `List [f x; g y]) xs)
-let label_map_to_yojson row_elem_to_yojson m =
-  bindings_to_yojson label_to_yojson row_elem_to_yojson (LMap.bindings m)
+
 
 type 'ty_expr row_element_mini_c = {
   associated_type      : 'ty_expr ;

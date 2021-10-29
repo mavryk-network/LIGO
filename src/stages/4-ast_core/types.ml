@@ -326,11 +326,7 @@ type 'a poly_set = 'a RedBlackTrees.PolySet.t
 (* representant for an equivalence class of type variables *)
 type 'v typeVariableMap = (type_variable, 'v) RedBlackTrees.PolyMap.t
 let typeVariableMap_to_yojson f tvmap =
-  bindings_to_yojson type_variable_to_yojson f @@ RedBlackTrees.PolyMap.bindings tvmap
-
-let typeVariableMap_of_yojson f tvmap =
-  Stdlib.Result.bind (Stage_common.Of_yojson.bindings type_variable_of_yojson f tvmap)
-    (Stdlib.Option.to_result ~none:"Map with duplicates" <@ RedBlackTrees.PolyMap.from_list ~cmp:compare)
+  Stage_common.To_yojson.(bindings_to_yojson type_variable_to_yojson f @@ RedBlackTrees.PolyMap.bindings tvmap)
 
 (* typevariable: to_string = (fun s -> Format.asprintf "%a" Var.pp s) *)
 type unionfind = type_variable poly_unionfind

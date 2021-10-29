@@ -596,7 +596,7 @@ let rec error_jsonformat : typer_error -> Yojson.Safe.t = fun a ->
   | `Typer_missing_funarg_annotation v ->
     let message = Format.asprintf "Missing type annotation for argument" in
     let content = `Assoc [
-      ("value", Stage_common.Types.expression_variable_to_yojson v );
+      ("value", Stage_common.To_yojson.expression_variable_to_yojson v );
       ("message", `String message );
       ("location", Location.to_yojson v.location); ] in
     json_error ~stage ~content
