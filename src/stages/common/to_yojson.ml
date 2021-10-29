@@ -187,6 +187,8 @@ let constant' = function
   | C_SAPLING_EMPTY_STATE      -> `List [`String "SAPLING_EMPTY_STATE"; `Null ]
   (* JsLIGO *)
   | C_POLYMORPHIC_ADD          -> `List [`String "POLYMORPHIC_ADD"; `Null ]
+let bytes_to_yojson b = `String (Bytes.to_string b)
+let [@warning "-32"] z_to_yojson x = `String (Z.to_string x)
 
 let literal = function
   | Literal_unit        -> `List [`String "Literal_unit"; `Null ]
