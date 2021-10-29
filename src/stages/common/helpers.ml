@@ -86,6 +86,6 @@ let rec map_pattern_t : ('a binder -> 'b binder) -> 'a pattern -> 'b pattern =
       let lp = List.map ~f:self lp in
       ret @@ P_record (x,lp)
 
-let var_attribute = { const_or_var = Some `Var }
-let const_attribute = { const_or_var = Some `Const }
+let var_attribute = { const_or_var = Some AVar }
+let const_attribute = { const_or_var = Some AConst }
 let empty_attribute = { const_or_var = None }

@@ -240,8 +240,8 @@ let for_all type_expression {ty_binder ; kind = _ ; type_ } =
 let binder type_expression {var;ascr;attributes} =
   let attributes = match attributes.const_or_var with
         | None -> []
-        | Some `Var -> [("const_or_var", `String "var")]
-        | Some `Const -> [("const_or_var", `String "const")] in
+        | Some AVar -> [("const_or_var", `String "var")]
+        | Some AConst -> [("const_or_var", `String "const")] in
   `Assoc ([
     ("var", expression_variable_to_yojson var);
     ("ty", option' type_expression ascr);

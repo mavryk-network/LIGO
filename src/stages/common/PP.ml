@@ -132,8 +132,8 @@ let wildcard ppf = fun () ->
 let option_const_or_var ppf is_var =
   match is_var with
   | None -> fprintf ppf ""
-  | Some `Var -> fprintf ppf "[@var]"
-  | Some `Const -> fprintf ppf ""
+  | Some AVar -> fprintf ppf "[@var]"
+  | Some AConst -> fprintf ppf ""
 
 let binder type_expression ppf {var;ascr;attributes={const_or_var}} =
   match ascr with

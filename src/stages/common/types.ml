@@ -14,14 +14,14 @@ type known_attributes = {
 }
 
 type expression_
-and expression_variable = expression_ Var.t Location.wrap
+type expression_variable = expression_ Var.t Location.wrap
 let expression_variable_to_yojson var = Location.wrap_to_yojson (Var.to_yojson) var
 let expression_variable_of_yojson var = Location.wrap_of_yojson (Var.of_yojson) var
 let equal_expression_variable t1 t2 = Location.equal_content ~equal:Var.equal t1 t2
 let compare_expression_variable t1 t2 = Location.compare_content ~compare:Var.compare t1 t2
 
 type type_
-and type_variable = type_ Var.t
+type type_variable = type_ Var.t
 let type_variable_to_yojson var = Var.to_yojson var
 let type_variable_of_yojson var = Var.of_yojson var
 type module_variable = string
@@ -91,8 +91,10 @@ type 'ty_exp arrow = {
   }
 
 (* Expression level types *)
+type const_or_var = AConst | AVar
+
 type binder_attributes = {
-    const_or_var : [`Const | `Var] option;
+    const_or_var : const_or_var option;
   }
 
 type 'ty_exp binder = {

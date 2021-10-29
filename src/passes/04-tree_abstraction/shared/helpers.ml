@@ -15,12 +15,12 @@ let strings_of_binder_attributes
       (attributes : binder_attributes) : string list =
   let pureligo {const_or_var} =
     match const_or_var with
-                | Some `Var -> ["var"]
+                | Some AVar -> ["var"]
                 | _ -> [] in
   let impureligo {const_or_var} =
     match const_or_var with
-                | Some `Var -> ["var"]
-                | Some `Const -> ["const"]
+                | Some AVar -> ["var"]
+                | Some AConst -> ["const"]
                 | _ -> [] in
   match lang with
   | `CameLIGO | `ReasonLIGO -> pureligo attributes

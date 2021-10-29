@@ -4,7 +4,7 @@ open Ast_imperative
 open Trace
 
 let is_const = fun x -> match x with
-                      | { const_or_var = Some `Const } -> true
+                      | { const_or_var = Some AConst } -> true
                       | _ -> false
 
 let add_binder b var vars =

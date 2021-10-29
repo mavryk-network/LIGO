@@ -10,7 +10,7 @@ let get_of m l =
       | None -> None) m
 
 let is_var = fun x -> match x with
-                      | { const_or_var = Some `Var } -> true
+                      | { const_or_var = Some AVar } -> true
                       | _ -> false
 
 let add_binder b var vars =
