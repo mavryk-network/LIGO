@@ -18,6 +18,7 @@ depends: [
   "ppx_deriving"
   "ppx_deriving_yojson"
   "ppx_expect"
+  "ppx_import"
   "tezos-011-PtHangzH-test-helpers"
   "yojson"
   "alcotest" { with-test }
@@ -27,8 +28,6 @@ depends: [
   "linenoise"
   "qcheck"
   "tezos-clic"
-  # work around upstream in-place update
-  "ocaml-migrate-parsetree" { = "2.1.0" }
   # work around tezos' failure to constrain
   "lwt" { = "5.4.2" }
   "bisect_ppx" {>= "2.3"}

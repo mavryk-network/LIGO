@@ -107,7 +107,7 @@ depends: [
   "ocaml-base-compiler" {= "4.12.1"}
   "ocaml-compiler-libs" {= "v0.12.4"}
   "ocaml-config" {= "1"}
-  "ocaml-migrate-parsetree" {= "2.1.0"}
+  "ocaml-migrate-parsetree" {= "1.8.0"}
   "ocaml-syntax-shims" {= "1.0.0"}
   "ocamlbuild" {= "0.14.0"}
   "ocamlfind" {= "1.9.1"}
@@ -126,12 +126,13 @@ depends: [
   "ppx_cold" {= "v0.14.0"}
   "ppx_compare" {= "v0.14.0"}
   "ppx_derivers" {= "1.2.1"}
-  "ppx_deriving" {= "5.2.1"}
+  "ppx_deriving" {= "5.1"}
   "ppx_deriving_yojson" {= "3.6.1"}
   "ppx_enumerate" {= "v0.14.0"}
-  "ppx_expect" {= "v0.14.1"}
+  "ppx_expect" {= "v0.14.0"}
   "ppx_hash" {= "v0.14.0"}
   "ppx_here" {= "v0.14.0"}
+  "ppx_import" {= "1.8.0"}
   "ppx_inline_test" {= "v0.14.1"}
   "ppx_irmin" {= "2.7.2"}
   "ppx_js_style" {= "v0.14.1"}
