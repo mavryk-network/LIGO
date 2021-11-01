@@ -34,7 +34,30 @@ let t__type_ ?loc ?core t t' : type_expression = t_constant ?loc ?core _type__na
 
 let t_mutez = t_tez
 
-let t_abstraction1 ?loc name kind : type_expression =
+  (*X_name here should be replaced by X_injection*)
+(* let t_signature  ?loc ?core () : type_expression = t_constant ?loc ?core signature_name []
+ * let t_chain_id   ?loc ?core () : type_expression = t_constant ?loc ?core chain_id_name []
+ * let t_string     ?loc ?core () : type_expression = t_constant ?loc ?core string_name []
+ * let t_bytes      ?loc ?core () : type_expression = t_constant ?loc ?core bytes_name []
+ * let t_key        ?loc ?core () : type_expression = t_constant ?loc ?core key_name []
+ * let t_key_hash   ?loc ?core () : type_expression = t_constant ?loc ?core key_hash_name []
+ * let t_int        ?loc ?core () : type_expression = t_constant ?loc ?core int_name []
+ * let t_address    ?loc ?core () : type_expression = t_constant ?loc ?core address_name []
+ * let t_operation  ?loc ?core () : type_expression = t_constant ?loc ?core operation_name []
+ * let t_nat        ?loc ?core () : type_expression = t_constant ?loc ?core nat_name []
+ * let t_mutez      ?loc ?core () : type_expression = t_constant ?loc ?core tez_name []
+ * let t_timestamp  ?loc ?core () : type_expression = t_constant ?loc ?core timestamp_name []
+ * let t_unit       ?loc ?core () : type_expression = t_constant ?loc ?core unit_name []
+ * let t_bls12_381_g1 ?loc ?core () : type_expression = t_constant ?loc ?core bls12_381_g1_name []
+ * let t_bls12_381_g2 ?loc ?core () : type_expression = t_constant ?loc ?core bls12_381_g2_name []
+ * let t_bls12_381_fr ?loc ?core () : type_expression = t_constant ?loc ?core bls12_381_fr_name []
+ * let t_never       ?loc ?core () : type_expression = t_constant ?loc ?core never_name [] *)
+let t_pvss_key ?loc ?core () : type_expression = t_constant ?loc ?core pvss_key_name []
+let t_baker_hash ?loc ?core () : type_expression = t_constant ?loc ?core baker_hash_name []
+let t_chest_key ?loc ?core () : type_expression = t_constant ?loc ?core chest_key_name []
+let t_chest ?loc ?core () : type_expression = t_constant ?loc ?core chest_name []
+
+let t_abstraction1 ?loc name kind : type_expression = 
   let ty_binder = Location.wrap @@ Var.fresh () in
   let type_ = t_constant name [t_variable ~core:(Ast_core.t_variable ty_binder.wrap_content) ty_binder.wrap_content] in
   t_abstraction ?loc ty_binder kind type_
@@ -85,6 +108,12 @@ let t_test_exec_result ?loc ?core () : type_expression = t_sum_ez ?loc ?core
 
 let t_function param result ?loc ?s () : type_expression = make_t ?loc (T_arrow {type1=param; type2=result}) s
 let t_shallow_closure param result ?loc ?s () : type_expression = make_t ?loc (T_arrow {type1=param; type2=result}) s
+let t_chest_opening_result ?loc ?core () : type_expression =
+  t_sum_ez ?loc ?core [
+    ("Ok_opening", t_bytes ()) ;
+    ("Fail_decrypt", t_unit ());
+    ("Fail_timelock", t_unit ())
+  ]
 
 let get_lambda_with_type e =
   match (e.expression_content , e.type_expression.type_content) with
@@ -121,6 +150,8 @@ let get_t__type_ (t : type_expression) : unit option = get_t_base_inj t _type__n
 [@@map (_type_, (int, nat, unit, tez, timestamp, address, bytes, string, key, signature, key_hash))]
 
 let get_t_mutez (t:type_expression) : unit option = get_t_tez t
+let get_t_chest (t:type_expression) : unit option = get_t_base_inj t chest_name
+let get_t_chest_key (t:type_expression) : unit option = get_t_base_inj t chest_key_name
 let get_t_michelson_code (t:type_expression) : unit option = get_t_base_inj t test_michelson_name
 
 let get_t__type_ (t : type_expression) : type_expression option = get_t_unary_inj t _type__name
@@ -222,6 +253,8 @@ let get_t_big_map_value : type_expression -> type_expression option = fun t ->
   match get_t_big_map t with
   | Some (_,value) -> Some value
   | None -> None
+
+let is_t_function t = Option.is_some (get_t_function t)
 
 let is_e_matching e = match e.expression_content with | E_matching _ -> true | _ -> false
 
