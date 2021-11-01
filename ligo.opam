@@ -37,7 +37,7 @@ depends: [
   "tezos-crypto"
   "tezos-micheline"
   "ppx_inline_test"
-  "fmt"
+  "fmt" { = "0.9.0" }
 ]
 build: [
   [ "dune" "build" "-p" name "-j" jobs ]
