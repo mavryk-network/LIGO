@@ -175,7 +175,7 @@ module Make(Params : PARAMS) = struct
 
     let label_to_variable : W.label -> string = fun str ->
       let s = String.lowercase_ascii str in
-      if Caml.Hashtbl.mem P.Lexer.keyword_table s
+      if P.Keyword.is_keyword s
       then s ^ "_"
       else s
 
