@@ -5,7 +5,7 @@ type 'a t = {
   counter : int option ;
 }
 
-let to_yojson f =
+let to_yojson : 'a t -> Yojson.Safe.t  = fun f ->
   match f.counter with
     Some i ->
     `Assoc [
@@ -17,7 +17,7 @@ let to_yojson f =
         ("name", `String f.name) ;
       ]
 
-let of_yojson = fun t ->
+let of_yojson : Yojson.Safe.t -> ('a t, string) result = fun t ->
   match t with
   | `Assoc [
       ("name", `String name) ;
