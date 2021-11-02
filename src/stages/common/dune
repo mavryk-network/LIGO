@@ -13,7 +13,7 @@
   )
   (inline_tests)
   (preprocess
-    (pps ppx_expect ppx_only_interpreter_tags)
+    (pps ppx_expect ppx_only_interpreter_tags ppx_mod_po)
   )
   (flags (:standard -open Simple_utils))
 )
@@ -24,3 +24,17 @@
  (modules ppx_only_interpreter_tags)
  (preprocess (pps ppxlib.metaquot))
  (libraries ppxlib))
+
+(library
+  (name ppx_mod_po)
+  (kind ppx_rewriter)
+  (libraries
+    base
+    simple-utils
+    ppxlib)
+  (modules ppx_mod_po)
+  (preprocess (pps ppxlib.metaquot))
+  (flags (:standard -open Simple_utils
+           ;; SOMEDAY remove this
+           -w -9))
+)
