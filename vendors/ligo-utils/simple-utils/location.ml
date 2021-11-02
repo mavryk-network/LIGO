@@ -12,10 +12,10 @@ type t =
   | File of Region.t (* file_location *)
   | Virtual of virtual_location
 
-let to_yojson = function
+let to_yojson : t -> Yojson.Safe.t = function
   | File reg  -> `List [`String "File"; Region.to_yojson reg]
   | Virtual v -> `List [`String "Virtual"; `String v]
-let of_yojson = function
+let of_yojson : Yojson.Safe.t -> (t, virtual_location) Stdlib.result = function
   | `List [`String "File"; reg] ->
     let reg = Region.of_yojson reg in
     (match reg with

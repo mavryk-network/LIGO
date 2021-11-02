@@ -1,0 +1,11 @@
+{
+  "first_class_module_signature_blacklist": [
+    "Stdlib.Set.OrderedType"
+  ],
+  "variant_constructors": [
+    ["String", "Yojson.Safe.String"],
+    ["Assoc", "Yojson.Safe.Assoc"],
+    ["Int", "Yojson.Safe.Int"],
+    ["List", "Yojson.Safe.List"]
+  ]
+}

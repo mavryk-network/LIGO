@@ -1,6 +1,5 @@
 [@@@warning "-30-32"]
 
-open Simple_utils.Function
 include Stage_common.Types
 
 type sugar_type_expression_option = Ast_sugar.type_expression option [@@deriving yojson]
