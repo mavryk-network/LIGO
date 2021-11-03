@@ -21,13 +21,20 @@ let post_t =
     [ { pstr_desc = new_desc ; pstr_loc = loc } ] in
   { has_it ; gen_it }
 
+let rec extract_var = function
+    { ppat_desc = Ppat_var { txt } } -> Some txt
+  | { ppat_desc = Ppat_constraint (pp, _) } -> extract_var pp
+  | _ -> None
+
 let post_pp =
   let has_it xs =
     let aux = function
         { pstr_desc = Pstr_value (_, xs) } ->
          let aux = function
-             { pvb_pat = { ppat_desc = Ppat_var { txt } } } -> String.equal txt "pp"
-           | _ -> false in
+             { pvb_pat = ppat_var } ->
+              match extract_var ppat_var with
+              | Some txt -> String.equal txt "pp"
+              | None -> false in
          List.exists ~f:aux xs
       | _ -> false in
     List.exists ~f:aux xs in
