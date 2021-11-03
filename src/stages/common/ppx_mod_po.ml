@@ -45,12 +45,13 @@ let map_exprs = object
 
   method! structure = fun decls ->
     let aux = fun { pstr_desc ; pstr_loc } -> match pstr_desc with
-        Pstr_module { pmb_name = { txt = Some ml } ; pmb_expr = { pmod_desc = Pmod_structure sis } } as pstr_desc ->
+        Pstr_module { pmb_name = { txt = Some ml } ; pmb_expr = { pmod_desc = Pmod_structure sis } ; pmb_attributes } as pstr_desc ->
          let pstr_desc = super#structure_item_desc pstr_desc in
-         let loc = pstr_loc in
+         let attrs = List.map ~f:(fun {attr_name;_} -> attr_name.txt) pmb_attributes in
+         let b = List.mem attrs "mod_po" ~equal:String.equal in
          let aux r { has_it ; gen_it } =
-           if has_it sis then
-             r @ gen_it ~loc ml
+           if b || has_it sis then
+             r @ gen_it ~loc:pstr_loc ml
            else
              r in
          List.fold ~init:[{ pstr_desc ; pstr_loc }] ~f:aux posts
