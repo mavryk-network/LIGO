@@ -37,7 +37,11 @@ test: build
 
 clean:
 	dune clean
+	rm -fr _opam
 	rm -fr _coverage_all _coverage_cli _coverage_ligo
+# NEW-PROTOCOL-TEMPORARY
+	git submodule vendors/tezos/ foreach --recursive git clean -dfx
+# NEW-PROTOCOL-TEMPORARY
 
 coverage:
 	eval $$(opam config env)
