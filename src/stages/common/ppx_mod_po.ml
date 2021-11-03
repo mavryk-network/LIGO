@@ -2,18 +2,31 @@ open Ppxlib
 open Simple_utils
 open Ast_builder.Default
 
-type post = { has_it : structure -> bool ;
+let rec extract_ident = function
+  Lident id -> id
+| Ldot (_, id) -> id
+| Lapply (_, lid) -> extract_ident lid
+
+let extract_payload = function
+  | PStr [{ pstr_desc =
+              Pstr_eval ({ pexp_desc = Pexp_constant (Pconst_string (id, _, _)) ; _ }, _)
+          ; _ }] ->
+     Some [id]
+  | PStr [{ pstr_desc =
+              Pstr_eval ({ pexp_desc = Pexp_tuple l ; _ }, _)
+          ; _ }] ->
+     let f = function
+       | { pexp_desc = Pexp_constant (Pconst_string (id, _, _)) ; _ } -> Some id
+       | _ -> None in
+     let l = List.filter_map l ~f in
+     Some l
+  | _ -> None
+
+type post = { has_it : label list -> bool ;
               gen_it : loc:location -> name:string -> structure }
 
 let post_t =
-  let has_it xs =
-    let aux = function
-        { pstr_desc = Pstr_type (_, xs) } ->
-         let aux = function
-             { ptype_name = { txt } } -> String.equal txt "t" in
-         List.exists ~f:aux xs
-      | _ -> false in
-    List.exists ~f:aux xs in
+  let has_it xs = List.mem xs "t" ~equal:String.equal in
   let gen_it ~loc ~name =
     let t = ptyp_constr ~loc { txt = Longident.parse (name ^ ".t") ; loc } [] in
     let type_declaration = type_declaration ~loc ~name:{ txt = String.lowercase_ascii name ; loc } ~params:[] ~cstrs:[] ~kind:Ptype_abstract ~private_:Public ~manifest:(Some t) in
@@ -27,17 +40,7 @@ let rec extract_var = function
   | _ -> None
 
 let post_pp =
-  let has_it xs =
-    let aux = function
-        { pstr_desc = Pstr_value (_, xs) } ->
-         let aux = function
-             { pvb_pat = ppat_var } ->
-              match extract_var ppat_var with
-              | Some txt -> String.equal txt "pp"
-              | None -> false in
-         List.exists ~f:aux xs
-      | _ -> false in
-    List.exists ~f:aux xs in
+  let has_it xs = List.mem xs "pp" ~equal:String.equal in
   let gen_it ~loc ~name =
     let value_binding = value_binding ~loc ~pat:(ppat_var ~loc @@ { txt = "pp_" ^ (String.lowercase_ascii name) ; loc })
                           ~expr:(pexp_ident ~loc { txt = Longident.parse (name ^ ".pp") ; loc }) in
@@ -52,24 +55,26 @@ let map_exprs = object
 
   method! structure = fun decls ->
     let aux = fun { pstr_desc ; pstr_loc } -> match pstr_desc with
-        Pstr_module { pmb_name = { txt = Some name } ; pmb_expr = { pmod_desc = Pmod_structure sis } ; pmb_attributes } as pstr_desc ->
+        Pstr_module { pmb_name = { txt = Some name } ; pmb_attributes } as pstr_desc ->
          let pstr_desc = super#structure_item_desc pstr_desc in
-         let attrs = List.map ~f:(fun {attr_name;_} -> attr_name.txt) pmb_attributes in
-         if List.mem attrs "no_mod_po" ~equal:String.equal then
-           [{ pstr_desc ; pstr_loc }]
-         else
-           let b = List.mem attrs "force_mod_po" ~equal:String.equal in
-           let loc = pstr_loc in
-           let aux r { has_it ; gen_it } =
-             if b || has_it sis then
-               r @ gen_it ~loc ~name
-             else
-               r in
-           let structure = List.fold ~init:[] ~f:aux posts in
-           let expr = pmod_structure ~loc structure in
-           let include_infos = include_infos ~loc expr in
-           let pstr_include = pstr_include ~loc include_infos in
-           [{ pstr_desc ; pstr_loc } ; pstr_include ]
+         let attr = List.find_map pmb_attributes
+                      ~f:(function | {attr_name; attr_payload; _} when String.equal attr_name.txt "mod_po" -> Some attr_payload
+                                   | _ -> None) in
+         let attr = Option.bind attr ~f:extract_payload in
+         (match attr with
+         | None -> [{ pstr_desc ; pstr_loc }]
+         | Some l ->
+            let loc = pstr_loc in
+            let aux r { has_it ; gen_it } =
+              if has_it l then
+                r @ gen_it ~loc ~name
+              else
+                r in
+            let structure = List.fold ~init:[] ~f:aux posts in
+            let expr = pmod_structure ~loc structure in
+            let include_infos = include_infos ~loc expr in
+            let pstr_include = pstr_include ~loc include_infos in
+            [{ pstr_desc ; pstr_loc } ; pstr_include ])
       | pstr_desc ->
          let pstr_desc = super#structure_item_desc pstr_desc in
          [{ pstr_desc ; pstr_loc }] in
