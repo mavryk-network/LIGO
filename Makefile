@@ -15,7 +15,11 @@ build-deps:
 #	Create opam dev switch locally for use with Ligo, add merlin/etc
 	if ! opam switch show >/dev/null 2>&1; then scripts/setup_switch.sh ; fi
 # NEW-PROTOCOL-TEMPORARY
-	if ! opam switch show >/dev/null 2>&1 ; then scripts/hangzhou_pin_hack.sh ; fi
+	if ! opam switch show >/dev/null 2>&1 ; then
+		git submodule init
+		git pull --recurse
+		scripts/hangzhou_pin_hack.sh ;
+	fi
 #	Install OCaml build dependencies for Ligo
 	scripts/install_vendors_deps.sh
 
