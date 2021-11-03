@@ -3,7 +3,7 @@ open Simple_utils
 open Ast_builder.Default
 
 type post = { has_it : structure -> bool ;
-              gen_it : loc:location -> string -> structure }
+              gen_it : loc:location -> name:string -> structure }
 
 let post_t =
   let has_it xs =
@@ -14,9 +14,9 @@ let post_t =
          List.exists ~f:aux xs
       | _ -> false in
     List.exists ~f:aux xs in
-  let gen_it ~loc mname =
-    let t = ptyp_constr ~loc { txt = Ldot (lident mname, "t") ; loc } [] in
-    let type_declaration = type_declaration ~loc ~name:{ txt = String.lowercase_ascii mname ; loc } ~params:[] ~cstrs:[] ~kind:Ptype_abstract ~private_:Public ~manifest:(Some t) in
+  let gen_it ~loc ~name =
+    let t = ptyp_constr ~loc { txt = Ldot (lident name, "t") ; loc } [] in
+    let type_declaration = type_declaration ~loc ~name:{ txt = String.lowercase_ascii name ; loc } ~params:[] ~cstrs:[] ~kind:Ptype_abstract ~private_:Public ~manifest:(Some t) in
     let new_desc = Pstr_type (Nonrecursive, [type_declaration]) in
     [ { pstr_desc = new_desc ; pstr_loc = loc } ] in
   { has_it ; gen_it }
@@ -31,9 +31,9 @@ let post_pp =
          List.exists ~f:aux xs
       | _ -> false in
     List.exists ~f:aux xs in
-  let gen_it ~loc mname =
-    let value_binding = value_binding ~loc ~pat:(ppat_var ~loc @@ { txt = "pp_" ^ (String.lowercase_ascii mname) ; loc })
-                          ~expr:(pexp_ident ~loc { txt = Ldot (lident mname, "pp") ; loc }) in
+  let gen_it ~loc ~name =
+    let value_binding = value_binding ~loc ~pat:(ppat_var ~loc @@ { txt = "pp_" ^ (String.lowercase_ascii name) ; loc })
+                          ~expr:(pexp_ident ~loc { txt = Ldot (lident name, "pp") ; loc }) in
     let new_desc = Pstr_value (Nonrecursive, [value_binding]) in
     [ { pstr_desc = new_desc ; pstr_loc = loc } ] in
   { has_it ; gen_it }
@@ -51,7 +51,7 @@ let map_exprs = object
          let b = List.mem attrs "mod_po" ~equal:String.equal in
          let aux r { has_it ; gen_it } =
            if b || has_it sis then
-             r @ gen_it ~loc:pstr_loc ml
+             r @ gen_it ~loc:pstr_loc ~name:ml
            else
              r in
          List.fold ~init:[{ pstr_desc ; pstr_loc }] ~f:aux posts
