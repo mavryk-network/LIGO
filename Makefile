@@ -13,14 +13,9 @@ install-deps:
 build-deps:
 	export PATH="/usr/local/bin$${PATH:+:}$${PATH:-}"
 #	Create opam dev switch locally for use with Ligo, add merlin/etc
-	if [ ! -d "./_opam" ];
-	then scripts/setup_switch.sh;
-	fi
-	eval $$(opam config env)
+	if ! opam switch show >/dev/null 2>&1; then scripts/setup_switch.sh ; fi
 # NEW-PROTOCOL-TEMPORARY
-	git submodule init
-	git pull --recurse
-# NEW-PROTOCOL-TEMPORARY
+	if ! opam switch show >/dev/null 2>&1 ; then scripts/hangzhou_pin_hack.sh ; fi
 #	Install OCaml build dependencies for Ligo
 	scripts/install_vendors_deps.sh
 
@@ -36,12 +31,10 @@ test: build
 	scripts/test_ligo.sh
 
 clean:
-	dune clean
-	rm -fr _opam
+	rm -fr _opam _build
 	rm -fr _coverage_all _coverage_cli _coverage_ligo
 # NEW-PROTOCOL-TEMPORARY
-	git submodule vendors/tezos/ foreach --recursive git clean -dfx
-# NEW-PROTOCOL-TEMPORARY
+	git submodule foreach --recursive git reset --hard
 
 coverage:
 	eval $$(opam config env)

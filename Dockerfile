@@ -24,15 +24,12 @@ ENV RUSTFLAGS='--codegen target-feature=-crt-static'
 COPY scripts/setup_switch.sh /ligo/scripts/setup_switch.sh
 RUN opam update && sh scripts/setup_switch.sh
 COPY scripts/install_opam_deps.sh /ligo/scripts/install_opam_deps.sh
+COPY scripts/hangzhou_pin_hack.sh /ligo/scripts/hangzhou_pin_hack.sh
 COPY ligo.opam /ligo
 COPY ligo.opam.locked /ligo
 COPY vendors /ligo/vendors
 # TEMPORARY PROTOCOL Fix mistake in upstream file
-RUN sed -i 's/"ppx_inline_test" {with-test}/"ppx_inline_test"/' vendors/tezos/src/lib_stdlib/tezos-stdlib.opam
-RUN sed -i '11i\\t"bls12-381-legacy"' vendors/tezos/src/lib_protocol_environment/tezos-protocol-environment-structs.opam
-RUN sed -i 's/{ >= "2.7.2" }/{ >= "2.7.2" \& < "2.8.0" }/' vendors/tezos/src/lib_context/tezos-context.opam
-RUN sed -i '20i\\t\t\t\t\t\t\t\t\t\t\t\tfmt' vendors/tezos/src/lib_stdlib_unix/dune
-RUN sed -i '18i\\t"fmt"' vendors/tezos/src/lib_stdlib_unix/tezos-stdlib-unix.opam
+RUN sh scripts/hangzhou_pin_hack.sh
 
 # install all transitive deps
 RUN opam update && sh scripts/install_opam_deps.sh
