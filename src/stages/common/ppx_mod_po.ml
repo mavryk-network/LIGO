@@ -2,6 +2,8 @@ open Ppxlib
 open Simple_utils
 open Ast_builder.Default
 
+(* Some helpers for destructing AST *)
+
 let rec extract_ident = function
   Lident id -> id
 | Ldot (_, id) -> id
@@ -22,8 +24,24 @@ let extract_payload = function
      Some l
   | _ -> None
 
+
+let rec extract_var = function
+    { ppat_desc = Ppat_var { txt } } -> Some txt
+  | { ppat_desc = Ppat_constraint (pp, _) } -> extract_var pp
+  | _ -> None
+
 type post = { has_it : label list -> bool ;
               gen_it : loc:location -> name:string -> structure }
+
+let post_t1 =
+  let has_it xs = List.mem xs "t1" ~equal:String.equal in
+  let gen_it ~loc ~name =
+    let ta = ptyp_var ~loc "a" in
+    let t = ptyp_constr ~loc { txt = Longident.parse (name ^ ".t") ; loc } [ta] in
+    let type_declaration = type_declaration ~loc ~name:{ txt = String.lowercase_ascii name ; loc } ~params:[(ta, (NoVariance, NoInjectivity))] ~cstrs:[] ~kind:Ptype_abstract ~private_:Public ~manifest:(Some t) in
+    let new_desc = Pstr_type (Nonrecursive, [type_declaration]) in
+    [ { pstr_desc = new_desc ; pstr_loc = loc } ] in
+  { has_it ; gen_it }
 
 let post_t =
   let has_it xs = List.mem xs "t" ~equal:String.equal in
@@ -34,11 +52,6 @@ let post_t =
     [ { pstr_desc = new_desc ; pstr_loc = loc } ] in
   { has_it ; gen_it }
 
-let rec extract_var = function
-    { ppat_desc = Ppat_var { txt } } -> Some txt
-  | { ppat_desc = Ppat_constraint (pp, _) } -> extract_var pp
-  | _ -> None
-
 let post_pp =
   let has_it xs = List.mem xs "pp" ~equal:String.equal in
   let gen_it ~loc ~name =
@@ -48,7 +61,7 @@ let post_pp =
     [ { pstr_desc = new_desc ; pstr_loc = loc } ] in
   { has_it ; gen_it }
 
-let posts = [ post_t ; post_pp ]
+let posts = [ post_t ; post_t1 ; post_pp ]
 
 let map_exprs = object
   inherit Ast_traverse.map as super
