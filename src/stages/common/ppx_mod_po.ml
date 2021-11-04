@@ -30,38 +30,52 @@ let rec extract_var = function
   | { ppat_desc = Ppat_constraint (pp, _) } -> extract_var pp
   | _ -> None
 
-type post = { has_it : label list -> bool ;
-              gen_it : loc:location -> name:string -> structure }
+type post = { has_it : label list -> label option ;
+              gen_it : loc:location -> name:string -> label -> structure }
 
 let post_t1 =
-  let has_it xs = List.mem xs "t1" ~equal:String.equal in
-  let gen_it ~loc ~name =
-    let ta = ptyp_var ~loc "a" in
-    let t = ptyp_constr ~loc { txt = Longident.parse (name ^ ".t") ; loc } [ta] in
-    let type_declaration = type_declaration ~loc ~name:{ txt = String.lowercase_ascii name ; loc } ~params:[(ta, (NoVariance, NoInjectivity))] ~cstrs:[] ~kind:Ptype_abstract ~private_:Public ~manifest:(Some t) in
+  let get s =
+    match String.split_on_char 't' s with
+    | [""; n] -> Some (int_of_string n)
+    | _ -> None in
+  let reconstruct n = "t" ^ string_of_int n in
+  let has_it xs =
+    Option.map ~f:reconstruct @@ List.find_map xs ~f:get in
+  let gen_it ~loc ~name l =
+    let n = match get l with
+      | Some n -> n
+      | None -> failwith "impossible?" in
+    let ta = List.init n ~f:(fun i -> ptyp_var ~loc @@ "a" ^ string_of_int i) in
+    let t = ptyp_constr ~loc { txt = Longident.parse (name ^ ".t") ; loc } ta in
+    let ta = List.map ta ~f:(fun t -> (t, (NoVariance, NoInjectivity))) in
+    let type_declaration = type_declaration ~loc ~name:{ txt = String.lowercase_ascii name ; loc } ~params:ta ~cstrs:[] ~kind:Ptype_abstract ~private_:Public ~manifest:(Some t) in
     let new_desc = Pstr_type (Nonrecursive, [type_declaration]) in
     [ { pstr_desc = new_desc ; pstr_loc = loc } ] in
   { has_it ; gen_it }
 
-let post_t =
-  let has_it xs = List.mem xs "t" ~equal:String.equal in
-  let gen_it ~loc ~name =
-    let t = ptyp_constr ~loc { txt = Longident.parse (name ^ ".t") ; loc } [] in
-    let type_declaration = type_declaration ~loc ~name:{ txt = String.lowercase_ascii name ; loc } ~params:[] ~cstrs:[] ~kind:Ptype_abstract ~private_:Public ~manifest:(Some t) in
-    let new_desc = Pstr_type (Nonrecursive, [type_declaration]) in
-    [ { pstr_desc = new_desc ; pstr_loc = loc } ] in
-  { has_it ; gen_it }
+(* let post_t =
+ *   let has_it xs = List.mem xs "t" ~equal:String.equal in
+ *   let gen_it ~loc ~name _ =
+ *     let t = ptyp_constr ~loc { txt = Longident.parse (name ^ ".t") ; loc } [] in
+ *     let type_declaration = type_declaration ~loc ~name:{ txt = String.lowercase_ascii name ; loc } ~params:[] ~cstrs:[] ~kind:Ptype_abstract ~private_:Public ~manifest:(Some t) in
+ *     let new_desc = Pstr_type (Nonrecursive, [type_declaration]) in
+ *     [ { pstr_desc = new_desc ; pstr_loc = loc } ] in
+ *   { has_it ; gen_it } *)
 
 let post_pp =
-  let has_it xs = List.mem xs "pp" ~equal:String.equal in
-  let gen_it ~loc ~name =
+  let has_it xs =
+    if List.mem xs "pp" ~equal:String.equal then
+      Some "pp"
+    else
+      None in
+  let gen_it ~loc ~name _ =
     let value_binding = value_binding ~loc ~pat:(ppat_var ~loc @@ { txt = "pp_" ^ (String.lowercase_ascii name) ; loc })
                           ~expr:(pexp_ident ~loc { txt = Longident.parse (name ^ ".pp") ; loc }) in
     let new_desc = Pstr_value (Nonrecursive, [value_binding]) in
     [ { pstr_desc = new_desc ; pstr_loc = loc } ] in
   { has_it ; gen_it }
 
-let posts = [ post_t ; post_t1 ; post_pp ]
+let posts = [ (* post_t ;  *)post_t1 ; post_pp ]
 
 let map_exprs = object
   inherit Ast_traverse.map as super
@@ -79,10 +93,9 @@ let map_exprs = object
          | Some l ->
             let loc = pstr_loc in
             let aux r { has_it ; gen_it } =
-              if has_it l then
-                r @ gen_it ~loc ~name
-              else
-                r in
+              match has_it l with
+              | None -> r
+              | Some l -> r @ gen_it ~loc ~name l in
             let structure = List.fold ~init:[] ~f:aux posts in
             let expr = pmod_structure ~loc structure in
             let include_infos = include_infos ~loc expr in

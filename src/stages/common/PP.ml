@@ -31,7 +31,7 @@ let option_public ppf public =
 let label ppf (l:label) : unit =
   let Label l = l in fprintf ppf "%s" l
 
-module Var = Var [@@mod_po ("pp")]
+module Var = Var [@@mod_po ("pp", "t1")]
 
 let expression_variable ppf (t : expression_variable) : unit = fprintf ppf "%a" pp_var t.wrap_content
 let type_variable       ppf (t : type_variable)       : unit = fprintf ppf "%a" pp_var t
