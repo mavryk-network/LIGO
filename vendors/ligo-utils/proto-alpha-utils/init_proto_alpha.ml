@@ -192,7 +192,7 @@ type environment = {
   }
 
 let init_environment () =
-  Context_init.main 10 >>=? fun (tezos_context, accounts, contracts) ->
+  Context_init.main 6 >>=? fun (tezos_context, accounts, contracts) ->
   let accounts = List.map ~f:fst accounts in
   let x = Memory_proto_alpha.Protocol.Alpha_context.Gas.Arith.(integral_of_int_exn 800000) in
   let tezos_context = Alpha_context.Gas.set_limit tezos_context x in
