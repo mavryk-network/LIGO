@@ -13,6 +13,9 @@ type environment = Environment.t
 
 let cast_var (orig: 'a Var.t Location.wrap) = { orig with wrap_content = Var.todo_cast orig.wrap_content}
 let assert_type_expression_eq = Helpers.assert_type_expression_eq
+let is_int s =
+  try ignore (int_of_string s); true
+  with _ -> false
 
 (* The `table` represents the substitutions that have been inferred.
    For example, if matching `a -> b -> a` with `int -> bool -> int`,
@@ -46,12 +49,13 @@ let rec infer_type_application ~raise ~loc ?(default_error = fun loc t t' -> ass
      if layout_eq layout layout' &&
           List.equal equal_label (List.map content_kv ~f:fst) (List.map content'_kv ~f:fst) then
        let elements = List.zip_exn content_kv content'_kv in
-       let aux ((_, {associated_type;michelson_annotation;decl_pos}), (_, {associated_type=associated_type';michelson_annotation=michelson_annotation';decl_pos=decl_pos'})) table =
-         if Int.equal decl_pos decl_pos' && Option.equal String.equal michelson_annotation michelson_annotation' then
-           self table associated_type associated_type'
+       let aux ((Label n, {associated_type;michelson_annotation;decl_pos}), (Label n', {associated_type=associated_type';michelson_annotation=michelson_annotation';decl_pos=decl_pos'})) (table, are_tuples) =
+         if (are_tuples || Int.equal decl_pos decl_pos') && Option.equal String.equal michelson_annotation michelson_annotation' then
+           let are_tuples = are_tuples && is_int n && is_int n' in
+           (self table associated_type associated_type', are_tuples)
          else
            raise.raise default_error in
-       let table = List.fold_right elements ~f:aux ~init:table in
+       let table, _ = List.fold_right elements ~f:aux ~init:(table, true) in
        table
      else
        raise.raise default_error
