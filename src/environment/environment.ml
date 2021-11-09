@@ -64,7 +64,7 @@ let meta_ligo_types : (type_variable * type_expression) list -> (type_variable *
     (v_failure, t_constant failure_name []);
   ]
 
-let e_raw_code = Ast_typed.Combinators.e_raw_code_of_michelson
+let e_raw_code = Ast_typed.Combinators.e_a_raw_michelson_code
 
 let wrap_var s = Location.wrap @@ Var.of_name s
 

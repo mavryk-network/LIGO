@@ -402,6 +402,15 @@ let ez_e_a_record ?layout r = make_e (ez_e_record r) (ez_t_record ?layout (List.
 let e_a_let_in binder expr body attr = make_e (e_let_in binder expr body attr) (get_type_expression body)
 let e_a_mod_in module_binder rhs let_result = make_e (e_mod_in module_binder rhs let_result) (get_type_expression let_result)
 let e_a_raw_code l c t = make_e (e_raw_code l c) t
+let e_a_raw_michelson_code c t = 
+    e_a_raw_code "Michelson" 
+    {
+      expression_content = E_literal (Literal_string (Simple_utils.Ligo_string.verbatim c)) ;
+      location = Location.generated ;
+      type_expression = t ;
+    }
+    t
+    
 let e_a_nil t = make_e (e_nil ()) (t_list t)
 let e_a_cons hd tl = make_e (e_cons hd tl) (t_list hd.type_expression)
 let e_a_set_empty t = make_e (e_set_empty ()) (t_set t)
@@ -480,15 +489,3 @@ let get_record_field_type (t : type_expression) (label : label) : type_expressio
     match LMap.find_opt label record.content with
     | None -> None
     | Some row_element -> Some row_element.associated_type
-
-let e_raw_code_of_michelson code typ =
-  {
-    expression_content = E_raw_code { language = "Michelson" ; code = {
-      expression_content = E_literal (Literal_string (Simple_utils.Ligo_string.verbatim code)) ;
-      location = Location.generated ;
-      type_expression = typ ;     
-    } ; } ;
-    location = Location.generated ;
-    type_expression = typ ;
-  }
-    
