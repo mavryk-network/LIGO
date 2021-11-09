@@ -1,0 +1,4 @@
+author: er433
+merge_request: '1407'
+title: 'Fix: temporal for type checking proc. and decl_pos'
+type: fixed
