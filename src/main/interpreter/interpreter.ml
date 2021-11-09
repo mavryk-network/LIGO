@@ -467,10 +467,12 @@ let rec apply_operator ~raise ~steps ~protocol_version : Location.t -> calltrace
         )
         (V_Ct C_unit) elts
     | ( C_SET_MAP , [ V_Func_val {arg_binder ; body ; env} ; V_Set (elts) ] ) ->
+      let* set_ty = monad_option (Errors.generic_error loc "Could not recover types") @@ List.nth types 1 in
+      let* ty = monad_option (Errors.generic_error set_ty.location "Expected set type") @@ Ast_typed.get_t_set set_ty in
       let* elts =
         Monad.bind_map_list
           (fun elt ->
-            let env' = Env.extend env (arg_binder,elt) in
+            let env' = Env.extend env arg_binder (ty,elt) in
             eval_ligo body calltrace env')
           elts
       in
