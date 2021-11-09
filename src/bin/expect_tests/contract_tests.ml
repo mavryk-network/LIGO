@@ -2167,3 +2167,17 @@ let%expect_test _ =
                      DIG 2 ;
                      CONS ;
                      PAIR } } } } } |} ]
+
+(* Check that decl_pos is not taken into account when "inferring" about tuples *)
+let%expect_test _ =
+  run_ligo_good [ "compile" ; "expression" ; "cameligo" ; "foo" ; "--init-file" ; contract "tuple_decl_pos.mligo" ; "--without-run" ] ;
+  [%expect {|
+                     { UNIT ;
+                       PUSH mutez 0 ;
+                       NONE key_hash ;
+                       CREATE_CONTRACT
+                         { parameter unit ;
+                           storage unit ;
+                           code { DROP ; UNIT ; NIL operation ; PAIR } } ;
+                       DROP 2 ;
+                       UNIT } |} ]
