@@ -88,7 +88,7 @@ UNPAIR ;
 SLICE ;
 IF_NONE { PUSH string \"SLICE\" ; FAILWITH } {} }"
 
-let slice_type = t_function (t_pair (t_pair (t_nat ()) (t_nat ())) (t_string ())) (t_string ()) ()
+let slice_type = t_function (t_triplet (t_nat ()) (t_nat ()) (t_string ())) (t_string ()) ()
 
 let string_module e = make_module e "String" [
   ("length", e_raw_code "{ SIZE }" (t_function (t_string ()) (t_nat ()) ()) ) ;
@@ -105,7 +105,7 @@ let crypto_module e = make_module e "Crypto" [
   ("sha3"    , e_raw_code "{ SHA3     }" (t_function (t_bytes ()) (t_bytes    ()) ())) ;
   ("keccak"  , e_raw_code "{ KECCAK   }" (t_function (t_bytes ()) (t_bytes    ()) ())) ;
   ("hash_key", e_raw_code "{ HASH_KEY }" (t_function (t_key   ()) (t_key_hash ()) ())) ;
-  ("check"   , e_raw_code "{ UNPAIR ; UNPAIR ; CHECK_SIGNATURE }" (t_function (t_pair (t_pair (t_key ()) (t_signature ())) (t_bytes ())) (t_bool ()) ()))
+  ("check"   , e_raw_code "{ UNPAIR ; UNPAIR ; CHECK_SIGNATURE }" (t_function (t_triplet (t_key ()) (t_signature ()) (t_bytes ())) (t_bool ()) ()))
 ]
 
 let michelson_module e = make_module e "Michelson" [
@@ -117,7 +117,7 @@ let toplevel e = add_bindings_in_env [
   ("sha256"         , e_raw_code "{ SHA256   }" (t_function (t_bytes ()) (t_bytes    ()) ())) ;
   ("sha512"         , e_raw_code "{ SHA512   }" (t_function (t_bytes ()) (t_bytes    ()) ())) ;
   ("crypto_hash_key", e_raw_code "{ HASH_KEY }" (t_function (t_key   ()) (t_key_hash ()) ())) ;
-  ("crypto_check"   , e_raw_code "{ UNPAIR ; UNPAIR ; CHECK_SIGNATURE }" (t_function (t_pair (t_pair (t_key ()) (t_signature ())) (t_bytes ())) (t_bool ()) ())) ;
+  ("crypto_check"   , e_raw_code "{ UNPAIR ; UNPAIR ; CHECK_SIGNATURE }" (t_function (t_triplet (t_key ()) (t_signature ()) (t_bytes ())) (t_bool ()) ())) ;
 
   ("string_slice" , e_raw_code michelson_slice slice_type) ;
   ("string_concat", e_raw_code "{ UNPAIR ; CONCAT }" (t_function (t_pair (t_string ()) (t_string ())) (t_string ()) ())) ; 

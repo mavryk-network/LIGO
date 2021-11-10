@@ -27,7 +27,10 @@ let contract_passes ~raise = [
 
 let all_module ~add_warning ~raise init env =
   let module_fully_typed = List.fold ~f:(|>) (all_module_passes ~add_warning ~raise) ~init in
-  Built_in.add_built_in_modules ~raise module_fully_typed env
+  let module_fully_typed = Default_env.insert_as_header env module_fully_typed in
+  (* This allows to remove unused element from built-ins *)
+  (* Contract_passes.remove_unused ~raise "" module_fully_typed *)
+  module_fully_typed
 
 let all_expression ~raise init =
   List.fold ~f:(|>) (all_expression_passes ~raise) ~init

@@ -172,7 +172,8 @@ let main =
   test_suite "Markdown files" @@
     List.map
       ~f:(fun md_file ->
-        let test_name = "File : "^md_file^"\"" in
+        let test_name = Str.string_after md_file @@ String.length "./gitlab-pages/docs/" in
+        let test_name = "File : "^test_name in
         test test_name (compile md_file)
       )
       (get_all_md_files ())
