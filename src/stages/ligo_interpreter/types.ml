@@ -2,10 +2,9 @@ include Ast_typed.Types
 
 module Tez = Proto_alpha_utils.Memory_proto_alpha.Protocol.Alpha_context.Tez
 module Timestamp = Memory_proto_alpha.Protocol.Alpha_context.Script_timestamp
-module Int = Int_repr_copied
 
 type mcode = unit Tezos_utils.Michelson.michelson
-type mcontract = Tezos_protocol_010_PtGRANAD.Protocol.Alpha_context.Contract.t
+type mcontract = Tezos_protocol_011_PtHangzH.Protocol.Alpha_context.Contract.t
 
 type mutation = Location.t * Ast_typed.expression
 
@@ -34,15 +33,15 @@ and contract =
 and constant_val =
   | C_unit
   | C_bool of bool
-  | C_int of Int.z Int.num
-  | C_nat of Int.n Int.num
+  | C_int of Z.t
+  | C_nat of Z.t
   | C_timestamp of Z.t
   | C_string of string
   | C_bytes of bytes
-  | C_mutez of Int.n Int.num
+  | C_mutez of Z.t
   | C_address of mcontract (*should be represented as michelson data ? not convenient *)
   | C_contract of contract
-  | C_key_hash of Tezos_protocol_010_PtGRANAD.Protocol.Alpha_context.public_key_hash
+  | C_key_hash of Tezos_protocol_011_PtHangzH.Protocol.Alpha_context.public_key_hash
 
 
 and micheline_value = (unit, string) Tezos_micheline.Micheline.node *
@@ -51,7 +50,6 @@ and micheline_value = (unit, string) Tezos_micheline.Micheline.node *
 and value_expr = { ast_type : Ast_typed.type_expression ;
                    eval_term : value }
 and value =
-  | V_Func_val of func_val
   | V_Ct of constant_val
   | V_List of value list
   | V_Record of value label_map
@@ -62,6 +60,7 @@ and value =
   | V_Ligo of (string * string)
   | V_Mutation of mutation
   | V_Failure of exception_type
+  | V_Func_val of func_val
 
 and fail_reason = Val of value | Reason of string
 
@@ -73,8 +72,8 @@ and exception_type =
 
 type bigmap_state = (value * value) list
 type bigmap_data = {
-      key_type : Tezos_raw_protocol_010_PtGRANAD.Script_repr.expr;
-      value_type : Tezos_raw_protocol_010_PtGRANAD.Script_repr.expr;
+      key_type : Tezos_raw_protocol_011_PtHangzH.Script_repr.expr;
+      value_type : Tezos_raw_protocol_011_PtHangzH.Script_repr.expr;
       version : bigmap_state }
 type bigmap = int * bigmap_data
 type bigmaps = bigmap list

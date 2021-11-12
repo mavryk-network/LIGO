@@ -7,17 +7,12 @@ open Trace
 
 module LT = Ligo_interpreter.Types
 module LC = Ligo_interpreter.Combinators
-module Int_repr = Ligo_interpreter.Int_repr_copied
 module Exc = Ligo_interpreter_exc
 open Errors
 
 type execution_trace = unit
 
 let add_warning _ = ()
-
-let wrap_compare compare a b =
-  let res = compare a b in
-  if (res = 0) then 0 else if (res > 0) then 1 else -1
 
 let clean_locations ty = Tezos_micheline.Micheline.inject_locations (fun _ -> ()) (Tezos_micheline.Micheline.strip_locations ty)
 
@@ -27,8 +22,8 @@ module Command = struct
     | Get_big_map : Location.t * Ligo_interpreter.Types.calltrace * LT.type_expression * LT.type_expression * LT.value * Z.t -> LT.value t
     | Mem_big_map : Location.t * LT.type_expression * LT.type_expression * LT.value * Z.t -> bool t
     | Bootstrap_contract : int * LT.value * LT.value * Ast_typed.type_expression  -> unit t
-    | Nth_bootstrap_contract : int -> Tezos_protocol_010_PtGRANAD.Protocol.Alpha_context.Contract.t t
-    | Nth_bootstrap_typed_address : Location.t * int -> (Tezos_protocol_010_PtGRANAD.Protocol.Alpha_context.Contract.t * Ast_typed.type_expression * Ast_typed.type_expression) t
+    | Nth_bootstrap_contract : int -> Tezos_protocol_011_PtHangzH.Protocol.Alpha_context.Contract.t t
+    | Nth_bootstrap_typed_address : Location.t * int -> (Tezos_protocol_011_PtHangzH.Protocol.Alpha_context.Contract.t * Ast_typed.type_expression * Ast_typed.type_expression) t
     | Reset_state : Location.t * LT.calltrace * LT.value * LT.value -> unit t
     | Get_state : unit -> Tezos_state.context t
     | Put_state : Tezos_state.context -> unit t
@@ -40,13 +35,13 @@ module Command = struct
     | Get_balance : Location.t * Ligo_interpreter.Types.calltrace * LT.value -> LT.value t
     | Get_last_originations : unit -> LT.value t
     | Check_obj_ligo : LT.expression -> unit t
-    | Compile_contract_from_file : string * string -> (LT.value * LT.value) t
+    | Compile_contract_from_file : string * string * string list -> (LT.value * LT.value) t
     | Compile_meta_value : Location.t * LT.value * Ast_typed.type_expression -> LT.value t
     | Run : Location.t * LT.func_val * LT.value -> LT.value t
     | Eval : Location.t * LT.value * Ast_typed.type_expression -> LT.value t
     | Compile_contract : Location.t * LT.value * Ast_typed.type_expression -> LT.value t
     | To_contract : Location.t * LT.value * string option * Ast_typed.type_expression -> LT.value t
-    | Check_storage_address : Location.t * Tezos_protocol_010_PtGRANAD.Protocol.Alpha_context.Contract.t * Ast_typed.type_expression -> unit t
+    | Check_storage_address : Location.t * Tezos_protocol_011_PtHangzH.Protocol.Alpha_context.Contract.t * Ast_typed.type_expression -> unit t
     | Contract_exists : LT.value -> bool t
     | Inject_script : Location.t * Ligo_interpreter.Types.calltrace * LT.value * LT.value * Z.t -> LT.value t
     | Set_now : Location.t * Ligo_interpreter.Types.calltrace * Z.t -> unit t
@@ -54,35 +49,6 @@ module Command = struct
     | Set_baker : LT.value -> unit t
     | Get_bootstrap : Location.t * LT.value -> LT.value t
     | Michelson_equal : Location.t * LT.value * LT.value -> bool t
-    | Int_compare_wrapped : 'a Int_repr.num * 'a Int_repr.num -> int t
-    | Int_compare : 'a Int_repr.num * 'a Int_repr.num -> int t
-    | Int_abs : Int_repr.z Int_repr.num -> Int_repr.n Int_repr.num t
-    | Int_of_zint : Z.t -> Int_repr.z Int_repr.num t
-    | Int_to_zint : 'a Int_repr.num -> Z.t t
-    | Int_of_int64 : int64 -> Int_repr.z Int_repr.num t
-    | Int_to_int64 : _ Int_repr.num -> int64 option t
-    | Int_is_nat : Int_repr.z Int_repr.num -> Int_repr.n Int_repr.num option t
-    | Int_neg : _ Int_repr.num -> Int_repr.z Int_repr.num t
-    | Int_add : _ Int_repr.num * _ Int_repr.num -> Int_repr.z Int_repr.num t
-    | Int_add_n : Int_repr.n Int_repr.num * Int_repr.n Int_repr.num -> Int_repr.n Int_repr.num t
-    | Int_mul : _ Int_repr.num * _ Int_repr.num -> Int_repr.z Int_repr.num t
-    | Int_mul_n : Int_repr.n Int_repr.num * Int_repr.n Int_repr.num -> Int_repr.n Int_repr.num t
-    | Int_ediv :
-      _ Int_repr.num * _ Int_repr.num ->
-      (Int_repr.z Int_repr.num * Int_repr.n Int_repr.num) option t
-    | Int_ediv_n :
-      Int_repr.n Int_repr.num * Int_repr.n Int_repr.num ->
-      (Int_repr.n Int_repr.num * Int_repr.n Int_repr.num) option t
-    | Int_sub : _ Int_repr.num * _ Int_repr.num -> Int_repr.z Int_repr.num t
-    | Int_shift_left : 'a Int_repr.num * Int_repr.n Int_repr.num -> 'a Int_repr.num option t
-    | Int_shift_right : 'a Int_repr.num * Int_repr.n Int_repr.num -> 'a Int_repr.num option t
-    | Int_logor : ('a Int_repr.num * 'a Int_repr.num) -> 'a Int_repr.num t
-    | Int_logand : (_ Int_repr.num * Int_repr.n Int_repr.num) -> Int_repr.n Int_repr.num t
-    | Int_logxor : (Int_repr.n Int_repr.num * Int_repr.n Int_repr.num) -> Int_repr.n Int_repr.num t
-    | Int_lognot : _ Int_repr.num -> Int_repr.z Int_repr.num t
-    | Int_of_int : int -> Int_repr.z Int_repr.num t
-    | Int_int : Int_repr.n Int_repr.num -> Int_repr.z Int_repr.num t
-
   let eval
     : type a.
       raise:Errors.interpreter_error raise ->
@@ -141,7 +107,10 @@ module Command = struct
       in
       let n = trace_option ~raise (corner_case ()) @@ LC.get_nat n in
       let bootstrap_contract = List.rev ctxt.internals.next_bootstrapped_contracts in
-      let ctxt = Tezos_state.init_ctxt ~raise ~loc ~calltrace ~initial_balances:amts ~n:(Z.to_int n) bootstrap_contract in
+      let ctxt = Tezos_state.init_ctxt
+        ~raise ~loc ~calltrace ~initial_balances:amts ~n:(Z.to_int n)
+        ctxt.internals.protocol_version bootstrap_contract
+      in
       ((),ctxt)
     | Get_state () ->
       (ctxt,ctxt)
@@ -168,7 +137,7 @@ module Command = struct
       let addr = trace_option ~raise (corner_case ()) @@ LC.get_address addr in
       let (storage',ty) = Tezos_state.get_storage ~raise ~loc ~calltrace ctxt addr in
       let storage = storage'
-        |> Tezos_protocol_010_PtGRANAD.Protocol.Michelson_v1_primitives.strings_of_prims
+        |> Tezos_protocol_011_PtHangzH.Protocol.Michelson_v1_primitives.strings_of_prims
         |> Tezos_micheline.Micheline.inject_locations (fun _ -> ())
       in
       let ret = Michelson_to_value.decompile_to_untyped_value ~raise ~bigmaps:ctxt.transduced.bigmaps ty storage in
@@ -184,7 +153,7 @@ module Command = struct
       let addr = trace_option ~raise (corner_case ()) @@ LC.get_address addr in
       let (storage',ty) = Tezos_state.get_storage ~raise ~loc ~calltrace ctxt addr in
       let storage = storage'
-        |> Tezos_protocol_010_PtGRANAD.Protocol.Michelson_v1_primitives.strings_of_prims
+        |> Tezos_protocol_011_PtHangzH.Protocol.Michelson_v1_primitives.strings_of_prims
         |> Tezos_micheline.Micheline.inject_locations (fun _ -> ())
       in
       let ligo_ty =
@@ -208,9 +177,10 @@ module Command = struct
          | _ -> raise.raise @@ Errors.generic_error Location.generated
                           "Trying to measure a non-contract"
        end
-    | Compile_contract_from_file (source_file, entrypoint) ->
+    | Compile_contract_from_file (source_file, entrypoint, views) ->
       let contract_code =
-        Michelson_backend.compile_contract ~raise ~add_warning source_file entrypoint in
+        let protocol_version = ctxt.internals.protocol_version in
+        Michelson_backend.compile_contract ~raise ~add_warning ~protocol_version source_file entrypoint views in
       let size =
         let s = Ligo_compile.Of_michelson.measure ~raise contract_code in
         LT.V_Ct (C_int (Z.of_int s))
@@ -219,13 +189,13 @@ module Command = struct
       ((contract,size), ctxt)
     | Run (loc, f, v) ->
       let open Ligo_interpreter.Types in
-      let subst_lst = Michelson_backend.make_subst_ast_env_exp ~raise ~toplevel:true f.env f.orig_lambda in
+      let subst_lst = Michelson_backend.make_subst_ast_env_exp ~raise f.env f.orig_lambda in
       let in_ty, out_ty = trace_option ~raise (Errors.generic_error loc "Trying to run a non-function?") @@
                             Ast_typed.get_t_function f.orig_lambda.type_expression in
       let func_typed_exp = Michelson_backend.make_function ~raise in_ty out_ty f.arg_binder f.body subst_lst in
       let _ = trace ~raise Main_errors.self_ast_typed_tracer @@ Self_ast_typed.expression_obj func_typed_exp in
       let func_code = Michelson_backend.compile_value ~raise func_typed_exp in
-      let arg_code,_,_ = Michelson_backend.compile_simple_value ~raise ~ctxt ~loc ~toplevel:true v in_ty in
+      let arg_code,_,_ = Michelson_backend.compile_simple_value ~raise ~ctxt ~loc v in_ty in
       let input_ty,_ = Ligo_run.Of_michelson.fetch_lambda_types ~raise func_code.expr_ty in
       let options = Michelson_backend.make_options ~raise ~param:input_ty (Some ctxt) in
       let runres = Ligo_run.Of_michelson.run_function ~raise ~options func_code.expr func_code.expr_ty arg_code in
@@ -240,12 +210,13 @@ module Command = struct
     | Compile_contract (loc, v, _ty_expr) ->
        let compiled_expr, compiled_expr_ty = match v with
          | LT.V_Func_val { arg_binder ; body ; orig_lambda ; env ; rec_name } ->
-            let subst_lst = Michelson_backend.make_subst_ast_env_exp ~raise ~toplevel:true env orig_lambda in
+            let subst_lst = Michelson_backend.make_subst_ast_env_exp ~raise env orig_lambda in
             let in_ty, out_ty =
               trace_option ~raise (Errors.generic_error loc "Trying to run a non-function?") @@
                 Ast_typed.get_t_function orig_lambda.type_expression in
             let compiled_expr =
-              Michelson_backend.compile_contract_ ~raise subst_lst arg_binder rec_name in_ty out_ty body in
+              let protocol_version = ctxt.internals.protocol_version in
+              Michelson_backend.compile_contract_ ~raise ~protocol_version subst_lst arg_binder rec_name in_ty out_ty body in
             let expr = clean_locations compiled_expr.expr in
             (* TODO-er: check the ignored second component: *)
             let expr_ty = clean_locations compiled_expr.expr_ty in
@@ -253,14 +224,14 @@ module Command = struct
          | _ ->
             raise.raise @@ Errors.generic_error loc "Contract does not reduce to a function value?" in
         let (param_ty, storage_ty) =
-        match Self_michelson.fetch_contract_inputs compiled_expr_ty with
+        match Self_michelson.fetch_contract_ty_inputs compiled_expr_ty with
         | Some (param_ty, storage_ty) -> (param_ty, storage_ty)
         | _ -> raise.raise @@ Errors.generic_error loc "Compiled expression has not the correct input of contract" in
       let open Tezos_utils in
       let param_ty = clean_locations param_ty in
       let storage_ty = clean_locations storage_ty in
       let expr = clean_locations compiled_expr in
-      let contract = Michelson.contract param_ty storage_ty expr in
+      let contract = Michelson.contract param_ty storage_ty expr [] in
       (LT.V_Michelson (Contract contract), ctxt)
     | To_contract (loc, v, entrypoint, _ty_expr) ->
       begin
@@ -317,31 +288,6 @@ module Command = struct
       in
       let v = LT.V_Map (List.map ~f:aux ctxt.transduced.last_originations) in
       (v,ctxt)
-    | Int_compare_wrapped (x, y) ->
-      (wrap_compare Int_repr.compare x y, ctxt)
-    | Int_compare (x, y) -> (Int_repr.compare x y, ctxt)
-    | Int_abs z -> (Int_repr.abs z, ctxt)
-    | Int_of_int i -> (Int_repr.of_int i, ctxt)
-    | Int_of_zint z -> (Int_repr.of_zint z, ctxt)
-    | Int_to_zint z -> (Int_repr.to_zint z, ctxt)
-    | Int_of_int64 i -> (Int_repr.of_int64 i, ctxt)
-    | Int_to_int64 i -> (Int_repr.to_int64 i, ctxt)
-    | Int_is_nat z -> (Int_repr.is_nat z, ctxt)
-    | Int_neg n -> (Int_repr.neg n, ctxt)
-    | Int_add (x, y) -> (Int_repr.add x y, ctxt)
-    | Int_add_n (x, y) -> (Int_repr.add_n x y, ctxt)
-    | Int_mul (x, y) -> (Int_repr.mul x y, ctxt)
-    | Int_mul_n (x, y) -> (Int_repr.mul_n x y, ctxt)
-    | Int_ediv (x, y) -> (Int_repr.ediv x y, ctxt)
-    | Int_ediv_n (x, y) -> (Int_repr.ediv_n x y, ctxt)
-    | Int_sub (x, y) -> (Int_repr.sub x y, ctxt)
-    | Int_shift_left (x, y) -> (Int_repr.shift_left x y, ctxt)
-    | Int_shift_right (x, y) -> (Int_repr.shift_right x y, ctxt)
-    | Int_logor (x, y) -> (Int_repr.logor x y, ctxt)
-    | Int_logand (x, y) -> (Int_repr.logand x y, ctxt)
-    | Int_logxor (x, y) -> (Int_repr.logxor x y, ctxt)
-    | Int_lognot n -> (Int_repr.lognot n, ctxt)
-    | Int_int n -> (Int_repr.int n, ctxt)
 end
 
 type 'a t =
