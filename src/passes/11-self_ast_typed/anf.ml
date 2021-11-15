@@ -211,7 +211,7 @@ let  rec transform_recursive (expr : expression) : expression =
      let id_expr = e_a_lambda ~location { binder = id_binder ; result = e_a_variable ~location id_binder out_type } out_type out_type in
      let transform = e_a_lambda ~location { binder = out_binder ; result = e_a_let_in fun_name transform
                                                                    (e_a_application ~location (e_a_variable ~location fun_name fun_type)
-                       (e_a_pair (e_a_variable ~location out_binder in_type) id_expr) out_type) { inline = false ; no_mutation = false ; public = true } }
+                       (e_a_pair (e_a_variable ~location out_binder in_type) id_expr) out_type) { inline = false ; no_mutation = false ; public = true ; view = false } }
                        in_type out_type in
      let transform = reduce transform in
      let transform = fix_app fun_name transform in
