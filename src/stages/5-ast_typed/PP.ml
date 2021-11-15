@@ -26,13 +26,13 @@ let tuple_sep value sep ppf m =
 let record_sep_t value sep ppf (m : 'a label_map) =
   let lst = LMap.to_kv_list m in
   let lst = List.dedup_and_sort ~compare:(fun (Label a,_) (Label b,_) -> String.compare a b) lst in
-  let new_pp ppf (k, {associated_type;_}) = fprintf ppf "@[<h>%a -> %a@]" label k value associated_type in
+  let new_pp ppf (k, v) = fprintf ppf "@[<h>%a -> %a@]" label k value v in
   fprintf ppf "%a" (list_sep new_pp sep) lst
 
 let tuple_sep_t value sep ppf m =
   assert (Helpers.is_tuple_lmap m);
   let lst = Helpers.tuple_of_record m in
-  let new_pp ppf (_, {associated_type;_}) = fprintf ppf "%a" value associated_type in
+  let new_pp ppf (_, v) = fprintf ppf "%a" value v in
   fprintf ppf "%a" (list_sep new_pp sep) lst
 
 (* Prints records which only contain the consecutive fields
@@ -98,7 +98,7 @@ let rec type_content : formatter -> type_content -> unit =
   | T_variable        tv -> type_variable                 ppf tv
   | T_constant        tc -> type_injection ppf tc
   | T_sum              m -> fprintf ppf "@[<h>sum[%a]@]" (lmap_sep_d row) (LMap.to_kv_list_rev m.content)
-  | T_record           m -> fprintf ppf "%a" record m
+  | T_record           m -> fprintf ppf "%a" (tuple_or_record_sep_type row) m.content
   | T_arrow            a -> arrow         type_expression ppf a
   | T_module_accessor ma -> module_access type_expression ppf ma
   | T_singleton       x  -> literal       ppf             x
@@ -115,10 +115,6 @@ and type_injection ppf {language;injection;parameters} =
   ignore language;
   fprintf ppf "%s%a" (Ligo_string.extract injection) (list_sep_d_par type_expression) parameters
 
-
-and record ppf {content; layout=_} =
-  fprintf ppf "%a"
-    (tuple_or_record_sep_type type_expression) content
 
 and type_expression ppf (te : type_expression) : unit =
   (* TODO: we should have a way to hook custom pretty-printers for some types and/or track the "origin" of types as they flow through the constraint solver. This is a temporary quick fix *)
@@ -159,7 +155,7 @@ and expression_content ppf (ec: expression_content) =
         expression result
   | E_matching {matchee; cases;} ->
       fprintf ppf "@[<v 2> match @[%a@] with@ %a@]" expression matchee (matching expression) cases
-  | E_let_in {let_binder; rhs; let_result; attr = { inline; no_mutation; public=__LOC__ } } ->
+  | E_let_in {let_binder; rhs; let_result; attr = { inline; no_mutation; public=__LOC__ ; view = _} } ->
       fprintf ppf "let %a = %a%a%a in %a" expression_variable let_binder expression
         rhs option_inline inline option_no_mutation no_mutation expression let_result
   | E_type_in   {type_binder; rhs; let_result} -> 
@@ -206,10 +202,10 @@ and matching : (formatter -> expression -> unit) -> _ -> matching_expr -> unit =
 
 and declaration ppf (d : declaration) =
   match d with
-  | Declaration_constant {name = _; binder; expr; attr = { inline; no_mutation; public } } ->
-      fprintf ppf "const %a = %a%a%a%a" expression_variable binder expression expr option_inline inline option_no_mutation no_mutation option_public public
+  | Declaration_constant {name = _; binder; expr; attr = { inline; no_mutation ; view ; public } } ->
+      fprintf ppf "const %a = %a%a%a%a%a" expression_variable binder expression expr option_inline inline option_no_mutation no_mutation option_view view option_public public
   | Declaration_type {type_binder; type_expr; type_attr = { public }} ->
-      fprintf ppf "type %a = %a%a" type_variable type_binder type_expression type_expr option_public public
+    fprintf ppf "type %a = %a%a" type_variable type_binder type_expression type_expr option_public public
   | Declaration_module {module_binder; module_; module_attr = {public}} ->
       fprintf ppf "module %a = %a%a" module_variable module_binder module_fully_typed module_ option_public public
   | Module_alias {alias; binders} ->
@@ -292,7 +288,7 @@ let row_tag ppf = function
 
 let environment_element_definition ppf = function
   | ED_binder -> fprintf ppf "Binder"
-  | ED_declaration {expression=e;free_variables=fv} ->
+  | ED_declaration {expression=e;free_variables=fv;attr=_} ->
     fprintf ppf "Declaration : {expression : %a ;@ free_variables : %a}" expression e (list expression_variable) fv
 let rec environment_element ppf ({type_value;definition} : environment_element) =
   fprintf ppf "{@[<hv 2> @ type_value : %a;@ definition : %a;@]@ }"
