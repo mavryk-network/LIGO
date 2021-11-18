@@ -247,10 +247,10 @@ let%expect_test _ =
                let card_pattern =
                  {card_pattern with
                    {quantity =
-                      (abs
-                         ((Operator.sub
-                             (card_pattern.quantity)
-                             (1n))))}} in
+                      abs
+                        (Operator.sub
+                           (card_pattern.quantity)
+                           (1n))}} in
                let [@var] card_patterns : card_patterns =
                  s.card_patterns in
                let card_patterns =
@@ -435,10 +435,10 @@ let sell_single: (action_sell_single, storage) => return =
              {...card_pattern,
                {
                  quantity:
-                   (
-                    abs(((
-                        Operator.sub((card_pattern.quantity),
-                           (1n))))))
+
+                   abs((
+                      Operator.sub((card_pattern.quantity),
+                         (1n))))
                }};
            let [@var] card_patterns: card_patterns =
              s.card_patterns;

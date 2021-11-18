@@ -84,10 +84,10 @@ let%expect_test _ =
     const toto = ADD(E.toto ,
     C.B.titi)
     const fb = record[tata -> 2 , tete -> 3 , titi -> 1 , toto -> toto]
-    const main = lambda (#6) return let #8 = #6 in  match #8 with
-                                                     | ( p , s ) ->
-                                                     let s = ADD(ADD(p , s) ,
-                                                     toto) in ( LIST_EMPTY() , s ) |}]
+    const main = lambda (#18) return let #20 = #18 in  match #20 with
+                                                        | ( p , s ) ->
+                                                        let s = ADD(ADD(p , s) ,
+                                                        toto) in ( LIST_EMPTY() , s ) |}]
 
 let%expect_test _ =
   run_ligo_good [ "print" ; "mini-c" ; contract "D.mligo" ] ;
@@ -100,9 +100,9 @@ let ../../test/contracts/build/B.mligo =
   let f =
     fun #1 ->
     (let #6 = #1 in
-     let (#10, #11) = #6 in
-     let #2 = #10 in
-     let x = #11 in let x = ADD(ADD(x , A) , titi) in PAIR(LIST_EMPTY() , x))[@inline] in
+     let (#12, #13) = #6 in
+     let #2 = #12 in
+     let x = #13 in let x = ADD(ADD(x , A) , titi) in PAIR(LIST_EMPTY() , x))[@inline] in
   PAIR(PAIR(A , f) , PAIR(titi , toto))
 let ../../test/contracts/build/F.mligo = let toto = L(44)[@inline] in toto
 let ../../test/contracts/build/G.mligo = let toto = L(43)[@inline] in toto
@@ -124,9 +124,9 @@ let fb = (L(1), toto, L(2), L(3))
 let main =
   fun #4 ->
   (let #8 = #4 in
-   let (#12, #13) = #8 in
-   let p = #12 in
-   let s = #13 in let s = ADD(ADD(p , s) , toto) in PAIR(LIST_EMPTY() , s)) |}]
+   let (#14, #15) = #8 in
+   let p = #14 in
+   let s = #15 in let s = ADD(ADD(p , s) , toto) in PAIR(LIST_EMPTY() , s)) |}]
 
 let%expect_test _ =
   run_ligo_good [ "compile" ; "contract" ; contract "D.mligo" ] ;

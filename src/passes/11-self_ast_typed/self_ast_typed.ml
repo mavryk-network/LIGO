@@ -25,8 +25,10 @@ let contract_passes ~raise = [
   Contract_passes.entrypoint_typing ~raise ;
 ]
 
-let all_module ~add_warning ~raise init =
-  List.fold ~f:(|>) (all_module_passes ~add_warning ~raise) ~init
+let all_module ~add_warning ~raise ~protocol init =
+  let module_fully_typed = List.fold ~f:(|>) (all_module_passes ~add_warning ~raise) ~init in
+  let module_fully_typed = Default_env.inline_env protocol module_fully_typed in
+  module_fully_typed
 
 let all_expression ~raise init =
   List.fold ~f:(|>) (all_expression_passes ~raise) ~init
