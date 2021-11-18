@@ -131,6 +131,7 @@ let compile_groups ~raise filename grp_list =
         let typed,_   = Ligo_compile.Of_core.typecheck ~raise ~add_warning ~options Env inferred in
         let applied   = Self_ast_typed.monomorphise_module typed in
         let _,applied = trace ~raise self_ast_typed_tracer @@ Self_ast_typed.morph_module options.init_env applied in
+        Format.printf "Typed : %a" Ast_typed.PP.module_fully_typed applied ;
         let mini_c    = Ligo_compile.Of_typed.compile ~raise applied in
         let (_michelsons : Stacking.compiled_expression list) =
           List.map ~f:
@@ -174,7 +175,8 @@ let main =
   test_suite "Markdown files" @@
     List.map
       ~f:(fun md_file ->
-        let test_name = "File : "^md_file^"\"" in
+        let test_name = Str.string_after md_file @@ String.length "./gitlab-pages/docs/" in
+        let test_name = "File : "^test_name in
         test test_name (compile md_file)
       )
       (get_all_md_files ())
