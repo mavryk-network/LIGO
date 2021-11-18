@@ -110,7 +110,7 @@ let crypto_module e = make_module e "Crypto" [
 
 let michelson_module e = make_module e "Michelson" [
   ("is_nat", e_raw_code "{ ISNAT }" (t_function (t_int ()) (t_option (t_nat ())) ())) ;
-]
+] (* Deprecated*)
 
 let toplevel e = add_bindings_in_env [
   ("blake2b"        , e_raw_code "{ BLAKE2B  }" (t_function (t_bytes ()) (t_bytes    ()) ())) ;
