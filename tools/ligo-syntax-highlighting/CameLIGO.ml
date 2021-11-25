@@ -6,13 +6,10 @@ module Name = struct
   let let_binding               = "letbinding"
   let lambda                    = "lambda"
   let type_definition           = "typedefinition"
-  let type_annotation           = "typeannotation"
   let control_keywords          = "controlkeywords"
   let numeric_literals          = "numericliterals"
   let operators                 = "operators"
   let identifier_constructor    = "identifierconstructor"
-  let identifier_lower          = "identifierlower"
-  let multiplication            = "multiplication"
   let module_                   = "module"
   let attribute                 = "attribute"
 end
@@ -36,7 +33,7 @@ let syntax_highlighting =
         "*";
         "/";
         "==";
-        "=/=";
+        "<>";
         ">=";
         "<=";
         ">";
@@ -49,25 +46,25 @@ let syntax_highlighting =
       string_delimiters = [
         {
           emacs    = "\\\"";
-          textmate = "";
+          textmate = "\\\"";
           vim      = "\\\""
         }
       ];
       comments = {
         line_comment = {
           emacs    = "//";
-          textmate = "";
+          textmate = "\\/\\/.*$";
           vim      = "\\/\\/.*$"
         };
         block_comment = (
           {
             emacs    = "(*";
-            textmate = "";
+            textmate = "\\(\\*";
             vim      = "(\\*"
           },
           {
             emacs    = "*)";
-            textmate = "";
+            textmate = "\\*\\)";
             vim      = "\\*)"
           }
         );
@@ -105,12 +102,10 @@ let syntax_highlighting =
       Name.let_binding;
       Name.lambda;
       Name.type_definition;
-      Name.type_annotation; 
       Name.control_keywords;
       Name.numeric_literals;
       Name.operators;
       Name.identifier_constructor;
-      Name.identifier_lower;
       Name.module_
     ];
     repository = [
@@ -140,20 +135,6 @@ let syntax_highlighting =
         kind = Match {
           match_name = Some Operator;
           match_ = [(Regexp.operators_match, None)]
-        }
-      };
-      {
-        name = Name.type_annotation;
-        kind = Match { 
-          match_ = [(Regexp.type_annotation_match, None)];
-          match_name = Some Type
-        }
-      };
-      {
-        name = Name.multiplication;
-        kind = Match { 
-          match_ = [(Regexp.multiplication_match, None)];
-          match_name = Some Operator
         }
       };
       {

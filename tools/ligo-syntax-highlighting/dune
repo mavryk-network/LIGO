@@ -4,6 +4,8 @@
  (modules
   regexp
   CameLIGO
+  ReasonLIGO
+  PascaLIGO
   LigoSyntaxHighlighting
  )
  (libraries 
