@@ -73,7 +73,7 @@ let steps =
 
 let protocol_version =
   let open Arg in
-  let open Environment.Protocols in
+  let open Compiler_options.Protocols in
   let plist = Format.asprintf "%a" (Simple_utils.PP_helpers.list_sep_d_par Format.pp_print_string) protocols_str in
   let info =
     let docv = "PROTOCOL_VERSION" in
@@ -638,15 +638,18 @@ let test =
 let repl =
   let f syntax_name protocol_version infer
     amount balance sender source now display_format init_file : unit Term.ret =
-    (let protocol = Environment.Protocols.protocols_to_variant protocol_version in
-    let syntax = Ligo_compile.Helpers.syntax_to_variant (Syntax_name syntax_name) None in
+    (let protocol = Compiler_options.Protocols.protocols_to_variant protocol_version in
+    let syntax = File_metadata.syntax_to_variant (Syntax_name syntax_name) None in
     let dry_run_opts = Ligo_run.Of_michelson.make_dry_run_options {now ; amount ; balance ; sender ; source ; parameter_ty = None } in
     match protocol, Trace.to_option syntax, Trace.to_option dry_run_opts with
     | _, None, _ -> `Error (false, "Please check syntax name.")
     | None, _, _ -> `Error (false, "Please check protocol name.")
     | _, _, None -> `Error (false, "Please check run options.")
     | Some protocol, Some syntax, Some dry_run_opts ->
-       `Ok (Repl.main syntax display_format protocol infer dry_run_opts init_file)) in
+      let options = Compiler_options.make ~infer ~protocol_version:protocol () in
+      let meta    = File_metadata.make_from_syntax syntax in
+      let env     = Ligo_compile.Helpers.make_env ~options ~meta () in
+       `Ok (Repl.main ~options ~meta ~env display_format dry_run_opts init_file)) in
   let term =
     Term.(const f $ req_syntax 0 $ protocol_version $ infer $ amount $ balance $ sender $ source $ now $ display_format $ init_file) in
   let cmdname = "repl" in

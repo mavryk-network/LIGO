@@ -12,7 +12,7 @@ include Helpers
 open Peephole
 open Peephole.Let_syntax 
 
-type proto = Environment.Protocols.t
+type proto = Compiler_options.Protocols.t
 
 (* `arity p` should be `Some n` only if p is (always) an instruction
    which removes n items from the stack and uses them to push 1 item,
@@ -627,7 +627,7 @@ let rec opt_strip_annots (x : _ michelson) : _ michelson =
     end
   | x -> x
 
-let optimize : 'l. Environment.Protocols.t -> 'l michelson -> 'l michelson =
+let optimize : 'l. Compiler_options.Protocols.t -> 'l michelson -> 'l michelson =
   fun proto x ->
   ignore proto;
   let x = flatten_seqs x in

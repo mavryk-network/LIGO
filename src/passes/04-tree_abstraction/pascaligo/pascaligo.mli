@@ -14,6 +14,6 @@ val compile_expression : raise:Errors.abs_error Trace.raise -> CST.expr -> AST.e
     AST used by the compiler. *)
 val compile_module : raise:Errors.abs_error Trace.raise -> CST.ast -> AST.module_
 
-val decompile_expression : ?dialect:Decompiler.dialect -> AST.expr -> CST.expr
+val decompile_expression : ?dialect:File_metadata.dialect -> AST.expr -> CST.expr
 
-val decompile_module : ?dialect:Decompiler.dialect -> AST.module_ -> CST.ast
+val decompile_module : ?dialect:File_metadata.dialect -> AST.module_ -> CST.ast

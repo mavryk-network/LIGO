@@ -6,6 +6,7 @@ type all = Types.all
 (* build system *)
 let build_error_tracer (e:BuildSystem.Errors.t) : all = `Build_error_tracer e
 
+let meta_tracer (e:File_metadata.Errors.t) : all = `Main_metadata e
 (* passes tracers *)
 
 let preproc_tracer (e:Preprocessing.Errors.t) : all = `Main_preproc e
@@ -38,8 +39,6 @@ let decompile_michelson : Stacking.Errors.stacking_error -> all = fun e -> `Main
 (* top-level glue (in between passes) *)
 
 let invalid_generator generator : all = `Main_invalid_generator_name generator
-let syntax_auto_detection extension : all = `Main_invalid_extension extension
-let invalid_syntax syntax : all = `Main_invalid_syntax_name syntax
 let invalid_protocol_version possible actual = `Main_invalid_protocol_version (possible,actual)
 let invalid_typer_switch s = `Main_invalid_typer_switch s
 

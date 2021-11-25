@@ -4,7 +4,7 @@ open Main_errors
 
 open Ast_imperative.Combinators
 
-let init_env = Environment.default Environment.Protocols.current
+let init_env = Environment.init_env ~test:false ~protocol:Compiler_options.Protocols.current ~curry:false ()
 
 let type_file f =
   type_file f Env options

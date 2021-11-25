@@ -1,6 +1,6 @@
 (library
- (name compiler_options)
- (public_name ligo.compiler_options)
+ (name file_metadata)
+ (public_name ligo.file_metadata)
  (instrumentation
   (backend bisect_ppx))
  (libraries simple-utils)

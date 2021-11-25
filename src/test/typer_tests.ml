@@ -22,7 +22,7 @@ let int ~raise  () : unit =
   ()
 
 let init_env = Checking.decompile_env @@ 
-  Environment.default Environment.Protocols.current
+  Environment.init_env ~curry:false ~test:false ~protocol:Compiler_options.Protocols.current ()
 
 open Ast_core
 

@@ -58,8 +58,8 @@ let rec compile_binds ~raise protocol_version env outer proj binds =
 and compile_expr ~raise protocol_version env outer expr =
   compile_expr' generated (compile_operator ~raise protocol_version) literal_type literal_value env outer expr
 
-and apply_static_args ~raise : Environment.Protocols.t -> string -> (_, constant', literal) static_args -> _ node =
-  fun protocol_version prim args ->
+and apply_static_args ~raise : Compiler_options.Protocols.t -> string -> (_, constant', literal) static_args -> _ node =
+  fun protocol_version prim args -> 
   match args with
   | Type_args (annot, types) ->
     Prim (generated, prim, types, Option.to_list annot)
@@ -72,7 +72,7 @@ and apply_static_args ~raise : Environment.Protocols.t -> string -> (_, constant
     let code = Prim (generated, "code", [Seq (generated, e)], []) in
     Prim (generated, prim, [Seq (generated, [parameter; storage; code])], [])
 
-and compile_operator ~raise : Environment.Protocols.t -> constant' -> (_, constant', literal) static_args -> (Location.t, string) node list =
+and compile_operator ~raise : Compiler_options.Protocols.t -> constant' -> (_, constant', literal) static_args -> (Location.t, string) node list =
   fun protocol_version c args ->
   match Predefined.Stacking.get_operators protocol_version c with
   | Some x -> [wipe_locations generated

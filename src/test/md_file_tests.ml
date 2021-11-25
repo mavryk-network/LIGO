@@ -6,13 +6,13 @@ let () = Unix.putenv "LIGO_FORCE_NEW_TYPER" "false"
 type syntax = string
 type group_name = string
 type lang = Meta | Object (* Object = normal LIGO code ; Meta = ligo test framework code *)
-module SnippetsGroup = Map.Make(struct type t = (syntax * group_name * Environment.Protocols.t) let compare a b = compare a b end)
+module SnippetsGroup = Map.Make(struct type t = (syntax * group_name * Compiler_options.Protocols.t) let compare a b = compare a b end)
 
 
 type snippetsmap = (lang * string) SnippetsGroup.t
 
 let get_proto p =
-  let opt = try Environment.Protocols.protocols_to_variant p with
+  let opt = try Compiler_options.Protocols.protocols_to_variant p with
     _ -> None
   in
   match opt with
@@ -109,28 +109,29 @@ let get_groups md_file : snippetsmap =
 **)
 let compile_groups ~raise filename grp_list =
   let add_warning _ = () in
-  let aux : (syntax * group_name * Environment.Protocols.t) * (lang * string) -> unit =
+  let aux : (syntax * group_name * Compiler_options.Protocols.t) * (lang * string) -> unit =
     fun ((syntax , grp, protocol_version) , (lang , contents)) ->
       trace ~raise (test_md_file filename syntax grp contents) @@
       fun ~raise -> 
       let options    = Compiler_options.make ~protocol_version () in
-      let meta       = Ligo_compile.Of_source.make_meta ~raise syntax None in
+      let meta       = trace ~raise Main_errors.meta_tracer @@ File_metadata.make syntax None in
+      let env        = Ligo_compile.Helpers.make_env ~options ~meta () in
       let c_unit,_   = Ligo_compile.Of_source.compile_string ~raise ~options ~meta contents in
       let imperative = Ligo_compile.Of_c_unit.compile ~raise ~add_warning ~meta c_unit filename in
       let sugar      = Ligo_compile.Of_imperative.compile ~raise imperative in
       let core       = Ligo_compile.Of_sugar.compile sugar in
-      let inferred   = Ligo_compile.Of_core.infer  ~raise~options core in
+      let inferred   = Ligo_compile.Of_core.infer ~raise ~options ~env core in
       match lang with
       | Meta ->
-        let init_env = Environment.default_with_test options.protocol_version in
-        let options = { options with init_env ; test = true } in
-        let typed,_    = Ligo_compile.Of_core.typecheck ~raise ~add_warning ~options Env inferred in
+        let options = { options with test = true } in
+        let env        = Ligo_compile.Helpers.make_env ~options ~meta () in
+        let typed,_    = Ligo_compile.Of_core.typecheck ~raise ~add_warning ~options ~meta ~env Env inferred in
         let _ = Interpreter.eval_test ~protocol_version:options.protocol_version ~raise ~steps:5000 typed in
         ()
       | Object ->
-        let typed,_   = Ligo_compile.Of_core.typecheck ~raise ~add_warning ~options Env inferred in
+        let typed,_   = Ligo_compile.Of_core.typecheck ~raise ~add_warning ~options ~meta ~env Env inferred in
         let applied   = Self_ast_typed.monomorphise_module typed in
-        let _,applied = trace ~raise self_ast_typed_tracer @@ Self_ast_typed.morph_module options.init_env applied in
+        let _,applied = trace ~raise self_ast_typed_tracer @@ Self_ast_typed.morph_module env applied in
         Format.printf "Typed : %a" Ast_typed.PP.module_fully_typed applied ;
         let mini_c    = Ligo_compile.Of_typed.compile ~raise applied in
         let (_michelsons : Stacking.compiled_expression list) =

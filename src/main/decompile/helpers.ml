@@ -1,42 +1,5 @@
-open Trace
-open Main_errors
+open File_metadata
 
-type s_syntax = Syntax_name of string
-type s_dialect = Dialect_name of string
-
-type v_syntax =
-  | PascaLIGO of Tree_abstraction.Pascaligo.Decompiler.dialect option
-  | CameLIGO
-  | ReasonLIGO
-  | JsLIGO
-
-let dialect_to_variant ~raise dialect =
-  match dialect with
-  | None -> None
-  | Some (Dialect_name dialect) ->
-     match dialect with
-     | "terse" -> (Some Tree_abstraction.Pascaligo.Decompiler.Terse)
-     | "verbose" -> (Some Tree_abstraction.Pascaligo.Decompiler.Verbose)
-     | _ -> raise.raise (`Main_invalid_dialect_name dialect)
-
-let syntax_to_variant ~raise ?dialect (Syntax_name syntax) source =
-  match syntax, source with
-    "auto", Some sf ->
-      (match Filename.extension sf with
-         ".ligo" | ".pligo" ->
-                    let dialect = dialect_to_variant ~raise dialect in
-                    (PascaLIGO dialect)
-       | ".mligo"           -> CameLIGO
-       | ".religo"          -> ReasonLIGO
-       | ".jsligo"          -> JsLIGO
-       | ext                -> raise.raise (syntax_auto_detection ext))
-  | ("pascaligo" | "PascaLIGO"),   _ ->
-     let dialect = dialect_to_variant ~raise dialect in
-     (PascaLIGO dialect)
-  | ("cameligo" | "CameLIGO"),     _ -> CameLIGO
-  | ("reasonligo" | "ReasonLIGO"), _ -> ReasonLIGO
-  | ("jsligo" | "JsLIGO"),         _ -> JsLIGO
-  | _ -> raise.raise (invalid_syntax syntax)
 
 let specialise_and_print_pascaligo dialect m =
   let ast = Self_ast_imperative.decompile_imperative m in

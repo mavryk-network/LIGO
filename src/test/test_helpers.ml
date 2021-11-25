@@ -113,7 +113,9 @@ let wrap_ref file f =
 (* Common functions used in tests *)
 
 let type_file ~raise ?(st = "auto") f entry options =
-  Ligo_compile.Utils.type_file ~raise ~options f st entry
+  let meta = trace ~raise Main_errors.meta_tracer @@ File_metadata.extract st f in
+  let env  = Ligo_compile.Helpers.make_env ~options ~meta () in
+  Ligo_compile.Utils.type_file ~raise ~options ~meta ~env f entry
 
 let get_program ~raise ~add_warning ?(st = "auto") f entry =
   wrap_ref f (fun s ->

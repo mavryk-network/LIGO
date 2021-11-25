@@ -2,13 +2,6 @@ open Trace
 
 (* Helpers *)
 
-let variant_to_syntax (v: Ligo_compile.Helpers.v_syntax) =
-  match v with
-  | PascaLIGO -> "pascaligo"
-  | CameLIGO -> "cameligo"
-  | ReasonLIGO -> "reasonligo"
-  | JsLIGO -> "jsligo"
-
 let get_declarations_core core_prg =
      let func_declarations  = Ligo_compile.Of_core.list_declarations core_prg in
      let type_declarations  = Ligo_compile.Of_core.list_type_declarations core_prg in
@@ -77,20 +70,17 @@ let repl_result_format : 'a Display.format = {
 module Run = Ligo_run.Of_michelson
 
 type state = { env : Ast_typed.environment;
-               syntax : Ligo_compile.Helpers.v_syntax;
-               infer : bool ;
-               protocol : Environment.Protocols.t;
+               meta : File_metadata.t;
+               options : Compiler_options.t;
                decl_list : Mini_c.program;
                dry_run_opts : Run.options;
               }
 
 let try_eval ~raise state s =
-  let options = Compiler_options.make ~infer:state.infer ~protocol_version:state.protocol () in
-  let options = {options with init_env = state.env } in
-  let typed_exp,env = Ligo_compile.Utils.type_expression_string ~raise ~options:options state.syntax s state.env in
+  let typed_exp,env = Ligo_compile.Utils.type_expression_string ~raise ~options:state.options ~meta:state.meta ~env:state.env s in
   let env,applied = trace ~raise Main_errors.self_ast_typed_tracer @@ Self_ast_typed.morph_expression env typed_exp in
   let mini_c_exp = Ligo_compile.Of_typed.compile_expression ~raise applied in
-  let compiled_exp = Ligo_compile.Of_mini_c.aggregate_and_compile_expression ~raise ~options:options state.decl_list mini_c_exp in
+  let compiled_exp = Ligo_compile.Of_mini_c.aggregate_and_compile_expression ~raise ~options:state.options state.decl_list mini_c_exp in
   let options = state.dry_run_opts in
   let runres = Run.run_expression ~raise ~options:options compiled_exp.expr compiled_exp.expr_ty in
   let x = Decompile.Of_michelson.decompile_expression ~raise applied.type_expression runres in
@@ -102,12 +92,10 @@ let try_eval ~raise state s =
     raise.raise `Repl_unexpected
 
 let try_contract ~raise state s =
-  let options = Compiler_options.make ~infer:state.infer ~protocol_version:state.protocol () in
-  let options = {options with init_env = state.env } in
   try
     try_with (fun ~raise ->
       let typed_prg,core_prg,env =
-        Ligo_compile.Utils.type_contract_string ~raise ~add_warning ~options:options state.syntax s state.env in
+        Ligo_compile.Utils.type_contract_string ~raise ~add_warning ~options:state.options ~meta:state.meta ~env:state.env s in
       let env,applied =
         trace ~raise Main_errors.self_ast_typed_tracer @@ Self_ast_typed.morph_module env typed_prg in
       let mini_c =
@@ -129,9 +117,7 @@ let try_contract ~raise state s =
      raise.raise `Repl_unexpected
 
 let import_file ~raise state file_name module_name =
-  let options = Compiler_options.make ~infer:state.infer ~protocol_version:state.protocol () in
-  let options = {options with init_env = state.env } in
-  let module_,env = Build.combined_contract ~raise ~add_warning ~options (variant_to_syntax state.syntax) file_name in
+  let module_,env = Build.combined_contract ~raise ~add_warning ~options:state.options ~meta:state.meta ~env:state.env file_name in
   let env = Ast_typed.Environment.add_module ~public:true module_name env state.env in
   let module_ = Ast_typed.(Module_Fully_Typed [Location.wrap @@ Declaration_module {module_binder=module_name;module_;module_attr={public=true}}]) in
   let env,contract = trace ~raise Main_errors.self_ast_typed_tracer @@ Self_ast_typed.morph_module env module_ in
@@ -140,10 +126,8 @@ let import_file ~raise state file_name module_name =
   (state, Just_ok)
 
 let use_file ~raise state s =
-  let options = Compiler_options.make ~infer:state.infer ~protocol_version:state.protocol () in
-  let options = {options with init_env = state.env } in
   (* Missing typer environment? *)
-  let mini_c,(Ast_typed.Module_Fully_Typed module'),env = Build.build_contract_use ~raise ~add_warning ~options (variant_to_syntax state.syntax) s in
+  let mini_c,(Ast_typed.Module_Fully_Typed module'),env = Build.build_contract_use ~raise ~add_warning ~options:state.options ~meta:state.meta ~env:state.env s in
   let state = { state with env = env;
                            decl_list = state.decl_list @ mini_c;
                           } in
@@ -200,12 +184,11 @@ Included directives:
   #use \"file_path\";;
   #import \"file_path\" \"module_name\";;"
 
-let make_initial_state syntax protocol infer dry_run_opts =
-  { env = Environment.default protocol;
+let make_initial_state ~options ~meta ~env dry_run_opts =
+  { env ;
+    meta ;
+    options ;  
     decl_list = [];
-    syntax = syntax;
-    infer = infer;
-    protocol = protocol;
     dry_run_opts = dry_run_opts;
   }
 
@@ -221,7 +204,7 @@ let rec read_input prompt delim =
                  some @@ s ^ "\n" ^ i
               | hd :: _ -> some @@ hd
 
-let rec loop syntax display_format state n =
+let rec loop display_format state n =
   let prompt = Format.sprintf "In  [%d]: " n in
   let s = read_input prompt ";;" in
   match s with
@@ -229,16 +212,16 @@ let rec loop syntax display_format state n =
      let k, state, out = parse_and_eval display_format state s in
      let out = Format.sprintf "Out [%d]: %s" n out in
      print_endline out;
-     loop syntax display_format state (n + k)
+     loop display_format state (n + k)
   | None -> ()
 
-let main syntax display_format protocol typer_switch dry_run_opts init_file =
+let main ~options ~meta ~env display_format dry_run_opts init_file =
   print_endline welcome_msg;
-  let state = make_initial_state syntax protocol typer_switch dry_run_opts in
+  let state = make_initial_state ~options ~meta ~env dry_run_opts in
   let state = match init_file with
     | None -> state
     | Some file_name -> let c = use_file state file_name in
                         let _, state, _ = eval (Ex_display_format Dev) state c in
                         state in
   LNoise.set_multiline true;
-  loop syntax display_format state 1
+  loop display_format state 1

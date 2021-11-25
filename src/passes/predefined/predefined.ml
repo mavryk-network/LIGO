@@ -724,7 +724,7 @@ module Stacking = struct
     `Tezos_utils.Michelson` will help too, so that no Michelson has to actually
     be written by hand.
    *)
-  type protocol_type = Environment.Protocols.t
+  type protocol_type = Compiler_options.Protocols.t
   include Helpers.Stacking
   open Tezos_utils.Michelson
   open Stage_common.Types

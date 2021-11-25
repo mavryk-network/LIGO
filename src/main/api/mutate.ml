@@ -2,6 +2,7 @@ open Api_helpers
 open Simple_utils.Trace
 module Compile = Ligo_compile
 module Helpers   = Ligo_compile.Helpers
+open Main_errors
 
 let generator_to_variant ~raise s =
   if String.equal s "list" then
@@ -23,14 +24,13 @@ let mutate_ast source_file syntax infer protocol_version libs display_format see
     let module Fuzzer = Fuzz.Ast_imperative.Mutator(Gen) in
     let protocol_version = Helpers.protocol_to_variant ~raise protocol_version in
     let options       = Compiler_options.make ~infer ~protocol_version ~libs () in
-    let meta     = Compile.Of_source.extract_meta ~raise syntax source_file in
-    let c_unit,_ = Compile.Utils.to_c_unit ~raise ~options ~meta source_file in
+    let meta          = trace ~raise meta_tracer @@ File_metadata.extract syntax source_file in
+    let c_unit,_      = Compile.Utils.to_c_unit ~raise ~options ~meta source_file in
     let imperative_prg = Compile.Utils.to_imperative ~raise ~add_warning ~options ~meta c_unit source_file in
     let _, imperative_prg = Fuzzer.mutate_module_ ?n:seed imperative_prg in
-    let dialect         = Decompile.Helpers.Dialect_name "verbose" in
-    let syntax = Helpers.variant_to_syntax meta.syntax in
-    let buffer     =
-        Decompile.Of_imperative.decompile ~raise ~dialect imperative_prg (Syntax_name syntax) in
+    let dialect         = File_metadata.Dialect_name "verbose" in
+    let syntax         = File_metadata.variant_to_syntax meta.syntax in
+    let buffer         = Decompile.Of_imperative.decompile ~raise ~dialect imperative_prg (Syntax_name syntax) in
     buffer
 
 let mutate_cst source_file syntax infer protocol_version libs display_format seed generator =
@@ -43,10 +43,10 @@ let mutate_cst source_file syntax infer protocol_version libs display_format see
     let module Gen : Fuzz.Monad = (val get_module : Fuzz.Monad) in
     let protocol_version = Helpers.protocol_to_variant ~raise protocol_version in
     let options   = Compiler_options.make ~infer ~protocol_version ~libs () in
-    let meta     = Compile.Of_source.extract_meta ~raise syntax source_file in
-    let c_unit,_ = Compile.Utils.to_c_unit ~raise ~options ~meta source_file in
-    match meta with
-    | {syntax = CameLIGO} ->
+    let meta      = trace ~raise meta_tracer @@ File_metadata.extract syntax source_file in
+    let c_unit,_  = Compile.Utils.to_c_unit ~raise ~options ~meta source_file in
+    match meta.syntax with
+    | CameLIGO ->
        begin
          let module Fuzzer = Fuzz.Cameligo.Mutator(Gen) in
          let raw =
@@ -59,7 +59,7 @@ let mutate_cst source_file syntax infer protocol_version libs display_format see
          let buffer = (Parsing.Cameligo.pretty_print mutated_prg) in
          buffer
        end
-      | {syntax = ReasonLIGO} ->
+      | ReasonLIGO ->
          begin
            let module Fuzzer = Fuzz.Reasonligo.Mutator(Gen) in
            let raw =
@@ -72,7 +72,7 @@ let mutate_cst source_file syntax infer protocol_version libs display_format see
            let buffer = (Parsing.Reasonligo.pretty_print mutated_prg) in
            buffer
          end
-      | {syntax = PascaLIGO} ->
+      | PascaLIGO _ ->
          begin
            let module Fuzzer = Fuzz.Pascaligo.Mutator(Gen) in
            let raw =
@@ -85,7 +85,7 @@ let mutate_cst source_file syntax infer protocol_version libs display_format see
            let buffer = (Parsing.Pascaligo.pretty_print mutated_prg) in
            buffer
          end
-      | {syntax = JsLIGO} ->
+      | JsLIGO ->
          begin
            let module Fuzzer = Fuzz.Jsligo.Mutator(Gen) in
            let raw =

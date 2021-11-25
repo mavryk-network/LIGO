@@ -4,7 +4,7 @@ open Ast_typed
 
 
 
-let inline_env protocol contract = 
+let inline_env protocol curry contract = 
   let rec f env e = 
     match e.expression_content with
     E_variable var -> 
@@ -23,4 +23,4 @@ let inline_env protocol contract =
       )
     | _ -> e
   in
-  map_module (f (default_with_test protocol)) contract
+  map_module (f (init_env ~test:true ~curry ~protocol ())) contract

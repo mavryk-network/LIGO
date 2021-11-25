@@ -33,21 +33,6 @@ let human_readable_error e =
   error display_format e
 
 let%expect_test "main" =
-  human_readable_error (`Main_invalid_syntax_name "foo") ;
-  [%expect
-    {|
-      Invalid syntax option: 'foo'.
-      Use 'pascaligo', 'cameligo', or 'reasonligo'.|}] ;
-    human_readable_error (`Main_invalid_dialect_name "foo") ;
-  [%expect
-    {|
-      Invalid dialect option: 'foo'.
-      Use 'verbose' or 'terse'.|}] ;
-  human_readable_error (`Main_invalid_extension "foo") ;
-  [%expect
-    {|
-  Invalid file extension 'foo'.
-  Use '.ligo' for PascaLIGO, '.mligo' for CameLIGO, '.religo' for ReasonLIGO, or the --syntax option.|}] ;
   human_readable_error
     (`Main_unparse_tracer
       [`Tezos_alpha_error Tezos_error_monad.Error_monad.Timeout]) ;
@@ -133,6 +118,24 @@ let%expect_test _ =
   |}]
 
 let%expect_test "pretty" = () (* not used *)
+
+let%expect_test "file_metadata" =
+  let error e = human_readable_error (`Main_metadata e) in
+  error (`Meta_invalid_extension "foo") ;
+  [%expect
+    {|
+  Invalid file extension 'foo'.
+  Use '.ligo' for PascaLIGO, '.mligo' for CameLIGO, '.religo' for ReasonLIGO, or the --syntax option.|}] ;
+  error (`Meta_invalid_syntax_name "foo") ;
+  [%expect
+    {|
+      Invalid syntax option: 'foo'.
+      Use 'pascaligo', 'cameligo', or 'reasonligo'.|}] ;
+  error (`Meta_invalid_dialect_name "foo") ;
+  [%expect
+    {|
+      Invalid dialect option: 'foo'.
+      Use 'verbose' or 'terse'.|}]
 
 let%expect_test "self_ast_imperative" =
   let open Ast_imperative in

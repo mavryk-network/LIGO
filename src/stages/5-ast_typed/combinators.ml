@@ -354,7 +354,7 @@ let e_key s : expression_content = E_literal (Literal_key s)
 let e_key_hash s : expression_content = E_literal (Literal_key_hash s)
 let e_chain_id s : expression_content = E_literal (Literal_chain_id s)
 let e_operation s : expression_content = E_literal (Literal_operation s)
-let e_lambda l : expression_content = E_lambda l
+let e_lambda binder result : expression_content = E_lambda {binder;result}
 let e_recursive l : expression_content = E_recursive l
 let e_pair a b : expression_content = ez_e_record [(Label "0",a);(Label "1", b)]
 let e_application lamb args : expression_content = E_application {lamb;args}
@@ -387,7 +387,7 @@ let e_a_pair a b = make_e (e_pair a b)
 let e_a_constructor c e t = make_e (e_constructor (Label c) e) t
 let e_a_some s = make_e (e_some s) (t_constant option_name [s.type_expression])
 
-let e_a_lambda l in_ty out_ty = make_e (e_lambda l) (t_function in_ty out_ty ())
+let e_a_lambda binder result in_ty out_ty = make_e (e_lambda binder result) (t_function in_ty out_ty ())
 let e_a_recursive l= make_e (e_recursive l) l.fun_type
 let e_a_none t = make_e (e_none ()) (t_option t)
 let e_a_record ?(layout=default_layout) r = make_e (e_record r) (t_record ~layout

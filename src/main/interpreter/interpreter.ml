@@ -483,11 +483,11 @@ let rec apply_operator ~raise ~steps ~protocol_version : Location.t -> calltrace
     *)
     | ( C_TEST_ORIGINATE_FROM_FILE, args) -> (
       match protocol_version, args with
-      | Environment.Protocols.Edo , [ V_Ct (C_string source_file) ; V_Ct (C_string entryp) ; storage ; V_Ct ( C_mutez amt ) ] ->
+      | Compiler_options.Protocols.Edo , [ V_Ct (C_string source_file) ; V_Ct (C_string entryp) ; storage ; V_Ct ( C_mutez amt ) ] ->
         let>> (code,size) = Compile_contract_from_file (source_file,entryp,[]) in
         let>> addr = Inject_script (loc, calltrace, code, storage, amt) in
         return @@ V_Record (LMap.of_list [ (Label "0", addr) ; (Label "1", code) ; (Label "2", size) ])
-      | Environment.Protocols.Hangzhou , [ V_Ct (C_string source_file) ; V_Ct (C_string entryp) ; V_List views ; storage ; V_Ct ( C_mutez amt ) ] ->
+      | Compiler_options.Protocols.Hangzhou , [ V_Ct (C_string source_file) ; V_Ct (C_string entryp) ; V_List views ; storage ; V_Ct ( C_mutez amt ) ] ->
         let views = List.map
           ~f:(fun x -> trace_option ~raise (Errors.corner_case ()) @@ get_string x)
           views
@@ -908,7 +908,7 @@ and eval_ligo ~raise ~steps ~protocol_version : Ast_typed.expression -> calltrac
                                    get_t_function (get_type_expression code) in
         let arg_binder = Location.wrap @@ Var.fresh () in
         let body = e_a_application term (e_a_variable arg_binder in_type) out_type in
-        let orig_lambda = e_a_lambda { binder = arg_binder ; result = body } in_type out_type in
+        let orig_lambda = e_a_lambda arg_binder body in_type out_type in
         return @@ V_Func_val { rec_name = None ; orig_lambda ; body ; env ; arg_binder }
       | E_literal (Literal_string x) ->
         let exp_as_string = Ligo_string.extract x in

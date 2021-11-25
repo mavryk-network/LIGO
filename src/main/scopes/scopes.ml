@@ -5,7 +5,7 @@ module Formatter = Formatter
 
 type sub_module = { type_env : tenv  ; bindings : bindings_map }
 
-let scopes : with_types:bool -> options:Compiler_options.t -> Ast_core.module_ -> (def_map * scopes) = fun ~with_types ~options core_prg ->
+let scopes : with_types:bool -> options:Compiler_options.t -> env:Environment.t -> Ast_core.module_ -> (def_map * scopes) = fun ~with_types ~options ~env core_prg ->
   let make_v_def_from_core = make_v_def_from_core ~with_types  in
   let make_v_def_option_type = make_v_def_option_type ~with_types in
 
@@ -172,7 +172,7 @@ let scopes : with_types:bool -> options:Compiler_options.t -> Ast_core.module_ -
         ( i, top_def_map, inner_def_map, scopes, partials )
       )
     in
-    let init = { type_env = options.init_env ; bindings = Bindings_map.empty } in
+    let init = { type_env = env ; bindings = Bindings_map.empty } in
     List.fold_left ~f:aux ~init:(i, Def_map.empty, Def_map.empty, [], init) core_prg 
   in
   let (_,top_d,inner_d,s,_) = declaration ~options 0 core_prg in

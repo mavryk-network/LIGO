@@ -4,10 +4,8 @@ type all =
 [
  | `Build_error_tracer of BuildSystem.Errors.t
 
+ | `Main_metadata of File_metadata.Errors.t
  | `Main_invalid_generator_name of string
- | `Main_invalid_syntax_name of string
- | `Main_invalid_dialect_name of string
- | `Main_invalid_extension of string
  | `Main_invalid_protocol_version of string list *  string
  | `Main_invalid_typer_switch of string
  | `Main_unparse_tracer of tezos_alpha_error list

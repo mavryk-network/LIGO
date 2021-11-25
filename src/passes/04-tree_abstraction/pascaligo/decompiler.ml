@@ -1,6 +1,7 @@
 module AST = Ast_imperative
 module CST = Cst.Pascaligo
 module Predefined = Predefined.Tree_abstraction.Pascaligo
+open File_metadata
 
 open Function
 
@@ -41,8 +42,6 @@ let prefix_colon a = (ghost, a)
 let suffix_with a = (a, ghost)
 
 (* Dialect-relevant functions *)
-type dialect = Terse | Verbose
-
 let terminator = function
   | Terse -> Some ghost
   | Verbose -> None

@@ -4,6 +4,7 @@ open Trace
 module Compile = Ligo_compile
 module Helpers   = Ligo_compile.Helpers
 module Run = Ligo_run.Of_michelson
+open Main_errors
 
 let test source_file syntax steps infer protocol_version display_format =
     Trace.warning_with @@ fun add_warning get_warnings ->
@@ -11,9 +12,11 @@ let test source_file syntax steps infer protocol_version display_format =
       fun ~raise ->
       let protocol_version = Helpers.protocol_to_variant ~raise protocol_version in
       let options = Compiler_options.make ~infer ~test:true ~protocol_version () in
-      let typed,_ = Build.combined_contract ~raise ~add_warning ~options syntax source_file in
+      let meta    = trace ~raise meta_tracer @@ File_metadata.extract syntax source_file in
+      let env     = Helpers.make_env ~options ~meta () in
+      let typed,_ = Build.combined_contract ~raise ~add_warning ~options ~meta ~env source_file in
       let typed   = Self_ast_typed.monomorphise_module typed in
-      let _,typed = trace ~raise Main_errors.self_ast_typed_tracer @@ Self_ast_typed.morph_module options.init_env typed in
+      let _,typed = trace ~raise Main_errors.self_ast_typed_tracer @@ Self_ast_typed.morph_module env typed in
       let steps = int_of_string steps in
       Interpreter.eval_test ~raise ~steps ~protocol_version typed
 
@@ -23,7 +26,9 @@ let dry_run source_file entry_point input storage amount balance sender source n
       fun ~raise ->
       let protocol_version = Helpers.protocol_to_variant ~raise protocol_version in
       let options = Compiler_options.make ~infer ~protocol_version () in
-      let mini_c_prg,typed_prg,env = Build.build_contract_use ~raise ~add_warning ~options syntax source_file in
+      let meta    = trace ~raise meta_tracer @@ File_metadata.extract syntax source_file in
+      let env     = Helpers.make_env ~options ~meta () in
+      let mini_c_prg,typed_prg,env = Build.build_contract_use ~raise ~add_warning ~options ~meta ~env source_file in
       let michelson_prg   = Compile.Of_mini_c.aggregate_and_compile_contract ~raise ~options mini_c_prg entry_point in
       let parameter_ty =
         (* fails if the given entry point is not a valid contract *)
@@ -31,7 +36,7 @@ let dry_run source_file entry_point input storage amount balance sender source n
         Option.map ~f:fst @@ Self_michelson.fetch_contract_ty_inputs michelson_prg.expr_ty
       in
 
-      let compiled_params   = Compile.Utils.compile_storage ~raise ~options input storage source_file syntax env mini_c_prg in
+      let compiled_params   = Compile.Utils.compile_storage ~raise ~options ~meta ~env input storage mini_c_prg in
       let args_michelson    = Run.evaluate_expression ~raise compiled_params.expr compiled_params.expr_ty in
 
       let options           = Run.make_dry_run_options ~raise {now ; amount ; balance ; sender ; source ; parameter_ty } in
@@ -46,7 +51,9 @@ let interpret expression init_file syntax infer protocol_version amount balance 
         let protocol_version = Helpers.protocol_to_variant ~raise protocol_version in
         Compiler_options.make ~infer ~protocol_version ()
       in
-      let (mini_c_exp, typed_exp), decl_list = Build.build_expression ~raise ~add_warning ~options syntax expression init_file in
+      let meta    = trace ~raise meta_tracer @@ File_metadata.make syntax init_file in
+      let env     = Helpers.make_env ~options ~meta () in
+      let (mini_c_exp, typed_exp), decl_list = Build.build_expression ~raise ~add_warning ~options ~meta ~env expression init_file in
       let compiled_exp   = Ligo_compile.Of_mini_c.aggregate_and_compile_expression ~raise ~options decl_list mini_c_exp in
       let options           = Run.make_dry_run_options ~raise {now ; amount ; balance ; sender ; source ; parameter_ty = None } in
       let runres  = Run.run_expression ~raise ~options compiled_exp.expr compiled_exp.expr_ty in
@@ -60,8 +67,9 @@ let evaluate_call source_file entry_point parameter amount balance sender source
         let protocol_version = Helpers.protocol_to_variant ~raise protocol_version in
         Compiler_options.make ~infer ~protocol_version ()
       in
-      let mini_c_prg,typed_prg,env = Build.build_contract_use ~raise ~add_warning ~options syntax source_file in
-      let meta             = Compile.Of_source.extract_meta ~raise syntax source_file in
+      let meta                     = trace ~raise meta_tracer @@ File_metadata.extract syntax source_file in
+      let env                      = Helpers.make_env ~options ~meta () in
+      let mini_c_prg,typed_prg,env = Build.build_contract_use ~raise ~add_warning ~options ~meta ~env source_file in
       let c_unit_param,_   = Compile.Of_source.compile_string ~raise ~options ~meta parameter in
       let imperative_param = Compile.Of_c_unit.compile_expression ~raise ~meta c_unit_param in
       let sugar_param      = Compile.Of_imperative.compile_expression ~raise imperative_param in
@@ -84,7 +92,9 @@ let evaluate_expr source_file entry_point amount balance sender source now synta
         let protocol_version = Helpers.protocol_to_variant ~raise protocol_version in
         Compiler_options.make ~infer ~protocol_version ()
       in
-      let mini_c,typed_prg,_ = Build.build_contract_use ~raise ~add_warning ~options syntax source_file in
+      let meta               = trace ~raise meta_tracer @@ File_metadata.extract syntax source_file in
+      let env                = Helpers.make_env ~options ~meta () in
+      let mini_c,typed_prg,_ = Build.build_contract_use ~raise ~add_warning ~options ~meta ~env source_file in
       let (exp,_)       = trace_option ~raise Main_errors.entrypoint_not_found @@ Mini_c.get_entry mini_c entry_point in
       let exp = Mini_c.e_var ~loc:exp.location (Location.wrap @@ Var.of_name entry_point) exp.type_expression in
       let compiled      = Compile.Of_mini_c.aggregate_and_compile_expression ~raise ~options mini_c exp in

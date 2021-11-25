@@ -82,8 +82,10 @@ let compile_contract ~raise ~add_warning ~protocol_version source_file entry_poi
   let open Ligo_compile in
   let syntax = "auto" in
   let options = Compiler_options.make ~protocol_version () in
-  let michelson,env = Build.build_contract ~raise ~add_warning ~options syntax entry_point source_file in
-  let views = Build.build_views ~raise ~add_warning ~options syntax entry_point (declared_views,env) source_file in
+  let meta    = trace ~raise Main_errors.meta_tracer @@ File_metadata.extract syntax source_file in
+  let env     = Helpers.make_env ~options ~meta () in
+  let michelson,env = Build.build_contract ~raise ~add_warning ~options ~meta ~env entry_point source_file in
+  let views = Build.build_views ~raise ~add_warning ~options ~meta entry_point (declared_views,env) source_file in
   Of_michelson.build_contract ~raise ~disable_typecheck:false michelson views
 
 let clean_location_with v x =
@@ -164,7 +166,7 @@ let compile_contract_ ~raise ~protocol_version subst_lst arg_binder rec_name in_
   let options = Compiler_options.make ~protocol_version () in
   let typed_exp' = add_ast_env ~raise subst_lst arg_binder typed_exp in
   let typed_exp = match rec_name with
-    | None -> Ast_typed.e_a_lambda { result = typed_exp'; binder = arg_binder } in_ty out_ty
+    | None -> Ast_typed.e_a_lambda arg_binder typed_exp' in_ty out_ty
     | Some fun_name -> Ast_typed.e_a_recursive { fun_name ; fun_type  = (Ast_typed.t_function in_ty out_ty ()) ; lambda = { result = typed_exp';binder = arg_binder } } in
   let mini_c_exp     = Of_typed.compile_expression ~raise typed_exp in
   let compiled_exp   = Of_mini_c.aggregate_and_compile ~raise ~options [] (ContractForm mini_c_exp) in
@@ -172,7 +174,7 @@ let compile_contract_ ~raise ~protocol_version subst_lst arg_binder rec_name in_
 
 let make_function ~raise in_ty out_ty arg_binder body subst_lst =
   let typed_exp' = add_ast_env ~raise subst_lst arg_binder body in
-  Ast_typed.e_a_lambda {result=typed_exp'; binder=arg_binder} in_ty out_ty
+  Ast_typed.e_a_lambda arg_binder typed_exp' in_ty out_ty
 
 let rec val_to_ast ~raise ~loc : Ligo_interpreter.Types.value ->
                           Ast_typed.type_expression ->
@@ -324,7 +326,7 @@ and make_ast_func ~raise ?name env arg body orig =
     | None ->
        let in_ty,out_ty =
          get_t_function_exn orig.type_expression in
-       e_a_lambda lambda in_ty out_ty
+       e_a_lambda arg typed_exp' in_ty out_ty
     | Some fun_name ->
        e_a_recursive {fun_name ;
                       fun_type = orig.type_expression ;

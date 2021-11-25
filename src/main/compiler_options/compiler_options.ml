@@ -1,7 +1,6 @@
-open Environment
+module Protocols = Protocols
 
 type t = {
-  init_env : Ast_typed.environment ;
   infer : bool ;
   libs : string list ;
   test : bool ;
@@ -18,7 +17,7 @@ let make :
     ?(libs = ([]:string list))
     ?(protocol_version=Protocols.current)
     ?(test = false) () ->
-      { init_env = if test then default_with_test protocol_version else default protocol_version;
+      {
         infer;
         libs ;
         protocol_version;

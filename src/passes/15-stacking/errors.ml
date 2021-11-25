@@ -8,7 +8,7 @@ type stacking_error = [
   | `Stacking_could_not_tokenize_michelson of string
   | `Stacking_could_not_parse_michelson of string
   | `Stacking_untranspilable of int Michelson.t * int Michelson.t
-  | `Stacking_unsupported_primitive of Stage_common.Types.constant' * Environment.Protocols.t
+  | `Stacking_unsupported_primitive of Stage_common.Types.constant' * Compiler_options.Protocols.t
 ] [@@deriving poly_constructor { prefix = "stacking_" }]
 
 let stage = "stacking"
@@ -30,7 +30,7 @@ let error_ppformat : display_format:string display_format ->
   | Human_readable | Dev -> (
     match a with
     | `Stacking_unsupported_primitive (c,p) ->
-      Format.fprintf f "@[<hv>unsupported primitive %a in protocol %s@]" Stage_common.PP.constant' c (Environment.Protocols.variant_to_string p)
+      Format.fprintf f "@[<hv>unsupported primitive %a in protocol %s@]" Stage_common.PP.constant' c (Compiler_options.Protocols.variant_to_string p)
     | `Stacking_corner_case (loc,msg) ->
       let s = Format.asprintf "Stacking corner case at %s : %s.\n%s"
         loc msg (corner_case_msg ()) in

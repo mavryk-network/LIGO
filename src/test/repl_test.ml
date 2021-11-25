@@ -2,14 +2,21 @@ open Test_helpers
 open Trace
 
 let dry_run_options = Proto_alpha_utils.Memory_proto_alpha.(make_options ~env:(test_environment ()) ())
-let init_state_cameligo = Repl.make_initial_state
-                            (CameLIGO: Ligo_compile.Helpers.v_syntax)
-                            Environment.Protocols.Edo
+
+let make_initial_state syntax protocol_version infer dry_run_options  = 
+  let options = Compiler_options.make ~infer ~protocol_version () in
+  let meta    = File_metadata.make_from_syntax syntax in
+  let env     = Ligo_compile.Helpers.make_env ~options ~meta () in
+  Repl.make_initial_state ~options ~meta ~env dry_run_options
+
+let init_state_cameligo = make_initial_state
+                            (CameLIGO: File_metadata.v_syntax)
+                            Compiler_options.Protocols.Edo
                             false dry_run_options
 
-let init_state_jsligo = Repl.make_initial_state
-                          (JsLIGO: Ligo_compile.Helpers.v_syntax)
-                          Environment.Protocols.Edo
+let init_state_jsligo = make_initial_state
+                          (JsLIGO: File_metadata.v_syntax)
+                          Compiler_options.Protocols.Edo
                           false dry_run_options
 
 let apply_repl_sequence init_state commands =

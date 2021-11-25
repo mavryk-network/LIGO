@@ -7,6 +7,7 @@ let rec error_ppformat : display_format:string display_format ->
   | Human_readable | Dev -> (
     match a with
     | `Build_error_tracer err -> BuildSystem.Errors.error_ppformat ~display_format f err
+    | `Main_metadata err -> File_metadata.Errors.error_ppformat ~display_format f err
     | `Test_err_tracer (name,err) ->
       Format.fprintf f "@[<hv>Test '%s'@ %a@]"
         name (error_ppformat ~display_format) err
@@ -58,14 +59,6 @@ let rec error_ppformat : display_format:string display_format ->
       Format.fprintf f
         "@[<hv>Invalid generator option: '%s'. @.Use 'random' or 'list'. @]"
           generator
-    | `Main_invalid_syntax_name syntax ->
-      Format.fprintf f
-        "@[<hv>Invalid syntax option: '%s'. @.Use 'pascaligo', 'cameligo', or 'reasonligo'. @]"
-          syntax
-    | `Main_invalid_dialect_name syntax ->
-      Format.fprintf f
-        "@[<hv>Invalid dialect option: '%s'. @.Use 'verbose' or 'terse'. @]"
-          syntax
     | `Main_invalid_protocol_version (possible,actual) ->
       Format.fprintf f
       "@[<hv>Invalid protocol version '%s'. Available versions: %a"
@@ -75,11 +68,6 @@ let rec error_ppformat : display_format:string display_format ->
       Format.fprintf f
       "@[<hv>Invalid typer switch '%s'. Available: 'new' 'old'"
         actual
-    | `Main_invalid_extension extension ->
-      Format.fprintf f
-        "@[<hv>Invalid file extension '%s'. @.Use '.ligo' for PascaLIGO, '.mligo' for CameLIGO, '.religo' for ReasonLIGO, or the --syntax option.@]"
-        extension
-
     | `Main_unparse_tracer errs ->
       let errs = List.map ~f:( fun e -> match e with `Tezos_alpha_error a -> a) errs in
       Format.fprintf f "@[Error(s) occurred while translating to Michelson:@.%a@]"
@@ -268,18 +256,13 @@ let rec error_jsonformat : Types.all -> Yojson.Safe.t = fun a ->
 
   (* Top-level errors *)
   | `Build_error_tracer e -> json_error ~stage:"build system" ~content:(BuildSystem.Errors.error_jsonformat e)
+  | `Main_metadata e -> json_error ~stage:"metadata" ~content:(File_metadata.Errors.error_jsonformat e)
   | `Main_invalid_generator_name _ ->
     json_error ~stage:"command line interpreter" ~content:(`String "bad generator name")
-  | `Main_invalid_syntax_name _ ->
-    json_error ~stage:"command line interpreter" ~content:(`String "bad syntax name")
-  | `Main_invalid_dialect_name _ ->
-    json_error ~stage:"command line interpreter" ~content:(`String "bad dialect name")
   | `Main_invalid_protocol_version _ ->
     json_error ~stage:"command line interpreter" ~content:(`String "bad protocol version")
   | `Main_invalid_typer_switch _ ->
     json_error ~stage:"command line interpreter" ~content:(`String "bad typer switch")
-  | `Main_invalid_extension _ ->
-    json_error ~stage:"command line interpreter" ~content:(`String "bad file extension")
 
   | `Main_unparse_tracer _ ->
     let content = `Assoc [("message", `String "could not unparse michelson type")] in

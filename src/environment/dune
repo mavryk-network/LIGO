@@ -3,6 +3,6 @@
  (public_name ligo.environment)
  (instrumentation
   (backend bisect_ppx))
- (libraries simple-utils tezos-utils ast_typed stage_common typesystem)
+ (libraries simple-utils tezos-utils ast_typed stage_common typesystem compiler_options file_metadata)
  (flags
   (:standard -open Simple_utils)))

@@ -37,7 +37,7 @@ and transduced = {
   bigmaps : bigmaps ; (* context bigmaps state as ligo values *)
 }
 and internals = {
-  protocol_version : Environment.Protocols.t ;
+  protocol_version : Compiler_options.Protocols.t ;
   baker : Memory_proto_alpha.Protocol.Alpha_context.Contract.t ; (* baker to be used for the next transfer/origination *)
   source : Memory_proto_alpha.Protocol.Alpha_context.Contract.t ; (* source to be used for the next transfer/origination *)
   next_bootstrapped_contracts : bootstrap_contract list ; (* next contracts to be injected as boostrap accounts in the next state reset *)

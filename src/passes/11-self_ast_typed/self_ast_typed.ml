@@ -25,9 +25,9 @@ let contract_passes ~raise = [
   Contract_passes.entrypoint_typing ~raise ;
 ]
 
-let all_module ~add_warning ~raise ~protocol init =
+let all_module ~add_warning ~raise ~protocol ~curry init =
   let module_fully_typed = List.fold ~f:(|>) (all_module_passes ~add_warning ~raise) ~init in
-  let module_fully_typed = Default_env.inline_env protocol module_fully_typed in
+  let module_fully_typed = Default_env.inline_env protocol curry module_fully_typed in
   module_fully_typed
 
 let all_expression ~raise init =

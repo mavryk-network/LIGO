@@ -16,7 +16,9 @@ let positive_contract_tests =
   List.map
     ~f:(fun path ->
       let run ~raise ~add_warning () =
-        let prog = Ligo_compile.Utils.type_file ~raise ~add_warning ~options path "auto" Env in
+        let meta = Trace.trace ~raise Main_errors.meta_tracer @@ File_metadata.extract "auto" path in
+        let env  = Ligo_compile.Helpers.make_env ~options ~meta () in
+        let prog = Ligo_compile.Utils.type_file ~raise ~add_warning ~options ~meta ~env path Env in
         let _michelson = typed_program_to_michelson ~raise prog "main" in
         () in
         test_w ("src/test/"^path) run)

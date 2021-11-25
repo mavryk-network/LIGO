@@ -6,7 +6,7 @@ module I = Ast_core
 module O = Ast_typed
 open O.Combinators
 
-type protocol_version = Environment.Protocols.t
+type protocol_version = Compiler_options.Protocols.t
 module Environment = O.Environment
 
 type environment = Environment.t

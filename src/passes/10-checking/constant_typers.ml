@@ -1,5 +1,5 @@
 module H=Helpers
-module Ligo_proto = Environment.Protocols
+module Ligo_proto = Compiler_options.Protocols
 open Trace
 open Errors
 open Ast_typed

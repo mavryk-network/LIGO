@@ -6,18 +6,19 @@ type form =
   | View of string * string
   | Env
 
-let infer ~raise ~(options: Compiler_options.t) (m : Ast_core.module_) =
+let infer ~raise ~(options: Compiler_options.t) ~(env:Environment.t) (m : Ast_core.module_) =
   match options.infer with
     | true  ->
-       let env_inf = Checking.decompile_env options.init_env in
+       let env_inf = Checking.decompile_env env in
        let (_,e,_,_) = trace ~raise inference_tracer @@ Inference.type_module ~init_env:env_inf m in e
     | false -> m
 
-let typecheck ~raise ~add_warning ~(options: Compiler_options.t) (cform : form) (m : Ast_core.module_) : Ast_typed.module_fully_typed * Ast_typed.environment =
-  let e,typed = trace ~raise checking_tracer @@ Checking.type_module ~test:options.test ~init_env:options.init_env ~protocol_version:options.protocol_version m in
+let typecheck ~raise ~add_warning ~(options: Compiler_options.t) ~(meta:File_metadata.t) ~(env:Environment.t) (cform : form) (m : Ast_core.module_) : Ast_typed.module_fully_typed * Ast_typed.environment =
+  let init_env = env in
+  let e,typed = trace ~raise checking_tracer @@ Checking.type_module ~test:options.test ~init_env ~protocol_version:options.protocol_version m in
   let applied = trace ~raise self_ast_typed_tracer @@
     fun ~raise ->
-    let selfed = Self_ast_typed.all_module ~raise ~add_warning ~protocol:options.protocol_version typed in
+    let selfed = Self_ast_typed.all_module ~raise ~add_warning ~protocol:options.protocol_version ~curry:meta.curry typed in
     match cform with
     | Contract entrypoint -> Self_ast_typed.all_contract ~raise entrypoint selfed
     | View (view_name,main_name) -> Self_ast_typed.all_view ~raise view_name main_name selfed

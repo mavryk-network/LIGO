@@ -50,7 +50,7 @@ let buffer_of_mutation : mutation -> Buffer.t = fun (loc, _expr) ->
      let file = r # file in
      let ic = open_in_bin file in
      (* Decompile expression *)
-     let n_syntax     = Trace.to_stdlib_result (Decompile.Helpers.syntax_to_variant (Syntax_name "auto") (Some file)) in
+     let n_syntax     = Trace.to_stdlib_result File_metadata.(syntax_to_variant (Syntax_name "auto") (Some file)) in
      let n_syntax     = match n_syntax with
        | Ok r -> r
        | Error _ -> failwith "Cannot detect syntax" in
