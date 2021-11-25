@@ -176,6 +176,7 @@ let e_map_add    ?loc ?sugar k v old  : expression = make_e ?loc ?sugar @@ E_con
 
 let e_constant    ?loc ?sugar name lst             = make_e ?loc ?sugar @@ E_constant {cons_name=name ; arguments = lst}
 let e_variable v            : expression = make_e @@ E_variable v
+let e_variable_ez v         : expression = e_variable @@ Location.wrap @@ Var.of_name v
 let e_application lamb args : expression = make_e @@ E_application {lamb;args}
 let e_lambda      ?loc ?sugar binder output_type result            = make_e ?loc ?sugar @@ E_lambda {binder; output_type; result ;  }
 let e_lambda_ez   ?loc ?sugar var ?ascr ?const_or_var output_type result         = e_lambda ?loc ?sugar {var;ascr;attributes={const_or_var}} output_type result

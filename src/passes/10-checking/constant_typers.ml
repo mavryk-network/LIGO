@@ -1218,11 +1218,6 @@ let constant_typers ~raise ~test ~protocol_version loc c : typer = match c with
   (* BIG MAP *)
   | C_BIG_MAP_GET_AND_UPDATE -> big_map_get_and_update ~raise loc;
   (* CRYPTO *)
-  | C_SHA256              -> hash256 ~raise loc ;
-  | C_SHA512              -> hash512 ~raise loc ;
-  | C_BLAKE2b             -> blake2b ~raise loc ;
-  | C_HASH_KEY            -> hash_key ~raise loc ;
-  | C_CHECK_SIGNATURE     -> check_signature ~raise loc ;
   | C_CHAIN_ID            -> chain_id ~raise loc;
   (* BLOCKCHAIN *)
   | C_CONTRACT            -> get_contract ~raise loc ;
@@ -1241,8 +1236,6 @@ let constant_typers ~raise ~test ~protocol_version loc c : typer = match c with
   | C_IMPLICIT_ACCOUNT    -> implicit_account ~raise loc ;
   | C_SET_DELEGATE        -> set_delegate ~raise loc ;
   | C_CREATE_CONTRACT     -> create_contract ~raise loc ;
-  | C_SHA3              -> sha3 ~raise loc ;
-  | C_KECCAK            -> keccak ~raise loc ;
   | C_LEVEL             -> level ~raise loc ;
   | C_VOTING_POWER      -> voting_power ~raise loc ;
   | C_TOTAL_VOTING_POWER -> total_voting_power ~raise loc ;

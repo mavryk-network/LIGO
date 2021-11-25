@@ -58,7 +58,7 @@ module TestExpressions = struct
 
   let add ~raise  () : unit = test_expression ~raise I.(e_constant C_ADD [e_int Z.zero; e_int Z.one]) O.(t_int ())
   let eq ~raise  () : unit = test_expression ~raise I.(e_constant C_EQ [e_int Z.zero; e_int Z.zero]) O.(t_bool ())
-  let key_hash ~raise  () : unit = test_expression ~raise I.(e_constant C_HASH_KEY [e_key "toto"]) O.(t_key_hash ())
+  let key_hash ~raise  () : unit = test_expression ~raise I.(e_application (e_module_accessor "Crypto" @@ e_variable_ez "hash_key") (e_key "toto")) O.(t_key_hash ())
   let failwith ~raise  () : unit = test_expression ~raise I.(e_ascription (e_constant C_FAILWITH [e_int Z.zero]) (t_int ())) O.(t_int ())
   let application ~raise  () : unit =
     test_expression ~raise

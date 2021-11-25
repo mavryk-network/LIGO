@@ -404,11 +404,6 @@ tc "arguments for (+)"
     (* BIG MAP *)
     | C_BIG_MAP_GET_AND_UPDATE -> t_big_map_get_and_update ;
     (* CRYPTO *)
-    | C_SHA256              -> t_hash256 ;
-    | C_SHA512              -> t_hash512 ;
-    | C_BLAKE2b             -> t_blake2b ;
-    | C_HASH_KEY            -> t_hash_key ;
-    | C_CHECK_SIGNATURE     -> t_check_signature ;
     | C_CHAIN_ID            -> t_chain_id ;
     (*BLOCKCHAIN *)
     | C_CONTRACT            -> t_get_contract ;

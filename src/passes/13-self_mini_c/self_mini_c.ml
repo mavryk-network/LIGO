@@ -30,9 +30,7 @@ let is_pure_constant : constant' -> bool =
   | C_INT | C_ABS | C_IS_NAT
   | C_ADDRESS
   | C_SET_MEM | C_SET_ADD | C_SET_REMOVE | C_SLICE | C_SET_UPDATE
-  | C_SHA256 | C_SHA512 | C_BLAKE2b | C_CHECK_SIGNATURE
-  | C_SHA3 | C_KECCAK
-  | C_HASH_KEY | C_BYTES_PACK | C_CONCAT
+  | C_BYTES_PACK | C_CONCAT
   | C_FOLD_CONTINUE | C_FOLD_STOP
   | C_LOOP_CONTINUE | C_LOOP_STOP
   | C_EDIV
@@ -94,7 +92,6 @@ let is_pure_constant : constant' -> bool =
   | C_BIG_MAP
   | C_BIG_MAP_EMPTY
   | C_BIG_MAP_LITERAL
-  | C_HASH
   | C_CONTRACT
   | C_CONTRACT_WITH_ERROR
   | C_CONTRACT_OPT

@@ -74,16 +74,6 @@ module Tree_abstraction = struct
     | "Tezos.split_ticket" -> some_const C_SPLIT_TICKET
     | "Tezos.read_ticket" -> some_const C_READ_TICKET
 
-    (* Crypto module *)
-
-    | "Crypto.check"    -> some_const C_CHECK_SIGNATURE
-    | "Crypto.hash_key" -> some_const C_HASH_KEY
-    | "Crypto.blake2b"  -> some_const C_BLAKE2b
-    | "Crypto.sha256"   -> some_const C_SHA256
-    | "Crypto.sha512"   -> some_const C_SHA512
-    | "Crypto.sha3"     -> some_const C_SHA3
-    | "Crypto.keccak"   -> some_const C_KECCAK
-
     (* Bytes module *)
 
     | "Bytes.pack"   -> some_const C_BYTES_PACK
@@ -270,16 +260,6 @@ module Tree_abstraction = struct
     | C_LE   -> "Operator.le"
     | C_CONS -> "Operator.cons"
     | C_NEQ  -> "Operator.neq"
-
-    (* Crypto module *)
-
-    | C_CHECK_SIGNATURE -> "Crypto.check"
-    | C_HASH_KEY        -> "Crypto.hash_key"
-    | C_BLAKE2b         -> "Crypto.blake2b"
-    | C_SHA256          -> "Crypto.sha256"
-    | C_SHA512          -> "Crypto.sha512"
-    | C_SHA3            -> "Crypto.sha3"
-    | C_KECCAK          -> "Crypto.keccak"
 
     (* Bytes module *)
 
@@ -798,16 +778,9 @@ module Stacking = struct
     | C_SET_REMOVE         , _   -> Some ( simple_binary @@ seq [dip (i_push (prim "bool") (prim "False")) ; prim "UPDATE"])
     | C_SET_UPDATE         , _   -> Some ( simple_ternary @@ prim "UPDATE" )
     | C_SLICE              , _   -> Some ( simple_ternary @@ seq [prim "SLICE" ; i_assert_some_msg (i_push_string "SLICE")])
-    | C_SHA256             , _   -> Some ( simple_unary @@ prim "SHA256")
-    | C_SHA512             , _   -> Some ( simple_unary @@ prim "SHA512")
-    | C_BLAKE2b            , _   -> Some ( simple_unary @@ prim "BLAKE2B")
-    | C_CHECK_SIGNATURE    , _   -> Some ( simple_ternary @@ prim "CHECK_SIGNATURE")
-    | C_HASH_KEY           , _   -> Some ( simple_unary @@ prim "HASH_KEY")
     | C_BYTES_PACK         , _   -> Some ( simple_unary @@ prim "PACK")
     | C_CONCAT             , _   -> Some ( simple_binary @@ prim "CONCAT")
     | C_CHAIN_ID           , _   -> Some ( simple_constant @@ prim "CHAIN_ID")
-    | C_SHA3               , _   -> Some ( simple_unary @@ prim "SHA3")
-    | C_KECCAK             , _   -> Some ( simple_unary @@ prim "KECCAK")
     | C_LEVEL              , _   -> Some ( simple_constant @@ prim "LEVEL")
     | C_VOTING_POWER       , _   -> Some ( simple_unary @@ prim "VOTING_POWER")
     | C_TOTAL_VOTING_POWER , _   -> Some ( simple_unary @@ prim "TOTAL_VOTING_POWER")

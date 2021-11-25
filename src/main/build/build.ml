@@ -139,16 +139,16 @@ let build_mini_c ~raise ~add_warning : options:Compiler_options.t -> meta:File_m
       let meta = meta
       let env = env
     end) in
-    let contract,_ = combined_contract ~raise ~add_warning ~options ~meta ~env file_name in 
+    let contract,env = combined_contract ~raise ~add_warning ~options ~meta ~env file_name in 
     let applied = match entry_point with
     | Ligo_compile.Of_core.Contract entrypoint ->
       trace ~raise self_ast_typed_tracer @@ Self_ast_typed.all_contract entrypoint contract
     | View (view_name,main_name) ->
       trace ~raise self_ast_typed_tracer @@ Self_ast_typed.all_view view_name main_name contract
     | Env -> contract in
-    let applied = Self_ast_typed.monomorphise_module applied in
+    let applied   = Self_ast_typed.monomorphise_module applied in
     let env,applied = trace ~raise self_ast_typed_tracer @@ Self_ast_typed.morph_module env applied in
-    let mini_c       = Ligo_compile.Of_typed.compile ~raise applied in
+    let mini_c    = Ligo_compile.Of_typed.compile ~raise applied in
     (mini_c,env)
 
 let build_expression ~raise ~add_warning : options:Compiler_options.t -> meta:File_metadata.t -> env:Environment.t -> string -> file_name option -> _ =

@@ -59,16 +59,6 @@ let tezos_module e = make_module e "Tezos" [
 
 *)
 
-let crypto_module e = make_module e "Crypto" [
-  ("blake2b" , H.e_a_raw_code "{ BLAKE2B  }" (t_function (t_bytes ()) (t_bytes    ()) ())) ;
-  ("sha256"  , H.e_a_raw_code "{ SHA256   }" (t_function (t_bytes ()) (t_bytes    ()) ())) ;
-  ("sha512"  , H.e_a_raw_code "{ SHA512   }" (t_function (t_bytes ()) (t_bytes    ()) ())) ;
-  ("sha3"    , H.e_a_raw_code "{ SHA3     }" (t_function (t_bytes ()) (t_bytes    ()) ())) ;
-  ("keccak"  , H.e_a_raw_code "{ KECCAK   }" (t_function (t_bytes ()) (t_bytes    ()) ())) ;
-  ("hash_key", H.e_a_raw_code "{ HASH_KEY }" (t_function (t_key   ()) (t_key_hash ()) ())) ;
-  ("check"   , H.e_a_raw_code "{ UNPAIR ; UNPAIR ; CHECK_SIGNATURE }" (t_function (t_triplet (t_key ()) (t_signature ()) (t_bytes ())) (t_bool ()) ()))
-]
-
 let michelson_module e = make_module e "Michelson" [
   ("is_nat", e_a_raw_code "{ ISNAT }" (t_function (t_int ()) (t_option (t_nat ())) ())) ;
 ] (* Deprecated*)
@@ -92,7 +82,7 @@ let toplevel e = add_bindings_in_env [
 let add_build_in_values ~curry e = 
   e
   |> Strings.module_ ~curry
-  |> crypto_module
+  |> Crypto.module_ ~curry
   |> michelson_module
   |> toplevel
 
