@@ -671,7 +671,7 @@ and type_module ~raise ~init_env (p : I.module_) : environment * O.module_ * O.t
     (init_env , empty_state , p)
     Typesystem.Misc.Substitution.Pattern.s_module
     (type_module_returns_env ~raise) in
-  Format.eprintf "Charcking for uni_vars\n%!";
+  Format.eprintf "Checking for uni_vars\n%!";
   let p = Check.check_has_no_unification_vars p in
   let () = (if Ast_core.Debug.json_new_typer then Printf.eprintf "%!\"end of JSON\"],\n###############################END_OF_JSON\n%!") in
   let () = Pretty_print_variables.flush_pending_print state in

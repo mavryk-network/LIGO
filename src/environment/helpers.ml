@@ -12,7 +12,7 @@ let add_types_in_module_env ts env =
     Ast_typed.Environment.add_type ~public:true v t env)
 
 let make_module parent_env module_name bindings = 
-  let module_env = add_bindings_in_env bindings parent_env in
+  let module_env = add_bindings_in_env bindings Ast_typed.Environment.empty in
   Ast_typed.Environment.add_module ~public:true module_name module_env parent_env 
 
 let e_a_raw_code = Ast_typed.Combinators.e_a_raw_michelson_code

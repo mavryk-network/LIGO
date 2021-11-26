@@ -778,7 +778,8 @@ and type_expression' ~raise ~test ~protocol_version ?(args = []) ?last : environ
       Some m -> m
     | None   -> raise.raise @@ unbound_module_variable e module_name ae.location
     in
-    let element = type_expression' ~raise ~test  ~protocol_version ~args ?last ?tv_opt ?other_module:(Some true) module_env element in
+    let new_env = Environment.sum module_env e in
+    let element = type_expression' ~raise ~test  ~protocol_version ~args ?last ?tv_opt ?other_module:(Some true) new_env element in
     return (E_module_accessor {module_name; element}) element.type_expression
 
 

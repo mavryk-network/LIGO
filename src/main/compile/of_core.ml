@@ -9,8 +9,8 @@ type form =
 let infer ~raise ~(options: Compiler_options.t) ~(env:Environment.t) (m : Ast_core.module_) =
   match options.infer with
     | true  ->
-       let env_inf = Checking.decompile_env env in
-       let (_,e,_,_) = trace ~raise inference_tracer @@ Inference.type_module ~init_env:env_inf m in e
+       let init_env = Checking.decompile_env env in
+       let (_env,m,_t,_s) = trace ~raise inference_tracer @@ Inference.type_module ~init_env m in m
     | false -> m
 
 let typecheck ~raise ~add_warning ~(options: Compiler_options.t) ~(meta:File_metadata.t) ~(env:Environment.t) (cform : form) (m : Ast_core.module_) : Ast_typed.module_fully_typed * Ast_typed.environment =

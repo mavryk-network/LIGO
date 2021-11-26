@@ -11,6 +11,7 @@ val add_module : public:bool -> module_variable -> environment -> t -> t
 val add_type : public:bool -> type_variable -> type_expression -> t -> t
 val add_kind : type_variable -> unit -> t -> t
 val add_type_var : type_variable -> unit -> t -> t
+val sum : t -> t -> t
 val of_list_type : (type_variable * type_expression) list -> t
 val get_opt : ?other_module:bool -> expression_variable -> t -> element option
 val get_type_opt : ?other_module:bool -> type_variable -> t -> type_expression option

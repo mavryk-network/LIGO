@@ -34,6 +34,12 @@ let add_type_var : type_variable -> unit -> t -> t = fun type_variable () -> map
 let add_module ~public : module_variable -> environment -> t -> t = fun module_variable module_ -> map_module_environment (fun x -> { module_variable ; module_; public } :: x)
 (* TODO: generate : these are now messy, clean them up. *)
 
+let sum : t -> t -> t = fun env1 env2 ->
+  let expression_environment = env1.expression_environment @ env2.expression_environment in
+  let type_environment       = env1.type_environment       @ env2.type_environment in
+  let module_environment     = env1.module_environment     @ env2.module_environment in
+  {expression_environment;type_environment;module_environment}
+
 let of_list_type : (type_variable * type_expression) list -> t = fun tvlist -> List.fold_left ~f:(fun acc (t,v) -> add_type ~public:true t v acc) ~init:empty tvlist
 
 let get_opt : ?other_module:bool -> expression_variable -> t -> element option = fun ?other_module k x ->
