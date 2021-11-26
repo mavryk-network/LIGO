@@ -81,13 +81,14 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_good [ "print" ; "ast-typed" ; contract "D.mligo" ] ;
   [%expect {|
-    const toto = ADD(E.toto ,
+    const toto : int = ADD(E.toto ,
     C.B.titi)
-    const fb = record[tata -> 2 , tete -> 3 , titi -> 1 , toto -> toto]
-    const main = lambda (#18) return let #20 = #18 in  match #20 with
-                                                        | ( p , s ) ->
-                                                        let s = ADD(ADD(p , s) ,
-                                                        toto) in ( LIST_EMPTY() , s ) |}]
+    const fb : record[tata -> int , tete -> int , titi -> int , toto -> int] =
+    record[tata -> 2 , tete -> 3 , titi -> 1 , toto -> toto]
+    const main : ( int * int ) -> ( list (operation) * int ) = lambda (#18) return let #20 = #18 in
+     match #20 with
+      | ( p , s ) ->
+      let s = ADD(ADD(p , s) , toto) in ( LIST_EMPTY() , s ) |}]
 
 let%expect_test _ =
   run_ligo_good [ "print" ; "mini-c" ; contract "D.mligo" ] ;

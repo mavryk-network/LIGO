@@ -183,10 +183,10 @@ module PP = struct
   let list_sep_scope x = list_sep x (const " | ")
 
   let rec environment_element = fun ppf {expr_var ; env_elt; public=_} ->
-    fprintf ppf "%a -> %a \n" PP.expression_variable expr_var PP.type_expression env_elt.type_value
+    fprintf ppf "%a => %a \n" PP.expression_variable expr_var PP.type_expression env_elt.type_value
 
   and type_environment_element = fun ppf {type_variable ; type_; public=_} ->
-    fprintf ppf "%a -> %a" PP.type_variable type_variable PP.type_or_kind type_
+    fprintf ppf "%a => %a" PP.type_variable type_variable PP.type_or_kind type_
 
   and expr_environment : _ -> expression_environment -> unit = fun ppf lst ->
     fprintf ppf "Env:[%a]" (list_sep environment_element (tag "@,")) lst

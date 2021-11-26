@@ -203,7 +203,7 @@ and matching : (formatter -> expression -> unit) -> _ -> matching_expr -> unit =
 and declaration ppf (d : declaration) =
   match d with
   | Declaration_constant {name = _; binder; expr; attr = { inline; no_mutation ; view ; public } } ->
-      fprintf ppf "const %a = %a%a%a%a%a" expression_variable binder expression expr option_inline inline option_no_mutation no_mutation option_view view option_public public
+      fprintf ppf "const %a : %a = %a%a%a%a%a" expression_variable binder type_expression expr.type_expression expression expr option_inline inline option_no_mutation no_mutation option_view view option_public public
   | Declaration_type {type_binder; type_expr; type_attr = { public }} ->
     fprintf ppf "type %a = %a%a" type_variable type_binder type_expression type_expr option_public public
   | Declaration_module {module_binder; module_; module_attr = {public}} ->

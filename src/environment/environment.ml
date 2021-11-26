@@ -70,6 +70,9 @@ let toplevel e = add_bindings_in_env [
   ("crypto_hash_key", e_a_raw_code "{ HASH_KEY }" (t_function (t_key   ()) (t_key_hash ()) ())) ;
   ("crypto_check"   , e_a_raw_code "{ UNPAIR ; UNPAIR ; CHECK_SIGNATURE }" (t_function (t_triplet (t_key ()) (t_signature ()) (t_bytes ())) (t_bool ()) ())) ;
 
+  ("bytes_pack"   , e_a_raw_code "{ PACK   }" (t_function (t_variable @@ Var.of_name "_a") (t_bytes    ()) ())) ;
+  ("bytes_unpack" , e_a_raw_code "{ UNPACK }" (t_function (t_bytes ()) (t_option @@ t_variable @@ Var.of_name "_a") ())) ;
+
   ("string_slice" , e_a_raw_code Strings.michelson_slice Strings.slice_type) ;
   ("string_concat", e_a_raw_code "{ UNPAIR ; CONCAT }" (t_function (t_pair (t_string ()) (t_string ())) (t_string ()) ())) ; 
 
@@ -83,6 +86,8 @@ let add_build_in_values ~curry e =
   e
   |> Strings.module_ ~curry
   |> Crypto.module_ ~curry
+  |> Bytes.module_ ~curry
+  |> Bitwise.module_ ~curry
   |> michelson_module
   |> toplevel
 

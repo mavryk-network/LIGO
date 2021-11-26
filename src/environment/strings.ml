@@ -7,8 +7,6 @@ let michelson_slice =
 
 let slice_type = t_function (t_triplet (t_nat ()) (t_nat ()) (t_string ())) (t_string ()) ()
 
-let string_module e = make_module e "String"
-
 let mixed  = [
   ("length", e_a_raw_code "{ SIZE }" (t_function (t_string ()) (t_nat ()) ())) ;
   ("size"  , e_a_raw_code "{ SIZE }" (t_function (t_string ()) (t_nat ()) ())) ;

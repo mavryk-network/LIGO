@@ -1098,7 +1098,7 @@ let%expect_test _ =
 
 let%expect_test _ =
   run_ligo_good [ "print" ; "ast-typed" ; contract "sequence.mligo" ; ];
-  [%expect {| const y = lambda (#1) return let _x = +1 in let _ = let _x = +2 in UNIT() in let _ = let _x = +23 in UNIT() in let _ = let _x = +42 in UNIT() in _x |}]
+  [%expect {| const y : unit -> nat = lambda (#1) return let _x = +1 in let _ = let _x = +2 in UNIT() in let _ = let _x = +23 in UNIT() in let _ = let _x = +42 in UNIT() in _x |}]
 
 let%expect_test _ =
   run_ligo_bad [ "compile" ; "contract" ; contract "bad_type_operator.ligo" ] ;
@@ -1993,13 +1993,13 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_good [ "print" ; "ast-typed" ; contract "remove_recursion.mligo" ] ;
   [%expect {|
-    const f = lambda (n) return let f = rec (f:int -> int => lambda (n) return let #3 = EQ(n ,
+    const f : int -> int = lambda (n) return let f = rec (f:int -> int => lambda (n) return let #3 = EQ(n ,
     0) in  match #3 with
             | False unit_proj#4 ->
               (f)@(SUB(n ,
               1)) | True unit_proj#5 ->
                     1 ) in (f)@(4)
-    const g = rec (g:int -> int -> int -> int => lambda (f) return (g)@(let h = rec (h:int -> int => lambda (n) return let #6 = EQ(n ,
+    const g : int -> int -> int -> int = rec (g:int -> int -> int -> int => lambda (f) return (g)@(let h = rec (h:int -> int => lambda (n) return let #6 = EQ(n ,
     0) in  match #6 with
             | False unit_proj#7 ->
               (h)@(SUB(n ,
@@ -2036,14 +2036,14 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_good [ "print" ; "ast-typed" ; contract "attributes.jsligo" ] ;
   [%expect {|
-    const x = 1[@inline][@private]
-    const foo = lambda (a) return let test = ADD(2 ,
+    const x : int = 1[@inline][@private]
+    const foo : int -> int = lambda (a) return let test = ADD(2 ,
     a)[@inline] in test[@inline][@private]
-    const y = 1[@private]
-    const bar = lambda (b) return let test = lambda (z) return ADD(ADD(2 ,
+    const y : int = 1[@private]
+    const bar : int -> int = lambda (b) return let test = lambda (z) return ADD(ADD(2 ,
     b) ,
     z)[@inline] in (test)@(b)[@private]
-    const check = 4[@private] |}]
+    const check : int = 4[@private] |}]
 
 (* literal type "casting" inside modules *)
 let%expect_test _ =
@@ -2172,20 +2172,21 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_good [ "print" ; "ast-typed" ; contract "tuple_decl_pos.mligo" ] ;
   [%expect {|
-                     const c = lambda (#4) return CREATE_CONTRACT(lambda (#1) return let #9 = #1 in
+                     const c : unit -> ( operation * address ) = lambda (#4) return CREATE_CONTRACT(lambda (#1) return let #9 = #1 in
                       match #9 with
                        | ( #3 , #2 ) ->
                        ( LIST_EMPTY() , unit ) ,
                      NONE() ,
                      0mutez ,
                      unit)
-                     const foo = let #11 = (c)@(unit) in  match #11 with
-                                                           | ( _a , _b ) ->
-                                                           unit
-                     const c = lambda (#5) return ( 1 , "1" , +1 , 2 , "2" , +2 , 3 , "3" , +3 , 4 , "4" )
-                     const foo = let #13 = (c)@(unit) in  match #13 with
-                                                           | ( _i1 , _s1 , _n1 , _i2 , _s2 , _n2 , _i3 , _s3 , _n3 , _i4 , _s4 ) ->
-                                                           unit |} ]
+                     const foo : unit = let #11 = (c)@(unit) in  match #11 with
+                                                                  | ( _a , _b ) ->
+                                                                  unit
+                     const c : unit -> ( int * string * nat * int * string * nat * int * string * nat * int * string ) = lambda (#5) return
+                     ( 1 , "1" , +1 , 2 , "2" , +2 , 3 , "3" , +3 , 4 , "4" )
+                     const foo : unit = let #13 = (c)@(unit) in  match #13 with
+                                                                  | ( _i1 , _s1 , _n1 , _i2 , _s2 , _n2 , _i3 , _s3 , _n3 , _i4 , _s4 ) ->
+                                                                  unit |} ]
 
 (* Module being defined does not type with its own type *)
 let%expect_test _ =

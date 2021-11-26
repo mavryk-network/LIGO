@@ -87,7 +87,6 @@ let ast_typed source_file syntax infer protocol_version display_format =
       let meta    = trace ~raise meta_tracer @@ File_metadata.extract syntax source_file in
       let env     = Helpers.make_env ~options ~meta () in
       let typed,_ = Build.type_contract ~raise ~add_warning ~options ~meta ~env Env source_file in
-      let typed = Self_ast_typed.monomorphise_module typed in
       typed
 
 let ast_combined  source_file syntax infer protocol_version display_format =
