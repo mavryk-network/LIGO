@@ -122,6 +122,58 @@ let michelson_annotation_eq ma mb =
   | None , None -> Some ()
   | _ -> None
 
+(* start copy-pasted from 4-ast_core/environment.ml and adjusted for some renamed fields + handle only types, not kinds *)
+let get_nominal_record : (rows -> bool) -> t -> (type_variable option * rows) option = fun predicate e ->
+  let rec rec_aux e =
+    let aux = fun ({type_variable=_ ; type_ ; public = _} : type_environment_binding) ->
+      match type_ with
+      | Ty { type_content = T_record rows ; orig_var ; _ } ->
+        if (Misc.t_is_nominal rows && predicate rows) then Some (orig_var, rows) else None
+      | Ty { type_content = _ ; _ }
+      | Kind () -> None
+    in
+    match List.find_map ~f:aux (get_type_environment e) with
+      Some _ as s -> s
+    | None ->
+      let modules = get_module_environment e in
+      List.fold_left
+        ~f:(fun res {module_variable=_;module_} ->
+            match res with
+            | Some _ as s ->
+              (*REMITODO:
+                add a warning: used a nominal record which was declared in another module
+                please declare an alias for this type
+              *)
+              s
+            | None -> rec_aux module_
+        )
+        ~init:None
+        modules
+  in
+  rec_aux e
+let get_nominal_record_from_row  : row_element label_map -> t -> (type_variable option * rows) option = fun lmap e ->
+  let row_match (y: row_element label_map) (x: rows) : bool =
+    let lstx = LMap.keys x.content in
+    let lsty = LMap.keys y in
+    let res = List.for_all2
+      ~f:(fun la lb -> (Compare.label la lb) = 0)
+      lstx lsty
+    in
+    match res with
+    | Ok label_equal -> label_equal
+    | Unequal_lengths -> false
+  in
+  get_nominal_record (row_match lmap) e
+
+let get_nominal_record_from_label : label -> t -> (type_variable option * rows) option = fun x e ->
+  let label_match (y: label) (x:rows) : bool =
+    let lst = LMap.keys x.content in
+    List.exists ~f:(fun cl -> Compare.label cl y = 0) lst 
+  in
+  get_nominal_record (label_match x) e
+(* end copy-pasted from 4-ast_core/environment.ml *)
+
+(*
 let get_record : ?check_annot:bool -> _ label_map -> t -> (type_variable option * rows) option = fun ?(check_annot=false) lmap e ->
   let rec rec_aux e =
     let aux = fun {type_variable=_ ; type_ ; public=_} ->
@@ -152,7 +204,7 @@ let get_record : ?check_annot:bool -> _ label_map -> t -> (type_variable option 
         match res with Some _ as s -> s | None -> rec_aux module_
       ) ~init:None modules
   in rec_aux e
-
+*)
 
 let get_sum : ?check_annot:bool -> _ label_map -> t -> rows option = fun ?(check_annot=false) lmap e ->
   let rec rec_aux e =

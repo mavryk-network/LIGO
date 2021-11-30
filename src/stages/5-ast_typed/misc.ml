@@ -264,3 +264,21 @@ let equal_variables a b : bool =
   match a.expression_content, b.expression_content with
   | E_variable a, E_variable b -> Var.equal a.wrap_content b.wrap_content
   |  _, _ -> false
+
+(*
+  `t_is_nominal rows` returns true if the type from which those rows are extracted are
+  to be considered nominal.
+  For now, types holding `layout`/`michelson_annotation` [@ .. ]-annotations have to be
+  nominal (i.e. the rows labels must be disjoint from all other T_record/T_sum types)
+*)
+(* copy-pasted from 4-ast_core/misc.ml and modified to remove the layout = None case, not sure if it's correct *)
+let t_is_nominal : rows -> bool =
+  fun x ->
+    match x with
+    | { content ; layout = _ } -> (
+      let lst = LMap.to_kv_list content in
+      List.exists
+        ~f:(function (_label, { michelson_annotation=Some _ ; _ }) -> true | _ -> false)
+        lst 
+    )
+(* end copy-pasted from 4-ast_core/misc.ml *)

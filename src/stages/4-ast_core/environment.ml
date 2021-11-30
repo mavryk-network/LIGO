@@ -68,7 +68,7 @@ let get_constructor : label -> t -> (type_expression * type_expression) option =
 
 let get_nominal_record : (rows -> bool) -> t -> rows option = fun predicate e ->
   let rec rec_aux e =
-    let aux = fun {type_variable=_ ; type_} ->
+    let aux = fun ({type_variable=_ ; type_} : type_environment_binding) ->
       match type_.type_content with
       | T_record x ->
         if (Misc.t_is_nominal x && predicate x) then Some x else None
@@ -93,7 +93,7 @@ let get_nominal_record : (rows -> bool) -> t -> rows option = fun predicate e ->
         modules
   in
   rec_aux e
-let get_nominal_record_from_row lmap e =
+let get_nominal_record_from_row : row_element label_map -> t -> rows option = fun lmap e ->
   let row_match (y: row_element label_map) (x: rows) : bool =
     let lstx = LMap.keys x.fields in
     let lsty = LMap.keys y in
@@ -106,7 +106,7 @@ let get_nominal_record_from_row lmap e =
     | Unequal_lengths -> false
   in
   get_nominal_record (row_match lmap) e
-let get_nominal_record_from_label x e =
+let get_nominal_record_from_label : label -> t -> rows option = fun x e ->
   let label_match (y: label) (x:rows) : bool =
     let lst = LMap.keys x.fields in
     List.exists ~f:(fun cl -> Compare.label cl y = 0) lst 

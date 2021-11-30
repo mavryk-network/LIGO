@@ -20,7 +20,7 @@ val get_constructor : label -> t -> (type_expression * type_expression) option
 val get_constructor_parametric : label -> t -> (type_variable list * type_expression * type_expression) option
 val get_nominal_record_from_row : row_element label_map -> t -> (type_variable option * rows) option
 val get_nominal_record_from_label : label -> t -> (type_variable option * rows) option
-val get_sum : row_element label_map -> t -> rows option
+val get_sum : ?check_annot:bool -> row_element label_map -> t -> rows option
 
 module PP : sig
   open Format
