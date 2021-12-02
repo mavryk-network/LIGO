@@ -389,6 +389,16 @@ let encode m =
         f x;
         patch_gap32 g (pos s - p)
       end
+    
+    let custom_section id f x needed =
+      if needed then begin
+        u8 0;
+        let g = gap32 () in        
+        let p = pos s in
+        string id;
+        f x;
+        patch_gap32 g (pos s - p);        
+      end
 
     (* Type section *)
     let type_ t = func_type t.it
@@ -467,7 +477,7 @@ let encode m =
         | ts -> (t, 1) :: ts
       in List.fold_right combine ts []
 
-    let local (t, n) = len n; value_type t
+    let local ((_, t), n) = len n; value_type t
 
     let code f =
       let {locals; body; _} = f.it in
@@ -499,6 +509,41 @@ let encode m =
     let data_section data =
       section 11 (vec memory_segment) data (data <> [])
 
+
+    (* Name section *)
+
+    let name_section_impl m =       
+      u8 1; (* functions *)
+      let g = gap32 () in
+      let p = pos s in
+      vu32 (Int32.of_int (List.length m.imports + List.length m.funcs));
+      List.iteri (fun i import ->
+        vu32 (Int32.of_int i);
+        string (Ast.string_of_name import.it.item_name);        
+      ) m.imports;
+      List.iteri (fun i (f: Ast.func) ->
+        vu32 (Int32.of_int (List.length m.imports + i));
+        string f.it.name;
+      ) m.funcs;
+      patch_gap32 g (pos s - p);
+
+      u8 2; (* locals *)
+      let g = gap32 () in
+      let p = pos s in
+      vu32 (Int32.of_int (List.length m.funcs));
+      List.iteri(fun i (f: Ast.func) ->
+        vu32 (Int32.of_int (List.length m.imports + i));
+        vu32 (Int32.of_int (List.length f.it.locals));
+        List.iteri(fun i (name, _) ->
+          vu32 (Int32.of_int i);
+          string name;
+        ) f.it.locals
+      ) m.funcs;
+      patch_gap32 g (pos s - p)
+
+    let name_section m =
+      custom_section "name" name_section_impl m (m.data <> [] && m.imports <> [] && m.funcs <> [] && m.funcs <> [])
+
     (* Module *)
 
     let module_ m =
@@ -514,6 +559,7 @@ let encode m =
       start_section m.it.start;
       elem_section m.it.elems;
       code_section m.it.funcs;
-      data_section m.it.data
+      data_section m.it.data;
+      name_section m.it;
   end
   in E.module_ m; to_string s

@@ -109,6 +109,7 @@
  type global = global' Source.phrase
  and global' =
  {
+   name  : string;
    gtype : global_type;
    value : const;
  }
@@ -116,8 +117,9 @@
  type func = func' Source.phrase
  and func' =
  {
+   name  : string;
    ftype : var;
-   locals : value_type list;
+   locals : (string * value_type) list;
    body : instr list;
  }
  
@@ -199,7 +201,7 @@
  and sym_info_data = 
  {
    index: var;
-   relocation_offset: var;
+   relocation_offset: var; (* ??? *)
    size: var;
    offset: var;
  }
