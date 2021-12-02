@@ -1,6 +1,33 @@
-(* open Ast
+open Ast
 
-type code_relocation =
+let data_index (data: data_part segment list) symbol = 
+  let rec iter_data (data: data_part segment list) count = 
+    match data with
+    | Source.{it = {init = {name}}; _} :: remaining when name = symbol -> count
+    | _ :: remaining -> iter_data remaining (Int32.add count 1l) 
+    | [] -> (-1l)
+  in iter_data data 0l
+
+let func_index (funcs: Ast.func list) (imports: Ast.import list) symbol = 
+  let rec find_import imports count = 
+    match imports with
+    | Source.{it = {item_name};_} :: remaining when (Ast.string_of_name item_name) = symbol -> count
+    | _ :: remaining -> find_import remaining (Int32.add count 1l) 
+    | [] -> (-1l)
+  in
+  let result = find_import imports 0l in
+  if result = (-1l) then 
+    let rec find_func funcs count = 
+      match funcs with
+      | Source.{it = {name; ftype}; _} :: remaining when name = symbol -> count
+      | _ :: remaining -> find_func remaining (Int32.add count 1l)
+      | [] -> failwith ("Could not find: " ^ symbol)
+    in
+    find_func funcs (Int32.of_int (List.length imports))
+  else 
+    result
+
+(*type code_relocation =
   | R_WASM_FUNCTION_INDEX_LEB of int32 * string
   | R_WASM_MEMORY_ADDR_LEB of int32 * Ast.var  
   | R_WASM_TYPE_INDEX_LEB of int32 * Ast.var

@@ -205,7 +205,23 @@
    size: var;
    offset: var;
  }
-  
+
+ type data_part = 
+ {
+   name: string;
+   detail: data_part_detail list
+ }
+ and data_part_detail =
+  | String of string
+  | Int32 of int32
+  | Nativeint of nativeint
+  | Int16 of int
+  | Int8 of int
+  | Float32 of F32.t
+  | Float64 of F64.t
+  | Symbol of string
+  | FunctionLoc of string
+
  type module_ = module_' Source.phrase
  and module_' =
  {
@@ -216,7 +232,7 @@
    funcs : func list;
    start : var option;
    elems : var list segment list;
-   data : string segment list;
+   data : data_part segment list;
    imports : import list;
    exports : export list;
    symbols : sym_info list

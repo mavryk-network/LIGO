@@ -29,10 +29,30 @@ let to_string s =
   Bytes.to_string bs
 
 
+(* move to linking *)
+type code_relocation =
+| R_WASM_FUNCTION_INDEX_LEB of int32 * string
+| R_WASM_MEMORY_ADDR_LEB of int32 * Ast.var  
+| R_WASM_TYPE_INDEX_LEB of int32 * Ast.var
+| R_WASM_GLOBAL_INDEX_LEB of int32 * string
+| R_WASM_MEMORY_ADDR_SLEB of int32 * string
+| R_WASM_TABLE_INDEX_SLEB  of int32 * string
+
+type data_relocation =
+| R_WASM_TABLE_INDEX_I32 of int32 * string
+| R_WASM_MEMORY_ADDR_I32 of int32 * string
+
+
+
 (* Encoding *)
 
-let encode m =
+let encode (m: Ast.module_) =
   let s = stream () in
+
+
+  let code_relocations:code_relocation list ref = ref [] in
+
+  let data_relocations:data_relocation list ref = ref [] in
 
   let module E = struct
     (* Generic values *)
@@ -503,11 +523,65 @@ let encode m =
       section 9 (vec table_segment) elems (elems <> [])
 
     (* Data section *)
-    let memory_segment seg =
-      segment string seg
+
+    let data_part_list (data_part_list: data_part) =      
+      let g = gap32 () in      
+      let start = pos s in
+      List.iter (fun f ->
+        match f with
+        | String bs -> 
+          put_string s bs
+        | Float32 f -> 
+          f32 f
+        | Float64 f -> 
+          f64 f
+        | Symbol symbol ->
+          let p = pos s in          
+          let found = ref false in
+          List.iteri (fun symbol_index (s: Ast.sym_info) -> 
+          match s.it.details with
+           | Data { index; offset } when s.it.name = symbol -> 
+            found := true;
+            data_relocations := !data_relocations @ [R_WASM_MEMORY_ADDR_I32 (Int32.of_int p, symbol)];
+            if offset.it = (-1l) then
+              u32 0l
+            else
+              u32 offset.it
+           | Function
+           | Import _ when s.it.name = symbol ->
+            found := true;
+            let symbol_index = Linking.func_index m.it.funcs m.it.imports symbol in
+            data_relocations := !data_relocations @ [R_WASM_TABLE_INDEX_I32 (Int32.of_int p, symbol)]; 
+            u32 symbol_index
+           | Global _ when s.it.name = symbol ->
+            failwith "Not handling a global here..."
+           | _ -> ()
+          ) m.it.symbols;
+          if not !found then (
+            failwith ("Not found symbol: " ^ symbol)
+          )
+        | FunctionLoc symbol -> 
+          let p = pos s in
+          let symbol_index = Linking.func_index m.it.funcs m.it.imports symbol in
+          data_relocations := !data_relocations @ [R_WASM_TABLE_INDEX_I32 (Int32.of_int p, symbol)];
+          u32 symbol_index        
+        | Int32 i32 -> 
+          u32 i32
+        | Nativeint ni -> 
+          u32 (Nativeint.to_int32 ni)
+        | Int16 i -> 
+          u16 i
+        | Int8 i -> 
+          u8 i
+      ) data_part_list.detail;
+      let l = pos s - start in
+      patch_gap32 g l
+
+    let data_segment seg = (* https://github.com/WebAssembly/design/blob/master/BinaryEncoding.md#data-section *)
+      segment data_part_list seg
 
     let data_section data =
-      section 11 (vec memory_segment) data (data <> [])
+      section 11 (vec data_segment) data (data <> [])
 
 
     (* Name section *)
@@ -516,37 +590,165 @@ let encode m =
       u8 1; (* functions *)
       let g = gap32 () in
       let p = pos s in
-      vu32 (Int32.of_int (List.length m.imports + List.length m.funcs));
+      vu32 (Int32.of_int (List.length m.it.imports + List.length m.it.funcs));
       List.iteri (fun i import ->
         vu32 (Int32.of_int i);
         string (Ast.string_of_name import.it.item_name);        
-      ) m.imports;
+      ) m.it.imports;
       List.iteri (fun i (f: Ast.func) ->
-        vu32 (Int32.of_int (List.length m.imports + i));
+        vu32 (Int32.of_int (List.length m.it.imports + i));
         string f.it.name;
-      ) m.funcs;
+      ) m.it.funcs;
       patch_gap32 g (pos s - p);
 
       u8 2; (* locals *)
       let g = gap32 () in
       let p = pos s in
-      vu32 (Int32.of_int (List.length m.funcs));
+      vu32 (Int32.of_int (List.length m.it.funcs));
       List.iteri(fun i (f: Ast.func) ->
-        vu32 (Int32.of_int (List.length m.imports + i));
+        vu32 (Int32.of_int (List.length m.it.imports + i));
         vu32 (Int32.of_int (List.length f.it.locals));
         List.iteri(fun i (name, _) ->
           vu32 (Int32.of_int i);
           string name;
         ) f.it.locals
-      ) m.funcs;
+      ) m.it.funcs;
       patch_gap32 g (pos s - p)
 
     let name_section m =
-      custom_section "name" name_section_impl m (m.data <> [] && m.imports <> [] && m.funcs <> [] && m.funcs <> [])
+      custom_section "name" name_section_impl m (m.it.data <> [] && m.it.imports <> [] && m.it.funcs <> [] && m.it.funcs <> [])
+
+    (* Linking *)
+
+    let symbol (sym: sym_info) =
+      let sym = sym.it in   
+      (match sym.details with
+      | Import _
+      | Function -> u8 0
+      | Data _ ->  u8 1
+      | Global _ -> u8 2
+      );
+
+      let flags = ref (
+        match sym.details with 
+        | Import _ -> 0l
+        | _ -> 1l
+      )
+      in
+      let exists = (match sym.details with      
+      | Function -> 
+        (if not (List.exists (fun (f:Ast.func) -> f.it.name = sym.name) m.it.funcs) then ( 
+          failwith ("BUG: symbol " ^ sym.name ^ " appears to refer to a nonexisting function, perhaps it should refer to an import instead?"));            
+        );
+        (List.exists (fun (f:Ast.func) -> f.it.name = sym.name) m.it.funcs)
+      | Import _ -> false
+      | Data _ -> failwith "todo"
+        (* (data_index sym.name) <> -1l *)
+      | Global _ -> true
+      )
+      in
+      (if not exists then 
+      (      
+        flags := Int32.logor !flags 16l
+      ));
+      (match sym.details with 
+      | Global _ -> flags := Int32.logor !flags 4l 
+      | _ -> ());
+      vu32 !flags;  
+      (match sym.details with
+      | Global f ->         
+        vu32 f.index.it;
+        if exists then (
+          string sym.name
+        )
+      | Function ->
+        vu32 (Linking.func_index m.it.funcs m.it.imports sym.name);
+        if exists then (
+          string sym.name
+          (* string sym.name *)
+        ) 
+      | Import _ ->
+        vu32 (Linking.func_index m.it.funcs m.it.imports sym.name);
+      | Data d -> (     
+        (if sym.name <> "" then        
+        string sym.name
+        else         
+        string "_"); (* probably an initial block ?!malformed uleb128*)
+        if exists then (
+          vu32 (Linking.data_index m.it.data sym.name);
+          vu32 d.relocation_offset.it;
+          vu32 d.size.it
+        )
+        )
+      )        
+    
+
+
+    let symbol_table (data2:data_part segment list) =
+        (* let size = ref 0l in
+      List.iter (fun f -> 
+        match f.details with
+        | Data d -> size := Int32.add d.offset d.size
+        | _ -> ()
+      ) data;
+      u8 2; (* WASM_DATA_SIZE *)
+      let g = gap32 () in
+      let p = pos s in
+      vu32 !size;
+      patch_gap32 g (pos s - p); *)
+      (* u8 3; (* WASM_DATA_ALIGNMENT *)
+      let g = gap32 () in
+      let p = pos s in
+      vu32 0l;
+      patch_gap32 g (pos s - p); *)
+      vu32 2l;
+      u8 5;
+      let g = gap32 () in
+      let p = pos s in
+      let no_of_data = List.length data2 in
+      vu32 (Int32.of_int no_of_data);
+      List.iter (fun (d: Ast.data_part Ast.segment) ->
+        string d.it.init.name;
+        vu32 4l;
+        vu32 0l;      
+      ) data2;
+      patch_gap32 g (pos s - p);
+      
+      u8 8; (* WASM_SYMBOL_TABLE *)
+      let g = gap32 () in
+      let p = pos s in
+      
+      (* let written_symbols = ref [] in
+      let data = List.filter (fun sym -> (
+        let exists = List.exists (fun f -> f = sym.name) !written_symbols in
+        if not exists then (
+          written_symbols := !written_symbols @ [sym.name]
+        );
+        not exists
+      )) m.it.symbols in *)
+      vec symbol m.it.symbols;
+      patch_gap32 g (pos s - p)
+(*       
+      List.iteri(fun i (f: Ast.sym_info) ->
+        match f.it.details with
+        | Function when f.name = "caml_startup" ->  (
+          u8 6; (* WASM_INIT_FUNCS *)
+          let g = gap32 () in
+          let p = pos s in
+          vu32 1l;
+          vu32 0l;
+          vu32 (Int32.of_int i);
+          patch_gap32 g (pos s - p)
+        )
+        | _ -> ()
+      ) m.it.symbols *)
+
+    let linking_section data =
+      custom_section "linking" symbol_table data true
 
     (* Module *)
 
-    let module_ m =
+    let module_ (m: Ast.module_) =
       u32 0x6d736100l;
       u32 version;
       type_section m.it.types;
@@ -560,6 +762,7 @@ let encode m =
       elem_section m.it.elems;
       code_section m.it.funcs;
       data_section m.it.data;
-      name_section m.it;
+      linking_section m.it.data;
+      name_section m;
   end
   in E.module_ m; to_string s
