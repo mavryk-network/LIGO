@@ -1,0 +1,4 @@
+(library
+ (name WasmObjectFile)
+ (public_name WasmObjectFile)
+ )

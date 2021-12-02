@@ -1,0 +1,18 @@
+opam-version : "2.0"
+version      : "0.1"
+synopsis     : "Output WebAssembly object files"
+description  : "Support WebAssembly object files ."
+maintainer   : "Sander Spies <contact@ligolang.org>"
+authors      : ["Sander Spies"]
+homepage     : "https://gitlab.com/ligolang/ligo"
+bug-reports  : "https://github.com/ligolang/ligo/issues"
+dev-repo     : "git+https://gitlab.com/ligolang/ligo"
+license      : "MIT"
+# If you change the dependencies, run `opam lock` in the root
+depends      : ["dune"]
+build        : [
+                ["dune" "build" "-p" name "-j" jobs]
+               ]
+url {
+  src: "https://github.com/ligolang/ligo/"
+}
