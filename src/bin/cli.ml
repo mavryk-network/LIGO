@@ -230,9 +230,9 @@ module Api = Ligo_api
 
 let compile_group = Clic.{name="compile";title="Commands for compiling from Ligo to Michelson"}
 let compile_file =
-  let f (entry_point, oc_views, syntax, infer, protocol_version, display_format, disable_typecheck, michelson_format, output_file, warn, werror, michelson_comments) source_file () =
+  let f (entry_point, oc_views, infer, protocol_version, display_format, disable_typecheck, michelson_format, output_file, warn, werror, michelson_comments) source_file () =
     return_result ~warn ?output_file @@
-    Api.Compile.contract ~werror source_file entry_point oc_views syntax infer protocol_version display_format disable_typecheck michelson_format michelson_comments in
+    Api.Compile.contract ~werror source_file entry_point oc_views infer protocol_version display_format disable_typecheck michelson_format michelson_comments in
   let _doc = "Subcommand: Compile a contract." in
   let desc =     "This sub-command compiles a contract to Michelson \
                  code. It expects a source file and an entrypoint \
@@ -242,7 +242,7 @@ let compile_file =
 
     ~group:compile_group
     ~desc
-    Clic.(args12 entry_point on_chain_views syntax infer protocol_version display_format disable_michelson_typechecking michelson_code_format output_file warn werror michelson_comments)
+    Clic.(args11 entry_point on_chain_views infer protocol_version display_format disable_michelson_typechecking michelson_code_format output_file warn werror michelson_comments)
     Clic.(prefixes ["compile"; "contract"] @@ source_file @@ stop)
     f
 
@@ -366,9 +366,9 @@ let mutate_ast =
 (** Run commands *)
 let run_group = Clic.{name="run";title="Commands for executing Ligo code"}
 let test =
-  let f (syntax, steps, infer, protocol_version, display_format) source_file () =
+  let f (steps, infer, protocol_version, display_format) source_file () =
     return_result @@
-    Api.Run.test source_file syntax steps infer protocol_version display_format
+    Api.Run.test source_file steps infer protocol_version display_format
   in
   let _doc = "Subcommand: Test a contract with the LIGO test framework (BETA)." in
   let desc =    "This sub-command tests a LIGO contract using a LIGO \
@@ -377,7 +377,7 @@ let test =
                  procedure should rely on this sub-command alone."
   in
   Clic.command ~group:run_group ~desc
-    Clic.(args5 syntax steps infer protocol_version display_format)
+    Clic.(args4 steps infer protocol_version display_format)
     Clic.(prefixes ["run";"test"] @@ source_file @@ stop)
     f
 
@@ -475,15 +475,15 @@ let list_declarations =
     f
 
 let measure_contract =
-  let f (entry_point, oc_views, syntax, infer, protocol_version, display_format, warn, werror) source_file () =
+  let f (entry_point, oc_views, infer, protocol_version, display_format, warn, werror) source_file () =
     return_result ~warn @@
-    Api.Info.measure_contract source_file entry_point oc_views syntax infer protocol_version display_format werror
+    Api.Info.measure_contract source_file entry_point oc_views infer protocol_version display_format werror
   in
   let _doc = "Subcommand: Measure a contract's compiled size in bytes." in
   let desc =    "This sub-command compiles a source file and measures \
                  the contract's compiled size in bytes." in
   Clic.command ~group:info_group ~desc
-    Clic.(args8 entry_point on_chain_views syntax infer protocol_version display_format warn werror)
+    Clic.(args7 entry_point on_chain_views infer protocol_version display_format warn werror)
     Clic.(prefixes ["info";"measure-contract"] @@ source_file @@ stop)
     f
 
@@ -638,9 +638,9 @@ let print_ast_typed =
     f
 
 let print_ast_combined =
-  let f (syntax, infer, protocol_version, display_format) source_file () =
+  let f (infer, protocol_version, display_format) source_file () =
     return_result @@
-    Api.Print.ast_combined source_file syntax infer protocol_version display_format
+    Api.Print.ast_combined source_file infer protocol_version display_format
   in
   let _cmdname = "print ast-combined" in
   let _doc = "Subcommand: Print the contract after combination with the build system.\n Warning: Intended for development of LIGO and can break at any time." in
@@ -651,14 +651,14 @@ let print_ast_combined =
   Clic.command
     ~group:print_group
     ~desc
-    Clic.(args4 syntax infer protocol_version display_format)
+    Clic.(args3 infer protocol_version display_format)
     Clic.(prefixes ["print";"ast-combined"] @@ source_file @@ stop)
     f
 
 let print_mini_c =
-  let f (syntax, infer, protocol_version, display_format, optimize) source_file () =
+  let f (infer, protocol_version, display_format, optimize) source_file () =
     return_result @@
-    Api.Print.mini_c source_file syntax infer protocol_version display_format optimize
+    Api.Print.mini_c source_file infer protocol_version display_format optimize
   in
   let _cmdname = "print-mini-c" in
   let _doc = "Subcommand: Print Mini-C. Warning: Intended for development of LIGO and can break at any time." in
@@ -669,7 +669,7 @@ let print_mini_c =
   Clic.command
     ~group:print_group
     ~desc
-    Clic.(args5 syntax infer protocol_version display_format optimize)
+    Clic.(args4 infer protocol_version display_format optimize)
     Clic.(prefixes ["print";"mini-c"] @@ source_file @@ stop)
     f
 

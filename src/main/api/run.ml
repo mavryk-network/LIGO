@@ -5,13 +5,13 @@ module Compile = Ligo_compile
 module Helpers   = Ligo_compile.Helpers
 module Run = Ligo_run.Of_michelson
 
-let test source_file syntax steps infer protocol_version display_format =
+let test source_file steps infer protocol_version display_format =
     Trace.warning_with @@ fun add_warning get_warnings ->
     format_result ~display_format (Ligo_interpreter.Formatter.tests_format) get_warnings @@
       fun ~raise ->
       let protocol_version = Helpers.protocol_to_variant ~raise protocol_version in
       let options = Compiler_options.make ~infer ~test:true ~protocol_version () in
-      let typed,_ = Build.combined_contract ~raise ~add_warning ~options syntax source_file in
+      let typed,_ = Build.combined_contract ~raise ~add_warning ~options source_file in
       let typed   = Self_ast_typed.monomorphise_module typed in
       let _,typed = trace ~raise Main_errors.self_ast_typed_tracer @@ Self_ast_typed.morph_module options.init_env typed in
       let steps = int_of_string steps in

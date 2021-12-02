@@ -28,7 +28,6 @@ let%expect_test _ =
       Unterminated command, here are possible completions.
         compile contract SOURCE_FILE [-e --entry-point <ENTRY_POINT>]
         [-v --views <ON_CHAIN_VIEWS>]
-        [-s --syntax <SYNTAX>]
         [--infer]
         [-p --protocol <PROTOCOL_VERSION>]
         [--format <DISPLAY-FORMAT>]
@@ -55,7 +54,6 @@ let%expect_test _ =
     Commands for compiling from Ligo to Michelson
     compile contract SOURCE_FILE [-e --entry-point <ENTRY_POINT>]
     [-v --views <ON_CHAIN_VIEWS>]
-    [-s --syntax <SYNTAX>]
     [--infer]
     [-p --protocol <PROTOCOL_VERSION>]
     [--format <DISPLAY-FORMAT>]
@@ -71,8 +69,6 @@ let%expect_test _ =
       Defaults to `main`.
     -v --views <ON_CHAIN_VIEWS>: A list of declaration name that will be compiled as on-chain views, separated by ','
       Defaults to ``.
-    -s --syntax <SYNTAX>: the syntax that will be used. Currently supported syntaxes are "pascaligo", "cameligo", "reasonligo" and "jsligo". By default, the syntax is guessed from the extension (.ligo, .mligo, .religo, and .jsligo respectively).
-      Defaults to `auto`.
     --infer: enable type inference
     -p --protocol <PROTOCOL_VERSION>: Choose protocol's types/values pre-loaded into the LIGO environment  (edo ,
       hangzhou). By default, the current protocol (edo) will be used

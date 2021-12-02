@@ -4,7 +4,7 @@ module Helpers   = Ligo_compile.Helpers
 
 let pretty_print ?werror source_file syntax display_format =
     format_result ?werror ~display_format (Parsing.Formatter.ppx_format) (fun _ -> []) @@
-    fun ~raise -> 
+    fun ~raise ->
     let options = Compiler_options.make () in
     let meta = Compile.Of_source.extract_meta ~raise syntax source_file in
     Compile.Utils.pretty_print ~raise ~options ~meta source_file
@@ -82,7 +82,7 @@ let ast_typed source_file syntax infer protocol_version display_format =
       let typed = Self_ast_typed.monomorphise_module typed in
       typed
 
-let ast_combined  source_file syntax infer protocol_version display_format =
+let ast_combined  source_file infer protocol_version display_format =
     Trace.warning_with @@ fun add_warning get_warnings ->
     format_result ~display_format (Ast_typed.Formatter.module_format_fully_typed) get_warnings @@
     fun ~raise ->
@@ -90,10 +90,10 @@ let ast_combined  source_file syntax infer protocol_version display_format =
         let protocol_version = Helpers.protocol_to_variant ~raise protocol_version in
         Compiler_options.make ~infer ~protocol_version ()
       in
-      let typed,_ = Build.combined_contract ~raise ~add_warning ~options syntax source_file in
+      let typed,_ = Build.combined_contract ~raise ~add_warning ~options source_file in
       typed
 
-let mini_c source_file syntax infer protocol_version display_format optimize =
+let mini_c source_file infer protocol_version display_format optimize =
     Trace.warning_with @@ fun add_warning get_warnings ->
     format_result ~display_format (Mini_c.Formatter.program_format) get_warnings @@
     fun ~raise ->
@@ -101,7 +101,7 @@ let mini_c source_file syntax infer protocol_version display_format optimize =
         let protocol_version = Helpers.protocol_to_variant ~raise protocol_version in
         Compiler_options.make ~infer ~protocol_version ()
       in
-      let mini_c,_ = Build.build_mini_c ~raise ~add_warning ~options syntax Ligo_compile.Of_core.Env source_file in
+      let mini_c,_ = Build.build_mini_c ~raise ~add_warning ~options Ligo_compile.Of_core.Env source_file in
       match optimize with
         | None -> Mini_c.Formatter.Raw mini_c
         | Some entry_point ->

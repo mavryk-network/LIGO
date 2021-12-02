@@ -7,7 +7,7 @@ module Run = Ligo_run.Of_michelson
 let no_comment node =
   Tezos_micheline.Micheline.(inject_locations (fun _ -> Simple_utils.Location.generated) (strip_locations node))
 
-let contract ?werror source_file entry_point declared_views syntax infer protocol_version display_format disable_typecheck michelson_code_format michelson_comments =
+let contract ?werror source_file entry_point declared_views infer protocol_version display_format disable_typecheck michelson_code_format michelson_comments =
     Trace.warning_with @@ fun add_warning get_warnings ->
     format_result ?werror ~display_format (Formatter.Michelson_formatter.michelson_format michelson_code_format michelson_comments) get_warnings @@
       fun ~raise ->
@@ -15,9 +15,9 @@ let contract ?werror source_file entry_point declared_views syntax infer protoco
           let protocol_version = Helpers.protocol_to_variant ~raise protocol_version in
           Compiler_options.make ~infer ~protocol_version ()
       in
-      let code,env = Build.build_contract ~raise ~add_warning ~options syntax entry_point source_file in
+      let code,env = Build.build_contract ~raise ~add_warning ~options entry_point source_file in
       let views =
-        Build.build_views ~raise ~add_warning ~options syntax entry_point (declared_views,env) source_file
+        Build.build_views ~raise ~add_warning ~options entry_point (declared_views,env) source_file
       in
       Ligo_compile.Of_michelson.build_contract ~raise ~disable_typecheck code views
 
@@ -43,7 +43,7 @@ let parameter source_file entry_point expression syntax infer protocol_version a
       fun ~raise ->
       let protocol_version = Helpers.protocol_to_variant ~raise protocol_version in
       let options = Compiler_options.make ~infer ~protocol_version () in
-      let typed_prg,env   = Build.combined_contract ~raise ~add_warning ~options syntax source_file in
+      let typed_prg,env   = Build.combined_contract ~raise ~add_warning ~options source_file in
       let mini_c_prg      = Ligo_compile.Of_typed.compile ~raise typed_prg in
       let michelson_prg   = Ligo_compile.Of_mini_c.aggregate_and_compile_contract ~raise ~options mini_c_prg entry_point in
       let _contract =
@@ -63,7 +63,7 @@ let storage source_file entry_point expression syntax infer protocol_version amo
       fun ~raise ->
       let protocol_version = Helpers.protocol_to_variant ~raise protocol_version in
       let options = Compiler_options.make ~infer ~protocol_version () in
-      let typed_prg,env       = Build.combined_contract ~raise ~add_warning ~options syntax source_file in
+      let typed_prg,env       = Build.combined_contract ~raise ~add_warning ~options source_file in
       let mini_c_prg          = Ligo_compile.Of_typed.compile ~raise typed_prg in
       let michelson_prg       = Ligo_compile.Of_mini_c.aggregate_and_compile_contract ~raise ~options  mini_c_prg entry_point in
       let _contract =

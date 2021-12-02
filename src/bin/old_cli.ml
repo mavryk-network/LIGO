@@ -248,10 +248,10 @@ let generator =
 
 module Api = Ligo_api
 let compile_file =
-  let f source_file entry_point oc_views syntax infer protocol_version display_format disable_typecheck michelson_format output_file warn werror =
+  let f source_file entry_point oc_views infer protocol_version display_format disable_typecheck michelson_format output_file warn werror =
     return_result ~warn ?output_file @@
-    Api.Compile.contract ~werror source_file entry_point oc_views syntax infer protocol_version display_format disable_typecheck michelson_format [] in
-  let term = Term.(const f $ source_file 0 $ entry_point 1 $ on_chain_views $ syntax $ infer $ protocol_version $ display_format $ disable_michelson_typechecking $ michelson_code_format $ output_file $ warn $ werror) in
+    Api.Compile.contract ~werror source_file entry_point oc_views infer protocol_version display_format disable_typecheck michelson_format [] in
+  let term = Term.(const f $ source_file 0 $ entry_point 1 $ on_chain_views $ infer $ protocol_version $ display_format $ disable_michelson_typechecking $ michelson_code_format $ output_file $ warn $ werror) in
   let cmdname = "compile-contract" in
   let doc = "Subcommand: Compile a contract." in
   let man = [`S Manpage.s_description;
@@ -375,11 +375,11 @@ let print_ast_typed =
   in (Term.ret term, Term.info ~man ~doc cmdname)
 
 let print_ast_combined =
-  let f source_file syntax infer protocol_version display_format =
+  let f source_file infer protocol_version display_format =
     return_result @@
-    Api.Print.ast_combined source_file syntax infer protocol_version display_format
+    Api.Print.ast_combined source_file infer protocol_version display_format
   in
-  let term = Term.(const f $ source_file 0  $ syntax $ infer $ protocol_version $ display_format) in
+  let term = Term.(const f $ source_file 0  $ infer $ protocol_version $ display_format) in
   let cmdname = "print-ast-combined" in
   let doc = "Subcommand: Print the contract after combination with the build system.\n Warning: Intended for development of LIGO and can break at any time." in
   let man = [`S Manpage.s_description;
@@ -390,11 +390,11 @@ let print_ast_combined =
   in (Term.ret term, Term.info ~man ~doc cmdname)
 
 let print_mini_c =
-  let f source_file syntax infer protocol_version display_format optimize =
+  let f source_file infer protocol_version display_format optimize =
     return_result @@
-    Api.Print.mini_c source_file syntax infer protocol_version display_format optimize
+    Api.Print.mini_c source_file infer protocol_version display_format optimize
   in
-  let term = Term.(const f $ source_file 0 $ syntax $ infer $ protocol_version $ display_format $ optimize) in
+  let term = Term.(const f $ source_file 0 $ infer $ protocol_version $ display_format $ optimize) in
   let cmdname = "print-mini-c" in
   let doc = "Subcommand: Print Mini-C. Warning: Intended for development of LIGO and can break at any time." in
   let man = [`S Manpage.s_description;
@@ -405,12 +405,12 @@ let print_mini_c =
   in (Term.ret term, Term.info ~man ~doc cmdname)
 
 let measure_contract =
-  let f source_file entry_point oc_views syntax infer protocol_version display_format warn werror =
+  let f source_file entry_point oc_views infer protocol_version display_format warn werror =
     return_result ~warn @@
-    Api.Info.measure_contract source_file entry_point oc_views syntax infer protocol_version display_format werror
+    Api.Info.measure_contract source_file entry_point oc_views infer protocol_version display_format werror
   in
   let term =
-    Term.(const f $ source_file 0 $ entry_point 1 $ on_chain_views $ syntax $ infer $ protocol_version $ display_format $ warn $ werror) in
+    Term.(const f $ source_file 0 $ entry_point 1 $ on_chain_views $ infer $ protocol_version $ display_format $ warn $ werror) in
   let cmdname = "measure-contract" in
   let doc = "Subcommand: Measure a contract's compiled size in bytes." in
   let man = [`S Manpage.s_description;
@@ -618,12 +618,12 @@ let get_scope =
   in (Term.ret term , Term.info ~man ~doc cmdname)
 
 let test =
-  let f source_file syntax steps infer protocol_version display_format =
+  let f source_file steps infer protocol_version display_format =
     return_result @@
-    Api.Run.test source_file syntax steps infer protocol_version display_format
+    Api.Run.test source_file steps infer protocol_version display_format
   in
   let term =
-    Term.(const f $ source_file 0 $ syntax $ steps $ infer $ protocol_version $ display_format) in
+    Term.(const f $ source_file 0 $ steps $ infer $ protocol_version $ display_format) in
   let cmdname = "test" in
   let doc = "Subcommand: Test a contract with the LIGO test framework (BETA)." in
   let man = [`S Manpage.s_description;

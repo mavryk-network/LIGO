@@ -131,7 +131,7 @@ let try_contract ~raise state s =
 let import_file ~raise state file_name module_name =
   let options = Compiler_options.make ~infer:state.infer ~protocol_version:state.protocol () in
   let options = {options with init_env = state.env } in
-  let module_,env = Build.combined_contract ~raise ~add_warning ~options (variant_to_syntax state.syntax) file_name in
+  let module_,env = Build.combined_contract ~raise ~add_warning ~options file_name in
   let env = Ast_typed.Environment.add_module ~public:true module_name env state.env in
   let module_ = Ast_typed.(Module_Fully_Typed [Location.wrap @@ Declaration_module {module_binder=module_name;module_;module_attr={public=true}}]) in
   let env,contract = trace ~raise Main_errors.self_ast_typed_tracer @@ Self_ast_typed.morph_module env module_ in
