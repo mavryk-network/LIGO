@@ -144,8 +144,6 @@ export class LigoCompiler {
         entrypoint,
         '--michelson-format',
         format,
-        '-s',
-        syntax,
       ]);
       return result;
     } finally {
@@ -182,8 +180,6 @@ export class LigoCompiler {
         'info',
         'list-declarations',
         name,
-        '-s',
-        syntax,
       ]);
       return result;
     } finally {
@@ -210,8 +206,6 @@ export class LigoCompiler {
         entrypoint,
         '--michelson-format',
         format,
-        '-s',
-        syntax,
       ]);
 
       return result;
@@ -237,8 +231,6 @@ export class LigoCompiler {
         storage,
         '-e',
         entrypoint,
-        '-s',
-        syntax,
       ]);
       return result;
     } finally {
@@ -253,8 +245,6 @@ export class LigoCompiler {
         'run',
         'evaluate-expr',
         name,
-        '-s',
-        syntax,
         '-e',
         entrypoint,
       ]);
@@ -279,8 +269,6 @@ export class LigoCompiler {
         parameter,
         '-e',
         entrypoint,
-        '-s',
-        syntax,
       ]);
       return result;
     } finally {
