@@ -27,6 +27,14 @@ let func_index (funcs: Ast.func list) (imports: Ast.import list) symbol =
   else 
     result
 
+let find_type types x = 
+  let rec iter result = function
+    | Source.{it = {tname}; _} :: remaining when tname = x -> result
+    | {it = {tname}; _} :: remaining -> iter (Int32.add result 1l) remaining
+    | [] -> result
+  in
+  iter 0l types 
+
 (*type code_relocation =
   | R_WASM_FUNCTION_INDEX_LEB of int32 * string
   | R_WASM_MEMORY_ADDR_LEB of int32 * Ast.var  
@@ -88,10 +96,4 @@ let data_index data symbol =
     | [] -> (-1l)
   in iter_data data 0l
 
-let find_type types x = 
-  let rec iter result = function
-    | ({tname}:Ast.type_) :: remaining when tname = x -> result
-    | ({tname}:Ast.type_) :: remaining -> iter (Int32.add result 1l) remaining
-    | [] -> result
-  in
-  iter 0l types  *)
+ *)

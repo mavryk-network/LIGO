@@ -68,6 +68,8 @@
  type literal = Values.value Source.phrase
  type name = int list
  
+ type symbol = string
+
  type block_type = VarBlockType of var | ValBlockType of value_type option
  
  type instr = instr' Source.phrase
@@ -83,18 +85,20 @@
    | BrIf of var                       (* conditional break *)
    | BrTable of var list * var         (* indexed break *)
    | Return                            (* break from function body *)
-   | Call of var                       (* call function *)
-   | CallIndirect of var               (* call function through table *)
-   | LocalGet of var                   (* read local variable *)
-   | LocalSet of var                   (* write local variable *)
-   | LocalTee of var                   (* write local variable and keep value *)
-   | GlobalGet of var                  (* read global variable *)
-   | GlobalSet of var                  (* write global variable *)
+   | Call of symbol                       (* call function *)
+   | CallIndirect of symbol               (* call function through table *)
+   | LocalGet of symbol                   (* read local variable *)
+   | LocalSet of symbol                   (* write local variable *)
+   | LocalTee of symbol                   (* write local variable and keep value *)
+   | GlobalGet of symbol                  (* read global variable *)
+   | GlobalSet of symbol                  (* write global variable *)
    | Load of loadop                    (* read memory at address *)
    | Store of storeop                  (* write memory at address *)
    | MemorySize                        (* size of linear memory *)
    | MemoryGrow                        (* grow linear memory *)
    | Const of literal                  (* constant *)
+   | DataSymbol of symbol
+   | FuncSymbol of symbol
    | Test of testop                    (* numeric test *)
    | Compare of relop                  (* numeric comparison *)
    | Unary of unop                     (* unary numeric operator *)
@@ -152,7 +156,12 @@
  
  (* Modules *)
  
- type type_ = func_type Source.phrase
+ type type_ = type_' Source.phrase
+ and type_' = 
+ {
+   tname : string;
+   tdetails : func_type
+ }
  
  type export_desc = export_desc' Source.phrase
  and export_desc' =
@@ -258,18 +267,18 @@
  
  open Source
  
- let func_type_for (m : module_) (x : var) : func_type =
-   (Lib.List32.nth m.it.types x.it).it
+ (* let func_type_for (m : module_) (x : var) : func_type =
+   (Lib.List32.nth m.it.types x.it).it *)
  
- let import_type (m : module_) (im : import) : extern_type =
+ (* let import_type (m : module_) (im : import) : extern_type =
    let {idesc; _} = im.it in
    match idesc.it with
    | FuncImport x -> ExternFuncType (func_type_for m x)
    | TableImport t -> ExternTableType t
    | MemoryImport t -> ExternMemoryType t
    | GlobalImport t -> ExternGlobalType t
- 
- let export_type (m : module_) (ex : export) : extern_type =
+  *)
+ (* let export_type (m : module_) (ex : export) : extern_type =
    let {edesc; _} = ex.it in
    let its = List.map (import_type m) m.it.imports in
    let open Lib.List32 in
@@ -286,7 +295,7 @@
      ExternMemoryType (nth mts x.it)
    | GlobalExport x ->
      let gts = globals its @ List.map (fun g -> g.it.gtype) m.it.globals in
-     ExternGlobalType (nth gts x.it)
+     ExternGlobalType (nth gts x.it) *)
  
  let string_of_name n =
    let b = Buffer.create 16 in

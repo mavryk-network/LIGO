@@ -78,6 +78,16 @@ let encode (m: Ast.module_) =
 
     let vu1 i = vu64 Int64.(logand (of_int i) 1L)
     let vu32 i = vu64 Int64.(logand (of_int32 i) 0xffffffffL)
+    let vu32_fixed i = (
+      let i = Int64.of_int32 i in
+      Int64.(
+        u8 ((to_int (logand i 0x7fL)) lor 0x80);
+        u8 ((to_int  (logand (shift_right_logical i 7) 0x7fL) lor 0x80));
+        u8 ((to_int  (logand (shift_right_logical i 14) 0x7fL) lor 0x80)); 
+        u8 ((to_int  (logand (shift_right_logical i 21) 0x7fL) lor 0x80));
+        u8 (to_int (logand (shift_right_logical i 28) 0x0fL))
+      )
+    )
     let vs7 i = vs64 (Int64.of_int i)
     let vs32 i = vs64 (Int64.of_int32 i)
     let vs33 i = vs64 (I64_convert.extend_i32_s i)
@@ -153,6 +163,9 @@ let encode (m: Ast.module_) =
 
     let var x = vu32 x.it
 
+    let reloc_index x = 
+      vu32_fixed x
+
     let block_type = function
       | VarBlockType x -> vs33 x.it
       | ValBlockType None -> vs7 (-0x40)
@@ -174,8 +187,20 @@ let encode (m: Ast.module_) =
       | BrIf x -> op 0x0d; var x
       | BrTable (xs, x) -> op 0x0e; vec var xs; var x
       | Return -> op 0x0f
-      | Call x -> op 0x10; var x
-      | CallIndirect x -> op 0x11; var x; u8 0x00
+      | Call symbol -> 
+        op 0x10; 
+        let p = pos s in
+        let index = Linking.func_index m.it.funcs m.it.imports symbol in
+        code_relocations := !code_relocations @ [R_WASM_FUNCTION_INDEX_LEB (Int32.of_int p, symbol)];          
+        reloc_index index
+      | CallIndirect symbol ->
+        
+        op 0x11;        
+        let p = pos s in
+        let index = Linking.find_type m.it.types symbol in
+        code_relocations := !code_relocations @ [R_WASM_TYPE_INDEX_LEB (Int32.of_int p, index)];
+        reloc_index index;
+        u8 0x00
 
       | Drop -> op 0x1a
       | Select -> op 0x1b
