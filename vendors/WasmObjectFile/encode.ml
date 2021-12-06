@@ -94,6 +94,15 @@ let encode (m: Ast.module_) =
     let f32 x = u32 (F32.to_bits x)
     let f64 x = u64 (F64.to_bits x)
 
+    let vs32_fixed i = (
+      let i = Int64.of_int32 i in
+      let rec aux i p = 
+        let b = Int64.(to_int (logand i 0x7fL)) in
+        if -64L <= i && i < 64L && p = 0 then u8 b
+        else (u8 (b lor 0x80); aux (Int64.shift_right i 7) (p - 1))
+      in aux i 4
+    )
+
     let len i =
       if Int32.to_int (Int32.of_int i) <> i then
         Code.error Source.no_region
@@ -171,17 +180,29 @@ let encode (m: Ast.module_) =
       | ValBlockType None -> vs7 (-0x40)
       | ValBlockType (Some t) -> value_type t
 
-    let rec instr e =
+    let rec instr locals e =
+      let get_local_position name = (
+        let rec find counter = function
+          | (local_, _) :: _ when local_ = name -> 
+            {
+              it = Int32.of_int counter;
+              at = e.at;
+            }
+          | _ ::  rest -> find (counter + 1) rest
+          | [] -> failwith ("did not find:" ^ name)
+        in
+        find 0 locals )
+      in
       match e.it with
       | Unreachable -> op 0x00
       | Nop -> op 0x01
 
-      | Block (bt, es) -> op 0x02; block_type bt; list instr es; end_ ()
-      | Loop (bt, es) -> op 0x03; block_type bt; list instr es; end_ ()
+      | Block (bt, es) -> op 0x02; block_type bt; list (instr locals) es; end_ ()
+      | Loop (bt, es) -> op 0x03; block_type bt; list (instr locals) es; end_ ()
       | If (bt, es1, es2) ->
-        op 0x04; block_type bt; list instr es1;
+        op 0x04; block_type bt; list (instr locals) es1;
         if es2 <> [] then op 0x05;
-        list instr es2; end_ ()
+        list (instr locals) es2; end_ ()
 
       | Br x -> op 0x0c; var x
       | BrIf x -> op 0x0d; var x
@@ -198,18 +219,41 @@ let encode (m: Ast.module_) =
         op 0x11;        
         let p = pos s in
         let index = Linking.find_type m.it.types symbol in
+        let index = {
+          it = index;
+          at = e.at
+        } in 
         code_relocations := !code_relocations @ [R_WASM_TYPE_INDEX_LEB (Int32.of_int p, index)];
-        reloc_index index;
+        reloc_index index.it;
         u8 0x00
 
       | Drop -> op 0x1a
       | Select -> op 0x1b
 
-      | LocalGet x -> op 0x20; var x
-      | LocalSet x -> op 0x21; var x
-      | LocalTee x -> op 0x22; var x
-      | GlobalGet x -> op 0x23; var x
-      | GlobalSet x -> op 0x24; var x
+      | LocalGet x -> 
+        let x = get_local_position x in
+        op 0x20; 
+        var x
+      | LocalSet x -> 
+        let x = get_local_position x in
+        op 0x21; 
+        var x
+      | LocalTee x -> 
+        let x = get_local_position x in
+        op 0x22; 
+        var x
+      | GlobalGet x -> 
+        op 0x23; 
+        let p = pos s in
+        code_relocations := !code_relocations @ [R_WASM_GLOBAL_INDEX_LEB (Int32.of_int p, x)];
+        let x = Linking.find_global_index m.it.symbols e.at x in
+        var x
+      | GlobalSet x -> 
+        op 0x24; 
+        let p = pos s in
+        code_relocations := !code_relocations @ [R_WASM_GLOBAL_INDEX_LEB (Int32.of_int p, x)];
+        let x = Linking.find_global_index m.it.symbols e.at x in
+        var x
 
       | Load ({ty = I32Type; sz = None; _} as mo) -> op 0x28; memop mo
       | Load ({ty = I64Type; sz = None; _} as mo) -> op 0x29; memop mo
@@ -420,9 +464,28 @@ let encode (m: Ast.module_) =
       | Convert (F64 F64Op.PromoteF32) -> op 0xbb
       | Convert (F64 F64Op.DemoteF64) -> assert false
       | Convert (F64 F64Op.ReinterpretInt) -> op 0xbf
+      | FuncSymbol symbol ->
+        op 0x41;
+        let p = pos s in
+        (* let _, index = Linking.find_symbol_index m.it.symbols (fun s -> match s.it.details with Function when s.it.name = symbol -> true | _ -> false) symbol in *)
+        code_relocations := !code_relocations @ [R_WASM_TABLE_INDEX_SLEB (Int32.of_int p, symbol)];
+        vs32_fixed (Linking.func_index m.it.funcs m.it.imports symbol)
+      | DataSymbol symbol ->
+        op 0x41;
+        let p = pos s in
+        let s, _ = Linking.find_symbol_index m.it.symbols (fun s -> match s.it.details with Function when s.it.name = symbol -> true | _ -> false) symbol in
+        code_relocations := !code_relocations @ [R_WASM_MEMORY_ADDR_SLEB (Int32.of_int p, symbol)];
+        match s.it.details with 
+          Data {offset; _} ->
+            code_relocations := !code_relocations @ [R_WASM_MEMORY_ADDR_SLEB (Int32.of_int p, symbol)];
+            vs32_fixed offset.it
+        | Function ->
+            code_relocations := !code_relocations @ [R_WASM_TABLE_INDEX_SLEB (Int32.of_int p, symbol)];
+            vs32_fixed (Linking.func_index m.it.funcs m.it.imports symbol)
+        | _ -> ()
 
     let const c =
-      list instr c.it; end_ ()
+      list (instr []) c.it; end_ ()
 
     (* Sections *)
 
@@ -446,7 +509,7 @@ let encode (m: Ast.module_) =
       end
 
     (* Type section *)
-    let type_ t = func_type t.it
+    let type_ t = func_type t.it.tdetails
 
     let type_section ts =
       section 1 (vec type_) ts (ts <> [])
@@ -529,7 +592,7 @@ let encode (m: Ast.module_) =
       let g = gap32 () in
       let p = pos s in
       vec local (compress locals);
-      list instr body;
+      list (instr locals) body;
       end_ ();
       patch_gap32 g (pos s - p)
 

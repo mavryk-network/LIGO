@@ -35,6 +35,33 @@ let find_type types x =
   in
   iter 0l types 
 
+let find_global_index symbols at index_ =
+  let result = ref (-1l) in
+  List.iteri (fun i s -> match s.Source.it.details with
+  | Global {index} when s.Source.it.name = index_ -> (
+      result := index.it
+    )
+  | _ -> ()) symbols;
+  if !result = (-1l) then (        
+    failwith ("Could not find global: " ^ index_)
+  ) else 
+    Source.{
+      it = !result;
+      at
+    }
+
+let find_symbol_index symbols func name =
+  let rec aux index = function
+    hd :: tl when func hd -> 
+      (hd, Int32.of_int index)
+  | _ :: tl ->
+    aux (index + 1) tl
+  | [] ->
+    failwith "not found"
+  in
+  aux 0 symbols
+
+
 (*type code_relocation =
   | R_WASM_FUNCTION_INDEX_LEB of int32 * string
   | R_WASM_MEMORY_ADDR_LEB of int32 * Ast.var  
@@ -47,17 +74,7 @@ type data_relocation =
   | R_WASM_TABLE_INDEX_I32 of int32 * string
   | R_WASM_MEMORY_ADDR_I32 of int32 * string
 
-let find_global_index symbols index_ =
-  let result = ref (-1l) in
-  List.iteri (fun i s -> match s.details with
-  | Global {index} when s.name = index_ -> (
-      result := index.it
-    )
-  | _ -> ()) symbols;
-  if !result = (-1l) then (        
-    failwith ("Could not find global: " ^ index_)
-  ) else 
-    !result
+
 
 let func_symbol_index symbols symbol = 
   let rec f symbol symbols result = 
