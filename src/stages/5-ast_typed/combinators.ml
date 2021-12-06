@@ -10,8 +10,8 @@ let make_e ?(location = Location.generated) expression_content type_expression =
   location ;
   }
 let t_variable   ?loc ?core t  : type_expression = make_t ?loc (T_variable t) core
-let t_abstraction ?loc ?core ty_binder kind type_ =
-  make_t ?loc (T_abstraction {ty_binder ; kind ; type_}) core
+let t_abstraction ?loc ?core ty_binder kind body =
+  make_t ?loc (T_abstraction {ty_binder ; kind ; type_ = body}) core
 let t_for_all ?loc ?core ty_binder kind type_ =
   make_t ?loc (T_for_all {ty_binder ; kind ; type_}) core
 

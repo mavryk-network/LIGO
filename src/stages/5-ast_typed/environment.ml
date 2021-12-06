@@ -151,7 +151,8 @@ let get_nominal_record : (rows -> bool) -> t -> (type_variable option * rows) op
         modules
   in
   rec_aux e
-let get_nominal_record_from_row  : row_element label_map -> t -> (type_variable option * rows) option = fun lmap e ->
+
+let get_nominal_record_from_row : row_element label_map -> t -> (type_variable option * rows) option = fun lmap e ->
   let row_match (y: row_element label_map) (x: rows) : bool =
     let lstx = LMap.keys x.content in
     let lsty = LMap.keys y in
@@ -163,7 +164,29 @@ let get_nominal_record_from_row  : row_element label_map -> t -> (type_variable 
     | Ok label_equal -> label_equal
     | Unequal_lengths -> false
   in
-  get_nominal_record (row_match lmap) e
+  let opt = get_nominal_record (row_match lmap) e in
+  let () = match opt with
+    | Some (_,rows) -> (
+      let lst_kv  = LMap.to_kv_list_rev lmap in
+      let lst_kv' = LMap.to_kv_list_rev rows.content in
+      let m = Misc.assert_list_eq
+        (fun (ka,va) (kb,vb) ->
+          let open Option in
+          let Label ka = ka in
+          let Label kb = kb in
+          let* () = Misc.assert_eq ka kb in
+          Misc.assert_type_expression_eq (va.associated_type, vb.associated_type)
+          (* TODO : check that annotation is the same or missing *)
+        ) lst_kv lst_kv'
+      in
+      match m with
+      | Some () -> ()
+      | None -> failwith "TODO: incompatible records, all the record types containing FIELD should have the same fields, types and annotations
+        (because FIELD is annotated)"
+    )
+    | None -> ()
+  in
+  opt
 
 let get_nominal_record_from_label : label -> t -> (type_variable option * rows) option = fun x e ->
   let label_match (y: label) (x:rows) : bool =
@@ -172,39 +195,6 @@ let get_nominal_record_from_label : label -> t -> (type_variable option * rows) 
   in
   get_nominal_record (label_match x) e
 (* end copy-pasted from 4-ast_core/environment.ml *)
-
-(*
-let get_record : ?check_annot:bool -> _ label_map -> t -> (type_variable option * rows) option = fun ?(check_annot=false) lmap e ->
-  let rec rec_aux e =
-    let aux = fun {type_variable=_ ; type_ ; public=_} ->
-      match type_ with
-      | Kind () -> None
-      | Ty type_ ->
-        match type_.type_content with
-        | T_record m -> Option.(
-          let lst_kv  = LMap.to_kv_list_rev lmap in
-          let lst_kv' = LMap.to_kv_list_rev m.content in
-          let m = map ~f:(fun () -> m) @@ Misc.assert_list_eq
-            ( fun (ka,va) (kb,vb) ->
-              let Label ka = ka in
-              let Label kb = kb in
-              let* () = Misc.assert_eq ka kb in
-              let* () = if check_annot then michelson_annotation_eq va.michelson_annotation vb.michelson_annotation else Some () in
-              Misc.assert_type_expression_eq (va.associated_type, vb.associated_type)
-            ) lst_kv lst_kv' in
-          map ~f:(fun m -> (type_.orig_var,m)) @@ m
-        )
-        | _ -> None
-    in
-    match List.find_map ~f:aux (get_type_environment e) with
-      Some _ as s -> s
-    | None ->
-      let modules = get_module_environment e in
-      List.fold_left ~f:(fun res {module_variable=_;module_; public=_} ->
-        match res with Some _ as s -> s | None -> rec_aux module_
-      ) ~init:None modules
-  in rec_aux e
-*)
 
 let get_sum : ?check_annot:bool -> _ label_map -> t -> rows option = fun ?(check_annot=false) lmap e ->
   let rec rec_aux e =

@@ -3,3 +3,8 @@ let michelson = "Michelson"
 
 (* some constant string used in code generation for a given backend *)
 let fw_partial_match = Ligo_string.verbatim "PARTIAL MATCH"
+
+(* hacky names given to record fields reprensenting native michelson pairs *)
+let field_of_str : string -> string =
+  fun str ->
+    "michelson_"^str

@@ -68,7 +68,7 @@ let t_sapling_transaction ?loc a                : type_expression = t_app ?loc v
 
 let get_t_annoted = fun te ->
   match te.type_content with
-    T_annoted (te, lst) -> Some (te,lst)
+    T_annoted (te, str) -> Some (te,str)
   | _ -> None
 
 let make_e ?(loc = Location.generated) expression_content =

@@ -76,14 +76,12 @@ let is_michelson_or (t: _ label_map) =
   | _ -> None
 
 let is_michelson_pair (t: row_element label_map) : (row_element * row_element) option =
-  match LMap.to_list t with
+  let lst = LMap.to_list t in
+  let aux a b = Int.compare a.decl_pos b.decl_pos in
+  match List.sort ~compare:aux lst with
   | [ a ; b ] -> (
-      if List.for_all ~f:(fun i -> LMap.mem i t) @@ (label_range 0 2)
-      && Option.(
-        is_some a.michelson_annotation || is_some b.michelson_annotation
-      )
-      then Some (a , b)
-      else None
+    if Option.( is_some a.michelson_annotation || is_some b.michelson_annotation ) then Some (a , b)
+    else None
     )
   | _ -> None
 

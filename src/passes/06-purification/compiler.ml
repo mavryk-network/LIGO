@@ -152,11 +152,11 @@ let rec compile_type_expression ~raise : I.type_expression -> O.type_expression 
       let (l, l_ann) = trace_option ~raise (Errors.corner_case "not an annotated type") @@ I.get_t_annoted l in
       let (r, r_ann) = trace_option ~raise (Errors.corner_case "not an annotated type") @@ I.get_t_annoted r in
       let (l,r) = Pair.map ~f:(compile_type_expression ~raise) (l,r) in
-      let sum : (O.label * _ O.row_element) list = [
-        (O.Label "0", {associated_type = l ; attributes = [ "annot:"^l_ann ] ; decl_pos = 0});
-        (O.Label "1", {associated_type = r ; attributes = [ "annot:"^r_ann ] ; decl_pos = 1}); ]
+      let prod : (O.label * _ O.row_element) list = [
+        (O.Label (Stage_common.Backends.field_of_str l_ann), {associated_type = l ; attributes = [ "annot:"^l_ann ] ; decl_pos = 0});
+        (O.Label (Stage_common.Backends.field_of_str r_ann), {associated_type = r ; attributes = [ "annot:"^r_ann ] ; decl_pos = 1}); ]
       in
-      return @@ O.T_record { fields = (O.LMap.of_list sum) ; attributes = [] }
+      return @@ O.T_record { fields = (O.LMap.of_list prod) ; attributes = ["layout:comb"] }
     | I.T_app c ->
       let c = type_app self c in
       return @@ T_app c
