@@ -283,6 +283,7 @@ deploy-handoff-feature:
     LIGO_CI_MERGE_REQUEST_IID: "${CI_MERGE_REQUEST_IID}"
   trigger: 
     project: ligolang/ligo-webide-deploy
+    branch: change-conditions-for-jobs
   rules:
     # Only deploy handoff when from an MR AND on the canonical ligolang/ligo repository.
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH == "ligolang/ligo"'
@@ -298,6 +299,7 @@ deploy-handoff:
     LIGO_COMMIT_REF_NAME: "${CI_COMMIT_SHORT_SHA}"
   trigger: 
     project: ligolang/ligo-webide-deploy
+    branch: change-conditions-for-jobs
   rules:
     # Only deploy handoff when from the dev branch AND on the canonical ligolang/ligo repository
     - if: '$CI_COMMIT_REF_NAME == "dev" && $CI_PROJECT_PATH == "ligolang/ligo"'
@@ -349,7 +351,7 @@ build-ligo-webide-front-end:
     - npm install netlify-cli
     - npx netlify deploy --site $NETLIFY_SITE_ID --auth $NETLIFY_AUTH_TOKEN --json --prod > netlify.json
   rules:
-    - if: '$CI_COMMIT_BRANCH == "1298-test-netlify-publish"'
+    - if: '$CI_COMMIT_BRANCH == "dev"'
       changes:
         - tools/webide/**/*
       when: always
@@ -365,6 +367,7 @@ downstream-webide-removal-handoff:
     CLEAN_DOWNSTREAM: "true"
   trigger: 
     project: ligolang/ligo-webide-deploy
+    branch: change-conditions-for-jobs
   rules:
     # When there is a merge request there will be a manual job to remove feature branch containers
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH == "ligolang/ligo"'
