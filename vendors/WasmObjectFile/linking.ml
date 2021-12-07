@@ -50,7 +50,7 @@ let find_global_index symbols at index_ =
       at
     }
 
-let find_symbol_index symbols func name =
+let find_symbol_index symbols func =
   let rec aux index = function
     hd :: tl when func hd -> 
       (hd, Int32.of_int index)

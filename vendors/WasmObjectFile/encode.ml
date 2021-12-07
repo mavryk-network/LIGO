@@ -168,6 +168,9 @@ let encode (m: Ast.module_) =
     let op n = u8 n
     let end_ () = op 0x0b
 
+    let code_pos = ref (-1l)
+    let data_pos = ref (-1l)
+
     let memop {align; offset; _} = vu32 (Int32.of_int align); vu32 offset
 
     let var x = vu32 x.it
@@ -473,7 +476,7 @@ let encode (m: Ast.module_) =
       | DataSymbol symbol ->
         op 0x41;
         let p = pos s in
-        let s, _ = Linking.find_symbol_index m.it.symbols (fun s -> match s.it.details with Function when s.it.name = symbol -> true | _ -> false) symbol in
+        let s, _ = Linking.find_symbol_index m.it.symbols (fun s -> match s.it.details with Function when s.it.name = symbol -> true | _ -> false) in
         code_relocations := !code_relocations @ [R_WASM_MEMORY_ADDR_SLEB (Int32.of_int p, symbol)];
         match s.it.details with 
           Data {offset; _} ->
@@ -488,9 +491,12 @@ let encode (m: Ast.module_) =
       list (instr []) c.it; end_ ()
 
     (* Sections *)
-
+    let code_section_index = ref 0
+    let data_section_index = ref 0
+    let section_counter = ref 0
     let section id f x needed =
       if needed then begin
+        section_counter := !section_counter + 1;
         u8 id;
         let g = gap32 () in
         let p = pos s in
@@ -597,6 +603,8 @@ let encode (m: Ast.module_) =
       patch_gap32 g (pos s - p)
 
     let code_section fs =
+      code_section_index := !section_counter;
+      code_pos := Int32.of_int (pos s + 6);
       section 10 (vec code) fs (fs <> [])
 
     (* Element section *)
@@ -669,6 +677,8 @@ let encode (m: Ast.module_) =
       segment data_part_list seg
 
     let data_section data =
+      data_section_index := !section_counter;      
+      data_pos := Int32.of_int (pos s + 6);
       section 11 (vec data_segment) data (data <> [])
 
 
@@ -707,6 +717,134 @@ let encode (m: Ast.module_) =
       custom_section "name" name_section_impl m (m.it.data <> [] && m.it.imports <> [] && m.it.funcs <> [] && m.it.funcs <> [])
 
     (* Linking *)
+
+    let reloc_code data =
+      vu32 (Int32.of_int !code_section_index);
+      vu32 (Int32.of_int (List.length !code_relocations));      
+      List.iteri (fun i r -> 
+      (        
+        match r with        
+        | R_WASM_TABLE_INDEX_SLEB (offset, symbol_) 
+        | R_WASM_MEMORY_ADDR_SLEB (offset, symbol_) -> ( 
+          let exists = ref false in
+          List.iteri (fun symbol_index s -> match s.it.details with          
+          | Data {index}  when s.it.name = symbol_ ->
+            exists := true;
+            u8 4;
+            vu32 (Int32.sub offset !code_pos);
+            vs32_fixed (Int32.of_int symbol_index); 
+            if symbol_ = "caml_globals_inited"  (* || symbol_ = "caml_backtrace_pos" || index = (-1l) *) then
+              vs32 0l
+            else
+              vs32 4l            
+          | Import _
+          | Function when s.it.name = symbol_ -> 
+            exists := true;            
+            u8 1;            
+            vu32 (Int32.sub offset !code_pos);
+            vs32_fixed (Int32.of_int symbol_index); 
+           | _ -> ()  
+          ) m.it.symbols;
+          if not !exists then (
+            failwith ("Could not write relocation for:" ^ symbol_)
+          )
+        )
+        | R_WASM_FUNCTION_INDEX_LEB (offset, symbol) ->
+          let _, symbol_index = 
+            Linking.find_symbol_index 
+              m.it.symbols 
+              (fun f -> 
+                match f.it.details with 
+                  Function | Import _ when f.it.name = symbol -> true 
+                | _ -> false) 
+          in
+          u8 0;
+          vu32 (Int32.sub offset !code_pos);
+          vu32_fixed symbol_index;
+        | R_WASM_MEMORY_ADDR_LEB (offset, index_) -> 
+          (
+            let _, symbol_index = 
+              Linking.find_symbol_index 
+                m.it.symbols 
+                (fun f -> 
+                  match f.it.details with 
+                    Data {index; _} when index = index_ -> true 
+                  | _ -> false) 
+            in
+            (* let symbol_index = ref (-1) in
+            List.iteri (fun i s -> match s.details with
+            | Data { index; _ } when index = index_ -> (
+                symbol_index := i
+              )
+            | _ -> ()) m.it.symbols; *)
+            u8 3;
+            vu32 (Int32.sub offset !code_pos);
+            vs32_fixed symbol_index;
+            vs32 4l
+          )
+        | R_WASM_TYPE_INDEX_LEB (offset, index) ->
+          u8 6;
+          vu32 (Int32.sub offset !code_pos); 
+          vu32_fixed index.it
+        | R_WASM_GLOBAL_INDEX_LEB (offset, symbol) ->
+          u8 7;
+          vu32 (Int32.sub offset !code_pos);
+          let pos = {file = "dummy"; line = -1; column = -1} in
+          let dummy_at = {left = pos; right = pos} in
+          let symbol_index = Linking.find_global_index m.it.symbols dummy_at symbol in
+          vu32_fixed symbol_index.it
+      )
+      ) !code_relocations
+      
+
+    let relocate_code_section data =
+      custom_section "reloc.CODE" reloc_code data (data <> [])
+
+    let reloc_data data =
+      vu32 (Int32.of_int !data_section_index);
+      vu32 (Int32.of_int (List.length !data_relocations));    
+      List.iter (fun r ->
+        match r with      
+        | R_WASM_TABLE_INDEX_I32 (offset, symbol) -> ( 
+          let _, symbol_index = 
+            Linking.find_symbol_index 
+              m.it.symbols 
+              (fun f -> 
+                match f.it.details with 
+                  Function | Import _ when f.it.name = symbol -> true 
+                | _ -> false) 
+          in  
+          u8 2;
+          vu32 (Int32.sub offset !data_pos);          
+          vu32 symbol_index;
+        )
+        | R_WASM_MEMORY_ADDR_I32 (offset, symbol_) -> (
+            
+          let _, symbol_index = 
+            Linking.find_symbol_index 
+              m.it.symbols 
+              (fun f -> 
+                match f.it.details with 
+                  Data _ when f.it.name = symbol_ -> true 
+                | _ -> false) 
+            in  
+            u8 5;
+            vu32 (Int32.sub offset !data_pos);
+            vu32 symbol_index;
+            (* TODO: make more elegant *)
+            (* let len = String.length symbol_ in
+            let gc_roots_length = String.length "__gc_roots" in            
+            let frametable_length = String.length "__frametable" in
+            (* print_endline ("A1:" ^ symbol_); *)
+            if symbol_ = "caml_frametable" || ( len > gc_roots_length && String.sub symbol_ (len - gc_roots_length) gc_roots_length = "__gc_roots") || ( len > frametable_length && String.sub symbol_ (len - frametable_length) frametable_length = "__frametable") then *)
+              vs32 0l
+            (* else 
+              vs32 4l *)
+        )
+      ) !data_relocations
+
+    let relocate_data_section data =
+      custom_section "reloc.DATA" reloc_data data (data <> [])
 
     let symbol (sym: sym_info) =
       let sym = sym.it in   
@@ -789,7 +927,7 @@ let encode (m: Ast.module_) =
       vu32 0l;
       patch_gap32 g (pos s - p); *)
       vu32 2l;
-      u8 5;
+      (* u8 5;
       let g = gap32 () in
       let p = pos s in
       let no_of_data = List.length data2 in
@@ -800,7 +938,7 @@ let encode (m: Ast.module_) =
         vu32 0l;      
       ) data2;
       patch_gap32 g (pos s - p);
-      
+       *)
       u8 8; (* WASM_SYMBOL_TABLE *)
       let g = gap32 () in
       let p = pos s in
@@ -850,6 +988,10 @@ let encode (m: Ast.module_) =
       code_section m.it.funcs;
       data_section m.it.data;
       linking_section m.it.data;
+      if List.length !code_relocations > 0 then
+        relocate_code_section m.it.funcs;
+      if List.length !data_relocations > 0 then
+        relocate_data_section m.it.funcs;
       name_section m;
   end
   in E.module_ m; to_string s
