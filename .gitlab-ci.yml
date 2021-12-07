@@ -349,7 +349,7 @@ build-ligo-webide-front-end:
     - npm install netlify-cli
     - npx netlify deploy --site $NETLIFY_SITE_ID --auth $NETLIFY_AUTH_TOKEN --json --prod > netlify.json
   rules:
-    - if: '$CI_COMMIT_BRANCH == "dev"'
+    - if: '$CI_COMMIT_BRANCH == "1298-test-netlify-publish"'
       changes:
         - tools/webide/**/*
       when: always
