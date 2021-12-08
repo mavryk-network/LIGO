@@ -307,54 +307,54 @@ deploy-handoff:
 
 # This job builds the ligo-webide front-end from the tools/webide/ directory and deploys it as a Branch Deploy to Netlify using the netlify-cli tool.
 # After the deployment is done a comment is posted to the MR with the draft site URL as well as the Netlify logs
-build-preview-ligo-webide-front-end:
-  stage: ide-deploy
-  image: node:12.20.0-buster
-  tags:
-    - docker
-  script:
-    - apt-get update
-    - apt-get install -y --no-install-recommends jq
-    - cd ./tools/webide/
-    - sed -i "s/temphost/$CI_MERGE_REQUEST_IID-$CI_COMMIT_SHORT_SHA/g" ./packages/client/feature-netlify.toml
-    - cat ./packages/client/feature-netlify.toml
-    - mv ./packages/client/feature-netlify.toml ./packages/client/netlify.toml
-    - yarn install
-    - CI= yarn workspaces run build
-    - cd ./packages/client
-    - npm install netlify-cli
-    - npx netlify deploy --site $NETLIFY_SITE_ID --auth $NETLIFY_AUTH_TOKEN --json --alias="$CI_MERGE_REQUEST_IID-$CI_COMMIT_SHORT_SHA" > netlify.json
-    - export NETLIFY_DEPLOY_URL=$(jq -r .deploy_url netlify.json)
-    - export NETLIFY_DEPLOY_LOGS=$(jq -r .logs netlify.json)
-    - echo "The URL for this deployment is $NETLIFY_DEPLOY_URL"
-    - echo "Logs for this deployment can be found at $NETLIFY_DEPLOY_LOGS"
-    - '[ ! -z "$CI_MERGE_REQUEST_IID" ] && curl POST https://gitlab.com/api/v4/projects/$CI_PROJECT_ID/merge_requests/$CI_MERGE_REQUEST_IID/notes -d "{\"body\": \"A new deploy preview is available on Netlify at $NETLIFY_DEPLOY_URL, you can view the logs at $NETLIFY_DEPLOY_LOGS\"}" --header "Content-Type: application/json" --header "Private-Token: $GITLAB_PERSONAL_API_PRIVATE_TOKEN"'
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      changes:
-        - tools/webide/**/*
-      when: always
+# build-preview-ligo-webide-front-end:
+#   stage: ide-deploy
+#   image: node:12.20.0-buster
+#   tags:
+#     - docker
+#   script:
+#     - apt-get update
+#     - apt-get install -y --no-install-recommends jq
+#     - cd ./tools/webide/
+#     - sed -i "s/temphost/$CI_MERGE_REQUEST_IID-$CI_COMMIT_SHORT_SHA/g" ./packages/client/feature-netlify.toml
+#     - cat ./packages/client/feature-netlify.toml
+#     - mv ./packages/client/feature-netlify.toml ./packages/client/netlify.toml
+#     - yarn install
+#     - CI= yarn workspaces run build
+#     - cd ./packages/client
+#     - npm install netlify-cli
+#     - npx netlify deploy --site $NETLIFY_SITE_ID --auth $NETLIFY_AUTH_TOKEN --json --alias="$CI_MERGE_REQUEST_IID-$CI_COMMIT_SHORT_SHA" > netlify.json
+#     - export NETLIFY_DEPLOY_URL=$(jq -r .deploy_url netlify.json)
+#     - export NETLIFY_DEPLOY_LOGS=$(jq -r .logs netlify.json)
+#     - echo "The URL for this deployment is $NETLIFY_DEPLOY_URL"
+#     - echo "Logs for this deployment can be found at $NETLIFY_DEPLOY_LOGS"
+#     - '[ ! -z "$CI_MERGE_REQUEST_IID" ] && curl POST https://gitlab.com/api/v4/projects/$CI_PROJECT_ID/merge_requests/$CI_MERGE_REQUEST_IID/notes -d "{\"body\": \"A new deploy preview is available on Netlify at $NETLIFY_DEPLOY_URL, you can view the logs at $NETLIFY_DEPLOY_LOGS\"}" --header "Content-Type: application/json" --header "Private-Token: $GITLAB_PERSONAL_API_PRIVATE_TOKEN"'
+#   rules:
+#     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+#       changes:
+#         - tools/webide/**/*
+#       when: always
 
 # This job builds the ligo-webide front-end from the tools/webide/ directory and does a production deployment to Netlify and publishes the site using the netlify-cli tool.
-build-ligo-webide-front-end:
-  stage: ide-deploy
-  image: node:12.20.0-buster
-  tags:
-    - docker
-  script:
-    - apt-get update
-    - cd ./tools/webide/
-    - mv ./packages/client/prod-netlify.toml ./packages/client/netlify.toml
-    - yarn install
-    - CI= yarn workspaces run build
-    - cd ./packages/client
-    - npm install netlify-cli
-    - npx netlify deploy --site $NETLIFY_SITE_ID --auth $NETLIFY_AUTH_TOKEN --json --prod > netlify.json
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "dev"'
-      changes:
-        - tools/webide/**/*
-      when: always
+# build-ligo-webide-front-end:
+#   stage: ide-deploy
+#   image: node:12.20.0-buster
+#   tags:
+#     - docker
+#   script:
+#     - apt-get update
+#     - cd ./tools/webide/
+#     - mv ./packages/client/prod-netlify.toml ./packages/client/netlify.toml
+#     - yarn install
+#     - CI= yarn workspaces run build
+#     - cd ./packages/client
+#     - npm install netlify-cli
+#     - npx netlify deploy --site $NETLIFY_SITE_ID --auth $NETLIFY_AUTH_TOKEN --json --prod > netlify.json
+#   rules:
+#     - if: '$CI_COMMIT_BRANCH == "dev"'
+#       changes:
+#         - tools/webide/**/*
+#       when: always
       
 # This job will remove the web-ide docker containers that contain the MR_IID in their name from the test server.
 downstream-webide-removal-handoff:
