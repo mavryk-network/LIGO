@@ -301,7 +301,7 @@ deploy-handoff:
     project: ligolang/ligo-webide-deploy
     branch: change-conditions-for-jobs
   rules:
-    # Only deploy handoff when from the dev branch AND on the canonical ligolang/ligo repository
+    ## Only deploy handoff when from the dev branch AND on the canonical ligolang/ligo repository
     - if: '$CI_COMMIT_REF_NAME == "dev" && $CI_PROJECT_PATH == "ligolang/ligo"'
       when: always
 
