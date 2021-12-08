@@ -7,6 +7,7 @@ open Trace
 open Function
 
 let annotation_or_label annot label = Option.value ~default:label (Helpers.remove_empty_annotation annot)
+let default_layout_backend = L_tree
 
 let t_sum ~raise ~layout return compile_type m =
   let open AST.Helpers in
@@ -180,8 +181,9 @@ let record_access_to_lr ~raise ~layout ty m_ty index =
 
 let record_to_pairs ~raise compile_expression return record_t record : Mini_c.expression =
   let open AST.Helpers in
-  let lst = kv_list_of_record_or_tuple ~layout:record_t.layout record_t.content record in
-  match record_t.layout with
+  let layout = Option.value ~default:default_layout_backend record_t.layout in
+  let lst = kv_list_of_record_or_tuple ~layout record_t.content record in
+  match layout with
   | L_tree -> (
     let node = Append_tree.of_list lst in
     let aux a b : expression =

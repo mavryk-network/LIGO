@@ -41,6 +41,11 @@ let option = fun f ppf opt ->
   | Some x -> fprintf ppf "Some(%a)" f x
   | None -> fprintf ppf "None"
 
+  let option_opt = fun f ppf opt ->
+    match opt with
+    | Some x -> fprintf ppf "%a" f x
+    | None -> ()
+
 let lr = fun ppf lr ->
   match lr with
   | `Left -> fprintf ppf "left"

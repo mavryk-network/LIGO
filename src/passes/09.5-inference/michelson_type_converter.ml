@@ -40,7 +40,7 @@ let rec to_right_comb_pair l new_map =
       (Label "1" , annotate_field row_element_r ann_r) ] new_map
   | (Label ann, field)::tl ->
     let new_map' = LMap.add (Label "0") (annotate_field field ann) new_map in
-    LMap.add (Label "1") (comb_pair (T_record {fields=(to_right_comb_pair tl new_map');layout= Some default_layout})) new_map'
+    LMap.add (Label "1") (comb_pair (T_record {fields=(to_right_comb_pair tl new_map');layout= None})) new_map'
 
 let rec to_right_comb_variant l new_map =
   match l with
@@ -51,7 +51,7 @@ let rec to_right_comb_variant l new_map =
       (Label "M_right" , annotate_field row_element_r ann_r) ] new_map
   | (Label ann, field)::tl ->
     let new_map' = LMap.add (Label "M_left") (annotate_field field ann) new_map in
-    LMap.add (Label "M_right") (comb_ctor (T_sum {fields = (to_right_comb_variant tl new_map') ; layout = Some default_layout})) new_map'
+    LMap.add (Label "M_right") (comb_ctor (T_sum {fields = (to_right_comb_variant tl new_map') ; layout = None})) new_map'
 
 let rec to_left_comb_pair' first l new_map =
   match l with
@@ -63,7 +63,7 @@ let rec to_left_comb_pair' first l new_map =
     to_left_comb_pair' false tl new_map'
   | (Label ann, field)::tl ->
     let new_map' = LMap.add_bindings [
-      (Label "0" , comb_pair (T_record {fields=new_map;layout=Some default_layout})) ;
+      (Label "0" , comb_pair (T_record {fields=new_map;layout=None})) ;
       (Label "1" , annotate_field field ann ) ;] LMap.empty in
     to_left_comb_pair' first tl new_map'
 let to_left_comb_pair = to_left_comb_pair' true
@@ -78,7 +78,7 @@ let rec to_left_comb_variant' first l new_map =
     to_left_comb_variant' false tl new_map'
   | (Label ann, ctor)::tl ->
     let new_map' = LMap.add_bindings [
-      (Label "M_left"  , comb_ctor (T_sum { fields = new_map ; layout = Some default_layout})) ;
+      (Label "M_left"  , comb_ctor (T_sum { fields = new_map ; layout = None})) ;
       (Label "M_right" , annotate_field ctor ann ) ;] LMap.empty in
     to_left_comb_variant' first tl new_map'
 let to_left_comb_variant = to_left_comb_variant' true
@@ -125,44 +125,44 @@ let rec from_left_comb_variant ~raise (l:row_element label_map) (size:int) : row
 
 let convert_pair_to_right_comb l =
   let l' = List.sort ~compare:(fun (_,{associated_type=_;decl_pos=a;_}) (_,{associated_type=_;decl_pos=b;_}) -> Int.compare a b) l in
-  T_record {fields=(to_right_comb_pair l' LMap.empty);layout=Some default_layout}
+  T_record {fields=(to_right_comb_pair l' LMap.empty);layout=None}
 
 let convert_pair_to_left_comb l =
   let l' = List.sort ~compare:(fun (_,{associated_type=_;decl_pos=a;_}) (_,{associated_type=_;decl_pos=b;_}) -> Int.compare a b) l in
-  T_record {fields=(to_left_comb_pair l' LMap.empty);layout=Some default_layout}
+  T_record {fields=(to_left_comb_pair l' LMap.empty);layout=None}
 
 let convert_pair_from_right_comb ~raise (src:ty_expr row_element_mini_c label_map) (dst:ty_expr row_element_mini_c label_map) : type_content =
   let fields = from_right_comb_pair ~raise src (LMap.cardinal dst) in
   let labels = List.map ~f:(fun (l,_) -> l) @@
     List.sort ~compare:(fun (_,{associated_type=_;decl_pos=a;_}) (_,{associated_type=_;decl_pos=b;_}) -> Int.compare a b ) @@
     LMap.to_kv_list_rev dst in
-  T_record {fields=(LMap.of_list @@ List.zip_exn labels fields);layout=Some default_layout}
+  T_record {fields=(LMap.of_list @@ List.zip_exn labels fields);layout=None}
 
 let convert_pair_from_left_comb ~raise (src:ty_expr row_element_mini_c label_map) (dst:ty_expr row_element_mini_c label_map) : type_content =
   let fields = from_left_comb_pair ~raise src (LMap.cardinal dst) in
   let labels = List.map ~f:(fun (l,_) -> l) @@
     List.sort ~compare:(fun (_,{associated_type=_;decl_pos=a;_}) (_,{associated_type=_;decl_pos=b;_}) -> Int.compare a b ) @@
     LMap.to_kv_list_rev dst in
-  T_record {fields=(LMap.of_list @@ List.zip_exn labels fields);layout=Some default_layout}
+  T_record {fields=(LMap.of_list @@ List.zip_exn labels fields);layout=None}
 
 let convert_variant_to_right_comb l =
   let l' = List.sort ~compare:(fun (_,{associated_type=_;decl_pos=a;_}) (_,{associated_type=_;decl_pos=b;_}) -> Int.compare a b) l in
-  T_sum {fields = to_right_comb_variant l' LMap.empty ; layout = Some default_layout }
+  T_sum {fields = to_right_comb_variant l' LMap.empty ; layout = None }
 
 let convert_variant_to_left_comb l =
   let l' = List.sort ~compare:(fun (_,{associated_type=_;decl_pos=a;_}) (_,{associated_type=_;decl_pos=b;_}) -> Int.compare a b) l in
-  T_sum { fields = to_left_comb_variant l' LMap.empty ; layout = Some default_layout }
+  T_sum { fields = to_left_comb_variant l' LMap.empty ; layout = None }
 
 let convert_variant_from_right_comb ~raise (src:ty_expr row_element_mini_c label_map) (dst:ty_expr row_element_mini_c label_map) : type_content =
   let ctors = from_right_comb_variant ~raise src (LMap.cardinal dst) in
   let ctors_name = List.map ~f:(fun (l,_) -> l) @@
     List.sort ~compare:(fun (_,{associated_type=_;decl_pos=a;_}) (_,{associated_type=_;decl_pos=b;_}) -> Int.compare a b ) @@
     LMap.to_kv_list_rev dst in
-  (T_sum { fields = LMap.of_list @@ List.zip_exn ctors_name ctors ; layout = Some default_layout })
+  (T_sum { fields = LMap.of_list @@ List.zip_exn ctors_name ctors ; layout = None })
 
 let convert_variant_from_left_comb ~raise (src:ty_expr row_element_mini_c label_map) (dst:ty_expr row_element_mini_c label_map) : type_content =
   let ctors = from_left_comb_variant ~raise src (LMap.cardinal dst) in
   let ctors_name = List.map ~f:(fun (l,_) -> l) @@
     List.sort ~compare:(fun (_,{associated_type=_;decl_pos=a;_}) (_,{associated_type=_;decl_pos=b;_}) -> Int.compare a b ) @@
     LMap.to_kv_list_rev dst in
-  (T_sum { fields = LMap.of_list @@ List.zip_exn ctors_name ctors ; layout = Some default_layout })
+  (T_sum { fields = LMap.of_list @@ List.zip_exn ctors_name ctors ; layout = None })

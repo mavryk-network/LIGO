@@ -191,11 +191,13 @@ let rec decompile ~raise (v : value) (t : AST.type_expression) : AST.expression 
       raise.raise @@ corner_case ~loc:"unspiller" "Wrong number of args or wrong kinds for the type constant"
   )
   | T_sum {layout ; content} ->
+      let layout = Option.value ~default:Layout.default_layout_backend layout in
       let lst = List.map ~f:(fun (k,({associated_type;_} : _ row_element_mini_c)) -> (k,associated_type)) @@ Ast_typed.Helpers.kv_list_of_t_sum ~layout content in
       let (constructor, v, tv) = Layout.extract_constructor ~raise ~layout v lst in
       let sub = self v tv in
       return (E_constructor {constructor;element=sub})
   | T_record {layout ; content } ->
+      let layout = Option.value ~default:Layout.default_layout_backend layout in
       let lst = List.map ~f:(fun (k,({associated_type;_} : _ row_element_mini_c)) -> (k,associated_type)) @@ Ast_typed.Helpers.kv_list_of_t_record_or_tuple ~layout content in
       let lst = Layout.extract_record ~raise ~layout v lst in
       let lst = List.Assoc.map ~f:(fun (y, z) -> self y z) lst in

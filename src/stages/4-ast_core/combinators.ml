@@ -57,15 +57,14 @@ let t_map_or_big_map ?loc ?sugar k v : type_expression = t_constant ?loc ?sugar 
 
 
 let t_record ?loc ?sugar ?layout fields  : type_expression = make_t ?loc ?sugar @@ T_record {fields;layout}
-let default_layout = L_tree
 let make_t_ez_record ?loc ?sugar ?layout (lst:(string * type_expression) list) : type_expression =
   let lst = List.mapi ~f:(fun i (x,y) -> (Label x, ({associated_type=y;michelson_annotation=None;decl_pos=i} : row_element)) ) lst in
   let map = LMap.of_list lst in
   t_record ?loc ?sugar ?layout map
 
-let ez_t_record ?loc ?sugar ?(layout=default_layout) lst : type_expression =
+let ez_t_record ?loc ?sugar ?layout lst : type_expression =
   let m = LMap.of_list lst in
-  t_record ?loc ?sugar ~layout m
+  t_record ?loc ?sugar ?layout m
 let t_pair ?loc ?sugar a b : type_expression =
   ez_t_record ?loc ?sugar [
     (Label "0",{associated_type=a;michelson_annotation=None ; decl_pos = 0}) ;

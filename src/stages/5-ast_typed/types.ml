@@ -32,7 +32,7 @@ and type_injection = {
 
 and rows = {
   content : row_element label_map;
-  layout : layout ;
+  layout : layout option ;
 }
 
 and te_list = type_expression list

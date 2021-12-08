@@ -333,9 +333,10 @@ and make_ast_func ~raise ?name env arg body orig =
 
 and make_ast_record ~raise ~loc map_ty map =
   let open Ligo_interpreter.Types in
-  let kv_list = Ast_typed.Helpers.kv_list_of_t_record_or_tuple ~layout:map_ty.layout map_ty.content in
+  let layout = Option.value ~default:Spilling.Layout.default_layout_backend map_ty.layout in
+  let kv_list = Ast_typed.Helpers.kv_list_of_t_record_or_tuple ~layout map_ty.content in
   let kv_list = List.map ~f:(fun (l, ty) -> let value = LMap.find l map in let ast = val_to_ast ~raise ~loc value ty.associated_type in (l, ast)) kv_list in
-  Ast_typed.ez_e_a_record ~layout:map_ty.layout kv_list
+  Ast_typed.ez_e_a_record ~layout kv_list
 
 and make_ast_list ~raise ~loc ty l =
   let l = List.map ~f:(fun v -> val_to_ast ~raise ~loc v ty) l in

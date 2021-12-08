@@ -454,7 +454,7 @@ and type_expression' ~raise : ?tv_opt:O.type_expression -> environment -> _ O'.t
       ) m' ~init:0 in
     let record_type = match Environment.get_nominal_record_from_row lmap e with
       | Some r -> r
-      | None -> O.{fields=lmap;layout= Some default_layout}
+      | None -> O.{fields=lmap;layout= None}
     in
     let wrapped = Wrap.record record_type in
     return_wrapped (e_record @@ O.LMap.map fst m') e state' constraints wrapped

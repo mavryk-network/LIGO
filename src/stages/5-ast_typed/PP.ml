@@ -98,7 +98,7 @@ let rec type_content : formatter -> type_content -> unit =
   | T_variable        tv -> type_variable                 ppf tv
   | T_constant        tc -> type_injection ppf tc
   | T_sum              m -> fprintf ppf "@[<h>sum[%a]@]" (lmap_sep_d row) (LMap.to_kv_list_rev m.content)
-  | T_record           m -> fprintf ppf "%a" (tuple_or_record_sep_type row) m.content
+  | T_record           m -> fprintf ppf "%a%a" (tuple_or_record_sep_type row) m.content option_layout m.layout
   | T_arrow            a -> arrow         type_expression ppf a
   | T_module_accessor ma -> module_access type_expression ppf ma
   | T_singleton       x  -> literal       ppf             x

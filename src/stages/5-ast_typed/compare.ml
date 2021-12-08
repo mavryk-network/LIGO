@@ -17,6 +17,12 @@ let cmp_pair f g (a1, a2) (b1, b2) = cmp2 f a1 b1 g a2 b2
 let compare_lmap_entry  compare (Label na, va) (Label nb, vb) = cmp2 String.compare na nb compare va vb
 let compare_tvmap_entry compare (tva, va) (tvb, vb) = cmp2 Var.compare tva tvb compare va vb
 
+let option f oa ob =
+  match oa,ob with
+  | None, None -> 0
+  | Some _, None -> 1
+  | None, Some _ -> -1
+  | Some a, Some b -> f a b
 let bool a b = (Stdlib.compare : bool -> bool -> int) a b
 let label (Label a) (Label b) = String.compare a b
 let label_map ~compare lma lmb =
@@ -109,7 +115,7 @@ and injection {language=la ; injection=ia ; parameters=pa} {language=lb ; inject
 and rows {content=ca; layout=la} {content=cb; layout=lb} =
   cmp2
     (label_map ~compare:row_element) ca cb
-    layout la lb
+    (option layout) la lb
 
 and constraint_identifier (ConstraintIdentifier.T a) (ConstraintIdentifier.T b) =
   cmp2
@@ -134,13 +140,6 @@ and for_all {ty_binder = ba ; kind = _ ; type_ = ta } {ty_binder = bb ; kind = _
 
 let constant_tag (ct : constant_tag) (ct2 : constant_tag) =
   Int.compare (constant_tag ct ) (constant_tag ct2 )
-
-let option f oa ob =
-  match oa,ob with
-  | None, None -> 0
-  | Some _, None -> 1
-  | None, Some _ -> -1
-  | Some a, Some b -> f a b
 
 let binder ty_expr {var=va;ascr=aa;_} {var=vb;ascr=ab;_} =
   cmp2

@@ -86,7 +86,7 @@ and type_content : formatter -> type_content -> unit =
   match te with
   | T_variable        tv -> type_variable ppf tv
   | T_sum              m -> fprintf ppf "@[<h>sum[%a]@]" (lmap_sep_d row) (LMap.to_kv_list_rev m.fields)
-  | T_record           m -> fprintf ppf "%a" (tuple_or_record_sep_type row) m.fields
+  | T_record           m -> fprintf ppf "%a [@ layout:%a]" (tuple_or_record_sep_type row) m.fields (option layout) m.layout 
   | T_arrow            a -> arrow         type_expression ppf a
   | T_app              a -> type_app type_expression ppf a
   | T_module_accessor ma -> module_access type_expression ppf ma

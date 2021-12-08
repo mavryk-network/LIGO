@@ -24,7 +24,7 @@ end
 
 val get_entry : module_fully_typed -> string -> expression option
 
-val layout_eq : layout -> layout -> bool
+val layout_eq : layout option -> layout option -> bool
 
 val assert_eq : 'a -> 'a -> unit option
 val assert_list_eq : ('a -> 'a -> unit option) -> 'a list -> 'a list -> unit option

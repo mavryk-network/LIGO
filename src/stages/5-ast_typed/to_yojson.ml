@@ -55,7 +55,7 @@ and type_injection {language;injection;parameters} =
 and rows {content; layout = l } =
   `Assoc [
     ("content", label_map row_element content);
-    ("layout", layout l);
+    ("layout", (option layout) l);
   ]
 and row_element {associated_type; michelson_annotation; decl_pos} =
   `Assoc [

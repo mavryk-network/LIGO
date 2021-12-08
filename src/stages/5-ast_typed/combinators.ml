@@ -67,16 +67,15 @@ let t_big_map        ?loc ?core k v : type_expression = t_constant ?loc ?core bi
 let t_map_or_big_map ?loc ?core k v : type_expression = t_constant ?loc ?core map_or_big_map_name [ k ; v ]
 
 
-let t_record ?loc ?core ~layout content  : type_expression = make_t ?loc (T_record {content;layout}) core
-let default_layout = L_tree
-let make_t_ez_record ?loc ?core ?(layout=default_layout) (lst:(string * type_expression) list) : type_expression =
+let t_record ?loc ?core ?layout content  : type_expression = make_t ?loc (T_record {content;layout}) core
+let make_t_ez_record ?loc ?core ?layout (lst:(string * type_expression) list) : type_expression =
   let lst = List.mapi ~f:(fun i (x,y) -> (Label x, ({associated_type=y;michelson_annotation=None;decl_pos=i} : row_element)) ) lst in
   let map = LMap.of_list lst in
-  t_record ?loc ?core ~layout map
+  t_record ?loc ?core ?layout map
 
-let ez_t_record ?loc ?core ?(layout=default_layout) lst : type_expression =
+let ez_t_record ?loc ?core ?layout lst : type_expression =
   let m = LMap.of_list lst in
-  t_record ?loc ?core ~layout m
+  t_record ?loc ?core ?layout m
 let t_pair ?loc ?core a b : type_expression =
   ez_t_record ?loc ?core [
     (Label "0",{associated_type=a;michelson_annotation=None ; decl_pos = 0}) ;
@@ -89,7 +88,7 @@ let t_triplet ?loc ?core a b c : type_expression =
     (Label "2",{associated_type=c;michelson_annotation=None ; decl_pos = 2}) ]
 
 let t_sum ?loc ?core ~layout content : type_expression = make_t ?loc (T_sum {content;layout}) core
-let t_sum_ez ?loc ?core ?(layout=default_layout) (lst:(string * type_expression) list) : type_expression =
+let t_sum_ez ?loc ?core ?layout (lst:(string * type_expression) list) : type_expression =
   let lst = List.mapi ~f:(fun i (x,y) -> (Label x, ({associated_type=y;michelson_annotation=None;decl_pos=i}:row_element)) ) lst in
   let map = LMap.of_list lst in
   t_sum ?loc ?core ~layout map
@@ -390,7 +389,7 @@ let e_a_some s = make_e (e_some s) (t_constant option_name [s.type_expression])
 let e_a_lambda l in_ty out_ty = make_e (e_lambda l) (t_function in_ty out_ty ())
 let e_a_recursive l= make_e (e_recursive l) l.fun_type
 let e_a_none t = make_e (e_none ()) (t_option t)
-let e_a_record ?(layout=default_layout) r = make_e (e_record r) (t_record ~layout
+let e_a_record ?layout r = make_e (e_record r) (t_record ?layout
   (LMap.map
     (fun t ->
       let associated_type = get_type_expression t in

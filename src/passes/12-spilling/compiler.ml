@@ -272,6 +272,7 @@ let rec compile_type ~raise (t:AST.type_expression) : type_expression =
   )
   | T_sum { content = m ; layout } -> (
       let open Ast_typed.Helpers in
+      let layout = Option.value ~default:Layout.default_layout_backend layout in
       match is_michelson_or m with
       | Some (a , b) -> (
           let aux (x : AST.row_element) =
@@ -287,6 +288,7 @@ let rec compile_type ~raise (t:AST.type_expression) : type_expression =
     )
   | T_record { content = m ; layout } -> (
       let open Ast_typed.Helpers in
+      let layout = Option.value ~default:Layout.default_layout_backend layout in
       match is_michelson_pair m with
       | Some (a , b) -> (
           let aux (x : AST.row_element) =
@@ -341,7 +343,8 @@ let compile_record_matching ~raise expr' return k ({ fields; body; tv } : Ast_ty
   let record = 
     trace_option ~raise (corner_case ~loc:__LOC__ "getting lr tree") @@
     get_t_record tv in
-  match record.layout with
+    let layout = Option.value ~default:Layout.default_layout_backend record.layout in
+  match layout with
   (* TODO unify with or simplify other case below? *)
   | L_comb ->
     let record_fields = Ast_typed.Helpers.kv_list_of_t_record_or_tuple ~layout:L_comb record.content in
@@ -360,7 +363,8 @@ let compile_record_matching ~raise expr' return k ({ fields; body; tv } : Ast_ty
     let body = k body in
     return (E_let_tuple (expr', (fields, body)))
   | _ ->
-    let tree = Layout.record_tree ~layout:record.layout (compile_type ~raise) record.content in
+    let layout = Option.value ~default:Layout.default_layout_backend record.layout in
+    let tree = Layout.record_tree ~layout (compile_type ~raise) record.content in
     let body = k body in
     let rec aux expr (tree : Layout.record_tree) body =
       match tree.content with
@@ -433,7 +437,8 @@ and compile_expression ~raise (ae:AST.expression) : expression =
     let ty_variant =
       trace_option ~raise (corner_case ~loc:__LOC__ "not a record") @@
       get_t_sum (get_type_expression ae) in
-    let path = Layout.constructor_to_lr ~raise ~layout:ty_variant.layout ty' ty_variant.content constructor in
+    let layout = Option.value ~default:Layout.default_layout_backend ty_variant.layout in
+    let path = Layout.constructor_to_lr ~raise ~layout:layout ty' ty_variant.content constructor in
     let aux = fun pred (ty, lr) ->
       let c = match lr with
         | `Left  -> C_LEFT
@@ -454,15 +459,16 @@ and compile_expression ~raise (ae:AST.expression) : expression =
     let ty' = compile_type ~raise (get_type_expression record) in
     let record_ty = trace_option ~raise (corner_case ~loc:__LOC__ "not a record") @@
       get_t_record (get_type_expression record) in
-    match record_ty.layout with
+    let layout = Option.value ~default:Layout.default_layout_backend record_ty.layout in
+    match layout with
     | L_comb ->
-      let record_fields = Ast_typed.Helpers.kv_list_of_t_record_or_tuple ~layout:record_ty.layout record_ty.content in
+      let record_fields = Ast_typed.Helpers.kv_list_of_t_record_or_tuple ~layout record_ty.content in
       let i = fst @@ Option.value_exn  (List.findi ~f:(fun _ (label, _) -> 0 = Ast_typed.Compare.label path label) record_fields) in
       let n = List.length record_fields in
       let record = compile_expression ~raise record in
       return (E_proj (record, i, n))
     | _ ->
-    let path = Layout.record_access_to_lr ~raise ~layout:record_ty.layout ty' record_ty.content path in
+    let path = Layout.record_access_to_lr ~raise ~layout ty' record_ty.content path in
     let aux = fun pred (ty, lr) ->
       let c = match lr with
         | `Left  -> C_CAR
@@ -483,9 +489,10 @@ and compile_expression ~raise (ae:AST.expression) : expression =
         trace_option ~raise (corner_case ~loc:__LOC__ "not a record") @@
         get_t_record (ty) in
       let ty' = compile_type ~raise (ty) in
-      match record_ty.layout with
+      let layout = Option.value ~default:Layout.default_layout_backend record_ty.layout in
+      match layout with
       | L_comb ->
-        let record_fields = Ast_typed.Helpers.kv_list_of_t_record_or_tuple ~layout:record_ty.layout record_ty.content in
+        let record_fields = Ast_typed.Helpers.kv_list_of_t_record_or_tuple ~layout record_ty.content in
         let record = self record in
         let update = self update in
         let i = fst @@ Option.value_exn  (List.findi ~f:(fun _ (label, _) -> 0 = Ast_typed.Compare.label path label) record_fields) in
@@ -494,7 +501,7 @@ and compile_expression ~raise (ae:AST.expression) : expression =
       | _ ->
       let path =
         trace_strong ~raise (corner_case ~loc:__LOC__ "record access") @@
-        (fun ~raise:_ -> Layout.record_access_to_lr ~raise ~layout:record_ty.layout ty' record_ty.content path) in
+        (fun ~raise:_ -> Layout.record_access_to_lr ~raise ~layout ty' record_ty.content path) in
       let path = List.map ~f:snd path in
       let update = self update in
       let record = self record in
@@ -657,7 +664,8 @@ and compile_expression ~raise (ae:AST.expression) : expression =
           | _ -> (
               let record_ty = trace_option ~raise (corner_case ~loc:__LOC__ "getting lr tree") @@
                 get_t_sum tv in
-              let tree = Layout.match_variant_to_tree ~raise ~layout:record_ty.layout ~compile_type:(compile_type ~raise) record_ty.content in
+              let layout = Option.value ~default:Layout.default_layout_backend record_ty.layout in
+              let tree = Layout.match_variant_to_tree ~raise ~layout ~compile_type:(compile_type ~raise) record_ty.content in
               let rec aux top t =
                 match t with
                 | ((`Leaf (Label constructor_name)) , tv) -> (
@@ -825,7 +833,8 @@ and compile_recursive ~raise {fun_name; fun_type; lambda} =
         | _ -> (
             let record_ty = trace_option ~raise (corner_case ~loc:__LOC__ "getting lr tree") @@
               get_t_sum tv in
-            let tree = Layout.match_variant_to_tree ~raise ~layout:record_ty.layout ~compile_type:(compile_type ~raise) record_ty.content in
+            let layout = Option.value ~default:Layout.default_layout_backend record_ty.layout in
+            let tree = Layout.match_variant_to_tree ~raise ~layout ~compile_type:(compile_type ~raise) record_ty.content in
             let rec aux top t =
               match t with
               | ((`Leaf (Label constructor_name)) , tv) -> (

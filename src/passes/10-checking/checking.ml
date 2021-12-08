@@ -278,7 +278,7 @@ and evaluate_type ~raise ?other_module (e:environment) (t:I.type_expression) : O
     in
     let sum : O.rows  = match Environment.get_sum ~check_annot:true lmap e with
       | None ->
-        let layout = Option.value ~default:default_layout m.layout in
+        let layout = m.layout in
         {content = lmap; layout}
       | Some r -> r
     in
@@ -302,7 +302,7 @@ and evaluate_type ~raise ?other_module (e:environment) (t:I.type_expression) : O
     let lmap = O.LMap.map aux m.fields in
     let record : O.rows = match Environment.get_nominal_record_from_row (*~check_annot:true*) lmap e with
     | None ->
-      let layout = Option.value ~default:default_layout m.layout in
+      let layout = m.layout in
       {content=lmap;layout}
     | Some (_,r) ->  r
     in
@@ -482,17 +482,22 @@ and type_expression' ~raise ~test ~protocol_version ?(args = []) ?last : environ
   )
   (* Sum *)
   | E_constructor {constructor; element} ->
+      let () = Format.eprintf "E_constructor\n" in
       let (avs, c_tv, sum_tv) = trace_option ~raise (unbound_constructor e constructor ae.location) @@
         Environment.get_constructor_parametric constructor e in
       let expr' = type_expression' ~raise ~test ~protocol_version e element in
+      let () = Format.eprintf "1\n" in
       let table = infer_type_application ~raise ~loc:element.location TMap.empty c_tv expr'.type_expression in
+      let () = Format.eprintf "1'\n" in
       let table = match tv_opt with
         | Some tv_opt -> infer_type_application ~raise ~loc:ae.location ~default_error:(fun loc t t' -> assert_equal loc t' t) table sum_tv tv_opt
         | None -> table in
       let () = trace_option ~raise (not_annotated ae.location) @@
                  if (List.for_all avs ~f:(fun v -> TMap.mem v table)) then Some () else None in
+      let () = Format.eprintf "2\n" in
       let c_tv = TMap.fold (fun tv t r -> Ast_typed.Helpers.subst_type tv t r) table c_tv in
       let sum_tv = TMap.fold (fun tv t r -> Ast_typed.Helpers.subst_type tv t r) table sum_tv in
+      let () = Format.eprintf "comparing %a with %a\n" O.PP.type_expression c_tv O.PP.type_expression expr'.type_expression in
       let () = assert_type_expression_eq ~raise expr'.location (c_tv, expr'.type_expression) in
       return (E_constructor {constructor; element=expr'}) sum_tv
   (* Record *)
@@ -506,7 +511,7 @@ and type_expression' ~raise ~test ~protocol_version ?(args = []) ?last : environ
       in
       let _,lmap = O.LMap.fold_map ~f m' ~init:0 in
       let record_type = match Environment.get_nominal_record_from_row lmap e with
-        | None -> t_record ~layout:default_layout lmap
+        | None -> t_record lmap
         | Some (orig_var,r) -> make_t_orig_var (T_record r) None orig_var
       in
       return (E_record m') record_type
@@ -836,14 +841,14 @@ let rec untype_type_expression (t:O.type_expression) : I.type_expression =
        let v' = ({associated_type ; michelson_annotation ; decl_pos} : I.row_element) in
        v' in
      let x' = I.LMap.map aux content in
-     return @@ I.T_sum { fields = x' ; layout = Some layout }
+     return @@ I.T_sum { fields = x' ; layout }
   | O.T_record {content;layout} -> (
     let aux ({associated_type ; michelson_annotation ; decl_pos} : O.row_element) =
       let associated_type = untype_type_expression associated_type in
       let v' = ({associated_type ; michelson_annotation ; decl_pos} : I.row_element) in
       v' in
     let x' = I.LMap.map aux content in
-    return @@ I.T_record {fields = x' ; layout = Some layout}
+    return @@ I.T_record {fields = x' ; layout }
   )
   | O.T_variable name -> return @@ I.T_variable (Var.todo_cast name)
   | O.T_arrow arr ->

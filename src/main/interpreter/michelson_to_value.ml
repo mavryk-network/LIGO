@@ -262,11 +262,13 @@ let rec decompile_value ~raise ~(bigmaps : bigmap list) (v : value) (t : Ast_typ
       v
   )
   | T_sum {layout ; content} ->
+      let layout = Option.value ~default:Spilling.Layout.default_layout_backend layout in
       let lst = List.map ~f:(fun (k,({associated_type;_} : _ row_element_mini_c)) -> (k,associated_type)) @@ Ast_typed.Helpers.kv_list_of_t_sum ~layout content in
       let (Label constructor, v, tv) = Layout.extract_constructor ~raise ~layout v lst in
       let sub = self v tv in
       (V_Construct (constructor, sub))
   | T_record {layout ; content } ->
+      let layout = Option.value ~default:Spilling.Layout.default_layout_backend layout in
       let lst = List.map ~f:(fun (k,({associated_type;_} : _ row_element_mini_c)) -> (k,associated_type)) @@ Ast_typed.Helpers.kv_list_of_t_record_or_tuple ~layout content in
       let lst = Layout.extract_record ~raise ~layout v lst in
       let lst = List.Assoc.map ~f:(fun (y, z) -> self y z) lst in

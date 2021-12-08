@@ -64,9 +64,8 @@ let layout ppf layout = match layout with
   | L_tree -> fprintf ppf "tree"
   | L_comb -> fprintf ppf "comb"
 
-let option_layout ppf l = match l with
-  | Some l -> fprintf ppf "[layout:%a]" layout l
-  | None   -> fprintf ppf ""
+let option_layout ppf l =
+  option_opt (fun ppf l -> fprintf ppf "[layout:%a]" layout l) ppf l
 
 let layout_option = option layout
 

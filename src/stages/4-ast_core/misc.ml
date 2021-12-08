@@ -332,12 +332,11 @@ let reason_simpl : type_constraint_simpl -> string = fun c -> reason_simpl_ c
   nominal (i.e. the rows labels must be disjoint from all other T_record/T_sum types)
 *)
 let t_is_nominal : rows -> bool =
-  fun x ->
-    match x with
-    | { fields ; layout = Some _ } -> (
-      let lst = LMap.to_kv_list fields in
-      List.exists
-        ~f:(function (_label, { michelson_annotation=Some _ ; _ }) -> true | _ -> false)
-        lst 
-    )
-    | _ -> false
+  function
+  | { fields = _ ; layout = Some _ } -> true
+  | { fields ; layout = None } -> (
+    let lst = LMap.to_kv_list fields in
+    List.exists
+      ~f:(function (_label, { michelson_annotation=Some _ ; _ }) -> true | _ -> false)
+      lst 
+  )

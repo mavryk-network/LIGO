@@ -76,9 +76,10 @@ let rec assert_list_eq f = fun a b -> match (a,b) with
   )
 
 let layout_eq a b = match (a,b) with
-  | L_comb, L_comb
-  | L_tree, L_tree -> true
-  | _ -> false
+  | Some L_comb, Some L_comb
+  | Some L_tree, Some L_tree
+  | None , None -> true
+  | (None  | Some (L_comb | L_tree)) , (None  | Some (L_comb | L_tree)) -> false
 
 let constant_compare ia ib =
   let open Stage_common.Constant in
@@ -123,7 +124,7 @@ let rec assert_type_expression_eq (a, b: (type_expression * type_expression)) : 
         let* _ = assert_eq ka kb in
         assert_type_expression_eq (va, vb)
       in
-      let* _ = assert_eq ra.layout rb.layout in
+      let* _ = if Compare.(option layout) ra.layout rb.layout = 0 then Some () else None in
       let* _ = assert_same_size ra' rb' in
       List.fold_left ~f:(fun acc p -> match acc with | None -> None | Some () -> aux p) ~init:(Some ()) (List.zip_exn ra' rb')
 
@@ -271,14 +272,13 @@ let equal_variables a b : bool =
   For now, types holding `layout`/`michelson_annotation` [@ .. ]-annotations have to be
   nominal (i.e. the rows labels must be disjoint from all other T_record/T_sum types)
 *)
-(* copy-pasted from 4-ast_core/misc.ml and modified to remove the layout = None case, not sure if it's correct *)
 let t_is_nominal : rows -> bool =
-  fun x ->
-    match x with
-    | { content ; layout = _ } -> (
-      let lst = LMap.to_kv_list content in
-      List.exists
-        ~f:(function (_label, { michelson_annotation=Some _ ; _ }) -> true | _ -> false)
-        lst 
-    )
+  function
+  | { content = _ ; layout = Some _ } -> true
+  | { content ; layout = None } -> (
+    let lst = LMap.to_kv_list content in
+    List.exists
+      ~f:(function (_label, { michelson_annotation=Some _ ; _ }) -> true | _ -> false)
+      lst 
+  )
 (* end copy-pasted from 4-ast_core/misc.ml *)

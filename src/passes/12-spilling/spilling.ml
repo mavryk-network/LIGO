@@ -4,6 +4,7 @@ module Append_tree = Tree.Append
 module Compiler   = Compiler
 module Decompiler = Decompiler
 module Errors = Errors
+module Layout = Layout
 
 let compile_module = Compiler.compile_module
 let compile_expression = Compiler.compile_expression
