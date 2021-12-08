@@ -3,7 +3,7 @@ open Ast
 let data_index (data: data_part segment list) symbol = 
   let rec iter_data (data: data_part segment list) count = 
     match data with
-    | Source.{it = {init = {name}}; _} :: remaining when name = symbol -> count
+    | Source.{it = {init = {name; _}; _}; _} :: remaining when name = symbol -> count
     | _ :: remaining -> iter_data remaining (Int32.add count 1l) 
     | [] -> (-1l)
   in iter_data data 0l
@@ -11,7 +11,7 @@ let data_index (data: data_part segment list) symbol =
 let func_index (funcs: Ast.func list) (imports: Ast.import list) symbol = 
   let rec find_import imports count = 
     match imports with
-    | Source.{it = {item_name};_} :: remaining when (Ast.string_of_name item_name) = symbol -> count
+    | Source.{it = {item_name; _};_} :: remaining when (Ast.string_of_name item_name) = symbol -> count
     | _ :: remaining -> find_import remaining (Int32.add count 1l) 
     | [] -> (-1l)
   in
@@ -19,7 +19,7 @@ let func_index (funcs: Ast.func list) (imports: Ast.import list) symbol =
   if result = (-1l) then 
     let rec find_func funcs count = 
       match funcs with
-      | Source.{it = {name; ftype}; _} :: remaining when name = symbol -> count
+      | Source.{it = {name; ftype; _}; _} :: remaining when name = symbol -> count
       | _ :: remaining -> find_func remaining (Int32.add count 1l)
       | [] -> failwith ("Could not find: " ^ symbol)
     in
@@ -29,8 +29,8 @@ let func_index (funcs: Ast.func list) (imports: Ast.import list) symbol =
 
 let find_type types x = 
   let rec iter result = function
-    | Source.{it = {tname}; _} :: remaining when tname = x -> result
-    | {it = {tname}; _} :: remaining -> iter (Int32.add result 1l) remaining
+    | Source.{it = {tname; _}; _} :: remaining when tname = x -> result
+    | {it = {tname; _}; _} :: remaining -> iter (Int32.add result 1l) remaining
     | [] -> result
   in
   iter 0l types 
@@ -38,7 +38,7 @@ let find_type types x =
 let find_global_index symbols at index_ =
   let result = ref (-1l) in
   List.iteri (fun i s -> match s.Source.it.details with
-  | Global {index} when s.Source.it.name = index_ -> (
+  | Global {index; _} when s.Source.it.name = index_ -> (
       result := index.it
     )
   | _ -> ()) symbols;

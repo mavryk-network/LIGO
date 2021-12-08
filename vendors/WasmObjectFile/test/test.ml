@@ -6,7 +6,6 @@ module Encode = WasmObjectFile.Encode
 open Source
 open Ast
 open Values
-open Encode
 
 let pos = {file = "dummy"; line = -1; column = -1}
 let region = {left = pos; right = pos}

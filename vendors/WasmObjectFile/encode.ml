@@ -32,7 +32,7 @@ let to_string s =
 (* move to linking *)
 type code_relocation =
 | R_WASM_FUNCTION_INDEX_LEB of int32 * string
-| R_WASM_MEMORY_ADDR_LEB of int32 * Ast.var  
+(* | R_WASM_MEMORY_ADDR_LEB of int32 * Ast.var   *)
 | R_WASM_TYPE_INDEX_LEB of int32 * Ast.var
 | R_WASM_GLOBAL_INDEX_LEB of int32 * string
 | R_WASM_MEMORY_ADDR_SLEB of int32 * string
@@ -559,7 +559,7 @@ let encode (m: Ast.module_) =
 
     (* Global section *)
     let global g =
-      let {gtype; value} = g.it in
+      let {gtype; value; _} = g.it in
       global_type gtype; const value
 
     let global_section gs =
@@ -636,7 +636,7 @@ let encode (m: Ast.module_) =
           let found = ref false in
           List.iteri (fun symbol_index (s: Ast.sym_info) -> 
           match s.it.details with
-           | Data { index; offset } when s.it.name = symbol -> 
+           | Data { index; offset; _ } when s.it.name = symbol -> 
             found := true;
             data_relocations := !data_relocations @ [R_WASM_MEMORY_ADDR_I32 (Int32.of_int p, symbol)];
             if offset.it = (-1l) then
@@ -728,7 +728,7 @@ let encode (m: Ast.module_) =
         | R_WASM_MEMORY_ADDR_SLEB (offset, symbol_) -> ( 
           let exists = ref false in
           List.iteri (fun symbol_index s -> match s.it.details with          
-          | Data {index}  when s.it.name = symbol_ ->
+          | Data {index; _}  when s.it.name = symbol_ ->
             exists := true;
             u8 4;
             vu32 (Int32.sub offset !code_pos);
@@ -761,7 +761,7 @@ let encode (m: Ast.module_) =
           u8 0;
           vu32 (Int32.sub offset !code_pos);
           vu32_fixed symbol_index;
-        | R_WASM_MEMORY_ADDR_LEB (offset, index_) -> 
+        (* | R_WASM_MEMORY_ADDR_LEB (offset, index_) -> 
           (
             let _, symbol_index = 
               Linking.find_symbol_index 
@@ -781,7 +781,7 @@ let encode (m: Ast.module_) =
             vu32 (Int32.sub offset !code_pos);
             vs32_fixed symbol_index;
             vs32 4l
-          )
+          ) *)
         | R_WASM_TYPE_INDEX_LEB (offset, index) ->
           u8 6;
           vu32 (Int32.sub offset !code_pos); 

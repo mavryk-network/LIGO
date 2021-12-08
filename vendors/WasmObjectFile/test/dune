@@ -1,3 +1,37 @@
 (executable
  (name test)
- (libraries WasmObjectFile))
+ (libraries WasmObjectFile)
+)
+
+(rule
+ (alias checklld)
+  (target .checklld )
+  (deps check_lld.sh)
+  (action 
+   (progn
+    (bash ./check_lld.sh)
+   )
+ )
+)
+
+; (rule 
+;  (alias wabt)
+;  (
+
+;  )
+; )
+
+(rule
+ (alias runtest)
+ (deps test.exe check_lld.sh)
+ (action 
+  (progn
+   (bash ./check_lld.sh)
+   (run %{exe:test.exe})
+   (run lld -flavor wasm testml.wasm -o test.wasm)
+   ;; TODO: get wabt validate thingy here.
+   ;; TODO: validate the wasm file via wabt
+  )
+ )
+)
+ 
