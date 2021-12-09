@@ -49,14 +49,6 @@ export class DeployAction extends CancellableAction {
           rpcUrl: `https://granadanet.api.tez.ie`,
         },
       });
-    } else if (launchNetwork === NetworkType.FLORENCENET) {
-      await beaconWallet.requestPermissions({
-        network: {
-          type: NetworkType.FLORENCENET,
-          name: 'Florencenet',
-          rpcUrl: `https://florencenet.api.tez.ie`,
-        },
-      });
     } else if (launchNetwork === NetworkType.MAINNET) {
       await beaconWallet.requestPermissions({
         network: {

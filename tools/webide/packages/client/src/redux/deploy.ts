@@ -7,7 +7,6 @@ import {
 
 export enum networkType {
   Mainnet = 'mainnet',
-  Florencenet = 'florencenet',
   Granadanet = 'granadanet',
 }
 
