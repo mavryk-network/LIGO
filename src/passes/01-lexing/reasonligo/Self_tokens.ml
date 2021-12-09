@@ -31,7 +31,11 @@ type lex_unit = token Core.lex_unit
 
 (* Virtual token *)
 
-let es6fun = Token.ES6FUN Region.ghost
+let es6fun = Token.ES6FUN (object 
+  method region = Region.ghost
+  method attributes = []
+  method payload = ""
+end)
 
 (* Inserting the ES6FUN virtual token *)
 
@@ -59,6 +63,11 @@ let insert_es6fun_token tokens =
 
     | (DOT _ as dot) :: (UIdent _ as hd) :: rest ->
       inner (hd :: dot :: result) open_parentheses rest
+
+    (* let a : (A|B) => int = (_a:(|A|B)) => 3 *)
+    | (UIdent _ as c) :: (VBAR _ as vbar) ::  rest ->
+      inner (vbar :: c :: result) open_parentheses rest
+    
     | (_ as hd) :: (UIdent _ as c) :: rest ->
       List.rev_append (c :: hd :: result) rest
 
@@ -85,6 +94,11 @@ let insert_es6fun_token tokens =
     | (RBRACKET _ as hd) :: rest
     | (VBAR _ as hd) :: rest ->
         List.rev_append (hd :: result) rest
+
+    (* let rec foo : int => int = (i: int) => ...  *)
+    | (COLON _ as hd)::(Ident _ as i)::(Rec _ as r)::rest
+        when open_parentheses = 0 ->
+        List.rev_append (r::i::hd::es6fun::result) rest
 
       (* let foo : int => int = (i: int) => ...  *)
     | (COLON _ as hd)::(Ident _ as i)::(Let _ as l)::rest
