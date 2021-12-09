@@ -15,7 +15,7 @@ import { ChangeOutputAction } from '../result';
 import { CommandType } from '../types';
 import { CancellableAction } from './cancellable';
 
-const URL = 'https://granadanet.api.tez.ie/';
+const URL = 'https://api.tez.ie/keys/granadanet/';
 const AUTHORIZATION_HEADER = 'Bearer ligo-ide';
 const Tezos = new TezosToolkit('https://granadanet.api.tez.ie');
 
