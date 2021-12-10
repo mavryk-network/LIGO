@@ -14,23 +14,27 @@
  )
 )
 
-; (rule 
-;  (alias wabt)
-;  (
-
-;  )
-; )
+(rule 
+ (alias wabt)
+ (deps get_wabt.sh)
+ (targets wasm-validate)
+ (action
+  (progn
+    (bash ./get_wabt.sh)
+    (run ls -l)
+  )
+ )
+)
 
 (rule
  (alias runtest)
- (deps test.exe check_lld.sh)
+ (deps test.exe check_lld.sh (alias wabt))
  (action 
   (progn
    (bash ./check_lld.sh)
    (run %{exe:test.exe})
    (run lld -flavor wasm testml.wasm -o test.wasm)
-   ;; TODO: get wabt validate thingy here.
-   ;; TODO: validate the wasm file via wabt
+   (run ./wasm-validate test.wasm)
   )
  )
 )
