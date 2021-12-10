@@ -41,12 +41,12 @@ export class DeployAction extends CancellableAction {
     beaconWallet: any,
     launchNetwork: string
   ): Promise<void> => {
-    if (launchNetwork === NetworkType.GRANADANET) {
+    if (launchNetwork === NetworkType.HANGZHOUNET) {
       await beaconWallet.requestPermissions({
         network: {
-          type: NetworkType.GRANADANET,
-          name: 'Granadanet',
-          rpcUrl: `https://granadanet.api.tez.ie`,
+          type: NetworkType.HANGZHOUNET,
+          name: 'Hangzhounet',
+          rpcUrl: `https://hangzhounet.api.tez.ie`,
         },
       });
     } else if (launchNetwork === NetworkType.MAINNET) {
@@ -80,12 +80,12 @@ export class DeployAction extends CancellableAction {
       MichelsonFormat.Json
     );
 
-    let networkURL = 'https://florencenet.api.tez.ie';
-    let network = { type: NetworkType.FLORENCENET };
+    let networkURL = 'https://hangzhounet.api.tez.ie';
+    let network = { type: NetworkType.HANGZHOUNET };
 
-    if (deployState.network === 'granadanet') {
-      networkURL = 'https://granadanet.api.tez.ie';
-      network = { type: NetworkType.GRANADANET };
+    if (deployState.network === 'hangzhounet') {
+      networkURL = 'https://hangzhounet.api.tez.ie';
+      network = { type: NetworkType.HANGZHOUNET };
     } else if (deployState.network === NetworkType.MAINNET) {
       networkURL = 'https://mainnet.api.tez.ie';
       network = { type: NetworkType.MAINNET };
