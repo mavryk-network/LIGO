@@ -16,4 +16,5 @@ else
     cmake ..
     cmake --build .
     mv wasm-validate ../../wasm-validate
+    mv wasm-interp ../../wasm-interp
 fi

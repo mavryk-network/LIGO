@@ -33,7 +33,7 @@ let () =
     funcs = [
       r {
         name = "hello_world";
-        ftype = r 1l;
+        ftype = "some_type2";
         locals = [];
         body = [
           r (Const (r (I32 10l)))
@@ -41,7 +41,7 @@ let () =
       };
       r {
         name = "entry";
-        ftype = r 1l;
+        ftype = "some_type2";
         locals = [];
         body = [
           r (Call "hello_world")
@@ -49,11 +49,10 @@ let () =
       };
       r {
         name = "_start";
-        ftype = r 0l;
+        ftype = "some_type2";
         locals = [];
         body = [
           r (Call "entry");
-          r Drop
         ]
       }
     ];
