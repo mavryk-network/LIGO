@@ -6,7 +6,7 @@ let tag tag : formatter -> unit -> unit = fun ppf () -> fprintf ppf tag
 
 let bool ppf b = fprintf ppf "%b" b
 
-let pair f g ppf (a , b) = fprintf ppf "%a , %a" f a g b
+let pair f g ppf (a , b) = fprintf ppf "(%a , %a)" f a g b
 
 let new_line : formatter -> unit -> unit = tag "@;"
 
@@ -20,6 +20,11 @@ let const const : formatter -> unit -> unit = fun ppf () -> fprintf ppf "%s" con
 let comment : formatter -> string -> unit = fun ppf s -> fprintf ppf "(* %s *)" s
 
 let list_sep value separator = pp_print_list ~pp_sep:separator value
+let list_sep_d x = list_sep x (tag " ,@ ")
+let list_sep_d_par f ppf lst =
+  match lst with 
+  | [] -> ()
+  | _ -> fprintf ppf " (%a)" (list_sep_d f) lst
 
 let list value = pp_print_list ~pp_sep:(tag "") value
 

@@ -3,17 +3,22 @@ import { combineReducers } from 'redux';
 import command, { CommandState } from './command';
 import compile, { CompileState } from './compile';
 import deploy, { DeployState } from './deploy';
-import dryRun, { DryRunState } from './dry-run';
+import { DryRunState, dryRun } from './dry-run';
 import editor, { EditorState } from './editor';
 import evaluateFunction, { EvaluateFunctionState } from './evaluate-function';
-import evaluateValue, { EvaluateValueState } from './evaluate-value';
+import evaluateValue, { EvaluateValueState } from './evaluate-expr';
 import examples, { ExamplesState } from './examples';
-import generateCommand, { GenerateCommandState } from './generate-command';
+import generateDeployScript, {
+  GenerateDeployScriptState,
+} from './generate-deploy-script';
 import loading, { LoadingState } from './loading';
 import result, { ResultState } from './result';
 import share, { ShareState } from './share';
+import version, { VersionState } from './version';
+import compileFunction, { CompileFunctionState } from './compile-function';
 
 export interface AppState {
+  version: VersionState;
   editor: EditorState;
   share: ShareState;
   compile: CompileState;
@@ -21,14 +26,15 @@ export interface AppState {
   deploy: DeployState;
   evaluateFunction: EvaluateFunctionState;
   evaluateValue: EvaluateValueState;
-  generateCommand: GenerateCommandState;
+  generateDeployScript: GenerateDeployScriptState;
   result: ResultState;
   command: CommandState;
   examples: ExamplesState;
   loading: LoadingState;
+  compileFunction: CompileFunctionState;
 }
 
-export default combineReducers({
+const reducer = combineReducers({
   editor,
   share,
   compile,
@@ -36,9 +42,13 @@ export default combineReducers({
   deploy,
   evaluateFunction,
   evaluateValue,
-  generateCommand,
+  generateDeployScript,
   result,
   command,
   examples,
-  loading
+  loading,
+  version,
+  compileFunction,
 });
+
+export default reducer;

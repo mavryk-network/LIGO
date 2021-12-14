@@ -79,17 +79,17 @@ type t = <
   (* Conversions to type [string] *)
 
   to_string : ?file:bool -> ?offsets:bool -> [`Byte | `Point] -> string;
-  compact   : ?file:bool -> ?offsets:bool -> [`Byte | `Point] -> string
+  compact   : ?file:bool -> ?offsets:bool -> [`Byte | `Point] -> string;
 >
 
 (** The type [region] is a synonym of [t] to use after [open Region].
  *)
-type region = t
+and region = t
 
 (** The type ['a reg] enables the concept of some value of type ['a] to
     be related to a region in a source file.
 *)
-type 'a reg = {region: t; value: 'a}
+and 'a reg = {region: t; value: 'a}
 
 (* {1 Constructors} *)
 
@@ -128,12 +128,18 @@ val min : file:string -> t
     equal. See {! Pos.equal}. Note that [r1] and [r2] can be
     ghosts.  *)
 val equal : t -> t -> bool
+val reg_equal : ('a -> 'a -> bool) -> 'a reg -> 'a reg -> bool
 
 (** The call [lt r1 r2] ("lower than") has the value [true] if, and
     only if, regions [r1] and [r2] refer to the same file, none is a
     ghost and the start position of [r1] is lower than that of
     [r2]. (See {! Pos.lt}.) *)
 val lt : t -> t -> bool
+
+(** The call [compare r1 r2] has the value 0 if [equal r1 r2] returns
+   [true]. Otherwise it returns -1 if [lt r1 r2] returns [true], and 1
+   if [lt r1 r2] returns [false]. *)
+val compare : t -> t -> int
 
 (** Given two regions [r1] and [r2], we may want the region [cover r1
     r2] that covers [r1] and [r2]. We have the property [equal (cover
@@ -143,3 +149,7 @@ val lt : t -> t -> bool
     is [r1].
  *)
 val cover : t -> t -> t
+
+val to_yojson : t -> Yojson.Safe.t
+val of_yojson : Yojson.Safe.t -> (t,string) Result.t
+val to_human_yojson : t -> Yojson.Safe.t

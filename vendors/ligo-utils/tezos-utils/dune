@@ -4,9 +4,11 @@
   (libraries
     tezos-error-monad
     tezos-stdlib-unix
-    tezos-memory-proto-alpha
+    tezos-micheline
+    tezos-base
+    data-encoding
     simple-utils
-    michelson-parser
+    base
   )
- (flags (:standard -open Simple_utils ))
+ (flags (:standard -open Core ))
 )

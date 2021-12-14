@@ -2,7 +2,9 @@
 *~
 *.merlin
 cache/*
-Version.ml
+version.ml
+/result
+/result-*
 /_opam/
 /*.pp.ligo
 /*.pp.mligo
@@ -13,3 +15,5 @@ Version.ml
 *.coverage
 /_coverage/
 /_coverage_*/
+.history
+/to-dos.html

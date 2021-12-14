@@ -1,3 +1,4 @@
+# last refactor: 2021-05-05
 .ONESHELL:
 
 all: test
@@ -12,11 +13,14 @@ install-deps:
 build-deps:
 	export PATH="/usr/local/bin$${PATH:+:}$${PATH:-}"
 #	Create opam dev switch locally for use with Ligo, add merlin/etc
-	if [ -n "`opam switch show | grep -P ".+/ligo"`" ];
-	then :; else scripts/setup_switch.sh;
+	if [ ! -d "./_opam" ];
+	then scripts/setup_switch.sh;
 	fi
-	scripts/setup_repos.sh
 	eval $$(opam config env)
+# NEW-PROTOCOL-TEMPORARY
+	git submodule init
+	git pull --recurse
+# NEW-PROTOCOL-TEMPORARY
 #	Install OCaml build dependencies for Ligo
 	scripts/install_vendors_deps.sh
 
@@ -27,6 +31,7 @@ build: build-deps
 	scripts/build_ligo_local.sh
 
 test: build
+	scripts/check_duplicate_filenames.sh || exit
 	export PATH="/usr/local/bin$${PATH:+:}$${PATH:-}"
 	eval $$(opam config env)
 	scripts/test_ligo.sh
@@ -35,22 +40,9 @@ clean:
 	dune clean
 	rm -fr _coverage_all _coverage_cli _coverage_ligo
 
-coverage: clean
-	BISECT_ENABLE=yes dune runtest --force
+coverage:
+	eval $$(opam config env)
+	find . -name '*.coverage' | xargs rm -f
+	dune runtest --instrument-with bisect_ppx --force
 	bisect-ppx-report html -o ./_coverage_all --title="LIGO overall test coverage"
-	bisect-ppx-report summary --per-file
-
-coverage-ligo: clean
-	BISECT_ENABLE=yes dune runtest src/test --force
-	bisect-ppx-report html -o ./_coverage_ligo --title="LIGO test coverage"
-	bisect-ppx-report summary --per-file
-
-coverage-doc: clean
-	BISECT_ENABLE=yes dune build @doc-test --force
-	bisect-ppx-report html -o ./_coverage_doc --title="LIGO doc coverage"
-	bisect-ppx-report summary --per-file
-
-coverage-cli: clean
-	BISECT_ENABLE=yes dune runtest src/bin/expect_tests
-	bisect-ppx-report html -o ./_coverage_cli --title="CLI test coverage"
 	bisect-ppx-report summary --per-file

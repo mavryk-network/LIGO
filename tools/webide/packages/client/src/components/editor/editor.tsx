@@ -1,3 +1,4 @@
+import { languages } from 'monaco-editor';
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import styled from 'styled-components';
@@ -8,10 +9,13 @@ import { Language } from '../../redux/types';
 import { Option, Select } from '../form/select';
 import { ShareComponent } from '../share';
 import { EditableTitleComponent } from './editable-title';
-import { MonacoComponent } from './monaco';
+import MonacoComponent from './monaco';
 
 const Container = styled.div`
   flex: 2;
+  width: inherit;
+  height: 100%;
+  order: 2;
 `;
 
 const Header = styled.div`
@@ -33,18 +37,44 @@ const StyledEditableTitleComponent = styled(EditableTitleComponent)`
   margin-left: 20px;
 `;
 
-export const EditorComponent = () => {
+const SelectLanguage = styled(Select)`
+
+  &:hover {
+    background: var(--blue_trans1);
+  }
+`;
+
+const CursorPosition = styled.div`
+  text-align: right;
+  padding: 5px 10px;
+  height: 37px;
+  background: var(--blue_trans1);
+`;
+
+
+export const EditorComponent = ({editorHeight}) => {
   const dispatch = useDispatch();
-  const title = useSelector<AppState, string>(state => state.editor.title);
+  const title = useSelector<AppState, string>(state => state.editor && state.editor.title);
   const language = useSelector<AppState, EditorState['language']>(
-    state => state.editor.language
+    state => state.editor && state.editor.language
   );
+
+  const cursorPosition = useSelector<AppState, EditorState['cursorPosition']>(
+    state => state.editor && state.editor.cursorPosition
+  );
+  
+  const getCursorPosition = () => {
+    if(cursorPosition) {
+      return `Line ${cursorPosition.lineNumber}, Column ${cursorPosition.column}`
+    }
+  }
 
   return (
     <Container>
       <Header>
         <LeftActions>
           <ShareComponent></ShareComponent>
+          {console.log('PPPP', language)}
           <StyledEditableTitleComponent
             id="editor-title"
             title={title}
@@ -53,19 +83,23 @@ export const EditorComponent = () => {
             }}
           ></StyledEditableTitleComponent>
         </LeftActions>
-        <Select
-          id="syntax-select"
-          value={language}
-          onChange={language => {
-            dispatch({ ...new ChangeLanguageAction(language) });
-          }}
-        >
-          <Option value={Language.PascaLigo}>PascaLIGO</Option>
-          <Option value={Language.CameLigo}>CameLIGO</Option>
-          <Option value={Language.ReasonLIGO}>ReasonLIGO</Option>
-        </Select>
+        <LeftActions >
+          <SelectLanguage
+            id="syntax-select"
+            value={language}
+            onChange={language => {
+              dispatch({ ...new ChangeLanguageAction(language) });
+            }}
+          >
+            <Option value={Language.PascaLigo}>PascaLIGO</Option>
+            <Option value={Language.CameLigo}>CameLIGO</Option>
+            <Option value={Language.ReasonLigo}>ReasonLIGO</Option>
+            <Option value={Language.JsLigo}>JsLIGO</Option>
+          </SelectLanguage>
+        </LeftActions>
       </Header>
-      <MonacoComponent></MonacoComponent>
+      <MonacoComponent editorHeight={editorHeight}></MonacoComponent>
+      <CursorPosition>{getCursorPosition()}</CursorPosition>
     </Container>
   );
 };

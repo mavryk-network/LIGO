@@ -19,11 +19,16 @@ export async function loadDefaultState(appBundleDirectory: string) {
   );
   const examplesList = JSON.parse(examples);
   const defaultState = {
+    version: {
+      branch: process.env['GIT_TAG'],
+      revision: process.env['GIT_COMMIT']
+    },
     compile: {},
     dryRun: {},
     deploy: {},
     evaluateValue: {},
     evaluateFunction: {},
+    generateDeployScript: {},
     editor: {
       title: ''
     },
@@ -58,6 +63,10 @@ export async function loadDefaultState(appBundleDirectory: string) {
     defaultState.evaluateFunction = {
       ...defaultState.evaluateFunction,
       ...defaultExample.evaluateFunction
+    };
+    defaultState.generateDeployScript = {
+      ...defaultState.generateDeployScript,
+      ...defaultExample.generateDeployScript
     };
     defaultState.editor = {
       ...defaultState.editor,

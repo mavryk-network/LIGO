@@ -7,12 +7,20 @@
 type colour = Red | Black
 
 type 'a t = private
-  Ext
-| Int of colour * 'a t * 'a * 'a t
+  L
+| T of colour * 'a t * 'a * 'a t
 
 val empty: 'a t
 
 val is_empty: 'a t -> bool
+
+val count : 'a t -> int
+
+val blackDepth : 'a t -> int
+
+val checkDepth_opt : 'a t -> int option
+
+val is_legal : 'a t -> bool
 
 (* The value of the call [add ~cmp choice x t] is a red-black tree
    augmenting the tree [t] with a node containing the element [x],
@@ -24,13 +32,24 @@ val is_empty: 'a t -> bool
 
 type choice = Old | New
 
-val add: cmp:('a -> 'a -> int) -> choice -> 'a -> 'a t -> 'a t
+val add: ?debug:(Format.formatter -> 'a -> unit) -> cmp:('a -> 'a -> int) -> choice -> 'a -> 'a t -> 'a t
+
+val union: cmp:('a -> 'a -> int) -> choice -> 'a t -> 'a t -> 'a t
+
+(* The value of the call [remove ~cmp x t] is a red-black tree
+   containing the same elements as [t] with the exception of the
+   element identified by [x]. The type of [x] can be different from
+   that of the elements of the tree, for example if the tree is used to
+   implement a map, x would be a [key], whereas the elements of the tree
+   would be [key, value] pairs. *)
+
+val delete: ?debug:(Format.formatter -> 'b -> unit) -> cmp:('a -> 'b -> int) -> 'a -> 'b t -> 'b t
+
+val delete_opt: ?debug:(Format.formatter -> 'b -> unit) -> cmp:('a -> 'b -> int) -> 'a -> 'b t -> 'b t option
 
 (* The value of the call [find ~cmp x t] is the element [y] belonging
    to a node of the tree [t], such that [cmp x y = true]. If none, the
    exception [Not_found] is raised. *)
-
-exception Not_found
 
 val find: cmp:('a -> 'b -> int) -> 'a -> 'b t -> 'b
 
@@ -64,3 +83,5 @@ val fold_inc: (elt:'a -> acc:'b -> 'b) -> init:'b -> 'a t -> 'b
    [init]. *)
 
 val fold_dec: (elt:'a -> acc:'b -> 'b) -> init:'b -> 'a t -> 'b
+
+val pp : (Format.formatter -> 'a -> unit) -> Format.formatter -> 'a t -> unit

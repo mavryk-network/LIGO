@@ -40,6 +40,8 @@ module Append = struct
     | Empty -> None
     | Full x -> exists_path' f x
 
+  let exists_path_to index = exists_path (fun (i,_) -> Caml.(=) i index)
+
   let empty : 'a t = Empty
 
   let size' = function
@@ -101,7 +103,6 @@ module Append = struct
   let fold empty leaf node = function
     | Empty -> empty
     | Full x -> fold' leaf node x
-
 
   let rec assoc_opt' : ('a * 'b) t' -> 'a -> 'b option = fun t k ->
     match t with

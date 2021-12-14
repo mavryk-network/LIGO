@@ -1,23 +1,33 @@
-open Cmdliner
-open Trace
-open Main.Display
 
-let error_suggest: string = "\n If you're not sure how to fix this error, you can
- do one of the following:
+let return_good v =  Proto_alpha_utils.Error_monad.return v
 
-* Visit our documentation: https://ligolang.org/docs/intro/what-and-why/
-* Ask a question on our Discord: https://discord.gg/9rhYaEt
-* Open a gitlab issue: https://gitlab.com/ligolang/ligo/issues/new
-* Check the changelog by running 'ligo changelog'\n"
+exception Error_compilation
+let return_bad v : unit Proto_alpha_utils.Error_monad.tzresult Lwt.t = (
+  if Char.(v.[String.length v - 1] = '\n') then
+    Format.eprintf "%s" v
+  else
+    Format.eprintf "%s\n" v;
+    Format.pp_print_flush Format.err_formatter ();
+    Proto_alpha_utils.Error_monad.fail_with_exn Error_compilation
+  )
 
-let toplevel ~(display_format : display_format) (x : string result) : unit Term.ret =
-  match x with
-  | Ok _ -> Format.printf "%a%!" (formatted_string_result_pp display_format) x;
-            `Ok ()
-  | Error _ ->
-    begin
-    match display_format with 
-    | `Human_readable -> print_string error_suggest ;
-    | _ -> () 
-    end ;       
-    `Error (false, Format.asprintf "%a%!" (formatted_string_result_pp display_format) x)
+
+let return_result : ?warn:bool -> ?output_file:string -> ('value, _) result -> unit Proto_alpha_utils.Error_monad.tzresult Lwt.t =
+  fun ?(warn=false) ?output_file value ->
+    let return_with_warn warns f =
+          if not (String.length (String.strip warns) = 0) && warn then
+            begin
+              Format.eprintf "%s\n" warns;
+              Format.pp_print_flush Format.err_formatter ()
+            end;
+          f ()
+    in
+    match value with
+    | Ok (v,w) ->
+      let fmt : Format.formatter = match output_file with
+        | Some file_path -> Format.formatter_of_out_channel @@ Out_channel.create file_path
+        | None -> Format.std_formatter in
+      return_with_warn w (fun () -> return_good @@ (Format.fprintf fmt "%s\n" v;
+                                                  Format.pp_print_flush fmt ()))
+    | Error (e,w) ->
+       return_with_warn w (fun () -> return_bad e)

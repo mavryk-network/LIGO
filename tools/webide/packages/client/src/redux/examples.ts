@@ -2,7 +2,8 @@ import { ExampleState } from './example';
 
 export enum ActionType {
   ChangeSelected = 'examples-change-selected',
-  ClearSelected = 'examples-clear-selected'
+  ClearSelected = 'examples-clear-selected',
+  SetDefaultList = 'set-default-examples',
 }
 
 export interface ExampleItem {
@@ -12,8 +13,13 @@ export interface ExampleItem {
 
 export interface ExamplesState {
   selected: ExampleState | null;
-  list: ExampleItem[];
+  list?: ExampleItem[];
 }
+
+// export class SetDefaultList {
+//   public readonly type = ActionType.SetDefaultList;
+//   constructor(public payload: ExamplesState['list']) {}
+// }
 
 export class ChangeSelectedAction {
   public readonly type = ActionType.ChangeSelected;
@@ -26,32 +32,30 @@ export class ClearSelectedAction {
 
 type Action = ChangeSelectedAction | ClearSelectedAction;
 
-export const DEFAULT_STATE: ExamplesState = {
+const DEFAULT_STATE = {
   selected: null,
-  list: []
+  list: [],
 };
 
-if (process.env.NODE_ENV === 'development') {
-  DEFAULT_STATE.list = [
-    { id: 'MzkMQ1oiVHJqbcfUuVFKTw', name: 'CameLIGO Contract' },
-    { id: 'FEb62HL7onjg1424eUsGSg', name: 'PascaLIGO Contract' },
-    { id: 'JPhSOehj_2MFwRIlml0ymQ', name: 'ReasonLIGO Contract' }
-  ];
-}
-
-export default (state = DEFAULT_STATE, action: Action): ExamplesState => {
+const examples = (state = DEFAULT_STATE, action: any): ExamplesState => {
   switch (action.type) {
     case ActionType.ChangeSelected:
       return {
         ...state,
-        selected: action.payload
+        selected: action.payload,
       };
     case ActionType.ClearSelected:
       return {
         ...state,
-        selected: null
+        selected: null,
       };
+    case ActionType.SetDefaultList:
+      return { ...state, list: action.value };
     default:
-      return state;
+      return {
+        ...state,
+      };
   }
 };
+
+export default examples;

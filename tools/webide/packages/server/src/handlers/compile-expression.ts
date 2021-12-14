@@ -10,12 +10,12 @@ interface CompileBody {
   format?: string;
 }
 
-const validateRequest = (body: any): { value: CompileBody; error: any } => {
+const validateRequest = (body: any): { value: CompileBody; error?: any } => {
   return joi
     .object({
       syntax: joi.string().required(),
       expression: joi.string().required(),
-      format: joi.string().optional()
+      format: joi.string().optional(),
     })
     .validate(body);
 };
@@ -30,7 +30,7 @@ export async function compileExpressionHandler(req: Request, res: Response) {
       const michelsonCode = await new LigoCompiler().compileExpression(
         body.syntax,
         body.expression,
-        body.format || 'text'
+        body.format || ''
       );
 
       res.send({ result: michelsonCode });
@@ -38,7 +38,7 @@ export async function compileExpressionHandler(req: Request, res: Response) {
       if (ex instanceof CompilerError) {
         res.status(400).json({ error: ex.message });
       } else {
-        logger.error(ex);
+        logger.error((ex as Error).message);
         res.sendStatus(500);
       }
     }

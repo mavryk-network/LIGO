@@ -1,5 +1,5 @@
 (*_*
-  name: ReasonLIGO Contract
+  name: Increment (ReasonLIGO)
   language: reasonligo
   compile:
     entrypoint: main
@@ -15,25 +15,33 @@
   evaluateFunction:
     entrypoint: add
     parameters: (5, 6)
+  generateDeployScript:
+    tool: tezos-client
+    entrypoint: main
+    storage: 0
 *_*)
+
 type storage = int;
 
-/* variant defining pseudo multi-entrypoint actions */
+type parameter =
+  Increment (int)
+| Decrement (int)
+| Reset;
 
-type action =
-  | Increment(int)
-  | Decrement(int);
+type return = (list (operation), storage);
 
-let add = ((a,b): (int, int)): int => a + b;
-let sub = ((a,b): (int, int)): int => a - b;
+// Two entrypoints
 
-/* real entrypoint that re-routes the flow based on the action provided */
+let add = ((store, delta) : (storage, int)) : storage => store + delta;
+let sub = ((store, delta) : (storage, int)) : storage => store - delta;
 
-let main = ((p,storage): (action, storage)) => {
-  let storage =
-    switch (p) {
-    | Increment(n) => add((storage, n))
-    | Decrement(n) => sub((storage, n))
-    };
-  ([]: list(operation), storage);
+/* Main access point that dispatches to the entrypoints according to
+   the smart contract parameter. */
+   
+let main = ((action, store) : (parameter, storage)) : return => {
+ (([] : list (operation)),    // No operations
+ (switch (action) {
+  | Increment (n) => add ((store, n))
+  | Decrement (n) => sub ((store, n))
+  | Reset         => 0}))
 };

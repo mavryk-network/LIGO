@@ -1,38 +1,39 @@
 (library
-  (name cli)
-  (libraries
-    simple-utils
-    cmdliner
-    ligo
-  )
-  (modules cli cli_helpers version)
-  (preprocess
-    (pps ppx_let ppx_blob bisect_ppx --conditional)
-  )
-  (preprocessor_deps (file ../../CHANGELOG.md))
-  (flags (:standard -open Simple_utils))
+ (name cli)
+ (instrumentation
+  (backend bisect_ppx))
+ (libraries simple-utils cmdliner ligo ligo_compile build repl ligo_api)
+ (modules cli cli_helpers old_cli old_cli_helpers version)
+)
+
+(library
+ (name repl)
+ (instrumentation
+  (backend bisect_ppx))
+ (libraries simple-utils cmdliner ligo build linenoise)
+ (modules repl)
 )
 
 (rule
  (targets version.ml)
- (action (with-stdout-to
-          version.ml
-          (run "sh" "-c"
-               "printf 'let hash = \"%s\"\nlet commit_date = \"%s\"\nlet job_id = \"%s\"\n' \"$(git rev-parse HEAD)\" \"$(git show --no-patch --format=%ci)\" \"${CI_JOB_ID}\""))))
+ (action
+  (with-stdout-to
+   version.ml
+   (run "sh" "-c" "printf 'let version = \"%s\"' \"${LIGO_VERSION}\""))))
+
+; build static executable with --profile static
+
+(env
+ (static
+  (flags
+   (:standard -ccopt -static -cclib "-lgmp"))))
 
 (executable
-  (name runligo)
-  (public_name ligo)
-  (libraries
-    simple-utils
-    cmdliner
-    ligo
-    cli
-  )
-  (modules runligo)
-  (package ligo)
-  (preprocess
-    (pps ppx_let ppx_blob bisect_ppx --conditional)
-  )
-  (flags (:standard -open Simple_utils))
+ (name runligo)
+ (public_name ligo)
+ (instrumentation
+  (backend bisect_ppx))
+ (libraries simple-utils cmdliner ligo cli)
+ (modules runligo)
+ (package ligo)
 )

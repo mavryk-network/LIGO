@@ -16,6 +16,8 @@
    this confusion should not arise for us.  *)
 
 type 'a t
+val to_yojson : 'a t -> Yojson.Safe.t
+val of_yojson : Yojson.Safe.t -> ('a t, string) Result.t
 
 val equal : 'a t -> 'a t -> bool
 val compare : 'a t -> 'a t -> int
@@ -43,3 +45,17 @@ val fresh_like : 'a t -> 'b t
 (* Reset the global counter. Danger, do not use... Provided for tests
    only. *)
 val reset_counter : unit -> unit
+
+val debug : 'a t -> string
+
+val is_generated : 'a t -> bool
+
+val todo_cast : 'a t -> 'b t
+
+(* Used for pretty-printing by the typer *)
+type names_for_print = { get_name_for_print : 'a . 'a t -> string }
+val with_names_for_print : names_for_print -> (unit -> unit) -> unit
+
+val internal_get_name_and_counter : 'a t -> (string * int option)
+
+val wildcard : string

@@ -1,45 +1,44 @@
 include Simple_utils.Trace
 
+module List = Simple_utils.List
 module AE = Memory_proto_alpha.Alpha_environment
-module TP = Tezos_base__TzPervasives
+module TP = Tezos_error_monad.Error_monad
 
-let of_tz_error (err:X_error_monad.error) : error_thunk =
-  let str () = X_error_monad.(to_string err) in
-  error (thunk "alpha error") str
+type tezos_alpha_error =  [`Tezos_alpha_error of TP.error]
 
-let of_alpha_tz_error err = of_tz_error (AE.Ecoproto_error err)
+let of_tz_error (err:X_error_monad.error) : tezos_alpha_error =
+  `Tezos_alpha_error err
 
-let trace_alpha_tzresult err : 'a AE.Error_monad.tzresult -> 'a result =
-  function
-  | Ok x -> ok x
-  | Error errs -> fail @@ thunk @@ patch_children (List.map of_alpha_tz_error errs) (err ())
 
-let trace_alpha_tzresult_lwt error (x:_ AE.Error_monad.tzresult Lwt.t) : _ result =
-  trace_alpha_tzresult error @@ Lwt_main.run x
+let trace_decoding_error :
+  (Data_encoding.Binary.read_error -> 'err) -> ('a, Data_encoding.Binary.read_error) Stdlib.result -> ('a,'err) result =
+  fun f err ->
+    match err with
+    | Ok x -> Ok x
+    | Error err -> Error (f err)
 
-let trace_tzresult err =
-  function
-  | Ok x -> ok x
-  | Error errs -> fail @@ thunk @@ patch_children (List.map of_tz_error errs) (err ())
-
-(* TODO: should be a combination of trace_tzresult and trace_r *)
-let trace_tzresult_r err_thunk_may_fail =
-  function
-  | Ok x -> ok x
+let trace_alpha_tzresult :
+  raise:'b raise -> (tezos_alpha_error list -> 'b) -> 'a AE.Error_monad.tzresult -> 'a =
+  fun ~raise tracer err -> match err with
+  | Ok x -> x
   | Error errs ->
-      let tz_errs = List.map of_tz_error errs in
-      match err_thunk_may_fail () with
-      | Ok (err, annotations) ->
-         ignore annotations ;
-         Error (fun () -> patch_children tz_errs (err ()))
-      | Error errors_while_generating_error ->
-          (* TODO: the complexity could be O(n*n) in the worst case,
-             this should use some catenable lists. *)
-          Error (errors_while_generating_error)
+    raise.raise @@ tracer (List.map ~f:of_tz_error @@ AE.wrap_tztrace errs)
 
-let trace_tzresult_lwt err (x:_ TP.Error_monad.tzresult Lwt.t) : _ result =
-  trace_tzresult err @@ Lwt_main.run x
+let trace_alpha_tzresult_lwt ~raise tracer (x:_ AE.Error_monad.tzresult Lwt.t) : _ =
+  trace_alpha_tzresult ~raise tracer @@ Lwt_main.run x
 
-let trace_tzresult_lwt_r err (x:_ TP.Error_monad.tzresult Lwt.t) : _ result =
-  trace_tzresult_r err @@ Lwt_main.run x
+let trace_tzresult :
+  raise: 'b raise ->
+  (tezos_alpha_error list -> _) -> ('a, TP.error list) Stdlib.result -> 'a =
+  fun ~raise tracer err -> match err with
+  | Ok x -> x
+  | Error errs -> raise.raise @@ tracer (List.map ~f:of_tz_error errs)
 
+let tz_result_to_bool : ('a, TP.error list) Stdlib.result -> bool =
+  fun err ->
+    match err with
+    | Ok _ -> true
+    | Error _ -> false
+
+let trace_tzresult_lwt ~raise err (x:_ TP.tzresult Lwt.t) : _ =
+  trace_tzresult ~raise err @@ Lwt_main.run x

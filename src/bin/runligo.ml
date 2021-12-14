@@ -1,3 +1,4 @@
-open Cmdliner
-
-let () = Term.exit @@ Cli.run ()
+let () = 
+  let argv = Sys.get_argv () in
+  let result = Cli.run ~argv () in
+  Stdlib.exit result

@@ -51,6 +51,7 @@ html[data-theme='dark'] {
   --color-primary-text: white;
   --blockquote-color: var(--ifm-navbar-background-color);
   --light-blue: var(--ifm-navbar-background-color);
+  --lighter-blue: #082e4f;
 }
 
 html {
@@ -240,6 +241,10 @@ p {
 .tabs {
   margin: 0 auto;
   border-top: none;
+}
+
+.tabs .tabs__item {
+  outline: 0;
 }
 
 .tabs .nav-tabs > div {
@@ -507,7 +512,6 @@ a:hover {
 
 #contactPage,
 #pageNotFoundPage {
-  font-weight: lighter;
   margin-top: 80px;
   margin-bottom: 80px;
 }
@@ -551,7 +555,7 @@ a:hover {
   list-style-type: none;
 }
 
-#homePage #intro #callToAction ul li {
+#homePage #intro #callToAction ul li a{
   cursor: pointer;
   font-weight: normal;
   font-size: 2em;
@@ -559,20 +563,18 @@ a:hover {
   padding: 30px 50px;
 }
 
-#homePage #intro #callToAction ul li + li {
-  margin-top: 1.8em;
+#homePage #intro #callToAction ul li.secondary a{
+  margin-top: 3.4em;
 }
 
-#homePage #intro #callToAction ul li:hover {
+#homePage #intro #callToAction ul li.primary a:hover {
   color: white;
-}
-
-#homePage #intro #callToAction ul li.primary:hover {
   background-color: var(--ifm-color-primary);
   border-left: 4px solid var(--ifm-color-primary);
 }
 
-#homePage #intro #callToAction ul li.secondary:hover {
+#homePage #intro #callToAction ul li.secondary a:hover {
+  color: white;
   background-color: var(--secondary-brand-color);
   border-left: 4px solid var(--secondary-brand-color);
 }
@@ -580,6 +582,7 @@ a:hover {
 #homePage #intro #callToAction ul li a {
   color: inherit;
   text-decoration: none;
+  display: flex;
 }
 
 #homePage #intro #preview  {
@@ -692,7 +695,7 @@ a:hover {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  font-size: 1.25em;
+  font-size: 0.85em;
   font-weight: normal;
   color: white;
 }
@@ -735,6 +738,7 @@ a:hover {
   cursor: pointer;
   background-color: var(--lighter-blue);
   border-left: 6px solid var(--blue);
+  text-decoration: none;
 }
 
 #contactPage #message .communicationOptions .option .icon {
@@ -943,7 +947,7 @@ a:hover {
     min-width: 260px;
   }
 
-  #homePage #intro #callToAction ul li + li {
+  #homePage #intro #callToAction ul li.secondary a {
     margin-top: 0;
   }
 
@@ -1057,4 +1061,12 @@ a:hover {
 .boolean-example-table > .example pre,
 .boolean-example-table > .example .codeBlockLines_src-theme-CodeBlock- {
   background-color: transparent;
+}
+
+.compactLigoIde {
+  height: 400px;
+}
+
+.compactLigoIde pre {
+  border-radius: 0px;
 }

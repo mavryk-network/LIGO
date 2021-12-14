@@ -82,7 +82,7 @@ let make ~byte ~point_num ~point_bol =
       let len = String.length string
       in (self#shift_bytes len)#add_nl
 
-    method is_ghost = (byte = Lexing.dummy_pos)
+    method is_ghost = Caml.(byte = Lexing.dummy_pos)
 
     method file = byte.Lexing.pos_fname
 
@@ -108,8 +108,8 @@ let make ~byte ~point_num ~point_bol =
           if offsets then
             "character", offset
           else "column", offset + 1 in
-        if file && self#file <> "" then
-          sprintf "File \"%s\", line %i, %s %i"
+        if file && String.(<>) self#file "" then
+          sprintf "File %S, line %i, %s %i"
                   self#file self#line horizontal value
         else sprintf "Line %i, %s %i"
                      self#line horizontal value
@@ -120,11 +120,53 @@ let make ~byte ~point_num ~point_bol =
         let horizontal =
           if offsets then self#offset mode
           else self#column mode in
-        if file && self#file <> "" then
+        if file && String.(<>) self#file "" then
           sprintf "%s:%i:%i" self#file self#line horizontal
         else
           sprintf "%i:%i" self#line horizontal
 end
+
+
+let position_to_yojson x =
+  `Assoc
+    ["pos_fname", `String x.Lexing.pos_fname;
+      "pos_lnum", `Int x.Lexing.pos_lnum;
+      "pos_bol", `Int x.Lexing.pos_bol;
+      "pos_cnum", `Int x.Lexing.pos_cnum]
+
+let position_of_yojson x =
+  match x with
+  | `Assoc
+    ["pos_fname", `String pos_fname;
+      "pos_lnum", `Int pos_lnum;
+      "pos_bol", `Int pos_bol;
+      "pos_cnum", `Int pos_cnum] ->
+      Ok (Lexing.{pos_fname; pos_lnum; pos_bol; pos_cnum})
+  | _ ->
+      Utils.error_yojson_format "{pos_fname: string, pos_lnum: int, pos_bol: int, pos_cnum: int}"
+
+let to_yojson x =
+  `Assoc
+    ["byte", position_to_yojson x#byte;
+      "point_num", `Int (x#point_num);
+      "point_bol", `Int (x#point_bol)
+    ]
+
+let to_human_yojson x =
+  `Assoc
+    [("file", `String x#byte.Lexing.pos_fname);
+     ("line", `Int x#byte.Lexing.pos_lnum);
+     ("col", `Int (x#point_num - x#point_bol))]
+
+let of_yojson x =
+  match x with
+  | `Assoc ["byte", byte;
+            "point_num", `Int point_num;
+            "point_bol", `Int point_bol] ->
+     Stdlib.Result.map (fun byte -> make ~byte ~point_num ~point_bol)
+                       (position_of_yojson byte)
+  | _ ->
+      Utils.error_yojson_format "{byte: Lexing.position, point_num: int, point_bol: int}\nwhere Lexing.position is {pos_fname: string, pos_lnum: int, pos_bol: int, pos_cnum: int}"
 
 let from_byte byte =
   let point_num = byte.Lexing.pos_cnum
@@ -134,13 +176,19 @@ let from_byte byte =
 let ghost = make ~byte:Lexing.dummy_pos ~point_num:(-1) ~point_bol:(-1)
 
 let min ~file =
-  let pos = make ~byte:Lexing.dummy_pos ~point_num:0 ~point_bol:0
-  in pos#set_file file
+  let min_byte = Lexing.{
+    pos_fname = file;
+    pos_lnum  = 1;
+    pos_bol   = 0;
+    pos_cnum  = 0
+  }
+  in make ~byte:min_byte ~point_num:0 ~point_bol:0
+
 
 (* Comparisons *)
 
 let equal pos1 pos2 =
-  pos1#file = pos2#file && pos1#byte_offset = pos2#byte_offset
+  String.equal pos1#file pos2#file && pos1#byte_offset = pos2#byte_offset
 
 let lt pos1 pos2 =
-  pos1#file = pos2#file && pos1#byte_offset < pos2#byte_offset
+  String.equal pos1#file pos2#file && pos1#byte_offset < pos2#byte_offset

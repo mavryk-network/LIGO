@@ -1,0 +1,8 @@
+(library
+ (name scopes)
+ (public_name ligo.scopes)
+ (instrumentation
+  (backend bisect_ppx))
+ (libraries main_errors ligo_compile simple-utils self_ast_core ast_typed
+   compiler_options)
+)

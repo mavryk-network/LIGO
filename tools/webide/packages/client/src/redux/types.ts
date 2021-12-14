@@ -1,22 +1,20 @@
 export enum Language {
   PascaLigo = 'pascaligo',
   CameLigo = 'cameligo',
-  ReasonLIGO = 'reasonligo'
+  ReasonLigo = 'reasonligo',
+  JsLigo = 'jsligo',
 }
 
-export enum Command {
+export enum CommandType {
   Compile = 'compile',
+  CompileFunction = 'compile-function',
   DryRun = 'dry-run',
-  EvaluateValue = 'evaluate-value',
+  EvaluateValue = 'evaluate-expr',
   EvaluateFunction = 'evaluate-function',
   Deploy = 'deploy',
-  GenerateCommand = 'generate-command'
+  GenerateDeployScript = 'generate-deploy-script',
 }
 
 export enum Tool {
-  TezosClient = 'tezos-client'
-}
-
-export enum ToolCommand {
-  Originate = 'originate'
+  TezosClient = 'tezos-client',
 }

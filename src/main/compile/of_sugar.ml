@@ -1,25 +1,17 @@
-open Trace
 open Ast_sugar
-open Sugar_to_core
+open Desugaring
 
-type form = 
-  | Contract of string
-  | Env
+let compile (m : module_) : Ast_core.module_  =
+  compile_module m
 
-let compile (program : program) : Ast_core.program result =
-  compile_program program
-
-let compile_expression (e : expression) : Ast_core.expression result =
+let compile_expression (e : expression) : Ast_core.expression  =
   compile_expression e
 
-let pretty_print formatter (program : program) = 
-  PP.program formatter program
-
-let list_declarations (program : program) : string list =
+let list_declarations (m : module_) : string list =
   List.fold_left
-    (fun prev el -> 
+    ~f:(fun prev el ->
       let open Location in
       match el.wrap_content with
-      | Declaration_constant (var,_,_,_) -> (Var.to_name var)::prev
-      | _ -> prev) 
-    [] program
+      | Declaration_constant {binder;_} -> (Simple_utils.Var.to_name binder.var.wrap_content)::prev
+      | _ -> prev)
+    ~init:[] m

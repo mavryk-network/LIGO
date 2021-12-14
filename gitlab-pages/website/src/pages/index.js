@@ -69,7 +69,8 @@ Prism.languages = {
       /(^|[^\\])\/\*[\s\S]*?\*\//,
       /\(\*[\s\S]*?\*\)/,   
       /\/\/.*/   
-    ]}
+    ]},
+  jsligo: Prism.languages.typescript
 };
 
 
@@ -88,7 +89,7 @@ const FEATURES = [
   {
     image: 'img/easy-integration.svg',
     title: 'Easy Integration',
-    content: 'You can use LIGO as a NodeJS library with Granary'
+    content: 'You can use LIGO as a Node.js library with Truffle.'
   }
 ];
 
@@ -100,9 +101,9 @@ const PARTNERS = [
     pinned: true
   },
   {
-    name: 'Tocqueville Group',
+    name: 'TQ Tezos',
     image: 'img/tq-logo.svg',
-    link: 'https://tqgroup.io/',
+    link: 'https://tqtezos.com/',
     pinned: true
   },
   {
@@ -144,19 +145,23 @@ function HomePage() {
         flexDirection: 'column'
       }}>
         <div id="intro" className="centered">
-        <div id="callToAction">
-          <ul>
-            <li className="primary">
-              <a href="https://ide.ligolang.org">Try Online</a>
-            </li>
-            <li className="secondary">
-              <a href={useBaseUrl('/docs/intro/installation')}>Install</a>
-            </li>
+          <div id="callToAction">
+            <ul>
+              <li className="primary">
+                <a href="https://ide.ligolang.org">
+                  Try Online
+                </a>
+              </li>
+              <li className="secondary">
+                <a href={useBaseUrl('/docs/intro/installation')}>
+                  Install
+                </a>
+              </li>
           </ul>
         </div>
         <div id="preview">
           <h1>A friendly Smart Contract Language for Tezos</h1>
-          <p>Tezos was never so easy</p>
+          <p>Smart contracts were never so easy</p>
           <CodeExamples /> 
         </div>
       </div>

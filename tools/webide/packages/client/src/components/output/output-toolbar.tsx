@@ -1,13 +1,12 @@
 import { faCopy, faDownload } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import React from 'react';
-import { useSelector } from 'react-redux';
+import React, {FC} from 'react';
+import { connect } from 'react-redux';
 import styled from 'styled-components';
 
-import { AppState } from '../../redux/app';
-import { ResultState } from '../../redux/result';
 import { Item, Toolbar } from '../toolbar';
 import { Tooltip } from '../tooltip';
+import { Statusbar } from '../statusBar';
 
 const Divider = styled.div`
   display: block;
@@ -23,39 +22,67 @@ const Link = styled.a`
   opacity: 1;
 `;
 
-export const OutputToolbarComponent = (props: {
-  showTryMichelson?: boolean;
-  onCopy?: () => void;
-  onDownload?: () => void;
-}) => {
-  const output = useSelector<AppState, ResultState['output']>(
-    state => state.result.output
-  );
+interface propsTypes {
+    showTryMichelson?: boolean;
+    onCopy?: () => void;
+    onDownload?: () => void;
+  }
 
-  return (
-    <Toolbar>
-      <Item onClick={() => props.onCopy && props.onCopy()}>
-        <FontAwesomeIcon icon={faCopy}></FontAwesomeIcon>
-        <Tooltip>Copy</Tooltip>
-      </Item>
-      <Item onClick={() => props.onDownload && props.onDownload()}>
-        <FontAwesomeIcon icon={faDownload}></FontAwesomeIcon>
-        <Tooltip>Download</Tooltip>
-      </Item>
-      {props.showTryMichelson && <Divider></Divider>}
-      {props.showTryMichelson && (
-        <Item>
-          <Link
-            target="_blank"
-            rel="noopener noreferrer"
-            href={`https://try-michelson.tzalpha.net/?source=${encodeURIComponent(
-              output
-            )}`}
-          >
-            View in Try-Michelson IDE
-          </Link>
-        </Item>
-      )}
-    </Toolbar>
-  );
+  interface stateTypes {
+    hasError?: boolean;
+    output?: string;
+  }
+
+
+const OutputToolbarComponent: FC<propsTypes & stateTypes> = (props) => {
+
+  const {showTryMichelson, onCopy, onDownload, hasError, output} = props
+  const downloadResult = output ? output : ''
+
+  const renderResult = () => {
+    if(!hasError) {
+      return (
+        <Toolbar>
+          <Item onClick={() => onCopy && onCopy()}>
+            <FontAwesomeIcon icon={faCopy}></FontAwesomeIcon>
+            <Tooltip>Copy</Tooltip>
+          </Item>
+          <Item onClick={() => onDownload && onDownload()}>
+            <FontAwesomeIcon icon={faDownload}></FontAwesomeIcon>
+            <Tooltip>Download</Tooltip>
+          </Item>
+          {showTryMichelson && <Divider></Divider>}
+          {showTryMichelson && (
+            <Item>
+              <Link
+                target="_blank"
+                rel="noopener noreferrer"
+                href={`https://try-michelson.com/?source=${encodeURIComponent(
+                  downloadResult
+                )}`}
+              >
+                View in Try-Michelson IDE
+              </Link>
+            </Item>
+          )}
+        </Toolbar>
+      );
+    }
+    else {
+      return (
+        <><Statusbar error={hasError} /></>
+      );
+    }
+  };
+  return <div>{renderResult()}</div>;
 };
+
+function mapStateToProps(state) {
+  const { result } = state
+  return { 
+    output: result.output,
+    hasError: result.error
+   }
+}
+
+export default connect(mapStateToProps, null)(OutputToolbarComponent)

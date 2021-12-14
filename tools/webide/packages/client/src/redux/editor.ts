@@ -1,11 +1,22 @@
-import { ActionType as ExamplesActionType, ChangeSelectedAction as ChangeSelectedExampleAction } from './examples';
+import {
+  ActionType as ExamplesActionType,
+  ChangeSelectedAction as ChangeSelectedExampleAction,
+} from './examples';
 import { Language } from './types';
+import {} from './actions/editor';
 
 export enum ActionType {
   ChangeLanguage = 'editor-change-language',
   ChangeCode = 'editor-change-code',
   ChangeDirty = 'editor-change-dirty',
-  ChangeTitle = 'editor-change-title'
+  ChangeTitle = 'editor-change-title',
+  ChangeCursorPosition = 'editor-change-cursor-position',
+  ChangeLastEditedTime = 'editor-last-edited-time',
+}
+
+export interface CursorPosition {
+  lineNumber: Number;
+  column: Number;
 }
 
 export interface EditorState {
@@ -13,6 +24,8 @@ export interface EditorState {
   code: string;
   title: string;
   dirty: boolean;
+  cursorPosition?: CursorPosition | null;
+  lastEditedTime?: Date | null;
 }
 
 export class ChangeLanguageAction {
@@ -35,50 +48,80 @@ export class ChangeTitleAction {
   constructor(public payload: EditorState['title']) {}
 }
 
+export class ChangeCursorPositionAction {
+  public readonly type = ActionType.ChangeCursorPosition;
+  constructor(public payload: EditorState['cursorPosition']) {}
+}
+
+export class ChangeLastEditedTimeAction {
+  public readonly type = ActionType.ChangeLastEditedTime;
+  constructor(public payload: EditorState['lastEditedTime']) {}
+}
+
 type Action =
   | ChangeCodeAction
   | ChangeLanguageAction
   | ChangeDirtyAction
   | ChangeTitleAction
-  | ChangeSelectedExampleAction;
+  | ChangeSelectedExampleAction
+  | ChangeCursorPositionAction
+  | ChangeLastEditedTimeAction;
 
 const DEFAULT_STATE: EditorState = {
   language: Language.CameLigo,
   code: '',
   title: '',
-  dirty: false
+  dirty: false,
+  cursorPosition: null,
+  lastEditedTime: null,
 };
 
-export default (state = DEFAULT_STATE, action: Action): EditorState => {
+const editor = (state, action: Action): EditorState => {
+  if (!state) {
+    state = DEFAULT_STATE;
+  }
   switch (action.type) {
     case ExamplesActionType.ChangeSelected:
       return {
         ...state,
-        ...(!action.payload
-          ? DEFAULT_STATE
-          : { ...action.payload.editor, title: action.payload.name })
+        ...action.payload?.editor,
+        title: action.payload?.name
+          ? action.payload.name
+          : action.payload?.editor.title,
       };
     case ActionType.ChangeLanguage:
       return {
         ...state,
-        language: action.payload
+        language: action.payload,
       };
     case ActionType.ChangeCode:
       return {
         ...state,
-        code: action.payload
+        code: action.payload,
       };
     case ActionType.ChangeDirty:
       return {
         ...state,
-        dirty: action.payload
+        dirty: action.payload,
       };
     case ActionType.ChangeTitle:
       return {
         ...state,
-        title: action.payload
+        title: action.payload,
+      };
+    case ActionType.ChangeCursorPosition:
+      return {
+        ...state,
+        cursorPosition: action.payload,
+      };
+    case ActionType.ChangeLastEditedTime:
+      return {
+        ...state,
+        lastEditedTime: action.payload,
       };
     default:
-      return state;
+      return { ...state };
   }
 };
+
+export default editor;

@@ -1,25 +1,22 @@
-open Trace
+open Main_errors
+open Simple_utils.Trace
 open Ast_imperative
-open Imperative_to_sugar
+open Purification
 
-type form = 
-  | Contract of string
-  | Env
+let compile ~raise (m : module_) : Ast_sugar.module_ =
+  trace ~raise purification_tracer @@ compile_module m
 
-let compile (program : program) : Ast_sugar.program result =
-  compile_program program
+let compile_expression ~raise (e : expression) : Ast_sugar.expression =
+  trace ~raise purification_tracer @@ compile_expression ~last:true e
 
-let compile_expression (e : expression) : Ast_sugar.expression result =
-  compile_expression e
+let pretty_print formatter (m : module_) =
+  PP.module_ formatter m
 
-let pretty_print formatter (program : program) = 
-  PP.program formatter program
-
-let list_declarations (program : program) : string list =
+let list_declarations (m : module_) : string list =
   List.fold_left
-    (fun prev el -> 
+    ~f:(fun prev el ->
       let open Location in
       match el.wrap_content with
-      | Declaration_constant (var,_,_,_) -> (Var.to_name var)::prev
-      | _ -> prev) 
-    [] program
+      | Declaration_constant {binder;_} -> (Simple_utils.Var.to_name binder.var.wrap_content)::prev
+      | _ -> prev)
+    ~init:[] m

@@ -1,6 +1,7 @@
 // Test while loops in PascaLIGO
 
-function counter (var n : nat) : nat is
+// recursive to test a bugfix
+recursive function counter (var n : nat) : nat is
   block {
     var i : nat := 0n;
     while i < n block {
@@ -15,7 +16,8 @@ function while_sum (var n : nat) : nat is
     while i < n block {
       i := i + 1n;
       r := r + i
-    }
+    };
+    var _ := i;
   } with r
 
 function for_sum (var n : nat) : int is
@@ -27,7 +29,16 @@ function for_sum (var n : nat) : int is
       }
   } with acc
 
-function for_collection_list (var nee : unit) : (int * string) is
+function for_sum_step (var n : nat) : int is
+  block {
+    var acc : int := 0;
+    for i := 1 to int (2n*n) step 2
+      block {
+        acc := acc + i
+      }
+  } with acc
+
+function for_collection_list (var _ : unit) : (int * string) is
   block {
     var acc : int := 0;
     var st : string := "to";
@@ -39,7 +50,7 @@ function for_collection_list (var nee : unit) : (int * string) is
       }
   } with (acc, st)
 
-function for_collection_set (var nee : unit) : int * string is
+function for_collection_set (var _ : unit) : int * string is
   block {
     var acc : int := 0;
     var st : string := "to";
@@ -50,7 +61,7 @@ function for_collection_set (var nee : unit) : int * string is
     }
   } with (acc, st)
 
-function for_collection_if_and_local_var (var nee : unit) : int is
+function for_collection_if_and_local_var (var _ : unit) : int is
   block {
     var acc : int := 0;
     const theone : int = 1;
@@ -63,7 +74,7 @@ function for_collection_if_and_local_var (var nee : unit) : int is
     }
   } with acc
 
-function for_collection_rhs_capture (var nee : unit) : int is
+function for_collection_rhs_capture (var _ : unit) : int is
   block {
     var acc : int := 0;
     const mybigint : int = 1000;
@@ -74,7 +85,7 @@ function for_collection_rhs_capture (var nee : unit) : int is
     }
   } with acc
 
-function for_collection_proc_call (var nee : unit) : int is
+function for_collection_proc_call (var _ : unit) : int is
   block {
     var acc : int := 0;
     var myset : set (int) := set [1; 2; 3];
@@ -85,7 +96,7 @@ function for_collection_proc_call (var nee : unit) : int is
     }
   } with acc
 
-function for_collection_comp_with_acc (var nee : unit) : int is
+function for_collection_comp_with_acc (var _ : unit) : int is
   block {
     var myint : int := 0;
     var mylist : list (int) := list [1; 10; 15];
@@ -95,7 +106,7 @@ function for_collection_comp_with_acc (var nee : unit) : int is
     }
   } with myint
 
-function for_collection_with_patches (var nee : unit) : map (string,int) is
+function for_collection_with_patches (var _ : unit) : map (string,int) is
   block {
     var myint : int := 12;
     var mylist : list (string) := list ["I"; "am"; "foo"];
@@ -105,16 +116,16 @@ function for_collection_with_patches (var nee : unit) : map (string,int) is
     }
   } with mymap
 
-function for_collection_empty (var nee : unit) : int is
+function for_collection_empty (var _ : unit) : int is
   block {
     var acc : int := 0;
     var myset : set(int) := set [1; 2; 3];
-    for x in set myset block {
+    for _x in set myset block {
       skip
     }
   } with acc
 
-function for_collection_map_kv (var nee : unit) : int * string is
+function for_collection_map_kv (var _ : unit) : int * string is
   block {
     var acc : int := 0;
     var st : string := "";
@@ -125,16 +136,7 @@ function for_collection_map_kv (var nee : unit) : int * string is
     }
   } with (acc, st)
 
-function for_collection_map_k (var nee : unit) : string is
-  block {
-    var st : string := "";
-    var mymap : map (string, int) := map ["1" -> 1; "2" -> 2; "3" -> 3];
-    for k in map mymap block {
-      st := st ^ k
-    }
-  } with st
-
-function nested_for_collection (var nee : unit) : int * string is
+function nested_for_collection (var _ : unit) : int * string is
   block {
     var myint : int := 0;
     var mystoo : string := "";
@@ -153,7 +155,7 @@ function nested_for_collection (var nee : unit) : int * string is
     }
   } with (myint, mystoo)
 
-function nested_for_collection_local_var (var nee : unit) : int*string is
+function nested_for_collection_local_var (var _ : unit) : int*string is
   block {
     var myint : int := 0;
     var myst : string := "";
@@ -174,12 +176,12 @@ function dummy (const n : nat) : nat is block {
   while False block { skip }
 } with n
 
-function inner_capture_in_conditional_block (var nee : unit) : bool * int is
+function inner_capture_in_conditional_block (var _ : unit) : bool * int is
   block {
     var count : int := 1;
     var ret : bool := False;
     var mylist : list (int) := list [1; 2; 3];
-    for it1 in list mylist block {
+    for _it1 in list mylist block {
       for it2 in list mylist block {
         if count = it2 then ret := not (ret) else skip
       };

@@ -1,71 +1,68 @@
+open Main_errors
 open Tezos_utils
 open Proto_alpha_utils
 open Trace
 
-module Errors = struct
-(*
-  TODO: those errors should have been caught in the earlier stages on the ligo pipeline
-  build_contract is a kind of security net
-*)
-  let title_type_check_msg () = "generated Michelson contract failed to typecheck"
-  let bad_parameter c () =
-    let message () =
-      let code = Format.asprintf "%a" Michelson.pp c in
-      "bad contract parameter type (some michelson types are forbidden as contract parameter):\n"^code in
-    error title_type_check_msg message
-  let bad_storage c () =
-    let message () =
-      let code = Format.asprintf "%a" Michelson.pp c in
-      "bad storage type (some michelson types are forbidden as contract storage):\n"^code in
-    error title_type_check_msg message
-  let bad_contract c () =
-    let message () =
-      let code = Format.asprintf "%a" Michelson.pp c in
-      "bad contract type\n"^code in
-    error title_type_check_msg message
-  let ran_out_of_gas () =
-    let message () = "Ran out of gas!" in
-    error title_type_check_msg message
-  let unknown () =
-    let message () =
-      "unknown error" in
-    error title_type_check_msg message
-end
+(* should preserve locations, currently wipes them *)
+let build_contract ~raise :
+  ?disable_typecheck:bool ->
+  Stacking.compiled_expression ->
+  (string * Stacking.compiled_expression) list -> _ Michelson.michelson  =
+    fun ?(disable_typecheck= false) compiled views ->
+      let views =
+        List.map
+          ~f:(fun (name, view) ->
+            let (view_param_ty, ret_ty) = trace_option ~raise (main_entrypoint_not_a_function) @@ (* remitodo error specific to views*)
+              Self_michelson.fetch_views_ty view.expr_ty
+            in
+            (name, view_param_ty, ret_ty, view.expr)
+          )
+          views
+      in
+      let (param_ty, storage_ty) = trace_option ~raise (main_entrypoint_not_a_function) @@
+        Self_michelson.fetch_contract_ty_inputs compiled.expr_ty in
+      let expr = compiled.expr in
+      let contract =
+        Michelson.lcontract
+          Location.dummy
+          Location.dummy param_ty
+          Location.dummy storage_ty
+          Location.dummy expr
+          Location.dummy views in
+      if disable_typecheck then
+        contract
+      else
+        let contract' =
+          Trace.trace_tzresult_lwt ~raise (typecheck_contract_tracer contract)
+            (Memory_proto_alpha.prims_of_strings contract) in
+        let _ = Trace.trace_tzresult_lwt ~raise (typecheck_contract_tracer contract) @@
+          Proto_alpha_utils.Memory_proto_alpha.typecheck_contract contract' in
+        contract
 
-let build_contract : ?disable_typecheck:bool -> Compiler.compiled_expression -> Michelson.michelson result =
-  fun ?(disable_typecheck= false) compiled ->
-  let%bind ((Ex_ty _param_ty),(Ex_ty _storage_ty)) = Self_michelson.fetch_contract_inputs compiled.expr_ty in
-  let%bind param_michelson =
-    Trace.trace_tzresult_lwt (simple_error "Could not unparse parameter") @@
-    Proto_alpha_utils.Memory_proto_alpha.unparse_ty_michelson _param_ty in
-  let%bind storage_michelson =
-    Trace.trace_tzresult_lwt (simple_error "Could not unparse storage") @@
-    Proto_alpha_utils.Memory_proto_alpha.unparse_ty_michelson _storage_ty in
-  let contract = Michelson.contract param_michelson storage_michelson compiled.expr in
-  if disable_typecheck then
-    ok contract
-  else
-    let%bind res =
-      Trace.trace_tzresult_lwt (simple_error "Could not typecheck the code") @@
-      Proto_alpha_utils.Memory_proto_alpha.typecheck_contract contract in
-    match res with
-    | Type_checked  -> ok contract
-    | Err_parameter -> fail @@ Errors.bad_parameter contract ()
-    | Err_storage   -> fail @@ Errors.bad_storage contract ()
-    | Err_contract  -> fail @@ Errors.bad_contract contract ()
-    | Err_gas       -> fail @@ Errors.ran_out_of_gas ()
-    | Err_unknown   -> fail @@ Errors.unknown ()
+let measure ~raise = fun m ->
+  Trace.trace_tzresult_lwt ~raise (main_could_not_serialize) @@
+    Proto_alpha_utils.Measure.measure m
 
-type check_type = Check_parameter | Check_storage
-let assert_equal_contract_type : check_type -> Compiler.compiled_expression -> Compiler.compiled_expression -> unit result =
-  fun c compiled_prg compiled_param ->
-    let%bind (Ex_ty expected_ty) =
-      let%bind (c_param_ty,c_storage_ty) = Self_michelson.fetch_contract_inputs compiled_prg.expr_ty in
-      match c with
-      | Check_parameter -> ok c_param_ty
-      | Check_storage -> ok c_storage_ty in
-    let (Ex_ty actual_ty) = compiled_param.expr_ty in
-    let%bind _ = 
-      Trace.trace_tzresult (simple_error "Passed parameter does not match the contract type") @@
-      Proto_alpha_utils.Memory_proto_alpha.assert_equal_michelson_type expected_ty actual_ty in
-    ok ()
+(* find pairs of canonical Michelson locations, and the original Ligo
+   locations recorded there by the compiler *)
+let source_map contract =
+  let open Tezos_micheline in
+  let (_, locs) = Micheline.extract_locations contract in
+  let module LocSet = Caml.Set.Make(struct type t = Location.t ;; let compare = Location.compare end) in
+  let ignored = LocSet.of_list [Location.dummy; Location.generated] in
+  List.filter ~f:(fun (_, loc) -> not (LocSet.mem loc ignored)) locs
+
+(* find pairs of "canonical" and concrete Michelson locations by
+   printing and then parsing again *)
+let michelson_location_map contract =
+  let open Tezos_micheline in
+  let contract = Tezos_micheline.Micheline_printer.printable (fun s -> s) (Tezos_micheline.Micheline.strip_locations contract) in
+  let contract = Format.asprintf "%a" Micheline_printer.print_expr contract in
+  match Micheline_parser.(no_parsing_error (tokenize contract)) with
+  | Error _ -> Stdlib.failwith (Format.asprintf "TODO error tokenizing Michelson %s" __LOC__)
+  | Ok contract ->
+    match Micheline_parser.(no_parsing_error (parse_expression contract)) with
+    | Error _ -> Stdlib.failwith (Format.asprintf "TODO error parsing Michelson %s" __LOC__)
+    | Ok contract ->
+      let (_, clocs) = Micheline.extract_locations contract in
+      clocs

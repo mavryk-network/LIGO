@@ -1,2 +1,2 @@
-open Cmdliner
-val run : ?argv:string array -> unit -> unit Term.result
+
+val run : ?argv:string array -> unit -> int

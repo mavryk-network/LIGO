@@ -1,3 +1,3 @@
-import { SchemaMigrationV2 } from './share-v2';
+import { SchemaMigrationV4 } from './share-v4';
 
-export default new SchemaMigrationV2();
+export default new SchemaMigrationV4();

@@ -1,33 +1,73 @@
 open Test_helpers
-open Trace
+module Trace = Simple_utils.Trace
+open Simple_utils.Trace
+open Main_errors
 
-type 'a sdata = { erroneous_source_file : string ; parser : string -> 'a result }
+type ('a,'err) sdata = {
+  erroneous_source_file : string ;
+  preproc :raise:'err raise -> string -> Buffer.t * (string * string) list;
+  parser : raise:'err raise -> Buffer.t -> 'a
+}
+
 let pascaligo_sdata = {
-  erroneous_source_file = "../passes/1-parser/pascaligo/all.ligo" ;
-  parser = Parser.Pascaligo.parse_expression }
+  erroneous_source_file =
+    "../passes/02-parsing/pascaligo/all.ligo" ;
+  preproc =
+    (fun ~raise s -> trace ~raise preproc_tracer @@
+    fun ~raise -> Trace.from_result ~raise @@
+    Preprocessing.Pascaligo.preprocess_string [] s);
+  parser =
+    fun ~raise buffer -> trace ~raise parser_tracer @@
+      fun ~raise -> Parsing.Pascaligo.parse_expression buffer ~raise
+}
+
 let cameligo_sdata = {
-  erroneous_source_file = "../passes/1-parser/cameligo/all.mligo" ;
-  parser = Parser.Cameligo.parse_expression }
+  erroneous_source_file =
+    "../passes/02-parsing/cameligo/all.mligo";
+  preproc =
+    (fun ~raise s -> trace ~raise preproc_tracer @@
+    fun ~raise -> Trace.from_result ~raise @@
+    Preprocessing.Cameligo.preprocess_string [] s);
+  parser =
+    fun ~raise buffer -> trace ~raise parser_tracer (
+    Parsing.Cameligo.parse_expression buffer)
+}
+
 let reasonligo_sdata = {
-  erroneous_source_file = "../passes/1-parser/reasonligo/all.religo" ;
-  parser = Parser.Reasonligo.parse_expression }
+  erroneous_source_file =
+    "../passes/02-parsing/reasonligo/all.religo" ;
+  preproc =
+    (fun ~raise s -> trace ~raise preproc_tracer @@
+    fun ~raise -> Trace.from_result ~raise @@
+    Preprocessing.Reasonligo.preprocess_string [] s);
+  parser =
+    fun ~raise buffer -> trace ~raise parser_tracer (
+    Parsing.Reasonligo.parse_expression buffer)
+}
 
 let get_exp_as_string filename =
   let lines = ref [] in
-  let chan = open_in filename in
+  let chan = In_channel.create filename in
   try
     while true; do
-      lines := input_line chan :: !lines
+      lines := In_channel.input_line_exn chan :: !lines
     done; !lines
   with End_of_file ->
-    close_in chan;
-    List.rev !lines ;;
+    In_channel.close chan;
+    List.rev !lines
 
-let assert_syntax_error sdata () =
-  let%bind _l = bind_iter_list
-    (fun entry -> Assert.assert_fail @@ sdata.parser entry)
-    (get_exp_as_string sdata.erroneous_source_file) in
-  ok ()
+let assert_syntax_error ~raise sdata () =
+  let aux entry =
+    Format.printf "Entry : <%s>%!\n" entry ;
+    let c_unit,_ = sdata.preproc ~raise entry in
+    Assert.assert_fail ~raise (test_internal __LOC__) @@ 
+      sdata.parser c_unit;
+    Format.printf "Parsed%!\n" ;
+    ()
+  in
+  let exps = get_exp_as_string sdata.erroneous_source_file in
+  List.iter ~f:aux exps
+
 
 let () =
   Printexc.record_backtrace true ;

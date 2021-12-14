@@ -1,26 +1,33 @@
-open Trace
 open Helpers
 
-let compile (source_filename:string) syntax : Ast_imperative.program result =
-  let%bind syntax = syntax_to_variant syntax (Some source_filename) in
-  let%bind abstract = parsify syntax source_filename in
-  ok abstract
+type file_path = string
+type module_name = string
 
-let compile_string (source:string) syntax : Ast_imperative.program result =
-  let%bind abstract = parsify_string syntax source in
-  ok abstract
+type c_unit = Buffer.t * (file_path * module_name) list
 
-let compile_expression : v_syntax -> string -> Ast_imperative.expression result =
-    fun syntax exp ->
-  parsify_expression syntax exp
+(* we should have on for filename with syntax_opt and one in case of no file *)
+let extract_meta ~raise syntax file_name : meta =
+  let syntax   = syntax_to_variant ~raise (Syntax_name syntax) (Some file_name) in
+  {syntax}
 
-let compile_contract_input : string -> string -> v_syntax -> Ast_imperative.expression result =
-    fun storage parameter syntax ->
-  let%bind (storage,parameter) = bind_map_pair (compile_expression syntax) (storage,parameter) in
-  ok @@ Ast_imperative.e_pair storage parameter
+let make_meta ~raise syntax file_name_opt : meta =
+  let syntax   = syntax_to_variant ~raise (Syntax_name syntax) file_name_opt in
+  {syntax}
 
-let pretty_print source_filename syntax =
-  Helpers.pretty_print syntax source_filename
+let make_meta_from_syntax syntax : meta =
+  {syntax}
 
-let preprocess source_filename syntax =
-  Helpers.preprocess syntax source_filename
+let compile ~raise ~options ~meta (source_filename:string) : c_unit  =
+  preprocess_file ~raise ~options ~meta source_filename
+
+let compile_string ~raise ~options ~meta source : c_unit  =
+  preprocess_string ~raise ~options ~meta source
+
+let compile_string_without_preproc source : c_unit  =
+  let buffer = Buffer.create 0 in
+  Buffer.add_string buffer source;
+  (buffer, [])
+
+let compile_contract_input ~raise : options:Compiler_options.t -> meta:meta -> string -> string -> c_unit * c_unit =
+    fun ~options ~meta parameter storage ->
+  Simple_utils.Pair.map ~f:(compile_string ~raise ~options ~meta) (parameter,storage)

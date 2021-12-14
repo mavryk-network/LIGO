@@ -1,308 +1,279 @@
+module Location = Simple_utils.Location
+module Var      = Simple_utils.Var
+module List     = Simple_utils.List
+include Enums
+
+module SMap = Simple_utils.Map.Make(String)
+
+type location = Location.t
+type 'a location_wrap = 'a Location.wrap
+
+type attributes = string list
+type known_attributes = {
+  inline: bool ;
+  no_mutation: bool;
+  view : bool;
+  public: bool;
+}
+
 type expression_
-and expression_variable = expression_ Var.t
+and expression_variable = expression_ Var.t Location.wrap
+let expression_variable_to_yojson var = Location.wrap_to_yojson (Var.to_yojson) var
+let expression_variable_of_yojson var = Location.wrap_of_yojson (Var.of_yojson) var
+let equal_expression_variable t1 t2 = Location.equal_content ~equal:Var.equal t1 t2
+let compare_expression_variable t1 t2 = Location.compare_content ~compare:Var.compare t1 t2
+
 type type_
 and type_variable = type_ Var.t
+let type_variable_to_yojson var = Var.to_yojson var
+let type_variable_of_yojson var = Var.of_yojson var
+type module_variable = string
+let module_variable_to_yojson var = `String var
+let module_variable_of_yojson var = `String var
+let compare_module_variable = String.compare
+let equal_module_variable = String.equal
+type kind = unit
+let equal_kind = Unit.equal
+let compare_kind = Unit.compare
 
-
-type constructor' = Constructor of string
 type label = Label of string
+let label_to_yojson (Label l) = `List [`String "Label"; `String l]
+let label_of_yojson = function
+  | `List [`String "Label"; `String l] -> Ok (Label l)
+  | _ -> Simple_utils.Utils.error_yojson_format "Label of string"
+let equal_label (Label a) (Label b) = String.equal a b
+let compare_label (Label a) (Label b) = String.compare a b
 
-module CMap = Map.Make( struct type t = constructor' let compare (Constructor a) (Constructor b) = compare a b end)
-module LMap = Map.Make( struct type t = label let compare (Label a) (Label b) = String.compare a b end)
-
+module LMap = Simple_utils.Map.Make(struct type t = label let compare = compare_label end)
 type 'a label_map = 'a LMap.t
-type 'a constructor_map = 'a CMap.t
 
-  and type_constant =
-    | TC_unit
-    | TC_string
-    | TC_bytes
-    | TC_nat
-    | TC_int
-    | TC_mutez
-    | TC_bool
-    | TC_operation
-    | TC_address
-    | TC_key
-    | TC_key_hash
-    | TC_chain_id
-    | TC_signature
-    | TC_timestamp
-    | TC_void
-module type AST_PARAMETER_TYPE = sig
-  type type_meta
-end
+let const_name = function
+  | Deprecated {const;_} -> const
+  | Const      const     -> const
+let bindings_to_yojson f g xs = `List (List.map ~f:(fun (x,y) -> `List [f x; g y]) xs)
+let label_map_to_yojson row_elem_to_yojson m =
+  bindings_to_yojson label_to_yojson row_elem_to_yojson (LMap.bindings m)
 
-module Ast_generic_type (PARAMETER : AST_PARAMETER_TYPE) = struct
-  open PARAMETER
+type 'ty_expr row_element_mini_c = {
+  associated_type      : 'ty_expr ;
+  michelson_annotation : string option ;
+  decl_pos : int ;
+  }
 
-  type type_content =
-    | T_sum of type_expression constructor_map
-    | T_record of type_expression label_map
-    | T_arrow of arrow
-    | T_variable of type_variable
-    | T_constant of type_constant
-    | T_operator of type_operator
+type 'ty_exp type_app = {
+  type_operator : type_variable ;
+  arguments     : 'ty_exp list ;
+}
 
-  and arrow = {type1: type_expression; type2: type_expression}
+type 'ty_expr row_element = {
+  associated_type : 'ty_expr ;
+  attributes      : string list ;
+  decl_pos        : int ;
+  }
 
-  and type_operator =
-    | TC_contract of type_expression
-    | TC_option of type_expression
-    | TC_list of type_expression
-    | TC_set of type_expression
-    | TC_map of type_expression * type_expression
-    | TC_big_map of type_expression * type_expression
-    | TC_map_or_big_map of type_expression * type_expression
-    | TC_michelson_or of type_expression * type_expression
-    | TC_arrow of type_expression * type_expression
+type 'a module_access = {
+  module_name : module_variable ;
+  element     : 'a ;
+}
+
+(* Type level types *)
+type 'ty_exp abstraction = {
+  ty_binder : type_variable Location.wrap ;
+  kind : kind ;
+  type_ : 'ty_exp ;
+}
+
+type 'ty_exp rows = {
+  fields     : 'ty_exp row_element label_map;
+  attributes : string list ;
+  }
+
+type 'ty_exp arrow = {
+  type1: 'ty_exp ;
+  type2: 'ty_exp ;
+  }
+
+(* Expression level types *)
+type binder_attributes = {
+    const_or_var : [`Const | `Var] option;
+  }
+
+type 'ty_exp binder = {
+  var  : expression_variable ;
+  ascr : 'ty_exp option;
+  attributes : binder_attributes ;
+  }
 
 
-  and type_expression = {type_content: type_content; type_meta: type_meta}
+type 'exp application = {
+  lamb: 'exp ;
+  args: 'exp ;
+  }
 
-  open Trace
-  let map_type_operator f = function
-      TC_contract x -> TC_contract (f x)
-    | TC_option x -> TC_option (f x)
-    | TC_list x -> TC_list (f x)
-    | TC_set x -> TC_set (f x)
-    | TC_map (x , y) -> TC_map (f x , f y)
-    | TC_big_map (x , y)-> TC_big_map (f x , f y)
-    | TC_map_or_big_map (x , y)-> TC_map_or_big_map (f x , f y)
-    | TC_michelson_or (x , y)-> TC_michelson_or (f x , f y)
-    | TC_arrow (x, y) -> TC_arrow (f x, f y)
+type 'exp constant = {
+  cons_name: constant' ; (* this is in enum *)
+  arguments: 'exp list ;
+  }
 
-  let bind_map_type_operator f = function
-      TC_contract x -> let%bind x = f x in ok @@ TC_contract x
-    | TC_option x -> let%bind x = f x in ok @@ TC_option x
-    | TC_list x -> let%bind x = f x in ok @@ TC_list x
-    | TC_set x -> let%bind x = f x in ok @@ TC_set x
-    | TC_map (x , y) -> let%bind x = f x in let%bind y = f y in ok @@ TC_map (x , y)
-    | TC_big_map (x , y)-> let%bind x = f x in let%bind y = f y in ok @@ TC_big_map (x , y)
-    | TC_map_or_big_map (x , y)-> let%bind x = f x in let%bind y = f y in ok @@ TC_map_or_big_map (x , y)
-    | TC_michelson_or (x , y)-> let%bind x = f x in let%bind y = f y in ok @@ TC_michelson_or (x , y)
-    | TC_arrow (x , y)-> let%bind x = f x in let%bind y = f y in ok @@ TC_arrow (x , y)
+type ('exp,'ty_exp) lambda = {
+  binder: 'ty_exp binder ;
+  output_type : 'ty_exp option;
+  result: 'exp ;
+  }
 
-  let type_operator_name = function
-        TC_contract _ -> "TC_contract"
-      | TC_option   _ -> "TC_option"
-      | TC_list     _ -> "TC_list"
-      | TC_set      _ -> "TC_set"
-      | TC_map      _ -> "TC_map"
-      | TC_big_map  _ -> "TC_big_map"
-      | TC_map_or_big_map _ -> "TC_map_or_big_map"
-      | TC_michelson_or _ -> "TC_michelson_or"
-      | TC_arrow    _ -> "TC_arrow"
+type ('exp, 'ty_exp) recursive = {
+  fun_name :  expression_variable ;
+  fun_type : 'ty_exp ;
+  lambda   : ('exp, 'ty_exp) lambda ;
+  }
 
-  let type_expression'_of_string = function
-    | "TC_contract" , [x]     -> ok @@ T_operator(TC_contract x)
-    | "TC_option"   , [x]     -> ok @@ T_operator(TC_option x)
-    | "TC_list"     , [x]     -> ok @@ T_operator(TC_list x)
-    | "TC_set"      , [x]     -> ok @@ T_operator(TC_set x)
-    | "TC_map"      , [x ; y] -> ok @@ T_operator(TC_map (x , y))
-    | "TC_big_map"  , [x ; y] -> ok @@ T_operator(TC_big_map (x, y))
-    | ("TC_contract" | "TC_option" | "TC_list" | "TC_set" | "TC_map" | "TC_big_map"), _ ->
-      failwith "internal error: wrong number of arguments for type operator"
+type ('exp, 'ty_exp) let_in = {
+    let_binder: 'ty_exp binder ;
+    rhs       : 'exp ;
+    let_result: 'exp ;
+    attributes: attributes ;
+  }
 
-    | "TC_unit"      , [] -> ok @@ T_constant(TC_unit)
-    | "TC_string"    , [] -> ok @@ T_constant(TC_string)
-    | "TC_bytes"     , [] -> ok @@ T_constant(TC_bytes)
-    | "TC_nat"       , [] -> ok @@ T_constant(TC_nat)
-    | "TC_int"       , [] -> ok @@ T_constant(TC_int)
-    | "TC_mutez"     , [] -> ok @@ T_constant(TC_mutez)
-    | "TC_bool"      , [] -> ok @@ T_constant(TC_bool)
-    | "TC_operation" , [] -> ok @@ T_constant(TC_operation)
-    | "TC_address"   , [] -> ok @@ T_constant(TC_address)
-    | "TC_key"       , [] -> ok @@ T_constant(TC_key)
-    | "TC_key_hash"  , [] -> ok @@ T_constant(TC_key_hash)
-    | "TC_chain_id"  , [] -> ok @@ T_constant(TC_chain_id)
-    | "TC_signature" , [] -> ok @@ T_constant(TC_signature)
-    | "TC_timestamp" , [] -> ok @@ T_constant(TC_timestamp)
-    | _,               [] ->
-      failwith "internal error: wrong number of arguments for type constant"
-    | _                       ->
-      failwith "internal error: unknown type operator"
+type ('exp, 'ty_exp) type_in = {
+    type_binder: type_variable ;
+    rhs        : 'ty_exp ;
+    let_result : 'exp ;
+  }
 
-  let string_of_type_operator = function
-    | TC_contract       x       -> "TC_contract"     , [x]
-    | TC_option         x       -> "TC_option"       , [x]
-    | TC_list           x       -> "TC_list"         , [x]
-    | TC_set            x       -> "TC_set"          , [x]
-    | TC_map            (x , y) -> "TC_map"          , [x ; y]
-    | TC_big_map        (x , y) -> "TC_big_map"      , [x ; y]
-    | TC_map_or_big_map (x , y) -> "TC_map_or_big_map"  , [x ; y]
-    | TC_michelson_or   (x , y) -> "TC_michelson_or" , [x ; y]
-    | TC_arrow          (x , y) -> "TC_arrow"        , [x ; y]
+type 'exp raw_code = {
+  language : string ;
+  code : 'exp ;
+  }
 
-  let string_of_type_constant = function
-    | TC_unit      -> "TC_unit", []
-    | TC_string    -> "TC_string", []
-    | TC_bytes     -> "TC_bytes", []
-    | TC_nat       -> "TC_nat", []
-    | TC_int       -> "TC_int", []
-    | TC_mutez     -> "TC_mutez", []
-    | TC_bool      -> "TC_bool", []
-    | TC_operation -> "TC_operation", []
-    | TC_address   -> "TC_address", []
-    | TC_key       -> "TC_key", []
-    | TC_key_hash  -> "TC_key_hash", []
-    | TC_chain_id  -> "TC_chain_id", []
-    | TC_signature -> "TC_signature", []
-    | TC_timestamp -> "TC_timestamp", []
-    | TC_void      -> "TC_void", []
+type 'exp constructor = {constructor: label; element: 'exp}
 
-  let string_of_type_expression' = function
-    | T_operator o -> string_of_type_operator o
-    | T_constant c -> string_of_type_constant c
-    | T_sum _ | T_record _ | T_arrow _ | T_variable _ ->
-      failwith "not a type operator or constant"
+type 'exp access =
+  | Access_tuple of z
+  | Access_record of string
+  | Access_map of 'exp
 
-end
+type 'exp accessor = {record: 'exp; path: 'exp access list}
+type 'exp update   = {record: 'exp; path: 'exp access list; update: 'exp}
 
-type literal =
-  | Literal_unit
-  | Literal_bool of bool
-  | Literal_int of int
-  | Literal_nat of int
-  | Literal_timestamp of int
-  | Literal_mutez of int
-  | Literal_string of string
-  | Literal_bytes of bytes
-  | Literal_address of string
-  | Literal_signature of string
-  | Literal_key of string
-  | Literal_key_hash of string
-  | Literal_chain_id of string
-  | Literal_void
-  | Literal_operation of
-      Memory_proto_alpha.Protocol.Alpha_context.packed_internal_operation
-and ('a,'tv) matching_content =
-  | Match_bool of {
-      match_true : 'a ;
-      match_false : 'a ;
-    }
-  | Match_list of {
-      match_nil : 'a ;
-      match_cons : expression_variable * expression_variable * 'a * 'tv;
-    }
-  | Match_option of {
-      match_none : 'a ;
-      match_some : expression_variable * 'a * 'tv;
-    }
-  | Match_tuple of (expression_variable list * 'a) * 'tv list
-  | Match_variant of ((constructor' * expression_variable) * 'a) list * 'tv
+type 'exp record_accessor = {record: 'exp; path: label}
+type 'exp record_update   = {record: 'exp; path: label; update: 'exp}
 
-and constant' =
-  | C_INT
-  | C_UNIT
-  | C_NIL
-  | C_NOW
-  | C_IS_NAT
-  | C_SOME
-  | C_NONE
-  | C_ASSERTION
-  | C_ASSERT_INFERRED
-  | C_FAILWITH
-  | C_UPDATE
-  (* Loops *)
-  | C_ITER
-  | C_FOLD_WHILE
-  | C_FOLD_CONTINUE
-  | C_FOLD_STOP
-  | C_LOOP_LEFT
-  | C_LOOP_CONTINUE
-  | C_LOOP_STOP
-  | C_FOLD
-  (* MATH *)
-  | C_NEG
-  | C_ABS
-  | C_ADD
-  | C_SUB
-  | C_MUL
-  | C_EDIV
-  | C_DIV
-  | C_MOD
-  (* LOGIC *)
-  | C_NOT
-  | C_AND
-  | C_OR
-  | C_XOR
-  | C_LSL
-  | C_LSR
-  (* COMPARATOR *)
-  | C_EQ
-  | C_NEQ
-  | C_LT
-  | C_GT
-  | C_LE
-  | C_GE
-  (* Bytes/ String *)
-  | C_SIZE
-  | C_CONCAT
-  | C_SLICE
-  | C_BYTES_PACK
-  | C_BYTES_UNPACK
-  | C_CONS
-  (* Pair *)
-  | C_PAIR
-  | C_CAR
-  | C_CDR
-  | C_LEFT
-  | C_RIGHT
-  (* Set *)
-  | C_SET_EMPTY
-  | C_SET_LITERAL
-  | C_SET_ADD
-  | C_SET_REMOVE
-  | C_SET_ITER
-  | C_SET_FOLD
-  | C_SET_MEM
-  (* List *)
-  | C_LIST_EMPTY
-  | C_LIST_LITERAL
-  | C_LIST_ITER
-  | C_LIST_MAP
-  | C_LIST_FOLD
-  (* Maps *)
-  | C_MAP
-  | C_MAP_EMPTY
-  | C_MAP_LITERAL
-  | C_MAP_GET
-  | C_MAP_GET_FORCE
-  | C_MAP_ADD
-  | C_MAP_REMOVE
-  | C_MAP_UPDATE
-  | C_MAP_ITER
-  | C_MAP_MAP
-  | C_MAP_FOLD
-  | C_MAP_MEM
-  | C_MAP_FIND
-  | C_MAP_FIND_OPT
-  (* Big Maps *)
-  | C_BIG_MAP
-  | C_BIG_MAP_EMPTY
-  | C_BIG_MAP_LITERAL
-  (* Crypto *)
-  | C_SHA256
-  | C_SHA512
-  | C_BLAKE2b
-  | C_HASH
-  | C_HASH_KEY
-  | C_CHECK_SIGNATURE
-  | C_CHAIN_ID
-  (* Blockchain *)
-  | C_CALL
-  | C_CONTRACT
-  | C_CONTRACT_OPT
-  | C_CONTRACT_ENTRYPOINT
-  | C_CONTRACT_ENTRYPOINT_OPT
-  | C_AMOUNT
-  | C_BALANCE
-  | C_SOURCE
-  | C_SENDER
-  | C_ADDRESS
-  | C_SELF
-  | C_SELF_ADDRESS
-  | C_IMPLICIT_ACCOUNT
-  | C_SET_DELEGATE
-  | C_CREATE_CONTRACT
+type ('exp,'ty_exp) ascription = {anno_expr: 'exp; type_annotation: 'ty_exp}
+
+type 'exp conditional = {
+  condition   : 'exp ;
+  then_clause : 'exp ;
+  else_clause : 'exp ;
+  }
+
+and 'exp sequence = {
+  expr1: 'exp ;
+  expr2: 'exp ;
+  }
+
+and 'exp assign = {
+  variable    : expression_variable ;
+  access_path : 'exp access list ;
+  expression  : 'exp ;
+  }
+
+and 'exp for_ = {
+  binder : expression_variable ;
+  start  : 'exp ;
+  final  : 'exp ;
+  incr   : 'exp ;
+  f_body : 'exp ;
+  }
+
+and 'exp for_each = {
+  fe_binder : expression_variable * expression_variable option ;
+  collection : 'exp ;
+  collection_type : collect_type ;
+  fe_body : 'exp ;
+  }
+
+and collect_type =
+  | Map
+  | Set
+  | List
+  | Any
+
+and 'exp while_loop = {
+  cond : 'exp ;
+  body : 'exp ;
+  }
+
+type 'ty_exp list_pattern =
+  | Cons of 'ty_exp pattern * 'ty_exp pattern
+  | List of 'ty_exp pattern list
+
+and 'ty_exp pattern_repr =
+  | P_unit
+  | P_var of 'ty_exp binder
+  | P_list of 'ty_exp list_pattern
+  | P_variant of label * 'ty_exp pattern
+  | P_tuple of 'ty_exp pattern list
+  | P_record of label list * 'ty_exp pattern list
+
+and 'ty_exp pattern = 'ty_exp pattern_repr Location.wrap
+
+type ('exp , 'ty_exp) match_case = {
+  pattern : 'ty_exp pattern ;
+  body : 'exp
+}
+
+type ('exp , 'ty_exp) match_exp = {
+  matchee : 'exp ;
+  cases : ('exp , 'ty_exp) match_case list
+}
+
+(* Declaration types *)
+type 'ty_exp declaration_type = {
+    type_binder : type_variable ;
+    type_expr : 'ty_exp ;
+    type_attr : attributes ;
+  }
+
+and ('exp,'ty_exp) declaration_constant = {
+    name : string option;
+    binder : 'ty_exp binder;
+    attr : attributes ;
+    expr : 'exp ;
+  }
+
+and ('exp,'ty_expr) declaration_module = {
+    module_binder : module_variable ;
+    module_ : ('exp,'ty_expr) module' ;
+    module_attr : attributes
+  }
+
+and module_alias = {
+    alias   : module_variable ;
+    binders : module_variable List.Ne.t;
+}
+
+(* Module types *)
+
+and ('exp,'ty_exp) declaration' =
+  | Declaration_type of 'ty_exp declaration_type
+  | Declaration_constant of ('exp,'ty_exp) declaration_constant
+  | Declaration_module   of ('exp, 'ty_exp) declaration_module
+  | Module_alias         of module_alias
+
+
+(* Program types *)
+
+and ('exp,'ty_exp) module' = ('exp,'ty_exp) declaration' location_wrap list
+
+
+type ('exp,'type_exp) mod_in = {
+  module_binder : module_variable ;
+  rhs           : ('exp,'type_exp) module' ;
+  let_result    : 'exp ;
+}
+
+and 'exp mod_alias = {
+  alias   : module_variable ;
+  binders : module_variable List.Ne.t;
+  result  : 'exp ;
+}

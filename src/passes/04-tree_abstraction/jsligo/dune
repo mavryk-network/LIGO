@@ -1,0 +1,9 @@
+(library
+ (name jsligo)
+ (public_name ligo.jsligo)
+ (instrumentation
+  (backend bisect_ppx))
+ (libraries simple-utils tezos-utils cst ast_imperative predefined parsing)
+ (preprocess
+  (pps ppx_poly_constructor))
+)
