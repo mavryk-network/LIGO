@@ -567,4 +567,15 @@ let%expect_test _ =
     (a#3 -> a) File "../../test/contracts/get_scope_tests/module.mligo", line 13, characters 12-13 |resolved: int|
     references: []
     Type definitions:
-    Module definitions: |} ]
+    Module definitions: |} ] ;
+
+  run_ligo_good [ "info"; "get-scope" ; gs "root.mligo" ; "--format"; "dev" ; "--lib" ; gs "foo" ] ;
+  [%expect{|
+    Scopes:
+    [ ] File "../../test/contracts/get_scope_tests/foo/bar/b.mligo", line 1, characters 0-16
+
+    Variable definitions:
+    (x#0 -> x) File "../../test/contracts/get_scope_tests/foo/bar/b.mligo", line 1, characters 4-5 |core: int|
+    references: []
+    Type definitions:
+    Module definitions: |}] ;

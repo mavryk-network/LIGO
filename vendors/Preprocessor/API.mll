@@ -241,9 +241,7 @@ let find dir file dirs =
     if dir = "." || dir = "" then file
     else dir ^ Filename.dir_sep ^ file in
   try Some (path, open_in path) with
-    Sys_error _ ->
-      let base = Filename.basename file in
-      if base = file then find file dirs else None
+    Sys_error _ -> find file dirs
 
 (* PRINTING *)
 

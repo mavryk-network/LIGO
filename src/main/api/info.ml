@@ -24,11 +24,37 @@ let list_declarations source_file syntax display_format =
       let declarations  = Compile.Of_core.list_declarations core_prg in
       (source_file, declarations)
 
+module SSet = Set.Make(String)
+let rec explore_directories dirs parent = 
+  let dirs = List.map ~f:(explore_dir parent) dirs in
+  let uniq_dirs = List.fold_left 
+    ~f:(fun set dirs -> Set.union set @@ SSet.of_list dirs) 
+    ~init:SSet.empty dirs in
+  SSet.to_list uniq_dirs
+
+and explore_dir segs dir = 
+  match (Unix.lstat dir).st_kind with
+    Unix.S_DIR -> 
+      let dirs = Array.to_list @@ Sys.readdir dir in
+      let () = Sys.chdir dir in
+      let dirs = explore_directories dirs (dir :: segs) in
+      let () = Sys.chdir ".." in
+      List.fold_left ~f:(fun acc dir -> dir :: acc) ~init:[] dirs 
+  | _ -> [String.concat ~sep:Filename.dir_sep @@ List.rev segs]
+
+let explore_directories dirs =
+  let cwd = Sys.getcwd () in
+  let dirs = try explore_directories dirs []
+  with _ -> dirs in
+  let () = Sys.chdir cwd in
+  dirs
+
 let get_scope source_file syntax infer protocol_version libs display_format with_types =
     Trace.warning_with @@ fun add_warning get_warnings ->
     format_result ~display_format Scopes.Formatter.scope_format get_warnings @@
       fun ~raise ->
       let protocol_version = Helpers.protocol_to_variant ~raise protocol_version in
+      let libs = explore_directories libs in
       let options = Compiler_options.make ~infer ~protocol_version ~libs () in
       let meta     = Compile.Of_source.extract_meta ~raise syntax source_file in
       let c_unit,_ = Compile.Utils.to_c_unit ~raise ~options ~meta source_file in
