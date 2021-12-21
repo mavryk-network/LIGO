@@ -1,7 +1,7 @@
 open Types
 module Option = Simple_utils.Option
 
-module SMap = Map.String
+module SMap = Simple_utils.Map.String
 open Stage_common.Constant
 
 let make_t ?(loc = Location.generated) type_content = {type_content; location=loc}
@@ -11,22 +11,12 @@ let t_variable_ez ?loc n     : type_expression = t_variable ?loc (Var.of_name n)
 
 let t_app ?loc type_operator arguments : type_expression = make_t ?loc @@ T_app {type_operator ; arguments}
 
-let t_bool ?loc ()        : type_expression = t_variable ?loc v_bool
-let t_string ?loc ()      : type_expression = t_variable ?loc v_string
-let t_bytes ?loc ()       : type_expression = t_variable ?loc v_bytes
-let t_int ?loc ()         : type_expression = t_variable ?loc v_int
-let t_operation ?loc ()   : type_expression = t_variable ?loc v_operation
-let t_nat ?loc ()         : type_expression = t_variable ?loc v_nat
-let t_tez ?loc ()         : type_expression = t_variable ?loc v_tez
-let t_unit ?loc ()        : type_expression = t_variable ?loc v_unit
-let t_address ?loc ()     : type_expression = t_variable ?loc v_address
-let t_signature ?loc ()   : type_expression = t_variable ?loc v_signature
-let t_key ?loc ()         : type_expression = t_variable ?loc v_key
-let t_key_hash ?loc ()    : type_expression = t_variable ?loc v_key_hash
-let t_timestamp ?loc ()   : type_expression = t_variable ?loc v_timestamp
-let t_option ?loc o       : type_expression = t_app ?loc v_option [o]
-let t_list ?loc t         : type_expression = t_app ?loc v_list [t]
-
+let t__type_ ?loc () : type_expression = t_variable ?loc v__type_
+[@@map (_type_, ("bool", "string", "bytes", "int", "operation", "nat", "tez", "unit", "address", "signature", "key", "key_hash", "timestamp"))]
+let t__type_ ?loc t : type_expression = t_app ?loc v__type_ [t]
+[@@map (_type_, ("option", "list", "set", "contract"))]
+let t__type_ ?loc t t' :type_expression = t_app ?loc v__type_ [t; t']
+[@@map (_type_, ("map", "big_map"))]
 
 let t_record ?loc record  : type_expression = make_t ?loc @@ T_record record
 let t_record_ez_attr ?loc ?(attr=[]) lst =
@@ -56,10 +46,7 @@ let t_module_accessor ?loc module_name element = make_t ?loc @@ T_module_accesso
 
 let t_function ?loc type1 type2  : type_expression = make_t ?loc @@ T_arrow {type1; type2}
 let t_abstraction ?loc ty_binder kind type_ : type_expression = make_t ?loc @@ T_abstraction { ty_binder ; kind ; type_ }
-let t_map ?loc key value                  : type_expression = t_app ?loc v_map [key; value]
-let t_big_map ?loc key value              : type_expression = t_app ?loc v_big_map [key; value]
-let t_set ?loc key                        : type_expression = t_app ?loc v_set [key]
-let t_contract ?loc contract              : type_expression = t_app ?loc v_contract [contract]
+let t_for_all ?loc ty_binder kind type_ : type_expression   = make_t ?loc @@ T_for_all { ty_binder ; kind ; type_ }
 let t_michelson_or ?loc l l_ann r r_ann   : type_expression = t_app ?loc v_michelson_or [t_annoted l l_ann; t_annoted r r_ann]
 let t_michelson_pair ?loc l l_ann r r_ann : type_expression = t_app ?loc v_michelson_pair [t_annoted l l_ann; t_annoted r r_ann]
 let t_sapling_state ?loc a                : type_expression = t_app ?loc v_sapling_state [a]
@@ -75,22 +62,19 @@ let make_e ?(loc = Location.generated) expression_content =
   { expression_content; location }
 
 let e_literal ?loc l : expression = make_e ?loc @@ E_literal l
-let e_unit ?loc () : expression = make_e ?loc @@ E_literal (Literal_unit)
-let e_int_z ?loc n : expression = make_e ?loc @@ E_literal (Literal_int n)
-let e_int ?loc n : expression = e_int_z ?loc @@ Z.of_int n
-let e_nat_z ?loc n : expression = make_e ?loc @@ E_literal (Literal_nat n)
-let e_nat ?loc n : expression = e_nat_z ?loc @@ Z.of_int n
-let e_timestamp_z ?loc n : expression = make_e ?loc @@ E_literal (Literal_timestamp n)
-let e_timestamp ?loc n : expression = e_timestamp_z ?loc @@ Z.of_int n
+let e__type_ ?loc p : expression = make_e ?loc @@ E_literal (Literal__type_ p)
+[@@map (_type_, ("address", "signature", "key", "key_hash", "chain_id"))]
+
+let e__type__z ?loc n : expression = make_e ?loc @@ E_literal (Literal__type_ n)
+[@@map (_type_, ("int", "nat", "timestamp", "mutez"))]
+
+let e__type_ ?loc n : expression = e__type__z ?loc @@ Z.of_int n
+[@@map (_type_, ("int", "nat", "timestamp", "mutez"))]
+
 let e_string ?loc s : expression = make_e ?loc @@ E_literal (Literal_string (Standard s))
 let e_verbatim ?loc v : expression = make_e ?loc @@ E_literal (Literal_string (Verbatim v))
-let e_address ?loc s : expression = make_e ?loc @@ E_literal (Literal_address s)
-let e_mutez_z ?loc s : expression = make_e ?loc @@ E_literal (Literal_mutez s)
-let e_mutez ?loc s : expression = e_mutez_z ?loc @@ Z.of_int s
-let e_signature ?loc s : expression = make_e ?loc @@ E_literal (Literal_signature s)
-let e_key ?loc s : expression = make_e ?loc @@ E_literal (Literal_key s)
-let e_key_hash ?loc s : expression = make_e ?loc @@ E_literal (Literal_key_hash s)
-let e_chain_id ?loc s : expression = make_e ?loc @@ E_literal (Literal_chain_id s)
+let e_unit ?loc () : expression = make_e ?loc @@ E_literal (Literal_unit)
+
 let e'_bytes b : expression_content option =
   try
     let bytes = Hex.to_bytes (`Hex b) in
@@ -121,7 +105,7 @@ let e_recursive ?loc fun_name fun_type lambda = make_e ?loc @@ E_recursive {fun_
 let e_let_in    ?loc let_binder attributes rhs let_result = make_e ?loc @@ E_let_in { let_binder; rhs ; let_result; attributes }
 let e_let_in_ez ?loc var ?ascr ?const_or_var attributes rhs let_result = make_e ?loc @@ E_let_in { let_binder={var;ascr;attributes={const_or_var}}; rhs ; let_result; attributes }
 (* let e_let_in_ez ?loc binder ascr inline rhs let_result = e_let_in ?loc (Var.of_name binder, ascr) inline rhs let_result *)
-let e_type_in   ?loc type_binder   rhs let_result = make_e ?loc @@ E_type_in { type_binder; rhs ; let_result }
+let e_type_in   ?loc type_binder rhs let_result = make_e ?loc @@ E_type_in { type_binder; rhs ; let_result}
 let e_mod_in    ?loc module_binder rhs let_result = make_e ?loc @@ E_mod_in  { module_binder; rhs ; let_result }
 let e_mod_alias ?loc alias binders result = make_e ?loc @@ E_mod_alias { alias; binders ; result }
 
@@ -171,7 +155,6 @@ let make_option_typed ?loc e t_opt =
   | None -> e
   | Some t -> e_annotation ?loc e t
 
-
 let e_typed_none ?loc t_opt =
   let type_annotation = t_option t_opt in
   e_annotation ?loc (e_none ?loc ()) type_annotation
@@ -184,9 +167,6 @@ let e_typed_map ?loc lst k v = e_annotation ?loc (e_map lst) (t_map k v)
 let e_typed_big_map ?loc lst k v = e_annotation ?loc (e_big_map lst) (t_big_map k v)
 
 let e_typed_set ?loc lst k = e_annotation ?loc (e_set lst) (t_set k)
-
-
-
 
 let e_assign ?loc variable access_path expression = make_e ?loc @@ E_assign {variable;access_path;expression}
 let e_assign_ez ?loc variable access_path expression = e_assign ?loc (Location.wrap ?loc @@ Var.of_name variable) access_path expression
@@ -242,3 +222,11 @@ let extract_map : expression -> (expression * expression) list option = fun e ->
   match e.expression_content with
   | E_map lst -> Some lst
   | _ -> None
+
+(* This function takes a type `∀ v1 ... vn . t` into the pair `([ v1 ; .. ; vn ] , t)` *)
+let destruct_for_alls (t : type_expression) =
+  let rec destruct_for_alls type_vars (t : type_expression) = match t.type_content with
+    | T_for_all { ty_binder ; type_ ; _ } ->
+       destruct_for_alls (Location.unwrap ty_binder :: type_vars) type_
+    | _ -> (type_vars, t)
+  in destruct_for_alls [] t

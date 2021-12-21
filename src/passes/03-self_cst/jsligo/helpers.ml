@@ -1,6 +1,7 @@
 [@@@warning "-26"]
 
 open Cst.Jsligo
+module List = Simple_utils.List
 
 let npseq_to_ne_list (hd, tl) = hd, (List.map ~f:snd tl)
 
@@ -39,7 +40,7 @@ let rec fold_type_expression : ('a, 'err) folder -> 'a -> type_expr -> 'a =
     TProd  {inside = {value = { inside ;_};_} ; _} ->
       List.Ne.fold_left self init @@ npseq_to_ne_list inside
   | TSum {value;region=_} ->
-     let {variants; attributes=_} = value in
+     let {variants; attributes=_;leading_vbar=_} = value in
      List.Ne.fold_left self_variant init @@ npseq_to_ne_list variants.value
 
   | TObject {value;region=_} ->
@@ -181,7 +182,7 @@ let rec fold_expression : ('a, 'err) folder -> 'a -> expr -> 'a = fun f init e  
       Some inside ->
         fold_npseq fold_array_item init inside
     | None -> init)
-  | EAssign (e1, _, e2) ->
+  | EAssign     (e1, _, e2) ->
     let res = self init e1 in
     let res = self res e2 in
     self res e1
@@ -202,7 +203,7 @@ and fold_statement : ('a, 'err) folder -> 'a -> statement -> 'a =
   match d with
     SBlock {value = {inside; _}; _} -> fold_npseq self init inside
   | SExpr e -> self_expr init e
-  | SCond {value = {test; ifso; ifnot}; _} ->
+  | SCond {value = {kwd_if=_;test; ifso; ifnot}; _} ->
     let res = self_expr init test.inside in
     let res = self res ifso in
     (match ifnot with
@@ -243,7 +244,7 @@ and fold_statement : ('a, 'err) folder -> 'a -> statement -> 'a =
     in
     List.Ne.fold_left fold_case res cases
   | SBreak _ -> init
-  | SNamespace {value = (_, _, {value = {inside; _}; _} ); _} -> fold_npseq self init inside
+  | SNamespace {value = (_, _, {value = {inside; _}; _}, _ ); _} -> fold_npseq self init inside
   | SExport {value = (_, s); _} -> self init s
   | SImport _ -> init
   | SForOf {value = {expr; statement; _}; _}
@@ -502,7 +503,7 @@ let rec map_expression : 'err mapper -> expr -> expr = fun f e  ->
     let selection = map_selection value.selection in
     let value = {expr;selection} in
     return @@ EProj {value; region}
-  | EAssign  (a, e, b) ->
+  | EAssign     (a, e, b) ->
     let a = self a in
     let b = self b in
     return @@ EAssign (a, e, b)
@@ -610,7 +611,7 @@ and map_statement : ('err) mapper -> statement -> statement =
   | SBreak b ->
     return @@ SBreak b
   | SNamespace {value; region} ->
-    let (kwd_namespace, name, statements) = value in
+    let (kwd_namespace, name, statements, attributes) = value in
     let ({value = statements_value; region = statements_region}: statements braces reg) = statements in
     let inside = map_npseq self statements_value.inside in
     let statements: statements braces reg = {
@@ -620,7 +621,7 @@ and map_statement : ('err) mapper -> statement -> statement =
       };
       region = statements_region
     } in
-    let value = (kwd_namespace, name, statements) in
+    let value = (kwd_namespace, name, statements, attributes) in
     return @@ SNamespace {
       value;
       region

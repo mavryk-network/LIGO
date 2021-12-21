@@ -1,4 +1,6 @@
 
+module Pair = Simple_utils.Pair
+module Location = Simple_utils.Location
 module Errors = Errors
 module I = Ast_imperative
 module O = Ast_sugar
@@ -34,6 +36,9 @@ let rec decompile_type_expression : O.type_expression -> I.type_expression =
     | O.T_abstraction x ->
       let type_ = self x.type_ in
       return @@ I.T_abstraction {x with type_}
+    | O.T_for_all x ->
+      let type_ = self x.type_ in
+      return @@ I.T_for_all {x with type_}
 
 let rec decompile_expression : O.expression -> I.expression =
   fun e ->
@@ -56,7 +61,7 @@ let rec decompile_expression : O.expression -> I.expression =
   | O.E_recursive recs ->
     let recs = recursive self self_type recs in
     return @@ I.E_recursive recs
-  | O.E_let_in {let_binder;attributes;rhs;let_result} ->
+  | O.E_let_in {let_binder;attributes;rhs;let_result;mut=_} ->
     let {var;ascr;attributes=var_attributes} : _ O.binder = let_binder in
     let ascr = Option.map ~f:decompile_type_expression ascr in
     let rhs = decompile_expression rhs in

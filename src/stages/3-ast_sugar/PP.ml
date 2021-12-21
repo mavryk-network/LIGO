@@ -1,7 +1,7 @@
 [@@@coverage exclude_file]
 open Types
 open Format
-open PP_helpers
+open Simple_utils.PP_helpers
 
 include Stage_common.PP
 
@@ -40,7 +40,8 @@ let rec type_content : formatter -> type_expression -> unit =
   | T_app            app -> type_app      type_expression ppf app
   | T_module_accessor ma -> module_access type_expression ppf ma
   | T_singleton       x  -> literal       ppf             x
-  | T_abstraction     x  -> abstraction   type_expression ppf x           
+  | T_abstraction     x  -> abstraction   type_expression ppf x
+  | T_for_all         x  -> for_all       type_expression ppf x
 
 and type_expression ppf (te : type_expression) : unit =
   fprintf ppf "%a" type_content te
@@ -75,7 +76,7 @@ and expression_content ppf (ec : expression_content) =
   | E_lambda {binder; output_type; result} ->
       fprintf ppf "lambda (%a) : %a return %a"
         option_type_name binder
-        (PP_helpers.option type_expression) output_type
+        (Simple_utils.PP_helpers.option type_expression) output_type
         expression result
   | E_recursive { fun_name; fun_type; lambda} ->
       fprintf ppf "rec (%a:%a => %a )"
@@ -134,7 +135,7 @@ and option_mut ppf mut =
 
 and attributes ppf attributes =
   let attr =
-    List.map ~f:(fun attr -> "[@@" ^ attr ^ "]") attributes |> String.concat ""
+    List.map ~f:(fun attr -> "[@@" ^ attr ^ "]") attributes |> String.concat
   in fprintf ppf "%s" attr
 
 let declaration ppf (d : declaration) = declaration expression type_expression ppf d

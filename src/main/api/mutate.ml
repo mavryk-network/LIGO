@@ -9,9 +9,9 @@ let generator_to_variant ~raise s =
   else if String.equal s "random" then
     `Generator_random
   else
-    raise.raise @@ Main_errors.invalid_generator s
+    raise.raise @@ Main_errors.main_invalid_generator_name s
 
-let mutate_ast source_file syntax infer protocol_version libs display_format seed generator =
+let mutate_ast source_file syntax protocol_version libs display_format seed generator () =
   Trace.warning_with @@ fun add_warning get_warnings ->
   format_result ~display_format (Parsing.Formatter.ppx_format) get_warnings @@
     fun ~raise ->
@@ -21,8 +21,8 @@ let mutate_ast source_file syntax infer protocol_version libs display_format see
       | `Generator_random -> (module Fuzz.Rnd : Fuzz.Monad) in
     let module Gen : Fuzz.Monad = (val get_module : Fuzz.Monad) in
     let module Fuzzer = Fuzz.Ast_imperative.Mutator(Gen) in
-    let init_env   = Helpers.get_initial_env ~raise protocol_version in
-    let options       = Compiler_options.make ~infer ~init_env ~libs () in
+    let protocol_version = Helpers.protocol_to_variant ~raise protocol_version in
+    let options       = Compiler_options.make ~protocol_version ~libs () in
     let meta     = Compile.Of_source.extract_meta ~raise syntax source_file in
     let c_unit,_ = Compile.Utils.to_c_unit ~raise ~options ~meta source_file in
     let imperative_prg = Compile.Utils.to_imperative ~raise ~add_warning ~options ~meta c_unit source_file in
@@ -33,7 +33,7 @@ let mutate_ast source_file syntax infer protocol_version libs display_format see
         Decompile.Of_imperative.decompile ~raise ~dialect imperative_prg (Syntax_name syntax) in
     buffer
 
-let mutate_cst source_file syntax infer protocol_version libs display_format seed generator =
+let mutate_cst source_file syntax protocol_version libs display_format seed generator () =
   format_result ~display_format (Parsing.Formatter.ppx_format) (fun () -> []) @@
     fun ~raise ->
     let generator = generator_to_variant ~raise generator in
@@ -41,8 +41,8 @@ let mutate_cst source_file syntax infer protocol_version libs display_format see
       | `Generator_list -> (module Fuzz.Lst : Fuzz.Monad)
       | `Generator_random -> (module Fuzz.Rnd : Fuzz.Monad) in
     let module Gen : Fuzz.Monad = (val get_module : Fuzz.Monad) in
-    let init_env = Helpers.get_initial_env ~raise protocol_version in
-    let options   = Compiler_options.make ~infer ~init_env ~libs () in
+    let protocol_version = Helpers.protocol_to_variant ~raise protocol_version in
+    let options   = Compiler_options.make ~protocol_version ~libs () in
     let meta     = Compile.Of_source.extract_meta ~raise syntax source_file in
     let c_unit,_ = Compile.Utils.to_c_unit ~raise ~options ~meta source_file in
     match meta with

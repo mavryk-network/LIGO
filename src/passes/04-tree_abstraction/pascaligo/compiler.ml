@@ -1,11 +1,20 @@
 open Errors
-open Trace
-open Function
+open Simple_utils.Trace
+open Simple_utils.Function
+
+module Utils = Simple_utils.Utils
 
 module CST = Cst.Pascaligo
 module AST = Ast_imperative
 
 open AST
+
+let ghost = 
+  object 
+    method region = Region.ghost 
+    method attributes = []
+    method payload = ""
+  end 
 
 let nseq_to_list (hd, tl) = hd :: tl
 let npseq_to_list (hd, tl) = hd :: (List.map ~f:snd tl)
@@ -273,7 +282,7 @@ let rec compile_expression ~raise : CST.expr -> AST.expr = fun e ->
       return @@ e_application ~loc func args
     )
   (*TODO: move to proper module*)
-  | ECall {value=(EModA {value={module_name;field};region=_},args);region} when
+  | ECall {value=(EModA {value={module_name;field;selector=_};region=_},args);region} when
     List.mem ~equal:Caml.(=) build_ins module_name.value ->
     let loc = Location.lift region in
     let fun_name = match field with
@@ -435,8 +444,8 @@ let rec compile_expression ~raise : CST.expr -> AST.expr = fun e ->
       in
       let lst = List.map ~f:self lst in
       return @@ e_list ~loc lst
-    | ENil nil ->
-      let loc = Location.lift nil in
+    | ENil kwd_nil ->
+      let loc = Location.lift kwd_nil#region in
       return @@ e_list ~loc []
       (* Is seems that either ENil is redondant or EListComp should be an nsepseq and not a sepseq  *)
   )
@@ -508,7 +517,10 @@ and conv ~raise : ?const:bool -> CST.pattern -> AST.ty_expr AST.pattern =
      let (var,loc) = r_split var in
      let attributes = if const then Stage_common.Helpers.const_attribute else Stage_common.Helpers.var_attribute in
     let b =
-      let var = Location.wrap ~loc @@ Var.of_name var.variable.value in
+      let var = Location.wrap ~loc @@ match var.variable.value with
+        | "_" -> Var.fresh ()
+        | var -> Var.of_name var
+      in
       { var ; ascr = None ; attributes }
     in
     Location.wrap ~loc @@ P_var b
@@ -565,8 +577,8 @@ and conv ~raise : ?const:bool -> CST.pattern -> AST.ty_expr AST.pattern =
         Location.wrap ~loc @@ P_list (Cons (hd,tl))
       | _ -> raise.raise @@ unsupported_pattern_type p
     )
-    | PNil n ->
-      let loc = Location.lift n in
+    | PNil kwd_nil ->
+      let loc = Location.lift kwd_nil#region in
       Location.wrap ~loc @@ P_list (List [])
     in
     repr
@@ -647,7 +659,7 @@ and compile_instruction ~raise : ?next: AST.expression -> CST.instruction -> _  
       (* This looks like it should be the job of the parser *)
       let CST.{lbrace; inside; rbrace} = block.value in
       let region = block.region in
-      let enclosing = CST.Block (Region.ghost, lbrace, rbrace)
+      let enclosing = CST.Block (ghost, lbrace, rbrace)
       and (statements,terminator) = inside in
       let value = CST.{enclosing;statements;terminator} in
       let block : _ CST.reg = {value; region} in
@@ -743,7 +755,7 @@ and compile_instruction ~raise : ?next: AST.expression -> CST.instruction -> _  
       return @@ e_application ~loc func args
     )
   (*TODO: move to proper module*)
-  | ProcCall {value=(EModA {value={module_name;field};region=_},args);region} when
+  | ProcCall {value=(EModA {value={module_name;field;selector=_};region=_},args);region} when
     List.mem ~equal:Caml.(=) build_ins module_name.value ->
     let loc = Location.lift region in
     let fun_name = match field with
@@ -768,8 +780,8 @@ and compile_instruction ~raise : ?next: AST.expression -> CST.instruction -> _  
     let func = compile_expression ~raise func in
     let args = compile_tuple_expression args in
     return @@ e_application ~loc func args
-  | Skip s ->
-    let loc = Location.lift s in
+  | Skip kwd_skip ->
+    let loc = Location.lift kwd_skip#region in
     return @@ e_skip ~loc ()
   | RecordPatch rp ->
     let (rp, loc) = r_split rp in
@@ -919,7 +931,7 @@ and compile_block ~raise : ?next:AST.expression -> CST.block CST.reg -> _ =
   | None -> raise.raise @@ block_start_with_attribute block
 
 and compile_fun_decl ~raise : CST.fun_decl -> string * expression_variable * type_expression option * AST.attributes * expression =
-  fun ({kwd_recursive; fun_name; param; ret_type; return=r; attributes}: CST.fun_decl) ->
+  fun ({kwd_recursive; fun_name; param; ret_type; return=r; attributes; kwd_function=_;kwd_is=_;terminator=_}: CST.fun_decl) ->
   let return a = a in
   let (fun_name, loc) = r_split fun_name in
   let fun_binder = Location.wrap ~loc @@ Var.of_name fun_name in
@@ -954,7 +966,7 @@ and compile_fun_decl ~raise : CST.fun_decl -> string * expression_variable * typ
     Some reg ->
       let fun_type =
         trace_option ~raise (untyped_recursive_fun loc) @@ fun_type in
-      return @@ e_recursive ~loc:(Location.lift reg) fun_binder fun_type lambda
+      return @@ e_recursive ~loc:(Location.lift reg#region) fun_binder fun_type lambda
   | None   ->
       return @@ make_e ~loc @@ E_lambda lambda
   in
@@ -966,7 +978,7 @@ and compile_declaration ~raise : CST.declaration -> _ =
   let return reg decl =
     [Location.wrap ~loc:(Location.lift reg) decl] in
   match decl with
-    TypeDecl {value={name; type_expr; params}; region} ->
+    TypeDecl {value={name; type_expr; params; kwd_type=_;kwd_is=_; terminator=_}; region} ->
     let name, _ = r_split name in
     let type_expr =
       let rhs = compile_type_expression ~raise type_expr in
@@ -982,7 +994,7 @@ and compile_declaration ~raise : CST.declaration -> _ =
         in
         List.fold_right ~f:aux ~init:rhs lst
     in
-    return region @@ AST.Declaration_type {type_binder=Var.of_name name; type_expr}
+    return region @@ AST.Declaration_type {type_binder=Var.of_name name; type_expr; type_attr=[]}
   | ConstDecl {value={pattern; const_type; init; attributes; _}; region} -> (
     let attr = compile_attributes attributes in
     match pattern with
@@ -1006,7 +1018,7 @@ and compile_declaration ~raise : CST.declaration -> _ =
   | ModuleDecl {value={name; module_; _};region} ->
       let (name,_) = r_split name in
       let module_ = compile_module ~raise module_ in
-      let ast = AST.Declaration_module  {module_binder=name; module_}
+      let ast = AST.Declaration_module  {module_binder=name; module_; module_attr=[]}
       in return region ast
 
   | ModuleAlias {value={alias; binders; _};region} ->

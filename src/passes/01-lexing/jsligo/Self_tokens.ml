@@ -46,11 +46,11 @@ let tokens_of = function
   Stdlib.Ok lex_units ->
     let apply tokens = function
       Core.Token token -> token::tokens
-    | Core.Markup (Markup.BlockCom c) -> Token.BlockCom c :: tokens
-    | Core.Markup (Markup.LineCom c) -> Token.LineCom c :: tokens
+    | Core.Markup (Markup.BlockCom {value; region}) -> Token.BlockCom (Token.wrap value region) :: tokens
+    | Core.Markup (Markup.LineCom {value; region}) -> Token.LineCom (Token.wrap value region) :: tokens
     | Core.Markup _ -> tokens
     | Core.Directive d -> Token.Directive d :: tokens
-    in List.fold_left apply [] lex_units |> List.rev |> ok
+    in List.fold_left ~f:apply ~init:[] lex_units |> List.rev |> ok
 | Error _ as err -> err
 
 (* Automatic Semicolon Insertion *)
@@ -82,12 +82,12 @@ let automatic_semicolon_insertion tokens =
     let (r, _) = Token.proj_token token in
     let (r2, _) = Token.proj_token t in
     if r#stop#line < r2#start#line  then (
-      inner (t :: SEMI (Region.make ~start:(r#shift_one_uchar (-1))#stop ~stop:r#stop) :: token :: result) rest 
+      inner (t :: SEMI (Token.wrap ";" (Region.make ~start:(r#shift_one_uchar (-1))#stop ~stop:r#stop)) :: token :: result) rest 
     )
     else (
       match token with 
         RBRACE _ as t -> 
-        inner (t :: SEMI (Region.make ~start:(r#shift_one_uchar (-1))#stop ~stop:r#stop) :: token :: result) rest 
+        inner (t :: SEMI (Token.wrap ";" (Region.make ~start:(r#shift_one_uchar (-1))#stop ~stop:r#stop)) :: token :: result) rest 
       | _ ->
         inner (t :: token :: result) rest
     )
@@ -108,12 +108,12 @@ let collect_attributes str =
     try (
       let r = Str.search_forward attribute_regexp str 0 in
       let s = Str.matched_group 0 str in
-      let s = String.sub s 1 (String.length s - 1) in
-      let next = (String.sub str (r + String.length s) (String.length str - (r + + String.length s))) in
+      let s = String.sub s ~pos:1 ~len:(String.length s - 1) in
+      let next = (String.sub str ~pos:(r + String.length s) ~len:(String.length str - (r + + String.length s))) in
       inner (s :: result) next
     )
     with
-    | Not_found -> result
+    | Caml.Not_found -> result
   in
   inner [] str
 
@@ -122,9 +122,10 @@ let attributes tokens =
   let rec inner result = function
     LineCom c :: tl
   | BlockCom c :: tl ->
-      let attributes = collect_attributes c.Region.value in
-      let attributes = List.map (fun e ->
-        Attr Region.{value = e; region = c.region}) attributes in
+      let attributes = collect_attributes c#payload in
+      let attributes = List.map ~f:(fun e ->
+        Attr (Token.wrap e c#region)
+      ) attributes in
       inner (attributes @ result) tl
   | hd :: tl -> inner (hd :: result) tl
   | [] -> List.rev result
@@ -139,7 +140,7 @@ let inject_zwsp lex_units =
   let open! Token in
   let rec aux acc = function
     [] -> List.rev acc
-  | (Core.Token GT _ as gt1)::(Core.Token GT reg :: _ as units) ->
+  | (Core.Token GT _ as gt1) :: (Core.Token GT reg :: _ as units) ->
       aux (Core.Token (ZWSP reg) :: gt1 :: acc) units
   | unit::units -> aux (unit::acc) units
   in aux [] lex_units
@@ -159,7 +160,7 @@ let print_unit = function
     Printf.printf "%s\n" (Directive.to_string ~offsets:true `Point d)
 
 let print_units units =
-  apply (fun units -> List.iter print_unit units; units) units
+  apply (fun units -> List.iter ~f:print_unit units; units) units
 
 (* Printing tokens *)
 
@@ -167,7 +168,7 @@ let print_token token =
   Printf.printf "%s\n" (Token.to_string ~offsets:true `Point token)
 
 let print_tokens tokens =
-  apply (fun tokens -> List.iter print_token tokens; tokens) tokens
+  apply (fun tokens -> List.iter ~f:print_token tokens; tokens) tokens
 
 
 (* insert vertical bar for sum type *)
@@ -179,7 +180,7 @@ let vertical_bar_insert tokens =
     aux (hd::acc) false tl
   | (EQ _ as hd) :: tl ->
     if insert_token then (
-      List.rev_append (hd :: VBAR Region.ghost :: acc) tl
+      List.rev_append (hd :: VBAR (Token.wrap "|" Region.ghost) :: acc) tl
     )
     else (
       List.rev_append (hd :: acc) tl

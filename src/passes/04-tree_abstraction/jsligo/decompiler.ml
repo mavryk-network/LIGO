@@ -5,12 +5,23 @@
 module AST = Ast_imperative
 module CST = Cst.Jsligo
 module Predefined = Predefined.Tree_abstraction.Jsligo
+module Region     = Simple_utils.Region
+module Var        = Simple_utils.Var
+module Location   = Simple_utils.Location
+module List       = Simple_utils.List
+module Pair       = Simple_utils.Pair
+module Utils      = Simple_utils.Utils
 
-open Function
+open Simple_utils.Function
 
 (* Utils *)
 
-let ghost = Region.ghost
+let ghost = 
+  object 
+    method region = Region.ghost 
+    method attributes = []
+    method payload = ""
+  end 
 
 let wrap = Region.wrap_ghost
 
@@ -57,15 +68,18 @@ let brackets x = CST.{lbracket=ghost;inside=x;rbracket=ghost}
 let fun_type_arg x = CST.{ name = wrap "_" ; colon = ghost ; type_expr = x }
 let braced d = CST.{lbrace=ghost; rbrace=ghost; inside=d}
 
+let filter_private (attributes: CST.attributes) = 
+  List.filter ~f:(fun v -> not (String.equal v.value "private")) attributes
+
 (* Decompiler *)
 
 let decompile_variable : type a. a Var.t -> CST.variable = fun var ->
   let var = Format.asprintf "%a" Var.pp var in
   if String.contains var '#' then
-    let var = String.split_on_char '#' var in
-    wrap @@ "gen__" ^ (String.concat "" var)
+    let var = String.split ~on:'#' var in
+    wrap @@ "gen__" ^ (String.concat var)
   else
-    if String.length var > 4 && String.equal "gen__" @@ String.sub var 0 5 then
+    if String.length var > 4 && String.equal "gen__" @@ String.sub var ~pos:0 ~len:5 then
       wrap @@ "user__" ^ var
     else
       wrap @@ var
@@ -73,10 +87,10 @@ let decompile_variable : type a. a Var.t -> CST.variable = fun var ->
 let decompile_variable2 : type a. a Var.t -> CST.var_pattern Region.reg = fun var ->
   let var = Format.asprintf "%a" Var.pp var in
   if String.contains var '#' then
-    let var = String.split_on_char '#' var in
-    wrap @@ CST.{variable = wrap ("gen__" ^ (String.concat "" var)); attributes = []}
+    let var = String.split ~on:'#' var in
+    wrap @@ CST.{variable = wrap ("gen__" ^ (String.concat var)); attributes = []}
   else
-    if String.length var > 4 && String.equal "gen__" @@ String.sub var 0 5 then
+    if String.length var > 4 && String.equal "gen__" @@ String.sub var ~pos:0 ~len:5 then
       wrap @@ CST.{variable = wrap ("user__" ^ var); attributes = []}
     else
       wrap @@ CST.{variable = wrap var; attributes = []}
@@ -129,7 +143,7 @@ let rec decompile_type_expr : AST.type_expression -> CST.type_expr = fun te ->
     let tuple = List.map ~f:decompile_type_expr tuple in
     let tuple = list_to_nsepseq tuple in
     let tuple = brackets tuple in
-    return @@ CST.TProd {inside = {value = tuple; region = ghost}; attributes = []}
+    return @@ CST.TProd {inside = {value = tuple; region = Region.ghost}; attributes = []}
   | T_arrow {type1;type2} ->
     let type1 = decompile_type_expr type1 in
     let type_arg = fun_type_arg type1 in
@@ -160,6 +174,7 @@ let rec decompile_type_expr : AST.type_expression -> CST.type_expr = fun te ->
       | _ -> failwith "unsupported singleton"
   )
   | T_abstraction x -> decompile_type_expr x.type_
+  | T_for_all x -> decompile_type_expr x.type_
 
 let get_e_variable : AST.expression -> _ = fun expr ->
   match expr.expression_content with
@@ -225,7 +240,7 @@ let rec decompile_expression_in : AST.expression -> statement_or_expr list = fun
       (match literal with
           Literal_unit  ->  return_expr @@ [Expr (CST.EUnit (wrap (ghost,ghost)))]
         | Literal_int i ->  return_expr @@ [Expr (CST.EArith (Int (wrap ("",i))))]
-        | Literal_nat n ->  return_expr @@ [Expr (CST.EAnnot {value = CST.EArith (Int (wrap ("",n))), ghost, CST.TVar {value = "nat"; region = ghost}; region = ghost })]
+        | Literal_nat n ->  return_expr @@ [Expr (CST.EAnnot {value = CST.EArith (Int (wrap ("",n))), ghost, CST.TVar {value = "nat"; region = Region.ghost}; region = Region.ghost })]
         | Literal_timestamp time ->
           let time = Tezos_utils.Time.Protocol.to_notation @@
             Tezos_utils.Time.Protocol.of_seconds @@ Z.to_int64 time in
@@ -233,7 +248,7 @@ let rec decompile_expression_in : AST.expression -> statement_or_expr list = fun
           let ty = decompile_type_expr @@ AST.t_timestamp () in
           let time = CST.EString (String (wrap time)) in
           return_expr @@ [Expr (CST.EAnnot (wrap @@ (time, ghost, ty)))]
-        | Literal_mutez mtez -> return_expr @@ [Expr (CST.EAnnot {value = CST.EArith (Int (wrap ("", mtez))), ghost, CST.TVar {value = "mutez"; region = ghost}; region = ghost })]
+        | Literal_mutez mtez -> return_expr @@ [Expr (CST.EAnnot {value = CST.EArith (Int (wrap ("", mtez))), ghost, CST.TVar {value = "mutez"; region = Region.ghost}; region = Region.ghost })]
         | Literal_string (Standard str) -> return_expr @@ [Expr (CST.EString (String   (wrap str)))]
         | Literal_string (Verbatim ver) -> return_expr @@ [Expr (CST.EString (Verbatim (wrap ver)))]
         | Literal_bytes b ->
@@ -284,8 +299,9 @@ let rec decompile_expression_in : AST.expression -> statement_or_expr list = fun
     let (parameters,lhs_type,body) = decompile_lambda lambda in
     let fun_expr : CST.fun_expr = {parameters;lhs_type;arrow=ghost;body} in
     return_expr @@ [Expr (CST.EFun (wrap @@ fun_expr))]
-  | E_let_in {let_binder={var;ascr};rhs;let_result;attributes} ->
+  | E_let_in {let_binder={var;ascr;attributes=_};rhs;let_result;attributes} ->
     let attributes = decompile_attributes attributes in
+    let attributes = filter_private attributes in
     let var = CST.PVar (decompile_variable2 @@ var.wrap_content) in
     let binders = var in
     let lhs_type = Option.map ~f:(prefix_colon <@ decompile_type_expr) ascr in
@@ -307,7 +323,7 @@ let rec decompile_expression_in : AST.expression -> statement_or_expr list = fun
   | E_type_in {type_binder;rhs;let_result} ->
     let name = wrap @@ Var.to_name type_binder in
     let type_expr = decompile_type_expr rhs in
-    let type_decl : CST.type_decl = {kwd_type=ghost;name;params=None;eq=ghost;type_expr} in
+    let type_decl : CST.type_decl = {kwd_type=ghost;name;params=None;eq=ghost;type_expr;attributes=[]} in
     let body = decompile_expression_in let_result in
     return_expr @@ Statement (CST.SType (wrap type_decl)) :: body
   | E_mod_in {module_binder;rhs;let_result} ->
@@ -321,7 +337,8 @@ let rec decompile_expression_in : AST.expression -> statement_or_expr list = fun
     let statements: CST.statements = (toplevel_to_statement a, List.map ~f:(fun e -> (ghost, toplevel_to_statement e)) (snd module_.statements)) in 
     let statements: CST.statements CST.braces Region.reg = wrap @@ braced statements in
     let body = decompile_expression_in let_result in
-    [Statement (CST.SNamespace (wrap (ghost, name, statements)))] @ body
+    let attributes = [] in
+    [Statement (CST.SNamespace (wrap (ghost, name, statements, attributes)))] @ body
   | E_mod_alias {alias; binders; result} ->
     let alias   = wrap alias in
     let binders = nelist_to_npseq @@ List.Ne.map wrap binders in
@@ -335,7 +352,7 @@ let rec decompile_expression_in : AST.expression -> statement_or_expr list = fun
       [Expr (CST.EAnnot {value = hd; _})] -> hd
     | _ -> failwith "not implemented"
     in
-    return_expr @@ [Expr (CST.EAnnot {value = CST.ECodeInj (wrap CST.{language; code}), kwd_as,type_expr; region = ghost })]
+    return_expr @@ [Expr (CST.EAnnot {value = CST.ECodeInj (wrap CST.{language; code}), kwd_as,type_expr; region = Region.ghost })]
   | E_constructor {constructor;element} ->
     let Label constr = constructor in
     let constr = wrap constr in
@@ -471,7 +488,7 @@ let rec decompile_expression_in : AST.expression -> statement_or_expr list = fun
     let name = Var.to_name variable.wrap_content in
     let evar = CST.EVar (wrap name) in
     let rhs = decompile_expression_in expression in
-    return_expr @@ [Expr (CST.EAssign (evar, ghost, e_hd rhs))]
+    return_expr @@ [Expr (CST.EAssign (evar, {value = CST.Eq; region = Region.ghost}, e_hd rhs))]
   | E_for_each {fe_binder;collection;fe_body; _} ->
     let var = decompile_variable @@ (fst fe_binder).wrap_content in
     let bind_to = Option.map ~f:(fun (x:AST.expression_variable) -> (ghost,decompile_variable x.wrap_content)) @@ snd fe_binder in
@@ -571,7 +588,7 @@ and function_body body =
 and decompile_lambda : (AST.expr, AST.ty_expr) AST.lambda -> _ =
   fun {binder;output_type;result} ->
     let type_expr = Option.map ~f:decompile_type_expr binder.ascr in
-    let type_expr = Option.value ~default:(TVar {value = "_"; region = ghost}) type_expr in
+    let type_expr = Option.value ~default:(TVar {value = "_"; region = Region.ghost}) type_expr in
     let v = decompile_variable binder.var.wrap_content in
     let seq = CST.ESeq (wrap (CST.EAnnot (wrap (CST.EVar v,ghost,type_expr)), [])) in
     let parameters = CST.EPar (wrap @@ par seq ) in
@@ -649,7 +666,11 @@ and decompile_declaration : AST.declaration Location.wrap -> CST.statement = fun
   let decl = Location.unwrap decl in
   let wrap value = ({value;region=Region.ghost} : _ Region.reg) in
   match decl with
-    Declaration_type {type_binder;type_expr} ->
+    Declaration_type {type_binder;type_expr;type_attr} ->
+    let attr = type_attr in
+    let is_private = List.mem ~equal:Caml.(=) attr "private" in
+    let attributes : CST.attributes = decompile_attributes attr in
+    let attributes = filter_private attributes in
     let name = decompile_variable type_binder in
     let (params : CST.type_vars option) =
       match type_expr.type_content with
@@ -669,8 +690,13 @@ and decompile_declaration : AST.declaration Location.wrap -> CST.statement = fun
       | _ -> None
     in
     let type_expr = decompile_type_expr type_expr in
-    CST.SType (wrap (CST.{kwd_type=ghost; name; params;eq=ghost; type_expr}))
-  | Declaration_constant {binder; attr; expr; } ->
+    let type_ = CST.SType (wrap (CST.{attributes;kwd_type=ghost; name; params;eq=ghost; type_expr})) in
+    if is_private then 
+      type_
+    else
+      CST.SExport (wrap (ghost, type_))
+  | Declaration_constant {binder; attr; expr; name=_ } ->
+    let is_private = List.mem ~equal:Caml.(=) attr "private" in
     let attributes : CST.attributes = decompile_attributes attr in
     let var = CST.PVar (decompile_variable2 binder.var.wrap_content) in
     let binders = var in
@@ -680,13 +706,21 @@ and decompile_declaration : AST.declaration Location.wrap -> CST.statement = fun
     let binding = CST.({
       binders;
       lhs_type;
-      eq = Region.ghost;
+      eq = ghost;
       expr
     }) in
-    CST.SConst (wrap (CST.{kwd_const=ghost; bindings = (wrap binding, []); attributes = []}))
-  | Declaration_module {module_binder; module_} ->
+    let const = CST.SConst (wrap (CST.{kwd_const=ghost; bindings = (wrap binding, []); attributes})) in
+    if is_private then
+      const
+    else 
+      CST.SExport (wrap (ghost, const))
+  | Declaration_module {module_binder; module_; module_attr} ->
+    let attr = module_attr in
+    let is_private = List.mem ~equal:Caml.(=) attr "private" in
     let name = wrap module_binder in
     let module_ = decompile_module module_ in
+    let attributes = decompile_attributes module_attr in
+    let attributes = filter_private attributes in
     let toplevel_to_statement = function
         CST.TopLevel (s, _) -> s
       | _ -> failwith "not implemented"
@@ -694,7 +728,11 @@ and decompile_declaration : AST.declaration Location.wrap -> CST.statement = fun
     let a = (fst module_.statements) in
     let statements: CST.statements = (toplevel_to_statement a, List.map ~f:(fun e -> (ghost, toplevel_to_statement e)) (snd module_.statements)) in 
     let statements: CST.statements CST.braces Region.reg = wrap @@ braced statements in
-    CST.SNamespace (wrap (ghost, name, statements))
+    let ns = CST.SNamespace (wrap (ghost, name, statements, attributes)) in
+    if is_private then
+      ns
+    else 
+      CST.SExport (wrap (ghost, ns))
   | Module_alias {alias; binders} ->
     let alias = wrap alias in
     let binders = nelist_to_npseq @@ List.Ne.map wrap binders in

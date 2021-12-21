@@ -4,7 +4,7 @@ let contract = test
 let bad_contract = bad_test
 
 (* avoid pretty printing *)
-let () = Unix.putenv "TERM" "dumb"
+let () = Unix.putenv ~key:"TERM" ~data:"dumb"
 
 let%expect_test _ =
   run_ligo_good [ "info" ; "measure-contract" ; contract "coase.ligo" ] ;
@@ -880,7 +880,7 @@ let%expect_test _ =
              PAIR } } } |}]
 
 let%expect_test _ =
-  run_ligo_good [ "compile" ; "contract" ; contract "ticket_wallet.mligo" ; "--protocol"; "edo" ; "--disable-michelson-typechecking" ] ;
+  run_ligo_good [ "compile" ; "contract" ; contract "ticket_wallet.mligo" ] ;
   [%expect {|
 { parameter
     (or (ticket %receive unit)
@@ -960,8 +960,8 @@ let%expect_test _ =
                      PUSH mutez 0 ;
                      DIG 3 ;
                      TRANSFER_TOKENS ;
-                     DUG 2 ;
                      SWAP ;
+                     DIG 2 ;
                      PAIR ;
                      NIL operation ;
                      DIG 2 ;
@@ -969,7 +969,7 @@ let%expect_test _ =
                      PAIR } } } } } |} ]
 
 let%expect_test _ =
-  run_ligo_good [ "compile" ; "contract" ; contract "ticket_builder.mligo" ; "--protocol"; "edo" ] ;
+  run_ligo_good [ "compile" ; "contract" ; contract "ticket_builder.mligo" ] ;
   [%expect {|
 File "../../test/contracts/ticket_builder.mligo", line 29, characters 28-34:
  28 |       begin
@@ -1013,7 +1013,7 @@ Hint: replace it by "_ticket" to prevent this warning.
              PUSH mutez 0 ;
              DIG 2 ;
              CDR ;
-             PUSH unit Unit ;
+             UNIT ;
              TICKET ;
              TRANSFER_TOKENS ;
              SWAP ;
@@ -1490,7 +1490,8 @@ File "../../test/contracts/negative/bad_contract2.mligo", line 5, characters 9-4
   6 |   ("bad",store + 1)
 
 Invalid type for entrypoint "main".
-An entrypoint must of type "parameter * storage -> operations list * storage". |}] ;
+An entrypoint must of type "parameter * storage -> operations list * storage".
+We expected a list of operations but we got string |}] ;
 
   run_ligo_bad [ "compile" ; "contract" ; bad_contract "bad_contract3.mligo" ] ;
   [%expect {|
@@ -1622,7 +1623,7 @@ Invalid entrypoint "Toto". One of the following patterns is expected:
     Invalid big map nesting.
     A big map cannot be nested inside another big map. |}];
 
-  run_ligo_good ["print" ; "ast"; contract "letin.mligo"];
+  run_ligo_good ["print" ; "ast-imperative"; contract "letin.mligo"];
   [%expect {|
 type storage = (int , int)
 const main : (int , storage) -> (list (operation) , storage) =
@@ -1642,10 +1643,10 @@ const letin_nesting =
 const letin_nesting2 =
   lambda (x : int) return let y = 2 in let z = 3 in ADD(ADD(x , y) , z)
 const x =  match (+1 , (+2 , +3)) with
-            | (_,(x,_)) -> x
+            | (#2,(x,#3)) -> x
     |}];
 
-  run_ligo_good ["print" ; "ast"; contract "letin.religo"];
+  run_ligo_good ["print" ; "ast-imperative"; contract "letin.religo"];
   [%expect {|
 type storage = (int , int)
 const main = lambda (n : (int , storage)) : (list (operation) ,
@@ -1664,7 +1665,7 @@ const letin_nesting =
 const letin_nesting2 =
   lambda (x : int) return let y = 2 in let z = 3 in ADD(ADD(x , y) , z)
 const x =  match (+1 , (+2 , +3)) with
-            | (_,(x,_)) -> x
+            | (#2,(x,#3)) -> x
     |}];
 
   run_ligo_bad ["print" ; "ast-typed"; contract "existential.mligo"];
@@ -1713,19 +1714,19 @@ Missing a type annotation for argument "b". |}];
 let%expect_test _ =
   run_ligo_good [ "compile" ; "contract" ; contract "uncurry_contract.mligo" ] ;
   let output = [%expect.output] in
-  let lines = String.split_on_char '\n' output in
+  let lines = String.split_lines output in
   let lines = List.take lines 8 in
-  let output = String.concat "\n" lines in
+  let output = String.concat ~sep:"\n" lines in
   print_string output;
   [%expect {|
     { parameter unit ;
       storage unit ;
-      code { LAMBDA
-               (pair unit (pair unit (pair unit unit)))
-               unit
-               { UNPAIR 4 ; DROP 4 ; PUSH unit Unit } ;
+      code { LAMBDA (pair unit (pair unit (pair unit unit))) unit { UNPAIR 4 ; DROP 4 ; UNIT } ;
              LAMBDA (pair nat nat) nat { UNPAIR ; MUL } ;
-             DIG 2 ; |}]
+             DIG 2 ;
+             UNPAIR ;
+             PUSH nat 0 ;
+             PUSH nat 2 ; |}]
 
 (* old uncurry bugs: *)
 let%expect_test _ =
@@ -1805,7 +1806,7 @@ let%expect_test _ =
 
 (* warning non-duplicable variable used examples *)
 let%expect_test _ =
-  run_ligo_bad [ "compile" ; "expression" ; "cameligo" ; "x" ; "--init-file" ; contract "warning_duplicate.mligo" ] ;
+  run_ligo_good [ "compile" ; "expression" ; "cameligo" ; "x" ; "--init-file" ; contract "warning_duplicate.mligo" ] ;
   [%expect {|
     File "../../test/contracts/warning_duplicate.mligo", line 2, characters 23-50:
       1 | module Foo = struct
@@ -1814,10 +1815,8 @@ let%expect_test _ =
     :
     Warning: variable "Foo.x" cannot be used more than once.
 
-    Error(s) occurred while checking the contract:
-    At (unshown) location 8, DUP used on the non-dupable type ticket nat.
-    At (unshown) location 8, Ticket in unauthorized position (type error).
-  |}]
+    (Pair (Pair "KT1DUMMYDUMMYDUMMYDUMMYDUMMYDUMu2oHG" 42 42)
+          (Pair "KT1DUMMYDUMMYDUMMYDUMMYDUMMYDUMu2oHG" 42 42)) |}]
 
 
 let%expect_test _ =
@@ -1830,7 +1829,7 @@ let%expect_test _ =
     Warning: variable "x" cannot be used more than once.
 
     Error(s) occurred while checking the contract:
-    At (unshown) location 8, DUP used on the non-dupable type ticket nat.
+    At (unshown) location 8, type ticket nat cannot be used here because it is not duplicable. Only duplicable types can be used with the DUP instruction and as view inputs and outputs.
     At (unshown) location 8, Ticket in unauthorized position (type error).
   |}]
 
@@ -1905,9 +1904,9 @@ let%expect_test _ =
       code { DROP ;
              SELF %foo ;
              PUSH mutez 0 ;
-             PUSH unit Unit ;
+             UNIT ;
              TRANSFER_TOKENS ;
-             PUSH unit Unit ;
+             UNIT ;
              NIL operation ;
              DIG 2 ;
              CONS ;
@@ -1954,7 +1953,7 @@ let%expect_test _ =
   [%expect {|
     { parameter unit ;
       storage unit ;
-      code { DROP ; PUSH unit Unit ; NIL operation ; PAIR } } |}]
+      code { DROP ; UNIT ; NIL operation ; PAIR } } |}]
 
 let%expect_test _ =
   run_ligo_good [ "compile" ; "contract" ; contract "remove_unused_toptup.mligo" ] ;
@@ -1979,14 +1978,14 @@ let%expect_test _ =
   [%expect {|
     { parameter (pair (pair (nat %AAA) (nat %fooB)) (nat %cCC)) ;
       storage unit ;
-      code { DROP ; PUSH unit Unit ; NIL operation ; PAIR } } |}]
+      code { DROP ; UNIT ; NIL operation ; PAIR } } |}]
 
 let%expect_test _ =
   run_ligo_good [ "compile" ; "contract" ; contract "annotation_cases.mligo" ; "-e" ; "main2" ] ;
   [%expect {|
     { parameter (or (or (nat %AAA) (nat %fooB)) (nat %cCC)) ;
       storage unit ;
-      code { DROP ; PUSH unit Unit ; NIL operation ; PAIR } } |}]
+      code { DROP ; UNIT ; NIL operation ; PAIR } } |}]
 
 (* remove recursion *)
 let%expect_test _ =
@@ -2025,21 +2024,243 @@ let%expect_test _ =
     Cannot redeclare block-scoped variable. |}]
 
 let%expect_test _ =
-  run_ligo_good [ "run"; "run-function"; contract "assert.mligo"; "(false, ())"; "-e"; "with_error"];
+  run_ligo_good [ "run"; "evaluate-call"; contract "assert.mligo"; "(false, ())"; "-e"; "with_error"];
   [%expect {| failwith("my custom error") |}]
 
 let%expect_test _ =
-  run_ligo_good [ "run"; "run-function"; contract "assert.mligo"; "(None: unit option)"; "-e"; "some_with_error"];
+  run_ligo_good [ "run"; "evaluate-call"; contract "assert.mligo"; "(None: unit option)"; "-e"; "some_with_error"];
+  [%expect {| failwith("my custom error") |}]
+
+let%expect_test _ =
+  run_ligo_good [ "run"; "evaluate-call"; contract "assert.mligo"; "(Some (): unit option)"; "-e"; "none_with_error"];
   [%expect {| failwith("my custom error") |}]
 
 let%expect_test _ =
   run_ligo_good [ "print" ; "ast-typed" ; contract "attributes.jsligo" ] ;
   [%expect {|
-    const x = 1[@inline]
+    const x = 1[@inline][@private]
     const foo = lambda (a) return let test = ADD(2 ,
-    a)[@inline] in test[@inline]
-    const y = 1
+    a)[@inline] in test[@inline][@private]
+    const y = 1[@private]
     const bar = lambda (b) return let test = lambda (z) return ADD(ADD(2 ,
     b) ,
-    z)[@inline] in (test)@(b)
-    const check = 4 |}]
+    z)[@inline] in (test)@(b)[@private]
+    const check = 4[@private] |}]
+
+(* literal type "casting" inside modules *)
+let%expect_test _ =
+  run_ligo_good [ "compile" ; "contract" ; contract "literal_type_cast.mligo" ] ;
+  [%expect {|
+    { parameter unit ;
+      storage timestamp ;
+      code { DROP ; PUSH timestamp 0 ; NIL operation ; PAIR } }
+  |}]
+
+(* JsLIGO export testing *)
+let%expect_test _ =
+  run_ligo_bad [ "compile" ; "contract" ; bad_contract "modules_export_type.jsligo" ] ;
+    [%expect {|
+      File "../../test/contracts/negative/modules_export_type.jsligo", line 5, characters 13-16:
+        4 |
+        5 | type a = Bar.foo
+
+      Type "foo" not found. |}];
+  run_ligo_bad [ "compile" ; "contract" ; bad_contract "modules_export_const.jsligo" ] ;
+    [%expect {|
+      File "../../test/contracts/negative/modules_export_const.jsligo", line 5, characters 12-15:
+        4 |
+        5 | let a = Bar.foo;
+
+      Variable "foo" not found. |}];
+  run_ligo_bad [ "compile" ; "contract" ; bad_contract "modules_export_namespace.jsligo" ] ;
+    [%expect {|
+      File "../../test/contracts/negative/modules_export_namespace.jsligo", line 7, characters 0-20:
+        6 |
+        7 | import Foo = Bar.Foo
+
+      Module "Foo" not found. |}]
+
+(* Test compile contract with Big_map.get_and_update for Hangzhou *)
+let%expect_test _ =
+  run_ligo_good [ "compile" ; "contract" ; contract "ticket_wallet.mligo" ; "--protocol"; "hangzhou" ] ;
+  [%expect {|
+{ parameter
+    (or (ticket %receive unit)
+        (pair %send
+           (contract %destination (ticket unit))
+           (pair (nat %amount) (address %ticketer)))) ;
+  storage (pair (address %manager) (big_map %tickets address (ticket unit))) ;
+  code { PUSH mutez 0 ;
+         AMOUNT ;
+         COMPARE ;
+         EQ ;
+         IF {} { PUSH string "failed assertion" ; FAILWITH } ;
+         UNPAIR ;
+         SWAP ;
+         UNPAIR ;
+         DIG 2 ;
+         IF_LEFT
+           { READ_TICKET ;
+             CAR ;
+             DIG 3 ;
+             NONE (ticket unit) ;
+             DUP 3 ;
+             GET_AND_UPDATE ;
+             IF_NONE
+               { DIG 2 }
+               { DIG 3 ;
+                 PAIR ;
+                 JOIN_TICKETS ;
+                 IF_NONE { PUSH string "impossible?" ; FAILWITH } {} } ;
+             SOME ;
+             DIG 2 ;
+             GET_AND_UPDATE ;
+             DROP ;
+             SWAP ;
+             PAIR ;
+             NIL operation ;
+             PAIR }
+           { SWAP ;
+             DUP ;
+             DUG 2 ;
+             SENDER ;
+             COMPARE ;
+             EQ ;
+             IF {} { PUSH string "failed assertion" ; FAILWITH } ;
+             DIG 2 ;
+             NONE (ticket unit) ;
+             DUP 3 ;
+             GET 4 ;
+             GET_AND_UPDATE ;
+             IF_NONE
+               { DROP 3 ; PUSH string "no tickets" ; FAILWITH }
+               { READ_TICKET ;
+                 CDR ;
+                 CDR ;
+                 DUP 4 ;
+                 GET 3 ;
+                 DUP ;
+                 DIG 2 ;
+                 SUB ;
+                 ISNAT ;
+                 IF_NONE { PUSH string "not enough tickets" ; FAILWITH } {} ;
+                 SWAP ;
+                 PAIR ;
+                 SWAP ;
+                 SPLIT_TICKET ;
+                 IF_NONE
+                   { DROP 3 ; PUSH string "impossible?" ; FAILWITH }
+                   { UNPAIR ;
+                     DUG 2 ;
+                     SOME ;
+                     DUP 4 ;
+                     GET 4 ;
+                     GET_AND_UPDATE ;
+                     DROP ;
+                     DIG 2 ;
+                     CAR ;
+                     PUSH mutez 0 ;
+                     DIG 3 ;
+                     TRANSFER_TOKENS ;
+                     SWAP ;
+                     DIG 2 ;
+                     PAIR ;
+                     NIL operation ;
+                     DIG 2 ;
+                     CONS ;
+                     PAIR } } } } } |} ]
+
+(* source location comments *)
+let%expect_test _ =
+  run_ligo_good [ "compile"; "contract"; contract "noop.mligo";
+                  "--michelson-comments"; "location" ];
+  [%expect {|
+    { parameter unit ;
+      storage unit ;
+      code { DROP ;
+             UNIT ;
+             NIL operation
+                 /* File "../../test/contracts/noop.mligo", line 2, characters 4-6 */
+             /* File "../../test/contracts/noop.mligo", line 2, characters 4-6 */ ;
+             PAIR
+             /* File "../../test/contracts/noop.mligo", line 2, characters 3-28 */ } } |}]
+
+(* JSON source location comments *)
+let%expect_test _ =
+  run_ligo_good [ "compile"; "contract"; contract "noop.mligo";
+                  "--michelson-format"; "json";
+                  "--michelson-comments"; "location" ];
+  [%expect {|
+    { "expression":
+        [ { "prim": "parameter", "args": [ { "prim": "unit" } ] },
+          { "prim": "storage", "args": [ { "prim": "unit" } ] },
+          { "prim": "code",
+            "args":
+              [ [ { "prim": "DROP" }, { "prim": "UNIT" },
+                  { "prim": "NIL", "args": [ { "prim": "operation" } ] },
+                  { "prim": "PAIR" } ] ] } ],
+      "locations":
+        [ null, null, null, null, null, null, null, null, null,
+          { "location":
+              { "start":
+                  { "file": "../../test/contracts/noop.mligo", "line": "2",
+                    "col": "4" },
+                "stop":
+                  { "file": "../../test/contracts/noop.mligo", "line": "2",
+                    "col": "6" } } },
+          { "location":
+              { "start":
+                  { "file": "../../test/contracts/noop.mligo", "line": "2",
+                    "col": "4" },
+                "stop":
+                  { "file": "../../test/contracts/noop.mligo", "line": "2",
+                    "col": "6" } } },
+          { "location":
+              { "start":
+                  { "file": "../../test/contracts/noop.mligo", "line": "2",
+                    "col": "3" },
+                "stop":
+                  { "file": "../../test/contracts/noop.mligo", "line": "2",
+                    "col": "28" } } } ] } |}]
+
+(* Check that decl_pos is not taken into account when "inferring" about tuples (including long tuples) *)
+let%expect_test _ =
+  run_ligo_good [ "print" ; "ast-typed" ; contract "tuple_decl_pos.mligo" ] ;
+  [%expect {|
+                     const c = lambda (#4) return CREATE_CONTRACT(lambda (#1) return let #9 = #1 in
+                      match #9 with
+                       | ( #3 , #2 ) ->
+                       ( LIST_EMPTY() , unit ) ,
+                     NONE() ,
+                     0mutez ,
+                     unit)
+                     const foo = let #11 = (c)@(unit) in  match #11 with
+                                                           | ( _a , _b ) ->
+                                                           unit
+                     const c = lambda (#5) return ( 1 , "1" , +1 , 2 , "2" , +2 , 3 , "3" , +3 , 4 , "4" )
+                     const foo = let #13 = (c)@(unit) in  match #13 with
+                                                           | ( _i1 , _s1 , _n1 , _i2 , _s2 , _n2 , _i3 , _s3 , _n3 , _i4 , _s4 ) ->
+                                                           unit |} ]
+
+(* Module being defined does not type with its own type *)
+let%expect_test _ =
+  run_ligo_good [ "print" ; "mini-c" ; contract "modules_env.mligo" ] ;
+  [%expect {|
+    let Foo = let x = L(54)[@inline] in (x)[@inline]
+    let Foo = let y = (Foo).(0)[@inline] in (y)[@inline] |}]
+
+let%expect_test _ =
+  run_ligo_good [ "compile" ; "storage" ; contract "module_contract_simple.mligo" ; "999" ] ;
+  [%expect{| 999 |}]
+
+let%expect_test _ =
+  run_ligo_good [ "compile" ; "parameter" ; contract "module_contract_simple.mligo" ; "Add 999" ] ;
+  [%expect{| (Left (Left 999)) |}]
+
+let%expect_test _ =
+  run_ligo_good [ "compile" ; "storage" ; contract "module_contract_complex.mligo" ; "{ number = 999 ; previous_action = Reset }" ] ;
+  [%expect{| (Pair 999 (Left (Right Unit))) |}]
+
+let%expect_test _ =
+  run_ligo_good [ "compile" ; "parameter" ; contract "module_contract_complex.mligo" ; "Add 999" ] ;
+  [%expect{| (Left (Left 999)) |}]

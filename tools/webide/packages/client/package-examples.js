@@ -76,34 +76,10 @@ async function processExample(abspath, destDir) {
   return { id: id, name: config.name };
 }
 
-function globPromise(src) {
-  return new Promise((resolve, reject) => {
-    glob(src, (err, matches) => {
-      err
-        ? reject(err)
-        : resolve(matches)
-    })  
-  })
-}
-
-async function processExamples(srcDir, exclusions, destDir) {
-  const src = join(srcDir, "/**/*.*ligo")
-  const retval = (await globPromise(src))
-    .sort((a, b) => basename(a).localeCompare(basename(b)))
-    .map(item => {
-      console.log(item);
-      return item;
-    })
-    .reduce(
-      (retval, abspath) => {
-        const relpath = basename(abspath)
-        return exclusions.includes(relpath)
-            ? retval
-            : [...retval, processExample(abspath, destDir)]  
-      },
-      []
-    )
-  return Promise.all(retval)
+function processExamples(srcDir, files, destDir) {
+  return Promise.all(
+    files.map((file) => processExample(srcDir, file, destDir))
+  );
 }
 
 async function main() {
@@ -114,6 +90,30 @@ async function main() {
   const EXAMPLES_DIR =
     process.env['EXAMPLES_DIR'] ||
     join(process.cwd(), '../../../../src/test/examples');
+
+  // const EXAMPLES_GLOB = '**/*.ligo';
+  // const files = await findFiles(EXAMPLES_GLOB, EXAMPLES_DIR);
+
+  const CURATED_EXAMPLES = [
+    'jsligo/arithmetic-contract.ligo',
+    'cameligo/arithmetic-contract.ligo',
+    'reasonligo/arithmetic-contract.ligo',
+    'pascaligo/arithmetic-contract.ligo',
+
+    'jsligo/id.jsligo',
+    'cameligo/id.mligo',
+    'reasonligo/id.religo',
+    'pascaligo/id.ligo',
+
+    'jsligo/hashlock.jsligo',
+    'cameligo/hashlock.mligo',
+    'reasonligo/hashlock.religo',
+    'pascaligo/hashlock.ligo',
+  ];
+  // Disable ID examples pending https://ligo.atlassian.net/browse/LIGO-676
+  //'pascaligo/id.ligo',
+  //'cameligo/id.mligo',
+  //'reasonligo/id.religo',
 
   const EXAMPLES_DEST_DIR = join(process.cwd(), 'build', 'static', 'examples');
   fs.mkdirSync(EXAMPLES_DEST_DIR, { recursive: true });

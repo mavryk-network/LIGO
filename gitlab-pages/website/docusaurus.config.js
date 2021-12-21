@@ -136,7 +136,7 @@ const siteConfig = {
           { from: ["/docs/next/manpages/list-declarations"    ], to: "/docs/next/manpages/info list-declarations" },
           { from: ["/docs/next/manpages/measure-contract"     ], to: "/docs/next/manpages/info measure-contract"  },
           { from: ["/docs/next/manpages/preprocess"           ], to: "/docs/next/manpages/print preprocessed"     },
-          { from: ["/docs/next/manpages/pretty-print"         ], to: "/docs/next/manpages/print pretty-print"     },
+          { from: ["/docs/next/manpages/pretty-print"         ], to: "/docs/next/manpages/print pretty"           },
           { from: ["/docs/next/manpages/print-ast"            ], to: "/docs/next/manpages/print ast"              },
           { from: ["/docs/next/manpages/print-ast-combined"   ], to: "/docs/next/manpages/print ast-combined"     },
           { from: ["/docs/next/manpages/print-ast-core"       ], to: "/docs/next/manpages/print ast-core"         },
@@ -149,6 +149,7 @@ const siteConfig = {
           { from: ["/docs/next/manpages/test"                 ], to: "/docs/next/manpages/run test"               },
           { from: ["/docs/next/manpages/transpile-contract"   ], to: "/docs/next/manpages/transpile contract"     },
           { from: ["/docs/next/manpages/transpile-expression" ], to: "/docs/next/manpages/transpile expression"   },
+          { from: ["/docs/next/language-basics/strings"       ], to: "/docs/next/language-basics/strings-bytes"        },
         ],      
       }
     ]
@@ -202,7 +203,7 @@ const siteConfig = {
         { to: 'docs/intro/installation', label: 'Install', position: 'left' },
         { to: 'docs/intro/introduction', label: 'Docs', position: 'left' },
         {
-          to: 'docs/tutorials/get-started/tezos-taco-shop-smart-contract',
+          to: 'docs/tutorials/getting-started/getting-started',
           label: 'Tutorials',
           position: 'left'
         },
@@ -249,7 +250,7 @@ const siteConfig = {
           items: [
             {
               label: 'Tutorials',
-              to: 'docs/tutorials/get-started/tezos-taco-shop-smart-contract'
+              to: 'docs/tutorials/getting-started/getting-started'
             },
             {
               href: 'https://forum.tezosagora.org/tag/ligo',

@@ -1,3 +1,9 @@
+open Main_errors
+module Region  = Simple_utils.Region
+module Pos     = Simple_utils.Pos
+module Display = Simple_utils.Display
+module Michelson = Tezos_utils.Michelson
+module Location = Simple_utils.Location
 open Region
 
 let byte =
@@ -107,25 +113,25 @@ let%expect_test "main_execution_failed" =
   [%expect {|An error occurred while evaluating an expression: bar|}]
 
 let%expect_test _ =
-  human_readable_error (`Main_unparse_michelson_result [`Tezos_alpha_error Tezos_error_monad.Error_monad.Timeout; `Tezos_alpha_error Tezos_error_monad.Error_monad.Canceled]) ;
+  human_readable_error (unparsing_michelson_tracer [`Tezos_alpha_error Tezos_error_monad.Error_monad.Timeout; `Tezos_alpha_error Tezos_error_monad.Error_monad.Canceled]) ;
   [%expect {|
   Error(s) occurred while unparsing the Michelson result:
   The request has timed out
   The promise was unexpectedly canceled
   |}] ;
-  human_readable_error (`Main_parse_michelson_input [`Tezos_alpha_error Tezos_error_monad.Error_monad.Timeout; `Tezos_alpha_error Tezos_error_monad.Error_monad.Canceled]) ;
+  human_readable_error (parsing_input_tracer [`Tezos_alpha_error Tezos_error_monad.Error_monad.Timeout; `Tezos_alpha_error Tezos_error_monad.Error_monad.Canceled]) ;
   [%expect {|
   Error(s) occurred while parsing the Michelson input:
   The request has timed out
   The promise was unexpectedly canceled
   |}] ;
-  human_readable_error (`Main_parse_michelson_code [`Tezos_alpha_error Tezos_error_monad.Error_monad.Timeout; `Tezos_alpha_error Tezos_error_monad.Error_monad.Canceled]) ;
+  human_readable_error (parsing_code_tracer [`Tezos_alpha_error Tezos_error_monad.Error_monad.Timeout; `Tezos_alpha_error Tezos_error_monad.Error_monad.Canceled]) ;
   [%expect {|
   Error(s) occurred while checking the contract:
   The request has timed out
   The promise was unexpectedly canceled
   |}] ;
-  human_readable_error (`Main_michelson_execution_error [`Tezos_alpha_error Tezos_error_monad.Error_monad.Timeout; `Tezos_alpha_error Tezos_error_monad.Error_monad.Canceled]) ;
+  human_readable_error (error_of_execution_tracer [`Tezos_alpha_error Tezos_error_monad.Error_monad.Timeout; `Tezos_alpha_error Tezos_error_monad.Error_monad.Canceled]) ;
   [%expect {|
   Error(s) occurred while executing the contract:
   The request has timed out
@@ -137,7 +143,7 @@ let%expect_test "pretty" = () (* not used *)
 let%expect_test "self_ast_imperative" =
   let open Ast_imperative in
   let open Location in
-  let error e = human_readable_error (`Main_self_ast_imperative e) in
+  let error e = human_readable_error (self_ast_imperative_tracer e) in
   let location_t = File default_location in
   let type_content = T_variable (Var.of_name "foo") in
   let type_expression = {type_content; location= location_t} in
@@ -197,7 +203,7 @@ let%expect_test "self_ast_imperative" =
   Ill-formed "ITER" expression.
   A list of pair parameters is expected.
   |}] ;
-  error (`Self_ast_imperative_bad_convertion_bytes expression) ;
+  error (`Self_ast_imperative_bad_conversion_bytes expression) ;
   [%expect
     {|
   File "a dummy file name", line 20, character 5:
@@ -206,9 +212,9 @@ let%expect_test "self_ast_imperative" =
   |}]
 
 let%expect_test _ =
-  human_readable_error (`Main_purification (`purification_corner_case "foo")) ;
+  human_readable_error (purification_tracer (`Purification_corner_case "foo")) ;
   [%expect {|Corner case: foo|}] ;
-  human_readable_error (`Main_depurification (`purification_corner_case "foo")) ;
+  human_readable_error (depurification_tracer (`Purification_corner_case "foo")) ;
   [%expect {| |}]
 
 let%expect_test "desugaring" = ()
@@ -218,7 +224,14 @@ let%expect_test "sugaring" = ()
 let%expect_test "main_cit_pascaligo" =
   let open Cst.Pascaligo in
   let open Location in
-  let error e = human_readable_error (`Main_cit_pascaligo e) in
+  let ghost =
+    object
+      method region = Region.ghost
+      method attributes = []
+      method payload = ""
+    end
+  in
+  let error e = human_readable_error (cit_pascaligo_tracer e) in
   let lexeme_reg : lexeme reg = {value= "foo"; region= default_region1} in
   let pvar = PVar {value = {variable = lexeme_reg ; attributes = []} ; region = default_region1} in
   let type_expr = TString {value= "yolo"; region= default_region1} in
@@ -252,7 +265,7 @@ let%expect_test "main_cit_pascaligo" =
 
       Invalid "zzz" type.
       An even number of 2 or more arguments is expected, where each odd item is a type annotated by the following string.|}] ;
-  error (`Concrete_pascaligo_recursive_fun location_t) ;
+  error (`Concrete_pascaligo_untyped_recursive_fun location_t) ;
   [%expect
     {|
   File "a dummy file name", line 20, character 5:
@@ -262,17 +275,17 @@ let%expect_test "main_cit_pascaligo" =
   |}] ;
   let pvar : var_pattern = {variable = {value = "foo"; region = Region.ghost} ; attributes = []} in
   error
-    (`Concrete_pascaligo_block_attribute
+    (`Concrete_pascaligo_block_start_with_attribute
       { value=
-          { enclosing= BeginEnd (Region.ghost, Region.ghost);
+          { enclosing= BeginEnd (ghost, ghost);
             statements=
               ( Data
                   (LocalVar
                      { value=
-                         { kwd_var= Region.ghost;
+                         { kwd_var= ghost;
                            pattern= PVar {value= pvar; region= Region.ghost};
                            var_type= None;
-                           assign= Region.ghost;
+                           assign= ghost;
                            init= EVar {value= "xxx"; region= Region.ghost};
                            terminator= None;
                            attributes = []};
@@ -289,12 +302,12 @@ let%expect_test "main_cit_pascaligo" =
 let%expect_test "main_cit_cameligo" =
   let open Cst.Cameligo in
   let open Location in
-  let error e = human_readable_error (`Main_cit_cameligo e) in
+  let error e = human_readable_error (cit_cameligo_tracer e) in
   let variable = {value= "dog"; region= default_region1} in
   let pvar = PVar {value = { variable ; attributes = []} ; region = default_region1} in
   let type_expr = TVar {value= "dog"; region= default_region1} in
   let location_t = File default_location in
-  error (`Concrete_cameligo_recursive_fun default_region1) ;
+  error (`Concrete_cameligo_untyped_recursive_fun default_region1) ;
   [%expect
     {|
       File "a dummy file name", line 20, character 5:
@@ -346,12 +359,12 @@ At this point, an annotation, in the form of a string, is expected for the prece
 let%expect_test "main_cit_reasonligo" =
   let open Cst.Reasonligo in
   let open Location in
-  let error e = human_readable_error (`Main_cit_reasonligo e) in
+  let error e = human_readable_error (cit_reasonligo_tracer e) in
   let variable = {value= "dog"; region= default_region1} in
   let pvar = PVar  {value= {variable; attributes = []}; region= default_region1} in
   let type_expr = TVar {value= "dog"; region= default_region1} in
   let location_t = File default_location in
-  error (`Concrete_reasonligo_recursive_fun default_region1) ;
+  error (`Concrete_reasonligo_untyped_recursive_fun default_region1) ;
   [%expect
     {|
       File "a dummy file name", line 20, character 5:
@@ -403,7 +416,7 @@ let%expect_test "main_cit_reasonligo" =
 let%expect_test "typer" =
   let open Ast_typed in
   let open Location in
-  let error e = human_readable_error (`Main_checking e) in
+  let error e = human_readable_error (checking_tracer e) in
   let location_t = File default_location in
   let environment = Environment.empty in
   let type_variable = Var.of_name "foo" in
@@ -555,32 +568,32 @@ let%expect_test "typer" =
   Expected a function type, but got "foo".|}] ;
   error
     (`Typer_bad_record_access
-      (Label "bar", ast_core_expression, type_expression, location_t)) ;
+      (Label "bar", expression, location_t)) ;
   [%expect
     {|
   File "a dummy file name", line 20, character 5:
 
-  Invalid record field "bar" in record "bar".|}] ;
+  Invalid record field "bar" in record "unit".|}] ;
   error
     (`Typer_expression_tracer
       ( ast_core_expression,
         `Typer_bad_record_access
-          (Label "bar", ast_core_expression, type_expression, location_t) )) ;
+          (Label "bar", expression, location_t) )) ;
   [%expect
     {|
   File "a dummy file name", line 20, character 5:
 
-  Invalid record field "bar" in record "bar".|}] ;
+  Invalid record field "bar" in record "unit".|}] ;
   error
     (`Typer_record_access_tracer
       ( expression,
         `Typer_bad_record_access
-          (Label "bar", ast_core_expression, type_expression, location_t) )) ;
+          (Label "bar", expression, location_t) )) ;
   [%expect
     {|
   File "a dummy file name", line 20, character 5:
 
-  Invalid record field "bar" in record "bar".|}] ;
+  Invalid record field "bar" in record "unit".|}] ;
   error (`Typer_assert_equal (location_t, type_expression, type_expression2)) ;
   [%expect {|
     File "a dummy file name", line 20, character 5:
@@ -766,8 +779,9 @@ let%expect_test "typer" =
     {|
     File "a dummy file name", line 20, character 5:
 
-    These types are not matching: - foo
-    - bar|}] ;
+    These types are not matching:
+     - foo
+     - bar|}] ;
   error (`Typer_not_annotated location_t);
   [%expect {|
     File "a dummy file name", line 20, character 5:
@@ -874,7 +888,7 @@ let%expect_test "interpreter" = ()
 let%expect_test "self_ast_typed" =
   let open Ast_typed in
   let open Location in
-  let error e = human_readable_error (`Main_self_ast_typed e) in
+  let error e = human_readable_error (self_ast_typed_tracer e) in
   let expression_variable = Location.wrap (Var.of_name "bar") in
   let location_t = File default_location in
   let type_expression : Ast_typed.type_expression =
@@ -893,7 +907,7 @@ let%expect_test "self_ast_typed" =
   let expression =
     {expression_content; location= location_t; type_expression}
   in
-  error (`Self_ast_typed_rec_call (expression_variable, location_t)) ;
+  error (`Self_ast_typed_recursive_call_is_only_allowed_as_the_last_operation (expression_variable, location_t)) ;
   [%expect
     {|
     File "a dummy file name", line 20, character 5:
@@ -910,7 +924,7 @@ let%expect_test "self_ast_typed" =
     Invalid type annotation.
     "bar" was given, but "foo" was expected.
     Note that "Tezos.self" refers to this contract, so the parameters should be the same. |}] ;
-  error (`Self_ast_typed_format_entrypoint_ann ("foo", location_t)) ;
+  error (`Self_ast_typed_bad_format_entrypoint_ann ("foo", location_t)) ;
   [%expect
     {|
     File "a dummy file name", line 20, character 5:
@@ -932,7 +946,7 @@ let%expect_test "self_ast_typed" =
 
     Invalid entrypoint value.
     The entrypoint value does not match a constructor of the contract parameter. |}] ;
-  error (`Self_ast_typed_nested_big_map location_t) ;
+  error (`Self_ast_typed_nested_bigmap location_t) ;
   [%expect
     {|
     File "a dummy file name", line 20, character 5:
@@ -942,7 +956,7 @@ let%expect_test "self_ast_typed" =
   error (`Self_ast_typed_corner_case "foo") ;
   [%expect {|
     Internal error: foo |}] ;
-  error (`Self_ast_typed_contract_io ("foo", expression)) ;
+  error (`Self_ast_typed_bad_contract_io ("foo", expression)) ;
   [%expect
     {|
     File "a dummy file name", line 20, character 5:
@@ -950,13 +964,14 @@ let%expect_test "self_ast_typed" =
     Invalid type for entrypoint "foo".
     An entrypoint must of type "parameter * storage -> operations list * storage". |}] ;
   error
-    (`Self_ast_typed_contract_list_ops ("foo", type_expression, expression)) ;
+    (`Self_ast_typed_expected_list_operation ("foo", type_expression, expression)) ;
   [%expect
     {|
     File "a dummy file name", line 20, character 5:
 
     Invalid type for entrypoint "foo".
-    An entrypoint must of type "parameter * storage -> operations list * storage". |}] ;
+    An entrypoint must of type "parameter * storage -> operations list * storage".
+    We expected a list of operations but we got foo |}] ;
   error
     (`Self_ast_typed_expected_same_entry
       ("foo", type_expression, type_expression2, expression)) ;
@@ -966,14 +981,14 @@ let%expect_test "self_ast_typed" =
 
     Invalid type for entrypoint "foo".
     The storage type "foo" of the function parameter must be the same as the storage type "bar" of the return value. |}] ;
-  error (`Self_ast_typed_pair_in location_t) ;
+  error (`Self_ast_typed_expected_pair_in (location_t, `Contract)) ;
   [%expect
     {|
     File "a dummy file name", line 20, character 5:
 
-    Invalid entrypoint.
+    Invalid contract.
     Expected a tuple as argument. |}] ;
-  error (`Self_ast_typed_pair_out location_t) ;
+  error (`Self_ast_typed_expected_pair_out location_t) ;
   [%expect
     {|
     File "a dummy file name", line 20, character 5:
@@ -982,20 +997,20 @@ let%expect_test "self_ast_typed" =
     Expected a tuple of operations and storage as return value. |}]
 
 let%expect_test "self_mini_c" =
-  let error e = human_readable_error (`Main_self_mini_c e) in
+  let error e = human_readable_error (self_mini_c_tracer e) in
   error (`Self_mini_c_bad_self_address C_SELF_ADDRESS) ;
   [%expect {|"Tezos.self" must be used directly and cannot be used via another function. |}] ;
   error `Self_mini_c_not_a_function ;
   [%expect {|
     Invalid type for entrypoint.
     An entrypoint must of type "parameter * storage -> operations list * storage". |}] ;
-  error `Self_mini_c_aggregation ;
+  error `Self_mini_c_could_not_aggregate_entry ;
   [%expect {|
     Invalid type for entrypoint.
     An entrypoint must of type "parameter * storage -> operations list * storage". |}]
 
 let%expect_test "spilling" =
-  let error (e:Spilling.Errors.spilling_error) = human_readable_error (`Main_spilling e) in
+  let error (e:Spilling.Errors.spilling_error) = human_readable_error (spilling_tracer e) in
   let open Ast_typed in
   let open Location in
   let type_variable : Ast_typed.type_variable = Var.of_name "foo" in
@@ -1035,7 +1050,7 @@ let%expect_test "spilling" =
 
 let%expect_test "stacking" =
   let open Mini_c in
-  let error e = human_readable_error (`Main_stacking e) in
+  let error e = human_readable_error (stacking_tracer e) in
   error (`Stacking_corner_case ("foo", "bar")) ;
   [%expect
     {|
