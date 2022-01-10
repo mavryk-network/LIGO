@@ -1,3 +1,6 @@
+module Var         = Simple_utils.Var
+module Ligo_string = Simple_utils.Ligo_string
+module Location    = Simple_utils.Location
 module I = Ast_core
 module O = Ast_typed
 
@@ -82,7 +85,6 @@ and untype_declaration untype_expression =
 
 
 
-and untype_module untype_expression : O.module_fully_typed -> I.module_ =
-  fun (O.Module_Fully_Typed p) ->
+and untype_module untype_expression : O.module_ -> I.module_ = fun p ->
   let untype_declaration = untype_declaration untype_expression in
   List.map ~f:(Location.map untype_declaration) p

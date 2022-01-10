@@ -1,7 +1,8 @@
 [@@@coverage exclude_file]
+module Int64 = Caml.Int64
 open Types
 open Format
-open PP_helpers
+open Simple_utils.PP_helpers
 include Stage_common.PP
 
 type 'a pretty_printer = Format.formatter -> 'a -> unit
@@ -57,7 +58,7 @@ let rec constraint_identifier_unicode (ci : Int64.t) =
     | a when Int64.equal a 9L -> "₉"
     | _ -> failwith (Format.asprintf "internal error: couldn't pretty-print int64: %Li (is it a negative number?)" ci)
   in
-  if ci = 0L then "" else (constraint_identifier_unicode (Int64.div ci 10L)) ^ digit
+  if Int64.equal ci 0L then "" else (constraint_identifier_unicode (Int64.div ci 10L)) ^ digit
 
 let constraint_identifier_short ppf x =
   if Int64.equal x 0L
@@ -121,7 +122,7 @@ and expression_content ppf (ec : expression_content) =
       type_expression rhs
       expression let_result
   | E_mod_in {module_binder; rhs; let_result;} ->
-    fprintf ppf "@[let %a =@;<1 2>%a in@ %a@]" module_variable module_binder module_ rhs expression let_result
+    fprintf ppf "@[let module %a = struct@; @[<v>%a@] end in@ %a@]" module_variable module_binder module_ rhs expression let_result
   | E_mod_alias ma -> mod_alias expression ppf ma
   | E_raw_code r -> raw_code expression ppf r
   | E_ascription a -> ascription expression type_expression ppf a
@@ -140,15 +141,18 @@ and declaration ppf (d : declaration) =
         option_view view
         option_public public
   | Declaration_module {module_binder;module_=m;module_attr={public}} ->
-      fprintf ppf "@[<2>module %a =@ %a%a@]"
+      fprintf ppf "module %a = struct @; @[%a@]@;end %a"
         module_variable module_binder
         module_ m
         option_public public
   | Module_alias {alias;binders} ->
-    fprintf ppf "@[<2>module %a =@ %a@]" module_variable alias (list_sep_d module_variable) @@ List.Ne.to_list binders
+    fprintf ppf "module %a =@ %a" module_variable alias (list_sep_d module_variable) @@ List.Ne.to_list binders
 
 
-and module_ ppf (p : module_) = list_sep_d (declaration) ppf (List.map ~f:Location.unwrap p)
+and module_ ppf (p : module_) =
+  fprintf ppf "@[<v>%a@]"
+    (list_sep declaration (tag "@;"))
+    (List.map ~f:Location.unwrap p)
 
 let module_with_unification_vars ppf (Module_With_Unification_Vars p : module_with_unification_vars) =
   fprintf ppf "@[<v>%a@]"

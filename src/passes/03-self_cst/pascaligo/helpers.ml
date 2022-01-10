@@ -1,3 +1,4 @@
+module List = Simple_utils.List
 open Cst.Pascaligo
 
 let nseq_to_list (hd, tl) = hd :: tl
@@ -36,7 +37,7 @@ let rec fold_type_expression : ('a, 'err) folder -> 'a -> type_expr -> 'a = fun 
   let init = f.t init t in
   match t with
     TProd   {value;region=_} ->
-    List.Ne.fold_left self init @@ npseq_to_ne_list value
+    List.Ne.fold_left ~f:self ~init @@ npseq_to_ne_list value
   | TSum    {value;region=_} ->
     let {lead_vbar=_;variants;attributes=_} = value in
     let aux init ({value;region=_} : _ reg) =
@@ -45,16 +46,16 @@ let rec fold_type_expression : ('a, 'err) folder -> 'a -> type_expr -> 'a = fun 
         Some (_,t) -> self init t
       | None -> init
     in
-    List.Ne.fold_left aux init @@ npseq_to_ne_list variants
+    List.Ne.fold_left ~f:aux ~init @@ npseq_to_ne_list variants
   | TRecord {value;region=_} ->
     let aux init ({value;region=_} : _ reg) =
       let {field_name=_;colon=_;field_type;attributes=_} = value in
       self init field_type
     in
-    List.Ne.fold_left aux init @@ npseq_to_ne_list value.ne_elements
+    List.Ne.fold_left ~f:aux ~init @@ npseq_to_ne_list value.ne_elements
   | TApp    {value;region=_} ->
     let (_, tuple) = value in
-    List.Ne.fold_left self init @@ npseq_to_ne_list tuple.value.inside
+    List.Ne.fold_left ~f:self ~init @@ npseq_to_ne_list tuple.value.inside
   | TFun    {value;region=_} ->
     let (ty1, _, ty2) = value in
     let res = self init ty1 in
@@ -80,12 +81,12 @@ let rec fold_expression : ('a, 'err) folder -> 'a -> expr -> 'a = fun f init e  
   in
   match e with
     ECase    {value;region=_} ->
-    let {kwd_case=_;expr;kwd_of=_;lead_vbar=_;cases} = value in
+    let {kwd_case=_;expr;kwd_of=_;lead_vbar=_;cases;enclosing=_} = value in
     let res = self init expr in
     let res = matching_cases self res cases in
     res
   | ECond    {value;region=_} ->
-    let ({kwd_if=_;test;kwd_then=_;ifso;ifnot} : cond_expr) = value in
+    let ({kwd_else=_;kwd_if=_;test;kwd_then=_;ifso;ifnot;terminator=_} : cond_expr) = value in
     let res = self init test in
     let res = self res ifso in
     let res = self res ifnot in
@@ -133,7 +134,7 @@ let rec fold_expression : ('a, 'err) folder -> 'a -> expr -> 'a = fun f init e  
     (match expr with
       None -> init
     | Some e ->
-      List.Ne.fold_left self init @@ npseq_to_ne_list e.value.inside
+      List.Ne.fold_left ~f:self ~init @@ npseq_to_ne_list e.value.inside
     )
   | ERecord  {value;region=_} ->
     let aux init ({value;region=_} : _ reg) =
@@ -141,7 +142,7 @@ let rec fold_expression : ('a, 'err) folder -> 'a -> expr -> 'a = fun f init e  
       let res = self init field_expr in
       res
     in
-    List.Ne.fold_left aux init @@ npseq_to_ne_list value.ne_elements
+    List.Ne.fold_left ~f:aux ~init @@ npseq_to_ne_list value.ne_elements
   | EProj    _ -> init
   | EUpdate  {value;region=_} ->
     let aux init ({value;region=_} : _ reg) =
@@ -149,20 +150,20 @@ let rec fold_expression : ('a, 'err) folder -> 'a -> expr -> 'a = fun f init e  
       let res = self init field_expr in
       res
     in
-    List.Ne.fold_left aux init @@ npseq_to_ne_list value.updates.value.ne_elements
+    List.Ne.fold_left ~f:aux ~init @@ npseq_to_ne_list value.updates.value.ne_elements
   | EModA    {value;region=_} -> self init value.field
   | EVar     _ -> init
   | ECall    {value;region=_} ->
     let (lam, args) = value in
     let res = self init lam in
-    List.Ne.fold_left self res @@ npseq_to_ne_list args.value.inside
+    List.Ne.fold_left ~f:self ~init:res @@ npseq_to_ne_list args.value.inside
   | EBytes   _ -> init
   | ETuple   {value;region=_} ->
-    List.Ne.fold_left self init @@ npseq_to_ne_list value.inside
+    List.Ne.fold_left ~f:self ~init @@ npseq_to_ne_list value.inside
   | EPar     {value;region=_} ->
     self init value.inside
   | EFun     {value;region=_} ->
-    let ({kwd_function=_; param=_; ret_type; kwd_is=_; return}: fun_expr) = value in
+    let ({kwd_function=_; param=_; ret_type; kwd_is=_; return;attributes=_}: fun_expr) = value in
     let res = self init return in
     (match ret_type with
       Some (_, ty) -> self_type res ty
@@ -198,7 +199,7 @@ let rec fold_expression : ('a, 'err) folder -> 'a -> expr -> 'a = fun f init e  
 
 and fold_block f init ({value;region=_}: block reg) =
   let {enclosing=_;statements;terminator=_} = value in
-  let res = List.Ne.fold_left(fold_statement f) init @@ npseq_to_ne_list statements in
+  let res = List.Ne.fold_left ~f:(fold_statement f) ~init @@ npseq_to_ne_list statements in
   res
 
 and fold_statement : ('a, 'err) folder -> 'a -> statement -> 'a = fun f init s  ->
@@ -210,7 +211,7 @@ and fold_statement : ('a, 'err) folder -> 'a -> statement -> 'a = fun f init s  
   let if_clause res = function
       ClauseInstr inst -> self res @@ Instr inst
     | ClauseBlock LongBlock block -> fold_block f res block
-    | ClauseBlock ShortBlock {value;region=_} -> List.Ne.fold_left self res @@ npseq_to_ne_list @@ fst value.inside
+    | ClauseBlock ShortBlock {value;region=_} -> List.Ne.fold_left ~f:self ~init:res @@ npseq_to_ne_list @@ fst value.inside
   in
   let fold_selection init = function
     FieldName _ -> init
@@ -220,7 +221,7 @@ and fold_statement : ('a, 'err) folder -> 'a -> statement -> 'a = fun f init s  
     Name _ -> init
   | Path {value;region=_} ->
     let {struct_name=_;selector=_;field_path} = value in
-    List.Ne.fold_left fold_selection init @@ npseq_to_ne_list field_path
+    List.Ne.fold_left ~f:fold_selection ~init @@ npseq_to_ne_list field_path
   in
   match s with
     Instr Cond        {value;region=_} ->
@@ -268,7 +269,7 @@ and fold_statement : ('a, 'err) folder -> 'a -> statement -> 'a = fun f init s  
   | Instr ProcCall    {value;region=_} ->
     let (expr, arguments) = value in
     let res = self_expr init expr in
-    let res = List.Ne.fold_left self_expr res @@ npseq_to_ne_list arguments.value.inside in
+    let res = List.Ne.fold_left ~f:self_expr ~init:res @@ npseq_to_ne_list arguments.value.inside in
     res
   | Instr Skip        _ -> init
   | Instr RecordPatch {value;region=_} ->
@@ -279,7 +280,7 @@ and fold_statement : ('a, 'err) folder -> 'a -> statement -> 'a = fun f init s  
       let res = self_expr init field_expr in
       res
     in
-    let res = List.Ne.fold_left aux res @@ npseq_to_ne_list record_inj.value.ne_elements in
+    let res = List.Ne.fold_left ~f:aux ~init:res @@ npseq_to_ne_list record_inj.value.ne_elements in
     res
   | Instr MapPatch    {value;region=_} ->
     let {kwd_patch=_;path;kwd_with=_;map_inj} = value in
@@ -290,12 +291,12 @@ and fold_statement : ('a, 'err) folder -> 'a -> statement -> 'a = fun f init s  
       let res = self_expr res  image in
       res
     in
-    let res = List.Ne.fold_left aux res @@ npseq_to_ne_list map_inj.value.ne_elements in
+    let res = List.Ne.fold_left ~f:aux ~init:res @@ npseq_to_ne_list map_inj.value.ne_elements in
     res
   | Instr SetPatch    {value;region=_} ->
     let {kwd_patch=_;path;kwd_with=_;set_inj} = value in
     let res = fold_path init path in
-    let res = List.Ne.fold_left self_expr res @@ npseq_to_ne_list set_inj.value.ne_elements in
+    let res = List.Ne.fold_left ~f:self_expr ~init:res @@ npseq_to_ne_list set_inj.value.ne_elements in
     res
   | Instr MapRemove   {value;region=_} ->
     let {kwd_remove=_;key;kwd_from=_;kwd_map=_;map} = value in
@@ -315,7 +316,7 @@ and fold_statement : ('a, 'err) folder -> 'a -> statement -> 'a = fun f init s  
     | None ->    res
     )
   | Data LocalVar     {value;region=_} ->
-    let {kwd_var=_;pattern=_;var_type;assign=_;init=expr;terminator=_} = value in
+    let {kwd_var=_;pattern=_;var_type;assign=_;init=expr;terminator=_;attributes=_} = value in
     let res = self_expr init expr in
     (match var_type with
       Some (_, ty) -> self_type res ty
@@ -329,7 +330,7 @@ and fold_statement : ('a, 'err) folder -> 'a -> statement -> 'a = fun f init s  
     | None ->    res
     )
   | Data LocalType {value;region=_} ->
-    let {kwd_type=_;name=_;kwd_is=_;type_expr;terminator=_} = value in
+    let {kwd_type=_;name=_;kwd_is=_;type_expr;terminator=_;params=_} = value in
     let res = self_type init type_expr in
     res
   | Data LocalModule {value;region=_} ->
@@ -347,7 +348,7 @@ and matching_cases : type b.('a -> b -> _) -> 'a -> (b case_clause reg, _) Utils
     let {pattern=_;arrow=_;rhs} = value in
     self init rhs
   in
-  List.Ne.fold_left(case_clause self) init @@ npseq_to_ne_list value
+  List.Ne.fold_left ~f:(case_clause self) ~init @@ npseq_to_ne_list value
 
 and fold_declaration : ('a, 'err) folder -> 'a -> declaration -> 'a =
   fun f init d ->
@@ -371,7 +372,7 @@ and fold_declaration : ('a, 'err) folder -> 'a -> declaration -> 'a =
     | None ->    res
     )
   | TypeDecl {value;region=_} ->
-    let {kwd_type=_;name=_;kwd_is=_;type_expr;terminator=_} = value in
+    let {kwd_type=_;name=_;kwd_is=_;type_expr;terminator=_;params=_} = value in
     let res = self_type init type_expr in
     res
   | ModuleDecl {value;region=_} ->
@@ -379,14 +380,14 @@ and fold_declaration : ('a, 'err) folder -> 'a -> declaration -> 'a =
     let res = self_module init module_ in
     res
   | ModuleAlias {value;region=_} ->
-    let {kwd_module=_;alias=_;kwd_is=_;binders=_;} = value in
+    let {kwd_module=_;alias=_;kwd_is=_;binders=_;terminator=_} = value in
     init
   | Directive _ -> init
 
 and fold_module : ('a, 'err) folder -> 'a -> t -> 'a =
   fun f init {decl;eof=_} ->
   let self = fold_declaration f in
-  List.Ne.fold_left self init @@ decl
+  List.Ne.fold_left ~f:self ~init @@ decl
 
 type ('err) mapper = {
   e : expr -> expr ;
@@ -458,13 +459,13 @@ let rec map_expression : ('err) mapper -> expr -> expr = fun f e  ->
   in
   match e with
     ECase    {value;region} ->
-    let {kwd_case=_;expr;kwd_of=_;lead_vbar=_;cases} = value in
+    let {kwd_case=_;expr;kwd_of=_;lead_vbar=_;cases;enclosing=_} = value in
     let expr = self expr in
     let cases = matching_cases self cases in
     let value = {value with expr;cases} in
     return @@ ECase {value;region}
   | ECond    {value;region} ->
-    let ({kwd_if=_;test;kwd_then=_;ifso;ifnot} : cond_expr) = value in
+    let ({kwd_if=_;test;kwd_then=_;ifso;kwd_else=_;ifnot;terminator=_} : cond_expr) = value in
     let test = self test in
     let ifso = self ifso in
     let ifnot = self ifnot in
@@ -590,7 +591,7 @@ let rec map_expression : ('err) mapper -> expr -> expr = fun f e  ->
     let value = {value with inside} in
     return @@ EPar {value;region}
   | EFun     {value;region} ->
-    let ({kwd_function=_; param=_; ret_type; kwd_is=_; return=body}: fun_expr) = value in
+    let ({kwd_function=_; param=_; ret_type; kwd_is=_; return=body;attributes=_}: fun_expr) = value in
     let body = self body in
     let ret_type = Option.map ~f:(fun (a,b) ->
       let b = self_type b in (a,b)) ret_type in
@@ -667,7 +668,7 @@ and map_statement : 'err mapper -> statement -> statement = fun f s  ->
     let value = {value with init;const_type} in
     Data (LocalConst {value;region})
   | Data LocalVar     {value;region} ->
-    let {kwd_var=_;pattern=_;var_type;assign=_;init;terminator=_} = value in
+    let {kwd_var=_;pattern=_;var_type;assign=_;init;terminator=_;attributes=_} = value in
     let var_type = Option.map ~f:(fun (w, ty)
       -> let ty = self_type ty in (w,ty)) var_type in
     let value = {value with init;var_type} in
@@ -680,7 +681,7 @@ and map_statement : 'err mapper -> statement -> statement = fun f s  ->
     let value = {value with return;ret_type} in
     Data (LocalFun {value;region})
   | Data LocalType {value;region} ->
-    let {kwd_type=_;name=_;kwd_is=_;type_expr;terminator=_} = value in
+    let {kwd_type=_;name=_;kwd_is=_;type_expr;terminator=_;params=_} = value in
     let type_expr = self_type type_expr in
     let value = {value with type_expr} in
     Data (LocalType {value;region})
@@ -859,7 +860,7 @@ and map_declaration : 'err mapper -> declaration -> declaration =
     let value = {value with return=expr;ret_type} in
     return @@ FunDecl {value;region}
   | TypeDecl {value;region} ->
-    let {kwd_type=_;name=_;kwd_is=_;type_expr;terminator=_} = value in
+    let {kwd_type=_;name=_;kwd_is=_;type_expr;terminator=_;params=_} = value in
     let type_expr = self_type type_expr in
     let value = {value with type_expr} in
     return @@ TypeDecl {value;region}
@@ -869,7 +870,7 @@ and map_declaration : 'err mapper -> declaration -> declaration =
     let value = {value with module_} in
     return @@ ModuleDecl {value;region}
   | ModuleAlias {value;region} ->
-    let {kwd_module=_;alias=_;kwd_is=_;binders=_} = value in
+    let {kwd_module=_;alias=_;kwd_is=_;binders=_;terminator=_} = value in
     return @@ ModuleAlias {value;region}
   | Directive _ as d -> return d
 

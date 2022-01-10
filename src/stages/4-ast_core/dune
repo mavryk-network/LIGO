@@ -4,5 +4,5 @@
  (instrumentation
   (backend bisect_ppx))
  (libraries simple-utils stage_common ast_sugar UnionFind)
- (flags
-  (:standard -open Simple_utils)))
+ (preprocess
+  (pps ppx_map)))

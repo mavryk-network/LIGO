@@ -1,12 +1,12 @@
-open Trace
+open Simple_utils.Trace
 open Test_helpers
 open Main_errors
 
-let () = Unix.putenv "LIGO_FORCE_NEW_TYPER" "false"
+let () = Unix.putenv ~key:"LIGO_FORCE_NEW_TYPER" ~data:"false"
 type syntax = string
 type group_name = string
 type lang = Meta | Object (* Object = normal LIGO code ; Meta = ligo test framework code *)
-module SnippetsGroup = Map.Make(struct type t = (syntax * group_name * Environment.Protocols.t) let compare a b = compare a b end)
+module SnippetsGroup = Caml.Map.Make(struct type t = (syntax * group_name * Environment.Protocols.t) let compare a b = Caml.compare a b end)
 
 
 type snippetsmap = (lang * string) SnippetsGroup.t
@@ -28,7 +28,7 @@ let current_proto = get_proto "current"
     ```
 *)
 let get_groups md_file : snippetsmap =
-  let channel = open_in md_file in
+  let channel = In_channel.create md_file in
   let lexbuf = Lexing.from_channel channel in
   let code_blocks = Md.token lexbuf in
   let aux : snippetsmap -> Md.block -> snippetsmap =
@@ -49,8 +49,8 @@ let get_groups md_file : snippetsmap =
           SnippetsGroup.update (s,"ungrouped",current_proto)
             (fun arg_content ->
               match arg_content with
-              | Some (lang,ct) -> Some (lang, String.concat "\n" (ct::el.contents))
-              | None -> Some (Object, String.concat "\n" el.contents)
+              | Some (lang,ct) -> Some (lang, String.concat ~sep:"\n" (ct::el.contents))
+              | None -> Some (Object, String.concat ~sep:"\n" el.contents)
             )
             grp_map
         )
@@ -60,8 +60,8 @@ let get_groups md_file : snippetsmap =
           SnippetsGroup.update (s,name,get_proto x)
             (fun arg_content ->
               match arg_content with
-              | Some (lang',ct) when lang = lang' -> Some (lang, String.concat "\n" (ct::el.contents))
-              | _ -> Some (lang, String.concat "\n" el.contents)
+              | Some (lang',ct) when Caml.(=) lang lang' -> Some (lang, String.concat ~sep:"\n" (ct::el.contents))
+              | _ -> Some (lang, String.concat ~sep:"\n" el.contents)
             )
             grp_map
         )
@@ -70,8 +70,8 @@ let get_groups md_file : snippetsmap =
           SnippetsGroup.update (s,name,current_proto)
             (fun arg_content ->
               match arg_content with
-              | Some (lang',ct) when lang = lang' -> Some (lang, String.concat "\n" (ct::el.contents))
-              | _ -> Some (lang, String.concat "\n" el.contents)
+              | Some (lang',ct) when Caml.(=) lang lang' -> Some (lang, String.concat ~sep:"\n" (ct::el.contents))
+              | _ -> Some (lang, String.concat ~sep:"\n" el.contents)
             )
             grp_map
         )
@@ -80,8 +80,8 @@ let get_groups md_file : snippetsmap =
           SnippetsGroup.update (s,name,get_proto x)
             (fun arg_content ->
               match arg_content with
-              | Some (lang',ct) when lang = lang' -> Some (lang, String.concat "\n" (ct::el.contents))
-              | _ -> Some (lang, String.concat "\n" el.contents)
+              | Some (lang',ct) when Caml.(=) lang lang' -> Some (lang, String.concat ~sep:"\n" (ct::el.contents))
+              | _ -> Some (lang, String.concat ~sep:"\n" el.contents)
             )
             grp_map
         )
@@ -90,8 +90,8 @@ let get_groups md_file : snippetsmap =
           SnippetsGroup.update (s,name,current_proto)
             (fun arg_content ->
               match arg_content with
-              | Some (lang',ct) when lang = lang' -> Some (lang, String.concat "\n" (ct::el.contents))
-              | _ -> Some (lang, String.concat "\n" el.contents)
+              | Some (lang',ct) when Caml.(=) lang lang' -> Some (lang, String.concat ~sep:"\n" (ct::el.contents))
+              | _ -> Some (lang, String.concat ~sep:"\n" el.contents)
             )
             grp_map
         )
@@ -119,24 +119,20 @@ let compile_groups ~raise filename grp_list =
       let imperative = Ligo_compile.Of_c_unit.compile ~raise ~add_warning ~meta c_unit filename in
       let sugar      = Ligo_compile.Of_imperative.compile ~raise imperative in
       let core       = Ligo_compile.Of_sugar.compile sugar in
-      let inferred   = Ligo_compile.Of_core.infer  ~raise~options core in
+      let inferred   = Ligo_compile.Of_core.infer ~raise ~options core in
       match lang with
       | Meta ->
         let init_env = Environment.default_with_test options.protocol_version in
         let options = { options with init_env ; test = true } in
-        let typed,_    = Ligo_compile.Of_core.typecheck ~raise ~add_warning ~options Env inferred in
+        let typed   = Ligo_compile.Of_core.typecheck ~raise ~add_warning ~options Env inferred in
         let _ = Interpreter.eval_test ~protocol_version:options.protocol_version ~raise ~steps:5000 typed in
         ()
       | Object ->
-        let typed,_   = Ligo_compile.Of_core.typecheck ~raise ~add_warning ~options Env inferred in
-        let applied   = Self_ast_typed.monomorphise_module typed in
-        let _,applied = trace ~raise self_ast_typed_tracer @@ Self_ast_typed.morph_module options.init_env applied in
-        let mini_c    = Ligo_compile.Of_typed.compile ~raise applied in
-        let (_michelsons : Stacking.compiled_expression list) =
-          List.map ~f:
-            (fun ((_, _, exp),_) -> Ligo_compile.Of_mini_c.aggregate_and_compile_expression ~raise ~options mini_c exp)
-            mini_c
-        in
+        let typed     = Ligo_compile.Of_core.typecheck ~raise ~add_warning ~options Env inferred in
+        let agg_prg   = Ligo_compile.Of_typed.compile_program ~raise typed in
+        let aggregated_with_unit = Ligo_compile.Of_typed.compile_expression_in_context ~raise (Ast_typed.e_a_unit ()) agg_prg in
+        let mini_c = Ligo_compile.Of_aggregated.compile_expression ~raise aggregated_with_unit in
+        let _michelson : Stacking__Compiler_program.compiled_expression = Ligo_compile.Of_mini_c.compile_expression ~raise ~options mini_c in
         ()
   in
   let () = List.iter ~f:aux grp_list in
@@ -157,7 +153,7 @@ let get_all_md_files () =
   let () =
     try
       while true do
-        let md_file = input_line ic in
+        let md_file = In_channel.input_line_exn ic in
         if not (List.exists ~f:(String.equal md_file) exclude_files) then
           let grp = get_groups md_file in
           if not (SnippetsGroup.is_empty grp) then
@@ -165,7 +161,7 @@ let get_all_md_files () =
       done
     with
       End_of_file ->
-      close_in ic
+      In_channel.close ic
   in
   !all_input
 

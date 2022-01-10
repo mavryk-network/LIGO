@@ -1,4 +1,4 @@
-open Trace
+open Simple_utils.Trace
 open Test_helpers
 open Main_errors
 
@@ -21,7 +21,7 @@ let int ~raise  () : unit =
   let () = trace_option ~raise (test_internal __LOC__) @@ assert_type_expression_eq (t, t_int ()) in
   ()
 
-let init_env = Checking.decompile_env @@ 
+let init_env = Inference.decompile_env @@ Environment.to_program @@
   Environment.default Environment.Protocols.current
 
 open Ast_core

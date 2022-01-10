@@ -7,7 +7,7 @@ module V = struct
   let compare x y = Var.compare (Location.unwrap x) (Location.unwrap y)
 end
 
-module M = Map.Make(V)
+module M = Simple_utils.Map.Make(V)
 
 type muchuse = int M.t * V.t list
 
@@ -74,8 +74,8 @@ let rec is_dup (t : type_expression) =
      List.is_empty row_types
   | T_arrow _ -> true
   | T_variable _ -> true
-  | T_abstraction {type_} -> is_dup type_
-  | T_for_all {type_} -> is_dup type_
+  | T_abstraction {type_;ty_binder=_;kind=_} -> is_dup type_
+  | T_for_all {type_;ty_binder=_;kind=_} -> is_dup type_
   | _ -> false
 
 let muchuse_union (x,a) (y,b) =
@@ -203,44 +203,44 @@ and muchuse_of_record {body;fields;_} =
   List.fold_left ~f:(fun (c,m) (v,t) -> muchuse_of_binder v t (c,m))
     ~init:(muchuse_of_expr body) typed_vars
 
-let rec get_all_declarations (module_name : module_variable) : module_fully_typed ->
+let rec get_all_declarations (module_name : module_variable) : module_ ->
                                (expression_variable * type_expression) list =
-  function (Module_Fully_Typed p) ->
+  function m ->
     let aux = fun (x : declaration) ->
       match x with
       | Declaration_constant {binder;expr;_} ->
          let name = module_name ^ "." ^ Var.to_name (Location.unwrap binder) in
          [(Location.wrap ~loc:expr.location (Var.of_name name), expr.type_expression)]
-      | Declaration_module {module_binder;module_} ->
+      | Declaration_module {module_binder;module_;module_attr=_} ->
          let recs = get_all_declarations module_binder module_ in
          let add_module_name (v, t) =
            let name = module_name ^ "." ^ Var.to_name (Location.unwrap v) in
            (Location.wrap ~loc:v.location (Var.of_name name), t) in
          recs |> List.map ~f:add_module_name
       | _ -> [] in
-    p |> List.map ~f:Location.unwrap |> List.map ~f:aux |> List.concat
+    m |> List.map ~f:Location.unwrap |> List.map ~f:aux |> List.concat
 
-let rec muchused_helper (muchuse : muchuse) : module_fully_typed -> muchuse =
-  function (Module_Fully_Typed p) ->
+let rec muchused_helper (muchuse : muchuse) : module_ -> muchuse =
+  function m ->
   let aux = fun (x : declaration) s ->
     match x with
     | Declaration_constant {expr ; binder; _} ->
        muchuse_union (muchuse_of_expr expr)
          (muchuse_of_binder binder expr.type_expression s)
-    | Declaration_module {module_;module_binder} ->
+    | Declaration_module {module_;module_binder;module_attr=_} ->
        let decls = get_all_declarations module_binder module_ in
        List.fold_right ~f:(fun (v, t) (c,m) -> muchuse_of_binder v t (c, m))
          decls ~init:(muchused_helper s module_)
     | _ -> s
   in
-  List.fold_right ~f:aux (List.map ~f:Location.unwrap p) ~init:muchuse
+  List.fold_right ~f:aux (List.map ~f:Location.unwrap m) ~init:muchuse
 
-let muchused_map_module ~add_warning : module_fully_typed -> module_fully_typed = function module' ->
+let muchused_map_module ~add_warning : module_ -> module_ = function module_ ->
   let update_annotations annots =
     List.iter ~f:(fun a -> add_warning a) annots in
-  let _,muchused = muchused_helper muchuse_neutral module' in
+  let _,muchused = muchused_helper muchuse_neutral module_ in
   let warn_var v =
     `Self_ast_typed_warning_muchused
       (Location.get_location v, Format.asprintf "%a" Var.pp (Location.unwrap v)) in
   let () = update_annotations @@ List.map ~f:warn_var muchused in
-    module'
+  module_

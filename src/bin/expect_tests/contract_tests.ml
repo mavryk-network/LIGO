@@ -4,7 +4,7 @@ let contract = test
 let bad_contract = bad_test
 
 (* avoid pretty printing *)
-let () = Unix.putenv "TERM" "dumb"
+let () = Unix.putenv ~key:"TERM" ~data:"dumb"
 
 let%expect_test _ =
   run_ligo_good [ "info" ; "measure-contract" ; contract "coase.ligo" ] ;
@@ -960,8 +960,8 @@ let%expect_test _ =
                      PUSH mutez 0 ;
                      DIG 3 ;
                      TRANSFER_TOKENS ;
-                     DUG 2 ;
                      SWAP ;
+                     DIG 2 ;
                      PAIR ;
                      NIL operation ;
                      DIG 2 ;
@@ -1227,31 +1227,7 @@ let%expect_test _ =
 
 let%expect_test _ =
   run_ligo_bad [ "compile" ; "contract" ; bad_contract "self_in_lambda.mligo" ] ;
-  [%expect {|
-    File "../../test/contracts/negative/self_in_lambda.mligo", line 4, characters 6-11:
-      3 | let main (ps: unit * address): (operation list * address) =
-      4 |   let dummy = foo () in (* force not to inline foo *)
-      5 |   ( ([] : operation list) , foo ())
-    :
-    Warning: unused variable "dummy".
-    Hint: replace it by "_dummy" to prevent this warning.
-
-    File "../../test/contracts/negative/self_in_lambda.mligo", line 3, characters 9-29:
-      2 |
-      3 | let main (ps: unit * address): (operation list * address) =
-      4 |   let dummy = foo () in (* force not to inline foo *)
-    :
-    Warning: unused variable "ps".
-    Hint: replace it by "_ps" to prevent this warning.
-
-    File "../../test/contracts/negative/self_in_lambda.mligo", line 1, characters 8-18:
-      1 | let foo (u : unit) : address = Tezos.address (Tezos.self "%default" : unit contract)
-      2 |
-    :
-    Warning: unused variable "u".
-    Hint: replace it by "_u" to prevent this warning.
-
-    "Tezos.self" must be used directly and cannot be used via another function. |}]
+  [%expect{| "Tezos.self" must be used directly and cannot be used via another function. |}]
 
 let%expect_test _ =
   run_ligo_good [ "compile" ; "storage" ; contract "big_map.ligo" ; "(big_map1,unit)" ] ;
@@ -1623,7 +1599,7 @@ Invalid entrypoint "Toto". One of the following patterns is expected:
     Invalid big map nesting.
     A big map cannot be nested inside another big map. |}];
 
-  run_ligo_good ["print" ; "ast"; contract "letin.mligo"];
+  run_ligo_good ["print" ; "ast-imperative"; contract "letin.mligo"];
   [%expect {|
 type storage = (int , int)
 const main : (int , storage) -> (list (operation) , storage) =
@@ -1646,7 +1622,7 @@ const x =  match (+1 , (+2 , +3)) with
             | (#2,(x,#3)) -> x
     |}];
 
-  run_ligo_good ["print" ; "ast"; contract "letin.religo"];
+  run_ligo_good ["print" ; "ast-imperative"; contract "letin.religo"];
   [%expect {|
 type storage = (int , int)
 const main = lambda (n : (int , storage)) : (list (operation) ,
@@ -1705,6 +1681,10 @@ Missing a type annotation for argument "b". |}];
 
   run_ligo_bad [ "compile" ; "contract" ; bad_contract "duplicate_record_field.mligo" ] ;
   [%expect {|
+    File "../../test/contracts/negative/duplicate_record_field.mligo", line 1, characters 23-26:
+      1 | type r = { foo : int ; foo : int }
+      2 |
+
     Duplicate field name "foo" in this record declaration.
     Hint: Change the name. |}];
 
@@ -1714,9 +1694,9 @@ Missing a type annotation for argument "b". |}];
 let%expect_test _ =
   run_ligo_good [ "compile" ; "contract" ; contract "uncurry_contract.mligo" ] ;
   let output = [%expect.output] in
-  let lines = String.split_on_char '\n' output in
+  let lines = String.split_lines output in
   let lines = List.take lines 8 in
-  let output = String.concat "\n" lines in
+  let output = String.concat ~sep:"\n" lines in
   print_string output;
   [%expect {|
     { parameter unit ;
@@ -1726,7 +1706,7 @@ let%expect_test _ =
              DIG 2 ;
              UNPAIR ;
              PUSH nat 0 ;
-             PUSH nat 0 ; |}]
+             PUSH nat 2 ; |}]
 
 (* old uncurry bugs: *)
 let%expect_test _ =
@@ -1806,8 +1786,8 @@ let%expect_test _ =
 
 (* warning non-duplicable variable used examples *)
 let%expect_test _ =
-  run_ligo_good [ "compile" ; "expression" ; "cameligo" ; "x" ; "--init-file" ; contract "warning_duplicate.mligo" ] ;
-  [%expect {|
+  run_ligo_bad [ "compile" ; "expression" ; "cameligo" ; "x" ; "--init-file" ; contract "warning_duplicate.mligo" ] ;
+  [%expect{|
     File "../../test/contracts/warning_duplicate.mligo", line 2, characters 23-50:
       1 | module Foo = struct
       2 |   let x : nat ticket = Tezos.create_ticket 42n 42n
@@ -1815,13 +1795,14 @@ let%expect_test _ =
     :
     Warning: variable "Foo.x" cannot be used more than once.
 
-    (Pair (Pair "KT1DUMMYDUMMYDUMMYDUMMYDUMMYDUMu2oHG" 42 42)
-          (Pair "KT1DUMMYDUMMYDUMMYDUMMYDUMMYDUMu2oHG" 42 42)) |}]
+    Error(s) occurred while checking the contract:
+    At (unshown) location 8, type ticket nat cannot be used here because it is not duplicable. Only duplicable types can be used with the DUP instruction and as view inputs and outputs.
+    At (unshown) location 8, Ticket in unauthorized position (type error). |}]
 
 
 let%expect_test _ =
   run_ligo_bad [ "compile" ; "expression" ; "cameligo" ; "x" ; "--init-file" ; contract "warning_duplicate2.mligo" ] ;
-  [%expect {|
+  [%expect{|
     File "../../test/contracts/warning_duplicate2.mligo", line 1, characters 4-5:
       1 | let x = Tezos.create_ticket 42n 42n
       2 | let x = (x, x)
@@ -1830,8 +1811,7 @@ let%expect_test _ =
 
     Error(s) occurred while checking the contract:
     At (unshown) location 8, type ticket nat cannot be used here because it is not duplicable. Only duplicable types can be used with the DUP instruction and as view inputs and outputs.
-    At (unshown) location 8, Ticket in unauthorized position (type error).
-  |}]
+    At (unshown) location 8, Ticket in unauthorized position (type error). |}]
 
 (* warning layout attribute on constructor *)
 let%expect_test _ =
@@ -2024,15 +2004,15 @@ let%expect_test _ =
     Cannot redeclare block-scoped variable. |}]
 
 let%expect_test _ =
-  run_ligo_good [ "run"; "run-function"; contract "assert.mligo"; "(false, ())"; "-e"; "with_error"];
+  run_ligo_good [ "run"; "evaluate-call"; contract "assert.mligo"; "(false, ())"; "-e"; "with_error"];
   [%expect {| failwith("my custom error") |}]
 
 let%expect_test _ =
-  run_ligo_good [ "run"; "run-function"; contract "assert.mligo"; "(None: unit option)"; "-e"; "some_with_error"];
+  run_ligo_good [ "run"; "evaluate-call"; contract "assert.mligo"; "(None: unit option)"; "-e"; "some_with_error"];
   [%expect {| failwith("my custom error") |}]
 
 let%expect_test _ =
-  run_ligo_good [ "run"; "run-function"; contract "assert.mligo"; "(Some (): unit option)"; "-e"; "none_with_error"];
+  run_ligo_good [ "run"; "evaluate-call"; contract "assert.mligo"; "(Some (): unit option)"; "-e"; "none_with_error"];
   [%expect {| failwith("my custom error") |}]
 
 let%expect_test _ =
@@ -2162,8 +2142,8 @@ let%expect_test _ =
                      PUSH mutez 0 ;
                      DIG 3 ;
                      TRANSFER_TOKENS ;
-                     DUG 2 ;
                      SWAP ;
+                     DIG 2 ;
                      PAIR ;
                      NIL operation ;
                      DIG 2 ;
@@ -2246,5 +2226,74 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_good [ "print" ; "mini-c" ; contract "modules_env.mligo" ] ;
   [%expect {|
-    let Foo = let x = L(54)[@inline] in (x)[@inline]
-    let Foo = let y = (Foo).(0)[@inline] in (y)[@inline] |}]
+    let #Foo#x#1 = L(54) in let #Foo#y#2 = #Foo#x#1 in L(unit) |}]
+
+let%expect_test _ =
+  run_ligo_good [ "compile" ; "storage" ; contract "module_contract_simple.mligo" ; "999" ] ;
+  [%expect{| 999 |}]
+
+let%expect_test _ =
+  run_ligo_good [ "compile" ; "parameter" ; contract "module_contract_simple.mligo" ; "Add 999" ] ;
+  [%expect{| (Left (Left 999)) |}]
+
+let%expect_test _ =
+  run_ligo_good [ "compile" ; "storage" ; contract "module_contract_complex.mligo" ; "{ number = 999 ; previous_action = Reset }" ] ;
+  [%expect{| (Pair 999 (Left (Right Unit))) |}]
+
+let%expect_test _ =
+  run_ligo_good [ "compile" ; "parameter" ; contract "module_contract_complex.mligo" ; "Add 999" ] ;
+  [%expect{| (Left (Left 999)) |}]
+
+(* Test pairing_check and bls12_381_g1/g2/fr literals *)
+let%expect_test _ =
+  run_ligo_good [ "compile" ; "expression" ; "cameligo" ; "test" ; "--init-file" ; contract "pairing_check.mligo" ] ;
+  [%expect{| Unit |}]
+
+(* Test decompilation of bls12_381_g1/g2/fr literals *)
+let%expect_test _ =
+  run_ligo_good [ "run" ; "interpret" ; "(alpha, beta, input_x)" ; "--init-file" ; contract "pairing_check.mligo" ] ;
+  [%expect{|
+    ( bls12_381_g1 0x024142bc89bf29017a38d0ee97711098639aa0bbc5b54b5104cc88b1c0fd09330fb8341e3da91e7a50f0da5c988517db0f52df51f745392ecdd3ffbb50f8a25fcdec6f48886b650de26821e244cb8ab69d49722d290a420ce1284b909d3e15a0 ,
+      bls12_381_g2 0x0050b3ab4877c99ce7f180e879d91eb4df24b1e20ed88f1fdde42f91dfe0e7e451aa35d1457dd15ab507fc8f2b3180550ca7b4ea9b67810e346456c35060c8d542f37ee5fe2b1461e2f02fefac55a9863e94cab5c16befad3b866a42ee20835b1351f3f9c20a05586c1d647d756efb5c575d7ab23fbf5b3e1a6ffe024633a63a668a01fcab440866035ea2c0d4bfe30a1242f67119650e2aa605289ade2684287192382d6a01d7865fcd9e1507264a80f387b6441e37438c888159827a4efa67 ,
+      bls12_381_fr 0xe406000000000000000000000000000000000000000000000000000000000000 ) |}]
+
+(* Example contracts from getting-started *)
+let%expect_test _ =
+  run_ligo_good [ "compile" ; "contract" ; contract "increment.mligo" ] ;
+  [%expect{|
+    { parameter (or (or (int %decrement) (int %increment)) (unit %reset)) ;
+      storage int ;
+      code { UNPAIR ;
+             IF_LEFT { IF_LEFT { SWAP ; SUB } { ADD } } { DROP 2 ; PUSH int 0 } ;
+             NIL operation ;
+             PAIR } } |}]
+
+let%expect_test _ =
+  run_ligo_good [ "compile" ; "contract" ; contract "increment.ligo" ] ;
+  [%expect{|
+    { parameter (or (or (int %decrement) (int %increment)) (unit %reset)) ;
+      storage int ;
+      code { UNPAIR ;
+             IF_LEFT { IF_LEFT { SWAP ; SUB } { ADD } } { DROP 2 ; PUSH int 0 } ;
+             NIL operation ;
+             PAIR } } |}]
+
+let%expect_test _ =
+  run_ligo_good [ "compile" ; "contract" ; contract "increment.religo" ] ;
+  [%expect{|
+    { parameter (or (or (int %decrement) (int %increment)) (unit %reset)) ;
+      storage int ;
+      code { UNPAIR ;
+             IF_LEFT { IF_LEFT { SWAP ; SUB } { ADD } } { DROP 2 ; PUSH int 0 } ;
+             NIL operation ;
+             PAIR } } |}]
+
+let%expect_test _ =
+  run_ligo_good [ "compile" ; "contract" ; contract "increment.jsligo" ] ;
+  [%expect{|
+    { parameter (or (or (int %decrement) (int %increment)) (unit %reset)) ;
+      storage int ;
+      code { UNPAIR ;
+             IF_LEFT { IF_LEFT { SWAP ; SUB } { ADD } } { DROP 2 ; PUSH int 0 } ;
+             NIL operation ;
+             PAIR } } |}]

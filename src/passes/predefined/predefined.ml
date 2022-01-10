@@ -201,6 +201,7 @@ module Tree_abstraction = struct
     | "Test.nth_bootstrap_typed_address" -> some_const C_TEST_NTH_BOOTSTRAP_TYPED_ADDRESS
     | "Test.to_entrypoint" -> some_const C_TEST_TO_ENTRYPOINT
     | "Test.to_typed_address" -> some_const C_TEST_TO_TYPED_ADDRESS
+    | "Test.random" -> some_const C_TEST_RANDOM
     | "Test.set_big_map" -> some_const C_TEST_SET_BIG_MAP
     | "Test.cast_address" -> some_const C_TEST_CAST_ADDRESS
     | "Test.create_chest" -> some_const C_TEST_CREATE_CHEST
@@ -376,7 +377,6 @@ module Tree_abstraction = struct
     | C_TEST_GET_NTH_BS -> "Test.nth_bootstrap_account"
     | C_TEST_LAST_ORIGINATIONS -> "Test.last_originations"
     | C_TEST_COMPILE_META_VALUE -> "Test.compile_value"
-    | C_TEST_MUTATE_COUNT -> "Test.mutate_count"
     | C_TEST_MUTATE_VALUE -> "Test.mutate_value"
     | C_TEST_MUTATION_TEST -> "Test.mutation_test"
     | C_TEST_MUTATION_TEST_ALL -> "Test.mutation_test_all"
@@ -388,6 +388,7 @@ module Tree_abstraction = struct
     | C_TEST_NTH_BOOTSTRAP_TYPED_ADDRESS -> "Test.nth_bootstrap_typed_address"
     | C_TEST_TO_ENTRYPOINT -> "Test.to_entrypoint"
     | C_TEST_TO_TYPED_ADDRESS -> "Test.to_typed_address"
+    | C_TEST_RANDOM -> "Test.random"
     | C_TEST_SET_BIG_MAP -> "Test.set_big_map"
     | C_TEST_CAST_ADDRESS -> "Test.cast_address"
     | C_TEST_CREATE_CHEST -> "Test.create_chest"

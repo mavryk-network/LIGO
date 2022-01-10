@@ -4,5 +4,5 @@
  (instrumentation
   (backend bisect_ppx))
  (libraries simple-utils stage_common)
- (flags
-  (:standard -open Simple_utils)))
+ (preprocess
+  (pps ppx_map)))

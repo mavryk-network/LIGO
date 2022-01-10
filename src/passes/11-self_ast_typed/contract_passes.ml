@@ -1,17 +1,18 @@
 open Ast_typed.Types
-open Trace
+open Simple_utils.Trace
+module Ligo_string = Simple_utils.Ligo_string
 
 type contract_pass_data = {
   contract_type : Helpers.contract_type ;
   main_name : string ;
 }
 
-let annotation_or_label annot label = String.capitalize_ascii (Option.value ~default:label (Ast_typed.Helpers.remove_empty_annotation annot))
+let annotation_or_label annot label = String.capitalize (Option.value ~default:label (Ast_typed.Helpers.remove_empty_annotation annot))
 
 let check_entrypoint_annotation_format ~raise ep (exp: expression) =
-  match String.split_on_char '%' ep with
+  match String.split ~on:'%' ep with
     | [ "" ; ep'] ->
-      let cap = String.capitalize_ascii ep' in
+      let cap = String.capitalize ep' in
       if String.equal cap ep' then raise.raise @@ Errors.bad_format_entrypoint_ann ep exp.location
       else cap
     | _ -> raise.raise @@ Errors.bad_format_entrypoint_ann ep exp.location 
@@ -66,7 +67,7 @@ let entrypoint_typing ~raise : contract_pass_data -> expression -> bool * contra
     (true, dat, e)
   | _ -> (true,dat,e)
 
-module VSet = Set.Make(struct
+module VSet = Caml.Set.Make(struct
   type t = expression_ Var.t
   let compare = Var.compare
 end)
@@ -78,13 +79,12 @@ end)*)
 type env = {env:env SMap.t;used_var:VSet.t}
 let rec pp_env ppf env = 
   Format.fprintf ppf "{env: %a;used_var: %a}"
-    (PP_helpers.list_sep_d (fun ppf (k,v) -> Format.fprintf ppf "(%s,%a)" k pp_env v)) (SMap.to_kv_list env.env)
-    (PP_helpers.list_sep_d Var.pp) (VSet.elements env.used_var)
+    (Simple_utils.PP_helpers.list_sep_d (fun ppf (k,v) -> Format.fprintf ppf "(%s,%a)" k pp_env v)) (SMap.to_kv_list env.env)
+    (Simple_utils.PP_helpers.list_sep_d Var.pp) (VSet.elements env.used_var)
 
-let remove_unused ~raise : string -> module_fully_typed -> module_fully_typed = fun main_name prg ->
-  let Module_Fully_Typed module' = prg in
+let remove_unused ~raise : string -> program -> program = fun main_name prg ->
   (* Process declaration in reverse order *)
-  let prg_decls = List.rev module' in
+  let prg_decls = List.rev prg in
   let aux = function
       {Location.wrap_content = Declaration_constant {name = Some name;  _}; _} -> not (String.equal name main_name)
     | _ -> true in
@@ -160,9 +160,7 @@ let remove_unused ~raise : string -> module_fully_typed -> module_fully_typed = 
       (match SMap.find_opt module_binder env.env with
         Some (env') ->
           let env = {env with env = SMap.remove module_binder env.env} in
-          let Module_Fully_Typed rhs = rhs in
           let env',rhs = get_fv_module env'[] @@ List.rev rhs in
-          let rhs = Module_Fully_Typed rhs in
           return (merge_env env env') @@ E_mod_in {module_binder; rhs; let_result}
       | None ->
         env,let_result
@@ -209,10 +207,8 @@ let remove_unused ~raise : string -> module_fully_typed -> module_fully_typed = 
        (match SMap.find_opt module_binder env.env with
         Some (env') ->
           let env = {env with env = SMap.remove module_binder env.env} in
-          let Module_Fully_Typed module_ = module_ in
           let new_env,module_ = get_fv_module env' [] @@ List.rev module_ in
           let env = merge_env env new_env in
-          let module_ = Module_Fully_Typed module_ in
           get_fv_module env ({hd with wrap_content=Declaration_module{module_binder;module_;module_attr}} :: acc) tl
       | None ->
           get_fv_module env acc tl
@@ -237,5 +233,5 @@ let remove_unused ~raise : string -> module_fully_typed -> module_fully_typed = 
   let main_dc = {main_dc with expr = main_expr} in
   let main_decl = {main_decl with wrap_content = Declaration_constant main_dc} in
   let _,module_ = get_fv_module env [main_decl] prg_decls in
-  Module_Fully_Typed module_
+  module_
 

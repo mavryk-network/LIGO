@@ -1,4 +1,4 @@
-open Trace
+open Simple_utils.Trace
 open Proto_alpha_utils
 module Tezos_alpha_test_helpers = Tezos_011_PtHangz2_test_helpers
 open Errors
@@ -7,15 +7,16 @@ open Ligo_interpreter.Types
 open Ligo_interpreter.Combinators
 module Tezos_protocol = Tezos_protocol_011_PtHangz2
 module Tezos_raw_protocol = Tezos_raw_protocol_011_PtHangz2
+module Tezos_protocol_parameters = Tezos_protocol_011_PtHangz2_parameters
 
 type r = Errors.interpreter_error raise
 
 type bootstrap_contract =
-  int * unit Tezos_utils.Michelson.michelson * unit Tezos_utils.Michelson.michelson * Ast_typed.type_expression * Ast_typed.type_expression
+  int * unit Tezos_utils.Michelson.michelson * unit Tezos_utils.Michelson.michelson * Ast_aggregated.type_expression * Ast_aggregated.type_expression
 type block = Tezos_alpha_test_helpers.Block.t
 type last_originations = (Memory_proto_alpha.Protocol.Alpha_context.Contract.t * Memory_proto_alpha.Protocol.Alpha_context.Contract.t list) list
-type storage_tys = (Tezos_protocol.Protocol.Alpha_context.Contract.t * Ast_typed.type_expression) list
-type parameter_tys = (Tezos_protocol.Protocol.Alpha_context.Contract.t * Ast_typed.type_expression) list
+type storage_tys = (Tezos_protocol.Protocol.Alpha_context.Contract.t * Ast_aggregated.type_expression) list
+type parameter_tys = (Tezos_protocol.Protocol.Alpha_context.Contract.t * Ast_aggregated.type_expression) list
 type state_error = Tezos_error_monad.TzCore.error list
 type tezos_op = Tezos_raw_protocol.Alpha_context.packed_operation
 
@@ -61,8 +62,8 @@ let contract_exists : context ->  Memory_proto_alpha.Protocol.Alpha_context.Cont
     Tezos_raw_protocol.Alpha_services.Contract.info Tezos_alpha_test_helpers.Block.rpc_ctxt ctxt.raw contract in
   Trace.tz_result_to_bool info
 
-let compare_account_ = Memory_proto_alpha.Protocol.Alpha_context.Contract.compare
-let compare_account a b = (compare_account_ a b) = 0
+let equal_account = Memory_proto_alpha.Protocol.Alpha_context.Contract.equal
+let compare_account = Memory_proto_alpha.Protocol.Alpha_context.Contract.compare
 
 type ligo_repr = unit Tezos_utils.Michelson.michelson
 type canonical_repr = Tezos_raw_protocol.Michelson_v1_primitives.prim Tezos_micheline.Micheline.canonical
@@ -190,14 +191,14 @@ let extract_origination_from_result :
   fun src x ->
   let open Tezos_raw_protocol in
   match x with
-  | Manager_operation_result { operation_result = Applied (Transaction_result _) ; internal_operation_results } ->
+  | Manager_operation_result { operation_result = Applied (Transaction_result _) ; internal_operation_results ; balance_updates=_ } ->
     let aux (x:Apply_results.packed_internal_operation_result) =
       match x with
       | Internal_operation_result ({source ; _},Applied (Origination_result x)) -> [(source, x.originated_contracts)]
       | _ -> []
     in
     List.concat @@ List.map ~f:aux internal_operation_results
-  | Manager_operation_result { operation_result = Applied (Origination_result x) ; internal_operation_results=_ } ->
+  | Manager_operation_result { operation_result = Applied (Origination_result x) ; internal_operation_results=_ ; balance_updates=_} ->
     [(src, x.originated_contracts)]
   | _ -> []
 
@@ -208,7 +209,7 @@ let extract_lazy_storage_diff_from_result :
   fun x ->
   let open Tezos_raw_protocol in
   match x with
-  | Manager_operation_result { operation_result = Applied (Transaction_result y) ; internal_operation_results } ->
+  | Manager_operation_result { operation_result = Applied (Transaction_result y) ; internal_operation_results ; balance_updates=_ } ->
     let aux (x:Apply_results.packed_internal_operation_result) =
       match x with
       | Internal_operation_result ({source = _ ; _},Applied (Origination_result x)) -> [x.lazy_storage_diff]
@@ -216,7 +217,7 @@ let extract_lazy_storage_diff_from_result :
       | _ -> []
     in
     (List.concat @@ List.map ~f:aux internal_operation_results) @ [y.lazy_storage_diff]
-  | Manager_operation_result { operation_result = Applied (Origination_result x) ; internal_operation_results=_ } ->
+  | Manager_operation_result { operation_result = Applied (Origination_result x) ; internal_operation_results=_ ; balance_updates=_ } ->
     [x.lazy_storage_diff]
   | _ -> []
 
@@ -280,7 +281,7 @@ let upd_bigmaps : raise:r -> bigmaps -> Tezos_raw_protocol.Apply_results.packed_
         | Item (Big_map, id, Remove) ->
             List.Assoc.remove bigmaps ~equal:Int.equal (get_id id)
         | Item (Big_map, id, Update {init=Alloc {key_type;value_type};updates}) ->
-            let kv_diff = List.map ~f:(fun {key;value} -> (key, value)) updates in
+            let kv_diff = List.map ~f:(fun {key;value;key_hash=_} -> (key, value)) updates in
             let aux (kv : (value * value) list) (key, value) =
               let key_value = Michelson_to_value.conv ~raise ~bigmaps key_type key in
               match value with
@@ -292,7 +293,7 @@ let upd_bigmaps : raise:r -> bigmaps -> Tezos_raw_protocol.Apply_results.packed_
             let data = {key_type;value_type;version = state} in
             List.Assoc.add bigmaps ~equal:Int.equal (get_id id) data
         | Item (Big_map, id, Update {init=Copy {src};updates}) ->
-            let kv_diff = List.map ~f:(fun {key;value} -> (key, value)) updates in
+            let kv_diff = List.map ~f:(fun {key;value;key_hash=_} -> (key, value)) updates in
             let data = List.Assoc.find_exn bigmaps ~equal:Int.equal (get_id src) in
             let state = data.version in
             let aux (kv : (value * value) list) (key, value) =
@@ -306,7 +307,7 @@ let upd_bigmaps : raise:r -> bigmaps -> Tezos_raw_protocol.Apply_results.packed_
             let data = { data with version = state } in
             List.Assoc.add bigmaps ~equal:Int.equal (get_id id) data
         | Item (Big_map, id, Update {init=Existing;updates}) ->
-            let kv_diff = List.map ~f:(fun {key;value} -> (key, value)) updates in
+            let kv_diff = List.map ~f:(fun {key;value;key_hash=_} -> (key, value)) updates in
             let data = List.Assoc.find_exn bigmaps ~equal:Int.equal (get_id id) in
             let state = data.version in
             let aux (kv : (value * value) list) (key, value) =
@@ -373,7 +374,7 @@ let transfer ~raise ~loc ~calltrace (ctxt:context) ?entrypoint dst parameter amt
 let originate_contract : raise:r -> loc:Location.t -> calltrace:calltrace -> context -> value * value -> Z.t -> value * context =
   fun ~raise ~loc ~calltrace ctxt (contract, storage) amt ->
     let contract = trace_option ~raise (corner_case ()) @@ get_michelson_contract contract in
-    let (storage,_,ligo_ty) = trace_option ~raise (corner_case ()) @@ get_michelson_expr storage in
+    let { code = storage ; ast_ty = ligo_ty ; _ } = trace_option ~raise (corner_case ()) @@ get_michelson_expr storage in
     let open Tezos_alpha_test_helpers in
     let source = unwrap_source ~raise ~loc ctxt.internals.source in
     let amt = Test_tez.Tez.of_mutez (Int64.of_int (Z.to_int amt)) in
@@ -402,13 +403,13 @@ let get_bootstrapped_contract ~raise (n : int) =
 
 let init_ctxt ~raise ?(loc=Location.generated) ?(calltrace=[]) ?(initial_balances=[]) ?(n=2) protocol_version bootstrapped_contracts =
   let open Tezos_raw_protocol in
-  let rng_state = Random.State.make (Array.make 1 0) in
+  let rng_state = Caml.Random.State.make (Caml.Array.make 1 0) in
   let () = (* check baker initial balance if the default amount is changed *)
     match initial_balances with
     | [] -> () (* if empty list: will be defaulted with coherent values*)
     | baker::_ -> (
-      let max = Tezos_protocol_011_PtHangz2_parameters.Default_parameters.constants_test.tokens_per_roll in
-      if (Alpha_context.Tez.of_mutez_exn baker < max) then raise.raise (Errors.not_enough_initial_accounts loc max) else ()
+      let max = Tezos_protocol_parameters.Default_parameters.constants_test.tokens_per_roll in
+      if (Tez.(<) (Alpha_context.Tez.of_mutez_exn baker) max) then raise.raise (Errors.not_enough_initial_accounts loc max) else ()
     )
   in
   (* DEPRECATED FOR NOW, delegate should become optional and this argument must be passed to init

@@ -1,6 +1,7 @@
 module H=Helpers
 module Ligo_proto = Environment.Protocols
-open Trace
+module Option = Simple_utils.Option
+open Simple_utils.Trace
 open Errors
 open Ast_typed
 open H
@@ -361,14 +362,33 @@ let is_nat ~raise loc = typer_1 ~raise loc "ISNAT" @@ fun t ->
   t_option (t_nat ())
 
 let neg ~raise loc = typer_1 ~raise loc "NEG" @@ fun t ->
-  let () = Assert.assert_true ~raise (wrong_neg loc t) @@ (eq_1 t (t_nat ()) || eq_1 t (t_int ())) in
-  t_int ()
+  if eq_1 t (t_int ())
+  then (t_int ()) else
+  if eq_1 t (t_nat ())
+  then (t_int ()) else
+  if eq_1 t (t_bls12_381_g1 ())
+  then (t_bls12_381_g1 ()) else
+  if eq_1 t (t_bls12_381_g2 ())
+  then (t_bls12_381_g2 ()) else
+  if eq_1 t (t_bls12_381_fr ())
+  then (t_bls12_381_fr ()) else
+  if eq_1 t (t_bls12_381_fr ())
+  then (t_bls12_381_fr ()) else
+    raise.raise @@ typeclass_error loc
+              [
+                [t_int()] ;
+                [t_nat()] ;
+                [t_bls12_381_g1()] ;
+                [t_bls12_381_g2()] ;
+                [t_bls12_381_fr()] ;
+              ]
+              [t]
 
-let unopt ~raise loc = typer_1 ~raise loc "ASSERT" @@ fun a ->
+let unopt ~raise loc = typer_1 ~raise loc "UNOPT" @@ fun a ->
   let a  = trace_option ~raise (expected_option loc a) @@ get_t_option a in
   a
 
-let unopt_with_error ~raise loc = typer_2 ~raise loc "ASSERT" @@ fun a b ->
+let unopt_with_error ~raise loc = typer_2 ~raise loc "UNOPT_WITH_ERROR" @@ fun a b ->
   let a  = trace_option ~raise (expected_option loc a) @@ get_t_option a in
   let () = trace_option ~raise (expected_option loc a) @@ assert_t_string b in
   a
@@ -1091,6 +1111,11 @@ let test_to_typed_address ~raise loc = typer_1_opt ~raise loc "TEST_TO_TYPED_ADD
   let () = assert_eq_1 ~raise ~loc parameter_ty parameter_ty' in
   t_typed_address parameter_ty storage_ty
 
+let test_random ~raise loc = typer_1_opt ~raise loc "TEST_RANDOM" @@ fun unit tv_opt ->
+  let () = assert_eq_1 ~raise ~loc unit (t_unit ()) in
+  let tv = trace_option ~raise (not_annotated loc) tv_opt in
+  tv
+
 let test_set_big_map ~raise loc = typer_2 ~raise loc "TEST_SET_BIG_MAP" @@ fun id bm ->
   let () = assert_eq_1 ~raise ~loc id (t_int ()) in
   let _ = trace_option ~raise (expected_big_map loc bm) @@ get_t_big_map bm in
@@ -1296,6 +1321,7 @@ let constant_typers ~raise ~test ~protocol_version loc c : typer = match c with
   | C_TEST_NTH_BOOTSTRAP_TYPED_ADDRESS -> test_nth_bootstrap_typed_address ~raise loc ;
   | C_TEST_TO_ENTRYPOINT -> test_to_entrypoint ~raise loc ;
   | C_TEST_TO_TYPED_ADDRESS -> test_to_typed_address ~raise loc ;
+  | C_TEST_RANDOM -> test_random ~raise loc ;
   | C_TEST_SET_BIG_MAP -> test_set_big_map ~raise loc ;
   | C_TEST_ORIGINATE_FROM_FILE -> test_originate_from_file ~protocol_version ~raise loc ;
   | C_TEST_SAVE_MUTATION -> test_save_mutation ~raise loc ;

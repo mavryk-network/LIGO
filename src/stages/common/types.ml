@@ -1,6 +1,9 @@
+module Location = Simple_utils.Location
+module Var      = Simple_utils.Var
+module List     = Simple_utils.List
 include Enums
 
-module SMap = Map.Make(String)
+module SMap = Simple_utils.Map.Make(String)
 
 type location = Location.t
 type 'a location_wrap = 'a Location.wrap
@@ -14,7 +17,7 @@ type known_attributes = {
 }
 
 type expression_
-and expression_variable = expression_ Var.t Location.wrap
+and expression_variable = expression_ Var.t Location.wrap 
 let expression_variable_to_yojson var = Location.wrap_to_yojson (Var.to_yojson) var
 let expression_variable_of_yojson var = Location.wrap_of_yojson (Var.of_yojson) var
 let equal_expression_variable t1 t2 = Location.equal_content ~equal:Var.equal t1 t2
@@ -37,11 +40,11 @@ type label = Label of string
 let label_to_yojson (Label l) = `List [`String "Label"; `String l]
 let label_of_yojson = function
   | `List [`String "Label"; `String l] -> Ok (Label l)
-  | _ -> Utils.error_yojson_format "Label of string"
+  | _ -> Simple_utils.Utils.error_yojson_format "Label of string"
 let equal_label (Label a) (Label b) = String.equal a b
 let compare_label (Label a) (Label b) = String.compare a b
 
-module LMap = Map.Make(struct type t = label let compare = compare_label end)
+module LMap = Simple_utils.Map.Make(struct type t = label let compare = compare_label end)
 type 'a label_map = 'a LMap.t
 
 let const_name = function

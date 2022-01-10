@@ -1,5 +1,7 @@
 open Cst.Reasonligo
 
+module List = Simple_utils.List
+
 let nseq_to_list (hd, tl) = hd :: tl
 
 let npseq_to_list (hd, tl) = hd :: (List.map ~f:snd tl)
@@ -33,7 +35,7 @@ let rec fold_type_expression : 'a folder -> 'a -> type_expr -> 'a = fun f init t
   let init = f.t init t in
   match t with
     TProd   {value;region=_} ->
-    List.Ne.fold_left self init @@ npseq_to_ne_list value.inside
+    List.Ne.fold_left ~f:self ~init @@ npseq_to_ne_list value.inside
   | TSum    {value;region=_} ->
     let {lead_vbar=_;variants;attributes=_} = value in
     let aux init ({value;region=_} : _ reg) =
@@ -44,16 +46,16 @@ let rec fold_type_expression : 'a folder -> 'a -> type_expr -> 'a = fun f init t
         self init t
       | None -> init
     in
-    List.Ne.fold_left aux init @@ npseq_to_ne_list variants
+    List.Ne.fold_left ~f:aux ~init @@ npseq_to_ne_list variants
   | TRecord {value;region=_} ->
     let aux init ({value;region=_} : _ reg) =
       let {field_name=_;colon=_;field_type;attributes=_} = value in
       self init field_type
     in
-    List.Ne.fold_left aux init @@ npseq_to_ne_list value.ne_elements
+    List.Ne.fold_left ~f:aux ~init @@ npseq_to_ne_list value.ne_elements
   | TApp    {value;region=_} ->
     let (_, tuple) = value in
-    List.Ne.fold_left self init @@ npseq_to_ne_list tuple.value.inside
+    List.Ne.fold_left ~f:self ~init @@ npseq_to_ne_list tuple.value.inside
   | TFun    {value;region=_} ->
     let (ty1, _, ty2) = value in
     let res = self init ty1 in
@@ -154,7 +156,7 @@ let rec fold_expression : 'a folder -> 'a -> expr -> 'a = fun f init e  ->
       let res = self init field_expr in
       res
     in
-    List.Ne.fold_left aux init @@ npseq_to_ne_list value.ne_elements
+    List.Ne.fold_left ~f:aux ~init @@ npseq_to_ne_list value.ne_elements
   | EProj    _ -> init
   | EUpdate  {value;region=_} ->
     let aux init ({value;region=_} : _ reg) =
@@ -162,7 +164,7 @@ let rec fold_expression : 'a folder -> 'a -> expr -> 'a = fun f init e  ->
       let res = self init field_expr in
       res
     in
-    List.Ne.fold_left aux init @@ npseq_to_ne_list value.updates.value.ne_elements
+    List.Ne.fold_left ~f:aux ~init @@ npseq_to_ne_list value.updates.value.ne_elements
   | EModA    {value;region=_} -> self init value.field
   | EVar     _ -> init
   | ECall    {value;region=_} ->
@@ -171,12 +173,12 @@ let rec fold_expression : 'a folder -> 'a -> expr -> 'a = fun f init e  ->
     (match args with
     | Unit _ -> res
     | Multiple {value;region=_} ->
-      List.Ne.fold_left self res @@ npseq_to_ne_list value.inside
+      List.Ne.fold_left ~f:self ~init:res @@ npseq_to_ne_list value.inside
     )
   | EBytes   _ -> init
   | EUnit    _ -> init
   | ETuple   {value;region=_} ->
-    List.Ne.fold_left self init @@ npseq_to_ne_list value
+    List.Ne.fold_left ~f:self ~init @@ npseq_to_ne_list value
   | EPar     {value;region=_} ->
     self init value.inside
   | ELetIn   {value;region=_} ->
@@ -190,7 +192,7 @@ let rec fold_expression : 'a folder -> 'a -> expr -> 'a = fun f init e  ->
     )
   | ETypeIn  {value;region=_} ->
     let {type_decl;semi=_;body} = value in
-    let {kwd_type=_;name=_;eq=_;type_expr} = type_decl in
+    let {kwd_type=_;name=_;eq=_;type_expr; params=_} = type_decl in
     let res = self_type init type_expr in
     self res body
   | EModIn  {value;region=_} ->
@@ -203,7 +205,7 @@ let rec fold_expression : 'a folder -> 'a -> expr -> 'a = fun f init e  ->
     let {kwd_module=_;alias=_;eq=_;binders=_} = mod_alias in
     self init body
   | EFun     {value;region=_} ->
-    let {binders=_; lhs_type; arrow=_; body} = value in
+    let {binders=_; lhs_type; arrow=_; body; attributes=_} = value in
     let res = self init body in
     (match lhs_type with
       Some (_, ty) -> self_type res ty
@@ -216,10 +218,10 @@ let rec fold_expression : 'a folder -> 'a -> expr -> 'a = fun f init e  ->
     self init code
 
 and matching_cases self init ({value;region=_}: _ reg) =
-  List.Ne.fold_left(case_clause self) init @@ npseq_to_ne_list value
+  List.Ne.fold_left ~f:(case_clause self) ~init @@ npseq_to_ne_list value
 
 and case_clause self init ({value;region=_}: _ case_clause reg) =
-  let {pattern=_;arrow=_;rhs} = value in
+  let {pattern=_;arrow=_;rhs;terminator=_} = value in
   self init rhs
 
 and fold_declaration : 'a folder -> 'a -> declaration -> 'a =
@@ -238,7 +240,7 @@ and fold_declaration : 'a folder -> 'a -> declaration -> 'a =
     | None -> res
     )
   | TypeDecl {value;region=_} ->
-    let {kwd_type=_;name=_;eq=_;type_expr} = value in
+    let {kwd_type=_;name=_;eq=_;type_expr; params=_} = value in
     let res = self_type init type_expr in
     res
 
@@ -254,7 +256,7 @@ and fold_declaration : 'a folder -> 'a -> declaration -> 'a =
 and fold_module : 'a folder -> 'a -> t -> 'a =
   fun f init {decl;eof=_} ->
   let self = fold_declaration f in
-  List.Ne.fold_left self init @@ decl
+  List.Ne.fold_left ~f:self ~init @@ decl
 
 type mapper = {
   e : expr -> expr;
@@ -509,7 +511,7 @@ let rec map_expression : mapper -> expr -> expr = fun f e  ->
     ELetIn {value;region}
   | ETypeIn  {value;region} ->
     let {type_decl;semi;body} = value in
-    let {kwd_type=_;name=_;eq=_;type_expr} = type_decl in
+    let {kwd_type=_;name=_;eq=_;type_expr;params=_} = type_decl in
     let type_expr = self_type type_expr in
     let body = self body in
     let type_decl = {type_decl with type_expr} in
@@ -530,7 +532,7 @@ let rec map_expression : mapper -> expr -> expr = fun f e  ->
     let value = {mod_alias;semi;body} in
     EModAlias {value;region}
   | EFun     {value;region} ->
-    let {binders=_; lhs_type; arrow=_; body} = value in
+    let {binders=_; lhs_type; arrow=_; body;attributes=_} = value in
     let body = self body in
     let lhs_type = Option.map ~f:(fun (a,b) ->
       let b = self_type b in (a,b)) lhs_type in
@@ -550,7 +552,7 @@ and matching_cases self (cases: _ Utils.nsepseq reg) =
   {cases with value}
 
 and case_clause self (case_clause: _ case_clause reg) =
-  let {pattern=_;arrow=_;rhs} = case_clause.value in
+  let {pattern=_;arrow=_;rhs; terminator=_} = case_clause.value in
   let rhs = self rhs in
   let value = {case_clause.value with rhs} in
   {case_clause with value}
@@ -573,7 +575,7 @@ and map_declaration : mapper -> declaration -> declaration =
     let value = (kwd_let,kwd_rec,let_binding,attr) in
     return @@ ConstDecl {value;region}
   | TypeDecl {value;region} ->
-    let {kwd_type=_;name=_;eq=_;type_expr} = value in
+    let {kwd_type=_;name=_;eq=_;type_expr;params=_} = value in
     let type_expr = self_type type_expr in
     let value = {value with type_expr} in
     return @@ TypeDecl {value;region}

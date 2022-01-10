@@ -4,10 +4,12 @@
 
 module Region = Simple_utils.Region
 module CST    = Cst.Reasonligo
+module Var    = Simple_utils.Var
+module Utils  = Simple_utils.Utils
 
 open Region
 open Errors
-open Trace
+open Simple_utils.Trace
 
 (* TODO don't *)
 let ignore x =
@@ -16,7 +18,7 @@ let ignore x =
 
 (* Useful modules *)
 
-module SSet = Set.Make (String)
+module SSet = Caml.Set.Make (String)
 
 module Ord =
   struct
@@ -25,7 +27,7 @@ module Ord =
       String.compare v1.value v2.value
   end
 
-module VarSet = Set.Make (Ord)
+module VarSet = Caml.Set.Make (Ord)
 
 (* Checking the definition of reserved names (shadowing) *)
 
@@ -124,12 +126,10 @@ and vars_of_fields ~raise env fields =
   Helpers.fold_npseq (vars_of_field_pattern ~raise) env fields
 
 and vars_of_field_pattern ~raise env field =
-  let var = field.value.field_name in
-  if VarSet.mem var env then
-    raise.raise @@ non_linear_pattern var
-  else
-    let p = field.value.pattern
-    in vars_of_pattern ~raise (VarSet.add var env) p
+  (* TODO: fix this when fixing linearity check for all syntaxes
+    Ref: https://gitlab.com/ligolang/ligo/-/merge_requests/1445#note_802535832 *)
+  let p = field.value.pattern in
+  vars_of_pattern ~raise env p
 
 and vars_of_pconstr ~raise env = function
   Some pattern -> vars_of_pattern ~raise env pattern

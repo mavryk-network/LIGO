@@ -1,4 +1,5 @@
-open Core
+module Location = Simple_utils.Location
+open Types
 
 let pair_map = fun f (x , y) -> (f x , f y)
 
@@ -47,7 +48,7 @@ module Substitution = struct
       let () = ignore @@ substs in
       var
 
-    and s_binder : (_ T.binder,_) w = fun ~substs {var;ascr} ->
+    and s_binder : (_ T.binder,_) w = fun ~substs {var;ascr;attributes=_} ->
       let var = s_variable ~substs var in
       let ascr = Option.map ~f:(s_type_expression ~substs) ascr in
       T.{var;ascr;attributes=Stage_common.Helpers.empty_attribute}
@@ -120,9 +121,12 @@ module Substitution = struct
       | (T.Literal_key _ as x)
       | (T.Literal_key_hash _ as x)
       | (T.Literal_chain_id _ as x)
-      | (T.Literal_operation _ as x) ->
+      | (T.Literal_operation _ as x)
+      | (T.Literal_bls12_381_g1 _ as x)
+      | (T.Literal_bls12_381_g2 _ as x)
+      | (T.Literal_bls12_381_fr _ as x) ->
         x
-    and s_matching_expr : (_ T.match_case list,_) w = fun ~(substs : substs) -> 
+    and s_matching_expr : (_ T.match_case list,_) w = fun ~(substs : substs) ->
       fun x ->
         List.map ~f:
           (fun (x: _ T.match_case) -> let body = s_expression ~substs x.body in { x with body })
