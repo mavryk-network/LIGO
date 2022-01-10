@@ -536,8 +536,9 @@ let encode (m: Ast.module_) =
       section 2 (vec import) ims (ims <> [])
 
     (* Function section *)
-    let func f = var f.it.ftype
-
+    let func f = 
+      vu32 (Linking.find_type m.it.types f.it.ftype)
+      
     let func_section fs =
       section 3 (vec func) fs (fs <> [])
 

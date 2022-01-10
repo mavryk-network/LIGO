@@ -122,7 +122,7 @@
  and func' =
  {
    name  : string;
-   ftype : var;
+   ftype : string;
    locals : (string * value_type) list;
    body : instr list;
  }
