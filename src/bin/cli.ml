@@ -213,13 +213,25 @@ let compile_file =
     return_result ~return ~warn ?output_file @@
     Api.Compile.contract ~werror source_file entry_point oc_views syntax protocol_version display_format disable_typecheck michelson_format michelson_comments in
   let summary   = "compile a contract." in
-  let readme () = "This sub-command compiles a contract to Michelson \
-                  code. It expects a source file and an entrypoint \
-                  function that has the type of a contract: \"parameter \
-                  * storage -> operations list * storage\"." in
+  let readme () = "This sub-command compiles a contract to Michelson. It \
+                  expects a source file and an entrypoint function that has\ 
+                  the type of a contract: 
+                  \"parameter * storage -> operations list * storage\"." in
   Command.basic ~summary ~readme
   (f <$> source_file <*> entry_point <*> on_chain_views <*> syntax <*> protocol_version <*> display_format <*> disable_michelson_typechecking <*> michelson_code_format <*> output_file <*> warn <*> werror <*> michelson_comments)
 
+let compile_wasm =
+  let f source_file entry_point oc_views syntax protocol_version display_format output_file warn werror () =
+    return_result ~return ~warn ?output_file @@
+    Api.Compile.contract_wasm ~werror source_file entry_point oc_views syntax protocol_version display_format in
+  let summary   = "compile a contract to WebAssembly." in
+  let readme () = "This sub-command compiles a contract to WebAssembly. It \
+                  expects a source file and an entrypoint function that has\ 
+                  the type of a contract: 
+                  \"parameter * storage -> operations list * storage\"." in
+  Command.basic ~summary ~readme
+  (f <$> source_file <*> entry_point <*> on_chain_views <*> syntax <*> protocol_version <*> display_format <*> output_file <*> warn <*> werror)
+  
 
 let compile_parameter =
   let f source_file entry_point expression syntax protocol_version amount balance sender source now display_format michelson_format output_file warn werror () =
@@ -261,11 +273,12 @@ let compile_storage =
   Command.basic ~summary ~readme
   (f <$> source_file <*> expression "STORAGE" <*> entry_point <*> syntax <*> protocol_version <*> amount <*> balance <*> sender <*> source <*> now <*> display_format <*> michelson_code_format <*> output_file <*> warn <*> werror)
 
-let compile_group = Command.group ~summary:"compile a ligo program to michelson" @@
-  [ "contract",   compile_file;
-    "expression", compile_expression;
-    "parameter",  compile_parameter;
-    "storage",    compile_storage;]
+let compile_group = Command.group ~summary:"compile a ligo program to michelson or" @@
+  [ "contract",      compile_file;
+    "contract-wasm", compile_wasm;
+    "expression",    compile_expression;
+    "parameter",     compile_parameter;
+    "storage",       compile_storage;]
 
 (** Transpile commands *)
 let transpile_contract =
@@ -624,14 +637,14 @@ let repl =
 
 let main = Command.group ~preserve_subcommand_order:() ~summary:"the LigoLANG compiler" @@
   [
-    "compile"  , compile_group;
-    "transpile", transpile_group;
-    "run"      , run_group;
-    "info"     , info_group;
-    "mutate"   , mutate_group;
-    "repl"     , repl;
-    "changelog", changelog;
-    "print"    , print_group;
+    "compile"     , compile_group;
+    "transpile"   , transpile_group;
+    "run"         , run_group;
+    "info"        , info_group;
+    "mutate"      , mutate_group;
+    "repl"        , repl;
+    "changelog"   , changelog;
+    "print"       , print_group;
   ]
 
 let run ?argv () =

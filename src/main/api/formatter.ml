@@ -148,3 +148,44 @@ module Michelson_formatter = struct
     to_json = michelson_jsonformat mf (convert_michelson_comments michelson_comments);
   }
 end
+
+module Wasm_formatter = struct 
+  (* TODO: fix me - ugly hackish code *)
+
+  open Tezos_utils.Michelson
+  (* open Simple_utils *)
+
+  type wasm_format = [
+    | `Text
+    | `Json
+    | `Hex
+  ]
+
+  let wasm_ppformat wasm_format ~display_format f a : unit =
+    let wasm_pp = function
+      | `Text -> pp_comment ~comment:(fun _ -> None)
+      | `Json -> pp_json ?comment:None
+      | `Hex -> failwith "TODO" 
+    in
+    match display_format with
+    | Human_readable | Dev -> (
+       let m = Format.asprintf "%a\n" (wasm_pp wasm_format) a in
+       Format.pp_print_string f m
+    )
+
+  let wasm_jsonformat wasm_format a : json = match wasm_format with
+    | `Text ->
+      let code_as_str = Format.asprintf "%a" (pp_comment ~comment:(fun _ -> None)) a in
+      `Assoc [("text_code" , `String code_as_str)]
+    | `Hex -> 
+      failwith "TODO"
+    | `Json ->
+      let code_as_str = Format.asprintf "%a" (pp_json ?comment:None) a in
+      `Assoc [("json_code" , `String code_as_str)]
+
+  let wasm_format : wasm_format -> 'b format = fun mf -> {
+    pp = wasm_ppformat mf;
+    to_json = wasm_jsonformat mf;
+  }
+
+end
