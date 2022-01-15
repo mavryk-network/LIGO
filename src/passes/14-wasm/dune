@@ -5,7 +5,7 @@
   (pps ppx_expect ppx_poly_constructor))
  (libraries 
   mini_c
-  wasm
+  WasmObjectFile
  )
 
  (flags

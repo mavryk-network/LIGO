@@ -174,6 +174,7 @@ let rec error_ppformat : display_format:string display_format ->
     | `Self_mini_c_tracer e -> Self_mini_c.Errors.error_ppformat ~display_format f e
     | `Spilling_tracer e -> Spilling.Errors.error_ppformat ~display_format f  e
     | `Stacking_tracer e -> Stacking.Errors.error_ppformat ~display_format f e
+    | `Wasm_tracer e -> Wasm_pass.Errors.error_ppformat ~display_format f e
 
     | `Main_interpret_not_enough_initial_accounts (loc,max) ->
       Format.fprintf f "@[<hv>%a@. baker account initial balance must at least reach %a tez @]"
@@ -401,6 +402,7 @@ let rec error_jsonformat : Types.all -> Yojson.Safe.t = fun a ->
   | `Spilling_tracer e -> Spilling.Errors.error_jsonformat e
   | `Self_mini_c_tracer e -> Self_mini_c.Errors.error_jsonformat e
   | `Stacking_tracer e -> Stacking.Errors.error_jsonformat e
+  | `Wasm_tracer e -> Wasm_pass.Errors.error_jsonformat e
 
   | `Main_interpret_test_entry_not_found _
   | `Main_interpret_target_lang_error _

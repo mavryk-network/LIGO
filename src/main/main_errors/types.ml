@@ -51,6 +51,7 @@ type all =
  | `Aggregation_tracer of Aggregation.Errors.aggregation_error
  | `Self_mini_c_tracer of Self_mini_c.Errors.self_mini_c_error
  | `Stacking_tracer of Stacking.Errors.stacking_error
+ | `Wasm_tracer of Wasm_pass.Errors.wasm_error
 
  (* | `Main_interpreter of Interpreter.interpreter_error *)
  | `Main_interpret_test_entry_not_found of string

@@ -1,11 +1,11 @@
 (* use https://github.com/SanderSpies/ocaml/blob/manual_gc/asmcomp/wasm32/emit.mlp for inspiration *)
 
-[@@@warning "-33"]
+[@@@warning "-33-27"]
 open Trace
 open Errors 
 
 module I = Mini_c.Types
-module W = Wasm  
+module W = WasmObjectFile  
 
 let expression ~raise : I.expression -> W.Ast.instr list = fun e ->
   match e.content with 
@@ -51,11 +51,11 @@ let expression ~raise : I.expression -> W.Ast.instr list = fun e ->
   | E_update of expression * int * expression * int
   | E_raw_michelson _ -> failwith "not supported" *)
 
-let func_type: I.expression -> W.AST.type_ = fun e ->
+(* let func_type: I.expression -> W.AST.type_ = fun e ->
   let type_expression = e.type_expression in
   let type_content = type_expression.type_content in  
   let _location = type_expression.location in
-  match type_content with 
+  match type_content with  *)
   
 
   (* | T_tuple of type_expression annotated list
@@ -72,5 +72,6 @@ let func_type: I.expression -> W.AST.type_ = fun e ->
   | T_sapling_transaction of Z.t
   | T_option of type_expression *)
 
-let compile: I.program -> W.Ast.module_' = fun _a -> 
+let compile ~raise : I.expression -> W.Ast.module_' = fun e -> 
+  let _ = expression ~raise e in
   W.Ast.empty_module

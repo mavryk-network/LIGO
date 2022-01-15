@@ -201,6 +201,17 @@ let self_pass =
   let doc  = "apply the self pass" in
   flag ~doc name no_arg
 
+let backend =
+  let open Command.Param in
+  let docv = "--backend" in
+  let doc = "Compile the contract to `michelson`(default) or `wasm`." in
+  flag ~doc docv @@
+  optional_with_default `Michelson @@
+  Command.Arg_type.create @@ function
+    | "michelson" -> `Michelson
+    | "wasm" -> `Wasm
+    | _ -> failwith "todo"
+
 module Api = Ligo_api
 let (<*>) = Command.Param.(<*>)
 let (<$>) f a = Command.Param.return f <*> a
@@ -209,29 +220,16 @@ let (<$>) f a = Command.Param.return f <*> a
 I use a mutable variable to propagate back the effect of the result of f *)
 let return = ref Done
 let compile_file =
-  let f source_file entry_point oc_views syntax protocol_version display_format disable_typecheck michelson_format output_file warn werror michelson_comments () =
+  let f source_file entry_point oc_views syntax protocol_version display_format disable_typecheck michelson_format output_file warn werror michelson_comments backend () =
     return_result ~return ~warn ?output_file @@
-    Api.Compile.contract ~werror source_file entry_point oc_views syntax protocol_version display_format disable_typecheck michelson_format michelson_comments in
+    Api.Compile.contract ~werror source_file entry_point oc_views syntax protocol_version display_format disable_typecheck michelson_format michelson_comments backend in
   let summary   = "compile a contract." in
   let readme () = "This sub-command compiles a contract to Michelson. It \
                   expects a source file and an entrypoint function that has\ 
                   the type of a contract: 
                   \"parameter * storage -> operations list * storage\"." in
   Command.basic ~summary ~readme
-  (f <$> source_file <*> entry_point <*> on_chain_views <*> syntax <*> protocol_version <*> display_format <*> disable_michelson_typechecking <*> michelson_code_format <*> output_file <*> warn <*> werror <*> michelson_comments)
-
-let compile_wasm =
-  let f source_file entry_point oc_views syntax protocol_version display_format output_file warn werror () =
-    return_result ~return ~warn ?output_file @@
-    Api.Compile.contract_wasm ~werror source_file entry_point oc_views syntax protocol_version display_format in
-  let summary   = "compile a contract to WebAssembly." in
-  let readme () = "This sub-command compiles a contract to WebAssembly. It \
-                  expects a source file and an entrypoint function that has\ 
-                  the type of a contract: 
-                  \"parameter * storage -> operations list * storage\"." in
-  Command.basic ~summary ~readme
-  (f <$> source_file <*> entry_point <*> on_chain_views <*> syntax <*> protocol_version <*> display_format <*> output_file <*> warn <*> werror)
-  
+  (f <$> source_file <*> entry_point <*> on_chain_views <*> syntax <*> protocol_version <*> display_format <*> disable_michelson_typechecking <*> michelson_code_format <*> output_file <*> warn <*> werror <*> michelson_comments <*> backend)
 
 let compile_parameter =
   let f source_file entry_point expression syntax protocol_version amount balance sender source now display_format michelson_format output_file warn werror () =
@@ -275,7 +273,6 @@ let compile_storage =
 
 let compile_group = Command.group ~summary:"compile a ligo program to michelson or" @@
   [ "contract",      compile_file;
-    "contract-wasm", compile_wasm;
     "expression",    compile_expression;
     "parameter",     compile_parameter;
     "storage",       compile_storage;]

@@ -7,7 +7,7 @@ module Run = Ligo_run.Of_michelson
 let no_comment node =
   Tezos_micheline.Micheline.(inject_locations (fun _ -> Simple_utils.Location.generated) (strip_locations node))
 
-let contract ?werror source_file entry_point declared_views syntax protocol_version display_format disable_typecheck michelson_code_format michelson_comments () =
+let contract ?werror source_file entry_point declared_views syntax protocol_version display_format disable_typecheck michelson_code_format michelson_comments backend () =
     Trace.warning_with @@ fun add_warning get_warnings ->
     format_result ?werror ~display_format (Formatter.Michelson_formatter.michelson_format michelson_code_format michelson_comments) get_warnings @@
       fun ~raise ->
@@ -15,27 +15,21 @@ let contract ?werror source_file entry_point declared_views syntax protocol_vers
           let protocol_version = Helpers.protocol_to_variant ~raise protocol_version in
           Compiler_options.make ~protocol_version ()
       in
-      let code,env = Build.build_contract ~raise ~add_warning ~options syntax entry_point source_file in
-      let views =
-        Build.build_views ~raise ~add_warning ~options syntax entry_point (declared_views,env) source_file
-      in
-      Ligo_compile.Of_michelson.build_contract ~raise ~disable_typecheck code views
-      
-let contract_wasm ?werror source_file entry_point _declared_views syntax protocol_version display_format () =
-  Trace.warning_with @@ fun add_warning get_warnings ->
-  format_result ?werror ~display_format (Formatter.Wasm_formatter.wasm_format `Text) get_warnings @@
-    fun ~raise ->
-    let options =
-        let protocol_version = Helpers.protocol_to_variant ~raise protocol_version in
-        Compiler_options.make ~protocol_version ()
-    in
-    let code,env = Build.build_wasm_code ~raise ~add_warning ~options syntax entry_point source_file in
-    (* let views =
-      Build.build_views ~raise ~add_warning ~options syntax entry_point (declared_views,env) source_file
-    in
-    let _ = Ligo_compile.Of_wasm.build_contract ~raise code views in *)
-    ignore code; ignore env;
-    (String (0, "This should not be here")) (* TODO: remove this *)
+      match backend with 
+        `Michelson ->
+          let code,env = Build.build_contract ~raise ~add_warning ~options syntax entry_point source_file in
+          let views =
+            Build.build_views ~raise ~add_warning ~options syntax entry_point (declared_views,env) source_file
+          in
+          Ligo_compile.Of_michelson.build_contract ~raise ~disable_typecheck code views
+      | `Wasm -> 
+          let code,env = Build.build_wasm_code ~raise ~add_warning ~options syntax entry_point source_file in
+          (* let views =
+            Build.build_views ~raise ~add_warning ~options syntax entry_point (declared_views,env) source_file
+          in
+          *)
+          ignore code; ignore env;
+          (String (Virtual "no", "This should not be here"))    
 
 let expression expression syntax protocol_version init_file display_format without_run michelson_format werror () =
     Trace.warning_with @@ fun add_warning get_warnings ->
