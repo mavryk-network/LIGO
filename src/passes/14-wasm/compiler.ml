@@ -8,22 +8,49 @@ module I = Mini_c.Types
 module W = WasmObjectFile  
 
 let expression ~raise : I.expression -> W.Ast.instr list = fun e ->
+  print_endline "oh yes here";
   match e.content with 
-  | E_literal (Literal_unit) -> failwith "not supported yet"
-  | E_literal (Literal_int _z) -> failwith "not supported yet"
-  | E_literal (Literal_nat _z) -> failwith "not supported yet"
-  | E_literal (Literal_timestamp _z) -> failwith "not supported yet"
-  | E_literal (Literal_mutez _z) -> failwith "not supported yet"
-  | E_literal (Literal_string _s) -> failwith "not supported yet"
-  | E_literal (Literal_bytes _b) -> failwith "not supported yet"
-  | E_literal (Literal_address _b) -> failwith "not supported yet"
-  | E_literal (Literal_signature _b) -> failwith "not supported yet"
-  | E_literal (Literal_key _b) -> failwith "not supported yet"
-  | E_literal (Literal_key_hash _b) -> failwith "not supported yet"
-  | E_literal (Literal_chain_id _b) -> failwith "not supported yet"
-  | E_literal (Literal_operation _b) -> failwith "not supported yet"
-  | E_closure {binder; body} -> []
-  
+  | E_literal (Literal_unit) -> failwith "not supported yet 1"
+  | E_literal (Literal_int _z) -> failwith "not supported yet 2"
+  | E_literal (Literal_nat _z) -> failwith "not supported yet 3"
+  | E_literal (Literal_timestamp _z) -> failwith "not supported yet 4"
+  | E_literal (Literal_mutez _z) -> failwith "not supported yet 5"
+  | E_literal (Literal_string _s) -> failwith "not supported yet 6"
+  | E_literal (Literal_bytes _b) -> failwith "not supported yet 7"
+  | E_literal (Literal_address _b) -> failwith "not supported yet 8"
+  | E_literal (Literal_signature _b) -> failwith "not supported yet 9"
+  | E_literal (Literal_key _b) -> failwith "not supported yet 10"
+  | E_literal (Literal_key_hash _b) -> failwith "not supported yet 11"
+  | E_literal (Literal_chain_id _b) -> failwith "not supported yet 12"
+  | E_literal (Literal_operation _b) -> failwith "not supported yet 13"
+  | E_closure {binder; body} -> failwith "not supported yet 14"
+  | E_constant _ -> failwith "not supported yet 15"
+  | E_application _ -> failwith "not supported yet 16"
+  | E_variable _ -> failwith "not supported yet 17"
+  | E_iterator _ -> failwith "not supported yet 18"
+  | E_fold     _ -> failwith "not supported yet 19"
+  | E_fold_right _ -> failwith "not supported yet 20"
+  | E_if_bool  _ -> failwith "not supported yet 21"
+  | E_if_none  _ -> failwith "not supported yet 22"
+  | E_if_cons  _ -> failwith "not supported yet 23"
+  | E_if_left  _ -> failwith "not supported yet 24"
+  | E_let_in (e1, _inline, ((name, _type), _e2)) -> 
+    print_endline (Var.debug (Location.unwrap name));
+    
+
+
+    failwith "not supported yet 25"
+  | E_tuple _ -> failwith "not supported yet 26"
+  | E_let_tuple _ -> failwith "not supported yet 27"
+  (* E_proj (record, index, field_count): we use the field_count to
+     know whether the index is the last field or not, since Michelson
+     treats the last element of a comb differently than the rest. We
+     could alternatively put `unit` at the end of all our combs, but
+     that would break compatibility and is not a standard Michelson
+     convention... *)
+  | E_proj _ -> failwith "not supported yet 28"
+  (* E_update (record, index, update, field_count): field_count as for E_proj *)
+  | E_update _ -> failwith "not supported yet 29"  
   | E_raw_michelson _ -> raise.raise @@ michelson_insertion Location.dummy
   | _ -> []
   (* | E_closure of anon_function
