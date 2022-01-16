@@ -3,6 +3,7 @@ open Helpers
 
 let decompile ~raise ?dialect (m : module_) syntax : _  =
   let syntax = syntax_to_variant ~raise ?dialect syntax None in
+  Format.printf "syntax extracted\n%!";
   specialise_and_print syntax m
 
 let decompile_expression (e : expression) syntax : _  =

@@ -188,6 +188,7 @@ let decompile_type_params : AST.type_expression -> _ option * CST.type_expr = fu
          Some q, t
 
 let rec decompile_expression : AST.expression -> CST.expr = fun expr ->
+  Format.printf "decompile_epxression %a\n%!" AST.PP.expression expr;
   let return_expr expr = expr in
   let return_expr_with_par expr = return_expr @@ CST.EPar (wrap @@ par @@ expr) in
   match expr.expression_content with
@@ -490,10 +491,11 @@ let rec decompile_expression : AST.expression -> CST.expr = fun expr ->
     let lst = list_to_sepseq lst in
     return_expr @@ CST.EList (EListComp (wrap @@ inject brackets @@ lst))
   | E_set set ->
-    let set = List.map ~f:decompile_expression set in
-    let set = List.Ne.of_list @@ set in
+    let lst = List.map ~f:decompile_expression set in
+    let lst = list_to_sepseq lst in
+    let set = CST.EList (EListComp (wrap @@ inject brackets @@ lst)) in
     let var = CST.EVar (wrap "Set.literal") in
-    return_expr @@ CST.ECall (wrap @@ (var,set))
+    return_expr @@ CST.ECall (wrap @@ (var,(set,[])))
     (* We should avoid to generate skip instruction*)
   | E_skip -> return_expr @@ CST.EUnit (wrap (ghost,ghost))
   | E_assign _
@@ -637,6 +639,7 @@ and decompile_pattern : AST.type_expression AST.pattern -> CST.pattern =
       CST.PRecord (wrap inj)
 
 and decompile_module : AST.module_ -> CST.ast = fun prg ->
+  Format.printf "decompiling module \n%!";
   let decl = List.map ~f:decompile_declaration prg in
   let decl = List.Ne.of_list decl in
   ({decl;eof=ghost}: CST.ast)

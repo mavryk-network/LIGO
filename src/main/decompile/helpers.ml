@@ -52,6 +52,7 @@ let specialise_and_print_expression_pascaligo dialect expression =
 
 let specialise_and_print_cameligo m =
   let cst = Tree_abstraction.Cameligo.decompile_module m in
+  Format.printf "Decompile to cst \n%!";
   let source = (Parsing.Cameligo.pretty_print cst)
   in source
 

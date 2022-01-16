@@ -290,6 +290,11 @@ module Tree_abstraction = struct
     | C_CONCAT       -> "Bytes.concat"
     | C_SLICE        -> "Bytes.sub"
 
+    (* Options module *)
+
+    | C_UNOPT            -> "Option.unopt"           
+    | C_UNOPT_WITH_ERROR -> "Option.unopt_with_error"
+
     (* List module *)
 
     (*  | C_SIZE      -> "List.size" *)
@@ -516,8 +521,12 @@ module Tree_abstraction = struct
 
       (*->  Others *)
 
-      | C_ASSERTION   -> "assert"
-      | C_ASSERT_SOME -> "assert_some"
+      | C_ASSERTION              -> "assert"                
+      | C_ASSERTION_WITH_ERROR   -> "assert_with_error"     
+      | C_ASSERT_SOME            -> "assert_some"           
+      | C_ASSERT_SOME_WITH_ERROR -> "assert_some_with_error"
+      | C_ASSERT_NONE            -> "assert_none"           
+      | C_ASSERT_NONE_WITH_ERROR -> "assert_none_with_error"
 
       | _ as c            -> pseudo_module_to_string c
 
@@ -604,7 +613,7 @@ module Tree_abstraction = struct
 
     let constant'_to_string = function
       (* Tezos (ex-Michelson, ex-Current, ex-Operation) *)
-      | C_FAILWITH -> "failwith"
+      | C_FAILWITH               -> "failwith"
 
       | C_IS_NAT     -> "is_nat"
       | C_INT        -> "int"
@@ -615,8 +624,12 @@ module Tree_abstraction = struct
 
       (* Others *)
 
-      | C_ASSERTION   -> "assert"
-      | C_ASSERT_SOME -> "assert_some"
+      | C_ASSERTION              -> "assert"                
+      | C_ASSERTION_WITH_ERROR   -> "assert_with_error"     
+      | C_ASSERT_SOME            -> "assert_some"           
+      | C_ASSERT_SOME_WITH_ERROR -> "assert_some_with_error"
+      | C_ASSERT_NONE            -> "assert_none"           
+      | C_ASSERT_NONE_WITH_ERROR -> "assert_none_with_error"
       | C_TRUE -> "true"
       | C_FALSE -> "false"
 
@@ -716,8 +729,12 @@ module Tree_abstraction = struct
 
       (* Others *)
 
-      | C_ASSERTION   -> "assert"
-      | C_ASSERT_SOME -> "assert_some"
+      | C_ASSERTION              -> "assert"                
+      | C_ASSERTION_WITH_ERROR   -> "assert_with_error"     
+      | C_ASSERT_SOME            -> "assert_some"           
+      | C_ASSERT_SOME_WITH_ERROR -> "assert_some_with_error"
+      | C_ASSERT_NONE            -> "assert_none"           
+      | C_ASSERT_NONE_WITH_ERROR -> "assert_none_with_error"
       | C_TRUE -> "true"
       | C_FALSE -> "false"
 
