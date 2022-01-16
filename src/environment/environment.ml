@@ -19,16 +19,8 @@ let fold ~f ~init (env:t) = List.fold ~f ~init @@ List.rev env
 
 (* Artefact for build system *)
 type core = Ast_core.module_
-let add_core_module ?public : Ast_core.module_variable -> Ast_core.module_ -> core -> core =
-  fun module_binder module_ env ->
-    let module_ = Location.wrap @@ Ast_core.M_struct module_ in
-    let new_d = Location.wrap @@ Ast_core.Declaration_module {module_binder;module_;module_attr={public=Option.is_some public}} in
-    new_d :: env
-
-let to_program env = List.rev env
 let init_core p = append p []
 let to_core_program env = List.rev env
-let append_core = append
 
 (* This is an stdlib *)
 let star = Type
