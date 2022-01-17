@@ -5,8 +5,6 @@ open Simple_utils.Trace
 
 let get_t_function ~raise e =
   trace_option ~raise not_a_function @@ Mini_c.get_t_function e
-let get_function ~raise e =
-  trace_option ~raise not_a_function @@ Mini_c.get_function e
 let get_function_eta ~raise e =
   trace_option ~raise not_a_function @@ Mini_c.get_function_eta e
 
