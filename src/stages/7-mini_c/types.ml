@@ -1,5 +1,7 @@
 include Stage_common.Types
 
+module Bindings = Simple_utils.Map.Make(struct type t = expression_variable let compare = compare_expression_variable end)
+
 type 'a annotated = string option * 'a
 
 type type_content =
@@ -116,6 +118,7 @@ and expression = {
   content : expression_content ;
   type_expression : type_expression ;
   location : Location.t;
+  fvs : int Bindings.t option
 }
 
 and constant = {

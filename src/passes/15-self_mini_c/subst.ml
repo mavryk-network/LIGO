@@ -117,7 +117,11 @@ let subst_binder : type body.
     if Var.equal x.wrap_content y.wrap_content
     then (y, body)
     (* else, if no capture, subst in binder *)
-    else if not (Free_variables.mem (Free_variables.expression [] expr) y)
+    else
+    let has = match expr.fvs with
+      | Some fvs -> Free_variables_term.mem fvs y
+      | None -> Free_variables.mem (Free_variables.expression [] expr) y in
+    if not has
     then (y, subst ~body ~x ~expr)
     (* else, avoid capture and subst in binder *)
     else

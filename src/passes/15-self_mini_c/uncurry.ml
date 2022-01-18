@@ -120,7 +120,9 @@ let comb_type (ts : type_expression list) : type_expression =
 let comb_expr (es : expression list) : expression =
   { content = E_tuple es;
     location = Location.generated;
-    type_expression = comb_type (List.map ~f:(fun e -> e.type_expression) es) }
+    type_expression = comb_type (List.map ~f:(fun e -> e.type_expression) es) ;
+    fvs = None
+  }
 
 let uncurry_rhs (depth : int) (expr : expression) : expression =
   let (arg_types, ret_type) = uncurry_arrow depth expr.type_expression in
@@ -133,7 +135,7 @@ let uncurry_rhs (depth : int) (expr : expression) : expression =
   let fresh_vars = List.map ~f:(Location.map Var.fresh_like) vars in
   let binder_expr = { content = E_variable binder;
                       type_expression = comb_type arg_types;
-                      location = Location.generated } in
+                      location = Location.generated ; fvs = None } in
   let tuple_vars = List.zip_exn fresh_vars arg_types in
   (* generate lets in the correct order to bind the original variables *)
   let body =
@@ -142,10 +144,10 @@ let uncurry_rhs (depth : int) (expr : expression) : expression =
          let fresh_var_expr =
            { content = E_variable fresh_var;
              type_expression = arg_type;
-             location = Location.generated } in
+             location = Location.generated ; fvs = None } in
          { content = E_let_in (fresh_var_expr, true, ((var, arg_type), body));
            type_expression = body.type_expression;
-           location = Location.generated })
+           location = Location.generated ; fvs = None })
       (List.zip_exn (List.zip_exn vars fresh_vars) arg_types)
       ~init:body in
   let body = { body with content = E_let_tuple (binder_expr, (tuple_vars, body)) } in

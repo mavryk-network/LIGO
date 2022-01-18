@@ -183,13 +183,25 @@ let rec is_pure : expression -> bool = fun e ->
 
 let occurs_in : expression_variable -> expression -> bool =
   fun x e ->
-  let fvs = Free_variables.expression [] e in
-  Free_variables.mem fvs x
+  match e.fvs with
+  | None ->
+     (* print_endline "NO HIT"; *)
+     let fvs = Free_variables.expression [] e in
+     Free_variables.mem fvs x
+  | Some fvs ->
+     Free_variables_term.mem fvs x
 
 let occurs_count : expression_variable -> expression -> int =
   fun x e ->
-  let fvs = Free_variables.expression [] e in
-  Free_variables.mem_count x fvs
+  match e.fvs with
+  | None ->
+     (* print_endline "NO HIT"; *)
+     let fvs = Free_variables.expression [] e in
+     Free_variables.mem_count x fvs
+  | Some fvs ->
+     let count = Free_variables_term.mem_count x fvs in
+     (* print_endline (Format.asprintf "%a : %d in %a" Var.pp (Location.unwrap x) count PP.expression e); *)
+     count
 
 (* Let "inlining" mean transforming the code:
 
@@ -225,8 +237,9 @@ let inline_let : bool ref -> unit -> expression -> bool * unit * expression =
   | E_let_in (e1, should_inline_here, ((x, _a), e2)) ->
     if is_pure e1 && (should_inline_here || should_inline x e1 e2)
     then
-      let e2' = Subst.subst_expression ~body:e2 ~x:x ~expr:e1 in
-      (changed := true ; (false, (), e2'))
+    (* let () = print_endline (Format.asprintf "inlining: %a" PP.expression e) in *)
+    let e2' = Subst.subst_expression ~body:e2 ~x:x ~expr:e1 in
+    (changed := true ; (false, (), e2'))
     else
       (true, (), e)
   | _ -> (true, (), e)
@@ -251,12 +264,12 @@ let inline_lets : bool ref -> expression -> expression =
 let beta ~raise:_ : bool ref -> expression -> expression =
   fun changed e ->
   match e.content with
-  | E_application ({ content = E_closure { binder = x ; body = e1 } ; type_expression = {type_content = T_function (xtv, tv);_ }; location = _}, e2) ->
+  | E_application ({ content = E_closure { binder = x ; body = e1 } ; type_expression = {type_content = T_function (xtv, tv);_ }; location = _ ; fvs = _}, e2) ->
     (changed := true ;
      Expression.make (E_let_in (e2, false,((x, xtv), e1))) tv)
 
   (* also do CAR (PAIR x y) ↦ x, or CDR (PAIR x y) ↦ y, only if x and y are pure *)
-  | E_constant {cons_name = C_CAR| C_CDR as const; arguments = [ { content = E_constant {cons_name = C_PAIR; arguments = [ e1 ; e2 ]} ; type_expression = _ ; location = _} ]} ->
+  | E_constant {cons_name = C_CAR| C_CDR as const; arguments = [ { content = E_constant {cons_name = C_PAIR; arguments = [ e1 ; e2 ]} ; type_expression = _ ; location = _ ; fvs = _} ]} ->
     if is_pure e1 && is_pure e2
     then (changed := true ;
           match const with
@@ -274,7 +287,7 @@ let beta ~raise:_ : bool ref -> expression -> expression =
 
   (** This case shows up in the compilation of modules:
       (let x = e1 in e2).(i) ↦ (let x = e1 in e2.(i)) *)
-  | E_proj ({ content = E_let_in (e1, inline, ((x, a), e2));type_expression = _; location=_ } as e_let_in, i, n) ->
+  | E_proj ({ content = E_let_in (e1, inline, ((x, a), e2));type_expression = _; location=_  ; fvs = _} as e_let_in, i, n) ->
     changed := true;
     { e_let_in with content = E_let_in (e1, inline, ((x, a), ({ e with content = E_proj (e2, i, n) }))) }
 
@@ -307,7 +320,7 @@ let beta ~raise:_ : bool ref -> expression -> expression =
       ~f:(fun body (e, (v, t)) ->
          { content = E_let_in (e, false, ((v, t), body));
            location = Location.generated;
-           type_expression = body.type_expression })
+           type_expression = body.type_expression ; fvs = None })
       ~init:body (List.zip_exn es vars)
   | _ -> e
 
@@ -318,8 +331,8 @@ let betas ~raise : bool ref -> expression -> expression =
 let eta ~raise:_ : bool ref -> expression -> expression =
   fun changed e ->
   match e.content with
-  | E_constant {cons_name = C_PAIR; arguments = [ { content = E_constant {cons_name = C_CAR; arguments = [ e1 ]} ; type_expression = _ ; location = _} ;
-                                                  { content = E_constant {cons_name = C_CDR; arguments = [ e2 ]} ; type_expression = _ ; location = _}]} ->
+  | E_constant {cons_name = C_PAIR; arguments = [ { content = E_constant {cons_name = C_CAR; arguments = [ e1 ]} ; type_expression = _ ; location = _ ; fvs = _} ;
+                                                  { content = E_constant {cons_name = C_CDR; arguments = [ e2 ]} ; type_expression = _ ; location = _ ; fvs = _}]} ->
     (match (e1.content, e2.content) with
      | E_variable x1, E_variable x2 ->
        if Var.equal x1.wrap_content x2.wrap_content
@@ -364,6 +377,11 @@ let contract_check ~raise (init: anon_function) : anon_function=
   List.fold ~f:(|>) all_e ~init
 let rec all_expression ~raise : expression -> expression =
   fun e ->
+  let e = Free_variables_term.expression e in
+  (* let open Simple_utils in *)
+  (* let kvs = match e.fvs with | None -> failwith "what" | Some fvs -> Free_variables_term.to_list fvs in
+   * let kvs = List.map ~f:(fun (k, v) -> Location.unwrap k, v) kvs in
+   * let () = print_endline (Format.asprintf "list: %a" (PP_helpers.list_sep_d (PP_helpers.pair Var.pp PP_helpers.int)) kvs) in *)
   let changed = ref false in
   let e = inline_lets changed e in
   let e = betas ~raise changed e in
@@ -374,5 +392,7 @@ let rec all_expression ~raise : expression -> expression =
 
 let all_expression ~raise e =
   let e = Uncurry.uncurry_expression ~raise e in
+  (* let st = Unix.gettimeofday () in *)
   let e = all_expression ~raise e in
+  (* let () = print_endline (Format.asprintf "all_expression: %f" (Unix.gettimeofday () -. st)) in *)
   e

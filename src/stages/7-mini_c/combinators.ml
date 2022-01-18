@@ -16,12 +16,14 @@ module Expression = struct
     content = e' ;
     type_expression = t ;
     location = loc;
+    fvs = None;
   }
 
   let make_tpl ?(loc=Location.generated) = fun (e' , t) -> {
     content = e' ;
     type_expression = t ;
     location = loc;
+    fvs = None;
   }
 
   let pair : t -> t -> t' = fun a b -> E_constant { cons_name = C_PAIR; arguments = [ a ; b ]}
@@ -103,7 +105,7 @@ let get_function_eta (e : expression) =
   | E_closure f -> Some f
   | _ ->
     let binder = Location.wrap @@ Var.fresh () in
-    Some { binder = binder ; body = { content = E_application (e, { content = E_variable binder ; type_expression = in_ty ; location = Location.generated }) ; type_expression = out_ty ; location = Location.generated } }
+    Some { binder = binder ; body = { content = E_application (e, { content = E_variable binder ; type_expression = in_ty ; location = Location.generated ; fvs = None }) ; type_expression = out_ty ; location = Location.generated ; fvs = None } }
 
 let get_t_function tv = match tv.type_content with
   | T_function ty -> Some ty

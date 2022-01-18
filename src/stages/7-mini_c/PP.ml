@@ -186,7 +186,7 @@ let%expect_test _ =
 let%expect_test _ =
   let pp = expression_content Format.std_formatter in
   let dummy_type = {type_content=T_base TB_unit;location=Location.generated} in
-  let wrap e = { content = e ; type_expression = dummy_type ; location = Location.generated} in
+  let wrap e = { content = e ; type_expression = dummy_type ; location = Location.generated ; fvs = None } in
   let y = Location.wrap ~loc:(Location.generated) (Var.of_name "y") in
   let z = Location.wrap ~loc:(Location.generated) (Var.of_name "z") in
   pp @@ E_closure { binder = y ; body = wrap (E_variable y) } ;
