@@ -133,6 +133,7 @@ let is_pure_constant : constant' -> bool =
   | C_TEST_RUN
   | C_TEST_EVAL
   | C_TEST_COMPILE_CONTRACT
+  | C_TEST_DECOMPILE
   | C_TEST_TO_CONTRACT
   | C_TEST_TO_ENTRYPOINT
   | C_TEST_TO_TYPED_ADDRESS
@@ -284,20 +285,6 @@ let beta ~raise:_ : bool ref -> expression -> expression =
     then (changed := true;
           List.nth_exn es i)
     else e
-
-  (** This case shows up in the compilation of modules:
-      (let x = e1 in e2).(i) ↦ (let x = e1 in e2.(i)) *)
-  | E_proj ({ content = E_let_in (e1, inline, ((x, a), e2));type_expression = _; location=_  ; fvs = _} as e_let_in, i, n) ->
-    changed := true;
-    { e_let_in with content = E_let_in (e1, inline, ((x, a), ({ e with content = E_proj (e2, i, n) }))) }
-
-  (** This case shows up in the compilation of modules:
-      (let x = (let y = e1 in e2) in e3) ↦ (let y = e1 in let x = e2 in e3) *)
-  | E_let_in ({ content = E_let_in (e1, inline2, ((y, b), e2)); _ }, inline1, ((x, a), e3)) ->
-    let y' = Location.wrap (Var.fresh_like (Location.unwrap y)) in
-    let e2 = Subst.replace e2 y y' in
-    changed := true;
-    {e with content = E_let_in (e1, inline2, ((y', b), {e with content = E_let_in (e2, inline1, ((x, a), e3))}))}
 
   (** This case shows up in the compilation of modules:
       (let x = e1 in e2)@e3 ↦ let x = e1 in e2@e3  (only if e2 and e3 are pure??) *)
