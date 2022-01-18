@@ -118,10 +118,12 @@ let subst_binder : type body.
     then (y, body)
     (* else, if no capture, subst in binder *)
     else
-    let has = match expr.fvs with
-      | Some fvs -> Free_variables_term.mem fvs y
-      | None -> Free_variables.mem (Free_variables.expression [] expr) y in
-    if not has
+    let has_y = match expr.fvs with
+      | None ->
+         Free_variables.mem (Free_variables.expression [] expr) y
+      | Some fvs ->
+         All_free_variables.mem fvs y in
+    if not has_y
     then (y, subst ~body ~x ~expr)
     (* else, avoid capture and subst in binder *)
     else

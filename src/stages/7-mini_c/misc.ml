@@ -79,7 +79,7 @@ module Free_variables = struct
 
 end
 
-module Free_variables_term = struct
+module All_free_variables = struct
 
   type bindings = int Bindings.t
   let singleton : expression_variable -> bindings = fun s -> Bindings.add s 1 Bindings.empty
@@ -93,7 +93,6 @@ module Free_variables_term = struct
   let unions : bindings list -> bindings = List.fold_right ~f:union ~init:Bindings.empty
   let empty : bindings = Bindings.empty
   let of_list : expression_variable list -> bindings = fun x -> unions @@ List.map ~f:singleton x
-  let to_list : bindings -> (expression_variable * int) list = fun l -> Bindings.to_kv_list l
 
   let rec expression : expression -> expression = fun e ->
     let self = expression in
@@ -179,7 +178,6 @@ module Free_variables_term = struct
       let exprs = List.map ~f:self exprs in
       return (E_tuple exprs) @@ unions exprs
     | E_let_tuple (expr, (fields , body)) ->
-      (* let body = expression (unions' (List.map ~f:(fun (x, _) -> singleton x) fields @ [b])) body in *)
       let body = self body in
       let fvs_body = List.fold_right ~f:Bindings.remove ~init:(extract body) @@ List.map ~f:(fun (x, _) -> x) fields in
       let expr = self expr in

@@ -186,23 +186,17 @@ let occurs_in : expression_variable -> expression -> bool =
   fun x e ->
   match e.fvs with
   | None ->
-     (* print_endline "NO HIT"; *)
-     let fvs = Free_variables.expression [] e in
-     Free_variables.mem fvs x
+     Free_variables.mem (Free_variables.expression [] e) x
   | Some fvs ->
-     Free_variables_term.mem fvs x
+     All_free_variables.mem fvs x
 
 let occurs_count : expression_variable -> expression -> int =
   fun x e ->
   match e.fvs with
   | None ->
-     (* print_endline "NO HIT"; *)
-     let fvs = Free_variables.expression [] e in
-     Free_variables.mem_count x fvs
+     Free_variables.mem_count x (Free_variables.expression [] e)
   | Some fvs ->
-     let count = Free_variables_term.mem_count x fvs in
-     (* print_endline (Format.asprintf "%a : %d in %a" Var.pp (Location.unwrap x) count PP.expression e); *)
-     count
+     All_free_variables.mem_count x fvs
 
 (* Let "inlining" mean transforming the code:
 
@@ -238,9 +232,8 @@ let inline_let : bool ref -> unit -> expression -> bool * unit * expression =
   | E_let_in (e1, should_inline_here, ((x, _a), e2)) ->
     if is_pure e1 && (should_inline_here || should_inline x e1 e2)
     then
-    (* let () = print_endline (Format.asprintf "inlining: %a" PP.expression e) in *)
-    let e2' = Subst.subst_expression ~body:e2 ~x:x ~expr:e1 in
-    (changed := true ; (false, (), e2'))
+      let e2' = Subst.subst_expression ~body:e2 ~x:x ~expr:e1 in
+      (changed := true ; (false, (), e2'))
     else
       (true, (), e)
   | _ -> (true, (), e)
@@ -364,12 +357,8 @@ let contract_check ~raise (init: anon_function) : anon_function=
   List.fold ~f:(|>) all_e ~init
 let rec all_expression ~raise : expression -> expression =
   fun e ->
-  let e = Free_variables_term.expression e in
-  (* let open Simple_utils in *)
-  (* let kvs = match e.fvs with | None -> failwith "what" | Some fvs -> Free_variables_term.to_list fvs in
-   * let kvs = List.map ~f:(fun (k, v) -> Location.unwrap k, v) kvs in
-   * let () = print_endline (Format.asprintf "list: %a" (PP_helpers.list_sep_d (PP_helpers.pair Var.pp PP_helpers.int)) kvs) in *)
   let changed = ref false in
+  let e = All_free_variables.expression e in
   let e = inline_lets changed e in
   let e = betas ~raise changed e in
   let e = etas ~raise changed e in
@@ -379,7 +368,5 @@ let rec all_expression ~raise : expression -> expression =
 
 let all_expression ~raise e =
   let e = Uncurry.uncurry_expression ~raise e in
-  (* let st = Unix.gettimeofday () in *)
   let e = all_expression ~raise e in
-  (* let () = print_endline (Format.asprintf "all_expression: %f" (Unix.gettimeofday () -. st)) in *)
   e
