@@ -156,6 +156,18 @@ let get_alpha_context ~raise ctxt =
         ctxt.raw.context in
   alpha_context
 
+let get_gas_consumed ~raise : context -> context -> Z.t = fun since until ->
+  let open Memory_proto_alpha.Protocol.Alpha_context.Gas in
+  let fp_to_z (fp : Arith.fp) : z =
+    let open Data_encoding in
+    (match Binary.to_bytes_opt Arith.z_fp_encoding fp with Some x -> x | None -> failwith "failed decoding gas")
+    |> Binary.of_bytes_exn z
+  in
+  let since = get_alpha_context ~raise since
+  and until = get_alpha_context ~raise until in
+  let c = consumed ~since ~until in
+  fp_to_z c
+
 let unwrap_baker ~raise ~loc : Memory_proto_alpha.Protocol.Alpha_context.Contract.t -> Tezos_crypto.Signature.Public_key_hash.t  =
   fun x ->
     Trace.trace_option ~raise (generic_error loc "The baker is not an implicit account") @@ Memory_proto_alpha.Protocol.Alpha_context.Contract.is_implicit x
