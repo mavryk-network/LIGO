@@ -139,8 +139,7 @@ module Command = struct
     | External_call (loc, calltrace, { address; entrypoint }, param, amt) -> (
       let x = Tezos_state.transfer ~raise ~loc ~calltrace ctxt address ?entrypoint param amt in
       match x with
-      | Success ctxt' ->
-        let gas_consumed = Tezos_state.get_gas_consumed ~raise ctxt ctxt' in
+      | Success (ctxt',gas_consumed) ->
         (`Exec_ok gas_consumed, ctxt')
       | Fail errs -> (`Exec_failed errs, ctxt)
     )
