@@ -8,7 +8,7 @@ module I = Mini_c.Types
 module W = WasmObjectFile  
 
 let expression ~raise : I.expression -> W.Ast.instr list = fun e ->
-  print_endline "oh yes here";
+  print_endline "wasm compiler: expression -> ...";
   match e.content with 
   | E_literal (Literal_unit) -> failwith "not supported yet 1"
   | E_literal (Literal_int _z) -> failwith "not supported yet 2"
