@@ -10,5 +10,6 @@ let main ((_, s) : unit * int) : operation list * int =
   let s = i (g s) in
   let z = s in 
   let o = z in
+  let p = j 5 in
   let s = f s (g s) in
   (([] : operation list), s)
