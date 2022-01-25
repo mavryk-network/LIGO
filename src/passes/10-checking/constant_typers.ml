@@ -1148,7 +1148,11 @@ let test_originate_from_file ~protocol_version ~raise loc =
       let () = assert_eq_1 ~raise ~loc balance (t_mutez ()) in
       (t_triplet (t_address ()) (t_michelson_code ()) (t_int ()))
 
-let test_compile_contract ~raise loc = typer_1 ~raise loc "TEST_COMPILE_CONTRACT" @@ fun _ ->
+let test_compile_contract ~raise loc = typer_1 ~raise loc "TEST_COMPILE_CONTRACT" @@ fun main ->
+  let { type1 = in_ty ; type2 = out_ty } = trace_option ~raise (expected_function loc main) @@ get_t_arrow main in
+  let _param_ty, storage_ty = trace_option ~raise (expected_pair loc in_ty) @@ get_t_pair in_ty in
+  let _list_operation_ty, storage_ty_ = trace_option ~raise (expected_pair loc in_ty) @@ get_t_pair out_ty in
+  let () = assert_eq_1 ~raise ~loc storage_ty storage_ty_ in
   (t_michelson_code ())
 
 let test_cast_address ~raise loc = typer_1_opt ~raise loc "TEST_CAST_ADDRESS" @@ fun addr tv_opt ->
