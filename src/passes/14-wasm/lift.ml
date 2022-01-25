@@ -32,15 +32,19 @@ let rec lift: env -> expression -> env * expression = fun env e ->
   | E_constant { cons_name; arguments } ->
     let arguments = List.map ~f:(fun a -> snd @@ lift env a) arguments in
     env, {e with content = E_constant {cons_name; arguments}}
-  | E_application (e1, e2) ->
-    (match e1.content with 
-      E_variable v -> 
-        print_endline (Var.debug (Location.unwrap v));
-        List.iter ~f:(fun (e, _) -> if (Location.equal_content ~equal:Var.equal e v) then print_endline "yay" else print_endline "nay") env.replacements
-(*         
-        print_endline "evar yes" *)
-    | _ -> ()
+  | E_application ({content = E_variable v; _ } as e1, e2) ->
+    let env, e1 = lift env e1 in 
+    let env, e2 = lift env e2 in 
+    let e_app = {e with content = E_application (e1, e2)} in
+    print_endline ("e_app: " ^ Var.debug (Location.unwrap v));
+    let r = (match List.find env.replacements ~f:(fun r -> Location.equal_content ~equal:Var.equal (fst r) v) with 
+        Some r -> print_endline ("replacement e_app: " ^ Var.debug (Location.unwrap @@ fst r)); env, snd r e_app
+      | None -> print_endline "other"; env, e_app
     );
+  in 
+  print_endline "ok";
+  r
+  | E_application (e1, e2) ->
     let env, e1 = lift env e1 in 
     let env, e2 = lift env e2 in 
     env, {e with content = E_application (e1, e2)}
@@ -48,7 +52,8 @@ let rec lift: env -> expression -> env * expression = fun env e ->
     if List.mem env.variables v ~equal:(Location.equal_content ~equal:Var.equal) then 
       env, e
     else 
-      {env with missing = v :: env.missing}, e
+      (print_endline ("add missing:" ^ Var.debug (Location.unwrap v));
+      {env with missing = v :: env.missing}, e)
   | E_iterator (cc, ((var_name, type_expression), e1), e2) ->
     let env, e1 = lift env e1 in
     let env, e2 = lift env e2 in
@@ -84,7 +89,7 @@ let rec lift: env -> expression -> env * expression = fun env e ->
     let _, e3 = lift env e3 in
     env, {e with content = E_if_left (e1, ((var_name1, type_expression1), e2), ((var_name2, type_expression2), e3))}
   | E_let_in ({content = E_closure _} as c, inline, ((var_name, type_expression), e2)) -> 
-    let env, e2 = lift env e2 in
+    print_endline ("before: " ^ Var.debug (Location.unwrap var_name));
     let env2, c = lift empty_env c in
     let v = Location.wrap (Var.fresh_like (Location.unwrap var_name)) in
     (* let replacement = {e with content = E_let_in ({content = E_variable v; type_expression = c.type_expression; location = c.location}, inline, ((var_name, type_expression), e2))} in *)
@@ -94,23 +99,28 @@ let rec lift: env -> expression -> env * expression = fun env e ->
           {content = E_closure {binder = item; body = aux remaining};  type_expression = c.type_expression; location = c.location}
       | [] -> c
     in
-    let rec aux2 remaining = 
+    let rec aux2 remaining r = 
       match remaining with 
         item :: remaining -> 
-          fun e -> 
+          print_endline "aux1";
             let item = {content = E_variable item; type_expression = c.type_expression; location = c.location} in
-            {content = E_application (item, aux2 remaining e);  type_expression = c.type_expression; location = c.location}
-      | [] -> fun e -> e
+            {content = E_application (item, aux2 remaining r);  type_expression = c.type_expression; location = c.location}
+      | [] -> print_endline "aux2"; r
     in
     let replacement = (var_name, aux2 env2.missing) in
+    print_endline ("Replacements added:" ^ string_of_int (List.length env2.missing));    
+
     let export = aux env2.missing in
     let export = fun e -> {content = E_let_in (export, inline, ((v, type_expression), e)); type_expression = c.type_expression; location = c.location} in
     let env = {env with exported_funcs = export :: env.exported_funcs; variables = v :: env.variables; replacements = replacement :: env.replacements } in
+    print_endline "aahaa";
+    let env, e2 = lift env e2 in
     env, e2
   | E_let_in (e1, inline, ((var_name, type_expression), e2)) ->
     let env = {env with variables = var_name :: env.variables} in
-    let env, e2 = lift env e2 in
     let env, e1 = lift env e1 in
+    let env, e2 = lift env e2 in
+    
     env, {e with content = E_let_in (e1, inline, ((var_name, type_expression), e2))}
   | E_tuple l -> 
     let l = List.map ~f:(fun e -> snd @@ lift env e) l in
