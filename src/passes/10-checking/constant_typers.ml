@@ -1155,6 +1155,12 @@ let test_compile_contract ~raise loc = typer_1 ~raise loc "TEST_COMPILE_CONTRACT
   let () = assert_eq_1 ~raise ~loc storage_ty storage_ty_ in
   (t_michelson_code ())
 
+let test_inject_script ~raise loc = typer_3 ~raise loc "TEST_INJECT_SCRIPT" @@ fun contract storage balance ->
+  ignore storage;
+  let () = trace_option ~raise (expected_michelson_code loc contract) @@ assert_t_michelson_code contract in
+  let () = assert_eq_1 ~raise ~loc balance (t_mutez ()) in
+  (t_address ())
+
 let test_cast_address ~raise loc = typer_1_opt ~raise loc "TEST_CAST_ADDRESS" @@ fun addr tv_opt ->
   let cast_t = trace_option ~raise (not_annotated loc) @@ tv_opt in
   let (pty,sty) = trace_option ~raise (expected_typed_address loc cast_t) @@ get_t_typed_address cast_t in
@@ -1330,6 +1336,7 @@ let constant_typers ~raise ~test ~protocol_version loc c : typer = match c with
   | C_TEST_EVAL -> test_eval ~raise loc ;
   | C_TEST_COMPILE_CONTRACT -> test_compile_contract ~raise loc ;
   | C_TEST_DECOMPILE -> test_decompile ~raise loc ;
+  | C_TEST_INJECT_SCRIPT -> test_inject_script ~raise loc ;
   | C_TEST_TO_CONTRACT -> test_to_contract ~raise loc ;
   | C_TEST_NTH_BOOTSTRAP_TYPED_ADDRESS -> test_nth_bootstrap_typed_address ~raise loc ;
   | C_TEST_TO_ENTRYPOINT -> test_to_entrypoint ~raise loc ;

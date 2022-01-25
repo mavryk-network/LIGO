@@ -901,6 +901,12 @@ let rec apply_operator ~raise ~steps ~protocol_version ~options : Location.t -> 
        let>> code = Compile_contract (loc, contract, contract_ty) in
        return @@ code
     | ( C_TEST_COMPILE_CONTRACT , _  ) -> fail @@ error_type
+    | ( C_TEST_INJECT_SCRIPT , [ code ; storage ;  V_Ct ( C_mutez amt ) ] ) ->
+       let* storage_ty = monad_option (Errors.generic_error loc "Could not recover types") @@ List.nth types 1 in
+       let>> storage = Eval (loc, storage, storage_ty) in
+       let>> addr = Inject_script (loc, calltrace, code, storage, amt) in
+       return @@ addr
+    | ( C_TEST_INJECT_SCRIPT , _  ) -> fail @@ error_type
     | ( C_TEST_EXTERNAL_CALL_TO_CONTRACT_EXN , [ (V_Ct (C_contract contract)) ; param ; V_Ct ( C_mutez amt ) ] ) -> (
        let* param_ty = monad_option (Errors.generic_error loc "Could not recover types") @@ List.nth types 1 in
        let>> param = Eval (loc, param, param_ty) in
@@ -966,7 +972,7 @@ let rec apply_operator ~raise ~steps ~protocol_version ~options : Location.t -> 
          C_BIG_MAP | C_BIG_MAP_LITERAL | C_BIG_MAP_GET_AND_UPDATE | C_CALL | C_CONTRACT |
          C_CONTRACT_OPT | C_CONTRACT_WITH_ERROR | C_CONTRACT_ENTRYPOINT |
          C_CONTRACT_ENTRYPOINT_OPT | C_IMPLICIT_ACCOUNT | C_SET_DELEGATE |
-         C_CREATE_CONTRACT | C_OPEN_CHEST | C_VIEW | C_TEST_INJECT_SCRIPT) , _ ) ->
+         C_CREATE_CONTRACT | C_OPEN_CHEST | C_VIEW) , _ ) ->
       fail @@ Errors.generic_error loc "Unbound primitive."
   )
 
