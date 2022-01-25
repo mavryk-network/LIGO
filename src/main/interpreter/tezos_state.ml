@@ -339,7 +339,7 @@ let get_last_operation_result (incr : Tezos_alpha_test_helpers.Incremental.t) =
   match Tezos_alpha_test_helpers.Incremental.rev_tickets incr with
   | [] -> failwith "Tried to get last operation result in empty block"
   | hd :: [] -> hd
-  | _ -> failwith "wow"
+  | _ -> failwith "Tried to get last operation result but the ticket list has more than one element"
 
 let get_single_tx_result (x : Tezos_raw_protocol.Apply_results.packed_operation_metadata) =
   match x with
@@ -357,15 +357,12 @@ let get_single_tx_result (x : Tezos_raw_protocol.Apply_results.packed_operation_
 
 let get_consumed_gas x =
   let fp_to_z (fp : Memory_proto_alpha.Protocol.Alpha_context.Gas.Arith.fp) : z =
-    Z.((of_int (Obj.magic fp : int)) / (of_int 1000))
-  in
-  (* let fp_to_z (fp : Memory_proto_alpha.Protocol.Alpha_context.Gas.Arith.fp) : z =
     let open Data_encoding in
     (match Binary.to_bytes_opt Memory_proto_alpha.Protocol.Alpha_context.Gas.Arith.z_fp_encoding fp with Some x -> x | None -> failwith "failed decoding gas")
     |> Binary.of_bytes_exn z
-  in *)
+  in
   match get_single_tx_result x with
-  | Some x -> fp_to_z x
+  | Some x -> Z.((fp_to_z x) / (of_int 1000))
   | None -> Z.zero
 
 let bake_op : raise:r -> loc:Location.t -> calltrace:calltrace -> context -> tezos_op -> add_operation_outcome =
