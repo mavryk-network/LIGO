@@ -83,6 +83,7 @@ let meta_ligo_types : (type_variable * type_expression) list -> (type_variable *
   fun proto_types ->
     proto_types @ [
     (v_test_michelson, t_constant test_michelson_name []) ;
+    (v_michelson_contract, t_abstraction2 michelson_contract_name star star) ;
     (v_test_exec_error, t_test_exec_error () ) ;
     (v_test_exec_result , t_test_exec_result () ) ;
     (v_account , t_constant account_name []) ;

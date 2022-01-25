@@ -48,6 +48,7 @@ type typer_error = [
   | `Typer_expected_key of Location.t * Ast_typed.type_expression
   | `Typer_expected_signature of Location.t * Ast_typed.type_expression
   | `Typer_expected_contract of Location.t * Ast_typed.type_expression
+  | `Typer_expected_michelson_contract of Location.t * Ast_typed.type_expression
   | `Typer_expected_typed_address of Location.t * Ast_typed.type_expression
   | `Typer_expected_address of Location.t * Ast_typed.type_expression
   | `Typer_expected_string of Location.t * Ast_typed.type_expression
@@ -424,6 +425,11 @@ let rec error_ppformat : display_format:string display_format ->
     | `Typer_expected_typed_address (loc,t) ->
       Format.fprintf f
         "@[<hv>%a@.Incorrect argument.@.Expected a typed address, but got an argument of type \"%a\". @]"
+        Snippet.pp loc
+        Ast_typed.PP.type_expression t
+    | `Typer_expected_michelson_contract (loc,t) ->
+      Format.fprintf f
+        "@[<hv>%a@.Incorrect argument.@.Expected a Michelson contract, but got an argument of type \"%a\". @]"
         Snippet.pp loc
         Ast_typed.PP.type_expression t
     | `Typer_expected_address (loc,t) ->
@@ -938,6 +944,15 @@ let rec error_jsonformat : typer_error -> Yojson.Safe.t = fun a ->
     json_error ~stage ~content
   | `Typer_expected_typed_address (loc,t) ->
     let message = `String "expected typed address" in
+    let value = `String (Format.asprintf "%a" Ast_typed.PP.type_expression t) in
+    let content = `Assoc [
+      ("message", message);
+      ("location", Location.to_yojson loc);
+      ("value", value);
+    ] in
+    json_error ~stage ~content
+  | `Typer_expected_michelson_contract (loc,t) ->
+    let message = `String "expected Michelson contract" in
     let value = `String (Format.asprintf "%a" Ast_typed.PP.type_expression t) in
     let content = `Assoc [
       ("message", message);
