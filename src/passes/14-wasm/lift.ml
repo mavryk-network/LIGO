@@ -90,7 +90,7 @@ let rec lift: env -> expression -> env * expression = fun env e ->
           let body, type_expression = aux remaining in
           let type_expression_item = (match (List.find ~f:(fun var -> Location.equal_content ~equal:Var.equal item (fst var)) env.variables) with
               Some (_, s) -> s
-            | None -> failwith "should not happen"
+            | None -> type_expression
           ) in
           let type_expression = {type_content = T_function (type_expression_item, type_expression); location = e.type_expression.location} in
           {content = E_closure {binder = item; body};  type_expression; location = c.location}, type_expression
@@ -106,7 +106,7 @@ let rec lift: env -> expression -> env * expression = fun env e ->
     let replacement = (var_name, aux2 (v :: env2.missing)) in
     let export, type_expression = aux env2.missing in
     let export = fun e -> {content = E_let_in (export, inline, ((v, type_expression), e)); type_expression; location = c.location} in
-    let env = {env with exported_funcs = export :: env.exported_funcs; variables = (v, type_expression) :: env.variables; replacements = replacement :: env.replacements } in
+    let env = {exported_funcs = export :: env.exported_funcs; variables = (v, type_expression) :: env.variables; replacements = replacement :: env.replacements; missing = env2.missing @ env.missing } in
     let env, e2 = lift env e2 in
     env, e2
   | E_let_in (e1, inline, ((var_name, type_expression), e2)) ->
@@ -130,13 +130,17 @@ let rec lift: env -> expression -> env * expression = fun env e ->
     env, {e with content = E_update (e1, a, e2, b)}
   | E_raw_michelson _ -> env, e
 
-let rec toplevel: expression -> expression = fun e ->
+let rec toplevel_inner: env -> expression -> expression = fun env e ->
   match e.content with
     E_let_in ({content = E_closure {binder; body}; _} as e1, inline, ((var_name, type_expression), e2)) -> 
       let env, body = lift empty_env body in
       List.fold_left ~f:(
         fun prev el ->
           el prev
-      ) ~init:{e with content = E_let_in ({ e1 with content =  E_closure {binder; body}}, inline, ((var_name, type_expression), toplevel e2))}
+      ) ~init:{e with content = E_let_in ({ e1 with content =  E_closure {binder; body}}, inline, ((var_name, type_expression), toplevel_inner env e2))}
       env.exported_funcs 
-  | content -> { e with content }
+  | E_let_in (e1, inline, ((var_name, type_expression), e2)) -> 
+      {e with content = E_let_in (e1, inline, ((var_name, type_expression), toplevel_inner env e2))}
+  | _ -> e
+
+let toplevel = toplevel_inner empty_env 
