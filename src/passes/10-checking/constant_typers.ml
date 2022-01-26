@@ -1161,6 +1161,13 @@ let test_inject_script ~raise loc = typer_3 ~raise loc "TEST_INJECT_SCRIPT" @@ f
   let () = assert_eq_1 ~raise ~loc storage_ty storage in
   (t_typed_address parameter_ty storage_ty)
 
+let test_add_view_to_contract ~raise loc = typer_2 ~raise loc "TEST_ADD_VIEW_TO_CONTRACT" @@ fun contract view ->
+  let { type1 = in_ty ; type2 = _ } = trace_option ~raise (expected_function loc view) @@ get_t_arrow view in
+  let _, storage_ty = trace_option ~raise (expected_pair loc in_ty) @@ get_t_pair in_ty in
+  let _, storage_ty_ = trace_option ~raise (expected_michelson_contract loc contract) @@ get_t_michelson_contract contract in
+  let () = assert_eq_1 ~raise ~loc storage_ty storage_ty_ in
+  contract
+
 let test_cast_address ~raise loc = typer_1_opt ~raise loc "TEST_CAST_ADDRESS" @@ fun addr tv_opt ->
   let cast_t = trace_option ~raise (not_annotated loc) @@ tv_opt in
   let (pty,sty) = trace_option ~raise (expected_typed_address loc cast_t) @@ get_t_typed_address cast_t in
@@ -1337,6 +1344,7 @@ let constant_typers ~raise ~test ~protocol_version loc c : typer = match c with
   | C_TEST_COMPILE_CONTRACT -> test_compile_contract ~raise loc ;
   | C_TEST_DECOMPILE -> test_decompile ~raise loc ;
   | C_TEST_INJECT_SCRIPT -> test_inject_script ~raise loc ;
+  | C_TEST_ADD_VIEW_TO_CONTRACT -> test_add_view_to_contract ~raise loc ;
   | C_TEST_TO_CONTRACT -> test_to_contract ~raise loc ;
   | C_TEST_NTH_BOOTSTRAP_TYPED_ADDRESS -> test_nth_bootstrap_typed_address ~raise loc ;
   | C_TEST_TO_ENTRYPOINT -> test_to_entrypoint ~raise loc ;
