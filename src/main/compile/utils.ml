@@ -38,6 +38,14 @@ let compile_file ~raise ~add_warning ~options f stx ep =
   let contract   = Of_michelson.build_contract ~raise michelson in
   contract
 
+let core_expression_string ~raise ~options syntax expression =
+  let meta              = Of_source.make_meta_from_syntax syntax in
+  let c_unit_exp, _     = Of_source.compile_string_without_preproc expression in
+  let imperative_exp    = Of_c_unit.compile_expression ~raise ~meta c_unit_exp in
+  let sugar_exp         = Of_imperative.compile_expression ~raise imperative_exp in
+  let core_exp          = Of_sugar.compile_expression sugar_exp in
+  core_exp
+
 let type_expression_string ~raise ~options syntax expression init_prog =
   let meta              = Of_source.make_meta_from_syntax syntax in
   let c_unit_exp, _     = Of_source.compile_string_without_preproc expression in

@@ -306,6 +306,18 @@ let get_a_unit (t:expression) =
   | E_literal (Literal_unit) -> Some ()
   | _ -> None
 
+let get_a_pair = fun (t:expression) ->
+  match t.expression_content with
+  | E_record r -> (
+  let lst = LMap.to_kv_list_rev r in
+    match lst with
+    | [(Label "O",a);(Label "1",b)]
+    | [(Label "1",b);(Label "0",a)] ->
+        Some (a , b)
+    | _ -> None
+    )
+  | _ -> None
+
 let get_a_bool (t:expression) =
   match t.expression_content with
   | E_constructor {constructor=Label name;element} when

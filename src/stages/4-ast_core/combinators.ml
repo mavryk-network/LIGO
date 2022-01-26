@@ -159,6 +159,8 @@ let e_none       ?loc ?sugar ()       : expression = e_constant ?loc ?sugar C_NO
 let e_string_cat ?loc ?sugar sl sr    : expression = e_constant ?loc ?sugar C_CONCAT [sl; sr]
 let e_map_add    ?loc ?sugar k v old  : expression = e_constant ?loc ?sugar C_MAP_ADD [k; v; old]
 
+let e_pair ?loc ?sugar a b = e_record ?loc ?sugar (LMap.of_list [(Label "O",a);(Label "1",b)]) ()
+
 let e_bool b : expression =
   if b then
     e_constructor (Label "True") (e_ascription (e_unit ())(t_unit()))
@@ -194,7 +196,6 @@ let get_e_bool (t:expression) =
     && Compare.expression_content element.expression_content (e_unit ()).expression_content = 0 ->
       Some false
   | _ -> None
-
 
 let get_e_pair = fun t ->
   match t with
@@ -279,6 +280,8 @@ let extract_map : expression -> (expression * expression) list option = fun e ->
     | _ -> [None]
   in
   Option.all @@ aux e
+
+let make_binder ?(ascr=None) ?(attributes={const_or_var = None}) var = {var ; ascr ; attributes }
 
 let make_c_constructor_simpl ?(reason_constr_simpl="") id_constructor_simpl original_id tv c_tag tv_list = {
   reason_constr_simpl ;
