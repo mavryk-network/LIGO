@@ -167,10 +167,10 @@ let rec apply_comparison :
             l) ;
       fail @@ Errors.meta_lang_eval loc calltrace "Not comparable"
 
-let rec apply_operator ~raise ~steps ~protocol_version : Location.t -> calltrace -> AST.type_expression -> env -> AST.constant' -> (value * AST.type_expression * Location.t) list -> value Monad.t =
+let rec apply_operator ~raise ~steps ~protocol_version ~options : Location.t -> calltrace -> AST.type_expression -> env -> AST.constant' -> (value * AST.type_expression * Location.t) list -> value Monad.t =
   fun loc calltrace expr_ty env c operands ->
   let open Monad in
-  let eval_ligo = eval_ligo ~raise ~steps ~protocol_version in
+  let eval_ligo = eval_ligo ~raise ~steps ~protocol_version ~options in
   let locs = List.map ~f:(fun (_, _, c) -> c) operands in
   let types = List.map ~f:(fun (_, b, _) -> b) operands in
   let operands = List.map ~f:(fun (a, _, _) -> a) operands in
@@ -178,6 +178,16 @@ let rec apply_operator ~raise ~steps ~protocol_version : Location.t -> calltrace
   let return_ct v = return @@ V_Ct v in
   let return_none () = return @@ v_none () in
   let return_some v = return @@ v_some v in
+  let return_contract_exec_exn = function
+    | `Exec_ok gas -> return_ct (C_nat gas)
+    | `Exec_failed e -> fail @@ Errors.target_lang_error loc calltrace e
+  in
+  let return_contract_exec = function
+    | `Exec_ok gas -> return (LC.v_ctor "Success" (LC.v_nat gas))
+    | `Exec_failed e ->
+      let>> a = State_error_to_value e in
+      return a
+  in
   ( match (c,operands) with
     (* nullary *)
     | ( C_NONE , [] ) -> return_none ()
@@ -693,20 +703,14 @@ let rec apply_operator ~raise ~steps ~protocol_version : Location.t -> calltrace
     )
     | ( C_TEST_EXTERNAL_CALL_TO_ADDRESS_EXN , [ (V_Ct (C_address address)) ; V_Michelson (Ty_code { code = param ; _ }) ; V_Ct ( C_mutez amt ) ] ) -> (
       let contract = { address; entrypoint = None } in
-      let>> err_opt = External_call (loc,calltrace,contract,param,amt) in
-      match err_opt with
-      | None -> return_ct C_unit
-      | Some e -> fail @@ Errors.target_lang_error loc calltrace e
+      let>> res = External_call (loc,calltrace,contract,param,amt) in
+      return_contract_exec_exn res
     )
     | ( C_TEST_EXTERNAL_CALL_TO_ADDRESS_EXN , _  ) -> fail @@ error_type
     | ( C_TEST_EXTERNAL_CALL_TO_ADDRESS , [ (V_Ct (C_address address)) ; V_Michelson (Ty_code { code = param ; _ }) ; V_Ct ( C_mutez amt ) ] ) -> (
       let contract = { address; entrypoint = None } in
-      let>> err_opt = External_call (loc,calltrace,contract,param,amt) in
-      match err_opt with
-      | None -> return (LC.v_ctor "Success" (LC.v_unit ()))
-      | Some e ->
-        let>> a = State_error_to_value e in
-        return a
+      let>> res = External_call (loc,calltrace,contract,param,amt) in
+      return_contract_exec res
     )
     | ( C_TEST_EXTERNAL_CALL_TO_ADDRESS , _  ) -> fail @@ error_type
     | ( C_TEST_SET_NOW , [ V_Ct (C_timestamp t) ] ) ->
@@ -892,29 +896,25 @@ let rec apply_operator ~raise ~steps ~protocol_version : Location.t -> calltrace
        let>> addr  = Inject_script (loc, calltrace, code, storage, amt) in
        return @@ V_Record (LMap.of_list [ (Label "0", addr) ; (Label "1", code) ; (Label "2", size) ])
     | ( C_TEST_ORIGINATE , _  ) -> fail @@ error_type
-    | ( C_TEST_EXTERNAL_CALL_TO_CONTRACT_EXN , [ (V_Ct (C_contract contract)) ; param ; V_Ct ( C_mutez amt ) ] ) ->
+    | ( C_TEST_EXTERNAL_CALL_TO_CONTRACT_EXN , [ (V_Ct (C_contract contract)) ; param ; V_Ct ( C_mutez amt ) ] ) -> (
        let* param_ty = monad_option (Errors.generic_error loc "Could not recover types") @@ List.nth types 1 in
        let>> param = Eval (loc, param, param_ty) in
-       (match param with
+       match param with
        | V_Michelson (Ty_code { code = param ; _ }) ->
-          let>> err_opt = External_call (loc,calltrace,contract,param,amt) in
-          (match err_opt with
-                     | None -> return @@ V_Ct C_unit
-                     | Some e -> fail @@ Errors.target_lang_error loc calltrace e)
-       | _ -> fail @@ Errors.generic_error loc "Error typing param")
+          let>> res = External_call (loc,calltrace,contract,param,amt) in
+          return_contract_exec_exn res
+       | _ -> fail @@ Errors.generic_error loc "Error typing param"
+    )
     | ( C_TEST_EXTERNAL_CALL_TO_CONTRACT_EXN , _  ) -> fail @@ error_type
-    | ( C_TEST_EXTERNAL_CALL_TO_CONTRACT , [ (V_Ct (C_contract contract)) ; param; V_Ct ( C_mutez amt ) ] ) ->
+    | ( C_TEST_EXTERNAL_CALL_TO_CONTRACT , [ (V_Ct (C_contract contract)) ; param; V_Ct ( C_mutez amt ) ] ) -> (
        let* param_ty = monad_option (Errors.generic_error loc "Could not recover types") @@ List.nth types 1 in
        let>> param = Eval (loc, param, param_ty) in
-       (match param with
+       match param with
        | V_Michelson (Ty_code { code = param ; _ }) ->
-          let>> err_opt = External_call (loc,calltrace,contract,param,amt) in
-          (match err_opt with
-           | None -> return (LC.v_ctor "Success" (LC.v_unit ()))
-           | Some e ->
-              let>> a = State_error_to_value e in
-              return a)
-       | _ -> fail @@ Errors.generic_error loc "Error typing param")
+          let>> res = External_call (loc,calltrace,contract,param,amt) in
+          return_contract_exec res
+       | _ -> fail @@ Errors.generic_error loc "Error typing param"
+    )
     | ( C_TEST_EXTERNAL_CALL_TO_CONTRACT , _  ) -> fail @@ error_type
     | ( C_TEST_NTH_BOOTSTRAP_TYPED_ADDRESS , [ V_Ct (C_nat n) ] ) ->
       let n = Z.to_int n in
@@ -1011,9 +1011,9 @@ and eval_literal : AST.literal -> value Monad.t = function
   )
   | l -> Monad.fail @@ Errors.literal Location.generated l
 
-and eval_ligo ~raise ~steps ~protocol_version : AST.expression -> calltrace -> env -> value Monad.t
+and eval_ligo ~raise ~steps ~protocol_version ~options : AST.expression -> calltrace -> env -> value Monad.t
   = fun term calltrace env ->
-    let eval_ligo ?(steps = steps - 1) = eval_ligo ~raise ~steps ~protocol_version in
+    let eval_ligo ?(steps = steps - 1) = eval_ligo ~raise ~steps ~protocol_version ~options in
     let open Monad in
     let* () = if steps <= 0 then fail (Errors.meta_lang_eval term.location calltrace "Out of fuel") else return () in
     match term.expression_content with
@@ -1084,7 +1084,7 @@ and eval_ligo ~raise ~steps ~protocol_version : AST.expression -> calltrace -> e
           let* value = eval_ligo ae calltrace env in
           return @@ (value, ae.type_expression, ae.location))
         arguments in
-      apply_operator ~raise ~steps ~protocol_version term.location calltrace term.type_expression env cons_name arguments'
+      apply_operator ~raise ~steps ~protocol_version ~options term.location calltrace term.type_expression env cons_name arguments'
     )
     | E_constructor { constructor = Label c ; element = { expression_content = E_literal (Literal_unit) ; _ } } when String.equal c "True" ->
       return @@ V_Ct (C_bool true)
@@ -1188,9 +1188,9 @@ and eval_ligo ~raise ~steps ~protocol_version : AST.expression -> calltrace -> e
       | _ -> failwith "impossible"
     )
 
-and try_eval ~raise ~steps ~protocol_version expr env state r = Monad.eval ~raise (eval_ligo ~raise ~steps ~protocol_version expr [] env) state r
+and try_eval ~raise ~steps ~protocol_version ~options expr env state r = Monad.eval ~raise ~options (eval_ligo ~raise ~steps ~protocol_version ~options expr [] env) state r
 
-let eval_test ~raise ~steps ~protocol_version : Ast_typed.program -> ((string * value) list) =
+let eval_test ~raise ~steps ~options ~protocol_version : Ast_typed.program -> ((string * value) list) =
   fun prg ->
   let decl_lst = prg in
   (* Pass over declarations, for each "test"-prefixed one, add a new
@@ -1218,7 +1218,7 @@ let eval_test ~raise ~steps ~protocol_version : Ast_typed.program -> ((string * 
   let expr = Ast_typed.e_a_record map in
   let expr = ctxt expr in
   let expr = Self_ast_aggregated.expression_mono expr in
-  let value, _ = try_eval ~raise ~steps ~protocol_version expr Env.empty_env initial_state None in
+  let value, _ = try_eval ~raise ~steps ~protocol_version ~options expr Env.empty_env initial_state None in
   match value with
   | V_Record m ->
     let f (n, _) r =
