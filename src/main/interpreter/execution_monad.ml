@@ -190,14 +190,11 @@ module Command = struct
     | Compile_meta_value (loc,x,ty) ->
       let x = Michelson_backend.compile_simple_value ~raise ~ctxt ~loc x ty in
       (LT.V_Michelson (LT.Ty_code x), ctxt)
-    | Get_size (contract_code) -> (
-      match contract_code with
-      | LT.V_Michelson (LT.Contract { contract ; _ }) ->
-         let s = Ligo_compile.Of_michelson.measure ~raise contract in
-         (LT.V_Ct (C_int (Z.of_int s)), ctxt)
-      | _ -> raise.raise @@ Errors.generic_error Location.generated
-                              "Trying to measure a non-contract"
-    )
+    | Get_size (contract_code) ->
+      let contract, _ = trace_option ~raise (Errors.generic_error Location.generated "Trying to measure a non-contract") @@
+                                  LC.get_michelson_contract contract_code in
+      let s = Ligo_compile.Of_michelson.measure ~raise contract in
+      (LT.V_Ct (C_int (Z.of_int s)), ctxt)
     | Compile_contract_from_file (source_file, entrypoint, views) ->
       let contract_code =
         Michelson_backend.compile_contract ~raise ~add_warning ~options source_file entrypoint views in
