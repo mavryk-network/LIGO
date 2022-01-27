@@ -217,6 +217,7 @@ type constant' =
   | C_TEST_RUN [@only_interpreter]
   | C_TEST_EVAL [@only_interpreter]
   | C_TEST_COMPILE_CONTRACT [@only_interpreter]
+  | C_TEST_COMPILE_CONTRACT_FROM_FILE [@only_interpreter]
   | C_TEST_INJECT_SCRIPT [@only_interpreter]
   | C_TEST_ADD_VIEW_TO_CONTRACT [@only_interpreter]
   | C_TEST_DECOMPILE [@only_interpreter]

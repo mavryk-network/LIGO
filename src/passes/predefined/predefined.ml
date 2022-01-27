@@ -197,6 +197,7 @@ module Tree_abstraction = struct
     | "Test.run" -> some_const C_TEST_RUN
     | "Test.eval" -> some_const C_TEST_EVAL
     | "Test.compile_contract" -> some_const C_TEST_COMPILE_CONTRACT
+    | "Test.compile_contract_from_file" -> some_const C_TEST_COMPILE_CONTRACT_FROM_FILE
     | "Test.decompile" -> some_const C_TEST_DECOMPILE
     | "Test.inject_script" -> some_const C_TEST_INJECT_SCRIPT
     | "Test.add_view_to_contract" -> some_const C_TEST_ADD_VIEW_TO_CONTRACT
@@ -387,6 +388,7 @@ module Tree_abstraction = struct
     | C_TEST_RUN -> "Test.run"
     | C_TEST_EVAL -> "Test.eval"
     | C_TEST_COMPILE_CONTRACT -> "Test.compile_contract"
+    | C_TEST_COMPILE_CONTRACT_FROM_FILE -> "Test.compile_contract_from_file"
     | C_TEST_DECOMPILE -> "Test.decompile"
     | C_TEST_INJECT_SCRIPT -> "Test.inject_script"
     | C_TEST_ADD_VIEW_TO_CONTRACT -> "Test.add_view_to_contract"
