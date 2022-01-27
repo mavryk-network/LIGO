@@ -1161,10 +1161,11 @@ let test_inject_script ~raise loc = typer_3 ~raise loc "TEST_INJECT_SCRIPT" @@ f
   let () = assert_eq_1 ~raise ~loc storage_ty storage in
   (t_typed_address parameter_ty storage_ty)
 
-let test_add_view_to_contract ~raise loc = typer_2 ~raise loc "TEST_ADD_VIEW_TO_CONTRACT" @@ fun contract view ->
+let test_add_view_to_contract ~raise loc = typer_3 ~raise loc "TEST_ADD_VIEW_TO_CONTRACT" @@ fun contract name view ->
   let { type1 = in_ty ; type2 = _ } = trace_option ~raise (expected_function loc view) @@ get_t_arrow view in
   let _, storage_ty = trace_option ~raise (expected_pair loc in_ty) @@ get_t_pair in_ty in
   let _, storage_ty_ = trace_option ~raise (expected_michelson_contract loc contract) @@ get_t_michelson_contract contract in
+  let () = trace_option ~raise (expected_string loc name) @@ get_t_string name in
   let () = assert_eq_1 ~raise ~loc storage_ty storage_ty_ in
   contract
 
