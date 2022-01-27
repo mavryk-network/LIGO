@@ -181,6 +181,14 @@ let compile_view_ ~raise ~protocol_version subst_lst arg_binder rec_name in_ty o
   let mini_c = Of_aggregated.compile_expression ~raise aggregated_exp in
   Of_mini_c.compile_view ~raise ~options mini_c
 
+let compile_contract_with_views contract views =
+  let module M = Tezos_utils.Michelson in
+  let open Tezos_micheline.Micheline in
+  let views = List.map ~f:(fun (name, code, t_arg, t_ret) -> M.prim ~children:[M.string name ; t_arg ; t_ret ; code] "view") views in
+  match contract with
+  | Seq ((), xs) -> M.seq @@ xs @ views
+  | _ -> failwith "Wrongly compiled program?"
+
 let make_function in_ty out_ty arg_binder body subst_lst =
   let typed_exp' = add_ast_env subst_lst arg_binder body in
   Ast_aggregated.e_a_lambda {result=typed_exp'; binder=arg_binder} in_ty out_ty

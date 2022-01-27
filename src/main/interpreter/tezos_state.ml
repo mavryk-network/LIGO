@@ -397,9 +397,8 @@ let transfer ~raise ~loc ~calltrace (ctxt:context) ?entrypoint dst parameter amt
   in
   bake_op ~raise ~loc ~calltrace ctxt operation
 
-let originate_contract : raise:r -> loc:Location.t -> calltrace:calltrace -> context -> value * value -> Z.t -> value * context =
+let originate_contract : raise:r -> loc:Location.t -> calltrace:calltrace -> context -> _ * value -> Z.t -> value * context =
   fun ~raise ~loc ~calltrace ctxt (contract, storage) amt ->
-    let contract, _views = trace_option ~raise (corner_case ()) @@ get_michelson_contract contract in
     let { code = storage ; ast_ty = ligo_ty ; _ } = trace_option ~raise (corner_case ()) @@ get_michelson_expr storage in
     let open Tezos_alpha_test_helpers in
     let source = unwrap_source ~raise ~loc ctxt.internals.source in

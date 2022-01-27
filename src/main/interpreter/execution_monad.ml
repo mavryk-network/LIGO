@@ -45,7 +45,7 @@ module Command = struct
     | Eval : Location.t * LT.value * Ast_aggregated.type_expression -> LT.value t
     | Compile_contract : Location.t * LT.value * Ast_aggregated.type_expression -> LT.value t
     | Decompile : LT.mcode * LT.mcode * Ast_aggregated.type_expression -> LT.value t
-    | Compile_view : Location.t * LT.value * Ast_aggregated.type_expression -> LT.mcode t
+    | Compile_view : Location.t * LT.value * Ast_aggregated.type_expression -> (LT.mcode * LT.mcode * LT.mcode) t
     | To_contract : Location.t * LT.value * string option * Ast_aggregated.type_expression -> LT.value t
     | Check_storage_address : Location.t * Tezos_protocol.Protocol.Alpha_context.Contract.t * Ast_aggregated.type_expression -> unit t
     | Contract_exists : LT.value -> bool t
@@ -229,25 +229,25 @@ module Command = struct
       let value = Michelson_backend.compile_simple_value ~raise ~ctxt ~loc v expr_ty in
       (LT.V_Michelson (Ty_code value), ctxt)
     | Compile_contract (loc, v, _ty_expr) ->
-       let compiled_expr, compiled_expr_ty = match v with
-         | LT.V_Func_val { arg_binder ; body ; orig_lambda ; env ; rec_name } ->
-            let subst_lst = Michelson_backend.make_subst_ast_env_exp ~raise env orig_lambda in
-            let Ast_aggregated.{ type1 = in_ty ; type2 = out_ty } =
-              trace_option ~raise (Errors.generic_error loc "Trying to run a non-function?") @@
-                Ast_aggregated.get_t_arrow orig_lambda.type_expression in
-            let compiled_expr =
-              let protocol_version = ctxt.internals.protocol_version in
-              Michelson_backend.compile_contract_ ~raise ~protocol_version subst_lst arg_binder rec_name in_ty out_ty body in
-            let expr = clean_locations compiled_expr.expr in
-            (* TODO-er: check the ignored second component: *)
-            let expr_ty = clean_locations compiled_expr.expr_ty in
-            (expr, expr_ty)
-         | _ ->
-            raise.raise @@ Errors.generic_error loc "Contract does not reduce to a function value?" in
-        let (param_ty, storage_ty) =
+      let compiled_expr, compiled_expr_ty = match v with
+        | LT.V_Func_val { arg_binder ; body ; orig_lambda ; env ; rec_name } ->
+          let subst_lst = Michelson_backend.make_subst_ast_env_exp ~raise env orig_lambda in
+          let Ast_aggregated.{ type1 = in_ty ; type2 = out_ty } =
+            trace_option ~raise (Errors.generic_error loc "Trying to run a non-function?") @@
+              Ast_aggregated.get_t_arrow orig_lambda.type_expression in
+          let compiled_expr =
+            let protocol_version = ctxt.internals.protocol_version in
+            Michelson_backend.compile_contract_ ~raise ~protocol_version subst_lst arg_binder rec_name in_ty out_ty body in
+          let expr = clean_locations compiled_expr.expr in
+          (* TODO-er: check the ignored second component: *)
+          let expr_ty = clean_locations compiled_expr.expr_ty in
+          (expr, expr_ty)
+       | _ ->
+          raise.raise @@ Errors.generic_error loc "Contract does not reduce to a function value?" in
+      let (param_ty, storage_ty) =
         match Self_michelson.fetch_contract_ty_inputs compiled_expr_ty with
-        | Some (param_ty, storage_ty) -> (param_ty, storage_ty)
-        | _ -> raise.raise @@ Errors.generic_error loc "Compiled expression has not the correct input of contract" in
+         | Some (param_ty, storage_ty) -> (param_ty, storage_ty)
+         | _ -> raise.raise @@ Errors.generic_error loc "Compiled expression has not the correct input of contract" in
       let open Tezos_utils in
       let param_ty = clean_locations param_ty in
       let storage_ty = clean_locations storage_ty in
@@ -259,7 +259,7 @@ module Command = struct
       let ret = Michelson_to_value.decompile_value ~raise ~bigmaps:ctxt.transduced.bigmaps ret ast_ty in
       (ret, ctxt)
     | Compile_view (loc, v, _ty_expr) ->
-       let compiled_expr, _compiled_expr_ty = match v with
+       let compiled_expr, compiled_expr_ty = match v with
          | LT.V_Func_val { arg_binder ; body ; orig_lambda ; env ; rec_name } ->
             let subst_lst = Michelson_backend.make_subst_ast_env_exp ~raise env orig_lambda in
             let Ast_aggregated.{ type1 = in_ty ; type2 = out_ty } =
@@ -274,8 +274,12 @@ module Command = struct
             (expr, expr_ty)
          | _ ->
             raise.raise @@ Errors.generic_error loc "Contract does not reduce to a function value?" in
+      let (param_ty, ret_ty) =
+        match Self_michelson.fetch_views_ty compiled_expr_ty with
+        | Some (param_ty, ret_ty) -> (param_ty, ret_ty)
+        | _ -> raise.raise @@ Errors.generic_error loc "Compiled expression has not the correct input of contract" in
       let expr = clean_locations compiled_expr in
-      (expr, ctxt)
+      ((expr, param_ty, ret_ty), ctxt)
     | To_contract (loc, v, entrypoint, _ty_expr) -> (
       match v with
       | LT.V_Ct (LT.C_address address) ->
@@ -299,7 +303,9 @@ module Command = struct
       let addr = trace_option ~raise (corner_case ()) @@ LC.get_address addr in
       let info = Tezos_state.contract_exists ctxt addr in
       (info, ctxt)
-    | Inject_script (loc, calltrace, code, storage, amt) ->
+    | Inject_script (loc, calltrace, contract, storage, amt) ->
+      let contract, views = trace_option ~raise (corner_case ()) @@ LC.get_michelson_contract contract in
+      let code = Michelson_backend.compile_contract_with_views contract views in
       Tezos_state.originate_contract ~raise ~loc ~calltrace ctxt (code, storage) amt
     | Set_now (loc, calltrace, now) ->
       let ctxt = Tezos_state.set_timestamp ~raise ~loc ~calltrace ctxt now in
