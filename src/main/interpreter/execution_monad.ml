@@ -45,6 +45,7 @@ module Command = struct
     | Eval : Location.t * LT.value * Ast_aggregated.type_expression -> LT.value t
     | Compile_contract : Location.t * LT.value * Ast_aggregated.type_expression -> LT.value t
     | Decompile : LT.mcode * LT.mcode * Ast_aggregated.type_expression -> LT.value t
+    | Compile_view : Location.t * LT.value * Ast_aggregated.type_expression -> LT.mcode t
     | To_contract : Location.t * LT.value * string option * Ast_aggregated.type_expression -> LT.value t
     | Check_storage_address : Location.t * Tezos_protocol.Protocol.Alpha_context.Contract.t * Ast_aggregated.type_expression -> unit t
     | Contract_exists : LT.value -> bool t
@@ -109,7 +110,7 @@ module Command = struct
       let contract = Tezos_state.get_bootstrapped_contract ~raise n in
       ((contract, parameter_ty, storage_ty),ctxt)
     | Bootstrap_contract (mutez, contract, storage, contract_ty) ->
-      let contract = trace_option ~raise (corner_case ()) @@ LC.get_michelson_contract contract in
+      let contract, _views = trace_option ~raise (corner_case ()) @@ LC.get_michelson_contract contract in
       let Ast_aggregated.{ type1 = input_ty ; type2 = _ } = trace_option ~raise (corner_case ()) @@ Ast_aggregated.get_t_arrow contract_ty in
       let parameter_ty, _ = trace_option ~raise (corner_case ()) @@ Ast_aggregated.get_t_pair input_ty in
       let { code = storage ; ast_ty = storage_ty ; _ } : LT.typed_michelson_code =
@@ -191,8 +192,8 @@ module Command = struct
       (LT.V_Michelson (LT.Ty_code x), ctxt)
     | Get_size (contract_code) -> (
       match contract_code with
-      | LT.V_Michelson (LT.Contract contract_code) ->
-         let s = Ligo_compile.Of_michelson.measure ~raise contract_code in
+      | LT.V_Michelson (LT.Contract { contract ; _ }) ->
+         let s = Ligo_compile.Of_michelson.measure ~raise contract in
          (LT.V_Ct (C_int (Z.of_int s)), ctxt)
       | _ -> raise.raise @@ Errors.generic_error Location.generated
                               "Trying to measure a non-contract"
@@ -205,7 +206,7 @@ module Command = struct
         LT.V_Ct (C_int (Z.of_int s))
       in
       let contract_code = Tezos_micheline.Micheline.(inject_locations (fun _ -> ()) (strip_locations contract_code)) in
-      let contract = LT.V_Michelson (LT.Contract contract_code) in
+      let contract = LT.V_Michelson (LT.Contract { contract = contract_code ; views = [] }) in
       ((contract,size), ctxt)
     | Run (loc, f, v) ->
       let open Ligo_interpreter.Types in
@@ -252,11 +253,29 @@ module Command = struct
       let storage_ty = clean_locations storage_ty in
       let expr = clean_locations compiled_expr in
       let contract = Michelson.contract param_ty storage_ty expr [] in
-      (LT.V_Michelson (Contract contract), ctxt)
+      (LT.V_Michelson (Contract { contract ; views = [] }), ctxt)
     | Decompile (code, code_ty, ast_ty) ->
       let ret = Michelson_to_value.decompile_to_untyped_value ~raise ~bigmaps:ctxt.transduced.bigmaps code_ty code in
       let ret = Michelson_to_value.decompile_value ~raise ~bigmaps:ctxt.transduced.bigmaps ret ast_ty in
       (ret, ctxt)
+    | Compile_view (loc, v, _ty_expr) ->
+       let compiled_expr, _compiled_expr_ty = match v with
+         | LT.V_Func_val { arg_binder ; body ; orig_lambda ; env ; rec_name } ->
+            let subst_lst = Michelson_backend.make_subst_ast_env_exp ~raise env orig_lambda in
+            let Ast_aggregated.{ type1 = in_ty ; type2 = out_ty } =
+              trace_option ~raise (Errors.generic_error loc "Trying to run a non-function?") @@
+                Ast_aggregated.get_t_arrow orig_lambda.type_expression in
+            let compiled_expr =
+              let protocol_version = ctxt.internals.protocol_version in
+              Michelson_backend.compile_view_ ~raise ~protocol_version subst_lst arg_binder rec_name in_ty out_ty body in
+            let expr = clean_locations compiled_expr.expr in
+            (* TODO-er: check the ignored second component: *)
+            let expr_ty = clean_locations compiled_expr.expr_ty in
+            (expr, expr_ty)
+         | _ ->
+            raise.raise @@ Errors.generic_error loc "Contract does not reduce to a function value?" in
+      let expr = clean_locations compiled_expr in
+      (expr, ctxt)
     | To_contract (loc, v, entrypoint, _ty_expr) -> (
       match v with
       | LT.V_Ct (LT.C_address address) ->

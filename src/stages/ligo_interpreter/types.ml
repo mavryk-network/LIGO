@@ -25,9 +25,10 @@ and func_val = {
   }
 
 and typed_michelson_code = { code_ty : mcode ; code : mcode; ast_ty : Ast_aggregated.type_expression }
+and michelson_contract = { contract : mcode ; views : (string * mcode) list }
 
 and michelson_code =
-  | Contract of mcode
+  | Contract of michelson_contract
   | Ty_code of typed_michelson_code
 
 and contract =

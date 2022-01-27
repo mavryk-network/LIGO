@@ -171,6 +171,16 @@ let compile_contract_ ~raise ~protocol_version subst_lst arg_binder rec_name in_
   let mini_c = Of_aggregated.compile_expression ~raise aggregated_exp in
   Of_mini_c.compile_contract ~raise ~options mini_c
 
+let compile_view_ ~raise ~protocol_version subst_lst arg_binder rec_name in_ty out_ty aggregated_exp =
+  let open Ligo_compile in
+  let options = Compiler_options.make ~protocol_version () in
+  let aggregated_exp' = add_ast_env subst_lst arg_binder aggregated_exp in
+  let aggregated_exp = match rec_name with
+    | None -> Ast_aggregated.e_a_lambda { result = aggregated_exp'; binder = arg_binder } in_ty out_ty
+    | Some fun_name -> Ast_aggregated.e_a_recursive { fun_name ; fun_type  = (Ast_aggregated.t_arrow in_ty out_ty ()) ; lambda = { result = aggregated_exp';binder = arg_binder } } in
+  let mini_c = Of_aggregated.compile_expression ~raise aggregated_exp in
+  Of_mini_c.compile_view ~raise ~options mini_c
+
 let make_function in_ty out_ty arg_binder body subst_lst =
   let typed_exp' = add_ast_env subst_lst arg_binder body in
   Ast_aggregated.e_a_lambda {result=typed_exp'; binder=arg_binder} in_ty out_ty

@@ -60,8 +60,8 @@ let get_address : value -> Tezos_protocol_011_PtHangz2.Protocol.Alpha_context.Co
   | V_Ct ( C_address x ) -> Some x
   | _ -> None
 
-let get_michelson_contract : value -> unit Tezos_utils.Michelson.michelson option = function
-  | V_Michelson ( Contract x ) -> Some x
+let get_michelson_contract : value -> (unit Tezos_utils.Michelson.michelson * _) option = function
+  | V_Michelson ( Contract { contract ; views } ) -> Some (contract, views)
   | _ -> None
 
 let get_michelson_expr : value -> typed_michelson_code option =

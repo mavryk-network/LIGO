@@ -907,6 +907,11 @@ let rec apply_operator ~raise ~steps ~protocol_version ~options : Location.t -> 
        let>> addr = Inject_script (loc, calltrace, code, storage, amt) in
        return @@ addr
     | ( C_TEST_INJECT_SCRIPT , _  ) -> fail @@ error_type
+    | ( C_TEST_ADD_VIEW_TO_CONTRACT , [ V_Michelson (Contract { contract ; views }) ; V_Ct (C_string name) ; view  ] ) ->
+       let* view_ty = monad_option (Errors.generic_error loc "Could not recover types") @@ List.nth types 1 in
+       let>> view_code = Compile_view (loc, view, view_ty) in
+       return @@ V_Michelson (Contract { contract ; views = views @ [ (name, view_code) ] })
+    | ( C_TEST_ADD_VIEW_TO_CONTRACT , _  ) -> fail @@ error_type
     | ( C_TEST_EXTERNAL_CALL_TO_CONTRACT_EXN , [ (V_Ct (C_contract contract)) ; param ; V_Ct ( C_mutez amt ) ] ) -> (
        let* param_ty = monad_option (Errors.generic_error loc "Could not recover types") @@ List.nth types 1 in
        let>> param = Eval (loc, param, param_ty) in
@@ -972,7 +977,7 @@ let rec apply_operator ~raise ~steps ~protocol_version ~options : Location.t -> 
          C_BIG_MAP | C_BIG_MAP_LITERAL | C_BIG_MAP_GET_AND_UPDATE | C_CALL | C_CONTRACT |
          C_CONTRACT_OPT | C_CONTRACT_WITH_ERROR | C_CONTRACT_ENTRYPOINT |
          C_CONTRACT_ENTRYPOINT_OPT | C_IMPLICIT_ACCOUNT | C_SET_DELEGATE |
-         C_CREATE_CONTRACT | C_OPEN_CHEST | C_VIEW | C_TEST_ADD_VIEW_TO_CONTRACT) , _ ) ->
+         C_CREATE_CONTRACT | C_OPEN_CHEST | C_VIEW) , _ ) ->
       fail @@ Errors.generic_error loc "Unbound primitive."
   )
 
