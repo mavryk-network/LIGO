@@ -270,16 +270,10 @@ module Command = struct
                                Self_michelson.fetch_views_ty compiled_expr_ty in
       let view_code = clean_locations compiled_expr in
       (LT.(V_Michelson (Contract { contract ; views = views @ [(view_name, view_code, param_ty, ret_ty)] })), ctxt)
-    | To_contract (loc, v, entrypoint, _ty_expr) -> (
-      match v with
-      | LT.V_Ct (LT.C_address address) ->
-         let contract : LT.constant_val =
-           LT.C_contract { address ; entrypoint } in
-         (LT.V_Ct contract, ctxt)
-      | _ ->
-         raise.raise @@ Errors.generic_error loc
-                          "Should be caught by the typer"
-    )
+    | To_contract (loc, v, entrypoint, _ty_expr) ->
+      let address = trace_option ~raise (Errors.generic_error loc "Should be caught by the typer") @@ LC.get_address v in
+      let contract : LT.constant_val = LT.C_contract { address ; entrypoint } in
+      (LT.V_Ct contract, ctxt)
     | Check_storage_address (loc, addr, ty) ->
       let ligo_ty =
         trace_option ~raise (Errors.generic_error loc "Not supported (yet) when the provided account has been fetched from Test.get_last_originations" ) @@
