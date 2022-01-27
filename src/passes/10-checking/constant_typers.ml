@@ -1155,6 +1155,25 @@ let test_compile_contract ~raise loc = typer_1 ~raise loc "TEST_COMPILE_CONTRACT
   let () = assert_eq_1 ~raise ~loc storage_ty storage_ty_ in
   (t_michelson_contract param_ty storage_ty)
 
+let test_compile_contract_from_file ~protocol_version ~raise loc =
+  match (protocol_version : Ligo_proto.t) with
+  | Edo ->
+    typer_2_opt ~raise loc "TEST_COMPILE_CONTRACT_FROM_FILE" @@ fun source_file entrypoint tv_opt ->
+      let contract = trace_option ~raise (not_annotated loc) @@ tv_opt in
+      let param_ty, storage_ty = trace_option ~raise (expected_michelson_contract loc contract) @@ get_t_michelson_contract contract in
+      let () = trace_option ~raise (expected_string loc source_file) @@ assert_t_string source_file in
+      let () = trace_option ~raise (expected_string loc entrypoint) @@ assert_t_string entrypoint in
+      (t_michelson_contract param_ty storage_ty)
+  | Hangzhou ->
+    typer_3_opt ~raise loc "TEST_ORIGINATE_FROM_FILE" @@ fun source_file entrypoint views tv_opt ->
+      let contract = trace_option ~raise (not_annotated loc) @@ tv_opt in
+      let param_ty, storage_ty = trace_option ~raise (expected_michelson_contract loc contract) @@ get_t_michelson_contract contract in
+      let tlist = trace_option ~raise (expected_list loc views) @@ get_t_list views in
+      let () = trace_option ~raise (expected_string loc tlist) @@ assert_t_string tlist in
+      let () = trace_option ~raise (expected_string loc source_file) @@ assert_t_string source_file in
+      let () = trace_option ~raise (expected_string loc entrypoint) @@ assert_t_string entrypoint in
+      (t_michelson_contract param_ty storage_ty)
+
 let test_inject_script ~raise loc = typer_3 ~raise loc "TEST_INJECT_SCRIPT" @@ fun contract storage balance ->
   let parameter_ty, storage_ty = trace_option ~raise (expected_michelson_contract loc contract) @@ get_t_michelson_contract contract in
   let () = assert_eq_1 ~raise ~loc balance (t_mutez ()) in
@@ -1343,6 +1362,7 @@ let constant_typers ~raise ~test ~protocol_version loc c : typer = match c with
   | C_TEST_RUN -> test_run ~raise loc ;
   | C_TEST_EVAL -> test_eval ~raise loc ;
   | C_TEST_COMPILE_CONTRACT -> test_compile_contract ~raise loc ;
+  | C_TEST_COMPILE_CONTRACT_FROM_FILE -> test_compile_contract_from_file ~protocol_version ~raise loc ;
   | C_TEST_DECOMPILE -> test_decompile ~raise loc ;
   | C_TEST_INJECT_SCRIPT -> test_inject_script ~raise loc ;
   | C_TEST_ADD_VIEW_TO_CONTRACT -> test_add_view_to_contract ~raise loc ;
