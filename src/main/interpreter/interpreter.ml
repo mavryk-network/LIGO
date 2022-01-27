@@ -688,7 +688,8 @@ let rec apply_operator ~raise ~steps ~protocol_version ~options : Location.t -> 
     | ( C_TEST_ORIGINATE_FROM_FILE, args) -> (
       match protocol_version, args with
       | Environment.Protocols.Edo , [ V_Ct (C_string source_file) ; V_Ct (C_string entryp) ; storage ; V_Ct ( C_mutez amt ) ] ->
-        let>> (code,size) = Compile_contract_from_file (source_file,entryp,[]) in
+        let>> code = Compile_contract_from_file (source_file,entryp,[]) in
+        let>> size = Get_size code in
         let>> addr = Inject_script (loc, calltrace, code, storage, amt) in
         return @@ V_Record (LMap.of_list [ (Label "0", addr) ; (Label "1", code) ; (Label "2", size) ])
       | Environment.Protocols.Hangzhou , [ V_Ct (C_string source_file) ; V_Ct (C_string entryp) ; V_List views ; storage ; V_Ct ( C_mutez amt ) ] ->
@@ -696,7 +697,8 @@ let rec apply_operator ~raise ~steps ~protocol_version ~options : Location.t -> 
           ~f:(fun x -> trace_option ~raise (Errors.corner_case ()) @@ get_string x)
           views
         in
-        let>> (code,size) = Compile_contract_from_file (source_file,entryp,views) in
+        let>> code = Compile_contract_from_file (source_file,entryp,views) in
+        let>> size = Get_size code in
         let>> addr = Inject_script (loc, calltrace, code, storage, amt) in
         return @@ V_Record (LMap.of_list [ (Label "0", addr) ; (Label "1", code) ; (Label "2", size) ])
       | _ -> fail @@ Errors.generic_error loc "Unbound primitive. Check the protocol version you are using"
@@ -901,6 +903,17 @@ let rec apply_operator ~raise ~steps ~protocol_version ~options : Location.t -> 
        let>> code = Compile_contract (loc, contract, contract_ty) in
        return @@ code
     | ( C_TEST_COMPILE_CONTRACT , _  ) -> fail @@ error_type
+    | ( C_TEST_COMPILE_CONTRACT_FROM_FILE, args) -> (
+      match protocol_version, args with
+      | Environment.Protocols.Edo , [ V_Ct (C_string source_file) ; V_Ct (C_string entryp) ] ->
+        let>> code = Compile_contract_from_file (source_file,entryp,[]) in
+        return @@ code
+      | Environment.Protocols.Hangzhou , [ V_Ct (C_string source_file) ; V_Ct (C_string entryp) ; V_List views ] ->
+        let views = List.map ~f:(fun x -> trace_option ~raise (Errors.corner_case ()) @@ get_string x) views in
+        let>> code = Compile_contract_from_file (source_file,entryp,views) in
+        return @@ code
+      | _ -> fail @@ Errors.generic_error loc "Unbound primitive. Check the protocol version you are using"
+    )
     | ( C_TEST_INJECT_SCRIPT , [ code ; storage ;  V_Ct ( C_mutez amt ) ] ) ->
        let* storage_ty = monad_option (Errors.generic_error loc "Could not recover types") @@ List.nth types 1 in
        let>> storage = Eval (loc, storage, storage_ty) in
@@ -976,7 +989,7 @@ let rec apply_operator ~raise ~steps ~protocol_version ~options : Location.t -> 
          C_BIG_MAP | C_BIG_MAP_LITERAL | C_BIG_MAP_GET_AND_UPDATE | C_CALL | C_CONTRACT |
          C_CONTRACT_OPT | C_CONTRACT_WITH_ERROR | C_CONTRACT_ENTRYPOINT |
          C_CONTRACT_ENTRYPOINT_OPT | C_IMPLICIT_ACCOUNT | C_SET_DELEGATE |
-         C_CREATE_CONTRACT | C_OPEN_CHEST | C_VIEW | C_TEST_COMPILE_CONTRACT_FROM_FILE) , _ ) ->
+         C_CREATE_CONTRACT | C_OPEN_CHEST | C_VIEW) , _ ) ->
       fail @@ Errors.generic_error loc "Unbound primitive."
   )
 
