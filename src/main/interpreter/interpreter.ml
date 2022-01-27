@@ -907,10 +907,9 @@ let rec apply_operator ~raise ~steps ~protocol_version ~options : Location.t -> 
        let>> addr = Inject_script (loc, calltrace, code, storage, amt) in
        return @@ addr
     | ( C_TEST_INJECT_SCRIPT , _  ) -> fail @@ error_type
-    | ( C_TEST_ADD_VIEW_TO_CONTRACT , [ V_Michelson (Contract { contract ; views }) ; V_Ct (C_string name) ; view  ] ) ->
-       let* view_ty = monad_option (Errors.generic_error loc "Could not recover types") @@ List.nth types 1 in
-       let>> view_code, param_ty, ret_ty = Compile_view (loc, view, view_ty) in
-       return @@ V_Michelson (Contract { contract ; views = views @ [ (name, view_code, param_ty, ret_ty) ] })
+    | ( C_TEST_ADD_VIEW_TO_CONTRACT , [ V_Michelson (Contract { contract = _ ; views = _ }) as contract ; V_Ct (C_string name) ; view  ] ) ->
+       let>> contract = Compile_view (loc, contract, name, view) in
+       return @@ contract
     | ( C_TEST_ADD_VIEW_TO_CONTRACT , _  ) -> fail @@ error_type
     | ( C_TEST_EXTERNAL_CALL_TO_CONTRACT_EXN , [ (V_Ct (C_contract contract)) ; param ; V_Ct ( C_mutez amt ) ] ) -> (
        let* param_ty = monad_option (Errors.generic_error loc "Could not recover types") @@ List.nth types 1 in
