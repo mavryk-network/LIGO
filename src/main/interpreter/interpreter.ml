@@ -1190,8 +1190,19 @@ and eval_ligo ~raise ~steps ~protocol_version ~options : AST.expression -> callt
 
 and try_eval ~raise ~steps ~protocol_version ~options expr env state r = Monad.eval ~raise ~options (eval_ligo ~raise ~steps ~protocol_version ~options expr [] env) state r
 
-let eval_test ~raise ~steps ~options ~protocol_version : Ast_typed.program -> ((string * value) list) =
-  fun prg ->
+let library = "
+  module Foo = struct
+    let x = 42n
+  end
+"
+
+let eval_test ~raise ~add_warning ~steps ~options ~protocol_version : _ -> _ -> ((string * value) list) =
+  fun syntax source_file ->
+  let library_prg, _ = Trace.trace ~raise (fun _ -> Errors.generic_error Location.generated "Error typing library") @@
+                         Ligo_compile.Utils.type_contract_string ~add_warning:(fun _ -> ()) ~options CameLIGO library (Environment.default Environment.Protocols.Edo) in
+  let init_env = Environment.append library_prg options.init_env in
+  let options = { options with init_env } in
+  let prg   = Build.build_context ~raise ~add_warning ~options ~default:library_prg syntax source_file in
   let decl_lst = prg in
   (* Pass over declarations, for each "test"-prefixed one, add a new
      declaration and in the end, gather all of them together *)
