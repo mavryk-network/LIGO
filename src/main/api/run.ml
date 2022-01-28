@@ -10,8 +10,7 @@ let test source_file syntax steps protocol_version display_format project_root (
       fun ~raise ->
       let protocol_version = Helpers.protocol_to_variant ~raise protocol_version in
       let options = Compiler_options.make ~test:true ~protocol_version ?project_root () in
-      let typed   = Build.build_context ~raise ~add_warning ~options syntax source_file in
-      Interpreter.eval_test ~raise ~steps ~options ~protocol_version typed
+      Interpreter.eval_test ~raise ~add_warning ~steps ~options ~protocol_version syntax source_file
 
 let dry_run source_file entry_point parameter storage amount balance sender source now syntax protocol_version display_format werror project_root () =
     Trace.warning_with @@ fun add_warning get_warnings ->

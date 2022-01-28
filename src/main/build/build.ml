@@ -201,12 +201,12 @@ let build_views ~raise ~add_warning :
 
 (* build_context builds a context to be used later for evaluation *)
 let build_context ~raise ~add_warning :
-  options:Compiler_options.t -> string -> file_name -> Ast_typed.program =
-    fun ~options _syntax file_name ->
+  options:Compiler_options.t -> ?default:_ -> string -> file_name -> Ast_typed.program =
+    fun ~options ?(default = []) _syntax file_name ->
       let open Build(struct
         let raise = raise
         let add_warning = add_warning
         let options = options
       end) in
-      let contract = trace ~raise build_error_tracer @@ Trace.from_result (compile_combined file_name) in
+      let contract = trace ~raise build_error_tracer @@ Trace.from_result (compile_combined ~default file_name) in
       contract
