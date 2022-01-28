@@ -1920,12 +1920,12 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_bad [ "compile" ; "contract" ; bad_contract "compile_test.mligo" ] ;
   [%expect{|
-    File "../../test/contracts/negative/compile_test.mligo", line 15, characters 28-42:
-     14 |  (match action with
-     15 |    Increment (n) -> let _ = Test.log "foo" in add (store, n)
-     16 |  | Decrement (n) -> sub (store, n)
+    File "../../test/contracts/negative/compile_test.mligo", line 23, characters 3-19:
+     22 |   let _r = Test.transfer_to_contract_exn contr (Increment (32)) 1tez  in
+     23 |   (Test.get_storage(taddr) = initial_storage + 32)
+     24 | let test = _test ()
 
-    Invalid call to Test primitive. |}]
+    Module "Test" not found. |}]
 
 (* remove unused declarations *)
 let%expect_test _ =

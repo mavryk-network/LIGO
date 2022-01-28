@@ -10,7 +10,11 @@ let test source_file syntax steps protocol_version display_format project_root (
       fun ~raise ->
       let protocol_version = Helpers.protocol_to_variant ~raise protocol_version in
       let options = Compiler_options.make ~test:true ~protocol_version ?project_root () in
-      Interpreter.eval_test ~raise ~add_warning ~steps ~options ~protocol_version syntax source_file
+      let lib_lang, lib_code = Interpreter.library () in
+      let library_prg, _ = Ligo_compile.Utils.type_contract_string ~raise ~add_warning ~options lib_lang lib_code options.init_env in
+      let options = { options with init_env = Environment.append library_prg options.init_env } in
+      let prg   = Build.build_context ~raise ~add_warning ~options ~default:library_prg syntax source_file in
+      Interpreter.eval_test ~raise ~steps ~options ~protocol_version prg
 
 let dry_run source_file entry_point parameter storage amount balance sender source now syntax protocol_version display_format werror project_root () =
     Trace.warning_with @@ fun add_warning get_warnings ->

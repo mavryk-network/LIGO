@@ -179,7 +179,7 @@ module Tree_abstraction = struct
     | "Test.transfer_to_contract_exn" -> some_const C_TEST_EXTERNAL_CALL_TO_CONTRACT_EXN
     | "Test.transfer" -> some_const C_TEST_EXTERNAL_CALL_TO_ADDRESS
     | "Test.transfer_exn" -> some_const C_TEST_EXTERNAL_CALL_TO_ADDRESS_EXN
-    | "Test.get_storage" -> some_const C_TEST_GET_STORAGE
+    (* | "Test.get_storage" -> some_const C_TEST_GET_STORAGE *)
     | "Test.get_storage_of_address" -> some_const C_TEST_GET_STORAGE_OF_ADDRESS
     | "Test.get_balance" -> some_const C_TEST_GET_BALANCE
     | "Test.michelson_equal" -> some_const C_TEST_MICHELSON_EQUAL
@@ -370,7 +370,7 @@ module Tree_abstraction = struct
     | C_TEST_EXTERNAL_CALL_TO_CONTRACT_EXN -> "Test.transfer_to_contract_exn"
     | C_TEST_EXTERNAL_CALL_TO_ADDRESS -> "Test.transfer"
     | C_TEST_EXTERNAL_CALL_TO_ADDRESS_EXN -> "Test.transfer_exn"
-    | C_TEST_GET_STORAGE -> "Test.get_storage"
+    (* | C_TEST_GET_STORAGE -> "Test.get_storage" *)
     | C_TEST_GET_STORAGE_OF_ADDRESS -> "Test.get_storage_of_address"
     | C_TEST_GET_BALANCE -> "Test.get_balance"
     | C_TEST_MICHELSON_EQUAL -> "Test.michelson_equal"
