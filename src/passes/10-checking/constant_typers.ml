@@ -1031,10 +1031,6 @@ let test_external_call_to_address ~raise loc = typer_3 ~raise loc "TEST_EXTERNAL
   let () = assert_eq_1 ~raise ~loc p (t_michelson_code ()) in
   (t_test_exec_result ())
 
-let test_get_storage ~raise loc = typer_1 ~raise loc "TEST_GET_STORAGE" @@ fun c ->
-  let (_, storage_ty) = trace_option ~raise (expected_typed_address loc c) @@ get_t_typed_address c in
-  storage_ty
-
 let test_get_storage_of_address ~raise loc = typer_1 ~raise loc "TEST_GET_STORAGE_OF_ADDRESS" @@ fun addr ->
   let () = assert_eq_1 ~raise ~loc addr (t_address ()) in
   (t_michelson_code ())
@@ -1313,7 +1309,6 @@ let rec constant_typers ~raise ~test ~protocol_version loc c : typer = match c w
   | C_TEST_EXTERNAL_CALL_TO_CONTRACT_EXN -> test_external_call_to_contract_exn ~raise loc ;
   | C_TEST_EXTERNAL_CALL_TO_ADDRESS -> test_external_call_to_address ~raise loc ;
   | C_TEST_EXTERNAL_CALL_TO_ADDRESS_EXN -> test_external_call_to_address_exn ~raise loc ;
-  | C_TEST_GET_STORAGE -> test_get_storage ~raise loc ;
   | C_TEST_GET_STORAGE_OF_ADDRESS -> test_get_storage_of_address ~raise loc ;
   | C_TEST_GET_BALANCE -> test_get_balance ~raise loc ;
   | C_TEST_MICHELSON_EQUAL -> test_michelson_equal ~raise loc ;
