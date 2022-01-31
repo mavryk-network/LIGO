@@ -121,8 +121,8 @@ module Make (M : M) =
       (dep_types,(M.AST.make_module_declaration module_binder ast_typed))
     in
     let _,header_list = List.fold_map_right ~f:add_modules ~init:(SMap.empty) @@ order_deps in
-    let aggregated = List.fold_left ~f:(fun c a ->  a::c) ~init:contract (default @ header_list) in
-    aggregated
+    let aggregated = List.fold_left ~f:(fun c a ->  a::c) ~init:contract (header_list) in
+    default @ aggregated
 
   let add_modules_in_env (env : M.AST.environment) deps =
     let aux env (module_name, (_,ast)) = 
