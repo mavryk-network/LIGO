@@ -1195,6 +1195,7 @@ module Internal__Test_curried = struct
   let transfer_to_typed_address_exn (type p s) (ta : (p, s) typed_address) (p : p) (m : tez) : test_exec_result =
     let c : p contract = Test.to_contract ta in
     Test.transfer_to_contract c p m
+  let michelson_equal (v : michelson_program) (w : michelson_program) : bool = v = w
 end
 
 module Internal__Test_uncurried = struct
@@ -1209,6 +1210,7 @@ module Internal__Test_uncurried = struct
   let transfer_to_typed_address_exn (type p s) ((ta, p, m) : ((p, s) typed_address * p * tez)) : test_exec_result =
     let c : p contract = Test.to_contract ta in
     Test.transfer_to_contract c p m
+  let michelson_equal ((v, w) : michelson_program * michelson_program) : bool = v = w
 end
 ")
 
