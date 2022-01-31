@@ -1,7 +1,5 @@
 (* 
-  Lift functions outside, as WebAssembly has no support for nested functions.
-   
-  Creation of types in this file is flawed, but doesn't seem to have an effect so far?
+  Lift functions outside, as WebAssembly has no support for nested functions.   
 *)
 open Mini_c.Types
 
@@ -21,7 +19,13 @@ let empty_env = {
   functions      = [];
 }
 
+let variable_exists env v = 
+  match (List.find ~f:(fun var -> Location.equal_content ~equal:Var.equal v (fst var)) env.variables) with 
+      Some _ -> true 
+    | None -> false
+
 let rec lift: env -> expression -> env * expression = fun env e ->
+  let variable_exists = variable_exists env in
   match e.content with 
   | E_literal _ -> env, e
   | E_closure {binder; body} -> 
@@ -61,12 +65,11 @@ let rec lift: env -> expression -> env * expression = fun env e ->
     let env, e1 = lift env e1 in 
     let env, e2 = lift env e2 in 
     env, {e with content = E_application (e1, e2)}
-  | E_variable v -> 
-    (match (List.find ~f:(fun var -> Location.equal_content ~equal:Var.equal v (fst var)) env.variables) with 
-      Some _ -> env, e 
-    | None -> 
-      {env with missing = v :: env.missing}, e)
+  | E_variable v when variable_exists v -> env, e
+  | E_variable v -> {env with missing = v :: env.missing}, e
   | E_iterator (cc, ((var_name, type_expression), e1), e2) ->
+    let variables = (var_name, type_expression) :: env.variables in
+    let env = {env with variables} in
     let env, e1 = lift env e1 in
     let env, e2 = lift env e2 in
     env, {e with content = E_iterator (cc, ((var_name, type_expression), e1), e2)}
@@ -88,16 +91,22 @@ let rec lift: env -> expression -> env * expression = fun env e ->
     let env, e3 = lift env e3 in
     env, {e with content = E_if_bool (e1, e2, e3) }
   | E_if_none (e1, e2, ((var_name, type_expression), e3)) -> 
+    let variables = (var_name, type_expression) :: env.variables in
+    let env = {env with variables} in
     let env, e1 = lift env e1 in
     let env, e2 = lift env e2 in
     let env, e3 = lift env e3 in
     env, {e with content = E_if_none (e1, e2, ((var_name, type_expression), e3)) }
   | E_if_cons (e1, e2, (((var_name1, type_expression1), (var_name2, type_expression2)), e3)) ->
+    let variables = (var_name1, type_expression1) :: (var_name2, type_expression2) :: env.variables in
+    let env = {env with variables} in
     let env, e1 = lift env e1 in
     let env, e2 = lift env e2 in
     let env, e3 = lift env e3 in
     env, {e with content = E_if_cons (e1, e2, (((var_name1, type_expression1), (var_name2, type_expression2)), e3)) }
   | E_if_left (e1, ((var_name1, type_expression1), e2), ((var_name2, type_expression2), e3)) ->
+    let variables = (var_name1, type_expression1) :: (var_name2, type_expression2) :: env.variables in
+    let env = {env with variables} in
     let env, e1 = lift env e1 in
     let env, e2 = lift env e2 in
     let env, e3 = lift env e3 in
