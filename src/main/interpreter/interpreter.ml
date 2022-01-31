@@ -1190,7 +1190,11 @@ module Internal__Test_curried = struct
     let s : michelson_program = Test.get_storage_of_address a in
     let s : s = Test.decompile s in
     s
-  let compile_value (type a) (x : a) = Test.eval x
+  let compile_value (type a) (x : a) : michelson_program = Test.eval x
+  let to_address (type p s) (t : (p, s) typed_address) : address = Tezos.address (Test.to_contract t)
+  let transfer_to_typed_address_exn (type p s) (ta : (p, s) typed_address) (p : p) (m : tez) : test_exec_result =
+    let c : p contract = Test.to_contract ta in
+    Test.transfer_to_contract c p m
 end
 
 module Internal__Test_uncurried = struct
@@ -1200,7 +1204,11 @@ module Internal__Test_uncurried = struct
     let s : michelson_program = Test.get_storage_of_address a in
     let s : s = Test.decompile s in
     s
-  let compile_value (type a) (x : a) = Test.eval x
+  let compile_value (type a) (x : a) : michelson_program = Test.eval x
+  let to_address (type p s) (t : (p, s) typed_address) : address = Tezos.address (Test.to_contract t)
+  let transfer_to_typed_address_exn (type p s) ((ta, p, m) : ((p, s) typed_address * p * tez)) : test_exec_result =
+    let c : p contract = Test.to_contract ta in
+    Test.transfer_to_contract c p m
 end
 ")
 
