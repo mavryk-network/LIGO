@@ -42,7 +42,7 @@ let rec lift: env -> expression -> env * expression = fun env e ->
       fun (env, args) a -> 
         let env, arg = lift env a in
         env, arg :: args
-    ) ~init:(env, []) arguments 
+    ) ~init:(env, []) (List.rev arguments)
     in
     env, {e with content = E_constant {cons_name; arguments}}
   | E_application ({content = E_variable v; _ } as e1, e2) ->    
@@ -141,11 +141,16 @@ let rec lift: env -> expression -> env * expression = fun env e ->
         | [] -> r, r.type_expression
       in fst (aux remaining r)
     in
+    let in_replacement i = (match List.find env.replacements ~f:(fun (_,r,_) -> Location.equal_content ~equal:Var.equal r i) with 
+        Some _ -> true
+      | None -> false
+    ) in
     let in_function i = (match List.find env.functions ~f:(fun r -> Location.equal_content ~equal:Var.equal r i) with 
         Some _ -> true
       | None -> false
     ) in
-    let missing = List.filter ~f:(fun f -> not(in_function f)) env2.missing in
+    let missing = List.filter ~f:(fun f -> not(in_replacement f)) env2.missing in
+    let missing = List.filter ~f:(fun f -> not(in_function f)) missing in
     let replacement = (var_name, v, var_replacement (v :: missing)) in
     let export, type_expression = export_func missing in
     let export = fun e -> {content = E_let_in (export, inline, ((v, type_expression), e)); type_expression; location = c.location} in
@@ -162,9 +167,9 @@ let rec lift: env -> expression -> env * expression = fun env e ->
       fun (env, args) a -> 
         let env, arg = lift env a in
         env, arg :: args
-    ) ~init:(env, []) l 
+    ) ~init:(env, []) (List.rev l)
     in
-    env, {e with content = E_tuple l}
+    env, {e with content = E_tuple (List.rev l)}
   | E_let_tuple (e1, (lst, e2)) -> 
     let env, e1 = lift env e1 in
     let env, e2 = lift {env with variables = lst @ env.variables} e2 in
@@ -182,7 +187,7 @@ let rec lift: env -> expression -> env * expression = fun env e ->
       fun (env, args) a -> 
         let env, arg = lift env a in
         env, arg :: args
-    ) ~init:(env, []) lst 
+    ) ~init:(env, []) (List.rev lst)
     in
     env, {e with content = E_global_constant (s, lst)}
 
