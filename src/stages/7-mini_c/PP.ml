@@ -107,7 +107,8 @@ and value_assoc ppf : (value * value) -> unit = fun (a, b) ->
   fprintf ppf "%a -> %a" value a value b
 
 and expression ppf (e:expression) =
-  fprintf ppf "%a" expression_content e.content
+  expression_with_type ppf e
+  (* fprintf ppf "%a" expression_content e.content *)
 
 and expression_content ppf (e:expression_content) = match e with
   | E_closure x -> function_ ppf x
