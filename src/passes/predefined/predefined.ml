@@ -189,7 +189,6 @@ module Tree_abstraction = struct
     | "Test.nth_bootstrap_contract" -> some_const C_TEST_NTH_BOOTSTRAP_CONTRACT
     | "Test.nth_bootstrap_account" -> some_const C_TEST_GET_NTH_BS
     | "Test.last_originations" -> some_const C_TEST_LAST_ORIGINATIONS
-    | "Test.compile_value" -> some_const C_TEST_COMPILE_META_VALUE
     | "Test.mutate_value" -> some_const C_TEST_MUTATE_VALUE
     | "Test.mutation_test" -> some_const C_TEST_MUTATION_TEST
     | "Test.mutation_test_all" -> some_const C_TEST_MUTATION_TEST_ALL
@@ -368,7 +367,6 @@ module Tree_abstraction = struct
     | C_TEST_EXTERNAL_CALL_TO_CONTRACT_EXN -> "Test.transfer_to_contract_exn"
     | C_TEST_EXTERNAL_CALL_TO_ADDRESS -> "Test.transfer"
     | C_TEST_EXTERNAL_CALL_TO_ADDRESS_EXN -> "Test.transfer_exn"
-    (* | C_TEST_GET_STORAGE -> "Test.get_storage" *)
     | C_TEST_GET_STORAGE_OF_ADDRESS -> "Test.get_storage_of_address"
     | C_TEST_GET_BALANCE -> "Test.get_balance"
     | C_TEST_MICHELSON_EQUAL -> "Test.michelson_equal"
@@ -378,7 +376,6 @@ module Tree_abstraction = struct
     | C_TEST_NTH_BOOTSTRAP_CONTRACT -> "Test.nth_bootstrap_contract"
     | C_TEST_GET_NTH_BS -> "Test.nth_bootstrap_account"
     | C_TEST_LAST_ORIGINATIONS -> "Test.last_originations"
-    | C_TEST_COMPILE_META_VALUE -> "Test.compile_value"
     | C_TEST_MUTATE_VALUE -> "Test.mutate_value"
     | C_TEST_MUTATION_TEST -> "Test.mutation_test"
     | C_TEST_MUTATION_TEST_ALL -> "Test.mutation_test_all"

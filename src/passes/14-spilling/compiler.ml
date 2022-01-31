@@ -194,7 +194,6 @@ let compile_constant' : AST.constant' -> constant' = function
       | C_TEST_SET_BIG_MAP
       | C_TEST_NTH_BOOTSTRAP_TYPED_ADDRESS
       | C_TEST_ORIGINATE_FROM_FILE
-      | C_TEST_COMPILE_META_VALUE
       | C_TEST_MUTATE_VALUE
       | C_TEST_MUTATION_TEST
       | C_TEST_MUTATION_TEST_ALL

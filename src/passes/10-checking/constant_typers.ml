@@ -1050,9 +1050,6 @@ let test_last_originations ~raise loc = typer_1 ~raise loc "TEST_LAST_ORIGINATIO
   let () = trace_option ~raise (expected_unit loc u) @@ assert_t_unit u in
   (t_map (t_address ()) (t_list (t_address ())))
 
-let test_compile_meta_value ~raise loc = typer_1 ~raise loc "TEST_LAST_ORIGINATIONS" @@ fun _ ->
-  (t_michelson_code ())
-
 let test_mutate_value ~raise loc = typer_2 ~raise loc "TEST_MUTATE_VALUE" @@ fun n expr ->
   let () = assert_eq_1 ~raise ~loc n (t_nat ()) in
   (t_option (t_pair expr (t_mutation ())))
@@ -1318,7 +1315,6 @@ let rec constant_typers ~raise ~test ~protocol_version loc c : typer = match c w
   | C_TEST_BOOTSTRAP_CONTRACT -> test_bootstrap_contract ~raise loc ;
   | C_TEST_NTH_BOOTSTRAP_CONTRACT -> test_nth_bootstrap_contract ~raise loc ;
   | C_TEST_LAST_ORIGINATIONS -> test_last_originations ~raise loc ;
-  | C_TEST_COMPILE_META_VALUE -> test_compile_meta_value ~raise loc ;
   | C_TEST_MUTATE_VALUE -> test_mutate_value ~raise loc ;
   | C_TEST_MUTATION_TEST -> test_mutation_test ~raise loc ;
   | C_TEST_MUTATION_TEST_ALL -> test_mutation_test_all ~raise loc ;

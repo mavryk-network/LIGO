@@ -865,14 +865,12 @@ let rec apply_operator ~raise ~steps ~protocol_version ~options : Location.t -> 
        let>> code = Run (loc, f, v) in
        return code
     | ( C_TEST_RUN , _  ) -> fail @@ error_type
-    | ( C_TEST_EVAL , [ v ] )
-    | ( C_TEST_COMPILE_META_VALUE , [ v ] ) ->
+    | ( C_TEST_EVAL , [ v ] ) ->
        let* () = check_value v in
        let* value_ty = monad_option (Errors.generic_error loc "Could not recover types") @@ List.nth types 0 in
        let>> code = Eval (loc, v, value_ty) in
        return code
     | ( C_TEST_EVAL , _  ) -> fail @@ error_type
-    | ( C_TEST_COMPILE_META_VALUE , _  ) -> fail @@ error_type
     | ( C_TEST_DECOMPILE , [ V_Michelson (Ty_code { code_ty ; code ; ast_ty }) ] ) ->
       let* loc = monad_option (Errors.generic_error loc "Could not recover locations") @@ List.nth locs 0 in
       let () = trace_option ~raise (Errors.generic_error loc @@ Format.asprintf "This Michelson value has assigned type '%a', which does not coincide with expected type '%a'." AST.PP.type_expression ast_ty AST.PP.type_expression expr_ty) @@ AST.Helpers.assert_type_expression_eq (ast_ty, expr_ty) in
@@ -1192,7 +1190,7 @@ module Internal__Test_curried = struct
     let s : michelson_program = Test.get_storage_of_address a in
     let s : s = Test.decompile s in
     s
-  let foo (x : int) (y : int) = x + y
+  let compile_value (type a) (x : a) = Test.eval x
 end
 
 module Internal__Test_uncurried = struct
@@ -1202,7 +1200,7 @@ module Internal__Test_uncurried = struct
     let s : michelson_program = Test.get_storage_of_address a in
     let s : s = Test.decompile s in
     s
-  let foo ((x, y) : (int * int)) = x + y
+  let compile_value (type a) (x : a) = Test.eval x
 end
 ")
 
