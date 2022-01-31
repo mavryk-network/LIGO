@@ -21,7 +21,7 @@ module type M =
       val add_module_to_env : module_name -> environment -> environment -> environment
       val add_ast_to_env : t -> environment -> environment
       val init_env : environment
-      val ast_lib : t
+      val postprocess : t -> t
 
       (* This should probably be taken in charge be the compiler, which should be able to handle "libraries" *)
       val make_module_declaration : module_name -> t -> declaration
@@ -123,7 +123,7 @@ module Make (M : M) =
     in
     let _,header_list = List.fold_map_right ~f:add_modules ~init:(SMap.empty) @@ order_deps in
     let aggregated = List.fold_left ~f:(fun c a ->  a::c) ~init:contract (header_list) in
-    M.AST.ast_lib @ aggregated
+    M.AST.postprocess aggregated
 
   let add_modules_in_env (env : M.AST.environment) deps =
     let aux env (module_name, (_,ast)) = 

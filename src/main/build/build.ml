@@ -33,14 +33,14 @@ module M (Params : Params) =
       let add_module_to_env : module_name -> environment -> environment -> environment =
         fun module_name ast_typed_env env ->
           Environment.add_module ~public:() module_name (Environment.to_program ast_typed_env) env
-      let init_env : environment = options.init_env
+      let init_env : environment = match Params.lib with | None -> options.init_env | Some { code ; _ } -> Environment.append code options.init_env
       let make_module_declaration : module_name -> t -> declaration =
         fun module_binder ast_typed ->
         (Location.wrap @@ (Ast_typed.Declaration_module {module_binder;module_=ast_typed;module_attr={public=true}}: Ast_typed.declaration))
       let make_module_alias : module_name -> file_name -> declaration =
         fun module_name file_name ->
         Location.wrap @@ (Ast_typed.Module_alias {alias=module_name;binders=file_name,[]}: Ast_typed.declaration)
-      let ast_lib : t = match Params.lib with | None -> [] | Some { code ; _ } -> code
+      let postprocess (aggregated : t) : t = match Params.lib with | None -> aggregated | Some { code ; _ } -> code @ aggregated
     end
     let compile : AST.environment -> file_name -> meta_data -> compilation_unit -> AST.t =
       fun env file_name meta c_unit ->
@@ -72,7 +72,7 @@ module Infer (Params : Params) = struct
       let make_module_alias : module_name -> file_name -> declaration =
         fun module_name file_name ->
         Location.wrap @@ (Ast_core.Module_alias {alias=module_name;binders=file_name,[]}: Ast_core.declaration)
-      let ast_lib : t = []
+      let postprocess (c : t) : t = c
   end
 
   let compile : AST.environment -> file_name -> meta_data -> compilation_unit -> AST.t =

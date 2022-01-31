@@ -10,9 +10,8 @@ let test source_file syntax steps protocol_version display_format project_root (
       fun ~raise ->
       let protocol_version = Helpers.protocol_to_variant ~raise protocol_version in
       let options = Compiler_options.make ~test:true ~protocol_version ?project_root () in
-      let test_lib = Interpreter.test_lib ~raise ~options in
-      let options = { options with init_env = Environment.append test_lib.code options.init_env } in
-      let prg   = Build.build_context ~raise ~add_warning ~options ~lib:test_lib syntax source_file in
+      let lib = Interpreter.test_lib ~raise ~options in
+      let prg = Build.build_context ~raise ~add_warning ~options ~lib syntax source_file in
       Interpreter.eval_test ~raise ~steps ~options ~protocol_version prg
 
 let dry_run source_file entry_point parameter storage amount balance sender source now syntax protocol_version display_format werror project_root () =
