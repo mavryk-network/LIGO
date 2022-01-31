@@ -1190,16 +1190,33 @@ and eval_ligo ~raise ~steps ~protocol_version ~options : AST.expression -> callt
 
 and try_eval ~raise ~steps ~protocol_version ~options expr env state r = Monad.eval ~raise ~options (eval_ligo ~raise ~steps ~protocol_version ~options expr [] env) state r
 
-let library () : Self_ast_imperative.Syntax.v_syntax * string = (CameLIGO, "
-module Test = struct
+let library () : Ligo_compile.Helpers.meta * string = ({ syntax = CameLIGO }, "
+module Internal__Test_curried = struct
   let get_storage (type p s) (t : (p, s) typed_address) : s =
     let c : p contract = Test.to_contract t in
     let a : address = Tezos.address c in
     let s : michelson_program = Test.get_storage_of_address a in
     let s : s = Test.decompile s in
     s
+  let foo (x : int) (y : int) = x + y
+end
+
+module Internal__Test_uncurried = struct
+  let get_storage (type p s) (t : (p, s) typed_address) : s =
+    let c : p contract = Test.to_contract t in
+    let a : address = Tezos.address c in
+    let s : michelson_program = Test.get_storage_of_address a in
+    let s : s = Test.decompile s in
+    s
+  let foo ((x, y) : (int * int)) = x + y
 end
 ")
+
+let library_lang : Ligo_compile.Helpers.meta -> Ast_typed.module_ = function
+  | { syntax = CameLIGO } ->
+     [Location.wrap @@ Ast_typed.Module_alias { alias = "Test" ; binders = List.Ne.singleton "Internal__Test_curried" } ]
+  | { syntax = ReasonLIGO | PascaLIGO | JsLIGO } ->
+     [Location.wrap @@ Ast_typed.Module_alias { alias = "Test" ; binders = List.Ne.singleton "Internal__Test_uncurried" } ]
 
 let eval_test ~raise ~steps ~options ~protocol_version : Ast_typed.module_ -> ((string * value) list) =
   fun prg ->
