@@ -733,10 +733,6 @@ let rec apply_operator ~raise ~steps ~protocol_version ~options : Location.t -> 
       let>> balance = Get_balance (loc, calltrace, addr) in
       return balance
     | ( C_TEST_GET_BALANCE , _  ) -> fail @@ error_type
-    | ( C_TEST_MICHELSON_EQUAL , [ a ; b ] ) ->
-      let>> b = Michelson_equal (loc,a,b) in
-      return_ct (C_bool b)
-    | ( C_TEST_MICHELSON_EQUAL , _  ) -> fail @@ error_type
     | ( C_TEST_LOG , [ v ]) ->
       let () = Format.printf "%a\n" Ligo_interpreter.PP.pp_value v in
       return_ct C_unit
@@ -1183,34 +1179,28 @@ and try_eval ~raise ~steps ~protocol_version ~options expr env state r = Monad.e
 open Self_ast_imperative.Syntax
 
 let library () : v_syntax * string = (CameLIGO, "
-module Internal__Test_curried = struct
-  let get_storage (type p s) (t : (p, s) typed_address) : s =
-    let c : p contract = Test.to_contract t in
-    let a : address = Tezos.address c in
-    let s : michelson_program = Test.get_storage_of_address a in
-    let s : s = Test.decompile s in
-    s
-  let compile_value (type a) (x : a) : michelson_program = Test.eval x
-  let to_address (type p s) (t : (p, s) typed_address) : address = Tezos.address (Test.to_contract t)
-  let transfer_to_typed_address_exn (type p s) (ta : (p, s) typed_address) (p : p) (m : tez) : test_exec_result =
-    let c : p contract = Test.to_contract ta in
-    Test.transfer_to_contract c p m
-  let michelson_equal (v : michelson_program) (w : michelson_program) : bool = v = w
-end
-
-module Internal__Test_uncurried = struct
-  let get_storage (type p s) (t : (p, s) typed_address) : s =
-    let c : p contract = Test.to_contract t in
-    let a : address = Tezos.address c in
-    let s : michelson_program = Test.get_storage_of_address a in
-    let s : s = Test.decompile s in
-    s
-  let compile_value (type a) (x : a) : michelson_program = Test.eval x
-  let to_address (type p s) (t : (p, s) typed_address) : address = Tezos.address (Test.to_contract t)
-  let transfer_to_typed_address_exn (type p s) ((ta, p, m) : ((p, s) typed_address * p * tez)) : test_exec_result =
-    let c : p contract = Test.to_contract ta in
-    Test.transfer_to_contract c p m
-  let michelson_equal ((v, w) : michelson_program * michelson_program) : bool = v = w
+module Internal__Test = struct
+  module CURRY = struct
+    let get_storage (type p s) (t : (p, s) typed_address) : s =
+      let c : p contract = Test.to_contract t in
+      let a : address = Tezos.address c in
+      let s : michelson_program = Test.get_storage_of_address a in
+      let s : s = Test.decompile s in
+      s
+    let compile_value (type a) (x : a) : michelson_program = Test.eval x
+    let to_address (type p s) (t : (p, s) typed_address) : address = Tezos.address (Test.to_contract t)
+    let transfer_to_typed_address_exn (type p s) (ta : (p, s) typed_address) (p : p) (m : tez) : test_exec_result =
+      let c : p contract = Test.to_contract ta in
+      Test.transfer_to_contract c p m
+    let michelson_equal (v : michelson_program) (w : michelson_program) : bool = v = w
+  end
+  module UNCURRY = struct
+    let get_storage (type p s) (t : (p, s) typed_address) : s = CURRY.get_storage t
+    let compile_value (type a) (x : a) : michelson_program = CURRY.compile_value x
+    let to_address (type p s) (t : (p, s) typed_address) : address = CURRY.to_address t
+    let transfer_to_typed_address_exn (type p s) ((ta, p, m) : ((p, s) typed_address * p * tez)) : test_exec_result = CURRY.transfer_to_typed_address_exn ta p m
+    let michelson_equal ((v, w) : michelson_program * michelson_program) : bool = CURRY.michelson_equal v w
+  end
 end
 ")
 
@@ -1220,9 +1210,9 @@ let test_lib ~raise ~options : Environment.lib =
                          Ligo_compile.Utils.type_contract_string ~add_warning:(fun _ -> ()) ~options lib_syntax lib_code options.init_env in
   let install_lib = function
     | CameLIGO ->
-       [Location.wrap @@ Ast_typed.Module_alias { alias = "Test" ; binders = List.Ne.singleton "Internal__Test_curried" } ]
+       [Location.wrap @@ Ast_typed.Module_alias { alias = "Test" ; binders = List.Ne.of_list ["Internal__Test"; "CURRY"] } ]
     | ReasonLIGO | PascaLIGO | JsLIGO ->
-       [Location.wrap @@ Ast_typed.Module_alias { alias = "Test" ; binders = List.Ne.singleton "Internal__Test_uncurried" } ] in
+       [Location.wrap @@ Ast_typed.Module_alias { alias = "Test" ; binders = List.Ne.of_list ["Internal__Test"; "UNCURRY"] } ] in
   Environment.{ code ; install_lib }
 
 let eval_test ~raise ~steps ~options ~protocol_version : Ast_typed.module_ -> ((string * value) list) =

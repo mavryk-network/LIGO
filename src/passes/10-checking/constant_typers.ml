@@ -1039,11 +1039,6 @@ let test_get_balance ~raise loc = typer_1 ~raise loc "TEST_GET_BALANCE" @@ fun a
   let () = assert_eq_1 ~raise ~loc addr (t_address ()) in
   (t_mutez ())
 
-let test_michelson_equal ~raise loc = typer_2 ~raise loc "TEST_ASSERT_EQUAL" @@ fun x y ->
-  let () = trace_option ~raise (expected_michelson_code loc x) @@ assert_t_michelson_code x in
-  let () = trace_option ~raise (expected_michelson_code loc y) @@ assert_t_michelson_code y in
-  (t_bool ())
-
 let test_log ~raise loc = typer_1 ~raise loc "TEST_LOG" @@ fun _ -> t_unit ()
 
 let test_last_originations ~raise loc = typer_1 ~raise loc "TEST_LAST_ORIGINATIONS" @@ fun u ->
@@ -1308,7 +1303,6 @@ let rec constant_typers ~raise ~test ~protocol_version loc c : typer = match c w
   | C_TEST_EXTERNAL_CALL_TO_ADDRESS_EXN -> test_external_call_to_address_exn ~raise loc ;
   | C_TEST_GET_STORAGE_OF_ADDRESS -> test_get_storage_of_address ~raise loc ;
   | C_TEST_GET_BALANCE -> test_get_balance ~raise loc ;
-  | C_TEST_MICHELSON_EQUAL -> test_michelson_equal ~raise loc ;
   | C_TEST_GET_NTH_BS -> test_get_nth ~raise loc ;
   | C_TEST_LOG -> test_log ~raise loc ;
   | C_TEST_STATE_RESET -> test_state_reset ~raise loc ;
