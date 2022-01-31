@@ -7,7 +7,7 @@ module type Params = sig
   val raise : all raise
   val add_warning : Main_warnings.all -> unit
   val options : Compiler_options.t
-  val prefix_lang : (Ligo_compile.Helpers.meta -> Ast_typed.module_) option
+  val lib : Environment.lib option
 end
 
 module M (Params : Params) =
@@ -40,10 +40,11 @@ module M (Params : Params) =
       let make_module_alias : module_name -> file_name -> declaration =
         fun module_name file_name ->
         Location.wrap @@ (Ast_typed.Module_alias {alias=module_name;binders=file_name,[]}: Ast_typed.declaration)
+      let ast_lib : t = match Params.lib with | None -> [] | Some { code ; _ } -> code
     end
     let compile : AST.environment -> file_name -> meta_data -> compilation_unit -> AST.t =
       fun env file_name meta c_unit ->
-      let lib, env = match Params.prefix_lang with | None -> [], env | Some lib -> lib meta, Environment.append (lib meta) env in
+      let lib, env = match Params.lib with | None -> [], env | Some { code = _ ; install_lib } -> install_lib meta.syntax, Environment.append (install_lib meta.syntax) env in
       let options = {options with init_env = env } in
       let ast_core = Ligo_compile.Utils.to_core ~raise ~add_warning ~options ~meta c_unit file_name in
       let inferred = Ligo_compile.Of_core.infer ~raise ~options ast_core in
@@ -71,6 +72,7 @@ module Infer (Params : Params) = struct
       let make_module_alias : module_name -> file_name -> declaration =
         fun module_name file_name ->
         Location.wrap @@ (Ast_core.Module_alias {alias=module_name;binders=file_name,[]}: Ast_core.declaration)
+      let ast_lib : t = []
   end
 
   let compile : AST.environment -> file_name -> meta_data -> compilation_unit -> AST.t =
@@ -89,7 +91,7 @@ let dependency_graph ~raise ~add_warning : options:Compiler_options.t -> string 
       let raise = raise
       let add_warning = add_warning
       let options = options
-      let prefix_lang = None
+      let lib = None
     end) in
     dependency_graph file_name
 
@@ -99,7 +101,7 @@ let infer_contract ~raise ~add_warning : options:Compiler_options.t -> file_name
       let raise = raise
       let add_warning = add_warning
       let options = options
-      let prefix_lang = None
+      let lib = None
     end)) in
     trace ~raise build_error_tracer @@ from_result (compile_separate main_file_name)
 
@@ -109,7 +111,7 @@ let type_contract ~raise ~add_warning : options:Compiler_options.t -> string -> 
       let raise = raise
       let add_warning = add_warning
       let options = options
-      let prefix_lang = None
+      let lib = None
     end) in
     trace ~raise build_error_tracer @@ from_result (compile_separate file_name)
 
@@ -119,7 +121,7 @@ let combined_contract ~raise ~add_warning : options:Compiler_options.t -> 'a -> 
       let raise = raise
       let add_warning = add_warning
       let options = options
-      let prefix_lang = None
+      let lib = None
     end)) in
     let contract = trace ~raise build_error_tracer @@ from_result (compile_combined file_name) in
     let contract = Ligo_compile.Of_core.typecheck ~raise ~add_warning ~options Env contract in
@@ -132,7 +134,7 @@ let build_typed ~raise ~add_warning :
         let raise = raise
         let add_warning = add_warning
         let options = options
-        let prefix_lang = None
+        let lib = None
       end) in
       let contract = combined_contract ~raise ~add_warning ~options _syntax file_name in
       let applied =
@@ -208,13 +210,13 @@ let build_views ~raise ~add_warning :
 
 (* build_context builds a context to be used later for evaluation *)
 let build_context ~raise ~add_warning :
-  options:Compiler_options.t -> ?default:_ -> ?prefix_lang:_ -> string -> file_name -> Ast_typed.program =
-    fun ~options ?(default = []) ?prefix_lang _syntax file_name ->
+  options:Compiler_options.t -> ?lib:_ -> string -> file_name -> Ast_typed.program =
+    fun ~options ?lib _syntax file_name ->
       let open Build(struct
         let raise = raise
         let add_warning = add_warning
         let options = options
-        let prefix_lang = prefix_lang
+        let lib = lib
       end) in
-      let contract = trace ~raise build_error_tracer @@ Trace.from_result (compile_combined ~default file_name) in
+      let contract = trace ~raise build_error_tracer @@ Trace.from_result (compile_combined file_name) in
       contract

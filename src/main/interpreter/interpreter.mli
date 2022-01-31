@@ -7,5 +7,4 @@ val eval_test : raise:interpreter_error Simple_utils.Trace.raise
     -> Ast_typed.module_
     -> (Ast_aggregated.module_variable * Ligo_interpreter.Types.value) list
 
-val library : unit -> Ligo_compile.Helpers.meta * string
-val library_lang : Ligo_compile.Helpers.meta -> Ast_typed.module_
+val test_lib : raise:interpreter_error Simple_utils.Trace.raise -> options:Compiler_options.t -> Environment.lib

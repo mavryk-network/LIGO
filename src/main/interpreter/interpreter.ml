@@ -1190,7 +1190,9 @@ and eval_ligo ~raise ~steps ~protocol_version ~options : AST.expression -> callt
 
 and try_eval ~raise ~steps ~protocol_version ~options expr env state r = Monad.eval ~raise ~options (eval_ligo ~raise ~steps ~protocol_version ~options expr [] env) state r
 
-let library () : Ligo_compile.Helpers.meta * string = ({ syntax = CameLIGO }, "
+open Self_ast_imperative.Syntax
+
+let library () : v_syntax * string = (CameLIGO, "
 module Internal__Test_curried = struct
   let get_storage (type p s) (t : (p, s) typed_address) : s =
     let c : p contract = Test.to_contract t in
@@ -1212,11 +1214,16 @@ module Internal__Test_uncurried = struct
 end
 ")
 
-let library_lang : Ligo_compile.Helpers.meta -> Ast_typed.module_ = function
-  | { syntax = CameLIGO } ->
-     [Location.wrap @@ Ast_typed.Module_alias { alias = "Test" ; binders = List.Ne.singleton "Internal__Test_curried" } ]
-  | { syntax = ReasonLIGO | PascaLIGO | JsLIGO } ->
-     [Location.wrap @@ Ast_typed.Module_alias { alias = "Test" ; binders = List.Ne.singleton "Internal__Test_uncurried" } ]
+let test_lib ~raise ~options : Environment.lib =
+  let lib_syntax, lib_code = library () in
+  let code, _ = Trace.trace ~raise (fun _ -> Errors.generic_error Location.generated "Error compiling Test library") @@
+                         Ligo_compile.Utils.type_contract_string ~add_warning:(fun _ -> ()) ~options lib_syntax lib_code options.init_env in
+  let install_lib = function
+    | CameLIGO ->
+       [Location.wrap @@ Ast_typed.Module_alias { alias = "Test" ; binders = List.Ne.singleton "Internal__Test_curried" } ]
+    | ReasonLIGO | PascaLIGO | JsLIGO ->
+       [Location.wrap @@ Ast_typed.Module_alias { alias = "Test" ; binders = List.Ne.singleton "Internal__Test_uncurried" } ] in
+  Environment.{ code ; install_lib }
 
 let eval_test ~raise ~steps ~options ~protocol_version : Ast_typed.module_ -> ((string * value) list) =
   fun prg ->

@@ -21,6 +21,7 @@ module type M =
       val add_module_to_env : module_name -> environment -> environment -> environment
       val add_ast_to_env : t -> environment -> environment
       val init_env : environment
+      val ast_lib : t
 
       (* This should probably be taken in charge be the compiler, which should be able to handle "libraries" *)
       val make_module_declaration : module_name -> t -> declaration
@@ -82,7 +83,7 @@ module Make (M : M) =
       let order = TopSort.fold aux dep_g [] in
       Ok (order)
 
-  let aggregate_dependencies_as_headers ~default order_deps asts_typed =
+  let aggregate_dependencies_as_headers order_deps asts_typed =
     (* Add the module at the beginning of the file *)
     let aux map (file_name,(_,_,deps_lst)) =
       let (ast,_) =
@@ -122,7 +123,7 @@ module Make (M : M) =
     in
     let _,header_list = List.fold_map_right ~f:add_modules ~init:(SMap.empty) @@ order_deps in
     let aggregated = List.fold_left ~f:(fun c a ->  a::c) ~init:contract (header_list) in
-    default @ aggregated
+    M.AST.ast_lib @ aggregated
 
   let add_modules_in_env (env : M.AST.environment) deps =
     let aux env (module_name, (_,ast)) = 
@@ -158,13 +159,13 @@ module Make (M : M) =
         Ok (fst @@ SMap.find main_file_name asts_typed)
       | Error e -> Error e
 
-  let compile_combined ?(default = []) : file_name -> ast build_error =
+  let compile_combined : file_name -> ast build_error =
     fun file_name ->
       let deps = dependency_graph file_name in
       match solve_graph deps file_name with
         Ok (ordered_deps) ->
         let asts_typed = List.fold ~f:(compile_file_with_deps) ~init:(SMap.empty) ordered_deps in
-        let contract = aggregate_dependencies_as_headers ~default ordered_deps asts_typed in
+        let contract = aggregate_dependencies_as_headers ordered_deps asts_typed in
         Ok(contract)
       | Error e -> Error e
   end    

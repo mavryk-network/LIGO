@@ -22,3 +22,9 @@ val init_core       : Ast_core.module' -> core
 val to_program      : t -> Ast_typed.program
 val to_core_program : core -> Ast_core.module'
 val append_core     : Ast_core.module' -> core -> core
+
+type lib = {
+    code : Ast_typed.module_ ;
+    install_lib : Self_ast_imperative.Syntax.v_syntax -> Ast_typed.module_
+}
+

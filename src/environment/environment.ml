@@ -2,7 +2,6 @@ open Ast_typed
 open Stage_common.Constant
 module Protocols = Protocols
 
-
 (* This is an env use by repl and build *)
 (* Environment records declarations already seen in reverse orders. Use for different kind of processes *)
 type t = module_
@@ -101,3 +100,8 @@ let default : Protocols.t -> t = function
 let default_with_test : Protocols.t -> t = function
   | Protocols.Edo -> of_list_type (meta_ligo_types edo_types)
   | Protocols.Hangzhou -> of_list_type (meta_ligo_types hangzhou_types)
+
+type lib = {
+    code : module_ ;
+    install_lib : Self_ast_imperative.Syntax.v_syntax -> module_
+}

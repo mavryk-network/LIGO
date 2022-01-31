@@ -124,12 +124,11 @@ let compile_groups ~raise filename grp_list =
       | Meta ->
         let init_env = Environment.default_with_test options.protocol_version in
         let options = { options with init_env ; test = true } in
-        let ({ syntax = lib_lang } : Ligo_compile.Helpers.meta), lib_code = Interpreter.library () in
-        let library_prg, _ = Ligo_compile.Utils.type_contract_string ~raise ~add_warning ~options lib_lang lib_code options.init_env in
-        let library_prefix = Interpreter.library_lang meta in
-        let options = { options with init_env = Environment.append library_prefix @@ Environment.append library_prg options.init_env } in
+        let test_lib = Interpreter.test_lib ~raise ~options in
+        let install_lib = test_lib.install_lib meta.syntax in
+        let options = { options with init_env = Environment.append install_lib @@ Environment.append test_lib.code options.init_env } in
         let typed   = Ligo_compile.Of_core.typecheck ~raise ~add_warning ~options Env inferred in
-        let _ = Interpreter.eval_test ~protocol_version ~options ~raise ~steps:5000 (library_prg @ library_prefix @ typed) in
+        let _ = Interpreter.eval_test ~protocol_version ~options ~raise ~steps:5000 (test_lib.code @ install_lib @ typed) in
         ()
       | Object ->
         let typed     = Ligo_compile.Of_core.typecheck ~raise ~add_warning ~options Env inferred in
