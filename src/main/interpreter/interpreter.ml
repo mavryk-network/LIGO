@@ -1179,6 +1179,10 @@ module Internal__Test = struct
       s
     let compile_value (type a) (x : a) : michelson_program = Test.eval x
     let to_address (type p s) (t : (p, s) typed_address) : address = Tezos.address (Test.to_contract t)
+    let transfer_to_contract (type p) (c : p contract) (p : p) (m : tez) : test_exec_result =
+      let a : address = Tezos.address c in
+      let mp : michelson_program = Test.eval p in
+      Test.transfer a mp m
     let transfer_to_contract_exn (type p) (c : p contract) (p : p) (m : tez) : nat =
       let a : address = Tezos.address c in
       let mp : michelson_program = Test.eval p in
@@ -1192,6 +1196,7 @@ module Internal__Test = struct
     let get_storage (type p s) (t : (p, s) typed_address) : s = CURRY.get_storage t
     let compile_value (type a) (x : a) : michelson_program = CURRY.compile_value x
     let to_address (type p s) (t : (p, s) typed_address) : address = CURRY.to_address t
+    let transfer_to_contract (type p) ((c, p, m) : p contract * p * tez) : test_exec_result = CURRY.transfer_to_contract c p m
     let transfer_to_contract_exn (type p) ((c, p, m) : p contract * p * tez) : nat = CURRY.transfer_to_contract_exn c p m
     let transfer_to_typed_address_exn (type p s) ((ta, p, m) : (p, s) typed_address * p * tez) : nat = CURRY.transfer_to_typed_address_exn ta p m
     let michelson_equal ((v, w) : michelson_program * michelson_program) : bool = CURRY.michelson_equal v w
