@@ -1007,12 +1007,6 @@ let test_get_nth ~raise loc = typer_1 ~raise loc "TEST_GET_NTH" @@ fun n ->
   let () = trace_option ~raise (expected_int loc n) @@ assert_t_int n in
   (t_address ())
 
-let test_external_call_to_contract ~raise loc = typer_3 ~raise loc "TEST_EXTERNAL_CALL_TO_CONTRACT" @@ fun addr p amt  ->
-  let contract_ty = trace_option ~raise (expected_contract loc addr) @@ get_t_contract addr in
-  let () = assert_eq_1 ~raise ~loc amt (t_mutez ()) in
-  let () = assert_eq_1 ~raise ~loc p contract_ty in
-  (t_test_exec_result ())
-
 let test_external_call_to_address_exn ~raise loc = typer_3 ~raise loc "TEST_EXTERNAL_CALL_TO_ADDRESS_EXN" @@ fun addr p amt  ->
   let () = assert_eq_1 ~raise ~loc addr (t_address ()) in
   let () = assert_eq_1 ~raise ~loc amt (t_mutez ()) in
@@ -1291,7 +1285,6 @@ let rec constant_typers ~raise ~test ~protocol_version loc c : typer = match c w
   | C_TEST_SET_NOW -> test_set_now ~raise loc ;
   | C_TEST_SET_SOURCE -> test_set_source ~raise loc ;
   | C_TEST_SET_BAKER -> test_set_source ~raise loc ;
-  | C_TEST_EXTERNAL_CALL_TO_CONTRACT -> test_external_call_to_contract ~raise loc ;
   | C_TEST_EXTERNAL_CALL_TO_ADDRESS -> test_external_call_to_address ~raise loc ;
   | C_TEST_EXTERNAL_CALL_TO_ADDRESS_EXN -> test_external_call_to_address_exn ~raise loc ;
   | C_TEST_GET_STORAGE_OF_ADDRESS -> test_get_storage_of_address ~raise loc ;

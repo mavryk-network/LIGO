@@ -176,7 +176,6 @@ module Tree_abstraction = struct
     | "Test.set_now" -> some_const C_TEST_SET_NOW
     | "Test.set_source" -> some_const C_TEST_SET_SOURCE
     | "Test.set_baker" -> some_const C_TEST_SET_BAKER
-    (* | "Test.transfer_to_contract" -> some_const C_TEST_EXTERNAL_CALL_TO_CONTRACT *)
     | "Test.transfer" -> some_const C_TEST_EXTERNAL_CALL_TO_ADDRESS
     | "Test.transfer_exn" -> some_const C_TEST_EXTERNAL_CALL_TO_ADDRESS_EXN
     | "Test.get_storage_of_address" -> some_const C_TEST_GET_STORAGE_OF_ADDRESS
@@ -361,7 +360,6 @@ module Tree_abstraction = struct
     | C_TEST_SET_NOW -> "Test.set_now"
     | C_TEST_SET_SOURCE -> "Test.set_source"
     | C_TEST_SET_BAKER -> "Test.set_baker"
-    (* | C_TEST_EXTERNAL_CALL_TO_CONTRACT -> "Test.transfer_to_contract" *)
     | C_TEST_EXTERNAL_CALL_TO_ADDRESS -> "Test.transfer"
     | C_TEST_EXTERNAL_CALL_TO_ADDRESS_EXN -> "Test.transfer_exn"
     | C_TEST_GET_STORAGE_OF_ADDRESS -> "Test.get_storage_of_address"
