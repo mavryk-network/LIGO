@@ -574,6 +574,8 @@ let%expect_test _ =
   run_ligo_bad [ "run" ; "test" ; bad_test "test_source2.mligo" ] ;
   [%expect {|
     The source address is not an implicit account
+    Trace:
+    File "../../test/contracts/negative//interpreter_tests/test_source2.mligo", line 10, characters 10-52
     KT1EaZdMJaW3jgoYLwKJSjuUFA6qoKCPjiie |}]
 
 let%expect_test _ =
