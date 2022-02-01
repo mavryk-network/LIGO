@@ -170,8 +170,8 @@ let compile_constant' : AST.constant' -> constant' = function
       | C_TEST_SET_NOW
       | C_TEST_SET_SOURCE
       | C_TEST_SET_BAKER
-      | C_TEST_EXTERNAL_CALL_TO_ADDRESS
-      | C_TEST_EXTERNAL_CALL_TO_ADDRESS_EXN
+      | C_TEST_EXTERNAL_CALL
+      | C_TEST_EXTERNAL_CALL_EXN
       | C_TEST_GET_STORAGE_OF_ADDRESS
       | C_TEST_GET_BALANCE
       | C_TEST_LOG

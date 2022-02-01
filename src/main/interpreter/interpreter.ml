@@ -701,18 +701,16 @@ let rec apply_operator ~raise ~steps ~protocol_version ~options : Location.t -> 
         return @@ V_Record (LMap.of_list [ (Label "0", addr) ; (Label "1", code) ; (Label "2", size) ])
       | _ -> fail @@ Errors.generic_error loc "Unbound primitive. Check the protocol version you are using"
     )
-    | ( C_TEST_EXTERNAL_CALL_TO_ADDRESS_EXN , [ (V_Ct (C_address address)) ; V_Michelson (Ty_code { code = param ; _ }) ; V_Ct ( C_mutez amt ) ] ) -> (
-      let contract = { address; entrypoint = None } in
+    | ( C_TEST_EXTERNAL_CALL_EXN , [ (V_Ct (C_contract contract)) ; V_Michelson (Ty_code { code = param ; _ }) ; V_Ct ( C_mutez amt ) ] ) -> (
       let>> res = External_call (loc,calltrace,contract,param,amt) in
       return_contract_exec_exn res
     )
-    | ( C_TEST_EXTERNAL_CALL_TO_ADDRESS_EXN , _  ) -> fail @@ error_type
-    | ( C_TEST_EXTERNAL_CALL_TO_ADDRESS , [ (V_Ct (C_address address)) ; V_Michelson (Ty_code { code = param ; _ }) ; V_Ct ( C_mutez amt ) ] ) -> (
-      let contract = { address; entrypoint = None } in
+    | ( C_TEST_EXTERNAL_CALL_EXN , _  ) -> fail @@ error_type
+    | ( C_TEST_EXTERNAL_CALL , [ (V_Ct (C_contract contract)) ; V_Michelson (Ty_code { code = param ; _ }) ; V_Ct ( C_mutez amt ) ] ) -> (
       let>> res = External_call (loc,calltrace,contract,param,amt) in
       return_contract_exec res
     )
-    | ( C_TEST_EXTERNAL_CALL_TO_ADDRESS , _  ) -> fail @@ error_type
+    | ( C_TEST_EXTERNAL_CALL , _  ) -> fail @@ error_type
     | ( C_TEST_SET_NOW , [ V_Ct (C_timestamp t) ] ) ->
       let>> () = Set_now (loc,calltrace,t) in
       return_ct C_unit
@@ -1169,14 +1167,20 @@ module Internal__Test = struct
       s
     let compile_value (type a) (x : a) : michelson_program = Test.eval x
     let to_address (type p s) (t : (p, s) typed_address) : address = Tezos.address (Test.to_contract t)
+    let transfer (a : address) (mp : michelson_program) (m : tez) : test_exec_result =
+      let ta : (unit, unit) typed_address = Test.cast_address a in
+      let c : unit contract = Test.to_contract ta in
+      Test.transfer_ c mp m
+    let transfer_exn (a : address) (mp : michelson_program) (m : tez) : nat =
+      let ta : (unit, unit) typed_address = Test.cast_address a in
+      let c : unit contract = Test.to_contract ta in
+      Test.transfer_exn_ c mp m
     let transfer_to_contract (type p) (c : p contract) (p : p) (m : tez) : test_exec_result =
-      let a : address = Tezos.address c in
       let mp : michelson_program = Test.eval p in
-      Test.transfer a mp m
+      Test.transfer_ c mp m
     let transfer_to_contract_exn (type p) (c : p contract) (p : p) (m : tez) : nat =
-      let a : address = Tezos.address c in
       let mp : michelson_program = Test.eval p in
-      Test.transfer_exn a mp m
+      Test.transfer_exn_ c mp m
     let transfer_to_typed_address_exn (type p s) (ta : (p, s) typed_address) (p : p) (m : tez) : nat =
       let c : p contract = Test.to_contract ta in
       transfer_to_contract_exn c p m
@@ -1186,6 +1190,8 @@ module Internal__Test = struct
     let get_storage (type p s) (t : (p, s) typed_address) : s = CURRY.get_storage t
     let compile_value (type a) (x : a) : michelson_program = CURRY.compile_value x
     let to_address (type p s) (t : (p, s) typed_address) : address = CURRY.to_address t
+    let transfer ((a, p, m) : address * michelson_program * tez) : test_exec_result = CURRY.transfer a p m
+    let transfer_exn ((a, p, m) : address * michelson_program * tez) : nat = CURRY.transfer_exn a p m
     let transfer_to_contract (type p) ((c, p, m) : p contract * p * tez) : test_exec_result = CURRY.transfer_to_contract c p m
     let transfer_to_contract_exn (type p) ((c, p, m) : p contract * p * tez) : nat = CURRY.transfer_to_contract_exn c p m
     let transfer_to_typed_address_exn (type p s) ((ta, p, m) : (p, s) typed_address * p * tez) : nat = CURRY.transfer_to_typed_address_exn ta p m

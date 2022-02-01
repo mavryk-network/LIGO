@@ -573,11 +573,6 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_bad [ "run" ; "test" ; bad_test "test_source2.mligo" ] ;
   [%expect {|
-    File "../../test/contracts/negative//interpreter_tests/test_source2.mligo", line 10, characters 10-52:
-      9 |   let () = Test.set_source addr in
-     10 |   let _ = Test.transfer_exn addr (Test.eval ()) 0tez in
-     11 |   ()
-
     The source address is not an implicit account
     KT1EaZdMJaW3jgoYLwKJSjuUFA6qoKCPjiie |}]
 
