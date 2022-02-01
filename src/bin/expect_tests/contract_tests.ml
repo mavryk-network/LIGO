@@ -1920,10 +1920,10 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_bad [ "compile" ; "contract" ; bad_contract "compile_test.mligo" ] ;
   [%expect{|
-    File "../../test/contracts/negative/compile_test.mligo", line 23, characters 3-19:
+    File "../../test/contracts/negative/compile_test.mligo", line 22, characters 11-40:
+     21 |   let contr = Test.to_contract(taddr) in
      22 |   let _r = Test.transfer_to_contract_exn contr (Increment (32)) 1tez  in
      23 |   (Test.get_storage(taddr) = initial_storage + 32)
-     24 | let test = _test ()
 
     Module "Test" not found. |}]
 
