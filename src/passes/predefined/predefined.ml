@@ -191,7 +191,7 @@ module Tree_abstraction = struct
     | "Test.mutation_test_all" -> some_const C_TEST_MUTATION_TEST_ALL
     | "Test.save_mutation" -> some_const C_TEST_SAVE_MUTATION
     | "Test.run" -> some_const C_TEST_RUN
-    | "Test.eval" -> some_const C_TEST_EVAL
+    (* | "Test.eval" -> some_const C_TEST_EVAL *)
     | "Test.compile_contract" -> some_const C_TEST_COMPILE_CONTRACT
     | "Test.decompile" -> some_const C_TEST_DECOMPILE
     | "Test.to_contract" -> some_const C_TEST_TO_CONTRACT
@@ -375,7 +375,7 @@ module Tree_abstraction = struct
     | C_TEST_MUTATION_TEST_ALL -> "Test.mutation_test_all"
     | C_TEST_SAVE_MUTATION -> "Test.save_mutation"
     | C_TEST_RUN -> "Test.run"
-    | C_TEST_EVAL -> "Test.eval"
+    (* | C_TEST_EVAL -> "Test.eval" *)
     | C_TEST_COMPILE_CONTRACT -> "Test.compile_contract"
     | C_TEST_DECOMPILE -> "Test.decompile"
     | C_TEST_TO_CONTRACT -> "Test.to_contract"

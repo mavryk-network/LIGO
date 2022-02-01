@@ -743,6 +743,17 @@ let rec apply_operator ~raise ~steps ~protocol_version ~options : Location.t -> 
        let>> () = Bootstrap_contract ((Z.to_int z), code, storage, contract_ty) in
        return_ct C_unit
     | ( C_TEST_BOOTSTRAP_CONTRACT , _  ) -> fail @@ error_type
+    | ( C_TEST_NTH_BOOTSTRAP_TYPED_ADDRESS , [ V_Ct (C_nat n) ] ) ->
+      let n = Z.to_int n in
+      let* parameter_ty', storage_ty' = monad_option (Errors.generic_error loc "Expected typed address") @@
+                                          AST.get_t_typed_address expr_ty in
+      let>> (address, parameter_ty, storage_ty) = Nth_bootstrap_typed_address (loc, n) in
+      let* () = monad_option (Errors.generic_error loc "Parameter in bootstrap contract does not match") @@
+                   AST.Helpers.assert_type_expression_eq (parameter_ty, parameter_ty') in
+      let* () = monad_option (Errors.generic_error loc "Storage in bootstrap contract does not match") @@
+                   AST.Helpers.assert_type_expression_eq (storage_ty, storage_ty') in
+      return_ct (C_address address)
+    | ( C_TEST_NTH_BOOTSTRAP_TYPED_ADDRESS , _  ) -> fail @@ error_type
     | ( C_TEST_NTH_BOOTSTRAP_CONTRACT , [ V_Ct (C_nat n) ] ) ->
        let n = Z.to_int n in
        let>> address = Nth_bootstrap_contract n in
@@ -880,17 +891,6 @@ let rec apply_operator ~raise ~steps ~protocol_version ~options : Location.t -> 
        let>> addr  = Inject_script (loc, calltrace, code, storage, amt) in
        return @@ V_Record (LMap.of_list [ (Label "0", addr) ; (Label "1", code) ; (Label "2", size) ])
     | ( C_TEST_ORIGINATE , _  ) -> fail @@ error_type
-    | ( C_TEST_NTH_BOOTSTRAP_TYPED_ADDRESS , [ V_Ct (C_nat n) ] ) ->
-      let n = Z.to_int n in
-      let* parameter_ty', storage_ty' = monad_option (Errors.generic_error loc "Expected typed address") @@
-                                          AST.get_t_typed_address expr_ty in
-      let>> (address, parameter_ty, storage_ty) = Nth_bootstrap_typed_address (loc, n) in
-      let* () = monad_option (Errors.generic_error loc "Parameter in bootstrap contract does not match") @@
-                   AST.Helpers.assert_type_expression_eq (parameter_ty, parameter_ty') in
-      let* () = monad_option (Errors.generic_error loc "Storage in bootstrap contract does not match") @@
-                   AST.Helpers.assert_type_expression_eq (storage_ty, storage_ty') in
-      return_ct (C_address address)
-    | ( C_TEST_NTH_BOOTSTRAP_TYPED_ADDRESS , _  ) -> fail @@ error_type
     | ( C_TEST_RANDOM , [ V_Ct (C_unit) ] ) ->
       let expr_gen = QCheck.Gen.generate1 (Mutation.expr_gen ~raise expr_ty)  in
       let* value = eval_ligo expr_gen calltrace env in
@@ -1168,7 +1168,8 @@ module Internal__Test = struct
       let s : michelson_program = Test.get_storage_of_address a in
       let s : s = Test.decompile s in
       s
-    let compile_value (type a) (x : a) : michelson_program = Test.eval x
+    let eval (type a) (x : a) : michelson_program = Test.run (fun (x : a) -> x) x
+    let compile_value (type a) (x : a) : michelson_program = Test.run (fun (x : a) -> x) x
     let to_address (type p s) (t : (p, s) typed_address) : address = Tezos.address (Test.to_contract t)
     let transfer (a : address) (mp : michelson_program) (m : tez) : test_exec_result =
       let ta : (unit, unit) typed_address = Test.cast_address a in
@@ -1179,10 +1180,10 @@ module Internal__Test = struct
       let c : unit contract = Test.to_contract ta in
       Test.transfer_exn_ c mp m
     let transfer_to_contract (type p) (c : p contract) (p : p) (m : tez) : test_exec_result =
-      let mp : michelson_program = Test.eval p in
+      let mp : michelson_program = eval p in
       Test.transfer_ c mp m
     let transfer_to_contract_exn (type p) (c : p contract) (p : p) (m : tez) : nat =
-      let mp : michelson_program = Test.eval p in
+      let mp : michelson_program = eval p in
       Test.transfer_exn_ c mp m
     let transfer_to_typed_address_exn (type p s) (ta : (p, s) typed_address) (p : p) (m : tez) : nat =
       let c : p contract = Test.to_contract ta in
@@ -1191,6 +1192,7 @@ module Internal__Test = struct
   end
   module UNCURRY = struct
     let get_storage (type p s) (t : (p, s) typed_address) : s = CURRY.get_storage t
+    let eval (type a) (x : a) : michelson_program = CURRY.eval x
     let compile_value (type a) (x : a) : michelson_program = CURRY.compile_value x
     let to_address (type p s) (t : (p, s) typed_address) : address = CURRY.to_address t
     let transfer ((a, p, m) : address * michelson_program * tez) : test_exec_result = CURRY.transfer a p m
