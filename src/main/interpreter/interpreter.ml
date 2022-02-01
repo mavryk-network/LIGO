@@ -1205,9 +1205,9 @@ end
 ")
 
 let test_lib ~raise ~options : Environment.lib =
-  let lib_syntax, lib_code = library () in
+  let ligo_syntax, ligo_code = library () in
   let code, _ = Trace.trace ~raise (fun _ -> Errors.generic_error Location.generated "Error compiling Test library") @@
-                         Ligo_compile.Utils.type_contract_string ~add_warning:(fun _ -> ()) ~options lib_syntax lib_code options.init_env in
+                         Ligo_compile.Utils.type_contract_string ~add_warning:(fun _ -> ()) ~options ligo_syntax ligo_code options.init_env in
   let install_lib = function
     | S.CameLIGO ->
        [Location.wrap @@ Ast_typed.Module_alias { alias = "Test" ; binders = List.Ne.of_list ["Internal__Test"; "CURRY"] } ]
