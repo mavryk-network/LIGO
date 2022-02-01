@@ -368,7 +368,7 @@ type 'a t =
 let rec eval
   : type a.
     raise:Errors.interpreter_error raise ->
-    options:Compiler_options.t ->  
+    options:Compiler_options.t ->
     a t ->
     Tezos_state.context ->
     execution_trace ref option ->
