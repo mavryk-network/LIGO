@@ -136,7 +136,7 @@ let get_storage ~raise ~loc ~calltrace ctxt addr =
           ~fitness:ctxt.raw.header.shell.fitness
           ctxt.raw.context
     in
-    fst @@ Trace.trace_alpha_tzresult_lwt ~raise (throw_obj_exc loc calltrace) @@ 
+    fst @@ Trace.trace_alpha_tzresult_lwt ~raise (throw_obj_exc loc calltrace) @@
       Tezos_protocol.Protocol.Script_ir_translator.parse_toplevel alpha_context ~legacy:false x
   in
   let storage_type = Tezos_micheline.Micheline.(inject_locations (fun _ -> ()) (strip_locations storage_type)) in
@@ -346,7 +346,7 @@ let get_single_tx_result (x : Tezos_raw_protocol.Apply_results.packed_operation_
   | Operation_metadata ({contents = Single_result y} : _ Tezos_raw_protocol.Apply_results.operation_metadata)  -> (
     match y with
     | Manager_operation_result { operation_result = Applied (
-          Transaction_result { consumed_gas ; _ } 
+          Transaction_result { consumed_gas ; _ }
         | Origination_result { consumed_gas ; _ }
         | Delegation_result { consumed_gas ; _ }
         | Register_global_constant_result { consumed_gas ; _ } )
