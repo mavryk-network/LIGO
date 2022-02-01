@@ -1157,6 +1157,9 @@ and try_eval ~raise ~steps ~protocol_version ~options expr env state r = Monad.e
 module S = Self_ast_imperative.Syntax
 
 let library () : S.v_syntax * string = (CameLIGO, "
+type test_exec_error = Rejected of (michelson_program * address) | Other
+type test_exec_result = Success of nat | Fail of test_exec_error
+
 module Internal__Test = struct
   module CURRY = struct
     let get_storage (type p s) (t : (p, s) typed_address) : s =
