@@ -1057,9 +1057,6 @@ let test_run ~raise loc = typer_2 ~raise loc "TEST_RUN" @@ fun lambda expr ->
   let () = assert_eq_1 ~raise ~loc arg expr in
   (t_michelson_code ())
 
-let test_eval ~raise loc = typer_1 ~raise loc "TEST_EVAL" @@ fun _ ->
-  (t_michelson_code ())
-
 let test_decompile ~raise loc = typer_1_opt ~raise loc "TEST_DECOMPILE" @@ fun mich tv_opt ->
   let () = trace_option ~raise (expected_michelson_code loc mich) @@ get_t_michelson_code mich in
   match tv_opt with
@@ -1299,7 +1296,6 @@ let rec constant_typers ~raise ~test ~protocol_version loc c : typer = match c w
   | C_TEST_MUTATION_TEST -> test_mutation_test ~raise loc ;
   | C_TEST_MUTATION_TEST_ALL -> test_mutation_test_all ~raise loc ;
   | C_TEST_RUN -> test_run ~raise loc ;
-  | C_TEST_EVAL -> test_eval ~raise loc ;
   | C_TEST_COMPILE_CONTRACT -> test_compile_contract ~raise loc ;
   | C_TEST_DECOMPILE -> test_decompile ~raise loc ;
   | C_TEST_TO_CONTRACT -> test_to_contract ~raise loc ;

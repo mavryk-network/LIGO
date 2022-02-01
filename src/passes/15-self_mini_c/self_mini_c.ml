@@ -186,7 +186,6 @@ let is_pure_constant : constant' -> bool =
   | C_TEST_MUTATION_TEST_ALL
   | C_TEST_SAVE_MUTATION
   | C_TEST_RUN
-  | C_TEST_EVAL
   | C_TEST_COMPILE_CONTRACT
   | C_TEST_DECOMPILE
   | C_TEST_TO_CONTRACT
