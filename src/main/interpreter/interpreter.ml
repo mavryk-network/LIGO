@@ -1176,9 +1176,9 @@ and eval_ligo ~raise ~steps ~protocol_version ~options : AST.expression -> callt
 
 and try_eval ~raise ~steps ~protocol_version ~options expr env state r = Monad.eval ~raise ~options (eval_ligo ~raise ~steps ~protocol_version ~options expr [] env) state r
 
-open Self_ast_imperative.Syntax
+module S = Self_ast_imperative.Syntax
 
-let library () : v_syntax * string = (CameLIGO, "
+let library () : S.v_syntax * string = (CameLIGO, "
 module Internal__Test = struct
   module CURRY = struct
     let get_storage (type p s) (t : (p, s) typed_address) : s =
@@ -1209,9 +1209,9 @@ let test_lib ~raise ~options : Environment.lib =
   let code, _ = Trace.trace ~raise (fun _ -> Errors.generic_error Location.generated "Error compiling Test library") @@
                          Ligo_compile.Utils.type_contract_string ~add_warning:(fun _ -> ()) ~options lib_syntax lib_code options.init_env in
   let install_lib = function
-    | CameLIGO ->
+    | S.CameLIGO ->
        [Location.wrap @@ Ast_typed.Module_alias { alias = "Test" ; binders = List.Ne.of_list ["Internal__Test"; "CURRY"] } ]
-    | ReasonLIGO | PascaLIGO | JsLIGO ->
+    | S.ReasonLIGO | S.PascaLIGO | S.JsLIGO ->
        [Location.wrap @@ Ast_typed.Module_alias { alias = "Test" ; binders = List.Ne.of_list ["Internal__Test"; "UNCURRY"] } ] in
   Environment.{ code ; install_lib }
 
