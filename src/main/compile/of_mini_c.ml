@@ -11,10 +11,6 @@ let dummy_locations : 'l 'p. ('l, 'p) Micheline.node -> (Location.t, 'p) Micheli
   Micheline.(inject_locations (fun _ -> Location.dummy) (strip_locations e))
 
 let compile_contract ~raise : options:Compiler_options.t -> expression -> Stacking.compiled_expression  = fun ~options e ->
-  let e = Wasm_pass.Lift.toplevel e in
-  Format.pp_print_flush Format.std_formatter ();
-  print_endline "Testing:";
-  Mini_c.PP.expression Format.std_formatter e;
   let (input_ty , _) = trace ~raise self_mini_c_tracer @@ Self_mini_c.get_t_function e.type_expression in
   let contract : anon_function = trace ~raise self_mini_c_tracer @@ Self_mini_c.get_function_or_eta_expand e in
   let contract = { contract with body = Self_mini_c.all_expression ~raise contract.body} in
