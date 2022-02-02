@@ -1,0 +1,4 @@
+author: er433
+merge_request: '1518'
+title: 'Testing framework: implement (part of) Test module as a library'
+type: internal
