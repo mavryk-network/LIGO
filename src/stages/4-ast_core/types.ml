@@ -11,11 +11,11 @@ type string_option = string option [@@deriving sexp]
 
 type type_attribute = {
   public: bool;
-} [@@deriving sexp]
+}
 
 and module_attribute = {
   public: bool;
-} [@@deriving sexp]
+}
 
 and module_ = declaration Location.wrap list
 
@@ -161,7 +161,7 @@ and environment = {
   expression_environment: expression_environment ;
   type_environment: type_environment ;
   module_environment : module_environment ;
-  }
+  } [@@deriving sexp]
 
 (* Solver types
 

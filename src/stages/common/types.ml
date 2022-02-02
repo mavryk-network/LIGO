@@ -267,7 +267,7 @@ and ('exp,'ty_expr) declaration_module = {
 and module_alias = {
     alias   : module_variable ;
     binders : module_variable List.Ne.t;
-} [@@deriving sexp]
+}
 
 (* Module types *)
 
@@ -280,17 +280,17 @@ and ('exp,'ty_exp) declaration' =
 
 (* Program types *)
 
-and ('exp,'ty_exp) module' = ('exp,'ty_exp) declaration' location_wrap list
+and ('exp,'ty_exp) module' = ('exp,'ty_exp) declaration' location_wrap list [@@deriving sexp]
 
 
 type ('exp,'type_exp) mod_in = {
   module_binder : module_variable ;
   rhs           : ('exp,'type_exp) module' ;
   let_result    : 'exp ;
-} [@@deriving sexp]
+}
 
 and 'exp mod_alias = {
   alias   : module_variable ;
   binders : module_variable List.Ne.t;
   result  : 'exp ;
-}
+} [@@deriving sexp]

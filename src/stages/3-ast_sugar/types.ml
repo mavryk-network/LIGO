@@ -13,8 +13,8 @@ type type_content =
   | T_abstraction     of ty_expr abstraction
   | T_for_all         of ty_expr abstraction
 
-and type_expression = {type_content: type_content; location: Location.t} [@@deriving sexp]
-and ty_expr = type_expression
+and type_expression = {type_content: type_content; location: Location.t}
+and ty_expr = type_expression [@@deriving sexp]
 
 
 type module_ = (expr,ty_expr) module'
@@ -22,7 +22,7 @@ type module_ = (expr,ty_expr) module'
 and declaration = (expr,ty_expr) declaration'
 
 (* | Macro_declaration of macro_declaration *)
-and expression = {expression_content: expression_content; location: Location.t} [@@deriving sexp]
+and expression = {expression_content: expression_content; location: Location.t}
 and expr = expression
 
 and expression_content =
@@ -68,4 +68,4 @@ and let_in = {
   mut: bool;
 }
 
-and matching = (expression , type_expression) match_exp
+and matching = (expression , type_expression) match_exp [@@deriving sexp]
