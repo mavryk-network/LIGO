@@ -1,3 +1,4 @@
+[@@@warning "-39"]
 module Location = Simple_utils.Location
 module Var      = Simple_utils.Var
 module List     = Simple_utils.List
