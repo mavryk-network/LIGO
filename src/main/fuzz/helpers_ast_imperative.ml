@@ -6,13 +6,13 @@ module Fold_helpers(M : Monad) = struct
 
   let bind_lmap (l:_ label_map) =
     let open LMap in
-    let aux k v prev =
+    let aux ~key:k ~data:v prev =
       let* prev' = prev in
       let* v' = v in
-      return @@ add k v' prev' in
-    fold aux l (return empty)
+      return @@ set ~key:k ~data:v' prev' in
+    fold ~f:aux l ~init:(return empty)
 
-  let bind_map_lmap f map = bind_lmap (LMap.map f map)
+  let bind_map_lmap f map = bind_lmap (LMap.map ~f: f map)
 
   type 'a monad = 'a t
   let ok x = return x

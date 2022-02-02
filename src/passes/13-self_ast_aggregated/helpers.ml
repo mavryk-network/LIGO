@@ -28,11 +28,11 @@ let rec fold_expression : ('a , 'err) folder -> 'a -> expression -> 'a = fun f i
     res
   )
   | E_record m -> (
-    let aux _ expr init =
+    let aux ~key:_ ~data:expr init =
       let res = fold_expression self init expr in
       res
     in
-    let res = LMap.fold aux m init in
+    let res = LMap.fold ~f:aux m ~init:init in
     res
   )
   | E_record_update {record;update} -> (
@@ -72,8 +72,8 @@ let rec iter_type_expression : ty_mapper -> type_expression -> unit = fun f t ->
   match t.type_content with
   | T_variable _ -> ()
   | T_constant x -> List.iter ~f:self x.parameters
-  | T_sum x -> List.iter ~f:(fun x -> self x.associated_type) (LMap.to_list x.content)
-  | T_record x -> List.iter ~f:(fun x -> self x.associated_type) (LMap.to_list x.content)
+  | T_sum x -> List.iter ~f:(fun x -> self x.associated_type) (LMap.data x.content)
+  | T_record x -> List.iter ~f:(fun x -> self x.associated_type) (LMap.data x.content)
   | T_arrow x ->
     let () = self x.type1 in
     self x.type2
@@ -97,7 +97,7 @@ let rec map_expression : 'err mapper -> expression -> expression = fun f e ->
     return @@ E_record_accessor {record; path}
   )
   | E_record m -> (
-    let m' = LMap.map self m in
+    let m' = LMap.map ~f: self m in
     return @@ E_record m'
   )
   | E_record_update {record; path; update} -> (
@@ -296,8 +296,8 @@ module Free_variables :
     | E_matching {matchee; cases} ->
       merge (self matchee)(get_fv_cases cases)
     | E_record m ->
-      let res = LMap.map self m in
-      let res = LMap.to_list res in
+      let res = LMap.map ~f: self m in
+      let res = LMap.data res in
       unions res
     | E_record_update {record;update} ->
       merge (self record) (self update)
@@ -318,7 +318,7 @@ module Free_variables :
         {modVarSet;moduleEnv;varSet=VarSet.remove pattern @@ varSet} in
       unions @@  List.map ~f:aux cases
     | Match_record {fields; body; tv = _} ->
-      let pattern = LMap.values fields |> List.map ~f:fst in
+      let pattern = LMap.data fields |> List.map ~f:fst in
       let {modVarSet;moduleEnv;varSet} = get_fv_expr body in
       {modVarSet;moduleEnv;varSet=List.fold_right pattern ~f:VarSet.remove ~init:varSet}
 

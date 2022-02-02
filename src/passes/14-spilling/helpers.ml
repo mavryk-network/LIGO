@@ -4,13 +4,13 @@ module Append_tree = Simple_utils.Tree.Append
 
 module LMap = AST.Types.LMap
 
-let list_of_lmap    m = List.rev @@ LMap.fold (fun _ v prev -> v :: prev) m []
-let kv_list_of_lmap m = List.rev @@ LMap.fold (fun k v prev -> (k, v) :: prev) m []
+let list_of_lmap    m = List.rev @@ LMap.fold ~f:(fun ~key:_ ~data:v prev -> v :: prev) m ~init:[]
+let kv_list_of_lmap m = List.rev @@ LMap.fold ~f:(fun ~key:k ~data:v prev -> (k, v) :: prev) m ~init:[]
 let list_of_map m = List.rev @@ Simple_utils.Map.String.fold (fun _ v prev -> v :: prev) m []
 let kv_list_of_map m = List.rev @@ Simple_utils.Map.String.fold (fun k v prev -> (k, v) :: prev) m []
 let lmap_of_kv_list lst =
   let open LMap in
-  List.fold_left ~f:(fun prev (k, v) -> add k v prev) ~init:empty lst
+  List.fold_left ~f:(fun prev (k, v) -> set ~key:k ~data:v prev) ~init:empty lst
 let map_of_kv_list lst =
   let open Simple_utils.Map.String in
   List.fold_left ~f:(fun prev (k, v) -> add k v prev) ~init:empty lst

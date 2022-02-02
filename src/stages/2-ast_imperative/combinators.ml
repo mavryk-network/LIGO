@@ -165,7 +165,7 @@ let e_bool ?loc   b : expression =
   else e_constructor ?loc "False" (e_unit ())
 let e_record ?loc map = make_e ?loc @@ E_record map
 let e_record_ez ?loc (lst : (string * expr) list) : expression =
-  let map = List.fold_left ~f:(fun m (x, y) -> LMap.add (Label x) y m) ~init:LMap.empty lst in
+  let map = List.fold_left ~f:(fun m (x, y) -> LMap.set ~key:(Label x) ~data:y m) ~init:LMap.empty lst in
   e_record ?loc map
 
 let make_option_typed ?loc e t_opt =
@@ -233,7 +233,7 @@ let extract_list : expression -> expression list option = fun e ->
 
 let extract_record : expression -> (label * expression) list option = fun e ->
   match e.expression_content with
-  | E_record lst -> Some (LMap.to_kv_list lst)
+  | E_record lst -> Some (LMap.to_alist lst)
   | _ -> None
 
 let extract_map : expression -> (expression * expression) list option = fun e ->

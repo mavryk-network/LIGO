@@ -168,7 +168,7 @@ let propagator : (selector_output, _) Type_variable_abstraction.Solver_types.pro
           "propagator: break_ctor: row"
       in
       let bindings =  
-        match List.map2 ~f:(fun x y -> (x,y)) (LMap.bindings a.tv_map) (LMap.bindings b.tv_map)
+        match List.map2 ~f:(fun x y -> (x,y)) (LMap.to_alist a.tv_map) (LMap.to_alist b.tv_map)
         with Ok a -> a | List.Or_unequal_lengths.Unequal_lengths -> raise.raise @@ (corner_case "TODO: different number of labels (List.length a.tv_map) (List.length b.tv_map)")
       in
       List.map ~f:aux bindings

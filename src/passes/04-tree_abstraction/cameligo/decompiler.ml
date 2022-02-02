@@ -82,7 +82,7 @@ let rec decompile_type_expr : AST.type_expression -> CST.type_expr = fun te ->
   match te.type_content with
     T_sum { attributes ; fields } ->
     let attributes = decompile_attributes attributes in
-    let lst = AST.LMap.to_kv_list fields in
+    let lst = AST.LMap.to_alist fields in
     let aux (AST.Label c, AST.{associated_type; attributes=row_attr; _}) =
       let constr = wrap c in
       let arg = decompile_type_expr associated_type in
@@ -96,7 +96,7 @@ let rec decompile_type_expr : AST.type_expression -> CST.type_expr = fun te ->
     let sum : CST.sum_type = {lead_vbar; variants; attributes} in
     return @@ CST.TSum (wrap sum)
   | T_record {fields; attributes} ->
-     let record = AST.LMap.to_kv_list fields in
+     let record = AST.LMap.to_alist fields in
      let aux (AST.Label c, AST.{associated_type; attributes=field_attr; _}) =
       let field_name = wrap c in
       let colon = ghost in
@@ -372,7 +372,7 @@ let rec decompile_expression : AST.expression -> CST.expr = fun expr ->
     let cases : _ CST.case = {kwd_match=ghost;expr;kwd_with=ghost;lead_vbar=None;cases} in
     return_expr @@ CST.ECase (wrap cases)
   | E_record record ->
-    let record = AST.LMap.to_kv_list record in
+    let record = AST.LMap.to_alist record in
     let aux (AST.Label str, expr) =
       let field_name = wrap str in
       let field_expr = decompile_expression expr in

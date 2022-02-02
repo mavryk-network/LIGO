@@ -13,8 +13,8 @@ let rec assert_type_expression_eq ~raise (a, b: (type_expression * type_expressi
   )
   | T_app _, _ -> raise.raise @@ different_types a b
   | T_sum sa, T_sum sb -> (
-      let sa' = LMap.to_kv_list_rev sa.fields in
-      let sb' = LMap.to_kv_list_rev sb.fields in
+      let sa' = LMap.to_alist ~key_order:`Decreasing sa.fields in
+      let sb' = LMap.to_alist ~key_order:`Decreasing sb.fields in
       let aux ((Label ka, {associated_type=va;_}), (Label kb, {associated_type=vb;_})) =
         let _ =
           Assert.assert_true ~raise (corner_case "different keys in sum types")
@@ -35,8 +35,8 @@ let rec assert_type_expression_eq ~raise (a, b: (type_expression * type_expressi
   )
   | T_record ra, T_record rb -> (
       let sort_lmap r' = List.sort ~compare:(fun (Label a,_) (Label b,_) -> String.compare a b) r' in
-      let ra' = sort_lmap @@ LMap.to_kv_list_rev ra.fields in
-      let rb' = sort_lmap @@ LMap.to_kv_list_rev rb.fields in
+      let ra' = sort_lmap @@ LMap.to_alist ~key_order:`Decreasing ra.fields in
+      let rb' = sort_lmap @@ LMap.to_alist ~key_order:`Decreasing rb.fields in
       let aux ((ka, {associated_type=va;_}), (kb, {associated_type=vb;_})) =
         let () =
           trace_strong ~raise (different_types a b) @@

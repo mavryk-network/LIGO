@@ -99,7 +99,7 @@ let rec subst_var_expr v v' (e : AST.expression) =
                      let cases = List.map cases ~f in
                      return_f @@ E_matching { matchee ; cases = Match_variant { cases ; tv } }
                   | E_matching { matchee ; cases = Match_record { fields ; body ; tv } }
-                       when List.mem (List.map (AST.LMap.to_list fields) ~f:fst) v ~equal:(=)  ->
+                       when List.mem (List.map (AST.LMap.data fields) ~f:fst) v ~equal:(=)  ->
                      let matchee = subst_var_expr v v' matchee in
                      return_f @@ E_matching { matchee ; cases = Match_record { fields ; body ; tv } }
                   | _ -> return e.expression_content
@@ -120,7 +120,7 @@ let apply_table_expr table (e : AST.expression) =
                   | E_matching { matchee ; cases = Match_variant { cases ; tv } } ->
                      return @@ E_matching { matchee ; cases = Match_variant { cases ; tv = apply_table_type tv } }
                   | E_matching { matchee ; cases = Match_record { fields ; body ; tv } } ->
-                     let fields = AST.LMap.map (fun (casev, caset) -> (casev, apply_table_type caset)) fields in
+                     let fields = AST.LMap.map ~f: (fun (casev, caset) -> (casev, apply_table_type caset)) fields in
                      return @@ E_matching { matchee ; cases = Match_record { fields ; body ; tv = apply_table_type tv } }
                   | _ -> return e.expression_content) () e in
   e
@@ -189,9 +189,9 @@ let rec mono_polymorphic_expression : Data.t -> AST.expression -> Data.t * AST.e
      let data, matchee = self data matchee in
      data, return (E_matching { matchee ; cases })
   | E_record lmap ->
-     let data, lmap = AST.LMap.fold (fun l expr (data, r) ->
+     let data, lmap = AST.LMap.fold ~f:(fun ~key:l ~data:expr (data, r) ->
                           let data, v = self data expr in
-                          data, AST.LMap.add l v r) lmap (data, AST.LMap.empty) in
+                          data, AST.LMap.set ~key:l ~data:v r) lmap ~init:(data, AST.LMap.empty) in
      data, return (E_record lmap)
   | E_record_accessor { record ; path } ->
      let data, record = self data record in
@@ -228,7 +228,7 @@ and mono_polymorphic_cases : Data.t -> AST.matching_expr -> Data.t * AST.matchin
      let data, cases = List.fold_right cases ~f:aux ~init:(data, []) in
      data, Match_variant { tv ; cases }
   | Match_record { tv ; body ; fields } ->
-     let binders = List.map ~f:fst @@ AST.LMap.to_list fields in
+     let binders = List.map ~f:fst @@ AST.LMap.data fields in
      let data, binders_instances = List.fold_right binders ~init:(data, []) ~f:(fun binder (data, binders_instances) ->
                                       let binder_instances, data = Data.instances_lookup_and_remove (Longident.of_variable binder) data in
                                       data, (binder, binder_instances) :: binders_instances) in

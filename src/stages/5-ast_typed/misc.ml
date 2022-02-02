@@ -29,7 +29,7 @@ module Free_variables = struct
       )
     | E_application {lamb;args} -> unions @@ List.map ~f:self [ lamb ; args ]
     | E_constructor {element;_} -> self element
-    | E_record m -> unions @@ List.map ~f:self @@ LMap.to_list m
+    | E_record m -> unions @@ List.map ~f:self @@ LMap.data m
     | E_record_accessor {record;_} -> self record
     | E_record_update {record; update;_} -> union (self record) @@ self update
     | E_matching {matchee; cases;_} -> union (self matchee) (matching_expression b cases)
@@ -62,7 +62,7 @@ module Free_variables = struct
       match m with
       | Match_variant { cases ; tv=_ } -> unions @@ List.map ~f:(matching_variant_case f b) cases
       | Match_record {fields; body; tv = _} ->
-        f (union (List.map ~f:fst (LMap.to_list fields)) b) body
+        f (union (List.map ~f:fst (LMap.data fields)) b) body
 
     and matching_expression = fun x -> matching expression x
 
@@ -106,8 +106,8 @@ let rec assert_type_expression_eq (a, b: (type_expression * type_expression)) : 
   )
   | T_constant _, _ -> None
   | T_sum sa, T_sum sb -> (
-      let sa' = LMap.to_kv_list_rev sa.content in
-      let sb' = LMap.to_kv_list_rev sb.content in
+      let sa' = LMap.to_alist ~key_order:`Decreasing sa.content in
+      let sb' = LMap.to_alist ~key_order:`Decreasing sb.content in
       let aux ((ka, {associated_type=va;_}), (kb, {associated_type=vb;_})) =
         let* _ = assert_eq ka kb in
         assert_type_expression_eq (va, vb)
@@ -120,8 +120,8 @@ let rec assert_type_expression_eq (a, b: (type_expression * type_expression)) : 
        when Bool.(<>) (Helpers.is_tuple_lmap ra.content) (Helpers.is_tuple_lmap rb.content) -> None
   | T_record ra, T_record rb -> (
       let sort_lmap r' = List.sort ~compare:(fun (Label a,_) (Label b,_) -> String.compare a b) r' in
-      let ra' = sort_lmap @@ LMap.to_kv_list_rev ra.content in
-      let rb' = sort_lmap @@ LMap.to_kv_list_rev rb.content in
+      let ra' = sort_lmap @@ LMap.to_alist ~key_order:`Decreasing ra.content in
+      let rb' = sort_lmap @@ LMap.to_alist ~key_order:`Decreasing rb.content in
       let aux ((ka, {associated_type=va;_}), (kb, {associated_type=vb;_})) =
         let Label ka = ka in
         let Label kb = kb in
@@ -224,14 +224,14 @@ let rec assert_value_eq (a, b: (expression*expression)) : unit option =
   | E_constructor _, E_constructor _ -> None
   | E_constructor _, _ -> None
   | E_record sma, E_record smb -> (
-      let aux (Label _k) a b =
-        match a, b with
-        | Some a, Some b -> assert_value_eq (a, b)
+      let aux ~key:(Label _k) v =
+        match v with
+        | `Both (a, b) -> assert_value_eq (a, b)
         | _              -> None
       in
-      let all = LMap.merge aux sma smb in
-      if    ((LMap.cardinal all) = (LMap.cardinal sma))
-         || ((LMap.cardinal all) = (LMap.cardinal smb)) then
+      let all = LMap.merge ~f:aux sma smb in
+      if    ((LMap.length all) = (LMap.length sma))
+         || ((LMap.length all) = (LMap.length smb)) then
         Some ()
       else None
     )

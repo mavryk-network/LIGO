@@ -17,7 +17,7 @@ let lmap_sep value sep ppf m =
   fprintf ppf "%a" (list_sep new_pp sep) lst
 
 let record_sep value sep ppf (m : 'a label_map) =
-  let lst = LMap.to_kv_list m in
+  let lst = LMap.to_alist m in
   let lst = List.dedup_and_sort ~compare:(fun (Label a,_) (Label b,_) -> String.compare a b) lst in
   let new_pp ppf (k, v) = fprintf ppf "@[<h>%a -> %a@]" label k value v in
   fprintf ppf "%a" (list_sep new_pp sep) lst
@@ -29,7 +29,7 @@ let tuple_sep value sep ppf m =
   fprintf ppf "%a" (list_sep new_pp sep) lst
 
 let record_sep_t value sep ppf (m : 'a label_map) =
-  let lst = LMap.to_kv_list m in
+  let lst = LMap.to_alist m in
   let lst = List.dedup_and_sort ~compare:(fun (Label a,_) (Label b,_) -> String.compare a b) lst in
   let new_pp ppf (k, v) = fprintf ppf "@[<h>%a -> %a@]" label k value v in
   fprintf ppf "%a" (list_sep new_pp sep) lst
@@ -102,7 +102,7 @@ let rec type_content : formatter -> type_content -> unit =
   match tc with
   | T_variable        tv -> type_variable                 ppf tv
   | T_constant        tc -> type_injection ppf tc
-  | T_sum              m -> fprintf ppf "@[<h>sum[%a]@]" (lmap_sep_d row) (LMap.to_kv_list_rev m.content)
+  | T_sum              m -> fprintf ppf "@[<h>sum[%a]@]" (lmap_sep_d row) (LMap.to_alist ~key_order:`Decreasing m.content)
   | T_record           m -> fprintf ppf "%a" (tuple_or_record_sep_type row) m.content
   | T_arrow            a -> arrow         type_expression ppf a
   | T_module_accessor ma -> module_access type_expression ppf ma
@@ -200,7 +200,7 @@ and matching : (formatter -> expression -> unit) -> _ -> matching_expr -> unit =
       fprintf ppf "@[%a@]" (list_sep (matching_variant_case f) (tag "@ ")) cases
   | Match_record {fields ; body ; tv = _} ->
       (* let with_annots f g ppf (a , b) = fprintf ppf "%a:%a" f a g b in *)
-      let fields = LMap.map (fun (v,_) -> v) fields in
+      let fields = LMap.map ~f: (fun (v,_) -> v) fields in
       fprintf ppf "| @[%a@] ->@ @[%a@]"
         (tuple_or_record_sep_expr expression_variable) fields
         f body

@@ -72,7 +72,7 @@ let type_expression'_of_simple_c_constant : constant_tag * type_expression list 
 let type_expression'_of_simple_c_row : Ast_core.row_tag * Ast_core.row_variable Ast_core.label_map -> Ast_core.type_content =
   fun (tag, content) ->
   let open Ast_core in
-  let fields = LMap.map (fun {associated_variable;michelson_annotation;decl_pos} ->
+  let fields = LMap.map ~f: (fun {associated_variable;michelson_annotation;decl_pos} ->
     {associated_type = Ast_core.t_variable associated_variable (); michelson_annotation; decl_pos}) content in
   match tag with
   | C_record -> T_record { layout = Some default_layout ; fields }

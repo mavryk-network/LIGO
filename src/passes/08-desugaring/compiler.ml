@@ -55,7 +55,7 @@ let rec compile_type_expression : I.type_expression -> O.type_expression =
       return @@ T_app a'
     | I.T_sum {fields ; attributes} ->
       let fields =
-        O.LMap.map (fun v ->
+        O.LMap.map ~f: (fun v ->
           let {associated_type ; attributes ; decl_pos} : _ I.row_element = v in
           let michelson_annotation = get_michelson_annotation attributes in
           let associated_type = compile_type_expression associated_type in
@@ -67,7 +67,7 @@ let rec compile_type_expression : I.type_expression -> O.type_expression =
       return @@ O.T_sum {fields ; layout }
     | I.T_record {fields ; attributes} ->
       let fields =
-        O.LMap.map (fun v ->
+        O.LMap.map ~f: (fun v ->
           let {associated_type ; attributes ; decl_pos} : _ I.row_element = v in
           let associated_type = compile_type_expression associated_type in
           let michelson_annotation = get_michelson_annotation attributes in

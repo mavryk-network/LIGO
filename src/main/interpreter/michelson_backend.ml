@@ -283,7 +283,7 @@ let rec val_to_ast ~raise ~loc : Ligo_interpreter.Types.value ->
        raise.raise @@ Errors.generic_error loc "Expected either None or Some"
   | V_Construct (ctor, arg) when is_t_sum ty ->
      let map_ty = trace_option ~raise (Errors.generic_error loc (Format.asprintf "Expected sum type but got %a" Ast_aggregated.PP.type_expression ty)) @@ get_t_sum_opt ty in
-     let {associated_type=ty';michelson_annotation=_;decl_pos=_} = LMap.find (Label ctor) map_ty.content in
+     let {associated_type=ty';michelson_annotation=_;decl_pos=_} = LMap.find_exn map_ty.content (Label ctor) in
      let arg = val_to_ast ~raise ~loc arg ty' in
      e_a_constructor ctor arg ty
   | V_Construct _ ->
@@ -340,7 +340,7 @@ and make_ast_func ~raise ?name env arg body orig =
 and make_ast_record ~raise ~loc map_ty map =
   let open Ligo_interpreter.Types in
   let kv_list = Ast_aggregated.Helpers.kv_list_of_t_record_or_tuple ~layout:map_ty.layout map_ty.content in
-  let kv_list = List.map ~f:(fun (l, ty) -> let value = LMap.find l map in let ast = val_to_ast ~raise ~loc value ty.associated_type in (l, ast)) kv_list in
+  let kv_list = List.map ~f:(fun (l, ty) -> let value = LMap.find_exn map l in let ast = val_to_ast ~raise ~loc value ty.associated_type in (l, ast)) kv_list in
   Ast_aggregated.ez_e_a_record ~layout:map_ty.layout kv_list
 
 and make_ast_list ~raise ~loc ty l =

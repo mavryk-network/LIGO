@@ -80,7 +80,7 @@ let scopes : with_types:bool -> options:Compiler_options.t -> Ast_core.module_ -
         let (i,all_defs,_,scopes) = find_scopes' (i,all_defs,env,scopes,exp.location) bindings exp in
         (i,all_defs,scopes)
       in
-      let (i,all_defs,scopes) = List.fold_left ~f:aux ~init:(i,all_defs,scopes) (Ast_core.LMap.to_list emap) in
+      let (i,all_defs,scopes) = List.fold_left ~f:aux ~init:(i,all_defs,scopes) (Ast_core.LMap.data emap) in
       (i,all_defs,env,scopes)
     )
     | E_record_update { record ; update ; _ } -> (

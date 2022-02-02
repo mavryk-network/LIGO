@@ -181,3 +181,11 @@ let of_yojson = fun t ->
      | (Error _ as e), _ | _, (Error _ as e) -> e end
   | _ ->
      Utils.error_yojson_format "{start: Pos.t, stop: Pos.t}"
+
+let sexp_of_t x =
+  Tuple2.sexp_of_t Pos.sexp_of_t Pos.sexp_of_t @@
+    (x#start, x#stop)
+
+let t_of_sexp v =
+  let start, stop = Tuple2.t_of_sexp Pos.t_of_sexp Pos.t_of_sexp v in
+  make ~start ~stop

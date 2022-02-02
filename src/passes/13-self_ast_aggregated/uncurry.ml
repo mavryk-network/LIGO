@@ -104,9 +104,9 @@ let rec usage_in_expr ~raise (f : expression_variable) (expr : expression) : usa
     usages (self matchee ::
             List.map ~f:(fun { constructor = _; pattern; body } -> self_binder [pattern] body) cases)
   | E_matching { matchee; cases = Ast_aggregated.Match_record { fields; body; tv = _ } } ->
-    usages [self matchee; self_binder (List.map ~f:fst (LMap.to_list fields)) body]
+    usages [self matchee; self_binder (List.map ~f:fst (LMap.data fields)) body]
   | E_record fields ->
-    usages (List.map ~f:self (LMap.to_list fields))
+    usages (List.map ~f:self (LMap.data fields))
   | E_record_accessor { record; path = _ } ->
     self record
   | E_record_update { record; path = _; update } ->
@@ -227,12 +227,12 @@ let rec uncurry_in_expression ~raise
     return (E_matching { matchee; cases = Match_variant { cases; tv } } )
   | E_matching { matchee; cases = Match_record { fields; body; tv } } ->
     let matchee = self matchee in
-    let body = self_binder (List.map ~f:fst (LMap.to_list fields)) body in
+    let body = self_binder (List.map ~f:fst (LMap.data fields)) body in
     return (E_matching { matchee; cases = Match_record { fields; body; tv } })
   | E_record fields ->
     let fields =
       List.map ~f:(fun (k, v) -> let v = self v in (k, v))
-        (LMap.to_kv_list fields) in
+        (LMap.to_alist fields) in
     let fields = LMap.of_list fields in
     return (E_record fields)
   | E_record_accessor { record; path } ->

@@ -339,7 +339,7 @@ let compile_record_matching ~raise expr' return k ({ fields; body; tv } : AST.ma
           let t = compile_type ~raise row_element.associated_type in
           let x = trace_option ~raise
             (corner_case ~loc:__LOC__ ("missing label in record"))
-            (LMap.find_opt l fields)
+            (LMap.find fields l)
           in
           (fst x, t)
         )
@@ -355,7 +355,7 @@ let compile_record_matching ~raise expr' return k ({ fields; body; tv } : AST.ma
       | Field l ->
         let x = trace_option ~raise
           (corner_case ~loc:__LOC__ ("missing label in record"))
-          (LMap.find_opt l fields)
+          (LMap.find fields l)
         in
         let var = fst x in
         return @@ E_let_in (expr, false, ((var, tree.type_), body))
@@ -602,7 +602,7 @@ and compile_expression ~raise (ae:AST.expression) : expression =
             let get_case c =
               trace_option ~raise
                 (corner_case ~loc:__LOC__ ("missing " ^ c ^ " case in match"))
-                (AST.LMap.find_opt (Label c) c_body_lst) in
+                (AST.LMap.find c_body_lst (Label c)) in
             let match_nil = get_case "Nil" in
             let match_cons = get_case "Cons" in
             let nil = self (fst match_nil) in
@@ -622,7 +622,7 @@ and compile_expression ~raise (ae:AST.expression) : expression =
             let get_case c =
               trace_option ~raise
                 (corner_case ~loc:__LOC__ ("missing " ^ c ^ " case in match"))
-                (AST.LMap.find_opt (Label c) c_body_lst) in
+                (AST.LMap.find c_body_lst (Label c)) in
             let match_none = get_case "None" in
             let match_some = get_case "Some" in
             let n = self (fst match_none) in
@@ -638,7 +638,7 @@ and compile_expression ~raise (ae:AST.expression) : expression =
             let get_case c =
               trace_option ~raise
                 (corner_case ~loc:__LOC__ ("missing " ^ c ^ " case in match"))
-                (AST.LMap.find_opt (Label c) cases) in
+                (AST.LMap.find cases (Label c)) in
             let match_true  = get_case "True" in
             let match_false = get_case "False" in
             let (t , f) = Pair.map ~f:self (match_true, match_false) in
@@ -769,7 +769,7 @@ and compile_recursive ~raise {fun_name; fun_type; lambda} =
           let get_case c =
             trace_option ~raise
               (corner_case ~loc:__LOC__ ("missing " ^ c ^ " case in match"))
-              (AST.LMap.find_opt (Label c) c_body_lst) in
+              (AST.LMap.find c_body_lst (Label c)) in
           let match_nil = get_case "Nil" in
           let match_cons = get_case "Cons" in
           let nil = self (fst match_nil) in
@@ -789,7 +789,7 @@ and compile_recursive ~raise {fun_name; fun_type; lambda} =
           let get_case c =
             trace_option ~raise
               (corner_case ~loc:__LOC__ ("missing " ^ c ^ " case in match"))
-              (AST.LMap.find_opt (Label c) c_body_lst) in
+              (AST.LMap.find c_body_lst (Label c)) in
           let match_none = get_case "None" in
           let match_some = get_case "Some" in
           let n = self (fst match_none) in
@@ -805,7 +805,7 @@ and compile_recursive ~raise {fun_name; fun_type; lambda} =
           let get_case c =
             trace_option ~raise
               (corner_case ~loc:__LOC__ ("missing " ^ c ^ " case in match"))
-              (AST.LMap.find_opt (Label c) cases) in
+              (AST.LMap.find cases (Label c)) in
           let match_true  = get_case "True" in
           let match_false = get_case "False" in
           let (t , f) = Pair.map ~f:self (match_true, match_false) in

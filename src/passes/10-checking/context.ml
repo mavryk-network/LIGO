@@ -117,7 +117,7 @@ let get_constructor : label -> t -> (type_expression * type_expression) option =
     let aux = fun (_,type_) ->
     match type_.type_content with
     | T_sum m ->
-      (match LMap.find_opt k m.content with
+      (match LMap.find m.content k with
           Some {associated_type ; _} -> Some (associated_type , type_)
         | None -> None)
     | _ -> None
@@ -136,7 +136,7 @@ let get_constructor_parametric : label -> t -> (type_variable list * type_expres
     let rec aux av = fun (_t,type_) ->
       match type_.type_content with
       | T_sum m ->
-         (match LMap.find_opt k m.content with
+         (match LMap.find m.content k with
             Some {associated_type ; _} -> Some (av, associated_type , type_)
           | None -> None)
       | T_abstraction { ty_binder ; kind = _ ; type_ } ->
@@ -157,8 +157,8 @@ let get_record : _ label_map -> t -> (type_variable option * rows) option = fun 
     let aux = fun (_,type_) ->
     match type_.type_content with
     | T_record m -> Simple_utils.Option.(
-      let lst_kv  = LMap.to_kv_list_rev lmap in
-      let lst_kv' = LMap.to_kv_list_rev m.content in
+      let lst_kv  = LMap.to_alist ~key_order:`Decreasing lmap in
+      let lst_kv' = LMap.to_alist ~key_order:`Decreasing m.content in
       let m = map ~f:(fun () -> m) @@ Ast_typed.Misc.assert_list_eq
         ( fun (ka,va) (kb,vb) ->
           let Label ka = ka in
@@ -185,8 +185,8 @@ let get_sum : _ label_map -> t -> rows option = fun lmap e ->
     let aux = fun (_,type_) ->
     match type_.type_content with
     | T_sum m -> Simple_utils.Option.(
-      let lst_kv  = LMap.to_kv_list_rev lmap in
-      let lst_kv' = LMap.to_kv_list_rev m.content in
+      let lst_kv  = LMap.to_alist ~key_order:`Decreasing lmap in
+      let lst_kv' = LMap.to_alist ~key_order:`Decreasing m.content in
       map ~f:(fun () -> m) @@ Ast_typed.Misc.assert_list_eq (
         fun (ka,va) (kb,vb) ->
           let Label ka = ka in

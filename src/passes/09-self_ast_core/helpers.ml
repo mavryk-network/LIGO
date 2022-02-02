@@ -5,7 +5,7 @@ open Stage_common
 include Ast_core.PP
 
 let map_lmap_t f map = 
-  LMap.map
+  LMap.map ~f:
     (fun ({associated_type;_} as field) ->
       let field' = f associated_type in
       {field with associated_type = field'})
@@ -82,7 +82,7 @@ let rec map_expression ~raise : 'err exp_mapper -> expression -> expression = fu
       return @@ E_record_accessor acc
     )
   | E_record m -> (
-    let m' = LMap.map self m in
+    let m' = LMap.map ~f: self m in
     return @@ E_record m'
   )
   | E_record_update ru -> (

@@ -51,7 +51,7 @@ let rec expr_gen : raise:interpreter_error raise -> Ast_aggregated.type_expressi
   else if is_t_sum type_expr then
     match get_t_sum_opt type_expr with
     | Some rows ->
-       let l = LMap.to_kv_list rows.content in
+       let l = LMap.to_alist rows.content in
        let gens = List.map ~f:(fun (Label label, row_el) ->
                       QCheck.Gen.(expr_gen ~raise row_el.associated_type >>= fun v ->
                                   return (e_a_constructor label v (t_sum ~layout:rows.layout rows.content)))) l in
@@ -60,7 +60,7 @@ let rec expr_gen : raise:interpreter_error raise -> Ast_aggregated.type_expressi
   else if is_t_record type_expr then
     match get_t_record_opt type_expr with
     | Some rows ->
-       let l = LMap.to_kv_list rows.content in
+       let l = LMap.to_alist rows.content in
        let gens = List.map ~f:(fun (label, row_el) ->
                        (label, expr_gen ~raise row_el.associated_type)) l in
        let rec gen l : ((label * expression) list) QCheck.Gen.t = match l with

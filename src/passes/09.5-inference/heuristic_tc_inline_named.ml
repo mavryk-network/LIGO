@@ -168,7 +168,7 @@ let propagator : (selector_output, typer_error) Type_variable_abstraction.Solver
          P_constant { p_ctor_tag = c_tag ; p_ctor_args = (List.map ~f:p_variable tv_list) }
        | `Row { reason_row_simpl; id_row_simpl=_; original_id=_; tv=_; r_tag; tv_map } ->
          let _ = reason_row_simpl in (* TODO: use it *)
-         P_row { p_row_tag = r_tag ; p_row_args = (LMap.map row_value tv_map) }
+         P_row { p_row_tag = r_tag ; p_row_args = (LMap.map ~f: row_value tv_map) }
       )
     | other -> changed, other
   in

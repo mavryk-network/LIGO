@@ -63,9 +63,9 @@ let assert_equal_contract_type ~raise : Simple_utils.Runned_result.check_type ->
     match entry_point.type_expression.type_content with
     | T_arrow {type1=args;type2=_} -> (
         match args.type_content with
-        | T_record m when LMap.cardinal m.content = 2 -> (
-          let {associated_type=param_exp;_} = LMap.find (Label "0") m.content in
-          let {associated_type=storage_exp;_} = LMap.find (Label "1") m.content in
+        | T_record m when LMap.length m.content = 2 -> (
+          let {associated_type=param_exp;_} = LMap.find_exn m.content (Label "0") in
+          let {associated_type=storage_exp;_} = LMap.find_exn m.content (Label "1") in
             match c with
             | Check_parameter -> trace ~raise checking_tracer @@ Checking.assert_type_expression_eq entry_point.location (param_exp, param.type_expression)
             | Check_storage   -> trace ~raise checking_tracer @@ Checking.assert_type_expression_eq entry_point.location (storage_exp, param.type_expression)

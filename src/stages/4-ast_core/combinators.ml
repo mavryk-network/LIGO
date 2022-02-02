@@ -90,7 +90,7 @@ let get_t_bool (t:type_expression) : unit option = match t.type_content with
 
 let tuple_of_record (m: _ LMap.t) =
   let aux i =
-    let opt = LMap.find_opt (Label (string_of_int i)) m in
+    let opt = LMap.find m (Label (string_of_int i)) in
     Option.bind ~f: (fun opt -> Some (opt,i+1)) opt
   in
   let l = Base.Sequence.to_list @@ Base.Sequence.unfold ~init:0 ~f:aux in
@@ -111,7 +111,7 @@ let get_t_pair (t:type_expression) : (type_expression * type_expression) option 
   | _ -> None
 
 let ez_e_record (lst : (label * expression) list) : expression =
-  let aux prev (k, v) = LMap.add k v prev in
+  let aux prev (k, v) = LMap.set ~key:k ~data:v prev in
   let map = List.fold_left ~f:aux ~init:LMap.empty lst in
   e_record map ()
 
@@ -199,7 +199,7 @@ let get_e_bool (t:expression) =
 let get_e_pair = fun t ->
   match t with
   | E_record r -> (
-  let lst = LMap.to_kv_list_rev r in
+  let lst = LMap.to_alist ~key_order:`Decreasing r in
     match lst with
     | [(Label "O",a);(Label "1",b)]
     | [(Label "1",b);(Label "0",a)] ->
@@ -242,7 +242,7 @@ let get_record_field_type (t : type_expression) (label : label) : type_expressio
   match get_t_record t with
   | None -> None
   | Some record ->
-    match LMap.find_opt label record.fields with
+    match LMap.find record.fields label with
     | None -> None
     | Some row_element -> Some row_element.associated_type
 
@@ -255,7 +255,7 @@ let get_e_ascription = fun a ->
 let extract_pair : expression -> (expression * expression) option = fun e ->
   match e.expression_content with
   | E_record r -> (
-  let lst = LMap.to_kv_list_rev r in
+  let lst = LMap.to_alist ~key_order:`Decreasing r in
     match lst with
     | [(Label "O",a);(Label "1",b)]
     | [(Label "1",b);(Label "0",a)] ->
@@ -266,7 +266,7 @@ let extract_pair : expression -> (expression * expression) option = fun e ->
 
 let extract_record : expression -> (label * expression) list option = fun e ->
   match e.expression_content with
-  | E_record lst -> Some (LMap.to_kv_list lst)
+  | E_record lst -> Some (LMap.to_alist lst)
   | _ -> None
 
 let extract_map : expression -> (expression * expression) list option = fun e ->

@@ -22,7 +22,7 @@ let rec decompile_type_expression : O.type_expression -> I.type_expression =
         return @@ T_app tc
       | O.T_sum {fields;layout} ->
         let fields =
-          O.LMap.map (fun v ->
+          O.LMap.map ~f: (fun v ->
             let {associated_type;michelson_annotation;decl_pos} : O.row_element = v in
             let associated_type = self associated_type in
             let attributes = match michelson_annotation with | Some a -> [a] | None -> [] in
@@ -34,7 +34,7 @@ let rec decompile_type_expression : O.type_expression -> I.type_expression =
         return @@ I.T_sum {fields ; attributes}
       | O.T_record {fields;layout} ->
         let fields =
-          O.LMap.map (fun v ->
+          O.LMap.map ~f: (fun v ->
             let {associated_type;michelson_annotation;decl_pos} : O.row_element = v in
             let associated_type = self associated_type in
             let attributes = match michelson_annotation with | Some a -> [a] | None -> [] in
@@ -122,7 +122,7 @@ let rec decompile_expression : O.expression -> I.expression =
       let cases = List.map ~f:aux cases in
       return @@ I.E_matching {matchee ; cases}
     | O.E_record record ->
-      let record = O.LMap.to_kv_list_rev record in
+      let record = O.LMap.to_alist ~key_order:`Decreasing record in
       let record =
         List.map ~f:(fun (O.Label k,v) ->
           let v = self v in

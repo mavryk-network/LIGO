@@ -14,7 +14,7 @@ let option f o =
 let pair f g (x, y) = `Tuple [ f x ; g y ]
 let list f lst = `List (List.map ~f:f lst)
 let label_map f lmap =
-  let lst = List.sort ~compare:(fun (Label a, _) (Label b, _) -> String.compare a b) (LMap.bindings lmap) in
+  let lst = List.sort ~compare:(fun (Label a, _) (Label b, _) -> String.compare a b) (LMap.to_alist lmap) in
   let lst' = List.fold_left
       ~f:(fun acc (Label k, v) -> (k , f v)::acc)
       ~init:[] lst

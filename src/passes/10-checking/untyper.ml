@@ -16,14 +16,14 @@ let rec untype_type_expression_nofail (t:O.type_expression) : I.type_expression 
        let associated_type = untype_type_expression_nofail associated_type in
        let v' = ({associated_type ; michelson_annotation ; decl_pos} : I.row_element) in
        v' in
-     let x' = Stage_common.Types.LMap.map aux content in
+     let x' = Stage_common.Types.LMap.map ~f: aux content in
      return @@ I.T_sum { fields = x' ; layout = Some layout }
   | O.T_record {content;layout} -> (
     let aux ({associated_type ; michelson_annotation ; decl_pos} : O.row_element) =
       let associated_type = untype_type_expression_nofail associated_type in
       let v' = ({associated_type ; michelson_annotation ; decl_pos} : I.row_element) in
       v' in
-    let x' = Stage_common.Types.LMap.map aux content in
+    let x' = Stage_common.Types.LMap.map ~f: aux content in
     return @@ I.T_record {fields = x' ; layout = Some layout}
   )
   | O.T_arrow {type1;type2} ->

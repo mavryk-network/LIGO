@@ -68,7 +68,7 @@ let rec is_dup (t : type_expression) =
       is_dup t1 && is_dup t2
   | T_record rows
   | T_sum rows ->
-     let row_types = LMap.to_list rows.content
+     let row_types = LMap.data rows.content
                      |> List.map ~f:(fun v -> v.associated_type)
                      |> List.filter ~f:(fun v -> not (is_dup v)) in
      List.is_empty row_types
@@ -134,7 +134,7 @@ let rec muchuse_of_expr expr : muchuse =
      muchuse_union (muchuse_of_expr matchee) (muchuse_of_cases cases)
   | E_record re ->
      Stage_common.Types.LMap.fold
-       (fun _ x -> muchuse_union (muchuse_of_expr x)) re muchuse_neutral
+       ~f:(fun ~key:_ ~data:x -> muchuse_union (muchuse_of_expr x)) re ~init:muchuse_neutral
   | E_raw_code {code;_} ->
      muchuse_of_expr code
   | E_record_accessor {record;_} ->
@@ -174,7 +174,7 @@ and muchuse_of_variant {cases;tv} =
           | Some tv' ->
              let get_c_body (case : Ast_typed.matching_content_case) = (case.constructor, (case.body, case.pattern)) in
              let c_body_lst = Ast_typed.LMap.of_list (List.map ~f:get_c_body cases) in
-             let get_case c =  Ast_typed.LMap.find (Label c) c_body_lst in
+             let get_case c =  Ast_typed.LMap.find_exn c_body_lst (Label c) in
              let match_none,_ = get_case "None" in
              let match_some,v = get_case "Some" in
              muchuse_max (muchuse_of_binder v tv' (muchuse_of_expr match_some)) (muchuse_of_expr match_none)
@@ -182,14 +182,14 @@ and muchuse_of_variant {cases;tv} =
       | Some tv' ->
          let get_c_body (case : Ast_typed.matching_content_case) = (case.constructor, (case.body, case.pattern)) in
          let c_body_lst = Ast_typed.LMap.of_list (List.map ~f:get_c_body cases) in
-         let get_case c =  Ast_typed.LMap.find (Label c) c_body_lst in
+         let get_case c =  Ast_typed.LMap.find_exn c_body_lst (Label c) in
          let match_nil,_ = get_case "Nil" in
          let match_cons,v = get_case "Cons" in
          muchuse_max (muchuse_of_binder v (t_pair tv' tv) (muchuse_of_expr match_cons)) (muchuse_of_expr match_nil)
     end
   | Some ts ->
      let case_ts ({constructor;_} : matching_content_case) =
-       let row_element = LMap.find constructor ts.content in
+       let row_element = LMap.find_exn ts.content constructor in
        row_element.associated_type in
      let cases_ts = List.map ~f:case_ts cases in
      muchuse_maxs @@
@@ -199,7 +199,7 @@ and muchuse_of_variant {cases;tv} =
          cases_ts cases
 
 and muchuse_of_record {body;fields;_} =
-  let typed_vars = LMap.to_list fields in
+  let typed_vars = LMap.data fields in
   List.fold_left ~f:(fun (c,m) (v,t) -> muchuse_of_binder v t (c,m))
     ~init:(muchuse_of_expr body) typed_vars
 

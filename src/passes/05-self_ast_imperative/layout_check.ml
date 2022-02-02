@@ -7,7 +7,7 @@ let layout_type_expression ~add_warning : type_expression -> type_expression  = 
   match e.type_content with
   | T_sum cmap ->
      let _ = LMap.mapi
-       (fun k ({attributes;_} : _ Ast_imperative.row_element) ->
+       ~f:(fun ~key:k ~data:({attributes;_} : _ Ast_imperative.row_element) ->
          if attributes |> List.map ~f:is_layout |> List.exists ~f:Option.is_some then
             let () = add_warning @@ Main_warnings.warn_layout e.location k in
              ()

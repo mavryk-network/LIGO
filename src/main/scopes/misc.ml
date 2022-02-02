@@ -46,7 +46,7 @@ let extract_variable_types :
             | Some variant_t ->
               let aux : Ast_typed.matching_content_case -> (Ast_typed.expression_variable * Ast_typed.type_expression) =
                 fun { constructor ; pattern ; _ } ->
-                  let proj_t = (Ast_core.LMap.find constructor variant_t.content).associated_type in
+                  let proj_t = (Ast_core.LMap.find_exn variant_t.content constructor).associated_type in
                   (pattern,proj_t)
               in
               return (List.map ~f:aux cases)
@@ -66,7 +66,7 @@ let extract_variable_types :
               )
         )
         | Match_record { fields ; _ }  ->
-          return (Ast_typed.LMap.to_list fields)
+          return (Ast_typed.LMap.data fields)
       )
     in
     match decl with

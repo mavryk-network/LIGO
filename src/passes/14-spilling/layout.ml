@@ -254,7 +254,7 @@ let match_variant_to_tree ~raise ~layout ~compile_type content : variant_pair =
   match layout with
   | L_tree -> (
       let kt_tree =
-        let kt_list = List.map ~f:(fun (k,({associated_type;_}:AST.row_element)) -> (k,associated_type)) (LMap.to_kv_list content) in
+        let kt_list = List.map ~f:(fun (k,({associated_type;_}:AST.row_element)) -> (k,associated_type)) (LMap.to_alist content) in
         Append_tree.of_list kt_list
       in
       let ne_tree = match kt_tree with

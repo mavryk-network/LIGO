@@ -1,5 +1,8 @@
 type z = Z.t [@@deriving ord]
-type ligo_string = Simple_utils.Ligo_string.t [@@deriving yojson, ord]
+let z_of_sexp v = Z.of_string (String.t_of_sexp v)
+let sexp_of_z v = String.sexp_of_t (Z.to_string v)
+
+type ligo_string = Simple_utils.Ligo_string.t [@@deriving yojson, ord, sexp]
 
 let [@warning "-32"] z_to_yojson x = `String (Z.to_string x)
 let [@warning "-32"] z_of_yojson x =
@@ -15,7 +18,7 @@ let bytes_to_yojson b = `String (Bytes.to_string b)
 
 type layout =
   | L_comb
-  | L_tree
+  | L_tree [@@deriving sexp]
 
 type literal =
   | Literal_unit
@@ -34,7 +37,7 @@ type literal =
   | Literal_bls12_381_g1 of bytes
   | Literal_bls12_381_g2 of bytes
   | Literal_bls12_381_fr of bytes
-[@@deriving yojson, ord]
+[@@deriving yojson, ord, sexp]
 
 let literal_to_enum = function
   | Literal_unit        ->  1
@@ -244,7 +247,7 @@ type constant' =
   | C_GLOBAL_CONSTANT
   (* JsLIGO *)
   | C_POLYMORPHIC_ADD [@print "C_POLYMORPHIC_ADD"]
-[@@deriving enum, yojson, print_constant, only_interpreter_tags ]
+[@@deriving enum, yojson, print_constant, only_interpreter_tags, sexp]
 
 type deprecated = {
   name : string ;

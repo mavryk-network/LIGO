@@ -15,7 +15,7 @@
    does not accept names like "foo#121" as possible variable names, so
    this confusion should not arise for us.  *)
 
-type 'a t
+type 'a t [@@deriving sexp]
 val to_yojson : 'a t -> Yojson.Safe.t
 val of_yojson : Yojson.Safe.t -> ('a t, string) Result.t
 

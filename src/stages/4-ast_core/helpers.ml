@@ -8,17 +8,17 @@ let label_range i j =
   List.map ~f:(fun i -> Label (string_of_int i)) @@ range i j
 
 let is_tuple_lmap m =
-  List.for_all ~f:(fun i -> LMap.mem i m) @@ (label_range 0 (LMap.cardinal m))
+  List.for_all ~f:(fun i -> LMap.mem m i) @@ (label_range 0 (LMap.length m))
 
 let get_pair m =
-  match (LMap.find_opt (Label "0") m , LMap.find_opt (Label "1") m) with
+  match (LMap.find m (Label "0") , LMap.find m (Label "1")) with
   | Some {associated_type=e1;_}, Some {associated_type=e2;_} -> Some (e1,e2)
   | _ -> None
 
 let tuple_of_record (m: _ LMap.t) =
   let aux i =
     let label = Label (string_of_int i) in
-    let opt = LMap.find_opt (label) m in
+    let opt = LMap.find m (label) in
     Option.bind ~f: (fun opt -> Some ((label,opt),i+1)) opt
   in
   Base.Sequence.to_list @@ Base.Sequence.unfold ~init:0 ~f:aux
@@ -60,10 +60,10 @@ module Free_type_variables = struct
     let self = map_type_expression type_env in
     match te.type_content with
     | T_sum { fields ; _ } ->
-       let fields = LMap.to_list fields |> List.map ~f:(fun ({ associated_type ; _ } : _ row_element_mini_c) -> self associated_type) in
+       let fields = LMap.data fields |> List.map ~f:(fun ({ associated_type ; _ } : _ row_element_mini_c) -> self associated_type) in
        unions fields
     | T_record { fields ; _ } ->
-       let fields = LMap.to_list fields |> List.map ~f:(fun ({ associated_type ; _ } : _ row_element_mini_c) -> self associated_type) in
+       let fields = LMap.data fields |> List.map ~f:(fun ({ associated_type ; _ } : _ row_element_mini_c) -> self associated_type) in
        unions fields
     | T_arrow { type1 ; type2 } ->
        VarSet.union (self type1) (self type2)

@@ -19,14 +19,14 @@ let rec untype_type_expression (t:O.type_expression) : I.type_expression =
        let associated_type = untype_type_expression associated_type in
        let v' = ({associated_type ; michelson_annotation ; decl_pos} : I.row_element) in
        v' in
-     let x' = O.LMap.map aux fields in
+     let x' = O.LMap.map ~f: aux fields in
      return @@ I.T_sum { fields = x' ; layout }
   | O.T_record {fields;layout} -> (
     let aux ({associated_type ; michelson_annotation ; decl_pos} : O.row_element) =
       let associated_type = untype_type_expression associated_type in
       let v' = ({associated_type ; michelson_annotation ; decl_pos} : I.row_element) in
       v' in
-    let x' = O.LMap.map aux fields in
+    let x' = O.LMap.map ~f: aux fields in
     return @@ I.T_record {fields = x' ; layout}
   )
   | O.T_variable name -> return @@ I.T_variable (Var.todo_cast name)
@@ -71,7 +71,7 @@ let rec untype_expression (e:O.expression) : I.expression =
     let element = untype_expression element in
     return @@ E_constructor {constructor; element}
   | E_record r ->
-    let r' = O.LMap.map untype_expression r in
+    let r' = O.LMap.map ~f: untype_expression r in
     return @@ E_record r'
   | E_record_accessor {record; path} ->
     let record = untype_expression record in

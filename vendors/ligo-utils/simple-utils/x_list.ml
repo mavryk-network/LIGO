@@ -42,7 +42,7 @@ let uncons = function
 
 module Ne = struct
 
-  type 'a t = 'a * 'a List.t
+  type 'a t = 'a * 'a List.t [@@deriving sexp]
 
   let unzip ((hd, tl): _ t) =
     let (a, b) = hd and (la, lb) = List.unzip tl in

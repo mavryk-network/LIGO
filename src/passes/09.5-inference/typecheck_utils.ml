@@ -12,7 +12,7 @@ module All_vars(Plugins : Plugins) = struct
     let aux1 : type_variable * constructor_or_row  -> type_variable list = fun (tv, cor) ->
       match cor with
       | `Constructor k -> tv :: k.tv :: k.tv_list
-      | `Row r -> tv :: r.tv :: List.map ~f:(fun {associated_variable} -> associated_variable) (LMap.to_list r.tv_map) in
+      | `Row r -> tv :: r.tv :: List.map ~f:(fun {associated_variable} -> associated_variable) (LMap.data r.tv_map) in
     let from_assignments = List.concat @@ List.map
       ~f:aux1
       (Plugin_states.Assignments.bindings (Plugin_states.assignments state.plugin_states)#assignments)
@@ -30,7 +30,7 @@ module All_vars(Plugins : Plugins) = struct
           so only the args are returned *)
     | SC_Typeclass   tc -> tc.args                            (* TC(α, …) *)
     | SC_Access_label l  -> [l.tv; l.record_type]                   (* TC(α, …) *)
-    | SC_Row         r  -> r.tv :: List.map ~f:(fun {associated_variable} -> associated_variable) (LMap.to_list r.tv_map)      (* α = row(l -> β, …) *)
+    | SC_Row         r  -> r.tv :: List.map ~f:(fun {associated_variable} -> associated_variable) (LMap.data r.tv_map)      (* α = row(l -> β, …) *)
     in
     let from_constraints = List.concat @@ List.map ~f:type_constraint_simpl_all_vars @@ PolySet.elements state.all_constraints in
     let uniq lst = PolySet.elements (PolySet.add_list lst (PolySet.create ~cmp:Var.compare)).set in
@@ -58,7 +58,7 @@ let other_check all_constraints assignments =
       else (*add the dependencies first, then our newfound variable if it is still new*) (
         match find_assignment repr_unification_var with
         | Some c_or_r ->
-          let args : type_variable list = match c_or_r with `Constructor k -> k.tv_list | `Row r -> List.map ~f:(fun {associated_variable} -> associated_variable) @@ LMap.to_list r.tv_map in
+          let args : type_variable list = match c_or_r with `Constructor k -> k.tv_list | `Row r -> List.map ~f:(fun {associated_variable} -> associated_variable) @@ LMap.data r.tv_map in
           let (already_seen, tree) = List.fold_map ~f:(fun already_seen tvar -> toposort ~raise already_seen tvar repr find_assignment) ~init:already_seen args in
           if Set.mem repr_unification_var already_seen then
             (already_seen, Compare_renaming.Node tree)
@@ -120,7 +120,7 @@ let other_check all_constraints assignments =
       (*  3) reconstruct canonical form of map(χ,β), this gives us map(α,β)     (* just copy the k.ctor_tag and replace the k.ctor_args, can't fail by itself *) *)
       let map_args f cor : canon_constructor_or_row = match cor with
         | `Constructor k -> `Constructor (object method c_tag = k.c_tag method tv_list = List.map ~f:f k.tv_list end)
-        | `Row r -> `Row (object method r_tag = r.r_tag method tv_map = LMap.map (fun {associated_variable=v} -> f v) r.tv_map end)
+        | `Row r -> `Row (object method r_tag = r.r_tag method tv_map = LMap.map ~f: (fun {associated_variable=v} -> f v) r.tv_map end)
       in
       let canon_repr : canon_constructor_or_row = map_args lookup assigment in
       (* 4) lookup map(α,β) in intemediate "canon", gives δ                    else add map(α,β)↦γ to the map "canon" and use γ *)

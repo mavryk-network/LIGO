@@ -17,7 +17,12 @@ module TYPE_VARIABLE_ABSTRACTION = functor (Type_variable : sig type t end) -> s
         | C_record    (* ( label , * ) … -> * *)
         | C_variant   (* ( label , * ) … -> * *)
       type label
-      module LMap : Simple_utils.Map.S with type key = label
+      module LMap : sig
+        include Map.S
+        val fold_map : f:(label -> 'a -> 'b -> 'b * 'c) -> init:'b -> 'a t -> 'b * 'c t
+        val of_list : (label * 'a) list -> 'a t
+        val add_bindings : (label * 'a) list -> 'a t -> 'a t
+      end with type Key.t = label
       type 'a label_map = 'a LMap.t
       type typeclass = type_value list list
       and type_value_ =

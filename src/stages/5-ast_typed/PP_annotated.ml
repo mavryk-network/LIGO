@@ -14,7 +14,7 @@ let lmap_sep value sep ppf m =
   fprintf ppf "%a" (list_sep new_pp sep) lst
 
 let record_sep value sep ppf (m : 'a label_map) =
-  let lst = LMap.to_kv_list m in
+  let lst = LMap.to_alist m in
   let lst = List.dedup_and_sort ~compare:(fun (Label a,_) (Label b,_) -> String.compare a b) lst in
   let new_pp ppf (k, v) = fprintf ppf "@[<h>%a -> %a@]" label k value v in
   fprintf ppf "%a" (list_sep new_pp sep) lst
@@ -26,7 +26,7 @@ let tuple_sep value sep ppf m =
   fprintf ppf "%a" (list_sep new_pp sep) lst
 
 let record_sep_t value sep ppf (m : 'a label_map) =
-  let lst = LMap.to_kv_list m in
+  let lst = LMap.to_alist m in
   let lst = List.dedup_and_sort ~compare:(fun (Label a,_) (Label b,_) -> String.compare a b) lst in
   let new_pp ppf (k, {associated_type;_}) = fprintf ppf "@[<h>%a -> %a@]" label k value associated_type in
   fprintf ppf "%a" (list_sep new_pp sep) lst
@@ -69,7 +69,7 @@ let rec type_content : formatter -> type_content -> unit =
   match tc with
   | T_variable        tv -> type_variable                 ppf tv
   | T_constant        tc -> type_injection ppf tc
-  | T_sum              m -> fprintf ppf "@[<h>sum[%a]@]" (lmap_sep_d row_element) (LMap.to_kv_list_rev m.content)
+  | T_sum              m -> fprintf ppf "@[<h>sum[%a]@]" (lmap_sep_d row_element) (LMap.to_alist ~key_order:`Decreasing m.content)
   | T_record           m -> fprintf ppf "%a" record m
   | T_arrow            a -> arrow         type_expression ppf a
   | T_module_accessor ma -> module_access type_expression ppf ma

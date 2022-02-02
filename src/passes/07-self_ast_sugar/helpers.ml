@@ -86,7 +86,7 @@ let rec map_expression : 'err exp_mapper -> expression -> expression = fun f e -
     let cases' = List.map ~f:aux cases in
     return @@ E_matching {matchee=e';cases=cases'}
   | E_record m -> (
-    let m' = LMap.map self m in
+    let m' = LMap.map ~f: self m in
     return @@ E_record m'
   )
   | E_accessor acc -> (

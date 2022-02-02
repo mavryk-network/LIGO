@@ -6,7 +6,7 @@ let peephole_type_expression ~raise : type_expression -> type_expression  = fun 
   match e.type_content with
   | T_sum cmap ->
     let _ = LMap.mapi
-      (fun k _ ->
+      ~f:(fun ~key:k ~data:_ ->
         let (Label name) = k in
         if (String.length name >= 32) then raise.raise @@ long_constructor name e
         (*RL TODO: move this to some passes after typer*)

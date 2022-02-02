@@ -91,7 +91,7 @@ let rec defuse_of_expr defuse expr : defuse =
      defuse_union (defuse_of_expr defuse matchee) (defuse_of_cases defuse cases)
   | E_record re ->
      Stage_common.Types.LMap.fold
-       (fun _ x -> defuse_union (defuse_of_expr defuse x)) re defuse_neutral
+       ~f:(fun ~key:_ ~data:x -> defuse_union (defuse_of_expr defuse x)) re ~init:defuse_neutral
   | E_record_accessor {record;_} ->
      defuse_of_expr defuse record
   | E_record_update {record;update;_} ->
@@ -122,7 +122,7 @@ and defuse_of_variant defuse {cases;_} =
       cases
 
 and defuse_of_record defuse {body;fields;_} =
-  let vars = LMap.to_list fields |> List.map ~f:fst in
+  let vars = LMap.data fields |> List.map ~f:fst in
   let map = List.fold_left ~f:(fun m v -> M.add v false m) ~init:defuse vars in
   let vars' = List.map ~f:(fun v -> (v, M.find_opt v defuse)) vars in
   let defuse,unused = defuse_of_expr map body in

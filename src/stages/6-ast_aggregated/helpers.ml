@@ -8,18 +8,18 @@ let label_range i j =
   List.map ~f:(fun i -> Label (string_of_int i)) @@ range i j
 
 let is_tuple_lmap m =
-  List.for_all ~f:(fun i -> LMap.mem i m) @@ (label_range 0 (LMap.cardinal m))
+  List.for_all ~f:(fun i -> LMap.mem m i) @@ (label_range 0 (LMap.length m))
 
 let tuple_of_record (m: _ LMap.t) =
   let aux i =
     let label = Label (string_of_int i) in
-    let opt = LMap.find_opt (label) m in
+    let opt = LMap.find m label in
     Option.bind ~f: (fun opt -> Some ((label,opt),i+1)) opt
   in
   Base.Sequence.to_list @@ Base.Sequence.unfold ~init:0 ~f:aux
 
 let kv_list_of_t_sum ?(layout = L_tree) (m: row_element LMap.t) =
-  let lst = LMap.to_kv_list m in
+  let lst = LMap.to_alist m in
   match layout with
   | L_tree -> lst
   | L_comb -> (
@@ -31,7 +31,7 @@ let kv_list_of_t_record_or_tuple ?(layout = L_tree) (m: row_element LMap.t) =
   let lst =
     if (is_tuple_lmap m)
     then tuple_of_record m
-    else LMap.to_kv_list m
+    else LMap.to_alist m
   in
   match layout with
   | L_tree -> lst
@@ -44,12 +44,12 @@ let kv_list_of_record_or_tuple ~layout record_t_content record =
   let exps =
     if (is_tuple_lmap record)
     then tuple_of_record record
-    else LMap.to_kv_list record
+    else LMap.to_alist record
   in
   match layout with
   | L_tree -> List.map ~f:snd exps
   | L_comb -> (
-    let types = LMap.to_kv_list record_t_content in
+    let types = LMap.to_alist record_t_content in
     let te = List.map ~f:(fun ((label_t,t),(label_e,e)) ->
       assert (Compare.label label_t label_e = 0) ; (*TODO TEST*)
       (t,e)) (List.zip_exn types exps) in
@@ -65,15 +65,15 @@ let remove_empty_annotation (ann : string option) : string option =
 
 let is_michelson_or (t: _ label_map) =
   let s = List.sort ~compare:(fun (Label k1, _) (Label k2, _) -> String.compare k1 k2) @@
-    LMap.to_kv_list t in
+    LMap.to_alist t in
   match s with
   | [ (Label "M_left", ta) ; (Label "M_right", tb) ] -> Some (ta,tb)
   | _ -> None
 
 let is_michelson_pair (t: row_element label_map) : (row_element * row_element) option =
-  match LMap.to_list t with
+  match LMap.data t with
   | [ a ; b ] -> (
-      if List.for_all ~f:(fun i -> LMap.mem i t) @@ (label_range 0 2)
+      if List.for_all ~f:(fun i -> LMap.mem t i) @@ (label_range 0 2)
       && Option.(
         is_some a.michelson_annotation || is_some b.michelson_annotation
       )
@@ -100,11 +100,11 @@ let rec subst_type v t (u : type_expression) =
      let parameters = List.map ~f:(self v t) parameters in
      { u with type_content = T_constant {language;injection;parameters} }
   | T_sum {content; layout} ->
-     let content = LMap.map (fun {associated_type; michelson_annotation; decl_pos} : row_element ->
+     let content = LMap.map ~f: (fun {associated_type; michelson_annotation; decl_pos} : row_element ->
                        {associated_type = self v t associated_type; michelson_annotation;decl_pos}) content in
      { u with type_content = T_sum {content; layout} }
   | T_record {content; layout} ->
-     let content = LMap.map (fun {associated_type; michelson_annotation; decl_pos} : row_element ->
+     let content = LMap.map ~f: (fun {associated_type; michelson_annotation; decl_pos} : row_element ->
                        {associated_type = self v t associated_type; michelson_annotation;decl_pos}) content in
      { u with type_content = T_record {content; layout} }
   | _ -> u
@@ -141,8 +141,8 @@ let rec assert_type_expression_eq (a, b: (type_expression * type_expression)) : 
   )
   | T_constant _, _ -> None
   | T_sum sa, T_sum sb -> (
-      let sa' = LMap.to_kv_list_rev sa.content in
-      let sb' = LMap.to_kv_list_rev sb.content in
+      let sa' = LMap.to_alist ~key_order:`Decreasing sa.content in
+      let sb' = LMap.to_alist ~key_order:`Decreasing sb.content in
       let aux ((ka, {associated_type=va;_}), (kb, {associated_type=vb;_})) =
         let* _ = assert_eq ka kb in
         assert_type_expression_eq (va, vb)
@@ -155,8 +155,8 @@ let rec assert_type_expression_eq (a, b: (type_expression * type_expression)) : 
        when Bool.(<>) (is_tuple_lmap ra.content) (is_tuple_lmap rb.content) -> None
   | T_record ra, T_record rb -> (
       let sort_lmap r' = List.sort ~compare:(fun (Label a,_) (Label b,_) -> String.compare a b) r' in
-      let ra' = sort_lmap @@ LMap.to_kv_list_rev ra.content in
-      let rb' = sort_lmap @@ LMap.to_kv_list_rev rb.content in
+      let ra' = sort_lmap @@ LMap.to_alist ~key_order:`Decreasing ra.content in
+      let rb' = sort_lmap @@ LMap.to_alist ~key_order:`Decreasing rb.content in
       let aux ((ka, {associated_type=va;_}), (kb, {associated_type=vb;_})) =
         let Label ka = ka in
         let Label kb = kb in

@@ -45,7 +45,7 @@ let lmap : compare:('a cmp) -> ('a LMap.t) cmp = fun ~compare expected actual ->
   if List.compare Ast_core.Compare.label (LMap.keys expected) (LMap.keys actual) <> 0 then
     None
   else
-    list ~compare (LMap.values expected) (LMap.values actual)
+    list ~compare (LMap.data expected) (LMap.data actual)
 
 let rec c_equation : c_equation cmp = fun expected actual ->
   let { aval=a1; bval=a2 } = expected in
@@ -126,7 +126,7 @@ and p_row : p_row cmp = fun expected actual ->
   let { p_row_tag = a1; p_row_args = a2 } = expected in
   let { p_row_tag = b1; p_row_args = b2 } = actual in
   use_generated Ast_core.Compare.row_tag a1 b1 <? fun () ->
-    list ~compare:lmap_row_value_pair (LMap.to_kv_list a2) (LMap.to_kv_list b2)
+    list ~compare:lmap_row_value_pair (LMap.to_alist a2) (LMap.to_alist b2)
 
 and row_value : row_value cmp = fun expected actual ->
   use_generated Ast_core.Compare.row_value expected actual

@@ -11,4 +11,6 @@
    unix
    str)
   (flags (:standard -open Core))
+  (preprocess
+    (pps ppx_sexp_conv))
 )

@@ -39,12 +39,12 @@ let rec pp_value : Format.formatter -> value -> unit = fun ppf v ->
       let aux : Format.formatter -> value -> unit = fun ppf v ->
         Format.fprintf ppf "%a" pp_value v
       in
-      Format.fprintf ppf "(%a)" (list_sep aux (tag " , ")) (LMap.to_list recmap)
+      Format.fprintf ppf "(%a)" (list_sep aux (tag " , ")) (LMap.data recmap)
     else
       let aux : Format.formatter -> (label * value) -> unit = fun ppf (Label l, v) ->
         Format.fprintf ppf "%s = %a" l pp_value v
       in
-      Format.fprintf ppf "{%a}" (list_sep aux (tag " ; ")) (LMap.to_kv_list recmap)
+      Format.fprintf ppf "{%a}" (list_sep aux (tag " ; ")) (LMap.to_alist recmap)
   | V_Michelson (Ty_code { code ; _ } | Contract code) ->
     Format.fprintf ppf "%a" Tezos_utils.Michelson.pp code
   | V_Ligo (_syntax , code) ->

@@ -6,11 +6,11 @@
 (*   end_column : int ; *)
 (* } *)
 
-type virtual_location = string
+type virtual_location = string [@@deriving sexp]
 
 type t =
   | File of Region.t (* file_location *)
-  | Virtual of virtual_location
+  | Virtual of virtual_location [@@deriving sexp]
 
 let to_yojson = function
   | File reg  -> `List [`String "File"; Region.to_yojson reg]
@@ -63,7 +63,7 @@ let is_virtual = function
 type 'a wrap = {
   wrap_content : 'a ;
   location : t ;
-}
+}  [@@deriving sexp]
 
 let wrap_to_yojson f {wrap_content;location} =
   `Assoc [("wrap_content", f wrap_content); ("location",to_yojson location)]

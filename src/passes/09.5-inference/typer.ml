@@ -52,7 +52,7 @@ end = struct
     | O.E_matching        { matchee; cases } ->
       let () = expression matchee in
       List.iter ~f:(fun ({body ; _ }: _ O.match_case ) -> expression body) cases
-    | O.E_record          m -> List.fold ~f:(fun () (_key, e) -> expression e) ~init:() @@ Ast_core.LMap.bindings m
+    | O.E_record          m -> List.fold ~f:(fun () (_key, e) -> expression e) ~init:() @@ Ast_core.LMap.to_alist m
     | O.E_record_accessor { record; path=_ } -> expression record
     | O.E_record_update   { record; path=_; update } -> let () = expression record in expression update
     | O.E_module_accessor { module_name=_; element} -> expression element
@@ -61,9 +61,9 @@ end = struct
     te where associated_type
   and tc where : O.type_content -> _ = function
       O.T_sum      m ->
-      List.fold ~f:(fun () (_key, row_element) -> re where row_element) ~init:() @@ Ast_core.LMap.bindings m.fields
+      List.fold ~f:(fun () (_key, row_element) -> re where row_element) ~init:() @@ Ast_core.LMap.to_alist m.fields
     | O.T_record   m ->
-      List.fold ~f:(fun () (_key, row_element) -> re where row_element) ~init:() @@ Ast_core.LMap.bindings m.fields
+      List.fold ~f:(fun () (_key, row_element) -> re where row_element) ~init:() @@ Ast_core.LMap.to_alist m.fields
     | O.T_arrow    { type1; type2 } ->
       let () = te where type1 in
       te where type2
@@ -163,7 +163,7 @@ and evaluate_type ~raise : environment -> I.type_expression -> O.type_expression
       let associated_type = evaluate_type ~raise e associated_type in
       ({associated_type ; michelson_annotation ; decl_pos}:_ O.row_element_mini_c)
     in
-    let fields = O.LMap.map aux fields in
+    let fields = O.LMap.map ~f: aux fields in
     let () = trace_assert_fail_option ~raise (variant_redefined_error t.location) @@
       Environment.get_sum fields e in
     return (T_sum {fields ; layout})
@@ -173,7 +173,7 @@ and evaluate_type ~raise : environment -> I.type_expression -> O.type_expression
       let associated_type = evaluate_type ~raise e associated_type in
       ({associated_type ; michelson_annotation ; decl_pos}:_ O.row_element_mini_c)
     in
-    let fields = O.LMap.map aux fields in
+    let fields = O.LMap.map ~f: aux fields in
     (* let () = trace_assert_fail_option (record_redefined_error t.location) @@
       Environment.get_record content e in *)
     return (T_record {fields ; layout})
@@ -468,7 +468,7 @@ and type_expression' ~raise : ?tv_opt:O.type_expression -> environment -> _ O'.t
       | Some r -> r
     in
     let wrapped = Wrap.record record_type in
-    return_wrapped (e_record (O.LMap.map fst m') ()) e state' constraints wrapped
+    return_wrapped (e_record (O.LMap.map ~f: fst m') ()) e state' constraints wrapped
 
   | E_record_accessor {record;path} -> (
       let (e,state,base,t),constraints = self e state record in

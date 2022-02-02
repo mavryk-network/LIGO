@@ -71,7 +71,7 @@ let extract_variant_type ~raise : pattern -> O.label -> O.type_expression -> O.t
   fun p label t ->
   match t.type_content with
   | T_sum rows -> (
-    match O.LMap.find_opt label rows.content with
+    match O.LMap.find rows.content label with
     | Some t -> t.associated_type
     | None -> raise.raise @@ pattern_do_not_conform_type p t
   )
@@ -93,7 +93,7 @@ let extract_record_type ~raise : pattern -> O.label -> O.type_expression -> O.ty
   fun p label t ->
   match t.type_content with
   | T_record rows -> (
-    match O.LMap.find_opt label rows.content with
+    match O.LMap.find rows.content label with
     | Some t -> t.associated_type
     | None -> raise.raise @@ pattern_do_not_conform_type p t
   )
@@ -116,12 +116,12 @@ let type_matchee ~raise : equations -> O.type_expression =
       match p.wrap_content , t.type_content with
       | I.P_var _ , _ -> ()
       | I.P_variant (label,_) , O.T_sum sum_type -> (
-        if O.LMap.mem label sum_type.content then ()
+        if O.LMap.mem sum_type.content label then ()
         else raise.raise @@ pattern_do_not_conform_type p t
       )
       | I.P_variant _ , O.T_constant { injection ; _ } when String.equal (Ligo_string.extract injection) Stage_common.Constant.option_name -> ()
       | P_tuple tupl , O.T_record record_type -> (
-        if (List.length tupl) <> (O.LMap.cardinal record_type.content) then
+        if (List.length tupl) <> (O.LMap.length record_type.content) then
           raise.raise @@ pattern_do_not_conform_type p t
         else ()
       )
@@ -230,29 +230,29 @@ let group_equations ~raise : equations -> equations O.label_map =
       fun (pl , (body , env)) m ->
         let (phd,t) = List.hd_exn pl in
         let ptl = List.tl_exn pl in
-        let upd : O.type_expression -> pattern -> equations option -> equations option =
+        let upd : O.type_expression -> pattern -> equations option -> equations =
           fun proj_t pattern kopt ->
             match kopt with
             | Some eqs ->
               let p = (pattern,proj_t) in
-              Some (( p::ptl , (body,env))::eqs)
+              (( p::ptl , (body,env))::eqs)
             | None ->
               let p = (pattern,proj_t) in
-              Some [ (p::ptl          , (body,env)) ]
+              [ (p::ptl          , (body,env)) ]
         in
         match phd.wrap_content with
         | P_variant (label,p_opt) ->
           let proj_t = extract_variant_type ~raise phd label t in
-          O.LMap.update label (upd proj_t p_opt) m
+          O.LMap.update m label ~f:(upd proj_t p_opt)
         | P_list (List []) ->
           let label = O.Label "Nil" in
           let proj_t = extract_variant_type ~raise phd label t in
-          O.LMap.update label (upd proj_t (Location.wrap O.P_unit)) m
+          O.LMap.update m label ~f:(upd proj_t (Location.wrap O.P_unit))
         | P_list (Cons (p_hd,p_tl)) ->
           let label = O.Label "Cons" in
           let pattern = Location.wrap ~loc:(phd.location) @@ I.P_tuple [p_hd;p_tl] in
           let proj_t = extract_variant_type ~raise phd label t in
-          O.LMap.update label (upd proj_t pattern) m
+          O.LMap.update m label ~f:(upd proj_t pattern)
         | _ -> raise.raise @@ corner_case __LOC__
     in
     List.fold_right ~f:aux ~init:O.LMap.empty eqs
@@ -351,15 +351,15 @@ and ctor_rule ~raise : err_loc:Location.t -> type_f:type_fun -> body_t:O.type_ex
     let grouped_eqs =
       match O.get_t_sum matchee_t with
       | Some rows ->
-        let eq_opt_map = O.LMap.mapi (fun label _ -> O.LMap.find_opt label eq_map) rows.content in
-        O.LMap.to_kv_list @@ eq_opt_map
+        let eq_opt_map = O.LMap.mapi ~f:(fun ~key:label ~data:_ -> O.LMap.find eq_map label) rows.content in
+        O.LMap.to_alist @@ eq_opt_map
       | None -> (
         (* REMITODO: parametric types in env ? *)
         match O.get_t_option matchee_t with
-        | Some _ -> List.map ~f:(fun label -> (label, O.LMap.find_opt label eq_map)) O.[Label "Some"; Label "None"]
+        | Some _ -> List.map ~f:(fun label -> (label, O.LMap.find eq_map label)) O.[Label "Some"; Label "None"]
         | None -> (
           match O.get_t_list matchee_t with
-          | Some _ -> List.map ~f:(fun label -> (label, O.LMap.find_opt label eq_map)) O.[Label "Cons"; Label "Nil"]
+          | Some _ -> List.map ~f:(fun label -> (label, O.LMap.find eq_map label)) O.[Label "Cons"; Label "Nil"]
           | None -> raise.raise @@ corner_case __LOC__ (* should be caught when typing the matchee *)
         )
       )

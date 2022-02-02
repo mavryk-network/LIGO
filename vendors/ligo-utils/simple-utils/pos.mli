@@ -97,7 +97,7 @@ type t = <
     ?file:bool -> ?offsets:bool -> [`Byte | `Point] -> string;
   compact :
     ?file:bool -> ?offsets:bool -> [`Byte | `Point] -> string;
->
+> [@@deriving sexp]
 
 (* A shorthand after an [open Pos]. *)
 

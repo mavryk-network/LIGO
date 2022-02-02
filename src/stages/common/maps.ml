@@ -19,7 +19,7 @@ let type_app : ('a -> 'b) -> 'a type_app -> 'b type_app
 
 let rows : ('a -> 'b) -> 'a rows -> 'b rows
 = fun g {fields; attributes} ->
-  let fields = LMap.map
+  let fields = LMap.map ~f:
   (fun {associated_type ; attributes ; decl_pos} ->
     let associated_type = g associated_type in
     ({associated_type ; attributes ; decl_pos}: 'b row_element)
@@ -88,7 +88,7 @@ let path : ('a -> 'b) -> 'a access list -> 'b access list
 
 let record : ('a -> 'b) -> 'a label_map -> 'b label_map
 = fun f record ->
-  LMap.map f record
+  LMap.map ~f: f record
 
 let recursive : ('a -> 'b) -> ('c -> 'd) -> ('a,'c) recursive -> ('b,'d) recursive
 = fun f g {fun_name;fun_type;lambda=l} ->

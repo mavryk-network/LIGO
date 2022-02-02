@@ -52,8 +52,8 @@ let rec infer_type_application ~raise ~loc ?(default_error = fun loc t t' -> ass
      else
        raise.raise default_error
   | T_record {content; layout}, T_record {content=content'; layout=layout'} ->
-     let content_kv = O.LMap.to_kv_list content in
-     let content'_kv = O.LMap.to_kv_list content' in
+     let content_kv = O.LMap.to_alist content in
+     let content'_kv = O.LMap.to_alist content' in
      if layout_eq layout layout' &&
           List.equal equal_label (List.map content_kv ~f:fst) (List.map content'_kv ~f:fst) then
        let elements = List.zip_exn content_kv content'_kv in
@@ -67,8 +67,8 @@ let rec infer_type_application ~raise ~loc ?(default_error = fun loc t t' -> ass
      else
        raise.raise default_error
   | T_sum {content; layout}, T_sum {content=content'; layout=layout'} ->
-     let content_kv = O.LMap.to_kv_list content in
-     let content'_kv = O.LMap.to_kv_list content' in
+     let content_kv = O.LMap.to_alist content in
+     let content'_kv = O.LMap.to_alist content' in
      if layout_eq layout layout' &&
           List.equal equal_label (List.map content_kv ~f:fst) (List.map content'_kv ~f:fst) then
        let elements = List.zip_exn content_kv content'_kv in
@@ -203,7 +203,7 @@ and evaluate_otype ~raise (c:context) (t:O.type_expression) : O.type_expression 
         let associated_type = evaluate_otype ~raise c associated_type in
         ({associated_type;michelson_annotation;decl_pos} : O.row_element)
       in
-      O.LMap.map aux m.content
+      O.LMap.map ~f: aux m.content
     in
     let sum : O.rows  = match Context.get_sum lmap c with
       | None ->
@@ -213,13 +213,13 @@ and evaluate_otype ~raise (c:context) (t:O.type_expression) : O.type_expression 
     in
     let ty = make_t (T_sum sum) None in
     let () =
-      let aux k _v acc = match Context.get_constructor k c with
+      let aux ~key:k ~data:_v acc = match Context.get_constructor k c with
           | Some (_,type_) ->
             if Ast_typed.Misc.type_expression_eq (acc,type_) then type_
-            else if I.LMap.mem (Label "M_left") m.content || I.LMap.mem (Label "M_right") m.content then type_
+            else if I.LMap.mem m.content (Label "M_left") || I.LMap.mem m.content (Label "M_right") then type_
             else raise.raise (redundant_constructor k t.location)
           | None -> acc in
-      let _ = O.LMap.fold aux m.content ty in ()
+      let _ = O.LMap.fold ~f:aux m.content ~init:ty in ()
     in
     return @@ T_sum sum
   )
@@ -228,7 +228,7 @@ and evaluate_otype ~raise (c:context) (t:O.type_expression) : O.type_expression 
       let associated_type = evaluate_otype ~raise c associated_type in
       ({associated_type;michelson_annotation;decl_pos} : O.row_element)
     in
-    let lmap = O.LMap.map aux m.content in
+    let lmap = O.LMap.map ~f: aux m.content in
     let record : O.rows = match Context.get_record lmap c with
     | None ->
       let layout = m.layout in
@@ -272,7 +272,7 @@ and evaluate_type ~raise (c:context) (t:I.type_expression) : O.type_expression =
         let associated_type = evaluate_type ~raise c associated_type in
         ({associated_type;michelson_annotation;decl_pos} : O.row_element)
       in
-      O.LMap.map aux m.fields
+      O.LMap.map ~f: aux m.fields
     in
     let sum : O.rows  = match Context.get_sum lmap c with
       | None ->
@@ -282,13 +282,13 @@ and evaluate_type ~raise (c:context) (t:I.type_expression) : O.type_expression =
     in
     let ty = make_t (T_sum sum) None in
     let () =
-      let aux k _v acc = match Context.get_constructor k c with
+      let aux ~key:k ~data:_v acc = match Context.get_constructor k c with
           | Some (_,type_) ->
             if Ast_typed.Misc.type_expression_eq (acc,type_) then type_
-            else if I.LMap.mem (Label "M_left") m.fields || I.LMap.mem (Label "M_right") m.fields then type_
+            else if I.LMap.mem m.fields (Label "M_left") || I.LMap.mem m.fields (Label "M_right") then type_
             else raise.raise (redundant_constructor k t.location)
           | None -> acc in
-      let _ = O.LMap.fold aux m.fields ty in ()
+      let _ = O.LMap.fold ~f:aux m.fields ~init:ty in ()
     in
     return @@ T_sum sum
   )
@@ -297,7 +297,7 @@ and evaluate_type ~raise (c:context) (t:I.type_expression) : O.type_expression =
       let associated_type = evaluate_type ~raise c associated_type in
       ({associated_type;michelson_annotation;decl_pos} : O.row_element)
     in
-    let lmap = O.LMap.map aux m.fields in
+    let lmap = O.LMap.map ~f: aux m.fields in
     let record : O.rows = match Context.get_record lmap c with
     | None ->
       let layout = Option.value ~default:default_layout m.layout in
@@ -458,7 +458,7 @@ and type_expression' ~raise ~test ~protocol_version ?(args = []) ?last : context
             get_t_record prev.type_expression in
           let tv =
             trace_option ~raise (bad_record_access property prev e.location) @@
-            O.LMap.find_opt property r_tv.content in
+            O.LMap.find r_tv.content property in
           let location = e.location in
           make_e ~location (E_record_accessor {record=prev; path=property}) tv.associated_type
       in
@@ -474,7 +474,7 @@ and type_expression' ~raise ~test ~protocol_version ?(args = []) ?last : context
     let expr' = type_expression' ~raise ~test ~protocol_version context element in
     ( match t.type_content with
       | T_sum c ->
-        let {associated_type ; _} : O.row_element = O.LMap.find (Label s) c.content in
+        let {associated_type ; _} : O.row_element = O.LMap.find_exn c.content (Label s) in
         let () = assert_type_expression_eq ~raise expr'.location (associated_type, expr'.type_expression) in
         return (E_constructor {constructor = Label s; element=expr'}) t
       | _ -> raise.raise (michelson_or_no_annotation constructor e.location)
@@ -497,7 +497,7 @@ and type_expression' ~raise ~test ~protocol_version ?(args = []) ?last : context
       return (E_constructor {constructor; element=expr'}) sum_tv
   (* Record *)
   | E_record m ->
-      let m' = O.LMap.map (type_expression' ~raise ~test ~protocol_version context) m in
+      let m' = O.LMap.map ~f: (type_expression' ~raise ~test ~protocol_version context) m in
       let _,lmap = O.LMap.fold_map ~f:(
         fun (Label k) e i ->
           let decl_pos = match int_of_string_opt k with Some i -> i | None -> i in
@@ -516,7 +516,7 @@ and type_expression' ~raise ~test ~protocol_version ?(args = []) ?last : context
       match wrapped.type_content with
       | T_record {content;_} -> (
           let O.{associated_type;_} = trace_option ~raise (bad_record_access path record update.location) @@
-            O.LMap.find_opt path content in
+            O.LMap.find content path in
           associated_type
       )
       | _ -> failwith "Update an expression which is not a record"
@@ -844,14 +844,14 @@ let rec untype_type_expression (t:O.type_expression) : I.type_expression =
        let associated_type = untype_type_expression associated_type in
        let v' = ({associated_type ; michelson_annotation ; decl_pos} : I.row_element) in
        v' in
-     let x' = I.LMap.map aux content in
+     let x' = I.LMap.map ~f: aux content in
      return @@ I.T_sum { fields = x' ; layout = Some layout }
   | O.T_record {content;layout} -> (
     let aux ({associated_type ; michelson_annotation ; decl_pos} : O.row_element) =
       let associated_type = untype_type_expression associated_type in
       let v' = ({associated_type ; michelson_annotation ; decl_pos} : I.row_element) in
       v' in
-    let x' = I.LMap.map aux content in
+    let x' = I.LMap.map ~f: aux content in
     return @@ I.T_record {fields = x' ; layout = Some layout}
   )
   | O.T_variable name -> return @@ I.T_variable (Var.todo_cast name)
@@ -906,7 +906,7 @@ and untype_expression_content ty (ec:O.expression_content) : I.expression =
       let p' = untype_expression element in
       return (e_constructor constructor p')
   | E_record r ->
-    let r' = LMap.map untype_expression r in
+    let r' = LMap.map ~f: untype_expression r in
     return (e_record r' ())
   | E_record_accessor {record; path} ->
       let r' = untype_expression record in
@@ -945,7 +945,7 @@ and untype_expression_content ty (ec:O.expression_content) : I.expression =
           (Label label, proj)
         )
       in
-      let (labels,patterns) = List.unzip @@ List.map ~f:aux (LMap.to_kv_list fields) in
+      let (labels,patterns) = List.unzip @@ List.map ~f:aux (LMap.to_alist fields) in
       let body = untype_expression body in
       let case = match Ast_typed.Helpers.is_tuple_lmap fields with
         | false ->

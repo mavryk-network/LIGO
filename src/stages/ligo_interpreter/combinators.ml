@@ -31,8 +31,8 @@ let extract_pair : value -> (value * value) option =
   fun p ->
     ( match p with
       | V_Record lmap ->
-        let fst = LMap.find (Label "0") lmap in
-        let snd = LMap.find (Label "1") lmap in
+        let fst = LMap.find_exn lmap (Label "0") in
+        let snd = LMap.find_exn lmap (Label "1") in
         Some (fst,snd)
       | _ -> None
     )
@@ -130,7 +130,7 @@ let get_pair : value -> (value * value) option =
   fun value ->
     match value with
     | V_Record lm -> (
-      let x = LMap.to_kv_list lm in
+      let x = LMap.to_alist lm in
       match x with
       | [ (Label "0", x ) ; (Label "1", y) ] -> Some (x,y)
       | _ -> None
@@ -233,8 +233,8 @@ let rec compare_value (v : value) (v' : value) : int =
      let compare (Label l, v) (Label l', v') = match String.compare l l' with
          0 -> compare_value v v'
        | c -> c in
-     let r = LMap.to_kv_list r |> List.sort ~compare in
-     let r' = LMap.to_kv_list r' |> List.sort ~compare in
+     let r = LMap.to_alist r |> List.sort ~compare in
+     let r' = LMap.to_alist r' |> List.sort ~compare in
      List.compare compare r r'
   | V_Record _, (V_Map _ | V_Set _ | V_Construct _ | V_Michelson _ | V_Ligo _ | V_Mutation _ | V_Failure _ | V_Func_val _) -> 1
   | V_Map _, (V_Ct _ | V_List _ | V_Record _) -> -1

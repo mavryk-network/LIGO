@@ -8,9 +8,9 @@ include Stage_common.Types
    provided by the Comparable module *)
 (*@ typeclass poly_unionfind comparable *)
 (*@ typeclass poly_set       comparable *)
-type ast_core_type_expression = Ast_core.type_expression
+type ast_core_type_expression = Ast_core.type_expression [@@deriving sexp]
 
-type te_lmap = row_element label_map
+type te_lmap = row_element label_map [@@deriving sexp]
 and type_meta = ast_core_type_expression option
 
 and type_content =
@@ -169,7 +169,7 @@ and expression_content =
   | E_record of expression_label_map
   | E_record_accessor of record_accessor
   | E_record_update   of record_update
-  | E_module_accessor of expression module_access
+  | E_module_accessor of expression module_access [@@deriving sexp]
 
 and type_inst = {
     forall: expression ;

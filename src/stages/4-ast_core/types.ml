@@ -4,18 +4,18 @@ module Ligo_string = Simple_utils.Ligo_string
 open Simple_utils.Function
 include Stage_common.Types
 
-type sugar_type_expression_option = Ast_sugar.type_expression option
-type sugar_expression_option = Ast_sugar.expression option
+type sugar_type_expression_option = Ast_sugar.type_expression option [@@deriving sexp]
+type sugar_expression_option = Ast_sugar.expression option [@@deriving sexp]
 
-type string_option = string option
+type string_option = string option [@@deriving sexp]
 
 type type_attribute = {
   public: bool;
-}
+} [@@deriving sexp]
 
 and module_attribute = {
   public: bool;
-}
+} [@@deriving sexp]
 
 and module_ = declaration Location.wrap list
 
@@ -67,7 +67,7 @@ and type_expression = {
   type_content  : type_content ;
   sugar    : sugar_type_expression_option ;
   location : location ;
-  }
+  }  [@@deriving sexp]
 and ty_expr = type_expression
 
 and expression = {

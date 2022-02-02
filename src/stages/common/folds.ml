@@ -11,9 +11,9 @@ let type_app : ('acc -> 'a -> 'acc) -> 'acc -> 'a type_app -> 'acc
 let rows : ('acc -> 'a -> 'acc) -> 'acc -> 'a rows -> 'acc
 = fun g acc {fields;attributes=_} ->
   LMap.fold
-  (fun _ {associated_type;attributes=_;decl_pos=_} acc ->
+  ~f:(fun ~key:_ ~data:{associated_type;attributes=_;decl_pos=_} acc ->
     g acc associated_type
-  ) acc fields
+  ) ~init:acc fields
 
 let arrow : ('acc -> 'a -> 'acc) -> 'acc -> 'a arrow -> 'acc
 = fun g acc {type1;type2} ->
@@ -79,9 +79,9 @@ let path : ('acc -> 'a -> 'acc) -> 'acc -> 'a access list -> 'acc
 
 let record : ('acc -> 'a -> 'acc) -> 'acc -> 'a label_map -> 'acc
 = fun f acc record ->
-  LMap.fold (
-    fun _ a acc -> f acc a
-  ) record acc
+  LMap.fold ~f:(
+    fun ~key:_ ~data:a acc -> f acc a
+  ) record ~init:acc
 
 let tuple : ('acc -> 'a -> 'acc) -> 'acc -> 'a list -> 'acc
 = fun f acc record ->

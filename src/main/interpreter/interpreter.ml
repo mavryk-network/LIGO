@@ -1056,14 +1056,14 @@ and eval_ligo ~raise ~steps ~protocol_version ~options : AST.expression -> callt
         (fun (label,(v:AST.expression)) ->
           let* v' = eval_ligo v calltrace env in
           return (label,v'))
-        (LMap.to_kv_list_rev recmap)
+        (LMap.to_alist ~key_order:`Decreasing recmap)
       in
       return @@ V_Record (LMap.of_list lv')
     | E_record_accessor { record ; path} -> (
       let* record' = eval_ligo record calltrace env in
       match record' with
       | V_Record recmap ->
-        let a = LMap.find path recmap in
+        let a = LMap.find_exn recmap path in
         return a
       | _ -> failwith "trying to access a non-record"
     )
@@ -1071,9 +1071,9 @@ and eval_ligo ~raise ~steps ~protocol_version ~options : AST.expression -> callt
       let* record' = eval_ligo record calltrace env in
       match record' with
       | V_Record recmap ->
-        if LMap.mem path recmap then
+        if LMap.mem recmap path then
           let* field' = eval_ligo update calltrace env in
-          return @@ V_Record (LMap.add path field' recmap)
+          return @@ V_Record (LMap.set ~key:path ~data:field' recmap)
         else
           failwith "field l does not exist in record"
       | _ -> failwith "this expression isn't a record"
@@ -1119,7 +1119,7 @@ and eval_ligo ~raise ~steps ~protocol_version ~options : AST.expression -> callt
         let ctor_body (case : matching_content_case) = (case.constructor, case.body) in
         let cases = LMap.of_list (List.map ~f:ctor_body cases) in
         let get_case c =
-            (LMap.find (Label c) cases) in
+            (LMap.find_exn cases (Label c)) in
         let match_true  = get_case "True" in
         let match_false = get_case "False" in
         if b then eval_ligo match_true calltrace env
@@ -1127,8 +1127,8 @@ and eval_ligo ~raise ~steps ~protocol_version ~options : AST.expression -> callt
       | Match_variant {cases ; tv} , V_Construct (matched_c , proj) ->
         let* tv = match AST.get_t_sum_opt tv with
           | Some tv ->
-             let {associated_type; michelson_annotation=_; decl_pos=_} = LMap.find
-                                  (Label matched_c) tv.content in
+             let {associated_type; michelson_annotation=_; decl_pos=_} = LMap.find_exn
+                                  tv.content (Label matched_c) in
              return associated_type
           | None ->
              match AST.get_t_option tv with
@@ -1145,15 +1145,15 @@ and eval_ligo ~raise ~steps ~protocol_version ~options : AST.expression -> callt
         let env' = Env.extend env pattern (tv, proj) in
         eval_ligo body calltrace env'
       | Match_record {fields ; body ; tv = _} , V_Record rv ->
-        let aux : label -> ( expression_variable * _ ) -> env -> env =
-          fun l (v,ty) env ->
-            let iv = match LMap.find_opt l rv with
+        let aux : key:label -> data:( expression_variable * _ ) -> env -> env =
+          fun ~key:l ~data:(v,ty) env ->
+            let iv = match LMap.find rv l with
               | Some x -> x
               | None -> failwith "label do not match"
             in
             Env.extend env v (ty,iv)
         in
-        let env' = LMap.fold aux fields env in
+        let env' = LMap.fold ~f:aux fields ~init:env in
         eval_ligo body calltrace env'
       | _ , v -> failwith ("not yet supported case "^ Format.asprintf "%a" Ligo_interpreter.PP.pp_value v^ Format.asprintf "%a" AST.PP.expression term)
     )
@@ -1213,7 +1213,7 @@ let eval_test ~raise ~steps ~options ~protocol_version : Ast_typed.program -> ((
   let initial_state = Tezos_state.init_ctxt ~raise protocol_version [] in
   let f (n, t) r =
     let s, _ = Var.internal_get_name_and_counter n in
-    LMap.add (Label s) (Ast_typed.e_a_variable (Location.wrap n) t) r in
+    LMap.set ~key:(Label s) ~data:(Ast_typed.e_a_variable (Location.wrap n) t) r in
   let map = List.fold_right lst ~f ~init:LMap.empty in
   let expr = Ast_typed.e_a_record map in
   let expr = ctxt expr in
@@ -1223,7 +1223,7 @@ let eval_test ~raise ~steps ~options ~protocol_version : Ast_typed.program -> ((
   | V_Record m ->
     let f (n, _) r =
       let s, _ = Var.internal_get_name_and_counter n in
-      match LMap.find_opt (Label s) m with
+      match LMap.find m (Label s) with
       | None -> failwith "Cannot find"
       | Some v -> (s, v) :: r in
     List.fold_right ~f ~init:[] @@ lst

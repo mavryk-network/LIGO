@@ -52,7 +52,7 @@ let get_constructor : label -> t -> (type_expression * type_expression) option =
     let aux = fun {type_variable=_ ; type_} ->
       match type_.type_content with
       | T_sum m ->
-        (match LMap.find_opt k m.fields with
+        (match LMap.find m.fields k with
             Some {associated_type ; _} -> Some (associated_type , type_)
           | None -> None)
       | _ -> None
@@ -72,8 +72,8 @@ let get_record : _ label_map -> t -> (rows) option = fun lmap e ->
     let aux = fun {type_variable=_ ; type_} ->
       match type_.type_content with
       | T_record m -> Option.(
-        let lst_kv  = LMap.to_kv_list_rev lmap in
-        let lst_kv' = LMap.to_kv_list_rev m.fields in
+        let lst_kv  = LMap.to_alist ~key_order:`Decreasing lmap in
+        let lst_kv' = LMap.to_alist ~key_order:`Decreasing m.fields in
         let m = map ~f:(fun () -> m) @@ Misc.assert_list_eq
           ( fun (ka,va) (kb,vb) ->
             let Label ka = ka in
@@ -101,8 +101,8 @@ let get_sum : _ label_map -> t -> rows option = fun lmap e ->
     let aux = fun {type_variable=_ ; type_} ->
       match type_.type_content with
       | T_sum m -> Option.(
-        let lst_kv  = LMap.to_kv_list_rev lmap in
-        let lst_kv' = LMap.to_kv_list_rev m.fields in
+        let lst_kv  = LMap.to_alist ~key_order:`Decreasing lmap in
+        let lst_kv' = LMap.to_alist ~key_order:`Decreasing m.fields in
         map ~f:(fun () -> m) @@ Misc.assert_list_eq (
           fun (ka,va) (kb,vb) ->
             let Label ka = ka in

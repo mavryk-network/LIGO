@@ -4,7 +4,7 @@ open Ast_imperative
 open Stage_common
 
 let map_lmap_t f map =
-  LMap.map
+  LMap.map ~f:
     (fun ({associated_type;_} as field : _ row_element) ->
       let associated_type = f associated_type in
       {field with associated_type })
@@ -95,7 +95,7 @@ let rec map_expression : 'err exp_mapper -> expression -> expression = fun f e -
     let cases' = List.map ~f:aux cases in
     return @@ E_matching {matchee=e';cases=cases'}
   | E_record m -> (
-    let m' = LMap.map self m in
+    let m' = LMap.map ~f: self m in
     return @@ E_record m'
   )
   | E_accessor acc -> (
@@ -409,8 +409,8 @@ module Free_variables :
       in
       VarSet.union (self matchee) (unions @@ List.map ~f:aux cases)
     | E_record m ->
-      let res = LMap.map self m in
-      let res = LMap.to_list res in
+      let res = LMap.map ~f: self m in
+      let res = LMap.data res in
       unions res
     | E_accessor {record;path} ->
       let aux = function

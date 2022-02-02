@@ -132,7 +132,7 @@ let all_equal' : type_constraint_simpl list -> (type_variable -> type_variable) 
                 []
             | SC_Row         {tv;r_tag;tv_map} ->
               if Compare.type_variable (repr tv) (repr v) = 0 then
-                [(`Row (r_tag, LMap.keys tv_map, List.map ~f:(fun {associated_variable;michelson_annotation;decl_pos} -> { associated_value = Location.wrap @@ P_variable associated_variable;michelson_annotation;decl_pos}) @@ LMap.values tv_map))]
+                [(`Row (r_tag, LMap.keys tv_map, List.map ~f:(fun {associated_variable;michelson_annotation;decl_pos} -> { associated_value = Location.wrap @@ P_variable associated_variable;michelson_annotation;decl_pos}) @@ LMap.data tv_map))]
               else
                 []
             | SC_Alias       _ -> failwith "impossible, sc_alias should be removed"
@@ -153,7 +153,7 @@ let all_equal' : type_constraint_simpl list -> (type_variable -> type_variable) 
         | P_abs        _ -> [`TODO]
         | P_constraint _ -> failwith "kinding error: constraints have kind Constraint, but the cells of a typeclass can only contain types (i.e. kind *)"
         | P_constant { p_ctor_tag; p_ctor_args } -> [`Constructor (p_ctor_tag, List.length p_ctor_args, p_ctor_args)]
-        | P_row      { p_row_tag;  p_row_args  } -> [`Row         (p_row_tag, LMap.keys p_row_args, LMap.values p_row_args)]
+        | P_row      { p_row_tag;  p_row_args  } -> [`Row         (p_row_tag, LMap.keys p_row_args, LMap.data p_row_args)]
       ) @@ List.map ~f:(fun x -> x.Location.wrap_content) type_values
       in List.concat res
     in
@@ -205,7 +205,7 @@ let all_equal' : type_constraint_simpl list -> (type_variable -> type_variable) 
                 (k, ({ associated_variable=Core.fresh_type_variable (); michelson_annotation; decl_pos} : row_variable)))
               (List.zip_exn hd_row_keys hd_row_values)
           } in
-          let fresh_vars = List.map ~f:(fun x -> x.associated_variable) @@ LMap.values deduced.tv_map in
+          let fresh_vars = List.map ~f:(fun x -> x.associated_variable) @@ LMap.data deduced.tv_map in
           All_equal_to (`Row deduced, fresh_vars,
              List.map
                ~f:(function `Row (_p_row_tag, _p_row_keys, p_row_values) ->

@@ -121,7 +121,7 @@ and compile_type ~raise : I.type_expression -> O.type_expression =
     let return type_content : O.type_expression = { type_content ; orig_var = ty.orig_var ; location = ty.location } in
     let map_rows : I.row_element label_map -> O.row_element label_map = fun rows ->
       let f : I.row_element -> O.row_element = fun row -> { row with associated_type = self row.associated_type} in
-      LMap.map f rows
+      LMap.map ~f: f rows
     in
     match ty.type_content with
     | T_variable x -> return (T_variable x)
@@ -173,7 +173,7 @@ and compile_expression ~raise : Data.scope -> Data.path -> I.expression -> O.exp
       return @@ O.E_record_accessor {record; path}
     )
     | I.E_record m -> (
-      let m' = O.LMap.map self m in
+      let m' = O.LMap.map ~f: self m in
       return @@ O.E_record m'
     )
     | I.E_record_update {record; path; update} -> (
@@ -288,8 +288,8 @@ and compile_cases ~raise : Data.scope -> Data.path -> I.matching_expr -> O.match
         Match_variant {cases ; tv}
       )
     | Match_record {fields; body; tv} ->
-      let fields = O.LMap.map (fun (v, t) -> (v, compile_type ~raise t)) fields in
-      let lst = List.map ~f:fst (O.LMap.values fields) in
+      let fields = O.LMap.map ~f: (fun (v, t) -> (v, compile_type ~raise t)) fields in
+      let lst = List.map ~f:fst (O.LMap.data fields) in
       let data = List.fold_right ~f:(fun v data -> Data.rm_exp data v) ~init:scope lst in
       let body = compile_expression ~raise data path body in
       let tv = compile_type ~raise tv in

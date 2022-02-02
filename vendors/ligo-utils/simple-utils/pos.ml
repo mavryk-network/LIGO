@@ -145,6 +145,15 @@ let position_of_yojson x =
   | _ ->
       Utils.error_yojson_format "{pos_fname: string, pos_lnum: int, pos_bol: int, pos_cnum: int}"
 
+let sexp_of_position p =
+  Tuple2.sexp_of_t String.sexp_of_t (Tuple3.sexp_of_t Int.sexp_of_t Int.sexp_of_t Int.sexp_of_t) @@
+    (p.Lexing.pos_fname, (p.Lexing.pos_lnum, p.Lexing.pos_bol, p.Lexing.pos_cnum))
+
+let position_of_sexp v =
+  let pos_fname, (pos_lnum, pos_bol, pos_cnum) = Tuple2.t_of_sexp String.t_of_sexp (Tuple3.t_of_sexp Int.t_of_sexp Int.t_of_sexp Int.t_of_sexp) v in
+  Lexing.{pos_fname; pos_lnum; pos_bol; pos_cnum}
+
+
 let to_yojson x =
   `Assoc
     ["byte", position_to_yojson x#byte;
@@ -167,6 +176,14 @@ let of_yojson x =
                        (position_of_yojson byte)
   | _ ->
       Utils.error_yojson_format "{byte: Lexing.position, point_num: int, point_bol: int}\nwhere Lexing.position is {pos_fname: string, pos_lnum: int, pos_bol: int, pos_cnum: int}"
+
+let sexp_of_t x =
+  Tuple3.sexp_of_t sexp_of_position Int.sexp_of_t Int.sexp_of_t @@
+    (x#byte, x#point_num, x#point_bol)
+
+let t_of_sexp v =
+  let byte, point_num, point_bol = Tuple3.t_of_sexp position_of_sexp Int.t_of_sexp Int.t_of_sexp v in
+  make ~byte ~point_num ~point_bol
 
 let from_byte byte =
   let point_num = byte.Lexing.pos_cnum

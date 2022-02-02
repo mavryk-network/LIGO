@@ -42,7 +42,7 @@ let self_typing ~raise : contract_pass_data -> expression -> bool * contract_pas
       match dat.contract_type.parameter.type_content with
       | (T_sum _ as t) when String.equal "Default" entrypoint -> {dat.contract_type.parameter with type_content = t}
       | T_sum cmap ->
-        let content = LMap.to_kv_list cmap.content in
+        let content = LMap.to_alist cmap.content in
         let content = List.map ~f:(fun (Label entrypoint, {michelson_annotation;associated_type;_}) ->
                           (annotation_or_label michelson_annotation entrypoint, associated_type)) content in
         let associated_type = trace_option ~raise (Errors.unmatched_entrypoint entrypoint_exp.location) @@
@@ -121,8 +121,8 @@ and get_fv expr =
      let env_c,cases = get_fv_cases cases in
      return (merge_env env env_c) @@ E_matching{matchee;cases}
   | E_record m ->
-     let res = LMap.map self m in
-     let keys,env_exp = List.unzip @@ LMap.to_kv_list res in
+     let res = LMap.map ~f: self m in
+     let keys,env_exp = List.unzip @@ LMap.to_alist res in
      let env,exp = List.unzip env_exp in
      let m = LMap.of_list @@ List.zip_exn keys exp in
      return (unions env) @@ E_record m
@@ -166,7 +166,7 @@ and get_fv_cases : matching_expr -> env * matching_expr = fun m ->
      let envs,cases = List.unzip @@  List.map ~f:aux cases in
      (unions envs), Match_variant {cases;tv}
   | Match_record {fields; body; tv} ->
-     let pattern = LMap.values fields |> List.map ~f:fst |> List.map ~f:Location.unwrap in
+     let pattern = LMap.data fields |> List.map ~f:fst |> List.map ~f:Location.unwrap in
      let env,body = get_fv body in
      {env with used_var=List.fold_right pattern ~f:VSet.remove ~init:env.used_var}, Match_record {fields;body;tv}
 

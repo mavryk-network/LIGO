@@ -211,7 +211,7 @@ module Mutator = struct
       return @@ E_record_accessor {record; path}, mutation
     )
     | E_record m -> (
-      let ml = LMap.to_kv_list m in
+      let ml = LMap.to_alist m in
       let mls = List.map ~f:(fun (l, v) -> let* h,m = self v in [((l, h), m)]) ml in
       let+ m', mutation = combine_list ml mls in
       return @@ E_record (LMap.of_list m'), mutation

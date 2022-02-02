@@ -3,7 +3,7 @@
 type 'a t = {
   name : string ;
   counter : int option ;
-}
+} [@@deriving sexp]
 
 let to_yojson f =
   match f.counter with

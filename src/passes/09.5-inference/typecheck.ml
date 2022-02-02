@@ -40,7 +40,7 @@ let rec recursive_find_assignnment ~raise : db_access:db_access -> type_variable
       let associated_value = recursive_find_assignnment ~raise ~db_access associated_variable in
       {associated_value;michelson_annotation;decl_pos}
     in
-    let p_row_args = LMap.map aux r.tv_map in
+    let p_row_args = LMap.map ~f: aux r.tv_map in
     Ast_core.Reasons.wrap (Todo r.reason_row_simpl) @@ P_row { p_row_tag = r.r_tag ; p_row_args }
   | None -> raise.raise @@ (corner_case (Format.asprintf "error  raised at %s" __LOC__))
 
@@ -103,7 +103,7 @@ let check_typeclass ~raise : db_access:db_access -> c_typeclass_simpl -> unit =
     match find_assignment (repr r.tv) with
     | Some `Row rw -> (
       let () = Assert.assert_true ~raise (err_TODO __LOC__) (Ast_core.Compare.row_tag rw.r_tag r.r_tag = 0) in
-      let () = Assert.assert_true ~raise (err_TODO __LOC__) (LMap.cardinal rw.tv_map = LMap.cardinal r.tv_map) in
+      let () = Assert.assert_true ~raise (err_TODO __LOC__) (LMap.length rw.tv_map = LMap.length r.tv_map) in
       (* ??? Not sure if this is the right thing to do,
         should we allow non-aliases and recursively check
       the equality of the assignments ? That would be slow. *)
@@ -113,7 +113,7 @@ let check_typeclass ~raise : db_access:db_access -> c_typeclass_simpl -> unit =
           Assert.assert_true ~raise (err_TODO __LOC__) (Ast_core.Compare.label label_left label_right = 0);
           fast_assert_types_are_equal ~raise ~db_access (err_TODO __LOC__) var_left var_right
       in
-      List.iter2_exn ~f:aux (LMap.bindings rw.tv_map) (LMap.bindings r.tv_map)
+      List.iter2_exn ~f:aux (LMap.to_alist rw.tv_map) (LMap.to_alist r.tv_map)
     )
     | Some `Constructor _ -> raise.raise @@ (err_TODO __LOC__)
     | None -> raise.raise (err_TODO __LOC__)(* unassigned unification variable *)
@@ -156,14 +156,14 @@ let rec compare_and_stop_at_bound_vars
 
     (* Π(ε, …), Γ(φ, …) or Σ(ε, …), Σ(φ, …) or another incompatible combination of Π and Σ *)
     | Some `Row r, P_row { p_row_tag ; p_row_args } ->
-      let () = Assert.assert_true ~raise (err_TODO __LOC__)(*wrong number of args*) (LMap.cardinal r.tv_map = LMap.cardinal p_row_args) in
+      let () = Assert.assert_true ~raise (err_TODO __LOC__)(*wrong number of args*) (LMap.length r.tv_map = LMap.length p_row_args) in
       (* not a check for equality, just a sanity check: *)
       let () = Assert.assert_true ~raise (err_TODO __LOC__)(*internal error*) (Var.equal (db_access.repr r.tv) (db_access.repr lhs)) in
       let () = Assert.assert_true ~raise (err_TODO __LOC__)(*wrong tag k.c_tag != p_ctor_tag*) (Ast_core.Compare.row_tag r.r_tag p_row_tag = 0) in
       let l = List.map2_exn 
         ~f:(fun {associated_variable=lhs} ({associated_value=rhs;_}:row_value) -> compare_and_stop_at_bound_vars ~raise ~db_access lhs rhs.wrap_content bound_by_foralls)
         (*instantiated_binder*)
-        (LMap.to_list r.tv_map) (LMap.to_list p_row_args)
+        (LMap.data r.tv_map) (LMap.data p_row_args)
       in
       Compare_renaming.Node l
 
@@ -241,12 +241,12 @@ let rec check_type_variable_and_type_value ~raise : db_access:db_access -> bound
         ka.tv_list kb.p_ctor_args
     | (Some (`Row ra), P_row rb) ->
       let () = Assert.assert_true ~raise (err_TODO __LOC__) (Ast_core.Compare.row_tag ra.r_tag rb.p_row_tag = 0) in
-      let () = Assert.assert_true ~raise (err_TODO __LOC__) (LMap.cardinal ra.tv_map = LMap.cardinal rb.p_row_args) in
+      let () = Assert.assert_true ~raise (err_TODO __LOC__) (LMap.length ra.tv_map = LMap.length rb.p_row_args) in
       List.iter2_exn
         ~f:(fun (la,a) (lb,b) ->
           let () = Assert.assert_true ~raise (err_TODO __LOC__) (Ast_core.Compare.label la lb = 0) in
           check_type_variable_and_type_value ~raise ~db_access ~bound_var_assignments a b)
-        (LMap.bindings @@ LMap.map (fun {associated_variable} -> associated_variable) ra.tv_map) (LMap.bindings @@ LMap.map (fun {associated_value;} -> associated_value) rb.p_row_args)
+        (LMap.to_alist @@ LMap.map ~f: (fun {associated_variable} -> associated_variable) ra.tv_map) (LMap.to_alist @@ LMap.map ~f: (fun {associated_value;} -> associated_value) rb.p_row_args)
     | (Some _, P_variable vb) -> (
       match PolyMap.find_opt vb bound_var_assignments with
       | None -> raise.raise (corner_case "unbound type variable")
@@ -265,12 +265,12 @@ let rec compare_type_values_using_bound_vars ~raise : db_access:db_access -> bou
         ka.p_ctor_args kb.p_ctor_args
     | P_row      ra , P_row      rb ->
       let () = Assert.assert_true ~raise (err_TODO __LOC__) (Ast_core.Compare.row_tag ra.p_row_tag rb.p_row_tag = 0) in
-      let () = Assert.assert_true ~raise (err_TODO __LOC__) (LMap.cardinal ra.p_row_args = LMap.cardinal rb.p_row_args) in
+      let () = Assert.assert_true ~raise (err_TODO __LOC__) (LMap.length ra.p_row_args = LMap.length rb.p_row_args) in
       List.iter2_exn
         ~f:(fun (la,a) (lb,b) ->
            let () = Assert.assert_true ~raise (err_TODO __LOC__) (Ast_core.Compare.label la lb = 0) in
            compare_type_values_using_bound_vars ~raise ~db_access ~bound_var_assignments a b)
-        (LMap.bindings @@ LMap.map (fun {associated_value} -> associated_value) ra.p_row_args) (LMap.bindings @@ LMap.map (fun {associated_value} -> associated_value) rb.p_row_args)
+        (LMap.to_alist @@ LMap.map ~f: (fun {associated_value} -> associated_value) ra.p_row_args) (LMap.to_alist @@ LMap.map ~f: (fun {associated_value} -> associated_value) rb.p_row_args)
     | P_forall (*{ binder; constraints; body }*)_ , P_forall (*{ binder; constraints; body }*)_     ->
       failwith "comparison of foralls is not implemented yet."
     | (P_variable tv , _other)  ->
@@ -292,7 +292,7 @@ let check_access_label ~raise : _ = fun ~db_access ~bound_var_assignments access
          (corner_case
             (Format.asprintf "Type error: field %a is not in record %a"
                Ast_core.PP.label accessor
-               (fun ppf lm -> Ast_core.PP.(lmap_sep_d row_value) ppf @@ LMap.to_kv_list lm) p_row_args)) @@ LMap.find_opt accessor p_row_args in
+               (fun ppf lm -> Ast_core.PP.(lmap_sep_d row_value) ppf @@ LMap.to_alist lm) p_row_args)) @@ LMap.find p_row_args accessor in
      check_type_variable_and_type_value ~raise ~db_access ~bound_var_assignments c_access_label_tvar field_type.associated_value
    | Ast_core.Types.C_variant -> failwith "Type error: cannot access field in variant")
 
@@ -305,7 +305,7 @@ let check_access_label_simpl ~raise : db_access:db_access -> bound_var_assignmen
         (corner_case
            (Format.asprintf "Type error: field %a is not in record %a"
               Ast_core.PP.label accessor
-              (fun ppf lm -> Ast_core.PP.(lmap_sep_d row_variable) ppf @@ LMap.to_kv_list lm) tv_map)) @@ LMap.find_opt accessor tv_map in
+              (fun ppf lm -> Ast_core.PP.(lmap_sep_d row_variable) ppf @@ LMap.to_alist lm) tv_map)) @@ LMap.find tv_map accessor in
     let field_type_value = recursive_find_assignnment ~raise ~db_access field_type.associated_variable in
     let c_access_label_tvar_value = recursive_find_assignnment ~raise ~db_access c_access_label_tvar in
     Compare_renaming.compare_and_check_vars

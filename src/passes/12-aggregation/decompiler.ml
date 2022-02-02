@@ -57,11 +57,11 @@ let rec decompile ~raise : Ast_aggregated.expression -> Ast_typed.expression =
        let f (v, t) =
          let t = decompile_type ~raise t in
          (v, t) in
-       let fields = I.LMap.map f fields in
+       let fields = I.LMap.map ~f: f fields in
        return (O.E_matching { matchee ; cases = Match_record { fields ; body ; tv } })
     (* Record *)
     | E_record map ->
-       let map = I.LMap.map (decompile ~raise) map in
+       let map = I.LMap.map ~f: (decompile ~raise) map in
        return (O.E_record map)
     | E_record_accessor { record ; path } ->
        let record = decompile ~raise record in
@@ -87,13 +87,13 @@ and decompile_type ~raise : Ast_aggregated.type_expression -> Ast_typed.type_exp
      let f { I.associated_type ; michelson_annotation ; decl_pos } =
        let associated_type = decompile_type ~raise associated_type in
        { O.associated_type ; michelson_annotation ; decl_pos } in
-     let content = I.LMap.map f content in
+     let content = I.LMap.map ~f: f content in
      return (O.T_sum { content ; layout })
   | T_record { content ; layout } ->
      let f { I.associated_type ; michelson_annotation ; decl_pos } =
        let associated_type = decompile_type ~raise associated_type in
        { O.associated_type ; michelson_annotation ; decl_pos } in
-     let content = I.LMap.map f content in
+     let content = I.LMap.map ~f: f content in
      return (O.T_record { content ; layout })
   | T_arrow { type1 ; type2 } ->
      let type1 = decompile_type ~raise type1 in

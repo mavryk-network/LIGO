@@ -69,7 +69,7 @@ module Substitution = struct
       let aux T.{ associated_type; michelson_annotation ; decl_pos } =
         let associated_type = s_type_expression ~substs associated_type in
         T.{ associated_type; michelson_annotation; decl_pos } in
-      let fields = T.LMap.map aux rows.fields in
+      let fields = T.LMap.map ~f: aux rows.fields in
       { rows with fields }
 
     and s_type_content : (T.type_content,_) w = fun ~substs -> function
@@ -189,7 +189,7 @@ module Substitution = struct
       | T.E_record          aemap ->
         let aemap = List.map ~f:(fun (key,val_) ->
           let val_ = s_expression ~substs val_ in
-          (key , val_)) @@ T.LMap.to_kv_list aemap in
+          (key , val_)) @@ T.LMap.to_alist aemap in
         let aemap = T.LMap.of_list aemap in
         T.E_record aemap
       | T.E_record_accessor {record=e;path} ->
@@ -263,7 +263,7 @@ module Substitution = struct
           T.Reasons.(wrap (Todo "2") @@ T.P_apply { tf = self tf ; targ = self targ})
         )
       | P_row {p_row_tag; p_row_args} ->
-        let p_row_args = T.LMap.map (fun ({associated_value;michelson_annotation;decl_pos}: T.row_value ) -> ({associated_value=self associated_value;michelson_annotation;decl_pos} : T.row_value)) p_row_args in
+        let p_row_args = T.LMap.map ~f: (fun ({associated_value;michelson_annotation;decl_pos}: T.row_value ) -> ({associated_value=self associated_value;michelson_annotation;decl_pos} : T.row_value)) p_row_args in
         wrap (Todo "3") @@ T.P_row {p_row_tag ; p_row_args}
       | P_forall p -> (
           let aux c = constraint_ ~c ~substs in

@@ -145,7 +145,7 @@ let get_t_michelson_code (t:type_expression) : unit option = get_t_test_michelso
 
 let tuple_of_record (m: _ LMap.t) =
   let aux i =
-    let opt = LMap.find_opt (Label (string_of_int i)) m in
+    let opt = LMap.find m (Label (string_of_int i)) in
     Option.bind ~f: (fun opt -> Some (opt,i+1)) opt
   in
   let l = Base.Sequence.to_list @@ Base.Sequence.unfold ~init:0 ~f:aux in
@@ -207,7 +207,7 @@ let assert_t__type_ : type_expression -> unit option = fun v -> Option.map ~f:(f
 [@@map (_type_, ("option", "set", "list"))]
 
 let ez_e_record (lst : (label * expression) list) : expression_content =
-  let aux prev (k, v) = LMap.add k v prev in
+  let aux prev (k, v) = LMap.set ~key:k ~data:v prev in
   let map = List.fold_left ~f:aux ~init:LMap.empty lst in
   E_record map
 
@@ -245,7 +245,7 @@ let e_a_pair a b = make_e (e_pair a b)
 let e_a_constructor constructor element t = e_constructor { constructor = (Label constructor) ; element } t
 let e_a_record_accessor record path t = e_record_accessor {record ; path} t
 let e_a_record ?(layout=default_layout) r = e_record r (t_record ~layout
-  (LMap.map
+  (LMap.map ~f:
     (fun t ->
       let associated_type = get_type t in
       {associated_type ; michelson_annotation=None ; decl_pos = 0} )
@@ -314,6 +314,6 @@ let get_record_field_type (t : type_expression) (label : label) : type_expressio
   match get_t_record_opt t with
   | None -> None
   | Some record ->
-    match LMap.find_opt label record.content with
+    match LMap.find record.content label with
     | None -> None
     | Some row_element -> Some row_element.associated_type

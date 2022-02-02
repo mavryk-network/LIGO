@@ -13,7 +13,7 @@ let lmap_sep value sep ppf m =
   fprintf ppf "%a" (list_sep new_pp sep) lst
 
 let record_sep value sep ppf (m : 'a label_map) =
-  let lst = LMap.to_kv_list m in
+  let lst = LMap.to_alist m in
   let lst = List.dedup_and_sort ~compare:(fun (Label a,_) (Label b,_) -> String.compare a b) lst in
   let new_pp ppf (k, v) = fprintf ppf "@[<h>%a -> %a@]" label k value v in
   fprintf ppf "%a" (list_sep new_pp sep) lst
@@ -80,7 +80,7 @@ and type_content : formatter -> type_content -> unit =
   fun ppf te ->
   match te with
   | T_variable        tv -> type_variable ppf tv
-  | T_sum              m -> fprintf ppf "@[<h>sum[%a]@]" (lmap_sep_d row) (LMap.to_kv_list_rev m.fields)
+  | T_sum              m -> fprintf ppf "@[<h>sum[%a]@]" (lmap_sep_d row) (LMap.to_alist ~key_order:`Decreasing m.fields)
   | T_record           m -> fprintf ppf "%a" (tuple_or_record_sep_type row) m.fields
   | T_arrow            a -> arrow         type_expression ppf a
   | T_app              a -> type_app type_expression ppf a
@@ -337,7 +337,7 @@ and p_apply ppf {tf; targ} =
 and p_row ppf {p_row_tag; p_row_args} =
   fprintf ppf "{@[<hv 2>@ p_row_tag : %a;@ p_row_args : %a;@]@ }"
     row_tag p_row_tag
-    (lmap_sep_d row_value) @@ LMap.to_kv_list p_row_args
+    (lmap_sep_d row_value) @@ LMap.to_alist p_row_args
 
 and p_abs ppf {arg; ret} =
   fprintf ppf "{@[<hv 2>@ arg: %a;@ ret: %a;@]@ }"
@@ -349,17 +349,17 @@ and p_constraint ppf {pc} =
     type_constraint pc
 
 and p_row_short ppf {p_row_tag; p_row_args} =
-  match p_row_tag, LMap.cardinal p_row_args with
+  match p_row_tag, LMap.length p_row_args with
     C_record, 0 ->
     fprintf ppf "{ }"
   | C_record, _ ->
     fprintf ppf "{ %a }"
-      (lmap_sep_short row_value_short ~sep:" ; " ~assoc:" : ") @@ LMap.to_kv_list p_row_args
+      (lmap_sep_short row_value_short ~sep:" ; " ~assoc:" : ") @@ LMap.to_alist p_row_args
   | C_variant, 0 ->
     fprintf ppf "(empty variant)"
   | C_variant, _ ->
     fprintf ppf "%a"
-      (lmap_sep_short row_value_short ~sep:" | " ~assoc:" of ") @@ LMap.to_kv_list p_row_args
+      (lmap_sep_short row_value_short ~sep:" | " ~assoc:" of ") @@ LMap.to_alist p_row_args
 
 and row_value : formatter -> row_value -> unit =
   fun ppf { associated_value ; michelson_annotation=_ ; decl_pos } ->
@@ -501,7 +501,7 @@ and c_row_simpl ppf ({id_row_simpl = ConstraintIdentifier.T ci; reason_row_simpl
     reason_row_simpl
     type_variable tv
     row_tag r_tag
-    (lmap_sep_d row_variable) @@ LMap.to_kv_list tv_map
+    (lmap_sep_d row_variable) @@ LMap.to_alist tv_map
 
 and c_row_simpl_short ppf ({id_row_simpl = ConstraintIdentifier.T ci; reason_row_simpl=_; original_id=_; tv; r_tag; tv_map}) =
   match r_tag with
@@ -509,12 +509,12 @@ and c_row_simpl_short ppf ({id_row_simpl = ConstraintIdentifier.T ci; reason_row
     fprintf ppf "%a ~%a { %a }"
       type_variable tv
       constraint_identifier_short ci
-      (lmap_sep_short row_variable ~sep:" ; " ~assoc:" : ") @@ LMap.to_kv_list tv_map
+      (lmap_sep_short row_variable ~sep:" ; " ~assoc:" : ") @@ LMap.to_alist tv_map
   | C_variant ->
     fprintf ppf "%a ~%a %a"
       type_variable tv
       constraint_identifier_short ci
-      (lmap_sep_short row_variable ~sep:" | " ~assoc:" of ") @@ LMap.to_kv_list tv_map
+      (lmap_sep_short row_variable ~sep:" | " ~assoc:" of ") @@ LMap.to_alist tv_map
 
 and c_access_label_simpl ppf { id_access_label_simpl = ConstraintIdentifier.T ci ; reason_access_label_simpl ; record_type ; label = l ; tv } =
   fprintf ppf "{@,@[<hv 2>

@@ -838,7 +838,7 @@ let rec record_comparator ~raise ~test : Location.t -> string -> typer = fun loc
   let aux a b : type_expression =
     comparator ~raise ~test loc s [a.associated_type;b.associated_type] None
   in
-  let _ = List.map2_exn ~f:aux (LMap.to_list a_r.content) (LMap.to_list b_r.content) in
+  let _ = List.map2_exn ~f:aux (LMap.data a_r.content) (LMap.data b_r.content) in
   t_bool ()
 
 and sum_comparator ~raise ~test : Location.t -> string -> typer = fun loc s -> typer_2 ~raise loc s @@ fun a b ->
@@ -852,7 +852,7 @@ and sum_comparator ~raise ~test : Location.t -> string -> typer = fun loc s -> t
   let aux a b : type_expression =
     comparator ~raise ~test loc s [a.associated_type;b.associated_type] None
   in
-  let _ = List.map2_exn ~f:aux (LMap.to_list a_r.content) (LMap.to_list b_r.content) in
+  let _ = List.map2_exn ~f:aux (LMap.data a_r.content) (LMap.data b_r.content) in
   t_bool ()
 
 and list_comparator ~raise ~test : Location.t -> string -> typer = fun loc s -> typer_2 ~raise loc s @@ fun a_lst b_lst ->

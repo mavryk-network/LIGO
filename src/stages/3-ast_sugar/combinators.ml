@@ -59,7 +59,7 @@ let t_pair ?loc (a , b) : type_expression = t_record_ez ?loc [
 let t_tuple ?loc lst    : type_expression = t_record_ez ?loc (tuple_to_record lst)
 
 let t_sum_ez ?loc (lst:((string * ty_expr row_element) list)) : type_expression =
-  let aux prev (k, v) = LMap.add (Label k) v prev in
+  let aux prev (k, v) = LMap.set ~key:(Label k) ~data:v prev in
   let fields = List.fold_left ~f:aux ~init:LMap.empty lst in
   make_t ?loc @@ T_sum {fields ; attributes=[]}
 let t_sum ?loc m : type_expression =
@@ -171,7 +171,7 @@ let extract_list : expression -> (expression list) option = fun e ->
 
 let extract_record : expression -> ((label * expression) list) option = fun e ->
   match e.expression_content with
-  | E_record lst -> Some (LMap.to_kv_list lst)
+  | E_record lst -> Some (LMap.to_alist lst)
   | _ -> None
 
 let extract_map : expression -> ((expression * expression) list) option = fun e ->

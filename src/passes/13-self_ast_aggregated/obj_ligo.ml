@@ -7,7 +7,7 @@ let type_constants =
 type 'err ty_exp_mapper = AST.type_expression -> unit
 
 let rows : ('a -> unit) -> AST.rows -> unit = fun g {content; _} ->
-  let _ = AST.LMap.map (fun {AST.associated_type ; _} ->
+  let _ = AST.LMap.map ~f: (fun {AST.associated_type ; _} ->
               let () = g associated_type in
               ()) content in
   ()

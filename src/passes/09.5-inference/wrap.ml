@@ -15,11 +15,11 @@ let rec type_expression_to_type_value : T.type_expression -> O.type_value = fun 
   | T_sum {fields ; layout=_} ->
     let aux ({associated_type;michelson_annotation;decl_pos}:T.row_element) : T.row_value =
        {associated_value = type_expression_to_type_value associated_type;michelson_annotation;decl_pos} in
-    p_row C_variant @@ T.LMap.map aux fields
+    p_row C_variant @@ T.LMap.map ~f: aux fields
   | T_record {fields ; layout=_} ->
     let aux ({associated_type;michelson_annotation;decl_pos}:T.row_element) : T.row_value =
        {associated_value = type_expression_to_type_value associated_type;michelson_annotation;decl_pos} in
-    p_row C_record @@ T.LMap.map aux fields
+    p_row C_record @@ T.LMap.map ~f: aux fields
   | T_arrow {type1;type2} ->
     p_constant C_arrow @@ List.map ~f:type_expression_to_type_value [ type1 ; type2 ]
   | T_module_accessor {module_name=_; element} ->
