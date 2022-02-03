@@ -7,12 +7,7 @@ let%expect_test _ =
   [%expect {|
     { parameter unit ;
       storage int ;
-      code { DROP ;
-             PUSH int 2 ;
-             LEFT int ;
-             LOOP_LEFT { PUSH int 1 ; ADD ; RIGHT int } ;
-             NIL operation ;
-             PAIR } } |} ]
+      code { DROP ; PUSH int 1 ; PUSH int 2 ; ADD ; NIL operation ; PAIR } } |} ]
 
 let%expect_test _ =
   run_ligo_good ["compile"; "contract" ; contract "unused_recursion.mligo" ; "--warn-unused-rec" ] ;
@@ -27,9 +22,4 @@ let%expect_test _ =
 
     { parameter unit ;
       storage int ;
-      code { DROP ;
-             PUSH int 2 ;
-             LEFT int ;
-             LOOP_LEFT { PUSH int 1 ; ADD ; RIGHT int } ;
-             NIL operation ;
-             PAIR } } |} ]
+      code { DROP ; PUSH int 1 ; PUSH int 2 ; ADD ; NIL operation ; PAIR } } |} ]
