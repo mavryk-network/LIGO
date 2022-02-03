@@ -4,7 +4,7 @@
 let warning_with f =
   let warnings = ref [] in
   let add_warning x = warnings := x :: !warnings in
-  let get_warnings () = !warnings in
+  let get_warnings ?(pred=(fun _ -> true)) () = List.filter ~f:pred !warnings in
   f add_warning get_warnings
 
 (* Errors *)

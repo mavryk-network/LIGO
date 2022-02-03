@@ -2,9 +2,10 @@ open Api_helpers
 module Compile = Ligo_compile
 module Helpers   = Ligo_compile.Helpers
 
-let measure_contract source_file entry_point declared_views syntax protocol_version display_format werror project_root () =
+let measure_contract source_file entry_point declared_views syntax protocol_version display_format werror project_root warning_flags () =
     Trace.warning_with @@ fun add_warning get_warnings ->
-    format_result ~werror ~display_format Formatter.contract_size_format get_warnings @@
+    format_result ~werror ~display_format Formatter.contract_size_format 
+    (get_warnings ~pred:(Main_warnings.filter_warnings warning_flags)) @@
       fun ~raise ->
       let protocol_version = Helpers.protocol_to_variant ~raise protocol_version in
       let options = Compiler_options.make ~protocol_version ?project_root () in
@@ -13,9 +14,10 @@ let measure_contract source_file entry_point declared_views syntax protocol_vers
       let contract = Compile.Of_michelson.build_contract ~raise michelson views in
       Compile.Of_michelson.measure ~raise contract
 
-let list_declarations source_file syntax display_format () =
+let list_declarations source_file syntax display_format warning_flags () =
     Trace.warning_with @@ fun add_warning get_warnings ->
-    format_result ~display_format Formatter.declarations_format get_warnings @@
+    format_result ~display_format Formatter.declarations_format 
+      (get_warnings ~pred:(Main_warnings.filter_warnings warning_flags)) @@
       fun ~raise ->
       let options       = Compiler_options.make () in
       let meta     = Compile.Of_source.extract_meta ~raise syntax source_file in
@@ -24,9 +26,10 @@ let list_declarations source_file syntax display_format () =
       let declarations  = Compile.Of_core.list_declarations core_prg in
       (source_file, declarations)
 
-let get_scope source_file protocol_version libs display_format with_types () =
+let get_scope source_file protocol_version libs display_format with_types warning_flags () =
     Trace.warning_with @@ fun add_warning get_warnings ->
-    format_result ~display_format Scopes.Formatter.scope_format get_warnings @@
+    format_result ~display_format Scopes.Formatter.scope_format 
+      (get_warnings ~pred:(Main_warnings.filter_warnings warning_flags)) @@
       fun ~raise ->
       let protocol_version = Helpers.protocol_to_variant ~raise protocol_version in
       let options = Compiler_options.make ~protocol_version ~libs () in

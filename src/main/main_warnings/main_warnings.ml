@@ -1,10 +1,17 @@
 open Simple_utils
 open Display
 
+type flags = {
+  unused_rec : bool
+}
+
+let make_warning_flags ~warn_unused_rec = { unused_rec = warn_unused_rec }
+
 type all = 
 [
   | `Self_ast_typed_warning_unused of Location.t * string
   | `Self_ast_typed_warning_muchused of Location.t * string
+  | `Self_ast_typed_warning_unused_rec of Location.t * string
   | `Self_ast_imperative_warning_layout of (Location.t * Ast_imperative.label)
   | `Main_view_ignored of Location.t
 ]
@@ -28,6 +35,10 @@ let pp : display_format:string display_format ->
         Format.fprintf f
           "@[<hv>%a:@.Warning: variable \"%s\" cannot be used more than once.\n@]"
           Snippet.pp loc s
+    | `Self_ast_typed_warning_unused_rec (loc, s) ->
+      Format.fprintf f
+        "@[<hv>%a:@.Warning: unused recursion .@.Hint: remove recursion from the function \"%s\" to prevent this warning.\n@]"
+        Snippet.pp loc s
     | `Self_ast_imperative_warning_layout (loc,Label s) ->
         Format.fprintf f
           "@[<hv>%a@ Warning: layout attribute only applying to %s, probably ignored.@.@]"
@@ -72,6 +83,17 @@ let to_json : all -> Yojson.Safe.t = fun a ->
                        ("variable", description)
                      ] in
      json_warning ~stage ~content
+  | `Self_ast_typed_warning_unused_rec (loc, s) ->
+    let message = `String "unused recursion in function" in
+    let stage   = "self_ast_typed" in
+    let description = `String s in
+    let loc = `String (Format.asprintf "%a" Location.pp loc) in
+    let content = `Assoc [
+                      ("message", message);
+                      ("location", loc);
+                      ("variable", description)
+                    ] in
+    json_warning ~stage ~content
   | `Self_ast_imperative_warning_layout (loc, s) ->
     let message = `String (Format.asprintf "Layout attribute on constructor %a" Ast_imperative.PP.label s) in
      let stage   = "self_ast_imperative" in
@@ -83,3 +105,8 @@ let to_json : all -> Yojson.Safe.t = fun a ->
     json_warning ~stage ~content
 
 let format = {pp;to_json}
+
+let filter_warnings flags warning =
+  match warning with
+    `Self_ast_typed_warning_unused_rec (_,_) -> flags.unused_rec
+  | _ -> true

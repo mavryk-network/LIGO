@@ -188,6 +188,12 @@ let werror =
   let doc  = "treat warnings as errors" in
   flag ~doc name no_arg
 
+let warn_unused_rec =
+  let open Command.Param in
+  let name = "--warn-unused-rec" in
+  let doc  = "warning for unused recursion" in
+  flag ~doc name no_arg
+
 let seed =
   let open Command.Param in
   let name = "--seed" in
@@ -228,22 +234,24 @@ let (<$>) f a = Command.Param.return f <*> a
 I use a mutable variable to propagate back the effect of the result of f *)
 let return = ref Done
 let compile_file =
-  let f source_file entry_point oc_views syntax protocol_version display_format disable_typecheck michelson_format output_file warn werror michelson_comments project_root  () =
+  let f source_file entry_point oc_views syntax protocol_version display_format disable_typecheck michelson_format output_file warn werror michelson_comments project_root warn_unused_rec () =
+    let warning_flags = Main_warnings.make_warning_flags ~warn_unused_rec in
     return_result ~return ~warn ?output_file @@
-    Api.Compile.contract ~werror source_file entry_point oc_views syntax protocol_version display_format disable_typecheck michelson_format michelson_comments project_root  in
+    Api.Compile.contract ~werror source_file entry_point oc_views syntax protocol_version display_format disable_typecheck michelson_format michelson_comments project_root warning_flags in
   let summary   = "compile a contract." in
   let readme () = "This sub-command compiles a contract to Michelson \
                   code. It expects a source file and an entrypoint \
                   function that has the type of a contract: \"parameter \
                   * storage -> operations list * storage\"." in
   Command.basic ~summary ~readme
-  (f <$> source_file <*> entry_point <*> on_chain_views <*> syntax <*> protocol_version <*> display_format <*> disable_michelson_typechecking <*> michelson_code_format <*> output_file <*> warn <*> werror <*> michelson_comments <*> project_root )
+  (f <$> source_file <*> entry_point <*> on_chain_views <*> syntax <*> protocol_version <*> display_format <*> disable_michelson_typechecking <*> michelson_code_format <*> output_file <*> warn <*> werror <*> michelson_comments <*> project_root <*> warn_unused_rec)
 
 
 let compile_parameter =
-  let f source_file entry_point expression syntax protocol_version amount balance sender source now display_format michelson_format output_file warn werror project_root  () =
+  let f source_file entry_point expression syntax protocol_version amount balance sender source now display_format michelson_format output_file warn werror project_root warn_unused_rec () =
+    let warning_flags = Main_warnings.make_warning_flags ~warn_unused_rec in
     return_result ~return ~warn ?output_file @@
-    Api.Compile.parameter source_file entry_point expression syntax protocol_version amount balance sender source now display_format michelson_format werror project_root 
+    Api.Compile.parameter source_file entry_point expression syntax protocol_version amount balance sender source now display_format michelson_format werror project_root warning_flags
   in
   let summary   = "compile parameters to a Michelson expression." in
   let readme () = "This sub-command compiles a parameter for a given \
@@ -251,12 +259,13 @@ let compile_parameter =
                   Michelson expression can be passed as an argument in \
                   a transaction which calls a contract." in
   Command.basic ~summary ~readme
-  (f <$> source_file <*> entry_point <*> expression "parameter" <*> syntax <*> protocol_version <*> amount <*> balance <*> sender <*> source <*> now <*> display_format <*> michelson_code_format <*> output_file <*> warn <*> werror <*> project_root )
+  (f <$> source_file <*> entry_point <*> expression "parameter" <*> syntax <*> protocol_version <*> amount <*> balance <*> sender <*> source <*> now <*> display_format <*> michelson_code_format <*> output_file <*> warn <*> werror <*> project_root <*> warn_unused_rec)
 
 let compile_expression =
-  let f syntax expression protocol_version init_file display_format without_run michelson_format warn werror project_root  () =
+  let f syntax expression protocol_version init_file display_format without_run michelson_format warn werror project_root warn_unused_rec () =
+    let warning_flags = Main_warnings.make_warning_flags ~warn_unused_rec in
     return_result ~return ~warn @@
-    Api.Compile.expression expression syntax protocol_version init_file display_format without_run michelson_format werror project_root 
+    Api.Compile.expression expression syntax protocol_version init_file display_format without_run michelson_format werror project_root warning_flags
     in
   let summary   = "compile to a Michelson value." in
   let readme () = "This sub-command compiles a LIGO expression to a \
@@ -264,12 +273,13 @@ let compile_expression =
                    expression to a Michelson expression and then \
                    interpreting it using Michelson's interpreter." in
   Command.basic ~summary ~readme
-  (f <$> req_syntax <*> expression "" <*> protocol_version <*> init_file <*> display_format  <*> without_run <*> michelson_code_format <*> warn <*> werror <*> project_root )
+  (f <$> req_syntax <*> expression "" <*> protocol_version <*> init_file <*> display_format  <*> without_run <*> michelson_code_format <*> warn <*> werror <*> project_root <*> warn_unused_rec)
 
 let compile_storage =
-  let f source_file expression entry_point syntax protocol_version amount balance sender source now display_format michelson_format output_file warn werror project_root  () =
+  let f source_file expression entry_point syntax protocol_version amount balance sender source now display_format michelson_format output_file warn werror project_root warn_unused_rec () =
+    let warning_flags = Main_warnings.make_warning_flags ~warn_unused_rec in
     return_result ~return ~warn ?output_file @@
-    Api.Compile.storage source_file entry_point expression syntax protocol_version amount balance sender source now display_format michelson_format werror project_root 
+    Api.Compile.storage source_file entry_point expression syntax protocol_version amount balance sender source now display_format michelson_format werror project_root warning_flags
   in
   let summary   = "compile an initial storage in LIGO syntax to \
                   a Michelson expression." in
@@ -278,7 +288,7 @@ let compile_storage =
                   resulting Michelson expression can be passed as an \
                   argument in a transaction which originates a contract." in
   Command.basic ~summary ~readme
-  (f <$> source_file <*> expression "STORAGE" <*> entry_point <*> syntax <*> protocol_version <*> amount <*> balance <*> sender <*> source <*> now <*> display_format <*> michelson_code_format <*> output_file <*> warn <*> werror <*> project_root )
+  (f <$> source_file <*> expression "STORAGE" <*> entry_point <*> syntax <*> protocol_version <*> amount <*> balance <*> sender <*> source <*> now <*> display_format <*> michelson_code_format <*> output_file <*> warn <*> werror <*> project_root <*> warn_unused_rec)
 
 let compile_group = Command.group ~summary:"compile a ligo program to michelson" @@
   [ "contract",   compile_file;
@@ -288,9 +298,10 @@ let compile_group = Command.group ~summary:"compile a ligo program to michelson"
 
 (** Transpile commands *)
 let transpile_contract =
-  let f source_file new_syntax syntax new_dialect display_format output_file () =
+  let f source_file new_syntax syntax new_dialect display_format output_file warn_unused_rec () =
+    let warning_flags = Main_warnings.make_warning_flags ~warn_unused_rec in
     return_result ~return ?output_file @@
-    Api.Transpile.contract source_file new_syntax syntax new_dialect display_format
+    Api.Transpile.contract source_file new_syntax syntax new_dialect display_format warning_flags
   in
   let summary   = "transpile a contract to another syntax (BETA)." in
   let readme () = "This sub-command transpiles a source file to another \
@@ -298,7 +309,7 @@ let transpile_contract =
                   source file is preprocessed. Comments are currently \
                   not transpiled. Please use at your own risk." in
   Command.basic ~summary ~readme
-  (f <$> source_file <*> req_syntax <*> syntax <*> dialect <*> display_format <*> output_file)
+  (f <$> source_file <*> req_syntax <*> syntax <*> dialect <*> display_format <*> output_file <*> warn_unused_rec)
 
 
 let transpile_expression =
@@ -331,15 +342,16 @@ let mutate_cst =
   (f <$> source_file <*> syntax <*> protocol_version <*> libraries <*> display_format <*> seed <*> generator)
 
 let mutate_ast =
-  let f source_file syntax protocol_version libs display_format seed generator () =
+  let f source_file syntax protocol_version libs display_format seed generator warn_unused_rec () =
+    let warning_flags = Main_warnings.make_warning_flags ~warn_unused_rec in
     return_result ~return @@
-    Api.Mutate.mutate_ast source_file syntax protocol_version libs display_format seed generator
+    Api.Mutate.mutate_ast source_file syntax protocol_version libs display_format seed generator warning_flags
   in
   let summary   = "return a mutated version for a given file." in
   let readme () = "This sub-command returns a mutated version for a \
                   given file. It does not use the build system." in
   Command.basic ~summary ~readme
-  (f <$> source_file <*> syntax <*> protocol_version <*> libraries <*> display_format <*> seed <*> generator)
+  (f <$> source_file <*> syntax <*> protocol_version <*> libraries <*> display_format <*> seed <*> generator <*> warn_unused_rec)
 
 let mutate_group =
   let summary = "create mutants of a ligo file" in
@@ -349,9 +361,10 @@ let mutate_group =
 
 (** Run commands *)
 let test =
-  let f source_file syntax steps protocol_version display_format project_root  () =
+  let f source_file syntax steps protocol_version display_format project_root warn_unused_rec () =
+    let warning_flags = Main_warnings.make_warning_flags ~warn_unused_rec in
     return_result ~return @@
-    Api.Run.test source_file syntax steps protocol_version display_format project_root 
+    Api.Run.test source_file syntax steps protocol_version display_format project_root warning_flags
   in
   let summary   = "test a contract with the LIGO test framework (BETA)." in
   let readme () = "This sub-command tests a LIGO contract using a LIGO \
@@ -360,12 +373,13 @@ let test =
                   procedure should rely on this sub-command alone."
   in
   Command.basic ~summary ~readme
-  (f <$> source_file <*> syntax <*> steps <*> protocol_version <*> display_format <*> project_root )
+  (f <$> source_file <*> syntax <*> steps <*> protocol_version <*> display_format <*> project_root <*> warn_unused_rec)
 
 let dry_run =
-  let f source_file parameter storage entry_point amount balance sender source now syntax protocol_version display_format warn werror project_root  () =
+  let f source_file parameter storage entry_point amount balance sender source now syntax protocol_version display_format warn werror project_root warn_unused_rec () =
+    let warning_flags = Main_warnings.make_warning_flags ~warn_unused_rec in
     return_result ~return ~warn @@
-    Api.Run.dry_run source_file entry_point parameter storage amount balance sender source now syntax protocol_version display_format werror project_root 
+    Api.Run.dry_run source_file entry_point parameter storage amount balance sender source now syntax protocol_version display_format werror project_root warning_flags
     in
   let summary   = "run a smart-contract with the given storage and input." in
   let readme () = "This sub-command runs a LIGO contract on a given \
@@ -374,12 +388,13 @@ let dry_run =
                   implemented. The interpretation is done using \
                   Michelson's interpreter." in
   Command.basic ~summary ~readme
-  (f <$> source_file <*> expression "PARAMETER" <*> expression "STORAGE" <*> entry_point <*> amount <*> balance <*> sender <*> source <*> now <*> syntax <*> protocol_version <*> display_format <*> warn <*> werror <*> project_root )
+  (f <$> source_file <*> expression "PARAMETER" <*> expression "STORAGE" <*> entry_point <*> amount <*> balance <*> sender <*> source <*> now <*> syntax <*> protocol_version <*> display_format <*> warn <*> werror <*> project_root <*> warn_unused_rec)
 
 let evaluate_call =
-  let f source_file parameter entry_point amount balance sender source now syntax protocol_version display_format warn werror project_root  () =
+  let f source_file parameter entry_point amount balance sender source now syntax protocol_version display_format warn werror project_root warn_unused_rec () =
+    let warning_flags = Main_warnings.make_warning_flags ~warn_unused_rec in
     return_result ~return ~warn @@
-    Api.Run.evaluate_call source_file entry_point parameter amount balance sender source now syntax protocol_version display_format werror project_root 
+    Api.Run.evaluate_call source_file entry_point parameter amount balance sender source now syntax protocol_version display_format werror project_root warning_flags
     in
   let summary   = "run a function with the given parameter." in
   let readme () = "This sub-command runs a LIGO function on a given \
@@ -387,12 +402,13 @@ let evaluate_call =
                   file where the function is implemented. The \
                   interpretation is done using Michelson's interpreter." in
   Command.basic ~summary ~readme
-  (f <$> source_file <*> expression "PARAMETER" <*>  entry_point <*> amount <*> balance <*> sender <*> source <*> now <*> syntax <*> protocol_version <*> display_format <*> warn <*> werror <*> project_root )
+  (f <$> source_file <*> expression "PARAMETER" <*>  entry_point <*> amount <*> balance <*> sender <*> source <*> now <*> syntax <*> protocol_version <*> display_format <*> warn <*> werror <*> project_root <*> warn_unused_rec)
 
 let evaluate_expr =
-  let f source_file entry_point amount balance sender source now syntax protocol_version display_format warn werror project_root  () =
+  let f source_file entry_point amount balance sender source now syntax protocol_version display_format warn werror project_root warn_unused_rec () =
+    let warning_flags = Main_warnings.make_warning_flags ~warn_unused_rec in
     return_result ~return ~warn @@
-    Api.Run.evaluate_expr source_file entry_point amount balance sender source now syntax protocol_version display_format werror project_root 
+    Api.Run.evaluate_expr source_file entry_point amount balance sender source now syntax protocol_version display_format werror project_root warning_flags
     in
   let summary   = "evaluate a given definition." in
   let readme () = "This sub-command evaluates a LIGO definition. The \
@@ -400,12 +416,13 @@ let evaluate_expr =
                   definition is written. The interpretation is done \
                   using a Michelson interpreter." in
   Command.basic ~summary ~readme
-  (f <$> source_file <*> entry_point <*> amount <*> balance <*> sender <*> source <*> now <*> syntax <*> protocol_version <*> display_format <*> warn <*> werror <*> project_root )
+  (f <$> source_file <*> entry_point <*> amount <*> balance <*> sender <*> source <*> now <*> syntax <*> protocol_version <*> display_format <*> warn <*> werror <*> project_root <*> warn_unused_rec)
 
 let interpret =
-  let f expression init_file syntax protocol_version amount balance sender source now display_format project_root  () =
+  let f expression init_file syntax protocol_version amount balance sender source now display_format project_root warn_unused_rec () =
+    let warning_flags = Main_warnings.make_warning_flags ~warn_unused_rec in
     return_result ~return @@
-    Api.Run.interpret expression init_file syntax protocol_version amount balance sender source now display_format project_root 
+    Api.Run.interpret expression init_file syntax protocol_version amount balance sender source now display_format project_root warning_flags
   in
   let summary   = "interpret the expression in the context initialized by the provided source file." in
   let readme () = "This sub-command interprets a LIGO expression. The \
@@ -413,7 +430,7 @@ let interpret =
                   file. The interpretation is done using Michelson's \
                   interpreter." in
   Command.basic ~summary ~readme
-  (f <$> expression "EXPRESSION" <*> init_file <*> syntax <*> protocol_version <*> amount <*> balance <*> sender <*> source <*> now <*> display_format <*> project_root )
+  (f <$> expression "EXPRESSION" <*> init_file <*> syntax <*> protocol_version <*> amount <*> balance <*> sender <*> source <*> now <*> display_format <*> project_root <*> warn_unused_rec)
 
 let run_group =
   Command.group ~summary:"compile and interpret ligo code"
@@ -427,37 +444,40 @@ let run_group =
 
 (** Info commands *)
 let list_declarations =
-  let f source_file syntax display_format () =
+  let f source_file syntax display_format warn_unused_rec () =
+    let warning_flags = Main_warnings.make_warning_flags ~warn_unused_rec in
     return_result ~return @@
-    Api.Info.list_declarations source_file syntax display_format
+    Api.Info.list_declarations source_file syntax display_format warning_flags
   in
   let summary   = "list all the top-level declarations." in
   let readme () = "This sub-command prints a list of all top-level \
                   declarations (not including types and modules)." in
   Command.basic ~summary ~readme
-  (f <$> source_file <*> syntax <*> display_format)
+  (f <$> source_file <*> syntax <*> display_format <*> warn_unused_rec)
 
 let measure_contract =
-  let f source_file entry_point oc_views syntax protocol_version display_format warn werror project_root  () =
+  let f source_file entry_point oc_views syntax protocol_version display_format warn werror project_root warn_unused_rec () =
+    let warning_flags = Main_warnings.make_warning_flags ~warn_unused_rec in
     return_result ~return ~warn @@
-    Api.Info.measure_contract source_file entry_point oc_views syntax protocol_version display_format werror project_root 
+    Api.Info.measure_contract source_file entry_point oc_views syntax protocol_version display_format werror project_root warning_flags
   in
   let summary   = "measure a contract's compiled size in bytes." in
   let readme () = "This sub-command compiles a source file and measures \
                   the contract's compiled size in bytes." in
   Command.basic ~summary ~readme
-  (f <$> source_file <*> entry_point <*> on_chain_views <*> syntax <*> protocol_version <*> display_format <*> warn <*> werror <*> project_root )
+  (f <$> source_file <*> entry_point <*> on_chain_views <*> syntax <*> protocol_version <*> display_format <*> warn <*> werror <*> project_root <*> warn_unused_rec)
 
 let get_scope =
-  let f source_file protocol_version libs display_format with_types () =
+  let f source_file protocol_version libs display_format with_types warn_unused_rec () =
+    let warning_flags = Main_warnings.make_warning_flags ~warn_unused_rec in
     return_result ~return @@
-    Api.Info.get_scope source_file protocol_version libs display_format with_types
+    Api.Info.get_scope source_file protocol_version libs display_format with_types warning_flags
   in
   let summary   = "return the JSON encoded environment for a given file." in
   let readme () = "This sub-command returns the environment for a given \
                   file in JSON format. It does not use the build system." in
   Command.basic ~summary ~readme
-  (f <$> source_file <*> protocol_version <*> libraries <*> display_format <*> with_types)
+  (f <$> source_file <*> protocol_version <*> libraries <*> display_format <*> with_types <*> warn_unused_rec)
 
 let info_group =
   let summary = "tools to get information from contracts" in
@@ -493,16 +513,17 @@ let pretty_print =
   Command.basic ~summary ~readme @@
   (f <$> source_file <*> syntax <*> display_format)
 let print_graph =
-  let f source_file syntax display_format project_root  () =
+  let f source_file syntax display_format project_root warn_unused_rec () =
+    let warning_flags = Main_warnings.make_warning_flags ~warn_unused_rec in
     return_result ~return @@
-    Api.Print.dependency_graph source_file syntax display_format project_root 
+    Api.Print.dependency_graph source_file syntax display_format project_root warning_flags
   in
   let summary   = "print the dependency graph.\nWarning: Intended for development of LIGO and can break at any time." in
   let readme () = "This sub-command prints the dependency graph created \
                   by the module system. It explores all imported source \
                   files (recursively) following a DFS strategy." in
   Command.basic ~summary ~readme @@
-  (f <$> source_file <*> syntax <*> display_format <*> project_root )
+  (f <$> source_file <*> syntax <*> display_format <*> project_root <*> warn_unused_rec)
 
 let print_cst =
   let f source_file syntax display_format () =
@@ -517,43 +538,47 @@ let print_cst =
   (f <$> source_file <*> syntax <*> display_format)
 
 let print_ast =
-  let f source_file syntax display_format () =
+  let f source_file syntax display_format warn_unused_rec () =
+    let warning_flags = Main_warnings.make_warning_flags ~warn_unused_rec in
     return_result ~return@@
-    Api.Print.ast source_file syntax display_format
+    Api.Print.ast source_file syntax display_format warning_flags
   in
   let summary   = "print the AST with imperative construct.\n Warning: Intended for development of LIGO and can break at any time." in
   let readme () = "This sub-command prints the source file in the AST \
                   imperative stage, before desugaring step is applied." in
   Command.basic ~summary ~readme @@
-  (f <$> source_file <*> syntax <*> display_format)
+  (f <$> source_file <*> syntax <*> display_format <*> warn_unused_rec)
 
 
 let print_ast_sugar =
-  let f source_file syntax display_format self_pass () =
+  let f source_file syntax display_format self_pass warn_unused_rec () =
+    let warning_flags = Main_warnings.make_warning_flags ~warn_unused_rec in
     return_result ~return @@
-    Api.Print.ast_sugar source_file syntax display_format self_pass
+    Api.Print.ast_sugar source_file syntax display_format self_pass warning_flags
   in
   let summary   = "print the AST with syntatic sugar.\n Warning: Intended for development of LIGO and can break at any time." in
   let readme () = "This sub-command prints the source file in the AST \
                   stage, after desugaring step is applied." in
   Command.basic ~summary ~readme @@
-  (f <$> source_file <*> syntax <*> display_format <*> self_pass)
+  (f <$> source_file <*> syntax <*> display_format <*> self_pass <*> warn_unused_rec)
 
 let print_ast_core =
-  let f source_file syntax display_format self_pass project_root  () =
+  let f source_file syntax display_format self_pass project_root warn_unused_rec () =
+    let warning_flags = Main_warnings.make_warning_flags ~warn_unused_rec in
     return_result ~return @@
-    Api.Print.ast_core source_file syntax display_format self_pass project_root 
+    Api.Print.ast_core source_file syntax display_format self_pass project_root warning_flags
   in
   let summary  = "print the core ligo AST.\n Warning: Intended for development of LIGO and can break at any time." in
   let readme () = "This sub-command prints the source file in the AST \
                   core stage." in
   Command.basic ~summary ~readme @@
-  (f <$> source_file <*> syntax <*> display_format <*> self_pass <*> project_root )
+  (f <$> source_file <*> syntax <*> display_format <*> self_pass <*> project_root <*> warn_unused_rec)
 
 let print_ast_typed =
-  let f source_file syntax protocol_version display_format self_pass project_root  () =
+  let f source_file syntax protocol_version display_format self_pass project_root warn_unused_rec () =
+    let warning_flags = Main_warnings.make_warning_flags ~warn_unused_rec in
     return_result ~return @@
-    Api.Print.ast_typed source_file syntax protocol_version display_format self_pass project_root 
+    Api.Print.ast_typed source_file syntax protocol_version display_format self_pass project_root warning_flags
   in
   let summary   = "print the typed AST.\n Warning: Intended for development of LIGO and can break at any time." in
   let readme () = "This sub-command prints the source file in the AST \
@@ -561,23 +586,25 @@ let print_ast_typed =
                   type the contract, but the contract is not combined \
                   with imported modules." in
   Command.basic ~summary ~readme @@
-  (f <$> source_file <*> syntax <*> protocol_version <*> display_format <*> self_pass <*> project_root )
+  (f <$> source_file <*> syntax <*> protocol_version <*> display_format <*> self_pass <*> project_root <*> warn_unused_rec)
 
 let print_ast_aggregated =
-  let f source_file syntax protocol_version display_format self_pass project_root  () =
+  let f source_file syntax protocol_version display_format self_pass project_root warn_unused_rec () =
+    let warning_flags = Main_warnings.make_warning_flags ~warn_unused_rec in
     return_result ~return @@
-      Api.Print.ast_aggregated source_file syntax protocol_version display_format self_pass project_root 
+      Api.Print.ast_aggregated source_file syntax protocol_version display_format self_pass project_root warning_flags
   in
   let summary = "print the contract after aggregation.\n Warning: Intended for development of LIGO and can break at any time." in
   let readme () = "This sub-command prints the source file in the AST \
                    aggregated stage." in
   Command.basic ~summary ~readme
-  (f <$> source_file <*> syntax <*> protocol_version <*> display_format <*> self_pass <*> project_root )
+  (f <$> source_file <*> syntax <*> protocol_version <*> display_format <*> self_pass <*> project_root <*> warn_unused_rec)
 
 let print_ast_combined =
-  let f source_file syntax protocol_version display_format project_root  () =
+  let f source_file syntax protocol_version display_format project_root warn_unused_rec () =
+    let warning_flags = Main_warnings.make_warning_flags ~warn_unused_rec in
     return_result ~return @@
-    Api.Print.ast_combined source_file syntax protocol_version display_format project_root 
+    Api.Print.ast_combined source_file syntax protocol_version display_format project_root warning_flags
   in
   let summary   = "print the contract after combination with the build system.\n Warning: Intended for development of LIGO and can break at any time." in
   let readme () = "This sub-command prints the source file in the AST \
@@ -585,12 +612,13 @@ let print_ast_combined =
                   type the contract, and the contract is combined with \
                   the imported modules." in
   Command.basic ~summary ~readme
-  (f <$> source_file <*> syntax <*> protocol_version <*> display_format <*> project_root )
+  (f <$> source_file <*> syntax <*> protocol_version <*> display_format <*> project_root <*> warn_unused_rec)
 
 let print_mini_c =
-  let f source_file syntax protocol_version display_format optimize project_root  () =
+  let f source_file syntax protocol_version display_format optimize project_root warn_unused_rec () =
+    let warning_flags = Main_warnings.make_warning_flags ~warn_unused_rec in
     return_result ~return @@
-    Api.Print.mini_c source_file syntax protocol_version display_format optimize project_root 
+    Api.Print.mini_c source_file syntax protocol_version display_format optimize project_root warning_flags
   in
   let summary   = "print Mini-C. Warning: Intended for development of LIGO and can break at any time." in
   let readme () = "This sub-command prints the source file in the Mini-C \
@@ -598,7 +626,7 @@ let print_mini_c =
                   and compile the contract. Compilation is applied \
                   after combination in the AST typed stage." in
   Command.basic ~summary ~readme
-  (f <$> source_file <*> syntax <*> protocol_version <*> display_format <*> optimize <*> project_root )
+  (f <$> source_file <*> syntax <*> protocol_version <*> display_format <*> optimize <*> project_root <*> warn_unused_rec)
 
 let print_group =
   let summary = "print intermediary program representation.\nWarning: Intended for development of LIGO and can break at any time" in

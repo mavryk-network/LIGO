@@ -2,9 +2,10 @@ open Api_helpers
 module Compile = Ligo_compile
 module Helpers   = Ligo_compile.Helpers
 
-let contract source_file new_syntax syntax new_dialect display_format () =
+let contract source_file new_syntax syntax new_dialect display_format warning_flags () =
     Trace.warning_with @@ fun add_warning get_warnings ->
-    format_result ~display_format (Parsing.Formatter.ppx_format) get_warnings @@
+    format_result ~display_format (Parsing.Formatter.ppx_format) 
+      (get_warnings ~pred:(Main_warnings.filter_warnings warning_flags)) @@
       fun ~raise ->
       let options         = Compiler_options.make () in
       let meta       = Compile.Of_source.extract_meta ~raise syntax source_file in

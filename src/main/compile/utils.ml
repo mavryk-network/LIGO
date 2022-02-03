@@ -66,29 +66,29 @@ let type_expression ~raise ~options source_file syntax expression init_prog =
   let typed_exp         = Of_core.compile_expression ~raise ~options ~init_prog core_exp in
   typed_exp
 
-let expression_to_aggregated ~raise ~options source_file syntax expression init_prog =
-  let typed_exp  = type_expression ~raise ~options source_file syntax expression init_prog in
+let expression_to_aggregated ~raise ~add_warning ~options source_file syntax expression init_prog =
+  let typed_exp  = type_expression ~raise ~add_warning ~options source_file syntax expression init_prog in
   Of_typed.compile_expression ~raise typed_exp
 
-let expression_to_mini_c ~raise ~options source_file syntax expression env =
-  let aggregated  = expression_to_aggregated ~raise ~options source_file syntax expression env in
+let expression_to_mini_c ~raise ~add_warning ~options source_file syntax expression env =
+  let aggregated  = expression_to_aggregated ~raise ~add_warning ~options source_file syntax expression env in
   let mini_c_exp  = Of_aggregated.compile_expression ~raise aggregated in
   mini_c_exp
 
-let compile_expression ~raise ~options source_file syntax expression env =
-  let mini_c_exp = expression_to_mini_c ~raise ~options source_file syntax expression env in
+let compile_expression ~raise ~add_warning ~options source_file syntax expression env =
+  let mini_c_exp = expression_to_mini_c ~raise ~add_warning ~options source_file syntax expression env in
   let compiled   = Of_mini_c.compile_expression ~options mini_c_exp in
   compiled
 
 
-let compile_contract_input ~raise ~options parameter storage source_file syntax init_prog =
+let compile_contract_input ~raise ~add_warning ~options parameter storage source_file syntax init_prog =
   let meta       = Of_source.extract_meta ~raise syntax source_file in
   let (parameter,_),(storage,_) = Of_source.compile_contract_input ~raise ~options ~meta parameter storage in
   let aggregated_prg = Of_typed.compile_program ~raise init_prog in
   let imperative = Of_c_unit.compile_contract_input ~raise ~meta parameter storage in
   let sugar      = Of_imperative.compile_expression ~raise imperative in
   let core       = Of_sugar.compile_expression sugar in
-  let typed      = Of_core.compile_expression ~raise ~options ~init_prog core in
+  let typed      = Of_core.compile_expression ~raise ~add_warning ~options ~init_prog core in
   let aggregated = Of_typed.compile_expression_in_context ~raise typed aggregated_prg  in
   let mini_c     = Of_aggregated.compile_expression ~raise aggregated in
   let compiled   = Of_mini_c.compile_expression ~raise ~options mini_c in

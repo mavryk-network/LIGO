@@ -5,12 +5,12 @@ let all_module_passes ~add_warning ~raise = [
   Unused.unused_map_module ~add_warning;
   Muchused.muchused_map_module ~add_warning;
   Helpers.map_module @@ Recursion.remove_rec_expression ;
-  Helpers.map_module @@ Recursion.check_tail_expression ~raise ;
+  Helpers.map_module @@ Recursion.check_tail_expression ~add_warning ~raise ;
   Helpers.map_module @@ Pattern_matching_simpl.peephole_expression ~raise ;
 ]
 
-let all_expression_passes ~raise = [
-  Helpers.map_expression @@ Recursion.check_tail_expression ~raise ;
+let all_expression_passes ~add_warning ~raise = [
+  Helpers.map_expression @@ Recursion.check_tail_expression ~add_warning ~raise ;
   Helpers.map_expression @@ Recursion.remove_rec_expression ;
   Pattern_matching_simpl.peephole_expression ~raise ;
 ]
@@ -25,8 +25,8 @@ let contract_passes ~raise = [
 let all_module ~add_warning ~raise init =
   List.fold ~f:(|>) (all_module_passes ~add_warning ~raise) ~init
 
-let all_expression ~raise init =
-  List.fold ~f:(|>) (all_expression_passes ~raise) ~init
+let all_expression ~add_warning ~raise init =
+  List.fold ~f:(|>) (all_expression_passes ~add_warning ~raise) ~init
 
 let all_contract ~raise main_name prg =
   let contract_type = Helpers.fetch_contract_type ~raise main_name prg in

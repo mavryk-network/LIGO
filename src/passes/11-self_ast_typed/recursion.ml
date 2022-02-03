@@ -60,11 +60,17 @@ and check_recursive_call_in_matching ~raise = fun n final_path c ->
     check_recursive_call ~raise n final_path body
 
 
-let check_tail_expression ~raise : expression -> expression = fun e ->
+let check_tail_expression ~raise ~add_warning : expression -> expression = fun e ->
   let return expression_content = { e with expression_content } in
   match e.expression_content with
   | E_recursive {fun_name; fun_type=_; lambda} as e-> (
-    let () = check_recursive_call ~raise fun_name true lambda.result in
+    let binder_is_shadowed = var_equal fun_name lambda.binder in
+    let () = 
+      if binder_is_shadowed 
+      then add_warning 
+        (`Self_ast_typed_warning_unused_rec
+          (Location.get_location fun_name, Format.asprintf "%a" Var.pp (Location.unwrap fun_name)))
+      else check_recursive_call ~raise fun_name true lambda.result in
     return e
     )
   | e -> return e
@@ -75,9 +81,7 @@ let remove_rec_expression : expression -> expression = fun e ->
   match e.expression_content with
   | E_recursive {fun_name; fun_type=_; lambda} as e-> (
     let _, fv = FV.expression lambda.result in
-    let binder_is_shadowed = var_equal fun_name lambda.binder in
-    (* TODO: if binder_is_shadowed, add a warning 'lambda.binder isn't used' ? *)
-    if (List.mem fv fun_name ~equal:var_equal && not binder_is_shadowed) then
+    if (List.mem fv fun_name ~equal:var_equal) then
       return e
     else
       return (E_lambda lambda)

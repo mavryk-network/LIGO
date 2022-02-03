@@ -4,18 +4,20 @@ module Compile = Ligo_compile
 module Helpers   = Ligo_compile.Helpers
 module Run = Ligo_run.Of_michelson
 
-let test source_file syntax steps protocol_version display_format project_root () =
+let test source_file syntax steps protocol_version display_format project_root warning_flags () =
     Trace.warning_with @@ fun add_warning get_warnings ->
-    format_result ~display_format (Ligo_interpreter.Formatter.tests_format) get_warnings @@
+    format_result ~display_format (Ligo_interpreter.Formatter.tests_format) 
+      (get_warnings ~pred:(Main_warnings.filter_warnings warning_flags)) @@
       fun ~raise ->
       let protocol_version = Helpers.protocol_to_variant ~raise protocol_version in
       let options = Compiler_options.make ~test:true ~protocol_version ?project_root () in
       let typed   = Build.build_context ~raise ~add_warning ~options syntax source_file in
       Interpreter.eval_test ~raise ~steps ~options ~protocol_version typed
 
-let dry_run source_file entry_point parameter storage amount balance sender source now syntax protocol_version display_format werror project_root () =
+let dry_run source_file entry_point parameter storage amount balance sender source now syntax protocol_version display_format werror project_root warning_flags () =
     Trace.warning_with @@ fun add_warning get_warnings ->
-    format_result ~werror ~display_format (Decompile.Formatter.expression_format) get_warnings @@
+    format_result ~werror ~display_format (Decompile.Formatter.expression_format) 
+      (get_warnings ~pred:(Main_warnings.filter_warnings warning_flags)) @@
       fun ~raise ->
       let protocol_version = Helpers.protocol_to_variant ~raise protocol_version in
       let options = Compiler_options.make ~protocol_version ?project_root () in
@@ -28,15 +30,16 @@ let dry_run source_file entry_point parameter storage amount balance sender sour
         let _contract = Compile.Of_michelson.build_contract ~raise compile_exp in
         Option.map ~f:fst @@ Self_michelson.fetch_contract_ty_inputs compile_exp.expr_ty
       in
-      let compiled_input    = Compile.Utils.compile_contract_input ~raise ~options parameter storage source_file syntax typed_prg in
+      let compiled_input    = Compile.Utils.compile_contract_input ~raise ~add_warning ~options parameter storage source_file syntax typed_prg in
       let args_michelson    = Run.evaluate_expression ~raise compiled_input.expr compiled_input.expr_ty in
       let options           = Run.make_dry_run_options ~raise {now ; amount ; balance ; sender ; source ; parameter_ty } in
       let runres  = Run.run_contract ~raise ~options compile_exp.expr compile_exp.expr_ty args_michelson in
       Decompile.Of_michelson.decompile_value_from_contract_execution ~raise aggregated_prg.type_expression runres
 
-let interpret expression init_file syntax protocol_version amount balance sender source now display_format project_root () =
+let interpret expression init_file syntax protocol_version amount balance sender source now display_format project_root warning_flags () =
     Trace.warning_with @@ fun add_warning get_warnings ->
-    format_result ~display_format (Decompile.Formatter.expression_format) get_warnings @@
+    format_result ~display_format (Decompile.Formatter.expression_format) 
+      (get_warnings ~pred:(Main_warnings.filter_warnings warning_flags)) @@
       fun ~raise ->
       let options =
         let protocol_version = Helpers.protocol_to_variant ~raise protocol_version in
@@ -48,9 +51,10 @@ let interpret expression init_file syntax protocol_version amount balance sender
       let runres  = Run.run_expression ~raise ~options compiled_exp.expr compiled_exp.expr_ty in
       Decompile.Of_michelson.decompile_expression ~raise typed_exp.type_expression runres
 
-let evaluate_call source_file entry_point parameter amount balance sender source now syntax protocol_version display_format werror project_root () =
+let evaluate_call source_file entry_point parameter amount balance sender source now syntax protocol_version display_format werror project_root warning_flags () =
     Trace.warning_with @@ fun add_warning get_warnings ->
-    format_result ~werror ~display_format (Decompile.Formatter.expression_format) get_warnings @@
+    format_result ~werror ~display_format (Decompile.Formatter.expression_format) 
+      (get_warnings ~pred:(Main_warnings.filter_warnings warning_flags)) @@
       fun ~raise ->
       let options =
         let protocol_version = Helpers.protocol_to_variant ~raise protocol_version in
@@ -67,7 +71,7 @@ let evaluate_call source_file entry_point parameter amount balance sender source
       let sugar_param      = Compile.Of_imperative.compile_expression ~raise imperative_param in
       let core_param       = Compile.Of_sugar.compile_expression sugar_param in
       let app              = Compile.Of_core.apply entry_point core_param in
-      let typed_app        = Compile.Of_core.compile_expression ~raise ~options ~init_prog app in
+      let typed_app        = Compile.Of_core.compile_expression ~raise ~add_warning ~options ~init_prog app in
       let app_aggregated   = Compile.Of_typed.compile_expression_in_context ~raise typed_app aggregated_prg in
       let app_mini_c       = Compile.Of_aggregated.compile_expression ~raise app_aggregated in
       let michelson        = Compile.Of_mini_c.compile_expression ~raise ~options app_mini_c in
@@ -75,9 +79,10 @@ let evaluate_call source_file entry_point parameter amount balance sender source
       let runres           = Run.run_expression ~raise ~options michelson.expr michelson.expr_ty in
       Decompile.Of_michelson.decompile_expression ~raise app_aggregated.type_expression runres
 
-let evaluate_expr source_file entry_point amount balance sender source now syntax protocol_version display_format werror project_root () =
+let evaluate_expr source_file entry_point amount balance sender source now syntax protocol_version display_format werror project_root warning_flags () =
     Trace.warning_with @@ fun add_warning get_warnings ->
-    format_result ~werror ~display_format Decompile.Formatter.expression_format get_warnings @@
+    format_result ~werror ~display_format Decompile.Formatter.expression_format 
+      (get_warnings ~pred:(Main_warnings.filter_warnings warning_flags)) @@
       fun ~raise ->
         let options =
           let protocol_version = Helpers.protocol_to_variant ~raise protocol_version in
