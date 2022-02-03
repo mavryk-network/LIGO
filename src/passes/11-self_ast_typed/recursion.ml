@@ -75,7 +75,9 @@ let remove_rec_expression : expression -> expression = fun e ->
   match e.expression_content with
   | E_recursive {fun_name; fun_type=_; lambda} as e-> (
     let _, fv = FV.expression lambda.result in
-    if (List.mem fv fun_name ~equal:var_equal && not (var_equal fun_name lambda.binder)) then
+    let binder_is_shadowed = var_equal fun_name lambda.binder in
+    (* TODO: if binder_is_shadowed, add a warning 'lambda.binder isn't used' ? *)
+    if (List.mem fv fun_name ~equal:var_equal && not binder_is_shadowed) then
       return e
     else
       return (E_lambda lambda)
