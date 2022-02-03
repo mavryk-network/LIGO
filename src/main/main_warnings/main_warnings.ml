@@ -106,7 +106,7 @@ let to_json : all -> Yojson.Safe.t = fun a ->
 
 let format = {pp;to_json}
 
-let filter_warnings flags warning =
+let filter_warnings flags (warning : all) =
   match warning with
     `Self_ast_typed_warning_unused_rec (_,_) -> flags.unused_rec
   | _ -> true
