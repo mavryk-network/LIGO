@@ -51,13 +51,13 @@ type t = {
   backend : backend ;
 }
 
-let make : 
+let make :
   raw_options : raw ->
   ?protocol_version:Protocols.t ->
   ?test:bool ->
   ?has_env_comments : bool ->
   unit -> t =
-  fun 
+  fun
     ~raw_options
     ?(protocol_version = Protocols.current)
     ?(test = false)
@@ -89,9 +89,9 @@ let make :
         constants = raw_options.constants ;
         file_constants = raw_options.file_constants ;
         has_env_comments = has_env_comments ;
-      } 
+      }
       in
-      { 
+      {
         frontend ;
         tools ;
         test_framework ;
@@ -99,7 +99,7 @@ let make :
         backend ;
       }
 
-let set_init_env opts init_env = 
+let set_init_env opts init_env =
   { opts with middle_end = { opts.middle_end with init_env } }
 
 let set_test_flag opts test =
