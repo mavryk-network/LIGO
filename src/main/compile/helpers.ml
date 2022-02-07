@@ -56,6 +56,19 @@ let preprocess_file ~raise ~(options:options) ~(meta: meta) file_path
   in trace ~raise preproc_tracer @@
       Simple_utils.Trace.from_result (preprocess_file ?project_root options.libs file_path)
 
+      let preprocess_str_contr ~raise ~(options:options) ~(meta: meta) file_path
+  : Preprocessing.Pascaligo.success =
+  let open Preprocessing in
+  let project_root = options.project_root in
+  let preprocess_file =
+    match meta.syntax with
+      PascaLIGO  -> Pascaligo.preprocess_string
+    | CameLIGO   -> Cameligo.preprocess_string
+    | ReasonLIGO -> Reasonligo.preprocess_string
+    | JsLIGO     -> Jsligo.preprocess_string
+  in trace ~raise preproc_tracer @@
+      Simple_utils.Trace.from_result (preprocess_file ?project_root options.libs file_path)
+
 let preprocess_string ~raise ~(options:options) ~(meta: meta) file_path =
   let open Preprocessing in
   let project_root = options.project_root in
@@ -83,6 +96,20 @@ let parse_and_abstract_pascaligo ~raise buffer file_path =
     trace ~raise cit_pascaligo_tracer @@
     Tree_abstraction.Pascaligo.compile_module applied
   in imperative
+
+  let parse_and_abstract_pascaligo_str ~raise buffer code =
+    let raw =
+      trace ~raise parser_tracer @@
+      Parsing.Pascaligo.parse_string buffer in
+    let applied =
+      trace ~raise self_cst_pascaligo_tracer @@
+      Self_cst.Pascaligo.all_module raw in
+    let imperative =
+      trace ~raise cit_pascaligo_tracer @@
+      Tree_abstraction.Pascaligo.compile_module applied
+    in imperative
+  
+    
 
 let parse_and_abstract_expression_pascaligo ~raise buffer =
   let raw =
@@ -175,13 +202,29 @@ let parse_and_abstract ~raise ~(meta: meta) ~add_warning buffer file_path
       PascaLIGO  -> parse_and_abstract_pascaligo
     | CameLIGO   -> parse_and_abstract_cameligo
     | ReasonLIGO -> parse_and_abstract_reasonligo
-    | JsLIGO     -> parse_and_abstract_jsligo in
+    | JsLIGO     ->  parse_and_abstract_jsligo in
   let abstracted =
     parse_and_abstract ~raise buffer file_path in
   let applied =
     trace ~raise self_ast_imperative_tracer @@
     Self_ast_imperative.all_module abstracted ~add_warning ~lang:meta.syntax in
   applied
+
+
+let parse_and_abstract_str ~raise ~(meta: meta) ~add_warning buffer code
+: Ast_imperative.module_ =
+let parse_and_abstract =
+match meta.syntax with
+  PascaLIGO  -> parse_and_abstract_pascaligo_str
+| CameLIGO   -> parse_and_abstract_pascaligo_str
+| ReasonLIGO -> parse_and_abstract_pascaligo_str
+| JsLIGO     -> parse_and_abstract_pascaligo_str in
+let abstracted =
+parse_and_abstract ~raise buffer code in
+let applied =
+trace ~raise self_ast_imperative_tracer @@
+Self_ast_imperative.all_module abstracted ~add_warning ~lang:meta.syntax in
+applied
 
 let parse_and_abstract_expression ~raise ~(meta: meta) buffer =
   let parse_and_abstract =

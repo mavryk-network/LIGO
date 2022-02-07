@@ -21,6 +21,20 @@ let contract ?werror source_file entry_point declared_views syntax protocol_vers
       in
       Ligo_compile.Of_michelson.build_contract ~raise ~disable_typecheck code views
 
+      let contract_string ?werror source_file entry_point declared_views syntax protocol_version display_format disable_typecheck michelson_code_format michelson_comments project_root () =
+        Trace.warning_with @@ fun add_warning get_warnings ->
+        format_result ?werror ~display_format (Formatter.Michelson_formatter.michelson_format michelson_code_format michelson_comments) get_warnings @@
+          fun ~raise ->
+          let options =
+              let protocol_version = Helpers.protocol_to_variant ~raise protocol_version in
+              Compiler_options.make ~protocol_version ?project_root ()
+          in
+          let code,env = Build.build_contract_string ~raise ~add_warning ~options "cameligo" entry_point source_file in
+          let views =
+            Build.build_views ~raise ~add_warning ~options syntax entry_point (declared_views,env) source_file
+          in
+          Ligo_compile.Of_michelson.build_contract ~raise ~disable_typecheck code views
+
 let expression expression syntax protocol_version init_file display_format without_run michelson_format werror project_root () =
     Trace.warning_with @@ fun add_warning get_warnings ->
     format_result ~werror ~display_format (Formatter.Michelson_formatter.michelson_format michelson_format []) get_warnings @@

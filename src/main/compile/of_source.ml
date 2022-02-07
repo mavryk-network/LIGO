@@ -20,6 +20,11 @@ let make_meta_from_syntax syntax : meta =
 let compile ~raise ~options ~meta (source_filename:string) : c_unit  =
   preprocess_file ~raise ~options ~meta source_filename
 
+  let compile_str_contr ~raise ~options ~meta (source_filename:string) : c_unit  =
+  preprocess_str_contr ~raise ~options ~meta source_filename
+
+  
+
 let compile_string ~raise ~options ~meta source : c_unit  =
   preprocess_string ~raise ~options ~meta source
 

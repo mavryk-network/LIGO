@@ -239,6 +239,18 @@ let compile_file =
   Command.basic ~summary ~readme
   (f <$> source_file <*> entry_point <*> on_chain_views <*> syntax <*> protocol_version <*> display_format <*> disable_michelson_typechecking <*> michelson_code_format <*> output_file <*> warn <*> werror <*> michelson_comments <*> project_root )
 
+  let compile_string =
+    let f source_file entry_point oc_views syntax protocol_version display_format disable_typecheck michelson_format output_file warn werror michelson_comments project_root  () =
+      return_result ~return ~warn ?output_file @@
+      Api.Compile.contract_string ~werror source_file entry_point oc_views syntax protocol_version display_format disable_typecheck michelson_format michelson_comments project_root  in
+    let summary   = "compile a contract." in
+    let readme () = "This sub-command compiles a contract to Michelson \
+                    code. It expects a source file and an entrypoint \
+                    function that has the type of a contract: \"parameter \
+                    * storage -> operations list * storage\"." in
+    Command.basic ~summary ~readme
+    (f <$> source_file <*> entry_point <*> on_chain_views <*> syntax <*> protocol_version <*> display_format <*> disable_michelson_typechecking <*> michelson_code_format <*> output_file <*> warn <*> werror <*> michelson_comments <*> project_root )
+  
 
 let compile_parameter =
   let f source_file entry_point expression syntax protocol_version amount balance sender source now display_format michelson_format output_file warn werror project_root  () =
@@ -284,6 +296,7 @@ let compile_group = Command.group ~summary:"compile a ligo program to michelson"
   [ "contract",   compile_file;
     "expression", compile_expression;
     "parameter",  compile_parameter;
+    "string", compile_string;
     "storage",    compile_storage;]
 
 (** Transpile commands *)

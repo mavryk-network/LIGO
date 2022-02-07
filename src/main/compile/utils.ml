@@ -7,15 +7,31 @@ let to_imperative ~raise ~add_warning ~options ~meta (c_unit: Buffer.t) file_pat
   let imperative = Of_c_unit.compile ~raise ~add_warning ~meta c_unit file_path in
   imperative
 
+  let to_imperative_str ~raise ~add_warning ~options ~meta (c_unit: Buffer.t) file_path =
+    let () = ignore options in
+    let imperative = Of_c_unit.compile_str ~raise ~add_warning ~meta c_unit file_path in
+    imperative
+  
+
 let to_sugar ~raise ~add_warning ~options ~meta (c_unit: Buffer.t) file_path =
   let imperative = to_imperative ~raise ~add_warning ~options ~meta c_unit file_path in
   let sugar      = Of_imperative.compile ~raise imperative in
   sugar
 
+  let to_sugar_str ~raise ~add_warning ~options ~meta (c_unit: Buffer.t) file_path =
+    let imperative = to_imperative_str ~raise ~add_warning ~options ~meta c_unit file_path in
+    let sugar      = Of_imperative.compile ~raise imperative in
+    sugar
+
 let to_core ~raise ~add_warning ~options ~meta (c_unit: Buffer.t) file_path =
   let sugar  = to_sugar ~raise ~add_warning ~options ~meta c_unit file_path in
   let core   = Of_sugar.compile sugar in
   core
+
+  let to_core_str ~raise ~add_warning ~options ~meta (c_unit: Buffer.t) file_path =
+    let sugar  = to_sugar_str ~raise ~add_warning ~options ~meta c_unit file_path in
+    let core   = Of_sugar.compile sugar in
+    core
 
 let type_file ~raise ~add_warning ~options f stx form : Ast_typed.program =
   let meta          = Of_source.extract_meta ~raise stx f in
@@ -24,6 +40,14 @@ let type_file ~raise ~add_warning ~options f stx form : Ast_typed.program =
   let inferred      = Of_core.infer ~raise ~options core in
   let typed         = Of_core.typecheck ~raise ~add_warning ~options form inferred in
   typed
+
+  let type_str ~raise ~add_warning ~options f stx : Ast_typed.program =
+    let meta          = Of_source.make_meta ~raise stx None in
+    let c_unit,_      = Of_source.compile_str_contr ~raise ~options ~meta f in
+    let core          = to_core ~raise ~add_warning ~options ~meta c_unit f in
+    let inferred      = Of_core.infer ~raise ~options core in
+    let typed         = Of_core.typecheck_str ~raise ~add_warning ~options inferred in
+    typed
 
 let to_mini_c ~raise ~add_warning ~options f stx env =
   let typed  = type_file ~raise ~add_warning ~options f stx env in
@@ -37,6 +61,15 @@ let compile_file ~raise ~add_warning ~options f stx ep =
   let michelson  = Of_mini_c.compile_contract ~raise ~options mini_c in
   let contract   = Of_michelson.build_contract ~raise michelson in
   contract
+
+  let compile_from_string_contract ~raise ~add_warning ~options f stx =
+    let typed    = type_str ~raise ~add_warning ~options f stx in
+    (* let aggregated = Of_typed.apply_to_entrypoint_contract ~raise typed ep in
+    let mini_c     = Of_aggregated.compile_expression ~raise aggregated in
+    let michelson  = Of_mini_c.compile_contract ~raise ~options mini_c in
+    let contract   = Of_michelson.build_contract ~raise michelson in *)
+    typed
+  
 
 let type_expression_string ~raise ~options syntax expression init_prog =
   let meta              = Of_source.make_meta_from_syntax syntax in

@@ -167,5 +167,18 @@ module Make (M : M) =
         let contract = aggregate_dependencies_as_headers ordered_deps asts_typed in
         Ok(contract)
       | Error e -> Error e
+      
+
+      let compile_combined_string : file_name -> ast build_error =
+        fun file_name ->
+          (* let  *)
+          let deps = dependency_graph file_name in
+          match solve_graph deps file_name with
+            Ok (ordered_deps) ->
+            let asts_typed = List.fold ~f:(compile_file_with_deps) ~init:(SMap.empty) ordered_deps in
+            let contract = aggregate_dependencies_as_headers ordered_deps asts_typed in
+            Ok(contract)
+          | Error e -> Error e
+      
   end    
 
