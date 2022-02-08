@@ -1209,9 +1209,9 @@ let test_lib ~raise ~options : Environment.lib =
                          Ligo_compile.Utils.type_contract_string ~add_warning:(fun _ -> ()) ~options ligo_syntax ligo_code options.init_env in
   let install_lib = function
     | S.CameLIGO ->
-       [Location.wrap @@ Ast_typed.Module_alias { alias = "Test" ; binders = List.Ne.of_list ["Internal__Test"; "CURRY"] } ]
+       [Location.wrap @@ Ast_typed.Module_alias { alias = (Var.of_input_var "Test") ; binders = List.Ne.of_list [(Var.of_input_var "Internal__Test"); (Var.of_input_var "CURRY")] } ]
     | S.ReasonLIGO | S.PascaLIGO | S.JsLIGO ->
-       [Location.wrap @@ Ast_typed.Module_alias { alias = "Test" ; binders = List.Ne.of_list ["Internal__Test"; "UNCURRY"] } ] in
+       [Location.wrap @@ Ast_typed.Module_alias { alias = (Var.of_input_var "Test") ; binders = List.Ne.of_list [(Var.of_input_var "Internal__Test"); (Var.of_input_var "UNCURRY")] } ] in
   Environment.{ code ; install_lib }
 
 let eval_test ~raise ~steps ~options ~protocol_version : Ast_typed.module_ -> ((string * value) list) =

@@ -343,7 +343,7 @@ let rec compile_expression ~raise : CST.expr -> AST.expr = fun e ->
       let var = module_name ^ "." ^ fun_name in
       (match constants var with
         Some const -> return @@ e_constant ~loc const []
-      | None -> return @@ e_module_accessor ~loc module_name element
+      | None -> return @@ e_module_accessor ~loc (Var.of_input_var module_name) element
       )
     else
       return @@ e_module_accessor ~loc (Var.of_input_var module_name) element
