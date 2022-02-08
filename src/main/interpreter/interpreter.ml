@@ -675,6 +675,10 @@ let rec apply_operator ~raise ~steps ~protocol_version ~options : Location.t -> 
       let>> value = Pairing_check l in
       return @@ value
     | ( C_PAIRING_CHECK , _  ) -> fail @@ error_type
+    | ( C_IMPLICIT_ACCOUNT, [ V_Ct (C_key_hash kh) ] )->
+      let>> value = Implicit_account (loc, kh) in
+      return @@ value
+    | ( C_IMPLICIT_ACCOUNT , _  ) -> fail @@ error_type
     | ( C_FAILWITH , [ a ] ) ->
       fail @@ Errors.meta_lang_failwith loc calltrace a
     | ( C_FAILWITH , _  ) -> fail @@ error_type
@@ -918,7 +922,7 @@ let rec apply_operator ~raise ~steps ~protocol_version ~options : Location.t -> 
          C_SET_LITERAL | C_LIST_LITERAL | C_MAP | C_MAP_LITERAL | C_MAP_GET | C_MAP_GET_FORCE |
          C_BIG_MAP | C_BIG_MAP_LITERAL | C_BIG_MAP_GET_AND_UPDATE | C_CALL | C_CONTRACT |
          C_CONTRACT_OPT | C_CONTRACT_WITH_ERROR | C_CONTRACT_ENTRYPOINT |
-         C_CONTRACT_ENTRYPOINT_OPT | C_IMPLICIT_ACCOUNT | C_SET_DELEGATE |
+         C_CONTRACT_ENTRYPOINT_OPT | C_SET_DELEGATE |
          C_CREATE_CONTRACT | C_OPEN_CHEST | C_VIEW | C_TEST_COMPILE_CONTRACT | C_GLOBAL_CONSTANT) , _ ) ->
       fail @@ Errors.generic_error loc "Unbound primitive."
   )
@@ -1128,7 +1132,7 @@ and eval_ligo ~raise ~steps ~protocol_version ~options : AST.expression -> callt
                                            is_t_arrow (get_type code) ->
         let AST.{ type1 = in_type ; type2 = out_type } = trace_option ~raise (Errors.generic_error term.location "Expected function") @@
                                    get_t_arrow (get_type code) in
-        let arg_binder = Location.wrap @@ Var.fresh () in
+        let arg_binder = Var.fresh () in
         let body = e_a_application term (e_a_variable arg_binder in_type) out_type in
         let orig_lambda = e_a_lambda { binder = arg_binder ; result = body } in_type out_type in
         return @@ V_Func_val { rec_name = None ; orig_lambda ; body ; env ; arg_binder }
@@ -1219,11 +1223,10 @@ let eval_test ~raise ~steps ~options ~protocol_version : Ast_typed.module_ -> ((
     let ds, defs = r in
     match decl.Location.wrap_content with
     | Ast_typed.Declaration_constant { binder ; expr ; _ } ->
-       let ev = binder.wrap_content in
-       if not (Var.is_generated ev) && (Base.String.is_prefix (Var.to_name ev) ~prefix:"test") then
+       if not (Var.is_generated binder) && (Base.String.is_prefix (Var.to_name_exn binder) ~prefix:"test") then
          let expr = Ast_typed.e_a_variable binder expr.type_expression in
          (* TODO: check that variables are unique, as they are ignored *)
-         decl :: ds, (ev, expr.type_expression) :: defs
+         decl :: ds, (binder, expr.type_expression) :: defs
        else
          decl :: ds, defs
     | _ -> decl :: ds, defs in
@@ -1233,7 +1236,7 @@ let eval_test ~raise ~steps ~options ~protocol_version : Ast_typed.module_ -> ((
   let initial_state = Tezos_state.init_ctxt ~raise protocol_version [] in
   let f (n, t) r =
     let s, _ = Var.internal_get_name_and_counter n in
-    LMap.add (Label s) (Ast_typed.e_a_variable (Location.wrap n) t) r in
+    LMap.add (Label s) (Ast_typed.e_a_variable n t) r in
   let map = List.fold_right lst ~f ~init:LMap.empty in
   let expr = Ast_typed.e_a_record map in
   let expr = ctxt expr in
