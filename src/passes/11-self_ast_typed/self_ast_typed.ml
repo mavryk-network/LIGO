@@ -4,8 +4,8 @@ module Helpers = Helpers
 let all_module_passes ~add_warning ~raise = [
   Unused.unused_map_module ~add_warning;
   Muchused.muchused_map_module ~add_warning;
-  Helpers.map_module @@ Recursion.remove_rec_expression ~add_warning ;
   Helpers.map_module @@ Recursion.check_tail_expression ~raise ;
+  Helpers.map_module @@ Recursion.remove_rec_expression ~add_warning ;
   Helpers.map_module @@ Pattern_matching_simpl.peephole_expression ~raise ;
 ]
 
