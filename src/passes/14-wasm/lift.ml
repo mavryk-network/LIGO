@@ -1,5 +1,14 @@
 (* 
-  Lift functions outside, as WebAssembly has no support for nested functions.   
+  Lift functions outside, as WebAssembly has no support for nested functions.
+
+  memory = [
+    info n
+
+  ]
+
+  helper_functions = [
+
+  ]
 *)
 open Mini_c.Types
 

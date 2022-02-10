@@ -23,13 +23,19 @@ let contract ?werror source_file entry_point declared_views syntax protocol_vers
           in
           Ligo_compile.Of_michelson.build_contract ~raise ~disable_typecheck code views
       | `Wasm -> 
-          let code,env = Build.build_wasm_code ~raise ~add_warning ~options syntax entry_point source_file in
+          let _ = Build.build_wasm_code ~raise ~add_warning ~options syntax entry_point source_file in
+          (String (Virtual "no", "This should not be here"))
+
+          (* let code,env = Build.build_wasm_code ~raise ~add_warning ~options syntax entry_point source_file in
           (* let views =
             Build.build_views ~raise ~add_warning ~options syntax entry_point (declared_views,env) source_file
           in
           *)
           ignore code; ignore env;
-          (String (Virtual "no", "This should not be here"))    
+          let bytes = WasmObjectFile.Encode.encode wasm in
+          
+
+          (String (Virtual "no", "This should not be here"))     *)
 
 let expression expression syntax protocol_version init_file display_format without_run michelson_format werror project_root () =
     Trace.warning_with @@ fun add_warning get_warnings ->

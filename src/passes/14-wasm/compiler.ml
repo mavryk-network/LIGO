@@ -6,8 +6,13 @@ open Errors
 
 module I = Mini_c.Types
 module W = WasmObjectFile  
+module A = W.Ast
+module S = W.Source
+module Z = Z
 
-let expression ~raise : I.expression -> W.Ast.instr list = fun e ->
+let no_region = S.no_region
+
+let rec expression ~raise : I.expression -> A.instr list = fun e ->
   print_endline "wasm compiler: expression -> ...";
   match e.content with 
   | E_literal (Literal_unit) -> failwith "not supported yet 1"
@@ -34,12 +39,27 @@ let expression ~raise : I.expression -> W.Ast.instr list = fun e ->
   | E_if_none  _ -> failwith "not supported yet 22"
   | E_if_cons  _ -> failwith "not supported yet 23"
   | E_if_left  _ -> failwith "not supported yet 24"
-  | E_let_in (e1, _inline, ((name, _type), _e2)) -> 
+  | E_let_in ({content = E_closure e}, _inline, ((name, _type), e2)) -> 
+    print_endline "---CLOSURE---";
+    print_endline (Var.debug (Location.unwrap name));
+    (*
+      function information in data:
+      - function name
+      - no of arguments
+    *)
+
+    (* let _ = expression  ~raise e1 in *)
+    let _ = expression  ~raise e2 in
+    []
+  | E_let_in (e1, _inline, ((name, _type), e2)) -> 
+    print_endline "------";
     print_endline (Var.debug (Location.unwrap name));
     
 
-
-    failwith "not supported yet 25"
+    (* let _ = expression  ~raise e1 in *)
+    let _ = expression  ~raise e2 in
+    []
+    (* failwith "not supported yet 25" *)
   | E_tuple _ -> failwith "not supported yet 26"
   | E_let_tuple _ -> failwith "not supported yet 27"
   (* E_proj (record, index, field_count): we use the field_count to
@@ -99,6 +119,184 @@ let expression ~raise : I.expression -> W.Ast.instr list = fun e ->
   | T_sapling_transaction of Z.t
   | T_option of type_expression *)
 
-let compile ~raise : I.expression -> W.Ast.module_' = fun e -> 
-  let _ = expression ~raise e in
-  W.Ast.empty_module
+let global_offset = ref 0l
+
+let convert_to_memory: string -> Z.t -> A.data_part A.segment list * A.sym_info list = fun name z -> 
+  let no_of_bits = Z.of_int (Z.log2up z) in        (* the no of bits that's required *)
+  let size =  Z.cdiv no_of_bits (Z.of_int 32) in (* assuming 32 bit*)
+  let _mp_alloc = size in
+  let _mp_size = if Z.lt z Z.zero then 
+    Z.sub Z.zero size
+  else
+    size
+  in
+  (* 
+    figure out how to get the limbs...  
+  *)
+  (* let limbs = Z.c_shift_right... *)
+
+  let data = A.[
+  S.{
+    it = {
+      index = {it = 0l; at = no_region};
+      offset = {
+        it = [
+          { it = Const {it = I32 0l; at = no_region}; at = no_region}
+        ]; at = no_region};
+      init = {
+        name = name;
+        detail = [
+          Int32 (Z.to_int32 _mp_alloc);
+          Int32 (Z.to_int32 _mp_size);
+          Symbol (name ^ "__ligo_internal_limbs")
+        ]
+      }
+    };
+    at = no_region
+  };
+  { 
+    it = {
+      index = {it = 0l; at = no_region};
+      offset = {
+        it = [
+          { it = Const {
+              it = I32 Int32.(!global_offset + 3l); 
+              at = no_region
+            }; 
+            at = no_region
+          }
+        ]; 
+        at = no_region
+      };
+      init = {
+        name = name ^ "__ligo_internal_limbs";
+        detail = [
+          String (Z.to_bits z)
+        ]
+      }
+    };
+    at = no_region;
+  }
+  
+  ]
+  in 
+  let symbols = [
+    S.{
+      it = A.{
+        name;
+        details = Data {
+          index = {it = 0l; at = no_region};
+          relocation_offset =  {it = 0l; at = no_region};
+          size = { it = 3l; at = no_region};
+          offset = { it = !global_offset; at = no_region}
+        }
+      };
+      at = no_region
+    };
+    {
+      it = {
+        name = name ^ "__ligo_internal_limbs";
+        details = Data {
+          index = {it = 0l; at = no_region};
+          relocation_offset = {it = 0l; at = no_region};
+          size = {it = Z.to_int32 _mp_size; at = no_region};
+          offset = {it = Int32.(!global_offset + 3l); at = no_region}
+        }
+      };
+      at = no_region
+    }
+  ]
+  in 
+  global_offset := Int32.(!global_offset + 4l);
+  data, symbols
+
+let rec toplevel_bindings ~raise : I.expression -> W.Ast.module_' -> W.Ast.module_' = fun e w ->
+  match e.content with
+    E_let_in ({content = E_closure e; _}, _inline, ((name, _type), e2)) -> 
+      (* 
+        - use __stack_pointer I guess...
+          - gmpz_init:
+            - allocate pointer on stack
+            - call mpz_init with allocated pointer
+            - how do we set the value?
+            - can't we do this more directly?
+    
+
+        - toplevel main function
+          - set toplevel __gmpz_init_set stuff
+
+        - allocate memory
+        - we give __gmpz_init a memory location (pointer)
+
+        - stack_pointer: not important for now.
+        - Every argument is a pointer.
+        - the pointer should point to a value that libgmp understands.
+        - use gmp integer functions for now, no need to overcomplicate things with lower-level functions
+        - create a test program...
+
+
+        Memory:
+        - list of values to which bindings can point
+        - 
+
+
+      *)
+
+
+    print_endline "---CLOSURE---";
+    print_endline (Var.debug (Location.unwrap name));
+    toplevel_bindings  ~raise e2 w
+  | E_let_in ({content = E_literal (Literal_int z); _}, _inline, ((name, _type), e2)) -> 
+    let name, hash = Var.internal_get_name_and_counter (Location.unwrap name) in
+    let name = match hash with 
+      Some s -> name ^ "#" ^ (string_of_int s)
+    | None -> name
+    in 
+    let data, symbols = convert_to_memory name z in
+    toplevel_bindings ~raise e2 {w with data = w.data @ data; symbols = w.symbols @ symbols }
+    (* | Literal_unit *)
+    (* | Literal_nat of z
+    | Literal_timestamp of z
+    | Literal_mutez of z *)
+    (* | Literal_string of ligo_string
+    | Literal_bytes of bytes
+    | Literal_address of string
+    | Literal_signature of string
+    | Literal_key of string
+    | Literal_key_hash of string
+    | Literal_chain_id of string
+    | Literal_operation of bytes
+    | Literal_bls12_381_g1 of bytes
+    | Literal_bls12_381_g2 of bytes
+    | Literal_bls12_381_fr of bytes *)
+  | E_let_in (e1, _inline, ((name, _type), e2)) -> 
+    (* 
+      These should be pointers.
+      - create a new number: should always be allocated somewhere.
+    *)
+    print_endline "------";
+    print_endline (Var.debug (Location.unwrap name));
+    let _ = toplevel_bindings  ~raise e2 w in
+    w
+  | E_variable _ ->
+    print_endline "ehm";
+    w
+  | _ -> failwith "Instruction not supported at the toplevel."
+
+let compile ~raise : I.expression -> W.Ast.module_ = fun e -> 
+  let w = W.Ast.empty_module in
+  let w = {
+    w with memories = [
+      {
+        it = {
+          mtype = MemoryType {min = 100l; max = Some 100l}
+        };
+        at = no_region
+      }
+    ]
+  }
+  in
+  S.{ 
+    it = toplevel_bindings ~raise e w;
+    at = no_region
+  }

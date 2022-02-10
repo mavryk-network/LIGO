@@ -8,7 +8,7 @@ module Lift = Wasm_pass.Lift
 module Wasm = Wasm_pass.Compiler
 
 
-let compile_contract ~raise : options:Compiler_options.t -> expression -> WasmObjectFile.Ast.module_'  = fun ~options e ->
+let compile_contract ~raise : options:Compiler_options.t -> expression -> WasmObjectFile.Ast.module_  = fun ~options e ->
   (* give warnings / errors on certain command line options... *)
   (* ignore options; *)
   print_endline "before:";
