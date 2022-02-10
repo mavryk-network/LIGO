@@ -532,7 +532,7 @@ let rec apply_operator ~raise ~steps ~protocol_version ~options : Location.t -> 
           eval_ligo body calltrace env'
         )
         init elts
-    | ( C_FOLD , _  ) -> fail @@ error_type
+    
     | ( C_LIST_FOLD , _  ) -> fail @@ error_type
     | ( C_SET_FOLD , _  ) -> fail @@ error_type
     | ( C_LIST_FOLD_RIGHT , [ V_Func_val {arg_binder ; body ; env; rec_name=_; orig_lambda=_}  ; V_List elts ; init ] ) ->
@@ -561,6 +561,7 @@ let rec apply_operator ~raise ~steps ~protocol_version ~options : Location.t -> 
     | ( C_BIG_MAP_EMPTY , _  ) -> fail @@ error_type
     | ( C_MAP_EMPTY , []) -> return @@ V_Map ([])
     | ( C_MAP_EMPTY , _  ) -> fail @@ error_type
+    | ( C_FOLD ,     [ V_Func_val {arg_binder ; body ; env ; rec_name=_; orig_lambda=_}  ; V_Map kvs ; init ] )
     | ( C_MAP_FOLD , [ V_Func_val {arg_binder ; body ; env; rec_name=_; orig_lambda=_}  ; V_Map kvs ; init ] ) ->
       let* map_ty = monad_option (Errors.generic_error loc "Could not recover types") @@ List.nth types 1 in
       let* acc_ty = monad_option (Errors.generic_error loc "Could not recover types") @@ List.nth types 2 in
@@ -573,6 +574,7 @@ let rec apply_operator ~raise ~steps ~protocol_version ~options : Location.t -> 
         )
         init kvs
     | ( C_MAP_FOLD , _  ) -> fail @@ error_type
+    | ( C_FOLD , _  ) -> fail @@ error_type
     | ( C_MAP_MEM , [k ; V_Map kvs]) -> return @@ v_bool (List.Assoc.mem ~equal:LC.equal_value kvs k)
     | ( C_MAP_MEM , _  ) -> fail @@ error_type
     | ( C_MAP_ADD , [ k ; v ; V_Map kvs] ) -> return (V_Map ((k,v) :: List.Assoc.remove ~equal:LC.equal_value kvs k))

@@ -639,7 +639,14 @@ let list_map ~raise loc = typer_2 ~raise loc "LIST_MAP" @@ fun body lst ->
 let fold ~raise loc = typer_3 ~raise loc "FOLD" @@ fun body container init ->
   let { type1 = arg ; type2 = res } = trace_option ~raise (expected_function loc body) @@ get_t_arrow body in
   let (prec , cur) = trace_option ~raise (expected_pair loc arg) @@ get_t_pair arg in
-  let key = trace_option ~raise (expected_list loc container) @@ Option.map_pair_or (get_t_list,get_t_set) container in
+  let typ = Option.map_pair_or (get_t_list,get_t_set) container in
+  let typ = match typ with
+  | Some typ as t -> t
+  | None ->  
+    let (key , value) = trace_option ~raise (expected_map loc container) @@ get_t_map container in
+    Some (t_pair key value)
+  in
+  let key = trace_option ~raise (expected_list loc container) @@ typ in
   let () = assert_eq_1 ~raise ~loc key cur in
   let () = assert_eq_1 ~raise ~loc prec res in
   let () = assert_eq_1 ~raise ~loc res init in

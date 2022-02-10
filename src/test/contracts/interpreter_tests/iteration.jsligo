@@ -17,3 +17,26 @@ let f_list = (xs : list<int>) : int => {
 };
 
 let test_list = f_list(list([1,2,3]));
+
+let sum_map = (m: map<string, int>): [string, int] => {
+  let string_total: string = "";
+  let int_total: int = 0;
+  for (const item of m) {
+    let [key, value] = item;
+    string_total = string_total + key;
+    int_total = int_total + value
+  };
+  return [string_total, int_total]
+}
+
+let _test_map = (_ : unit) : unit => {
+  let m : map<string, int> = 
+    Map.literal(list([
+      [("1"), 9],
+      [("2"), 10]]));
+  let [k, v] = sum_map(m);
+  assert(k == "12");
+  assert(v == 19);
+}
+
+let test_map = _test_map();
