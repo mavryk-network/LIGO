@@ -189,7 +189,7 @@ let typed_program_with_imperative_input_to_michelson ~raise (program : Ast_typed
   let sugar            = Ligo_compile.Of_imperative.compile_expression ~raise input in
   let core             = Ligo_compile.Of_sugar.compile_expression sugar in
   let app              = Ligo_compile.Of_core.apply entry_point core in
-  let typed_app        = Ligo_compile.Of_core.compile_expression ~raise ~options ~init_prog:program app in
+  let typed_app        = Ligo_compile.Of_core.compile_expression ~raise ~add_warning ~options ~init_prog:program app in
   (* let compiled_applied = Ligo_compile.Of_typed.compile_expression ~raise typed_app in *)
   let program = Ligo_compile.Of_typed.compile_program ~raise program in
   let aggregated = Ligo_compile.Of_typed.compile_expression_in_context ~raise typed_app program in

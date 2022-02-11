@@ -5,18 +5,18 @@ let contract = test
 let%expect_test _ =
   run_ligo_good ["compile"; "contract" ; contract "unused_recursion.mligo" ] ;
   [%expect {|
-    File "../../test/contracts/unused_recursion.mligo", line 5, characters 10-14:
-      4 |   let rec foo : (int -> int) -> int = fun (foo : (int -> int)) -> let foo = foo 0 in foo in
-      5 |   let rec toto : int -> int = fun (toto:int) : int -> let number = toto in number + 1 in
-      6 |   toto (number)  + foo (id)
+    File "../../test/contracts/unused_recursion.mligo", line 9, characters 10-14:
+      8 |
+      9 |   let rec toto : int -> int = fun (toto:int) : int -> let number = toto in number + 1 in
+     10 |
     :
     Warning: unused recursion .
     Hint: remove recursion from the function "toto" to prevent this warning.
 
-    File "../../test/contracts/unused_recursion.mligo", line 4, characters 10-13:
-      3 |   let id (x : int) : int = x in
-      4 |   let rec foo : (int -> int) -> int = fun (foo : (int -> int)) -> let foo = foo 0 in foo in
-      5 |   let rec toto : int -> int = fun (toto:int) : int -> let number = toto in number + 1 in
+    File "../../test/contracts/unused_recursion.mligo", line 7, characters 10-13:
+      6 |
+      7 |   let rec foo : (int -> int) -> int = fun (foo : (int -> int)) -> let foo = foo 0 in foo in
+      8 |
     :
     Warning: unused recursion .
     Hint: remove recursion from the function "foo" to prevent this warning.

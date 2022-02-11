@@ -3,6 +3,7 @@ let coucou = fun (_:int) : int ->
   
   let id (x : int) : int = x in
   (* here we test that foo is not considered a recursive function if the parameter shadow the function *)
+  
   let rec foo : (int -> int) -> int = fun (foo : (int -> int)) -> let foo = foo 0 in foo in
   
   let rec toto : int -> int = fun (toto:int) : int -> let number = toto in number + 1 in
