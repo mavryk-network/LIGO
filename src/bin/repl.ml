@@ -42,12 +42,12 @@ let repl_result_ppformat ~display_format f = function
   | Defined_values_core module_ ->
      (match display_format with
       | Human_readable | Dev -> Simple_utils.PP_helpers.list_sep_d
-                                  Simple_utils.PP_helpers.string f
+                                  Ast_core.PP.expression_variable f
                                   (get_declarations_core module_))
   | Defined_values_typed module' ->
      (match display_format with
       | Human_readable | Dev -> Simple_utils.PP_helpers.list_sep_d
-                                  Simple_utils.PP_helpers.string f
+                                  Ast_typed.PP.expression_variable f
                                   (get_declarations_typed module'))
   | Just_ok -> Simple_utils.PP_helpers.string f "Done."
 
@@ -58,13 +58,13 @@ let repl_result_jsonformat = function
   | Defined_values_core module_ ->
      let func_declarations  = Ligo_compile.Of_core.list_declarations module_ in
      let type_declarations  = Ligo_compile.Of_core.list_type_declarations module_ in
-     let name n = `Assoc [("name", `String n)] in
+     let name n = `Assoc [("name", Ast_core.type_variable_to_yojson n)] in
      let defs = List.map ~f:name (func_declarations @ type_declarations) in
      `Assoc [("definitions", `List defs)]
   | Defined_values_typed module' ->
      let func_declarations  = Ligo_compile.Of_typed.list_declarations module' in
      let type_declarations  = Ligo_compile.Of_typed.list_type_declarations module' in
-     let name n = `Assoc [("name", `String n)] in
+     let name n = `Assoc [("name", Ast_typed.type_variable_to_yojson n)] in
      let defs = List.map ~f:name (func_declarations @ type_declarations) in
      `Assoc [("definitions", `List defs)]
   | Just_ok -> `Assoc []
@@ -128,40 +128,23 @@ let try_declaration ~raise state s =
   | Failure _ ->
      raise.raise `Repl_unexpected
 
-let resolve_file_name file_name project_root =
-  (* TODO: dont use stdlib here *)
-  if Stdlib.Sys.file_exists file_name then file_name
-  else
-    match project_root with
-      Some project_root ->
-        let open Preprocessor in
-        let module_resolutions = ModuleResolutions.make project_root in
-        let inclusion_list = ModuleResolutions.get_root_inclusion_list module_resolutions in
-        let external_file = ModuleResolutions.find_external_file ~file:file_name ~inclusion_list in
-        (match external_file with
-          Some external_file -> external_file
-        | None -> file_name)
-    | None -> file_name
-
 let import_file ~raise state file_name module_name =
-  let options = Compiler_options.make ~protocol_version:state.protocol ?project_root:state.project_root () in
+  let options = Compiler_options.make ~protocol_version:state.protocol () in
   let options = {options with init_env = state.env } in
-  let file_name = resolve_file_name file_name state.project_root in
   let module_ = Build.combined_contract ~raise ~add_warning ~options (variant_to_syntax state.syntax) file_name in
-  let module_ = Ast_typed.([Simple_utils.Location.wrap @@ Declaration_module {module_binder=module_name;module_;module_attr={public=true}}]) in
+  let module_ = Ast_typed.([Simple_utils.Location.wrap @@ Declaration_module {module_binder=Ast_typed.Var.of_input_var module_name;module_;module_attr={public=true}}]) in
   let env     = Environment.append module_ state.env in
   let state = { state with env = env; top_level = concat_modules ~declaration:true state.top_level module_ } in
   (state, Just_ok)
 
-let use_file ~raise state file_name =
-  let options = Compiler_options.make ~protocol_version:state.protocol ?project_root:state.project_root () in
+let use_file ~raise state s =
+  let options = Compiler_options.make ~protocol_version:state.protocol () in
   let options = {options with init_env = state.env } in
   (* Missing typer environment? *)
-  let file_name = resolve_file_name file_name state.project_root in
-  let module' = Build.combined_contract ~raise ~add_warning ~options (variant_to_syntax state.syntax) file_name in
+  let module' = Build.combined_contract ~raise ~add_warning ~options (variant_to_syntax state.syntax) s in
   let env = Environment.append module' state.env in
   let state = { state with env = env;
-                           top_level = concat_modules ~declaration:false state.top_level module'
+                            top_level = concat_modules ~declaration:false state.top_level module'
                           } in
   (state, Defined_values_typed module')
 
@@ -188,28 +171,28 @@ let eval display_format state c =
   let (Ex_display_format t) = display_format in
   match to_stdlib_result c with
     Ok (state, out) ->
-     let disp = (Displayable {value = out; format = repl_result_format }) in
-     let out : string =
-       match t with
-       | Human_readable -> convert ~display_format:t disp ;
-       | Dev -> convert ~display_format:t disp ;
-       | Json -> Yojson.Safe.pretty_to_string @@ convert ~display_format:t disp in
-     (1, state, out)
+      let disp = (Displayable {value = out; format = repl_result_format }) in
+      let out : string =
+        match t with
+        | Human_readable -> convert ~display_format:t disp ;
+        | Dev -> convert ~display_format:t disp ;
+        | Json -> Yojson.Safe.pretty_to_string @@ convert ~display_format:t disp in
+      (1, state, out)
   | Error e ->
-     let disp = (Displayable {value = e; format = Main_errors.Formatter.error_format }) in
-     let out : string =
-       match t with
-       | Human_readable -> convert ~display_format:t disp ;
-       | Dev -> convert ~display_format:t disp ;
-       | Json -> Yojson.Safe.pretty_to_string @@ convert ~display_format:t disp in
-     (0, state, out)
+      let disp = (Displayable {value = e; format = Main_errors.Formatter.error_format }) in
+      let out : string =
+        match t with
+        | Human_readable -> convert ~display_format:t disp ;
+        | Dev -> convert ~display_format:t disp ;
+        | Json -> Yojson.Safe.pretty_to_string @@ convert ~display_format:t disp in
+      (0, state, out)
 
 let parse_and_eval display_format state s =
   let c = match parse s with
     | Use s -> use_file state s
     | Import (fn, mn) -> import_file state fn mn
     | Expr s -> try_declaration state s in
-  eval display_format state c
+  eval display_format state c                    
 
 let welcome_msg = "Welcome to LIGO's interpreter!
 Included directives:

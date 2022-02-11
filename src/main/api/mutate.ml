@@ -53,10 +53,7 @@ let mutate_cst source_file syntax protocol_version libs display_format seed gene
          let raw =
            trace ~raise Main_errors.parser_tracer @@
              Parsing.Cameligo.parse_file c_unit source_file in
-         let applied =
-           trace ~raise Main_errors.self_cst_cameligo_tracer @@
-             Self_cst.Cameligo.all_module raw in
-         let _, mutated_prg = Fuzzer.mutate_module_ ?n:seed applied in
+         let _, mutated_prg = Fuzzer.mutate_module_ ?n:seed raw in
          let buffer = (Parsing.Cameligo.pretty_print mutated_prg) in
          buffer
        end
@@ -66,10 +63,7 @@ let mutate_cst source_file syntax protocol_version libs display_format seed gene
            let raw =
              trace ~raise Main_errors.parser_tracer @@
                Parsing.Reasonligo.parse_file c_unit source_file in
-           let applied =
-             trace ~raise Main_errors.self_cst_reasonligo_tracer @@
-               Self_cst.Reasonligo.all_module raw in
-           let _, mutated_prg = Fuzzer.mutate_module_ ?n:seed applied in
+           let _, mutated_prg = Fuzzer.mutate_module_ ?n:seed raw in
            let buffer = (Parsing.Reasonligo.pretty_print mutated_prg) in
            buffer
          end
@@ -79,10 +73,7 @@ let mutate_cst source_file syntax protocol_version libs display_format seed gene
            let raw =
              trace ~raise Main_errors.parser_tracer @@
               Parsing.Pascaligo.parse_file c_unit source_file in
-           let applied =
-             trace ~raise Main_errors.self_cst_pascaligo_tracer @@
-               Self_cst.Pascaligo.all_module raw in
-           let _, mutated_prg = Fuzzer.mutate_module_ ?n:seed applied in
+           let _, mutated_prg = Fuzzer.mutate_module_ ?n:seed raw in
            let buffer = (Parsing.Pascaligo.pretty_print mutated_prg) in
            buffer
          end
@@ -92,10 +83,7 @@ let mutate_cst source_file syntax protocol_version libs display_format seed gene
            let raw =
             trace ~raise Main_errors.parser_tracer @@
               Parsing.Jsligo.parse_file c_unit source_file in
-           let applied =
-             trace ~raise Main_errors.self_cst_jsligo_tracer @@
-               Self_cst.Jsligo.all_module raw in
-           let _, mutated_prg = Fuzzer.mutate_module_ ?n:seed applied in
+           let _, mutated_prg = Fuzzer.mutate_module_ ?n:seed raw in
            let buffer = (Parsing.Jsligo.pretty_print mutated_prg) in
            buffer
          end
