@@ -1,12 +1,12 @@
 # Create a debian package from static executable
-{ stdenv, lib, writeTextFile, dpkg }:
+{ stdenv, lib, writeTextFile, dpkg, ligo }:
 let
   project = "ligo";
-  version = "0.0.0";
-  revision = lib.commitIdFromGitRepo ../.git;
+  version = ligo.version;
+  # revision = lib.sources.commitIdFromGitRepo ../.git;
   pkgArch = "amd64";
-  bin = "${../ligo}";
-  pkgName = "${project}_0ubuntu${version}-${revision}_${pkgArch}";
+  bin = "${ligo}/bin/ligo";
+  pkgName = "${project}_0ubuntu${version}_${pkgArch}";
   depends = "";
   maintainer = "ligolang ligolang.org";
   description = "A friendly Smart Contract Language for Tezos";
@@ -15,7 +15,7 @@ let
     name = "control";
     text = ''
       Package: ${project}
-      Version: ${version}-${revision}
+      Version: ${version}
       Priority: optional
       Architecture: ${pkgArch}
       Depends: ${depends}

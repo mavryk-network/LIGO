@@ -16,10 +16,10 @@
     let
       pkgs = import nixpkgs { inherit system; };
       
-      packages = pkgs.callPackage ./nix/ligo.nix { coq = pkgs.coq_8_14; }; 
+      ligo = pkgs.callPackage ./nix/ligo.nix { coq = pkgs.coq_8_14; doCheck = false; }; 
 
       devShell = (pkgs.mkShell {
-        inputsFrom = [ packages.ligo ];
+        inputsFrom = [ ligo ];
         buildInputs = with pkgs; with coq_8_14.ocamlPackages; [
             ocaml-lsp
             ocamlformat_0_20_1
@@ -28,7 +28,11 @@
       });
     in
     {
-      inherit packages;
+      packages = {
+        inherit ligo;
+        docker = pkgs.callPackage ./nix/docker.nix { inherit ligo; };
+        deb = pkgs.callPackage ./nix/packageDeb.nix { inherit ligo; };
+      };
       inherit devShell;
     }
   );
