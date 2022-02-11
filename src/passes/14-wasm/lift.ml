@@ -29,12 +29,12 @@ let empty_env = {
 }
 
 let variable_exists env v = 
-  match (List.find ~f:(fun var -> Location.equal_content ~equal:Var.equal v (fst var)) env.variables) with 
+  match (List.find ~f:(fun var -> Var.equal v (fst var)) env.variables) with 
       Some _ -> true 
     | None -> false
 
 let var_type env v = 
-  match (List.find ~f:(fun var -> Location.equal_content ~equal:Var.equal v (fst var)) env.variables) with 
+  match (List.find ~f:(fun var -> Var.equal v (fst var)) env.variables) with 
       Some (_, type_) -> type_
     | None -> failwith "should not happen"
 
@@ -57,7 +57,7 @@ let rec lift: env -> expression -> env * expression = fun env e ->
   | E_application ({content = E_variable v; _ } as e1, e2) ->    
     let env, e1 = lift env e1 in 
     let env, e2 = lift env e2 in
-    let env, e1 = (match List.find env.replacements ~f:(fun (r, _, _) -> Location.equal_content ~equal:Var.equal r v) with 
+    let env, e1 = (match List.find env.replacements ~f:(fun (r, _, _) -> Var.equal r v) with 
         Some (_, _, x) -> lift env x
       | None           -> env, e1
     )
@@ -66,7 +66,7 @@ let rec lift: env -> expression -> env * expression = fun env e ->
   | E_application (e1, ({content = E_variable v; _} as e2)) ->
     let env, e1 = lift env e1 in 
     let env, e2 = lift env e2 in 
-    let e2 = (match List.find env.replacements ~f:(fun (r, _, _) -> Location.equal_content ~equal:Var.equal r v) with 
+    let e2 = (match List.find env.replacements ~f:(fun (r, _, _) -> Var.equal r v) with 
         Some (_, x, _) -> 
           {e2 with content = E_variable x}
       | None -> 
@@ -126,7 +126,7 @@ let rec lift: env -> expression -> env * expression = fun env e ->
     env, {e with content = E_if_left (e1, ((var_name1, type_expression1), e2), ((var_name2, type_expression2), e3))}
   | E_let_in ({content = E_closure _} as c, inline, ((var_name, type_expression), e2)) -> 
     let env2, c = lift {empty_env with replacements = env.replacements; functions = env.functions} c in
-    let v = Location.wrap (Var.fresh_like (Location.unwrap var_name)) in
+    let v = Var.fresh_like var_name in
     let env = {env with variables = (v, type_expression) :: env.variables} in
     let export_func remaining = 
       List.fold_left ~f:(
@@ -148,11 +148,11 @@ let rec lift: env -> expression -> env * expression = fun env e ->
         }
       ) ~init remaining
     in
-    let in_replacement i = (match List.find env.replacements ~f:(fun (_,r,_) -> Location.equal_content ~equal:Var.equal r i) with 
+    let in_replacement i = (match List.find env.replacements ~f:(fun (_,r,_) -> Var.equal r i) with 
         Some _ -> true
       | None -> false
     ) in
-    let in_function i = (match List.find env.functions ~f:(fun r -> Location.equal_content ~equal:Var.equal r i) with 
+    let in_function i = (match List.find env.functions ~f:(fun r -> Var.equal r i) with 
         Some _ -> true
       | None -> false
     ) in

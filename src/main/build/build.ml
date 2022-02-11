@@ -173,6 +173,7 @@ let build_contract ~raise ~add_warning : options:Compiler_options.t -> string ->
 
 let build_wasm_code ~raise ~add_warning : options:Compiler_options.t -> string -> string -> file_name -> unit =
   fun ~options syntax entry_point file_name ->
+    let entry_point = Stage_common.Var.of_input_var entry_point in
     let typed_prg, _contract = build_typed ~raise ~add_warning ~options syntax (Ligo_compile.Of_core.Contract entry_point) file_name in
     let aggregated = Ligo_compile.Of_typed.apply_to_entrypoint_contract ~raise typed_prg entry_point in
     let mini_c = Ligo_compile.Of_aggregated.compile_expression ~raise aggregated in

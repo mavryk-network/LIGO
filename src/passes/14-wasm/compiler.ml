@@ -9,6 +9,7 @@ module W = WasmObjectFile
 module A = W.Ast
 module S = W.Source
 module Z = Z
+module Var = Stage_common.Var
 
 let no_region = S.no_region
 
@@ -41,7 +42,7 @@ let rec expression ~raise : I.expression -> A.instr list = fun e ->
   | E_if_left  _ -> failwith "not supported yet 24"
   | E_let_in ({content = E_closure e}, _inline, ((name, _type), e2)) -> 
     print_endline "---CLOSURE---";
-    print_endline (Var.debug (Location.unwrap name));
+    print_endline (Var.to_name_exn name);
     (*
       function information in data:
       - function name
@@ -53,7 +54,7 @@ let rec expression ~raise : I.expression -> A.instr list = fun e ->
     []
   | E_let_in (e1, _inline, ((name, _type), e2)) -> 
     print_endline "------";
-    print_endline (Var.debug (Location.unwrap name));
+    print_endline (Var.to_name_exn name);
     
 
     (* let _ = expression  ~raise e1 in *)
@@ -244,10 +245,10 @@ let rec toplevel_bindings ~raise : I.expression -> W.Ast.module_' -> W.Ast.modul
 
 
     print_endline "---CLOSURE---";
-    print_endline (Var.debug (Location.unwrap name));
+    print_endline (Var.to_name_exn name);
     toplevel_bindings  ~raise e2 w
   | E_let_in ({content = E_literal (Literal_int z); _}, _inline, ((name, _type), e2)) -> 
-    let name, hash = Var.internal_get_name_and_counter (Location.unwrap name) in
+    let name, hash = Var.internal_get_name_and_counter name in
     let name = match hash with 
       Some s -> name ^ "#" ^ (string_of_int s)
     | None -> name
@@ -275,7 +276,7 @@ let rec toplevel_bindings ~raise : I.expression -> W.Ast.module_' -> W.Ast.modul
       - create a new number: should always be allocated somewhere.
     *)
     print_endline "------";
-    print_endline (Var.debug (Location.unwrap name));
+    print_endline (Var.to_name_exn name);
     let _ = toplevel_bindings  ~raise e2 w in
     w
   | E_variable _ ->
@@ -285,6 +286,22 @@ let rec toplevel_bindings ~raise : I.expression -> W.Ast.module_' -> W.Ast.modul
 
 let compile ~raise : I.expression -> W.Ast.module_ = fun e -> 
   let w = W.Ast.empty_module in
+
+  (* 
+    First block of memory will be the GMP values apparently. 
+
+    TODO: 1. how much memory is required for storage? Put at __data_start (or something...).
+          2. allocate the memory
+          3. read from storage (fd_read "<contract_name>_storage" for now)
+
+          4. set parameter by reading cli argument (how?)
+          5. do contract logic
+
+          6. compress storage?
+             - easy way, will do for now but lame: allocate new memory block
+          7. write changed storage (fd_write "<contract_name>_storage" for now)
+  *)
+
   let w = {
     w with memories = [
       {
