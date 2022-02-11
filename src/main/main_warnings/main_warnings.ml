@@ -1,12 +1,6 @@
 open Simple_utils
 open Display
 
-type flags = {
-  unused_rec : bool
-}
-
-let make_warning_flags ~warn_unused_rec = { unused_rec = warn_unused_rec }
-
 type all = 
 [
   | `Self_ast_typed_warning_unused of Location.t * string
@@ -105,8 +99,3 @@ let to_json : all -> Yojson.Safe.t = fun a ->
     json_warning ~stage ~content
 
 let format = {pp;to_json}
-
-let filter_warnings flags (warning : all) =
-  match warning with
-    `Self_ast_typed_warning_unused_rec (_,_) -> flags.unused_rec
-  | _ -> true
