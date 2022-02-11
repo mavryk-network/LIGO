@@ -1,14 +1,22 @@
 { lib
+, pkgs
 , coq
 , cacert
 , patdiff
 }:
-
+let
+  filters = (import ./filters.nix) { inherit lib; };
+in
 {
   ligo = coq.ocamlPackages.buildDunePackage rec {
     pname = "ligo";
     version = "0.36.0-dev";
-    src = ./..;
+
+    src = filters.filterGitSource {
+      src = ../.;
+      dirs = [ "src" "vendors" "scripts" ];
+      files = [ "dune" "dune-project" "ligo.opam" ];
+    };
 
     # The build picks this up for ligo --version
     LIGO_VERSION = version;
@@ -35,11 +43,6 @@
       qcheck
       terminal_size
       tezos-011-PtHangz2-test-helpers
-      tezos-base
-      tezos-protocol-011-PtHangz2
-      tezos-protocol-011-PtHangz2-parameters
-      tezos-protocol-environment
-      tezos-shell-services
       yojson
     ];
 
