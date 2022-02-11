@@ -9,10 +9,9 @@ let pretty_print ?werror source_file syntax display_format () =
     let meta = Compile.Of_source.extract_meta ~raise syntax source_file in
     Compile.Utils.pretty_print ~raise ~options ~meta source_file
 
-let dependency_graph source_file syntax display_format project_root warning_flags () =
+let dependency_graph source_file syntax display_format project_root () =
     Trace.warning_with @@ fun add_warning get_warnings ->
-    format_result ~display_format (BuildSystem.Formatter.graph_format) 
-      (get_warnings ~pred:(Main_warnings.filter_warnings warning_flags)) @@
+    format_result ~display_format (BuildSystem.Formatter.graph_format) get_warnings @@
       fun ~raise ->
       let options = Compiler_options.make ?project_root () in
       let g,_ = Build.dependency_graph ~raise ~add_warning ~options syntax Env source_file in
@@ -33,20 +32,18 @@ let cst source_file syntax display_format () =
       let meta = Compile.Of_source.extract_meta ~raise syntax source_file in
       Compile.Utils.pretty_print_cst ~raise ~options ~meta source_file
 
-let ast source_file syntax display_format warning_flags () =
+let ast source_file syntax display_format () =
     Trace.warning_with @@ fun add_warning get_warnings ->
-    format_result ~display_format (Ast_imperative.Formatter.module_format) 
-      (get_warnings ~pred:(Main_warnings.filter_warnings warning_flags)) @@
+    format_result ~display_format (Ast_imperative.Formatter.module_format) get_warnings @@
       fun ~raise ->
       let options       = Compiler_options.make () in
       let meta     = Compile.Of_source.extract_meta ~raise syntax source_file in
       let c_unit,_ = Compile.Utils.to_c_unit ~raise ~options ~meta source_file in
       Compile.Utils.to_imperative ~raise ~add_warning ~options ~meta c_unit source_file
 
-let ast_sugar source_file syntax display_format self_pass warning_flags () =
+let ast_sugar source_file syntax display_format self_pass () =
     Trace.warning_with @@ fun add_warning get_warnings ->
-    format_result ~display_format (Ast_sugar.Formatter.module_format) 
-      (get_warnings ~pred:(Main_warnings.filter_warnings warning_flags)) @@
+    format_result ~display_format (Ast_sugar.Formatter.module_format) get_warnings @@
       fun ~raise ->
       let options = Compiler_options.make () in
       let meta     = Compile.Of_source.extract_meta ~raise syntax source_file in
@@ -57,10 +54,9 @@ let ast_sugar source_file syntax display_format self_pass warning_flags () =
       else
         sugar
 
-let ast_core source_file syntax display_format self_pass project_root warning_flags () =
+let ast_core source_file syntax display_format self_pass project_root () =
     Trace.warning_with @@ fun add_warning get_warnings ->
-    format_result ~display_format (Ast_core.Formatter.module_format) 
-    (get_warnings ~pred:(Main_warnings.filter_warnings warning_flags)) @@
+    format_result ~display_format (Ast_core.Formatter.module_format) get_warnings @@
     fun ~raise ->
       let options = Compiler_options.make ?project_root () in
       let meta     = Compile.Of_source.extract_meta ~raise syntax source_file in
@@ -71,10 +67,9 @@ let ast_core source_file syntax display_format self_pass project_root warning_fl
       else
         core
 
-let ast_typed source_file syntax protocol_version display_format self_pass project_root warning_flags () =
+let ast_typed source_file syntax protocol_version display_format self_pass project_root () =
     Trace.warning_with @@ fun add_warning get_warnings ->
-    format_result ~display_format (Ast_typed.Formatter.program_format) 
-    (get_warnings ~pred:(Main_warnings.filter_warnings warning_flags)) @@
+    format_result ~display_format (Ast_typed.Formatter.program_format) get_warnings @@
     fun ~raise ->
       let options = (* TODO: options should be computed outside of the API *)
         let protocol_version = Helpers.protocol_to_variant ~raise protocol_version in
@@ -86,10 +81,9 @@ let ast_typed source_file syntax protocol_version display_format self_pass proje
       else
         typed
 
-let ast_aggregated source_file syntax protocol_version display_format self_pass project_root warning_flags () =
+let ast_aggregated source_file syntax protocol_version display_format self_pass project_root () =
     Trace.warning_with @@ fun add_warning get_warnings ->
-    format_result ~display_format (Ast_aggregated.Formatter.expression_format) 
-    (get_warnings ~pred:(Main_warnings.filter_warnings warning_flags)) @@
+    format_result ~display_format (Ast_aggregated.Formatter.expression_format) get_warnings @@
     fun ~raise ->
       let options = (* TODO: options should be computed outside of the API *)
         let protocol_version = Helpers.protocol_to_variant ~raise protocol_version in
@@ -103,10 +97,9 @@ let ast_aggregated source_file syntax protocol_version display_format self_pass 
       else
         aggregated
 
-let ast_combined  source_file syntax protocol_version display_format project_root warning_flags () =
+let ast_combined  source_file syntax protocol_version display_format project_root () =
   Trace.warning_with @@ fun add_warning get_warnings ->
-  format_result ~display_format Ast_typed.Formatter.program_format 
-  (get_warnings ~pred:(Main_warnings.filter_warnings warning_flags)) @@
+  format_result ~display_format Ast_typed.Formatter.program_format get_warnings @@
   fun ~raise ->
     let options = (* TODO: options should be computed outside of the API *)
       let protocol_version = Helpers.protocol_to_variant ~raise protocol_version in
@@ -115,10 +108,9 @@ let ast_combined  source_file syntax protocol_version display_format project_roo
     let typed = Build.combined_contract ~raise ~add_warning ~options syntax source_file in
     typed
 
-let mini_c source_file syntax protocol_version display_format optimize project_root warning_flags () =
+let mini_c source_file syntax protocol_version display_format optimize project_root () =
     Trace.warning_with @@ fun add_warning get_warnings ->
-    format_result ~display_format (Mini_c.Formatter.program_format) 
-    (get_warnings ~pred:(Main_warnings.filter_warnings warning_flags)) @@
+    format_result ~display_format (Mini_c.Formatter.program_format) get_warnings @@
     fun ~raise ->
       let options = (* TODO: options should be computed outside of the API *)
         let protocol_version = Helpers.protocol_to_variant ~raise protocol_version in

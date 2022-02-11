@@ -11,10 +11,9 @@ let generator_to_variant ~raise s =
   else
     raise.raise @@ Main_errors.main_invalid_generator_name s
 
-let mutate_ast source_file syntax protocol_version libs display_format seed generator warning_flags () =
+let mutate_ast source_file syntax protocol_version libs display_format seed generator () =
   Trace.warning_with @@ fun add_warning get_warnings ->
-  format_result ~display_format (Parsing.Formatter.ppx_format) 
-    (get_warnings ~pred:(Main_warnings.filter_warnings warning_flags)) @@
+  format_result ~display_format (Parsing.Formatter.ppx_format) get_warnings @@
     fun ~raise ->
     let generator = generator_to_variant ~raise generator in
     let get_module = match generator with

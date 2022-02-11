@@ -84,7 +84,7 @@ let remove_rec_expression ~add_warning : expression -> expression = fun e ->
       if binder_is_shadowed 
       then add_warning 
         (`Self_ast_typed_warning_unused_rec
-          (Location.get_location fun_name, Format.asprintf "%a" Var.pp (Location.unwrap fun_name)))
+          (Var.get_location fun_name, Format.asprintf "%a" Var.pp fun_name))
       else () in
     if (List.mem fv fun_name ~equal:var_equal && not binder_is_shadowed) then
       return e

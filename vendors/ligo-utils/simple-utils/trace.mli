@@ -8,7 +8,7 @@ warning_with @@ fun add_warning get_warnings ->
   let warnings = get_warnings () in
   rest_of_the processing ()
 *)
-val warning_with : (('a -> unit) -> (?pred:('a -> bool) -> unit -> 'a list) -> 'b) -> 'b
+val warning_with : (('a -> unit) -> (unit -> 'a list) -> 'b) -> 'b
 
 
 (* The function [try_with] is a wrapper for errors.

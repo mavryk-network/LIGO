@@ -9,7 +9,7 @@ let all_module_passes ~add_warning ~raise = [
   Helpers.map_module @@ Pattern_matching_simpl.peephole_expression ~raise ;
 ]
 
-let all_expression_passes ~add_warning ~raise = [
+let all_expression_passes ~add_warning  ~raise = [
   Helpers.map_expression @@ Recursion.check_tail_expression ~raise ;
   Helpers.map_expression @@ Recursion.remove_rec_expression ~add_warning ;
   Pattern_matching_simpl.peephole_expression ~raise ;
@@ -25,7 +25,7 @@ let contract_passes ~raise = [
 let all_module ~add_warning ~raise init =
   List.fold ~f:(|>) (all_module_passes ~add_warning ~raise) ~init
 
-let all_expression ~add_warning ~raise init =
+let all_expression ~add_warning  ~raise init =
   List.fold ~f:(|>) (all_expression_passes ~add_warning ~raise) ~init
 
 let all_contract ~raise main_name prg =
