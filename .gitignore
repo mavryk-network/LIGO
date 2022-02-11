@@ -11,6 +11,7 @@ version.ml
 /*.pp.religo
 **/.DS_Store
 .vscode/
+.direnv
 /ligo.install
 *.coverage
 /_coverage/
