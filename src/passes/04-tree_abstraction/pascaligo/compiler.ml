@@ -346,7 +346,14 @@ let rec compile_expression ~(raise :Errors.abs_error Simple_utils.Trace.raise) :
       let var = module_name#payload ^ "." ^ fun_name in
       match constants var with
       | Some const -> e_constant ~loc const []
-      | None -> e_variable_ez ~loc var
+      | None -> let field = self ma.field in
+                let f : CST.module_name -> AST.expression -> AST.expression =
+                  fun module_name acc ->
+                  let (name,loc) = w_split module_name in
+                  e_module_accessor ~loc (mk_var ~loc name) acc
+                in
+                let lst = Utils.nsepseq_to_list ma.module_path in
+                List.fold_right lst ~f ~init:field
     )
     | _ -> (
       let field = self ma.field in
