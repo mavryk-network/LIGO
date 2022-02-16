@@ -2,7 +2,7 @@
 
 git clone --recursive https://github.com/WebAssembly/wabt
 cd wabt
-git checkout 1.0.24
+git checkout 1.0.26
 git submodule update --init
 
 mkdir build

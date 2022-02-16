@@ -476,7 +476,9 @@ let encode (m: Ast.module_) =
       | DataSymbol symbol ->
         op 0x41;
         let p = pos s in
-        let s, _ = Linking.find_symbol_index m.it.symbols (fun s -> match s.it.details with Function when s.it.name = symbol -> true | _ -> false) in
+        print_endline ("Looking for:" ^ symbol);
+        let s, _ = Linking.find_symbol_index m.it.symbols (fun s -> match s.it.details with Function when s.it.name = symbol -> true |  Data _ when s.it.name = symbol -> true | _ -> false) in
+        print_endline (" and succeeded...");
         code_relocations := !code_relocations @ [R_WASM_MEMORY_ADDR_SLEB (Int32.of_int p, symbol)];
         match s.it.details with 
           Data {offset; _} ->
@@ -523,7 +525,7 @@ let encode (m: Ast.module_) =
     (* Import section *)
     let import_desc d =
       match d.it with
-      | FuncImport x -> u8 0x00; var x
+      | FuncImport x -> u8 0x00; vu32 (Linking.find_type m.it.types x)
       | TableImport t -> u8 0x01; table_type t
       | MemoryImport t -> u8 0x02; memory_type t
       | GlobalImport t -> u8 0x03; global_type t
@@ -595,7 +597,7 @@ let encode (m: Ast.module_) =
     let local ((_, t), n) = len n; value_type t
 
     let code f =
-      let {locals; body; _} = f.it in
+      let {locals; body; name; _} = f.it in
       let g = gap32 () in
       let p = pos s in
       vec local (compress locals);
@@ -734,10 +736,7 @@ let encode (m: Ast.module_) =
             u8 4;
             vu32 (Int32.sub offset !code_pos);
             vs32_fixed (Int32.of_int symbol_index); 
-            if symbol_ = "caml_globals_inited"  (* || symbol_ = "caml_backtrace_pos" || index = (-1l) *) then
-              vs32 0l
-            else
-              vs32 4l            
+            vs32 0l
           | Import _
           | Function when s.it.name = symbol_ -> 
             exists := true;            
@@ -895,11 +894,12 @@ let encode (m: Ast.module_) =
         ) 
       | Import _ ->
         vu32 (Linking.func_index m.it.funcs m.it.imports sym.name);
-      | Data d -> (     
-        (* (if sym.name <> "" then        
+      | Data d -> (    
+        (if sym.name <> "" then        
         string sym.name
         else         
-        string "_"); probably an initial block ?!malformed uleb128 *)
+        string "_"); 
+        (* probably an initial block ?!malformed uleb128 *)
         if exists then (
           vu32 (Linking.data_index m.it.data sym.name);
           vu32 d.relocation_offset.it;

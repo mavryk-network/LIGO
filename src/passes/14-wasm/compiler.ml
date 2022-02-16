@@ -1,23 +1,153 @@
 (* use https://github.com/SanderSpies/ocaml/blob/manual_gc/asmcomp/wasm32/emit.mlp for inspiration *)
 
-[@@@warning "-33-27"]
+[@@@warning "-33-27-26"]
 open Trace
 open Errors 
 
 module I = Mini_c.Types
 module W = WasmObjectFile  
 module A = W.Ast
+module T = W.Types
 module S = W.Source
 module Z = Z
 module Var = Stage_common.Var
+module Location = Simple_utils.Location
 
-let no_region = S.no_region
+(**
+ * Converts LIGO's location.t to WasmObjectFile's Source.region.
+ *)
+let location_to_region (l: Location.t) : S.region = 
+  match l with  
+    File l ->
+      {
+        left = {
+          file   = l#file;
+          line   = l#start#line;
+          column = l#start#column `Byte;
+        };
+        right = {
+          file   = l#file;
+          line   = l#stop#line;
+          column = l#stop#column `Byte;
+        }
+      }
+  | Virtual _ -> S.no_region
 
-let rec expression ~raise : I.expression -> A.instr list = fun e ->
-  print_endline "wasm compiler: expression -> ...";
+(* Convert a variable to a string which we can use for symbols *)
+let var_to_string name =  
+  let name, hash = Var.internal_get_name_and_counter name in
+  match hash with 
+    Some s -> name ^ "#" ^ (string_of_int s)
+  | None -> name
+
+(* The data offset. This indicates where a block of data should be placed in the linear memory. *)
+let global_offset = ref 0l
+
+(**
+ * Convert a Zarith value to WASM's linear memory for use with GMP.
+ *
+ * See also GMP internals (TODO:add link here)
+ **)
+let convert_to_memory: string -> S.region -> Z.t -> A.data_part A.segment list * A.sym_info list = fun name at z -> 
+  let no_of_bits = Z.of_int (Z.log2up z) in      (* the no of bits that's required *)
+  let size =  Z.cdiv no_of_bits (Z.of_int 32) in (* assuming 32 bit*)
+  let _mp_alloc = size in
+  let _mp_size = if Z.lt z Z.zero then 
+    Z.sub Z.zero size
+  else
+    size
+  in
+  let data = A.[
+    S.{
+      it = {
+        index = {it = 0l; at};
+        offset = {
+          it = [
+            { it = Const {it = I32 !global_offset; at}; at}
+          ]; at};
+        init = {
+          name = name;
+          detail = [
+            Int32 (Z.to_int32 _mp_alloc);
+            Int32 (Z.to_int32 _mp_size);
+            Symbol (name ^ "__ligo_internal_limbs")
+          ]
+        }
+      };
+      at
+    };
+    { 
+      it = {
+        index = {it = 0l; at};
+        offset = {
+          it = [
+            { it = Const {
+                it = I32 Int32.(!global_offset + 3l); 
+                at
+              }; 
+              at
+            }
+          ]; 
+          at
+        };
+        init = {
+          name = name ^ "__ligo_internal_limbs";
+          detail = [
+            String (Z.to_bits z)
+          ]
+        }
+      };
+      at;
+    }
+  ]
+  in 
+  let symbols = [
+    S.{
+      it = A.{
+        name;
+        details = Data {
+          index = {it = 0l; at};
+          relocation_offset =  {it = 0l; at};
+          size = { it = 3l; at};
+          offset = { it = !global_offset; at}
+        }
+      };
+      at
+    };
+    {
+      it = {
+        name = name ^ "__ligo_internal_limbs";
+        details = Data {
+          index = {it = 0l; at};
+          relocation_offset = {it = 0l; at};
+          size = {it = Z.to_int32 _mp_size; at};
+          offset = {it = Int32.(!global_offset + 3l); at}
+        }
+      };
+      at
+    }
+  ]
+  in 
+  global_offset := Int32.(!global_offset + 4l); (* TODO: get proper size for limbs... *)
+  data, symbols
+
+type locals = (string * T.value_type) list
+
+let name s =
+  try W.Utf8.decode s with W.Utf8.Utf8 ->
+    failwith "invalid UTF-8 encoding"
+
+let rec expression ~raise : A.module_' -> locals -> I.expression -> A.module_' * locals * A.instr list = fun w l e ->
+  let at = location_to_region e.location in
   match e.content with 
-  | E_literal (Literal_unit) -> failwith "not supported yet 1"
-  | E_literal (Literal_int _z) -> failwith "not supported yet 2"
+  | E_literal (Literal_unit) ->
+    w, l, [{it = Nop; at}]
+  | E_literal (Literal_int z) -> 
+    let unique_name = Var.fresh () in
+    let name = var_to_string unique_name in
+    let data, symbols = convert_to_memory name at z in
+    let w = {w with data = w.data @ data; symbols = w.symbols @ symbols } in
+    w, l, [{it = A.DataSymbol name; at}]
   | E_literal (Literal_nat _z) -> failwith "not supported yet 3"
   | E_literal (Literal_timestamp _z) -> failwith "not supported yet 4"
   | E_literal (Literal_mutez _z) -> failwith "not supported yet 5"
@@ -30,9 +160,86 @@ let rec expression ~raise : I.expression -> A.instr list = fun e ->
   | E_literal (Literal_chain_id _b) -> failwith "not supported yet 12"
   | E_literal (Literal_operation _b) -> failwith "not supported yet 13"
   | E_closure {binder; body} -> failwith "not supported yet 14"
-  | E_constant _ -> failwith "not supported yet 15"
-  | E_application _ -> failwith "not supported yet 16"
-  | E_variable _ -> failwith "not supported yet 17"
+  | E_constant {cons_name = C_LIST_EMPTY; arguments = []} -> 
+    let data = [S.{
+      it = A.{
+        index = { it = 0l; at};
+        offset = {
+          it = [
+            { it = Const {it = I32 !global_offset; at}; at}
+          ]; 
+          at
+        };
+        init = {
+          name = "C_LIST_EMPTY";
+          detail = [Int32 0l]
+        }
+      };
+      at
+    }] in
+    let symbols = [S.{
+      it = A.{
+        name = "C_LIST_EMPTY";
+        details = Data {
+          index = {it = 0l; at};
+          relocation_offset = {it = 0l; at};
+          size = {it = 4l; at};
+          offset = {it = !global_offset; at}
+        }
+      };
+      at
+    }]
+    in
+    global_offset := Int32.(!global_offset + 4l);
+    let w = {w with data = w.data @ data; symbols = w.symbols @ symbols } in
+    w, l, [{it = DataSymbol "C_LIST_EMPTY"; at}]
+  | E_constant {cons_name = C_PAIR; arguments = [e1; e2]} -> 
+    (* allocate memory block *)
+    (* add e1 *)
+    (* add e2 *)
+    let w, l, _ = expression ~raise w l e1 in
+    let w, l, _ = expression ~raise w l e2 in
+    w, l, []
+    
+  | E_constant {cons_name = C_ADD; arguments = [e1; e2]} -> 
+    let w, l, e1 = expression ~raise w l e1 in
+    let w, l, e2 = expression ~raise w l e2 in
+    {w with imports = w.imports @ [{it = {
+      module_name = name "env";
+      item_name = name "__gmpz_add";
+      idesc = {it = A.FuncImport "__gmpz_add_type"; at}
+    }; at}]; 
+    types = w.types @ [{it = {
+      tname = "__gmpz_add_type";
+      tdetails = FuncType ([T.I32Type; T.I32Type], [T.I32Type])
+    }; at}];
+    symbols = w.symbols @ [{it = {name = "__gmpz_add"; details = Import ([T.I32Type; T.I32Type], [T.I32Type])}; at}]}, l, e1 @ e2 @ [{it = A.Call "__gmpz_add"; at}]
+    (* failwith "todo me" *)
+  | E_constant {cons_name; arguments} -> failwith "not supported yet 15"
+    (* we should probably call GMP here... *)
+  | E_application _ -> 
+    let rec aux result expr = 
+      (match expr.I.content with 
+        E_application (func, e) -> 
+          aux (e :: result) func
+      | E_variable v -> 
+        let name = var_to_string v in
+        name, List.rev result
+      | _ -> failwith "Not supported yet x1")
+    in
+    let name, args = aux [] e in
+    let w, l, args = List.fold ~f:(fun (w, l, a) f -> 
+      let w, l, c = expression ~raise w l f in 
+      w, l,  a @ c
+    ) ~init:(w, l, []) args in
+    let args = List.rev args in
+    w, l, args @ [S.{it = A.Call name; at}]
+  | E_variable name ->
+    let name = var_to_string name in
+    print_endline ("trying to get var:" ^ name);
+    (match List.find ~f:(fun (n, _) -> print_endline ("check:" ^ n); (String.equal n name)) l with 
+     Some _ -> print_endline "oh hi here"; w, l, [{it = LocalGet name; at}]
+    | None ->  w, l, [{it = DataSymbol name; at}])
   | E_iterator _ -> failwith "not supported yet 18"
   | E_fold     _ -> failwith "not supported yet 19"
   | E_fold_right _ -> failwith "not supported yet 20"
@@ -40,29 +247,38 @@ let rec expression ~raise : I.expression -> A.instr list = fun e ->
   | E_if_none  _ -> failwith "not supported yet 22"
   | E_if_cons  _ -> failwith "not supported yet 23"
   | E_if_left  _ -> failwith "not supported yet 24"
-  | E_let_in ({content = E_closure e}, _inline, ((name, _type), e2)) -> 
-    print_endline "---CLOSURE---";
-    print_endline (Var.to_name_exn name);
-    (*
-      function information in data:
-      - function name
-      - no of arguments
-    *)
-
-    (* let _ = expression  ~raise e1 in *)
-    let _ = expression  ~raise e2 in
-    []
-  | E_let_in (e1, _inline, ((name, _type), e2)) -> 
-    print_endline "------";
-    print_endline (Var.to_name_exn name);
-    
-
-    (* let _ = expression  ~raise e1 in *)
-    let _ = expression  ~raise e2 in
-    []
-    (* failwith "not supported yet 25" *)
+  | E_let_in ({content = E_closure {binder; body}}, _inline, ((name, _type), e2)) -> failwith "should not happen..."
+  | E_let_in (e1, _inline, ((name, typex), e2)) -> 
+    let name = var_to_string name in
+    print_endline ("Set local:" ^ name);
+    let w, l, e1 = expression ~raise w l e1 in
+    let w, l, e2 = expression ~raise w l e2 in
+    w, (name, T.I32Type) :: l, e1 @ [S.{it = A.LocalSet name; at}] @ e2
   | E_tuple _ -> failwith "not supported yet 26"
-  | E_let_tuple _ -> failwith "not supported yet 27"
+  | E_let_tuple (tuple, (values, rhs)) -> 
+    let w, l, tuple = expression ~raise w l tuple in
+    let l, e = List.foldi ~f:(fun i (l, all) (name, _) -> 
+      let name = var_to_string name in
+      (name, T.I32Type) :: l, all 
+      @
+      tuple 
+      @
+      [
+        {
+          it = Binary (I32 Add);
+          at 
+        };
+        (* Load {}; *) (* TODO *)
+        { 
+          it = LocalSet name; 
+          at 
+        }]
+    ) ~init:(l, []) values
+    in
+
+    let w, l, e2 = expression ~raise w l rhs in 
+    w, l, e @ e2
+
   (* E_proj (record, index, field_count): we use the field_count to
      know whether the index is the last field or not, since Michelson
      treats the last element of a comb differently than the rest. We
@@ -73,7 +289,7 @@ let rec expression ~raise : I.expression -> A.instr list = fun e ->
   (* E_update (record, index, update, field_count): field_count as for E_proj *)
   | E_update _ -> failwith "not supported yet 29"  
   | E_raw_michelson _ -> raise.raise @@ michelson_insertion Location.dummy
-  | _ -> []
+  | _ -> failwith "not supported x"
   (* | E_closure of anon_function
   | E_constant of constant
   | E_application of (expression * expression)
@@ -120,100 +336,56 @@ let rec expression ~raise : I.expression -> A.instr list = fun e ->
   | T_sapling_transaction of Z.t
   | T_option of type_expression *)
 
-let global_offset = ref 0l
-
-let convert_to_memory: string -> Z.t -> A.data_part A.segment list * A.sym_info list = fun name z -> 
-  let no_of_bits = Z.of_int (Z.log2up z) in        (* the no of bits that's required *)
-  let size =  Z.cdiv no_of_bits (Z.of_int 32) in (* assuming 32 bit*)
-  let _mp_alloc = size in
-  let _mp_size = if Z.lt z Z.zero then 
-    Z.sub Z.zero size
-  else
-    size
+let func I.{binder; body} =
+  let rec aux arguments body =
+    match body.I.content with 
+      E_closure {binder; body} -> 
+        aux (binder :: arguments) body
+    | _ -> List.rev arguments, body
   in
-  (* 
-    figure out how to get the limbs...  
-  *)
-  (* let limbs = Z.c_shift_right... *)
-
-  let data = A.[
-  S.{
-    it = {
-      index = {it = 0l; at = no_region};
-      offset = {
-        it = [
-          { it = Const {it = I32 0l; at = no_region}; at = no_region}
-        ]; at = no_region};
-      init = {
-        name = name;
-        detail = [
-          Int32 (Z.to_int32 _mp_alloc);
-          Int32 (Z.to_int32 _mp_size);
-          Symbol (name ^ "__ligo_internal_limbs")
-        ]
-      }
-    };
-    at = no_region
-  };
-  { 
-    it = {
-      index = {it = 0l; at = no_region};
-      offset = {
-        it = [
-          { it = Const {
-              it = I32 Int32.(!global_offset + 3l); 
-              at = no_region
-            }; 
-            at = no_region
-          }
-        ]; 
-        at = no_region
-      };
-      init = {
-        name = name ^ "__ligo_internal_limbs";
-        detail = [
-          String (Z.to_bits z)
-        ]
-      }
-    };
-    at = no_region;
-  }
-  
-  ]
-  in 
-  let symbols = [
-    S.{
-      it = A.{
-        name;
-        details = Data {
-          index = {it = 0l; at = no_region};
-          relocation_offset =  {it = 0l; at = no_region};
-          size = { it = 3l; at = no_region};
-          offset = { it = !global_offset; at = no_region}
-        }
-      };
-      at = no_region
-    };
-    {
-      it = {
-        name = name ^ "__ligo_internal_limbs";
-        details = Data {
-          index = {it = 0l; at = no_region};
-          relocation_offset = {it = 0l; at = no_region};
-          size = {it = Z.to_int32 _mp_size; at = no_region};
-          offset = {it = Int32.(!global_offset + 3l); at = no_region}
-        }
-      };
-      at = no_region
-    }
-  ]
-  in 
-  global_offset := Int32.(!global_offset + 4l);
-  data, symbols
+  aux [binder] body
 
 let rec toplevel_bindings ~raise : I.expression -> W.Ast.module_' -> W.Ast.module_' = fun e w ->
+  let at = location_to_region e.location in
   match e.content with
-    E_let_in ({content = E_closure e; _}, _inline, ((name, _type), e2)) -> 
+    E_let_in ({content = E_closure c; _}, _inline, ((name, type_), e2)) -> 
+      let name = var_to_string name in
+      let arguments, body = func c in
+      let locals = List.map ~f:(fun a -> (var_to_string a, T.I32Type)) arguments in
+      let w, locals, body = expression ~raise w locals body in
+      let type_arg = List.map ~f:(fun _ -> T.I32Type) arguments in
+      let return_type = (match type_.type_content with 
+         I.T_function (_, {type_content = I.T_base TB_unit; _}) -> []
+       |  _ -> [T.I32Type]
+      ) in
+      let w = {w with 
+        symbols = w.symbols @ [{
+          it = {
+            name = name;
+            details = Function
+          };
+          at
+        }];
+        types = w.types @ [{
+          it = {
+            tname = name ^ "_type";
+            tdetails = FuncType (type_arg, return_type)
+          };
+          at
+        }];
+        funcs = w.funcs @ [{
+          it = {
+            name = name;
+            ftype = name ^ "_type";
+            locals;
+            body
+          };
+          at
+        }]
+      }
+      in
+      (* type is always int32 (aka pointers) *)
+
       (* 
         - use __stack_pointer I guess...
           - gmpz_init:
@@ -242,18 +414,12 @@ let rec toplevel_bindings ~raise : I.expression -> W.Ast.module_' -> W.Ast.modul
 
 
       *)
-
-
-    print_endline "---CLOSURE---";
-    print_endline (Var.to_name_exn name);
-    toplevel_bindings  ~raise e2 w
+    toplevel_bindings ~raise e2 w
   | E_let_in ({content = E_literal (Literal_int z); _}, _inline, ((name, _type), e2)) -> 
-    let name, hash = Var.internal_get_name_and_counter name in
-    let name = match hash with 
-      Some s -> name ^ "#" ^ (string_of_int s)
-    | None -> name
-    in 
-    let data, symbols = convert_to_memory name z in
+    (* we convert these to in memory values *)
+    let name = var_to_string name in
+    print_endline ("doing this:" ^ name);
+    let data, symbols = convert_to_memory name at z in
     toplevel_bindings ~raise e2 {w with data = w.data @ data; symbols = w.symbols @ symbols }
     (* | Literal_unit *)
     (* | Literal_nat of z
@@ -270,23 +436,14 @@ let rec toplevel_bindings ~raise : I.expression -> W.Ast.module_' -> W.Ast.modul
     | Literal_bls12_381_g1 of bytes
     | Literal_bls12_381_g2 of bytes
     | Literal_bls12_381_fr of bytes *)
-  | E_let_in (e1, _inline, ((name, _type), e2)) -> 
-    (* 
-      These should be pointers.
-      - create a new number: should always be allocated somewhere.
-    *)
-    print_endline "------";
-    print_endline (Var.to_name_exn name);
-    let _ = toplevel_bindings  ~raise e2 w in
-    w
   | E_variable _ ->
-    print_endline "ehm";
+    (* The variable at the end, nothing should happen here. *)
     w
   | _ -> failwith "Instruction not supported at the toplevel."
 
 let compile ~raise : I.expression -> W.Ast.module_ = fun e -> 
-  let w = W.Ast.empty_module in
-
+  let w = Default_env.env in
+  let at = location_to_region e.location in
   (* 
     First block of memory will be the GMP values apparently. 
 
@@ -300,20 +457,36 @@ let compile ~raise : I.expression -> W.Ast.module_ = fun e ->
           6. compress storage?
              - easy way, will do for now but lame: allocate new memory block
           7. write changed storage (fd_write "<contract_name>_storage" for now)
+
+
+    Memory representation of data types:
+    - int: pointer
+    
+    Later:
+    - bool:
+    - string
+    - variant
+    - record
+    - list: 
+    - tuple:
+      value, next_item or nothing
+    - map:
+    - set:
+    - big map:
   *)
 
-  let w = {
-    w with memories = [
+  (* let w = {
+    w.it with memories = [
       {
         it = {
           mtype = MemoryType {min = 100l; max = Some 100l}
         };
-        at = no_region
+        at
       }
     ]
   }
-  in
+  in *)
   S.{ 
-    it = toplevel_bindings ~raise e w;
-    at = no_region
+    it = toplevel_bindings ~raise e w.it;
+    at = w.at
   }

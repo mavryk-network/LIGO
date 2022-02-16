@@ -179,7 +179,7 @@
  
  type import_desc = import_desc' Source.phrase
  and import_desc' =
-   | FuncImport of var
+   | FuncImport of string
    | TableImport of table_type
    | MemoryImport of memory_type
    | GlobalImport of global_type

@@ -57,7 +57,7 @@ let find_symbol_index symbols func =
   | _ :: tl ->
     aux (index + 1) tl
   | [] ->
-    failwith "not found"
+    failwith "not found symbol"
   in
   aux 0 symbols
 
