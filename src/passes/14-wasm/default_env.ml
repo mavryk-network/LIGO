@@ -118,6 +118,13 @@ let env: module_ = {
       };
       {
         it = {
+          tname    = "__gmpz_init_type";
+          tdetails = FuncType ([I32Type], [])
+        };
+        at
+      };
+      {
+        it = {
           tname    = "__gmpz_add_type";
           tdetails = FuncType ([I32Type; I32Type; I32Type], [])
         };
@@ -243,6 +250,17 @@ let env: module_ = {
           }
         };
         at
+      };
+      {
+        it = {
+          module_name = name "env";
+          item_name   = name "__gmpz_init";
+          idesc       = {
+            it = FuncImport "__gmpz_init_type";
+            at
+          }
+        };
+        at = no_region
       };
       {
         it = {
@@ -404,6 +422,13 @@ let env: module_ = {
         it = {
           name    = "fd_read";
           details = Import ([I32Type; I32Type; I32Type; I32Type], [I32Type]);
+        };
+        at
+      };
+      {
+        it = {
+          name    = "__gmpz_init";
+          details = Import ([I32Type], [])
         };
         at
       };

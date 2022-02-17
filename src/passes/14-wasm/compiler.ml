@@ -33,7 +33,9 @@ let location_to_region (l: Location.t) : S.region =
       }
   | Virtual _ -> S.no_region
 
-(* Convert a variable to a string which we can use for symbols *)
+(** 
+ * Convert a variable to a string which we can use for symbols 
+ *)
 let var_to_string name =  
   let name, hash = Var.internal_get_name_and_counter name in
   match hash with 
@@ -46,7 +48,7 @@ let global_offset = ref Default_env.offset
 (**
  * Convert a Zarith value to WASM's linear memory for use with GMP.
  *
- * See also GMP internals (TODO:add link here)
+ * See also [GMP internals](https://gmplib.org/manual/Internals)
  **)
 let convert_to_memory: string -> S.region -> Z.t -> A.data_part A.segment list * A.sym_info list = fun name at z -> 
   let no_of_bits = Z.of_int (Z.log2up z) in      (* the no of bits that's required *)
@@ -160,9 +162,7 @@ let rec expression ~raise : A.module_' -> locals -> I.expression -> A.module_' *
   | E_literal (Literal_chain_id _b) -> failwith "not supported yet 12"
   | E_literal (Literal_operation _b) -> failwith "not supported yet 13"
   | E_closure {binder; body} -> failwith "not supported yet 14"
-  | E_constant {cons_name = C_LIST_EMPTY; arguments = []} -> 
-    
-    w, l, [{it = DataSymbol "C_LIST_EMPTY"; at}]
+  | E_constant {cons_name = C_LIST_EMPTY; arguments = []} -> w, l, [{it = DataSymbol "C_LIST_EMPTY"; at}]
   | E_constant {cons_name = C_PAIR; arguments = [e1; e2]} -> 
     let malloc_local = var_to_string (Var.fresh ~name:"malloc" ()) in
     let open A in
@@ -190,14 +190,26 @@ let rec expression ~raise : A.module_' -> locals -> I.expression -> A.module_' *
     @ 
     e2 
     @ 
-    [{ it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at }]
+    [{ it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+      { it = LocalGet malloc_local; at };
+    ]
     in
     w, (malloc_local, I32Type) :: l, allocation @ e1 @ e2
     
   | E_constant {cons_name = C_ADD; arguments = [e1; e2]} -> 
+    let new_value = var_to_string (Var.fresh ~name:"C_ADD" ()) in
+    let mpz_init = [
+      S.{ it = A.Const { it = I32 8l; at}; at };
+      { it = A.Call "malloc"; at };
+      { it = A.LocalTee new_value; at };
+      { it = A.Call "__gmpz_init"; at };   
+      { it = A.LocalGet new_value; at };   
+    ]
+    in
+    let l = (new_value, T.I32Type) :: l in
     let w, l, e1 = expression ~raise w l e1 in
     let w, l, e2 = expression ~raise w l e2 in
-    w, l, e1 @ e2 @ [{it = A.Call "__gmpz_add"; at}]
+    w, l, mpz_init @ e1 @ e2 @ [{it = A.Call "__gmpz_add"; at}; {it = A.LocalGet new_value; at}]
   | E_constant {cons_name; arguments} -> failwith "not supported yet 15"
   | E_application _ -> 
     let rec aux result expr = 
@@ -214,7 +226,7 @@ let rec expression ~raise : A.module_' -> locals -> I.expression -> A.module_' *
       let w, l, c = expression ~raise w l f in 
       w, l,  a @ c
     ) ~init:(w, l, []) args in
-    let args = List.rev args in
+    (* let args = List.rev args in *)
     w, l, args @ [S.{it = A.Call name; at}]
   | E_variable name ->
     let name = var_to_string name in
@@ -418,15 +430,8 @@ let rec toplevel_bindings ~raise : I.expression -> W.Ast.module_' -> W.Ast.modul
     | Literal_bls12_381_g2 of bytes
     | Literal_bls12_381_fr of bytes *)
   | E_variable _ ->
-    (* The variable at the end, nothing should happen here. *)
-    w
-  | _ -> failwith "Instruction not supported at the toplevel."
-
-let compile ~raise : I.expression -> W.Ast.module_ = fun e -> 
-  let w = Default_env.env in
-  let at = location_to_region e.location in
-  (* 
-    First block of memory will be the GMP values apparently. 
+    (* 
+      instead of doing nothing, we do:
 
     TODO: 1. how much memory is required for storage? Put at __data_start (or something...).
           2. allocate the memory
@@ -438,6 +443,31 @@ let compile ~raise : I.expression -> W.Ast.module_ = fun e ->
           6. compress storage?
              - easy way, will do for now but lame: allocate new memory block
           7. write changed storage (fd_write "<contract_name>_storage" for now)
+    *)
+    let _start_func = [
+      (* {it = Call "fstat..."; at};
+      {it = Call "malloc"; at};
+      {it = Call "fread"; at};
+      {it = Store };
+      {it = Call "fclose"; at};
+      {it = Call "get parameter here somehow"}; (* how will this work? argument or something else? *)
+      {it = Call "the contract with storage and parameter (2 pointers to memory stuff)"};
+      {it = Call "how do the operations work here?"};
+      {it = Call "store the storage"}; *)
+        (* for now:
+          - use the storage root and move from there to the other points of the storage
+        *)
+    ]
+    in
+    w
+  | _ -> failwith "Instruction not supported at the toplevel."
+
+let compile ~raise : I.expression -> W.Ast.module_ = fun e -> 
+  let w = Default_env.env in
+  let at = location_to_region e.location in
+  (* 
+    First block of memory will be the GMP values apparently. 
+
 
 
     Memory representation of data types:
