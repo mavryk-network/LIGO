@@ -1,0 +1,9 @@
+(library
+ (name ast_unified_poc)
+ (public_name ligo.ast_unified_poc)
+ (instrumentation
+  (backend bisect_ppx))
+ (libraries simple-utils cameligo pascaligo reasonligo jsligo)
+ (preprocess
+  (staged_pps ppx_import ppx_map ppx_woo)))
+

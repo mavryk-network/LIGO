@@ -1,0 +1,16 @@
+(library
+ (name unify_pascaligo)
+ (public_name ligo.unify_pascaligo)
+ (instrumentation
+  (backend bisect_ppx))
+ (libraries
+    ;; Vendor
+    simple-utils
+    stage_common
+    ;; LIGO
+    cst
+    lexing_shared
+    ast_unified_poc
+ )
+ (preprocess
+  (pps ppx_poly_constructor)))
