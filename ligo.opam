@@ -31,7 +31,6 @@ depends: [
   "ocaml-recovery-parser" { = "0.2.2" }
   # Tezos libs
   "tezos-base"
-  "tezos-crypto"
   "tezos-micheline"
   # "tezos-011-PtHangz2-test-helpers"
   # PPXs

@@ -195,7 +195,6 @@ depends: [
   "terminal_size" {= "0.1.4"}
   "tezos-base" {= "dev"}
   "tezos-clic" {= "dev"}
-  "tezos-crypto" {= "dev"}
   "tezos-error-monad" {= "dev"}
   "tezos-event-logging" {= "dev"}
   "tezos-hacl-glue" {= "dev"}
@@ -231,7 +230,6 @@ pin-depends: [
   [ "tezos-client-base-unix.dev" "./vendors/tezos-ligo/src/lib_client_base_unix" ]
   [ "tezos-client-commands.dev" "./vendors/tezos-ligo/src/lib_client_commands" ]
   [ "tezos-context.dev" "./vendors/tezos-ligo/src/lib_context" ]
-  [ "tezos-crypto.dev" "./vendors/tezos-ligo/src/lib_crypto" ]
   [ "tezos-error-monad.dev" "./vendors/tezos-ligo/src/lib_error_monad" ]
   [ "tezos-event-logging.dev" "./vendors/tezos-ligo/src/lib_event_logging" ]
   [ "tezos-hacl-glue.dev" "./vendors/tezos-ligo/src/lib_hacl_glue/virtual" ]
