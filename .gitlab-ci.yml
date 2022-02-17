@@ -37,7 +37,7 @@ changelog:
     - /[0-9]+\.[0-9]+\.[0-9]+/
   script:
     - echo $CI_WORKFLOW
-    - nix-build nix -A ligo-changelog
+    - nix build .\#changelog
     - cp -L result/* .
   artifacts:
     paths:

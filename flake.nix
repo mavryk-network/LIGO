@@ -32,6 +32,7 @@
         inherit ligo;
         docker = pkgs.callPackage ./nix/docker.nix { inherit ligo; };
         deb = pkgs.callPackage ./nix/packageDeb.nix { inherit ligo; };
+        changelog = pkgs.callPackage ./nix/changelog.nix { };
       };
       inherit devShell;
     }
