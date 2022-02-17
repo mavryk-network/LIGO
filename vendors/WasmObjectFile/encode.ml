@@ -214,7 +214,8 @@ let encode (m: Ast.module_) =
       | Call symbol -> 
         op 0x10; 
         let p = pos s in
-        let index = Linking.func_index m.it.funcs m.it.imports symbol in
+        let import_funcs = List.filter (fun i -> match i.it.idesc.it with FuncImport _ -> true | _ -> false) m.it.imports in
+        let index = Linking.func_index m.it.funcs import_funcs symbol in
         code_relocations := !code_relocations @ [R_WASM_FUNCTION_INDEX_LEB (Int32.of_int p, symbol)];          
         reloc_index index
       | CallIndirect symbol ->
@@ -472,13 +473,12 @@ let encode (m: Ast.module_) =
         let p = pos s in
         (* let _, index = Linking.find_symbol_index m.it.symbols (fun s -> match s.it.details with Function when s.it.name = symbol -> true | _ -> false) symbol in *)
         code_relocations := !code_relocations @ [R_WASM_TABLE_INDEX_SLEB (Int32.of_int p, symbol)];
-        vs32_fixed (Linking.func_index m.it.funcs m.it.imports symbol)
+        let import_funcs = List.filter (fun i -> match i.it.idesc.it with FuncImport _ -> true | _ -> false) m.it.imports in
+        vs32_fixed (Linking.func_index m.it.funcs import_funcs symbol)
       | DataSymbol symbol ->
         op 0x41;
         let p = pos s in
-        print_endline ("Looking for:" ^ symbol);
         let s, _ = Linking.find_symbol_index m.it.symbols (fun s -> match s.it.details with Function when s.it.name = symbol -> true |  Data _ when s.it.name = symbol -> true | _ -> false) in
-        print_endline (" and succeeded...");
         code_relocations := !code_relocations @ [R_WASM_MEMORY_ADDR_SLEB (Int32.of_int p, symbol)];
         match s.it.details with 
           Data {offset; _} ->
@@ -486,7 +486,8 @@ let encode (m: Ast.module_) =
             vs32_fixed offset.it
         | Function ->
             code_relocations := !code_relocations @ [R_WASM_TABLE_INDEX_SLEB (Int32.of_int p, symbol)];
-            vs32_fixed (Linking.func_index m.it.funcs m.it.imports symbol)
+            let import_funcs = List.filter (fun i -> match i.it.idesc.it with FuncImport _ -> true | _ -> false) m.it.imports in
+            vs32_fixed (Linking.func_index m.it.funcs import_funcs symbol)
         | _ -> ()
 
     let const c =
@@ -649,7 +650,8 @@ let encode (m: Ast.module_) =
            | Function
            | Import _ when s.it.name = symbol ->
             found := true;
-            let symbol_index = Linking.func_index m.it.funcs m.it.imports symbol in
+            let import_funcs = List.filter (fun i -> match i.it.idesc.it with FuncImport _ -> true | _ -> false) m.it.imports in
+            let symbol_index = Linking.func_index m.it.funcs import_funcs symbol in
             data_relocations := !data_relocations @ [R_WASM_TABLE_INDEX_I32 (Int32.of_int p, symbol)]; 
             u32 symbol_index
            | Global _ when s.it.name = symbol ->
@@ -661,7 +663,8 @@ let encode (m: Ast.module_) =
           )
         | FunctionLoc symbol -> 
           let p = pos s in
-          let symbol_index = Linking.func_index m.it.funcs m.it.imports symbol in
+          let import_funcs = List.filter (fun i -> match i.it.idesc.it with FuncImport _ -> true | _ -> false) m.it.imports in
+          let symbol_index = Linking.func_index m.it.funcs import_funcs symbol in
           data_relocations := !data_relocations @ [R_WASM_TABLE_INDEX_I32 (Int32.of_int p, symbol)];
           u32 symbol_index        
         | Int32 i32 -> 
@@ -691,13 +694,15 @@ let encode (m: Ast.module_) =
       u8 1; (* functions *)
       let g = gap32 () in
       let p = pos s in
-      vu32 (Int32.of_int (List.length m.it.imports + List.length m.it.funcs));
+      let import_funcs = List.filter (fun i -> match i.it.idesc.it with FuncImport _ -> true | _ -> false) m.it.imports in
+      vu32 (Int32.of_int (List.length import_funcs + List.length m.it.funcs));
+      
       List.iteri (fun i import ->
         vu32 (Int32.of_int i);
-        string (Ast.string_of_name import.it.item_name);        
-      ) m.it.imports;
+        string (Ast.string_of_name import.it.item_name)
+      ) import_funcs;
       List.iteri (fun i (f: Ast.func) ->
-        vu32 (Int32.of_int (List.length m.it.imports + i));
+        vu32 (Int32.of_int (List.length import_funcs + i));
         string f.it.name;
       ) m.it.funcs;
       patch_gap32 g (pos s - p);
@@ -707,7 +712,7 @@ let encode (m: Ast.module_) =
       let p = pos s in
       vu32 (Int32.of_int (List.length m.it.funcs));
       List.iteri(fun i (f: Ast.func) ->
-        vu32 (Int32.of_int (List.length m.it.imports + i));
+        vu32 (Int32.of_int (List.length import_funcs + i));
         vu32 (Int32.of_int (List.length f.it.locals));
         List.iteri(fun i (name, _) ->
           vu32 (Int32.of_int i);
@@ -880,6 +885,7 @@ let encode (m: Ast.module_) =
       | Global _ -> flags := Int32.logor !flags 4l 
       | _ -> ());
       vu32 !flags;  
+      let import_funcs = List.filter (fun i -> match i.it.idesc.it with FuncImport _ -> true | _ -> false) m.it.imports in
       (match sym.details with
       | Global f ->         
         vu32 f.index.it;
@@ -887,13 +893,13 @@ let encode (m: Ast.module_) =
           string sym.name
         )
       | Function ->
-        vu32 (Linking.func_index m.it.funcs m.it.imports sym.name);
+        vu32 (Linking.func_index m.it.funcs import_funcs sym.name);
         if exists then (
           string sym.name
-          (* string sym.name *)
-        ) 
-      | Import _ ->
-        vu32 (Linking.func_index m.it.funcs m.it.imports sym.name);
+        )
+
+      | Import _ ->        
+        vu32 (Linking.func_index m.it.funcs import_funcs sym.name);
       | Data d -> (    
         (if sym.name <> "" then        
         string sym.name

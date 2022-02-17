@@ -1,5 +1,5 @@
 (**
-  The basic environment that we expect to have for a LIGO program to run in.
+  The default environment that we expect to have for a LIGO program to run in.
 
   Added:
   - wasi functions for file input / output
@@ -461,4 +461,4 @@ let env: module_ = {
   at
 }
 
-let data_start = 16l (* this needs to be made more robust *)
+let offset = 16l (* this needs to be made more robust *)

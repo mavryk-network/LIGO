@@ -41,7 +41,7 @@ let var_to_string name =
   | None -> name
 
 (* The data offset. This indicates where a block of data should be placed in the linear memory. *)
-let global_offset = ref 0l
+let global_offset = ref Default_env.offset
 
 (**
  * Convert a Zarith value to WASM's linear memory for use with GMP.
@@ -161,62 +161,44 @@ let rec expression ~raise : A.module_' -> locals -> I.expression -> A.module_' *
   | E_literal (Literal_operation _b) -> failwith "not supported yet 13"
   | E_closure {binder; body} -> failwith "not supported yet 14"
   | E_constant {cons_name = C_LIST_EMPTY; arguments = []} -> 
-    let data = [S.{
-      it = A.{
-        index = { it = 0l; at};
-        offset = {
-          it = [
-            { it = Const {it = I32 !global_offset; at}; at}
-          ]; 
-          at
-        };
-        init = {
-          name = "C_LIST_EMPTY";
-          detail = [Int32 0l]
-        }
-      };
-      at
-    }] in
-    let symbols = [S.{
-      it = A.{
-        name = "C_LIST_EMPTY";
-        details = Data {
-          index = {it = 0l; at};
-          relocation_offset = {it = 0l; at};
-          size = {it = 4l; at};
-          offset = {it = !global_offset; at}
-        }
-      };
-      at
-    }]
-    in
-    global_offset := Int32.(!global_offset + 4l);
-    let w = {w with data = w.data @ data; symbols = w.symbols @ symbols } in
+    
     w, l, [{it = DataSymbol "C_LIST_EMPTY"; at}]
   | E_constant {cons_name = C_PAIR; arguments = [e1; e2]} -> 
-    (* allocate memory block *)
-    (* add e1 *)
-    (* add e2 *)
-    let w, l, _ = expression ~raise w l e1 in
-    let w, l, _ = expression ~raise w l e2 in
-    w, l, []
+    let malloc_local = var_to_string (Var.fresh ~name:"malloc" ()) in
+    let open A in
+    let open S in
+    let allocation = [
+      { it = Const { it = I32 8l; at}; at };
+      { it = Call "malloc"; at };
+      { it = LocalSet malloc_local; at }
+    ] in
+    let w, l, e1 = expression ~raise w l e1 in
+    let e1 = [
+      { it = LocalGet malloc_local; at };
+    ] 
+    @ 
+    e1 
+    @ 
+    [{ it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at }]
+    in
+    let w, l, e2 = expression ~raise w l e2 in
+    let e2 = [
+      { it = LocalGet malloc_local; at };
+      { it = Const { it = I32 4l; at}; at };
+      { it = Binary (I32 Add); at }
+    ]
+    @ 
+    e2 
+    @ 
+    [{ it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at }]
+    in
+    w, (malloc_local, I32Type) :: l, allocation @ e1 @ e2
     
   | E_constant {cons_name = C_ADD; arguments = [e1; e2]} -> 
     let w, l, e1 = expression ~raise w l e1 in
     let w, l, e2 = expression ~raise w l e2 in
-    {w with imports = w.imports @ [{it = {
-      module_name = name "env";
-      item_name = name "__gmpz_add";
-      idesc = {it = A.FuncImport "__gmpz_add_type"; at}
-    }; at}]; 
-    types = w.types @ [{it = {
-      tname = "__gmpz_add_type";
-      tdetails = FuncType ([T.I32Type; T.I32Type], [T.I32Type])
-    }; at}];
-    symbols = w.symbols @ [{it = {name = "__gmpz_add"; details = Import ([T.I32Type; T.I32Type], [T.I32Type])}; at}]}, l, e1 @ e2 @ [{it = A.Call "__gmpz_add"; at}]
-    (* failwith "todo me" *)
+    w, l, e1 @ e2 @ [{it = A.Call "__gmpz_add"; at}]
   | E_constant {cons_name; arguments} -> failwith "not supported yet 15"
-    (* we should probably call GMP here... *)
   | E_application _ -> 
     let rec aux result expr = 
       (match expr.I.content with 
@@ -236,9 +218,8 @@ let rec expression ~raise : A.module_' -> locals -> I.expression -> A.module_' *
     w, l, args @ [S.{it = A.Call name; at}]
   | E_variable name ->
     let name = var_to_string name in
-    print_endline ("trying to get var:" ^ name);
-    (match List.find ~f:(fun (n, _) -> print_endline ("check:" ^ n); (String.equal n name)) l with 
-     Some _ -> print_endline "oh hi here"; w, l, [{it = LocalGet name; at}]
+    (match List.find ~f:(fun (n, _) -> String.equal n name) l with 
+     Some _ -> w, l, [{it = LocalGet name; at}]
     | None ->  w, l, [{it = DataSymbol name; at}])
   | E_iterator _ -> failwith "not supported yet 18"
   | E_fold     _ -> failwith "not supported yet 19"
@@ -250,34 +231,35 @@ let rec expression ~raise : A.module_' -> locals -> I.expression -> A.module_' *
   | E_let_in ({content = E_closure {binder; body}}, _inline, ((name, _type), e2)) -> failwith "should not happen..."
   | E_let_in (e1, _inline, ((name, typex), e2)) -> 
     let name = var_to_string name in
-    print_endline ("Set local:" ^ name);
     let w, l, e1 = expression ~raise w l e1 in
+    let l = (name, T.I32Type) :: l in
     let w, l, e2 = expression ~raise w l e2 in
-    w, (name, T.I32Type) :: l, e1 @ [S.{it = A.LocalSet name; at}] @ e2
+    w, l, e1 @ [S.{it = A.LocalSet name; at}] @ e2
   | E_tuple _ -> failwith "not supported yet 26"
   | E_let_tuple (tuple, (values, rhs)) -> 
     let w, l, tuple = expression ~raise w l tuple in
+    let tuple_name = var_to_string (Var.fresh ~name:"let_tuple" ()) in
+    let t = tuple @ [
+      S.{it = A.LocalSet tuple_name; at}
+    ]
+    in
+    let l = (tuple_name, T.I32Type) :: l in
     let l, e = List.foldi ~f:(fun i (l, all) (name, _) -> 
       let name = var_to_string name in
       (name, T.I32Type) :: l, all 
       @
-      tuple 
-      @
       [
-        {
-          it = Binary (I32 Add);
-          at 
-        };
-        (* Load {}; *) (* TODO *)
-        { 
-          it = LocalSet name; 
-          at 
-        }]
+        S.{ it = A.LocalGet tuple_name; at};
+        { it = Const {it = I32 (Int32.(4l * (Int32.of_int_exn i))); at}; at };
+        { it = Binary (I32 Add); at };
+        { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+        { it = LocalSet name; at }
+      ]
     ) ~init:(l, []) values
     in
 
     let w, l, e2 = expression ~raise w l rhs in 
-    w, l, e @ e2
+    w, l, t @ e @ e2
 
   (* E_proj (record, index, field_count): we use the field_count to
      know whether the index is the last field or not, since Michelson
@@ -418,7 +400,6 @@ let rec toplevel_bindings ~raise : I.expression -> W.Ast.module_' -> W.Ast.modul
   | E_let_in ({content = E_literal (Literal_int z); _}, _inline, ((name, _type), e2)) -> 
     (* we convert these to in memory values *)
     let name = var_to_string name in
-    print_endline ("doing this:" ^ name);
     let data, symbols = convert_to_memory name at z in
     toplevel_bindings ~raise e2 {w with data = w.data @ data; symbols = w.symbols @ symbols }
     (* | Literal_unit *)
