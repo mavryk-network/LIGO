@@ -1,0 +1,13 @@
+(executable
+ (name ppx_debug)
+ (public_name ppx_debug)
+ (libraries
+  core
+  ppxlib
+  ppx_deriving.show
+  ppx_deriving.eq
+  ppx_import
+  ppx_map
+  ppx_woo
+ )
+)

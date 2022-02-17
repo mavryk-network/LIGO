@@ -118,7 +118,6 @@ and expression_content =
   (* jsligo construct that are casted,  *)
   | E_array of unit (* [ a, b ] ; [ ] *)
   | E_object of unit (* { a : 1 ; b : 2 } , {...r , b : 2 } *)
-
   | E_block of unit (* { ... } *)
 
   | E_literal of literal

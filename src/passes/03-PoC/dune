@@ -7,3 +7,14 @@
  (preprocess
   (staged_pps ppx_import ppx_map ppx_woo)))
 
+; (rule
+;   (targets combinators.ml.generated)
+;   (deps combinators.ml)
+;   (action
+;     (with-stdout-to
+;       %{targets}
+;       (run %{bin:ppx_debug} %{deps}) 
+;     )
+;   )
+;   (mode promote-until-clean)
+; )
