@@ -223,6 +223,7 @@
  and data_part_detail =
   | String of string
   | Int32 of int32
+  | Int64 of int64
   | Nativeint of nativeint
   | Int16 of int
   | Int8 of int

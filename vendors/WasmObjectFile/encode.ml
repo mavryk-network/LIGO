@@ -49,7 +49,6 @@ type data_relocation =
 let encode (m: Ast.module_) =
   let s = stream () in
 
-
   let code_relocations:code_relocation list ref = ref [] in
 
   let data_relocations:data_relocation list ref = ref [] in
@@ -669,6 +668,8 @@ let encode (m: Ast.module_) =
           u32 symbol_index        
         | Int32 i32 -> 
           u32 i32
+        | Int64 i64 -> 
+          u64 i64
         | Nativeint ni -> 
           u32 (Nativeint.to_int32 ni)
         | Int16 i -> 

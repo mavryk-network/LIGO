@@ -43,7 +43,7 @@ let var_to_string name =
   | None -> name
 
 (* The data offset. This indicates where a block of data should be placed in the linear memory. *)
-let global_offset = ref Default_env.offset
+let global_offset = ref 0l
 
 (**
  * Convert a Zarith value to WASM's linear memory for use with GMP.
@@ -444,8 +444,16 @@ let rec toplevel_bindings ~raise : I.expression -> W.Ast.module_' -> W.Ast.modul
              - easy way, will do for now but lame: allocate new memory block
           7. write changed storage (fd_write "<contract_name>_storage" for now)
     *)
-    let _start_func = [
-      (* {it = Call "fstat..."; at};
+    let _start_func_instr = [
+      (* {it = I} *)
+    S.{ it = A.Const {it = I32 3l; at}; at};      (* file descriptor *)
+      { it = Const {it = I32 0l; at}; at};        (* lookup flags *)
+      { it = DataSymbol "STORAGE_FILE_NAME"; at}; (* file name *)
+      { it = DataSymbol "STORAGE_FILE_STAT"; at}; (* where the stats will be written to *)
+      { it = Call "path_filestat_get"; at};
+       
+      (* 
+      {it = Call "fstat..."; at};
       {it = Call "malloc"; at};
       {it = Call "fread"; at};
       {it = Store };
@@ -465,6 +473,90 @@ let rec toplevel_bindings ~raise : I.expression -> W.Ast.module_' -> W.Ast.modul
 let compile ~raise : I.expression -> W.Ast.module_ = fun e -> 
   let w = Default_env.env in
   let at = location_to_region e.location in
+  let offset = Default_env.offset in
+  let b = Buffer.create 20 in
+  Buffer.add_string b "storage.byte";
+  let length = Bytes.length (Buffer.contents_bytes b) in
+  let data = [
+    S.{
+      it = A.{
+        index = {it = 0l; at};
+        offset = {it = [
+          { it = Const {it = I32 offset; at}; at}
+        ]; at};
+        init = {
+          name = "STORAGE_FILE_NAME";
+          detail = [
+            String "storage.byte"
+          ]
+        }
+      };
+      at
+    };
+    {
+      it = A.{
+        index = {it = 0l; at};
+        offset = {it = [
+          A.{ it = Const {it = I32 Int32.(offset + Int32.of_int_exn length); at}; at}
+        ]; at};
+        init = {
+          name = "STORAGE_FILE_STAT";
+          detail = [
+            A.Int64 0L; (* 0: dev *)
+            Int64 0L; (* 8: inode *)
+            Int64 0L; (* 16: filetype *)
+            Int64 0L; (* 24: linkcount *)
+            Int64 0L; (* 32: filesize *)
+            Int64 0L; (* 40: timestamp - last date accessed *)
+            Int64 0L; (* 48: timestamp - last modification date *)
+            Int64 0L; (* 56: timestamp - Last file status change timestamp. *)
+          ]
+        }
+      };
+      at
+    }
+  ]
+  in
+  let symbols = [
+    S.{
+      it = A.{
+        name = "STORAGE_FILE_NAME";
+        details = Data {
+          index = {it = 0l; at};
+          relocation_offset =  {it = 0l; at};
+          size = { it = Int32.of_int_exn length; at};
+          offset = { it = offset; at}
+        }
+      };
+      at
+    };
+    {
+      it = {
+        name = "STORAGE_FILE_STAT";
+        details = Data {
+          index = {it = 0l; at};
+          relocation_offset =  {it = 0l; at};
+          size = { it = 64l; at};
+          offset = { it = Int32.(offset + Int32.of_int_exn length); at}
+        }
+      };
+      at
+    }
+  ]
+  in
+  let w = {
+    w with it = {
+      w.it with 
+        data    = w.it.data @ data;
+        symbols = w.it.symbols @ symbols;
+    }
+  }
+  in
+  
+  let pos = Int32.(16l + Int32.of_int_exn length + 64l) in
+  global_offset := pos; 
+  (* print_endline ("xxx:" ^ Int32.to_string pos); *)
+  
   (* 
     First block of memory will be the GMP values apparently. 
 

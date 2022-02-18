@@ -104,7 +104,7 @@ let env: module_ = {
       };
       {
         it = {
-          tname    = "fd_fdstat_get_type";
+          tname    = "path_filestat_get_type";
           tdetails = FuncType ([I32Type; I32Type], [I32Type])
         };
         at
@@ -232,9 +232,9 @@ let env: module_ = {
       {
         it = {
           module_name = name "wasi_unstable";
-          item_name   = name "fd_fdstat_get";
+          item_name   = name "path_filestat_get";
           idesc       = {
-            it = FuncImport "fd_fdstat_get_type";
+            it = FuncImport "path_filestat_get_type";
             at
           }
         };
@@ -413,7 +413,7 @@ let env: module_ = {
       };
       {
         it = {
-          name    = "fd_fdstat_get";
+          name    = "path_filestat_get";
           details = Import ([I32Type; I32Type], [I32Type]);
         };
         at
