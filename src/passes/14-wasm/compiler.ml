@@ -451,6 +451,9 @@ let rec toplevel_bindings ~raise : I.expression -> W.Ast.module_' -> W.Ast.modul
       { it = DataSymbol "STORAGE_FILE_NAME"; at}; (* file name *)
       { it = DataSymbol "STORAGE_FILE_STAT"; at}; (* where the stats will be written to *)
       { it = Call "path_filestat_get"; at};
+      { it = Const {it = I32 0l; at}; at};
+      { it = ; at};
+      { it = If; at };
        
       (* 
       {it = Call "fstat..."; at};
@@ -502,11 +505,11 @@ let compile ~raise : I.expression -> W.Ast.module_ = fun e ->
         init = {
           name = "STORAGE_FILE_STAT";
           detail = [
-            A.Int64 0L; (* 0: dev *)
+            A.Int64 0L; (* 0: device *)
             Int64 0L; (* 8: inode *)
             Int64 0L; (* 16: filetype *)
             Int64 0L; (* 24: linkcount *)
-            Int64 0L; (* 32: filesize *)
+            Int64 0L; (* 32: filesize in bytes *)
             Int64 0L; (* 40: timestamp - last date accessed *)
             Int64 0L; (* 48: timestamp - last modification date *)
             Int64 0L; (* 56: timestamp - Last file status change timestamp. *)

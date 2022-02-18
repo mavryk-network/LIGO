@@ -209,7 +209,7 @@ let env: module_ = {
       };
       {
         it = {
-          module_name = name "wasi_unstable";
+          module_name = name "wasi_snapshot_preview1";
           item_name   = name "fd_write";
           idesc       = {
             it = FuncImport "fd_write_type" ;
@@ -220,7 +220,7 @@ let env: module_ = {
       };
       {
         it = {
-          module_name = name "wasi_unstable";
+          module_name = name "wasi_snapshot_preview1";
           item_name   = name "fd_close";
           idesc       = {
             it = FuncImport "fd_close_type";
@@ -231,7 +231,7 @@ let env: module_ = {
       };
       {
         it = {
-          module_name = name "wasi_unstable";
+          module_name = name "wasi_snapshot_preview1";
           item_name   = name "path_filestat_get";
           idesc       = {
             it = FuncImport "path_filestat_get_type";
@@ -242,7 +242,7 @@ let env: module_ = {
       };
       {
         it = {
-          module_name = name "wasi_unstable";
+          module_name = name "wasi_snapshot_preview1";
           item_name   = name "fd_read";
           idesc       = {
             it = FuncImport "fd_read_type";
