@@ -194,7 +194,7 @@ let rec expression ~raise : A.module_' -> locals -> I.expression -> A.module_' *
       { it = LocalGet malloc_local; at };
     ]
     in
-    w, (malloc_local, I32Type) :: l, allocation @ e1 @ e2
+    w, l @ [(malloc_local, I32Type)], allocation @ e1 @ e2
     
   | E_constant {cons_name = C_ADD; arguments = [e1; e2]} -> 
     let new_value = var_to_string (Var.fresh ~name:"C_ADD" ()) in
@@ -206,7 +206,7 @@ let rec expression ~raise : A.module_' -> locals -> I.expression -> A.module_' *
       { it = A.LocalGet new_value; at };   
     ]
     in
-    let l = (new_value, T.I32Type) :: l in
+    let l =  l @ [(new_value, T.I32Type)] in
     let w, l, e1 = expression ~raise w l e1 in
     let w, l, e2 = expression ~raise w l e2 in
     w, l, mpz_init @ e1 @ e2 @ [{it = A.Call "__gmpz_add"; at}; {it = A.LocalGet new_value; at}]
@@ -244,7 +244,7 @@ let rec expression ~raise : A.module_' -> locals -> I.expression -> A.module_' *
   | E_let_in (e1, _inline, ((name, typex), e2)) -> 
     let name = var_to_string name in
     let w, l, e1 = expression ~raise w l e1 in
-    let l = (name, T.I32Type) :: l in
+    let l = l @ [(name, T.I32Type)] in
     let w, l, e2 = expression ~raise w l e2 in
     w, l, e1 @ [S.{it = A.LocalSet name; at}] @ e2
   | E_tuple _ -> failwith "not supported yet 26"
@@ -255,10 +255,10 @@ let rec expression ~raise : A.module_' -> locals -> I.expression -> A.module_' *
       S.{it = A.LocalSet tuple_name; at}
     ]
     in
-    let l = (tuple_name, T.I32Type) :: l in
+    let l = l @ [(tuple_name, T.I32Type)] in
     let l, e = List.foldi ~f:(fun i (l, all) (name, _) -> 
       let name = var_to_string name in
-      (name, T.I32Type) :: l, all 
+      l @ [(name, T.I32Type)], all 
       @
       [
         S.{ it = A.LocalGet tuple_name; at};
@@ -429,32 +429,55 @@ let rec toplevel_bindings ~raise : I.expression -> W.Ast.module_' -> W.Ast.modul
     | Literal_bls12_381_g1 of bytes
     | Literal_bls12_381_g2 of bytes
     | Literal_bls12_381_fr of bytes *)
-  | E_variable _ ->
-    (* 
-      instead of doing nothing, we do:
-
-    TODO: 1. how much memory is required for storage? Put at __data_start (or something...).
-          2. allocate the memory
-          3. read from storage (fd_read "<contract_name>_storage" for now)
-
-          4. set parameter by reading cli argument (how?)
-          5. do contract logic
-
-          6. compress storage?
-             - easy way, will do for now but lame: allocate new memory block
-          7. write changed storage (fd_write "<contract_name>_storage" for now)
-    *)
+  | E_variable entrypoint ->
+    let entrypoint = var_to_string entrypoint in
+    let storage_malloc = var_to_string (Var.fresh ~name:"storage_malloc" ()) in
     let _start_func_instr = [
-      (* {it = I} *)
+    (* get storage file size *)
     S.{ it = A.Const {it = I32 3l; at}; at};      (* file descriptor *)
-      { it = Const {it = I32 0l; at}; at};        (* lookup flags *)
+      (* { it = Const {it = I32 0l; at}; at};        (* lookup flags *) *)
       { it = DataSymbol "STORAGE_FILE_NAME"; at}; (* file name *)
       { it = DataSymbol "STORAGE_FILE_STAT"; at}; (* where the stats will be written to *)
       { it = Call "path_filestat_get"; at};
       { it = Const {it = I32 0l; at}; at};
-      { it = ; at};
-      { it = If; at };
-       
+      { it = Compare (I32 Ne); at};
+      { it = If
+          (ValBlockType (Some I32Type), 
+          [
+            { it = Const {it = I32 (1l); at}; at};  (* dummy error code *)
+          ],
+          [
+            (* allocate memory for storage *)
+            { it = DataSymbol "STORAGE_FILE_STAT"; at};
+            { it = Const {it = I32 32l; at}; at};
+            { it = Binary (I32 Add); at };
+            { it = Load {ty = I64Type; align = 0; offset = 0l; sz = None}; at };
+            { it = Convert (I32 WrapI64); at }; (* TODO: we should error if the file is too large... *)
+            { it = Call "malloc"; at };
+            { it = LocalTee storage_malloc; at};
+            { it = Drop; at };
+            (* read storage into memory *)
+
+            (* set entrypoint_tuple:storage to right memory location *)
+            { it = DataSymbol "ENTRYPOINT_TUPLE"; at};
+            { it = Const {it = I32 4l; at}; at};
+            { it = Binary (I32 Add); at };
+            { it = LocalGet storage_malloc; at };
+            { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+
+            (* call entry with storage *)
+            { it = DataSymbol "ENTRYPOINT_TUPLE"; at};
+            { it = Call entrypoint; at };
+
+            (*
+            { it = Call "__slim_storage"; at};
+            (* results in a pointer to: ]
+                [ pointer -> operations |  pointer -> storage ]
+            *)
+            { it = Const {it = I32 (2l); at}; at};  dummy success code *)
+          ]);
+        at
+      }
       (* 
       {it = Call "fstat..."; at};
       {it = Call "malloc"; at};
@@ -470,10 +493,38 @@ let rec toplevel_bindings ~raise : I.expression -> W.Ast.module_' -> W.Ast.modul
         *)
     ]
     in
-    w
+    let type_ = [S.{
+      it = A.{
+        tname    = "_start_type";
+        tdetails = FuncType ([], [I32Type])
+      };
+      at
+    }]
+    in
+    let func =  [S.{
+      it = A.{
+        name = "_start";
+        ftype = "_start_type";
+        locals = [(storage_malloc, I32Type)];
+        body = _start_func_instr;
+      };
+      at
+    }]
+    in
+    let symbol = [S.{
+      it = A.{
+        name = "_start";
+        details = Function
+      };
+      at
+    } 
+    ]
+    in
+    { w with types = w.types @ type_; funcs = w.funcs @ func; symbols = w.symbols @ symbol }
+    (* w *)
   | _ -> failwith "Instruction not supported at the toplevel."
 
-let compile ~raise : I.expression -> W.Ast.module_ = fun e -> 
+let compile ~raise : I.expression -> string -> string -> W.Ast.module_ = fun e filename entrypoint -> 
   let w = Default_env.env in
   let at = location_to_region e.location in
   let offset = Default_env.offset in
@@ -496,28 +547,6 @@ let compile ~raise : I.expression -> W.Ast.module_ = fun e ->
       };
       at
     };
-    {
-      it = A.{
-        index = {it = 0l; at};
-        offset = {it = [
-          A.{ it = Const {it = I32 Int32.(offset + Int32.of_int_exn length); at}; at}
-        ]; at};
-        init = {
-          name = "STORAGE_FILE_STAT";
-          detail = [
-            A.Int64 0L; (* 0: device *)
-            Int64 0L; (* 8: inode *)
-            Int64 0L; (* 16: filetype *)
-            Int64 0L; (* 24: linkcount *)
-            Int64 0L; (* 32: filesize in bytes *)
-            Int64 0L; (* 40: timestamp - last date accessed *)
-            Int64 0L; (* 48: timestamp - last modification date *)
-            Int64 0L; (* 56: timestamp - Last file status change timestamp. *)
-          ]
-        }
-      };
-      at
-    }
   ]
   in
   let symbols = [
@@ -529,18 +558,6 @@ let compile ~raise : I.expression -> W.Ast.module_ = fun e ->
           relocation_offset =  {it = 0l; at};
           size = { it = Int32.of_int_exn length; at};
           offset = { it = offset; at}
-        }
-      };
-      at
-    };
-    {
-      it = {
-        name = "STORAGE_FILE_STAT";
-        details = Data {
-          index = {it = 0l; at};
-          relocation_offset =  {it = 0l; at};
-          size = { it = 64l; at};
-          offset = { it = Int32.(offset + Int32.of_int_exn length); at}
         }
       };
       at
@@ -556,7 +573,7 @@ let compile ~raise : I.expression -> W.Ast.module_ = fun e ->
   }
   in
   
-  let pos = Int32.(16l + Int32.of_int_exn length + 64l) in
+  let pos = Int32.(offset + Int32.of_int_exn length) in
   global_offset := pos; 
   (* print_endline ("xxx:" ^ Int32.to_string pos); *)
   

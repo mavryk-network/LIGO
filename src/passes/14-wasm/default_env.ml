@@ -78,7 +78,62 @@ let env: module_ = {
           }
         };
         at
-      }
+      };
+      {
+        it = {
+          index = {it = 0l; at};
+          offset = {it = [
+            { it = Const {it = I32 16l; at}; at}
+          ]; at};
+          init = {
+            name = "ENTRYPOINT_TUPLE";
+            detail = [
+              Int32 0l; (* pointer to parameter info *)
+              Int32 0l  (* pointer to storage *)
+            ]
+          }
+        };
+        at
+      };
+      {
+        it = {
+          index = {it = 0l; at};
+          offset = {it = [
+            { it = Const {it = I32 24l; at}; at}
+          ]; at};
+          init = {
+            name = "STORAGE_FILE_STAT";
+            detail = [
+              Int64 0L; (* 0: device *)
+              Int64 0L; (* 8: inode *)
+              Int64 0L; (* 16: filetype *)
+              Int64 0L; (* 24: linkcount *)
+              Int64 0L; (* 32: filesize in bytes *)
+              Int64 0L; (* 40: timestamp - last date accessed *)
+              Int64 0L; (* 48: timestamp - last modification date *)
+              Int64 0L; (* 56: timestamp - Last file status change timestamp. *)
+            ]
+          }
+        };
+        at
+      };
+      {
+        it = {
+          (* CONTRACT_RESULT *)
+          index = {it = 0l; at};
+          offset = {it = [
+            { it = Const {it = I32 88l; at}; at}
+          ]; at};
+          init = {
+            name = "CONTRACT_RESULT";
+            detail = [
+              Int32 0l; (* pointer to operations *)
+              Int32 0l  (* pointer to modified storage *)
+            ]
+          }
+        };
+        at
+      };
     ]; 
     types = [
       {
@@ -105,7 +160,7 @@ let env: module_ = {
       {
         it = {
           tname    = "path_filestat_get_type";
-          tdetails = FuncType ([I32Type; I32Type], [I32Type])
+          tdetails = FuncType ([I32Type; I32Type; I32Type], [I32Type])
         };
         at
       };
@@ -392,6 +447,42 @@ let env: module_ = {
       };
       {
         it = {
+          name = "ENTRYPOINT_TUPLE";
+          details = Data {
+            index = {it = 0l; at};
+            relocation_offset =  {it = 0l; at};
+            size = { it = 8l; at};
+            offset = { it = 16l; at}
+          }
+        };
+        at
+      };
+      {
+        it = {
+          name = "STORAGE_FILE_STAT";
+          details = Data {
+            index = {it = 0l; at};
+            relocation_offset =  {it = 0l; at};
+            size = { it = 64l; at};
+            offset = { it = 24l; at}
+          }
+        };
+        at
+      };
+      {
+        it = {
+          name = "CONTRACT_RESULT";
+          details = Data {
+            index = {it = 0l; at};
+            relocation_offset =  {it = 0l; at};
+            size = { it = 8l; at};
+            offset = { it = 88l; at}
+          }
+        };
+        at
+      };
+      {
+        it = {
           name    = "malloc";
           details = Import ([I32Type], [I32Type])
         };
@@ -414,7 +505,7 @@ let env: module_ = {
       {
         it = {
           name    = "path_filestat_get";
-          details = Import ([I32Type; I32Type], [I32Type]);
+          details = Import ([I32Type; I32Type; I32Type], [I32Type]);
         };
         at
       };
@@ -486,4 +577,4 @@ let env: module_ = {
   at
 }
 
-let offset = 16l (* this needs to be made more robust *)
+let offset = 96l (* this needs to be made more robust *)
