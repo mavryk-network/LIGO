@@ -1,9 +1,9 @@
 { lib
-, pkgs
 , coq
 , cacert
 , patdiff
 , doCheck ? true
+, static ? false
 }:
 let
   filters = (import ./filters.nix) { inherit lib; };
@@ -18,15 +18,30 @@ coq.ocamlPackages.buildDunePackage rec {
     files = [ "dune" "dune-project" "ligo.opam" ];
   };
 
+  buildPhase = ''
+    echo "running ${if static then "static" else "release"} build"
+    dune build -p ligo --display=short --profile=${if static then "static" else "release"}
+  '';
+  installPhase = ''
+    mkdir -p $out/bin
+    mv _build/default/src/bin/runligo.exe $out/bin/ligo
+  '';
+
   # The build picks this up for ligo --version
   LIGO_VERSION = version;
 
   useDune2 = true;
 
+  nativeBuildInputs = with coq.ocamlPackages; [
+    coq
+    findlib
+    menhir
+  ];
+
+
   buildInputs = with coq.ocamlPackages; [
     bisect_ppx
     cmdliner
-    coq
     core
     data-encoding
     getopt
@@ -46,10 +61,13 @@ coq.ocamlPackages.buildDunePackage rec {
     yojson
   ];
 
-  checkInputs = [
+  nativeCheckInputs = [
     cacert
-    coq.ocamlPackages.ca-certs
     patdiff
+  ];
+
+  checkInputs = [
+    coq.ocamlPackages.ca-certs
   ];
 
   inherit doCheck;
