@@ -159,14 +159,14 @@ let env: module_ = {
       };
       {
         it = {
-          tname    = "path_filestat_get_type";
-          tdetails = FuncType ([I32Type; I32Type; I32Type], [I32Type])
+          tname    = "__wasi_path_filestat_get_type";
+          tdetails = FuncType ([I32Type; I32Type; I32Type; I32Type], [I32Type])
         };
         at
       };
       {
         it = {
-          tname    = "fd_read_type";
+          tname    = "__wasi_fd_read_type";
           tdetails = FuncType ([I32Type; I32Type; I32Type; I32Type], [I32Type])
         };
         at
@@ -286,10 +286,10 @@ let env: module_ = {
       };
       {
         it = {
-          module_name = name "wasi_snapshot_preview1";
-          item_name   = name "path_filestat_get";
+          module_name = name "env";
+          item_name   = name "__wasi_path_filestat_get";
           idesc       = {
-            it = FuncImport "path_filestat_get_type";
+            it = FuncImport "__wasi_path_filestat_get_type";
             at
           }
         };
@@ -297,10 +297,10 @@ let env: module_ = {
       };
       {
         it = {
-          module_name = name "wasi_snapshot_preview1";
-          item_name   = name "fd_read";
+          module_name = name "env";
+          item_name   = name "__wasi_fd_read";
           idesc       = {
-            it = FuncImport "fd_read_type";
+            it = FuncImport "__wasi_fd_read_type";
             at
           }
         };
@@ -504,14 +504,14 @@ let env: module_ = {
       };
       {
         it = {
-          name    = "path_filestat_get";
-          details = Import ([I32Type; I32Type; I32Type], [I32Type]);
+          name    = "__wasi_path_filestat_get";
+          details = Import ([I32Type; I32Type; I32Type; I32Type], [I32Type]);
         };
         at
       };
       {
         it = {
-          name    = "fd_read";
+          name    = "__wasi_fd_read";
           details = Import ([I32Type; I32Type; I32Type; I32Type], [I32Type]);
         };
         at

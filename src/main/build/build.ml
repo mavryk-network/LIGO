@@ -183,6 +183,8 @@ let build_wasm_code ~raise ~add_warning : options:Compiler_options.t -> string -
     let channel = Out_channel.create "work_in_progress.wasm" in
     Out_channel.output_string channel wasm;
     Out_channel.close channel; 
+    (* link with GMP *)
+    Ligo_compile.Of_wasm.link ["work_in_progress.wasm";"vendors/gmp/libgmp.a"] file_name;
     ()
     (* , contract *)
 
