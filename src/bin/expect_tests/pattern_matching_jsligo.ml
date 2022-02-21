@@ -43,6 +43,14 @@ let%expect_test _ =
     Pattern not of the expected type sum[Fail -> sum[Other -> unit , Rejected -> ( michelson_program * address )] , Success -> nat] |}]
 
 let%expect_test _ =
+  run_ligo_bad [ "print" ; "ast-typed" ; (bad_test "pattern_match6.jsligo") ] ;
+  [%expect{|
+    File "../../test/contracts/negative/pattern_match6.jsligo", line 1, characters 11-20:
+      1 | let foo = ([a,b,c,d] : [int,int,int]) : int => a + b + c + d;
+
+    Pattern not of the expected type ( int * int * int ) |}]
+
+let%expect_test _ =
   run_ligo_good [ "print" ; "ast-typed" ; (test "pattern_match4.jsligo") ] ;
   [%expect{|
     const test_foo = lambda (x) return  match x with
