@@ -1,0 +1,4 @@
+author: er433
+merge_request: '1575'
+title: 'JsLIGO: make compile_parameter use patterns instead of accessors in abstractor'
+type: fixed
