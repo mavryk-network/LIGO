@@ -145,14 +145,14 @@ let env: module_ = {
       };
       {
         it = {
-          tname    = "fd_write_type";
+          tname    = "__wasi_fd_write_type";
           tdetails = FuncType ([I32Type; I32Type; I32Type; I32Type], [I32Type])
         };
         at
       };
       {
         it = {
-          tname    = "fd_close_type";
+          tname    = "__wasi_fd_close_type";
           tdetails = FuncType ([I32Type], [I32Type])
         };
         at
@@ -265,9 +265,9 @@ let env: module_ = {
       {
         it = {
           module_name = name "wasi_snapshot_preview1";
-          item_name   = name "fd_write";
+          item_name   = name "__wasi_fd_write";
           idesc       = {
-            it = FuncImport "fd_write_type" ;
+            it = FuncImport "__wasi_fd_write_type" ;
             at
             }
         };
@@ -276,9 +276,9 @@ let env: module_ = {
       {
         it = {
           module_name = name "wasi_snapshot_preview1";
-          item_name   = name "fd_close";
+          item_name   = name "__wasi_fd_close";
           idesc       = {
-            it = FuncImport "fd_close_type";
+            it = FuncImport "__wasi_fd_close_type";
             at 
           }
         };
@@ -286,7 +286,7 @@ let env: module_ = {
       };
       {
         it = {
-          module_name = name "env";
+          module_name = name "wasi_snapshot_preview1";
           item_name   = name "__wasi_path_filestat_get";
           idesc       = {
             it = FuncImport "__wasi_path_filestat_get_type";
@@ -490,14 +490,14 @@ let env: module_ = {
       };
       {
         it = {
-          name    = "fd_write";
+          name    = "__wasi_fd_write";
           details = Import ([I32Type; I32Type; I32Type; I32Type], [I32Type]);
         };
         at
       };
       {
         it = {
-          name    = "fd_close";
+          name    = "__wasi_fd_close";
           details = Import ([I32Type], [I32Type]);
         };
         at
