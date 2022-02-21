@@ -2,3 +2,4 @@ emsdk/
 gmp-6.2.1/
 wabt/
 gmp-6.2.1.tar.lz
+wasi-sdk-*
