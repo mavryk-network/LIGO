@@ -345,8 +345,8 @@ let%expect_test _ =
                                                                    }
                                                                  } )[@@private]
     const bar[@var] =
-      rec (bar:unit -> int => lambda (_#2 : unit) : int return  match (4 , 5) with
+      rec (bar:unit -> int => lambda (_#3 : unit) : int return  match (4 , 5) with
                                                                  | (x,y) ->
-                                                                 let add[@var] = rec (add:unit -> int => lambda (_#3 : unit) : int return C_POLYMORPHIC_ADD(x ,y) )[@@private] in
+                                                                 let add[@var] = rec (add:unit -> int => lambda (_#2 : unit) : int return C_POLYMORPHIC_ADD(x ,y) )[@@private] in
                                                                  (add)@(unit) )[@@private] |}]
 
