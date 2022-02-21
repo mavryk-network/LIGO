@@ -68,6 +68,11 @@ let rec get_var : I.expr -> (string * Location.t) option =
   | E_Par x -> get_var x.value.inside
   | E_Var v -> Some (w_split v)
   | _ -> None
+let rec get_record : I.expr -> (_ * Location.t) option =
+  function
+  | E_Par x -> get_record x.value.inside
+  | E_Record v -> Some (r_split v)
+  | _ -> None
 (* let compile_var_opt : I.expr -> AST.expression_variable option = fun expr ->
   Option.map (get_var expr) ~f:(fun (v,loc) -> mk_var ~loc v) *)
 
@@ -79,13 +84,14 @@ let compile_attributes : I.attribute list -> O.source_attribute list = fun _as -
   in
   List.map ~f _as
 
-let compile_selection : I.selection -> 'a O.access * Location.t = function
+let compile_selection : I.selection -> (O.expression O.access) Location.wrap =
+  function
   | FieldName name ->
     let name, loc = w_split name in
-    Access_record name, loc
+    Location.wrap ~loc (O.Access_record name)
   | Component comp ->
     let (_, index), loc = w_split comp in
-    Access_tuple  index, loc
+    Location.wrap ~loc (O.Access_tuple index)
 
 (* let rec compile_type_expression ~(raise :Errors.abs_error Simple_utils.Trace.raise) : ?attr:I.attribute list -> I.type_expr -> AST.type_expression =
   fun ?(attr = []) te ->
@@ -226,17 +232,6 @@ let compile_selection : I.selection -> 'a O.access * Location.t = function
 let rec compile_expression ~(raise :Errors.t Simple_utils.Trace.raise) : ?attr:I.attribute list -> I.expr -> O.expr = fun ?(attr = []) e ->
   ignore attr ;
   let self = compile_expression ~raise in
-  (* let compile_tuple_expression : I.expr I.tuple -> O.expression = fun tuple_expr ->
-    let (lst, loc) = r_split tuple_expr in
-    let (hd,tl) = lst.inside in
-    let tl = List.map ~f:snd tl in
-    match tl with
-    | [] -> self hd
-    | _ ->
-      let lst = List.map ~f:self (hd::tl) in
-      e_tuple ~loc lst
-  in
-  *)
   let compile_bin_op : O.external_notation -> _ I.bin_op I.reg -> O.expression = fun notation op ->
     let (op, loc) = r_split op in
     let (_,loc_notation) = w_split op.op in
@@ -260,7 +255,7 @@ let rec compile_expression ~(raise :Errors.t Simple_utils.Trace.raise) : ?attr:I
   match e with
   | E_Var var -> (
     let (var, loc) = w_split var in
-    Location.wrap ~loc (O.E_external_variable var) 
+    make_e ~loc (e_source_variable var) 
   )
   | E_Par par -> self par.value.inside
   | E_Bytes bytes_ ->
@@ -329,91 +324,114 @@ let rec compile_expression ~(raise :Errors.t Simple_utils.Trace.raise) : ?attr:I
       )
     in
     let fields = List.map ~f:aux (Utils.sepseq_to_list record.elements) in
-    make_e ~loc (e_record fields)
-  
-  | _ -> failwith "wait"
-
-  (*
+    make_e ~loc (e_record_raw fields)
   | E_Proj proj ->
     let (proj, loc) = r_split proj in
     let expr = self proj.record_or_tuple in
-    let (sels, _) = List.unzip @@ List.map ~f:compile_selection @@ Utils.nsepseq_to_list proj.field_path in
-    e_accessor ~loc expr sels
-  | E_ModPath ma -> (
-    let (ma, loc) = r_split ma in
-    match ma.module_path with
-    | (module_name,[]) when List.mem ~equal:Caml.(=) build_ins module_name#payload -> (
-      (*TODO: move to proper module*)
-      let fun_name = compile_pseudomodule_access ~loc ma.field module_name#payload in
-      let var = module_name#payload ^ "." ^ fun_name in
-      match constants var with
-      | Some const -> e_constant ~loc const []
-      | None -> e_variable_ez ~loc var
-    )
-    | _ -> (
-      let field = self ma.field in
-      let f : I.module_name -> O.expression -> O.expression =
-        fun module_name acc ->
-          let (name,loc) = w_split module_name in
-          e_module_accessor ~loc (mk_var ~loc name) acc
-      in
-      let lst = Utils.nsepseq_to_list ma.module_path in
-      List.fold_right lst ~f ~init:field
-    )
+    let path = List.map ~f:compile_selection @@ Utils.nsepseq_to_list proj.field_path in
+    make_e ~loc (e_expression_access { expr ; path })
+
+
+  | E_ModPath { region ; value = { module_path ; field = E_Par x ; _ }} -> (
+    let loc = Location.lift region in
+    let mod_path =
+      let lst = Utils.nsepseq_to_list module_path in
+    in
+    let body = self x.value.inside in
+    make_e ~loc (e_let_open {mod_path ; body})
   )
+
+  | E_ModPath { region ; value = { module_path ; field ; _ }} -> (
+    let loc = Location.lift region in
+    let hd,tl = module_path in
+    let mod_ =
+      let (x,loc) = w_split hd in
+      Location.wrap ~loc  (O.M_source_variable x)
+    in
+    let path = List.map
+      ~f:(fun x ->
+        let (x,loc) = w_split x in
+        Location.wrap ~loc x
+      )
+      (List.map ~f:snd tl)
+    in
+    let mod_expr = Location.wrap (O.M_module_path { mod_ ; path }) in
+    let var_or_proj = self field in
+    make_e ~loc (e_module_access O.{ mod_expr ; var_or_proj })
+  )
+
   | E_Update { value = { structure ; kwd_with=_ ; update } ; region } -> (
+    let f : (I.expr, I.expr) I.field I.reg -> O.expression O.field_upd_ Location.wrap = fun x ->
+      let (field_upd,field_upd_loc) = r_split x in
+      let return x = Location.wrap ~loc:field_upd_loc x in
+      match field_upd with
+      | I.Complete {field_lhs ; field_lens ; field_rhs ; attributes} -> (
+        let rhs = self field_rhs in
+        let op =
+          let lens_loc = Location.lift (I.field_lens_to_region field_lens) in
+          let lens =
+            match field_lens with
+            | Lens_Id _ -> O.Id
+            | Lens_Add x -> O.Add_eq
+            | Lens_Sub _ -> O.Sub_eq
+            | Lens_Mult _ -> O.Mult_eq
+            | Lens_Div _ -> O.Div_eq
+            | Lens_Fun _ -> O.Map_eq
+          in
+          Location.wrap ~loc:lens_loc lens
+        in
+        match field_lhs with
+        | I.E_Var x -> (
+          let lhs =
+            let (label,label_loc) = w_split x in
+            [Location.wrap ~loc:label_loc (O.Label label)]
+          in
+          return O.{ lhs ; op ; rhs}
+        )
+        | I.E_Proj {region ; value = {record_or_tuple ; selector = _ ; field_path }} -> (
+          let lst = Utils.nsepseq_to_list field_path in
+          let hd =
+            let (hd,hd_loc) = trace_option ~raise
+              (expected_variable (Location.lift @@ I.expr_to_region record_or_tuple))
+              (get_var record_or_tuple)
+            in
+            Location.wrap ~loc:hd_loc (O.Label hd)
+          in
+          let tl = List.map lst
+              ~f:(function
+                | FieldName x ->
+                  let (x,loc) = w_split x in
+                  Location.wrap ~loc (O.Label x)
+                | Component x ->
+                  let ((x,_),loc) = w_split x in
+                  Location.wrap ~loc (O.Label x)
+              )
+          in
+          return O.{ lhs = hd::tl ; op ; rhs }
+        )
+        | x -> raise.raise (expected_field_or_access @@ I.expr_to_region x)
+      )
+      | I.Punned {pun ; attributes} -> (
+        let (label,loc) = trace_option ~raise (expected_variable (Location.lift @@ I.expr_to_region pun)) @@ get_var pun in
+        let lhs = [ Location.wrap ~loc (O.Label label) ] in
+        let op = Location.wrap ~loc O.Id in
+        let rhs = make_e ~loc (e_source_variable label) in
+        return O.{ lhs ; op ; rhs }
+      )
+    in
     let loc = Location.lift region in
     let structure = self structure in
-    match update with
-    | E_Record record_lhs -> (
-      let f : O.expression -> (I.expr, I.expr) I.field I.reg -> O.expression = fun acc x ->
-        let field_loc = Location.lift x.region in
-        match x.value with
-        | I.Complete {field_lhs ; field_lens ; field_rhs ; attributes} -> (
-          check_no_attributes ~raise field_loc attributes;
-          let field_rhs = self field_rhs in
-          let func_update self_accessor =
-            match field_lens with
-            | Lens_Id _ -> field_rhs
-            | Lens_Add _ -> e_add ~loc:field_loc self_accessor field_rhs
-            | Lens_Sub _ -> e_sub ~loc:field_loc self_accessor field_rhs
-            | Lens_Mult _ -> e_mult ~loc:field_loc self_accessor field_rhs
-            | Lens_Div _ -> e_div ~loc:field_loc self_accessor field_rhs
-            | Lens_Fun _ -> e_application ~loc:field_loc self_accessor field_rhs
-          in
-          match field_lhs with
-          | I.E_Var x -> (
-            let label = fst @@ w_split x in
-            let self_accessor = e_accessor ~loc structure [O.Access_record label] in
-            e_update ~loc acc [O.Access_record label] (func_update self_accessor)
-          )
-          | I.E_Proj {region ; value = {record_or_tuple ; selector = _ ; field_path }} -> (
-            let (label,_) = trace_option ~raise (expected_variable (Location.lift @@ I.expr_to_region record_or_tuple)) @@ get_var record_or_tuple in
-            let path =
-              let path = List.map (Utils.nsepseq_to_list field_path)
-                ~f:(function FieldName x -> Access_record x#payload | Component x -> Access_tuple (snd @@ fst @@ w_split x))
-              in
-              (O.Access_record label::path)
-            in
-            let self_accessor = e_accessor ~loc:(Location.lift region) structure path in
-            e_update ~loc acc path (func_update self_accessor)
-          )
-          | x -> raise.raise (expected_field_or_access @@ I.expr_to_region x)
-        )
-        | I.Punned {pun ; attributes} -> (
-          check_no_attributes ~raise field_loc attributes;
-          let label,v =
-            let (label,loc) = trace_option ~raise (expected_variable (Location.lift @@ I.expr_to_region pun)) @@ get_var pun in
-            if String.equal label "_" then raise.raise (unexpected_wildcard @@ I.expr_to_region pun) ;
-            (label, mk_var ~loc label)
-          in
-          e_update ~loc acc [O.Access_record label] (e_variable v)
-        )
-      in
-      List.fold_left (Utils.sepseq_to_list record_lhs.value.elements) ~f ~init:structure
-    )
-    | x -> raise.raise (wrong_functional_updator @@ I.expr_to_region x)
+    let (update,_) = trace_option ~raise (wrong_functional_updator (I.expr_to_region update)) @@
+      get_record update
+    in 
+    let field_updates = List.map ~f (Utils.sepseq_to_list update.elements) in
+    make_e ~loc (e_function)
   )
+
+  | _ -> failwith "wait"
+
+    (*
+
   | E_Fun { value = { parameters; ret_type ; return ; _ } ; region} -> (
     check_no_attributes ~raise (Location.lift region) attr ;
     let compile_param : I.param_decl I.reg -> _  = fun { value = { param_kind ; pattern ; param_type } ; region } ->
