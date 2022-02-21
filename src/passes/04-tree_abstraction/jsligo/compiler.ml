@@ -698,10 +698,9 @@ and compile_expression ~raise : CST.expr -> AST.expr = fun e ->
     let (func, loc) = r_split func in
     let ({parameters; lhs_type; body;arrow=_} : CST.fun_expr) = func in
     let lhs_type,fa = Option.unzip @@ Option.map ~f:(compile_type_expression ~raise <@ snd) lhs_type in
-    let (binder,exprs),fv = compile_parameter ~raise parameters in
     let body = compile_function_body_to_expression ~raise body in
-    let aux (binder,attr,rhs) expr = e_let_in binder attr rhs expr in
-    let expr = List.fold_right ~f:aux exprs ~init:body  in
+    let binder,exprs,fv = compile_parameter ~raise parameters in
+    let expr = exprs body  in
     let fa = Option.value ~default:[] fa in
     let _fv = List.dedup_and_sort ~compare:String.compare @@ fa @ fv in
     return @@ e_lambda ~loc binder lhs_type expr
@@ -897,75 +896,58 @@ and compile_object_let_destructuring ~raise : const:bool -> AST.expression -> CS
     (fun let_result -> nestrec let_result f patterns)
 
 and compile_parameter ~raise : CST.expr ->
-    (type_expression binder * (type_expression binder * Types.attributes * expression) list) * string list = fun expr ->
-  let return ?ascr ?(fv=[]) (exprs: (type_expression binder * Types.attributes * expression) list) var =
-    ({var; ascr; attributes = Stage_common.Helpers.const_attribute}, exprs),fv in
+    _ binder * (expression -> expression) * string list = fun expr ->
+  let return ?ascr ?(attributes = Stage_common.Helpers.const_attribute) ?(fv = []) fun_ var =
+     ({var; ascr; attributes}, fun_, fv) in
+  let return_1 ?ascr ?(attributes = Stage_common.Helpers.const_attribute) ?fv var = return ?ascr ~attributes ?fv (fun e -> e) var in
+  let matching binder_lst fun_ =
+    match binder_lst with
+    | [binder] ->
+       let expr = fun expr -> fun_ expr in
+       let ascr = binder.ascr in
+       binder.var, expr, ascr
+    | _ ->
+       let var = Var.fresh () in
+       let expr = fun expr -> e_matching_tuple (e_variable var) binder_lst @@ fun_ expr in
+       let ascr = Option.all @@ List.map ~f:(fun binder -> binder.ascr) binder_lst in
+       let ascr = Option.map ~f:(t_tuple) ascr in
+       var, expr, ascr in
   match expr with
-  | EPar { value = { inside = ESeq { value = arguments; _ }; _ }; region} ->
-    let argument = function
-      CST.EAnnot ea ->
-        let (ea, _loc) = r_split ea in
-        let (expr, _, type_expr) : CST.annot_expr = ea in
-        let ascr,fa = compile_type_expression ~raise type_expr in
-        (match expr with
-          CST.EVar ev ->
-            return ~ascr [] @@ compile_variable ev
-        | EArray {value = {inside = Some array_items; _}; _} ->
-            let array_item = function
-              CST.Expr_entry EVar var ->
-                return [] @@ compile_variable var
-            | Rest_entry _ as r -> raise.raise @@ array_rest_not_supported r
-            | _ -> raise.raise @@ not_a_valid_parameter expr
-            in
-
-            let lst,fv = List.Ne.unzip @@ List.Ne.map array_item @@ npseq_to_ne_list array_items in
-            let (lst,exprs) = List.Ne.unzip lst in
-            let var, expr = match lst with
-              {var;ascr=_;attributes=_}, [] ->
-              var, []
-            | var, lst ->
-              let binder = Var.fresh () in
-              let aux (i: Z.t) (b: type_expression binder) =
-                Z.add i Z.one,
-                (b, [], e_accessor (e_variable binder) @@ [Access_tuple i])
-              in
-              binder,
-              snd @@ List.fold_map ~f:aux ~init:Z.zero @@ var :: lst
-            in
-            let exprs = List.concat @@ expr :: List.Ne.to_list exprs in
-            let fv = List.Ne.concat @@ List.Ne.cons fa fv in
-            return ~fv ~ascr exprs @@ var
-        | _ -> raise.raise @@ not_a_valid_parameter expr
-        )
-    | _ as e -> raise.raise @@ not_a_valid_parameter e
+  | EAnnot ea ->
+     let (ea, _loc) = r_split ea in
+     let (expr, _, type_expr) : CST.annot_expr = ea in
+     let ascr,fa = compile_type_expression ~raise type_expr in
+     let ({var;attributes;_}, exprs,fb) = compile_parameter ~raise expr in
+     return ~ascr ~attributes ~fv:(fa @ fb) exprs var
+  | EArray array_items ->
+    let (arguments, _loc) = r_split array_items in
+    let { inside = arguments ; _ } : _ CST.brackets = arguments in
+    let array_item = function
+        CST.Expr_entry EVar var ->
+         return_1 @@ compile_variable var
+      | Rest_entry _ as r -> raise.raise @@ array_rest_not_supported r
+      | _ -> raise.raise @@ not_a_valid_parameter expr
     in
-    let lst,fv = List.Ne.unzip @@ List.Ne.map argument @@ npseq_to_ne_list arguments in
-    let (lst,exprs) = List.Ne.unzip lst in
-    let loc = Location.lift region in
-    let var, ascr, expr = match lst with
-      {var;ascr;attributes=_}, [] ->
-      var, ascr, []
-    | var, lst ->
-      let binder = Var.fresh ~loc () in
-      let aux (i: Z.t) (b: type_expression binder) =
-        Z.add i Z.one,
-        (b, [], e_accessor (e_variable binder) @@ [Access_tuple i])
-      in
-      binder,
-      Option.map ~f:(t_tuple ~loc) @@ Option.all @@ List.map ~f:(fun e -> e.ascr) @@ var::lst,
-      snd @@ List.fold_map ~f:aux ~init:Z.zero @@ var :: lst
-    in
-    let exprs = List.concat @@ expr :: List.Ne.to_list exprs in
-    let fv    = List.Ne.concat fv in
-    return ~fv ?ascr exprs @@ var
-
+    let arguments = pseq_to_list arguments in
+    let aux (binder, fun_', fv') (binder_lst, fun_, fv) =
+      (binder :: binder_lst, fun_' <@ fun_, fv @ fv') in
+    let binder_lst, fun_, fv = List.fold_right ~f:aux ~init:([], (fun e -> e), []) @@ List.map ~f:array_item @@ arguments in
+    let var, expr, ascr = matching binder_lst fun_ in
+    return ?ascr ~fv expr var
+  | EPar { value = { inside = ESeq { value = arguments; _ }; _ }; region = _} ->
+    let aux b (binder_lst, fun_, fv) =
+      let (binder, fun_', fv') = compile_parameter ~raise b in
+      (binder :: binder_lst, fun_' <@ fun_, fv @ fv') in
+    let binder_lst, fun_, fv = List.fold_right ~f:aux ~init:([], (fun e -> e), []) @@ npseq_to_list arguments in
+    let var, expr, ascr = matching binder_lst fun_ in
+    return ?ascr ~fv expr var
   | EVar var ->
-    return [] @@ compile_variable var
+    let var = compile_variable var in
+    return_1 var
   | EUnit the_unit ->
     let loc = Location.lift the_unit.region in
-    return ~ascr:(t_unit ~loc ()) [] @@ Var.fresh ~loc ~name:"()" ()
+    return_1 ~ascr:(t_unit ~loc ()) @@ Var.fresh ~loc ~name:"()" ()
   | _ -> raise.raise @@ not_a_valid_parameter expr
-
 
 and compile_function_body_to_expression ~raise : CST.body -> AST.expression = fun body ->
   match body with
