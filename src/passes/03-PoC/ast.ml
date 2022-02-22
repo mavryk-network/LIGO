@@ -7,10 +7,11 @@ type expression_variable = string
 type type_variable = string
 type module_variable = string
 type ('exp,'ty) match_case = ('exp, 'ty) Stage_common.Ast_common.match_case
-type 'ty pattern = 'ty Stage_common.Ast_common.pattern
+type mut = Mutable | Immutable
 type ('var, 'ty_exp) binder = {
-  var  : 'var ;
-  ascr : 'ty_exp option;
+    var  : 'var ;
+    ascr : 'ty_exp option ;
+    mut : mut ; 
   }
 type literal = Stage_common.Ast_common.literal
 type ligo_string = Stage_common.Ast_common.ligo_string
@@ -21,8 +22,6 @@ type 'expr access = 'expr Stage_common.Ast_common.access =
   | Access_record of string
   | Access_map of 'expr
 
-
-(* THE MESS OF HAVING PARAMETRIC TYPES TO UNIFY NODES ON WHICH WE WANT TO PERFORM NANOPASSES *)
 
 (*** Language of types ***)
 type 'attr declaration_type_ = {
@@ -63,10 +62,11 @@ and expression_content =
   | E_module_access of expression mod_access_
   | E_let_open of expression let_open_
 
+  | E_func_update of expression func_update_
+  | E_function of (expression, type_expression , type_expression pattern) func_
 
   | E_let_pattern of unit (* cameligo : binders list ; pascaligo : *)
   | E_matching of unit
-  | E_function
 (* effect *)
   | E_assign
   | E_patch
@@ -171,6 +171,26 @@ and 'expr func_update_ = {
 }
 
 
+and list_pattern =
+  | Cons of pattern * pattern
+  | List of pattern list
+and  pattern_repr =
+  | P_unit
+  | P_var of expression_variable * mut
+  | P_list of list_pattern
+  | P_variant of label * 'ty_exp pattern
+  | P_tuple of 'ty_exp pattern list
+  | P_record of label list * 'ty_exp pattern list
+and 'ty_exp pattern = 'ty_exp pattern_repr Location.wrap
+
+type 'a toto = 'a Stage_common.Ast_common.pattern
+
+
+and ('expr,'ty,'param) func_ = {
+  parameters : 'param list ;
+  body : 'expr ;
+  return_type : 'ty
+}
 
 
 
@@ -202,6 +222,8 @@ and 'expr func_update_ = {
     remove : E_let_open_in
     add : 
     example: `M.(x+y) --> error (unsupported yet)`
+
+  ## unsupported function without return type (is that even true ??)
 
   ## Pseudo externals:
     remove : E_external_variable
