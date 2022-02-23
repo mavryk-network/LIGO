@@ -478,7 +478,6 @@ let encode (m: Ast.module_) =
         op 0x41;
         let p = pos s in
         let s, _ = Linking.find_symbol_index m.it.symbols (fun s -> match s.it.details with Function when s.it.name = symbol -> true |  Data _ when s.it.name = symbol -> true | _ -> false) in
-        code_relocations := !code_relocations @ [R_WASM_MEMORY_ADDR_SLEB (Int32.of_int p, symbol)];
         match s.it.details with 
           Data {offset; _} ->
             code_relocations := !code_relocations @ [R_WASM_MEMORY_ADDR_SLEB (Int32.of_int p, symbol)];
@@ -852,6 +851,12 @@ let encode (m: Ast.module_) =
     let relocate_data_section data =
       custom_section "reloc.DATA" reloc_data data (data <> [])
 
+    let segment (sym: sym_info) = 
+      let sym = sym.it in
+      string sym.name;
+      vu32 4l;
+      vu32 0l
+
     let symbol (sym: sym_info) =
       let sym = sym.it in   
       (match sym.details with
@@ -891,6 +896,7 @@ let encode (m: Ast.module_) =
       | Global f ->         
         vu32 f.index.it;
         if exists then (
+          
           string sym.name
         )
       | Function ->
@@ -947,6 +953,15 @@ let encode (m: Ast.module_) =
       ) data2;
       patch_gap32 g (pos s - p);
        *)
+       
+      u8 5;
+      let g = gap32 () in
+      let p = pos s in
+      
+      let segments = List.filter (fun f -> match f.it.details with Data _ -> true | _ -> false) m.it.symbols in
+      vec segment segments;
+
+      patch_gap32 g (pos s - p);
       u8 8; (* WASM_SYMBOL_TABLE *)
       let g = gap32 () in
       let p = pos s in

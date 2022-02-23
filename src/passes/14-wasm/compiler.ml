@@ -199,7 +199,9 @@ let rec expression ~raise : A.module_' -> locals -> I.expression -> A.module_' *
       { it = If (
         ValBlockType (Some I32Type), 
         [
-          { it = A.Const { it = I32 (-1l); at}; at }; (* malloc did not succeed *)
+          { it = Const {it = I32 0l; at}; at};
+          { it = Const {it = I32 4l; at}; at};
+          { it = Call "__wasi_proc_exit"; at};
         ],
         e1 @ e2);
         at
@@ -445,11 +447,17 @@ let rec toplevel_bindings ~raise : I.expression -> W.Ast.module_' -> W.Ast.modul
     let entrypoint = var_to_string entrypoint in
     let storage_malloc = var_to_string (Var.fresh ~name:"storage_malloc" ()) in
     let storage_size = var_to_string (Var.fresh ~name:"storage_size" ()) in
+    let read_return_malloc = var_to_string (Var.fresh ~name:"read_return" ()) in
     let _start_func_instr = [
     (* get storage file size *)
-    S.{ it = A.Const {it = I32 3l; at}; at};      (* file descriptor *)
-      { it = Const {it = I32 0l; at}; at};        (* a *)
+      S.
+      
+      
+      
+      
       (* { it = Const {it = I32 0l; at}; at};        b *)
+      { it = A.Const {it = I32 3l; at}; at};      (* file descriptor *)
+      { it = Const {it = I32 0l; at}; at};        (* lookup flags *)
       { it = DataSymbol "STORAGE_FILE_NAME"; at}; (* file name *)
       { it = DataSymbol "STORAGE_FILE_STAT"; at}; (* where the stats will be written to *)
       { it = Call "__wasi_path_filestat_get"; at};
@@ -458,16 +466,22 @@ let rec toplevel_bindings ~raise : I.expression -> W.Ast.module_' -> W.Ast.modul
       { it = If
           (ValBlockType (Some I32Type), 
           [
-            { it = Const {it = I32 (-2l); at}; at};  (* dummy error code *)
+            { it = Const {it = I32 (0l); at}; at};
+            { it = Const {it = I32 (2l); at}; at};
+            { it = Call "__wasi_proc_exit"; at};
           ],
           [
             (* allocate memory for storage *)
+     
+
             { it = DataSymbol "STORAGE_FILE_STAT"; at};
-            { it = Const {it = I32 32l; at}; at};
+            { it = Const {it = I32 40l; at}; at};
             { it = Binary (I32 Add); at };
             { it = Load {ty = I64Type; align = 0; offset = 0l; sz = None}; at };
             { it = Convert (I32 WrapI64); at }; (* TODO: we should error if the file is too large... *)
             { it = LocalTee storage_size; at };
+            { it = Const {it = I32 4l; at}; at};
+            { it = Binary (I32 Add); at };
             { it = Call "malloc"; at };
             { it = LocalTee storage_malloc; at};
             { it = Const {it = I32 0l; at}; at};
@@ -476,28 +490,59 @@ let rec toplevel_bindings ~raise : I.expression -> W.Ast.module_' -> W.Ast.modul
                 (
                   ValBlockType (Some I32Type),
                   [
-                    { it = Const {it = I32 (-3l); at}; at};  (* dummy error code *)
+                    { it = Const {it = I32 (0l); at}; at};
+                    { it = Const {it = I32 (3l); at}; at};  (* dummy error code *)
+                    { it = Call "__wasi_proc_exit"; at};
                   ],
                   [
                     (* we read everything at once for now, perhaps needs to be optimized later on *)
 
-                    { it = Const {it = I32 3l; at}; at}; 
-                    { it = LocalGet storage_malloc; at};
-                    { it = Const {it = I32 1l; at}; at};
-                    { it = LocalGet storage_size; at}; (* size pointer ?! *)
-                    { it = Call "__wasi_fd_read"; at };
-                    { it = Drop; at }; (* expecting it to be 0, but we should probably check... *)
-                    { it = DataSymbol "ENTRYPOINT_TUPLE"; at};
                     { it = Const {it = I32 4l; at}; at};
-                    { it = Binary (I32 Add); at };
-                    { it = LocalGet storage_malloc; at };
-                    { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-        
-                    (* call entry with storage *)
-                    { it = DataSymbol "ENTRYPOINT_TUPLE"; at};
-                    { it = Call entrypoint; at };
-
-                    (* TODO: save the result... *)
+                    { it = Call "malloc"; at};
+                    { it = LocalTee read_return_malloc; at};
+                    { it = Const {it = I32 0l; at}; at};
+                    { it = Compare (I32 Ne); at};
+                    { it = If (
+                      ValBlockType (Some I32Type),
+                      [
+                        { it = Const {it = I32 (0l); at}; at};
+                        { it = Const {it = I32 (5l); at}; at};  (* dummy error code *)
+                        { it = Call "__wasi_proc_exit"; at};
+                      ],
+                      [
+                        { it = Const {it = I32 0l; at}; at}; (* file descriptor: storage file *)
+                        { it = LocalGet storage_malloc; at}; (* we need the iovector here *)
+                        { it = Const {it = I32 1l; at}; at}; (* iovector size *)
+                        
+                        { it = LocalGet read_return_malloc; at}; (* TODO: fix this return pointer *)
+                        { it = Call "__wasi_fd_read"; at };
+                        { it = Const {it = I32 0l; at}; at};
+                        { it = Compare (I32 Ne); at};
+                        { it = If 
+                            (
+                              ValBlockType (Some I32Type),
+                              [
+                                { it = Const {it = I32 (0l); at}; at};
+                                { it = Const {it = I32 (3l); at}; at};  (* dummy error code *)
+                                { it = Call "__wasi_proc_exit"; at};
+                              ],
+                              [
+                                { it = DataSymbol "ENTRYPOINT_TUPLE"; at};
+                                { it = Const {it = I32 4l; at}; at};
+                                { it = Binary (I32 Add); at };
+                                { it = LocalGet storage_malloc; at };
+                                { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+                    
+                                (* call entry with storage *)
+                                { it = DataSymbol "ENTRYPOINT_TUPLE"; at};
+                                { it = Call entrypoint; at };
+                              ]
+                            );
+                          at
+                        }
+                      ]);
+                      at
+                    }
                 ]);
               at
             };
@@ -520,7 +565,7 @@ let rec toplevel_bindings ~raise : I.expression -> W.Ast.module_' -> W.Ast.modul
       it = A.{
         name = "_start";
         ftype = "_start_type";
-        locals = [(storage_malloc, I32Type); (storage_size, I32Type)];
+        locals = [(storage_malloc, I32Type); (storage_size, I32Type); (read_return_malloc, I32Type)];
         body = _start_func_instr;
       };
       at

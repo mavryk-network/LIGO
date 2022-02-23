@@ -26,6 +26,50 @@ let name s =
 let env: module_ = {
   it = {
     empty_module with
+    globals = [
+      {
+        it = {
+          name  = "__heap_base";
+          gtype = GlobalType (I32Type, Immutable);
+          value = {
+            it = [
+              {it = Const {it = I32 3000l; at}; at}
+            ];
+            at
+          };
+        };
+        at
+      };
+      {
+        it = {
+          name  = "__data_end";
+          gtype = GlobalType (I32Type, Immutable);
+          value = {
+            it = [
+              {it = Const {it = I32 4000l; at}; at}
+            ];
+            at
+          };
+        };
+        at
+      }
+    ];
+    exports = [
+      {
+        it = {
+          name  = name "__heap_base";
+          edesc = {it = GlobalExport {it = 0l; at}; at}
+        };
+        at
+      };
+      {
+        it = {
+          name  = name "__data_end";
+          edesc = {it = GlobalExport {it = 1l; at}; at}
+        };
+        at
+      };
+    ];
     data = [
       {
         it = {
@@ -119,7 +163,6 @@ let env: module_ = {
       };
       {
         it = {
-          (* CONTRACT_RESULT *)
           index = {it = 0l; at};
           offset = {it = [
             { it = Const {it = I32 88l; at}; at}
@@ -134,6 +177,38 @@ let env: module_ = {
         };
         at
       };
+      {
+        it = {
+          index = {it = 0l; at};
+          offset = {it = [
+            { it = Const {it = I32 96l; at}; at}
+          ]; at};
+          init = {
+            name = "TESTX";
+            detail = [
+              String "Helloxx"
+            ]
+          }
+        };
+        at
+      };
+      {
+        it = {
+          index = {it = 0l; at};
+          offset = {it = [
+            { it = Const {it = I32 104l; at}; at}
+          ]; at};
+          init = {
+            name = "IOV";
+            detail = [
+              Symbol "TESTX";
+              Int32 8l
+            ]
+          }
+        };
+        at
+      }
+  
     ]; 
     types = [
       {
@@ -168,6 +243,13 @@ let env: module_ = {
         it = {
           tname    = "__wasi_fd_read_type";
           tdetails = FuncType ([I32Type; I32Type; I32Type; I32Type], [I32Type])
+        };
+        at
+      };
+      {
+        it = {
+          tname = "__wasi_proc_exit_type";
+          tdetails = FuncType ([I32Type], [])
         };
         at
       };
@@ -309,6 +391,17 @@ let env: module_ = {
       {
         it = {
           module_name = name "env";
+          item_name   = name "__wasi_proc_exit";
+          idesc       = {
+            it = FuncImport "__wasi_proc_exit_type";
+            at
+          }
+        };
+        at
+      };
+      {
+        it = {
+          module_name = name "env";
           item_name   = name "__gmpz_init";
           idesc       = {
             it = FuncImport "__gmpz_init_type";
@@ -413,7 +506,7 @@ let env: module_ = {
         it = {
           name    = "C_LIST_EMPTY";
           details = Data {
-            index = {it = 0l; at};
+            index = {it = 1l; at};
             relocation_offset = {it = 0l; at};
             size = {it = 4l; at};
             offset = {it = 4l; at}
@@ -425,7 +518,7 @@ let env: module_ = {
         it = {
           name    = "C_MAP_EMPTY";
           details = Data {
-            index = {it = 0l; at};
+            index = {it = 2l; at};
             relocation_offset = {it = 0l; at};
             size = {it = 4l; at};
             offset = {it = 8l; at}
@@ -437,7 +530,7 @@ let env: module_ = {
         it = {
           name    = "C_BIG_MAP_EMPTY";
           details = Data {
-            index = {it = 0l; at};
+            index = {it = 3l; at};
             relocation_offset = {it = 0l; at};
             size = {it = 4l; at};
             offset = {it = 12l; at}
@@ -449,7 +542,7 @@ let env: module_ = {
         it = {
           name = "ENTRYPOINT_TUPLE";
           details = Data {
-            index = {it = 0l; at};
+            index = {it = 4l; at};
             relocation_offset =  {it = 0l; at};
             size = { it = 8l; at};
             offset = { it = 16l; at}
@@ -461,7 +554,7 @@ let env: module_ = {
         it = {
           name = "STORAGE_FILE_STAT";
           details = Data {
-            index = {it = 0l; at};
+            index = {it = 5l; at};
             relocation_offset =  {it = 0l; at};
             size = { it = 64l; at};
             offset = { it = 24l; at}
@@ -473,10 +566,34 @@ let env: module_ = {
         it = {
           name = "CONTRACT_RESULT";
           details = Data {
-            index = {it = 0l; at};
+            index = {it = 6l; at};
             relocation_offset =  {it = 0l; at};
             size = { it = 8l; at};
             offset = { it = 88l; at}
+          }
+        };
+        at
+      };
+      {
+        it = {
+          name = "TESTX";
+          details = Data {
+            index = {it = 7l; at};
+            relocation_offset =  {it = 0l; at};
+            size = { it = 8l; at};
+            offset = { it = 96l; at}
+          }
+        };
+        at
+      };
+      {
+        it = {
+          name = "IOV";
+          details = Data {
+            index = {it = 8l; at};
+            relocation_offset =  {it = 0l; at};
+            size = { it = 8l; at};
+            offset = { it = 104l; at}
           }
         };
         at
@@ -513,6 +630,13 @@ let env: module_ = {
         it = {
           name    = "__wasi_fd_read";
           details = Import ([I32Type; I32Type; I32Type; I32Type], [I32Type]);
+        };
+        at
+      };
+      {
+        it = {
+          name    = "__wasi_proc_exit";
+          details = Import ([I32Type], []);
         };
         at
       };
@@ -577,4 +701,5 @@ let env: module_ = {
   at
 }
 
-let offset = 96l (* this needs to be made more robust *)
+let _offset = 96l (* this needs to be made more robust *)
+let offset = 112l (* for the testing... *)
