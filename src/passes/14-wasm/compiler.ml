@@ -195,7 +195,7 @@ let rec expression ~raise : A.module_' -> locals -> I.expression -> A.module_' *
       { it = Call "malloc"; at };
       { it = LocalTee malloc_local; at };
       { it = Const { it = I32 0l; at}; at };
-      { it = Compare (I32 Ne); at };
+      { it = Compare (I32 Eq); at };
       { it = If (
         ValBlockType (Some I32Type), 
         [
@@ -451,10 +451,6 @@ let rec toplevel_bindings ~raise : I.expression -> W.Ast.module_' -> W.Ast.modul
     let _start_func_instr = [
     (* get storage file size *)
       S.
-      
-      
-      
-      
       (* { it = Const {it = I32 0l; at}; at};        b *)
       { it = A.Const {it = I32 3l; at}; at};      (* file descriptor *)
       { it = Const {it = I32 0l; at}; at};        (* lookup flags *)
@@ -464,18 +460,15 @@ let rec toplevel_bindings ~raise : I.expression -> W.Ast.module_' -> W.Ast.modul
       { it = Const {it = I32 0l; at}; at};
       { it = Compare (I32 Ne); at};
       { it = If
-          (ValBlockType (Some I32Type), 
+          (ValBlockType None, 
           [
-            { it = Const {it = I32 (0l); at}; at};
             { it = Const {it = I32 (2l); at}; at};
             { it = Call "__wasi_proc_exit"; at};
           ],
           [
             (* allocate memory for storage *)
-     
-
             { it = DataSymbol "STORAGE_FILE_STAT"; at};
-            { it = Const {it = I32 40l; at}; at};
+            { it = Const {it = I32 32l; at}; at};
             { it = Binary (I32 Add); at };
             { it = Load {ty = I64Type; align = 0; offset = 0l; sz = None}; at };
             { it = Convert (I32 WrapI64); at }; (* TODO: we should error if the file is too large... *)
@@ -485,13 +478,12 @@ let rec toplevel_bindings ~raise : I.expression -> W.Ast.module_' -> W.Ast.modul
             { it = Call "malloc"; at };
             { it = LocalTee storage_malloc; at};
             { it = Const {it = I32 0l; at}; at};
-            { it = Compare (I32 Ne); at};
+            { it = Compare (I32 Eq); at};
             { it = If 
                 (
-                  ValBlockType (Some I32Type),
+                  ValBlockType None,
                   [
-                    { it = Const {it = I32 (0l); at}; at};
-                    { it = Const {it = I32 (3l); at}; at};  (* dummy error code *)
+                    { it = Const {it = I32 (53l); at}; at};  (* dummy error code *)
                     { it = Call "__wasi_proc_exit"; at};
                   ],
                   [
@@ -501,11 +493,10 @@ let rec toplevel_bindings ~raise : I.expression -> W.Ast.module_' -> W.Ast.modul
                     { it = Call "malloc"; at};
                     { it = LocalTee read_return_malloc; at};
                     { it = Const {it = I32 0l; at}; at};
-                    { it = Compare (I32 Ne); at};
+                    { it = Compare (I32 Eq); at};
                     { it = If (
-                      ValBlockType (Some I32Type),
+                      ValBlockType None,
                       [
-                        { it = Const {it = I32 (0l); at}; at};
                         { it = Const {it = I32 (5l); at}; at};  (* dummy error code *)
                         { it = Call "__wasi_proc_exit"; at};
                       ],
@@ -520,10 +511,9 @@ let rec toplevel_bindings ~raise : I.expression -> W.Ast.module_' -> W.Ast.modul
                         { it = Compare (I32 Ne); at};
                         { it = If 
                             (
-                              ValBlockType (Some I32Type),
+                              ValBlockType None,
                               [
-                                { it = Const {it = I32 (0l); at}; at};
-                                { it = Const {it = I32 (3l); at}; at};  (* dummy error code *)
+                                { it = Const {it = I32 (30l); at}; at};  (* dummy error code *)
                                 { it = Call "__wasi_proc_exit"; at};
                               ],
                               [
@@ -536,6 +526,21 @@ let rec toplevel_bindings ~raise : I.expression -> W.Ast.module_' -> W.Ast.modul
                                 (* call entry with storage *)
                                 { it = DataSymbol "ENTRYPOINT_TUPLE"; at};
                                 { it = Call entrypoint; at };
+
+                                
+(* { it = DataSymbol "ENTRYPOINT_TUPLE"; at}; *)
+                                { it = Const {it = I32 4l; at}; at};
+                                { it = Binary (I32 Add); at };
+                                { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+                                
+                                { it = Call "__gmpz_get_ui"; at};
+                                { it = Call "__wasi_proc_exit"; at};
+                                (* gmp_printf ("%s is an mpz %Zd\n", "here", z); *)
+                                (* { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }; *)
+                                (* { it = Drop; at }; *)
+                                (* { it = Drop; at }; *)
+                                
+                                
                               ]
                             );
                           at
@@ -550,7 +555,7 @@ let rec toplevel_bindings ~raise : I.expression -> W.Ast.module_' -> W.Ast.modul
           ]);
         at
       };
-      { it = Drop; at }
+      (* { it = Drop; at } *)
     ]
     in
     let type_ = [S.{

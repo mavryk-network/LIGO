@@ -26,7 +26,7 @@ let name s =
 let env: module_ = {
   it = {
     empty_module with
-    globals = [
+    (* globals = [
       {
         it = {
           name  = "__heap_base";
@@ -69,7 +69,7 @@ let env: module_ = {
         };
         at
       };
-    ];
+    ]; *)
     data = [
       {
         it = {
@@ -309,6 +309,20 @@ let env: module_ = {
         };
         at
       };     
+      {
+        it = {
+          tname    = "__gmp_printf_type";
+          tdetails = FuncType ([I32Type; I32Type], [I32Type])
+        };
+        at
+      };
+      {
+        it = {
+          tname    = "__gmpz_get_ui_type";
+          tdetails = FuncType ([I32Type], [I32Type])
+        };
+        at
+      }
     ];
     imports = [
       {
@@ -487,7 +501,29 @@ let env: module_ = {
         };
         at
       };
-      (* Missing logarithmic functions, need to add those. *)
+      {
+        it = {
+          module_name = name "env";
+          item_name   = name "__gmp_printf";
+          idesc       = {
+            it = FuncImport "__gmp_printf_type";
+            at
+          }
+        };
+        at
+      };
+      {
+        it = {
+          module_name = name "env";
+          item_name   = name "__gmpz_get_ui";
+          idesc       = {
+            it = FuncImport "__gmpz_get_ui_type";
+            at
+          }
+        };
+        at
+      }
+      (* TODO: Missing logarithmic functions, need to add those. *)
     ];
     symbols = [
       {
@@ -693,6 +729,20 @@ let env: module_ = {
         it = {
           name = "__gmpz_neg";
           details = Import ([I32Type; I32Type], [])
+        };
+        at
+      };
+      {
+        it = {
+          name    = "__gmp_printf";
+          details = Import ([I32Type; I32Type], [I32Type])
+        };
+        at
+      };
+      {
+        it = {
+          name = "__gmpz_get_ui";
+          details = Import ([I32Type], [I32Type])
         };
         at
       }
