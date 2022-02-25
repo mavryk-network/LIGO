@@ -163,9 +163,27 @@ let env: module_ = {
       };
       {
         it = {
+          index = { it = 0l; at };
+          offset = {
+            it = [
+              { it = Const {it = I32 88l; at}; at }
+            ];
+            at
+          };
+          init = {
+            name = "STORAGE_FD";
+            detail = [
+              Int32 0l
+            ]
+          }
+        };
+        at
+      };
+      {
+        it = {
           index = {it = 0l; at};
           offset = {it = [
-            { it = Const {it = I32 88l; at}; at}
+            { it = Const {it = I32 92l; at}; at}
           ]; at};
           init = {
             name = "CONTRACT_RESULT";
@@ -181,7 +199,7 @@ let env: module_ = {
         it = {
           index = {it = 0l; at};
           offset = {it = [
-            { it = Const {it = I32 96l; at}; at}
+            { it = Const {it = I32 100l; at}; at}
           ]; at};
           init = {
             name = "TESTX";
@@ -196,7 +214,7 @@ let env: module_ = {
         it = {
           index = {it = 0l; at};
           offset = {it = [
-            { it = Const {it = I32 104l; at}; at}
+            { it = Const {it = I32 108l; at}; at}
           ]; at};
           init = {
             name = "IOV";
@@ -229,6 +247,13 @@ let env: module_ = {
         it = {
           tname    = "__wasi_fd_close_type";
           tdetails = FuncType ([I32Type], [I32Type])
+        };
+        at
+      };
+      {
+        it = {
+          tname = "__wasi_path_open_type";
+          tdetails = FuncType ([I32Type; I32Type; I32Type; I32Type; I64Type; I64Type; I32Type; I32Type], [I32Type])
         };
         at
       };
@@ -376,6 +401,17 @@ let env: module_ = {
           idesc       = {
             it = FuncImport "__wasi_fd_close_type";
             at 
+          }
+        };
+        at
+      };
+      { 
+        it = {
+          module_name = name "wasi_snapshot_preview1";
+          item_name   = name "__wasi_path_open";
+          idesc       = {
+            it = FuncImport "__wasi_path_open_type";
+            at
           }
         };
         at
@@ -600,12 +636,24 @@ let env: module_ = {
       };
       {
         it = {
-          name = "CONTRACT_RESULT";
+          name = "STORAGE_FD";
           details = Data {
             index = {it = 6l; at};
             relocation_offset =  {it = 0l; at};
+            size = { it = 4l; at};
+            offset = { it = 28l; at}
+          }
+        };
+        at
+      };
+      {
+        it = {
+          name = "CONTRACT_RESULT";
+          details = Data {
+            index = {it = 7l; at};
+            relocation_offset =  {it = 0l; at};
             size = { it = 8l; at};
-            offset = { it = 88l; at}
+            offset = { it = 92l; at}
           }
         };
         at
@@ -614,10 +662,10 @@ let env: module_ = {
         it = {
           name = "TESTX";
           details = Data {
-            index = {it = 7l; at};
+            index = {it = 8l; at};
             relocation_offset =  {it = 0l; at};
             size = { it = 8l; at};
-            offset = { it = 96l; at}
+            offset = { it = 100l; at}
           }
         };
         at
@@ -626,10 +674,10 @@ let env: module_ = {
         it = {
           name = "IOV";
           details = Data {
-            index = {it = 8l; at};
+            index = {it = 9l; at};
             relocation_offset =  {it = 0l; at};
             size = { it = 8l; at};
-            offset = { it = 104l; at}
+            offset = { it = 108l; at}
           }
         };
         at
@@ -652,6 +700,13 @@ let env: module_ = {
         it = {
           name    = "__wasi_fd_close";
           details = Import ([I32Type], [I32Type]);
+        };
+        at
+      };
+      {
+        it = {
+          name    = "__wasi_path_open";
+          details = Import ([I32Type; I32Type; I32Type; I32Type; I64Type; I64Type; I32Type; I32Type], [I32Type]); 
         };
         at
       };

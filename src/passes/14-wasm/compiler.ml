@@ -448,6 +448,9 @@ let rec toplevel_bindings ~raise : I.expression -> W.Ast.module_' -> W.Ast.modul
     let storage_malloc = var_to_string (Var.fresh ~name:"storage_malloc" ()) in
     let storage_size = var_to_string (Var.fresh ~name:"storage_size" ()) in
     let read_return_malloc = var_to_string (Var.fresh ~name:"read_return" ()) in
+    let entrypoint_result = var_to_string (Var.fresh ~name:"entrypoint_result" ()) in
+    let storage_fd = var_to_string  (Var.fresh ~name:"storage_fd" ()) in
+    (* should we extract this to a C function? *)
     let _start_func_instr = [
     (* get storage file size *)
       S.
@@ -526,21 +529,71 @@ let rec toplevel_bindings ~raise : I.expression -> W.Ast.module_' -> W.Ast.modul
                                 (* call entry with storage *)
                                 { it = DataSymbol "ENTRYPOINT_TUPLE"; at};
                                 { it = Call entrypoint; at };
+                                { it = LocalSet entrypoint_result; at};
 
-                                
-(* { it = DataSymbol "ENTRYPOINT_TUPLE"; at}; *)
-                                { it = Const {it = I32 4l; at}; at};
-                                { it = Binary (I32 Add); at };
-                                { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-                                
-                                { it = Call "__gmpz_get_ui"; at};
-                                { it = Call "__wasi_proc_exit"; at};
-                                (* gmp_printf ("%s is an mpz %Zd\n", "here", z); *)
-                                (* { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }; *)
-                                (* { it = Drop; at }; *)
-                                (* { it = Drop; at }; *)
-                                
-                                
+
+                                (* write to file... *)
+                                { it = Const {it = I32 3l; at}; at}; 
+                                { it = Const {it = I32 0l; at}; at};
+                                { it = DataSymbol "STORAGE_FILE_NAME"; at};
+                                { it = Const {it = I32 0l; at}; at};
+                                { it = Const {it = I64 999L; at}; at}; (* TODO: this is super dumb, needs to be improved *)
+                                { it = Const {it = I64 0L; at}; at};
+                                { it = Const {it = I32 0l; at}; at};
+                                { it = DataSymbol "STORAGE_FD"; at};
+                                { it = Call "__wasi_path_open"; at};
+                                { it = Const {it = I32 0l; at}; at};
+                                { it = Compare (I32 Ne); at};
+                                { it = If 
+                                    (ValBlockType None,
+                                     [
+                                        { it = Const {it = I32 (39l); at}; at};  (* dummy error code *)
+                                        { it = Call "__wasi_proc_exit"; at};
+                                    ],
+                                    [
+                                      { it = DataSymbol "STORAGE_FD"; at};
+                                      { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+                                      { it = LocalTee storage_fd; at };
+                                      (* { it = Drop; at };
+                                      { it = Const {it = I32 1l; at}; at}; *)
+                                      
+                                      { it = LocalGet entrypoint_result; at};
+                                      { it = Const {it = I32 4l; at}; at};
+                                      { it = Binary (I32 Add); at };
+                                      { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+                                      { it = Const {it = I32 1l; at}; at}; (* iovecs length *)
+                                      { it = Const {it = I32 4l; at}; at};
+                                      { it = Call "__wasi_fd_write"; at};
+                                      { it = Const {it = I32 0l; at}; at};
+                                      { it = Compare (I32 Ne); at};
+                                      { it = If 
+                                          (ValBlockType None,
+                                          [
+                                            { it = Const {it = I32 (43l); at}; at};  (* dummy error code *)
+                                            { it = Call "__wasi_proc_exit"; at};
+                                          ],
+                                          [      
+                                            { it = LocalGet storage_fd; at };
+                                            { it = Call "__wasi_fd_close"; at};
+                                            { it = Const {it = I32 0l; at}; at};
+                                            { it = Compare (I32 Ne); at};
+                                            { it = If 
+                                                (ValBlockType None,
+                                                [
+                                                  { it = Const {it = I32 (44l); at}; at};  (* dummy error code *)
+                                                  { it = Call "__wasi_proc_exit"; at};
+                                                ],
+                                                [
+                                                  (* everything went okay! *)
+                                                ]);
+                                              at 
+                                            }
+                                          ]);
+                                        at }
+                                    ]
+                                  );
+                                  at
+                                };
                               ]
                             );
                           at
@@ -555,7 +608,6 @@ let rec toplevel_bindings ~raise : I.expression -> W.Ast.module_' -> W.Ast.modul
           ]);
         at
       };
-      (* { it = Drop; at } *)
     ]
     in
     let type_ = [S.{
@@ -570,7 +622,7 @@ let rec toplevel_bindings ~raise : I.expression -> W.Ast.module_' -> W.Ast.modul
       it = A.{
         name = "_start";
         ftype = "_start_type";
-        locals = [(storage_malloc, I32Type); (storage_size, I32Type); (read_return_malloc, I32Type)];
+        locals = [(storage_malloc, I32Type); (storage_size, I32Type); (read_return_malloc, I32Type); (entrypoint_result, I32Type); (storage_fd, I32Type)];
         body = _start_func_instr;
       };
       at
