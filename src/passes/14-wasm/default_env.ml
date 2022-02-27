@@ -385,7 +385,7 @@ let env: module_ = {
       };
       {
         it = {
-          module_name = name "wasi_snapshot_preview1";
+          module_name = name "env";
           item_name   = name "__wasi_fd_write";
           idesc       = {
             it = FuncImport "__wasi_fd_write_type" ;
@@ -396,7 +396,7 @@ let env: module_ = {
       };
       {
         it = {
-          module_name = name "wasi_snapshot_preview1";
+          module_name = name "env";
           item_name   = name "__wasi_fd_close";
           idesc       = {
             it = FuncImport "__wasi_fd_close_type";
@@ -407,7 +407,7 @@ let env: module_ = {
       };
       { 
         it = {
-          module_name = name "wasi_snapshot_preview1";
+          module_name = name "env";
           item_name   = name "__wasi_path_open";
           idesc       = {
             it = FuncImport "__wasi_path_open_type";
@@ -418,7 +418,7 @@ let env: module_ = {
       };
       {
         it = {
-          module_name = name "wasi_snapshot_preview1";
+          module_name = name "env";
           item_name   = name "__wasi_path_filestat_get";
           idesc       = {
             it = FuncImport "__wasi_path_filestat_get_type";

@@ -184,7 +184,7 @@ let build_wasm_code ~raise ~add_warning : options:Compiler_options.t -> string -
     Out_channel.output_string channel wasm;
     Out_channel.close channel; 
     (* link with GMP *)
-    Ligo_compile.Of_wasm.link ["vendors/gmp/libgmp.a"; "vendors/wasi/wasi-sdk-14.0/lib/clang/13.0.0/lib/wasi/libclang_rt.builtins-wasm32.a"; "work_in_progress.wasm"] file_name;
+    Ligo_compile.Of_wasm.link ["vendors/gmp/libgmp.a"; "src/passes/14-wasm/start.wasm"; "vendors/wasi/wasi-sdk-14.0/lib/clang/13.0.0/lib/wasi/libclang_rt.builtins-wasm32.a"; "work_in_progress.wasm"] file_name;
     ()
     (* , contract *)
 

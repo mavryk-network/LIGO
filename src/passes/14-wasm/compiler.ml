@@ -391,37 +391,7 @@ let rec toplevel_bindings ~raise : I.expression -> W.Ast.module_' -> W.Ast.modul
           at
         }]
       }
-      in
-      (* type is always int32 (aka pointers) *)
-
-      (* 
-        - use __stack_pointer I guess...
-          - gmpz_init:
-            - allocate pointer on stack
-            - call mpz_init with allocated pointer
-            - how do we set the value?
-            - can't we do this more directly?
-    
-
-        - toplevel main function
-          - set toplevel __gmpz_init_set stuff
-
-        - allocate memory
-        - we give __gmpz_init a memory location (pointer)
-
-        - stack_pointer: not important for now.
-        - Every argument is a pointer.
-        - the pointer should point to a value that libgmp understands.
-        - use gmp integer functions for now, no need to overcomplicate things with lower-level functions
-        - create a test program...
-
-
-        Memory:
-        - list of values to which bindings can point
-        - 
-
-
-      *)
+      in      
     toplevel_bindings ~raise e2 w
   | E_let_in ({content = E_literal (Literal_int z); _}, _inline, ((name, _type), e2)) -> 
     (* we convert these to in memory values *)
@@ -444,201 +414,57 @@ let rec toplevel_bindings ~raise : I.expression -> W.Ast.module_' -> W.Ast.modul
     | Literal_bls12_381_g2 of bytes
     | Literal_bls12_381_fr of bytes *)
   | E_variable entrypoint ->
-    let entrypoint = var_to_string entrypoint in
-    let storage_malloc = var_to_string (Var.fresh ~name:"storage_malloc" ()) in
-    let storage_size = var_to_string (Var.fresh ~name:"storage_size" ()) in
-    let read_return_malloc = var_to_string (Var.fresh ~name:"read_return" ()) in
-    let entrypoint_result = var_to_string (Var.fresh ~name:"entrypoint_result" ()) in
-    let storage_fd = var_to_string  (Var.fresh ~name:"storage_fd" ()) in
-    (* should we extract this to a C function? *)
-    let _start_func_instr = [
-    (* get storage file size *)
-      S.
-      (* { it = Const {it = I32 0l; at}; at};        b *)
-      { it = A.Const {it = I32 3l; at}; at};      (* file descriptor *)
-      { it = Const {it = I32 0l; at}; at};        (* lookup flags *)
-      { it = DataSymbol "STORAGE_FILE_NAME"; at}; (* file name *)
-      { it = DataSymbol "STORAGE_FILE_STAT"; at}; (* where the stats will be written to *)
-      { it = Call "__wasi_path_filestat_get"; at};
-      { it = Const {it = I32 0l; at}; at};
-      { it = Compare (I32 Ne); at};
-      { it = If
-          (ValBlockType None, 
-          [
-            { it = Const {it = I32 (2l); at}; at};
-            { it = Call "__wasi_proc_exit"; at};
-          ],
-          [
-            (* allocate memory for storage *)
-            { it = DataSymbol "STORAGE_FILE_STAT"; at};
-            { it = Const {it = I32 32l; at}; at};
-            { it = Binary (I32 Add); at };
-            { it = Load {ty = I64Type; align = 0; offset = 0l; sz = None}; at };
-            { it = Convert (I32 WrapI64); at }; (* TODO: we should error if the file is too large... *)
-            { it = LocalTee storage_size; at };
-            { it = Const {it = I32 4l; at}; at};
-            { it = Binary (I32 Add); at };
-            { it = Call "malloc"; at };
-            { it = LocalTee storage_malloc; at};
-            { it = Const {it = I32 0l; at}; at};
-            { it = Compare (I32 Eq); at};
-            { it = If 
-                (
-                  ValBlockType None,
-                  [
-                    { it = Const {it = I32 (53l); at}; at};  (* dummy error code *)
-                    { it = Call "__wasi_proc_exit"; at};
-                  ],
-                  [
-                    (* we read everything at once for now, perhaps needs to be optimized later on *)
-
-                    { it = Const {it = I32 4l; at}; at};
-                    { it = Call "malloc"; at};
-                    { it = LocalTee read_return_malloc; at};
-                    { it = Const {it = I32 0l; at}; at};
-                    { it = Compare (I32 Eq); at};
-                    { it = If (
-                      ValBlockType None,
-                      [
-                        { it = Const {it = I32 (5l); at}; at};  (* dummy error code *)
-                        { it = Call "__wasi_proc_exit"; at};
-                      ],
-                      [
-                        { it = Const {it = I32 0l; at}; at}; (* file descriptor: storage file *)
-                        { it = LocalGet storage_malloc; at}; (* we need the iovector here *)
-                        { it = Const {it = I32 1l; at}; at}; (* iovector size *)
-                        
-                        { it = LocalGet read_return_malloc; at}; (* TODO: fix this return pointer *)
-                        { it = Call "__wasi_fd_read"; at };
-                        { it = Const {it = I32 0l; at}; at};
-                        { it = Compare (I32 Ne); at};
-                        { it = If 
-                            (
-                              ValBlockType None,
-                              [
-                                { it = Const {it = I32 (30l); at}; at};  (* dummy error code *)
-                                { it = Call "__wasi_proc_exit"; at};
-                              ],
-                              [
-                                { it = DataSymbol "ENTRYPOINT_TUPLE"; at};
-                                { it = Const {it = I32 4l; at}; at};
-                                { it = Binary (I32 Add); at };
-                                { it = LocalGet storage_malloc; at };
-                                { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-                    
-                                (* call entry with storage *)
-                                { it = DataSymbol "ENTRYPOINT_TUPLE"; at};
-                                { it = Call entrypoint; at };
-                                { it = LocalSet entrypoint_result; at};
-
-
-                                (* write to file... *)
-                                { it = Const {it = I32 3l; at}; at}; 
-                                { it = Const {it = I32 0l; at}; at};
-                                { it = DataSymbol "STORAGE_FILE_NAME"; at};
-                                { it = Const {it = I32 0l; at}; at};
-                                { it = Const {it = I64 999L; at}; at}; (* TODO: this is super dumb, needs to be improved *)
-                                { it = Const {it = I64 0L; at}; at};
-                                { it = Const {it = I32 0l; at}; at};
-                                { it = DataSymbol "STORAGE_FD"; at};
-                                { it = Call "__wasi_path_open"; at};
-                                { it = Const {it = I32 0l; at}; at};
-                                { it = Compare (I32 Ne); at};
-                                { it = If 
-                                    (ValBlockType None,
-                                     [
-                                        { it = Const {it = I32 (39l); at}; at};  (* dummy error code *)
-                                        { it = Call "__wasi_proc_exit"; at};
-                                    ],
-                                    [
-                                      { it = DataSymbol "STORAGE_FD"; at};
-                                      { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-                                      { it = LocalTee storage_fd; at };
-                                      (* { it = Drop; at };
-                                      { it = Const {it = I32 1l; at}; at}; *)
-                                      
-                                      { it = LocalGet entrypoint_result; at};
-                                      { it = Const {it = I32 4l; at}; at};
-                                      { it = Binary (I32 Add); at };
-                                      { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-                                      { it = Const {it = I32 1l; at}; at}; (* iovecs length *)
-                                      { it = Const {it = I32 4l; at}; at};
-                                      { it = Call "__wasi_fd_write"; at};
-                                      { it = Const {it = I32 0l; at}; at};
-                                      { it = Compare (I32 Ne); at};
-                                      { it = If 
-                                          (ValBlockType None,
-                                          [
-                                            { it = Const {it = I32 (43l); at}; at};  (* dummy error code *)
-                                            { it = Call "__wasi_proc_exit"; at};
-                                          ],
-                                          [      
-                                            { it = LocalGet storage_fd; at };
-                                            { it = Call "__wasi_fd_close"; at};
-                                            { it = Const {it = I32 0l; at}; at};
-                                            { it = Compare (I32 Ne); at};
-                                            { it = If 
-                                                (ValBlockType None,
-                                                [
-                                                  { it = Const {it = I32 (44l); at}; at};  (* dummy error code *)
-                                                  { it = Call "__wasi_proc_exit"; at};
-                                                ],
-                                                [
-                                                  (* everything went okay! *)
-                                                ]);
-                                              at 
-                                            }
-                                          ]);
-                                        at }
-                                    ]
-                                  );
-                                  at
-                                };
-                              ]
-                            );
-                          at
-                        }
-                      ]);
-                      at
-                    }
-                ]);
-              at
-            };
-            
-          ]);
-        at
-      };
-    ]
+    let actual_name = var_to_string entrypoint in
+    let name = "entrypoint" in
+    let w = {w with 
+        symbols = w.symbols @ [{
+          it = {
+            name = name;
+            details = Function
+          };
+          at
+        }];
+        types = w.types @ [{
+          it = {
+            tname = name ^ "_type";
+            tdetails = FuncType ([I32Type; I32Type], [I32Type])
+          };
+          at
+        }];
+        funcs = w.funcs @ [{
+          it = {
+            name = name;
+            ftype = name ^ "_type";
+            locals = [("entrypoint_tuple", I32Type); ("return_tuple", I32Type)];
+            body = [
+              {
+                it = LocalGet "return_tuple";
+                at
+              };
+              {
+                it = LocalGet "entrypoint_tuple";
+                at
+              };
+              {
+                it = Call actual_name; 
+                at
+              };
+              {
+                it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at
+              };
+              {
+                it = Const { it = I32 0l; at };
+                at
+              }
+            ]
+          };
+          at
+        }]
+    }
     in
-    let type_ = [S.{
-      it = A.{
-        tname    = "_start_type";
-        tdetails = FuncType ([], [])
-      };
-      at
-    }]
-    in
-    let func =  [S.{
-      it = A.{
-        name = "_start";
-        ftype = "_start_type";
-        locals = [(storage_malloc, I32Type); (storage_size, I32Type); (read_return_malloc, I32Type); (entrypoint_result, I32Type); (storage_fd, I32Type)];
-        body = _start_func_instr;
-      };
-      at
-    }]
-    in
-    let symbol = [S.{
-      it = A.{
-        name = "_start";
-        details = Function
-      };
-      at
-    } 
-    ]
-    in
-    { w with types = w.types @ type_; funcs = w.funcs @ func; symbols = w.symbols @ symbol }
-    (* w *)
+    w
+    (* in *)
+    (* { w with types = w.types @ type_; funcs = w.funcs @ func; symbols = w.symbols @ symbol } *)
   | _ -> failwith "Instruction not supported at the toplevel."
 
 let compile ~raise : I.expression -> string -> string -> W.Ast.module_ = fun e filename entrypoint -> 
@@ -692,40 +518,7 @@ let compile ~raise : I.expression -> string -> string -> W.Ast.module_ = fun e f
   
   let pos = Int32.(offset + Int32.of_int_exn length) in
   global_offset := pos; 
-  (* print_endline ("xxx:" ^ Int32.to_string pos); *)
   
-  (* 
-    First block of memory will be the GMP values apparently. 
-
-
-
-    Memory representation of data types:
-    - int: pointer
-    
-    Later:
-    - bool:
-    - string
-    - variant
-    - record
-    - list: 
-    - tuple:
-      value, next_item or nothing
-    - map:
-    - set:
-    - big map:
-  *)
-
-  (* let w = {
-    w.it with memories = [
-      {
-        it = {
-          mtype = MemoryType {min = 100l; max = Some 100l}
-        };
-        at
-      }
-    ]
-  }
-  in *)
   S.{ 
     it = toplevel_bindings ~raise e w.it;
     at = w.at
