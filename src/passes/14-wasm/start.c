@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include "../../../vendors/gmp/gmp-6.2.1/gmp.h"
 #include "api.h"
 typedef struct entrypoint_tuple {
   int parameter; // TODO: implement
@@ -12,6 +13,23 @@ typedef struct tezos_operations {
 
 typedef struct entrypoint_result {
   tezos_operations* operations;
+
+// /**
+//  * A region of memory for scatter/gather writes.
+//  */
+// typedef struct __wasi_ciovec_t {
+//     /**
+//      * The address of the buffer to be written.
+//      */
+//     const uint8_t * buf;
+
+//     /**
+//      * The length of the buffer to be written.
+//      */
+//     __wasi_size_t buf_len;
+
+// } __wasi_ciovec_t;
+
   __wasi_ciovec_t* storage;
 } entrypoint_result;
 
@@ -44,8 +62,9 @@ void _start() {
     .parameter = 1,
     .storage   = iovs
   };
-  entrypoint_result *er;
-  int err_code3 = entrypoint(et, er);
+  // int loc = ;
+  entrypoint_result *er = malloc(3);
+  int err_code3 = entrypoint(&et, &er);
   if (err_code3 != 0) {
     __wasi_proc_exit(5);
     return;
@@ -53,17 +72,30 @@ void _start() {
   
   // open storage file for writing
   __wasi_fd_t *fd;
-  int err_code4 = __wasi_path_open(3, 0, "storage.byte", 0, __WASI_RIGHTS_FD_WRITE & __WASI_RIGHTS_PATH_OPEN, 0, 0, fd);
+  int err_code4 = __wasi_path_open(3, 0, "storage.byte", 0, __WASI_RIGHTS_FD_WRITE | __WASI_RIGHTS_PATH_OPEN, 0, 0, fd);
   if (err_code4 != 0) {
     __wasi_proc_exit(6);
     return;
   }
 
-  printf("okay: %i\n", er->storage);
+  
+  int *x = er->storage;
+  
+  gmp_printf("The storage contents: %Zd\n", x);
     
+  /*
+    TODO: implement proper handling of storage. Challenges:
+    - pointers
+    - data structures
+  */
+  __wasi_ciovec_t foo = {
+    .buf = x,
+    .buf_len = 1
+  };
+
   // write returned storage from contract to storage file
   __wasi_size_t *retptr1;
-  int err_code5 = __wasi_fd_write(*fd, er->storage, 1, retptr1);
+  int err_code5 = __wasi_fd_write(*fd, &foo, 1, retptr1);
   if (err_code5 !=0) {
     __wasi_proc_exit(7);
     return;

@@ -431,6 +431,24 @@ let rec toplevel_bindings ~raise : I.expression -> W.Ast.module_' -> W.Ast.modul
           };
           at
         }];
+        (*
+/**
+ * A region of memory for scatter/gather writes.
+ */
+typedef struct __wasi_ciovec_t {
+    /**
+     * The address of the buffer to be written.
+     */
+    const uint8_t * buf;
+
+    /**
+     * The length of the buffer to be written.
+     */
+    __wasi_size_t buf_len;
+
+} __wasi_ciovec_t;        
+        *)
+        
         funcs = w.funcs @ [{
           it = {
             name = name;
