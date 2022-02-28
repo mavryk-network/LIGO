@@ -26,50 +26,6 @@ let name s =
 let env: module_ = {
   it = {
     empty_module with
-    (* globals = [
-      {
-        it = {
-          name  = "__heap_base";
-          gtype = GlobalType (I32Type, Immutable);
-          value = {
-            it = [
-              {it = Const {it = I32 3000l; at}; at}
-            ];
-            at
-          };
-        };
-        at
-      };
-      {
-        it = {
-          name  = "__data_end";
-          gtype = GlobalType (I32Type, Immutable);
-          value = {
-            it = [
-              {it = Const {it = I32 4000l; at}; at}
-            ];
-            at
-          };
-        };
-        at
-      }
-    ];
-    exports = [
-      {
-        it = {
-          name  = name "__heap_base";
-          edesc = {it = GlobalExport {it = 0l; at}; at}
-        };
-        at
-      };
-      {
-        it = {
-          name  = name "__data_end";
-          edesc = {it = GlobalExport {it = 1l; at}; at}
-        };
-        at
-      };
-    ]; *)
     data = [
       {
         it = {
@@ -123,110 +79,6 @@ let env: module_ = {
         };
         at
       };
-      {
-        it = {
-          index = {it = 0l; at};
-          offset = {it = [
-            { it = Const {it = I32 16l; at}; at}
-          ]; at};
-          init = {
-            name = "ENTRYPOINT_TUPLE";
-            detail = [
-              Int32 0l; (* pointer to parameter info *)
-              Int32 0l  (* pointer to storage *)
-            ]
-          }
-        };
-        at
-      };
-      {
-        it = {
-          index = {it = 0l; at};
-          offset = {it = [
-            { it = Const {it = I32 24l; at}; at}
-          ]; at};
-          init = {
-            name = "STORAGE_FILE_STAT";
-            detail = [
-              Int64 0L; (* 0: device *)
-              Int64 0L; (* 8: inode *)
-              Int64 0L; (* 16: filetype *)
-              Int64 0L; (* 24: linkcount *)
-              Int64 0L; (* 32: filesize in bytes *)
-              Int64 0L; (* 40: timestamp - last date accessed *)
-              Int64 0L; (* 48: timestamp - last modification date *)
-              Int64 0L; (* 56: timestamp - Last file status change timestamp. *)
-            ]
-          }
-        };
-        at
-      };
-      {
-        it = {
-          index = { it = 0l; at };
-          offset = {
-            it = [
-              { it = Const {it = I32 88l; at}; at }
-            ];
-            at
-          };
-          init = {
-            name = "STORAGE_FD";
-            detail = [
-              Int32 0l
-            ]
-          }
-        };
-        at
-      };
-      {
-        it = {
-          index = {it = 0l; at};
-          offset = {it = [
-            { it = Const {it = I32 92l; at}; at}
-          ]; at};
-          init = {
-            name = "CONTRACT_RESULT";
-            detail = [
-              Int32 0l; (* pointer to operations *)
-              Int32 0l  (* pointer to modified storage *)
-            ]
-          }
-        };
-        at
-      };
-      {
-        it = {
-          index = {it = 0l; at};
-          offset = {it = [
-            { it = Const {it = I32 100l; at}; at}
-          ]; at};
-          init = {
-            name = "TESTX";
-            detail = [
-              String "Helloxx"
-            ]
-          }
-        };
-        at
-      };
-      {
-        it = {
-          index = {it = 0l; at};
-          offset = {it = [
-            { it = Const {it = I32 108l; at}; at}
-          ]; at};
-          init = {
-            name = "IOV";
-            detail = [
-              Symbol "TESTX";
-              Int32 8l
-            ]
-          }
-        };
-        at
-      }
-  
     ]; 
     types = [
       {
@@ -612,78 +464,6 @@ let env: module_ = {
       };
       {
         it = {
-          name = "ENTRYPOINT_TUPLE";
-          details = Data {
-            index = {it = 4l; at};
-            relocation_offset =  {it = 0l; at};
-            size = { it = 8l; at};
-            offset = { it = 16l; at}
-          }
-        };
-        at
-      };
-      {
-        it = {
-          name = "STORAGE_FILE_STAT";
-          details = Data {
-            index = {it = 5l; at};
-            relocation_offset =  {it = 0l; at};
-            size = { it = 64l; at};
-            offset = { it = 24l; at}
-          }
-        };
-        at
-      };
-      {
-        it = {
-          name = "STORAGE_FD";
-          details = Data {
-            index = {it = 6l; at};
-            relocation_offset =  {it = 0l; at};
-            size = { it = 4l; at};
-            offset = { it = 28l; at}
-          }
-        };
-        at
-      };
-      {
-        it = {
-          name = "CONTRACT_RESULT";
-          details = Data {
-            index = {it = 7l; at};
-            relocation_offset =  {it = 0l; at};
-            size = { it = 8l; at};
-            offset = { it = 92l; at}
-          }
-        };
-        at
-      };
-      {
-        it = {
-          name = "TESTX";
-          details = Data {
-            index = {it = 8l; at};
-            relocation_offset =  {it = 0l; at};
-            size = { it = 8l; at};
-            offset = { it = 100l; at}
-          }
-        };
-        at
-      };
-      {
-        it = {
-          name = "IOV";
-          details = Data {
-            index = {it = 9l; at};
-            relocation_offset =  {it = 0l; at};
-            size = { it = 8l; at};
-            offset = { it = 108l; at}
-          }
-        };
-        at
-      };
-      {
-        it = {
           name    = "malloc";
           details = Import ([I32Type], [I32Type])
         };
@@ -806,5 +586,4 @@ let env: module_ = {
   at
 }
 
-let _offset = 96l (* this needs to be made more robust *)
-let offset = 112l (* for the testing... *)
+let offset = 12l (* TODO: this needs to be made more robust *)

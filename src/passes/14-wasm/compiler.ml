@@ -488,56 +488,8 @@ typedef struct __wasi_ciovec_t {
 let compile ~raise : I.expression -> string -> string -> W.Ast.module_ = fun e filename entrypoint -> 
   let w = Default_env.env in
   let at = location_to_region e.location in
-  let offset = Default_env.offset in
-  let b = Buffer.create 20 in
-  Buffer.add_string b "storage.byte";
-  let length = Bytes.length (Buffer.contents_bytes b) in
-  let data = [
-    S.{
-      it = A.{
-        index = {it = 0l; at};
-        offset = {it = [
-          { it = Const {it = I32 offset; at}; at}
-        ]; at};
-        init = {
-          name = "STORAGE_FILE_NAME";
-          detail = [
-            String "storage.byte"
-          ]
-        }
-      };
-      at
-    };
-  ]
-  in
-  let symbols = [
-    S.{
-      it = A.{
-        name = "STORAGE_FILE_NAME";
-        details = Data {
-          index = {it = 0l; at};
-          relocation_offset =  {it = 0l; at};
-          size = { it = Int32.of_int_exn length; at};
-          offset = { it = offset; at}
-        }
-      };
-      at
-    }
-  ]
-  in
-  let w = {
-    w with it = {
-      w.it with 
-        data    = w.it.data @ data;
-        symbols = w.it.symbols @ symbols;
-    }
-  }
-  in
-  
-  let pos = Int32.(offset + Int32.of_int_exn length) in
-  global_offset := pos; 
-  
+  global_offset := Default_env.offset; 
   S.{ 
     it = toplevel_bindings ~raise e w.it;
-    at = w.at
+    at
   }

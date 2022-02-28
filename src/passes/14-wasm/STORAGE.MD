@@ -34,4 +34,4 @@ Constructor
 
 When storing data structures, pointers should be changed to an easy to deserialize format. Ideally something as offset + pointer in serialized format. 
 
-Can we generate code to loop over the storage data structure?
+Can we generate code to loop over the storage data structure? Type info perhaps?!
