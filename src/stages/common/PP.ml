@@ -15,6 +15,12 @@ let option_no_mutation ppf no_mutation =
   else
     fprintf ppf ""
 
+let option_on_test ppf on_test =
+  if on_test then
+    fprintf ppf "[@@on_test]"
+  else
+    fprintf ppf ""
+
 let option_view ppf no_mutation =
   if no_mutation then
     fprintf ppf "[@@view]"

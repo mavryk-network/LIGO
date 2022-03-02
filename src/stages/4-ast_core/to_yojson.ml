@@ -136,12 +136,13 @@ and type_in {type_binder;rhs;let_result} =
   ]
 
 
-and attribute {inline;no_mutation;public;view} =
+and attribute {inline;no_mutation;public;view;on_test} =
   `Assoc [
     ("inline", `Bool inline);
     ("no_mutation", `Bool no_mutation);
     ("public", `Bool public);
     ("view", `Bool view);
+    ("on_test", `Bool on_test);
   ]
 
 and type_attribute ({public}: type_attribute) =

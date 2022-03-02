@@ -15,6 +15,7 @@ type known_attributes = {
   no_mutation: bool;
   view : bool;
   public: bool;
+  on_test: bool;
 }
 
 type expression_variable = Var.t [@@deriving yojson, equal, compare]

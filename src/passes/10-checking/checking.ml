@@ -697,7 +697,7 @@ and type_expression' ~raise ~options ?(args = []) ?last : context -> ?tv_opt:O.t
       let matcheevar = I.Var.fresh () in
       let case_exp = Pattern_matching.compile_matching ~raise ~err_loc:e.location ~type_f:(type_expression' ~options ~args:[] ?last:None) ~body_t:(tv_opt) matcheevar eqs in
       let case_exp = { case_exp with location = e.location } in
-      let x = O.E_let_in { let_binder = matcheevar ; rhs = matchee' ; let_result = case_exp ; attr = {inline = false; no_mutation = false; public = true ; view= false } } in
+      let x = O.E_let_in { let_binder = matcheevar ; rhs = matchee' ; let_result = case_exp ; attr = {inline = false; no_mutation = false; public = true ; view= false ; on_test = false } } in
       return x case_exp.type_expression
   )
   | E_let_in {let_binder = {var ; ascr = None ; attributes=_} ; rhs ; let_result; attr } ->
@@ -1006,11 +1006,11 @@ function
   Declaration_type {type_binder; type_expr;type_attr={public}} ->
   let type_expr = untype_type_expression type_expr in
   return @@ Declaration_type {type_binder; type_expr;type_attr={public}}
-| Declaration_constant {binder;expr;attr={inline;no_mutation;public;view}} ->
+| Declaration_constant {binder;expr;attr={inline;no_mutation;public;view;on_test}} ->
   let ty = untype_type_expression expr.type_expression in
   let var = binder in
   let expr = untype_expression expr in
-  return @@ Declaration_constant {binder={var;ascr=Some ty;attributes = Stage_common.Helpers.empty_attribute};expr;attr={inline;no_mutation;view;public}}
+  return @@ Declaration_constant {binder={var;ascr=Some ty;attributes = Stage_common.Helpers.empty_attribute};expr;attr={inline;no_mutation;view;public;on_test}}
 | Declaration_module {module_binder;module_;module_attr={public}} ->
   let module_ = untype_module module_ in
   return @@ Declaration_module {module_binder;module_; module_attr={public}}

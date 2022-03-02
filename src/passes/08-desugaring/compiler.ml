@@ -35,9 +35,11 @@ let get_layout : (string list) -> O.layout option = fun attributes ->
 
 let is_inline attr = String.equal "inline" attr
 let is_no_mutation attr = String.equal "no_mutation" attr
+let is_on_test attr = String.equal "on_test" attr
 let is_view attr = String.equal "view" attr
 let get_inline : (string list) -> bool = List.exists ~f:is_inline
 let get_no_mutation : (string list) -> bool = List.exists ~f:is_no_mutation
+let get_on_test : (string list) -> bool = List.exists ~f:is_on_test
 let get_view : (string list) -> bool = List.exists ~f:is_view
 
 let get_public : (string list) -> bool = fun attr -> not (List.mem attr "private" ~equal:String.equal)
@@ -129,9 +131,10 @@ let rec compile_expression : I.expression -> O.expression =
       let inline = get_inline attributes in
       let no_mutation = get_no_mutation attributes in
       let public = get_public attributes in
+      let on_test = get_on_test attributes in
       (* TODO: attribute 'view' will be ignored here, warning ? *)
       let view = get_view attributes in
-      return @@ O.E_let_in {let_binder;attr = {inline; no_mutation; view; public};rhs;let_result}
+      return @@ O.E_let_in {let_binder;attr = {inline; no_mutation; view; public;on_test};rhs;let_result}
     | I.E_type_in {type_binder; rhs; let_result} ->
       let rhs = self_type rhs in
       let let_result = self let_result in
@@ -258,7 +261,7 @@ let rec compile_expression : I.expression -> O.expression =
       let expr1 = self expr1 in
       let expr2 = self expr2 in
       let let_binder : _ O.binder = {var = Stage_common.Var.fresh ~name:"()" () ; ascr = Some (O.t_unit ()) ; attributes = Stage_common.Helpers.empty_attribute} in
-      return @@ O.E_let_in {let_binder; rhs=expr1;let_result=expr2; attr = {inline=false; no_mutation=false; view = false ; public=true}}
+      return @@ O.E_let_in {let_binder; rhs=expr1;let_result=expr2; attr = {inline=false; no_mutation=false; view = false ; public=true;on_test = false}}
     | I.E_skip -> O.e_unit ~loc:sugar.location ~sugar ()
     | I.E_tuple t ->
       let aux (i,acc) el =
@@ -283,7 +286,8 @@ and compile_declaration : I.declaration -> O.declaration =
     let no_mutation = get_no_mutation attr in
     let public = get_public attr in
     let view = get_view attr in
-    return @@ O.Declaration_constant {binder; attr={inline;no_mutation;view;public}; expr}
+    let on_test = get_on_test attr in
+    return @@ O.Declaration_constant {binder; attr={inline;no_mutation;view;public;on_test}; expr}
   | I.Declaration_module {module_binder;module_;module_attr} ->
     let module_ = compile_module module_ in
     let public = get_public module_attr in

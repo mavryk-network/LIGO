@@ -81,7 +81,7 @@ let rec decompile_expression : O.expression -> I.expression =
     | O.E_recursive recs ->
       let recs = recursive self self_type recs in
       return @@ I.E_recursive recs
-    | O.E_let_in {let_binder = {var; ascr;attributes=_};attr={inline=false;no_mutation=_;view=_;public=_};rhs=expr1;let_result=expr2}
+    | O.E_let_in {let_binder = {var; ascr;attributes=_};attr={inline=false;no_mutation=_;view=_;public=_;on_test=_};rhs=expr1;let_result=expr2}
       when O.Var.is_name var "()"
            && Stdlib.(=) ascr (Some (O.t_unit ())) ->
       let expr1 = self expr1 in
@@ -161,7 +161,7 @@ and decompile_declaration : O.declaration -> I.declaration =
   | O.Declaration_type {type_binder; type_expr; type_attr=_} ->
     let type_expr = decompile_type_expression type_expr in
     return @@ I.Declaration_type {type_binder; type_expr; type_attr=[]}
-  | O.Declaration_constant {binder=b; attr={inline;no_mutation=_;public=_;view=_}; expr} ->
+  | O.Declaration_constant {binder=b; attr={inline;no_mutation=_;public=_;view=_;on_test=_}; expr} ->
     let binder = binder decompile_type_expression b in
     let expr = decompile_expression expr in
     let attr = if inline then ["inline"] else [] in

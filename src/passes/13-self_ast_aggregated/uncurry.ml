@@ -287,7 +287,7 @@ let uncurry_expression ~raise (expr : expression) : expression =
                                               location = Location.generated } } in
               (* Apply function to tuple: f(x1', x2', ..., xn') *)
               let result = e_a_application (e_a_variable fun_name fun_type) args ret_type in
-              let attr = { inline = true ; no_mutation = false ; view = false; public = true } in
+              let attr = { inline = true ; no_mutation = false ; view = false; public = true ; on_test = false } in
               (* Construct the let *)
               let result = e_a_let_in fun_name rhs result attr in
               let f (binder, t) result =

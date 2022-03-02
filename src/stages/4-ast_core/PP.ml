@@ -129,14 +129,15 @@ and declaration ppf (d : declaration) =
   match d with
   | Declaration_type     {type_binder;type_expr;type_attr={public}} ->
     fprintf ppf "@[<2>type %a =@ %a%a@]" type_variable type_binder type_expression type_expr option_public public
-  | Declaration_constant { binder=b ; attr = { inline ; no_mutation ; view ; public } ; expr} ->
-      fprintf ppf "@[<2>const %a =@ %a%a%a%a%a@]"
+  | Declaration_constant { binder=b ; attr = { inline ; no_mutation ; view ; public ; on_test } ; expr} ->
+      fprintf ppf "@[<2>const %a =@ %a%a%a%a%a%a@]"
         (binder type_expression) b
         expression expr
         option_inline inline
         option_no_mutation no_mutation
         option_view view
         option_public public
+        option_on_test on_test
   | Declaration_module {module_binder;module_=m;module_attr={public}} ->
       fprintf ppf "module %a = struct @; @[%a@]@;end %a"
         module_variable module_binder
