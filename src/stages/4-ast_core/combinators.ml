@@ -29,20 +29,20 @@ type type_content = [%import: Types.type_content]
     } ]
 
 let t_constant ?loc ?sugar type_operator arguments : type_expression =
-  make_t ?loc ?sugar (T_app {type_operator=Var.of_input_var type_operator;arguments})
+  make_t ?loc ?sugar (T_app {type_operator=Var.of_input_var (Stage_common.Constant.to_string type_operator);arguments})
 let t_abstraction ?loc ?sugar ty_binder kind type_ =
   make_t ?loc ?sugar (T_abstraction {ty_binder ; kind ; type_})
 let t_for_all ?loc ?sugar ty_binder kind type_ =
   make_t ?loc ?sugar (T_for_all {ty_binder ; kind ; type_})
 
 (* TODO?: X_name here should be replaced by X_injection *)
-let t__type_ ?loc ?sugar () : type_expression = t_constant ?loc ?sugar _type__name []
+let t__type_ ?loc ?sugar () : type_expression = t_constant ?loc ?sugar _type_ []
 [@@map (_type_, ("signature","chain_id", "string", "bytes", "key", "key_hash", "int", "address", "operation", "nat", "tez", "timestamp", "unit", "bls12_381_g1", "bls12_381_g2", "bls12_381_fr", "never", "mutation", "failure", "pvss_key", "baker_hash", "chest_key", "chest"))]
 
-let t__type_ ?loc ?sugar t : type_expression = t_constant ?loc ?sugar _type__name [t]
+let t__type_ ?loc ?sugar t : type_expression = t_constant ?loc ?sugar _type_ [t]
 [@@map (_type_, ("option", "list", "set", "contract", "ticket"))]
 
-let t__type_ ?loc ?sugar t t' : type_expression = t_constant ?loc ?sugar _type__name [t; t']
+let t__type_ ?loc ?sugar t t' : type_expression = t_constant ?loc ?sugar _type_ [t; t']
 [@@map (_type_, ("map", "big_map", "map_or_big_map", "typed_address"))]
 
 let t_mutez = t_tez
@@ -285,90 +285,3 @@ let extract_map : expression -> (expression * expression) list option = fun e ->
     | _ -> [None]
   in
   Option.all @@ aux e
-
-let make_c_constructor_simpl ?(reason_constr_simpl="") id_constructor_simpl original_id tv c_tag tv_list = {
-  reason_constr_simpl ;
-  id_constructor_simpl = ConstraintIdentifier.T (Int64.of_int id_constructor_simpl) ;
-  original_id = Option.map ~f:(fun i -> ConstraintIdentifier.T (Int64.of_int i)) original_id;
-  tv ;
-  c_tag;
-  tv_list
-}
-
-let make_c_row_simpl ?(reason_row_simpl="") id_row_simpl original_id tv r_tag tv_map_as_lst : c_row_simpl = {
-  reason_row_simpl ;
-  id_row_simpl = ConstraintIdentifier.T (Int64.of_int id_row_simpl) ;
-  original_id = Option.map ~f:(fun i -> ConstraintIdentifier.T (Int64.of_int i)) original_id;
-  tv;
-  r_tag;
-  tv_map = LMap.of_list @@ List.mapi ~f:(fun i (k,v) -> (k,{associated_variable=v;michelson_annotation=None;decl_pos=i})) tv_map_as_lst ;
-}
-
-
-(* TODO: remove this () argument, it is just here to make sure that
-   the ~bound and ~constraints arguments are given (while adding the
-   fields to the record, we need to make sure they're supplied
-   everywhere) *)
-let make_c_typeclass_simpl ?(reason_typeclass_simpl="") ~bound ~constraints () id_typeclass_simpl original_id args tc : c_typeclass_simpl =
-  {
-    tc_bound = bound;
-    tc_constraints = constraints;
-    reason_typeclass_simpl ;
-    id_typeclass_simpl = ConstraintIdentifier.T (Int64.of_int id_typeclass_simpl) ;
-    original_id = Option.map ~f:(fun i -> ConstraintIdentifier.T (Int64.of_int i)) original_id;
-    tc ;
-    args ;
-  }
-
-let make_constructor_or ?(reason_constr_simpl = "") id_constructor_simpl original_id tv c_tag tv_list =
-  `Constructor (make_c_constructor_simpl ~reason_constr_simpl id_constructor_simpl original_id tv c_tag tv_list)
-
-let make_row_or ?(reason_row_simpl = "") id_row_simpl original_id tv r_tag tv_map_as_lst : constructor_or_row =
-  `Row (make_c_row_simpl ~reason_row_simpl id_row_simpl original_id tv r_tag tv_map_as_lst)
-
-let make_alias ?(reason_alias_simpl="") a b :  type_constraint_simpl = SC_Alias {
-  reason_alias_simpl ;
-  a ;
-  b ;
-}
-
-let make_sc_alias ?(reason_alias_simpl="") a b : type_constraint_simpl =
-  SC_Alias {
-    reason_alias_simpl ;
-    a ;
-    b ;
-  }
-let make_sc_constructor ?(reason_constr_simpl="") id_constructor_simpl original_id tv c_tag tv_list : type_constraint_simpl =
-  SC_Constructor (make_c_constructor_simpl ~reason_constr_simpl id_constructor_simpl original_id tv c_tag tv_list)
-let make_sc_row ?(reason_row_simpl="") id_row_simpl original_id tv r_tag tv_map_as_lst : type_constraint_simpl =
-  SC_Row (make_c_row_simpl ~reason_row_simpl id_row_simpl original_id tv r_tag tv_map_as_lst)
-(* TODO: remove this () argument, it is just here to make sure that
-   the ~bound and ~constraints arguments are given (while adding the
-   fields to the record, we need to make sure they're supplied
-   everywhere) *)
-let make_sc_typeclass ?(reason_typeclass_simpl="") ~bound ~constraints () (tc : typeclass) (args : type_variable list) =
-  SC_Typeclass {
-    tc_bound = bound;
-    tc_constraints = constraints;
-    reason_typeclass_simpl ;
-    id_typeclass_simpl = ConstraintIdentifier.fresh () ;
-    original_id = None ;
-    tc ;
-    args ;
-  }
-let make_sc_poly ?(reason_poly_simpl="") (tv:type_variable) (forall:p_forall) =
-  SC_Poly {
-    reason_poly_simpl ;
-    id_poly_simpl = ConstraintIdentifier.fresh () ;
-    original_id = None ;
-    tv ;
-    forall ;
-  }
-let make_sc_access_label ?(reason_access_label_simpl="") (tv:type_variable) ~(record_type:type_variable) (label:label) =
-  SC_Access_label {
-    reason_access_label_simpl ;
-    id_access_label_simpl = ConstraintIdentifier.fresh () ;
-    tv ;
-    record_type ;
-    label ;
-  }
