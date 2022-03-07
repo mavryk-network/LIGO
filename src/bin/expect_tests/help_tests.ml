@@ -12,7 +12,7 @@ let%expect_test _ =
   (src/command.ml.Exit_called (status 1))
   Raised at Core_kernel__Command.exit in file "src/command.ml", line 23, characters 34-64
   Called from Core_kernel__Command.Exn.handle_uncaught_and_exit in file "src/command.ml", line 32, characters 12-16
-  Called from Cli.run in file "src/bin/cli.ml", line 716, characters 2-49
+  Called from Cli.run in file "src/bin/cli.ml", line 727, characters 2-49
   Called from Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 25, characters 18-31
   Called from Cli_expect_tests__Help_tests.(fun) in file "src/bin/expect_tests/help_tests.ml", line 5, characters 2-18
   Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
@@ -71,10 +71,14 @@ let%expect_test _ =
 
       ligo compile contract SOURCE_FILE
 
-    This sub-command compiles a contract to Michelson code. It expects a source file and an entrypoint function that has the type of a contract: "parameter * storage -> operations list * storage".
+    This sub-command compiles a contract to Michelson. It expects a source file and an entrypoint function that has
+                      the type of a contract:
+                      "parameter * storage -> operations list * storage".
 
     === flags ===
 
+      [--backend Compile]                 the contract to `michelson`(default) or
+                                          `wasm`.
       [--constants CONSTANTS]             A list of global constants that will be
                                           assumed in the context, separated by ','
                                           (alias: -c)
