@@ -1,6 +1,6 @@
 let y_mismo = (b : bool) => switch (b, b) {
   | (true, true) => true
-  | (true, false) => true
-  | (false, true) => true
+  | (true, false) => false
+  | (false, true) => false
   | (false, false) => false
 };
