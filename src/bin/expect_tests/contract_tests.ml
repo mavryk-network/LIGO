@@ -2460,3 +2460,12 @@ let%expect_test _ =
   run_ligo_good [ "compile" ; "expression" ; "cameligo" ; "y_mismo(true)" ; "--init-file" ; contract "pattern_ct_bool.religo" ] ;
   [%expect{|
 True |}]
+
+let%expect_test _ =
+  run_ligo_bad [ "compile" ; "expression" ; "reasonligo" ; "1" ; "--init-file" ; bad_contract "pattern_ct_bool.religo" ] ;
+  [%expect{|
+    File "../../test/contracts/negative/pattern_ct_bool.religo", line 1, characters 11-15:
+      1 | let foo = (true : bool) => true
+
+    Invalid pattern matching.
+    Can't match on values. |}]
