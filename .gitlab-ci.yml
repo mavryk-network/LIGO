@@ -13,16 +13,47 @@ stages:
   - ide-deploy                      # deploy web IDE
   - release                         # Manage branch matching ^release/*
 
-include: 
+
+include:
+  # jobs for managing process around changelog generation
+  - '/.ci/.gitlab-ci-changelog.yml'
   # jobs for building and testing LSP
   - '/tools/lsp/.gitlab-ci.yml'
   # jobs for managing process around release
-  - '/.ci/.gitlab-ci.yml'
+  - '/.ci/.gitlab-ci-release.yml'
+
 
 .nix:
   before_script:
     - find "$CI_PROJECT_DIR" -path "$CI_PROJECT_DIR/.git" -prune -o "(" -type d -a -not -perm -u=w ")" -exec chmod --verbose u+w {} ";"
     - export COMMIT_DATE="$(git show --no-patch --format=%ci)"
+
+initialize-ssh:
+  stage: pretooling
+  only:
+    # prefixed by release /^release/.*/
+    - /^release/.*/
+    - tags
+  script:
+      - chmod 766 ~/.ssh
+      - eval `ssh-agent -s`
+      - cat $SSH_PRIVATE_KEY_TOOLKIT  > ~/.ssh/id_rsa
+      - chmod 600 ~/.ssh/id_rsa
+      - ssh-keyscan gitlab.com  >> ~/.ssh/known_hosts
+      - chmod 644 ~/.ssh/known_hosts
+
+initialize-git:
+  stage: pretooling
+  dependencies:
+    - initialize-ssh
+  only:
+    # prefixed by release /^release/.*/
+    - /^release/.*/
+    - tags
+  script:
+      - git config --global user.name 'InfraBot'
+      - git config --global user.email 'infra@marigold.dev'
+
 
 changelog:
   stage: pretooling
@@ -33,7 +64,6 @@ changelog:
     - /^.*-run-dev$/
     - /[0-9]+\.[0-9]+\.[0-9]+/
   script:
-    - echo $CI_WORKFLOW
     - nix-build nix -A ligo-changelog
     - cp -L result/* .
   artifacts:
@@ -215,7 +245,6 @@ release:
       - ligo.deb
   script:
     - release-cli create --name "Release $CI_COMMIT_TAG" --description "$(cat release-notes.md)" --assets-links-name "Static Linux binary" --assets-links-url "$CI_PROJECT_URL/-/jobs/$CI_JOB_ID/artifacts/raw/ligo" --assets-links-name "deb package" --assets-links-url "$CI_PROJECT_URL/-/jobs/$CI_JOB_ID/artifacts/raw/ligo.deb"
-      # git cli initialized in .ci/gitlab-ci.yml. Update release branch metadata
     - git remote rm origin && git remote add origin "git@gitlab.com:ligolang/ligo.git" 
     - git fetch
     - git checkout release/$CI_COMMIT_TAG  
