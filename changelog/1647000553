@@ -1,0 +1,4 @@
+author: er433
+merge_request: '1619'
+title: 'Fix: true/false constants in patterns'
+type: fixed
