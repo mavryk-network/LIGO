@@ -22,6 +22,8 @@ let get_value : 'a Raw.reg -> 'a = fun x -> x.value
 
 let build_ins = ["Operator";"Test";"Tezos";"Crypto";"Bytes";"List";"Set";"Map";"Big_map";"Bitwise";"String";"Layout";"Option"]
   @ ["Michelson"]
+let is_ct (v : CST.var_pattern Region.reg) = List.mem ~equal:String.equal ["true" ; "false"] v.value.variable.value
+let ct_to_label s = String.capitalize s
 
 open Predefined.Tree_abstraction.Cameligo
 
@@ -524,6 +526,9 @@ let rec compile_expression ~raise : CST.expr -> AST.expr  = fun e ->
 and conv ~raise : CST.pattern -> AST.ty_expr AST.pattern =
   fun p ->
   match unepar p with
+  | CST.PVar x when is_ct x ->
+    let (pvar, loc) = r_split x in
+    Location.wrap ~loc @@ P_variant (Label (ct_to_label pvar.variable.value), Location.wrap ~loc:loc P_unit)
   | CST.PVar {value={variable; attributes}; _} ->
     let (var,loc) = r_split variable in
     let attributes = attributes |> List.map ~f:(fun x -> x.Region.value) |>
@@ -650,6 +655,7 @@ and compile_let_binding ~raise ?kwd_rec attributes binding =
   | CST.PPar par ->
     let par, _ = r_split par in
     aux par.inside
+  | PVar x when is_ct x -> raise.raise @@ unsupported_pattern_type @@ binders
   | PVar {value={variable=name;attributes=var_attributes}; _} ->
      (*function or const *)
     let var_attributes = var_attributes |> List.map ~f:(fun x -> x.Region.value) |>
@@ -670,7 +676,7 @@ and compile_let_binding ~raise ?kwd_rec attributes binding =
       List.fold_right fv ~init:t ~f:(fun v t ->
         t_for_all (v) Type t)) in
     return_1 @@ ({var=fun_binder;ascr=lhs_type;attributes = var_attributes}, attributes, expr)
-  | _ ->raise.raise @@ unsupported_pattern_type @@ binders
+  | _ -> raise.raise @@ unsupported_pattern_type @@ binders
   in aux binders
 
 and compile_parameter ~raise : CST.pattern -> _ binder * (_ -> _) * type_variable list =
@@ -679,7 +685,8 @@ and compile_parameter ~raise : CST.pattern -> _ binder * (_ -> _) * type_variabl
     ({var; ascr; attributes}, fun_, fv) in
   let return_1 ?ascr ?(attributes = Stage_common.Helpers.const_attribute) ?fv var = return ?ascr ~attributes ?fv (fun e -> e) var in
   match pattern with
-    PConstr _ ->raise.raise @@ unsupported_pattern_type pattern
+    PVar x when is_ct x -> raise.raise @@ unsupported_pattern_type pattern
+  | PConstr _ -> raise.raise @@ unsupported_pattern_type pattern
   | PUnit the_unit  ->
     let loc = Location.lift the_unit.region in
     return_1 ~ascr:(t_unit ~loc ()) @@ ValueVar.fresh ~loc ()
