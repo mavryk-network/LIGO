@@ -2446,3 +2446,8 @@ let%expect_test _ =
   run_ligo_good [ "compile" ; "expression" ; "cameligo" ; "y_mismo true" ; "--init-file" ; contract "pattern_ct_bool.mligo" ] ;
   [%expect{|
 True |}]
+
+let%expect_test _ =
+  run_ligo_good [ "compile" ; "expression" ; "cameligo" ; "y_mismo(true)" ; "--init-file" ; contract "pattern_ct_bool.religo" ] ;
+  [%expect{|
+True |}]
