@@ -535,15 +535,20 @@ let rec compile_expression ~raise : CST.expr -> AST.expr = fun e ->
       in
       aux hd @@ tl
 
+and is_bool_ct (v : CST.var_pattern Region.reg) = List.mem ~equal:String.equal ["true" ; "false"] v.value.variable.value
+
 and pattern_is_matching : CST.pattern -> bool =
   fun p -> match unepar p with
-    CST.PVar _  -> false
   | CST.PUnit _ | CST.PInt _ | CST.PNat _ | CST.PBytes _ | CST.PString _ | CST.PVerbatim _
   | CST.PPar _ | CST.PTyped _
   | CST.PTuple _ | CST.PRecord _ | CST.PConstr _ | CST.PList _ -> true
+  | CST.PVar v  -> is_bool_ct v
 and conv ~raise : CST.pattern -> AST.ty_expr AST.pattern =
   fun p ->
   match unepar p with
+  | CST.PVar x when is_bool_ct x ->
+    let (pvar, loc) = r_split x in
+    Location.wrap ~loc @@ P_variant (Label (String.capitalize pvar.variable.value), Location.wrap ~loc:loc P_unit)
   | CST.PVar x ->
     let (pvar,loc) = r_split x in
     let attributes = Tree_abstraction_shared.Helpers.binder_attributes_of_strings (compile_attributes pvar.attributes) in
@@ -658,6 +663,7 @@ and compile_parameter ~raise : CST.pattern -> _ binder * (_ -> _) =
   let return_1 ?ascr ?(attributes = Stage_common.Helpers.const_attribute) var = return ?ascr ~attributes (fun e -> e) var in
   match pattern with
     PConstr _ -> raise.raise @@ unsupported_pattern_type [pattern]
+  | PVar x when is_bool_ct x -> raise.raise @@ unsupported_pattern_type [pattern]
   | PUnit the_unit  ->
     let loc = Location.lift the_unit.region in
     return_1 ~ascr:(t_unit ~loc ()) @@ ValueVar.fresh ~loc ()
