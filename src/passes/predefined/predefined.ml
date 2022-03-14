@@ -427,16 +427,8 @@ module Tree_abstraction = struct
       let some_deprecated = some_deprecated x in
       match x with
       (* Tezos module (ex-Michelson) *)
-      | "chain_id"               -> some_deprecated C_CHAIN_ID            (* Deprecated *)
-      | "get_chain_id"           -> some_deprecated C_CHAIN_ID            (* Deprecated *)
-      | "balance"                -> some_deprecated C_BALANCE             (* Deprecated *)
-      | "now"                    -> some_deprecated C_NOW                 (* Deprecated *)
-      | "amount"                 -> some_deprecated C_AMOUNT              (* Deprecated *)
-      | "sender"                 -> some_deprecated C_SENDER              (* Deprecated *)
       | "address"                -> some_deprecated C_ADDRESS             (* Deprecated *)
-      | "self_address"           -> some_deprecated C_SELF_ADDRESS        (* Deprecated *)
       | "implicit_account"       -> some_deprecated C_IMPLICIT_ACCOUNT    (* Deprecated *)
-      | "source"                 -> some_deprecated C_SOURCE              (* Deprecated *)
       | "failwith"               -> some_const      C_FAILWITH
       | "transaction"            -> some_deprecated C_CALL                    (* Deprecated *)
       | "set_delegate"           -> some_deprecated C_SET_DELEGATE            (* Deprecated *)
@@ -558,20 +550,14 @@ module Tree_abstraction = struct
       match x with
       (* Tezos (ex-Michelson, ex-Current, ex-Operation) *)
 
-      | "chain_id"                   -> some_deprecated C_CHAIN_ID            (* Deprecated *)
       | "Current.balance"            -> some_deprecated C_BALANCE             (* Deprecated *)
-      | "balance"                    -> some_deprecated C_BALANCE             (* Deprecated *)
       | "Current.time"               -> some_deprecated C_NOW                 (* Deprecated *)
-      | "time"                       -> some_deprecated C_NOW                 (* Deprecated *)
       | "Current.amount"             -> some_deprecated C_AMOUNT              (* Deprecated *)
-      | "amount"                     -> some_deprecated C_AMOUNT              (* Deprecated *)
       | "Current.sender"             -> some_deprecated C_SENDER              (* Deprecated *)
-      | "sender"                     -> some_deprecated C_SENDER              (* Deprecated *)
       | "Current.address"            -> some_deprecated C_ADDRESS             (* Deprecated *)
       | "Current.self_address"       -> some_deprecated C_SELF_ADDRESS        (* Deprecated *)
       | "Current.implicit_account"   -> some_deprecated C_IMPLICIT_ACCOUNT    (* Deprecated *)
       | "Current.source"             -> some_deprecated C_SOURCE              (* Deprecated *)
-      | "source"                     -> some_deprecated C_SOURCE              (* Deprecated *)
       | "Current.failwith"           -> some_deprecated C_FAILWITH            (* Deprecated *)
       | "failwith"                   -> some_const C_FAILWITH
 
@@ -651,20 +637,14 @@ module Tree_abstraction = struct
       match x with
       (* Tezos (ex-Michelson, ex-Current, ex-Operation) *)
 
-      | "chain_id"                   -> some_deprecated C_CHAIN_ID            (* Deprecated *)
       | "Current.balance"            -> some_deprecated C_BALANCE             (* Deprecated *)
-      | "balance"                    -> some_deprecated C_BALANCE             (* Deprecated *)
       | "Current.time"               -> some_deprecated C_NOW                 (* Deprecated *)
-      | "time"                       -> some_deprecated C_NOW                 (* Deprecated *)
       | "Current.amount"             -> some_deprecated C_AMOUNT              (* Deprecated *)
-      | "amount"                     -> some_deprecated C_AMOUNT              (* Deprecated *)
       | "Current.sender"             -> some_deprecated C_SENDER              (* Deprecated *)
-      | "sender"                     -> some_deprecated C_SENDER              (* Deprecated *)
       | "Current.address"            -> some_deprecated C_ADDRESS             (* Deprecated *)
       | "Current.self_address"       -> some_deprecated C_SELF_ADDRESS        (* Deprecated *)
       | "Current.implicit_account"   -> some_deprecated C_IMPLICIT_ACCOUNT    (* Deprecated *)
       | "Current.source"             -> some_deprecated C_SOURCE              (* Deprecated *)
-      | "source"                     -> some_deprecated C_SOURCE              (* Deprecated *)
       | "Current.failwith"           -> some_deprecated C_FAILWITH            (* Deprecated *)
       | "failwith"                   -> some_const C_FAILWITH
 
