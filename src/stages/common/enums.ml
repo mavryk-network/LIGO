@@ -80,9 +80,6 @@ type constant' =
   | C_UPDATE
   (* Loops *)
   | C_ITER
-  | C_FOLD_WHILE
-  | C_FOLD_CONTINUE [@print "CONTINUE"]
-  | C_FOLD_STOP [@print "STOP"]
   | C_LOOP_LEFT
   | C_LOOP_CONTINUE
   | C_LOOP_STOP
@@ -199,7 +196,6 @@ type constant' =
   | C_TEST_GET_STORAGE [@only_interpreter]
   | C_TEST_GET_STORAGE_OF_ADDRESS [@only_interpreter]
   | C_TEST_GET_BALANCE [@only_interpreter]
-  | C_TEST_SET_NOW [@only_interpreter]
   | C_TEST_SET_SOURCE [@only_interpreter]
   | C_TEST_SET_BAKER [@only_interpreter]
   | C_TEST_EXTERNAL_CALL_TO_CONTRACT [@only_interpreter]
@@ -234,6 +230,9 @@ type constant' =
   | C_TEST_RANDOM [@only_interpreter]
   | C_TEST_ADD_ACCOUNT [@only_interpreter]
   | C_TEST_NEW_ACCOUNT [@only_interpreter]
+  | C_TEST_BAKER_ACCOUNT [@only_interpreter]
+  | C_TEST_REGISTER_DELEGATE [@only_interpreter]
+  | C_TEST_BAKE_UNTIL_N_CYCLE_END [@only_interpreter]
   | C_TEST_GET_VOTING_POWER [@only_interpreter]
   | C_TEST_GET_TOTAL_VOTING_POWER [@only_interpreter]
   (* New with EDO*)
@@ -252,6 +251,10 @@ type constant' =
   | C_GLOBAL_CONSTANT
   (* JsLIGO *)
   | C_POLYMORPHIC_ADD [@print "C_POLYMORPHIC_ADD"]
+  (* New with Ithaca *)
+  | C_POLYMORPHIC_SUB [@print "C_POLYMORPHIC_SUB"]
+  | C_SUB_MUTEZ
+  | C_OPTION_MAP
 [@@deriving enum, yojson, print_constant, only_interpreter_tags ]
 
 type deprecated = {
