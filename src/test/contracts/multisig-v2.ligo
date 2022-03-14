@@ -69,7 +69,7 @@ function send (const param : send_pt; var s : storage) : return is
     | None ->
         block {
           // the message has never been received before
-          s.proposal_counters[sender] :=
+          s.proposal_counters[Tezos.sender] :=
              get_force (Tezos.sender, s.proposal_counters) + 1n;
              new_store := set [Tezos.sender]
         }

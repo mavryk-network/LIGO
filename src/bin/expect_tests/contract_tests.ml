@@ -63,24 +63,8 @@ Expected: "parameter", but got: "storage". |}] ;
   ()
 
 let%expect_test _  =
-  run_ligo_good [ "compile" ; "storage" ; contract "timestamp.ligo" ; "now" ; "--now" ; "2042-01-01T00:00:00Z" ] ;
+  run_ligo_good [ "compile" ; "storage" ; contract "timestamp.ligo" ; "Tezos.now" ; "--now" ; "2042-01-01T00:00:00Z" ] ;
   [%expect {|
-    File "../../test/contracts/timestamp.ligo", line 3, characters 21-22:
-      2 |
-      3 | function main (const p : unit; const s : storage_) :
-      4 |   list (operation) * storage_ is ((nil: list (operation)), now)
-    :
-    Warning: unused variable "p".
-    Hint: replace it by "_p" to prevent this warning.
-
-    File "../../test/contracts/timestamp.ligo", line 3, characters 37-38:
-      2 |
-      3 | function main (const p : unit; const s : storage_) :
-      4 |   list (operation) * storage_ is ((nil: list (operation)), now)
-    :
-    Warning: unused variable "s".
-    Hint: replace it by "_s" to prevent this warning.
-
     "2042-01-01T00:00:29Z" |}]
 
 let%expect_test _ =
