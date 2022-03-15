@@ -6,9 +6,7 @@
     - MR_RAW_DESCRIPTION=$(nix-shell -p jq --run "jq \".description\" <<< ${MR_INFO}")
     - export MR_TYPE=$(sed  -e 's/.*type:\(breaking\|added\|fixed\|changed\|deprecated\|removed\|performance\|internal\|other\|none\).*/\L\1/I' <<< $MR_RAW_DESCRIPTION)
     - MD_DESC_SEPARATOR="Changelog details:\n"
-    - echo $MR_RAW_DESCRIPTION
     - export MR_DESC=$(sed -e 's/.*Changelog details:\\n\(.*\)/\1/' <<< $MR_RAW_DESCRIPTION)
-    - echo $MR_DESC
     
 add-changelog-entry:
   stage: pretooling
@@ -27,7 +25,7 @@ add-changelog-entry:
       changes:
           - changelog/*
       when: never
-    - if: ($CI_PIPELINE_SOURCE == "merge_request_event")
+    - if: ($CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TITLE !~ /Draft:/)
       when: always
 
 abort-MR-without-changelog:
@@ -45,4 +43,4 @@ abort-MR-without-changelog:
       changes:
           - changelog/*
       when: never
-    - if: ($CI_PIPELINE_SOURCE == "merge_request_event")
+    - if: ($CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TITLE !~ /Draft:/)
