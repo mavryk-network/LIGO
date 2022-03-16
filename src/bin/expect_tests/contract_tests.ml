@@ -8,7 +8,36 @@ let () = Unix.putenv ~key:"TERM" ~data:"dumb"
 
 let%expect_test _ =
   run_ligo_good [ "info" ; "measure-contract" ; contract "coase.ligo" ] ;
-  [%expect {| 1175 bytes |}] ;
+  [%expect {|
+    File "../../test/contracts/coase.ligo", line 117, characters 21-27:
+    116 |     cards[s.next_id] := record [
+    117 |       card_owner   = sender;
+    118 |       card_pattern = action.card_to_buy
+
+    Warning: constant sender is being deprecated soon. Consider using Tezos.sender instead.
+
+    File "../../test/contracts/coase.ligo", line 108, characters 15-21:
+    107 |       card_pattern.coefficient * (card_pattern.quantity + 1n);
+    108 |     if price > amount then failwith ("Not enough money") else skip;
+    109 |     // Increase quantity
+
+    Warning: constant amount is being deprecated soon. Consider using Tezos.amount instead.
+
+    File "../../test/contracts/coase.ligo", line 72, characters 27-33:
+     71 |       ];
+     72 |     if card.card_owner =/= sender
+     73 |     then failwith ("This card doesn't belong to you")
+
+    Warning: constant sender is being deprecated soon. Consider using Tezos.sender instead.
+
+    File "../../test/contracts/coase.ligo", line 56, characters 27-33:
+     55 |       ];
+     56 |     if card.card_owner =/= sender then
+     57 |       failwith ("This card doesn't belong to you")
+
+    Warning: constant sender is being deprecated soon. Consider using Tezos.sender instead.
+
+    1175 bytes |}] ;
 
   run_ligo_good [ "info" ; "measure-contract" ; contract "multisig.ligo" ] ;
   [%expect {|
@@ -16,6 +45,48 @@ let%expect_test _ =
 
   run_ligo_good [ "info" ; "measure-contract" ; contract "multisig-v2.ligo" ] ;
   [%expect {|
+    File "../../test/contracts/multisig-v2.ligo", line 121, characters 22-67:
+    120 |           then s.proposal_counters[Tezos.sender] :=
+    121 |                  abs (get_force (Tezos.sender, s.proposal_counters) - 1n)
+    122 |           else skip;
+
+    Warning: constant get_force is being deprecated soon. Consider using Big_map.find instead.
+
+    File "../../test/contracts/multisig-v2.ligo", line 81, characters 6-51:
+     80 |     var sender_proposal_counter : nat :=
+     81 |       get_force (Tezos.sender, s.proposal_counters);
+     82 |
+
+    Warning: constant get_force is being deprecated soon. Consider using Big_map.find instead.
+
+    File "../../test/contracts/multisig-v2.ligo", line 73, characters 13-58:
+     72 |           s.proposal_counters[sender] :=
+     73 |              get_force (Tezos.sender, s.proposal_counters) + 1n;
+     74 |              new_store := set [Tezos.sender]
+
+    Warning: constant get_force is being deprecated soon. Consider using Big_map.find instead.
+
+    File "../../test/contracts/multisig-v2.ligo", line 72, characters 30-36:
+     71 |           // the message has never been received before
+     72 |           s.proposal_counters[sender] :=
+     73 |              get_force (Tezos.sender, s.proposal_counters) + 1n;
+
+    Warning: constant sender is being deprecated soon. Consider using Tezos.sender instead.
+
+    File "../../test/contracts/multisig-v2.ligo", line 66, characters 17-62:
+     65 |           else s.proposal_counters[Tezos.sender] :=
+     66 |                  get_force (Tezos.sender, s.proposal_counters) + 1n;
+     67 |                  new_store := Set.add (Tezos.sender,voters)
+
+    Warning: constant get_force is being deprecated soon. Consider using Big_map.find instead.
+
+    File "../../test/contracts/multisig-v2.ligo", line 57, characters 9-46:
+     56 |
+     57 |     case map_get (packed_msg, s.message_store) of [
+     58 |       Some (voters) ->
+
+    Warning: constant map_get is being deprecated soon. Consider using Map.find_opt instead.
+
     1565 bytes |}] ;
 
   run_ligo_good [ "info" ; "measure-contract" ; contract "vote.mligo" ] ;
@@ -23,13 +94,99 @@ let%expect_test _ =
     430 bytes |}] ;
 
   run_ligo_good [ "compile" ; "parameter" ; contract "coase.ligo" ; "Buy_single (record [ card_to_buy = 1n ])" ] ;
-  [%expect {| (Left (Left 1)) |}] ;
+  [%expect {|
+    File "../../test/contracts/coase.ligo", line 117, characters 21-27:
+    116 |     cards[s.next_id] := record [
+    117 |       card_owner   = sender;
+    118 |       card_pattern = action.card_to_buy
+
+    Warning: constant sender is being deprecated soon. Consider using Tezos.sender instead.
+
+    File "../../test/contracts/coase.ligo", line 108, characters 15-21:
+    107 |       card_pattern.coefficient * (card_pattern.quantity + 1n);
+    108 |     if price > amount then failwith ("Not enough money") else skip;
+    109 |     // Increase quantity
+
+    Warning: constant amount is being deprecated soon. Consider using Tezos.amount instead.
+
+    File "../../test/contracts/coase.ligo", line 72, characters 27-33:
+     71 |       ];
+     72 |     if card.card_owner =/= sender
+     73 |     then failwith ("This card doesn't belong to you")
+
+    Warning: constant sender is being deprecated soon. Consider using Tezos.sender instead.
+
+    File "../../test/contracts/coase.ligo", line 56, characters 27-33:
+     55 |       ];
+     56 |     if card.card_owner =/= sender then
+     57 |       failwith ("This card doesn't belong to you")
+
+    Warning: constant sender is being deprecated soon. Consider using Tezos.sender instead.
+
+    (Left (Left 1)) |}] ;
 
   run_ligo_good [ "compile" ; "storage" ; contract "coase.ligo" ; "record [ cards = (map [] : cards) ; card_patterns = (map [] : card_patterns) ; next_id = 3n ]" ] ;
-  [%expect {| (Pair (Pair {} {}) 3) |}] ;
+  [%expect {|
+    File "../../test/contracts/coase.ligo", line 117, characters 21-27:
+    116 |     cards[s.next_id] := record [
+    117 |       card_owner   = sender;
+    118 |       card_pattern = action.card_to_buy
+
+    Warning: constant sender is being deprecated soon. Consider using Tezos.sender instead.
+
+    File "../../test/contracts/coase.ligo", line 108, characters 15-21:
+    107 |       card_pattern.coefficient * (card_pattern.quantity + 1n);
+    108 |     if price > amount then failwith ("Not enough money") else skip;
+    109 |     // Increase quantity
+
+    Warning: constant amount is being deprecated soon. Consider using Tezos.amount instead.
+
+    File "../../test/contracts/coase.ligo", line 72, characters 27-33:
+     71 |       ];
+     72 |     if card.card_owner =/= sender
+     73 |     then failwith ("This card doesn't belong to you")
+
+    Warning: constant sender is being deprecated soon. Consider using Tezos.sender instead.
+
+    File "../../test/contracts/coase.ligo", line 56, characters 27-33:
+     55 |       ];
+     56 |     if card.card_owner =/= sender then
+     57 |       failwith ("This card doesn't belong to you")
+
+    Warning: constant sender is being deprecated soon. Consider using Tezos.sender instead.
+
+    (Pair (Pair {} {}) 3) |}] ;
 
   run_ligo_bad [ "compile" ; "storage" ; contract "coase.ligo" ; "Buy_single (record [ card_to_buy = 1n ])" ] ;
   [%expect {|
+File "../../test/contracts/coase.ligo", line 117, characters 21-27:
+116 |     cards[s.next_id] := record [
+117 |       card_owner   = sender;
+118 |       card_pattern = action.card_to_buy
+
+Warning: constant sender is being deprecated soon. Consider using Tezos.sender instead.
+
+File "../../test/contracts/coase.ligo", line 108, characters 15-21:
+107 |       card_pattern.coefficient * (card_pattern.quantity + 1n);
+108 |     if price > amount then failwith ("Not enough money") else skip;
+109 |     // Increase quantity
+
+Warning: constant amount is being deprecated soon. Consider using Tezos.amount instead.
+
+File "../../test/contracts/coase.ligo", line 72, characters 27-33:
+ 71 |       ];
+ 72 |     if card.card_owner =/= sender
+ 73 |     then failwith ("This card doesn't belong to you")
+
+Warning: constant sender is being deprecated soon. Consider using Tezos.sender instead.
+
+File "../../test/contracts/coase.ligo", line 56, characters 27-33:
+ 55 |       ];
+ 56 |     if card.card_owner =/= sender then
+ 57 |       failwith ("This card doesn't belong to you")
+
+Warning: constant sender is being deprecated soon. Consider using Tezos.sender instead.
+
 Invalid command line argument.
 The provided storage does not have the correct type for the contract.
 File "../../test/contracts/coase.ligo", line 124, character 0 to line 129, character 3:
@@ -46,6 +203,34 @@ Expected: "storage", but got: "parameter". |}] ;
 
   run_ligo_bad [ "compile" ; "parameter" ; contract "coase.ligo" ; "record [ cards = (map [] : cards) ; card_patterns = (map [] : card_patterns) ; next_id = 3n ]" ] ;
   [%expect {|
+File "../../test/contracts/coase.ligo", line 117, characters 21-27:
+116 |     cards[s.next_id] := record [
+117 |       card_owner   = sender;
+118 |       card_pattern = action.card_to_buy
+
+Warning: constant sender is being deprecated soon. Consider using Tezos.sender instead.
+
+File "../../test/contracts/coase.ligo", line 108, characters 15-21:
+107 |       card_pattern.coefficient * (card_pattern.quantity + 1n);
+108 |     if price > amount then failwith ("Not enough money") else skip;
+109 |     // Increase quantity
+
+Warning: constant amount is being deprecated soon. Consider using Tezos.amount instead.
+
+File "../../test/contracts/coase.ligo", line 72, characters 27-33:
+ 71 |       ];
+ 72 |     if card.card_owner =/= sender
+ 73 |     then failwith ("This card doesn't belong to you")
+
+Warning: constant sender is being deprecated soon. Consider using Tezos.sender instead.
+
+File "../../test/contracts/coase.ligo", line 56, characters 27-33:
+ 55 |       ];
+ 56 |     if card.card_owner =/= sender then
+ 57 |       failwith ("This card doesn't belong to you")
+
+Warning: constant sender is being deprecated soon. Consider using Tezos.sender instead.
+
 Invalid command line argument.
 The provided parameter does not have the correct type for the given entrypoint.
 File "../../test/contracts/coase.ligo", line 124, character 0 to line 129, character 3:
@@ -81,11 +266,45 @@ let%expect_test _  =
     Warning: unused variable "s".
     Hint: replace it by "_s" to prevent this warning.
 
+    File "../../test/contracts/timestamp.ligo", line 4, characters 59-62:
+      3 | function main (const p : unit; const s : storage_) :
+      4 |   list (operation) * storage_ is ((nil: list (operation)), now)
+
+    Warning: constant now is being deprecated soon. Consider using Tezos.now instead.
+
     "2042-01-01T00:00:29Z" |}]
 
 let%expect_test _ =
   run_ligo_good [ "compile" ; "contract" ; contract "coase.ligo" ] ;
   [%expect {|
+File "../../test/contracts/coase.ligo", line 117, characters 21-27:
+116 |     cards[s.next_id] := record [
+117 |       card_owner   = sender;
+118 |       card_pattern = action.card_to_buy
+
+Warning: constant sender is being deprecated soon. Consider using Tezos.sender instead.
+
+File "../../test/contracts/coase.ligo", line 108, characters 15-21:
+107 |       card_pattern.coefficient * (card_pattern.quantity + 1n);
+108 |     if price > amount then failwith ("Not enough money") else skip;
+109 |     // Increase quantity
+
+Warning: constant amount is being deprecated soon. Consider using Tezos.amount instead.
+
+File "../../test/contracts/coase.ligo", line 72, characters 27-33:
+ 71 |       ];
+ 72 |     if card.card_owner =/= sender
+ 73 |     then failwith ("This card doesn't belong to you")
+
+Warning: constant sender is being deprecated soon. Consider using Tezos.sender instead.
+
+File "../../test/contracts/coase.ligo", line 56, characters 27-33:
+ 55 |       ];
+ 56 |     if card.card_owner =/= sender then
+ 57 |       failwith ("This card doesn't belong to you")
+
+Warning: constant sender is being deprecated soon. Consider using Tezos.sender instead.
+
 { parameter
     (or (or (nat %buy_single) (nat %sell_single))
         (pair %transfer_single (nat %card_to_transfer) (address %destination))) ;
@@ -419,6 +638,48 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_good [ "compile" ; "contract" ; contract "multisig-v2.ligo" ] ;
   [%expect {|
+File "../../test/contracts/multisig-v2.ligo", line 121, characters 22-67:
+120 |           then s.proposal_counters[Tezos.sender] :=
+121 |                  abs (get_force (Tezos.sender, s.proposal_counters) - 1n)
+122 |           else skip;
+
+Warning: constant get_force is being deprecated soon. Consider using Big_map.find instead.
+
+File "../../test/contracts/multisig-v2.ligo", line 81, characters 6-51:
+ 80 |     var sender_proposal_counter : nat :=
+ 81 |       get_force (Tezos.sender, s.proposal_counters);
+ 82 |
+
+Warning: constant get_force is being deprecated soon. Consider using Big_map.find instead.
+
+File "../../test/contracts/multisig-v2.ligo", line 73, characters 13-58:
+ 72 |           s.proposal_counters[sender] :=
+ 73 |              get_force (Tezos.sender, s.proposal_counters) + 1n;
+ 74 |              new_store := set [Tezos.sender]
+
+Warning: constant get_force is being deprecated soon. Consider using Big_map.find instead.
+
+File "../../test/contracts/multisig-v2.ligo", line 72, characters 30-36:
+ 71 |           // the message has never been received before
+ 72 |           s.proposal_counters[sender] :=
+ 73 |              get_force (Tezos.sender, s.proposal_counters) + 1n;
+
+Warning: constant sender is being deprecated soon. Consider using Tezos.sender instead.
+
+File "../../test/contracts/multisig-v2.ligo", line 66, characters 17-62:
+ 65 |           else s.proposal_counters[Tezos.sender] :=
+ 66 |                  get_force (Tezos.sender, s.proposal_counters) + 1n;
+ 67 |                  new_store := Set.add (Tezos.sender,voters)
+
+Warning: constant get_force is being deprecated soon. Consider using Big_map.find instead.
+
+File "../../test/contracts/multisig-v2.ligo", line 57, characters 9-46:
+ 56 |
+ 57 |     case map_get (packed_msg, s.message_store) of [
+ 58 |       Some (voters) ->
+
+Warning: constant map_get is being deprecated soon. Consider using Map.find_opt instead.
+
 { parameter
     (or (or (unit %default) (lambda %send bytes (list operation)))
         (lambda %withdraw bytes (list operation))) ;
@@ -1105,6 +1366,20 @@ let%expect_test _ =
     Warning: unused variable "x".
     Hint: replace it by "_x" to prevent this warning.
 
+    File "../../test/contracts/amount_lambda.mligo", line 8, characters 20-34:
+      7 | let f2 (x : unit) : unit -> tez =
+      8 |   fun (x : unit) -> Current.amount
+      9 |
+
+    Warning: constant Current.amount is being deprecated soon. Consider using Tezos.amount instead.
+
+    File "../../test/contracts/amount_lambda.mligo", line 3, characters 18-32:
+      2 | let f1 (x : unit) : unit -> tez =
+      3 |   let amt : tez = Current.amount in
+      4 |   fun (x : unit) -> amt
+
+    Warning: constant Current.amount is being deprecated soon. Consider using Tezos.amount instead.
+
     { parameter bool ;
       storage (lambda unit mutez) ;
       code { CAR ;
@@ -1249,6 +1524,13 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_good [ "compile" ; "storage" ; contract "big_map.ligo" ; "(big_map1,unit)" ] ;
   [%expect {|
+    File "../../test/contracts/big_map.ligo", line 34, characters 11-30:
+     33 |   bar[42] := 0;
+     34 |   n[42] := get_force (42, bar)
+     35 | } with n
+
+    Warning: constant get_force is being deprecated soon. Consider using Big_map.find instead.
+
     (Pair { Elt 23 0 ; Elt 42 0 } Unit) |}]
 
 let%expect_test _ =
@@ -2194,55 +2476,124 @@ let%expect_test _ =
 (* source location comments *)
 let%expect_test _ =
   run_ligo_good [ "compile"; "contract"; contract "noop.mligo";
-                  "--michelson-comments"; "location" ];
+                  "--michelson-comments"; "location";
+                  "--michelson-comments"; "env";
+                ];
   [%expect {|
     { parameter unit ;
       storage unit ;
-      code { DROP ;
-             UNIT ;
+      code { { /* _ */ } ;
+             CDR ;
+             { /* _ */ } ;
+             LAMBDA unit unit { { /* x */ } } ;
+             { /* f, _ */ } ;
+             DUP ;
+             DUG 2 ;
+             SWAP ;
+             EXEC ;
+             { /* s2, f */ } ;
+             SWAP ;
+             DUP ;
+             DUG 2 ;
+             SWAP ;
+             EXEC ;
+             { /* s3, f */ } ;
+             EXEC ;
+             { /* s */ } ;
              NIL operation
-                 /* File "../../test/contracts/noop.mligo", line 2, characters 4-6 */
-             /* File "../../test/contracts/noop.mligo", line 2, characters 4-6 */ ;
+                 /* File "../../test/contracts/noop.mligo", line 6, characters 4-6 */
+             /* File "../../test/contracts/noop.mligo", line 6, characters 4-6 */ ;
              PAIR
-             /* File "../../test/contracts/noop.mligo", line 2, characters 3-28 */ } } |}]
+             /* File "../../test/contracts/noop.mligo", line 6, characters 3-27 */ } } |}]
 
 (* JSON source location comments *)
 let%expect_test _ =
   run_ligo_good [ "compile"; "contract"; contract "noop.mligo";
                   "--michelson-format"; "json";
-                  "--michelson-comments"; "location" ];
-  [%expect {|
-    { "expression":
-        [ { "prim": "parameter", "args": [ { "prim": "unit" } ] },
-          { "prim": "storage", "args": [ { "prim": "unit" } ] },
-          { "prim": "code",
-            "args":
-              [ [ { "prim": "DROP" }, { "prim": "UNIT" },
-                  { "prim": "NIL", "args": [ { "prim": "operation" } ] },
-                  { "prim": "PAIR" } ] ] } ],
-      "locations":
-        [ null, null, null, null, null, null, null, null, null,
-          { "location":
-              { "start":
-                  { "file": "../../test/contracts/noop.mligo", "line": "2",
-                    "col": "4" },
-                "stop":
-                  { "file": "../../test/contracts/noop.mligo", "line": "2",
-                    "col": "6" } } },
-          { "location":
-              { "start":
-                  { "file": "../../test/contracts/noop.mligo", "line": "2",
-                    "col": "4" },
-                "stop":
-                  { "file": "../../test/contracts/noop.mligo", "line": "2",
-                    "col": "6" } } },
-          { "location":
-              { "start":
-                  { "file": "../../test/contracts/noop.mligo", "line": "2",
-                    "col": "3" },
-                "stop":
-                  { "file": "../../test/contracts/noop.mligo", "line": "2",
-                    "col": "28" } } } ] } |}]
+                  "--michelson-comments"; "location";
+                  "--michelson-comments"; "env" ];
+  [%expect{|
+    { "types":
+        [ { "type_content":
+              [ "t_constant",
+                { "language": "Michelson", "injection": "unit",
+                  "parameters": [] } ], "type_meta": [ "None", null ],
+            "location": [ "Virtual", "generated" ],
+            "orig_var": [ "None", null ] },
+          { "type_content":
+              [ "t_arrow",
+                { "type1":
+                    { "type_content":
+                        [ "t_constant",
+                          { "language": "Michelson", "injection": "unit",
+                            "parameters": [] } ], "type_meta": [ "None", null ],
+                      "location": [ "Virtual", "generated" ],
+                      "orig_var": [ "None", null ] },
+                  "type2":
+                    { "type_content":
+                        [ "t_constant",
+                          { "language": "Michelson", "injection": "unit",
+                            "parameters": [] } ], "type_meta": [ "None", null ],
+                      "location": [ "Virtual", "generated" ],
+                      "orig_var": [ "None", null ] } } ],
+            "type_meta": [ "None", null ],
+            "location": [ "Virtual", "generated" ],
+            "orig_var": [ "None", null ] } ],
+      "michelson":
+        { "expression":
+            [ { "prim": "parameter", "args": [ { "prim": "unit" } ] },
+              { "prim": "storage", "args": [ { "prim": "unit" } ] },
+              { "prim": "code",
+                "args":
+                  [ [ [], { "prim": "CDR" }, [],
+                      { "prim": "LAMBDA",
+                        "args":
+                          [ { "prim": "unit" }, { "prim": "unit" }, [ [] ] ] },
+                      [], { "prim": "DUP" },
+                      { "prim": "DUG", "args": [ { "int": "2" } ] },
+                      { "prim": "SWAP" }, { "prim": "EXEC" }, [],
+                      { "prim": "SWAP" }, { "prim": "DUP" },
+                      { "prim": "DUG", "args": [ { "int": "2" } ] },
+                      { "prim": "SWAP" }, { "prim": "EXEC" }, [],
+                      { "prim": "EXEC" }, [],
+                      { "prim": "NIL", "args": [ { "prim": "operation" } ] },
+                      { "prim": "PAIR" } ] ] } ],
+          "locations":
+            [ {}, {}, {}, {}, {}, {}, {}, { "environment": [ null ] }, {},
+              { "environment": [ { "source_type": "0" } ] }, {}, {}, {}, {},
+              { "environment": [ { "name": "x", "source_type": "0" } ] },
+              { "environment":
+                  [ { "name": "f", "source_type": "1" }, { "source_type": "0" } ] },
+              {}, {}, {}, {}, {},
+              { "environment":
+                  [ { "name": "s2", "source_type": "0" },
+                    { "name": "f", "source_type": "1" } ] }, {}, {}, {}, {}, {},
+              {},
+              { "environment":
+                  [ { "name": "s3", "source_type": "0" },
+                    { "name": "f", "source_type": "1" } ] }, {},
+              { "environment": [ { "name": "s", "source_type": "0" } ] },
+              { "location":
+                  { "start":
+                      { "file": "../../test/contracts/noop.mligo", "line": "6",
+                        "col": "4" },
+                    "stop":
+                      { "file": "../../test/contracts/noop.mligo", "line": "6",
+                        "col": "6" } } },
+              { "location":
+                  { "start":
+                      { "file": "../../test/contracts/noop.mligo", "line": "6",
+                        "col": "4" },
+                    "stop":
+                      { "file": "../../test/contracts/noop.mligo", "line": "6",
+                        "col": "6" } } },
+              { "location":
+                  { "start":
+                      { "file": "../../test/contracts/noop.mligo", "line": "6",
+                        "col": "3" },
+                    "stop":
+                      { "file": "../../test/contracts/noop.mligo", "line": "6",
+                        "col": "27" } } } ] } } |}]
 
 (* Check that decl_pos is not taken into account when "inferring" about tuples (including long tuples) *)
 let%expect_test _ =
