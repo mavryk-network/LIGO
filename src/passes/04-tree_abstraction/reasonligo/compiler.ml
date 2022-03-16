@@ -306,7 +306,7 @@ let rec compile_expression ~raise : CST.expr -> AST.expr  = fun e ->
       return @@ e_application ~loc func args
     )
   (*TODO: move to proper module*)
-  | ECall {value=(EModA {value={module_name;field;selector=_};region=_},args);region} when
+  | ECall ({value=(EModA {value={module_name;field;selector=_};region=_},args);region} as call) when
     List.mem ~equal:Caml.(=) build_ins module_name.value ->
     let args = match args with
       | Unit the_unit -> CST.EUnit the_unit,[]
@@ -326,7 +326,15 @@ let rec compile_expression ~raise : CST.expr -> AST.expr  = fun e ->
       let args = List.map ~f:self @@ nseq_to_list args in
       return @@ e_constant ~loc const args
     | None ->
-     raise.raise @@ unknown_constant var loc
+      let ((func, args), loc) = r_split call in
+      let args = match args with
+        | Unit the_unit -> CST.EUnit the_unit,[]
+        | Multiple xs ->
+           let hd,tl = xs.value.inside in
+           hd,List.map ~f:snd tl in
+      let func = self func in
+      let args = compile_tuple_expression args in
+      return @@ e_application ~loc func args
       )
   | ECall call ->
     let ((func, args), loc) = r_split call in
@@ -374,7 +382,7 @@ let rec compile_expression ~raise : CST.expr -> AST.expr  = fun e ->
       let var = module_name ^ "." ^ fun_name in
       (match constants var with
         Some const -> return @@ e_constant ~loc const []
-      | None -> return @@ e_variable_ez ~loc var
+      | None -> return @@ e_module_accessor ~loc (ModuleVar.of_input_var module_name) element
       )
     else
       return @@ e_module_accessor ~loc (ModuleVar.of_input_var module_name) element
