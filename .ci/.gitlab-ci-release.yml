@@ -4,32 +4,6 @@
 # Will update code and create a merge request targeting dev
 #######################################################################
 
-initialize-ssh:
-  stage: pretooling
-  only:
-    # prefixed by release /^release/.*/
-    - /^release/.*/
-    - tags
-  script:
-      - chmod 766 ~/.ssh
-      - eval `ssh-agent -s`
-      - cat $SSH_PRIVATE_KEY_TOOLKIT  > ~/.ssh/id_rsa
-      - chmod 600 ~/.ssh/id_rsa
-      - ssh-keyscan gitlab.com  >> ~/.ssh/known_hosts
-      - chmod 644 ~/.ssh/known_hosts
-
-initialize-git:
-  stage: pretooling
-  dependencies:
-    - initialize-ssh
-  only:
-    # prefixed by release /^release/.*/
-    - /^release/.*/
-    - tags
-  script:
-      - git config --global user.name 'InfraBot'
-      - git config --global user.email 'infra@marigold.dev'
-
 #######################################################################
 # Following script is executed when branch is create
 #######################################################################
