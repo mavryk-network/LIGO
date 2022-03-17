@@ -44,7 +44,7 @@ let find_global_index symbols at index_ =
   | _ -> ()) symbols;
   if !result = (-1l) then (        
     failwith ("Could not find global: " ^ index_)
-  ) else 
+  ) else
     Source.{
       it = !result;
       at

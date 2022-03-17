@@ -7,7 +7,7 @@
   (modules CLI API Version)
   (libraries
     ;; Vendors
-    simple-utils
+    simple-utils  
     ocaml-recovery-parser
     ;; Third party
     getopt

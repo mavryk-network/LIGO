@@ -879,7 +879,7 @@ let encode (m: Ast.module_) =
         );
         (List.exists (fun (f:Ast.func) -> f.it.name = sym.name) m.it.funcs)
       | Import _ -> false
-      | Data _ -> (Linking.data_index m.it.data sym.name) <> -1l
+      | Data _ -> (Linking.data_index m.it.data sym.name) <> -1l && sym.name <> "__heap_base"
       | Global _ -> true
       )
       in
@@ -896,7 +896,6 @@ let encode (m: Ast.module_) =
       | Global f ->         
         vu32 f.index.it;
         if exists then (
-          
           string sym.name
         )
       | Function ->
@@ -908,8 +907,11 @@ let encode (m: Ast.module_) =
       | Import _ ->        
         vu32 (Linking.func_index m.it.funcs import_funcs sym.name);
       | Data d -> (    
-        (if sym.name <> "" then        
+        (if sym.name <> "" then (    
+          print_endline ("write data name:" ^ sym.name);
+          
         string sym.name
+        )
         else         
         string "_"); 
         (* probably an initial block ?!malformed uleb128 *)
@@ -958,7 +960,8 @@ let encode (m: Ast.module_) =
       let g = gap32 () in
       let p = pos s in
       
-      let segments = List.filter (fun f -> match f.it.details with Data _ -> true | _ -> false) m.it.symbols in
+      (* improve: should be both in data and in the symbols *)
+      let segments = List.filter (fun (f : sym_info) -> f.it.name <> "__heap_base" && match f.it.details with Data _ -> true  | _ -> false) m.it.symbols in
       vec segment segments;
 
       patch_gap32 g (pos s - p);

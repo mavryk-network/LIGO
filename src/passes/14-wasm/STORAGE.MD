@@ -32,6 +32,6 @@ Constructor
     - list of contructors
     - [pointer to contructor, pointer to value]
 
-When storing data structures, pointers should be changed to an easy to deserialize format. Ideally something as offset + pointer in serialized format. 
-
-Can we generate code to loop over the storage data structure? Type info perhaps?!
+- "Compress" before saving storage and expect everything to be offset at 0.
+- when accessing memory use an offset
+- when allocating memory do: minus an offset

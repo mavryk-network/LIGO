@@ -26,6 +26,50 @@ let name s =
 let env: module_ = {
   it = {
     empty_module with
+    
+    (* funcs = [
+      {
+        it = {
+          name = "__fix_set";
+          (* This function is used when loading the contract which uses set. *)
+          ftype = "__fix_set_type";
+          locals = [("node", I32Type); ("offset", I32Type)];
+          body = [
+            (* left *)
+            { 
+              it = If (
+                ValBlockType (Some I32Type), 
+                [
+                  { it = Call "__fix_set"; at }
+                ],
+                [
+
+                ]
+              );
+              at
+            };
+            (* pointer to item *)
+            (*  - pointer + offset *)
+            (* depth ignore *)
+
+            (* right *)
+            { 
+              it = If (
+                ValBlockType (Some I32Type), 
+                [
+                  { it = Call "__fix_set"; at }
+                ],
+                [
+
+                ]
+              );
+              at
+            };
+          ];
+        }
+        at
+      }
+    ]; *)
     data = [
       {
         it = {
@@ -78,9 +122,23 @@ let env: module_ = {
           }
         };
         at
-      };
+      }
     ]; 
     types = [
+      {
+        it = {
+          tname = "__load_type";
+          tdetails = FuncType ([], [])
+        };
+        at
+      };
+      {
+        it = {
+          tname = "__save_type";
+          tdetails = FuncType ([I32Type], [I32Type])
+        };
+        at
+      };
       {
         it = {
           tname    = "malloc_type";
@@ -202,6 +260,17 @@ let env: module_ = {
       }
     ];
     imports = [
+      (* {
+        it = {
+          module_name = name "env";
+          item_name   = name "__heap_base";
+          idesc       = {
+            it = GlobalImport (GlobalType (I32Type, Immutable));
+            at
+          }
+        };
+        at
+      }; *)
       {
         it = {
           module_name = name "env";
@@ -464,6 +533,18 @@ let env: module_ = {
       };
       {
         it = {
+          name    = "__heap_base";
+          details = Data {
+            index = {it = 4l; at};
+            relocation_offset = {it = 0l; at};
+            size = {it = 4l; at};
+            offset = {it = 16l; at}
+          }
+        };
+        at
+      };
+      {
+        it = {
           name    = "malloc";
           details = Import ([I32Type], [I32Type])
         };
@@ -580,10 +661,24 @@ let env: module_ = {
           details = Import ([I32Type], [I32Type])
         };
         at
+      };
+      {
+        it = {
+          name = "__load";
+          details = Function
+        };
+        at
+      };
+      {
+        it = {
+          name = "__save";
+          details = Function
+        };
+        at
       }
     ];
   };
   at
 }
 
-let offset = 12l (* TODO: this needs to be made more robust *)
+let offset = 20l (* TODO: this needs to be made more robust *)
