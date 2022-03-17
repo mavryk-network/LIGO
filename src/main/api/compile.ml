@@ -45,7 +45,7 @@ let contract (raw_options : Compiler_options.raw) source_file display_format mic
         Ligo_compile.Of_michelson.build_contract ~raise ~disable_typecheck ~constants code views
       | "wasm" ->
         let _ = Build.build_wasm_code ~raise ~add_warning ~options entry_point source_file in
-        (String (Virtual "no", "This should not be here"))
+        (String ({location = Location.dummy; env = []; binder = None}, "This should not be here"))
       | _ -> failwith "nope"
 
 let expression (raw_options : Compiler_options.raw) expression init_file display_format michelson_format () =

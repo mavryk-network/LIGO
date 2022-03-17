@@ -24,6 +24,7 @@ module type VAR = sig
    val is_generated     : t -> bool
    (* Prints vars as %s or %s#%d *)
    val pp : Format.formatter -> t -> unit
+
 end
 
 module Internal () = struct

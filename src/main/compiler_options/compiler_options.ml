@@ -45,7 +45,7 @@ type backend = {
   views : string list ;
   constants : string list ;
   file_constants : string option ;
-  backend : string
+  backend : string ;
   has_env_comments : bool ; (* true if --michelson-comments env. if
                                true, empty seqs {} with comments will
                                not be erased during optimisation *)

@@ -10,7 +10,7 @@ module A = W.Ast
 module T = W.Types
 module S = W.Source
 module Z = Z
-module Var = Stage_common.Var
+module ValueVar = Stage_common.Types.ValueVar
 module Location = Simple_utils.Location
 
 (**
@@ -37,10 +37,9 @@ let location_to_region (l: Location.t) : S.region =
  * Convert a variable to a string which we can use for symbols 
  *)
 let var_to_string name =  
-  let name, hash = Var.internal_get_name_and_counter name in
-  match hash with 
-    Some s -> name ^ "#" ^ (string_of_int s)
-  | None -> name
+  let name, hash = ValueVar.internal_get_name_and_counter name in
+  name ^ "#" ^ (string_of_int hash)
+  (* | None -> name *)
 
 (* The data offset. This indicates where a block of data should be placed in the linear memory. *)
 let global_offset = ref 0l
@@ -145,7 +144,7 @@ let rec expression ~raise : A.module_' -> locals -> I.expression -> A.module_' *
   | E_literal (Literal_unit) ->
     w, l, [{it = Nop; at}]
   | E_literal (Literal_int z) -> 
-    let unique_name = Var.fresh () in
+    let unique_name = ValueVar.fresh () in
     let name = var_to_string unique_name in
     let data, symbols = convert_to_memory name at z in
     let w = {w with data = w.data @ data; symbols = w.symbols @ symbols } in
@@ -164,7 +163,7 @@ let rec expression ~raise : A.module_' -> locals -> I.expression -> A.module_' *
   | E_closure {binder; body} -> failwith "not supported yet 14"
   | E_constant {cons_name = C_LIST_EMPTY; arguments = []} -> w, l, [{it = DataSymbol "C_LIST_EMPTY"; at}]
   | E_constant {cons_name = C_PAIR; arguments = [e1; e2]} -> 
-    let malloc_local = var_to_string (Var.fresh ~name:"malloc" ()) in
+    let malloc_local = var_to_string (ValueVar.fresh ~name:"malloc" ()) in
     let open A in
     let open S in
 
@@ -210,7 +209,7 @@ let rec expression ~raise : A.module_' -> locals -> I.expression -> A.module_' *
     w, l @ [(malloc_local, I32Type)], allocation
     
   | E_constant {cons_name = C_ADD; arguments = [e1; e2]} -> 
-    let new_value = var_to_string (Var.fresh ~name:"C_ADD" ()) in
+    let new_value = var_to_string (ValueVar.fresh ~name:"C_ADD" ()) in
     let mpz_init = [
       S.{ it = A.Const { it = I32 8l; at}; at };
       { it = A.Call "malloc"; at };
@@ -264,7 +263,7 @@ let rec expression ~raise : A.module_' -> locals -> I.expression -> A.module_' *
   | E_tuple _ -> failwith "not supported yet 26"
   | E_let_tuple (tuple, (values, rhs)) -> 
     let w, l, tuple = expression ~raise w l tuple in
-    let tuple_name = var_to_string (Var.fresh ~name:"let_tuple" ()) in
+    let tuple_name = var_to_string (ValueVar.fresh ~name:"let_tuple" ()) in
     let t = tuple @ [
       S.{it = A.LocalSet tuple_name; at}
     ]
@@ -496,8 +495,8 @@ let rec generate_storage_loader: I.type_expression  -> (A.instr list * locals) =
   let at = S.no_region in
   match t.type_content with 
     T_list t ->
-      let addr = var_to_string (Var.fresh ~name:"addr" ()) in
-      let next_item = var_to_string (Var.fresh ~name:"next_item" ()) in
+      let addr = var_to_string (ValueVar.fresh ~name:"addr" ()) in
+      let next_item = var_to_string (ValueVar.fresh ~name:"next_item" ()) in
       let (list_item_loader, locals) = generate_storage_loader t in
       [
         {
@@ -549,7 +548,7 @@ let rec generate_storage_loader: I.type_expression  -> (A.instr list * locals) =
         };
       ], ((addr, I32Type) :: (next_item, I32Type) :: locals)
   | T_tuple ann_list ->
-    let addr = var_to_string (Var.fresh ~name:"addr" ()) in
+    let addr = var_to_string (ValueVar.fresh ~name:"addr" ()) in
     let (result, locals), _counter = List.fold_left ~f:(fun ((result, result_locals), counter) (annotation, type_expression) -> 
       let (tuple_item_loader, locals) = (generate_storage_loader type_expression) in
       let annotation = [
@@ -564,9 +563,9 @@ let rec generate_storage_loader: I.type_expression  -> (A.instr list * locals) =
     ) ~init:(([], []), 0) ann_list in    
     { it = LocalSet addr; at} :: result, ((addr, I32Type) :: locals)
   | T_or ((annot_a, a), (annot_b, b)) ->
-    let addr       = var_to_string (Var.fresh ~name:"addr" ()) in
-    let item_a     = var_to_string (Var.fresh ~name:"item_a" ()) in
-    let item_b     = var_to_string (Var.fresh ~name:"item_b" ()) in
+    let addr       = var_to_string (ValueVar.fresh ~name:"addr" ()) in
+    let item_a     = var_to_string (ValueVar.fresh ~name:"item_a" ()) in
+    let item_b     = var_to_string (ValueVar.fresh ~name:"item_b" ()) in
     let item_a_loader, locals_a = generate_storage_loader a in
     let item_b_loader, locals_b = generate_storage_loader b in
     [
@@ -606,12 +605,12 @@ let rec generate_storage_loader: I.type_expression  -> (A.instr list * locals) =
        - size, items of the set.
        - there should not be any interruptions in the set, otherwise: oops.
       *)
-    let addr     = var_to_string (Var.fresh ~name:"addr" ()) in
-    let size     = var_to_string (Var.fresh ~name:"size" ()) in
-    let counter  = var_to_string (Var.fresh ~name:"counter" ()) in
-    let left     = var_to_string (Var.fresh ~name:"left" ()) in
-    let item     = var_to_string (Var.fresh ~name:"item" ()) in
-    let right    = var_to_string (Var.fresh ~name:"right" ()) in
+    let addr     = var_to_string (ValueVar.fresh ~name:"addr" ()) in
+    let size     = var_to_string (ValueVar.fresh ~name:"size" ()) in
+    let counter  = var_to_string (ValueVar.fresh ~name:"counter" ()) in
+    let left     = var_to_string (ValueVar.fresh ~name:"left" ()) in
+    let item     = var_to_string (ValueVar.fresh ~name:"item" ()) in
+    let right    = var_to_string (ValueVar.fresh ~name:"right" ()) in
     let set_item_loader, locals = generate_storage_loader ty in
     [
       S.{ it = A.LocalTee addr; at };
@@ -693,7 +692,7 @@ let rec generate_storage_loader: I.type_expression  -> (A.instr list * locals) =
       }
     ], ((addr, I32Type) :: (size, I32Type) :: (counter, I32Type) :: (left, I32Type) :: (item, I32Type) :: (right, I32Type) :: locals)
     | T_base TB_int -> 
-      let addr     = var_to_string (Var.fresh ~name:"addr" ()) in
+      let addr     = var_to_string (ValueVar.fresh ~name:"addr" ()) in
       [
         S.{ it = A.LocalTee addr; at };
         { it = Const {it = I32 8l; at}; at};
@@ -755,9 +754,9 @@ typedef struct
 *)
 
 *)
-    let mp_size = var_to_string (Var.fresh ~name:"mp_size" ()) in
-    let counter = var_to_string (Var.fresh ~name:"counter" ()) in
-    let limbs = var_to_string (Var.fresh ~name:"limbs" ()) in
+    let mp_size = var_to_string (ValueVar.fresh ~name:"mp_size" ()) in
+    let counter = var_to_string (ValueVar.fresh ~name:"counter" ()) in
+    let limbs = var_to_string (ValueVar.fresh ~name:"limbs" ()) in
     [
       S.
       (* _mp_alloc *)
@@ -898,9 +897,9 @@ let compile ~raise : I.expression -> string -> string -> W.Ast.module_ = fun e f
   in
   let body,      locals      = generate_storage_loader storage_type_input in
   
-  let target_addr     = var_to_string (Var.fresh ~name:"target_addr" ()) in
-  let src_addr        = var_to_string (Var.fresh ~name:"src_addr" ()) in
-  let foo             = var_to_string (Var.fresh ~name:"foo" ()) in
+  let target_addr     = var_to_string (ValueVar.fresh ~name:"target_addr" ()) in
+  let src_addr        = var_to_string (ValueVar.fresh ~name:"src_addr" ()) in
+  let foo             = var_to_string (ValueVar.fresh ~name:"foo" ()) in
   let body_calc, locals_calc = calculate_storage_size storage_type_output src_addr in
   let body_save, locals_save = generate_storage_saver storage_type_output src_addr target_addr 0l in
   let w = {w with it = {
