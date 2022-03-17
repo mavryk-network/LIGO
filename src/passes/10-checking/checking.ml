@@ -212,6 +212,7 @@ and evaluate_type ~raise (c:context) (t:I.type_expression) : O.type_expression =
           that the variable could be put in the extended context
           via an annotation *)
        raise.raise (not_annotated t.location)
+    | None when Helpers.is_external_type name -> return @@ T_variable name
     | None -> raise.raise (unbound_type_variable name t.location)
   )
   | T_app {type_operator;arguments} -> (
@@ -304,10 +305,15 @@ and type_expression' ~raise ~options ?(args = []) ?last : context -> ?tv_opt:O.t
         trace_option ~raise (unbound_variable name e.location)
         @@ Context.get_value context name in
       (match tv' with
-       | { type_content = T_for_all _ ; type_meta = _; orig_var=_ ; location=_} ->
+       | { type_content = T_variable v ; _ } when Helpers.is_external_type v ->
+          let args = List.map ~f:(fun ({type_expression;_} : O.expression) -> type_expression) args in
+          let tv' = Constant_typers.infer_external_type ~raise ~options ~loc:e.location v args in
+          return (E_variable name) tv'
+       | { type_content = T_for_all _ ; type_meta = _; orig_var=_ ; location=_ ; from_external = _} ->
           (* TODO: This is some inference, and we should reconcile it with the inference pass. *)
           let avs, type_ = O.Helpers.destruct_for_alls tv' in
-          let table = Inference.infer_type_applications ~raise ~loc:e.location type_ (List.map ~f:(fun ({type_expression;_} : O.expression) -> type_expression) args) last in
+          let args = List.map ~f:(fun ({type_expression;_} : O.expression) -> type_expression) args in
+          let table = Inference.infer_type_applications ~raise ~loc:e.location type_ args last in
           let lamb = make_e ~location:e.location (E_variable name) tv' in
           return_e @@ Inference.build_type_insts ~raise ~loc:e.location lamb table avs
        | _ ->

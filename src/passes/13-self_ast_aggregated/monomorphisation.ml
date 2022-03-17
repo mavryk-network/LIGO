@@ -173,6 +173,24 @@ let rec mono_polymorphic_expression : Data.t -> AST.expression -> Data.t * AST.e
        let instances, data = Data.instances_lookup_and_remove (Longident.of_variable let_binder) data in
        let expr, data = List.fold_right instances ~f:(build_let @@ Longident.of_variable let_binder) ~init:(let_result, data) in
        data, expr
+    | T_variable name when AST.TypeVar.is_external name ->
+       let type_ = rhs.type_expression in
+       let build_let (lid : Longident.t) { Instance.vid ; type_instances ; type_ = typed } (let_result, data) =
+         let let_binder = vid.variable in
+         let rhs = { rhs with type_expression = type_ } in
+         let rhs, data = match rhs.expression_content with
+           | E_recursive { fun_name ; fun_type = _ ; lambda = { binder ; result } } ->
+              let lambda = { AST.binder ; result = subst_var_expr lid.variable vid.variable (subst_var_expr fun_name vid.variable result) } in
+              let data = Data.instance_add lid { vid ; type_instances ; type_ = typed } data in
+              { rhs with expression_content = E_recursive { fun_name = vid.variable ; fun_type = type_ ; lambda } }, data
+           | _ -> rhs, data in
+         let rhs = apply_table_expr table rhs in
+         let data, rhs = self data rhs in
+         (AST.e_a_let_in let_binder rhs let_result attr, data) in
+       let data, let_result = self data let_result in
+       let instances, data = Data.instances_lookup_and_remove (Longident.of_variable let_binder) data in
+       let expr, data = List.fold_right instances ~f:(build_let @@ Longident.of_variable let_binder) ~init:(let_result, data) in
+       data, expr
     | _ ->
        let binder_instances, data = Data.instances_lookup_and_remove (Longident.of_variable let_binder) data in
        let data, let_result = self data let_result in

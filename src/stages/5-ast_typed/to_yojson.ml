@@ -30,7 +30,7 @@ let layout = function
   | L_tree -> `List [ `String "L_tree"; `Null ]
 
 
-let rec type_expression {type_content=tc;type_meta;location;orig_var} =
+let rec type_expression {type_content=tc;type_meta;location;orig_var;from_external=_} =
   `Assoc [
     ("type_content", type_content tc);
     ("type_meta", option Ast_core.Yojson.type_expression type_meta);

@@ -23,8 +23,8 @@ type expression_content = [%import: Types.expression_content]
 type type_content = [%import: Types.type_content]
 [@@deriving ez {
       prefixes = [
-        ("make_t" , fun  ?(loc = Location.generated) type_content type_meta ->
-                  ({ type_content ; location = loc ; orig_var = None ; type_meta } : type_expression)) ;
+        ("make_t" , fun  ?(loc = Location.generated) ?(from_external = false) type_content type_meta ->
+                  ({ type_content ; location = loc ; orig_var = None ; type_meta ;  from_external } : type_expression)) ;
         ("get" , fun x -> x.type_content) ;
       ] ;
       wrap_constructor = ("type_content" , (fun type_content ?loc ?type_meta () -> make_t ?loc type_content type_meta)) ;
@@ -32,7 +32,7 @@ type type_content = [%import: Types.type_content]
       default_get = `Option ;
     } ]
 
-let make_t_orig_var ?(loc = Location.generated) type_content core orig_var = {type_content; location=loc; type_meta = core ; orig_var}
+let make_t_orig_var ?(loc = Location.generated) ?(from_external = false) type_content core orig_var = {type_content; location=loc; type_meta = core ; orig_var ; from_external }
 
 let t_constant ?loc ?core injection parameters : type_expression =
   make_t ?loc (T_constant {language=Stage_common.Backends.michelson; injection = injection ; parameters}) core

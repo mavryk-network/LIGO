@@ -64,3 +64,7 @@ let eq_1 a cst = type_expression_eq (a , cst)
 let eq_2 (a , b) cst = type_expression_eq (a , cst) && type_expression_eq (b , cst)
 
 let assert_eq_1 ~raise ?(loc=(Location.Virtual "assert_eq_1")) a b = if eq_1 a b then () else raise.raise @@ not_matching loc a b
+
+let is_external_type v =
+  let s = try TypeVar.to_name_exn v with _ -> "" in
+  Core.String.is_prefix s ~prefix:"ext_"

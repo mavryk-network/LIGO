@@ -35,6 +35,7 @@ end
 module TypeVar : sig
    include VAR
    val is_generalizable : t -> bool
+   val is_external      : t -> bool
    val is_name          : t -> string -> bool
 end
 

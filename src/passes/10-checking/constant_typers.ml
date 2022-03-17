@@ -172,6 +172,23 @@ let typer_of_ligo_type ?(add_tc = true) ?(fail = true) lamb_type : typer = fun ~
         if add_tc then error := `TC arrs :: ! error else ();
         None)
 
+(* Given a ligo type, construct the corresponding typer, return all type *)
+let all_typer_of_ligo_type ?(add_tc = true) ?(fail = true) lamb_type : typer = fun ~error ~raise ~options ~loc lst tv_opt ->
+  ignore options;
+  let _, lamb_type = O.Helpers.destruct_for_alls lamb_type in
+  Simple_utils.Trace.try_with (fun ~raise ->
+      let table = Inference.infer_type_applications ~raise ~loc ~default_error:(fun loc t t' -> `Outer_error (loc, t', t)) lamb_type lst tv_opt in
+      let lamb_type = Inference.TMap.fold (fun tv t r -> Ast_typed.Helpers.subst_type tv t r) table lamb_type in
+      let tv = lamb_type in
+      Some tv)
+    (function
+     | `Outer_error (loc, t', t) ->
+        if fail then raise.raise (assert_equal loc t' t) else None
+     | _ ->
+        let arrs, _ = O.Helpers.destruct_arrows_n lamb_type (List.length lst) in
+        if add_tc then error := `TC arrs :: ! error else ();
+        None)
+
 let typer_of_old_typer (typer : raise:_ -> _ -> O.type_expression list -> O.type_expression option -> O.type_expression) : typer =
   fun ~error ~raise ~options ~loc lst tv_opt ->
   ignore error; ignore options;
@@ -241,6 +258,9 @@ module Constant_types = struct
 
   let of_types c ts =
     (c, any_of (List.map ~f:(fun v -> typer_of_ligo_type v) ts))
+
+  let of_all_types c ts =
+    (c, any_of (List.map ~f:(fun v -> all_typer_of_ligo_type v) ts))
 
   let per_protocol c f =
     (c, per_protocol @@ fun protocol -> any_of [typer_of_ligo_type (f protocol)])
@@ -570,6 +590,26 @@ module Constant_types = struct
                     (C_LE, typer_of_comparator (comparator ~cmp:"LE"));
                     (C_GE, typer_of_comparator (comparator ~cmp:"GE"));
                   ]
+
+  let infer_external_type ~raise ~options ~loc v args =
+    let v = try TypeVar.to_name_exn v with _ -> "" in
+    match v with
+    | "ext_size" ->
+       let _, typer =
+         of_all_types C_SIZE [
+           O.(for_all "a" @@ fun a -> t_list a ^-> t_nat ());
+           O.(t_bytes () ^-> t_nat ());
+           O.(t_string () ^-> t_nat ());
+           O.(for_all "a" @@ fun a -> t_set a ^-> t_nat ());
+           O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> t_map a b ^-> t_nat ())
+         ] in
+       let error = ref [] in
+       begin
+         match typer ~error ~raise ~options ~loc args None with
+         | Some tv -> { tv with from_external = true }
+         | None -> raise.raise (corner_case "Cannot infer external type")
+       end
+    | _ -> raise.raise (corner_case "External type not found")
 end
 
 let constant_typers ~raise ~options loc c =
@@ -582,3 +622,5 @@ let constant_typers ~raise ~options loc c =
       | None -> raise.raise (corner_case @@ Format.asprintf "Cannot type constant %a" PP.constant' c))
   | _ ->
      raise.raise (corner_case @@ Format.asprintf "Typer not implemented for constant %a" PP.constant' c)
+
+let infer_external_type = Constant_types.infer_external_type

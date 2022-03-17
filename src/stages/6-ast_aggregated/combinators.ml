@@ -22,8 +22,8 @@ type expression_content = [%import: Types.expression_content]
 type type_content = [%import: Types.type_content]
 [@@deriving ez {
       prefixes = [
-        ("make_t" , fun ?(loc = Location.generated) ?source_type type_content ->
-                  ({ type_content ; location = loc ; orig_var = None ; source_type } : type_expression)) ;
+        ("make_t" , fun ?(loc = Location.generated) ?(from_external = false) ?source_type type_content ->
+                  ({ type_content ; location = loc ; orig_var = None ; source_type ; from_external } : type_expression)) ;
         ("get" , fun x -> x.type_content) ;
       ] ;
       wrap_constructor = ("type_content" , (fun type_content ?loc ?source_type () -> make_t ?loc ?source_type type_content)) ;

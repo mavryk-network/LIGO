@@ -48,6 +48,7 @@ and type_expression = {
     orig_var: type_variable option ;
     location: location;
     source_type: Ast_typed.type_expression option;
+    from_external: bool;
   }
 and ty_expr = type_expression
 

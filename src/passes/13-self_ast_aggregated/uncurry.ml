@@ -135,7 +135,8 @@ let uncurried_record_type depth args =
   { type_content = T_record record_type ;
     orig_var = None ;
     location = Location.generated ;
-    source_type = None }
+    source_type = None ;
+    from_external = false }
 
 let uncurry_rhs (depth : int) (expr : expression) =
   let (arg_types, ret_type) = uncurry_arrow depth expr.type_expression in
@@ -154,7 +155,8 @@ let uncurry_rhs (depth : int) (expr : expression) =
   let record_tv = { type_content = T_record rows ;
                     orig_var = None ;
                     location = Location.generated ;
-                    source_type = None } in
+                    source_type = None ;
+                    from_external = false } in
   let result = { expression_content = E_matching { matchee ;
                                                    cases = Match_record { fields ;
                                                                           body ;
@@ -288,7 +290,8 @@ let uncurry_expression ~raise (expr : expression) : expression =
                           type_expression = { type_content = T_arrow {type1 = record_type ; type2 = ret_type} ;
                                               orig_var = None ;
                                               location = Location.generated ;
-                                              source_type = None } } in
+                                              source_type = None ;
+                                              from_external = false } } in
               (* Apply function to tuple: f(x1', x2', ..., xn') *)
               let result = e_a_application (e_a_variable fun_name fun_type) args ret_type in
               let attr = { inline = true ; no_mutation = false ; view = false; public = true } in

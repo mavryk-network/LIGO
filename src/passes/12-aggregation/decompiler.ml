@@ -79,7 +79,7 @@ and decompile_type ~raise : Ast_aggregated.type_expression -> Ast_typed.type_exp
   let module I = Ast_aggregated in
   let module O = Ast_typed in
   let return type_content : O.type_expression =
-    { type_content ; location = ty.location ; orig_var = ty.orig_var ; type_meta = None } in
+    { type_content ; location = ty.location ; orig_var = ty.orig_var ; type_meta = None ; from_external = ty.from_external } in
   match ty.type_content with
   | T_variable v ->
      return (O.T_variable v)
