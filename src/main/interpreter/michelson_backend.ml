@@ -3,7 +3,7 @@ module Var      = Simple_utils.Var
 open Simple_utils.Trace
 open Simple_utils.Option
 
-module Tezos_protocol = Tezos_protocol_011_PtHangz2
+module Tezos_protocol = Tezos_protocol_012_Psithaca
 
 let int_of_mutez t = Z.of_int64 @@ Memory_proto_alpha.Protocol.Alpha_context.Tez.to_mutez t
 let string_of_contract t = Format.asprintf "%a" Tezos_protocol.Protocol.Alpha_context.Contract.pp t
@@ -101,10 +101,10 @@ let clean_location_with v x =
 let clean_locations e t =
   clean_location_with () e, clean_location_with () t
 
-let add_ast_env ?(name = Ast_aggregated.Var.fresh ()) env binder body =
+let add_ast_env ?(name = Ast_aggregated.ValueVar.fresh ()) env binder body =
   let open Ast_aggregated in
   let aux (let_binder , expr, no_mutation) (e : expression) =
-    if Var.compare let_binder binder <> 0 && Var.compare let_binder name <> 0 then
+    if ValueVar.compare let_binder binder <> 0 && ValueVar.compare let_binder name <> 0 then
       e_a_let_in let_binder expr e { inline = false ; no_mutation ; view = false ; public = false }
     else
       e in
@@ -128,6 +128,10 @@ let make_options ~raise ?param ctxt =
     let tezos_context = Tezos_state.get_alpha_context ~raise ctxt in
     let tezos_context = Memory_proto_alpha.Protocol.Alpha_context.Gas.set_limit tezos_context (Memory_proto_alpha.Protocol.Alpha_context.Gas.Arith.integral_exn (Z.of_int 800000)) in
     let timestamp = Timestamp.of_zint (Z.of_int64 (Proto_alpha_utils.Time.Protocol.to_seconds (Tezos_state.get_timestamp ctxt))) in
+    let level =
+      Memory_proto_alpha.Protocol.Alpha_context.((Level.current tezos_context).level |> Raw_level.to_int32
+      |> Script_int.of_int32 |> Script_int.abs)
+    in
     {
       tezos_context ;
       source ;
@@ -137,6 +141,7 @@ let make_options ~raise ?param ctxt =
       chain_id = Memory_proto_alpha.Protocol.Environment.Chain_id.zero;
       balance = Memory_proto_alpha.Protocol.Alpha_context.Tez.zero ;
       now = timestamp ;
+      level ;
     }
 
 let run_expression_unwrap ~raise ?ctxt ?(loc = Location.generated) (c_expr : Stacking.compiled_expression) =
@@ -314,6 +319,8 @@ let rec val_to_ast ~raise ~loc : Ligo_interpreter.Types.value ->
      raise.raise @@ Errors.generic_error loc "Cannot be abstracted: ligo"
   | V_Michelson (Contract _) ->
      raise.raise @@ Errors.generic_error loc "Cannot be abstracted: michelson-contract"
+  | V_Michelson (Untyped_code _) ->
+     raise.raise @@ Errors.generic_error loc "Cannot be abstracted: untyped-michelson-code"
   | V_Mutation _ ->
      raise.raise @@ Errors.generic_error loc "Cannot be abstracted: mutation"
   | V_Failure _ ->
@@ -386,11 +393,11 @@ and make_subst_ast_env_exp ~raise env expr =
   let rec aux (fv) acc = function
     | [] -> acc
     | Expression { name; item ; no_mutation } :: tl ->
-       if List.mem fv name ~equal:Var.equal then
-         let expr = val_to_ast ~raise ~loc:(Var.get_location name) item.eval_term item.ast_type in
+       if List.mem fv name ~equal:ValueVar.equal then
+         let expr = val_to_ast ~raise ~loc:(ValueVar.get_location name) item.eval_term item.ast_type in
          let expr_fv = get_fv expr in
-         let fv = List.remove_element ~compare:Var.compare name fv in
-         let fv = List.dedup_and_sort ~compare:Var.compare (fv @ expr_fv) in
+         let fv = List.remove_element ~compare:ValueVar.compare name fv in
+         let fv = List.dedup_and_sort ~compare:ValueVar.compare (fv @ expr_fv) in
          aux fv ((name, expr, no_mutation) :: acc) tl
        else
          aux fv acc tl in
