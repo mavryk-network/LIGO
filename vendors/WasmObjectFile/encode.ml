@@ -907,10 +907,8 @@ let encode (m: Ast.module_) =
       | Import _ ->        
         vu32 (Linking.func_index m.it.funcs import_funcs sym.name);
       | Data d -> (    
-        (if sym.name <> "" then (    
-          print_endline ("write data name:" ^ sym.name);
-          
-        string sym.name
+        (if sym.name <> "" then (              
+          string sym.name
         )
         else         
         string "_"); 

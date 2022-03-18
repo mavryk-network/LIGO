@@ -128,14 +128,14 @@ let env: module_ = {
       {
         it = {
           tname = "__load_type";
-          tdetails = FuncType ([], [])
+          tdetails = FuncType ([I32Type], [])
         };
         at
       };
       {
         it = {
           tname = "__save_type";
-          tdetails = FuncType ([I32Type], [I32Type])
+          tdetails = FuncType ([I32Type; I32Type], [])
         };
         at
       };

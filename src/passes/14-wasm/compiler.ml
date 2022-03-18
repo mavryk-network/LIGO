@@ -491,13 +491,13 @@ typedef struct __wasi_ciovec_t {
   - possible improvement: - in storage, store the offset and use that to store it.
                           - if offset matches, it can be just a copy paste in memory...
 *)
-let rec generate_storage_loader: I.type_expression  -> (A.instr list * locals) = fun t ->
+let rec generate_storage_loader: I.type_expression -> string -> (A.instr list * locals) = fun t offset ->
   let at = S.no_region in
   match t.type_content with 
     T_list t ->
       let addr = var_to_string (ValueVar.fresh ~name:"addr" ()) in
       let next_item = var_to_string (ValueVar.fresh ~name:"next_item" ()) in
-      let (list_item_loader, locals) = generate_storage_loader t in
+      let (list_item_loader, locals) = generate_storage_loader t offset in
       [
         {
           it = Block (
@@ -524,7 +524,7 @@ let rec generate_storage_loader: I.type_expression  -> (A.instr list * locals) =
               { it = LocalGet addr; at};
               { it = LocalGet addr; at};
               
-              { it = DataSymbol "__heap_base"; at};
+              { it = LocalGet offset; at };
               { it = Binary (I32 Add); at };
               { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
 
@@ -535,7 +535,7 @@ let rec generate_storage_loader: I.type_expression  -> (A.instr list * locals) =
               { it = LocalGet addr; at};
               { it = Const {it = I32 4l; at}; at };
               { it = Binary (I32 Add); at };
-              { it = DataSymbol "__heap_base"; at};
+              { it = LocalGet offset; at };
               { it = Binary (I32 Add); at };
               { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
 
@@ -550,11 +550,11 @@ let rec generate_storage_loader: I.type_expression  -> (A.instr list * locals) =
   | T_tuple ann_list ->
     let addr = var_to_string (ValueVar.fresh ~name:"addr" ()) in
     let (result, locals), _counter = List.fold_left ~f:(fun ((result, result_locals), counter) (annotation, type_expression) -> 
-      let (tuple_item_loader, locals) = (generate_storage_loader type_expression) in
+      let (tuple_item_loader, locals) = (generate_storage_loader type_expression offset) in
       let annotation = [
         S.{ it = A.LocalGet addr; at };
         { it = Load {ty = I32Type; align = 0; offset = Int32.of_int_exn(counter * 8); sz = None}; at }; (* is type annotation always one word? - assume yes for now *)
-        { it = DataSymbol "__heap_base"; at};
+        { it = LocalGet offset; at };
         { it = Binary (I32 Add); at };
         { it = Store {ty = I32Type; align = 0; offset = Int32.of_int_exn(counter * 8); sz = None}; at };
       ]
@@ -566,8 +566,8 @@ let rec generate_storage_loader: I.type_expression  -> (A.instr list * locals) =
     let addr       = var_to_string (ValueVar.fresh ~name:"addr" ()) in
     let item_a     = var_to_string (ValueVar.fresh ~name:"item_a" ()) in
     let item_b     = var_to_string (ValueVar.fresh ~name:"item_b" ()) in
-    let item_a_loader, locals_a = generate_storage_loader a in
-    let item_b_loader, locals_b = generate_storage_loader b in
+    let item_a_loader, locals_a = generate_storage_loader a offset in
+    let item_b_loader, locals_b = generate_storage_loader b offset in
     [
       S.{ it = A.LocalTee addr; at };
       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
@@ -589,14 +589,14 @@ let rec generate_storage_loader: I.type_expression  -> (A.instr list * locals) =
     [
       { it = LocalGet addr; at };
       { it = LocalGet item_a; at };
-      { it = DataSymbol "__heap_base"; at};
+      { it = LocalGet offset; at };
       { it = Binary (I32 Add); at };
 
       { it = LocalGet addr; at };
       { it = Const {it = I32 4l; at}; at };
       { it = Binary (I32 Add); at };
       { it = LocalGet item_b; at };
-      { it = DataSymbol "__heap_base"; at};
+      { it = LocalGet offset; at };
       { it = Binary (I32 Add); at };
     ],
     (((addr, T.I32Type) :: (item_a, I32Type) :: (item_b, I32Type) :: locals_a) @ locals_b)
@@ -611,7 +611,7 @@ let rec generate_storage_loader: I.type_expression  -> (A.instr list * locals) =
     let left     = var_to_string (ValueVar.fresh ~name:"left" ()) in
     let item     = var_to_string (ValueVar.fresh ~name:"item" ()) in
     let right    = var_to_string (ValueVar.fresh ~name:"right" ()) in
-    let set_item_loader, locals = generate_storage_loader ty in
+    let set_item_loader, locals = generate_storage_loader ty offset in
     [
       S.{ it = A.LocalTee addr; at };
       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
@@ -630,7 +630,7 @@ let rec generate_storage_loader: I.type_expression  -> (A.instr list * locals) =
           { it = LocalGet addr; at };
           { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
           { it = LocalTee left; at };
-          { it = DataSymbol "__heap_base"; at};
+          { it = LocalGet offset; at };
           { it = Binary (I32 Add); at };
           { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
 
@@ -649,7 +649,7 @@ let rec generate_storage_loader: I.type_expression  -> (A.instr list * locals) =
           { it = Const {it = I32 4l; at}; at };
           { it = Binary (I32 Add); at };
           { it = LocalGet item; at };
-          { it = DataSymbol "__heap_base"; at};
+          { it = LocalGet offset; at };
           { it = Binary (I32 Add); at };
           { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
 
@@ -664,7 +664,7 @@ let rec generate_storage_loader: I.type_expression  -> (A.instr list * locals) =
           { it = Binary (I32 Add); at };
           { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
           { it = LocalTee right; at };
-          { it = DataSymbol "__heap_base"; at};
+          { it = LocalGet offset; at };
           { it = Binary (I32 Add); at };
           { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
 
@@ -701,7 +701,7 @@ let rec generate_storage_loader: I.type_expression  -> (A.instr list * locals) =
         { it = Const {it = I32 8l; at}; at};
         { it = Binary (I32 Add); at };
         { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-        { it = DataSymbol "__heap_base"; at};
+        { it = LocalGet offset; at };
         { it = Binary (I32 Add); at };
         { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
       ], ((addr, I32Type) :: [])
@@ -725,6 +725,8 @@ let  calculate_storage_size: I.type_expression -> string -> (A.instr list * loca
       { it = Const {it = I32 4l; at}; at};
       { it = Binary (I32 Add); at };
       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }; (* get the size of the limbs *)
+      { it = Const {it = I32 4l; at}; at};
+      { it = Binary (I32 Mul); at };
       { it = Const {it = I32 12l; at}; at};
       { it = Binary (I32 Add); at };
     ], [])
@@ -788,8 +790,8 @@ typedef struct
       { it = Const {it = I32 8l; at}; at};
       { it = Binary (I32 Add); at };
       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-      { it = Const {it = I32 4l; at}; at};
-      { it = Binary (I32 Sub); at };
+      (* { it = Const {it = I32 4l; at}; at};
+      { it = Binary (I32 Add); at }; *)
       { it = LocalSet limbs; at};
 
       { it = Const {it = I32 0l; at}; at};
@@ -855,31 +857,6 @@ typedef struct
     print_endline "- Do nothing apparently...";
     ([], [])
 
-(*
-   Generate a storage loader. 
-   - at the end the malloc position should be moved...
-   - do a simple malloc for all the space?!
-*)
-(* let generate_storage_loader: I.expression -> unit = fun t ->
-  match t.
-
-(* important: should fit __wasi_ciovec_t *)
-let generate_storage_saver: I.type_expression -> unit = fun t -> 
-  match t.type_content with
-  | T_tuple of type_expression annotated list
-  | T_or of (type_expression annotated * type_expression annotated)
-  | T_function of (type_expression * type_expression)
-  | T_base of type_base
-  | T_map of (type_expression * type_expression)
-  | T_big_map of (type_expression * type_expression)
-  | T_list of type_expression
-  | T_set of type_expression
-  | T_contract of type_expression
-  | T_ticket of type_expression
-  | T_sapling_state of Z.t
-  | T_sapling_transaction of Z.t
-  | T_option of type_expression *)
-
 let compile ~raise : I.expression -> string -> string -> W.Ast.module_ = fun e filename entrypoint -> 
   let w = Default_env.env in
   let at = S.no_region in
@@ -895,11 +872,14 @@ let compile ~raise : I.expression -> string -> string -> W.Ast.module_ = fun e f
     T_tuple [(_, a); (_,b)] -> a, b
   | _ -> failwith "should not happen, I think..."
   in
-  let body,      locals      = generate_storage_loader storage_type_input in
+  let offset          = var_to_string (ValueVar.fresh ~name:"offset" ()) in
+  let body, locals    = generate_storage_loader storage_type_input offset in
   
   let target_addr     = var_to_string (ValueVar.fresh ~name:"target_addr" ()) in
   let src_addr        = var_to_string (ValueVar.fresh ~name:"src_addr" ()) in
   let foo             = var_to_string (ValueVar.fresh ~name:"foo" ()) in
+  let storage_size    = var_to_string (ValueVar.fresh ~name:"storage_size" ()) in
+  let result_with_size    = var_to_string (ValueVar.fresh ~name:"result_with_size" ()) in
   let body_calc, locals_calc = calculate_storage_size storage_type_output src_addr in
   let body_save, locals_save = generate_storage_saver storage_type_output src_addr target_addr 0l in
   let w = {w with it = {
@@ -908,8 +888,8 @@ let compile ~raise : I.expression -> string -> string -> W.Ast.module_ = fun e f
         it = {
           name = "__load";
           ftype = "__load_type";
-          locals;
-          body = {it = DataSymbol "__heap_base"; at = S.no_region} :: body;
+          locals = (offset, I32Type) :: locals;
+          body = {it = LocalGet offset; at = S.no_region} :: body;
         }; 
         at = S.no_region
       };
@@ -917,19 +897,27 @@ let compile ~raise : I.expression -> string -> string -> W.Ast.module_ = fun e f
         it = {
           name = "__save";
           ftype = "__save_type";
-          locals = ((src_addr, T.I32Type) :: (target_addr, I32Type) :: (foo, I32Type) :: locals_save)  @ locals_calc;
+          locals = ((src_addr, T.I32Type) :: (result_with_size, T.I32Type) :: (target_addr, I32Type) :: (foo, I32Type) :: (storage_size, I32Type) :: (result_with_size, I32Type) :: locals_save)  @ locals_calc;
           body = 
             body_calc @  
             [
-              S.{ it = A.Call "malloc"; at};
+              S.{ it = A.LocalTee storage_size; at };
+              { it = Call "malloc"; at};
               { it = LocalSet target_addr; at};
             ] @
             body_save
             @ 
             [
-
-              S.{ it = LocalGet target_addr; at};
+              S.
+              { it = LocalGet result_with_size; at };
+              { it = LocalGet target_addr; at};
+              { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
               
+              { it = A.LocalGet result_with_size; at };
+              { it = Const { it = I32 4l; at}; at };
+              { it = Binary (I32 Add); at };
+              { it = A.LocalGet storage_size; at };
+              { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
             ]
         }; 
         at = S.no_region

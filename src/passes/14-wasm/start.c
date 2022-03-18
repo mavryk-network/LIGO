@@ -2,8 +2,8 @@
 #include "../../../vendors/gmp/gmp-6.2.1/gmp.h"
 #include "api.h"
 
-extern void __load();
-extern uint32_t __save(uint32_t src_addr);
+extern void __load(uint32_t addr);
+extern void __save(uint32_t src_addr, __wasi_ciovec_t* result);
 
 typedef struct entrypoint_tuple {
   int parameter; // TODO: implement
@@ -53,15 +53,6 @@ void _start() {
     return;
   } 
 
-  //   int err_code623 = __wasi_fd_close(fd1);
-  // if (err_code623 != __WASI_ERRNO_SUCCESS) {
-  //   __wasi_proc_exit(92);
-  //   return;
-  // } 
-  
-  // allocate memory for storage
-  printf("Allocate: %i\n", fstat->size);
-
   int* alloc = malloc(fstat->size);
   if (alloc == NULL) {
     __wasi_proc_exit(3);
@@ -71,14 +62,14 @@ void _start() {
     .buf = alloc,
     .buf_len = fstat->size
   };
-  
+  __wasi_iovec_t *iovs2 = &iovs;
+
   // __wasi_fd_t *fd2;
   int err_code42 = __wasi_path_open(3, 0, "storage.byte", 0, __WASI_RIGHTS_FD_READ | __WASI_RIGHTS_FD_FILESTAT_GET | __WASI_RIGHTS_PATH_OPEN, 0, 0, fd1);
   if (err_code42 != __WASI_ERRNO_SUCCESS) {
     __wasi_proc_exit(6);
     return;
   }
-
 
   // read storage into allocated memory
   __wasi_size_t nread;
@@ -90,22 +81,33 @@ void _start() {
     return;
   }
 
-  printf("Bytes read: %lu\n", nread);
-
+  // printf("Bytes read: %lu\n", nread);
+  int* i = iovs2->buf;
+  // int* a2 = (int*)((char*)i+4);
+  // int* a3 = (int*)((char*)i+8);
+  // int* a4 = (int*)((char*)i+12);
+  // int* a5 = (int*)((char*)i+16);
+  // int* a6 = (int*)((char*)i+20);
+  
+  // printf("The storage contents before 1: %i\n", *i);
+  // printf("The storage contents before 1: %i\n", *a2);
+  
+  // printf("The storage contents before 1: %i\n", *a3);
+  // printf("The storage contents before 1: %i\n", *a4);
+  // printf("The storage contents before 1: %i\n", *a5);
+  // printf("The storage contents before 1: %i\n", *a6);
   
 
-  // call generated `__load` to fix pointers in storage
-  __load();
-
-
-gmp_printf("The storage contents before: %Zd\n", alloc);
-
-
+  // // call generated `__load` to fix pointers in storage
+  // printf("Given address: %i\n", i);
+  __load(i);
+  
+  gmp_printf("The storage contents before 2x: %Zd\n", i);
 
   // call smart contract entrypoint
   entrypoint_tuple et = {
     .parameter = 1,
-    .storage   = &iovs
+    .storage   = iovs2->buf
   };
   // int loc = ;
   entrypoint_result *er = malloc(3);
@@ -127,37 +129,35 @@ gmp_printf("The storage contents before: %Zd\n", alloc);
   int a = er->storage;
   gmp_printf("The storage contents after 1: %Zd\n", (int*)a);
 
-  int x = __save(a);
-  printf("location1: %i\n", x);
+  __wasi_ciovec_t *foo;
+  __save(a, foo);
+
+  int* x = foo->buf;
   
-  // int *x = er->storage;
-  
-  gmp_printf("The storage contents after 2: %Zd\n", x);
-    gmp_printf("x2\n");
-  /*
-    TODO: implement proper handling of storage. Challenges:
-    - pointers
-    - data structures
-  */
-  __wasi_ciovec_t foo = {
-    .buf = x,
-    .buf_len = 20 // how to get this number the right way?!
-  };
-gmp_printf("x3\n");
+  printf("x: %i\n", x);
+
+gmp_printf("The storage contents after 2: %Zd\n", x);
+
+  printf("size: %i\n", foo->buf_len);
   // write returned storage from contract to storage file
   __wasi_size_t *retptr1;
   int err_code5 = __wasi_fd_write(*fd1, &foo, 1, retptr1);
   if (err_code5 != __WASI_ERRNO_SUCCESS) {
+    printf("frak1\n");
     __wasi_proc_exit(7);
     return;
   }
 
+  // foo.buf_len = *retptr1;
+  printf("Check: %i\n", *retptr1);
+  // foo.buf_len =
+
   // close the file descriptor to the file
   int err_code6 = __wasi_fd_close(fd1);
   if (err_code6 != __WASI_ERRNO_SUCCESS) {
+    printf("frak2\n");
     __wasi_proc_exit(8);
     return;
   } 
-  gmp_printf("x5\n");
   __wasi_proc_exit(EXIT_SUCCESS);
 }
