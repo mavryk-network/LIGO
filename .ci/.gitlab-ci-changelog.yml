@@ -21,11 +21,11 @@ add-changelog-entry:
     - git commit -m "[Bot] add changelog entry"
     - git push origin HEAD:$CI_COMMIT_REF_NAME
   rules:
-    - if: ($CI_PIPELINE_SOURCE == "merge_request_event")
+    - if: ($CI_MERGE_REQUEST_EVENT_TYPE == "merge_train")
       changes:
           - changelog/*
       when: never
-    - if: ($CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TITLE !~ /Draft:/)
+    - if: ($CI_MERGE_REQUEST_EVENT_TYPE == "merge_train")
       when: always
 
 abort-MR-without-changelog:
@@ -39,8 +39,8 @@ abort-MR-without-changelog:
       into changelog folder (with script add-changelog-entry.sh or not)."
     - ([[ $MR_TYPE = none ]] && exit 1)
   rules:
-    - if: ($CI_PIPELINE_SOURCE == "merge_request_event")
+    - if: ($CI_MERGE_REQUEST_EVENT_TYPE == "merge_train")
       changes:
           - changelog/*
       when: never
-    - if: ($CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TITLE !~ /Draft:/)
+    - if: ($CI_MERGE_REQUEST_EVENT_TYPE == "merge_train")
