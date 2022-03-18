@@ -1,0 +1,33 @@
+author: Laucans
+description: '\n### E_module_alias ; Declaration_module_alias\n\nThis node is removed
+  at it can be expressed as `let module A = B.C in ..` can be expressed as: \n`E_module_in
+  (M_Variable \"A\" , (M_module_path (M_Variable \"B\" , [\"C\"]), ...)`\n\nSame story
+  for `Declaration_module_alias`\n\n### E_module_accessor / T_accessor\n\nThe current
+  (origin/dev) module and type accessors look like \"module openning\"/\"scoped expressions\"
+  as they accept `expression`/`type_expression` as their rhs. \nThis led to problem
+  in the pipeline where some part of the code (aggregation for instance) were implemented
+  as if we were supporting module openning ... when in reality the syntax did not
+  allow them .. (see https://gitlab.com/ligolang/ligo/-/issues/1362).\n\nWe now only
+  accept *accessors*, meaning the rhs is an label representing a declaration in the
+  accessed module expression.\n\nnote that we use label (instead of variable), so
+  this implies that we should never \"freshen\" the binder of a a top-level declaration
+  to perform substitution, .. (or some other ad-hoc transformation). e.g :\n\n```ocaml\nlet
+  x = < .. >\n< E[x] >\n```\n\n\\-- forbidden -->\n\n```ocaml\nlet x#fresh = < ..
+  >\n< E[x / x#fresh] >\n```\n\n## Side effects\n\n### scopes\n\n\"Module references\"
+  implementation is broken in `origin/dev`\n\n### `remove_unused` self pass\n\nnot
+  quite sure how to fix the failwith in `src/passes/11-self_ast_typed/contract_passes.ml`.
+  Looks like it would be better to perform dead code elimination in a latter pass
+  ?\n\n### aggregation becomes easier\n\nE_module_access rhs being restricted to declaration
+  names makes it easier for E_module_accessor to be aggregated\n\n## Future work\n\nAfter
+  this MR, the `E_module_access`/`T_module_access` nodes are still weird\n\n@er433
+  suggest we use \"identifiers\" for types/module/expression *declarations* names
+  as explained [here](https://caml.inria.fr/pub/papers/xleroy-modular_modules-jfp.pdf)
+  from page 4/35.\n\nNice effects of such a representation would be:\n\n* less dependencies
+  between languages: the link between expression / type_expression / declaration languages
+  and the module language is achieved through \"path\" (i.e. an identifier list together
+  with a declaration name as a string)\n* module_in becomes cosmetics: we could safely
+  remove E_mod_in (in a nanopass before typing) where a module (having a unique identifier)
+  would have been defined at top-level\n* [ ] has a changelog entry'
+merge_request: '1620'
+title: Laucans/generate changelog process
+type: other
