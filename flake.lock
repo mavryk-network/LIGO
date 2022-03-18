@@ -15,36 +15,38 @@
         "type": "github"
       }
     },
-    "flake-utils_2": {
+    "nixpkgs": {
       "locked": {
-        "lastModified": 1637014545,
-        "narHash": "sha256-26IZAc5yzlD9FlDT54io1oqG/bBoyka+FJk5guaX4x4=",
-        "owner": "numtide",
-        "repo": "flake-utils",
-        "rev": "bba5dcc8e0b20ab664967ad83d24d64cb64ec4f4",
+        "lastModified": 1647297614,
+        "narHash": "sha256-ulGq3W5XsrBMU/u5k9d4oPy65pQTkunR4HKKtTq0RwY=",
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "rev": "73ad5f9e147c0d2a2061f1d4bd91e05078dc0b58",
         "type": "github"
       },
       "original": {
-        "owner": "numtide",
-        "repo": "flake-utils",
+        "owner": "nixos",
+        "ref": "nixos-unstable",
+        "repo": "nixpkgs",
         "type": "github"
       }
     },
-    "nixpkgs": {
+    "ocaml-overlay": {
       "inputs": {
-        "flake-utils": "flake-utils_2"
+        "flake-utils": [
+          "flake-utils"
+        ]
       },
       "locked": {
-        "lastModified": 1645390338,
-        "narHash": "sha256-I0yDMhT1Mqe3gBKH3C05UIwFQ5dk/EXtYDnljSfzX7A=",
+        "lastModified": 1647465073,
+        "narHash": "sha256-yyvziIw4j6m2tPcMtwlRsQwhPtgC0GLBs+YUFj7ukfg=",
         "owner": "anmonteiro",
         "repo": "nix-overlays",
-        "rev": "18b9cbbb7861a62a1560af208977cc8631b02d90",
+        "rev": "767d63ae6469c96f332966d804f6b10982c96010",
         "type": "github"
       },
       "original": {
         "owner": "anmonteiro",
-        "ref": "ulrikstrid/revert_ppx_deriving_patch",
         "repo": "nix-overlays",
         "type": "github"
       }
@@ -52,7 +54,8 @@
     "root": {
       "inputs": {
         "flake-utils": "flake-utils",
-        "nixpkgs": "nixpkgs"
+        "nixpkgs": "nixpkgs",
+        "ocaml-overlay": "ocaml-overlay"
       }
     }
   },

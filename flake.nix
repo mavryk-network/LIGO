@@ -2,19 +2,19 @@
   description = "A friendly Smart Contract Language for Tezos";
 
   inputs = {
-    nixpkgs.url = "github:anmonteiro/nix-overlays/ulrikstrid/revert_ppx_deriving_patch";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
   
     flake-utils.url = "github:numtide/flake-utils";
 
-    # ocaml-overlay.url = "github:anmonteiro/nix-overlays/ulrikstrid/static-coq";
-    # ocaml-overlay.inputs.nixpkgs.follows = "nixpkgs";
-    # ocaml-overlay.inputs.flake-utils.follows = "flake-utils";
+    ocaml-overlay.url = "github:anmonteiro/nix-overlays";
+    ocaml-overlay.inputs.nixpkgs.follows = "nixpkgs";
+    ocaml-overlay.inputs.flake-utils.follows = "flake-utils";
   };
 
-  outputs = { self, nixpkgs, flake-utils }:
+  outputs = { self, nixpkgs, flake-utils, ocaml-overlay }:
   flake-utils.lib.eachDefaultSystem (system:
     let
-      pkgs = nixpkgs.legacyPackages."${system}";
+      pkgs = import nixpkgs { inherit system; overlays = [ ocaml-overlay.overlay ]; };
       pkgs' = pkgs.pkgsCross.musl64;
 
       coq-compiler = (pkgs'.coq_8_14.override { buildIde = false; csdp = null; })
