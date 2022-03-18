@@ -1,6 +1,7 @@
 { lib
 , pkgs
 , removeReferencesTo
+, git
 , coq
 , cacert
 , patdiff
@@ -13,7 +14,7 @@ let
 in
 ocamlPackages.buildDunePackage rec {
   pname = "ligo";
-  version = "0.37.0-dev";
+  version = "0.39.0-dev";
 
   src = filters.filterGitSource {
     src = ../.;
@@ -55,6 +56,7 @@ ocamlPackages.buildDunePackage rec {
   nativeBuildInputs = [
     removeReferencesTo
     coq
+    git
   ] ++ (with ocamlPackages; [
     menhir
     ocaml-recovery-parser
@@ -96,6 +98,8 @@ ocamlPackages.buildDunePackage rec {
     resto-directory
     resto-cohttp-self-serving-client
     irmin-pack
+    zarith_stubs_js
+    pure-splitmix
 
     # Test helpers deps
     qcheck

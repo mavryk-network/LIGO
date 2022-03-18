@@ -38,15 +38,16 @@
         ]
       },
       "locked": {
-        "lastModified": 1647465073,
-        "narHash": "sha256-yyvziIw4j6m2tPcMtwlRsQwhPtgC0GLBs+YUFj7ukfg=",
+        "lastModified": 1647613761,
+        "narHash": "sha256-+p+CyDWGq0pOK4vmPOkVSdop9EScDl4NhRw4qCoGvbc=",
         "owner": "anmonteiro",
         "repo": "nix-overlays",
-        "rev": "767d63ae6469c96f332966d804f6b10982c96010",
+        "rev": "0f2df18cd2c5b6d83750eaead5f30cc2ea0f669b",
         "type": "github"
       },
       "original": {
         "owner": "anmonteiro",
+        "ref": "ulrikstrid/ocaml-recovery-parser",
         "repo": "nix-overlays",
         "type": "github"
       }
