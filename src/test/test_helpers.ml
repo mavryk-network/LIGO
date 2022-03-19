@@ -138,7 +138,7 @@ let pack_payload ~raise (program:Ast_typed.program) (payload:Ast_imperative.expr
   let code =
     let sugar     = Ligo_compile.Of_imperative.compile_expression ~raise payload in
     let core      = Ligo_compile.Of_sugar.compile_expression ~raise sugar in
-    let typed      = Ligo_compile.Of_core.compile_expression ~raise ~options ~init_prog:program core in
+    let typed      = Ligo_compile.Of_core.compile_expression ~raise ~add_warning ~options ~init_prog:program core in
     let aggregated = Ligo_compile.Of_typed.compile_expression ~raise typed in
     let mini_c = Ligo_compile.Of_aggregated.compile_expression ~raise aggregated in
     Ligo_compile.Of_mini_c.compile_expression ~raise ~options mini_c in
