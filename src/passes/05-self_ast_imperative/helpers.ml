@@ -3,13 +3,6 @@ module Var  = Simple_utils.Var
 open Ast_imperative
 open Stage_common
 
-let map_lmap_t f map =
-  LMap.map
-    (fun ({associated_type;_} as field : _ row_element) ->
-      let associated_type = f associated_type in
-      {field with associated_type })
-    map
-
 type ('a,'err) folder = 'a -> expression -> 'a
 let rec fold_expression : ('a, 'err) folder -> 'a -> expression -> 'a = fun f init e ->
   let self = fold_expression f in
@@ -26,6 +19,7 @@ let rec fold_expression : ('a, 'err) folder -> 'a -> expression -> 'a = fun f in
   )
   | E_application app -> Folds.application self init app
   | E_lambda l -> Folds.lambda self (fun _ a -> a) init l
+  | E_type_abstraction ta -> Folds.type_abs self init ta
   | E_ascription a -> Folds.ascription self (fun _ a -> a) init a
   | E_constructor c -> Folds.constructor self init c
   | E_matching {matchee=e; cases} -> (
@@ -137,6 +131,10 @@ let rec map_expression : 'err exp_mapper -> expression -> expression = fun f e -
   | E_lambda l -> (
       let l = Maps.lambda self (fun a -> a) l in
       return @@ E_lambda l
+    )
+  | E_type_abstraction ta -> (
+      let ta = Maps.type_abs self ta in
+      return @@ E_type_abstraction ta
     )
   | E_recursive r ->
       let r = Maps.recursive self (fun a -> a) r in
@@ -318,6 +316,10 @@ let rec fold_map_expression : ('a, 'err) fold_mapper -> 'a -> expression -> 'a *
       let res,l = Fold_maps.lambda self idle init l in
       ( res, return @@ E_lambda l)
     )
+  | E_type_abstraction ta -> (
+      let res, ta = Fold_maps.type_abs self init ta in
+      res, return @@ E_type_abstraction ta
+    )
   | E_recursive r ->
       let res,r = Fold_maps.recursive self idle init r in
       ( res, return @@ E_recursive r)
@@ -350,12 +352,8 @@ let rec fold_map_expression : ('a, 'err) fold_mapper -> 'a -> expression -> 'a *
   )
   | E_literal _ | E_variable _ | E_raw_code _ | E_skip as e' -> (init, return e')
 
-
-let in_vars var vars =
-  List.mem ~equal:Var.equal vars var
-
 let remove_from var vars =
-  let f v vars = if Var.equal var v then vars else v :: vars in
+  let f v vars = if ValueVar.equal var v then vars else v :: vars in
   List.fold_right ~f vars ~init:[]
 
 let get_pattern ?(pred = fun _ -> true) pattern =
@@ -370,12 +368,8 @@ module Free_variables :
     val expression : expression -> expression_variable list
   end
   = struct
-  module Var = struct
-    type t = expression_variable
-    let compare e e' = Var.compare e e'
-  end
 
-  module VarSet = Caml.Set.Make(Var)
+  module VarSet = Caml.Set.Make(ValueVar)
 
   let unions : VarSet.t list -> VarSet.t =
     fun l -> List.fold l ~init:VarSet.empty ~f:VarSet.union
@@ -432,6 +426,8 @@ module Free_variables :
       self result
     | E_lambda {binder = {var;ascr=_;attributes=_}; result;output_type=_} ->
       VarSet.remove var @@ self result
+    | E_type_abstraction {type_binder=_;result} ->
+      self result
     | E_recursive {fun_name; lambda = {binder = {var;ascr=_;attributes=_}; result;_};fun_type=_} ->
       VarSet.remove fun_name @@ VarSet.remove var @@ self result
     | E_constant {arguments;cons_name=_} ->

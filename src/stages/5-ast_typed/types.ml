@@ -26,7 +26,7 @@ and type_content =
 
 and type_injection = {
   language : string ;
-  injection : Simple_utils.Ligo_string.t ;
+  injection : Stage_common.Constant.t ;
   parameters : ty_expr list ;
 }
 
@@ -41,15 +41,6 @@ and annot_option = string option
 
 and row_element = type_expression row_element_mini_c
 
-and type_map_args = {
-    k : type_expression;
-    v : type_expression;
-  }
-
-and michelson_or_args = {
-    l : type_expression;
-    r : type_expression;
-  }
 
 and type_expression = {
     type_content: type_content;
@@ -134,11 +125,6 @@ and map_kv = {
     value : expression ;
   }
 
-and look_up = {
-    ds : expression;
-    ind : expression;
-  }
-
 and expression_label_map = expression label_map
 and expression_list = expression list
 
@@ -156,6 +142,7 @@ and expression_content =
   | E_mod_alias of expr mod_alias
   | E_raw_code of raw_code
   | E_type_inst of type_inst
+  | E_type_abstraction of expr type_abs
   (* Variant *)
   | E_constructor of constructor (* For user defined constructors *)
   | E_matching of matching

@@ -75,11 +75,14 @@ let rec decompile_expression : O.expression -> I.expression =
     | O.E_lambda lamb ->
       let lamb = lambda self self_type lamb in
       return @@ I.E_lambda lamb
+    | O.E_type_abstraction ta ->
+      let ta = type_abs self ta in
+      return @@ I.E_type_abstraction ta
     | O.E_recursive recs ->
       let recs = recursive self self_type recs in
       return @@ I.E_recursive recs
     | O.E_let_in {let_binder = {var; ascr;attributes=_};attr={inline=false;no_mutation=_;view=_;public=_};rhs=expr1;let_result=expr2}
-      when O.Var.is_name var "()"
+      when O.ValueVar.is_name var "()"
            && Stdlib.(=) ascr (Some (O.t_unit ())) ->
       let expr1 = self expr1 in
       let expr2 = self expr2 in
@@ -143,13 +146,6 @@ let rec decompile_expression : O.expression -> I.expression =
     | O.E_module_accessor ma ->
       let ma = module_access self ma in
       return @@ E_module_accessor ma
-
-and decompile_lambda : _ O.lambda -> _ I.lambda =
-  fun {binder=b;output_type;result}->
-    let binder = binder decompile_type_expression b in
-    let output_type = Option.map ~f:decompile_type_expression output_type in
-    let result = decompile_expression result in
-    I.{binder;output_type;result}
 
 and decompile_declaration : O.declaration -> I.declaration =
   fun declaration ->

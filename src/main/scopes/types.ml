@@ -9,7 +9,7 @@ module Definitions = struct
     | Unresolved
 
   type vdef = {
-    name  : Ast_core.expression_variable;
+    name  : string ;
     range : Location.t ;
     body_range : Location.t ;
     t : type_case ;
@@ -17,7 +17,7 @@ module Definitions = struct
   }
 
   type tdef = {
-    name : string ;
+    name  : string ;
     range : Location.t ;
     body_range : Location.t ;
     content : Ast_core.type_expression ;
@@ -37,7 +37,7 @@ module Definitions = struct
     content : def_map ;
   }
 
-  and def = Variable of vdef | Type of tdef | Module of mdef | ModuleAlias of adef
+  and def = Variable of vdef | Type of tdef | Module of mdef
   and def_map = def Def_map.t
 
   let merge_refs : string -> def -> def -> def option = fun _ a b ->
@@ -45,24 +45,22 @@ module Definitions = struct
     | Variable a , Variable b ->
       let references = List.dedup_and_sort ~compare:Location.compare (a.references @ b.references) in
       Some (Variable { a with references })
-    | (Variable _ |Type _ | Module _ | ModuleAlias _) , (Variable _ |Type _ | Module _ | ModuleAlias _) -> Some a
+    | (Variable _ |Type _ | Module _ ) , (Variable _ |Type _ | Module _ ) -> Some a
 
   let merge_defs a b =
     Def_map.union merge_refs a b
 
   let get_def_name = function
-    | Variable    d -> Ast_core.Var.to_name_exn d.name
+    | Variable    d -> d.name
     | Type        d -> d.name
     | Module      d -> d.name
-    | ModuleAlias d -> d.name
 
   let get_range = function
     | Type        t -> t.range
     | Variable    v -> v.range
     | Module      m -> m.range
-    | ModuleAlias a -> a.range
 
-  let make_v_def : Ast_core.expression_variable -> type_case -> Location.t -> Location.t -> def =
+  let make_v_def : string -> type_case -> Location.t -> Location.t -> def =
     fun name t range body_range ->
       Variable { name ; range ; body_range ; t ; references = [] }
 
@@ -74,21 +72,17 @@ module Definitions = struct
     fun name loc m ->
       Module { name ; range = loc ; body_range = Location.dummy ; content = m }
 
-  let make_a_def : string -> Ast_core.declaration Location.wrap -> Ast_core.module_variable List.Ne.t -> def =
-    fun name decl a ->
-      ModuleAlias { name ; range = decl.location ; body_range = Location.dummy ; content = a }
-
   let add_reference : Ast_core.expression_variable -> def_map -> def_map = fun x env ->
     let aux : string * def -> bool = fun (_,d) ->
       match d with
-      | Variable v -> Ast_core.Var.equal v.name x
-      | (Type _ | Module _ | ModuleAlias _) -> false
+      | Variable v -> Ast_core.ValueVar.is_name x v.name
+      | (Type _ | Module _ ) -> false
     in
     match List.find ~f:aux (Def_map.bindings env) with
     | Some (k,_) ->
       let aux : def option -> def option = fun d_opt ->
         match d_opt with
-        | Some (Variable v) -> Some (Variable { v with references = (Ast_core.Var.get_location x :: v.references) })
+        | Some (Variable v) -> Some (Variable { v with references = (Ast_core.ValueVar.get_location x :: v.references) })
         | Some x -> Some x
         | None -> None
       in

@@ -37,6 +37,7 @@ and expression_content =
   | E_variable of expression_variable
   | E_application of expr application
   | E_lambda of (expr, ty_expr) lambda
+  | E_type_abstraction of expr type_abs
   | E_recursive of (expr, ty_expr) recursive
   | E_let_in  of (expr, ty_expr) let_in
   | E_type_in of (expr, ty_expr) type_in
@@ -83,9 +84,9 @@ and environment_element_definition =
 and free_variables = expression_variable list
 
 and environment_element =
-  { type_value: type_expression
-  ; source_environment: environment
-  ; definition: environment_element_definition }
+  { type_value: type_expression ;
+    definition: environment_element_definition
+  }
 
 and expr_environment = (expression_variable * environment_element) list
 and type_environment = (type_variable * type_expression) list

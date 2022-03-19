@@ -54,7 +54,7 @@ let lmap_sep_d x = lmap_sep x (tag " ,@ ")
 let tuple_or_record_sep_expr value = tuple_or_record_sep value "@[<h>record[%a]@]" " ,@ " "@[<h>( %a )@]" " ,@ "
 let tuple_or_record_sep_type value = tuple_or_record_sep_t value "@[<h>record[%a]@]" " ,@ " "@[<h>( %a )@]" " *@ "
 
-let type_variable ppf (t : type_variable) : unit = fprintf ppf "%a" Var.pp t
+let type_variable ppf (t : type_variable) : unit = fprintf ppf "%a" TypeVar.pp t
 
 open Format
 
@@ -84,7 +84,7 @@ and row_element : formatter -> row_element -> unit =
 
 and type_injection ppf {language;injection;parameters} =
   ignore language;
-  fprintf ppf "[%s {| %s %a |}]" language (Ligo_string.extract injection) (list_sep_d_par type_expression) parameters
+  fprintf ppf "[%s {| %s %a |}]" language (Stage_common.Constant.to_string injection) (list_sep_d_par type_expression) parameters
 
 and record ppf {content; layout=_} =
   fprintf ppf "%a"
@@ -120,6 +120,7 @@ and expression_content ppf (ec: expression_content) =
   | E_lambda {binder; result} ->
       fprintf ppf "lambda (%a) return %a" expression_variable binder
         expression result
+  | E_type_abstraction e -> type_abs expression ppf e
   | E_matching {matchee; cases;} ->
       fprintf ppf "match %a with %a" expression matchee (matching expression) cases
   | E_let_in {let_binder; rhs; let_result; attr = { inline; no_mutation; public=_ ; view = _ } } ->

@@ -1,6 +1,8 @@
-module Location = Simple_utils.Location
-module List     = Simple_utils.List
-module Var      = Var
+module Location  = Simple_utils.Location
+module List      = Simple_utils.List
+module ValueVar  = Var.ValueVar
+module TypeVar   = Var.TypeVar
+module ModuleVar = Var.ModuleVar
 include Enums
 
 module SMap = Simple_utils.Map.Make(String)
@@ -17,17 +19,15 @@ type known_attributes = {
   public: bool;
 }
 
-type expression_variable = Var.t [@@deriving yojson, equal, compare]
-type type_variable       = Var.t [@@deriving yojson, equal, compare]
-type module_variable     = Var.t [@@deriving yojson, equal, compare]
+type expression_variable = ValueVar.t
+type type_variable       = TypeVar.t
+type module_variable     = ModuleVar.t
 
-type kind = unit [@@deriving yojson,equal,compare]
+type kind = | Type
+            | Singleton [@@deriving yojson,equal,compare]
 
 type label = Label of string
 let label_to_yojson (Label l) = `List [`String "Label"; `String l]
-let label_of_yojson = function
-  | `List [`String "Label"; `String l] -> Ok (Label l)
-  | _ -> Simple_utils.Utils.error_yojson_format "Label of string"
 let equal_label (Label a) (Label b) = String.equal a b
 let compare_label (Label a) (Label b) = String.compare a b
 
@@ -37,9 +37,6 @@ type 'a label_map = 'a LMap.t
 let const_name = function
   | Deprecated {const;_} -> const
   | Const      const     -> const
-let bindings_to_yojson f g xs = `List (List.map ~f:(fun (x,y) -> `List [f x; g y]) xs)
-let label_map_to_yojson row_elem_to_yojson m =
-  bindings_to_yojson label_to_yojson row_elem_to_yojson (LMap.bindings m)
 
 type 'ty_expr row_element_mini_c = {
   associated_type      : 'ty_expr ;
@@ -144,6 +141,8 @@ type 'exp update   = {record: 'exp; path: 'exp access list; update: 'exp}
 
 type 'exp record_accessor = {record: 'exp; path: label}
 type 'exp record_update   = {record: 'exp; path: label; update: 'exp}
+
+type ('exp) type_abs = {type_binder:type_variable;result:'exp}
 
 type ('exp,'ty_exp) ascription = {anno_expr: 'exp; type_annotation: 'ty_exp}
 

@@ -31,9 +31,9 @@ let option_public ppf public =
 let label ppf (l:label) : unit =
   let Label l = l in fprintf ppf "%s" l
 
-let expression_variable ppf (t : expression_variable) : unit = fprintf ppf "%a" Var.pp t
-let type_variable       ppf (t : type_variable)       : unit = fprintf ppf "%a" Var.pp t
-let module_variable     ppf (t : module_variable)     : unit = fprintf ppf "%a" Var.pp t
+let expression_variable ppf (t : expression_variable) : unit = fprintf ppf "%a" ValueVar.pp t
+let type_variable       ppf (t : type_variable)       : unit = fprintf ppf "%a" TypeVar.pp t
+let module_variable     ppf (t : module_variable)     : unit = fprintf ppf "%a" ModuleVar.pp t
 let kind_               ppf (_ : kind)                : unit = fprintf ppf "*"
 
 and access f ppf a =
@@ -180,6 +180,11 @@ let lambda expression type_expression ppf = fun {binder=b; output_type; result} 
   fprintf ppf "lambda (%a)%a return %a"
     (binder type_expression) b
     (option_type_expression type_expression) output_type
+    expression result
+
+let type_abs expression ppf = fun {type_binder;result} ->
+  fprintf ppf "Λ %a -> @;@[%a@]"
+    type_variable type_binder
     expression result
 
 let _option_map ppf (k,v_opt) =
