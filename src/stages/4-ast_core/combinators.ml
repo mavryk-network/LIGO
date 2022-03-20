@@ -83,6 +83,19 @@ let t_bool ?loc ?sugar ()       : type_expression = t_sum_ez ?loc ?sugar
 
 let t_arrow ?loc ?sugar param result : type_expression = t_arrow ?loc ?sugar {type1=param; type2=result} ()
 let t_shallow_closure ?loc ?sugar param result: type_expression = make_t ?loc ?sugar (T_arrow {type1=param; type2=result})
+let t_chest_opening_result ?loc ?sugar () : type_expression =
+  t_sum_ez ?loc ?sugar [
+    ("Ok_opening", t_bytes ()) ;
+    ("Fail_decrypt", t_unit ());
+    ("Fail_timelock", t_unit ())
+  ]
+
+(* types specific to LIGO test framework*)
+let t_michelson_code ?loc ?sugar () : type_expression = t_constant ?loc ?sugar Stage_common.Constant.Michelson_program []
+let t_test_exec_error ?loc ?sugar () : type_expression = t_sum_ez ?loc ?sugar
+  [ ("Rejected", t_pair (t_michelson_code ()) (t_address ())) ; ("Other" , t_unit ())]
+let t_test_exec_result ?loc ?sugar () : type_expression = t_sum_ez ?loc ?sugar
+  [ ("Success" ,t_nat ()); ("Fail", t_sum_ez [ ("Rejected", t_pair (t_michelson_code ()) (t_address ())) ; ("Other" , t_unit ())])]
 
 let get_t_bool (t:type_expression) : unit option = match t.type_content with
   | t when (Compare.type_content t (t_bool ()).type_content) = 0-> Some ()

@@ -908,6 +908,8 @@ and untype_expression_content ty (ec:O.expression_content) : I.expression =
     | _ ->
      failwith "Impossible case: cannot untype a type instance of a non polymorphic type"
 
+and untype_declaration_loc : O.declaration_loc -> I.declaration_loc = fun l ->
+  Location.wrap ~loc:l.location (untype_declaration l.wrap_content)
 and untype_declaration : O.declaration -> I.declaration =
 let return (d: I.declaration) = d in
 function

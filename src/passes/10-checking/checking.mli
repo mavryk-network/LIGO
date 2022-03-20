@@ -13,7 +13,8 @@ val type_expression  : raise:typer_error raise -> options:Compiler_options.middl
 
 
 val untype_expression : O.expression -> I.expression
-
+val untype_declaration : O.declaration -> I.declaration
+val untype_declaration_loc : O.declaration_loc -> I.declaration_loc
 val untype_program : O.program -> I.module_
 
 val assert_type_expression_eq : raise:typer_error raise -> Location.t -> O.type_expression * O.type_expression -> unit

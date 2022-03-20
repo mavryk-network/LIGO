@@ -16,7 +16,11 @@ and module_attribute = {
   public: bool;
 }
 
-and module_ = declaration Location.wrap list
+and declaration_loc = declaration location_wrap
+
+and module_ = declaration_loc list
+
+and program = module_
 
 and declaration_constant = {
   binder : ty_expr binder;
