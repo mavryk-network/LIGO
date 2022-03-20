@@ -4,8 +4,6 @@ open Ast_typed
 open Errors
 open Simple_utils.Trace
 
-module Var = Ast_typed.ValueVar
-
 let var_equal = ValueVar.equal
 
 let rec check_recursive_call ~raise : expression_variable -> bool -> expression -> unit = fun n final_path e ->
@@ -78,21 +76,23 @@ let check_tail_expression ~raise : expression -> expression = fun e ->
   | e -> return e
 
 
-let remove_rec_expression ~add_warning : expression -> expression = fun e ->
+let show_unused_rec_warning ~add_warning ~warn_unused_rec fun_name = 
+  if warn_unused_rec then
+    add_warning 
+      (`Self_ast_typed_warning_unused_rec
+        (ValueVar.get_location fun_name, Format.asprintf "%a" ValueVar.pp fun_name))
+  else ()
+
+let remove_rec_expression ~warn_unused_rec ~add_warning : expression -> expression = fun e ->
   let return expression_content = { e with expression_content } in
   match e.expression_content with
   | E_recursive {fun_name; fun_type=_; lambda} as e-> (
     let _, fv = FV.expression lambda.result in
     let binder_is_shadowed = var_equal fun_name lambda.binder in
-    let () = 
-      if binder_is_shadowed 
-      then add_warning 
-        (`Self_ast_typed_warning_unused_rec
-          (Var.get_location fun_name, Format.asprintf "%a" Var.pp fun_name))
-      else () in
     if (List.mem fv fun_name ~equal:var_equal && not binder_is_shadowed) then
       return e
     else
+      let () = show_unused_rec_warning ~add_warning ~warn_unused_rec fun_name in
       return (E_lambda lambda)
     )
   | e -> return e

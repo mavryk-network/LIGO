@@ -86,8 +86,10 @@ let ast_typed (raw_options : Compiler_options.raw) source_file display_format ()
       in
       let Compiler_options.{ self_pass ; _ } = options.tools in
       let typed = Build.type_contract ~raise ~add_warning ~options source_file in
+      let syntax = Syntax.of_string_opt ~raise (Syntax_name "auto") (Some source_file) in
       if self_pass then
-        Trace.trace ~raise Main_errors.self_ast_typed_tracer @@ Self_ast_typed.all_module ~add_warning typed
+        let warn_unused_rec = options.middle_end.warn_unused_rec && (not (Syntax_types.equal syntax Syntax_types.JsLIGO)) in
+        Trace.trace ~raise Main_errors.self_ast_typed_tracer @@ Self_ast_typed.all_module ~add_warning ~warn_unused_rec typed
       else
         typed
 

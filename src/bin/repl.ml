@@ -81,8 +81,9 @@ type state = { env : Environment.t; (* The repl should have its own notion of en
                dry_run_opts : Run.options;
               }
 
-let try_eval ~raise ~raw_options state s =
-  let options = Compiler_options.make ~raw_options () in
+let try_eval ~raise ~(raw_options : Compiler_options.raw) state s =
+  let warn_unused_rec = raw_options.warn_unused_rec && not (Syntax_types.equal state.syntax Syntax_types.JsLIGO) in
+  let options = Compiler_options.make ~raw_options ~warn_unused_rec () in
   let options = Compiler_options.set_init_env options state.env in
   let typed_exp  = Ligo_compile.Utils.type_expression_string ~raise ~add_warning ~options:options state.syntax s @@ Environment.to_program state.env in
   let module_ = Ligo_compile.Of_typed.compile_program ~raise state.top_level in

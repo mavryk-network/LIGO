@@ -50,7 +50,7 @@ type t = {
   middle_end : middle_end ;
   backend : backend ;
 }
-
+(* TODO: take into account syntax for warn_unused_rec *)
 let make : 
   raw_options : raw ->
   ?protocol_version:Protocols.t ->
