@@ -365,6 +365,21 @@ let rec compile_expression ~raise : CST.expr -> AST.expr = fun e ->
   | EModA ma -> (
     let (ma, loc) = r_split ma in
     let (module_name, _) = r_split ma.module_name in
+    let rec aux : module_variable list -> CST.expr -> AST.expression = fun acc exp ->
+      match exp with
+      | EVar v ->
+         let accessed_el = compile_variable v in
+         return @@ e_module_accessor ~loc acc accessed_el
+      | EProj proj ->
+         let (proj, _) = r_split proj in
+         let (var, _) = r_split proj.struct_name in
+         let moda  = e_module_accessor ~loc acc (ValueVar.of_input_var var) in
+         let (sels, _) = List.unzip @@ List.map ~f:compile_selection @@ npseq_to_list proj.field_path in
+         return @@ e_accessor ~loc moda sels
+      | EModA ma ->
+         aux (acc @ [compile_mod_var ma.value.module_name]) ma.value.field
+      | _ -> raise.raise (expected_access_to_variable (CST.expr_to_region ma.field))
+    in
     (*TODO: move to proper module*)
     if List.mem ~equal:Caml.(=) build_ins module_name then
       let fun_name = match ma.field with
@@ -377,39 +392,8 @@ let rec compile_expression ~raise : CST.expr -> AST.expr = fun e ->
       let var = module_name ^ "." ^ fun_name in
       match constants var with
         Some const -> return @@ e_constant ~loc const []
-      | None -> (
-        let rec aux : module_variable list -> CST.expr -> AST.expression = fun acc exp ->
-          match exp with
-          | EVar v ->
-             let accessed_el = compile_variable v in
-             return @@ e_module_accessor ~loc acc accessed_el
-          | EProj proj ->
-             let (proj, _) = r_split proj in
-             let (var, _) = r_split proj.struct_name in
-             let moda  = e_module_accessor ~loc acc (ValueVar.of_input_var var) in
-             let (sels, _) = List.unzip @@ List.map ~f:compile_selection @@ npseq_to_list proj.field_path in
-             return @@ e_accessor ~loc moda sels
-          | EModA ma ->
-             aux (acc @ [compile_mod_var ma.value.module_name]) ma.value.field
-          | _ -> raise.raise (expected_access_to_variable (CST.expr_to_region ma.field))
-        in
-        aux [compile_mod_var ma.module_name] ma.field)
+      | None -> aux [compile_mod_var ma.module_name] ma.field
     else
-      let rec aux : module_variable list -> CST.expr -> AST.expression = fun acc exp ->
-        match exp with
-        | EVar v ->
-          let accessed_el = compile_variable v in
-          return @@ e_module_accessor ~loc acc accessed_el
-        | EProj proj ->
-          let (proj, _) = r_split proj in
-          let (var, _) = r_split proj.struct_name in
-          let moda  = e_module_accessor ~loc acc (ValueVar.of_input_var var) in
-          let (sels, _) = List.unzip @@ List.map ~f:compile_selection @@ npseq_to_list proj.field_path in
-          return @@ e_accessor ~loc moda sels
-        | EModA ma ->
-          aux (acc @ [compile_mod_var ma.value.module_name]) ma.value.field
-        | _ -> raise.raise (expected_access_to_variable (CST.expr_to_region ma.field))
-      in
       aux [compile_mod_var ma.module_name] ma.field
   )
   | EUpdate update ->
