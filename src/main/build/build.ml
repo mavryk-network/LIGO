@@ -54,9 +54,19 @@ module M (Params : Params) =
   end
 
 module Infer (Params : Params) = struct
-  include M(Params)
+    let raise = Params.raise
+    let add_warning = Params.add_warning
+    let options = Params.options
+    type file_name = string
+    type module_name = string
+    type compilation_unit = Buffer.t
+    type meta_data = Ligo_compile.Helpers.meta
+    let preprocess : file_name -> compilation_unit * meta_data * (file_name * module_name) list =
+      fun file_name ->
+      let meta = Ligo_compile.Of_source.extract_meta ~raise "auto" file_name in
+      let c_unit, deps = Ligo_compile.Helpers.preprocess_file ~raise ~meta ~options:options.frontend file_name in
+      c_unit,meta,deps
   module AST = struct
-    include AST
     type declaration = Ast_core.declaration Location.wrap
     type t = declaration list
       type environment = Environment.core

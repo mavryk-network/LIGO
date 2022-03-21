@@ -722,7 +722,9 @@ and type_constant ~raise ~options (name:I.constant') (loc:Location.t) (lst:O.typ
   let tv = typer lst tv_opt in
   (name, tv)
 
-let type_program ~raise ~options ?env m = type_module ~raise ~options ~init_context:(Context.init ?env ()) m
+let type_program ~raise ~options ?env m =
+  (* print_endline (Format.asprintf "%a" (Simple_utils.PP_helpers.option Environment.pp) env); *)
+  type_module ~raise ~options ~init_context:(Context.init ?env ()) m
 let type_declaration ~raise ~options ?env d = snd @@ type_declaration' ~raise ~options (Context.init ?env ()) d
 let untype_literal (l:O.literal) : I.literal =
   let open I in
