@@ -1,7 +1,74 @@
+open Simple_utils
 open Types
 
+let assert_eq = fun a b -> if Caml.(=) a b then Some () else None
+let assert_same_size = fun a b -> if (List.length a = List.length b) then Some () else None
 
-let assert_literal_eq (a, b : literal * literal) : unit option =
+let rec assert_type_expression_eq (a, b: (type_expression * type_expression)) : unit option =
+  let open Option in
+  match (a.type_content, b.type_content) with
+  | T_app {type_operator=toa;arguments=lsta}, T_app {type_operator=tob;arguments=lstb} -> (
+    if (TypeVar.equal toa tob) then (
+      let* _ = assert_same_size lsta lstb in
+      List.fold_left ~f:(fun acc p -> match acc with | None -> None | Some () -> assert_type_expression_eq p) ~init:(Some ()) (List.zip_exn lsta lstb)
+    ) else
+      None
+  )
+  | T_app _, _ -> None
+  | T_sum sa, T_sum sb -> (
+      let sa' = LMap.to_kv_list_rev sa.fields in
+      let sb' = LMap.to_kv_list_rev sb.fields in
+      let aux ((ka, {associated_type=va;_}), (kb, {associated_type=vb;_})) =
+        let* _ = assert_eq ka kb in
+        assert_type_expression_eq (va, vb)
+      in
+      let* _ = assert_same_size sa' sb' in
+      List.fold_left ~f:(fun acc p -> match acc with | None -> None | Some () -> aux p) ~init:(Some ()) (List.zip_exn sa' sb')
+    )
+  | T_sum _, _ -> None
+  | T_record ra, T_record rb
+       when Bool.(<>) (Helpers.is_tuple_lmap ra.fields) (Helpers.is_tuple_lmap rb.fields) -> None
+  | T_record ra, T_record rb -> (
+      let sort_lmap r' = List.sort ~compare:(fun (Label a,_) (Label b,_) -> String.compare a b) r' in
+      let ra' = sort_lmap @@ LMap.to_kv_list_rev ra.fields in
+      let rb' = sort_lmap @@ LMap.to_kv_list_rev rb.fields in
+      let aux ((ka, {associated_type=va;_}), (kb, {associated_type=vb;_})) =
+        let Label ka = ka in
+        let Label kb = kb in
+        let* _ = assert_eq ka kb in
+        assert_type_expression_eq (va, vb)
+      in
+      let* _ = assert_eq ra.layout rb.layout in
+      let* _ = assert_same_size ra' rb' in
+      List.fold_left ~f:(fun acc p -> match acc with | None -> None | Some () -> aux p) ~init:(Some ()) (List.zip_exn ra' rb')
+
+    )
+  | T_record _, _ -> None
+  | T_arrow {type1;type2}, T_arrow {type1=type1';type2=type2'} ->
+    let* _ = assert_type_expression_eq (type1, type1') in
+    assert_type_expression_eq (type2, type2')
+  | T_arrow _, _ -> None
+  | T_variable x, T_variable y ->
+     (* TODO : we must check that the two types were bound at the same location (even if they have the same name), i.e. use something like De Bruijn indices or a propper graph encoding *)
+     if TypeVar.equal x y then Some () else None
+  | T_variable _, _ -> None
+  | T_module_accessor {module_name=mna;element=ea}, T_module_accessor {module_name=mnb;element=eb} when ModuleVar.equal mna mnb ->
+    assert_type_expression_eq (ea, eb)
+  | T_module_accessor _, _ -> None
+  | T_singleton a , T_singleton b -> assert_literal_eq (a , b)
+  | T_singleton _ , _ -> None
+  | T_abstraction a , T_abstraction b ->
+    assert_type_expression_eq (a.type_, b.type_) >>= fun _ ->
+    Some (assert (equal_kind a.kind b.kind))
+  | T_for_all a , T_for_all b ->
+    assert_type_expression_eq (a.type_, b.type_) >>= fun _ ->
+    Some (assert (equal_kind a.kind b.kind))
+  | T_abstraction _ , _ -> None
+  | T_for_all _ , _ -> None
+
+(* and type_expression_eq ab = Option.is_some @@ assert_type_expression_eq ab *)
+
+and assert_literal_eq (a, b : literal * literal) : unit option =
   match (a, b) with
   | Literal_int a, Literal_int b when Z.equal a b -> Some ()
   | Literal_int _, Literal_int _ -> None
