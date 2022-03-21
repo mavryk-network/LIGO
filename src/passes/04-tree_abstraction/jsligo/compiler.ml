@@ -673,11 +673,18 @@ and compile_expression ~raise : CST.expr -> AST.expr = fun e ->
       let var = module_name ^ "." ^ fun_name in
       match constants var with
         Some const -> return @@ e_constant ~loc const []
-(* <<<<<<< HEAD
- *       | None -> return @@ e_module_accessor ~loc (ModuleVar.of_input_var ~loc:l module_name) element
- *       )
- * ======= *)
-      | None -> return @@ e_variable_ez ~loc var
+      | None -> (
+        let rec aux : module_variable list -> CST.expr -> AST.expression = fun acc exp ->
+          match exp with
+          | EVar v ->
+             let accessed_el = compile_variable v in
+             return @@ e_module_accessor ~loc acc accessed_el
+          | EModA ma ->
+             aux (acc @ [ModuleVar.of_input_var ma.value.module_name.value]) ma.value.field
+          | _ -> raise.raise (expected_a_variable (CST.expr_to_region ma.field))
+        in
+        aux [ModuleVar.of_input_var ma.module_name.value] ma.field
+      )
     else
       let rec aux : module_variable list -> CST.expr -> AST.expression = fun acc exp ->
         match exp with
