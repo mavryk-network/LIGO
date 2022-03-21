@@ -17,35 +17,19 @@ typedef struct tezos_operations {
 
 typedef struct entrypoint_result {
   tezos_operations* operations;
-
-// /**
-//  * A region of memory for scatter/gather writes.
-//  */
-// typedef struct __wasi_ciovec_t {
-//     /**
-//      * The address of the buffer to be written.
-//      */
-//     const uint8_t * buf;
-
-//     /**
-//      * The length of the buffer to be written.
-//      */
-//     __wasi_size_t buf_len;
-
-// } __wasi_ciovec_t;
-
   __wasi_ciovec_t* storage;
 } entrypoint_result;
 
 void _start() {
   // storage file information
   __wasi_fd_t *fd1;
-  int err_code423 = __wasi_path_open(3, 0, "storage.byte", 0, __WASI_RIGHTS_FD_READ | __WASI_RIGHTS_FD_FILESTAT_GET | __WASI_RIGHTS_PATH_OPEN, 0, 0, fd1);
+  int err_code423 = __wasi_path_open(3, 0, "storage.byte", 0, __WASI_RIGHTS_FD_FILESTAT_GET | __WASI_RIGHTS_PATH_OPEN   , 0, 0, fd1);
   if (err_code423 != __WASI_ERRNO_SUCCESS) {
     __wasi_proc_exit(63);
     return;
   }
 
+  // get filestat for file size
   __wasi_filestat_t *fstat;
   __wasi_errno_t err_code1 = __wasi_fd_filestat_get(*fd1, fstat);
   if (err_code1 != __WASI_ERRNO_SUCCESS) {
@@ -53,63 +37,43 @@ void _start() {
     return;
   } 
 
+  // allocate the file size into memory
   int* alloc = malloc(fstat->size);
   if (alloc == NULL) {
     __wasi_proc_exit(3);
     return;
   }
+
+  // read the file into memory
   __wasi_iovec_t iovs = { 
     .buf = alloc,
     .buf_len = fstat->size
   };
   __wasi_iovec_t *iovs2 = &iovs;
-
-  // __wasi_fd_t *fd2;
-  int err_code42 = __wasi_path_open(3, 0, "storage.byte", 0, __WASI_RIGHTS_FD_READ | __WASI_RIGHTS_FD_FILESTAT_GET | __WASI_RIGHTS_PATH_OPEN, 0, 0, fd1);
+  int err_code42 = __wasi_path_open(3, 0, "storage.byte", __WASI_OFLAGS_CREAT, __WASI_RIGHTS_FD_READ, 0, 0, fd1);
   if (err_code42 != __WASI_ERRNO_SUCCESS) {
     __wasi_proc_exit(6);
     return;
   }
-
   // read storage into allocated memory
   __wasi_size_t nread;
   __wasi_errno_t err_code2 = __wasi_fd_read(*fd1, &iovs, 1, &nread);
-
   if (err_code2 != __WASI_ERRNO_SUCCESS) {
     __wasi_proc_exit(4);
-    
     return;
   }
 
-  // printf("Bytes read: %lu\n", nread);
-  int* i = iovs2->buf;
-  // int* a2 = (int*)((char*)i+4);
-  // int* a3 = (int*)((char*)i+8);
-  // int* a4 = (int*)((char*)i+12);
-  // int* a5 = (int*)((char*)i+16);
-  // int* a6 = (int*)((char*)i+20);
-  
-  // printf("The storage contents before 1: %i\n", *i);
-  // printf("The storage contents before 1: %i\n", *a2);
-  
-  // printf("The storage contents before 1: %i\n", *a3);
-  // printf("The storage contents before 1: %i\n", *a4);
-  // printf("The storage contents before 1: %i\n", *a5);
-  // printf("The storage contents before 1: %i\n", *a6);
-  
+  int* given_storage = iovs2->buf;
 
-  // // call generated `__load` to fix pointers in storage
-  // printf("Given address: %i\n", i);
-  __load(i);
+  // call generated `__load` function which corrects the pointers
+  __load(given_storage);
   
-  gmp_printf("The storage contents before 2x: %Zd\n", i);
 
   // call smart contract entrypoint
   entrypoint_tuple et = {
     .parameter = 1,
     .storage   = iovs2->buf
   };
-  // int loc = ;
   entrypoint_result *er = malloc(3);
   int err_code3 = entrypoint(&et, &er);
   if (err_code3 != __WASI_ERRNO_SUCCESS) {
@@ -117,47 +81,136 @@ void _start() {
     return;
   } 
 
-  
-  // open storage file for writing
-  
-  int err_code4 = __wasi_path_open(3, 0, "storage.byte", 0, __WASI_RIGHTS_FD_WRITE | __WASI_RIGHTS_PATH_OPEN, 0, 0, fd1);
+  int storage = er->storage;
+
+  // for debugging purposes, should be removed once there is a better way to print storage data
+  gmp_printf("The storage contents after 1: %Zd\n", (int*)storage);
+
+
+  __wasi_ciovec_t result;
+
+  /**
+   * Call the generated `__save` function.
+   * 
+   * This function compresses the data and changes the pointers so the file is
+   * easy to load.
+   */
+  __save(storage, &result);
+
+  int err_code4 = __wasi_path_open(3, 0, "storage.byte", 0, __WASI_RIGHTS_FD_WRITE, 0, 0, fd1);
   if (err_code4 != __WASI_ERRNO_SUCCESS) {
     __wasi_proc_exit(6);
     return;
   }
 
-  int a = er->storage;
-  gmp_printf("The storage contents after 1: %Zd\n", (int*)a);
-
-  __wasi_ciovec_t *foo;
-  __save(a, foo);
-
-  int* x = foo->buf;
-  
-  printf("x: %i\n", x);
-
-gmp_printf("The storage contents after 2: %Zd\n", x);
-
-  printf("size: %i\n", foo->buf_len);
-  // write returned storage from contract to storage file
+  // write to storage
   __wasi_size_t *retptr1;
-  int err_code5 = __wasi_fd_write(*fd1, &foo, 1, retptr1);
+  int err_code5 = __wasi_fd_write(*fd1, &result, 1, retptr1);
   if (err_code5 != __WASI_ERRNO_SUCCESS) {
-    printf("frak1\n");
+    if (err_code5 == __WASI_ERRNO_ACCES) {
+      printf("__WASI_ERRNO_ACCES\n");
+    }
+    else if (err_code5 == __WASI_ERRNO_NOTCAPABLE) {
+      printf("__WASI_ERRNO_ACCES\n");
+    }    
+    else if (err_code5 == __WASI_ERRNO_ROFS) {
+      printf("__WASI_ERRNO_ROFS\n");
+    }
+    else if (err_code5 == __WASI_ERRNO_RANGE) {
+      printf("__WASI_ERRNO_RANGE\n");
+    }
+    else if (err_code5 == __WASI_ERRNO_PIPE) {
+      printf("__WASI_ERRNO_PIPE\n");
+    }
+    else if (err_code5 == __WASI_ERRNO_OVERFLOW) {
+      printf("__WASI_ERRNO_OVERFLOW\n");
+    }
+    else if (err_code5 == __WASI_ERRNO_NOTTY) {
+      printf("__WASI_ERRNO_NOTTY\n");
+    }
+    else if (err_code5 == __WASI_ERRNO_NOSPC) {
+      printf("__WASI_ERRNO_NOSPC\n");
+    }
+    else if (err_code5 == __WASI_ERRNO_NOMEM) {
+      printf("__WASI_ERRNO_NOMEM\n");
+    }
+    else if (err_code5 == __WASI_ERRNO_NOLCK) {
+      printf("__WASI_ERRNO_NOLCK\n");
+    }
+    else if (err_code5 == __WASI_ERRNO_NOENT) {
+      printf("__WASI_ERRNO_NOENT\n");
+    }
+    else if (err_code5 == __WASI_ERRNO_NOBUFS) {
+      printf("__WASI_ERRNO_NOBUFS\n");
+    }
+    else if (err_code5 == __WASI_ERRNO_MULTIHOP) {
+      printf("__WASI_ERRNO_MULTIHOP\n");
+    }
+    else if (err_code5 == __WASI_ERRNO_MSGSIZE) {
+      printf("__WASI_ERRNO_MSGSIZE\n");
+    }
+    else if (err_code5 == __WASI_ERRNO_MFILE) {
+      printf("__WASI_ERRNO_MFILE\n");
+    }
+    else if (err_code5 == __WASI_ERRNO_IO) {
+      printf("__WASI_ERRNO_IO\n");
+    }
+    else if (err_code5 == __WASI_ERRNO_INVAL) {
+      printf("__WASI_ERRNO_INVAL\n");
+    }
+    else if (err_code5 == __WASI_ERRNO_INPROGRESS) {
+      printf("__WASI_ERRNO_INPROGRESS\n");
+    }
+    else if (err_code5 == __WASI_ERRNO_ILSEQ) {
+      printf("__WASI_ERRNO_ILSEQ\n");
+    }
+    else if (err_code5 == __WASI_ERRNO_FAULT) {
+      printf("__WASI_ERRNO_FAULT\n");
+    }
+    else if (err_code5 == __WASI_ERRNO_DEADLK) {
+      printf("__WASI_ERRNO_DEADLK\n");
+    }
+    else if (err_code5 == __WASI_ERRNO_BUSY) {
+      printf("__WASI_ERRNO_BUSY\n");
+    }
+    else if (err_code5 == __WASI_ERRNO_BADMSG) {
+      printf("__WASI_ERRNO_BADMSG\n");
+    }
+    else if (err_code5 == __WASI_ERRNO_BADF) {
+      printf("__WASI_ERRNO_BADF\n");
+    }
+    else if (err_code5 == __WASI_ERRNO_AGAIN) {
+      printf("__WASI_ERRNO_AGAIN\n");
+    }
+    else if (err_code5 == __WASI_ERRNO_AFNOSUPPORT) {
+      printf("__WASI_ERRNO_AFNOSUPPORT\n");
+    }
+    else if (err_code5 == __WASI_ERRNO_ADDRNOTAVAIL) {
+      printf("__WASI_ERRNO_ADDRNOTAVAIL\n");
+    }
+    else if (err_code5 == __WASI_ERRNO_ACCES) {
+      printf("__WASI_ERRNO_ACCES\n");
+    }
+    else if (err_code5 == __WASI_ERRNO_2BIG) {
+      printf("__WASI_ERRNO_2BIG\n");
+    }
+    else {
+      printf("frak other\n");
+    }
+    
     __wasi_proc_exit(7);
     return;
   }
 
-  // foo.buf_len = *retptr1;
-  printf("Check: %i\n", *retptr1);
-  // foo.buf_len =
-
-  // close the file descriptor to the file
+  // close the file handler
   int err_code6 = __wasi_fd_close(fd1);
   if (err_code6 != __WASI_ERRNO_SUCCESS) {
-    printf("frak2\n");
     __wasi_proc_exit(8);
     return;
   } 
+
+  // should we free the memory as well here?
+
+  // pfew everything went well it seems
   __wasi_proc_exit(EXIT_SUCCESS);
 }

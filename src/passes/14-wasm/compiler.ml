@@ -812,7 +812,6 @@ typedef struct
             { it = Binary (I32 Mul); at };
             { it = Binary (I32 Add); at };
             { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-
             { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
 
             { it = LocalGet counter; at};
@@ -877,7 +876,6 @@ let compile ~raise : I.expression -> string -> string -> W.Ast.module_ = fun e f
   
   let target_addr     = var_to_string (ValueVar.fresh ~name:"target_addr" ()) in
   let src_addr        = var_to_string (ValueVar.fresh ~name:"src_addr" ()) in
-  let foo             = var_to_string (ValueVar.fresh ~name:"foo" ()) in
   let storage_size    = var_to_string (ValueVar.fresh ~name:"storage_size" ()) in
   let result_with_size    = var_to_string (ValueVar.fresh ~name:"result_with_size" ()) in
   let body_calc, locals_calc = calculate_storage_size storage_type_output src_addr in
@@ -897,7 +895,12 @@ let compile ~raise : I.expression -> string -> string -> W.Ast.module_ = fun e f
         it = {
           name = "__save";
           ftype = "__save_type";
-          locals = ((src_addr, T.I32Type) :: (result_with_size, T.I32Type) :: (target_addr, I32Type) :: (foo, I32Type) :: (storage_size, I32Type) :: (result_with_size, I32Type) :: locals_save)  @ locals_calc;
+          locals = (
+            (src_addr, T.I32Type) ::
+            (result_with_size, T.I32Type) :: 
+            (target_addr, I32Type) :: 
+            (storage_size, I32Type) :: locals_save)  
+            @ locals_calc;
           body = 
             body_calc @  
             [
@@ -909,11 +912,19 @@ let compile ~raise : I.expression -> string -> string -> W.Ast.module_ = fun e f
             @ 
             [
               S.
-              { it = LocalGet result_with_size; at };
+              (* { it = A.Const { it = I32 4l; at}; at };
+              { it = Call "malloc"; at};
+              { it = LocalTee target_addr_a; at};
+              { it = LocalGet target_addr; at};
+              { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+               *)
+              { it = A.LocalGet result_with_size; at };
               { it = LocalGet target_addr; at};
               { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
               
-              { it = A.LocalGet result_with_size; at };
+          
+
+              { it = LocalGet result_with_size; at };
               { it = Const { it = I32 4l; at}; at };
               { it = Binary (I32 Add); at };
               { it = A.LocalGet storage_size; at };
