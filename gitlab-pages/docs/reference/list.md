@@ -336,7 +336,7 @@ let fold: ((folder: [acc: &apos;acc, item: &apos;item]) => &apos;acc, list: list
 ```pascaligo group=lists
 const my_list : list (int) = list [1; 2; 3]
 
-function sum (const acc : int; const i : int): int is acc + i
+function sum (const (acc, i) : int * int): int is acc + i
 
 const sum_of_elements : int = List.fold (sum, my_list, 0)
 ```
@@ -395,7 +395,7 @@ let fold_left: (((a: [&apos;acc, &apos;item]) => &apos;acc), &apos;acc, list&lt;
 ```pascaligo group=lists
 const my_list : list (int) = list [1; 2; 3]
 
-function sum (const acc : int; const i : int) : int is acc + i
+function sum (const (acc, i) : int * int) : int is acc + i
 
 const sum_of_elements : int = List.fold_left (sum, 0, my_list)
 ```
@@ -455,7 +455,7 @@ let fold_right: (((a: [&apos;item, &apos;acc]) => &apos;acc), list&lt;&apos;item
 ```pascaligo group=lists
 const my_list : list (int) = list [1; 2; 3]
 
-function sum_right (const i : int; const acc : int) : int is acc + i
+function sum_right (const (i, acc) : int * int) : int is acc + i
 
 const sum_of_elements : int = List.fold_right (sum_right, my_list, 0)
 ```

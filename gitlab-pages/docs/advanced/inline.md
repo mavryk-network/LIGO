@@ -24,8 +24,8 @@ To force inlining you can use the inline attribute.
 ```pascaligo
 [@inline] function fst (const p : nat * nat) : nat is p.0;
 
-function main (const p : nat * nat; const s : nat * nat) : list (operation) * (nat * nat) is
-  ((list [] : list (operation)), (fst (p.0, p.1), fst (s.1, s.0)))
+function main (const (p, s) : (nat * nat) * (nat * nat)) : list (operation) * (nat * nat) is
+  ((list [] : list (operation)), (fst((p.0, p.1)), fst((s.1, s.0))))
 ```
 
 </Syntax>

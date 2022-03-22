@@ -222,7 +222,7 @@ The return value is a pair of type `(operation * address)`.
 
 ```pascaligo group=e
 const origination : operation * address = Tezos.create_contract (
-  function (const p : nat; const s : string): list(operation) * string is ((nil : list(operation)), s),
+  function (const (p, s) : nat * string): list(operation) * string is ((nil : list(operation)), s),
   (None : option(key_hash)),
   3tz,
   "initial_storage")

@@ -30,7 +30,7 @@ type tx is
 
 type storage is record [owner : address; transactionLog : list (tx)]
 
-function send (const dst : address; const @amount : tez) is {
+function send (const (dst, @amount) : address * tez) is {
   const callee : option (contract (unit)) = Tezos.get_contract_opt (dst)
 } with
     case callee of [
@@ -43,7 +43,7 @@ function send (const dst : address; const @amount : tez) is {
 function receive (const src : address; const @amount : tez) is
   (Incoming (src, @amount), (list [] : list (operation)))
 
-function main (const p : parameter; const s : storage) is {
+function main (const (p, s) : parameter * storage) is {
   const result
   = case p of [
       Fund -> receive (Tezos.sender, Tezos.amount)
@@ -372,7 +372,7 @@ function send_rewards (const beneficiary_addr : address) is {
     ]
 } with Tezos.transaction (Unit, 5000000mutez, beneficiary)
 
-function main (const p : unit; const s : storage) is
+function main (const (p, s) : unit * storage) is
   if Tezos.sender =/= s.owner
   then (failwith ("ACCESS_DENIED") : list (operation) * storage)
   else {

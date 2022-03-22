@@ -672,7 +672,7 @@ For example, we can create a new counter contract with
 
 ```pascaligo skip
 Tezos.create_contract(
-    function (const p : int; const s : int) is ((list [] : list (operation)), p + s),
+    function (const (p, s) : int * int) is ((list [] : list (operation)), p + s),
     (None : option (key_hash)),
     0mutez,
     1
@@ -721,7 +721,7 @@ function create_and_call (const st : list (address)) is
 block {
   const create_contract_result =
       Tezos.create_contract(
-          (function (const p : int; const s : int) is
+          (function (const (p, s) : int * int) is
             ((list [] : list (operation)), p + s)),
           (None : option (key_hash)),
           0mutez,

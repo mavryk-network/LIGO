@@ -568,7 +568,7 @@ To make sure we get paid, we will:
 <Syntax syntax="pascaligo">
 
 ```pascaligo group=b
-function buy_taco (const taco_kind_index : nat ; var taco_shop_storage : taco_shop_storage) : return is {
+function buy_taco (var (taco_kind_index, taco_shop_storage) : nat * taco_shop_storage) : return is {
   // Retrieve the taco_kind from the contract's storage or fail
   var taco_kind : taco_supply :=
     case taco_shop_storage[taco_kind_index] of [

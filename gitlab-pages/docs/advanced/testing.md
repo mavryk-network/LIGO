@@ -76,7 +76,7 @@ function sub (const store : storage; const delta : int) : storage is
 (* Main access point that dispatches to the entrypoints according to
    the smart contract parameter. *)
 
-function main (const action : parameter; const store : storage) : return is
+function main (const (action, store) : parameter * storage) : return is
  ((nil : list (operation)),    // No operations
   case action of [
     Increment (n) -> add (store, n)
@@ -555,7 +555,7 @@ let test =
 ```pascaligo test-ligo group=rmv_bal_test
 const test =
   List.iter (
-    (function (const threshold : tez; const expected_size : nat) is {
+    (function (const (threshold, expected_size) : tez * nat) is {
         function tester (const input : balances * tez) is
           Map.size(balances_under (input.0, input.1));
         const size_ = Test.run (tester, (balances, threshold));

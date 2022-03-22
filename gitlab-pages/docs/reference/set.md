@@ -433,7 +433,7 @@ let fold: ((iterator: [acc: &apos;acc, item: &apos;item]) => &apos;acc), set: se
 <Syntax syntax="pascaligo">
 
 ```pascaligo group=sets
-function sum (const acc : int; const i : int): int is acc + i
+function sum (const (acc, i) : int * int): int is acc + i
 const sum_of_elements : int = Set.fold (sum, my_set, 0)
 ```
 
@@ -483,7 +483,7 @@ let fold_desc: (((a: [&apos;item, &apos;acc]) => &apos;acc), set&lt;&apos;item&g
 <Syntax syntax="pascaligo">
 
 ```pascaligo group=sets
-function sum_right (const i : int; const acc : int) : int is acc + i
+function sum_right (const (i, acc) : int * int) : int is acc + i
 const sum_of_elements : int = Set.fold_desc (sum_right, my_set, 0)
 ```
 

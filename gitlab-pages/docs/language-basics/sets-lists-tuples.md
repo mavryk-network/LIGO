@@ -518,7 +518,7 @@ Here is an example of their use.
 <Syntax syntax="pascaligo">
 
 ```pascaligo group=lists
-function sum (const acc : int; const i : int) : int is acc + i
+function sum (const (acc, i) : int * int) : int is acc + i
 const sum_of_elements : int = List.fold_left (sum, 0, my_list)
 ```
 
@@ -1009,7 +1009,7 @@ it has the function signature `val fold_right&lt;elt,acc&gt; : (elt *
 acc -> acc) -> elt set -> acc -> acc`.
 
 ```pascaligo group=sets
-function sum (const acc : int; const i : int) : int is acc + i
+function sum (const (acc, i) : int * int) : int is acc + i
 const sum_of_elements : int = Set.fold (sum, my_set, 0)
 ```
 

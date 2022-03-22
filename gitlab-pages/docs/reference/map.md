@@ -446,7 +446,7 @@ Iterate over key-value pairs in a map
 
 ```pascaligo group=maps
 function iter_op (const m : register) : unit is {
-  function iterated (const i : address; const j : move) : unit is
+  function iterated (const (i, j) : address * move) : unit is
     if j.1 <= 3 then (failwith ("Below range.") : unit)
 } with Map.iter (iterated, m)
 ```
@@ -501,7 +501,7 @@ Applies the mapper function on the key-value pairs of map and builds a new map
 
 ```pascaligo group=maps
 function map_op (const m : register) : register is {
-  function increment (const _ : address; const j : move) : move is
+  function increment (const (_, j) : address * move) : move is
     (j.0, j.1 + 1)
 } with Map.map (increment, m)
 ```
@@ -557,7 +557,7 @@ Fold over key-value pairs of a map
 
 ```pascaligo group=maps
 function fold_op (const m : register) : int is {
-  function folded (const i : int; const j : address * move) : int is
+  function folded (const (i, j) : int * (address * move)) : int is
     i + j.1.1
 } with Map.fold (folded, m, 5)
 ```

@@ -982,7 +982,7 @@ of moves is iterated to check that the start of each move is above
 
 ```pascaligo group=maps
 function iter_op (const m : register) : unit is {
-  function iterated (const i : address; const j : move) : unit is
+  function iterated (const (i, j) : address * move) : unit is
     if j.1 <= 3 then (failwith ("Below range.") : unit)
 } with Map.iter (iterated, m)
 ```
@@ -1032,7 +1032,7 @@ register.
 
 ```pascaligo group=maps
 function map_op (const m : register) : register is {
-  function increment (const i : address; const j : move) : move is
+  function increment (const (i, j) : address * move) : move is
     (j.0, j.1 + 1)
 } with Map.map (increment, m)
 ```
@@ -1086,7 +1086,7 @@ over maps is called `Map.fold` and is used as follows.
 
 ```pascaligo group=maps
 function fold_op (const m : register) : int is {
-  function folded (const i : int; const j : address * move) : int is
+  function folded (const (i, j) : int * (address * move)) : int is
     i + j.1.1
 } with Map.fold (folded, m, 5)
 ```
