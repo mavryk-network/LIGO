@@ -149,22 +149,22 @@ let%expect_test _ =
 (* Positives *)
 
 let%expect_test _ =
-  run_ligo_good [ "run" ; "interpret" ; "t1 (Nil,Nil)" ; "--init-file";(good_test "pm_test.ligo") ] ;
+  run_ligo_good [ "run" ; "interpret" ; "t1((Nil,Nil))" ; "--init-file";(good_test "pm_test.ligo") ] ;
   [%expect{|
     1 |}]
 
 let%expect_test _ =
-  run_ligo_good [ "run" ; "interpret" ; "t1 (Nil,Cons(1,2))" ; "--init-file";(good_test "pm_test.ligo") ] ;
+  run_ligo_good [ "run" ; "interpret" ; "t1((Nil,Cons(1,2)))" ; "--init-file";(good_test "pm_test.ligo") ] ;
   [%expect{|
     1 |}]
 
 let%expect_test _ =
-  run_ligo_good [ "run" ; "interpret" ; "t1 (Cons(1,2),Nil)" ; "--init-file";(good_test "pm_test.ligo") ] ;
+  run_ligo_good [ "run" ; "interpret" ; "t1((Cons(1,2),Nil))" ; "--init-file";(good_test "pm_test.ligo") ] ;
   [%expect{|
     2 |}]
 
 let%expect_test _ =
-  run_ligo_good [ "run" ; "interpret" ; "t1 (Cons(1,2),Cons(3,4))" ; "--init-file";(good_test "pm_test.ligo") ] ;
+  run_ligo_good [ "run" ; "interpret" ; "t1((Cons(1,2),Cons(3,4)))" ; "--init-file";(good_test "pm_test.ligo") ] ;
   [%expect{|
     10 |}]
 

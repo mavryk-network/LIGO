@@ -9,31 +9,31 @@ let () = Unix.putenv ~key:"TERM" ~data:"dumb"
 let%expect_test _ =
   run_ligo_good [ "info" ; "measure-contract" ; contract "coase.ligo" ] ;
   [%expect {|
-    File "../../test/contracts/coase.ligo", line 117, characters 21-27:
-    116 |     cards[s.next_id] := record [
-    117 |       card_owner   = sender;
-    118 |       card_pattern = action.card_to_buy
+    File "../../test/contracts/coase.ligo", line 114, characters 21-27:
+    113 |     cards[s.next_id] := record [
+    114 |       card_owner   = sender;
+    115 |       card_pattern = action.card_to_buy
 
     Warning: constant sender is being deprecated soon. Consider using Tezos.sender instead.
 
-    File "../../test/contracts/coase.ligo", line 108, characters 15-21:
-    107 |       card_pattern.coefficient * (card_pattern.quantity + 1n);
-    108 |     if price > amount then failwith ("Not enough money") else skip;
-    109 |     // Increase quantity
+    File "../../test/contracts/coase.ligo", line 105, characters 15-21:
+    104 |       card_pattern.coefficient * (card_pattern.quantity + 1n);
+    105 |     if price > amount then failwith ("Not enough money") else skip;
+    106 |     // Increase quantity
 
     Warning: constant amount is being deprecated soon. Consider using Tezos.amount instead.
 
-    File "../../test/contracts/coase.ligo", line 72, characters 27-33:
-     71 |       ];
-     72 |     if card.card_owner =/= sender
-     73 |     then failwith ("This card doesn't belong to you")
+    File "../../test/contracts/coase.ligo", line 70, characters 27-33:
+     69 |       ];
+     70 |     if card.card_owner =/= sender
+     71 |     then failwith ("This card doesn't belong to you")
 
     Warning: constant sender is being deprecated soon. Consider using Tezos.sender instead.
 
-    File "../../test/contracts/coase.ligo", line 56, characters 27-33:
-     55 |       ];
-     56 |     if card.card_owner =/= sender then
-     57 |       failwith ("This card doesn't belong to you")
+    File "../../test/contracts/coase.ligo", line 55, characters 27-33:
+     54 |       ];
+     55 |     if card.card_owner =/= sender then
+     56 |       failwith ("This card doesn't belong to you")
 
     Warning: constant sender is being deprecated soon. Consider using Tezos.sender instead.
 
@@ -95,31 +95,31 @@ let%expect_test _ =
 
   run_ligo_good [ "compile" ; "parameter" ; contract "coase.ligo" ; "Buy_single (record [ card_to_buy = 1n ])" ] ;
   [%expect {|
-    File "../../test/contracts/coase.ligo", line 117, characters 21-27:
-    116 |     cards[s.next_id] := record [
-    117 |       card_owner   = sender;
-    118 |       card_pattern = action.card_to_buy
+    File "../../test/contracts/coase.ligo", line 114, characters 21-27:
+    113 |     cards[s.next_id] := record [
+    114 |       card_owner   = sender;
+    115 |       card_pattern = action.card_to_buy
 
     Warning: constant sender is being deprecated soon. Consider using Tezos.sender instead.
 
-    File "../../test/contracts/coase.ligo", line 108, characters 15-21:
-    107 |       card_pattern.coefficient * (card_pattern.quantity + 1n);
-    108 |     if price > amount then failwith ("Not enough money") else skip;
-    109 |     // Increase quantity
+    File "../../test/contracts/coase.ligo", line 105, characters 15-21:
+    104 |       card_pattern.coefficient * (card_pattern.quantity + 1n);
+    105 |     if price > amount then failwith ("Not enough money") else skip;
+    106 |     // Increase quantity
 
     Warning: constant amount is being deprecated soon. Consider using Tezos.amount instead.
 
-    File "../../test/contracts/coase.ligo", line 72, characters 27-33:
-     71 |       ];
-     72 |     if card.card_owner =/= sender
-     73 |     then failwith ("This card doesn't belong to you")
+    File "../../test/contracts/coase.ligo", line 70, characters 27-33:
+     69 |       ];
+     70 |     if card.card_owner =/= sender
+     71 |     then failwith ("This card doesn't belong to you")
 
     Warning: constant sender is being deprecated soon. Consider using Tezos.sender instead.
 
-    File "../../test/contracts/coase.ligo", line 56, characters 27-33:
-     55 |       ];
-     56 |     if card.card_owner =/= sender then
-     57 |       failwith ("This card doesn't belong to you")
+    File "../../test/contracts/coase.ligo", line 55, characters 27-33:
+     54 |       ];
+     55 |     if card.card_owner =/= sender then
+     56 |       failwith ("This card doesn't belong to you")
 
     Warning: constant sender is being deprecated soon. Consider using Tezos.sender instead.
 
@@ -127,31 +127,31 @@ let%expect_test _ =
 
   run_ligo_good [ "compile" ; "storage" ; contract "coase.ligo" ; "record [ cards = (map [] : cards) ; card_patterns = (map [] : card_patterns) ; next_id = 3n ]" ] ;
   [%expect {|
-    File "../../test/contracts/coase.ligo", line 117, characters 21-27:
-    116 |     cards[s.next_id] := record [
-    117 |       card_owner   = sender;
-    118 |       card_pattern = action.card_to_buy
+    File "../../test/contracts/coase.ligo", line 114, characters 21-27:
+    113 |     cards[s.next_id] := record [
+    114 |       card_owner   = sender;
+    115 |       card_pattern = action.card_to_buy
 
     Warning: constant sender is being deprecated soon. Consider using Tezos.sender instead.
 
-    File "../../test/contracts/coase.ligo", line 108, characters 15-21:
-    107 |       card_pattern.coefficient * (card_pattern.quantity + 1n);
-    108 |     if price > amount then failwith ("Not enough money") else skip;
-    109 |     // Increase quantity
+    File "../../test/contracts/coase.ligo", line 105, characters 15-21:
+    104 |       card_pattern.coefficient * (card_pattern.quantity + 1n);
+    105 |     if price > amount then failwith ("Not enough money") else skip;
+    106 |     // Increase quantity
 
     Warning: constant amount is being deprecated soon. Consider using Tezos.amount instead.
 
-    File "../../test/contracts/coase.ligo", line 72, characters 27-33:
-     71 |       ];
-     72 |     if card.card_owner =/= sender
-     73 |     then failwith ("This card doesn't belong to you")
+    File "../../test/contracts/coase.ligo", line 70, characters 27-33:
+     69 |       ];
+     70 |     if card.card_owner =/= sender
+     71 |     then failwith ("This card doesn't belong to you")
 
     Warning: constant sender is being deprecated soon. Consider using Tezos.sender instead.
 
-    File "../../test/contracts/coase.ligo", line 56, characters 27-33:
-     55 |       ];
-     56 |     if card.card_owner =/= sender then
-     57 |       failwith ("This card doesn't belong to you")
+    File "../../test/contracts/coase.ligo", line 55, characters 27-33:
+     54 |       ];
+     55 |     if card.card_owner =/= sender then
+     56 |       failwith ("This card doesn't belong to you")
 
     Warning: constant sender is being deprecated soon. Consider using Tezos.sender instead.
 
@@ -159,88 +159,88 @@ let%expect_test _ =
 
   run_ligo_bad [ "compile" ; "storage" ; contract "coase.ligo" ; "Buy_single (record [ card_to_buy = 1n ])" ] ;
   [%expect {|
-File "../../test/contracts/coase.ligo", line 117, characters 21-27:
-116 |     cards[s.next_id] := record [
-117 |       card_owner   = sender;
-118 |       card_pattern = action.card_to_buy
+File "../../test/contracts/coase.ligo", line 114, characters 21-27:
+113 |     cards[s.next_id] := record [
+114 |       card_owner   = sender;
+115 |       card_pattern = action.card_to_buy
 
 Warning: constant sender is being deprecated soon. Consider using Tezos.sender instead.
 
-File "../../test/contracts/coase.ligo", line 108, characters 15-21:
-107 |       card_pattern.coefficient * (card_pattern.quantity + 1n);
-108 |     if price > amount then failwith ("Not enough money") else skip;
-109 |     // Increase quantity
+File "../../test/contracts/coase.ligo", line 105, characters 15-21:
+104 |       card_pattern.coefficient * (card_pattern.quantity + 1n);
+105 |     if price > amount then failwith ("Not enough money") else skip;
+106 |     // Increase quantity
 
 Warning: constant amount is being deprecated soon. Consider using Tezos.amount instead.
 
-File "../../test/contracts/coase.ligo", line 72, characters 27-33:
- 71 |       ];
- 72 |     if card.card_owner =/= sender
- 73 |     then failwith ("This card doesn't belong to you")
+File "../../test/contracts/coase.ligo", line 70, characters 27-33:
+ 69 |       ];
+ 70 |     if card.card_owner =/= sender
+ 71 |     then failwith ("This card doesn't belong to you")
 
 Warning: constant sender is being deprecated soon. Consider using Tezos.sender instead.
 
-File "../../test/contracts/coase.ligo", line 56, characters 27-33:
- 55 |       ];
- 56 |     if card.card_owner =/= sender then
- 57 |       failwith ("This card doesn't belong to you")
+File "../../test/contracts/coase.ligo", line 55, characters 27-33:
+ 54 |       ];
+ 55 |     if card.card_owner =/= sender then
+ 56 |       failwith ("This card doesn't belong to you")
 
 Warning: constant sender is being deprecated soon. Consider using Tezos.sender instead.
 
 Invalid command line argument.
 The provided storage does not have the correct type for the contract.
-File "../../test/contracts/coase.ligo", line 124, character 0 to line 129, character 3:
-123 |
-124 | function main (const action : parameter; const s : storage) : return is
-125 |   case action of [
-126 |     Buy_single (bs)      -> buy_single (bs, s)
-127 |   | Sell_single (as)     -> sell_single (as, s)
-128 |   | Transfer_single (at) -> transfer_single (at, s)
-129 |   ]
+File "../../test/contracts/coase.ligo", line 121, character 0 to line 126, character 3:
+120 |
+121 | function main (const (action, s) : parameter * storage) : return is
+122 |   case action of [
+123 |     Buy_single (bs)      -> buy_single((bs, s))
+124 |   | Sell_single (as)     -> sell_single((as, s))
+125 |   | Transfer_single (at) -> transfer_single((at, s))
+126 |   ]
 
 Invalid type(s).
 Expected: "storage", but got: "parameter". |}] ;
 
   run_ligo_bad [ "compile" ; "parameter" ; contract "coase.ligo" ; "record [ cards = (map [] : cards) ; card_patterns = (map [] : card_patterns) ; next_id = 3n ]" ] ;
   [%expect {|
-File "../../test/contracts/coase.ligo", line 117, characters 21-27:
-116 |     cards[s.next_id] := record [
-117 |       card_owner   = sender;
-118 |       card_pattern = action.card_to_buy
+File "../../test/contracts/coase.ligo", line 114, characters 21-27:
+113 |     cards[s.next_id] := record [
+114 |       card_owner   = sender;
+115 |       card_pattern = action.card_to_buy
 
 Warning: constant sender is being deprecated soon. Consider using Tezos.sender instead.
 
-File "../../test/contracts/coase.ligo", line 108, characters 15-21:
-107 |       card_pattern.coefficient * (card_pattern.quantity + 1n);
-108 |     if price > amount then failwith ("Not enough money") else skip;
-109 |     // Increase quantity
+File "../../test/contracts/coase.ligo", line 105, characters 15-21:
+104 |       card_pattern.coefficient * (card_pattern.quantity + 1n);
+105 |     if price > amount then failwith ("Not enough money") else skip;
+106 |     // Increase quantity
 
 Warning: constant amount is being deprecated soon. Consider using Tezos.amount instead.
 
-File "../../test/contracts/coase.ligo", line 72, characters 27-33:
- 71 |       ];
- 72 |     if card.card_owner =/= sender
- 73 |     then failwith ("This card doesn't belong to you")
+File "../../test/contracts/coase.ligo", line 70, characters 27-33:
+ 69 |       ];
+ 70 |     if card.card_owner =/= sender
+ 71 |     then failwith ("This card doesn't belong to you")
 
 Warning: constant sender is being deprecated soon. Consider using Tezos.sender instead.
 
-File "../../test/contracts/coase.ligo", line 56, characters 27-33:
- 55 |       ];
- 56 |     if card.card_owner =/= sender then
- 57 |       failwith ("This card doesn't belong to you")
+File "../../test/contracts/coase.ligo", line 55, characters 27-33:
+ 54 |       ];
+ 55 |     if card.card_owner =/= sender then
+ 56 |       failwith ("This card doesn't belong to you")
 
 Warning: constant sender is being deprecated soon. Consider using Tezos.sender instead.
 
 Invalid command line argument.
 The provided parameter does not have the correct type for the given entrypoint.
-File "../../test/contracts/coase.ligo", line 124, character 0 to line 129, character 3:
-123 |
-124 | function main (const action : parameter; const s : storage) : return is
-125 |   case action of [
-126 |     Buy_single (bs)      -> buy_single (bs, s)
-127 |   | Sell_single (as)     -> sell_single (as, s)
-128 |   | Transfer_single (at) -> transfer_single (at, s)
-129 |   ]
+File "../../test/contracts/coase.ligo", line 121, character 0 to line 126, character 3:
+120 |
+121 | function main (const (action, s) : parameter * storage) : return is
+122 |   case action of [
+123 |     Buy_single (bs)      -> buy_single((bs, s))
+124 |   | Sell_single (as)     -> sell_single((as, s))
+125 |   | Transfer_single (at) -> transfer_single((at, s))
+126 |   ]
 
 Invalid type(s).
 Expected: "parameter", but got: "storage". |}] ;
@@ -250,24 +250,24 @@ Expected: "parameter", but got: "storage". |}] ;
 let%expect_test _  =
   run_ligo_good [ "compile" ; "storage" ; contract "timestamp.ligo" ; "now" ; "--now" ; "2042-01-01T00:00:00Z" ] ;
   [%expect {|
-    File "../../test/contracts/timestamp.ligo", line 3, characters 21-22:
+    File "../../test/contracts/timestamp.ligo", line 3, characters 22-23:
       2 |
-      3 | function main (const p : unit; const s : storage_) :
+      3 | function main (const (p, s) : unit * storage_) :
       4 |   list (operation) * storage_ is ((nil: list (operation)), now)
     :
     Warning: unused variable "p".
     Hint: replace it by "_p" to prevent this warning.
 
-    File "../../test/contracts/timestamp.ligo", line 3, characters 37-38:
+    File "../../test/contracts/timestamp.ligo", line 3, characters 25-26:
       2 |
-      3 | function main (const p : unit; const s : storage_) :
+      3 | function main (const (p, s) : unit * storage_) :
       4 |   list (operation) * storage_ is ((nil: list (operation)), now)
     :
     Warning: unused variable "s".
     Hint: replace it by "_s" to prevent this warning.
 
     File "../../test/contracts/timestamp.ligo", line 4, characters 59-62:
-      3 | function main (const p : unit; const s : storage_) :
+      3 | function main (const (p, s) : unit * storage_) :
       4 |   list (operation) * storage_ is ((nil: list (operation)), now)
 
     Warning: constant now is being deprecated soon. Consider using Tezos.now instead.
@@ -277,31 +277,31 @@ let%expect_test _  =
 let%expect_test _ =
   run_ligo_good [ "compile" ; "contract" ; contract "coase.ligo" ] ;
   [%expect {|
-File "../../test/contracts/coase.ligo", line 117, characters 21-27:
-116 |     cards[s.next_id] := record [
-117 |       card_owner   = sender;
-118 |       card_pattern = action.card_to_buy
+File "../../test/contracts/coase.ligo", line 114, characters 21-27:
+113 |     cards[s.next_id] := record [
+114 |       card_owner   = sender;
+115 |       card_pattern = action.card_to_buy
 
 Warning: constant sender is being deprecated soon. Consider using Tezos.sender instead.
 
-File "../../test/contracts/coase.ligo", line 108, characters 15-21:
-107 |       card_pattern.coefficient * (card_pattern.quantity + 1n);
-108 |     if price > amount then failwith ("Not enough money") else skip;
-109 |     // Increase quantity
+File "../../test/contracts/coase.ligo", line 105, characters 15-21:
+104 |       card_pattern.coefficient * (card_pattern.quantity + 1n);
+105 |     if price > amount then failwith ("Not enough money") else skip;
+106 |     // Increase quantity
 
 Warning: constant amount is being deprecated soon. Consider using Tezos.amount instead.
 
-File "../../test/contracts/coase.ligo", line 72, characters 27-33:
- 71 |       ];
- 72 |     if card.card_owner =/= sender
- 73 |     then failwith ("This card doesn't belong to you")
+File "../../test/contracts/coase.ligo", line 70, characters 27-33:
+ 69 |       ];
+ 70 |     if card.card_owner =/= sender
+ 71 |     then failwith ("This card doesn't belong to you")
 
 Warning: constant sender is being deprecated soon. Consider using Tezos.sender instead.
 
-File "../../test/contracts/coase.ligo", line 56, characters 27-33:
- 55 |       ];
- 56 |     if card.card_owner =/= sender then
- 57 |       failwith ("This card doesn't belong to you")
+File "../../test/contracts/coase.ligo", line 55, characters 27-33:
+ 54 |       ];
+ 55 |     if card.card_owner =/= sender then
+ 56 |       failwith ("This card doesn't belong to you")
 
 Warning: constant sender is being deprecated soon. Consider using Tezos.sender instead.
 
@@ -1451,17 +1451,17 @@ let%expect_test _ =
       Warning: unused variable "p".
       Hint: replace it by "_p" to prevent this warning.
 
-      File "../../test/contracts/redeclaration.ligo", line 3, characters 21-22:
+      File "../../test/contracts/redeclaration.ligo", line 3, characters 22-23:
         2 |
-        3 | function main (const p : unit; const s : int) : list (operation) * int is
+        3 | function main (const (p, s) : unit * int) : list (operation) * int is
         4 |   ((nil : list (operation)), foo (unit))
       :
       Warning: unused variable "p".
       Hint: replace it by "_p" to prevent this warning.
 
-      File "../../test/contracts/redeclaration.ligo", line 3, characters 37-38:
+      File "../../test/contracts/redeclaration.ligo", line 3, characters 25-26:
         2 |
-        3 | function main (const p : unit; const s : int) : list (operation) * int is
+        3 | function main (const (p, s) : unit * int) : list (operation) * int is
         4 |   ((nil : list (operation)), foo (unit))
       :
       Warning: unused variable "s".
@@ -1479,9 +1479,9 @@ let%expect_test _ =
 let%expect_test _ =
     run_ligo_good [ "run" ; "dry-run" ; contract "double_main.ligo" ; "unit" ; "0" ] ;
     [%expect {|
-      File "../../test/contracts/double_main.ligo", line 5, characters 20-21:
+      File "../../test/contracts/double_main.ligo", line 5, characters 21-22:
         4 |
-        5 | function main(const p : parameter; const s : storage) : return is
+        5 | function main(const (p, s) : parameter * storage) : return is
         6 |   ((nil : list(operation)), s+1)
       :
       Warning: unused variable "p".
@@ -1538,9 +1538,9 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_good [ "compile" ; "contract" ; contract "key_hash_comparable.ligo" ] ;
   [%expect {|
-    File "../../test/contracts/key_hash_comparable.ligo", line 8, characters 21-22:
+    File "../../test/contracts/key_hash_comparable.ligo", line 8, characters 22-23:
       7 |
-      8 | function main (const a : int; const store : storage) : return is
+      8 | function main (const (a, store) : int * storage) : return is
       9 |   ((nil : list (operation)), store)
     :
     Warning: unused variable "a".
@@ -1703,9 +1703,9 @@ let%expect_test _ =
     Warning: unused variable "self_contract".
     Hint: replace it by "_self_contract" to prevent this warning.
 
-    File "../../test/contracts/negative/self_type_annotation.ligo", line 6, characters 21-22:
+    File "../../test/contracts/negative/self_type_annotation.ligo", line 6, characters 22-23:
       5 |
-      6 | function main (const p : parameter; const s : storage) : return is
+      6 | function main (const (p, s) : parameter * storage) : return is
       7 |   block {
     :
     Warning: unused variable "p".
@@ -1799,9 +1799,9 @@ The storage type "int" of the function parameter must be the same as the storage
 let%expect_test _ =
   run_ligo_good [ "compile" ; "contract" ; contract "self_with_entrypoint.ligo" ] ;
   [%expect {|
-    File "../../test/contracts/self_with_entrypoint.ligo", line 6, characters 21-22:
+    File "../../test/contracts/self_with_entrypoint.ligo", line 6, characters 22-23:
       5 |
-      6 | function main (const p : parameter; const s : storage) : return is
+      6 | function main (const (p, s) : parameter * storage) : return is
       7 |   block {
     :
     Warning: unused variable "p".
@@ -1822,9 +1822,9 @@ let%expect_test _ =
 
   run_ligo_good [ "compile" ; "contract" ; contract "self_without_entrypoint.ligo" ] ;
   [%expect {|
-    File "../../test/contracts/self_without_entrypoint.ligo", line 6, characters 21-22:
+    File "../../test/contracts/self_without_entrypoint.ligo", line 6, characters 22-23:
       5 |
-      6 | function main (const p : parameter; const s : storage) : return is
+      6 | function main (const (p, s) : parameter * storage) : return is
       7 |   block {
     :
     Warning: unused variable "p".
@@ -1845,9 +1845,9 @@ let%expect_test _ =
 
   run_ligo_bad [ "compile" ; "contract" ; bad_contract "self_bad_entrypoint_format.ligo" ] ;
   [%expect {|
-File "../../test/contracts/negative/self_bad_entrypoint_format.ligo", line 6, characters 21-22:
+File "../../test/contracts/negative/self_bad_entrypoint_format.ligo", line 6, characters 22-23:
   5 |
-  6 | function main (const p : parameter; const s : storage) : return is
+  6 | function main (const (p, s) : parameter * storage) : return is
   7 |   block {
 :
 Warning: unused variable "p".

@@ -43,8 +43,8 @@ let%expect_test _ =
       | Transfer_single of action_transfer_single
 
     function transfer_single
-      (const gen__parameters2 : action_transfer_single * storage) is
-      case gen__parameters2 of [
+      (const gen__gen2 : action_transfer_single * storage) is
+      case gen__gen2 of [
         (action, s) ->
           {
             const cards : cards = s.cards;
@@ -71,8 +71,8 @@ let%expect_test _ =
       ]
 
     function sell_single
-      (const gen__parameters3 : action_sell_single * storage) is
-      case gen__parameters3 of [
+      (const gen__gen3 : action_sell_single * storage) is
+      case gen__gen3 of [
         (action, s) ->
           {
             const card : card
@@ -135,8 +135,8 @@ let%expect_test _ =
       ]
 
     function buy_single
-      (const gen__parameters4 : action_buy_single * storage) is
-      case gen__parameters4 of [
+      (const gen__gen4 : action_buy_single * storage) is
+      case gen__gen4 of [
         (action, s) ->
           {
             const card_pattern : card_pattern
@@ -184,8 +184,8 @@ let%expect_test _ =
           } with ((list [] : list (operation)), s)
       ]
 
-    function main (const gen__parameters5 : parameter * storage) is
-      case gen__parameters5 of [
+    function main (const gen__gen5 : parameter * storage) is
+      case gen__gen5 of [
         (action, s) ->
           case action of [
             Buy_single (bs) -> buy_single (bs, s)
@@ -229,9 +229,9 @@ let%expect_test _ =
 
     let transfer_single
     : action_transfer_single * storage -> return =
-      (fun gen__parameters2 : action_transfer_single * storage ->
-         match gen__parameters2 with
-         action, [@var] s ->
+      (fun [@var] gen__gen2 : action_transfer_single * storage ->
+         match gen__gen2 with
+         [@var] action, [@var] s ->
              let [@var] cards : cards = s.cards in
              let [@var] card : card =
                match Map.find_opt action.card_to_transfer cards
@@ -258,9 +258,9 @@ let%expect_test _ =
              end)
 
     let sell_single : action_sell_single * storage -> return =
-      (fun gen__parameters3 : action_sell_single * storage ->
-         match gen__parameters3 with
-         action, [@var] s ->
+      (fun [@var] gen__gen3 : action_sell_single * storage ->
+         match gen__gen3 with
+         [@var] action, [@var] s ->
              let card : card =
                match Map.find_opt action.card_to_sell s.cards
                with
@@ -316,9 +316,9 @@ let%expect_test _ =
              end)
 
     let buy_single : action_buy_single * storage -> return =
-      (fun gen__parameters4 : action_buy_single * storage ->
-         match gen__parameters4 with
-         action, [@var] s ->
+      (fun [@var] gen__gen4 : action_buy_single * storage ->
+         match gen__gen4 with
+         [@var] action, [@var] s ->
              let [@var] card_pattern : card_pattern =
                match Map.find_opt
                        action.card_to_buy
@@ -359,8 +359,8 @@ let%expect_test _ =
              end)
 
     let main : parameter * storage -> return =
-      (fun gen__parameters5 : parameter * storage ->
-         match gen__parameters5 with
+      (fun gen__gen5 : parameter * storage ->
+         match gen__gen5 with
          action, s ->
              match action with
                Buy_single bs -> buy_single bs s
@@ -403,10 +403,10 @@ type parameter =
 
 let transfer_single
 : (action_transfer_single, storage) => return =
-  ((gen__parameters2: (action_transfer_single, storage))
+  (([@var] gen__gen2: (action_transfer_single, storage))
    : return =>
-     switch  gen__parameters2 {
-     | action, [@var] s =>
+     switch  gen__gen2 {
+     | [@var] action, [@var] s =>
          let [@var] cards: cards = s.cards;
          let [@var] card: card =
            switch
@@ -437,9 +437,9 @@ let transfer_single
      });
 
 let sell_single: (action_sell_single, storage) => return =
-  ((gen__parameters3: (action_sell_single, storage)): return =>
-     switch  gen__parameters3 {
-     | action, [@var] s =>
+  (([@var] gen__gen3: (action_sell_single, storage)): return =>
+     switch  gen__gen3 {
+     | [@var] action, [@var] s =>
          let card: card =
            switch Map.find_opt(action.card_to_sell, s.cards) {
            | Some card => card
@@ -499,9 +499,9 @@ let sell_single: (action_sell_single, storage) => return =
      });
 
 let buy_single: (action_buy_single, storage) => return =
-  ((gen__parameters4: (action_buy_single, storage)): return =>
-     switch  gen__parameters4 {
-     | action, [@var] s =>
+  (([@var] gen__gen4: (action_buy_single, storage)): return =>
+     switch  gen__gen4 {
+     | [@var] action, [@var] s =>
          let [@var] card_pattern: card_pattern =
            switch
            Map.find_opt(action.card_to_buy, s.card_patterns) {
@@ -547,8 +547,8 @@ let buy_single: (action_buy_single, storage) => return =
      });
 
 let main: (parameter, storage) => return =
-  ((gen__parameters5: (parameter, storage)): return =>
-     switch  gen__parameters5 {
+  ((gen__gen5: (parameter, storage)): return =>
+     switch  gen__gen5 {
      | action, s =>
          switch  action {
          | Buy_single bs => buy_single(bs, s)
@@ -833,8 +833,8 @@ type storage is unit
 
 type return is list (operation) * storage
 
-function main (const gen__parameters2 : parameter * storage) is
-  case gen__parameters2 of [
+function main (const gen__gen2 : parameter * storage) is
+  case gen__gen2 of [
     (p, s) ->
       {
         case p of [
@@ -921,8 +921,8 @@ type storage = unit
 type return = operation list * storage
 
 let main : parameter * storage -> return =
-  (fun gen__parameters2 : parameter * storage ->
-     match gen__parameters2 with
+  (fun gen__gen2 : parameter * storage ->
+     match gen__gen2 with
      p, s ->
          begin
            match p with
@@ -995,8 +995,8 @@ type storage = unit;
 type return = (list(operation), storage);
 
 let main: (parameter, storage) => return =
-  ((gen__parameters2: (parameter, storage)): return =>
-     switch  gen__parameters2 {
+  ((gen__gen2: (parameter, storage)): return =>
+     switch  gen__gen2 {
      | p, s =>
          {
            switch  p {
@@ -1086,17 +1086,16 @@ let failer: int => int =
 let%expect_test _ =
   run_ligo_good [ "transpile" ; "contract" ; "../../test/contracts/recursion.ligo" ; "pascaligo" ] ;
   [%expect {|
-    recursive function sum (const gen__parameters2 : int * int) is
-      case gen__parameters2 of [
+    recursive function sum (const gen__gen2 : int * int) is
+      case gen__gen2 of [
         (n, acc) ->
           if Operator.lt (n, 1)
           then acc
           else sum (Operator.sub (n, 1), Operator.add (acc, n))
       ]
 
-    recursive function fibo
-      (const gen__parameters3 : int * int * int) is
-      case gen__parameters3 of [
+    recursive function fibo (const gen__gen3 : int * int * int) is
+      case gen__gen3 of [
         (n, n_1, n_0) ->
           if Operator.lt (n, 2)
           then n_1
@@ -1107,14 +1106,14 @@ let%expect_test _ =
   run_ligo_good [ "transpile" ; "contract" ; "../../test/contracts/recursion.ligo" ; "cameligo" ] ;
   [%expect {|
     let rec sum : int * int -> int =
-      (fun gen__parameters2 : int * int ->
-         match gen__parameters2 with
+      (fun gen__gen2 : int * int ->
+         match gen__gen2 with
          n, acc ->
              if (n < 1) then acc else sum (n - 1) (acc + n))
 
     let rec fibo : int * int * int -> int =
-      (fun gen__parameters3 : int * int * int ->
-         match gen__parameters3 with
+      (fun gen__gen3 : int * int * int ->
+         match gen__gen3 with
          n, n_1, n_0 ->
              if (n < 2)
              then n_1
@@ -1122,8 +1121,8 @@ let%expect_test _ =
   run_ligo_good [ "transpile" ; "contract" ; "../../test/contracts/recursion.ligo" ; "reasonligo" ] ;
   [%expect {|
     let rec sum: (int, int) => int =
-      ((gen__parameters2: (int, int)): int =>
-         switch  gen__parameters2 {
+      ((gen__gen2: (int, int)): int =>
+         switch  gen__gen2 {
          | n, acc =>
              if(((n) < (1))) {
                acc
@@ -1134,8 +1133,8 @@ let%expect_test _ =
          });
 
     let rec fibo: (int, int, int) => int =
-      ((gen__parameters3: (int, int, int)): int =>
-         switch  gen__parameters3 {
+      ((gen__gen3: (int, int, int)): int =>
+         switch  gen__gen3 {
          | n, n_1, n_0 =>
              if(((n) < (2))) {
                n_1

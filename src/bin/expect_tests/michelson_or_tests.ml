@@ -47,17 +47,17 @@ let%expect_test _ =
     Warning: unused variable "bar".
     Hint: replace it by "_bar" to prevent this warning.
 
-    File "../../test/contracts/double_michelson_or.ligo", line 6, characters 21-27:
+    File "../../test/contracts/double_michelson_or.ligo", line 6, characters 22-28:
       5 |
-      6 | function main (const action : unit; const store : storage) : return is
+      6 | function main (const (action, store) : unit * storage) : return is
       7 | block {
     :
     Warning: unused variable "action".
     Hint: replace it by "_action" to prevent this warning.
 
-    File "../../test/contracts/double_michelson_or.ligo", line 6, characters 42-47:
+    File "../../test/contracts/double_michelson_or.ligo", line 6, characters 30-35:
       5 |
-      6 | function main (const action : unit; const store : storage) : return is
+      6 | function main (const (action, store) : unit * storage) : return is
       7 | block {
     :
     Warning: unused variable "store".
@@ -103,17 +103,17 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_good [ "compile" ; "contract" ; contract "michelson_or_tree_intermediary.ligo" ] ;
   [%expect {|
-    File "../../test/contracts/michelson_or_tree_intermediary.ligo", line 6, characters 21-27:
+    File "../../test/contracts/michelson_or_tree_intermediary.ligo", line 6, characters 22-28:
       5 |
-      6 | function main (const action : unit; const store : storage) : return is block {
+      6 | function main (const (action, store) : unit * storage) : return is block {
       7 |   const foo : storage = (M_right ((M_left(1) : inner_storage)) : storage) ;
     :
     Warning: unused variable "action".
     Hint: replace it by "_action" to prevent this warning.
 
-    File "../../test/contracts/michelson_or_tree_intermediary.ligo", line 6, characters 42-47:
+    File "../../test/contracts/michelson_or_tree_intermediary.ligo", line 6, characters 30-35:
       5 |
-      6 | function main (const action : unit; const store : storage) : return is block {
+      6 | function main (const (action, store) : unit * storage) : return is block {
       7 |   const foo : storage = (M_right ((M_left(1) : inner_storage)) : storage) ;
     :
     Warning: unused variable "store".
