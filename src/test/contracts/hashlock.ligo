@@ -24,14 +24,14 @@ type return is list(operation) * storage
 
 (* We use hash-commit so that a baker can not steal *)
 
-function commit (const p : bytes; var s: storage) : return is
+function commit (var (p, s) : bytes * storage) : return is
   begin
     const commit : commit = record [date = Tezos.now + 86_400; salted_hash = p];
     const updated_map: commit_set = Big_map.update(Tezos.sender, Some(commit), s.commits);
     s := s with record [commits = updated_map];
   end with ((nil : list(operation)), s)
 
-function reveal (const p: reveal; var s: storage) : return is
+function reveal (var (p, s): reveal * storage) : return is
   begin
     if not s.unused
     then failwith("This contract has already been used.")
@@ -55,8 +55,8 @@ function reveal (const p: reveal; var s: storage) : return is
       failwith("Your commitment did not match the storage hash.");
   end with (p.message(unit), s)
 
-function main (const p: parameter; const s: storage) : return is
+function main (const (p, s): parameter * storage) : return is
   case p of [
-  | Commit (c) -> commit (c,s)
-  | Reveal (r) -> reveal (r,s)
+  | Commit (c) -> commit((c,s))
+  | Reveal (r) -> reveal((r,s))
   ]

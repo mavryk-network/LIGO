@@ -30,8 +30,7 @@ type return is list (operation) * storage
 
 type parameter is CheckMessage of check_message_pt
 
-function check_message (const param : check_message_pt;
-                        var s : storage) : return is block {
+function check_message (var (param, s) : check_message_pt * storage) : return is block {
   var message : message := param.message;
 
   if param.counter =/= s.counter then
@@ -64,5 +63,5 @@ function check_message (const param : check_message_pt;
   }
 } with (message (unit), s)
 
-function main (const param : parameter; const s : storage) : return is
-  case param of [ CheckMessage (p) -> check_message (p,s) ]
+function main (const (param, s) : parameter * storage) : return is
+  case param of [ CheckMessage (p) -> check_message((p,s)) ]

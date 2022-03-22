@@ -57,7 +57,7 @@ Should probably do some napkin calculations for how expensive skipping needs to
 be to deter people from doing it just to chew up address space.
 *)
 
-function buy (const parameter : buy; const storage : storage) : list(operation) * storage is
+function buy (const (parameter, storage) : buy * storage) : list(operation) * storage is
   begin
     if amount = storage.name_price
     then skip
@@ -83,7 +83,7 @@ function buy (const parameter : buy; const storage : storage) : list(operation) 
                               next_id = new_id + 1;
                               ])
 
-function update_owner (const parameter : update_owner; const storage : storage) :
+function update_owner (const (parameter, storage) : update_owner * storage) :
          list(operation) * storage is
   begin
     if (amount =/= 0mutez)
@@ -105,7 +105,7 @@ function update_owner (const parameter : update_owner; const storage : storage) 
     identities[id] := id_details;
   end with ((nil: list(operation)), storage with record [ identities = identities; ])
 
-function update_details (const parameter : update_details; const storage : storage ) :
+function update_details (const (parameter, storage) : update_details * storage ) :
          list(operation) * storage is
   begin
     if (amount =/= 0mutez) then failwith("Updating details doesn't cost anything.") ;
@@ -137,15 +137,15 @@ function update_details (const parameter : update_details; const storage : stora
   end with ((nil: list(operation)), storage with record [ identities = identities; ])
 
 (* Let someone skip the next identity so nobody has to take one that's undesirable *)
-function skip_ (const _ : unit; const storage: storage) : list(operation) * storage is
+function skip_ (const (_, storage) : unit * storage) : list(operation) * storage is
   begin
     if amount =/= storage.skip_price then failwith("Incorrect amount paid.");
   end with ((nil: list(operation)), storage with record [ next_id = storage.next_id + 1; ])
 
-function main (const action : action; const storage : storage) : list(operation) * storage is
+function main (const (action, storage) : action * storage) : list(operation) * storage is
   case action of [
-  | Buy(b) -> buy (b, storage)
-  | Update_owner(uo) -> update_owner (uo, storage)
-  | Update_details(ud) -> update_details (ud, storage)
-  | Skip(_) -> skip_ (unit, storage)
+  | Buy(b) -> buy((b, storage))
+  | Update_owner(uo) -> update_owner((uo, storage))
+  | Update_details(ud) -> update_details((ud, storage))
+  | Skip(_) -> skip_((unit, storage))
   ]

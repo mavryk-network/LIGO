@@ -3,7 +3,7 @@ type storage is address
 type return is list (operation) * storage
 
 
-function main (const _p : parameter; const _s : storage) : return is
+function main (const (_p, _s) : parameter * storage) : return is
   block {
     const s : contract(parameter) = Tezos.self("%default") ;
   }

@@ -6,7 +6,7 @@ type storage is int
 
 type return is list (operation) * storage
 
-function main (const p : action; const s : int) : return is
+function main (const (p, s) : action * int) : return is
   ((nil : list (operation)),
    case p of [
      Increment (n) -> s + n

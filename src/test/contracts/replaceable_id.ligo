@@ -13,23 +13,21 @@ type entry_point_t is
   Change_address of change_addr_pt
 | Pass_message   of pass_message_pt
 
-function change_address (const param : change_addr_pt;
-                         const s : storage_t) : contract_return_t is
+function change_address (const (param, s) : change_addr_pt * storage_t) : contract_return_t is
   block {
     if sender =/= s then failwith ("Unauthorized sender")
     else skip
   } with ((nil : list (operation)), param)
 
-function pass_message (const param: pass_message_pt;
-                       const s : storage_t ) : contract_return_t is
+function pass_message (const (param, s) : pass_message_pt * storage_t ) : contract_return_t is
   block {
     if sender =/= s then failwith("Unauthorized sender") else skip;
     var _message : pass_message_pt := param
   } with (param (unit), s)
 
-function main (const param : entry_point_t; const s : storage_t) :
+function main (const (param, s) : entry_point_t * storage_t) :
   contract_return_t is
   case param of [
-    Change_address (p) -> change_address (p,s)
-  | Pass_message (p)   -> pass_message (p,s)
+    Change_address (p) -> change_address((p,s))
+  | Pass_message (p)   -> pass_message((p,s))
   ]

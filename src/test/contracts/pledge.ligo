@@ -16,9 +16,9 @@ type parameter is
 | Donate of unit
 | Distribute of (unit -> list(operation))
 
-function donate (const _: unit; const s: storage) : list(operation) * storage is ((nil: list(operation)), s);
+function donate (const (_, s) : unit * storage) : list(operation) * storage is ((nil: list(operation)), s);
 
-function distribute (const p: (unit -> list(operation)); const s: storage) : list(operation) * storage is
+function distribute (const (p, s): (unit -> list(operation)) * storage) : list(operation) * storage is
   begin
     var result : list(operation) * storage := (p(unit),s);
     if Tezos.sender = s
@@ -27,7 +27,7 @@ function distribute (const p: (unit -> list(operation)); const s: storage) : lis
                        list(operation) * storage)
   end with result
 
-function main (const p: parameter; const s: storage) : list(operation) * storage is
+function main (const (p, s): parameter * storage) : list(operation) * storage is
   case p of [
   | Donate -> donate((unit,s))
   | Distribute (msg) -> distribute((msg,s))

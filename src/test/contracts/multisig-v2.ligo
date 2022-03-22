@@ -33,7 +33,7 @@ type parameter is
 | Withdraw of withdraw_pt
 | Default  of default_pt
 
-function send (const param : send_pt; var s : storage) : return is
+function send (var (param, s) : send_pt * storage) : return is
   block {
     // check sender against the authorized addresses
 
@@ -102,7 +102,7 @@ function send (const param : send_pt; var s : storage) : return is
     } else s.message_store[packed_msg] := new_store
   } with (ret_ops, s)
 
-function withdraw (const param : withdraw_pt; var s : storage) : return is
+function withdraw (var (param, s) : withdraw_pt * storage) : return is
   block {
     var message : message := param;
     const packed_msg : bytes = Bytes.pack (message);
@@ -132,18 +132,18 @@ function withdraw (const param : withdraw_pt; var s : storage) : return is
     ] // The message is not stored, ignore.
   } with ((nil : list (operation)), s)
 
-function default (const _ : default_pt; const s : storage) : return is
+function default (const (_, s) : default_pt * storage) : return is
     ((nil : list (operation)), s)
 
-function main (const param : parameter; const s : storage) : return  is
+function main (const (param, s) : parameter * storage) : return  is
   case param of [
     (* Propagate message p if the number of authorized addresses having
        voted for the same message p equals the threshold. *)
-    | Send (p) -> send (p, s)
+    | Send (p) -> send((p, s))
 
     (* Withraw vote for message p *)
-    | Withdraw (p) -> withdraw (p, s)
+    | Withdraw (p) -> withdraw((p, s))
 
     (* Use this action to transfer tez to the contract *)
-    | Default (p) -> default (p, s)
+    | Default (p) -> default((p, s))
   ]

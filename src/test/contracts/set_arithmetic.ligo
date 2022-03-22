@@ -46,10 +46,10 @@ function iter_op_with_effect (const s : set (int)) : int is
 
 function fold_op (const s : set (int)) : list(int) is
   block {
-    function aggregate (const i : list(int); const j : int) : list(int) is j # i
+    function aggregate (const (i, j) : list(int) * int) : list(int) is j # i
   } with set_fold (aggregate, s, (list [] : list (int)))
 
 function fold_right (const s : set (int)) : list(int) is
   block {
-    function aggregate (const i : int; const j : list(int)) : list(int) is i # j
+    function aggregate (const (i, j) : int * list(int)) : list(int) is i # j
   } with Set.fold_desc (aggregate, s, (list [] : list (int)))

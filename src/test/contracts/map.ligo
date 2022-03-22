@@ -13,11 +13,11 @@ const map1 : foobar = map [
 
 const map2 : foobar = map [23 -> 0; 42 -> 0]
 
-function set_ (var n : int; var m : foobar) : foobar is block {
+function set_ (var (n, m) : int * foobar) : foobar is block {
   m[23] := n
 } with m
 
-function add (var n : int ; var m : foobar) : foobar is set_(n,m)
+function add (var (n, m) : int * foobar) : foobar is set_((n,m))
 
 function rm (var m : foobar) : foobar is block {
   remove 42 from map m
@@ -34,22 +34,22 @@ function size_ (const m : foobar) : nat is Map.size (m)
 
 function get (const m : foobar) : option (int) is m[42]
 
-function mem (const k: int; const m: foobar) : bool is Map.mem (k, m)
+function mem (const (k, m) : int * foobar) : bool is Map.mem (k, m)
 
 function iter_op (const m : foobar) : unit is
   block {
-    function aggregate (const i : int; const j : int) : unit is block
+    function aggregate (const (i, j) : int * int) : unit is block
       { if i=j then skip else failwith ("fail") } with unit
   } with Map.iter (aggregate, m)
 
 function map_op (const m : foobar) : foobar is
   block {
-    function increment (const _ : int; const j : int) : int is j+1
+    function increment (const (_, j) : int * int) : int is j+1
   } with Map.map (increment, m)
 
 function fold_op (const m : foobar) : int is
   block {
-    function aggregate (const i : int; const j : int * int) : int is
+    function aggregate (const (i, j) : int * (int * int)) : int is
       i + j.0 + j.1
   } with Map.fold (aggregate, m, 10)
 

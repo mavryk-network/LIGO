@@ -9,20 +9,20 @@ type entry_point_t is
 | Call of call_pt
 | Default of default_pt
 
-function call (const p : call_pt; const s : storage_t) : contract_return_t is
+function call (const (p, s) : call_pt * storage_t) : contract_return_t is
   block {
     if s >= now then failwith ("Contract is still time locked") else skip;
     const message : message_t = p;
     const ret_ops : list (operation) = message (unit)
   } with (ret_ops, s)
 
-function default (const _ : default_pt; const s : storage_t) :
+function default (const (_, s) : default_pt * storage_t) :
   contract_return_t is
   ((nil : list (operation)), s)
 
-function main(const param : entry_point_t; const s : storage_t) :
+function main(const (param, s) : entry_point_t * storage_t) :
   contract_return_t is
   case param of [
-    Call    (p) -> call (p,s)
-  | Default (p) -> default (p,s)
+    Call    (p) -> call((p,s))
+  | Default (p) -> default((p,s))
   ]

@@ -1,4 +1,2 @@
-function check_signature (const pk     : key;
-                          const signed : signature;
-                          const msg    : bytes) : bool
+function check_signature (const (pk, signed, msg) : key * signature * bytes) : bool
 is Crypto.check (pk, signed, msg)

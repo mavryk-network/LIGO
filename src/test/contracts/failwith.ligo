@@ -6,7 +6,7 @@ type storage is unit
 
 type return is list (operation) * storage
 
-function main (const p : parameter; const s : storage) : return is {
+function main (const (p, s) : parameter * storage) : return is {
   case p of [
     Zero (n) -> if n > 0n then failwith ("fail")
   | Pos (n)  -> if n = 0n then failwith ("fail")

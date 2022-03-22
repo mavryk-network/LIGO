@@ -20,7 +20,7 @@ const bl : foobar = list [144; 51; 42; 120; 421]
 
 function fold_op (const s : list (int)) : int is
   block {
-    function aggregate (const prec: int; const cur: int) : int is prec+cur
+    function aggregate (const (prec, cur): int * int) : int is prec+cur
   } with List.fold (aggregate, s, 10)
 
 function iter_op (const s : list (int)) : int is

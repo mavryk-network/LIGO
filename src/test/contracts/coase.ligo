@@ -44,8 +44,7 @@ type parameter is
 | Sell_single     of action_sell_single
 | Transfer_single of action_transfer_single
 
-function transfer_single (const action : action_transfer_single;
-                          var s : storage) : return is
+function transfer_single (var (action, s) : action_transfer_single * storage) : return is
   block {
     var cards : cards := s.cards;
     var card : card :=
@@ -61,8 +60,7 @@ function transfer_single (const action : action_transfer_single;
     s.cards := cards
   } with ((nil : list (operation)), s)
 
-function sell_single (const action : action_sell_single;
-                      var s : storage) : return is
+function sell_single (var (action, s) : action_sell_single * storage) : return is
   block {
     const card : card =
       case s.cards[action.card_to_sell] of [
@@ -94,8 +92,7 @@ function sell_single (const action : action_sell_single;
     const operations : list (operation) = list [op]
   } with (operations, s)
 
-function buy_single (const action : action_buy_single;
-                     var s : storage) : return is
+function buy_single (var (action, s) : action_buy_single * storage) : return is
   block {
     // Check funds
     var card_pattern : card_pattern :=
@@ -121,9 +118,9 @@ function buy_single (const action : action_buy_single;
     s.next_id := s.next_id + 1n
   } with ((nil : list (operation)), s)
 
-function main (const action : parameter; const s : storage) : return is
+function main (const (action, s) : parameter * storage) : return is
   case action of [
-    Buy_single (bs)      -> buy_single (bs, s)
-  | Sell_single (as)     -> sell_single (as, s)
-  | Transfer_single (at) -> transfer_single (at, s)
+    Buy_single (bs)      -> buy_single((bs, s))
+  | Sell_single (as)     -> sell_single((as, s))
+  | Transfer_single (at) -> transfer_single((at, s))
   ]

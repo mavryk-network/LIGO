@@ -5,7 +5,7 @@ type parameter is
 
 type storage is int
 
-function main(const action : parameter; const store : storage) : list (operation) * storage is
+function main(const (action, store) : parameter * storage) : list (operation) * storage is
   ((nil : list (operation)),
    case action of [
      Increment (n) -> store + n

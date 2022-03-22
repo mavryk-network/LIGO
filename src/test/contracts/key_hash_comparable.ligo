@@ -5,5 +5,5 @@ type storage is record [
 
 type return is list (operation) * storage
 
-function main (const a : int; const store : storage) : return is
+function main (const (a, store) : int * storage) : return is
   ((nil : list (operation)), store)
