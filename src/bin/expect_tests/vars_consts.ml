@@ -87,31 +87,31 @@ let%expect_test _ =
       3 |     x := 4;
       4 |     y := 3; |}]
 
-let%expect_test _ =
-  run_ligo_bad [ "print" ; "ast-core" ; (bad_test "capture_var_param.ligo") ] ;
-  [%expect{|
-    File "../../test/contracts/negative/vars_consts/capture_var_param.ligo", line 3, characters 42-43:
-      2 |   block {
-      3 |     function bar(const _ : unit) : int is x;
-      4 |   } with bar
+(* let%expect_test _ =
+ *   run_ligo_bad [ "print" ; "ast-core" ; (bad_test "capture_var_param.ligo") ] ;
+ *   [%expect{|
+ *     File "../../test/contracts/negative/vars_consts/capture_var_param.ligo", line 3, characters 42-43:
+ *       2 |   block {
+ *       3 |     function bar(const _ : unit) : int is x;
+ *       4 |   } with bar
+ * 
+ *     Invalid capture of non-constant variable "x", declared at
+ *     File "../../test/contracts/negative/vars_consts/capture_var_param.ligo", line 1, characters 17-18:
+ *       1 | function foo(var x : int) : int is
+ *       2 |   block { |}] *)
 
-    Invalid capture of non-constant variable "x", declared at
-    File "../../test/contracts/negative/vars_consts/capture_var_param.ligo", line 1, characters 17-18:
-      1 | function foo(var x : int) : int is
-      2 |   block { |}]
-
-let%expect_test _ =
-  run_ligo_bad [ "print" ; "ast-core" ; (bad_test "capture_var_params.ligo") ] ;
-  [%expect{|
-    File "../../test/contracts/negative/vars_consts/capture_var_params.ligo", line 3, characters 42-43:
-      2 |   block {
-      3 |     function bar(const _ : unit) : int is x + y;
-      4 |   } with bar
-
-    Invalid capture of non-constant variable "x", declared at
-    File "../../test/contracts/negative/vars_consts/capture_var_params.ligo", line 1, characters 17-18:
-      1 | function foo(var x : int; const y : int) : int -> int is
-      2 |   block { |}]
+(* let%expect_test _ =
+ *   run_ligo_bad [ "print" ; "ast-core" ; (bad_test "capture_var_params.ligo") ] ;
+ *   [%expect{|
+ *     File "../../test/contracts/negative/vars_consts/capture_var_params.ligo", line 3, characters 42-43:
+ *       2 |   block {
+ *       3 |     function bar(const _ : unit) : int is x + y;
+ *       4 |   } with bar
+ * 
+ *     Invalid capture of non-constant variable "x", declared at
+ *     File "../../test/contracts/negative/vars_consts/capture_var_params.ligo", line 1, characters 17-18:
+ *       1 | function foo(var x : int; const y : int) : int -> int is
+ *       2 |   block { |}] *)
 
 let%expect_test _ =
   run_ligo_bad [ "print" ; "ast-core" ; (bad_test "capture_var_params.mligo") ] ;
@@ -165,30 +165,30 @@ let%expect_test _ =
       4 |     x = 2;
       5 |     y = 3; |}]
 
-let%expect_test _ =
-  run_ligo_bad [ "print" ; "ast-core" ; (bad_test "multiple_vars_2.jsligo") ] ;
-  [%expect{|
-    File "../../test/contracts/negative/vars_consts/multiple_vars_2.jsligo", line 4, characters 48-49:
-      3 |     let [x,y] = [4,5];
-      4 |     let add = (_ : unit) : int => { return (x + y); };
-      5 |     return add();
-
-    Invalid capture of non-constant variable "y", declared at
-    File "../../test/contracts/negative/vars_consts/multiple_vars_2.jsligo", line 3, characters 11-12:
-      2 |   {
-      3 |     let [x,y] = [4,5];
-      4 |     let add = (_ : unit) : int => { return (x + y); };
-
-    File "../../test/contracts/negative/vars_consts/multiple_vars_2.jsligo", line 4, characters 44-45:
-      3 |     let [x,y] = [4,5];
-      4 |     let add = (_ : unit) : int => { return (x + y); };
-      5 |     return add();
-
-    Invalid capture of non-constant variable "x", declared at
-    File "../../test/contracts/negative/vars_consts/multiple_vars_2.jsligo", line 3, characters 9-10:
-      2 |   {
-      3 |     let [x,y] = [4,5];
-      4 |     let add = (_ : unit) : int => { return (x + y); }; |}]
+(* let%expect_test _ =
+ *   run_ligo_bad [ "print" ; "ast-core" ; (bad_test "multiple_vars_2.jsligo") ] ;
+ *   [%expect{|
+ *     File "../../test/contracts/negative/vars_consts/multiple_vars_2.jsligo", line 4, characters 48-49:
+ *       3 |     let [x,y] = [4,5];
+ *       4 |     let add = (_ : unit) : int => { return (x + y); };
+ *       5 |     return add();
+ * 
+ *     Invalid capture of non-constant variable "y", declared at
+ *     File "../../test/contracts/negative/vars_consts/multiple_vars_2.jsligo", line 3, characters 11-12:
+ *       2 |   {
+ *       3 |     let [x,y] = [4,5];
+ *       4 |     let add = (_ : unit) : int => { return (x + y); };
+ * 
+ *     File "../../test/contracts/negative/vars_consts/multiple_vars_2.jsligo", line 4, characters 44-45:
+ *       3 |     let [x,y] = [4,5];
+ *       4 |     let add = (_ : unit) : int => { return (x + y); };
+ *       5 |     return add();
+ * 
+ *     Invalid capture of non-constant variable "x", declared at
+ *     File "../../test/contracts/negative/vars_consts/multiple_vars_2.jsligo", line 3, characters 9-10:
+ *       2 |   {
+ *       3 |     let [x,y] = [4,5];
+ *       4 |     let add = (_ : unit) : int => { return (x + y); }; |}] *)
 
 let%expect_test _ =
   run_ligo_bad [ "print" ; "ast-core" ; (bad_test "multiple_vars_1.ligo") ] ;
@@ -204,44 +204,44 @@ let%expect_test _ =
       4 |     x := 2;
       5 |     y := 3; |}]
 
-let%expect_test _ =
-  run_ligo_bad [ "print" ; "ast-core" ; (bad_test "multiple_vars_2.ligo") ] ;
-  [%expect{|
-    File "../../test/contracts/negative/vars_consts/multiple_vars_2.ligo", line 4, characters 42-43:
-      3 |     var (x, y) := (4, 5);
-      4 |     function add(const _u : unit) is (x + y);
-      5 |   } with add(unit)
+(* let%expect_test _ =
+ *   run_ligo_bad [ "print" ; "ast-core" ; (bad_test "multiple_vars_2.ligo") ] ;
+ *   [%expect{|
+ *     File "../../test/contracts/negative/vars_consts/multiple_vars_2.ligo", line 4, characters 42-43:
+ *       3 |     var (x, y) := (4, 5);
+ *       4 |     function add(const _u : unit) is (x + y);
+ *       5 |   } with add(unit)
+ * 
+ *     Invalid capture of non-constant variable "y", declared at
+ *     File "../../test/contracts/negative/vars_consts/multiple_vars_2.ligo", line 3, characters 12-13:
+ *       2 |   block {
+ *       3 |     var (x, y) := (4, 5);
+ *       4 |     function add(const _u : unit) is (x + y);
+ * 
+ *     File "../../test/contracts/negative/vars_consts/multiple_vars_2.ligo", line 4, characters 38-39:
+ *       3 |     var (x, y) := (4, 5);
+ *       4 |     function add(const _u : unit) is (x + y);
+ *       5 |   } with add(unit)
+ * 
+ *     Invalid capture of non-constant variable "x", declared at
+ *     File "../../test/contracts/negative/vars_consts/multiple_vars_2.ligo", line 3, characters 9-10:
+ *       2 |   block {
+ *       3 |     var (x, y) := (4, 5);
+ *       4 |     function add(const _u : unit) is (x + y); |}] *)
 
-    Invalid capture of non-constant variable "y", declared at
-    File "../../test/contracts/negative/vars_consts/multiple_vars_2.ligo", line 3, characters 12-13:
-      2 |   block {
-      3 |     var (x, y) := (4, 5);
-      4 |     function add(const _u : unit) is (x + y);
-
-    File "../../test/contracts/negative/vars_consts/multiple_vars_2.ligo", line 4, characters 38-39:
-      3 |     var (x, y) := (4, 5);
-      4 |     function add(const _u : unit) is (x + y);
-      5 |   } with add(unit)
-
-    Invalid capture of non-constant variable "x", declared at
-    File "../../test/contracts/negative/vars_consts/multiple_vars_2.ligo", line 3, characters 9-10:
-      2 |   block {
-      3 |     var (x, y) := (4, 5);
-      4 |     function add(const _u : unit) is (x + y); |}]
-
-let%expect_test _ =
-  run_ligo_bad [ "print" ; "ast-core" ; (bad_test "capture_assign.ligo") ] ;
-  [%expect{|
-    File "../../test/contracts/negative/vars_consts/capture_assign.ligo", line 5, characters 4-5:
-      4 |     const y = 0;
-      5 |     x := 6;
-      6 |   } with unit;
-
-    Invalid capture of non-constant variable "x", declared at
-    File "../../test/contracts/negative/vars_consts/capture_assign.ligo", line 2, characters 6-7:
-      1 | function foo(const _ : unit) is block {
-      2 |   var x := 42;
-      3 |   function bar(const _ : unit) is block { |}]
+(* let%expect_test _ =
+ *   run_ligo_bad [ "print" ; "ast-core" ; (bad_test "capture_assign.ligo") ] ;
+ *   [%expect{|
+ *     File "../../test/contracts/negative/vars_consts/capture_assign.ligo", line 5, characters 4-5:
+ *       4 |     const y = 0;
+ *       5 |     x := 6;
+ *       6 |   } with unit;
+ * 
+ *     Invalid capture of non-constant variable "x", declared at
+ *     File "../../test/contracts/negative/vars_consts/capture_assign.ligo", line 2, characters 6-7:
+ *       1 | function foo(const _ : unit) is block {
+ *       2 |   var x := 42;
+ *       3 |   function bar(const _ : unit) is block { |}] *)
 
 (* Positives *)
 
