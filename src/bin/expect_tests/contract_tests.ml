@@ -2813,3 +2813,24 @@ let%expect_test _ =
   TRANSFER_TOKENS ;
   CONS ;
   PAIR } |}]
+
+(* extend built-in modules *)
+let%expect_test _ =
+  run_ligo_good [ "compile" ; "expression" ; "pascaligo" ; "y" ; "--init-file" ; contract "extend_builtin.ligo" ] ;
+  [%expect{|
+44 |}]
+
+let%expect_test _ =
+  run_ligo_good [ "compile" ; "expression" ; "cameligo" ; "y" ; "--init-file" ; contract "extend_builtin.mligo" ] ;
+  [%expect{|
+44 |}]
+
+let%expect_test _ =
+  run_ligo_good [ "compile" ; "expression" ; "jsligo" ; "y" ; "--init-file" ; contract "extend_builtin.jsligo" ] ;
+  [%expect{|
+44 |}]
+
+let%expect_test _ =
+  run_ligo_good [ "compile" ; "expression" ; "reasonligo" ; "y" ; "--init-file" ; contract "extend_builtin.religo" ] ;
+  [%expect{|
+44 |}]
