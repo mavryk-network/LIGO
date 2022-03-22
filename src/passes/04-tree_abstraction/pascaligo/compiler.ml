@@ -200,6 +200,16 @@ let rec compile_expression ~(raise :Errors.abs_error Simple_utils.Trace.raise) :
       let lst = List.map ~f:self (hd::tl) in
       e_tuple ~loc lst
   in
+  let compile_tuple_expressions : CST.expr CST.tuple -> (AST.expression list * location) = fun tuple_expr ->
+    let (lst, loc) = r_split tuple_expr in
+    let (hd,tl) = lst.inside in
+    let tl = List.map ~f:snd tl in
+    match tl with
+    | [] -> [self hd], loc
+    | _ ->
+      let lst = List.map ~f:self (hd::tl) in
+      (lst, loc)
+  in
   let compile_bin_op : AST.constant' ->  _ CST.bin_op CST.reg -> AST.expression = fun op_type op ->
     let (op, loc) = r_split op in
     let a = self op.arg1 in
@@ -274,8 +284,9 @@ let rec compile_expression ~(raise :Errors.abs_error Simple_utils.Trace.raise) :
       e_constant ~loc const args
     | None ->
       let func = e_variable_ez ~loc:loc_var var in
-      let args = compile_tuple_expression args in
-      e_application ~loc func args
+      let args, _loc = compile_tuple_expressions args in
+      List.fold_left ~f:(fun e arg -> e_application ~loc e arg) ~init:func args
+      (* e_application ~loc func args *)
   )
   (*TODO: move to proper module*)
   | E_Call { value=( E_ModPath { value={ module_path = (module_name,[]) ; field ; _ }; region=_ }, args ); region }
@@ -291,8 +302,9 @@ let rec compile_expression ~(raise :Errors.abs_error Simple_utils.Trace.raise) :
   | E_Call call ->
     let ((func, args), loc) = r_split call in
     let func = self func in
-    let args = compile_tuple_expression args in
-    e_application ~loc func args
+    let args, _loc = compile_tuple_expressions args in
+    List.fold_left ~f:(fun e arg -> e_application ~loc e arg) ~init:func args
+    (* e_application ~loc func args *)
   | E_Tuple lst ->
     compile_tuple_expression lst
   | E_Record record ->
@@ -405,46 +417,60 @@ let rec compile_expression ~(raise :Errors.abs_error Simple_utils.Trace.raise) :
   )
   | E_Fun { value = { parameters; ret_type ; return ; _ } ; region} -> (
     check_no_attributes ~raise (Location.lift region) attr ;
-    let compile_param : CST.param_decl CST.reg -> _  = fun { value = { param_kind ; pattern ; param_type } ; region = _ } ->
-      (* TODO: feels wrong, binders do not have loc in AST *)
-      let var =
-        match pattern with
-        | P_Var x -> compile_variable x
-        | x -> raise.raise (unsuported_pattern_in_function @@ CST.pattern_to_region x)
-      in
-      let ascr = Option.map ~f:(compile_type_expression ~raise <@ snd) param_type in
-      let attributes =
-        match param_kind with
-        | `Const _kwd -> Stage_common.Helpers.const_attribute
-        | `Var _kwd -> Stage_common.Helpers.var_attribute
-      in
-      { var ; ascr ; attributes }
-    in
     let loc = Location.lift region in
     let (lambda, fun_type) =
-      let (params, loc_par)  = r_split parameters in
-      let params = Utils.nsepseq_map compile_param params.inside in
-      let body = self return in
-      let ret_ty = Option.map ~f:(compile_type_expression ~raise <@ snd ) ret_type in
-      match params with
-      | (binder, []) ->
-        let expr = e_lambda ~loc binder ret_ty body in
-        let ty_opt = Option.map ~f:(fun (a,b) -> t_arrow ~loc a b) (Option.bind_pair (binder.ascr,ret_ty)) in
-        (expr, ty_opt)
-      | (hd,tl) ->
-        let params = hd::(List.map ~f:snd tl) in
-        let input_tuple_ty =
-          (* TODOpoly: polymorphism should give some leeway (using Option.all feels wrong) *)
-          let in_tys_opt = Option.all @@ List.map ~f:(fun b -> b.ascr) params in
-          Option.map ~f:t_tuple in_tys_opt
-        in
-        let binder = ValueVar.fresh ~loc ~name:"parameter" () in
-        let expr =
-          let body = e_matching_tuple ~loc:loc_par (e_variable binder) params body in
-          e_lambda_ez ~loc binder ?ascr:input_tuple_ty ret_ty body
-        in
-        let ty_opt = Option.map ~f:(fun (a,b) -> t_arrow a b) (Option.bind_pair (input_tuple_ty,ret_ty)) in
-        (expr, ty_opt)
+      (* let (params, _loc_par)  = r_split parameters in *)
+      let params, k = compile_parameters ~raise parameters in
+      (* let params = Utils.nsepseq_to_list params in *)
+      let result = k (self return) in
+      let ret_type = Option.map ~f:(compile_type_expression ~raise <@ snd ) ret_type in
+      match List.rev params with
+      | [] -> failwith "Check me"
+      | binder :: lst ->
+         (* print_endline @@ Format.asprintf "first binder: %a" ValueVar.pp binder.var;
+          * print_endline @@ Format.asprintf "next binders: %a" Simple_utils.PP_helpers.(list_sep_d ValueVar.pp) (List.map ~f:(fun binder -> binder.var) lst); *)
+         (* print_endline @@ Format.asprintf "ret_type: %a" Simple_utils.PP_helpers.(option PP.type_expression) ret_type;
+          * let eee = Option.map ~f:(fun (a,b) -> t_arrow a b) @@ Option.bind_pair (binder.ascr,ret_type) in
+          * print_endline @@ Format.asprintf "eee: %a" Simple_utils.PP_helpers.(option PP.type_expression) eee; *)
+         let init = { binder ; output_type = ret_type ; result },
+                    Option.map ~f:(fun (a,b) -> t_arrow a b) @@ Option.bind_pair (binder.ascr,ret_type) in
+         let f (l, output_type) binder =
+           ({ binder ; output_type ; result = make_e ~loc @@ E_lambda l },
+            Option.map ~f:(fun (a,b) -> t_arrow a b) @@ Option.bind_pair (binder.ascr,output_type)) in
+         let { binder ; output_type ; result }, ret_type = List.fold_left ~f ~init lst in
+         e_lambda ~loc binder output_type result, ret_type
+      (* match List.rev binders with
+       * | (binder, lst) ->
+       *    let lst = List.map ~f:snd lst in
+       *    let init = { binder ; output_type = ret_type ; result },
+       *               Option.map ~f:(fun (a,b) -> t_arrow a b) @@ Option.bind_pair (binder.ascr,ret_type) in
+       *    let f binder (l, ret_type) =
+       *      ({ binder ; output_type = ret_type ; result = make_e ~loc @@ E_lambda l },
+       *       Option.map ~f:(fun (a,b) -> t_arrow a b) @@ Option.bind_pair (binder.ascr,ret_type)) in
+       *    let { binder ; output_type ; result }, ret_type = List.fold_right ~f ~init lst in
+       *    (\* print_endline @@ Format.asprintf "expr: %a" PP.expression result;
+       *     * print_endline @@ Format.asprintf "ret_type: %a" Simple_utils.PP_helpers.(option PP.type_expression) ret_type;
+       *     * print_endline @@ Format.asprintf "output_type: %a" Simple_utils.PP_helpers.(option PP.type_expression) output_type; *\)
+       *    e_lambda ~loc binder output_type result, ret_type *)
+      (* match params with
+       * | (binder, []) ->
+       *   let expr = e_lambda ~loc binder ret_ty body in
+       *   let ty_opt = Option.map ~f:(fun (a,b) -> t_arrow ~loc a b) (Option.bind_pair (binder.ascr,ret_ty)) in
+       *   (expr, ty_opt)
+       * | (hd,tl) ->
+       *   let params = hd::(List.map ~f:snd tl) in
+       *   let input_tuple_ty =
+       *     (\* TODOpoly: polymorphism should give some leeway (using Option.all feels wrong) *\)
+       *     let in_tys_opt = Option.all @@ List.map ~f:(fun b -> b.ascr) params in
+       *     Option.map ~f:t_tuple in_tys_opt
+       *   in
+       *   let binder = ValueVar.fresh ~loc ~name:"parameter" () in
+       *   let expr =
+       *     let body = e_matching_tuple ~loc:loc_par (e_variable binder) params body in
+       *     e_lambda_ez ~loc binder ?ascr:input_tuple_ty ret_ty body
+       *   in
+       *   let ty_opt = Option.map ~f:(fun (a,b) -> t_arrow a b) (Option.bind_pair (input_tuple_ty,ret_ty)) in
+       *   (expr, ty_opt) *)
     in
     Option.value_map ~default:lambda ~f:(e_annotation ~loc lambda) fun_type
   )
@@ -690,24 +716,81 @@ and compile_matching_expr : type a . raise:'b raise -> (a-> AST.expression) -> a
     in
     List.map ~f:aux cases
 
-and compile_parameters ~raise : CST.parameters -> (AST.type_expression AST.binder) list = fun params ->
-  let aux : CST.param_decl CST.reg -> AST.type_expression AST.binder = fun param ->
-    let (param, _loc) = r_split param in
-    let var = match param.pattern with
-      | P_Var param -> compile_variable param
-      | x -> raise.raise (unsuported_pattern_in_function @@ CST.pattern_to_region x)
+and compile_parameter ~raise ?(attributes = Stage_common.Helpers.const_attribute) : CST.pattern -> _ binder * (_ -> _) =
+  fun pattern ->
+  let return ?ascr ?(attributes = Stage_common.Helpers.const_attribute) fun_ var =
+    ({var; ascr; attributes }, fun_) in
+  let return_1 ?ascr ?(attributes = Stage_common.Helpers.const_attribute) var = return ?ascr ~attributes (fun e -> e) var in
+  match pattern with
+  | P_Var pvar ->
+    return_1 ~attributes @@ compile_variable pvar
+  | P_Tuple tuple ->
+    let (tuple, loc) = r_split tuple in
+    let var = ValueVar.fresh ~loc () in
+    let aux pattern (binder_lst, fun_) =
+      let (binder,fun_') = compile_parameter ~raise ~attributes pattern in
+      (binder :: binder_lst, fun_' <@ fun_)
     in
-    match param.param_kind with
-    | `Var _ ->
-      let ascr = Option.map ~f:(compile_type_expression ~raise <@ snd) param.param_type in
-      { var ; ascr ; attributes = Stage_common.Helpers.var_attribute }
-    | `Const _ ->
-      let ascr = Option.map ~f:(compile_type_expression ~raise  <@ snd) param.param_type in
-      { var ; ascr ; attributes = Stage_common.Helpers.const_attribute }
+    let binder_lst, fun_ = List.fold_right ~f:aux ~init:([],fun e -> e) @@ npseq_to_list tuple.inside in
+    let expr = fun expr -> e_matching_tuple ~loc (e_variable ~loc var) binder_lst @@ fun_ expr in
+    let ascr = Option.all @@ List.map ~f:(fun binder -> binder.ascr) binder_lst in
+    let ascr = Option.map ~f:(t_tuple) ascr in
+    return ?ascr ~attributes expr var
+  | P_Par par ->
+    let (par,_loc) = r_split par in
+    let ({var;ascr;attributes}, expr) = compile_parameter ~raise par.inside in
+    return ?ascr ~attributes expr var
+  (* | P_Record record ->
+   *   let record,loc = r_split record in
+   *   let var = ValueVar.fresh ~loc () in
+   *   let aux ({value;_}:CST.field_pattern CST.reg) (binder_lst,fun_') =
+   *     let field_name, pattern = match value with
+   *       | Complete { field_lhs = P_Var v ; field_rhs ; _ } ->
+   *          v, field_rhs
+   *       | _ -> raise.raise @@ unsupported_pattern_type pattern
+   *     in
+   *     let field_name = compile_variable field_name in
+   *     let binder,fun_ = compile_parameter ~raise pattern in
+   *     ((field_name,binder)::binder_lst,fun_ <@ fun_')
+   *   in
+   *   let binder_lst, fun_ = List.fold_right ~f:aux ~init:([],fun e -> e) @@ npseq_to_list record.ne_elements in
+   *   let expr = fun expr -> e_matching_record ~loc (e_variable var) binder_lst @@ fun_ expr in
+   *   let ascr = Option.all @@ List.map ~f:(fun (_,binder) -> binder.ascr) binder_lst in
+   *   let ascr = Option.map ~f:(t_tuple) ascr in
+   *   return ?ascr expr var *)
+  | P_Typed tp ->
+    let (tp, _loc) = r_split tp in
+    let {pattern; type_annot = (_, type_expr) } : CST.typed_pattern = tp in
+    let ascr = compile_type_expression ~raise type_expr in
+    let ({var;attributes;  _}, exprs) = compile_parameter ~raise pattern in
+    return ~ascr ~attributes exprs var
+  | _ -> raise.raise @@ unsupported_pattern_type pattern
+
+and compile_parameters ~raise : CST.parameters -> (AST.type_expression AST.binder) list * (expression -> expression) = fun params ->
+  let aux : CST.param_decl CST.reg -> _ * (expression -> expression) -> (AST.type_expression AST.binder) list * (expression -> expression) = fun param (binders, k) ->
+    let (param, _loc) = r_split param in
+    let attributes = match param.param_kind with `Var _ -> Stage_common.Helpers.var_attribute
+                                               | `Const _ -> Stage_common.Helpers.const_attribute in
+    let binder, k' = compile_parameter ~raise ~attributes param.pattern in
+    let ascr = Option.map ~f:snd param.param_type in
+    let ascr = Option.map ~f:(compile_type_expression ~raise) ascr in
+    { binder with ascr ; attributes  } :: binders, (fun e -> k' (k e))
+    (* let var = match param.pattern with
+     *   | P_Var param -> compile_variable param
+     *   | x -> raise.raise (unsuported_pattern_in_function @@ CST.pattern_to_region x)
+     * in
+     * match param.param_kind with
+     * | `Var _ ->
+     *   let ascr = Option.map ~f:(compile_type_expression ~raise <@ snd) param.param_type in
+     *   { var ; ascr ; attributes = Stage_common.Helpers.var_attribute }
+     * | `Const _ ->
+     *   let ascr = Option.map ~f:(compile_type_expression ~raise  <@ snd) param.param_type in
+     *   { var ; ascr ; attributes = Stage_common.Helpers.const_attribute } *)
   in
   let (params, _loc) = r_split params in
   let params = npseq_to_list params.inside in
-  List.map ~f:aux params
+  let binders, k = List.fold_right ~f:aux ~init:([], fun e -> e) params in
+  binders, k
 
 and compile_path : (CST.selection, CST.dot) Utils.nsepseq -> AST.expression AST.access list =
   fun x ->
@@ -1029,22 +1112,32 @@ and compile_fun_decl loc ~raise : CST.fun_decl -> expression_variable * type_exp
   fun ({kwd_recursive; kwd_function=_; fun_name; type_params; parameters; ret_type; kwd_is=_; return=r; terminator=_ }: CST.fun_decl) ->
   let fun_binder = compile_variable fun_name in
   let ret_type = Option.map ~f:(compile_type_expression ~raise <@ snd) ret_type in
-  let param = compile_parameters ~raise parameters in
+  let params, k = compile_parameters ~raise parameters in
   let result = compile_expression ~raise r in
+  let result = k result in
   let (lambda, fun_type) =
-    match param with
-    | binder::[] ->
-      let lambda : _ AST.lambda = { binder; output_type = ret_type; result } in
-      (lambda , Option.map ~f:(fun (a,b) -> t_arrow a b) @@ Option.bind_pair (binder.ascr,ret_type))
-    | lst ->
-      let lst = Option.all @@ List.map ~f:(fun e -> e.ascr) lst in
-      let input_type = Option.map ~f:t_tuple lst in
-      let var = ValueVar.fresh ~name:"parameters" () in
-      let binder = { var;ascr=input_type;attributes=Stage_common.Helpers.const_attribute} in
-      let result = e_matching_tuple (e_variable var) param result in
-      let lambda : _ AST.lambda = { binder ; output_type = ret_type ; result } in
-      (lambda, Option.map ~f:(fun (a,b) -> t_arrow a b) @@ Option.bind_pair (input_type,ret_type))
+    match List.rev params with
+    | [] -> failwith "Check me"
+    | binder :: lst ->
+       (* print_endline @@ Format.asprintf "first binder: %a" ValueVar.pp binder.var;
+        * print_endline @@ Format.asprintf "next binders: %a" Simple_utils.PP_helpers.(list_sep_d ValueVar.pp) (List.map ~f:(fun binder -> binder.var) lst); *)
+       (* print_endline @@ Format.asprintf "ret_type: %a" Simple_utils.PP_helpers.(option PP.type_expression) ret_type;
+        * let eee = Option.map ~f:(fun (a,b) -> t_arrow a b) @@ Option.bind_pair (binder.ascr,ret_type) in
+        * print_endline @@ Format.asprintf "eee: %a" Simple_utils.PP_helpers.(option PP.type_expression) eee; *)
+       let init = { binder ; output_type = ret_type ; result },
+                  Option.map ~f:(fun (a,b) -> t_arrow a b) @@ Option.bind_pair (binder.ascr,ret_type) in
+       let f (l, output_type) binder =
+         ({ binder ; output_type ; result = make_e ~loc @@ E_lambda l },
+          Option.map ~f:(fun (a,b) -> t_arrow a b) @@ Option.bind_pair (binder.ascr,output_type)) in
+       List.fold_left ~f ~init lst
+       (* print_endline @@ Format.asprintf "e: %a" (PP.lambda PP.expression PP.type_expression) e; *)
+       (* print_endline @@ Format.asprintf "ret_type: %a" Simple_utils.PP_helpers.(option PP.type_expression) ret_type; *)
+       (* e, ret_type *)
   in
+  (* print_endline @@ Format.asprintf "lambda: %a" PP.lambda lambda; *)
+  (* print_endline @@ Format.asprintf "fun_type: %a" Simple_utils.PP_helpers.(option PP.type_expression) fun_type; *)
+  (* print_endline @@ Format.asprintf "output_type: %a" Simple_utils.PP_helpers.(option PP.type_expression) output_type; *)
+
   let func =
     match kwd_recursive with
     | Some reg ->
