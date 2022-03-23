@@ -286,7 +286,6 @@ let rec compile_expression ~(raise :Errors.abs_error Simple_utils.Trace.raise) :
       let func = e_variable_ez ~loc:loc_var var in
       let args, _loc = compile_tuple_expressions args in
       List.fold_left ~f:(fun e arg -> e_application ~loc e arg) ~init:func args
-      (* e_application ~loc func args *)
   )
   (*TODO: move to proper module*)
   | E_Call { value=( E_ModPath { value={ module_path = (module_name,[]) ; field ; _ }; region=_ }, args ); region }
@@ -419,19 +418,12 @@ let rec compile_expression ~(raise :Errors.abs_error Simple_utils.Trace.raise) :
     check_no_attributes ~raise (Location.lift region) attr ;
     let loc = Location.lift region in
     let (lambda, fun_type) =
-      (* let (params, _loc_par)  = r_split parameters in *)
       let params, k = compile_parameters ~raise parameters in
-      (* let params = Utils.nsepseq_to_list params in *)
       let result = k (self return) in
       let ret_type = Option.map ~f:(compile_type_expression ~raise <@ snd ) ret_type in
       match List.rev params with
       | [] -> failwith "Check me"
       | binder :: lst ->
-         (* print_endline @@ Format.asprintf "first binder: %a" ValueVar.pp binder.var;
-          * print_endline @@ Format.asprintf "next binders: %a" Simple_utils.PP_helpers.(list_sep_d ValueVar.pp) (List.map ~f:(fun binder -> binder.var) lst); *)
-         (* print_endline @@ Format.asprintf "ret_type: %a" Simple_utils.PP_helpers.(option PP.type_expression) ret_type;
-          * let eee = Option.map ~f:(fun (a,b) -> t_arrow a b) @@ Option.bind_pair (binder.ascr,ret_type) in
-          * print_endline @@ Format.asprintf "eee: %a" Simple_utils.PP_helpers.(option PP.type_expression) eee; *)
          let init = { binder ; output_type = ret_type ; result },
                     Option.map ~f:(fun (a,b) -> t_arrow a b) @@ Option.bind_pair (binder.ascr,ret_type) in
          let f (l, output_type) binder =
@@ -439,38 +431,6 @@ let rec compile_expression ~(raise :Errors.abs_error Simple_utils.Trace.raise) :
             Option.map ~f:(fun (a,b) -> t_arrow a b) @@ Option.bind_pair (binder.ascr,output_type)) in
          let { binder ; output_type ; result }, ret_type = List.fold_left ~f ~init lst in
          e_lambda ~loc binder output_type result, ret_type
-      (* match List.rev binders with
-       * | (binder, lst) ->
-       *    let lst = List.map ~f:snd lst in
-       *    let init = { binder ; output_type = ret_type ; result },
-       *               Option.map ~f:(fun (a,b) -> t_arrow a b) @@ Option.bind_pair (binder.ascr,ret_type) in
-       *    let f binder (l, ret_type) =
-       *      ({ binder ; output_type = ret_type ; result = make_e ~loc @@ E_lambda l },
-       *       Option.map ~f:(fun (a,b) -> t_arrow a b) @@ Option.bind_pair (binder.ascr,ret_type)) in
-       *    let { binder ; output_type ; result }, ret_type = List.fold_right ~f ~init lst in
-       *    (\* print_endline @@ Format.asprintf "expr: %a" PP.expression result;
-       *     * print_endline @@ Format.asprintf "ret_type: %a" Simple_utils.PP_helpers.(option PP.type_expression) ret_type;
-       *     * print_endline @@ Format.asprintf "output_type: %a" Simple_utils.PP_helpers.(option PP.type_expression) output_type; *\)
-       *    e_lambda ~loc binder output_type result, ret_type *)
-      (* match params with
-       * | (binder, []) ->
-       *   let expr = e_lambda ~loc binder ret_ty body in
-       *   let ty_opt = Option.map ~f:(fun (a,b) -> t_arrow ~loc a b) (Option.bind_pair (binder.ascr,ret_ty)) in
-       *   (expr, ty_opt)
-       * | (hd,tl) ->
-       *   let params = hd::(List.map ~f:snd tl) in
-       *   let input_tuple_ty =
-       *     (\* TODOpoly: polymorphism should give some leeway (using Option.all feels wrong) *\)
-       *     let in_tys_opt = Option.all @@ List.map ~f:(fun b -> b.ascr) params in
-       *     Option.map ~f:t_tuple in_tys_opt
-       *   in
-       *   let binder = ValueVar.fresh ~loc ~name:"parameter" () in
-       *   let expr =
-       *     let body = e_matching_tuple ~loc:loc_par (e_variable binder) params body in
-       *     e_lambda_ez ~loc binder ?ascr:input_tuple_ty ret_ty body
-       *   in
-       *   let ty_opt = Option.map ~f:(fun (a,b) -> t_arrow a b) (Option.bind_pair (input_tuple_ty,ret_ty)) in
-       *   (expr, ty_opt) *)
     in
     Option.value_map ~default:lambda ~f:(e_annotation ~loc lambda) fun_type
   )
@@ -775,17 +735,6 @@ and compile_parameters ~raise : CST.parameters -> (AST.type_expression AST.binde
     let ascr = Option.map ~f:snd param.param_type in
     let ascr = Option.map ~f:(compile_type_expression ~raise) ascr in
     { binder with ascr ; attributes  } :: binders, (fun e -> k' (k e))
-    (* let var = match param.pattern with
-     *   | P_Var param -> compile_variable param
-     *   | x -> raise.raise (unsuported_pattern_in_function @@ CST.pattern_to_region x)
-     * in
-     * match param.param_kind with
-     * | `Var _ ->
-     *   let ascr = Option.map ~f:(compile_type_expression ~raise <@ snd) param.param_type in
-     *   { var ; ascr ; attributes = Stage_common.Helpers.var_attribute }
-     * | `Const _ ->
-     *   let ascr = Option.map ~f:(compile_type_expression ~raise  <@ snd) param.param_type in
-     *   { var ; ascr ; attributes = Stage_common.Helpers.const_attribute } *)
   in
   let (params, _loc) = r_split params in
   let params = npseq_to_list params.inside in
@@ -1119,25 +1068,13 @@ and compile_fun_decl loc ~raise : CST.fun_decl -> expression_variable * type_exp
     match List.rev params with
     | [] -> failwith "Check me"
     | binder :: lst ->
-       (* print_endline @@ Format.asprintf "first binder: %a" ValueVar.pp binder.var;
-        * print_endline @@ Format.asprintf "next binders: %a" Simple_utils.PP_helpers.(list_sep_d ValueVar.pp) (List.map ~f:(fun binder -> binder.var) lst); *)
-       (* print_endline @@ Format.asprintf "ret_type: %a" Simple_utils.PP_helpers.(option PP.type_expression) ret_type;
-        * let eee = Option.map ~f:(fun (a,b) -> t_arrow a b) @@ Option.bind_pair (binder.ascr,ret_type) in
-        * print_endline @@ Format.asprintf "eee: %a" Simple_utils.PP_helpers.(option PP.type_expression) eee; *)
        let init = { binder ; output_type = ret_type ; result },
                   Option.map ~f:(fun (a,b) -> t_arrow a b) @@ Option.bind_pair (binder.ascr,ret_type) in
        let f (l, output_type) binder =
          ({ binder ; output_type ; result = make_e ~loc @@ E_lambda l },
           Option.map ~f:(fun (a,b) -> t_arrow a b) @@ Option.bind_pair (binder.ascr,output_type)) in
        List.fold_left ~f ~init lst
-       (* print_endline @@ Format.asprintf "e: %a" (PP.lambda PP.expression PP.type_expression) e; *)
-       (* print_endline @@ Format.asprintf "ret_type: %a" Simple_utils.PP_helpers.(option PP.type_expression) ret_type; *)
-       (* e, ret_type *)
   in
-  (* print_endline @@ Format.asprintf "lambda: %a" PP.lambda lambda; *)
-  (* print_endline @@ Format.asprintf "fun_type: %a" Simple_utils.PP_helpers.(option PP.type_expression) fun_type; *)
-  (* print_endline @@ Format.asprintf "output_type: %a" Simple_utils.PP_helpers.(option PP.type_expression) output_type; *)
-
   let func =
     match kwd_recursive with
     | Some reg ->
