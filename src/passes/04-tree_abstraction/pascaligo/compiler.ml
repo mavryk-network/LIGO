@@ -303,7 +303,6 @@ let rec compile_expression ~(raise :Errors.abs_error Simple_utils.Trace.raise) :
     let func = self func in
     let args, _loc = compile_tuple_expressions args in
     List.fold_left ~f:(fun e arg -> e_application ~loc e arg) ~init:func args
-    (* e_application ~loc func args *)
   | E_Tuple lst ->
     compile_tuple_expression lst
   | E_Record record ->
