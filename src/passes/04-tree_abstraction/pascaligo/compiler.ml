@@ -700,24 +700,24 @@ and compile_parameter ~raise ?(attributes = Stage_common.Helpers.const_attribute
     let (par,_loc) = r_split par in
     let ({var;ascr;attributes}, expr) = compile_parameter ~raise par.inside in
     return ?ascr ~attributes expr var
-  (* | P_Record record ->
-   *   let record,loc = r_split record in
-   *   let var = ValueVar.fresh ~loc () in
-   *   let aux ({value;_}:CST.field_pattern CST.reg) (binder_lst,fun_') =
-   *     let field_name, pattern = match value with
-   *       | Complete { field_lhs = P_Var v ; field_rhs ; _ } ->
-   *          v, field_rhs
-   *       | _ -> raise.raise @@ unsupported_pattern_type pattern
-   *     in
-   *     let field_name = compile_variable field_name in
-   *     let binder,fun_ = compile_parameter ~raise pattern in
-   *     ((field_name,binder)::binder_lst,fun_ <@ fun_')
-   *   in
-   *   let binder_lst, fun_ = List.fold_right ~f:aux ~init:([],fun e -> e) @@ npseq_to_list record.ne_elements in
-   *   let expr = fun expr -> e_matching_record ~loc (e_variable var) binder_lst @@ fun_ expr in
-   *   let ascr = Option.all @@ List.map ~f:(fun (_,binder) -> binder.ascr) binder_lst in
-   *   let ascr = Option.map ~f:(t_tuple) ascr in
-   *   return ?ascr expr var *)
+  | P_Record record ->
+    let record,loc = r_split record in
+    let var = ValueVar.fresh ~loc () in
+    let aux ({value;_}:CST.field_pattern CST.reg) (binder_lst,fun_') =
+      let field_name, pattern = match value with
+        | Complete { field_lhs = P_Var v ; field_rhs ; _ } ->
+           v, field_rhs
+        | _ -> raise.raise @@ unsupported_pattern_type pattern
+      in
+      let (field_name,_loc) = w_split field_name in
+      let binder,fun_ = compile_parameter ~raise pattern in
+      ((field_name,binder)::binder_lst,fun_ <@ fun_')
+    in
+    let binder_lst, fun_ = List.fold_right ~f:aux ~init:([],fun e -> e) @@ Utils.sepseq_to_list record.elements in
+    let expr = fun expr -> e_matching_record ~loc (e_variable var) binder_lst @@ fun_ expr in
+    let ascr = Option.all @@ List.map ~f:(fun (_,binder) -> binder.ascr) binder_lst in
+    let ascr = Option.map ~f:(t_tuple) ascr in
+    return ?ascr expr var
   | P_Typed tp ->
     let (tp, _loc) = r_split tp in
     let {pattern; type_annot = (_, type_expr) } : CST.typed_pattern = tp in
