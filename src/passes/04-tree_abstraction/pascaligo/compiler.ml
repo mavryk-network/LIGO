@@ -422,7 +422,7 @@ let rec compile_expression ~(raise :Errors.abs_error Simple_utils.Trace.raise) :
       let result = k (self return) in
       let ret_type = Option.map ~f:(compile_type_expression ~raise <@ snd ) ret_type in
       match List.rev params with
-      | [] -> failwith "Check me"
+      | [] -> raise.raise @@ unsuported_pattern_in_function parameters.region
       | binder :: lst ->
          let init = { binder ; output_type = ret_type ; result },
                     Option.map ~f:(fun (a,b) -> t_arrow a b) @@ Option.bind_pair (binder.ascr,ret_type) in
@@ -1066,7 +1066,7 @@ and compile_fun_decl loc ~raise : CST.fun_decl -> expression_variable * type_exp
   let result = k result in
   let (lambda, fun_type) =
     match List.rev params with
-    | [] -> failwith "Check me"
+    | [] -> raise.raise @@ unsuported_pattern_in_function parameters.region
     | binder :: lst ->
        let init = { binder ; output_type = ret_type ; result },
                   Option.map ~f:(fun (a,b) -> t_arrow a b) @@ Option.bind_pair (binder.ascr,ret_type) in
