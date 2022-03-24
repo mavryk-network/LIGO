@@ -120,6 +120,8 @@ void report_error (int err_code) {
 
 void _start() {
   // storage file information
+  printf("a0\n");
+
   __wasi_fd_t *fd1;
   __wasi_errno_t err_code = __wasi_path_open(3, 0, "storage.byte", __WASI_OFLAGS_CREAT, __WASI_RIGHTS_FD_FILESTAT_GET | __WASI_RIGHTS_PATH_OPEN, 0, 0, fd1);
   __wasi_fd_t origin_fd1 = *fd1;
@@ -216,7 +218,7 @@ printf("a4\n");
   __wasi_ciovec_t* storage = er->storage;
 
   // for debugging purposes, should be removed once there is a better way to print storage data
-  gmp_printf("The storage contents after 1: %Zd\n", (int*)storage);
+  // gmp_printf("The storage contents after 1: %Zd\n", (int*)storage);
 
 printf("a5\n");
   __wasi_ciovec_t result;
