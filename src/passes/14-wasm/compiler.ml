@@ -1,6 +1,6 @@
 (* use https://github.com/SanderSpies/ocaml/blob/manual_gc/asmcomp/wasm32/emit.mlp for inspiration *)
 
-[@@@warning "-33-27-26"]
+[@@@warning "-33-27-26-39"]
 open Trace
 open Errors 
 
@@ -548,7 +548,8 @@ let rec generate_storage_loader: I.type_expression -> string -> (A.instr list * 
         };
       ], ((addr, I32Type) :: (next_item, I32Type) :: locals)
   | T_tuple ann_list ->
-    let addr = var_to_string (ValueVar.fresh ~name:"addr" ()) in
+    [], []
+    (* let addr = var_to_string (ValueVar.fresh ~name:"addr" ()) in
     let (result, locals), _counter = List.fold_left ~f:(fun ((result, result_locals), counter) (annotation, type_expression) -> 
       let (tuple_item_loader, locals) = (generate_storage_loader type_expression offset) in
       let annotation = [
@@ -561,7 +562,7 @@ let rec generate_storage_loader: I.type_expression -> string -> (A.instr list * 
       in
       ((result @ annotation @ tuple_item_loader, result_locals @ locals), counter + 1)
     ) ~init:(([], []), 0) ann_list in    
-    { it = LocalSet addr; at} :: result, ((addr, I32Type) :: locals)
+    { it = LocalSet addr; at} :: result, ((addr, I32Type) :: locals) *)
   | T_or ((annot_a, a), (annot_b, b)) ->
     let addr       = var_to_string (ValueVar.fresh ~name:"addr" ()) in
     let item_a     = var_to_string (ValueVar.fresh ~name:"item_a" ()) in
@@ -715,12 +716,24 @@ let rec generate_storage_loader: I.type_expression -> string -> (A.instr list * 
 (*
   Calculate the required storage that needs to be allocated for saving the storage in a compressed way.
 *)
-let  calculate_storage_size: I.type_expression -> string -> (A.instr list * locals) = fun t src_addr ->
+let rec calculate_storage_size: I.type_expression -> string -> A.instr list = fun t src_addr ->
   let at = S.no_region in
   match t.type_content with 
-  | T_base TB_int ->
-    
-    ([
+  | T_tuple ann_list ->
+      let start = [
+        S.{ it = A.Const {it = I32 Int32.(4l (* size *) + Int32.of_int_exn (List.length ann_list) (* pointers to tuple components *) * 4l); at}; at};
+      ]
+      in
+      List.fold_left ~f:(fun result (annot, component) -> 
+        result 
+        @ 
+        calculate_storage_size component src_addr
+        @
+        [{ it = Binary (I32 Add); at }]
+      ) ~init:start ann_list
+      
+  | T_base TB_int ->    
+    [
       S.{ it = A.LocalGet src_addr; at };
       { it = Const {it = I32 4l; at}; at};
       { it = Binary (I32 Add); at };
@@ -729,33 +742,13 @@ let  calculate_storage_size: I.type_expression -> string -> (A.instr list * loca
       { it = Binary (I32 Mul); at };
       { it = Const {it = I32 12l; at}; at};
       { it = Binary (I32 Add); at };
-    ], [])
-  | _ -> ([], [])
+    ]
+  | _ -> []
 
-let generate_storage_saver: I.type_expression -> string -> string -> int32 -> (A.instr list * locals) = fun t src_addr target_addr offset ->
+let rec generate_storage_saver: I.type_expression -> string -> string -> string -> (A.instr list * locals) = fun t src_addr target_addr offset ->
   let at = S.no_region in
   match t.type_content with 
-  | T_base TB_int -> 
-    
-(*
-typedef struct
-{
-  int _mp_alloc;		/* Number of *limbs* allocated and pointed
-				   to by the _mp_d field.  */
-  int _mp_size;			/* abs(_mp_size) is the number of limbs the
-				   last field points to.  If _mp_size is
-				   negative this is a negative number.  */
-  mp_limb_t *_mp_d;		/* Pointer to the limbs.  */
-} __mpz_struct;
-*)
-(*
-(*
- Int32 (Z.to_int32 _mp_alloc);
-            Int32 (Z.to_int32 _mp_size);
-            Symbol (name ^ "__ligo_internal_limbs")
-*)
-
-*)
+  | T_base TB_int ->
     let mp_size = var_to_string (ValueVar.fresh ~name:"mp_size" ()) in
     let counter = var_to_string (ValueVar.fresh ~name:"counter" ()) in
     let limbs = var_to_string (ValueVar.fresh ~name:"limbs" ()) in
@@ -763,13 +756,17 @@ typedef struct
       S.
       (* _mp_alloc *)
       { it = LocalGet target_addr; at };
+      { it = LocalGet offset; at};
+      { it = Binary (I32 Add); at };
       { it = LocalGet src_addr; at };
       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
       { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
 
       (* _mp_size *)
       { it = A.LocalGet target_addr; at };
+      { it = A.LocalGet offset; at };
       { it = Const {it = I32 4l; at}; at};
+      { it = Binary (I32 Add); at };
       { it = Binary (I32 Add); at };
       { it = LocalGet src_addr; at };
       { it = Const {it = I32 4l; at}; at};
@@ -780,9 +777,13 @@ typedef struct
 
       (* pointer to limbs *)
       { it = LocalGet target_addr; at };
+      { it = A.LocalGet offset; at };
       { it = Const {it = I32 8l; at}; at};
       { it = Binary (I32 Add); at };
-      { it = Const {it = I32 Int32.(offset +  12l); at}; at};
+      { it = Binary (I32 Add); at };
+      { it = A.LocalGet offset; at };
+      { it = Const {it = I32 12l; at}; at};
+      { it = Binary (I32 Add); at };
       { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
 
       (* the limbs *)
@@ -790,16 +791,16 @@ typedef struct
       { it = Const {it = I32 8l; at}; at};
       { it = Binary (I32 Add); at };
       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-      (* { it = Const {it = I32 4l; at}; at};
-      { it = Binary (I32 Add); at }; *)
       { it = LocalSet limbs; at};
 
       { it = Const {it = I32 0l; at}; at};
       { it = LocalSet counter; at };
       { it = Loop (ValBlockType None,
           [
-            { it = LocalGet target_addr; at };
+            S.{ it = A.LocalGet target_addr; at };
+            { it = LocalGet offset; at};
             { it = Const {it = I32 12l; at}; at};
+            { it = Binary (I32 Add); at };
             { it = Binary (I32 Add); at };
             { it = LocalGet counter; at};
             { it = Const {it = I32 4l; at}; at};
@@ -827,7 +828,6 @@ typedef struct
                 { it = Br {it = 1l; at}; at}
               ],
               [
-                (* {it = Br {it = 2l; at}; at} *)
 
               ]
             );
@@ -835,26 +835,136 @@ typedef struct
           ];
         );
         at
-      
       };
-      
-
-(*       
-      { it = LocalGet target_addr; at };
-      { it = Const {it = I32 12l; at}; at};
+      { it = LocalGet offset; at };
+      { it = Const {it = I32 3l; at}; at};
+      { it = LocalGet mp_size; at };
+      { it = Const {it = I32 4l; at}; at};
+      { it = Binary (I32 Mul); at };
       { it = Binary (I32 Add); at };
-      { it = Const {it = I32 10l; at}; at};
-      { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-
-      { it = LocalGet target_addr; at };
-      { it = Const {it = I32 16l; at}; at};
       { it = Binary (I32 Add); at };
-      { it = Const {it = I32 10l; at}; at};
-      { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at }; *)
+      { it = LocalSet offset; at };
     ], ((mp_size, I32Type) :: (counter, I32Type) :: (limbs, I32Type) :: [])
+  | T_tuple ann_list ->
+    let tuple_offset = var_to_string (ValueVar.fresh ~name:"tuple_offset" ()) in
+    let pointer_to_component_value = var_to_string (ValueVar.fresh ~name:"pointer_to_component_value" ()) in
+
+    (* size of the tuple *)
+    let old_offset = [
+      S.{ it = A.LocalGet offset; at };
+      { it = Const {it = I32 4l; at}; at};
+      { it = Binary (I32 Add); at };
+      { it = LocalSet tuple_offset; at };
+    ]
+    in
+    let tuple_size = [
+      S.{ it = A.LocalGet target_addr; at };
+      { it = LocalGet offset; at };
+      { it = Binary (I32 Add); at };
+      { it = Const {it = I32 (Int32.of_int_exn (List.length ann_list)); at}; at};
+      { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+    ]
+    in
+    let set_offset = [
+      S.{ it = A.LocalGet offset; at };
+      { it = Const {it = I32 4l; at}; at};
+      { it = Const {it = I32 (Int32.of_int_exn (List.length ann_list)); at}; at};
+      { it = Binary (I32 Add); at };
+      { it = Binary (I32 Add); at };
+      { it = LocalSet offset; at };
+    ]
+    in
+    let tuple_components, locals, _ = List.fold_left
+      ~f:(fun (result, locals, counter) (annot, item) -> 
+        let save_tuple_component_value, s_locals = generate_storage_saver item src_addr target_addr offset in
+        (result @ 
+        S.[
+          A.{ it = LocalGet offset; at };
+          { it = LocalSet pointer_to_component_value; at };
+        ]
+        @
+        save_tuple_component_value
+        @
+        S.[
+          A.{ it = LocalGet target_addr; at };
+          { it = LocalGet tuple_offset; at };
+          { it = Const {it = I32 Int32.(counter * 4l); at}; at};
+          { it = Binary (I32 Add); at };
+          { it = Binary (I32 Add); at };
+          { it = LocalGet pointer_to_component_value; at};
+          { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+        ],
+        s_locals @ locals, Int32.(counter + 1l))
+      ) ~init:([], [], 0l) ann_list
+      in
+      (old_offset @
+      tuple_size @
+      set_offset @
+      tuple_components, (tuple_offset, I32Type) :: (pointer_to_component_value, I32Type) :: locals )
   | _ -> 
     print_endline "- Do nothing apparently...";
     ([], [])
+
+let generate_storage_printer : I.type_expression -> string -> A.instr list = fun t offset ->
+  match t.type_content with 
+  | T_base TB_int ->
+    [
+      { it = LocalGet offset; at };
+      { it = Call "__gmp_printf"; at };
+      { it = Drop; at }; (* ignore result *)
+
+      (* update the offset *)
+      { it = Const {it = I32 12l; at}; at};
+      { it = LocalGet offset; at };
+      { it = Const {it = I32 4l; at}; at};
+      { it = Binary (I32 Add); at };
+      { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+      { it = Const {it = I32 4l; at}; at};
+      { it = Binary (I32 Mul); at };
+      { it = Binary (I32 Add); at };
+      { it = LocalSet offset; at };
+    ]
+  | T_tuple tuple ->
+    let counter = var_to_string (ValueVar.fresh ~name:"counter" ()) in
+    [
+      { it = LocalGet offset; at };
+      (* "["
+      { it = Call "printf"; at }; *)
+      { it = Const {it = I32 0l; at}; at};
+      { it = LocalSet counter; at };
+      { it = Loop (
+        ValBlockType None, 
+        [
+
+          (* print the item *)
+          (* print a comma *)
+          (* print next line *)
+          { it = LocalGet counter; at};
+          { it = LocalGet mp_size; at};
+          { it = Compare (I32 LtU); at };
+          { it = If (
+            ValBlockType None, 
+            [
+              { it = LocalGet counter; at};
+              { it = Const {it = I32 1l; at}; at};
+              { it = Binary (I32 Add); at };
+              { it = LocalSet counter; at};
+              { it = Br {it = 1l; at}; at}
+            ],
+            [
+
+            ]
+          );
+          at }
+        ]
+        ); 
+        at
+      };
+      (* "]"
+      { it = Call "printf"; at }; *)
+    ]
+
+
 
 let compile ~raise : I.expression -> string -> string -> W.Ast.module_ = fun e filename entrypoint -> 
   let w = Default_env.env in
@@ -878,8 +988,8 @@ let compile ~raise : I.expression -> string -> string -> W.Ast.module_ = fun e f
   let src_addr        = var_to_string (ValueVar.fresh ~name:"src_addr" ()) in
   let storage_size    = var_to_string (ValueVar.fresh ~name:"storage_size" ()) in
   let result_with_size    = var_to_string (ValueVar.fresh ~name:"result_with_size" ()) in
-  let body_calc, locals_calc = calculate_storage_size storage_type_output src_addr in
-  let body_save, locals_save = generate_storage_saver storage_type_output src_addr target_addr 0l in
+  let body_calc = calculate_storage_size storage_type_output src_addr in
+  let body_save, locals_save = generate_storage_saver storage_type_output src_addr target_addr offset in
   let w = {w with it = {
     w.it with funcs = w.it.funcs @ [
       { 
@@ -887,7 +997,7 @@ let compile ~raise : I.expression -> string -> string -> W.Ast.module_ = fun e f
           name = "__load";
           ftype = "__load_type";
           locals = (offset, I32Type) :: locals;
-          body = {it = LocalGet offset; at = S.no_region} :: body;
+          body
         }; 
         at = S.no_region
       };
@@ -895,35 +1005,31 @@ let compile ~raise : I.expression -> string -> string -> W.Ast.module_ = fun e f
         it = {
           name = "__save";
           ftype = "__save_type";
-          locals = (
+          locals =
             (src_addr, T.I32Type) ::
             (result_with_size, T.I32Type) :: 
             (target_addr, I32Type) :: 
-            (storage_size, I32Type) :: locals_save)  
-            @ locals_calc;
+            (storage_size, I32Type) :: 
+            (offset, I32Type) ::
+            locals_save;
           body = 
             body_calc @  
             [
               S.{ it = A.LocalTee storage_size; at };
               { it = Call "malloc"; at};
               { it = LocalSet target_addr; at};
+              { it = Const {it = I32 0l;  at}; at};
+              { it = LocalSet offset; at};
             ] @
             body_save
             @ 
+            (* Here we return the compressed storage and the size of the compressed 
+               storage (which can directly used via `__wasi_ciovec_t` in C) *)
             [
               S.
-              (* { it = A.Const { it = I32 4l; at}; at };
-              { it = Call "malloc"; at};
-              { it = LocalTee target_addr_a; at};
-              { it = LocalGet target_addr; at};
-              { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-               *)
               { it = A.LocalGet result_with_size; at };
               { it = LocalGet target_addr; at};
               { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-              
-          
-
               { it = LocalGet result_with_size; at };
               { it = Const { it = I32 4l; at}; at };
               { it = Binary (I32 Add); at };
@@ -933,6 +1039,14 @@ let compile ~raise : I.expression -> string -> string -> W.Ast.module_ = fun e f
         }; 
         at = S.no_region
       };
+      {
+        it = {
+          name    = "__print";
+          ftype   = "__print_type";
+          locals  = [];
+          body    = []
+        }
+      }
     ]   
     }
   }

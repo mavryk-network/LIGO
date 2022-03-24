@@ -136,6 +136,8 @@ void _start() {
     __wasi_proc_exit(2);
     return;
   } 
+
+  printf("a1\n");
   
   // allocate the file size into memory
   uint8_t * alloc = malloc(fstat->size);
@@ -145,6 +147,8 @@ void _start() {
     return;
   }
 
+  printf("a1\n");
+
   // read the file into memory
   __wasi_iovec_t iovs = { 
     .buf = alloc,
@@ -152,6 +156,9 @@ void _start() {
   };
   __wasi_iovec_t *iovs2 = &iovs;
   
+
+  printf("a1\n");
+
   err_code = __wasi_fd_close(origin_fd1);
   if (err_code != __WASI_ERRNO_SUCCESS) {
     report_error(err_code);
@@ -168,6 +175,9 @@ void _start() {
     return;
   }
 
+
+printf("a1\n");
+
   // read storage into allocated memory
   __wasi_size_t nread;
   err_code = __wasi_fd_read(*fd2, &iovs, 1, &nread);
@@ -179,9 +189,13 @@ void _start() {
 
   uint8_t * given_storage = iovs2->buf;
 
+printf("a2\n");
+
   // call generated `__load` function which corrects the pointers
   __load(given_storage);
   
+
+  printf("a3\n");
 
   __wasi_iovec_t * buf = (__wasi_iovec_t *)iovs2->buf;
 
@@ -198,12 +212,13 @@ void _start() {
     return;
   } 
 
+printf("a4\n");
   __wasi_ciovec_t* storage = er->storage;
 
   // for debugging purposes, should be removed once there is a better way to print storage data
   gmp_printf("The storage contents after 1: %Zd\n", (int*)storage);
 
-
+printf("a5\n");
   __wasi_ciovec_t result;
 
   /**
