@@ -191,11 +191,31 @@ printf("a1\n");
 
   uint8_t * given_storage = iovs2->buf;
 
-printf("a2\n");
+  int *z1 = (int*)((char*)given_storage);
+  int *z2 = (int*)((char*)given_storage + 4);
+  int *z3 = (int*)((char*)given_storage + 8);
+  int *z4 = (int*)((char*)given_storage + 12);
+  printf("z1: %i\n", *z1);
+  printf("z2: %i\n", *z2);
+  printf("z3: %i\n", *z3);
+  printf("z4: %i\n", *z4);
 
   // call generated `__load` function which corrects the pointers
   __load(given_storage);
   
+printf("a3x\n");
+
+  int *a1 = (int*)((char*)given_storage);
+  int *a2 = (int*)((char*)given_storage + 4);
+  int *a3 = (int*)((char*)given_storage + 8);
+  int *a4 = (int*)((char*)given_storage + 12);
+  printf("a1: %i\n", a1);
+  printf("a1: %i\n", *a1);
+  printf("a2: %i\n", *a2);
+  printf("a3: %i\n", *a3);
+  printf("a4: %i\n", *a4);
+  int ax = (int*)((char*)given_storage+28);
+  gmp_printf("The storage contents after 1: %Zd\n", ax );
 
   printf("a3\n");
 
@@ -218,7 +238,7 @@ printf("a4\n");
   __wasi_ciovec_t* storage = er->storage;
 
   // for debugging purposes, should be removed once there is a better way to print storage data
-  // gmp_printf("The storage contents after 1: %Zd\n", (int*)storage);
+  
 
 printf("a5\n");
   __wasi_ciovec_t result;
@@ -231,6 +251,10 @@ printf("a5\n");
    */
   __save(storage, &result);
 
+
+
+  printf("The size: %i \n", result.buf_len);
+
   err_code = __wasi_fd_close(origin_fd2);
   if (err_code != __WASI_ERRNO_SUCCESS) {
     report_error(err_code);
@@ -238,6 +262,7 @@ printf("a5\n");
     return;
   } 
 
+  // enable once load works...
   __wasi_fd_t *fd3;
   err_code = __wasi_path_open(3, 0, "storage.byte", 0, __WASI_RIGHTS_FD_WRITE, 0, 0, fd3);
   __wasi_fd_t origin_fd3 = *fd3;

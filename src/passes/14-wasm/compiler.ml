@@ -83,7 +83,7 @@ let convert_to_memory: string -> S.region -> Z.t -> A.data_part A.segment list *
         offset = {
           it = [
             { it = Const {
-                it = I32 Int32.(!global_offset + 3l); 
+                it = I32 Int32.(!global_offset + 12l); 
                 at
               }; 
               at
@@ -109,7 +109,7 @@ let convert_to_memory: string -> S.region -> Z.t -> A.data_part A.segment list *
         details = Data {
           index = {it = 0l; at};
           relocation_offset =  {it = 0l; at};
-          size = { it = 3l; at};
+          size = { it = 12l; at};
           offset = { it = !global_offset; at}
         }
       };
@@ -121,7 +121,7 @@ let convert_to_memory: string -> S.region -> Z.t -> A.data_part A.segment list *
         details = Data {
           index = {it = 0l; at};
           relocation_offset = {it = 0l; at};
-          size = {it = Z.to_int32 _mp_size; at};
+          size = {it = Int32.(Z.to_int32 _mp_size * 4l); at};
           offset = {it = Int32.(!global_offset + 3l); at}
         }
       };
@@ -129,7 +129,7 @@ let convert_to_memory: string -> S.region -> Z.t -> A.data_part A.segment list *
     }
   ]
   in 
-  global_offset := Int32.(!global_offset + 4l); (* TODO: get proper size for limbs... *)
+  global_offset := Int32.(!global_offset + Z.to_int32 _mp_size * 4l + 12l); (* TODO: get proper size for limbs... *)
   data, symbols
 
 type locals = (string * T.value_type) list
@@ -552,27 +552,46 @@ let rec generate_storage_loader: I.type_expression -> string -> (A.instr list * 
     let addr = var_to_string (ValueVar.fresh ~name:"addr" ()) in
     let new_addr = var_to_string (ValueVar.fresh ~name:"new_addr" ()) in
     let (result, locals), _counter = List.fold_left ~f:(fun ((result, result_locals), counter) (annotation, type_expression) -> 
+      print_endline "add one here";
       let (tuple_item_loader, locals) = (generate_storage_loader type_expression offset) in
       let tuple_item_loader = [
         S.{ it = A.LocalGet addr; at };
-        {it = Const {it = I32 Int32.(4l * counter); at}; at};
+        { it = Const {it = I32 Int32.(4l * counter); at}; at };
         { it = Binary (I32 Add); at };
+
         { it = LocalGet addr; at };
-        { it = Const {it = I32 Int32.(4l * counter); at}; at};
+        { it = Const {it = I32 Int32.(4l * counter); at}; at };
         { it = Binary (I32 Add); at };
+        { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
         { it = LocalGet offset; at };
         { it = Binary (I32 Add); at };
-        { it = LocalTee new_addr; at};
+        { it = LocalTee new_addr; at };
+        
         { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };  
-        (* { it = LocalGet new_addr; at}; *)
-        (* { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };   *)
+        
+        { it = LocalGet new_addr; at };
+        (* { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }; *)
       ] 
-      (* @  *)
-      (* tuple_item_loader *)
+      @ 
+      tuple_item_loader
       in
       (( result @ tuple_item_loader, result_locals @ locals), Int32.(counter + 1l))
     ) ~init:(([], []), 0l) ann_list in    
     { it = LocalSet addr; at} :: result, ((addr, I32Type) :: (new_addr, I32Type) :: locals)
+  | T_base TB_int -> 
+    let addr     = var_to_string (ValueVar.fresh ~name:"addr" ()) in
+    [
+      S.{ it = A.LocalTee addr; at };
+      { it = Const {it = I32 8l; at}; at};
+      { it = Binary (I32 Add); at };
+      { it = LocalGet addr; at };
+      { it = Const {it = I32 8l; at}; at};
+      { it = Binary (I32 Add); at };
+      { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+      { it = LocalGet offset; at };
+      { it = Binary (I32 Add); at };
+      { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ], ((addr, I32Type) :: [])    
   | T_or ((annot_a, a), (annot_b, b)) ->
     let addr       = var_to_string (ValueVar.fresh ~name:"addr" ()) in
     let item_a     = var_to_string (ValueVar.fresh ~name:"item_a" ()) in
@@ -702,20 +721,6 @@ let rec generate_storage_loader: I.type_expression -> string -> (A.instr list * 
         ]); at 
       }
     ], ((addr, I32Type) :: (size, I32Type) :: (counter, I32Type) :: (left, I32Type) :: (item, I32Type) :: (right, I32Type) :: locals)
-    | T_base TB_int -> 
-      let addr     = var_to_string (ValueVar.fresh ~name:"addr" ()) in
-      [
-        S.{ it = A.LocalTee addr; at };
-        { it = Const {it = I32 8l; at}; at};
-        { it = Binary (I32 Add); at };
-        { it = LocalGet addr; at };
-        { it = Const {it = I32 8l; at}; at};
-        { it = Binary (I32 Add); at };
-        { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-        { it = LocalGet offset; at };
-        { it = Binary (I32 Add); at };
-        { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-      ], ((addr, I32Type) :: [])
   | T_function _ -> 
     print_endline "- function oh hai...";
     ([], [])
@@ -731,12 +736,20 @@ let rec calculate_storage_size: I.type_expression -> string -> A.instr list = fu
   match t.type_content with 
   | T_tuple ann_list ->
       let start = [
-        S.{ it = A.Const {it = I32 Int32.(4l (* size *) + Int32.of_int_exn (List.length ann_list) (* pointers to tuple components *) * 4l); at}; at};
+        S.{ it = A.Const {it = I32 Int32.(Int32.of_int_exn (List.length ann_list) (* pointers to tuple components *) * 4l); at}; at};
       ]
       in
       List.fold_left ~f:(fun result (annot, component) -> 
         result 
         @ 
+        [
+          { it = LocalGet src_addr; at };
+          { it = A.Const {it = I32 Int32.(Int32.of_int_exn (List.length ann_list) (* pointers to tuple components *) * 4l); at}; at};
+// TODO: fix the calculate storage feature...          { it = Binary (I32 Add); at };
+//          { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+          { it = LocalSet src_addr; at };
+        ]
+        @
         calculate_storage_size component src_addr
         @
         [{ it = Binary (I32 Add); at }]
@@ -858,28 +871,14 @@ let rec generate_storage_saver: I.type_expression -> string -> string -> string 
   | T_tuple ann_list ->
     let tuple_offset = var_to_string (ValueVar.fresh ~name:"tuple_offset" ()) in
     let pointer_to_component_value = var_to_string (ValueVar.fresh ~name:"pointer_to_component_value" ()) in
-
-    (* size of the tuple *)
     let old_offset = [
       S.{ it = A.LocalGet offset; at };
-      { it = Const {it = I32 4l; at}; at};
-      { it = Binary (I32 Add); at };
       { it = LocalSet tuple_offset; at };
-    ]
-    in
-    let tuple_size = [
-      S.{ it = A.LocalGet target_addr; at };
-      { it = LocalGet offset; at };
-      { it = Binary (I32 Add); at };
-      { it = Const {it = I32 (Int32.of_int_exn (List.length ann_list)); at}; at};
-      { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
     ]
     in
     let set_offset = [
       S.{ it = A.LocalGet offset; at };
-      { it = Const {it = I32 4l; at}; at};
-      { it = Const {it = I32 (Int32.of_int_exn (List.length ann_list)); at}; at};
-      { it = Binary (I32 Add); at };
+      { it = Const {it = I32 (Int32.(of_int_exn (List.length ann_list) * 4l)); at}; at};
       { it = Binary (I32 Add); at };
       { it = LocalSet offset; at };
     ]
@@ -908,7 +907,7 @@ let rec generate_storage_saver: I.type_expression -> string -> string -> string 
       ) ~init:([], [], 0l) ann_list
       in
       (old_offset @
-      tuple_size @
+      (* tuple_size @ *)
       set_offset @
       tuple_components, (tuple_offset, I32Type) :: (pointer_to_component_value, I32Type) :: locals )
   | _ -> 
