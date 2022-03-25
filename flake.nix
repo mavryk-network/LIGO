@@ -6,7 +6,7 @@
   
     flake-utils.url = "github:numtide/flake-utils";
 
-    ocaml-overlay.url = "github:anmonteiro/nix-overlays/ulrikstrid/ocaml-recovery-parser";
+    ocaml-overlay.url = "github:anmonteiro/nix-overlays";
     ocaml-overlay.inputs.nixpkgs.follows = "nixpkgs";
     ocaml-overlay.inputs.flake-utils.follows = "flake-utils";
   };
@@ -49,6 +49,7 @@
         deb = pkgs.callPackage ./nix/packageDeb.nix { ligo = ligo-static; };
         changelog = pkgs.callPackage ./nix/changelog.nix { };
       };
+      defaultPackage = ligo;
       inherit devShell;
     }
   );

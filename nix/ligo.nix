@@ -10,15 +10,15 @@
 }:
 let
   filters = (import ./filters.nix) { inherit lib; };
-  ocamlPackages = pkgs.ocaml-ng.ocamlPackages_4_12;
+  ocamlPackages = coq.ocamlPackages;
 in
 ocamlPackages.buildDunePackage rec {
   pname = "ligo";
   version = "0.39.0-dev";
 
-  src = filters.filterGitSource {
+  src = filters.filterSource {
     src = ../.;
-    dirs = [ "src" "vendors" "scripts" ];
+    dirs = [ "src" "vendors" ];
     files = [ "dune" "dune-project" "ligo.opam" ];
   };
 
