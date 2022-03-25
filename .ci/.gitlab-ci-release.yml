@@ -99,7 +99,7 @@ update-versionned-doc:
     - job: build_release_env_vars
       artifacts: true
   rules:
-    - if: ($CI_COMMIT_BRANCH =~ /^release/ &&  $TRIGGER_DOC_UPDATE != null) 
+    - if: ($CI_COMMIT_BRANCH =~ /^release/)
       when: always
 
 create-doc-update-MR:
