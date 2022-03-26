@@ -308,11 +308,28 @@ and infer_t_insts ~raise ~loc app_context ( (tc,t) : O.expression_content * O.ty
     let avs, type_ = O.Helpers.destruct_for_alls t in
     let last = App_context.get_expect app_context in
     let args = match App_context.pop app_context with | None -> [] | Some args -> args in
-    let table = Inference.infer_type_applications ~raise ~loc avs type_ args last in
-    let lamb = make_e ~location:loc tc t in
-    let x = Inference.build_type_insts ~raise ~loc lamb table avs in
+    let x = match type_.type_content with
+      | T_constant { injection ; _ } when Stage_common.Constant.equal injection Poly_add ->
+         let b = List.nth_exn avs 0 in
+         let a = List.nth_exn avs 1 in
+         let add_int = t_arrow (t_pair (t_int ()) (t_int ())) (t_int ()) () in
+         let table = Inference.TMap.empty in
+         let table = Inference.infer_type_application ~raise ~loc avs table (t_variable a ()) (t_int ()) in
+         let table = Inference.infer_type_application ~raise ~loc avs table (t_variable b ()) (t_int ()) in
+         let lamb = make_e ~location:loc tc t in
+         let x = Inference.build_type_insts ~raise ~loc lamb table avs in
+         { x with type_expression = add_int }
+      | _ ->
+         let table = Inference.infer_type_applications ~raise ~loc avs type_ args last in
+         let lamb = make_e ~location:loc tc t in
+         Inference.build_type_insts ~raise ~loc lamb table avs in
     x.expression_content , x.type_expression
   | _ -> tc, t
+  (* | { type_content = T_constant { injection ; _ } ; _ } when Stage_common.Constant.equal injection Poly_add ->
+   *   let _last = App_context.get_expect app_context in
+   *   let _args = match App_context.pop app_context with | None -> [] | Some args -> args in
+   *   let x = make_e ~location:loc tc (t_arrow (t_int ()) (t_arrow (t_int ()) (t_int ()) ()) ()) in
+   *   x.expression_content , (t_arrow (t_int ()) (t_arrow (t_int ()) (t_int ()) ()) ()) *)
 
 and type_expression' ~raise ~options : context -> ?tv_opt:O.type_expression -> I.expression -> O.expression = fun (app_context, context) ?tv_opt e ->
   let return expr tv =

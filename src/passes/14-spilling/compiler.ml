@@ -284,7 +284,8 @@ let rec compile_type ~raise (t:AST.type_expression) : type_expression =
         Test_exec_error | Ticket   | Michelson_program    | Sapling_state       |
         Contract        | Map      | Big_map              | Typed_address       |
         Michelson_pair  | Set      | Test_exec_result     | Account             | 
-        Time            | Mutation | Failure              | List), []) 
+        Time            | Mutation | Failure              | List                |
+        Poly_add), []) 
         -> raise.raise @@ corner_case ~loc:__LOC__ "wrong constant"
     | ((Bool       | Unit      | Baker_operation      |
       Nat          | Timestamp | Michelson_or         |
@@ -300,7 +301,7 @@ let rec compile_type ~raise (t:AST.type_expression) : type_expression =
       Never        | Chest_key | Test_exec_result     |
       Account      | Time      | Typed_address        |
       Mutation     | Bytes     | Failure              |
-      List), _::_) -> raise.raise @@ corner_case ~loc:__LOC__ "wrong constant"
+      List         | Poly_add), _::_) -> raise.raise @@ corner_case ~loc:__LOC__ "wrong constant"
   )
   | T_sum { content = m ; layout } -> (
       let open AST.Helpers in
@@ -704,8 +705,9 @@ let rec compile_expression ~raise (ae:AST.expression) : expression =
         (corner_case ~loc:__LOC__ "Language insert - backend mismatch only provide code insertion in the language you are compiling to")
         (String.equal language backend)
     in
-    let type_anno  = get_type code in
-    let type_anno' = compile_type ~raise type_anno in
+    (* TODO *)
+    (* let type_anno  = get_type code in *)
+    let type_anno' = compile_type ~raise ae.type_expression in
     let code = trace_option ~raise (corner_case ~loc:__LOC__ "could not get a string") @@ get_a_string code in
     let open Tezos_micheline in
     let orig_code = code in

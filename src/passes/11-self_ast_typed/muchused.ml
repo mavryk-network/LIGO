@@ -49,7 +49,8 @@ let rec is_dup (t : type_expression) =
     Account             |
     Failure             |
     Typed_address       |
-    Mutation
+    Mutation            |
+    Poly_add
   ); _} ->
      true
   | T_constant {injection=

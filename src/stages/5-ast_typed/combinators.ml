@@ -45,7 +45,7 @@ let t__type_ ?loc ?core t : type_expression = t_constant ?loc ?core _type_ [t]
 [@@map (_type_, ("option", "list", "set", "contract", "ticket", "sapling_state", "sapling_transaction"))]
 
 let t__type_ ?loc ?core t t' : type_expression = t_constant ?loc ?core _type_ [t; t']
-[@@map (_type_, ("map", "big_map", "map_or_big_map", "typed_address"))]
+[@@map (_type_, ("map", "big_map", "map_or_big_map", "typed_address", "poly_add"))]
 
 let t_mutez = t_tez
 
