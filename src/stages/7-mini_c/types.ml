@@ -47,6 +47,7 @@ and type_base =
   | TB_never
   | TB_chest
   | TB_chest_key
+  | TB_poly_add
 
 and environment_element = expression_variable * type_expression
 

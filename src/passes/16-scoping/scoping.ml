@@ -73,6 +73,7 @@ let rec translate_type ?var : I.type_expression -> (meta, string) node =
   | I.T_base I.TB_never -> Prim (nil, "never", [], [])
   | I.T_base I.TB_chest -> Prim (nil, "chest", [], [])
   | I.T_base I.TB_chest_key -> Prim (nil, "chest_key", [], [])
+  | I.T_base I.TB_poly_add -> failwith "rr"
   | I.T_ticket x -> Prim (nil, "ticket", [translate_type x], [])
   | I.T_sapling_transaction memo_size -> Prim (nil, "sapling_transaction", [Int (nil, memo_size)], [])
   | I.T_sapling_state memo_size -> Prim (nil, "sapling_state", [Int (nil, memo_size)], [])
@@ -237,6 +238,10 @@ let rec translate_expression (expr : I.expression) (env : I.environment) =
   | E_update (e1, i, e2, n) ->
     let (args, us) = translate_args [e2; e1] env in
     (E_update (meta, args, int_to_nat i, int_to_nat n), us)
+  | E_raw_michelson code when Option.is_some (Mini_c.get_t_poly_add ty) ->
+    (* maybe should move type into syntax? *)
+    ignore code;
+    failwith "bleh"
   | E_raw_michelson code ->
     (* maybe should move type into syntax? *)
     let (a, b) = match Mini_c.get_t_function ty with

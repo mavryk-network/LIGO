@@ -58,6 +58,7 @@ val get_t_contract : type_expression -> type_expression option
 val get_t_operation : type_expression -> type_expression option
 val get_t_sapling_state : type_expression -> Z.t option
 val get_operation : value -> bytes option
+val get_t_poly_add : type_expression -> type_expression option
 
 val t_int      : ?loc:Location.t -> unit -> type_expression 
 val t_unit     : ?loc:Location.t -> unit -> type_expression 

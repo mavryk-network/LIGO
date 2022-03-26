@@ -173,6 +173,10 @@ let get_t_sapling_state t = match t.type_content with
   | T_sapling_state memo_size -> Some memo_size
   | _ -> None
 
+let get_t_poly_add t = match t.type_content with
+  | T_base  TB_poly_add -> Some t
+  | _ -> None
+
 let get_operation (v:value) = match v with
   | D_operation x -> Some x
   | _ -> None
