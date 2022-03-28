@@ -10,8 +10,16 @@ module CTMap = Simple_utils.Map.Make(struct type t = string let compare x y = St
 type t = typer CTMap.t
 
 let typer_add : typer = fun args tv_opt ->
-  ignore args; ignore tv_opt;
-  t_arrow (t_int ()) (t_arrow (t_int ()) (t_int ()) ()) ()
+  match args, tv_opt with
+  | [ { type_content = T_constant { injection = Int ; _ } ; _ } ;
+      { type_content = T_constant { injection = Int ; _ } ; _ } ],
+    (None | Some { type_content = T_constant { injection = Int ; _ } ; _ }) ->
+     t_arrow (t_int ()) (t_arrow (t_int ()) (t_int ()) ()) ()
+  | [ { type_content = T_constant { injection = Nat ; _ } ; _ } ;
+      { type_content = T_constant { injection = Nat ; _ } ; _ } ],
+    (None | Some { type_content = T_constant { injection = Nat ; _ } ; _ }) ->
+     t_arrow (t_nat ()) (t_arrow (t_nat ()) (t_nat ()) ()) ()
+  | _ -> failwith "typer not found"
 
 let tbl = CTMap.of_list [("add", typer_add)]
 
