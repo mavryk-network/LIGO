@@ -209,7 +209,7 @@ let rec decompile ~raise (v : value) (t : AST.type_expression) : AST.expression 
         Sapling_state   | Sapling_transaction  | Baker_operation | Never    | Michelson_program | Test_exec_result |
         Test_exec_error | Account              | Typed_address   | Mutation | Failure           | Chest            | 
         Chest_key       | Chest_opening_result | Int             | Key_hash | Ticket            | Timestamp        | 
-        Operation       | Time                 | String          | List     | Poly_add), _) ->
+        Operation       | Time                 | String          | List     | External _), _) ->
       let () = Format.printf "%a" AST.PP.type_content t.type_content in
       raise.raise @@ corner_case ~loc:"unspiller" "Wrong number of args or wrong kinds for the type constant"
   )

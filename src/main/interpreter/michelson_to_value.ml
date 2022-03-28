@@ -269,7 +269,7 @@ let rec decompile_value ~raise ~(bigmaps : bigmap list) (v : value) (t : Ast_agg
         Pvss_key     | Sapling_state | Sapling_transaction | Baker_operation      | Bls12_381_g1     | Bls12_381_g2 |
         Bls12_381_fr | Never         | Ticket              | Test_exec_error      | Test_exec_result | Account      |
         Time         | Typed_address | Mutation            | Chest_opening_result | Chest_key        | Chest        |
-        Failure      | Poly_add), _) -> v
+        Failure      | External _), _) -> v
   )
   | T_sum {layout ; content} ->
       let lst = List.map ~f:(fun (k,({associated_type;_} : _ row_element_mini_c)) -> (k,associated_type)) @@ Ast_aggregated.Helpers.kv_list_of_t_sum ~layout content in

@@ -312,7 +312,7 @@ and infer_t_insts ~raise ~loc app_context ( (tc,t) : O.expression_content * O.ty
     let lamb = make_e ~location:loc tc t in
     let x = Inference.build_type_insts ~raise ~loc lamb table avs in
     x.expression_content , x.type_expression
-  | { type_content = T_constant { injection ; _ } ; _ } when Stage_common.Constant.equal injection Poly_add ->
+  | { type_content = T_constant { injection = External s ; _ } ; _ } when String.equal s "add" ->
     let _last = App_context.get_expect app_context in
     let _args = match App_context.pop app_context with | None -> [] | Some args -> args in
     let x = make_e ~location:loc tc (t_arrow (t_int ()) (t_arrow (t_int ()) (t_int ()) ()) ()) in

@@ -248,7 +248,6 @@ let rec compile_type ~raise (t:AST.type_expression) : type_expression =
     | (Bls12_381_g2,    []) -> return (T_base TB_bls12_381_g2)
     | (Bls12_381_fr,    []) -> return (T_base TB_bls12_381_fr)
     | (Never,           []) -> return (T_base TB_never)
-    | (Poly_add,        []) -> return (T_base TB_poly_add)
     | (Ticket,         [x]) -> let x' = compile_type x in
                                return (T_ticket x')
     | (Sapling_transaction, [x]) -> (
@@ -285,7 +284,8 @@ let rec compile_type ~raise (t:AST.type_expression) : type_expression =
         Test_exec_error | Ticket   | Michelson_program    | Sapling_state       |
         Contract        | Map      | Big_map              | Typed_address       |
         Michelson_pair  | Set      | Test_exec_result     | Account             | 
-        Time            | Mutation | Failure              | List), []) 
+        Time            | Mutation | Failure              | List                |
+        External _), []) 
         -> raise.raise @@ corner_case ~loc:__LOC__ "wrong constant"
     | ((Bool       | Unit      | Baker_operation      |
       Nat          | Timestamp | Michelson_or         |
@@ -301,7 +301,7 @@ let rec compile_type ~raise (t:AST.type_expression) : type_expression =
       Never        | Chest_key | Test_exec_result     |
       Account      | Time      | Typed_address        |
       Mutation     | Bytes     | Failure              |
-      Poly_add     | List), _::_) -> raise.raise @@ corner_case ~loc:__LOC__ "wrong constant"
+      External _   | List), _::_) -> raise.raise @@ corner_case ~loc:__LOC__ "wrong constant"
   )
   | T_sum { content = m ; layout } -> (
       let open AST.Helpers in

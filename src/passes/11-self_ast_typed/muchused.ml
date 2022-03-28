@@ -45,7 +45,7 @@ let rec is_dup (t : type_expression) =
     Bls12_381_fr        |
     Sapling_transaction |
     Sapling_state       |
-    Poly_add            |
+    External _          |
     (* Test primitives are dup *)
     Account             |
     Failure             |
