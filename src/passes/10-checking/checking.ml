@@ -308,15 +308,18 @@ and infer_t_insts ~raise ~loc app_context ( (tc,t) : O.expression_content * O.ty
     let avs, type_ = O.Helpers.destruct_for_alls t in
     let last = App_context.get_expect app_context in
     let args = match App_context.pop app_context with | None -> [] | Some args -> args in
-    let table = Inference.infer_type_applications ~raise ~loc avs type_ args last in
+    let table, outer_type = match type_ with
+      | { type_content = T_constant { injection = External s ; _ } ; _ } -> (
+        let t = type_external ~raise s loc args last in
+        match List.zip avs args with
+        | Ok l -> Inference.TMap.of_list l, t
+        | _ -> failwith "not same size"
+      )
+      | _ ->
+         Inference.infer_type_applications ~raise ~loc avs type_ args last, t in
     let lamb = make_e ~location:loc tc t in
     let x = Inference.build_type_insts ~raise ~loc lamb table avs in
-    x.expression_content , x.type_expression
-  | { type_content = T_constant { injection = External s ; _ } ; _ } when String.equal s "add" ->
-    let _last = App_context.get_expect app_context in
-    let _args = match App_context.pop app_context with | None -> [] | Some args -> args in
-    let x = make_e ~location:loc tc (t_arrow (t_int ()) (t_arrow (t_int ()) (t_int ()) ()) ()) in
-    x.expression_content , (t_arrow (t_int ()) (t_arrow (t_int ()) (t_int ()) ()) ())
+    x.expression_content , outer_type
   | _ -> tc, t
 
 and type_expression' ~raise ~options : context -> ?tv_opt:O.type_expression -> I.expression -> O.expression = fun (app_context, context) ?tv_opt e ->
@@ -729,6 +732,12 @@ and type_constant ~raise ~options (name:I.constant') (loc:Location.t) (lst:O.typ
   let typer = Constant_typers.constant_typers ~raise ~options loc name in
   let tv = typer lst tv_opt in
   (name, tv)
+
+and type_external ~raise (name:string) (loc:Location.t) (lst:O.type_expression list) (tv_opt:O.type_expression option) : O.type_expression =
+  ignore loc;
+  let typer = External_typers.external_typers ~raise name in
+  let tv = typer lst tv_opt in
+  tv
 
 let type_program ~raise ~options ?env m = type_module ~raise ~options ~init_context:(Typing_context.init ?env ()) m
 let type_declaration ~raise ~options ?env d = snd @@ type_declaration' ~raise ~options (Typing_context.init ?env ()) d
