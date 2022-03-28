@@ -3,6 +3,45 @@ open Simple_utils
 open Trace
 open Main_errors
 
+let lib (s : Syntax_types.t) =
+  match s with
+  | PascaLIGO _ | ReasonLIGO | JsLIGO ->"
+module Bytes = struct
+   let concat (p : bytes * bytes) : bytes = [%Michelson ({| { UNPAIR ; CONCAT } |} : bytes * bytes -> bytes)] p
+   let sub (sli : nat * nat * bytes) : bytes = [%Michelson ({| { UNPAIR  ; UNPAIR ; SLICE ; IF_NONE { PUSH string \"SLICE\" ; FAILWITH } {} } |} : nat * nat * bytes -> bytes)] sli
+end
+module List = struct
+   let length (type a) (xs : a list) : nat = [%Michelson ({| { SIZE } |} : a list -> nat)] xs
+   let size (type a) (xs : a list) : nat = length xs
+   let head_opt (type a) (xs : a list) : a option =
+     match xs with
+     | [] -> None
+     | x :: _ -> Some x
+   let tail_opt (type a) (xs : a list) : (a list) option =
+     match xs with
+     | [] -> None
+     | _ :: xs -> Some xs
+end
+"
+  | CameLIGO -> "
+module Bytes = struct
+   let concat (b : bytes) (c : bytes) : bytes = [%Michelson ({| { UNPAIR ; CONCAT } |} : bytes * bytes -> bytes)] (b, c)
+   let sub (start : nat) (length : nat) (input : bytes) : bytes = [%Michelson ({| { UNPAIR ; UNPAIR ; SLICE ; IF_NONE { PUSH string \"SLICE\" ; FAILWITH } {} } |} : nat * nat * bytes -> bytes)] (start, length, input)
+end
+module List = struct
+   let length (type a) (xs : a list) : nat = [%Michelson ({| { SIZE } |} : a list -> nat)] xs
+   let size (type a) (xs : a list) : nat = length xs
+   let head_opt (type a) (xs : a list) : a option =
+     match xs with
+     | [] -> None
+     | x :: _ -> Some x
+   let tail_opt (type a) (xs : a list) : (a list) option =
+     match xs with
+     | [] -> None
+     | _ :: xs -> Some xs
+end
+"
+
 module type Params = sig
   val raise : all raise
   val add_warning : Main_warnings.all -> unit
@@ -84,7 +123,9 @@ module Infer (Params : Params) = struct
 
   let compile : AST.environment -> file_name -> meta_data -> compilation_unit -> AST.t =
     fun _ file_name meta c_unit ->
-    Ligo_compile.Utils.to_core ~raise ~add_warning ~options ~meta c_unit file_name
+    let _, pre = Ligo_compile.Utils.type_contract_string ~raise ~add_warning:(fun _ -> ()) ~options CameLIGO (lib meta.syntax) in
+    let module_ = Ligo_compile.Utils.to_core ~raise ~add_warning ~options ~meta c_unit file_name in
+    pre @ module_
 
 end
 

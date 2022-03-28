@@ -126,6 +126,8 @@ let compile_groups ~raise filename grp_list =
       let imperative = Ligo_compile.Of_c_unit.compile ~raise ~add_warning ~meta c_unit filename in
       let sugar      = Ligo_compile.Of_imperative.compile ~raise imperative in
       let core       = Ligo_compile.Of_sugar.compile sugar in
+      let _, pre     = Ligo_compile.Utils.type_contract_string ~raise ~add_warning:(fun _ -> ()) ~options CameLIGO (Build.lib meta.syntax) in
+      let core       = pre @ core in
       match lang with
       | Meta ->
         let init_env = Environment.default_with_test protocol_version in

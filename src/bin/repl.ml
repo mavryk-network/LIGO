@@ -12,6 +12,8 @@ let get_declarations_typed typed_prg =
      let func_declarations = List.map ~f:(fun a -> `Value a)  @@ Ligo_compile.Of_typed.list_declarations typed_prg in
      let type_declarations = List.map ~f:(fun a -> `Type a)   @@ Ligo_compile.Of_typed.list_type_declarations typed_prg in
      let mod_declarations  = List.map ~f:(fun a -> `Module a) @@ Ligo_compile.Of_typed.list_mod_declarations typed_prg in
+     let mod_declarations  = List.filter ~f:(function (`Module v) -> not (String.equal "List" (Format.asprintf "%a" Ast_typed.ModuleVar.pp v)) | _ -> true) mod_declarations in
+     let mod_declarations  = List.filter ~f:(function (`Module v) -> not (String.equal "Bytes" (Format.asprintf "%a" Ast_typed.ModuleVar.pp v)) | _ -> true) mod_declarations in
      func_declarations @ type_declarations @ mod_declarations
 
 let pp_declaration ppf = function
@@ -243,6 +245,13 @@ let main (raw_options : Compiler_options.raw) display_format now amount balance 
     begin
       print_endline welcome_msg;
       let state = make_initial_state syntax protocol dry_run_opts in
+      let options = Compiler_options.make ~raw_options () in
+      let result = Simple_utils.Trace.to_stdlib_result @@
+                     Ligo_compile.Utils.type_contract_string ~add_warning:(fun _ -> ()) ~options CameLIGO (Build.lib state.syntax) in
+      let top_level = match result with
+        | Ok (top_level, _) -> top_level
+        | Error _ -> failwith "oops" in
+      let state = { state with top_level } in
       let state = match init_file with
         | None -> state
         | Some file_name -> let c = use_file state ~raw_options file_name in

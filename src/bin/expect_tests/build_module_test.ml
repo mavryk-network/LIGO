@@ -94,37 +94,52 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_good [ "print" ; "mini-c" ; contract "D.mligo" ] ;
   [%expect{|
-let #../../test/contracts/build/A.mligo#toto#9 = L(1) in
-let #../../test/contracts/build/B.mligo#toto#10 = L(32) in
-let #../../test/contracts/build/B.mligo#titi#11 =
-  ADD(#../../test/contracts/build/A.mligo#toto#9 , L(42)) in
-let #../../test/contracts/build/B.mligo#f#12 =
-  fun gen#2 ->
-  (let (gen#19, gen#20) = gen#2 in
-   let gen#3 = gen#19 in
-   let x = gen#20 in
+let #../../test/contracts/build/A.mligo#Bytes#concat#121 =
+  fun b -> (fun c -> (({ UNPAIR ; CONCAT })@(PAIR(b , c)))) in
+let #../../test/contracts/build/A.mligo#toto#126 = L(1) in
+let #../../test/contracts/build/B.mligo#Bytes#concat#127 =
+  fun b -> (fun c -> (({ UNPAIR ; CONCAT })@(PAIR(b , c)))) in
+let #../../test/contracts/build/B.mligo#toto#132 = L(32) in
+let #../../test/contracts/build/B.mligo#titi#133 =
+  ADD(#../../test/contracts/build/A.mligo#toto#126 , L(42)) in
+let #../../test/contracts/build/B.mligo#f#134 =
+  fun gen#22 ->
+  (let (gen#166, gen#167) = gen#22 in
+   let gen#23 = gen#166 in
+   let x = gen#167 in
    let x =
-     ADD(ADD(x , #../../test/contracts/build/A.mligo#toto#9) ,
-         #../../test/contracts/build/B.mligo#titi#11) in
+     ADD(ADD(x , #../../test/contracts/build/A.mligo#toto#126) ,
+         #../../test/contracts/build/B.mligo#titi#133) in
    PAIR(LIST_EMPTY() , x)) in
-let #../../test/contracts/build/F.mligo#toto#13 = L(44) in
-let #../../test/contracts/build/G.mligo#toto#14 = L(43) in
-let #../../test/contracts/build/C.mligo#tata#15 =
-  ADD(#../../test/contracts/build/A.mligo#toto#9 ,
-      #../../test/contracts/build/B.mligo#titi#11) in
-let #../../test/contracts/build/C.mligo#foo#16 =
-  (#../../test/contracts/build/B.mligo#f#12)@(PAIR(L(unit) , L(3))) in
-let #../../test/contracts/build/E.mligo#toto#17 = L(10) in
-let #../../test/contracts/build/E.mligo#foo#18 = L("bar") in
+let #../../test/contracts/build/F.mligo#Bytes#concat#135 =
+  fun b -> (fun c -> (({ UNPAIR ; CONCAT })@(PAIR(b , c)))) in
+let #../../test/contracts/build/F.mligo#toto#140 = L(44) in
+let #../../test/contracts/build/G.mligo#Bytes#concat#141 =
+  fun b -> (fun c -> (({ UNPAIR ; CONCAT })@(PAIR(b , c)))) in
+let #../../test/contracts/build/G.mligo#toto#146 = L(43) in
+let #../../test/contracts/build/C.mligo#Bytes#concat#147 =
+  fun b -> (fun c -> (({ UNPAIR ; CONCAT })@(PAIR(b , c)))) in
+let #../../test/contracts/build/C.mligo#tata#152 =
+  ADD(#../../test/contracts/build/A.mligo#toto#126 ,
+      #../../test/contracts/build/B.mligo#titi#133) in
+let #../../test/contracts/build/C.mligo#foo#153 =
+  (#../../test/contracts/build/B.mligo#f#134)@(PAIR(L(unit) , L(3))) in
+let #../../test/contracts/build/E.mligo#Bytes#concat#154 =
+  fun b -> (fun c -> (({ UNPAIR ; CONCAT })@(PAIR(b , c)))) in
+let #../../test/contracts/build/E.mligo#toto#159 = L(10) in
+let #../../test/contracts/build/E.mligo#foo#160 = L("bar") in
+let #Bytes#concat#161 =
+  fun b -> (fun c -> (({ UNPAIR ; CONCAT })@(PAIR(b , c)))) in
 let toto =
-  ADD(#../../test/contracts/build/E.mligo#toto#17 ,
-      #../../test/contracts/build/A.mligo#toto#9) in
+  ADD(#../../test/contracts/build/E.mligo#toto#159 ,
+      #../../test/contracts/build/A.mligo#toto#126) in
 let fb = (L(1), toto, L(2), L(3)) in
 let main =
-  fun gen#5 ->
-  (let (gen#21, gen#22) = gen#5 in
-   let p = gen#21 in
-   let s = gen#22 in let s = ADD(ADD(p , s) , toto) in PAIR(LIST_EMPTY() , s)) in
+  fun gen#75 ->
+  (let (gen#168, gen#169) = gen#75 in
+   let p = gen#168 in
+   let s = gen#169 in
+   let s = ADD(ADD(p , s) , toto) in PAIR(LIST_EMPTY() , s)) in
 L(unit) |}]
 
 let%expect_test _ =

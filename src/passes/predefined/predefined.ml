@@ -92,8 +92,8 @@ module Tree_abstraction = struct
     | "Bytes.pack"   -> some_const C_BYTES_PACK
     | "Bytes.unpack" -> some_const C_BYTES_UNPACK
     | "Bytes.length" -> some_const C_SIZE
-    | "Bytes.concat" -> some_const C_CONCAT
-    | "Bytes.sub"    -> some_const C_SLICE
+    (* | "Bytes.concat" -> some_const C_CONCAT *)
+    (* | "Bytes.sub"    -> some_const C_SLICE *)
 
     (* Options module *)
 
@@ -103,15 +103,15 @@ module Tree_abstraction = struct
 
     (* List module *)
 
-    | "List.length"   -> some_const C_SIZE
-    | "List.size"     -> some_const C_SIZE
+    (* | "List.length"   -> some_const C_SIZE *)
+    (* | "List.size"     -> some_const C_SIZE *)
     | "List.iter"     -> some_const C_LIST_ITER
     | "List.map"      -> some_const C_LIST_MAP
     | "List.fold"     -> some_const C_LIST_FOLD
     | "List.fold_left"  -> some_const C_LIST_FOLD_LEFT
     | "List.fold_right" -> some_const C_LIST_FOLD_RIGHT
-    | "List.head_opt" -> some_const C_LIST_HEAD_OPT
-    | "List.tail_opt" -> some_const C_LIST_TAIL_OPT
+    (* | "List.head_opt" -> some_const C_LIST_HEAD_OPT
+     * | "List.tail_opt" -> some_const C_LIST_TAIL_OPT *)
 
     (* Set module *)
 
