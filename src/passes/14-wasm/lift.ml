@@ -1,14 +1,5 @@
 (* 
   Lift functions outside, as WebAssembly has no support for nested functions.
-
-  memory = [
-    info n
-
-  ]
-
-  helper_functions = [
-
-  ]
 *)
 open Mini_c.Types
 module ValueVar = Stage_common.Types.ValueVar
@@ -203,6 +194,11 @@ let rec lift: env -> expression -> env * expression = fun env e ->
 let rec toplevel_inner: env -> expression -> expression = fun env e ->
   match e.content with
     E_let_in ({content = E_closure {binder; body}; _} as e1, inline, ((var_name, type_expression), e2)) -> 
+      let var_to_string name =  
+        let name, hash = ValueVar.internal_get_name_and_counter name in
+        name ^ "#" ^ (string_of_int hash)
+      in
+      print_endline ("e_let_in x:" ^ var_to_string var_name);
       let env, body = lift {empty_env with functions = var_name :: env.functions} body in
       List.fold_left ~f:(
         fun prev el ->
@@ -210,6 +206,11 @@ let rec toplevel_inner: env -> expression -> expression = fun env e ->
       ) ~init:{e with content = E_let_in ({ e1 with content =  E_closure {binder; body}}, inline, ((var_name, type_expression), toplevel_inner env e2))}
       env.exported_funcs
   | E_let_in (e1, inline, ((var_name, type_expression), e2)) -> 
+      let var_to_string name =  
+        let name, hash = ValueVar.internal_get_name_and_counter name in
+        name ^ "#" ^ (string_of_int hash)
+      in
+      print_endline ("e_let_in:" ^ var_to_string var_name);
       {e with content = E_let_in (e1, inline, ((var_name, type_expression), toplevel_inner env e2))}
   | _ -> e
 

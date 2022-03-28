@@ -195,10 +195,13 @@ printf("a1\n");
   int *z2 = (int*)((char*)given_storage + 4);
   int *z3 = (int*)((char*)given_storage + 8);
   int *z4 = (int*)((char*)given_storage + 12);
+  int *z5 = (int*)((char*)given_storage + 16);
   printf("z1: %i\n", *z1);
   printf("z2: %i\n", *z2);
   printf("z3: %i\n", *z3);
   printf("z4: %i\n", *z4);
+  printf("z5: %i\n", *z5);
+  printf("gs: %i\n", given_storage);
 
   // call generated `__load` function which corrects the pointers
   __load(given_storage);
@@ -209,15 +212,22 @@ printf("a3x\n");
   int *a2 = (int*)((char*)given_storage + 4);
   int *a3 = (int*)((char*)given_storage + 8);
   int *a4 = (int*)((char*)given_storage + 12);
-  printf("a1: %i\n", a1);
+  int *a5 = (int*)((char*)given_storage + 16);
+  int *a6 = (int*)((char*)given_storage + 32);
+  // printf("a1: %i\n", a1);
   printf("a1: %i\n", *a1);
   printf("a2: %i\n", *a2);
   printf("a3: %i\n", *a3);
   printf("a4: %i\n", *a4);
-  int ax = (int*)((char*)given_storage+28);
-  gmp_printf("The storage contents after 1: %Zd\n", ax );
+  int ax = (int*)((char*)given_storage);
 
-  printf("a3\n");
+  // 02 00 00 00 01 00 00 00 0C 00 00 00 FB 07 00 00
+  // 08 00 00 00 18 00 00 00 02 00 00 00 01 00 00 00 14 00 00 00 FB 07 00 00 02 00 00 00 01 00 00 00
+  gmp_printf("The storage contents after 1: %Zd\n", a5 );
+  gmp_printf("The storage contents after 1: %Zd\n", a6 );
+  // gmp_printf("The storage contents after 1: %Zd\n", a5 );
+
+  // printf("a3\n");
 
   __wasi_iovec_t * buf = (__wasi_iovec_t *)iovs2->buf;
 

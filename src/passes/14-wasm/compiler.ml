@@ -160,7 +160,10 @@ let rec expression ~raise : A.module_' -> locals -> I.expression -> A.module_' *
   | E_literal (Literal_key_hash _b) -> failwith "not supported yet 11"
   | E_literal (Literal_chain_id _b) -> failwith "not supported yet 12"
   | E_literal (Literal_operation _b) -> failwith "not supported yet 13"
-  | E_closure {binder; body} -> failwith "not supported yet 14"
+  | E_closure {binder; body} -> 
+    w, l, [
+      S.{ it = A.Nop; at}
+    ]
   | E_constant {cons_name = C_LIST_EMPTY; arguments = []} -> w, l, [{it = DataSymbol "C_LIST_EMPTY"; at}]
   | E_constant {cons_name = C_PAIR; arguments = [e1; e2]} -> 
     let malloc_local = var_to_string (ValueVar.fresh ~name:"malloc" ()) in
@@ -223,6 +226,16 @@ let rec expression ~raise : A.module_' -> locals -> I.expression -> A.module_' *
     let w, l, e1 = expression ~raise w l e1 in
     let w, l, e2 = expression ~raise w l e2 in
     w, l, mpz_init @ e1 @ e2 @ [{it = A.Call "__gmpz_add"; at}; {it = A.LocalGet new_value; at}]
+  | E_constant {cons_name = C_CAR; arguments = [cons]} -> 
+    let w, l, cons = expression ~raise w l cons in
+    w, l, cons @ [{ it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }]
+  | E_constant {cons_name = C_CDR; arguments = [cons]} -> 
+    let w, l, cons = expression ~raise w l cons in
+    w, l, cons @ [
+       { it = A.Const { it = I32 4l; at}; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
   | E_constant {cons_name; arguments} -> failwith "not supported yet 15"
   | E_application _ -> 
     let rec aux result expr = 
@@ -547,37 +560,48 @@ let rec generate_storage_loader: I.type_expression -> string -> (A.instr list * 
           at
         };
       ], ((addr, I32Type) :: (next_item, I32Type) :: locals)
-  | T_tuple ann_list ->
-    (* ignore annotation for now *)
+  | T_tuple [(_, item1); (_, item2)] ->
+    (* ignore annotations for now *)
     let addr = var_to_string (ValueVar.fresh ~name:"addr" ()) in
-    let new_addr = var_to_string (ValueVar.fresh ~name:"new_addr" ()) in
-    let (result, locals), _counter = List.fold_left ~f:(fun ((result, result_locals), counter) (annotation, type_expression) -> 
-      print_endline "add one here";
-      let (tuple_item_loader, locals) = (generate_storage_loader type_expression offset) in
-      let tuple_item_loader = [
-        S.{ it = A.LocalGet addr; at };
-        { it = Const {it = I32 Int32.(4l * counter); at}; at };
-        { it = Binary (I32 Add); at };
+    let a1, locals1 =  generate_storage_loader item1 offset in
+    let a2, locals2 =  generate_storage_loader item2 offset in
+    ([
+      S.{ it = A.LocalTee addr; at };
+      
+      { it = LocalGet addr; at };
+      { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+      { it = LocalGet offset; at };
+      { it = Binary (I32 Add); at };
+      { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };  
 
-        { it = LocalGet addr; at };
-        { it = Const {it = I32 Int32.(4l * counter); at}; at };
-        { it = Binary (I32 Add); at };
-        { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-        { it = LocalGet offset; at };
-        { it = Binary (I32 Add); at };
-        { it = LocalTee new_addr; at };
-        
-        { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };  
-        
-        { it = LocalGet new_addr; at };
-        (* { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }; *)
-      ] 
-      @ 
-      tuple_item_loader
-      in
-      (( result @ tuple_item_loader, result_locals @ locals), Int32.(counter + 1l))
-    ) ~init:(([], []), 0l) ann_list in    
-    { it = LocalSet addr; at} :: result, ((addr, I32Type) :: (new_addr, I32Type) :: locals)
+      { it = LocalGet addr; at };
+      { it = Const {it = I32 4l; at}; at };
+      { it = Binary (I32 Add); at };
+      
+      { it = LocalGet addr; at };
+      { it = Const {it = I32 4l; at}; at };
+      { it = Binary (I32 Add); at };
+      { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+      { it = LocalGet offset; at };
+      { it = Binary (I32 Add); at };
+
+      { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };  
+      
+      { it = A.LocalGet addr; at};
+      { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+    @ 
+    a1
+    @
+    [
+      S.{ it = A.LocalGet addr; at};
+      { it = Const {it = I32 4l; at}; at };
+      { it = Binary (I32 Add); at };
+      { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+    @ 
+    a2,
+    ((addr, T.I32Type) :: locals1) @ locals2)
   | T_base TB_int -> 
     let addr     = var_to_string (ValueVar.fresh ~name:"addr" ()) in
     [
@@ -731,32 +755,40 @@ let rec generate_storage_loader: I.type_expression -> string -> (A.instr list * 
 (*
   Calculate the required storage that needs to be allocated for saving the storage in a compressed way.
 *)
-let rec calculate_storage_size: I.type_expression -> string -> A.instr list = fun t src_addr ->
+let rec calculate_storage_size: I.type_expression -> string -> string -> (A.instr list * locals) = fun t src_addr old_addr ->
+  
   let at = S.no_region in
   match t.type_content with 
-  | T_tuple ann_list ->
-      let start = [
-        S.{ it = A.Const {it = I32 Int32.(Int32.of_int_exn (List.length ann_list) (* pointers to tuple components *) * 4l); at}; at};
+  | T_tuple [(_, item1); (_, item2)] ->
+      let tuple_addr     = var_to_string (ValueVar.fresh ~name:"tuple_addr" ()) in
+      let a1, locals1 = calculate_storage_size item1 src_addr old_addr in
+      let a2, locals2 = calculate_storage_size item2 src_addr old_addr in
+      ([
+        S.{ it = A.LocalGet src_addr; at};
+        { it = A.LocalTee tuple_addr; at};
+        { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+        { it = LocalSet src_addr; at };
       ]
-      in
-      List.fold_left ~f:(fun result (annot, component) -> 
-        result 
-        @ 
-        [
-          { it = LocalGet src_addr; at };
-          { it = A.Const {it = I32 Int32.(Int32.of_int_exn (List.length ann_list) (* pointers to tuple components *) * 4l); at}; at};
-// TODO: fix the calculate storage feature...          { it = Binary (I32 Add); at };
-//          { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-          { it = LocalSet src_addr; at };
-        ]
-        @
-        calculate_storage_size component src_addr
-        @
-        [{ it = Binary (I32 Add); at }]
-      ) ~init:start ann_list
+      @
+      a1
+      @ 
+      [
+        S.{ it = A.LocalGet tuple_addr; at};
+        { it = Const {it = I32 4l; at}; at}; 
+        { it = Binary (I32 Add); at };
+        { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+        { it = LocalSet src_addr; at };
+      ]
+      @
+      a2
+      @
+      [{ it = Const {it = I32 8l; at}; at}; 
+        { it = Binary (I32 Add); at };
+        { it = Binary (I32 Add); at };
+      ], ((tuple_addr, T.I32Type) :: locals1) @ locals2)
       
   | T_base TB_int ->    
-    [
+    ([
       S.{ it = A.LocalGet src_addr; at };
       { it = Const {it = I32 4l; at}; at};
       { it = Binary (I32 Add); at };
@@ -765,8 +797,8 @@ let rec calculate_storage_size: I.type_expression -> string -> A.instr list = fu
       { it = Binary (I32 Mul); at };
       { it = Const {it = I32 12l; at}; at};
       { it = Binary (I32 Add); at };
-    ]
-  | _ -> []
+    ], [])
+  | _ -> [], []
 
 let rec generate_storage_saver: I.type_expression -> string -> string -> string -> (A.instr list * locals) = fun t src_addr target_addr offset ->
   let at = S.no_region in
@@ -774,7 +806,7 @@ let rec generate_storage_saver: I.type_expression -> string -> string -> string 
   | T_base TB_int ->
     let mp_size = var_to_string (ValueVar.fresh ~name:"mp_size" ()) in
     let counter = var_to_string (ValueVar.fresh ~name:"counter" ()) in
-    let limbs = var_to_string (ValueVar.fresh ~name:"limbs" ()) in
+    let limbs   = var_to_string (ValueVar.fresh ~name:"limbs" ()) in
     [
       S.
       (* _mp_alloc *)
@@ -868,48 +900,57 @@ let rec generate_storage_saver: I.type_expression -> string -> string -> string 
       { it = Binary (I32 Add); at };
       { it = LocalSet offset; at };
     ], ((mp_size, I32Type) :: (counter, I32Type) :: (limbs, I32Type) :: [])
-  | T_tuple ann_list ->
+  | T_tuple [(_, item1); (_, item2)] -> 
+
+    (* item = pointer to a tuple or a value *)
+    
+    (* works like a PAIR *)
     let tuple_offset = var_to_string (ValueVar.fresh ~name:"tuple_offset" ()) in
-    let pointer_to_component_value = var_to_string (ValueVar.fresh ~name:"pointer_to_component_value" ()) in
-    let old_offset = [
+    let tuple_src_addr = var_to_string (ValueVar.fresh ~name:"tuple_src_addr" ()) in
+
+    let a1, locals1 = generate_storage_saver item1 src_addr target_addr offset in
+    let a2, locals2 = generate_storage_saver item2 src_addr target_addr offset in
+    (([
       S.{ it = A.LocalGet offset; at };
-      { it = LocalSet tuple_offset; at };
-    ]
-    in
-    let set_offset = [
-      S.{ it = A.LocalGet offset; at };
-      { it = Const {it = I32 (Int32.(of_int_exn (List.length ann_list) * 4l)); at}; at};
+      { it = LocalSet tuple_offset; at};
+      { it = LocalGet src_addr; at };
+      { it = LocalSet tuple_src_addr; at };
+      { it = A.LocalGet offset; at };
+      { it = Const {it = I32 8l; at}; at};
       { it = Binary (I32 Add); at };
       { it = LocalSet offset; at };
+
+      { it = LocalGet target_addr; at};
+      { it = LocalGet tuple_offset; at};
+      { it = Binary (I32 Add); at };
+      { it = LocalGet offset; at};
+      { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    
+      { it = LocalGet tuple_src_addr; at };
+      { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+      { it = LocalSet src_addr; at };
+    ] 
+    @
+    a1
+    @
+    [
+      S.{ it = A.LocalGet target_addr; at};
+      { it = LocalGet tuple_offset; at};
+      { it = Binary (I32 Add); at };
+      { it = Const {it = I32 4l; at}; at};
+      { it = Binary (I32 Add); at };
+      { it = LocalGet offset; at};
+      { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+      { it = LocalGet tuple_src_addr; at };
+      { it = Const {it = I32 4l; at}; at};
+      { it = Binary (I32 Add); at };
+      { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+      { it = LocalSet src_addr; at };
     ]
-    in
-    let tuple_components, locals, _ = List.fold_left
-      ~f:(fun (result, locals, counter) (annot, item) -> 
-        let save_tuple_component_value, s_locals = generate_storage_saver item src_addr target_addr offset in
-        (result @ 
-        S.[
-          A.{ it = LocalGet offset; at };
-          { it = LocalSet pointer_to_component_value; at };
-        ]
-        @
-        save_tuple_component_value
-        @
-        S.[
-          A.{ it = LocalGet target_addr; at };
-          { it = LocalGet tuple_offset; at };
-          { it = Const {it = I32 Int32.(counter * 4l); at}; at};
-          { it = Binary (I32 Add); at };
-          { it = Binary (I32 Add); at };
-          { it = LocalGet pointer_to_component_value; at};
-          { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
-        ],
-        s_locals @ locals, Int32.(counter + 1l))
-      ) ~init:([], [], 0l) ann_list
-      in
-      (old_offset @
-      (* tuple_size @ *)
-      set_offset @
-      tuple_components, (tuple_offset, I32Type) :: (pointer_to_component_value, I32Type) :: locals )
+    @
+    a2
+    ), ((tuple_src_addr, T.I32Type) :: (tuple_offset, I32Type) :: locals1) @ locals2)
+
   | _ -> 
     print_endline "- Do nothing apparently...";
     ([], [])
@@ -935,9 +976,11 @@ let compile ~raise : I.expression -> string -> string -> W.Ast.module_ = fun e f
   
   let target_addr     = var_to_string (ValueVar.fresh ~name:"target_addr" ()) in
   let src_addr        = var_to_string (ValueVar.fresh ~name:"src_addr" ()) in
+  let src_addr_backup        = var_to_string (ValueVar.fresh ~name:"src_addr_backup" ()) in
+  let old_addr        = var_to_string (ValueVar.fresh ~name:"old_addr" ()) in
   let storage_size    = var_to_string (ValueVar.fresh ~name:"storage_size" ()) in
   let result_with_size    = var_to_string (ValueVar.fresh ~name:"result_with_size" ()) in
-  let body_calc = calculate_storage_size storage_type_output src_addr in
+  let body_calc, locals_calc = calculate_storage_size storage_type_output src_addr old_addr in
   let body_save, locals_save = generate_storage_saver storage_type_output src_addr target_addr offset in
   let w = {w with it = {
     w.it with funcs = w.it.funcs @ [
@@ -955,18 +998,28 @@ let compile ~raise : I.expression -> string -> string -> W.Ast.module_ = fun e f
           name = "__save";
           ftype = "__save_type";
           locals =
-            (src_addr, T.I32Type) ::
+            ((src_addr, T.I32Type) ::            
             (result_with_size, T.I32Type) :: 
             (target_addr, I32Type) :: 
             (storage_size, I32Type) :: 
             (offset, I32Type) ::
-            locals_save;
+            (old_addr, I32Type) ::
+            (src_addr_backup, T.I32Type) ::
+            locals_save) @ locals_calc;
           body = 
-            body_calc @  
+            [
+              S.{it = A.LocalGet src_addr; at };
+              {it = LocalSet src_addr_backup; at };
+            ]
+            @
+            body_calc 
+            @  
             [
               S.{ it = A.LocalTee storage_size; at };
               { it = Call "malloc"; at};
               { it = LocalSet target_addr; at};
+              { it = LocalGet src_addr_backup; at };
+              { it = LocalSet src_addr; at };
               { it = Const {it = I32 0l;  at}; at};
               { it = LocalSet offset; at};
             ] @
