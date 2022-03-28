@@ -308,18 +308,23 @@ and infer_t_insts ~raise ~loc app_context ( (tc,t) : O.expression_content * O.ty
     let avs, type_ = O.Helpers.destruct_for_alls t in
     let last = App_context.get_expect app_context in
     let args = match App_context.pop app_context with | None -> [] | Some args -> args in
-    let table, outer_type = match type_ with
+    let term = match type_ with
       | { type_content = T_constant { injection = External s ; _ } ; _ } -> (
-        let t = type_external ~raise s loc args last in
+        let type_expression = type_external ~raise s loc args last in
         match List.zip avs args with
-        | Ok l -> Inference.TMap.of_list l, t
+        | Ok l ->
+           let table = Inference.TMap.of_list l in
+           let lamb = make_e ~location:loc tc t in
+           let term = Inference.build_type_insts ~raise ~loc lamb table avs in
+           { term with type_expression }
         | _ -> failwith "not same size"
       )
-      | _ ->
-         Inference.infer_type_applications ~raise ~loc avs type_ args last, t in
-    let lamb = make_e ~location:loc tc t in
-    let x = Inference.build_type_insts ~raise ~loc lamb table avs in
-    x.expression_content , outer_type
+      | _ -> (
+         let table = Inference.infer_type_applications ~raise ~loc avs type_ args last in
+         let lamb = make_e ~location:loc tc t in
+         Inference.build_type_insts ~raise ~loc lamb table avs
+      ) in
+    term.expression_content , term.type_expression
   | _ -> tc, t
 
 and type_expression' ~raise ~options : context -> ?tv_opt:O.type_expression -> I.expression -> O.expression = fun (app_context, context) ?tv_opt e ->
