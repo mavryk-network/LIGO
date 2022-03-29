@@ -252,7 +252,7 @@ let rec translate_expression (expr : I.expression) (env : I.environment) =
      use_nothing env)
   | E_external "add" ->
     let binder1 = Var.fresh () in
-    let (binder1_type, return_type) =
+    let (binder1_type, inner_type) =
       (* TODO move binder type to the binder, like all other binders? *)
       (* at the moment, this is the only error here! so I am not
          bothering with error machinery... *)
@@ -260,22 +260,22 @@ let rec translate_expression (expr : I.expression) (env : I.environment) =
       | None -> internal_error __LOC__ "type of lambda is not a function type"
       | Some t -> t in
     let binder1_var = I.e_var binder1 binder1_type in
-    (* let binder1 = (binder1, binder1_type) in *)
     let binder2 = Var.fresh () in
     let (binder2_type, return_type) =
       (* TODO move binder type to the binder, like all other binders? *)
       (* at the moment, this is the only error here! so I am not
          bothering with error machinery... *)
-      match Mini_c.get_t_function return_type with
+      match Mini_c.get_t_function inner_type with
       | None -> internal_error __LOC__ "type of lambda is not a function type"
       | Some t -> t in
     let binder2_var = I.e_var binder2 binder2_type in
-    let binder2 = (binder2, binder2_type) in
-    let body = I.e_constant C_ADD [binder1_var ; binder2_var] return_type in 
-    let (binder, usages) = translate_binder (binder2, body) env in
-    let body, usages = (O.E_lam (meta, binder, translate_type return_type), usages) in
+    let env = I.Environment.add (binder1, binder1_type) (I.Environment.add (binder2, binder2_type) env) in
+    let body = I.e_constant C_ADD [binder1_var ; binder2_var] return_type in
+    let (body, usages) = translate_expression body env in
+    let (binder, usages) = (O.Binds ([List.hd_exn usages], [translate_type ~var:binder2 binder2_type], body), List.tl_exn usages) in
+    let (body, usages) = (O.E_lam (meta, binder, translate_type return_type), usages) in
     let (binder, usages) = (O.Binds ([List.hd_exn usages], [translate_type ~var:binder1 binder1_type], body), List.tl_exn usages) in
-    (O.E_lam (meta, binder, translate_type return_type), usages)
+    (O.E_lam (meta, binder, translate_type inner_type), usages)
   | E_external _ ->
     failwith "external not found"
   | E_global_constant (hash, args) ->
