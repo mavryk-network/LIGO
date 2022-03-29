@@ -96,49 +96,119 @@ let%expect_test _ =
   [%expect{|
 let #../../test/contracts/build/A.mligo#Bytes#concat#121 =
   fun b -> (fun c -> (({ UNPAIR ; CONCAT })@(PAIR(b , c)))) in
-let #../../test/contracts/build/A.mligo#toto#126 = L(1) in
-let #../../test/contracts/build/B.mligo#Bytes#concat#127 =
+let #../../test/contracts/build/A.mligo#Bytes#sub#122 =
+  fun start ->
+  (fun length ->
+   (fun input ->
+    (({ UNPAIR ;
+       UNPAIR ;
+       SLICE ;
+       IF_NONE { PUSH string "SLICE" ; FAILWITH } {} })@(PAIR(PAIR(start ,
+                                                                   length) ,
+                                                              input))))) in
+let #../../test/contracts/build/A.mligo#toto#128 = L(1) in
+let #../../test/contracts/build/B.mligo#Bytes#concat#129 =
   fun b -> (fun c -> (({ UNPAIR ; CONCAT })@(PAIR(b , c)))) in
-let #../../test/contracts/build/B.mligo#toto#132 = L(32) in
-let #../../test/contracts/build/B.mligo#titi#133 =
-  ADD(#../../test/contracts/build/A.mligo#toto#126 , L(42)) in
-let #../../test/contracts/build/B.mligo#f#134 =
+let #../../test/contracts/build/B.mligo#Bytes#sub#130 =
+  fun start ->
+  (fun length ->
+   (fun input ->
+    (({ UNPAIR ;
+       UNPAIR ;
+       SLICE ;
+       IF_NONE { PUSH string "SLICE" ; FAILWITH } {} })@(PAIR(PAIR(start ,
+                                                                   length) ,
+                                                              input))))) in
+let #../../test/contracts/build/B.mligo#toto#136 = L(32) in
+let #../../test/contracts/build/B.mligo#titi#137 =
+  ADD(#../../test/contracts/build/A.mligo#toto#128 , L(42)) in
+let #../../test/contracts/build/B.mligo#f#138 =
   fun gen#22 ->
-  (let (gen#166, gen#167) = gen#22 in
-   let gen#23 = gen#166 in
-   let x = gen#167 in
+  (let (gen#180, gen#181) = gen#22 in
+   let gen#23 = gen#180 in
+   let x = gen#181 in
    let x =
-     ADD(ADD(x , #../../test/contracts/build/A.mligo#toto#126) ,
-         #../../test/contracts/build/B.mligo#titi#133) in
+     ADD(ADD(x , #../../test/contracts/build/A.mligo#toto#128) ,
+         #../../test/contracts/build/B.mligo#titi#137) in
    PAIR(LIST_EMPTY() , x)) in
-let #../../test/contracts/build/F.mligo#Bytes#concat#135 =
+let #../../test/contracts/build/F.mligo#Bytes#concat#139 =
   fun b -> (fun c -> (({ UNPAIR ; CONCAT })@(PAIR(b , c)))) in
-let #../../test/contracts/build/F.mligo#toto#140 = L(44) in
-let #../../test/contracts/build/G.mligo#Bytes#concat#141 =
+let #../../test/contracts/build/F.mligo#Bytes#sub#140 =
+  fun start ->
+  (fun length ->
+   (fun input ->
+    (({ UNPAIR ;
+       UNPAIR ;
+       SLICE ;
+       IF_NONE { PUSH string "SLICE" ; FAILWITH } {} })@(PAIR(PAIR(start ,
+                                                                   length) ,
+                                                              input))))) in
+let #../../test/contracts/build/F.mligo#toto#146 = L(44) in
+let #../../test/contracts/build/G.mligo#Bytes#concat#147 =
   fun b -> (fun c -> (({ UNPAIR ; CONCAT })@(PAIR(b , c)))) in
-let #../../test/contracts/build/G.mligo#toto#146 = L(43) in
-let #../../test/contracts/build/C.mligo#Bytes#concat#147 =
+let #../../test/contracts/build/G.mligo#Bytes#sub#148 =
+  fun start ->
+  (fun length ->
+   (fun input ->
+    (({ UNPAIR ;
+       UNPAIR ;
+       SLICE ;
+       IF_NONE { PUSH string "SLICE" ; FAILWITH } {} })@(PAIR(PAIR(start ,
+                                                                   length) ,
+                                                              input))))) in
+let #../../test/contracts/build/G.mligo#toto#154 = L(43) in
+let #../../test/contracts/build/C.mligo#Bytes#concat#155 =
   fun b -> (fun c -> (({ UNPAIR ; CONCAT })@(PAIR(b , c)))) in
-let #../../test/contracts/build/C.mligo#tata#152 =
-  ADD(#../../test/contracts/build/A.mligo#toto#126 ,
-      #../../test/contracts/build/B.mligo#titi#133) in
-let #../../test/contracts/build/C.mligo#foo#153 =
-  (#../../test/contracts/build/B.mligo#f#134)@(PAIR(L(unit) , L(3))) in
-let #../../test/contracts/build/E.mligo#Bytes#concat#154 =
+let #../../test/contracts/build/C.mligo#Bytes#sub#156 =
+  fun start ->
+  (fun length ->
+   (fun input ->
+    (({ UNPAIR ;
+       UNPAIR ;
+       SLICE ;
+       IF_NONE { PUSH string "SLICE" ; FAILWITH } {} })@(PAIR(PAIR(start ,
+                                                                   length) ,
+                                                              input))))) in
+let #../../test/contracts/build/C.mligo#tata#162 =
+  ADD(#../../test/contracts/build/A.mligo#toto#128 ,
+      #../../test/contracts/build/B.mligo#titi#137) in
+let #../../test/contracts/build/C.mligo#foo#163 =
+  (#../../test/contracts/build/B.mligo#f#138)@(PAIR(L(unit) , L(3))) in
+let #../../test/contracts/build/E.mligo#Bytes#concat#164 =
   fun b -> (fun c -> (({ UNPAIR ; CONCAT })@(PAIR(b , c)))) in
-let #../../test/contracts/build/E.mligo#toto#159 = L(10) in
-let #../../test/contracts/build/E.mligo#foo#160 = L("bar") in
-let #Bytes#concat#161 =
+let #../../test/contracts/build/E.mligo#Bytes#sub#165 =
+  fun start ->
+  (fun length ->
+   (fun input ->
+    (({ UNPAIR ;
+       UNPAIR ;
+       SLICE ;
+       IF_NONE { PUSH string "SLICE" ; FAILWITH } {} })@(PAIR(PAIR(start ,
+                                                                   length) ,
+                                                              input))))) in
+let #../../test/contracts/build/E.mligo#toto#171 = L(10) in
+let #../../test/contracts/build/E.mligo#foo#172 = L("bar") in
+let #Bytes#concat#173 =
   fun b -> (fun c -> (({ UNPAIR ; CONCAT })@(PAIR(b , c)))) in
+let #Bytes#sub#174 =
+  fun start ->
+  (fun length ->
+   (fun input ->
+    (({ UNPAIR ;
+       UNPAIR ;
+       SLICE ;
+       IF_NONE { PUSH string "SLICE" ; FAILWITH } {} })@(PAIR(PAIR(start ,
+                                                                   length) ,
+                                                              input))))) in
 let toto =
-  ADD(#../../test/contracts/build/E.mligo#toto#159 ,
-      #../../test/contracts/build/A.mligo#toto#126) in
+  ADD(#../../test/contracts/build/E.mligo#toto#171 ,
+      #../../test/contracts/build/A.mligo#toto#128) in
 let fb = (L(1), toto, L(2), L(3)) in
 let main =
   fun gen#75 ->
-  (let (gen#168, gen#169) = gen#75 in
-   let p = gen#168 in
-   let s = gen#169 in
+  (let (gen#182, gen#183) = gen#75 in
+   let p = gen#182 in
+   let s = gen#183 in
    let s = ADD(ADD(p , s) , toto) in PAIR(LIST_EMPTY() , s)) in
 L(unit) |}]
 

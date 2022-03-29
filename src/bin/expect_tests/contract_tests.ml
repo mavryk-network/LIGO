@@ -87,7 +87,7 @@ let%expect_test _ =
 
     Warning: constant map_get is being deprecated soon. Consider using Map.find_opt instead.
 
-    1565 bytes |}] ;
+    1612 bytes |}] ;
 
   run_ligo_good [ "info" ; "measure-contract" ; contract "vote.mligo" ] ;
   [%expect {|
@@ -688,10 +688,12 @@ Warning: constant map_get is being deprecated soon. Consider using Map.find_opt 
                 (pair (nat %max_proposal) (map %message_store bytes (set address))))
           (pair (pair (map %proposal_counters address nat) (bytes %state_hash))
                 (nat %threshold))) ;
-  code { UNPAIR ;
+  code { LAMBDA (lambda bytes (list operation)) bytes { PACK } ;
+         SWAP ;
+         UNPAIR ;
          IF_LEFT
            { IF_LEFT
-               { DROP ; NIL operation ; PAIR }
+               { DIG 2 ; DROP 2 ; NIL operation ; PAIR }
                { SWAP ;
                  DUP ;
                  DUG 2 ;
@@ -703,7 +705,9 @@ Warning: constant map_get is being deprecated soon. Consider using Map.find_opt 
                  NOT ;
                  IF { PUSH string "Unauthorized address" ; FAILWITH } {} ;
                  DUP ;
-                 PACK ;
+                 DIG 3 ;
+                 SWAP ;
+                 EXEC ;
                  DUP 3 ;
                  CAR ;
                  CAR ;
@@ -960,7 +964,9 @@ Warning: constant map_get is being deprecated soon. Consider using Map.find_opt 
                  SWAP ;
                  CDR ;
                  PAIR } }
-           { PACK ;
+           { DIG 2 ;
+             SWAP ;
+             EXEC ;
              SWAP ;
              DUP ;
              DUG 2 ;
@@ -2625,7 +2631,17 @@ let%expect_test _ =
   [%expect {|
     let #Bytes#concat#18 =
       fun b -> (fun c -> (({ UNPAIR ; CONCAT })@(PAIR(b , c)))) in
-    let #Foo#x#23 = L(54) in let #Foo#y#24 = #Foo#x#23 in L(unit) |}]
+    let #Bytes#sub#19 =
+      fun start ->
+      (fun length ->
+       (fun input ->
+        (({ UNPAIR ;
+           UNPAIR ;
+           SLICE ;
+           IF_NONE { PUSH string "SLICE" ; FAILWITH } {} })@(PAIR(PAIR(start ,
+                                                                       length) ,
+                                                                  input))))) in
+    let #Foo#x#25 = L(54) in let #Foo#y#26 = #Foo#x#25 in L(unit) |}]
 
 let%expect_test _ =
   run_ligo_good [ "compile" ; "storage" ; contract "module_contract_simple.mligo" ; "999" ] ;
