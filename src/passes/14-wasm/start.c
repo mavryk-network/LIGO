@@ -223,8 +223,8 @@ printf("a3x\n");
 
   // 02 00 00 00 01 00 00 00 0C 00 00 00 FB 07 00 00
   // 08 00 00 00 18 00 00 00 02 00 00 00 01 00 00 00 14 00 00 00 FB 07 00 00 02 00 00 00 01 00 00 00
-  gmp_printf("The storage contents after 1: %Zd\n", a5 );
-  gmp_printf("The storage contents after 1: %Zd\n", a6 );
+  // gmp_printf("The storage contents after 1: %Zd\n", a3 + given_storage );
+  // gmp_printf("The storage contents after 1: %Zd\n", a1 );
   // gmp_printf("The storage contents after 1: %Zd\n", a5 );
 
   // printf("a3\n");
