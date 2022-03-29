@@ -209,3 +209,6 @@ let ec_pair a b : expression_content =
   E_constant {cons_name=C_PAIR;arguments=[a; b]}
 
 let d_unit : value = D_unit
+
+let e_constant ?loc cons_name arguments t : expression =
+  Expression.make ?loc (E_constant {cons_name ; arguments}) t

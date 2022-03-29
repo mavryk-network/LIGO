@@ -66,6 +66,7 @@ module Free_variables = struct
     | E_update (expr, _i, update, _n) ->
       unions [ self expr; self update ]
     | E_raw_michelson _ -> empty
+    | E_external _ -> empty
     | E_global_constant (_hash, args) ->
       unions (List.map ~f:self args)
 

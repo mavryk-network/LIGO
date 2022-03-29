@@ -698,6 +698,43 @@ let rec compile_expression ~raise (ae:AST.expression) : expression =
       | Match_record record ->
         compile_record_matching ~raise expr' return self record
   )
+  | E_raw_code { language; code}  when String.equal language "external" ->
+    let code = trace_option ~raise (corner_case ~loc:__LOC__ "could not get a string") @@ get_a_string code in
+    return @@ E_external code
+  (* | E_raw_code { language; code}  when String.equal language "external" ->
+   *   let code = trace_option ~raise (corner_case ~loc:__LOC__ "could not get a string") @@ get_a_string code in
+   *   let open Tezos_micheline in
+   *   begin
+   *     let code = match code, ae.type_expression with
+   *       | "add", { type_content = T_arrow { type1 = { type_content = T_constant { injection = Int ; _ } ; _ } ; _} ; _} ->
+   *          "{ LAMBDA (pair int int) int { UNPAIR ; ADD } ; SWAP ; APPLY }"
+   *       | "add", { type_content = T_arrow { type1 = { type_content = T_constant { injection = Nat ; _ } ; _ } ; _} ; _} ->
+   *          "{ LAMBDA (pair nat nat) nat { UNPAIR ; ADD } ; SWAP ; APPLY }"
+   *       (\* | "unpack", { type_content = T_arrow { type2 ; _} ; _} ->
+   *        *    let o = compile_type ~raise type2 in
+   *        *    match o.type_content with
+   *        *    | T_option t ->
+   *        *    failwith "unpack" *\)
+   *       | _ -> failwith "noope" in
+   *     let orig_code = code in
+   *     let (code, errs) = Micheline_parser.tokenize code in
+   *     (match errs with
+   *      | _ :: _ -> raise.raise (could_not_parse_raw_michelson ae.location orig_code)
+   *      | [] ->
+   *         let (code, errs) = Micheline_parser.parse_expression ~check:false code in
+   *         match errs with
+   *         | _ :: _ -> raise.raise (could_not_parse_raw_michelson ae.location orig_code)
+   *         | [] ->
+   *            let code = Micheline.strip_locations code in
+   *            (\* hmm *\)
+   *            let code = Micheline.inject_locations (fun _ -> Location.generated) code in
+   *            match code with
+   *            | Seq (_, code) ->
+   *               return @@ E_raw_michelson code
+   *            | _ ->
+   *               raise.raise (raw_michelson_must_be_seq ae.location code)
+   *     )
+   *   end *)
   | E_raw_code { language; code} ->
     let backend = Stage_common.Backends.michelson in
     let () =
@@ -705,8 +742,8 @@ let rec compile_expression ~raise (ae:AST.expression) : expression =
         (corner_case ~loc:__LOC__ "Language insert - backend mismatch only provide code insertion in the language you are compiling to")
         (String.equal language backend)
     in
-    let type_anno  = get_type code in
-    let type_anno' = compile_type ~raise type_anno in
+    (* let type_anno  = get_type code in *)
+    let type_anno' = compile_type ~raise ae.type_expression in
     let code = trace_option ~raise (corner_case ~loc:__LOC__ "could not get a string") @@ get_a_string code in
     let open Tezos_micheline in
     let orig_code = code in

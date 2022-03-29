@@ -69,6 +69,8 @@ let rec map_expression : mapper -> expression -> expression = fun f e ->
       let expr = self expr in
       let update = self update in
       return @@ E_update (expr, i, update, n)
+  | E_external s ->
+      return @@ E_external s
   | E_global_constant (hash, args) ->
       let args = List.map ~f:self args in
       return @@ E_global_constant (hash, args)

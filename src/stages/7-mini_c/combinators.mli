@@ -85,3 +85,4 @@ val d_unit : value
 val e_var : ?loc:Location.t -> var_name -> type_expression -> expression
 val ec_pair : expression -> expression -> expression_content
 val e_application : ?loc:Location.t -> expression -> type_expression -> expression -> expression
+val e_constant : ?loc:Location.t -> constant' -> expression list -> type_expression -> expression
