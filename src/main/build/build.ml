@@ -239,7 +239,11 @@ let build_expression ~raise ~add_warning : options:Compiler_options.t -> string 
          let module_ = build_context ~raise ~add_warning ~options init_file in
          let contract = Ligo_compile.Of_typed.compile_program ~raise module_ in
          (module_, contract)
-      | None -> ([], fun x -> Ligo_compile.Of_typed.compile_expression ~raise x)
+      | None ->
+         let syntax   = Syntax.of_string_opt ~raise (Syntax_name syntax) None in
+         let module_, _ = Ligo_compile.Utils.type_contract_string ~raise ~add_warning:(fun _ -> ()) ~options CameLIGO (lib syntax) in
+         let contract = Ligo_compile.Of_typed.compile_program ~raise module_ in
+         (module_, contract)
     in
     let typed_exp       = Ligo_compile.Utils.type_expression ~raise ~options file_name syntax expression contract in
     let aggregated      = Ligo_compile.Of_typed.compile_expression_in_context ~raise typed_exp aggregated_prg in
