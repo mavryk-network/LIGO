@@ -210,5 +210,5 @@ let t13 =
             hd
         | { a : _, b : _ }, {a : Some([hd, ..._tl]), b : [] } =>
             hd
-        | { a : Some a, b : _}, _ => int(String.length(a))
+        | { a : Some a, b : _}, _ => int(List.length(a))
         }));
