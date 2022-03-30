@@ -214,7 +214,7 @@ printf("a1\n");
   printf("gs: %i\n", given_storage);
 
   // call generated `__load` function which corrects the pointers
-  // __load(given_storage);
+  __load(given_storage);
   
   printf("a3x\n");
 

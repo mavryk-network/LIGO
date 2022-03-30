@@ -245,7 +245,7 @@ let rec expression ~raise : A.module_' -> locals -> I.expression -> A.module_' *
     let cons = var_to_string (ValueVar.fresh ~name:"C_CONS" ()) in
     let w, l, l1 = expression ~raise w l l1 in
     let w, l, l2 = expression ~raise w l l2 in
-    w, ((cons, I32Type)  :: l),
+    w, (l @ [(cons, I32Type)]),
     [
     S.{ it = A.Const { it = I32 8l; at}; at };
       { it = A.Call "malloc"; at }; (* check if not 0 *)
@@ -430,7 +430,7 @@ let rec toplevel_bindings ~raise : I.expression -> W.Ast.module_' -> W.Ast.modul
           it = {
             name = name;
             ftype = name ^ "_type";
-            locals;
+            locals ;
             body
           };
           at
