@@ -3690,16 +3690,145 @@ let%expect_test _ =
                                                             "arguments": [
                                                               {
                                                                 "expression_content": [
-                                                                  "E_constant",
+                                                                  "E_application",
                                                                   {
-                                                                    "cons_name": [
-                                                                    "Const",
-                                                                    [
-                                                                    "C_SIZE"
-                                                                    ]
-                                                                    ],
-                                                                    "arguments": [
+                                                                    "lamb": {
+                                                                    "expression_content": [
+                                                                    "E_module_accessor",
                                                                     {
+                                                                    "module_name": [
+                                                                    {
+                                                                    "name":
+                                                                    "Bytes",
+                                                                    "counter":
+                                                                    0,
+                                                                    "location": [
+                                                                    "File",
+                                                                    {
+                                                                    "start": {
+                                                                    "byte": {
+                                                                    "pos_fname":
+                                                                    "../../test/contracts/multisig-v2.ligo",
+                                                                    "pos_lnum":
+                                                                    48,
+                                                                    "pos_bol":
+                                                                    1214,
+                                                                    "pos_cnum":
+                                                                    1221
+                                                                    },
+                                                                    "point_num":
+                                                                    1221,
+                                                                    "point_bol":
+                                                                    1214
+                                                                    },
+                                                                    "stop": {
+                                                                    "byte": {
+                                                                    "pos_fname":
+                                                                    "../../test/contracts/multisig-v2.ligo",
+                                                                    "pos_lnum":
+                                                                    48,
+                                                                    "pos_bol":
+                                                                    1214,
+                                                                    "pos_cnum":
+                                                                    1226
+                                                                    },
+                                                                    "point_num":
+                                                                    1226,
+                                                                    "point_bol":
+                                                                    1214
+                                                                    }
+                                                                    }
+                                                                    ],
+                                                                    "generated":
+                                                                    false
+                                                                    }
+                                                                    ],
+                                                                    "element": {
+                                                                    "name":
+                                                                    "length",
+                                                                    "counter":
+                                                                    0,
+                                                                    "location": [
+                                                                    "File",
+                                                                    {
+                                                                    "start": {
+                                                                    "byte": {
+                                                                    "pos_fname":
+                                                                    "../../test/contracts/multisig-v2.ligo",
+                                                                    "pos_lnum":
+                                                                    48,
+                                                                    "pos_bol":
+                                                                    1214,
+                                                                    "pos_cnum":
+                                                                    1227
+                                                                    },
+                                                                    "point_num":
+                                                                    1227,
+                                                                    "point_bol":
+                                                                    1214
+                                                                    },
+                                                                    "stop": {
+                                                                    "byte": {
+                                                                    "pos_fname":
+                                                                    "../../test/contracts/multisig-v2.ligo",
+                                                                    "pos_lnum":
+                                                                    48,
+                                                                    "pos_bol":
+                                                                    1214,
+                                                                    "pos_cnum":
+                                                                    1233
+                                                                    },
+                                                                    "point_num":
+                                                                    1233,
+                                                                    "point_bol":
+                                                                    1214
+                                                                    }
+                                                                    }
+                                                                    ],
+                                                                    "generated":
+                                                                    false
+                                                                    }
+                                                                    }
+                                                                    ],
+                                                                    "location": [
+                                                                    "File",
+                                                                    {
+                                                                    "start": {
+                                                                    "byte": {
+                                                                    "pos_fname":
+                                                                    "../../test/contracts/multisig-v2.ligo",
+                                                                    "pos_lnum":
+                                                                    48,
+                                                                    "pos_bol":
+                                                                    1214,
+                                                                    "pos_cnum":
+                                                                    1221
+                                                                    },
+                                                                    "point_num":
+                                                                    1221,
+                                                                    "point_bol":
+                                                                    1214
+                                                                    },
+                                                                    "stop": {
+                                                                    "byte": {
+                                                                    "pos_fname":
+                                                                    "../../test/contracts/multisig-v2.ligo",
+                                                                    "pos_lnum":
+                                                                    48,
+                                                                    "pos_bol":
+                                                                    1214,
+                                                                    "pos_cnum":
+                                                                    1233
+                                                                    },
+                                                                    "point_num":
+                                                                    1233,
+                                                                    "point_bol":
+                                                                    1214
+                                                                    }
+                                                                    }
+                                                                    ]
+                                                                    },
+                                                                    "args": {
                                                                     "expression_content": [
                                                                     "E_variable",
                                                                     {
@@ -3786,7 +3915,6 @@ let%expect_test _ =
                                                                     }
                                                                     ]
                                                                     }
-                                                                    ]
                                                                   }
                                                                 ],
                                                                 "location": [

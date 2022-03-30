@@ -91,7 +91,7 @@ module Tree_abstraction = struct
 
     (* | "Bytes.pack"   -> some_const C_BYTES_PACK *)
     | "Bytes.unpack" -> some_const C_BYTES_UNPACK
-    | "Bytes.length" -> some_const C_SIZE
+    (* | "Bytes.length" -> some_const C_SIZE *)
     (* | "Bytes.concat" -> some_const C_CONCAT *)
     (* | "Bytes.sub"    -> some_const C_SLICE *)
 

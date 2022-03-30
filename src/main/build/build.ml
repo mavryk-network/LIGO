@@ -7,19 +7,20 @@ let lib (s : Syntax_types.t) =
   match s with
   | PascaLIGO _ | ReasonLIGO | JsLIGO ->"
 module Bytes = struct
-   let concat (p : bytes * bytes) : bytes = [%Michelson ({| { UNPAIR ; CONCAT } |} : bytes * bytes -> bytes)] p
-   let sub (sli : nat * nat * bytes) : bytes = [%Michelson ({| { UNPAIR  ; UNPAIR ; SLICE ; IF_NONE { PUSH string \"SLICE\" ; FAILWITH } {} } |} : nat * nat * bytes -> bytes)] sli
-   let pack (type a) (x : a) : bytes = [%Michelson ({| { PACK } |} : a -> bytes)] x
+   [@inline] let concat (p : bytes * bytes) : bytes = [%Michelson ({| { UNPAIR ; CONCAT } |} : bytes * bytes -> bytes)] p
+   [@inline] let sub (sli : nat * nat * bytes) : bytes = [%Michelson ({| { UNPAIR  ; UNPAIR ; SLICE ; IF_NONE { PUSH string \"SLICE\" ; FAILWITH } {} } |} : nat * nat * bytes -> bytes)] sli
+   [@inline] let pack (type a) (x : a) : bytes = [%Michelson ({| { PACK } |} : a -> bytes)] x
+   [@inline] let length (b : bytes) : nat = [%Michelson ({| { SIZE } |} : bytes -> nat)] b
    (* let unpack (type a) (b : bytes) : a option = [%Michelson ({| { UNPACK } |} : bytes -> a option)] b *)
 end
 module List = struct
-   let length (type a) (xs : a list) : nat = [%Michelson ({| { SIZE } |} : a list -> nat)] xs
-   let size (type a) (xs : a list) : nat = length xs
-   let head_opt (type a) (xs : a list) : a option =
+   [@inline] let length (type a) (xs : a list) : nat = [%Michelson ({| { SIZE } |} : a list -> nat)] xs
+   [@inline] let size (type a) (xs : a list) : nat = length xs
+   [@inline] let head_opt (type a) (xs : a list) : a option =
      match xs with
      | [] -> None
      | x :: _ -> Some x
-   let tail_opt (type a) (xs : a list) : (a list) option =
+   [@inline] let tail_opt (type a) (xs : a list) : (a list) option =
      match xs with
      | [] -> None
      | _ :: xs -> Some xs
@@ -27,19 +28,20 @@ end
 "
   | CameLIGO -> "
 module Bytes = struct
-   let concat (b : bytes) (c : bytes) : bytes = [%Michelson ({| { UNPAIR ; CONCAT } |} : bytes * bytes -> bytes)] (b, c)
-   let sub (start : nat) (length : nat) (input : bytes) : bytes = [%Michelson ({| { UNPAIR ; UNPAIR ; SLICE ; IF_NONE { PUSH string \"SLICE\" ; FAILWITH } {} } |} : nat * nat * bytes -> bytes)] (start, length, input)
-   let pack (type a) (x : a) : bytes = [%Michelson ({| { PACK } |} : a -> bytes)] x
+   [@inline] let concat (b : bytes) (c : bytes) : bytes = [%Michelson ({| { UNPAIR ; CONCAT } |} : bytes * bytes -> bytes)] (b, c)
+   [@inline] let sub (start : nat) (length : nat) (input : bytes) : bytes = [%Michelson ({| { UNPAIR ; UNPAIR ; SLICE ; IF_NONE { PUSH string \"SLICE\" ; FAILWITH } {} } |} : nat * nat * bytes -> bytes)] (start, length, input)
+   [@inline] let pack (type a) (x : a) : bytes = [%Michelson ({| { PACK } |} : a -> bytes)] x
+   [@inline] let length (b : bytes) : nat = [%Michelson ({| { SIZE } |} : bytes -> nat)] b
    (* let unpack (type a) (b : bytes) : a option = [%Michelson ({| { UNPACK } |} : bytes -> a option)] b *)
 end
 module List = struct
-   let length (type a) (xs : a list) : nat = [%Michelson ({| { SIZE } |} : a list -> nat)] xs
-   let size (type a) (xs : a list) : nat = length xs
-   let head_opt (type a) (xs : a list) : a option =
+   [@inline] let length (type a) (xs : a list) : nat = [%Michelson ({| { SIZE } |} : a list -> nat)] xs
+   [@inline] let size (type a) (xs : a list) : nat = length xs
+   [@inline] let head_opt (type a) (xs : a list) : a option =
      match xs with
      | [] -> None
      | x :: _ -> Some x
-   let tail_opt (type a) (xs : a list) : (a list) option =
+   [@inline] let tail_opt (type a) (xs : a list) : (a list) option =
      match xs with
      | [] -> None
      | _ :: xs -> Some xs
