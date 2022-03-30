@@ -1392,7 +1392,7 @@ let%expect_test _ =
   run_ligo_good [ "print" ; "ast-typed" ; contract "sequence.mligo" ; ];
   [%expect {|
     const y =
-      lambda (_#2) return let _x = +1 in let ()#5 = let _x = +2 in UNIT() in let ()#4 = let _x = +23 in UNIT() in let ()#3 = let _x = +42 in UNIT() in _x |}]
+      lambda (_#12) return let _x = +1 in let ()#15 = let _x = +2 in UNIT() in let ()#14 = let _x = +23 in UNIT() in let ()#13 = let _x = +42 in UNIT() in _x |}]
 
 let%expect_test _ =
   run_ligo_bad [ "compile" ; "contract" ; contract "bad_type_operator.ligo" ] ;
@@ -2299,18 +2299,18 @@ let%expect_test _ =
   run_ligo_good [ "print" ; "ast-typed" ; contract "remove_recursion.mligo" ] ;
   [%expect {|
     const f =
-      lambda (n) return let f = rec (f:int -> int => lambda (n) return let gen#4 = EQ(n ,
-      0) in  match gen#4 with
-              | False unit_proj#5 ->
+      lambda (n) return let f = rec (f:int -> int => lambda (n) return let gen#14 = EQ(n ,
+      0) in  match gen#14 with
+              | False unit_proj#15 ->
                 (f)@(SUB(n ,
-                1)) | True unit_proj#6 ->
+                1)) | True unit_proj#16 ->
                       1 ) in (f)@(4)
     const g =
-      rec (g:int -> int -> int -> int => lambda (f) return (g)@(let h = rec (h:int -> int => lambda (n) return let gen#7 = EQ(n ,
-      0) in  match gen#7 with
-              | False unit_proj#8 ->
+      rec (g:int -> int -> int -> int => lambda (f) return (g)@(let h = rec (h:int -> int => lambda (n) return let gen#17 = EQ(n ,
+      0) in  match gen#17 with
+              | False unit_proj#18 ->
                 (h)@(SUB(n ,
-                1)) | True unit_proj#9 ->
+                1)) | True unit_proj#19 ->
                       1 ) in h) ) |}]
 
 let%expect_test _ =
@@ -2603,19 +2603,19 @@ let%expect_test _ =
   run_ligo_good [ "print" ; "ast-typed" ; contract "tuple_decl_pos.mligo" ] ;
   [%expect {|
                      const c =
-                       lambda (gen#5) return CREATE_CONTRACT(lambda (gen#2) return  match
-                                                                                     gen#2 with
-                                                                                     | ( _#4 , _#3 ) ->
-                                                                                     ( LIST_EMPTY() , unit ) ,
+                       lambda (gen#15) return CREATE_CONTRACT(lambda (gen#12) return  match
+                                                                                       gen#12 with
+                                                                                       | ( _#14 , _#13 ) ->
+                                                                                       ( LIST_EMPTY() , unit ) ,
                        NONE() , 0mutez , unit)
                      const foo =
-                       let gen#11 = (c)@(unit) in  match gen#11 with
+                       let gen#21 = (c)@(unit) in  match gen#21 with
                                                     | ( _a , _b ) ->
                                                     unit
                      const c =
-                       lambda (gen#6) return ( 1 , "1" , +1 , 2 , "2" , +2 , 3 , "3" , +3 , 4 , "4" )
+                       lambda (gen#16) return ( 1 , "1" , +1 , 2 , "2" , +2 , 3 , "3" , +3 , 4 , "4" )
                      const foo =
-                       let gen#13 = (c)@(unit) in  match gen#13 with
+                       let gen#23 = (c)@(unit) in  match gen#23 with
                                                     | ( _i1 , _s1 , _n1 , _i2 , _s2 , _n2 , _i3 , _s3 , _n3 , _i4 , _s4 ) ->
                                                     unit |} ]
 
@@ -2623,20 +2623,21 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_good [ "print" ; "mini-c" ; contract "modules_env.mligo" ] ;
   [%expect {|
-    let #Crypto#blake2b#18 = fun b -> (({ BLAKE2B })@(b))[@inline] in
-    let #Crypto#sha256#19 = fun b -> (({ SHA256 })@(b))[@inline] in
-    let #Crypto#sha512#20 = fun b -> (({ SHA512 })@(b))[@inline] in
-    let #Crypto#sha3#21 = fun b -> (({ SHA3 })@(b))[@inline] in
-    let #Crypto#keccak#22 = fun b -> (({ KECCAK })@(b))[@inline] in
-    let #Crypto#hash_key#23 = fun k -> (({ HASH_KEY })@(k))[@inline] in
-    let #Crypto#check#24 =
-      fun k ->
-      (fun s ->
-       (fun b ->
-        (({ UNPAIR ; UNPAIR ; CHECK_SIGNATURE })@(PAIR(PAIR(k , s) , b)))))[@inline] in
-    let #Bytes#concat#25 =
-      fun b -> (fun c -> (({ UNPAIR ; CONCAT })@(PAIR(b , c))))[@inline] in
-    let #Bytes#sub#26 =
+    let #String#length#18 = fun s -> (({ SIZE })@(s))[@inline] in
+    let #String#size#19 = fun s -> (({ SIZE })@(s))[@inline] in
+    let #String#sub#20 =
+      fun sli ->
+      (({ UNPAIR ;
+         UNPAIR ;
+         SLICE ;
+         IF_NONE { PUSH string "SLICE" ; FAILWITH } {} })@(sli))[@inline] in
+    let #String#slice#21 =
+      fun sli ->
+      (({ UNPAIR ;
+         UNPAIR ;
+         SLICE ;
+         IF_NONE { PUSH string "SLICE" ; FAILWITH } {} })@(sli))[@inline] in
+    let #String#sub#22 =
       fun start ->
       (fun length ->
        (fun input ->
@@ -2646,8 +2647,33 @@ let%expect_test _ =
            IF_NONE { PUSH string "SLICE" ; FAILWITH } {} })@(PAIR(PAIR(start ,
                                                                        length) ,
                                                                   input)))))[@inline] in
-    let #Bytes#length#28 = fun b -> (({ SIZE })@(b))[@inline] in
-    let #Foo#x#33 = L(54) in let #Foo#y#34 = #Foo#x#33 in L(unit) |}]
+    let #String#concat#23 =
+      fun b -> (fun c -> (({ UNPAIR ; CONCAT })@(PAIR(b , c))))[@inline] in
+    let #Crypto#blake2b#24 = fun b -> (({ BLAKE2B })@(b))[@inline] in
+    let #Crypto#sha256#25 = fun b -> (({ SHA256 })@(b))[@inline] in
+    let #Crypto#sha512#26 = fun b -> (({ SHA512 })@(b))[@inline] in
+    let #Crypto#sha3#27 = fun b -> (({ SHA3 })@(b))[@inline] in
+    let #Crypto#keccak#28 = fun b -> (({ KECCAK })@(b))[@inline] in
+    let #Crypto#hash_key#29 = fun k -> (({ HASH_KEY })@(k))[@inline] in
+    let #Crypto#check#30 =
+      fun k ->
+      (fun s ->
+       (fun b ->
+        (({ UNPAIR ; UNPAIR ; CHECK_SIGNATURE })@(PAIR(PAIR(k , s) , b)))))[@inline] in
+    let #Bytes#concat#31 =
+      fun b -> (fun c -> (({ UNPAIR ; CONCAT })@(PAIR(b , c))))[@inline] in
+    let #Bytes#sub#32 =
+      fun start ->
+      (fun length ->
+       (fun input ->
+        (({ UNPAIR ;
+           UNPAIR ;
+           SLICE ;
+           IF_NONE { PUSH string "SLICE" ; FAILWITH } {} })@(PAIR(PAIR(start ,
+                                                                       length) ,
+                                                                  input)))))[@inline] in
+    let #Bytes#length#34 = fun b -> (({ SIZE })@(b))[@inline] in
+    let #Foo#x#39 = L(54) in let #Foo#y#40 = #Foo#x#39 in L(unit) |}]
 
 let%expect_test _ =
   run_ligo_good [ "compile" ; "storage" ; contract "module_contract_simple.mligo" ; "999" ] ;

@@ -79,13 +79,13 @@ module Tree_abstraction = struct
 
     (* Crypto module *)
 
-    | "Crypto.check"    -> some_const C_CHECK_SIGNATURE
-    | "Crypto.hash_key" -> some_const C_HASH_KEY
-    | "Crypto.blake2b"  -> some_const C_BLAKE2b
-    | "Crypto.sha256"   -> some_const C_SHA256
-    | "Crypto.sha512"   -> some_const C_SHA512
-    | "Crypto.sha3"     -> some_const C_SHA3
-    | "Crypto.keccak"   -> some_const C_KECCAK
+    (* | "Crypto.check"    -> some_const C_CHECK_SIGNATURE
+     * | "Crypto.hash_key" -> some_const C_HASH_KEY
+     * | "Crypto.blake2b"  -> some_const C_BLAKE2b
+     * | "Crypto.sha256"   -> some_const C_SHA256
+     * | "Crypto.sha512"   -> some_const C_SHA512
+     * | "Crypto.sha3"     -> some_const C_SHA3
+     * | "Crypto.keccak"   -> some_const C_KECCAK *)
 
     (* Bytes module *)
 
@@ -166,11 +166,11 @@ module Tree_abstraction = struct
 
     (* String module *)
 
-    | "String.length"   -> some_const C_SIZE
-    | "String.size"     -> some_deprecated x C_SIZE  (* Deprecated *)
-    | "String.slice"    -> some_deprecated x C_SLICE (* Deprecated *)
-    | "String.sub"      -> some_const C_SLICE
-    | "String.concat"   -> some_const C_CONCAT
+    (* | "String.length"   -> some_const C_SIZE
+     * | "String.size"     -> some_deprecated x C_SIZE  (\* Deprecated *\)
+     * | "String.slice"    -> some_deprecated x C_SLICE (\* Deprecated *\)
+     * | "String.sub"      -> some_const C_SLICE
+     * | "String.concat"   -> some_const C_CONCAT *)
 
     (* Testing module *)
 
@@ -301,7 +301,7 @@ module Tree_abstraction = struct
 
     (* Bytes module *)
 
-    | C_BYTES_PACK   -> "Bytes.pack"
+    (* | C_BYTES_PACK   -> "Bytes.pack" *)
     | C_BYTES_UNPACK -> "Bytes.unpack"
     | C_SIZE         -> "Bytes.length"
     | C_CONCAT       -> "Bytes.concat"

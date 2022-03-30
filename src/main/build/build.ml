@@ -6,6 +6,13 @@ open Main_errors
 let lib (s : Syntax_types.t) =
   match s with
   | PascaLIGO _ | ReasonLIGO | JsLIGO ->"
+module String = struct
+   [@inline] let length (s : string) : nat = [%Michelson ({| { SIZE } |} : string -> nat)] s
+   [@inline] let size (s : string) : nat = [%Michelson ({| { SIZE } |} : string -> nat)] s
+   [@inline] let sub (sli : nat * nat * string) : string = [%Michelson ({| { UNPAIR  ; UNPAIR ; SLICE ; IF_NONE { PUSH string \"SLICE\" ; FAILWITH } {} } |} : nat * nat * string -> string)] sli
+   [@inline] let slice (sli : nat * nat * string) : string = [%Michelson ({| { UNPAIR  ; UNPAIR ; SLICE ; IF_NONE { PUSH string \"SLICE\" ; FAILWITH } {} } |} : nat * nat * string -> string)] sli
+   [@inline] let concat (p : string * string) : string = [%Michelson ({| { UNPAIR ; CONCAT } |} : string * string -> string)] p
+end
 module Crypto = struct
    [@inline] let blake2b (b : bytes) : bytes = [%Michelson ({| { BLAKE2B } |} : bytes -> bytes)] b
    [@inline] let sha256 (b : bytes) : bytes = [%Michelson ({| { SHA256 } |} : bytes -> bytes)] b
@@ -36,6 +43,14 @@ module List = struct
 end
 "
   | CameLIGO -> "
+module String = struct
+   [@inline] let length (s : string) : nat = [%Michelson ({| { SIZE } |} : string -> nat)] s
+   [@inline] let size (s : string) : nat = [%Michelson ({| { SIZE } |} : string -> nat)] s
+   [@inline] let sub (sli : nat * nat * string) : string = [%Michelson ({| { UNPAIR  ; UNPAIR ; SLICE ; IF_NONE { PUSH string \"SLICE\" ; FAILWITH } {} } |} : nat * nat * string -> string)] sli
+   [@inline] let slice (sli : nat * nat * string) : string = [%Michelson ({| { UNPAIR  ; UNPAIR ; SLICE ; IF_NONE { PUSH string \"SLICE\" ; FAILWITH } {} } |} : nat * nat * string -> string)] sli
+   [@inline] let sub (start : nat) (length : nat) (input : string) : string = [%Michelson ({| { UNPAIR ; UNPAIR ; SLICE ; IF_NONE { PUSH string \"SLICE\" ; FAILWITH } {} } |} : nat * nat * string -> string)] (start, length, input)
+   [@inline] let concat (b : string) (c : string) : string = [%Michelson ({| { UNPAIR ; CONCAT } |} : string * string -> string)] (b, c)
+end
 module Crypto = struct
    [@inline] let blake2b (b : bytes) : bytes = [%Michelson ({| { BLAKE2B } |} : bytes -> bytes)] b
    [@inline] let sha256 (b : bytes) : bytes = [%Michelson ({| { SHA256 } |} : bytes -> bytes)] b
