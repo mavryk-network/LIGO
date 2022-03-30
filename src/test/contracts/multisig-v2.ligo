@@ -54,7 +54,7 @@ function send (const param : send_pt; var s : storage) : return is
 
     var new_store : addr_set := set [];
 
-    case map_get (packed_msg, s.message_store) of [
+    case Map.find_opt (packed_msg, s.message_store) of [
       Some (voters) ->
         block {
           (* The message is already stored.

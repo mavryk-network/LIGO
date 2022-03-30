@@ -47,8 +47,8 @@ let%expect_test _ =
   [%expect{xxx|
     const test_foo =
       lambda (x) return  match x with
-                          | Fail _#19 ->
-                            "" | Success _#18 ->
+                          | Fail _#25 ->
+                            "" | Success _#24 ->
                                  ""[@private] |xxx}]
 
 let%expect_test _ =

@@ -80,13 +80,6 @@ let%expect_test _ =
 
     Warning: constant get_force is being deprecated soon. Consider using Big_map.find instead.
 
-    File "../../test/contracts/multisig-v2.ligo", line 57, characters 9-46:
-     56 |
-     57 |     case map_get (packed_msg, s.message_store) of [
-     58 |       Some (voters) ->
-
-    Warning: constant map_get is being deprecated soon. Consider using Map.find_opt instead.
-
     1565 bytes |}] ;
 
   run_ligo_good [ "info" ; "measure-contract" ; contract "vote.mligo" ] ;
@@ -672,13 +665,6 @@ File "../../test/contracts/multisig-v2.ligo", line 66, characters 17-62:
  67 |                  new_store := Set.add (Tezos.sender,voters)
 
 Warning: constant get_force is being deprecated soon. Consider using Big_map.find instead.
-
-File "../../test/contracts/multisig-v2.ligo", line 57, characters 9-46:
- 56 |
- 57 |     case map_get (packed_msg, s.message_store) of [
- 58 |       Some (voters) ->
-
-Warning: constant map_get is being deprecated soon. Consider using Map.find_opt instead.
 
 { parameter
     (or (or (unit %default) (lambda %send bytes (list operation)))
@@ -2623,21 +2609,21 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_good [ "print" ; "mini-c" ; contract "modules_env.mligo" ] ;
   [%expect {|
-    let #String#length#23 = fun s -> (({ SIZE })@(s))[@inline] in
-    let #String#size#24 = fun s -> (({ SIZE })@(s))[@inline] in
-    let #String#sub#25 =
-      fun sli ->
-      (({ UNPAIR ;
-         UNPAIR ;
-         SLICE ;
-         IF_NONE { PUSH string "SLICE" ; FAILWITH } {} })@(sli))[@inline] in
-    let #String#slice#26 =
-      fun sli ->
-      (({ UNPAIR ;
-         UNPAIR ;
-         SLICE ;
-         IF_NONE { PUSH string "SLICE" ; FAILWITH } {} })@(sli))[@inline] in
+    let #String#length#25 = fun s -> (({ SIZE })@(s))[@inline] in
+    let #String#size#26 = fun s -> (({ SIZE })@(s))[@inline] in
     let #String#sub#27 =
+      fun sli ->
+      (({ UNPAIR ;
+         UNPAIR ;
+         SLICE ;
+         IF_NONE { PUSH string "SLICE" ; FAILWITH } {} })@(sli))[@inline] in
+    let #String#slice#28 =
+      fun sli ->
+      (({ UNPAIR ;
+         UNPAIR ;
+         SLICE ;
+         IF_NONE { PUSH string "SLICE" ; FAILWITH } {} })@(sli))[@inline] in
+    let #String#sub#29 =
       fun start ->
       (fun length ->
        (fun input ->
@@ -2647,22 +2633,22 @@ let%expect_test _ =
            IF_NONE { PUSH string "SLICE" ; FAILWITH } {} })@(PAIR(PAIR(start ,
                                                                        length) ,
                                                                   input)))))[@inline] in
-    let #String#concat#28 =
+    let #String#concat#30 =
       fun b -> (fun c -> (({ UNPAIR ; CONCAT })@(PAIR(b , c))))[@inline] in
-    let #Crypto#blake2b#29 = fun b -> (({ BLAKE2B })@(b))[@inline] in
-    let #Crypto#sha256#30 = fun b -> (({ SHA256 })@(b))[@inline] in
-    let #Crypto#sha512#31 = fun b -> (({ SHA512 })@(b))[@inline] in
-    let #Crypto#sha3#32 = fun b -> (({ SHA3 })@(b))[@inline] in
-    let #Crypto#keccak#33 = fun b -> (({ KECCAK })@(b))[@inline] in
-    let #Crypto#hash_key#34 = fun k -> (({ HASH_KEY })@(k))[@inline] in
-    let #Crypto#check#35 =
+    let #Crypto#blake2b#31 = fun b -> (({ BLAKE2B })@(b))[@inline] in
+    let #Crypto#sha256#32 = fun b -> (({ SHA256 })@(b))[@inline] in
+    let #Crypto#sha512#33 = fun b -> (({ SHA512 })@(b))[@inline] in
+    let #Crypto#sha3#34 = fun b -> (({ SHA3 })@(b))[@inline] in
+    let #Crypto#keccak#35 = fun b -> (({ KECCAK })@(b))[@inline] in
+    let #Crypto#hash_key#36 = fun k -> (({ HASH_KEY })@(k))[@inline] in
+    let #Crypto#check#37 =
       fun k ->
       (fun s ->
        (fun b ->
         (({ UNPAIR ; UNPAIR ; CHECK_SIGNATURE })@(PAIR(PAIR(k , s) , b)))))[@inline] in
-    let #Bytes#concat#36 =
+    let #Bytes#concat#38 =
       fun b -> (fun c -> (({ UNPAIR ; CONCAT })@(PAIR(b , c))))[@inline] in
-    let #Bytes#sub#37 =
+    let #Bytes#sub#39 =
       fun start ->
       (fun length ->
        (fun input ->
@@ -2672,7 +2658,7 @@ let%expect_test _ =
            IF_NONE { PUSH string "SLICE" ; FAILWITH } {} })@(PAIR(PAIR(start ,
                                                                        length) ,
                                                                   input)))))[@inline] in
-    let #Bytes#slice#38 =
+    let #Bytes#slice#40 =
       fun start ->
       (fun length ->
        (fun input ->
@@ -2682,8 +2668,8 @@ let%expect_test _ =
            IF_NONE { PUSH string "SLICE" ; FAILWITH } {} })@(PAIR(PAIR(start ,
                                                                        length) ,
                                                                   input)))))[@inline] in
-    let #Bytes#length#40 = fun b -> (({ SIZE })@(b))[@inline] in
-    let #Foo#x#45 = L(54) in let #Foo#y#46 = #Foo#x#45 in L(unit) |}]
+    let #Bytes#length#42 = fun b -> (({ SIZE })@(b))[@inline] in
+    let #Foo#x#47 = L(54) in let #Foo#y#48 = #Foo#x#47 in L(unit) |}]
 
 let%expect_test _ =
   run_ligo_good [ "compile" ; "storage" ; contract "module_contract_simple.mligo" ; "999" ] ;

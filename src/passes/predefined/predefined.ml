@@ -115,7 +115,7 @@ module Tree_abstraction = struct
 
     (* Map module *)
 
-    | "Map.find_opt" -> some_const C_MAP_FIND_OPT
+    (* | "Map.find_opt" -> some_const C_MAP_FIND_OPT *)
     | "Map.update"   -> some_const C_MAP_UPDATE
     | "Map.iter"     -> some_const C_MAP_ITER
     | "Map.map"      -> some_const C_MAP_MAP
@@ -295,7 +295,7 @@ module Tree_abstraction = struct
 
     (* Map module *)
 
-    | C_MAP_FIND_OPT -> "Map.find_opt"
+    (* | C_MAP_FIND_OPT -> "Map.find_opt" *)
     | C_MAP_UPDATE   -> "Map.update"
     | C_MAP_ITER     -> "Map.iter"
     | C_MAP_MAP      -> "Map.map"
@@ -442,7 +442,7 @@ module Tree_abstraction = struct
       (* Map module *)
 
       | "get_force"    -> some_deprecated C_MAP_FIND      (* Deprecated *)
-      | "map_get"      -> some_deprecated C_MAP_FIND_OPT  (* Deprecated *)
+      (* | "map_get"      -> some_deprecated C_MAP_FIND_OPT  (\* Deprecated *\) *)
       | "map_update"   -> some_deprecated C_MAP_UPDATE    (* Deprecated *)
       | "map_remove"   -> some_deprecated C_MAP_REMOVE    (* Deprecated *)
       | "map_iter"     -> some_deprecated C_MAP_ITER      (* Deprecated *)

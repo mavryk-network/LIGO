@@ -5,7 +5,11 @@ module Option = struct
    [@inline] let unopt (type a) (o : a option) : a = [%Michelson ({| { IF_NONE { PUSH string \"option is None\" ; FAILWITH } {} } |} : a option -> a)] o
    [@inline] let unopt_with_error (type a) ((o, s) : a option * string) : a = [%Michelson ({| { UNPAIR ; IF_NONE { FAILWITH } { SWAP ; DROP } } |} : (a option * string) -> a)] (o, s)
 end
+module Big_map = struct
+   [@inline] let find_opt (type k v) ((k, m) : k * (k, v) big_map) : v option = [%Michelson ({| { UNPAIR ; GET } |} : k * (k, v) big_map -> v option)] (k, m)
+end
 module Map = struct
+   [@inline] let find_opt (type k v) ((k, m) : k * (k, v) map) : v option = [%Michelson ({| { UNPAIR ; GET } |} : k * (k, v) map -> v option)] (k, m)
    [@inline] let size (type k v) (m : (k, v) map) : nat = [%Michelson ({| { SIZE } |} : (k, v) map -> nat)] m
 end
 module Set = struct
@@ -54,7 +58,11 @@ module Option = struct
    [@inline] let unopt (type a) (o : a option) : a = [%Michelson ({| { IF_NONE { PUSH string \"option is None\" ; FAILWITH } {} } |} : a option -> a)] o
    [@inline] let unopt_with_error (type a) (o : a option) (s : string) : a = [%Michelson ({| { UNPAIR ; IF_NONE { FAILWITH } { SWAP ; DROP } } |} : (a option * string) -> a)] (o, s)
 end
+module Big_map = struct
+   [@inline] let find_opt (type k v) (k : k) (m : (k, v) big_map) : v option = [%Michelson ({| { UNPAIR ; GET } |} : k * (k, v) big_map -> v option)] (k, m)
+end
 module Map = struct
+   [@inline] let find_opt (type k v) (k : k) (m : (k, v) map) : v option = [%Michelson ({| { UNPAIR ; GET } |} : k * (k, v) map -> v option)] (k, m)
    [@inline] let size (type k v) (m : (k, v) map) : nat = [%Michelson ({| { SIZE } |} : (k, v) map -> nat)] m
 end
 module Set = struct

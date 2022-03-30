@@ -1056,7 +1056,7 @@ and eval_ligo ~raise ~steps ~options : AST.expression -> calltrace -> env -> val
       let* record' = eval_ligo record calltrace env in
       match record' with
       | V_Record recmap ->
-        let a = LMap.find path recmap in
+        let a = try LMap.find path recmap with _ -> (function Label s -> failwith s) path in
         return a
       | _ -> failwith "trying to access a non-record"
     )

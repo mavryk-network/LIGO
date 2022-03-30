@@ -4460,25 +4460,16 @@ let%expect_test _ =
                                                                 {
                                                                   "matchee": {
                                                                     "expression_content": [
-                                                                    "E_constant",
+                                                                    "E_application",
                                                                     {
-                                                                    "cons_name": [
-                                                                    "Deprecatd",
-                                                                    {
-                                                                    "name":
-                                                                    "map_get",
-                                                                    "const": [
-                                                                    "C_MAP_FIND_OPT"
-                                                                    ]
-                                                                    }
-                                                                    ],
-                                                                    "arguments": [
-                                                                    {
+                                                                    "lamb": {
                                                                     "expression_content": [
-                                                                    "E_variable",
+                                                                    "E_module_accessor",
+                                                                    {
+                                                                    "module_name": [
                                                                     {
                                                                     "name":
-                                                                    "packed_msg",
+                                                                    "Map",
                                                                     "counter":
                                                                     0,
                                                                     "location": [
@@ -4493,10 +4484,10 @@ let%expect_test _ =
                                                                     "pos_bol":
                                                                     1480,
                                                                     "pos_cnum":
-                                                                    1498
+                                                                    1489
                                                                     },
                                                                     "point_num":
-                                                                    1498,
+                                                                    1489,
                                                                     "point_bol":
                                                                     1480
                                                                     },
@@ -4509,10 +4500,10 @@ let%expect_test _ =
                                                                     "pos_bol":
                                                                     1480,
                                                                     "pos_cnum":
-                                                                    1508
+                                                                    1492
                                                                     },
                                                                     "point_num":
-                                                                    1508,
+                                                                    1492,
                                                                     "point_bol":
                                                                     1480
                                                                     }
@@ -4522,54 +4513,9 @@ let%expect_test _ =
                                                                     false
                                                                     }
                                                                     ],
-                                                                    "location": [
-                                                                    "File",
-                                                                    {
-                                                                    "start": {
-                                                                    "byte": {
-                                                                    "pos_fname":
-                                                                    "../../test/contracts/multisig-v2.ligo",
-                                                                    "pos_lnum":
-                                                                    57,
-                                                                    "pos_bol":
-                                                                    1480,
-                                                                    "pos_cnum":
-                                                                    1498
-                                                                    },
-                                                                    "point_num":
-                                                                    1498,
-                                                                    "point_bol":
-                                                                    1480
-                                                                    },
-                                                                    "stop": {
-                                                                    "byte": {
-                                                                    "pos_fname":
-                                                                    "../../test/contracts/multisig-v2.ligo",
-                                                                    "pos_lnum":
-                                                                    57,
-                                                                    "pos_bol":
-                                                                    1480,
-                                                                    "pos_cnum":
-                                                                    1508
-                                                                    },
-                                                                    "point_num":
-                                                                    1508,
-                                                                    "point_bol":
-                                                                    1480
-                                                                    }
-                                                                    }
-                                                                    ]
-                                                                    },
-                                                                    {
-                                                                    "expression_content": [
-                                                                    "E_record_accessor",
-                                                                    {
-                                                                    "record": {
-                                                                    "expression_content": [
-                                                                    "E_variable",
-                                                                    {
+                                                                    "element": {
                                                                     "name":
-                                                                    "s",
+                                                                    "find_opt",
                                                                     "counter":
                                                                     0,
                                                                     "location": [
@@ -4584,10 +4530,10 @@ let%expect_test _ =
                                                                     "pos_bol":
                                                                     1480,
                                                                     "pos_cnum":
-                                                                    1510
+                                                                    1493
                                                                     },
                                                                     "point_num":
-                                                                    1510,
+                                                                    1493,
                                                                     "point_bol":
                                                                     1480
                                                                     },
@@ -4600,10 +4546,10 @@ let%expect_test _ =
                                                                     "pos_bol":
                                                                     1480,
                                                                     "pos_cnum":
-                                                                    1511
+                                                                    1501
                                                                     },
                                                                     "point_num":
-                                                                    1511,
+                                                                    1501,
                                                                     "point_bol":
                                                                     1480
                                                                     }
@@ -4612,92 +4558,6 @@ let%expect_test _ =
                                                                     "generated":
                                                                     false
                                                                     }
-                                                                    ],
-                                                                    "location": [
-                                                                    "File",
-                                                                    {
-                                                                    "start": {
-                                                                    "byte": {
-                                                                    "pos_fname":
-                                                                    "../../test/contracts/multisig-v2.ligo",
-                                                                    "pos_lnum":
-                                                                    57,
-                                                                    "pos_bol":
-                                                                    1480,
-                                                                    "pos_cnum":
-                                                                    1510
-                                                                    },
-                                                                    "point_num":
-                                                                    1510,
-                                                                    "point_bol":
-                                                                    1480
-                                                                    },
-                                                                    "stop": {
-                                                                    "byte": {
-                                                                    "pos_fname":
-                                                                    "../../test/contracts/multisig-v2.ligo",
-                                                                    "pos_lnum":
-                                                                    57,
-                                                                    "pos_bol":
-                                                                    1480,
-                                                                    "pos_cnum":
-                                                                    1511
-                                                                    },
-                                                                    "point_num":
-                                                                    1511,
-                                                                    "point_bol":
-                                                                    1480
-                                                                    }
-                                                                    }
-                                                                    ]
-                                                                    },
-                                                                    "path": [
-                                                                    [
-                                                                    "Access_tuple",
-                                                                    "message_store"
-                                                                    ]
-                                                                    ]
-                                                                    }
-                                                                    ],
-                                                                    "location": [
-                                                                    "File",
-                                                                    {
-                                                                    "start": {
-                                                                    "byte": {
-                                                                    "pos_fname":
-                                                                    "../../test/contracts/multisig-v2.ligo",
-                                                                    "pos_lnum":
-                                                                    57,
-                                                                    "pos_bol":
-                                                                    1480,
-                                                                    "pos_cnum":
-                                                                    1510
-                                                                    },
-                                                                    "point_num":
-                                                                    1510,
-                                                                    "point_bol":
-                                                                    1480
-                                                                    },
-                                                                    "stop": {
-                                                                    "byte": {
-                                                                    "pos_fname":
-                                                                    "../../test/contracts/multisig-v2.ligo",
-                                                                    "pos_lnum":
-                                                                    57,
-                                                                    "pos_bol":
-                                                                    1480,
-                                                                    "pos_cnum":
-                                                                    1525
-                                                                    },
-                                                                    "point_num":
-                                                                    1525,
-                                                                    "point_bol":
-                                                                    1480
-                                                                    }
-                                                                    }
-                                                                    ]
-                                                                    }
-                                                                    ]
                                                                     }
                                                                     ],
                                                                     "location": [
@@ -4728,10 +4588,318 @@ let%expect_test _ =
                                                                     "pos_bol":
                                                                     1480,
                                                                     "pos_cnum":
-                                                                    1526
+                                                                    1501
                                                                     },
                                                                     "point_num":
-                                                                    1526,
+                                                                    1501,
+                                                                    "point_bol":
+                                                                    1480
+                                                                    }
+                                                                    }
+                                                                    ]
+                                                                    },
+                                                                    "args": {
+                                                                    "expression_content": [
+                                                                    "E_tuple",
+                                                                    [
+                                                                    {
+                                                                    "expression_content": [
+                                                                    "E_variable",
+                                                                    {
+                                                                    "name":
+                                                                    "packed_msg",
+                                                                    "counter":
+                                                                    0,
+                                                                    "location": [
+                                                                    "File",
+                                                                    {
+                                                                    "start": {
+                                                                    "byte": {
+                                                                    "pos_fname":
+                                                                    "../../test/contracts/multisig-v2.ligo",
+                                                                    "pos_lnum":
+                                                                    57,
+                                                                    "pos_bol":
+                                                                    1480,
+                                                                    "pos_cnum":
+                                                                    1503
+                                                                    },
+                                                                    "point_num":
+                                                                    1503,
+                                                                    "point_bol":
+                                                                    1480
+                                                                    },
+                                                                    "stop": {
+                                                                    "byte": {
+                                                                    "pos_fname":
+                                                                    "../../test/contracts/multisig-v2.ligo",
+                                                                    "pos_lnum":
+                                                                    57,
+                                                                    "pos_bol":
+                                                                    1480,
+                                                                    "pos_cnum":
+                                                                    1513
+                                                                    },
+                                                                    "point_num":
+                                                                    1513,
+                                                                    "point_bol":
+                                                                    1480
+                                                                    }
+                                                                    }
+                                                                    ],
+                                                                    "generated":
+                                                                    false
+                                                                    }
+                                                                    ],
+                                                                    "location": [
+                                                                    "File",
+                                                                    {
+                                                                    "start": {
+                                                                    "byte": {
+                                                                    "pos_fname":
+                                                                    "../../test/contracts/multisig-v2.ligo",
+                                                                    "pos_lnum":
+                                                                    57,
+                                                                    "pos_bol":
+                                                                    1480,
+                                                                    "pos_cnum":
+                                                                    1503
+                                                                    },
+                                                                    "point_num":
+                                                                    1503,
+                                                                    "point_bol":
+                                                                    1480
+                                                                    },
+                                                                    "stop": {
+                                                                    "byte": {
+                                                                    "pos_fname":
+                                                                    "../../test/contracts/multisig-v2.ligo",
+                                                                    "pos_lnum":
+                                                                    57,
+                                                                    "pos_bol":
+                                                                    1480,
+                                                                    "pos_cnum":
+                                                                    1513
+                                                                    },
+                                                                    "point_num":
+                                                                    1513,
+                                                                    "point_bol":
+                                                                    1480
+                                                                    }
+                                                                    }
+                                                                    ]
+                                                                    },
+                                                                    {
+                                                                    "expression_content": [
+                                                                    "E_record_accessor",
+                                                                    {
+                                                                    "record": {
+                                                                    "expression_content": [
+                                                                    "E_variable",
+                                                                    {
+                                                                    "name":
+                                                                    "s",
+                                                                    "counter":
+                                                                    0,
+                                                                    "location": [
+                                                                    "File",
+                                                                    {
+                                                                    "start": {
+                                                                    "byte": {
+                                                                    "pos_fname":
+                                                                    "../../test/contracts/multisig-v2.ligo",
+                                                                    "pos_lnum":
+                                                                    57,
+                                                                    "pos_bol":
+                                                                    1480,
+                                                                    "pos_cnum":
+                                                                    1515
+                                                                    },
+                                                                    "point_num":
+                                                                    1515,
+                                                                    "point_bol":
+                                                                    1480
+                                                                    },
+                                                                    "stop": {
+                                                                    "byte": {
+                                                                    "pos_fname":
+                                                                    "../../test/contracts/multisig-v2.ligo",
+                                                                    "pos_lnum":
+                                                                    57,
+                                                                    "pos_bol":
+                                                                    1480,
+                                                                    "pos_cnum":
+                                                                    1516
+                                                                    },
+                                                                    "point_num":
+                                                                    1516,
+                                                                    "point_bol":
+                                                                    1480
+                                                                    }
+                                                                    }
+                                                                    ],
+                                                                    "generated":
+                                                                    false
+                                                                    }
+                                                                    ],
+                                                                    "location": [
+                                                                    "File",
+                                                                    {
+                                                                    "start": {
+                                                                    "byte": {
+                                                                    "pos_fname":
+                                                                    "../../test/contracts/multisig-v2.ligo",
+                                                                    "pos_lnum":
+                                                                    57,
+                                                                    "pos_bol":
+                                                                    1480,
+                                                                    "pos_cnum":
+                                                                    1515
+                                                                    },
+                                                                    "point_num":
+                                                                    1515,
+                                                                    "point_bol":
+                                                                    1480
+                                                                    },
+                                                                    "stop": {
+                                                                    "byte": {
+                                                                    "pos_fname":
+                                                                    "../../test/contracts/multisig-v2.ligo",
+                                                                    "pos_lnum":
+                                                                    57,
+                                                                    "pos_bol":
+                                                                    1480,
+                                                                    "pos_cnum":
+                                                                    1516
+                                                                    },
+                                                                    "point_num":
+                                                                    1516,
+                                                                    "point_bol":
+                                                                    1480
+                                                                    }
+                                                                    }
+                                                                    ]
+                                                                    },
+                                                                    "path": [
+                                                                    [
+                                                                    "Access_tuple",
+                                                                    "message_store"
+                                                                    ]
+                                                                    ]
+                                                                    }
+                                                                    ],
+                                                                    "location": [
+                                                                    "File",
+                                                                    {
+                                                                    "start": {
+                                                                    "byte": {
+                                                                    "pos_fname":
+                                                                    "../../test/contracts/multisig-v2.ligo",
+                                                                    "pos_lnum":
+                                                                    57,
+                                                                    "pos_bol":
+                                                                    1480,
+                                                                    "pos_cnum":
+                                                                    1515
+                                                                    },
+                                                                    "point_num":
+                                                                    1515,
+                                                                    "point_bol":
+                                                                    1480
+                                                                    },
+                                                                    "stop": {
+                                                                    "byte": {
+                                                                    "pos_fname":
+                                                                    "../../test/contracts/multisig-v2.ligo",
+                                                                    "pos_lnum":
+                                                                    57,
+                                                                    "pos_bol":
+                                                                    1480,
+                                                                    "pos_cnum":
+                                                                    1530
+                                                                    },
+                                                                    "point_num":
+                                                                    1530,
+                                                                    "point_bol":
+                                                                    1480
+                                                                    }
+                                                                    }
+                                                                    ]
+                                                                    }
+                                                                    ]
+                                                                    ],
+                                                                    "location": [
+                                                                    "File",
+                                                                    {
+                                                                    "start": {
+                                                                    "byte": {
+                                                                    "pos_fname":
+                                                                    "../../test/contracts/multisig-v2.ligo",
+                                                                    "pos_lnum":
+                                                                    57,
+                                                                    "pos_bol":
+                                                                    1480,
+                                                                    "pos_cnum":
+                                                                    1502
+                                                                    },
+                                                                    "point_num":
+                                                                    1502,
+                                                                    "point_bol":
+                                                                    1480
+                                                                    },
+                                                                    "stop": {
+                                                                    "byte": {
+                                                                    "pos_fname":
+                                                                    "../../test/contracts/multisig-v2.ligo",
+                                                                    "pos_lnum":
+                                                                    57,
+                                                                    "pos_bol":
+                                                                    1480,
+                                                                    "pos_cnum":
+                                                                    1531
+                                                                    },
+                                                                    "point_num":
+                                                                    1531,
+                                                                    "point_bol":
+                                                                    1480
+                                                                    }
+                                                                    }
+                                                                    ]
+                                                                    }
+                                                                    }
+                                                                    ],
+                                                                    "location": [
+                                                                    "File",
+                                                                    {
+                                                                    "start": {
+                                                                    "byte": {
+                                                                    "pos_fname":
+                                                                    "../../test/contracts/multisig-v2.ligo",
+                                                                    "pos_lnum":
+                                                                    57,
+                                                                    "pos_bol":
+                                                                    1480,
+                                                                    "pos_cnum":
+                                                                    1489
+                                                                    },
+                                                                    "point_num":
+                                                                    1489,
+                                                                    "point_bol":
+                                                                    1480
+                                                                    },
+                                                                    "stop": {
+                                                                    "byte": {
+                                                                    "pos_fname":
+                                                                    "../../test/contracts/multisig-v2.ligo",
+                                                                    "pos_lnum":
+                                                                    57,
+                                                                    "pos_bol":
+                                                                    1480,
+                                                                    "pos_cnum":
+                                                                    1531
+                                                                    },
+                                                                    "point_num":
+                                                                    1531,
                                                                     "point_bol":
                                                                     1480
                                                                     }
@@ -4764,14 +4932,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     58,
                                                                     "pos_bol":
-                                                                    1532,
+                                                                    1537,
                                                                     "pos_cnum":
-                                                                    1544
+                                                                    1549
                                                                     },
                                                                     "point_num":
-                                                                    1544,
+                                                                    1549,
                                                                     "point_bol":
-                                                                    1532
+                                                                    1537
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -4780,14 +4948,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     58,
                                                                     "pos_bol":
-                                                                    1532,
+                                                                    1537,
                                                                     "pos_cnum":
-                                                                    1550
+                                                                    1555
                                                                     },
                                                                     "point_num":
-                                                                    1550,
+                                                                    1555,
                                                                     "point_bol":
-                                                                    1532
+                                                                    1537
                                                                     }
                                                                     }
                                                                     ],
@@ -4844,14 +5012,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     63,
                                                                     "pos_bol":
-                                                                    1729,
+                                                                    1734,
                                                                     "pos_cnum":
-                                                                    1751
+                                                                    1756
                                                                     },
                                                                     "point_num":
-                                                                    1751,
+                                                                    1756,
                                                                     "point_bol":
-                                                                    1729
+                                                                    1734
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -4860,14 +5028,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     63,
                                                                     "pos_bol":
-                                                                    1729,
+                                                                    1734,
                                                                     "pos_cnum":
-                                                                    1763
+                                                                    1768
                                                                     },
                                                                     "point_num":
-                                                                    1763,
+                                                                    1768,
                                                                     "point_bol":
-                                                                    1729
+                                                                    1734
                                                                     }
                                                                     }
                                                                     ]
@@ -4890,14 +5058,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     63,
                                                                     "pos_bol":
-                                                                    1729,
+                                                                    1734,
                                                                     "pos_cnum":
-                                                                    1765
+                                                                    1770
                                                                     },
                                                                     "point_num":
-                                                                    1765,
+                                                                    1770,
                                                                     "point_bol":
-                                                                    1729
+                                                                    1734
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -4906,14 +5074,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     63,
                                                                     "pos_bol":
-                                                                    1729,
+                                                                    1734,
                                                                     "pos_cnum":
-                                                                    1771
+                                                                    1776
                                                                     },
                                                                     "point_num":
-                                                                    1771,
+                                                                    1776,
                                                                     "point_bol":
-                                                                    1729
+                                                                    1734
                                                                     }
                                                                     }
                                                                     ],
@@ -4931,14 +5099,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     63,
                                                                     "pos_bol":
-                                                                    1729,
+                                                                    1734,
                                                                     "pos_cnum":
-                                                                    1765
+                                                                    1770
                                                                     },
                                                                     "point_num":
-                                                                    1765,
+                                                                    1770,
                                                                     "point_bol":
-                                                                    1729
+                                                                    1734
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -4947,14 +5115,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     63,
                                                                     "pos_bol":
-                                                                    1729,
+                                                                    1734,
                                                                     "pos_cnum":
-                                                                    1771
+                                                                    1776
                                                                     },
                                                                     "point_num":
-                                                                    1771,
+                                                                    1776,
                                                                     "point_bol":
-                                                                    1729
+                                                                    1734
                                                                     }
                                                                     }
                                                                     ]
@@ -4972,14 +5140,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     63,
                                                                     "pos_bol":
-                                                                    1729,
+                                                                    1734,
                                                                     "pos_cnum":
-                                                                    1742
+                                                                    1747
                                                                     },
                                                                     "point_num":
-                                                                    1742,
+                                                                    1747,
                                                                     "point_bol":
-                                                                    1729
+                                                                    1734
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -4988,14 +5156,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     63,
                                                                     "pos_bol":
-                                                                    1729,
+                                                                    1734,
                                                                     "pos_cnum":
-                                                                    1772
+                                                                    1777
                                                                     },
                                                                     "point_num":
-                                                                    1772,
+                                                                    1777,
                                                                     "point_bol":
-                                                                    1729
+                                                                    1734
                                                                     }
                                                                     }
                                                                     ]
@@ -5015,14 +5183,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     64,
                                                                     "pos_bol":
-                                                                    1773,
+                                                                    1778,
                                                                     "pos_cnum":
-                                                                    1788
+                                                                    1793
                                                                     },
                                                                     "point_num":
-                                                                    1788,
+                                                                    1793,
                                                                     "point_bol":
-                                                                    1773
+                                                                    1778
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -5031,14 +5199,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     64,
                                                                     "pos_bol":
-                                                                    1773,
+                                                                    1778,
                                                                     "pos_cnum":
-                                                                    1792
+                                                                    1797
                                                                     },
                                                                     "point_num":
-                                                                    1792,
+                                                                    1797,
                                                                     "point_bol":
-                                                                    1773
+                                                                    1778
                                                                     }
                                                                     }
                                                                     ]
@@ -5062,14 +5230,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     65,
                                                                     "pos_bol":
-                                                                    1793,
+                                                                    1798,
                                                                     "pos_cnum":
-                                                                    1808
+                                                                    1813
                                                                     },
                                                                     "point_num":
-                                                                    1808,
+                                                                    1813,
                                                                     "point_bol":
-                                                                    1793
+                                                                    1798
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -5078,14 +5246,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     65,
                                                                     "pos_bol":
-                                                                    1793,
+                                                                    1798,
                                                                     "pos_cnum":
-                                                                    1809
+                                                                    1814
                                                                     },
                                                                     "point_num":
-                                                                    1809,
+                                                                    1814,
                                                                     "point_bol":
-                                                                    1793
+                                                                    1798
                                                                     }
                                                                     }
                                                                     ],
@@ -5116,14 +5284,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     65,
                                                                     "pos_bol":
-                                                                    1793,
+                                                                    1798,
                                                                     "pos_cnum":
-                                                                    1808
+                                                                    1813
                                                                     },
                                                                     "point_num":
-                                                                    1808,
+                                                                    1813,
                                                                     "point_bol":
-                                                                    1793
+                                                                    1798
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -5132,14 +5300,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     65,
                                                                     "pos_bol":
-                                                                    1793,
+                                                                    1798,
                                                                     "pos_cnum":
-                                                                    1809
+                                                                    1814
                                                                     },
                                                                     "point_num":
-                                                                    1809,
+                                                                    1814,
                                                                     "point_bol":
-                                                                    1793
+                                                                    1798
                                                                     }
                                                                     }
                                                                     ],
@@ -5157,14 +5325,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     65,
                                                                     "pos_bol":
-                                                                    1793,
+                                                                    1798,
                                                                     "pos_cnum":
-                                                                    1808
+                                                                    1813
                                                                     },
                                                                     "point_num":
-                                                                    1808,
+                                                                    1813,
                                                                     "point_bol":
-                                                                    1793
+                                                                    1798
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -5173,14 +5341,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     66,
                                                                     "pos_bol":
-                                                                    1845,
+                                                                    1850,
                                                                     "pos_cnum":
-                                                                    1912
+                                                                    1917
                                                                     },
                                                                     "point_num":
-                                                                    1912,
+                                                                    1917,
                                                                     "point_bol":
-                                                                    1845
+                                                                    1850
                                                                     }
                                                                     }
                                                                     ]
@@ -5226,14 +5394,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     65,
                                                                     "pos_bol":
-                                                                    1793,
+                                                                    1798,
                                                                     "pos_cnum":
-                                                                    1828
+                                                                    1833
                                                                     },
                                                                     "point_num":
-                                                                    1828,
+                                                                    1833,
                                                                     "point_bol":
-                                                                    1793
+                                                                    1798
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -5242,14 +5410,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     65,
                                                                     "pos_bol":
-                                                                    1793,
+                                                                    1798,
                                                                     "pos_cnum":
-                                                                    1840
+                                                                    1845
                                                                     },
                                                                     "point_num":
-                                                                    1840,
+                                                                    1845,
                                                                     "point_bol":
-                                                                    1793
+                                                                    1798
                                                                     }
                                                                     }
                                                                     ]
@@ -5304,14 +5472,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     66,
                                                                     "pos_bol":
-                                                                    1845,
+                                                                    1850,
                                                                     "pos_cnum":
-                                                                    1873
+                                                                    1878
                                                                     },
                                                                     "point_num":
-                                                                    1873,
+                                                                    1878,
                                                                     "point_bol":
-                                                                    1845
+                                                                    1850
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -5320,14 +5488,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     66,
                                                                     "pos_bol":
-                                                                    1845,
+                                                                    1850,
                                                                     "pos_cnum":
-                                                                    1885
+                                                                    1890
                                                                     },
                                                                     "point_num":
-                                                                    1885,
+                                                                    1890,
                                                                     "point_bol":
-                                                                    1845
+                                                                    1850
                                                                     }
                                                                     }
                                                                     ]
@@ -5354,14 +5522,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     66,
                                                                     "pos_bol":
-                                                                    1845,
+                                                                    1850,
                                                                     "pos_cnum":
-                                                                    1887
+                                                                    1892
                                                                     },
                                                                     "point_num":
-                                                                    1887,
+                                                                    1892,
                                                                     "point_bol":
-                                                                    1845
+                                                                    1850
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -5370,14 +5538,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     66,
                                                                     "pos_bol":
-                                                                    1845,
+                                                                    1850,
                                                                     "pos_cnum":
-                                                                    1888
+                                                                    1893
                                                                     },
                                                                     "point_num":
-                                                                    1888,
+                                                                    1893,
                                                                     "point_bol":
-                                                                    1845
+                                                                    1850
                                                                     }
                                                                     }
                                                                     ],
@@ -5395,14 +5563,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     66,
                                                                     "pos_bol":
-                                                                    1845,
+                                                                    1850,
                                                                     "pos_cnum":
-                                                                    1887
+                                                                    1892
                                                                     },
                                                                     "point_num":
-                                                                    1887,
+                                                                    1892,
                                                                     "point_bol":
-                                                                    1845
+                                                                    1850
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -5411,14 +5579,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     66,
                                                                     "pos_bol":
-                                                                    1845,
+                                                                    1850,
                                                                     "pos_cnum":
-                                                                    1888
+                                                                    1893
                                                                     },
                                                                     "point_num":
-                                                                    1888,
+                                                                    1893,
                                                                     "point_bol":
-                                                                    1845
+                                                                    1850
                                                                     }
                                                                     }
                                                                     ]
@@ -5441,14 +5609,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     66,
                                                                     "pos_bol":
-                                                                    1845,
+                                                                    1850,
                                                                     "pos_cnum":
-                                                                    1887
+                                                                    1892
                                                                     },
                                                                     "point_num":
-                                                                    1887,
+                                                                    1892,
                                                                     "point_bol":
-                                                                    1845
+                                                                    1850
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -5457,14 +5625,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     66,
                                                                     "pos_bol":
-                                                                    1845,
+                                                                    1850,
                                                                     "pos_cnum":
-                                                                    1906
+                                                                    1911
                                                                     },
                                                                     "point_num":
-                                                                    1906,
+                                                                    1911,
                                                                     "point_bol":
-                                                                    1845
+                                                                    1850
                                                                     }
                                                                     }
                                                                     ]
@@ -5482,14 +5650,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     66,
                                                                     "pos_bol":
-                                                                    1845,
+                                                                    1850,
                                                                     "pos_cnum":
-                                                                    1862
+                                                                    1867
                                                                     },
                                                                     "point_num":
-                                                                    1862,
+                                                                    1867,
                                                                     "point_bol":
-                                                                    1845
+                                                                    1850
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -5498,14 +5666,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     66,
                                                                     "pos_bol":
-                                                                    1845,
+                                                                    1850,
                                                                     "pos_cnum":
-                                                                    1907
+                                                                    1912
                                                                     },
                                                                     "point_num":
-                                                                    1907,
+                                                                    1912,
                                                                     "point_bol":
-                                                                    1845
+                                                                    1850
                                                                     }
                                                                     }
                                                                     ]
@@ -5528,14 +5696,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     66,
                                                                     "pos_bol":
-                                                                    1845,
+                                                                    1850,
                                                                     "pos_cnum":
-                                                                    1910
+                                                                    1915
                                                                     },
                                                                     "point_num":
-                                                                    1910,
+                                                                    1915,
                                                                     "point_bol":
-                                                                    1845
+                                                                    1850
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -5544,14 +5712,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     66,
                                                                     "pos_bol":
-                                                                    1845,
+                                                                    1850,
                                                                     "pos_cnum":
-                                                                    1912
+                                                                    1917
                                                                     },
                                                                     "point_num":
-                                                                    1912,
+                                                                    1917,
                                                                     "point_bol":
-                                                                    1845
+                                                                    1850
                                                                     }
                                                                     }
                                                                     ]
@@ -5569,14 +5737,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     66,
                                                                     "pos_bol":
-                                                                    1845,
+                                                                    1850,
                                                                     "pos_cnum":
-                                                                    1862
+                                                                    1867
                                                                     },
                                                                     "point_num":
-                                                                    1862,
+                                                                    1867,
                                                                     "point_bol":
-                                                                    1845
+                                                                    1850
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -5585,14 +5753,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     66,
                                                                     "pos_bol":
-                                                                    1845,
+                                                                    1850,
                                                                     "pos_cnum":
-                                                                    1912
+                                                                    1917
                                                                     },
                                                                     "point_num":
-                                                                    1912,
+                                                                    1917,
                                                                     "point_bol":
-                                                                    1845
+                                                                    1850
                                                                     }
                                                                     }
                                                                     ]
@@ -5619,14 +5787,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     65,
                                                                     "pos_bol":
-                                                                    1793,
+                                                                    1798,
                                                                     "pos_cnum":
-                                                                    1808
+                                                                    1813
                                                                     },
                                                                     "point_num":
-                                                                    1808,
+                                                                    1813,
                                                                     "point_bol":
-                                                                    1793
+                                                                    1798
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -5635,14 +5803,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     65,
                                                                     "pos_bol":
-                                                                    1793,
+                                                                    1798,
                                                                     "pos_cnum":
-                                                                    1809
+                                                                    1814
                                                                     },
                                                                     "point_num":
-                                                                    1809,
+                                                                    1814,
                                                                     "point_bol":
-                                                                    1793
+                                                                    1798
                                                                     }
                                                                     }
                                                                     ],
@@ -5660,14 +5828,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     65,
                                                                     "pos_bol":
-                                                                    1793,
+                                                                    1798,
                                                                     "pos_cnum":
-                                                                    1808
+                                                                    1813
                                                                     },
                                                                     "point_num":
-                                                                    1808,
+                                                                    1813,
                                                                     "point_bol":
-                                                                    1793
+                                                                    1798
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -5676,14 +5844,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     66,
                                                                     "pos_bol":
-                                                                    1845,
+                                                                    1850,
                                                                     "pos_cnum":
-                                                                    1912
+                                                                    1917
                                                                     },
                                                                     "point_num":
-                                                                    1912,
+                                                                    1917,
                                                                     "point_bol":
-                                                                    1845
+                                                                    1850
                                                                     }
                                                                     }
                                                                     ]
@@ -5706,14 +5874,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     65,
                                                                     "pos_bol":
-                                                                    1793,
+                                                                    1798,
                                                                     "pos_cnum":
-                                                                    1808
+                                                                    1813
                                                                     },
                                                                     "point_num":
-                                                                    1808,
+                                                                    1813,
                                                                     "point_bol":
-                                                                    1793
+                                                                    1798
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -5722,14 +5890,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     66,
                                                                     "pos_bol":
-                                                                    1845,
+                                                                    1850,
                                                                     "pos_cnum":
-                                                                    1912
+                                                                    1917
                                                                     },
                                                                     "point_num":
-                                                                    1912,
+                                                                    1917,
                                                                     "point_bol":
-                                                                    1845
+                                                                    1850
                                                                     }
                                                                     }
                                                                     ]
@@ -5747,14 +5915,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     65,
                                                                     "pos_bol":
-                                                                    1793,
+                                                                    1798,
                                                                     "pos_cnum":
-                                                                    1808
+                                                                    1813
                                                                     },
                                                                     "point_num":
-                                                                    1808,
+                                                                    1813,
                                                                     "point_bol":
-                                                                    1793
+                                                                    1798
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -5763,14 +5931,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     66,
                                                                     "pos_bol":
-                                                                    1845,
+                                                                    1850,
                                                                     "pos_cnum":
-                                                                    1912
+                                                                    1917
                                                                     },
                                                                     "point_num":
-                                                                    1912,
+                                                                    1917,
                                                                     "point_bol":
-                                                                    1845
+                                                                    1850
                                                                     }
                                                                     }
                                                                     ]
@@ -5787,14 +5955,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     65,
                                                                     "pos_bol":
-                                                                    1793,
+                                                                    1798,
                                                                     "pos_cnum":
-                                                                    1808
+                                                                    1813
                                                                     },
                                                                     "point_num":
-                                                                    1808,
+                                                                    1813,
                                                                     "point_bol":
-                                                                    1793
+                                                                    1798
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -5803,14 +5971,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     66,
                                                                     "pos_bol":
-                                                                    1845,
+                                                                    1850,
                                                                     "pos_cnum":
-                                                                    1912
+                                                                    1917
                                                                     },
                                                                     "point_num":
-                                                                    1912,
+                                                                    1917,
                                                                     "point_bol":
-                                                                    1845
+                                                                    1850
                                                                     }
                                                                     }
                                                                     ]
@@ -5827,14 +5995,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     65,
                                                                     "pos_bol":
-                                                                    1793,
+                                                                    1798,
                                                                     "pos_cnum":
-                                                                    1808
+                                                                    1813
                                                                     },
                                                                     "point_num":
-                                                                    1808,
+                                                                    1813,
                                                                     "point_bol":
-                                                                    1793
+                                                                    1798
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -5843,14 +6011,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     66,
                                                                     "pos_bol":
-                                                                    1845,
+                                                                    1850,
                                                                     "pos_cnum":
-                                                                    1912
+                                                                    1917
                                                                     },
                                                                     "point_num":
-                                                                    1912,
+                                                                    1917,
                                                                     "point_bol":
-                                                                    1845
+                                                                    1850
                                                                     }
                                                                     }
                                                                     ]
@@ -5867,14 +6035,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     63,
                                                                     "pos_bol":
-                                                                    1729,
+                                                                    1734,
                                                                     "pos_cnum":
-                                                                    1739
+                                                                    1744
                                                                     },
                                                                     "point_num":
-                                                                    1739,
+                                                                    1744,
                                                                     "point_bol":
-                                                                    1729
+                                                                    1734
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -5883,14 +6051,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     66,
                                                                     "pos_bol":
-                                                                    1845,
+                                                                    1850,
                                                                     "pos_cnum":
-                                                                    1912
+                                                                    1917
                                                                     },
                                                                     "point_num":
-                                                                    1912,
+                                                                    1917,
                                                                     "point_bol":
-                                                                    1845
+                                                                    1850
                                                                     }
                                                                     }
                                                                     ]
@@ -5914,14 +6082,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     67,
                                                                     "pos_bol":
-                                                                    1914,
+                                                                    1919,
                                                                     "pos_cnum":
-                                                                    1931
+                                                                    1936
                                                                     },
                                                                     "point_num":
-                                                                    1931,
+                                                                    1936,
                                                                     "point_bol":
-                                                                    1914
+                                                                    1919
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -5930,14 +6098,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     67,
                                                                     "pos_bol":
-                                                                    1914,
+                                                                    1919,
                                                                     "pos_cnum":
-                                                                    1940
+                                                                    1945
                                                                     },
                                                                     "point_num":
-                                                                    1940,
+                                                                    1945,
                                                                     "point_bol":
-                                                                    1914
+                                                                    1919
                                                                     }
                                                                     }
                                                                     ],
@@ -5981,14 +6149,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     67,
                                                                     "pos_bol":
-                                                                    1914,
+                                                                    1919,
                                                                     "pos_cnum":
-                                                                    1953
+                                                                    1958
                                                                     },
                                                                     "point_num":
-                                                                    1953,
+                                                                    1958,
                                                                     "point_bol":
-                                                                    1914
+                                                                    1919
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -5997,14 +6165,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     67,
                                                                     "pos_bol":
-                                                                    1914,
+                                                                    1919,
                                                                     "pos_cnum":
-                                                                    1965
+                                                                    1970
                                                                     },
                                                                     "point_num":
-                                                                    1965,
+                                                                    1970,
                                                                     "point_bol":
-                                                                    1914
+                                                                    1919
                                                                     }
                                                                     }
                                                                     ]
@@ -6027,14 +6195,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     67,
                                                                     "pos_bol":
-                                                                    1914,
+                                                                    1919,
                                                                     "pos_cnum":
-                                                                    1966
+                                                                    1971
                                                                     },
                                                                     "point_num":
-                                                                    1966,
+                                                                    1971,
                                                                     "point_bol":
-                                                                    1914
+                                                                    1919
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -6043,14 +6211,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     67,
                                                                     "pos_bol":
-                                                                    1914,
+                                                                    1919,
                                                                     "pos_cnum":
-                                                                    1972
+                                                                    1977
                                                                     },
                                                                     "point_num":
-                                                                    1972,
+                                                                    1977,
                                                                     "point_bol":
-                                                                    1914
+                                                                    1919
                                                                     }
                                                                     }
                                                                     ],
@@ -6068,14 +6236,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     67,
                                                                     "pos_bol":
-                                                                    1914,
+                                                                    1919,
                                                                     "pos_cnum":
-                                                                    1966
+                                                                    1971
                                                                     },
                                                                     "point_num":
-                                                                    1966,
+                                                                    1971,
                                                                     "point_bol":
-                                                                    1914
+                                                                    1919
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -6084,14 +6252,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     67,
                                                                     "pos_bol":
-                                                                    1914,
+                                                                    1919,
                                                                     "pos_cnum":
-                                                                    1972
+                                                                    1977
                                                                     },
                                                                     "point_num":
-                                                                    1972,
+                                                                    1977,
                                                                     "point_bol":
-                                                                    1914
+                                                                    1919
                                                                     }
                                                                     }
                                                                     ]
@@ -6109,14 +6277,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     67,
                                                                     "pos_bol":
-                                                                    1914,
+                                                                    1919,
                                                                     "pos_cnum":
-                                                                    1944
+                                                                    1949
                                                                     },
                                                                     "point_num":
-                                                                    1944,
+                                                                    1949,
                                                                     "point_bol":
-                                                                    1914
+                                                                    1919
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -6125,14 +6293,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     67,
                                                                     "pos_bol":
-                                                                    1914,
+                                                                    1919,
                                                                     "pos_cnum":
-                                                                    1973
+                                                                    1978
                                                                     },
                                                                     "point_num":
-                                                                    1973,
+                                                                    1978,
                                                                     "point_bol":
-                                                                    1914
+                                                                    1919
                                                                     }
                                                                     }
                                                                     ]
@@ -6149,14 +6317,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     67,
                                                                     "pos_bol":
-                                                                    1914,
+                                                                    1919,
                                                                     "pos_cnum":
-                                                                    1931
+                                                                    1936
                                                                     },
                                                                     "point_num":
-                                                                    1931,
+                                                                    1936,
                                                                     "point_bol":
-                                                                    1914
+                                                                    1919
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -6165,14 +6333,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     67,
                                                                     "pos_bol":
-                                                                    1914,
+                                                                    1919,
                                                                     "pos_cnum":
-                                                                    1973
+                                                                    1978
                                                                     },
                                                                     "point_num":
-                                                                    1973,
+                                                                    1978,
                                                                     "point_bol":
-                                                                    1914
+                                                                    1919
                                                                     }
                                                                     }
                                                                     ]
@@ -6220,14 +6388,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     72,
                                                                     "pos_bol":
-                                                                    2070,
+                                                                    2075,
                                                                     "pos_cnum":
-                                                                    2080
+                                                                    2085
                                                                     },
                                                                     "point_num":
-                                                                    2080,
+                                                                    2085,
                                                                     "point_bol":
-                                                                    2070
+                                                                    2075
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -6236,14 +6404,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     72,
                                                                     "pos_bol":
-                                                                    2070,
+                                                                    2075,
                                                                     "pos_cnum":
-                                                                    2081
+                                                                    2086
                                                                     },
                                                                     "point_num":
-                                                                    2081,
+                                                                    2086,
                                                                     "point_bol":
-                                                                    2070
+                                                                    2075
                                                                     }
                                                                     }
                                                                     ],
@@ -6274,14 +6442,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     72,
                                                                     "pos_bol":
-                                                                    2070,
+                                                                    2075,
                                                                     "pos_cnum":
-                                                                    2080
+                                                                    2085
                                                                     },
                                                                     "point_num":
-                                                                    2080,
+                                                                    2085,
                                                                     "point_bol":
-                                                                    2070
+                                                                    2075
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -6290,14 +6458,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     72,
                                                                     "pos_bol":
-                                                                    2070,
+                                                                    2075,
                                                                     "pos_cnum":
-                                                                    2081
+                                                                    2086
                                                                     },
                                                                     "point_num":
-                                                                    2081,
+                                                                    2086,
                                                                     "point_bol":
-                                                                    2070
+                                                                    2075
                                                                     }
                                                                     }
                                                                     ],
@@ -6315,14 +6483,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     72,
                                                                     "pos_bol":
-                                                                    2070,
+                                                                    2075,
                                                                     "pos_cnum":
-                                                                    2080
+                                                                    2085
                                                                     },
                                                                     "point_num":
-                                                                    2080,
+                                                                    2085,
                                                                     "point_bol":
-                                                                    2070
+                                                                    2075
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -6331,14 +6499,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     73,
                                                                     "pos_bol":
-                                                                    2111,
+                                                                    2116,
                                                                     "pos_cnum":
-                                                                    2174
+                                                                    2179
                                                                     },
                                                                     "point_num":
-                                                                    2174,
+                                                                    2179,
                                                                     "point_bol":
-                                                                    2111
+                                                                    2116
                                                                     }
                                                                     }
                                                                     ]
@@ -6388,14 +6556,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     72,
                                                                     "pos_bol":
-                                                                    2070,
+                                                                    2075,
                                                                     "pos_cnum":
-                                                                    2100
+                                                                    2105
                                                                     },
                                                                     "point_num":
-                                                                    2100,
+                                                                    2105,
                                                                     "point_bol":
-                                                                    2070
+                                                                    2075
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -6404,14 +6572,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     72,
                                                                     "pos_bol":
-                                                                    2070,
+                                                                    2075,
                                                                     "pos_cnum":
-                                                                    2106
+                                                                    2111
                                                                     },
                                                                     "point_num":
-                                                                    2106,
+                                                                    2111,
                                                                     "point_bol":
-                                                                    2070
+                                                                    2075
                                                                     }
                                                                     }
                                                                     ]
@@ -6466,14 +6634,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     73,
                                                                     "pos_bol":
-                                                                    2111,
+                                                                    2116,
                                                                     "pos_cnum":
-                                                                    2135
+                                                                    2140
                                                                     },
                                                                     "point_num":
-                                                                    2135,
+                                                                    2140,
                                                                     "point_bol":
-                                                                    2111
+                                                                    2116
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -6482,14 +6650,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     73,
                                                                     "pos_bol":
-                                                                    2111,
+                                                                    2116,
                                                                     "pos_cnum":
-                                                                    2147
+                                                                    2152
                                                                     },
                                                                     "point_num":
-                                                                    2147,
+                                                                    2152,
                                                                     "point_bol":
-                                                                    2111
+                                                                    2116
                                                                     }
                                                                     }
                                                                     ]
@@ -6516,14 +6684,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     73,
                                                                     "pos_bol":
-                                                                    2111,
+                                                                    2116,
                                                                     "pos_cnum":
-                                                                    2149
+                                                                    2154
                                                                     },
                                                                     "point_num":
-                                                                    2149,
+                                                                    2154,
                                                                     "point_bol":
-                                                                    2111
+                                                                    2116
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -6532,14 +6700,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     73,
                                                                     "pos_bol":
-                                                                    2111,
+                                                                    2116,
                                                                     "pos_cnum":
-                                                                    2150
+                                                                    2155
                                                                     },
                                                                     "point_num":
-                                                                    2150,
+                                                                    2155,
                                                                     "point_bol":
-                                                                    2111
+                                                                    2116
                                                                     }
                                                                     }
                                                                     ],
@@ -6557,14 +6725,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     73,
                                                                     "pos_bol":
-                                                                    2111,
+                                                                    2116,
                                                                     "pos_cnum":
-                                                                    2149
+                                                                    2154
                                                                     },
                                                                     "point_num":
-                                                                    2149,
+                                                                    2154,
                                                                     "point_bol":
-                                                                    2111
+                                                                    2116
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -6573,14 +6741,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     73,
                                                                     "pos_bol":
-                                                                    2111,
+                                                                    2116,
                                                                     "pos_cnum":
-                                                                    2150
+                                                                    2155
                                                                     },
                                                                     "point_num":
-                                                                    2150,
+                                                                    2155,
                                                                     "point_bol":
-                                                                    2111
+                                                                    2116
                                                                     }
                                                                     }
                                                                     ]
@@ -6603,14 +6771,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     73,
                                                                     "pos_bol":
-                                                                    2111,
+                                                                    2116,
                                                                     "pos_cnum":
-                                                                    2149
+                                                                    2154
                                                                     },
                                                                     "point_num":
-                                                                    2149,
+                                                                    2154,
                                                                     "point_bol":
-                                                                    2111
+                                                                    2116
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -6619,14 +6787,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     73,
                                                                     "pos_bol":
-                                                                    2111,
+                                                                    2116,
                                                                     "pos_cnum":
-                                                                    2168
+                                                                    2173
                                                                     },
                                                                     "point_num":
-                                                                    2168,
+                                                                    2173,
                                                                     "point_bol":
-                                                                    2111
+                                                                    2116
                                                                     }
                                                                     }
                                                                     ]
@@ -6644,14 +6812,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     73,
                                                                     "pos_bol":
-                                                                    2111,
+                                                                    2116,
                                                                     "pos_cnum":
-                                                                    2124
+                                                                    2129
                                                                     },
                                                                     "point_num":
-                                                                    2124,
+                                                                    2129,
                                                                     "point_bol":
-                                                                    2111
+                                                                    2116
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -6660,14 +6828,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     73,
                                                                     "pos_bol":
-                                                                    2111,
+                                                                    2116,
                                                                     "pos_cnum":
-                                                                    2169
+                                                                    2174
                                                                     },
                                                                     "point_num":
-                                                                    2169,
+                                                                    2174,
                                                                     "point_bol":
-                                                                    2111
+                                                                    2116
                                                                     }
                                                                     }
                                                                     ]
@@ -6690,14 +6858,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     73,
                                                                     "pos_bol":
-                                                                    2111,
+                                                                    2116,
                                                                     "pos_cnum":
-                                                                    2172
+                                                                    2177
                                                                     },
                                                                     "point_num":
-                                                                    2172,
+                                                                    2177,
                                                                     "point_bol":
-                                                                    2111
+                                                                    2116
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -6706,14 +6874,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     73,
                                                                     "pos_bol":
-                                                                    2111,
+                                                                    2116,
                                                                     "pos_cnum":
-                                                                    2174
+                                                                    2179
                                                                     },
                                                                     "point_num":
-                                                                    2174,
+                                                                    2179,
                                                                     "point_bol":
-                                                                    2111
+                                                                    2116
                                                                     }
                                                                     }
                                                                     ]
@@ -6731,14 +6899,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     73,
                                                                     "pos_bol":
-                                                                    2111,
+                                                                    2116,
                                                                     "pos_cnum":
-                                                                    2124
+                                                                    2129
                                                                     },
                                                                     "point_num":
-                                                                    2124,
+                                                                    2129,
                                                                     "point_bol":
-                                                                    2111
+                                                                    2116
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -6747,14 +6915,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     73,
                                                                     "pos_bol":
-                                                                    2111,
+                                                                    2116,
                                                                     "pos_cnum":
-                                                                    2174
+                                                                    2179
                                                                     },
                                                                     "point_num":
-                                                                    2174,
+                                                                    2179,
                                                                     "point_bol":
-                                                                    2111
+                                                                    2116
                                                                     }
                                                                     }
                                                                     ]
@@ -6781,14 +6949,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     72,
                                                                     "pos_bol":
-                                                                    2070,
+                                                                    2075,
                                                                     "pos_cnum":
-                                                                    2080
+                                                                    2085
                                                                     },
                                                                     "point_num":
-                                                                    2080,
+                                                                    2085,
                                                                     "point_bol":
-                                                                    2070
+                                                                    2075
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -6797,14 +6965,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     72,
                                                                     "pos_bol":
-                                                                    2070,
+                                                                    2075,
                                                                     "pos_cnum":
-                                                                    2081
+                                                                    2086
                                                                     },
                                                                     "point_num":
-                                                                    2081,
+                                                                    2086,
                                                                     "point_bol":
-                                                                    2070
+                                                                    2075
                                                                     }
                                                                     }
                                                                     ],
@@ -6822,14 +6990,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     72,
                                                                     "pos_bol":
-                                                                    2070,
+                                                                    2075,
                                                                     "pos_cnum":
-                                                                    2080
+                                                                    2085
                                                                     },
                                                                     "point_num":
-                                                                    2080,
+                                                                    2085,
                                                                     "point_bol":
-                                                                    2070
+                                                                    2075
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -6838,14 +7006,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     73,
                                                                     "pos_bol":
-                                                                    2111,
+                                                                    2116,
                                                                     "pos_cnum":
-                                                                    2174
+                                                                    2179
                                                                     },
                                                                     "point_num":
-                                                                    2174,
+                                                                    2179,
                                                                     "point_bol":
-                                                                    2111
+                                                                    2116
                                                                     }
                                                                     }
                                                                     ]
@@ -6868,14 +7036,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     72,
                                                                     "pos_bol":
-                                                                    2070,
+                                                                    2075,
                                                                     "pos_cnum":
-                                                                    2080
+                                                                    2085
                                                                     },
                                                                     "point_num":
-                                                                    2080,
+                                                                    2085,
                                                                     "point_bol":
-                                                                    2070
+                                                                    2075
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -6884,14 +7052,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     73,
                                                                     "pos_bol":
-                                                                    2111,
+                                                                    2116,
                                                                     "pos_cnum":
-                                                                    2174
+                                                                    2179
                                                                     },
                                                                     "point_num":
-                                                                    2174,
+                                                                    2179,
                                                                     "point_bol":
-                                                                    2111
+                                                                    2116
                                                                     }
                                                                     }
                                                                     ]
@@ -6909,14 +7077,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     72,
                                                                     "pos_bol":
-                                                                    2070,
+                                                                    2075,
                                                                     "pos_cnum":
-                                                                    2080
+                                                                    2085
                                                                     },
                                                                     "point_num":
-                                                                    2080,
+                                                                    2085,
                                                                     "point_bol":
-                                                                    2070
+                                                                    2075
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -6925,14 +7093,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     73,
                                                                     "pos_bol":
-                                                                    2111,
+                                                                    2116,
                                                                     "pos_cnum":
-                                                                    2174
+                                                                    2179
                                                                     },
                                                                     "point_num":
-                                                                    2174,
+                                                                    2179,
                                                                     "point_bol":
-                                                                    2111
+                                                                    2116
                                                                     }
                                                                     }
                                                                     ]
@@ -6949,14 +7117,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     72,
                                                                     "pos_bol":
-                                                                    2070,
+                                                                    2075,
                                                                     "pos_cnum":
-                                                                    2080
+                                                                    2085
                                                                     },
                                                                     "point_num":
-                                                                    2080,
+                                                                    2085,
                                                                     "point_bol":
-                                                                    2070
+                                                                    2075
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -6965,14 +7133,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     73,
                                                                     "pos_bol":
-                                                                    2111,
+                                                                    2116,
                                                                     "pos_cnum":
-                                                                    2174
+                                                                    2179
                                                                     },
                                                                     "point_num":
-                                                                    2174,
+                                                                    2179,
                                                                     "point_bol":
-                                                                    2111
+                                                                    2116
                                                                     }
                                                                     }
                                                                     ]
@@ -6989,14 +7157,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     72,
                                                                     "pos_bol":
-                                                                    2070,
+                                                                    2075,
                                                                     "pos_cnum":
-                                                                    2080
+                                                                    2085
                                                                     },
                                                                     "point_num":
-                                                                    2080,
+                                                                    2085,
                                                                     "point_bol":
-                                                                    2070
+                                                                    2075
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -7005,14 +7173,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     73,
                                                                     "pos_bol":
-                                                                    2111,
+                                                                    2116,
                                                                     "pos_cnum":
-                                                                    2174
+                                                                    2179
                                                                     },
                                                                     "point_num":
-                                                                    2174,
+                                                                    2179,
                                                                     "point_bol":
-                                                                    2111
+                                                                    2116
                                                                     }
                                                                     }
                                                                     ]
@@ -7036,14 +7204,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     74,
                                                                     "pos_bol":
-                                                                    2176,
+                                                                    2181,
                                                                     "pos_cnum":
-                                                                    2189
+                                                                    2194
                                                                     },
                                                                     "point_num":
-                                                                    2189,
+                                                                    2194,
                                                                     "point_bol":
-                                                                    2176
+                                                                    2181
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -7052,14 +7220,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     74,
                                                                     "pos_bol":
-                                                                    2176,
+                                                                    2181,
                                                                     "pos_cnum":
-                                                                    2198
+                                                                    2203
                                                                     },
                                                                     "point_num":
-                                                                    2198,
+                                                                    2203,
                                                                     "point_bol":
-                                                                    2176
+                                                                    2181
                                                                     }
                                                                     }
                                                                     ],
@@ -7096,14 +7264,54 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     74,
                                                                     "pos_bol":
-                                                                    2176,
+                                                                    2181,
+                                                                    "pos_cnum":
+                                                                    2212
+                                                                    },
+                                                                    "point_num":
+                                                                    2212,
+                                                                    "point_bol":
+                                                                    2181
+                                                                    },
+                                                                    "stop": {
+                                                                    "byte": {
+                                                                    "pos_fname":
+                                                                    "../../test/contracts/multisig-v2.ligo",
+                                                                    "pos_lnum":
+                                                                    74,
+                                                                    "pos_bol":
+                                                                    2181,
+                                                                    "pos_cnum":
+                                                                    2224
+                                                                    },
+                                                                    "point_num":
+                                                                    2224,
+                                                                    "point_bol":
+                                                                    2181
+                                                                    }
+                                                                    }
+                                                                    ]
+                                                                    }
+                                                                    ]
+                                                                    ],
+                                                                    "location": [
+                                                                    "File",
+                                                                    {
+                                                                    "start": {
+                                                                    "byte": {
+                                                                    "pos_fname":
+                                                                    "../../test/contracts/multisig-v2.ligo",
+                                                                    "pos_lnum":
+                                                                    74,
+                                                                    "pos_bol":
+                                                                    2181,
                                                                     "pos_cnum":
                                                                     2207
                                                                     },
                                                                     "point_num":
                                                                     2207,
                                                                     "point_bol":
-                                                                    2176
+                                                                    2181
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -7112,54 +7320,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     74,
                                                                     "pos_bol":
-                                                                    2176,
+                                                                    2181,
                                                                     "pos_cnum":
-                                                                    2219
+                                                                    2225
                                                                     },
                                                                     "point_num":
-                                                                    2219,
+                                                                    2225,
                                                                     "point_bol":
-                                                                    2176
-                                                                    }
-                                                                    }
-                                                                    ]
-                                                                    }
-                                                                    ]
-                                                                    ],
-                                                                    "location": [
-                                                                    "File",
-                                                                    {
-                                                                    "start": {
-                                                                    "byte": {
-                                                                    "pos_fname":
-                                                                    "../../test/contracts/multisig-v2.ligo",
-                                                                    "pos_lnum":
-                                                                    74,
-                                                                    "pos_bol":
-                                                                    2176,
-                                                                    "pos_cnum":
-                                                                    2202
-                                                                    },
-                                                                    "point_num":
-                                                                    2202,
-                                                                    "point_bol":
-                                                                    2176
-                                                                    },
-                                                                    "stop": {
-                                                                    "byte": {
-                                                                    "pos_fname":
-                                                                    "../../test/contracts/multisig-v2.ligo",
-                                                                    "pos_lnum":
-                                                                    74,
-                                                                    "pos_bol":
-                                                                    2176,
-                                                                    "pos_cnum":
-                                                                    2220
-                                                                    },
-                                                                    "point_num":
-                                                                    2220,
-                                                                    "point_bol":
-                                                                    2176
+                                                                    2181
                                                                     }
                                                                     }
                                                                     ]
@@ -7176,14 +7344,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     74,
                                                                     "pos_bol":
-                                                                    2176,
+                                                                    2181,
                                                                     "pos_cnum":
-                                                                    2189
+                                                                    2194
                                                                     },
                                                                     "point_num":
-                                                                    2189,
+                                                                    2194,
                                                                     "point_bol":
-                                                                    2176
+                                                                    2181
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -7192,14 +7360,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     74,
                                                                     "pos_bol":
-                                                                    2176,
+                                                                    2181,
                                                                     "pos_cnum":
-                                                                    2220
+                                                                    2225
                                                                     },
                                                                     "point_num":
-                                                                    2220,
+                                                                    2225,
                                                                     "point_bol":
-                                                                    2176
+                                                                    2181
                                                                     }
                                                                     }
                                                                     ]
@@ -7241,14 +7409,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     76,
                                                                     "pos_bol":
-                                                                    2231,
+                                                                    2236,
                                                                     "pos_cnum":
-                                                                    2236
+                                                                    2241
                                                                     },
                                                                     "point_num":
-                                                                    2236,
+                                                                    2241,
                                                                     "point_bol":
-                                                                    2231
+                                                                    2236
                                                                   }
                                                                 }
                                                               ]
@@ -7273,14 +7441,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     80,
                                                                     "pos_bol":
-                                                                    2308,
+                                                                    2313,
                                                                     "pos_cnum":
-                                                                    2316
+                                                                    2321
                                                                     },
                                                                     "point_num":
-                                                                    2316,
+                                                                    2321,
                                                                     "point_bol":
-                                                                    2308
+                                                                    2313
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -7289,14 +7457,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     80,
                                                                     "pos_bol":
-                                                                    2308,
+                                                                    2313,
                                                                     "pos_cnum":
-                                                                    2339
+                                                                    2344
                                                                     },
                                                                     "point_num":
-                                                                    2339,
+                                                                    2344,
                                                                     "point_bol":
-                                                                    2308
+                                                                    2313
                                                                     }
                                                                     }
                                                                     ],
@@ -7329,14 +7497,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     80,
                                                                     "pos_bol":
-                                                                    2308,
+                                                                    2313,
                                                                     "pos_cnum":
-                                                                    2342
+                                                                    2347
                                                                     },
                                                                     "point_num":
-                                                                    2342,
+                                                                    2347,
                                                                     "point_bol":
-                                                                    2308
+                                                                    2313
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -7345,14 +7513,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     80,
                                                                     "pos_bol":
-                                                                    2308,
+                                                                    2313,
                                                                     "pos_cnum":
-                                                                    2345
+                                                                    2350
                                                                     },
                                                                     "point_num":
-                                                                    2345,
+                                                                    2350,
                                                                     "point_bol":
-                                                                    2308
+                                                                    2313
                                                                     }
                                                                     }
                                                                     ]
@@ -7399,14 +7567,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     81,
                                                                     "pos_bol":
-                                                                    2349,
+                                                                    2354,
                                                                     "pos_cnum":
-                                                                    2366
+                                                                    2371
                                                                     },
                                                                     "point_num":
-                                                                    2366,
+                                                                    2371,
                                                                     "point_bol":
-                                                                    2349
+                                                                    2354
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -7415,14 +7583,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     81,
                                                                     "pos_bol":
-                                                                    2349,
+                                                                    2354,
                                                                     "pos_cnum":
-                                                                    2378
+                                                                    2383
                                                                     },
                                                                     "point_num":
-                                                                    2378,
+                                                                    2383,
                                                                     "point_bol":
-                                                                    2349
+                                                                    2354
                                                                     }
                                                                     }
                                                                     ]
@@ -7449,14 +7617,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     81,
                                                                     "pos_bol":
-                                                                    2349,
+                                                                    2354,
                                                                     "pos_cnum":
-                                                                    2380
+                                                                    2385
                                                                     },
                                                                     "point_num":
-                                                                    2380,
+                                                                    2385,
                                                                     "point_bol":
-                                                                    2349
+                                                                    2354
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -7465,14 +7633,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     81,
                                                                     "pos_bol":
-                                                                    2349,
+                                                                    2354,
                                                                     "pos_cnum":
-                                                                    2381
+                                                                    2386
                                                                     },
                                                                     "point_num":
-                                                                    2381,
+                                                                    2386,
                                                                     "point_bol":
-                                                                    2349
+                                                                    2354
                                                                     }
                                                                     }
                                                                     ],
@@ -7490,14 +7658,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     81,
                                                                     "pos_bol":
-                                                                    2349,
+                                                                    2354,
                                                                     "pos_cnum":
-                                                                    2380
+                                                                    2385
                                                                     },
                                                                     "point_num":
-                                                                    2380,
+                                                                    2385,
                                                                     "point_bol":
-                                                                    2349
+                                                                    2354
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -7506,14 +7674,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     81,
                                                                     "pos_bol":
-                                                                    2349,
+                                                                    2354,
                                                                     "pos_cnum":
-                                                                    2381
+                                                                    2386
                                                                     },
                                                                     "point_num":
-                                                                    2381,
+                                                                    2386,
                                                                     "point_bol":
-                                                                    2349
+                                                                    2354
                                                                     }
                                                                     }
                                                                     ]
@@ -7536,14 +7704,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     81,
                                                                     "pos_bol":
-                                                                    2349,
+                                                                    2354,
                                                                     "pos_cnum":
-                                                                    2380
+                                                                    2385
                                                                     },
                                                                     "point_num":
-                                                                    2380,
+                                                                    2385,
                                                                     "point_bol":
-                                                                    2349
+                                                                    2354
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -7552,14 +7720,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     81,
                                                                     "pos_bol":
-                                                                    2349,
+                                                                    2354,
                                                                     "pos_cnum":
-                                                                    2399
+                                                                    2404
                                                                     },
                                                                     "point_num":
-                                                                    2399,
+                                                                    2404,
                                                                     "point_bol":
-                                                                    2349
+                                                                    2354
                                                                     }
                                                                     }
                                                                     ]
@@ -7577,14 +7745,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     81,
                                                                     "pos_bol":
-                                                                    2349,
+                                                                    2354,
                                                                     "pos_cnum":
-                                                                    2355
+                                                                    2360
                                                                     },
                                                                     "point_num":
-                                                                    2355,
+                                                                    2360,
                                                                     "point_bol":
-                                                                    2349
+                                                                    2354
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -7593,14 +7761,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     81,
                                                                     "pos_bol":
-                                                                    2349,
+                                                                    2354,
                                                                     "pos_cnum":
-                                                                    2400
+                                                                    2405
                                                                     },
                                                                     "point_num":
-                                                                    2400,
+                                                                    2405,
                                                                     "point_bol":
-                                                                    2349
+                                                                    2354
                                                                     }
                                                                     }
                                                                     ]
@@ -7642,14 +7810,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     83,
                                                                     "pos_bol":
-                                                                    2403,
+                                                                    2408,
                                                                     "pos_cnum":
-                                                                    2410
+                                                                    2415
                                                                     },
                                                                     "point_num":
-                                                                    2410,
+                                                                    2415,
                                                                     "point_bol":
-                                                                    2403
+                                                                    2408
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -7658,14 +7826,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     83,
                                                                     "pos_bol":
-                                                                    2403,
+                                                                    2408,
                                                                     "pos_cnum":
-                                                                    2433
+                                                                    2438
                                                                     },
                                                                     "point_num":
-                                                                    2433,
+                                                                    2438,
                                                                     "point_bol":
-                                                                    2403
+                                                                    2408
                                                                     }
                                                                     }
                                                                     ],
@@ -7683,14 +7851,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     83,
                                                                     "pos_bol":
-                                                                    2403,
+                                                                    2408,
                                                                     "pos_cnum":
-                                                                    2410
+                                                                    2415
                                                                     },
                                                                     "point_num":
-                                                                    2410,
+                                                                    2415,
                                                                     "point_bol":
-                                                                    2403
+                                                                    2408
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -7699,14 +7867,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     83,
                                                                     "pos_bol":
-                                                                    2403,
+                                                                    2408,
                                                                     "pos_cnum":
-                                                                    2433
+                                                                    2438
                                                                     },
                                                                     "point_num":
-                                                                    2433,
+                                                                    2438,
                                                                     "point_bol":
-                                                                    2403
+                                                                    2408
                                                                     }
                                                                     }
                                                                     ]
@@ -7733,14 +7901,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     83,
                                                                     "pos_bol":
-                                                                    2403,
+                                                                    2408,
                                                                     "pos_cnum":
-                                                                    2436
+                                                                    2441
                                                                     },
                                                                     "point_num":
-                                                                    2436,
+                                                                    2441,
                                                                     "point_bol":
-                                                                    2403
+                                                                    2408
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -7749,14 +7917,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     83,
                                                                     "pos_bol":
-                                                                    2403,
+                                                                    2408,
                                                                     "pos_cnum":
-                                                                    2437
+                                                                    2442
                                                                     },
                                                                     "point_num":
-                                                                    2437,
+                                                                    2442,
                                                                     "point_bol":
-                                                                    2403
+                                                                    2408
                                                                     }
                                                                     }
                                                                     ],
@@ -7774,14 +7942,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     83,
                                                                     "pos_bol":
-                                                                    2403,
+                                                                    2408,
                                                                     "pos_cnum":
-                                                                    2436
+                                                                    2441
                                                                     },
                                                                     "point_num":
-                                                                    2436,
+                                                                    2441,
                                                                     "point_bol":
-                                                                    2403
+                                                                    2408
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -7790,14 +7958,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     83,
                                                                     "pos_bol":
-                                                                    2403,
+                                                                    2408,
                                                                     "pos_cnum":
-                                                                    2437
+                                                                    2442
                                                                     },
                                                                     "point_num":
-                                                                    2437,
+                                                                    2442,
                                                                     "point_bol":
-                                                                    2403
+                                                                    2408
                                                                     }
                                                                     }
                                                                     ]
@@ -7820,14 +7988,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     83,
                                                                     "pos_bol":
-                                                                    2403,
+                                                                    2408,
                                                                     "pos_cnum":
-                                                                    2436
+                                                                    2441
                                                                     },
                                                                     "point_num":
-                                                                    2436,
+                                                                    2441,
                                                                     "point_bol":
-                                                                    2403
+                                                                    2408
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -7836,14 +8004,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     83,
                                                                     "pos_bol":
-                                                                    2403,
+                                                                    2408,
                                                                     "pos_cnum":
-                                                                    2450
+                                                                    2455
                                                                     },
                                                                     "point_num":
-                                                                    2450,
+                                                                    2455,
                                                                     "point_bol":
-                                                                    2403
+                                                                    2408
                                                                     }
                                                                     }
                                                                     ]
@@ -7861,14 +8029,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     83,
                                                                     "pos_bol":
-                                                                    2403,
+                                                                    2408,
                                                                     "pos_cnum":
-                                                                    2410
+                                                                    2415
                                                                     },
                                                                     "point_num":
-                                                                    2410,
+                                                                    2415,
                                                                     "point_bol":
-                                                                    2403
+                                                                    2408
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -7877,14 +8045,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     83,
                                                                     "pos_bol":
-                                                                    2403,
+                                                                    2408,
                                                                     "pos_cnum":
-                                                                    2450
+                                                                    2455
                                                                     },
                                                                     "point_num":
-                                                                    2450,
+                                                                    2455,
                                                                     "point_bol":
-                                                                    2403
+                                                                    2408
                                                                     }
                                                                     }
                                                                     ]
@@ -7921,14 +8089,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     84,
                                                                     "pos_bol":
-                                                                    2451,
+                                                                    2456,
                                                                     "pos_cnum":
-                                                                    2470
+                                                                    2475
                                                                     },
                                                                     "point_num":
-                                                                    2470,
+                                                                    2475,
                                                                     "point_bol":
-                                                                    2451
+                                                                    2456
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -7937,14 +8105,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     84,
                                                                     "pos_bol":
-                                                                    2451,
+                                                                    2456,
                                                                     "pos_cnum":
-                                                                    2506
+                                                                    2511
                                                                     },
                                                                     "point_num":
-                                                                    2506,
+                                                                    2511,
                                                                     "point_bol":
-                                                                    2451
+                                                                    2456
                                                                     }
                                                                     }
                                                                     ]
@@ -7962,14 +8130,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     84,
                                                                     "pos_bol":
-                                                                    2451,
+                                                                    2456,
                                                                     "pos_cnum":
-                                                                    2460
+                                                                    2465
                                                                     },
                                                                     "point_num":
-                                                                    2460,
+                                                                    2465,
                                                                     "point_bol":
-                                                                    2451
+                                                                    2456
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -7978,14 +8146,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     84,
                                                                     "pos_bol":
-                                                                    2451,
+                                                                    2456,
                                                                     "pos_cnum":
-                                                                    2507
+                                                                    2512
                                                                     },
                                                                     "point_num":
-                                                                    2507,
+                                                                    2512,
                                                                     "point_bol":
-                                                                    2451
+                                                                    2456
                                                                     }
                                                                     }
                                                                     ]
@@ -8005,14 +8173,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     85,
                                                                     "pos_bol":
-                                                                    2508,
+                                                                    2513,
                                                                     "pos_cnum":
-                                                                    2517
+                                                                    2522
                                                                     },
                                                                     "point_num":
-                                                                    2517,
+                                                                    2522,
                                                                     "point_bol":
-                                                                    2508
+                                                                    2513
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -8021,14 +8189,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     85,
                                                                     "pos_bol":
-                                                                    2508,
+                                                                    2513,
                                                                     "pos_cnum":
-                                                                    2521
+                                                                    2526
                                                                     },
                                                                     "point_num":
-                                                                    2521,
+                                                                    2526,
                                                                     "point_bol":
-                                                                    2508
+                                                                    2513
                                                                     }
                                                                     }
                                                                     ]
@@ -8045,14 +8213,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     83,
                                                                     "pos_bol":
-                                                                    2403,
+                                                                    2408,
                                                                     "pos_cnum":
-                                                                    2407
+                                                                    2412
                                                                     },
                                                                     "point_num":
-                                                                    2407,
+                                                                    2412,
                                                                     "point_bol":
-                                                                    2403
+                                                                    2408
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -8061,14 +8229,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     85,
                                                                     "pos_bol":
-                                                                    2508,
+                                                                    2513,
                                                                     "pos_cnum":
-                                                                    2521
+                                                                    2526
                                                                     },
                                                                     "point_num":
-                                                                    2521,
+                                                                    2526,
                                                                     "point_bol":
-                                                                    2508
+                                                                    2513
                                                                     }
                                                                     }
                                                                     ]
@@ -8093,14 +8261,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     89,
                                                                     "pos_bol":
-                                                                    2552,
+                                                                    2557,
                                                                     "pos_cnum":
-                                                                    2560
+                                                                    2565
                                                                     },
                                                                     "point_num":
-                                                                    2560,
+                                                                    2565,
                                                                     "point_bol":
-                                                                    2552
+                                                                    2557
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -8109,14 +8277,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     89,
                                                                     "pos_bol":
-                                                                    2552,
+                                                                    2557,
                                                                     "pos_cnum":
-                                                                    2567
+                                                                    2572
                                                                     },
                                                                     "point_num":
-                                                                    2567,
+                                                                    2572,
                                                                     "point_bol":
-                                                                    2552
+                                                                    2557
                                                                     }
                                                                     }
                                                                     ],
@@ -8142,14 +8310,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     89,
                                                                     "pos_bol":
-                                                                    2552,
+                                                                    2557,
                                                                     "pos_cnum":
-                                                                    2570
+                                                                    2575
                                                                     },
                                                                     "point_num":
-                                                                    2570,
+                                                                    2575,
                                                                     "point_bol":
-                                                                    2552
+                                                                    2557
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -8158,14 +8326,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     89,
                                                                     "pos_bol":
-                                                                    2552,
+                                                                    2557,
                                                                     "pos_cnum":
-                                                                    2574
+                                                                    2579
                                                                     },
                                                                     "point_num":
-                                                                    2574,
+                                                                    2579,
                                                                     "point_bol":
-                                                                    2552
+                                                                    2557
                                                                     }
                                                                     }
                                                                     ],
@@ -8199,14 +8367,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     89,
                                                                     "pos_bol":
-                                                                    2552,
+                                                                    2557,
                                                                     "pos_cnum":
-                                                                    2576
+                                                                    2581
                                                                     },
                                                                     "point_num":
-                                                                    2576,
+                                                                    2581,
                                                                     "point_bol":
-                                                                    2552
+                                                                    2557
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -8215,14 +8383,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     89,
                                                                     "pos_bol":
-                                                                    2552,
+                                                                    2557,
                                                                     "pos_cnum":
-                                                                    2585
+                                                                    2590
                                                                     },
                                                                     "point_num":
-                                                                    2585,
+                                                                    2590,
                                                                     "point_bol":
-                                                                    2552
+                                                                    2557
                                                                     }
                                                                     }
                                                                     ]
@@ -8240,14 +8408,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     89,
                                                                     "pos_bol":
-                                                                    2552,
+                                                                    2557,
                                                                     "pos_cnum":
-                                                                    2570
+                                                                    2575
                                                                     },
                                                                     "point_num":
-                                                                    2570,
+                                                                    2575,
                                                                     "point_bol":
-                                                                    2552
+                                                                    2557
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -8256,14 +8424,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     89,
                                                                     "pos_bol":
-                                                                    2552,
+                                                                    2557,
                                                                     "pos_cnum":
-                                                                    2586
+                                                                    2591
                                                                     },
                                                                     "point_num":
-                                                                    2586,
+                                                                    2591,
                                                                     "point_bol":
-                                                                    2552
+                                                                    2557
                                                                     }
                                                                     }
                                                                     ]
@@ -8286,14 +8454,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     89,
                                                                     "pos_bol":
-                                                                    2552,
+                                                                    2557,
                                                                     "pos_cnum":
-                                                                    2590
+                                                                    2595
                                                                     },
                                                                     "point_num":
-                                                                    2590,
+                                                                    2595,
                                                                     "point_bol":
-                                                                    2552
+                                                                    2557
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -8302,14 +8470,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     89,
                                                                     "pos_bol":
-                                                                    2552,
+                                                                    2557,
                                                                     "pos_cnum":
-                                                                    2593
+                                                                    2598
                                                                     },
                                                                     "point_num":
-                                                                    2593,
+                                                                    2598,
                                                                     "point_bol":
-                                                                    2552
+                                                                    2557
                                                                     }
                                                                     }
                                                                     ]
@@ -8357,14 +8525,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     91,
                                                                     "pos_bol":
-                                                                    2596,
+                                                                    2601,
                                                                     "pos_cnum":
-                                                                    2603
+                                                                    2608
                                                                     },
                                                                     "point_num":
-                                                                    2603,
+                                                                    2608,
                                                                     "point_bol":
-                                                                    2596
+                                                                    2601
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -8373,14 +8541,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     91,
                                                                     "pos_bol":
-                                                                    2596,
+                                                                    2601,
                                                                     "pos_cnum":
-                                                                    2606
+                                                                    2611
                                                                     },
                                                                     "point_num":
-                                                                    2606,
+                                                                    2611,
                                                                     "point_bol":
-                                                                    2596
+                                                                    2601
                                                                     }
                                                                     }
                                                                     ],
@@ -8403,14 +8571,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     91,
                                                                     "pos_bol":
-                                                                    2596,
+                                                                    2601,
                                                                     "pos_cnum":
-                                                                    2607
+                                                                    2612
                                                                     },
                                                                     "point_num":
-                                                                    2607,
+                                                                    2612,
                                                                     "point_bol":
-                                                                    2596
+                                                                    2601
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -8419,14 +8587,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     91,
                                                                     "pos_bol":
-                                                                    2596,
+                                                                    2601,
                                                                     "pos_cnum":
-                                                                    2615
+                                                                    2620
                                                                     },
                                                                     "point_num":
-                                                                    2615,
+                                                                    2620,
                                                                     "point_bol":
-                                                                    2596
+                                                                    2601
                                                                     }
                                                                     }
                                                                     ],
@@ -8445,14 +8613,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     91,
                                                                     "pos_bol":
-                                                                    2596,
+                                                                    2601,
                                                                     "pos_cnum":
-                                                                    2603
+                                                                    2608
                                                                     },
                                                                     "point_num":
-                                                                    2603,
+                                                                    2608,
                                                                     "point_bol":
-                                                                    2596
+                                                                    2601
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -8461,14 +8629,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     91,
                                                                     "pos_bol":
-                                                                    2596,
+                                                                    2601,
                                                                     "pos_cnum":
-                                                                    2615
+                                                                    2620
                                                                     },
                                                                     "point_num":
-                                                                    2615,
+                                                                    2620,
                                                                     "point_bol":
-                                                                    2596
+                                                                    2601
                                                                     }
                                                                     }
                                                                     ]
@@ -8491,14 +8659,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     91,
                                                                     "pos_bol":
-                                                                    2596,
+                                                                    2601,
                                                                     "pos_cnum":
-                                                                    2617
+                                                                    2622
                                                                     },
                                                                     "point_num":
-                                                                    2617,
+                                                                    2622,
                                                                     "point_bol":
-                                                                    2596
+                                                                    2601
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -8507,14 +8675,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     91,
                                                                     "pos_bol":
-                                                                    2596,
+                                                                    2601,
                                                                     "pos_cnum":
-                                                                    2626
+                                                                    2631
                                                                     },
                                                                     "point_num":
-                                                                    2626,
+                                                                    2631,
                                                                     "point_bol":
-                                                                    2596
+                                                                    2601
                                                                     }
                                                                     }
                                                                     ],
@@ -8532,14 +8700,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     91,
                                                                     "pos_bol":
-                                                                    2596,
+                                                                    2601,
                                                                     "pos_cnum":
-                                                                    2617
+                                                                    2622
                                                                     },
                                                                     "point_num":
-                                                                    2617,
+                                                                    2622,
                                                                     "point_bol":
-                                                                    2596
+                                                                    2601
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -8548,14 +8716,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     91,
                                                                     "pos_bol":
-                                                                    2596,
+                                                                    2601,
                                                                     "pos_cnum":
-                                                                    2626
+                                                                    2631
                                                                     },
                                                                     "point_num":
-                                                                    2626,
+                                                                    2631,
                                                                     "point_bol":
-                                                                    2596
+                                                                    2601
                                                                     }
                                                                     }
                                                                     ]
@@ -8572,14 +8740,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     91,
                                                                     "pos_bol":
-                                                                    2596,
+                                                                    2601,
                                                                     "pos_cnum":
-                                                                    2603
+                                                                    2608
                                                                     },
                                                                     "point_num":
-                                                                    2603,
+                                                                    2608,
                                                                     "point_bol":
-                                                                    2596
+                                                                    2601
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -8588,14 +8756,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     91,
                                                                     "pos_bol":
-                                                                    2596,
+                                                                    2601,
                                                                     "pos_cnum":
-                                                                    2627
+                                                                    2632
                                                                     },
                                                                     "point_num":
-                                                                    2627,
+                                                                    2632,
                                                                     "point_bol":
-                                                                    2596
+                                                                    2601
                                                                     }
                                                                     }
                                                                     ]
@@ -8622,14 +8790,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     91,
                                                                     "pos_bol":
-                                                                    2596,
+                                                                    2601,
                                                                     "pos_cnum":
-                                                                    2631
+                                                                    2636
                                                                     },
                                                                     "point_num":
-                                                                    2631,
+                                                                    2636,
                                                                     "point_bol":
-                                                                    2596
+                                                                    2601
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -8638,14 +8806,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     91,
                                                                     "pos_bol":
-                                                                    2596,
+                                                                    2601,
                                                                     "pos_cnum":
-                                                                    2632
+                                                                    2637
                                                                     },
                                                                     "point_num":
-                                                                    2632,
+                                                                    2637,
                                                                     "point_bol":
-                                                                    2596
+                                                                    2601
                                                                     }
                                                                     }
                                                                     ],
@@ -8663,14 +8831,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     91,
                                                                     "pos_bol":
-                                                                    2596,
+                                                                    2601,
                                                                     "pos_cnum":
-                                                                    2631
+                                                                    2636
                                                                     },
                                                                     "point_num":
-                                                                    2631,
+                                                                    2636,
                                                                     "point_bol":
-                                                                    2596
+                                                                    2601
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -8679,14 +8847,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     91,
                                                                     "pos_bol":
-                                                                    2596,
+                                                                    2601,
                                                                     "pos_cnum":
-                                                                    2632
+                                                                    2637
                                                                     },
                                                                     "point_num":
-                                                                    2632,
+                                                                    2637,
                                                                     "point_bol":
-                                                                    2596
+                                                                    2601
                                                                     }
                                                                     }
                                                                     ]
@@ -8709,14 +8877,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     91,
                                                                     "pos_bol":
-                                                                    2596,
+                                                                    2601,
                                                                     "pos_cnum":
-                                                                    2631
+                                                                    2636
                                                                     },
                                                                     "point_num":
-                                                                    2631,
+                                                                    2636,
                                                                     "point_bol":
-                                                                    2596
+                                                                    2601
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -8725,14 +8893,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     91,
                                                                     "pos_bol":
-                                                                    2596,
+                                                                    2601,
                                                                     "pos_cnum":
-                                                                    2642
+                                                                    2647
                                                                     },
                                                                     "point_num":
-                                                                    2642,
+                                                                    2647,
                                                                     "point_bol":
-                                                                    2596
+                                                                    2601
                                                                     }
                                                                     }
                                                                     ]
@@ -8750,14 +8918,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     91,
                                                                     "pos_bol":
-                                                                    2596,
+                                                                    2601,
                                                                     "pos_cnum":
-                                                                    2603
+                                                                    2608
                                                                     },
                                                                     "point_num":
-                                                                    2603,
+                                                                    2608,
                                                                     "point_bol":
-                                                                    2596
+                                                                    2601
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -8766,14 +8934,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     91,
                                                                     "pos_bol":
-                                                                    2596,
+                                                                    2601,
                                                                     "pos_cnum":
-                                                                    2642
+                                                                    2647
                                                                     },
                                                                     "point_num":
-                                                                    2642,
+                                                                    2647,
                                                                     "point_bol":
-                                                                    2596
+                                                                    2601
                                                                     }
                                                                     }
                                                                     ]
@@ -8801,14 +8969,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     92,
                                                                     "pos_bol":
-                                                                    2650,
+                                                                    2655,
                                                                     "pos_cnum":
-                                                                    2683
+                                                                    2688
                                                                     },
                                                                     "point_num":
-                                                                    2683,
+                                                                    2688,
                                                                     "point_bol":
-                                                                    2650
+                                                                    2655
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -8817,14 +8985,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     92,
                                                                     "pos_bol":
-                                                                    2650,
+                                                                    2655,
                                                                     "pos_cnum":
-                                                                    2684
+                                                                    2689
                                                                     },
                                                                     "point_num":
-                                                                    2684,
+                                                                    2689,
                                                                     "point_bol":
-                                                                    2650
+                                                                    2655
                                                                     }
                                                                     }
                                                                     ],
@@ -8855,14 +9023,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     92,
                                                                     "pos_bol":
-                                                                    2650,
+                                                                    2655,
                                                                     "pos_cnum":
-                                                                    2683
+                                                                    2688
                                                                     },
                                                                     "point_num":
-                                                                    2683,
+                                                                    2688,
                                                                     "point_bol":
-                                                                    2650
+                                                                    2655
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -8871,14 +9039,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     92,
                                                                     "pos_bol":
-                                                                    2650,
+                                                                    2655,
                                                                     "pos_cnum":
-                                                                    2684
+                                                                    2689
                                                                     },
                                                                     "point_num":
-                                                                    2684,
+                                                                    2689,
                                                                     "point_bol":
-                                                                    2650
+                                                                    2655
                                                                     }
                                                                     }
                                                                     ],
@@ -8896,14 +9064,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     92,
                                                                     "pos_bol":
-                                                                    2650,
+                                                                    2655,
                                                                     "pos_cnum":
-                                                                    2656
+                                                                    2661
                                                                     },
                                                                     "point_num":
-                                                                    2656,
+                                                                    2661,
                                                                     "point_bol":
-                                                                    2650
+                                                                    2655
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -8912,14 +9080,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     92,
                                                                     "pos_bol":
-                                                                    2650,
+                                                                    2655,
                                                                     "pos_cnum":
-                                                                    2698
+                                                                    2703
                                                                     },
                                                                     "point_num":
-                                                                    2698,
+                                                                    2703,
                                                                     "point_bol":
-                                                                    2650
+                                                                    2655
                                                                     }
                                                                     }
                                                                     ]
@@ -8959,14 +9127,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     92,
                                                                     "pos_bol":
-                                                                    2650,
+                                                                    2655,
                                                                     "pos_cnum":
-                                                                    2663
+                                                                    2668
                                                                     },
                                                                     "point_num":
-                                                                    2663,
+                                                                    2668,
                                                                     "point_bol":
-                                                                    2650
+                                                                    2655
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -8975,14 +9143,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     92,
                                                                     "pos_bol":
-                                                                    2650,
+                                                                    2655,
                                                                     "pos_cnum":
-                                                                    2673
+                                                                    2678
                                                                     },
                                                                     "point_num":
-                                                                    2673,
+                                                                    2678,
                                                                     "point_bol":
-                                                                    2650
+                                                                    2655
                                                                     }
                                                                     }
                                                                     ],
@@ -9000,14 +9168,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     92,
                                                                     "pos_bol":
-                                                                    2650,
+                                                                    2655,
                                                                     "pos_cnum":
-                                                                    2663
+                                                                    2668
                                                                     },
                                                                     "point_num":
-                                                                    2663,
+                                                                    2668,
                                                                     "point_bol":
-                                                                    2650
+                                                                    2655
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -9016,14 +9184,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     92,
                                                                     "pos_bol":
-                                                                    2650,
+                                                                    2655,
                                                                     "pos_cnum":
-                                                                    2673
+                                                                    2678
                                                                     },
                                                                     "point_num":
-                                                                    2673,
+                                                                    2678,
                                                                     "point_bol":
-                                                                    2650
+                                                                    2655
                                                                     }
                                                                     }
                                                                     ]
@@ -9050,14 +9218,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     92,
                                                                     "pos_bol":
-                                                                    2650,
+                                                                    2655,
                                                                     "pos_cnum":
-                                                                    2683
+                                                                    2688
                                                                     },
                                                                     "point_num":
-                                                                    2683,
+                                                                    2688,
                                                                     "point_bol":
-                                                                    2650
+                                                                    2655
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -9066,14 +9234,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     92,
                                                                     "pos_bol":
-                                                                    2650,
+                                                                    2655,
                                                                     "pos_cnum":
-                                                                    2684
+                                                                    2689
                                                                     },
                                                                     "point_num":
-                                                                    2684,
+                                                                    2689,
                                                                     "point_bol":
-                                                                    2650
+                                                                    2655
                                                                     }
                                                                     }
                                                                     ],
@@ -9091,14 +9259,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     92,
                                                                     "pos_bol":
-                                                                    2650,
+                                                                    2655,
                                                                     "pos_cnum":
-                                                                    2656
+                                                                    2661
                                                                     },
                                                                     "point_num":
-                                                                    2656,
+                                                                    2661,
                                                                     "point_bol":
-                                                                    2650
+                                                                    2655
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -9107,14 +9275,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     92,
                                                                     "pos_bol":
-                                                                    2650,
+                                                                    2655,
                                                                     "pos_cnum":
-                                                                    2698
+                                                                    2703
                                                                     },
                                                                     "point_num":
-                                                                    2698,
+                                                                    2703,
                                                                     "point_bol":
-                                                                    2650
+                                                                    2655
                                                                     }
                                                                     }
                                                                     ]
@@ -9137,14 +9305,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     92,
                                                                     "pos_bol":
-                                                                    2650,
+                                                                    2655,
                                                                     "pos_cnum":
-                                                                    2656
+                                                                    2661
                                                                     },
                                                                     "point_num":
-                                                                    2656,
+                                                                    2661,
                                                                     "point_bol":
-                                                                    2650
+                                                                    2655
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -9153,14 +9321,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     92,
                                                                     "pos_bol":
-                                                                    2650,
+                                                                    2655,
                                                                     "pos_cnum":
-                                                                    2698
+                                                                    2703
                                                                     },
                                                                     "point_num":
-                                                                    2698,
+                                                                    2703,
                                                                     "point_bol":
-                                                                    2650
+                                                                    2655
                                                                     }
                                                                     }
                                                                     ]
@@ -9178,14 +9346,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     92,
                                                                     "pos_bol":
-                                                                    2650,
+                                                                    2655,
                                                                     "pos_cnum":
-                                                                    2656
+                                                                    2661
                                                                     },
                                                                     "point_num":
-                                                                    2656,
+                                                                    2661,
                                                                     "point_bol":
-                                                                    2650
+                                                                    2655
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -9194,14 +9362,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     92,
                                                                     "pos_bol":
-                                                                    2650,
+                                                                    2655,
                                                                     "pos_cnum":
-                                                                    2698
+                                                                    2703
                                                                     },
                                                                     "point_num":
-                                                                    2698,
+                                                                    2703,
                                                                     "point_bol":
-                                                                    2650
+                                                                    2655
                                                                     }
                                                                     }
                                                                     ]
@@ -9218,14 +9386,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     92,
                                                                     "pos_bol":
-                                                                    2650,
+                                                                    2655,
                                                                     "pos_cnum":
-                                                                    2656
+                                                                    2661
                                                                     },
                                                                     "point_num":
-                                                                    2656,
+                                                                    2661,
                                                                     "point_bol":
-                                                                    2650
+                                                                    2655
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -9234,14 +9402,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     92,
                                                                     "pos_bol":
-                                                                    2650,
+                                                                    2655,
                                                                     "pos_cnum":
-                                                                    2698
+                                                                    2703
                                                                     },
                                                                     "point_num":
-                                                                    2698,
+                                                                    2703,
                                                                     "point_bol":
-                                                                    2650
+                                                                    2655
                                                                     }
                                                                     }
                                                                     ]
@@ -9258,14 +9426,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     92,
                                                                     "pos_bol":
-                                                                    2650,
+                                                                    2655,
                                                                     "pos_cnum":
-                                                                    2656
+                                                                    2661
                                                                     },
                                                                     "point_num":
-                                                                    2656,
+                                                                    2661,
                                                                     "point_bol":
-                                                                    2650
+                                                                    2655
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -9274,14 +9442,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     92,
                                                                     "pos_bol":
-                                                                    2650,
+                                                                    2655,
                                                                     "pos_cnum":
-                                                                    2698
+                                                                    2703
                                                                     },
                                                                     "point_num":
-                                                                    2698,
+                                                                    2703,
                                                                     "point_bol":
-                                                                    2650
+                                                                    2655
                                                                     }
                                                                     }
                                                                     ]
@@ -9309,14 +9477,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     93,
                                                                     "pos_bol":
-                                                                    2700,
+                                                                    2705,
                                                                     "pos_cnum":
-                                                                    2706
+                                                                    2711
                                                                     },
                                                                     "point_num":
-                                                                    2706,
+                                                                    2711,
                                                                     "point_bol":
-                                                                    2700
+                                                                    2705
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -9325,14 +9493,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     93,
                                                                     "pos_bol":
-                                                                    2700,
+                                                                    2705,
                                                                     "pos_cnum":
-                                                                    2713
+                                                                    2718
                                                                     },
                                                                     "point_num":
-                                                                    2713,
+                                                                    2718,
                                                                     "point_bol":
-                                                                    2700
+                                                                    2705
                                                                     }
                                                                     }
                                                                     ],
@@ -9363,14 +9531,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     93,
                                                                     "pos_bol":
-                                                                    2700,
+                                                                    2705,
                                                                     "pos_cnum":
-                                                                    2717
+                                                                    2722
                                                                     },
                                                                     "point_num":
-                                                                    2717,
+                                                                    2722,
                                                                     "point_bol":
-                                                                    2700
+                                                                    2705
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -9379,14 +9547,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     93,
                                                                     "pos_bol":
-                                                                    2700,
+                                                                    2705,
                                                                     "pos_cnum":
-                                                                    2724
+                                                                    2729
                                                                     },
                                                                     "point_num":
-                                                                    2724,
+                                                                    2729,
                                                                     "point_bol":
-                                                                    2700
+                                                                    2705
                                                                     }
                                                                     }
                                                                     ],
@@ -9404,14 +9572,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     93,
                                                                     "pos_bol":
-                                                                    2700,
+                                                                    2705,
                                                                     "pos_cnum":
-                                                                    2717
+                                                                    2722
                                                                     },
                                                                     "point_num":
-                                                                    2717,
+                                                                    2722,
                                                                     "point_bol":
-                                                                    2700
+                                                                    2705
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -9420,14 +9588,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     93,
                                                                     "pos_bol":
-                                                                    2700,
+                                                                    2705,
                                                                     "pos_cnum":
-                                                                    2724
+                                                                    2729
                                                                     },
                                                                     "point_num":
-                                                                    2724,
+                                                                    2729,
                                                                     "point_bol":
-                                                                    2700
+                                                                    2705
                                                                     }
                                                                     }
                                                                     ]
@@ -9454,14 +9622,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     93,
                                                                     "pos_bol":
-                                                                    2700,
+                                                                    2705,
                                                                     "pos_cnum":
-                                                                    2726
+                                                                    2731
                                                                     },
                                                                     "point_num":
-                                                                    2726,
+                                                                    2731,
                                                                     "point_bol":
-                                                                    2700
+                                                                    2705
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -9470,14 +9638,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     93,
                                                                     "pos_bol":
-                                                                    2700,
+                                                                    2705,
                                                                     "pos_cnum":
-                                                                    2727
+                                                                    2732
                                                                     },
                                                                     "point_num":
-                                                                    2727,
+                                                                    2732,
                                                                     "point_bol":
-                                                                    2700
+                                                                    2705
                                                                     }
                                                                     }
                                                                     ],
@@ -9495,14 +9663,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     93,
                                                                     "pos_bol":
-                                                                    2700,
+                                                                    2705,
                                                                     "pos_cnum":
-                                                                    2726
+                                                                    2731
                                                                     },
                                                                     "point_num":
-                                                                    2726,
+                                                                    2731,
                                                                     "point_bol":
-                                                                    2700
+                                                                    2705
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -9511,14 +9679,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     93,
                                                                     "pos_bol":
-                                                                    2700,
+                                                                    2705,
                                                                     "pos_cnum":
-                                                                    2727
+                                                                    2732
                                                                     },
                                                                     "point_num":
-                                                                    2727,
+                                                                    2732,
                                                                     "point_bol":
-                                                                    2700
+                                                                    2705
                                                                     }
                                                                     }
                                                                     ]
@@ -9541,14 +9709,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     93,
                                                                     "pos_bol":
-                                                                    2700,
+                                                                    2705,
                                                                     "pos_cnum":
-                                                                    2726
+                                                                    2731
                                                                     },
                                                                     "point_num":
-                                                                    2726,
+                                                                    2731,
                                                                     "point_bol":
-                                                                    2700
+                                                                    2705
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -9557,14 +9725,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     93,
                                                                     "pos_bol":
-                                                                    2700,
+                                                                    2705,
                                                                     "pos_cnum":
-                                                                    2738
+                                                                    2743
                                                                     },
                                                                     "point_num":
-                                                                    2738,
+                                                                    2743,
                                                                     "point_bol":
-                                                                    2700
+                                                                    2705
                                                                     }
                                                                     }
                                                                     ]
@@ -9581,14 +9749,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     93,
                                                                     "pos_bol":
-                                                                    2700,
+                                                                    2705,
                                                                     "pos_cnum":
-                                                                    2717
+                                                                    2722
                                                                     },
                                                                     "point_num":
-                                                                    2717,
+                                                                    2722,
                                                                     "point_bol":
-                                                                    2700
+                                                                    2705
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -9597,14 +9765,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     93,
                                                                     "pos_bol":
-                                                                    2700,
+                                                                    2705,
                                                                     "pos_cnum":
-                                                                    2739
+                                                                    2744
                                                                     },
                                                                     "point_num":
-                                                                    2739,
+                                                                    2744,
                                                                     "point_bol":
-                                                                    2700
+                                                                    2705
                                                                     }
                                                                     }
                                                                     ]
@@ -9621,14 +9789,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     93,
                                                                     "pos_bol":
-                                                                    2700,
+                                                                    2705,
                                                                     "pos_cnum":
-                                                                    2706
+                                                                    2711
                                                                     },
                                                                     "point_num":
-                                                                    2706,
+                                                                    2711,
                                                                     "point_bol":
-                                                                    2700
+                                                                    2705
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -9637,14 +9805,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     93,
                                                                     "pos_bol":
-                                                                    2700,
+                                                                    2705,
                                                                     "pos_cnum":
-                                                                    2739
+                                                                    2744
                                                                     },
                                                                     "point_num":
-                                                                    2739,
+                                                                    2744,
                                                                     "point_bol":
-                                                                    2700
+                                                                    2705
                                                                     }
                                                                     }
                                                                     ]
@@ -9672,14 +9840,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     95,
                                                                     "pos_bol":
-                                                                    2772,
+                                                                    2777,
                                                                     "pos_cnum":
-                                                                    2778
+                                                                    2783
                                                                     },
                                                                     "point_num":
-                                                                    2778,
+                                                                    2783,
                                                                     "point_bol":
-                                                                    2772
+                                                                    2777
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -9688,14 +9856,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     95,
                                                                     "pos_bol":
-                                                                    2772,
+                                                                    2777,
                                                                     "pos_cnum":
-                                                                    2779
+                                                                    2784
                                                                     },
                                                                     "point_num":
-                                                                    2779,
+                                                                    2784,
                                                                     "point_bol":
-                                                                    2772
+                                                                    2777
                                                                     }
                                                                     }
                                                                     ],
@@ -9726,14 +9894,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     95,
                                                                     "pos_bol":
-                                                                    2772,
+                                                                    2777,
                                                                     "pos_cnum":
-                                                                    2778
+                                                                    2783
                                                                     },
                                                                     "point_num":
-                                                                    2778,
+                                                                    2783,
                                                                     "point_bol":
-                                                                    2772
+                                                                    2777
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -9742,14 +9910,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     95,
                                                                     "pos_bol":
-                                                                    2772,
+                                                                    2777,
                                                                     "pos_cnum":
-                                                                    2779
+                                                                    2784
                                                                     },
                                                                     "point_num":
-                                                                    2779,
+                                                                    2784,
                                                                     "point_bol":
-                                                                    2772
+                                                                    2777
                                                                     }
                                                                     }
                                                                     ],
@@ -9792,14 +9960,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     95,
                                                                     "pos_bol":
-                                                                    2772,
+                                                                    2777,
                                                                     "pos_cnum":
-                                                                    2794
+                                                                    2799
                                                                     },
                                                                     "point_num":
-                                                                    2794,
+                                                                    2799,
                                                                     "point_bol":
-                                                                    2772
+                                                                    2777
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -9808,14 +9976,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     95,
                                                                     "pos_bol":
-                                                                    2772,
+                                                                    2777,
                                                                     "pos_cnum":
-                                                                    2800
+                                                                    2805
                                                                     },
                                                                     "point_num":
-                                                                    2800,
+                                                                    2805,
                                                                     "point_bol":
-                                                                    2772
+                                                                    2777
                                                                     }
                                                                     }
                                                                     ],
@@ -9838,14 +10006,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     95,
                                                                     "pos_bol":
-                                                                    2772,
+                                                                    2777,
                                                                     "pos_cnum":
-                                                                    2801
+                                                                    2806
                                                                     },
                                                                     "point_num":
-                                                                    2801,
+                                                                    2806,
                                                                     "point_bol":
-                                                                    2772
+                                                                    2777
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -9854,14 +10022,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     95,
                                                                     "pos_bol":
-                                                                    2772,
+                                                                    2777,
                                                                     "pos_cnum":
-                                                                    2807
+                                                                    2812
                                                                     },
                                                                     "point_num":
-                                                                    2807,
+                                                                    2812,
                                                                     "point_bol":
-                                                                    2772
+                                                                    2777
                                                                     }
                                                                     }
                                                                     ],
@@ -9880,14 +10048,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     95,
                                                                     "pos_bol":
-                                                                    2772,
+                                                                    2777,
                                                                     "pos_cnum":
-                                                                    2794
+                                                                    2799
                                                                     },
                                                                     "point_num":
-                                                                    2794,
+                                                                    2799,
                                                                     "point_bol":
-                                                                    2772
+                                                                    2777
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -9896,14 +10064,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     95,
                                                                     "pos_bol":
-                                                                    2772,
+                                                                    2777,
                                                                     "pos_cnum":
-                                                                    2807
+                                                                    2812
                                                                     },
                                                                     "point_num":
-                                                                    2807,
+                                                                    2812,
                                                                     "point_bol":
-                                                                    2772
+                                                                    2777
                                                                     }
                                                                     }
                                                                     ]
@@ -9932,14 +10100,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     95,
                                                                     "pos_bol":
-                                                                    2772,
+                                                                    2777,
                                                                     "pos_cnum":
-                                                                    2809
+                                                                    2814
                                                                     },
                                                                     "point_num":
-                                                                    2809,
+                                                                    2814,
                                                                     "point_bol":
-                                                                    2772
+                                                                    2777
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -9948,14 +10116,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     95,
                                                                     "pos_bol":
-                                                                    2772,
+                                                                    2777,
                                                                     "pos_cnum":
-                                                                    2814
+                                                                    2819
                                                                     },
                                                                     "point_num":
-                                                                    2814,
+                                                                    2819,
                                                                     "point_bol":
-                                                                    2772
+                                                                    2777
                                                                     }
                                                                     }
                                                                     ],
@@ -9978,14 +10146,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     95,
                                                                     "pos_bol":
-                                                                    2772,
+                                                                    2777,
                                                                     "pos_cnum":
-                                                                    2815
+                                                                    2820
                                                                     },
                                                                     "point_num":
-                                                                    2815,
+                                                                    2820,
                                                                     "point_bol":
-                                                                    2772
+                                                                    2777
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -9994,14 +10162,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     95,
                                                                     "pos_bol":
-                                                                    2772,
+                                                                    2777,
                                                                     "pos_cnum":
-                                                                    2821
+                                                                    2826
                                                                     },
                                                                     "point_num":
-                                                                    2821,
+                                                                    2826,
                                                                     "point_bol":
-                                                                    2772
+                                                                    2777
                                                                     }
                                                                     }
                                                                     ],
@@ -10020,14 +10188,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     95,
                                                                     "pos_bol":
-                                                                    2772,
+                                                                    2777,
                                                                     "pos_cnum":
-                                                                    2809
+                                                                    2814
                                                                     },
                                                                     "point_num":
-                                                                    2809,
+                                                                    2814,
                                                                     "point_bol":
-                                                                    2772
+                                                                    2777
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -10036,14 +10204,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     95,
                                                                     "pos_bol":
-                                                                    2772,
+                                                                    2777,
                                                                     "pos_cnum":
-                                                                    2821
+                                                                    2826
                                                                     },
                                                                     "point_num":
-                                                                    2821,
+                                                                    2826,
                                                                     "point_bol":
-                                                                    2772
+                                                                    2777
                                                                     }
                                                                     }
                                                                     ]
@@ -10074,14 +10242,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     95,
                                                                     "pos_bol":
-                                                                    2772,
+                                                                    2777,
                                                                     "pos_cnum":
-                                                                    2823
+                                                                    2828
                                                                     },
                                                                     "point_num":
-                                                                    2823,
+                                                                    2828,
                                                                     "point_bol":
-                                                                    2772
+                                                                    2777
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -10090,14 +10258,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     95,
                                                                     "pos_bol":
-                                                                    2772,
+                                                                    2777,
                                                                     "pos_cnum":
-                                                                    2824
+                                                                    2829
                                                                     },
                                                                     "point_num":
-                                                                    2824,
+                                                                    2829,
                                                                     "point_bol":
-                                                                    2772
+                                                                    2777
                                                                     }
                                                                     }
                                                                     ],
@@ -10115,14 +10283,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     95,
                                                                     "pos_bol":
-                                                                    2772,
+                                                                    2777,
                                                                     "pos_cnum":
-                                                                    2823
+                                                                    2828
                                                                     },
                                                                     "point_num":
-                                                                    2823,
+                                                                    2828,
                                                                     "point_bol":
-                                                                    2772
+                                                                    2777
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -10131,14 +10299,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     95,
                                                                     "pos_bol":
-                                                                    2772,
+                                                                    2777,
                                                                     "pos_cnum":
-                                                                    2824
+                                                                    2829
                                                                     },
                                                                     "point_num":
-                                                                    2824,
+                                                                    2829,
                                                                     "point_bol":
-                                                                    2772
+                                                                    2777
                                                                     }
                                                                     }
                                                                     ]
@@ -10161,14 +10329,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     95,
                                                                     "pos_bol":
-                                                                    2772,
+                                                                    2777,
                                                                     "pos_cnum":
-                                                                    2823
+                                                                    2828
                                                                     },
                                                                     "point_num":
-                                                                    2823,
+                                                                    2828,
                                                                     "point_bol":
-                                                                    2772
+                                                                    2777
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -10177,14 +10345,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     95,
                                                                     "pos_bol":
-                                                                    2772,
+                                                                    2777,
                                                                     "pos_cnum":
-                                                                    2835
+                                                                    2840
                                                                     },
                                                                     "point_num":
-                                                                    2835,
+                                                                    2840,
                                                                     "point_bol":
-                                                                    2772
+                                                                    2777
                                                                     }
                                                                     }
                                                                     ]
@@ -10207,14 +10375,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     95,
                                                                     "pos_bol":
-                                                                    2772,
+                                                                    2777,
                                                                     "pos_cnum":
-                                                                    2837
+                                                                    2842
                                                                     },
                                                                     "point_num":
-                                                                    2837,
+                                                                    2842,
                                                                     "point_bol":
-                                                                    2772
+                                                                    2777
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -10223,14 +10391,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     95,
                                                                     "pos_bol":
-                                                                    2772,
+                                                                    2777,
                                                                     "pos_cnum":
-                                                                    2847
+                                                                    2852
                                                                     },
                                                                     "point_num":
-                                                                    2847,
+                                                                    2852,
                                                                     "point_bol":
-                                                                    2772
+                                                                    2777
                                                                     }
                                                                     }
                                                                     ],
@@ -10248,14 +10416,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     95,
                                                                     "pos_bol":
-                                                                    2772,
+                                                                    2777,
                                                                     "pos_cnum":
-                                                                    2837
+                                                                    2842
                                                                     },
                                                                     "point_num":
-                                                                    2837,
+                                                                    2842,
                                                                     "point_bol":
-                                                                    2772
+                                                                    2777
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -10264,14 +10432,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     95,
                                                                     "pos_bol":
-                                                                    2772,
+                                                                    2777,
                                                                     "pos_cnum":
-                                                                    2847
+                                                                    2852
                                                                     },
                                                                     "point_num":
-                                                                    2847,
+                                                                    2852,
                                                                     "point_bol":
-                                                                    2772
+                                                                    2777
                                                                     }
                                                                     }
                                                                     ]
@@ -10288,14 +10456,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     95,
                                                                     "pos_bol":
-                                                                    2772,
+                                                                    2777,
                                                                     "pos_cnum":
-                                                                    2822
+                                                                    2827
                                                                     },
                                                                     "point_num":
-                                                                    2822,
+                                                                    2827,
                                                                     "point_bol":
-                                                                    2772
+                                                                    2777
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -10304,14 +10472,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     95,
                                                                     "pos_bol":
-                                                                    2772,
+                                                                    2777,
                                                                     "pos_cnum":
-                                                                    2848
+                                                                    2853
                                                                     },
                                                                     "point_num":
-                                                                    2848,
+                                                                    2853,
                                                                     "point_bol":
-                                                                    2772
+                                                                    2777
                                                                     }
                                                                     }
                                                                     ]
@@ -10328,14 +10496,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     95,
                                                                     "pos_bol":
-                                                                    2772,
+                                                                    2777,
                                                                     "pos_cnum":
-                                                                    2809
+                                                                    2814
                                                                     },
                                                                     "point_num":
-                                                                    2809,
+                                                                    2814,
                                                                     "point_bol":
-                                                                    2772
+                                                                    2777
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -10344,14 +10512,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     95,
                                                                     "pos_bol":
-                                                                    2772,
+                                                                    2777,
                                                                     "pos_cnum":
-                                                                    2848
+                                                                    2853
                                                                     },
                                                                     "point_num":
-                                                                    2848,
+                                                                    2853,
                                                                     "point_bol":
-                                                                    2772
+                                                                    2777
                                                                     }
                                                                     }
                                                                     ]
@@ -10368,14 +10536,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     95,
                                                                     "pos_bol":
-                                                                    2772,
+                                                                    2777,
                                                                     "pos_cnum":
-                                                                    2794
+                                                                    2799
                                                                     },
                                                                     "point_num":
-                                                                    2794,
+                                                                    2799,
                                                                     "point_bol":
-                                                                    2772
+                                                                    2777
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -10384,14 +10552,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     95,
                                                                     "pos_bol":
-                                                                    2772,
+                                                                    2777,
                                                                     "pos_cnum":
-                                                                    2849
+                                                                    2854
                                                                     },
                                                                     "point_num":
-                                                                    2849,
+                                                                    2854,
                                                                     "point_bol":
-                                                                    2772
+                                                                    2777
                                                                     }
                                                                     }
                                                                     ]
@@ -10408,14 +10576,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     95,
                                                                     "pos_bol":
-                                                                    2772,
+                                                                    2777,
                                                                     "pos_cnum":
-                                                                    2778
+                                                                    2783
                                                                     },
                                                                     "point_num":
-                                                                    2778,
+                                                                    2783,
                                                                     "point_bol":
-                                                                    2772
+                                                                    2777
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -10424,14 +10592,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     95,
                                                                     "pos_bol":
-                                                                    2772,
+                                                                    2777,
                                                                     "pos_cnum":
-                                                                    2849
+                                                                    2854
                                                                     },
                                                                     "point_num":
-                                                                    2849,
+                                                                    2854,
                                                                     "point_bol":
-                                                                    2772
+                                                                    2777
                                                                     }
                                                                     }
                                                                     ]
@@ -10448,14 +10616,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     95,
                                                                     "pos_bol":
-                                                                    2772,
+                                                                    2777,
                                                                     "pos_cnum":
-                                                                    2778
+                                                                    2783
                                                                     },
                                                                     "point_num":
-                                                                    2778,
+                                                                    2783,
                                                                     "point_bol":
-                                                                    2772
+                                                                    2777
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -10464,14 +10632,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     95,
                                                                     "pos_bol":
-                                                                    2772,
+                                                                    2777,
                                                                     "pos_cnum":
-                                                                    2849
+                                                                    2854
                                                                     },
                                                                     "point_num":
-                                                                    2849,
+                                                                    2854,
                                                                     "point_bol":
-                                                                    2772
+                                                                    2777
                                                                     }
                                                                     }
                                                                     ]
@@ -10496,14 +10664,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     97,
                                                                     "pos_bol":
-                                                                    2883,
+                                                                    2888,
                                                                     "pos_cnum":
-                                                                    2893
+                                                                    2898
                                                                     },
                                                                     "point_num":
-                                                                    2893,
+                                                                    2898,
                                                                     "point_bol":
-                                                                    2883
+                                                                    2888
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -10512,14 +10680,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     97,
                                                                     "pos_bol":
-                                                                    2883,
+                                                                    2888,
                                                                     "pos_cnum":
-                                                                    2897
+                                                                    2902
                                                                     },
                                                                     "point_num":
-                                                                    2897,
+                                                                    2902,
                                                                     "point_bol":
-                                                                    2883
+                                                                    2888
                                                                     }
                                                                     }
                                                                     ],
@@ -10543,14 +10711,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     97,
                                                                     "pos_bol":
-                                                                    2883,
+                                                                    2888,
                                                                     "pos_cnum":
-                                                                    2901
+                                                                    2906
                                                                     },
                                                                     "point_num":
-                                                                    2901,
+                                                                    2906,
                                                                     "point_bol":
-                                                                    2883
+                                                                    2888
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -10559,14 +10727,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     97,
                                                                     "pos_bol":
-                                                                    2883,
+                                                                    2888,
                                                                     "pos_cnum":
-                                                                    2904
+                                                                    2909
                                                                     },
                                                                     "point_num":
-                                                                    2904,
+                                                                    2909,
                                                                     "point_bol":
-                                                                    2883
+                                                                    2888
                                                                     }
                                                                     }
                                                                     ],
@@ -10597,14 +10765,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     97,
                                                                     "pos_bol":
-                                                                    2883,
+                                                                    2888,
                                                                     "pos_cnum":
-                                                                    2912
+                                                                    2917
                                                                     },
                                                                     "point_num":
-                                                                    2912,
+                                                                    2917,
                                                                     "point_bol":
-                                                                    2883
+                                                                    2888
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -10613,14 +10781,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     97,
                                                                     "pos_bol":
-                                                                    2883,
+                                                                    2888,
                                                                     "pos_cnum":
-                                                                    2913
+                                                                    2918
                                                                     },
                                                                     "point_num":
-                                                                    2913,
+                                                                    2918,
                                                                     "point_bol":
-                                                                    2883
+                                                                    2888
                                                                     }
                                                                     }
                                                                     ],
@@ -10638,14 +10806,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     97,
                                                                     "pos_bol":
-                                                                    2883,
+                                                                    2888,
                                                                     "pos_cnum":
-                                                                    2912
+                                                                    2917
                                                                     },
                                                                     "point_num":
-                                                                    2912,
+                                                                    2917,
                                                                     "point_bol":
-                                                                    2883
+                                                                    2888
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -10654,14 +10822,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     97,
                                                                     "pos_bol":
-                                                                    2883,
+                                                                    2888,
                                                                     "pos_cnum":
-                                                                    2913
+                                                                    2918
                                                                     },
                                                                     "point_num":
-                                                                    2913,
+                                                                    2918,
                                                                     "point_bol":
-                                                                    2883
+                                                                    2888
                                                                     }
                                                                     }
                                                                     ]
@@ -10684,14 +10852,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     97,
                                                                     "pos_bol":
-                                                                    2883,
+                                                                    2888,
                                                                     "pos_cnum":
-                                                                    2912
+                                                                    2917
                                                                     },
                                                                     "point_num":
-                                                                    2912,
+                                                                    2917,
                                                                     "point_bol":
-                                                                    2883
+                                                                    2888
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -10700,14 +10868,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     97,
                                                                     "pos_bol":
-                                                                    2883,
+                                                                    2888,
                                                                     "pos_cnum":
-                                                                    2931
+                                                                    2936
                                                                     },
                                                                     "point_num":
-                                                                    2931,
+                                                                    2936,
                                                                     "point_bol":
-                                                                    2883
+                                                                    2888
                                                                     }
                                                                     }
                                                                     ]
@@ -10749,14 +10917,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     98,
                                                                     "pos_bol":
-                                                                    2940,
+                                                                    2945,
                                                                     "pos_cnum":
-                                                                    2960
+                                                                    2965
                                                                     },
                                                                     "point_num":
-                                                                    2960,
+                                                                    2965,
                                                                     "point_bol":
-                                                                    2940
+                                                                    2945
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -10765,14 +10933,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     98,
                                                                     "pos_bol":
-                                                                    2940,
+                                                                    2945,
                                                                     "pos_cnum":
-                                                                    2964
+                                                                    2969
                                                                     },
                                                                     "point_num":
-                                                                    2964,
+                                                                    2969,
                                                                     "point_bol":
-                                                                    2940
+                                                                    2945
                                                                     }
                                                                     }
                                                                     ],
@@ -10790,14 +10958,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     98,
                                                                     "pos_bol":
-                                                                    2940,
+                                                                    2945,
                                                                     "pos_cnum":
-                                                                    2960
+                                                                    2965
                                                                     },
                                                                     "point_num":
-                                                                    2960,
+                                                                    2965,
                                                                     "point_bol":
-                                                                    2940
+                                                                    2945
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -10806,14 +10974,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     98,
                                                                     "pos_bol":
-                                                                    2940,
+                                                                    2945,
                                                                     "pos_cnum":
-                                                                    2964
+                                                                    2969
                                                                     },
                                                                     "point_num":
-                                                                    2964,
+                                                                    2969,
                                                                     "point_bol":
-                                                                    2940
+                                                                    2945
                                                                     }
                                                                     }
                                                                     ]
@@ -10836,14 +11004,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     98,
                                                                     "pos_bol":
-                                                                    2940,
+                                                                    2945,
                                                                     "pos_cnum":
-                                                                    2966
+                                                                    2971
                                                                     },
                                                                     "point_num":
-                                                                    2966,
+                                                                    2971,
                                                                     "point_bol":
-                                                                    2940
+                                                                    2945
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -10852,14 +11020,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     98,
                                                                     "pos_bol":
-                                                                    2940,
+                                                                    2945,
                                                                     "pos_cnum":
-                                                                    2975
+                                                                    2980
                                                                     },
                                                                     "point_num":
-                                                                    2975,
+                                                                    2980,
                                                                     "point_bol":
-                                                                    2940
+                                                                    2945
                                                                     }
                                                                     }
                                                                     ],
@@ -10877,14 +11045,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     98,
                                                                     "pos_bol":
-                                                                    2940,
+                                                                    2945,
                                                                     "pos_cnum":
-                                                                    2966
+                                                                    2971
                                                                     },
                                                                     "point_num":
-                                                                    2966,
+                                                                    2971,
                                                                     "point_bol":
-                                                                    2940
+                                                                    2945
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -10893,14 +11061,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     98,
                                                                     "pos_bol":
-                                                                    2940,
+                                                                    2945,
                                                                     "pos_cnum":
-                                                                    2975
+                                                                    2980
                                                                     },
                                                                     "point_num":
-                                                                    2975,
+                                                                    2980,
                                                                     "point_bol":
-                                                                    2940
+                                                                    2945
                                                                     }
                                                                     }
                                                                     ]
@@ -10918,14 +11086,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     98,
                                                                     "pos_bol":
-                                                                    2940,
+                                                                    2945,
                                                                     "pos_cnum":
-                                                                    2951
+                                                                    2956
                                                                     },
                                                                     "point_num":
-                                                                    2951,
+                                                                    2956,
                                                                     "point_bol":
-                                                                    2940
+                                                                    2945
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -10934,14 +11102,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     98,
                                                                     "pos_bol":
-                                                                    2940,
+                                                                    2945,
                                                                     "pos_cnum":
-                                                                    2976
+                                                                    2981
                                                                     },
                                                                     "point_num":
-                                                                    2976,
+                                                                    2981,
                                                                     "point_bol":
-                                                                    2940
+                                                                    2945
                                                                     }
                                                                     }
                                                                     ]
@@ -10965,14 +11133,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     99,
                                                                     "pos_bol":
-                                                                    2982,
+                                                                    2987,
                                                                     "pos_cnum":
-                                                                    2992
+                                                                    2997
                                                                     },
                                                                     "point_num":
-                                                                    2992,
+                                                                    2997,
                                                                     "point_bol":
-                                                                    2982
+                                                                    2987
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -10981,14 +11149,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     99,
                                                                     "pos_bol":
-                                                                    2982,
+                                                                    2987,
                                                                     "pos_cnum":
-                                                                    2993
+                                                                    2998
                                                                     },
                                                                     "point_num":
-                                                                    2993,
+                                                                    2998,
                                                                     "point_bol":
-                                                                    2982
+                                                                    2987
                                                                     }
                                                                     }
                                                                     ],
@@ -11019,14 +11187,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     99,
                                                                     "pos_bol":
-                                                                    2982,
+                                                                    2987,
                                                                     "pos_cnum":
-                                                                    2992
+                                                                    2997
                                                                     },
                                                                     "point_num":
-                                                                    2992,
+                                                                    2997,
                                                                     "point_bol":
-                                                                    2982
+                                                                    2987
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -11035,14 +11203,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     99,
                                                                     "pos_bol":
-                                                                    2982,
+                                                                    2987,
                                                                     "pos_cnum":
-                                                                    2993
+                                                                    2998
                                                                     },
                                                                     "point_num":
-                                                                    2993,
+                                                                    2998,
                                                                     "point_bol":
-                                                                    2982
+                                                                    2987
                                                                     }
                                                                     }
                                                                     ],
@@ -11060,14 +11228,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     99,
                                                                     "pos_bol":
-                                                                    2982,
+                                                                    2987,
                                                                     "pos_cnum":
-                                                                    2992
+                                                                    2997
                                                                     },
                                                                     "point_num":
-                                                                    2992,
+                                                                    2997,
                                                                     "point_bol":
-                                                                    2982
+                                                                    2987
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -11076,14 +11244,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     99,
                                                                     "pos_bol":
-                                                                    2982,
+                                                                    2987,
                                                                     "pos_cnum":
-                                                                    3035
+                                                                    3040
                                                                     },
                                                                     "point_num":
-                                                                    3035,
+                                                                    3040,
                                                                     "point_bol":
-                                                                    2982
+                                                                    2987
                                                                     }
                                                                     }
                                                                     ]
@@ -11123,14 +11291,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     99,
                                                                     "pos_bol":
-                                                                    2982,
+                                                                    2987,
                                                                     "pos_cnum":
-                                                                    3012
+                                                                    3017
                                                                     },
                                                                     "point_num":
-                                                                    3012,
+                                                                    3017,
                                                                     "point_bol":
-                                                                    2982
+                                                                    2987
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -11139,14 +11307,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     99,
                                                                     "pos_bol":
-                                                                    2982,
+                                                                    2987,
                                                                     "pos_cnum":
-                                                                    3016
+                                                                    3021
                                                                     },
                                                                     "point_num":
-                                                                    3016,
+                                                                    3021,
                                                                     "point_bol":
-                                                                    2982
+                                                                    2987
                                                                     }
                                                                     }
                                                                     ],
@@ -11164,14 +11332,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     99,
                                                                     "pos_bol":
-                                                                    2982,
+                                                                    2987,
                                                                     "pos_cnum":
-                                                                    3012
+                                                                    3017
                                                                     },
                                                                     "point_num":
-                                                                    3012,
+                                                                    3017,
                                                                     "point_bol":
-                                                                    2982
+                                                                    2987
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -11180,14 +11348,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     99,
                                                                     "pos_bol":
-                                                                    2982,
+                                                                    2987,
                                                                     "pos_cnum":
-                                                                    3016
+                                                                    3021
                                                                     },
                                                                     "point_num":
-                                                                    3016,
+                                                                    3021,
                                                                     "point_bol":
-                                                                    2982
+                                                                    2987
                                                                     }
                                                                     }
                                                                     ]
@@ -11232,14 +11400,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     99,
                                                                     "pos_bol":
-                                                                    2982,
+                                                                    2987,
                                                                     "pos_cnum":
-                                                                    3026
+                                                                    3031
                                                                     },
                                                                     "point_num":
-                                                                    3026,
+                                                                    3031,
                                                                     "point_bol":
-                                                                    2982
+                                                                    2987
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -11248,14 +11416,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     99,
                                                                     "pos_bol":
-                                                                    2982,
+                                                                    2987,
                                                                     "pos_cnum":
-                                                                    3029
+                                                                    3034
                                                                     },
                                                                     "point_num":
-                                                                    3029,
+                                                                    3034,
                                                                     "point_bol":
-                                                                    2982
+                                                                    2987
                                                                     }
                                                                     }
                                                                     ],
@@ -11273,14 +11441,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     99,
                                                                     "pos_bol":
-                                                                    2982,
+                                                                    2987,
                                                                     "pos_cnum":
-                                                                    3026
+                                                                    3031
                                                                     },
                                                                     "point_num":
-                                                                    3026,
+                                                                    3031,
                                                                     "point_bol":
-                                                                    2982
+                                                                    2987
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -11289,14 +11457,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     99,
                                                                     "pos_bol":
-                                                                    2982,
+                                                                    2987,
                                                                     "pos_cnum":
-                                                                    3029
+                                                                    3034
                                                                     },
                                                                     "point_num":
-                                                                    3029,
+                                                                    3034,
                                                                     "point_bol":
-                                                                    2982
+                                                                    2987
                                                                     }
                                                                     }
                                                                     ]
@@ -11319,14 +11487,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     99,
                                                                     "pos_bol":
-                                                                    2982,
+                                                                    2987,
                                                                     "pos_cnum":
-                                                                    3032
+                                                                    3037
                                                                     },
                                                                     "point_num":
-                                                                    3032,
+                                                                    3037,
                                                                     "point_bol":
-                                                                    2982
+                                                                    2987
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -11335,14 +11503,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     99,
                                                                     "pos_bol":
-                                                                    2982,
+                                                                    2987,
                                                                     "pos_cnum":
-                                                                    3034
+                                                                    3039
                                                                     },
                                                                     "point_num":
-                                                                    3034,
+                                                                    3039,
                                                                     "point_bol":
-                                                                    2982
+                                                                    2987
                                                                     }
                                                                     }
                                                                     ]
@@ -11360,14 +11528,55 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     99,
                                                                     "pos_bol":
-                                                                    2982,
+                                                                    2987,
+                                                                    "pos_cnum":
+                                                                    3031
+                                                                    },
+                                                                    "point_num":
+                                                                    3031,
+                                                                    "point_bol":
+                                                                    2987
+                                                                    },
+                                                                    "stop": {
+                                                                    "byte": {
+                                                                    "pos_fname":
+                                                                    "../../test/contracts/multisig-v2.ligo",
+                                                                    "pos_lnum":
+                                                                    99,
+                                                                    "pos_bol":
+                                                                    2987,
+                                                                    "pos_cnum":
+                                                                    3039
+                                                                    },
+                                                                    "point_num":
+                                                                    3039,
+                                                                    "point_bol":
+                                                                    2987
+                                                                    }
+                                                                    }
+                                                                    ]
+                                                                    }
+                                                                    ]
+                                                                    }
+                                                                    ],
+                                                                    "location": [
+                                                                    "File",
+                                                                    {
+                                                                    "start": {
+                                                                    "byte": {
+                                                                    "pos_fname":
+                                                                    "../../test/contracts/multisig-v2.ligo",
+                                                                    "pos_lnum":
+                                                                    99,
+                                                                    "pos_bol":
+                                                                    2987,
                                                                     "pos_cnum":
                                                                     3026
                                                                     },
                                                                     "point_num":
                                                                     3026,
                                                                     "point_bol":
-                                                                    2982
+                                                                    2987
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -11376,55 +11585,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     99,
                                                                     "pos_bol":
-                                                                    2982,
+                                                                    2987,
                                                                     "pos_cnum":
-                                                                    3034
+                                                                    3040
                                                                     },
                                                                     "point_num":
-                                                                    3034,
+                                                                    3040,
                                                                     "point_bol":
-                                                                    2982
-                                                                    }
-                                                                    }
-                                                                    ]
-                                                                    }
-                                                                    ]
-                                                                    }
-                                                                    ],
-                                                                    "location": [
-                                                                    "File",
-                                                                    {
-                                                                    "start": {
-                                                                    "byte": {
-                                                                    "pos_fname":
-                                                                    "../../test/contracts/multisig-v2.ligo",
-                                                                    "pos_lnum":
-                                                                    99,
-                                                                    "pos_bol":
-                                                                    2982,
-                                                                    "pos_cnum":
-                                                                    3021
-                                                                    },
-                                                                    "point_num":
-                                                                    3021,
-                                                                    "point_bol":
-                                                                    2982
-                                                                    },
-                                                                    "stop": {
-                                                                    "byte": {
-                                                                    "pos_fname":
-                                                                    "../../test/contracts/multisig-v2.ligo",
-                                                                    "pos_lnum":
-                                                                    99,
-                                                                    "pos_bol":
-                                                                    2982,
-                                                                    "pos_cnum":
-                                                                    3035
-                                                                    },
-                                                                    "point_num":
-                                                                    3035,
-                                                                    "point_bol":
-                                                                    2982
+                                                                    2987
                                                                     }
                                                                     }
                                                                     ]
@@ -11451,14 +11619,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     99,
                                                                     "pos_bol":
-                                                                    2982,
+                                                                    2987,
                                                                     "pos_cnum":
-                                                                    2992
+                                                                    2997
                                                                     },
                                                                     "point_num":
-                                                                    2992,
+                                                                    2997,
                                                                     "point_bol":
-                                                                    2982
+                                                                    2987
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -11467,14 +11635,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     99,
                                                                     "pos_bol":
-                                                                    2982,
+                                                                    2987,
                                                                     "pos_cnum":
-                                                                    2993
+                                                                    2998
                                                                     },
                                                                     "point_num":
-                                                                    2993,
+                                                                    2998,
                                                                     "point_bol":
-                                                                    2982
+                                                                    2987
                                                                     }
                                                                     }
                                                                     ],
@@ -11492,14 +11660,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     99,
                                                                     "pos_bol":
-                                                                    2982,
+                                                                    2987,
                                                                     "pos_cnum":
-                                                                    2992
+                                                                    2997
                                                                     },
                                                                     "point_num":
-                                                                    2992,
+                                                                    2997,
                                                                     "point_bol":
-                                                                    2982
+                                                                    2987
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -11508,14 +11676,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     99,
                                                                     "pos_bol":
-                                                                    2982,
+                                                                    2987,
                                                                     "pos_cnum":
-                                                                    3035
+                                                                    3040
                                                                     },
                                                                     "point_num":
-                                                                    3035,
+                                                                    3040,
                                                                     "point_bol":
-                                                                    2982
+                                                                    2987
                                                                     }
                                                                     }
                                                                     ]
@@ -11538,14 +11706,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     99,
                                                                     "pos_bol":
-                                                                    2982,
+                                                                    2987,
                                                                     "pos_cnum":
-                                                                    2992
+                                                                    2997
                                                                     },
                                                                     "point_num":
-                                                                    2992,
+                                                                    2997,
                                                                     "point_bol":
-                                                                    2982
+                                                                    2987
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -11554,14 +11722,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     99,
                                                                     "pos_bol":
-                                                                    2982,
+                                                                    2987,
                                                                     "pos_cnum":
-                                                                    3035
+                                                                    3040
                                                                     },
                                                                     "point_num":
-                                                                    3035,
+                                                                    3040,
                                                                     "point_bol":
-                                                                    2982
+                                                                    2987
                                                                     }
                                                                     }
                                                                     ]
@@ -11579,14 +11747,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     99,
                                                                     "pos_bol":
-                                                                    2982,
+                                                                    2987,
                                                                     "pos_cnum":
-                                                                    2992
+                                                                    2997
                                                                     },
                                                                     "point_num":
-                                                                    2992,
+                                                                    2997,
                                                                     "point_bol":
-                                                                    2982
+                                                                    2987
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -11595,14 +11763,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     99,
                                                                     "pos_bol":
-                                                                    2982,
+                                                                    2987,
                                                                     "pos_cnum":
-                                                                    3035
+                                                                    3040
                                                                     },
                                                                     "point_num":
-                                                                    3035,
+                                                                    3040,
                                                                     "point_bol":
-                                                                    2982
+                                                                    2987
                                                                     }
                                                                     }
                                                                     ]
@@ -11619,14 +11787,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     99,
                                                                     "pos_bol":
-                                                                    2982,
+                                                                    2987,
                                                                     "pos_cnum":
-                                                                    2992
+                                                                    2997
                                                                     },
                                                                     "point_num":
-                                                                    2992,
+                                                                    2997,
                                                                     "point_bol":
-                                                                    2982
+                                                                    2987
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -11635,14 +11803,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     99,
                                                                     "pos_bol":
-                                                                    2982,
+                                                                    2987,
                                                                     "pos_cnum":
-                                                                    3035
+                                                                    3040
                                                                     },
                                                                     "point_num":
-                                                                    3035,
+                                                                    3040,
                                                                     "point_bol":
-                                                                    2982
+                                                                    2987
                                                                     }
                                                                     }
                                                                     ]
@@ -11659,14 +11827,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     99,
                                                                     "pos_bol":
-                                                                    2982,
+                                                                    2987,
                                                                     "pos_cnum":
-                                                                    2992
+                                                                    2997
                                                                     },
                                                                     "point_num":
-                                                                    2992,
+                                                                    2997,
                                                                     "point_bol":
-                                                                    2982
+                                                                    2987
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -11675,14 +11843,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     99,
                                                                     "pos_bol":
-                                                                    2982,
+                                                                    2987,
                                                                     "pos_cnum":
-                                                                    3035
+                                                                    3040
                                                                     },
                                                                     "point_num":
-                                                                    3035,
+                                                                    3040,
                                                                     "point_bol":
-                                                                    2982
+                                                                    2987
                                                                     }
                                                                     }
                                                                     ]
@@ -11702,14 +11870,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     100,
                                                                     "pos_bol":
-                                                                    3036,
+                                                                    3041,
                                                                     "pos_cnum":
-                                                                    3049
+                                                                    3054
                                                                     },
                                                                     "point_num":
-                                                                    3049,
+                                                                    3054,
                                                                     "point_bol":
-                                                                    3036
+                                                                    3041
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -11718,14 +11886,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     100,
                                                                     "pos_bol":
-                                                                    3036,
+                                                                    3041,
                                                                     "pos_cnum":
-                                                                    3053
+                                                                    3058
                                                                     },
                                                                     "point_num":
-                                                                    3053,
+                                                                    3058,
                                                                     "point_bol":
-                                                                    3036
+                                                                    3041
                                                                     }
                                                                     }
                                                                     ]
@@ -11742,14 +11910,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     98,
                                                                     "pos_bol":
-                                                                    2940,
+                                                                    2945,
                                                                     "pos_cnum":
-                                                                    2948
+                                                                    2953
                                                                     },
                                                                     "point_num":
-                                                                    2948,
+                                                                    2953,
                                                                     "point_bol":
-                                                                    2940
+                                                                    2945
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -11758,14 +11926,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     100,
                                                                     "pos_bol":
-                                                                    3036,
+                                                                    3041,
                                                                     "pos_cnum":
-                                                                    3053
+                                                                    3058
                                                                     },
                                                                     "point_num":
-                                                                    3053,
+                                                                    3058,
                                                                     "point_bol":
-                                                                    3036
+                                                                    3041
                                                                     }
                                                                     }
                                                                     ]
@@ -11782,14 +11950,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     97,
                                                                     "pos_bol":
-                                                                    2883,
+                                                                    2888,
                                                                     "pos_cnum":
-                                                                    2889
+                                                                    2894
                                                                     },
                                                                     "point_num":
-                                                                    2889,
+                                                                    2894,
                                                                     "point_bol":
-                                                                    2883
+                                                                    2888
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -11798,14 +11966,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     101,
                                                                     "pos_bol":
-                                                                    3054,
+                                                                    3059,
                                                                     "pos_cnum":
-                                                                    3061
+                                                                    3066
                                                                     },
                                                                     "point_num":
-                                                                    3061,
+                                                                    3066,
                                                                     "point_bol":
-                                                                    3054
+                                                                    3059
                                                                     }
                                                                     }
                                                                     ]
@@ -11850,14 +12018,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     102,
                                                                     "pos_bol":
-                                                                    3062,
+                                                                    3067,
                                                                     "pos_cnum":
-                                                                    3073
+                                                                    3078
                                                                     },
                                                                     "point_num":
-                                                                    3073,
+                                                                    3078,
                                                                     "point_bol":
-                                                                    3062
+                                                                    3067
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -11866,14 +12034,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     102,
                                                                     "pos_bol":
-                                                                    3062,
+                                                                    3067,
                                                                     "pos_cnum":
-                                                                    3074
+                                                                    3079
                                                                     },
                                                                     "point_num":
-                                                                    3074,
+                                                                    3079,
                                                                     "point_bol":
-                                                                    3062
+                                                                    3067
                                                                     }
                                                                     }
                                                                     ],
@@ -11904,14 +12072,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     102,
                                                                     "pos_bol":
-                                                                    3062,
+                                                                    3067,
                                                                     "pos_cnum":
-                                                                    3073
+                                                                    3078
                                                                     },
                                                                     "point_num":
-                                                                    3073,
+                                                                    3078,
                                                                     "point_bol":
-                                                                    3062
+                                                                    3067
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -11920,14 +12088,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     102,
                                                                     "pos_bol":
-                                                                    3062,
+                                                                    3067,
                                                                     "pos_cnum":
-                                                                    3074
+                                                                    3079
                                                                     },
                                                                     "point_num":
-                                                                    3074,
+                                                                    3079,
                                                                     "point_bol":
-                                                                    3062
+                                                                    3067
                                                                     }
                                                                     }
                                                                     ],
@@ -11945,14 +12113,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     102,
                                                                     "pos_bol":
-                                                                    3062,
+                                                                    3067,
                                                                     "pos_cnum":
-                                                                    3073
+                                                                    3078
                                                                     },
                                                                     "point_num":
-                                                                    3073,
+                                                                    3078,
                                                                     "point_bol":
-                                                                    3062
+                                                                    3067
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -11961,14 +12129,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     102,
                                                                     "pos_bol":
-                                                                    3062,
+                                                                    3067,
                                                                     "pos_cnum":
-                                                                    3113
+                                                                    3118
                                                                     },
                                                                     "point_num":
-                                                                    3113,
+                                                                    3118,
                                                                     "point_bol":
-                                                                    3062
+                                                                    3067
                                                                     }
                                                                     }
                                                                     ]
@@ -12008,14 +12176,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     102,
                                                                     "pos_bol":
-                                                                    3062,
+                                                                    3067,
                                                                     "pos_cnum":
-                                                                    3089
+                                                                    3094
                                                                     },
                                                                     "point_num":
-                                                                    3089,
+                                                                    3094,
                                                                     "point_bol":
-                                                                    3062
+                                                                    3067
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -12024,14 +12192,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     102,
                                                                     "pos_bol":
-                                                                    3062,
+                                                                    3067,
                                                                     "pos_cnum":
-                                                                    3099
+                                                                    3104
                                                                     },
                                                                     "point_num":
-                                                                    3099,
+                                                                    3104,
                                                                     "point_bol":
-                                                                    3062
+                                                                    3067
                                                                     }
                                                                     }
                                                                     ],
@@ -12049,14 +12217,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     102,
                                                                     "pos_bol":
-                                                                    3062,
+                                                                    3067,
                                                                     "pos_cnum":
-                                                                    3089
+                                                                    3094
                                                                     },
                                                                     "point_num":
-                                                                    3089,
+                                                                    3094,
                                                                     "point_bol":
-                                                                    3062
+                                                                    3067
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -12065,14 +12233,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     102,
                                                                     "pos_bol":
-                                                                    3062,
+                                                                    3067,
                                                                     "pos_cnum":
-                                                                    3099
+                                                                    3104
                                                                     },
                                                                     "point_num":
-                                                                    3099,
+                                                                    3104,
                                                                     "point_bol":
-                                                                    3062
+                                                                    3067
                                                                     }
                                                                     }
                                                                     ]
@@ -12095,14 +12263,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     102,
                                                                     "pos_bol":
-                                                                    3062,
+                                                                    3067,
                                                                     "pos_cnum":
-                                                                    3104
+                                                                    3109
                                                                     },
                                                                     "point_num":
-                                                                    3104,
+                                                                    3109,
                                                                     "point_bol":
-                                                                    3062
+                                                                    3067
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -12111,14 +12279,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     102,
                                                                     "pos_bol":
-                                                                    3062,
+                                                                    3067,
                                                                     "pos_cnum":
-                                                                    3113
+                                                                    3118
                                                                     },
                                                                     "point_num":
-                                                                    3113,
+                                                                    3118,
                                                                     "point_bol":
-                                                                    3062
+                                                                    3067
                                                                     }
                                                                     }
                                                                     ],
@@ -12136,14 +12304,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     102,
                                                                     "pos_bol":
-                                                                    3062,
+                                                                    3067,
                                                                     "pos_cnum":
-                                                                    3104
+                                                                    3109
                                                                     },
                                                                     "point_num":
-                                                                    3104,
+                                                                    3109,
                                                                     "point_bol":
-                                                                    3062
+                                                                    3067
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -12152,14 +12320,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     102,
                                                                     "pos_bol":
-                                                                    3062,
+                                                                    3067,
                                                                     "pos_cnum":
-                                                                    3113
+                                                                    3118
                                                                     },
                                                                     "point_num":
-                                                                    3113,
+                                                                    3118,
                                                                     "point_bol":
-                                                                    3062
+                                                                    3067
                                                                     }
                                                                     }
                                                                     ]
@@ -12186,14 +12354,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     102,
                                                                     "pos_bol":
-                                                                    3062,
+                                                                    3067,
                                                                     "pos_cnum":
-                                                                    3073
+                                                                    3078
                                                                     },
                                                                     "point_num":
-                                                                    3073,
+                                                                    3078,
                                                                     "point_bol":
-                                                                    3062
+                                                                    3067
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -12202,14 +12370,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     102,
                                                                     "pos_bol":
-                                                                    3062,
+                                                                    3067,
                                                                     "pos_cnum":
-                                                                    3074
+                                                                    3079
                                                                     },
                                                                     "point_num":
-                                                                    3074,
+                                                                    3079,
                                                                     "point_bol":
-                                                                    3062
+                                                                    3067
                                                                     }
                                                                     }
                                                                     ],
@@ -12227,14 +12395,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     102,
                                                                     "pos_bol":
-                                                                    3062,
+                                                                    3067,
                                                                     "pos_cnum":
-                                                                    3073
+                                                                    3078
                                                                     },
                                                                     "point_num":
-                                                                    3073,
+                                                                    3078,
                                                                     "point_bol":
-                                                                    3062
+                                                                    3067
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -12243,14 +12411,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     102,
                                                                     "pos_bol":
-                                                                    3062,
+                                                                    3067,
                                                                     "pos_cnum":
-                                                                    3113
+                                                                    3118
                                                                     },
                                                                     "point_num":
-                                                                    3113,
+                                                                    3118,
                                                                     "point_bol":
-                                                                    3062
+                                                                    3067
                                                                     }
                                                                     }
                                                                     ]
@@ -12273,14 +12441,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     102,
                                                                     "pos_bol":
-                                                                    3062,
+                                                                    3067,
                                                                     "pos_cnum":
-                                                                    3073
+                                                                    3078
                                                                     },
                                                                     "point_num":
-                                                                    3073,
+                                                                    3078,
                                                                     "point_bol":
-                                                                    3062
+                                                                    3067
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -12289,14 +12457,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     102,
                                                                     "pos_bol":
-                                                                    3062,
+                                                                    3067,
                                                                     "pos_cnum":
-                                                                    3113
+                                                                    3118
                                                                     },
                                                                     "point_num":
-                                                                    3113,
+                                                                    3118,
                                                                     "point_bol":
-                                                                    3062
+                                                                    3067
                                                                     }
                                                                     }
                                                                     ]
@@ -12314,14 +12482,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     102,
                                                                     "pos_bol":
-                                                                    3062,
+                                                                    3067,
                                                                     "pos_cnum":
-                                                                    3073
+                                                                    3078
                                                                     },
                                                                     "point_num":
-                                                                    3073,
+                                                                    3078,
                                                                     "point_bol":
-                                                                    3062
+                                                                    3067
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -12330,14 +12498,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     102,
                                                                     "pos_bol":
-                                                                    3062,
+                                                                    3067,
                                                                     "pos_cnum":
-                                                                    3113
+                                                                    3118
                                                                     },
                                                                     "point_num":
-                                                                    3113,
+                                                                    3118,
                                                                     "point_bol":
-                                                                    3062
+                                                                    3067
                                                                     }
                                                                     }
                                                                     ]
@@ -12354,14 +12522,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     102,
                                                                     "pos_bol":
-                                                                    3062,
+                                                                    3067,
                                                                     "pos_cnum":
-                                                                    3073
+                                                                    3078
                                                                     },
                                                                     "point_num":
-                                                                    3073,
+                                                                    3078,
                                                                     "point_bol":
-                                                                    3062
+                                                                    3067
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -12370,14 +12538,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     102,
                                                                     "pos_bol":
-                                                                    3062,
+                                                                    3067,
                                                                     "pos_cnum":
-                                                                    3113
+                                                                    3118
                                                                     },
                                                                     "point_num":
-                                                                    3113,
+                                                                    3118,
                                                                     "point_bol":
-                                                                    3062
+                                                                    3067
                                                                     }
                                                                     }
                                                                     ]
@@ -12394,14 +12562,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     102,
                                                                     "pos_bol":
-                                                                    3062,
+                                                                    3067,
                                                                     "pos_cnum":
-                                                                    3073
+                                                                    3078
                                                                     },
                                                                     "point_num":
-                                                                    3073,
+                                                                    3078,
                                                                     "point_bol":
-                                                                    3062
+                                                                    3067
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -12410,14 +12578,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     102,
                                                                     "pos_bol":
-                                                                    3062,
+                                                                    3067,
                                                                     "pos_cnum":
-                                                                    3113
+                                                                    3118
                                                                     },
                                                                     "point_num":
-                                                                    3113,
+                                                                    3118,
                                                                     "point_bol":
-                                                                    3062
+                                                                    3067
                                                                     }
                                                                     }
                                                                     ]
@@ -12434,14 +12602,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     91,
                                                                     "pos_bol":
-                                                                    2596,
+                                                                    2601,
                                                                     "pos_cnum":
-                                                                    2600
+                                                                    2605
                                                                     },
                                                                     "point_num":
-                                                                    2600,
+                                                                    2605,
                                                                     "point_bol":
-                                                                    2596
+                                                                    2601
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -12450,14 +12618,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     102,
                                                                     "pos_bol":
-                                                                    3062,
+                                                                    3067,
                                                                     "pos_cnum":
-                                                                    3113
+                                                                    3118
                                                                     },
                                                                     "point_num":
-                                                                    3113,
+                                                                    3118,
                                                                     "point_bol":
-                                                                    3062
+                                                                    3067
                                                                     }
                                                                     }
                                                                     ]
@@ -12484,14 +12652,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     103,
                                                                     "pos_bol":
-                                                                    3114,
+                                                                    3119,
                                                                     "pos_cnum":
-                                                                    3124
+                                                                    3129
                                                                     },
                                                                     "point_num":
-                                                                    3124,
+                                                                    3129,
                                                                     "point_bol":
-                                                                    3114
+                                                                    3119
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -12500,14 +12668,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     103,
                                                                     "pos_bol":
-                                                                    3114,
+                                                                    3119,
                                                                     "pos_cnum":
-                                                                    3131
+                                                                    3136
                                                                     },
                                                                     "point_num":
-                                                                    3131,
+                                                                    3136,
                                                                     "point_bol":
-                                                                    3114
+                                                                    3119
                                                                     }
                                                                     }
                                                                     ],
@@ -12525,14 +12693,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     103,
                                                                     "pos_bol":
-                                                                    3114,
+                                                                    3119,
                                                                     "pos_cnum":
-                                                                    3124
+                                                                    3129
                                                                     },
                                                                     "point_num":
-                                                                    3124,
+                                                                    3129,
                                                                     "point_bol":
-                                                                    3114
+                                                                    3119
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -12541,14 +12709,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     103,
                                                                     "pos_bol":
-                                                                    3114,
+                                                                    3119,
                                                                     "pos_cnum":
-                                                                    3131
+                                                                    3136
                                                                     },
                                                                     "point_num":
-                                                                    3131,
+                                                                    3136,
                                                                     "point_bol":
-                                                                    3114
+                                                                    3119
                                                                     }
                                                                     }
                                                                     ]
@@ -12571,14 +12739,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     103,
                                                                     "pos_bol":
-                                                                    3114,
+                                                                    3119,
                                                                     "pos_cnum":
-                                                                    3133
+                                                                    3138
                                                                     },
                                                                     "point_num":
-                                                                    3133,
+                                                                    3138,
                                                                     "point_bol":
-                                                                    3114
+                                                                    3119
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -12587,14 +12755,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     103,
                                                                     "pos_bol":
-                                                                    3114,
+                                                                    3119,
                                                                     "pos_cnum":
-                                                                    3134
+                                                                    3139
                                                                     },
                                                                     "point_num":
-                                                                    3134,
+                                                                    3139,
                                                                     "point_bol":
-                                                                    3114
+                                                                    3119
                                                                     }
                                                                     }
                                                                     ],
@@ -12612,14 +12780,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     103,
                                                                     "pos_bol":
-                                                                    3114,
+                                                                    3119,
                                                                     "pos_cnum":
-                                                                    3133
+                                                                    3138
                                                                     },
                                                                     "point_num":
-                                                                    3133,
+                                                                    3138,
                                                                     "point_bol":
-                                                                    3114
+                                                                    3119
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -12628,14 +12796,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     103,
                                                                     "pos_bol":
-                                                                    3114,
+                                                                    3119,
                                                                     "pos_cnum":
-                                                                    3134
+                                                                    3139
                                                                     },
                                                                     "point_num":
-                                                                    3134,
+                                                                    3139,
                                                                     "point_bol":
-                                                                    3114
+                                                                    3119
                                                                     }
                                                                     }
                                                                     ]
@@ -12652,14 +12820,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     103,
                                                                     "pos_bol":
-                                                                    3114,
+                                                                    3119,
                                                                     "pos_cnum":
-                                                                    3123
+                                                                    3128
                                                                     },
                                                                     "point_num":
-                                                                    3123,
+                                                                    3128,
                                                                     "point_bol":
-                                                                    3114
+                                                                    3119
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -12668,14 +12836,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     103,
                                                                     "pos_bol":
-                                                                    3114,
+                                                                    3119,
                                                                     "pos_cnum":
-                                                                    3135
+                                                                    3140
                                                                     },
                                                                     "point_num":
-                                                                    3135,
+                                                                    3140,
                                                                     "point_bol":
-                                                                    3114
+                                                                    3119
                                                                     }
                                                                     }
                                                                     ]
@@ -12703,14 +12871,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     89,
                                                                     "pos_bol":
-                                                                    2552,
+                                                                    2557,
                                                                     "pos_cnum":
-                                                                    2556
+                                                                    2561
                                                                     },
                                                                     "point_num":
-                                                                    2556,
+                                                                    2561,
                                                                     "point_bol":
-                                                                    2552
+                                                                    2557
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -12719,14 +12887,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     89,
                                                                     "pos_bol":
-                                                                    2552,
+                                                                    2557,
                                                                     "pos_cnum":
-                                                                    2593
+                                                                    2598
                                                                     },
                                                                     "point_num":
-                                                                    2593,
+                                                                    2598,
                                                                     "point_bol":
-                                                                    2552
+                                                                    2557
                                                                     }
                                                                     }
                                                                     ]
@@ -12754,14 +12922,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     80,
                                                                     "pos_bol":
-                                                                    2308,
+                                                                    2313,
                                                                     "pos_cnum":
-                                                                    2312
+                                                                    2317
                                                                     },
                                                                     "point_num":
-                                                                    2312,
+                                                                    2317,
                                                                     "point_bol":
-                                                                    2308
+                                                                    2313
                                                                   },
                                                                   "stop": {
                                                                     "byte": {
@@ -12770,14 +12938,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     81,
                                                                     "pos_bol":
-                                                                    2349,
+                                                                    2354,
                                                                     "pos_cnum":
-                                                                    2400
+                                                                    2405
                                                                     },
                                                                     "point_num":
-                                                                    2400,
+                                                                    2405,
                                                                     "point_bol":
-                                                                    2349
+                                                                    2354
                                                                   }
                                                                 }
                                                               ]
@@ -12919,11 +13087,11 @@ let%expect_test _ =
                 "byte": {
                   "pos_fname": "../../test/contracts/multisig-v2.ligo",
                   "pos_lnum": 103,
-                  "pos_bol": 3114,
-                  "pos_cnum": 3135
+                  "pos_bol": 3119,
+                  "pos_cnum": 3140
                 },
-                "point_num": 3135,
-                "point_bol": 3114
+                "point_num": 3140,
+                "point_bol": 3119
               }
             }
           ]
@@ -12948,11 +13116,11 @@ let%expect_test _ =
           "byte": {
             "pos_fname": "../../test/contracts/multisig-v2.ligo",
             "pos_lnum": 103,
-            "pos_bol": 3114,
-            "pos_cnum": 3135
+            "pos_bol": 3119,
+            "pos_cnum": 3140
           },
-          "point_num": 3135,
-          "point_bol": 3114
+          "point_num": 3140,
+          "point_bol": 3119
         }
       }
     ]
@@ -12972,21 +13140,21 @@ let%expect_test _ =
                   "byte": {
                     "pos_fname": "../../test/contracts/multisig-v2.ligo",
                     "pos_lnum": 105,
-                    "pos_bol": 3137,
-                    "pos_cnum": 3146
+                    "pos_bol": 3142,
+                    "pos_cnum": 3151
                   },
-                  "point_num": 3146,
-                  "point_bol": 3137
+                  "point_num": 3151,
+                  "point_bol": 3142
                 },
                 "stop": {
                   "byte": {
                     "pos_fname": "../../test/contracts/multisig-v2.ligo",
                     "pos_lnum": 105,
-                    "pos_bol": 3137,
-                    "pos_cnum": 3154
+                    "pos_bol": 3142,
+                    "pos_cnum": 3159
                   },
-                  "point_num": 3154,
-                  "point_bol": 3137
+                  "point_num": 3159,
+                  "point_bol": 3142
                 }
               }
             ],
@@ -13018,22 +13186,22 @@ let%expect_test _ =
                                 "pos_fname":
                                   "../../test/contracts/multisig-v2.ligo",
                                 "pos_lnum": 105,
-                                "pos_bol": 3137,
-                                "pos_cnum": 3170
+                                "pos_bol": 3142,
+                                "pos_cnum": 3175
                               },
-                              "point_num": 3170,
-                              "point_bol": 3137
+                              "point_num": 3175,
+                              "point_bol": 3142
                             },
                             "stop": {
                               "byte": {
                                 "pos_fname":
                                   "../../test/contracts/multisig-v2.ligo",
                                 "pos_lnum": 105,
-                                "pos_bol": 3137,
-                                "pos_cnum": 3181
+                                "pos_bol": 3142,
+                                "pos_cnum": 3186
                               },
-                              "point_num": 3181,
-                              "point_bol": 3137
+                              "point_num": 3186,
+                              "point_bol": 3142
                             }
                           }
                         ]
@@ -13056,22 +13224,22 @@ let%expect_test _ =
                                 "pos_fname":
                                   "../../test/contracts/multisig-v2.ligo",
                                 "pos_lnum": 105,
-                                "pos_bol": 3137,
-                                "pos_cnum": 3191
+                                "pos_bol": 3142,
+                                "pos_cnum": 3196
                               },
-                              "point_num": 3191,
-                              "point_bol": 3137
+                              "point_num": 3196,
+                              "point_bol": 3142
                             },
                             "stop": {
                               "byte": {
                                 "pos_fname":
                                   "../../test/contracts/multisig-v2.ligo",
                                 "pos_lnum": 105,
-                                "pos_bol": 3137,
-                                "pos_cnum": 3198
+                                "pos_bol": 3142,
+                                "pos_cnum": 3203
                               },
-                              "point_num": 3198,
-                              "point_bol": 3137
+                              "point_num": 3203,
+                              "point_bol": 3142
                             }
                           }
                         ]
@@ -13098,22 +13266,22 @@ let%expect_test _ =
                           "pos_fname":
                             "../../test/contracts/multisig-v2.ligo",
                           "pos_lnum": 105,
-                          "pos_bol": 3137,
-                          "pos_cnum": 3202
+                          "pos_bol": 3142,
+                          "pos_cnum": 3207
                         },
-                        "point_num": 3202,
-                        "point_bol": 3137
+                        "point_num": 3207,
+                        "point_bol": 3142
                       },
                       "stop": {
                         "byte": {
                           "pos_fname":
                             "../../test/contracts/multisig-v2.ligo",
                           "pos_lnum": 105,
-                          "pos_bol": 3137,
-                          "pos_cnum": 3208
+                          "pos_bol": 3142,
+                          "pos_cnum": 3213
                         },
-                        "point_num": 3208,
-                        "point_bol": 3137
+                        "point_num": 3213,
+                        "point_bol": 3142
                       }
                     }
                   ]
@@ -13156,22 +13324,22 @@ let%expect_test _ =
                                 "pos_fname":
                                   "../../test/contracts/multisig-v2.ligo",
                                 "pos_lnum": 105,
-                                "pos_bol": 3137,
-                                "pos_cnum": 3170
+                                "pos_bol": 3142,
+                                "pos_cnum": 3175
                               },
-                              "point_num": 3170,
-                              "point_bol": 3137
+                              "point_num": 3175,
+                              "point_bol": 3142
                             },
                             "stop": {
                               "byte": {
                                 "pos_fname":
                                   "../../test/contracts/multisig-v2.ligo",
                                 "pos_lnum": 105,
-                                "pos_bol": 3137,
-                                "pos_cnum": 3181
+                                "pos_bol": 3142,
+                                "pos_cnum": 3186
                               },
-                              "point_num": 3181,
-                              "point_bol": 3137
+                              "point_num": 3186,
+                              "point_bol": 3142
                             }
                           }
                         ]
@@ -13194,22 +13362,22 @@ let%expect_test _ =
                                 "pos_fname":
                                   "../../test/contracts/multisig-v2.ligo",
                                 "pos_lnum": 105,
-                                "pos_bol": 3137,
-                                "pos_cnum": 3191
+                                "pos_bol": 3142,
+                                "pos_cnum": 3196
                               },
-                              "point_num": 3191,
-                              "point_bol": 3137
+                              "point_num": 3196,
+                              "point_bol": 3142
                             },
                             "stop": {
                               "byte": {
                                 "pos_fname":
                                   "../../test/contracts/multisig-v2.ligo",
                                 "pos_lnum": 105,
-                                "pos_bol": 3137,
-                                "pos_cnum": 3198
+                                "pos_bol": 3142,
+                                "pos_cnum": 3203
                               },
-                              "point_num": 3198,
-                              "point_bol": 3137
+                              "point_num": 3203,
+                              "point_bol": 3142
                             }
                           }
                         ]
@@ -13237,21 +13405,21 @@ let%expect_test _ =
                       "byte": {
                         "pos_fname": "../../test/contracts/multisig-v2.ligo",
                         "pos_lnum": 105,
-                        "pos_bol": 3137,
-                        "pos_cnum": 3202
+                        "pos_bol": 3142,
+                        "pos_cnum": 3207
                       },
-                      "point_num": 3202,
-                      "point_bol": 3137
+                      "point_num": 3207,
+                      "point_bol": 3142
                     },
                     "stop": {
                       "byte": {
                         "pos_fname": "../../test/contracts/multisig-v2.ligo",
                         "pos_lnum": 105,
-                        "pos_bol": 3137,
-                        "pos_cnum": 3208
+                        "pos_bol": 3142,
+                        "pos_cnum": 3213
                       },
-                      "point_num": 3208,
-                      "point_bol": 3137
+                      "point_num": 3213,
+                      "point_bol": 3142
                     }
                   }
                 ]
@@ -13291,22 +13459,22 @@ let%expect_test _ =
                                           "pos_fname":
                                             "../../test/contracts/multisig-v2.ligo",
                                           "pos_lnum": 105,
-                                          "pos_bol": 3137,
-                                          "pos_cnum": 3162
+                                          "pos_bol": 3142,
+                                          "pos_cnum": 3167
                                         },
-                                        "point_num": 3162,
-                                        "point_bol": 3137
+                                        "point_num": 3167,
+                                        "point_bol": 3142
                                       },
                                       "stop": {
                                         "byte": {
                                           "pos_fname":
                                             "../../test/contracts/multisig-v2.ligo",
                                           "pos_lnum": 105,
-                                          "pos_bol": 3137,
-                                          "pos_cnum": 3167
+                                          "pos_bol": 3142,
+                                          "pos_cnum": 3172
                                         },
-                                        "point_num": 3167,
-                                        "point_bol": 3137
+                                        "point_num": 3172,
+                                        "point_bol": 3142
                                       }
                                     }
                                   ],
@@ -13330,22 +13498,22 @@ let%expect_test _ =
                                           "pos_fname":
                                             "../../test/contracts/multisig-v2.ligo",
                                           "pos_lnum": 105,
-                                          "pos_bol": 3137,
-                                          "pos_cnum": 3170
+                                          "pos_bol": 3142,
+                                          "pos_cnum": 3175
                                         },
-                                        "point_num": 3170,
-                                        "point_bol": 3137
+                                        "point_num": 3175,
+                                        "point_bol": 3142
                                       },
                                       "stop": {
                                         "byte": {
                                           "pos_fname":
                                             "../../test/contracts/multisig-v2.ligo",
                                           "pos_lnum": 105,
-                                          "pos_bol": 3137,
-                                          "pos_cnum": 3181
+                                          "pos_bol": 3142,
+                                          "pos_cnum": 3186
                                         },
-                                        "point_num": 3181,
-                                        "point_bol": 3137
+                                        "point_num": 3186,
+                                        "point_bol": 3142
                                       }
                                     }
                                   ]
@@ -13367,22 +13535,22 @@ let%expect_test _ =
                                           "pos_fname":
                                             "../../test/contracts/multisig-v2.ligo",
                                           "pos_lnum": 105,
-                                          "pos_bol": 3137,
-                                          "pos_cnum": 3187
+                                          "pos_bol": 3142,
+                                          "pos_cnum": 3192
                                         },
-                                        "point_num": 3187,
-                                        "point_bol": 3137
+                                        "point_num": 3192,
+                                        "point_bol": 3142
                                       },
                                       "stop": {
                                         "byte": {
                                           "pos_fname":
                                             "../../test/contracts/multisig-v2.ligo",
                                           "pos_lnum": 105,
-                                          "pos_bol": 3137,
-                                          "pos_cnum": 3188
+                                          "pos_bol": 3142,
+                                          "pos_cnum": 3193
                                         },
-                                        "point_num": 3188,
-                                        "point_bol": 3137
+                                        "point_num": 3193,
+                                        "point_bol": 3142
                                       }
                                     }
                                   ],
@@ -13406,22 +13574,22 @@ let%expect_test _ =
                                           "pos_fname":
                                             "../../test/contracts/multisig-v2.ligo",
                                           "pos_lnum": 105,
-                                          "pos_bol": 3137,
-                                          "pos_cnum": 3191
+                                          "pos_bol": 3142,
+                                          "pos_cnum": 3196
                                         },
-                                        "point_num": 3191,
-                                        "point_bol": 3137
+                                        "point_num": 3196,
+                                        "point_bol": 3142
                                       },
                                       "stop": {
                                         "byte": {
                                           "pos_fname":
                                             "../../test/contracts/multisig-v2.ligo",
                                           "pos_lnum": 105,
-                                          "pos_bol": 3137,
-                                          "pos_cnum": 3198
+                                          "pos_bol": 3142,
+                                          "pos_cnum": 3203
                                         },
-                                        "point_num": 3198,
-                                        "point_bol": 3137
+                                        "point_num": 3203,
+                                        "point_bol": 3142
                                       }
                                     }
                                   ]
@@ -13447,22 +13615,22 @@ let%expect_test _ =
                                           "pos_fname":
                                             "../../test/contracts/multisig-v2.ligo",
                                           "pos_lnum": 107,
-                                          "pos_bol": 3222,
-                                          "pos_cnum": 3230
+                                          "pos_bol": 3227,
+                                          "pos_cnum": 3235
                                         },
-                                        "point_num": 3230,
-                                        "point_bol": 3222
+                                        "point_num": 3235,
+                                        "point_bol": 3227
                                       },
                                       "stop": {
                                         "byte": {
                                           "pos_fname":
                                             "../../test/contracts/multisig-v2.ligo",
                                           "pos_lnum": 107,
-                                          "pos_bol": 3222,
-                                          "pos_cnum": 3237
+                                          "pos_bol": 3227,
+                                          "pos_cnum": 3242
                                         },
-                                        "point_num": 3237,
-                                        "point_bol": 3222
+                                        "point_num": 3242,
+                                        "point_bol": 3227
                                       }
                                     }
                                   ],
@@ -13486,22 +13654,22 @@ let%expect_test _ =
                                           "pos_fname":
                                             "../../test/contracts/multisig-v2.ligo",
                                           "pos_lnum": 107,
-                                          "pos_bol": 3222,
-                                          "pos_cnum": 3240
+                                          "pos_bol": 3227,
+                                          "pos_cnum": 3245
                                         },
-                                        "point_num": 3240,
-                                        "point_bol": 3222
+                                        "point_num": 3245,
+                                        "point_bol": 3227
                                       },
                                       "stop": {
                                         "byte": {
                                           "pos_fname":
                                             "../../test/contracts/multisig-v2.ligo",
                                           "pos_lnum": 107,
-                                          "pos_bol": 3222,
-                                          "pos_cnum": 3247
+                                          "pos_bol": 3227,
+                                          "pos_cnum": 3252
                                         },
-                                        "point_num": 3247,
-                                        "point_bol": 3222
+                                        "point_num": 3252,
+                                        "point_bol": 3227
                                       }
                                     }
                                   ]
@@ -13522,22 +13690,22 @@ let%expect_test _ =
                                             "pos_fname":
                                               "../../test/contracts/multisig-v2.ligo",
                                             "pos_lnum": 107,
-                                            "pos_bol": 3222,
-                                            "pos_cnum": 3251
+                                            "pos_bol": 3227,
+                                            "pos_cnum": 3256
                                           },
-                                          "point_num": 3251,
-                                          "point_bol": 3222
+                                          "point_num": 3256,
+                                          "point_bol": 3227
                                         },
                                         "stop": {
                                           "byte": {
                                             "pos_fname":
                                               "../../test/contracts/multisig-v2.ligo",
                                             "pos_lnum": 107,
-                                            "pos_bol": 3222,
-                                            "pos_cnum": 3256
+                                            "pos_bol": 3227,
+                                            "pos_cnum": 3261
                                           },
-                                          "point_num": 3256,
-                                          "point_bol": 3222
+                                          "point_num": 3261,
+                                          "point_bol": 3227
                                         }
                                       }
                                     ],
@@ -13552,22 +13720,22 @@ let%expect_test _ =
                                         "pos_fname":
                                           "../../test/contracts/multisig-v2.ligo",
                                         "pos_lnum": 107,
-                                        "pos_bol": 3222,
-                                        "pos_cnum": 3251
+                                        "pos_bol": 3227,
+                                        "pos_cnum": 3256
                                       },
-                                      "point_num": 3251,
-                                      "point_bol": 3222
+                                      "point_num": 3256,
+                                      "point_bol": 3227
                                     },
                                     "stop": {
                                       "byte": {
                                         "pos_fname":
                                           "../../test/contracts/multisig-v2.ligo",
                                         "pos_lnum": 107,
-                                        "pos_bol": 3222,
-                                        "pos_cnum": 3256
+                                        "pos_bol": 3227,
+                                        "pos_cnum": 3261
                                       },
-                                      "point_num": 3256,
-                                      "point_bol": 3222
+                                      "point_num": 3261,
+                                      "point_bol": 3227
                                     }
                                   }
                                 ]
@@ -13588,22 +13756,22 @@ let%expect_test _ =
                                                 "pos_fname":
                                                   "../../test/contracts/multisig-v2.ligo",
                                                 "pos_lnum": 108,
-                                                "pos_bol": 3258,
-                                                "pos_cnum": 3268
+                                                "pos_bol": 3263,
+                                                "pos_cnum": 3273
                                               },
-                                              "point_num": 3268,
-                                              "point_bol": 3258
+                                              "point_num": 3273,
+                                              "point_bol": 3263
                                             },
                                             "stop": {
                                               "byte": {
                                                 "pos_fname":
                                                   "../../test/contracts/multisig-v2.ligo",
                                                 "pos_lnum": 108,
-                                                "pos_bol": 3258,
-                                                "pos_cnum": 3278
+                                                "pos_bol": 3263,
+                                                "pos_cnum": 3283
                                               },
-                                              "point_num": 3278,
-                                              "point_bol": 3258
+                                              "point_num": 3283,
+                                              "point_bol": 3263
                                             }
                                           }
                                         ],
@@ -13629,22 +13797,22 @@ let%expect_test _ =
                                                 "pos_fname":
                                                   "../../test/contracts/multisig-v2.ligo",
                                                 "pos_lnum": 108,
-                                                "pos_bol": 3258,
-                                                "pos_cnum": 3281
+                                                "pos_bol": 3263,
+                                                "pos_cnum": 3286
                                               },
-                                              "point_num": 3281,
-                                              "point_bol": 3258
+                                              "point_num": 3286,
+                                              "point_bol": 3263
                                             },
                                             "stop": {
                                               "byte": {
                                                 "pos_fname":
                                                   "../../test/contracts/multisig-v2.ligo",
                                                 "pos_lnum": 108,
-                                                "pos_bol": 3258,
-                                                "pos_cnum": 3286
+                                                "pos_bol": 3263,
+                                                "pos_cnum": 3291
                                               },
-                                              "point_num": 3286,
-                                              "point_bol": 3258
+                                              "point_num": 3291,
+                                              "point_bol": 3263
                                             }
                                           }
                                         ]
@@ -13671,22 +13839,22 @@ let%expect_test _ =
                                                             "pos_fname":
                                                               "../../test/contracts/multisig-v2.ligo",
                                                             "pos_lnum": 108,
-                                                            "pos_bol": 3258,
-                                                            "pos_cnum": 3289
+                                                            "pos_bol": 3263,
+                                                            "pos_cnum": 3294
                                                           },
-                                                          "point_num": 3289,
-                                                          "point_bol": 3258
+                                                          "point_num": 3294,
+                                                          "point_bol": 3263
                                                         },
                                                         "stop": {
                                                           "byte": {
                                                             "pos_fname":
                                                               "../../test/contracts/multisig-v2.ligo",
                                                             "pos_lnum": 108,
-                                                            "pos_bol": 3258,
-                                                            "pos_cnum": 3294
+                                                            "pos_bol": 3263,
+                                                            "pos_cnum": 3299
                                                           },
-                                                          "point_num": 3294,
-                                                          "point_bol": 3258
+                                                          "point_num": 3299,
+                                                          "point_bol": 3263
                                                         }
                                                       }
                                                     ],
@@ -13704,22 +13872,22 @@ let%expect_test _ =
                                                           "pos_fname":
                                                             "../../test/contracts/multisig-v2.ligo",
                                                           "pos_lnum": 108,
-                                                          "pos_bol": 3258,
-                                                          "pos_cnum": 3295
+                                                          "pos_bol": 3263,
+                                                          "pos_cnum": 3300
                                                         },
-                                                        "point_num": 3295,
-                                                        "point_bol": 3258
+                                                        "point_num": 3300,
+                                                        "point_bol": 3263
                                                       },
                                                       "stop": {
                                                         "byte": {
                                                           "pos_fname":
                                                             "../../test/contracts/multisig-v2.ligo",
                                                           "pos_lnum": 108,
-                                                          "pos_bol": 3258,
-                                                          "pos_cnum": 3299
+                                                          "pos_bol": 3263,
+                                                          "pos_cnum": 3304
                                                         },
-                                                        "point_num": 3299,
-                                                        "point_bol": 3258
+                                                        "point_num": 3304,
+                                                        "point_bol": 3263
                                                       }
                                                     }
                                                   ],
@@ -13735,22 +13903,22 @@ let%expect_test _ =
                                                     "pos_fname":
                                                       "../../test/contracts/multisig-v2.ligo",
                                                     "pos_lnum": 108,
-                                                    "pos_bol": 3258,
-                                                    "pos_cnum": 3289
+                                                    "pos_bol": 3263,
+                                                    "pos_cnum": 3294
                                                   },
-                                                  "point_num": 3289,
-                                                  "point_bol": 3258
+                                                  "point_num": 3294,
+                                                  "point_bol": 3263
                                                 },
                                                 "stop": {
                                                   "byte": {
                                                     "pos_fname":
                                                       "../../test/contracts/multisig-v2.ligo",
                                                     "pos_lnum": 108,
-                                                    "pos_bol": 3258,
-                                                    "pos_cnum": 3299
+                                                    "pos_bol": 3263,
+                                                    "pos_cnum": 3304
                                                   },
-                                                  "point_num": 3299,
-                                                  "point_bol": 3258
+                                                  "point_num": 3304,
+                                                  "point_bol": 3263
                                                 }
                                               }
                                             ]
@@ -13769,22 +13937,22 @@ let%expect_test _ =
                                                         "pos_fname":
                                                           "../../test/contracts/multisig-v2.ligo",
                                                         "pos_lnum": 108,
-                                                        "pos_bol": 3258,
-                                                        "pos_cnum": 3301
+                                                        "pos_bol": 3263,
+                                                        "pos_cnum": 3306
                                                       },
-                                                      "point_num": 3301,
-                                                      "point_bol": 3258
+                                                      "point_num": 3306,
+                                                      "point_bol": 3263
                                                     },
                                                     "stop": {
                                                       "byte": {
                                                         "pos_fname":
                                                           "../../test/contracts/multisig-v2.ligo",
                                                         "pos_lnum": 108,
-                                                        "pos_bol": 3258,
-                                                        "pos_cnum": 3308
+                                                        "pos_bol": 3263,
+                                                        "pos_cnum": 3313
                                                       },
-                                                      "point_num": 3308,
-                                                      "point_bol": 3258
+                                                      "point_num": 3313,
+                                                      "point_bol": 3263
                                                     }
                                                   }
                                                 ],
@@ -13799,22 +13967,22 @@ let%expect_test _ =
                                                     "pos_fname":
                                                       "../../test/contracts/multisig-v2.ligo",
                                                     "pos_lnum": 108,
-                                                    "pos_bol": 3258,
-                                                    "pos_cnum": 3301
+                                                    "pos_bol": 3263,
+                                                    "pos_cnum": 3306
                                                   },
-                                                  "point_num": 3301,
-                                                  "point_bol": 3258
+                                                  "point_num": 3306,
+                                                  "point_bol": 3263
                                                 },
                                                 "stop": {
                                                   "byte": {
                                                     "pos_fname":
                                                       "../../test/contracts/multisig-v2.ligo",
                                                     "pos_lnum": 108,
-                                                    "pos_bol": 3258,
-                                                    "pos_cnum": 3308
+                                                    "pos_bol": 3263,
+                                                    "pos_cnum": 3313
                                                   },
-                                                  "point_num": 3308,
-                                                  "point_bol": 3258
+                                                  "point_num": 3313,
+                                                  "point_bol": 3263
                                                 }
                                               }
                                             ]
@@ -13829,22 +13997,22 @@ let%expect_test _ =
                                               "pos_fname":
                                                 "../../test/contracts/multisig-v2.ligo",
                                               "pos_lnum": 108,
-                                              "pos_bol": 3258,
-                                              "pos_cnum": 3289
+                                              "pos_bol": 3263,
+                                              "pos_cnum": 3294
                                             },
-                                            "point_num": 3289,
-                                            "point_bol": 3258
+                                            "point_num": 3294,
+                                            "point_bol": 3263
                                           },
                                           "stop": {
                                             "byte": {
                                               "pos_fname":
                                                 "../../test/contracts/multisig-v2.ligo",
                                               "pos_lnum": 108,
-                                              "pos_bol": 3258,
-                                              "pos_cnum": 3309
+                                              "pos_bol": 3263,
+                                              "pos_cnum": 3314
                                             },
-                                            "point_num": 3309,
-                                            "point_bol": 3258
+                                            "point_num": 3314,
+                                            "point_bol": 3263
                                           }
                                         }
                                       ]
@@ -13882,14 +14050,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     110,
                                                                     "pos_bol":
-                                                                    3312,
+                                                                    3317,
                                                                     "pos_cnum":
-                                                                    3321
+                                                                    3326
                                                                     },
                                                                     "point_num":
-                                                                    3321,
+                                                                    3326,
                                                                     "point_bol":
-                                                                    3312
+                                                                    3317
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -13898,14 +14066,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     110,
                                                                     "pos_bol":
-                                                                    3312,
+                                                                    3317,
                                                                     "pos_cnum":
-                                                                    3322
+                                                                    3327
                                                                     },
                                                                     "point_num":
-                                                                    3322,
+                                                                    3327,
                                                                     "point_bol":
-                                                                    3312
+                                                                    3317
                                                                     }
                                                                     }
                                                                   ],
@@ -13923,14 +14091,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     110,
                                                                     "pos_bol":
-                                                                    3312,
+                                                                    3317,
                                                                     "pos_cnum":
-                                                                    3321
+                                                                    3326
                                                                     },
                                                                     "point_num":
-                                                                    3321,
+                                                                    3326,
                                                                     "point_bol":
-                                                                    3312
+                                                                    3317
                                                                   },
                                                                   "stop": {
                                                                     "byte": {
@@ -13939,14 +14107,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     110,
                                                                     "pos_bol":
-                                                                    3312,
+                                                                    3317,
                                                                     "pos_cnum":
-                                                                    3322
+                                                                    3327
                                                                     },
                                                                     "point_num":
-                                                                    3322,
+                                                                    3327,
                                                                     "point_bol":
-                                                                    3312
+                                                                    3317
                                                                   }
                                                                 }
                                                               ]
@@ -13969,14 +14137,14 @@ let%expect_test _ =
                                                                 "pos_lnum":
                                                                   110,
                                                                 "pos_bol":
-                                                                  3312,
+                                                                  3317,
                                                                 "pos_cnum":
-                                                                  3321
+                                                                  3326
                                                               },
                                                               "point_num":
-                                                                3321,
+                                                                3326,
                                                               "point_bol":
-                                                                3312
+                                                                3317
                                                             },
                                                             "stop": {
                                                               "byte": {
@@ -13985,14 +14153,14 @@ let%expect_test _ =
                                                                 "pos_lnum":
                                                                   110,
                                                                 "pos_bol":
-                                                                  3312,
+                                                                  3317,
                                                                 "pos_cnum":
-                                                                  3336
+                                                                  3341
                                                               },
                                                               "point_num":
-                                                                3336,
+                                                                3341,
                                                               "point_bol":
-                                                                3312
+                                                                3317
                                                             }
                                                           }
                                                         ]
@@ -14017,14 +14185,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     110,
                                                                     "pos_bol":
-                                                                    3312,
+                                                                    3317,
                                                                     "pos_cnum":
-                                                                    3337
+                                                                    3342
                                                                     },
                                                                     "point_num":
-                                                                    3337,
+                                                                    3342,
                                                                     "point_bol":
-                                                                    3312
+                                                                    3317
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -14033,14 +14201,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     110,
                                                                     "pos_bol":
-                                                                    3312,
+                                                                    3317,
                                                                     "pos_cnum":
-                                                                    3347
+                                                                    3352
                                                                     },
                                                                     "point_num":
-                                                                    3347,
+                                                                    3352,
                                                                     "point_bol":
-                                                                    3312
+                                                                    3317
                                                                     }
                                                                   }
                                                                 ],
@@ -14058,14 +14226,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     110,
                                                                     "pos_bol":
-                                                                    3312,
+                                                                    3317,
                                                                     "pos_cnum":
-                                                                    3337
+                                                                    3342
                                                                   },
                                                                   "point_num":
-                                                                    3337,
+                                                                    3342,
                                                                   "point_bol":
-                                                                    3312
+                                                                    3317
                                                                 },
                                                                 "stop": {
                                                                   "byte": {
@@ -14074,14 +14242,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     110,
                                                                     "pos_bol":
-                                                                    3312,
+                                                                    3317,
                                                                     "pos_cnum":
-                                                                    3347
+                                                                    3352
                                                                   },
                                                                   "point_num":
-                                                                    3347,
+                                                                    3352,
                                                                   "point_bol":
-                                                                    3312
+                                                                    3317
                                                                 }
                                                               }
                                                             ]
@@ -14098,22 +14266,22 @@ let%expect_test _ =
                                                           "pos_fname":
                                                             "../../test/contracts/multisig-v2.ligo",
                                                           "pos_lnum": 110,
-                                                          "pos_bol": 3312,
-                                                          "pos_cnum": 3321
+                                                          "pos_bol": 3317,
+                                                          "pos_cnum": 3326
                                                         },
-                                                        "point_num": 3321,
-                                                        "point_bol": 3312
+                                                        "point_num": 3326,
+                                                        "point_bol": 3317
                                                       },
                                                       "stop": {
                                                         "byte": {
                                                           "pos_fname":
                                                             "../../test/contracts/multisig-v2.ligo",
                                                           "pos_lnum": 110,
-                                                          "pos_bol": 3312,
-                                                          "pos_cnum": 3347
+                                                          "pos_bol": 3317,
+                                                          "pos_cnum": 3352
                                                         },
-                                                        "point_num": 3347,
-                                                        "point_bol": 3312
+                                                        "point_num": 3352,
+                                                        "point_bol": 3317
                                                       }
                                                     }
                                                   ]
@@ -14139,14 +14307,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     111,
                                                                     "pos_bol":
-                                                                    3354,
+                                                                    3359,
                                                                     "pos_cnum":
-                                                                    3366
+                                                                    3371
                                                                   },
                                                                   "point_num":
-                                                                    3366,
+                                                                    3371,
                                                                   "point_bol":
-                                                                    3354
+                                                                    3359
                                                                 },
                                                                 "stop": {
                                                                   "byte": {
@@ -14155,14 +14323,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     111,
                                                                     "pos_bol":
-                                                                    3354,
+                                                                    3359,
                                                                     "pos_cnum":
-                                                                    3372
+                                                                    3377
                                                                   },
                                                                   "point_num":
-                                                                    3372,
+                                                                    3377,
                                                                   "point_bol":
-                                                                    3354
+                                                                    3359
                                                                 }
                                                               }
                                                             ],
@@ -14194,14 +14362,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     114,
                                                                     "pos_bol":
-                                                                    3428,
+                                                                    3433,
                                                                     "pos_cnum":
-                                                                    3444
+                                                                    3449
                                                                     },
                                                                     "point_num":
-                                                                    3444,
+                                                                    3449,
                                                                     "point_bol":
-                                                                    3428
+                                                                    3433
                                                                   },
                                                                   "stop": {
                                                                     "byte": {
@@ -14210,14 +14378,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     114,
                                                                     "pos_bol":
-                                                                    3428,
+                                                                    3433,
                                                                     "pos_cnum":
-                                                                    3451
+                                                                    3456
                                                                     },
                                                                     "point_num":
-                                                                    3451,
+                                                                    3456,
                                                                     "point_bol":
-                                                                    3428
+                                                                    3433
                                                                   }
                                                                 }
                                                               ],
@@ -14250,14 +14418,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     114,
                                                                     "pos_bol":
-                                                                    3428,
+                                                                    3433,
                                                                     "pos_cnum":
-                                                                    3454
+                                                                    3459
                                                                     },
                                                                     "point_num":
-                                                                    3454,
+                                                                    3459,
                                                                     "point_bol":
-                                                                    3428
+                                                                    3433
                                                                   },
                                                                   "stop": {
                                                                     "byte": {
@@ -14266,14 +14434,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     114,
                                                                     "pos_bol":
-                                                                    3428,
+                                                                    3433,
                                                                     "pos_cnum":
-                                                                    3462
+                                                                    3467
                                                                     },
                                                                     "point_num":
-                                                                    3462,
+                                                                    3467,
                                                                     "point_bol":
-                                                                    3428
+                                                                    3433
                                                                   }
                                                                 }
                                                               ]
@@ -14316,14 +14484,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     114,
                                                                     "pos_bol":
-                                                                    3428,
+                                                                    3433,
                                                                     "pos_cnum":
-                                                                    3477
+                                                                    3482
                                                                     },
                                                                     "point_num":
-                                                                    3477,
+                                                                    3482,
                                                                     "point_bol":
-                                                                    3428
+                                                                    3433
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -14332,14 +14500,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     114,
                                                                     "pos_bol":
-                                                                    3428,
+                                                                    3433,
                                                                     "pos_cnum":
-                                                                    3489
+                                                                    3494
                                                                     },
                                                                     "point_num":
-                                                                    3489,
+                                                                    3494,
                                                                     "point_bol":
-                                                                    3428
+                                                                    3433
                                                                     }
                                                                     }
                                                                     ]
@@ -14362,14 +14530,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     114,
                                                                     "pos_bol":
-                                                                    3428,
+                                                                    3433,
                                                                     "pos_cnum":
-                                                                    3491
+                                                                    3496
                                                                     },
                                                                     "point_num":
-                                                                    3491,
+                                                                    3496,
                                                                     "point_bol":
-                                                                    3428
+                                                                    3433
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -14378,14 +14546,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     114,
                                                                     "pos_bol":
-                                                                    3428,
+                                                                    3433,
                                                                     "pos_cnum":
-                                                                    3497
+                                                                    3502
                                                                     },
                                                                     "point_num":
-                                                                    3497,
+                                                                    3502,
                                                                     "point_bol":
-                                                                    3428
+                                                                    3433
                                                                     }
                                                                     }
                                                                     ],
@@ -14403,14 +14571,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     114,
                                                                     "pos_bol":
-                                                                    3428,
+                                                                    3433,
                                                                     "pos_cnum":
-                                                                    3491
+                                                                    3496
                                                                     },
                                                                     "point_num":
-                                                                    3491,
+                                                                    3496,
                                                                     "point_bol":
-                                                                    3428
+                                                                    3433
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -14419,14 +14587,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     114,
                                                                     "pos_bol":
-                                                                    3428,
+                                                                    3433,
                                                                     "pos_cnum":
-                                                                    3497
+                                                                    3502
                                                                     },
                                                                     "point_num":
-                                                                    3497,
+                                                                    3502,
                                                                     "point_bol":
-                                                                    3428
+                                                                    3433
                                                                     }
                                                                     }
                                                                     ]
@@ -14444,14 +14612,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     114,
                                                                     "pos_bol":
-                                                                    3428,
+                                                                    3433,
                                                                     "pos_cnum":
-                                                                    3465
+                                                                    3470
                                                                   },
                                                                   "point_num":
-                                                                    3465,
+                                                                    3470,
                                                                   "point_bol":
-                                                                    3428
+                                                                    3433
                                                                 },
                                                                 "stop": {
                                                                   "byte": {
@@ -14460,14 +14628,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     114,
                                                                     "pos_bol":
-                                                                    3428,
+                                                                    3433,
                                                                     "pos_cnum":
-                                                                    3498
+                                                                    3503
                                                                   },
                                                                   "point_num":
-                                                                    3498,
+                                                                    3503,
                                                                   "point_bol":
-                                                                    3428
+                                                                    3433
                                                                 }
                                                               }
                                                             ]
@@ -14515,14 +14683,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     119,
                                                                     "pos_bol":
-                                                                    3612,
+                                                                    3617,
                                                                     "pos_cnum":
-                                                                    3625
+                                                                    3630
                                                                     },
                                                                     "point_num":
-                                                                    3625,
+                                                                    3630,
                                                                     "point_bol":
-                                                                    3612
+                                                                    3617
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -14531,14 +14699,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     119,
                                                                     "pos_bol":
-                                                                    3612,
+                                                                    3617,
                                                                     "pos_cnum":
-                                                                    3628
+                                                                    3633
                                                                     },
                                                                     "point_num":
-                                                                    3628,
+                                                                    3633,
                                                                     "point_bol":
-                                                                    3612
+                                                                    3617
                                                                     }
                                                                     }
                                                                     ],
@@ -14561,14 +14729,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     119,
                                                                     "pos_bol":
-                                                                    3612,
+                                                                    3617,
                                                                     "pos_cnum":
-                                                                    3629
+                                                                    3634
                                                                     },
                                                                     "point_num":
-                                                                    3629,
+                                                                    3634,
                                                                     "point_bol":
-                                                                    3612
+                                                                    3617
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -14577,14 +14745,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     119,
                                                                     "pos_bol":
-                                                                    3612,
+                                                                    3617,
                                                                     "pos_cnum":
-                                                                    3637
+                                                                    3642
                                                                     },
                                                                     "point_num":
-                                                                    3637,
+                                                                    3642,
                                                                     "point_bol":
-                                                                    3612
+                                                                    3617
                                                                     }
                                                                     }
                                                                     ],
@@ -14603,14 +14771,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     119,
                                                                     "pos_bol":
-                                                                    3612,
+                                                                    3617,
                                                                     "pos_cnum":
-                                                                    3625
+                                                                    3630
                                                                     },
                                                                     "point_num":
-                                                                    3625,
+                                                                    3630,
                                                                     "point_bol":
-                                                                    3612
+                                                                    3617
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -14619,14 +14787,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     119,
                                                                     "pos_bol":
-                                                                    3612,
+                                                                    3617,
                                                                     "pos_cnum":
-                                                                    3637
+                                                                    3642
                                                                     },
                                                                     "point_num":
-                                                                    3637,
+                                                                    3642,
                                                                     "point_bol":
-                                                                    3612
+                                                                    3617
                                                                     }
                                                                     }
                                                                     ]
@@ -14649,14 +14817,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     119,
                                                                     "pos_bol":
-                                                                    3612,
+                                                                    3617,
                                                                     "pos_cnum":
-                                                                    3639
+                                                                    3644
                                                                     },
                                                                     "point_num":
-                                                                    3639,
+                                                                    3644,
                                                                     "point_bol":
-                                                                    3612
+                                                                    3617
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -14665,14 +14833,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     119,
                                                                     "pos_bol":
-                                                                    3612,
+                                                                    3617,
                                                                     "pos_cnum":
-                                                                    3645
+                                                                    3650
                                                                     },
                                                                     "point_num":
-                                                                    3645,
+                                                                    3650,
                                                                     "point_bol":
-                                                                    3612
+                                                                    3617
                                                                     }
                                                                     }
                                                                     ],
@@ -14690,14 +14858,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     119,
                                                                     "pos_bol":
-                                                                    3612,
+                                                                    3617,
                                                                     "pos_cnum":
-                                                                    3639
+                                                                    3644
                                                                     },
                                                                     "point_num":
-                                                                    3639,
+                                                                    3644,
                                                                     "point_bol":
-                                                                    3612
+                                                                    3617
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -14706,14 +14874,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     119,
                                                                     "pos_bol":
-                                                                    3612,
+                                                                    3617,
                                                                     "pos_cnum":
-                                                                    3645
+                                                                    3650
                                                                     },
                                                                     "point_num":
-                                                                    3645,
+                                                                    3650,
                                                                     "point_bol":
-                                                                    3612
+                                                                    3617
                                                                     }
                                                                     }
                                                                     ]
@@ -14730,14 +14898,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     119,
                                                                     "pos_bol":
-                                                                    3612,
+                                                                    3617,
                                                                     "pos_cnum":
-                                                                    3625
+                                                                    3630
                                                                     },
                                                                     "point_num":
-                                                                    3625,
+                                                                    3630,
                                                                     "point_bol":
-                                                                    3612
+                                                                    3617
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -14746,14 +14914,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     119,
                                                                     "pos_bol":
-                                                                    3612,
+                                                                    3617,
                                                                     "pos_cnum":
-                                                                    3646
+                                                                    3651
                                                                     },
                                                                     "point_num":
-                                                                    3646,
+                                                                    3651,
                                                                     "point_bol":
-                                                                    3612
+                                                                    3617
                                                                     }
                                                                     }
                                                                     ]
@@ -14782,14 +14950,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     119,
                                                                     "pos_bol":
-                                                                    3612,
+                                                                    3617,
                                                                     "pos_cnum":
-                                                                    3651
+                                                                    3656
                                                                     },
                                                                     "point_num":
-                                                                    3651,
+                                                                    3656,
                                                                     "point_bol":
-                                                                    3612
+                                                                    3617
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -14798,14 +14966,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     119,
                                                                     "pos_bol":
-                                                                    3612,
+                                                                    3617,
                                                                     "pos_cnum":
-                                                                    3654
+                                                                    3659
                                                                     },
                                                                     "point_num":
-                                                                    3654,
+                                                                    3659,
                                                                     "point_bol":
-                                                                    3612
+                                                                    3617
                                                                     }
                                                                     }
                                                                     ],
@@ -14828,14 +14996,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     119,
                                                                     "pos_bol":
-                                                                    3612,
+                                                                    3617,
                                                                     "pos_cnum":
-                                                                    3655
+                                                                    3660
                                                                     },
                                                                     "point_num":
-                                                                    3655,
+                                                                    3660,
                                                                     "point_bol":
-                                                                    3612
+                                                                    3617
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -14844,14 +15012,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     119,
                                                                     "pos_bol":
-                                                                    3612,
+                                                                    3617,
                                                                     "pos_cnum":
-                                                                    3663
+                                                                    3668
                                                                     },
                                                                     "point_num":
-                                                                    3663,
+                                                                    3668,
                                                                     "point_bol":
-                                                                    3612
+                                                                    3617
                                                                     }
                                                                     }
                                                                     ],
@@ -14870,14 +15038,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     119,
                                                                     "pos_bol":
-                                                                    3612,
+                                                                    3617,
                                                                     "pos_cnum":
-                                                                    3651
+                                                                    3656
                                                                     },
                                                                     "point_num":
-                                                                    3651,
+                                                                    3656,
                                                                     "point_bol":
-                                                                    3612
+                                                                    3617
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -14886,14 +15054,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     119,
                                                                     "pos_bol":
-                                                                    3612,
+                                                                    3617,
                                                                     "pos_cnum":
-                                                                    3663
+                                                                    3668
                                                                     },
                                                                     "point_num":
-                                                                    3663,
+                                                                    3668,
                                                                     "point_bol":
-                                                                    3612
+                                                                    3617
                                                                     }
                                                                     }
                                                                     ]
@@ -14916,14 +15084,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     119,
                                                                     "pos_bol":
-                                                                    3612,
+                                                                    3617,
                                                                     "pos_cnum":
-                                                                    3665
+                                                                    3670
                                                                     },
                                                                     "point_num":
-                                                                    3665,
+                                                                    3670,
                                                                     "point_bol":
-                                                                    3612
+                                                                    3617
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -14932,14 +15100,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     119,
                                                                     "pos_bol":
-                                                                    3612,
+                                                                    3617,
                                                                     "pos_cnum":
-                                                                    3672
+                                                                    3677
                                                                     },
                                                                     "point_num":
-                                                                    3672,
+                                                                    3677,
                                                                     "point_bol":
-                                                                    3612
+                                                                    3617
                                                                     }
                                                                     }
                                                                     ],
@@ -14957,14 +15125,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     119,
                                                                     "pos_bol":
-                                                                    3612,
+                                                                    3617,
                                                                     "pos_cnum":
-                                                                    3665
+                                                                    3670
                                                                     },
                                                                     "point_num":
-                                                                    3665,
+                                                                    3670,
                                                                     "point_bol":
-                                                                    3612
+                                                                    3617
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -14973,14 +15141,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     119,
                                                                     "pos_bol":
-                                                                    3612,
+                                                                    3617,
                                                                     "pos_cnum":
-                                                                    3672
+                                                                    3677
                                                                     },
                                                                     "point_num":
-                                                                    3672,
+                                                                    3677,
                                                                     "point_bol":
-                                                                    3612
+                                                                    3617
                                                                     }
                                                                     }
                                                                     ]
@@ -14997,14 +15165,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     119,
                                                                     "pos_bol":
-                                                                    3612,
+                                                                    3617,
                                                                     "pos_cnum":
-                                                                    3651
+                                                                    3656
                                                                     },
                                                                     "point_num":
-                                                                    3651,
+                                                                    3656,
                                                                     "point_bol":
-                                                                    3612
+                                                                    3617
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -15013,14 +15181,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     119,
                                                                     "pos_bol":
-                                                                    3612,
+                                                                    3617,
                                                                     "pos_cnum":
-                                                                    3673
+                                                                    3678
                                                                     },
                                                                     "point_num":
-                                                                    3673,
+                                                                    3678,
                                                                     "point_bol":
-                                                                    3612
+                                                                    3617
                                                                     }
                                                                     }
                                                                     ]
@@ -15038,14 +15206,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     119,
                                                                     "pos_bol":
-                                                                    3612,
+                                                                    3617,
                                                                     "pos_cnum":
-                                                                    3625
+                                                                    3630
                                                                     },
                                                                     "point_num":
-                                                                    3625,
+                                                                    3630,
                                                                     "point_bol":
-                                                                    3612
+                                                                    3617
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -15054,14 +15222,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     119,
                                                                     "pos_bol":
-                                                                    3612,
+                                                                    3617,
                                                                     "pos_cnum":
-                                                                    3673
+                                                                    3678
                                                                     },
                                                                     "point_num":
-                                                                    3673,
+                                                                    3678,
                                                                     "point_bol":
-                                                                    3612
+                                                                    3617
                                                                     }
                                                                     }
                                                                     ]
@@ -15085,14 +15253,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     120,
                                                                     "pos_bol":
-                                                                    3674,
+                                                                    3679,
                                                                     "pos_cnum":
-                                                                    3689
+                                                                    3694
                                                                     },
                                                                     "point_num":
-                                                                    3689,
+                                                                    3694,
                                                                     "point_bol":
-                                                                    3674
+                                                                    3679
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -15101,14 +15269,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     120,
                                                                     "pos_bol":
-                                                                    3674,
+                                                                    3679,
                                                                     "pos_cnum":
-                                                                    3690
+                                                                    3695
                                                                     },
                                                                     "point_num":
-                                                                    3690,
+                                                                    3695,
                                                                     "point_bol":
-                                                                    3674
+                                                                    3679
                                                                     }
                                                                     }
                                                                     ],
@@ -15139,14 +15307,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     120,
                                                                     "pos_bol":
-                                                                    3674,
+                                                                    3679,
                                                                     "pos_cnum":
-                                                                    3689
+                                                                    3694
                                                                     },
                                                                     "point_num":
-                                                                    3689,
+                                                                    3694,
                                                                     "point_bol":
-                                                                    3674
+                                                                    3679
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -15155,14 +15323,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     120,
                                                                     "pos_bol":
-                                                                    3674,
+                                                                    3679,
                                                                     "pos_cnum":
-                                                                    3690
+                                                                    3695
                                                                     },
                                                                     "point_num":
-                                                                    3690,
+                                                                    3695,
                                                                     "point_bol":
-                                                                    3674
+                                                                    3679
                                                                     }
                                                                     }
                                                                     ],
@@ -15180,14 +15348,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     120,
                                                                     "pos_bol":
-                                                                    3674,
+                                                                    3679,
                                                                     "pos_cnum":
-                                                                    3689
+                                                                    3694
                                                                     },
                                                                     "point_num":
-                                                                    3689,
+                                                                    3694,
                                                                     "point_bol":
-                                                                    3674
+                                                                    3679
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -15196,14 +15364,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     121,
                                                                     "pos_bol":
-                                                                    3726,
+                                                                    3731,
                                                                     "pos_cnum":
-                                                                    3799
+                                                                    3804
                                                                     },
                                                                     "point_num":
-                                                                    3799,
+                                                                    3804,
                                                                     "point_bol":
-                                                                    3726
+                                                                    3731
                                                                     }
                                                                     }
                                                                     ]
@@ -15249,14 +15417,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     120,
                                                                     "pos_bol":
-                                                                    3674,
+                                                                    3679,
                                                                     "pos_cnum":
-                                                                    3709
+                                                                    3714
                                                                     },
                                                                     "point_num":
-                                                                    3709,
+                                                                    3714,
                                                                     "point_bol":
-                                                                    3674
+                                                                    3679
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -15265,14 +15433,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     120,
                                                                     "pos_bol":
-                                                                    3674,
+                                                                    3679,
                                                                     "pos_cnum":
-                                                                    3721
+                                                                    3726
                                                                     },
                                                                     "point_num":
-                                                                    3721,
+                                                                    3726,
                                                                     "point_bol":
-                                                                    3674
+                                                                    3679
                                                                     }
                                                                     }
                                                                     ]
@@ -15338,14 +15506,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     121,
                                                                     "pos_bol":
-                                                                    3726,
+                                                                    3731,
                                                                     "pos_cnum":
-                                                                    3759
+                                                                    3764
                                                                     },
                                                                     "point_num":
-                                                                    3759,
+                                                                    3764,
                                                                     "point_bol":
-                                                                    3726
+                                                                    3731
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -15354,14 +15522,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     121,
                                                                     "pos_bol":
-                                                                    3726,
+                                                                    3731,
                                                                     "pos_cnum":
-                                                                    3771
+                                                                    3776
                                                                     },
                                                                     "point_num":
-                                                                    3771,
+                                                                    3776,
                                                                     "point_bol":
-                                                                    3726
+                                                                    3731
                                                                     }
                                                                     }
                                                                     ]
@@ -15388,14 +15556,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     121,
                                                                     "pos_bol":
-                                                                    3726,
+                                                                    3731,
                                                                     "pos_cnum":
-                                                                    3773
+                                                                    3778
                                                                     },
                                                                     "point_num":
-                                                                    3773,
+                                                                    3778,
                                                                     "point_bol":
-                                                                    3726
+                                                                    3731
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -15404,14 +15572,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     121,
                                                                     "pos_bol":
-                                                                    3726,
+                                                                    3731,
                                                                     "pos_cnum":
-                                                                    3774
+                                                                    3779
                                                                     },
                                                                     "point_num":
-                                                                    3774,
+                                                                    3779,
                                                                     "point_bol":
-                                                                    3726
+                                                                    3731
                                                                     }
                                                                     }
                                                                     ],
@@ -15429,14 +15597,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     121,
                                                                     "pos_bol":
-                                                                    3726,
+                                                                    3731,
                                                                     "pos_cnum":
-                                                                    3773
+                                                                    3778
                                                                     },
                                                                     "point_num":
-                                                                    3773,
+                                                                    3778,
                                                                     "point_bol":
-                                                                    3726
+                                                                    3731
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -15445,14 +15613,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     121,
                                                                     "pos_bol":
-                                                                    3726,
+                                                                    3731,
                                                                     "pos_cnum":
-                                                                    3774
+                                                                    3779
                                                                     },
                                                                     "point_num":
-                                                                    3774,
+                                                                    3779,
                                                                     "point_bol":
-                                                                    3726
+                                                                    3731
                                                                     }
                                                                     }
                                                                     ]
@@ -15475,14 +15643,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     121,
                                                                     "pos_bol":
-                                                                    3726,
+                                                                    3731,
                                                                     "pos_cnum":
-                                                                    3773
+                                                                    3778
                                                                     },
                                                                     "point_num":
-                                                                    3773,
+                                                                    3778,
                                                                     "point_bol":
-                                                                    3726
+                                                                    3731
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -15491,14 +15659,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     121,
                                                                     "pos_bol":
-                                                                    3726,
+                                                                    3731,
                                                                     "pos_cnum":
-                                                                    3792
+                                                                    3797
                                                                     },
                                                                     "point_num":
-                                                                    3792,
+                                                                    3797,
                                                                     "point_bol":
-                                                                    3726
+                                                                    3731
                                                                     }
                                                                     }
                                                                     ]
@@ -15516,14 +15684,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     121,
                                                                     "pos_bol":
-                                                                    3726,
+                                                                    3731,
                                                                     "pos_cnum":
-                                                                    3748
+                                                                    3753
                                                                     },
                                                                     "point_num":
-                                                                    3748,
+                                                                    3753,
                                                                     "point_bol":
-                                                                    3726
+                                                                    3731
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -15532,14 +15700,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     121,
                                                                     "pos_bol":
-                                                                    3726,
+                                                                    3731,
                                                                     "pos_cnum":
-                                                                    3793
+                                                                    3798
                                                                     },
                                                                     "point_num":
-                                                                    3793,
+                                                                    3798,
                                                                     "point_bol":
-                                                                    3726
+                                                                    3731
                                                                     }
                                                                     }
                                                                     ]
@@ -15562,14 +15730,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     121,
                                                                     "pos_bol":
-                                                                    3726,
+                                                                    3731,
                                                                     "pos_cnum":
-                                                                    3796
+                                                                    3801
                                                                     },
                                                                     "point_num":
-                                                                    3796,
+                                                                    3801,
                                                                     "point_bol":
-                                                                    3726
+                                                                    3731
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -15578,14 +15746,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     121,
                                                                     "pos_bol":
-                                                                    3726,
+                                                                    3731,
                                                                     "pos_cnum":
-                                                                    3798
+                                                                    3803
                                                                     },
                                                                     "point_num":
-                                                                    3798,
+                                                                    3803,
                                                                     "point_bol":
-                                                                    3726
+                                                                    3731
                                                                     }
                                                                     }
                                                                     ]
@@ -15603,14 +15771,55 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     121,
                                                                     "pos_bol":
-                                                                    3726,
+                                                                    3731,
+                                                                    "pos_cnum":
+                                                                    3753
+                                                                    },
+                                                                    "point_num":
+                                                                    3753,
+                                                                    "point_bol":
+                                                                    3731
+                                                                    },
+                                                                    "stop": {
+                                                                    "byte": {
+                                                                    "pos_fname":
+                                                                    "../../test/contracts/multisig-v2.ligo",
+                                                                    "pos_lnum":
+                                                                    121,
+                                                                    "pos_bol":
+                                                                    3731,
+                                                                    "pos_cnum":
+                                                                    3803
+                                                                    },
+                                                                    "point_num":
+                                                                    3803,
+                                                                    "point_bol":
+                                                                    3731
+                                                                    }
+                                                                    }
+                                                                    ]
+                                                                    }
+                                                                    ]
+                                                                    }
+                                                                    ],
+                                                                    "location": [
+                                                                    "File",
+                                                                    {
+                                                                    "start": {
+                                                                    "byte": {
+                                                                    "pos_fname":
+                                                                    "../../test/contracts/multisig-v2.ligo",
+                                                                    "pos_lnum":
+                                                                    121,
+                                                                    "pos_bol":
+                                                                    3731,
                                                                     "pos_cnum":
                                                                     3748
                                                                     },
                                                                     "point_num":
                                                                     3748,
                                                                     "point_bol":
-                                                                    3726
+                                                                    3731
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -15619,55 +15828,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     121,
                                                                     "pos_bol":
-                                                                    3726,
+                                                                    3731,
                                                                     "pos_cnum":
-                                                                    3798
+                                                                    3804
                                                                     },
                                                                     "point_num":
-                                                                    3798,
+                                                                    3804,
                                                                     "point_bol":
-                                                                    3726
-                                                                    }
-                                                                    }
-                                                                    ]
-                                                                    }
-                                                                    ]
-                                                                    }
-                                                                    ],
-                                                                    "location": [
-                                                                    "File",
-                                                                    {
-                                                                    "start": {
-                                                                    "byte": {
-                                                                    "pos_fname":
-                                                                    "../../test/contracts/multisig-v2.ligo",
-                                                                    "pos_lnum":
-                                                                    121,
-                                                                    "pos_bol":
-                                                                    3726,
-                                                                    "pos_cnum":
-                                                                    3743
-                                                                    },
-                                                                    "point_num":
-                                                                    3743,
-                                                                    "point_bol":
-                                                                    3726
-                                                                    },
-                                                                    "stop": {
-                                                                    "byte": {
-                                                                    "pos_fname":
-                                                                    "../../test/contracts/multisig-v2.ligo",
-                                                                    "pos_lnum":
-                                                                    121,
-                                                                    "pos_bol":
-                                                                    3726,
-                                                                    "pos_cnum":
-                                                                    3799
-                                                                    },
-                                                                    "point_num":
-                                                                    3799,
-                                                                    "point_bol":
-                                                                    3726
+                                                                    3731
                                                                     }
                                                                     }
                                                                     ]
@@ -15694,14 +15862,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     120,
                                                                     "pos_bol":
-                                                                    3674,
+                                                                    3679,
                                                                     "pos_cnum":
-                                                                    3689
+                                                                    3694
                                                                     },
                                                                     "point_num":
-                                                                    3689,
+                                                                    3694,
                                                                     "point_bol":
-                                                                    3674
+                                                                    3679
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -15710,14 +15878,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     120,
                                                                     "pos_bol":
-                                                                    3674,
+                                                                    3679,
                                                                     "pos_cnum":
-                                                                    3690
+                                                                    3695
                                                                     },
                                                                     "point_num":
-                                                                    3690,
+                                                                    3695,
                                                                     "point_bol":
-                                                                    3674
+                                                                    3679
                                                                     }
                                                                     }
                                                                     ],
@@ -15735,14 +15903,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     120,
                                                                     "pos_bol":
-                                                                    3674,
+                                                                    3679,
                                                                     "pos_cnum":
-                                                                    3689
+                                                                    3694
                                                                     },
                                                                     "point_num":
-                                                                    3689,
+                                                                    3694,
                                                                     "point_bol":
-                                                                    3674
+                                                                    3679
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -15751,14 +15919,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     121,
                                                                     "pos_bol":
-                                                                    3726,
+                                                                    3731,
                                                                     "pos_cnum":
-                                                                    3799
+                                                                    3804
                                                                     },
                                                                     "point_num":
-                                                                    3799,
+                                                                    3804,
                                                                     "point_bol":
-                                                                    3726
+                                                                    3731
                                                                     }
                                                                     }
                                                                     ]
@@ -15781,14 +15949,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     120,
                                                                     "pos_bol":
-                                                                    3674,
+                                                                    3679,
                                                                     "pos_cnum":
-                                                                    3689
+                                                                    3694
                                                                     },
                                                                     "point_num":
-                                                                    3689,
+                                                                    3694,
                                                                     "point_bol":
-                                                                    3674
+                                                                    3679
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -15797,14 +15965,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     121,
                                                                     "pos_bol":
-                                                                    3726,
+                                                                    3731,
                                                                     "pos_cnum":
-                                                                    3799
+                                                                    3804
                                                                     },
                                                                     "point_num":
-                                                                    3799,
+                                                                    3804,
                                                                     "point_bol":
-                                                                    3726
+                                                                    3731
                                                                     }
                                                                     }
                                                                     ]
@@ -15822,14 +15990,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     120,
                                                                     "pos_bol":
-                                                                    3674,
+                                                                    3679,
                                                                     "pos_cnum":
-                                                                    3689
+                                                                    3694
                                                                     },
                                                                     "point_num":
-                                                                    3689,
+                                                                    3694,
                                                                     "point_bol":
-                                                                    3674
+                                                                    3679
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -15838,14 +16006,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     121,
                                                                     "pos_bol":
-                                                                    3726,
+                                                                    3731,
                                                                     "pos_cnum":
-                                                                    3799
+                                                                    3804
                                                                     },
                                                                     "point_num":
-                                                                    3799,
+                                                                    3804,
                                                                     "point_bol":
-                                                                    3726
+                                                                    3731
                                                                     }
                                                                     }
                                                                     ]
@@ -15862,14 +16030,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     120,
                                                                     "pos_bol":
-                                                                    3674,
+                                                                    3679,
                                                                     "pos_cnum":
-                                                                    3689
+                                                                    3694
                                                                     },
                                                                     "point_num":
-                                                                    3689,
+                                                                    3694,
                                                                     "point_bol":
-                                                                    3674
+                                                                    3679
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -15878,14 +16046,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     121,
                                                                     "pos_bol":
-                                                                    3726,
+                                                                    3731,
                                                                     "pos_cnum":
-                                                                    3799
+                                                                    3804
                                                                     },
                                                                     "point_num":
-                                                                    3799,
+                                                                    3804,
                                                                     "point_bol":
-                                                                    3726
+                                                                    3731
                                                                     }
                                                                     }
                                                                     ]
@@ -15902,14 +16070,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     120,
                                                                     "pos_bol":
-                                                                    3674,
+                                                                    3679,
                                                                     "pos_cnum":
-                                                                    3689
+                                                                    3694
                                                                     },
                                                                     "point_num":
-                                                                    3689,
+                                                                    3694,
                                                                     "point_bol":
-                                                                    3674
+                                                                    3679
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -15918,14 +16086,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     121,
                                                                     "pos_bol":
-                                                                    3726,
+                                                                    3731,
                                                                     "pos_cnum":
-                                                                    3799
+                                                                    3804
                                                                     },
                                                                     "point_num":
-                                                                    3799,
+                                                                    3804,
                                                                     "point_bol":
-                                                                    3726
+                                                                    3731
                                                                     }
                                                                     }
                                                                     ]
@@ -15945,14 +16113,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     122,
                                                                     "pos_bol":
-                                                                    3800,
+                                                                    3805,
                                                                     "pos_cnum":
-                                                                    3815
+                                                                    3820
                                                                     },
                                                                     "point_num":
-                                                                    3815,
+                                                                    3820,
                                                                     "point_bol":
-                                                                    3800
+                                                                    3805
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -15961,14 +16129,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     122,
                                                                     "pos_bol":
-                                                                    3800,
+                                                                    3805,
                                                                     "pos_cnum":
-                                                                    3819
+                                                                    3824
                                                                     },
                                                                     "point_num":
-                                                                    3819,
+                                                                    3824,
                                                                     "point_bol":
-                                                                    3800
+                                                                    3805
                                                                     }
                                                                     }
                                                                     ]
@@ -15985,14 +16153,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     119,
                                                                     "pos_bol":
-                                                                    3612,
+                                                                    3617,
                                                                     "pos_cnum":
-                                                                    3622
+                                                                    3627
                                                                     },
                                                                     "point_num":
-                                                                    3622,
+                                                                    3627,
                                                                     "point_bol":
-                                                                    3612
+                                                                    3617
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -16001,14 +16169,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     122,
                                                                     "pos_bol":
-                                                                    3800,
+                                                                    3805,
                                                                     "pos_cnum":
-                                                                    3819
+                                                                    3824
                                                                     },
                                                                     "point_num":
-                                                                    3819,
+                                                                    3824,
                                                                     "point_bol":
-                                                                    3800
+                                                                    3805
                                                                     }
                                                                     }
                                                                   ]
@@ -16052,14 +16220,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     127,
                                                                     "pos_bol":
-                                                                    3954,
+                                                                    3959,
                                                                     "pos_cnum":
-                                                                    3967
+                                                                    3972
                                                                     },
                                                                     "point_num":
-                                                                    3967,
+                                                                    3972,
                                                                     "point_bol":
-                                                                    3954
+                                                                    3959
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -16068,14 +16236,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     127,
                                                                     "pos_bol":
-                                                                    3954,
+                                                                    3959,
                                                                     "pos_cnum":
-                                                                    3970
+                                                                    3975
                                                                     },
                                                                     "point_num":
-                                                                    3970,
+                                                                    3975,
                                                                     "point_bol":
-                                                                    3954
+                                                                    3959
                                                                     }
                                                                     }
                                                                     ],
@@ -16098,14 +16266,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     127,
                                                                     "pos_bol":
-                                                                    3954,
+                                                                    3959,
                                                                     "pos_cnum":
-                                                                    3971
+                                                                    3976
                                                                     },
                                                                     "point_num":
-                                                                    3971,
+                                                                    3976,
                                                                     "point_bol":
-                                                                    3954
+                                                                    3959
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -16114,14 +16282,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     127,
                                                                     "pos_bol":
-                                                                    3954,
+                                                                    3959,
                                                                     "pos_cnum":
-                                                                    3979
+                                                                    3984
                                                                     },
                                                                     "point_num":
-                                                                    3979,
+                                                                    3984,
                                                                     "point_bol":
-                                                                    3954
+                                                                    3959
                                                                     }
                                                                     }
                                                                     ],
@@ -16140,14 +16308,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     127,
                                                                     "pos_bol":
-                                                                    3954,
+                                                                    3959,
                                                                     "pos_cnum":
-                                                                    3967
+                                                                    3972
                                                                     },
                                                                     "point_num":
-                                                                    3967,
+                                                                    3972,
                                                                     "point_bol":
-                                                                    3954
+                                                                    3959
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -16156,14 +16324,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     127,
                                                                     "pos_bol":
-                                                                    3954,
+                                                                    3959,
                                                                     "pos_cnum":
-                                                                    3979
+                                                                    3984
                                                                     },
                                                                     "point_num":
-                                                                    3979,
+                                                                    3984,
                                                                     "point_bol":
-                                                                    3954
+                                                                    3959
                                                                     }
                                                                     }
                                                                     ]
@@ -16186,14 +16354,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     127,
                                                                     "pos_bol":
-                                                                    3954,
+                                                                    3959,
                                                                     "pos_cnum":
-                                                                    3981
+                                                                    3986
                                                                     },
                                                                     "point_num":
-                                                                    3981,
+                                                                    3986,
                                                                     "point_bol":
-                                                                    3954
+                                                                    3959
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -16202,14 +16370,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     127,
                                                                     "pos_bol":
-                                                                    3954,
+                                                                    3959,
                                                                     "pos_cnum":
-                                                                    3988
+                                                                    3993
                                                                     },
                                                                     "point_num":
-                                                                    3988,
+                                                                    3993,
                                                                     "point_bol":
-                                                                    3954
+                                                                    3959
                                                                     }
                                                                     }
                                                                     ],
@@ -16227,14 +16395,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     127,
                                                                     "pos_bol":
-                                                                    3954,
+                                                                    3959,
                                                                     "pos_cnum":
-                                                                    3981
+                                                                    3986
                                                                     },
                                                                     "point_num":
-                                                                    3981,
+                                                                    3986,
                                                                     "point_bol":
-                                                                    3954
+                                                                    3959
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -16243,14 +16411,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     127,
                                                                     "pos_bol":
-                                                                    3954,
+                                                                    3959,
                                                                     "pos_cnum":
-                                                                    3988
+                                                                    3993
                                                                     },
                                                                     "point_num":
-                                                                    3988,
+                                                                    3993,
                                                                     "point_bol":
-                                                                    3954
+                                                                    3959
                                                                     }
                                                                     }
                                                                     ]
@@ -16267,14 +16435,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     127,
                                                                     "pos_bol":
-                                                                    3954,
+                                                                    3959,
                                                                     "pos_cnum":
-                                                                    3967
+                                                                    3972
                                                                     },
                                                                     "point_num":
-                                                                    3967,
+                                                                    3972,
                                                                     "point_bol":
-                                                                    3954
+                                                                    3959
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -16283,14 +16451,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     127,
                                                                     "pos_bol":
-                                                                    3954,
+                                                                    3959,
                                                                     "pos_cnum":
-                                                                    3989
+                                                                    3994
                                                                     },
                                                                     "point_num":
-                                                                    3989,
+                                                                    3994,
                                                                     "point_bol":
-                                                                    3954
+                                                                    3959
                                                                     }
                                                                     }
                                                                     ]
@@ -16313,14 +16481,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     127,
                                                                     "pos_bol":
-                                                                    3954,
+                                                                    3959,
                                                                     "pos_cnum":
-                                                                    3992
+                                                                    3997
                                                                     },
                                                                     "point_num":
-                                                                    3992,
+                                                                    3997,
                                                                     "point_bol":
-                                                                    3954
+                                                                    3959
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -16329,14 +16497,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     127,
                                                                     "pos_bol":
-                                                                    3954,
+                                                                    3959,
                                                                     "pos_cnum":
-                                                                    3994
+                                                                    3999
                                                                     },
                                                                     "point_num":
-                                                                    3994,
+                                                                    3999,
                                                                     "point_bol":
-                                                                    3954
+                                                                    3959
                                                                     }
                                                                     }
                                                                     ]
@@ -16354,14 +16522,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     127,
                                                                     "pos_bol":
-                                                                    3954,
+                                                                    3959,
                                                                     "pos_cnum":
-                                                                    3967
+                                                                    3972
                                                                     },
                                                                     "point_num":
-                                                                    3967,
+                                                                    3972,
                                                                     "point_bol":
-                                                                    3954
+                                                                    3959
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -16370,14 +16538,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     127,
                                                                     "pos_bol":
-                                                                    3954,
+                                                                    3959,
                                                                     "pos_cnum":
-                                                                    3994
+                                                                    3999
                                                                     },
                                                                     "point_num":
-                                                                    3994,
+                                                                    3999,
                                                                     "point_bol":
-                                                                    3954
+                                                                    3959
                                                                     }
                                                                     }
                                                                     ]
@@ -16401,14 +16569,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     128,
                                                                     "pos_bol":
-                                                                    3995,
+                                                                    4000,
                                                                     "pos_cnum":
-                                                                    4037
+                                                                    4042
                                                                     },
                                                                     "point_num":
-                                                                    4037,
+                                                                    4042,
                                                                     "point_bol":
-                                                                    3995
+                                                                    4000
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -16417,14 +16585,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     128,
                                                                     "pos_bol":
-                                                                    3995,
+                                                                    4000,
                                                                     "pos_cnum":
-                                                                    4038
+                                                                    4043
                                                                     },
                                                                     "point_num":
-                                                                    4038,
+                                                                    4043,
                                                                     "point_bol":
-                                                                    3995
+                                                                    4000
                                                                     }
                                                                     }
                                                                     ],
@@ -16455,14 +16623,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     128,
                                                                     "pos_bol":
-                                                                    3995,
+                                                                    4000,
                                                                     "pos_cnum":
-                                                                    4037
+                                                                    4042
                                                                     },
                                                                     "point_num":
-                                                                    4037,
+                                                                    4042,
                                                                     "point_bol":
-                                                                    3995
+                                                                    4000
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -16471,14 +16639,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     128,
                                                                     "pos_bol":
-                                                                    3995,
+                                                                    4000,
                                                                     "pos_cnum":
-                                                                    4038
+                                                                    4043
                                                                     },
                                                                     "point_num":
-                                                                    4038,
+                                                                    4043,
                                                                     "point_bol":
-                                                                    3995
+                                                                    4000
                                                                     }
                                                                     }
                                                                     ],
@@ -16496,14 +16664,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     128,
                                                                     "pos_bol":
-                                                                    3995,
+                                                                    4000,
                                                                     "pos_cnum":
-                                                                    4010
+                                                                    4015
                                                                     },
                                                                     "point_num":
-                                                                    4010,
+                                                                    4015,
                                                                     "point_bol":
-                                                                    3995
+                                                                    4000
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -16512,14 +16680,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     128,
                                                                     "pos_bol":
-                                                                    3995,
+                                                                    4000,
                                                                     "pos_cnum":
-                                                                    4052
+                                                                    4057
                                                                     },
                                                                     "point_num":
-                                                                    4052,
+                                                                    4057,
                                                                     "point_bol":
-                                                                    3995
+                                                                    4000
                                                                     }
                                                                     }
                                                                     ]
@@ -16559,14 +16727,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     128,
                                                                     "pos_bol":
-                                                                    3995,
+                                                                    4000,
                                                                     "pos_cnum":
-                                                                    4017
+                                                                    4022
                                                                     },
                                                                     "point_num":
-                                                                    4017,
+                                                                    4022,
                                                                     "point_bol":
-                                                                    3995
+                                                                    4000
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -16575,14 +16743,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     128,
                                                                     "pos_bol":
-                                                                    3995,
+                                                                    4000,
                                                                     "pos_cnum":
-                                                                    4027
+                                                                    4032
                                                                     },
                                                                     "point_num":
-                                                                    4027,
+                                                                    4032,
                                                                     "point_bol":
-                                                                    3995
+                                                                    4000
                                                                     }
                                                                     }
                                                                     ],
@@ -16600,14 +16768,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     128,
                                                                     "pos_bol":
-                                                                    3995,
+                                                                    4000,
                                                                     "pos_cnum":
-                                                                    4017
+                                                                    4022
                                                                     },
                                                                     "point_num":
-                                                                    4017,
+                                                                    4022,
                                                                     "point_bol":
-                                                                    3995
+                                                                    4000
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -16616,14 +16784,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     128,
                                                                     "pos_bol":
-                                                                    3995,
+                                                                    4000,
                                                                     "pos_cnum":
-                                                                    4027
+                                                                    4032
                                                                     },
                                                                     "point_num":
-                                                                    4027,
+                                                                    4032,
                                                                     "point_bol":
-                                                                    3995
+                                                                    4000
                                                                     }
                                                                     }
                                                                     ]
@@ -16650,14 +16818,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     128,
                                                                     "pos_bol":
-                                                                    3995,
+                                                                    4000,
                                                                     "pos_cnum":
-                                                                    4037
+                                                                    4042
                                                                     },
                                                                     "point_num":
-                                                                    4037,
+                                                                    4042,
                                                                     "point_bol":
-                                                                    3995
+                                                                    4000
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -16666,14 +16834,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     128,
                                                                     "pos_bol":
-                                                                    3995,
+                                                                    4000,
                                                                     "pos_cnum":
-                                                                    4038
+                                                                    4043
                                                                     },
                                                                     "point_num":
-                                                                    4038,
+                                                                    4043,
                                                                     "point_bol":
-                                                                    3995
+                                                                    4000
                                                                     }
                                                                     }
                                                                     ],
@@ -16691,14 +16859,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     128,
                                                                     "pos_bol":
-                                                                    3995,
+                                                                    4000,
                                                                     "pos_cnum":
-                                                                    4010
+                                                                    4015
                                                                     },
                                                                     "point_num":
-                                                                    4010,
+                                                                    4015,
                                                                     "point_bol":
-                                                                    3995
+                                                                    4000
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -16707,14 +16875,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     128,
                                                                     "pos_bol":
-                                                                    3995,
+                                                                    4000,
                                                                     "pos_cnum":
-                                                                    4052
+                                                                    4057
                                                                     },
                                                                     "point_num":
-                                                                    4052,
+                                                                    4057,
                                                                     "point_bol":
-                                                                    3995
+                                                                    4000
                                                                     }
                                                                     }
                                                                     ]
@@ -16737,14 +16905,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     128,
                                                                     "pos_bol":
-                                                                    3995,
+                                                                    4000,
                                                                     "pos_cnum":
-                                                                    4010
+                                                                    4015
                                                                     },
                                                                     "point_num":
-                                                                    4010,
+                                                                    4015,
                                                                     "point_bol":
-                                                                    3995
+                                                                    4000
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -16753,14 +16921,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     128,
                                                                     "pos_bol":
-                                                                    3995,
+                                                                    4000,
                                                                     "pos_cnum":
-                                                                    4052
+                                                                    4057
                                                                     },
                                                                     "point_num":
-                                                                    4052,
+                                                                    4057,
                                                                     "point_bol":
-                                                                    3995
+                                                                    4000
                                                                     }
                                                                     }
                                                                     ]
@@ -16778,14 +16946,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     128,
                                                                     "pos_bol":
-                                                                    3995,
+                                                                    4000,
                                                                     "pos_cnum":
-                                                                    4010
+                                                                    4015
                                                                     },
                                                                     "point_num":
-                                                                    4010,
+                                                                    4015,
                                                                     "point_bol":
-                                                                    3995
+                                                                    4000
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -16794,14 +16962,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     128,
                                                                     "pos_bol":
-                                                                    3995,
+                                                                    4000,
                                                                     "pos_cnum":
-                                                                    4052
+                                                                    4057
                                                                     },
                                                                     "point_num":
-                                                                    4052,
+                                                                    4057,
                                                                     "point_bol":
-                                                                    3995
+                                                                    4000
                                                                     }
                                                                     }
                                                                     ]
@@ -16818,14 +16986,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     128,
                                                                     "pos_bol":
-                                                                    3995,
+                                                                    4000,
                                                                     "pos_cnum":
-                                                                    4010
+                                                                    4015
                                                                     },
                                                                     "point_num":
-                                                                    4010,
+                                                                    4015,
                                                                     "point_bol":
-                                                                    3995
+                                                                    4000
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -16834,14 +17002,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     128,
                                                                     "pos_bol":
-                                                                    3995,
+                                                                    4000,
                                                                     "pos_cnum":
-                                                                    4052
+                                                                    4057
                                                                     },
                                                                     "point_num":
-                                                                    4052,
+                                                                    4057,
                                                                     "point_bol":
-                                                                    3995
+                                                                    4000
                                                                     }
                                                                     }
                                                                     ]
@@ -16858,14 +17026,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     128,
                                                                     "pos_bol":
-                                                                    3995,
+                                                                    4000,
                                                                     "pos_cnum":
-                                                                    4010
+                                                                    4015
                                                                     },
                                                                     "point_num":
-                                                                    4010,
+                                                                    4015,
                                                                     "point_bol":
-                                                                    3995
+                                                                    4000
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -16874,14 +17042,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     128,
                                                                     "pos_bol":
-                                                                    3995,
+                                                                    4000,
                                                                     "pos_cnum":
-                                                                    4052
+                                                                    4057
                                                                     },
                                                                     "point_num":
-                                                                    4052,
+                                                                    4057,
                                                                     "point_bol":
-                                                                    3995
+                                                                    4000
                                                                     }
                                                                     }
                                                                     ]
@@ -16905,14 +17073,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     129,
                                                                     "pos_bol":
-                                                                    4053,
+                                                                    4058,
                                                                     "pos_cnum":
-                                                                    4068
+                                                                    4073
                                                                     },
                                                                     "point_num":
-                                                                    4068,
+                                                                    4073,
                                                                     "point_bol":
-                                                                    4053
+                                                                    4058
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -16921,14 +17089,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     129,
                                                                     "pos_bol":
-                                                                    4053,
+                                                                    4058,
                                                                     "pos_cnum":
-                                                                    4069
+                                                                    4074
                                                                     },
                                                                     "point_num":
-                                                                    4069,
+                                                                    4074,
                                                                     "point_bol":
-                                                                    4053
+                                                                    4058
                                                                     }
                                                                     }
                                                                     ],
@@ -16959,14 +17127,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     129,
                                                                     "pos_bol":
-                                                                    4053,
+                                                                    4058,
                                                                     "pos_cnum":
-                                                                    4068
+                                                                    4073
                                                                     },
                                                                     "point_num":
-                                                                    4068,
+                                                                    4073,
                                                                     "point_bol":
-                                                                    4053
+                                                                    4058
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -16975,14 +17143,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     129,
                                                                     "pos_bol":
-                                                                    4053,
+                                                                    4058,
                                                                     "pos_cnum":
-                                                                    4069
+                                                                    4074
                                                                     },
                                                                     "point_num":
-                                                                    4069,
+                                                                    4074,
                                                                     "point_bol":
-                                                                    4053
+                                                                    4058
                                                                     }
                                                                     }
                                                                     ],
@@ -17000,14 +17168,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     129,
                                                                     "pos_bol":
-                                                                    4053,
+                                                                    4058,
                                                                     "pos_cnum":
-                                                                    4068
+                                                                    4073
                                                                     },
                                                                     "point_num":
-                                                                    4068,
+                                                                    4073,
                                                                     "point_bol":
-                                                                    4053
+                                                                    4058
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -17016,14 +17184,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     129,
                                                                     "pos_bol":
-                                                                    4053,
+                                                                    4058,
                                                                     "pos_cnum":
-                                                                    4106
+                                                                    4111
                                                                     },
                                                                     "point_num":
-                                                                    4106,
+                                                                    4111,
                                                                     "point_bol":
-                                                                    4053
+                                                                    4058
                                                                     }
                                                                     }
                                                                     ]
@@ -17063,14 +17231,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     129,
                                                                     "pos_bol":
-                                                                    4053,
+                                                                    4058,
                                                                     "pos_cnum":
-                                                                    4084
+                                                                    4089
                                                                     },
                                                                     "point_num":
-                                                                    4084,
+                                                                    4089,
                                                                     "point_bol":
-                                                                    4053
+                                                                    4058
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -17079,14 +17247,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     129,
                                                                     "pos_bol":
-                                                                    4053,
+                                                                    4058,
                                                                     "pos_cnum":
-                                                                    4094
+                                                                    4099
                                                                     },
                                                                     "point_num":
-                                                                    4094,
+                                                                    4099,
                                                                     "point_bol":
-                                                                    4053
+                                                                    4058
                                                                     }
                                                                     }
                                                                     ],
@@ -17104,14 +17272,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     129,
                                                                     "pos_bol":
-                                                                    4053,
+                                                                    4058,
                                                                     "pos_cnum":
-                                                                    4084
+                                                                    4089
                                                                     },
                                                                     "point_num":
-                                                                    4084,
+                                                                    4089,
                                                                     "point_bol":
-                                                                    4053
+                                                                    4058
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -17120,14 +17288,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     129,
                                                                     "pos_bol":
-                                                                    4053,
+                                                                    4058,
                                                                     "pos_cnum":
-                                                                    4094
+                                                                    4099
                                                                     },
                                                                     "point_num":
-                                                                    4094,
+                                                                    4099,
                                                                     "point_bol":
-                                                                    4053
+                                                                    4058
                                                                     }
                                                                     }
                                                                     ]
@@ -17150,14 +17318,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     129,
                                                                     "pos_bol":
-                                                                    4053,
+                                                                    4058,
                                                                     "pos_cnum":
-                                                                    4099
+                                                                    4104
                                                                     },
                                                                     "point_num":
-                                                                    4099,
+                                                                    4104,
                                                                     "point_bol":
-                                                                    4053
+                                                                    4058
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -17166,14 +17334,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     129,
                                                                     "pos_bol":
-                                                                    4053,
+                                                                    4058,
                                                                     "pos_cnum":
-                                                                    4106
+                                                                    4111
                                                                     },
                                                                     "point_num":
-                                                                    4106,
+                                                                    4111,
                                                                     "point_bol":
-                                                                    4053
+                                                                    4058
                                                                     }
                                                                     }
                                                                     ],
@@ -17191,14 +17359,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     129,
                                                                     "pos_bol":
-                                                                    4053,
+                                                                    4058,
                                                                     "pos_cnum":
-                                                                    4099
+                                                                    4104
                                                                     },
                                                                     "point_num":
-                                                                    4099,
+                                                                    4104,
                                                                     "point_bol":
-                                                                    4053
+                                                                    4058
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -17207,14 +17375,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     129,
                                                                     "pos_bol":
-                                                                    4053,
+                                                                    4058,
                                                                     "pos_cnum":
-                                                                    4106
+                                                                    4111
                                                                     },
                                                                     "point_num":
-                                                                    4106,
+                                                                    4111,
                                                                     "point_bol":
-                                                                    4053
+                                                                    4058
                                                                     }
                                                                     }
                                                                     ]
@@ -17241,14 +17409,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     129,
                                                                     "pos_bol":
-                                                                    4053,
+                                                                    4058,
                                                                     "pos_cnum":
-                                                                    4068
+                                                                    4073
                                                                     },
                                                                     "point_num":
-                                                                    4068,
+                                                                    4073,
                                                                     "point_bol":
-                                                                    4053
+                                                                    4058
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -17257,14 +17425,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     129,
                                                                     "pos_bol":
-                                                                    4053,
+                                                                    4058,
                                                                     "pos_cnum":
-                                                                    4069
+                                                                    4074
                                                                     },
                                                                     "point_num":
-                                                                    4069,
+                                                                    4074,
                                                                     "point_bol":
-                                                                    4053
+                                                                    4058
                                                                     }
                                                                     }
                                                                     ],
@@ -17282,14 +17450,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     129,
                                                                     "pos_bol":
-                                                                    4053,
+                                                                    4058,
                                                                     "pos_cnum":
-                                                                    4068
+                                                                    4073
                                                                     },
                                                                     "point_num":
-                                                                    4068,
+                                                                    4073,
                                                                     "point_bol":
-                                                                    4053
+                                                                    4058
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -17298,14 +17466,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     129,
                                                                     "pos_bol":
-                                                                    4053,
+                                                                    4058,
                                                                     "pos_cnum":
-                                                                    4106
+                                                                    4111
                                                                     },
                                                                     "point_num":
-                                                                    4106,
+                                                                    4111,
                                                                     "point_bol":
-                                                                    4053
+                                                                    4058
                                                                     }
                                                                     }
                                                                     ]
@@ -17328,14 +17496,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     129,
                                                                     "pos_bol":
-                                                                    4053,
+                                                                    4058,
                                                                     "pos_cnum":
-                                                                    4068
+                                                                    4073
                                                                     },
                                                                     "point_num":
-                                                                    4068,
+                                                                    4073,
                                                                     "point_bol":
-                                                                    4053
+                                                                    4058
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -17344,14 +17512,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     129,
                                                                     "pos_bol":
-                                                                    4053,
+                                                                    4058,
                                                                     "pos_cnum":
-                                                                    4106
+                                                                    4111
                                                                     },
                                                                     "point_num":
-                                                                    4106,
+                                                                    4111,
                                                                     "point_bol":
-                                                                    4053
+                                                                    4058
                                                                     }
                                                                     }
                                                                     ]
@@ -17369,14 +17537,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     129,
                                                                     "pos_bol":
-                                                                    4053,
+                                                                    4058,
                                                                     "pos_cnum":
-                                                                    4068
+                                                                    4073
                                                                     },
                                                                     "point_num":
-                                                                    4068,
+                                                                    4073,
                                                                     "point_bol":
-                                                                    4053
+                                                                    4058
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -17385,14 +17553,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     129,
                                                                     "pos_bol":
-                                                                    4053,
+                                                                    4058,
                                                                     "pos_cnum":
-                                                                    4106
+                                                                    4111
                                                                     },
                                                                     "point_num":
-                                                                    4106,
+                                                                    4111,
                                                                     "point_bol":
-                                                                    4053
+                                                                    4058
                                                                     }
                                                                     }
                                                                     ]
@@ -17409,14 +17577,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     129,
                                                                     "pos_bol":
-                                                                    4053,
+                                                                    4058,
                                                                     "pos_cnum":
-                                                                    4068
+                                                                    4073
                                                                     },
                                                                     "point_num":
-                                                                    4068,
+                                                                    4073,
                                                                     "point_bol":
-                                                                    4053
+                                                                    4058
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -17425,14 +17593,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     129,
                                                                     "pos_bol":
-                                                                    4053,
+                                                                    4058,
                                                                     "pos_cnum":
-                                                                    4106
+                                                                    4111
                                                                     },
                                                                     "point_num":
-                                                                    4106,
+                                                                    4111,
                                                                     "point_bol":
-                                                                    4053
+                                                                    4058
                                                                     }
                                                                     }
                                                                     ]
@@ -17449,14 +17617,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     129,
                                                                     "pos_bol":
-                                                                    4053,
+                                                                    4058,
                                                                     "pos_cnum":
-                                                                    4068
+                                                                    4073
                                                                     },
                                                                     "point_num":
-                                                                    4068,
+                                                                    4073,
                                                                     "point_bol":
-                                                                    4053
+                                                                    4058
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -17465,14 +17633,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     129,
                                                                     "pos_bol":
-                                                                    4053,
+                                                                    4058,
                                                                     "pos_cnum":
-                                                                    4106
+                                                                    4111
                                                                     },
                                                                     "point_num":
-                                                                    4106,
+                                                                    4111,
                                                                     "point_bol":
-                                                                    4053
+                                                                    4058
                                                                     }
                                                                     }
                                                                     ]
@@ -17489,14 +17657,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     127,
                                                                     "pos_bol":
-                                                                    3954,
+                                                                    3959,
                                                                     "pos_cnum":
-                                                                    3964
+                                                                    3969
                                                                     },
                                                                     "point_num":
-                                                                    3964,
+                                                                    3969,
                                                                     "point_bol":
-                                                                    3954
+                                                                    3959
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -17505,14 +17673,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     129,
                                                                     "pos_bol":
-                                                                    4053,
+                                                                    4058,
                                                                     "pos_cnum":
-                                                                    4106
+                                                                    4111
                                                                     },
                                                                     "point_num":
-                                                                    4106,
+                                                                    4111,
                                                                     "point_bol":
-                                                                    4053
+                                                                    4058
                                                                     }
                                                                     }
                                                                   ]
@@ -17537,24 +17705,24 @@ let%expect_test _ =
                                                               "pos_fname":
                                                                 "../../test/contracts/multisig-v2.ligo",
                                                               "pos_lnum": 114,
-                                                              "pos_bol": 3428,
+                                                              "pos_bol": 3433,
                                                               "pos_cnum":
-                                                                3438
+                                                                3443
                                                             },
-                                                            "point_num": 3438,
-                                                            "point_bol": 3428
+                                                            "point_num": 3443,
+                                                            "point_bol": 3433
                                                           },
                                                           "stop": {
                                                             "byte": {
                                                               "pos_fname":
                                                                 "../../test/contracts/multisig-v2.ligo",
                                                               "pos_lnum": 114,
-                                                              "pos_bol": 3428,
+                                                              "pos_bol": 3433,
                                                               "pos_cnum":
-                                                                3498
+                                                                3503
                                                             },
-                                                            "point_num": 3498,
-                                                            "point_bol": 3428
+                                                            "point_num": 3503,
+                                                            "point_bol": 3433
                                                           }
                                                         }
                                                       ]
@@ -17578,24 +17746,24 @@ let%expect_test _ =
                                                               "pos_fname":
                                                                 "../../test/contracts/multisig-v2.ligo",
                                                               "pos_lnum": 131,
-                                                              "pos_bol": 4117,
+                                                              "pos_bol": 4122,
                                                               "pos_cnum":
-                                                                4131
+                                                                4136
                                                             },
-                                                            "point_num": 4131,
-                                                            "point_bol": 4117
+                                                            "point_num": 4136,
+                                                            "point_bol": 4122
                                                           },
                                                           "stop": {
                                                             "byte": {
                                                               "pos_fname":
                                                                 "../../test/contracts/multisig-v2.ligo",
                                                               "pos_lnum": 131,
-                                                              "pos_bol": 4117,
+                                                              "pos_bol": 4122,
                                                               "pos_cnum":
-                                                                4135
+                                                                4140
                                                             },
-                                                            "point_num": 4135,
-                                                            "point_bol": 4117
+                                                            "point_num": 4140,
+                                                            "point_bol": 4122
                                                           }
                                                         }
                                                       ]
@@ -17612,22 +17780,22 @@ let%expect_test _ =
                                                     "pos_fname":
                                                       "../../test/contracts/multisig-v2.ligo",
                                                     "pos_lnum": 110,
-                                                    "pos_bol": 3312,
-                                                    "pos_cnum": 3316
+                                                    "pos_bol": 3317,
+                                                    "pos_cnum": 3321
                                                   },
-                                                  "point_num": 3316,
-                                                  "point_bol": 3312
+                                                  "point_num": 3321,
+                                                  "point_bol": 3317
                                                 },
                                                 "stop": {
                                                   "byte": {
                                                     "pos_fname":
                                                       "../../test/contracts/multisig-v2.ligo",
                                                     "pos_lnum": 132,
-                                                    "pos_bol": 4136,
-                                                    "pos_cnum": 4141
+                                                    "pos_bol": 4141,
+                                                    "pos_cnum": 4146
                                                   },
-                                                  "point_num": 4141,
-                                                  "point_bol": 4136
+                                                  "point_num": 4146,
+                                                  "point_bol": 4141
                                                 }
                                               }
                                             ]
@@ -17654,14 +17822,14 @@ let%expect_test _ =
                                                                 "pos_lnum":
                                                                   133,
                                                                 "pos_bol":
-                                                                  4180,
+                                                                  4185,
                                                                 "pos_cnum":
-                                                                  4191
+                                                                  4196
                                                               },
                                                               "point_num":
-                                                                4191,
+                                                                4196,
                                                               "point_bol":
-                                                                4180
+                                                                4185
                                                             },
                                                             "stop": {
                                                               "byte": {
@@ -17670,14 +17838,14 @@ let%expect_test _ =
                                                                 "pos_lnum":
                                                                   133,
                                                                 "pos_bol":
-                                                                  4180,
+                                                                  4185,
                                                                 "pos_cnum":
-                                                                  4194
+                                                                  4199
                                                               },
                                                               "point_num":
-                                                                4194,
+                                                                4199,
                                                               "point_bol":
-                                                                4180
+                                                                4185
                                                             }
                                                           }
                                                         ]
@@ -17699,14 +17867,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     133,
                                                                     "pos_bol":
-                                                                    4180,
+                                                                    4185,
                                                                     "pos_cnum":
-                                                                    4197
+                                                                    4202
                                                                     },
                                                                     "point_num":
-                                                                    4197,
+                                                                    4202,
                                                                     "point_bol":
-                                                                    4180
+                                                                    4185
                                                                   },
                                                                   "stop": {
                                                                     "byte": {
@@ -17715,14 +17883,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     133,
                                                                     "pos_bol":
-                                                                    4180,
+                                                                    4185,
                                                                     "pos_cnum":
-                                                                    4201
+                                                                    4206
                                                                     },
                                                                     "point_num":
-                                                                    4201,
+                                                                    4206,
                                                                     "point_bol":
-                                                                    4180
+                                                                    4185
                                                                   }
                                                                 }
                                                               ],
@@ -17756,14 +17924,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     133,
                                                                     "pos_bol":
-                                                                    4180,
+                                                                    4185,
                                                                     "pos_cnum":
-                                                                    4203
+                                                                    4208
                                                                     },
                                                                     "point_num":
-                                                                    4203,
+                                                                    4208,
                                                                     "point_bol":
-                                                                    4180
+                                                                    4185
                                                                     },
                                                                     "stop": {
                                                                     "byte": {
@@ -17772,14 +17940,14 @@ let%expect_test _ =
                                                                     "pos_lnum":
                                                                     133,
                                                                     "pos_bol":
-                                                                    4180,
+                                                                    4185,
                                                                     "pos_cnum":
-                                                                    4212
+                                                                    4217
                                                                     },
                                                                     "point_num":
-                                                                    4212,
+                                                                    4217,
                                                                     "point_bol":
-                                                                    4180
+                                                                    4185
                                                                     }
                                                                   }
                                                                 ]
@@ -17797,14 +17965,14 @@ let%expect_test _ =
                                                                 "pos_lnum":
                                                                   133,
                                                                 "pos_bol":
-                                                                  4180,
+                                                                  4185,
                                                                 "pos_cnum":
-                                                                  4197
+                                                                  4202
                                                               },
                                                               "point_num":
-                                                                4197,
+                                                                4202,
                                                               "point_bol":
-                                                                4180
+                                                                4185
                                                             },
                                                             "stop": {
                                                               "byte": {
@@ -17813,14 +17981,14 @@ let%expect_test _ =
                                                                 "pos_lnum":
                                                                   133,
                                                                 "pos_bol":
-                                                                  4180,
+                                                                  4185,
                                                                 "pos_cnum":
-                                                                  4213
+                                                                  4218
                                                               },
                                                               "point_num":
-                                                                4213,
+                                                                4218,
                                                               "point_bol":
-                                                                4180
+                                                                4185
                                                             }
                                                           }
                                                         ]
@@ -17835,22 +18003,22 @@ let%expect_test _ =
                                                           "pos_fname":
                                                             "../../test/contracts/multisig-v2.ligo",
                                                           "pos_lnum": 133,
-                                                          "pos_bol": 4180,
-                                                          "pos_cnum": 4190
+                                                          "pos_bol": 4185,
+                                                          "pos_cnum": 4195
                                                         },
-                                                        "point_num": 4190,
-                                                        "point_bol": 4180
+                                                        "point_num": 4195,
+                                                        "point_bol": 4185
                                                       },
                                                       "stop": {
                                                         "byte": {
                                                           "pos_fname":
                                                             "../../test/contracts/multisig-v2.ligo",
                                                           "pos_lnum": 133,
-                                                          "pos_bol": 4180,
-                                                          "pos_cnum": 4214
+                                                          "pos_bol": 4185,
+                                                          "pos_cnum": 4219
                                                         },
-                                                        "point_num": 4214,
-                                                        "point_bol": 4180
+                                                        "point_num": 4219,
+                                                        "point_bol": 4185
                                                       }
                                                     }
                                                   ]
@@ -17869,24 +18037,24 @@ let%expect_test _ =
                                                               "pos_fname":
                                                                 "../../test/contracts/multisig-v2.ligo",
                                                               "pos_lnum": 133,
-                                                              "pos_bol": 4180,
+                                                              "pos_bol": 4185,
                                                               "pos_cnum":
-                                                                4216
+                                                                4221
                                                             },
-                                                            "point_num": 4216,
-                                                            "point_bol": 4180
+                                                            "point_num": 4221,
+                                                            "point_bol": 4185
                                                           },
                                                           "stop": {
                                                             "byte": {
                                                               "pos_fname":
                                                                 "../../test/contracts/multisig-v2.ligo",
                                                               "pos_lnum": 133,
-                                                              "pos_bol": 4180,
+                                                              "pos_bol": 4185,
                                                               "pos_cnum":
-                                                                4217
+                                                                4222
                                                             },
-                                                            "point_num": 4217,
-                                                            "point_bol": 4180
+                                                            "point_num": 4222,
+                                                            "point_bol": 4185
                                                           }
                                                         }
                                                       ],
@@ -17901,22 +18069,22 @@ let%expect_test _ =
                                                           "pos_fname":
                                                             "../../test/contracts/multisig-v2.ligo",
                                                           "pos_lnum": 133,
-                                                          "pos_bol": 4180,
-                                                          "pos_cnum": 4216
+                                                          "pos_bol": 4185,
+                                                          "pos_cnum": 4221
                                                         },
-                                                        "point_num": 4216,
-                                                        "point_bol": 4180
+                                                        "point_num": 4221,
+                                                        "point_bol": 4185
                                                       },
                                                       "stop": {
                                                         "byte": {
                                                           "pos_fname":
                                                             "../../test/contracts/multisig-v2.ligo",
                                                           "pos_lnum": 133,
-                                                          "pos_bol": 4180,
-                                                          "pos_cnum": 4217
+                                                          "pos_bol": 4185,
+                                                          "pos_cnum": 4222
                                                         },
-                                                        "point_num": 4217,
-                                                        "point_bol": 4180
+                                                        "point_num": 4222,
+                                                        "point_bol": 4185
                                                       }
                                                     }
                                                   ]
@@ -17931,22 +18099,22 @@ let%expect_test _ =
                                                     "pos_fname":
                                                       "../../test/contracts/multisig-v2.ligo",
                                                     "pos_lnum": 133,
-                                                    "pos_bol": 4180,
-                                                    "pos_cnum": 4189
+                                                    "pos_bol": 4185,
+                                                    "pos_cnum": 4194
                                                   },
-                                                  "point_num": 4189,
-                                                  "point_bol": 4180
+                                                  "point_num": 4194,
+                                                  "point_bol": 4185
                                                 },
                                                 "stop": {
                                                   "byte": {
                                                     "pos_fname":
                                                       "../../test/contracts/multisig-v2.ligo",
                                                     "pos_lnum": 133,
-                                                    "pos_bol": 4180,
-                                                    "pos_cnum": 4218
+                                                    "pos_bol": 4185,
+                                                    "pos_cnum": 4223
                                                   },
-                                                  "point_num": 4218,
-                                                  "point_bol": 4180
+                                                  "point_num": 4223,
+                                                  "point_bol": 4185
                                                 }
                                               }
                                             ]
@@ -17966,22 +18134,22 @@ let%expect_test _ =
                                         "pos_fname":
                                           "../../test/contracts/multisig-v2.ligo",
                                         "pos_lnum": 108,
-                                        "pos_bol": 3258,
-                                        "pos_cnum": 3262
+                                        "pos_bol": 3263,
+                                        "pos_cnum": 3267
                                       },
-                                      "point_num": 3262,
-                                      "point_bol": 3258
+                                      "point_num": 3267,
+                                      "point_bol": 3263
                                     },
                                     "stop": {
                                       "byte": {
                                         "pos_fname":
                                           "../../test/contracts/multisig-v2.ligo",
                                         "pos_lnum": 108,
-                                        "pos_bol": 3258,
-                                        "pos_cnum": 3309
+                                        "pos_bol": 3263,
+                                        "pos_cnum": 3314
                                       },
-                                      "point_num": 3309,
-                                      "point_bol": 3258
+                                      "point_num": 3314,
+                                      "point_bol": 3263
                                     }
                                   }
                                 ]
@@ -17997,22 +18165,22 @@ let%expect_test _ =
                                   "pos_fname":
                                     "../../test/contracts/multisig-v2.ligo",
                                   "pos_lnum": 107,
-                                  "pos_bol": 3222,
-                                  "pos_cnum": 3226
+                                  "pos_bol": 3227,
+                                  "pos_cnum": 3231
                                 },
-                                "point_num": 3226,
-                                "point_bol": 3222
+                                "point_num": 3231,
+                                "point_bol": 3227
                               },
                               "stop": {
                                 "byte": {
                                   "pos_fname":
                                     "../../test/contracts/multisig-v2.ligo",
                                   "pos_lnum": 107,
-                                  "pos_bol": 3222,
-                                  "pos_cnum": 3256
+                                  "pos_bol": 3227,
+                                  "pos_cnum": 3261
                                 },
-                                "point_num": 3256,
-                                "point_bol": 3222
+                                "point_num": 3261,
+                                "point_bol": 3227
                               }
                             }
                           ]
@@ -18032,21 +18200,21 @@ let%expect_test _ =
                 "byte": {
                   "pos_fname": "../../test/contracts/multisig-v2.ligo",
                   "pos_lnum": 105,
-                  "pos_bol": 3137,
-                  "pos_cnum": 3137
+                  "pos_bol": 3142,
+                  "pos_cnum": 3142
                 },
-                "point_num": 3137,
-                "point_bol": 3137
+                "point_num": 3142,
+                "point_bol": 3142
               },
               "stop": {
                 "byte": {
                   "pos_fname": "../../test/contracts/multisig-v2.ligo",
                   "pos_lnum": 133,
-                  "pos_bol": 4180,
-                  "pos_cnum": 4218
+                  "pos_bol": 4185,
+                  "pos_cnum": 4223
                 },
-                "point_num": 4218,
-                "point_bol": 4180
+                "point_num": 4223,
+                "point_bol": 4185
               }
             }
           ]
@@ -18061,21 +18229,21 @@ let%expect_test _ =
           "byte": {
             "pos_fname": "../../test/contracts/multisig-v2.ligo",
             "pos_lnum": 105,
-            "pos_bol": 3137,
-            "pos_cnum": 3137
+            "pos_bol": 3142,
+            "pos_cnum": 3142
           },
-          "point_num": 3137,
-          "point_bol": 3137
+          "point_num": 3142,
+          "point_bol": 3142
         },
         "stop": {
           "byte": {
             "pos_fname": "../../test/contracts/multisig-v2.ligo",
             "pos_lnum": 133,
-            "pos_bol": 4180,
-            "pos_cnum": 4218
+            "pos_bol": 4185,
+            "pos_cnum": 4223
           },
-          "point_num": 4218,
-          "point_bol": 4180
+          "point_num": 4223,
+          "point_bol": 4185
         }
       }
     ]
@@ -18095,21 +18263,21 @@ let%expect_test _ =
                   "byte": {
                     "pos_fname": "../../test/contracts/multisig-v2.ligo",
                     "pos_lnum": 135,
-                    "pos_bol": 4220,
-                    "pos_cnum": 4229
+                    "pos_bol": 4225,
+                    "pos_cnum": 4234
                   },
-                  "point_num": 4229,
-                  "point_bol": 4220
+                  "point_num": 4234,
+                  "point_bol": 4225
                 },
                 "stop": {
                   "byte": {
                     "pos_fname": "../../test/contracts/multisig-v2.ligo",
                     "pos_lnum": 135,
-                    "pos_bol": 4220,
-                    "pos_cnum": 4236
+                    "pos_bol": 4225,
+                    "pos_cnum": 4241
                   },
-                  "point_num": 4236,
-                  "point_bol": 4220
+                  "point_num": 4241,
+                  "point_bol": 4225
                 }
               }
             ],
@@ -18141,22 +18309,22 @@ let%expect_test _ =
                                 "pos_fname":
                                   "../../test/contracts/multisig-v2.ligo",
                                 "pos_lnum": 135,
-                                "pos_bol": 4220,
-                                "pos_cnum": 4248
+                                "pos_bol": 4225,
+                                "pos_cnum": 4253
                               },
-                              "point_num": 4248,
-                              "point_bol": 4220
+                              "point_num": 4253,
+                              "point_bol": 4225
                             },
                             "stop": {
                               "byte": {
                                 "pos_fname":
                                   "../../test/contracts/multisig-v2.ligo",
                                 "pos_lnum": 135,
-                                "pos_bol": 4220,
-                                "pos_cnum": 4258
+                                "pos_bol": 4225,
+                                "pos_cnum": 4263
                               },
-                              "point_num": 4258,
-                              "point_bol": 4220
+                              "point_num": 4263,
+                              "point_bol": 4225
                             }
                           }
                         ]
@@ -18179,22 +18347,22 @@ let%expect_test _ =
                                 "pos_fname":
                                   "../../test/contracts/multisig-v2.ligo",
                                 "pos_lnum": 135,
-                                "pos_bol": 4220,
-                                "pos_cnum": 4270
+                                "pos_bol": 4225,
+                                "pos_cnum": 4275
                               },
-                              "point_num": 4270,
-                              "point_bol": 4220
+                              "point_num": 4275,
+                              "point_bol": 4225
                             },
                             "stop": {
                               "byte": {
                                 "pos_fname":
                                   "../../test/contracts/multisig-v2.ligo",
                                 "pos_lnum": 135,
-                                "pos_bol": 4220,
-                                "pos_cnum": 4277
+                                "pos_bol": 4225,
+                                "pos_cnum": 4282
                               },
-                              "point_num": 4277,
-                              "point_bol": 4220
+                              "point_num": 4282,
+                              "point_bol": 4225
                             }
                           }
                         ]
@@ -18221,22 +18389,22 @@ let%expect_test _ =
                           "pos_fname":
                             "../../test/contracts/multisig-v2.ligo",
                           "pos_lnum": 135,
-                          "pos_bol": 4220,
-                          "pos_cnum": 4281
+                          "pos_bol": 4225,
+                          "pos_cnum": 4286
                         },
-                        "point_num": 4281,
-                        "point_bol": 4220
+                        "point_num": 4286,
+                        "point_bol": 4225
                       },
                       "stop": {
                         "byte": {
                           "pos_fname":
                             "../../test/contracts/multisig-v2.ligo",
                           "pos_lnum": 135,
-                          "pos_bol": 4220,
-                          "pos_cnum": 4287
+                          "pos_bol": 4225,
+                          "pos_cnum": 4292
                         },
-                        "point_num": 4287,
-                        "point_bol": 4220
+                        "point_num": 4292,
+                        "point_bol": 4225
                       }
                     }
                   ]
@@ -18279,22 +18447,22 @@ let%expect_test _ =
                                 "pos_fname":
                                   "../../test/contracts/multisig-v2.ligo",
                                 "pos_lnum": 135,
-                                "pos_bol": 4220,
-                                "pos_cnum": 4248
+                                "pos_bol": 4225,
+                                "pos_cnum": 4253
                               },
-                              "point_num": 4248,
-                              "point_bol": 4220
+                              "point_num": 4253,
+                              "point_bol": 4225
                             },
                             "stop": {
                               "byte": {
                                 "pos_fname":
                                   "../../test/contracts/multisig-v2.ligo",
                                 "pos_lnum": 135,
-                                "pos_bol": 4220,
-                                "pos_cnum": 4258
+                                "pos_bol": 4225,
+                                "pos_cnum": 4263
                               },
-                              "point_num": 4258,
-                              "point_bol": 4220
+                              "point_num": 4263,
+                              "point_bol": 4225
                             }
                           }
                         ]
@@ -18317,22 +18485,22 @@ let%expect_test _ =
                                 "pos_fname":
                                   "../../test/contracts/multisig-v2.ligo",
                                 "pos_lnum": 135,
-                                "pos_bol": 4220,
-                                "pos_cnum": 4270
+                                "pos_bol": 4225,
+                                "pos_cnum": 4275
                               },
-                              "point_num": 4270,
-                              "point_bol": 4220
+                              "point_num": 4275,
+                              "point_bol": 4225
                             },
                             "stop": {
                               "byte": {
                                 "pos_fname":
                                   "../../test/contracts/multisig-v2.ligo",
                                 "pos_lnum": 135,
-                                "pos_bol": 4220,
-                                "pos_cnum": 4277
+                                "pos_bol": 4225,
+                                "pos_cnum": 4282
                               },
-                              "point_num": 4277,
-                              "point_bol": 4220
+                              "point_num": 4282,
+                              "point_bol": 4225
                             }
                           }
                         ]
@@ -18360,21 +18528,21 @@ let%expect_test _ =
                       "byte": {
                         "pos_fname": "../../test/contracts/multisig-v2.ligo",
                         "pos_lnum": 135,
-                        "pos_bol": 4220,
-                        "pos_cnum": 4281
+                        "pos_bol": 4225,
+                        "pos_cnum": 4286
                       },
-                      "point_num": 4281,
-                      "point_bol": 4220
+                      "point_num": 4286,
+                      "point_bol": 4225
                     },
                     "stop": {
                       "byte": {
                         "pos_fname": "../../test/contracts/multisig-v2.ligo",
                         "pos_lnum": 135,
-                        "pos_bol": 4220,
-                        "pos_cnum": 4287
+                        "pos_bol": 4225,
+                        "pos_cnum": 4292
                       },
-                      "point_num": 4287,
-                      "point_bol": 4220
+                      "point_num": 4292,
+                      "point_bol": 4225
                     }
                   }
                 ]
@@ -18414,22 +18582,22 @@ let%expect_test _ =
                                           "pos_fname":
                                             "../../test/contracts/multisig-v2.ligo",
                                           "pos_lnum": 135,
-                                          "pos_bol": 4220,
-                                          "pos_cnum": 4244
+                                          "pos_bol": 4225,
+                                          "pos_cnum": 4249
                                         },
-                                        "point_num": 4244,
-                                        "point_bol": 4220
+                                        "point_num": 4249,
+                                        "point_bol": 4225
                                       },
                                       "stop": {
                                         "byte": {
                                           "pos_fname":
                                             "../../test/contracts/multisig-v2.ligo",
                                           "pos_lnum": 135,
-                                          "pos_bol": 4220,
-                                          "pos_cnum": 4245
+                                          "pos_bol": 4225,
+                                          "pos_cnum": 4250
                                         },
-                                        "point_num": 4245,
-                                        "point_bol": 4220
+                                        "point_num": 4250,
+                                        "point_bol": 4225
                                       }
                                     }
                                   ],
@@ -18453,22 +18621,22 @@ let%expect_test _ =
                                           "pos_fname":
                                             "../../test/contracts/multisig-v2.ligo",
                                           "pos_lnum": 135,
-                                          "pos_bol": 4220,
-                                          "pos_cnum": 4248
+                                          "pos_bol": 4225,
+                                          "pos_cnum": 4253
                                         },
-                                        "point_num": 4248,
-                                        "point_bol": 4220
+                                        "point_num": 4253,
+                                        "point_bol": 4225
                                       },
                                       "stop": {
                                         "byte": {
                                           "pos_fname":
                                             "../../test/contracts/multisig-v2.ligo",
                                           "pos_lnum": 135,
-                                          "pos_bol": 4220,
-                                          "pos_cnum": 4258
+                                          "pos_bol": 4225,
+                                          "pos_cnum": 4263
                                         },
-                                        "point_num": 4258,
-                                        "point_bol": 4220
+                                        "point_num": 4263,
+                                        "point_bol": 4225
                                       }
                                     }
                                   ]
@@ -18490,22 +18658,22 @@ let%expect_test _ =
                                           "pos_fname":
                                             "../../test/contracts/multisig-v2.ligo",
                                           "pos_lnum": 135,
-                                          "pos_bol": 4220,
-                                          "pos_cnum": 4266
+                                          "pos_bol": 4225,
+                                          "pos_cnum": 4271
                                         },
-                                        "point_num": 4266,
-                                        "point_bol": 4220
+                                        "point_num": 4271,
+                                        "point_bol": 4225
                                       },
                                       "stop": {
                                         "byte": {
                                           "pos_fname":
                                             "../../test/contracts/multisig-v2.ligo",
                                           "pos_lnum": 135,
-                                          "pos_bol": 4220,
-                                          "pos_cnum": 4267
+                                          "pos_bol": 4225,
+                                          "pos_cnum": 4272
                                         },
-                                        "point_num": 4267,
-                                        "point_bol": 4220
+                                        "point_num": 4272,
+                                        "point_bol": 4225
                                       }
                                     }
                                   ],
@@ -18529,22 +18697,22 @@ let%expect_test _ =
                                           "pos_fname":
                                             "../../test/contracts/multisig-v2.ligo",
                                           "pos_lnum": 135,
-                                          "pos_bol": 4220,
-                                          "pos_cnum": 4270
+                                          "pos_bol": 4225,
+                                          "pos_cnum": 4275
                                         },
-                                        "point_num": 4270,
-                                        "point_bol": 4220
+                                        "point_num": 4275,
+                                        "point_bol": 4225
                                       },
                                       "stop": {
                                         "byte": {
                                           "pos_fname":
                                             "../../test/contracts/multisig-v2.ligo",
                                           "pos_lnum": 135,
-                                          "pos_bol": 4220,
-                                          "pos_cnum": 4277
+                                          "pos_bol": 4225,
+                                          "pos_cnum": 4282
                                         },
-                                        "point_num": 4277,
-                                        "point_bol": 4220
+                                        "point_num": 4282,
+                                        "point_bol": 4225
                                       }
                                     }
                                   ]
@@ -18572,22 +18740,22 @@ let%expect_test _ =
                                               "pos_fname":
                                                 "../../test/contracts/multisig-v2.ligo",
                                               "pos_lnum": 136,
-                                              "pos_bol": 4291,
-                                              "pos_cnum": 4297
+                                              "pos_bol": 4296,
+                                              "pos_cnum": 4302
                                             },
-                                            "point_num": 4297,
-                                            "point_bol": 4291
+                                            "point_num": 4302,
+                                            "point_bol": 4296
                                           },
                                           "stop": {
                                             "byte": {
                                               "pos_fname":
                                                 "../../test/contracts/multisig-v2.ligo",
                                               "pos_lnum": 136,
-                                              "pos_bol": 4291,
-                                              "pos_cnum": 4300
+                                              "pos_bol": 4296,
+                                              "pos_cnum": 4305
                                             },
-                                            "point_num": 4300,
-                                            "point_bol": 4291
+                                            "point_num": 4305,
+                                            "point_bol": 4296
                                           }
                                         }
                                       ]
@@ -18607,22 +18775,22 @@ let%expect_test _ =
                                                     "pos_fname":
                                                       "../../test/contracts/multisig-v2.ligo",
                                                     "pos_lnum": 136,
-                                                    "pos_bol": 4291,
-                                                    "pos_cnum": 4303
+                                                    "pos_bol": 4296,
+                                                    "pos_cnum": 4308
                                                   },
-                                                  "point_num": 4303,
-                                                  "point_bol": 4291
+                                                  "point_num": 4308,
+                                                  "point_bol": 4296
                                                 },
                                                 "stop": {
                                                   "byte": {
                                                     "pos_fname":
                                                       "../../test/contracts/multisig-v2.ligo",
                                                     "pos_lnum": 136,
-                                                    "pos_bol": 4291,
-                                                    "pos_cnum": 4307
+                                                    "pos_bol": 4296,
+                                                    "pos_cnum": 4312
                                                   },
-                                                  "point_num": 4307,
-                                                  "point_bol": 4291
+                                                  "point_num": 4312,
+                                                  "point_bol": 4296
                                                 }
                                               }
                                             ],
@@ -18649,22 +18817,22 @@ let%expect_test _ =
                                                       "pos_fname":
                                                         "../../test/contracts/multisig-v2.ligo",
                                                       "pos_lnum": 136,
-                                                      "pos_bol": 4291,
-                                                      "pos_cnum": 4309
+                                                      "pos_bol": 4296,
+                                                      "pos_cnum": 4314
                                                     },
-                                                    "point_num": 4309,
-                                                    "point_bol": 4291
+                                                    "point_num": 4314,
+                                                    "point_bol": 4296
                                                   },
                                                   "stop": {
                                                     "byte": {
                                                       "pos_fname":
                                                         "../../test/contracts/multisig-v2.ligo",
                                                       "pos_lnum": 136,
-                                                      "pos_bol": 4291,
-                                                      "pos_cnum": 4318
+                                                      "pos_bol": 4296,
+                                                      "pos_cnum": 4323
                                                     },
-                                                    "point_num": 4318,
-                                                    "point_bol": 4291
+                                                    "point_num": 4323,
+                                                    "point_bol": 4296
                                                   }
                                                 }
                                               ]
@@ -18680,22 +18848,22 @@ let%expect_test _ =
                                               "pos_fname":
                                                 "../../test/contracts/multisig-v2.ligo",
                                               "pos_lnum": 136,
-                                              "pos_bol": 4291,
-                                              "pos_cnum": 4303
+                                              "pos_bol": 4296,
+                                              "pos_cnum": 4308
                                             },
-                                            "point_num": 4303,
-                                            "point_bol": 4291
+                                            "point_num": 4308,
+                                            "point_bol": 4296
                                           },
                                           "stop": {
                                             "byte": {
                                               "pos_fname":
                                                 "../../test/contracts/multisig-v2.ligo",
                                               "pos_lnum": 136,
-                                              "pos_bol": 4291,
-                                              "pos_cnum": 4319
+                                              "pos_bol": 4296,
+                                              "pos_cnum": 4324
                                             },
-                                            "point_num": 4319,
-                                            "point_bol": 4291
+                                            "point_num": 4324,
+                                            "point_bol": 4296
                                           }
                                         }
                                       ]
@@ -18710,22 +18878,22 @@ let%expect_test _ =
                                         "pos_fname":
                                           "../../test/contracts/multisig-v2.ligo",
                                         "pos_lnum": 136,
-                                        "pos_bol": 4291,
-                                        "pos_cnum": 4296
+                                        "pos_bol": 4296,
+                                        "pos_cnum": 4301
                                       },
-                                      "point_num": 4296,
-                                      "point_bol": 4291
+                                      "point_num": 4301,
+                                      "point_bol": 4296
                                     },
                                     "stop": {
                                       "byte": {
                                         "pos_fname":
                                           "../../test/contracts/multisig-v2.ligo",
                                         "pos_lnum": 136,
-                                        "pos_bol": 4291,
-                                        "pos_cnum": 4320
+                                        "pos_bol": 4296,
+                                        "pos_cnum": 4325
                                       },
-                                      "point_num": 4320,
-                                      "point_bol": 4291
+                                      "point_num": 4325,
+                                      "point_bol": 4296
                                     }
                                   }
                                 ]
@@ -18744,22 +18912,22 @@ let%expect_test _ =
                                             "pos_fname":
                                               "../../test/contracts/multisig-v2.ligo",
                                             "pos_lnum": 136,
-                                            "pos_bol": 4291,
-                                            "pos_cnum": 4322
+                                            "pos_bol": 4296,
+                                            "pos_cnum": 4327
                                           },
-                                          "point_num": 4322,
-                                          "point_bol": 4291
+                                          "point_num": 4327,
+                                          "point_bol": 4296
                                         },
                                         "stop": {
                                           "byte": {
                                             "pos_fname":
                                               "../../test/contracts/multisig-v2.ligo",
                                             "pos_lnum": 136,
-                                            "pos_bol": 4291,
-                                            "pos_cnum": 4323
+                                            "pos_bol": 4296,
+                                            "pos_cnum": 4328
                                           },
-                                          "point_num": 4323,
-                                          "point_bol": 4291
+                                          "point_num": 4328,
+                                          "point_bol": 4296
                                         }
                                       }
                                     ],
@@ -18774,22 +18942,22 @@ let%expect_test _ =
                                         "pos_fname":
                                           "../../test/contracts/multisig-v2.ligo",
                                         "pos_lnum": 136,
-                                        "pos_bol": 4291,
-                                        "pos_cnum": 4322
+                                        "pos_bol": 4296,
+                                        "pos_cnum": 4327
                                       },
-                                      "point_num": 4322,
-                                      "point_bol": 4291
+                                      "point_num": 4327,
+                                      "point_bol": 4296
                                     },
                                     "stop": {
                                       "byte": {
                                         "pos_fname":
                                           "../../test/contracts/multisig-v2.ligo",
                                         "pos_lnum": 136,
-                                        "pos_bol": 4291,
-                                        "pos_cnum": 4323
+                                        "pos_bol": 4296,
+                                        "pos_cnum": 4328
                                       },
-                                      "point_num": 4323,
-                                      "point_bol": 4291
+                                      "point_num": 4328,
+                                      "point_bol": 4296
                                     }
                                   }
                                 ]
@@ -18804,22 +18972,22 @@ let%expect_test _ =
                                   "pos_fname":
                                     "../../test/contracts/multisig-v2.ligo",
                                   "pos_lnum": 136,
-                                  "pos_bol": 4291,
-                                  "pos_cnum": 4295
+                                  "pos_bol": 4296,
+                                  "pos_cnum": 4300
                                 },
-                                "point_num": 4295,
-                                "point_bol": 4291
+                                "point_num": 4300,
+                                "point_bol": 4296
                               },
                               "stop": {
                                 "byte": {
                                   "pos_fname":
                                     "../../test/contracts/multisig-v2.ligo",
                                   "pos_lnum": 136,
-                                  "pos_bol": 4291,
-                                  "pos_cnum": 4324
+                                  "pos_bol": 4296,
+                                  "pos_cnum": 4329
                                 },
-                                "point_num": 4324,
-                                "point_bol": 4291
+                                "point_num": 4329,
+                                "point_bol": 4296
                               }
                             }
                           ]
@@ -18839,21 +19007,21 @@ let%expect_test _ =
                 "byte": {
                   "pos_fname": "../../test/contracts/multisig-v2.ligo",
                   "pos_lnum": 135,
-                  "pos_bol": 4220,
-                  "pos_cnum": 4220
+                  "pos_bol": 4225,
+                  "pos_cnum": 4225
                 },
-                "point_num": 4220,
-                "point_bol": 4220
+                "point_num": 4225,
+                "point_bol": 4225
               },
               "stop": {
                 "byte": {
                   "pos_fname": "../../test/contracts/multisig-v2.ligo",
                   "pos_lnum": 136,
-                  "pos_bol": 4291,
-                  "pos_cnum": 4324
+                  "pos_bol": 4296,
+                  "pos_cnum": 4329
                 },
-                "point_num": 4324,
-                "point_bol": 4291
+                "point_num": 4329,
+                "point_bol": 4296
               }
             }
           ]
@@ -18868,21 +19036,21 @@ let%expect_test _ =
           "byte": {
             "pos_fname": "../../test/contracts/multisig-v2.ligo",
             "pos_lnum": 135,
-            "pos_bol": 4220,
-            "pos_cnum": 4220
+            "pos_bol": 4225,
+            "pos_cnum": 4225
           },
-          "point_num": 4220,
-          "point_bol": 4220
+          "point_num": 4225,
+          "point_bol": 4225
         },
         "stop": {
           "byte": {
             "pos_fname": "../../test/contracts/multisig-v2.ligo",
             "pos_lnum": 136,
-            "pos_bol": 4291,
-            "pos_cnum": 4324
+            "pos_bol": 4296,
+            "pos_cnum": 4329
           },
-          "point_num": 4324,
-          "point_bol": 4291
+          "point_num": 4329,
+          "point_bol": 4296
         }
       }
     ]
@@ -18902,21 +19070,21 @@ let%expect_test _ =
                   "byte": {
                     "pos_fname": "../../test/contracts/multisig-v2.ligo",
                     "pos_lnum": 138,
-                    "pos_bol": 4326,
-                    "pos_cnum": 4335
+                    "pos_bol": 4331,
+                    "pos_cnum": 4340
                   },
-                  "point_num": 4335,
-                  "point_bol": 4326
+                  "point_num": 4340,
+                  "point_bol": 4331
                 },
                 "stop": {
                   "byte": {
                     "pos_fname": "../../test/contracts/multisig-v2.ligo",
                     "pos_lnum": 138,
-                    "pos_bol": 4326,
-                    "pos_cnum": 4339
+                    "pos_bol": 4331,
+                    "pos_cnum": 4344
                   },
-                  "point_num": 4339,
-                  "point_bol": 4326
+                  "point_num": 4344,
+                  "point_bol": 4331
                 }
               }
             ],
@@ -18948,22 +19116,22 @@ let%expect_test _ =
                                 "pos_fname":
                                   "../../test/contracts/multisig-v2.ligo",
                                 "pos_lnum": 138,
-                                "pos_bol": 4326,
-                                "pos_cnum": 4355
+                                "pos_bol": 4331,
+                                "pos_cnum": 4360
                               },
-                              "point_num": 4355,
-                              "point_bol": 4326
+                              "point_num": 4360,
+                              "point_bol": 4331
                             },
                             "stop": {
                               "byte": {
                                 "pos_fname":
                                   "../../test/contracts/multisig-v2.ligo",
                                 "pos_lnum": 138,
-                                "pos_bol": 4326,
-                                "pos_cnum": 4364
+                                "pos_bol": 4331,
+                                "pos_cnum": 4369
                               },
-                              "point_num": 4364,
-                              "point_bol": 4326
+                              "point_num": 4369,
+                              "point_bol": 4331
                             }
                           }
                         ]
@@ -18986,22 +19154,22 @@ let%expect_test _ =
                                 "pos_fname":
                                   "../../test/contracts/multisig-v2.ligo",
                                 "pos_lnum": 138,
-                                "pos_bol": 4326,
-                                "pos_cnum": 4376
+                                "pos_bol": 4331,
+                                "pos_cnum": 4381
                               },
-                              "point_num": 4376,
-                              "point_bol": 4326
+                              "point_num": 4381,
+                              "point_bol": 4331
                             },
                             "stop": {
                               "byte": {
                                 "pos_fname":
                                   "../../test/contracts/multisig-v2.ligo",
                                 "pos_lnum": 138,
-                                "pos_bol": 4326,
-                                "pos_cnum": 4383
+                                "pos_bol": 4331,
+                                "pos_cnum": 4388
                               },
-                              "point_num": 4383,
-                              "point_bol": 4326
+                              "point_num": 4388,
+                              "point_bol": 4331
                             }
                           }
                         ]
@@ -19028,22 +19196,22 @@ let%expect_test _ =
                           "pos_fname":
                             "../../test/contracts/multisig-v2.ligo",
                           "pos_lnum": 138,
-                          "pos_bol": 4326,
-                          "pos_cnum": 4387
+                          "pos_bol": 4331,
+                          "pos_cnum": 4392
                         },
-                        "point_num": 4387,
-                        "point_bol": 4326
+                        "point_num": 4392,
+                        "point_bol": 4331
                       },
                       "stop": {
                         "byte": {
                           "pos_fname":
                             "../../test/contracts/multisig-v2.ligo",
                           "pos_lnum": 138,
-                          "pos_bol": 4326,
-                          "pos_cnum": 4393
+                          "pos_bol": 4331,
+                          "pos_cnum": 4398
                         },
-                        "point_num": 4393,
-                        "point_bol": 4326
+                        "point_num": 4398,
+                        "point_bol": 4331
                       }
                     }
                   ]
@@ -19086,22 +19254,22 @@ let%expect_test _ =
                                 "pos_fname":
                                   "../../test/contracts/multisig-v2.ligo",
                                 "pos_lnum": 138,
-                                "pos_bol": 4326,
-                                "pos_cnum": 4355
+                                "pos_bol": 4331,
+                                "pos_cnum": 4360
                               },
-                              "point_num": 4355,
-                              "point_bol": 4326
+                              "point_num": 4360,
+                              "point_bol": 4331
                             },
                             "stop": {
                               "byte": {
                                 "pos_fname":
                                   "../../test/contracts/multisig-v2.ligo",
                                 "pos_lnum": 138,
-                                "pos_bol": 4326,
-                                "pos_cnum": 4364
+                                "pos_bol": 4331,
+                                "pos_cnum": 4369
                               },
-                              "point_num": 4364,
-                              "point_bol": 4326
+                              "point_num": 4369,
+                              "point_bol": 4331
                             }
                           }
                         ]
@@ -19124,22 +19292,22 @@ let%expect_test _ =
                                 "pos_fname":
                                   "../../test/contracts/multisig-v2.ligo",
                                 "pos_lnum": 138,
-                                "pos_bol": 4326,
-                                "pos_cnum": 4376
+                                "pos_bol": 4331,
+                                "pos_cnum": 4381
                               },
-                              "point_num": 4376,
-                              "point_bol": 4326
+                              "point_num": 4381,
+                              "point_bol": 4331
                             },
                             "stop": {
                               "byte": {
                                 "pos_fname":
                                   "../../test/contracts/multisig-v2.ligo",
                                 "pos_lnum": 138,
-                                "pos_bol": 4326,
-                                "pos_cnum": 4383
+                                "pos_bol": 4331,
+                                "pos_cnum": 4388
                               },
-                              "point_num": 4383,
-                              "point_bol": 4326
+                              "point_num": 4388,
+                              "point_bol": 4331
                             }
                           }
                         ]
@@ -19167,21 +19335,21 @@ let%expect_test _ =
                       "byte": {
                         "pos_fname": "../../test/contracts/multisig-v2.ligo",
                         "pos_lnum": 138,
-                        "pos_bol": 4326,
-                        "pos_cnum": 4387
+                        "pos_bol": 4331,
+                        "pos_cnum": 4392
                       },
-                      "point_num": 4387,
-                      "point_bol": 4326
+                      "point_num": 4392,
+                      "point_bol": 4331
                     },
                     "stop": {
                       "byte": {
                         "pos_fname": "../../test/contracts/multisig-v2.ligo",
                         "pos_lnum": 138,
-                        "pos_bol": 4326,
-                        "pos_cnum": 4393
+                        "pos_bol": 4331,
+                        "pos_cnum": 4398
                       },
-                      "point_num": 4393,
-                      "point_bol": 4326
+                      "point_num": 4398,
+                      "point_bol": 4331
                     }
                   }
                 ]
@@ -19221,22 +19389,22 @@ let%expect_test _ =
                                           "pos_fname":
                                             "../../test/contracts/multisig-v2.ligo",
                                           "pos_lnum": 138,
-                                          "pos_bol": 4326,
-                                          "pos_cnum": 4347
+                                          "pos_bol": 4331,
+                                          "pos_cnum": 4352
                                         },
-                                        "point_num": 4347,
-                                        "point_bol": 4326
+                                        "point_num": 4352,
+                                        "point_bol": 4331
                                       },
                                       "stop": {
                                         "byte": {
                                           "pos_fname":
                                             "../../test/contracts/multisig-v2.ligo",
                                           "pos_lnum": 138,
-                                          "pos_bol": 4326,
-                                          "pos_cnum": 4352
+                                          "pos_bol": 4331,
+                                          "pos_cnum": 4357
                                         },
-                                        "point_num": 4352,
-                                        "point_bol": 4326
+                                        "point_num": 4357,
+                                        "point_bol": 4331
                                       }
                                     }
                                   ],
@@ -19260,22 +19428,22 @@ let%expect_test _ =
                                           "pos_fname":
                                             "../../test/contracts/multisig-v2.ligo",
                                           "pos_lnum": 138,
-                                          "pos_bol": 4326,
-                                          "pos_cnum": 4355
+                                          "pos_bol": 4331,
+                                          "pos_cnum": 4360
                                         },
-                                        "point_num": 4355,
-                                        "point_bol": 4326
+                                        "point_num": 4360,
+                                        "point_bol": 4331
                                       },
                                       "stop": {
                                         "byte": {
                                           "pos_fname":
                                             "../../test/contracts/multisig-v2.ligo",
                                           "pos_lnum": 138,
-                                          "pos_bol": 4326,
-                                          "pos_cnum": 4364
+                                          "pos_bol": 4331,
+                                          "pos_cnum": 4369
                                         },
-                                        "point_num": 4364,
-                                        "point_bol": 4326
+                                        "point_num": 4369,
+                                        "point_bol": 4331
                                       }
                                     }
                                   ]
@@ -19297,22 +19465,22 @@ let%expect_test _ =
                                           "pos_fname":
                                             "../../test/contracts/multisig-v2.ligo",
                                           "pos_lnum": 138,
-                                          "pos_bol": 4326,
-                                          "pos_cnum": 4372
+                                          "pos_bol": 4331,
+                                          "pos_cnum": 4377
                                         },
-                                        "point_num": 4372,
-                                        "point_bol": 4326
+                                        "point_num": 4377,
+                                        "point_bol": 4331
                                       },
                                       "stop": {
                                         "byte": {
                                           "pos_fname":
                                             "../../test/contracts/multisig-v2.ligo",
                                           "pos_lnum": 138,
-                                          "pos_bol": 4326,
-                                          "pos_cnum": 4373
+                                          "pos_bol": 4331,
+                                          "pos_cnum": 4378
                                         },
-                                        "point_num": 4373,
-                                        "point_bol": 4326
+                                        "point_num": 4378,
+                                        "point_bol": 4331
                                       }
                                     }
                                   ],
@@ -19336,22 +19504,22 @@ let%expect_test _ =
                                           "pos_fname":
                                             "../../test/contracts/multisig-v2.ligo",
                                           "pos_lnum": 138,
-                                          "pos_bol": 4326,
-                                          "pos_cnum": 4376
+                                          "pos_bol": 4331,
+                                          "pos_cnum": 4381
                                         },
-                                        "point_num": 4376,
-                                        "point_bol": 4326
+                                        "point_num": 4381,
+                                        "point_bol": 4331
                                       },
                                       "stop": {
                                         "byte": {
                                           "pos_fname":
                                             "../../test/contracts/multisig-v2.ligo",
                                           "pos_lnum": 138,
-                                          "pos_bol": 4326,
-                                          "pos_cnum": 4383
+                                          "pos_bol": 4331,
+                                          "pos_cnum": 4388
                                         },
-                                        "point_num": 4383,
-                                        "point_bol": 4326
+                                        "point_num": 4388,
+                                        "point_bol": 4331
                                       }
                                     }
                                   ]
@@ -19379,22 +19547,22 @@ let%expect_test _ =
                                             "pos_fname":
                                               "../../test/contracts/multisig-v2.ligo",
                                             "pos_lnum": 139,
-                                            "pos_bol": 4398,
-                                            "pos_cnum": 4405
+                                            "pos_bol": 4403,
+                                            "pos_cnum": 4410
                                           },
-                                          "point_num": 4405,
-                                          "point_bol": 4398
+                                          "point_num": 4410,
+                                          "point_bol": 4403
                                         },
                                         "stop": {
                                           "byte": {
                                             "pos_fname":
                                               "../../test/contracts/multisig-v2.ligo",
                                             "pos_lnum": 139,
-                                            "pos_bol": 4398,
-                                            "pos_cnum": 4410
+                                            "pos_bol": 4403,
+                                            "pos_cnum": 4415
                                           },
-                                          "point_num": 4410,
-                                          "point_bol": 4398
+                                          "point_num": 4415,
+                                          "point_bol": 4403
                                         }
                                       }
                                     ],
@@ -19409,22 +19577,22 @@ let%expect_test _ =
                                         "pos_fname":
                                           "../../test/contracts/multisig-v2.ligo",
                                         "pos_lnum": 139,
-                                        "pos_bol": 4398,
-                                        "pos_cnum": 4405
+                                        "pos_bol": 4403,
+                                        "pos_cnum": 4410
                                       },
-                                      "point_num": 4405,
-                                      "point_bol": 4398
+                                      "point_num": 4410,
+                                      "point_bol": 4403
                                     },
                                     "stop": {
                                       "byte": {
                                         "pos_fname":
                                           "../../test/contracts/multisig-v2.ligo",
                                         "pos_lnum": 139,
-                                        "pos_bol": 4398,
-                                        "pos_cnum": 4410
+                                        "pos_bol": 4403,
+                                        "pos_cnum": 4415
                                       },
-                                      "point_num": 4410,
-                                      "point_bol": 4398
+                                      "point_num": 4415,
+                                      "point_bol": 4403
                                     }
                                   }
                                 ]
@@ -19448,22 +19616,22 @@ let%expect_test _ =
                                                   "pos_fname":
                                                     "../../test/contracts/multisig-v2.ligo",
                                                   "pos_lnum": 142,
-                                                  "pos_bol": 4549,
-                                                  "pos_cnum": 4561
+                                                  "pos_bol": 4554,
+                                                  "pos_cnum": 4566
                                                 },
-                                                "point_num": 4561,
-                                                "point_bol": 4549
+                                                "point_num": 4566,
+                                                "point_bol": 4554
                                               },
                                               "stop": {
                                                 "byte": {
                                                   "pos_fname":
                                                     "../../test/contracts/multisig-v2.ligo",
                                                   "pos_lnum": 142,
-                                                  "pos_bol": 4549,
-                                                  "pos_cnum": 4562
+                                                  "pos_bol": 4554,
+                                                  "pos_cnum": 4567
                                                 },
-                                                "point_num": 4562,
-                                                "point_bol": 4549
+                                                "point_num": 4567,
+                                                "point_bol": 4554
                                               }
                                             }
                                           ],
@@ -19492,22 +19660,22 @@ let%expect_test _ =
                                                       "pos_fname":
                                                         "../../test/contracts/multisig-v2.ligo",
                                                       "pos_lnum": 142,
-                                                      "pos_bol": 4549,
-                                                      "pos_cnum": 4567
+                                                      "pos_bol": 4554,
+                                                      "pos_cnum": 4572
                                                     },
-                                                    "point_num": 4567,
-                                                    "point_bol": 4549
+                                                    "point_num": 4572,
+                                                    "point_bol": 4554
                                                   },
                                                   "stop": {
                                                     "byte": {
                                                       "pos_fname":
                                                         "../../test/contracts/multisig-v2.ligo",
                                                       "pos_lnum": 142,
-                                                      "pos_bol": 4549,
-                                                      "pos_cnum": 4571
+                                                      "pos_bol": 4554,
+                                                      "pos_cnum": 4576
                                                     },
-                                                    "point_num": 4571,
-                                                    "point_bol": 4549
+                                                    "point_num": 4576,
+                                                    "point_bol": 4554
                                                   }
                                                 }
                                               ],
@@ -19522,22 +19690,22 @@ let%expect_test _ =
                                                   "pos_fname":
                                                     "../../test/contracts/multisig-v2.ligo",
                                                   "pos_lnum": 142,
-                                                  "pos_bol": 4549,
-                                                  "pos_cnum": 4567
+                                                  "pos_bol": 4554,
+                                                  "pos_cnum": 4572
                                                 },
-                                                "point_num": 4567,
-                                                "point_bol": 4549
+                                                "point_num": 4572,
+                                                "point_bol": 4554
                                               },
                                               "stop": {
                                                 "byte": {
                                                   "pos_fname":
                                                     "../../test/contracts/multisig-v2.ligo",
                                                   "pos_lnum": 142,
-                                                  "pos_bol": 4549,
-                                                  "pos_cnum": 4571
+                                                  "pos_bol": 4554,
+                                                  "pos_cnum": 4576
                                                 },
-                                                "point_num": 4571,
-                                                "point_bol": 4549
+                                                "point_num": 4576,
+                                                "point_bol": 4554
                                               }
                                             }
                                           ]
@@ -19560,22 +19728,22 @@ let%expect_test _ =
                                                             "pos_fname":
                                                               "../../test/contracts/multisig-v2.ligo",
                                                             "pos_lnum": 142,
-                                                            "pos_bol": 4549,
-                                                            "pos_cnum": 4573
+                                                            "pos_bol": 4554,
+                                                            "pos_cnum": 4578
                                                           },
-                                                          "point_num": 4573,
-                                                          "point_bol": 4549
+                                                          "point_num": 4578,
+                                                          "point_bol": 4554
                                                         },
                                                         "stop": {
                                                           "byte": {
                                                             "pos_fname":
                                                               "../../test/contracts/multisig-v2.ligo",
                                                             "pos_lnum": 142,
-                                                            "pos_bol": 4549,
-                                                            "pos_cnum": 4574
+                                                            "pos_bol": 4554,
+                                                            "pos_cnum": 4579
                                                           },
-                                                          "point_num": 4574,
-                                                          "point_bol": 4549
+                                                          "point_num": 4579,
+                                                          "point_bol": 4554
                                                         }
                                                       }
                                                     ],
@@ -19590,22 +19758,22 @@ let%expect_test _ =
                                                         "pos_fname":
                                                           "../../test/contracts/multisig-v2.ligo",
                                                         "pos_lnum": 142,
-                                                        "pos_bol": 4549,
-                                                        "pos_cnum": 4573
+                                                        "pos_bol": 4554,
+                                                        "pos_cnum": 4578
                                                       },
-                                                      "point_num": 4573,
-                                                      "point_bol": 4549
+                                                      "point_num": 4578,
+                                                      "point_bol": 4554
                                                     },
                                                     "stop": {
                                                       "byte": {
                                                         "pos_fname":
                                                           "../../test/contracts/multisig-v2.ligo",
                                                         "pos_lnum": 142,
-                                                        "pos_bol": 4549,
-                                                        "pos_cnum": 4574
+                                                        "pos_bol": 4554,
+                                                        "pos_cnum": 4579
                                                       },
-                                                      "point_num": 4574,
-                                                      "point_bol": 4549
+                                                      "point_num": 4579,
+                                                      "point_bol": 4554
                                                     }
                                                   }
                                                 ]
@@ -19624,22 +19792,22 @@ let%expect_test _ =
                                                             "pos_fname":
                                                               "../../test/contracts/multisig-v2.ligo",
                                                             "pos_lnum": 142,
-                                                            "pos_bol": 4549,
-                                                            "pos_cnum": 4576
+                                                            "pos_bol": 4554,
+                                                            "pos_cnum": 4581
                                                           },
-                                                          "point_num": 4576,
-                                                          "point_bol": 4549
+                                                          "point_num": 4581,
+                                                          "point_bol": 4554
                                                         },
                                                         "stop": {
                                                           "byte": {
                                                             "pos_fname":
                                                               "../../test/contracts/multisig-v2.ligo",
                                                             "pos_lnum": 142,
-                                                            "pos_bol": 4549,
-                                                            "pos_cnum": 4577
+                                                            "pos_bol": 4554,
+                                                            "pos_cnum": 4582
                                                           },
-                                                          "point_num": 4577,
-                                                          "point_bol": 4549
+                                                          "point_num": 4582,
+                                                          "point_bol": 4554
                                                         }
                                                       }
                                                     ],
@@ -19654,22 +19822,22 @@ let%expect_test _ =
                                                         "pos_fname":
                                                           "../../test/contracts/multisig-v2.ligo",
                                                         "pos_lnum": 142,
-                                                        "pos_bol": 4549,
-                                                        "pos_cnum": 4576
+                                                        "pos_bol": 4554,
+                                                        "pos_cnum": 4581
                                                       },
-                                                      "point_num": 4576,
-                                                      "point_bol": 4549
+                                                      "point_num": 4581,
+                                                      "point_bol": 4554
                                                     },
                                                     "stop": {
                                                       "byte": {
                                                         "pos_fname":
                                                           "../../test/contracts/multisig-v2.ligo",
                                                         "pos_lnum": 142,
-                                                        "pos_bol": 4549,
-                                                        "pos_cnum": 4577
+                                                        "pos_bol": 4554,
+                                                        "pos_cnum": 4582
                                                       },
-                                                      "point_num": 4577,
-                                                      "point_bol": 4549
+                                                      "point_num": 4582,
+                                                      "point_bol": 4554
                                                     }
                                                   }
                                                 ]
@@ -19684,22 +19852,22 @@ let%expect_test _ =
                                                   "pos_fname":
                                                     "../../test/contracts/multisig-v2.ligo",
                                                   "pos_lnum": 142,
-                                                  "pos_bol": 4549,
-                                                  "pos_cnum": 4572
+                                                  "pos_bol": 4554,
+                                                  "pos_cnum": 4577
                                                 },
-                                                "point_num": 4572,
-                                                "point_bol": 4549
+                                                "point_num": 4577,
+                                                "point_bol": 4554
                                               },
                                               "stop": {
                                                 "byte": {
                                                   "pos_fname":
                                                     "../../test/contracts/multisig-v2.ligo",
                                                   "pos_lnum": 142,
-                                                  "pos_bol": 4549,
-                                                  "pos_cnum": 4578
+                                                  "pos_bol": 4554,
+                                                  "pos_cnum": 4583
                                                 },
-                                                "point_num": 4578,
-                                                "point_bol": 4549
+                                                "point_num": 4583,
+                                                "point_bol": 4554
                                               }
                                             }
                                           ]
@@ -19714,22 +19882,22 @@ let%expect_test _ =
                                             "pos_fname":
                                               "../../test/contracts/multisig-v2.ligo",
                                             "pos_lnum": 142,
-                                            "pos_bol": 4549,
-                                            "pos_cnum": 4567
+                                            "pos_bol": 4554,
+                                            "pos_cnum": 4572
                                           },
-                                          "point_num": 4567,
-                                          "point_bol": 4549
+                                          "point_num": 4572,
+                                          "point_bol": 4554
                                         },
                                         "stop": {
                                           "byte": {
                                             "pos_fname":
                                               "../../test/contracts/multisig-v2.ligo",
                                             "pos_lnum": 142,
-                                            "pos_bol": 4549,
-                                            "pos_cnum": 4578
+                                            "pos_bol": 4554,
+                                            "pos_cnum": 4583
                                           },
-                                          "point_num": 4578,
-                                          "point_bol": 4549
+                                          "point_num": 4583,
+                                          "point_bol": 4554
                                         }
                                       }
                                     ]
@@ -19753,22 +19921,22 @@ let%expect_test _ =
                                                   "pos_fname":
                                                     "../../test/contracts/multisig-v2.ligo",
                                                   "pos_lnum": 145,
-                                                  "pos_bol": 4617,
-                                                  "pos_cnum": 4633
+                                                  "pos_bol": 4622,
+                                                  "pos_cnum": 4638
                                                 },
-                                                "point_num": 4633,
-                                                "point_bol": 4617
+                                                "point_num": 4638,
+                                                "point_bol": 4622
                                               },
                                               "stop": {
                                                 "byte": {
                                                   "pos_fname":
                                                     "../../test/contracts/multisig-v2.ligo",
                                                   "pos_lnum": 145,
-                                                  "pos_bol": 4617,
-                                                  "pos_cnum": 4634
+                                                  "pos_bol": 4622,
+                                                  "pos_cnum": 4639
                                                 },
-                                                "point_num": 4634,
-                                                "point_bol": 4617
+                                                "point_num": 4639,
+                                                "point_bol": 4622
                                               }
                                             }
                                           ],
@@ -19797,22 +19965,22 @@ let%expect_test _ =
                                                       "pos_fname":
                                                         "../../test/contracts/multisig-v2.ligo",
                                                       "pos_lnum": 145,
-                                                      "pos_bol": 4617,
-                                                      "pos_cnum": 4639
+                                                      "pos_bol": 4622,
+                                                      "pos_cnum": 4644
                                                     },
-                                                    "point_num": 4639,
-                                                    "point_bol": 4617
+                                                    "point_num": 4644,
+                                                    "point_bol": 4622
                                                   },
                                                   "stop": {
                                                     "byte": {
                                                       "pos_fname":
                                                         "../../test/contracts/multisig-v2.ligo",
                                                       "pos_lnum": 145,
-                                                      "pos_bol": 4617,
-                                                      "pos_cnum": 4647
+                                                      "pos_bol": 4622,
+                                                      "pos_cnum": 4652
                                                     },
-                                                    "point_num": 4647,
-                                                    "point_bol": 4617
+                                                    "point_num": 4652,
+                                                    "point_bol": 4622
                                                   }
                                                 }
                                               ],
@@ -19827,22 +19995,22 @@ let%expect_test _ =
                                                   "pos_fname":
                                                     "../../test/contracts/multisig-v2.ligo",
                                                   "pos_lnum": 145,
-                                                  "pos_bol": 4617,
-                                                  "pos_cnum": 4639
+                                                  "pos_bol": 4622,
+                                                  "pos_cnum": 4644
                                                 },
-                                                "point_num": 4639,
-                                                "point_bol": 4617
+                                                "point_num": 4644,
+                                                "point_bol": 4622
                                               },
                                               "stop": {
                                                 "byte": {
                                                   "pos_fname":
                                                     "../../test/contracts/multisig-v2.ligo",
                                                   "pos_lnum": 145,
-                                                  "pos_bol": 4617,
-                                                  "pos_cnum": 4647
+                                                  "pos_bol": 4622,
+                                                  "pos_cnum": 4652
                                                 },
-                                                "point_num": 4647,
-                                                "point_bol": 4617
+                                                "point_num": 4652,
+                                                "point_bol": 4622
                                               }
                                             }
                                           ]
@@ -19865,22 +20033,22 @@ let%expect_test _ =
                                                             "pos_fname":
                                                               "../../test/contracts/multisig-v2.ligo",
                                                             "pos_lnum": 145,
-                                                            "pos_bol": 4617,
-                                                            "pos_cnum": 4649
+                                                            "pos_bol": 4622,
+                                                            "pos_cnum": 4654
                                                           },
-                                                          "point_num": 4649,
-                                                          "point_bol": 4617
+                                                          "point_num": 4654,
+                                                          "point_bol": 4622
                                                         },
                                                         "stop": {
                                                           "byte": {
                                                             "pos_fname":
                                                               "../../test/contracts/multisig-v2.ligo",
                                                             "pos_lnum": 145,
-                                                            "pos_bol": 4617,
-                                                            "pos_cnum": 4650
+                                                            "pos_bol": 4622,
+                                                            "pos_cnum": 4655
                                                           },
-                                                          "point_num": 4650,
-                                                          "point_bol": 4617
+                                                          "point_num": 4655,
+                                                          "point_bol": 4622
                                                         }
                                                       }
                                                     ],
@@ -19895,22 +20063,22 @@ let%expect_test _ =
                                                         "pos_fname":
                                                           "../../test/contracts/multisig-v2.ligo",
                                                         "pos_lnum": 145,
-                                                        "pos_bol": 4617,
-                                                        "pos_cnum": 4649
+                                                        "pos_bol": 4622,
+                                                        "pos_cnum": 4654
                                                       },
-                                                      "point_num": 4649,
-                                                      "point_bol": 4617
+                                                      "point_num": 4654,
+                                                      "point_bol": 4622
                                                     },
                                                     "stop": {
                                                       "byte": {
                                                         "pos_fname":
                                                           "../../test/contracts/multisig-v2.ligo",
                                                         "pos_lnum": 145,
-                                                        "pos_bol": 4617,
-                                                        "pos_cnum": 4650
+                                                        "pos_bol": 4622,
+                                                        "pos_cnum": 4655
                                                       },
-                                                      "point_num": 4650,
-                                                      "point_bol": 4617
+                                                      "point_num": 4655,
+                                                      "point_bol": 4622
                                                     }
                                                   }
                                                 ]
@@ -19929,22 +20097,22 @@ let%expect_test _ =
                                                             "pos_fname":
                                                               "../../test/contracts/multisig-v2.ligo",
                                                             "pos_lnum": 145,
-                                                            "pos_bol": 4617,
-                                                            "pos_cnum": 4652
+                                                            "pos_bol": 4622,
+                                                            "pos_cnum": 4657
                                                           },
-                                                          "point_num": 4652,
-                                                          "point_bol": 4617
+                                                          "point_num": 4657,
+                                                          "point_bol": 4622
                                                         },
                                                         "stop": {
                                                           "byte": {
                                                             "pos_fname":
                                                               "../../test/contracts/multisig-v2.ligo",
                                                             "pos_lnum": 145,
-                                                            "pos_bol": 4617,
-                                                            "pos_cnum": 4653
+                                                            "pos_bol": 4622,
+                                                            "pos_cnum": 4658
                                                           },
-                                                          "point_num": 4653,
-                                                          "point_bol": 4617
+                                                          "point_num": 4658,
+                                                          "point_bol": 4622
                                                         }
                                                       }
                                                     ],
@@ -19959,22 +20127,22 @@ let%expect_test _ =
                                                         "pos_fname":
                                                           "../../test/contracts/multisig-v2.ligo",
                                                         "pos_lnum": 145,
-                                                        "pos_bol": 4617,
-                                                        "pos_cnum": 4652
+                                                        "pos_bol": 4622,
+                                                        "pos_cnum": 4657
                                                       },
-                                                      "point_num": 4652,
-                                                      "point_bol": 4617
+                                                      "point_num": 4657,
+                                                      "point_bol": 4622
                                                     },
                                                     "stop": {
                                                       "byte": {
                                                         "pos_fname":
                                                           "../../test/contracts/multisig-v2.ligo",
                                                         "pos_lnum": 145,
-                                                        "pos_bol": 4617,
-                                                        "pos_cnum": 4653
+                                                        "pos_bol": 4622,
+                                                        "pos_cnum": 4658
                                                       },
-                                                      "point_num": 4653,
-                                                      "point_bol": 4617
+                                                      "point_num": 4658,
+                                                      "point_bol": 4622
                                                     }
                                                   }
                                                 ]
@@ -19989,22 +20157,22 @@ let%expect_test _ =
                                                   "pos_fname":
                                                     "../../test/contracts/multisig-v2.ligo",
                                                   "pos_lnum": 145,
-                                                  "pos_bol": 4617,
-                                                  "pos_cnum": 4648
+                                                  "pos_bol": 4622,
+                                                  "pos_cnum": 4653
                                                 },
-                                                "point_num": 4648,
-                                                "point_bol": 4617
+                                                "point_num": 4653,
+                                                "point_bol": 4622
                                               },
                                               "stop": {
                                                 "byte": {
                                                   "pos_fname":
                                                     "../../test/contracts/multisig-v2.ligo",
                                                   "pos_lnum": 145,
-                                                  "pos_bol": 4617,
-                                                  "pos_cnum": 4654
+                                                  "pos_bol": 4622,
+                                                  "pos_cnum": 4659
                                                 },
-                                                "point_num": 4654,
-                                                "point_bol": 4617
+                                                "point_num": 4659,
+                                                "point_bol": 4622
                                               }
                                             }
                                           ]
@@ -20019,22 +20187,22 @@ let%expect_test _ =
                                             "pos_fname":
                                               "../../test/contracts/multisig-v2.ligo",
                                             "pos_lnum": 145,
-                                            "pos_bol": 4617,
-                                            "pos_cnum": 4639
+                                            "pos_bol": 4622,
+                                            "pos_cnum": 4644
                                           },
-                                          "point_num": 4639,
-                                          "point_bol": 4617
+                                          "point_num": 4644,
+                                          "point_bol": 4622
                                         },
                                         "stop": {
                                           "byte": {
                                             "pos_fname":
                                               "../../test/contracts/multisig-v2.ligo",
                                             "pos_lnum": 145,
-                                            "pos_bol": 4617,
-                                            "pos_cnum": 4654
+                                            "pos_bol": 4622,
+                                            "pos_cnum": 4659
                                           },
-                                          "point_num": 4654,
-                                          "point_bol": 4617
+                                          "point_num": 4659,
+                                          "point_bol": 4622
                                         }
                                       }
                                     ]
@@ -20058,22 +20226,22 @@ let%expect_test _ =
                                                   "pos_fname":
                                                     "../../test/contracts/multisig-v2.ligo",
                                                   "pos_lnum": 148,
-                                                  "pos_bol": 4714,
-                                                  "pos_cnum": 4729
+                                                  "pos_bol": 4719,
+                                                  "pos_cnum": 4734
                                                 },
-                                                "point_num": 4729,
-                                                "point_bol": 4714
+                                                "point_num": 4734,
+                                                "point_bol": 4719
                                               },
                                               "stop": {
                                                 "byte": {
                                                   "pos_fname":
                                                     "../../test/contracts/multisig-v2.ligo",
                                                   "pos_lnum": 148,
-                                                  "pos_bol": 4714,
-                                                  "pos_cnum": 4730
+                                                  "pos_bol": 4719,
+                                                  "pos_cnum": 4735
                                                 },
-                                                "point_num": 4730,
-                                                "point_bol": 4714
+                                                "point_num": 4735,
+                                                "point_bol": 4719
                                               }
                                             }
                                           ],
@@ -20102,22 +20270,22 @@ let%expect_test _ =
                                                       "pos_fname":
                                                         "../../test/contracts/multisig-v2.ligo",
                                                       "pos_lnum": 148,
-                                                      "pos_bol": 4714,
-                                                      "pos_cnum": 4735
+                                                      "pos_bol": 4719,
+                                                      "pos_cnum": 4740
                                                     },
-                                                    "point_num": 4735,
-                                                    "point_bol": 4714
+                                                    "point_num": 4740,
+                                                    "point_bol": 4719
                                                   },
                                                   "stop": {
                                                     "byte": {
                                                       "pos_fname":
                                                         "../../test/contracts/multisig-v2.ligo",
                                                       "pos_lnum": 148,
-                                                      "pos_bol": 4714,
-                                                      "pos_cnum": 4742
+                                                      "pos_bol": 4719,
+                                                      "pos_cnum": 4747
                                                     },
-                                                    "point_num": 4742,
-                                                    "point_bol": 4714
+                                                    "point_num": 4747,
+                                                    "point_bol": 4719
                                                   }
                                                 }
                                               ],
@@ -20132,22 +20300,22 @@ let%expect_test _ =
                                                   "pos_fname":
                                                     "../../test/contracts/multisig-v2.ligo",
                                                   "pos_lnum": 148,
-                                                  "pos_bol": 4714,
-                                                  "pos_cnum": 4735
+                                                  "pos_bol": 4719,
+                                                  "pos_cnum": 4740
                                                 },
-                                                "point_num": 4735,
-                                                "point_bol": 4714
+                                                "point_num": 4740,
+                                                "point_bol": 4719
                                               },
                                               "stop": {
                                                 "byte": {
                                                   "pos_fname":
                                                     "../../test/contracts/multisig-v2.ligo",
                                                   "pos_lnum": 148,
-                                                  "pos_bol": 4714,
-                                                  "pos_cnum": 4742
+                                                  "pos_bol": 4719,
+                                                  "pos_cnum": 4747
                                                 },
-                                                "point_num": 4742,
-                                                "point_bol": 4714
+                                                "point_num": 4747,
+                                                "point_bol": 4719
                                               }
                                             }
                                           ]
@@ -20170,22 +20338,22 @@ let%expect_test _ =
                                                             "pos_fname":
                                                               "../../test/contracts/multisig-v2.ligo",
                                                             "pos_lnum": 148,
-                                                            "pos_bol": 4714,
-                                                            "pos_cnum": 4744
+                                                            "pos_bol": 4719,
+                                                            "pos_cnum": 4749
                                                           },
-                                                          "point_num": 4744,
-                                                          "point_bol": 4714
+                                                          "point_num": 4749,
+                                                          "point_bol": 4719
                                                         },
                                                         "stop": {
                                                           "byte": {
                                                             "pos_fname":
                                                               "../../test/contracts/multisig-v2.ligo",
                                                             "pos_lnum": 148,
-                                                            "pos_bol": 4714,
-                                                            "pos_cnum": 4745
+                                                            "pos_bol": 4719,
+                                                            "pos_cnum": 4750
                                                           },
-                                                          "point_num": 4745,
-                                                          "point_bol": 4714
+                                                          "point_num": 4750,
+                                                          "point_bol": 4719
                                                         }
                                                       }
                                                     ],
@@ -20200,22 +20368,22 @@ let%expect_test _ =
                                                         "pos_fname":
                                                           "../../test/contracts/multisig-v2.ligo",
                                                         "pos_lnum": 148,
-                                                        "pos_bol": 4714,
-                                                        "pos_cnum": 4744
+                                                        "pos_bol": 4719,
+                                                        "pos_cnum": 4749
                                                       },
-                                                      "point_num": 4744,
-                                                      "point_bol": 4714
+                                                      "point_num": 4749,
+                                                      "point_bol": 4719
                                                     },
                                                     "stop": {
                                                       "byte": {
                                                         "pos_fname":
                                                           "../../test/contracts/multisig-v2.ligo",
                                                         "pos_lnum": 148,
-                                                        "pos_bol": 4714,
-                                                        "pos_cnum": 4745
+                                                        "pos_bol": 4719,
+                                                        "pos_cnum": 4750
                                                       },
-                                                      "point_num": 4745,
-                                                      "point_bol": 4714
+                                                      "point_num": 4750,
+                                                      "point_bol": 4719
                                                     }
                                                   }
                                                 ]
@@ -20234,22 +20402,22 @@ let%expect_test _ =
                                                             "pos_fname":
                                                               "../../test/contracts/multisig-v2.ligo",
                                                             "pos_lnum": 148,
-                                                            "pos_bol": 4714,
-                                                            "pos_cnum": 4747
+                                                            "pos_bol": 4719,
+                                                            "pos_cnum": 4752
                                                           },
-                                                          "point_num": 4747,
-                                                          "point_bol": 4714
+                                                          "point_num": 4752,
+                                                          "point_bol": 4719
                                                         },
                                                         "stop": {
                                                           "byte": {
                                                             "pos_fname":
                                                               "../../test/contracts/multisig-v2.ligo",
                                                             "pos_lnum": 148,
-                                                            "pos_bol": 4714,
-                                                            "pos_cnum": 4748
+                                                            "pos_bol": 4719,
+                                                            "pos_cnum": 4753
                                                           },
-                                                          "point_num": 4748,
-                                                          "point_bol": 4714
+                                                          "point_num": 4753,
+                                                          "point_bol": 4719
                                                         }
                                                       }
                                                     ],
@@ -20264,22 +20432,22 @@ let%expect_test _ =
                                                         "pos_fname":
                                                           "../../test/contracts/multisig-v2.ligo",
                                                         "pos_lnum": 148,
-                                                        "pos_bol": 4714,
-                                                        "pos_cnum": 4747
+                                                        "pos_bol": 4719,
+                                                        "pos_cnum": 4752
                                                       },
-                                                      "point_num": 4747,
-                                                      "point_bol": 4714
+                                                      "point_num": 4752,
+                                                      "point_bol": 4719
                                                     },
                                                     "stop": {
                                                       "byte": {
                                                         "pos_fname":
                                                           "../../test/contracts/multisig-v2.ligo",
                                                         "pos_lnum": 148,
-                                                        "pos_bol": 4714,
-                                                        "pos_cnum": 4748
+                                                        "pos_bol": 4719,
+                                                        "pos_cnum": 4753
                                                       },
-                                                      "point_num": 4748,
-                                                      "point_bol": 4714
+                                                      "point_num": 4753,
+                                                      "point_bol": 4719
                                                     }
                                                   }
                                                 ]
@@ -20294,22 +20462,22 @@ let%expect_test _ =
                                                   "pos_fname":
                                                     "../../test/contracts/multisig-v2.ligo",
                                                   "pos_lnum": 148,
-                                                  "pos_bol": 4714,
-                                                  "pos_cnum": 4743
+                                                  "pos_bol": 4719,
+                                                  "pos_cnum": 4748
                                                 },
-                                                "point_num": 4743,
-                                                "point_bol": 4714
+                                                "point_num": 4748,
+                                                "point_bol": 4719
                                               },
                                               "stop": {
                                                 "byte": {
                                                   "pos_fname":
                                                     "../../test/contracts/multisig-v2.ligo",
                                                   "pos_lnum": 148,
-                                                  "pos_bol": 4714,
-                                                  "pos_cnum": 4749
+                                                  "pos_bol": 4719,
+                                                  "pos_cnum": 4754
                                                 },
-                                                "point_num": 4749,
-                                                "point_bol": 4714
+                                                "point_num": 4754,
+                                                "point_bol": 4719
                                               }
                                             }
                                           ]
@@ -20324,22 +20492,22 @@ let%expect_test _ =
                                             "pos_fname":
                                               "../../test/contracts/multisig-v2.ligo",
                                             "pos_lnum": 148,
-                                            "pos_bol": 4714,
-                                            "pos_cnum": 4735
+                                            "pos_bol": 4719,
+                                            "pos_cnum": 4740
                                           },
-                                          "point_num": 4735,
-                                          "point_bol": 4714
+                                          "point_num": 4740,
+                                          "point_bol": 4719
                                         },
                                         "stop": {
                                           "byte": {
                                             "pos_fname":
                                               "../../test/contracts/multisig-v2.ligo",
                                             "pos_lnum": 148,
-                                            "pos_bol": 4714,
-                                            "pos_cnum": 4749
+                                            "pos_bol": 4719,
+                                            "pos_cnum": 4754
                                           },
-                                          "point_num": 4749,
-                                          "point_bol": 4714
+                                          "point_num": 4754,
+                                          "point_bol": 4719
                                         }
                                       }
                                     ]
@@ -20356,22 +20524,22 @@ let%expect_test _ =
                                   "pos_fname":
                                     "../../test/contracts/multisig-v2.ligo",
                                   "pos_lnum": 139,
-                                  "pos_bol": 4398,
-                                  "pos_cnum": 4400
+                                  "pos_bol": 4403,
+                                  "pos_cnum": 4405
                                 },
-                                "point_num": 4400,
-                                "point_bol": 4398
+                                "point_num": 4405,
+                                "point_bol": 4403
                               },
                               "stop": {
                                 "byte": {
                                   "pos_fname":
                                     "../../test/contracts/multisig-v2.ligo",
                                   "pos_lnum": 149,
-                                  "pos_bol": 4750,
-                                  "pos_cnum": 4753
+                                  "pos_bol": 4755,
+                                  "pos_cnum": 4758
                                 },
-                                "point_num": 4753,
-                                "point_bol": 4750
+                                "point_num": 4758,
+                                "point_bol": 4755
                               }
                             }
                           ]
@@ -20391,21 +20559,21 @@ let%expect_test _ =
                 "byte": {
                   "pos_fname": "../../test/contracts/multisig-v2.ligo",
                   "pos_lnum": 138,
-                  "pos_bol": 4326,
-                  "pos_cnum": 4326
+                  "pos_bol": 4331,
+                  "pos_cnum": 4331
                 },
-                "point_num": 4326,
-                "point_bol": 4326
+                "point_num": 4331,
+                "point_bol": 4331
               },
               "stop": {
                 "byte": {
                   "pos_fname": "../../test/contracts/multisig-v2.ligo",
                   "pos_lnum": 149,
-                  "pos_bol": 4750,
-                  "pos_cnum": 4753
+                  "pos_bol": 4755,
+                  "pos_cnum": 4758
                 },
-                "point_num": 4753,
-                "point_bol": 4750
+                "point_num": 4758,
+                "point_bol": 4755
               }
             }
           ]
@@ -20420,21 +20588,21 @@ let%expect_test _ =
           "byte": {
             "pos_fname": "../../test/contracts/multisig-v2.ligo",
             "pos_lnum": 138,
-            "pos_bol": 4326,
-            "pos_cnum": 4326
+            "pos_bol": 4331,
+            "pos_cnum": 4331
           },
-          "point_num": 4326,
-          "point_bol": 4326
+          "point_num": 4331,
+          "point_bol": 4331
         },
         "stop": {
           "byte": {
             "pos_fname": "../../test/contracts/multisig-v2.ligo",
             "pos_lnum": 149,
-            "pos_bol": 4750,
-            "pos_cnum": 4753
+            "pos_bol": 4755,
+            "pos_cnum": 4758
           },
-          "point_num": 4753,
-          "point_bol": 4750
+          "point_num": 4758,
+          "point_bol": 4755
         }
       }
     ]

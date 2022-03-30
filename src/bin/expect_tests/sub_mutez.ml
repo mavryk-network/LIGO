@@ -68,34 +68,34 @@ let%expect_test _ =
   run_ligo_good [ "print" ; "ast-typed" ; (test "sub_mutez_new.ligo") ; "--protocol" ; "ithaca" ] ;
   [%expect{xxx|
     const sub =
-      lambda (parameters#18) return  match parameters#18 with
+      lambda (parameters#24) return  match parameters#24 with
                                       | ( store , delta ) ->
                                       SUB_MUTEZ(store , delta)
     const main =
-      lambda (parameters#20) return  match parameters#20 with
-                                      | ( _#19 , store ) ->
+      lambda (parameters#26) return  match parameters#26 with
+                                      | ( _#25 , store ) ->
                                       ( LIST_EMPTY() , (Option.unopt@{tez})@((sub)@(( store , 1000000mutez ))) ) |xxx}]
 
 let%expect_test _ =
   run_ligo_good [ "print" ; "ast-typed" ; (test "sub_mutez_new.religo") ; "--protocol" ; "ithaca" ] ;
   [%expect{xxx|
     const sub =
-      lambda (gen#18) return  match gen#18 with
+      lambda (gen#24) return  match gen#24 with
                                | ( store , delta ) ->
                                SUB_MUTEZ(store , delta)
     const main =
-      lambda (gen#19) return  match gen#19 with
-                               | ( _#20 , store ) ->
+      lambda (gen#25) return  match gen#25 with
+                               | ( _#26 , store ) ->
                                ( LIST_EMPTY() , (Option.unopt@{tez})@((sub)@(( store , 1000000mutez ))) ) |xxx}]
 
 let%expect_test _ =
   run_ligo_good [ "print" ; "ast-typed" ; (test "sub_mutez_new.jsligo") ; "--protocol" ; "ithaca" ] ;
   [%expect{xxx|
     const sub =
-      lambda (gen#18) return let store = gen#18.0 in let delta = gen#18.1 in SUB_MUTEZ(store ,
+      lambda (gen#24) return let store = gen#24.0 in let delta = gen#24.1 in SUB_MUTEZ(store ,
       delta)[@private]
     const main =
-      lambda (gen#20) return let _#19 = gen#20.0 in let store = gen#20.1 in
+      lambda (gen#26) return let _#25 = gen#26.0 in let store = gen#26.1 in
       ( LIST_EMPTY() , (Option.unopt@{tez})@((sub)@(( store , 1000000mutez ))) )[@private] |xxx}]
 
 let%expect_test _ =
@@ -209,12 +209,12 @@ let%expect_test _ =
   run_ligo_good [ "print" ; "ast-typed" ; (test "sub_mutez_old.ligo") ] ;
   [%expect{xxx|
     const sub =
-      lambda (parameters#18) return  match parameters#18 with
+      lambda (parameters#24) return  match parameters#24 with
                                       | ( store , delta ) ->
                                       SUB(store , delta)
     const main =
-      lambda (parameters#20) return  match parameters#20 with
-                                      | ( _#19 , store ) ->
+      lambda (parameters#26) return  match parameters#26 with
+                                      | ( _#25 , store ) ->
                                       ( LIST_EMPTY() , (sub)@(( store , 1000000mutez )) )
   |xxx}]
 
@@ -222,12 +222,12 @@ let%expect_test _ =
   run_ligo_good [ "print" ; "ast-typed" ; (test "sub_mutez_old.religo") ] ;
   [%expect{xxx|
     const sub =
-      lambda (gen#18) return  match gen#18 with
+      lambda (gen#24) return  match gen#24 with
                                | ( store , delta ) ->
                                SUB(store , delta)
     const main =
-      lambda (gen#19) return  match gen#19 with
-                               | ( _#20 , store ) ->
+      lambda (gen#25) return  match gen#25 with
+                               | ( _#26 , store ) ->
                                ( LIST_EMPTY() , (sub)@(( store , 1000000mutez )) )
   |xxx}]
 
@@ -235,10 +235,10 @@ let%expect_test _ =
   run_ligo_good [ "print" ; "ast-typed" ; (test "sub_mutez_old.jsligo") ] ;
   [%expect{xxx|
     const sub =
-      lambda (gen#18) return let store = gen#18.0 in let delta = gen#18.1 in SUB(store ,
+      lambda (gen#24) return let store = gen#24.0 in let delta = gen#24.1 in SUB(store ,
       delta)[@private]
     const main =
-      lambda (gen#20) return let _#19 = gen#20.0 in let store = gen#20.1 in
+      lambda (gen#26) return let _#25 = gen#26.0 in let store = gen#26.1 in
       ( LIST_EMPTY() , (sub)@(( store , 1000000mutez )) )[@private]
   |xxx}]
 
