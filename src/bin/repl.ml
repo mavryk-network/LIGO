@@ -1,6 +1,7 @@
 open Simple_utils.Trace
 
 (* Helpers *)
+let builtin_mod = ["List"; "Bytes"; "Crypto"]
 
 let get_declarations_core core_prg =
      let func_declarations = List.map ~f:(fun a -> `Value a)  @@ Ligo_compile.Of_core.list_declarations core_prg in
@@ -12,8 +13,7 @@ let get_declarations_typed typed_prg =
      let func_declarations = List.map ~f:(fun a -> `Value a)  @@ Ligo_compile.Of_typed.list_declarations typed_prg in
      let type_declarations = List.map ~f:(fun a -> `Type a)   @@ Ligo_compile.Of_typed.list_type_declarations typed_prg in
      let mod_declarations  = List.map ~f:(fun a -> `Module a) @@ Ligo_compile.Of_typed.list_mod_declarations typed_prg in
-     let mod_declarations  = List.filter ~f:(function (`Module v) -> not (String.equal "List" (Format.asprintf "%a" Ast_typed.ModuleVar.pp v)) | _ -> true) mod_declarations in
-     let mod_declarations  = List.filter ~f:(function (`Module v) -> not (String.equal "Bytes" (Format.asprintf "%a" Ast_typed.ModuleVar.pp v)) | _ -> true) mod_declarations in
+     let mod_declarations  = List.filter ~f:(function (`Module v) -> not (List.mem ~equal:String.equal builtin_mod (Format.asprintf "%a" Ast_typed.ModuleVar.pp v)) | _ -> true) mod_declarations in
      func_declarations @ type_declarations @ mod_declarations
 
 let pp_declaration ppf = function

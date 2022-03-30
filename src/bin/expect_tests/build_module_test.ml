@@ -94,9 +94,26 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_good [ "print" ; "mini-c" ; contract "D.mligo" ] ;
   [%expect{|
-let #../../test/contracts/build/A.mligo#Bytes#concat#121 =
+let #../../test/contracts/build/A.mligo#Crypto#blake2b#121 =
+  fun b -> (({ BLAKE2B })@(b))[@inline] in
+let #../../test/contracts/build/A.mligo#Crypto#sha256#122 =
+  fun b -> (({ SHA256 })@(b))[@inline] in
+let #../../test/contracts/build/A.mligo#Crypto#sha512#123 =
+  fun b -> (({ SHA512 })@(b))[@inline] in
+let #../../test/contracts/build/A.mligo#Crypto#sha3#124 =
+  fun b -> (({ SHA3 })@(b))[@inline] in
+let #../../test/contracts/build/A.mligo#Crypto#keccak#125 =
+  fun b -> (({ KECCAK })@(b))[@inline] in
+let #../../test/contracts/build/A.mligo#Crypto#hash_key#126 =
+  fun k -> (({ HASH_KEY })@(k))[@inline] in
+let #../../test/contracts/build/A.mligo#Crypto#check#127 =
+  fun k ->
+  (fun s ->
+   (fun b ->
+    (({ UNPAIR ; UNPAIR ; CHECK_SIGNATURE })@(PAIR(PAIR(k , s) , b)))))[@inline] in
+let #../../test/contracts/build/A.mligo#Bytes#concat#128 =
   fun b -> (fun c -> (({ UNPAIR ; CONCAT })@(PAIR(b , c))))[@inline] in
-let #../../test/contracts/build/A.mligo#Bytes#sub#122 =
+let #../../test/contracts/build/A.mligo#Bytes#sub#129 =
   fun start ->
   (fun length ->
    (fun input ->
@@ -106,12 +123,29 @@ let #../../test/contracts/build/A.mligo#Bytes#sub#122 =
        IF_NONE { PUSH string "SLICE" ; FAILWITH } {} })@(PAIR(PAIR(start ,
                                                                    length) ,
                                                               input)))))[@inline] in
-let #../../test/contracts/build/A.mligo#Bytes#length#124 =
+let #../../test/contracts/build/A.mligo#Bytes#length#131 =
   fun b -> (({ SIZE })@(b))[@inline] in
-let #../../test/contracts/build/A.mligo#toto#129 = L(1) in
-let #../../test/contracts/build/B.mligo#Bytes#concat#130 =
+let #../../test/contracts/build/A.mligo#toto#136 = L(1) in
+let #../../test/contracts/build/B.mligo#Crypto#blake2b#137 =
+  fun b -> (({ BLAKE2B })@(b))[@inline] in
+let #../../test/contracts/build/B.mligo#Crypto#sha256#138 =
+  fun b -> (({ SHA256 })@(b))[@inline] in
+let #../../test/contracts/build/B.mligo#Crypto#sha512#139 =
+  fun b -> (({ SHA512 })@(b))[@inline] in
+let #../../test/contracts/build/B.mligo#Crypto#sha3#140 =
+  fun b -> (({ SHA3 })@(b))[@inline] in
+let #../../test/contracts/build/B.mligo#Crypto#keccak#141 =
+  fun b -> (({ KECCAK })@(b))[@inline] in
+let #../../test/contracts/build/B.mligo#Crypto#hash_key#142 =
+  fun k -> (({ HASH_KEY })@(k))[@inline] in
+let #../../test/contracts/build/B.mligo#Crypto#check#143 =
+  fun k ->
+  (fun s ->
+   (fun b ->
+    (({ UNPAIR ; UNPAIR ; CHECK_SIGNATURE })@(PAIR(PAIR(k , s) , b)))))[@inline] in
+let #../../test/contracts/build/B.mligo#Bytes#concat#144 =
   fun b -> (fun c -> (({ UNPAIR ; CONCAT })@(PAIR(b , c))))[@inline] in
-let #../../test/contracts/build/B.mligo#Bytes#sub#131 =
+let #../../test/contracts/build/B.mligo#Bytes#sub#145 =
   fun start ->
   (fun length ->
    (fun input ->
@@ -121,23 +155,40 @@ let #../../test/contracts/build/B.mligo#Bytes#sub#131 =
        IF_NONE { PUSH string "SLICE" ; FAILWITH } {} })@(PAIR(PAIR(start ,
                                                                    length) ,
                                                               input)))))[@inline] in
-let #../../test/contracts/build/B.mligo#Bytes#length#133 =
+let #../../test/contracts/build/B.mligo#Bytes#length#147 =
   fun b -> (({ SIZE })@(b))[@inline] in
-let #../../test/contracts/build/B.mligo#toto#138 = L(32) in
-let #../../test/contracts/build/B.mligo#titi#139 =
-  ADD(#../../test/contracts/build/A.mligo#toto#129 , L(42)) in
-let #../../test/contracts/build/B.mligo#f#140 =
+let #../../test/contracts/build/B.mligo#toto#152 = L(32) in
+let #../../test/contracts/build/B.mligo#titi#153 =
+  ADD(#../../test/contracts/build/A.mligo#toto#136 , L(42)) in
+let #../../test/contracts/build/B.mligo#f#154 =
   fun gen#22 ->
-  (let (gen#187, gen#188) = gen#22 in
-   let gen#23 = gen#187 in
-   let x = gen#188 in
+  (let (gen#236, gen#237) = gen#22 in
+   let gen#23 = gen#236 in
+   let x = gen#237 in
    let x =
-     ADD(ADD(x , #../../test/contracts/build/A.mligo#toto#129) ,
-         #../../test/contracts/build/B.mligo#titi#139) in
+     ADD(ADD(x , #../../test/contracts/build/A.mligo#toto#136) ,
+         #../../test/contracts/build/B.mligo#titi#153) in
    PAIR(LIST_EMPTY() , x)) in
-let #../../test/contracts/build/F.mligo#Bytes#concat#141 =
+let #../../test/contracts/build/F.mligo#Crypto#blake2b#155 =
+  fun b -> (({ BLAKE2B })@(b))[@inline] in
+let #../../test/contracts/build/F.mligo#Crypto#sha256#156 =
+  fun b -> (({ SHA256 })@(b))[@inline] in
+let #../../test/contracts/build/F.mligo#Crypto#sha512#157 =
+  fun b -> (({ SHA512 })@(b))[@inline] in
+let #../../test/contracts/build/F.mligo#Crypto#sha3#158 =
+  fun b -> (({ SHA3 })@(b))[@inline] in
+let #../../test/contracts/build/F.mligo#Crypto#keccak#159 =
+  fun b -> (({ KECCAK })@(b))[@inline] in
+let #../../test/contracts/build/F.mligo#Crypto#hash_key#160 =
+  fun k -> (({ HASH_KEY })@(k))[@inline] in
+let #../../test/contracts/build/F.mligo#Crypto#check#161 =
+  fun k ->
+  (fun s ->
+   (fun b ->
+    (({ UNPAIR ; UNPAIR ; CHECK_SIGNATURE })@(PAIR(PAIR(k , s) , b)))))[@inline] in
+let #../../test/contracts/build/F.mligo#Bytes#concat#162 =
   fun b -> (fun c -> (({ UNPAIR ; CONCAT })@(PAIR(b , c))))[@inline] in
-let #../../test/contracts/build/F.mligo#Bytes#sub#142 =
+let #../../test/contracts/build/F.mligo#Bytes#sub#163 =
   fun start ->
   (fun length ->
    (fun input ->
@@ -147,12 +198,29 @@ let #../../test/contracts/build/F.mligo#Bytes#sub#142 =
        IF_NONE { PUSH string "SLICE" ; FAILWITH } {} })@(PAIR(PAIR(start ,
                                                                    length) ,
                                                               input)))))[@inline] in
-let #../../test/contracts/build/F.mligo#Bytes#length#144 =
+let #../../test/contracts/build/F.mligo#Bytes#length#165 =
   fun b -> (({ SIZE })@(b))[@inline] in
-let #../../test/contracts/build/F.mligo#toto#149 = L(44) in
-let #../../test/contracts/build/G.mligo#Bytes#concat#150 =
+let #../../test/contracts/build/F.mligo#toto#170 = L(44) in
+let #../../test/contracts/build/G.mligo#Crypto#blake2b#171 =
+  fun b -> (({ BLAKE2B })@(b))[@inline] in
+let #../../test/contracts/build/G.mligo#Crypto#sha256#172 =
+  fun b -> (({ SHA256 })@(b))[@inline] in
+let #../../test/contracts/build/G.mligo#Crypto#sha512#173 =
+  fun b -> (({ SHA512 })@(b))[@inline] in
+let #../../test/contracts/build/G.mligo#Crypto#sha3#174 =
+  fun b -> (({ SHA3 })@(b))[@inline] in
+let #../../test/contracts/build/G.mligo#Crypto#keccak#175 =
+  fun b -> (({ KECCAK })@(b))[@inline] in
+let #../../test/contracts/build/G.mligo#Crypto#hash_key#176 =
+  fun k -> (({ HASH_KEY })@(k))[@inline] in
+let #../../test/contracts/build/G.mligo#Crypto#check#177 =
+  fun k ->
+  (fun s ->
+   (fun b ->
+    (({ UNPAIR ; UNPAIR ; CHECK_SIGNATURE })@(PAIR(PAIR(k , s) , b)))))[@inline] in
+let #../../test/contracts/build/G.mligo#Bytes#concat#178 =
   fun b -> (fun c -> (({ UNPAIR ; CONCAT })@(PAIR(b , c))))[@inline] in
-let #../../test/contracts/build/G.mligo#Bytes#sub#151 =
+let #../../test/contracts/build/G.mligo#Bytes#sub#179 =
   fun start ->
   (fun length ->
    (fun input ->
@@ -162,12 +230,29 @@ let #../../test/contracts/build/G.mligo#Bytes#sub#151 =
        IF_NONE { PUSH string "SLICE" ; FAILWITH } {} })@(PAIR(PAIR(start ,
                                                                    length) ,
                                                               input)))))[@inline] in
-let #../../test/contracts/build/G.mligo#Bytes#length#153 =
+let #../../test/contracts/build/G.mligo#Bytes#length#181 =
   fun b -> (({ SIZE })@(b))[@inline] in
-let #../../test/contracts/build/G.mligo#toto#158 = L(43) in
-let #../../test/contracts/build/C.mligo#Bytes#concat#159 =
+let #../../test/contracts/build/G.mligo#toto#186 = L(43) in
+let #../../test/contracts/build/C.mligo#Crypto#blake2b#187 =
+  fun b -> (({ BLAKE2B })@(b))[@inline] in
+let #../../test/contracts/build/C.mligo#Crypto#sha256#188 =
+  fun b -> (({ SHA256 })@(b))[@inline] in
+let #../../test/contracts/build/C.mligo#Crypto#sha512#189 =
+  fun b -> (({ SHA512 })@(b))[@inline] in
+let #../../test/contracts/build/C.mligo#Crypto#sha3#190 =
+  fun b -> (({ SHA3 })@(b))[@inline] in
+let #../../test/contracts/build/C.mligo#Crypto#keccak#191 =
+  fun b -> (({ KECCAK })@(b))[@inline] in
+let #../../test/contracts/build/C.mligo#Crypto#hash_key#192 =
+  fun k -> (({ HASH_KEY })@(k))[@inline] in
+let #../../test/contracts/build/C.mligo#Crypto#check#193 =
+  fun k ->
+  (fun s ->
+   (fun b ->
+    (({ UNPAIR ; UNPAIR ; CHECK_SIGNATURE })@(PAIR(PAIR(k , s) , b)))))[@inline] in
+let #../../test/contracts/build/C.mligo#Bytes#concat#194 =
   fun b -> (fun c -> (({ UNPAIR ; CONCAT })@(PAIR(b , c))))[@inline] in
-let #../../test/contracts/build/C.mligo#Bytes#sub#160 =
+let #../../test/contracts/build/C.mligo#Bytes#sub#195 =
   fun start ->
   (fun length ->
    (fun input ->
@@ -177,16 +262,33 @@ let #../../test/contracts/build/C.mligo#Bytes#sub#160 =
        IF_NONE { PUSH string "SLICE" ; FAILWITH } {} })@(PAIR(PAIR(start ,
                                                                    length) ,
                                                               input)))))[@inline] in
-let #../../test/contracts/build/C.mligo#Bytes#length#162 =
+let #../../test/contracts/build/C.mligo#Bytes#length#197 =
   fun b -> (({ SIZE })@(b))[@inline] in
-let #../../test/contracts/build/C.mligo#tata#167 =
-  ADD(#../../test/contracts/build/A.mligo#toto#129 ,
-      #../../test/contracts/build/B.mligo#titi#139) in
-let #../../test/contracts/build/C.mligo#foo#168 =
-  (#../../test/contracts/build/B.mligo#f#140)@(PAIR(L(unit) , L(3))) in
-let #../../test/contracts/build/E.mligo#Bytes#concat#169 =
+let #../../test/contracts/build/C.mligo#tata#202 =
+  ADD(#../../test/contracts/build/A.mligo#toto#136 ,
+      #../../test/contracts/build/B.mligo#titi#153) in
+let #../../test/contracts/build/C.mligo#foo#203 =
+  (#../../test/contracts/build/B.mligo#f#154)@(PAIR(L(unit) , L(3))) in
+let #../../test/contracts/build/E.mligo#Crypto#blake2b#204 =
+  fun b -> (({ BLAKE2B })@(b))[@inline] in
+let #../../test/contracts/build/E.mligo#Crypto#sha256#205 =
+  fun b -> (({ SHA256 })@(b))[@inline] in
+let #../../test/contracts/build/E.mligo#Crypto#sha512#206 =
+  fun b -> (({ SHA512 })@(b))[@inline] in
+let #../../test/contracts/build/E.mligo#Crypto#sha3#207 =
+  fun b -> (({ SHA3 })@(b))[@inline] in
+let #../../test/contracts/build/E.mligo#Crypto#keccak#208 =
+  fun b -> (({ KECCAK })@(b))[@inline] in
+let #../../test/contracts/build/E.mligo#Crypto#hash_key#209 =
+  fun k -> (({ HASH_KEY })@(k))[@inline] in
+let #../../test/contracts/build/E.mligo#Crypto#check#210 =
+  fun k ->
+  (fun s ->
+   (fun b ->
+    (({ UNPAIR ; UNPAIR ; CHECK_SIGNATURE })@(PAIR(PAIR(k , s) , b)))))[@inline] in
+let #../../test/contracts/build/E.mligo#Bytes#concat#211 =
   fun b -> (fun c -> (({ UNPAIR ; CONCAT })@(PAIR(b , c))))[@inline] in
-let #../../test/contracts/build/E.mligo#Bytes#sub#170 =
+let #../../test/contracts/build/E.mligo#Bytes#sub#212 =
   fun start ->
   (fun length ->
    (fun input ->
@@ -196,13 +298,24 @@ let #../../test/contracts/build/E.mligo#Bytes#sub#170 =
        IF_NONE { PUSH string "SLICE" ; FAILWITH } {} })@(PAIR(PAIR(start ,
                                                                    length) ,
                                                               input)))))[@inline] in
-let #../../test/contracts/build/E.mligo#Bytes#length#172 =
+let #../../test/contracts/build/E.mligo#Bytes#length#214 =
   fun b -> (({ SIZE })@(b))[@inline] in
-let #../../test/contracts/build/E.mligo#toto#177 = L(10) in
-let #../../test/contracts/build/E.mligo#foo#178 = L("bar") in
-let #Bytes#concat#179 =
+let #../../test/contracts/build/E.mligo#toto#219 = L(10) in
+let #../../test/contracts/build/E.mligo#foo#220 = L("bar") in
+let #Crypto#blake2b#221 = fun b -> (({ BLAKE2B })@(b))[@inline] in
+let #Crypto#sha256#222 = fun b -> (({ SHA256 })@(b))[@inline] in
+let #Crypto#sha512#223 = fun b -> (({ SHA512 })@(b))[@inline] in
+let #Crypto#sha3#224 = fun b -> (({ SHA3 })@(b))[@inline] in
+let #Crypto#keccak#225 = fun b -> (({ KECCAK })@(b))[@inline] in
+let #Crypto#hash_key#226 = fun k -> (({ HASH_KEY })@(k))[@inline] in
+let #Crypto#check#227 =
+  fun k ->
+  (fun s ->
+   (fun b ->
+    (({ UNPAIR ; UNPAIR ; CHECK_SIGNATURE })@(PAIR(PAIR(k , s) , b)))))[@inline] in
+let #Bytes#concat#228 =
   fun b -> (fun c -> (({ UNPAIR ; CONCAT })@(PAIR(b , c))))[@inline] in
-let #Bytes#sub#180 =
+let #Bytes#sub#229 =
   fun start ->
   (fun length ->
    (fun input ->
@@ -212,16 +325,16 @@ let #Bytes#sub#180 =
        IF_NONE { PUSH string "SLICE" ; FAILWITH } {} })@(PAIR(PAIR(start ,
                                                                    length) ,
                                                               input)))))[@inline] in
-let #Bytes#length#182 = fun b -> (({ SIZE })@(b))[@inline] in
+let #Bytes#length#231 = fun b -> (({ SIZE })@(b))[@inline] in
 let toto =
-  ADD(#../../test/contracts/build/E.mligo#toto#177 ,
-      #../../test/contracts/build/A.mligo#toto#129) in
+  ADD(#../../test/contracts/build/E.mligo#toto#219 ,
+      #../../test/contracts/build/A.mligo#toto#136) in
 let fb = (L(1), toto, L(2), L(3)) in
 let main =
   fun gen#75 ->
-  (let (gen#189, gen#190) = gen#75 in
-   let p = gen#189 in
-   let s = gen#190 in
+  (let (gen#238, gen#239) = gen#75 in
+   let p = gen#238 in
+   let s = gen#239 in
    let s = ADD(ADD(p , s) , toto) in PAIR(LIST_EMPTY() , s)) in
 L(unit) |}]
 

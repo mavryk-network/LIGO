@@ -47,8 +47,8 @@ let reserved_names = (* Part of names in that list would be caught by some synta
     "unit"; "source"; "sender"; "failwith"; "bitwise_or"; "bitwise_and"; "bitwise_xor"; "string_concat"; "string_slice"; "crypto_check"; "crypto_hash_key";
     "bytes_concat"; "bytes_slice"; "bytes_pack"; "bytes_unpack"; "set_empty"; "set_mem"; "set_add"; "set_remove"; "set_iter"; "set_fold"; "list_iter";
     "list_fold"; "list_fold_left"; "list_fold_right"; "list_map"; "map_iter"; "map_map"; "map_fold"; "map_remove"; "map_update"; "map_get"; "map_mem";
-    "sha_256"; "sha_512"; "blake2b"; "address"; "self_address"; "implicit_account"; "set_delegate"; "true"; "false";
-    "assert"; "black2b"; "continue";  "gas"; "hash"; "hash_key"; "sha256"; "sha512"; "stop"; "time"; "unpack" ;
+    "address"; "self_address"; "implicit_account"; "set_delegate"; "true"; "false";
+    "assert"; "continue";  "gas"; "hash"; "stop"; "time"; "unpack" ;
     "continue"; "debugger"; "do";
     "get_chain_id"; "abs";
   ]

@@ -291,13 +291,13 @@ module Tree_abstraction = struct
 
     (* Crypto module *)
 
-    | C_CHECK_SIGNATURE -> "Crypto.check"
-    | C_HASH_KEY        -> "Crypto.hash_key"
-    | C_BLAKE2b         -> "Crypto.blake2b"
-    | C_SHA256          -> "Crypto.sha256"
-    | C_SHA512          -> "Crypto.sha512"
-    | C_SHA3            -> "Crypto.sha3"
-    | C_KECCAK          -> "Crypto.keccak"
+    (* | C_CHECK_SIGNATURE -> "Crypto.check"
+     * | C_HASH_KEY        -> "Crypto.hash_key"
+     * | C_BLAKE2b         -> "Crypto.blake2b"
+     * | C_SHA256          -> "Crypto.sha256"
+     * | C_SHA512          -> "Crypto.sha512"
+     * | C_SHA3            -> "Crypto.sha3"
+     * | C_KECCAK          -> "Crypto.keccak" *)
 
     (* Bytes module *)
 
