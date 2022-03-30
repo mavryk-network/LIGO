@@ -6,6 +6,10 @@ open Main_errors
 let lib (s : Syntax_types.t) =
   match s with
   | PascaLIGO _ | ReasonLIGO | JsLIGO ->"
+module Set = struct
+   [@inline] let cardinal (type a) (xs : a set) : nat = [%Michelson ({| { SIZE } |} : a set -> nat)] xs
+   [@inline] let size (type a) (xs : a set) : nat = [%Michelson ({| { SIZE } |} : a set -> nat)] xs
+end
 module String = struct
    [@inline] let length (s : string) : nat = [%Michelson ({| { SIZE } |} : string -> nat)] s
    [@inline] let size (s : string) : nat = [%Michelson ({| { SIZE } |} : string -> nat)] s
@@ -43,6 +47,10 @@ module List = struct
 end
 "
   | CameLIGO -> "
+module Set = struct
+   [@inline] let cardinal (type a) (xs : a set) : nat = [%Michelson ({| { SIZE } |} : a set -> nat)] xs
+   [@inline] let size (type a) (xs : a set) : nat = [%Michelson ({| { SIZE } |} : a set -> nat)] xs
+end
 module String = struct
    [@inline] let length (s : string) : nat = [%Michelson ({| { SIZE } |} : string -> nat)] s
    [@inline] let size (s : string) : nat = [%Michelson ({| { SIZE } |} : string -> nat)] s

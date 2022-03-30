@@ -117,7 +117,7 @@ module Tree_abstraction = struct
 
     | "Set.empty"      -> some_const C_SET_EMPTY
     | "Set.literal"    -> some_const C_SET_LITERAL
-    | "Set.cardinal"   -> some_const C_SIZE
+    (* | "Set.cardinal"   -> some_const C_SIZE *)
     | "Set.mem"        -> some_const C_SET_MEM
     | "Set.add"        -> some_const C_SET_ADD
     | "Set.remove"     -> some_const C_SET_REMOVE
@@ -481,7 +481,7 @@ module Tree_abstraction = struct
       (* Set module *)
 
 
-      | "Set.size"    -> some_deprecated C_SIZE        (* Deprecated *)
+      (* | "Set.size"    -> some_deprecated C_SIZE        (\* Deprecated *\) *)
       | "set_size"    -> some_deprecated C_SIZE        (* Deprecated *)
       | "set_empty"   -> some_deprecated C_SET_EMPTY   (* Deprecated *)
       | "set_mem"     -> some_deprecated C_SET_MEM     (* Deprecated *)
@@ -595,7 +595,7 @@ module Tree_abstraction = struct
       | "Bytes.slice"  -> some_deprecated C_SLICE      (* Deprecated *)
 
       (* Set module *)
-      | "Set.size"     -> some_deprecated C_SIZE (* Deprecated *)
+      (* | "Set.size"     -> some_deprecated C_SIZE (\* Deprecated *\) *)
 
       (* Map module *)
       | "Map.find"     -> some_deprecated C_MAP_FIND     (* Deprecated *)
@@ -688,7 +688,7 @@ module Tree_abstraction = struct
       | "Bytes.slice"  -> some_deprecated C_SLICE      (* Deprecated *)
 
       (* Set module *)
-      | "Set.size"     -> some_deprecated C_SIZE (* Deprecated *)
+      (* | "Set.size"     -> some_deprecated C_SIZE (\* Deprecated *\) *)
 
       (* Map module *)
       | "Map.find"     -> some_deprecated C_MAP_FIND     (* Deprecated *)
