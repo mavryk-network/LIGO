@@ -83,6 +83,27 @@ module List = struct
      | _ :: xs -> Some xs
 end
 "
+
+let internalize_typed (ds : Ast_typed.program) =
+  let open Ast_typed in
+  let f (d : _) = match d with
+    | Declaration_module { module_binder ; module_ ; module_attr = _ } ->
+       let module_attr = { public = false } in
+       Declaration_module { module_binder ; module_ ; module_attr }
+    | _ -> d in
+  let f (d : _ Ast_typed.location_wrap) = Simple_utils.Location.map f d in
+  List.map ~f ds
+
+let internalize_core (ds : Ast_core.module_) =
+  let open Ast_core in
+  let f (d : _) = match d with
+    | Declaration_module { module_binder ; module_ ; module_attr = _ } ->
+       let module_attr = { public = false } in
+       Declaration_module { module_binder ; module_ ; module_attr }
+    | _ -> d in
+  let f (d : _ Ast_core.location_wrap) = Simple_utils.Location.map f d in
+  List.map ~f ds
+
 let stdlib ~options syntax =
   match Simple_utils.Trace.to_stdlib_result @@
           Ligo_compile.Utils.type_contract_string ~add_warning:(fun _ -> ()) ~options CameLIGO (lib syntax) with
@@ -90,7 +111,7 @@ let stdlib ~options syntax =
   | _ -> failwith "Error compiling the stdlib"
 
 let stdlib_typed ~options syntax =
-  fst @@ stdlib ~options syntax
+  internalize_typed @@fst @@ stdlib ~options syntax
 
 let stdlib_core ~options syntax =
-  snd @@ stdlib ~options syntax
+  internalize_core @@snd @@ stdlib ~options syntax
