@@ -268,20 +268,6 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t) : Location.
       | None -> fail @@ Errors.generic_error loc "Expected option type"
     )
     | ( C_ASSERT_NONE_WITH_ERROR , _  ) -> fail @@ error_type
-    | ( C_UNOPT , [ v ] ) -> (
-      match get_option v with
-      | Some (Some value) -> return @@ value
-      | Some None -> fail @@ Errors.meta_lang_eval loc calltrace "option is None"
-      | None -> fail @@ Errors.generic_error loc "Expected option type"
-    )
-    | ( C_UNOPT , _  ) -> fail @@ error_type
-    | ( C_UNOPT_WITH_ERROR , [ v ; V_Ct (C_string s) ] ) -> (
-      match get_option v with
-      | Some (Some value) -> return @@ value
-      | Some None -> fail @@ Errors.meta_lang_eval loc calltrace s
-      | None -> fail @@ Errors.generic_error loc "Expected option type"
-    )
-    | ( C_UNOPT_WITH_ERROR , _  ) -> fail @@ error_type
     | ( C_MAP_FIND_OPT , [ k ; V_Map l ] ) -> ( match List.Assoc.find ~equal:LC.equal_value l k with
       | Some v -> return @@ v_some v
       | None -> return @@ v_none ()

@@ -26,8 +26,6 @@ let compile_constant' : AST.constant' -> constant' = function
   | C_IS_NAT -> C_IS_NAT
   | C_SOME -> C_SOME
   | C_NONE -> C_NONE
-  | C_UNOPT -> C_UNOPT
-  | C_UNOPT_WITH_ERROR -> C_UNOPT_WITH_ERROR
   | C_ASSERTION -> C_ASSERTION
   | C_ASSERTION_WITH_ERROR -> C_ASSERTION_WITH_ERROR
   | C_ASSERT_SOME -> C_ASSERT_SOME

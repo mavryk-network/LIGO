@@ -86,8 +86,8 @@ module Tree_abstraction = struct
 
     (* Options module *)
 
-    | "Option.unopt"            -> some_const C_UNOPT
-    | "Option.unopt_with_error" -> some_const C_UNOPT_WITH_ERROR
+    (* | "Option.unopt"            -> some_const C_UNOPT *)
+    (* | "Option.unopt_with_error" -> some_const C_UNOPT_WITH_ERROR *)
     | "Option.map"              -> some_const C_OPTION_MAP
 
     (* List module *)
@@ -724,8 +724,6 @@ module Stacking = struct
       Some (simple_ternary @@ seq [prim "GET_AND_UPDATE"; prim "PAIR"])
     | C_FAILWITH              , _   -> Some ( simple_unary @@ prim "FAILWITH")
     | C_NEVER                 , _   -> Some ( simple_unary @@ prim "NEVER")
-    | C_UNOPT                 , _   -> Some ( simple_binary @@ i_if_none (seq [i_push_string "option is None"; i_failwith]) (seq []))
-    | C_UNOPT_WITH_ERROR      , _   -> Some ( simple_binary @@ i_if_none (i_failwith) (seq [ i_swap; i_drop]))
     | C_ASSERT_SOME           , _   -> Some ( simple_unary @@ i_if_none (seq [i_push_string "failed assert some" ; i_failwith]) (seq [i_drop; i_push_unit]))
     | C_ASSERT_SOME_WITH_ERROR, _   -> Some ( simple_binary @@ i_if_none (i_failwith) (seq [i_dropn 2; i_push_unit]))
     | C_ASSERT_NONE           , _   -> Some ( simple_unary @@ i_if_none (seq [i_push_unit]) (seq [i_push_string "failed assert none" ; i_failwith]))

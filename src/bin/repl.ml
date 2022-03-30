@@ -1,7 +1,7 @@
 open Simple_utils.Trace
 
 (* Helpers *)
-let builtin_mod = ["List"; "Bytes"; "Crypto"; "String"; "Set"; "Map"]
+let builtin_mod = ["List"; "Bytes"; "Crypto"; "String"; "Set"; "Map"; "Tezos"; "Option"]
 
 module ModResHelpers = Preprocessor.ModRes.Helpers
 

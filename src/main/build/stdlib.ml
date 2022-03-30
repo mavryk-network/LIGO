@@ -1,6 +1,10 @@
 let lib (s : Syntax_types.t) =
   match s with
   | PascaLIGO _ | ReasonLIGO | JsLIGO ->"
+module Option = struct
+   [@inline] let unopt (type a) (o : a option) : a = [%Michelson ({| { IF_NONE { PUSH string \"option is None\" ; FAILWITH } {} } |} : a option -> a)] o
+   [@inline] let unopt_with_error (type a) ((o, s) : a option * string) : a = [%Michelson ({| { UNPAIR ; IF_NONE { FAILWITH } { SWAP ; DROP } } |} : (a option * string) -> a)] (o, s)
+end
 module Map = struct
    [@inline] let size (type k v) (m : (k, v) map) : nat = [%Michelson ({| { SIZE } |} : (k, v) map -> nat)] m
 end
@@ -46,6 +50,10 @@ module List = struct
 end
 "
   | CameLIGO -> "
+module Option = struct
+   [@inline] let unopt (type a) (o : a option) : a = [%Michelson ({| { IF_NONE { PUSH string \"option is None\" ; FAILWITH } {} } |} : a option -> a)] o
+   [@inline] let unopt_with_error (type a) (o : a option) (s : string) : a = [%Michelson ({| { UNPAIR ; IF_NONE { FAILWITH } { SWAP ; DROP } } |} : (a option * string) -> a)] (o, s)
+end
 module Map = struct
    [@inline] let size (type k v) (m : (k, v) map) : nat = [%Michelson ({| { SIZE } |} : (k, v) map -> nat)] m
 end

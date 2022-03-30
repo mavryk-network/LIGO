@@ -301,8 +301,6 @@ module Constant_types = struct
                     (* OPTION *)
                     of_type C_NONE O.(for_all "a" @@ fun a -> t_option a);
                     of_type C_SOME O.(for_all "a" @@ fun a -> a ^-> t_option a);
-                    of_type C_UNOPT O.(for_all "a" @@ fun a -> t_option a ^-> a);
-                    of_type C_UNOPT_WITH_ERROR O.(for_all "a" @@ fun a -> t_option a ^-> t_string () ^-> a);
                     of_type_since ~since:Ligo_proto.Ithaca ~constant:"Option.map"
                       C_OPTION_MAP O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> (a ^-> b) ^-> t_option a ^-> t_option b);
                     (* GLOBAL *)
