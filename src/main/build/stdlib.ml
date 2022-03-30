@@ -1,6 +1,9 @@
 let lib (s : Syntax_types.t) =
   match s with
   | PascaLIGO _ | ReasonLIGO | JsLIGO ->"
+module Map = struct
+   [@inline] let size (type k v) (m : (k, v) map) : nat = [%Michelson ({| { SIZE } |} : (k, v) map -> nat)] m
+end
 module Set = struct
    [@inline] let cardinal (type a) (xs : a set) : nat = [%Michelson ({| { SIZE } |} : a set -> nat)] xs
    [@inline] let size (type a) (xs : a set) : nat = [%Michelson ({| { SIZE } |} : a set -> nat)] xs
@@ -42,6 +45,9 @@ module List = struct
 end
 "
   | CameLIGO -> "
+module Map = struct
+   [@inline] let size (type k v) (m : (k, v) map) : nat = [%Michelson ({| { SIZE } |} : (k, v) map -> nat)] m
+end
 module Set = struct
    [@inline] let cardinal (type a) (xs : a set) : nat = [%Michelson ({| { SIZE } |} : a set -> nat)] xs
    [@inline] let size (type a) (xs : a set) : nat = [%Michelson ({| { SIZE } |} : a set -> nat)] xs

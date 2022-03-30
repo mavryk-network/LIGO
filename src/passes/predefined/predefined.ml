@@ -77,21 +77,10 @@ module Tree_abstraction = struct
     | "Tezos.split_ticket" -> some_const C_SPLIT_TICKET
     | "Tezos.read_ticket" -> some_const C_READ_TICKET
 
-    (* Crypto module *)
-
-    (* | "Crypto.check"    -> some_const C_CHECK_SIGNATURE
-     * | "Crypto.hash_key" -> some_const C_HASH_KEY
-     * | "Crypto.blake2b"  -> some_const C_BLAKE2b
-     * | "Crypto.sha256"   -> some_const C_SHA256
-     * | "Crypto.sha512"   -> some_const C_SHA512
-     * | "Crypto.sha3"     -> some_const C_SHA3
-     * | "Crypto.keccak"   -> some_const C_KECCAK *)
-
     (* Bytes module *)
 
     (* | "Bytes.pack"   -> some_const C_BYTES_PACK *)
     | "Bytes.unpack" -> some_const C_BYTES_UNPACK
-    (* | "Bytes.length" -> some_const C_SIZE *)
     (* | "Bytes.concat" -> some_const C_CONCAT *)
     (* | "Bytes.sub"    -> some_const C_SLICE *)
 
@@ -103,8 +92,6 @@ module Tree_abstraction = struct
 
     (* List module *)
 
-    (* | "List.length"   -> some_const C_SIZE *)
-    (* | "List.size"     -> some_const C_SIZE *)
     | "List.iter"     -> some_const C_LIST_ITER
     | "List.map"      -> some_const C_LIST_MAP
     | "List.fold"     -> some_const C_LIST_FOLD
@@ -117,7 +104,6 @@ module Tree_abstraction = struct
 
     | "Set.empty"      -> some_const C_SET_EMPTY
     | "Set.literal"    -> some_const C_SET_LITERAL
-    (* | "Set.cardinal"   -> some_const C_SIZE *)
     | "Set.mem"        -> some_const C_SET_MEM
     | "Set.add"        -> some_const C_SET_ADD
     | "Set.remove"     -> some_const C_SET_REMOVE
@@ -135,7 +121,7 @@ module Tree_abstraction = struct
     | "Map.map"      -> some_const C_MAP_MAP
     | "Map.fold"     -> some_const C_MAP_FOLD
     | "Map.mem"      -> some_const C_MAP_MEM
-    | "Map.size"     -> some_const C_SIZE
+    (* | "Map.size"     -> some_const C_SIZE *)
     | "Map.add"      -> some_const C_MAP_ADD
     | "Map.remove"   -> some_const C_MAP_REMOVE
     | "Map.empty"    -> some_const C_MAP_EMPTY
@@ -163,14 +149,6 @@ module Tree_abstraction = struct
     | "Bitwise.xor"         -> some_const C_XOR
     | "Bitwise.shift_left"  -> some_const C_LSL
     | "Bitwise.shift_right" -> some_const C_LSR
-
-    (* String module *)
-
-    (* | "String.length"   -> some_const C_SIZE
-     * | "String.size"     -> some_deprecated x C_SIZE  (\* Deprecated *\)
-     * | "String.slice"    -> some_deprecated x C_SLICE (\* Deprecated *\)
-     * | "String.sub"      -> some_const C_SLICE
-     * | "String.concat"   -> some_const C_CONCAT *)
 
     (* Testing module *)
 
@@ -289,21 +267,10 @@ module Tree_abstraction = struct
     | C_CONS -> "Operator.cons"
     | C_NEQ  -> "Operator.neq"
 
-    (* Crypto module *)
-
-    (* | C_CHECK_SIGNATURE -> "Crypto.check"
-     * | C_HASH_KEY        -> "Crypto.hash_key"
-     * | C_BLAKE2b         -> "Crypto.blake2b"
-     * | C_SHA256          -> "Crypto.sha256"
-     * | C_SHA512          -> "Crypto.sha512"
-     * | C_SHA3            -> "Crypto.sha3"
-     * | C_KECCAK          -> "Crypto.keccak" *)
-
     (* Bytes module *)
 
     (* | C_BYTES_PACK   -> "Bytes.pack" *)
     | C_BYTES_UNPACK -> "Bytes.unpack"
-    | C_SIZE         -> "Bytes.length"
     | C_CONCAT       -> "Bytes.concat"
     | C_SLICE        -> "Bytes.sub"
 
@@ -458,14 +425,12 @@ module Tree_abstraction = struct
 
       | "bytes_pack"   -> some_deprecated C_BYTES_PACK    (* Deprecated *)
       | "bytes_unpack" -> some_deprecated C_BYTES_UNPACK  (* Deprecated *)
-      | "Bytes.size"   -> some_deprecated C_SIZE          (* Deprecated *)
       | "bytes_concat" -> some_deprecated C_CONCAT        (* Deprecated *)
       | "bytes_slice"  -> some_deprecated C_SLICE         (* Deprecated *)
       | "Bytes.slice"  -> some_deprecated C_SLICE         (* Deprecated *)
 
       (* List module *)
 
-      | "list_size"   -> some_deprecated C_SIZE       (* Deprecated *)
       | "list_iter"   -> some_deprecated C_LIST_ITER  (* Deprecated *)
       | "list_map"    -> some_deprecated C_LIST_MAP   (* Deprecated *)
       | "list_fold"   -> some_deprecated C_LIST_FOLD  (* Deprecated *)
@@ -474,7 +439,6 @@ module Tree_abstraction = struct
 
 
       (* | "Set.size"    -> some_deprecated C_SIZE        (\* Deprecated *\) *)
-      | "set_size"    -> some_deprecated C_SIZE        (* Deprecated *)
       | "set_empty"   -> some_deprecated C_SET_EMPTY   (* Deprecated *)
       | "set_mem"     -> some_deprecated C_SET_MEM     (* Deprecated *)
       | "set_add"     -> some_deprecated C_SET_ADD     (* Deprecated *)
@@ -492,7 +456,6 @@ module Tree_abstraction = struct
       | "map_map"      -> some_deprecated C_MAP_MAP       (* Deprecated *)
       | "map_fold"     -> some_deprecated C_MAP_FOLD      (* Deprecated *)
       | "map_mem"      -> some_deprecated C_MAP_MEM       (* Deprecated *)
-      | "map_size"     -> some_deprecated C_SIZE          (* Deprecated *)
 
 
       (* Bitwise module *)
@@ -516,7 +479,6 @@ module Tree_abstraction = struct
       | "assert_some_with_error" -> some_const C_ASSERT_SOME_WITH_ERROR
       | "assert_none"            -> some_const C_ASSERT_NONE
       | "assert_none_with_error" -> some_const C_ASSERT_NONE_WITH_ERROR
-      | "size"                   -> some_deprecated C_SIZE (* Deprecated *)
 
       | _ as c                   -> pseudo_modules c
 
@@ -583,7 +545,6 @@ module Tree_abstraction = struct
 
       (* Bytes module *)
 
-      | "Bytes.size"   -> some_deprecated C_SIZE       (* Deprecated *)
       | "Bytes.slice"  -> some_deprecated C_SLICE      (* Deprecated *)
 
       (* Set module *)
@@ -676,7 +637,6 @@ module Tree_abstraction = struct
 
       (* Bytes module *)
 
-      | "Bytes.size"   -> some_deprecated C_SIZE       (* Deprecated *)
       | "Bytes.slice"  -> some_deprecated C_SLICE      (* Deprecated *)
 
       (* Set module *)
@@ -788,7 +748,6 @@ module Stacking = struct
     | C_MAP_UPDATE         , _   -> Some ( simple_ternary @@ prim "UPDATE")
     | (C_MAP_GET_AND_UPDATE|C_BIG_MAP_GET_AND_UPDATE) , _ ->
       Some (simple_ternary @@ seq [prim "GET_AND_UPDATE"; prim "PAIR"])
-    | C_SIZE                  , _   -> Some ( simple_unary @@ prim "SIZE")
     | C_FAILWITH              , _   -> Some ( simple_unary @@ prim "FAILWITH")
     | C_NEVER                 , _   -> Some ( simple_unary @@ prim "NEVER")
     | C_UNOPT                 , _   -> Some ( simple_binary @@ i_if_none (seq [i_push_string "option is None"; i_failwith]) (seq []))

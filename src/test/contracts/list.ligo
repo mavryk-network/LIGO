@@ -12,7 +12,7 @@ const fb_head = List.head_opt (fb)
 
 const fb_tail = List.tail_opt (fb)
 
-function size_ (const m : foobar) : nat is size (m)
+function size_ (const m : foobar) : nat is List.size (m)
 
 // function hdf (const m : foobar) : int is hd (m)
 

@@ -2623,21 +2623,21 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_good [ "print" ; "mini-c" ; contract "modules_env.mligo" ] ;
   [%expect {|
-    let #String#length#20 = fun s -> (({ SIZE })@(s))[@inline] in
-    let #String#size#21 = fun s -> (({ SIZE })@(s))[@inline] in
-    let #String#sub#22 =
+    let #String#length#21 = fun s -> (({ SIZE })@(s))[@inline] in
+    let #String#size#22 = fun s -> (({ SIZE })@(s))[@inline] in
+    let #String#sub#23 =
       fun sli ->
       (({ UNPAIR ;
          UNPAIR ;
          SLICE ;
          IF_NONE { PUSH string "SLICE" ; FAILWITH } {} })@(sli))[@inline] in
-    let #String#slice#23 =
+    let #String#slice#24 =
       fun sli ->
       (({ UNPAIR ;
          UNPAIR ;
          SLICE ;
          IF_NONE { PUSH string "SLICE" ; FAILWITH } {} })@(sli))[@inline] in
-    let #String#sub#24 =
+    let #String#sub#25 =
       fun start ->
       (fun length ->
        (fun input ->
@@ -2647,22 +2647,22 @@ let%expect_test _ =
            IF_NONE { PUSH string "SLICE" ; FAILWITH } {} })@(PAIR(PAIR(start ,
                                                                        length) ,
                                                                   input)))))[@inline] in
-    let #String#concat#25 =
+    let #String#concat#26 =
       fun b -> (fun c -> (({ UNPAIR ; CONCAT })@(PAIR(b , c))))[@inline] in
-    let #Crypto#blake2b#26 = fun b -> (({ BLAKE2B })@(b))[@inline] in
-    let #Crypto#sha256#27 = fun b -> (({ SHA256 })@(b))[@inline] in
-    let #Crypto#sha512#28 = fun b -> (({ SHA512 })@(b))[@inline] in
-    let #Crypto#sha3#29 = fun b -> (({ SHA3 })@(b))[@inline] in
-    let #Crypto#keccak#30 = fun b -> (({ KECCAK })@(b))[@inline] in
-    let #Crypto#hash_key#31 = fun k -> (({ HASH_KEY })@(k))[@inline] in
-    let #Crypto#check#32 =
+    let #Crypto#blake2b#27 = fun b -> (({ BLAKE2B })@(b))[@inline] in
+    let #Crypto#sha256#28 = fun b -> (({ SHA256 })@(b))[@inline] in
+    let #Crypto#sha512#29 = fun b -> (({ SHA512 })@(b))[@inline] in
+    let #Crypto#sha3#30 = fun b -> (({ SHA3 })@(b))[@inline] in
+    let #Crypto#keccak#31 = fun b -> (({ KECCAK })@(b))[@inline] in
+    let #Crypto#hash_key#32 = fun k -> (({ HASH_KEY })@(k))[@inline] in
+    let #Crypto#check#33 =
       fun k ->
       (fun s ->
        (fun b ->
         (({ UNPAIR ; UNPAIR ; CHECK_SIGNATURE })@(PAIR(PAIR(k , s) , b)))))[@inline] in
-    let #Bytes#concat#33 =
+    let #Bytes#concat#34 =
       fun b -> (fun c -> (({ UNPAIR ; CONCAT })@(PAIR(b , c))))[@inline] in
-    let #Bytes#sub#34 =
+    let #Bytes#sub#35 =
       fun start ->
       (fun length ->
        (fun input ->
@@ -2672,8 +2672,8 @@ let%expect_test _ =
            IF_NONE { PUSH string "SLICE" ; FAILWITH } {} })@(PAIR(PAIR(start ,
                                                                        length) ,
                                                                   input)))))[@inline] in
-    let #Bytes#length#36 = fun b -> (({ SIZE })@(b))[@inline] in
-    let #Foo#x#41 = L(54) in let #Foo#y#42 = #Foo#x#41 in L(unit) |}]
+    let #Bytes#length#37 = fun b -> (({ SIZE })@(b))[@inline] in
+    let #Foo#x#42 = L(54) in let #Foo#y#43 = #Foo#x#42 in L(unit) |}]
 
 let%expect_test _ =
   run_ligo_good [ "compile" ; "storage" ; contract "module_contract_simple.mligo" ; "999" ] ;
