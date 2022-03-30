@@ -1,93 +1,8 @@
-
 open Simple_utils
 open Trace
 open Main_errors
 
-let lib (s : Syntax_types.t) =
-  match s with
-  | PascaLIGO _ | ReasonLIGO | JsLIGO ->"
-module Set = struct
-   [@inline] let cardinal (type a) (xs : a set) : nat = [%Michelson ({| { SIZE } |} : a set -> nat)] xs
-   [@inline] let size (type a) (xs : a set) : nat = [%Michelson ({| { SIZE } |} : a set -> nat)] xs
-end
-module String = struct
-   [@inline] let length (s : string) : nat = [%Michelson ({| { SIZE } |} : string -> nat)] s
-   [@inline] let size (s : string) : nat = [%Michelson ({| { SIZE } |} : string -> nat)] s
-   [@inline] let sub (sli : nat * nat * string) : string = [%Michelson ({| { UNPAIR  ; UNPAIR ; SLICE ; IF_NONE { PUSH string \"SLICE\" ; FAILWITH } {} } |} : nat * nat * string -> string)] sli
-   [@inline] let slice (sli : nat * nat * string) : string = [%Michelson ({| { UNPAIR  ; UNPAIR ; SLICE ; IF_NONE { PUSH string \"SLICE\" ; FAILWITH } {} } |} : nat * nat * string -> string)] sli
-   [@inline] let concat (p : string * string) : string = [%Michelson ({| { UNPAIR ; CONCAT } |} : string * string -> string)] p
-end
-module Crypto = struct
-   [@inline] let blake2b (b : bytes) : bytes = [%Michelson ({| { BLAKE2B } |} : bytes -> bytes)] b
-   [@inline] let sha256 (b : bytes) : bytes = [%Michelson ({| { SHA256 } |} : bytes -> bytes)] b
-   [@inline] let sha512 (b : bytes) : bytes = [%Michelson ({| { SHA512 } |} : bytes -> bytes)] b
-   [@inline] let sha3 (b : bytes) : bytes = [%Michelson ({| { SHA3 } |} : bytes -> bytes)] b
-   [@inline] let keccak (b : bytes) : bytes = [%Michelson ({| { KECCAK } |} : bytes -> bytes)] b
-   [@inline] let hash_key (k : key) : key_hash = [%Michelson ({| { HASH_KEY } |} : key -> key_hash)] k
-   [@inline] let check ((k, s, b) : key * signature * bytes) : bool = [%Michelson ({| { UNPAIR ; UNPAIR ; CHECK_SIGNATURE } |} : key * signature * bytes -> bool)] (k, s, b)
-end
-module Bytes = struct
-   [@inline] let concat (p : bytes * bytes) : bytes = [%Michelson ({| { UNPAIR ; CONCAT } |} : bytes * bytes -> bytes)] p
-   [@inline] let sub (sli : nat * nat * bytes) : bytes = [%Michelson ({| { UNPAIR  ; UNPAIR ; SLICE ; IF_NONE { PUSH string \"SLICE\" ; FAILWITH } {} } |} : nat * nat * bytes -> bytes)] sli
-   [@inline] let pack (type a) (x : a) : bytes = [%Michelson ({| { PACK } |} : a -> bytes)] x
-   [@inline] let length (b : bytes) : nat = [%Michelson ({| { SIZE } |} : bytes -> nat)] b
-   (* let unpack (type a) (b : bytes) : a option = [%Michelson ({| { UNPACK } |} : bytes -> a option)] b *)
-end
-module List = struct
-   [@inline] let length (type a) (xs : a list) : nat = [%Michelson ({| { SIZE } |} : a list -> nat)] xs
-   [@inline] let size (type a) (xs : a list) : nat = length xs
-   [@inline] let head_opt (type a) (xs : a list) : a option =
-     match xs with
-     | [] -> None
-     | x :: _ -> Some x
-   [@inline] let tail_opt (type a) (xs : a list) : (a list) option =
-     match xs with
-     | [] -> None
-     | _ :: xs -> Some xs
-end
-"
-  | CameLIGO -> "
-module Set = struct
-   [@inline] let cardinal (type a) (xs : a set) : nat = [%Michelson ({| { SIZE } |} : a set -> nat)] xs
-   [@inline] let size (type a) (xs : a set) : nat = [%Michelson ({| { SIZE } |} : a set -> nat)] xs
-end
-module String = struct
-   [@inline] let length (s : string) : nat = [%Michelson ({| { SIZE } |} : string -> nat)] s
-   [@inline] let size (s : string) : nat = [%Michelson ({| { SIZE } |} : string -> nat)] s
-   [@inline] let sub (sli : nat * nat * string) : string = [%Michelson ({| { UNPAIR  ; UNPAIR ; SLICE ; IF_NONE { PUSH string \"SLICE\" ; FAILWITH } {} } |} : nat * nat * string -> string)] sli
-   [@inline] let slice (sli : nat * nat * string) : string = [%Michelson ({| { UNPAIR  ; UNPAIR ; SLICE ; IF_NONE { PUSH string \"SLICE\" ; FAILWITH } {} } |} : nat * nat * string -> string)] sli
-   [@inline] let sub (start : nat) (length : nat) (input : string) : string = [%Michelson ({| { UNPAIR ; UNPAIR ; SLICE ; IF_NONE { PUSH string \"SLICE\" ; FAILWITH } {} } |} : nat * nat * string -> string)] (start, length, input)
-   [@inline] let concat (b : string) (c : string) : string = [%Michelson ({| { UNPAIR ; CONCAT } |} : string * string -> string)] (b, c)
-end
-module Crypto = struct
-   [@inline] let blake2b (b : bytes) : bytes = [%Michelson ({| { BLAKE2B } |} : bytes -> bytes)] b
-   [@inline] let sha256 (b : bytes) : bytes = [%Michelson ({| { SHA256 } |} : bytes -> bytes)] b
-   [@inline] let sha512 (b : bytes) : bytes = [%Michelson ({| { SHA512 } |} : bytes -> bytes)] b
-   [@inline] let sha3 (b : bytes) : bytes = [%Michelson ({| { SHA3 } |} : bytes -> bytes)] b
-   [@inline] let keccak (b : bytes) : bytes = [%Michelson ({| { KECCAK } |} : bytes -> bytes)] b
-   [@inline] let hash_key (k : key) : key_hash = [%Michelson ({| { HASH_KEY } |} : key -> key_hash)] k
-   [@inline] let check (k : key) (s : signature) (b : bytes) : bool = [%Michelson ({| { UNPAIR ; UNPAIR ; CHECK_SIGNATURE } |} : key * signature * bytes -> bool)] (k, s, b)
-end
-module Bytes = struct
-   [@inline] let concat (b : bytes) (c : bytes) : bytes = [%Michelson ({| { UNPAIR ; CONCAT } |} : bytes * bytes -> bytes)] (b, c)
-   [@inline] let sub (start : nat) (length : nat) (input : bytes) : bytes = [%Michelson ({| { UNPAIR ; UNPAIR ; SLICE ; IF_NONE { PUSH string \"SLICE\" ; FAILWITH } {} } |} : nat * nat * bytes -> bytes)] (start, length, input)
-   [@inline] let pack (type a) (x : a) : bytes = [%Michelson ({| { PACK } |} : a -> bytes)] x
-   [@inline] let length (b : bytes) : nat = [%Michelson ({| { SIZE } |} : bytes -> nat)] b
-   (* let unpack (type a) (b : bytes) : a option = [%Michelson ({| { UNPACK } |} : bytes -> a option)] b *)
-end
-module List = struct
-   [@inline] let length (type a) (xs : a list) : nat = [%Michelson ({| { SIZE } |} : a list -> nat)] xs
-   [@inline] let size (type a) (xs : a list) : nat = length xs
-   [@inline] let head_opt (type a) (xs : a list) : a option =
-     match xs with
-     | [] -> None
-     | x :: _ -> Some x
-   [@inline] let tail_opt (type a) (xs : a list) : (a list) option =
-     match xs with
-     | [] -> None
-     | _ :: xs -> Some xs
-end
-"
+module Stdlib = Stdlib
 
 module type Params = sig
   val raise : all raise
@@ -135,8 +50,8 @@ module M (Params : Params) =
     let compile : AST.environment -> file_name -> meta_data -> compilation_unit -> AST.t =
       fun env file_name meta c_unit ->
       let options = Compiler_options.set_init_env options env in
-      let pre, _ = Ligo_compile.Utils.type_contract_string ~raise ~add_warning:(fun _ -> ()) ~options CameLIGO (lib meta.syntax) in
-      let options = Compiler_options.set_init_env options (Environment.append pre env) in
+      let stdlib = Stdlib.stdlib_typed ~options meta.syntax in
+      let options = Compiler_options.set_init_env options (Environment.append stdlib env) in
       let ast_core = Ligo_compile.Utils.to_core ~raise ~add_warning ~options ~meta c_unit file_name in
       let ast_typed = Ligo_compile.Of_core.typecheck ~raise ~add_warning ~options Ligo_compile.Of_core.Env ast_core in
       ast_typed
@@ -172,9 +87,9 @@ module Infer (Params : Params) = struct
 
   let compile : AST.environment -> file_name -> meta_data -> compilation_unit -> AST.t =
     fun _ file_name meta c_unit ->
-    let _, pre = Ligo_compile.Utils.type_contract_string ~raise ~add_warning:(fun _ -> ()) ~options CameLIGO (lib meta.syntax) in
+    let stdlib =  Stdlib.stdlib_core ~options meta.syntax in
     let module_ = Ligo_compile.Utils.to_core ~raise ~add_warning ~options ~meta c_unit file_name in
-    pre @ module_
+    stdlib @ module_
 
 end
 
@@ -249,9 +164,9 @@ let build_expression ~raise ~add_warning : options:Compiler_options.t -> string 
          (module_, contract)
       | None ->
          let syntax   = Syntax.of_string_opt ~raise (Syntax_name syntax) None in
-         let module_, _ = Ligo_compile.Utils.type_contract_string ~raise ~add_warning:(fun _ -> ()) ~options CameLIGO (lib syntax) in
-         let contract = Ligo_compile.Of_typed.compile_program ~raise module_ in
-         (module_, contract)
+         let stdlib   = Stdlib.stdlib_typed ~options syntax in
+         let contract = Ligo_compile.Of_typed.compile_program ~raise stdlib in
+         (stdlib, contract)
     in
     let typed_exp       = Ligo_compile.Utils.type_expression ~raise ~options file_name syntax expression contract in
     let aggregated      = Ligo_compile.Of_typed.compile_expression_in_context ~raise typed_exp aggregated_prg in

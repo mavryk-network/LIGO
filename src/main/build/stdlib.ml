@@ -1,0 +1,96 @@
+let lib (s : Syntax_types.t) =
+  match s with
+  | PascaLIGO _ | ReasonLIGO | JsLIGO ->"
+module Set = struct
+   [@inline] let cardinal (type a) (xs : a set) : nat = [%Michelson ({| { SIZE } |} : a set -> nat)] xs
+   [@inline] let size (type a) (xs : a set) : nat = [%Michelson ({| { SIZE } |} : a set -> nat)] xs
+end
+module String = struct
+   [@inline] let length (s : string) : nat = [%Michelson ({| { SIZE } |} : string -> nat)] s
+   [@inline] let size (s : string) : nat = [%Michelson ({| { SIZE } |} : string -> nat)] s
+   [@inline] let sub (sli : nat * nat * string) : string = [%Michelson ({| { UNPAIR  ; UNPAIR ; SLICE ; IF_NONE { PUSH string \"SLICE\" ; FAILWITH } {} } |} : nat * nat * string -> string)] sli
+   [@inline] let slice (sli : nat * nat * string) : string = [%Michelson ({| { UNPAIR  ; UNPAIR ; SLICE ; IF_NONE { PUSH string \"SLICE\" ; FAILWITH } {} } |} : nat * nat * string -> string)] sli
+   [@inline] let concat (p : string * string) : string = [%Michelson ({| { UNPAIR ; CONCAT } |} : string * string -> string)] p
+end
+module Crypto = struct
+   [@inline] let blake2b (b : bytes) : bytes = [%Michelson ({| { BLAKE2B } |} : bytes -> bytes)] b
+   [@inline] let sha256 (b : bytes) : bytes = [%Michelson ({| { SHA256 } |} : bytes -> bytes)] b
+   [@inline] let sha512 (b : bytes) : bytes = [%Michelson ({| { SHA512 } |} : bytes -> bytes)] b
+   [@inline] let sha3 (b : bytes) : bytes = [%Michelson ({| { SHA3 } |} : bytes -> bytes)] b
+   [@inline] let keccak (b : bytes) : bytes = [%Michelson ({| { KECCAK } |} : bytes -> bytes)] b
+   [@inline] let hash_key (k : key) : key_hash = [%Michelson ({| { HASH_KEY } |} : key -> key_hash)] k
+   [@inline] let check ((k, s, b) : key * signature * bytes) : bool = [%Michelson ({| { UNPAIR ; UNPAIR ; CHECK_SIGNATURE } |} : key * signature * bytes -> bool)] (k, s, b)
+end
+module Bytes = struct
+   [@inline] let concat (p : bytes * bytes) : bytes = [%Michelson ({| { UNPAIR ; CONCAT } |} : bytes * bytes -> bytes)] p
+   [@inline] let sub (sli : nat * nat * bytes) : bytes = [%Michelson ({| { UNPAIR  ; UNPAIR ; SLICE ; IF_NONE { PUSH string \"SLICE\" ; FAILWITH } {} } |} : nat * nat * bytes -> bytes)] sli
+   [@inline] let pack (type a) (x : a) : bytes = [%Michelson ({| { PACK } |} : a -> bytes)] x
+   [@inline] let length (b : bytes) : nat = [%Michelson ({| { SIZE } |} : bytes -> nat)] b
+   (* let unpack (type a) (b : bytes) : a option = [%Michelson ({| { UNPACK } |} : bytes -> a option)] b *)
+end
+module List = struct
+   [@inline] let length (type a) (xs : a list) : nat = [%Michelson ({| { SIZE } |} : a list -> nat)] xs
+   [@inline] let size (type a) (xs : a list) : nat = length xs
+   [@inline] let head_opt (type a) (xs : a list) : a option =
+     match xs with
+     | [] -> None
+     | x :: _ -> Some x
+   [@inline] let tail_opt (type a) (xs : a list) : (a list) option =
+     match xs with
+     | [] -> None
+     | _ :: xs -> Some xs
+end
+"
+  | CameLIGO -> "
+module Set = struct
+   [@inline] let cardinal (type a) (xs : a set) : nat = [%Michelson ({| { SIZE } |} : a set -> nat)] xs
+   [@inline] let size (type a) (xs : a set) : nat = [%Michelson ({| { SIZE } |} : a set -> nat)] xs
+end
+module String = struct
+   [@inline] let length (s : string) : nat = [%Michelson ({| { SIZE } |} : string -> nat)] s
+   [@inline] let size (s : string) : nat = [%Michelson ({| { SIZE } |} : string -> nat)] s
+   [@inline] let sub (sli : nat * nat * string) : string = [%Michelson ({| { UNPAIR  ; UNPAIR ; SLICE ; IF_NONE { PUSH string \"SLICE\" ; FAILWITH } {} } |} : nat * nat * string -> string)] sli
+   [@inline] let slice (sli : nat * nat * string) : string = [%Michelson ({| { UNPAIR  ; UNPAIR ; SLICE ; IF_NONE { PUSH string \"SLICE\" ; FAILWITH } {} } |} : nat * nat * string -> string)] sli
+   [@inline] let sub (start : nat) (length : nat) (input : string) : string = [%Michelson ({| { UNPAIR ; UNPAIR ; SLICE ; IF_NONE { PUSH string \"SLICE\" ; FAILWITH } {} } |} : nat * nat * string -> string)] (start, length, input)
+   [@inline] let concat (b : string) (c : string) : string = [%Michelson ({| { UNPAIR ; CONCAT } |} : string * string -> string)] (b, c)
+end
+module Crypto = struct
+   [@inline] let blake2b (b : bytes) : bytes = [%Michelson ({| { BLAKE2B } |} : bytes -> bytes)] b
+   [@inline] let sha256 (b : bytes) : bytes = [%Michelson ({| { SHA256 } |} : bytes -> bytes)] b
+   [@inline] let sha512 (b : bytes) : bytes = [%Michelson ({| { SHA512 } |} : bytes -> bytes)] b
+   [@inline] let sha3 (b : bytes) : bytes = [%Michelson ({| { SHA3 } |} : bytes -> bytes)] b
+   [@inline] let keccak (b : bytes) : bytes = [%Michelson ({| { KECCAK } |} : bytes -> bytes)] b
+   [@inline] let hash_key (k : key) : key_hash = [%Michelson ({| { HASH_KEY } |} : key -> key_hash)] k
+   [@inline] let check (k : key) (s : signature) (b : bytes) : bool = [%Michelson ({| { UNPAIR ; UNPAIR ; CHECK_SIGNATURE } |} : key * signature * bytes -> bool)] (k, s, b)
+end
+module Bytes = struct
+   [@inline] let concat (b : bytes) (c : bytes) : bytes = [%Michelson ({| { UNPAIR ; CONCAT } |} : bytes * bytes -> bytes)] (b, c)
+   [@inline] let sub (start : nat) (length : nat) (input : bytes) : bytes = [%Michelson ({| { UNPAIR ; UNPAIR ; SLICE ; IF_NONE { PUSH string \"SLICE\" ; FAILWITH } {} } |} : nat * nat * bytes -> bytes)] (start, length, input)
+   [@inline] let pack (type a) (x : a) : bytes = [%Michelson ({| { PACK } |} : a -> bytes)] x
+   [@inline] let length (b : bytes) : nat = [%Michelson ({| { SIZE } |} : bytes -> nat)] b
+   (* let unpack (type a) (b : bytes) : a option = [%Michelson ({| { UNPACK } |} : bytes -> a option)] b *)
+end
+module List = struct
+   [@inline] let length (type a) (xs : a list) : nat = [%Michelson ({| { SIZE } |} : a list -> nat)] xs
+   [@inline] let size (type a) (xs : a list) : nat = length xs
+   [@inline] let head_opt (type a) (xs : a list) : a option =
+     match xs with
+     | [] -> None
+     | x :: _ -> Some x
+   [@inline] let tail_opt (type a) (xs : a list) : (a list) option =
+     match xs with
+     | [] -> None
+     | _ :: xs -> Some xs
+end
+"
+let stdlib ~options syntax =
+  match Simple_utils.Trace.to_stdlib_result @@
+          Ligo_compile.Utils.type_contract_string ~add_warning:(fun _ -> ()) ~options CameLIGO (lib syntax) with
+  | Ok s -> s
+  | _ -> failwith "Error compiling the stdlib"
+
+let stdlib_typed ~options syntax =
+  fst @@ stdlib ~options syntax
+
+let stdlib_core ~options syntax =
+  snd @@ stdlib ~options syntax

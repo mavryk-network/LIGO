@@ -275,11 +275,7 @@ let main (raw_options : Compiler_options.raw) display_format now amount balance 
       print_endline welcome_msg;
       let state = make_initial_state syntax protocol dry_run_opts raw_options.project_root in
       let options = Compiler_options.make ~raw_options () in
-      let result = Simple_utils.Trace.to_stdlib_result @@
-                     Ligo_compile.Utils.type_contract_string ~add_warning:(fun _ -> ()) ~options CameLIGO (Build.lib state.syntax) in
-      let top_level = match result with
-        | Ok (top_level, _) -> top_level
-        | Error _ -> failwith "oops" in
+      let top_level = Build.Stdlib.stdlib_typed ~options state.syntax in
       let state = { state with top_level } in
       let state = match init_file with
         | None -> state
