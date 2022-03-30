@@ -196,29 +196,49 @@ printf("a1\n");
   int *z3 = (int*)((char*)given_storage + 8);
   int *z4 = (int*)((char*)given_storage + 12);
   int *z5 = (int*)((char*)given_storage + 16);
+  int *z6 = (int*)((char*)given_storage + 20);
+  int *z7 = (int*)((char*)given_storage + 24);
+  int *z8 = (int*)((char*)given_storage + 28);
+  int *z9 = (int*)((char*)given_storage + 32);
+  int *z10 = (int*)((char*)given_storage + 36);
   printf("z1: %i\n", *z1);
   printf("z2: %i\n", *z2);
   printf("z3: %i\n", *z3);
   printf("z4: %i\n", *z4);
   printf("z5: %i\n", *z5);
+  printf("z6: %i\n", *z6);
+  printf("z7: %i\n", *z7);
+  printf("z8: %i\n", *z8);
+  printf("z9: %i\n", *z9);
+  printf("z10: %i\n", *z10);
   printf("gs: %i\n", given_storage);
 
   // call generated `__load` function which corrects the pointers
-  __load(given_storage);
+  // __load(given_storage);
   
-printf("a3x\n");
+  printf("a3x\n");
 
   int *a1 = (int*)((char*)given_storage);
   int *a2 = (int*)((char*)given_storage + 4);
   int *a3 = (int*)((char*)given_storage + 8);
   int *a4 = (int*)((char*)given_storage + 12);
   int *a5 = (int*)((char*)given_storage + 16);
-  int *a6 = (int*)((char*)given_storage + 32);
+  int *a6 = (int*)((char*)given_storage + 20);
+  int *a7 = (int*)((char*)given_storage + 24);
+  int *a8 = (int*)((char*)given_storage + 28);
+  int *a9 = (int*)((char*)given_storage + 32);
+  int *a10 = (int*)((char*)given_storage + 36);
   // printf("a1: %i\n", a1);
   printf("a1: %i\n", *a1);
   printf("a2: %i\n", *a2);
   printf("a3: %i\n", *a3);
   printf("a4: %i\n", *a4);
+  printf("a5: %i\n", *a5);
+  printf("a6: %i\n", *a6);
+  printf("a7: %i\n", *a7);
+  printf("a8: %i\n", *a8);
+  printf("a9: %i\n", *a9);
+  printf("a10: %i\n", *a10);
   int ax = (int*)((char*)given_storage);
 
   // 02 00 00 00 01 00 00 00 0C 00 00 00 FB 07 00 00
