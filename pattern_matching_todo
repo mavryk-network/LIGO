@@ -19,3 +19,7 @@ pattern matching
 *)
 
 (* pattern compilation (on typed_pattern) (Ast_typed -> Ast_cases) : Ast_typed  ; Ast_cases (new) ; Ast_aggregation *)
+
+Case Analysis
+- https://www.cl.cam.ac.uk/~nk480/pattern-popl09.pdfhttps://www.cl.cam.ac.uk/~nk480/pattern-popl09.pdf
+- https://github.com/MLton/mlton/tree/master/mlton/match-compile
