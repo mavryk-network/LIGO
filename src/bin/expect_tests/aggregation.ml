@@ -24,27 +24,28 @@ let%expect_test _ =
     let #Crypto#check#33 = lambda (k) return lambda (s) return lambda (b) return ([%Michelson {| { UNPAIR ; UNPAIR ; CHECK_SIGNATURE } |}])@(( k , s , b ))[@inline] in
     let #Bytes#concat#34 = lambda (b) return lambda (c) return ([%Michelson {| { UNPAIR ; CONCAT } |}])@(( b , c ))[@inline] in
     let #Bytes#sub#35 = lambda (start) return lambda (length) return lambda (input) return ([%Michelson {| { UNPAIR ; UNPAIR ; SLICE ; IF_NONE { PUSH string "SLICE" ; FAILWITH } {} } |}])@(( start , length , input ))[@inline] in
-    let #Bytes#pack#36 = lambda (x) return ([%Michelson {| { PACK } |}])@(x)[@inline] in
-    let #Bytes#length#37 = lambda (b) return ([%Michelson {| { SIZE } |}])@(b)[@inline] in
-    let #List#length#38 = lambda (xs) return ([%Michelson {| { SIZE } |}])@(xs)[@inline] in
-    let #List#size#39 = lambda (xs) return (#List#length#38@{a})@(xs)[@inline] in
-    let #List#head_opt#40 = lambda (xs) return  match xs with
+    let #Bytes#slice#36 = lambda (start) return lambda (length) return lambda (input) return ([%Michelson {| { UNPAIR ; UNPAIR ; SLICE ; IF_NONE { PUSH string "SLICE" ; FAILWITH } {} } |}])@(( start , length , input ))[@inline] in
+    let #Bytes#pack#37 = lambda (x) return ([%Michelson {| { PACK } |}])@(x)[@inline] in
+    let #Bytes#length#38 = lambda (b) return ([%Michelson {| { SIZE } |}])@(b)[@inline] in
+    let #List#length#39 = lambda (xs) return ([%Michelson {| { SIZE } |}])@(xs)[@inline] in
+    let #List#size#40 = lambda (xs) return (#List#length#39@{a})@(xs)[@inline] in
+    let #List#head_opt#41 = lambda (xs) return  match xs with
                                                  | Cons ctor_proj#12 ->
                                                     match ctor_proj#12 with
                                                      | ( x , _#2 ) ->
                                                      SOME(x)
                                                  | Nil unit_proj#14 ->
                                                    NONE()[@inline] in
-    let #List#tail_opt#41 = lambda (xs) return  match xs with
+    let #List#tail_opt#42 = lambda (xs) return  match xs with
                                                  | Cons ctor_proj#15 ->
                                                     match ctor_proj#15 with
                                                      | ( _#3 , xs ) ->
                                                      SOME(xs)
                                                  | Nil unit_proj#17 ->
                                                    NONE()[@inline] in
-    let #A#a#42 = 42 in
-    let #B#b#43 = 1 in
-    let x = #A#a#42 in
+    let #A#a#43 = 42 in
+    let #B#b#44 = 1 in
+    let x = #A#a#43 in
     unit |xxx}]
 let%expect_test _ =
   run_ligo_good [ "compile" ; "expression" ; "cameligo" ; "x" ; "--init-file" ; contract "bug_alias.mligo" ] ;
@@ -72,30 +73,31 @@ let%expect_test _ =
     let #Crypto#check#33 = lambda (k) return lambda (s) return lambda (b) return ([%Michelson {| { UNPAIR ; UNPAIR ; CHECK_SIGNATURE } |}])@(( k , s , b ))[@inline] in
     let #Bytes#concat#34 = lambda (b) return lambda (c) return ([%Michelson {| { UNPAIR ; CONCAT } |}])@(( b , c ))[@inline] in
     let #Bytes#sub#35 = lambda (start) return lambda (length) return lambda (input) return ([%Michelson {| { UNPAIR ; UNPAIR ; SLICE ; IF_NONE { PUSH string "SLICE" ; FAILWITH } {} } |}])@(( start , length , input ))[@inline] in
-    let #Bytes#pack#36 = lambda (x) return ([%Michelson {| { PACK } |}])@(x)[@inline] in
-    let #Bytes#length#37 = lambda (b) return ([%Michelson {| { SIZE } |}])@(b)[@inline] in
-    let #List#length#38 = lambda (xs) return ([%Michelson {| { SIZE } |}])@(xs)[@inline] in
-    let #List#size#39 = lambda (xs) return (#List#length#38@{a})@(xs)[@inline] in
-    let #List#head_opt#40 = lambda (xs) return  match xs with
+    let #Bytes#slice#36 = lambda (start) return lambda (length) return lambda (input) return ([%Michelson {| { UNPAIR ; UNPAIR ; SLICE ; IF_NONE { PUSH string "SLICE" ; FAILWITH } {} } |}])@(( start , length , input ))[@inline] in
+    let #Bytes#pack#37 = lambda (x) return ([%Michelson {| { PACK } |}])@(x)[@inline] in
+    let #Bytes#length#38 = lambda (b) return ([%Michelson {| { SIZE } |}])@(b)[@inline] in
+    let #List#length#39 = lambda (xs) return ([%Michelson {| { SIZE } |}])@(xs)[@inline] in
+    let #List#size#40 = lambda (xs) return (#List#length#39@{a})@(xs)[@inline] in
+    let #List#head_opt#41 = lambda (xs) return  match xs with
                                                  | Cons ctor_proj#12 ->
                                                     match ctor_proj#12 with
                                                      | ( x , _#2 ) ->
                                                      SOME(x)
                                                  | Nil unit_proj#14 ->
                                                    NONE()[@inline] in
-    let #List#tail_opt#41 = lambda (xs) return  match xs with
+    let #List#tail_opt#42 = lambda (xs) return  match xs with
                                                  | Cons ctor_proj#15 ->
                                                     match ctor_proj#15 with
                                                      | ( _#3 , xs ) ->
                                                      SOME(xs)
                                                  | Nil unit_proj#17 ->
                                                    NONE()[@inline] in
-    let #A#a#42 = 40 in
-    let #B#b#45 = let #LOCAL#inA#ba#43 = 1 in
-    let #LOCAL#inA#baa#44 = #LOCAL#inA#ba#43 in
-    ADD(#LOCAL#inA#ba#43 ,
-    #LOCAL#inA#baa#44) in
-    let x = ADD(#A#a#42 , #B#b#45) in
+    let #A#a#43 = 40 in
+    let #B#b#46 = let #LOCAL#inA#ba#44 = 1 in
+    let #LOCAL#inA#baa#45 = #LOCAL#inA#ba#44 in
+    ADD(#LOCAL#inA#ba#44 ,
+    #LOCAL#inA#baa#45) in
+    let x = ADD(#A#a#43 , #B#b#46) in
     unit |xxx}]
 let%expect_test _ =
   run_ligo_good [ "compile" ; "expression" ; "cameligo" ; "x" ; "--init-file" ; contract "bug_alias2.mligo" ] ;
@@ -122,29 +124,30 @@ let%expect_test _ =
     let #Crypto#check#33 = lambda (k) return lambda (s) return lambda (b) return ([%Michelson {| { UNPAIR ; UNPAIR ; CHECK_SIGNATURE } |}])@(( k , s , b ))[@inline] in
     let #Bytes#concat#34 = lambda (b) return lambda (c) return ([%Michelson {| { UNPAIR ; CONCAT } |}])@(( b , c ))[@inline] in
     let #Bytes#sub#35 = lambda (start) return lambda (length) return lambda (input) return ([%Michelson {| { UNPAIR ; UNPAIR ; SLICE ; IF_NONE { PUSH string "SLICE" ; FAILWITH } {} } |}])@(( start , length , input ))[@inline] in
-    let #Bytes#pack#36 = lambda (x) return ([%Michelson {| { PACK } |}])@(x)[@inline] in
-    let #Bytes#length#37 = lambda (b) return ([%Michelson {| { SIZE } |}])@(b)[@inline] in
-    let #List#length#38 = lambda (xs) return ([%Michelson {| { SIZE } |}])@(xs)[@inline] in
-    let #List#size#39 = lambda (xs) return (#List#length#38@{a})@(xs)[@inline] in
-    let #List#head_opt#40 = lambda (xs) return  match xs with
+    let #Bytes#slice#36 = lambda (start) return lambda (length) return lambda (input) return ([%Michelson {| { UNPAIR ; UNPAIR ; SLICE ; IF_NONE { PUSH string "SLICE" ; FAILWITH } {} } |}])@(( start , length , input ))[@inline] in
+    let #Bytes#pack#37 = lambda (x) return ([%Michelson {| { PACK } |}])@(x)[@inline] in
+    let #Bytes#length#38 = lambda (b) return ([%Michelson {| { SIZE } |}])@(b)[@inline] in
+    let #List#length#39 = lambda (xs) return ([%Michelson {| { SIZE } |}])@(xs)[@inline] in
+    let #List#size#40 = lambda (xs) return (#List#length#39@{a})@(xs)[@inline] in
+    let #List#head_opt#41 = lambda (xs) return  match xs with
                                                  | Cons ctor_proj#12 ->
                                                     match ctor_proj#12 with
                                                      | ( x , _#2 ) ->
                                                      SOME(x)
                                                  | Nil unit_proj#14 ->
                                                    NONE()[@inline] in
-    let #List#tail_opt#41 = lambda (xs) return  match xs with
+    let #List#tail_opt#42 = lambda (xs) return  match xs with
                                                  | Cons ctor_proj#15 ->
                                                     match ctor_proj#15 with
                                                      | ( _#3 , xs ) ->
                                                      SOME(xs)
                                                  | Nil unit_proj#17 ->
                                                    NONE()[@inline] in
-    let #A#a#42 = 1 in
-    let #A_s#as#43 = 42 in
-    let #B#x#44 = #A#a#42 in
-    let #B#b#45 = #A_s#as#43 in
-    let x = #A_s#as#43 in
+    let #A#a#43 = 1 in
+    let #A_s#as#44 = 42 in
+    let #B#x#45 = #A#a#43 in
+    let #B#b#46 = #A_s#as#44 in
+    let x = #A_s#as#44 in
     unit |xxx}]
 let%expect_test _ =
   run_ligo_good [ "compile" ; "expression" ; "cameligo" ; "x" ; "--init-file" ; contract "bug_alias3.mligo" ] ;
@@ -171,27 +174,28 @@ let%expect_test _ =
   let #Crypto#check#33 = lambda (k) return lambda (s) return lambda (b) return ([%Michelson {| { UNPAIR ; UNPAIR ; CHECK_SIGNATURE } |}])@(( k , s , b ))[@inline] in
   let #Bytes#concat#34 = lambda (b) return lambda (c) return ([%Michelson {| { UNPAIR ; CONCAT } |}])@(( b , c ))[@inline] in
   let #Bytes#sub#35 = lambda (start) return lambda (length) return lambda (input) return ([%Michelson {| { UNPAIR ; UNPAIR ; SLICE ; IF_NONE { PUSH string "SLICE" ; FAILWITH } {} } |}])@(( start , length , input ))[@inline] in
-  let #Bytes#pack#36 = lambda (x) return ([%Michelson {| { PACK } |}])@(x)[@inline] in
-  let #Bytes#length#37 = lambda (b) return ([%Michelson {| { SIZE } |}])@(b)[@inline] in
-  let #List#length#38 = lambda (xs) return ([%Michelson {| { SIZE } |}])@(xs)[@inline] in
-  let #List#size#39 = lambda (xs) return (#List#length#38@{a})@(xs)[@inline] in
-  let #List#head_opt#40 = lambda (xs) return  match xs with
+  let #Bytes#slice#36 = lambda (start) return lambda (length) return lambda (input) return ([%Michelson {| { UNPAIR ; UNPAIR ; SLICE ; IF_NONE { PUSH string "SLICE" ; FAILWITH } {} } |}])@(( start , length , input ))[@inline] in
+  let #Bytes#pack#37 = lambda (x) return ([%Michelson {| { PACK } |}])@(x)[@inline] in
+  let #Bytes#length#38 = lambda (b) return ([%Michelson {| { SIZE } |}])@(b)[@inline] in
+  let #List#length#39 = lambda (xs) return ([%Michelson {| { SIZE } |}])@(xs)[@inline] in
+  let #List#size#40 = lambda (xs) return (#List#length#39@{a})@(xs)[@inline] in
+  let #List#head_opt#41 = lambda (xs) return  match xs with
                                                | Cons ctor_proj#12 ->
                                                   match ctor_proj#12 with
                                                    | ( x , _#2 ) ->
                                                    SOME(x)
                                                | Nil unit_proj#14 ->
                                                  NONE()[@inline] in
-  let #List#tail_opt#41 = lambda (xs) return  match xs with
+  let #List#tail_opt#42 = lambda (xs) return  match xs with
                                                | Cons ctor_proj#15 ->
                                                   match ctor_proj#15 with
                                                    | ( _#3 , xs ) ->
                                                    SOME(xs)
                                                | Nil unit_proj#17 ->
                                                  NONE()[@inline] in
-  let #A_s#as#42 = 20 in
-  let #A#s_as#43 = 22 in
-  let x = ADD(#A_s#as#42 , #A#s_as#43) in
+  let #A_s#as#43 = 20 in
+  let #A#s_as#44 = 22 in
+  let x = ADD(#A_s#as#43 , #A#s_as#44) in
   unit |xxx}]
 let%expect_test _ =
   run_ligo_good [ "compile" ; "expression" ; "cameligo" ; "x" ; "--init-file" ; contract "bug_alias4.mligo" ] ;
@@ -219,28 +223,29 @@ let%expect_test _ =
   let #Crypto#check#33 = lambda (k) return lambda (s) return lambda (b) return ([%Michelson {| { UNPAIR ; UNPAIR ; CHECK_SIGNATURE } |}])@(( k , s , b ))[@inline] in
   let #Bytes#concat#34 = lambda (b) return lambda (c) return ([%Michelson {| { UNPAIR ; CONCAT } |}])@(( b , c ))[@inline] in
   let #Bytes#sub#35 = lambda (start) return lambda (length) return lambda (input) return ([%Michelson {| { UNPAIR ; UNPAIR ; SLICE ; IF_NONE { PUSH string "SLICE" ; FAILWITH } {} } |}])@(( start , length , input ))[@inline] in
-  let #Bytes#pack#36 = lambda (x) return ([%Michelson {| { PACK } |}])@(x)[@inline] in
-  let #Bytes#length#37 = lambda (b) return ([%Michelson {| { SIZE } |}])@(b)[@inline] in
-  let #List#length#38 = lambda (xs) return ([%Michelson {| { SIZE } |}])@(xs)[@inline] in
-  let #List#size#39 = lambda (xs) return (#List#length#38@{a})@(xs)[@inline] in
-  let #List#head_opt#40 = lambda (xs) return  match xs with
+  let #Bytes#slice#36 = lambda (start) return lambda (length) return lambda (input) return ([%Michelson {| { UNPAIR ; UNPAIR ; SLICE ; IF_NONE { PUSH string "SLICE" ; FAILWITH } {} } |}])@(( start , length , input ))[@inline] in
+  let #Bytes#pack#37 = lambda (x) return ([%Michelson {| { PACK } |}])@(x)[@inline] in
+  let #Bytes#length#38 = lambda (b) return ([%Michelson {| { SIZE } |}])@(b)[@inline] in
+  let #List#length#39 = lambda (xs) return ([%Michelson {| { SIZE } |}])@(xs)[@inline] in
+  let #List#size#40 = lambda (xs) return (#List#length#39@{a})@(xs)[@inline] in
+  let #List#head_opt#41 = lambda (xs) return  match xs with
                                                | Cons ctor_proj#12 ->
                                                   match ctor_proj#12 with
                                                    | ( x , _#2 ) ->
                                                    SOME(x)
                                                | Nil unit_proj#14 ->
                                                  NONE()[@inline] in
-  let #List#tail_opt#41 = lambda (xs) return  match xs with
+  let #List#tail_opt#42 = lambda (xs) return  match xs with
                                                | Cons ctor_proj#15 ->
                                                   match ctor_proj#15 with
                                                    | ( _#3 , xs ) ->
                                                    SOME(xs)
                                                | Nil unit_proj#17 ->
                                                  NONE()[@inline] in
-  let #A#a#42 = 1 in
-  let #A#A_s#as#43 = 42 in
-  let #A#A_s#as#44 = 3 in
-  let x = #A#A_s#as#43 in
+  let #A#a#43 = 1 in
+  let #A#A_s#as#44 = 42 in
+  let #A#A_s#as#45 = 3 in
+  let x = #A#A_s#as#44 in
   unit |xxx}]
 let%expect_test _ =
   run_ligo_good [ "compile" ; "expression" ; "cameligo" ; "x" ; "--init-file" ; contract "bug_alias5.mligo" ] ;
@@ -267,31 +272,32 @@ let%expect_test _ =
   let #Crypto#check#33 = lambda (k) return lambda (s) return lambda (b) return ([%Michelson {| { UNPAIR ; UNPAIR ; CHECK_SIGNATURE } |}])@(( k , s , b ))[@inline] in
   let #Bytes#concat#34 = lambda (b) return lambda (c) return ([%Michelson {| { UNPAIR ; CONCAT } |}])@(( b , c ))[@inline] in
   let #Bytes#sub#35 = lambda (start) return lambda (length) return lambda (input) return ([%Michelson {| { UNPAIR ; UNPAIR ; SLICE ; IF_NONE { PUSH string "SLICE" ; FAILWITH } {} } |}])@(( start , length , input ))[@inline] in
-  let #Bytes#pack#36 = lambda (x) return ([%Michelson {| { PACK } |}])@(x)[@inline] in
-  let #Bytes#length#37 = lambda (b) return ([%Michelson {| { SIZE } |}])@(b)[@inline] in
-  let #List#length#38 = lambda (xs) return ([%Michelson {| { SIZE } |}])@(xs)[@inline] in
-  let #List#size#39 = lambda (xs) return (#List#length#38@{a})@(xs)[@inline] in
-  let #List#head_opt#40 = lambda (xs) return  match xs with
+  let #Bytes#slice#36 = lambda (start) return lambda (length) return lambda (input) return ([%Michelson {| { UNPAIR ; UNPAIR ; SLICE ; IF_NONE { PUSH string "SLICE" ; FAILWITH } {} } |}])@(( start , length , input ))[@inline] in
+  let #Bytes#pack#37 = lambda (x) return ([%Michelson {| { PACK } |}])@(x)[@inline] in
+  let #Bytes#length#38 = lambda (b) return ([%Michelson {| { SIZE } |}])@(b)[@inline] in
+  let #List#length#39 = lambda (xs) return ([%Michelson {| { SIZE } |}])@(xs)[@inline] in
+  let #List#size#40 = lambda (xs) return (#List#length#39@{a})@(xs)[@inline] in
+  let #List#head_opt#41 = lambda (xs) return  match xs with
                                                | Cons ctor_proj#12 ->
                                                   match ctor_proj#12 with
                                                    | ( x , _#2 ) ->
                                                    SOME(x)
                                                | Nil unit_proj#14 ->
                                                  NONE()[@inline] in
-  let #List#tail_opt#41 = lambda (xs) return  match xs with
+  let #List#tail_opt#42 = lambda (xs) return  match xs with
                                                | Cons ctor_proj#15 ->
                                                   match ctor_proj#15 with
                                                    | ( _#3 , xs ) ->
                                                    SOME(xs)
                                                | Nil unit_proj#17 ->
                                                  NONE()[@inline] in
-  let #Foo#x#42 = 1 in
+  let #Foo#x#43 = 1 in
   let foo = let x = 20 in
-  let #LOCAL#inFoo#x#43 = x in
-  let #LOCAL#inFoo#y#44 = #Foo#x#42 in
-  let #LOCAL#inFoo#z#45 = #LOCAL#inFoo#y#44 in
-  ADD(ADD(ADD(#LOCAL#inFoo#x#43 , #LOCAL#inFoo#y#44) , x) ,
-  #LOCAL#inFoo#z#45) in
+  let #LOCAL#inFoo#x#44 = x in
+  let #LOCAL#inFoo#y#45 = #Foo#x#43 in
+  let #LOCAL#inFoo#z#46 = #LOCAL#inFoo#y#45 in
+  ADD(ADD(ADD(#LOCAL#inFoo#x#44 , #LOCAL#inFoo#y#45) , x) ,
+  #LOCAL#inFoo#z#46) in
   let x = foo in
   unit |xxx}]
 let%expect_test _ =
@@ -319,28 +325,29 @@ let%expect_test _ =
   let #Crypto#check#33 = lambda (k) return lambda (s) return lambda (b) return ([%Michelson {| { UNPAIR ; UNPAIR ; CHECK_SIGNATURE } |}])@(( k , s , b ))[@inline] in
   let #Bytes#concat#34 = lambda (b) return lambda (c) return ([%Michelson {| { UNPAIR ; CONCAT } |}])@(( b , c ))[@inline] in
   let #Bytes#sub#35 = lambda (start) return lambda (length) return lambda (input) return ([%Michelson {| { UNPAIR ; UNPAIR ; SLICE ; IF_NONE { PUSH string "SLICE" ; FAILWITH } {} } |}])@(( start , length , input ))[@inline] in
-  let #Bytes#pack#36 = lambda (x) return ([%Michelson {| { PACK } |}])@(x)[@inline] in
-  let #Bytes#length#37 = lambda (b) return ([%Michelson {| { SIZE } |}])@(b)[@inline] in
-  let #List#length#38 = lambda (xs) return ([%Michelson {| { SIZE } |}])@(xs)[@inline] in
-  let #List#size#39 = lambda (xs) return (#List#length#38@{a})@(xs)[@inline] in
-  let #List#head_opt#40 = lambda (xs) return  match xs with
+  let #Bytes#slice#36 = lambda (start) return lambda (length) return lambda (input) return ([%Michelson {| { UNPAIR ; UNPAIR ; SLICE ; IF_NONE { PUSH string "SLICE" ; FAILWITH } {} } |}])@(( start , length , input ))[@inline] in
+  let #Bytes#pack#37 = lambda (x) return ([%Michelson {| { PACK } |}])@(x)[@inline] in
+  let #Bytes#length#38 = lambda (b) return ([%Michelson {| { SIZE } |}])@(b)[@inline] in
+  let #List#length#39 = lambda (xs) return ([%Michelson {| { SIZE } |}])@(xs)[@inline] in
+  let #List#size#40 = lambda (xs) return (#List#length#39@{a})@(xs)[@inline] in
+  let #List#head_opt#41 = lambda (xs) return  match xs with
                                                | Cons ctor_proj#12 ->
                                                   match ctor_proj#12 with
                                                    | ( x , _#2 ) ->
                                                    SOME(x)
                                                | Nil unit_proj#14 ->
                                                  NONE()[@inline] in
-  let #List#tail_opt#41 = lambda (xs) return  match xs with
+  let #List#tail_opt#42 = lambda (xs) return  match xs with
                                                | Cons ctor_proj#15 ->
                                                   match ctor_proj#15 with
                                                    | ( _#3 , xs ) ->
                                                    SOME(xs)
                                                | Nil unit_proj#17 ->
                                                  NONE()[@inline] in
-  let #A#v#42 = 40 in
-  let #A#B#v#43 = ADD(#A#v#42 , 1) in
-  let #A#B#C#v#44 = ADD(#A#B#v#43 , 1) in
-  let x = #A#B#C#v#44 in
+  let #A#v#43 = 40 in
+  let #A#B#v#44 = ADD(#A#v#43 , 1) in
+  let #A#B#C#v#45 = ADD(#A#B#v#44 , 1) in
+  let x = #A#B#C#v#45 in
   unit |xxx}]
 let%expect_test _ =
   run_ligo_good [ "compile" ; "expression" ; "cameligo" ; "x" ; "--init-file" ; contract "bug_alias7.mligo" ] ;
@@ -368,29 +375,30 @@ let%expect_test _ =
   let #Crypto#check#33 = lambda (k) return lambda (s) return lambda (b) return ([%Michelson {| { UNPAIR ; UNPAIR ; CHECK_SIGNATURE } |}])@(( k , s , b ))[@inline] in
   let #Bytes#concat#34 = lambda (b) return lambda (c) return ([%Michelson {| { UNPAIR ; CONCAT } |}])@(( b , c ))[@inline] in
   let #Bytes#sub#35 = lambda (start) return lambda (length) return lambda (input) return ([%Michelson {| { UNPAIR ; UNPAIR ; SLICE ; IF_NONE { PUSH string "SLICE" ; FAILWITH } {} } |}])@(( start , length , input ))[@inline] in
-  let #Bytes#pack#36 = lambda (x) return ([%Michelson {| { PACK } |}])@(x)[@inline] in
-  let #Bytes#length#37 = lambda (b) return ([%Michelson {| { SIZE } |}])@(b)[@inline] in
-  let #List#length#38 = lambda (xs) return ([%Michelson {| { SIZE } |}])@(xs)[@inline] in
-  let #List#size#39 = lambda (xs) return (#List#length#38@{a})@(xs)[@inline] in
-  let #List#head_opt#40 = lambda (xs) return  match xs with
+  let #Bytes#slice#36 = lambda (start) return lambda (length) return lambda (input) return ([%Michelson {| { UNPAIR ; UNPAIR ; SLICE ; IF_NONE { PUSH string "SLICE" ; FAILWITH } {} } |}])@(( start , length , input ))[@inline] in
+  let #Bytes#pack#37 = lambda (x) return ([%Michelson {| { PACK } |}])@(x)[@inline] in
+  let #Bytes#length#38 = lambda (b) return ([%Michelson {| { SIZE } |}])@(b)[@inline] in
+  let #List#length#39 = lambda (xs) return ([%Michelson {| { SIZE } |}])@(xs)[@inline] in
+  let #List#size#40 = lambda (xs) return (#List#length#39@{a})@(xs)[@inline] in
+  let #List#head_opt#41 = lambda (xs) return  match xs with
                                                | Cons ctor_proj#12 ->
                                                   match ctor_proj#12 with
                                                    | ( x , _#2 ) ->
                                                    SOME(x)
                                                | Nil unit_proj#14 ->
                                                  NONE()[@inline] in
-  let #List#tail_opt#41 = lambda (xs) return  match xs with
+  let #List#tail_opt#42 = lambda (xs) return  match xs with
                                                | Cons ctor_proj#15 ->
                                                   match ctor_proj#15 with
                                                    | ( _#3 , xs ) ->
                                                    SOME(xs)
                                                | Nil unit_proj#17 ->
                                                  NONE()[@inline] in
-  let #Foo#x#42 = 41 in
+  let #Foo#x#43 = 41 in
   let x = 1 in
-  let #TFoo#x#43 = x in
-  let #TFoo#y#44 = #Foo#x#42 in
-  let u = ADD(#TFoo#x#43 , #TFoo#y#44) in
+  let #TFoo#x#44 = x in
+  let #TFoo#y#45 = #Foo#x#43 in
+  let u = ADD(#TFoo#x#44 , #TFoo#y#45) in
   let x = u in
   unit |xxx}]
 let%expect_test _ =
@@ -418,27 +426,28 @@ let%expect_test _ =
   let #Crypto#check#33 = lambda (k) return lambda (s) return lambda (b) return ([%Michelson {| { UNPAIR ; UNPAIR ; CHECK_SIGNATURE } |}])@(( k , s , b ))[@inline] in
   let #Bytes#concat#34 = lambda (b) return lambda (c) return ([%Michelson {| { UNPAIR ; CONCAT } |}])@(( b , c ))[@inline] in
   let #Bytes#sub#35 = lambda (start) return lambda (length) return lambda (input) return ([%Michelson {| { UNPAIR ; UNPAIR ; SLICE ; IF_NONE { PUSH string "SLICE" ; FAILWITH } {} } |}])@(( start , length , input ))[@inline] in
-  let #Bytes#pack#36 = lambda (x) return ([%Michelson {| { PACK } |}])@(x)[@inline] in
-  let #Bytes#length#37 = lambda (b) return ([%Michelson {| { SIZE } |}])@(b)[@inline] in
-  let #List#length#38 = lambda (xs) return ([%Michelson {| { SIZE } |}])@(xs)[@inline] in
-  let #List#size#39 = lambda (xs) return (#List#length#38@{a})@(xs)[@inline] in
-  let #List#head_opt#40 = lambda (xs) return  match xs with
+  let #Bytes#slice#36 = lambda (start) return lambda (length) return lambda (input) return ([%Michelson {| { UNPAIR ; UNPAIR ; SLICE ; IF_NONE { PUSH string "SLICE" ; FAILWITH } {} } |}])@(( start , length , input ))[@inline] in
+  let #Bytes#pack#37 = lambda (x) return ([%Michelson {| { PACK } |}])@(x)[@inline] in
+  let #Bytes#length#38 = lambda (b) return ([%Michelson {| { SIZE } |}])@(b)[@inline] in
+  let #List#length#39 = lambda (xs) return ([%Michelson {| { SIZE } |}])@(xs)[@inline] in
+  let #List#size#40 = lambda (xs) return (#List#length#39@{a})@(xs)[@inline] in
+  let #List#head_opt#41 = lambda (xs) return  match xs with
                                                | Cons ctor_proj#12 ->
                                                   match ctor_proj#12 with
                                                    | ( x , _#2 ) ->
                                                    SOME(x)
                                                | Nil unit_proj#14 ->
                                                  NONE()[@inline] in
-  let #List#tail_opt#41 = lambda (xs) return  match xs with
+  let #List#tail_opt#42 = lambda (xs) return  match xs with
                                                | Cons ctor_proj#15 ->
                                                   match ctor_proj#15 with
                                                    | ( _#3 , xs ) ->
                                                    SOME(xs)
                                                | Nil unit_proj#17 ->
                                                  NONE()[@inline] in
-  let #A#B#x#42 = 41 in
-  let #A#B#x#43 = ADD(#A#B#x#42 , 1) in
-  let x = #A#B#x#43 in
+  let #A#B#x#43 = 41 in
+  let #A#B#x#44 = ADD(#A#B#x#43 , 1) in
+  let x = #A#B#x#44 in
   unit |xxx}]
 let%expect_test _ =
   run_ligo_good [ "compile" ; "expression" ; "cameligo" ; "x" ; "--init-file" ; contract "bug_alias9.mligo" ] ;
@@ -465,28 +474,29 @@ let%expect_test _ =
   let #Crypto#check#33 = lambda (k) return lambda (s) return lambda (b) return ([%Michelson {| { UNPAIR ; UNPAIR ; CHECK_SIGNATURE } |}])@(( k , s , b ))[@inline] in
   let #Bytes#concat#34 = lambda (b) return lambda (c) return ([%Michelson {| { UNPAIR ; CONCAT } |}])@(( b , c ))[@inline] in
   let #Bytes#sub#35 = lambda (start) return lambda (length) return lambda (input) return ([%Michelson {| { UNPAIR ; UNPAIR ; SLICE ; IF_NONE { PUSH string "SLICE" ; FAILWITH } {} } |}])@(( start , length , input ))[@inline] in
-  let #Bytes#pack#36 = lambda (x) return ([%Michelson {| { PACK } |}])@(x)[@inline] in
-  let #Bytes#length#37 = lambda (b) return ([%Michelson {| { SIZE } |}])@(b)[@inline] in
-  let #List#length#38 = lambda (xs) return ([%Michelson {| { SIZE } |}])@(xs)[@inline] in
-  let #List#size#39 = lambda (xs) return (#List#length#38@{a})@(xs)[@inline] in
-  let #List#head_opt#40 = lambda (xs) return  match xs with
+  let #Bytes#slice#36 = lambda (start) return lambda (length) return lambda (input) return ([%Michelson {| { UNPAIR ; UNPAIR ; SLICE ; IF_NONE { PUSH string "SLICE" ; FAILWITH } {} } |}])@(( start , length , input ))[@inline] in
+  let #Bytes#pack#37 = lambda (x) return ([%Michelson {| { PACK } |}])@(x)[@inline] in
+  let #Bytes#length#38 = lambda (b) return ([%Michelson {| { SIZE } |}])@(b)[@inline] in
+  let #List#length#39 = lambda (xs) return ([%Michelson {| { SIZE } |}])@(xs)[@inline] in
+  let #List#size#40 = lambda (xs) return (#List#length#39@{a})@(xs)[@inline] in
+  let #List#head_opt#41 = lambda (xs) return  match xs with
                                                | Cons ctor_proj#12 ->
                                                   match ctor_proj#12 with
                                                    | ( x , _#2 ) ->
                                                    SOME(x)
                                                | Nil unit_proj#14 ->
                                                  NONE()[@inline] in
-  let #List#tail_opt#41 = lambda (xs) return  match xs with
+  let #List#tail_opt#42 = lambda (xs) return  match xs with
                                                | Cons ctor_proj#15 ->
                                                   match ctor_proj#15 with
                                                    | ( _#3 , xs ) ->
                                                    SOME(xs)
                                                | Nil unit_proj#17 ->
                                                  NONE()[@inline] in
-  let #A#B#x#42 = 42 in
-  let #A#B#x#43 = 2 in
-  let #A#y#44 = #A#B#x#42 in
-  let x = #A#y#44 in
+  let #A#B#x#43 = 42 in
+  let #A#B#x#44 = 2 in
+  let #A#y#45 = #A#B#x#43 in
+  let x = #A#y#45 in
   unit |xxx}]
 let%expect_test _ =
   run_ligo_good [ "compile" ; "expression" ; "cameligo" ; "x" ; "--init-file" ; contract "bug_alias10.mligo" ] ;
@@ -513,29 +523,30 @@ let%expect_test _ =
   let #Crypto#check#33 = lambda (k) return lambda (s) return lambda (b) return ([%Michelson {| { UNPAIR ; UNPAIR ; CHECK_SIGNATURE } |}])@(( k , s , b ))[@inline] in
   let #Bytes#concat#34 = lambda (b) return lambda (c) return ([%Michelson {| { UNPAIR ; CONCAT } |}])@(( b , c ))[@inline] in
   let #Bytes#sub#35 = lambda (start) return lambda (length) return lambda (input) return ([%Michelson {| { UNPAIR ; UNPAIR ; SLICE ; IF_NONE { PUSH string "SLICE" ; FAILWITH } {} } |}])@(( start , length , input ))[@inline] in
-  let #Bytes#pack#36 = lambda (x) return ([%Michelson {| { PACK } |}])@(x)[@inline] in
-  let #Bytes#length#37 = lambda (b) return ([%Michelson {| { SIZE } |}])@(b)[@inline] in
-  let #List#length#38 = lambda (xs) return ([%Michelson {| { SIZE } |}])@(xs)[@inline] in
-  let #List#size#39 = lambda (xs) return (#List#length#38@{a})@(xs)[@inline] in
-  let #List#head_opt#40 = lambda (xs) return  match xs with
+  let #Bytes#slice#36 = lambda (start) return lambda (length) return lambda (input) return ([%Michelson {| { UNPAIR ; UNPAIR ; SLICE ; IF_NONE { PUSH string "SLICE" ; FAILWITH } {} } |}])@(( start , length , input ))[@inline] in
+  let #Bytes#pack#37 = lambda (x) return ([%Michelson {| { PACK } |}])@(x)[@inline] in
+  let #Bytes#length#38 = lambda (b) return ([%Michelson {| { SIZE } |}])@(b)[@inline] in
+  let #List#length#39 = lambda (xs) return ([%Michelson {| { SIZE } |}])@(xs)[@inline] in
+  let #List#size#40 = lambda (xs) return (#List#length#39@{a})@(xs)[@inline] in
+  let #List#head_opt#41 = lambda (xs) return  match xs with
                                                | Cons ctor_proj#12 ->
                                                   match ctor_proj#12 with
                                                    | ( x , _#2 ) ->
                                                    SOME(x)
                                                | Nil unit_proj#14 ->
                                                  NONE()[@inline] in
-  let #List#tail_opt#41 = lambda (xs) return  match xs with
+  let #List#tail_opt#42 = lambda (xs) return  match xs with
                                                | Cons ctor_proj#15 ->
                                                   match ctor_proj#15 with
                                                    | ( _#3 , xs ) ->
                                                    SOME(xs)
                                                | Nil unit_proj#17 ->
                                                  NONE()[@inline] in
-  let #Foo#x#42 = 19 in
-  let #Foo#y#43 = 22 in
+  let #Foo#x#43 = 19 in
+  let #Foo#y#44 = 22 in
   let x = let x = 1 in
-  let u = #Foo#x#42 in
-  let v = #Foo#y#43 in
+  let u = #Foo#x#43 in
+  let v = #Foo#y#44 in
   ADD(ADD(u , v) ,
   x) in
   unit |xxx}]
@@ -564,27 +575,28 @@ let%expect_test _ =
   let #Crypto#check#33 = lambda (k) return lambda (s) return lambda (b) return ([%Michelson {| { UNPAIR ; UNPAIR ; CHECK_SIGNATURE } |}])@(( k , s , b ))[@inline] in
   let #Bytes#concat#34 = lambda (b) return lambda (c) return ([%Michelson {| { UNPAIR ; CONCAT } |}])@(( b , c ))[@inline] in
   let #Bytes#sub#35 = lambda (start) return lambda (length) return lambda (input) return ([%Michelson {| { UNPAIR ; UNPAIR ; SLICE ; IF_NONE { PUSH string "SLICE" ; FAILWITH } {} } |}])@(( start , length , input ))[@inline] in
-  let #Bytes#pack#36 = lambda (x) return ([%Michelson {| { PACK } |}])@(x)[@inline] in
-  let #Bytes#length#37 = lambda (b) return ([%Michelson {| { SIZE } |}])@(b)[@inline] in
-  let #List#length#38 = lambda (xs) return ([%Michelson {| { SIZE } |}])@(xs)[@inline] in
-  let #List#size#39 = lambda (xs) return (#List#length#38@{a})@(xs)[@inline] in
-  let #List#head_opt#40 = lambda (xs) return  match xs with
+  let #Bytes#slice#36 = lambda (start) return lambda (length) return lambda (input) return ([%Michelson {| { UNPAIR ; UNPAIR ; SLICE ; IF_NONE { PUSH string "SLICE" ; FAILWITH } {} } |}])@(( start , length , input ))[@inline] in
+  let #Bytes#pack#37 = lambda (x) return ([%Michelson {| { PACK } |}])@(x)[@inline] in
+  let #Bytes#length#38 = lambda (b) return ([%Michelson {| { SIZE } |}])@(b)[@inline] in
+  let #List#length#39 = lambda (xs) return ([%Michelson {| { SIZE } |}])@(xs)[@inline] in
+  let #List#size#40 = lambda (xs) return (#List#length#39@{a})@(xs)[@inline] in
+  let #List#head_opt#41 = lambda (xs) return  match xs with
                                                | Cons ctor_proj#12 ->
                                                   match ctor_proj#12 with
                                                    | ( x , _#2 ) ->
                                                    SOME(x)
                                                | Nil unit_proj#14 ->
                                                  NONE()[@inline] in
-  let #List#tail_opt#41 = lambda (xs) return  match xs with
+  let #List#tail_opt#42 = lambda (xs) return  match xs with
                                                | Cons ctor_proj#15 ->
                                                   match ctor_proj#15 with
                                                    | ( _#3 , xs ) ->
                                                    SOME(xs)
                                                | Nil unit_proj#17 ->
                                                  NONE()[@inline] in
-  let #F#F#a#42 = 42 in
-  let #F#F#x#43 = #F#F#a#42 in
-  let x = #F#F#x#43 in
+  let #F#F#a#43 = 42 in
+  let #F#F#x#44 = #F#F#a#43 in
+  let x = #F#F#x#44 in
   unit |xxx}]
 let%expect_test _ =
   run_ligo_good [ "compile" ; "expression" ; "cameligo" ; "x" ; "--init-file" ; contract "bug_alias12.mligo" ] ;
@@ -611,31 +623,32 @@ let%expect_test _ =
   let #Crypto#check#36 = lambda (k) return lambda (s) return lambda (b) return ([%Michelson {| { UNPAIR ; UNPAIR ; CHECK_SIGNATURE } |}])@(( k , s , b ))[@inline] in
   let #Bytes#concat#37 = lambda (b) return lambda (c) return ([%Michelson {| { UNPAIR ; CONCAT } |}])@(( b , c ))[@inline] in
   let #Bytes#sub#38 = lambda (start) return lambda (length) return lambda (input) return ([%Michelson {| { UNPAIR ; UNPAIR ; SLICE ; IF_NONE { PUSH string "SLICE" ; FAILWITH } {} } |}])@(( start , length , input ))[@inline] in
-  let #Bytes#pack#39 = lambda (x) return ([%Michelson {| { PACK } |}])@(x)[@inline] in
-  let #Bytes#length#40 = lambda (b) return ([%Michelson {| { SIZE } |}])@(b)[@inline] in
-  let #List#length#41 = lambda (xs) return ([%Michelson {| { SIZE } |}])@(xs)[@inline] in
-  let #List#size#42 = lambda (xs) return (#List#length#41@{a})@(xs)[@inline] in
-  let #List#head_opt#43 = lambda (xs) return  match xs with
+  let #Bytes#slice#39 = lambda (start) return lambda (length) return lambda (input) return ([%Michelson {| { UNPAIR ; UNPAIR ; SLICE ; IF_NONE { PUSH string "SLICE" ; FAILWITH } {} } |}])@(( start , length , input ))[@inline] in
+  let #Bytes#pack#40 = lambda (x) return ([%Michelson {| { PACK } |}])@(x)[@inline] in
+  let #Bytes#length#41 = lambda (b) return ([%Michelson {| { SIZE } |}])@(b)[@inline] in
+  let #List#length#42 = lambda (xs) return ([%Michelson {| { SIZE } |}])@(xs)[@inline] in
+  let #List#size#43 = lambda (xs) return (#List#length#42@{a})@(xs)[@inline] in
+  let #List#head_opt#44 = lambda (xs) return  match xs with
                                                | Cons ctor_proj#14 ->
                                                   match ctor_proj#14 with
                                                    | ( x , _#2 ) ->
                                                    SOME(x)
                                                | Nil unit_proj#16 ->
                                                  NONE()[@inline] in
-  let #List#tail_opt#44 = lambda (xs) return  match xs with
+  let #List#tail_opt#45 = lambda (xs) return  match xs with
                                                | Cons ctor_proj#17 ->
                                                   match ctor_proj#17 with
                                                    | ( _#3 , xs ) ->
                                                    SOME(xs)
                                                | Nil unit_proj#19 ->
                                                  NONE()[@inline] in
-  let #A#current_turn#45 = lambda (i) return ADD(i , +1) in
-  let #A#other#46 = lambda (n) return let current_turn = (#A#current_turn#45)@(+1) in
+  let #A#current_turn#46 = lambda (i) return ADD(i , +1) in
+  let #A#other#47 = lambda (n) return let current_turn = (#A#current_turn#46)@(+1) in
   ASSERTION(EQ(n ,
   current_turn)) in
   let main = lambda (gen#12) return  match gen#12 with
                                       | ( _p , _s ) ->
-                                      ( LIST_EMPTY() , (#A#other#46)@(+2) ) in
+                                      ( LIST_EMPTY() , (#A#other#47)@(+2) ) in
   unit |xxx}]
 let%expect_test _ =
   run_ligo_good [ "compile" ; "contract" ; contract "bug_alias13.mligo" ] ;
@@ -686,11 +699,11 @@ let%expect_test _ =
     let #Crypto#hash_key#35 = fun k -> (({ HASH_KEY })@(k))[@inline] in
     let #Crypto#check#36 =
       fun gen#2 ->
-      (let (gen#46, gen#47) = gen#2 in
-       let (gen#48, gen#49) = gen#46 in
-       let k = gen#48 in
-       let s = gen#49 in
-       let b = gen#47 in
+      (let (gen#47, gen#48) = gen#2 in
+       let (gen#49, gen#50) = gen#47 in
+       let k = gen#49 in
+       let s = gen#50 in
+       let b = gen#48 in
        ({ UNPAIR ; UNPAIR ; CHECK_SIGNATURE })@(PAIR(PAIR(k , s) , b)))[@inline] in
     let #Bytes#concat#37 = fun p -> (({ UNPAIR ; CONCAT })@(p))[@inline] in
     let #Bytes#sub#38 =
@@ -699,5 +712,11 @@ let%expect_test _ =
          UNPAIR ;
          SLICE ;
          IF_NONE { PUSH string "SLICE" ; FAILWITH } {} })@(sli))[@inline] in
-    let #Bytes#length#40 = fun b -> (({ SIZE })@(b))[@inline] in
-    let v = PAIR(L(1) , L("b")) in let #A#y#45 = v in let tm = #A#y#45 in L(unit) |}]
+    let #Bytes#slice#39 =
+      fun sli ->
+      (({ UNPAIR ;
+         UNPAIR ;
+         SLICE ;
+         IF_NONE { PUSH string "SLICE" ; FAILWITH } {} })@(sli))[@inline] in
+    let #Bytes#length#41 = fun b -> (({ SIZE })@(b))[@inline] in
+    let v = PAIR(L(1) , L("b")) in let #A#y#46 = v in let tm = #A#y#46 in L(unit) |}]

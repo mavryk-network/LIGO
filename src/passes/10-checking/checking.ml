@@ -536,29 +536,20 @@ and type_expression' ~raise ~options : context -> ?tv_opt:O.type_expression -> I
   | E_constant {cons_name = C_POLYMORPHIC_ADD;arguments} ->
       let lst' = List.map ~f:(type_expression' ~raise ~options (app_context, context)) arguments in
       let tv_lst = List.map ~f:get_type lst' in
-      let decide = function
-        | {O.expression_content = E_literal (Literal_string _); _ } -> Some S.C_CONCAT
-        | {expression_content = E_constant {cons_name = C_ADD; _ }; _ } -> Some C_ADD
-        | {expression_content = E_constant {cons_name = C_CONCAT; _ }; _ } -> Some C_CONCAT
-        | {expression_content = E_constant {cons_name = C_SLICE; _ }; _ } -> Some C_CONCAT
-        | {expression_content = E_literal (Literal_int _); _ } -> Some C_ADD
-        | {expression_content = E_record_accessor {record; path}; _ } ->
-            (let x = get_record_field_type record.type_expression path in
-            match x with
-            Some s when is_t_string s ->
-              Some C_CONCAT
-            | _ -> None )
-        | {expression_content = E_variable _; type_expression = texpr ; location = _} ->
-            if is_t_string texpr then
-              Some C_CONCAT
-            else
-              None
-        | _ -> None in
-      let cst =
-        Option.value ~default:S.C_ADD @@ List.find_map lst' ~f:decide in
-      let (name', tv) =
-        type_constant ~raise ~options cst e.location tv_lst tv_opt in
-      return (E_constant {cons_name=name';arguments=lst'}) tv
+      let any_string = List.exists tv_lst ~f:is_t_string in
+      let any_bytes = List.exists tv_lst ~f:is_t_bytes in
+      if any_string then
+        let l = List.nth_exn lst' 0 in
+        let r = List.nth_exn lst' 1 in
+        return (e_concat (t_string ()) l r) (t_string ())
+      else if any_bytes then
+        let l = List.nth_exn lst' 0 in
+        let r = List.nth_exn lst' 1 in
+        return (e_concat (t_bytes ()) l r) (t_bytes ())
+      else
+        let (name', tv) =
+          type_constant ~raise ~options S.C_ADD e.location tv_lst tv_opt in
+        return (E_constant {cons_name=name';arguments=lst'}) tv
   | E_constant {cons_name = C_POLYMORPHIC_SUB;arguments} ->
       let lst' = List.map ~f:(type_expression' ~raise ~options (app_context, context)) arguments in
       let tv_lst = List.map ~f:get_type lst' in

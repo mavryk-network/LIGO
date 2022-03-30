@@ -27,6 +27,7 @@ end
 module Bytes = struct
    [@inline] let concat (p : bytes * bytes) : bytes = [%Michelson ({| { UNPAIR ; CONCAT } |} : bytes * bytes -> bytes)] p
    [@inline] let sub (sli : nat * nat * bytes) : bytes = [%Michelson ({| { UNPAIR  ; UNPAIR ; SLICE ; IF_NONE { PUSH string \"SLICE\" ; FAILWITH } {} } |} : nat * nat * bytes -> bytes)] sli
+   [@inline] let slice (sli : nat * nat * bytes) : bytes = [%Michelson ({| { UNPAIR  ; UNPAIR ; SLICE ; IF_NONE { PUSH string \"SLICE\" ; FAILWITH } {} } |} : nat * nat * bytes -> bytes)] sli
    [@inline] let pack (type a) (x : a) : bytes = [%Michelson ({| { PACK } |} : a -> bytes)] x
    [@inline] let length (b : bytes) : nat = [%Michelson ({| { SIZE } |} : bytes -> nat)] b
    (* let unpack (type a) (b : bytes) : a option = [%Michelson ({| { UNPACK } |} : bytes -> a option)] b *)
@@ -72,6 +73,7 @@ end
 module Bytes = struct
    [@inline] let concat (b : bytes) (c : bytes) : bytes = [%Michelson ({| { UNPAIR ; CONCAT } |} : bytes * bytes -> bytes)] (b, c)
    [@inline] let sub (start : nat) (length : nat) (input : bytes) : bytes = [%Michelson ({| { UNPAIR ; UNPAIR ; SLICE ; IF_NONE { PUSH string \"SLICE\" ; FAILWITH } {} } |} : nat * nat * bytes -> bytes)] (start, length, input)
+   [@inline] let slice (start : nat) (length : nat) (input : bytes) : bytes = [%Michelson ({| { UNPAIR ; UNPAIR ; SLICE ; IF_NONE { PUSH string \"SLICE\" ; FAILWITH } {} } |} : nat * nat * bytes -> bytes)] (start, length, input)
    [@inline] let pack (type a) (x : a) : bytes = [%Michelson ({| { PACK } |} : a -> bytes)] x
    [@inline] let length (b : bytes) : nat = [%Michelson ({| { SIZE } |} : bytes -> nat)] b
    (* let unpack (type a) (b : bytes) : a option = [%Michelson ({| { UNPACK } |} : bytes -> a option)] b *)

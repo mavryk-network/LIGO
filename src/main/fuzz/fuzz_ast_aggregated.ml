@@ -191,9 +191,10 @@ module Mutator = struct
     let mapper x =
         ({ const with cons_name = x }), true in
     let swapper cons_name arguments =
+      ignore arguments;
       match cons_name with
-      | C_CONCAT ->
-         [({cons_name;arguments=List.rev arguments}, true)]
+      (* | C_CONCAT ->
+       *    [({cons_name;arguments=List.rev arguments}, true)] *)
       | _ ->
          [] in
     [(const, false)] @ List.map ~f:mapper ops @ swapper cons_name arguments

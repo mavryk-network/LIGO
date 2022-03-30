@@ -236,7 +236,7 @@ let rec compile_expression ~(raise :Errors.abs_error Simple_utils.Trace.raise) :
     let (op,loc) = r_split c in
     let a = self op.arg1 in
     let b = self op.arg2 in
-    e_constant ~loc (Const C_CONCAT) [a;b]
+    e_constant ~loc (Const C_POLYMORPHIC_ADD) [a;b]
   | E_Verbatim str ->
     let (str, loc) = w_split str in
     e_verbatim ~loc str

@@ -2672,8 +2672,18 @@ let%expect_test _ =
            IF_NONE { PUSH string "SLICE" ; FAILWITH } {} })@(PAIR(PAIR(start ,
                                                                        length) ,
                                                                   input)))))[@inline] in
-    let #Bytes#length#37 = fun b -> (({ SIZE })@(b))[@inline] in
-    let #Foo#x#42 = L(54) in let #Foo#y#43 = #Foo#x#42 in L(unit) |}]
+    let #Bytes#slice#36 =
+      fun start ->
+      (fun length ->
+       (fun input ->
+        (({ UNPAIR ;
+           UNPAIR ;
+           SLICE ;
+           IF_NONE { PUSH string "SLICE" ; FAILWITH } {} })@(PAIR(PAIR(start ,
+                                                                       length) ,
+                                                                  input)))))[@inline] in
+    let #Bytes#length#38 = fun b -> (({ SIZE })@(b))[@inline] in
+    let #Foo#x#43 = L(54) in let #Foo#y#44 = #Foo#x#43 in L(unit) |}]
 
 let%expect_test _ =
   run_ligo_good [ "compile" ; "storage" ; contract "module_contract_simple.mligo" ; "999" ] ;

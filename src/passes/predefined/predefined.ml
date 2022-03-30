@@ -269,10 +269,7 @@ module Tree_abstraction = struct
 
     (* Bytes module *)
 
-    (* | C_BYTES_PACK   -> "Bytes.pack" *)
     | C_BYTES_UNPACK -> "Bytes.unpack"
-    | C_CONCAT       -> "Bytes.concat"
-    | C_SLICE        -> "Bytes.sub"
 
     (* List module *)
 
@@ -423,11 +420,7 @@ module Tree_abstraction = struct
 
       (* Bytes module *)
 
-      | "bytes_pack"   -> some_deprecated C_BYTES_PACK    (* Deprecated *)
       | "bytes_unpack" -> some_deprecated C_BYTES_UNPACK  (* Deprecated *)
-      | "bytes_concat" -> some_deprecated C_CONCAT        (* Deprecated *)
-      | "bytes_slice"  -> some_deprecated C_SLICE         (* Deprecated *)
-      | "Bytes.slice"  -> some_deprecated C_SLICE         (* Deprecated *)
 
       (* List module *)
 
@@ -465,11 +458,6 @@ module Tree_abstraction = struct
       | "bitwise_xor"         -> some_deprecated C_XOR     (* Deprecated *)
       | "bitwise_lsl"         -> some_deprecated C_LSL     (* Deprecated *)
       | "bitwise_lsr"         -> some_deprecated C_LSR     (* Deprecated *)
-
-      (* String module *)
-
-      | "string_slice"    -> some_deprecated C_SLICE    (* Deprecated *)
-      | "string_concat"   -> some_deprecated C_CONCAT   (* Deprecated *)
 
       (* Others *)
 
@@ -542,13 +530,6 @@ module Tree_abstraction = struct
       | "abs"              -> some_const C_ABS
       | "ediv"             -> some_const C_EDIV
       | "unit"             -> some_const C_UNIT
-
-      (* Bytes module *)
-
-      | "Bytes.slice"  -> some_deprecated C_SLICE      (* Deprecated *)
-
-      (* Set module *)
-      (* | "Set.size"     -> some_deprecated C_SIZE (\* Deprecated *\) *)
 
       (* Map module *)
       | "Map.find"     -> some_deprecated C_MAP_FIND     (* Deprecated *)
@@ -634,13 +615,6 @@ module Tree_abstraction = struct
       | "abs"              -> some_const C_ABS
       | "ediv"             -> some_const C_EDIV
       | "unit"             -> some_const C_UNIT
-
-      (* Bytes module *)
-
-      | "Bytes.slice"  -> some_deprecated C_SLICE      (* Deprecated *)
-
-      (* Set module *)
-      (* | "Set.size"     -> some_deprecated C_SIZE (\* Deprecated *\) *)
 
       (* Map module *)
       | "Map.find"     -> some_deprecated C_MAP_FIND     (* Deprecated *)
@@ -778,9 +752,6 @@ module Stacking = struct
     | C_SET_ADD            , _   -> Some ( simple_binary @@ seq [dip (i_push (prim "bool") (prim "True")) ; prim "UPDATE"])
     | C_SET_REMOVE         , _   -> Some ( simple_binary @@ seq [dip (i_push (prim "bool") (prim "False")) ; prim "UPDATE"])
     | C_SET_UPDATE         , _   -> Some ( simple_ternary @@ prim "UPDATE" )
-    | C_SLICE              , _   -> Some ( simple_ternary @@ seq [prim "SLICE" ; i_assert_some_msg (i_push_string "SLICE")])
-    | C_BYTES_PACK         , _   -> Some ( simple_unary @@ prim "PACK")
-    | C_CONCAT             , _   -> Some ( simple_binary @@ prim "CONCAT")
     | C_CHAIN_ID           , _   -> Some ( simple_constant @@ prim "CHAIN_ID")
     | C_LEVEL              , _   -> Some ( simple_constant @@ prim "LEVEL")
     | C_VOTING_POWER       , _   -> Some ( simple_unary @@ prim "VOTING_POWER")
