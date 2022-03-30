@@ -454,14 +454,6 @@ module Tree_abstraction = struct
 
       | "cons"             -> some_deprecated C_CONS (* Deprecated *)
 
-      (* Crypto module *)
-
-      | "crypto_check"    -> some_deprecated C_CHECK_SIGNATURE       (* Deprecated *)
-      | "crypto_hash_key" -> some_deprecated C_HASH_KEY              (* Deprecated *)
-      | "blake2b"         -> some_deprecated C_BLAKE2b               (* Deprecated *)
-      | "sha_256"         -> some_deprecated C_SHA256                (* Deprecated *)
-      | "sha_512"         -> some_deprecated C_SHA512                (* Deprecated *)
-
       (* Bytes module *)
 
       | "bytes_pack"   -> some_deprecated C_BYTES_PACK    (* Deprecated *)
@@ -828,16 +820,9 @@ module Stacking = struct
     | C_SET_REMOVE         , _   -> Some ( simple_binary @@ seq [dip (i_push (prim "bool") (prim "False")) ; prim "UPDATE"])
     | C_SET_UPDATE         , _   -> Some ( simple_ternary @@ prim "UPDATE" )
     | C_SLICE              , _   -> Some ( simple_ternary @@ seq [prim "SLICE" ; i_assert_some_msg (i_push_string "SLICE")])
-    | C_SHA256             , _   -> Some ( simple_unary @@ prim "SHA256")
-    | C_SHA512             , _   -> Some ( simple_unary @@ prim "SHA512")
-    | C_BLAKE2b            , _   -> Some ( simple_unary @@ prim "BLAKE2B")
-    | C_CHECK_SIGNATURE    , _   -> Some ( simple_ternary @@ prim "CHECK_SIGNATURE")
-    | C_HASH_KEY           , _   -> Some ( simple_unary @@ prim "HASH_KEY")
     | C_BYTES_PACK         , _   -> Some ( simple_unary @@ prim "PACK")
     | C_CONCAT             , _   -> Some ( simple_binary @@ prim "CONCAT")
     | C_CHAIN_ID           , _   -> Some ( simple_constant @@ prim "CHAIN_ID")
-    | C_SHA3               , _   -> Some ( simple_unary @@ prim "SHA3")
-    | C_KECCAK             , _   -> Some ( simple_unary @@ prim "KECCAK")
     | C_LEVEL              , _   -> Some ( simple_constant @@ prim "LEVEL")
     | C_VOTING_POWER       , _   -> Some ( simple_unary @@ prim "VOTING_POWER")
     | C_TOTAL_VOTING_POWER , _   -> Some ( simple_unary @@ prim "TOTAL_VOTING_POWER")

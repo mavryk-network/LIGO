@@ -165,14 +165,8 @@ type constant' =
   | C_BIG_MAP_EMPTY
   | C_BIG_MAP_LITERAL
   | C_BIG_MAP_GET_AND_UPDATE
-  (* Crypto *)
-  | C_SHA256
-  | C_SHA512
-  | C_BLAKE2b
-  | C_HASH_KEY
-  | C_CHECK_SIGNATURE
-  | C_CHAIN_ID
   (* Blockchain *)
+  | C_CHAIN_ID
   | C_CALL
   | C_CONTRACT
   | C_CONTRACT_OPT
@@ -238,8 +232,6 @@ type constant' =
   | C_TEST_REGISTER_CONSTANT [@only_interpreter]
   | C_TEST_CONSTANT_TO_MICHELSON [@only_interpreter]
   (* New with EDO*)
-  | C_SHA3
-  | C_KECCAK
   | C_LEVEL
   | C_VOTING_POWER
   | C_TOTAL_VOTING_POWER
