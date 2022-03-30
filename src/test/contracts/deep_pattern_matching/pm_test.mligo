@@ -5,10 +5,26 @@ type myd = One of myt | Two of myr
 let t1 = fun (x: myt * myt) ->
   let fr = fun (x: myt) -> 1 in
   let fl = fun (x: myt) -> 2 in
-  match x with
-  | Nil , ys  -> fr ys
+  match x  with
+   (* | (Nil , ys : myt * myt )  -> fr ys *)
+  | Nil (P_Ctor) , ys  -> fr ys
   | xs  , Nil -> fl xs
   | Cons (a,b) , Cons (c,d) -> a + b + c + d
+
+(* typing : checking.ml
+  1) write pattern_expr checking (matching_expr -> typed_matching_expr' ) & throw the result
+    - fold into matchee type at the same type as the parterns , you add (var->type) binding in the typing context for all P_var .. and then you type the bodies
+    - IN : patterns (as defined now) , OUT : typed_patterns
+  2) remove all type_assert_eq in pattern_matching.ml (dune runtest should pass)
+*)
+
+
+
+(* case analysis : (optional : self_ast_typed )
+  - src/test/contracts/deep_pattern_matching/pm_test.mligo
+*)
+
+(* pattern compilation (on typed_pattern) (Ast_typed -> Ast_cases) : Ast_typed  ; Ast_cases (new) ; Ast_aggregation *)
 
 // this essentially test variable substitution (see var rule)
 let t2 = fun (x: myt) (y: myt) ->

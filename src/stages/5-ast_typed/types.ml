@@ -114,7 +114,7 @@ and expression_content =
   | E_type_abstraction of expr type_abs
   (* Variant *)
   | E_constructor of constructor (* For user defined constructors *)
-  | E_matching of matching
+  | E_matching of matching (* TYPED patterns *)
   (* Record *)
   | E_record of expression_label_map
   | E_record_accessor of record_accessor

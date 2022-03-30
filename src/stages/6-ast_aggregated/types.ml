@@ -101,7 +101,7 @@ and expression_content =
   | E_type_inst of type_inst
   (* Variant *)
   | E_constructor of constructor (* For user defined constructors *)
-  | E_matching of matching
+  | E_matching of matching (* Ast_case ;; E_case *)
   (* Record *)
   | E_record of expression_label_map
   | E_record_accessor of record_accessor

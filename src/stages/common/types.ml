@@ -202,15 +202,27 @@ and 'ty_exp pattern_repr =
   | P_variant of label * 'ty_exp pattern
   | P_tuple of 'ty_exp pattern list
   | P_record of label list * 'ty_exp pattern list
+  (*
+  | P_ascription of 'ty_exp pattern_repr * ty_exp (* SOLUTION 1 *)
+  *)
 
 and 'ty_exp pattern = 'ty_exp pattern_repr Location.wrap
+
+
+(* and 'ty pattern = {
+    pattern_content: expression_content ;
+    location: location ;
+    (* SOLUTION 2 *)
+    type_expression: type_expression option (* <= AST_core *) ; 
+    type_expression: type_expression (* >= AST_typed *) ;
+  } *)
 
 type ('exp , 'ty_exp) match_case = {
   pattern : 'ty_exp pattern ;
   body : 'exp
 }
 
-type ('exp , 'ty_exp) match_exp = {
+type ('exp , 'ty_exp) match_exp = { (* it's worth to have ('exp , 'ty_exp, 'pattern) match_exp *)
   matchee : 'exp ;
   cases : ('exp , 'ty_exp) match_case list
 }

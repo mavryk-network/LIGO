@@ -61,7 +61,7 @@ and expression_content =
   | E_mod_in  of mod_in
   | E_raw_code of expr raw_code
   | E_constructor of expr constructor
-  | E_matching of matching_expr
+  | E_matching of matching_expr (* UNTYPED patterns *)
   | E_record of expression_label_map
   | E_record_accessor of expr record_accessor
   | E_record_update   of expr record_update
