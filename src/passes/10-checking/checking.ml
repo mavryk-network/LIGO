@@ -602,6 +602,8 @@ and type_expression' ~raise ~options : context -> ?tv_opt:O.type_expression -> I
     let rec typecheck_pattern (pattern : I.type_expression I.pattern) (expected_typ : O.type_expression) context = 
       match pattern.wrap_content, expected_typ.type_content with
       I.P_unit , O.T_constant { injection = Stage_common.Constant.Unit ; _ } -> context
+    | I.P_unit , _ -> 
+      raise.raise (wrong_type_for_unit_pattern pattern.location expected_typ)
     | I.P_var v , _ -> 
       let loc = I.ValueVar.get_location v.var in
       let () = Option.iter v.ascr ~f:(fun typ -> 
@@ -620,7 +622,13 @@ and type_expression' ~raise ~options : context -> ?tv_opt:O.type_expression -> I
     | I.P_list (I.List lst) , O.T_constant { injection = Stage_common.Constant.List ; parameters ; _ } ->
       let list_elt_typ = List.hd_exn parameters in (* TODO: dont use _exn*)
       let context = List.fold_left lst ~init:context ~f:(fun context pattern -> typecheck_pattern pattern list_elt_typ context) in
-      context  
+      context
+    (* TODO: change the option type in environment & abstractors & remove this case after that*)
+    | I.P_variant (label,pattern') , O.T_constant { injection = Stage_common.Constant.Option ; parameters = [proj_t] ; _} ->
+      (match label with
+        Label "Some" -> typecheck_pattern pattern' proj_t context
+      | Label "None" -> context
+      | Label _ -> raise.raise @@ pattern_do_not_conform_type pattern expected_typ)
     | I.P_variant (label,pattern) , O.T_sum sum_type ->
       let label_map = sum_type.content in
       let c = O.LMap.find_opt label label_map in
