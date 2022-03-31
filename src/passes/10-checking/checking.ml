@@ -655,21 +655,18 @@ and type_expression' ~raise ~options : context -> ?tv_opt:O.type_expression -> I
       context
     | _ -> raise.raise @@ pattern_do_not_conform_type pattern expected_typ
     in
-    let _ = List.fold_left cases ~init:context ~f:(fun context {pattern;body=_body} -> 
-      typecheck_pattern pattern matchee'.type_expression context) in
-    (* let _ = List.fold_left cases ~init:(matchee'.type_expression, tv_opt)
-      ~f:(fun (matchee_typ, body_typ_opt) {pattern;body} -> match pattern.wrap_content, matchee_typ.type_content with
-        I.P_unit , O.T_constant { injection = Stage_common.Constant.Unit ; _ } -> (matchee_typ, body_typ_opt)
-      | I.P_var _ , _ -> (matchee_typ, body_typ_opt) (* Add var, matchee_type in context and type the body *)
-      | I.P_list _ , O.T_constant { injection = Stage_common.Constant.List ; _ } -> (matchee_typ, body_typ_opt)
-      | I.P_variant (label,_) , O.T_sum sum_type -> 
-        let () = if O.LMap.mem label sum_type.content then ()
-        else raise.raise @@ pattern_do_not_conform_type p t in
-        (matchee_typ, body_typ_opt)
-      | I.P_tuple tupl , O.T_record record_type -> (matchee_typ, body_typ_opt) (* type check each element of tuple *)
-      | I.P_record (labels,patterns) , O.T_record record_type -> (matchee_typ, body_typ_opt)
-      | _ -> raise.raise @@ pattern_do_not_conform_type p t)
-    in *)
+    let _ = List.fold_left cases ~init:tv_opt ~f:(fun tv_opt {pattern;body} -> 
+      let context = typecheck_pattern pattern matchee'.type_expression context in
+      match tv_opt with
+        Some tv_opt -> 
+          (* let () = Format.printf "\n%a\n" Context.Typing.pp context in *)
+          (* let () = Format.printf "%a\n" O.PP.type_expression tv_opt in *)
+          let _ = type_expression' ~raise ~options (app_context, context) ~tv_opt body in
+          Some tv_opt
+      | None ->
+          let exp = type_expression' ~raise ~options (app_context, context) body in
+          Some exp.type_expression
+    ) in
     let aux : (I.expression, I.type_expression) I.match_case -> ((I.type_expression I.pattern * O.type_expression) list * (I.expression * typing_context)) =
       fun {pattern ; body} -> ([(pattern,matchee'.type_expression)], (body,context))
     in
