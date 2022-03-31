@@ -2,6 +2,7 @@ pattern matching
 - step 1 
   - separate type checking from pattern compilation
   - abstractor fix allow type ascriptions for patterns & check types of patterns
+  - maybe use local environment instead of substitution
 
    (* | (Nil , ys : myt * myt )  -> fr ys *)
 

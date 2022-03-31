@@ -599,32 +599,57 @@ and type_expression' ~raise ~options : context -> ?tv_opt:O.type_expression -> I
       2. if tv_opt is Some all rhs of patterns should match tv_opt
          else type of 1st pattern rhs should match all rhs of patterns
     *)
-    let rec typecheck_pattern (pattern : I.type_expression I.pattern) (typ : O.type_expression) context = 
-      match pattern.wrap_content, typ.type_content with
+    let rec typecheck_pattern (pattern : I.type_expression I.pattern) (expected_typ : O.type_expression) context = 
+      match pattern.wrap_content, expected_typ.type_content with
       I.P_unit , O.T_constant { injection = Stage_common.Constant.Unit ; _ } -> context
     | I.P_var v , _ -> 
-      (* TODO: assert v.ascr = typ *)
-      Context.Typing.add_value context v.var typ
-    | I.P_list (I.Cons (hd, tl)) , O.T_constant { injection = Stage_common.Constant.List ; parameters } ->
-       (*TODO: assert hd = parameters[0] - typecheck_pattern *)
-       (* TODO: assert tl = typ - typecheck_pattern *)
+      let loc = I.ValueVar.get_location v.var in
+      let () = Option.iter v.ascr ~f:(fun typ -> 
+        let av, tv = Ast_core.Helpers.destruct_for_alls typ in
+        let context = List.fold_right av ~f:(fun v c -> Typing_context.add_type_var c v ()) ~init:context in
+        let typ = evaluate_type ~raise context tv in
+        assert_type_expression_eq ~raise loc (typ,expected_typ)
+      ) in
+      Context.Typing.add_value context v.var expected_typ
+    | I.P_list (I.Cons (hd, tl)) , O.T_constant { injection = Stage_common.Constant.List ; parameters ; _ } ->
+      let list_elt_typ = List.hd_exn parameters in (* TODO: dont use _exn*)
+      let list_typ = expected_typ in
+      let context = typecheck_pattern hd list_elt_typ context in
+      let context = typecheck_pattern tl list_typ context in
       context
-    | I.P_list (I.List lst) , O.T_constant { injection = Stage_common.Constant.List ; parameters } ->
-      (*TODO: assert hlst[0] = parameters[0] - typecheck_pattern *)
+    | I.P_list (I.List lst) , O.T_constant { injection = Stage_common.Constant.List ; parameters ; _ } ->
+      let list_elt_typ = List.hd_exn parameters in (* TODO: dont use _exn*)
+      let context = List.fold_left lst ~init:context ~f:(fun context pattern -> typecheck_pattern pattern list_elt_typ context) in
       context  
-    | I.P_variant (label,pattern) , O.T_sum sum_type -> 
-      (* TODO: label in sum_typr.content *)
-      (* TODO: assert pattern sum_type.associated_type *)
+    | I.P_variant (label,pattern) , O.T_sum sum_type ->
+      let label_map = sum_type.content in
+      let c = O.LMap.find_opt label label_map in
+      let c = trace_option ~raise (pattern_do_not_conform_type pattern expected_typ) c in
+      let sum_typ = c.associated_type in
+      let context = typecheck_pattern pattern sum_typ context in
       context 
-    | I.P_tuple tupl , O.T_record record_type -> 
-      (* TODO: check how this is done in pattern_matching.ml *)
+    | I.P_tuple tupl , O.T_record record_type ->
+      let label_map = record_type.content in
+      let _, context = List.fold_left tupl ~init:(0, context) ~f:(fun (idx,context) pattern -> 
+        let c = O.LMap.find_opt (Label (string_of_int idx)) label_map in
+        let c = trace_option ~raise (pattern_do_not_conform_type pattern expected_typ) c in
+        let tupl_elt_typ = c.associated_type in
+        idx+1, typecheck_pattern pattern tupl_elt_typ context) in
       context
-    | I.P_record (labels,patterns) , O.T_record record_type -> 
-      (* TODO: check how this is done in pattern_matching.ml *)
+    | I.P_record (labels,patterns) , O.T_record record_type ->
+      let label_map = record_type.content in
+      let label_patterns = List.zip_exn labels patterns in (* TODO: dont use _exn*)
+      let context = List.fold_left label_patterns ~init:context ~f:(fun context (label,pattern) ->
+        let c = O.LMap.find_opt label label_map in
+        let c = trace_option ~raise (pattern_do_not_conform_type pattern expected_typ) c in
+        let field_typ = c.associated_type in
+        typecheck_pattern pattern field_typ context) in
       context
-    | _ -> raise.raise @@ pattern_do_not_conform_type pattern typ
+    | _ -> raise.raise @@ pattern_do_not_conform_type pattern expected_typ
     in
-    let _ = List.fold_left cases ~init:(matchee'.type_expression, tv_opt)
+    let _ = List.fold_left cases ~init:context ~f:(fun context {pattern;body=_body} -> 
+      typecheck_pattern pattern matchee'.type_expression context) in
+    (* let _ = List.fold_left cases ~init:(matchee'.type_expression, tv_opt)
       ~f:(fun (matchee_typ, body_typ_opt) {pattern;body} -> match pattern.wrap_content, matchee_typ.type_content with
         I.P_unit , O.T_constant { injection = Stage_common.Constant.Unit ; _ } -> (matchee_typ, body_typ_opt)
       | I.P_var _ , _ -> (matchee_typ, body_typ_opt) (* Add var, matchee_type in context and type the body *)
@@ -636,7 +661,7 @@ and type_expression' ~raise ~options : context -> ?tv_opt:O.type_expression -> I
       | I.P_tuple tupl , O.T_record record_type -> (matchee_typ, body_typ_opt) (* type check each element of tuple *)
       | I.P_record (labels,patterns) , O.T_record record_type -> (matchee_typ, body_typ_opt)
       | _ -> raise.raise @@ pattern_do_not_conform_type p t)
-    in
+    in *)
     let aux : (I.expression, I.type_expression) I.match_case -> ((I.type_expression I.pattern * O.type_expression) list * (I.expression * typing_context)) =
       fun {pattern ; body} -> ([(pattern,matchee'.type_expression)], (body,context))
     in
