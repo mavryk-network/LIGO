@@ -7,7 +7,7 @@ let t1 = fun (x: myt * myt) ->
   let fl = fun (x: myt) -> 2 in
   match x  with
    (* | (Nil , ys : myt * myt )  -> fr ys *)
-  | Nil (P_Ctor) , ys  -> fr ys
+  | Nil , ys  -> fr ys
   | xs  , Nil -> fl xs
   | Cons (a,b) , Cons (c,d) -> a + b + c + d
 

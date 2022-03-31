@@ -647,11 +647,11 @@ and type_expression' ~raise ~options : context -> ?tv_opt:O.type_expression -> I
     | I.P_record (labels,patterns) , O.T_record record_type ->
       let label_map = record_type.content in
       let label_patterns = List.zip_exn labels patterns in (* TODO: dont use _exn*)
-      let context = List.fold_left label_patterns ~init:context ~f:(fun context (label,pattern) ->
+      let context = List.fold_left label_patterns ~init:context ~f:(fun context (label,pattern') ->
         let c = O.LMap.find_opt label label_map in
         let c = trace_option ~raise (pattern_do_not_conform_type pattern expected_typ) c in
         let field_typ = c.associated_type in
-        typecheck_pattern pattern field_typ context) in
+        typecheck_pattern pattern' field_typ context) in
       context
     | _ -> raise.raise @@ pattern_do_not_conform_type pattern expected_typ
     in
