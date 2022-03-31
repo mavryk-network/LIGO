@@ -638,11 +638,11 @@ and type_expression' ~raise ~options : context -> ?tv_opt:O.type_expression -> I
       context 
     | I.P_tuple tupl , O.T_record record_type ->
       let label_map = record_type.content in
-      let _, context = List.fold_left tupl ~init:(0, context) ~f:(fun (idx,context) pattern -> 
+      let _, context = List.fold_left tupl ~init:(0, context) ~f:(fun (idx,context) pattern' -> 
         let c = O.LMap.find_opt (Label (string_of_int idx)) label_map in
         let c = trace_option ~raise (pattern_do_not_conform_type pattern expected_typ) c in
         let tupl_elt_typ = c.associated_type in
-        idx+1, typecheck_pattern pattern tupl_elt_typ context) in
+        idx+1, typecheck_pattern pattern' tupl_elt_typ context) in
       context
     | I.P_record (labels,patterns) , O.T_record record_type ->
       let label_map = record_type.content in
