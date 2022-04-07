@@ -120,7 +120,7 @@ let rec decompile ~raise (v : value) (t : AST.type_expression) : AST.expression 
         get_string v in
       return (E_literal (Literal_signature n))
     )
-    | (Option, [o])  -> (
+    (* | (Option, [o])  -> (
         let opt =
           trace_option ~raise (wrong_mini_c_value t v) @@
           get_option v in
@@ -129,7 +129,7 @@ let rec decompile ~raise (v : value) (t : AST.type_expression) : AST.expression 
         | Some s ->
             let s' = self s o in
             (e_a_some s')
-      )
+      ) *)
     | (Map, [k_ty;v_ty])  -> (
         let map =
           trace_option ~raise (wrong_mini_c_value t v) @@
@@ -204,7 +204,7 @@ let rec decompile ~raise (v : value) (t : AST.type_expression) : AST.expression 
     | ((Michelson_pair | Michelson_or),_) ->
       raise.raise @@ corner_case ~loc:"unspiller" "Michelson_combs t should not be present in mini-c"
     | ((Unit            | Nat                  | Tez             | Bytes    | Bls12_381_g1      | Bls12_381_g2     |
-        Bls12_381_fr    | Address              | Key             | Chain_id | Signature         | Option           |
+        Bls12_381_fr    | Address              | Key             | Chain_id | Signature         |
         Map             | Big_map              | Set             | Bool     | Baker_hash        | Pvss_key         | 
         Sapling_state   | Sapling_transaction  | Baker_operation | Never    | Michelson_program | Test_exec_result |
         Test_exec_error | Account              | Typed_address   | Mutation | Failure           | Chest            | 

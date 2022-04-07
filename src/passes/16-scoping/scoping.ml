@@ -332,7 +332,8 @@ and translate_constant (expr : I.constant) (ty : I.type_expression) env :
         return (Type_args (Some annot, []), arguments)
       | _ -> None
     )
-    | C_NONE | C_BYTES_UNPACK ->
+    (* | C_NONE  *)
+    | C_BYTES_UNPACK ->
       let* a = Mini_c.get_t_option ty in
       return (Type_args (None, [translate_type a]), expr.arguments)
     | C_NIL | C_LIST_EMPTY ->

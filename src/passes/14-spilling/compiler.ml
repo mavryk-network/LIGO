@@ -263,9 +263,9 @@ let rec compile_type ~raise (t:AST.type_expression) : type_expression =
     | (Contract, [x]) ->
       let x' = compile_type x in
       return (T_contract x')
-    | (Option, [o]) ->
+    (* | (Option, [o]) ->
       let o' = compile_type o in
-      return (T_option o')
+      return (T_option o') *)
     | (Map, [k;v]) ->
       let kv' = Pair.map ~f:compile_type (k, v) in
       return (T_map kv')
@@ -280,7 +280,7 @@ let rec compile_type ~raise (t:AST.type_expression) : type_expression =
     | (Set, [t]) ->
       let t' = compile_type t in
       return (T_set t')
-    | ((Michelson_or    | Option   | Chest_opening_result | Sapling_transaction |
+    | ((Michelson_or    | Chest_opening_result | Sapling_transaction |
         Test_exec_error | Ticket   | Michelson_program    | Sapling_state       |
         Contract        | Map      | Big_map              | Typed_address       |
         Michelson_pair  | Set      | Test_exec_result     | Account             | 
@@ -288,7 +288,7 @@ let rec compile_type ~raise (t:AST.type_expression) : type_expression =
         -> raise.raise @@ corner_case ~loc:__LOC__ "wrong constant"
     | ((Bool       | Unit      | Baker_operation      |
       Nat          | Timestamp | Michelson_or         |
-      Option       | String    | Chest_opening_result |
+      String    | Chest_opening_result |
       Address      | Operation | Bls12_381_fr         |
       Key_hash     | Chain_id  | Sapling_transaction  |
       Baker_hash   | Pvss_key  | Test_exec_error      |
@@ -427,6 +427,10 @@ let rec compile_expression ~raise (ae:AST.expression) : expression =
     return @@ E_constant { cons_name = C_TRUE ; arguments = [] }
   | E_constructor {constructor=Label name;element} when String.equal name "False" && Ast_aggregated.Compare.expression_content element.expression_content (AST.e_unit ()) = 0 ->
     return @@ E_constant { cons_name = C_FALSE ; arguments = [] }
+  | E_constructor {constructor=Label name;element} when String.equal name "None" && Ast_aggregated.Compare.expression_content element.expression_content (AST.e_unit ()) = 0 ->
+    return @@ E_constant { cons_name = C_NONE ; arguments = [] }
+  | E_constructor {constructor=Label name;element} when String.equal name "Some" ->
+    return @@ E_constant { cons_name = C_SOME ; arguments = [compile_expression ~raise element] }
   | E_constructor {constructor;element} -> (
     let ty' = compile_type ~raise ae.type_expression in
     let ty_variant =
@@ -633,7 +637,10 @@ let rec compile_expression ~raise (ae:AST.expression) : expression =
               (((hd,list_ty), (tl,expr'.type_expression)), cons_body')
             in
             return @@ E_if_cons (expr' , nil , cons)
-          | T_constant { injection = Stage_common.Constant.Option ; parameters = [opt_tv]; language=_ } ->
+          (* | T_constant { injection = Stage_common.Constant.Option ; parameters = [opt_tv]; language=_ } -> *)
+          | T_sum _ when Option.is_some (AST.get_t_option expr.type_expression) ->
+            (* let () = print_endline "\nWWWWWWWWWWWWWWWWWWWWWW\nAAAAAAAAAAAAAAAAAAAAA" in *)
+            let opt_tv = trace_option ~raise (corner_case ~loc:__LOC__ ("impossible")) @@ AST.get_t_option expr.type_expression in
             let get_c_body (case : AST.matching_content_case) = (case.constructor, (case.body, case.pattern)) in
             let c_body_lst = AST.LMap.of_list (List.map ~f:get_c_body cases) in
             let get_case c =
@@ -799,7 +806,10 @@ and compile_recursive ~raise {fun_name; fun_type; lambda} =
             (((hd,list_ty), (tl,expr'.type_expression)), cons_body')
           in
           return @@ E_if_cons (expr' , nil , cons)
-        | T_constant { injection = Stage_common.Constant.Option; parameters = [opt_tv] ; language=_} ->
+        (* | T_constant { injection = Stage_common.Constant.Option; parameters = [opt_tv] ; language=_} -> *)
+      | T_sum _ when Option.is_some (AST.get_t_option m.matchee.type_expression) ->
+          (* let () = print_endline "\nWWWWWWWWWWWWWWWWWWWWWW\nAAAAAAAAAAAAAAAAAAAAA" in *)
+          let opt_tv = trace_option ~raise (corner_case ~loc:__LOC__ ("impossible")) @@ AST.get_t_option m.matchee.type_expression in
           let get_c_body (case : AST.matching_content_case) = (case.constructor, (case.body, case.pattern)) in
           let c_body_lst = AST.LMap.of_list (List.map ~f:get_c_body cases) in
           let get_case c =

@@ -110,7 +110,7 @@ module Command = struct
       let ret = Michelson_to_value.decompile_to_untyped_value ~raise ~bigmaps:ctxt.transduced.bigmaps ret_ty ret_co in
       (ret, ctxt)
     | Unpack (loc, bytes, value_ty) ->
-      let value_ty = trace_option ~raise (Errors.generic_error loc "Expected return type is not an option" ) @@ Ast_aggregated.get_t_option value_ty in
+      let value_ty = trace_option ~raise (Errors.generic_error loc "Expected return type is not an option" ) @@ Obj.magic value_ty in
       let expr = Ast_aggregated.(e_a_unpack (e_a_bytes bytes) value_ty) in
       let mich = Michelson_backend.compile_value ~raise ~options expr in
       let (ret_co, ret_ty) = Michelson_backend.run_expression_unwrap ~raise ~ctxt ~loc mich in

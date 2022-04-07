@@ -643,7 +643,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t) : Location.
     | ( C_SET_UPDATE , _  ) -> fail @@ error_type
     | ( C_OPTION_MAP , [ V_Func_val {arg_binder ; body ; env ; rec_name=_ ; orig_lambda=_}  ; V_Construct ("Some" , v) ] ) ->
       let* opt_ty = monad_option (Errors.generic_error loc "Could not recover types") @@ List.nth types 1 in
-      let* ty = monad_option (Errors.generic_error opt_ty.location "Expected option type") @@ AST.get_t_option opt_ty in
+      let* ty = monad_option (Errors.generic_error opt_ty.location "Expected option type") @@ Obj.magic opt_ty in
       let* new_v =
         let env' = Env.extend env arg_binder (ty,v) in
         eval_ligo body calltrace env'
@@ -1191,7 +1191,7 @@ and eval_ligo ~raise ~steps ~options : AST.expression -> calltrace -> env -> val
                                   (Label matched_c) tv.content in
              return associated_type
           | None ->
-             match AST.get_t_option tv with
+             match Obj.magic tv with
              | Some tv -> return tv
              | None ->
                 fail @@

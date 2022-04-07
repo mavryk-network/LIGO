@@ -576,11 +576,11 @@ and type_expression' ~raise ~add_warning ~options : context -> ?tv_opt:O.type_ex
       let context = List.fold_left lst ~init:context ~f:(fun context pattern -> typecheck_pattern pattern list_elt_typ context) in
       context
     (* TODO: change the option type in environment & abstractors & remove this case after that*)
-    | I.P_variant (label,pattern') , O.T_constant { injection = Stage_common.Constant.Option ; parameters = [proj_t] ; _} ->
+    (* | I.P_variant (label,pattern') , O.T_constant { injection = Stage_common.Constant.Option ; parameters = [proj_t] ; _} ->
       (match label with
         Label "Some" -> typecheck_pattern pattern' proj_t context
       | Label "None" -> context
-      | Label _ -> raise.raise @@ pattern_do_not_conform_type pattern expected_typ)
+      | Label _ -> raise.raise @@ pattern_do_not_conform_type pattern expected_typ) *)
     | I.P_variant (label,pattern) , O.T_sum sum_type ->
       let label_map = sum_type.content in
       let c = O.LMap.find_opt label label_map in

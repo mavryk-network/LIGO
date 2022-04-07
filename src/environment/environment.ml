@@ -42,7 +42,7 @@ let basic_types : (type_variable * type_expression) list = [
     (v_int    , t_int                   ()) ;
     (v_nat    , t_nat                   ()) ;
     (v_unit   , t_unit                  ()) ;
-    (v_option , t_abstraction1 Option star) ; (* this will become T_sum *)
+    (v_option , t_option                ()) ;
   ]
 
 let michelson_base : (type_variable * type_expression) list = [

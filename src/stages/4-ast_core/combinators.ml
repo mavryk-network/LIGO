@@ -40,7 +40,7 @@ let t__type_ ?loc ?sugar () : type_expression = t_constant ?loc ?sugar _type_ []
 [@@map (_type_, ("signature","chain_id", "string", "bytes", "key", "key_hash", "int", "address", "operation", "nat", "tez", "timestamp", "unit", "bls12_381_g1", "bls12_381_g2", "bls12_381_fr", "never", "mutation", "failure", "pvss_key", "baker_hash", "chest_key", "chest"))]
 
 let t__type_ ?loc ?sugar t : type_expression = t_constant ?loc ?sugar _type_ [t]
-[@@map (_type_, ("option", "list", "set", "contract", "ticket"))]
+[@@map (_type_, ("list", "set", "contract", "ticket"))]
 
 let t__type_ ?loc ?sugar t t' : type_expression = t_constant ?loc ?sugar _type_ [t; t']
 [@@map (_type_, ("map", "big_map", "map_or_big_map", "typed_address"))]
@@ -154,8 +154,8 @@ let e_lambda_ez   ?loc ?sugar var ?ascr ?const_or_var output_type result        
 let e_let_in_ez   ?loc ?sugar var ?ascr ?const_or_var inline rhs let_result = e_let_in ?loc ?sugar {var;ascr;attributes={const_or_var}} rhs let_result inline
 
 (* Constants *)
-let e_some       ?loc ?sugar s        : expression = e_constant ?loc ?sugar C_SOME [s]
-let e_none       ?loc ?sugar ()       : expression = e_constant ?loc ?sugar C_NONE []
+(* let e_some       ?loc ?sugar s        : expression = e_constant ?loc ?sugar C_SOME [s] *)
+(* let e_none       ?loc ?sugar ()       : expression = e_constant ?loc ?sugar C_NONE [] *)
 let e_string_cat ?loc ?sugar sl sr    : expression = e_constant ?loc ?sugar C_CONCAT [sl; sr]
 let e_map_add    ?loc ?sugar k v old  : expression = e_constant ?loc ?sugar C_MAP_ADD [k; v; old]
 

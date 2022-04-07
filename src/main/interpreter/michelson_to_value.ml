@@ -215,14 +215,14 @@ let rec decompile_value ~raise ~(bigmaps : bigmap list) (v : value) (t : Ast_agg
       (String.equal language Stage_common.Backends.michelson)
     in
     match injection, parameters with
-    | (Option, [o]) -> (
+    (* | (Option, [o]) -> (
         let opt = trace_option ~raise (wrong_mini_c_value t v) @@ get_option v in
         match opt with
         | None -> v_none ()
         | Some s ->
             let s' = self s o in
             v_some s'
-      )
+      ) *)
     | (Map, [k_ty;v_ty]) -> (
         let map = trace_option ~raise (wrong_mini_c_value t v) @@ get_map v in
         let map' =
@@ -262,7 +262,7 @@ let rec decompile_value ~raise ~(bigmaps : bigmap list) (v : value) (t : Ast_agg
           List.map ~f:aux lst in
         V_Set lst'
       )
-    | ((Option       | Map           | Big_map             | List                 | Set              | Bool         |
+    | ((Map           | Big_map             | List                 | Set              | Bool         |
         String       | Bytes         | Int                 | Operation            | Nat              | Tez          |
         Unit         | Address       | Signature           | Key                  | Key_hash         | Timestamp    |
         Chain_id     | Contract      | Michelson_program   | Michelson_or         | Michelson_pair   | Baker_hash   |

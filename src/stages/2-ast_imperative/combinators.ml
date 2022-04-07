@@ -114,8 +114,8 @@ let e_bytes_hex_ez ?loc b : expression option =
 let e_bytes_raw ?loc (b: bytes) : expression = make_e ?loc @@ E_literal (Literal_bytes b)
 let e_bytes_hex ?loc b : expression = e_bytes_raw ?loc @@ Hex.to_bytes b
 let e_bytes_string ?loc (s: string) : expression = e_bytes_hex ?loc @@ Hex.of_string s
-let e_some ?loc s  : expression = make_e ?loc @@ E_constant {cons_name = Const C_SOME; arguments = [s]}
-let e_none ?loc () : expression = make_e ?loc @@ E_constant {cons_name = Const C_NONE; arguments = []}
+(* let e_some ?loc s  : expression = make_e ?loc @@ E_constant {cons_name = Const C_SOME; arguments = [s]} *)
+(* let e_none ?loc () : expression = make_e ?loc @@ E_constant {cons_name = Const C_NONE; arguments = []} *)
 let e_string_cat ?loc sl sr : expression = make_e ?loc @@ E_constant {cons_name = Const C_CONCAT; arguments = [sl ; sr ]}
 let e_map_add ?loc k v old  : expression = make_e ?loc @@ E_constant {cons_name = Const C_MAP_ADD; arguments = [k ; v ; old]}
 let e_add ?loc a b : expression = make_e ?loc @@ E_constant {cons_name = Const C_ADD; arguments = [a ; b]}
@@ -200,9 +200,9 @@ let e_set_remove ?loc ele set = e_constant ?loc (Const C_SET_REMOVE) [ele;set]
 let e_map_remove ?loc ele map = e_constant ?loc (Const C_MAP_REMOVE) [ele;map]
 let e_set_add ?loc ele set = e_constant ?loc (Const C_SET_ADD) [ele; set]
 
-let e_typed_none ?loc t_opt =
+(* let e_typed_none ?loc t_opt =
   let type_annotation = t_option t_opt in
-  e_annotation ?loc (e_none ?loc ()) type_annotation
+  e_annotation ?loc (e_none ?loc ()) type_annotation *)
 
 let e_typed_list ?loc lst t = e_annotation ?loc (e_list lst) (t_list t)
 let e_typed_list_literal ?loc lst t =
