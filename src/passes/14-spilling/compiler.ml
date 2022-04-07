@@ -263,9 +263,6 @@ let rec compile_type ~raise (t:AST.type_expression) : type_expression =
     | (Contract, [x]) ->
       let x' = compile_type x in
       return (T_contract x')
-    (* | (Option, [o]) ->
-      let o' = compile_type o in
-      return (T_option o') *)
     | (Map, [k;v]) ->
       let kv' = Pair.map ~f:compile_type (k, v) in
       return (T_map kv')
@@ -432,9 +429,12 @@ let rec compile_expression ~raise (ae:AST.expression) : expression =
   | E_constructor {constructor=Label name;element} when String.equal name "False" && Ast_aggregated.Compare.expression_content element.expression_content (AST.e_unit ()) = 0 ->
     return @@ E_constant { cons_name = C_FALSE ; arguments = [] }
   | E_constructor {constructor=Label name;element} when String.equal name "None" && Ast_aggregated.Compare.expression_content element.expression_content (AST.e_unit ()) = 0 ->
+    (* let () = Format.printf "-- %a \n" PP.type_expression tv in *)
     return @@ E_constant { cons_name = C_NONE ; arguments = [] }
   | E_constructor {constructor=Label name;element} when String.equal name "Some" ->
-    return @@ E_constant { cons_name = C_SOME ; arguments = [compile_expression ~raise element] }
+    let e = compile_expression ~raise element in
+    (* let () = Format.printf "-- %a -- %a -- %a \n" AST.PP.expression element PP.expression e PP.type_expression tv in *)
+    return @@ E_constant { cons_name = C_SOME ; arguments = [e] }
   | E_constructor {constructor;element} -> (
     let ty' = compile_type ~raise ae.type_expression in
     let ty_variant =
