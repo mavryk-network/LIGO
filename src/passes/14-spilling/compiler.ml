@@ -302,6 +302,10 @@ let rec compile_type ~raise (t:AST.type_expression) : type_expression =
       Mutation     | Bytes     | Failure              |
       List), _::_) -> raise.raise @@ corner_case ~loc:__LOC__ "wrong constant"
   )
+  | T_sum _ when Option.is_some (AST.get_t_option t) ->
+    let o = trace_option ~raise (corner_case ~loc:__LOC__ ("impossible")) @@ AST.get_t_option t in
+    let o' = compile_type o in
+    return (T_option o')
   | T_sum { content = m ; layout } -> (
       let open AST.Helpers in
       match is_michelson_or m with
