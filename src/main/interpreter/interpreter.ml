@@ -643,7 +643,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t) : Location.
     | ( C_SET_UPDATE , _  ) -> fail @@ error_type
     | ( C_OPTION_MAP , [ V_Func_val {arg_binder ; body ; env ; rec_name=_ ; orig_lambda=_}  ; V_Construct ("Some" , v) ] ) ->
       let* opt_ty = monad_option (Errors.generic_error loc "Could not recover types") @@ List.nth types 1 in
-      let* ty = monad_option (Errors.generic_error opt_ty.location "Expected option type") @@ Obj.magic opt_ty in
+      let* ty = monad_option (Errors.generic_error opt_ty.location "Expected option type") @@ AST.get_t_option opt_ty in
       let* new_v =
         let env' = Env.extend env arg_binder (ty,v) in
         eval_ligo body calltrace env'
@@ -1146,10 +1146,17 @@ and eval_ligo ~raise ~steps ~options : AST.expression -> calltrace -> env -> val
         arguments in
       apply_operator ~raise ~steps ~options term.location calltrace term.type_expression env cons_name arguments'
     )
-    | E_constructor { constructor = Label c ; element = { expression_content = E_literal (Literal_unit) ; _ } } when String.equal c "True" ->
+    | E_constructor { constructor = Label "True" ; element = { expression_content = E_literal (Literal_unit) ; _ } } ->
       return @@ V_Ct (C_bool true)
-    | E_constructor { constructor = Label c ; element = { expression_content = E_literal (Literal_unit) ; _ } } when String.equal c "False" ->
+    | E_constructor { constructor = Label "False" ; element = { expression_content = E_literal (Literal_unit) ; _ } } ->
       return @@ V_Ct (C_bool false)
+    | E_constructor { constructor = Label "Some" ; element } ->
+      (* let () = print_endline "AAAAAAAAAAAAAAAAAAAAA" in *)
+      let* v = eval_ligo element (term.location :: calltrace) env in
+      return @@ v_some v
+    | E_constructor { constructor = Label "None" ; element = { expression_content = E_literal (Literal_unit) ; _ } } ->
+      (* let () = print_endline "BBBBBBBBBBBBBBBBBBBBAAAAAAAAAAAAAAAAAAAAA" in *)
+      return @@ v_none ()
     | E_constructor { constructor = Label c ; element } ->
       let* v' = eval_ligo element calltrace env in
       return @@ V_Construct (c,v')
@@ -1191,7 +1198,7 @@ and eval_ligo ~raise ~steps ~options : AST.expression -> calltrace -> env -> val
                                   (Label matched_c) tv.content in
              return associated_type
           | None ->
-             match Obj.magic tv with
+             match AST.get_t_option tv with
              | Some tv -> return tv
              | None ->
                 fail @@

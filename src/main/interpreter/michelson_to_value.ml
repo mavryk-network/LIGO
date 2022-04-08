@@ -271,6 +271,7 @@ let rec decompile_value ~raise ~(bigmaps : bigmap list) (v : value) (t : Ast_agg
         Time         | Typed_address | Mutation            | Chest_opening_result | Chest_key        | Chest        |
         Failure), _) -> v
   )
+  | T_sum _ when (Option.is_some (Ast_aggregated.get_t_option t)) -> v
   | T_sum {layout ; content} ->
       let lst = List.map ~f:(fun (k,({associated_type;_} : _ row_element_mini_c)) -> (k,associated_type)) @@ Ast_aggregated.Helpers.kv_list_of_t_sum ~layout content in
       let (Label constructor, v, tv) = Layout.extract_constructor ~raise ~layout v lst in
