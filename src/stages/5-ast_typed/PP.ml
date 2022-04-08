@@ -155,6 +155,12 @@ and type_expression_orig ppf (te : type_expression) : unit =
   | None ->
      if Option.is_some (Combinators.get_t_bool te) then
        fprintf ppf "%a" type_variable Stage_common.Constant.v_bool
+     else if Option.is_some (Combinators.get_t_option te) then
+      (* TODO: this is ugly make this less ugly later *)
+      let t = Combinators.get_t_option te in
+      (match t with
+        Some t -> fprintf ppf "option (%a)" type_expression t
+      | None -> fprintf ppf "option")
      else
        fprintf ppf "%a" type_content_orig te.type_content
   | Some v ->

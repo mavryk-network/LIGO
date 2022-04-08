@@ -88,6 +88,18 @@ let get_t_bool (t:type_expression) : unit option = match t.type_content with
   | t when (Compare.type_content t (t_bool ()).type_content) = 0-> Some ()
   | _ -> None
 
+let get_t_option (t:type_expression) : type_expression option = match t.type_content with
+  | T_sum {fields;_} ->
+    let keys = LMap.keys fields in
+    (match keys with
+      [Label "Some" ; Label "None"]
+    | [Label "None" ; Label "Some"] ->
+        let some = LMap.find (Label "Some") fields in
+        Some some.associated_type 
+    | _ -> None)
+  | _ -> None
+
+
 let tuple_of_record (m: _ LMap.t) =
   let aux i =
     let opt = LMap.find_opt (Label (string_of_int i)) m in
