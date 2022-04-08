@@ -85,7 +85,7 @@ let%expect_test _ =
       4 |
 
     Invalid type(s).
-    Expected: "list (string)", but got: "option ('a)". |} ] ;
+    Expected: "list (string)", but got: "toto". |} ] ;
 
   run_ligo_bad [ "compile" ; "contract" ; "../../test/contracts/negative/error_typer_3.mligo" ] ;
   [%expect {|
@@ -202,8 +202,8 @@ let%expect_test _ =
      46 |   in
 
     Invalid arguments.
-    Expected an argument of type ('a, option ('b), map ('a ,
-    'b)) or ('a, option ('b), big_map ('a ,
+    Expected an argument of type ('a, sum[None -> unit , Some -> 'b], map ('a ,
+    'b)) or ('a, sum[None -> unit , Some -> 'b], big_map ('a ,
     'b)), but got an argument of type int, record[controller -> address , owner -> address , profile -> bytes], big_map (int ,
     record[controller -> address , owner -> address , profile -> bytes]). |}]
 
@@ -252,8 +252,7 @@ let%expect_test _ =
       2 |
       3 | let main (x,y:bool * bool) = ([] : operation list), (None : option)
 
-    Invalid type(s).
-    Expected: "option", but got: "option ('a)". |} ]
+    Can't infer the type of this value, please add a type annotation. |} ]
 
 let%expect_test _ =
   run_ligo_bad [ "compile" ; "contract" ; "../../test/contracts/negative/will_be_ignored.mligo" ] ;

@@ -1161,90 +1161,90 @@ let%expect_test _ =
 
 let%expect_test _ =
   run_ligo_good [ "compile" ; "contract" ; contract "ticket_wallet.mligo" ] ;
-  [%expect {|
-{ parameter
-    (or (ticket %receive unit)
-        (pair %send (contract %destination (ticket unit)) (nat %amount) (address %ticketer))) ;
-  storage (pair (address %manager) (big_map %tickets address (ticket unit))) ;
-  code { PUSH mutez 0 ;
-         AMOUNT ;
-         COMPARE ;
-         EQ ;
-         IF {} { PUSH string "failed assertion" ; FAILWITH } ;
-         UNPAIR ;
-         SWAP ;
-         UNPAIR ;
-         DIG 2 ;
-         IF_LEFT
-           { READ_TICKET ;
-             CAR ;
-             DIG 3 ;
-             NONE (ticket unit) ;
-             DUP 3 ;
-             GET_AND_UPDATE ;
-             IF_NONE
-               { DIG 2 }
-               { DIG 3 ;
-                 PAIR ;
-                 JOIN_TICKETS ;
-                 IF_NONE { PUSH string "impossible?" ; FAILWITH } {} } ;
-             SOME ;
-             DIG 2 ;
-             GET_AND_UPDATE ;
-             DROP ;
-             SWAP ;
-             PAIR ;
-             NIL operation ;
-             PAIR }
-           { SWAP ;
-             DUP ;
-             DUG 2 ;
-             SENDER ;
+  [%expect{|
+    { parameter
+        (or (ticket %receive unit)
+            (pair %send (contract %destination (ticket unit)) (nat %amount) (address %ticketer))) ;
+      storage (pair (address %manager) (big_map %tickets address (ticket unit))) ;
+      code { PUSH mutez 0 ;
+             AMOUNT ;
              COMPARE ;
              EQ ;
              IF {} { PUSH string "failed assertion" ; FAILWITH } ;
+             UNPAIR ;
+             SWAP ;
+             UNPAIR ;
              DIG 2 ;
-             NONE (ticket unit) ;
-             DUP 3 ;
-             GET 4 ;
-             GET_AND_UPDATE ;
-             IF_NONE
-               { DROP 3 ; PUSH string "no tickets" ; FAILWITH }
+             IF_LEFT
                { READ_TICKET ;
-                 CDR ;
-                 CDR ;
-                 DUP 4 ;
-                 GET 3 ;
-                 DUP ;
+                 CAR ;
+                 DIG 3 ;
+                 NONE (ticket unit) ;
+                 DUP 3 ;
+                 GET_AND_UPDATE ;
+                 IF_NONE
+                   { DIG 2 }
+                   { DIG 3 ;
+                     PAIR ;
+                     JOIN_TICKETS ;
+                     IF_NONE { PUSH string "impossible?" ; FAILWITH } {} } ;
+                 SOME ;
                  DIG 2 ;
-                 SUB ;
-                 ISNAT ;
-                 IF_NONE { PUSH string "not enough tickets" ; FAILWITH } {} ;
+                 GET_AND_UPDATE ;
+                 DROP ;
                  SWAP ;
                  PAIR ;
-                 SWAP ;
-                 SPLIT_TICKET ;
+                 NIL operation ;
+                 PAIR }
+               { SWAP ;
+                 DUP ;
+                 DUG 2 ;
+                 SENDER ;
+                 COMPARE ;
+                 EQ ;
+                 IF {} { PUSH string "failed assertion" ; FAILWITH } ;
+                 DIG 2 ;
+                 NONE (ticket unit) ;
+                 DUP 3 ;
+                 GET 4 ;
+                 GET_AND_UPDATE ;
                  IF_NONE
-                   { DROP 3 ; PUSH string "impossible?" ; FAILWITH }
-                   { UNPAIR ;
-                     DUG 2 ;
-                     SOME ;
+                   { DROP 3 ; PUSH string "no tickets" ; FAILWITH }
+                   { READ_TICKET ;
+                     CDR ;
+                     CDR ;
                      DUP 4 ;
-                     GET 4 ;
-                     GET_AND_UPDATE ;
-                     DROP ;
+                     GET 3 ;
+                     DUP ;
                      DIG 2 ;
-                     CAR ;
-                     PUSH mutez 0 ;
-                     DIG 3 ;
-                     TRANSFER_TOKENS ;
+                     SUB ;
+                     ISNAT ;
+                     IF_NONE { PUSH string "not enough tickets" ; FAILWITH } {} ;
                      SWAP ;
-                     DIG 2 ;
                      PAIR ;
-                     NIL operation ;
-                     DIG 2 ;
-                     CONS ;
-                     PAIR } } } } } |} ]
+                     SWAP ;
+                     SPLIT_TICKET ;
+                     IF_NONE
+                       { DROP 3 ; PUSH string "impossible?" ; FAILWITH }
+                       { UNPAIR ;
+                         DUG 2 ;
+                         SOME ;
+                         DUP 4 ;
+                         GET 4 ;
+                         GET_AND_UPDATE ;
+                         DROP ;
+                         DIG 2 ;
+                         CAR ;
+                         PUSH mutez 0 ;
+                         DIG 3 ;
+                         TRANSFER_TOKENS ;
+                         SWAP ;
+                         DIG 2 ;
+                         PAIR ;
+                         NIL operation ;
+                         DIG 2 ;
+                         CONS ;
+                         PAIR } } } } } |} ]
 
 let%expect_test _ =
   run_ligo_good [ "compile" ; "contract" ; contract "ticket_builder.mligo" ] ;
@@ -2389,90 +2389,90 @@ let%expect_test _ =
 (* Test compile contract with Big_map.get_and_update for Hangzhou *)
 let%expect_test _ =
   run_ligo_good [ "compile" ; "contract" ; contract "ticket_wallet.mligo" ; "--protocol"; "hangzhou" ] ;
-  [%expect {|
-{ parameter
-    (or (ticket %receive unit)
-        (pair %send (contract %destination (ticket unit)) (nat %amount) (address %ticketer))) ;
-  storage (pair (address %manager) (big_map %tickets address (ticket unit))) ;
-  code { PUSH mutez 0 ;
-         AMOUNT ;
-         COMPARE ;
-         EQ ;
-         IF {} { PUSH string "failed assertion" ; FAILWITH } ;
-         UNPAIR ;
-         SWAP ;
-         UNPAIR ;
-         DIG 2 ;
-         IF_LEFT
-           { READ_TICKET ;
-             CAR ;
-             DIG 3 ;
-             NONE (ticket unit) ;
-             DUP 3 ;
-             GET_AND_UPDATE ;
-             IF_NONE
-               { DIG 2 }
-               { DIG 3 ;
-                 PAIR ;
-                 JOIN_TICKETS ;
-                 IF_NONE { PUSH string "impossible?" ; FAILWITH } {} } ;
-             SOME ;
-             DIG 2 ;
-             GET_AND_UPDATE ;
-             DROP ;
-             SWAP ;
-             PAIR ;
-             NIL operation ;
-             PAIR }
-           { SWAP ;
-             DUP ;
-             DUG 2 ;
-             SENDER ;
+  [%expect{|
+    { parameter
+        (or (ticket %receive unit)
+            (pair %send (contract %destination (ticket unit)) (nat %amount) (address %ticketer))) ;
+      storage (pair (address %manager) (big_map %tickets address (ticket unit))) ;
+      code { PUSH mutez 0 ;
+             AMOUNT ;
              COMPARE ;
              EQ ;
              IF {} { PUSH string "failed assertion" ; FAILWITH } ;
+             UNPAIR ;
+             SWAP ;
+             UNPAIR ;
              DIG 2 ;
-             NONE (ticket unit) ;
-             DUP 3 ;
-             GET 4 ;
-             GET_AND_UPDATE ;
-             IF_NONE
-               { DROP 3 ; PUSH string "no tickets" ; FAILWITH }
+             IF_LEFT
                { READ_TICKET ;
-                 CDR ;
-                 CDR ;
-                 DUP 4 ;
-                 GET 3 ;
-                 DUP ;
+                 CAR ;
+                 DIG 3 ;
+                 NONE (ticket unit) ;
+                 DUP 3 ;
+                 GET_AND_UPDATE ;
+                 IF_NONE
+                   { DIG 2 }
+                   { DIG 3 ;
+                     PAIR ;
+                     JOIN_TICKETS ;
+                     IF_NONE { PUSH string "impossible?" ; FAILWITH } {} } ;
+                 SOME ;
                  DIG 2 ;
-                 SUB ;
-                 ISNAT ;
-                 IF_NONE { PUSH string "not enough tickets" ; FAILWITH } {} ;
+                 GET_AND_UPDATE ;
+                 DROP ;
                  SWAP ;
                  PAIR ;
-                 SWAP ;
-                 SPLIT_TICKET ;
+                 NIL operation ;
+                 PAIR }
+               { SWAP ;
+                 DUP ;
+                 DUG 2 ;
+                 SENDER ;
+                 COMPARE ;
+                 EQ ;
+                 IF {} { PUSH string "failed assertion" ; FAILWITH } ;
+                 DIG 2 ;
+                 NONE (ticket unit) ;
+                 DUP 3 ;
+                 GET 4 ;
+                 GET_AND_UPDATE ;
                  IF_NONE
-                   { DROP 3 ; PUSH string "impossible?" ; FAILWITH }
-                   { UNPAIR ;
-                     DUG 2 ;
-                     SOME ;
+                   { DROP 3 ; PUSH string "no tickets" ; FAILWITH }
+                   { READ_TICKET ;
+                     CDR ;
+                     CDR ;
                      DUP 4 ;
-                     GET 4 ;
-                     GET_AND_UPDATE ;
-                     DROP ;
+                     GET 3 ;
+                     DUP ;
                      DIG 2 ;
-                     CAR ;
-                     PUSH mutez 0 ;
-                     DIG 3 ;
-                     TRANSFER_TOKENS ;
+                     SUB ;
+                     ISNAT ;
+                     IF_NONE { PUSH string "not enough tickets" ; FAILWITH } {} ;
                      SWAP ;
-                     DIG 2 ;
                      PAIR ;
-                     NIL operation ;
-                     DIG 2 ;
-                     CONS ;
-                     PAIR } } } } } |} ]
+                     SWAP ;
+                     SPLIT_TICKET ;
+                     IF_NONE
+                       { DROP 3 ; PUSH string "impossible?" ; FAILWITH }
+                       { UNPAIR ;
+                         DUG 2 ;
+                         SOME ;
+                         DUP 4 ;
+                         GET 4 ;
+                         GET_AND_UPDATE ;
+                         DROP ;
+                         DIG 2 ;
+                         CAR ;
+                         PUSH mutez 0 ;
+                         DIG 3 ;
+                         TRANSFER_TOKENS ;
+                         SWAP ;
+                         DIG 2 ;
+                         PAIR ;
+                         NIL operation ;
+                         DIG 2 ;
+                         CONS ;
+                         PAIR } } } } } |} ]
 
 (* source location comments *)
 let%expect_test _ =
@@ -2605,7 +2605,7 @@ let%expect_test _ =
                                                                                      gen#2 with
                                                                                      | ( _#4 , _#3 ) ->
                                                                                      ( LIST_EMPTY() , unit ) ,
-                       NONE() , 0mutez , unit)
+                       None(unit) , 0mutez , unit)
                      const foo =
                        let gen#11 = (c)@(unit) in  match gen#11 with
                                                     | ( _a , _b ) ->
@@ -2826,6 +2826,13 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_good [ "compile" ; "contract" ; contract "warning_ambiguous_ctor.mligo" ] ;
   [%expect{|
+File "../../test/contracts/warning_ambiguous_ctor.mligo", line 9, characters 61-64:
+  8 | (* here we expect a warning because both A constructor have the same parameter type *)
+  9 | let main = fun (() , (_: union_b)) -> ([]: operation list) , A 1
+
+The type of this value is ambiguous: Inferred type is union_b but could be of type union_a.
+Hint: You might want to add a type annotation.
+
 File "../../test/contracts/warning_ambiguous_ctor.mligo", line 9, characters 61-64:
   8 | (* here we expect a warning because both A constructor have the same parameter type *)
   9 | let main = fun (() , (_: union_b)) -> ([]: operation list) , A 1

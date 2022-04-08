@@ -53,12 +53,12 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_bad [ "print" ; "ast-typed" ; (bad_test "pm_fail5.ligo") ] ;
   [%expect{|
-    File "../../test/contracts/negative//deep_pattern_matching/pm_fail5.ligo", line 5, characters 4-17:
+    File "../../test/contracts/negative//deep_pattern_matching/pm_fail5.ligo", line 5, characters 15-16:
       4 |   case x of [
       5 |   | Some_fake (x) -> x
       6 |   | None_fake -> 1
 
-    Pattern not of the expected type option (int) |}]
+    Pattern not of the expected type sum[None -> unit , Some -> int] |}]
 
 (* wrong body type *)
 
@@ -76,13 +76,13 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_bad [ "print" ; "ast-typed" ; (bad_test "pm_fail8.ligo") ] ;
   [%expect{|
-    File "../../test/contracts/negative//deep_pattern_matching/pm_fail8.ligo", line 22, characters 17-24:
-     21 |             const f = function (const b:int) is b + a ;
+    File "../../test/contracts/negative//deep_pattern_matching/pm_fail8.ligo", line 23, characters 24-33:
      22 |           } with f (b+1)
      23 |         | Cons (a,b) -> "invalid"
+     24 |         ] ;
 
     Invalid type(s).
-    Expected: "string", but got: "int". |}]
+    Expected: "int", but got: "string". |}]
 
 
 (* rendundancy detected while compiling the pattern matching *)
@@ -150,157 +150,854 @@ let%expect_test _ =
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t1 (Nil,Nil)" ; "--init-file";(good_test "pm_test.ligo") ] ;
-  [%expect{|
-    1 |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
+  Called from Cli_expect_tests__Deep_pattern_matching_pascaligo.(fun) in file "src/bin/expect_tests/deep_pattern_matching_pascaligo.ml", line 152, characters 2-99
+  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
+
+  Trailing output
+  ---------------
+  File "../../test/contracts//deep_pattern_matching/pm_test.ligo", line 179, characters 35-49:
+  178 | const none_a = record [ a = (None:option(list(int))) ; b = list [42] ]
+  179 | const some_a = record [ a = (Some (list [1;2;3;4])) ; b = list [42] ]
+  180 | const a_empty_b_not = record [ a = Some ((list []: list(int))) ; b = list [111] ]
+
+  Invalid type(s).
+  Expected: "int", but got: "list (int)". |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t1 (Nil,Cons(1,2))" ; "--init-file";(good_test "pm_test.ligo") ] ;
-  [%expect{|
-    1 |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
+  Called from Cli_expect_tests__Deep_pattern_matching_pascaligo.(fun) in file "src/bin/expect_tests/deep_pattern_matching_pascaligo.ml", line 175, characters 2-105
+  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
+
+  Trailing output
+  ---------------
+  File "../../test/contracts//deep_pattern_matching/pm_test.ligo", line 179, characters 35-49:
+  178 | const none_a = record [ a = (None:option(list(int))) ; b = list [42] ]
+  179 | const some_a = record [ a = (Some (list [1;2;3;4])) ; b = list [42] ]
+  180 | const a_empty_b_not = record [ a = Some ((list []: list(int))) ; b = list [111] ]
+
+  Invalid type(s).
+  Expected: "int", but got: "list (int)". |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t1 (Cons(1,2),Nil)" ; "--init-file";(good_test "pm_test.ligo") ] ;
-  [%expect{|
-    2 |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
+  Called from Cli_expect_tests__Deep_pattern_matching_pascaligo.(fun) in file "src/bin/expect_tests/deep_pattern_matching_pascaligo.ml", line 198, characters 2-105
+  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
+
+  Trailing output
+  ---------------
+  File "../../test/contracts//deep_pattern_matching/pm_test.ligo", line 179, characters 35-49:
+  178 | const none_a = record [ a = (None:option(list(int))) ; b = list [42] ]
+  179 | const some_a = record [ a = (Some (list [1;2;3;4])) ; b = list [42] ]
+  180 | const a_empty_b_not = record [ a = Some ((list []: list(int))) ; b = list [111] ]
+
+  Invalid type(s).
+  Expected: "int", but got: "list (int)". |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t1 (Cons(1,2),Cons(3,4))" ; "--init-file";(good_test "pm_test.ligo") ] ;
-  [%expect{|
-    10 |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
+  Called from Cli_expect_tests__Deep_pattern_matching_pascaligo.(fun) in file "src/bin/expect_tests/deep_pattern_matching_pascaligo.ml", line 221, characters 2-111
+  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
+
+  Trailing output
+  ---------------
+  File "../../test/contracts//deep_pattern_matching/pm_test.ligo", line 179, characters 35-49:
+  178 | const none_a = record [ a = (None:option(list(int))) ; b = list [42] ]
+  179 | const some_a = record [ a = (Some (list [1;2;3;4])) ; b = list [42] ]
+  180 | const a_empty_b_not = record [ a = Some ((list []: list(int))) ; b = list [111] ]
+
+  Invalid type(s).
+  Expected: "int", but got: "list (int)". |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t2 (Nil, Nil)" ; "--init-file" ; (good_test "pm_test.ligo") ] ;
-  [%expect{| 1 |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
+  Called from Cli_expect_tests__Deep_pattern_matching_pascaligo.(fun) in file "src/bin/expect_tests/deep_pattern_matching_pascaligo.ml", line 244, characters 2-102
+  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
+
+  Trailing output
+  ---------------
+  File "../../test/contracts//deep_pattern_matching/pm_test.ligo", line 179, characters 35-49:
+  178 | const none_a = record [ a = (None:option(list(int))) ; b = list [42] ]
+  179 | const some_a = record [ a = (Some (list [1;2;3;4])) ; b = list [42] ]
+  180 | const a_empty_b_not = record [ a = Some ((list []: list(int))) ; b = list [111] ]
+
+  Invalid type(s).
+  Expected: "int", but got: "list (int)". |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t2 (Nil, (Cons (1,2)))" ; "--init-file" ; (good_test "pm_test.ligo") ] ;
-  [%expect{| 3 |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
+  Called from Cli_expect_tests__Deep_pattern_matching_pascaligo.(fun) in file "src/bin/expect_tests/deep_pattern_matching_pascaligo.ml", line 267, characters 2-111
+  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
+
+  Trailing output
+  ---------------
+  File "../../test/contracts//deep_pattern_matching/pm_test.ligo", line 179, characters 35-49:
+  178 | const none_a = record [ a = (None:option(list(int))) ; b = list [42] ]
+  179 | const some_a = record [ a = (Some (list [1;2;3;4])) ; b = list [42] ]
+  180 | const a_empty_b_not = record [ a = Some ((list []: list(int))) ; b = list [111] ]
+
+  Invalid type(s).
+  Expected: "int", but got: "list (int)". |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t2 (Cons(1,2) , Cons(1,2))" ; "--init-file" ; (good_test "pm_test.ligo") ] ;
-  [%expect{| 6 |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
+  Called from Cli_expect_tests__Deep_pattern_matching_pascaligo.(fun) in file "src/bin/expect_tests/deep_pattern_matching_pascaligo.ml", line 290, characters 2-115
+  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
+
+  Trailing output
+  ---------------
+  File "../../test/contracts//deep_pattern_matching/pm_test.ligo", line 179, characters 35-49:
+  178 | const none_a = record [ a = (None:option(list(int))) ; b = list [42] ]
+  179 | const some_a = record [ a = (Some (list [1;2;3;4])) ; b = list [42] ]
+  180 | const a_empty_b_not = record [ a = Some ((list []: list(int))) ; b = list [111] ]
+
+  Invalid type(s).
+  Expected: "int", but got: "list (int)". |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t2 (Cons(1,2) , Nil)" ; "--init-file" ; (good_test "pm_test.ligo") ] ;
-  [%expect{| 7 |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
+  Called from Cli_expect_tests__Deep_pattern_matching_pascaligo.(fun) in file "src/bin/expect_tests/deep_pattern_matching_pascaligo.ml", line 313, characters 2-109
+  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
+
+  Trailing output
+  ---------------
+  File "../../test/contracts//deep_pattern_matching/pm_test.ligo", line 179, characters 35-49:
+  178 | const none_a = record [ a = (None:option(list(int))) ; b = list [42] ]
+  179 | const some_a = record [ a = (Some (list [1;2;3;4])) ; b = list [42] ]
+  180 | const a_empty_b_not = record [ a = Some ((list []: list(int))) ; b = list [111] ]
+
+  Invalid type(s).
+  Expected: "int", but got: "list (int)". |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t3 (One (Nil))" ; "--init-file" ; (good_test "pm_test.ligo") ] ;
-  [%expect{|
-    1 |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
+  Called from Cli_expect_tests__Deep_pattern_matching_pascaligo.(fun) in file "src/bin/expect_tests/deep_pattern_matching_pascaligo.ml", line 336, characters 2-103
+  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
+
+  Trailing output
+  ---------------
+  File "../../test/contracts//deep_pattern_matching/pm_test.ligo", line 179, characters 35-49:
+  178 | const none_a = record [ a = (None:option(list(int))) ; b = list [42] ]
+  179 | const some_a = record [ a = (Some (list [1;2;3;4])) ; b = list [42] ]
+  180 | const a_empty_b_not = record [ a = Some ((list []: list(int))) ; b = list [111] ]
+
+  Invalid type(s).
+  Expected: "int", but got: "list (int)". |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t3 (One (Cons(1,2)))" ; "--init-file" ; (good_test "pm_test.ligo") ] ;
-  [%expect{|
-    3 |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
+  Called from Cli_expect_tests__Deep_pattern_matching_pascaligo.(fun) in file "src/bin/expect_tests/deep_pattern_matching_pascaligo.ml", line 359, characters 2-109
+  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
+
+  Trailing output
+  ---------------
+  File "../../test/contracts//deep_pattern_matching/pm_test.ligo", line 179, characters 35-49:
+  178 | const none_a = record [ a = (None:option(list(int))) ; b = list [42] ]
+  179 | const some_a = record [ a = (Some (list [1;2;3;4])) ; b = list [42] ]
+  180 | const a_empty_b_not = record [ a = Some ((list []: list(int))) ; b = list [111] ]
+
+  Invalid type(s).
+  Expected: "int", but got: "list (int)". |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t3 (Two (record [a = 1 ; b = 2n ; c = \"tri\"]))" ; "--init-file" ; (good_test "pm_test.ligo") ] ;
-  [%expect{| 6 |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
+  Called from Cli_expect_tests__Deep_pattern_matching_pascaligo.(fun) in file "src/bin/expect_tests/deep_pattern_matching_pascaligo.ml", line 382, characters 2-137
+  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
+
+  Trailing output
+  ---------------
+  File "../../test/contracts//deep_pattern_matching/pm_test.ligo", line 179, characters 35-49:
+  178 | const none_a = record [ a = (None:option(list(int))) ; b = list [42] ]
+  179 | const some_a = record [ a = (Some (list [1;2;3;4])) ; b = list [42] ]
+  180 | const a_empty_b_not = record [ a = Some ((list []: list(int))) ; b = list [111] ]
+
+  Invalid type(s).
+  Expected: "int", but got: "list (int)". |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t2_3 (Cons(1,2) , Nil, (One(Nil)))" ; "--init-file" ; (good_test "pm_test.ligo") ] ;
-  [%expect{| 8 |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
+  Called from Cli_expect_tests__Deep_pattern_matching_pascaligo.(fun) in file "src/bin/expect_tests/deep_pattern_matching_pascaligo.ml", line 405, characters 2-123
+  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
+
+  Trailing output
+  ---------------
+  File "../../test/contracts//deep_pattern_matching/pm_test.ligo", line 179, characters 35-49:
+  178 | const none_a = record [ a = (None:option(list(int))) ; b = list [42] ]
+  179 | const some_a = record [ a = (Some (list [1;2;3;4])) ; b = list [42] ]
+  180 | const a_empty_b_not = record [ a = Some ((list []: list(int))) ; b = list [111] ]
+
+  Invalid type(s).
+  Expected: "int", but got: "list (int)". |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t4 (One(Nil) , One (Nil))" ; "--init-file" ; (good_test "pm_test.ligo") ] ;
-  [%expect{| 1 |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
+  Called from Cli_expect_tests__Deep_pattern_matching_pascaligo.(fun) in file "src/bin/expect_tests/deep_pattern_matching_pascaligo.ml", line 428, characters 2-114
+  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
+
+  Trailing output
+  ---------------
+  File "../../test/contracts//deep_pattern_matching/pm_test.ligo", line 179, characters 35-49:
+  178 | const none_a = record [ a = (None:option(list(int))) ; b = list [42] ]
+  179 | const some_a = record [ a = (Some (list [1;2;3;4])) ; b = list [42] ]
+  180 | const a_empty_b_not = record [ a = Some ((list []: list(int))) ; b = list [111] ]
+
+  Invalid type(s).
+  Expected: "int", but got: "list (int)". |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t4 (One(Nil) , Two (record [a=1;b=2n;c=\"tri\"]))" ; "--init-file" ; (good_test "pm_test.ligo") ] ;
-  [%expect{| 2 |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
+  Called from Cli_expect_tests__Deep_pattern_matching_pascaligo.(fun) in file "src/bin/expect_tests/deep_pattern_matching_pascaligo.ml", line 451, characters 2-138
+  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
+
+  Trailing output
+  ---------------
+  File "../../test/contracts//deep_pattern_matching/pm_test.ligo", line 179, characters 35-49:
+  178 | const none_a = record [ a = (None:option(list(int))) ; b = list [42] ]
+  179 | const some_a = record [ a = (Some (list [1;2;3;4])) ; b = list [42] ]
+  180 | const a_empty_b_not = record [ a = Some ((list []: list(int))) ; b = list [111] ]
+
+  Invalid type(s).
+  Expected: "int", but got: "list (int)". |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t4 (One(Cons(1,2)) , Two (record [ a=1;b=2n;c=\"tri\"]))" ; "--init-file" ; (good_test "pm_test.ligo") ] ;
-  [%expect{| 3 |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
+  Called from Cli_expect_tests__Deep_pattern_matching_pascaligo.(fun) in file "src/bin/expect_tests/deep_pattern_matching_pascaligo.ml", line 474, characters 2-145
+  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
+
+  Trailing output
+  ---------------
+  File "../../test/contracts//deep_pattern_matching/pm_test.ligo", line 179, characters 35-49:
+  178 | const none_a = record [ a = (None:option(list(int))) ; b = list [42] ]
+  179 | const some_a = record [ a = (Some (list [1;2;3;4])) ; b = list [42] ]
+  180 | const a_empty_b_not = record [ a = Some ((list []: list(int))) ; b = list [111] ]
+
+  Invalid type(s).
+  Expected: "int", but got: "list (int)". |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t4 (Two (record [a=0;b=0n;c=\"\"]) , Two (record [ a=1;b=2n;c=\"tri\"]))" ; "--init-file" ; (good_test "pm_test.ligo") ] ;
-  [%expect{| 4 |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
+  Called from Cli_expect_tests__Deep_pattern_matching_pascaligo.(fun) in file "src/bin/expect_tests/deep_pattern_matching_pascaligo.ml", line 497, characters 2-161
+  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
+
+  Trailing output
+  ---------------
+  File "../../test/contracts//deep_pattern_matching/pm_test.ligo", line 179, characters 35-49:
+  178 | const none_a = record [ a = (None:option(list(int))) ; b = list [42] ]
+  179 | const some_a = record [ a = (Some (list [1;2;3;4])) ; b = list [42] ]
+  180 | const a_empty_b_not = record [ a = Some ((list []: list(int))) ; b = list [111] ]
+
+  Invalid type(s).
+  Expected: "int", but got: "list (int)". |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t5 (1)" ; "--init-file" ; (good_test "pm_test.ligo") ] ;
-  [%expect{| 1 |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
+  Called from Cli_expect_tests__Deep_pattern_matching_pascaligo.(fun) in file "src/bin/expect_tests/deep_pattern_matching_pascaligo.ml", line 520, characters 2-95
+  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
+
+  Trailing output
+  ---------------
+  File "../../test/contracts//deep_pattern_matching/pm_test.ligo", line 179, characters 35-49:
+  178 | const none_a = record [ a = (None:option(list(int))) ; b = list [42] ]
+  179 | const some_a = record [ a = (Some (list [1;2;3;4])) ; b = list [42] ]
+  180 | const a_empty_b_not = record [ a = Some ((list []: list(int))) ; b = list [111] ]
+
+  Invalid type(s).
+  Expected: "int", but got: "list (int)". |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t6 (42)" ; "--init-file" ; (good_test "pm_test.ligo") ] ;
-  [%expect{| 2 |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
+  Called from Cli_expect_tests__Deep_pattern_matching_pascaligo.(fun) in file "src/bin/expect_tests/deep_pattern_matching_pascaligo.ml", line 543, characters 2-96
+  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
+
+  Trailing output
+  ---------------
+  File "../../test/contracts//deep_pattern_matching/pm_test.ligo", line 179, characters 35-49:
+  178 | const none_a = record [ a = (None:option(list(int))) ; b = list [42] ]
+  179 | const some_a = record [ a = (Some (list [1;2;3;4])) ; b = list [42] ]
+  180 | const a_empty_b_not = record [ a = Some ((list []: list(int))) ; b = list [111] ]
+
+  Invalid type(s).
+  Expected: "int", but got: "list (int)". |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t7 (Some (10))" ; "--init-file" ; (good_test "pm_test.ligo") ] ;
-  [%expect{| 10 |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
+  Called from Cli_expect_tests__Deep_pattern_matching_pascaligo.(fun) in file "src/bin/expect_tests/deep_pattern_matching_pascaligo.ml", line 566, characters 2-103
+  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
+
+  Trailing output
+  ---------------
+  File "../../test/contracts//deep_pattern_matching/pm_test.ligo", line 179, characters 35-49:
+  178 | const none_a = record [ a = (None:option(list(int))) ; b = list [42] ]
+  179 | const some_a = record [ a = (Some (list [1;2;3;4])) ; b = list [42] ]
+  180 | const a_empty_b_not = record [ a = Some ((list []: list(int))) ; b = list [111] ]
+
+  Invalid type(s).
+  Expected: "int", but got: "list (int)". |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t7 ((None: option(int)))" ; "--init-file" ; (good_test "pm_test.ligo") ] ;
-  [%expect{| 1 |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
+  Called from Cli_expect_tests__Deep_pattern_matching_pascaligo.(fun) in file "src/bin/expect_tests/deep_pattern_matching_pascaligo.ml", line 589, characters 2-113
+  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
+
+  Trailing output
+  ---------------
+  File "../../test/contracts//deep_pattern_matching/pm_test.ligo", line 179, characters 35-49:
+  178 | const none_a = record [ a = (None:option(list(int))) ; b = list [42] ]
+  179 | const some_a = record [ a = (Some (list [1;2;3;4])) ; b = list [42] ]
+  180 | const a_empty_b_not = record [ a = Some ((list []: list(int))) ; b = list [111] ]
+
+  Invalid type(s).
+  Expected: "int", but got: "list (int)". |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t8 (Some (1,2), 2)" ; "--init-file" ; (good_test "pm_test.ligo") ] ;
-  [%expect{| 3 |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
+  Called from Cli_expect_tests__Deep_pattern_matching_pascaligo.(fun) in file "src/bin/expect_tests/deep_pattern_matching_pascaligo.ml", line 612, characters 2-107
+  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
+
+  Trailing output
+  ---------------
+  File "../../test/contracts//deep_pattern_matching/pm_test.ligo", line 179, characters 35-49:
+  178 | const none_a = record [ a = (None:option(list(int))) ; b = list [42] ]
+  179 | const some_a = record [ a = (Some (list [1;2;3;4])) ; b = list [42] ]
+  180 | const a_empty_b_not = record [ a = Some ((list []: list(int))) ; b = list [111] ]
+
+  Invalid type(s).
+  Expected: "int", but got: "list (int)". |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t8 ( (None: option(int * int)), 2)" ; "--init-file" ; (good_test "pm_test.ligo") ] ;
-  [%expect{| 2 |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
+  Called from Cli_expect_tests__Deep_pattern_matching_pascaligo.(fun) in file "src/bin/expect_tests/deep_pattern_matching_pascaligo.ml", line 635, characters 2-123
+  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
+
+  Trailing output
+  ---------------
+  File "../../test/contracts//deep_pattern_matching/pm_test.ligo", line 179, characters 35-49:
+  178 | const none_a = record [ a = (None:option(list(int))) ; b = list [42] ]
+  179 | const some_a = record [ a = (Some (list [1;2;3;4])) ; b = list [42] ]
+  180 | const a_empty_b_not = record [ a = Some ((list []: list(int))) ; b = list [111] ]
+
+  Invalid type(s).
+  Expected: "int", but got: "list (int)". |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t9 ((None:option(int)) , (None: option(int)))" ; "--init-file" ; (good_test "pm_test.ligo") ] ;
-  [%expect{| 1 |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
+  Called from Cli_expect_tests__Deep_pattern_matching_pascaligo.(fun) in file "src/bin/expect_tests/deep_pattern_matching_pascaligo.ml", line 658, characters 2-134
+  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
+
+  Trailing output
+  ---------------
+  File "../../test/contracts//deep_pattern_matching/pm_test.ligo", line 179, characters 35-49:
+  178 | const none_a = record [ a = (None:option(list(int))) ; b = list [42] ]
+  179 | const some_a = record [ a = (Some (list [1;2;3;4])) ; b = list [42] ]
+  180 | const a_empty_b_not = record [ a = Some ((list []: list(int))) ; b = list [111] ]
+
+  Invalid type(s).
+  Expected: "int", but got: "list (int)". |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t9 ((None: option(int)) , Some (1))" ; "--init-file" ; (good_test "pm_test.ligo") ] ;
-  [%expect{| 1 |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
+  Called from Cli_expect_tests__Deep_pattern_matching_pascaligo.(fun) in file "src/bin/expect_tests/deep_pattern_matching_pascaligo.ml", line 681, characters 2-124
+  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
+
+  Trailing output
+  ---------------
+  File "../../test/contracts//deep_pattern_matching/pm_test.ligo", line 179, characters 35-49:
+  178 | const none_a = record [ a = (None:option(list(int))) ; b = list [42] ]
+  179 | const some_a = record [ a = (Some (list [1;2;3;4])) ; b = list [42] ]
+  180 | const a_empty_b_not = record [ a = Some ((list []: list(int))) ; b = list [111] ]
+
+  Invalid type(s).
+  Expected: "int", but got: "list (int)". |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t9 (Some (1) , (None: option(int)))" ; "--init-file" ; (good_test "pm_test.ligo") ] ;
-  [%expect{| 2 |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
+  Called from Cli_expect_tests__Deep_pattern_matching_pascaligo.(fun) in file "src/bin/expect_tests/deep_pattern_matching_pascaligo.ml", line 704, characters 2-124
+  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
+
+  Trailing output
+  ---------------
+  File "../../test/contracts//deep_pattern_matching/pm_test.ligo", line 179, characters 35-49:
+  178 | const none_a = record [ a = (None:option(list(int))) ; b = list [42] ]
+  179 | const some_a = record [ a = (Some (list [1;2;3;4])) ; b = list [42] ]
+  180 | const a_empty_b_not = record [ a = Some ((list []: list(int))) ; b = list [111] ]
+
+  Invalid type(s).
+  Expected: "int", but got: "list (int)". |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t9 (Some (1) , Some (2))" ; "--init-file" ; (good_test "pm_test.ligo") ] ;
-  [%expect{| 3 |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
+  Called from Cli_expect_tests__Deep_pattern_matching_pascaligo.(fun) in file "src/bin/expect_tests/deep_pattern_matching_pascaligo.ml", line 727, characters 2-113
+  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
+
+  Trailing output
+  ---------------
+  File "../../test/contracts//deep_pattern_matching/pm_test.ligo", line 179, characters 35-49:
+  178 | const none_a = record [ a = (None:option(list(int))) ; b = list [42] ]
+  179 | const some_a = record [ a = (Some (list [1;2;3;4])) ; b = list [42] ]
+  180 | const a_empty_b_not = record [ a = Some ((list []: list(int))) ; b = list [111] ]
+
+  Invalid type(s).
+  Expected: "int", but got: "list (int)". |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t10 (Consi ((None:  option(int))) ,  Consi(Some (100)) )" ; "--init-file" ; (good_test "pm_test.ligo") ] ;
-  [%expect{| 1 |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
+  Called from Cli_expect_tests__Deep_pattern_matching_pascaligo.(fun) in file "src/bin/expect_tests/deep_pattern_matching_pascaligo.ml", line 750, characters 2-145
+  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
+
+  Trailing output
+  ---------------
+  File "../../test/contracts//deep_pattern_matching/pm_test.ligo", line 179, characters 35-49:
+  178 | const none_a = record [ a = (None:option(list(int))) ; b = list [42] ]
+  179 | const some_a = record [ a = (Some (list [1;2;3;4])) ; b = list [42] ]
+  180 | const a_empty_b_not = record [ a = Some ((list []: list(int))) ; b = list [111] ]
+
+  Invalid type(s).
+  Expected: "int", but got: "list (int)". |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t11 (Consi ((None: option(int))) , Consi (Some (100)))" ; "--init-file" ; (good_test "pm_test.ligo") ] ;
-  [%expect{| 4 |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
+  Called from Cli_expect_tests__Deep_pattern_matching_pascaligo.(fun) in file "src/bin/expect_tests/deep_pattern_matching_pascaligo.ml", line 773, characters 2-143
+  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
+
+  Trailing output
+  ---------------
+  File "../../test/contracts//deep_pattern_matching/pm_test.ligo", line 179, characters 35-49:
+  178 | const none_a = record [ a = (None:option(list(int))) ; b = list [42] ]
+  179 | const some_a = record [ a = (Some (list [1;2;3;4])) ; b = list [42] ]
+  180 | const a_empty_b_not = record [ a = Some ((list []: list(int))) ; b = list [111] ]
+
+  Invalid type(s).
+  Expected: "int", but got: "list (int)". |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t12 ((nil: list(int)))" ; "--init-file" ; (good_test "pm_test.ligo") ] ;
-  [%expect{| 0 |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
+  Called from Cli_expect_tests__Deep_pattern_matching_pascaligo.(fun) in file "src/bin/expect_tests/deep_pattern_matching_pascaligo.ml", line 796, characters 2-111
+  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
+
+  Trailing output
+  ---------------
+  File "../../test/contracts//deep_pattern_matching/pm_test.ligo", line 179, characters 35-49:
+  178 | const none_a = record [ a = (None:option(list(int))) ; b = list [42] ]
+  179 | const some_a = record [ a = (Some (list [1;2;3;4])) ; b = list [42] ]
+  180 | const a_empty_b_not = record [ a = Some ((list []: list(int))) ; b = list [111] ]
+
+  Invalid type(s).
+  Expected: "int", but got: "list (int)". |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t12 (list [1])" ; "--init-file" ; (good_test "pm_test.ligo") ] ;
-  [%expect{| 1 |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
+  Called from Cli_expect_tests__Deep_pattern_matching_pascaligo.(fun) in file "src/bin/expect_tests/deep_pattern_matching_pascaligo.ml", line 819, characters 2-103
+  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
+
+  Trailing output
+  ---------------
+  File "../../test/contracts//deep_pattern_matching/pm_test.ligo", line 179, characters 35-49:
+  178 | const none_a = record [ a = (None:option(list(int))) ; b = list [42] ]
+  179 | const some_a = record [ a = (Some (list [1;2;3;4])) ; b = list [42] ]
+  180 | const a_empty_b_not = record [ a = Some ((list []: list(int))) ; b = list [111] ]
+
+  Invalid type(s).
+  Expected: "int", but got: "list (int)". |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t12 (list [1;2])" ; "--init-file" ; (good_test "pm_test.ligo") ] ;
-  [%expect{| 3 |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
+  Called from Cli_expect_tests__Deep_pattern_matching_pascaligo.(fun) in file "src/bin/expect_tests/deep_pattern_matching_pascaligo.ml", line 842, characters 2-105
+  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
+
+  Trailing output
+  ---------------
+  File "../../test/contracts//deep_pattern_matching/pm_test.ligo", line 179, characters 35-49:
+  178 | const none_a = record [ a = (None:option(list(int))) ; b = list [42] ]
+  179 | const some_a = record [ a = (Some (list [1;2;3;4])) ; b = list [42] ]
+  180 | const a_empty_b_not = record [ a = Some ((list []: list(int))) ; b = list [111] ]
+
+  Invalid type(s).
+  Expected: "int", but got: "list (int)". |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t12 (list [1;2;3])" ; "--init-file" ; (good_test "pm_test.ligo") ] ;
-  [%expect{| 6 |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
+  Called from Cli_expect_tests__Deep_pattern_matching_pascaligo.(fun) in file "src/bin/expect_tests/deep_pattern_matching_pascaligo.ml", line 865, characters 2-107
+  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
+
+  Trailing output
+  ---------------
+  File "../../test/contracts//deep_pattern_matching/pm_test.ligo", line 179, characters 35-49:
+  178 | const none_a = record [ a = (None:option(list(int))) ; b = list [42] ]
+  179 | const some_a = record [ a = (Some (list [1;2;3;4])) ; b = list [42] ]
+  180 | const a_empty_b_not = record [ a = Some ((list []: list(int))) ; b = list [111] ]
+
+  Invalid type(s).
+  Expected: "int", but got: "list (int)". |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret"  ; "t12 (list [1;2;3;4])" ; "--init-file" ; (good_test "pm_test.ligo")] ;
-  [%expect{| -1 |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
+  Called from Cli_expect_tests__Deep_pattern_matching_pascaligo.(fun) in file "src/bin/expect_tests/deep_pattern_matching_pascaligo.ml", line 888, characters 2-109
+  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
+
+  Trailing output
+  ---------------
+  File "../../test/contracts//deep_pattern_matching/pm_test.ligo", line 179, characters 35-49:
+  178 | const none_a = record [ a = (None:option(list(int))) ; b = list [42] ]
+  179 | const some_a = record [ a = (Some (list [1;2;3;4])) ; b = list [42] ]
+  180 | const a_empty_b_not = record [ a = Some ((list []: list(int))) ; b = list [111] ]
+
+  Invalid type(s).
+  Expected: "int", but got: "list (int)". |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t13 (none_a , some_a)" ; "--init-file" ; (good_test "pm_test.ligo") ] ;
-  [%expect{| -1 |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
+  Called from Cli_expect_tests__Deep_pattern_matching_pascaligo.(fun) in file "src/bin/expect_tests/deep_pattern_matching_pascaligo.ml", line 911, characters 2-110
+  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
+
+  Trailing output
+  ---------------
+  File "../../test/contracts//deep_pattern_matching/pm_test.ligo", line 179, characters 35-49:
+  178 | const none_a = record [ a = (None:option(list(int))) ; b = list [42] ]
+  179 | const some_a = record [ a = (Some (list [1;2;3;4])) ; b = list [42] ]
+  180 | const a_empty_b_not = record [ a = Some ((list []: list(int))) ; b = list [111] ]
+
+  Invalid type(s).
+  Expected: "int", but got: "list (int)". |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t13 (some_a , a_empty_b_not)" ; "--init-file" ; (good_test "pm_test.ligo") ] ;
-  [%expect{| 111 |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
+  Called from Cli_expect_tests__Deep_pattern_matching_pascaligo.(fun) in file "src/bin/expect_tests/deep_pattern_matching_pascaligo.ml", line 934, characters 2-117
+  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
+
+  Trailing output
+  ---------------
+  File "../../test/contracts//deep_pattern_matching/pm_test.ligo", line 179, characters 35-49:
+  178 | const none_a = record [ a = (None:option(list(int))) ; b = list [42] ]
+  179 | const some_a = record [ a = (Some (list [1;2;3;4])) ; b = list [42] ]
+  180 | const a_empty_b_not = record [ a = Some ((list []: list(int))) ; b = list [111] ]
+
+  Invalid type(s).
+  Expected: "int", but got: "list (int)". |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t13 (some_a,  b_empty_a_not)" ; "--init-file" ; (good_test "pm_test.ligo") ] ;
-  [%expect{| 222 |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
+  Called from Cli_expect_tests__Deep_pattern_matching_pascaligo.(fun) in file "src/bin/expect_tests/deep_pattern_matching_pascaligo.ml", line 957, characters 2-117
+  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
+
+  Trailing output
+  ---------------
+  File "../../test/contracts//deep_pattern_matching/pm_test.ligo", line 179, characters 35-49:
+  178 | const none_a = record [ a = (None:option(list(int))) ; b = list [42] ]
+  179 | const some_a = record [ a = (Some (list [1;2;3;4])) ; b = list [42] ]
+  180 | const a_empty_b_not = record [ a = Some ((list []: list(int))) ; b = list [111] ]
+
+  Invalid type(s).
+  Expected: "int", but got: "list (int)". |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t13 (some_a, some_a)" ; "--init-file";(good_test "pm_test.ligo") ] ;
-  [%expect{| 4 |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
+  Called from Cli_expect_tests__Deep_pattern_matching_pascaligo.(fun) in file "src/bin/expect_tests/deep_pattern_matching_pascaligo.ml", line 980, characters 2-107
+  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
+
+  Trailing output
+  ---------------
+  File "../../test/contracts//deep_pattern_matching/pm_test.ligo", line 179, characters 35-49:
+  178 | const none_a = record [ a = (None:option(list(int))) ; b = list [42] ]
+  179 | const some_a = record [ a = (Some (list [1;2;3;4])) ; b = list [42] ]
+  180 | const a_empty_b_not = record [ a = Some ((list []: list(int))) ; b = list [111] ]
+
+  Invalid type(s).
+  Expected: "int", but got: "list (int)". |}]
 
 let%expect_test _ =
   run_ligo_good [ "print" ; "ast-core" ; (good_test "list_pattern.ligo") ] ;
