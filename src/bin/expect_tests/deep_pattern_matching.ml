@@ -91,7 +91,7 @@ let%expect_test _ =
       5 |   | Some_fake x -> x
       6 |   | None_fake -> 1
 
-    Pattern not of the expected type sum[None -> unit , Some -> int] |}]
+    Pattern not of the expected type option (int) |}]
 
 (* wrong body type *)
 

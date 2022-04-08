@@ -202,8 +202,8 @@ let%expect_test _ =
      46 |   in
 
     Invalid arguments.
-    Expected an argument of type ('a, sum[None -> unit , Some -> 'b], map ('a ,
-    'b)) or ('a, sum[None -> unit , Some -> 'b], big_map ('a ,
+    Expected an argument of type ('a, option ('b), map ('a ,
+    'b)) or ('a, option ('b), big_map ('a ,
     'b)), but got an argument of type int, record[controller -> address , owner -> address , profile -> bytes], big_map (int ,
     record[controller -> address , owner -> address , profile -> bytes]). |}]
 
