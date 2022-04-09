@@ -6,26 +6,78 @@ let () = Sys.chdir "../../test/contracts/interpreter_tests/"
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test" ; test "interpret_test.mligo" ] ;
-  [%expect.unreachable]
-[@@expect.uncaught_exn {|
-  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
-     This is strongly discouraged as backtraces are fragile.
-     Please change this test to not include a backtrace. *)
-
-  (Cli_expect_tests.Cli_expect.Should_exit_good)
-  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
-  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 8, characters 2-63
-  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
-
-  Trailing output
-  ---------------
-  File "./interpret_test.mligo", line 308, characters 45-50:
-  307 |   let xs = Map.literal [(1n,"Hello");(2n,"World")] in
-  308 |   let (old,xs) = Map.get_and_update 2n (Some "Foo") xs in
-  309 |   let ys = Map.literal [(1n,"Hello");(2n,"Foo")] in
-
-  Invalid type(s).
-  Expected: "int", but got: "string". |}]
+  [%expect{|
+    Everything at the top-level was executed.
+    - test_lambda_call exited with value ().
+    - test_higher_order1 exited with value ().
+    - test_higher_order2 exited with value ().
+    - test_higher_order3 exited with value ().
+    - test_higher_order4 exited with value ().
+    - test_concats exited with value ().
+    - test_record_concat exited with value ().
+    - test_record_patch exited with value ().
+    - test_record_lambda exited with value ().
+    - test_variant_match exited with value ().
+    - test_bool_match exited with value ().
+    - test_list_match exited with value ().
+    - test_tuple_proj exited with value ().
+    - test_list_const exited with value ().
+    - test_options_match_some exited with value ().
+    - test_options_match_none exited with value ().
+    - test_is_nat_yes exited with value ().
+    - test_is_nat_no exited with value ().
+    - test_abs_int exited with value ().
+    - test_nat_int exited with value ().
+    - test_map_list exited with value ().
+    - test_fold_list exited with value ().
+    - test_comparison_int exited with value ().
+    - test_comparison_string exited with value ().
+    - test_divs_int exited with value ().
+    - test_divs_nat exited with value ().
+    - test_var_neg exited with value ().
+    - test_sizes exited with value ().
+    - test_modi exited with value ().
+    - test_assertion_pass exited with value ().
+    - test_map_finds exited with value ().
+    - test_map_fold exited with value ().
+    - test_map_map exited with value ().
+    - test_map_mem exited with value ().
+    - test_map_remove exited with value ().
+    - test_map_update exited with value ().
+    - test_set_add exited with value ().
+    - test_set_mem exited with value ().
+    - test_set_remove exited with value ().
+    - test_recursion_let_rec_in exited with value ().
+    - test_top_level_recursion exited with value ().
+    - test_bitwise_ops exited with value ().
+    - test_bitwise_module exited with value ().
+    - test_list_concat exited with value ().
+    - test_list_head_opt exited with value ().
+    - test_list_tail_opt exited with value ().
+    - test_list_reverse exited with value ().
+    - test_set_fold_desc exited with value ().
+    - test_set_update exited with value ().
+    - test_map_get_and_update exited with value ().
+    - test_add_mutez exited with value ().
+    - test_sub_mutez exited with value ().
+    - test_div_mutez exited with value ().
+    - test_list_fold_left_sum exited with value ().
+    - test_bytes_sub exited with value ().
+    - test_with_error exited with value ().
+    - test_some exited with value ().
+    - test_some_with_error exited with value ().
+    - test_none exited with value ().
+    - test_none_with_error exited with value ().
+    - test_unopt exited with value ().
+    - test_unopt_with_error exited with value ().
+    - test_sha256 exited with value ().
+    - test_sha512 exited with value ().
+    - test_blake2b exited with value ().
+    - test_keccak exited with value ().
+    - test_sha3 exited with value ().
+    - test_key_hash exited with value ().
+    - test_check exited with value ().
+    - test_int_bls exited with value (). |}]
 
 let%expect_test _ =
   (* This tests a possible regression on the way modules are evaluated. It is possible that the number of element in the environment explodes. *)
@@ -679,7 +731,7 @@ let%expect_test _ =
 
   (Cli_expect_tests.Cli_expect.Should_exit_good)
   Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
-  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 673, characters 2-137
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 725, characters 2-137
   Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
 
   Trailing output

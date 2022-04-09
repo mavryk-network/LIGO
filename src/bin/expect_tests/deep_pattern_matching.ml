@@ -178,854 +178,151 @@ let%expect_test _ =
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t1 (Nil,Nil)" ; "--init-file" ; (good_test "pm_test.mligo") ] ;
-  [%expect.unreachable]
-[@@expect.uncaught_exn {|
-  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
-     This is strongly discouraged as backtraces are fragile.
-     Please change this test to not include a backtrace. *)
-
-  (Cli_expect_tests.Cli_expect.Should_exit_good)
-  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
-  Called from Cli_expect_tests__Deep_pattern_matching.(fun) in file "src/bin/expect_tests/deep_pattern_matching.ml", line 180, characters 2-102
-  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
-
-  Trailing output
-  ---------------
-  File "../../test/contracts//deep_pattern_matching/pm_test.mligo", line 163, characters 25-34:
-  162 | let none_a = { a = (None:int list option) ; b = [42] }
-  163 | let some_a = { a = Some ([1;2;3;4]) ; b = [42] }
-  164 | let a_empty_b_not = { a = Some (([]: int list)) ; b = [111] }
-
-  Invalid type(s).
-  Expected: "int", but got: "list (int)". |}]
+  [%expect{| 1 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t1 (Nil,Cons(1,2))" ; "--init-file" ; (good_test "pm_test.mligo") ] ;
-  [%expect.unreachable]
-[@@expect.uncaught_exn {|
-  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
-     This is strongly discouraged as backtraces are fragile.
-     Please change this test to not include a backtrace. *)
-
-  (Cli_expect_tests.Cli_expect.Should_exit_good)
-  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
-  Called from Cli_expect_tests__Deep_pattern_matching.(fun) in file "src/bin/expect_tests/deep_pattern_matching.ml", line 203, characters 2-108
-  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
-
-  Trailing output
-  ---------------
-  File "../../test/contracts//deep_pattern_matching/pm_test.mligo", line 163, characters 25-34:
-  162 | let none_a = { a = (None:int list option) ; b = [42] }
-  163 | let some_a = { a = Some ([1;2;3;4]) ; b = [42] }
-  164 | let a_empty_b_not = { a = Some (([]: int list)) ; b = [111] }
-
-  Invalid type(s).
-  Expected: "int", but got: "list (int)". |}]
+  [%expect{| 1 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t1 (Cons(1,2),Nil)" ; "--init-file" ; (good_test "pm_test.mligo") ] ;
-  [%expect.unreachable]
-[@@expect.uncaught_exn {|
-  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
-     This is strongly discouraged as backtraces are fragile.
-     Please change this test to not include a backtrace. *)
-
-  (Cli_expect_tests.Cli_expect.Should_exit_good)
-  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
-  Called from Cli_expect_tests__Deep_pattern_matching.(fun) in file "src/bin/expect_tests/deep_pattern_matching.ml", line 226, characters 2-108
-  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
-
-  Trailing output
-  ---------------
-  File "../../test/contracts//deep_pattern_matching/pm_test.mligo", line 163, characters 25-34:
-  162 | let none_a = { a = (None:int list option) ; b = [42] }
-  163 | let some_a = { a = Some ([1;2;3;4]) ; b = [42] }
-  164 | let a_empty_b_not = { a = Some (([]: int list)) ; b = [111] }
-
-  Invalid type(s).
-  Expected: "int", but got: "list (int)". |}]
+  [%expect{| 2 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t1 (Cons(1,2),Cons(3,4))" ; "--init-file" ; (good_test "pm_test.mligo") ] ;
-  [%expect.unreachable]
-[@@expect.uncaught_exn {|
-  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
-     This is strongly discouraged as backtraces are fragile.
-     Please change this test to not include a backtrace. *)
-
-  (Cli_expect_tests.Cli_expect.Should_exit_good)
-  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
-  Called from Cli_expect_tests__Deep_pattern_matching.(fun) in file "src/bin/expect_tests/deep_pattern_matching.ml", line 249, characters 2-114
-  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
-
-  Trailing output
-  ---------------
-  File "../../test/contracts//deep_pattern_matching/pm_test.mligo", line 163, characters 25-34:
-  162 | let none_a = { a = (None:int list option) ; b = [42] }
-  163 | let some_a = { a = Some ([1;2;3;4]) ; b = [42] }
-  164 | let a_empty_b_not = { a = Some (([]: int list)) ; b = [111] }
-
-  Invalid type(s).
-  Expected: "int", but got: "list (int)". |}]
+  [%expect{| 10 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t2 Nil Nil" ; "--init-file" ; (good_test "pm_test.mligo") ] ;
-  [%expect.unreachable]
-[@@expect.uncaught_exn {|
-  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
-     This is strongly discouraged as backtraces are fragile.
-     Please change this test to not include a backtrace. *)
-
-  (Cli_expect_tests.Cli_expect.Should_exit_good)
-  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
-  Called from Cli_expect_tests__Deep_pattern_matching.(fun) in file "src/bin/expect_tests/deep_pattern_matching.ml", line 272, characters 2-100
-  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
-
-  Trailing output
-  ---------------
-  File "../../test/contracts//deep_pattern_matching/pm_test.mligo", line 163, characters 25-34:
-  162 | let none_a = { a = (None:int list option) ; b = [42] }
-  163 | let some_a = { a = Some ([1;2;3;4]) ; b = [42] }
-  164 | let a_empty_b_not = { a = Some (([]: int list)) ; b = [111] }
-
-  Invalid type(s).
-  Expected: "int", but got: "list (int)". |}]
+  [%expect{| 1 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t2 Nil (Cons (1,2))" ; "--init-file" ; (good_test "pm_test.mligo") ] ;
-  [%expect.unreachable]
-[@@expect.uncaught_exn {|
-  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
-     This is strongly discouraged as backtraces are fragile.
-     Please change this test to not include a backtrace. *)
-
-  (Cli_expect_tests.Cli_expect.Should_exit_good)
-  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
-  Called from Cli_expect_tests__Deep_pattern_matching.(fun) in file "src/bin/expect_tests/deep_pattern_matching.ml", line 295, characters 2-109
-  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
-
-  Trailing output
-  ---------------
-  File "../../test/contracts//deep_pattern_matching/pm_test.mligo", line 163, characters 25-34:
-  162 | let none_a = { a = (None:int list option) ; b = [42] }
-  163 | let some_a = { a = Some ([1;2;3;4]) ; b = [42] }
-  164 | let a_empty_b_not = { a = Some (([]: int list)) ; b = [111] }
-
-  Invalid type(s).
-  Expected: "int", but got: "list (int)". |}]
+  [%expect{| 3 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t2 (Cons(1,2)) (Cons(1,2))" ; "--init-file" ; (good_test "pm_test.mligo") ] ;
-  [%expect.unreachable]
-[@@expect.uncaught_exn {|
-  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
-     This is strongly discouraged as backtraces are fragile.
-     Please change this test to not include a backtrace. *)
-
-  (Cli_expect_tests.Cli_expect.Should_exit_good)
-  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
-  Called from Cli_expect_tests__Deep_pattern_matching.(fun) in file "src/bin/expect_tests/deep_pattern_matching.ml", line 318, characters 2-116
-  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
-
-  Trailing output
-  ---------------
-  File "../../test/contracts//deep_pattern_matching/pm_test.mligo", line 163, characters 25-34:
-  162 | let none_a = { a = (None:int list option) ; b = [42] }
-  163 | let some_a = { a = Some ([1;2;3;4]) ; b = [42] }
-  164 | let a_empty_b_not = { a = Some (([]: int list)) ; b = [111] }
-
-  Invalid type(s).
-  Expected: "int", but got: "list (int)". |}]
+  [%expect{| 6 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t2 (Cons(1,2)) Nil" ; "--init-file" ; (good_test "pm_test.mligo") ] ;
-  [%expect.unreachable]
-[@@expect.uncaught_exn {|
-  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
-     This is strongly discouraged as backtraces are fragile.
-     Please change this test to not include a backtrace. *)
-
-  (Cli_expect_tests.Cli_expect.Should_exit_good)
-  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
-  Called from Cli_expect_tests__Deep_pattern_matching.(fun) in file "src/bin/expect_tests/deep_pattern_matching.ml", line 341, characters 2-108
-  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
-
-  Trailing output
-  ---------------
-  File "../../test/contracts//deep_pattern_matching/pm_test.mligo", line 163, characters 25-34:
-  162 | let none_a = { a = (None:int list option) ; b = [42] }
-  163 | let some_a = { a = Some ([1;2;3;4]) ; b = [42] }
-  164 | let a_empty_b_not = { a = Some (([]: int list)) ; b = [111] }
-
-  Invalid type(s).
-  Expected: "int", but got: "list (int)". |}]
+  [%expect{| 7 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t3 (One (Nil))" ; "--init-file" ; (good_test "pm_test.mligo") ] ;
-  [%expect.unreachable]
-[@@expect.uncaught_exn {|
-  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
-     This is strongly discouraged as backtraces are fragile.
-     Please change this test to not include a backtrace. *)
-
-  (Cli_expect_tests.Cli_expect.Should_exit_good)
-  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
-  Called from Cli_expect_tests__Deep_pattern_matching.(fun) in file "src/bin/expect_tests/deep_pattern_matching.ml", line 364, characters 2-104
-  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
-
-  Trailing output
-  ---------------
-  File "../../test/contracts//deep_pattern_matching/pm_test.mligo", line 163, characters 25-34:
-  162 | let none_a = { a = (None:int list option) ; b = [42] }
-  163 | let some_a = { a = Some ([1;2;3;4]) ; b = [42] }
-  164 | let a_empty_b_not = { a = Some (([]: int list)) ; b = [111] }
-
-  Invalid type(s).
-  Expected: "int", but got: "list (int)". |}]
+  [%expect{| 1 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t3 (One (Cons(1,2)))" ; "--init-file" ; (good_test "pm_test.mligo") ] ;
-  [%expect.unreachable]
-[@@expect.uncaught_exn {|
-  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
-     This is strongly discouraged as backtraces are fragile.
-     Please change this test to not include a backtrace. *)
-
-  (Cli_expect_tests.Cli_expect.Should_exit_good)
-  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
-  Called from Cli_expect_tests__Deep_pattern_matching.(fun) in file "src/bin/expect_tests/deep_pattern_matching.ml", line 387, characters 2-110
-  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
-
-  Trailing output
-  ---------------
-  File "../../test/contracts//deep_pattern_matching/pm_test.mligo", line 163, characters 25-34:
-  162 | let none_a = { a = (None:int list option) ; b = [42] }
-  163 | let some_a = { a = Some ([1;2;3;4]) ; b = [42] }
-  164 | let a_empty_b_not = { a = Some (([]: int list)) ; b = [111] }
-
-  Invalid type(s).
-  Expected: "int", but got: "list (int)". |}]
+  [%expect{| 3 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t3 (Two {a = 1 ; b = 2n ; c = \"tri\"})" ; "--init-file" ; (good_test "pm_test.mligo") ] ;
-  [%expect.unreachable]
-[@@expect.uncaught_exn {|
-  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
-     This is strongly discouraged as backtraces are fragile.
-     Please change this test to not include a backtrace. *)
-
-  (Cli_expect_tests.Cli_expect.Should_exit_good)
-  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
-  Called from Cli_expect_tests__Deep_pattern_matching.(fun) in file "src/bin/expect_tests/deep_pattern_matching.ml", line 410, characters 2-129
-  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
-
-  Trailing output
-  ---------------
-  File "../../test/contracts//deep_pattern_matching/pm_test.mligo", line 163, characters 25-34:
-  162 | let none_a = { a = (None:int list option) ; b = [42] }
-  163 | let some_a = { a = Some ([1;2;3;4]) ; b = [42] }
-  164 | let a_empty_b_not = { a = Some (([]: int list)) ; b = [111] }
-
-  Invalid type(s).
-  Expected: "int", but got: "list (int)". |}]
+  [%expect{| 6 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t2_3 (Cons(1,2)) Nil (One(Nil))" ; "--init-file" ; (good_test "pm_test.mligo") ] ;
-  [%expect.unreachable]
-[@@expect.uncaught_exn {|
-  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
-     This is strongly discouraged as backtraces are fragile.
-     Please change this test to not include a backtrace. *)
-
-  (Cli_expect_tests.Cli_expect.Should_exit_good)
-  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
-  Called from Cli_expect_tests__Deep_pattern_matching.(fun) in file "src/bin/expect_tests/deep_pattern_matching.ml", line 433, characters 2-121
-  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
-
-  Trailing output
-  ---------------
-  File "../../test/contracts//deep_pattern_matching/pm_test.mligo", line 163, characters 25-34:
-  162 | let none_a = { a = (None:int list option) ; b = [42] }
-  163 | let some_a = { a = Some ([1;2;3;4]) ; b = [42] }
-  164 | let a_empty_b_not = { a = Some (([]: int list)) ; b = [111] }
-
-  Invalid type(s).
-  Expected: "int", but got: "list (int)". |}]
+  [%expect{| 8 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t4 (One(Nil)) (One (Nil))" ; "--init-file" ; (good_test "pm_test.mligo") ] ;
-  [%expect.unreachable]
-[@@expect.uncaught_exn {|
-  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
-     This is strongly discouraged as backtraces are fragile.
-     Please change this test to not include a backtrace. *)
-
-  (Cli_expect_tests.Cli_expect.Should_exit_good)
-  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
-  Called from Cli_expect_tests__Deep_pattern_matching.(fun) in file "src/bin/expect_tests/deep_pattern_matching.ml", line 456, characters 2-115
-  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
-
-  Trailing output
-  ---------------
-  File "../../test/contracts//deep_pattern_matching/pm_test.mligo", line 163, characters 25-34:
-  162 | let none_a = { a = (None:int list option) ; b = [42] }
-  163 | let some_a = { a = Some ([1;2;3;4]) ; b = [42] }
-  164 | let a_empty_b_not = { a = Some (([]: int list)) ; b = [111] }
-
-  Invalid type(s).
-  Expected: "int", but got: "list (int)". |}]
+  [%expect{| 1 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t4 (One(Nil)) (Two {a=1;b=2n;c=\"tri\"})" ; "--init-file" ; (good_test "pm_test.mligo") ] ;
-  [%expect.unreachable]
-[@@expect.uncaught_exn {|
-  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
-     This is strongly discouraged as backtraces are fragile.
-     Please change this test to not include a backtrace. *)
-
-  (Cli_expect_tests.Cli_expect.Should_exit_good)
-  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
-  Called from Cli_expect_tests__Deep_pattern_matching.(fun) in file "src/bin/expect_tests/deep_pattern_matching.ml", line 479, characters 2-130
-  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
-
-  Trailing output
-  ---------------
-  File "../../test/contracts//deep_pattern_matching/pm_test.mligo", line 163, characters 25-34:
-  162 | let none_a = { a = (None:int list option) ; b = [42] }
-  163 | let some_a = { a = Some ([1;2;3;4]) ; b = [42] }
-  164 | let a_empty_b_not = { a = Some (([]: int list)) ; b = [111] }
-
-  Invalid type(s).
-  Expected: "int", but got: "list (int)". |}]
+  [%expect{| 2 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t4 (One(Cons(1,2))) (Two {a=1;b=2n;c=\"tri\"})" ; "--init-file" ; (good_test "pm_test.mligo") ] ;
-  [%expect.unreachable]
-[@@expect.uncaught_exn {|
-  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
-     This is strongly discouraged as backtraces are fragile.
-     Please change this test to not include a backtrace. *)
-
-  (Cli_expect_tests.Cli_expect.Should_exit_good)
-  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
-  Called from Cli_expect_tests__Deep_pattern_matching.(fun) in file "src/bin/expect_tests/deep_pattern_matching.ml", line 502, characters 2-136
-  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
-
-  Trailing output
-  ---------------
-  File "../../test/contracts//deep_pattern_matching/pm_test.mligo", line 163, characters 25-34:
-  162 | let none_a = { a = (None:int list option) ; b = [42] }
-  163 | let some_a = { a = Some ([1;2;3;4]) ; b = [42] }
-  164 | let a_empty_b_not = { a = Some (([]: int list)) ; b = [111] }
-
-  Invalid type(s).
-  Expected: "int", but got: "list (int)". |}]
+  [%expect{| 3 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t4 (Two {a=0;b=0n;c=\"\"}) (Two {a=1;b=2n;c=\"tri\"})" ; "--init-file" ; (good_test "pm_test.mligo") ] ;
-  [%expect.unreachable]
-[@@expect.uncaught_exn {|
-  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
-     This is strongly discouraged as backtraces are fragile.
-     Please change this test to not include a backtrace. *)
-
-  (Cli_expect_tests.Cli_expect.Should_exit_good)
-  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
-  Called from Cli_expect_tests__Deep_pattern_matching.(fun) in file "src/bin/expect_tests/deep_pattern_matching.ml", line 525, characters 2-143
-  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
-
-  Trailing output
-  ---------------
-  File "../../test/contracts//deep_pattern_matching/pm_test.mligo", line 163, characters 25-34:
-  162 | let none_a = { a = (None:int list option) ; b = [42] }
-  163 | let some_a = { a = Some ([1;2;3;4]) ; b = [42] }
-  164 | let a_empty_b_not = { a = Some (([]: int list)) ; b = [111] }
-
-  Invalid type(s).
-  Expected: "int", but got: "list (int)". |}]
+  [%expect{| 4 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t5 1" ; "--init-file" ; (good_test "pm_test.mligo") ] ;
-  [%expect.unreachable]
-[@@expect.uncaught_exn {|
-  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
-     This is strongly discouraged as backtraces are fragile.
-     Please change this test to not include a backtrace. *)
-
-  (Cli_expect_tests.Cli_expect.Should_exit_good)
-  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
-  Called from Cli_expect_tests__Deep_pattern_matching.(fun) in file "src/bin/expect_tests/deep_pattern_matching.ml", line 548, characters 2-94
-  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
-
-  Trailing output
-  ---------------
-  File "../../test/contracts//deep_pattern_matching/pm_test.mligo", line 163, characters 25-34:
-  162 | let none_a = { a = (None:int list option) ; b = [42] }
-  163 | let some_a = { a = Some ([1;2;3;4]) ; b = [42] }
-  164 | let a_empty_b_not = { a = Some (([]: int list)) ; b = [111] }
-
-  Invalid type(s).
-  Expected: "int", but got: "list (int)". |}]
+  [%expect{| 1 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t6 42" ; "--init-file" ; (good_test "pm_test.mligo") ] ;
-  [%expect.unreachable]
-[@@expect.uncaught_exn {|
-  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
-     This is strongly discouraged as backtraces are fragile.
-     Please change this test to not include a backtrace. *)
-
-  (Cli_expect_tests.Cli_expect.Should_exit_good)
-  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
-  Called from Cli_expect_tests__Deep_pattern_matching.(fun) in file "src/bin/expect_tests/deep_pattern_matching.ml", line 571, characters 2-95
-  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
-
-  Trailing output
-  ---------------
-  File "../../test/contracts//deep_pattern_matching/pm_test.mligo", line 163, characters 25-34:
-  162 | let none_a = { a = (None:int list option) ; b = [42] }
-  163 | let some_a = { a = Some ([1;2;3;4]) ; b = [42] }
-  164 | let a_empty_b_not = { a = Some (([]: int list)) ; b = [111] }
-
-  Invalid type(s).
-  Expected: "int", but got: "list (int)". |}]
+  [%expect{| 2 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t7 (Some 10)" ; "--init-file" ; (good_test "pm_test.mligo") ] ;
-  [%expect.unreachable]
-[@@expect.uncaught_exn {|
-  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
-     This is strongly discouraged as backtraces are fragile.
-     Please change this test to not include a backtrace. *)
-
-  (Cli_expect_tests.Cli_expect.Should_exit_good)
-  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
-  Called from Cli_expect_tests__Deep_pattern_matching.(fun) in file "src/bin/expect_tests/deep_pattern_matching.ml", line 594, characters 2-102
-  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
-
-  Trailing output
-  ---------------
-  File "../../test/contracts//deep_pattern_matching/pm_test.mligo", line 163, characters 25-34:
-  162 | let none_a = { a = (None:int list option) ; b = [42] }
-  163 | let some_a = { a = Some ([1;2;3;4]) ; b = [42] }
-  164 | let a_empty_b_not = { a = Some (([]: int list)) ; b = [111] }
-
-  Invalid type(s).
-  Expected: "int", but got: "list (int)". |}]
+  [%expect{| 10 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t7 (None: int option)" ; "--init-file" ; (good_test "pm_test.mligo") ] ;
-  [%expect.unreachable]
-[@@expect.uncaught_exn {|
-  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
-     This is strongly discouraged as backtraces are fragile.
-     Please change this test to not include a backtrace. *)
-
-  (Cli_expect_tests.Cli_expect.Should_exit_good)
-  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
-  Called from Cli_expect_tests__Deep_pattern_matching.(fun) in file "src/bin/expect_tests/deep_pattern_matching.ml", line 617, characters 2-111
-  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
-
-  Trailing output
-  ---------------
-  File "../../test/contracts//deep_pattern_matching/pm_test.mligo", line 163, characters 25-34:
-  162 | let none_a = { a = (None:int list option) ; b = [42] }
-  163 | let some_a = { a = Some ([1;2;3;4]) ; b = [42] }
-  164 | let a_empty_b_not = { a = Some (([]: int list)) ; b = [111] }
-
-  Invalid type(s).
-  Expected: "int", but got: "list (int)". |}]
+  [%expect{| 1 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t8 (Some (1,2)) 2" ; "--init-file" ; (good_test "pm_test.mligo") ] ;
-  [%expect.unreachable]
-[@@expect.uncaught_exn {|
-  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
-     This is strongly discouraged as backtraces are fragile.
-     Please change this test to not include a backtrace. *)
-
-  (Cli_expect_tests.Cli_expect.Should_exit_good)
-  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
-  Called from Cli_expect_tests__Deep_pattern_matching.(fun) in file "src/bin/expect_tests/deep_pattern_matching.ml", line 640, characters 2-107
-  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
-
-  Trailing output
-  ---------------
-  File "../../test/contracts//deep_pattern_matching/pm_test.mligo", line 163, characters 25-34:
-  162 | let none_a = { a = (None:int list option) ; b = [42] }
-  163 | let some_a = { a = Some ([1;2;3;4]) ; b = [42] }
-  164 | let a_empty_b_not = { a = Some (([]: int list)) ; b = [111] }
-
-  Invalid type(s).
-  Expected: "int", but got: "list (int)". |}]
+  [%expect{| 3 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t8 (None:(int * int) option) 2" ; "--init-file" ; (good_test "pm_test.mligo") ] ;
-  [%expect.unreachable]
-[@@expect.uncaught_exn {|
-  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
-     This is strongly discouraged as backtraces are fragile.
-     Please change this test to not include a backtrace. *)
-
-  (Cli_expect_tests.Cli_expect.Should_exit_good)
-  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
-  Called from Cli_expect_tests__Deep_pattern_matching.(fun) in file "src/bin/expect_tests/deep_pattern_matching.ml", line 663, characters 2-120
-  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
-
-  Trailing output
-  ---------------
-  File "../../test/contracts//deep_pattern_matching/pm_test.mligo", line 163, characters 25-34:
-  162 | let none_a = { a = (None:int list option) ; b = [42] }
-  163 | let some_a = { a = Some ([1;2;3;4]) ; b = [42] }
-  164 | let a_empty_b_not = { a = Some (([]: int list)) ; b = [111] }
-
-  Invalid type(s).
-  Expected: "int", but got: "list (int)". |}]
+  [%expect{| 2 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t9 (None:int option) (None:int option)" ; "--init-file" ; (good_test "pm_test.mligo") ] ;
-  [%expect.unreachable]
-[@@expect.uncaught_exn {|
-  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
-     This is strongly discouraged as backtraces are fragile.
-     Please change this test to not include a backtrace. *)
-
-  (Cli_expect_tests.Cli_expect.Should_exit_good)
-  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
-  Called from Cli_expect_tests__Deep_pattern_matching.(fun) in file "src/bin/expect_tests/deep_pattern_matching.ml", line 686, characters 2-128
-  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
-
-  Trailing output
-  ---------------
-  File "../../test/contracts//deep_pattern_matching/pm_test.mligo", line 163, characters 25-34:
-  162 | let none_a = { a = (None:int list option) ; b = [42] }
-  163 | let some_a = { a = Some ([1;2;3;4]) ; b = [42] }
-  164 | let a_empty_b_not = { a = Some (([]: int list)) ; b = [111] }
-
-  Invalid type(s).
-  Expected: "int", but got: "list (int)". |}]
+  [%expect{| 1 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t9 (None:int option) (Some 1)" ; "--init-file" ; (good_test "pm_test.mligo") ] ;
-  [%expect.unreachable]
-[@@expect.uncaught_exn {|
-  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
-     This is strongly discouraged as backtraces are fragile.
-     Please change this test to not include a backtrace. *)
-
-  (Cli_expect_tests.Cli_expect.Should_exit_good)
-  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
-  Called from Cli_expect_tests__Deep_pattern_matching.(fun) in file "src/bin/expect_tests/deep_pattern_matching.ml", line 709, characters 2-119
-  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
-
-  Trailing output
-  ---------------
-  File "../../test/contracts//deep_pattern_matching/pm_test.mligo", line 163, characters 25-34:
-  162 | let none_a = { a = (None:int list option) ; b = [42] }
-  163 | let some_a = { a = Some ([1;2;3;4]) ; b = [42] }
-  164 | let a_empty_b_not = { a = Some (([]: int list)) ; b = [111] }
-
-  Invalid type(s).
-  Expected: "int", but got: "list (int)". |}]
+  [%expect{| 1 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t9 (Some 1) (None:int option)" ; "--init-file" ; (good_test "pm_test.mligo") ] ;
-  [%expect.unreachable]
-[@@expect.uncaught_exn {|
-  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
-     This is strongly discouraged as backtraces are fragile.
-     Please change this test to not include a backtrace. *)
-
-  (Cli_expect_tests.Cli_expect.Should_exit_good)
-  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
-  Called from Cli_expect_tests__Deep_pattern_matching.(fun) in file "src/bin/expect_tests/deep_pattern_matching.ml", line 732, characters 2-119
-  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
-
-  Trailing output
-  ---------------
-  File "../../test/contracts//deep_pattern_matching/pm_test.mligo", line 163, characters 25-34:
-  162 | let none_a = { a = (None:int list option) ; b = [42] }
-  163 | let some_a = { a = Some ([1;2;3;4]) ; b = [42] }
-  164 | let a_empty_b_not = { a = Some (([]: int list)) ; b = [111] }
-
-  Invalid type(s).
-  Expected: "int", but got: "list (int)". |}]
+  [%expect{| 2 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t9 (Some 1) (Some 2)" ; "--init-file" ; (good_test "pm_test.mligo") ] ;
-  [%expect.unreachable]
-[@@expect.uncaught_exn {|
-  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
-     This is strongly discouraged as backtraces are fragile.
-     Please change this test to not include a backtrace. *)
-
-  (Cli_expect_tests.Cli_expect.Should_exit_good)
-  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
-  Called from Cli_expect_tests__Deep_pattern_matching.(fun) in file "src/bin/expect_tests/deep_pattern_matching.ml", line 755, characters 2-110
-  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
-
-  Trailing output
-  ---------------
-  File "../../test/contracts//deep_pattern_matching/pm_test.mligo", line 163, characters 25-34:
-  162 | let none_a = { a = (None:int list option) ; b = [42] }
-  163 | let some_a = { a = Some ([1;2;3;4]) ; b = [42] }
-  164 | let a_empty_b_not = { a = Some (([]: int list)) ; b = [111] }
-
-  Invalid type(s).
-  Expected: "int", but got: "list (int)". |}]
+  [%expect{| 3 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t10 (Consi(None:int option)) (Consi(Some 100))" ; "--init-file" ; (good_test "pm_test.mligo") ] ;
-  [%expect.unreachable]
-[@@expect.uncaught_exn {|
-  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
-     This is strongly discouraged as backtraces are fragile.
-     Please change this test to not include a backtrace. *)
-
-  (Cli_expect_tests.Cli_expect.Should_exit_good)
-  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
-  Called from Cli_expect_tests__Deep_pattern_matching.(fun) in file "src/bin/expect_tests/deep_pattern_matching.ml", line 778, characters 2-136
-  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
-
-  Trailing output
-  ---------------
-  File "../../test/contracts//deep_pattern_matching/pm_test.mligo", line 163, characters 25-34:
-  162 | let none_a = { a = (None:int list option) ; b = [42] }
-  163 | let some_a = { a = Some ([1;2;3;4]) ; b = [42] }
-  164 | let a_empty_b_not = { a = Some (([]: int list)) ; b = [111] }
-
-  Invalid type(s).
-  Expected: "int", but got: "list (int)". |}]
+  [%expect{| 1 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t11 (Consi(None:int option)) (Consi(Some 100))" ; "--init-file" ; (good_test "pm_test.mligo") ] ;
-  [%expect.unreachable]
-[@@expect.uncaught_exn {|
-  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
-     This is strongly discouraged as backtraces are fragile.
-     Please change this test to not include a backtrace. *)
-
-  (Cli_expect_tests.Cli_expect.Should_exit_good)
-  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
-  Called from Cli_expect_tests__Deep_pattern_matching.(fun) in file "src/bin/expect_tests/deep_pattern_matching.ml", line 801, characters 2-136
-  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
-
-  Trailing output
-  ---------------
-  File "../../test/contracts//deep_pattern_matching/pm_test.mligo", line 163, characters 25-34:
-  162 | let none_a = { a = (None:int list option) ; b = [42] }
-  163 | let some_a = { a = Some ([1;2;3;4]) ; b = [42] }
-  164 | let a_empty_b_not = { a = Some (([]: int list)) ; b = [111] }
-
-  Invalid type(s).
-  Expected: "int", but got: "list (int)". |}]
+  [%expect{| 4 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t12 ([]: int list)" ; "--init-file" ; (good_test "pm_test.mligo") ] ;
-  [%expect.unreachable]
-[@@expect.uncaught_exn {|
-  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
-     This is strongly discouraged as backtraces are fragile.
-     Please change this test to not include a backtrace. *)
-
-  (Cli_expect_tests.Cli_expect.Should_exit_good)
-  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
-  Called from Cli_expect_tests__Deep_pattern_matching.(fun) in file "src/bin/expect_tests/deep_pattern_matching.ml", line 824, characters 2-108
-  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
-
-  Trailing output
-  ---------------
-  File "../../test/contracts//deep_pattern_matching/pm_test.mligo", line 163, characters 25-34:
-  162 | let none_a = { a = (None:int list option) ; b = [42] }
-  163 | let some_a = { a = Some ([1;2;3;4]) ; b = [42] }
-  164 | let a_empty_b_not = { a = Some (([]: int list)) ; b = [111] }
-
-  Invalid type(s).
-  Expected: "int", but got: "list (int)". |}]
+  [%expect{| 0 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t12 [1]" ; "--init-file" ; (good_test "pm_test.mligo") ] ;
-  [%expect.unreachable]
-[@@expect.uncaught_exn {|
-  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
-     This is strongly discouraged as backtraces are fragile.
-     Please change this test to not include a backtrace. *)
-
-  (Cli_expect_tests.Cli_expect.Should_exit_good)
-  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
-  Called from Cli_expect_tests__Deep_pattern_matching.(fun) in file "src/bin/expect_tests/deep_pattern_matching.ml", line 847, characters 2-97
-  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
-
-  Trailing output
-  ---------------
-  File "../../test/contracts//deep_pattern_matching/pm_test.mligo", line 163, characters 25-34:
-  162 | let none_a = { a = (None:int list option) ; b = [42] }
-  163 | let some_a = { a = Some ([1;2;3;4]) ; b = [42] }
-  164 | let a_empty_b_not = { a = Some (([]: int list)) ; b = [111] }
-
-  Invalid type(s).
-  Expected: "int", but got: "list (int)". |}]
+  [%expect{| 1 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t12 [1;2]" ; "--init-file" ; (good_test "pm_test.mligo") ] ;
-  [%expect.unreachable]
-[@@expect.uncaught_exn {|
-  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
-     This is strongly discouraged as backtraces are fragile.
-     Please change this test to not include a backtrace. *)
-
-  (Cli_expect_tests.Cli_expect.Should_exit_good)
-  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
-  Called from Cli_expect_tests__Deep_pattern_matching.(fun) in file "src/bin/expect_tests/deep_pattern_matching.ml", line 870, characters 2-99
-  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
-
-  Trailing output
-  ---------------
-  File "../../test/contracts//deep_pattern_matching/pm_test.mligo", line 163, characters 25-34:
-  162 | let none_a = { a = (None:int list option) ; b = [42] }
-  163 | let some_a = { a = Some ([1;2;3;4]) ; b = [42] }
-  164 | let a_empty_b_not = { a = Some (([]: int list)) ; b = [111] }
-
-  Invalid type(s).
-  Expected: "int", but got: "list (int)". |}]
+  [%expect{| 3 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t12 [1;2;3]" ; "--init-file" ; (good_test "pm_test.mligo") ] ;
-  [%expect.unreachable]
-[@@expect.uncaught_exn {|
-  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
-     This is strongly discouraged as backtraces are fragile.
-     Please change this test to not include a backtrace. *)
-
-  (Cli_expect_tests.Cli_expect.Should_exit_good)
-  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
-  Called from Cli_expect_tests__Deep_pattern_matching.(fun) in file "src/bin/expect_tests/deep_pattern_matching.ml", line 893, characters 2-101
-  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
-
-  Trailing output
-  ---------------
-  File "../../test/contracts//deep_pattern_matching/pm_test.mligo", line 163, characters 25-34:
-  162 | let none_a = { a = (None:int list option) ; b = [42] }
-  163 | let some_a = { a = Some ([1;2;3;4]) ; b = [42] }
-  164 | let a_empty_b_not = { a = Some (([]: int list)) ; b = [111] }
-
-  Invalid type(s).
-  Expected: "int", but got: "list (int)". |}]
+  [%expect{| 6 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t12 [1;2;3;4]" ; "--init-file" ; (good_test "pm_test.mligo") ] ;
-  [%expect.unreachable]
-[@@expect.uncaught_exn {|
-  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
-     This is strongly discouraged as backtraces are fragile.
-     Please change this test to not include a backtrace. *)
-
-  (Cli_expect_tests.Cli_expect.Should_exit_good)
-  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
-  Called from Cli_expect_tests__Deep_pattern_matching.(fun) in file "src/bin/expect_tests/deep_pattern_matching.ml", line 916, characters 2-103
-  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
-
-  Trailing output
-  ---------------
-  File "../../test/contracts//deep_pattern_matching/pm_test.mligo", line 163, characters 25-34:
-  162 | let none_a = { a = (None:int list option) ; b = [42] }
-  163 | let some_a = { a = Some ([1;2;3;4]) ; b = [42] }
-  164 | let a_empty_b_not = { a = Some (([]: int list)) ; b = [111] }
-
-  Invalid type(s).
-  Expected: "int", but got: "list (int)". |}]
+  [%expect{| -1 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t13 none_a some_a" ; "--init-file" ; (good_test "pm_test.mligo") ] ;
-  [%expect.unreachable]
-[@@expect.uncaught_exn {|
-  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
-     This is strongly discouraged as backtraces are fragile.
-     Please change this test to not include a backtrace. *)
-
-  (Cli_expect_tests.Cli_expect.Should_exit_good)
-  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
-  Called from Cli_expect_tests__Deep_pattern_matching.(fun) in file "src/bin/expect_tests/deep_pattern_matching.ml", line 939, characters 2-107
-  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
-
-  Trailing output
-  ---------------
-  File "../../test/contracts//deep_pattern_matching/pm_test.mligo", line 163, characters 25-34:
-  162 | let none_a = { a = (None:int list option) ; b = [42] }
-  163 | let some_a = { a = Some ([1;2;3;4]) ; b = [42] }
-  164 | let a_empty_b_not = { a = Some (([]: int list)) ; b = [111] }
-
-  Invalid type(s).
-  Expected: "int", but got: "list (int)". |}]
+  [%expect{| -1 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t13 some_a a_empty_b_not" ; "--init-file" ; (good_test "pm_test.mligo") ] ;
-  [%expect.unreachable]
-[@@expect.uncaught_exn {|
-  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
-     This is strongly discouraged as backtraces are fragile.
-     Please change this test to not include a backtrace. *)
-
-  (Cli_expect_tests.Cli_expect.Should_exit_good)
-  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
-  Called from Cli_expect_tests__Deep_pattern_matching.(fun) in file "src/bin/expect_tests/deep_pattern_matching.ml", line 962, characters 2-114
-  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
-
-  Trailing output
-  ---------------
-  File "../../test/contracts//deep_pattern_matching/pm_test.mligo", line 163, characters 25-34:
-  162 | let none_a = { a = (None:int list option) ; b = [42] }
-  163 | let some_a = { a = Some ([1;2;3;4]) ; b = [42] }
-  164 | let a_empty_b_not = { a = Some (([]: int list)) ; b = [111] }
-
-  Invalid type(s).
-  Expected: "int", but got: "list (int)". |}]
+  [%expect{| 111 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t13 some_a b_empty_a_not" ; "--init-file" ; (good_test "pm_test.mligo") ] ;
-  [%expect.unreachable]
-[@@expect.uncaught_exn {|
-  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
-     This is strongly discouraged as backtraces are fragile.
-     Please change this test to not include a backtrace. *)
-
-  (Cli_expect_tests.Cli_expect.Should_exit_good)
-  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
-  Called from Cli_expect_tests__Deep_pattern_matching.(fun) in file "src/bin/expect_tests/deep_pattern_matching.ml", line 985, characters 2-114
-  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
-
-  Trailing output
-  ---------------
-  File "../../test/contracts//deep_pattern_matching/pm_test.mligo", line 163, characters 25-34:
-  162 | let none_a = { a = (None:int list option) ; b = [42] }
-  163 | let some_a = { a = Some ([1;2;3;4]) ; b = [42] }
-  164 | let a_empty_b_not = { a = Some (([]: int list)) ; b = [111] }
-
-  Invalid type(s).
-  Expected: "int", but got: "list (int)". |}]
+  [%expect{| 222 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t13 some_a some_a" ; "--init-file" ; (good_test "pm_test.mligo") ] ;
-  [%expect.unreachable]
-[@@expect.uncaught_exn {|
-  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
-     This is strongly discouraged as backtraces are fragile.
-     Please change this test to not include a backtrace. *)
-
-  (Cli_expect_tests.Cli_expect.Should_exit_good)
-  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
-  Called from Cli_expect_tests__Deep_pattern_matching.(fun) in file "src/bin/expect_tests/deep_pattern_matching.ml", line 1008, characters 2-107
-  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
-
-  Trailing output
-  ---------------
-  File "../../test/contracts//deep_pattern_matching/pm_test.mligo", line 163, characters 25-34:
-  162 | let none_a = { a = (None:int list option) ; b = [42] }
-  163 | let some_a = { a = Some ([1;2;3;4]) ; b = [42] }
-  164 | let a_empty_b_not = { a = Some (([]: int list)) ; b = [111] }
-
-  Invalid type(s).
-  Expected: "int", but got: "list (int)". |}]
+  [%expect{| 4 |}]
 
 let%expect_test _ =
   run_ligo_good [ "compile" ; "contract" ; (good_test "pm_ticket.mligo") ] ;
@@ -1066,23 +363,368 @@ let%expect_test _ =
 
 let%expect_test _ =
   run_ligo_good [ "print" ; "ast-typed" ; (good_test "pm_test.religo") ] ;
-  [%expect.unreachable]
-[@@expect.uncaught_exn {|
-  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
-     This is strongly discouraged as backtraces are fragile.
-     Please change this test to not include a backtrace. *)
-
-  (Cli_expect_tests.Cli_expect.Should_exit_good)
-  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
-  Called from Cli_expect_tests__Deep_pattern_matching.(fun) in file "src/bin/expect_tests/deep_pattern_matching.ml", line 1068, characters 2-72
-  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
-
-  Trailing output
-  ---------------
-  File "../../test/contracts//deep_pattern_matching/pm_test.religo", line 192, characters 24-36:
-  191 |
-  192 | let some_a = {a: (Some(([1, 2, 3, 4]))), b: [42] };
-  193 |
-
-  Invalid type(s).
-  Expected: "int", but got: "list (int)". |}]
+  [%expect{|
+    type myt = sum[Cons -> ( int * int ) , Nil -> unit]
+    type myr = record[a -> int , b -> nat , c -> string]
+    type myd =
+      sum[One -> sum[Cons -> ( int * int ) , Nil -> unit] , Two -> record[a -> int , b -> nat , c -> string]]
+    const t1 =
+      lambda (x) return let fr = lambda (_x) return 1 in let fl = lambda (_x) return 2 in
+       match x with
+        | ( tuple_proj#38 , ys ) ->
+         match tuple_proj#38 with
+          | Cons ctor_proj#51 ->
+             match ys with
+              | Cons ctor_proj#49 ->
+                 match ctor_proj#51 with
+                  | ( a , b ) ->
+                   match ctor_proj#49 with
+                    | ( c , d ) ->
+                    ADD(ADD(ADD(a , b) , c) , d)
+              | Nil unit_proj#48 ->
+                (fl)@(tuple_proj#38)
+          | Nil unit_proj#50 ->
+            (fr)@(ys)
+    const t2 =
+      lambda (x) return lambda (y) return  match x with
+                                            | Cons ctor_proj#57 ->
+                                               match ctor_proj#57 with
+                                                | ( a , b ) ->
+                                                let old_b = b in let b =
+                                                 match y with
+                                                  | Cons ctor_proj#60 ->
+                                                    ADD(a ,
+                                                    b)
+                                                  | Nil unit_proj#59 ->
+                                                    let f = lambda (b) return ADD(a ,
+                                                    b) in (f)@(ADD(b ,
+                                                    1)) in ADD(ADD(a ,
+                                                old_b) , b)
+                                            | Nil unit_proj#61 ->
+                                               match y with
+                                                | Cons ctor_proj#62 ->
+                                                   match ctor_proj#62 with
+                                                    | ( _a , b ) ->
+                                                    let a = "a" in ADD(INT(SIZE(a)) ,
+                                                    b)
+                                                | Nil unit_proj#64 ->
+                                                  1
+    const t3 =
+      lambda (x) return  match x with
+                          | One ctor_proj#68 ->
+                             match ctor_proj#68 with
+                              | Cons ctor_proj#73 ->
+                                 match ctor_proj#68 with
+                                  | Cons ctor_proj#69 ->
+                                     match ctor_proj#69 with
+                                      | ( a , b ) ->
+                                      ADD(a , b)
+                                  | Nil unit_proj#71 ->
+                                    2
+                              | Nil unit_proj#72 ->
+                                1
+                          | Two ctor_proj#74 ->
+                             match ctor_proj#74 with
+                              | record[a -> a , b -> b , c -> c] ->
+                              ADD(ADD(a , INT(b)) , INT(SIZE(c)))
+    const t2_3 =
+      lambda (x) return lambda (y) return lambda (x2) return let t2 =  match
+                                                                        x with
+                                                                        | Cons ctor_proj#82 ->
+                                                                         match
+                                                                        ctor_proj#82 with
+                                                                        | ( a , b ) ->
+                                                                        let old_b = b in let b =
+                                                                         match
+                                                                        y with
+                                                                        | Cons ctor_proj#84 ->
+                                                                         match
+                                                                        ctor_proj#84 with
+                                                                        | ( a , b ) ->
+                                                                        ADD(a ,
+                                                                        b)
+                                                                        | Nil unit_proj#86 ->
+                                                                        let f = lambda (b) return ADD(a ,
+                                                                        b) in (f)@(ADD(b ,
+                                                                        1)) in ADD(ADD(a ,
+                                                                        old_b) ,
+                                                                        b)
+                                                                        | Nil unit_proj#87 ->
+                                                                         match
+                                                                        y with
+                                                                        | Cons ctor_proj#88 ->
+                                                                         match
+                                                                        ctor_proj#88 with
+                                                                        | ( _a , b ) ->
+                                                                        let a = "a" in ADD(INT(SIZE(a)) ,
+                                                                        b)
+                                                                        | Nil unit_proj#90 ->
+                                                                        1 in let t3 =
+       match x2 with
+        | One ctor_proj#94 ->
+           match ctor_proj#94 with
+            | Cons ctor_proj#99 ->
+               match ctor_proj#94 with
+                | Cons ctor_proj#95 ->
+                   match ctor_proj#95 with
+                    | ( a , b ) ->
+                    ADD(a , b)
+                | Nil unit_proj#97 ->
+                  2
+            | Nil unit_proj#98 ->
+              1
+        | Two ctor_proj#100 ->
+           match ctor_proj#100 with
+            | record[a -> a , b -> b , c -> c] ->
+            ADD(ADD(a , b) , INT(SIZE(c))) in ADD(t2 ,
+      t3)
+    const t4 =
+      lambda (x) return lambda (y) return let gen#102 = ( x , y ) in  match
+                                                                       gen#102 with
+                                                                       |
+                                                                       ( a , tuple_proj#103 ) ->
+                                                                        match
+                                                                        tuple_proj#103 with
+                                                                        | Two ctor_proj#117 ->
+                                                                         match
+                                                                        a with
+                                                                        | One ctor_proj#108 ->
+                                                                         match
+                                                                        ctor_proj#108 with
+                                                                        | Cons ctor_proj#109 ->
+                                                                         match
+                                                                        ctor_proj#109 with
+                                                                        | ( a , b ) ->
+                                                                        ADD(a ,
+                                                                        b)
+                                                                        | Nil unit_proj#111 ->
+                                                                        2
+                                                                        | Two ctor_proj#112 ->
+                                                                         match
+                                                                        ctor_proj#112 with
+                                                                        | record[a -> a , b -> b , c -> c] ->
+                                                                         match
+                                                                        ctor_proj#117 with
+                                                                        | record[a -> aa , b -> gen#3 , c -> cc] ->
+                                                                        ADD(ADD(ADD(ADD(a ,
+                                                                        INT(b)) ,
+                                                                        INT(SIZE(c))) ,
+                                                                        aa) ,
+                                                                        INT(SIZE(cc)))
+                                                                        | One _x ->
+                                                                        1
+    const t5 =
+      lambda (x) return let gen#118 = ( x , unit ) in  match gen#118 with
+                                                        | ( a , tuple_proj#119 ) ->
+                                                        a
+    const t6 =
+      lambda (x) return let gen#121 = ( x , unit ) in  match gen#121 with
+                                                        | ( gen#4 , gen#5 ) ->
+                                                        2
+    const t7 =
+      lambda (x) return  match x with
+                          | None unit_proj#123 ->
+                            1 | Some x ->
+                                x
+    const t8 =
+      lambda (x) return lambda (y) return let gen#124 = ( x , y ) in  match
+                                                                       gen#124 with
+                                                                       |
+                                                                       ( tuple_proj#125 , x ) ->
+                                                                        match
+                                                                        tuple_proj#125 with
+                                                                        | None unit_proj#128 ->
+                                                                        x
+                                                                        | Some ctor_proj#129 ->
+                                                                         match
+                                                                        ctor_proj#129 with
+                                                                        | ( x , y ) ->
+                                                                        ADD(x ,
+                                                                        y)
+    const t9 =
+      lambda (x) return lambda (y) return let gen#131 = ( x , y ) in  match
+                                                                       gen#131 with
+                                                                       |
+                                                                       ( tuple_proj#132 , ys ) ->
+                                                                        match
+                                                                        tuple_proj#132 with
+                                                                        | Some ctor_proj#141 ->
+                                                                         match
+                                                                        ys with
+                                                                        | Some ctor_proj#139 ->
+                                                                        ADD(ctor_proj#141 ,
+                                                                        ctor_proj#139)
+                                                                        | None unit_proj#138 ->
+                                                                        2
+                                                                        | None unit_proj#140 ->
+                                                                        1
+    type optioni = option (int)
+    type myti = sum[Consi -> option (int) , Nili -> unit]
+    const fl = lambda (_x) return 1
+    const fo = lambda (_x) return 2
+    const t10 =
+      lambda (x) return lambda (y) return let gen#142 = ( x , y ) in  match
+                                                                       gen#142 with
+                                                                       |
+                                                                       ( tuple_proj#143 , ys ) ->
+                                                                        match
+                                                                        tuple_proj#143 with
+                                                                        | Consi ctor_proj#159 ->
+                                                                         match
+                                                                        ys with
+                                                                        | Consi ctor_proj#157 ->
+                                                                         match
+                                                                        ctor_proj#159 with
+                                                                        | Some ctor_proj#154 ->
+                                                                        ADD((fo)@(ctor_proj#159) ,
+                                                                        (fo)@(ctor_proj#157))
+                                                                        | None unit_proj#150 ->
+                                                                         match
+                                                                        ys with
+                                                                        | Nili ctor_proj#153 ->
+                                                                        ADD((fo)@(ctor_proj#159) ,
+                                                                        (fo)@(ctor_proj#157))
+                                                                        | Consi ctor_proj#151 ->
+                                                                         match
+                                                                        ctor_proj#151 with
+                                                                        | None ctor_proj#152 ->
+                                                                        ADD((fo)@(ctor_proj#159) ,
+                                                                        (fo)@(ctor_proj#157))
+                                                                        | Some _b ->
+                                                                        let b = 1 in b
+                                                                        | Nili unit_proj#156 ->
+                                                                        (fl)@(tuple_proj#143)
+                                                                        | Nili unit_proj#158 ->
+                                                                        (fl)@(ys)
+    const t11 =
+      lambda (x) return lambda (y) return let gen#161 = ( x , y ) in  match
+                                                                       gen#161 with
+                                                                       |
+                                                                       ( tuple_proj#162 , ys ) ->
+                                                                        match
+                                                                        tuple_proj#162 with
+                                                                        | Consi ctor_proj#178 ->
+                                                                         match
+                                                                        ys with
+                                                                        | Consi ctor_proj#176 ->
+                                                                         match
+                                                                        ctor_proj#178 with
+                                                                        | None ctor_proj#173 ->
+                                                                         match
+                                                                        ctor_proj#178 with
+                                                                        | None unit_proj#168 ->
+                                                                        ADD((fo)@(ctor_proj#178) ,
+                                                                        (fo)@(ctor_proj#176))
+                                                                        | Some a ->
+                                                                        a
+                                                                        | Some _a ->
+                                                                         match
+                                                                        ys with
+                                                                        | Nili ctor_proj#172 ->
+                                                                         match
+                                                                        ctor_proj#178 with
+                                                                        | None unit_proj#168 ->
+                                                                        ADD((fo)@(ctor_proj#178) ,
+                                                                        (fo)@(ctor_proj#176))
+                                                                        | Some a ->
+                                                                        a
+                                                                        | Consi ctor_proj#170 ->
+                                                                         match
+                                                                        ctor_proj#170 with
+                                                                        | None ctor_proj#171 ->
+                                                                         match
+                                                                        ctor_proj#178 with
+                                                                        | None unit_proj#168 ->
+                                                                        ADD((fo)@(ctor_proj#178) ,
+                                                                        (fo)@(ctor_proj#176))
+                                                                        | Some a ->
+                                                                        a
+                                                                        | Some b ->
+                                                                        let a = 1 in ADD(a ,
+                                                                        b)
+                                                                        | Nili unit_proj#175 ->
+                                                                        (fl)@(tuple_proj#162)
+                                                                        | Nili unit_proj#177 ->
+                                                                        (fl)@(ys)
+    const t12 =
+      lambda (x) return  match x with
+                          | Cons ctor_proj#179 ->
+                             match ctor_proj#179 with
+                              | ( hd , tuple_proj#180 ) ->
+                               match tuple_proj#180 with
+                                | Cons ctor_proj#185 ->
+                                   match ctor_proj#185 with
+                                    | ( hd2 , tuple_proj#186 ) ->
+                                     match tuple_proj#186 with
+                                      | Cons ctor_proj#189 ->
+                                         match ctor_proj#189 with
+                                          | ( hd3 , tuple_proj#190 ) ->
+                                           match tuple_proj#190 with
+                                            | Cons ctor_proj#193 ->
+                                              NEG(1)
+                                            | Nil unit_proj#192 ->
+                                              ADD(ADD(hd ,
+                                              hd2) ,
+                                              hd3)
+                                      | Nil unit_proj#194 ->
+                                        ADD(hd ,
+                                        hd2)
+                                | Nil unit_proj#195 ->
+                                  hd
+                          | Nil unit_proj#196 ->
+                            0
+    type recordi = record[a -> option (list (int)) , b -> list (int)]
+    const none_a = record[a -> None(unit) , b -> CONS(42 , LIST_EMPTY())]
+    const some_a =
+      record[a -> Some(CONS(1 , CONS(2 , CONS(3 , CONS(4 , LIST_EMPTY()))))) , b -> CONS(42 , LIST_EMPTY())]
+    const a_empty_b_not =
+      record[a -> Some(LIST_EMPTY()) , b -> CONS(111 , LIST_EMPTY())]
+    const b_empty_a_not =
+      record[a -> Some(CONS(222 , LIST_EMPTY())) , b -> LIST_EMPTY()]
+    const t13 =
+      lambda (x) return lambda (y) return let gen#197 = ( x , y ) in  match
+                                                                       gen#197 with
+                                                                       |
+                                                                       ( tuple_proj#198 , tuple_proj#199 ) ->
+                                                                        match
+                                                                        tuple_proj#198 with
+                                                                        |
+                                                                        record[a -> record_proj#204 , b -> gen#7] ->
+                                                                         match
+                                                                        record_proj#204 with
+                                                                        | Some ctor_proj#226 ->
+                                                                         match
+                                                                        tuple_proj#199 with
+                                                                        | record[a -> record_proj#210 , b -> record_proj#211] ->
+                                                                         match
+                                                                        record_proj#210 with
+                                                                        | None ctor_proj#223 ->
+                                                                        INT(SIZE(ctor_proj#226))
+                                                                        | Some ctor_proj#214 ->
+                                                                         match
+                                                                        ctor_proj#214 with
+                                                                        | Cons ctor_proj#215 ->
+                                                                         match
+                                                                        ctor_proj#215 with
+                                                                        | ( hd , _tl ) ->
+                                                                         match
+                                                                        record_proj#211 with
+                                                                        | Cons ctor_proj#218 ->
+                                                                        INT(SIZE(ctor_proj#226))
+                                                                        | Nil unit_proj#217 ->
+                                                                        hd
+                                                                        | Nil unit_proj#219 ->
+                                                                         match
+                                                                        record_proj#211 with
+                                                                        | Nil ctor_proj#222 ->
+                                                                        INT(SIZE(ctor_proj#226))
+                                                                        | Cons ctor_proj#220 ->
+                                                                         match
+                                                                        ctor_proj#220 with
+                                                                        | ( hd , _tl ) ->
+                                                                        hd
+                                                                        | None unit_proj#224 ->
+                                                                         match
+                                                                        tuple_proj#199 with
+                                                                        | record[a -> gen#9 , b -> gen#8] ->
+                                                                        NEG(1) |}]

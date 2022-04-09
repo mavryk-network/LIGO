@@ -324,11 +324,14 @@ and type_expression' ~raise ~add_warning ~options : context -> ?tv_opt:O.type_ex
       )
       | None -> (
         let matching_t_sum = Context.Typing.get_sum constructor context in
-        match matching_t_sum with
-        | (v_ty,tvl,c_arg_t,sum_t) :: ignored ->
+        let general_type = List.find ~f:(fun (_, tvs, _, _) -> not @@ List.is_empty tvs) matching_t_sum in
+        (match general_type with
+          Some (_,b,c,d) -> (b,c,d)
+        | None -> (match matching_t_sum with
+        | (v_ty,tvl,c_arg_t,sum_t) :: ignored  ->
           let () = warn_ambiguous_constructor ~add_warning e.location (v_ty,c_arg_t) ignored in
           (tvl,c_arg_t,sum_t)
-        | [] -> raise.raise (unbound_constructor constructor e.location)
+        | [] -> raise.raise (unbound_constructor constructor e.location)))
       )
     in
     let c_arg = type_expression' ~raise ~add_warning ~options (app_context, context) element in
