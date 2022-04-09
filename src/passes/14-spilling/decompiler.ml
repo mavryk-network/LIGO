@@ -213,7 +213,18 @@ let rec decompile ~raise (v : value) (t : AST.type_expression) : AST.expression 
       let () = Format.printf "%a" AST.PP.type_content t.type_content in
       raise.raise @@ corner_case ~loc:"unspiller" "Wrong number of args or wrong kinds for the type constant"
   )
+  | T_sum _ when (Option.is_some (Ast_aggregated.get_t_option t)) ->
+    (match v with
+    | D_some v ->
+      let tv = trace_option ~raise (corner_case ~loc:"unspiller" "impossible") @@ Ast_aggregated.get_t_option t in
+      let sub = self v tv in
+      return (E_constructor {constructor=Label "Some";element=sub})
+    | D_none -> 
+      return (E_constructor {constructor=Label "None";element=make_e (e_unit ()) (t_unit ())})
+    | _ -> failwith "todo"
+    )
   | T_sum {layout ; content} ->
+      (* let () = Format.printf "*** %a \n" AST.PP.type_expression t in *)
       let lst = List.map ~f:(fun (k,({associated_type;_} : _ row_element_mini_c)) -> (k,associated_type)) @@ AST.Helpers.kv_list_of_t_sum ~layout content in
       let (constructor, v, tv) = Layout.extract_constructor ~raise ~layout v lst in
       let sub = self v tv in
