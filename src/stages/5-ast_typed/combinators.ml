@@ -103,7 +103,7 @@ let t_option ?loc ?core ?typ () : type_expression =
         ("None", t_unit ());
       ]
   | None -> 
-    let ty_binder = TypeVar.fresh ~name:"_a" () in
+    let ty_binder = TypeVar.of_input_var "'a" in
     t_abstraction { ty_binder ; kind=Type ; type_ = (
       t_sum_ez ?loc ?core [
         ("Some", t_variable ty_binder ()) ;
