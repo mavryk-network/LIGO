@@ -448,6 +448,10 @@ let register_constant = (constant : michelson_program) => string
 </SyntaxTitle>
 Registers a global constant `constant`, returns its hash as a string.
 
+See the [documentation for global
+constants](../advanced/global-constants#global-constants-in-the-testing-framework)
+for an example of usage.
+
 <SyntaxTitle syntax="pascaligo">
 val constant_to_michelson_program : string -> michelson_program
 </SyntaxTitle>
@@ -461,6 +465,22 @@ let constant_to_michelson_program: string => michelson_program
 let constant_to_michelson_program = (constant : string) => michelson_program
 </SyntaxTitle>
 Turn a constant (as a string) into a `michelson_program`. To be used together with `Test.register_constant`.
+
+<SyntaxTitle syntax="pascaligo">
+val register_file_constants : string -> list (string)
+</SyntaxTitle>
+<SyntaxTitle syntax="cameligo">
+val register_file_constants : string -> string list
+</SyntaxTitle>
+<SyntaxTitle syntax="reasonligo">
+let register_file_constants: string => list (string)
+</SyntaxTitle>
+<SyntaxTitle syntax="jsligo">
+let register_file_constants = (filepath : string) => list&lt;string&gt;
+</SyntaxTitle>
+Registers the global constants listed in a JSON file. It takes a
+string (file path) and returns a list of strings corresponding to the
+hashes of the registered constants.
 
 <SyntaxTitle syntax="pascaligo">
 val bake_until_n_cycle_end : nat -> unit
@@ -775,6 +795,21 @@ This function reconstructs a file from a mutation (second argument),
 and saves it to a file in the directory path (first argument). It
 returns an optional string indicating the filename where the mutation
 was saved, or `None` if there was an error.
+
+<SyntaxTitle syntax="pascaligo">
+val random&lt;a&gt; : unit -> a
+</SyntaxTitle>
+<SyntaxTitle syntax="cameligo">
+val random : unit -> 'a
+</SyntaxTitle>
+<SyntaxTitle syntax="reasonligo">
+let random : unit => 'a
+</SyntaxTitle>
+<SyntaxTitle syntax="jsligo">
+let random : (u: unit) => 'a
+</SyntaxTitle>
+
+This function creates a random value for a chosen type.
 
 <SyntaxTitle syntax="pascaligo">
 val cast_address &lt;param, storage&gt; : address -> typed_address (param, storage)
