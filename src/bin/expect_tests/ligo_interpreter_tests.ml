@@ -702,14 +702,13 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_bad [ "run"; "test" ; bad_test "test_random.mligo" ] ;
   [%expect {|
-    File "../../test/contracts/negative//interpreter_tests/test_random.mligo", line 17, characters 18-30:
-     16 |       | None -> ()
-     17 |       | Some x -> assert false
-     18 | end
+    File "../../test/contracts/negative//interpreter_tests/test_random.mligo", line 22, characters 40-42:
+     21 | let almost_id (xs : int list) =
+     22 |   if (List.length xs = 5n) then [] else xs
+     23 |
 
-    Failed assertion
-    Trace:
-    File "../../test/contracts/negative//interpreter_tests/test_random.mligo", line 29, characters 2-25 |}]
+    Invalid type(s).
+    Expected: "list ('a)", but got: "list (int)". |}]
 
 let pwd = Sys.getcwd ()
 let () = Sys.chdir "../../test/contracts/negative/interpreter_tests/"
@@ -750,7 +749,7 @@ let%expect_test _ =
 
   (Cli_expect_tests.Cli_expect.Should_exit_good)
   Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
-  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 725, characters 2-137
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 743, characters 2-137
   Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
 
   Trailing output
