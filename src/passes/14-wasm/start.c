@@ -1,7 +1,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "../../../vendors/gmp/gmp-6.2.1/gmp.h"
-#include "api.h"
+#include "include/api.h"
+#include "include/red_black_tree.h"
 
 extern void __load(uint8_t * addr);
 extern void __save(__wasi_ciovec_t* src_addr, __wasi_ciovec_t* result);

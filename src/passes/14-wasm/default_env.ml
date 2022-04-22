@@ -257,7 +257,14 @@ let env: module_ = {
           tdetails = FuncType ([I32Type], [I32Type])
         };
         at
-      }
+      };
+      { 
+        it = {
+          tname = "insertNode_type";
+          tdetails = FuncType ([I32Type], [I32Type])
+        }; 
+        at 
+      }      
     ];
     imports = [
       (* {
@@ -479,7 +486,19 @@ let env: module_ = {
           }
         };
         at
-      }
+      };
+      {
+        it = {
+          module_name = name "env";
+          item_name   = name "insertNode";
+          idesc       = {
+            it = FuncImport "insertNode_type";
+            at
+          }
+        };
+        at
+      };
+      
       (* TODO: Missing logarithmic functions, need to add those. *)
     ];
     symbols = [
@@ -659,6 +678,13 @@ let env: module_ = {
         it = {
           name = "__gmpz_get_ui";
           details = Import ([I32Type], [I32Type])
+        };
+        at
+      };
+      {
+        it = {
+          name = "insertNode";
+          details = Import ([I32Type; I32Type; I32Type], [])
         };
         at
       };

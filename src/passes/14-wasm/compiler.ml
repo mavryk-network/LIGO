@@ -268,7 +268,15 @@ let rec expression ~raise : A.module_' -> locals -> I.expression -> A.module_' *
       { it = LocalGet cons; at}
     ]
   | E_constant {cons_name = C_LIST_LITERAL; arguments = [l1]} -> failwith "not supported yet 15a2"
+  | E_constant {cons_name = C_SET_ADD; arguments = [a; b]} ->
+    let w, l, a = expression ~raise w l a in
+    let w, l, b = expression ~raise w l b in
+    a @ 
+    b @ 
+    
+    [S.{ it = A.Call "insertNode"; at }]
   | E_constant {cons_name; arguments} -> failwith "not supported yet 15b"
+
   | E_application _ -> 
     let rec aux result expr = 
       (match expr.I.content with 
