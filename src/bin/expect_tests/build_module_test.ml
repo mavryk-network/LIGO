@@ -94,19 +94,20 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_good [ "print" ; "mini-c" ; contract "D.mligo" ] ;
   [%expect{|
-let #../../test/contracts/build/A.mligo#toto#9 = L(1) in
-let #../../test/contracts/build/B.mligo#titi#11 =
-  ADD(#../../test/contracts/build/A.mligo#toto#9 , L(42)) in
-let #../../test/contracts/build/C.mligo#tata#15 =
-  ADD(#../../test/contracts/build/A.mligo#toto#9 ,
-      #../../test/contracts/build/B.mligo#titi#11) in
-let #../../test/contracts/build/C.mligo#foo#16 =
-  let (gen#19, gen#20) = PAIR(L(unit) , L(3)) in
+let #../../test/contracts/build/A.mligo#toto#30 = L(1) in
+let #../../test/contracts/build/B.mligo#titi#32 =
+  ADD(#../../test/contracts/build/A.mligo#toto#30 , L(42)) in
+let #../../test/contracts/build/C.mligo#tata#36 =
+  ADD(#../../test/contracts/build/A.mligo#toto#30 ,
+      #../../test/contracts/build/B.mligo#titi#32) in
+let #../../test/contracts/build/C.mligo#foo#37 =
+  let (gen#40, gen#41) = PAIR(L(unit) , L(3)) in
   let x =
-    ADD(ADD(gen#20 , #../../test/contracts/build/A.mligo#toto#9) ,
-        #../../test/contracts/build/B.mligo#titi#11) in
+    ADD(ADD(gen#41 , #../../test/contracts/build/A.mligo#toto#30) ,
+        #../../test/contracts/build/B.mligo#titi#32) in
   PAIR(LIST_EMPTY() , x) in
-let toto = ADD(L(10) , #../../test/contracts/build/A.mligo#toto#9) in L(unit) |}]
+let toto = ADD(L(10) , #../../test/contracts/build/A.mligo#toto#30) in
+L(unit) |}]
 
 let%expect_test _ =
   run_ligo_good [ "compile" ; "contract" ; contract "D.mligo" ] ;
