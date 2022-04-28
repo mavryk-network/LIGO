@@ -122,14 +122,6 @@ let rec apply_comparison :
     return @@ v_bool (not b)
   | (comp, [(V_Ct _ as v1); (V_Ct _ as v2)]) ->
       compare_constants comp v1 v2 loc calltrace
-  | (comp, [V_Ligo (a1, b1); V_Ligo (a2, b2)]) ->
-      let* x =
-        match comp with
-        | C_EQ  -> return String.(a1 = a2 && b1 = b2)
-        | C_NEQ -> return String.(a1 = a2 && b1 = b2)
-        | _ -> fail @@ Errors.meta_lang_eval loc calltrace "Not comparable"
-      in
-      return @@ v_bool x
   | (comp, [V_List   _ as xs; V_List   _ as ys])
   | (comp, [V_Set    _ as xs; V_Set    _ as ys])
   | (comp, [V_Map    _ as xs; V_Map    _ as ys])
@@ -983,6 +975,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t) : Location.
     | ( C_TEST_CREATE_CHEST_KEY , [ V_Ct (C_bytes chest) ; V_Ct (C_nat time)] ) ->
       let chest_key = Michelson_backend.create_chest_key chest (Z.to_int time) in
       return @@ V_Ct (C_bytes chest_key)
+    | ( C_TEST_CREATE_CHEST_KEY , _  ) -> fail @@ error_type
     | ( C_TEST_GET_VOTING_POWER, [ V_Ct (C_key_hash hk) ]) ->
       let>> vp = Get_voting_power (loc, calltrace, hk) in
       return vp
@@ -1003,7 +996,14 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t) : Location.
       let>> v = Register_file_constants (loc, calltrace, path) in
       return @@ v
     | ( C_TEST_REGISTER_FILE_CONSTANTS , _ ) -> fail @@ error_type
-    | ( C_TEST_CREATE_CHEST_KEY , _  ) -> fail @@ error_type
+    | ( C_TEST_PUSH_CONTEXT , [ V_Ct C_unit ] ) ->
+      let>> () = Push_context () in
+      return @@ V_Ct C_unit
+    | ( C_TEST_PUSH_CONTEXT , _ ) -> fail @@ error_type
+    | ( C_TEST_POP_CONTEXT , [ V_Ct C_unit ] ) ->
+      let>> () = Pop_context () in
+      return @@ V_Ct C_unit
+    | ( C_TEST_POP_CONTEXT , _ ) -> fail @@ error_type
     | ( (C_SAPLING_VERIFY_UPDATE | C_SAPLING_EMPTY_STATE) , _ ) ->
       fail @@ Errors.generic_error loc "Sapling is not supported."
     | ( (C_SOURCE | C_SENDER | C_AMOUNT | C_BALANCE | C_NOW | C_LEVEL | C_SELF |
@@ -1090,9 +1090,6 @@ and eval_ligo ~raise ~steps ~options : AST.expression -> calltrace -> env -> val
             let f_env' = Env.extend env arg_binder (in_ty, args') in
             let f_env'' = Env.extend f_env' fun_name (orig_lambda.type_expression, f') in
             eval_ligo body (term.location :: calltrace) f_env''
-          | V_Ligo (_, code) ->
-            let>> ctxt = Get_state () in
-            return @@ Michelson_backend.parse_and_run_michelson_func ~raise ~loc:term.location ctxt code term.type_expression args' args.type_expression
           | V_Michelson (Ty_code { code ; code_ty = _ ; ast_ty = _ }) ->
             let>> ctxt = Get_state () in
             return @@ Michelson_backend.run_michelson_func ~raise ~loc:term.location ctxt code term.type_expression args' args.type_expression
@@ -1152,14 +1149,12 @@ and eval_ligo ~raise ~steps ~options : AST.expression -> calltrace -> env -> val
     )
     | E_constructor { constructor = Label "True" ; element = { expression_content = E_literal (Literal_unit) ; _ } } ->
       return @@ V_Ct (C_bool true)
-    | E_constructor { constructor = Label "False" ; element = { expression_content = E_literal (Literal_unit) ; _ } } ->
+    | E_constructor { constructor = Label "False"; element = { expression_content = E_literal (Literal_unit) ; _ } } ->
       return @@ V_Ct (C_bool false)
     | E_constructor { constructor = Label "Some" ; element } ->
-      (* let () = print_endline "AAAAAAAAAAAAAAAAAAAAA" in *)
       let* v = eval_ligo element (term.location :: calltrace) env in
       return @@ v_some v
     | E_constructor { constructor = Label "None" ; element = { expression_content = E_literal (Literal_unit) ; _ } } ->
-      (* let () = print_endline "BBBBBBBBBBBBBBBBBBBBAAAAAAAAAAAAAAAAAAAAA" in *)
       return @@ v_none ()
     | E_constructor { constructor = Label c ; element } ->
       let* v' = eval_ligo element calltrace env in
@@ -1242,9 +1237,6 @@ and eval_ligo ~raise ~steps ~options : AST.expression -> calltrace -> env -> val
         let exp_as_string = Ligo_string.extract x in
         let code, code_ty = Michelson_backend.parse_raw_michelson_code ~raise exp_as_string ast_ty in
         return @@ V_Michelson (Ty_code { code ; code_ty ; ast_ty })
-      | E_literal (Literal_string x) when is_t_arrow (get_type term) ->
-        let exp_as_string = Ligo_string.extract x in
-        return @@ V_Ligo (language , exp_as_string)
       | _ -> raise.raise @@ Errors.generic_error term.location "Embedded raw code can only have a functional type"
     )
 
@@ -1277,8 +1269,7 @@ let eval_test ~raise ~steps ~options : Ast_typed.program -> ((string * value) li
   let map = List.fold_right lst ~f ~init:LMap.empty in
   let expr = Ast_typed.e_a_record map in
   let expr = ctxt expr in
-  let expr = Self_ast_aggregated.expression_mono expr in
-  let expr = trace ~raise Main_errors.self_ast_aggregated_tracer @@ Self_ast_aggregated.expression_uncurry expr in
+  let expr = trace ~raise Main_errors.self_ast_aggregated_tracer @@ Self_ast_aggregated.all_expression ~test:true expr in
   let value, _ = try_eval ~raise ~steps ~options expr Env.empty_env initial_state None in
   match value with
   | V_Record m ->

@@ -5,9 +5,10 @@ type all =
 [
   | `Self_ast_typed_warning_unused of Location.t * string
   | `Self_ast_typed_warning_muchused of Location.t * string
-  | `Checking_ambiguous_contructor of Location.t * Stage_common.Types.type_variable * Stage_common.Types.type_variable 
+  | `Checking_ambiguous_contructor of Location.t * Stage_common.Types.type_variable * Stage_common.Types.type_variable
   | `Self_ast_imperative_warning_layout of (Location.t * Ast_imperative.label)
   | `Self_ast_imperative_warning_deprecated_constant of Location.t * string * string option
+  | `Self_ast_imperative_warning_deprecated_polymorphic_variable of Location.t * Stage_common.Types.TypeVar.t
   | `Main_view_ignored of Location.t
   | `Pascaligo_deprecated_case of Location.t
   | `Pascaligo_deprecated_semi_before_else of Location.t
@@ -57,6 +58,10 @@ let pp : display_format:string display_format ->
           Snippet.pp loc name (match replacement with
                                | Some r -> Format.asprintf " Consider using %s instead." r
                                | None -> "")
+    | `Self_ast_imperative_warning_deprecated_polymorphic_variable (loc, name) ->
+        Format.fprintf f
+          "@[<hv>%a@ Warning: %a is not recognize as a polymorphic variable anymore. If you want to make a polymorphic function, please consult the online documentation @.@]"
+          Snippet.pp loc Stage_common.Types.TypeVar.pp name
   )
 let to_json : all -> Yojson.Safe.t = fun a ->
   let json_warning ~stage ~content =
@@ -80,7 +85,7 @@ let to_json : all -> Yojson.Safe.t = fun a ->
   | `Main_view_ignored loc ->
     let message = `String "command line option overwrites annotated views" in
     let stage   = "Main" in
-    let loc = `String (Format.asprintf "%a" Location.pp loc) in
+    let loc = Location.to_yojson loc in
     let content = `Assoc [
                       ("message", message);
                       ("location", loc);
@@ -108,7 +113,7 @@ let to_json : all -> Yojson.Safe.t = fun a ->
      let message = `String "unused variable" in
      let stage   = "self_ast_typed" in
      let description = `String s in
-     let loc = `String (Format.asprintf "%a" Location.pp loc) in
+     let loc = Location.to_yojson loc in
      let content = `Assoc [
                        ("message", message);
                        ("location", loc);
@@ -119,7 +124,7 @@ let to_json : all -> Yojson.Safe.t = fun a ->
      let message = `String "much used variable" in
      let stage   = "self_ast_typed" in
      let description = `String s in
-     let loc = `String (Format.asprintf "%a" Location.pp loc) in
+     let loc = Location.to_yojson loc in
      let content = `Assoc [
                        ("message", message);
                        ("location", loc);
@@ -129,7 +134,7 @@ let to_json : all -> Yojson.Safe.t = fun a ->
   | `Self_ast_imperative_warning_layout (loc, s) ->
     let message = `String (Format.asprintf "Layout attribute on constructor %a" Ast_imperative.PP.label s) in
      let stage   = "self_ast_imperative" in
-    let loc = `String (Format.asprintf "%a" Location.pp loc) in
+    let loc = Location.to_yojson loc in
     let content = `Assoc [
       ("message", message);
       ("location", loc);
@@ -137,6 +142,15 @@ let to_json : all -> Yojson.Safe.t = fun a ->
     json_warning ~stage ~content
   | `Self_ast_imperative_warning_deprecated_constant (loc, name, _) ->
     let message = `String (Format.asprintf "Deprecated constant %s" name) in
+     let stage   = "self_ast_imperative" in
+    let loc = `String (Format.asprintf "%a" Location.pp loc) in
+    let content = `Assoc [
+      ("message", message);
+      ("location", loc);
+    ] in
+    json_warning ~stage ~content
+  | `Self_ast_imperative_warning_deprecated_polymorphic_variable (loc, name) ->
+    let message = `String (Format.asprintf "Deprecated polymorphic var %a" Stage_common.Types.TypeVar.pp name) in
      let stage   = "self_ast_imperative" in
     let loc = `String (Format.asprintf "%a" Location.pp loc) in
     let content = `Assoc [

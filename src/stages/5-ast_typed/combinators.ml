@@ -39,7 +39,7 @@ let t_constant ?loc ?core injection parameters : type_expression =
 
 (* TODO?: X_name here should be replaced by X_injection *)
 let t__type_ ?loc ?core () : type_expression = t_constant ?loc ?core _type_ []
-[@@map (_type_, ("signature","chain_id", "string", "bytes", "key", "key_hash", "int", "address", "operation", "nat", "tez", "timestamp", "unit", "bls12_381_g1", "bls12_381_g2", "bls12_381_fr", "never", "mutation", "failure", "pvss_key", "baker_hash", "chest_key", "chest"))]
+[@@map (_type_, ("signature","chain_id", "string", "bytes", "key", "key_hash", "int", "address", "operation", "nat", "tez", "timestamp", "unit", "bls12_381_g1", "bls12_381_g2", "bls12_381_fr", "never", "mutation", "pvss_key", "baker_hash", "chest_key", "chest"))]
 
 let t__type_ ?loc ?core t : type_expression = t_constant ?loc ?core _type_ [t]
 [@@map (_type_, ("list", "set", "contract", "ticket", "sapling_state", "sapling_transaction"))]
@@ -95,21 +95,21 @@ let t_record_ez ?loc ?core ?(layout=default_layout) (lst:(string * type_expressi
   t_record ?loc ?core ~layout map
 let t_bool ?loc ?core ()       : type_expression = t_sum_ez ?loc ?core
   [("True", t_unit ());("False", t_unit ())]
-let t_option ?loc ?core ?typ () : type_expression = 
-  match typ with
-    Some typ ->
-      t_sum_ez ?loc ?core [
-        ("Some", typ) ;
-        ("None", t_unit ());
-      ]
-  | None -> 
-    let ty_binder = TypeVar.of_input_var "'a" in
-    t_abstraction { ty_binder ; kind=Type ; type_ = (
-      t_sum_ez ?loc ?core [
-        ("Some", t_variable ty_binder ()) ;
-        ("None", t_unit ());
-      ]) 
-    } ()
+
+let t_option ?loc ?core typ : type_expression = 
+  t_sum_ez ?loc ?core [
+    ("Some", typ) ;
+    ("None", t_unit ());
+  ]
+
+let t_option_abst ?loc ?core () : type_expression =
+  let ty_binder = TypeVar.of_input_var "'a" in
+  t_abstraction { ty_binder ; kind=Type ; type_= (
+    t_sum_ez ?loc ?core [
+      ("Some", t_variable ty_binder ()) ;
+      ("None", t_unit ());
+    ]) 
+  } ()
 
 (* types specific to LIGO test framework*)
 let t_michelson_code ?loc ?core () : type_expression = t_constant ?loc ?core Stage_common.Constant.Michelson_program []
@@ -143,15 +143,15 @@ let get_t_bool (t:type_expression) : unit option = match t.type_content with
   | t when (Compare.type_content t (t_bool ()).type_content) = 0-> Some ()
   | _ -> None
 
-
-let get_t_option (t:type_expression) : type_expression option = match t.type_content with
+let get_t_option (t:type_expression) : type_expression option = 
+  match t.type_content with
   | T_sum {content;_} ->
     let keys = LMap.keys content in
     (match keys with
       [Label "Some" ; Label "None"]
     | [Label "None" ; Label "Some"] ->
-        let some = LMap.find (Label "Some") content in
-        Some some.associated_type 
+      let some = LMap.find (Label "Some") content in
+      Some some.associated_type 
     | _ -> None)
   | _ -> None
 
@@ -181,7 +181,7 @@ let get_t__type_ (t : type_expression) : unit option = get_t_base_inj t _type_
 [@@map (_type_, ("int", "nat", "unit", "tez", "timestamp", "address", "bytes", "string", "key", "signature", "key_hash", "chest", "chest_key", "michelson_program", "bls12_381_g1", "bls12_381_g2", "bls12_381_fr"))]
 
 let get_t__type_ (t : type_expression) : type_expression option = get_t_unary_inj t _type_
-[@@map (_type_, ("contract", "list", "set", "ticket", "sapling_state", "sapling_transaction"))]
+[@@map (_type_, ("contract",  "list", "set", "ticket", "sapling_state", "sapling_transaction"))]
 
 let get_t_mutez (t:type_expression) : unit option = get_t_tez t
 let get_t_michelson_code (t:type_expression) : unit option = get_t_michelson_program t
@@ -265,10 +265,10 @@ let ez_e_record (lst : (label * expression) list) : expression_content =
   E_record map
 
 let e__ct_ () : expression_content = E_constant { cons_name = C__CT_; arguments = [] }
-[@@map (_ct_, ("nil", "set_empty", "map_empty", "big_map_empty"))]
+[@@map (_ct_, ("none", "nil", "set_empty", "map_empty", "big_map_empty"))]
 
 let e__ct_ p : expression_content = E_constant { cons_name = C__CT_; arguments = [p] }
-[@@map (_ct_, ("contract_opt", "contract", "failwith"))]
+[@@map (_ct_, ("some", "contract_opt", "contract", "failwith"))]
 
 let e__ct_ p p' : expression_content = E_constant { cons_name = C__CT_; arguments = [p; p']}
 [@@map (_ct_, ("cons", "set_add", "map_remove", "contract_entrypoint", "contract_entrypoint_opt"))]
@@ -314,8 +314,6 @@ let e_a_type_inst forall type_ u = e_type_inst { forall ; type_ } u
 let e_a_mod_in module_binder rhs let_result = e_mod_in { module_binder ; rhs ; let_result } (get_type let_result)
 
 (* Constants *)
-(* let e_a_some s = make_e (e_some s) (t_option ~typ:s.type_expression ()) *)
-(* let e_a_none t = make_e (e_none ()) (t_option ~typ:t ()) *)
 let e_a_nil t = make_e (e_nil ()) (t_list t)
 let e_a_cons hd tl = make_e (e_cons hd tl) (t_list hd.type_expression)
 let e_a_set_empty t = make_e (e_set_empty ()) (t_set t)
@@ -325,10 +323,10 @@ let e_a_map_add k v tl = make_e (e_map_add k v tl) (t_map k.type_expression v.ty
 let e_a_big_map_empty kt vt = make_e (e_big_map_empty ()) (t_big_map kt vt)
 let e_a_big_map_add k v tl = make_e (e_map_add k v tl) (t_big_map k.type_expression v.type_expression)
 let e_a_big_map_remove k tl = make_e (e_map_remove k tl) tl.type_expression
-let e_a_contract_opt a t = make_e (e_contract_opt a) (t_option ~typ:(t_contract t) ())
+let e_a_contract_opt a t = make_e (e_contract_opt a) (t_option (t_contract t))
 let e_a_contract a t = make_e (e_contract a) (t_contract t)
 let e_a_contract_entrypoint e a t = make_e (e_contract_entrypoint e a) (t_contract t)
-let e_a_contract_entrypoint_opt e a t = make_e (e_contract_entrypoint_opt e a) (t_option ~typ:(t_contract t) ())
+let e_a_contract_entrypoint_opt e a t = make_e (e_contract_entrypoint_opt e a) (t_option (t_contract t))
 let e_a_pack e = make_e (e_pack e) (t_bytes ())
 let e_a_unpack e t = make_e (e_unpack e) (t_option t)
 

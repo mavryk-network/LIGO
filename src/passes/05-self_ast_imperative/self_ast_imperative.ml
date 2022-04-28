@@ -4,7 +4,6 @@ let all_expression_mapper ~raise ~add_warning ~js_style_no_shadowing = [
   Vars.capture_expression ~raise ;
   Consts.assign_expression ~raise ;
   Tezos_type_annotation.peephole_expression ~raise ;
-  None_variant.peephole_expression ;
   Literals.peephole_expression ~raise ;
   Expression_soundness.linearity ~raise ;
   Expression_soundness.reserved_names_exp ~raise ;
@@ -20,11 +19,12 @@ let all_type_expression_mapper ~raise ~add_warning =
     Type_soundness.predefined_names ~raise ;
     Type_soundness.linearity ~raise ;
     Layout_check.layout_type_expression ~add_warning ;
+    Deprecated_polymorphic_variables.warn ~add_warning ;
   ]
 
 let all_module_mapper ~raise ~js_style_no_shadowing =
   [ Expression_soundness.reserved_names_mod ~raise ]
-  @ 
+  @
     if js_style_no_shadowing then [ No_shadowing.peephole_module ~raise ] else []
 
 let all_module ~raise ~js_style_no_shadowing =

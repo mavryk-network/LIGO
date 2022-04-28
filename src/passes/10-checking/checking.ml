@@ -18,7 +18,7 @@ let assert_type_expression_eq = Helpers.assert_type_expression_eq
 
 (*
   This function operates on the return type of Context.get_sum.
-  If type match the constructor label and its argument type, warns user about ambiguous constructor 
+  If type match the constructor label and its argument type, warns user about ambiguous constructor
 *)
 let warn_ambiguous_constructor ~add_warning loc (var_chosen,c_arg_t) ignored =
   let ignored_match = List.find
@@ -70,8 +70,6 @@ fun ~raise ~add_warning ~options c d ->
 let loc = d.location in
 let return ?(loc = loc) c (d : O.declaration_content) = c,Location.wrap ~loc d in
 match Location.unwrap d with
-  | Declaration_type {type_binder ; _} when Ast_core.TypeVar.is_generalizable type_binder ->
-    raise.raise (wrong_generalizable d.location type_binder)
   | Declaration_type {type_binder ; type_expr; type_attr={public} } -> (
     let tv = evaluate_type ~raise c type_expr in
     let tv = {tv with orig_var = Some type_binder} in
@@ -135,28 +133,20 @@ and evaluate_type ~raise (c:typing_context) (t:I.type_expression) : O.type_expre
     return @@ T_sum rows
   )
   | T_record m -> (
-    let aux ({associated_type;michelson_annotation;decl_pos}: I.row_element) =
-      let associated_type = evaluate_type ~raise c associated_type in
-      ({associated_type;michelson_annotation;decl_pos} : O.row_element)
-    in
-    let lmap = O.LMap.map aux m.fields in
-    let record : O.rows = match Typing_context.get_record lmap c with
-    | None ->
+    let rows =
       let layout = Option.value ~default:default_layout m.layout in
-      {content=lmap;layout}
-    | Some (_,r) ->  r
+      let aux ({associated_type;michelson_annotation;decl_pos} : I.row_element) =
+        let associated_type = evaluate_type ~raise c associated_type in
+        ({associated_type;michelson_annotation;decl_pos} : O.row_element)
+      in
+      let content = O.LMap.map aux m.fields in
+      O.{ content ; layout }
     in
-    return @@ T_record record
+    return @@ T_record rows
   )
   | T_variable name -> (
     match Typing_context.get_type c name with
     | Some x -> x
-    | None when I.TypeVar.is_generalizable name ->
-       (* Case happening when trying to use a variable that is not in
-          the context, but it is generalizable: we hint the user
-          that the variable could be put in the extended context
-          via an annotation *)
-       raise.raise (not_annotated t.location)
     | None -> raise.raise (unbound_type_variable name t.location)
   )
   | T_app {type_operator;arguments} -> (
@@ -194,7 +184,7 @@ and evaluate_type ~raise (c:typing_context) (t:I.type_expression) : O.type_expre
         Currently, there is no way for ty_body to look like `fun 'a 'b -> forall 'a 'b . <some type>` `fun 'a 'b -> 'a * (fun 'b -> <type>)`
         so it is fine to use `psubst_type`. If this changes, we should use `subst_type` and capture the FV in the right element of vargs *)
       let table = O.Helpers.TMap.of_list vargs in
-      O.Helpers.psubst_type table ty_body 
+      O.Helpers.psubst_type table ty_body
     in
     return res.type_content
   )
@@ -315,7 +305,7 @@ and type_expression' ~raise ~add_warning ~options : context -> ?tv_opt:O.type_ex
       let* sum_t = tv_opt in
       let* x = O.get_sum_label_type sum_t constructor in
       return (sum_t, x)
-    in 
+    in
     let (avs, c_arg_t, sum_t) =
       match destructed_tv_opt with
       | Some (sum_t,c_tv) -> (
@@ -324,21 +314,14 @@ and type_expression' ~raise ~add_warning ~options : context -> ?tv_opt:O.type_ex
       )
       | None -> (
         let matching_t_sum = Context.Typing.get_sum constructor context in
-        let general_type = List.find ~f:(fun (_, tvs, _, _) -> not @@ List.is_empty tvs) matching_t_sum in
-        (match general_type with
-          Some (_,b,c,d) -> (b,c,d)
-        | None -> (match matching_t_sum with
+        (match matching_t_sum with
         | (v_ty,tvl,c_arg_t,sum_t) :: ignored  ->
           let () = warn_ambiguous_constructor ~add_warning e.location (v_ty,c_arg_t) ignored in
           (tvl,c_arg_t,sum_t)
         | [] -> raise.raise (unbound_constructor constructor e.location)))
-      )
     in
     let c_arg = type_expression' ~raise ~add_warning ~options (app_context, context) element in
     let table = Inference.infer_type_application ~raise ~loc:element.location avs Inference.TMap.empty c_arg_t c_arg.type_expression in
-    (* let () = trace_option ~raise (not_annotated e.location) @@
-      if (List.for_all avs ~f:(fun v -> O.Helpers.TMap.mem v table)) then Some () else None
-    in *)
     let c_t = Ast_typed.Helpers.psubst_type table c_arg_t in
     let sum_t = Ast_typed.Helpers.psubst_type table sum_t in
     let () = assert_type_expression_eq ~raise c_arg.location (c_t, c_arg.type_expression) in
@@ -355,7 +338,7 @@ and type_expression' ~raise ~add_warning ~options : context -> ?tv_opt:O.type_ex
         | Unequal_lengths -> None
       in
       return x
-    in 
+    in
     let m' = match field_types_opt with
       | None -> O.LMap.map (type_expression' ~raise ~add_warning ~options (app_context, context)) m
       | Some lst ->
@@ -445,20 +428,6 @@ and type_expression' ~raise ~add_warning ~options : context -> ?tv_opt:O.type_ex
       let tv_lst = List.map ~f:get_type lst' in
       let (opname',tv) = type_constant ~raise ~options opname e.location tv_lst tv_opt in
       return (E_constant {cons_name=opname';arguments=lst'}) tv
-  | E_constant {cons_name=C_CREATE_CONTRACT as cons_name;arguments} ->
-      let lst' = List.map ~f:(type_expression' ~raise ~add_warning ~options (app_context, context)) arguments in
-      let () = match lst' with
-        | { expression_content = O.E_lambda l ; _ } :: _ ->
-          let open Ast_typed.Misc in
-          let fvs = Free_variables.lambda [] l in
-          if Int.equal (List.length fvs) 0 then ()
-          else raise.raise @@ fvs_in_create_contract_lambda e (List.hd_exn fvs)
-        | _ -> raise.raise @@ create_contract_lambda S.C_CREATE_CONTRACT e
-      in
-      let tv_lst = List.map ~f:get_type lst' in
-      let (name', tv) =
-        type_constant ~raise ~options cons_name e.location tv_lst tv_opt in
-      return (E_constant {cons_name=name';arguments=lst'}) tv
   | E_constant {cons_name=C_SET_ADD|C_CONS as cst;arguments=[key;set]} ->
       let key' =  type_expression' ~raise ~add_warning ~options (app_context, context) key in
       let tv_key = get_type key' in
@@ -669,8 +638,6 @@ and type_expression' ~raise ~add_warning ~options : context -> ?tv_opt:O.type_ex
     let context = Typing_context.add_value pre_context binder type_expression in
     let let_result = type_expression' ~raise ~add_warning ~options ?tv_opt (app_context, context) let_result in
     return (E_let_in {let_binder = binder; rhs; let_result; attr }) let_result.type_expression
-  | E_type_in {type_binder; _} when Ast_core.TypeVar.is_generalizable type_binder ->
-    raise.raise (wrong_generalizable e.location type_binder)
   | E_type_in {type_binder; rhs ; let_result} ->
     let rhs = evaluate_type ~raise context rhs in
     let e' = Typing_context.add_type context type_binder rhs in

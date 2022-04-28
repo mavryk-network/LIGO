@@ -36,7 +36,7 @@ let t_constant ?loc injection parameters : type_expression =
 
 (* TODO?: X_name here should be replaced by X_injection *)
 let t__type_ ?loc () : type_expression = t_constant ?loc _type_ []
-[@@map (_type_, ("signature","chain_id", "string", "bytes", "key", "key_hash", "int", "address", "operation", "nat", "tez", "timestamp", "unit", "bls12_381_g1", "bls12_381_g2", "bls12_381_fr", "never", "mutation", "failure", "pvss_key", "baker_hash", "chest_key", "chest"))]
+[@@map (_type_, ("signature","chain_id", "string", "bytes", "key", "key_hash", "int", "address", "operation", "nat", "tez", "timestamp", "unit", "bls12_381_g1", "bls12_381_g2", "bls12_381_fr", "never", "mutation", "pvss_key", "baker_hash", "chest_key", "chest"))]
 
 let t__type_ ?loc t : type_expression = t_constant ?loc _type_ [t]
 [@@map (_type_, ("list", "set", "contract", "ticket"))]
@@ -101,7 +101,8 @@ let get_t_bool (t:type_expression) : unit option = match t.type_content with
   | t when (Compare.type_content t (t_bool ()).type_content) = 0 -> Some ()
   | _ -> None
 
-let get_t_option (t:type_expression) : type_expression option = match t.type_content with
+let get_t_option (t:type_expression) : type_expression option = 
+  match t.type_content with
   | T_sum {content;_} ->
     let keys = LMap.keys content in
     (match keys with
@@ -263,8 +264,6 @@ let e_a_raw_code language code t = e_raw_code { language ; code } t
 let e_a_type_inst forall type_ u = e_type_inst { forall ; type_ } u
 
 (* Constants *)
-(* let e_a_some s = make_e (e_some s) (t_option s.type_expression) *)
-(* let e_a_none t = make_e (e_none ()) (t_option t) *)
 let e_a_nil t = make_e (e_nil ()) (t_list t)
 let e_a_cons hd tl = make_e (e_cons hd tl) (t_list hd.type_expression)
 let e_a_set_empty t = make_e (e_set_empty ()) (t_set t)
