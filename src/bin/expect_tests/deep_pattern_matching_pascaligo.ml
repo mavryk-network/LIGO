@@ -53,7 +53,7 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_bad [ "print" ; "ast-typed" ; (bad_test "pm_fail5.ligo") ] ;
   [%expect{|
-    File "../../test/contracts/negative//deep_pattern_matching/pm_fail5.ligo", line 5, characters 4-17:
+    File "../../test/contracts/negative//deep_pattern_matching/pm_fail5.ligo", line 5, characters 15-16:
       4 |   case x of [
       5 |   | Some_fake (x) -> x
       6 |   | None_fake -> 1

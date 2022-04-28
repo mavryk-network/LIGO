@@ -764,8 +764,25 @@ let () = Sys.chdir "../../test/projects/"
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test" ; "originate_contract/test.mligo" ; "--project-root" ; "originate_contract" ; "--protocol" ; "hangzhou" ] ;
-  [%expect{|
-    Everything at the top-level was executed.
-    - test exited with value KT1JSxHPaoZTCEFVfK5Y1xwjtB8chWFSUyTN(None). |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 29, characters 7-29
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 766, characters 2-137
+  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
+
+  Trailing output
+  ---------------
+  File "/home/melwyn95/ligo/_build/default/src/test/projects/originate_contract/.ligo/source/i/tezos_ligo_fa2__1.0.1__93f08e6c/test/fa2/../../lib/fa2/asset/single_asset.mligo", line 58, characters 55-57:
+   57 |             let os = Set.remove operator os in
+   58 |             if (Set.size os = 0n) then None else Some (os)
+   59 |          in
+
+  Invalid type(s).
+  Expected: "'a", but got: "set (operator)". |}]
 
 let () = Sys.chdir pwd

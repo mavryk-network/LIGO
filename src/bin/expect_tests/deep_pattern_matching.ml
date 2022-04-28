@@ -97,7 +97,7 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_bad [ "print" ; "ast-typed" ; (bad_test "pm_fail5.mligo") ] ;
   [%expect{|
-    File "../../test/contracts/negative//deep_pattern_matching/pm_fail5.mligo", line 5, characters 4-15:
+    File "../../test/contracts/negative//deep_pattern_matching/pm_fail5.mligo", line 5, characters 14-15:
       4 |   match x with
       5 |   | Some_fake x -> x
       6 |   | None_fake -> 1
@@ -534,9 +534,9 @@ let%expect_test _ =
                                                         2
     const t7 =
       lambda (x) return  match x with
-                          | None unit_proj#123 ->
-                            1 | Some x ->
-                                x
+                          | Some x ->
+                            x | None unit_proj#123 ->
+                                1
     const t8 =
       lambda (x) return lambda (y) return let gen#124 = ( x , y ) in  match
                                                                        gen#124 with
@@ -544,14 +544,14 @@ let%expect_test _ =
                                                                        ( tuple_proj#125 , x ) ->
                                                                         match
                                                                         tuple_proj#125 with
-                                                                        | None unit_proj#128 ->
-                                                                        x
-                                                                        | Some ctor_proj#129 ->
+                                                                        | Some ctor_proj#128 ->
                                                                          match
-                                                                        ctor_proj#129 with
+                                                                        ctor_proj#128 with
                                                                         | ( x , y ) ->
                                                                         ADD(x ,
                                                                         y)
+                                                                        | None unit_proj#130 ->
+                                                                        x
     const t9 =
       lambda (x) return lambda (y) return let gen#131 = ( x , y ) in  match
                                                                        gen#131 with
@@ -623,33 +623,33 @@ let%expect_test _ =
                                                                         | None ctor_proj#173 ->
                                                                          match
                                                                         ctor_proj#178 with
+                                                                        | Some a ->
+                                                                        a
                                                                         | None unit_proj#168 ->
                                                                         ADD((fo)@(ctor_proj#178) ,
                                                                         (fo)@(ctor_proj#176))
-                                                                        | Some a ->
-                                                                        a
                                                                         | Some _a ->
                                                                          match
                                                                         ys with
                                                                         | Nili ctor_proj#172 ->
                                                                          match
                                                                         ctor_proj#178 with
+                                                                        | Some a ->
+                                                                        a
                                                                         | None unit_proj#168 ->
                                                                         ADD((fo)@(ctor_proj#178) ,
                                                                         (fo)@(ctor_proj#176))
-                                                                        | Some a ->
-                                                                        a
                                                                         | Consi ctor_proj#170 ->
                                                                          match
                                                                         ctor_proj#170 with
                                                                         | None ctor_proj#171 ->
                                                                          match
                                                                         ctor_proj#178 with
+                                                                        | Some a ->
+                                                                        a
                                                                         | None unit_proj#168 ->
                                                                         ADD((fo)@(ctor_proj#178) ,
                                                                         (fo)@(ctor_proj#176))
-                                                                        | Some a ->
-                                                                        a
                                                                         | Some b ->
                                                                         let a = 1 in ADD(a ,
                                                                         b)
