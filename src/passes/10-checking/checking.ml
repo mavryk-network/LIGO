@@ -322,6 +322,9 @@ and type_expression' ~raise ~add_warning ~options : context -> ?tv_opt:O.type_ex
     in
     let c_arg = type_expression' ~raise ~add_warning ~options (app_context, context) element in
     let table = Inference.infer_type_application ~raise ~loc:element.location avs Inference.TMap.empty c_arg_t c_arg.type_expression in
+    let () = if Option.is_none tv_opt then trace_option ~raise (not_annotated e.location) @@
+      if (List.for_all avs ~f:(fun v -> O.Helpers.TMap.mem v table)) then Some () else None
+    in
     let c_t = Ast_typed.Helpers.psubst_type table c_arg_t in
     let sum_t = Ast_typed.Helpers.psubst_type table sum_t in
     let () = assert_type_expression_eq ~raise c_arg.location (c_t, c_arg.type_expression) in
@@ -578,6 +581,20 @@ and type_expression' ~raise ~add_warning ~options : context -> ?tv_opt:O.type_ex
         typecheck_pattern pattern' field_typ context) in
       context
     | _ -> raise.raise @@ pattern_do_not_conform_type pattern expected_typ
+    in
+    let cases = match O.get_t_sum matchee'.type_expression with 
+      Some _ when Option.is_some (O.get_t_option matchee'.type_expression) ->
+        let compare = (fun ({pattern=a;_} : _ S.Types.match_case) ({pattern=b;_} : _ S.Types.match_case) -> 
+          match (a.wrap_content, b.wrap_content) with
+            I.P_variant (S.Label "Some",_), I.P_variant (S.Label "Some",_) -> 0
+          | I.P_variant (S.Label "None",_), I.P_variant (S.Label "None",_) -> 0
+          | I.P_variant (S.Label "Some",_), I.P_variant (S.Label "None",_) -> -1
+          | I.P_variant (S.Label "None",_), I.P_variant (S.Label "Some",_) -> 1
+          | _ -> 0  
+        ) in
+        List.sort cases ~compare
+    | Some _ -> cases
+    | None -> cases
     in
     let _ = List.fold_left cases ~init:tv_opt ~f:(fun tv_opt {pattern;body} -> 
       let context = typecheck_pattern pattern matchee'.type_expression context in
