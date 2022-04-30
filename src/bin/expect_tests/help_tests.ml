@@ -14,6 +14,7 @@ let%expect_test _ =
       run        compile and interpret ligo code
       info       tools to get information from contracts
       mutate     create mutants of a ligo file
+      init       initialize a new LIGO project
       repl       interactive ligo interpreter
       changelog  print the ligo changelog
       print      print intermediary program representation.

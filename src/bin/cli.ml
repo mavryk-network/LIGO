@@ -402,6 +402,26 @@ let mutate_group =
   [ "cst", mutate_cst;
     "ast", mutate_ast;]
 
+
+(** Init commands *)
+let init_contract =
+  let f source_file syntax display_format () =
+    (* let raw_options = Compiler_options.make_raw_options ~syntax ~protocol_version ~libraries ~generator () in *)
+    return_result ~return @@
+    Api.Init.contract_from_michelson syntax source_file display_format
+  in
+  let summary   = "Initialize a new LIGO skeleton contract from Michelson contract" in
+  let readme () = "This sub-command creates a skeleton LIGO contract with the entrypoint and storage types \
+                   corresponding to those from the input Michelson contract" in
+  Command.basic ~summary ~readme
+  (f <$> source_file <*> syntax <*> display_format)
+
+let init_group =
+  let summary = "initialize a new LIGO project" in
+  Command.group ~summary @@
+  [ "contract", init_contract ]
+
+
 (** Run commands *)
 let test =
   let f source_file syntax steps protocol_version display_format project_root warn_unused_rec () =
@@ -706,6 +726,7 @@ let main = Command.group ~preserve_subcommand_order:() ~summary:"The LigoLANG co
     "run"      , run_group;
     "info"     , info_group;
     "mutate"   , mutate_group;
+    "init"     , init_group;
     "repl"     , repl;
     "changelog", changelog;
     "print"    , print_group;
