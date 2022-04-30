@@ -550,12 +550,6 @@ and type_expression' ~raise ~add_warning ~options : context -> ?tv_opt:O.type_ex
       let list_elt_typ = List.hd_exn parameters in (* TODO: dont use _exn*)
       let context = List.fold_left lst ~init:context ~f:(fun context pattern -> typecheck_pattern pattern list_elt_typ context) in
       context
-    (* TODO: change the option type in environment & abstractors & remove this case after that*)
-    (* | I.P_variant (label,pattern') , O.T_constant { injection = Stage_common.Constant.Option ; parameters = [proj_t] ; _} ->
-      (match label with
-        Label "Some" -> typecheck_pattern pattern' proj_t context
-      | Label "None" -> context
-      | Label _ -> raise.raise @@ pattern_do_not_conform_type pattern expected_typ) *)
     | I.P_variant (label,pattern) , O.T_sum sum_type ->
       let label_map = sum_type.content in
       let c = O.LMap.find_opt label label_map in
@@ -593,6 +587,16 @@ and type_expression' ~raise ~add_warning ~options : context -> ?tv_opt:O.type_ex
           | _ -> 0  
         ) in
         List.sort cases ~compare
+    | Some _ when Option.is_some (O.get_t_bool matchee'.type_expression) ->
+      let compare = (fun ({pattern=a;_} : _ S.Types.match_case) ({pattern=b;_} : _ S.Types.match_case) -> 
+        match (a.wrap_content, b.wrap_content) with
+          I.P_variant (S.Label "True",_), I.P_variant (S.Label "True",_) -> 0
+        | I.P_variant (S.Label "False",_), I.P_variant (S.Label "False",_) -> 0
+        | I.P_variant (S.Label "False",_), I.P_variant (S.Label "True",_) -> -1
+        | I.P_variant (S.Label "True",_), I.P_variant (S.Label "False",_) -> 1
+        | _ -> 0  
+      ) in
+      List.sort cases ~compare
     | Some _ -> cases
     | None -> cases
     in
@@ -600,8 +604,6 @@ and type_expression' ~raise ~add_warning ~options : context -> ?tv_opt:O.type_ex
       let context = typecheck_pattern pattern matchee'.type_expression context in
       match tv_opt with
         Some tv_opt -> 
-          (* let () = Format.printf "\n%a\n" Context.Typing.pp context in *)
-          (* let () = Format.printf "%a\n" O.PP.type_expression tv_opt in *)
           let _ = type_expression' ~raise ~add_warning ~options (app_context, context) ~tv_opt body in
           Some tv_opt
       | None ->

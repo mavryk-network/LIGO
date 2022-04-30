@@ -725,13 +725,14 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_bad [ "run"; "test" ; bad_test "test_random.mligo" ] ;
   [%expect {|
-    File "../../test/contracts/negative//interpreter_tests/test_random.mligo", line 22, characters 40-42:
-     21 | let almost_id (xs : int list) =
-     22 |   if (List.length xs = 5n) then [] else xs
-     23 |
+    File "../../test/contracts/negative//interpreter_tests/test_random.mligo", line 17, characters 18-30:
+     16 |       | None -> ()
+     17 |       | Some x -> assert false
+     18 | end
 
-    Invalid type(s).
-    Expected: "list ('a)", but got: "list (int)". |}]
+    Failed assertion
+    Trace:
+    File "../../test/contracts/negative//interpreter_tests/test_random.mligo", line 29, characters 2-25 |}]
 
 let pwd = Sys.getcwd ()
 let () = Sys.chdir "../../test/contracts/negative/interpreter_tests/"
