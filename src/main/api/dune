@@ -3,7 +3,7 @@
  (public_name ligo.api)
  (instrumentation
   (backend bisect_ppx))
- (libraries simple-utils ligo build interpreter bos cli_helpers))
+ (libraries simple-utils ligo build interpreter bos cli_helpers tezos-micheline))
 
 (rule
  (targets changelog.ml)

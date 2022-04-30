@@ -728,11 +728,25 @@ let init_contract =
   let readme () = "Generate new folder from contract template. Internet connexion needed" in
   Command.basic ~summary ~readme (f <$> project_name <*> template <*> template_list <*> display_format)
 
+(* Initialize a skeleton contract from Michelson contract, containing the right param and storage types *)
+let init_skeleton =
+  let f source_file syntax display_format () =
+    (* let raw_options = Compiler_options.make_raw_options ~syntax ~protocol_version ~libraries ~generator () in *)
+    return_result ~return @@
+    Ligo_api.Init.contract_from_michelson syntax source_file display_format
+  in
+  let summary   = "Initialize a new LIGO skeleton contract from Michelson contract" in
+  let readme () = "This sub-command creates a skeleton LIGO contract with the entrypoint and storage types \
+                    corresponding to those from the input Michelson contract" in
+  Command.basic ~summary ~readme
+  (f <$> source_file <*> syntax <*> display_format)
+
 let init_group =
   Command.group ~summary:"Initialize a new ligo project from template. Contract or library."
   [
     "library"       , init_library;
     "contract"      , init_contract;
+    "skeleton"      , init_skeleton;
   ]
 
 
