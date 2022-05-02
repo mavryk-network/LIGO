@@ -599,29 +599,29 @@ and type_expression' ~raise ~add_warning ~options : context -> ?tv_opt:O.type_ex
     | Some _ -> cases
     | None -> cases
     in
-    let _ = List.fold_left cases ~init:(tv_opt,[]) ~f:(fun (tv_opt,xs) {pattern;body} -> 
+    let _, eqs = List.fold_left cases ~init:(tv_opt,[]) ~f:(fun (tv_opt,xs) {pattern;body} -> 
       let context,pattern = typecheck_pattern pattern matchee'.type_expression context in
       match tv_opt with
         Some tv_opt -> 
-          let e = type_expression' ~raise ~add_warning ~options (app_context, context) ~tv_opt body in
-          Some tv_opt, ([(pattern,matchee'.type_expression)],e)::xs
+          let body = type_expression' ~raise ~add_warning ~options (app_context, context) ~tv_opt body in
+          Some tv_opt, ([(pattern,matchee'.type_expression)],body)::xs
       | None ->
-          let e = type_expression' ~raise ~add_warning ~options (app_context, context) body in
-          Some e.type_expression, ([(pattern,matchee'.type_expression)],e)::xs
+          let body = type_expression' ~raise ~add_warning ~options (app_context, context) body in
+          Some body.type_expression, ([(pattern,matchee'.type_expression)],body)::xs
     ) in
-    let aux : (I.expression, I.type_expression) I.match_case -> ((I.type_expression I.pattern * O.type_expression) list * (I.expression * typing_context)) =
+    (* let aux : (I.expression, I.type_expression) I.match_case -> ((I.type_expression I.pattern * O.type_expression) list * (I.expression * typing_context)) =
       fun {pattern ; body} -> ([(pattern,matchee'.type_expression)], (body,context))
-    in
-    let eqs = List.map ~f:aux cases in
-    let aux = fun ~raise context ?tv_opt i -> type_expression' ~raise ~add_warning ~options (App_context.create None, context) ?tv_opt i in
+    in *)
+    (* let eqs = List.map ~f:aux cases in *)
+    (* let aux = fun ~raise context ?tv_opt i -> type_expression' ~raise ~add_warning ~options (App_context.create None, context) ?tv_opt i in *)
     match matchee.expression_content with
     | E_variable matcheevar ->
-      let case_exp = Pattern_matching.compile_matching ~raise ~err_loc:e.location ~type_f:aux ~body_t:(tv_opt) matcheevar eqs in
+      let case_exp = Pattern_matching.compile_matching ~raise ~err_loc:e.location matcheevar eqs in
       let case_exp = { case_exp with location = e.location } in
       return case_exp.expression_content case_exp.type_expression
     | _ ->
       let matcheevar = I.ValueVar.fresh () in
-      let case_exp = Pattern_matching.compile_matching ~raise ~err_loc:e.location ~type_f:aux ~body_t:(tv_opt) matcheevar eqs in
+      let case_exp = Pattern_matching.compile_matching ~raise ~err_loc:e.location matcheevar eqs in
       let case_exp = { case_exp with location = e.location } in
       let x = O.E_let_in { let_binder = matcheevar ; rhs = matchee' ; let_result = case_exp ; attr = {inline = false; no_mutation = false; public = true ; view= false } } in
       return x case_exp.type_expression
