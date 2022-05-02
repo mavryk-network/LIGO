@@ -1,0 +1,23 @@
+[package]
+name = "ligo-runtime"
+version = "0.1.0"
+edition = "2021"
+
+
+[lib]
+name = "ligo_runtime"
+path = "src/runtime.rs"
+crate-type = ["staticlib"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+serde = { version = "^1.0", features = ["std", "derive"] }
+serde_json = "1.0"
+rpds = { version = "0.11", features = ["serde"] }
+
+# [profile.release]
+# lto = true
+
+# [profile.dev]
+# incremental = false

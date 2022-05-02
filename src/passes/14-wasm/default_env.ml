@@ -125,7 +125,7 @@ let env: module_ = {
       }
     ]; 
     types = [
-      {
+      (* {
         it = {
           tname = "__load_type";
           tdetails = FuncType ([I32Type], [])
@@ -138,7 +138,7 @@ let env: module_ = {
           tdetails = FuncType ([I32Type; I32Type], [])
         };
         at
-      };
+      }; *)
       {
         it = {
           tname    = "malloc_type";
@@ -258,13 +258,13 @@ let env: module_ = {
         };
         at
       };
-      { 
+      (* { 
         it = {
           tname = "insertNode_type";
           tdetails = FuncType ([I32Type], [I32Type])
         }; 
         at 
-      }      
+      }       *)
     ];
     imports = [
       (* {
@@ -681,7 +681,7 @@ let env: module_ = {
         };
         at
       };
-      {
+      (* {
         it = {
           name = "insertNode";
           details = Import ([I32Type; I32Type; I32Type], [])
@@ -701,7 +701,7 @@ let env: module_ = {
           details = Function
         };
         at
-      }
+      } *)
     ];
   };
   at

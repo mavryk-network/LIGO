@@ -269,13 +269,13 @@ let rec expression ~raise : A.module_' -> locals -> I.expression -> A.module_' *
       { it = LocalGet cons; at}
     ]
   | E_constant {cons_name = C_LIST_LITERAL; arguments = [l1]} -> failwith "not supported yet 15a2"
-  | E_constant {cons_name = C_SET_ADD; arguments = [a; b]} ->
+  (* | E_constant {cons_name = C_SET_ADD; arguments = [a; b]} ->
     let w, l, a = expression ~raise w l a in
     let w, l, b = expression ~raise w l b in
     a @ 
     b @ 
     
-    [S.{ it = A.Call "insertNode"; at }]
+    [S.{ it = A.Call "insertNode"; at }] *)
   | E_constant {cons_name; arguments} -> failwith "not supported yet 15b"
 
   | E_application _ -> 
@@ -539,7 +539,7 @@ typedef struct __wasi_ciovec_t {
     (* { w with types = w.types @ type_; funcs = w.funcs @ func; symbols = w.symbols @ symbol } *)
   | _ -> failwith "Instruction not supported at the toplevel."
 
-
+(* 
 (* 
   - place everything at once in memory
   - however the pointers will be incorrect, the following code corrects this
@@ -1169,12 +1169,12 @@ let rec generate_storage_saver: I.type_expression -> string -> string -> string 
     ], (next_addr, I32Type) :: (list_addr, I32Type) :: (old_offset, I32Type) :: locals)  
   | _ -> 
     print_endline "- Do nothing apparently...";
-    ([], [])
+    ([], []) *)
 
 let compile ~raise : I.expression -> string -> string -> W.Ast.module_ = fun e filename entrypoint -> 
   let w = Default_env.env in
-  let at = S.no_region in
-  let input, output = match e.type_expression.type_content with 
+  (* let at = S.no_region in *)
+  (* let input, output = match e.type_expression.type_content with 
    T_function (left, right) -> left, right
   | _ -> failwith "should not happen, I think..."
   in
@@ -1188,7 +1188,7 @@ let compile ~raise : I.expression -> string -> string -> W.Ast.module_ = fun e f
   in
   let offset          = var_to_string (ValueVar.fresh ~name:"offset" ()) in
   let addr            = var_to_string (ValueVar.fresh ~name:"addr" ()) in
-  let body, locals    = generate_storage_loader storage_type_input offset in
+  (* let body, locals    = generate_storage_loader storage_type_input offset in *)
   
   let target_addr     = var_to_string (ValueVar.fresh ~name:"target_addr" ()) in
   let src_addr        = var_to_string (ValueVar.fresh ~name:"src_addr" ()) in
@@ -1196,8 +1196,8 @@ let compile ~raise : I.expression -> string -> string -> W.Ast.module_ = fun e f
   let old_addr        = var_to_string (ValueVar.fresh ~name:"old_addr" ()) in
   let storage_size    = var_to_string (ValueVar.fresh ~name:"storage_size" ()) in
   let result_with_size    = var_to_string (ValueVar.fresh ~name:"result_with_size" ()) in
-  let body_calc, locals_calc = calculate_storage_size storage_type_output src_addr old_addr in
-  let body_save, locals_save = generate_storage_saver storage_type_output src_addr target_addr offset in
+  (* let body_calc, locals_calc = calculate_storage_size storage_type_output src_addr old_addr in *)
+  (* let body_save, locals_save = generate_storage_saver storage_type_output src_addr target_addr offset in *)
   let w = {w with it = {
     w.it with funcs = w.it.funcs @ [
       { 
@@ -1260,7 +1260,7 @@ let compile ~raise : I.expression -> string -> string -> W.Ast.module_ = fun e f
     ]   
     }
   }
-  in
+  in *)
   let at = location_to_region e.location in
   global_offset := Default_env.offset; 
   S.{ 
