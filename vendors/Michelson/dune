@@ -18,6 +18,12 @@
 
 ;; Build of the version source (for the user, as a CLI option)
 
+(executable
+ (name ParserMain)
+ (modules ParserMain)
+ (public_name ParserMain)
+ (libraries Michelson))
+
 (rule
   (targets version.ml)
   (action
