@@ -528,52 +528,51 @@ and type_expression' ~raise ~add_warning ~options : context -> ?tv_opt:O.type_ex
     *)
     let rec typecheck_pattern (pattern : I.type_expression I.pattern) (expected_typ : O.type_expression) context = 
       match pattern.wrap_content, expected_typ.type_content with
-      I.P_unit , O.T_constant { injection = Stage_common.Constant.Unit ; _ } -> context
+      I.P_unit , O.T_constant { injection = Stage_common.Constant.Unit ; _ } -> context, (Location.wrap ~loc:pattern.location O.P_unit)
     | I.P_unit , _ -> 
       raise.raise (wrong_type_for_unit_pattern pattern.location expected_typ)
     | I.P_var v , _ -> 
-      let loc = I.ValueVar.get_location v.var in
-      let () = Option.iter v.ascr ~f:(fun typ -> 
-        let av, tv = Ast_core.Helpers.destruct_for_alls typ in
-        let context = List.fold_right av ~f:(fun v c -> Typing_context.add_type_var c v ()) ~init:context in
-        let typ = evaluate_type ~raise context tv in
-        assert_type_expression_eq ~raise loc (typ,expected_typ)
-      ) in
-      Context.Typing.add_value context v.var expected_typ
+      Context.Typing.add_value context v.var expected_typ, (Location.wrap ~loc:pattern.location (O.P_var {v with ascr=Some expected_typ}))
     | I.P_list (I.Cons (hd, tl)) , O.T_constant { injection = Stage_common.Constant.List ; parameters ; _ } ->
       let list_elt_typ = List.hd_exn parameters in (* TODO: dont use _exn*)
       let list_typ = expected_typ in
-      let context = typecheck_pattern hd list_elt_typ context in
-      let context = typecheck_pattern tl list_typ context in
-      context
+      let context,hd = typecheck_pattern hd list_elt_typ context in
+      let context,tl = typecheck_pattern tl list_typ context in
+      context, (Location.wrap ~loc:pattern.location (O.P_list (O.Cons (hd, tl))))
     | I.P_list (I.List lst) , O.T_constant { injection = Stage_common.Constant.List ; parameters ; _ } ->
       let list_elt_typ = List.hd_exn parameters in (* TODO: dont use _exn*)
-      let context = List.fold_left lst ~init:context ~f:(fun context pattern -> typecheck_pattern pattern list_elt_typ context) in
-      context
+      let context, lst = List.fold_left lst ~init:(context,[]) 
+        ~f:(fun (context,lst) pattern -> 
+              let context, p = typecheck_pattern pattern list_elt_typ context in
+              context, p::lst
+      ) in
+      context, (Location.wrap ~loc:pattern.location (O.P_list (O.List lst)))
     | I.P_variant (label,pattern) , O.T_sum sum_type ->
       let label_map = sum_type.content in
       let c = O.LMap.find_opt label label_map in
       let c = trace_option ~raise (pattern_do_not_conform_type pattern expected_typ) c in
       let sum_typ = c.associated_type in
-      let context = typecheck_pattern pattern sum_typ context in
-      context 
+      let context,pattern = typecheck_pattern pattern sum_typ context in
+      context, (Location.wrap ~loc:pattern.location (O.P_variant (label,pattern)))
     | I.P_tuple tupl , O.T_record record_type ->
       let label_map = record_type.content in
-      let _, context = List.fold_left tupl ~init:(0, context) ~f:(fun (idx,context) pattern' -> 
+      let _, context, elts = List.fold_left tupl ~init:(0, context, []) ~f:(fun (idx,context,elts) pattern' -> 
         let c = O.LMap.find_opt (Label (string_of_int idx)) label_map in
         let c = trace_option ~raise (pattern_do_not_conform_type pattern expected_typ) c in
         let tupl_elt_typ = c.associated_type in
-        idx+1, typecheck_pattern pattern' tupl_elt_typ context) in
-      context
+        let context, elt = typecheck_pattern pattern' tupl_elt_typ context in 
+        idx+1, context, elt::elts) in
+      context, (Location.wrap ~loc:pattern.location (O.P_tuple elts))
     | I.P_record (labels,patterns) , O.T_record record_type ->
       let label_map = record_type.content in
       let label_patterns = List.zip_exn labels patterns in (* TODO: dont use _exn*)
-      let context = List.fold_left label_patterns ~init:context ~f:(fun context (label,pattern') ->
+      let context,patterns = List.fold_left label_patterns ~init:(context,[]) ~f:(fun (context,patterns) (label,pattern') ->
         let c = O.LMap.find_opt label label_map in
         let c = trace_option ~raise (pattern_do_not_conform_type pattern expected_typ) c in
         let field_typ = c.associated_type in
-        typecheck_pattern pattern' field_typ context) in
-      context
+        let context,pattern = typecheck_pattern pattern' field_typ context in 
+        context, pattern::patterns) in
+      context, (Location.wrap ~loc:pattern.location (O.P_record (labels,patterns)))
     | _ -> raise.raise @@ pattern_do_not_conform_type pattern expected_typ
     in
     let cases = match O.get_t_sum matchee'.type_expression with 
@@ -600,15 +599,15 @@ and type_expression' ~raise ~add_warning ~options : context -> ?tv_opt:O.type_ex
     | Some _ -> cases
     | None -> cases
     in
-    let _ = List.fold_left cases ~init:tv_opt ~f:(fun tv_opt {pattern;body} -> 
-      let context = typecheck_pattern pattern matchee'.type_expression context in
+    let _ = List.fold_left cases ~init:(tv_opt,[]) ~f:(fun (tv_opt,xs) {pattern;body} -> 
+      let context,pattern = typecheck_pattern pattern matchee'.type_expression context in
       match tv_opt with
         Some tv_opt -> 
-          let _ = type_expression' ~raise ~add_warning ~options (app_context, context) ~tv_opt body in
-          Some tv_opt
+          let e = type_expression' ~raise ~add_warning ~options (app_context, context) ~tv_opt body in
+          Some tv_opt, ([(pattern,matchee'.type_expression)],e)::xs
       | None ->
-          let exp = type_expression' ~raise ~add_warning ~options (app_context, context) body in
-          Some exp.type_expression
+          let e = type_expression' ~raise ~add_warning ~options (app_context, context) body in
+          Some e.type_expression, ([(pattern,matchee'.type_expression)],e)::xs
     ) in
     let aux : (I.expression, I.type_expression) I.match_case -> ((I.type_expression I.pattern * O.type_expression) list * (I.expression * typing_context)) =
       fun {pattern ; body} -> ([(pattern,matchee'.type_expression)], (body,context))
