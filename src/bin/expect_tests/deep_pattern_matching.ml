@@ -416,7 +416,7 @@ let%expect_test _ =
                                                 | Cons ctor_proj#62 ->
                                                    match ctor_proj#62 with
                                                     | ( _a , b ) ->
-                                                    let a = "a" in ADD(INT(SIZE(a)) ,
+                                                    let a = "a" in ADD((int@{nat})@((String.length)@(a)) ,
                                                     b)
                                                 | Nil unit_proj#64 ->
                                                   1
@@ -437,7 +437,8 @@ let%expect_test _ =
                           | Two ctor_proj#74 ->
                              match ctor_proj#74 with
                               | record[a -> a , b -> b , c -> c] ->
-                              ADD(ADD(a , INT(b)) , INT(SIZE(c)))
+                              ADD(ADD(a , (int@{nat})@(b)) ,
+                              (int@{nat})@((String.length)@(c)))
     const t2_3 =
       lambda (x) return lambda (y) return lambda (x2) return let t2 =  match
                                                                         x with
@@ -467,7 +468,7 @@ let%expect_test _ =
                                                                          match
                                                                         ctor_proj#88 with
                                                                         | ( _a , b ) ->
-                                                                        let a = "a" in ADD(INT(SIZE(a)) ,
+                                                                        let a = "a" in ADD((int@{nat})@((String.length)@(a)) ,
                                                                         b)
                                                                         | Nil unit_proj#90 ->
                                                                         1 in let t3 =
@@ -487,7 +488,7 @@ let%expect_test _ =
         | Two ctor_proj#100 ->
            match ctor_proj#100 with
             | record[a -> a , b -> b , c -> c] ->
-            ADD(ADD(a , b) , INT(SIZE(c))) in ADD(t2 ,
+            ADD(ADD(a , b) , (int@{nat})@((String.length)@(c))) in ADD(t2 ,
       t3)
     const t4 =
       lambda (x) return lambda (y) return let gen#102 = ( x , y ) in  match
@@ -518,10 +519,10 @@ let%expect_test _ =
                                                                         ctor_proj#117 with
                                                                         | record[a -> aa , b -> gen#3 , c -> cc] ->
                                                                         ADD(ADD(ADD(ADD(a ,
-                                                                        INT(b)) ,
-                                                                        INT(SIZE(c))) ,
+                                                                        (int@{nat})@(b)) ,
+                                                                        (int@{nat})@((String.length)@(c))) ,
                                                                         aa) ,
-                                                                        INT(SIZE(cc)))
+                                                                        (int@{nat})@((String.length)@(cc)))
                                                                         | One _x ->
                                                                         1
     const t5 =

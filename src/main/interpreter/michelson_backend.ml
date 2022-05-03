@@ -101,7 +101,7 @@ let compile_contract ~raise ~add_warning ~options source_file entry_point declar
   let open Ligo_compile in
   let michelson,env = Build.build_contract ~raise ~add_warning ~options entry_point source_file in
   let views = Build.build_views ~raise ~add_warning ~options entry_point (declared_views,env) source_file in
-  Of_michelson.build_contract ~raise ~disable_typecheck:false michelson views
+  Of_michelson.build_contract ~raise ~add_warning ~protocol_version:options.middle_end.protocol_version ~disable_typecheck:false michelson views
 
 let clean_location_with v x =
   let open Tezos_micheline.Micheline in
@@ -114,7 +114,7 @@ let add_ast_env ?(name = Ast_aggregated.ValueVar.fresh ()) env binder body =
   let open Ast_aggregated in
   let aux (let_binder , expr, no_mutation) (e : expression) =
     if ValueVar.compare let_binder binder <> 0 && ValueVar.compare let_binder name <> 0 then
-      e_a_let_in let_binder expr e { inline = false ; no_mutation ; view = false ; public = false }
+      e_a_let_in let_binder expr e { inline = false ; no_mutation ; view = false ; public = false ; thunk = false ; hidden = false }
     else
       e in
   let typed_exp' = List.fold_right ~f:aux ~init:body env in
@@ -321,6 +321,8 @@ let rec val_to_ast ~raise ~loc : Ligo_interpreter.Types.value ->
      raise.raise @@ Errors.generic_error loc "Cannot be abstracted: untyped-michelson-code"
   | V_Mutation _ ->
      raise.raise @@ Errors.generic_error loc "Cannot be abstracted: mutation"
+  | V_Thunk { value ; _ } ->
+     value
 
 and make_ast_func ~raise ?name env arg body orig =
   let open Ast_aggregated in
@@ -414,7 +416,7 @@ let run_michelson_func ~raise ~loc (ctxt : Tezos_state.context) (code : (unit, s
   match Ligo_run.Of_michelson.run_expression ~raise func func_ty with
   | Success (ty, value) ->
       Michelson_to_value.decompile_to_untyped_value ~raise ~bigmaps:ctxt.transduced.bigmaps ty value
-  | _ ->
+  | Fail _ ->
      raise.raise (Errors.generic_error loc "Could not execute Michelson function")
 
 let parse_code ~raise code =

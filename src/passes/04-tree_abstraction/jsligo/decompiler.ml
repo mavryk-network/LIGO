@@ -4,7 +4,7 @@
 
 module AST = Ast_imperative
 module CST = Cst.Jsligo
-module Predefined = Predefined.Tree_abstraction.Jsligo
+module Predefined = Predefined.Tree_abstraction
 module Region     = Simple_utils.Region
 module Location   = Simple_utils.Location
 module List       = Simple_utils.List
@@ -183,6 +183,7 @@ let get_e_tuple : AST.expression -> _ = fun expr ->
   | E_variable _
   | E_literal _
   | E_constant _
+  | E_module_accessor _
   | E_lambda _ -> [expr]
   | _ -> failwith @@
     Format.asprintf "%a should be a tuple expression"
