@@ -541,8 +541,8 @@ and type_expression' ~raise ~add_warning ~options : context -> ?tv_opt:O.type_ex
       context, (Location.wrap ~loc:pattern.location (O.P_list (O.Cons (hd, tl))))
     | I.P_list (I.List lst) , O.T_constant { injection = Stage_common.Constant.List ; parameters ; _ } ->
       let list_elt_typ = List.hd_exn parameters in (* TODO: dont use _exn*)
-      let context, lst = List.fold_left lst ~init:(context,[]) 
-        ~f:(fun (context,lst) pattern -> 
+      let context, lst = List.fold_right lst ~init:(context,[]) 
+        ~f:(fun pattern (context,lst) -> 
               let context, p = typecheck_pattern pattern list_elt_typ context in
               context, p::lst
       ) in
@@ -562,11 +562,12 @@ and type_expression' ~raise ~add_warning ~options : context -> ?tv_opt:O.type_ex
         let tupl_elt_typ = c.associated_type in
         let context, elt = typecheck_pattern pattern' tupl_elt_typ context in 
         idx+1, context, elt::elts) in
+      let elts = List.rev elts in
       context, (Location.wrap ~loc:pattern.location (O.P_tuple elts))
     | I.P_record (labels,patterns) , O.T_record record_type ->
       let label_map = record_type.content in
       let label_patterns = List.zip_exn labels patterns in (* TODO: dont use _exn*)
-      let context,patterns = List.fold_left label_patterns ~init:(context,[]) ~f:(fun (context,patterns) (label,pattern') ->
+      let context,patterns = List.fold_right label_patterns ~init:(context,[]) ~f:(fun (label,pattern') (context,patterns) ->
         let c = O.LMap.find_opt label label_map in
         let c = trace_option ~raise (pattern_do_not_conform_type pattern expected_typ) c in
         let field_typ = c.associated_type in

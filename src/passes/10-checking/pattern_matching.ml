@@ -96,50 +96,13 @@ e.g.
     - t0 = t1 = .. = tk
     - conform p0 t0 && conform p1 t1 && conform pk tk
 **)
-let type_matchee ~raise : equations -> O.type_expression = (* BYE BYE moved*)
+let type_matchee : equations -> O.type_expression = (* BYE BYE moved*)
   fun eqs ->
     let pt1s = List.map ~f:(fun el -> List.hd_exn @@ fst el) eqs in
-    let conforms : typed_pattern -> unit = fun (p,t) ->
-      match p.wrap_content , t.type_content with
-      | I.P_var _ , _ -> ()
-      | I.P_variant (label,_) , O.T_sum sum_type -> (
-        if O.LMap.mem label sum_type.content then ()
-        else raise.raise @@ corner_case __LOC__
-      )
-      | P_tuple tupl , O.T_record record_type -> (
-        if (List.length tupl) <> (O.LMap.cardinal record_type.content) then
-          raise.raise @@ corner_case __LOC__
-        else ()
-      )
-      | (P_record (lst,_)) , O.T_record record_type -> (
-        let compare = O.Compare.label in
-        let sorted_p = List.sort ~compare lst in
-        let sorted_l = List.sort ~compare (O.LMap.keys record_type.content) in
-        let open! List.Or_unequal_lengths in
-        let x = List.iter2 sorted_p sorted_l
-          ~f:(fun la lb ->
-            if O.Compare.label la lb = 0 then ()
-            else raise.raise @@ corner_case __LOC__
-          )
-        in
-        match x with
-        | Ok () -> ()
-        | Unequal_lengths -> raise.raise @@ corner_case __LOC__
-      )
-      | I.P_unit , O.T_constant { injection = Stage_common.Constant.Unit ; _ } -> ()
-      | I.P_list _ , O.T_constant { injection = Stage_common.Constant.List ; _ } -> ()
-      | _ -> raise.raise @@ corner_case __LOC__
-    in
-    let aux : O.type_expression option -> typed_pattern -> O.type_expression option = fun t_opt (p,t) ->
-      let () = conforms (p,t) in
+    let aux : O.type_expression option -> typed_pattern -> O.type_expression option = fun t_opt (_,t) ->
       match t_opt with
-      | None -> (Some t)
-      | Some t' ->
-        let () =
-          trace_strong ~raise (match_error ~expected:t ~actual:t' p.location) @@
-            Helpers.assert_type_expression_eq Location.generated (t, t')
-        in
-        t_opt
+      | None -> Some t
+      | Some _ -> Some t
     in
     let t = List.fold ~f:aux ~init:None pt1s in
     Option.value_exn t
@@ -298,7 +261,7 @@ and ctor_rule ~raise : err_loc:Location.t -> matchees -> equations -> rest -> O.
   fun ~err_loc ms eqs def ->
   match ms with
   | mhd::mtl ->
-    let matchee_t = type_matchee ~raise eqs in
+    let matchee_t = type_matchee eqs in
     let matchee = O.e_a_variable mhd matchee_t in
     let eq_map = group_equations ~raise eqs in
     let aux_p :  O.label * equations -> O.matching_content_case  =
@@ -306,12 +269,10 @@ and ctor_rule ~raise : err_loc:Location.t -> matchees -> equations -> rest -> O.
         let proj =
           match eq with
           | [(tp,_)] -> (
-            let (pattern,t) = List.hd_exn tp in
+            let (pattern,_) = List.hd_exn tp in
             match pattern.wrap_content with
             | P_var x -> x.var
-            | P_unit ->
-              let () = assert_unit_pattern ~raise pattern.location t in
-              I.ValueVar.fresh ~name:"unit_proj" ()
+            | P_unit -> I.ValueVar.fresh ~name:"unit_proj" ()
             | _ -> I.ValueVar.fresh ~name:"ctor_proj" ()
           )
           | _ ->
@@ -343,7 +304,7 @@ and ctor_rule ~raise : err_loc:Location.t -> matchees -> equations -> rest -> O.
     in
     let present = List.filter_map ~f:(fun (c,eq_opt) -> match eq_opt with Some eq -> Some (c,eq) | None -> None) grouped_eqs in
     let present_cases = List.map present ~f:aux_p in
-    let body_t = (snd @@ List.hd_exn eqs).type_expression in
+    let body_t = (snd @@ List.hd_exn @@ snd @@ List.hd_exn present).type_expression in
     let missing = List.filter_map ~f:(fun (c,eq_opt) -> match eq_opt with Some _ -> None | None -> Some (c,body_t)) grouped_eqs in
     let missing_cases = List.map ~f:aux_m missing in
     let cases = O.Match_variant { cases = missing_cases @ present_cases ; tv = matchee_t } in
@@ -435,7 +396,7 @@ and product_rule ~raise : err_loc:Location.t -> typed_pattern -> matchees -> equ
       )
       | [] -> raise.raise @@ corner_case __LOC__
     in
-    let matchee_t = type_matchee ~raise eqs in
+    let matchee_t = type_matchee eqs in
     let eqs' = List.map ~f:aux eqs in
     let fields = O.LMap.of_list lb in
     let new_matchees = List.map ~f:(fun (_,((x:O.expression_variable),_)) -> x) lb in
