@@ -634,6 +634,7 @@ and type_expression' ~raise ~add_warning ~options : context -> ?tv_opt:O.type_ex
           let body = type_expression' ~raise ~add_warning ~options (app_context, context) body in
           Some body.type_expression, ([(pattern,matchee'.type_expression)],body)::xs
     ) in
+    let eqs = List.rev eqs in
     (* let aux : (I.expression, I.type_expression) I.match_case -> ((I.type_expression I.pattern * O.type_expression) list * (I.expression * typing_context)) =
       fun {pattern ; body} -> ([(pattern,matchee'.type_expression)], (body,context))
     in *)
