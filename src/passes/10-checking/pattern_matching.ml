@@ -54,11 +54,11 @@ let is_product : equations -> typed_pattern option = fun eqs ->
     )
     eqs
 
-let assert_unit_pattern ~raise (loc:Location.t) (tv: O.type_expression) : unit = (* BYE BYE *)
-  trace_option ~raise (wrong_type_for_unit_pattern loc tv) @@
-    O.assert_type_expression_eq (O.t_unit () , tv)
-
 let corner_case loc = (corner_case ("broken invariant at "^loc))
+
+(* TODO: this is bad, get rid of get_matchee_type *)
+let get_matchee_type eqs = 
+  snd @@ List.hd_exn @@ fst @@ List.hd_exn eqs
 
 let extract_variant_type ~raise : pattern -> O.label -> O.type_expression -> O.type_expression = (* PARTIAL BYE BYE (should never throw) *)
   fun _ label t ->
@@ -85,27 +85,6 @@ let extract_record_type ~raise : pattern -> O.label -> O.type_expression -> O.ty
     | None -> raise.raise @@ corner_case __LOC__
   )
   | _ -> raise.raise @@ corner_case __LOC__
-
-(**
-get_matchee_type [ ( [ (p01,t) , .. , (p0n,t0n) ], body0 ) , .. , ( [ (pk1,t) , .. , (pkn,tkn) ], bodyk ) ]
-makes sure that the left-most type/patterns pairs of the equations have the same type and return this type.
-It also fails if the pattern do not conform to the type (T_sum with P_variant, T_record with P_tuple/P_record ..)
-e.g.
-  get_matchee_type [ ( [ (p0,t0) , ... ], body0 ) , .. , ( [ (pk,tk) , ... ], bodyk ) ]
-  checks:
-    - t0 = t1 = .. = tk
-    - conform p0 t0 && conform p1 t1 && conform pk tk
-**)
-let type_matchee : equations -> O.type_expression = (* BYE BYE moved*)
-  fun eqs ->
-    let pt1s = List.map ~f:(fun el -> List.hd_exn @@ fst el) eqs in
-    let aux : O.type_expression option -> typed_pattern -> O.type_expression option = fun t_opt (_,t) ->
-      match t_opt with
-      | None -> Some t
-      | Some _ -> Some t
-    in
-    let t = List.fold ~f:aux ~init:None pt1s in
-    Option.value_exn t
 
 (**
   `substitute_var_in_body to_subst new_var body` replaces variables equal to `to_subst` with variable `new_var` in expression `body`.
@@ -261,7 +240,7 @@ and ctor_rule ~raise : err_loc:Location.t -> matchees -> equations -> rest -> O.
   fun ~err_loc ms eqs def ->
   match ms with
   | mhd::mtl ->
-    let matchee_t = type_matchee eqs in
+    let matchee_t = get_matchee_type eqs in
     let matchee = O.e_a_variable mhd matchee_t in
     let eq_map = group_equations ~raise eqs in
     let aux_p :  O.label * equations -> O.matching_content_case  =
@@ -396,7 +375,7 @@ and product_rule ~raise : err_loc:Location.t -> typed_pattern -> matchees -> equ
       )
       | [] -> raise.raise @@ corner_case __LOC__
     in
-    let matchee_t = type_matchee eqs in
+    let matchee_t = get_matchee_type eqs in
     let eqs' = List.map ~f:aux eqs in
     let fields = O.LMap.of_list lb in
     let new_matchees = List.map ~f:(fun (_,((x:O.expression_variable),_)) -> x) lb in
