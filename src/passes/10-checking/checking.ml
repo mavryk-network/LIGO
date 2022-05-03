@@ -580,6 +580,9 @@ and type_expression' ~raise ~add_warning ~options : context -> ?tv_opt:O.type_ex
       context, (Location.wrap ~loc:pattern.location (O.P_variant (label,pattern)))
     | I.P_tuple tupl , O.T_record record_type ->
       let label_map = record_type.content in
+      if O.LMap.cardinal label_map <> List.length tupl 
+      then raise.raise @@ pattern_do_not_conform_type pattern expected_typ 
+      else
       let _, context, elts = List.fold_left tupl ~init:(0, context, []) ~f:(fun (idx,context,elts) pattern' -> 
         let c = O.LMap.find_opt (Label (string_of_int idx)) label_map in
         let c = trace_option ~raise (pattern_do_not_conform_type pattern expected_typ) c in

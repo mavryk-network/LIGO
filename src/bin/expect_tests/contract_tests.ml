@@ -2710,13 +2710,6 @@ File "../../test/contracts/warning_ambiguous_ctor.mligo", line 9, characters 61-
 Warning: The type of this value is ambiguous: Inferred type is union_b but could be of type union_a.
 Hint: You might want to add a type annotation.
 
-File "../../test/contracts/warning_ambiguous_ctor.mligo", line 9, characters 61-64:
-  8 | (* here we expect a warning because both A constructor have the same parameter type *)
-  9 | let main = fun (() , (_: union_b)) -> ([]: operation list) , A 1
-
-The type of this value is ambiguous: Inferred type is union_b but could be of type union_a.
-Hint: You might want to add a type annotation.
-
 { parameter unit ;
   storage (or (int %a) (nat %b)) ;
   code { DROP ; PUSH int 1 ; LEFT nat ; NIL operation ; PAIR } } |}];
