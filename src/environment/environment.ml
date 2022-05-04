@@ -75,7 +75,11 @@ let michelson_base : (type_variable * type_expression) list = [
     (v_external_failwith  , t_abstraction1 (External "failwith")      star) ;
     (v_external_int       , t_abstraction1 (External "int")           star) ;
     (v_external_ediv      , t_abstraction2 (External "ediv")     star star) ;
-    (v_external_u_ediv    , t_abstraction2 (External "u_ediv")     star star) ;
+    (v_external_u_ediv    , t_abstraction2 (External "u_ediv")   star star) ;
+    (v_external_add       , t_abstraction2 (External "add")      star star) ;
+    (v_external_u_add     , t_abstraction2 (External "u_add")    star star) ;
+    (v_external_polymorphic_add   , t_abstraction2 (External "polymorphic_add")      star star) ;
+    (v_external_u_polymorphic_add , t_abstraction2 (External "u_polymorphic_add")    star star) ;
 ]
 
 let hangzhou_extra : (type_variable * type_expression) list = [

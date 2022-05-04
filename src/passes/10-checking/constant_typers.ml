@@ -355,7 +355,15 @@ module Constant_types = struct
                     (C_EDIV, any_of [
                         typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> t_ext_ediv a b);
                         typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> t_ext_u_ediv a b);
-                      ]);
+                    ]);
+                    (C_ADD, any_of [
+                        typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> t_ext_add a b);
+                        typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> t_ext_u_add a b);
+                    ]);
+                    (C_POLYMORPHIC_ADD, any_of [
+                        typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> t_ext_polymorphic_add a b);
+                        typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> t_ext_u_polymorphic_add a b);
+                    ]);
                     of_type C_AMOUNT O.(t_mutez ());
                     of_type C_BALANCE O.(t_mutez ());
                     of_type C_LEVEL O.(t_nat ());
@@ -391,19 +399,6 @@ module Constant_types = struct
                     of_type C_SPLIT_TICKET O.(for_all "a" @@ fun a -> t_ticket a ^-> t_pair (t_nat ()) (t_nat ()) ^-> t_option (t_pair (t_ticket a) (t_ticket a)));
                     of_type C_JOIN_TICKET O.(for_all "a" @@ fun a -> t_pair (t_ticket a) (t_ticket a) ^-> t_option (t_ticket a));
                     (* MATH *)
-                    of_types C_POLYMORPHIC_ADD [
-                        O.(t_string () ^-> t_string () ^-> t_string ());
-                        O.(t_bls12_381_g1 () ^-> t_bls12_381_g1 () ^-> t_bls12_381_g1 ());
-                        O.(t_bls12_381_g2 () ^-> t_bls12_381_g2 () ^-> t_bls12_381_g2 ());
-                        O.(t_bls12_381_fr () ^-> t_bls12_381_fr () ^-> t_bls12_381_fr ());
-                        O.(t_nat () ^-> t_nat () ^-> t_nat ());
-                        O.(t_int () ^-> t_int () ^-> t_int ());
-                        O.(t_mutez () ^-> t_mutez () ^-> t_mutez ());
-                        O.(t_nat () ^-> t_int () ^-> t_int ());
-                        O.(t_int () ^-> t_nat () ^-> t_int ());
-                        O.(t_timestamp () ^-> t_int () ^-> t_timestamp ());
-                        O.(t_int () ^-> t_timestamp () ^-> t_timestamp ());
-                      ];
                     of_types C_POLYMORPHIC_SUB [
                         O.(t_bls12_381_g1 () ^-> t_bls12_381_g1 () ^-> t_bls12_381_g1 ());
                         O.(t_bls12_381_g2 () ^-> t_bls12_381_g2 () ^-> t_bls12_381_g2 ());
@@ -415,18 +410,6 @@ module Constant_types = struct
                         O.(t_timestamp () ^-> t_timestamp () ^-> t_int ());
                         O.(t_timestamp () ^-> t_int () ^-> t_timestamp ());
                         O.(t_mutez () ^-> t_mutez () ^-> t_option (t_mutez ()));
-                      ];
-                    of_types C_ADD [
-                        O.(t_bls12_381_g1 () ^-> t_bls12_381_g1 () ^-> t_bls12_381_g1 ());
-                        O.(t_bls12_381_g2 () ^-> t_bls12_381_g2 () ^-> t_bls12_381_g2 ());
-                        O.(t_bls12_381_fr () ^-> t_bls12_381_fr () ^-> t_bls12_381_fr ());
-                        O.(t_nat () ^-> t_nat () ^-> t_nat ());
-                        O.(t_int () ^-> t_int () ^-> t_int ());
-                        O.(t_mutez () ^-> t_mutez () ^-> t_mutez ());
-                        O.(t_nat () ^-> t_int () ^-> t_int ());
-                        O.(t_int () ^-> t_nat () ^-> t_int ());
-                        O.(t_timestamp () ^-> t_int () ^-> t_timestamp ());
-                        O.(t_int () ^-> t_timestamp () ^-> t_timestamp ());
                       ];
                     of_types C_MUL [
                         O.(t_bls12_381_g1 () ^-> t_bls12_381_fr () ^-> t_bls12_381_g1 ());
@@ -574,7 +557,7 @@ module Constant_types = struct
                            typer_table_of_ligo_type O.(for_all "a" @@ fun a -> t_string () ^-> a);
                            typer_table_of_ligo_type O.(for_all "a" @@ fun a -> t_nat () ^-> a);
                            typer_table_of_ligo_type O.(for_all "a" @@ fun a -> t_int () ^-> a);
-                           ] 
+                           ]
 
   let int_typer = any_table_of [
                       typer_table_of_ligo_type O.(t_nat () ^-> t_int ());
@@ -589,6 +572,34 @@ module Constant_types = struct
                       typer_table_of_ligo_type O.(t_mutez () ^-> t_mutez () ^-> t_option (t_pair (t_nat ()) (t_mutez ())));
                       typer_table_of_ligo_type O.(t_mutez () ^-> t_nat () ^-> t_option (t_pair (t_mutez ()) (t_mutez ())));
                     ]
+
+  let add_typer = any_table_of [
+                      typer_table_of_ligo_type O.(t_bls12_381_g1 () ^-> t_bls12_381_g1 () ^-> t_bls12_381_g1 ());
+                      typer_table_of_ligo_type O.(t_bls12_381_g2 () ^-> t_bls12_381_g2 () ^-> t_bls12_381_g2 ());
+                      typer_table_of_ligo_type O.(t_bls12_381_fr () ^-> t_bls12_381_fr () ^-> t_bls12_381_fr ());
+                      typer_table_of_ligo_type O.(t_nat () ^-> t_nat () ^-> t_nat ());
+                      typer_table_of_ligo_type O.(t_int () ^-> t_int () ^-> t_int ());
+                      typer_table_of_ligo_type O.(t_mutez () ^-> t_mutez () ^-> t_mutez ());
+                      typer_table_of_ligo_type O.(t_nat () ^-> t_int () ^-> t_int ());
+                      typer_table_of_ligo_type O.(t_int () ^-> t_nat () ^-> t_int ());
+                      typer_table_of_ligo_type O.(t_timestamp () ^-> t_int () ^-> t_timestamp ());
+                      typer_table_of_ligo_type O.(t_int () ^-> t_timestamp () ^-> t_timestamp ());
+                    ]
+
+  let polymorphic_add_typer = any_table_of [
+                                  typer_table_of_ligo_type O.(t_string () ^-> t_string () ^-> t_string ());
+                                  typer_table_of_ligo_type O.(t_bls12_381_g1 () ^-> t_bls12_381_g1 () ^-> t_bls12_381_g1 ());
+                                  typer_table_of_ligo_type O.(t_bls12_381_g2 () ^-> t_bls12_381_g2 () ^-> t_bls12_381_g2 ());
+                                  typer_table_of_ligo_type O.(t_bls12_381_fr () ^-> t_bls12_381_fr () ^-> t_bls12_381_fr ());
+                                  typer_table_of_ligo_type O.(t_nat () ^-> t_nat () ^-> t_nat ());
+                                  typer_table_of_ligo_type O.(t_int () ^-> t_int () ^-> t_int ());
+                                  typer_table_of_ligo_type O.(t_mutez () ^-> t_mutez () ^-> t_mutez ());
+                                  typer_table_of_ligo_type O.(t_nat () ^-> t_int () ^-> t_int ());
+                                  typer_table_of_ligo_type O.(t_int () ^-> t_nat () ^-> t_int ());
+                                  typer_table_of_ligo_type O.(t_timestamp () ^-> t_int () ^-> t_timestamp ());
+                                  typer_table_of_ligo_type O.(t_int () ^-> t_timestamp () ^-> t_timestamp ());
+                                ]
+
 end
 
 let external_typers ~raise ~options loc s =
@@ -602,6 +613,14 @@ let external_typers ~raise ~options loc s =
        Constant_types.ediv_typer
     | "u_ediv" ->
        Constant_types.ediv_typer
+    | "add" ->
+       Constant_types.add_typer
+    | "u_add" ->
+       Constant_types.add_typer
+    | "polymorphic_add" ->
+       Constant_types.polymorphic_add_typer
+    | "u_polymorphic_add" ->
+       Constant_types.polymorphic_add_typer
     | _ ->
        raise.raise (corner_case @@ Format.asprintf "Typer not implemented for external %s" s) in
   fun lst tv_opt ->

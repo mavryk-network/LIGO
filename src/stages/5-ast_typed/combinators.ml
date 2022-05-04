@@ -48,6 +48,10 @@ let t_ext_failwith ?loc ?core t : type_expression = t_constant ?loc ?core (Exter
 let t_ext_int ?loc ?core t : type_expression = t_constant ?loc ?core (External "int") [t]
 let t_ext_ediv ?loc ?core t t' : type_expression = t_constant ?loc ?core (External "ediv") [t; t']
 let t_ext_u_ediv ?loc ?core t t' : type_expression = t_constant ?loc ?core (External "u_ediv") [t; t']
+let t_ext_add ?loc ?core t t' : type_expression = t_constant ?loc ?core (External "add") [t; t']
+let t_ext_u_add ?loc ?core t t' : type_expression = t_constant ?loc ?core (External "u_add") [t; t']
+let t_ext_polymorphic_add ?loc ?core t t' : type_expression = t_constant ?loc ?core (External "polymorphic_add") [t; t']
+let t_ext_u_polymorphic_add ?loc ?core t t' : type_expression = t_constant ?loc ?core (External "u_polymorphic_add") [t; t']
 
 let t__type_ ?loc ?core t t' : type_expression = t_constant ?loc ?core _type_ [t; t']
 [@@map (_type_, ("map", "big_map", "map_or_big_map", "typed_address"))]

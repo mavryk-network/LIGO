@@ -132,6 +132,10 @@ let to_string = function
   | "external_int"         -> External "int"
   | "external_ediv"        -> External "ediv"
   | "external_u_ediv"      -> External "u_ediv"
+  | "external_add"         -> External "add"
+  | "external_u_add"       -> External "u_add"
+  | "external_polymorphic_add"   -> External "polymorphic_add"
+  | "external_u_polymorphic_add" -> External "u_polymorphic_add"
   | _ -> failwith "Forgot to add constant name in constant.ml?"
 
 let bool                 = Bool
@@ -178,6 +182,10 @@ let external_failwith    = External "failwith"
 let external_int         = External "int"
 let external_ediv        = External "ediv"
 let external_u_ediv      = External "u_ediv"
+let external_add         = External "add"
+let external_u_add       = External "u_add"
+let external_polymorphic_add   = External "polymorphic_add"
+let external_u_polymorphic_add = External "u_polymorphic_add"
 
 let v_bool                 : type_variable = TypeVar.of_input_var (to_string Bool)
 let v_string               : type_variable = TypeVar.of_input_var (to_string String)
@@ -224,3 +232,7 @@ let v_external_failwith    : type_variable = TypeVar.of_input_var (to_string @@ 
 let v_external_int         : type_variable = TypeVar.of_input_var (to_string @@ External "int")
 let v_external_ediv        : type_variable = TypeVar.of_input_var (to_string @@ External "ediv")
 let v_external_u_ediv      : type_variable = TypeVar.of_input_var (to_string @@ External "u_ediv")
+let v_external_add         : type_variable = TypeVar.of_input_var (to_string @@ External "add")
+let v_external_u_add       : type_variable = TypeVar.of_input_var (to_string @@ External "u_add")
+let v_external_polymorphic_add   : type_variable = TypeVar.of_input_var (to_string @@ External "polymorphic_add")
+let v_external_u_polymorphic_add : type_variable = TypeVar.of_input_var (to_string @@ External "u_polymorphic_add")

@@ -208,6 +208,12 @@ let rec compile_expression ~(raise :Errors.abs_error Simple_utils.Trace.raise) :
     let b = self op.arg2 in
     e_constant ~loc (Const op_type) [a; b]
   in
+  let compile_add (op : _ CST.bin_op CST.reg) =
+    let (op, loc) = r_split op in
+    let a = self op.arg1 in
+    let b = self op.arg2 in
+    e_application ~loc (e_variable @@ ValueVar.of_input_var "#add") (e_pair a b)
+  in
   let compile_un_op : AST.constant' -> _ CST.un_op CST.reg -> AST.expression = fun op_type op ->
     let (op, loc) = r_split op in
     let arg = self op.arg in
@@ -242,7 +248,7 @@ let rec compile_expression ~(raise :Errors.abs_error Simple_utils.Trace.raise) :
   | E_Verbatim str ->
     let (str, loc) = w_split str in
     e_verbatim ~loc str
-  | E_Add plus   -> compile_bin_op C_ADD plus
+  | E_Add plus   -> compile_add plus
   | E_Sub minus  -> compile_bin_op C_POLYMORPHIC_SUB minus
   | E_Mult times -> compile_bin_op C_MUL times
   | E_Div slash  -> compile_bin_op C_DIV slash
