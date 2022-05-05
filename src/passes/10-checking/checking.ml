@@ -634,10 +634,10 @@ and type_expression' ~raise ~add_warning ~options : context -> ?tv_opt:O.type_ex
       let context,pattern = typecheck_pattern pattern matchee'.type_expression context in
       match tv_opt with
         Some tv_opt -> 
-          let body = type_expression' ~raise ~add_warning ~options (app_context, context) ~tv_opt body in
+          let body = type_expression' ~raise ~add_warning ~options (App_context.create (Some tv_opt), context) ~tv_opt body in
           Some tv_opt, ([(pattern,matchee'.type_expression)],body)::xs
       | None ->
-          let body = type_expression' ~raise ~add_warning ~options (app_context, context) body in
+          let body = type_expression' ~raise ~add_warning ~options (App_context.create None, context) body in
           Some body.type_expression, ([(pattern,matchee'.type_expression)],body)::xs
     ) in
     let eqs = List.rev eqs in

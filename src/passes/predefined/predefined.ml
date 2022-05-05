@@ -50,7 +50,6 @@ module Tree_abstraction = struct
 
     (* Set module *)
     | "Set.literal"    -> some_const C_SET_LITERAL
-    | "Set.empty"    -> some_const C_SET_EMPTY
 
     (* Map module *)
     | "Map.literal"  -> some_const C_MAP_LITERAL
