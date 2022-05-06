@@ -262,7 +262,7 @@ let%expect_test _ =
     const foo : int -> int -> int =
       lambda (x : int) : int -> int return let bar : int -> int =
                                              lambda (y[@var] : int) : int return
-                                             ADD(x , y) in
+                                             (#add)@(( x , y )) in
                                            bar |}]
 
 let%expect_test _ =
@@ -271,7 +271,8 @@ let%expect_test _ =
     const foo : int -> int =
       lambda (x : int) : int return let bar : int -> int =
                                       lambda (x[@var] : int) : int return
-                                      let ()#2 : unit = x[@var] := ADD(x , 1) in
+                                      let ()#2 : unit =
+                                        x[@var] := (#add)@(( x , 1 )) in
                                       x in
                                     (bar)@(42) |}]
 
@@ -294,7 +295,8 @@ let%expect_test _ =
                                         rec (fun_while_loop#2:unit -> unit => lambda (()#3 : unit) return
                                          match AND(LT(i , x) , GT(b , 0)) with
                                           | True () -> let ()#4 : unit =
-                                                         i[@var] := ADD(i , 1) in
+                                                         i[@var] := (#add)@(
+                                                                    ( i , 1 )) in
                                                        (fun_while_loop#2)@(unit)
                                           | False () -> unit ) in
                                       (fun_while_loop#2)@(unit) in
@@ -309,12 +311,13 @@ let%expect_test _ =
                                                             x[@var] := 2;
                                                             {
                                                                y[@var] := 3;
-                                                               ADD(x ,y)
+                                                               (#add)@((x , y))
                                                             }
                                   }
     const bar =
       lambda (_u : unit) return  match (4 , 5) with
-                                  | (x,y) -> let add = lambda (_u : unit) return ADD(x ,y) in
+                                  | (x,y) -> let add = lambda (_u : unit) return
+                                             (#add)@((x , y)) in
                                              (add)@(unit) |}]
 
 let%expect_test _ =
@@ -327,12 +330,15 @@ let%expect_test _ =
                                                                    x[@var] := 2;
                                                                    {
                                                                       y[@var] := 3;
-                                                                      C_POLYMORPHIC_ADD(x ,y)
+                                                                      (#polymorphic_add)@((
+                                                                      x , y))
                                                                    }
                                                                  } )[@@private]
     const bar =
       rec (bar:unit -> int => lambda (_#3 : unit) : int return  match (4 , 5) with
                                                                  | (x,y) ->
-                                                                 let add[@var] = rec (add:unit -> int => lambda (_#4 : unit) : int return C_POLYMORPHIC_ADD(x ,y) )[@@private] in
+                                                                 let add[@var] = rec (add:unit -> int => lambda (_#4 : unit) : int return
+                                                                 (#polymorphic_add)@((
+                                                                 x , y)) )[@@private] in
                                                                  (add)@(unit) )[@@private] |}]
 

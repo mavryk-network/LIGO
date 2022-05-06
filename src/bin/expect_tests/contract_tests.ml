@@ -1741,7 +1741,7 @@ type storage = (int , int)
 const main : (int , storage) -> (list (operation) , storage) =
   lambda (n : (int , storage)) : (list (operation) , storage) return
   let x : (int , int) = let x : int = 7 in
-                        (ADD(x ,n.0) , ADD(n.1.0 ,n.1.1)) in
+                        (((#add)@(x))@(n.0) , ((#add)@(n.1.0))@(n.1.1)) in
   (list[] : list (operation) , x)
 const f0 = lambda (_a : string) return true
 const f1 = lambda (_a : string) return true
@@ -1764,7 +1764,7 @@ const letin_nesting =
 const letin_nesting2 =
   lambda (x : int) return let y = 2 in
                           let z = 3 in
-                          ADD(ADD(x ,y) ,z)
+                          ((#add)@(((#add)@(x))@(y)))@(z)
 const x =  match (+1 , (+2 , +3)) with
             | (_#3,(x,_#4)) -> x
     |}];
@@ -1775,7 +1775,7 @@ type storage = (int , int)
 const main =
   lambda (n : (int , storage)) : (list (operation) , storage) return
   let x : (int , int) = let x : int = 7 in
-                        (ADD(x ,n.0) , ADD(n.1.0 ,n.1.1)) in
+                        ((#add)@((x , n.0)) , (#add)@((n.1.0 , n.1.1))) in
   (list[] : list (operation) , x)
 const f0 = lambda (_a : string) return true
 const f1 = lambda (_a : string) return true
@@ -1798,7 +1798,7 @@ const letin_nesting =
 const letin_nesting2 =
   lambda (x : int) return let y = 2 in
                           let z = 3 in
-                          ADD(ADD(x ,y) ,z)
+                          (#add)@(((#add)@((x , y)) , z))
 const x =  match (+1 , (+2 , +3)) with
             | (gen#3,(x,gen#4)) -> x
     |}];
@@ -2153,16 +2153,14 @@ let%expect_test _ =
       lambda (n : int) return let f : int -> int = rec (f:int -> int => lambda (n : int) return let gen#2[@var] = EQ(n ,
       0) in  match gen#2 with
               | False unit_proj#3 ->
-                (f)@(C_POLYMORPHIC_SUB(n ,
-                1))
+                (f)@(((#polymorphic_sub@{int}@{int})@(n))@(1))
               | True unit_proj#4 ->
                 1 ) in (f)@(4)
     const g =
       rec (g:int -> int -> int -> int => lambda (f : int -> int) return (g)@(let h : int -> int = rec (h:int -> int => lambda (n : int) return let gen#5[@var] = EQ(n ,
       0) in  match gen#5 with
               | False unit_proj#6 ->
-                (h)@(C_POLYMORPHIC_SUB(n ,
-                1))
+                (h)@(((#polymorphic_sub@{int}@{int})@(n))@(1))
               | True unit_proj#7 ->
                 1 ) in h) ) |}]
 
@@ -2222,12 +2220,13 @@ let%expect_test _ =
   run_ligo_good [ "print" ; "ast-typed" ; contract "attributes.jsligo" ] ;
   [%expect {|
     const x = 1[@inline][@private]
-    const foo = lambda (a : int) return let test[@var] = C_POLYMORPHIC_ADD(2 ,
-      a)[@inline] in test[@inline][@private]
+    const foo =
+      lambda (a : int) return let test[@var] = (#polymorphic_add@{int}@{int})@(
+      ( 2 , a ))[@inline] in test[@inline][@private]
     const y = 1[@private]
     const bar =
-      lambda (b : int) return let test[@var] = lambda (z : int) return C_POLYMORPHIC_ADD(C_POLYMORPHIC_ADD(2 ,
-      b) , z)[@inline] in (test)@(b)[@private]
+      lambda (b : int) return let test[@var] = lambda (z : int) return (#polymorphic_add@{int}@{int})@(
+      ( (#polymorphic_add@{int}@{int})@(( 2 , b )) , z ))[@inline] in (test)@(b)[@private]
     const check = 4[@private] |}]
 
 (* literal type "casting" inside modules *)

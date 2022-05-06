@@ -432,9 +432,8 @@ const t1 =
                                                                      match
                                                                     ctor_proj#27 with
                                                                     | ( c , d ) ->
-                                                                    ADD(ADD(ADD(a ,
-                                                                    b) , c) ,
-                                                                    d)
+                                                                    (#add@{int}@{int})@(
+                                                                    ( (#add@{int}@{int})@(( (#add@{int}@{int})@(( a , b )) , c )) , d ))
                                                                 | Nil unit_proj#26 ->
                                                                   (fl)@(tuple_proj#16)
                                                             | Nil unit_proj#28 ->
@@ -448,20 +447,20 @@ const t2 =
                                                          let old_b = b in let b =
                                                           match y with
                                                            | Cons ctor_proj#33 ->
-                                                             ADD(a ,
-                                                             b)
+                                                             (#add@{int}@{int})@(
+                                                             ( a , b ))
                                                            | Nil unit_proj#32 ->
-                                                             let f = lambda (b : int) return ADD(a ,
-                                                             b) in (f)@(ADD(b ,
-                                                             1)) in ADD(ADD(a ,
-                                                         old_b) , b)
+                                                             let f = lambda (b : int) return (#add@{int}@{int})@(
+                                                             ( a , b )) in (f)@((#add@{int}@{int})@(
+                                                             ( b , 1 ))) in (#add@{int}@{int})@(
+                                                         ( (#add@{int}@{int})@(( a , old_b )) , b ))
                                                      | Nil unit_proj#34 ->
                                                         match y with
                                                          | Cons ctor_proj#35 ->
                                                             match ctor_proj#35 with
                                                              | ( _a , b ) ->
-                                                             let a = "a" in ADD((int@{nat})@((String.length)@(a)) ,
-                                                             b)
+                                                             let a = "a" in (#add@{int}@{int})@(
+                                                             ( (int@{nat})@((String.length)@(a)) , b ))
                                                          | Nil unit_proj#37 ->
                                                            1
 const t3 =
@@ -474,7 +473,7 @@ const t3 =
             | Cons ctor_proj#39 ->
                match ctor_proj#39 with
                 | ( a , b ) ->
-                ADD(a , b)
+                (#add@{int}@{int})@(( a , b ))
             | Nil unit_proj#41 ->
               2
         | Nil unit_proj#42 ->
@@ -482,7 +481,7 @@ const t3 =
     | Two ctor_proj#44 ->
        match ctor_proj#44 with
         | record[a -> a , b -> b , c -> c] ->
-        ADD(ADD(a , (int@{nat})@(b)) , (int@{nat})@((String.length)@(c)))
+        (#add@{int}@{int})@(( (#add@{int}@{int})@(( a , (int@{nat})@(b) )) , (int@{nat})@((String.length)@(c)) ))
 const t2_3 =
   lambda (x : sum[Cons -> ( int * int ) , Nil -> unit]) return lambda (y :
   sum[Cons -> ( int * int ) , Nil -> unit]) return lambda (x2 : sum[One -> sum[Cons -> ( int * int ) , Nil -> unit] , Two -> record[a -> int , b -> nat , c -> string]]) return let t2 =
@@ -494,18 +493,18 @@ const t2_3 =
                                    | Cons ctor_proj#48 ->
                                       match ctor_proj#48 with
                                        | ( a , b ) ->
-                                       ADD(a , b)
+                                       (#add@{int}@{int})@(( a , b ))
                                    | Nil unit_proj#50 ->
-                                     let f = lambda (b : int) return ADD(a ,
-                                     b) in (f)@(ADD(b ,
-                                     1)) in ADD(ADD(a ,
-        old_b) , b)
+                                     let f = lambda (b : int) return (#add@{int}@{int})@(
+                                     ( a , b )) in (f)@((#add@{int}@{int})@(
+                                     ( b , 1 ))) in (#add@{int}@{int})@(
+        ( (#add@{int}@{int})@(( a , old_b )) , b ))
     | Nil unit_proj#51 ->
        match y with
         | Cons ctor_proj#52 ->
            match ctor_proj#52 with
             | ( _a , b ) ->
-            let a = "a" in ADD((int@{nat})@((String.length)@(a)) , b)
+            let a = "a" in (#add@{int}@{int})@(( (int@{nat})@((String.length)@(a)) , b ))
         | Nil unit_proj#54 ->
           1 in let t3 =  match x2 with
                           | One ctor_proj#55 ->
@@ -515,7 +514,7 @@ const t2_3 =
                                   | Cons ctor_proj#56 ->
                                      match ctor_proj#56 with
                                       | ( a , b ) ->
-                                      ADD(a , b)
+                                      (#add@{int}@{int})@(( a , b ))
                                   | Nil unit_proj#58 ->
                                     2
                               | Nil unit_proj#59 ->
@@ -523,9 +522,8 @@ const t2_3 =
                           | Two ctor_proj#61 ->
                              match ctor_proj#61 with
                               | record[a -> a , b -> b , c -> c] ->
-                              ADD(ADD(a , b) ,
-                              (int@{nat})@((String.length)@(c))) in ADD(t2 ,
-  t3)
+                              (#add@{int}@{int})@(( (#add@{int}@{nat})@(( a , b )) , (int@{nat})@((String.length)@(c)) )) in (#add@{int}@{int})@(
+  ( t2 , t3 ))
 const t4 =
   lambda (x : sum[One -> sum[Cons -> ( int * int ) , Nil -> unit] , Two -> record[a -> int , b -> nat , c -> string]]) return lambda (y :
   sum[One -> sum[Cons -> ( int * int ) , Nil -> unit] , Two -> record[a -> int , b -> nat , c -> string]]) return let gen#63[@var] =
@@ -539,7 +537,7 @@ const t4 =
                            | Cons ctor_proj#70 ->
                               match ctor_proj#70 with
                                | ( a , b ) ->
-                               ADD(a , b)
+                               (#add@{int}@{int})@(( a , b ))
                            | Nil unit_proj#72 ->
                              2
                        | Two ctor_proj#73 ->
@@ -547,9 +545,7 @@ const t4 =
                            | record[a -> a , b -> b , c -> c] ->
                             match ctor_proj#78 with
                              | record[a -> aa , b -> gen#3 , c -> cc] ->
-                             ADD(ADD(ADD(ADD(a , (int@{nat})@(b)) ,
-                             (int@{nat})@((String.length)@(c))) , aa) ,
-                             (int@{nat})@((String.length)@(cc)))
+                             (#add@{int}@{int})@(( (#add@{int}@{int})@(( (#add@{int}@{int})@(( (#add@{int}@{int})@(( a , (int@{nat})@(b) )) , (int@{nat})@((String.length)@(c)) )) , aa )) , (int@{nat})@((String.length)@(cc)) ))
                    | One _x ->
                      1
 const t5 =
@@ -573,7 +569,7 @@ const t8 =
                    | Some ctor_proj#89 ->
                       match ctor_proj#89 with
                        | ( x , y ) ->
-                       ADD(x , y)
+                       (#add@{int}@{int})@(( x , y ))
                    | None unit_proj#91 ->
                      x
 const t9 =
@@ -584,8 +580,7 @@ const t9 =
                    | Some ctor_proj#102 ->
                       match ys with
                        | Some ctor_proj#100 ->
-                         ADD(ctor_proj#102 ,
-                         ctor_proj#100)
+                         (#add@{int}@{int})@(( ctor_proj#102 , ctor_proj#100 ))
                        | None unit_proj#99 ->
                          2
                    | None unit_proj#101 ->
@@ -605,18 +600,15 @@ const t10 =
                        | Consi ctor_proj#118 ->
                           match ctor_proj#120 with
                            | Some ctor_proj#115 ->
-                             ADD((fo)@(ctor_proj#120) ,
-                             (fo)@(ctor_proj#118))
+                             (#add@{int}@{int})@(( (fo)@(ctor_proj#120) , (fo)@(ctor_proj#118) ))
                            | None unit_proj#111 ->
                               match ys with
                                | Nili ctor_proj#114 ->
-                                 ADD((fo)@(ctor_proj#120) ,
-                                 (fo)@(ctor_proj#118))
+                                 (#add@{int}@{int})@(( (fo)@(ctor_proj#120) , (fo)@(ctor_proj#118) ))
                                | Consi ctor_proj#112 ->
                                   match ctor_proj#112 with
                                    | None ctor_proj#113 ->
-                                     ADD((fo)@(ctor_proj#120) ,
-                                     (fo)@(ctor_proj#118))
+                                     (#add@{int}@{int})@(( (fo)@(ctor_proj#120) , (fo)@(ctor_proj#118) ))
                                    | Some _b ->
                                      let b = 1 in b
                        | Nili unit_proj#117 ->
@@ -638,8 +630,7 @@ const t11 =
                                | Some a ->
                                  a
                                | None unit_proj#128 ->
-                                 ADD((fo)@(ctor_proj#138) ,
-                                 (fo)@(ctor_proj#136))
+                                 (#add@{int}@{int})@(( (fo)@(ctor_proj#138) , (fo)@(ctor_proj#136) ))
                            | Some _a ->
                               match ys with
                                | Nili ctor_proj#132 ->
@@ -647,8 +638,7 @@ const t11 =
                                    | Some a ->
                                      a
                                    | None unit_proj#128 ->
-                                     ADD((fo)@(ctor_proj#138) ,
-                                     (fo)@(ctor_proj#136))
+                                     (#add@{int}@{int})@(( (fo)@(ctor_proj#138) , (fo)@(ctor_proj#136) ))
                                | Consi ctor_proj#130 ->
                                   match ctor_proj#130 with
                                    | None ctor_proj#131 ->
@@ -656,11 +646,10 @@ const t11 =
                                        | Some a ->
                                          a
                                        | None unit_proj#128 ->
-                                         ADD((fo)@(ctor_proj#138) ,
-                                         (fo)@(ctor_proj#136))
+                                         (#add@{int}@{int})@(( (fo)@(ctor_proj#138) , (fo)@(ctor_proj#136) ))
                                    | Some b ->
-                                     let a = 1 in ADD(a ,
-                                     b)
+                                     let a = 1 in (#add@{int}@{int})@(
+                                     ( a , b ))
                        | Nili unit_proj#135 ->
                          (fl)@(tuple_proj#122)
                    | Nili unit_proj#137 ->
@@ -682,12 +671,11 @@ const t12 =
                                                      | Cons ctor_proj#153 ->
                                                        NEG(1)
                                                      | Nil unit_proj#152 ->
-                                                       ADD(ADD(hd ,
-                                                       hd2) ,
-                                                       hd3)
+                                                       (#add@{int}@{int})@(
+                                                       ( (#add@{int}@{int})@(( hd , hd2 )) , hd3 ))
                                                | Nil unit_proj#154 ->
-                                                 ADD(hd ,
-                                                 hd2)
+                                                 (#add@{int}@{int})@(
+                                                 ( hd , hd2 ))
                                          | Nil unit_proj#155 ->
                                            hd
                                    | Nil unit_proj#156 ->

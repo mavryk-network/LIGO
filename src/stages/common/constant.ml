@@ -130,6 +130,10 @@ let to_string = function
   | "external_u_add"       -> External "u_add"
   | "external_polymorphic_add"   -> External "polymorphic_add"
   | "external_u_polymorphic_add" -> External "u_polymorphic_add"
+  | "external_sub"         -> External "sub"
+  | "external_u_sub"       -> External "u_sub"
+  | "external_polymorphic_sub"   -> External "polymorphic_sub"
+  | "external_u_polymorphic_sub" -> External "u_polymorphic_sub"
   | _ -> failwith "Forgot to add constant name in constant.ml?"
 
 let bool                 = Bool
@@ -178,6 +182,10 @@ let external_add         = External "add"
 let external_u_add       = External "u_add"
 let external_polymorphic_add   = External "polymorphic_add"
 let external_u_polymorphic_add = External "u_polymorphic_add"
+let external_sub         = External "sub"
+let external_u_sub       = External "u_sub"
+let external_polymorphic_sub   = External "polymorphic_sub"
+let external_u_polymorphic_sub = External "u_polymorphic_sub"
 
 let v_bool                 : type_variable = TypeVar.of_input_var (to_string Bool)
 let v_string               : type_variable = TypeVar.of_input_var (to_string String)
@@ -226,3 +234,7 @@ let v_external_add         : type_variable = TypeVar.of_input_var (to_string @@ 
 let v_external_u_add       : type_variable = TypeVar.of_input_var (to_string @@ External "u_add")
 let v_external_polymorphic_add   : type_variable = TypeVar.of_input_var (to_string @@ External "polymorphic_add")
 let v_external_u_polymorphic_add : type_variable = TypeVar.of_input_var (to_string @@ External "u_polymorphic_add")
+let v_external_sub         : type_variable = TypeVar.of_input_var (to_string @@ External "sub")
+let v_external_u_sub       : type_variable = TypeVar.of_input_var (to_string @@ External "u_sub")
+let v_external_polymorphic_sub   : type_variable = TypeVar.of_input_var (to_string @@ External "polymorphic_sub")
+let v_external_u_polymorphic_sub : type_variable = TypeVar.of_input_var (to_string @@ External "u_polymorphic_sub")

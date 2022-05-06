@@ -2,7 +2,7 @@ open Cli_expect
 
 let%expect_test _ =
   run_ligo_good [ "transpile" ; "contract" ; "../../test/contracts/coase.ligo" ; "pascaligo" ] ;
-  [%expect {|
+  [%expect{|
     type card_pattern_id is nat
 
     type card_pattern is
@@ -96,7 +96,9 @@ let%expect_test _ =
 
             card_pattern :=
               card_pattern.quantity with
-                abs (Operator.sub (card_pattern.quantity, 1n));
+                abs
+                  (gen__polymorphic_sub
+                     (card_pattern.quantity, 1n));
 
             const card_patterns : card_patterns
             = s.card_patterns;
@@ -150,7 +152,7 @@ let%expect_test _ =
             const price : tez
             = Operator.times
                 (card_pattern.coefficient,
-                 Operator.add (card_pattern.quantity, 1n));
+                 gen__add (card_pattern.quantity, 1n));
 
             if Operator.gt (price, Tezos.amount)
             then failwith ("Not enough money")
@@ -158,7 +160,7 @@ let%expect_test _ =
 
             card_pattern :=
               card_pattern.quantity with
-                Operator.add (card_pattern.quantity, 1n);
+                gen__add (card_pattern.quantity, 1n);
 
             const card_patterns : card_patterns
             = s.card_patterns;
@@ -181,7 +183,7 @@ let%expect_test _ =
 
             s := s.cards with cards;
 
-            s := s.next_id with Operator.add (s.next_id, 1n)
+            s := s.next_id with gen__add (s.next_id, 1n)
           } with ((list [] : list (operation)), s)
       ]
 
@@ -195,7 +197,7 @@ let%expect_test _ =
           ]
       ] |}];
   run_ligo_good [ "transpile" ; "contract" ; "../../test/contracts/coase.ligo" ; "cameligo" ] ;
-  [%expect {|
+  [%expect{|
     type card_pattern_id = nat
 
     type card_pattern = {coefficient : tez; quantity : nat}
@@ -292,7 +294,10 @@ let%expect_test _ =
                  let [@var] card_pattern =
                    {card_pattern with
                      {quantity =
-                        abs (card_pattern.quantity - 1n)}} in
+                        abs
+                          (gen__polymorphic_sub
+                             card_pattern.quantity
+                             1n)}} in
                  ();
                  let [@var] card_patterns : card_patterns =
                    s.card_patterns in
@@ -357,7 +362,7 @@ let%expect_test _ =
                     : card_pattern) in
              let price : tez =
                (card_pattern.coefficient
-                * (card_pattern.quantity + 1n)) in
+                * gen__add card_pattern.quantity 1n) in
              begin
                if (price > Tezos.amount)
                then failwith "Not enough money"
@@ -365,7 +370,8 @@ let%expect_test _ =
                begin
                  let [@var] card_pattern =
                    {card_pattern with
-                     {quantity = (card_pattern.quantity + 1n)}} in
+                     {quantity =
+                        gen__add card_pattern.quantity 1n}} in
                  ();
                  let [@var] card_patterns : card_patterns =
                    s.card_patterns in
@@ -396,7 +402,7 @@ let%expect_test _ =
                          begin
                            let [@var] s =
                              {s with
-                               {next_id = (s.next_id + 1n)}} in
+                               {next_id = gen__add s.next_id 1n}} in
                            ();
                            ([] : operation list), s
                          end
@@ -416,246 +422,252 @@ let%expect_test _ =
              | Sell_single as -> sell_single as s
              | Transfer_single at -> transfer_single at s) |}];
   run_ligo_good [ "transpile" ; "contract" ; "../../test/contracts/coase.ligo" ; "reasonligo" ] ;
-  [%expect {|
-type card_pattern_id = nat;
+  [%expect{|
+    type card_pattern_id = nat;
 
-type card_pattern = {coefficient: tez, quantity: nat};
+    type card_pattern = {coefficient: tez, quantity: nat};
 
-type card_patterns = map(card_pattern_id, card_pattern);
+    type card_patterns = map(card_pattern_id, card_pattern);
 
-type card_id = nat;
+    type card_id = nat;
 
-type card = {
-  card_owner: address,
-  card_pattern: card_pattern_id};
+    type card = {
+      card_owner: address,
+      card_pattern: card_pattern_id};
 
-type cards = map(card_id, card);
+    type cards = map(card_id, card);
 
-type storage = {card_patterns, cards, next_id: nat};
+    type storage = {card_patterns, cards, next_id: nat};
 
-type return = (list(operation), storage);
+    type return = (list(operation), storage);
 
-type action_buy_single = {card_to_buy: card_pattern_id};
+    type action_buy_single = {card_to_buy: card_pattern_id};
 
-type action_sell_single = {card_to_sell: card_id};
+    type action_sell_single = {card_to_sell: card_id};
 
-type action_transfer_single = {
-  card_to_transfer: card_id,
-  destination: address};
+    type action_transfer_single = {
+      card_to_transfer: card_id,
+      destination: address};
 
-type parameter =
-  Buy_single(action_buy_single)
-| Sell_single(action_sell_single)
-| Transfer_single(action_transfer_single);
+    type parameter =
+      Buy_single(action_buy_single)
+    | Sell_single(action_sell_single)
+    | Transfer_single(action_transfer_single);
 
-let transfer_single
-: (action_transfer_single, storage) => return =
-  ((gen__parameters2: (action_transfer_single, storage))
-   : return =>
-     switch  gen__parameters2 {
-     | action, [@var] s =>
-         let [@var] cards: cards = s.cards;
-         let [@var] card: card =
-           switch
-           Map.find_opt(action.card_to_transfer, cards) {
-           | Some card => card
-           | None() =>
-               (failwith("transfer_single: No card.") : card)
-           };
-         {
-           if(((card.card_owner) != (Tezos.sender))) {
-             failwith("This card doesn't belong to you")
-           } else {
-
-             ()
-             };
-           {
-             let [@var] card =
-               {...card,
-                 {card_owner: action.destination}};
-             ();
+    let transfer_single
+    : (action_transfer_single, storage) => return =
+      ((gen__parameters2: (action_transfer_single, storage))
+       : return =>
+         switch  gen__parameters2 {
+         | action, [@var] s =>
+             let [@var] cards: cards = s.cards;
+             let [@var] card: card =
+               switch
+               Map.find_opt(action.card_to_transfer, cards) {
+               | Some card => card
+               | None() =>
+                   (failwith("transfer_single: No card.") : card)
+               };
              {
-               let [@var] cards =
-                 (
-                  Map.add((action.card_to_transfer),
-                     (card),
-                     (cards)));
-               ();
-               {
-                 let [@var] s = {...s, {cards: cards}};
-                 ();
-                 ([] : list(operation)), s
-               }
-             }
-           }
-         }
-     });
+               if(((card.card_owner) != (Tezos.sender))) {
+                 failwith("This card doesn't belong to you")
+               } else {
 
-let sell_single: (action_sell_single, storage) => return =
-  ((gen__parameters3: (action_sell_single, storage)): return =>
-     switch  gen__parameters3 {
-     | action, [@var] s =>
-         let card: card =
-           switch Map.find_opt(action.card_to_sell, s.cards) {
-           | Some card => card
-           | None() =>
-               (failwith("sell_single: No card.") : card)
-           };
-         {
-           if(((card.card_owner) != (Tezos.sender))) {
-             failwith("This card doesn't belong to you")
-           } else {
-
-             ()
-             };
-           let [@var] card_pattern: card_pattern =
-             switch
-             Map.find_opt(card.card_pattern, s.card_patterns) {
-             | Some pattern => pattern
-             | None() =>
-                 (failwith("sell_single: No card pattern.")
-                   : card_pattern)
-             };
-           {
-             let [@var] card_pattern =
-               {...card_pattern,
-                 {
-                   quantity:
-                     abs(((card_pattern.quantity) - (1n)))}};
-             ();
-             let [@var] card_patterns: card_patterns =
-               s.card_patterns;
-             {
-               let [@var] card_patterns =
-                 (
-                  Map.add((card.card_pattern),
-                     (card_pattern),
-                     (card_patterns)));
-               ();
+                 ()
+                 };
                {
-                 let [@var] s =
-                   {...s,
-                     {card_patterns: card_patterns}};
+                 let [@var] card =
+                   {...card,
+                     {card_owner: action.destination}};
                  ();
-                 let [@var] cards: cards = s.cards;
                  {
                    let [@var] cards =
                      (
-                      Map.remove((action.card_to_sell),
+                      Map.add((action.card_to_transfer),
+                         (card),
                          (cards)));
                    ();
                    {
                      let [@var] s = {...s, {cards: cards}};
                      ();
-                     let price: tez =
-                       ((card_pattern.coefficient) * (card_pattern.
-                           quantity));
-                     let receiver: contract(unit) =
-                       switch (
-                         Tezos.get_contract_opt(Tezos.sender)
-                         : option(contract(unit))) {
-                       | Some contract => contract
-                       | None() =>
-                           (
-                             failwith("sell_single: No contract.")
-                             : contract(unit))
-                       };
-                     let op: operation =
-
-                       Tezos.transaction(unit,
-                          price,
-                          receiver);
-                     let operations: list(operation) = [op];
-                     operations, s
+                     ([] : list(operation)), s
                    }
                  }
                }
              }
-           }
-         }
-     });
+         });
 
-let buy_single: (action_buy_single, storage) => return =
-  ((gen__parameters4: (action_buy_single, storage)): return =>
-     switch  gen__parameters4 {
-     | action, [@var] s =>
-         let [@var] card_pattern: card_pattern =
-           switch
-           Map.find_opt(action.card_to_buy, s.card_patterns) {
-           | Some pattern => pattern
-           | None() =>
-               (failwith("buy_single: No card pattern.")
-                 : card_pattern)
-           };
-         let price: tez =
-           ((card_pattern.coefficient) * (((card_pattern.
-                 quantity) + (1n))));
-         {
-           if(((price) > (Tezos.amount))) {
-             failwith("Not enough money")
-           } else {
-
-             ()
-             };
-           {
-             let [@var] card_pattern =
-               {...card_pattern,
-                 {
-                   quantity:
-                     ((card_pattern.quantity) + (1n))}};
-             ();
-             let [@var] card_patterns: card_patterns =
-               s.card_patterns;
+    let sell_single: (action_sell_single, storage) => return =
+      ((gen__parameters3: (action_sell_single, storage)): return =>
+         switch  gen__parameters3 {
+         | action, [@var] s =>
+             let card: card =
+               switch Map.find_opt(action.card_to_sell, s.cards) {
+               | Some card => card
+               | None() =>
+                   (failwith("sell_single: No card.") : card)
+               };
              {
-               let [@var] card_patterns =
-                 (
-                  Map.add((action.card_to_buy),
-                     (card_pattern),
-                     (card_patterns)));
-               ();
+               if(((card.card_owner) != (Tezos.sender))) {
+                 failwith("This card doesn't belong to you")
+               } else {
+
+                 ()
+                 };
+               let [@var] card_pattern: card_pattern =
+                 switch
+                 Map.find_opt(card.card_pattern, s.card_patterns) {
+                 | Some pattern => pattern
+                 | None() =>
+                     (failwith("sell_single: No card pattern.")
+                       : card_pattern)
+                 };
                {
-                 let [@var] s =
-                   {...s,
-                     {card_patterns: card_patterns}};
+                 let [@var] card_pattern =
+                   {...card_pattern,
+                     {
+                       quantity:
+
+                         abs(
+                           gen__polymorphic_sub(card_pattern.
+                             quantity,
+                              1n))}};
                  ();
-                 let [@var] cards: cards = s.cards;
+                 let [@var] card_patterns: card_patterns =
+                   s.card_patterns;
                  {
-                   let [@var] cards =
+                   let [@var] card_patterns =
                      (
-                      Map.add((s.next_id),
-                         ({
-                           card_owner: Tezos.sender,
-                           card_pattern: action.card_to_buy}),
-                         (cards)));
+                      Map.add((card.card_pattern),
+                         (card_pattern),
+                         (card_patterns)));
                    ();
                    {
-                     let [@var] s = {...s, {cards: cards}};
+                     let [@var] s =
+                       {...s,
+                         {card_patterns: card_patterns}};
                      ();
+                     let [@var] cards: cards = s.cards;
                      {
-                       let [@var] s =
-                         {...s,
-                           {next_id: ((s.next_id) + (1n))}};
+                       let [@var] cards =
+                         (
+                          Map.remove((action.card_to_sell),
+                             (cards)));
                        ();
-                       ([] : list(operation)), s
+                       {
+                         let [@var] s = {...s, {cards: cards}};
+                         ();
+                         let price: tez =
+                           ((card_pattern.coefficient) * (card_pattern.
+                               quantity));
+                         let receiver: contract(unit) =
+                           switch (
+                             Tezos.get_contract_opt(Tezos.sender)
+                             : option(contract(unit))) {
+                           | Some contract => contract
+                           | None() =>
+                               (
+                                 failwith("sell_single: No contract.")
+                                 : contract(unit))
+                           };
+                         let op: operation =
+
+                           Tezos.transaction(unit,
+                              price,
+                              receiver);
+                         let operations: list(operation) = [op];
+                         operations, s
+                       }
                      }
                    }
                  }
                }
              }
-           }
-         }
-     });
+         });
 
-let main: (parameter, storage) => return =
-  ((gen__parameters5: (parameter, storage)): return =>
-     switch  gen__parameters5 {
-     | action, s =>
-         switch  action {
-         | Buy_single bs => buy_single(bs, s)
-         | Sell_single as => sell_single(as, s)
-         | Transfer_single at => transfer_single(at, s)
-         }
-     }); |}]
+    let buy_single: (action_buy_single, storage) => return =
+      ((gen__parameters4: (action_buy_single, storage)): return =>
+         switch  gen__parameters4 {
+         | action, [@var] s =>
+             let [@var] card_pattern: card_pattern =
+               switch
+               Map.find_opt(action.card_to_buy, s.card_patterns) {
+               | Some pattern => pattern
+               | None() =>
+                   (failwith("buy_single: No card pattern.")
+                     : card_pattern)
+               };
+             let price: tez =
+               ((card_pattern.coefficient) * (
+                   gen__add(card_pattern.quantity, 1n)));
+             {
+               if(((price) > (Tezos.amount))) {
+                 failwith("Not enough money")
+               } else {
+
+                 ()
+                 };
+               {
+                 let [@var] card_pattern =
+                   {...card_pattern,
+                     {
+                       quantity:
+                         gen__add(card_pattern.quantity, 1n)}};
+                 ();
+                 let [@var] card_patterns: card_patterns =
+                   s.card_patterns;
+                 {
+                   let [@var] card_patterns =
+                     (
+                      Map.add((action.card_to_buy),
+                         (card_pattern),
+                         (card_patterns)));
+                   ();
+                   {
+                     let [@var] s =
+                       {...s,
+                         {card_patterns: card_patterns}};
+                     ();
+                     let [@var] cards: cards = s.cards;
+                     {
+                       let [@var] cards =
+                         (
+                          Map.add((s.next_id),
+                             ({
+                               card_owner: Tezos.sender,
+                               card_pattern: action.card_to_buy}),
+                             (cards)));
+                       ();
+                       {
+                         let [@var] s = {...s, {cards: cards}};
+                         ();
+                         {
+                           let [@var] s =
+                             {...s,
+                               {
+                                 next_id:
+                                   gen__add(s.next_id, 1n)}};
+                           ();
+                           ([] : list(operation)), s
+                         }
+                       }
+                     }
+                   }
+                 }
+               }
+             }
+         });
+
+    let main: (parameter, storage) => return =
+      ((gen__parameters5: (parameter, storage)): return =>
+         switch  gen__parameters5 {
+         | action, s =>
+             switch  action {
+             | Buy_single bs => buy_single(bs, s)
+             | Sell_single as => sell_single(as, s)
+             | Transfer_single at => transfer_single(at, s)
+             }
+         }); |}]
 
 let%expect_test _ =
   run_ligo_good [ "transpile" ; "contract" ; "../../test/contracts/deep_access.ligo" ; "pascaligo" ] ;
@@ -679,9 +691,9 @@ let%expect_test _ =
     {
       const tuple : int * int * int * int = (0, (1, (2, 3)))
     } with
-        Operator.add
-          (Operator.add
-             (Operator.add (tuple.0, tuple.1. 0), tuple.1. 1. 0),
+        gen__add
+          (gen__add
+             (gen__add (tuple.0, tuple.1. 0), tuple.1. 1. 0),
            tuple.1. 1. 1)
 
     type nested_record_t is
@@ -722,7 +734,9 @@ let%expect_test _ =
     let asymetric_tuple_access : unit -> int =
       (fun gen___3 : unit ->
          let [@var] tuple : int * int * int * int = 0, 1, 2, 3 in
-         (((tuple.0 + tuple.1.0) + tuple.1.1.0) + tuple.1.1.1))
+         gen__add
+           gen__add gen__add tuple.0 tuple.1.0 tuple.1.1.0
+           tuple.1.1.1)
 
     type nested_record_t = {nesty : {mymap : (int, string) map}}
 
@@ -765,7 +779,11 @@ let main: unit => int =
 let asymetric_tuple_access: unit => int =
   ((gen___3: unit): int =>
      let [@var] tuple: (int, (int, (int, int))) = 0, 1, 2, 3;
-     ((((((tuple[0]) + (tuple[1][0]))) + (tuple[1][1][0]))) + (tuple[1][1][1])));
+
+     gen__add(
+       gen__add(gen__add(tuple[0], tuple[1][0]),
+          tuple[1][1][0]),
+        tuple[1][1][1]));
 
 type nested_record_t = {nesty: {mymap: map(int, string)}};
 
@@ -963,7 +981,7 @@ function foobar (const i : int) is
 
   if Operator.gt (i, 0)
   then {
-    i := Operator.add (i, 1);
+    i := gen__add (i, 1);
 
     if Operator.gt (i, 10)
     then {
@@ -1018,7 +1036,7 @@ let foobar : int -> int =
        if (i > 0)
        then
          begin
-           let [@var] i = (i + 1) in
+           let [@var] i = gen__add i 1 in
            ();
            if (i > 10)
            then
@@ -1088,7 +1106,7 @@ let foobar: int => int =
        if(((i) > (0))) {
 
          {
-           let [@var] i = ((i) + (1));
+           let [@var] i = gen__add(i, 1);
            ();
            if(((i) > (10))) {
 
@@ -1138,7 +1156,8 @@ let%expect_test _ =
         (n, acc) ->
           if Operator.lt (n, 1)
           then acc
-          else sum (Operator.sub (n, 1), Operator.add (acc, n))
+          else
+            sum (gen__polymorphic_sub (n, 1), gen__add (acc, n))
       ]
 
     recursive function fibo
@@ -1149,7 +1168,8 @@ let%expect_test _ =
           then n_1
           else
             fibo
-              (Operator.sub (n, 1), Operator.add (n_1, n_0), n_1)
+              (gen__polymorphic_sub (n, 1), gen__add (n_1, n_0),
+               n_1)
       ] |}];
   run_ligo_good [ "transpile" ; "contract" ; "../../test/contracts/recursion.ligo" ; "cameligo" ] ;
   [%expect {|
@@ -1157,7 +1177,9 @@ let%expect_test _ =
       (fun gen__parameters2 : int * int ->
          match gen__parameters2 with
          n, acc ->
-             if (n < 1) then acc else sum (n - 1) (acc + n))
+             if (n < 1)
+             then acc
+             else sum gen__polymorphic_sub n 1 gen__add acc n)
 
     let rec fibo : int * int * int -> int =
       (fun gen__parameters3 : int * int * int ->
@@ -1165,7 +1187,11 @@ let%expect_test _ =
          n, n_1, n_0 ->
              if (n < 2)
              then n_1
-             else fibo (n - 1) (n_1 + n_0) n_1) |}];
+             else
+               fibo
+                 gen__polymorphic_sub n 1
+                 gen__add n_1 n_0
+                 n_1) |}];
   run_ligo_good [ "transpile" ; "contract" ; "../../test/contracts/recursion.ligo" ; "reasonligo" ] ;
   [%expect {|
     let rec sum: (int, int) => int =
@@ -1176,7 +1202,7 @@ let%expect_test _ =
                acc
              } else {
 
-               sum(((n) - (1)), ((acc) + (n)))
+               sum(gen__polymorphic_sub(n, 1), gen__add(acc, n))
                }
          });
 
@@ -1188,7 +1214,10 @@ let%expect_test _ =
                n_1
              } else {
 
-               fibo(((n) - (1)), ((n_1) + (n_0)), n_1)
+
+               fibo(gen__polymorphic_sub(n, 1),
+                  gen__add(n_1, n_0),
+                  n_1)
                }
          }); |}]
 

@@ -199,7 +199,7 @@ and compile_expression' ~raise ~last : I.expression -> O.expression option -> O.
 
       (* Modify the body loop*)
       let ctrl =
-          O.e_let_in_ez binder false [] (O.e_constant C_ADD [ O.e_variable binder ; step ]) @@
+          O.e_let_in_ez binder false [] (O.e_application (O.e_variable @@ O.ValueVar.of_input_var "#add") (O.e_pair (O.e_variable binder) step)) @@
           recursive_call (O.e_variable binder)
       in
       let cond = O.e_annotation (O.e_constant (C_LE) [O.e_variable binder ; final]) (O.t_bool ()) in

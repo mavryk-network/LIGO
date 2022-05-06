@@ -129,6 +129,8 @@ end
 [@private] [@hidden] [@inline] let ediv (type a b) ((l, r) : (a * b)) : (a, b) external_u_ediv = [%external \"EDIV\"] l r
 [@private] [@hidden] [@inline] let _hash_add (type a b) ((l, r) : a * b) : (a, b) external_u_add = [%external \"ADD\"] l r
 [@private] [@hidden] [@inline] let _hash_polymorphic_add (type a b) ((l, r) : a * b) : (a, b) external_u_polymorphic_add = [%external \"POLYMORPHIC_ADD\"] l r
+[@private] [@hidden] [@inline] let _hash_sub (type a b) ((l, r) : a * b) : (a, b) external_u_sub = [%external \"SUB\"] l r
+[@private] [@hidden] [@inline] let _hash_polymorphic_sub (type a b) ((l, r) : a * b) : (a, b) external_u_polymorphic_sub = [%external \"POLYMORPHIC_SUB\"] l r
 "
   | CameLIGO -> "
 module Tezos = struct
@@ -259,16 +261,18 @@ end
 [@private] [@hidden] [@inline] let ediv (type a b) (l : a) (r : b) : (a, b) external_ediv = [%external \"EDIV\"] l r
 [@private] [@hidden] [@inline] let _hash_add (type a b) (l : a) (r : b) : (a, b) external_add = [%external \"ADD\"] l r
 [@private] [@hidden] [@inline] let _hash_polymorphic_add (type a b) (l : a) (r : b) : (a, b) external_polymorphic_add = [%external \"POLYMORPHIC_ADD\"] l r
+[@private] [@hidden] [@inline] let _hash_sub (type a b) (l : a) (r : b) : (a, b) external_sub = [%external \"SUB\"] l r
+[@private] [@hidden] [@inline] let _hash_polymorphic_sub (type a b) (l : a) (r : b) : (a, b) external_polymorphic_sub = [%external \"POLYMORPHIC_SUB\"] l r
 "
 
 let stdlib ~options syntax =
-  ignore options ; ignore syntax ; [] , []
-  (* match Simple_utils.Trace.to_stdlib_result @@
-   *         Ligo_compile.Utils.type_contract_string ~add_warning:(fun _ -> ()) ~options CameLIGO (lib syntax) with
-   * | Ok s -> s
-   * | Error e ->
-   *    let error_msg = Format.asprintf "%a" (Main_errors.Formatter.error_ppformat ~display_format:Human_readable) e in
-   *    failwith ("Error compiling the stdlib: " ^ error_msg) *)
+  (* ignore options ; ignore syntax ; [] , [] *)
+  match Simple_utils.Trace.to_stdlib_result @@
+          Ligo_compile.Utils.type_contract_string ~add_warning:(fun _ -> ()) ~options CameLIGO (lib syntax) with
+  | Ok s -> s
+  | Error e ->
+     let error_msg = Format.asprintf "%a" (Main_errors.Formatter.error_ppformat ~display_format:Human_readable) e in
+     failwith ("Error compiling the stdlib: " ^ error_msg)
 
 module LanguageMap = Simple_utils.Map.Make(struct type t = Syntax_types.t let compare = Syntax_types.compare end)
 let cached = ref LanguageMap.empty

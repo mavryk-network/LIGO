@@ -177,6 +177,11 @@ let typer_table_of_ligo_type ?(add_tc = true) ?(fail = true) lamb_type : typer_t
         if add_tc then error := `TC arrs :: ! error else ();
         None)
 
+let typer_table_of_ligo_type_on_protocol ~protocol ?(add_tc = true) ?(fail = true) lamb_type : typer_table = fun ~error ~raise ~options ~loc lst tv_opt ->
+  if (Environment.Protocols.compare options.protocol_version protocol) = 0 then
+    typer_table_of_ligo_type ~add_tc ~fail lamb_type ~error ~raise ~options ~loc lst tv_opt
+  else
+    None
 
 let typer_of_comparator (typer : raise:_ -> test:_ -> _ -> O.type_expression list -> O.type_expression option -> O.type_expression) : typer =
   fun ~error ~raise ~options ~loc lst tv_opt ->
@@ -378,6 +383,14 @@ module Constant_types = struct
                         typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> t_ext_polymorphic_add a b);
                         typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> t_ext_u_polymorphic_add a b);
                     ]);
+                    (C_SUB, any_of [
+                        typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> t_ext_sub a b);
+                        typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> t_ext_u_sub a b);
+                    ]);
+                    (C_POLYMORPHIC_SUB, any_of [
+                        typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> t_ext_polymorphic_sub a b);
+                        typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> t_ext_u_polymorphic_sub a b);
+                    ]);
                     of_type C_AMOUNT O.(t_mutez ());
                     of_type C_BALANCE O.(t_mutez ());
                     of_type C_LEVEL O.(t_nat ());
@@ -413,35 +426,6 @@ module Constant_types = struct
                     of_type C_SPLIT_TICKET O.(for_all "a" @@ fun a -> t_ticket a ^-> t_pair (t_nat ()) (t_nat ()) ^-> t_option (t_pair (t_ticket a) (t_ticket a)));
                     of_type C_JOIN_TICKET O.(for_all "a" @@ fun a -> t_pair (t_ticket a) (t_ticket a) ^-> t_option (t_ticket a));
                     (* MATH *)
-                        let l = [
-                            O.(t_bls12_381_g1 () ^-> t_bls12_381_g1 () ^-> t_bls12_381_g1 ());
-                            O.(t_bls12_381_g2 () ^-> t_bls12_381_g2 () ^-> t_bls12_381_g2 ());
-                            O.(t_bls12_381_fr () ^-> t_bls12_381_fr () ^-> t_bls12_381_fr ());
-                            O.(t_nat () ^-> t_nat () ^-> t_int ());
-                            O.(t_int () ^-> t_int () ^-> t_int ());
-                            O.(t_nat () ^-> t_int () ^-> t_int ());
-                            O.(t_int () ^-> t_nat () ^-> t_int ());
-                            O.(t_timestamp () ^-> t_timestamp () ^-> t_int ());
-                            O.(t_timestamp () ^-> t_int () ^-> t_timestamp ());
-                          ] in
-                        let ithaca =
-                          List.map ~f:(fun t -> (Environment.Protocols.Ithaca, t)) (O.(t_mutez () ^-> t_mutez () ^-> t_option (t_mutez ())) :: l) in
-                        let hangzhou =
-                          List.map ~f:(fun t -> (Environment.Protocols.Hangzhou, t)) (O.(t_mutez () ^-> t_mutez () ^-> (t_mutez ())) :: l) in
-                        ithaca @ hangzhou);
-                    of_types C_ADD [
-                        O.(t_bls12_381_g1 () ^-> t_bls12_381_g1 () ^-> t_bls12_381_g1 ());
-                        O.(t_bls12_381_g2 () ^-> t_bls12_381_g2 () ^-> t_bls12_381_g2 ());
-                        O.(t_bls12_381_fr () ^-> t_bls12_381_fr () ^-> t_bls12_381_fr ());
-                        O.(t_nat () ^-> t_nat () ^-> t_nat ());
-                        O.(t_int () ^-> t_int () ^-> t_int ());
-                        O.(t_mutez () ^-> t_mutez () ^-> t_mutez ());
-                        O.(t_nat () ^-> t_int () ^-> t_int ());
-                        O.(t_int () ^-> t_nat () ^-> t_int ());
-                        O.(t_timestamp () ^-> t_int () ^-> t_timestamp ());
-                        O.(t_int () ^-> t_timestamp () ^-> t_timestamp ());
->>>>>>> dev
-                      ];
                     of_types C_MUL [
                         O.(t_bls12_381_g1 () ^-> t_bls12_381_fr () ^-> t_bls12_381_g1 ());
                         O.(t_bls12_381_g2 () ^-> t_bls12_381_fr () ^-> t_bls12_381_g2 ());
@@ -456,18 +440,6 @@ module Constant_types = struct
                         O.(t_mutez () ^-> t_nat () ^-> t_mutez ());
                         O.(t_int () ^-> t_nat () ^-> t_int ());
                         O.(t_nat () ^-> t_int () ^-> t_int ());
-                      ];
-                    of_types C_SUB [
-                        O.(t_bls12_381_g1 () ^-> t_bls12_381_fr () ^-> t_bls12_381_g1 ());
-                        O.(t_bls12_381_g2 () ^-> t_bls12_381_fr () ^-> t_bls12_381_g2 ());
-                        O.(t_bls12_381_fr () ^-> t_bls12_381_fr () ^-> t_bls12_381_fr ());
-                        O.(t_nat () ^-> t_nat () ^-> t_int ());
-                        O.(t_int () ^-> t_int () ^-> t_int ());
-                        O.(t_int () ^-> t_nat () ^-> t_int ());
-                        O.(t_nat () ^-> t_int () ^-> t_int ());
-                        O.(t_timestamp () ^-> t_timestamp () ^-> t_int ());
-                        O.(t_timestamp () ^-> t_int () ^-> t_timestamp ());
-                        O.(t_mutez () ^-> t_mutez () ^-> t_mutez ());
                       ];
                     of_type_since ~since:Ligo_proto.Ithaca ~constant:"Operator.sub_mutez"
                       C_SUB_MUTEZ O.(t_mutez () ^-> t_mutez () ^-> t_option (t_mutez ()));
@@ -631,6 +603,50 @@ module Constant_types = struct
                                   typer_table_of_ligo_type O.(t_int () ^-> t_timestamp () ^-> t_timestamp ());
                                 ]
 
+  let sub_typer = any_table_of [
+                      typer_table_of_ligo_type O.(t_bls12_381_g1 () ^-> t_bls12_381_fr () ^-> t_bls12_381_g1 ());
+                      typer_table_of_ligo_type O.(t_bls12_381_g2 () ^-> t_bls12_381_fr () ^-> t_bls12_381_g2 ());
+                      typer_table_of_ligo_type O.(t_bls12_381_fr () ^-> t_bls12_381_fr () ^-> t_bls12_381_fr ());
+                      typer_table_of_ligo_type O.(t_nat () ^-> t_nat () ^-> t_int ());
+                      typer_table_of_ligo_type O.(t_int () ^-> t_int () ^-> t_int ());
+                      typer_table_of_ligo_type O.(t_int () ^-> t_nat () ^-> t_int ());
+                      typer_table_of_ligo_type O.(t_nat () ^-> t_int () ^-> t_int ());
+                      typer_table_of_ligo_type O.(t_timestamp () ^-> t_timestamp () ^-> t_int ());
+                      typer_table_of_ligo_type O.(t_timestamp () ^-> t_int () ^-> t_timestamp ());
+                      typer_table_of_ligo_type O.(t_mutez () ^-> t_mutez () ^-> t_mutez ());
+                    ]
+
+  let polymorphic_sub_typer = any_table_of [
+                                  typer_table_of_ligo_type O.(t_bls12_381_g1 () ^-> t_bls12_381_fr () ^-> t_bls12_381_g1 ());
+                                  typer_table_of_ligo_type O.(t_bls12_381_g2 () ^-> t_bls12_381_fr () ^-> t_bls12_381_g2 ());
+                                  typer_table_of_ligo_type O.(t_bls12_381_fr () ^-> t_bls12_381_fr () ^-> t_bls12_381_fr ());
+                                  typer_table_of_ligo_type O.(t_nat () ^-> t_nat () ^-> t_int ());
+                                  typer_table_of_ligo_type O.(t_int () ^-> t_int () ^-> t_int ());
+                                  typer_table_of_ligo_type O.(t_int () ^-> t_nat () ^-> t_int ());
+                                  typer_table_of_ligo_type O.(t_nat () ^-> t_int () ^-> t_int ());
+                                  typer_table_of_ligo_type O.(t_timestamp () ^-> t_timestamp () ^-> t_int ());
+                                  typer_table_of_ligo_type O.(t_timestamp () ^-> t_int () ^-> t_timestamp ());
+                                  typer_table_of_ligo_type_on_protocol ~protocol:Environment.Protocols.Ithaca O.(t_mutez () ^-> t_mutez () ^-> t_option (t_mutez ()));
+                                  typer_table_of_ligo_type_on_protocol ~protocol:Environment.Protocols.Hangzhou O.(t_mutez () ^-> t_mutez () ^-> t_mutez ());
+                                ]
+
+                    (* of_types_protocol C_POLYMORPHIC_SUB (
+                     *     let l = [
+                     *         O.(t_bls12_381_g1 () ^-> t_bls12_381_g1 () ^-> t_bls12_381_g1 ());
+                     *         O.(t_bls12_381_g2 () ^-> t_bls12_381_g2 () ^-> t_bls12_381_g2 ());
+                     *         O.(t_bls12_381_fr () ^-> t_bls12_381_fr () ^-> t_bls12_381_fr ());
+                     *         O.(t_nat () ^-> t_nat () ^-> t_int ());
+                     *         O.(t_int () ^-> t_int () ^-> t_int ());
+                     *         O.(t_nat () ^-> t_int () ^-> t_int ());
+                     *         O.(t_int () ^-> t_nat () ^-> t_int ());
+                     *         O.(t_timestamp () ^-> t_timestamp () ^-> t_int ());
+                     *         O.(t_timestamp () ^-> t_int () ^-> t_timestamp ());
+                     *       ] in
+                     *     let ithaca =
+                     *       List.map ~f:(fun t -> (Environment.Protocols.Ithaca, t)) (O.(t_mutez () ^-> t_mutez () ^-> t_option (t_mutez ())) :: l) in
+                     *     let hangzhou =
+                     *       List.map ~f:(fun t -> (Environment.Protocols.Hangzhou, t)) (O.(t_mutez () ^-> t_mutez () ^-> (t_mutez ())) :: l) in
+                     *     ithaca @ hangzhou); *)
 end
 
 let external_typers ~raise ~options loc s =
@@ -652,6 +668,14 @@ let external_typers ~raise ~options loc s =
        Constant_types.polymorphic_add_typer
     | "u_polymorphic_add" ->
        Constant_types.polymorphic_add_typer
+    | "sub" ->
+       Constant_types.sub_typer
+    | "u_sub" ->
+       Constant_types.sub_typer
+    | "polymorphic_sub" ->
+       Constant_types.polymorphic_sub_typer
+    | "u_polymorphic_sub" ->
+       Constant_types.polymorphic_sub_typer
     | _ ->
        raise.raise (corner_case @@ Format.asprintf "Typer not implemented for external %s" s) in
   fun lst tv_opt ->

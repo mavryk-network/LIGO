@@ -6279,15 +6279,35 @@ let%expect_test _ =
                                                                     },
                                                                     {
                                                                     "expression_content": [
-                                                                    "E_constant",
+                                                                    "E_application",
                                                                     {
-                                                                    "cons_name": [
-                                                                    "Const",
-                                                                    [
-                                                                    "C_ADD"
-                                                                    ]
+                                                                    "lamb": {
+                                                                    "expression_content": [
+                                                                    "E_variable",
+                                                                    {
+                                                                    "name":
+                                                                    "#add",
+                                                                    "counter":
+                                                                    0,
+                                                                    "location": [
+                                                                    "Virtual",
+                                                                    "dummy"
                                                                     ],
-                                                                    "arguments": [
+                                                                    "generated":
+                                                                    false,
+                                                                    "mutable_":
+                                                                    false
+                                                                    }
+                                                                    ],
+                                                                    "location": [
+                                                                    "Virtual",
+                                                                    "generated"
+                                                                    ]
+                                                                    },
+                                                                    "args": {
+                                                                    "expression_content": [
+                                                                    "E_tuple",
+                                                                    [
                                                                     {
                                                                     "expression_content": [
                                                                     "E_application",
@@ -6842,6 +6862,12 @@ let%expect_test _ =
                                                                     ]
                                                                     }
                                                                     ]
+                                                                    ],
+                                                                    "location": [
+                                                                    "Virtual",
+                                                                    "generated"
+                                                                    ]
+                                                                    }
                                                                     }
                                                                     ],
                                                                     "location": [
@@ -8073,15 +8099,35 @@ let%expect_test _ =
                                                                     },
                                                                     {
                                                                     "expression_content": [
-                                                                    "E_constant",
+                                                                    "E_application",
                                                                     {
-                                                                    "cons_name": [
-                                                                    "Const",
-                                                                    [
-                                                                    "C_ADD"
-                                                                    ]
+                                                                    "lamb": {
+                                                                    "expression_content": [
+                                                                    "E_variable",
+                                                                    {
+                                                                    "name":
+                                                                    "#add",
+                                                                    "counter":
+                                                                    0,
+                                                                    "location": [
+                                                                    "Virtual",
+                                                                    "dummy"
                                                                     ],
-                                                                    "arguments": [
+                                                                    "generated":
+                                                                    false,
+                                                                    "mutable_":
+                                                                    false
+                                                                    }
+                                                                    ],
+                                                                    "location": [
+                                                                    "Virtual",
+                                                                    "generated"
+                                                                    ]
+                                                                    },
+                                                                    "args": {
+                                                                    "expression_content": [
+                                                                    "E_tuple",
+                                                                    [
                                                                     {
                                                                     "expression_content": [
                                                                     "E_application",
@@ -8636,6 +8682,12 @@ let%expect_test _ =
                                                                     ]
                                                                     }
                                                                     ]
+                                                                    ],
+                                                                    "location": [
+                                                                    "Virtual",
+                                                                    "generated"
+                                                                    ]
+                                                                    }
                                                                     }
                                                                     ],
                                                                     "location": [
@@ -13913,15 +13965,35 @@ let%expect_test _ =
                                                                     },
                                                                     "args": {
                                                                     "expression_content": [
-                                                                    "E_constant",
+                                                                    "E_application",
                                                                     {
-                                                                    "cons_name": [
-                                                                    "Const",
-                                                                    [
-                                                                    "C_POLYMORPHIC_SUB"
-                                                                    ]
+                                                                    "lamb": {
+                                                                    "expression_content": [
+                                                                    "E_variable",
+                                                                    {
+                                                                    "name":
+                                                                    "#polymorphic_sub",
+                                                                    "counter":
+                                                                    0,
+                                                                    "location": [
+                                                                    "Virtual",
+                                                                    "dummy"
                                                                     ],
-                                                                    "arguments": [
+                                                                    "generated":
+                                                                    false,
+                                                                    "mutable_":
+                                                                    false
+                                                                    }
+                                                                    ],
+                                                                    "location": [
+                                                                    "Virtual",
+                                                                    "generated"
+                                                                    ]
+                                                                    },
+                                                                    "args": {
+                                                                    "expression_content": [
+                                                                    "E_tuple",
+                                                                    [
                                                                     {
                                                                     "expression_content": [
                                                                     "E_variable",
@@ -14058,6 +14130,12 @@ let%expect_test _ =
                                                                     ]
                                                                     }
                                                                     ]
+                                                                    ],
+                                                                    "location": [
+                                                                    "Virtual",
+                                                                    "generated"
+                                                                    ]
+                                                                    }
                                                                     }
                                                                     ],
                                                                     "location": [
@@ -18509,15 +18587,35 @@ let%expect_test _ =
                                                                     },
                                                                     "args": {
                                                                     "expression_content": [
-                                                                    "E_constant",
+                                                                    "E_application",
                                                                     {
-                                                                    "cons_name": [
-                                                                    "Const",
-                                                                    [
-                                                                    "C_POLYMORPHIC_SUB"
-                                                                    ]
+                                                                    "lamb": {
+                                                                    "expression_content": [
+                                                                    "E_variable",
+                                                                    {
+                                                                    "name":
+                                                                    "#polymorphic_sub",
+                                                                    "counter":
+                                                                    0,
+                                                                    "location": [
+                                                                    "Virtual",
+                                                                    "dummy"
                                                                     ],
-                                                                    "arguments": [
+                                                                    "generated":
+                                                                    false,
+                                                                    "mutable_":
+                                                                    false
+                                                                    }
+                                                                    ],
+                                                                    "location": [
+                                                                    "Virtual",
+                                                                    "generated"
+                                                                    ]
+                                                                    },
+                                                                    "args": {
+                                                                    "expression_content": [
+                                                                    "E_tuple",
+                                                                    [
                                                                     {
                                                                     "expression_content": [
                                                                     "E_application",
@@ -19072,6 +19170,12 @@ let%expect_test _ =
                                                                     ]
                                                                     }
                                                                     ]
+                                                                    ],
+                                                                    "location": [
+                                                                    "Virtual",
+                                                                    "generated"
+                                                                    ]
+                                                                    }
                                                                     }
                                                                     ],
                                                                     "location": [

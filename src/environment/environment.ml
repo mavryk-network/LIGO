@@ -80,6 +80,10 @@ let michelson_base : (type_variable * type_expression) list = [
     (v_external_u_add     , t_abstraction2 (External "u_add")    star star) ;
     (v_external_polymorphic_add   , t_abstraction2 (External "polymorphic_add")      star star) ;
     (v_external_u_polymorphic_add , t_abstraction2 (External "u_polymorphic_add")    star star) ;
+    (v_external_sub       , t_abstraction2 (External "sub")      star star) ;
+    (v_external_u_sub     , t_abstraction2 (External "u_sub")    star star) ;
+    (v_external_polymorphic_sub   , t_abstraction2 (External "polymorphic_sub")      star star) ;
+    (v_external_u_polymorphic_sub , t_abstraction2 (External "u_polymorphic_sub")    star star) ;
 ]
 
 let hangzhou_extra : (type_variable * type_expression) list = [

@@ -349,6 +349,22 @@ and compile_bin_op ~add_warning ~raise (op_type : AST.constant') (op : _ CST.bin
   let b = self op.arg2 in
   return @@ e_constant ~loc (Const op_type) [a; b]
 
+and compile_add ~add_warning ~raise (op : _ CST.bin_op CST.reg) =
+  let self = compile_expression ~add_warning ~raise in
+  let return e = e in
+  let (op, loc) = r_split op in
+  let a = self op.arg1 in
+  let b = self op.arg2 in
+  return @@ e_application ~loc (e_variable @@ ValueVar.of_input_var "#polymorphic_add") (e_pair a b)
+
+and compile_sub ~add_warning ~raise (op : _ CST.bin_op CST.reg) =
+  let self = compile_expression ~add_warning ~raise in
+  let return e = e in
+  let (op, loc) = r_split op in
+  let a = self op.arg1 in
+  let b = self op.arg2 in
+  return @@ e_application ~loc (e_variable @@ ValueVar.of_input_var "#polymorphic_sub") (e_pair a b)
+
 and compile_un_op ~add_warning ~raise (op_type : AST.constant') (op : _ CST.un_op CST.reg) =
   let self = compile_expression ~add_warning ~raise in
   let return e = e in
@@ -385,8 +401,8 @@ and compile_expression ~add_warning ~raise : CST.expr -> AST.expr = fun e ->
   )
   | EArith arth ->
     ( match arth with
-      Add plus   -> compile_bin_op ~add_warning ~raise C_POLYMORPHIC_ADD plus
-    | Sub minus  -> compile_bin_op ~add_warning ~raise C_POLYMORPHIC_SUB minus
+      Add plus   -> compile_add ~add_warning ~raise plus
+    | Sub minus  -> compile_sub ~add_warning ~raise minus
     | Mult times -> compile_bin_op ~add_warning ~raise C_MUL times
     | Div slash  -> compile_bin_op ~add_warning ~raise C_DIV slash
     | Mod mod_   -> compile_bin_op ~add_warning ~raise C_MOD mod_
@@ -748,30 +764,42 @@ and compile_expression ~add_warning ~raise : CST.expr -> AST.expr = fun e ->
       Eq ->
         self e2
     | Assignment_operator ao ->
-      let lexeme = (match ao with
-        Times_eq -> "*="
-      | Div_eq -> "/="
-      | Plus_eq -> "+="
-      | Min_eq -> "-="
-      | Mod_eq -> "%="
+      let lexeme, aop = (match ao with
+        Times_eq -> "*=", C_MUL
+      | Div_eq -> "/=", C_DIV
+      | Plus_eq -> "+=", C_POLYMORPHIC_ADD
+      | Min_eq -> "-=", C_POLYMORPHIC_SUB
+      | Mod_eq -> "%=", C_MOD
       )
       in
-      let ao = (match ao with
-        Times_eq -> C_MUL
-      | Div_eq -> C_DIV
-      | Plus_eq -> C_POLYMORPHIC_ADD
-      | Min_eq -> C_POLYMORPHIC_SUB
-      | Mod_eq -> C_MOD
-      )
-      in
-      compile_bin_op ~add_warning ~raise ao {
-        value = {
-          op   = Token.wrap lexeme op.region;
-          arg1 = e1;
-          arg2 = e2;
-        };
-        region = op.region
-      })
+      match ao with
+      | Times_eq | Div_eq | Mod_eq ->
+         compile_bin_op ~add_warning ~raise aop {
+             value = {
+               op   = Token.wrap lexeme op.region;
+               arg1 = e1;
+               arg2 = e2;
+             };
+             region = op.region
+           }
+      | Plus_eq ->
+         compile_add ~add_warning ~raise {
+             value = {
+               op   = Token.wrap lexeme op.region;
+               arg1 = e1;
+               arg2 = e2;
+             };
+             region = op.region
+             }
+      | Min_eq ->
+         compile_sub ~add_warning ~raise {
+             value = {
+               op   = Token.wrap lexeme op.region;
+               arg1 = e1;
+               arg2 = e2;
+             };
+             region = op.region
+             })
     in
     e_assign ~loc:outer_loc {var=ValueVar.of_input_var ~loc value;ascr=None;attributes={const_or_var=Some `Var}} [] e2
 

@@ -40,10 +40,6 @@ let%expect_test _ =
 
   run_ligo_bad [ "compile" ; "contract" ; "../../test/contracts/negative/error_type.ligo" ] ;
   [%expect {|
-    File "../../test/contracts/negative/error_type.ligo", line 3, characters 18-28:
-      2 |
-      3 | const foo : nat = 42 + "bar"
-
     Invalid arguments.
     Expected an argument of type (bls12_381_g1, bls12_381_g1) or (bls12_381_g2, bls12_381_g2) or (bls12_381_fr, bls12_381_fr) or (nat, nat) or (int, int) or (tez, tez) or (nat, int) or (int, nat) or (timestamp, int) or (int, timestamp), but got an argument of type int, string. |} ] ;
 
@@ -69,11 +65,6 @@ let%expect_test _ =
 
   run_ligo_bad [ "compile" ; "contract" ; "../../test/contracts/negative/error_typer_1.mligo" ] ;
   [%expect {|
-    File "../../test/contracts/negative/error_typer_1.mligo", line 3, characters 19-27:
-      2 |
-      3 | let foo : string = 42 + 127
-      4 |
-
     Invalid type(s).
     Expected: "string", but got: "int". |} ] ;
 
