@@ -349,45 +349,13 @@ and compile_bin_op ~add_warning ~raise (op_type : AST.constant') (op : _ CST.bin
   let b = self op.arg2 in
   return @@ e_constant ~loc (Const op_type) [a; b]
 
-and compile_add ~add_warning ~raise (op : _ CST.bin_op CST.reg) =
+and compile_bin_op' ~add_warning ~raise (op_type : string) (op : _ CST.bin_op CST.reg) =
   let self = compile_expression ~add_warning ~raise in
   let return e = e in
   let (op, loc) = r_split op in
   let a = self op.arg1 in
   let b = self op.arg2 in
-  return @@ e_application ~loc (e_variable @@ ValueVar.of_input_var "#polymorphic_add") (e_pair a b)
-
-and compile_sub ~add_warning ~raise (op : _ CST.bin_op CST.reg) =
-  let self = compile_expression ~add_warning ~raise in
-  let return e = e in
-  let (op, loc) = r_split op in
-  let a = self op.arg1 in
-  let b = self op.arg2 in
-  return @@ e_application ~loc (e_variable @@ ValueVar.of_input_var "#polymorphic_sub") (e_pair a b)
-
-and compile_mul ~add_warning ~raise (op : _ CST.bin_op CST.reg) =
-  let self = compile_expression ~add_warning ~raise in
-  let return e = e in
-  let (op, loc) = r_split op in
-  let a = self op.arg1 in
-  let b = self op.arg2 in
-  return @@ e_application ~loc (e_variable @@ ValueVar.of_input_var "#mul") (e_pair a b)
-
-and compile_div ~add_warning ~raise (op : _ CST.bin_op CST.reg) =
-  let self = compile_expression ~add_warning ~raise in
-  let return e = e in
-  let (op, loc) = r_split op in
-  let a = self op.arg1 in
-  let b = self op.arg2 in
-  return @@ e_application ~loc (e_variable @@ ValueVar.of_input_var "#div") (e_pair a b)
-
-and compile_mod ~add_warning ~raise (op : _ CST.bin_op CST.reg) =
-  let self = compile_expression ~add_warning ~raise in
-  let return e = e in
-  let (op, loc) = r_split op in
-  let a = self op.arg1 in
-  let b = self op.arg2 in
-  return @@ e_application ~loc (e_variable @@ ValueVar.of_input_var "#mod") (e_pair a b)
+  return @@ e_application ~loc (e_variable @@ ValueVar.of_input_var op_type) (e_pair a b)
 
 and compile_un_op ~add_warning ~raise (op_type : AST.constant') (op : _ CST.un_op CST.reg) =
   let self = compile_expression ~add_warning ~raise in
@@ -425,11 +393,11 @@ and compile_expression ~add_warning ~raise : CST.expr -> AST.expr = fun e ->
   )
   | EArith arth ->
     ( match arth with
-      Add plus   -> compile_add ~add_warning ~raise plus
-    | Sub minus  -> compile_sub ~add_warning ~raise minus
-    | Mult times -> compile_mul ~add_warning ~raise times
-    | Div slash  -> compile_div ~add_warning ~raise slash
-    | Mod mod_   -> compile_mod ~add_warning ~raise mod_
+      Add plus   -> compile_bin_op' ~add_warning ~raise "#polymorphic_add" plus
+    | Sub minus  -> compile_bin_op' ~add_warning ~raise "#polymorphic_sub" minus
+    | Mult times -> compile_bin_op' ~add_warning ~raise "#mul" times
+    | Div slash  -> compile_bin_op' ~add_warning ~raise "#div" slash
+    | Mod mod_   -> compile_bin_op' ~add_warning ~raise "#mod" mod_
     | Neg minus  -> compile_un_op ~add_warning ~raise C_NEG minus
     | Int i ->
       let ((_,i), loc) = r_split i in
@@ -788,53 +756,15 @@ and compile_expression ~add_warning ~raise : CST.expr -> AST.expr = fun e ->
       Eq ->
         self e2
     | Assignment_operator ao ->
-      let lexeme = (match ao with
-        Times_eq -> "*="
-      | Div_eq -> "/="
-      | Plus_eq -> "+="
-      | Min_eq -> "-="
-      | Mod_eq -> "%="
+      let lexeme, aop = (match ao with
+        Times_eq -> "*=", "#mul"
+      | Div_eq -> "/=", "#div"
+      | Plus_eq -> "+=", "#polymorphic_add"
+      | Min_eq -> "-=", "#polymorphic_sub"
+      | Mod_eq -> "%=", "#mod"
       )
       in
-      match ao with
-      | Plus_eq ->
-         compile_add ~add_warning ~raise {
-             value = {
-               op   = Token.wrap lexeme op.region;
-               arg1 = e1;
-               arg2 = e2;
-             };
-             region = op.region
-             }
-      | Min_eq ->
-         compile_sub ~add_warning ~raise {
-             value = {
-               op   = Token.wrap lexeme op.region;
-               arg1 = e1;
-               arg2 = e2;
-             };
-             region = op.region
-             }
-      | Times_eq ->
-         compile_mul ~add_warning ~raise {
-             value = {
-               op   = Token.wrap lexeme op.region;
-               arg1 = e1;
-               arg2 = e2;
-             };
-             region = op.region
-             }
-      | Div_eq ->
-         compile_div ~add_warning ~raise {
-             value = {
-               op   = Token.wrap lexeme op.region;
-               arg1 = e1;
-               arg2 = e2;
-             };
-             region = op.region
-             }
-      | Mod_eq ->
-         compile_mod ~add_warning ~raise {
+      compile_bin_op' ~add_warning ~raise aop {
              value = {
                op   = Token.wrap lexeme op.region;
                arg1 = e1;

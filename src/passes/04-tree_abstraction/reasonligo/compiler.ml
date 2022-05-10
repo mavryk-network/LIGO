@@ -217,35 +217,11 @@ let rec compile_expression ~(raise:Errors.abs_error Simple_utils.Trace.raise) ?f
     let b = self op.arg2 in
     return @@ e_constant ~loc (Const op_type) [a; b]
   in
-  let compile_add (op : _ CST.bin_op CST.reg) =
+  let compile_bin_op' (op_type : string) (op : _ CST.bin_op CST.reg) =
     let (op, loc) = r_split op in
     let a = self op.arg1 in
     let b = self op.arg2 in
-    return @@ e_application ~loc (e_variable @@ ValueVar.of_input_var "#add") (e_pair a b)
-  in
-  let compile_sub (op : _ CST.bin_op CST.reg) =
-    let (op, loc) = r_split op in
-    let a = self op.arg1 in
-    let b = self op.arg2 in
-    return @@ e_application ~loc (e_variable @@ ValueVar.of_input_var "#polymorphic_sub") (e_pair a b)
-  in
-  let compile_mul (op : _ CST.bin_op CST.reg) =
-    let (op, loc) = r_split op in
-    let a = self op.arg1 in
-    let b = self op.arg2 in
-    return @@ e_application ~loc (e_variable @@ ValueVar.of_input_var "#mul") (e_pair a b)
-  in
-  let compile_div (op : _ CST.bin_op CST.reg) =
-    let (op, loc) = r_split op in
-    let a = self op.arg1 in
-    let b = self op.arg2 in
-    return @@ e_application ~loc (e_variable @@ ValueVar.of_input_var "#div") (e_pair a b)
-  in
-  let compile_mod (op : _ CST.bin_op CST.reg) =
-    let (op, loc) = r_split op in
-    let a = self op.arg1 in
-    let b = self op.arg2 in
-    return @@ e_application ~loc (e_variable @@ ValueVar.of_input_var "#mod") (e_pair a b)
+    return @@ e_application ~loc (e_variable @@ ValueVar.of_input_var op_type) (e_pair a b)
   in
   let compile_un_op (op_type : AST.constant') (op : _ CST.un_op CST.reg) =
     let (op, loc) = r_split op in
@@ -283,11 +259,11 @@ let rec compile_expression ~(raise:Errors.abs_error Simple_utils.Trace.raise) ?f
   )
   | EArith arth ->
     ( match arth with
-      Add plus   -> compile_add plus
-    | Sub minus  -> compile_sub minus
-    | Mult times -> compile_mul times
-    | Div slash  -> compile_div slash
-    | Mod mod_   -> compile_mod mod_
+      Add plus   -> compile_bin_op' "#add" plus
+    | Sub minus  -> compile_bin_op' "#polymorphic_sub" minus
+    | Mult times -> compile_bin_op' "#mul" times
+    | Div slash  -> compile_bin_op' "#div" slash
+    | Mod mod_   -> compile_bin_op' "#mod" mod_
     | Land land_ -> compile_bin_op C_AND land_
     | Lor lor_   -> compile_bin_op C_OR lor_
     | Lxor lxor_ -> compile_bin_op C_XOR lxor_

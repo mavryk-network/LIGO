@@ -208,35 +208,11 @@ let rec compile_expression ~(raise :Errors.abs_error Simple_utils.Trace.raise) :
     let b = self op.arg2 in
     e_constant ~loc (Const op_type) [a; b]
   in
-  let compile_add (op : _ CST.bin_op CST.reg) =
+  let compile_bin_op' : string ->  _ CST.bin_op CST.reg -> AST.expression = fun op_type op ->
     let (op, loc) = r_split op in
     let a = self op.arg1 in
     let b = self op.arg2 in
-    e_application ~loc (e_variable @@ ValueVar.of_input_var "#add") (e_pair a b)
-  in
-  let compile_sub (op : _ CST.bin_op CST.reg) =
-    let (op, loc) = r_split op in
-    let a = self op.arg1 in
-    let b = self op.arg2 in
-    e_application ~loc (e_variable @@ ValueVar.of_input_var "#polymorphic_sub") (e_pair a b)
-  in
-  let compile_mul (op : _ CST.bin_op CST.reg) =
-    let (op, loc) = r_split op in
-    let a = self op.arg1 in
-    let b = self op.arg2 in
-    e_application ~loc (e_variable @@ ValueVar.of_input_var "#mul") (e_pair a b)
-  in
-  let compile_div (op : _ CST.bin_op CST.reg) =
-    let (op, loc) = r_split op in
-    let a = self op.arg1 in
-    let b = self op.arg2 in
-    e_application ~loc (e_variable @@ ValueVar.of_input_var "#div") (e_pair a b)
-  in
-  let compile_mod (op : _ CST.bin_op CST.reg) =
-    let (op, loc) = r_split op in
-    let a = self op.arg1 in
-    let b = self op.arg2 in
-    e_application ~loc (e_variable @@ ValueVar.of_input_var "#mod") (e_pair a b)
+    e_application ~loc (e_variable @@ ValueVar.of_input_var op_type) (e_pair a b)
   in
   let compile_un_op : AST.constant' -> _ CST.un_op CST.reg -> AST.expression = fun op_type op ->
     let (op, loc) = r_split op in
@@ -272,11 +248,11 @@ let rec compile_expression ~(raise :Errors.abs_error Simple_utils.Trace.raise) :
   | E_Verbatim str ->
     let (str, loc) = w_split str in
     e_verbatim ~loc str
-  | E_Add plus   -> compile_add plus
-  | E_Sub minus  -> compile_sub minus
-  | E_Mult times -> compile_mul times
-  | E_Div slash  -> compile_div slash
-  | E_Mod mod_   -> compile_mod mod_
+  | E_Add plus   -> compile_bin_op' "#add" plus
+  | E_Sub minus  -> compile_bin_op' "#polymorphic_sub" minus
+  | E_Mult times -> compile_bin_op' "#mul" times
+  | E_Div slash  -> compile_bin_op' "#div" slash
+  | E_Mod mod_   -> compile_bin_op' "#mod" mod_
   | E_Neg minus  -> compile_un_op C_NEG minus
   | E_Int i ->
     let ((_,i), loc) = w_split i in
