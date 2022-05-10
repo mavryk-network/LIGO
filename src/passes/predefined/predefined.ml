@@ -59,7 +59,6 @@ module Tree_abstraction = struct
 
     (* Bitwise module *)
     | "Bitwise.or"          -> some_const C_OR
-    | "Bitwise.and"         -> some_const C_AND
 
     (* Operator module *)
     | "Operator.neg"   -> some_const C_NEG

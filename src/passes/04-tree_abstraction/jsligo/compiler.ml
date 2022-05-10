@@ -408,7 +408,7 @@ and compile_expression ~add_warning ~raise : CST.expr -> AST.expr = fun e ->
       BoolExpr be -> (
       match be with
         Or or_   -> compile_bin_op ~add_warning ~raise C_OR  or_
-      | And and_ -> compile_bin_op ~add_warning ~raise C_AND and_
+      | And and_ -> compile_bin_op' ~add_warning ~raise "#and" and_
       | Not not_ -> compile_un_op ~add_warning ~raise  C_NOT not_
     )
     | CompExpr ce -> (
@@ -1233,7 +1233,7 @@ and compile_statement ?(wrap=false) ~add_warning ~raise : CST.statement -> state
     let found_case_assign_true   = e_assign found_case_binder  [] (e_true ()) in
 
     let not_expr     e   = e_constant (Const C_NOT)     [e   ] in
-    let and_expr     a b = e_constant (Const C_AND)     [a; b] in
+    let and_expr     a b = e_application ~loc (e_variable @@ ValueVar.of_input_var "#and") (e_pair a b) in
     let or_expr      a b = e_constant (Const C_OR)      [a; b] in
     let eq_expr ~loc a b = e_constant ~loc (Const C_EQ) [a; b] in
 

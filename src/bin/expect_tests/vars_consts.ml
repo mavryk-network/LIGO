@@ -293,7 +293,7 @@ let%expect_test _ =
                                     let ()#5 : unit =
                                       let fun_while_loop#2 =
                                         rec (fun_while_loop#2:unit -> unit => lambda (()#3 : unit) return
-                                         match AND(LT(i , x) , GT(b , 0)) with
+                                         match (#and)@(( LT(i , x) , GT(b , 0) )) with
                                           | True () -> let ()#4 : unit =
                                                          i[@var] := (#add)@(
                                                                     ( i , 1 )) in

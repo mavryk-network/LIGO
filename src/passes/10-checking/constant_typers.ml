@@ -403,6 +403,10 @@ module Constant_types = struct
                         typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> t_ext_mod a b);
                         typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> t_ext_u_mod a b);
                     ]);
+                    (C_AND, any_of [
+                        typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> t_ext_and a b);
+                        typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> t_ext_u_and a b);
+                    ]);
                     of_type C_AMOUNT O.(t_mutez ());
                     of_type C_BALANCE O.(t_mutez ());
                     of_type C_LEVEL O.(t_nat ());
@@ -453,11 +457,6 @@ module Constant_types = struct
                         O.(t_bool () ^-> t_bool ());
                         O.(t_int () ^-> t_int ());
                         O.(t_nat () ^-> t_int ());
-                      ];
-                    of_types C_AND [
-                        O.(t_bool () ^-> t_bool () ^-> t_bool ());
-                        O.(t_nat () ^-> t_nat () ^-> t_nat ());
-                        O.(t_int () ^-> t_nat () ^-> t_nat ());
                       ];
                     of_types C_OR [
                         O.(t_bool () ^-> t_bool () ^-> t_bool ());
@@ -644,6 +643,11 @@ module Constant_types = struct
                       typer_table_of_ligo_type O.(t_mutez () ^-> t_nat () ^-> t_mutez ());
                       typer_table_of_ligo_type O.(t_mutez () ^-> t_mutez () ^-> t_mutez ());
                     ]
+  let and_typer = any_table_of [
+                      typer_table_of_ligo_type O.(t_bool () ^-> t_bool () ^-> t_bool ());
+                      typer_table_of_ligo_type O.(t_nat () ^-> t_nat () ^-> t_nat ());
+                      typer_table_of_ligo_type O.(t_int () ^-> t_nat () ^-> t_nat ());
+                    ]
 end
 
 let external_typers ~raise ~options loc s =
@@ -685,6 +689,10 @@ let external_typers ~raise ~options loc s =
        Constant_types.mod_typer
     | "u_mod" ->
        Constant_types.mod_typer
+    | "and" ->
+       Constant_types.and_typer
+    | "u_and" ->
+       Constant_types.and_typer
     | _ ->
        raise.raise (corner_case @@ Format.asprintf "Typer not implemented for external %s" s) in
   fun lst tv_opt ->

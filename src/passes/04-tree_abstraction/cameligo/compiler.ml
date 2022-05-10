@@ -272,7 +272,7 @@ let rec compile_expression ~raise : CST.expr -> AST.expr = fun e ->
     | Mult times -> compile_bin_op' "#mul" times
     | Div slash  -> compile_bin_op' "#div" slash
     | Mod mod_   -> compile_bin_op' "#mod" mod_
-    | Land land_ -> compile_bin_op C_AND land_
+    | Land land_ -> compile_bin_op' "#and" land_
     | Lor lor_   -> compile_bin_op C_OR lor_
     | Lxor lxor_ -> compile_bin_op C_XOR lxor_
     | Lsl lsl_   -> compile_bin_op C_LSL lsl_
@@ -293,7 +293,7 @@ let rec compile_expression ~raise : CST.expr -> AST.expr = fun e ->
       BoolExpr be -> (
       match be with
         Or or_   -> compile_bin_op C_OR  or_
-      | And and_ -> compile_bin_op C_AND and_
+      | And and_ -> compile_bin_op' "#and" and_
       | Not not_ -> compile_un_op  C_NOT not_
     )
     | CompExpr ce -> (

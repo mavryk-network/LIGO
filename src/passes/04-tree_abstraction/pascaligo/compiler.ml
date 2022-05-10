@@ -264,7 +264,7 @@ let rec compile_expression ~(raise :Errors.abs_error Simple_utils.Trace.raise) :
     let ((_,mtez), loc) = w_split mtez in
     e_mutez_z ~loc (Z.of_int64 mtez)
   | E_Or or_   -> compile_bin_op C_OR  or_
-  | E_And and_ -> compile_bin_op C_AND and_
+  | E_And and_ -> compile_bin_op' "#and" and_
   | E_Not not_ -> compile_un_op  C_NOT not_
   | E_Lt lt    -> compile_bin_op C_LT  lt
   | E_Leq le   -> compile_bin_op C_LE  le

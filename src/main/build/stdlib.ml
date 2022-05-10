@@ -33,7 +33,7 @@ module Tezos = struct
   [@hidden] [@inline] let set_delegate (o : key_hash option) : operation = [%external \"SET_DELEGATE\"] o
 end
 module Bitwise = struct
-  (* [@hidden] [@inline] let and (type a b) ((l, r) : (a, b)) : (a, b) external_and = [%external \"AND\"] l r *)
+  [@hidden] [@inline] let _remove_and (type a b) ((l, r) : a * b) : (a, b) external_u_and = [%external \"AND\"] l r
   [@hidden] [@inline] let xor ((l, r) : nat * nat) : nat = [%external \"XOR\"] l r
   (* [@hidden] [@inline] let or ((l, r) : nat * nat) : nat = [%external \"OR\"] l r *)
   [@hidden] [@inline] let shift_left ((l, r) : nat * nat) : nat = [%external \"LSL\"] l r
@@ -134,6 +134,7 @@ end
 [@private] [@hidden] [@inline] let _hash_mul (type a b) ((l, r) : a * b) : (a, b) external_u_mul = [%external \"MUL\"] l r
 [@private] [@hidden] [@inline] let _hash_div (type a b) ((l, r) : a * b) : (a, b) external_u_div = [%external \"DIV\"] l r
 [@private] [@hidden] [@inline] let _hash_mod (type a b) ((l, r) : a * b) : (a, b) external_u_mod = [%external \"MOD\"] l r
+[@private] [@hidden] [@inline] let _hash_and (type a b) ((l, r) : a * b) : (a, b) external_u_and = [%external \"AND\"] l r
 "
   | CameLIGO -> "
 module Tezos = struct
@@ -168,7 +169,7 @@ module Tezos = struct
   [@hidden] [@inline] let set_delegate (o : key_hash option) : operation = [%external \"SET_DELEGATE\"] o
 end
 module Bitwise = struct
-  (* [@hidden] [@inline] let and (type a b) (l : a) (r : b) : (a, b) external_and = [%external \"AND\"] l r *)
+  [@hidden] [@inline] let _remove_and (type a b) (l : a) (r : b) : (a, b) external_and = [%external \"AND\"] l r
   [@hidden] [@inline] let xor (l : nat) (r : nat) : nat = [%external \"XOR\"] l r
   (* [@hidden] [@inline] let or (l : nat) (r : nat) : nat = [%external \"OR\"] l r *)
   [@hidden] [@inline] let shift_left (l : nat) (r : nat) : nat = [%external \"LSL\"] l r
@@ -269,6 +270,7 @@ end
 [@private] [@hidden] [@inline] let _hash_mul (type a b) (l : a) (r : b) : (a, b) external_mul = [%external \"MUL\"] l r
 [@private] [@hidden] [@inline] let _hash_div (type a b) (l : a) (r : b) : (a, b) external_div = [%external \"DIV\"] l r
 [@private] [@hidden] [@inline] let _hash_mod (type a b) (l : a) (r : b) : (a, b) external_mod = [%external \"MOD\"] l r
+[@private] [@hidden] [@inline] let _hash_and (type a b) (l : a) (r : b) : (a, b) external_and = [%external \"AND\"] l r
 "
 
 let stdlib ~options syntax =
