@@ -135,6 +135,8 @@ let to_string = function
   | "external_u_mul"       -> External "u_mul"
   | "external_div"         -> External "div"
   | "external_u_div"       -> External "u_div"
+  | "external_mod"         -> External "mod"
+  | "external_u_mod"       -> External "u_mod"
   | _ -> failwith "Forgot to add constant name in constant.ml?"
 
 let bool                 = Bool
@@ -190,6 +192,8 @@ let external_mul         = External "mul"
 let external_u_mul       = External "u_mul"
 let external_div         = External "div"
 let external_u_div       = External "u_div"
+let external_mod         = External "mod"
+let external_u_mod       = External "u_mod"
 
 let v_bool                 : type_variable = TypeVar.of_input_var (to_string Bool)
 let v_string               : type_variable = TypeVar.of_input_var (to_string String)
@@ -245,3 +249,5 @@ let v_external_mul         : type_variable = TypeVar.of_input_var (to_string @@ 
 let v_external_u_mul       : type_variable = TypeVar.of_input_var (to_string @@ External "u_mul")
 let v_external_div         : type_variable = TypeVar.of_input_var (to_string @@ External "div")
 let v_external_u_div       : type_variable = TypeVar.of_input_var (to_string @@ External "u_div")
+let v_external_mod         : type_variable = TypeVar.of_input_var (to_string @@ External "mod")
+let v_external_u_mod       : type_variable = TypeVar.of_input_var (to_string @@ External "u_mod")

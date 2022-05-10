@@ -399,6 +399,10 @@ module Constant_types = struct
                         typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> t_ext_div a b);
                         typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> t_ext_u_div a b);
                     ]);
+                    (C_MOD, any_of [
+                        typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> t_ext_mod a b);
+                        typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> t_ext_u_mod a b);
+                    ]);
                     of_type C_AMOUNT O.(t_mutez ());
                     of_type C_BALANCE O.(t_mutez ());
                     of_type C_LEVEL O.(t_nat ());
@@ -436,14 +440,6 @@ module Constant_types = struct
                     (* MATH *)
                     of_type_since ~since:Ligo_proto.Ithaca ~constant:"Operator.sub_mutez"
                       C_SUB_MUTEZ O.(t_mutez () ^-> t_mutez () ^-> t_option (t_mutez ()));
-                    of_types C_MOD [
-                        O.(t_nat () ^-> t_nat () ^-> t_nat ());
-                        O.(t_nat () ^-> t_int () ^-> t_nat ());
-                        O.(t_int () ^-> t_nat () ^-> t_nat ());
-                        O.(t_int () ^-> t_int () ^-> t_nat ());
-                        O.(t_mutez () ^-> t_nat () ^-> t_mutez ());
-                        O.(t_mutez () ^-> t_mutez () ^-> t_mutez ());
-                      ];
                     of_type C_ABS O.(t_int () ^-> t_nat ());
                     of_types C_NEG [
                         O.(t_int () ^-> t_int ());
@@ -639,6 +635,15 @@ module Constant_types = struct
                       typer_table_of_ligo_type O.(t_mutez () ^-> t_nat () ^-> t_mutez ());
                       typer_table_of_ligo_type O.(t_mutez () ^-> t_mutez () ^-> t_nat ());
                     ]
+
+  let mod_typer = any_table_of [
+                      typer_table_of_ligo_type O.(t_nat () ^-> t_nat () ^-> t_nat ());
+                      typer_table_of_ligo_type O.(t_nat () ^-> t_int () ^-> t_nat ());
+                      typer_table_of_ligo_type O.(t_int () ^-> t_nat () ^-> t_nat ());
+                      typer_table_of_ligo_type O.(t_int () ^-> t_int () ^-> t_nat ());
+                      typer_table_of_ligo_type O.(t_mutez () ^-> t_nat () ^-> t_mutez ());
+                      typer_table_of_ligo_type O.(t_mutez () ^-> t_mutez () ^-> t_mutez ());
+                    ]
 end
 
 let external_typers ~raise ~options loc s =
@@ -676,6 +681,10 @@ let external_typers ~raise ~options loc s =
        Constant_types.div_typer
     | "u_div" ->
        Constant_types.div_typer
+    | "mod" ->
+       Constant_types.mod_typer
+    | "u_mod" ->
+       Constant_types.mod_typer
     | _ ->
        raise.raise (corner_case @@ Format.asprintf "Typer not implemented for external %s" s) in
   fun lst tv_opt ->

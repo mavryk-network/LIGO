@@ -249,6 +249,12 @@ let rec compile_expression ~raise : CST.expr -> AST.expr = fun e ->
     let b = self op.arg2 in
     return @@ e_application ~loc (e_application ~loc (e_variable @@ ValueVar.of_input_var "#div") a) b
   in
+  let compile_mod (op : _ CST.bin_op CST.reg) =
+    let (op, loc) = r_split op in
+    let a = self op.arg1 in
+    let b = self op.arg2 in
+    return @@ e_application ~loc (e_application ~loc (e_variable @@ ValueVar.of_input_var "#mod") a) b
+  in
   let compile_un_op (op_type : AST.constant') (op : _ CST.un_op CST.reg) =
     let (op, loc) = r_split op in
     let arg = self op.arg in
@@ -290,7 +296,7 @@ let rec compile_expression ~raise : CST.expr -> AST.expr = fun e ->
     | Sub minus  -> compile_sub minus
     | Mult times -> compile_mul times
     | Div slash  -> compile_div slash
-    | Mod mod_   -> compile_bin_op C_MOD mod_
+    | Mod mod_   -> compile_mod mod_
     | Land land_ -> compile_bin_op C_AND land_
     | Lor lor_   -> compile_bin_op C_OR lor_
     | Lxor lxor_ -> compile_bin_op C_XOR lxor_
