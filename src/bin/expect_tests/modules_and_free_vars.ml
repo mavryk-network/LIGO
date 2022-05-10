@@ -62,8 +62,8 @@ module Tezo = struct
               end
 const balanc = 2000000mutez
 const size = 10
-const bal = ADD(balanc , 1000000mutez)
-const amt = ADD(Tezo.amoun , 1000000mutez)
+const bal = ((#add@{tez}@{tez})@(balanc))@(1000000mutez)
+const amt = ((#add@{tez}@{tez})@(Tezo.amoun))@(1000000mutez)
 type parameter = sum[Decrement -> unit , Increment -> unit]
 type storage = tez
 type return = ( list (operation) * tez )

@@ -447,20 +447,20 @@ const t2 =
                                                          let old_b = b in let b =
                                                           match y with
                                                            | Cons ctor_proj#34 ->
-                                                             ADD(a ,
-                                                             b)
+                                                             (#add@{int}@{int})@(
+                                                             ( a , b ))
                                                            | Nil unit_proj#33 ->
-                                                             let f = lambda (b : int) return ADD(a ,
-                                                             b) in (f)@(ADD(b ,
-                                                             1)) in ADD(ADD(a ,
-                                                         old_b) , b)
+                                                             let f = lambda (b : int) return (#add@{int}@{int})@(
+                                                             ( a , b )) in (f)@((#add@{int}@{int})@(
+                                                             ( b , 1 ))) in (#add@{int}@{int})@(
+                                                         ( (#add@{int}@{int})@(( a , old_b )) , b ))
                                                      | Nil unit_proj#37 ->
                                                         match y with
                                                          | Cons ctor_proj#30 ->
                                                             match ctor_proj#30 with
                                                              | ( _a , b ) ->
-                                                             let a = "a" in ADD((int@{nat})@((String.length)@(a)) ,
-                                                             b)
+                                                             let a = "a" in (#add@{int}@{int})@(
+                                                             ( (int@{nat})@((String.length)@(a)) , b ))
                                                          | Nil unit_proj#32 ->
                                                            1
 const t3 =
@@ -473,7 +473,7 @@ const t3 =
             | Cons ctor_proj#38 ->
                match ctor_proj#38 with
                 | ( a , b ) ->
-                ADD(a , b)
+                (#add@{int}@{int})@(( a , b ))
             | Nil unit_proj#40 ->
               2
         | Nil unit_proj#42 ->
@@ -493,18 +493,18 @@ const t2_3 =
                                    | Cons ctor_proj#49 ->
                                       match ctor_proj#49 with
                                        | ( a , b ) ->
-                                       ADD(a , b)
+                                       (#add@{int}@{int})@(( a , b ))
                                    | Nil unit_proj#51 ->
-                                     let f = lambda (b : int) return ADD(a ,
-                                     b) in (f)@(ADD(b ,
-                                     1)) in ADD(ADD(a ,
-        old_b) , b)
+                                     let f = lambda (b : int) return (#add@{int}@{int})@(
+                                     ( a , b )) in (f)@((#add@{int}@{int})@(
+                                     ( b , 1 ))) in (#add@{int}@{int})@(
+        ( (#add@{int}@{int})@(( a , old_b )) , b ))
     | Nil unit_proj#54 ->
        match y with
         | Cons ctor_proj#46 ->
            match ctor_proj#46 with
             | ( _a , b ) ->
-            let a = "a" in ADD((int@{nat})@((String.length)@(a)) , b)
+            let a = "a" in (#add@{int}@{int})@(( (int@{nat})@((String.length)@(a)) , b ))
         | Nil unit_proj#48 ->
           1 in let t3 =  match x2 with
                           | One ctor_proj#58 ->
@@ -514,7 +514,7 @@ const t2_3 =
                                   | Cons ctor_proj#55 ->
                                      match ctor_proj#55 with
                                       | ( a , b ) ->
-                                      ADD(a , b)
+                                      (#add@{int}@{int})@(( a , b ))
                                   | Nil unit_proj#57 ->
                                     2
                               | Nil unit_proj#59 ->
@@ -630,8 +630,7 @@ const t11 =
                                | Some a ->
                                  a
                                | None unit_proj#121 ->
-                                 ADD((fo)@(ctor_proj#138) ,
-                                 (fo)@(ctor_proj#136))
+                                 (#add@{int}@{int})@(( (fo)@(ctor_proj#138) , (fo)@(ctor_proj#136) ))
                            | Some _a ->
                               match ys with
                                | Nili ctor_proj#132 ->
@@ -639,8 +638,7 @@ const t11 =
                                    | Some a ->
                                      a
                                    | None unit_proj#121 ->
-                                     ADD((fo)@(ctor_proj#138) ,
-                                     (fo)@(ctor_proj#136))
+                                     (#add@{int}@{int})@(( (fo)@(ctor_proj#138) , (fo)@(ctor_proj#136) ))
                                | Consi ctor_proj#130 ->
                                   match ctor_proj#130 with
                                    | None ctor_proj#131 ->
@@ -648,8 +646,7 @@ const t11 =
                                        | Some a ->
                                          a
                                        | None unit_proj#121 ->
-                                         ADD((fo)@(ctor_proj#138) ,
-                                         (fo)@(ctor_proj#136))
+                                         (#add@{int}@{int})@(( (fo)@(ctor_proj#138) , (fo)@(ctor_proj#136) ))
                                    | Some b ->
                                      let a = 1 in (#add@{int}@{int})@(
                                      ( a , b ))
