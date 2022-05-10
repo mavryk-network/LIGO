@@ -64,6 +64,8 @@ let t_ext_mod ?loc ?core t t' : type_expression = t_constant ?loc ?core (Externa
 let t_ext_u_mod ?loc ?core t t' : type_expression = t_constant ?loc ?core (External "u_mod") [t; t']
 let t_ext_and ?loc ?core t t' : type_expression = t_constant ?loc ?core (External "and") [t; t']
 let t_ext_u_and ?loc ?core t t' : type_expression = t_constant ?loc ?core (External "u_and") [t; t']
+let t_ext_or ?loc ?core t t' : type_expression = t_constant ?loc ?core (External "or") [t; t']
+let t_ext_u_or ?loc ?core t t' : type_expression = t_constant ?loc ?core (External "u_or") [t; t']
 
 let t__type_ ?loc ?core t t' : type_expression = t_constant ?loc ?core _type_ [t; t']
 [@@map (_type_, ("map", "big_map", "typed_address"))]

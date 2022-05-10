@@ -265,7 +265,7 @@ let rec compile_expression ~(raise:Errors.abs_error Simple_utils.Trace.raise) ?f
     | Div slash  -> compile_bin_op' "#div" slash
     | Mod mod_   -> compile_bin_op' "#mod" mod_
     | Land land_ -> compile_bin_op' "#and" land_
-    | Lor lor_   -> compile_bin_op C_OR lor_
+    | Lor lor_   -> compile_bin_op' "#or" lor_
     | Lxor lxor_ -> compile_bin_op C_XOR lxor_
     | Lsl lsl_   -> compile_bin_op C_LSL lsl_
     | Lsr lsr_   -> compile_bin_op C_LSR lsr_
@@ -284,7 +284,7 @@ let rec compile_expression ~(raise:Errors.abs_error Simple_utils.Trace.raise) ?f
     match logic with
       BoolExpr be -> (
       match be with
-        Or or_   -> compile_bin_op C_OR  or_
+        Or or_   -> compile_bin_op' "#or"  or_
       | And and_ -> compile_bin_op' "#and" and_
       | Not not_ -> compile_un_op  C_NOT not_
     )

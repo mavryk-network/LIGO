@@ -94,16 +94,16 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_good [ "print" ; "mini-c" ; contract "D.mligo" ] ;
   [%expect{|
-let #../../test/contracts/build/A.mligo#toto#163 = L(1) in
-let #../../test/contracts/build/B.mligo#titi#321 =
-  ADD(#../../test/contracts/build/A.mligo#toto#163 , L(42)) in
-let #../../test/contracts/build/C.mligo#tata#793 =
-  ADD(#../../test/contracts/build/A.mligo#toto#163 ,
-      #../../test/contracts/build/B.mligo#titi#321) in
-let gen#3940 =
-  (ADD(L(3) , #../../test/contracts/build/A.mligo#toto#163), #../../test/contracts/build/B.mligo#titi#321) in
-let x = let (l, r) = gen#3940 in ADD(l , r) in
-let toto = ADD(L(10) , #../../test/contracts/build/A.mligo#toto#163) in
+let #../../test/contracts/build/A.mligo#toto#165 = L(1) in
+let #../../test/contracts/build/B.mligo#titi#325 =
+  ADD(#../../test/contracts/build/A.mligo#toto#165 , L(42)) in
+let #../../test/contracts/build/C.mligo#tata#803 =
+  ADD(#../../test/contracts/build/A.mligo#toto#165 ,
+      #../../test/contracts/build/B.mligo#titi#325) in
+let gen#3995 =
+  (ADD(L(3) , #../../test/contracts/build/A.mligo#toto#165), #../../test/contracts/build/B.mligo#titi#325) in
+let x = let (l, r) = gen#3995 in ADD(l , r) in
+let toto = ADD(L(10) , #../../test/contracts/build/A.mligo#toto#165) in
 L(unit) |}]
 
 let%expect_test _ =

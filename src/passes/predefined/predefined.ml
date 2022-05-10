@@ -57,9 +57,6 @@ module Tree_abstraction = struct
     (* Big_map module *)
     | "Big_map.literal"  -> some_const C_BIG_MAP_LITERAL
 
-    (* Bitwise module *)
-    | "Bitwise.or"          -> some_const C_OR
-
     (* Operator module *)
     | "Operator.neg"   -> some_const C_NEG
     | "Operator.add"   -> some_const C_ADD

@@ -407,7 +407,7 @@ and compile_expression ~add_warning ~raise : CST.expr -> AST.expr = fun e ->
     match logic with
       BoolExpr be -> (
       match be with
-        Or or_   -> compile_bin_op ~add_warning ~raise C_OR  or_
+        Or or_   -> compile_bin_op' ~add_warning ~raise "#or"  or_
       | And and_ -> compile_bin_op' ~add_warning ~raise "#and" and_
       | Not not_ -> compile_un_op ~add_warning ~raise  C_NOT not_
     )
@@ -1234,7 +1234,7 @@ and compile_statement ?(wrap=false) ~add_warning ~raise : CST.statement -> state
 
     let not_expr     e   = e_constant (Const C_NOT)     [e   ] in
     let and_expr     a b = e_application ~loc (e_variable @@ ValueVar.of_input_var "#and") (e_pair a b) in
-    let or_expr      a b = e_constant (Const C_OR)      [a; b] in
+    let or_expr      a b = e_application ~loc (e_variable @@ ValueVar.of_input_var "#or") (e_pair a b) in
     let eq_expr ~loc a b = e_constant ~loc (Const C_EQ) [a; b] in
 
     let found_case_eq_true  = eq_expr ~loc (e_variable found_case)  (e_true()) in
