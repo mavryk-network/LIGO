@@ -669,7 +669,7 @@ const t12 =
                                                    | ( hd3 , tuple_proj#150 ) ->
                                                     match tuple_proj#150 with
                                                      | Cons ctor_proj#153 ->
-                                                       NEG(1)
+                                                       (#neg@{int})@(1)
                                                      | Nil unit_proj#152 ->
                                                        (#add@{int}@{int})@(
                                                        ( (#add@{int}@{int})@(( hd , hd2 )) , hd3 ))
@@ -723,4 +723,4 @@ const t13 =
                      | None unit_proj#184 ->
                         match tuple_proj#159 with
                          | record[a -> gen#9 , b -> gen#8] ->
-                         NEG(1) |}]
+                         (#neg@{int})@(1) |}]

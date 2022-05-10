@@ -223,10 +223,10 @@ let rec compile_expression ~(raise:Errors.abs_error Simple_utils.Trace.raise) ?f
     let b = self op.arg2 in
     return @@ e_application ~loc (e_variable @@ ValueVar.of_input_var op_type) (e_pair a b)
   in
-  let compile_un_op (op_type : AST.constant') (op : _ CST.un_op CST.reg) =
+  let compile_un_op (op_type : string) (op : _ CST.un_op CST.reg) =
     let (op, loc) = r_split op in
     let arg = self op.arg in
-    return @@ e_constant ~loc (Const op_type) [arg]
+    return @@ e_application ~loc (e_variable @@ ValueVar.of_input_var op_type) arg
   in
   match e with
     EVar var -> (
@@ -269,7 +269,7 @@ let rec compile_expression ~(raise:Errors.abs_error Simple_utils.Trace.raise) ?f
     | Lxor lxor_ -> compile_bin_op C_XOR lxor_
     | Lsl lsl_   -> compile_bin_op C_LSL lsl_
     | Lsr lsr_   -> compile_bin_op C_LSR lsr_
-    | Neg minus  -> compile_un_op C_NEG minus
+    | Neg minus  -> compile_un_op "#neg" minus
     | Int i ->
       let ((_,i), loc) = r_split i in
       return @@ e_int_z ~loc i
@@ -286,7 +286,7 @@ let rec compile_expression ~(raise:Errors.abs_error Simple_utils.Trace.raise) ?f
       match be with
         Or or_   -> compile_bin_op' "#or"  or_
       | And and_ -> compile_bin_op' "#and" and_
-      | Not not_ -> compile_un_op  C_NOT not_
+      | Not not_ -> compile_un_op "#not" not_
     )
     | CompExpr ce -> (
       match ce with

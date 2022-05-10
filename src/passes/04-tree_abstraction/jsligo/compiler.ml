@@ -357,12 +357,12 @@ and compile_bin_op' ~add_warning ~raise (op_type : string) (op : _ CST.bin_op CS
   let b = self op.arg2 in
   return @@ e_application ~loc (e_variable @@ ValueVar.of_input_var op_type) (e_pair a b)
 
-and compile_un_op ~add_warning ~raise (op_type : AST.constant') (op : _ CST.un_op CST.reg) =
+and compile_un_op ~add_warning ~raise (op_type : string) (op : _ CST.un_op CST.reg) =
   let self = compile_expression ~add_warning ~raise in
   let return e = e in
   let (op, loc) = r_split op in
   let arg = self op.arg in
-  return @@ e_constant ~loc (Const op_type) [arg]
+  return @@ e_application ~loc (e_variable @@ ValueVar.of_input_var op_type) arg
 
 and compile_expression ~add_warning ~raise : CST.expr -> AST.expr = fun e ->
   let self: CST.expr -> AST.expr = compile_expression ~add_warning ~raise in
@@ -398,7 +398,7 @@ and compile_expression ~add_warning ~raise : CST.expr -> AST.expr = fun e ->
     | Mult times -> compile_bin_op' ~add_warning ~raise "#mul" times
     | Div slash  -> compile_bin_op' ~add_warning ~raise "#div" slash
     | Mod mod_   -> compile_bin_op' ~add_warning ~raise "#mod" mod_
-    | Neg minus  -> compile_un_op ~add_warning ~raise C_NEG minus
+    | Neg minus  -> compile_un_op ~add_warning ~raise "#neg" minus
     | Int i ->
       let ((_,i), loc) = r_split i in
       return @@ e_int_z ~loc i
@@ -409,7 +409,7 @@ and compile_expression ~add_warning ~raise : CST.expr -> AST.expr = fun e ->
       match be with
         Or or_   -> compile_bin_op' ~add_warning ~raise "#or"  or_
       | And and_ -> compile_bin_op' ~add_warning ~raise "#and" and_
-      | Not not_ -> compile_un_op ~add_warning ~raise  C_NOT not_
+      | Not not_ -> compile_un_op ~add_warning ~raise "#not" not_
     )
     | CompExpr ce -> (
       match ce with
@@ -1232,7 +1232,7 @@ and compile_statement ?(wrap=false) ~add_warning ~raise : CST.statement -> state
     let fallthrough_assign_true  = e_assign fallthrough_binder [] (e_true ()) in
     let found_case_assign_true   = e_assign found_case_binder  [] (e_true ()) in
 
-    let not_expr     e   = e_constant (Const C_NOT)     [e   ] in
+    let not_expr     e   = e_application ~loc (e_variable @@ ValueVar.of_input_var "#not") e in
     let and_expr     a b = e_application ~loc (e_variable @@ ValueVar.of_input_var "#and") (e_pair a b) in
     let or_expr      a b = e_application ~loc (e_variable @@ ValueVar.of_input_var "#or") (e_pair a b) in
     let eq_expr ~loc a b = e_constant ~loc (Const C_EQ) [a; b] in

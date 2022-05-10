@@ -371,6 +371,8 @@ module Constant_types = struct
                     of_type C_ASSERT_NONE_WITH_ERROR O.(for_all "a" @@ fun a -> t_option a ^-> t_string () ^-> t_unit ());
                     of_type C_FAILWITH O.(for_all "a" @@ fun a -> t_ext_failwith a);
                     of_type C_INT O.(for_all "a" @@ fun a -> t_ext_int a);
+                    of_type C_NEG O.(for_all "a" @@ fun a -> t_ext_neg a);
+                    of_type C_NOT O.(for_all "a" @@ fun a -> t_ext_not a);
                     (C_EDIV, any_of [
                         typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> t_ext_ediv a b);
                         typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> t_ext_u_ediv a b);
@@ -449,19 +451,7 @@ module Constant_types = struct
                     of_type_since ~since:Ligo_proto.Ithaca ~constant:"Operator.sub_mutez"
                       C_SUB_MUTEZ O.(t_mutez () ^-> t_mutez () ^-> t_option (t_mutez ()));
                     of_type C_ABS O.(t_int () ^-> t_nat ());
-                    of_types C_NEG [
-                        O.(t_int () ^-> t_int ());
-                        O.(t_nat () ^-> t_int ());
-                        O.(t_bls12_381_g1 () ^-> t_bls12_381_g1 ());
-                        O.(t_bls12_381_g2 () ^-> t_bls12_381_g2 ());
-                        O.(t_bls12_381_fr () ^-> t_bls12_381_fr ());
-                      ];
                     (* LOGIC *)
-                    of_types C_NOT [
-                        O.(t_bool () ^-> t_bool ());
-                        O.(t_int () ^-> t_int ());
-                        O.(t_nat () ^-> t_int ());
-                      ];
                     of_types C_XOR [
                         O.(t_bool () ^-> t_bool () ^-> t_bool ());
                         O.(t_nat () ^-> t_nat () ^-> t_nat ());
@@ -653,6 +643,19 @@ module Constant_types = struct
                      typer_table_of_ligo_type O.(t_bool () ^-> t_bool () ^-> t_bool ());
                      typer_table_of_ligo_type O.(t_nat () ^-> t_nat () ^-> t_nat ());
                    ]
+  let neg_typer = any_table_of [
+                      typer_table_of_ligo_type O.(t_int () ^-> t_int ());
+                      typer_table_of_ligo_type O.(t_nat () ^-> t_int ());
+                      typer_table_of_ligo_type O.(t_bls12_381_g1 () ^-> t_bls12_381_g1 ());
+                      typer_table_of_ligo_type O.(t_bls12_381_g2 () ^-> t_bls12_381_g2 ());
+                      typer_table_of_ligo_type O.(t_bls12_381_fr () ^-> t_bls12_381_fr ());
+                    ]
+
+  let not_typer = any_table_of [
+                      typer_table_of_ligo_type O.(t_bool () ^-> t_bool ());
+                      typer_table_of_ligo_type O.(t_int () ^-> t_int ());
+                      typer_table_of_ligo_type O.(t_nat () ^-> t_int ());
+                    ]
 end
 
 let external_typers ~raise ~options loc s =
@@ -662,6 +665,10 @@ let external_typers ~raise ~options loc s =
        Constant_types.failwith_typer
     | "int" ->
        Constant_types.int_typer
+    | "not" ->
+       Constant_types.not_typer
+    | "neg" ->
+       Constant_types.neg_typer
     | "ediv" ->
        Constant_types.ediv_typer
     | "u_ediv" ->

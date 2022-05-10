@@ -73,6 +73,8 @@ let michelson_base : (type_variable * type_expression) list = [
     (v_ticket             , t_abstraction1 Ticket              star) ;
     (v_external_failwith  , t_abstraction1 (External "failwith")      star) ;
     (v_external_int       , t_abstraction1 (External "int")           star) ;
+    (v_external_not       , t_abstraction1 (External "not")           star) ;
+    (v_external_neg       , t_abstraction1 (External "neg")           star) ;
     (v_external_ediv      , t_abstraction2 (External "ediv")     star star) ;
     (v_external_u_ediv    , t_abstraction2 (External "u_ediv")   star star) ;
     (v_external_add       , t_abstraction2 (External "add")      star star) ;

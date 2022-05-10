@@ -121,6 +121,8 @@ let to_string = function
   | "chest_opening_result" -> Chest_opening_result
   | "external_failwith"    -> External "failwith"
   | "external_int"         -> External "int"
+  | "external_neg"         -> External "neg"
+  | "external_not"         -> External "not"
   | "external_ediv"        -> External "ediv"
   | "external_u_ediv"      -> External "u_ediv"
   | "external_add"         -> External "add"
@@ -182,6 +184,8 @@ let chest_key            = Chest_key
 let chest_opening_result = Chest_opening_result
 let external_failwith    = External "failwith"
 let external_int         = External "int"
+let external_neg         = External "neg"
+let external_not         = External "not"
 let external_ediv        = External "ediv"
 let external_u_ediv      = External "u_ediv"
 let external_add         = External "add"
@@ -243,6 +247,8 @@ let v_chest_key            : type_variable = TypeVar.of_input_var (to_string Che
 let v_chest_opening_result : type_variable = TypeVar.of_input_var (to_string Chest_opening_result)
 let v_external_failwith    : type_variable = TypeVar.of_input_var (to_string @@ External "failwith")
 let v_external_int         : type_variable = TypeVar.of_input_var (to_string @@ External "int")
+let v_external_neg         : type_variable = TypeVar.of_input_var (to_string @@ External "neg")
+let v_external_not         : type_variable = TypeVar.of_input_var (to_string @@ External "not")
 let v_external_ediv        : type_variable = TypeVar.of_input_var (to_string @@ External "ediv")
 let v_external_u_ediv      : type_variable = TypeVar.of_input_var (to_string @@ External "u_ediv")
 let v_external_add         : type_variable = TypeVar.of_input_var (to_string @@ External "add")

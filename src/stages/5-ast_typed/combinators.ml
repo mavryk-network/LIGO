@@ -46,6 +46,8 @@ let t__type_ ?loc ?core t : type_expression = t_constant ?loc ?core _type_ [t]
 
 let t_ext_failwith ?loc ?core t : type_expression = t_constant ?loc ?core (External "failwith") [t]
 let t_ext_int ?loc ?core t : type_expression = t_constant ?loc ?core (External "int") [t]
+let t_ext_neg ?loc ?core t : type_expression = t_constant ?loc ?core (External "neg") [t]
+let t_ext_not ?loc ?core t : type_expression = t_constant ?loc ?core (External "not") [t]
 let t_ext_ediv ?loc ?core t t' : type_expression = t_constant ?loc ?core (External "ediv") [t; t']
 let t_ext_u_ediv ?loc ?core t t' : type_expression = t_constant ?loc ?core (External "u_ediv") [t; t']
 let t_ext_add ?loc ?core t t' : type_expression = t_constant ?loc ?core (External "add") [t; t']

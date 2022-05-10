@@ -214,10 +214,10 @@ let rec compile_expression ~(raise :Errors.abs_error Simple_utils.Trace.raise) :
     let b = self op.arg2 in
     e_application ~loc (e_variable @@ ValueVar.of_input_var op_type) (e_pair a b)
   in
-  let compile_un_op : AST.constant' -> _ CST.un_op CST.reg -> AST.expression = fun op_type op ->
+  let compile_un_op : string -> _ CST.un_op CST.reg -> AST.expression = fun op_type op ->
     let (op, loc) = r_split op in
     let arg = self op.arg in
-    e_constant ~loc (Const op_type) [arg]
+    e_application ~loc (e_variable @@ ValueVar.of_input_var op_type) arg
   in
   let compile_pseudomodule_access ~loc : CST.expr -> string -> string = fun field module_name ->
     match field with
@@ -253,7 +253,7 @@ let rec compile_expression ~(raise :Errors.abs_error Simple_utils.Trace.raise) :
   | E_Mult times -> compile_bin_op' "#mul" times
   | E_Div slash  -> compile_bin_op' "#div" slash
   | E_Mod mod_   -> compile_bin_op' "#mod" mod_
-  | E_Neg minus  -> compile_un_op C_NEG minus
+  | E_Neg minus  -> compile_un_op "#neg" minus
   | E_Int i ->
     let ((_,i), loc) = w_split i in
     e_int_z ~loc i
@@ -265,7 +265,7 @@ let rec compile_expression ~(raise :Errors.abs_error Simple_utils.Trace.raise) :
     e_mutez_z ~loc (Z.of_int64 mtez)
   | E_Or or_   -> compile_bin_op' "#or"  or_
   | E_And and_ -> compile_bin_op' "#and" and_
-  | E_Not not_ -> compile_un_op  C_NOT not_
+  | E_Not not_ -> compile_un_op "#not" not_
   | E_Lt lt    -> compile_bin_op C_LT  lt
   | E_Leq le   -> compile_bin_op C_LE  le
   | E_Gt gt    -> compile_bin_op C_GT  gt
