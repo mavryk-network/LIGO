@@ -9,7 +9,7 @@ let () = Unix.putenv ~key:"TERM" ~data:"dumb"
 
 let%expect_test _ =
   run_ligo_good [ "info" ; "measure-contract" ; contract "coase.ligo" ] ;
-  [%expect{| 1175 bytes |}] ;
+  [%expect{| 1163 bytes |}] ;
 
   run_ligo_good [ "info" ; "measure-contract" ; contract "multisig.ligo" ] ;
   [%expect{| 583 bytes |}] ;
@@ -233,11 +233,7 @@ let%expect_test _ =
                      PAIR ;
                      PAIR ;
                      SWAP ;
-                     DUP ;
-                     DUG 2 ;
-                     CDR ;
-                     DIG 2 ;
-                     CAR ;
+                     UNPAIR ;
                      MUL ;
                      SENDER ;
                      CONTRACT unit ;

@@ -116,7 +116,7 @@ let%expect_test _ =
             s := s.cards with cards;
 
             const price : tez
-            = Operator.times
+            = gen__mul
                 (card_pattern.coefficient, card_pattern.quantity);
 
             const receiver : contract (unit)
@@ -150,7 +150,7 @@ let%expect_test _ =
               ];
 
             const price : tez
-            = Operator.times
+            = gen__mul
                 (card_pattern.coefficient,
                  gen__add (card_pattern.quantity, 1n));
 
@@ -324,8 +324,9 @@ let%expect_test _ =
                          let [@var] s = {s with {cards = cards}} in
                          ();
                          let price : tez =
-                           (card_pattern.coefficient
-                            * card_pattern.quantity) in
+                           gen__mul
+                             card_pattern.coefficient
+                             card_pattern.quantity in
                          let receiver : unit contract =
                            match (Tezos.get_contract_opt
                                     Tezos.sender
@@ -361,8 +362,9 @@ let%expect_test _ =
                    (failwith "buy_single: No card pattern."
                     : card_pattern) in
              let price : tez =
-               (card_pattern.coefficient
-                * gen__add card_pattern.quantity 1n) in
+               gen__mul
+                 card_pattern.coefficient
+                 gen__add card_pattern.quantity 1n in
              begin
                if (price > Tezos.amount)
                then failwith "Not enough money"
@@ -558,8 +560,9 @@ let%expect_test _ =
                          let [@var] s = {...s, {cards: cards}};
                          ();
                          let price: tez =
-                           ((card_pattern.coefficient) * (card_pattern.
-                               quantity));
+
+                           gen__mul(card_pattern.coefficient,
+                              card_pattern.quantity);
                          let receiver: contract(unit) =
                            switch (
                              Tezos.get_contract_opt(Tezos.sender)
@@ -598,8 +601,9 @@ let%expect_test _ =
                      : card_pattern)
                };
              let price: tez =
-               ((card_pattern.coefficient) * (
-                   gen__add(card_pattern.quantity, 1n)));
+
+               gen__mul(card_pattern.coefficient,
+                  gen__add(card_pattern.quantity, 1n));
              {
                if(((price) > (Tezos.amount))) {
                  failwith("Not enough money")

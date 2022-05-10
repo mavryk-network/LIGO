@@ -131,6 +131,7 @@ end
 [@private] [@hidden] [@inline] let _hash_polymorphic_add (type a b) ((l, r) : a * b) : (a, b) external_u_polymorphic_add = [%external \"POLYMORPHIC_ADD\"] l r
 [@private] [@hidden] [@inline] let _hash_sub (type a b) ((l, r) : a * b) : (a, b) external_u_sub = [%external \"SUB\"] l r
 [@private] [@hidden] [@inline] let _hash_polymorphic_sub (type a b) ((l, r) : a * b) : (a, b) external_u_polymorphic_sub = [%external \"POLYMORPHIC_SUB\"] l r
+[@private] [@hidden] [@inline] let _hash_mul (type a b) ((l, r) : a * b) : (a, b) external_u_mul = [%external \"MUL\"] l r
 "
   | CameLIGO -> "
 module Tezos = struct
@@ -263,6 +264,7 @@ end
 [@private] [@hidden] [@inline] let _hash_polymorphic_add (type a b) (l : a) (r : b) : (a, b) external_polymorphic_add = [%external \"POLYMORPHIC_ADD\"] l r
 [@private] [@hidden] [@inline] let _hash_sub (type a b) (l : a) (r : b) : (a, b) external_sub = [%external \"SUB\"] l r
 [@private] [@hidden] [@inline] let _hash_polymorphic_sub (type a b) (l : a) (r : b) : (a, b) external_polymorphic_sub = [%external \"POLYMORPHIC_SUB\"] l r
+[@private] [@hidden] [@inline] let _hash_mul (type a b) (l : a) (r : b) : (a, b) external_mul = [%external \"MUL\"] l r
 "
 
 let stdlib ~options syntax =

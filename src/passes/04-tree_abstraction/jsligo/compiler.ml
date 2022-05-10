@@ -365,6 +365,14 @@ and compile_sub ~add_warning ~raise (op : _ CST.bin_op CST.reg) =
   let b = self op.arg2 in
   return @@ e_application ~loc (e_variable @@ ValueVar.of_input_var "#polymorphic_sub") (e_pair a b)
 
+and compile_mul ~add_warning ~raise (op : _ CST.bin_op CST.reg) =
+  let self = compile_expression ~add_warning ~raise in
+  let return e = e in
+  let (op, loc) = r_split op in
+  let a = self op.arg1 in
+  let b = self op.arg2 in
+  return @@ e_application ~loc (e_variable @@ ValueVar.of_input_var "#mul") (e_pair a b)
+
 and compile_un_op ~add_warning ~raise (op_type : AST.constant') (op : _ CST.un_op CST.reg) =
   let self = compile_expression ~add_warning ~raise in
   let return e = e in
@@ -403,7 +411,7 @@ and compile_expression ~add_warning ~raise : CST.expr -> AST.expr = fun e ->
     ( match arth with
       Add plus   -> compile_add ~add_warning ~raise plus
     | Sub minus  -> compile_sub ~add_warning ~raise minus
-    | Mult times -> compile_bin_op ~add_warning ~raise C_MUL times
+    | Mult times -> compile_mul ~add_warning ~raise times
     | Div slash  -> compile_bin_op ~add_warning ~raise C_DIV slash
     | Mod mod_   -> compile_bin_op ~add_warning ~raise C_MOD mod_
     | Neg minus  -> compile_un_op ~add_warning ~raise C_NEG minus
@@ -773,7 +781,7 @@ and compile_expression ~add_warning ~raise : CST.expr -> AST.expr = fun e ->
       )
       in
       match ao with
-      | Times_eq | Div_eq | Mod_eq ->
+      | Div_eq | Mod_eq ->
          compile_bin_op ~add_warning ~raise aop {
              value = {
                op   = Token.wrap lexeme op.region;
@@ -793,6 +801,15 @@ and compile_expression ~add_warning ~raise : CST.expr -> AST.expr = fun e ->
              }
       | Min_eq ->
          compile_sub ~add_warning ~raise {
+             value = {
+               op   = Token.wrap lexeme op.region;
+               arg1 = e1;
+               arg2 = e2;
+             };
+             region = op.region
+             }
+      | Times_eq ->
+         compile_mul ~add_warning ~raise {
              value = {
                op   = Token.wrap lexeme op.region;
                arg1 = e1;

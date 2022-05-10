@@ -56,6 +56,8 @@ let t_ext_sub ?loc ?core t t' : type_expression = t_constant ?loc ?core (Externa
 let t_ext_u_sub ?loc ?core t t' : type_expression = t_constant ?loc ?core (External "u_sub") [t; t']
 let t_ext_polymorphic_sub ?loc ?core t t' : type_expression = t_constant ?loc ?core (External "polymorphic_sub") [t; t']
 let t_ext_u_polymorphic_sub ?loc ?core t t' : type_expression = t_constant ?loc ?core (External "u_polymorphic_sub") [t; t']
+let t_ext_mul ?loc ?core t t' : type_expression = t_constant ?loc ?core (External "mul") [t; t']
+let t_ext_u_mul ?loc ?core t t' : type_expression = t_constant ?loc ?core (External "u_mul") [t; t']
 
 let t__type_ ?loc ?core t t' : type_expression = t_constant ?loc ?core _type_ [t; t']
 [@@map (_type_, ("map", "big_map", "typed_address"))]
