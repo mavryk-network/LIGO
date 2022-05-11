@@ -673,41 +673,23 @@ let external_typers ~raise ~options loc s =
        Constant_types.ediv_typer
     | "u_ediv" ->
        Constant_types.ediv_typer
-    | "add" ->
+    | "add" | "u_add" ->
        Constant_types.add_typer
-    | "u_add" ->
-       Constant_types.add_typer
-    | "polymorphic_add" ->
+    | "polymorphic_add" | "u_polymorphic_add" ->
        Constant_types.polymorphic_add_typer
-    | "u_polymorphic_add" ->
-       Constant_types.polymorphic_add_typer
-    | "sub" ->
+    | "sub" | "u_sub" ->
        Constant_types.sub_typer
-    | "u_sub" ->
-       Constant_types.sub_typer
-    | "polymorphic_sub" ->
+    | "polymorphic_sub" | "u_polymorphic_sub" ->
        Constant_types.polymorphic_sub_typer
-    | "u_polymorphic_sub" ->
-       Constant_types.polymorphic_sub_typer
-    | "mul" ->
+    | "mul" | "u_mul" ->
        Constant_types.mul_typer
-    | "u_mul" ->
-       Constant_types.mul_typer
-    | "div" ->
+    | "div" | "u_div" ->
        Constant_types.div_typer
-    | "u_div" ->
-       Constant_types.div_typer
-    | "mod" ->
+    | "mod" | "u_mod" ->
        Constant_types.mod_typer
-    | "u_mod" ->
-       Constant_types.mod_typer
-    | "and" ->
+    | "and" | "u_and" ->
        Constant_types.and_typer
-    | "u_and" ->
-       Constant_types.and_typer
-    | "or" ->
-       Constant_types.or_typer
-    | "u_or" ->
+    | "or" | "u_or" ->
        Constant_types.or_typer
     | _ ->
        raise.raise (corner_case @@ Format.asprintf "Typer not implemented for external %s" s) in
