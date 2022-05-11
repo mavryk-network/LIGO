@@ -442,7 +442,7 @@ and compile_expression ~add_warning ~raise : CST.expr -> AST.expr = fun e ->
     let loc = Location.lift region in
     let a = self e in
     let b = self expr in
-    return @@ e_constant ~loc (Const C_CONS) [a; b]
+    return @@ e_application ~loc (e_variable @@ ValueVar.of_input_var "#cons") (e_pair a b)
   | ECall {value=(EVar {value = "list"; _}, Multiple {value = {inside = (EArray {value = {inside;lbracket=_;rbracket=_};region=_}, []); _}; _}); region } -> (
     let loc = Location.lift region in
     let items = (match inside with

@@ -510,7 +510,7 @@ let rec compile_expression ~(raise:Errors.abs_error Simple_utils.Trace.raise) ?f
       let (cons, loc) = r_split cons in
       let a  = self cons.lexpr in
       let b  = self cons.rexpr in
-      return @@ e_constant ~loc (Const C_CONS) [a; b]
+      return @@ e_application ~loc (e_variable @@ ValueVar.of_input_var "#cons") (e_pair a b)
     | EListComp lc ->
       let (lc,loc) = r_split lc in
       let lst =

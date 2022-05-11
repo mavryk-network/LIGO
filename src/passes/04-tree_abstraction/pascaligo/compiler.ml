@@ -532,7 +532,7 @@ let rec compile_expression ~(raise :Errors.abs_error Simple_utils.Trace.raise) :
     let (cons, loc) = r_split cons in
     let a  = self cons.arg1 in
     let b  = self cons.arg2 in
-    e_constant ~loc (Const C_CONS) [a; b]
+    e_application ~loc (e_variable @@ ValueVar.of_input_var "#cons") (e_pair a b)
   )
   | E_Set set -> (
     let (si, loc) = r_split set in

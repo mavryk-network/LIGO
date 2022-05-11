@@ -473,7 +473,7 @@ let rec compile_expression ~raise : CST.expr -> AST.expr = fun e ->
       let (cons, loc) = r_split cons in
       let a  = self cons.arg1 in
       let b  = self cons.arg2 in
-      return @@ e_constant ~loc (Const C_CONS) [a; b]
+      return @@ e_application ~loc (e_application ~loc (e_variable @@ ValueVar.of_input_var "#cons") a) b
     | EListComp lc ->
       let (lc,loc) = r_split lc in
       let lst =

@@ -141,6 +141,7 @@ end
 [@private] [@hidden] [@inline] let _hash_xor (type a b) ((l, r) : a * b) : (a, b) external_u_xor = [%external \"XOR\"] l r
 [@private] [@hidden] [@inline] let _hash_lsl ((l, r) : nat * nat) : nat = [%external \"LSL\"] l r
 [@private] [@hidden] [@inline] let _hash_lsr ((l, r) : nat * nat) : nat = [%external \"LSR\"] l r
+[@private] [@hidden] [@inline] let _hash_cons (type a) ((x, xs) : a * a list) : a list = [%external \"CONS\"] x xs
 "
   | CameLIGO -> "
 module Tezos = struct
@@ -283,6 +284,7 @@ end
 [@private] [@hidden] [@inline] let _hash_xor (type a b) (l : a) (r : b) : (a, b) external_xor = [%external \"XOR\"] l r
 [@private] [@hidden] [@inline] let _hash_lsl (l : nat) (r : nat) : nat = [%external \"LSL\"] l r
 [@private] [@hidden] [@inline] let _hash_lsr (l : nat) (r : nat) : nat = [%external \"LSR\"] l r
+[@private] [@hidden] [@inline] let _hash_cons (type a) (x : a) (xs : a list) : a list = [%external \"CONS\"] x xs
 "
 
 let stdlib ~options syntax =
