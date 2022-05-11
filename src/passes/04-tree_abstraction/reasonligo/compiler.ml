@@ -266,9 +266,9 @@ let rec compile_expression ~(raise:Errors.abs_error Simple_utils.Trace.raise) ?f
     | Mod mod_   -> compile_bin_op' "#mod" mod_
     | Land land_ -> compile_bin_op' "#and" land_
     | Lor lor_   -> compile_bin_op' "#or" lor_
-    | Lxor lxor_ -> compile_bin_op C_XOR lxor_
-    | Lsl lsl_   -> compile_bin_op C_LSL lsl_
-    | Lsr lsr_   -> compile_bin_op C_LSR lsr_
+    | Lxor lxor_ -> compile_bin_op' "#xor" lxor_
+    | Lsl lsl_   -> compile_bin_op' "#lsl" lsl_
+    | Lsr lsr_   -> compile_bin_op' "#lsr" lsr_
     | Neg minus  -> compile_un_op "#neg" minus
     | Int i ->
       let ((_,i), loc) = r_split i in

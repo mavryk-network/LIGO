@@ -413,6 +413,10 @@ module Constant_types = struct
                         typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> t_ext_or a b);
                         typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> t_ext_u_or a b);
                     ]);
+                    (C_XOR, any_of [
+                        typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> t_ext_xor a b);
+                        typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> t_ext_u_xor a b);
+                    ]);
                     of_type C_AMOUNT O.(t_mutez ());
                     of_type C_BALANCE O.(t_mutez ());
                     of_type C_LEVEL O.(t_nat ());
@@ -452,10 +456,6 @@ module Constant_types = struct
                       C_SUB_MUTEZ O.(t_mutez () ^-> t_mutez () ^-> t_option (t_mutez ()));
                     of_type C_ABS O.(t_int () ^-> t_nat ());
                     (* LOGIC *)
-                    of_types C_XOR [
-                        O.(t_bool () ^-> t_bool () ^-> t_bool ());
-                        O.(t_nat () ^-> t_nat () ^-> t_nat ());
-                      ];
                     of_type C_LSL O.(t_nat () ^-> t_nat () ^-> t_nat ());
                     of_type C_LSR O.(t_nat () ^-> t_nat () ^-> t_nat ());
                     (* TEST *)
@@ -656,6 +656,11 @@ module Constant_types = struct
                       typer_table_of_ligo_type O.(t_int () ^-> t_int ());
                       typer_table_of_ligo_type O.(t_nat () ^-> t_int ());
                     ]
+
+  let xor_typer = any_table_of [
+                      typer_table_of_ligo_type O.(t_bool () ^-> t_bool () ^-> t_bool ());
+                      typer_table_of_ligo_type O.(t_nat () ^-> t_nat () ^-> t_nat ());
+                    ]
 end
 
 let external_typers ~raise ~options loc s =
@@ -691,6 +696,8 @@ let external_typers ~raise ~options loc s =
        Constant_types.and_typer
     | "or" | "u_or" ->
        Constant_types.or_typer
+    | "xor" | "u_xor" ->
+       Constant_types.xor_typer
     | _ ->
        raise.raise (corner_case @@ Format.asprintf "Typer not implemented for external %s" s) in
   fun lst tv_opt ->

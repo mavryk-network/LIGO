@@ -34,8 +34,8 @@ module Tezos = struct
 end
 module Bitwise = struct
   [@hidden] [@inline] let _remove_and (type a b) ((l, r) : a * b) : (a, b) external_u_and = [%external \"AND\"] l r
-  [@hidden] [@inline] let xor ((l, r) : nat * nat) : nat = [%external \"XOR\"] l r
   [@hidden] [@inline] let _remove_or (type a b) ((l, r) : a * b) : (a, b) external_u_or = [%external \"OR\"] l r
+  [@hidden] [@inline] let xor (type a b) ((l, r) : a * b) : (a, b) external_u_xor = [%external \"XOR\"] l r
   [@hidden] [@inline] let shift_left ((l, r) : nat * nat) : nat = [%external \"LSL\"] l r
   [@hidden] [@inline] let shift_right ((l, r) : nat * nat) : nat = [%external \"LSR\"] l r
 end
@@ -138,6 +138,9 @@ end
 [@private] [@hidden] [@inline] let _hash_mod (type a b) ((l, r) : a * b) : (a, b) external_u_mod = [%external \"MOD\"] l r
 [@private] [@hidden] [@inline] let _hash_and (type a b) ((l, r) : a * b) : (a, b) external_u_and = [%external \"AND\"] l r
 [@private] [@hidden] [@inline] let _hash_or (type a b) ((l, r) : a * b) : (a, b) external_u_or = [%external \"OR\"] l r
+[@private] [@hidden] [@inline] let _hash_xor (type a b) ((l, r) : a * b) : (a, b) external_u_xor = [%external \"XOR\"] l r
+[@private] [@hidden] [@inline] let _hash_lsl ((l, r) : nat * nat) : nat = [%external \"LSL\"] l r
+[@private] [@hidden] [@inline] let _hash_lsr ((l, r) : nat * nat) : nat = [%external \"LSR\"] l r
 "
   | CameLIGO -> "
 module Tezos = struct
@@ -173,8 +176,8 @@ module Tezos = struct
 end
 module Bitwise = struct
   [@hidden] [@inline] let _remove_and (type a b) (l : a) (r : b) : (a, b) external_and = [%external \"AND\"] l r
-  [@hidden] [@inline] let xor (l : nat) (r : nat) : nat = [%external \"XOR\"] l r
   [@hidden] [@inline] let _remove_or (type a b) (l : a) (r : b) : (a, b) external_or = [%external \"OR\"] l r
+  [@hidden] [@inline] let xor (type a b) (l : a) (r : b) : (a, b) external_xor = [%external \"XOR\"] l r
   [@hidden] [@inline] let shift_left (l : nat) (r : nat) : nat = [%external \"LSL\"] l r
   [@hidden] [@inline] let shift_right (l : nat) (r : nat) : nat = [%external \"LSR\"] l r
 end
@@ -277,6 +280,9 @@ end
 [@private] [@hidden] [@inline] let _hash_mod (type a b) (l : a) (r : b) : (a, b) external_mod = [%external \"MOD\"] l r
 [@private] [@hidden] [@inline] let _hash_and (type a b) (l : a) (r : b) : (a, b) external_and = [%external \"AND\"] l r
 [@private] [@hidden] [@inline] let _hash_or (type a b) (l : a) (r : b) : (a, b) external_or = [%external \"OR\"] l r
+[@private] [@hidden] [@inline] let _hash_xor (type a b) (l : a) (r : b) : (a, b) external_xor = [%external \"XOR\"] l r
+[@private] [@hidden] [@inline] let _hash_lsl (l : nat) (r : nat) : nat = [%external \"LSL\"] l r
+[@private] [@hidden] [@inline] let _hash_lsr (l : nat) (r : nat) : nat = [%external \"LSR\"] l r
 "
 
 let stdlib ~options syntax =

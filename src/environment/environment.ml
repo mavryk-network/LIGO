@@ -95,6 +95,8 @@ let michelson_base : (type_variable * type_expression) list = [
     (v_external_u_and     , t_abstraction2 (External "u_and")    star star) ;
     (v_external_or        , t_abstraction2 (External "or")      star star) ;
     (v_external_u_or      , t_abstraction2 (External "u_or")    star star) ;
+    (v_external_xor        , t_abstraction2 (External "xor")      star star) ;
+    (v_external_u_xor      , t_abstraction2 (External "u_xor")    star star) ;
 ]
 
 let hangzhou_extra : (type_variable * type_expression) list = [
