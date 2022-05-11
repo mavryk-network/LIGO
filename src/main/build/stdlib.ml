@@ -88,7 +88,8 @@ module List = struct
   [@hidden] [@inline] let cons (type a) ((x, xs) : a * a list) : a list = [%external \"CONS\"] x xs
 end
 module String = struct
-  [@hidden] [@inline] let concat ((b1, b2) : string * string) : string = [%external \"CONCAT\"] b1 b2
+  [@hidden] [@inline] let concat (type a b) ((b1, b2) : a * b) : (a, b) external_u_concat = [%external \"CONCAT\"] b1 b2
+  [@hidden] [@inline] let concat ((b1, b2) : string * string) : string = concat (b1, b2)
   [@hidden] [@inline] let sub ((s, l, b) : nat * nat * string) : string = [%external \"SLICE\"] s l b
   [@hidden] [@inline] let length (b : string) : nat = [%external \"SIZE\"] b
 end
@@ -98,7 +99,8 @@ module Option = struct
   (* [@hidden] [@inline] let map (type a b) ((f, v) : (a -> b) * (a option)) : b option = [%external \"OPTION_MAP\"] f v *)
 end
 module Bytes = struct
-  [@hidden] [@inline] let concat ((b1, b2) : bytes * bytes) : bytes = [%external \"CONCAT\"] b1 b2
+  [@hidden] [@inline] let concat (type a b) ((b1, b2) : a * b) : (a, b) external_u_concat = [%external \"CONCAT\"] b1 b2
+  [@hidden] [@inline] let concat ((b1, b2) : bytes * bytes) : bytes = concat (b1, b2)
   [@hidden] [@inline] let sub ((s, l, b) : nat * nat * bytes) : bytes = [%external \"SLICE\"] s l b
   [@hidden] [@inline] let pack (type a) (v : a) : bytes = [%external \"BYTES_PACK\"] v
   [@hidden] [@inline] let unpack (type a) (b : bytes) : a option = [%external \"BYTES_UNPACK\"] b
@@ -142,6 +144,7 @@ end
 [@private] [@hidden] [@inline] let _hash_lsl ((l, r) : nat * nat) : nat = [%external \"LSL\"] l r
 [@private] [@hidden] [@inline] let _hash_lsr ((l, r) : nat * nat) : nat = [%external \"LSR\"] l r
 [@private] [@hidden] [@inline] let _hash_cons (type a) ((x, xs) : a * a list) : a list = [%external \"CONS\"] x xs
+[@private] [@hidden] [@inline] let _hash_concat (type a b) ((l, r) : a * b) : (a, b) external_u_concat = [%external \"CONCAT\"] l r
 "
   | CameLIGO -> "
 module Tezos = struct
@@ -231,7 +234,8 @@ module List = struct
   [@hidden] [@inline] let cons (type a) (x : a) (xs : a list) : a list = [%external \"CONS\"] x xs
 end
 module String = struct
-  [@hidden] [@inline] let concat (b1 : string) (b2 : string) : string = [%external \"CONCAT\"] b1 b2
+  [@hidden] [@inline] let concat (type a b) (b1 : a) (b2 : b) : (a, b) external_concat = [%external \"CONCAT\"] b1 b2
+  [@hidden] [@inline] let concat (b1 : string) (b2 : string) : string = concat b1 b2
   [@hidden] [@inline] let sub (s : nat) (l : nat) (b : string) : string = [%external \"SLICE\"] s l b
   [@hidden] [@inline] let length (b : string) : nat = [%external \"SIZE\"] b
 end
@@ -241,7 +245,8 @@ module Option = struct
   (* [@hidden] [@inline] let map (type a b) (f : a -> b) (v : a option) : b option = [%external \"OPTION_MAP\"] f v *)
 end
 module Bytes = struct
-  [@hidden] [@inline] let concat (b1 : bytes) (b2 : bytes) : bytes = [%external \"CONCAT\"] b1 b2
+  [@hidden] [@inline] let concat (type a b) (b1 : a) (b2 : b) : (a, b) external_concat = [%external \"CONCAT\"] b1 b2
+  [@hidden] [@inline] let concat (b1 : bytes) (b2 : bytes) : bytes = concat b1 b2
   [@hidden] [@inline] let sub (s : nat) (l : nat) (b : bytes) : bytes = [%external \"SLICE\"] s l b
   [@hidden] [@inline] let pack (type a) (v : a) : bytes = [%external \"BYTES_PACK\"] v
   [@hidden] [@inline] let unpack (type a) (b : bytes) : a option = [%external \"BYTES_UNPACK\"] b
@@ -285,6 +290,7 @@ end
 [@private] [@hidden] [@inline] let _hash_lsl (l : nat) (r : nat) : nat = [%external \"LSL\"] l r
 [@private] [@hidden] [@inline] let _hash_lsr (l : nat) (r : nat) : nat = [%external \"LSR\"] l r
 [@private] [@hidden] [@inline] let _hash_cons (type a) (x : a) (xs : a list) : a list = [%external \"CONS\"] x xs
+[@private] [@hidden] [@inline] let _hash_concat (type a b) (l : a) (r : b) : (a, b) external_concat = [%external \"CONCAT\"] l r
 "
 
 let stdlib ~options syntax =

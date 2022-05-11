@@ -337,10 +337,6 @@ module Constant_types = struct
                         O.(for_all "a" @@ fun a -> t_set a ^-> t_nat ());
                         O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> t_map a b ^-> t_nat ())
                       ];
-                    of_types C_CONCAT [
-                        O.(t_string () ^-> t_string () ^-> t_string ());
-                        O.(t_bytes () ^-> t_bytes () ^-> t_bytes ());
-                      ];
                     of_types C_SLICE [
                         O.(t_nat () ^-> t_nat () ^-> t_string () ^-> t_string ());
                         O.(t_nat () ^-> t_nat () ^-> t_bytes () ^-> t_bytes ());
@@ -416,6 +412,10 @@ module Constant_types = struct
                     (C_XOR, any_of [
                         typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> t_ext_xor a b);
                         typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> t_ext_u_xor a b);
+                    ]);
+                    (C_CONCAT, any_of [
+                        typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> t_ext_concat a b);
+                        typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> t_ext_u_concat a b);
                     ]);
                     of_type C_AMOUNT O.(t_mutez ());
                     of_type C_BALANCE O.(t_mutez ());
@@ -661,6 +661,11 @@ module Constant_types = struct
                       typer_table_of_ligo_type O.(t_bool () ^-> t_bool () ^-> t_bool ());
                       typer_table_of_ligo_type O.(t_nat () ^-> t_nat () ^-> t_nat ());
                     ]
+
+  let concat_typer = any_table_of [
+                         typer_table_of_ligo_type O.(t_string () ^-> t_string () ^-> t_string ());
+                         typer_table_of_ligo_type O.(t_bytes () ^-> t_bytes () ^-> t_bytes ());
+                       ]
 end
 
 let external_typers ~raise ~options loc s =
@@ -698,6 +703,8 @@ let external_typers ~raise ~options loc s =
        Constant_types.or_typer
     | "xor" | "u_xor" ->
        Constant_types.xor_typer
+    | "concat" | "u_concat" ->
+       Constant_types.concat_typer
     | _ ->
        raise.raise (corner_case @@ Format.asprintf "Typer not implemented for external %s" s) in
   fun lst tv_opt ->

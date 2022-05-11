@@ -257,7 +257,7 @@ let rec compile_expression ~raise : CST.expr -> AST.expr = fun e ->
       let (op,loc) = r_split c in
       let a = self op.arg1 in
       let b = self op.arg2 in
-      return @@ e_constant ~loc (Const C_CONCAT) [a;b]
+      return @@ e_application ~loc (e_application ~loc (e_variable @@ ValueVar.of_input_var "#concat") a) b
     | String str ->
       let (str, loc) = r_split str in
       return @@ e_string ~loc str

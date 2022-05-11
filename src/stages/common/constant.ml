@@ -143,8 +143,10 @@ let to_string = function
   | "external_u_and"       -> External "u_and"
   | "external_or"          -> External "or"
   | "external_u_or"        -> External "u_or"
-  | "external_xor"          -> External "xor"
-  | "external_u_xor"        -> External "u_xor"
+  | "external_xor"         -> External "xor"
+  | "external_u_xor"       -> External "u_xor"
+  | "external_concat"      -> External "concat"
+  | "external_u_concat"    -> External "u_concat"
   | _ -> failwith "Forgot to add constant name in constant.ml?"
 
 let bool                 = Bool
@@ -208,8 +210,10 @@ let external_and         = External "and"
 let external_u_and       = External "u_and"
 let external_or          = External "or"
 let external_u_or        = External "u_or"
-let external_xor          = External "xor"
-let external_u_xor        = External "u_xor"
+let external_xor         = External "xor"
+let external_u_xor       = External "u_xor"
+let external_concat      = External "concat"
+let external_u_concat    = External "u_concat"
 
 let v_bool                 : type_variable = TypeVar.of_input_var (to_string Bool)
 let v_string               : type_variable = TypeVar.of_input_var (to_string String)
@@ -273,5 +277,7 @@ let v_external_and         : type_variable = TypeVar.of_input_var (to_string @@ 
 let v_external_u_and       : type_variable = TypeVar.of_input_var (to_string @@ External "u_and")
 let v_external_or          : type_variable = TypeVar.of_input_var (to_string @@ External "or")
 let v_external_u_or        : type_variable = TypeVar.of_input_var (to_string @@ External "u_or")
-let v_external_xor          : type_variable = TypeVar.of_input_var (to_string @@ External "xor")
-let v_external_u_xor        : type_variable = TypeVar.of_input_var (to_string @@ External "u_xor")
+let v_external_xor         : type_variable = TypeVar.of_input_var (to_string @@ External "xor")
+let v_external_u_xor       : type_variable = TypeVar.of_input_var (to_string @@ External "u_xor")
+let v_external_concat      : type_variable = TypeVar.of_input_var (to_string @@ External "concat")
+let v_external_u_concat    : type_variable = TypeVar.of_input_var (to_string @@ External "u_concat")

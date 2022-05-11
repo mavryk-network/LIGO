@@ -4,7 +4,7 @@ let contract = test
 
 let%expect_test _ =
   run_ligo_good [ "compile" ; "contract" ; contract "view.mligo" ] ;
-  [%expect {|
+  [%expect{|
     { parameter unit ;
       storage int ;
       code { CDR ; NIL operation ; PAIR } ;
@@ -13,7 +13,7 @@ let%expect_test _ =
 (* not warning is expected because the annotated view is still being included in the contract *)
 let%expect_test _ =
   run_ligo_good [ "compile" ; "contract" ; contract "view.mligo" ; "--views" ; "v1,v2" ] ;
-  [%expect {|
+  [%expect{|
     { parameter unit ;
       storage int ;
       code { CDR ; NIL operation ; PAIR } ;
@@ -23,7 +23,7 @@ let%expect_test _ =
 (* the following should trigger a warning because an annotated view is being ignored *)
 let%expect_test _ =
   run_ligo_good [ "compile" ; "contract" ; contract "view.mligo" ; "--views" ; "v2" ] ;
-  [%expect {|
+  [%expect{|
     File "../../test/contracts/view.mligo", line 3, characters 12-14:
       2 |
       3 | [@view] let v1 (n,s: int * int) : int = s + n + 1
@@ -52,13 +52,12 @@ let%expect_test _ =
 (* view + #import : no view expected *)
 let%expect_test _ =
   run_ligo_good [ "compile" ; "contract" ; contract "view_import.mligo" ; "--protocol" ; "hangzhou" ] ;
-  [%expect {| 
-    { parameter unit ; storage int ; code { CDR ; NIL operation ; PAIR } } |}]
+  [%expect{| { parameter unit ; storage int ; code { CDR ; NIL operation ; PAIR } } |}]
 
 (* view inside module : no view expected *)
 let%expect_test _ =
   run_ligo_good [ "compile" ; "contract" ; contract "view_inside_module.mligo" ; "--protocol" ; "hangzhou" ] ;
-  [%expect {|
+  [%expect{|
     { parameter unit ;
       storage unit ;
       code { DROP ; UNIT ; NIL operation ; PAIR } } |}]
@@ -66,7 +65,7 @@ let%expect_test _ =
 (* view + #import + alias : view expected *)
 let%expect_test _ =
   run_ligo_good [ "compile" ; "contract" ; contract "view_import_and_alias.mligo" ] ;
-  [%expect {| 
+  [%expect{|
     { parameter unit ;
       storage int ;
       code { CDR ; NIL operation ; PAIR } ;
