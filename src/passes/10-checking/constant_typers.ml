@@ -356,8 +356,7 @@ module Constant_types = struct
                     of_type C_SOME O.(for_all "a" @@ fun a -> a ^-> t_option a);
                     of_type C_UNOPT O.(for_all "a" @@ fun a -> t_option a ^-> a);
                     of_type C_UNOPT_WITH_ERROR O.(for_all "a" @@ fun a -> t_option a ^-> t_string () ^-> a);
-                    of_type_since ~since:Ligo_proto.Ithaca ~constant:"Option.map"
-                      C_OPTION_MAP O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> (a ^-> b) ^-> t_option a ^-> t_option b);
+                    of_type C_OPTION_MAP O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> (a ^-> b) ^-> t_option a ^-> t_option b);
                     (* GLOBAL *)
                     of_type C_ASSERTION O.(t_bool () ^-> t_unit ());
                     of_type C_ASSERTION_WITH_ERROR O.(t_bool () ^-> t_string () ^-> t_unit ());
@@ -400,8 +399,7 @@ module Constant_types = struct
                     of_type C_SPLIT_TICKET O.(for_all "a" @@ fun a -> t_ticket a ^-> t_pair (t_nat ()) (t_nat ()) ^-> t_option (t_pair (t_ticket a) (t_ticket a)));
                     of_type C_JOIN_TICKET O.(for_all "a" @@ fun a -> t_pair (t_ticket a) (t_ticket a) ^-> t_option (t_ticket a));
                     (* MATH *)
-                    of_type_since ~since:Ligo_proto.Ithaca ~constant:"Operator.sub_mutez"
-                      C_SUB_MUTEZ O.(t_mutez () ^-> t_mutez () ^-> t_option (t_mutez ()));
+                    of_type C_SUB_MUTEZ O.(t_mutez () ^-> t_mutez () ^-> t_option (t_mutez ()));
                     of_type C_ABS O.(t_int () ^-> t_nat ());
                     (* LOGIC *)
                     of_type C_LSL O.(t_nat () ^-> t_nat () ^-> t_nat ());
@@ -596,8 +594,7 @@ module Constant_types = struct
                                   typer_table_of_ligo_type O.(t_nat () ^-> t_int () ^-> t_int ());
                                   typer_table_of_ligo_type O.(t_timestamp () ^-> t_timestamp () ^-> t_int ());
                                   typer_table_of_ligo_type O.(t_timestamp () ^-> t_int () ^-> t_timestamp ());
-                                  typer_table_of_ligo_type_on_protocol ~protocol:Environment.Protocols.Ithaca O.(t_mutez () ^-> t_mutez () ^-> t_option (t_mutez ()));
-                                  typer_table_of_ligo_type_on_protocol ~protocol:Environment.Protocols.Hangzhou O.(t_mutez () ^-> t_mutez () ^-> t_mutez ());
+                                  typer_table_of_ligo_type O.(t_mutez () ^-> t_mutez () ^-> t_option (t_mutez ()));
                                 ]
 
   let mul_typer = any_table_of [
