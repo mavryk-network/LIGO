@@ -221,8 +221,6 @@ let decompile_operator : AST.rich_constant -> CST.expr List.Ne.t -> CST.expr opt
      Some CST.(EArith (Div (Region.wrap_ghost { op = Token.ghost_slash ; arg1 ; arg2 })))
   | Const C_MOD, (arg1, [arg2]) ->
      Some CST.(EArith (Mod (Region.wrap_ghost { op = Token.ghost_rem ; arg1 ; arg2 })))
-  | Const C_NEG, (arg, []) ->
-     Some CST.(EArith (Neg (Region.wrap_ghost { op = Token.ghost_minus ; arg })))
   | Const C_LT, (arg1, [arg2]) ->
      Some CST.(ELogic (CompExpr (Lt (Region.wrap_ghost { op = Token.ghost_lt ; arg1 ; arg2 }))))
   | Const C_LE, (arg1, [arg2]) ->

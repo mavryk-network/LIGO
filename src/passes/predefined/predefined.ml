@@ -58,7 +58,6 @@ module Tree_abstraction = struct
     | "Big_map.literal"  -> some_const C_BIG_MAP_LITERAL
 
     (* Operator module *)
-    | "Operator.neg"   -> some_const C_NEG
     | "Operator.add"   -> some_const C_ADD
     | "Operator.sub"   -> some_const C_POLYMORPHIC_SUB
     | "Operator.sub_mutez" -> some_const C_SUB_MUTEZ
@@ -66,7 +65,6 @@ module Tree_abstraction = struct
     | "Operator.div"   -> some_const C_DIV
     | "Operator.modulus" -> some_const C_MOD
     | "Operator.eq"    -> some_const C_EQ
-    | "Operator.not"   -> some_const C_NOT
     | "Operator.and"   -> some_const C_AND
     | "Operator.or"    -> some_const C_OR
     | "Operator.gt"    -> some_const C_GT
@@ -98,7 +96,6 @@ module Tree_abstraction = struct
     | C_GLOBAL_CONSTANT         -> "Tezos.constant"
 
     (* Operator module *)
-    | C_NEG  -> "Operator.neg"
     | C_ADD  -> "Operator.add"
     | C_SUB  -> "Operator.sub"
     | C_SUB_MUTEZ -> "Operator.sub_mutez"
@@ -107,7 +104,6 @@ module Tree_abstraction = struct
     | C_DIV  -> "Operator.div"
     | C_MOD  -> "Operator.modulus"
     | C_EQ   -> "Operator.eq"
-    | C_NOT  -> "Operator.not"
     | C_AND  -> "Operator.and"
     | C_OR   -> "Operator.or"
     | C_GT   -> "Operator.gt"
@@ -168,13 +164,11 @@ module Stacking = struct
     | C_MUL                , _   -> Some ( simple_binary @@ prim "MUL")
     | C_DIV                , _   -> Some ( simple_binary @@ seq [prim "EDIV" ; i_assert_some_msg (i_push_string "DIV by 0") ; i_car])
     | C_MOD                , _   -> Some ( simple_binary @@ seq [prim "EDIV" ; i_assert_some_msg (i_push_string "MOD by 0") ; i_cdr])
-    | C_NEG                , _   -> Some ( simple_unary @@ prim "NEG")
     | C_OR                 , _   -> Some ( simple_binary @@ prim "OR")
     | C_AND                , _   -> Some ( simple_binary @@ prim "AND")
     | C_XOR                , _   -> Some ( simple_binary @@ prim "XOR")
     | C_LSL                , _   -> Some ( simple_binary @@ prim "LSL")
     | C_LSR                , _   -> Some ( simple_binary @@ prim "LSR")
-    | C_NOT                , _   -> Some ( simple_unary @@ prim "NOT")
     | C_PAIR               , _   -> Some ( simple_binary @@ prim "PAIR")
     | C_CAR                , _   -> Some ( simple_unary @@ prim "CAR")
     | C_CDR                , _   -> Some ( simple_unary @@ prim "CDR")

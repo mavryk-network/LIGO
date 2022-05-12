@@ -87,14 +87,15 @@ let buffer_of_mutation : mutation -> Buffer.t = fun (loc, _expr) ->
 let map_constant cons_name arguments final_type_expression =
   let possible_const =
     match arguments with
-      [ e1 ] ->
-       let t1 = e1.type_expression in
-       let t2 = final_type_expression in
-       if is_t_nat t1 && is_t_int t2 then
-         [C_NOT;C_NEG]
-       else if is_t_int t1 && is_t_int t2 then
-         [C_NOT;C_NEG]
-       else
+      [ _ ] ->
+       (* let t1 = e1.type_expression in
+        * let t2 = final_type_expression in *)
+       (* TODO FIXME *)
+       (* if is_t_nat t1 && is_t_int t2 then
+        *   [C_NOT;C_NEG]
+        * else if is_t_int t1 && is_t_int t2 then
+        *   [C_NOT;C_NEG]
+        * else *)
          []
     | [ e1 ; e2 ] ->
        let t1 = e1.type_expression in

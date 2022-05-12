@@ -105,6 +105,9 @@ let rec decompile_to_untyped_value ~raise ~bigmaps :
       V_Ct (C_string s)
   | Prim (_, "bytes", [], _), Bytes (_, b) ->
       V_Ct (C_bytes b)
+  | Prim (_, "bls12_381_g1", [], _), Bytes (_, b) ->
+      let c = Bls12_381.G1.of_bytes_exn b in
+      V_Ct (C_bls12_381_g1 c)
   | Prim (_, "address", [], _), Bytes (_, b) ->
       let open Proto_alpha_utils in
       let enc = Memory_proto_alpha.Protocol.Alpha_context.Contract.encoding in

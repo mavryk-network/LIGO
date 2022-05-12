@@ -77,14 +77,12 @@ type constant' =
   | C_FOLD_LEFT
   | C_FOLD_RIGHT
   (* MATH *)
-  | C_NEG
   | C_ADD
   | C_SUB
   | C_MUL
   | C_DIV
   | C_MOD
   (* LOGIC *)
-  | C_NOT
   | C_AND
   | C_OR
   | C_XOR

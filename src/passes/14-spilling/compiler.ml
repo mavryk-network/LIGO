@@ -36,7 +36,6 @@ let compile_constant' : AST.constant' -> constant' = function
   | C_FOLD_LEFT -> C_FOLD_LEFT
   | C_FOLD_RIGHT -> C_FOLD_RIGHT
   (* MATH *)
-  | C_NEG -> C_NEG
   | C_ADD -> C_ADD
   | C_SUB -> C_SUB
   | C_MUL -> C_MUL
@@ -44,7 +43,6 @@ let compile_constant' : AST.constant' -> constant' = function
   | C_MOD -> C_MOD
   | C_SUB_MUTEZ -> C_SUB_MUTEZ
   (* LOGIC *)
-  | C_NOT -> C_NOT
   | C_AND -> C_AND
   | C_OR -> C_OR
   | C_XOR -> C_XOR

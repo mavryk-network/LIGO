@@ -326,10 +326,6 @@ module Constant_types = struct
                     of_type C_SET_ITER O.(for_all "a" @@ fun a -> (a ^-> t_unit ()) ^-> t_set a ^-> t_unit ());
                     of_type C_SET_FOLD O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> (t_pair b a ^-> b) ^-> t_set a ^-> b ^-> b);
                     of_type C_SET_FOLD_DESC O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> (t_pair a b ^-> b) ^-> t_set a ^-> b ^-> b);
-                    of_types C_CONCAT [
-                        O.(t_string () ^-> t_string () ^-> t_string ());
-                        O.(t_bytes () ^-> t_bytes () ^-> t_bytes ());
-                      ];
                     of_type C_BYTES_UNPACK O.(for_all "a" @@ fun a -> t_bytes () ^-> t_option a);
                     of_type C_NONE O.(for_all "a" @@ fun a -> t_option a);
                     of_type C_SOME O.(for_all "a" @@ fun a -> a ^-> t_option a);
@@ -420,13 +416,6 @@ module Constant_types = struct
                     (C_LE, typer_of_comparator (comparator ~cmp:"LE"));
                     (C_GE, typer_of_comparator (comparator ~cmp:"GE"));
                     of_type C_FAILWITH O.(for_all "a" @@ fun a -> t_ext_failwith a);
-                    of_type C_INT O.(for_all "a" @@ fun a -> t_ext_int a);
-                    of_type C_NEG O.(for_all "a" @@ fun a -> t_ext_neg a);
-                    of_type C_NOT O.(for_all "a" @@ fun a -> t_ext_not a);
-                    (C_EDIV, any_of [
-                        typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> t_ext_ediv a b);
-                        typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> t_ext_u_ediv a b);
-                    ]);
                     (C_ADD, any_of [
                         typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> t_ext_add a b);
                         typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> t_ext_u_add a b);
