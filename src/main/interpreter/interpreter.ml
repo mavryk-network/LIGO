@@ -230,22 +230,6 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t) : Location.
     | ( C_MAP_FIND , _  ) -> fail @@ error_type
     (* binary *)
     | ( (C_EQ | C_NEQ | C_LT | C_LE | C_GT | C_GE) , _ ) -> apply_comparison loc calltrace c operands
-    | ( C_SUB    , [ V_Ct (C_int a' | C_nat a') ; V_Ct (C_int b' | C_nat b') ] ) -> return_ct @@ C_int (Z.sub a' b')
-    | ( C_SUB    , [ V_Ct (C_int a' | C_timestamp a') ; V_Ct (C_timestamp b' | C_int b') ] ) ->
-      let res = Michelson_backend.Tezos_eq.timestamp_sub a' b' in
-      return_ct @@ C_timestamp res
-    | ( C_SUB    , [ V_Ct (C_mutez a') ; V_Ct (C_mutez b') ] ) -> (
-      match Michelson_backend.Tezos_eq.mutez_sub a' b' with
-      | Some res -> return_ct @@ C_mutez res
-      | None -> fail (Errors.meta_lang_eval loc calltrace "Mutez underflow/overflow")
-    )
-    | ( C_SUB_MUTEZ    , [ V_Ct (C_mutez a') ; V_Ct (C_mutez b') ] ) -> (
-      match Michelson_backend.Tezos_eq.mutez_sub a' b' with
-      | Some res -> return @@ v_some @@ V_Ct (C_mutez res)
-      | None -> return @@ v_none ()
-    )
-    | ( C_SUB , _  ) -> fail @@ error_type
-    | ( C_SUB_MUTEZ , _  ) -> fail @@ error_type
     | ( C_CONS   , [ v                  ; V_List vl          ] ) -> return @@ V_List (v::vl)
     | ( C_CONS , _  ) -> fail @@ error_type
     | ( C_CONCAT , [ V_Ct (C_string a') ; V_Ct (C_string b') ] ) -> return_ct @@ C_string (a' ^ b')

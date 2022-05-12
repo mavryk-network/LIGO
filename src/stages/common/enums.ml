@@ -76,8 +76,6 @@ type constant' =
   | C_FOLD
   | C_FOLD_LEFT
   | C_FOLD_RIGHT
-  (* MATH *)
-  | C_SUB
   (* LOGIC *)
   | C_AND
   | C_OR
@@ -214,7 +212,6 @@ type constant' =
   (* JsLIGO *)
   | C_POLYMORPHIC_ADD [@print "C_POLYMORPHIC_ADD"]
   | C_POLYMORPHIC_SUB [@print "C_POLYMORPHIC_SUB"]
-  | C_SUB_MUTEZ
   | C_OPTION_MAP
 [@@deriving enum, yojson, print_constant, only_interpreter_tags, read_constant ]
 

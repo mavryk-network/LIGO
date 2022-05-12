@@ -190,7 +190,6 @@ let decompile_operator : AST.rich_constant -> CST.expr List.Ne.t -> CST.expr opt
   match cons_name, arguments with
   | Const C_POLYMORPHIC_ADD, (arg1, [arg2]) ->
      Some CST.(EArith (Add (wrap { op = ghost ; arg1 ; arg2 })))
-  | Const C_SUB, (arg1, [arg2])
   | Const C_POLYMORPHIC_SUB, (arg1, [arg2]) ->
      Some CST.(EArith (Sub (wrap { op = ghost ; arg1 ; arg2 })))
   | Const C_LT, (arg1, [arg2]) ->

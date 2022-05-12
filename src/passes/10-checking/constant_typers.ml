@@ -350,8 +350,6 @@ module Constant_types = struct
                     of_type C_FALSE O.(t_bool ());
                     of_type C_OPEN_CHEST O.(t_chest_key () ^-> t_chest () ^-> t_nat () ^-> t_chest_opening_result ());
                     of_type C_VIEW O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> t_string () ^-> a ^-> t_address () ^-> t_option b);
-                    (* MATH *)
-                    of_type C_SUB_MUTEZ O.(t_mutez () ^-> t_mutez () ^-> t_option (t_mutez ()));
                     (* LOGIC *)
                     of_type C_LSL O.(t_nat () ^-> t_nat () ^-> t_nat ());
                     of_type C_LSR O.(t_nat () ^-> t_nat () ^-> t_nat ());
@@ -419,10 +417,6 @@ module Constant_types = struct
                     (C_POLYMORPHIC_ADD, any_of [
                         typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> t_ext_polymorphic_add a b);
                         typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> t_ext_u_polymorphic_add a b);
-                    ]);
-                    (C_SUB, any_of [
-                        typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> t_ext_sub a b);
-                        typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> t_ext_u_sub a b);
                     ]);
                     (C_POLYMORPHIC_SUB, any_of [
                         typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> t_ext_polymorphic_sub a b);

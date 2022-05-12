@@ -45,7 +45,6 @@ let is_pure_constant : constant' -> bool =
   | C_CONCAT
   | C_SET_MEM | C_SET_ADD | C_SET_REMOVE | C_SET_UPDATE
   | C_LOOP_CONTINUE | C_LOOP_STOP
-  | C_SUB_MUTEZ
   | C_BYTES_UNPACK
   | C_SET_EMPTY | C_SET_LITERAL
   | C_LIST_EMPTY | C_LIST_LITERAL
@@ -60,7 +59,7 @@ let is_pure_constant : constant' -> bool =
   | C_GLOBAL_CONSTANT (* pure because restricted to PUSH *)
     -> true
   (* unfortunately impure: *)
-  | C_SUB | C_LSL | C_LSR
+  | C_LSL | C_LSR
   | C_POLYMORPHIC_ADD | C_POLYMORPHIC_SUB
   (* impure: *)
   | C_UNOPT
