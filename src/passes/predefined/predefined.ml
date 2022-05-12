@@ -60,7 +60,6 @@ module Tree_abstraction = struct
     (* Operator module *)
     | "Operator.sub"   -> some_const C_POLYMORPHIC_SUB
     | "Operator.sub_mutez" -> some_const C_SUB_MUTEZ
-    | "Operator.times" -> some_const C_MUL
     | "Operator.div"   -> some_const C_DIV
     | "Operator.modulus" -> some_const C_MOD
     | "Operator.eq"    -> some_const C_EQ
@@ -98,7 +97,6 @@ module Tree_abstraction = struct
     | C_SUB  -> "Operator.sub"
     | C_SUB_MUTEZ -> "Operator.sub_mutez"
     | C_POLYMORPHIC_SUB -> "Operator.sub"
-    | C_MUL  -> "Operator.times"
     | C_DIV  -> "Operator.div"
     | C_MOD  -> "Operator.modulus"
     | C_EQ   -> "Operator.eq"
@@ -158,7 +156,6 @@ module Stacking = struct
     match c , protocol_version with
     | C_SUB                , _   -> Some ( simple_binary @@ prim "SUB")
     | C_SUB_MUTEZ          , _   -> Some ( simple_binary @@ prim "SUB_MUTEZ")
-    | C_MUL                , _   -> Some ( simple_binary @@ prim "MUL")
     | C_DIV                , _   -> Some ( simple_binary @@ seq [prim "EDIV" ; i_assert_some_msg (i_push_string "DIV by 0") ; i_car])
     | C_MOD                , _   -> Some ( simple_binary @@ seq [prim "EDIV" ; i_assert_some_msg (i_push_string "MOD by 0") ; i_cdr])
     | C_OR                 , _   -> Some ( simple_binary @@ prim "OR")

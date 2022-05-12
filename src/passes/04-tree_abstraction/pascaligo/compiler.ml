@@ -391,6 +391,7 @@ let rec compile_expression ~(raise :Errors.abs_error Simple_utils.Trace.raise) :
           check_no_attributes ~raise field_loc attributes;
           let field_rhs = self field_rhs in
           let e_add ?loc a b : expression = e_application ?loc (e_variable (ValueVar.of_input_var "#add")) (e_pair a b) in
+          let e_mult ?loc a b : expression = e_application ?loc (e_variable (ValueVar.of_input_var "#mul")) (e_pair a b) in
           let func_update self_accessor =
             match field_lens with
             | Lens_Id _ -> field_rhs

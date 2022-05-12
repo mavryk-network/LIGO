@@ -248,20 +248,6 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t) : Location.
     | ( C_SUB_MUTEZ , _  ) -> fail @@ error_type
     | ( C_CONS   , [ v                  ; V_List vl          ] ) -> return @@ V_List (v::vl)
     | ( C_CONS , _  ) -> fail @@ error_type
-    | ( C_MUL    , [ V_Ct (C_int a  )  ; V_Ct (C_int b  )  ] )
-    | ( C_MUL    , [ V_Ct (C_nat a  )  ; V_Ct (C_int b  )  ] )
-    | ( C_MUL    , [ V_Ct (C_int a  )  ; V_Ct (C_nat b  )  ] ) -> let r = Z.mul a b in return_ct (C_int r)
-    | ( C_MUL    , [ V_Ct (C_nat a  )  ; V_Ct (C_nat b  )  ] ) -> let r = Z.mul a b in return_ct (C_nat r)
-    | ( C_MUL    , [ V_Ct (C_nat a  )  ; V_Ct (C_mutez b)  ] ) -> let r = Z.mul a b in return_ct (C_mutez r)
-    | ( C_MUL    , [ V_Ct (C_mutez a)  ; V_Ct (C_nat b  )  ] ) -> let r = Z.mul a b in return_ct (C_mutez r)
-    | ( C_MUL    , [ V_Ct (C_bls12_381_g1 a) ; V_Ct (C_bls12_381_fr b) ] ) -> let r = Bls12_381.G1.(mul a b) in return_ct (C_bls12_381_g1 r)
-    | ( C_MUL    , [ V_Ct (C_bls12_381_g2 a) ; V_Ct (C_bls12_381_fr b) ] ) -> let r = Bls12_381.G2.(mul a b) in return_ct (C_bls12_381_g2 r)
-    | ( C_MUL    , [ V_Ct (C_bls12_381_fr a) ; V_Ct (C_bls12_381_fr b) ] ) -> let r = Bls12_381.Fr.(a * b) in return_ct (C_bls12_381_fr r)
-    | ( C_MUL    , [ V_Ct (C_nat a) ; V_Ct (C_bls12_381_fr b) ] ) -> let r = Bls12_381.Fr.(b ** a) in return_ct (C_bls12_381_fr r)
-    | ( C_MUL    , [ V_Ct (C_int a) ; V_Ct (C_bls12_381_fr b) ] ) -> let r = Bls12_381.Fr.(b ** a) in return_ct (C_bls12_381_fr r)
-    | ( C_MUL    , [ V_Ct (C_bls12_381_fr a) ; V_Ct (C_nat b) ] ) -> let r = Bls12_381.Fr.(a ** b) in return_ct (C_bls12_381_fr r)
-    | ( C_MUL    , [ V_Ct (C_bls12_381_fr a) ; V_Ct (C_int b) ] ) -> let r = Bls12_381.Fr.(a ** b) in return_ct (C_bls12_381_fr r)
-    | ( C_MUL , _  ) -> fail @@ error_type
     | ( C_DIV    , [ V_Ct (C_int a'  )  ; V_Ct (C_int b'  )  ] )
     | ( C_DIV    , [ V_Ct (C_int a'  )  ; V_Ct (C_nat b'  )  ] )
     | ( C_DIV    , [ V_Ct (C_nat a'  )  ; V_Ct (C_int b'  )  ] ) ->

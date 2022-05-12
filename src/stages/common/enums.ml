@@ -78,7 +78,6 @@ type constant' =
   | C_FOLD_RIGHT
   (* MATH *)
   | C_SUB
-  | C_MUL
   | C_DIV
   | C_MOD
   (* LOGIC *)

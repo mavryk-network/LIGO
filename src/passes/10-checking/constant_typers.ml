@@ -428,10 +428,6 @@ module Constant_types = struct
                         typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> t_ext_polymorphic_sub a b);
                         typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> t_ext_u_polymorphic_sub a b);
                     ]);
-                    (C_MUL, any_of [
-                        typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> t_ext_mul a b);
-                        typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> t_ext_u_mul a b);
-                    ]);
                     (C_DIV, any_of [
                         typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> t_ext_div a b);
                         typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> t_ext_u_div a b);
