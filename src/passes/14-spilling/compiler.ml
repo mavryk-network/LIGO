@@ -43,7 +43,6 @@ let compile_constant' : AST.constant' -> constant' = function
   | C_LE -> C_LE
   | C_GE -> C_GE
   (* Bytes/ String *)
-  | C_CONCAT -> C_CONCAT
   | C_BYTES_UNPACK -> C_BYTES_UNPACK
   | C_CONS -> C_CONS
   (* Pair *)

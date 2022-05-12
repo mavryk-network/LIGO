@@ -147,7 +147,16 @@ let%expect_test _ =
 
     { parameter string ;
       storage int ;
-      code { CDR ; PUSH int 1 ; ADD ; NIL operation ; PAIR } } |}]
+      code { UNPAIR ;
+             PUSH int 1 ;
+             DIG 2 ;
+             ADD ;
+             PUSH string "titi" ;
+             DIG 2 ;
+             CONCAT ;
+             DROP ;
+             NIL operation ;
+             PAIR } } |}]
 
 let%expect_test _ =
   run_ligo_good [ "compile" ; "expression" ; "cameligo" ; "tata" ; "--init-file" ; contract "C.mligo" ] ;

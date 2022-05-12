@@ -168,7 +168,6 @@ let e_let_in_ez   ?loc ?sugar var ?ascr ?const_or_var inline rhs let_result = e_
 (* Constants *)
 let e_some       ?loc ?sugar s        : expression = e_constant ?loc ?sugar C_SOME [s]
 let e_none       ?loc ?sugar ()       : expression = e_constant ?loc ?sugar C_NONE []
-let e_string_cat ?loc ?sugar sl sr    : expression = e_constant ?loc ?sugar C_CONCAT [sl; sr]
 let e_map_add    ?loc ?sugar k v old  : expression = e_constant ?loc ?sugar C_MAP_ADD [k; v; old]
 
 let e_bool b : expression =

@@ -384,7 +384,7 @@ module Toplevel = struct
 [@private] [@hidden] [@inline] let _hash_lsl ((l, r) : nat * nat) : nat = [%Michelson ({| { UNPAIR ; LSL } |} : nat * nat -> nat)] (l, r)
 [@private] [@hidden] [@inline] let _hash_lsr ((l, r) : nat * nat) : nat = [%Michelson ({| { UNPAIR ; LSR } |} : nat * nat -> nat)] (l, r)
 [@private] [@hidden] [@inline] let _hash_cons (type a) ((x, xs) : a * a list) : a list = [%external \"CONS\"] x xs
-[@private] [@hidden] [@inline] let _hash_concat (type a b) ((l, r) : a * b) : (a, b) external_u_concat = [%external \"CONCAT\"] l r
+[@private] [@hidden] [@inline] let _hash_concat (type a b) ((l, r) : a * b) : (a, b) external_u_concat = [%Michelson ({| { UNPAIR ; CONCAT } |} : a * b -> (a, b) external_u_concat)] (l, r)
 "
   let curried_bindings = "
 [@private] [@hidden] [@inline] let assert (b : bool) : unit = [%Michelson ({| { IF { UNIT } { PUSH string \"failed assertion\" ; FAILWITH } } |} : bool -> unit)] b
@@ -416,7 +416,7 @@ module Toplevel = struct
 [@private] [@hidden] [@inline] let _hash_lsl (l : nat) (r : nat) : nat = [%Michelson ({| { UNPAIR ; LSL } |} : nat * nat -> nat)] (l, r)
 [@private] [@hidden] [@inline] let _hash_lsr (l : nat) (r : nat) : nat = [%Michelson ({| { UNPAIR ; LSR } |} : nat * nat -> nat)] (l, r)
 [@private] [@hidden] [@inline] let _hash_cons (type a) (x : a) (xs : a list) : a list = [%external \"CONS\"] x xs
-[@private] [@hidden] [@inline] let _hash_concat (type a b) (l : a) (r : b) : (a, b) external_concat = [%external \"CONCAT\"] l r
+[@private] [@hidden] [@inline] let _hash_concat (type a b) (l : a) (r : b) : (a, b) external_concat = [%Michelson ({| { UNPAIR ; CONCAT } |} : a * b -> (a, b) external_concat)] (l, r)
 "
   module Ithaca = struct
     let tupled = tupled_bindings
