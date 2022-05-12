@@ -305,8 +305,16 @@ let rec val_to_ast ~raise ~loc : Ligo_interpreter.Types.value ->
   | V_Record map when is_t_record ty ->
      let map_ty = trace_option ~raise (Errors.generic_error loc (Format.asprintf "Expected record type but got %a" Ast_aggregated.PP.type_expression ty)) @@  get_t_record_opt ty in
      make_ast_record ~raise ~loc map_ty map
-  | V_Record _ ->
-     raise.raise @@ Errors.generic_error loc (Format.asprintf "Expected record type but got %a" Ast_aggregated.PP.type_expression ty)
+    (* | V_Record map when is_t_ticket ty -> failwith "lol" *)
+  | V_Record map -> (
+    match get_t_ticket ty with
+    | Some ticket_ty ->
+      let x = Ast_aggregated.(t_triplet ~layout:Stage_common.Enums.L_comb (t_address ()) ticket_ty (t_nat ())) in
+      let map_ty = trace_option ~raise (Errors.generic_error loc (Format.asprintf "Expected record type but got %a" Ast_aggregated.PP.type_expression ty)) @@  get_t_record_opt x in
+      make_ast_record ~raise ~loc map_ty map
+    | None ->
+      raise.raise @@ Errors.generic_error loc (Format.asprintf "Expected record type but got %a" Ast_aggregated.PP.type_expression ty)
+  )
   | V_List l ->
      let ty = trace_option ~raise (Errors.generic_error loc (Format.asprintf "Expected list but got %a" Ast_aggregated.PP.type_expression ty)) @@ get_t_list ty in
      make_ast_list ~raise ~loc ty l

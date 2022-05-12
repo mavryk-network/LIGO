@@ -61,8 +61,8 @@ let t_pair ?loc a b : type_expression =
     (Label "0",{associated_type=a;michelson_annotation=None ; decl_pos = 0}) ;
     (Label "1",{associated_type=b;michelson_annotation=None ; decl_pos = 1}) ]
 
-let t_triplet ?loc a b c : type_expression =
-  ez_t_record ?loc [
+let t_triplet ?loc ?layout a b c : type_expression =
+  ez_t_record ?loc ?layout [
     (Label "0",{associated_type=a;michelson_annotation=None ; decl_pos = 0}) ;
     (Label "1",{associated_type=b;michelson_annotation=None ; decl_pos = 1}) ;
     (Label "2",{associated_type=c;michelson_annotation=None ; decl_pos = 2}) ]
