@@ -421,12 +421,14 @@ let run_michelson_func ~raise ~options ~loc (ctxt : Tezos_state.context) (code :
   let open Ligo_interpreter.Types in
   let { code = arg ; code_ty = arg_ty ; _ } = compile_simple_value ~raise ~options ~loc arg arg_ty in
   let func_ty = compile_type ~raise func_ty in
-  let func = match code with
-  | Seq (_, s) ->
-     Tezos_utils.Michelson.(seq ([i_push arg_ty arg] @ s))
-  | _ ->
-     raise.raise (Errors.generic_error Location.generated "Could not parse") in
-  match Ligo_run.Of_michelson.run_expression ~raise func func_ty with
+  let func =
+    match code with
+    | Seq (_, s) ->
+      Tezos_utils.Michelson.(seq ([i_push arg_ty arg] @ s))
+    | _ ->
+      raise.raise (Errors.generic_error Location.generated "Could not parse")
+  in
+  match Ligo_run.Of_michelson.run_expression ~options:(make_options ~raise (Some ctxt)) ~raise func func_ty with
   | Success (ty, value) ->
      Result.return @@ Michelson_to_value.decompile_to_untyped_value ~raise ~bigmaps:ctxt.transduced.bigmaps ty value
   | Fail f ->
