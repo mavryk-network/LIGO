@@ -15,7 +15,7 @@ let%expect_test _ =
   [%expect{| 583 bytes |}] ;
 
   run_ligo_good [ "info" ; "measure-contract" ; contract "multisig-v2.ligo" ] ;
-  [%expect{| 1639 bytes |}] ;
+  [%expect{| 1653 bytes |}] ;
 
   run_ligo_good [ "info" ; "measure-contract" ; contract "vote.mligo" ] ;
   [%expect{| 430 bytes |}] ;
@@ -332,6 +332,7 @@ let%expect_test _ =
                   DUP 3 ;
                   PAIR ;
                   PAIR ;
+                  PACK ;
                   UNIT ;
                   PUSH nat 0 ;
                   DUP 6 ;
@@ -355,7 +356,6 @@ let%expect_test _ =
                              COMPARE ;
                              EQ ;
                              IF { DUP 5 ;
-                                  PACK ;
                                   DIG 4 ;
                                   CDR ;
                                   DIG 2 ;
@@ -466,8 +466,10 @@ let%expect_test _ =
                          GET ;
                          IF_NONE { PUSH string "MAP FIND" ; FAILWITH } {} ;
                          ADD ;
-                         SOME ;
                          SENDER ;
+                         SWAP ;
+                         SOME ;
+                         SWAP ;
                          UPDATE ;
                          PAIR ;
                          PAIR ;
@@ -475,8 +477,9 @@ let%expect_test _ =
                          CAR ;
                          PAIR ;
                          EMPTY_SET address ;
-                         PUSH bool True ;
                          SENDER ;
+                         PUSH bool True ;
+                         SWAP ;
                          UPDATE ;
                          UNIT ;
                          DUG 2 ;
@@ -506,8 +509,10 @@ let%expect_test _ =
                               GET ;
                               IF_NONE { PUSH string "MAP FIND" ; FAILWITH } {} ;
                               ADD ;
-                              SOME ;
                               SENDER ;
+                              SWAP ;
+                              SOME ;
+                              SWAP ;
                               UPDATE ;
                               PAIR ;
                               PAIR ;
@@ -737,8 +742,10 @@ let%expect_test _ =
                           IF_NONE { PUSH string "MAP FIND" ; FAILWITH } {} ;
                           SUB ;
                           ABS ;
-                          SOME ;
                           SENDER ;
+                          SWAP ;
+                          SOME ;
+                          SWAP ;
                           UPDATE ;
                           PAIR ;
                           PAIR ;
@@ -1029,12 +1036,13 @@ Hint: replace it by "_ticket" to prevent this warning.
              EQ ;
              IF {} { PUSH string "failed assertion" ; FAILWITH } ;
              DUP ;
-             CAR ;
-             PUSH mutez 0 ;
-             DIG 2 ;
              CDR ;
              UNIT ;
              TICKET ;
+             SWAP ;
+             CAR ;
+             PUSH mutez 0 ;
+             DIG 2 ;
              TRANSFER_TOKENS ;
              SWAP ;
              NIL operation ;
