@@ -96,14 +96,18 @@ let%expect_test _ =
   [%expect{|
 let #../../test/contracts/build/A.mligo#toto#172 = L(1) in
 let #../../test/contracts/build/B.mligo#titi#339 =
-  ADD(#../../test/contracts/build/A.mligo#toto#172 , L(42)) in
+  ({ UNPAIR ; ADD })@(PAIR(#../../test/contracts/build/A.mligo#toto#172 ,
+                           L(42))) in
 let #../../test/contracts/build/C.mligo#tata#838 =
-  ADD(#../../test/contracts/build/A.mligo#toto#172 ,
-      #../../test/contracts/build/B.mligo#titi#339) in
+  ({ UNPAIR ; ADD })@(PAIR(#../../test/contracts/build/A.mligo#toto#172 ,
+                           #../../test/contracts/build/B.mligo#titi#339)) in
 let gen#4168 =
-  (ADD(L(3) , #../../test/contracts/build/A.mligo#toto#172), #../../test/contracts/build/B.mligo#titi#339) in
-let x = let (l, r) = gen#4168 in ADD(l , r) in
-let toto = ADD(L(10) , #../../test/contracts/build/A.mligo#toto#172) in
+  (({ UNPAIR ; ADD })@(PAIR(L(3) ,
+                            #../../test/contracts/build/A.mligo#toto#172)), #../../test/contracts/build/B.mligo#titi#339) in
+let x = let (l, r) = gen#4168 in ({ UNPAIR ; ADD })@(PAIR(l , r)) in
+let toto =
+  ({ UNPAIR ; ADD })@(PAIR(L(10) ,
+                           #../../test/contracts/build/A.mligo#toto#172)) in
 L(unit) |}]
 
 let%expect_test _ =

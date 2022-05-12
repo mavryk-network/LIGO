@@ -236,7 +236,7 @@ and infer_t_insts ~raise ~options ~loc app_context ( (tc,t) : O.expression_conte
        let z = List.zip_exn avs argsv in
        let table = List.fold_right z ~f:(fun (av, t) table -> Inference.TMap.add av t table) ~init:table in
        let lamb = make_e ~location:loc tc ot in
-       let x = Inference.build_type_insts_function ~raise ~loc lamb table avs in
+       let x = Inference.build_type_insts_ufunction ~raise ~loc lamb table avs in
        x.expression_content , t
     | _ ->
        let table = Inference.infer_type_applications ~raise ~loc avs type_ args last in

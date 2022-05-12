@@ -522,7 +522,7 @@ const t2_3 =
                           | Two ctor_proj#61 ->
                              match ctor_proj#61 with
                               | record[a -> a , b -> b , c -> c] ->
-                              (#add@{int}@{int})@(( (#add@{int}@{nat})@(( a , b )) , (int@{nat})@((String.length)@(c)) )) in (#add@{int}@{int})@(
+                              (#add@{int}@{int})@(( (#add@{nat}@{int})@(( a , b )) , (int@{nat})@((String.length)@(c)) )) in (#add@{int}@{int})@(
   ( t2 , t3 ))
 const t4 =
   lambda (x : sum[One -> sum[Cons -> ( int * int ) , Nil -> unit] , Two -> record[a -> int , b -> nat , c -> string]]) return lambda (y :

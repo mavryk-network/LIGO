@@ -58,7 +58,6 @@ module Tree_abstraction = struct
     | "Big_map.literal"  -> some_const C_BIG_MAP_LITERAL
 
     (* Operator module *)
-    | "Operator.add"   -> some_const C_ADD
     | "Operator.sub"   -> some_const C_POLYMORPHIC_SUB
     | "Operator.sub_mutez" -> some_const C_SUB_MUTEZ
     | "Operator.times" -> some_const C_MUL
@@ -96,7 +95,6 @@ module Tree_abstraction = struct
     | C_GLOBAL_CONSTANT         -> "Tezos.constant"
 
     (* Operator module *)
-    | C_ADD  -> "Operator.add"
     | C_SUB  -> "Operator.sub"
     | C_SUB_MUTEZ -> "Operator.sub_mutez"
     | C_POLYMORPHIC_SUB -> "Operator.sub"
@@ -158,7 +156,6 @@ module Stacking = struct
 
   let get_operators (protocol_version: protocol_type) c : predicate option =
     match c , protocol_version with
-    | C_ADD                , _   -> Some ( simple_binary @@ prim "ADD")
     | C_SUB                , _   -> Some ( simple_binary @@ prim "SUB")
     | C_SUB_MUTEZ          , _   -> Some ( simple_binary @@ prim "SUB_MUTEZ")
     | C_MUL                , _   -> Some ( simple_binary @@ prim "MUL")

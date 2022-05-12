@@ -248,22 +248,6 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t) : Location.
     | ( C_SUB_MUTEZ , _  ) -> fail @@ error_type
     | ( C_CONS   , [ v                  ; V_List vl          ] ) -> return @@ V_List (v::vl)
     | ( C_CONS , _  ) -> fail @@ error_type
-    | ( C_ADD    , [ V_Ct (C_int a  )  ; V_Ct (C_int b  )  ] )
-    | ( C_ADD    , [ V_Ct (C_nat a  )  ; V_Ct (C_int b  )  ] )
-    | ( C_ADD    , [ V_Ct (C_int a  )  ; V_Ct (C_nat b  )  ] ) -> let r = Z.add a b in return_ct (C_int r)
-    | ( C_ADD    , [ V_Ct (C_nat a  )  ; V_Ct (C_nat b  )  ] ) -> let r = Z.add a b in return_ct (C_nat r)
-    | ( C_ADD    , [ V_Ct (C_int a' | C_timestamp a') ; V_Ct (C_timestamp b' | C_int b') ] ) ->
-      let res = Michelson_backend.Tezos_eq.timestamp_add a' b' in
-      return_ct @@ C_timestamp res
-    | ( C_ADD    , [ V_Ct (C_mutez a') ; V_Ct (C_mutez b') ] ) -> (
-      match Michelson_backend.Tezos_eq.mutez_add a' b' with
-      | Some res -> return_ct @@ C_mutez res
-      | None -> fail (Errors.meta_lang_eval loc calltrace "Mutez underflow/overflow")
-    )
-    | ( C_ADD    , [ V_Ct (C_bls12_381_g1 a) ; V_Ct (C_bls12_381_g1 b) ] ) -> let r = Bls12_381.G1.(add a b) in return_ct (C_bls12_381_g1 r)
-    | ( C_ADD    , [ V_Ct (C_bls12_381_g2 a) ; V_Ct (C_bls12_381_g2 b) ] ) -> let r = Bls12_381.G2.(add a b) in return_ct (C_bls12_381_g2 r)
-    | ( C_ADD    , [ V_Ct (C_bls12_381_fr a) ; V_Ct (C_bls12_381_fr b) ] ) -> let r = Bls12_381.Fr.(a + b) in return_ct (C_bls12_381_fr r)
-    | ( C_ADD , _  ) -> fail @@ error_type
     | ( C_MUL    , [ V_Ct (C_int a  )  ; V_Ct (C_int b  )  ] )
     | ( C_MUL    , [ V_Ct (C_nat a  )  ; V_Ct (C_int b  )  ] )
     | ( C_MUL    , [ V_Ct (C_int a  )  ; V_Ct (C_nat b  )  ] ) -> let r = Z.mul a b in return_ct (C_int r)

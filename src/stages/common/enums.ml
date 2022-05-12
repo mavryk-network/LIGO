@@ -77,7 +77,6 @@ type constant' =
   | C_FOLD_LEFT
   | C_FOLD_RIGHT
   (* MATH *)
-  | C_ADD
   | C_SUB
   | C_MUL
   | C_DIV

@@ -188,11 +188,11 @@ let%expect_test "self_ast_imperative" =
   Ill-formed "BYTES_UNPACK" expression
   One function argument is expected.
   |}] ;
-  error (`Self_ast_imperative_bad_map_param_type (C_ADD, expression)) ;
+  error (`Self_ast_imperative_bad_map_param_type (C_OR, expression)) ;
   [%expect
     {|
   File "a dummy file name", line 20, character 5:
-   Ill-formed "ADD" expression.
+   Ill-formed "OR" expression.
   A list of pair parameters is expected.
   |}] ;
   error (`Self_ast_imperative_bad_set_param_type (C_ITER, expression)) ;

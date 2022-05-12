@@ -6,7 +6,7 @@ let () = Sys.chdir "../../test/contracts/interpreter_tests/"
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test" ; test "interpret_test.mligo" ] ;
-  [%expect {|
+  [%expect{|
     Everything at the top-level was executed.
     - test_lambda_call exited with value ().
     - test_higher_order1 exited with value ().

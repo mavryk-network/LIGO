@@ -197,7 +197,6 @@ let decompile_type_params : AST.type_expression -> _ option * CST.type_expr = fu
 
 let decompile_operator : AST.rich_constant -> CST.expr List.Ne.t -> CST.expr option = fun cons_name arguments ->
   match cons_name, arguments with
-  | Const C_ADD, (arg1, [arg2])
   | Const C_POLYMORPHIC_ADD, (arg1, [arg2]) ->
      Some CST.(EArith (Add (wrap { op = Token.ghost_plus ; arg1 ; arg2 })))
   | Const C_SUB, (arg1, [arg2])
