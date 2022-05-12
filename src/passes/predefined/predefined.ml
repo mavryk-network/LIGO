@@ -109,10 +109,6 @@ module Tree_abstraction = struct
     (* Big_map module *)
     | C_BIG_MAP_LITERAL -> "Big_map.literal"
 
-    (* Bitwise module *)
-    | C_LSL -> "Bitwise.shift_left"
-    | C_LSR -> "Bitwise.shift_right"
-
     | _ as c -> failwith @@ Format.asprintf "Constant not handled : %a" Stage_common.PP.constant' c
 
 
@@ -142,8 +138,6 @@ module Stacking = struct
 
   let get_operators (protocol_version: protocol_type) c : predicate option =
     match c , protocol_version with
-    | C_LSL                , _   -> Some ( simple_binary @@ prim "LSL")
-    | C_LSR                , _   -> Some ( simple_binary @@ prim "LSR")
     | C_PAIR               , _   -> Some ( simple_binary @@ prim "PAIR")
     | C_CAR                , _   -> Some ( simple_unary @@ prim "CAR")
     | C_CDR                , _   -> Some ( simple_unary @@ prim "CDR")

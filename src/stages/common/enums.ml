@@ -76,9 +76,6 @@ type constant' =
   | C_FOLD
   | C_FOLD_LEFT
   | C_FOLD_RIGHT
-  (* LOGIC *)
-  | C_LSL
-  | C_LSR
   (* COMPARATOR *)
   | C_EQ
   | C_NEQ

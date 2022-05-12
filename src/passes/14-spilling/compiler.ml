@@ -35,9 +35,6 @@ let compile_constant' : AST.constant' -> constant' = function
   | C_FOLD -> C_FOLD
   | C_FOLD_LEFT -> C_FOLD_LEFT
   | C_FOLD_RIGHT -> C_FOLD_RIGHT
-  (* LOGIC *)
-  | C_LSL -> C_LSL
-  | C_LSR -> C_LSR
   (* COMPARATOR *)
   | C_EQ -> C_EQ
   | C_NEQ -> C_NEQ

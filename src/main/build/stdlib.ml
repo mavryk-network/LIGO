@@ -98,15 +98,15 @@ module Bitwise = struct
   [@hidden] [@inline] let _remove_and (type a b) ((l, r) : a * b) : (a, b) external_u_and = [%Michelson ({| { UNPAIR ; AND } |} : a * b -> (a, b) external_u_and)] (l, r)
   [@hidden] [@inline] let _remove_or (type a b) ((l, r) : a * b) : (a, b) external_u_or = [%Michelson ({| { UNPAIR ; OR } |} : a * b -> (a, b) external_u_or)] (l, r)
   [@hidden] [@inline] let xor (type a b) ((l, r) : a * b) : (a, b) external_u_xor = [%Michelson ({| { UNPAIR ; XOR } |} : a * b -> (a, b) external_u_xor)] (l, r)
-  [@hidden] [@inline] let shift_left ((l, r) : nat * nat) : nat = [%external \"LSL\"] l r
-  [@hidden] [@inline] let shift_right ((l, r) : nat * nat) : nat = [%external \"LSR\"] l r
+  [@hidden] [@inline] let shift_left ((l, r) : nat * nat) : nat = [%Michelson ({| { UNPAIR ; LSL } |} : nat * nat -> nat)] (l, r)
+  [@hidden] [@inline] let shift_right ((l, r) : nat * nat) : nat = [%Michelson ({| { UNPAIR ; LSR } |} : nat * nat -> nat)] (l, r)
 "
   let curried_bindings = "
   [@hidden] [@inline] let _remove_and (type a b) (l : a) (r : b) : (a, b) external_and = [%Michelson ({| { UNPAIR ; AND } |} : a * b -> (a, b) external_and)] (l, r)
   [@hidden] [@inline] let _remove_or (type a b) (l : a) (r : b) : (a, b) external_or = [%Michelson ({| { UNPAIR ; OR } |} : a * b -> (a, b) external_or)] (l, r)
   [@hidden] [@inline] let xor (type a b) (l : a) (r : b) : (a, b) external_xor = [%Michelson ({| { UNPAIR ; XOR } |} : a * b -> (a, b) external_xor)] (l, r)
-  [@hidden] [@inline] let shift_left (l : nat) (r : nat) : nat = [%external \"LSL\"] l r
-  [@hidden] [@inline] let shift_right (l : nat) (r : nat) : nat = [%external \"LSR\"] l r
+  [@hidden] [@inline] let shift_left (l : nat) (r : nat) : nat = [%Michelson ({| { UNPAIR ; LSL } |} : nat * nat -> nat)] (l, r)
+  [@hidden] [@inline] let shift_right (l : nat) (r : nat) : nat = [%Michelson ({| { UNPAIR ; LSR } |} : nat * nat -> nat)] (l, r)
 "
   module Ithaca = struct
     let tupled = module_ name tupled_bindings
@@ -381,8 +381,8 @@ module Toplevel = struct
 [@private] [@hidden] [@inline] let _hash_and (type a b) ((l, r) : a * b) : (a, b) external_u_and = [%Michelson ({| { UNPAIR ; AND } |} : a * b -> (a, b) external_u_and)] (l, r)
 [@private] [@hidden] [@inline] let _hash_or (type a b) ((l, r) : a * b) : (a, b) external_u_or = [%Michelson ({| { UNPAIR ; OR } |} : a * b -> (a, b) external_u_or)] (l, r)
 [@private] [@hidden] [@inline] let _hash_xor (type a b) ((l, r) : a * b) : (a, b) external_u_xor = [%Michelson ({| { UNPAIR ; XOR } |} : a * b -> (a, b) external_u_xor)] (l, r)
-[@private] [@hidden] [@inline] let _hash_lsl ((l, r) : nat * nat) : nat = [%external \"LSL\"] l r
-[@private] [@hidden] [@inline] let _hash_lsr ((l, r) : nat * nat) : nat = [%external \"LSR\"] l r
+[@private] [@hidden] [@inline] let _hash_lsl ((l, r) : nat * nat) : nat = [%Michelson ({| { UNPAIR ; LSL } |} : nat * nat -> nat)] (l, r)
+[@private] [@hidden] [@inline] let _hash_lsr ((l, r) : nat * nat) : nat = [%Michelson ({| { UNPAIR ; LSR } |} : nat * nat -> nat)] (l, r)
 [@private] [@hidden] [@inline] let _hash_cons (type a) ((x, xs) : a * a list) : a list = [%external \"CONS\"] x xs
 [@private] [@hidden] [@inline] let _hash_concat (type a b) ((l, r) : a * b) : (a, b) external_u_concat = [%external \"CONCAT\"] l r
 "
@@ -413,8 +413,8 @@ module Toplevel = struct
 [@private] [@hidden] [@inline] let _hash_and (type a b) (l : a) (r : b) : (a, b) external_and = [%Michelson ({| { UNPAIR ; AND } |} : a * b -> (a, b) external_and)] (l, r)
 [@private] [@hidden] [@inline] let _hash_or (type a b) (l : a) (r : b) : (a, b) external_or = [%Michelson ({| { UNPAIR ; OR } |} : a * b -> (a, b) external_or)] (l, r)
 [@private] [@hidden] [@inline] let _hash_xor (type a b) (l : a) (r : b) : (a, b) external_xor = [%Michelson ({| { UNPAIR ; XOR } |} : a * b -> (a, b) external_xor)] (l, r)
-[@private] [@hidden] [@inline] let _hash_lsl (l : nat) (r : nat) : nat = [%external \"LSL\"] l r
-[@private] [@hidden] [@inline] let _hash_lsr (l : nat) (r : nat) : nat = [%external \"LSR\"] l r
+[@private] [@hidden] [@inline] let _hash_lsl (l : nat) (r : nat) : nat = [%Michelson ({| { UNPAIR ; LSL } |} : nat * nat -> nat)] (l, r)
+[@private] [@hidden] [@inline] let _hash_lsr (l : nat) (r : nat) : nat = [%Michelson ({| { UNPAIR ; LSR } |} : nat * nat -> nat)] (l, r)
 [@private] [@hidden] [@inline] let _hash_cons (type a) (x : a) (xs : a list) : a list = [%external \"CONS\"] x xs
 [@private] [@hidden] [@inline] let _hash_concat (type a b) (l : a) (r : b) : (a, b) external_concat = [%external \"CONCAT\"] l r
 "

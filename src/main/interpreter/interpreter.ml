@@ -235,22 +235,6 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t) : Location.
     | ( C_CONCAT , [ V_Ct (C_string a') ; V_Ct (C_string b') ] ) -> return_ct @@ C_string (a' ^ b')
     | ( C_CONCAT , [ V_Ct (C_bytes a' ) ; V_Ct (C_bytes b' ) ] ) -> return_ct @@ C_bytes  (BytesLabels.cat a' b')
     | ( C_CONCAT , _  ) -> fail @@ error_type
-    | ( C_LSL    , [ V_Ct (C_nat a'  ) ; V_Ct (C_nat b'  ) ] ) ->
-      let v = Michelson_backend.Tezos_eq.nat_shift_left a' b' in
-      begin
-        match v with
-        | Some v -> return_ct @@ C_nat v
-        | None -> fail @@ Errors.meta_lang_eval loc calltrace "Overflow"
-      end
-    | ( C_LSL , _  ) -> fail @@ error_type
-    | ( C_LSR    , [ V_Ct (C_nat a'  ) ; V_Ct (C_nat b'  ) ] ) ->
-      let v = Michelson_backend.Tezos_eq.nat_shift_right a' b' in
-      begin
-        match v with
-        | Some v -> return_ct @@ C_nat v
-        | None -> fail @@ Errors.meta_lang_eval loc calltrace "Overflow"
-      end
-    | ( C_LSR , _  ) -> fail @@ error_type
     | ( C_LIST_EMPTY, []) -> return @@ V_List ([])
     | ( C_LIST_EMPTY , _  ) -> fail @@ error_type
     | ( C_LIST_MAP , [ V_Func_val {arg_binder ; body ; env ; rec_name=_ ; orig_lambda=_}  ; V_List (elts) ] ) ->
