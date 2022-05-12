@@ -35,7 +35,6 @@ let is_pure_constant : constant' -> bool =
   | C_UNIT
   | C_CAR | C_CDR | C_PAIR
   | C_NIL | C_CONS
-  | C_OR | C_AND | C_XOR
   | C_EQ  | C_NEQ | C_LT | C_LE | C_GT | C_GE
   | C_NONE | C_SOME
   | C_LEFT | C_RIGHT

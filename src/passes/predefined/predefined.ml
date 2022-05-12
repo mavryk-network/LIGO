@@ -60,8 +60,6 @@ module Tree_abstraction = struct
     (* Operator module *)
     | "Operator.sub"   -> some_const C_POLYMORPHIC_SUB
     | "Operator.eq"    -> some_const C_EQ
-    | "Operator.and"   -> some_const C_AND
-    | "Operator.or"    -> some_const C_OR
     | "Operator.gt"    -> some_const C_GT
     | "Operator.ge"    -> some_const C_GE
     | "Operator.lt"    -> some_const C_LT
@@ -93,8 +91,6 @@ module Tree_abstraction = struct
     (* Operator module *)
     | C_POLYMORPHIC_SUB -> "Operator.sub"
     | C_EQ   -> "Operator.eq"
-    | C_AND  -> "Operator.and"
-    | C_OR   -> "Operator.or"
     | C_GT   -> "Operator.gt"
     | C_GE   -> "Operator.ge"
     | C_LT   -> "Operator.lt"
@@ -114,7 +110,6 @@ module Tree_abstraction = struct
     | C_BIG_MAP_LITERAL -> "Big_map.literal"
 
     (* Bitwise module *)
-    | C_XOR -> "Bitwise.xor"
     | C_LSL -> "Bitwise.shift_left"
     | C_LSR -> "Bitwise.shift_right"
 
@@ -147,9 +142,6 @@ module Stacking = struct
 
   let get_operators (protocol_version: protocol_type) c : predicate option =
     match c , protocol_version with
-    | C_OR                 , _   -> Some ( simple_binary @@ prim "OR")
-    | C_AND                , _   -> Some ( simple_binary @@ prim "AND")
-    | C_XOR                , _   -> Some ( simple_binary @@ prim "XOR")
     | C_LSL                , _   -> Some ( simple_binary @@ prim "LSL")
     | C_LSR                , _   -> Some ( simple_binary @@ prim "LSR")
     | C_PAIR               , _   -> Some ( simple_binary @@ prim "PAIR")

@@ -77,9 +77,6 @@ type constant' =
   | C_FOLD_LEFT
   | C_FOLD_RIGHT
   (* LOGIC *)
-  | C_AND
-  | C_OR
-  | C_XOR
   | C_LSL
   | C_LSR
   (* COMPARATOR *)

@@ -5,7 +5,7 @@ include Fuzz_shared.Monad
 (* Helpers for swapping operators *)
 (* TODO FIXME *)
 let binary_num_constants = []
-let binary_bool_constants = [C_AND; C_OR; C_XOR]
+let binary_bool_constants = []
 let cmp_constants = [C_EQ; C_NEQ; C_LT; C_GT; C_LE; C_GE]
 let op_class = [binary_num_constants; binary_bool_constants; cmp_constants]
 
