@@ -60,8 +60,6 @@ module Tree_abstraction = struct
     (* Operator module *)
     | "Operator.sub"   -> some_const C_POLYMORPHIC_SUB
     | "Operator.sub_mutez" -> some_const C_SUB_MUTEZ
-    | "Operator.div"   -> some_const C_DIV
-    | "Operator.modulus" -> some_const C_MOD
     | "Operator.eq"    -> some_const C_EQ
     | "Operator.and"   -> some_const C_AND
     | "Operator.or"    -> some_const C_OR
@@ -97,8 +95,6 @@ module Tree_abstraction = struct
     | C_SUB  -> "Operator.sub"
     | C_SUB_MUTEZ -> "Operator.sub_mutez"
     | C_POLYMORPHIC_SUB -> "Operator.sub"
-    | C_DIV  -> "Operator.div"
-    | C_MOD  -> "Operator.modulus"
     | C_EQ   -> "Operator.eq"
     | C_AND  -> "Operator.and"
     | C_OR   -> "Operator.or"
@@ -156,8 +152,6 @@ module Stacking = struct
     match c , protocol_version with
     | C_SUB                , _   -> Some ( simple_binary @@ prim "SUB")
     | C_SUB_MUTEZ          , _   -> Some ( simple_binary @@ prim "SUB_MUTEZ")
-    | C_DIV                , _   -> Some ( simple_binary @@ seq [prim "EDIV" ; i_assert_some_msg (i_push_string "DIV by 0") ; i_car])
-    | C_MOD                , _   -> Some ( simple_binary @@ seq [prim "EDIV" ; i_assert_some_msg (i_push_string "MOD by 0") ; i_cdr])
     | C_OR                 , _   -> Some ( simple_binary @@ prim "OR")
     | C_AND                , _   -> Some ( simple_binary @@ prim "AND")
     | C_XOR                , _   -> Some ( simple_binary @@ prim "XOR")

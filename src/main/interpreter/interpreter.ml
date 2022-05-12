@@ -248,52 +248,6 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t) : Location.
     | ( C_SUB_MUTEZ , _  ) -> fail @@ error_type
     | ( C_CONS   , [ v                  ; V_List vl          ] ) -> return @@ V_List (v::vl)
     | ( C_CONS , _  ) -> fail @@ error_type
-    | ( C_DIV    , [ V_Ct (C_int a'  )  ; V_Ct (C_int b'  )  ] )
-    | ( C_DIV    , [ V_Ct (C_int a'  )  ; V_Ct (C_nat b'  )  ] )
-    | ( C_DIV    , [ V_Ct (C_nat a'  )  ; V_Ct (C_int b'  )  ] ) ->
-      let a = Michelson_backend.Tezos_eq.int_ediv a' b' in
-      begin
-        match a with
-        | Some (res,_) -> return_ct @@ C_int res
-        | None -> fail @@ Errors.meta_lang_eval loc calltrace "Dividing by zero"
-      end
-    | ( C_DIV    , [ V_Ct (C_nat a')  ; V_Ct (C_nat b')  ] ) ->
-      let a = Michelson_backend.Tezos_eq.int_ediv a' b' in
-      begin
-        match a with
-        | Some (res,_) -> return_ct @@ C_nat res
-        | None -> fail @@ Errors.meta_lang_eval loc calltrace "Dividing by zero"
-      end
-    | ( C_DIV    , [ V_Ct (C_mutez a')  ; V_Ct (C_mutez b')  ] ) ->
-      let a = Michelson_backend.Tezos_eq.int_ediv a' b' in
-      begin
-        match a with
-        | Some (res,_) -> return_ct @@ C_nat res
-        | None -> fail @@ Errors.meta_lang_eval loc calltrace "Dividing by zero"
-      end
-    | ( C_DIV    , [ V_Ct (C_mutez a')  ; V_Ct (C_nat b')  ] ) ->
-      let a = Michelson_backend.Tezos_eq.int_ediv a' b' in
-      begin
-        match a with
-        | Some (res,_) -> return_ct @@ C_mutez res
-        | None -> fail @@ Errors.meta_lang_eval loc calltrace "Dividing by zero"
-      end
-    | ( C_DIV , _  ) -> fail @@ error_type
-    | ( C_MOD    , [ V_Ct (C_int a')    ; V_Ct (C_int b')    ] )
-    | ( C_MOD    , [ V_Ct (C_int a')    ; V_Ct (C_nat b')    ] )
-    | ( C_MOD    , [ V_Ct (C_nat a')    ; V_Ct (C_int b')    ] ) -> (
-      let a = Michelson_backend.Tezos_eq.int_ediv a' b' in
-      match a with
-      | Some (_,r) -> return_ct @@ C_nat r
-      | None -> fail @@ Errors.meta_lang_eval loc calltrace "Dividing by zero"
-    )
-    | ( C_MOD    , [ V_Ct (C_nat a')    ; V_Ct (C_nat b')    ] ) -> (
-      let a = Michelson_backend.Tezos_eq.int_ediv a' b' in
-      match a with
-      | Some (_,r) -> return_ct @@ C_nat r
-      | None -> fail @@ Errors.meta_lang_eval loc calltrace "Dividing by zero"
-    )
-    | ( C_MOD , _  ) -> fail @@ error_type
     | ( C_CONCAT , [ V_Ct (C_string a') ; V_Ct (C_string b') ] ) -> return_ct @@ C_string (a' ^ b')
     | ( C_CONCAT , [ V_Ct (C_bytes a' ) ; V_Ct (C_bytes b' ) ] ) -> return_ct @@ C_bytes  (BytesLabels.cat a' b')
     | ( C_CONCAT , _  ) -> fail @@ error_type

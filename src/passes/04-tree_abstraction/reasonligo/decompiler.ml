@@ -193,10 +193,6 @@ let decompile_operator : AST.rich_constant -> CST.expr List.Ne.t -> CST.expr opt
   | Const C_SUB, (arg1, [arg2])
   | Const C_POLYMORPHIC_SUB, (arg1, [arg2]) ->
      Some CST.(EArith (Sub (wrap { op = ghost ; arg1 ; arg2 })))
-  | Const C_DIV, (arg1, [arg2]) ->
-     Some CST.(EArith (Div (wrap { op = ghost ; arg1 ; arg2 })))
-  | Const C_MOD, (arg1, [arg2]) ->
-     Some CST.(EArith (Mod (wrap { op = ghost ; arg1 ; arg2 })))
   | Const C_LT, (arg1, [arg2]) ->
      Some CST.(ELogic (CompExpr (Lt (wrap { op = ghost ; arg1 ; arg2 }))))
   | Const C_LE, (arg1, [arg2]) ->

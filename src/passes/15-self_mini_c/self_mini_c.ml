@@ -60,7 +60,7 @@ let is_pure_constant : constant' -> bool =
   | C_GLOBAL_CONSTANT (* pure because restricted to PUSH *)
     -> true
   (* unfortunately impure: *)
-  | C_SUB | C_DIV |C_MOD | C_LSL | C_LSR
+  | C_SUB | C_LSL | C_LSR
   | C_POLYMORPHIC_ADD | C_POLYMORPHIC_SUB
   (* impure: *)
   | C_UNOPT

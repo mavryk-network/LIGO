@@ -117,7 +117,6 @@ let e_bytes_string ?loc (s: string) : expression = e_bytes_hex ?loc @@ Hex.of_st
 let e_string_cat ?loc sl sr : expression = make_e ?loc @@ E_constant {cons_name = Const C_CONCAT; arguments = [sl ; sr ]}
 let e_map_add ?loc k v old  : expression = make_e ?loc @@ E_constant {cons_name = Const C_MAP_ADD; arguments = [k ; v ; old]}
 let e_sub ?loc a b : expression = make_e ?loc @@ E_constant {cons_name = Const C_SUB; arguments = [a ; b]}
-let e_div ?loc a b : expression = make_e ?loc @@ E_constant {cons_name = Const C_DIV; arguments = [a ; b]}
 let e_binop ?loc name a b  = make_e ?loc @@ E_constant {cons_name = name ; arguments = [a ; b]}
 
 let e_constant    ?loc name lst = make_e ?loc @@ E_constant {cons_name=name ; arguments = lst}
