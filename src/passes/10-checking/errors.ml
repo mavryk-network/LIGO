@@ -241,14 +241,9 @@ let rec error_ppformat : display_format:string display_format ->
         (list_sep_prep Ast_typed.PP.type_expression (tag "@.- ")) exps
         (list_sep_prep Ast_typed.PP.type_expression (tag "@.- ")) acts
     | `Typer_pattern_do_not_conform_type (p,t) ->
-      let pf ppf value =
-        match p.location with
-        | Virtual _ ->  Format.fprintf ppf "%a " (Stage_common.PP.match_pattern Ast_core.PP.type_expression) value
-        | File _ -> ()
-      in
       Format.fprintf f
-        "@[<hv>%a@.Pattern %anot of the expected type %a @]"
-        Snippet.pp p.location pf p Ast_typed.PP.type_expression t
+        "@[<hv>%a@.Pattern is expected of type %a@]"
+        Snippet.pp p.location Ast_typed.PP.type_expression t
     | `Typer_redundant_pattern loc ->
       Format.fprintf f
         "@[<hv>%a@.Redundant pattern matching@]"
