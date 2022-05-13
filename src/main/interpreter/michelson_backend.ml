@@ -208,9 +208,7 @@ let rec val_to_ast ~raise ~loc : Ligo_interpreter.Types.value ->
                  (get_t_bool ty) in
      e_a_bool b
   | V_Ct (C_int x) ->
-     let () = trace_option ~raise (
-                  let st = Caml.Printexc.get_callstack 10 in
-                  Errors.generic_error loc (Format.asprintf "Expected int but got %a %a %s" Ast_aggregated.PP.type_expression ty Ligo_interpreter.PP.pp_value v (Caml.Printexc.raw_backtrace_to_string st)))
+     let () = trace_option ~raise (Errors.generic_error loc (Format.asprintf "Expected int but got %a" Ast_aggregated.PP.type_expression ty))
                  (get_t_int ty) in
      e_a_int x
   | V_Ct (C_nat x) ->
