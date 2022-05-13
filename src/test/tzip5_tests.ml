@@ -23,7 +23,10 @@ let external_contract =
 let from_  = e_address @@ addr 5
 let to_    = e_address @@ addr 2
 let sender = e_address @@ sender
-let external_contract = e_annotation (e_constant (Const C_IMPLICIT_ACCOUNT) [e_key_hash external_contract]) (t_contract (t_nat ()))
+let external_contract =
+  let lamb = e_raw_code "Michelson" @@
+               e_annotation (e_string "{ IMPLICIT_ACCOUNT }") (t_arrow (t_key_hash ()) (t_contract (t_unit ()))) in
+  e_annotation (e_application lamb (e_key_hash external_contract)) (t_contract (t_nat ()))
 
 let transfer ~raise ~add_warning f s () =
   let program = get_program ~raise ~add_warning f ~st:s () in

@@ -97,7 +97,6 @@ let is_pure_constant : constant' -> bool =
   | C_CONTRACT_ENTRYPOINT_OPT
   | C_SELF
   | C_SELF_ADDRESS
-  | C_IMPLICIT_ACCOUNT
   | C_VIEW
   (* Test - ligo interpreter, should never end up here *)
   | C_TEST_ORIGINATE

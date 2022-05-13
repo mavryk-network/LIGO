@@ -115,6 +115,8 @@ let rec decompile_to_untyped_value ~raise ~bigmaps :
       V_Ct (C_address c)
   | Prim (_, "address", [], _), String (_, s) ->
       V_Ct (C_address (contract_of_string ~raise s))
+  | Prim (_, "contract", [_], _), String (_, s) ->
+      V_Ct (C_contract { address = contract_of_string ~raise s ; entrypoint = None })
   | Prim (_, "unit", [], _), Prim (_, "Unit", [], _) ->
       V_Ct (C_unit)
   | Prim (_, "option", [_], _), Prim (_, "None", [], _) ->

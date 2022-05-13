@@ -339,7 +339,6 @@ module Constant_types = struct
                     of_type C_CONTRACT_WITH_ERROR O.(for_all "a" @@ fun a -> t_address () ^-> t_string () ^-> t_contract a);
                     of_type C_CONTRACT_ENTRYPOINT_OPT O.(for_all "a" @@ fun a -> (t_string () ^-> t_address () ^-> t_option (t_contract a)));
                     of_type C_CONTRACT_ENTRYPOINT O.(for_all "a" @@ fun a -> (t_string () ^-> t_address () ^-> t_contract a));
-                    of_type C_IMPLICIT_ACCOUNT O.(t_key_hash () ^-> t_contract (t_unit ()));
                     of_type C_SET_DELEGATE O.(t_option (t_key_hash ()) ^-> t_operation ());
                     of_type C_SELF O.(for_all "a" @@ fun a -> (t_string () ^-> t_contract a));
                     of_type C_SELF_ADDRESS O.(t_address ());

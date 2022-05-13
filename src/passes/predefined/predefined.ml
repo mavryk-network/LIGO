@@ -74,7 +74,6 @@ module Tree_abstraction = struct
     | C_ADDRESS                 -> "Tezos.address"
     | C_SELF                    -> "Tezos.self"
     | C_SELF_ADDRESS            -> "Tezos.self_address"
-    | C_IMPLICIT_ACCOUNT        -> "Tezos.implicit_account"
     | C_FAILWITH                -> "Tezos.failwith"
     | C_CREATE_CONTRACT         -> "Tezos.create_contract"
     | C_CALL                    -> "Tezos.transaction"
@@ -165,7 +164,6 @@ module Stacking = struct
     | C_UNIT               , _   -> Some ( simple_constant @@ prim "UNIT")
     | C_ADDRESS            , _   -> Some ( simple_unary @@ prim "ADDRESS")
     | C_SELF_ADDRESS       , _   -> Some ( simple_constant @@ seq [prim "SELF_ADDRESS"])
-    | C_IMPLICIT_ACCOUNT   , _   -> Some ( simple_unary @@ prim "IMPLICIT_ACCOUNT")
     | C_SET_DELEGATE       , _   -> Some ( simple_unary @@ prim "SET_DELEGATE")
     | C_CALL               , _   -> Some ( simple_ternary @@ prim "TRANSFER_TOKENS")
     | C_SET_MEM            , _   -> Some ( simple_binary @@ prim "MEM")
