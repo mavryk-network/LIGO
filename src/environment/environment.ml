@@ -102,6 +102,8 @@ let michelson_base : (type_variable * type_expression) list = [
     (v_external_u_xor     , t_abstraction2 (External "u_xor")    star star) ;
     (v_external_concat    , t_abstraction2 (External "concat")      star star) ;
     (v_external_u_concat  , t_abstraction2 (External "u_concat")    star star) ;
+    (v_external_cmp       , t_abstraction1 (External "cmp")      star) ;
+    (v_external_u_cmp     , t_abstraction1 (External "u_cmp")    star) ;
 ]
 
 let jakarta_extra : (type_variable * type_expression) list = [

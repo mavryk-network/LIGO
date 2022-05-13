@@ -202,12 +202,6 @@ let rec compile_expression ~(raise :Errors.abs_error Simple_utils.Trace.raise) :
       let lst = List.map ~f:self (hd::tl) in
       e_tuple ~loc lst
   in
-  let compile_bin_op : AST.constant' ->  _ CST.bin_op CST.reg -> AST.expression = fun op_type op ->
-    let (op, loc) = r_split op in
-    let a = self op.arg1 in
-    let b = self op.arg2 in
-    e_constant ~loc (Const op_type) [a; b]
-  in
   let compile_bin_op' : string ->  _ CST.bin_op CST.reg -> AST.expression = fun op_type op ->
     let (op, loc) = r_split op in
     let a = self op.arg1 in
@@ -266,12 +260,12 @@ let rec compile_expression ~(raise :Errors.abs_error Simple_utils.Trace.raise) :
   | E_Or or_   -> compile_bin_op' "#or"  or_
   | E_And and_ -> compile_bin_op' "#and" and_
   | E_Not not_ -> compile_un_op "#not" not_
-  | E_Lt lt    -> compile_bin_op C_LT  lt
-  | E_Leq le   -> compile_bin_op C_LE  le
-  | E_Gt gt    -> compile_bin_op C_GT  gt
-  | E_Geq ge   -> compile_bin_op C_GE  ge
-  | E_Equal eq -> compile_bin_op C_EQ  eq
-  | E_Neq ne   -> compile_bin_op C_NEQ ne
+  | E_Lt lt    -> compile_bin_op' "#lt"  lt
+  | E_Leq le   -> compile_bin_op' "#le"  le
+  | E_Gt gt    -> compile_bin_op' "#gt"  gt
+  | E_Geq ge   -> compile_bin_op' "#ge"  ge
+  | E_Equal eq -> compile_bin_op' "#eq"  eq
+  | E_Neq ne   -> compile_bin_op' "#neq" ne
   | E_Call {value=(E_Var var,args);region} -> (
     let loc = Location.lift region in
     let (var, loc_var) = w_split var in

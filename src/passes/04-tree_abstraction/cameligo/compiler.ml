@@ -219,11 +219,6 @@ let rec compile_expression ~raise : CST.expr -> AST.expr = fun e ->
         let (sels, _) = List.unzip @@ List.map ~f:compile_selection @@ npseq_to_list proj.field_path in
         return @@ e_accessor var sels
   in
-  let compile_bin_op (op_type : AST.constant') (op : _ CST.bin_op CST.reg) =
-     let (op, loc) = r_split op in
-     let a = self op.arg1 in
-     let b = self op.arg2 in
-    return @@ e_constant ~loc (Const op_type) [a; b] in
   let compile_bin_op' (op_type : string) (op : _ CST.bin_op CST.reg) =
     let (op, loc) = r_split op in
     let a = self op.arg1 in
@@ -298,12 +293,12 @@ let rec compile_expression ~raise : CST.expr -> AST.expr = fun e ->
     )
     | CompExpr ce -> (
       match ce with
-        Lt lt    -> compile_bin_op C_LT  lt
-      | Leq le   -> compile_bin_op C_LE  le
-      | Gt gt    -> compile_bin_op C_GT  gt
-      | Geq ge   -> compile_bin_op C_GE  ge
-      | Equal eq -> compile_bin_op C_EQ  eq
-      | Neq ne   -> compile_bin_op C_NEQ ne
+        Lt lt    -> compile_bin_op' "#lt"  lt
+      | Leq le   -> compile_bin_op' "#le"  le
+      | Gt gt    -> compile_bin_op' "#gt"  gt
+      | Geq ge   -> compile_bin_op' "#ge"  ge
+      | Equal eq -> compile_bin_op' "#eq" eq
+      | Neq ne   -> compile_bin_op' "#neq" ne
     )
   )
   (* This case is due to a bad besign of our constant it as to change

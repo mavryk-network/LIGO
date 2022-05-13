@@ -385,6 +385,12 @@ module Toplevel = struct
 [@private] [@hidden] [@inline] let _hash_lsr ((l, r) : nat * nat) : nat = [%Michelson ({| { UNPAIR ; LSR } |} : nat * nat -> nat)] (l, r)
 [@private] [@hidden] [@inline] let _hash_cons (type a) ((x, xs) : a * a list) : a list = [%external \"CONS\"] x xs
 [@private] [@hidden] [@inline] let _hash_concat (type a b) ((l, r) : a * b) : (a, b) external_u_concat = [%Michelson ({| { UNPAIR ; CONCAT } |} : a * b -> (a, b) external_u_concat)] (l, r)
+[@private] [@hidden] [@inline] let _hash_eq (type a) ((l, r) : a * a) : a external_u_cmp =  [%external \"EQ\"] l r
+[@private] [@hidden] [@inline] let _hash_neq (type a) ((l, r) : a * a) : a external_u_cmp =  [%external \"NEQ\"] l r
+[@private] [@hidden] [@inline] let _hash_gt (type a) ((l, r) : a * a) : a external_u_cmp =  [%external \"GT\"] l r
+[@private] [@hidden] [@inline] let _hash_lt (type a) ((l, r) : a * a) : a external_u_cmp =  [%external \"LT\"] l r
+[@private] [@hidden] [@inline] let _hash_ge (type a) ((l, r) : a * a) : a external_u_cmp =  [%external \"GE\"] l r
+[@private] [@hidden] [@inline] let _hash_le (type a) ((l, r) : a * a) : a external_u_cmp =  [%external \"LE\"] l r
 "
   let curried_bindings = "
 [@private] [@hidden] [@inline] let assert (b : bool) : unit = [%Michelson ({| { IF { UNIT } { PUSH string \"failed assertion\" ; FAILWITH } } |} : bool -> unit)] b
@@ -417,6 +423,12 @@ module Toplevel = struct
 [@private] [@hidden] [@inline] let _hash_lsr (l : nat) (r : nat) : nat = [%Michelson ({| { UNPAIR ; LSR } |} : nat * nat -> nat)] (l, r)
 [@private] [@hidden] [@inline] let _hash_cons (type a) (x : a) (xs : a list) : a list = [%external \"CONS\"] x xs
 [@private] [@hidden] [@inline] let _hash_concat (type a b) (l : a) (r : b) : (a, b) external_concat = [%Michelson ({| { UNPAIR ; CONCAT } |} : a * b -> (a, b) external_concat)] (l, r)
+[@private] [@hidden] [@inline] let _hash_eq (type a) (l : a) (r : a) : a external_cmp = [%external \"EQ\"] l r
+[@private] [@hidden] [@inline] let _hash_neq (type a) (l : a) (r : a) : a external_cmp = [%external \"NEQ\"] l r
+[@private] [@hidden] [@inline] let _hash_gt (type a) (l : a) (r : a) : a external_cmp = [%external \"GT\"] l r
+[@private] [@hidden] [@inline] let _hash_lt (type a) (l : a) (r : a) : a external_cmp = [%external \"LT\"] l r
+[@private] [@hidden] [@inline] let _hash_ge (type a) (l : a) (r : a) : a external_cmp = [%external \"GE\"] l r
+[@private] [@hidden] [@inline] let _hash_le (type a) (l : a) (r : a) : a external_cmp = [%external \"LE\"] l r
 "
   module Ithaca = struct
     let tupled = tupled_bindings

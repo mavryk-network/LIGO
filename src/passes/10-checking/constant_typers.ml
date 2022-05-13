@@ -139,10 +139,17 @@ and comparator ~cmp ~raise ~test : Location.t -> typer = fun loc -> typer_2 ~rai
                                            record_comparator ~test loc cmp [a;b] None;
                                            sum_comparator ~test loc cmp [a;b] None]
 
+let built_comparator = comparator
+
 module O = Ast_typed
 
 type typer = error:[`TC of O.type_expression list] list ref -> raise:Errors.typer_error raise -> options:Compiler_options.middle_end -> loc:Location.t -> O.type_expression list -> O.type_expression option -> O.type_expression option
 type typer_table = error:[`TC of O.type_expression list] list ref -> raise:Errors.typer_error raise -> options:Compiler_options.middle_end -> loc:Location.t -> O.type_expression list -> O.type_expression option -> (O.type_expression * type_expression Inference.TMap.t * O.type_expression) option
+
+let typer_of_comparator (typer : raise:_ -> test:_ -> _ -> O.type_expression list -> O.type_expression option -> O.type_expression) : typer =
+  fun ~error ~raise ~options ~loc lst tv_opt ->
+  ignore error;
+  Some (typer ~raise ~test:options.test loc lst tv_opt)
 
 (* Given a ligo type, construct the corresponding typer *)
 let typer_of_ligo_type ?(add_tc = true) ?(fail = true) lamb_type : typer = fun ~error ~raise ~options ~loc lst tv_opt ->
@@ -177,16 +184,31 @@ let typer_table_of_ligo_type ?(add_tc = true) ?(fail = true) lamb_type : typer_t
         if add_tc then error := `TC arrs :: ! error else ();
         None)
 
+let typer_table_of_comparator ?(add_tc = true) ?(fail = true) ~cmp lamb_type : typer_table = fun ~error ~raise ~options ~loc lst tv_opt ->
+  ignore options;
+  let original_type = lamb_type in
+  let avs, lamb_type = O.Helpers.destruct_for_alls lamb_type in
+  let open Option in
+  let* r = Simple_utils.Trace.try_with (fun ~raise ->
+      let table = Inference.infer_type_applications ~raise ~loc ~default_error:(fun loc t t' -> `Outer_error (loc, t', t)) avs lamb_type lst tv_opt in
+      let lamb_type = Inference.TMap.fold (fun tv t r -> Ast_typed.Helpers.subst_type tv t r) table lamb_type in
+      Some (lamb_type, table, original_type)
+    )
+    (function
+     | `Outer_error (loc, t', t) ->
+        if fail then raise.raise (assert_equal loc t' t) else None
+     | _ ->
+        let arrs, _ = O.Helpers.destruct_arrows_n lamb_type (List.length lst) in
+        if add_tc then error := `TC arrs :: ! error else ();
+        None) in
+  let* _ = typer_of_comparator (built_comparator ~cmp) ~error ~raise ~options ~loc lst tv_opt in
+  return r
+
 let typer_table_of_ligo_type_on_protocol ~protocol ?(add_tc = true) ?(fail = true) lamb_type : typer_table = fun ~error ~raise ~options ~loc lst tv_opt ->
   if (Environment.Protocols.compare options.protocol_version protocol) = 0 then
     typer_table_of_ligo_type ~add_tc ~fail lamb_type ~error ~raise ~options ~loc lst tv_opt
   else
     None
-
-let typer_of_comparator (typer : raise:_ -> test:_ -> _ -> O.type_expression list -> O.type_expression option -> O.type_expression) : typer =
-  fun ~error ~raise ~options ~loc lst tv_opt ->
-  ignore error;
-  Some (typer ~raise ~test:options.test loc lst tv_opt)
 
 let raise_of_errors ~raise ~loc lst = function
   | [] ->
@@ -403,12 +425,30 @@ module Constant_types = struct
                     of_type C_SAPLING_VERIFY_UPDATE O.(t_for_all a_var Singleton (t_sapling_transaction (t_variable a_var ()) ^-> t_sapling_state (t_variable a_var ()) ^-> t_option (t_pair (t_int ()) (t_sapling_state (t_variable a_var ())))));
                     (* CUSTOM *)
                     (* COMPARATOR *)
-                    (C_EQ, typer_of_comparator (comparator ~cmp:"EQ"));
-                    (C_NEQ, typer_of_comparator (comparator ~cmp:"NEQ"));
-                    (C_LT, typer_of_comparator (comparator ~cmp:"LT"));
-                    (C_GT, typer_of_comparator (comparator ~cmp:"GT"));
-                    (C_LE, typer_of_comparator (comparator ~cmp:"LE"));
-                    (C_GE, typer_of_comparator (comparator ~cmp:"GE"));
+                    (C_EQ, any_of [
+                        typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> a ^-> a ^-> t_ext_cmp a);
+                        typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> a ^-> a ^-> t_ext_u_cmp a);
+                    ]);
+                    (C_NEQ, any_of [
+                        typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> a ^-> a ^-> t_ext_cmp a);
+                        typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> a ^-> a ^-> t_ext_u_cmp a);
+                    ]);
+                    (C_LT, any_of [
+                        typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> a ^-> a ^-> t_ext_cmp a);
+                        typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> a ^-> a ^-> t_ext_u_cmp a);
+                    ]);
+                    (C_GT, any_of [
+                        typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> a ^-> a ^-> t_ext_cmp a);
+                        typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> a ^-> a ^-> t_ext_u_cmp a);
+                    ]);
+                    (C_LE, any_of [
+                        typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> a ^-> a ^-> t_ext_cmp a);
+                        typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> a ^-> a ^-> t_ext_u_cmp a);
+                    ]);
+                    (C_GE, any_of [
+                        typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> a ^-> a ^-> t_ext_cmp a);
+                        typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> a ^-> a ^-> t_ext_u_cmp a);
+                    ]);
                     of_type C_FAILWITH O.(for_all "a" @@ fun a -> t_ext_failwith a);
                     (C_POLYMORPHIC_ADD, any_of [
                         typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> t_ext_polymorphic_add a b);
@@ -565,6 +605,8 @@ module Constant_types = struct
                          typer_table_of_ligo_type O.(t_string () ^-> t_string () ^-> t_string ());
                          typer_table_of_ligo_type O.(t_bytes () ^-> t_bytes () ^-> t_bytes ());
                        ]
+
+  let cmptest_typer = typer_table_of_comparator ~cmp:"" O.(for_all "a" @@ fun a -> a ^-> a ^-> t_bool ())
 end
 
 let external_typers ~raise ~options loc s =
@@ -604,6 +646,8 @@ let external_typers ~raise ~options loc s =
        Constant_types.xor_typer
     | "concat" | "u_concat" ->
        Constant_types.concat_typer
+    | "cmptest" | "u_cmptest" ->
+       Constant_types.cmptest_typer
     | _ ->
        raise.raise (corner_case @@ Format.asprintf "Typer not implemented for external %s" s) in
   fun lst tv_opt ->

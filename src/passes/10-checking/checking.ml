@@ -217,8 +217,25 @@ and infer_t_insts ~raise ~options ~loc app_context ( (tc,t) : O.expression_conte
     let args = match App_context.pop app_context with | None -> [] | Some args -> args in
     let avs, type_ = O.Helpers.destruct_for_alls t in
     let _, type_no_arrows = O.Helpers.destruct_arrows type_ in
-    match type_no_arrows.type_content with
-    | T_constant { injection = External s ; parameters = _ ; _ } when String.is_prefix s ~prefix:"u_" ->
+    match type_no_arrows.type_content, avs with
+    | T_constant { injection = External s ; parameters = _ ; _ }, [a] when String.equal s "u_cmp" ->
+       let args = O.Helpers.destruct_tuples args in
+       let ot = Constant_typers.built_comparator ~cmp:s ~raise ~test:options.Compiler_options.test loc args last in
+       let ot = t_arrow (t_pair (t_variable a ()) (t_variable a ())) ot () in
+       let forall_ot = t_for_all a Type ot in
+       let type_ = List.hd_exn args in
+       let lamb = make_e ~location:loc tc forall_ot in
+       let x = O.make_e (E_type_inst {forall = lamb ; type_ }) (Ast_typed.Helpers.subst_no_capture_type a type_ ot) in
+       x.expression_content , x.type_expression
+    | T_constant { injection = External s ; parameters = _ ; _ }, [a] when String.equal s "cmp" ->
+       let ot = Constant_typers.built_comparator ~cmp:s ~raise ~test:options.Compiler_options.test loc args last in
+       let ot = t_arrow (t_variable a ()) (t_arrow (t_variable a ()) ot ()) () in
+       let forall_ot = t_for_all a Type ot in
+       let type_ = List.hd_exn args in
+       let lamb = make_e ~location:loc tc forall_ot in
+       let x = O.make_e (E_type_inst {forall = lamb ; type_ }) (Ast_typed.Helpers.subst_no_capture_type a type_ ot) in
+       x.expression_content , x.type_expression
+    | T_constant { injection = External s ; parameters = _ ; _ }, _ when String.is_prefix s ~prefix:"u_" ->
        let args = O.Helpers.destruct_tuples args in
        let t, table, ot = Constant_typers.external_typers ~raise ~options loc s args last in
        let argsv, _ = O.Helpers.destruct_arrows_n t (List.length avs) in
@@ -230,7 +247,7 @@ and infer_t_insts ~raise ~options ~loc app_context ( (tc,t) : O.expression_conte
        let lamb = make_e ~location:loc tc ot in
        let x = Inference.build_type_insts_ufunction ~raise ~loc lamb table avs in
        x.expression_content , x.type_expression
-    | T_constant { injection = External s ; parameters = _ ; _ } ->
+    | T_constant { injection = External s ; parameters = _ ; _ }, _ ->
        let t, table, ot = Constant_typers.external_typers ~raise ~options loc s args last in
        let argsv, _ = O.Helpers.destruct_arrows_n t (List.length avs) in
        let z = List.zip_exn avs argsv in
@@ -238,7 +255,7 @@ and infer_t_insts ~raise ~options ~loc app_context ( (tc,t) : O.expression_conte
        let lamb = make_e ~location:loc tc ot in
        let x = Inference.build_type_insts_ufunction ~raise ~loc lamb table avs in
        x.expression_content , t
-    | _ ->
+    | _, _ ->
        let table = Inference.infer_type_applications ~raise ~loc avs type_ args last in
        let lamb = make_e ~location:loc tc t in
        let x = Inference.build_type_insts ~raise ~loc lamb table avs in

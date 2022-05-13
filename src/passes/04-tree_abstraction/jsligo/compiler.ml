@@ -341,14 +341,6 @@ and compile_arguments ~raise (args: CST.arguments) =
   let (args,loc) = arguments_to_expr_nseq args in
   compile_tuple_expression ~raise ~loc args
 
-and compile_bin_op ~add_warning ~raise (op_type : AST.constant') (op : _ CST.bin_op CST.reg) =
-  let self = compile_expression ~add_warning ~raise in
-  let return e = e in
-  let (op, loc) = r_split op in
-  let a = self op.arg1 in
-  let b = self op.arg2 in
-  return @@ e_constant ~loc (Const op_type) [a; b]
-
 and compile_bin_op' ~add_warning ~raise (op_type : string) (op : _ CST.bin_op CST.reg) =
   let self = compile_expression ~add_warning ~raise in
   let return e = e in
@@ -413,12 +405,12 @@ and compile_expression ~add_warning ~raise : CST.expr -> AST.expr = fun e ->
     )
     | CompExpr ce -> (
       match ce with
-        Lt lt    -> compile_bin_op ~add_warning ~raise C_LT  lt
-      | Leq le   -> compile_bin_op ~add_warning ~raise C_LE  le
-      | Gt gt    -> compile_bin_op ~add_warning ~raise C_GT  gt
-      | Geq ge   -> compile_bin_op ~add_warning ~raise C_GE  ge
-      | Equal eq -> compile_bin_op ~add_warning ~raise C_EQ  eq
-      | Neq ne   -> compile_bin_op ~add_warning ~raise C_NEQ ne
+        Lt lt    -> compile_bin_op' ~add_warning ~raise "#lt"  lt
+      | Leq le   -> compile_bin_op' ~add_warning ~raise "#le"  le
+      | Gt gt    -> compile_bin_op' ~add_warning ~raise "#gt"  gt
+      | Geq ge   -> compile_bin_op' ~add_warning ~raise "#ge"  ge
+      | Equal eq -> compile_bin_op' ~add_warning ~raise "#eq"  eq
+      | Neq ne   -> compile_bin_op' ~add_warning ~raise "#neq" ne
     )
   )
   | ECall {value = EProj {value = {expr = EVar {value = module_name; _}; selection = FieldName {value = {value = {value = fun_name; _}; _}; _}}; _}, arguments; region} when
@@ -1235,7 +1227,7 @@ and compile_statement ?(wrap=false) ~add_warning ~raise : CST.statement -> state
     let not_expr     e   = e_application ~loc (e_variable @@ ValueVar.of_input_var "#not") e in
     let and_expr     a b = e_application ~loc (e_variable @@ ValueVar.of_input_var "#and") (e_pair a b) in
     let or_expr      a b = e_application ~loc (e_variable @@ ValueVar.of_input_var "#or") (e_pair a b) in
-    let eq_expr ~loc a b = e_constant ~loc (Const C_EQ) [a; b] in
+    let eq_expr ~loc a b = e_application ~loc (e_variable @@ ValueVar.of_input_var "#eq") (e_pair a b) in
 
     let found_case_eq_true  = eq_expr ~loc (e_variable found_case)  (e_true()) in
     let fallthrough_eq_true = eq_expr ~loc (e_variable fallthrough) (e_true()) in

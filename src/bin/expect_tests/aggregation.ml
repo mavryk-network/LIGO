@@ -160,8 +160,7 @@ let%expect_test _ =
   [%expect {xxx|
   let #A#current_turn#139 : nat -> nat = lambda (i : nat) return ((#add@{nat}@{nat})@(i))@(+1) in
   let #A#other#140 : nat -> unit = lambda (n : nat) return let current_turn = (#A#current_turn#139)@(+1) in
-  (assert)@(EQ(n ,
-  current_turn)) in
+  (assert)@(((#eq@{nat})@(n))@(current_turn)) in
   let main : ( unit * unit ) -> ( list (operation) * unit ) = lambda (gen#2 : ( unit * unit )) return  match
                                                                       gen#2 with
                                                                       | ( _p , _s ) ->

@@ -99,16 +99,16 @@ let build_type_insts ~raise ~loc (forall : O.expression) table bound_variables =
        build_type_insts O.(make_e (E_type_inst {forall ; type_ }) (Ast_typed.Helpers.subst_no_capture_type ty_binder type_ t)) avs' in
   build_type_insts forall bound_variables
 
-let build_type_insts_function ~raise ~loc (forall : O.expression) table bound_variables =
-  let _, t = O.Helpers.destruct_for_alls forall.type_expression in
-  let forall = { forall with type_expression = t } in
-  let rec build_type_insts = function
-    | [] -> forall
-    | av :: avs' ->
-       let type_ = trace_option ~raise (Errors.not_annotated loc) @@ O.Helpers.TMap.find_opt av table in
-       let O.{ type1 = _ ; type2 } = trace_option ~raise (corner_case "Expected an arrow type") @@ O.get_t_arrow forall.type_expression in
-       O.make_e (E_type_inst {forall = build_type_insts avs' ; type_  = type_ }) (Ast_typed.Helpers.subst_no_capture_type av type_ type2) in
-  build_type_insts bound_variables
+(* let build_type_insts_function ~raise ~loc (forall : O.expression) table bound_variables =
+ *   let _, t = O.Helpers.destruct_for_alls forall.type_expression in
+ *   let forall = { forall with type_expression = t } in
+ *   let rec build_type_insts = function
+ *     | [] -> forall
+ *     | av :: avs' ->
+ *        let type_ = trace_option ~raise (Errors.not_annotated loc) @@ O.Helpers.TMap.find_opt av table in
+ *        let O.{ type1 = _ ; type2 } = trace_option ~raise (corner_case "Expected an arrow type") @@ O.get_t_arrow forall.type_expression in
+ *        O.make_e (E_type_inst {forall = build_type_insts avs' ; type_  = type_ }) (Ast_typed.Helpers.subst_no_capture_type av type_ type2) in
+ *   build_type_insts bound_variables *)
 
 let build_type_insts_ufunction ~raise ~loc (forall : O.expression) table bound_variables =
   let _avs, t = O.Helpers.destruct_for_alls forall.type_expression in

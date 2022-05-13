@@ -213,18 +213,6 @@ let decompile_operator : AST.rich_constant -> CST.expr List.Ne.t -> CST.expr opt
      Some CST.(EArith (Add (Region.wrap_ghost { op = Token.ghost_plus ; arg1 ; arg2 })))
   | Const C_POLYMORPHIC_SUB, (arg1, [arg2]) ->
      Some CST.(EArith (Sub (Region.wrap_ghost { op = Token.ghost_minus ; arg1 ; arg2 })))
-  | Const C_LT, (arg1, [arg2]) ->
-     Some CST.(ELogic (CompExpr (Lt (Region.wrap_ghost { op = Token.ghost_lt ; arg1 ; arg2 }))))
-  | Const C_LE, (arg1, [arg2]) ->
-     Some CST.(ELogic (CompExpr (Leq (Region.wrap_ghost { op = Token.ghost_le ; arg1 ; arg2 }))))
-  | Const C_GT, (arg1, [arg2]) ->
-     Some CST.(ELogic (CompExpr (Gt (Region.wrap_ghost { op = Token.ghost_gt ; arg1 ; arg2 }))))
-  | Const C_GE, (arg1, [arg2]) ->
-     Some CST.(ELogic (CompExpr (Geq (Region.wrap_ghost { op = Token.ghost_ge ; arg1 ; arg2 }))))
-  | Const C_EQ, (arg1, [arg2]) ->
-     Some CST.(ELogic (CompExpr (Equal (Region.wrap_ghost { op = Token.ghost_eq ; arg1 ; arg2 }))))
-  | Const C_NEQ, (arg1, [arg2]) ->
-     Some CST.(ELogic (CompExpr (Neq (Region.wrap_ghost { op = Token.ghost_ne ; arg1 ; arg2 }))))
   | _ -> None
 
 let rec decompile_expression_in : AST.expression -> statement_or_expr list = fun expr ->

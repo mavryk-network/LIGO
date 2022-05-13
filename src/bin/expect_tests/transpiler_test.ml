@@ -57,7 +57,7 @@ let%expect_test _ =
                    : card)
               ];
 
-            if Operator.neq (card.card_owner, Tezos.sender)
+            if gen__neq (card.card_owner, Tezos.sender)
             then failwith ("This card doesn't belong to you")
             else skip;
 
@@ -82,7 +82,7 @@ let%expect_test _ =
                   (failwith ("sell_single: No card.") : card)
               ];
 
-            if Operator.neq (card.card_owner, Tezos.sender)
+            if gen__neq (card.card_owner, Tezos.sender)
             then failwith ("This card doesn't belong to you")
             else skip;
 
@@ -154,7 +154,7 @@ let%expect_test _ =
                 (card_pattern.coefficient,
                  gen__add (card_pattern.quantity, 1n));
 
-            if Operator.gt (price, Tezos.amount)
+            if gen__gt (price, Tezos.amount)
             then failwith ("Not enough money")
             else skip;
 
@@ -243,7 +243,7 @@ let%expect_test _ =
                | None () ->
                    (failwith "transfer_single: No card." : card) in
              begin
-               if (card.card_owner <> Tezos.sender)
+               if gen__neq card.card_owner Tezos.sender
                then failwith "This card doesn't belong to you"
                else ();
                begin
@@ -278,7 +278,7 @@ let%expect_test _ =
                | None () ->
                    (failwith "sell_single: No card." : card) in
              begin
-               if (card.card_owner <> Tezos.sender)
+               if gen__neq card.card_owner Tezos.sender
                then failwith "This card doesn't belong to you"
                else ();
                let [@var] card_pattern : card_pattern =
@@ -366,7 +366,7 @@ let%expect_test _ =
                  card_pattern.coefficient
                  gen__add card_pattern.quantity 1n in
              begin
-               if (price > Tezos.amount)
+               if gen__gt price Tezos.amount
                then failwith "Not enough money"
                else ();
                begin
@@ -471,7 +471,7 @@ let%expect_test _ =
                    (failwith("transfer_single: No card.") : card)
                };
              {
-               if(((card.card_owner) != (Tezos.sender))) {
+               if(gen__neq(card.card_owner, Tezos.sender)) {
                  failwith("This card doesn't belong to you")
                } else {
 
@@ -510,7 +510,7 @@ let%expect_test _ =
                    (failwith("sell_single: No card.") : card)
                };
              {
-               if(((card.card_owner) != (Tezos.sender))) {
+               if(gen__neq(card.card_owner, Tezos.sender)) {
                  failwith("This card doesn't belong to you")
                } else {
 
@@ -605,7 +605,7 @@ let%expect_test _ =
                gen__mul(card_pattern.coefficient,
                   gen__add(card_pattern.quantity, 1n));
              {
-               if(((price) > (Tezos.amount))) {
+               if(gen__gt(price, Tezos.amount)) {
                  failwith("Not enough money")
                } else {
 
@@ -968,11 +968,11 @@ function main (const gen__parameters2 : parameter * storage) is
       {
         case p of [
           Zero (n) ->
-            if Operator.gt (n, 0n)
+            if gen__gt (n, 0n)
             then failwith ("fail")
             else skip
         | Pos (n) ->
-            if Operator.eq (n, 0n)
+            if gen__eq (n, 0n)
             then failwith ("fail")
             else skip
         ]
@@ -983,11 +983,11 @@ function foobar (const i : int) is
 {
   const p : parameter = (Zero (42n));
 
-  if Operator.gt (i, 0)
+  if gen__gt (i, 0)
   then {
     i := gen__add (i, 1);
 
-    if Operator.gt (i, 10)
+    if gen__gt (i, 10)
     then {
       i := 20;
 
@@ -1010,7 +1010,7 @@ function foobar (const i : int) is
 
 function failer (const p : int) is
 {
-  if Operator.eq (p, 1) then failwith (42) else skip
+  if gen__eq (p, 1) then failwith (42) else skip
 } with p |}];
   run_ligo_good [ "transpile" ; "contract" ; "../../test/contracts/failwith.ligo" ; "cameligo" ] ;
   [%expect {|
@@ -1027,9 +1027,9 @@ let main : parameter * storage -> return =
          begin
            match p with
              Zero n ->
-               if (n > 0n) then failwith "fail" else ()
+               if gen__gt n 0n then failwith "fail" else ()
            | Pos n ->
-               if (n = 0n) then failwith "fail" else ();
+               if gen__eq n 0n then failwith "fail" else ();
            ([] : operation list), s
          end)
 
@@ -1037,12 +1037,12 @@ let foobar : int -> int =
   (fun [@var] i : int ->
      let [@var] p : parameter = (Zero 42n) in
      begin
-       if (i > 0)
+       if gen__gt i 0
        then
          begin
            let [@var] i = gen__add i 1 in
            ();
-           if (i > 10)
+           if gen__gt i 10
            then
              begin
                let [@var] i = 20 in
@@ -1067,7 +1067,7 @@ let foobar : int -> int =
 let failer : int -> int =
   (fun p : int ->
      begin
-       if (p = 1) then failwith 42 else ();
+       if gen__eq p 1 then failwith 42 else ();
        p
      end) |}];
   run_ligo_good [ "transpile" ; "contract" ; "../../test/contracts/failwith.ligo" ; "reasonligo" ] ;
@@ -1085,14 +1085,14 @@ let main: (parameter, storage) => return =
          {
            switch  p {
            | Zero n =>
-               if(((n) > (0n))) {
+               if(gen__gt(n, 0n)) {
                  failwith("fail")
                } else {
 
                  ()
                  }
            | Pos n =>
-               if(((n) == (0n))) {
+               if(gen__eq(n, 0n)) {
                  failwith("fail")
                } else {
 
@@ -1107,12 +1107,12 @@ let foobar: int => int =
   (([@var] i: int): int =>
      let [@var] p: parameter = (Zero 42n);
      {
-       if(((i) > (0))) {
+       if(gen__gt(i, 0)) {
 
          {
            let [@var] i = gen__add(i, 1);
            ();
-           if(((i) > (10))) {
+           if(gen__gt(i, 10)) {
 
              {
                let [@var] i = 20;
@@ -1143,7 +1143,7 @@ let foobar: int => int =
 
 let failer: int => int =
   ((p: int): int => {
-     if(((p) == (1))) {
+     if(gen__eq(p, 1)) {
        failwith(42)
      } else {
 
@@ -1158,7 +1158,7 @@ let%expect_test _ =
     recursive function sum (const gen__parameters2 : int * int) is
       case gen__parameters2 of [
         (n, acc) ->
-          if Operator.lt (n, 1)
+          if gen__lt (n, 1)
           then acc
           else
             sum (gen__polymorphic_sub (n, 1), gen__add (acc, n))
@@ -1168,7 +1168,7 @@ let%expect_test _ =
       (const gen__parameters3 : int * int * int) is
       case gen__parameters3 of [
         (n, n_1, n_0) ->
-          if Operator.lt (n, 2)
+          if gen__lt (n, 2)
           then n_1
           else
             fibo
@@ -1181,7 +1181,7 @@ let%expect_test _ =
       (fun gen__parameters2 : int * int ->
          match gen__parameters2 with
          n, acc ->
-             if (n < 1)
+             if gen__lt n 1
              then acc
              else sum gen__polymorphic_sub n 1 gen__add acc n)
 
@@ -1189,7 +1189,7 @@ let%expect_test _ =
       (fun gen__parameters3 : int * int * int ->
          match gen__parameters3 with
          n, n_1, n_0 ->
-             if (n < 2)
+             if gen__lt n 2
              then n_1
              else
                fibo
@@ -1202,7 +1202,7 @@ let%expect_test _ =
       ((gen__parameters2: (int, int)): int =>
          switch  gen__parameters2 {
          | n, acc =>
-             if(((n) < (1))) {
+             if(gen__lt(n, 1)) {
                acc
              } else {
 
@@ -1214,7 +1214,7 @@ let%expect_test _ =
       ((gen__parameters3: (int, int, int)): int =>
          switch  gen__parameters3 {
          | n, n_1, n_0 =>
-             if(((n) < (2))) {
+             if(gen__lt(n, 2)) {
                n_1
              } else {
 

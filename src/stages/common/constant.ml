@@ -150,6 +150,8 @@ let to_string = function
   | "external_u_xor"       -> External "u_xor"
   | "external_concat"      -> External "concat"
   | "external_u_concat"    -> External "u_concat"
+  | "external_cmp"          -> External "cmp"
+  | "external_u_cmp"        -> External "u_cmp"
   | _ -> failwith "Forgot to add constant name in constant.ml?"
 
 let bool                 = Bool
@@ -218,6 +220,8 @@ let external_xor         = External "xor"
 let external_u_xor       = External "u_xor"
 let external_concat      = External "concat"
 let external_u_concat    = External "u_concat"
+let external_cmp          = External "cmp"
+let external_u_cmp        = External "u_cmp"
 
 let v_bool                 : type_variable = TypeVar.of_input_var (to_string Bool)
 let v_string               : type_variable = TypeVar.of_input_var (to_string String)
@@ -286,3 +290,5 @@ let v_external_xor         : type_variable = TypeVar.of_input_var (to_string @@ 
 let v_external_u_xor       : type_variable = TypeVar.of_input_var (to_string @@ External "u_xor")
 let v_external_concat      : type_variable = TypeVar.of_input_var (to_string @@ External "concat")
 let v_external_u_concat    : type_variable = TypeVar.of_input_var (to_string @@ External "u_concat")
+let v_external_cmp          : type_variable = TypeVar.of_input_var (to_string @@ External "cmp")
+let v_external_u_cmp        : type_variable = TypeVar.of_input_var (to_string @@ External "u_cmp")

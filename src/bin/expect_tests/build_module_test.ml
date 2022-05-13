@@ -94,20 +94,20 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_good [ "print" ; "mini-c" ; contract "D.mligo" ] ;
   [%expect{|
-let #../../test/contracts/build/A.mligo#toto#172 = L(1) in
-let #../../test/contracts/build/B.mligo#titi#339 =
-  ({ UNPAIR ; ADD })@(PAIR(#../../test/contracts/build/A.mligo#toto#172 ,
+let #../../test/contracts/build/A.mligo#toto#178 = L(1) in
+let #../../test/contracts/build/B.mligo#titi#351 =
+  ({ UNPAIR ; ADD })@(PAIR(#../../test/contracts/build/A.mligo#toto#178 ,
                            L(42))) in
-let #../../test/contracts/build/C.mligo#tata#838 =
-  ({ UNPAIR ; ADD })@(PAIR(#../../test/contracts/build/A.mligo#toto#172 ,
-                           #../../test/contracts/build/B.mligo#titi#339)) in
-let gen#4168 =
+let #../../test/contracts/build/C.mligo#tata#868 =
+  ({ UNPAIR ; ADD })@(PAIR(#../../test/contracts/build/A.mligo#toto#178 ,
+                           #../../test/contracts/build/B.mligo#titi#351)) in
+let gen#4330 =
   (({ UNPAIR ; ADD })@(PAIR(L(3) ,
-                            #../../test/contracts/build/A.mligo#toto#172)), #../../test/contracts/build/B.mligo#titi#339) in
-let x = let (l, r) = gen#4168 in ({ UNPAIR ; ADD })@(PAIR(l , r)) in
+                            #../../test/contracts/build/A.mligo#toto#178)), #../../test/contracts/build/B.mligo#titi#351) in
+let x = let (l, r) = gen#4330 in ({ UNPAIR ; ADD })@(PAIR(l , r)) in
 let toto =
   ({ UNPAIR ; ADD })@(PAIR(L(10) ,
-                           #../../test/contracts/build/A.mligo#toto#172)) in
+                           #../../test/contracts/build/A.mligo#toto#178)) in
 L(unit) |}]
 
 let%expect_test _ =

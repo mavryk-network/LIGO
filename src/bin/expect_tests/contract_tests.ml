@@ -2166,19 +2166,19 @@ let%expect_test _ =
   run_ligo_good [ "print" ; "ast-typed" ; contract "remove_recursion.mligo" ] ;
   [%expect {|
     const f =
-      lambda (n : int) return let f : int -> int = rec (f:int -> int => lambda (n : int) return let gen#2[@var] = EQ(n ,
-      0) in  match gen#2 with
-              | False unit_proj#3 ->
-                (f)@(((#polymorphic_sub@{int}@{int})@(n))@(1))
-              | True unit_proj#4 ->
-                1 ) in (f)@(4)
+      lambda (n : int) return let f : int -> int = rec (f:int -> int => lambda (n : int) return let gen#2[@var] = ((#eq@{int})@(n))@(0) in
+       match gen#2 with
+        | False unit_proj#3 ->
+          (f)@(((#polymorphic_sub@{int}@{int})@(n))@(1))
+        | True unit_proj#4 ->
+          1 ) in (f)@(4)
     const g =
-      rec (g:int -> int -> int -> int => lambda (f : int -> int) return (g)@(let h : int -> int = rec (h:int -> int => lambda (n : int) return let gen#5[@var] = EQ(n ,
-      0) in  match gen#5 with
-              | False unit_proj#6 ->
-                (h)@(((#polymorphic_sub@{int}@{int})@(n))@(1))
-              | True unit_proj#7 ->
-                1 ) in h) ) |}]
+      rec (g:int -> int -> int -> int => lambda (f : int -> int) return (g)@(let h : int -> int = rec (h:int -> int => lambda (n : int) return let gen#5[@var] = ((#eq@{int})@(n))@(0) in
+       match gen#5 with
+        | False unit_proj#6 ->
+          (h)@(((#polymorphic_sub@{int}@{int})@(n))@(1))
+        | True unit_proj#7 ->
+          1 ) in h) ) |}]
 
 let%expect_test _ =
   run_ligo_bad [ "compile" ; "contract" ; bad_contract "reuse_variable_name_top.jsligo" ] ;
