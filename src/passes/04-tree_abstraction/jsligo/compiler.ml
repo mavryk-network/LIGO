@@ -341,7 +341,7 @@ and compile_arguments ~raise (args: CST.arguments) =
   let (args,loc) = arguments_to_expr_nseq args in
   compile_tuple_expression ~raise ~loc args
 
-and compile_bin_op' ~add_warning ~raise (op_type : string) (op : _ CST.bin_op CST.reg) =
+and compile_bin_op ~add_warning ~raise (op_type : string) (op : _ CST.bin_op CST.reg) =
   let self = compile_expression ~add_warning ~raise in
   let return e = e in
   let (op, loc) = r_split op in
@@ -385,11 +385,11 @@ and compile_expression ~add_warning ~raise : CST.expr -> AST.expr = fun e ->
   )
   | EArith arth ->
     ( match arth with
-      Add plus   -> compile_bin_op' ~add_warning ~raise "#polymorphic_add_u" plus
-    | Sub minus  -> compile_bin_op' ~add_warning ~raise "#polymorphic_sub_u" minus
-    | Mult times -> compile_bin_op' ~add_warning ~raise "#mul_u" times
-    | Div slash  -> compile_bin_op' ~add_warning ~raise "#div_u" slash
-    | Mod mod_   -> compile_bin_op' ~add_warning ~raise "#mod_u" mod_
+      Add plus   -> compile_bin_op ~add_warning ~raise "#polymorphic_add_u" plus
+    | Sub minus  -> compile_bin_op ~add_warning ~raise "#polymorphic_sub_u" minus
+    | Mult times -> compile_bin_op ~add_warning ~raise "#mul_u" times
+    | Div slash  -> compile_bin_op ~add_warning ~raise "#div_u" slash
+    | Mod mod_   -> compile_bin_op ~add_warning ~raise "#mod_u" mod_
     | Neg minus  -> compile_un_op ~add_warning ~raise "#neg" minus
     | Int i ->
       let ((_,i), loc) = r_split i in
@@ -399,18 +399,18 @@ and compile_expression ~add_warning ~raise : CST.expr -> AST.expr = fun e ->
     match logic with
       BoolExpr be -> (
       match be with
-        Or or_   -> compile_bin_op' ~add_warning ~raise "#or_u"  or_
-      | And and_ -> compile_bin_op' ~add_warning ~raise "#and_u" and_
+        Or or_   -> compile_bin_op ~add_warning ~raise "#or_u"  or_
+      | And and_ -> compile_bin_op ~add_warning ~raise "#and_u" and_
       | Not not_ -> compile_un_op ~add_warning ~raise "#not" not_
     )
     | CompExpr ce -> (
       match ce with
-        Lt lt    -> compile_bin_op' ~add_warning ~raise "#lt_u"  lt
-      | Leq le   -> compile_bin_op' ~add_warning ~raise "#le_u"  le
-      | Gt gt    -> compile_bin_op' ~add_warning ~raise "#gt_u"  gt
-      | Geq ge   -> compile_bin_op' ~add_warning ~raise "#ge_u"  ge
-      | Equal eq -> compile_bin_op' ~add_warning ~raise "#eq_u"  eq
-      | Neq ne   -> compile_bin_op' ~add_warning ~raise "#neq_u" ne
+        Lt lt    -> compile_bin_op ~add_warning ~raise "#lt_u"  lt
+      | Leq le   -> compile_bin_op ~add_warning ~raise "#le_u"  le
+      | Gt gt    -> compile_bin_op ~add_warning ~raise "#gt_u"  gt
+      | Geq ge   -> compile_bin_op ~add_warning ~raise "#ge_u"  ge
+      | Equal eq -> compile_bin_op ~add_warning ~raise "#eq_u"  eq
+      | Neq ne   -> compile_bin_op ~add_warning ~raise "#neq_u" ne
     )
   )
   | ECall {value = EProj {value = {expr = EVar {value = module_name; _}; selection = FieldName {value = {value = {value = fun_name; _}; _}; _}}; _}, arguments; region} when
@@ -756,7 +756,7 @@ and compile_expression ~add_warning ~raise : CST.expr -> AST.expr = fun e ->
       | Mod_eq -> "%=", "#mod_u"
       )
       in
-      compile_bin_op' ~add_warning ~raise aop {
+      compile_bin_op ~add_warning ~raise aop {
              value = {
                op   = Token.wrap lexeme op.region;
                arg1 = e1;

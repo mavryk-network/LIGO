@@ -202,7 +202,7 @@ let rec compile_expression ~(raise :Errors.abs_error Simple_utils.Trace.raise) :
       let lst = List.map ~f:self (hd::tl) in
       e_tuple ~loc lst
   in
-  let compile_bin_op' : string ->  _ CST.bin_op CST.reg -> AST.expression = fun op_type op ->
+  let compile_bin_op : string ->  _ CST.bin_op CST.reg -> AST.expression = fun op_type op ->
     let (op, loc) = r_split op in
     let a = self op.arg1 in
     let b = self op.arg2 in
@@ -242,11 +242,11 @@ let rec compile_expression ~(raise :Errors.abs_error Simple_utils.Trace.raise) :
   | E_Verbatim str ->
     let (str, loc) = w_split str in
     e_verbatim ~loc str
-  | E_Add plus   -> compile_bin_op' "#add_u" plus
-  | E_Sub minus  -> compile_bin_op' "#polymorphic_sub_u" minus
-  | E_Mult times -> compile_bin_op' "#mul_u" times
-  | E_Div slash  -> compile_bin_op' "#div_u" slash
-  | E_Mod mod_   -> compile_bin_op' "#mod_u" mod_
+  | E_Add plus   -> compile_bin_op "#add_u" plus
+  | E_Sub minus  -> compile_bin_op "#polymorphic_sub_u" minus
+  | E_Mult times -> compile_bin_op "#mul_u" times
+  | E_Div slash  -> compile_bin_op "#div_u" slash
+  | E_Mod mod_   -> compile_bin_op "#mod_u" mod_
   | E_Neg minus  -> compile_un_op "#neg" minus
   | E_Int i ->
     let ((_,i), loc) = w_split i in
@@ -257,15 +257,15 @@ let rec compile_expression ~(raise :Errors.abs_error Simple_utils.Trace.raise) :
   | E_Mutez mtez ->
     let ((_,mtez), loc) = w_split mtez in
     e_mutez_z ~loc (Z.of_int64 mtez)
-  | E_Or or_   -> compile_bin_op' "#or_u"  or_
-  | E_And and_ -> compile_bin_op' "#and_u" and_
+  | E_Or or_   -> compile_bin_op "#or_u"  or_
+  | E_And and_ -> compile_bin_op "#and_u" and_
   | E_Not not_ -> compile_un_op "#not" not_
-  | E_Lt lt    -> compile_bin_op' "#lt_u"  lt
-  | E_Leq le   -> compile_bin_op' "#le_u"  le
-  | E_Gt gt    -> compile_bin_op' "#gt_u"  gt
-  | E_Geq ge   -> compile_bin_op' "#ge_u"  ge
-  | E_Equal eq -> compile_bin_op' "#eq_u"  eq
-  | E_Neq ne   -> compile_bin_op' "#neq_u" ne
+  | E_Lt lt    -> compile_bin_op "#lt_u"  lt
+  | E_Leq le   -> compile_bin_op "#le_u"  le
+  | E_Gt gt    -> compile_bin_op "#gt_u"  gt
+  | E_Geq ge   -> compile_bin_op "#ge_u"  ge
+  | E_Equal eq -> compile_bin_op "#eq_u"  eq
+  | E_Neq ne   -> compile_bin_op "#neq_u" ne
   | E_Call {value=(E_Var var,args);region} -> (
     let loc = Location.lift region in
     let (var, loc_var) = w_split var in
