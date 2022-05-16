@@ -199,10 +199,10 @@ and compile_expression' ~raise ~last : I.expression -> O.expression option -> O.
 
       (* Modify the body loop*)
       let ctrl =
-          O.e_let_in_ez binder false [] (O.e_application (O.e_variable @@ O.ValueVar.of_input_var "#add") (O.e_pair (O.e_variable binder) step)) @@
+          O.e_let_in_ez binder false [] (O.e_application (O.e_variable @@ O.ValueVar.of_input_var "#add_u") (O.e_pair (O.e_variable binder) step)) @@
           recursive_call (O.e_variable binder)
       in
-      let cond = O.e_annotation (O.e_application (O.e_variable @@ O.ValueVar.of_input_var "#le") (O.e_pair (O.e_variable binder) final)) (O.t_bool ()) in
+      let cond = O.e_annotation (O.e_application (O.e_variable @@ O.ValueVar.of_input_var "#le_u") (O.e_pair (O.e_variable binder) final)) (O.t_bool ()) in
       let continue_expr = add_to_end for_body ctrl in
       let stop_expr      = (O.e_unit ()) in
         let loop = O.e_recursive rec_func (O.t_arrow (O.t_int ()) (O.t_unit ())) @@

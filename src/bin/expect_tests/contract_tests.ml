@@ -1791,7 +1791,7 @@ type storage = (int , int)
 const main =
   lambda (n : (int , storage)) : (list (operation) , storage) return
   let x : (int , int) = let x : int = 7 in
-                        ((#add)@((x , n.0)) , (#add)@((n.1.0 , n.1.1))) in
+                        ((#add_u)@((x , n.0)) , (#add_u)@((n.1.0 , n.1.1))) in
   (list[] : list (operation) , x)
 const f0 = lambda (_a : string) return true
 const f1 = lambda (_a : string) return true
@@ -1814,7 +1814,7 @@ const letin_nesting =
 const letin_nesting2 =
   lambda (x : int) return let y = 2 in
                           let z = 3 in
-                          (#add)@(((#add)@((x , y)) , z))
+                          (#add_u)@(((#add_u)@((x , y)) , z))
 const x =  match (+1 , (+2 , +3)) with
             | (gen#3,(x,gen#4)) -> x
     |}];
@@ -2237,12 +2237,12 @@ let%expect_test _ =
   [%expect {|
     const x = 1[@inline][@private]
     const foo =
-      lambda (a : int) return let test[@var] = (#polymorphic_add@{int}@{int})@(
+      lambda (a : int) return let test[@var] = (#polymorphic_add_u@{int}@{int})@(
       ( 2 , a ))[@inline] in test[@inline][@private]
     const y = 1[@private]
     const bar =
-      lambda (b : int) return let test[@var] = lambda (z : int) return (#polymorphic_add@{int}@{int})@(
-      ( (#polymorphic_add@{int}@{int})@(( 2 , b )) , z ))[@inline] in (test)@(b)[@private]
+      lambda (b : int) return let test[@var] = lambda (z : int) return (#polymorphic_add_u@{int}@{int})@(
+      ( (#polymorphic_add_u@{int}@{int})@(( 2 , b )) , z ))[@inline] in (test)@(b)[@private]
     const check = 4[@private] |}]
 
 (* literal type "casting" inside modules *)

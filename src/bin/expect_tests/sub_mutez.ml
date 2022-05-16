@@ -70,7 +70,7 @@ let%expect_test _ =
     const sub =
       lambda (parameters#2 : ( tez * tez )) return  match parameters#2 with
                                                      | ( store , delta ) ->
-                                                     (#polymorphic_sub@{tez}@{tez})@(
+                                                     (#polymorphic_sub_u@{tez}@{tez})@(
                                                      ( store , delta ))
     const main =
       lambda (parameters#4 : ( unit * tez )) return  match parameters#4 with
@@ -83,7 +83,7 @@ let%expect_test _ =
     const sub =
       lambda (gen#2 : ( tez * tez )) return  match gen#2 with
                                               | ( store , delta ) ->
-                                              (#polymorphic_sub@{tez}@{tez})@(
+                                              (#polymorphic_sub_u@{tez}@{tez})@(
                                               ( store , delta ))
     const main =
       lambda (gen#3 : ( unit * tez )) return  match gen#3 with
@@ -94,7 +94,7 @@ let%expect_test _ =
   run_ligo_good [ "print" ; "ast-typed" ; (test "sub_mutez_new.jsligo") ; "--protocol" ; "ithaca" ] ;
   [%expect{xxx|
     const sub =
-      lambda (gen#2 : ( tez * tez )) return let store = gen#2.0 in let delta = gen#2.1 in (#polymorphic_sub@{tez}@{tez})@(
+      lambda (gen#2 : ( tez * tez )) return let store = gen#2.0 in let delta = gen#2.1 in (#polymorphic_sub_u@{tez}@{tez})@(
       ( store , delta ))
     const main =
       lambda (gen#4 : ( unit * tez )) return let _#3 = gen#4.0 in let store = gen#4.1 in
@@ -107,7 +107,7 @@ const sub : ( tez * tez ) -> option (tez) =
   lambda (parameters#2 : ( tez * tez )) : option (tez) return  match
                                                                 parameters#2 with
                                                                 | (store : tez,delta : tez) ->
-                                                                (#polymorphic_sub)@(
+                                                                (#polymorphic_sub_u)@(
                                                                 ( store ,
                                                                   delta ))
 const main : ( unit * tez ) -> ( list (operation) * tez ) =
@@ -123,7 +123,7 @@ let%expect_test _ =
 const sub =
   lambda (gen#2 : ( tez * tez )) : option (tez) return  match gen#2 with
                                                          | (store,delta) ->
-                                                         (#polymorphic_sub)@(
+                                                         (#polymorphic_sub_u)@(
                                                          ( store , delta ))
 const main =
   lambda (gen#3 : ( unit * tez )) : ( list (operation) * tez ) return
@@ -137,7 +137,7 @@ let%expect_test _ =
     const sub =
       rec (sub:( tez * tez ) -> option (tez) => lambda (gen#2 : ( tez * tez )) : option (tez) return
       let store = gen#2.0 in
-      let delta = gen#2.1 in (#polymorphic_sub)@(( store , delta )) )
+      let delta = gen#2.1 in (#polymorphic_sub_u)@(( store , delta )) )
     const main =
       rec (main:( unit * tez ) -> ( list (operation) * tez ) => lambda (gen#4 :
       ( unit * tez )) : ( list (operation) * tez ) return let _#3 = gen#4.0 in

@@ -243,7 +243,7 @@ let rec compile_expression ~(raise:Errors.abs_error Simple_utils.Trace.raise) ?f
       let (op,loc) = r_split c in
       let a = self op.arg1 in
       let b = self op.arg2 in
-      return @@ e_application ~loc (e_variable @@ ValueVar.of_input_var "#concat") (e_pair a b)
+      return @@ e_application ~loc (e_variable @@ ValueVar.of_input_var "#concat_u") (e_pair a b)
     | String str ->
       let (str, loc) = r_split str in
       return @@ e_string ~loc str
@@ -253,16 +253,16 @@ let rec compile_expression ~(raise:Errors.abs_error Simple_utils.Trace.raise) ?f
   )
   | EArith arth ->
     ( match arth with
-      Add plus   -> compile_bin_op' "#add" plus
-    | Sub minus  -> compile_bin_op' "#polymorphic_sub" minus
-    | Mult times -> compile_bin_op' "#mul" times
-    | Div slash  -> compile_bin_op' "#div" slash
-    | Mod mod_   -> compile_bin_op' "#mod" mod_
-    | Land land_ -> compile_bin_op' "#and" land_
-    | Lor lor_   -> compile_bin_op' "#or" lor_
-    | Lxor lxor_ -> compile_bin_op' "#xor" lxor_
-    | Lsl lsl_   -> compile_bin_op' "#lsl" lsl_
-    | Lsr lsr_   -> compile_bin_op' "#lsr" lsr_
+      Add plus   -> compile_bin_op' "#add_u" plus
+    | Sub minus  -> compile_bin_op' "#polymorphic_sub_u" minus
+    | Mult times -> compile_bin_op' "#mul_u" times
+    | Div slash  -> compile_bin_op' "#div_u" slash
+    | Mod mod_   -> compile_bin_op' "#mod_u" mod_
+    | Land land_ -> compile_bin_op' "#and_u" land_
+    | Lor lor_   -> compile_bin_op' "#or_u" lor_
+    | Lxor lxor_ -> compile_bin_op' "#xor_u" lxor_
+    | Lsl lsl_   -> compile_bin_op' "#lsl_u" lsl_
+    | Lsr lsr_   -> compile_bin_op' "#lsr_u" lsr_
     | Neg minus  -> compile_un_op "#neg" minus
     | Int i ->
       let ((_,i), loc) = r_split i in
@@ -278,18 +278,18 @@ let rec compile_expression ~(raise:Errors.abs_error Simple_utils.Trace.raise) ?f
     match logic with
       BoolExpr be -> (
       match be with
-        Or or_   -> compile_bin_op' "#or"  or_
-      | And and_ -> compile_bin_op' "#and" and_
+        Or or_   -> compile_bin_op' "#or_u"  or_
+      | And and_ -> compile_bin_op' "#and_u" and_
       | Not not_ -> compile_un_op "#not" not_
     )
     | CompExpr ce -> (
       match ce with
-        Lt lt    -> compile_bin_op' "#lt"  lt
-      | Leq le   -> compile_bin_op' "#le"  le
-      | Gt gt    -> compile_bin_op' "#gt"  gt
-      | Geq ge   -> compile_bin_op' "#ge"  ge
-      | Equal eq -> compile_bin_op' "#eq"  eq
-      | Neq ne   -> compile_bin_op' "#neq" ne
+        Lt lt    -> compile_bin_op' "#lt_u"  lt
+      | Leq le   -> compile_bin_op' "#le_u"  le
+      | Gt gt    -> compile_bin_op' "#gt_u"  gt
+      | Geq ge   -> compile_bin_op' "#ge_u"  ge
+      | Equal eq -> compile_bin_op' "#eq_u"  eq
+      | Neq ne   -> compile_bin_op' "#neq_u" ne
     )
   )
   (* This case is due to a bad besign of our constant it as to change
@@ -504,7 +504,7 @@ let rec compile_expression ~(raise:Errors.abs_error Simple_utils.Trace.raise) ?f
       let (cons, loc) = r_split cons in
       let a  = self cons.lexpr in
       let b  = self cons.rexpr in
-      return @@ e_application ~loc (e_variable @@ ValueVar.of_input_var "#cons") (e_pair a b)
+      return @@ e_application ~loc (e_variable @@ ValueVar.of_input_var "#cons_u") (e_pair a b)
     | EListComp lc ->
       let (lc,loc) = r_split lc in
       let lst =

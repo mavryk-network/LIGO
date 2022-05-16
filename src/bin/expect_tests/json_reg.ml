@@ -4085,7 +4085,7 @@ let%expect_test _ =
                                                                 "E_variable",
                                                                 {
                                                                   "name":
-                                                                    "#gt",
+                                                                    "#gt_u",
                                                                   "counter":
                                                                     0,
                                                                   "location": [
@@ -6322,7 +6322,7 @@ let%expect_test _ =
                                                                     "E_variable",
                                                                     {
                                                                     "name":
-                                                                    "#add",
+                                                                    "#add_u",
                                                                     "counter":
                                                                     0,
                                                                     "location": [
@@ -8142,7 +8142,7 @@ let%expect_test _ =
                                                                     "E_variable",
                                                                     {
                                                                     "name":
-                                                                    "#add",
+                                                                    "#add_u",
                                                                     "counter":
                                                                     0,
                                                                     "location": [
@@ -9991,7 +9991,7 @@ let%expect_test _ =
                                                                     "E_variable",
                                                                     {
                                                                     "name":
-                                                                    "#gt",
+                                                                    "#gt_u",
                                                                     "counter":
                                                                     0,
                                                                     "location": [
@@ -10817,7 +10817,7 @@ let%expect_test _ =
                                                                     "E_variable",
                                                                     {
                                                                     "name":
-                                                                    "#ge",
+                                                                    "#ge_u",
                                                                     "counter":
                                                                     0,
                                                                     "location": [
@@ -14060,7 +14060,7 @@ let%expect_test _ =
                                                                     "E_variable",
                                                                     {
                                                                     "name":
-                                                                    "#polymorphic_sub",
+                                                                    "#polymorphic_sub_u",
                                                                     "counter":
                                                                     0,
                                                                     "location": [
@@ -17682,7 +17682,7 @@ let%expect_test _ =
                                                                     "E_variable",
                                                                     {
                                                                     "name":
-                                                                    "#neq",
+                                                                    "#neq_u",
                                                                     "counter":
                                                                     0,
                                                                     "location": [
@@ -18708,7 +18708,7 @@ let%expect_test _ =
                                                                     "E_variable",
                                                                     {
                                                                     "name":
-                                                                    "#polymorphic_sub",
+                                                                    "#polymorphic_sub_u",
                                                                     "counter":
                                                                     0,
                                                                     "location": [
@@ -19726,7 +19726,7 @@ let%expect_test _ =
                                                                     "E_variable",
                                                                     {
                                                                     "name":
-                                                                    "#eq",
+                                                                    "#eq_u",
                                                                     "counter":
                                                                     0,
                                                                     "location": [

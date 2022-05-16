@@ -385,11 +385,11 @@ and compile_expression ~add_warning ~raise : CST.expr -> AST.expr = fun e ->
   )
   | EArith arth ->
     ( match arth with
-      Add plus   -> compile_bin_op' ~add_warning ~raise "#polymorphic_add" plus
-    | Sub minus  -> compile_bin_op' ~add_warning ~raise "#polymorphic_sub" minus
-    | Mult times -> compile_bin_op' ~add_warning ~raise "#mul" times
-    | Div slash  -> compile_bin_op' ~add_warning ~raise "#div" slash
-    | Mod mod_   -> compile_bin_op' ~add_warning ~raise "#mod" mod_
+      Add plus   -> compile_bin_op' ~add_warning ~raise "#polymorphic_add_u" plus
+    | Sub minus  -> compile_bin_op' ~add_warning ~raise "#polymorphic_sub_u" minus
+    | Mult times -> compile_bin_op' ~add_warning ~raise "#mul_u" times
+    | Div slash  -> compile_bin_op' ~add_warning ~raise "#div_u" slash
+    | Mod mod_   -> compile_bin_op' ~add_warning ~raise "#mod_u" mod_
     | Neg minus  -> compile_un_op ~add_warning ~raise "#neg" minus
     | Int i ->
       let ((_,i), loc) = r_split i in
@@ -399,18 +399,18 @@ and compile_expression ~add_warning ~raise : CST.expr -> AST.expr = fun e ->
     match logic with
       BoolExpr be -> (
       match be with
-        Or or_   -> compile_bin_op' ~add_warning ~raise "#or"  or_
-      | And and_ -> compile_bin_op' ~add_warning ~raise "#and" and_
+        Or or_   -> compile_bin_op' ~add_warning ~raise "#or_u"  or_
+      | And and_ -> compile_bin_op' ~add_warning ~raise "#and_u" and_
       | Not not_ -> compile_un_op ~add_warning ~raise "#not" not_
     )
     | CompExpr ce -> (
       match ce with
-        Lt lt    -> compile_bin_op' ~add_warning ~raise "#lt"  lt
-      | Leq le   -> compile_bin_op' ~add_warning ~raise "#le"  le
-      | Gt gt    -> compile_bin_op' ~add_warning ~raise "#gt"  gt
-      | Geq ge   -> compile_bin_op' ~add_warning ~raise "#ge"  ge
-      | Equal eq -> compile_bin_op' ~add_warning ~raise "#eq"  eq
-      | Neq ne   -> compile_bin_op' ~add_warning ~raise "#neq" ne
+        Lt lt    -> compile_bin_op' ~add_warning ~raise "#lt_u"  lt
+      | Leq le   -> compile_bin_op' ~add_warning ~raise "#le_u"  le
+      | Gt gt    -> compile_bin_op' ~add_warning ~raise "#gt_u"  gt
+      | Geq ge   -> compile_bin_op' ~add_warning ~raise "#ge_u"  ge
+      | Equal eq -> compile_bin_op' ~add_warning ~raise "#eq_u"  eq
+      | Neq ne   -> compile_bin_op' ~add_warning ~raise "#neq_u" ne
     )
   )
   | ECall {value = EProj {value = {expr = EVar {value = module_name; _}; selection = FieldName {value = {value = {value = fun_name; _}; _}; _}}; _}, arguments; region} when
@@ -434,7 +434,7 @@ and compile_expression ~add_warning ~raise : CST.expr -> AST.expr = fun e ->
     let loc = Location.lift region in
     let a = self e in
     let b = self expr in
-    return @@ e_application ~loc (e_variable @@ ValueVar.of_input_var "#cons") (e_pair a b)
+    return @@ e_application ~loc (e_variable @@ ValueVar.of_input_var "#cons_u") (e_pair a b)
   | ECall {value=(EVar {value = "list"; _}, Multiple {value = {inside = (EArray {value = {inside;lbracket=_;rbracket=_};region=_}, []); _}; _}); region } -> (
     let loc = Location.lift region in
     let items = (match inside with
@@ -749,11 +749,11 @@ and compile_expression ~add_warning ~raise : CST.expr -> AST.expr = fun e ->
         self e2
     | Assignment_operator ao ->
       let lexeme, aop = (match ao with
-        Times_eq -> "*=", "#mul"
-      | Div_eq -> "/=", "#div"
-      | Plus_eq -> "+=", "#polymorphic_add"
-      | Min_eq -> "-=", "#polymorphic_sub"
-      | Mod_eq -> "%=", "#mod"
+        Times_eq -> "*=", "#mul_u"
+      | Div_eq -> "/=", "#div_u"
+      | Plus_eq -> "+=", "#polymorphic_add_u"
+      | Min_eq -> "-=", "#polymorphic_sub_u"
+      | Mod_eq -> "%=", "#mod_u"
       )
       in
       compile_bin_op' ~add_warning ~raise aop {
@@ -1225,9 +1225,9 @@ and compile_statement ?(wrap=false) ~add_warning ~raise : CST.statement -> state
     let found_case_assign_true   = e_assign found_case_binder  [] (e_true ()) in
 
     let not_expr     e   = e_application ~loc (e_variable @@ ValueVar.of_input_var "#not") e in
-    let and_expr     a b = e_application ~loc (e_variable @@ ValueVar.of_input_var "#and") (e_pair a b) in
-    let or_expr      a b = e_application ~loc (e_variable @@ ValueVar.of_input_var "#or") (e_pair a b) in
-    let eq_expr ~loc a b = e_application ~loc (e_variable @@ ValueVar.of_input_var "#eq") (e_pair a b) in
+    let and_expr     a b = e_application ~loc (e_variable @@ ValueVar.of_input_var "#and_u") (e_pair a b) in
+    let or_expr      a b = e_application ~loc (e_variable @@ ValueVar.of_input_var "#or_u") (e_pair a b) in
+    let eq_expr ~loc a b = e_application ~loc (e_variable @@ ValueVar.of_input_var "#eq_u") (e_pair a b) in
 
     let found_case_eq_true  = eq_expr ~loc (e_variable found_case)  (e_true()) in
     let fallthrough_eq_true = eq_expr ~loc (e_variable fallthrough) (e_true()) in

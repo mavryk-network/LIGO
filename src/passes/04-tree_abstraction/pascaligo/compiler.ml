@@ -238,15 +238,15 @@ let rec compile_expression ~(raise :Errors.abs_error Simple_utils.Trace.raise) :
     let (op,loc) = r_split c in
     let a = self op.arg1 in
     let b = self op.arg2 in
-    e_application ~loc (e_variable @@ ValueVar.of_input_var "#concat") (e_pair a b)
+    e_application ~loc (e_variable @@ ValueVar.of_input_var "#concat_u") (e_pair a b)
   | E_Verbatim str ->
     let (str, loc) = w_split str in
     e_verbatim ~loc str
-  | E_Add plus   -> compile_bin_op' "#add" plus
-  | E_Sub minus  -> compile_bin_op' "#polymorphic_sub" minus
-  | E_Mult times -> compile_bin_op' "#mul" times
-  | E_Div slash  -> compile_bin_op' "#div" slash
-  | E_Mod mod_   -> compile_bin_op' "#mod" mod_
+  | E_Add plus   -> compile_bin_op' "#add_u" plus
+  | E_Sub minus  -> compile_bin_op' "#polymorphic_sub_u" minus
+  | E_Mult times -> compile_bin_op' "#mul_u" times
+  | E_Div slash  -> compile_bin_op' "#div_u" slash
+  | E_Mod mod_   -> compile_bin_op' "#mod_u" mod_
   | E_Neg minus  -> compile_un_op "#neg" minus
   | E_Int i ->
     let ((_,i), loc) = w_split i in
@@ -257,15 +257,15 @@ let rec compile_expression ~(raise :Errors.abs_error Simple_utils.Trace.raise) :
   | E_Mutez mtez ->
     let ((_,mtez), loc) = w_split mtez in
     e_mutez_z ~loc (Z.of_int64 mtez)
-  | E_Or or_   -> compile_bin_op' "#or"  or_
-  | E_And and_ -> compile_bin_op' "#and" and_
+  | E_Or or_   -> compile_bin_op' "#or_u"  or_
+  | E_And and_ -> compile_bin_op' "#and_u" and_
   | E_Not not_ -> compile_un_op "#not" not_
-  | E_Lt lt    -> compile_bin_op' "#lt"  lt
-  | E_Leq le   -> compile_bin_op' "#le"  le
-  | E_Gt gt    -> compile_bin_op' "#gt"  gt
-  | E_Geq ge   -> compile_bin_op' "#ge"  ge
-  | E_Equal eq -> compile_bin_op' "#eq"  eq
-  | E_Neq ne   -> compile_bin_op' "#neq" ne
+  | E_Lt lt    -> compile_bin_op' "#lt_u"  lt
+  | E_Leq le   -> compile_bin_op' "#le_u"  le
+  | E_Gt gt    -> compile_bin_op' "#gt_u"  gt
+  | E_Geq ge   -> compile_bin_op' "#ge_u"  ge
+  | E_Equal eq -> compile_bin_op' "#eq_u"  eq
+  | E_Neq ne   -> compile_bin_op' "#neq_u" ne
   | E_Call {value=(E_Var var,args);region} -> (
     let loc = Location.lift region in
     let (var, loc_var) = w_split var in
@@ -384,10 +384,10 @@ let rec compile_expression ~(raise :Errors.abs_error Simple_utils.Trace.raise) :
         | CST.Complete {field_lhs ; field_lens ; field_rhs ; attributes} -> (
           check_no_attributes ~raise field_loc attributes;
           let field_rhs = self field_rhs in
-          let e_add ?loc a b : expression = e_application ?loc (e_variable (ValueVar.of_input_var "#add")) (e_pair a b) in
-          let e_sub ?loc a b : expression = e_application ?loc (e_variable (ValueVar.of_input_var "#sub")) (e_pair a b) in
-          let e_mult ?loc a b : expression = e_application ?loc (e_variable (ValueVar.of_input_var "#mul")) (e_pair a b) in
-          let e_div ?loc a b : expression = e_application ?loc (e_variable (ValueVar.of_input_var "#div")) (e_pair a b) in
+          let e_add ?loc a b : expression = e_application ?loc (e_variable (ValueVar.of_input_var "#add_u")) (e_pair a b) in
+          let e_sub ?loc a b : expression = e_application ?loc (e_variable (ValueVar.of_input_var "#sub_u")) (e_pair a b) in
+          let e_mult ?loc a b : expression = e_application ?loc (e_variable (ValueVar.of_input_var "#mul_u")) (e_pair a b) in
+          let e_div ?loc a b : expression = e_application ?loc (e_variable (ValueVar.of_input_var "#div_u")) (e_pair a b) in
           let func_update self_accessor =
             match field_lens with
             | Lens_Id _ -> field_rhs
@@ -530,7 +530,7 @@ let rec compile_expression ~(raise :Errors.abs_error Simple_utils.Trace.raise) :
     let (cons, loc) = r_split cons in
     let a  = self cons.arg1 in
     let b  = self cons.arg2 in
-    e_application ~loc (e_variable @@ ValueVar.of_input_var "#cons") (e_pair a b)
+    e_application ~loc (e_variable @@ ValueVar.of_input_var "#cons_u") (e_pair a b)
   )
   | E_Set set -> (
     let (si, loc) = r_split set in
