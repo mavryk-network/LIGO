@@ -291,3 +291,16 @@ let destruct_for_alls (t : type_expression) =
        destruct_for_alls (ty_binder :: type_vars) type_
     | _ -> (type_vars, t)
   in destruct_for_alls [] t
+
+(* This function transforms an application expression `l e1 ... en` into the pair `([ e1 ; ... ; en ] , l)` *)
+let destruct_applications (e : expression) =
+  let rec destruct_applications acc (lamb : expression) =
+    match lamb.expression_content with
+    | E_application {lamb;args} ->
+       destruct_applications (args :: acc) lamb
+    | E_ascription { anno_expr ; type_annotation } ->
+       ignore type_annotation ;
+       destruct_applications acc anno_expr
+    | _ ->
+       (lamb, acc) in
+  destruct_applications [] e

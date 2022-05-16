@@ -15,6 +15,50 @@ module Pair     = Simple_utils.Pair
 
 let wrap = Region.wrap_ghost
 
+let bin_func_op = fun v ->
+  match v with
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#add") -> Some (fun arg1 arg2 -> CST.(EArith (Add (wrap { op = Token.ghost_plus ; arg1 ; arg2 }))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#sub") -> Some (fun arg1 arg2 -> CST.(EArith (Sub (wrap { op = Token.ghost_minus ; arg1 ; arg2 }))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#polymorphic_add") -> Some (fun arg1 arg2 -> CST.(EArith (Add (wrap { op = Token.ghost_plus ; arg1 ; arg2 }))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#polymorphic_sub") -> Some (fun arg1 arg2 -> CST.(EArith (Sub (wrap { op = Token.ghost_minus ; arg1 ; arg2 }))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#mul") -> Some (fun arg1 arg2 -> CST.(EArith (Mult (wrap { op = Token.ghost_times ; arg1 ; arg2 }))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#div") -> Some (fun arg1 arg2 -> CST.(EArith (Div (wrap { op = Token.ghost_slash ; arg1 ; arg2 }))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#mod") -> Some (fun arg1 arg2 -> CST.(EArith (Mod (wrap { op = Token.ghost_mod ; arg1 ; arg2 }))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#and") -> Some (fun arg1 arg2 -> CST.(EArith (Land (wrap { op = Token.ghost_land ; arg1 ; arg2 }))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#or") -> Some (fun arg1 arg2 -> CST.(EArith (Lor (wrap { op = Token.ghost_lor ; arg1 ; arg2 }))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#xor") -> Some (fun arg1 arg2 -> CST.(EArith (Lxor (wrap { op = Token.ghost_lxor ; arg1 ; arg2 }))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#lsl") -> Some (fun arg1 arg2 -> CST.(EArith (Lsl (wrap { op = Token.ghost_lsl ; arg1 ; arg2 }))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#lsr") -> Some (fun arg1 arg2 -> CST.(EArith (Lsr (wrap { op = Token.ghost_lsr ; arg1 ; arg2 }))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#eq") -> Some (fun arg1 arg2 -> CST.(ELogic (CompExpr (Equal (wrap { op = Token.ghost_eq ; arg1 ; arg2 })))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#neq") -> Some (fun arg1 arg2 -> CST.(ELogic (CompExpr (Neq (wrap { op = Token.ghost_ne ; arg1 ; arg2 })))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#lt") -> Some (fun arg1 arg2 -> CST.(ELogic (CompExpr (Lt (wrap { op = Token.ghost_lt ; arg1 ; arg2 })))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#gt") -> Some (fun arg1 arg2 -> CST.(ELogic (CompExpr (Gt (wrap { op = Token.ghost_gt ; arg1 ; arg2 })))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#le") -> Some (fun arg1 arg2 -> CST.(ELogic (CompExpr (Leq (wrap { op = Token.ghost_le ; arg1 ; arg2 })))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#ge") -> Some (fun arg1 arg2 -> CST.(ELogic (CompExpr (Geq (wrap { op = Token.ghost_ge ; arg1 ; arg2 })))))
+  | _ -> None
+
+let bin_u_func_op = fun v ->
+  match v with
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#add_u") -> Some (fun arg1 arg2 -> CST.(EArith (Add (wrap { op = Token.ghost_plus ; arg1 ; arg2 }))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#sub_u") -> Some (fun arg1 arg2 -> CST.(EArith (Sub (wrap { op = Token.ghost_minus ; arg1 ; arg2 }))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#polymorphic_add_u") -> Some (fun arg1 arg2 -> CST.(EArith (Add (wrap { op = Token.ghost_plus ; arg1 ; arg2 }))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#polymorphic_sub_u") -> Some (fun arg1 arg2 -> CST.(EArith (Sub (wrap { op = Token.ghost_minus ; arg1 ; arg2 }))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#mul_u") -> Some (fun arg1 arg2 -> CST.(EArith (Mult (wrap { op = Token.ghost_times ; arg1 ; arg2 }))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#div_u") -> Some (fun arg1 arg2 -> CST.(EArith (Div (wrap { op = Token.ghost_slash ; arg1 ; arg2 }))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#mod_u") -> Some (fun arg1 arg2 -> CST.(EArith (Mod (wrap { op = Token.ghost_mod ; arg1 ; arg2 }))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#and_u") -> Some (fun arg1 arg2 -> CST.(EArith (Land (wrap { op = Token.ghost_land ; arg1 ; arg2 }))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#or_u") -> Some (fun arg1 arg2 -> CST.(EArith (Lor (wrap { op = Token.ghost_lor ; arg1 ; arg2 }))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#xor_u") -> Some (fun arg1 arg2 -> CST.(EArith (Lxor (wrap { op = Token.ghost_lxor ; arg1 ; arg2 }))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#lsl_u") -> Some (fun arg1 arg2 -> CST.(EArith (Lsl (wrap { op = Token.ghost_lsl ; arg1 ; arg2 }))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#lsr_u") -> Some (fun arg1 arg2 -> CST.(EArith (Lsr (wrap { op = Token.ghost_lsr ; arg1 ; arg2 }))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#eq_u") -> Some (fun arg1 arg2 -> CST.(ELogic (CompExpr (Equal (wrap { op = Token.ghost_eq ; arg1 ; arg2 })))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#neq_u") -> Some (fun arg1 arg2 -> CST.(ELogic (CompExpr (Neq (wrap { op = Token.ghost_ne ; arg1 ; arg2 })))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#lt_u") -> Some (fun arg1 arg2 -> CST.(ELogic (CompExpr (Lt (wrap { op = Token.ghost_lt ; arg1 ; arg2 })))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#gt_u") -> Some (fun arg1 arg2 -> CST.(ELogic (CompExpr (Gt (wrap { op = Token.ghost_gt ; arg1 ; arg2 })))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#le_u") -> Some (fun arg1 arg2 -> CST.(ELogic (CompExpr (Leq (wrap { op = Token.ghost_le ; arg1 ; arg2 })))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#ge_u") -> Some (fun arg1 arg2 -> CST.(ELogic (CompExpr (Geq (wrap { op = Token.ghost_ge ; arg1 ; arg2 })))))
+  | _ -> None
+
 let list_to_sepseq ~sep lst =
   match lst with
     [] -> None
@@ -203,6 +247,14 @@ let decompile_operator : AST.rich_constant -> CST.expr List.Ne.t -> CST.expr opt
      Some CST.(EArith (Sub (wrap { op = Token.ghost_minus ; arg1 ; arg2 })))
   | _ -> None
 
+let decompile_function_operator : string -> CST.expr list -> CST.expr = fun cons_name arguments ->
+  match cons_name, arguments with
+  | "#add", [arg1; arg2] ->
+     CST.(EArith (Add (wrap { op = Token.ghost_plus ; arg1 ; arg2 })))
+  | "#mul", [arg1; arg2] ->
+     CST.(EArith (Mult (wrap { op = Token.ghost_plus ; arg1 ; arg2 })))
+  | _ -> failwith "Undefined function operator"
+
 let rec decompile_expression : AST.expression -> CST.expr = fun expr ->
   let return_expr expr = expr in
   let return_expr_with_par expr = return_expr @@ CST.EPar (wrap @@ par @@ expr) in
@@ -284,7 +336,19 @@ let rec decompile_expression : AST.expression -> CST.expr = fun expr ->
         return_expr @@ CST.EAnnot (Region.wrap_ghost @@ par (b,Token.ghost_colon,ty))
       | Literal_chest _ | Literal_chest_key _ -> failwith "chest / chest_key not allowed in the syntax (only tests need this type)"
     )
-  | E_application {lamb;args} ->
+  | E_application {lamb;args} -> (
+    match AST.destruct_applications expr with
+    | { expression_content = E_variable v ; _ }, [arg1 ; arg2] when Option.is_some (bin_func_op v) ->
+       let op = Option.value_exn (bin_func_op v) in
+       let arg1 = decompile_expression arg1 in
+       let arg2 = decompile_expression arg2 in
+       return_expr_with_par @@ op arg1 arg2
+    | { expression_content = E_variable v ; _ }, [args] when Option.is_some (bin_u_func_op v) ->
+       let op = Option.value_exn (bin_u_func_op v) in
+       let args, _ = get_e_tuple args in
+       let args = List.map ~f:decompile_expression args in
+       return_expr_with_par @@ op (List.nth_exn args 0) (List.nth_exn args 1)
+    | _, _ ->
     let f (expr, b) = if b then CST.EPar (wrap @@ par @@ expr) else expr in
     let lamb = decompile_expression lamb in
     let args = List.Ne.of_list @@
@@ -294,7 +358,7 @@ let rec decompile_expression : AST.expression -> CST.expr = fun expr ->
                                 (de, b)) e) @@
       get_e_tuple args
     in
-    return_expr @@ CST.ECall (wrap (lamb,args))
+    return_expr @@ CST.ECall (wrap (lamb,args)))
   | E_lambda lambda ->
     let (binders,_rhs_type,_block_with,body) = decompile_lambda lambda in
     let fun_expr : CST.fun_expr = {kwd_fun=Token.ghost_fun;binders;rhs_type=None;arrow=Token.ghost_arrow;body;type_params=None;attributes=[]} in
