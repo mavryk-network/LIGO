@@ -57,7 +57,7 @@ let%expect_test _ =
                    : card)
               ];
 
-            if gen__neq_u (card.card_owner, Tezos.sender)
+            if card.card_owner =/= Tezos.sender
             then failwith ("This card doesn't belong to you")
             else skip;
 
@@ -82,7 +82,7 @@ let%expect_test _ =
                   (failwith ("sell_single: No card.") : card)
               ];
 
-            if gen__neq_u (card.card_owner, Tezos.sender)
+            if card.card_owner =/= Tezos.sender
             then failwith ("This card doesn't belong to you")
             else skip;
 
@@ -96,9 +96,7 @@ let%expect_test _ =
 
             card_pattern :=
               card_pattern.quantity with
-                abs
-                  (gen__polymorphic_sub_u
-                     (card_pattern.quantity, 1n));
+                abs (card_pattern.quantity - 1n);
 
             const card_patterns : card_patterns
             = s.card_patterns;
@@ -116,8 +114,7 @@ let%expect_test _ =
             s := s.cards with cards;
 
             const price : tez
-            = gen__mul_u
-                (card_pattern.coefficient, card_pattern.quantity);
+            = card_pattern.coefficient * card_pattern.quantity;
 
             const receiver : contract (unit)
             = case (Tezos.get_contract_opt (Tezos.sender)
@@ -150,17 +147,16 @@ let%expect_test _ =
               ];
 
             const price : tez
-            = gen__mul_u
-                (card_pattern.coefficient,
-                 gen__add_u (card_pattern.quantity, 1n));
+            = card_pattern.coefficient
+              * card_pattern.quantity + 1n;
 
-            if gen__gt_u (price, Tezos.amount)
+            if price > Tezos.amount
             then failwith ("Not enough money")
             else skip;
 
             card_pattern :=
               card_pattern.quantity with
-                gen__add_u (card_pattern.quantity, 1n);
+                card_pattern.quantity + 1n;
 
             const card_patterns : card_patterns
             = s.card_patterns;
@@ -183,7 +179,7 @@ let%expect_test _ =
 
             s := s.cards with cards;
 
-            s := s.next_id with gen__add_u (s.next_id, 1n)
+            s := s.next_id with s.next_id + 1n
           } with ((list [] : list (operation)), s)
       ]
 
@@ -465,7 +461,7 @@ let%expect_test _ =
                    (failwith("transfer_single: No card.") : card)
                };
              {
-               if(gen__neq_u(card.card_owner, Tezos.sender)) {
+               if((card.card_owner != Tezos.sender)) {
                  failwith("This card doesn't belong to you")
                } else {
 
@@ -504,7 +500,7 @@ let%expect_test _ =
                    (failwith("sell_single: No card.") : card)
                };
              {
-               if(gen__neq_u(card.card_owner, Tezos.sender)) {
+               if((card.card_owner != Tezos.sender)) {
                  failwith("This card doesn't belong to you")
                } else {
 
@@ -523,11 +519,7 @@ let%expect_test _ =
                    {...card_pattern,
                      {
                        quantity:
-
-                         abs(
-                           gen__polymorphic_sub_u(card_pattern.
-                             quantity,
-                              1n))}};
+                         abs((card_pattern.quantity - 1n))}};
                  ();
                  let [@var] card_patterns: card_patterns =
                    s.card_patterns;
@@ -554,9 +546,8 @@ let%expect_test _ =
                          let [@var] s = {...s, {cards: cards}};
                          ();
                          let price: tez =
-
-                           gen__mul_u(card_pattern.coefficient,
-                              card_pattern.quantity);
+                           (card_pattern.coefficient * card_pattern.
+                              quantity);
                          let receiver: contract(unit) =
                            switch (
                              Tezos.get_contract_opt(Tezos.sender)
@@ -595,11 +586,10 @@ let%expect_test _ =
                      : card_pattern)
                };
              let price: tez =
-
-               gen__mul_u(card_pattern.coefficient,
-                  gen__add_u(card_pattern.quantity, 1n));
+               (card_pattern.coefficient * (card_pattern.
+                   quantity + 1n));
              {
-               if(gen__gt_u(price, Tezos.amount)) {
+               if((price > Tezos.amount)) {
                  failwith("Not enough money")
                } else {
 
@@ -608,9 +598,7 @@ let%expect_test _ =
                {
                  let [@var] card_pattern =
                    {...card_pattern,
-                     {
-                       quantity:
-                         gen__add_u(card_pattern.quantity, 1n)}};
+                     {quantity: (card_pattern.quantity + 1n)}};
                  ();
                  let [@var] card_patterns: card_patterns =
                    s.card_patterns;
@@ -642,9 +630,7 @@ let%expect_test _ =
                          {
                            let [@var] s =
                              {...s,
-                               {
-                                 next_id:
-                                   gen__add_u(s.next_id, 1n)}};
+                               {next_id: (s.next_id + 1n)}};
                            ();
                            ([] : list(operation)), s
                          }
@@ -688,11 +674,7 @@ let%expect_test _ =
     function asymetric_tuple_access (const gen___3 : unit) is
     {
       const tuple : int * int * int * int = (0, (1, (2, 3)))
-    } with
-        gen__add_u
-          (gen__add_u
-             (gen__add_u (tuple.0, tuple.1. 0), tuple.1. 1. 0),
-           tuple.1. 1. 1)
+    } with tuple.0 + tuple.1. 0 + tuple.1. 1. 0 + tuple.1. 1. 1
 
     type nested_record_t is
       record [nesty : record [mymap : map (int, string)]]
@@ -775,11 +757,7 @@ let main: unit => int =
 let asymetric_tuple_access: unit => int =
   ((gen___3: unit): int =>
      let [@var] tuple: (int, (int, (int, int))) = 0, 1, 2, 3;
-
-     gen__add_u(
-       gen__add_u(gen__add_u(tuple[0], tuple[1][0]),
-          tuple[1][1][0]),
-        tuple[1][1][1]));
+     (((tuple[0] + tuple[1][0]) + tuple[1][1][0]) + tuple[1][1][1]));
 
 type nested_record_t = {nesty: {mymap: map(int, string)}};
 
@@ -960,13 +938,9 @@ function main (const gen__parameters2 : parameter * storage) is
       {
         case p of [
           Zero (n) ->
-            if gen__gt_u (n, 0n)
-            then failwith ("fail")
-            else skip
+            if n > 0n then failwith ("fail") else skip
         | Pos (n) ->
-            if gen__eq_u (n, 0n)
-            then failwith ("fail")
-            else skip
+            if n = 0n then failwith ("fail") else skip
         ]
       } with ((list [] : list (operation)), s)
   ]
@@ -975,11 +949,11 @@ function foobar (const i : int) is
 {
   const p : parameter = (Zero (42n));
 
-  if gen__gt_u (i, 0)
+  if i > 0
   then {
-    i := gen__add_u (i, 1);
+    i := i + 1;
 
-    if gen__gt_u (i, 10)
+    if i > 10
     then {
       i := 20;
 
@@ -1002,7 +976,7 @@ function foobar (const i : int) is
 
 function failer (const p : int) is
 {
-  if gen__eq_u (p, 1) then failwith (42) else skip
+  if p = 1 then failwith (42) else skip
 } with p |}];
   run_ligo_good [ "transpile" ; "contract" ; "../../test/contracts/failwith.ligo" ; "cameligo" ] ;
   [%expect {|
@@ -1077,14 +1051,14 @@ let main: (parameter, storage) => return =
          {
            switch  p {
            | Zero n =>
-               if(gen__gt_u(n, 0n)) {
+               if((n > 0n)) {
                  failwith("fail")
                } else {
 
                  ()
                  }
            | Pos n =>
-               if(gen__eq_u(n, 0n)) {
+               if((n == 0n)) {
                  failwith("fail")
                } else {
 
@@ -1099,12 +1073,12 @@ let foobar: int => int =
   (([@var] i: int): int =>
      let [@var] p: parameter = (Zero 42n);
      {
-       if(gen__gt_u(i, 0)) {
+       if((i > 0)) {
 
          {
-           let [@var] i = gen__add_u(i, 1);
+           let [@var] i = (i + 1);
            ();
-           if(gen__gt_u(i, 10)) {
+           if((i > 10)) {
 
              {
                let [@var] i = 20;
@@ -1135,7 +1109,7 @@ let foobar: int => int =
 
 let failer: int => int =
   ((p: int): int => {
-     if(gen__eq_u(p, 1)) {
+     if((p == 1)) {
        failwith(42)
      } else {
 
@@ -1149,25 +1123,14 @@ let%expect_test _ =
   [%expect {|
     recursive function sum (const gen__parameters2 : int * int) is
       case gen__parameters2 of [
-        (n, acc) ->
-          if gen__lt_u (n, 1)
-          then acc
-          else
-            sum
-              (gen__polymorphic_sub_u (n, 1),
-               gen__add_u (acc, n))
+        (n, acc) -> if n < 1 then acc else sum (n - 1, acc + n)
       ]
 
     recursive function fibo
       (const gen__parameters3 : int * int * int) is
       case gen__parameters3 of [
         (n, n_1, n_0) ->
-          if gen__lt_u (n, 2)
-          then n_1
-          else
-            fibo
-              (gen__polymorphic_sub_u (n, 1),
-               gen__add_u (n_1, n_0), n_1)
+          if n < 2 then n_1 else fibo (n - 1, n_1 + n_0, n_1)
       ] |}];
   run_ligo_good [ "transpile" ; "contract" ; "../../test/contracts/recursion.ligo" ; "cameligo" ] ;
   [%expect {|
@@ -1190,13 +1153,11 @@ let%expect_test _ =
       ((gen__parameters2: (int, int)): int =>
          switch  gen__parameters2 {
          | n, acc =>
-             if(gen__lt_u(n, 1)) {
+             if((n < 1)) {
                acc
              } else {
 
-
-               sum(gen__polymorphic_sub_u(n, 1),
-                  gen__add_u(acc, n))
+               sum((n - 1), (acc + n))
                }
          });
 
@@ -1204,14 +1165,11 @@ let%expect_test _ =
       ((gen__parameters3: (int, int, int)): int =>
          switch  gen__parameters3 {
          | n, n_1, n_0 =>
-             if(gen__lt_u(n, 2)) {
+             if((n < 2)) {
                n_1
              } else {
 
-
-               fibo(gen__polymorphic_sub_u(n, 1),
-                  gen__add_u(n_1, n_0),
-                  n_1)
+               fibo((n - 1), (n_1 + n_0), n_1)
                }
          }); |}]
 
