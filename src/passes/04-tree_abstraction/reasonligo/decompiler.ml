@@ -14,6 +14,12 @@ open Simple_utils.Function
 (* Utils *)
 let wrap = Region.wrap_ghost
 
+let un_func_op = fun v ->
+  match v with
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#neg") -> Some (fun arg -> CST.(EArith (Neg (wrap { op = Token.ghost_minus ; arg }))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#not") -> Some (fun arg -> CST.(ELogic (BoolExpr (Not (wrap { op = Token.ghost_not ; arg })))))
+  | _ -> None
+
 let bin_func_op = fun v ->
   match v with
   | _ when AST.ValueVar.(equal v @@ of_input_var "#add") -> Some (fun arg1 arg2 -> CST.(EArith (Add (wrap { op = Token.ghost_plus ; arg1 ; arg2 }))))
@@ -335,6 +341,10 @@ let rec decompile_expression : AST.expression -> CST.expr = fun expr ->
        let args = get_e_tuple args in
        let args = List.map ~f:decompile_expression args in
        return_expr_with_par @@ op (List.nth_exn args 0) (List.nth_exn args 1)
+    | { expression_content = E_variable v ; _ }, [args] when Option.is_some (un_func_op v) ->
+       let op = Option.value_exn (un_func_op v) in
+       let args = decompile_expression args in
+       return_expr_with_par @@ op args
     | _, _ ->
     let lamb = decompile_expression lamb in
     let args =

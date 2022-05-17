@@ -18,6 +18,12 @@ module Pair     = Simple_utils.Pair
 
 let wrap = Region.wrap_ghost
 
+let un_func_op = fun v ->
+  match v with
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#neg") -> Some (fun arg -> CST.(E_Neg (wrap { op = Token.ghost_minus ; arg })))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#not") -> Some (fun arg -> CST.(E_Not (wrap { op = Token.ghost_not ; arg })))
+  | _ -> None
+
 let bin_func_op = fun v ->
   match v with
   | _ when AST.ValueVar.(equal v @@ of_input_var "#add") -> Some (fun arg1 arg2 -> CST.(E_Add (wrap { op = Token.ghost_plus ; arg1 ; arg2 })))
@@ -427,6 +433,10 @@ and decompile_eos : dialect -> eos -> AST.expression -> ((CST.statement List.Ne.
        let args = get_e_tuple args in
        let args = List.map ~f:(decompile_expression ~dialect) args in
        return_expr @@ op (List.nth_exn args 0) (List.nth_exn args 1)
+    | { expression_content = E_variable v ; _ }, [args] when Option.is_some (un_func_op v) ->
+       let op = Option.value_exn (un_func_op v) in
+       let args = decompile_expression ~dialect args in
+       return_expr @@ op args
     | _, _ ->
     let lamb = decompile_expression ~dialect lamb in
     let args = (decompile_to_tuple_expr dialect) @@ get_e_tuple args in
