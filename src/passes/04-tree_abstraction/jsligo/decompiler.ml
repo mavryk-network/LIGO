@@ -76,8 +76,14 @@ let bin_func_op = fun v ->
   | _ when AST.ValueVar.(equal v @@ of_input_var "#mul") -> Some (fun arg1 arg2 -> CST.(EArith (Mult (wrap { op = Token.ghost_times ; arg1 ; arg2 }))))
   | _ when AST.ValueVar.(equal v @@ of_input_var "#div") -> Some (fun arg1 arg2 -> CST.(EArith (Div (wrap { op = Token.ghost_slash ; arg1 ; arg2 }))))
   | _ when AST.ValueVar.(equal v @@ of_input_var "#mod") -> Some (fun arg1 arg2 -> CST.(EArith (Mod (wrap { op = Token.ghost_rem ; arg1 ; arg2 }))))
-  | _ when AST.ValueVar.(equal v @@ of_input_var "#and") -> Some (fun arg1 arg2 -> CST.(ELogic (BoolExpr (And (wrap { op = Token.ghost_bool_and ; arg1 ; arg2 })))))
-  | _ when AST.ValueVar.(equal v @@ of_input_var "#or") -> Some (fun arg1 arg2 -> CST.(ELogic (BoolExpr (Or (wrap { op = Token.ghost_bool_or ; arg1 ; arg2 })))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#and") -> Some (fun arg1 arg2 ->
+      let lamb = CST.(EModA (Region.wrap_ghost {module_name = Region.wrap_ghost "Bitwise";selector=Token.ghost_dot;field = EVar (Region.wrap_ghost "and")})) in
+      let args = CST.Multiple (Region.wrap_ghost @@ par @@ list_to_nsepseq ~sep:Token.ghost_comma [arg1; arg2]) in
+      CST.(ECall (wrap (lamb, args))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#or") -> Some (fun arg1 arg2 ->
+      let lamb = CST.(EModA (Region.wrap_ghost {module_name = Region.wrap_ghost "Bitwise";selector=Token.ghost_dot;field = EVar (Region.wrap_ghost "or")})) in
+      let args = CST.Multiple (Region.wrap_ghost @@ par @@ list_to_nsepseq ~sep:Token.ghost_comma [arg1; arg2]) in
+      CST.(ECall (wrap (lamb, args))))
   | _ when AST.ValueVar.(equal v @@ of_input_var "#xor") -> Some (fun arg1 arg2 ->
       let lamb = CST.(EModA (Region.wrap_ghost {module_name = Region.wrap_ghost "Bitwise";selector=Token.ghost_dot;field = EVar (Region.wrap_ghost "xor")})) in
       let args = CST.Multiple (Region.wrap_ghost @@ par @@ list_to_nsepseq ~sep:Token.ghost_comma [arg1; arg2]) in
@@ -90,6 +96,8 @@ let bin_func_op = fun v ->
       let lamb = CST.(EModA (Region.wrap_ghost {module_name = Region.wrap_ghost "Bitwise";selector=Token.ghost_dot;field = EVar (Region.wrap_ghost "lsr")})) in
       let args = CST.Multiple (Region.wrap_ghost @@ par @@ list_to_nsepseq ~sep:Token.ghost_comma [arg1; arg2]) in
       CST.(ECall (wrap (lamb, args))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#bool_and") -> Some (fun arg1 arg2 -> CST.(ELogic (BoolExpr (And (wrap { op = Token.ghost_bool_and ; arg1 ; arg2 })))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#bool_or") -> Some (fun arg1 arg2 -> CST.(ELogic (BoolExpr (Or (wrap { op = Token.ghost_bool_or ; arg1 ; arg2 })))))
   | _ when AST.ValueVar.(equal v @@ of_input_var "#eq") -> Some (fun arg1 arg2 -> CST.(ELogic (CompExpr (Equal (wrap { op = Token.ghost_eq ; arg1 ; arg2 })))))
   | _ when AST.ValueVar.(equal v @@ of_input_var "#neq") -> Some (fun arg1 arg2 -> CST.(ELogic (CompExpr (Neq (wrap { op = Token.ghost_ne ; arg1 ; arg2 })))))
   | _ when AST.ValueVar.(equal v @@ of_input_var "#lt") -> Some (fun arg1 arg2 -> CST.(ELogic (CompExpr (Lt (wrap { op = Token.ghost_lt ; arg1 ; arg2 })))))
@@ -106,8 +114,16 @@ let bin_u_func_op = fun v ->
   | _ when AST.ValueVar.(equal v @@ of_input_var "#polymorphic_sub_u") -> Some (fun arg1 arg2 -> CST.(EArith (Sub (wrap { op = Token.ghost_minus ; arg1 ; arg2 }))))
   | _ when AST.ValueVar.(equal v @@ of_input_var "#mul_u") -> Some (fun arg1 arg2 -> CST.(EArith (Mult (wrap { op = Token.ghost_times ; arg1 ; arg2 }))))
   | _ when AST.ValueVar.(equal v @@ of_input_var "#div_u") -> Some (fun arg1 arg2 -> CST.(EArith (Div (wrap { op = Token.ghost_slash ; arg1 ; arg2 }))))
-  | _ when AST.ValueVar.(equal v @@ of_input_var "#and_u") -> Some (fun arg1 arg2 -> CST.(ELogic (BoolExpr (And (wrap { op = Token.ghost_bool_and ; arg1 ; arg2 })))))
-  | _ when AST.ValueVar.(equal v @@ of_input_var "#or_u") -> Some (fun arg1 arg2 -> CST.(ELogic (BoolExpr (Or (wrap { op = Token.ghost_bool_or ; arg1 ; arg2 })))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#and_u") -> Some (fun arg1 arg2 ->
+      let lamb = CST.(EModA (Region.wrap_ghost {module_name = Region.wrap_ghost "Bitwise";selector=Token.ghost_dot;field = EVar (Region.wrap_ghost "and")})) in
+      let args = CST.Multiple (Region.wrap_ghost @@ par @@ list_to_nsepseq ~sep:Token.ghost_comma [arg1; arg2]) in
+      CST.(ECall (wrap (lamb, args))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#or_u") -> Some (fun arg1 arg2 ->
+      let lamb = CST.(EModA (Region.wrap_ghost {module_name = Region.wrap_ghost "Bitwise";selector=Token.ghost_dot;field = EVar (Region.wrap_ghost "or")})) in
+      let args = CST.Multiple (Region.wrap_ghost @@ par @@ list_to_nsepseq ~sep:Token.ghost_comma [arg1; arg2]) in
+      CST.(ECall (wrap (lamb, args))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#bool_and_u") -> Some (fun arg1 arg2 -> CST.(ELogic (BoolExpr (And (wrap { op = Token.ghost_bool_and ; arg1 ; arg2 })))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#bool_or_u") -> Some (fun arg1 arg2 -> CST.(ELogic (BoolExpr (Or (wrap { op = Token.ghost_bool_or ; arg1 ; arg2 })))))
   | _ when AST.ValueVar.(equal v @@ of_input_var "#xor_u") -> Some (fun arg1 arg2 ->
       let lamb = CST.(EModA (Region.wrap_ghost {module_name = Region.wrap_ghost "Bitwise";selector=Token.ghost_dot;field = EVar (Region.wrap_ghost "xor")})) in
       let args = CST.Multiple (Region.wrap_ghost @@ par @@ list_to_nsepseq ~sep:Token.ghost_comma [arg1; arg2]) in
