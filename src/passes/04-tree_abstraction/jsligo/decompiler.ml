@@ -18,55 +18,6 @@ open Simple_utils.Function
 
 let wrap = Region.wrap_ghost
 
-let un_func_op = fun v ->
-  match v with
-  | _ when AST.ValueVar.(equal v @@ of_input_var "#neg") -> Some (fun arg -> CST.(EArith (Neg (wrap { op = Token.ghost_minus ; arg }))))
-  | _ when AST.ValueVar.(equal v @@ of_input_var "#not") -> Some (fun arg -> CST.(ELogic (BoolExpr (Not (wrap { op = Token.ghost_bool_not ; arg })))))
-  | _ -> None
-
-let bin_func_op = fun v ->
-  match v with
-  | _ when AST.ValueVar.(equal v @@ of_input_var "#add") -> Some (fun arg1 arg2 -> CST.(EArith (Add (wrap { op = Token.ghost_plus ; arg1 ; arg2 }))))
-  | _ when AST.ValueVar.(equal v @@ of_input_var "#sub") -> Some (fun arg1 arg2 -> CST.(EArith (Sub (wrap { op = Token.ghost_minus ; arg1 ; arg2 }))))
-  | _ when AST.ValueVar.(equal v @@ of_input_var "#polymorphic_add") -> Some (fun arg1 arg2 -> CST.(EArith (Add (wrap { op = Token.ghost_plus ; arg1 ; arg2 }))))
-  | _ when AST.ValueVar.(equal v @@ of_input_var "#polymorphic_sub") -> Some (fun arg1 arg2 -> CST.(EArith (Sub (wrap { op = Token.ghost_minus ; arg1 ; arg2 }))))
-  | _ when AST.ValueVar.(equal v @@ of_input_var "#mul") -> Some (fun arg1 arg2 -> CST.(EArith (Mult (wrap { op = Token.ghost_times ; arg1 ; arg2 }))))
-  | _ when AST.ValueVar.(equal v @@ of_input_var "#div") -> Some (fun arg1 arg2 -> CST.(EArith (Div (wrap { op = Token.ghost_slash ; arg1 ; arg2 }))))
-  | _ when AST.ValueVar.(equal v @@ of_input_var "#mod") -> Some (fun arg1 arg2 -> CST.(EArith (Mod (wrap { op = Token.ghost_rem ; arg1 ; arg2 }))))
-  | _ when AST.ValueVar.(equal v @@ of_input_var "#and") -> Some (fun arg1 arg2 -> CST.(ELogic (BoolExpr (And (wrap { op = Token.ghost_bool_and ; arg1 ; arg2 })))))
-  | _ when AST.ValueVar.(equal v @@ of_input_var "#or") -> Some (fun arg1 arg2 -> CST.(ELogic (BoolExpr (Or (wrap { op = Token.ghost_bool_or ; arg1 ; arg2 })))))
-  (* | _ when AST.ValueVar.(equal v @@ of_input_var "#xor") -> Some (fun arg1 arg2 -> CST.(EArith (Lxor (wrap { op = Token.ghost_lxor ; arg1 ; arg2 }))))
-   * | _ when AST.ValueVar.(equal v @@ of_input_var "#lsl") -> Some (fun arg1 arg2 -> CST.(EArith (Lsl (wrap { op = Token.ghost_lsl ; arg1 ; arg2 }))))
-   * | _ when AST.ValueVar.(equal v @@ of_input_var "#lsr") -> Some (fun arg1 arg2 -> CST.(EArith (Lsr (wrap { op = Token.ghost_lsr ; arg1 ; arg2 })))) *)
-  | _ when AST.ValueVar.(equal v @@ of_input_var "#eq") -> Some (fun arg1 arg2 -> CST.(ELogic (CompExpr (Equal (wrap { op = Token.ghost_eq ; arg1 ; arg2 })))))
-  | _ when AST.ValueVar.(equal v @@ of_input_var "#neq") -> Some (fun arg1 arg2 -> CST.(ELogic (CompExpr (Neq (wrap { op = Token.ghost_ne ; arg1 ; arg2 })))))
-  | _ when AST.ValueVar.(equal v @@ of_input_var "#lt") -> Some (fun arg1 arg2 -> CST.(ELogic (CompExpr (Lt (wrap { op = Token.ghost_lt ; arg1 ; arg2 })))))
-  | _ when AST.ValueVar.(equal v @@ of_input_var "#gt") -> Some (fun arg1 arg2 -> CST.(ELogic (CompExpr (Gt (wrap { op = Token.ghost_gt ; arg1 ; arg2 })))))
-  | _ when AST.ValueVar.(equal v @@ of_input_var "#le") -> Some (fun arg1 arg2 -> CST.(ELogic (CompExpr (Leq (wrap { op = Token.ghost_le ; arg1 ; arg2 })))))
-  | _ when AST.ValueVar.(equal v @@ of_input_var "#ge") -> Some (fun arg1 arg2 -> CST.(ELogic (CompExpr (Geq (wrap { op = Token.ghost_ge ; arg1 ; arg2 })))))
-  | _ -> None
-
-let bin_u_func_op = fun v ->
-  match v with
-  | _ when AST.ValueVar.(equal v @@ of_input_var "#add_u") -> Some (fun arg1 arg2 -> CST.(EArith (Add (wrap { op = Token.ghost_plus ; arg1 ; arg2 }))))
-  | _ when AST.ValueVar.(equal v @@ of_input_var "#sub_u") -> Some (fun arg1 arg2 -> CST.(EArith (Sub (wrap { op = Token.ghost_minus ; arg1 ; arg2 }))))
-  | _ when AST.ValueVar.(equal v @@ of_input_var "#polymorphic_add_u") -> Some (fun arg1 arg2 -> CST.(EArith (Add (wrap { op = Token.ghost_plus ; arg1 ; arg2 }))))
-  | _ when AST.ValueVar.(equal v @@ of_input_var "#polymorphic_sub_u") -> Some (fun arg1 arg2 -> CST.(EArith (Sub (wrap { op = Token.ghost_minus ; arg1 ; arg2 }))))
-  | _ when AST.ValueVar.(equal v @@ of_input_var "#mul_u") -> Some (fun arg1 arg2 -> CST.(EArith (Mult (wrap { op = Token.ghost_times ; arg1 ; arg2 }))))
-  | _ when AST.ValueVar.(equal v @@ of_input_var "#div_u") -> Some (fun arg1 arg2 -> CST.(EArith (Div (wrap { op = Token.ghost_slash ; arg1 ; arg2 }))))
-  (* | _ when AST.ValueVar.(equal v @@ of_input_var "#mod_u") -> Some (fun arg1 arg2 -> CST.(EArith (Mod (wrap { op = Token.ghost_mod ; arg1 ; arg2 }))))
-   * | _ when AST.ValueVar.(equal v @@ of_input_var "#and_u") -> Some (fun arg1 arg2 -> CST.(EArith (Land (wrap { op = Token.ghost_land ; arg1 ; arg2 }))))
-   * | _ when AST.ValueVar.(equal v @@ of_input_var "#or_u") -> Some (fun arg1 arg2 -> CST.(EArith (Lor (wrap { op = Token.ghost_lor ; arg1 ; arg2 }))))
-   * | _ when AST.ValueVar.(equal v @@ of_input_var "#xor_u") -> Some (fun arg1 arg2 -> CST.(EArith (Lxor (wrap { op = Token.ghost_lxor ; arg1 ; arg2 }))))
-   * | _ when AST.ValueVar.(equal v @@ of_input_var "#lsl_u") -> Some (fun arg1 arg2 -> CST.(EArith (Lsl (wrap { op = Token.ghost_lsl ; arg1 ; arg2 }))))
-   * | _ when AST.ValueVar.(equal v @@ of_input_var "#lsr_u") -> Some (fun arg1 arg2 -> CST.(EArith (Lsr (wrap { op = Token.ghost_lsr ; arg1 ; arg2 })))) *)
-  | _ when AST.ValueVar.(equal v @@ of_input_var "#eq_u") -> Some (fun arg1 arg2 -> CST.(ELogic (CompExpr (Equal (wrap { op = Token.ghost_eq ; arg1 ; arg2 })))))
-  | _ when AST.ValueVar.(equal v @@ of_input_var "#neq_u") -> Some (fun arg1 arg2 -> CST.(ELogic (CompExpr (Neq (wrap { op = Token.ghost_ne ; arg1 ; arg2 })))))
-  | _ when AST.ValueVar.(equal v @@ of_input_var "#lt_u") -> Some (fun arg1 arg2 -> CST.(ELogic (CompExpr (Lt (wrap { op = Token.ghost_lt ; arg1 ; arg2 })))))
-  | _ when AST.ValueVar.(equal v @@ of_input_var "#gt_u") -> Some (fun arg1 arg2 -> CST.(ELogic (CompExpr (Gt (wrap { op = Token.ghost_gt ; arg1 ; arg2 })))))
-  | _ when AST.ValueVar.(equal v @@ of_input_var "#le_u") -> Some (fun arg1 arg2 -> CST.(ELogic (CompExpr (Leq (wrap { op = Token.ghost_le ; arg1 ; arg2 })))))
-  | _ when AST.ValueVar.(equal v @@ of_input_var "#ge_u") -> Some (fun arg1 arg2 -> CST.(ELogic (CompExpr (Geq (wrap { op = Token.ghost_ge ; arg1 ; arg2 })))))
-  | _ -> None
 
 let decompile_attributes : string list -> CST.attribute list = fun kvl ->
   let f : string -> CST.attribute = fun str -> Region.wrap_ghost str in
@@ -109,6 +60,73 @@ let braced d = CST.{lbrace=Token.ghost_lbrace; rbrace=Token.ghost_rbrace; inside
 
 let filter_private (attributes: CST.attributes) =
   List.filter ~f:(fun v -> not (String.equal v.value "private")) attributes
+
+let un_func_op = fun v ->
+  match v with
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#neg") -> Some (fun arg -> CST.(EArith (Neg (wrap { op = Token.ghost_minus ; arg }))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#not") -> Some (fun arg -> CST.(ELogic (BoolExpr (Not (wrap { op = Token.ghost_bool_not ; arg })))))
+  | _ -> None
+
+let bin_func_op = fun v ->
+  match v with
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#add") -> Some (fun arg1 arg2 -> CST.(EArith (Add (wrap { op = Token.ghost_plus ; arg1 ; arg2 }))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#sub") -> Some (fun arg1 arg2 -> CST.(EArith (Sub (wrap { op = Token.ghost_minus ; arg1 ; arg2 }))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#polymorphic_add") -> Some (fun arg1 arg2 -> CST.(EArith (Add (wrap { op = Token.ghost_plus ; arg1 ; arg2 }))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#polymorphic_sub") -> Some (fun arg1 arg2 -> CST.(EArith (Sub (wrap { op = Token.ghost_minus ; arg1 ; arg2 }))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#mul") -> Some (fun arg1 arg2 -> CST.(EArith (Mult (wrap { op = Token.ghost_times ; arg1 ; arg2 }))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#div") -> Some (fun arg1 arg2 -> CST.(EArith (Div (wrap { op = Token.ghost_slash ; arg1 ; arg2 }))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#mod") -> Some (fun arg1 arg2 -> CST.(EArith (Mod (wrap { op = Token.ghost_rem ; arg1 ; arg2 }))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#and") -> Some (fun arg1 arg2 -> CST.(ELogic (BoolExpr (And (wrap { op = Token.ghost_bool_and ; arg1 ; arg2 })))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#or") -> Some (fun arg1 arg2 -> CST.(ELogic (BoolExpr (Or (wrap { op = Token.ghost_bool_or ; arg1 ; arg2 })))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#xor") -> Some (fun arg1 arg2 ->
+      let lamb = CST.(EModA (Region.wrap_ghost {module_name = Region.wrap_ghost "Bitwise";selector=Token.ghost_dot;field = EVar (Region.wrap_ghost "xor")})) in
+      let args = CST.Multiple (Region.wrap_ghost @@ par @@ list_to_nsepseq ~sep:Token.ghost_comma [arg1; arg2]) in
+      CST.(ECall (wrap (lamb, args))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#lsl") -> Some (fun arg1 arg2 ->
+      let lamb = CST.(EModA (Region.wrap_ghost {module_name = Region.wrap_ghost "Bitwise";selector=Token.ghost_dot;field = EVar (Region.wrap_ghost "lsl")})) in
+      let args = CST.Multiple (Region.wrap_ghost @@ par @@ list_to_nsepseq ~sep:Token.ghost_comma [arg1; arg2]) in
+      CST.(ECall (wrap (lamb, args))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#lsr") -> Some (fun arg1 arg2 ->
+      let lamb = CST.(EModA (Region.wrap_ghost {module_name = Region.wrap_ghost "Bitwise";selector=Token.ghost_dot;field = EVar (Region.wrap_ghost "lsr")})) in
+      let args = CST.Multiple (Region.wrap_ghost @@ par @@ list_to_nsepseq ~sep:Token.ghost_comma [arg1; arg2]) in
+      CST.(ECall (wrap (lamb, args))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#eq") -> Some (fun arg1 arg2 -> CST.(ELogic (CompExpr (Equal (wrap { op = Token.ghost_eq ; arg1 ; arg2 })))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#neq") -> Some (fun arg1 arg2 -> CST.(ELogic (CompExpr (Neq (wrap { op = Token.ghost_ne ; arg1 ; arg2 })))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#lt") -> Some (fun arg1 arg2 -> CST.(ELogic (CompExpr (Lt (wrap { op = Token.ghost_lt ; arg1 ; arg2 })))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#gt") -> Some (fun arg1 arg2 -> CST.(ELogic (CompExpr (Gt (wrap { op = Token.ghost_gt ; arg1 ; arg2 })))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#le") -> Some (fun arg1 arg2 -> CST.(ELogic (CompExpr (Leq (wrap { op = Token.ghost_le ; arg1 ; arg2 })))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#ge") -> Some (fun arg1 arg2 -> CST.(ELogic (CompExpr (Geq (wrap { op = Token.ghost_ge ; arg1 ; arg2 })))))
+  | _ -> None
+
+let bin_u_func_op = fun v ->
+  match v with
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#add_u") -> Some (fun arg1 arg2 -> CST.(EArith (Add (wrap { op = Token.ghost_plus ; arg1 ; arg2 }))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#sub_u") -> Some (fun arg1 arg2 -> CST.(EArith (Sub (wrap { op = Token.ghost_minus ; arg1 ; arg2 }))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#polymorphic_add_u") -> Some (fun arg1 arg2 -> CST.(EArith (Add (wrap { op = Token.ghost_plus ; arg1 ; arg2 }))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#polymorphic_sub_u") -> Some (fun arg1 arg2 -> CST.(EArith (Sub (wrap { op = Token.ghost_minus ; arg1 ; arg2 }))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#mul_u") -> Some (fun arg1 arg2 -> CST.(EArith (Mult (wrap { op = Token.ghost_times ; arg1 ; arg2 }))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#div_u") -> Some (fun arg1 arg2 -> CST.(EArith (Div (wrap { op = Token.ghost_slash ; arg1 ; arg2 }))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#and_u") -> Some (fun arg1 arg2 -> CST.(ELogic (BoolExpr (And (wrap { op = Token.ghost_bool_and ; arg1 ; arg2 })))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#or_u") -> Some (fun arg1 arg2 -> CST.(ELogic (BoolExpr (Or (wrap { op = Token.ghost_bool_or ; arg1 ; arg2 })))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#xor_u") -> Some (fun arg1 arg2 ->
+      let lamb = CST.(EModA (Region.wrap_ghost {module_name = Region.wrap_ghost "Bitwise";selector=Token.ghost_dot;field = EVar (Region.wrap_ghost "xor")})) in
+      let args = CST.Multiple (Region.wrap_ghost @@ par @@ list_to_nsepseq ~sep:Token.ghost_comma [arg1; arg2]) in
+      CST.(ECall (wrap (lamb, args))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#lsl_u") -> Some (fun arg1 arg2 ->
+      let lamb = CST.(EModA (Region.wrap_ghost {module_name = Region.wrap_ghost "Bitwise";selector=Token.ghost_dot;field = EVar (Region.wrap_ghost "lsl")})) in
+      let args = CST.Multiple (Region.wrap_ghost @@ par @@ list_to_nsepseq ~sep:Token.ghost_comma [arg1; arg2]) in
+      CST.(ECall (wrap (lamb, args))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#lsr_u") -> Some (fun arg1 arg2 ->
+      let lamb = CST.(EModA (Region.wrap_ghost {module_name = Region.wrap_ghost "Bitwise";selector=Token.ghost_dot;field = EVar (Region.wrap_ghost "lsr")})) in
+      let args = CST.Multiple (Region.wrap_ghost @@ par @@ list_to_nsepseq ~sep:Token.ghost_comma [arg1; arg2]) in
+      CST.(ECall (wrap (lamb, args))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#eq_u") -> Some (fun arg1 arg2 -> CST.(ELogic (CompExpr (Equal (wrap { op = Token.ghost_eq ; arg1 ; arg2 })))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#neq_u") -> Some (fun arg1 arg2 -> CST.(ELogic (CompExpr (Neq (wrap { op = Token.ghost_ne ; arg1 ; arg2 })))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#lt_u") -> Some (fun arg1 arg2 -> CST.(ELogic (CompExpr (Lt (wrap { op = Token.ghost_lt ; arg1 ; arg2 })))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#gt_u") -> Some (fun arg1 arg2 -> CST.(ELogic (CompExpr (Gt (wrap { op = Token.ghost_gt ; arg1 ; arg2 })))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#le_u") -> Some (fun arg1 arg2 -> CST.(ELogic (CompExpr (Leq (wrap { op = Token.ghost_le ; arg1 ; arg2 })))))
+  | _ when AST.ValueVar.(equal v @@ of_input_var "#ge_u") -> Some (fun arg1 arg2 -> CST.(ELogic (CompExpr (Geq (wrap { op = Token.ghost_ge ; arg1 ; arg2 })))))
+  | _ -> None
 
 (* Decompiler *)
 
