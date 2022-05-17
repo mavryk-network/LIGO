@@ -10,7 +10,7 @@
   --ifm-color-primary-lightest: #92e0d0;
   --blockquote-color: #efefef;
   --ifm-code-font-size: .9rem;
-  
+
 
   /* header */
   --ifm-navbar-link-hover-color: #0e74ff;
@@ -291,7 +291,7 @@ blockquote {
 }
 
 blockquote code {
-  opacity: 1;  
+  opacity: 1;
 }
 
 a,
@@ -615,7 +615,7 @@ a:hover {
   font-size: 1.25rem;
 }
 
-#partners {  
+#partners {
   background-color: var(--ifm-color-primary);
   color: white;
   font-size: 2.8rem;
@@ -743,6 +743,45 @@ a:hover {
 
 #contactPage #message .communicationOptions .option .icon {
   margin-right: 30px;
+}
+
+/**
+ * FAQ page
+ */
+#faqPage .title {
+  width: 100%;
+  text-align: center;
+  font-size: 3.125rem;
+}
+
+#faqPage .body {
+  margin-top: 2em;
+  margin-left: 5em;
+}
+
+#faqPage .body .qa {
+  border: 1px solid grey;
+  border-radius: 0.5em;
+  padding-top: 0.25em;
+  padding-left: 1em;
+  padding-right: 1em;
+  margin-bottom: 1em;
+}
+#faqPage .body .question {
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+#faqPage .body .tags {
+  font-size: 1rem;
+  font-style: oblique;
+  border-bottom: 1px solid grey;
+}
+
+#faqPage .body .answer {
+  padding-top: 1%;
+  padding-bottom: 1%;
+  padding-left: 2%;
 }
 
 /**
@@ -888,7 +927,7 @@ a:hover {
 }
 
 @media (min-width: 1024px) {
-  .row .col { 
+  .row .col {
     padding-left: 3rem;
     padding-right: 3rem;
   }
@@ -999,7 +1038,7 @@ a:hover {
 }
 
 .codeTable {
-  display: grid; 
+  display: grid;
   grid-template-columns: 30% 70%;
   align-items: center;
 }
@@ -1026,7 +1065,7 @@ a:hover {
 
 
 .codeTable > .example {
-  padding-top: var(--ifm-leading);  
+  padding-top: var(--ifm-leading);
 }
 
 .codeTable > .example pre,

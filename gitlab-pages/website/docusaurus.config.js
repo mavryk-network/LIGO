@@ -22,7 +22,7 @@ const siteConfig = {
   //   organizationName: 'JoelMarcey'
 
   // For no header links in the top nav bar -> headerLinks: [],
-  
+
 
   // footerLinks: {
   //   docs: [
@@ -103,7 +103,7 @@ const siteConfig = {
 
   // On page navigation for the current documentation page.
   // No .html extensions for paths.
-  
+
   // Show documentation's last contributor's name.
   // enableUpdateBy: true,
 
@@ -123,8 +123,8 @@ const siteConfig = {
       priority: 0.5,
     }),
     [
-      '@docusaurus/plugin-client-redirects', {        
-        redirects: [          
+      '@docusaurus/plugin-client-redirects', {
+        redirects: [
           { from: ["/docs/next/manpages/compile-contract"     ], to: "/docs/next/manpages/compile contract"       },
           { from: ["/docs/next/manpages/compile-expression"   ], to: "/docs/next/manpages/compile expression"     },
           { from: ["/docs/next/manpages/compile-parameter"    ], to: "/docs/next/manpages/compile parameter"      },
@@ -154,11 +154,11 @@ const siteConfig = {
           { from: ["/docs/next/manpages/print ast"            ], to: "/docs/next/manpages/print ast-imperative"   },
           { from: ["/docs/next/manpages/run evaluate-value"   ], to: "/docs/next/manpages/run evaluate-expr"      },
           { from: ["/docs/next/manpages/run run-function"     ], to: "/docs/next/manpages/run evaluate-call"      },
-        ],      
+        ],
       }
     ]
   ],
-  
+
   presets: [
     [
       '@docusaurus/preset-classic',
@@ -176,7 +176,7 @@ const siteConfig = {
           current: {
             label: `(unreleased)`,
           },
-        
+
         }
       }
     ]
@@ -216,13 +216,14 @@ const siteConfig = {
         // TODO: { href: "/odoc", label: "API" },
         // { doc: 'contributors/origin', label: 'Contribute' },
         { to: '/contact', label: 'Ask Questions', position: 'left' },
+        { to: '/faq', label: 'FAQ', position: 'left' },
         { to: '/docs/next/intro/changelog/', label: 'Changelog', position: 'left' }
       ],
     },
     footer: {
-      links: [ 
+      links: [
         {
-          title: 'Docs', 
+          title: 'Docs',
           items: [
             { to: 'docs/intro/installation', label: 'Install' },
             { to: 'docs/api/cli-commands', label: 'CLI Commands' },
@@ -272,7 +273,7 @@ const siteConfig = {
             }
           ]
         }
-        
+
         // { href: 'https://ide.ligolang.org/', title: 'Try Online' }
       ],
       copyright: `© ${new Date().getFullYear()} LIGO. All rights reserved.`,
