@@ -278,8 +278,8 @@ let rec compile_expression ~(raise:Errors.abs_error Simple_utils.Trace.raise) ?f
     match logic with
       BoolExpr be -> (
       match be with
-        Or or_   -> compile_bin_op "#or_u"  or_
-      | And and_ -> compile_bin_op "#and_u" and_
+        Or or_   -> compile_bin_op "#bool_or_u"  or_
+      | And and_ -> compile_bin_op "#bool_and_u" and_
       | Not not_ -> compile_un_op "#not" not_
     )
     | CompExpr ce -> (

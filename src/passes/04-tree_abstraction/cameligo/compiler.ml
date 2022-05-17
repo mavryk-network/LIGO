@@ -287,8 +287,8 @@ let rec compile_expression ~raise : CST.expr -> AST.expr = fun e ->
     match logic with
       BoolExpr be -> (
       match be with
-        Or or_   -> compile_bin_op' "#or"  or_
-      | And and_ -> compile_bin_op' "#and" and_
+        Or or_   -> compile_bin_op' "#bool_or"  or_
+      | And and_ -> compile_bin_op' "#bool_and" and_
       | Not not_ -> compile_un_op "#not" not_
     )
     | CompExpr ce -> (

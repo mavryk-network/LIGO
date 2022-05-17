@@ -399,8 +399,8 @@ and compile_expression ~add_warning ~raise : CST.expr -> AST.expr = fun e ->
     match logic with
       BoolExpr be -> (
       match be with
-        Or or_   -> compile_bin_op ~add_warning ~raise "#or_u"  or_
-      | And and_ -> compile_bin_op ~add_warning ~raise "#and_u" and_
+        Or or_   -> compile_bin_op ~add_warning ~raise "#bool_or_u"  or_
+      | And and_ -> compile_bin_op ~add_warning ~raise "#bool_and_u" and_
       | Not not_ -> compile_un_op ~add_warning ~raise "#not" not_
     )
     | CompExpr ce -> (
@@ -1225,8 +1225,8 @@ and compile_statement ?(wrap=false) ~add_warning ~raise : CST.statement -> state
     let found_case_assign_true   = e_assign found_case_binder  [] (e_true ()) in
 
     let not_expr     e   = e_application ~loc (e_variable @@ ValueVar.of_input_var "#not") e in
-    let and_expr     a b = e_application ~loc (e_variable @@ ValueVar.of_input_var "#and_u") (e_pair a b) in
-    let or_expr      a b = e_application ~loc (e_variable @@ ValueVar.of_input_var "#or_u") (e_pair a b) in
+    let and_expr     a b = e_application ~loc (e_variable @@ ValueVar.of_input_var "#bool_and_u") (e_pair a b) in
+    let or_expr      a b = e_application ~loc (e_variable @@ ValueVar.of_input_var "#bool_or_u") (e_pair a b) in
     let eq_expr ~loc a b = e_application ~loc (e_variable @@ ValueVar.of_input_var "#eq_u") (e_pair a b) in
 
     let found_case_eq_true  = eq_expr ~loc (e_variable found_case)  (e_true()) in
