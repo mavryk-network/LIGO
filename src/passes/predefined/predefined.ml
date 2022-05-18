@@ -57,16 +57,6 @@ module Tree_abstraction = struct
     (* Big_map module *)
     | "Big_map.literal"  -> some_const C_BIG_MAP_LITERAL
 
-    (* Operator module *)
-    | "Operator.sub"   -> some_const C_POLYMORPHIC_SUB
-    | "Operator.eq"    -> some_const C_EQ
-    | "Operator.gt"    -> some_const C_GT
-    | "Operator.ge"    -> some_const C_GE
-    | "Operator.lt"    -> some_const C_LT
-    | "Operator.le"    -> some_const C_LE
-    | "Operator.cons"  -> some_const C_CONS
-    | "Operator.neq"   -> some_const C_NEQ
-
     | _ -> None
 
 
