@@ -58,3 +58,8 @@ module Test = struct
   let save_context (u : unit) : unit = [%external "TEST_PUSH_CONTEXT"] u
 end
 let _hash_eq (type a) (l : a) (r : a) : a external_cmp = [%external "EQ"] l r
+let _hash_neq (type a) (l : a) (r : a) : a external_cmp = [%external "NEQ"] l r
+let _hash_gt (type a) (l : a) (r : a) : a external_cmp = [%external "GT"] l r
+let _hash_lt (type a) (l : a) (r : a) : a external_cmp = [%external "LT"] l r
+let _hash_ge (type a) (l : a) (r : a) : a external_cmp = [%external "GE"] l r
+let _hash_le (type a) (l : a) (r : a) : a external_cmp = [%external "LE"] l r

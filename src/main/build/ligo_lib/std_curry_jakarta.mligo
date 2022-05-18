@@ -207,12 +207,12 @@ end
 [@private]
   let _hash_eq (type a) (l : a) (r : a) : a external_cmp = [%Michelson ({| { UNPAIR ; COMPARE ; EQ } |} : a * a -> a external_cmp)] (l, r)
 [@private]
-  let _hash_neq (type a) (l : a) (r : a) : a external_cmp = [%external "NEQ"] l r
+  let _hash_neq (type a) (l : a) (r : a) : a external_cmp = [%Michelson ({| { UNPAIR ; COMPARE ; NEQ } |} : a * a -> a external_cmp)] (l, r)
 [@private]
-  let _hash_gt (type a) (l : a) (r : a) : a external_cmp = [%external "GT"] l r
+  let _hash_gt (type a) (l : a) (r : a) : a external_cmp = [%Michelson ({| { UNPAIR ; COMPARE ; GT } |} : a * a -> a external_cmp)] (l, r)
 [@private]
-  let _hash_lt (type a) (l : a) (r : a) : a external_cmp = [%external "LT"] l r
+  let _hash_lt (type a) (l : a) (r : a) : a external_cmp = [%Michelson ({| { UNPAIR ; COMPARE ; LT } |} : a * a -> a external_cmp)] (l, r)
 [@private]
-  let _hash_ge (type a) (l : a) (r : a) : a external_cmp = [%external "GE"] l r
+  let _hash_ge (type a) (l : a) (r : a) : a external_cmp = [%Michelson ({| { UNPAIR ; COMPARE ; GE } |} : a * a -> a external_cmp)] (l, r)
 [@private]
-  let _hash_le (type a) (l : a) (r : a) : a external_cmp = [%external "LE"] l r
+  let _hash_le (type a) (l : a) (r : a) : a external_cmp = [%Michelson ({| { UNPAIR ; COMPARE ; LE } |} : a * a -> a external_cmp)] (l, r)

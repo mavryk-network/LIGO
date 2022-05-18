@@ -57,3 +57,15 @@ module Test = struct
   let restore_context (u : unit) : unit = [%external "TEST_POP_CONTEXT"] u
   let save_context (u : unit) : unit = [%external "TEST_PUSH_CONTEXT"] u
 end
+[@private]
+  let _hash_eq_u (type a) ((l, r) : a * a) : a external_u_cmp =  [%external "EQ"] l r
+[@private]
+  let _hash_neq_u (type a) ((l, r) : a * a) : a external_u_cmp =  [%external "NEQ"] l r
+[@private]
+  let _hash_gt_u (type a) ((l, r) : a * a) : a external_u_cmp =  [%external "GT"] l r
+[@private]
+  let _hash_lt_u (type a) ((l, r) : a * a) : a external_u_cmp =  [%external "LT"] l r
+[@private]
+  let _hash_ge_u (type a) ((l, r) : a * a) : a external_u_cmp =  [%external "GE"] l r
+[@private]
+  let _hash_le_u (type a) ((l, r) : a * a) : a external_u_cmp =  [%external "LE"] l r
