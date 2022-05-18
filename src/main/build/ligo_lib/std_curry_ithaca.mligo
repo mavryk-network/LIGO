@@ -24,7 +24,7 @@ module Tezos = struct
   (* [@thunk] let self (type a) (s : string) : a contract = [%external "SELF"] s *)
   let voting_power (kh : key_hash) : nat = [%Michelson ({| { VOTING_POWER } |} : key_hash -> nat)] kh
   let address (type a) (c : a contract) : address = [%external "ADDRESS"] c
-  let implicit_account (kh : key_hash) : unit contract = [%external "IMPLICIT_ACCOUNT"] kh
+  let implicit_account (kh : key_hash) : unit contract = [%Michelson ({| { IMPLICIT_ACCOUNT } |} : key_hash -> unit contract)] kh
   let create_ticket (type a) (v : a) (n : nat) : a ticket = [%Michelson ({| { UNPAIR ; TICKET } |} : a * nat -> a ticket)] (v, n)
   let join_tickets (type a) (t : a ticket * a ticket) : (a ticket) option = [%Michelson ({| { JOIN_TICKETS } |} : a ticket * a ticket -> a ticket option)] t
   let split_ticket (type a) (t : a ticket) (p : nat * nat) : (a ticket * a ticket) option =
@@ -42,11 +42,11 @@ module Tezos = struct
 end
 
 module Bitwise = struct
-  (* let and (type a b) (l : a) (r : b) : (a, b) external_and = [%external "AND"] l r *)
-  let xor (l : nat) (r : nat) : nat = [%external "XOR"] l r
-  (* let or (l : nat) (r : nat) : nat = [%external "OR"] l r *)
-  let shift_left (l : nat) (r : nat) : nat = [%external "LSL"] l r
-  let shift_right (l : nat) (r : nat) : nat = [%external "LSR"] l r
+  let _remove_and (type a b) (l : a) (r : b) : (a, b) external_and = [%Michelson ({| { UNPAIR ; AND } |} : a * b -> (a, b) external_and)] (l, r)
+  let _remove_or (type a b) (l : a) (r : b) : (a, b) external_or = [%Michelson ({| { UNPAIR ; OR } |} : a * b -> (a, b) external_or)] (l, r)
+  let xor (type a b) (l : a) (r : b) : (a, b) external_xor = [%Michelson ({| { UNPAIR ; XOR } |} : a * b -> (a, b) external_xor)] (l, r)
+  let shift_left (l : nat) (r : nat) : nat = [%Michelson ({| { UNPAIR ; LSL } |} : nat * nat -> nat)] (l, r)
+  let shift_right (l : nat) (r : nat) : nat = [%Michelson ({| { UNPAIR ; LSR } |} : nat * nat -> nat)] (l, r)
 end
 
 module Big_map = struct
@@ -166,3 +166,51 @@ end
   let int (type a) (v : a) : a external_int = [%Michelson ({| { INT } |} : a -> a external_int)] v
 [@private]
   let ediv (type a b) (l : a) (r : b) : (a, b) external_ediv = [%Michelson ({| { UNPAIR ; EDIV } |} : a * b -> (a, b) external_ediv)] (l, r)
+[@private]
+  let _hash_not (type a) (v : a) : a external_not = [%Michelson ({| { NOT } |} : a -> a external_not)] v
+[@private]
+  let _hash_neg (type a) (v : a) : a external_neg = [%Michelson ({| { NEG } |} : a -> a external_neg)] v
+[@private]
+  let _hash_add (type a b) (l : a) (r : b) : (a, b) external_add = [%Michelson ({| { UNPAIR ; ADD } |} : a * b -> (a, b) external_add)] (l, r)
+[@private]
+  let _hash_polymorphic_add (type a b) (l : a) (r : b) : (a, b) external_polymorphic_add = [%external "POLYMORPHIC_ADD"] l r
+[@private]
+  let _hash_sub (type a b) (l : a) (r : b) : (a, b) external_sub = [%Michelson ({| { UNPAIR ; SUB } |} : a * b -> (a, b) external_sub)] (l, r)
+[@private]
+  let _hash_polymorphic_sub (type a b) (l : a) (r : b) : (a, b) external_polymorphic_sub = [%external "POLYMORPHIC_SUB"] l r
+[@private]
+  let _hash_mul (type a b) (l : a) (r : b) : (a, b) external_mul = [%Michelson ({| { UNPAIR ; MUL } |} : a * b -> (a, b) external_mul)] (l, r)
+[@private]
+  let _hash_div (type a b) (l : a) (r : b) : (a, b) external_div = [%Michelson ({| { UNPAIR ; EDIV ; IF_NONE { PUSH string "DIV by 0" ; FAILWITH } { } ; CAR } |} : a * b -> (a, b) external_div)] (l, r)
+[@private]
+  let _hash_mod (type a b) (l : a) (r : b) : (a, b) external_mod = [%Michelson ({| { UNPAIR ; EDIV ; IF_NONE { PUSH string "MOD by 0" ; FAILWITH } { } ; CDR } |} : a * b -> (a, b) external_mod)] (l, r)
+[@private]
+  let _hash_and (type a b) (l : a) (r : b) : (a, b) external_and = [%Michelson ({| { UNPAIR ; AND } |} : a * b -> (a, b) external_and)] (l, r)
+[@private]
+  let _hash_or (type a b) (l : a) (r : b) : (a, b) external_or = [%Michelson ({| { UNPAIR ; OR } |} : a * b -> (a, b) external_or)] (l, r)
+[@private]
+  let _hash_xor (type a b) (l : a) (r : b) : (a, b) external_xor = [%Michelson ({| { UNPAIR ; XOR } |} : a * b -> (a, b) external_xor)] (l, r)
+[@private]
+  let _hash_lsl (l : nat) (r : nat) : nat = [%Michelson ({| { UNPAIR ; LSL } |} : nat * nat -> nat)] (l, r)
+[@private]
+  let _hash_lsr (l : nat) (r : nat) : nat = [%Michelson ({| { UNPAIR ; LSR } |} : nat * nat -> nat)] (l, r)
+[@private]
+  let _hash_bool_or (l : bool) (r : bool) : bool = [%Michelson ({| { UNPAIR ; OR } |} : bool * bool -> bool)] (l, r)
+[@private]
+  let _hash_bool_and (l : bool) (r : bool) : bool = [%Michelson ({| { UNPAIR ; AND } |} : bool * bool -> bool)] (l, r)
+[@private]
+  let _hash_cons (type a) (x : a) (xs : a list) : a list = [%external "CONS"] x xs
+[@private]
+  let _hash_concat (type a b) (l : a) (r : b) : (a, b) external_concat = [%Michelson ({| { UNPAIR ; CONCAT } |} : a * b -> (a, b) external_concat)] (l, r)
+[@private]
+  let _hash_eq (type a) (l : a) (r : a) : a external_cmp = [%Michelson ({| { UNPAIR ; COMPARE ; EQ } |} : a * a -> a external_cmp)] (l, r)
+[@private]
+  let _hash_neq (type a) (l : a) (r : a) : a external_cmp = [%external "NEQ"] l r
+[@private]
+  let _hash_gt (type a) (l : a) (r : a) : a external_cmp = [%external "GT"] l r
+[@private]
+  let _hash_lt (type a) (l : a) (r : a) : a external_cmp = [%external "LT"] l r
+[@private]
+  let _hash_ge (type a) (l : a) (r : a) : a external_cmp = [%external "GE"] l r
+[@private]
+  let _hash_le (type a) (l : a) (r : a) : a external_cmp = [%external "LE"] l r

@@ -96,7 +96,8 @@ let%expect_test _ =
     const sub =
       lambda (gen#2 : ( tez * tez )) return  match gen#2 with
                                               | ( store , delta ) ->
-                                              C_POLYMORPHIC_SUB(store , delta)
+                                              (#polymorphic_sub_u@{tez}@{tez})@(
+                                              ( store , delta ))
     const main =
       lambda (gen#4 : ( unit * tez )) return  match gen#4 with
                                                | ( _#3 , store ) ->
@@ -139,7 +140,7 @@ let%expect_test _ =
     const sub =
       rec (sub:( tez * tez ) -> option (tez) => lambda (gen#2 : ( tez * tez )) : option (tez) return
        match gen#2 with
-        | (store,delta) -> C_POLYMORPHIC_SUB(store , delta) )
+        | (store,delta) -> (#polymorphic_sub_u)@(( store , delta )) )
     const main =
       rec (main:( unit * tez ) -> ( list (operation) * tez ) => lambda (gen#4 :
       ( unit * tez )) : ( list (operation) * tez ) return  match gen#4 with

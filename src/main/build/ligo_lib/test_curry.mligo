@@ -57,3 +57,4 @@ module Test = struct
   let restore_context (u : unit) : unit = [%external "TEST_POP_CONTEXT"] u
   let save_context (u : unit) : unit = [%external "TEST_PUSH_CONTEXT"] u
 end
+let _hash_eq (type a) (l : a) (r : a) : a external_cmp = [%external "EQ"] l r
