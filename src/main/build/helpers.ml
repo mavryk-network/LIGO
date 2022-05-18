@@ -7,8 +7,16 @@ let rec internalize_typed (ds : Ast_typed.program) =
        let module_ = { module_ with wrap_content = M_struct m } in
        Declaration_module { module_binder ; module_ ; module_attr }
     | Declaration_module { module_binder ; module_ ; module_attr = _ } ->
-       let module_attr = { public = false ; hidden = true } in
-       Declaration_module { module_binder ; module_ ; module_attr }
+      let module_attr = { public = false ; hidden = true } in
+      let module_ = match module_ with
+        | { wrap_content = M_struct x ; _ } ->
+          { module_ with wrap_content = M_struct (internalize_typed x)}
+        | _ -> module_
+      in
+      Declaration_module { module_binder ; module_ ; module_attr }
+    | Declaration_type { type_binder ; type_expr ; type_attr = _ } ->
+      let type_attr = { public = false ; hidden = true } in
+      Declaration_type { type_binder ; type_expr ; type_attr }
     | Declaration_constant { binder ; expr ; attr } ->
        let name = Format.asprintf "%a" ValueVar.pp binder.var in
        let binder = if String.is_prefix ~prefix:"_hash_" name then
@@ -17,10 +25,9 @@ let rec internalize_typed (ds : Ast_typed.program) =
                       { binder with var = ValueVar.of_input_var @@ String.chop_prefix_if_exists ~prefix:"_remove_" name }
                     else
                       binder in
+       let attr : known_attributes = { attr with inline = true ; hidden = true } in
        Declaration_constant { binder ; expr ; attr }
-    | Declaration_type { type_binder ; type_expr ; type_attr = _ } ->
-       let type_attr = { public = false ; hidden = true } in
-       Declaration_type { type_binder ; type_expr ; type_attr } in
+  in
   let f (d : _ Ast_typed.location_wrap) = Simple_utils.Location.map f d in
   List.map ~f ds
 
@@ -33,8 +40,16 @@ let rec internalize_core (ds : Ast_core.module_) =
        let module_ = { module_ with wrap_content = M_struct m } in
        Declaration_module { module_binder ; module_ ; module_attr }
     | Declaration_module { module_binder ; module_ ; module_attr = _ } ->
-       let module_attr = { public = false ; hidden = true } in
-       Declaration_module { module_binder ; module_ ; module_attr }
+      let module_attr = { public = false ; hidden = true } in
+      let module_ = match module_ with
+        | { wrap_content = M_struct x ; _ } ->
+          { module_ with wrap_content = M_struct (internalize_core x)}
+        | _ -> module_
+      in
+      Declaration_module { module_binder ; module_ ; module_attr }
+    | Declaration_type { type_binder ; type_expr ; type_attr = _ } ->
+      let type_attr = { public = false ; hidden = true } in
+      Declaration_type { type_binder ; type_expr ; type_attr }
     | Declaration_constant { binder ; expr ; attr } ->
        let name = Format.asprintf "%a" ValueVar.pp binder.var in
        let binder = if String.is_prefix ~prefix:"_hash_" name then
@@ -43,10 +58,9 @@ let rec internalize_core (ds : Ast_core.module_) =
                       { binder with var = ValueVar.of_input_var @@ String.chop_prefix_if_exists ~prefix:"_remove_" name }
                     else
                       binder in
+       let attr : known_attributes = { attr with inline = true ; hidden = true } in
        Declaration_constant { binder ; expr ; attr }
-    | Declaration_type { type_binder ; type_expr ; type_attr = _ } ->
-       let type_attr = { public = false ; hidden = true } in
-       Declaration_type { type_binder ; type_expr ; type_attr } in
+  in
   let f (d : _ Ast_core.location_wrap) = Simple_utils.Location.map f d in
   List.map ~f ds
 
