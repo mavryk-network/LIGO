@@ -68,14 +68,14 @@ let%expect_test _ =
   run_ligo_good [ "print" ; "ast-typed" ; (test "sub_mutez_new.ligo") ; "--protocol" ; "ithaca" ] ;
   [%expect{xxx|
     const sub =
-      lambda (parameters#2 : ( tez * tez )) return  match parameters#2 with
-                                                     | ( store , delta ) ->
-                                                     (#polymorphic_sub_u@{tez}@{tez})@(
-                                                     ( store , delta ))
+      lambda (parameters#188 : ( tez * tez )) return  match parameters#188 with
+                                                       | ( store , delta ) ->
+                                                       (#polymorphic_sub_u@{tez}@{tez})@(
+                                                       ( store , delta ))
     const main =
-      lambda (parameters#4 : ( unit * tez )) return  match parameters#4 with
-                                                      | ( _#3 , store ) ->
-                                                      ( LIST_EMPTY() , (Option.unopt@{tez})@((sub)@(( store , 1000000mutez ))) ) |xxx}]
+      lambda (parameters#190 : ( unit * tez )) return  match parameters#190 with
+                                                        | ( _#189 , store ) ->
+                                                        ( LIST_EMPTY() , (Option.unopt@{tez})@((sub)@(( store , 1000000mutez ))) ) |xxx}]
 
 let%expect_test _ =
   run_ligo_good [ "print" ; "ast-typed" ; (test "sub_mutez_new.religo") ; "--protocol" ; "ithaca" ] ;
