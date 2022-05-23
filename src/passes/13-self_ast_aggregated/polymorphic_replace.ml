@@ -1,6 +1,6 @@
 open Ast_aggregated
 
-let expression ~protocol : expression -> expression = fun expr ->
+let expression : expression -> expression = fun expr ->
   match expr.expression_content with
   | E_constant { cons_name = C_POLYMORPHIC_ADD ; arguments = [l; r] } ->
      let decide e = match e with
@@ -18,7 +18,7 @@ let expression ~protocol : expression -> expression = fun expr ->
      { expr with expression_content }
   | E_constant { cons_name = C_POLYMORPHIC_SUB ; arguments = [l; r] } ->
      let decide e = match e with
-       | { type_expression ; _ } when is_t_tez type_expression && Environment.Protocols.(equal Ithaca protocol) -> Some `Sub_mutez
+       | { type_expression ; _ } when is_t_tez type_expression -> Some `Sub_mutez
        | _ -> None in
      let cons_name =
        Option.value ~default:`Sub @@ List.find_map [l; r] ~f:decide in
