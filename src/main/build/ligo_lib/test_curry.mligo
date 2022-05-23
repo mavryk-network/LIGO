@@ -65,19 +65,28 @@ module Test = struct
       let a : address = [%external "ADDRESS"] c in
       let s : michelson_program = eval s in
       transfer_exn a s t
-  let michelson_equal (m1 : michelson_program) (m2 : michelson_program) : bool = m1 = m2
+  let eq (type a) (l : a) (r : a) : a external_cmp = [%external "EQ"] l r
+  let gt (type a) (l : a) (r : a) : a external_cmp = [%external "GT"] l r
+  let sub (type a b) (l : a) (r : b) : (a, b) external_polymorphic_sub = [%external "POLYMORPHIC_SUB"] l r
+  let michelson_equal (m1 : michelson_program) (m2 : michelson_program) : bool = eq m1 m2
   let to_entrypoint (type a b c) (s : string) (t : (a, b) typed_address) : c contract =
-    let s = if String.length s > 0n then
-              if String.sub 0n 1n s = "%" then
+    let s = if gt (String.length s) 0n then
+              if eq (String.sub 0n 1n s) "%" then
                 let () = log "WARNING: Test.to_entrypoint: automatically removing starting %" in
-                String.sub 1n (abs (String.length s - 1)) s
+                String.sub 1n (abs (sub (String.length s) 1)) s
 	      else s
 	    else s in
     [%external "TEST_TO_ENTRYPOINT"] s t
 end
-let _hash_eq (type a) (l : a) (r : a) : a external_cmp = [%external "EQ"] l r
-let _hash_neq (type a) (l : a) (r : a) : a external_cmp = [%external "NEQ"] l r
-let _hash_gt (type a) (l : a) (r : a) : a external_cmp = [%external "GT"] l r
-let _hash_lt (type a) (l : a) (r : a) : a external_cmp = [%external "LT"] l r
-let _hash_ge (type a) (l : a) (r : a) : a external_cmp = [%external "GE"] l r
-let _hash_le (type a) (l : a) (r : a) : a external_cmp = [%external "LE"] l r
+[@private]
+  let _hash_eq (type a) (l : a) (r : a) : a external_cmp = [%external "EQ"] l r
+[@private]
+  let _hash_neq (type a) (l : a) (r : a) : a external_cmp = [%external "NEQ"] l r
+[@private]
+  let _hash_gt (type a) (l : a) (r : a) : a external_cmp = [%external "GT"] l r
+[@private]
+  let _hash_lt (type a) (l : a) (r : a) : a external_cmp = [%external "LT"] l r
+[@private]
+  let _hash_ge (type a) (l : a) (r : a) : a external_cmp = [%external "GE"] l r
+[@private]
+  let _hash_le (type a) (l : a) (r : a) : a external_cmp = [%external "LE"] l r

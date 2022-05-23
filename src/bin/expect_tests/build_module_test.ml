@@ -94,6 +94,20 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_good [ "print" ; "mini-c" ; contract "D.mligo" ] ;
   [%expect{|
+let #../../test/contracts/build/A.mligo#toto#307 = L(1) in
+let #../../test/contracts/build/B.mligo#titi#609 =
+  ({ UNPAIR ; ADD })@(PAIR(#../../test/contracts/build/A.mligo#toto#307 ,
+                           L(42))) in
+let #../../test/contracts/build/C.mligo#tata#1513 =
+  ({ UNPAIR ; ADD })@(PAIR(#../../test/contracts/build/A.mligo#toto#307 ,
+                           #../../test/contracts/build/B.mligo#titi#609)) in
+let gen#7546 =
+  (({ UNPAIR ; ADD })@(PAIR(L(3) ,
+                            #../../test/contracts/build/A.mligo#toto#307)), #../../test/contracts/build/B.mligo#titi#609) in
+let x = let (l, r) = gen#7546 in ({ UNPAIR ; ADD })@(PAIR(l , r)) in
+let toto =
+  ({ UNPAIR ; ADD })@(PAIR(L(10) ,
+                           #../../test/contracts/build/A.mligo#toto#307)) in
 L(unit) |}]
 
 let%expect_test _ =

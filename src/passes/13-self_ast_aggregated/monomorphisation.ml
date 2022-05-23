@@ -158,9 +158,6 @@ let subst_external_term et t (e : AST.expression) =
                   let e = { e with type_expression = subst_external_type et t e.type_expression } in
                   let return expression_content = (true, (), { e with expression_content }) in
                   match e.expression_content with
-                  | E_lambda { binder = { var ; ascr ; attributes} ; result } ->
-                     let ascr = Option.map ~f:(subst_external_type et t) ascr in
-                     return @@ E_lambda { binder = { var ; ascr ; attributes } ; result }
                   | E_type_inst { forall ; type_ } ->
                      return @@ E_type_inst { forall ; type_ = subst_external_type et t type_ }
                   | E_lambda { binder = { var ; ascr ; attributes } ; result } ->
