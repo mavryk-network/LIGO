@@ -3,6 +3,7 @@ import ReactMarkdown from 'react-markdown';
 import Layout from '@theme/Layout';
 import Highlight, { defaultProps } from "prism-react-renderer";
 import defaultTheme from 'prism-react-renderer/themes/palenight';
+import Prism from '../../core/PrismLigoSyntaxes'
 
 // TODO : Add light / dark theme instead of default one
 // TODO : Make Ligo syntaxes highlighting work in Markdown code block
@@ -39,10 +40,30 @@ Using Markdown syntax with three '~' :
 console.log("Some code !");
 ~~~
 
-~~~c
+Here is a C example :
+
+~~~c++
 #include <stdio.h>
 
-int main() {}
+int main() {
+  return 0;
+}
+~~~
+
+You can also include *Ligo* code snippets :
+
+~~~cameligo
+let main (action, store : parameter * storage) : return =
+ ([] : operation list),    // No operations
+ (match action with
+   Increment (n) -> add (store, n)
+ | Decrement (n) -> sub (store, n)
+ | Reset         -> 0)
+(* Tests for main access point *)
+let test_initial_storage =
+ let initial_storage = 42 in
+ let (taddr, _, _) = Test.originate main initial_storage 0tez in
+ assert (Test.get_storage taddr = initial_storage)
 ~~~
 `
 }
