@@ -1,4 +1,21 @@
+import useThemeContext from '@theme/hooks/useThemeContext';
+import defaultTheme from 'prism-react-renderer/themes/palenight';
+import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
+
 const {Prism} = require("prism-react-renderer");
+
+export const GetTheme = () => {
+  const {
+    siteConfig: {
+      themeConfig: {prism = {}},
+    },
+  } = useDocusaurusContext();
+  const {isDarkTheme} = useThemeContext();
+  const lightModeTheme = prism.theme || defaultTheme;
+  const darkModeTheme = prism.darkTheme || lightModeTheme;
+
+  return isDarkTheme ?  darkModeTheme : lightModeTheme;
+}
 
 // TODO : What's a better way to extend the Prism library with these syntaxes ?
 

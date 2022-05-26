@@ -2,6 +2,7 @@ import React from 'react';
 import Highlight, { defaultProps } from "prism-react-renderer";
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
+import Prism from './PrismLigoSyntaxes'
 import useThemeContext from '@theme/hooks/useThemeContext';
 import defaultTheme from 'prism-react-renderer/themes/palenight';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';

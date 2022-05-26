@@ -2,11 +2,8 @@ import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import Layout from '@theme/Layout';
 import Highlight, { defaultProps } from "prism-react-renderer";
-import defaultTheme from 'prism-react-renderer/themes/palenight';
-import Prism from '../../core/PrismLigoSyntaxes'
+import Prism, {GetTheme} from '../../core/PrismLigoSyntaxes'
 
-// TODO : Add light / dark theme instead of default one
-// TODO : Make Ligo syntaxes highlighting work in Markdown code block
 // TODO : Add filtering-by-tag function
 
 const QUESTIONS = [
@@ -87,7 +84,7 @@ const Question = ({question, answer, tags}) => (
             const language = match[1]
             const code = children[0]
             return (
-              <Highlight {...defaultProps} code={code} language={language} style={defaultTheme}>
+              <Highlight {...defaultProps} code={code} language={language} theme={GetTheme()}>
                 {/* This function was taken directly from the prism-react-renderer Github page README */}
                 {({ className, style, tokens, getLineProps, getTokenProps }) => (
                   <pre className={className} style={style}>
