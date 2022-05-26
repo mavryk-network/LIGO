@@ -38,6 +38,7 @@
     "caniuse-lite": "^1.0.30001251",
     "file-loader": "^6.2.0",
     "react-codejar": "^1.0.2",
+    "react-markdown": "^8.0.3",
     "url-loader": "^4.1.1",
     "yaml": "^1.10.0"
   }
