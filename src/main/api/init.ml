@@ -116,8 +116,162 @@ module Build_ast = struct
 
 end (* of module Build_ast  *)
 
+
+
+
+
+module Build_cst_cameligo = struct
+  open Cst_cameligo.CST
+
+  let the_unit : the_unit = (Wrap.ghost "(", Wrap.ghost ")") 
+  let wrapped_the_unit = Region.wrap_ghost the_unit 
+  let mk_eunit : expr =
+    EUnit wrapped_the_unit
+  
+  let mk_punit : pattern =
+    PUnit wrapped_the_unit
+
+  let mk_var : string -> variable = fun var_name -> Region.wrap_ghost var_name 
+
+  let mk_var_pattern : string -> var_pattern = fun var_name -> {
+    variable   = mk_var var_name;
+    attributes = []
+  } 
+  let mk_pvar : string -> pattern = fun name -> PVar ( Region.wrap_ghost @@ mk_var_pattern name) 
+
+  let mk_par : 'a -> 'a par reg = fun i ->
+    Region.wrap_ghost {
+      lpar = Wrap.ghost "(";
+      inside = i;
+      rpar = Wrap.ghost ")";
+    }
+  
+  let mk_ppar : pattern -> pattern = fun p ->
+    PPar (mk_par p)
+
+  let mk_ptyped : pattern -> type_expr -> pattern =
+    fun p te ->
+      PTyped (
+        Region.wrap_ghost {
+          pattern = p;
+          colon = Wrap.ghost ":";
+          type_expr = te
+        }
+      )
+
+  let mk_tvar type_name = TVar (Region.wrap_ghost type_name) 
+
+  let mk_let_binding
+    :  ?type_params:type_params option
+    -> ?args:pattern list
+    -> ?rhs_type:type_expr option
+    -> string
+    -> expr
+    -> let_binding =
+    fun ?(type_params=None) ?(args=[]) ?(rhs_type=None) var_name expr -> {
+      type_params = (
+        Option.bind type_params ~f:(fun type_params ->
+          Some ( mk_par type_params )
+        )
+      );
+      binders = (mk_pvar var_name, args);
+      rhs_type = Option.bind rhs_type ~f:(fun te ->
+        Some (
+          Wrap.ghost ":",
+          te
+        )
+      );
+      eq = Wrap.ghost "=";
+      let_rhs = expr
+    }
+
+  let mk_let_decl
+    : ?type_params:type_params option
+    -> ?args:pattern list
+    -> ?rhs_type:type_expr option
+    -> string
+    -> expr
+    -> declaration
+    = fun ?(type_params=None) ?(args=[]) ?(rhs_type=None) var_name expr ->
+    let decl = (
+      Wrap.ghost "let", (* kwd_let *)
+      None, (* kwd_rec option *)
+      mk_let_binding ~type_params ~args ~rhs_type var_name expr,
+      [] (* attributes *)
+    )
+    in Let (Region.wrap_ghost decl)
+
+  let mk_type_decl type_name type_expr =
+    let type_decl = {
+      kwd_type   = Wrap.ghost "type";
+      name       = Region.wrap_ghost type_name;
+      params     = None;
+      eq         = Wrap.ghost "=";
+      type_expr  = type_expr;
+    }
+    in TypeDecl (Region.wrap_ghost type_decl)
+
+  let mk_tprod t1 t2 =
+    TProd (Region.wrap_ghost (t1 , [ Wrap.ghost "*", t2 ]))
+
+  let mk_list t =
+    TApp ( Region.wrap_ghost ( (
+      Region.wrap_ghost "list" , CArg t
+    )))
+
+  (* TODO : Pattern-matching exhaustiveness is not ensured here, we currently have to manually of all Prim types, what can we do ? *)
+  let mk_type_expr_from_michelson ~(raise : (Main_errors.all, Main_warnings.all) Trace.raise) micheline_node =
+    let open Micheline in
+    let rec aux node =
+      match node with
+      | Prim (_, "int",    [], _ )         -> mk_tvar "int"
+      | Prim (_, "string", [], _ )         -> mk_tvar "string"
+      | Prim (_, "bytes",  [], _ )         -> mk_tvar "bytes"
+      | Prim (_, "nat",    [], _ )         -> mk_tvar "nat"
+      | Prim (_, "bool",   [], _ )         -> mk_tvar "bool"
+      | Prim (_, "list",   [n], _ )        -> mk_list (aux n)
+      | Prim (_, "pair",   [n1 ; n2], _ )  -> mk_tprod (aux n1) (aux n2)
+
+      (* TODO : Add appropriate error types in Main_errors *)
+      | Prim (_, name,     _, _ ) -> Printf.printf "Unsupported Prim() type : %s\n" name; raise.error @@ Main_errors.repl_unexpected
+      | _ -> Printf.printf "Unsupported type so far\n"; raise.error @@ Main_errors.repl_unexpected
+    in aux micheline_node
+
+
+
+
+
+
+  let toplevel
+    : raise:(Main_errors.all, Main_warnings.all) Trace.raise
+    -> ('a, lexeme) Micheline.node
+    -> ('a, lexeme) Micheline.node
+    -> Cst_cameligo.CST.t =
+    fun ~raise param_type storage_type ->
+
+      let params_type_expr = mk_type_expr_from_michelson ~raise param_type in
+      let storage_type_expr = mk_type_expr_from_michelson ~raise storage_type in
+      let params_type_decl = mk_type_decl "parameters" params_type_expr in
+      let storage_type_decl = mk_type_decl "storage" storage_type_expr in
+      (* let type_d *)
+      let output_type = mk_tprod (mk_list @@ mk_tvar "operation") (mk_tvar "storage") in
+      let params_input = mk_ppar @@ mk_ptyped (mk_pvar "params") (mk_tvar "parameters") in
+      let storage_input = mk_ppar @@ mk_ptyped (mk_pvar "storage") (mk_tvar "storage") in
+      let main_declaration = mk_let_decl ~rhs_type:(Some output_type) ~args:[params_input; storage_input] "main" mk_eunit in
+
+      { decl = (params_type_decl, [storage_type_decl ; main_declaration]);
+        eof = Wrap.ghost "eof"
+      }
+
+end
+
+
+
+
+
+
 let contract_from_michelson syntax source_file display_format () =
-  format_result ~display_format (Ast_core.Formatter.module_format) @@
+  format_result ~display_format (Parsing.Formatter.ppx_format) @@
   fun ~raise ->
 
     (* Check source file path *)
@@ -154,8 +308,8 @@ let contract_from_michelson syntax source_file display_format () =
     (* let () = Micheline_debug_print.print_toplevel Format.std_formatter ast_list in *)
 
     let _syntax = syntax in
-    let ast = Build_ast.toplevel ~raise param_node storage_node in
-    ast
+    (* let ast = Build_ast.toplevel ~raise param_node storage_node in *)
+    (* ast *)
 
     (* TODO : Error when decompiling [List is empty.], seems to come from [Decompile.Of_imperative.decompile] *)
     (* let dialect       = "terse" in *)
@@ -166,3 +320,8 @@ let contract_from_michelson syntax source_file display_format () =
     let buffer        = Decompile.Of_imperative.decompile ~raise imperative (Syntax_name syntax) in
     buffer
 *)
+      let cst = Build_cst_cameligo.toplevel ~raise param_node storage_node in
+      (* let buffer = Compile.Utils.pretty_print cst in *)
+      let buffer = Parsing.Cameligo.pretty_print cst in
+      buffer
+
