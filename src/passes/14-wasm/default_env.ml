@@ -92,7 +92,10 @@ let env: module_ = {
           ]; at};
           init = {
             name = "C_LIST_EMPTY";
-            detail = [Int32 0l]
+            detail = [
+              Int32 (Datatype.int32_of_datatype Datatype.ListItem);
+              Int32 0l
+            ]
           }
         };
         at
@@ -188,7 +191,7 @@ let env: module_ = {
         };
         at
       };
-      {
+      (* {
         it = {
           tname    = "__gmpz_init_type";
           tdetails = FuncType ([I32Type], [])
@@ -257,7 +260,7 @@ let env: module_ = {
           tdetails = FuncType ([I32Type], [I32Type])
         };
         at
-      };
+      }; *)
       (* { 
         it = {
           tname = "insertNode_type";
@@ -377,7 +380,7 @@ let env: module_ = {
         };
         at
       };
-      {
+      (* {
         it = {
           module_name = name "env";
           item_name   = name "__gmpz_init";
@@ -486,8 +489,8 @@ let env: module_ = {
           }
         };
         at
-      };
-      {
+      }; *)
+      (* {
         it = {
           module_name = name "env";
           item_name   = name "insertNode";
@@ -497,7 +500,7 @@ let env: module_ = {
           }
         };
         at
-      };
+      }; *)
       
       (* TODO: Missing logarithmic functions, need to add those. *)
     ];
@@ -611,7 +614,7 @@ let env: module_ = {
         };
         at
       };
-      {
+      (* {
         it = {
           name    = "__gmpz_init";
           details = Import ([I32Type], [])
@@ -680,7 +683,7 @@ let env: module_ = {
           details = Import ([I32Type], [I32Type])
         };
         at
-      };
+      }; *)
       (* {
         it = {
           name = "insertNode";
@@ -707,4 +710,4 @@ let env: module_ = {
   at
 }
 
-let offset = 16l (* TODO: this needs to be made more robust *)
+let offset = 20l (* TODO: this needs to be made more robust *)
