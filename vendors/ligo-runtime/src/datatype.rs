@@ -1,11 +1,16 @@
-use std::mem::ManuallyDrop;
+
+use core::mem::ManuallyDrop;
 
 use serde::{Serialize, Deserialize, Serializer, Deserializer};
 
 use core::fmt::Debug;
 
-// Big numbers
 use num_bigint::{ BigInt };
+
+extern crate alloc;
+use alloc::boxed::Box;
+use alloc::vec::Vec;
+
 
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
 #[repr(C)]
@@ -15,7 +20,7 @@ pub struct Wrapped<T> {
 
 pub trait Sup<'a>: Wrap<'a> {}
 
-impl<'a, U: std::cmp::PartialEq> Sup<'a> for U {}
+impl<'a, U: core::cmp::PartialEq> Sup<'a> for U {}
 
 impl<'de, T:Sup<'de> + Serialize> Serialize for Wrapped<T> {
   fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
@@ -38,7 +43,7 @@ impl<'de, T: Sup<'de> + Deserialize<'de>> Deserialize<'de> for Wrapped<T> {
   }
 }
 
-impl<U:std::fmt::Debug> Debug for Wrapped<U> {
+impl<U:core::fmt::Debug> Debug for Wrapped<U> {
   fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
     let b:&U = &self.unwrap(); 
     write!(f, "Wrapped {{ {:?} }}", b)?;
@@ -53,7 +58,9 @@ pub trait Wrap<'a> {
 
 impl<'a, U> Wrap<'a> for U {
   fn wrap(self) -> Wrapped<Self> {
+    print!("\nWrap: From: {:p} to ", &self);
     let b = Box::into_raw(Box::new(self));
+    print!("{:p}\n", &b);
     Wrapped {
       data: b
     }
@@ -65,8 +72,11 @@ pub trait Unwrap<T> {
 }
 
 impl<T> Unwrap<T> for Wrapped<T> {
-  fn unwrap(&self) -> &T {
-    unsafe { Box::leak(Box::from_raw(self.data)) }
+  fn unwrap(&self) -> &T {    
+    print!("\nUnwrap: From: {:p} to ", &self.data);
+    let r = unsafe { Box::leak(Box::from_raw(self.data)) };
+    print!("{:p}.\n", &r);
+    r
   }
 }
 
@@ -87,13 +97,11 @@ pub struct BigIntWrap {
 }
 
 pub fn to_wrap (i: &BigInt) -> BigIntWrap {
-  let mut vec = BigInt::to_signed_bytes_le(i);
+  let vec = BigInt::to_signed_bytes_le(i);
+  let mut vec = ManuallyDrop::new(vec);
   let data = vec.as_mut_ptr();
   let len = vec.len();
   let capacity = vec.capacity();
-  // std::mem::forget(vec);
-  ManuallyDrop::new(vec);
-  // unsafe { Box::leak(Box::from_raw(data)) };
   BigIntWrap { 
     datax:     data,
     len:      len,
@@ -103,9 +111,8 @@ pub fn to_wrap (i: &BigInt) -> BigIntWrap {
 
 pub fn to_bigint (i: &BigIntWrap) -> BigInt {
   let v = unsafe { Vec::from_raw_parts(i.datax, i.len, i.capacity) };
+  let v = ManuallyDrop::new(v);
   let r = BigInt::from_signed_bytes_le(v.as_slice());
-  ManuallyDrop::new(v);
-  // std::mem::forget(v);
   r
 }
 
@@ -164,6 +171,10 @@ pub enum DataType {
   // TODO: add other data types
 }
 
+/**
+ * 
+ * 
+ */
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, PartialOrd, Ord)]
 #[repr(C)]
 pub struct Node {
