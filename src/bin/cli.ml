@@ -97,13 +97,13 @@ let amount =
   let open Command.Param in
   let name = "--amount" in
   let doc  = "INT the tezos amount the Michelson interpreter will use for the transaction." in
-  let spec = optional_with_default "0" string in
+  let spec = optional string in
   flag ~doc name spec
 let balance =
   let open Command.Param in
   let name = "--balance" in
   let doc  = "INT the balance the Michelson interpreter will use for the contract balance." in
-  let spec = optional_with_default "0" string in
+  let spec = optional string in
   flag ~doc name spec
 
 let sender =
@@ -420,7 +420,7 @@ let test =
 
 let dry_run =
   let f source_file parameter storage entry_point amount balance sender source now syntax protocol_version display_format show_warnings warning_as_error project_root warn_unused_rec () =
-    let raw_options = Compiler_options.make_raw_options ~entry_point ~syntax ~protocol_version ~warning_as_error ~project_root ~warn_unused_rec () in
+    let raw_options = Compiler_options.make_raw_options ~entry_point ~syntax ~protocol_version ~warning_as_error ~project_root ~warn_unused_rec ~test:true () in
     return_result ~return ~show_warnings @@
     Api.Run.dry_run raw_options source_file parameter storage amount balance sender source now display_format
     in

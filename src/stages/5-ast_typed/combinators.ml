@@ -361,6 +361,18 @@ let get_a_unit (t:expression) =
   | E_literal (Literal_unit) -> Some ()
   | _ -> None
 
+let get_a_pair = fun (t:expression) ->
+  match t.expression_content with
+  | E_record r -> (
+  let lst = LMap.to_kv_list_rev r in
+    match lst with
+    | [(Label "O",a);(Label "1",b)]
+    | [(Label "1",b);(Label "0",a)] ->
+        Some (a , b)
+    | _ -> None
+    )
+  | _ -> None
+
 let get_record_field_type (t : type_expression) (label : label) : type_expression option =
   match get_t_record t with
   | None -> None
@@ -383,3 +395,5 @@ let get_sum_label_type (t : type_expression) (label : label) : type_expression o
     match LMap.find_opt label s.content with
     | None -> None
     | Some row_element -> Some row_element.associated_type
+
+let make_binder ?(ascr=None) ?(attributes={const_or_var = None}) var = { var ; ascr ; attributes }

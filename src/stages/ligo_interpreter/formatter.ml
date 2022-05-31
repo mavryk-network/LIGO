@@ -14,3 +14,9 @@ let tests_format : 'a format = {
   pp = tests_ppformat;
   to_json = tests_jsonformat;
 }
+
+
+let cli_format : 'a format = {
+  pp = ( fun ~display_format f v -> PP.pp_value f v ) ;
+  to_json = tests_jsonformat
+}

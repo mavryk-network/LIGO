@@ -125,8 +125,8 @@ let make_options ~raise ?param ctxt =
   let open Ligo_run.Of_michelson in
   let open Ligo_interpreter.Types in
   let default = { now = None ;
-                  amount = "" ;
-                  balance = "" ;
+                  amount = None ;
+                  balance = None ;
                   sender = None ;
                   source = None ;
                   parameter_ty = param } in

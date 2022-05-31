@@ -8,6 +8,14 @@ open Simple_utils.Runned_result
 
 module Errors = Main_errors
 
+let tez_of_string ~raise : (string -> 'a) -> string -> Tezos_raw_protocol_013_PtJakart.Alpha_context.Tez.t = fun err amt ->
+  match Memory_proto_alpha.Protocol.Alpha_context.Tez.of_string amt with
+  | None -> raise.raise @@ err amt
+  | Some amount -> amount
+
+let balance_to_tez ~raise v = tez_of_string ~raise (Errors.main_invalid_balance) v
+let amount_to_tez ~raise v = tez_of_string ~raise (Errors.main_invalid_amount) v
+
 let parse_constant ~raise code =
   let open Tezos_micheline in
   let open Tezos_micheline.Micheline in
@@ -27,8 +35,8 @@ type options = Memory_proto_alpha.options
 
 type dry_run_options =
   { parameter_ty : (Stacking.Program.meta, string) Tezos_micheline.Micheline.node option ; (* added to allow dry-running contract using `Tezos.self` *)
-    amount : string ;
-    balance : string ;
+    amount : string option ;
+    balance : string option ;
     now : string option ;
     sender : string option ;
     source : string option ;
@@ -39,12 +47,8 @@ let make_dry_run_options ~raise ?tezos_context ?(constants = []) (opts : dry_run
   let open Proto_alpha_utils.Trace in
   let open Proto_alpha_utils.Memory_proto_alpha in
   let open Protocol.Alpha_context in
-  let balance = match Tez.of_string opts.balance with
-    | None -> raise.raise @@ Errors.main_invalid_balance opts.balance
-    | Some balance -> balance in
-  let amount = match Tez.of_string opts.amount with
-    | None -> raise.raise @@ Errors.main_invalid_amount opts.amount
-    | Some amount -> amount in
+  let balance = Option.value_map opts.balance ~default:Tez.zero ~f:(balance_to_tez ~raise) in
+  let amount = Option.value_map opts.balance ~default:Tez.zero ~f:(amount_to_tez ~raise) in
   let sender =
     match opts.sender with
     | None -> None

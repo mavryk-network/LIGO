@@ -70,7 +70,7 @@ let expression (raw_options : Compiler_options.raw) expression init_file display
       if without_run then
         Run.clean_expression compiled_exp.expr
       else
-        let options = Run.make_dry_run_options ~raise ~constants { now = None ; amount = "0" ; balance = "0" ; sender = None ;  source = None ; parameter_ty = None } in
+        let options = Run.make_dry_run_options ~raise ~constants { now = None ; amount = None ; balance = None ; sender = None ;  source = None ; parameter_ty = None } in
         Run.evaluate_expression ~raise ~options compiled_exp.expr compiled_exp.expr_ty
 
 let constant (raw_options : Compiler_options.raw) constants init_file display_format () =

@@ -1129,4 +1129,9 @@ let eval_test ~raise ~steps ~options : Ast_typed.program -> ((string * value) li
     List.fold_right ~f ~init:[] @@ lst
   | _ -> failwith "Not a tuple?"
 
+let eval ~raise ~steps ~options expr =
+  let initial_state = Execution_monad.make_state ~raise ~options in
+  let res,_ctxt = Monad.eval ~raise ~options (eval_ligo ~raise ~steps ~options expr [] Env.empty_env) initial_state None in
+  res
+
 let () = Printexc.record_backtrace true

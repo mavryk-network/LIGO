@@ -128,6 +128,16 @@ let type_contract ~raise ~add_warning : options:Compiler_options.t -> file_name 
     end) in
     trace ~raise build_error_tracer @@ from_result (compile_separate file_name)
 
+let merge_libraries ~raise ~add_warning : options:Compiler_options.t -> file_name -> Ast_core.program =
+  fun ~options file_name ->
+    let open BuildSystem.Make(Infer(struct
+      let raise = raise
+      let add_warning = add_warning
+      let options = options
+    end)) in
+    let contract = trace ~raise build_error_tracer @@ from_result (compile_combined file_name) in
+    contract
+
 let merge_and_type_libraries ~raise ~add_warning : options:Compiler_options.t -> file_name -> Ast_typed.program =
   fun ~options file_name ->
     let open BuildSystem.Make(Infer(struct
