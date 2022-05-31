@@ -189,7 +189,7 @@ let rec decompile ~raise (v : value) (t : AST.type_expression) : AST.expression 
     | ((Unit            | Nat                  | Tez             | Bytes    | Bls12_381_g1      | Bls12_381_g2     |
         Bls12_381_fr    | Address              | Key             | Chain_id | Signature         |
         Map             | Big_map              | Set             | Bool     | Baker_hash        | Pvss_key         |
-        Sapling_state   | Sapling_transaction  | Baker_operation | Never    | Michelson_program |
+        Sapling_state   | Sapling_transaction  | Baker_operation | Never    | Michelson_program | Michelson_of     |
                           String               | Typed_address   | Mutation | List              | Chest            |
         Chest_key       | Chest_opening_result | Int             | Key_hash | Ticket            | Timestamp        |
         Operation       | External _ | Tx_rollup_l2_address), _) ->

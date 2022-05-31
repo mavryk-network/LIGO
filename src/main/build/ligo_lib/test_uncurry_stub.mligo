@@ -1,4 +1,5 @@
 type michelson_program = unit
+type 'a michelson_of = unit
 type test_exec_error_balance_too_low = { contract_too_low : address ; contract_balance : tez ; spend_request : tez }
 type test_exec_error = Rejected of michelson_program * address
                      | Balance_too_low of test_exec_error_balance_too_low

@@ -76,7 +76,7 @@ let rec is_dup (t : type_expression) =
   | T_constant { injection=(
                      Map              | Big_map              | List            |
                      Set              | Michelson_program    | Michelson_or    |
-    Michelson_pair | Pvss_key         | Baker_operation      |
+    Michelson_pair | Pvss_key         | Baker_operation      | Michelson_of    |
     Ticket         |                    Chest_opening_result | Baker_hash);_ }  -> false
   | T_singleton _
   | T_module_accessor _ -> false

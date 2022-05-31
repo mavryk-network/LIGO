@@ -1,4 +1,5 @@
 type michelson_program = unit
+type 'a michelson_of = unit
 type test_exec_error_balance_too_low = { contract_too_low : address ; contract_balance : tez ; spend_request : tez }
 type test_exec_error = Rejected of michelson_program * address
                      | Balance_too_low of test_exec_error_balance_too_low
@@ -16,7 +17,7 @@ module Test = struct
   type mutation = unit
   let to_contract (type p s) (_t : (p, s) typed_address) : p contract = failwith "TEST MODE"
   let originate_from_file (_fn : string) (_e : string) (_v : string list) (_s : michelson_program)  (_t : tez) : address * michelson_program * int = failwith "TEST MODE"
-  let originate (type p s) (_f : p * s -> operation list * s) (_s : s) (_t : tez) : ((p, s) typed_address * michelson_program * int) = failwith "TEST MODE"
+  let originate (type p s) (_f : p * s -> operation list * s) (_s : s) (_t : tez) : ((p, s) typed_address * s michelson_of * int) = failwith "TEST MODE"
   let set_source (_a : address) : unit = failwith "TEST MODE"
   let set_baker (_a : address) : unit = failwith "TEST MODE"
   let set_baker_policy (_bp : test_baker_policy) : unit = failwith "TEST MODE"
