@@ -80,6 +80,11 @@ let t_sum_ez ?loc ?sugar ?layout (lst:(string * type_expression) list) : type_ex
 
 let t_bool ?loc ?sugar ()       : type_expression = t_sum_ez ?loc ?sugar
   [("True", t_unit ());("False", t_unit ())]
+  let t_option ?loc ?sugar typ : type_expression = 
+    t_sum_ez ?loc ?sugar [
+      ("Some", typ) ;
+      ("None", t_unit ());
+    ]
 
 let t_arrow ?loc ?sugar param result : type_expression = t_arrow ?loc ?sugar {type1=param; type2=result} ()
 let t_shallow_closure ?loc ?sugar param result: type_expression = make_t ?loc ?sugar (T_arrow {type1=param; type2=result})

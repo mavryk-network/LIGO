@@ -48,26 +48,28 @@ let dry_run (raw_options : Compiler_options.raw) source_file parameter storage a
         let open Ast_core in
         let expr_storage = Ligo_compile.Utils.core_expression_string ~raise ~add_warning syntax storage in
         let expr_parameter = Ligo_compile.Utils.core_expression_string ~raise ~add_warning syntax parameter in
-        let mutez_conv (amount: string option) : Ast_core.expression =
+        let mutez_conv (ferr : (string -> Main_errors.all)) (amount: string option) : Ast_core.expression =
           let f : string -> Ast_core.expression = fun str ->
             try
               let z = Z.of_string str in
               Ast_core.(e_some (e_mutez z)) 
-            with _ -> Ast_core.e_none ()
+            with _ -> raise.raise (ferr str)
           in
-          Option.value_map amount ~default:(Ast_core.e_none ()) ~f
+          let default = Ast_core.(e_ascription (e_none ()) (t_option (t_mutez ()))) in
+          Option.value_map amount ~default ~f
         in
         let lst = [
           Declaration_constant { binder = make_binder binder_parameter  ; attr ; expr = expr_parameter                                               } ;
           Declaration_constant { binder = make_binder binder_storage    ; attr ; expr = expr_storage                                                 } ;
           Declaration_constant { binder = make_binder binder_filename   ; attr ; expr = e_string (Ligo_string.standard source_file)                  } ;
           Declaration_constant { binder = make_binder binder_entrypoint ; attr ; expr = e_string (Ligo_string.standard options.frontend.entry_point) } ;
-          Declaration_constant { binder = make_binder binder_amount     ; attr ; expr = mutez_conv amount                                            } ;
-          Declaration_constant { binder = make_binder binder_balance    ; attr ; expr = mutez_conv balance                                           } ;
+          Declaration_constant { binder = make_binder binder_amount     ; attr ; expr = mutez_conv (Main_errors.main_invalid_amount) amount                                            } ;
+          Declaration_constant { binder = make_binder binder_balance    ; attr ; expr = mutez_conv (Main_errors.main_invalid_balance) balance                                           } ;
           ]
         in
         let module_ = Location.wrap @@ M_struct (List.map ~f:(Location.wrap) lst) in
         let cli_parameters_module = Location.wrap @@ Declaration_module { module_binder = cli_parameter_m ; module_ ; module_attr } in
+
         (* let binder_parameter_ty = TypeVar.of_input_var "parameter_ty" in
         let binder_storage_ty = TypeVar.of_input_var "storage_ty" in
         let lst =
