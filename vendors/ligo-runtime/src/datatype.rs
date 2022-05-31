@@ -1,5 +1,7 @@
 
+use core::mem;
 use core::mem::ManuallyDrop;
+use core::mem::size_of;
 
 use serde::{Serialize, Deserialize, Serializer, Deserializer};
 
@@ -10,7 +12,6 @@ use num_bigint::{ BigInt };
 extern crate alloc;
 use alloc::boxed::Box;
 use alloc::vec::Vec;
-
 
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
 #[repr(C)]
@@ -32,6 +33,54 @@ impl<'de, T:Sup<'de> + Serialize> Serialize for Wrapped<T> {
     }
 }
 
+#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[repr(C)]
+pub struct String {
+  data: *mut u8,
+  len: usize,
+  cap: usize
+}
+
+impl Serialize for String {
+  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+      let s = self;
+      let s = unsafe { alloc::string::String::from_raw_parts(s.data, s.len, s.cap) };
+      s.serialize(serializer)
+    }
+}
+
+impl<'de> Deserialize<'de> for String {
+  fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+  where
+      D: Deserializer<'de>,
+  {
+    let mut d:alloc::string::String = Deserialize::deserialize(deserializer)?;
+    let s = unsafe { d.as_mut_vec() } ;
+    let s = s.as_mut_ptr();
+    let l = d.len();
+    let c = d.capacity();
+
+    Ok (
+      String {
+        data: s,
+        len: l,
+        cap: c
+      }
+    )
+  }
+}
+
+impl Debug for String {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let s = self;
+    let s = unsafe { alloc::string::String::from_raw_parts(s.data, s.len, s.cap) };
+    write!(f, "{:?}", s)?;
+    Ok(())
+  }
+}
 
 impl<'de, T: Sup<'de> + Deserialize<'de>> Deserialize<'de> for Wrapped<T> {
   fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
@@ -58,9 +107,7 @@ pub trait Wrap<'a> {
 
 impl<'a, U> Wrap<'a> for U {
   fn wrap(self) -> Wrapped<Self> {
-    print!("\nWrap: From: {:p} to ", &self);
     let b = Box::into_raw(Box::new(self));
-    print!("{:p}\n", &b);
     Wrapped {
       data: b
     }
@@ -73,13 +120,10 @@ pub trait Unwrap<T> {
 
 impl<T> Unwrap<T> for Wrapped<T> {
   fn unwrap(&self) -> &T {    
-    print!("\nUnwrap: From: {:p} to ", &self.data);
     let r = unsafe { Box::leak(Box::from_raw(self.data)) };
-    print!("{:p}.\n", &r);
     r
   }
 }
-
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, PartialOrd, Ord)]
 #[repr(C)]
@@ -103,7 +147,7 @@ pub fn to_wrap (i: &BigInt) -> BigIntWrap {
   let len = vec.len();
   let capacity = vec.capacity();
   BigIntWrap { 
-    datax:     data,
+    datax:    data,
     len:      len,
     capacity: capacity,
   }
@@ -131,10 +175,8 @@ impl<'de> Deserialize<'de> for BigIntWrap {
   where
       D: Deserializer<'de>,
   {
-    
     let (sign, data) = Deserialize::deserialize(deserializer)?;
     let big_int = BigInt::from_biguint(sign, data);
-    
     let r = Ok(to_wrap(&big_int));
     r
   }
@@ -147,15 +189,155 @@ impl Debug for BigIntWrap {
   }
 }
 
+macro_rules! mem_layout {
+  ($elem:expr, $size:expr) => (
+    println!("Address : {:p}, ", $elem);
+    println!("Pretty  : {:?}", $elem);
+    println!("  Size  : {:?} x 32bits", $size );
+    
+    print!  ("Layout : ");
+    let mut i: usize = 0;
+    
+    let x:[i32; $size] = unsafe { mem::transmute_copy($elem) } ;
+    while i < $size {
+      print!("{:?}, ", x[i]);        
+      i = i + 1;
+    }
+    println!("");
+    print!  ("         ");
+    i = 0;
+    while i < $size {
+      print!("{:#02x}, ", x[i]);        
+      i = i + 1;
+    }
+    println!("\n----");
+  );
+}
+
+pub trait MemoryLayout {
+  fn print(&self);
+}
+
+
+impl MemoryLayout for BigIntWrap {
+  fn print(&self) {
+    mem_layout!(self, size_of::<Self>() / 4);
+  }
+}
+
+impl MemoryLayout for DataType {
+  fn print(&self) {
+    mem_layout!(self, size_of::<Self>() / 4);
+    match self {
+      DataType::Int(i)  | 
+      DataType::Nat(i)  |
+      DataType::Mutez(i) 
+      => {
+        mem_layout!(i, size_of::<Wrapped<BigIntWrap>>() / 4);
+        let i = i.unwrap();
+        i.print()
+      }, 
+      
+      DataType::Timestamp(ix) => {
+        println!("Timestamp: {:?}", ix);
+      },
+      DataType::Bool(b) => {
+        println!("Bool: {:?}", b);
+      },
+      DataType::ListItem(n) |
+      DataType::Tuple(n) => {
+        mem_layout!(n, size_of::<Wrapped<Node>>() / 4);
+        let n = n.unwrap();
+        n.print()
+      },
+      DataType::Set(rb) | 
+      DataType::Map(rb) => {
+        panic!()
+      },
+      DataType::Operations(Option::Some (o)) => {
+        mem_layout!(o, size_of::<Wrapped<OperationNode>>());
+        let o = o.unwrap();
+        o.print()
+      },
+      DataType::Operations(Option::None) => {
+        println!("Operations::None");
+      },
+      DataType::String(s) => {
+        panic!()
+      }
+    }
+  }
+}
+
+impl MemoryLayout for Node {
+  fn print(&self){
+    mem_layout!(self, size_of::<Self>() / 4);
+    let value = &self.value;
+    value.print();
+    let n = &self.next;
+    match n {
+      Option::Some(s) => {
+        mem_layout!(&s, size_of::<Wrapped<Node>>() / 4);
+        let v = s.unwrap();
+        v.print()
+        
+      },
+      Option::None => ()
+    }
+  }
+}
+
+impl MemoryLayout for OperationNode {
+  fn print(&self){
+    mem_layout!(self, size_of::<Self>() / 4);
+    let value = &self.value;
+    mem_layout!(value, size_of::<Wrapped<OperationNode>>() / 4);
+    let value = value.unwrap();
+    value.print();
+    let n = &self.next;
+    match n {
+      Option::Some(s) => {
+        mem_layout!(&s, size_of::<Wrapped<OperationNode>>() / 4);
+        let v = s.unwrap();
+        v.print()
+        
+      },
+      Option::None => ()
+    }
+  }
+}
+
+impl MemoryLayout for Operation {
+  fn print(&self) {
+    panic!()
+  }
+}
+
+/*
+pub enum Operation {
+  Transaction(Transaction), 
+  Delegate(Delegate)
+}
+*/
+
+impl MemoryLayout for Wrapped<DataType> {
+  fn print(&self) {
+    mem_layout!(self, size_of::<Wrapped<DataType>>() / 4);
+    let u = self.unwrap();
+    u.print()
+  }
+}
+
+
 /**
  * These are the datatypes used by code generated from the smart contract.
  */
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, PartialOrd, Ord)]
 #[repr(C)]
 pub enum DataType {
-  Int(BigIntWrap), 
-  Nat(BigIntWrap), 
-  Mutez(BigIntWrap),
+  Int(Wrapped<BigIntWrap>), 
+  Nat(Wrapped<BigIntWrap>), 
+  Mutez(Wrapped<BigIntWrap>),
   Timestamp(i32),
   Bool(bool),
   ListItem(Wrapped<Node>),
@@ -163,8 +345,8 @@ pub enum DataType {
   Set(Wrapped<RBNode>),
   Map(Wrapped<RBNode>),
   // Map(Box<RedBlackTreeMap<Box<Self>, Box<Self>>>),
-  Operations(Option<Wrapped<OperationNode>>)
-  // String(Box<String>),
+  Operations(Option<Wrapped<OperationNode>>),
+  String(Wrapped<String>),
   // Bytes(Box<String>),
   // Address(Box<String>),
 
@@ -178,7 +360,7 @@ pub enum DataType {
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, PartialOrd, Ord)]
 #[repr(C)]
 pub struct Node {
-  pub value: DataType,
+  pub value: Wrapped<DataType>,
   pub next: Option<Wrapped<Node>>
 }
 
@@ -192,7 +374,7 @@ pub enum Operation {
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, PartialOrd, Ord)]
 #[repr(C)]
 pub struct OperationNode {
-  pub value: Operation,
+  pub value: Wrapped<Operation>,
   pub next: Option<Wrapped<OperationNode>>
 }
 
@@ -206,11 +388,11 @@ pub enum Color {
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, PartialOrd, Ord)]
 #[repr(C)]
 pub struct RBNode {
-  pub parent: Option<DataType>,
-  pub val:    DataType,
+  pub parent: Option<Wrapped<RBNode>>,
+  pub val:    Wrapped<DataType>,
   pub depth:  usize,
-  pub left:   Option<DataType>,
-  pub right:  Option<DataType>,
+  pub left:   Option<Wrapped<RBNode>>,
+  pub right:  Option<Wrapped<RBNode>>,
   pub color:  Color
 }
 

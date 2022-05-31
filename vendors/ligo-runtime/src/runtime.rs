@@ -69,99 +69,42 @@ pub extern "C" fn store(er: &DataType) {
   unsafe { wasi::fd_close(fd).unwrap() };
 }
 
-// extern "C" {
-//   // pub fn entrypoint2 (er: BigInt);
-//   pub fn entrypoint (er: DataType) -> DataType;
-// }
+
+extern "C" {
+  pub fn entrypoint (er: Wrapped<DataType>) -> Wrapped<DataType>;
+}
+
+
 
 // this is for debugging:
 //
-#[no_mangle]
-pub extern "C" fn entrypoint (er: Wrapped<DataType>) -> Wrapped<DataType> {
-  let operations:DataType = DataType::Operations(Option::None);
-
-  let b = BigInt::from(9313312u32) * BigInt::from(9313312u32)* BigInt::from(9313312u32)* BigInt::from(9313312u32)* BigInt::from(9313312u32);
-  let storage:DataType = DataType::Int(to_wrap(&b));
-  
-  // let result = operations.wrap();
-  // println!("xxx1: {:?}", &result);
-  let result = DataType::Tuple(
-    Node {
-      value: operations,
-      next: Option::Some(Node {
-          value: storage,
-          next: Option::None 
-      }.wrap())
-    }.wrap()
-  ).wrap();
-  result
-}
-
-macro_rules! mem_layout {
-  ($elem:expr, $size:expr) => (
-      
-      println!("Address : {:p}, ", $elem);
-      println!("Pretty  : {:?}", $elem);
-      println!("  Size  : {:?} x 32bits", $size );
-      
-      print!  ("Layout : ");
-      let mut i: usize = 0;
-      
-      let x:[i32; $size] = unsafe { mem::transmute_copy($elem) } ;
-      while i < $size {
-        print!("{:?}, ", x[i]);        
-        i = i + 1;
-      }
-      println!("");
-      print!  ("         ");
-      i = 0;
-      while i < $size {
-        print!("{:#02x}, ", x[i]);        
-        i = i + 1;
-      }
-
-      println!("\n----");
-  );
-}
-
-fn print_datatype(a: &DataType) {
-  mem_layout!(a,2);
-  match a {
-    DataType::Operations(ax) => { 
-      // println!("Operations:");
-
-    }
-    _ => () // println!("Not implemented yet")
-  }
-}
+// #[no_mangle]
+// pub extern "C" fn entrypoint (er: Wrapped<DataType>) -> Wrapped<DataType> {
+//   let operations:DataType = DataType::Operations(Option::None);
+//   let b = BigInt::from(9313312u32) * BigInt::from(9313312u32)* BigInt::from(9313312u32)* BigInt::from(9313312u32)* BigInt::from(9313312u32);
+//   let storage:DataType = DataType::Int(to_wrap(&b).wrap());
+//   let result = DataType::Tuple(
+//     Node {
+//       value: operations.wrap(),
+//       next: Option::Some(Node {
+//           value: storage.wrap(),
+//           next: Option::None 
+//       }.wrap())
+//     }.wrap()
+//   ).wrap();
+//   result
+// }
 
 use crate::mem::size_of;
 
 #[no_mangle]
 pub extern "C" fn _start () {
-  let ep = load();
+  // let ep = load();
+  let ep = DataType::Bool(false);
   let wrapped_ep = ep.wrap();
   let er: Wrapped<DataType> = unsafe { entrypoint(wrapped_ep) };
+  er.print();
+  let er: &DataType = er.unwrap();
   
-  mem_layout!(&er, size_of::<Wrapped<DataType>>() / 4);
-
-  let er = &er.unwrap();
-
-  mem_layout!(&er, size_of::<DataType>() / 4);
-  
-  match &er {
-    DataType::Tuple(a) => {
-      mem_layout!(&a, size_of::<Wrapped<Node>>() / 4);
-      let a = &a.unwrap();
-      mem_layout!(&a, size_of::<Node>() / 4);
-      // println!("Yes, a tuple: {:?}", a);
-      // print("yes a tuple\n");
-      mem_layout!(&a.value, size_of::<DataType>() / 4);
-      mem_layout!(&a.next, size_of::<Option<Wrapped<Node>>>() / 4);
-      
-    }
-    _ => ()
-  };
- 
   store(er);
 }

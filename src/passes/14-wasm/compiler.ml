@@ -176,7 +176,7 @@ let rec expression ~raise : A.module_' -> locals -> I.expression -> A.module_' *
         print_endline "operations"; 
         let malloc_local = var_to_string (ValueVar.fresh ~name:"malloc" ()) in
         w, l @ [(malloc_local, I32Type)], [
-          S.{ it = A.Const { it = I32 8l; at}; at };
+          S.{ it = A.Const { it = I32 12l; at}; at };
           { it = Call "malloc"; at }; 
           { it = LocalTee malloc_local; at};
           { it = A.Const { it = I32 (Datatype.int32_of_datatype Datatype.Operations); at}; at };
@@ -186,8 +186,14 @@ let rec expression ~raise : A.module_' -> locals -> I.expression -> A.module_' *
           { it = Const { it = I32 4l; at}; at };
           { it = Binary (I32 Add); at };
           { it = Const { it = I32 0l; at}; at };
-          (* { it = DataSymbol "C_LIST_EMPTY"; at }; *)
           { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+
+          { it = LocalGet malloc_local; at};
+          { it = Const { it = I32 8l; at}; at };
+          { it = Binary (I32 Add); at };
+          { it = Const { it = I32 0l; at}; at };
+          { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+
           { it = LocalGet malloc_local; at};
 
           
@@ -208,22 +214,84 @@ let rec expression ~raise : A.module_' -> locals -> I.expression -> A.module_' *
     let e1_local = var_to_string (ValueVar.fresh ~name:"e1" ()) in
     let e2_local = var_to_string (ValueVar.fresh ~name:"e2" ()) in
     w, l @ [(malloc_local, I32Type); (e1_local, I32Type); (e2_local, I32Type)], [
-      S.{ it = A.Const { it = I32 52l; at}; at };
+      S.{ it = A.Const { it = I32 32l; at}; at };
       { it = Call "malloc"; at };
+      { it = LocalSet malloc_local; at };
 
+      (* box pointer *)
+      { it = LocalGet malloc_local; at };
+      { it = LocalGet malloc_local; at };
+      { it = Const { it = I32 4l; at}; at };
+      { it = Binary (I32 Add); at };
+      { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+
+      (* tuple *)
+      { it = LocalGet malloc_local; at };
+      { it = Const { it = I32 4l; at}; at };
+      { it = Binary (I32 Add); at };
+      { it = Const { it = I32 6l; at}; at };
+      { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+      
+      (* pointer to node *)
+      { it = LocalGet malloc_local; at };
+      { it = Const { it = I32 8l; at}; at };
+      { it = Binary (I32 Add); at };
+      { it = LocalGet malloc_local; at };
+      { it = Const { it = I32 12l; at}; at };
+      { it = Binary (I32 Add); at };
+      { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+
+      (* node *)
+      { it = LocalGet malloc_local; at };
+      { it = Const { it = I32 12l; at}; at };
+      { it = Binary (I32 Add); at };
+    ]
+    @
+    e1
+    @
+    S.[
+      { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+
+      (* is there always a next value? *)
+      { it = LocalGet malloc_local; at };
+      { it = Const { it = I32 16l; at}; at };
+      { it = Binary (I32 Add); at };
+      { it = Const { it = I32 1l; at}; at };
+      { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+
+
+      (* another node appears *)
+      { it = LocalGet malloc_local; at };
+      { it = Const { it = I32 20l; at}; at };
+      { it = Binary (I32 Add); at };
+    ]
+    @
+    e2
+    @
+    S.[
+      { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+
+      { it = LocalGet malloc_local; at };
+      { it = Const { it = I32 24l; at}; at };
+      { it = Binary (I32 Add); at };
+      { it = Const { it = I32 0l; at}; at };
+      { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+
+      { it = LocalGet malloc_local; at };
+      { it = Const { it = I32 28l; at}; at };
+      { it = Binary (I32 Add); at };
+      { it = Const { it = I32 0l; at}; at };
+      { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+
+      { it = LocalGet malloc_local; at };
+      (* item 1 *)
+    ]
+(* 
       (* datatype: tuple *)
       { it = LocalTee malloc_local; at };
       { it = Const { it = I32 (Datatype.int32_of_datatype Datatype.Tuple); at}; at };
       { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
 
-      (* box pointer *)
-      { it = LocalGet malloc_local; at };
-      { it = Const { it = I32 4l; at}; at };
-      { it = Binary (I32 Add); at };
-      { it = LocalGet malloc_local; at };
-      { it = Const { it = I32 8l; at}; at };
-      { it = Binary (I32 Add); at };
-      { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
       
       (* tuple: head pointer *)
       { it = LocalGet malloc_local; at };
@@ -334,7 +402,7 @@ let rec expression ~raise : A.module_' -> locals -> I.expression -> A.module_' *
       { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
       
       { it = LocalGet malloc_local; at };
-    ]
+    ] *)
   | E_constant {cons_name = C_ADD; arguments = [e1; e2]} -> 
     let new_value = var_to_string (ValueVar.fresh ~name:"C_ADD" ()) in
     let mpz_init = [
@@ -654,6 +722,7 @@ typedef struct __wasi_ciovec_t {
               (* { it = LocalGet "return_tuple"; at }; *)
               { it = LocalGet "entrypoint_tuple"; at };
               { it = Call actual_name; at };
+              { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
               (* { it = LocalTee "tempx"; at};
               { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
               { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
