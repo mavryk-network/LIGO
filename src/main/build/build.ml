@@ -53,7 +53,7 @@ module M (Params : Params) =
       fun env file_name meta c_unit ->
       let options = Compiler_options.set_init_env options env in
       let stdlib = Stdlib.typed ~options meta.syntax in
-      let testlib = Testlib.typed ~options meta.syntax in
+      let testlib = Testlib.typed ~options (match options.test_framework.syntax with Some s -> s | None -> meta.syntax) in
       let options = Compiler_options.set_init_env options (Environment.append stdlib (Environment.append testlib env)) in
       let ast_core = Ligo_compile.Utils.to_core ~raise ~add_warning ~options ~meta c_unit file_name in
       let ast_typed = Ligo_compile.Of_core.typecheck ~raise ~add_warning ~options Ligo_compile.Of_core.Env ast_core in
@@ -91,7 +91,7 @@ module Infer (Params : Params) = struct
   let compile : AST.environment -> file_name -> meta_data -> compilation_unit -> AST.t =
     fun _ file_name meta c_unit ->
     let stdlib =  Stdlib.core ~options meta.syntax in
-    let testlib = Testlib.core ~options meta.syntax in
+    let testlib = Testlib.core ~options (match options.test_framework.syntax with Some s -> s | None -> meta.syntax) in
     let module_ = Ligo_compile.Utils.to_core ~raise ~add_warning ~options ~meta c_unit file_name in
     testlib @ stdlib @ module_
 

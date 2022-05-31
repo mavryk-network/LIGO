@@ -22,6 +22,8 @@ type tools = {
 }
 
 type test_framework = {
+  (* [syntax] The testing program and the testing logic can be written in different syntaxes *)
+  syntax : Syntax_types.t option ;
   steps : int ;
 }
 
@@ -63,12 +65,14 @@ let warn_unused_rec ~syntax should_warn =
 let make :
   raw_options : raw ->
   ?syntax : Syntax_types.t ->
+  ?test_syntax : Syntax_types.t ->
   ?protocol_version:Protocols.t ->
   ?has_env_comments : bool ->
   unit -> t =
   fun
     ~raw_options
     ?syntax
+    ?test_syntax
     ?(protocol_version = Protocols.current)
     ?(has_env_comments = false)
     () ->
@@ -84,6 +88,7 @@ let make :
       } in
       let test_framework = {
         steps = raw_options.steps;
+        syntax = test_syntax ;
       } in
       let middle_end = {
         test = raw_options.test;
