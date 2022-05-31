@@ -13,7 +13,7 @@ let test (raw_options : Compiler_options.raw) source_file display_format () =
       let options = Compiler_options.make ~protocol_version ~syntax ~raw_options () in
       let Compiler_options.{ steps ; _ } = options.test_framework in
       let typed   = Build.merge_and_type_libraries ~raise ~add_warning ~options source_file in
-      Interpreter.eval_test ~raise ~steps ~options typed
+      Interpreter.eval_test ~raise ~add_warning ~steps ~options typed
 
 let get_meta_ligo_eq ~raise ~add_warning file =
   let meta_ligo_eq = Run_meta_files.get file in
@@ -86,7 +86,7 @@ let dry_run (raw_options : Compiler_options.raw) source_file parameter storage a
       let cli_entry = core_contract @ cli_module :: get_meta_ligo_eq ~raise ~add_warning "dry_run.mligo" in
       let cli_entry_typed = Ligo_compile.Of_core.typecheck ~raise ~add_warning ~options Env cli_entry in
       let agg = Ligo_compile.Of_typed.apply_to_entrypoint ~raise ~options:options.middle_end cli_entry_typed "test_dry_run" in
-      Interpreter.eval ~raise ~steps ~options agg
+      Interpreter.eval ~raise ~add_warning ~steps ~options agg
 
 
 let interpret (raw_options : Compiler_options.raw) expression init_file amount balance sender source now display_format () =

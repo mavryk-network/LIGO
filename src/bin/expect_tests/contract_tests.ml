@@ -1259,7 +1259,7 @@ let%expect_test _ =
     Warning: unused variable "ps".
     Hint: replace it by "_ps" to prevent this warning.
 
-    failwith("This contract always fails") |}]
+    failed with: "This contract always fails" |}]
 
 let%expect_test _ =
   run_ligo_bad [ "compile" ; "contract" ; bad_contract "self_in_lambda.mligo" ] ;
@@ -2172,15 +2172,15 @@ let%expect_test _ =
 
 let%expect_test _ =
   run_ligo_good [ "run"; "evaluate-call"; contract "assert.mligo"; "(false, ())"; "-e"; "with_error"];
-  [%expect {| failwith("my custom error") |}]
+  [%expect {| failed with: "my custom error" |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "evaluate-call"; contract "assert.mligo"; "(None: unit option)"; "-e"; "some_with_error"];
-  [%expect {| failwith("my custom error") |}]
+  [%expect {| failed with: "my custom error" |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "evaluate-call"; contract "assert.mligo"; "(Some (): unit option)"; "-e"; "none_with_error"];
-  [%expect {| failwith("my custom error") |}]
+  [%expect {| failed with: "my custom error" |}]
 
 let%expect_test _ =
   run_ligo_good [ "print" ; "ast-typed" ; contract "attributes.jsligo" ] ;
@@ -2220,6 +2220,13 @@ let%expect_test _ =
 
       Toplevel let declaration are silently change to const declaration.
 
+      File "../../test/contracts/negative/modules_export_const.jsligo", line 2, characters 4-15:
+        1 | namespace Bar {
+        2 |     let foo = 2
+        3 | }
+
+      Toplevel let declaration are silently change to const declaration.
+
       File "../../test/contracts/negative/modules_export_const.jsligo", line 5, characters 8-15:
         4 |
         5 | let a = Bar.foo;
@@ -2227,6 +2234,13 @@ let%expect_test _ =
       Variable "foo" not found. |}];
   run_ligo_bad [ "compile" ; "contract" ; bad_contract "modules_export_namespace.jsligo" ] ;
     [%expect {|
+      File "../../test/contracts/negative/modules_export_namespace.jsligo", line 3, characters 8-17:
+        2 |     namespace Foo {
+        3 |         let a = 2;
+        4 |     }
+
+      Toplevel let declaration are silently change to const declaration.
+
       File "../../test/contracts/negative/modules_export_namespace.jsligo", line 7, characters 17-20:
         6 |
         7 | import Foo = Bar.Foo
@@ -2697,6 +2711,20 @@ let%expect_test _ =
 File "../../test/contracts/extend_builtin.jsligo", line 6, characters 0-24:
   5 |
   6 | let y = Tezos.f(Tezos.x);
+
+Toplevel let declaration are silently change to const declaration.
+
+File "../../test/contracts/extend_builtin.jsligo", line 3, characters 9-42:
+  2 |   export let x = 42;
+  3 |   export let f = (x  : int) : int => x + 2;
+  4 | }
+
+Toplevel let declaration are silently change to const declaration.
+
+File "../../test/contracts/extend_builtin.jsligo", line 2, characters 9-19:
+  1 | namespace Tezos {
+  2 |   export let x = 42;
+  3 |   export let f = (x  : int) : int => x + 2;
 
 Toplevel let declaration are silently change to const declaration.
 
