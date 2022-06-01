@@ -135,7 +135,7 @@ pub enum Option<T> {
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
 #[repr(C)]
 pub struct BigIntWrap {
-  datax:     *mut u8,
+  data:     *mut u8,
   len:      usize,
   capacity: usize
 }
@@ -147,14 +147,14 @@ pub fn to_wrap (i: &BigInt) -> BigIntWrap {
   let len = vec.len();
   let capacity = vec.capacity();
   BigIntWrap { 
-    datax:    data,
+    data:    data,
     len:      len,
     capacity: capacity,
   }
 }
 
 pub fn to_bigint (i: &BigIntWrap) -> BigInt {
-  let v = unsafe { Vec::from_raw_parts(i.datax, i.len, i.capacity) };
+  let v = unsafe { Vec::from_raw_parts(i.data, i.len, i.capacity) };
   let v = ManuallyDrop::new(v);
   let r = BigInt::from_signed_bytes_le(v.as_slice());
   r
@@ -222,6 +222,17 @@ pub trait MemoryLayout {
 impl MemoryLayout for BigIntWrap {
   fn print(&self) {
     mem_layout!(self, size_of::<Self>() / 4);
+    print!("Contents: ");
+    let start:u32 = self.data as u32;
+    let mut n: usize = 0;
+    while n < self.len {
+      let pos = start + (n as u32);
+      let addr = pos as *const i32;
+      let x:u8 = unsafe { *addr as u8 };
+      print!("{:?}, ", x);
+      n = n + 1;
+    }
+    println!("\n----");
   }
 }
 
@@ -312,13 +323,6 @@ impl MemoryLayout for Operation {
     panic!()
   }
 }
-
-/*
-pub enum Operation {
-  Transaction(Transaction), 
-  Delegate(Delegate)
-}
-*/
 
 impl MemoryLayout for Wrapped<DataType> {
   fn print(&self) {
