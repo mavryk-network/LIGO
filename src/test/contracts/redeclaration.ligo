@@ -1,6 +1,6 @@
-function foo (const p : unit) : int is 0
+function foo (const _ : unit) : int is 0
 
-function main (const p : unit; const s : int) : list (operation) * int is
+function main (const _ : unit; const _s : int) : list (operation) * int is
   ((nil : list (operation)), foo (unit))
 
-function foo (const p : unit) : int is 1
+function foo (const _ : unit) : int is 1

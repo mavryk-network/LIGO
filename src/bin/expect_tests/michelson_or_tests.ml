@@ -10,35 +10,10 @@ let () = Unix.putenv ~key:"TERM" ~data:"dumb"
 
 let%expect_test _ =
   run_ligo_good [ "run"; "dry-run" ; contract "double_michelson_or.mligo" ; "unit" ; "(M_left (1) : storage)" ] ;
-  [%expect {|
-    File "../../test/contracts/double_michelson_or.mligo", line 8, characters 6-9:
-      7 |   let foo = (M_right ("one") : storage) in
-      8 |   let bar = (M_right 1 : foobar) in
-      9 |   (([] : operation list), (foo: storage))
-    :
-    Warning: unused variable "bar".
-    Hint: replace it by "_bar" to prevent this warning.
-
-    File "../../test/contracts/double_michelson_or.mligo", line 6, characters 10-16:
-      5 |
-      6 | let main (action, store : unit * storage) : return =
-      7 |   let foo = (M_right ("one") : storage) in
-    :
-    Warning: unused variable "action".
-    Hint: replace it by "_action" to prevent this warning.
-
-    File "../../test/contracts/double_michelson_or.mligo", line 6, characters 18-23:
-      5 |
-      6 | let main (action, store : unit * storage) : return =
-      7 |   let foo = (M_right ("one") : storage) in
-    :
-    Warning: unused variable "store".
-    Hint: replace it by "_store" to prevent this warning.
-
-    ( LIST_EMPTY() , M_right("one") ) |}];
+  [%expect{| ((Right "one") , Success (2112n)) |}];
 
   run_ligo_good ["run"; "dry-run" ; contract "double_michelson_or.ligo" ; "unit" ; "(M_left (1) : storage)" ] ;
-  [%expect {|
+  [%expect{|
     File "../../test/contracts/double_michelson_or.ligo", line 9, characters 8-11:
       8 |   const foo : storage = (M_right ("one") : storage);
       9 |   const bar : foobar = (M_right (1) : foobar)
@@ -63,7 +38,7 @@ let%expect_test _ =
     Warning: unused variable "store".
     Hint: replace it by "_store" to prevent this warning.
 
-    ( LIST_EMPTY() , M_right("one") ) |}]
+    ((Right "one") , Success (2112n)) |}]
 
 
 let%expect_test _ =

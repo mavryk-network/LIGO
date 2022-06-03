@@ -21,7 +21,7 @@ let%expect_test _ =
     Warning: unused variable "ps".
     Hint: replace it by "_ps" to prevent this warning.
 
-    failed with: "This contract always fails" |}]
+    (Unit , Fail (Rejected (("This contract always fails" , KT1N87cqmGtF8C8mLq2y1yciuJymeDYWuPZP)))) |}]
 
 let%expect_test _ =
   run_ligo_good ["run"; "interpret" ; "assert(1=1)" ; "--syntax";"pascaligo" ] ;

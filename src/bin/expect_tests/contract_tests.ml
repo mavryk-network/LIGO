@@ -1186,37 +1186,7 @@ let%expect_test _ =
 let%expect_test _ =
     run_ligo_good [ "run" ; "dry-run" ; contract "redeclaration.ligo" ; "unit" ; "0" ] ;
     [%expect {|
-      File "../../test/contracts/redeclaration.ligo", line 6, characters 20-21:
-        5 |
-        6 | function foo (const p : unit) : int is 1
-      :
-      Warning: unused variable "p".
-      Hint: replace it by "_p" to prevent this warning.
-
-      File "../../test/contracts/redeclaration.ligo", line 3, characters 21-22:
-        2 |
-        3 | function main (const p : unit; const s : int) : list (operation) * int is
-        4 |   ((nil : list (operation)), foo (unit))
-      :
-      Warning: unused variable "p".
-      Hint: replace it by "_p" to prevent this warning.
-
-      File "../../test/contracts/redeclaration.ligo", line 3, characters 37-38:
-        2 |
-        3 | function main (const p : unit; const s : int) : list (operation) * int is
-        4 |   ((nil : list (operation)), foo (unit))
-      :
-      Warning: unused variable "s".
-      Hint: replace it by "_s" to prevent this warning.
-
-      File "../../test/contracts/redeclaration.ligo", line 1, characters 20-21:
-        1 | function foo (const p : unit) : int is 0
-        2 |
-      :
-      Warning: unused variable "p".
-      Hint: replace it by "_p" to prevent this warning.
-
-      ( LIST_EMPTY() , 0 ) |}]
+      (0 , Success (2109n)) |}]
 
 let%expect_test _ =
     run_ligo_good [ "run" ; "dry-run" ; contract "double_main.ligo" ; "unit" ; "0" ] ;
@@ -1229,7 +1199,7 @@ let%expect_test _ =
       Warning: unused variable "p".
       Hint: replace it by "_p" to prevent this warning.
 
-      ( LIST_EMPTY() , 2 ) |}]
+      (2 , Success (2118n)) |}]
 
 let%expect_test _ =
   run_ligo_good [ "compile" ; "contract" ; contract "subtle_nontail_fail.mligo" ] ;
@@ -1259,7 +1229,7 @@ let%expect_test _ =
     Warning: unused variable "ps".
     Hint: replace it by "_ps" to prevent this warning.
 
-    failed with: "This contract always fails" |}]
+    (Unit , Fail (Rejected (("This contract always fails" , KT1N87cqmGtF8C8mLq2y1yciuJymeDYWuPZP)))) |}]
 
 let%expect_test _ =
   run_ligo_bad [ "compile" ; "contract" ; bad_contract "self_in_lambda.mligo" ] ;
@@ -1301,7 +1271,7 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_good [ "run" ; "dry-run" ; contract "super-counter.mligo" ; "test_param" ; "test_storage" ] ;
   [%expect {|
-    ( LIST_EMPTY() , 3 ) |}]
+    (3 , Success (2114n)) |}]
 
 let%expect_test _ =
   run_ligo_good [ "compile" ; "expression" ; "cameligo" ; "x" ; "--init-file" ; contract "redundant_constructors.mligo" ] ;

@@ -159,7 +159,7 @@ let%expect_test _ =
              Warning: unused variable "action".
              Hint: replace it by "_action" to prevent this warning.
 
-             ( LIST_EMPTY() , record[bar -> "bar" , foo -> 2] ) |}];
+             ((Pair 2 "bar") , Success (2114n)) |}];
   run_ligo_good [ "run" ; "dry-run" ; contract "annotated_michelson_record_comb.mligo" ; "()" ; "{ a = 2 ; b = \"\" ; c = 1n }" ; "-e" ; "main_comb_three" ] ;
   [%expect {|
              File "../../test/contracts/annotated_michelson_record_comb.mligo", line 41, characters 20-26:
@@ -194,7 +194,7 @@ let%expect_test _ =
              Warning: unused variable "action".
              Hint: replace it by "_action" to prevent this warning.
 
-             ( LIST_EMPTY() , record[a -> 1 , b -> "" , c -> +1] ) |}];
+             ((Pair 1 "" 1) , Success (2118n)) |}];
   run_ligo_good [ "run" ; "dry-run" ; contract "annotated_michelson_record_comb.mligo" ; "()" ; "{ one = 1 ; two = \"\" ; three = true ; four = 2n ; five = 1 }" ; "-e" ; "main_comb_five" ] ;
   [%expect {|
              File "../../test/contracts/annotated_michelson_record_comb.mligo", line 41, characters 20-26:
@@ -229,8 +229,7 @@ let%expect_test _ =
              Warning: unused variable "action".
              Hint: replace it by "_action" to prevent this warning.
 
-             ( LIST_EMPTY() ,
-               record[five -> 1 , four -> +2 , one -> 1 , three -> True(unit) , two -> ""] ) |}]
+             ((Pair 1 "" True 2 1) , Success (2117n)) |}]
 
 (*TREE*)
 let%expect_test _ =
@@ -390,7 +389,7 @@ let%expect_test _ =
              Warning: unused variable "action".
              Hint: replace it by "_action" to prevent this warning.
 
-             ( LIST_EMPTY() , record[bar -> "bar" , foo -> 2] ) |}];
+             ((Pair "bar" 2) , Success (2111n)) |}];
   run_ligo_good [ "run" ; "dry-run" ; contract "annotated_michelson_record_tree.mligo" ; "()" ; "{ a = 2 ; b = \"\" ; c = 1n }" ; "-e" ; "main_comb_three" ] ;
   [%expect {|
              File "../../test/contracts/annotated_michelson_record_tree.mligo", line 41, characters 20-26:
@@ -425,7 +424,7 @@ let%expect_test _ =
              Warning: unused variable "action".
              Hint: replace it by "_action" to prevent this warning.
 
-             ( LIST_EMPTY() , record[a -> 1 , b -> "" , c -> +1] ) |}];
+             ((Pair (Pair 1 "") 1) , Success (2118n)) |}];
   run_ligo_good [ "run" ; "dry-run" ; contract "annotated_michelson_record_tree.mligo" ; "()" ; "{ one = 1 ; two = \"\" ; three = true ; four = 2n ; five = 1 }" ; "-e" ; "main_comb_five" ] ;
   [%expect {|
              File "../../test/contracts/annotated_michelson_record_tree.mligo", line 41, characters 20-26:
@@ -460,8 +459,7 @@ let%expect_test _ =
              Warning: unused variable "action".
              Hint: replace it by "_action" to prevent this warning.
 
-             ( LIST_EMPTY() ,
-               record[five -> 1 , four -> +2 , one -> 1 , three -> True(unit) , two -> ""] ) |}]
+             ((Pair (Pair (Pair 1 2) 1 True) "") , Success (2117n)) |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "accesses " ; "--init-file" ; (contract "annotated_michelson_record_comb.mligo") ] ;

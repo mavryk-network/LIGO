@@ -394,7 +394,7 @@ let%expect_test _ =
     Warning: unused variable "action".
     Hint: replace it by "_action" to prevent this warning.
 
-    ( LIST_EMPTY() , Bar("foo") ) |}];
+    ((Right "foo") , Success (2118n)) |}];
   run_ligo_good [ "run" ; "dry-run" ; contract "annotated_michelson_variant_comb.mligo" ; "()" ; "A(1)" ; "-e" ; "main_comb_three" ] ;
   [%expect{|
     File "../../test/contracts/annotated_michelson_variant_comb.mligo", line 35, characters 10-11:
@@ -485,7 +485,7 @@ let%expect_test _ =
     Warning: unused variable "action".
     Hint: replace it by "_action" to prevent this warning.
 
-    ( LIST_EMPTY() , C(+1) ) |}];
+    ((Right (Right 1)) , Success (2114n)) |}];
   run_ligo_good [ "run" ; "dry-run" ; contract "annotated_michelson_variant_comb.mligo" ; "()" ; "One(1)" ; "-e" ; "main_comb_five" ] ;
   [%expect{|
     File "../../test/contracts/annotated_michelson_variant_comb.mligo", line 35, characters 10-11:
@@ -576,7 +576,7 @@ let%expect_test _ =
     Warning: unused variable "action".
     Hint: replace it by "_action" to prevent this warning.
 
-    ( LIST_EMPTY() , Five(1) ) |}]
+    ((Right (Right (Right (Right 1)))) , Success (2148n)) |}]
 
 (*TREE*)
 let%expect_test _ =
@@ -969,7 +969,7 @@ let%expect_test _ =
              Warning: unused variable "action".
              Hint: replace it by "_action" to prevent this warning.
 
-             ( LIST_EMPTY() , Bar("foo") ) |}];
+             ((Left "foo") , Success (2118n)) |}];
   run_ligo_good [ "run" ; "dry-run" ; contract "annotated_michelson_variant_tree.mligo" ; "()" ; "A(2)" ; "-e" ; "main_comb_three" ] ;
   [%expect {|
              File "../../test/contracts/annotated_michelson_variant_tree.mligo", line 35, characters 10-11:
@@ -1060,7 +1060,7 @@ let%expect_test _ =
              Warning: unused variable "action".
              Hint: replace it by "_action" to prevent this warning.
 
-             ( LIST_EMPTY() , C(+1) ) |}];
+             ((Right 1) , Success (2114n)) |}];
   run_ligo_good [ "run" ; "dry-run" ; contract "annotated_michelson_variant_tree.mligo" ; "()" ; "One(1)" ; "-e" ; "main_comb_five" ] ;
   [%expect {|
              File "../../test/contracts/annotated_michelson_variant_tree.mligo", line 35, characters 10-11:
@@ -1151,4 +1151,4 @@ let%expect_test _ =
              Warning: unused variable "action".
              Hint: replace it by "_action" to prevent this warning.
 
-             ( LIST_EMPTY() , Five(1) ) |}]
+             ((Left (Left (Left 1))) , Success (2148n)) |}]
