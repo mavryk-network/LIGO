@@ -28,7 +28,8 @@ let dry_run (raw_options : Compiler_options.raw) source_file parameter storage a
       let syntax  = Syntax.of_string_opt ~raise (Syntax_name raw_options.syntax) (Some source_file) in
       let options = Compiler_options.make ~protocol_version ~syntax ~test_syntax:CameLIGO ~raw_options () in
       let Compiler_options.{ steps ; _ } = options.test_framework in
-      let core_contract = Build.merge_libraries ~raise ~add_warning ~options source_file in
+      (* Note: we are typing the contract first, but we are not emiting warning since they will be emited by Test.originate *)
+      let core_contract = Build.merge_libraries ~raise ~add_warning:(fun _ -> ()) ~options source_file in
 
 
       let attr = Ast_core.{ inline = false ; no_mutation = false ; view = false ; public = true ; thunk = false ; hidden = false } in
@@ -43,11 +44,34 @@ let dry_run (raw_options : Compiler_options.raw) source_file parameter storage a
       let binder_entrypoint = Ast_core.ValueVar.of_input_var "entrypoint" in
       let binder_amount = Ast_core.ValueVar.of_input_var "amount" in
       let binder_balance = Ast_core.ValueVar.of_input_var "balance" in
+      let binder_sender = Ast_core.ValueVar.of_input_var "sender" in
+      let binder_source = Ast_core.ValueVar.of_input_var "source" in
+      let binder_now = Ast_core.ValueVar.of_input_var "now" in
 
       let cli_module : Ast_core.declaration =
         let open Ast_core in
-        let expr_storage = Ligo_compile.Utils.core_expression_string ~raise ~add_warning syntax storage in
-        let expr_parameter = Ligo_compile.Utils.core_expression_string ~raise ~add_warning syntax parameter in
+        let expr_storage = Ligo_compile.Utils.core_expression_string ~raise ~add_warning:(fun _ -> ()) syntax storage in
+        let expr_parameter = Ligo_compile.Utils.core_expression_string ~raise ~add_warning:(fun _ -> ()) syntax parameter in
+
+        
+
+        let time_conv (amount: string option) : Ast_core.expression =
+          let f : string -> Ast_core.expression = fun str ->
+            let open Memory_proto_alpha.Protocol.Time_repr in
+            match of_notation str with
+            | Some i64 -> Ast_core.(e_some (e_timestamp (Z.of_int64 (to_seconds i64))))
+            | None -> raise.raise (Main_errors.main_invalid_timestamp str)
+          in
+          let default = Ast_core.(e_ascription (e_none ()) (t_option (t_timestamp ()))) in
+          Option.value_map amount ~default ~f
+        in
+
+        let address_conv (addr: string option) : Ast_core.expression =
+          let f : string -> Ast_core.expression = fun str -> Ast_core.(e_some (e_address str)) in
+          let default = Ast_core.(e_ascription (e_none ()) (t_option (t_address ()))) in
+          Option.value_map addr ~default ~f
+        in
+
         let mutez_conv (ferr : (string -> Main_errors.all)) (amount: string option) : Ast_core.expression =
           let f : string -> Ast_core.expression = fun str ->
             try
@@ -58,13 +82,19 @@ let dry_run (raw_options : Compiler_options.raw) source_file parameter storage a
           let default = Ast_core.(e_ascription (e_none ()) (t_option (t_mutez ()))) in
           Option.value_map amount ~default ~f
         in
+
+
+
         let lst = [
           Declaration_constant { binder = make_binder binder_parameter  ; attr ; expr = expr_parameter                                               } ;
           Declaration_constant { binder = make_binder binder_storage    ; attr ; expr = expr_storage                                                 } ;
           Declaration_constant { binder = make_binder binder_filename   ; attr ; expr = e_string (Ligo_string.standard source_file)                  } ;
           Declaration_constant { binder = make_binder binder_entrypoint ; attr ; expr = e_string (Ligo_string.standard options.frontend.entry_point) } ;
-          Declaration_constant { binder = make_binder binder_amount     ; attr ; expr = mutez_conv (Main_errors.main_invalid_amount) amount                                            } ;
-          Declaration_constant { binder = make_binder binder_balance    ; attr ; expr = mutez_conv (Main_errors.main_invalid_balance) balance                                           } ;
+          Declaration_constant { binder = make_binder binder_amount     ; attr ; expr = mutez_conv (Main_errors.main_invalid_amount) amount          } ;
+          Declaration_constant { binder = make_binder binder_balance    ; attr ; expr = mutez_conv (Main_errors.main_invalid_balance) balance        } ;
+          Declaration_constant { binder = make_binder binder_sender     ; attr ; expr = address_conv sender                                          } ;
+          Declaration_constant { binder = make_binder binder_source     ; attr ; expr = address_conv source                                          } ;
+          Declaration_constant { binder = make_binder binder_now        ; attr ; expr = time_conv now                                                } ;
           ]
         in
         let module_ = Location.wrap @@ M_struct (List.map ~f:(Location.wrap) lst) in
@@ -83,11 +113,10 @@ let dry_run (raw_options : Compiler_options.raw) source_file parameter storage a
         List.append [cli_parameters_module] cli_parameters_ty_module *)
         cli_parameters_module
       in
-      let cli_entry = core_contract @ cli_module :: get_meta_ligo_eq ~raise ~add_warning "dry_run.mligo" in
-      let cli_entry_typed = Ligo_compile.Of_core.typecheck ~raise ~add_warning ~options Env cli_entry in
+      let cli_entry = core_contract @ cli_module :: get_meta_ligo_eq ~raise ~add_warning:(fun _ -> ()) "dry_run.mligo" in
+      let cli_entry_typed = Ligo_compile.Of_core.typecheck ~raise ~add_warning:(fun _ -> ()) ~options Env cli_entry in
       let agg = Ligo_compile.Of_typed.apply_to_entrypoint ~raise ~options:options.middle_end cli_entry_typed "test_dry_run" in
       Interpreter.eval ~raise ~add_warning ~steps ~options agg
-
 
 let interpret (raw_options : Compiler_options.raw) expression init_file amount balance sender source now display_format () =
     Trace.warning_with @@ fun add_warning get_warnings ->
