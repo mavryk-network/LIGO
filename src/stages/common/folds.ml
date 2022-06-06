@@ -183,9 +183,28 @@ and declaration_type : ('acc -> 'a -> 'acc) -> 'acc -> ('a,'attr) declaration_ty
   let acc = g acc type_expr in
   acc
 
+and list_pattern : ('acc -> 'ty_exp -> 'acc) -> 'acc -> 'a list_pattern -> 'acc
+= fun f acc ps ->
+  match ps with
+    Cons (h, t) -> 
+      let acc = pattern f acc h in 
+      let acc = pattern f acc t in
+      acc 
+  | List ps -> List.fold ps ~init:acc ~f:(fun acc p -> pattern f acc p)
+
+and pattern : ('acc -> 'ty_exp -> 'acc) -> 'acc -> 'a pattern -> 'acc
+= fun f acc p ->
+    match (Location.unwrap p) with
+      P_unit -> acc
+    | P_var b -> binder f acc b
+    | P_list ps -> list_pattern f acc ps
+    | P_variant (_, p) -> pattern f acc p
+    | P_tuple ps -> List.fold ps ~init:acc ~f:(fun acc p -> pattern f acc p)
+    | P_record (_ ,ps) -> List.fold ps ~init:acc ~f:(fun acc p -> pattern f acc p)
+
 and declaration_constant : ('acc -> 'exp -> 'acc) -> ('acc -> 'ty_exp -> 'acc) -> 'acc -> ('exp,'ty_exp,'attr) declaration_constant' -> 'acc
 = fun f g acc {binder=b; attr=_; expr} ->
-  let acc = binder g acc b in
+  let acc = pattern g acc b in
   let acc = f acc expr     in
   acc
 

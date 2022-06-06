@@ -232,7 +232,7 @@ type ('ty_exp,'attr) declaration_type' = {
   }
 
 and ('exp,'ty_exp,'attr) declaration_constant' = {
-    binder : 'ty_exp binder;
+    binder : 'ty_exp pattern;
     expr : 'exp ;
     attr : 'attr ;
   }

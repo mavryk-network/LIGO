@@ -177,9 +177,40 @@ let declaration_type : ('acc -> 'a -> 'acc * 'b) -> 'acc -> ('a,'attr) declarati
   let acc,type_expr = g acc type_expr in
   (acc,{type_binder; type_expr; type_attr})
 
+let rec list_pattern : ('acc -> 'a -> 'acc * 'b) -> 'acc -> 'a list_pattern -> 'acc * 'b list_pattern
+= fun f acc ps ->
+  match ps with
+    Cons (h, t) ->
+      let acc,h = pattern f acc h in
+      let acc,t = pattern f acc t in
+      acc, Cons (h, t)
+  | List ps -> 
+    let acc,ps = List.fold_map ps ~init:acc ~f:(fun acc p -> pattern f acc p) in
+    acc, List ps
+and pattern : ('acc -> 'a -> 'acc * 'b) -> 'acc -> 'a pattern -> 'acc * 'b pattern
+= fun f acc p ->
+  let loc = Location.get_location p in
+  match (Location.unwrap p) with 
+    P_unit -> acc, Location.wrap ~loc P_unit
+  | P_var b -> 
+    let acc,b = binder f acc b in
+    acc, Location.wrap ~loc (P_var b)
+  | P_list ps -> 
+    let acc,ps = list_pattern f acc ps in
+    acc, Location.wrap ~loc (P_list ps)
+  | P_variant (c, p) -> 
+    let acc,p = pattern f acc p in
+    acc, Location.wrap ~loc (P_variant (c, p))
+  | P_tuple ps -> 
+    let acc,ps = List.fold_map ps ~init:acc ~f:(fun acc p -> pattern f acc p) in 
+    acc, Location.wrap ~loc (P_tuple ps)
+  | P_record (ks,ps) -> 
+    let acc,ps = List.fold_map ps ~init:acc ~f:(fun acc p -> pattern f acc p) in
+    acc, Location.wrap ~loc (P_record (ks,ps))
+
 let declaration_constant : ('acc -> 'a -> 'acc * 'b) -> ('acc -> 'c -> 'acc * 'd) -> 'acc -> ('a,'c,'attr) declaration_constant' -> 'acc * ('b,'d,'attr) declaration_constant'
 = fun f g acc {binder=b; attr; expr} ->
-  let acc,binder = binder g acc b in
+  let acc,binder = pattern g acc b in
   let acc,expr   = f acc expr     in
   (acc,{binder;attr;expr})
 

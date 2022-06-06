@@ -341,9 +341,10 @@ and declaration_type type_expression a_t ppf = fun {type_binder;type_expr; type_
 and declaration_constant ?(print_type = true) expression type_expression a_e ppf = fun {binder=binder'; attr ; expr} ->
   let cond ppf b =
     if print_type then
-      fprintf ppf "%a" (binder type_expression) b
+      fprintf ppf "%a" (match_pattern type_expression) b
     else
-      fprintf ppf "%a" expression_variable b.var
+      (* TODO: don't print types here *)
+      fprintf ppf "%a" (match_pattern type_expression) b
   in
   fprintf ppf "@[<2>const %a =@ %a%a@]"
     cond binder'

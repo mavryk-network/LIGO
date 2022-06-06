@@ -275,7 +275,7 @@ let declaration_type type_expression a_t {type_binder; type_expr; type_attr} =
 
 let declaration_constant expression type_expression a_e {binder=b;attr;expr} =
   `Assoc [
-    ("binder", binder type_expression b);
+    ("binder", pattern type_expression b);
     ("expr", expression expr);
     ("attribute", a_e attr);
   ]

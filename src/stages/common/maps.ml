@@ -176,9 +176,27 @@ let declaration_type : ('a -> 'b) -> ('attra -> 'attrb) -> ('a,'attra) declarati
   let type_attr = h type_attr in
   {type_binder; type_expr; type_attr}
 
+let rec list_pattern : ('a -> 'b) -> 'a list_pattern -> 'b list_pattern
+= fun f ps ->
+  match ps with
+    Cons (h, t) -> Cons (pattern f h, pattern f t) 
+  | List ps -> List (List.map ps ~f:(fun p -> pattern f p)) 
+
+and pattern : ('a -> 'b) -> 'a pattern -> 'b pattern
+= fun f p ->
+  Location.map 
+    (function 
+      P_unit -> P_unit
+    | P_var b -> P_var (binder f b)
+    | P_list ps -> P_list (list_pattern f ps)
+    | P_variant (c, p) -> P_variant (c, pattern f p)
+    | P_tuple ps -> P_tuple (List.map ps ~f:(fun p -> pattern f p))
+    | P_record (ks ,ps) -> P_record (ks, List.map ps ~f:(fun p -> pattern f p))) 
+    p
+
 let declaration_constant : ('a -> 'b) -> ('c -> 'd) -> ('attra -> 'attrb) -> ('a,'c,'attra) declaration_constant' -> ('b,'d,'attrb) declaration_constant'
 = fun map_e map_ty map_attr_e {binder=b; attr; expr} ->
-  let binder = binder map_ty b in
+  let binder = pattern map_ty b in
   let expr   = map_e expr     in
   let attr = map_attr_e attr in
   {binder;attr;expr}
