@@ -83,31 +83,27 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_good [ "print" ; "ast-typed" ; contract "D.mligo" ] ;
   [%expect {|
-    const toto = ((#add@{int}@{int})@(E.toto))@(C.B.A.toto)
+    const toto = ADD(E.toto , C.B.A.toto)
     const fb = record[tata -> 2 , tete -> 3 , titi -> 1 , toto -> toto]
     const main =
       lambda (gen#5 : ( int * int )) return  match gen#5 with
                                               | ( p , s ) ->
-                                              let s = ((#add@{int}@{int})@(((#add@{int}@{int})@(p))@(s)))@(toto) in
-                                              ( LIST_EMPTY() , s ) |}]
+                                              let s = ADD(ADD(p , s) ,
+                                              toto) in ( LIST_EMPTY() , s ) |}]
 
 let%expect_test _ =
   run_ligo_good [ "print" ; "mini-c" ; contract "D.mligo" ] ;
   [%expect{|
-let #../../test/contracts/build/A.mligo#toto#307 = L(1) in
-let #../../test/contracts/build/B.mligo#titi#609 =
-  ({ UNPAIR ; ADD })@(PAIR(#../../test/contracts/build/A.mligo#toto#307 ,
-                           L(42))) in
-let #../../test/contracts/build/C.mligo#tata#1513 =
-  ({ UNPAIR ; ADD })@(PAIR(#../../test/contracts/build/A.mligo#toto#307 ,
-                           #../../test/contracts/build/B.mligo#titi#609)) in
-let gen#7546 =
-  (({ UNPAIR ; ADD })@(PAIR(L(3) ,
-                            #../../test/contracts/build/A.mligo#toto#307)), #../../test/contracts/build/B.mligo#titi#609) in
-let x = let (l, r) = gen#7546 in ({ UNPAIR ; ADD })@(PAIR(l , r)) in
-let toto =
-  ({ UNPAIR ; ADD })@(PAIR(L(10) ,
-                           #../../test/contracts/build/A.mligo#toto#307)) in
+let #../../test/contracts/build/A.mligo#toto#364 = L(1) in
+let #../../test/contracts/build/B.mligo#titi#639 =
+  ADD(#../../test/contracts/build/A.mligo#toto#364 , L(42)) in
+let #../../test/contracts/build/C.mligo#tata#1462 =
+  ADD(#../../test/contracts/build/A.mligo#toto#364 ,
+      #../../test/contracts/build/B.mligo#titi#639) in
+let x =
+  ADD(ADD(L(3) , #../../test/contracts/build/A.mligo#toto#364) ,
+      #../../test/contracts/build/B.mligo#titi#639) in
+let toto = ADD(L(10) , #../../test/contracts/build/A.mligo#toto#364) in
 L(unit) |}]
 
 let%expect_test _ =
@@ -147,16 +143,7 @@ let%expect_test _ =
 
     { parameter string ;
       storage int ;
-      code { UNPAIR ;
-             PUSH int 1 ;
-             DIG 2 ;
-             ADD ;
-             PUSH string "titi" ;
-             DIG 2 ;
-             CONCAT ;
-             DROP ;
-             NIL operation ;
-             PAIR } } |}]
+      code { CDR ; PUSH int 1 ; ADD ; NIL operation ; PAIR } } |}]
 
 let%expect_test _ =
   run_ligo_good [ "compile" ; "expression" ; "cameligo" ; "tata" ; "--init-file" ; contract "C.mligo" ] ;

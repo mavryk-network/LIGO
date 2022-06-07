@@ -45,7 +45,9 @@ let rec pp_value : Format.formatter -> value -> unit = fun ppf v ->
         Format.fprintf ppf "%s = %a" l pp_value v
       in
       Format.fprintf ppf "{%a}" (list_sep aux (tag " ; ")) (LMap.to_kv_list recmap)
-  | V_Michelson (Ty_code { code ; _ } | Contract code | Untyped_code code) ->
+  | V_Michelson (Ty_code { code ; _ } | Untyped_code code) ->
+    Format.fprintf ppf "%a" Tezos_utils.Michelson.pp code
+  | V_Michelson_contract code ->
     Format.fprintf ppf "%a" Tezos_utils.Michelson.pp code
   | V_Mutation (l, e) ->
      Format.fprintf ppf "Mutation at: %a@.Replacing by: %a.@." Snippet.pp l Ast_aggregated.PP.expression e
@@ -57,7 +59,7 @@ let pp_value_expr : Format.formatter -> value_expr -> unit = fun ppf v ->
 
 let pp_env : Format.formatter -> env -> unit = fun ppf env ->
   let aux : Format.formatter -> env_item -> unit = fun ppf ->
-    function | Expression {name;item;no_mutation=_} ->
+    function | Expression {name;item;no_mutation=_;inline=_} ->
                 Format.fprintf ppf "%a -> %a" ValueVar.pp name pp_value_expr item in
   Format.fprintf ppf "@[<v 2>%i bindings in environment:@ %a@]"
     (List.length env)

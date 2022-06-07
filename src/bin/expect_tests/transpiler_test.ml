@@ -103,7 +103,9 @@ let%expect_test _ =
 
             card_patterns :=
               Map.add
-                (card.card_pattern, card_pattern, card_patterns);
+                (card.card_pattern,
+                 card_pattern,
+                 card_patterns);
 
             s := s.card_patterns with card_patterns;
 
@@ -114,10 +116,13 @@ let%expect_test _ =
             s := s.cards with cards;
 
             const price : tez
-            = card_pattern.coefficient * card_pattern.quantity;
+            = Operator.times
+                (card_pattern.coefficient,
+                 card_pattern.quantity);
 
             const receiver : contract (unit)
-            = case (Tezos.get_contract_opt (Tezos.sender)
+            = case (Tezos.get_contract_opt
+                      (Tezos.get_sender (Unit))
                     : option (contract (unit)))
               of [
                 Some (contract) -> contract
@@ -150,7 +155,7 @@ let%expect_test _ =
             = card_pattern.coefficient
               * card_pattern.quantity + 1n;
 
-            if price > Tezos.amount
+            if Operator.gt (price, Tezos.get_amount (Unit))
             then failwith ("Not enough money")
             else skip;
 
@@ -163,7 +168,9 @@ let%expect_test _ =
 
             card_patterns :=
               Map.add
-                (action.card_to_buy, card_pattern, card_patterns);
+                (action.card_to_buy,
+                 card_pattern,
+                 card_patterns);
 
             s := s.card_patterns with card_patterns;
 
@@ -173,9 +180,10 @@ let%expect_test _ =
               Map.add
                 (s.next_id,
                  record [
-                   card_owner = Tezos.sender;
+                   card_owner = Tezos.get_sender (Unit);
                    card_pattern = action.card_to_buy
-                 ], cards);
+                 ],
+                 cards);
 
             s := s.cards with cards;
 
@@ -239,7 +247,7 @@ let%expect_test _ =
                | None () ->
                    (failwith "transfer_single: No card." : card) in
              begin
-               if (card.card_owner <> Tezos.sender)
+               if (card.card_owner <> Tezos.get_sender ())
                then failwith "This card doesn't belong to you"
                else ();
                begin
@@ -274,7 +282,7 @@ let%expect_test _ =
                | None () ->
                    (failwith "sell_single: No card." : card) in
              begin
-               if (card.card_owner <> Tezos.sender)
+               if (card.card_owner <> Tezos.get_sender ())
                then failwith "This card doesn't belong to you"
                else ();
                let [@var] card_pattern : card_pattern =
@@ -321,7 +329,7 @@ let%expect_test _ =
                             * card_pattern.quantity) in
                          let receiver : unit contract =
                            match (Tezos.get_contract_opt
-                                    Tezos.sender
+                                    (Tezos.get_sender ())
                                   : unit contract option)
                            with
                              Some contract -> contract
@@ -357,7 +365,7 @@ let%expect_test _ =
                (card_pattern.coefficient
                 * (card_pattern.quantity + 1n)) in
              begin
-               if (price > Tezos.amount)
+               if (price > Tezos.get_amount ())
                then failwith "Not enough money"
                else ();
                begin
@@ -384,7 +392,7 @@ let%expect_test _ =
                        let [@var] cards =
                          (Map.add
                             (s.next_id)
-                            ({card_owner = Tezos.sender;
+                            ({card_owner = Tezos.get_sender ();
                               card_pattern = action.card_to_buy})
                             (cards)) in
                        ();
@@ -441,10 +449,24 @@ let%expect_test _ =
       card_to_transfer: card_id,
       destination: address};
 
-    type parameter =
-      Buy_single(action_buy_single)
-    | Sell_single(action_sell_single)
-    | Transfer_single(action_transfer_single);
+let transfer_single
+: (action_transfer_single, storage) => return =
+  ((gen__parameters2: (action_transfer_single, storage))
+   : return =>
+     switch  gen__parameters2 {
+     | action, [@var] s =>
+         let [@var] cards: cards = s.cards;
+         let [@var] card: card =
+           switch
+           Map.find_opt(action.card_to_transfer, cards) {
+           | Some card => card
+           | None() =>
+               (failwith("transfer_single: No card.") : card)
+           };
+         {
+           if(((card.card_owner) != (Tezos.get_sender(())))) {
+             failwith("This card doesn't belong to you")
+           } else {
 
     let transfer_single
     : (action_transfer_single, storage) => return =
@@ -461,9 +483,36 @@ let%expect_test _ =
                    (failwith("transfer_single: No card.") : card)
                };
              {
-               if((card.card_owner != Tezos.sender)) {
-                 failwith("This card doesn't belong to you")
-               } else {
+               let [@var] cards =
+                 (
+                  Map.add((action.card_to_transfer),
+                     (card),
+                     (cards)));
+               ();
+               {
+                 let [@var] s = {...s, {cards: cards}};
+                 ();
+                 ([] : list(operation)), s
+               }
+             }
+           }
+         }
+     });
+
+let sell_single: (action_sell_single, storage) => return =
+  ((gen__parameters3: (action_sell_single, storage)): return =>
+     switch  gen__parameters3 {
+     | action, [@var] s =>
+         let card: card =
+           switch Map.find_opt(action.card_to_sell, s.cards) {
+           | Some card => card
+           | None() =>
+               (failwith("sell_single: No card.") : card)
+           };
+         {
+           if(((card.card_owner) != (Tezos.get_sender(())))) {
+             failwith("This card doesn't belong to you")
+           } else {
 
                  ()
                  };
@@ -482,27 +531,52 @@ let%expect_test _ =
                    {
                      let [@var] s = {...s, {cards: cards}};
                      ();
-                     ([] : list(operation)), s
+                     let price: tez =
+                       ((card_pattern.coefficient) * (card_pattern.
+                           quantity));
+                     let receiver: contract(unit) =
+                       switch (
+                         Tezos.get_contract_opt(
+                           Tezos.get_sender(()))
+                         : option(contract(unit))) {
+                       | Some contract => contract
+                       | None() =>
+                           (
+                             failwith("sell_single: No contract.")
+                             : contract(unit))
+                       };
+                     let op: operation =
+
+                       Tezos.transaction(unit,
+                          price,
+                          receiver);
+                     let operations: list(operation) = [op];
+                     operations, s
                    }
                  }
                }
              }
          });
 
-    let sell_single: (action_sell_single, storage) => return =
-      ((gen__parameters3: (action_sell_single, storage)): return =>
-         switch  gen__parameters3 {
-         | action, [@var] s =>
-             let card: card =
-               switch Map.find_opt(action.card_to_sell, s.cards) {
-               | Some card => card
-               | None() =>
-                   (failwith("sell_single: No card.") : card)
-               };
-             {
-               if((card.card_owner != Tezos.sender)) {
-                 failwith("This card doesn't belong to you")
-               } else {
+let buy_single: (action_buy_single, storage) => return =
+  ((gen__parameters4: (action_buy_single, storage)): return =>
+     switch  gen__parameters4 {
+     | action, [@var] s =>
+         let [@var] card_pattern: card_pattern =
+           switch
+           Map.find_opt(action.card_to_buy, s.card_patterns) {
+           | Some pattern => pattern
+           | None() =>
+               (failwith("buy_single: No card pattern.")
+                 : card_pattern)
+           };
+         let price: tez =
+           ((card_pattern.coefficient) * (((card_pattern.
+                 quantity) + (1n))));
+         {
+           if(((price) > (Tezos.get_amount(())))) {
+             failwith("Not enough money")
+           } else {
 
                  ()
                  };
@@ -605,9 +679,11 @@ let%expect_test _ =
                  {
                    let [@var] card_patterns =
                      (
-                      Map.add((action.card_to_buy),
-                         (card_pattern),
-                         (card_patterns)));
+                      Map.add((s.next_id),
+                         ({
+                           card_owner: Tezos.get_sender(()),
+                           card_pattern: action.card_to_buy}),
+                         (cards)));
                    ();
                    {
                      let [@var] s =
@@ -674,7 +750,12 @@ let%expect_test _ =
     function asymetric_tuple_access (const gen___3 : unit) is
     {
       const tuple : int * int * int * int = (0, (1, (2, 3)))
-    } with tuple.0 + tuple.1. 0 + tuple.1. 1. 0 + tuple.1. 1. 1
+    } with
+        Operator.add
+          (Operator.add
+             (Operator.add (tuple.0, tuple.1. 0),
+              tuple.1. 1. 0),
+           tuple.1. 1. 1)
 
     type nested_record_t is
       record [nesty : record [mymap : map (int, string)]]
@@ -1130,7 +1211,13 @@ let%expect_test _ =
       (const gen__parameters3 : int * int * int) is
       case gen__parameters3 of [
         (n, n_1, n_0) ->
-          if n < 2 then n_1 else fibo (n - 1, n_1 + n_0, n_1)
+          if Operator.lt (n, 2)
+          then n_1
+          else
+            fibo
+              (Operator.sub (n, 1),
+               Operator.add (n_1, n_0),
+               n_1)
       ] |}];
   run_ligo_good [ "transpile" ; "contract" ; "../../test/contracts/recursion.ligo" ; "cameligo" ] ;
   [%expect {|

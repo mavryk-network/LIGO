@@ -8,12 +8,15 @@ type test_exec_error =
 
 type test_exec_result = Success of nat | Fail of test_exec_error
 
+type test_baker_policy =
+  | By_round of int
+  | By_account of address
+  | Excluding of address list
+
 module Test = struct
+  let failwith (type a b) (v : a) : b = [%external "TEST_FAILWITH"] v
   let to_contract (type p s) (t : (p, s) typed_address) : p contract = [%external "TEST_TO_CONTRACT"] t
-  let originate_from_file (fn : string) (e : string) (v : string list) (s : michelson_program)  (t : tez) : address * michelson_program * int = [%external "TEST_ORIGINATE_FROM_FILE"] fn e v s t
-  let originate (type p s) (f : p * s -> operation list * s) (s : s) (t : tez) : ((p, s) typed_address * michelson_program * int) = [%external "TEST_ORIGINATE"] f s t
   let set_source (a : address) : unit = [%external "TEST_SET_SOURCE"] a
-  let set_baker (a : address) : unit = [%external "TEST_SET_BAKER"] a
   let transfer (a : address) (s : michelson_program) (t : tez) : test_exec_result = [%external "TEST_EXTERNAL_CALL_TO_ADDRESS"] a s t
   let transfer_exn (a : address) (s : michelson_program) (t : tez) : nat = [%external "TEST_EXTERNAL_CALL_TO_ADDRESS_EXN"] a s t
   let get_storage_of_address (a : address) : michelson_program = [%external "TEST_GET_STORAGE_OF_ADDRESS"] a
@@ -77,6 +80,25 @@ module Test = struct
 	      else s
 	    else s in
     [%external "TEST_TO_ENTRYPOINT"] s t
+  let set_baker_policy (bp : test_baker_policy) : unit = [%external "TEST_SET_BAKER"] bp
+  let set_baker (a : address) : unit = set_baker_policy (By_account a)
+  let originate_contract (c : michelson_contract) (s : michelson_program) (t : tez) : address = [%external "TEST_ORIGINATE"] c s t
+  let size (c : michelson_contract) : int = [%external "TEST_SIZE"] c
+  let compile_contract (type p s) (f : p * s -> operation list * s) : michelson_contract = [%external "TEST_COMPILE_CONTRACT"] f
+  let originate (type p s) (f : p * s -> operation list * s) (s : s) (t : tez) : ((p, s) typed_address * michelson_contract * int) =
+    let f = compile_contract f in
+    let s = eval s in
+    let a = originate_contract f s t in
+    let c = size f in
+    let a : (p, s) typed_address = cast_address a in
+    (a, f, c)
+  let compile_contract_from_file (fn : string) (e : string) (v : string list) : michelson_contract = [%external "TEST_COMPILE_CONTRACT_FROM_FILE"] fn e v
+  let originate_from_file (fn : string) (e : string) (v : string list) (s : michelson_program)  (t : tez) : address * michelson_contract * int =
+    let f = compile_contract_from_file fn e v in
+    let a = originate_contract f s t in
+    let c = size f in
+    (a, f, c)
+  let read_contract_from_file (fn : string) : michelson_contract = [%external "TEST_READ_CONTRACT_FROM_FILE"] fn
 end
 [@private]
   let _hash_eq (type a) (l : a) (r : a) : a external_cmp = [%external "EQ"] l r
