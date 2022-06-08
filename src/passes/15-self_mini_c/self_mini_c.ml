@@ -32,18 +32,20 @@ let map_expression = Helpers.map_expression
    assuming arguments are pure *)
 let is_pure_constant : constant' -> bool =
   function
-  |C_NEG|C_ADD|C_SUB|C_MUL|C_DIV|C_MOD|C_NOT|C_AND|C_OR|C_XOR|C_LSL|C_LSR|C_CONCAT|C_SUB_MUTEZ
   | C_UNIT
   | C_CAR | C_CDR | C_PAIR
   | C_NIL | C_CONS
+  | C_NEG | C_OR | C_AND | C_XOR | C_NOT
   | C_EQ  | C_NEQ | C_LT | C_LE | C_GT | C_GE
   | C_NONE | C_SOME
   | C_LEFT | C_RIGHT
   | C_TRUE | C_FALSE
   | C_UPDATE | C_MAP_FIND_OPT | C_MAP_ADD | C_MAP_UPDATE
   | C_ADDRESS
+  | C_CONCAT
   | C_SET_MEM | C_SET_ADD | C_SET_REMOVE | C_SET_UPDATE
   | C_LOOP_CONTINUE | C_LOOP_STOP
+  | C_SUB_MUTEZ
   | C_BYTES_UNPACK
   | C_SET_EMPTY | C_SET_LITERAL
   | C_LIST_EMPTY | C_LIST_LITERAL
@@ -56,6 +58,7 @@ let is_pure_constant : constant' -> bool =
   | C_GLOBAL_CONSTANT (* pure because restricted to PUSH *)
     -> true
   (* unfortunately impure: *)
+  | C_ADD | C_SUB |C_MUL|C_DIV|C_MOD | C_LSL | C_LSR
   | C_POLYMORPHIC_ADD | C_POLYMORPHIC_SUB
   (* impure: *)
   | C_UNOPT
