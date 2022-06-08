@@ -179,37 +179,41 @@ end
 [@private]
   let ediv (type a b) (l : a) (r : b) : (a, b) external_ediv = [%Michelson ({| { UNPAIR ; EDIV } |} : a * b -> (a, b) external_ediv)] (l, r)
 [@private]
-  let _hash_not (type a) (v : a) : a external_not = [%Michelson ({| { NOT } |} : a -> a external_not)] v
+  let _hash_not (type a) (v : a) : a external_not = [%external "NOT"] v
 [@private]
-  let _hash_neg (type a) (v : a) : a external_neg = [%Michelson ({| { NEG } |} : a -> a external_neg)] v
+  let _hash_neg (type a) (v : a) : a external_neg = [%external "NEG"] v
 [@private]
-  let _hash_add (type a b) (l : a) (r : b) : (a, b) external_add = [%Michelson ({| { UNPAIR ; ADD } |} : a * b -> (a, b) external_add)] (l, r)
+  let _hash_add (type a b) (l : a) (r : b) : (a, b) external_add = [%external "ADD"] l r
 [@private]
   let _hash_polymorphic_add (type a b) (l : a) (r : b) : (a, b) external_polymorphic_add = [%external "POLYMORPHIC_ADD"] l r
 [@private]
-  let _hash_sub (type a b) (l : a) (r : b) : (a, b) external_sub = [%Michelson ({| { UNPAIR ; SUB } |} : a * b -> (a, b) external_sub)] (l, r)
+  let _hash_sub (type a b) (l : a) (r : b) : (a, b) external_sub = [%external "SUB"] l r
 [@private]
   let _hash_polymorphic_sub (type a b) (l : a) (r : b) : (a, b) external_polymorphic_sub = [%external "POLYMORPHIC_SUB"] l r
 [@private]
-  let _hash_mul (type a b) (l : a) (r : b) : (a, b) external_mul = [%Michelson ({| { UNPAIR ; MUL } |} : a * b -> (a, b) external_mul)] (l, r)
+  let _hash_mul (type a b) (l : a) (r : b) : (a, b) external_mul = [%external "MUL"] l r
 [@private]
-  let _hash_div (type a b) (l : a) (r : b) : (a, b) external_div = [%Michelson ({| { UNPAIR ; EDIV ; IF_NONE { PUSH string "DIV by 0" ; FAILWITH } { } ; CAR } |} : a * b -> (a, b) external_div)] (l, r)
+  let _hash_div (type a b) (l : a) (r : b) : (a, b) external_div = [%external "DIV"] l r
 [@private]
-  let _hash_mod (type a b) (l : a) (r : b) : (a, b) external_mod = [%Michelson ({| { UNPAIR ; EDIV ; IF_NONE { PUSH string "MOD by 0" ; FAILWITH } { } ; CDR } |} : a * b -> (a, b) external_mod)] (l, r)
+  let _hash_mod (type a b) (l : a) (r : b) : (a, b) external_mod = [%external "MOD"] l r
 [@private]
-  let _hash_and (type a b) (l : a) (r : b) : (a, b) external_and = [%Michelson ({| { UNPAIR ; AND } |} : a * b -> (a, b) external_and)] (l, r)
+  let _hash_and (type a b) (l : a) (r : b) : (a, b) external_and = [%external "AND"] l r
 [@private]
-  let _hash_or (type a b) (l : a) (r : b) : (a, b) external_or = [%Michelson ({| { UNPAIR ; OR } |} : a * b -> (a, b) external_or)] (l, r)
+  let _hash_or (type a b) (l : a) (r : b) : (a, b) external_or = [%external "OR"] l r
 [@private]
-  let _hash_xor (type a b) (l : a) (r : b) : (a, b) external_xor = [%Michelson ({| { UNPAIR ; XOR } |} : a * b -> (a, b) external_xor)] (l, r)
+  let _hash_xor (type a b) (l : a) (r : b) : (a, b) external_xor = [%external "XOR"] l r
 [@private]
-  let _hash_lsl (l : nat) (r : nat) : nat = [%Michelson ({| { UNPAIR ; LSL } |} : nat * nat -> nat)] (l, r)
+  let _hash_lsl (l : nat) (r : nat) : nat = [%external "LSL"] l r
 [@private]
-  let _hash_lsr (l : nat) (r : nat) : nat = [%Michelson ({| { UNPAIR ; LSR } |} : nat * nat -> nat)] (l, r)
+  let _hash_lsr (l : nat) (r : nat) : nat = [%external "LSR"] l r
 [@private]
-  let _hash_bool_or (l : bool) (r : bool) : bool = [%Michelson ({| { UNPAIR ; OR } |} : bool * bool -> bool)] (l, r)
+  let _hash_bool_or (l : bool) (r : bool) : bool =
+    let poly_or (type a b) ((l, r) : a * b) : (a, b) external_u_or = [%external "OR"] l r in
+    poly_or (l, r)
 [@private]
-  let _hash_bool_and (l : bool) (r : bool) : bool = [%Michelson ({| { UNPAIR ; AND } |} : bool * bool -> bool)] (l, r)
+  let _hash_bool_and (l : bool) (r : bool) : bool =
+    let poly_and (type a b) ((l, r) : a * b) : (a, b) external_u_and = [%external "AND"] l r in
+    poly_and (l, r)
 [@private]
   let _hash_cons (type a) (x : a) (xs : a list) : a list = [%external "CONS"] x xs
 [@private]

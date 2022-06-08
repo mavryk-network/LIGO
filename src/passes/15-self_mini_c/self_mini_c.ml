@@ -32,6 +32,7 @@ let map_expression = Helpers.map_expression
    assuming arguments are pure *)
 let is_pure_constant : constant' -> bool =
   function
+  |C_NEG|C_ADD|C_SUB|C_MUL|C_DIV|C_MOD|C_NOT|C_AND|C_OR|C_XOR|C_LSL|C_LSR|C_CONCAT|C_SUB_MUTEZ
   | C_UNIT
   | C_CAR | C_CDR | C_PAIR
   | C_NIL | C_CONS

@@ -127,6 +127,19 @@ module Stacking = struct
 
   let get_operators (protocol_version: protocol_type) c : predicate option =
     match c , protocol_version with
+    | C_ADD                , _   -> Some ( simple_binary @@ prim "ADD")
+    | C_SUB                , _   -> Some ( simple_binary @@ prim "SUB")
+    | C_SUB_MUTEZ          , _   -> Some ( simple_binary @@ prim "SUB_MUTEZ")
+    | C_MUL                , _   -> Some ( simple_binary @@ prim "MUL")
+    | C_DIV                , _   -> Some ( simple_binary @@ seq [prim "EDIV" ; i_assert_some_msg (i_push_string "DIV by 0") ; i_car])
+    | C_MOD                , _   -> Some ( simple_binary @@ seq [prim "EDIV" ; i_assert_some_msg (i_push_string "MOD by 0") ; i_cdr])
+    | C_NEG                , _   -> Some ( simple_unary @@ prim "NEG")
+    | C_OR                 , _   -> Some ( simple_binary @@ prim "OR")
+    | C_AND                , _   -> Some ( simple_binary @@ prim "AND")
+    | C_XOR                , _   -> Some ( simple_binary @@ prim "XOR")
+    | C_LSL                , _   -> Some ( simple_binary @@ prim "LSL")
+    | C_LSR                , _   -> Some ( simple_binary @@ prim "LSR")
+    | C_NOT                , _   -> Some ( simple_unary @@ prim "NOT")
     | C_PAIR               , _   -> Some ( simple_binary @@ prim "PAIR")
     | C_CAR                , _   -> Some ( simple_unary @@ prim "CAR")
     | C_CDR                , _   -> Some ( simple_unary @@ prim "CDR")

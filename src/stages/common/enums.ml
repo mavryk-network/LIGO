@@ -78,6 +78,20 @@ type constant' =
   | C_FOLD
   | C_FOLD_LEFT
   | C_FOLD_RIGHT
+  (* MATH *)
+  | C_NEG
+  | C_ADD
+  | C_SUB
+  | C_MUL
+  | C_DIV
+  | C_MOD
+  (* LOGIC *)
+  | C_NOT
+  | C_AND
+  | C_OR
+  | C_XOR
+  | C_LSL
+  | C_LSR
   (* COMPARATOR *)
   | C_EQ
   | C_NEQ
@@ -86,6 +100,7 @@ type constant' =
   | C_LE
   | C_GE
   (* Bytes/ String *)
+  | C_CONCAT
   | C_BYTES_UNPACK
   | C_CONS
   (* Pair *)
@@ -201,6 +216,7 @@ type constant' =
   (* JsLIGO *)
   | C_POLYMORPHIC_ADD [@print "C_POLYMORPHIC_ADD"]
   | C_POLYMORPHIC_SUB [@print "C_POLYMORPHIC_SUB"]
+  | C_SUB_MUTEZ
   | C_OPTION_MAP
 [@@deriving enum, yojson, print_constant, only_interpreter_tags, read_constant ]
 

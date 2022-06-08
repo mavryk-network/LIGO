@@ -197,6 +197,17 @@ let rec apply_operator ~raise ~add_warning ~steps ~(options : Compiler_options.t
     | ( C_TRUE , _  ) -> fail @@ error_type
     | ( C_FALSE , [] ) -> return @@ v_bool false
     | ( C_FALSE , _  ) -> fail @@ error_type
+    (* unary *)
+    | ( C_NOT    , [ V_Ct (C_bool a'  ) ] ) -> return_ct @@ C_bool (not a')
+    (* TODO-er: fix two complements: *)
+    | ( C_NOT    , [ V_Ct (C_int a'   ) ] ) -> return_ct @@ C_int (Z.neg a')
+    | ( C_NOT    , [ V_Ct (C_nat a'   ) ] ) -> return_ct @@ C_int (Z.neg a')
+    | ( C_NOT , _  ) -> fail @@ error_type
+    | ( C_NEG    , [ V_Ct (C_int a')    ] ) -> return_ct @@ C_int (Z.neg a')
+    | ( C_NEG    , [ V_Ct (C_bls12_381_g1 a')    ] ) -> return_ct @@ C_bls12_381_g1 (Bls12_381.G1.negate a')
+    | ( C_NEG    , [ V_Ct (C_bls12_381_g2 a')    ] ) -> return_ct @@ C_bls12_381_g2 (Bls12_381.G2.negate a')
+    | ( C_NEG    , [ V_Ct (C_bls12_381_fr a')    ] ) -> return_ct @@ C_bls12_381_fr (Bls12_381.Fr.negate a')
+    | ( C_NEG , _  ) -> fail @@ error_type
     | ( C_SOME   , [ v                  ] ) -> return_some v
     | ( C_SOME , _  ) -> fail @@ error_type
     | ( C_ADDRESS , [ V_Ct (C_contract { address ; entrypoint=_}) ] ) ->
@@ -233,8 +244,6 @@ let rec apply_operator ~raise ~add_warning ~steps ~(options : Compiler_options.t
     | ( C_MAP_FIND , _  ) -> fail @@ error_type
     (* binary *)
     | ( (C_EQ | C_NEQ | C_LT | C_LE | C_GT | C_GE) , _ ) -> apply_comparison loc calltrace c operands
-    | ( C_CONS   , [ v                  ; V_List vl          ] ) -> return @@ V_List (v::vl)
-    | ( C_CONS , _  ) -> fail @@ error_type
     | ( C_SUB    , [ V_Ct (C_int a' | C_nat a') ; V_Ct (C_int b' | C_nat b') ] ) -> return_ct @@ C_int (Z.sub a' b')
     | ( C_SUB    , [ V_Ct (C_int a' | C_timestamp a') ; V_Ct (C_timestamp b' | C_int b') ] ) ->
       let res = Michelson_backend.Tezos_eq.timestamp_sub a' b' in
@@ -559,10 +568,6 @@ let rec apply_operator ~raise ~add_warning ~steps ~(options : Compiler_options.t
     | ( C_OPTION_MAP , [ V_Func_val _  ; V_Construct ("None" , V_Ct C_unit) as v ] ) ->
       return v
     | ( C_OPTION_MAP , _  ) -> fail @@ error_type
-    | ( C_IMPLICIT_ACCOUNT, [ V_Ct (C_key_hash kh) ] )->
-      let>> value = Implicit_account (loc, calltrace, kh) in
-      return @@ value
-    | ( C_IMPLICIT_ACCOUNT , _  ) -> fail @@ error_type
     (*
     >>>>>>>>
       Test operators

@@ -420,6 +420,14 @@ module Constant_types = struct
                     of_type C_SAPLING_EMPTY_STATE O.(t_for_all a_var Singleton (t_sapling_state (t_variable a_var ())));
                     of_type C_SAPLING_VERIFY_UPDATE O.(t_for_all a_var Singleton (t_sapling_transaction (t_variable a_var ()) ^-> t_sapling_state (t_variable a_var ()) ^-> t_option (t_pair (t_int ()) (t_sapling_state (t_variable a_var ())))));
                     (* CUSTOM *)
+                    of_type C_LSL O.(t_nat () ^-> t_nat () ^-> t_nat ());
+                    of_type C_LSR O.(t_nat () ^-> t_nat () ^-> t_nat ());
+                    (C_NOT, any_of [
+                      typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> t_ext_not a);
+                    ]);
+                    (C_NEG, any_of [
+                      typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> t_ext_neg a);
+                    ]);
                     (* COMPARATOR *)
                     (C_EQ, any_of [
                         typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> a ^-> a ^-> t_ext_cmp a);
@@ -445,7 +453,6 @@ module Constant_types = struct
                         typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> a ^-> a ^-> t_ext_cmp a);
                         typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> a ^-> a ^-> t_ext_u_cmp a);
                     ]);
-                    of_type C_FAILWITH O.(for_all "a" @@ fun a -> t_ext_failwith a);
                     (C_POLYMORPHIC_ADD, any_of [
                         typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> t_ext_polymorphic_add a b);
                         typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> t_ext_u_polymorphic_add a b);
@@ -454,19 +461,42 @@ module Constant_types = struct
                         typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> t_ext_polymorphic_sub a b);
                         typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> t_ext_u_polymorphic_sub a b);
                     ]);
+                    (C_ADD, any_of [
+                      typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> t_ext_add a b);
+                      typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> t_ext_u_add a b);
+                    ]);
+                    (C_SUB, any_of [
+                      typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> t_ext_sub a b);
+                      typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> t_ext_u_sub a b);
+                    ]);
+                    (C_MUL, any_of [
+                      typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> t_ext_mul a b);
+                      typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> t_ext_u_mul a b);
+                    ]);
+                    (C_DIV, any_of [
+                      typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> t_ext_div a b);
+                      typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> t_ext_u_div a b);
+                    ]);
+                    (C_MOD, any_of [
+                      typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> t_ext_mod a b);
+                      typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> t_ext_u_mod a b);
+                    ]);
+                    (C_AND, any_of [
+                      typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> t_ext_and a b);
+                      typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> t_ext_u_and a b);
+                    ]);
+                    (C_OR, any_of [
+                      typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> t_ext_or a b);
+                      typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> t_ext_u_or a b);
+                    ]);
+                    (C_XOR, any_of [
+                      typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> t_ext_xor a b);
+                      typer_of_type_no_tc @@ O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> t_ext_u_xor a b);
+                    ]);
                   ]
 
   let typer_of_type_no_tc t =
     typer_table_of_ligo_type ~add_tc:false ~fail:false t
-
-  let failwith_typer = any_table_of [
-                           typer_of_type_no_tc @@ O.(t_string () ^-> t_unit ());
-                           typer_of_type_no_tc @@ O.(t_nat () ^-> t_unit ());
-                           typer_of_type_no_tc @@ O.(t_int () ^-> t_unit ());
-                           typer_table_of_ligo_type O.(for_all "a" @@ fun a -> t_string () ^-> a);
-                           typer_table_of_ligo_type O.(for_all "a" @@ fun a -> t_nat () ^-> a);
-                           typer_table_of_ligo_type O.(for_all "a" @@ fun a -> t_int () ^-> a);
-                           ]
 
   let int_typer = any_table_of [
                       typer_table_of_ligo_type O.(t_nat () ^-> t_int ());
