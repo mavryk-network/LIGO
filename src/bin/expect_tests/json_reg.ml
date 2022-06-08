@@ -2903,69 +2903,36 @@ let%expect_test _ =
                                   {
                                     "condition": {
                                       "expression_content": [
-                                        "E_constant",
+                                        "E_application",
                                         {
-                                          "cons_name": [
-                                            "Const",
-                                            [ "C_NOT" ]
-                                          ],
-                                          "arguments": [
-                                            {
-                                              "expression_content": [
-                                                "E_application",
-                                                {
-                                                  "lamb": {
-                                                    "expression_content": [
-                                                      "E_module_accessor",
-                                                      {
-                                                        "module_name": [
-                                                          {
-                                                            "name": "Set",
-                                                            "counter": 0,
-                                                            "location": [
-                                                              "File",
-                                                              {
-                                                                "start": {
-                                                                  "byte": {
-                                                                    "pos_fname":
-                                                                    "../../test/contracts/multisig-v2.ligo",
-                                                                    "pos_lnum":
-                                                                    40,
-                                                                    "pos_bol":
-                                                                    957,
-                                                                    "pos_cnum":
-                                                                    968
-                                                                  },
-                                                                  "point_num":
-                                                                    968,
-                                                                  "point_bol":
-                                                                    957
-                                                                },
-                                                                "stop": {
-                                                                  "byte": {
-                                                                    "pos_fname":
-                                                                    "../../test/contracts/multisig-v2.ligo",
-                                                                    "pos_lnum":
-                                                                    40,
-                                                                    "pos_bol":
-                                                                    957,
-                                                                    "pos_cnum":
-                                                                    971
-                                                                  },
-                                                                  "point_num":
-                                                                    971,
-                                                                  "point_bol":
-                                                                    957
-                                                                }
-                                                              }
-                                                            ],
-                                                            "generated":
-                                                              false,
-                                                            "mutable_": false
-                                                          }
-                                                        ],
-                                                        "element": {
-                                                          "name": "mem",
+                                          "lamb": {
+                                            "expression_content": [
+                                              "E_variable",
+                                              {
+                                                "name": "#not",
+                                                "counter": 0,
+                                                "location": [
+                                                  "Virtual", "dummy"
+                                                ],
+                                                "generated": false,
+                                                "mutable_": false
+                                              }
+                                            ],
+                                            "location": [
+                                              "Virtual", "generated"
+                                            ]
+                                          },
+                                          "args": {
+                                            "expression_content": [
+                                              "E_application",
+                                              {
+                                                "lamb": {
+                                                  "expression_content": [
+                                                    "E_module_accessor",
+                                                    {
+                                                      "module_name": [
+                                                        {
+                                                          "name": "Set",
                                                           "counter": 0,
                                                           "location": [
                                                             "File",
@@ -2979,10 +2946,10 @@ let%expect_test _ =
                                                                   "pos_bol":
                                                                     957,
                                                                   "pos_cnum":
-                                                                    972
+                                                                    968
                                                                 },
                                                                 "point_num":
-                                                                  972,
+                                                                  968,
                                                                 "point_bol":
                                                                   957
                                                               },
@@ -2995,10 +2962,10 @@ let%expect_test _ =
                                                                   "pos_bol":
                                                                     957,
                                                                   "pos_cnum":
-                                                                    975
+                                                                    971
                                                                 },
                                                                 "point_num":
-                                                                  975,
+                                                                  971,
                                                                 "point_bol":
                                                                   957
                                                               }
@@ -3007,49 +2974,93 @@ let%expect_test _ =
                                                           "generated": false,
                                                           "mutable_": false
                                                         }
+                                                      ],
+                                                      "element": {
+                                                        "name": "mem",
+                                                        "counter": 0,
+                                                        "location": [
+                                                          "File",
+                                                          {
+                                                            "start": {
+                                                              "byte": {
+                                                                "pos_fname":
+                                                                  "../../test/contracts/multisig-v2.ligo",
+                                                                "pos_lnum":
+                                                                  40,
+                                                                "pos_bol":
+                                                                  957,
+                                                                "pos_cnum":
+                                                                  972
+                                                              },
+                                                              "point_num":
+                                                                972,
+                                                              "point_bol":
+                                                                957
+                                                            },
+                                                            "stop": {
+                                                              "byte": {
+                                                                "pos_fname":
+                                                                  "../../test/contracts/multisig-v2.ligo",
+                                                                "pos_lnum":
+                                                                  40,
+                                                                "pos_bol":
+                                                                  957,
+                                                                "pos_cnum":
+                                                                  975
+                                                              },
+                                                              "point_num":
+                                                                975,
+                                                              "point_bol":
+                                                                957
+                                                            }
+                                                          }
+                                                        ],
+                                                        "generated": false,
+                                                        "mutable_": false
                                                       }
-                                                    ],
-                                                    "location": [
-                                                      "File",
-                                                      {
-                                                        "start": {
-                                                          "byte": {
-                                                            "pos_fname":
-                                                              "../../test/contracts/multisig-v2.ligo",
-                                                            "pos_lnum": 40,
-                                                            "pos_bol": 957,
-                                                            "pos_cnum": 968
-                                                          },
-                                                          "point_num": 968,
-                                                          "point_bol": 957
+                                                    }
+                                                  ],
+                                                  "location": [
+                                                    "File",
+                                                    {
+                                                      "start": {
+                                                        "byte": {
+                                                          "pos_fname":
+                                                            "../../test/contracts/multisig-v2.ligo",
+                                                          "pos_lnum": 40,
+                                                          "pos_bol": 957,
+                                                          "pos_cnum": 968
                                                         },
-                                                        "stop": {
-                                                          "byte": {
-                                                            "pos_fname":
-                                                              "../../test/contracts/multisig-v2.ligo",
-                                                            "pos_lnum": 40,
-                                                            "pos_bol": 957,
-                                                            "pos_cnum": 975
-                                                          },
-                                                          "point_num": 975,
-                                                          "point_bol": 957
-                                                        }
+                                                        "point_num": 968,
+                                                        "point_bol": 957
+                                                      },
+                                                      "stop": {
+                                                        "byte": {
+                                                          "pos_fname":
+                                                            "../../test/contracts/multisig-v2.ligo",
+                                                          "pos_lnum": 40,
+                                                          "pos_bol": 957,
+                                                          "pos_cnum": 975
+                                                        },
+                                                        "point_num": 975,
+                                                        "point_bol": 957
                                                       }
-                                                    ]
-                                                  },
-                                                  "args": {
-                                                    "expression_content": [
-                                                      "E_tuple",
-                                                      [
-                                                        {
-                                                          "expression_content": [
-                                                            "E_application",
-                                                            {
-                                                              "lamb": {
-                                                                "expression_content": [
-                                                                  "E_module_accessor",
-                                                                  {
-                                                                    "module_name": [
+                                                    }
+                                                  ]
+                                                },
+                                                "args": {
+                                                  "expression_content": [
+                                                    "E_tuple",
+                                                    [
+                                                      {
+                                                        "expression_content": [
+                                                          "E_application",
+                                                          {
+                                                            "lamb": {
+                                                              "expression_content": [
+                                                                "E_module_accessor",
+                                                                {
+                                                                  "module_name": [
                                                                     {
                                                                     "name":
                                                                     "Tezos",
@@ -3097,8 +3108,8 @@ let%expect_test _ =
                                                                     "mutable_":
                                                                     false
                                                                     }
-                                                                    ],
-                                                                    "element": {
+                                                                  ],
+                                                                  "element": {
                                                                     "name":
                                                                     "get_sender",
                                                                     "counter":
@@ -3144,13 +3155,13 @@ let%expect_test _ =
                                                                     false,
                                                                     "mutable_":
                                                                     false
-                                                                    }
                                                                   }
-                                                                ],
-                                                                "location": [
-                                                                  "File",
-                                                                  {
-                                                                    "start": {
+                                                                }
+                                                              ],
+                                                              "location": [
+                                                                "File",
+                                                                {
+                                                                  "start": {
                                                                     "byte": {
                                                                     "pos_fname":
                                                                     "../../test/contracts/multisig-v2.ligo",
@@ -3165,8 +3176,8 @@ let%expect_test _ =
                                                                     977,
                                                                     "point_bol":
                                                                     957
-                                                                    },
-                                                                    "stop": {
+                                                                  },
+                                                                  "stop": {
                                                                     "byte": {
                                                                     "pos_fname":
                                                                     "../../test/contracts/multisig-v2.ligo",
@@ -3181,21 +3192,21 @@ let%expect_test _ =
                                                                     993,
                                                                     "point_bol":
                                                                     957
-                                                                    }
                                                                   }
+                                                                }
+                                                              ]
+                                                            },
+                                                            "args": {
+                                                              "expression_content": [
+                                                                "E_literal",
+                                                                [
+                                                                  "Literal_unit"
                                                                 ]
-                                                              },
-                                                              "args": {
-                                                                "expression_content": [
-                                                                  "E_literal",
-                                                                  [
-                                                                    "Literal_unit"
-                                                                  ]
-                                                                ],
-                                                                "location": [
-                                                                  "File",
-                                                                  {
-                                                                    "start": {
+                                                              ],
+                                                              "location": [
+                                                                "File",
+                                                                {
+                                                                  "start": {
                                                                     "byte": {
                                                                     "pos_fname":
                                                                     "../../test/contracts/multisig-v2.ligo",
@@ -3210,8 +3221,8 @@ let%expect_test _ =
                                                                     993,
                                                                     "point_bol":
                                                                     957
-                                                                    },
-                                                                    "stop": {
+                                                                  },
+                                                                  "stop": {
                                                                     "byte": {
                                                                     "pos_fname":
                                                                     "../../test/contracts/multisig-v2.ligo",
@@ -3226,63 +3237,62 @@ let%expect_test _ =
                                                                     995,
                                                                     "point_bol":
                                                                     957
-                                                                    }
                                                                   }
-                                                                ]
-                                                              }
+                                                                }
+                                                              ]
                                                             }
-                                                          ],
-                                                          "location": [
-                                                            "File",
-                                                            {
-                                                              "start": {
-                                                                "byte": {
-                                                                  "pos_fname":
-                                                                    "../../test/contracts/multisig-v2.ligo",
-                                                                  "pos_lnum":
-                                                                    40,
-                                                                  "pos_bol":
-                                                                    957,
-                                                                  "pos_cnum":
-                                                                    977
-                                                                },
-                                                                "point_num":
-                                                                  977,
-                                                                "point_bol":
-                                                                  957
+                                                          }
+                                                        ],
+                                                        "location": [
+                                                          "File",
+                                                          {
+                                                            "start": {
+                                                              "byte": {
+                                                                "pos_fname":
+                                                                  "../../test/contracts/multisig-v2.ligo",
+                                                                "pos_lnum":
+                                                                  40,
+                                                                "pos_bol":
+                                                                  957,
+                                                                "pos_cnum":
+                                                                  977
                                                               },
-                                                              "stop": {
-                                                                "byte": {
-                                                                  "pos_fname":
-                                                                    "../../test/contracts/multisig-v2.ligo",
-                                                                  "pos_lnum":
-                                                                    40,
-                                                                  "pos_bol":
-                                                                    957,
-                                                                  "pos_cnum":
-                                                                    995
-                                                                },
-                                                                "point_num":
-                                                                  995,
-                                                                "point_bol":
-                                                                  957
-                                                              }
+                                                              "point_num":
+                                                                977,
+                                                              "point_bol":
+                                                                957
+                                                            },
+                                                            "stop": {
+                                                              "byte": {
+                                                                "pos_fname":
+                                                                  "../../test/contracts/multisig-v2.ligo",
+                                                                "pos_lnum":
+                                                                  40,
+                                                                "pos_bol":
+                                                                  957,
+                                                                "pos_cnum":
+                                                                  995
+                                                              },
+                                                              "point_num":
+                                                                995,
+                                                              "point_bol":
+                                                                957
                                                             }
-                                                          ]
-                                                        },
-                                                        {
-                                                          "expression_content": [
-                                                            "E_record_accessor",
-                                                            {
-                                                              "record": {
-                                                                "expression_content": [
-                                                                  "E_variable",
-                                                                  {
-                                                                    "name":
-                                                                    "s",
-                                                                    "counter":
+                                                          }
+                                                        ]
+                                                      },
+                                                      {
+                                                        "expression_content": [
+                                                          "E_record_accessor",
+                                                          {
+                                                            "record": {
+                                                              "expression_content": [
+                                                                "E_variable",
+                                                                {
+                                                                  "name": "s",
+                                                                  "counter":
                                                                     0,
-                                                                    "location": [
+                                                                  "location": [
                                                                     "File",
                                                                     {
                                                                     "start": {
@@ -3318,17 +3328,17 @@ let%expect_test _ =
                                                                     957
                                                                     }
                                                                     }
-                                                                    ],
-                                                                    "generated":
+                                                                  ],
+                                                                  "generated":
                                                                     false,
-                                                                    "mutable_":
+                                                                  "mutable_":
                                                                     false
-                                                                  }
-                                                                ],
-                                                                "location": [
-                                                                  "File",
-                                                                  {
-                                                                    "start": {
+                                                                }
+                                                              ],
+                                                              "location": [
+                                                                "File",
+                                                                {
+                                                                  "start": {
                                                                     "byte": {
                                                                     "pos_fname":
                                                                     "../../test/contracts/multisig-v2.ligo",
@@ -3343,8 +3353,8 @@ let%expect_test _ =
                                                                     997,
                                                                     "point_bol":
                                                                     957
-                                                                    },
-                                                                    "stop": {
+                                                                  },
+                                                                  "stop": {
                                                                     "byte": {
                                                                     "pos_fname":
                                                                     "../../test/contracts/multisig-v2.ligo",
@@ -3359,117 +3369,116 @@ let%expect_test _ =
                                                                     998,
                                                                     "point_bol":
                                                                     957
-                                                                    }
                                                                   }
-                                                                ]
-                                                              },
-                                                              "path": [
-                                                                [
-                                                                  "Access_tuple",
-                                                                  "authorized_addresses"
-                                                                ]
+                                                                }
                                                               ]
-                                                            }
-                                                          ],
-                                                          "location": [
-                                                            "File",
-                                                            {
-                                                              "start": {
-                                                                "byte": {
-                                                                  "pos_fname":
-                                                                    "../../test/contracts/multisig-v2.ligo",
-                                                                  "pos_lnum":
-                                                                    40,
-                                                                  "pos_bol":
-                                                                    957,
-                                                                  "pos_cnum":
-                                                                    997
-                                                                },
-                                                                "point_num":
-                                                                  997,
-                                                                "point_bol":
-                                                                  957
+                                                            },
+                                                            "path": [
+                                                              [
+                                                                "Access_tuple",
+                                                                "authorized_addresses"
+                                                              ]
+                                                            ]
+                                                          }
+                                                        ],
+                                                        "location": [
+                                                          "File",
+                                                          {
+                                                            "start": {
+                                                              "byte": {
+                                                                "pos_fname":
+                                                                  "../../test/contracts/multisig-v2.ligo",
+                                                                "pos_lnum":
+                                                                  40,
+                                                                "pos_bol":
+                                                                  957,
+                                                                "pos_cnum":
+                                                                  997
                                                               },
-                                                              "stop": {
-                                                                "byte": {
-                                                                  "pos_fname":
-                                                                    "../../test/contracts/multisig-v2.ligo",
-                                                                  "pos_lnum":
-                                                                    40,
-                                                                  "pos_bol":
-                                                                    957,
-                                                                  "pos_cnum":
-                                                                    1019
-                                                                },
-                                                                "point_num":
-                                                                  1019,
-                                                                "point_bol":
-                                                                  957
-                                                              }
+                                                              "point_num":
+                                                                997,
+                                                              "point_bol":
+                                                                957
+                                                            },
+                                                            "stop": {
+                                                              "byte": {
+                                                                "pos_fname":
+                                                                  "../../test/contracts/multisig-v2.ligo",
+                                                                "pos_lnum":
+                                                                  40,
+                                                                "pos_bol":
+                                                                  957,
+                                                                "pos_cnum":
+                                                                  1019
+                                                              },
+                                                              "point_num":
+                                                                1019,
+                                                              "point_bol":
+                                                                957
                                                             }
-                                                          ]
-                                                        }
-                                                      ]
-                                                    ],
-                                                    "location": [
-                                                      "File",
-                                                      {
-                                                        "start": {
-                                                          "byte": {
-                                                            "pos_fname":
-                                                              "../../test/contracts/multisig-v2.ligo",
-                                                            "pos_lnum": 40,
-                                                            "pos_bol": 957,
-                                                            "pos_cnum": 976
-                                                          },
-                                                          "point_num": 976,
-                                                          "point_bol": 957
-                                                        },
-                                                        "stop": {
-                                                          "byte": {
-                                                            "pos_fname":
-                                                              "../../test/contracts/multisig-v2.ligo",
-                                                            "pos_lnum": 40,
-                                                            "pos_bol": 957,
-                                                            "pos_cnum": 1020
-                                                          },
-                                                          "point_num": 1020,
-                                                          "point_bol": 957
-                                                        }
+                                                          }
+                                                        ]
                                                       }
                                                     ]
-                                                  }
+                                                  ],
+                                                  "location": [
+                                                    "File",
+                                                    {
+                                                      "start": {
+                                                        "byte": {
+                                                          "pos_fname":
+                                                            "../../test/contracts/multisig-v2.ligo",
+                                                          "pos_lnum": 40,
+                                                          "pos_bol": 957,
+                                                          "pos_cnum": 976
+                                                        },
+                                                        "point_num": 976,
+                                                        "point_bol": 957
+                                                      },
+                                                      "stop": {
+                                                        "byte": {
+                                                          "pos_fname":
+                                                            "../../test/contracts/multisig-v2.ligo",
+                                                          "pos_lnum": 40,
+                                                          "pos_bol": 957,
+                                                          "pos_cnum": 1020
+                                                        },
+                                                        "point_num": 1020,
+                                                        "point_bol": 957
+                                                      }
+                                                    }
+                                                  ]
                                                 }
-                                              ],
-                                              "location": [
-                                                "File",
-                                                {
-                                                  "start": {
-                                                    "byte": {
-                                                      "pos_fname":
-                                                        "../../test/contracts/multisig-v2.ligo",
-                                                      "pos_lnum": 40,
-                                                      "pos_bol": 957,
-                                                      "pos_cnum": 968
-                                                    },
-                                                    "point_num": 968,
-                                                    "point_bol": 957
+                                              }
+                                            ],
+                                            "location": [
+                                              "File",
+                                              {
+                                                "start": {
+                                                  "byte": {
+                                                    "pos_fname":
+                                                      "../../test/contracts/multisig-v2.ligo",
+                                                    "pos_lnum": 40,
+                                                    "pos_bol": 957,
+                                                    "pos_cnum": 968
                                                   },
-                                                  "stop": {
-                                                    "byte": {
-                                                      "pos_fname":
-                                                        "../../test/contracts/multisig-v2.ligo",
-                                                      "pos_lnum": 40,
-                                                      "pos_bol": 957,
-                                                      "pos_cnum": 1020
-                                                    },
-                                                    "point_num": 1020,
-                                                    "point_bol": 957
-                                                  }
+                                                  "point_num": 968,
+                                                  "point_bol": 957
+                                                },
+                                                "stop": {
+                                                  "byte": {
+                                                    "pos_fname":
+                                                      "../../test/contracts/multisig-v2.ligo",
+                                                    "pos_lnum": 40,
+                                                    "pos_bol": 957,
+                                                    "pos_cnum": 1020
+                                                  },
+                                                  "point_num": 1020,
+                                                  "point_bol": 957
                                                 }
-                                              ]
-                                            }
-                                          ]
+                                              }
+                                            ]
+                                          }
                                         }
                                       ],
                                       "location": [
@@ -4160,17 +4169,39 @@ let%expect_test _ =
                                                     {
                                                       "condition": {
                                                         "expression_content": [
-                                                          "E_constant",
+                                                          "E_application",
                                                           {
-                                                            "cons_name": [
-                                                              "Const",
-                                                              [ "C_GT" ]
-                                                            ],
-                                                            "arguments": [
-                                                              {
-                                                                "expression_content": [
-                                                                  "E_application",
+                                                            "lamb": {
+                                                              "expression_content": [
+                                                                "E_variable",
+                                                                {
+                                                                  "name":
+                                                                    "#gt_u",
+                                                                  "counter":
+                                                                    0,
+                                                                  "location": [
+                                                                    "Virtual",
+                                                                    "dummy"
+                                                                  ],
+                                                                  "generated":
+                                                                    false,
+                                                                  "mutable_":
+                                                                    false
+                                                                }
+                                                              ],
+                                                              "location": [
+                                                                "Virtual",
+                                                                "generated"
+                                                              ]
+                                                            },
+                                                            "args": {
+                                                              "expression_content": [
+                                                                "E_tuple",
+                                                                [
                                                                   {
+                                                                    "expression_content": [
+                                                                    "E_application",
+                                                                    {
                                                                     "lamb": {
                                                                     "expression_content": [
                                                                     "E_module_accessor",
@@ -4400,11 +4431,11 @@ let%expect_test _ =
                                                                     }
                                                                     ]
                                                                     }
-                                                                  }
-                                                                ],
-                                                                "location": [
-                                                                  "File",
-                                                                  {
+                                                                    }
+                                                                    ],
+                                                                    "location": [
+                                                                    "File",
+                                                                    {
                                                                     "start": {
                                                                     "byte": {
                                                                     "pos_fname":
@@ -4437,13 +4468,13 @@ let%expect_test _ =
                                                                     "point_bol":
                                                                     1220
                                                                     }
-                                                                  }
-                                                                ]
-                                                              },
-                                                              {
-                                                                "expression_content": [
-                                                                  "E_record_accessor",
+                                                                    }
+                                                                    ]
+                                                                  },
                                                                   {
+                                                                    "expression_content": [
+                                                                    "E_record_accessor",
+                                                                    {
                                                                     "record": {
                                                                     "expression_content": [
                                                                     "E_variable",
@@ -4539,11 +4570,11 @@ let%expect_test _ =
                                                                     "max_message_size"
                                                                     ]
                                                                     ]
-                                                                  }
-                                                                ],
-                                                                "location": [
-                                                                  "File",
-                                                                  {
+                                                                    }
+                                                                    ],
+                                                                    "location": [
+                                                                    "File",
+                                                                    {
                                                                     "start": {
                                                                     "byte": {
                                                                     "pos_fname":
@@ -4576,10 +4607,16 @@ let%expect_test _ =
                                                                     "point_bol":
                                                                     1220
                                                                     }
+                                                                    }
+                                                                    ]
                                                                   }
                                                                 ]
-                                                              }
-                                                            ]
+                                                              ],
+                                                              "location": [
+                                                                "Virtual",
+                                                                "generated"
+                                                              ]
+                                                            }
                                                           }
                                                         ],
                                                         "location": [
@@ -6547,15 +6584,35 @@ let%expect_test _ =
                                                                     },
                                                                     {
                                                                     "expression_content": [
-                                                                    "E_constant",
+                                                                    "E_application",
                                                                     {
-                                                                    "cons_name": [
-                                                                    "Const",
-                                                                    [
-                                                                    "C_ADD"
-                                                                    ]
+                                                                    "lamb": {
+                                                                    "expression_content": [
+                                                                    "E_variable",
+                                                                    {
+                                                                    "name":
+                                                                    "#add_u",
+                                                                    "counter":
+                                                                    0,
+                                                                    "location": [
+                                                                    "Virtual",
+                                                                    "dummy"
                                                                     ],
-                                                                    "arguments": [
+                                                                    "generated":
+                                                                    false,
+                                                                    "mutable_":
+                                                                    false
+                                                                    }
+                                                                    ],
+                                                                    "location": [
+                                                                    "Virtual",
+                                                                    "generated"
+                                                                    ]
+                                                                    },
+                                                                    "args": {
+                                                                    "expression_content": [
+                                                                    "E_tuple",
+                                                                    [
                                                                     {
                                                                     "expression_content": [
                                                                     "E_application",
@@ -7199,6 +7256,12 @@ let%expect_test _ =
                                                                     ]
                                                                     }
                                                                     ]
+                                                                    ],
+                                                                    "location": [
+                                                                    "Virtual",
+                                                                    "generated"
+                                                                    ]
+                                                                    }
                                                                     }
                                                                     ],
                                                                     "location": [
@@ -8608,15 +8671,35 @@ let%expect_test _ =
                                                                     },
                                                                     {
                                                                     "expression_content": [
-                                                                    "E_constant",
+                                                                    "E_application",
                                                                     {
-                                                                    "cons_name": [
-                                                                    "Const",
-                                                                    [
-                                                                    "C_ADD"
-                                                                    ]
+                                                                    "lamb": {
+                                                                    "expression_content": [
+                                                                    "E_variable",
+                                                                    {
+                                                                    "name":
+                                                                    "#add_u",
+                                                                    "counter":
+                                                                    0,
+                                                                    "location": [
+                                                                    "Virtual",
+                                                                    "dummy"
                                                                     ],
-                                                                    "arguments": [
+                                                                    "generated":
+                                                                    false,
+                                                                    "mutable_":
+                                                                    false
+                                                                    }
+                                                                    ],
+                                                                    "location": [
+                                                                    "Virtual",
+                                                                    "generated"
+                                                                    ]
+                                                                    },
+                                                                    "args": {
+                                                                    "expression_content": [
+                                                                    "E_tuple",
+                                                                    [
                                                                     {
                                                                     "expression_content": [
                                                                     "E_application",
@@ -9260,6 +9343,12 @@ let%expect_test _ =
                                                                     ]
                                                                     }
                                                                     ]
+                                                                    ],
+                                                                    "location": [
+                                                                    "Virtual",
+                                                                    "generated"
+                                                                    ]
+                                                                    }
                                                                     }
                                                                     ],
                                                                     "location": [
@@ -10698,15 +10787,35 @@ let%expect_test _ =
                                                                     {
                                                                     "condition": {
                                                                     "expression_content": [
-                                                                    "E_constant",
+                                                                    "E_application",
                                                                     {
-                                                                    "cons_name": [
-                                                                    "Const",
-                                                                    [
-                                                                    "C_GT"
-                                                                    ]
+                                                                    "lamb": {
+                                                                    "expression_content": [
+                                                                    "E_variable",
+                                                                    {
+                                                                    "name":
+                                                                    "#gt_u",
+                                                                    "counter":
+                                                                    0,
+                                                                    "location": [
+                                                                    "Virtual",
+                                                                    "dummy"
                                                                     ],
-                                                                    "arguments": [
+                                                                    "generated":
+                                                                    false,
+                                                                    "mutable_":
+                                                                    false
+                                                                    }
+                                                                    ],
+                                                                    "location": [
+                                                                    "Virtual",
+                                                                    "generated"
+                                                                    ]
+                                                                    },
+                                                                    "args": {
+                                                                    "expression_content": [
+                                                                    "E_tuple",
+                                                                    [
                                                                     {
                                                                     "expression_content": [
                                                                     "E_variable",
@@ -10936,6 +11045,12 @@ let%expect_test _ =
                                                                     ]
                                                                     }
                                                                     ]
+                                                                    ],
+                                                                    "location": [
+                                                                    "Virtual",
+                                                                    "generated"
+                                                                    ]
+                                                                    }
                                                                     }
                                                                     ],
                                                                     "location": [
@@ -11498,15 +11613,35 @@ let%expect_test _ =
                                                                     {
                                                                     "condition": {
                                                                     "expression_content": [
-                                                                    "E_constant",
+                                                                    "E_application",
                                                                     {
-                                                                    "cons_name": [
-                                                                    "Const",
-                                                                    [
-                                                                    "C_GE"
-                                                                    ]
+                                                                    "lamb": {
+                                                                    "expression_content": [
+                                                                    "E_variable",
+                                                                    {
+                                                                    "name":
+                                                                    "#ge_u",
+                                                                    "counter":
+                                                                    0,
+                                                                    "location": [
+                                                                    "Virtual",
+                                                                    "dummy"
                                                                     ],
-                                                                    "arguments": [
+                                                                    "generated":
+                                                                    false,
+                                                                    "mutable_":
+                                                                    false
+                                                                    }
+                                                                    ],
+                                                                    "location": [
+                                                                    "Virtual",
+                                                                    "generated"
+                                                                    ]
+                                                                    },
+                                                                    "args": {
+                                                                    "expression_content": [
+                                                                    "E_tuple",
+                                                                    [
                                                                     {
                                                                     "expression_content": [
                                                                     "E_application",
@@ -11920,6 +12055,12 @@ let%expect_test _ =
                                                                     ]
                                                                     }
                                                                     ]
+                                                                    ],
+                                                                    "location": [
+                                                                    "Virtual",
+                                                                    "generated"
+                                                                    ]
+                                                                    }
                                                                     }
                                                                     ],
                                                                     "location": [
@@ -14715,15 +14856,35 @@ let%expect_test _ =
                                                                     },
                                                                     "args": {
                                                                     "expression_content": [
-                                                                    "E_constant",
+                                                                    "E_application",
                                                                     {
-                                                                    "cons_name": [
-                                                                    "Const",
-                                                                    [
-                                                                    "C_POLYMORPHIC_SUB"
-                                                                    ]
+                                                                    "lamb": {
+                                                                    "expression_content": [
+                                                                    "E_variable",
+                                                                    {
+                                                                    "name":
+                                                                    "#polymorphic_sub_u",
+                                                                    "counter":
+                                                                    0,
+                                                                    "location": [
+                                                                    "Virtual",
+                                                                    "dummy"
                                                                     ],
-                                                                    "arguments": [
+                                                                    "generated":
+                                                                    false,
+                                                                    "mutable_":
+                                                                    false
+                                                                    }
+                                                                    ],
+                                                                    "location": [
+                                                                    "Virtual",
+                                                                    "generated"
+                                                                    ]
+                                                                    },
+                                                                    "args": {
+                                                                    "expression_content": [
+                                                                    "E_tuple",
+                                                                    [
                                                                     {
                                                                     "expression_content": [
                                                                     "E_variable",
@@ -14860,6 +15021,12 @@ let%expect_test _ =
                                                                     ]
                                                                     }
                                                                     ]
+                                                                    ],
+                                                                    "location": [
+                                                                    "Virtual",
+                                                                    "generated"
+                                                                    ]
+                                                                    }
                                                                     }
                                                                     ],
                                                                     "location": [
@@ -18400,15 +18567,35 @@ let%expect_test _ =
                                                                     {
                                                                     "condition": {
                                                                     "expression_content": [
-                                                                    "E_constant",
+                                                                    "E_application",
                                                                     {
-                                                                    "cons_name": [
-                                                                    "Const",
-                                                                    [
-                                                                    "C_NEQ"
-                                                                    ]
+                                                                    "lamb": {
+                                                                    "expression_content": [
+                                                                    "E_variable",
+                                                                    {
+                                                                    "name":
+                                                                    "#neq_u",
+                                                                    "counter":
+                                                                    0,
+                                                                    "location": [
+                                                                    "Virtual",
+                                                                    "dummy"
                                                                     ],
-                                                                    "arguments": [
+                                                                    "generated":
+                                                                    false,
+                                                                    "mutable_":
+                                                                    false
+                                                                    }
+                                                                    ],
+                                                                    "location": [
+                                                                    "Virtual",
+                                                                    "generated"
+                                                                    ]
+                                                                    },
+                                                                    "args": {
+                                                                    "expression_content": [
+                                                                    "E_tuple",
+                                                                    [
                                                                     {
                                                                     "expression_content": [
                                                                     "E_application",
@@ -18956,6 +19143,12 @@ let%expect_test _ =
                                                                     ]
                                                                     }
                                                                     ]
+                                                                    ],
+                                                                    "location": [
+                                                                    "Virtual",
+                                                                    "generated"
+                                                                    ]
+                                                                    }
                                                                     }
                                                                     ],
                                                                     "location": [
@@ -19489,15 +19682,35 @@ let%expect_test _ =
                                                                     },
                                                                     "args": {
                                                                     "expression_content": [
-                                                                    "E_constant",
+                                                                    "E_application",
                                                                     {
-                                                                    "cons_name": [
-                                                                    "Const",
-                                                                    [
-                                                                    "C_POLYMORPHIC_SUB"
-                                                                    ]
+                                                                    "lamb": {
+                                                                    "expression_content": [
+                                                                    "E_variable",
+                                                                    {
+                                                                    "name":
+                                                                    "#polymorphic_sub_u",
+                                                                    "counter":
+                                                                    0,
+                                                                    "location": [
+                                                                    "Virtual",
+                                                                    "dummy"
                                                                     ],
-                                                                    "arguments": [
+                                                                    "generated":
+                                                                    false,
+                                                                    "mutable_":
+                                                                    false
+                                                                    }
+                                                                    ],
+                                                                    "location": [
+                                                                    "Virtual",
+                                                                    "generated"
+                                                                    ]
+                                                                    },
+                                                                    "args": {
+                                                                    "expression_content": [
+                                                                    "E_tuple",
+                                                                    [
                                                                     {
                                                                     "expression_content": [
                                                                     "E_application",
@@ -20141,6 +20354,12 @@ let%expect_test _ =
                                                                     ]
                                                                     }
                                                                     ]
+                                                                    ],
+                                                                    "location": [
+                                                                    "Virtual",
+                                                                    "generated"
+                                                                    ]
+                                                                    }
                                                                     }
                                                                     ],
                                                                     "location": [
@@ -20570,15 +20789,35 @@ let%expect_test _ =
                                                                     {
                                                                     "condition": {
                                                                     "expression_content": [
-                                                                    "E_constant",
+                                                                    "E_application",
                                                                     {
-                                                                    "cons_name": [
-                                                                    "Const",
-                                                                    [
-                                                                    "C_EQ"
-                                                                    ]
+                                                                    "lamb": {
+                                                                    "expression_content": [
+                                                                    "E_variable",
+                                                                    {
+                                                                    "name":
+                                                                    "#eq_u",
+                                                                    "counter":
+                                                                    0,
+                                                                    "location": [
+                                                                    "Virtual",
+                                                                    "dummy"
                                                                     ],
-                                                                    "arguments": [
+                                                                    "generated":
+                                                                    false,
+                                                                    "mutable_":
+                                                                    false
+                                                                    }
+                                                                    ],
+                                                                    "location": [
+                                                                    "Virtual",
+                                                                    "generated"
+                                                                    ]
+                                                                    },
+                                                                    "args": {
+                                                                    "expression_content": [
+                                                                    "E_tuple",
+                                                                    [
                                                                     {
                                                                     "expression_content": [
                                                                     "E_application",
@@ -20899,6 +21138,12 @@ let%expect_test _ =
                                                                     ]
                                                                     }
                                                                     ]
+                                                                    ],
+                                                                    "location": [
+                                                                    "Virtual",
+                                                                    "generated"
+                                                                    ]
+                                                                    }
                                                                     }
                                                                     ],
                                                                     "location": [

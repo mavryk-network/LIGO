@@ -193,9 +193,9 @@ end
 [@private]
   let _hash_xor_u (type a b) ((l, r) : a * b) : (a, b) external_u_xor = [%external "XOR"] l r
 [@private]
-  let _hash_lsl_u ((l, r) : nat * nat) : nat = [%external "LSR"] l r
+  let _hash_lsl_u ((l, r) : nat * nat) : nat = [%Michelson ({| { UNPAIR ; LSL } |} : nat * nat -> nat)] (l, r)
 [@private]
-  let _hash_lsr_u ((l, r) : nat * nat) : nat = [%external "LSL"] l r
+  let _hash_lsr_u ((l, r) : nat * nat) : nat = [%Michelson ({| { UNPAIR ; LSR } |} : nat * nat -> nat)] (l, r)
 [@private]
   let _hash_bool_or_u ((l, r) : bool * bool) : bool =
     let poly_or (type a b) ((l, r) : a * b) : (a, b) external_u_or = [%external "OR"] l r in

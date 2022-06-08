@@ -19,22 +19,14 @@ let%expect_test _ =
     { parameter int ;
       storage (pair (int %x) (int %y)) ;
       code { CDR ;
-             PUSH int 3 ;
-             SWAP ;
              DUP ;
-             DUG 2 ;
-             CAR ;
-             ADD ;
-             DROP ;
+             CDR ;
              PUSH int 3 ;
              PUSH int 9 ;
-             DUP 3 ;
+             DIG 3 ;
              CAR ;
              MUL ;
              ADD ;
-             SWAP ;
-             CDR ;
-             SWAP ;
              PAIR ;
              NIL operation ;
              PAIR } } |}]

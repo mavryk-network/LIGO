@@ -10,11 +10,11 @@ let () = Unix.putenv ~key:"TERM" ~data:"dumb"
 let%expect_test _ =
   run_ligo_good [ "info" ; "measure-contract" ; contract "coase.ligo" ] ;
   [%expect{|
-    1171 bytes |}] ;
+    1143 bytes |}] ;
 
   run_ligo_good [ "info" ; "measure-contract" ; contract "multisig.ligo" ] ;
   [%expect{|
-    575 bytes |}] ;
+    567 bytes |}] ;
 
   run_ligo_good [ "info" ; "measure-contract" ; contract "multisig-v2.ligo" ] ;
   [%expect{|
@@ -111,31 +111,17 @@ let%expect_test _ =
                      DUG 2 ;
                      GET ;
                      IF_NONE { PUSH string "buy_single: No card pattern." ; FAILWITH } {} ;
+                     AMOUNT ;
                      PUSH nat 1 ;
-                     SWAP ;
-                     DUP ;
-                     DUG 2 ;
+                     DUP 3 ;
                      CDR ;
                      ADD ;
-                     SWAP ;
-                     DUP ;
-                     DUG 2 ;
+                     DUP 3 ;
                      CAR ;
                      MUL ;
-                     AMOUNT ;
-                     SWAP ;
                      COMPARE ;
                      GT ;
                      IF { PUSH string "Not enough money" ; FAILWITH } {} ;
-                     PUSH nat 1 ;
-                     SWAP ;
-                     DUP ;
-                     DUG 2 ;
-                     CDR ;
-                     ADD ;
-                     SWAP ;
-                     CAR ;
-                     PAIR ;
                      DUP 3 ;
                      CDR ;
                      DUP 4 ;
@@ -144,7 +130,13 @@ let%expect_test _ =
                      DIG 4 ;
                      CAR ;
                      CAR ;
-                     DIG 3 ;
+                     PUSH nat 1 ;
+                     DUP 5 ;
+                     CDR ;
+                     ADD ;
+                     DIG 4 ;
+                     CAR ;
+                     PAIR ;
                      DUP 5 ;
                      SWAP ;
                      SOME ;
@@ -238,17 +230,12 @@ let%expect_test _ =
                      UPDATE ;
                      PAIR ;
                      PAIR ;
-                     SWAP ;
-                     DUP ;
-                     DUG 2 ;
-                     CDR ;
-                     DIG 2 ;
-                     CAR ;
-                     MUL ;
                      SENDER ;
                      CONTRACT unit ;
                      IF_NONE { PUSH string "sell_single: No contract." ; FAILWITH } {} ;
-                     SWAP ;
+                     DIG 2 ;
+                     UNPAIR ;
+                     MUL ;
                      UNIT ;
                      TRANSFER_TOKENS ;
                      SWAP ;
@@ -369,7 +356,7 @@ let%expect_test _ =
                                   CDR ;
                                   DIG 2 ;
                                   CHECK_SIGNATURE ;
-                                  IF { PUSH nat 1 ; DIG 2 ; ADD ; UNIT ; SWAP }
+                                  IF { UNIT ; PUSH nat 1 ; DIG 3 ; ADD }
                                      { PUSH string "Invalid signature" ; FAILWITH } }
                                 { DIG 3 ; DROP 2 ; UNIT ; DIG 2 } }
                            { DIG 2 ; DROP ; UNIT ; DIG 2 } ;
@@ -387,22 +374,19 @@ let%expect_test _ =
                   COMPARE ;
                   LT ;
                   IF { PUSH string "Not enough signatures passed the check" ; FAILWITH }
-                     { SWAP ;
-                       DUP ;
-                       DUG 2 ;
+                     { UNIT ;
+                       DUP 3 ;
                        CDR ;
                        PUSH nat 1 ;
-                       DUP 4 ;
+                       DUP 5 ;
                        CAR ;
                        CDR ;
                        ADD ;
-                       DIG 3 ;
+                       DIG 4 ;
                        CAR ;
                        CAR ;
                        PAIR ;
-                       PAIR ;
-                       UNIT ;
-                       SWAP } } ;
+                       PAIR } } ;
              SWAP ;
              DROP ;
              UNIT ;
@@ -1339,7 +1323,7 @@ File "../../test/contracts/negative/create_contract_toplevel.mligo", line 4, cha
   8 |     "un"
   9 |   in
 
-Not all free variables could be inlined in Tezos.create_contract usage: gen#29. |}] ;
+Not all free variables could be inlined in Tezos.create_contract usage: gen#33. |}] ;
 
   run_ligo_good [ "compile" ; "contract" ; contract "create_contract_var.mligo" ] ;
   [%expect{|
@@ -1420,7 +1404,7 @@ Not all free variables could be inlined in Tezos.create_contract usage: gen#29. 
      11 |     "un"
      12 |   in
 
-    Not all free variables could be inlined in Tezos.create_contract usage: gen#31. |}] ;
+    Not all free variables could be inlined in Tezos.create_contract usage: gen#35. |}] ;
 
   run_ligo_bad [ "compile" ; "contract" ; bad_contract "create_contract_no_inline.mligo" ] ;
   [%expect{|
@@ -1760,7 +1744,7 @@ type storage = (int , int)
 const main : (int , storage) -> (list (operation) , storage) =
   lambda (n : (int , storage)) : (list (operation) , storage) return
   let x : (int , int) = let x : int = 7 in
-                        (ADD(x ,n.0) , ADD(n.1.0 ,n.1.1)) in
+                        (((#add)@(x))@(n.0) , ((#add)@(n.1.0))@(n.1.1)) in
   (list[] : list (operation) , x)
 const f0 = lambda (_a : string) return true
 const f1 = lambda (_a : string) return true
@@ -1783,7 +1767,7 @@ const letin_nesting =
 const letin_nesting2 =
   lambda (x : int) return let y = 2 in
                           let z = 3 in
-                          ADD(ADD(x ,y) ,z)
+                          ((#add)@(((#add)@(x))@(y)))@(z)
 const x =  match (+1 , (+2 , +3)) with
             | (_#3,(x,_#4)) -> x
     |}];
@@ -1794,7 +1778,7 @@ type storage = (int , int)
 const main =
   lambda (n : (int , storage)) : (list (operation) , storage) return
   let x : (int , int) = let x : int = 7 in
-                        (ADD(x ,n.0) , ADD(n.1.0 ,n.1.1)) in
+                        ((#add_u)@((x , n.0)) , (#add_u)@((n.1.0 , n.1.1))) in
   (list[] : list (operation) , x)
 const f0 = lambda (_a : string) return true
 const f1 = lambda (_a : string) return true
@@ -1817,7 +1801,7 @@ const letin_nesting =
 const letin_nesting2 =
   lambda (x : int) return let y = 2 in
                           let z = 3 in
-                          ADD(ADD(x ,y) ,z)
+                          (#add_u)@(((#add_u)@((x , y)) , z))
 const x =  match (+1 , (+2 , +3)) with
             | (gen#3,(x,gen#4)) -> x
     |}];
@@ -2100,21 +2084,19 @@ let%expect_test _ =
   run_ligo_good [ "print" ; "ast-typed" ; contract "remove_recursion.mligo" ] ;
   [%expect {|
     const f =
-      lambda (n : int) return let f : int -> int = rec (f:int -> int => lambda (n : int) return let gen#2[@var] = EQ(n ,
-      0) in  match gen#2 with
-              | False unit_proj#3 ->
-                (f)@(C_POLYMORPHIC_SUB(n ,
-                1))
-              | True unit_proj#4 ->
-                1 ) in (f)@(4)
+      lambda (n : int) return let f : int -> int = rec (f:int -> int => lambda (n : int) return let gen#2[@var] = ((#eq@{int})@(n))@(0) in
+       match gen#2 with
+        | False unit_proj#3 ->
+          (f)@(((#polymorphic_sub@{int}@{int})@(n))@(1))
+        | True unit_proj#4 ->
+          1 ) in (f)@(4)
     const g =
-      rec (g:int -> int -> int -> int => lambda (f : int -> int) return (g)@(let h : int -> int = rec (h:int -> int => lambda (n : int) return let gen#5[@var] = EQ(n ,
-      0) in  match gen#5 with
-              | False unit_proj#6 ->
-                (h)@(C_POLYMORPHIC_SUB(n ,
-                1))
-              | True unit_proj#7 ->
-                1 ) in h) ) |}]
+      rec (g:int -> int -> int -> int => lambda (f : int -> int) return (g)@(let h : int -> int = rec (h:int -> int => lambda (n : int) return let gen#5[@var] = ((#eq@{int})@(n))@(0) in
+       match gen#5 with
+        | False unit_proj#6 ->
+          (h)@(((#polymorphic_sub@{int}@{int})@(n))@(1))
+        | True unit_proj#7 ->
+          1 ) in h) ) |}]
 
 let%expect_test _ =
   run_ligo_bad [ "compile" ; "contract" ; bad_contract "reuse_variable_name_top.jsligo" ] ;
@@ -2151,12 +2133,13 @@ let%expect_test _ =
   run_ligo_good [ "print" ; "ast-typed" ; contract "attributes.jsligo" ] ;
   [%expect {|
     const x = 1[@inline][@private]
-    const foo = lambda (a : int) return let test[@var] = C_POLYMORPHIC_ADD(2 ,
-      a)[@inline] in test[@inline][@private]
+    const foo =
+      lambda (a : int) return let test[@var] = (#polymorphic_add_u@{int}@{int})@(
+      ( 2 , a ))[@inline] in test[@inline][@private]
     const y = 1[@private]
     const bar =
-      lambda (b : int) return let test[@var] = lambda (z : int) return C_POLYMORPHIC_ADD(C_POLYMORPHIC_ADD(2 ,
-      b) , z)[@inline] in (test)@(b)[@private]
+      lambda (b : int) return let test[@var] = lambda (z : int) return (#polymorphic_add_u@{int}@{int})@(
+      ( (#polymorphic_add_u@{int}@{int})@(( 2 , b )) , z ))[@inline] in (test)@(b)[@private]
     const check = 4[@private] |}]
 
 (* literal type "casting" inside modules *)

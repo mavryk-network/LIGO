@@ -8,14 +8,12 @@ let%expect_test _ =
     { parameter unit ;
       storage (pair (int %bar) (int %foo)) ;
       code { CDR ;
+             CDR ;
              PUSH int 0 ;
              PUSH int 1 ;
              PUSH int 2 ;
              ADD ;
              ADD ;
-             SWAP ;
-             CDR ;
-             SWAP ;
              PAIR ;
              NIL operation ;
              PAIR } } |} ]
@@ -50,14 +48,12 @@ let%expect_test _ =
     { parameter unit ;
       storage (pair (int %bar) (int %foo)) ;
       code { CDR ;
+             CDR ;
              PUSH int 0 ;
              PUSH int 1 ;
              PUSH int 2 ;
              ADD ;
              ADD ;
-             SWAP ;
-             CDR ;
-             SWAP ;
              PAIR ;
              NIL operation ;
              PAIR } } |} ]
@@ -82,14 +78,12 @@ let%expect_test _ =
     { parameter unit ;
       storage (pair (int %bar) (int %foo)) ;
       code { CDR ;
+             CDR ;
              PUSH int 0 ;
              PUSH int 1 ;
              PUSH int 2 ;
              ADD ;
              ADD ;
-             SWAP ;
-             CDR ;
-             SWAP ;
              PAIR ;
              NIL operation ;
              PAIR } } |} ]
@@ -114,14 +108,12 @@ let%expect_test _ =
     { parameter unit ;
       storage (pair (int %bar) (int %foo)) ;
       code { CDR ;
+             CDR ;
              PUSH int 0 ;
              PUSH int 1 ;
              PUSH int 2 ;
              ADD ;
              ADD ;
-             SWAP ;
-             CDR ;
-             SWAP ;
              PAIR ;
              NIL operation ;
              PAIR } } |} ]

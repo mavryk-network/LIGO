@@ -549,7 +549,7 @@ module Constant_types = struct
                       typer_table_of_ligo_type O.(t_nat () ^-> t_int () ^-> t_int ());
                       typer_table_of_ligo_type O.(t_timestamp () ^-> t_timestamp () ^-> t_int ());
                       typer_table_of_ligo_type O.(t_timestamp () ^-> t_int () ^-> t_timestamp ());
-                      typer_table_of_ligo_type O.(t_mutez () ^-> t_mutez () ^-> t_mutez ());
+                      typer_table_of_ligo_type O.(t_mutez () ^-> t_mutez () ^-> t_option (t_mutez ()));
                     ]
 
   let polymorphic_sub_typer = any_table_of [

@@ -66,14 +66,11 @@ let%expect_test _ =
     { parameter unit ;
       storage int ;
       code { PUSH int 1 ;
-             PUSH int 42 ;
              SWAP ;
-             DUP ;
-             DUG 2 ;
-             ADD ;
-             DIG 2 ;
              CDR ;
-             SWAP ;
+             PUSH int 42 ;
+             DUP 3 ;
+             ADD ;
              DUG 2 ;
              ADD ;
              ADD ;
@@ -83,27 +80,17 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_good [ "print" ; "ast-typed" ; contract "D.mligo" ] ;
   [%expect {|
-    const toto = ADD(E.toto , C.B.A.toto)
+    const toto = ((#add@{int}@{int})@(E.toto))@(C.B.A.toto)
     const fb = record[tata -> 2 , tete -> 3 , titi -> 1 , toto -> toto]
     const main =
       lambda (gen#5 : ( int * int )) return  match gen#5 with
                                               | ( p , s ) ->
-                                              let s = ADD(ADD(p , s) ,
-                                              toto) in ( LIST_EMPTY() , s ) |}]
+                                              let s = ((#add@{int}@{int})@(((#add@{int}@{int})@(p))@(s)))@(toto) in
+                                              ( LIST_EMPTY() , s ) |}]
 
 let%expect_test _ =
   run_ligo_good [ "print" ; "mini-c" ; contract "D.mligo" ] ;
   [%expect{|
-let #../../test/contracts/build/A.mligo#toto#364 = L(1) in
-let #../../test/contracts/build/B.mligo#titi#639 =
-  ADD(#../../test/contracts/build/A.mligo#toto#364 , L(42)) in
-let #../../test/contracts/build/C.mligo#tata#1462 =
-  ADD(#../../test/contracts/build/A.mligo#toto#364 ,
-      #../../test/contracts/build/B.mligo#titi#639) in
-let x =
-  ADD(ADD(L(3) , #../../test/contracts/build/A.mligo#toto#364) ,
-      #../../test/contracts/build/B.mligo#titi#639) in
-let toto = ADD(L(10) , #../../test/contracts/build/A.mligo#toto#364) in
 L(unit) |}]
 
 let%expect_test _ =
@@ -111,11 +98,11 @@ let%expect_test _ =
   [%expect{|
     { parameter int ;
       storage int ;
-      code { PUSH int 1 ;
+      code { UNPAIR ;
+             PUSH int 1 ;
              PUSH int 10 ;
              ADD ;
-             SWAP ;
-             UNPAIR ;
+             DUG 2 ;
              ADD ;
              ADD ;
              NIL operation ;
@@ -143,7 +130,15 @@ let%expect_test _ =
 
     { parameter string ;
       storage int ;
-      code { CDR ; PUSH int 1 ; ADD ; NIL operation ; PAIR } } |}]
+      code { UNPAIR ;
+             PUSH string "titi" ;
+             SWAP ;
+             CONCAT ;
+             DROP ;
+             PUSH int 1 ;
+             ADD ;
+             NIL operation ;
+             PAIR } } |}]
 
 let%expect_test _ =
   run_ligo_good [ "compile" ; "expression" ; "cameligo" ; "tata" ; "--init-file" ; contract "C.mligo" ] ;
