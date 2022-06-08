@@ -49,7 +49,8 @@ module Command = struct
     | Get_balance : Location.t * Ligo_interpreter.Types.calltrace * LT.value -> LT.value t
     | Get_last_originations : unit -> LT.value t
     | Check_obj_ligo : LT.expression -> unit t
-    | Compile_contract_from_file : string * string * string list -> (LT.value * LT.value) t
+    | Compile_contract_from_file : string * string * string list -> LT.value t
+    | Read_contract_from_file : Location.t * LT.calltrace * string -> LT.value t
     | Run : Location.t * LT.func_val * LT.value -> LT.value t
     | Eval : Location.t * LT.value * Ast_aggregated.type_expression -> LT.value t
     | Compile_contract : Location.t * LT.value * Ast_aggregated.type_expression -> LT.value t
@@ -58,15 +59,15 @@ module Command = struct
     | Check_storage_address : Location.t * Tezos_protocol.Protocol.Alpha_context.Contract.t * Ast_aggregated.type_expression -> unit t
     | Inject_script : Location.t * Ligo_interpreter.Types.calltrace * LT.value * LT.value * Z.t -> LT.value t
     | Set_source : LT.value -> unit t
-    | Set_baker : LT.value -> unit t
+    | Set_baker : Location.t * LT.calltrace * LT.value -> unit t
     | Get_voting_power : Location.t * Ligo_interpreter.Types.calltrace * Tezos_protocol.Protocol.Alpha_context.public_key_hash -> LT.value t
     | Get_total_voting_power : Location.t * Ligo_interpreter.Types.calltrace -> LT.value t
     | Get_bootstrap : Location.t * LT.value -> LT.value t
     (* TODO : move them ou to here *)
     | Michelson_equal : Location.t * LT.value * LT.value -> bool t
-    | Implicit_account : Location.t * Tezos_protocol.Protocol.Alpha_context.public_key_hash -> LT.value t
+    | Implicit_account : Location.t * LT.calltrace * Tezos_protocol.Protocol.Alpha_context.public_key_hash -> LT.value t
     | Pairing_check : (Bls12_381.G1.t * Bls12_381.G2.t) list -> LT.value t
-    | Add_account : Location.t * string * Tezos_protocol.Protocol.Alpha_context.public_key -> unit t
+    | Add_account : Location.t * LT.calltrace * string * Tezos_protocol.Protocol.Alpha_context.public_key -> unit t
     | New_account : unit -> LT.value t
     | Baker_account : LT.value * LT.value -> unit t
     | Register_delegate : Location.t * Ligo_interpreter.Types.calltrace *  Tezos_protocol.Protocol.Alpha_context.public_key_hash -> LT.value t
@@ -231,7 +232,7 @@ module Command = struct
       ((), ctxt)
     | Get_size (contract_code) -> (
       match contract_code with
-      | LT.V_Michelson (LT.Contract contract_code) ->
+      | LT.V_Michelson_contract contract_code ->
          let s = Ligo_compile.Of_michelson.measure ~raise contract_code in
          (LT.V_Ct (C_int (Z.of_int s)), ctxt)
       | _ -> raise.raise @@ Errors.generic_error Location.generated
@@ -243,13 +244,20 @@ module Command = struct
       let options = Compiler_options.set_test_flag options false in
       let contract_code =
         Michelson_backend.compile_contract ~raise ~add_warning ~options source_file entry_point views in
-      let size =
-        let s = Ligo_compile.Of_michelson.measure ~raise contract_code in
-        LT.V_Ct (C_int (Z.of_int s))
-      in
       let contract_code = Tezos_micheline.Micheline.(inject_locations (fun _ -> ()) (strip_locations contract_code)) in
-      let contract = LT.V_Michelson (LT.Contract contract_code) in
-      ((contract,size), ctxt)
+      let contract = LT.V_Michelson_contract contract_code in
+      (contract, ctxt)
+    | Read_contract_from_file (loc, calltrace, source_file) ->
+      (try
+        let s = In_channel.(with_file source_file ~f:input_all) in
+        let t, _ =  Tezos_micheline.Micheline_parser.tokenize s in
+        let m, _ = Tezos_micheline.Micheline_parser.parse_expression t in
+        let contract_code = Tezos_micheline.Micheline.map_node (fun _ -> ()) (fun x -> x) m in
+        let contract = LT.V_Michelson_contract contract_code in
+        (contract, ctxt)
+       with
+        | Sys_error _ ->
+          raise.raise @@ generic_error ~calltrace loc @@ "Could not open " ^ source_file ^ " for reading.")
     | Run (loc, f, v) ->
       let open Ligo_interpreter.Types in
       let subst_lst = Michelson_backend.make_subst_ast_env_exp ~raise f.env f.orig_lambda in
@@ -294,7 +302,7 @@ module Command = struct
       let storage_ty = clean_locations storage_ty in
       let expr = clean_locations compiled_expr in
       let contract = Michelson.contract param_ty storage_ty expr [] in
-      (LT.V_Michelson (Contract contract), ctxt)
+      (LT.V_Michelson_contract contract, ctxt)
     | Decompile (code, code_ty, ast_ty) ->
       let ret = Michelson_to_value.decompile_to_untyped_value ~raise ~bigmaps:ctxt.transduced.bigmaps code_ty code in
       let ret = Michelson_to_value.decompile_value ~raise ~bigmaps:ctxt.transduced.bigmaps ret ast_ty in
@@ -323,9 +331,9 @@ module Command = struct
     | Set_source source ->
       let source = trace_option ~raise (corner_case ()) @@ LC.get_address source in
       ((), {ctxt with internals = { ctxt.internals with source }})
-    | Set_baker baker_policy ->
+    | Set_baker (loc, calltrace, baker_policy) ->
       let baker_policy = trace_option ~raise (corner_case ()) @@ LC.get_baker_policy baker_policy in
-      let baker_policy = Tezos_state.baker_policy ~raise ~loc:Location.generated baker_policy in
+      let baker_policy = Tezos_state.baker_policy ~raise ~loc ~calltrace baker_policy in
       ((), {ctxt with internals = { ctxt.internals with baker_policy }})
     | Get_voting_power (loc, calltrace, key_hash) ->
       let vp = Tezos_state.get_voting_power ~raise ~loc ~calltrace ctxt key_hash in
@@ -353,9 +361,9 @@ module Command = struct
       in
       let v = LT.V_Map (List.map ~f:aux ctxt.transduced.last_originations) in
       (v,ctxt)
-    | Implicit_account (loc, kh) -> (
+    | Implicit_account (loc, calltrace, kh) -> (
       let address = Tezos_protocol.Protocol.Environment.Signature.Public_key_hash.to_b58check kh in
-      let address = Tezos_state.implicit_account ~raise ~loc address in
+      let address = Tezos_state.implicit_account ~raise ~loc ~calltrace address in
       let v = LT.V_Ct (LT.C_contract { address ; entrypoint = None }) in
       (v, ctxt)
     )
@@ -363,9 +371,9 @@ module Command = struct
       let check = Bls12_381.Pairing.pairing_check l in
       (LC.v_bool check, ctxt)
     )
-    | Add_account (loc, sk, pk) -> (
+    | Add_account (loc, calltrace, sk, pk) -> (
       let pkh = Tezos_protocol.Protocol.Environment.Signature.Public_key.hash pk in
-      Tezos_state.add_account ~raise ~loc sk pk pkh;
+      Tezos_state.add_account ~raise ~loc ~calltrace sk pk pkh;
       ((), ctxt)
     )
     | New_account () -> (

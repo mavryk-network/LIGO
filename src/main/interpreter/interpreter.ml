@@ -569,7 +569,7 @@ let rec apply_operator ~raise ~add_warning ~steps ~(options : Compiler_options.t
       return v
     | ( C_OPTION_MAP , _  ) -> fail @@ error_type
     | ( C_IMPLICIT_ACCOUNT, [ V_Ct (C_key_hash kh) ] )->
-      let>> value = Implicit_account (loc, kh) in
+      let>> value = Implicit_account (loc, calltrace, kh) in
       return @@ value
     | ( C_IMPLICIT_ACCOUNT , _  ) -> fail @@ error_type
     (*
@@ -579,17 +579,16 @@ let rec apply_operator ~raise ~add_warning ~steps ~(options : Compiler_options.t
     *)
     | ( C_TEST_FAILWITH , [ v ]) -> fail @@ Errors.meta_lang_failwith loc calltrace v
     | ( C_TEST_FAILWITH , _ ) -> fail @@ error_type
-    | ( C_TEST_ORIGINATE_FROM_FILE, [ V_Ct (C_string source_file) ; V_Ct (C_string entryp) ; V_List views ; storage ; V_Ct ( C_mutez amt ) ]) ->
+    | ( C_TEST_COMPILE_CONTRACT_FROM_FILE, [ V_Ct (C_string source_file) ; V_Ct (C_string entryp) ; V_List views ]) ->
       let>> mod_res = Get_mod_res () in
       let source_file = ModResHelpers.resolve_file_name source_file mod_res in
       let views = List.map
                     ~f:(fun x -> trace_option ~raise (Errors.corner_case ()) @@ get_string x)
                     views
       in
-      let>> (code,size) = Compile_contract_from_file (source_file,entryp,views) in
-      let>> addr = Inject_script (loc, calltrace, code, storage, amt) in
-      return @@ V_Record (LMap.of_list [ (Label "0", addr) ; (Label "1", code) ; (Label "2", size) ])
-    | ( C_TEST_ORIGINATE_FROM_FILE , _  ) -> fail @@ error_type
+      let>> code = Compile_contract_from_file (source_file,entryp,views) in
+      return @@ code
+    | ( C_TEST_COMPILE_CONTRACT_FROM_FILE , _  ) -> fail @@ error_type
     | ( C_TEST_EXTERNAL_CALL_TO_ADDRESS_EXN , [ (V_Ct (C_address address)) ; V_Michelson (Ty_code { code = param ; _ }) ; V_Ct ( C_mutez amt ) ] ) -> (
       let contract = { address; entrypoint = None } in
       let>> res = External_call (loc,calltrace,contract,param,amt) in
@@ -607,7 +606,7 @@ let rec apply_operator ~raise ~add_warning ~steps ~(options : Compiler_options.t
       return_ct C_unit
     | ( C_TEST_SET_SOURCE , _  ) -> fail @@ error_type
     | ( C_TEST_SET_BAKER , [ addr ] ) ->
-      let>> () = Set_baker addr in
+      let>> () = Set_baker (loc, calltrace, addr) in
       return_ct C_unit
     | ( C_TEST_SET_BAKER , _  ) -> fail @@ error_type
     | ( C_TEST_GET_STORAGE_OF_ADDRESS , [ addr ] ) ->
@@ -752,14 +751,18 @@ let rec apply_operator ~raise ~add_warning ~steps ~(options : Compiler_options.t
       let>> v = Decompile (code, code_ty, expr_ty) in
       return v
     | ( C_TEST_DECOMPILE , _  ) -> fail @@ error_type
-    | ( C_TEST_ORIGINATE , [ contract ; storage ; V_Ct ( C_mutez amt ) ] ) ->
+    | ( C_TEST_COMPILE_CONTRACT , [ contract ] ) ->
        let* contract_ty = monad_option (Errors.generic_error loc "Could not recover types") @@ List.nth types 0 in
-       let* storage_ty = monad_option (Errors.generic_error loc "Could not recover types") @@ List.nth types 1 in
        let>> code = Compile_contract (loc, contract, contract_ty) in
-       let>> storage = Eval (loc, storage, storage_ty) in
-       let>> size = Get_size code in
-       let>> addr  = Inject_script (loc, calltrace, code, storage, amt) in
-       return @@ V_Record (LMap.of_list [ (Label "0", addr) ; (Label "1", code) ; (Label "2", size) ])
+       return @@ code
+    | ( C_TEST_COMPILE_CONTRACT , _  ) -> fail @@ error_type
+    | ( C_TEST_SIZE , [ contract ] ) ->
+       let>> size = Get_size contract in
+       return @@ size
+    | ( C_TEST_SIZE , _  ) -> fail @@ error_type
+    | ( C_TEST_ORIGINATE , [ contract ; storage ; V_Ct ( C_mutez amt ) ] ) ->
+       let>> addr  = Inject_script (loc, calltrace, contract, storage, amt) in
+       return @@ addr
     | ( C_TEST_ORIGINATE , _  ) -> fail @@ error_type
     | ( C_TEST_NTH_BOOTSTRAP_TYPED_ADDRESS , [ V_Ct (C_nat n) ] ) ->
       let n = Z.to_int n in
@@ -786,7 +789,7 @@ let rec apply_operator ~raise ~add_warning ~steps ~(options : Compiler_options.t
       return_ct (C_address x)
     | ( C_TEST_CAST_ADDRESS , _  ) -> fail @@ error_type
     | ( C_TEST_ADD_ACCOUNT , [ V_Ct (C_string sk) ; V_Ct (C_key pk) ] ) ->
-      let>> () = Add_account (loc, sk, pk) in
+      let>> () = Add_account (loc, calltrace, sk, pk) in
       return @@ v_unit ()
     | ( C_TEST_ADD_ACCOUNT , _ ) -> fail @@ error_type
     | ( C_TEST_NEW_ACCOUNT , [ V_Ct (C_unit) ] ) ->
@@ -841,6 +844,10 @@ let rec apply_operator ~raise ~add_warning ~steps ~(options : Compiler_options.t
       let>> () = Pop_context () in
       return @@ V_Ct C_unit
     | ( C_TEST_POP_CONTEXT , _ ) -> fail @@ error_type
+    | ( C_TEST_READ_CONTRACT_FROM_FILE , [ V_Ct (C_string fn) ] ) ->
+      let>> contract = Read_contract_from_file (loc, calltrace, fn) in
+      return @@ contract
+    | ( C_TEST_READ_CONTRACT_FROM_FILE , _ ) -> fail @@ error_type
     | ( (C_SAPLING_VERIFY_UPDATE | C_SAPLING_EMPTY_STATE) , _ ) ->
       fail @@ Errors.generic_error loc "Sapling is not supported."
     | ( (C_SELF | C_SELF_ADDRESS) , _ ) ->
@@ -855,7 +862,7 @@ let rec apply_operator ~raise ~add_warning ~steps ~(options : Compiler_options.t
          C_BIG_MAP | C_BIG_MAP_LITERAL | C_BIG_MAP_GET_AND_UPDATE | C_CALL | C_CONTRACT |
          C_CONTRACT_OPT | C_CONTRACT_WITH_ERROR | C_CONTRACT_ENTRYPOINT |
          C_CONTRACT_ENTRYPOINT_OPT | C_SET_DELEGATE |
-         C_CREATE_CONTRACT | C_OPEN_CHEST | C_VIEW | C_TEST_COMPILE_CONTRACT | C_GLOBAL_CONSTANT) , _ ) ->
+         C_CREATE_CONTRACT | C_OPEN_CHEST | C_VIEW | C_GLOBAL_CONSTANT) , _ ) ->
       fail @@ Errors.generic_error loc "Unbound primitive."
   )
 
@@ -961,9 +968,6 @@ and eval_ligo ~raise ~add_warning ~steps ~options : AST.expression -> calltrace 
     | E_let_in {let_binder ; rhs; let_result; attr = { no_mutation ; inline ; view=_ ; public=_ ; thunk=false ; hidden = _ }} -> (
       let* rhs' = eval_ligo rhs calltrace env in
       eval_ligo (let_result) calltrace (Env.extend env let_binder.var ~inline ~no_mutation (rhs.type_expression,rhs'))
-    )
-    | E_type_in {type_binder=_ ; rhs=_; let_result} -> (
-      eval_ligo (let_result) calltrace env
     )
     | E_literal l ->
       eval_literal l
@@ -1131,7 +1135,7 @@ let eval_test ~raise ~add_warning ~steps ~options : Ast_typed.program -> ((strin
   let map = List.fold_right lst ~f ~init:LMap.empty in
   let expr = Ast_typed.e_a_record map in
   let expr = ctxt expr in
-  let expr = trace ~raise Main_errors.self_ast_aggregated_tracer @@ Self_ast_aggregated.all_expression ~options:options.middle_end expr in
+  let expr = trace ~raise Main_errors.self_ast_aggregated_tracer @@ Self_ast_aggregated.all_expression ~add_warning ~options:options.middle_end expr in
   let value, _ = try_eval ~raise ~add_warning ~steps ~options expr Env.empty_env initial_state None in
   match value with
   | V_Record m ->

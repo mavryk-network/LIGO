@@ -115,7 +115,7 @@ let dry_run (raw_options : Compiler_options.raw) source_file parameter storage a
       in
       let cli_entry = core_contract @ cli_module :: get_meta_ligo_eq ~raise ~add_warning:(fun _ -> ()) "dry_run.mligo" in
       let cli_entry_typed = Ligo_compile.Of_core.typecheck ~raise ~add_warning:(fun _ -> ()) ~options Env cli_entry in
-      let agg = Ligo_compile.Of_typed.apply_to_entrypoint ~raise ~options:options.middle_end cli_entry_typed "test_dry_run" in
+      let agg = Ligo_compile.Of_typed.apply_to_entrypoint ~raise ~add_warning ~options:options.middle_end cli_entry_typed "test_dry_run" in
       Interpreter.eval ~raise ~add_warning ~steps ~options agg
 
 let interpret (raw_options : Compiler_options.raw) expression init_file amount balance sender source now display_format () =
@@ -156,7 +156,7 @@ let evaluate_call (raw_options : Compiler_options.raw) source_file parameter amo
       let core_param       = Compile.Of_sugar.compile_expression ~raise sugar_param in
       let app              = Compile.Of_core.apply entry_point core_param in
       let typed_app        = Compile.Of_core.compile_expression ~raise ~add_warning ~options ~init_prog app in
-      let app_aggregated   = Compile.Of_typed.compile_expression_in_context ~raise ~options:options.middle_end typed_app aggregated_prg in
+      let app_aggregated   = Compile.Of_typed.compile_expression_in_context ~raise ~add_warning ~options:options.middle_end typed_app aggregated_prg in
       let app_mini_c       = Compile.Of_aggregated.compile_expression ~raise app_aggregated in
       let michelson        = Compile.Of_mini_c.compile_expression ~raise ~options app_mini_c in
       let options          = Run.make_dry_run_options ~raise {now ; amount ; balance ; sender ; source ; parameter_ty = None} in

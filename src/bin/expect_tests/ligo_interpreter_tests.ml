@@ -588,6 +588,19 @@ let%expect_test _ =
              NIL operation ;
              PAIR } } , 230). |}]
 
+let%expect_test _ =
+  run_ligo_good [ "run"; "test" ; test "test_read_contract.mligo" ] ;
+  [%expect {|
+    KT1CJbrhkpX9eeh88JvkC58rSXZvRxGq3RiV
+    Everything at the top-level was executed.
+    - test_foo exited with value (). |}]
+
+let%expect_test _ =
+  run_ligo_good [ "run"; "test" ; test "cli_arg.mligo" ; "--arg" ; "[ 1 ; 2 ; 3]" ] ;
+  [%expect {|
+    Everything at the top-level was executed.
+    - test_cli_arg exited with value [1 ; 2 ; 3]. |}]
+
 (* do not remove that :) *)
 let () = Sys.chdir pwd
 
@@ -829,6 +842,6 @@ let%expect_test _ =
   run_ligo_good [ "run"; "test" ; "originate_contract/test.mligo" ; "--project-root" ; "originate_contract" ; "--no-warn" ] ;
   [%expect{|
     Everything at the top-level was executed.
-    - test exited with value KT1BxaPaFE2YDn8Toh2u2SJ18P6zf24oqbzZ(None). |}]
+    - test exited with value KT1Xf7ZrYPUKgHXMnXW5M6qeHkk5ijPsXpAk(None). |}]
 
 let () = Sys.chdir pwd

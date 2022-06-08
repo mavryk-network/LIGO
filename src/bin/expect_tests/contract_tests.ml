@@ -10,19 +10,19 @@ let () = Unix.putenv ~key:"TERM" ~data:"dumb"
 let%expect_test _ =
   run_ligo_good [ "info" ; "measure-contract" ; contract "coase.ligo" ] ;
   [%expect{|
-    1175 bytes |}] ;
+    1171 bytes |}] ;
 
   run_ligo_good [ "info" ; "measure-contract" ; contract "multisig.ligo" ] ;
   [%expect{|
-    583 bytes |}] ;
+    575 bytes |}] ;
 
   run_ligo_good [ "info" ; "measure-contract" ; contract "multisig-v2.ligo" ] ;
   [%expect{|
-    1653 bytes |}] ;
+    1633 bytes |}] ;
 
   run_ligo_good [ "info" ; "measure-contract" ; contract "vote.mligo" ] ;
   [%expect{|
-    430 bytes |}] ;
+    420 bytes |}] ;
 
   run_ligo_good [ "compile" ; "parameter" ; contract "coase.ligo" ; "Buy_single (record [ card_to_buy = 1n ])" ] ;
   [%expect{|
@@ -183,8 +183,7 @@ let%expect_test _ =
                      SWAP ;
                      CAR ;
                      PAIR ;
-                     NIL operation ;
-                     PAIR }
+                     NIL operation }
                    { SWAP ;
                      DUP ;
                      DUG 2 ;
@@ -270,8 +269,7 @@ let%expect_test _ =
                      PAIR ;
                      NIL operation ;
                      DIG 2 ;
-                     CONS ;
-                     PAIR } }
+                     CONS } }
                { SWAP ;
                  DUP ;
                  DUG 2 ;
@@ -308,8 +306,8 @@ let%expect_test _ =
                  CAR ;
                  PAIR ;
                  PAIR ;
-                 NIL operation ;
-                 PAIR } } } |} ]
+                 NIL operation } ;
+             PAIR } } |} ]
 
 let%expect_test _ =
   run_ligo_good [ "compile" ; "contract" ; contract "multisig.ligo" ] ;
@@ -371,10 +369,13 @@ let%expect_test _ =
                                   CDR ;
                                   DIG 2 ;
                                   CHECK_SIGNATURE ;
-                                  IF { PUSH nat 1 ; DIG 2 ; ADD ; UNIT ; SWAP ; DIG 2 ; PAIR ; PAIR }
+                                  IF { PUSH nat 1 ; DIG 2 ; ADD ; UNIT ; SWAP }
                                      { PUSH string "Invalid signature" ; FAILWITH } }
-                                { DIG 3 ; DROP 2 ; UNIT ; DUG 2 ; PAIR ; PAIR } }
-                           { DIG 2 ; DROP ; UNIT ; DUG 2 ; PAIR ; PAIR } } ;
+                                { DIG 3 ; DROP 2 ; UNIT ; DIG 2 } }
+                           { DIG 2 ; DROP ; UNIT ; DIG 2 } ;
+                         DIG 2 ;
+                         PAIR ;
+                         PAIR } ;
                   SWAP ;
                   DROP ;
                   CAR ;
@@ -401,9 +402,9 @@ let%expect_test _ =
                        PAIR ;
                        PAIR ;
                        UNIT ;
-                       SWAP ;
-                       PAIR } } ;
-             CAR ;
+                       SWAP } } ;
+             SWAP ;
+             DROP ;
              UNIT ;
              DIG 2 ;
              SWAP ;
@@ -424,7 +425,7 @@ let%expect_test _ =
       code { UNPAIR ;
              IF_LEFT
                { IF_LEFT
-                   { DROP ; NIL operation ; PAIR }
+                   { DROP ; NIL operation }
                    { SWAP ;
                      DUP ;
                      DUG 2 ;
@@ -493,13 +494,11 @@ let%expect_test _ =
                          SWAP ;
                          UPDATE ;
                          UNIT ;
-                         DUG 2 ;
-                         PAIR ;
-                         PAIR }
+                         DUG 2 }
                        { DUP ;
                          SENDER ;
                          MEM ;
-                         IF { UNIT ; DIG 4 ; PAIR }
+                         IF { UNIT ; DIG 4 }
                             { DUP 4 ;
                               CDR ;
                               CDR ;
@@ -531,9 +530,9 @@ let%expect_test _ =
                               CAR ;
                               PAIR ;
                               UNIT ;
-                              SWAP ;
-                              PAIR } ;
-                         CAR ;
+                              SWAP } ;
+                         SWAP ;
+                         DROP ;
                          SWAP ;
                          SENDER ;
                          PAIR ;
@@ -542,10 +541,10 @@ let%expect_test _ =
                          UNPAIR ;
                          PUSH bool True ;
                          SWAP ;
-                         UPDATE ;
-                         PAIR ;
-                         PAIR } ;
-                     CAR ;
+                         UPDATE } ;
+                     PAIR ;
+                     SWAP ;
+                     DROP ;
                      UNPAIR ;
                      SWAP ;
                      DUP ;
@@ -672,11 +671,11 @@ let%expect_test _ =
                                       CAR ;
                                       PAIR ;
                                       UNIT ;
-                                      SWAP ;
-                                      DIG 2 ;
-                                      PAIR ;
-                                      PAIR }
-                                    { DROP 2 ; UNIT ; DUG 2 ; PAIR ; PAIR } } ;
+                                      SWAP }
+                                    { DROP 2 ; UNIT ; DIG 2 } ;
+                                 DIG 2 ;
+                                 PAIR ;
+                                 PAIR } ;
                           SWAP ;
                           DROP }
                         { DIG 3 ;
@@ -707,7 +706,8 @@ let%expect_test _ =
                           NIL operation ;
                           PAIR ;
                           PAIR } ;
-                     CAR } }
+                     CAR ;
+                     UNPAIR } }
                { PACK ;
                  SWAP ;
                  DUP ;
@@ -720,7 +720,7 @@ let%expect_test _ =
                  DUG 2 ;
                  GET ;
                  IF_NONE
-                   { DROP ; UNIT ; SWAP ; PAIR }
+                   { DROP ; UNIT ; SWAP }
                    { DUP ;
                      SENDER ;
                      PUSH bool False ;
@@ -764,10 +764,10 @@ let%expect_test _ =
                           CAR ;
                           PAIR ;
                           UNIT ;
-                          SWAP ;
-                          PAIR }
-                        { UNIT ; DIG 3 ; PAIR } ;
-                     CAR ;
+                          SWAP }
+                        { UNIT ; DIG 3 } ;
+                     SWAP ;
+                     DROP ;
                      PUSH nat 0 ;
                      DUP 3 ;
                      SIZE ;
@@ -795,10 +795,7 @@ let%expect_test _ =
                           PAIR ;
                           DIG 3 ;
                           CAR ;
-                          CAR ;
-                          PAIR ;
-                          PAIR ;
-                          PAIR }
+                          CAR }
                         { UNIT ;
                           SWAP ;
                           DUP ;
@@ -821,13 +818,13 @@ let%expect_test _ =
                           PAIR ;
                           DIG 3 ;
                           CAR ;
-                          CAR ;
-                          PAIR ;
-                          PAIR ;
-                          PAIR } } ;
-                 CAR ;
-                 NIL operation ;
-                 PAIR } } } |} ]
+                          CAR } ;
+                     PAIR ;
+                     PAIR } ;
+                 SWAP ;
+                 DROP ;
+                 NIL operation } ;
+             PAIR } } |} ]
 
 let%expect_test _ =
   run_ligo_good [ "compile" ; "contract" ; contract "vote.mligo" ] ;
@@ -859,9 +856,6 @@ let%expect_test _ =
              CAR ;
              CAR ;
              PAIR ;
-             PAIR ;
-             PAIR ;
-             NIL operation ;
              PAIR }
            { SENDER ;
              SWAP ;
@@ -885,7 +879,6 @@ let%expect_test _ =
                  CAR ;
                  CAR ;
                  PAIR ;
-                 PAIR ;
                  PAIR }
                { DROP ;
                  PUSH nat 1 ;
@@ -898,8 +891,8 @@ let%expect_test _ =
                  CAR ;
                  PAIR ;
                  DIG 2 ;
-                 CAR ;
-                 PAIR } ;
+                 CAR } ;
+             PAIR ;
              DUP ;
              CDR ;
              CDR ;
@@ -914,10 +907,10 @@ let%expect_test _ =
              UPDATE ;
              PAIR ;
              SWAP ;
-             CAR ;
-             PAIR ;
-             NIL operation ;
-             PAIR } } } |}]
+             CAR } ;
+         PAIR ;
+         NIL operation ;
+         PAIR } } |}]
 
 let%expect_test _ =
   run_ligo_good [ "compile" ; "contract" ; contract "ticket_wallet.mligo" ] ;
@@ -1037,8 +1030,7 @@ Hint: replace it by "_ticket" to prevent this warning.
              COMPARE ;
              EQ ;
              IF {} { PUSH string "failed assertion" ; FAILWITH } ;
-             NIL operation ;
-             PAIR }
+             NIL operation }
            { SWAP ;
              DUP ;
              DUG 2 ;
@@ -1058,8 +1050,8 @@ Hint: replace it by "_ticket" to prevent this warning.
              SWAP ;
              NIL operation ;
              DIG 2 ;
-             CONS ;
-             PAIR } } } |} ]
+             CONS } ;
+         PAIR } } |} ]
 
 let%expect_test _ =
     run_ligo_good [ "compile" ; "contract" ; contract "implicit.mligo" ] ;
@@ -1967,16 +1959,10 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_good [ "compile" ; "contract" ; contract "never.jsligo" ] ;
   [%expect {|
-    File "../../test/contracts/never.jsligo", line 8, character 0 to line 15, character 1:
+    File "../../test/contracts/never.jsligo", line 8, characters 4-8:
       7 |
       8 | let main = ([action, store] : [parameter, storage]) : [list<operation>, storage] => {
       9 |   return [
-     10 |    (list([]) as list <operation>),
-     11 |    (match (action, {
-     12 |     Increment: (n : int) => store + n,
-     13 |     Extend: (k : never) => (Tezos.never(k) as storage)}))
-     14 |   ]
-     15 | };
 
     Toplevel let declaration are silently change to const declaration.
 
@@ -2103,18 +2089,6 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_bad [ "compile" ; "contract" ; bad_contract "reuse_variable_name_top.jsligo" ] ;
   [%expect{|
-    File "../../test/contracts/negative/reuse_variable_name_top.jsligo", line 2, characters 0-14:
-      1 | let dog = 1;
-      2 | let dog = true;
-
-    Toplevel let declaration are silently change to const declaration.
-
-    File "../../test/contracts/negative/reuse_variable_name_top.jsligo", line 1, characters 0-11:
-      1 | let dog = 1;
-      2 | let dog = true;
-
-    Toplevel let declaration are silently change to const declaration.
-
     File "../../test/contracts/negative/reuse_variable_name_top.jsligo", line 2, characters 10-14:
       1 | let dog = 1;
       2 | let dog = true;
@@ -2124,15 +2098,6 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_bad [ "compile" ; "contract" ; bad_contract "reuse_variable_name_block.jsligo" ] ;
   [%expect{|
-    File "../../test/contracts/negative/reuse_variable_name_block.jsligo", line 1, character 0 to line 5, character 1:
-      1 | let foo = (): int => {
-      2 |     let x = 2;
-      3 |     let x = 2;
-      4 |     return x;
-      5 | }
-
-    Toplevel let declaration are silently change to const declaration.
-
     File "../../test/contracts/negative/reuse_variable_name_block.jsligo", line 3, characters 8-13:
       2 |     let x = 2;
       3 |     let x = 2;
@@ -2184,19 +2149,6 @@ let%expect_test _ =
       Type "foo" not found. |}];
   run_ligo_bad [ "compile" ; "contract" ; bad_contract "modules_export_const.jsligo" ] ;
     [%expect {|
-      File "../../test/contracts/negative/modules_export_const.jsligo", line 5, characters 0-15:
-        4 |
-        5 | let a = Bar.foo;
-
-      Toplevel let declaration are silently change to const declaration.
-
-      File "../../test/contracts/negative/modules_export_const.jsligo", line 2, characters 4-15:
-        1 | namespace Bar {
-        2 |     let foo = 2
-        3 | }
-
-      Toplevel let declaration are silently change to const declaration.
-
       File "../../test/contracts/negative/modules_export_const.jsligo", line 5, characters 8-15:
         4 |
         5 | let a = Bar.foo;
@@ -2204,13 +2156,6 @@ let%expect_test _ =
       Variable "foo" not found. |}];
   run_ligo_bad [ "compile" ; "contract" ; bad_contract "modules_export_namespace.jsligo" ] ;
     [%expect {|
-      File "../../test/contracts/negative/modules_export_namespace.jsligo", line 3, characters 8-17:
-        2 |     namespace Foo {
-        3 |         let a = 2;
-        4 |     }
-
-      Toplevel let declaration are silently change to const declaration.
-
       File "../../test/contracts/negative/modules_export_namespace.jsligo", line 7, characters 17-20:
         6 |
         7 | import Foo = Bar.Foo
@@ -2645,6 +2590,53 @@ let%expect_test _ =
          NIL operation ;
          PAIR } } |}]
 
+let%expect_test _ =
+  run_ligo_good [ "compile" ; "contract" ; contract "michelson_typed_opt.mligo" ; "-e" ; "main2" ; "--enable-michelson-typed-opt" ] ;
+  [%expect{|
+    { parameter (or (pair %one (nat %x) (int %y)) (pair %two (nat %x) (int %y))) ;
+      storage nat ;
+      code { CAR ; IF_LEFT {} {} ; CAR ; NIL operation ; PAIR } }  |}]
+
+let%expect_test _ =
+  run_ligo_good [ "compile" ; "contract" ; contract "michelson_typed_opt.mligo" ; "-e" ; "main3" ; "--enable-michelson-typed-opt" ] ;
+  [%expect{|
+    { parameter (or (pair %onee (nat %x) (int %y)) (pair %three (nat %x) (int %z))) ;
+      storage nat ;
+      code { CAR ; IF_LEFT {} {} ; CAR ; NIL operation ; PAIR } }
+           |}]
+
+let%expect_test _ =
+  run_ligo_good [ "compile" ; "contract" ; contract "michelson_typed_opt.mligo" ; "-e" ; "main4" ; "--enable-michelson-typed-opt" ] ;
+  [%expect{|
+    { parameter (or (pair %four (nat %x) (timestamp %y)) (pair %oneee (nat %x) (int %y))) ;
+      storage nat ;
+      code { CAR ; IF_LEFT { CAR } { CAR } ; NIL operation ; PAIR } }
+           |}]
+
+let%expect_test _ =
+  run_ligo_good [ "compile" ; "contract" ; contract "michelson_typed_opt.mligo" ; "-e" ; "main2" ] ;
+  [%expect{|
+    { parameter (or (pair %one (nat %x) (int %y)) (pair %two (nat %x) (int %y))) ;
+      storage nat ;
+      code { CAR ; IF_LEFT { CAR } { CAR } ; NIL operation ; PAIR } }
+           |}]
+
+let%expect_test _ =
+  run_ligo_good [ "compile" ; "contract" ; contract "michelson_typed_opt.mligo" ; "-e" ; "main3" ] ;
+  [%expect{|
+    { parameter (or (pair %onee (nat %x) (int %y)) (pair %three (nat %x) (int %z))) ;
+      storage nat ;
+      code { CAR ; IF_LEFT { CAR } { CAR } ; NIL operation ; PAIR } }
+           |}]
+
+let%expect_test _ =
+  run_ligo_good [ "compile" ; "contract" ; contract "michelson_typed_opt.mligo" ; "-e" ; "main4" ] ;
+  [%expect{|
+    { parameter (or (pair %four (nat %x) (timestamp %y)) (pair %oneee (nat %x) (int %y))) ;
+      storage nat ;
+      code { CAR ; IF_LEFT { CAR } { CAR } ; NIL operation ; PAIR } }
+           |}]
+
 (* check get contract with error typing *)
 let%expect_test _ =
   run_ligo_good [ "compile" ; "expression" ; "pascaligo" ; "cbo" ; "--init-file" ; contract "get_contract_with_error.ligo" ] ;
@@ -2678,23 +2670,23 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_good [ "compile" ; "expression" ; "jsligo" ; "y" ; "--init-file" ; contract "extend_builtin.jsligo" ] ;
   [%expect{|
-File "../../test/contracts/extend_builtin.jsligo", line 6, characters 0-24:
-  5 |
-  6 | let y = Tezos.f(Tezos.x);
+File "../../test/contracts/extend_builtin.jsligo", line 2, characters 13-14:
+  1 | namespace Tezos {
+  2 |   export let x = 42;
+  3 |   export let f = (x  : int) : int => x + 2;
 
 Toplevel let declaration are silently change to const declaration.
 
-File "../../test/contracts/extend_builtin.jsligo", line 3, characters 9-42:
+File "../../test/contracts/extend_builtin.jsligo", line 3, characters 13-14:
   2 |   export let x = 42;
   3 |   export let f = (x  : int) : int => x + 2;
   4 | }
 
 Toplevel let declaration are silently change to const declaration.
 
-File "../../test/contracts/extend_builtin.jsligo", line 2, characters 9-19:
-  1 | namespace Tezos {
-  2 |   export let x = 42;
-  3 |   export let f = (x  : int) : int => x + 2;
+File "../../test/contracts/extend_builtin.jsligo", line 6, characters 4-5:
+  5 |
+  6 | let y = Tezos.f(Tezos.x);
 
 Toplevel let declaration are silently change to const declaration.
 
