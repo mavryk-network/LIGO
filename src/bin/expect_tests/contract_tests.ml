@@ -10,11 +10,11 @@ let () = Unix.putenv ~key:"TERM" ~data:"dumb"
 let%expect_test _ =
   run_ligo_good [ "info" ; "measure-contract" ; contract "coase.ligo" ] ;
   [%expect{|
-    1143 bytes |}] ;
+    1159 bytes |}] ;
 
   run_ligo_good [ "info" ; "measure-contract" ; contract "multisig.ligo" ] ;
   [%expect{|
-    567 bytes |}] ;
+    575 bytes |}] ;
 
   run_ligo_good [ "info" ; "measure-contract" ; contract "multisig-v2.ligo" ] ;
   [%expect{|
@@ -111,17 +111,31 @@ let%expect_test _ =
                      DUG 2 ;
                      GET ;
                      IF_NONE { PUSH string "buy_single: No card pattern." ; FAILWITH } {} ;
-                     AMOUNT ;
                      PUSH nat 1 ;
-                     DUP 3 ;
+                     SWAP ;
+                     DUP ;
+                     DUG 2 ;
                      CDR ;
                      ADD ;
-                     DUP 3 ;
+                     SWAP ;
+                     DUP ;
+                     DUG 2 ;
                      CAR ;
                      MUL ;
+                     AMOUNT ;
+                     SWAP ;
                      COMPARE ;
                      GT ;
                      IF { PUSH string "Not enough money" ; FAILWITH } {} ;
+                     PUSH nat 1 ;
+                     SWAP ;
+                     DUP ;
+                     DUG 2 ;
+                     CDR ;
+                     ADD ;
+                     SWAP ;
+                     CAR ;
+                     PAIR ;
                      DUP 3 ;
                      CDR ;
                      DUP 4 ;
@@ -130,13 +144,7 @@ let%expect_test _ =
                      DIG 4 ;
                      CAR ;
                      CAR ;
-                     PUSH nat 1 ;
-                     DUP 5 ;
-                     CDR ;
-                     ADD ;
-                     DIG 4 ;
-                     CAR ;
-                     PAIR ;
+                     DIG 3 ;
                      DUP 5 ;
                      SWAP ;
                      SOME ;
@@ -230,12 +238,13 @@ let%expect_test _ =
                      UPDATE ;
                      PAIR ;
                      PAIR ;
+                     SWAP ;
+                     UNPAIR ;
+                     MUL ;
                      SENDER ;
                      CONTRACT unit ;
                      IF_NONE { PUSH string "sell_single: No contract." ; FAILWITH } {} ;
-                     DIG 2 ;
-                     UNPAIR ;
-                     MUL ;
+                     SWAP ;
                      UNIT ;
                      TRANSFER_TOKENS ;
                      SWAP ;
@@ -356,7 +365,7 @@ let%expect_test _ =
                                   CDR ;
                                   DIG 2 ;
                                   CHECK_SIGNATURE ;
-                                  IF { UNIT ; PUSH nat 1 ; DIG 3 ; ADD }
+                                  IF { PUSH nat 1 ; DIG 2 ; ADD ; UNIT ; SWAP }
                                      { PUSH string "Invalid signature" ; FAILWITH } }
                                 { DIG 3 ; DROP 2 ; UNIT ; DIG 2 } }
                            { DIG 2 ; DROP ; UNIT ; DIG 2 } ;
@@ -374,19 +383,22 @@ let%expect_test _ =
                   COMPARE ;
                   LT ;
                   IF { PUSH string "Not enough signatures passed the check" ; FAILWITH }
-                     { UNIT ;
-                       DUP 3 ;
+                     { SWAP ;
+                       DUP ;
+                       DUG 2 ;
                        CDR ;
                        PUSH nat 1 ;
-                       DUP 5 ;
+                       DUP 4 ;
                        CAR ;
                        CDR ;
                        ADD ;
-                       DIG 4 ;
+                       DIG 3 ;
                        CAR ;
                        CAR ;
                        PAIR ;
-                       PAIR } } ;
+                       PAIR ;
+                       UNIT ;
+                       SWAP } } ;
              SWAP ;
              DROP ;
              UNIT ;

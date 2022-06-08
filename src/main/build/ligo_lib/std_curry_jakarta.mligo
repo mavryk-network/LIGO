@@ -57,8 +57,8 @@ module Bitwise = struct
   let _remove_and (type a b) (l : a) (r : b) : (a, b) external_and = [%Michelson ({| { UNPAIR ; AND } |} : a * b -> (a, b) external_and)] (l, r)
   let _remove_or (type a b) (l : a) (r : b) : (a, b) external_or = [%Michelson ({| { UNPAIR ; OR } |} : a * b -> (a, b) external_or)] (l, r)
   let xor (type a b) (l : a) (r : b) : (a, b) external_xor = [%Michelson ({| { UNPAIR ; XOR } |} : a * b -> (a, b) external_xor)] (l, r)
-  let shift_left (l : nat) (r : nat) : nat = [%Michelson ({| { UNPAIR ; LSL } |} : nat * nat -> nat)] (l, r)
-  let shift_right (l : nat) (r : nat) : nat = [%Michelson ({| { UNPAIR ; LSR } |} : nat * nat -> nat)] (l, r)
+  let shift_left (l : nat) (r : nat) : nat = [%external "LSL"] l r
+  let shift_right (l : nat) (r : nat) : nat = [%external "LSR"] l r
 end
 
 module Big_map = struct
@@ -203,9 +203,9 @@ end
 [@private]
   let _hash_xor (type a b) (l : a) (r : b) : (a, b) external_xor = [%external "XOR"] l r
 [@private]
-  let _hash_lsl (l : nat) (r : nat) : nat = [%Michelson ({| { UNPAIR ; LSL } |} : nat * nat -> nat)] (l, r)
+  let _hash_lsl (l : nat) (r : nat) : nat = [%external "LSL"] l r
 [@private]
-  let _hash_lsr (l : nat) (r : nat) : nat = [%Michelson ({| { UNPAIR ; LSR } |} : nat * nat -> nat)] (l, r)
+  let _hash_lsr (l : nat) (r : nat) : nat = [%external "LSR"] l r
 [@private]
   let _hash_bool_or (l : bool) (r : bool) : bool =
     let poly_or (type a b) ((l, r) : a * b) : (a, b) external_u_or = [%external "OR"] l r in

@@ -66,11 +66,14 @@ let%expect_test _ =
     { parameter unit ;
       storage int ;
       code { PUSH int 1 ;
-             SWAP ;
-             CDR ;
              PUSH int 42 ;
-             DUP 3 ;
+             SWAP ;
+             DUP ;
+             DUG 2 ;
              ADD ;
+             DIG 2 ;
+             CDR ;
+             SWAP ;
              DUG 2 ;
              ADD ;
              ADD ;
@@ -91,6 +94,16 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_good [ "print" ; "mini-c" ; contract "D.mligo" ] ;
   [%expect{|
+let #../../test/contracts/build/A.mligo#toto#444 = L(1) in
+let #../../test/contracts/build/B.mligo#titi#771 =
+  ADD(#../../test/contracts/build/A.mligo#toto#444 , L(42)) in
+let #../../test/contracts/build/C.mligo#tata#1750 =
+  ADD(#../../test/contracts/build/A.mligo#toto#444 ,
+      #../../test/contracts/build/B.mligo#titi#771) in
+let gen#8462 =
+  (ADD(L(3) , #../../test/contracts/build/A.mligo#toto#444), #../../test/contracts/build/B.mligo#titi#771) in
+let x = let (l, r) = gen#8462 in ADD(l , r) in
+let toto = ADD(L(10) , #../../test/contracts/build/A.mligo#toto#444) in
 L(unit) |}]
 
 let%expect_test _ =
@@ -98,11 +111,11 @@ let%expect_test _ =
   [%expect{|
     { parameter int ;
       storage int ;
-      code { UNPAIR ;
-             PUSH int 1 ;
+      code { PUSH int 1 ;
              PUSH int 10 ;
              ADD ;
-             DUG 2 ;
+             SWAP ;
+             UNPAIR ;
              ADD ;
              ADD ;
              NIL operation ;
@@ -131,12 +144,13 @@ let%expect_test _ =
     { parameter string ;
       storage int ;
       code { UNPAIR ;
+             PUSH int 1 ;
+             DIG 2 ;
+             ADD ;
              PUSH string "titi" ;
-             SWAP ;
+             DIG 2 ;
              CONCAT ;
              DROP ;
-             PUSH int 1 ;
-             ADD ;
              NIL operation ;
              PAIR } } |}]
 
