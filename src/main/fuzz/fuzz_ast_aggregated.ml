@@ -85,49 +85,47 @@ let buffer_of_mutation : mutation -> Buffer.t = fun (loc, _expr) ->
 
 (* Helpers for changing operators *)
 let map_constant cons_name arguments final_type_expression =
-  ignore arguments ; ignore final_type_expression ; [ cons_name ]
-  (* let possible_const =
-   *   match arguments with
-   *     [ _ ] ->
-   *      (\* let t1 = e1.type_expression in
-   *       * let t2 = final_type_expression in *\)
-   *      (\* TODO FIXME *\)
-   *      (\* if is_t_nat t1 && is_t_int t2 then
-   *       *   [C_NOT;C_NEG]
-   *       * else if is_t_int t1 && is_t_int t2 then
-   *       *   [C_NOT;C_NEG]
-   *       * else *\)
-   *        []
-   *   (\* | [ e1 ; e2 ] ->
-   *    *    let t1 = e1.type_expression in
-   *    *    let t2 = e2.type_expression in
-   *    *    let t3 = final_type_expression in
-   *    *    let compare = [C_EQ; C_NEQ; C_LT; C_GT; C_LE; C_GE] in
-   *    *    if is_t_nat t1 && is_t_nat t2 && is_t_nat t3 then
-   *    *      [C_ADD;C_MUL;C_DIV;C_OR; C_AND; C_XOR]
-   *    *    else if is_t_int t1 && is_t_int t2 && is_t_int t3 then
-   *    *      [C_ADD;C_MUL;C_DIV;C_SUB]
-   *    *    else if is_t_bool t1 && is_t_bool t2 && is_t_bool t3 then
-   *    *      [C_OR; C_AND; C_XOR]
-   *    *    else if is_t_mutez t1 && is_t_mutez t2 && is_t_mutez t3 then
-   *    *      [C_ADD;C_SUB]
-   *    * 
-   *    *    else if is_t_int t1 && is_t_nat t2 && is_t_int t3 then
-   *    *      [C_ADD;C_MUL;C_SUB]
-   *    *    else if is_t_nat t1 && is_t_int t2 && is_t_int t3 then
-   *    *      [C_ADD;C_MUL;C_SUB]
-   *    * 
-   *    *    else if Ast_aggregated.Helpers.type_expression_eq (t1, t2) && is_t_bool t3 then
-   *    *      compare
-   *    * 
-   *    *    else
-   *    *      [] *\)
-   *    | _ ->
-   *      [] in
-   * if List.mem possible_const cons_name ~equal:(fun c1 c2 -> Ast_aggregated.Compare.constant' c1 c2 = 0) then
-   *   possible_const
-   * else
-   *    [cons_name] *)
+  let possible_const =
+    match arguments with
+      [ e1 ] ->
+       let t1 = e1.type_expression in
+       let t2 = final_type_expression in
+       if is_t_nat t1 && is_t_int t2 then
+         [C_NOT;C_NEG]
+       else if is_t_int t1 && is_t_int t2 then
+         [C_NOT;C_NEG]
+       else
+         []
+    | [ e1 ; e2 ] ->
+       let t1 = e1.type_expression in
+       let t2 = e2.type_expression in
+       let t3 = final_type_expression in
+       let compare = [C_EQ; C_NEQ; C_LT; C_GT; C_LE; C_GE] in
+       if is_t_nat t1 && is_t_nat t2 && is_t_nat t3 then
+         [C_ADD;C_MUL;C_DIV;C_OR; C_AND; C_XOR]
+       else if is_t_int t1 && is_t_int t2 && is_t_int t3 then
+         [C_ADD;C_MUL;C_DIV;C_SUB]
+       else if is_t_bool t1 && is_t_bool t2 && is_t_bool t3 then
+         [C_OR; C_AND; C_XOR]
+       else if is_t_mutez t1 && is_t_mutez t2 && is_t_mutez t3 then
+         [C_ADD;C_SUB]
+
+       else if is_t_int t1 && is_t_nat t2 && is_t_int t3 then
+         [C_ADD;C_MUL;C_SUB]
+       else if is_t_nat t1 && is_t_int t2 && is_t_int t3 then
+         [C_ADD;C_MUL;C_SUB]
+
+       else if Ast_aggregated.Helpers.type_expression_eq (t1, t2) && is_t_bool t3 then
+         compare
+
+       else
+         []
+     | _ ->
+       [] in
+  if List.mem possible_const cons_name ~equal:(fun c1 c2 -> Ast_aggregated.Compare.constant' c1 c2 = 0) then
+    possible_const
+  else
+     [cons_name]
 
 (* Helpers for transforming literals *)
 
@@ -193,11 +191,9 @@ module Mutator = struct
     let mapper x =
         ({ const with cons_name = x }), true in
     let swapper cons_name arguments =
-      (* TODO FIXME *)
-      ignore arguments;
       match cons_name with
-      (* | C_CONCAT ->
-       *    [({cons_name;arguments=List.rev arguments}, true)] *)
+      | C_CONCAT ->
+         [({cons_name;arguments=List.rev arguments}, true)]
       | _ ->
          [] in
     [(const, false)] @ List.map ~f:mapper ops @ swapper cons_name arguments
