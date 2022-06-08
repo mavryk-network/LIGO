@@ -42,6 +42,8 @@ module Command = struct
     | Get_mod_res : unit -> ModRes.t option t
     | External_call : Location.t * Ligo_interpreter.Types.calltrace * LT.contract * (execution_trace, string) Tezos_micheline.Micheline.node * Z.t
       -> [`Exec_failed of Tezos_state.state_error | `Exec_ok of Z.t] t
+    | Run_contract : Location.t * Ligo_interpreter.Types.calltrace * LT.value * LT.value * LT.value * string option ->
+      Tezos_raw_protocol_013_PtJakart.Script_interpreter.execution_result t
     | State_error_to_value : Tezos_state.state_error -> LT.value t
     | Get_storage : Location.t * Ligo_interpreter.Types.calltrace * LT.value * Ast_aggregated.type_expression -> LT.value t
     | Get_storage_of_address : Location.t * Ligo_interpreter.Types.calltrace * LT.value -> LT.value t
@@ -90,6 +92,9 @@ module Command = struct
     = fun ~raise ~add_warning ~options command state _log ->
     let ctxt = state.tezos_context in
     match command with
+    | Run_contract (loc,calltrace,c,p,s,e_opt) ->
+      let res = Tezos_state.run_script ~raise ~calltrace ctxt e_opt c p s in
+      (res, ctxt)
     | Set_big_map (id, kv, bigmap_ty) ->
       let (k_ty, v_ty) = trace_option ~raise (Errors.generic_error bigmap_ty.location "Expected big_map type") @@
                            Ast_aggregated.get_t_big_map bigmap_ty in

@@ -198,6 +198,9 @@ let rec decompile_to_untyped_value ~raise ~bigmaps :
    *   let v' = decompile_to_mini_c ~raise ~bigmaps ty v in
    *   let amt' = decompile_to_mini_c ~raise ~bigmaps ty_nat amt in
    *   D_ticket (v', amt') *)
+  | Prim (_, "contract", [ty], _) , String (_,s) ->
+    let address = contract_of_string ~raise s in
+    V_Ct (C_contract ({address ; entrypoint = None }))
   | ty, v ->
     raise.raise (untranspilable ty v)
 

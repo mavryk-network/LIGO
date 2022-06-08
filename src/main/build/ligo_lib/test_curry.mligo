@@ -96,4 +96,6 @@ module Test = struct
     let c = size f in
     (a, f, c)
   let read_contract_from_file (fn : string) : michelson_contract = [%external "TEST_READ_CONTRACT_FROM_FILE"] fn
+  let run_contract (type p s) (c : p * s -> operation list * s) (p:p) (s:s) (ep_opt: string option) =
+    [%external "TEST_RUN_CONTRACT"] (compile_contract c) (eval p) (eval s) ep_opt
 end

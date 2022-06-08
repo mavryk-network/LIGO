@@ -600,3 +600,67 @@ let init_ctxt ~raise ?(loc=Location.generated) ?(calltrace=[]) ?(initial_balance
     { raw = init_raw_ctxt ; transduced ; internals }
   | _ ->
     raise.raise (bootstrap_not_enough loc)
+let pouet :
+
+    Tezos_raw_protocol.Alpha_context.t ->
+      ?step_constants:Tezos_raw_protocol.Script_typed_ir.step_constants ->
+      string ->
+      ?entrypoint:Tezos_raw_protocol.Entrypoint_repr.t ->
+      storage:string ->
+      parameter:string ->
+      unit ->
+      (Tezos_raw_protocol.Script_interpreter.execution_result *
+       Tezos_raw_protocol.Alpha_context.t, Tezos_error_monad.TzCore.error list)
+      result Lwt.t
+    = Tezos_alpha_test_helpers.Contract_helpers.run_script
+    
+let run_script ~raise ~calltrace :
+  context -> string option -> value -> value -> value -> Tezos_raw_protocol.Script_interpreter.execution_result =
+    fun ctxt entrypoint_opt contract storage parameter ->
+      let code_to_str code kind =
+        let loc = Location.generated in
+        match code with
+        | Some (x: unit Tezos_utils.Michelson.michelson) -> Format.asprintf "%a" Tezos_utils.Michelson.pp x
+        | None -> raise.raise (Errors.generic_error ~calltrace loc ("Expected "^kind))
+      in
+      (* let entrypoint = Option.map entrypoint_opt ~f:Tezos_raw_protocol.Entrypoint_repr.of_string_lax in *)
+      let entrypoint = Option.value_map entrypoint_opt
+        ~default:None
+        ~f:(fun x -> Tezos_raw_protocol.Entrypoint_repr.of_annot_lax_opt @@ Tezos_raw_protocol.Non_empty_string.of_string_exn x)
+      in
+      let contract = code_to_str (get_michelson_contract contract) "contract" in
+      let storage = code_to_str (Option.map (get_michelson_expr storage) ~f:(fun x -> x.code)) "expression" in
+      let parameter = code_to_str (Option.map (get_michelson_expr parameter) ~f:(fun x -> x.code)) "expression" in
+      let (alpha_context,_,_) =
+          let open Tezos_raw_protocol in
+          Trace.trace_alpha_tzresult_lwt ~raise (fun _ -> corner_case ()) @@
+            Alpha_context.prepare
+              ~level:ctxt.raw.header.shell.level
+              ~predecessor_timestamp:ctxt.raw.header.shell.timestamp
+              ~timestamp:(get_timestamp ctxt)
+              ctxt.raw.context
+      in
+      let step_constants =
+        let default_step_constants = Tezos_alpha_test_helpers.Contract_helpers.default_step_constants in
+        default_step_constants
+      in
+      let loc = Location.generated in
+      let (res,_) = Trace.trace_tzresult_lwt ~raise (throw_obj_exc loc calltrace) @@
+        Tezos_alpha_test_helpers.Contract_helpers.run_script alpha_context ~step_constants contract ?entrypoint ~storage ~parameter ()
+      in
+      res
+
+
+  (* ype step_constants =
+  Tezos_raw_protocol.Script_typed_ir.step_constants = {
+  source : mcontract;
+  payer : mcontract;
+  self : mcontract;
+  amount : Tez.t;
+  balance : Tez.t;
+  chain_id : Crypto.Chain_id.t;
+  now : Timestamp.t;
+  level :
+    Tezos_raw_protocol.Script_int_repr.n
+    Tezos_raw_protocol.Script_int_repr.num;
+} *)

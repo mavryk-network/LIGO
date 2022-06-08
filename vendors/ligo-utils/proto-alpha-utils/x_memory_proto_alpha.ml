@@ -96,7 +96,7 @@ let parse_michelson_fail (type aft aftr)
   parse_instr
     ?type_logger
     top_level tezos_context
-    michelson bef ~legacy:false) >>=?? fun (j, _) ->
+    michelson bef ~legacy:true) >>=?? fun (j, _) ->
   match j with
   | Typed descr -> (
     Lwt.return (

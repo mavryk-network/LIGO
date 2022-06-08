@@ -848,6 +848,11 @@ let rec apply_operator ~raise ~add_warning ~steps ~(options : Compiler_options.t
       let>> contract = Read_contract_from_file (loc, calltrace, fn) in
       return @@ contract
     | ( C_TEST_READ_CONTRACT_FROM_FILE , _ ) -> fail @@ error_type
+    | ( C_TEST_RUN_CONTRACT , [ contract ; parameter ; storage ; entrypoint_opt] ) ->
+      let entrypoint_opt = trace_option ~raise error_type @@ LC.get_string_option entrypoint_opt in
+      let>> x = Run_contract (loc,calltrace,contract,parameter,storage,entrypoint_opt) in
+      failwith "wait"
+    | ( C_TEST_RUN_CONTRACT , _ ) -> fail @@ error_type
     | ( (C_SAPLING_VERIFY_UPDATE | C_SAPLING_EMPTY_STATE) , _ ) ->
       fail @@ Errors.generic_error loc "Sapling is not supported."
     | ( (C_SELF | C_SELF_ADDRESS) , _ ) ->
