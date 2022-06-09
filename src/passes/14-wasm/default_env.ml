@@ -23,6 +23,8 @@ let name s =
   try W.Utf8.decode s with W.Utf8.Utf8 ->
     failwith "invalid UTF-8 encoding"
 
+let interop_env = Interop.env.it
+
 let env: module_ = {
   it = {
     empty_module with
@@ -70,7 +72,7 @@ let env: module_ = {
         at
       }
     ]; *)
-    data = [
+    data = interop_env.data @ [
       {
         it = {
           index = {it = 0l; at};
@@ -127,7 +129,7 @@ let env: module_ = {
         at
       }
     ]; 
-    types = [
+    types = interop_env.types @ [
       (* {
         it = {
           tname = "__load_type";
@@ -269,7 +271,7 @@ let env: module_ = {
         at 
       }       *)
     ];
-    imports = [
+    imports = interop_env.imports @ [
       (* {
         it = {
           module_name = name "env";
@@ -504,7 +506,7 @@ let env: module_ = {
       
       (* TODO: Missing logarithmic functions, need to add those. *)
     ];
-    symbols = [
+    symbols = interop_env.symbols @ [
       {
         it = {
           name    = "C_SET_EMPTY";

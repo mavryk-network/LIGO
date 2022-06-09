@@ -1,4 +1,6 @@
 
+use ligo_runtime_macros::*;
+
 use core::mem;
 use core::mem::ManuallyDrop;
 use core::mem::size_of;
@@ -13,7 +15,7 @@ extern crate alloc;
 use alloc::boxed::Box;
 use alloc::vec::Vec;
 
-#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
 #[repr(C)]
 pub struct Wrapped<T> {
   pub data: *mut T
@@ -33,7 +35,7 @@ impl<'de, T:Sup<'de> + Serialize> Serialize for Wrapped<T> {
     }
 }
 
-#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
 #[repr(C)]
 pub struct String {
   data: *mut u8,
@@ -125,15 +127,16 @@ impl<T> Unwrap<T> for Wrapped<T> {
   }
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Copy, Clone, Serialize, Deserialize, Debug, PartialEq, Eq, PartialOrd, Ord)]
 #[repr(C)]
 pub enum Option<T> {
   None,
   Some(T),
 }
 
-#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
 #[repr(C)]
+#[datatype_helper]
 pub struct BigIntWrap {
   data:     *mut u8,
   len:      usize,
@@ -336,7 +339,7 @@ impl MemoryLayout for Wrapped<DataType> {
 /**
  * These are the datatypes used by code generated from the smart contract.
  */
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Copy, Clone, Serialize, Deserialize, Debug, PartialEq, Eq, PartialOrd, Ord)]
 #[repr(C)]
 pub enum DataType {
   Int(Wrapped<BigIntWrap>), 
@@ -361,35 +364,35 @@ pub enum DataType {
  * 
  * 
  */
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Copy, Clone, Serialize, Deserialize, Debug, PartialEq, Eq, PartialOrd, Ord)]
 #[repr(C)]
 pub struct Node {
   pub value: Wrapped<DataType>,
   pub next: Option<Wrapped<Node>>
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Copy, Clone, Serialize, Deserialize, Debug, PartialEq, Eq, PartialOrd, Ord)]
 #[repr(C)]
 pub enum Operation {
   Transaction(Transaction), 
   Delegate(Delegate)
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Copy, Clone, Serialize, Deserialize, Debug, PartialEq, Eq, PartialOrd, Ord)]
 #[repr(C)]
 pub struct OperationNode {
   pub value: Wrapped<Operation>,
   pub next: Option<Wrapped<OperationNode>>
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Copy, Clone, Serialize, Deserialize, Debug, PartialEq, Eq, PartialOrd, Ord)]
 #[repr(C)]
 pub enum Color {
   Red,
   Black
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Copy, Clone, Serialize, Deserialize, Debug, PartialEq, Eq, PartialOrd, Ord)]
 #[repr(C)]
 pub struct RBNode {
   pub parent: Option<Wrapped<RBNode>>,
@@ -400,7 +403,7 @@ pub struct RBNode {
   pub color:  Color
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Copy, Clone, Serialize, Deserialize, Debug, PartialEq, Eq, PartialOrd, Ord)]
 #[repr(C)]
 pub struct Transaction {
   pub action: DataType,
@@ -408,8 +411,12 @@ pub struct Transaction {
   pub contract: BigIntWrap
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Copy, Clone, Serialize, Deserialize, Debug, PartialEq, Eq, PartialOrd, Ord)]
 #[repr(C)]
 pub struct Delegate {
   pub delegate: Option<DataType>,
 }
+
+// This is a hack, and should ideally completely be removed.
+#[produce_datatype_file]
+fn todo_find_something_better() {}

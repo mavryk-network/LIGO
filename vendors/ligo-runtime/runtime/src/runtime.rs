@@ -1,15 +1,20 @@
-#![warn(missing_docs)]
 // #![no_std]
+
+#![warn(missing_docs)]
 
 /**
  * The LIGO runtime for WASM.
  */
+use quote::quote;
 
 use wasi::{Ciovec, Errno, fd_write, Size};
 
-use core::mem;
-
 use num_bigint::BigInt;
+
+use ligo_runtime_macros::*;
+
+mod stdlib;
+use stdlib::*;
 
 mod datatype;
 use datatype::*;
@@ -71,7 +76,7 @@ pub extern "C" fn store(er: &DataType) {
 
 
 extern "C" {
-  pub fn entrypoint (er: Wrapped<DataType>) -> Wrapped<DataType>;
+  pub fn entrypoint (er: &Wrapped<DataType>) -> Wrapped<DataType>;
 }
 
 
@@ -80,8 +85,11 @@ extern "C" {
 //
 // #[no_mangle]
 // pub extern "C" fn entrypoint (er: Wrapped<DataType>) -> Wrapped<DataType> {
+  
+
 //   let operations:DataType = DataType::Operations(Option::None);
 //   let b = BigInt::from(9313312u32) * BigInt::from(9313312u32)* BigInt::from(9313312u32)* BigInt::from(9313312u32)* BigInt::from(9313312u32);
+//   int_neg(&to_wrap(&b));
 //   let storage:DataType = DataType::Int(to_wrap(&b).wrap());
 //   let result = DataType::Tuple(
 //     Node {
@@ -95,16 +103,56 @@ extern "C" {
 //   result
 // }
 
-use crate::mem::size_of;
-
 #[no_mangle]
 pub extern "C" fn _start () {
-  // let ep = load();
-  let ep = DataType::Bool(false);
-  let wrapped_ep = ep.wrap();
-  let er: Wrapped<DataType> = unsafe { entrypoint(wrapped_ep) };
-  er.print();
-  let er: &DataType = er.unwrap();
+  let ep = load();
+  ep.print();
+  // let ep = DataType::Bool(false);
   
-  store(er);
+  match &ep {
+    DataType::Tuple (node) => {
+      let node:&Node = node.unwrap();
+      if let Option::Some(d) = &node.next {
+        // let d = &d.unwrap().value;
+        let d = d.unwrap();
+        // let d = &d.value;
+        println!("Yes: {:?}", d);
+        /*
+        let result = DataType::Tuple(
+//     Node {
+//       value: operations.wrap(),
+//       next: Option::Some(Node {
+//           value: storage.wrap(),
+//           next: Option::None 
+//       }.wrap())
+//     }.wrap()
+//   ).wrap();
+//   result
+        */
+
+        let x = DataType::Tuple (
+          Node {
+            value: d.value,
+            next: Option::Some ( Node {
+              value: d.value,
+              next: Option::None
+            }.wrap())
+          }.wrap()
+        );
+        println!("Yes 2: {:?}", x);
+        let er: Wrapped<DataType> = unsafe { entrypoint(&x.wrap()) };
+        er.print();
+        let er: &DataType = er.unwrap();
+        store(er);
+      } else {
+        println!("Nooooooooo")
+      }
+    },
+    _ => {
+      panic!("Not supported datatype in storage.")
+    }
+  }
+  // let wrapped_ep = ep.wrap();
+
+  
 }
