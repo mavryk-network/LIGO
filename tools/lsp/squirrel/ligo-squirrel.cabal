@@ -27,6 +27,7 @@ library
       AST.Includes
       AST.Parser
       AST.Parser.Camligo
+      AST.Parser.Jsligo
       AST.Parser.Pascaligo
       AST.Parser.Reasonligo
       AST.Pretty
@@ -103,6 +104,7 @@ library
       grammar/pascaligo/src
       grammar/reasonligo/src
       grammar/camligo/src
+      grammar/jsligo/src
   c-sources:
       grammar/pascaligo/src/parser.c
       grammar/pascaligo/src/scanner.c
@@ -110,6 +112,8 @@ library
       grammar/reasonligo/src/scanner.c
       grammar/camligo/src/parser.c
       grammar/camligo/src/scanner.c
+      grammar/jsligo/src/parser.c
+      grammar/jsligo/src/scanner.c
   build-depends:
       aeson
     , algebraic-graphs
@@ -117,11 +121,11 @@ library
     , bytestring
     , containers
     , data-default
-    , directory
     , dlist
     , duplo
     , fastsum
     , filepath
+    , free
     , ghc-prim
     , interpolate
     , katip
@@ -149,6 +153,11 @@ executable ligo-squirrel
       ASTMap
       Language.LSP.Util
       RIO
+      RIO.Diagnostic
+      RIO.Document
+      RIO.Indexing
+      RIO.Registration
+      RIO.Types
       Paths_ligo_squirrel
   hs-source-dirs:
       app/ligo-squirrel
@@ -199,19 +208,21 @@ executable ligo-squirrel
     , algebraic-graphs
     , base
     , clock
+    , co-log-core
     , containers
     , data-default
     , duplo
+    , filepath
     , focus
     , ghc-prim
     , hashable
-    , hslogger
     , interpolate
     , katip
     , lens
     , ligo-squirrel
     , lsp
     , mtl
+    , prettyprinter
     , stm
     , stm-containers
     , text
@@ -483,6 +494,7 @@ test-suite lsp-handlers-test
       Test.Capabilities.TypeDefinition
       Test.Common.LSP
       Test.DisabledFeatures
+      Test.Project.Driver
       Test.Common.Capabilities.CodeAction.ExtractTypeAlias
       Test.Common.Capabilities.Completion
       Test.Common.Capabilities.DocumentLink
@@ -548,6 +560,7 @@ test-suite lsp-handlers-test
   build-depends:
       HUnit
     , aeson
+    , algebraic-graphs
     , base
     , data-default
     , directory

@@ -85,11 +85,11 @@ let%expect_test _ =
       4 |
 
     Invalid type(s).
-    Expected: "list (string)", but got: "option ('a)". |} ] ;
+    Expected: "list (string)", but got: "toto". |} ] ;
 
   run_ligo_bad [ "compile" ; "contract" ; "../../test/contracts/negative/error_typer_3.mligo" ] ;
   [%expect {|
-    File "../../test/contracts/negative/error_typer_3.mligo", line 3, characters 36-44:
+    File "../../test/contracts/negative/error_typer_3.mligo", line 3, characters 34-53:
       2 |
       3 | let foo : (int * string * bool) = ((1, "foo") : toto)
       4 |
@@ -99,7 +99,7 @@ let%expect_test _ =
 
   run_ligo_bad [ "compile" ; "contract" ; "../../test/contracts/negative/error_typer_4.mligo" ] ;
   [%expect {|
-    File "../../test/contracts/negative/error_typer_4.mligo", line 4, characters 18-48:
+    File "../../test/contracts/negative/error_typer_4.mligo", line 4, characters 17-56:
       3 |
       4 | let foo : tata = ({a = 1 ; b = "foo" ; c = true} : toto)
       5 |
@@ -117,7 +117,7 @@ let%expect_test _ =
 
   run_ligo_bad [ "compile" ; "contract" ; "../../test/contracts/negative/error_typer_6.mligo" ] ;
   [%expect {|
-    File "../../test/contracts/negative/error_typer_6.mligo", line 1, characters 31-45:
+    File "../../test/contracts/negative/error_typer_6.mligo", line 1, characters 30-64:
       1 | let foo : (int, string) map = (Map.literal [] : (int, bool) map)
       2 | let main (p:int) (storage : int) =
 
@@ -147,65 +147,13 @@ let%expect_test _ =
 
   run_ligo_bad [ "compile" ; "contract" ; "../../test/contracts/negative/id.mligo" ] ;
   [%expect {|
-    File "../../test/contracts/negative/id.mligo", line 101, characters 27-33:
-    100 | let skip (p,s: unit * storage) =
-    101 |   let void: unit = assert (amount = storage.2.1) in
-    102 |   let identities, last_id, prices = storage in
-
-    Warning: constant amount is being deprecated soon. Consider using Tezos.amount instead.
-
-    File "../../test/contracts/negative/id.mligo", line 74, characters 64-70:
-     73 |       match current_id_details with
-     74 |       | Some id_details -> (sender = id_details.controller) || (sender = id_details.owner)
-     75 |       | None -> failwith ("No such ID " + id)
-
-    Warning: constant sender is being deprecated soon. Consider using Tezos.sender instead.
-
-    File "../../test/contracts/negative/id.mligo", line 74, characters 28-34:
-     73 |       match current_id_details with
-     74 |       | Some id_details -> (sender = id_details.controller) || (sender = id_details.owner)
-     75 |       | None -> failwith ("No such ID " + id)
-
-    Warning: constant sender is being deprecated soon. Consider using Tezos.sender instead.
-
-    File "../../test/contracts/negative/id.mligo", line 54, characters 7-13:
-     53 |   let is_allowed: bool =
-     54 |     if sender = current_id_details.owner
-     55 |     then true
-
-    Warning: constant sender is being deprecated soon. Consider using Tezos.sender instead.
-
-    File "../../test/contracts/negative/id.mligo", line 39, characters 12-18:
-     38 |   let new_id_details: id_details = {
-     39 |     owner = sender ;
-     40 |     controller = controller ;
-
-    Warning: constant sender is being deprecated soon. Consider using Tezos.sender instead.
-
-    File "../../test/contracts/negative/id.mligo", line 35, characters 14-20:
-     34 |     | Some addr -> addr
-     35 |     | None -> sender
-     36 |   in
-
-    Warning: constant sender is being deprecated soon. Consider using Tezos.sender instead.
-
-    File "../../test/contracts/negative/id.mligo", line 29, characters 27-33:
-     28 | let buy (parameter, storage: (bytes * address option) * storage) =
-     29 |   let void: unit = assert (amount = storage.2.0) in
-     30 |   let profile, initial_controller = parameter in
-
-    Warning: constant amount is being deprecated soon. Consider using Tezos.amount instead.
-
-    File "../../test/contracts/negative/id.mligo", line 45, characters 4-51:
+    File "../../test/contracts/negative/id.mligo", line 45, characters 4-18:
      44 |   let updated_identities: (id, id_details) big_map =
      45 |     Big_map.update new_id new_id_details identities
      46 |   in
 
-    Invalid arguments.
-    Expected an argument of type ('a, option ('b), map ('a ,
-    'b)) or ('a, option ('b), big_map ('a ,
-    'b)), but got an argument of type int, record[controller -> address , owner -> address , profile -> bytes], big_map (int ,
-    record[controller -> address , owner -> address , profile -> bytes]). |}]
+    Invalid type(s).
+    Expected: "option (v)", but got: "id_details". |}]
 
 (*
   This test is here to ensure compatibility with comparable pairs introduced in carthage
@@ -216,25 +164,6 @@ let%expect_test _ =
   run_ligo_good [ "run"; "interpret" ; "Set.literal [ (1,(2,3)) ; (2,(3,4)) ]" ; "--syntax"; "cameligo" ] ;
   [%expect {|
     SET_ADD(( 2 , ( 3 , 4 ) ) , SET_ADD(( 1 , ( 2 , 3 ) ) , SET_EMPTY())) |}]
-
-  (* 
-  run_ligo_bad [ "interpret" ; "Set.literal [ (1,2,3) ; (2,3,4) ]" ; "--syntax=cameligo" ] ;
-  [%expect {|
-    Error(s) occurred while parsing the Michelson input:
-    At (unshown) location 1, comparable type expected.Type
-                                                        pair (pair int int) int
-                                                      is not comparable. |}]
-  *)
-
-let%expect_test _ =
-  run_ligo_bad [ "compile" ; "contract" ; "../../test/contracts/negative/failwith_wrong_type.ligo" ] ;
-  [%expect {|
-    File "../../test/contracts/negative/failwith_wrong_type.ligo", line 2, characters 19-46:
-      1 |
-      2 | const bad : unit = failwith((nil : list(int)))
-
-    Invalid arguments.
-    Expected an argument of type (string) or (nat) or (int), but got an argument of type list (int). |}]
 
 let%expect_test _ =
   run_ligo_bad [ "compile" ; "contract" ; "../../test/contracts/negative/invalid_field_record_update.mligo" ] ;
@@ -252,8 +181,7 @@ let%expect_test _ =
       2 |
       3 | let main (x,y:bool * bool) = ([] : operation list), (None : option)
 
-    Invalid type(s).
-    Expected: "option", but got: "option ('a)". |} ]
+    Constructor "None" not found. |} ]
 
 let%expect_test _ =
   run_ligo_bad [ "compile" ; "contract" ; "../../test/contracts/negative/will_be_ignored.mligo" ] ;
@@ -263,12 +191,12 @@ let%expect_test _ =
       7 |       match (Tezos.get_contract_opt(s.owner) : contract option) with
       8 |         Some (contract) -> contract
 
-    Type takes the wrong number of arguments, expected: 1 got: 0 |}]
+    Type is applied to a wrong number of arguments, expected: 1 got: 0 |}]
 
 let%expect_test _ =
   run_ligo_bad [ "compile" ; "contract" ; "../../test/contracts/negative/error_contract_type_inference.mligo" ] ;
   [%expect {|
-      File "../../test/contracts/negative/error_contract_type_inference.mligo", line 8, characters 13-53:
+      File "../../test/contracts/negative/error_contract_type_inference.mligo", line 8, characters 12-69:
         7 |     Some contract -> contract
         8 |   | None -> (failwith "The entrypoint does not exist" : int contract)
         9 |

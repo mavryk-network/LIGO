@@ -20,13 +20,13 @@ block {
 
 function call_counter (const addr : address; const n : int) is
 block {
-  assert (Tezos.sender = Tezos.self_address);
+  assert (Tezos.get_sender() = Tezos.get_self_address());
   const callee_opt : option (contract (int)) = Tezos.get_contract_opt (addr);
   const callee =
-      case callee_opt of
-      |  Some (contract) -> contract
+      case callee_opt of [
+      | Some (contract) -> contract
       | None -> (failwith ("Could not find contract") : contract (int))
-      end
+      ]
 } with Tezos.transaction (n, 0mutez, callee)
 
 type parameter is
@@ -34,7 +34,7 @@ type parameter is
 | CreateAndCall
 
 function main (const param : parameter; const st : list (address)) is
-  case param of
+  case param of [
   | CreateAndCall -> create_and_call (st)
   | Callback (vs) -> (list [call_counter (vs)], st)
-  end
+  ]

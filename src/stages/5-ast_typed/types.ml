@@ -2,12 +2,6 @@
 
 include Stage_common.Types
 
-(* pseudo-typeclasses: interfaces that must be provided for arguments
-   of the givent polymmorphic types. For now, only one typeclass can
-   be specified for a given polymorphic type. The implementation is
-   provided by the Comparable module *)
-(*@ typeclass poly_unionfind comparable *)
-(*@ typeclass poly_set       comparable *)
 type ast_core_type_expression = Ast_core.type_expression
 
 type te_lmap = row_element label_map
@@ -19,7 +13,7 @@ and type_content =
   | T_sum      of rows
   | T_record   of rows
   | T_arrow    of ty_expr arrow
-  | T_module_accessor of ty_expr module_access
+  | T_module_accessor of type_variable module_access
   | T_singleton of literal
   | T_abstraction of ty_expr abstraction
   | T_for_all of ty_expr abstraction
@@ -44,9 +38,9 @@ and row_element = type_expression row_element_mini_c
 
 and type_expression = {
     type_content: type_content;
-    type_meta: type_meta;
-    orig_var: type_variable option ;
-    location: location;
+    type_meta: type_meta [@hash.ignore] ;
+    orig_var: type_variable option [@hash.ignore] ;
+    location: location [@hash.ignore] ;
   }
 and ty_expr = type_expression
 
@@ -67,7 +61,7 @@ and matching_content_variant = {
   }
 
 and matching_content_record = {
-  fields : (expression_variable * type_expression) label_map;
+  fields : (type_expression binder) label_map;
   body : expression;
   tv : type_expression;
 }
@@ -76,41 +70,17 @@ and matching_expr =
   | Match_variant of matching_content_variant
   | Match_record of matching_content_record
 
-and declaration_loc = declaration location_wrap
+and type_attribute = { public : bool ; hidden : bool }
+and module_attribute = type_attribute
 
-and module_ = declaration_loc list
-
-and program = module_
-
-and type_attribute = { public : bool }
-
-and module_attribute = { public : bool }
-
-and declaration_constant = {
-    binder : expression_variable ;
-    expr : expression ;
-    attr : known_attributes ;
-  }
-
-and declaration_type = {
-    type_binder : type_variable ;
-    type_expr   : type_expression ;
-    type_attr   : type_attribute
-  }
-
-and declaration_module = {
-    module_binder : module_variable ;
-    module_       : program ;
-    module_attr   : module_attribute
-  }
-
-and declaration' =
-  | Declaration_constant of declaration_constant
-  | Declaration_type of declaration_type
-  | Declaration_module of declaration_module
-  | Module_alias       of module_alias
-
-and declaration = declaration'
+and program              = module_
+and module_expr          = (expression , ty_expr , known_attributes , type_attribute , module_attribute) module_expr'
+and module_              = (expression , ty_expr , known_attributes , type_attribute , module_attribute) declarations'
+and declaration          = (expression , ty_expr , known_attributes , type_attribute , module_attribute) declaration'
+and declaration_content  = (expression , ty_expr , known_attributes , type_attribute , module_attribute) declaration_content'
+and declaration_module   = (expression , ty_expr , known_attributes , type_attribute , module_attribute) declaration_module'
+and declaration_constant = (expression , ty_expr , known_attributes) declaration_constant'
+and declaration_type     = (ty_expr , type_attribute) declaration_type'
 
 and expression = {
     expression_content: expression_content ;
@@ -137,9 +107,7 @@ and expression_content =
   | E_lambda of lambda
   | E_recursive of recursive
   | E_let_in of let_in
-  | E_type_in of (expr, ty_expr) type_in
   | E_mod_in of mod_in
-  | E_mod_alias of expr mod_alias
   | E_raw_code of raw_code
   | E_type_inst of type_inst
   | E_type_abstraction of expr type_abs
@@ -150,7 +118,8 @@ and expression_content =
   | E_record of expression_label_map
   | E_record_accessor of record_accessor
   | E_record_update   of record_update
-  | E_module_accessor of expression module_access
+  | E_module_accessor of expression_variable module_access
+  | E_assign   of (expr,ty_expr) assign
 
 and type_inst = {
     forall: expression ;
@@ -168,22 +137,18 @@ and application = {
   }
 
 and lambda =  {
-    binder: expression_variable ;
+    binder: ty_expr binder ;
     result: expression ;
   }
 
 and let_in = {
-    let_binder: expression_variable ;
+    let_binder: ty_expr binder ;
     rhs: expression ;
     let_result: expression ;
     attr: known_attributes ;
   }
 
-and mod_in = {
-    module_binder: module_variable ;
-    rhs: program ;
-    let_result: expression ;
-  }
+and mod_in = (expression , ty_expr , known_attributes , type_attribute , module_attribute) mod_in'
 
 and raw_code = {
   language : string;
@@ -193,7 +158,7 @@ and raw_code = {
 and recursive = {
   fun_name : expression_variable;
   fun_type : type_expression;
-  lambda : lambda;
+  lambda   : lambda;
   }
 
 and constructor = {

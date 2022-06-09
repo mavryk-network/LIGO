@@ -27,6 +27,17 @@ type type_content = [%import: Types.type_content]
       (* default_get = `Option ; *)
     } ]
 
+type module_expr_content = [%import: Types.module_expr_content]
+[@@deriving ez {
+      prefixes = [
+        ("make_m" , fun ?(loc = Location.generated) wrap_content ->
+                  ({ wrap_content ; location = loc } :  module_expr)) ;
+        ("get" , fun (x:module_expr) -> x.wrap_content) ;
+      ] ;
+      wrap_constructor = ("module_content" , (fun wrap_content ?loc () -> make_m ?loc wrap_content)) ;
+      wrap_get = ("module_content" , get) ;
+    } ]
+
 let t_variable ?loc variable  = make_t ?loc @@ T_variable variable
 let t_singleton ?loc x = make_t ?loc @@ T_singleton x
 let t_variable_ez ?loc n     : type_expression = t_variable ?loc (TypeVar.of_input_var n)
@@ -34,7 +45,7 @@ let t_variable_ez ?loc n     : type_expression = t_variable ?loc (TypeVar.of_inp
 let t_app ?loc type_operator arguments : type_expression = make_t ?loc @@ T_app {type_operator ; arguments}
 
 let t__type_ ?loc () : type_expression = t_variable ?loc v__type_
-[@@map (_type_, ("bool", "string", "bytes", "int", "operation", "nat", "tez", "unit", "address", "signature", "key", "key_hash", "timestamp", "bls12_381_g1", "bls12_381_g2", "bls12_381_fr"))]
+[@@map (_type_, ("bool", "string", "bytes", "int", "operation", "nat", "tez", "unit", "address", "signature", "key", "key_hash", "timestamp", "bls12_381_g1", "bls12_381_g2", "bls12_381_fr", "chain_id"))]
 let t__type_ ?loc t : type_expression = t_app ?loc v__type_ [t]
 [@@map (_type_, ("option", "list", "set", "contract"))]
 let t__type_ ?loc t t' :type_expression = t_app ?loc v__type_ [t; t']
@@ -62,7 +73,7 @@ let t_sum_ez_attr ?loc ?(attr=[]) fields =
   t_sum ?loc {fields; attributes=attr}
 
 let t_annoted ?loc ty str : type_expression = make_t ?loc @@ T_annoted (ty, str)
-let t_module_accessor ?loc module_name element = make_t ?loc @@ T_module_accessor {module_name;element}
+let t_module_accessor ?loc module_path element = make_t ?loc @@ T_module_accessor {module_path;element}
 
 let t_arrow ?loc type1 type2  : type_expression = make_t ?loc @@ T_arrow {type1; type2}
 let t_abstraction ?loc ty_binder kind type_ : type_expression = make_t ?loc @@ T_abstraction { ty_binder ; kind ; type_ }
@@ -103,8 +114,6 @@ let e_bytes_hex_ez ?loc b : expression option =
 let e_bytes_raw ?loc (b: bytes) : expression = make_e ?loc @@ E_literal (Literal_bytes b)
 let e_bytes_hex ?loc b : expression = e_bytes_raw ?loc @@ Hex.to_bytes b
 let e_bytes_string ?loc (s: string) : expression = e_bytes_hex ?loc @@ Hex.of_string s
-let e_some ?loc s  : expression = make_e ?loc @@ E_constant {cons_name = Const C_SOME; arguments = [s]}
-let e_none ?loc () : expression = make_e ?loc @@ E_constant {cons_name = Const C_NONE; arguments = []}
 let e_string_cat ?loc sl sr : expression = make_e ?loc @@ E_constant {cons_name = Const C_CONCAT; arguments = [sl ; sr ]}
 let e_map_add ?loc k v old  : expression = make_e ?loc @@ E_constant {cons_name = Const C_MAP_ADD; arguments = [k ; v ; old]}
 let e_add ?loc a b : expression = make_e ?loc @@ E_constant {cons_name = Const C_ADD; arguments = [a ; b]}
@@ -128,13 +137,17 @@ let e_let_in_ez ?loc var ?ascr ?const_or_var attributes rhs let_result = make_e 
 (* let e_let_in_ez ?loc binder ascr inline rhs let_result = e_let_in ?loc (Var.of_input_var binder, ascr) inline rhs let_result *)
 let e_type_in   ?loc type_binder rhs let_result = make_e ?loc @@ E_type_in { type_binder; rhs ; let_result}
 let e_mod_in    ?loc module_binder rhs let_result = make_e ?loc @@ E_mod_in  { module_binder; rhs ; let_result }
-let e_mod_alias ?loc alias binders result = make_e ?loc @@ E_mod_alias { alias; binders ; result }
+let m_path ?loc path = make_m ?loc (M_module_path path)
+let m_variable ?loc x = make_m ?loc (M_variable x)
+let m_struct ?loc x = make_m ?loc (M_struct x)
 
 let e_raw_code ?loc language code = make_e ?loc @@ E_raw_code {language; code}
 
 let e_constructor ?loc s a : expression = make_e ?loc @@ E_constructor { constructor = Label s; element = a}
 let e_true  ?loc (): expression = e_constructor ?loc "True"  @@ e_unit ?loc ()
 let e_false ?loc (): expression = e_constructor ?loc "False" @@ e_unit ?loc ()
+let e_some ?loc s  : expression = e_constructor ?loc "Some"  @@ s
+let e_none ?loc () : expression = e_constructor ?loc "None"  @@ e_unit ?loc ()
 let e_matching ?loc a b : expression = make_e ?loc @@ E_matching {matchee=a;cases=b}
 let e_matching_tuple ?loc matchee (binders: _ binder list) body : expression =
   let pv_lst = List.map ~f:(fun (b:_ binder) -> Location.wrap ?loc @@ (P_var b)) binders in
@@ -152,7 +165,7 @@ let e_accessor ?loc record path      = make_e ?loc @@ E_accessor {record; path}
 let e_update ?loc record path update = make_e ?loc @@ E_update {record; path; update}
 
 let e_annotation ?loc anno_expr ty = make_e ?loc @@ E_ascription {anno_expr; type_annotation = ty}
-let e_module_accessor ?loc module_name element = make_e ?loc @@ E_module_accessor {module_name;element}
+let e_module_accessor ?loc module_path element = make_e ?loc @@ E_module_accessor {module_path;element}
 
 let e_tuple ?loc lst : expression = make_e ?loc @@ E_tuple lst
 
@@ -187,7 +200,6 @@ let e_set_remove ?loc ele set = e_constant ?loc (Const C_SET_REMOVE) [ele;set]
 let e_map_remove ?loc ele map = e_constant ?loc (Const C_MAP_REMOVE) [ele;map]
 let e_set_add ?loc ele set = e_constant ?loc (Const C_SET_ADD) [ele; set]
 
-
 let e_typed_none ?loc t_opt =
   let type_annotation = t_option t_opt in
   e_annotation ?loc (e_none ?loc ()) type_annotation
@@ -201,8 +213,8 @@ let e_typed_big_map ?loc lst k v = e_annotation ?loc (e_big_map lst) (t_big_map 
 
 let e_typed_set ?loc lst k = e_annotation ?loc (e_set lst) (t_set k)
 
-let e_assign ?loc variable access_path expression = make_e ?loc @@ E_assign {variable;access_path;expression}
-let e_assign_ez ?loc variable access_path expression = e_assign ?loc (ValueVar.of_input_var ?loc variable) access_path expression
+let e_assign ?loc binder access_path expression = make_e ?loc @@ E_assign {binder;access_path;expression}
+let e_assign_ez ?loc variable access_path expression = e_assign ?loc ({var=ValueVar.of_input_var ?loc variable;ascr=None;attributes={const_or_var=Some `Var}}) access_path expression
 
 let e_unopt ?loc matchee none_body (var_some,some_body) =
   let attributes = {const_or_var = None} in

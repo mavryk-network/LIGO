@@ -63,8 +63,8 @@ let is_virtual = function
 
 type 'a wrap = {
   wrap_content : 'a ;
-  location : t ;
-}
+  location : t [@hash.ignore] ;
+} [@@deriving hash]
 
 let wrap_to_yojson f {wrap_content;location} =
   `Assoc [("wrap_content", f wrap_content); ("location",to_yojson location)]
@@ -98,9 +98,6 @@ let get_location x = x.location
 let unwrap { wrap_content ; _ } = wrap_content
 let map f x = { x with wrap_content = f x.wrap_content }
 let fold f acc x = f acc x.wrap_content
-let fold_map f acc x = 
-  let acc,wrap_content = f acc x.wrap_content in
-  acc,{ x with wrap_content}
 
 let pp_wrap f ppf { wrap_content ; _ } = Format.fprintf ppf "%a" f wrap_content
 

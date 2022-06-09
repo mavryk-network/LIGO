@@ -38,7 +38,7 @@ let%expect_test _ =
       6 |   | (Nil , record [a ; b ; c ]) -> 1
       7 |   | (xs  , Nil) -> 2
 
-    Pattern not of the expected type sum[Cons -> ( int * int ) , Nil -> unit] |}]
+    Pattern not of the expected type myt |}]
 
 let%expect_test _ =
   run_ligo_bad [ "print" ; "ast-typed" ; (bad_test "pm_fail2.ligo") ] ;
@@ -48,15 +48,15 @@ let%expect_test _ =
       5 |   | (Nil , (a,b,c)) -> 1
       6 |   | (xs  , Nil) -> 2
 
-    Pattern not of the expected type sum[Cons -> ( int * int ) , Nil -> unit] |}]
+    Pattern not of the expected type myt |}]
 
 let%expect_test _ =
   run_ligo_bad [ "print" ; "ast-typed" ; (bad_test "pm_fail5.ligo") ] ;
   [%expect{|
-    File "../../test/contracts/negative//deep_pattern_matching/pm_fail5.ligo", line 6, characters 4-13:
+    File "../../test/contracts/negative//deep_pattern_matching/pm_fail5.ligo", line 5, characters 4-17:
+      4 |   case x of [
       5 |   | Some_fake (x) -> x
       6 |   | None_fake -> 1
-      7 |   ]
 
     Pattern not of the expected type option (int) |}]
 
@@ -76,13 +76,13 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_bad [ "print" ; "ast-typed" ; (bad_test "pm_fail8.ligo") ] ;
   [%expect{|
-    File "../../test/contracts/negative//deep_pattern_matching/pm_fail8.ligo", line 21, characters 12-53:
-     20 |           block {
-     21 |             const f = function (const b:int) is b + a ;
+    File "../../test/contracts/negative//deep_pattern_matching/pm_fail8.ligo", line 23, characters 24-33:
      22 |           } with f (b+1)
+     23 |         | Cons (a,b) -> "invalid"
+     24 |         ] ;
 
     Invalid type(s).
-    Expected: "string", but got: "int". |}]
+    Expected: "int", but got: "string". |}]
 
 
 (* rendundancy detected while compiling the pattern matching *)
@@ -310,3 +310,13 @@ let%expect_test _ =
         | [  ] -> 1
         | a :: b :: c :: [  ] -> 2
         | _#2 -> 3 |}]
+
+let%expect_test _ =
+  run_ligo_good [ "run" ; "interpret" ; "nested_record_pm (record [ a = 1 ; b = E ])" ; "--init-file" ; (good_test "pm_test.ligo") ] ;
+  [%expect{|
+    5 |}]
+
+let%expect_test _ =
+  run_ligo_good [ "info" ; "measure-contract" ; (good_test "nested_record_sum.ligo") ] ;
+  [%expect{|
+    142 bytes |}]

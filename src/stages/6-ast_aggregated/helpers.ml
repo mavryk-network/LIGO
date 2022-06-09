@@ -49,7 +49,9 @@ let kv_list_of_record_or_tuple ~layout record_t_content record =
   match layout with
   | L_tree -> List.map ~f:snd exps
   | L_comb -> (
-    let types = LMap.to_kv_list record_t_content in
+    let types = if (is_tuple_lmap record)
+                then tuple_of_record record_t_content
+                else LMap.to_kv_list record_t_content in
     let te = List.map ~f:(fun ((label_t,t),(label_e,e)) ->
       assert (Compare.label label_t label_e = 0) ; (*TODO TEST*)
       (t,e)) (List.zip_exn types exps) in
@@ -113,6 +115,22 @@ let destruct_for_alls (t : type_expression) =
        destruct_for_alls (ty_binder :: type_vars) type_
     | _ -> (type_vars, t)
   in destruct_for_alls [] t
+
+(* This function transforms a type `t1 -> ... -> tn -> t` into the pair `([ t1 ; .. ; tn ] , t)` *)
+let destruct_arrows_n (t : type_expression) (n : int) =
+  let rec destruct_arrows type_vars (t : type_expression) = match t.type_content with
+    | T_arrow { type1 ; type2 } when List.length type_vars < n ->
+       destruct_arrows (type1 :: type_vars) type2
+    | _ -> (List.rev type_vars, t)
+  in destruct_arrows [] t
+
+(* This function transforms a type `t1 -> ... -> tn -> t` into the pair `([ t1 ; .. ; tn ] , t)` *)
+let destruct_arrows (t : type_expression) =
+  let rec destruct_arrows type_vars (t : type_expression) = match t.type_content with
+    | T_arrow { type1 ; type2 } ->
+       destruct_arrows (type1 :: type_vars) type2
+    | _ -> (List.rev type_vars, t)
+  in destruct_arrows [] t
 
 let assert_eq = fun a b -> if Caml.(=) a b then Some () else None
 let assert_same_size = fun a b -> if (List.length a = List.length b) then Some () else None

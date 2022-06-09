@@ -1,8 +1,7 @@
 #include "./contract_under_test/fail_contract.mligo"
 
 let test =
-  let vfail = fail_data in
-  let (typed_addr,code,_) = Test.originate main () 0tez in
+  let (typed_addr,_code,_) = Test.originate main () 0tez in
   let contr = Test.to_contract typed_addr in
   let addr = Tezos.address contr in
 
@@ -14,5 +13,5 @@ let test =
       let (x, addr_fail) = x in
       let () = assert (addr_fail = addr) in
       x
-    | Other -> (failwith "Failed, but wrong reason" : michelson_program )
+    | _ -> (failwith "Failed, but wrong reason" : michelson_program )
   )

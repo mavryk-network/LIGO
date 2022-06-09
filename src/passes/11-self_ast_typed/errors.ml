@@ -14,13 +14,13 @@ type self_ast_typed_error = [
   | `Self_ast_typed_nested_bigmap of Location.t
   | `Self_ast_typed_corner_case of string
   | `Self_ast_typed_bad_contract_io of Ast_typed.expression_variable * Ast_typed.expression
+  | `Self_ast_typed_bad_view_io of Ast_typed.expression_variable * Ast_typed.expression
   | `Self_ast_typed_expected_list_operation of Ast_typed.expression_variable * Ast_typed.type_expression * Ast_typed.expression
   | `Self_ast_typed_expected_same_entry of
     Ast_typed.expression_variable * Ast_typed.type_expression * Ast_typed.type_expression * Ast_typed.expression
   | `Self_ast_typed_expected_pair_in of Location.t * [`View | `Contract]
   | `Self_ast_typed_expected_pair_out of Location.t
   | `Self_ast_typed_pattern_matching_anomaly of Location.t
-  | `Self_ast_typed_expected_obj_ligo of Location.t
   | `Self_ast_typed_storage_view_contract of Location.t * Ast_typed.expression_variable * Ast_typed.expression_variable * Ast_typed.type_expression * Ast_typed.type_expression
   | `Self_ast_typed_view_io of Location.t * Ast_typed.type_expression * [`In | `Out]
 ] [@@deriving poly_constructor { prefix = "self_ast_typed_" }]
@@ -94,6 +94,11 @@ let error_ppformat : display_format:string display_format ->
         "@[<hv>%a@.Invalid type for entrypoint \"%a\".@.An entrypoint must of type \"parameter * storage -> operations list * storage\". @]"
         Snippet.pp e.location
         Ast_typed.PP.expression_variable entrypoint
+    | `Self_ast_typed_bad_view_io (entrypoint, e) ->
+      Format.fprintf f
+        "@[<hv>%a@.Invalid type for view \"%a\".@.An view must be a function. @]"
+        Snippet.pp e.location
+        Ast_typed.PP.expression_variable entrypoint
     | `Self_ast_typed_expected_list_operation (entrypoint, got, e) ->
       Format.fprintf f
         "@[<hv>%a@.Invalid type for entrypoint \"%a\".@.An entrypoint must of type \"parameter * storage -> operations list * storage\".@.\
@@ -118,10 +123,6 @@ let error_ppformat : display_format:string display_format ->
       Format.fprintf f
         "@[<hv>%a@.Invalid entrypoint.@.Expected a tuple of operations and storage as return value.@]"
         Snippet.pp loc
-    | `Self_ast_typed_expected_obj_ligo loc ->
-      Format.fprintf f
-        "@[<hv>%a@.Invalid call to Test primitive.@]"
-        Snippet.pp loc
   )
 
 let error_jsonformat : self_ast_typed_error -> Yojson.Safe.t = fun a ->
@@ -136,7 +137,7 @@ let error_jsonformat : self_ast_typed_error -> Yojson.Safe.t = fun a ->
     let message = `String "Invalid view argument" in
     let content = `Assoc [
       ("message", message);
-      ("loc", Location.to_yojson loc);
+      ("location", Location.to_yojson loc);
       ("main_name", Ast_typed.ValueVar.to_yojson main_name);
       ("view_name", Ast_typed.ValueVar.to_yojson view_name);
       ]
@@ -146,7 +147,7 @@ let error_jsonformat : self_ast_typed_error -> Yojson.Safe.t = fun a ->
     let message = `String "Invalid view argument" in
     let content = `Assoc [
       ("message", message);
-      ("loc", Location.to_yojson loc);
+      ("location", Location.to_yojson loc);
       ]
     in
     json_error ~stage ~content
@@ -154,7 +155,7 @@ let error_jsonformat : self_ast_typed_error -> Yojson.Safe.t = fun a ->
     let message = `String "pattern matching anomaly" in
     let content = `Assoc [
       ("message", message);
-      ("loc", Location.to_yojson loc);
+      ("location", Location.to_yojson loc);
       ]
     in
     json_error ~stage ~content
@@ -239,6 +240,20 @@ let error_jsonformat : self_ast_typed_error -> Yojson.Safe.t = fun a ->
        ]
     in
     json_error ~stage ~content
+  | `Self_ast_typed_bad_view_io (entrypoint, e) ->
+    let message = `String "badly typed view" in
+    let description = `String "unexpected view type" in
+    let entrypoint = Ast_typed.ValueVar.to_yojson entrypoint in
+    let eptype = `String (Format.asprintf "%a" Ast_typed.PP.type_expression e.type_expression) in
+    let content = `Assoc [
+       ("message", message);
+       ("description", description);
+       ("entrypoint", entrypoint);
+       ("location", Location.to_yojson e.location);
+       ("type", eptype);
+       ]
+    in
+    json_error ~stage ~content
   | `Self_ast_typed_expected_list_operation (entrypoint, got, e) ->
     let entrypoint = Ast_typed.ValueVar.to_yojson entrypoint in
     let message = `String "badly typed contract" in
@@ -291,13 +306,4 @@ let error_jsonformat : self_ast_typed_error -> Yojson.Safe.t = fun a ->
        ]
     in
     json_error ~stage ~content
-  | `Self_ast_typed_expected_obj_ligo loc ->
-    let message = `String "unexpected Test primitive" in
-    let description = `String "these Test primitive or type cannot be used in code to be compiled or run" in
-    let content = `Assoc [
-       ("message", message);
-       ("location", Location.to_yojson loc);
-       ("description", description);
-       ]
-    in
-    json_error ~stage ~content
+

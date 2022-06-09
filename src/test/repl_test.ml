@@ -4,16 +4,23 @@ open Simple_utils.Trace
 let dry_run_options = Proto_alpha_utils.Memory_proto_alpha.(make_options ~env:(test_environment ()) ())
 
 let raw_options = Compiler_options.default_raw_options
+let options = Compiler_options.make ~raw_options ()
 
-let init_state_cameligo = Repl.make_initial_state
+let make_init_state_cameligo ?(project_root=None) () = Repl.make_initial_state
                             (CameLIGO: Syntax_types.t)
-                            Environment.Protocols.Hangzhou
-                            dry_run_options
+                            Environment.Protocols.Ithaca
+                            dry_run_options project_root
+                            options
 
-let init_state_jsligo = Repl.make_initial_state
+let init_state_cameligo = make_init_state_cameligo ()
+
+let make_init_state_jsligo ?(project_root=None) () = Repl.make_initial_state
                           (JsLIGO: Syntax_types.t)
-                          Environment.Protocols.Hangzhou
-                          dry_run_options
+                          Environment.Protocols.Ithaca
+                          dry_run_options project_root
+                          options
+
+let init_state_jsligo = make_init_state_jsligo ()
 
 let apply_repl_sequence ~raw_options init_state commands =
   let f state command =
@@ -33,6 +40,12 @@ let test_basic ~raise ~raw_options () =
   if (String.compare s "4" = 0)
   then ()
   else raise.raise @@ `Test_repl ([s], ["4"])
+
+let test_stdlib ~raise ~raw_options () =
+  let _,_,s = Repl.parse_and_eval ~raw_options (Ex_display_format Dev) init_state_cameligo "String.concat \"Hello \" \"world!\"" in
+  if (String.compare s "\"Hello world!\"" = 0)
+  then ()
+  else raise.raise @@ `Test_repl (["\"Hello world!\""], [s])
 
 let test_empty ~raise ~raw_options () =
   test_seq ~raise ~raw_options init_state_cameligo [""]
@@ -96,6 +109,12 @@ let test_basic_jsligo ~raise ~raw_options () =
   then ()
   else raise.raise @@ `Test_repl ([s], ["4"])
 
+let test_stdlib_jsligo ~raise ~raw_options () =
+  let _,_,s = Repl.parse_and_eval ~raw_options (Ex_display_format Dev) init_state_jsligo "String.concat(\"Hello \", \"world!\")" in
+  if (String.compare s "\"Hello world!\"" = 0)
+  then ()
+  else raise.raise @@ `Test_repl (["\"Hello world!\""], [s])
+
 let test_empty_jsligo ~raise ~raw_options () =
   test_seq ~raise ~raw_options init_state_jsligo [""]
                                ["unexpected error, missing expression?"]
@@ -152,11 +171,56 @@ let test_long_jsligo ~raise ~raw_options () =
         "+32"]
         ()
 
+let test_use_external_packages ~raise ~(raw_options : Compiler_options.raw) () =
+  let project_root = Some "projects/demo" in
+  let raw_options = { raw_options with project_root = project_root } in
+  (* Here we #use (equivalent of #include) the dependencies of the root project *)
+  test_seq ~raise ~raw_options (make_init_state_cameligo ~project_root ()) [
+      "#use \"ligo-foo/foo.mligo\"";
+      "#use \"ligo-list-helpers/list.mligo\"";
+      "#use \"ligo-test_2/test2.mligo\"";
+      "y";
+      "#use \"ligo_test_1/test1.mligo\"";
+      "x";
+    ]
+    [
+      "uniq_concat , reverse , concat ,\nSetX";
+      "sum , reverse ,\nconcat";
+      "y";
+      "24";
+      "x";
+      "42";
+    ]
+    ()
+
+let test_import_external_packages ~raise ~(raw_options : Compiler_options.raw) () =
+  let project_root = Some "projects/demo" in
+  let raw_options = { raw_options with project_root = project_root } in
+  (* Here we #import the dependecies of the root project under separate namespaces *)
+  test_seq ~raise ~raw_options (make_init_state_cameligo ~project_root ()) [
+      "#import \"ligo-foo/foo.mligo\" \"Foo\"";
+      "#import \"ligo-list-helpers/list.mligo\" \"ListX\"";
+      "#import \"ligo-test_2/test2.mligo\" \"Test2\"";
+      "#import \"ligo_test_1/test1.mligo\" \"Test1\"";
+      "Test1.x";
+      "Test2.y";
+    ]
+    [
+      "Done.";
+      "Done.";
+      "Done.";
+      "Done.";
+      "42";
+      "24";
+      ]
+    ()
+
 let () =
   Printexc.record_backtrace true ;
   run_test @@ test_suite "LIGO" [
     test_suite "REPL (cameligo)" [
         test "basic" (test_basic ~raw_options);
+        test "stdlib" (test_stdlib ~raw_options);
         test "empty" (test_empty ~raw_options);
         test "def&eval" (test_def ~raw_options);
         test "mod" (test_mod ~raw_options);
@@ -165,12 +229,16 @@ let () =
       ] ;
     test_suite "REPL (jsligo)" [
         test "basic" (test_basic_jsligo ~raw_options);
+        test "stdlib" (test_stdlib_jsligo ~raw_options);
         test "empty" (test_empty_jsligo ~raw_options);
         test "def&eval" (test_def_jsligo ~raw_options);
         test "mod" (test_mod_jsligo ~raw_options);
         test "use" (test_use_jsligo ~raw_options);
         test "long" (test_long_jsligo ~raw_options)
-      ]
-
+      ] ;
+    test_suite "REPL + package-management" [
+      test "#use external packages" (test_use_external_packages ~raw_options);
+      test "#import external packages" (test_import_external_packages ~raw_options);
     ] ;
+  ] ;
   ()

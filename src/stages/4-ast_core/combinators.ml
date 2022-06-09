@@ -37,13 +37,13 @@ let t_for_all ?loc ?sugar ty_binder kind type_ =
 
 (* TODO?: X_name here should be replaced by X_injection *)
 let t__type_ ?loc ?sugar () : type_expression = t_constant ?loc ?sugar _type_ []
-[@@map (_type_, ("signature","chain_id", "string", "bytes", "key", "key_hash", "int", "address", "operation", "nat", "tez", "timestamp", "unit", "bls12_381_g1", "bls12_381_g2", "bls12_381_fr", "never", "mutation", "failure", "pvss_key", "baker_hash", "chest_key", "chest"))]
+[@@map (_type_, ("signature","chain_id", "string", "bytes", "key", "key_hash", "int", "address", "operation", "nat", "tez", "timestamp", "unit", "bls12_381_g1", "bls12_381_g2", "bls12_381_fr", "never", "mutation", "pvss_key", "baker_hash", "chest_key", "chest"))]
 
 let t__type_ ?loc ?sugar t : type_expression = t_constant ?loc ?sugar _type_ [t]
-[@@map (_type_, ("option", "list", "set", "contract", "ticket"))]
+[@@map (_type_, ("list", "set", "contract", "ticket"))]
 
 let t__type_ ?loc ?sugar t t' : type_expression = t_constant ?loc ?sugar _type_ [t; t']
-[@@map (_type_, ("map", "big_map", "map_or_big_map", "typed_address"))]
+[@@map (_type_, ("map", "big_map", "typed_address"))]
 
 let t_mutez = t_tez
 
@@ -86,6 +86,18 @@ let t_shallow_closure ?loc ?sugar param result: type_expression = make_t ?loc ?s
 
 let get_t_bool (t:type_expression) : unit option = match t.type_content with
   | t when (Compare.type_content t (t_bool ()).type_content) = 0-> Some ()
+  | _ -> None
+
+let get_t_option (t:type_expression) : type_expression option = 
+  match t.type_content with
+  | T_sum {fields;_} ->
+    let keys = LMap.keys fields in
+    (match keys with
+      [Label "Some" ; Label "None"]
+    | [Label "None" ; Label "Some"] ->
+      let some = LMap.find (Label "Some") fields in
+      Some some.associated_type 
+    | _ -> None)
   | _ -> None
 
 let tuple_of_record (m: _ LMap.t) =
@@ -143,13 +155,12 @@ let e_recursive ?loc ?sugar fun_name fun_type lambda = e_recursive ?loc ?sugar {
 let e_let_in ?loc ?sugar let_binder rhs let_result attr = e_let_in ?loc ?sugar { let_binder ; rhs ; let_result; attr } ()
 let e_type_in type_binder rhs let_result = e_type_in { type_binder ; rhs ; let_result } ()
 let e_mod_in ?loc ?sugar module_binder rhs let_result = e_mod_in ?loc ?sugar { module_binder ; rhs ; let_result } ()
-let e_mod_alias ?loc ?sugar  alias binders result = e_mod_alias ?loc ?sugar { alias ; binders ; result } ()
 let e_raw_code ?loc ?sugar language code = e_raw_code ?loc ?sugar {language; code} ()
 let e_constructor constructor element : expression = e_constructor {constructor;element} ()
 let e_matching ?loc ?sugar matchee cases : expression = e_matching ?loc ?sugar { matchee ; cases } ()
 let e_record_accessor ?loc ?sugar record path = e_record_accessor ?loc ?sugar ({record; path} : _ record_accessor) ()
 let e_record_update ?loc ?sugar record path update = e_record_update ?loc ?sugar ({record; path; update} : _ record_update) ()
-let e_module_accessor ?loc ?sugar module_name element = e_module_accessor ?loc ?sugar {module_name;element} ()
+let e_module_accessor ?loc ?sugar module_path element = e_module_accessor ?loc ?sugar {module_path;element} ()
 let e_ascription ?loc ?sugar anno_expr type_annotation  : expression = e_ascription ?loc ?sugar {anno_expr;type_annotation} ()
 let e_lambda_ez   ?loc ?sugar var ?ascr ?const_or_var output_type result         = e_lambda ?loc ?sugar {var;ascr;attributes={const_or_var}} output_type result
 let e_let_in_ez   ?loc ?sugar var ?ascr ?const_or_var inline rhs let_result = e_let_in ?loc ?sugar {var;ascr;attributes={const_or_var}} rhs let_result inline
@@ -215,17 +226,6 @@ let get_e_tuple = fun t ->
   | E_record r -> Some (List.map ~f:snd @@ Helpers.tuple_of_record r)
   | _ -> None
 
-let get_declaration_by_name : module_ -> expression_variable -> declaration option = fun (p) name ->
-  let aux : declaration -> bool = fun declaration ->
-    match declaration with
-    | Declaration_constant { binder ; expr=_ ; attr=_ } ->
-        ValueVar.equal binder.var name
-    | Declaration_type   _
-    | Declaration_module _
-    | Module_alias       _ -> false
-  in
-  List.find ~f:aux @@ List.map ~f:Location.unwrap p
-
 let get_record_field_type (t : type_expression) (label : label) : type_expression option =
   match get_t_record t with
   | None -> None
@@ -274,3 +274,5 @@ let extract_map : expression -> (expression * expression) list option = fun e ->
     | _ -> [None]
   in
   Option.all @@ aux e
+
+let make_binder ?(ascr=None) ?(attributes={const_or_var = None}) var = { var ; ascr ; attributes }

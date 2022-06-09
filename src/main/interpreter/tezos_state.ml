@@ -1,13 +1,13 @@
 open Simple_utils.Trace
 open Proto_alpha_utils
-module Tezos_alpha_test_helpers = Tezos_012_Psithaca_test_helpers
+module Tezos_alpha_test_helpers = Tezos_013_PtJakart_test_helpers
 open Errors
 open Ligo_interpreter_exc
 open Ligo_interpreter.Types
 open Ligo_interpreter.Combinators
-module Tezos_protocol = Tezos_protocol_012_Psithaca
-module Tezos_raw_protocol = Tezos_raw_protocol_012_Psithaca
-module Tezos_protocol_parameters = Tezos_protocol_012_Psithaca_parameters
+module Tezos_protocol = Tezos_protocol_013_PtJakart
+module Tezos_raw_protocol = Tezos_raw_protocol_013_PtJakart
+module Tezos_protocol_parameters = Tezos_protocol_013_PtJakart_parameters
 
 type r = Errors.interpreter_error raise
 
@@ -41,7 +41,7 @@ and transduced = {
 }
 and internals = {
   protocol_version : Environment.Protocols.t ;
-  baker : Memory_proto_alpha.Protocol.Alpha_context.Contract.t ; (* baker to be used for the next transfer/origination *)
+  baker_policy : Tezos_alpha_test_helpers.Block.baker_policy ; (* baker to be used for the next transfer/origination *)
   source : Memory_proto_alpha.Protocol.Alpha_context.Contract.t ; (* source to be used for the next transfer/origination *)
   next_bootstrapped_contracts : bootstrap_contract list ; (* next contracts to be injected as boostrap accounts in the next state reset *)
   next_baker_accounts : baker_account list ; (* next contracts to be injected as boostrap accounts in the next state reset *)
@@ -50,6 +50,7 @@ and internals = {
   parameter_tys : parameter_tys ; (* contract parameter ligo types of bootstrapped contracts *)
 }
 
+let contexts : context list ref = ref []
 
 (* Some getters    TODO: might be moved to tezos-X-test-helpers ? *)
 let get_timestamp (ctxt : context) =
@@ -59,7 +60,7 @@ let get_balance ~raise ~loc ~calltrace (ctxt :context) addr =
     Tezos_alpha_test_helpers.Context.Contract.balance (B ctxt.raw) addr
 let contract_exists : context ->  Memory_proto_alpha.Protocol.Alpha_context.Contract.t -> bool = fun ctxt contract ->
   let info = Lwt_main.run @@
-    Tezos_raw_protocol.Alpha_services.Contract.info Tezos_alpha_test_helpers.Block.rpc_ctxt ctxt.raw contract in
+    Tezos_raw_protocol.Alpha_services.Contract.info ~normalize_types:true Tezos_alpha_test_helpers.Block.rpc_ctxt ctxt.raw contract in
   Trace.tz_result_to_bool info
 
 let get_voting_power ~raise ~loc ~calltrace (ctxt :context) key_hash =
@@ -154,7 +155,7 @@ let get_storage ~raise ~loc ~calltrace ctxt addr =
           ~timestamp:(get_timestamp ctxt)
           ctxt.raw.context
     in
-    fst @@ Trace.trace_alpha_tzresult_lwt ~raise (throw_obj_exc loc calltrace) @@ 
+    fst @@ Trace.trace_alpha_tzresult_lwt ~raise (throw_obj_exc loc calltrace) @@
       Tezos_protocol.Protocol.Script_ir_translator.parse_toplevel alpha_context ~legacy:false x
   in
   let storage_type = Tezos_micheline.Micheline.(inject_locations (fun _ -> ()) (strip_locations storage_type)) in
@@ -173,17 +174,24 @@ let get_alpha_context ~raise ctxt =
         ctxt.raw.context in
   alpha_context
 
-let unwrap_baker ~raise ~loc : Memory_proto_alpha.Protocol.Alpha_context.Contract.t -> Tezos_crypto.Signature.Public_key_hash.t  =
+let unwrap_baker ~raise ~loc ~calltrace : Memory_proto_alpha.Protocol.Alpha_context.Contract.t -> Tezos_crypto.Signature.Public_key_hash.t  =
   fun x ->
-    Trace.trace_option ~raise (generic_error loc "The baker is not an implicit account") @@ Memory_proto_alpha.Protocol.Alpha_context.Contract.is_implicit x
+    Trace.trace_option ~raise (generic_error ~calltrace loc "The baker is not an implicit account") @@ Memory_proto_alpha.Protocol.Alpha_context.Contract.is_implicit x
 
-let unwrap_source ~raise ~loc : Memory_proto_alpha.Protocol.Alpha_context.Contract.t -> Memory_proto_alpha.Protocol.Alpha_context.Contract.t  =
+let baker_policy ~raise ~loc ~calltrace baker_policy =
+  let open Tezos_alpha_test_helpers.Block in
+  match baker_policy with
+  | `By_round i -> By_round i
+  | `By_account a -> By_account (unwrap_baker ~raise ~loc ~calltrace a)
+  | `Excluding l -> Excluding (List.map ~f:(unwrap_baker ~raise ~loc ~calltrace) l)
+
+let unwrap_source ~raise ~loc ~calltrace : Memory_proto_alpha.Protocol.Alpha_context.Contract.t -> Memory_proto_alpha.Protocol.Alpha_context.Contract.t  =
   fun x ->
-    let _ = Trace.trace_option ~raise (generic_error loc "The source address is not an implicit account") @@ Memory_proto_alpha.Protocol.Alpha_context.Contract.is_implicit x in
+    let _ = Trace.trace_option ~raise (generic_error ~calltrace loc "The source address is not an implicit account") @@ Memory_proto_alpha.Protocol.Alpha_context.Contract.is_implicit x in
     x
-let implicit_account ~raise ~loc : string -> Tezos_protocol.Protocol.Alpha_context.Contract.t  =
+let implicit_account ~raise ~loc ~calltrace : string -> Tezos_protocol.Protocol.Alpha_context.Contract.t  =
   fun x ->
-    Trace.trace_alpha_tzresult ~raise (fun _ -> generic_error loc "Cannot convert to implicit account") @@ Tezos_protocol.Protocol.Alpha_context.Contract.of_b58check x
+    Trace.trace_alpha_tzresult ~raise (fun _ -> generic_error ~calltrace loc "Cannot convert to implicit account") @@ Tezos_protocol.Protocol.Alpha_context.Contract.of_b58check x
 
 let script_of_compiled_code ~raise ~loc ~calltrace (contract : unit Tezos_utils.Michelson.michelson) (storage : unit Tezos_utils.Michelson.michelson) : Tezos_protocol.Protocol.Alpha_context.Script.t  =
   let open! Tezos_protocol.Protocol.Alpha_context.Script in
@@ -200,9 +208,9 @@ let extract_origination_from_result :
   let open Tezos_raw_protocol in
   match x with
   | Manager_operation_result { operation_result = Applied (Transaction_result _) ; internal_operation_results ; balance_updates=_ } ->
-    let aux (x:Apply_results.packed_internal_operation_result) =
+    let aux (x:Apply_results.packed_internal_manager_operation_result) =
       match x with
-      | Internal_operation_result ({source ; _},Applied (Origination_result x)) -> [(source, x.originated_contracts)]
+      | Internal_manager_operation_result ({source ; _},Applied (Origination_result x)) -> [(source, x.originated_contracts)]
       | _ -> []
     in
     List.concat @@ List.map ~f:aux internal_operation_results
@@ -217,11 +225,11 @@ let extract_lazy_storage_diff_from_result :
   fun x ->
   let open Tezos_raw_protocol in
   match x with
-  | Manager_operation_result { operation_result = Applied (Transaction_result y) ; internal_operation_results ; balance_updates=_ } ->
-    let aux (x:Apply_results.packed_internal_operation_result) =
+  | Manager_operation_result { operation_result = Applied (Transaction_result (Transaction_to_contract_result y)) ; internal_operation_results ; balance_updates=_ } ->
+    let aux (x:Apply_results.packed_internal_manager_operation_result) =
       match x with
-      | Internal_operation_result ({source = _ ; _},Applied (Origination_result x)) -> [x.lazy_storage_diff]
-      | Internal_operation_result ({source = _ ; _},Applied (Transaction_result x)) -> [x.lazy_storage_diff]
+      | Internal_manager_operation_result ({source = _ ; _},Applied (Origination_result x)) -> [x.lazy_storage_diff]
+      | Internal_manager_operation_result ({source = _ ; _},Applied (Transaction_result (Transaction_to_contract_result x))) -> [x.lazy_storage_diff]
       | _ -> []
     in
     (List.concat @@ List.map ~f:aux internal_operation_results) @ [y.lazy_storage_diff]
@@ -346,15 +354,15 @@ type add_operation_outcome =
 let get_last_operation_result (incr : Tezos_alpha_test_helpers.Incremental.t) =
   match Tezos_alpha_test_helpers.Incremental.rev_tickets incr with
   | [] -> failwith "Tried to get last operation result in empty block"
-  | hd :: [] -> hd
-  | _ -> failwith "Tried to get last operation result but the ticket list has more than one element"
+  | hd :: _ -> hd
 
 let get_single_tx_result (x : Tezos_raw_protocol.Apply_results.packed_operation_metadata) =
   match x with
   | Operation_metadata ({contents = Single_result y} : _ Tezos_raw_protocol.Apply_results.operation_metadata)  -> (
     match y with
     | Manager_operation_result { operation_result = Applied (
-          Transaction_result { consumed_gas ; _ } 
+          Transaction_result (Transaction_to_contract_result { consumed_gas ; _ })
+        | Transaction_result (Transaction_to_tx_rollup_result { consumed_gas ; _ })
         | Origination_result { consumed_gas ; _ }
         | Delegation_result { consumed_gas ; _ }
         | Register_global_constant_result { consumed_gas ; _ } )
@@ -373,31 +381,30 @@ let get_consumed_gas x =
   | Some x -> Z.((fp_to_z x) / (of_int 1000))
   | None -> Z.zero
 
-let bake_op : raise:r -> loc:Location.t -> calltrace:calltrace -> context -> tezos_op -> add_operation_outcome =
+let bake_ops : raise:r -> loc:Location.t -> calltrace:calltrace -> context -> (Tezos_alpha_test_helpers.Incremental.t -> tezos_op) list -> add_operation_outcome =
   fun ~raise ~loc ~calltrace ctxt operation ->
     let open Tezos_alpha_test_helpers in
-    let baker = unwrap_baker ~raise ~loc ctxt.internals.baker in
     (* First check if baker is going to be successfully selected *)
-    let _ = Trace.trace_tzresult_lwt ~raise (fun _ -> raise.raise (generic_error loc "Baker cannot bake. Enough rolls? Enough cycles passed?")) @@
-              Block.(get_next_baker ~policy:(By_account baker) ctxt.raw) in
+    let _ = Trace.trace_tzresult_lwt ~raise (fun _ -> raise.raise (generic_error ~calltrace loc "Baker cannot bake. Enough rolls? Enough cycles passed?")) @@ Block.(get_next_baker ~policy:ctxt.internals.baker_policy ctxt.raw) in
     let incr = Trace.trace_tzresult_lwt ~raise (throw_obj_exc loc calltrace) @@
-                 Incremental.begin_construction ~policy:Block.(By_account baker) ctxt.raw in
-    let incr = Incremental.add_operation incr operation in
-    match Lwt_main.run @@ incr with
+                 Incremental.begin_construction ~policy:ctxt.internals.baker_policy ctxt.raw in
+    let aux incr op = Lwt_main.run @@ Incremental.add_operation incr (op incr) in
+    match List.fold_result ~f:aux ~init:incr operation with
     | Ok incr ->
-      let consum = get_consumed_gas (get_last_operation_result incr) in
-      let op_data = get_last_operation_result incr in
-      let raw = Trace.trace_tzresult_lwt ~raise (throw_obj_exc loc calltrace) @@
-        Incremental.finalize_block incr
-      in
-      let transduced = upd_transduced_data ~raise ctxt op_data in
-      Success ({ ctxt with raw ; transduced }, consum)
-    | Error errs ->
-      Fail errs
+       let last_operation = get_last_operation_result incr in
+       let consum = get_consumed_gas last_operation in
+       let raw = Trace.trace_tzresult_lwt ~raise (throw_obj_exc loc calltrace) @@
+                   Incremental.finalize_block incr in
+       let transduced = upd_transduced_data ~raise ctxt last_operation in
+       Success ({ ctxt with raw ; transduced }, consum)
+    | Error errs -> Fail errs
+
+let bake_op  : raise:r -> loc:Location.t -> calltrace:calltrace -> context -> tezos_op -> add_operation_outcome =
+  fun ~raise ~loc ~calltrace ctxt op -> bake_ops ~raise ~loc ~calltrace ctxt [fun _ -> op]
 
 let bake_until_n_cycle_end ~raise ~loc ~calltrace (ctxt : context) n =
   let open Tezos_alpha_test_helpers in
-  let raw = Trace.trace_tzresult_lwt ~raise (throw_obj_exc loc calltrace) @@ Block.bake_until_n_cycle_end n ctxt.raw in
+  let raw = Trace.trace_tzresult_lwt ~raise (throw_obj_exc loc calltrace) @@ Block.bake_until_n_cycle_end ~policy:ctxt.internals.baker_policy n ctxt.raw in
   { ctxt with raw }
 
 let register_delegate ~raise ~loc ~calltrace (ctxt : context) pkh =
@@ -417,15 +424,50 @@ let register_constant ~raise ~loc ~calltrace (ctxt : context) ~source ~value =
   let hash = Format.asprintf "%a" Tezos_protocol.Protocol.Script_expr_hash.pp hash in
   let operation = Trace.trace_tzresult_lwt ~raise (throw_obj_exc loc calltrace) @@ Op.register_global_constant (B ctxt.raw) ~source ~value in
   match bake_op ~raise ~loc ~calltrace ctxt operation with
-  | Success (ctxt,_) ->
-    (hash, ctxt)
+  | Success (ctxt,_) -> (hash, ctxt)
   | Fail errs -> raise.raise (target_lang_error loc calltrace errs)
 
-let add_account ~raise ~loc sk pk pkh : unit =
+let read_file_constants ~raise fn =
+  try
+    let buf = In_channel.read_all fn in
+    let json = Yojson.Basic.from_string buf in
+    json |> Yojson.Basic.Util.to_list |> List.map ~f:Yojson.Basic.Util.to_string
+  with Sys_error _ -> raise.Trace.raise (`Main_cannot_open_global_constants fn)
+     | Yojson.Json_error s -> raise.Trace.raise (`Main_cannot_parse_global_constants (fn, s))
+
+let register_file_constants ~raise ~loc ~calltrace fn (ctxt : context) ~source =
   let open Tezos_alpha_test_helpers in
-  let sk = Trace.trace_tzresult ~raise (fun _ -> Errors.generic_error loc "Cannot parse secret key") @@ Tezos_crypto.Signature.Secret_key.of_b58check sk in
+  let string_to_constant constant =
+    let constant = parse_constant ~raise ~loc ~calltrace constant in
+    ligo_to_canonical ~raise ~loc ~calltrace constant in
+  let constant_to_hash constant =
+    let hash = Trace.trace_alpha_tzresult ~raise (throw_obj_exc loc calltrace) @@ Tezos_protocol.Protocol.Script_repr.force_bytes constant in
+    let hash = Tezos_protocol.Protocol.Script_expr_hash.hash_bytes [hash] in
+    Format.asprintf "%a" Tezos_protocol.Protocol.Script_expr_hash.pp hash in
+  let constants = read_file_constants ~raise fn in
+  let constants = List.map ~f:string_to_constant constants in
+  let hashes = List.map ~f:constant_to_hash constants in
+  let aux constant ctxt =
+    let op = Trace.trace_tzresult_lwt ~raise (throw_obj_exc loc calltrace) @@ Op.register_global_constant (B ctxt.raw) ~source ~value:constant in
+    match bake_op ~raise ~loc ~calltrace ctxt op with
+    | Success (ctxt,_) -> ctxt
+    | Fail errs -> raise.raise (target_lang_error loc calltrace errs) in
+  let ctxt = List.fold_right ~f:aux ~init:ctxt constants in
+  (hashes, ctxt)
+
+let add_account ~raise ~loc ~calltrace sk pk pkh : unit =
+  let open Tezos_alpha_test_helpers in
+  let sk = Trace.trace_tzresult ~raise (fun _ -> Errors.generic_error ~calltrace loc "Cannot parse secret key") @@ Tezos_crypto.Signature.Secret_key.of_b58check sk in
   let account = Account.{ sk ; pk ; pkh } in
   Account.add_account account
+
+let get_account ~raise ~loc ~calltrace mc : string * Signature.public_key =
+  let open Tezos_alpha_test_helpers in
+  let pkh = Trace.trace_option ~raise (generic_error ~calltrace loc "The account is not an implicit account") @@ Memory_proto_alpha.Protocol.Alpha_context.Contract.is_implicit mc in
+  let account = Trace.trace_tzresult_lwt ~raise (fun _ -> Errors.generic_error ~calltrace loc "Cannot find account") @@ Account.find pkh in
+  let sk = Signature.Secret_key.to_b58check account.sk in
+  let pk = account.pk in
+  (sk, pk)
 
 let new_account : unit -> string * Signature.public_key = fun () ->
   let open Tezos_alpha_test_helpers.Account in
@@ -433,9 +475,15 @@ let new_account : unit -> string * Signature.public_key = fun () ->
   let sk = Signature.Secret_key.to_b58check account.sk in
   (sk, account.pk)
 
+let sign_message ~raise ~loc ~calltrace (packed_payload : bytes) sk : Signature.t =
+  let open Tezos_crypto in
+  let sk = Trace.trace_tzresult ~raise (throw_obj_exc loc calltrace) @@ Signature.Secret_key.of_b58check sk in
+  let signed_data = Signature.sign sk packed_payload in
+  signed_data
+
 let transfer ~raise ~loc ~calltrace (ctxt:context) ?entrypoint dst parameter amt : add_operation_outcome =
   let open Tezos_alpha_test_helpers in
-  let source = unwrap_source ~raise ~loc ctxt.internals.source in
+  let source = unwrap_source ~raise ~loc ~calltrace ctxt.internals.source in
   let parameters = ligo_to_canonical ~raise ~loc ~calltrace parameter in
   let operation : Tezos_raw_protocol.Alpha_context.packed_operation = Trace.trace_tzresult_lwt ~raise (throw_obj_exc loc calltrace) @@
     (* TODO: fee? *)
@@ -450,12 +498,12 @@ let originate_contract : raise:r -> loc:Location.t -> calltrace:calltrace -> con
     let contract = trace_option ~raise (corner_case ()) @@ get_michelson_contract contract in
     let { code = storage ; ast_ty = ligo_ty ; _ } = trace_option ~raise (corner_case ()) @@ get_michelson_expr storage in
     let open Tezos_alpha_test_helpers in
-    let source = unwrap_source ~raise ~loc ctxt.internals.source in
+    let source = unwrap_source ~raise ~loc ~calltrace ctxt.internals.source in
     let amt = try Some (Test_tez.of_mutez_exn (Int64.of_int (Z.to_int amt))) with _ -> None in
     let script = script_of_compiled_code ~raise ~loc ~calltrace contract storage in
     let (operation, dst) = Trace.trace_tzresult_lwt ~raise (throw_obj_exc loc calltrace) @@
       (* TODO : fee ? *)
-      Op.origination (B ctxt.raw) source ?credit:amt ~fee:(Test_tez.of_int 1) ~script
+      Op.contract_origination (B ctxt.raw) source ?credit:amt ~fee:(Test_tez.of_int 1) ~script
     in
     match bake_op ~raise ~loc ~calltrace ctxt operation with
     | Success (ctxt,_) ->
@@ -470,7 +518,11 @@ let get_bootstrapped_contract ~raise (n : int) =
       0 -> e
     | k -> foldnat s (s e) (k - 1) in
   let open Tezos_raw_protocol.Contract_repr in
-  let origination_nonce = foldnat incr_origination_nonce (initial_origination_nonce (Tezos_crypto.Operation_hash.hash_bytes [Bytes.of_string "Un festival de GADT."])) n in
+  let origination_nonce =
+    let open Memory_proto_alpha.Protocol.Origination_nonce in
+    let initial = initial (Tezos_crypto.Operation_hash.hash_bytes [Bytes.of_string "Un festival de GADT."]) in
+    foldnat incr initial n
+  in
   let contract = to_b58check (originated_contract origination_nonce) in
   let contract = Tezos_protocol.Protocol.Alpha_context.Contract.of_b58check contract in
   Trace.trace_alpha_tzresult ~raise (fun _ -> generic_error Location.generated "Error parsing address") @@ contract
@@ -550,14 +602,15 @@ let init_ctxt ~raise ?(loc=Location.generated) ?(calltrace=[]) ?(initial_balance
       bootstrapped_contracts
   in
   let baker_accounts = List.map ~f:(fun (sk, pk, amt) ->
-                            let sk =  Trace.trace_tzresult ~raise (fun _ -> Errors.generic_error loc "Cannot parse secret key") @@ Tezos_crypto.Signature.Secret_key.of_b58check sk in
+                            let sk =  Trace.trace_tzresult ~raise (fun _ -> Errors.generic_error ~calltrace loc "Cannot parse secret key") @@ Tezos_crypto.Signature.Secret_key.of_b58check sk in
                             sk, pk, amt) baker_accounts in
   let r, acclst = init ~rng_state ~level:(Int32.of_int_exn 0) ~initial_balances ~baker_accounts n in
   let init_raw_ctxt = Trace.trace_tzresult_lwt ~raise (throw_obj_exc loc calltrace) @@ r in
   match acclst with
   | baker::source::_ ->
+    let baker = unwrap_baker ~raise ~loc ~calltrace baker in
     let transduced = { last_originations = [] ; bigmaps= [] } in
-    let internals = { protocol_version ; baker ; source ; next_bootstrapped_contracts = [] ; next_baker_accounts = [] ; storage_tys ; parameter_tys ; bootstrapped = acclst } in
+    let internals = { protocol_version ; baker_policy = By_account baker ; source ; next_bootstrapped_contracts = [] ; next_baker_accounts = [] ; storage_tys ; parameter_tys ; bootstrapped = acclst } in
     { raw = init_raw_ctxt ; transduced ; internals }
   | _ ->
     raise.raise (bootstrap_not_enough loc)

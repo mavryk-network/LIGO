@@ -1,5 +1,3 @@
-let cut = "./contract_under_test/contract_create.mligo"
-
 #include "./contract_under_test/contract_create.mligo"
 
 let check_new_origination (src :address) : address =
@@ -8,16 +6,16 @@ let check_new_origination (src :address) : address =
     | Some new_lst -> (
       let () = assert (List.length new_lst = 1n) in
       match new_lst with
-      | new_acc::rst -> new_acc
+      | new_acc::_rst -> new_acc
       | [] -> (failwith "more than one originated account" : address)
     )
     | None -> (failwith "source did not originate anything" : address)
 
 let test =
-  let baker = Test.nth_bootstrap_account 0 in
+  let _baker = Test.nth_bootstrap_account 0 in
   let src = Test.nth_bootstrap_account 1 in
 
-  let (typed_addr, code, size) = Test.originate main (None : storage) 0tez in
+  let (typed_addr, _code, size) = Test.originate main (None : storage) 0tez in
   let () = assert ((None : storage) = (Test.get_storage typed_addr : storage)) in
   let () = assert (size < 300) in
   let new_account1 = check_new_origination src in
@@ -41,7 +39,7 @@ let test =
       let () = assert (addr = new_account2) in
       let () = assert (Test.michelson_equal v (Test.eval 111)) in
       v
-    | Other -> (failwith "contract failed for another reason" : michelson_program)
+    | _ -> (failwith "contract failed for another reason" : michelson_program)
   )
 
 let test2 =

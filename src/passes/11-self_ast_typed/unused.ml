@@ -78,10 +78,10 @@ let rec defuse_of_expr defuse expr : defuse =
      defuse_of_expr defuse result
   | E_let_in {let_binder;rhs;let_result;_} ->
      let defuse,unused = defuse_of_expr defuse rhs in
-     let old_binder = M.find_opt let_binder defuse in
-     let defuse, unused' = defuse_of_expr (M.add let_binder false defuse) let_result in
-     let unused' = add_if_unused unused' let_binder defuse in
-     replace_opt let_binder old_binder defuse, unused@unused'
+     let old_binder = M.find_opt let_binder.var defuse in
+     let defuse, unused' = defuse_of_expr (M.add let_binder.var false defuse) let_result in
+     let unused' = add_if_unused unused' let_binder.var defuse in
+     replace_opt let_binder.var old_binder defuse, unused@unused'
   | E_raw_code {code;_} ->
      defuse_of_expr defuse code
   | E_matching {matchee;cases} ->
@@ -93,19 +93,18 @@ let rec defuse_of_expr defuse expr : defuse =
      defuse_of_expr defuse record
   | E_record_update {record;update;_} ->
      defuse_union (defuse_of_expr defuse record) (defuse_of_expr defuse update)
-  | E_type_in {let_result;_} ->
-     defuse_of_expr defuse let_result
   | E_mod_in {let_result;_} ->
      defuse_of_expr defuse let_result
-  | E_mod_alias {result;_} ->
-     defuse_of_expr defuse result
   | E_module_accessor _ ->
      defuse, []
   | E_type_inst {forall;_} ->
      defuse_of_expr defuse forall
+  | E_assign { binder=_; access_path=_; expression } ->
+     defuse_of_expr defuse expression
+
 
 and defuse_of_lambda defuse {binder; result} =
-  remove_defined_var_after defuse binder defuse_of_expr result
+  remove_defined_var_after defuse binder.var defuse_of_expr result
 
 and defuse_of_cases defuse = function
   | Match_variant x -> defuse_of_variant defuse x
@@ -119,7 +118,7 @@ and defuse_of_variant defuse {cases;_} =
       cases
 
 and defuse_of_record defuse {body;fields;_} =
-  let vars = LMap.to_list fields |> List.map ~f:fst in
+  let vars = LMap.to_list fields |> List.map ~f:(fun b -> b.var) in
   let map = List.fold_left ~f:(fun m v -> M.add v false m) ~init:defuse vars in
   let vars' = List.map ~f:(fun v -> (v, M.find_opt v defuse)) vars in
   let defuse,unused = defuse_of_expr map body in
@@ -128,10 +127,9 @@ and defuse_of_record defuse {body;fields;_} =
   (defuse, unused)
 
 let rec unused_map_module ~add_warning : module_ -> module_ = function m ->
-  let self = unused_map_module ~add_warning in
   let update_annotations annots =
     List.iter ~f:add_warning annots in
-  let aux = fun (x : declaration Location.wrap) ->
+  let aux = fun (x : declaration) ->
     match Location.unwrap x with
     | Declaration_constant {expr ; _} -> (
       let defuse,_ = defuse_neutral in
@@ -144,9 +142,15 @@ let rec unused_map_module ~add_warning : module_ -> module_ = function m ->
     )
     | Declaration_type _ -> ()
     | Declaration_module {module_; module_binder=_;module_attr=_} ->
-      let _ = self module_ in
+      let _ = unused_map_module_expr ~add_warning module_ in
       ()
-    | Module_alias _ -> ()
   in
   let () = List.iter ~f:aux m in
   m
+
+and unused_map_module_expr ~add_warning : module_expr -> module_expr = function m ->
+  let return wrap_content = { m with wrap_content } in
+  match Location.unwrap m with
+  | M_struct x -> return @@ M_struct (unused_map_module ~add_warning x)
+  | M_variable _ -> m
+  | M_module_path _ -> m

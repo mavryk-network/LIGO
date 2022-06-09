@@ -32,23 +32,24 @@ module Free_variables = struct
     | E_record_update {record; update;_} -> union (self record) @@ self update
     | E_matching {matchee; cases;_} -> union (self matchee) (matching_expression b cases)
     | E_let_in { let_binder; rhs; let_result; _} ->
-      let b' = union (singleton let_binder) b in
+      let b' = union (singleton let_binder.var) b in
       union
         (expression b' let_result)
         (self rhs)
-    | E_type_in { type_binder=_; rhs=_; let_result; _} -> self let_result
     | E_type_abstraction { type_binder=_; result} -> self result
     | E_mod_in { module_binder=_; rhs=_; let_result} -> self let_result
-    | E_mod_alias { alias=_; binders=_; result} -> self result
     | E_raw_code _ -> empty
     | E_type_inst {type_=_;forall} -> self forall
     | E_recursive {fun_name;lambda;_} ->
       let b' = union (singleton fun_name) b in
       expression_content b' @@ E_lambda lambda
-    | E_module_accessor {element;_} -> self element
+    | E_module_accessor _ -> empty
+    | E_assign {binder;access_path=_;expression=e} ->
+      let b' = union (singleton binder.var) b in
+      expression b' e
 
   and lambda : bindings -> lambda -> bindings = fun b l ->
-    let b' = union (singleton l.binder) b in
+    let b' = union (singleton l.binder.var) b in
     expression b' l.result
 
   and expression : bindings -> expression -> bindings = fun b e ->
@@ -61,7 +62,7 @@ module Free_variables = struct
       match m with
       | Match_variant { cases ; tv=_ } -> unions @@ List.map ~f:(matching_variant_case f b) cases
       | Match_record {fields; body; tv = _} ->
-        f (union (List.map ~f:fst (LMap.to_list fields)) b) body
+        f (union (List.map ~f:(fun b -> b.var) (LMap.to_list fields)) b) body
 
     and matching_expression = fun x -> matching expression x
 
@@ -85,11 +86,7 @@ let layout_eq a b = match (a,b) with
   | _ -> false
 
 let constant_compare ia ib =
-  let open Stage_common.Constant in
-  match ia,ib with
-  | (Map     | Map_or_big_map), (Map     | Map_or_big_map) -> 0
-  | (Big_map | Map_or_big_map), (Big_map | Map_or_big_map) -> 0
-  | _ -> Stage_common.Constant.compare ia ib
+  Stage_common.Constant.compare ia ib
 
 let rec assert_type_expression_eq (a, b: (type_expression * type_expression)) : unit option =
   let open Option in
@@ -139,8 +136,10 @@ let rec assert_type_expression_eq (a, b: (type_expression * type_expression)) : 
      (* TODO : we must check that the two types were bound at the same location (even if they have the same name), i.e. use something like De Bruijn indices or a propper graph encoding *)
      if TypeVar.equal x y then Some () else None
   | T_variable _, _ -> None
-  | T_module_accessor {module_name=mna;element=ea}, T_module_accessor {module_name=mnb;element=eb} when ModuleVar.equal mna mnb ->
-    assert_type_expression_eq (ea, eb)
+  | T_module_accessor {module_path=mna;element=ea}, T_module_accessor {module_path=mnb;element=eb} ->
+    let open Simple_utils.Option in
+    let* _ = if TypeVar.equal ea eb then Some () else None in
+    assert_list_eq (fun a b -> if ModuleVar.equal a b then Some () else None) mna mnb
   | T_module_accessor _, _ -> None
   | T_singleton a , T_singleton b -> assert_literal_eq (a , b)
   | T_singleton _ , _ -> None
@@ -210,29 +209,15 @@ and assert_literal_eq (a, b : literal * literal) : unit option =
   | Literal_chest_key _, Literal_chest_key _ -> None
   | Literal_chest_key _, _ -> None
 
-
-let merge_annotation (a:type_expression option) (b:type_expression option) assert_eq_fun : type_expression option =
-  let open Option in
-  match a, b with
-  | None, None -> None
-  | Some a, None -> Some a
-  | None, Some b -> Some b
-  | Some a, Some b ->
-      let* _ = assert_eq_fun (a, b) in
-      match a.type_meta, b.type_meta with
-      | _, None -> Some a
-      | _, Some _ -> Some b
-
 let get_entry (lst : program) (name : expression_variable) : expression option =
   let aux x =
     match Location.unwrap x with
-    | Declaration_constant { binder; expr ; attr = {inline=_ ; no_mutation = _ ; view = _ ; public = _ }} -> (
-      if   (ValueVar.equal name binder)
+    | Declaration_constant { binder; expr ; attr = {inline=_ ; no_mutation = _ ; view = _ ; public = _ ; thunk = _ ; hidden = _ }} -> (
+      if   (ValueVar.equal name binder.var)
       then Some expr
       else None
     )
     | Declaration_type   _
-    | Declaration_module _
-    | Module_alias       _ -> None
+    | Declaration_module _ -> None
   in
   List.find_map ~f:aux (List.rev lst)
