@@ -457,8 +457,8 @@ let rec expression ~raise : A.module_' -> locals -> I.expression -> A.module_' *
   | E_if_none  _ -> failwith "not supported yet 22"
   | E_if_cons  _ -> failwith "not supported yet 23"
   | E_if_left  _ -> failwith "not supported yet 24"
-  | E_let_in ({content = E_closure {binder; body}}, _inline, ((name, _type), e2)) -> failwith "should not happen..."
-  | E_let_in (e1, _inline, ((name, typex), e2)) -> 
+  | E_let_in ({content = E_closure {binder; body}}, _inline, _thunk, ((name, _type), e2)) -> failwith "should not happen..."
+  | E_let_in (e1, _inline, _thunk, ((name, typex), e2)) -> 
     let name = var_to_string name in
     let w, l, e1 = expression ~raise w l e1 in
     let l = l @ [(name, T.I32Type)] in
@@ -572,7 +572,7 @@ let func I.{binder; body} =
 let rec toplevel_bindings ~raise : I.expression -> W.Ast.module_' -> W.Ast.module_' = fun e w ->
   let at = location_to_region e.location in
   match e.content with
-    E_let_in ({content = E_closure c; _}, _inline, ((name, type_), e2)) -> 
+    E_let_in ({content = E_closure c; _}, _inline, _thunk, ((name, type_), e2)) -> 
       let name = var_to_string name in
       let arguments, body = func c in
       let locals = List.map ~f:(fun a -> (var_to_string a, T.I32Type)) arguments in
@@ -609,7 +609,7 @@ let rec toplevel_bindings ~raise : I.expression -> W.Ast.module_' -> W.Ast.modul
       }
       in      
     toplevel_bindings ~raise e2 w
-  | E_let_in ({content = E_literal (Literal_int z); _}, _inline, ((name, _type), e2)) -> 
+  | E_let_in ({content = E_literal (Literal_int z); _}, _inline, _thunk, ((name, _type), e2)) -> 
     (* we convert these to in memory values *)
     let name = var_to_string name in
     let data, symbols = convert_to_memory name at z in

@@ -2,7 +2,7 @@
 
 open Main_errors
 open Mini_c
-open Trace
+open Simple_utils.Trace
 
 module Lift = Wasm_pass.Lift
 module Wasm = Wasm_pass.Compiler

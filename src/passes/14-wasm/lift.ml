@@ -116,7 +116,7 @@ let rec lift: env -> expression -> env * expression = fun env e ->
     let env, e2 = lift env e2 in
     let env, e3 = lift env e3 in
     env, {e with content = E_if_left (e1, ((var_name1, type_expression1), e2), ((var_name2, type_expression2), e3))}
-  | E_let_in ({content = E_closure _} as c, inline, ((var_name, type_expression), e2)) -> 
+  | E_let_in ({content = E_closure _} as c, inline, thunk, ((var_name, type_expression), e2)) -> 
     let env2, c = lift {empty_env with replacements = env.replacements; functions = env.functions} c in
     let v = ValueVar.fresh_like var_name in
     let env = {env with variables = (v, type_expression) :: env.variables} in
@@ -153,15 +153,15 @@ let rec lift: env -> expression -> env * expression = fun env e ->
     let replacement = (var_name, v, var_replacement missing ({content = E_variable v; type_expression = e.type_expression; location = c.location})) in
     let export = export_func missing in
     let type_expression = export.type_expression in
-    let export = fun e -> {content = E_let_in (export, inline, ((v, type_expression), e)); type_expression; location = c.location} in
+    let export = fun e -> {content = E_let_in (export, inline, thunk, ((v, type_expression), e)); type_expression; location = c.location} in
     let env = {variables = (v, type_expression) :: env.variables; exported_funcs = export :: env.exported_funcs; functions = var_name :: env.functions; replacements = replacement :: env2.replacements @ env.replacements; missing = env2.missing @ env.missing } in
     let env, e2 = lift env e2 in
     env, e2
-  | E_let_in (e1, inline, ((var_name, type_expression), e2)) ->
+  | E_let_in (e1, inline, thunk, ((var_name, type_expression), e2)) ->
     let env = {env with variables = (var_name, type_expression) :: env.variables} in
     let env, e1 = lift env e1 in
     let env, e2 = lift env e2 in
-    env, {e with content = E_let_in (e1, inline, ((var_name, type_expression), e2))}
+    env, {e with content = E_let_in (e1, inline, thunk, ((var_name, type_expression), e2))}
   | E_tuple l -> 
     let env, l = List.fold_left ~f:(
       fun (env, args) a -> 
@@ -181,6 +181,7 @@ let rec lift: env -> expression -> env * expression = fun env e ->
     let env, e1 = lift env e1 in
     let env, e2 = lift env e2 in
     env, {e with content = E_update (e1, a, e2, b)}
+  | E_create_contract _ -> env, e
   | E_raw_michelson _ -> env, e
   | E_global_constant (s, lst) -> 
     let env, lst = List.fold_left ~f:(
@@ -193,7 +194,7 @@ let rec lift: env -> expression -> env * expression = fun env e ->
 
 let rec toplevel_inner: env -> expression -> expression = fun env e ->
   match e.content with
-    E_let_in ({content = E_closure {binder; body}; _} as e1, inline, ((var_name, type_expression), e2)) -> 
+    E_let_in ({content = E_closure {binder; body}; _} as e1, inline, thunk, ((var_name, type_expression), e2)) -> 
       let var_to_string name =  
         let name, hash = ValueVar.internal_get_name_and_counter name in
         name ^ "#" ^ (string_of_int hash)
@@ -203,15 +204,15 @@ let rec toplevel_inner: env -> expression -> expression = fun env e ->
       List.fold_left ~f:(
         fun prev el ->
           el prev
-      ) ~init:{e with content = E_let_in ({ e1 with content =  E_closure {binder; body}}, inline, ((var_name, type_expression), toplevel_inner env e2))}
+      ) ~init:{e with content = E_let_in ({ e1 with content =  E_closure {binder; body}}, inline, thunk, ((var_name, type_expression), toplevel_inner env e2))}
       env.exported_funcs
-  | E_let_in (e1, inline, ((var_name, type_expression), e2)) -> 
+  | E_let_in (e1, inline, thunk, ((var_name, type_expression), e2)) -> 
       let var_to_string name =  
         let name, hash = ValueVar.internal_get_name_and_counter name in
         name ^ "#" ^ (string_of_int hash)
       in
       print_endline ("e_let_in:" ^ var_to_string var_name);
-      {e with content = E_let_in (e1, inline, ((var_name, type_expression), toplevel_inner env e2))}
+      {e with content = E_let_in (e1, inline, thunk, ((var_name, type_expression), toplevel_inner env e2))}
   | _ -> e
 
 let toplevel = toplevel_inner empty_env 

@@ -199,7 +199,7 @@ let build_wasm_code ~raise ~add_warning : options:Compiler_options.t -> string -
     let entry_point_orig = entry_point in
     let entry_point = Ast_typed.ValueVar.of_input_var entry_point in
     let typed_prg, _contract = build_typed ~raise ~add_warning ~options (Ligo_compile.Of_core.Contract entry_point) file_name in
-    let aggregated = Ligo_compile.Of_typed.apply_to_entrypoint_contract ~raise typed_prg entry_point in
+    let aggregated = Ligo_compile.Of_typed.apply_to_entrypoint_contract ~raise ~add_warning ~options:options.middle_end typed_prg entry_point in
     let mini_c = Ligo_compile.Of_aggregated.compile_expression ~raise aggregated in
     let wasm  = Ligo_compile.Of_wasm.compile_contract ~raise ~options mini_c file_name entry_point_orig in
     let wasm = WasmObjectFile.Encode.encode wasm in

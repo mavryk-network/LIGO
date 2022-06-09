@@ -171,10 +171,5 @@ let storage (raw_options : Compiler_options.raw) source_file expression amount b
         let mini_c_param     = Ligo_compile.Of_aggregated.compile_expression ~raise aggregated_param in
         let compiled_param   = Ligo_compile.Of_mini_c.compile_expression ~raise ~options mini_c_param in
         let ()               = Ligo_compile.Of_typed.assert_equal_contract_type ~raise Check_storage entry_point app_typed_prg typed_param in
-<<<<<<< HEAD
-        let options          = Run.make_dry_run_options ~raise {now ; amount ; balance ; sender;  source ; parameter_ty = None } in
-        no_comment (Run.evaluate_expression ~raise ~options compiled_param.expr compiled_param.expr_ty)
-=======
         let options = Run.make_dry_run_options ~raise ~constants { now ; amount ; balance ; sender;  source ; parameter_ty = None } in
         no_comment (Run.evaluate_expression ~raise ~options compiled_param.expr compiled_param.expr_ty)
->>>>>>> 82dfa4950489258241f19020b29d9e62ad2cf137
