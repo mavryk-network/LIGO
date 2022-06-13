@@ -52,8 +52,6 @@ let is_pure_constant : constant' -> bool =
   | C_MAP_EMPTY | C_MAP_LITERAL
   | C_MAP_GET | C_MAP_REMOVE
   | C_MAP_GET_AND_UPDATE | C_BIG_MAP_GET_AND_UPDATE
-  | C_LIST_HEAD_OPT
-  | C_LIST_TAIL_OPT
   | C_SAPLING_EMPTY_STATE
   | C_SAPLING_VERIFY_UPDATE
   | C_OPEN_CHEST
@@ -69,7 +67,6 @@ let is_pure_constant : constant' -> bool =
   | C_ASSERT_INFERRED
   | C_MAP_FIND
   | C_CALL
-  | C_FAILWITH
   | C_ITER
   | C_LOOP_LEFT
   | C_FOLD
@@ -104,30 +101,25 @@ let is_pure_constant : constant' -> bool =
   | C_IMPLICIT_ACCOUNT
   | C_VIEW
   (* Test - ligo interpreter, should never end up here *)
+  | C_TEST_SIZE
   | C_TEST_ORIGINATE
-  | C_TEST_GET_STORAGE
   | C_TEST_GET_STORAGE_OF_ADDRESS
   | C_TEST_GET_BALANCE
   | C_TEST_SET_SOURCE
   | C_TEST_SET_BAKER
-  | C_TEST_EXTERNAL_CALL_TO_CONTRACT
-  | C_TEST_EXTERNAL_CALL_TO_CONTRACT_EXN
   | C_TEST_EXTERNAL_CALL_TO_ADDRESS
   | C_TEST_EXTERNAL_CALL_TO_ADDRESS_EXN
-  | C_TEST_MICHELSON_EQUAL
   | C_TEST_GET_NTH_BS
   | C_TEST_LOG
   | C_TEST_STATE_RESET
   | C_TEST_BOOTSTRAP_CONTRACT
   | C_TEST_NTH_BOOTSTRAP_CONTRACT
   | C_TEST_LAST_ORIGINATIONS
-  | C_TEST_COMPILE_META_VALUE
   | C_TEST_MUTATE_VALUE
   | C_TEST_MUTATION_TEST
   | C_TEST_MUTATION_TEST_ALL
   | C_TEST_SAVE_MUTATION
   | C_TEST_RUN
-  | C_TEST_EVAL
   | C_TEST_COMPILE_CONTRACT
   | C_TEST_DECOMPILE
   | C_TEST_TO_CONTRACT
@@ -135,7 +127,7 @@ let is_pure_constant : constant' -> bool =
   | C_TEST_TO_TYPED_ADDRESS
   | C_TEST_RANDOM
   | C_TEST_NTH_BOOTSTRAP_TYPED_ADDRESS
-  | C_TEST_ORIGINATE_FROM_FILE
+  | C_TEST_COMPILE_CONTRACT_FROM_FILE
   | C_TEST_SET_BIG_MAP
   | C_TEST_CAST_ADDRESS
   | C_TEST_CREATE_CHEST
@@ -152,6 +144,10 @@ let is_pure_constant : constant' -> bool =
   | C_TEST_REGISTER_FILE_CONSTANTS
   | C_TEST_PUSH_CONTEXT
   | C_TEST_POP_CONTEXT
+  | C_TEST_DROP_CONTEXT
+  | C_TEST_FAILWITH
+  | C_TEST_READ_CONTRACT_FROM_FILE
+  | C_TEST_SIGN
     -> false
 
 let rec is_pure : expression -> bool = fun e ->
@@ -185,6 +181,9 @@ let rec is_pure : expression -> bool = fun e ->
 
   | E_global_constant (_hash, _args) ->
     (* hashed code can be impure :( *)
+    false
+  | E_create_contract _ ->
+    (* very not pure *)
     false
 
   (* I'm not sure about these. Maybe can be tested better? *)
@@ -404,15 +403,10 @@ let rec all_expression ~raise : expression -> expression =
 let create_contract ~raise expr =
   let _ = map_expression (fun expr ->
                   match expr.content with
-                  | E_constant { cons_name = C_CREATE_CONTRACT ;
-                                 arguments = { content = E_closure _ ; _ } as lambda :: _ } -> (
-                    let fvs = Free_variables.expression [] lambda in
+                  | E_create_contract (_, _, ((x, _), lambda), _) -> (
+                    let fvs = Free_variables.expression [x] lambda in
                     if Int.equal (List.length fvs) 0 then expr
                     else raise.raise @@ fvs_in_create_contract_lambda expr (List.hd_exn fvs)
-                  )
-                  | E_constant { cons_name = C_CREATE_CONTRACT ;
-                                 arguments =  _ } -> (
-                    raise.raise @@ create_contract_lambda C_CREATE_CONTRACT expr
                   )
                   | _ -> expr) expr in
   expr

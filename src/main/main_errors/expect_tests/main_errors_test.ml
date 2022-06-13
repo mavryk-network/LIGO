@@ -43,7 +43,7 @@ let%expect_test "main" =
   [%expect
     {|
       Invalid syntax option: 'foo'.
-      Use 'pascaligo', 'cameligo', or 'reasonligo'.|}] ;
+      Use 'pascaligo', 'cameligo', 'reasonligo', or 'jsligo'.|}] ;
     human_readable_error (`Main_invalid_dialect_name "foo") ;
   [%expect
     {|
@@ -53,7 +53,7 @@ let%expect_test "main" =
   [%expect
     {|
   Invalid file extension 'foo'.
-  Use '.ligo' for PascaLIGO, '.mligo' for CameLIGO, '.religo' for ReasonLIGO, or the --syntax option.|}] ;
+  Use '.ligo' for PascaLIGO, '.mligo' for CameLIGO, '.religo' for ReasonLIGO, '.jsligo' for JsLIGO, or the --syntax option.|}] ;
   human_readable_error
     (`Main_unparse_tracer
       [`Tezos_alpha_error Tezos_error_monad.Error_monad.Timeout]) ;
@@ -74,8 +74,6 @@ let%expect_test "main" =
   [%expect {|
     Error(s) occurred while serializing Michelson code:
     The promise was unexpectedly canceled|}] ;
-  human_readable_error `Main_unknown_failwith_type ;
-  [%expect {|The contract failed to dry run, and returned an unsupported failwith type. Only int, string, and bytes are supported as failwith types for dry-run.|}] ;
   human_readable_error `Main_unknown ;
   [%expect {|An unknown error occurred.|}];
   human_readable_error `Main_entrypoint_not_a_function ;
@@ -102,15 +100,6 @@ let%expect_test "main" =
   [%expect {|
     Invalid command line option "--sender".
     The provided sender address "foo" is invalid. A valid Tezos address is a string prefixed by either tz1, tz2, tz3 or KT1 and followed by a Base58 encoded hash and terminated by a 4-byte checksum.|}]
-
-let%expect_test "main_execution_failed" =
-  let error e = human_readable_error (`Main_execution_failed e) in
-  error (Simple_utils.Runned_result.Failwith_int 743) ;
-  [%expect {|An error occurred while evaluating an expression: 743|}] ;
-  error (Simple_utils.Runned_result.Failwith_string "bar") ;
-  [%expect {|An error occurred while evaluating an expression: bar|}] ;
-  error (Simple_utils.Runned_result.Failwith_bytes (Bytes.of_string "bar")) ;
-  [%expect {|An error occurred while evaluating an expression: bar|}]
 
 let%expect_test _ =
   human_readable_error (unparsing_michelson_tracer [`Tezos_alpha_error Tezos_error_monad.Error_monad.Timeout; `Tezos_alpha_error Tezos_error_monad.Error_monad.Canceled]) ;
@@ -722,6 +711,22 @@ let%expect_test "spilling" =
   error (`Spilling_bad_decompile value) ;
   [%expect{| Cannot untranspile: None |}]
 
+let%expect_test "scoping" =
+  let open Mini_c in
+  let error e = human_readable_error (scoping_tracer e) in
+  error (`Scoping_corner_case ("foo", "bar")) ;
+  [%expect
+    {|
+      Scoping corner case at foo : bar.
+      Sorry, we don't have a proper error message for this error. Please report this use case so we can improve on this. |}] ;
+  error (`Scoping_contract_entrypoint "xxx") ;
+  [%expect {|contract entrypoint must be given as a literal string: xxx |}] ;
+  error (`Scoping_bad_iterator C_UNIT) ;
+  [%expect {|bad iterator: iter UNIT |}] ;
+  error `Scoping_not_comparable_pair_struct ;
+  [%expect
+    {|Invalid comparable value. When using a tuple with more than 2 components, structure the tuple like this: "(a, (b, c))". |}]
+
 let%expect_test "stacking" =
   let open Mini_c in
   let error e = human_readable_error (stacking_tracer e) in
@@ -739,7 +744,7 @@ let%expect_test "stacking" =
     {|Invalid comparable value. When using a tuple with more than 2 components, structure the tuple like this: "(a, (b, c))". |}]
 
 
-let%expect_test "decompile_michelson" = () (* same as stacking *)
+let%expect_test "decompile_michelson" = () (* same as scoping *)
 
 let%expect_test "decompile_mini_c" = ()  (* same as spilling *)
 
