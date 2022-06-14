@@ -45,11 +45,6 @@ type kwd_true   = lexeme wrap
 type kwd_type   = lexeme wrap
 type kwd_module    = lexeme wrap
 
-(* Data constructors *)
-
-type c_None  = lexeme wrap
-type c_Some  = lexeme wrap
-
 (* Symbols *)
 
 type arrow    = lexeme wrap  (* "=>"  *)
@@ -160,6 +155,11 @@ and let_binding = {
   lhs_type : (colon * type_expr) option;
   eq       : equal;
   let_rhs  : expr
+}
+
+and type_params = {
+  kwd_type  : kwd_type;
+  type_vars : (variable, comma) nsepseq
 }
 
 (* Type declarations *)
@@ -474,6 +474,7 @@ and mod_alias = {
 }
 
 and fun_expr = {
+  type_params : type_params option;
   binders     : pattern;
   lhs_type    : (colon * type_expr) option;
   arrow       : arrow;

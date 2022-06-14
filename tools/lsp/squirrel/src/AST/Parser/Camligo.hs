@@ -30,7 +30,7 @@ recognise (SomeRawTree dialect rawTree)
         "p_import"  -> BImport   <$>                      field "filename" <*> field "alias"
         "type_decl" -> BTypeDecl <$> field "name"     <*> fieldOpt "params" <*> field "type"
         "module_decl"  -> BModuleDecl <$> field "moduleName" <*> fields "declaration"
-        "module_alias" -> BModuleAlias <$> field "moduleName" <*> field "module"
+        "module_alias" -> BModuleAlias <$> field "moduleName" <*> fields "module"
         _           -> fallthrough
 
     -- TypeParams
@@ -212,7 +212,7 @@ recognise (SomeRawTree dialect rawTree)
     -- TField
   , Descent do
       boilerplate $ \case
-        "field_decl" -> TField <$> field "field" <*> field "type"
+        "field_decl" -> TField <$> field "field" <*> (Just <$> field "type")
         _            -> fallthrough
 
     -- TypeName

@@ -13,7 +13,6 @@ and type_content =
   | T_record   of rows
   | T_arrow    of ty_expr arrow
   | T_singleton of literal
-  | T_abstraction of ty_expr abstraction
   | T_for_all of ty_expr abstraction
 
 and type_injection = {
@@ -32,16 +31,6 @@ and te_list = type_expression list
 and annot_option = string option
 
 and row_element = type_expression row_element_mini_c
-
-and type_map_args = {
-    k : type_expression;
-    v : type_expression;
-  }
-
-and michelson_or_args = {
-    l : type_expression;
-    r : type_expression;
-  }
 
 and type_expression = {
     type_content: type_content;
@@ -68,7 +57,7 @@ and matching_content_variant = {
   }
 
 and matching_content_record = {
-  fields : (expression_variable * type_expression) label_map;
+  fields : type_expression binder label_map;
   body : expression;
   tv : type_expression;
 }
@@ -89,16 +78,6 @@ and expression = {
 
 and expr = expression
 
-and map_kv = {
-    key : expression ;
-    value : expression ;
-  }
-
-and look_up = {
-    ds : expression;
-    ind : expression;
-  }
-
 and expression_label_map = expression label_map
 and expression_list = expression list
 
@@ -112,7 +91,6 @@ and expression_content =
   | E_type_abstraction of expr type_abs
   | E_recursive of recursive
   | E_let_in of let_in
-  | E_type_in of (expr, ty_expr) type_in
   | E_raw_code of raw_code
   | E_type_inst of type_inst
   (* Variant *)
@@ -122,6 +100,8 @@ and expression_content =
   | E_record of expression_label_map
   | E_record_accessor of record_accessor
   | E_record_update   of record_update
+  (* assignation *)
+  | E_assign of (expression,type_expression) assign
 
 and type_inst = {
     forall: expression ;
@@ -139,12 +119,12 @@ and application = {
   }
 
 and lambda =  {
-    binder: expression_variable ;
+    binder: type_expression binder ;
     result: expression ;
   }
 
 and let_in = {
-    let_binder: expression_variable ;
+    let_binder: type_expression binder ;
     rhs: expression ;
     let_result: expression ;
     attr: known_attributes ;

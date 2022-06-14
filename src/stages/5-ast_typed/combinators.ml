@@ -39,13 +39,21 @@ let t_constant ?loc ?core injection parameters : type_expression =
 
 (* TODO?: X_name here should be replaced by X_injection *)
 let t__type_ ?loc ?core () : type_expression = t_constant ?loc ?core _type_ []
-[@@map (_type_, ("signature","chain_id", "string", "bytes", "key", "key_hash", "int", "address", "operation", "nat", "tez", "timestamp", "unit", "bls12_381_g1", "bls12_381_g2", "bls12_381_fr", "never", "mutation", "failure", "pvss_key", "baker_hash", "chest_key", "chest"))]
+[@@map (_type_, (
+    "signature","chain_id", "string", "bytes", "key", "key_hash", "int", "address", "operation", "nat", "tez",
+    "timestamp", "unit", "bls12_381_g1", "bls12_381_g2", "bls12_381_fr", "never", "mutation", "pvss_key", "baker_hash",
+    "chest_key", "chest" , "tx_rollup_l2_address", "michelson_contract"
+  ))]
 
 let t__type_ ?loc ?core t : type_expression = t_constant ?loc ?core _type_ [t]
-[@@map (_type_, ("option", "list", "set", "contract", "ticket", "sapling_state", "sapling_transaction"))]
+[@@map (_type_, ("list", "set", "contract", "ticket", "sapling_state", "sapling_transaction"))]
+
+let t_ext_int ?loc ?core t : type_expression = t_constant ?loc ?core (External "int") [t]
+let t_ext_ediv ?loc ?core t t' : type_expression = t_constant ?loc ?core (External "ediv") [t; t']
+let t_ext_u_ediv ?loc ?core t t' : type_expression = t_constant ?loc ?core (External "u_ediv") [t; t']
 
 let t__type_ ?loc ?core t t' : type_expression = t_constant ?loc ?core _type_ [t; t']
-[@@map (_type_, ("map", "big_map", "map_or_big_map", "typed_address"))]
+[@@map (_type_, ("map", "big_map", "typed_address"))]
 
 let t_mutez = t_tez
 
@@ -84,20 +92,52 @@ let t_triplet ?loc ?core a b c : type_expression =
     (Label "1",{associated_type=b;michelson_annotation=None ; decl_pos = 1}) ;
     (Label "2",{associated_type=c;michelson_annotation=None ; decl_pos = 2}) ]
 
+let t_tuple ?loc ?core xs : type_expression =
+  ez_t_record ?loc ?core @@
+    List.mapi ~f:(fun i t -> (Label (string_of_int i),{associated_type=t;michelson_annotation=None ; decl_pos = i})) xs
+
 let t_sum ?loc ?core ~layout content : type_expression = t_sum ?loc { content ; layout } ?type_meta:core ()
 let t_sum_ez ?loc ?core ?(layout=default_layout) (lst:(string * type_expression) list) : type_expression =
   let lst = List.mapi ~f:(fun i (x,y) -> (Label x, ({associated_type=y;michelson_annotation=None;decl_pos=i}:row_element)) ) lst in
   let map = LMap.of_list lst in
   t_sum ?loc ?core ~layout map
+let t_record_ez ?loc ?core ?(layout=default_layout) (lst:(string * type_expression) list) : type_expression =
+  let lst = List.mapi ~f:(fun i (x,y) -> (Label x, ({associated_type=y;michelson_annotation=None;decl_pos=i}:row_element)) ) lst in
+  let map = LMap.of_list lst in
+  t_record ?loc ?core ~layout map
 let t_bool ?loc ?core ()       : type_expression = t_sum_ez ?loc ?core
   [("True", t_unit ());("False", t_unit ())]
 
+let t_option ?loc ?core typ : type_expression = 
+  t_sum_ez ?loc ?core [
+    ("Some", typ) ;
+    ("None", t_unit ());
+  ]
+
+let t_option_abst ?loc ?core () : type_expression =
+  let ty_binder = TypeVar.of_input_var "'a" in
+  t_abstraction { ty_binder ; kind=Type ; type_= (
+    t_sum_ez ?loc ?core [
+      ("Some", t_variable ty_binder ()) ;
+      ("None", t_unit ());
+    ]) 
+  } ()
+
 (* types specific to LIGO test framework*)
 let t_michelson_code ?loc ?core () : type_expression = t_constant ?loc ?core Stage_common.Constant.Michelson_program []
-let t_test_exec_error ?loc ?core () : type_expression = t_sum_ez ?loc ?core
-  [ ("Rejected", t_pair (t_michelson_code ()) (t_address ())) ; ("Other" , t_unit ())]
+let t_test_exec_error ?loc ?core () : type_expression = t_sum_ez ?loc ?core [
+    "Rejected", t_pair (t_michelson_code ()) (t_address ()) ;
+    "Balance_too_low", t_record_ez [
+        "contract_too_low" , t_address () ;
+        "contract_balance" , t_mutez () ;
+        "spend_request" , t_mutez () ;
+      ];
+    "Other" , t_string ()
+  ]
 let t_test_exec_result ?loc ?core () : type_expression = t_sum_ez ?loc ?core
-  [ ("Success" ,t_nat ()); ("Fail", t_sum_ez [ ("Rejected", t_pair (t_michelson_code ()) (t_address ())) ; ("Other" , t_unit ())])]
+  [ ("Success" ,t_nat ()); ("Fail", t_test_exec_error ())]
+let t_test_baker_policy ?loc ?core () : type_expression = t_sum_ez ?loc ?core
+  [ ("By_round" ,t_int ()); ("By_account", t_address ()); ("Excluding", t_list (t_address ()))]
 
 let t_arrow param result ?loc ?s () : type_expression = t_arrow ?loc ?type_meta:s {type1=param; type2=result} ()
 let t_shallow_closure param result ?loc ?s () : type_expression = make_t ?loc (T_arrow {type1=param; type2=result}) s
@@ -115,6 +155,18 @@ let get_lambda_with_type e =
 
 let get_t_bool (t:type_expression) : unit option = match t.type_content with
   | t when (Compare.type_content t (t_bool ()).type_content) = 0-> Some ()
+  | _ -> None
+
+let get_t_option (t:type_expression) : type_expression option = 
+  match t.type_content with
+  | T_sum {content;_} ->
+    let keys = LMap.keys content in
+    (match keys with
+      [Label "Some" ; Label "None"]
+    | [Label "None" ; Label "Some"] ->
+      let some = LMap.find (Label "Some") content in
+      Some some.associated_type 
+    | _ -> None)
   | _ -> None
 
 let get_param_inj (t:type_expression) : (string * Stage_common.Constant.t * type_expression list) option =
@@ -143,7 +195,7 @@ let get_t__type_ (t : type_expression) : unit option = get_t_base_inj t _type_
 [@@map (_type_, ("int", "nat", "unit", "tez", "timestamp", "address", "bytes", "string", "key", "signature", "key_hash", "chest", "chest_key", "michelson_program", "bls12_381_g1", "bls12_381_g2", "bls12_381_fr"))]
 
 let get_t__type_ (t : type_expression) : type_expression option = get_t_unary_inj t _type_
-[@@map (_type_, ("contract", "option", "list", "set", "ticket", "sapling_state", "sapling_transaction"))]
+[@@map (_type_, ("contract",  "list", "set", "ticket", "sapling_state", "sapling_transaction"))]
 
 let get_t_mutez (t:type_expression) : unit option = get_t_tez t
 let get_t_michelson_code (t:type_expression) : unit option = get_t_michelson_program t
@@ -182,7 +234,6 @@ let get_t_or (t:type_expression) : (type_expression * type_expression) option = 
 let get_t_map (t:type_expression) : (type_expression * type_expression) option =
   match t.type_content with
   | T_constant {language=_;injection; parameters = [k;v]} when Stage_common.Constant.equal injection Stage_common.Constant.Map -> Some (k,v)
-  | T_constant {language=_;injection; parameters = [k;v]} when Stage_common.Constant.equal injection Stage_common.Constant.Map_or_big_map -> Some (k,v)
   | _ -> None
 
 let get_t_typed_address (t:type_expression) : (type_expression * type_expression) option =
@@ -193,7 +244,6 @@ let get_t_typed_address (t:type_expression) : (type_expression * type_expression
 let get_t_big_map (t:type_expression) : (type_expression * type_expression) option =
   match t.type_content with
   | T_constant {language=_;injection; parameters = [k;v]} when Stage_common.Constant.equal injection Stage_common.Constant.Big_map -> Some (k,v)
-  | T_constant {language=_;injection; parameters = [k;v]} when Stage_common.Constant.equal injection Stage_common.Constant.Map_or_big_map -> Some (k,v)
   | _ -> None
 
 let get_t__type__exn t = match get_t__type_ t with
@@ -206,7 +256,7 @@ let assert_t_contract (t:type_expression) : unit option = match get_t_unary_inj 
   | _ -> None
 
 let is_t__type_ t = Option.is_some (get_t__type_ t)
-[@@map (_type_, ("list", "set", "nat", "string", "bytes", "int", "bool", "unit", "address", "tez", "contract", "map", "big_map", "option"))]
+[@@map (_type_, ("list", "set", "nat", "string", "bytes", "int", "bool", "unit", "address", "tez", "contract", "map", "big_map"))]
 
 let is_t_mutez t = is_t_tez t
 
@@ -219,7 +269,7 @@ let assert_t__type_ : type_expression -> unit option = fun t -> get_t__type_ t
 [@@map (_type_, ("int", "nat", "bool", "unit", "mutez", "key", "signature", "key_hash", "bytes", "string", "michelson_code"))]
 
 let assert_t__type_ : type_expression -> unit option = fun v -> Option.map ~f:(fun _ -> ()) @@ get_t__type_ v
-[@@map (_type_, ("option", "set", "list"))]
+[@@map (_type_, ("set", "list"))]
 
 let ez_e_record (lst : (label * expression) list) : expression_content =
   let aux prev (k, v) = LMap.add k v prev in
@@ -230,13 +280,12 @@ let e__ct_ () : expression_content = E_constant { cons_name = C__CT_; arguments 
 [@@map (_ct_, ("none", "nil", "set_empty", "map_empty", "big_map_empty"))]
 
 let e__ct_ p : expression_content = E_constant { cons_name = C__CT_; arguments = [p] }
-[@@map (_ct_, ("some", "contract_opt", "contract", "failwith"))]
+[@@map (_ct_, ("some", "contract_opt", "contract"))]
 
 let e__ct_ p p' : expression_content = E_constant { cons_name = C__CT_; arguments = [p; p']}
 [@@map (_ct_, ("cons", "set_add", "map_remove", "contract_entrypoint", "contract_entrypoint_opt"))]
 
 let e_map_add k v tl : expression_content = E_constant {cons_name=C_MAP_ADD;arguments=[k;v;tl]}
-let e_pack e : expression_content = E_constant {cons_name=C_BYTES_PACK; arguments=[e]}
 let e_unpack e : expression_content = E_constant {cons_name=C_BYTES_UNPACK; arguments=[e]}
 
 let e__type_ p : expression_content = E_literal (Literal__type_ p)
@@ -276,8 +325,6 @@ let e_a_type_inst forall type_ u = e_type_inst { forall ; type_ } u
 let e_a_mod_in module_binder rhs let_result = e_mod_in { module_binder ; rhs ; let_result } (get_type let_result)
 
 (* Constants *)
-let e_a_some s = make_e (e_some s) (t_constant Stage_common.Constant.Option [s.type_expression])
-let e_a_none t = make_e (e_none ()) (t_option t)
 let e_a_nil t = make_e (e_nil ()) (t_list t)
 let e_a_cons hd tl = make_e (e_cons hd tl) (t_list hd.type_expression)
 let e_a_set_empty t = make_e (e_set_empty ()) (t_set t)
@@ -291,7 +338,6 @@ let e_a_contract_opt a t = make_e (e_contract_opt a) (t_option (t_contract t))
 let e_a_contract a t = make_e (e_contract a) (t_contract t)
 let e_a_contract_entrypoint e a t = make_e (e_contract_entrypoint e a) (t_contract t)
 let e_a_contract_entrypoint_opt e a t = make_e (e_contract_entrypoint_opt e a) (t_option (t_contract t))
-let e_a_pack e = make_e (e_pack e) (t_bytes ())
 let e_a_unpack e t = make_e (e_unpack e) (t_option t)
 
 let get_a_int (t:expression) =
@@ -314,33 +360,25 @@ let get_a_unit (t:expression) =
   | E_literal (Literal_unit) -> Some ()
   | _ -> None
 
-let get_a_bool (t:expression) =
-  match t.expression_content with
-  | E_constructor {constructor=Label name;element} when
-    (String.equal name "True")
-    && Compare.expression_content element.expression_content @@ e_unit () = 0 ->
-      Some true
-  | E_constructor {constructor=Label name;element} when
-    (String.equal name "False")
-    && Compare.expression_content element.expression_content @@ e_unit () = 0 ->
-      Some false
-  | _ -> None
-
-let get_declaration_by_name : program -> expression_variable -> declaration option = fun p name ->
-  let aux : declaration -> bool = fun declaration ->
-    match declaration with
-    | Declaration_constant { binder; expr = _ ; attr = _ } ->
-        ValueVar.equal binder name
-    | Declaration_type   _
-    | Declaration_module _
-    | Module_alias       _ -> false
-  in
-  List.find ~f:aux @@ List.map ~f:Location.unwrap p
-
 let get_record_field_type (t : type_expression) (label : label) : type_expression option =
   match get_t_record t with
   | None -> None
   | Some record ->
     match LMap.find_opt label record.content with
+    | None -> None
+    | Some row_element -> Some row_element.associated_type
+
+let get_record_fields (t : type_expression) : (label * type_expression) list option =
+  match get_t_record t with
+  | None -> None
+  | Some record ->
+    let lst = LMap.to_kv_list record.content in
+    Some (List.map ~f:(fun (k,x) -> k,x.associated_type) lst)
+
+let get_sum_label_type (t : type_expression) (label : label) : type_expression option =
+  match get_t_sum t with
+  | None -> None
+  | Some s ->
+    match LMap.find_opt label s.content with
     | None -> None
     | Some row_element -> Some row_element.associated_type

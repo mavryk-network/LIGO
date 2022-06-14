@@ -49,7 +49,9 @@ let kv_list_of_record_or_tuple ~layout record_t_content record =
   match layout with
   | L_tree -> List.map ~f:snd exps
   | L_comb -> (
-    let types = LMap.to_kv_list record_t_content in
+    let types = if (is_tuple_lmap record)
+                then tuple_of_record record_t_content
+                else LMap.to_kv_list record_t_content in
     let te = List.map ~f:(fun ((label_t,t),(label_e,e)) ->
       assert (Compare.label label_t label_e = 0) ; (*TODO TEST*)
       (t,e)) (List.zip_exn types exps) in
@@ -90,9 +92,6 @@ let rec subst_type v t (u : type_expression) =
      let type1 = self v t type1 in
      let type2 = self v t type2 in
      { u with type_content = T_arrow {type1;type2} }
-  | T_abstraction {ty_binder;kind;type_} when not (TypeVar.equal ty_binder v) ->
-     let type_ = self v t type_ in
-     { u with type_content = T_abstraction {ty_binder;kind;type_} }
   | T_for_all {ty_binder;kind;type_} when not (TypeVar.equal ty_binder v) ->
      let type_ = self v t type_ in
      { u with type_content = T_for_all {ty_binder;kind;type_} }
@@ -117,12 +116,21 @@ let destruct_for_alls (t : type_expression) =
     | _ -> (type_vars, t)
   in destruct_for_alls [] t
 
-let constant_compare ia ib =
-  let open Stage_common.Constant in
-  match ia, ib with
-  | (Map     | Map_or_big_map), (Map     | Map_or_big_map) -> 0
-  | (Big_map | Map_or_big_map), (Big_map | Map_or_big_map) -> 0
-  | _ -> Stage_common.Constant.compare ia ib
+(* This function transforms a type `t1 -> ... -> tn -> t` into the pair `([ t1 ; .. ; tn ] , t)` *)
+let destruct_arrows_n (t : type_expression) (n : int) =
+  let rec destruct_arrows type_vars (t : type_expression) = match t.type_content with
+    | T_arrow { type1 ; type2 } when List.length type_vars < n ->
+       destruct_arrows (type1 :: type_vars) type2
+    | _ -> (List.rev type_vars, t)
+  in destruct_arrows [] t
+
+(* This function transforms a type `t1 -> ... -> tn -> t` into the pair `([ t1 ; .. ; tn ] , t)` *)
+let destruct_arrows (t : type_expression) =
+  let rec destruct_arrows type_vars (t : type_expression) = match t.type_content with
+    | T_arrow { type1 ; type2 } ->
+       destruct_arrows (type1 :: type_vars) type2
+    | _ -> (List.rev type_vars, t)
+  in destruct_arrows [] t
 
 let assert_eq = fun a b -> if Caml.(=) a b then Some () else None
 let assert_same_size = fun a b -> if (List.length a = List.length b) then Some () else None
@@ -177,13 +185,9 @@ let rec assert_type_expression_eq (a, b: (type_expression * type_expression)) : 
   | T_variable _, _ -> None
   | T_singleton a , T_singleton b -> assert_literal_eq (a , b)
   | T_singleton _ , _ -> None
-  | T_abstraction a , T_abstraction b ->
-    assert_type_expression_eq (a.type_, b.type_) >>= fun _ ->
-    Some (assert (equal_kind a.kind b.kind))
   | T_for_all a , T_for_all b ->
     assert_type_expression_eq (a.type_, b.type_) >>= fun _ ->
     Some (assert (equal_kind a.kind b.kind))
-  | T_abstraction _ , _ -> None
   | T_for_all _ , _ -> None
 
 and type_expression_eq ab = Option.is_some @@ assert_type_expression_eq ab

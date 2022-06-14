@@ -10,13 +10,15 @@ let stage = "abstracter"
 
 type abs_error = [
   | `Concrete_reasonligo_unknown_constant of string * Location.t
-  | `Concrete_reasonligo_untyped_recursive_fun of Region.t
+  | `Concrete_reasonligo_untyped_recursive_fun of Location.t
   | `Concrete_reasonligo_unsupported_pattern_type of Raw.pattern
   | `Concrete_reasonligo_unsupported_string_singleton of Raw.type_expr
   | `Concrete_reasonligo_michelson_type_wrong of Location.t * string
   | `Concrete_reasonligo_michelson_type_wrong_arity of Location.t * string
   | `Concrete_reasonligo_recursion_on_non_function of Location.t
   | `Concrete_reasonligo_funarg_tuple_type_mismatch of Region.t * Raw.pattern * Raw.type_expr
+  | `Concrete_reasonligo_expected_access_to_variable of Region.t
+
   ] [@@deriving poly_constructor { prefix = "concrete_reasonligo_" }]
 
 let error_ppformat : display_format:string display_format ->
@@ -25,14 +27,18 @@ let error_ppformat : display_format:string display_format ->
   match display_format with
   | Human_readable | Dev -> (
     match a with
+    | `Concrete_reasonligo_expected_access_to_variable reg ->
+      Format.fprintf f
+      "@[<hv>%a@.Expected access to a variable.@]"
+        Snippet.pp_lift reg
     | `Concrete_reasonligo_unknown_constant (s,loc) ->
       Format.fprintf f
       "@[<hv>%a@.Unknown constant: %s"
         Snippet.pp loc s
-    | `Concrete_reasonligo_untyped_recursive_fun reg ->
+    | `Concrete_reasonligo_untyped_recursive_fun loc ->
       Format.fprintf f
         "@[<hv>%a@.Invalid function declaration.@.Recursive functions are required to have a type annotation (for now). @]"
-        Snippet.pp_lift reg
+        Snippet.pp loc
     | `Concrete_reasonligo_unsupported_pattern_type pl ->
       Format.fprintf f
         "@[<hv>%a@.Invalid pattern matching.\
@@ -76,6 +82,13 @@ let error_jsonformat : abs_error -> Yojson.Safe.t = fun a ->
       ("content",  content )]
   in
   match a with
+  | `Concrete_reasonligo_expected_access_to_variable reg ->
+    let message = `String "Expected access to a variable" in
+    let loc = Format.asprintf "%a" Location.pp_lift reg in
+    let content = `Assoc [
+      ("message", message );
+      ("location", `String loc);] in
+    json_error ~stage ~content
   | `Concrete_reasonligo_unknown_constant (s,loc) ->
     let message = `String ("Unknow constant: " ^ s) in
     let content = `Assoc [
@@ -83,54 +96,49 @@ let error_jsonformat : abs_error -> Yojson.Safe.t = fun a ->
       ("location", Location.to_yojson loc);
     ] in
     json_error ~stage ~content
-  | `Concrete_reasonligo_untyped_recursive_fun reg ->
+  | `Concrete_reasonligo_untyped_recursive_fun loc ->
     let message = `String "Untyped recursive functions are not supported yet" in
-    let loc = Format.asprintf "%a" Location.pp_lift reg in
     let content = `Assoc [
       ("message", message );
-      ("location", `String loc);] in
+      ("location", Location.to_yojson loc);] in
     json_error ~stage ~content
   | `Concrete_reasonligo_unsupported_pattern_type pl ->
-    let loc = Format.asprintf "%a"
-      Location.pp_lift ((fun a p -> Region.cover a (Raw.pattern_to_region p)) Region.ghost pl) in
+    let loc = Location.lift ((fun a p -> Region.cover a (Raw.pattern_to_region p)) Region.ghost pl) in
     let message = `String "Currently, only booleans, lists, options, and constructors are supported in patterns" in
     let content = `Assoc [
       ("message", message );
-      ("location", `String loc);] in
+      ("location", Location.to_yojson loc);] in
     json_error ~stage ~content
   | `Concrete_reasonligo_unsupported_string_singleton te ->
     let message = `String "Unsupported singleton string type" in
-    let loc = Format.asprintf "%a" Location.pp_lift (Raw.type_expr_to_region te) in
+    let loc = Location.lift (Raw.type_expr_to_region te) in
     let content = `Assoc [
       ("message", message );
-      ("location", `String loc);] in
+      ("location", Location.to_yojson loc);] in
     json_error ~stage ~content
-  | `Concrete_reasonligo_recursion_on_non_function reg ->
+  | `Concrete_reasonligo_recursion_on_non_function loc ->
     let message = Format.asprintf "Only functions can be recursive." in
-    let loc = Format.asprintf "%a" Location.pp reg in
     let content = `Assoc [
       ("message", `String message );
-      ("location", `String loc) ] in
+      ("location", Location.to_yojson loc) ] in
     json_error ~stage ~content
   | `Concrete_reasonligo_michelson_type_wrong (loc,name) ->
     let message = Format.asprintf "Argument %s must be a string singleton" name in
-    let loc = Format.asprintf "%a" Location.pp loc in
     let content = `Assoc [
       ("message", `String message );
-      ("location", `String loc); ] in
+      ("location", Location.to_yojson loc); ] in
     json_error ~stage ~content
   | `Concrete_reasonligo_michelson_type_wrong_arity (loc,name) ->
     let message = Format.asprintf "%s does not have the right number of argument" name in
-    let loc = Format.asprintf "%a" Location.pp loc in
     let content = `Assoc [
       ("message", `String message );
-      ("location", `String loc); ] in
+      ("location", Location.to_yojson loc); ] in
     json_error ~stage ~content
   | `Concrete_reasonligo_funarg_tuple_type_mismatch (r, _, _) ->
     let message = Format.asprintf "The tuple does not have the expected type." in
-    let loc = Format.asprintf "%a" Location.pp_lift r in
+    let loc = Location.lift r in
     let content = `Assoc [
       ("message", `String message );
-      ("location", `String loc);
+      ("location", Location.to_yojson loc);
     ] in
     json_error ~stage ~content

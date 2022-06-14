@@ -7,7 +7,8 @@ RUN apk update && apk upgrade && apk --no-cache add \
   bash ncurses-dev xz m4 git pkgconfig findutils rsync \
   gmp-dev libev-dev libressl-dev linux-headers pcre-dev perl zlib-dev hidapi-dev \
   libffi-dev \
-  cargo
+  cargo py3-pip
+RUN pip3 install jsonschema
 
 WORKDIR /ligo
 # install opam:
@@ -63,8 +64,8 @@ RUN opam exec -- bisect-ppx-report summary --per-file > coverage/coverage-summar
 
 # Generate syntax highlighting files
 COPY tools/ligo-syntax-highlighting ligo-syntax-highlighting
-RUN mkdir highlighting highlighting/vim highlighting/emacs highlighting/vscode
-RUN opam exec -- dune exec ligo-syntax-highlighting/LigoSyntaxHighlighting.exe -- --vim=highlighting/vim --emacs=highlighting/emacs --vscode=highlighting/vscode
+RUN mkdir highlighting highlighting/vim highlighting/emacs highlighting/vscode highlighting/textmate
+RUN opam exec -- dune exec ligo-syntax-highlighting/LigoSyntaxHighlighting.exe -- --vim=highlighting/vim --emacs=highlighting/emacs --vscode=highlighting/vscode --textmate=highlighting/textmate
 
 # Run doc
 RUN opam exec -- dune build @doc

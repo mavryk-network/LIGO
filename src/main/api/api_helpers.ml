@@ -3,15 +3,6 @@ open Simple_utils
 
 module Trace = Simple_utils.Trace
 
-let warn_str (display_format:ex_display_format) (a: 'a list) : string =
-  let (Ex_display_format t) = display_format in
-  match t with
-  | Human_readable | Dev as t ->
-     Format.asprintf "%a\n" (Simple_utils.PP_helpers.list_sep (Main_errors.Formatter.error_format.pp ~display_format:t) (Simple_utils.PP_helpers.tag "")) a
-  | Json -> let json = List.map ~f:Main_errors.Formatter.error_format.to_json a in
-            let s = Yojson.Safe.pretty_to_string @@ `List json in
-            Format.asprintf "%s\n" s
-
 let toplevel : ?warning_as_error:bool -> display_format:ex_display_format -> displayable -> (unit -> Main_warnings.all list) -> ('value, _) result -> _ =
   fun ?(warning_as_error=false) ~display_format disp warns value ->
     let (Ex_display_format t) = display_format in
@@ -37,5 +28,9 @@ let toplevel : ?warning_as_error:bool -> display_format:ex_display_format -> dis
 let format_result : ?warning_as_error:bool -> display_format:ex_display_format -> 'value format -> (unit -> Main_warnings.all list) -> (raise:Main_errors.all Trace.raise -> 'value) -> _ =
   fun ?(warning_as_error=false) ~display_format value_format warns value ->
     let format = bind_format value_format Main_errors.Formatter.error_format in
-    let value = Trace.to_stdlib_result value in
+    let value =
+        Trace.try_with
+            (fun ~raise -> Ok (value ~raise))
+            (fun e -> Error (e))
+    in
     toplevel ~warning_as_error ~display_format (Displayable {value ; format}) warns value

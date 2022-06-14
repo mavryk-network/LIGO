@@ -141,6 +141,7 @@ module.exports = grammar({
       prec(10, // see 'accessor_chain' for explanation of precedence
         common.withAttrs($, seq(
           field("field_name", $.FieldName),
+          // FIXME: Type annotation is optional.
           ':',
           field("field_type", $._type_expr),
         ))),
@@ -217,7 +218,7 @@ module.exports = grammar({
       "module",
       field("moduleName", $.ModuleName),
       "=",
-      common.sepBy('.', field("module", $.ModuleName))
+      common.sepBy1('.', field("module", $.ModuleName))
     ),
 
     /// STATEMENTS
@@ -416,8 +417,8 @@ module.exports = grammar({
       $.tuple,
       $.list,
       $.data_projection,
-      $.if,
-      $.switch,
+      $.if_then_else,
+      $.switch_case,
       $._record_expr,
       $.michelson_interop,
       $.paren_expr,
@@ -467,7 +468,7 @@ module.exports = grammar({
     // 'tools/lsp/squirrel/test/contracts/sexps/single_record_item.religo'.
     _accessor_chain: $ => prec.right(11, common.sepBy1('.', field("accessor", $.FieldName))),
 
-    if: $ => seq(
+    if_then_else: $ => seq(
       'if',
       field("selector", $._expr),
       field("then", $.block),
@@ -477,7 +478,7 @@ module.exports = grammar({
       ))
     ),
 
-    switch: $ => seq(
+    switch_case: $ => seq(
       'switch',
       field("subject", $._expr_term),
       common.block(seq(
@@ -622,7 +623,7 @@ module.exports = grammar({
 
     attr: $ => /\[@[a-zA-Z][a-zA-Z0-9_:]*\]/,
 
-    String: $ => /\"(\\.|[^"])*\"/,
+    String: $ => /\"(\\.|[^"\n])*\"/,
     Int: $ => /-?([1-9][0-9_]*|0)/,
     Nat: $ => /([1-9][0-9_]*|0)n/,
     Tez: $ => /([1-9][0-9_]*|0)(\.[0-9_]+)?(tz|tez|mutez)/,

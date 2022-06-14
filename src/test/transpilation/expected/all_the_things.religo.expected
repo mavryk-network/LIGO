@@ -2,25 +2,23 @@ type tokens = big_map(address, nat);
 
 type allowances = big_map((address, address), nat);
 
-type storage = {tokens, allowances, total_amount: nat };
+type storage = {tokens, allowances, total_amount: nat};
 
 type transfer = {
   address_from: address,
   address_to: address,
-  value: nat
-};
+  value: nat};
 
-type approve = {spender: address, value: nat };
+type approve = {spender: address, value: nat};
 
 type getAllowance = {
   owner: address,
   spender: address,
-  callback: contract(nat)
-};
+  callback: contract(nat)};
 
-type getBalance = {owner: address, callback: contract(nat) };
+type getBalance = {owner: address, callback: contract(nat)};
 
-type getTotalSupply = {callback: contract(nat) };
+type getTotalSupply = {callback: contract(nat)};
 
 type action = 
   Transfer(transfer)
@@ -32,13 +30,14 @@ type action =
 let transfer = ((p, s): (transfer, storage))
 : (list(operation), storage) => {
   let new_allowances = 
-    if(Tezos.sender == p.address_from) {
+    if(Tezos.get_sender() == p.address_from) {
       s.allowances
     } else {
 
       let authorized_value = 
         switch (
-         Big_map.find_opt((Tezos.sender, p.address_from),
+         Big_map.find_opt((Tezos.get_sender(),
+             p.address_from),
             s.allowances)) {
         | Some value => value
         | None => 0n
@@ -48,7 +47,7 @@ let transfer = ((p, s): (transfer, storage))
       } else {
 
 
-        Big_map.update((Tezos.sender, p.address_from),
+        Big_map.update((Tezos.get_sender(), p.address_from),
            (Some (abs(authorized_value - p.value))),
            s.allowances)
         }
@@ -89,7 +88,7 @@ let approve = ((p, s): (approve, storage))
 : (list(operation), storage) => {
   let previous_value = 
     switch (
-     Big_map.find_opt((p.spender, Tezos.sender),
+     Big_map.find_opt((p.spender, Tezos.get_sender()),
         s.allowances)) {
     | Some value => value
     | None => 0n
@@ -102,7 +101,7 @@ let approve = ((p, s): (approve, storage))
 
     let new_allowances = 
 
-      Big_map.update((p.spender, Tezos.sender),
+      Big_map.update((p.spender, Tezos.get_sender()),
          (Some (p.value)),
          s.allowances);
     (([] : list(operation)),
@@ -156,7 +155,7 @@ let main = (p: key_hash): address => {
 };
 
 let check_ = (p: unit): int => 
-  if(Tezos.amount == 100000000mutez) {
+  if(Tezos.get_amount() == 100000000mutez) {
     42
   } else {
 
@@ -211,7 +210,7 @@ let main = (parameter: int, storage: address) =>
 type storage = tez;
 
 let main2 = (p: unit, s: storage) => 
-  ([] : list(operation), Tezos.balance);
+  ([] : list(operation), Tezos.get_balance());
 
 let main = (x: (unit, storage)) => main2(x[0], x[1]);
 
@@ -354,21 +353,18 @@ type tokenAmount = nat;
 type transferContents = {
   to_: tokenOwner,
   token_id: tokenId,
-  amount: tokenAmount
-};
+  amount: tokenAmount};
 
 type transfer = {
   from_: tokenOwner,
-  txs: list(transferContents)
-};
+  txs: list(transferContents)};
 
 type transferContentsMichelson = michelson_pair_right_comb
   (transferContents);
 
 type transferAuxiliary = {
   from_: tokenOwner,
-  txs: list(transferContentsMichelson)
-};
+  txs: list(transferContentsMichelson)};
 
 type transferMichelson = michelson_pair_right_comb
   (transferAuxiliary);
@@ -393,7 +389,7 @@ type transferContentsIteratorAccumulator = (storage,
  tokenOwner);
 
 let allowOnlyOwnTransfer = (from: tokenOwner): unit => {
-  if(from != Tezos.sender) {
+  if(from != Tezos.get_sender()) {
     failwith(errorNotOwner)
   } else {
 
@@ -595,21 +591,18 @@ type id = int;
 type id_details = {
   owner: address,
   controller: address,
-  profile: bytes
-};
+  profile: bytes};
 
 type buy = {
   profile: bytes,
-  initial_controller: option(address)
-};
+  initial_controller: option(address)};
 
-type update_owner = {id, new_owner: address };
+type update_owner = {id, new_owner: address};
 
 type update_details = {
   id,
   new_profile: option(bytes),
-  new_controller: option(address)
-};
+  new_controller: option(address)};
 
 type action = 
   Buy(buy)
@@ -621,8 +614,7 @@ type storage = {
   identities: big_map(id, id_details),
   next_id: int,
   name_price: tez,
-  skip_price: tez
-};
+  skip_price: tez};
 
 let buy = ((parameter, storage): (buy, storage))
 : (list(operation), storage) => {
@@ -645,8 +637,7 @@ let buy = ((parameter, storage): (buy, storage))
   let new_id_details: id_details = {
     owner: sender,
     controller: controller,
-    profile: profile
-  };
+    profile: profile};
   let updated_identities: big_map(id, id_details) = 
 
     Big_map.update(new_id, Some (new_id_details), identities);
@@ -683,8 +674,7 @@ let update_owner = ((parameter, storage): (update_owner,
   let updated_id_details: id_details = {
     owner: new_owner,
     controller: current_id_details.controller,
-    profile: current_id_details.profile
-  };
+    profile: current_id_details.profile};
   let updated_identities = 
 
     Big_map.update(id, (Some updated_id_details), identities);
@@ -736,8 +726,7 @@ let update_details = ((parameter, storage): (update_details,
   let updated_id_details: id_details = {
     owner: owner,
     controller: controller,
-    profile: profile
-  };
+    profile: profile};
   let updated_identities: big_map(id, id_details) = 
 
     Big_map.update(id, (Some updated_id_details), identities);
@@ -917,21 +906,19 @@ let rec aux_simple = (i: int): int =>
 
 let counter_simple = (n: int): int => aux_simple(n);
 
-type sum_aggregator = {counter: int, sum: int };
+type sum_aggregator = {counter: int, sum: int};
 
 let counter = (n: int): int => {
   let initial: sum_aggregator = {
     counter: 0,
-    sum: 0
-  };
+    sum: 0};
   let rec aggregate = (prev: sum_aggregator): int => 
     if(prev.counter <= n) {
 
 
       aggregate({
           counter: prev.counter + 1,
-          sum: prev.counter + prev.sum
-        })
+          sum: prev.counter + prev.sum})
     } else {
 
       prev.sum
@@ -943,20 +930,18 @@ let rec aux_nest = (prev: sum_aggregator): sum_aggregator =>
   if(prev.counter < 100) {
 
     let sum: int = prev.sum + aux_simple(prev.counter);
-    aux_nest({counter: prev.counter + 1, sum: sum })
+    aux_nest({counter: prev.counter + 1, sum: sum})
   } else {
 
     ({
        counter: prev.counter,
-       sum: prev.sum
-     })
+       sum: prev.sum})
     };
 
 let counter_nest = (n: int): int => {
   let initial: sum_aggregator = {
     counter: 0,
-    sum: 0
-  };
+    sum: 0};
   let out: sum_aggregator = aux_nest(initial);
   out.sum
 };
@@ -1089,8 +1074,7 @@ type storage = {
   id,
   counter,
   threshold,
-  auth: authorized_keys
-};
+  auth: authorized_keys};
 
 type message = unit => list(operation);
 
@@ -1098,7 +1082,7 @@ type dummy = (key_hash, signature);
 
 type signatures = list(dummy);
 
-type check_message_pt = {counter, message, signatures };
+type check_message_pt = {counter, message, signatures};
 
 type return = (list(operation), storage);
 
@@ -1195,7 +1179,7 @@ let donate = ((p, s): (unit, storage))
 
 let distribute = ((p, s): ((unit => list(operation)),
    storage)): (list(operation), storage) => {
-  if(Tezos.sender == s) {
+  if(Tezos.get_sender() == s) {
     (p(), s)
   } else {
 
@@ -1213,13 +1197,13 @@ let main = ((p, s): (parameter, storage))
   }
 };
 
-type foobar = {foo: int, bar: int };
+type foobar = {foo: int, bar: int};
 
-let fb: foobar = {foo: 0, bar: 0 };
+let fb: foobar = {foo: 0, bar: 0};
 
-type abc = {a: int, b: int, c: int };
+type abc = {a: int, b: int, c: int};
 
-let abc: abc = {a: 42, b: 142, c: 242 };
+let abc: abc = {a: 42, b: 142, c: 242};
 
 let a: int = abc.a;
 
@@ -1229,15 +1213,15 @@ let c: int = abc.c;
 
 let projection = (r: foobar): int => r.foo + r.bar;
 
-let modify = (r: foobar): foobar => {foo: 256, bar: r.bar };
+let modify = (r: foobar): foobar => {foo: 256, bar: r.bar};
 
 let modify_abc = (r: abc): abc => {...r, b: 2048, c: 42};
 
-type big_record = {a: int, b: int, c: int, d: int, e: int };
+type big_record = {a: int, b: int, c: int, d: int, e: int};
 
-let br: big_record = {a: 23, b: 23, c: 23, d: 23, e: 23 };
+let br: big_record = {a: 23, b: 23, c: 23, d: 23, e: 23};
 
-type double_record = {inner: abc };
+type double_record = {inner: abc};
 
 let modify_inner = (r: double_record): double_record => 
   {...r,
@@ -1259,7 +1243,7 @@ let rec fibo = ((n, n_1, n_0): (int, int, int)): int =>
     fibo((n - 1, n_1 + n_0, n_1))
     };
 
-let main = (p: unit): address => Tezos.self_address;
+let main = (p: unit): address => Tezos.get_self_address();
 
 let literal_op = (p: unit): set(string) => 
   Set.literal(["foo", "bar", "foobar"]);
@@ -1282,9 +1266,9 @@ let main = (p: key_hash): list(operation) => {
   ([] : list(operation))
 };
 
-type p = {x: int };
+type p = {x: int};
 
-let o = (p: int): p => {x: p };
+let o = (p: int): p => {x: p};
 
 let size_op = (s: string): nat => String.length(s);
 
@@ -1421,15 +1405,13 @@ let p = {
 let q = {
   f: 3,
   g: 6,
-  h: {i: "bla", j: 1 + 2, k: {l: 1, z: 2 } }
-};
+  h: {i: "bla", j: 1 + 2, k: {l: 1, z: 2}}};
 
 let s = {
   let a = 2;
   {
     z: a,
-    a: a
-  }
+    a}
 };
 
 let t = (((((((2)))))));

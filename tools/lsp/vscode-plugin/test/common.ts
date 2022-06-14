@@ -5,6 +5,7 @@ export enum Dialect {
   PASCALIGO,
   CAMELIGO,
   REASONLIGO,
+  JSLIGO
 }
 
 export function getExt(lang: Dialect): string {
@@ -15,8 +16,10 @@ export function getExt(lang: Dialect): string {
       return 'mligo'
     case Dialect.REASONLIGO:
       return 'religo'
+    case Dialect.JSLIGO:
+      return 'jsligo'
     default:
-      throw new Error(`Unrecognized extesion: ${lang}`)
+      throw new Error(`Unrecognized dialect: ${lang}`)
   }
 }
 
@@ -28,19 +31,10 @@ export function getLang(lang: Dialect): string {
       return 'CameLIGO'
     case Dialect.REASONLIGO:
       return 'ReasonLIGO'
+    case Dialect.JSLIGO:
+      return 'JsLIGO'
     default:
-      throw new Error(`Unrecognized extesion: ${lang}`)
-  }
-}
-
-export default async function activate(uri: vscode.Uri) {
-  const ext = vscode.extensions.getExtension('ligolang-publish.ligo-vscode')
-  await ext.activate()
-  try {
-    const doc = await vscode.workspace.openTextDocument(uri)
-    await vscode.window.showTextDocument(doc)
-  } catch (e) {
-    console.error(e)
+      throw new Error(`Unrecognized dialect: ${lang}`)
   }
 }
 

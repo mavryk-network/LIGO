@@ -1,6 +1,6 @@
 module AST = Ast_imperative
 module CST = Cst.Reasonligo
-module Predefined = Predefined.Tree_abstraction.Reasonligo
+module Predefined = Predefined.Tree_abstraction
 module Token    = Lexing_reasonligo.Token
 module Region   = Simple_utils.Region
 module Location = Simple_utils.Location
@@ -28,7 +28,7 @@ let list_to_nsepseq lst =
     Some s -> s
   | None   -> failwith "List is empty"
 
-let nelist_to_npseq (hd, lst) = (hd, List.map ~f:(fun e -> (ghost, e)) lst)
+let nelist_to_npseq ~sep (hd, lst) = (hd, List.map ~f:(fun e -> (sep, e)) lst)
 
 let npseq_cons hd lst = hd,(ghost, fst lst)::(snd lst)
 
@@ -132,10 +132,21 @@ let rec decompile_type_expr : AST.type_expression -> _ = fun te ->
     return @@ CST.TApp (wrap (type_operator,wrap lst))
   | T_annoted _annot ->
     failwith "let's work on it later"
-  | T_module_accessor {module_name;element} ->
-    let module_name = decompile_mod_var module_name in
-    let field  = decompile_type_expr element in
-    return @@ CST.TModA (wrap CST.{module_name;selector=ghost;field})
+  | T_module_accessor {module_path;element} -> (
+    let rec aux : AST.module_variable list -> (CST.type_expr -> CST.type_expr) -> CST.type_expr = fun lst f_acc ->
+      match lst with
+      | module_name::tl ->
+        let module_name = decompile_mod_var module_name in
+        let f = fun field ->
+          f_acc (CST.TModA (wrap CST.{module_name;selector=Token.ghost_dot;field}))
+        in
+        aux tl f
+      | [] ->
+        let element = CST.TVar (decompile_type_var element) in
+        f_acc element
+    in
+    return @@ (aux module_path (fun x -> x))
+  )
   | T_singleton x -> (
     match x with
     | Literal_int i ->
@@ -159,6 +170,8 @@ let get_e_tuple : AST.expression -> _ = fun expr ->
   | E_variable _
   | E_literal _
   | E_constant _
+  | E_module_accessor _
+  | E_application _
   | E_lambda _ -> [expr]
   | _ -> failwith @@
     Format.asprintf "%a should be a tuple expression"
@@ -175,7 +188,7 @@ let pattern_type ({var;ascr;attributes}: _ AST.binder) =
 
 let decompile_operator : AST.rich_constant -> CST.expr List.Ne.t -> CST.expr option = fun cons_name arguments ->
   match cons_name, arguments with
-  | Const C_ADD, (arg1, [arg2]) 
+  | Const C_ADD, (arg1, [arg2])
   | Const C_POLYMORPHIC_ADD, (arg1, [arg2]) ->
      Some CST.(EArith (Add (wrap { op = ghost ; arg1 ; arg2 })))
   | Const C_SUB, (arg1, [arg2])
@@ -299,7 +312,7 @@ let rec decompile_expression : AST.expression -> CST.expr = fun expr ->
     return_expr @@ CST.ECall (wrap (lamb,args))
   | E_lambda lambda ->
     let (binders,lhs_type,body) = decompile_lambda lambda in
-    let fun_expr : CST.fun_expr = {attributes=[]; binders;lhs_type;arrow=ghost;body} in
+    let fun_expr : CST.fun_expr = {attributes=[]; binders;type_params=None;lhs_type;arrow=ghost;body} in
     return_expr_with_par @@ CST.EFun (wrap @@ fun_expr)
   | E_type_abstraction _ -> failwith "type_abstraction not supported yet"
   | E_recursive _ ->
@@ -326,20 +339,35 @@ let rec decompile_expression : AST.expression -> CST.expr = fun expr ->
     let body = decompile_expression let_result in
     let tin : CST.type_in = {type_decl;semi=ghost;body} in
     return_expr @@ CST.ETypeIn (wrap tin)
-  | E_mod_in {module_binder;rhs;let_result} ->
-    let name    = decompile_mod_var module_binder in
-    let module_ = decompile_module rhs in
-    let mod_decl : CST.module_decl = {kwd_module=ghost;name;eq=ghost;lbrace=ghost;module_;rbrace=ghost} in
-    let body = decompile_expression let_result in
-    let tin : CST.mod_in = {mod_decl;semi=ghost;body} in
-    return_expr @@ CST.EModIn (wrap tin)
-  | E_mod_alias {alias; binders; result} ->
-    let alias   = decompile_mod_var alias in
-    let binders = nelist_to_npseq @@ List.Ne.map decompile_mod_var binders in
-    let mod_alias : CST.module_alias = {kwd_module=ghost;alias;eq=ghost;binders} in
-    let body = decompile_expression result in
-    let mod_alias : CST.mod_alias = {mod_alias;semi=ghost;body} in
-    return_expr @@ CST.EModAlias (wrap mod_alias)
+  | E_mod_in {module_binder;rhs;let_result} -> (
+    let name = decompile_mod_var module_binder in
+    match rhs.wrap_content with
+    | M_struct prg -> (
+      let module_ = decompile_module prg in
+      let mod_decl : CST.module_decl = {kwd_module=Token.ghost_module;name;eq=Token.ghost_eq;lbrace=Token.ghost_lbrace;module_;rbrace=Token.ghost_rbrace} in
+      let body = decompile_expression let_result in
+      let min : CST.mod_in = {mod_decl;semi=Token.ghost_semi;body} in
+      return_expr @@ CST.EModIn (wrap min)
+    )
+    | M_variable v -> (
+      let alias = name in
+      let binders = decompile_mod_var v , [] in
+      let mod_alias : CST.module_alias = {kwd_module=Token.ghost_module;alias;eq=Token.ghost_eq;binders} in
+      let body = decompile_expression let_result in
+      let mod_alias : CST.mod_alias = {mod_alias;semi=Token.ghost_semi;body} in
+      return_expr @@ CST.EModAlias (wrap mod_alias)
+    )
+    | M_module_path path -> (
+      let alias = name in
+      let binders =
+        nelist_to_npseq ~sep:Token.ghost_dot @@ List.Ne.map (fun x -> wrap (Format.asprintf "%a" AST.ModuleVar.pp x)) path
+      in
+      let mod_alias : CST.module_alias = {kwd_module=Token.ghost_module;alias;eq=Token.ghost_eq;binders} in
+      let body = decompile_expression let_result in
+      let mod_alias : CST.mod_alias = {mod_alias;semi=Token.ghost_semi;body} in
+      return_expr @@ CST.EModAlias (wrap mod_alias)
+    )
+  )
   | E_raw_code {language; code} ->
     let language = wrap @@ wrap @@ language in
     let code = decompile_expression code in
@@ -487,10 +515,21 @@ let rec decompile_expression : AST.expression -> CST.expr = fun expr ->
     let expr = decompile_expression anno_expr in
     let ty   = decompile_type_expr type_annotation in
     return_expr_with_par @@ CST.EAnnot (wrap @@ (expr,ghost,ty))
-  | E_module_accessor {module_name;element} ->
-    let module_name = decompile_mod_var module_name in
-    let field  = decompile_expression element in
-    return_expr @@ CST.EModA (wrap CST.{module_name;selector=ghost;field})
+  | E_module_accessor {module_path;element} -> (
+    let rec aux : AST.module_variable list -> (CST.expr -> CST.expr) -> CST.expr = fun lst f_acc ->
+      match lst with
+      | module_name::tl ->
+        let module_name = decompile_mod_var module_name in
+        let f = fun field ->
+          f_acc (CST.EModA (wrap CST.{module_name;selector=Token.ghost_dot;field}))
+        in
+        aux tl f
+      | [] ->
+        let element = CST.EVar (decompile_variable element) in
+        f_acc element
+    in
+    return_expr @@ (aux module_path (fun x -> x))
+  )
   | E_cond {condition;then_clause;else_clause} ->
     let test  = decompile_expression condition in
     let test = CST.{lpar=ghost; inside=test; rpar=ghost} in
@@ -544,11 +583,24 @@ let rec decompile_expression : AST.expression -> CST.expr = fun expr ->
     return_expr @@ CST.ECall (wrap @@ (var,args))
     (* We should avoid to generate skip instruction*)
   | E_skip -> return_expr @@ CST.EUnit (wrap (ghost,ghost))
-  | E_assign _
+  | E_assign {binder={var;ascr;attributes};access_path;expression} ->
+    let var_attributes = attributes |> Tree_abstraction_shared.Helpers.strings_of_binder_attributes `ReasonLIGO |> decompile_attributes in
+    let binders =
+      CST.PVar (wrap @@ CST.{
+                    variable = decompile_variable var;
+                    attributes = var_attributes }) in
+    let lhs_type = Option.map ~f:(prefix_colon <@ decompile_type_expr) ascr in
+    let let_rhs = decompile_expression @@ match access_path with
+        [] -> expression
+      | _  -> AST.e_update (AST.e_variable var) access_path expression in
+    let binding : CST.let_binding = {binders;lhs_type;eq=ghost;let_rhs} in
+    let body = decompile_expression (AST.e_unit ()) in
+    let lin : CST.let_in = {kwd_let=ghost;kwd_rec=None;binding;semi=ghost;body;attributes=[]} in
+    return_expr @@ CST.ELetIn (wrap lin)
   | E_for _
   | E_for_each _
   | E_while _ ->
-    failwith @@ Format.asprintf "Decompiling a imperative construct to CameLIGO %a"
+    failwith @@ Format.asprintf "Decompiling a imperative construct to ReasonLIGO %a"
     AST.PP.expression expr
 
 and decompile_to_path : AST.expression_variable -> _ AST.access list -> CST.path = fun var access ->
@@ -576,7 +628,7 @@ and decompile_lambda : (AST.expr, AST.ty_expr) AST.lambda -> _ =
     let return = decompile_expression result in
     (param,ret_type,return)
 
-and decompile_declaration : AST.declaration Location.wrap -> CST.declaration = fun decl ->
+and decompile_declaration : AST.declaration -> CST.declaration = fun decl ->
   let decl = Location.unwrap decl in
   match decl with
     Declaration_type {type_binder;type_expr;type_attr=_} ->
@@ -624,14 +676,33 @@ and decompile_declaration : AST.declaration Location.wrap -> CST.declaration = f
       let let_decl = wrap (ghost,None,let_binding,attributes) in
       CST.ConstDecl let_decl
   )
-  | Declaration_module {module_binder;module_; module_attr=_} ->
+  | Declaration_module {module_binder;module_; module_attr=_} -> (
     let name    = decompile_mod_var module_binder in
-    let module_ = decompile_module module_ in
-    CST.ModuleDecl (wrap (CST.{kwd_module=ghost; name; eq=ghost; lbrace=ghost; module_; rbrace=ghost}))
-  | Module_alias {alias;binders} ->
-    let alias   = decompile_mod_var alias in
-    let binders = nelist_to_npseq @@ List.Ne.map decompile_mod_var binders in
-    CST.ModuleAlias (wrap (CST.{kwd_module=ghost; alias; eq=ghost; binders}))
+    match module_.wrap_content with
+    | M_struct prg -> (
+      let module_ = decompile_module prg in
+      let module_decl :CST.module_decl = {
+          kwd_module=Token.ghost_module; name; eq=Token.ghost_eq;
+          rbrace=Token.ghost_rbrace; module_; lbrace=Token.ghost_lbrace
+        }
+      in
+      CST.ModuleDecl (wrap @@ module_decl)
+    )
+    | M_variable v -> (
+      let alias = name in
+      let binders = decompile_mod_var v , [] in
+      let mod_alias : CST.module_alias = {kwd_module=Token.ghost_module;alias;eq=Token.ghost_eq;binders} in
+      CST.ModuleAlias (wrap mod_alias)
+    )
+    | M_module_path path -> (
+      let alias = name in
+      let binders =
+        nelist_to_npseq ~sep:Token.ghost_dot @@ List.Ne.map (fun x -> wrap (Format.asprintf "%a" AST.ModuleVar.pp x)) path
+      in
+      let mod_alias : CST.module_alias = {kwd_module=Token.ghost_module;alias;eq=Token.ghost_eq;binders} in
+      CST.ModuleAlias (wrap mod_alias)
+    )
+  )
 
 and decompile_pattern : AST.type_expression AST.pattern -> CST.pattern =
   fun pattern ->

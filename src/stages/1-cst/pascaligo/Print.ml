@@ -41,6 +41,9 @@ let print_list :
 let print_nsepseq state ?region label print node =
   print_list state ?region label print (Utils.nsepseq_to_list node)
 
+let print_sepseq state ?region label print node =
+  print_list state ?region label print (Utils.sepseq_to_list node)
+
 let print_nseq state ?region label print node =
   print_list state ?region label print (Utils.nseq_to_list node)
 
@@ -119,7 +122,7 @@ and print_declaration state = function
 | D_Directive d -> print_D_Directive state d
 | D_Fun       d -> print_D_Fun       state d
 | D_Module    d -> print_D_Module    state d
-| D_ModAlias  d -> print_D_ModAlias  state d
+(*| D_ModAlias  d -> print_D_ModAlias  state d*)
 | D_Type      d -> print_D_Type      state d
 
 (* Attributed declaration *)
@@ -166,8 +169,8 @@ and print_type_params state (node : type_params chevrons reg) =
                 node.value.inside
 
 and print_parameters state (node : parameters) =
-  print_nsepseq state "<parameters>" print_param_decl
-                node.value.inside
+  print_sepseq state "<parameters>" print_param_decl
+               node.value.inside
 
 and print_param_decl state (node : param_decl reg) =
   let Region.{value; region} = node in
@@ -190,6 +193,9 @@ and print_variable state (node : variable) =
       Tree.mk_child      Tree.print_literal node;
       Tree.mk_child_list print_attributes   node#attributes]
     in Tree.print state "<attributed variable>" children
+
+and print_mod_path state (node : (module_name, dot) nsepseq) =
+  print_nsepseq state "<path>" Tree.print_literal node
 *)
 
 and print_ret_type state (_, type_expr) =
@@ -204,23 +210,27 @@ and print_D_Module state (node : module_decl reg) =
   let node = node.value in
   let children = [
     Tree.mk_child Tree.print_literal node.name;
-    Tree.mk_child print_declarations node.declarations]
+    Tree.mk_child print_module_expr node.module_expr]
   in Tree.print state "D_Module" children
 
+and print_module_expr state (node : module_expr) =
+  match node with
+    M_Body e -> print_M_Body state e
+  | M_Path e -> print_M_Path state e
+  | M_Var  e -> print_M_Var  state e
+
+and print_M_Body state (node : module_body reg) =
+  let decl = node.value.declarations in
+  Tree.print_unary state "M_Body" print_declarations decl
+
+and print_M_Path state (node : module_name module_path reg) =
+  print_module_path Tree.print_literal "M_Path" state node
+
+and print_M_Var state (node : module_name) =
+  Tree.print_unary state "M_Var" Tree.print_literal node
+
 and print_declarations state (node : declarations) =
-  print_nseq state "<structure>" print_declaration node
-
-(* Module aliases declarations *)
-
-and print_D_ModAlias state (node : module_alias reg) =
-  let node = node.value in
-  let children = [
-    Tree.mk_child Tree.print_literal node.alias;
-    Tree.mk_child print_mod_path     node.mod_path]
-  in Tree.print state "D_ModAlias" children
-
-and print_mod_path state (node : (module_name, dot) nsepseq) =
-  print_nsepseq state "<path>" Tree.print_literal node
+  print_nseq state "<declarations>" print_declaration node
 
 (* Type declarations *)
 
@@ -452,8 +462,8 @@ and print_call state label (node : call) =
   and mk_func state =
     Tree.print_unary state "<function>" print_expr
 
-  and mk_args state (node : (expr, comma) nsepseq par reg) =
-    print_nsepseq state "<arguments>" print_expr node.value.inside in
+  and mk_args state (node : (expr, comma) Utils.sepseq par reg) =
+    print_sepseq state "<arguments>" print_expr node.value.inside in
 
   let children = [
     Tree.mk_child mk_func func;
@@ -886,7 +896,7 @@ and print_E_And state (node : kwd_and bin_op reg) =
 
 (* Constructor application (or constant constructor) as expressions *)
 
-and print_E_App state (node : (expr * arguments option) reg) =
+and print_E_App state (node : (expr * expr tuple option) reg) =
   let Region.{value; region} = node in
   let ctor, args = value in
   let children = [

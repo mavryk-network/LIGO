@@ -1,0 +1,211 @@
+
+#######################################################################
+# Process to build new release
+# Triggered when a branch prefixed by release/ will be pushed
+# Will update code and create a merge request targeting dev
+#######################################################################
+
+initialize-ssh:
+  stage: pretooling
+  only:
+    # prefixed by release /^release/.*/
+    - /^release/.*/
+    - tags
+  script:
+      - chmod 766 ~/.ssh
+      - eval `ssh-agent -s`
+      - cat $SSH_PRIVATE_KEY_TOOLKIT  > ~/.ssh/id_rsa
+      - chmod 600 ~/.ssh/id_rsa
+      - ssh-keyscan gitlab.com  >> ~/.ssh/known_hosts
+      - chmod 644 ~/.ssh/known_hosts
+
+initialize-git:
+  stage: pretooling
+  dependencies:
+    - initialize-ssh
+  only:
+    # prefixed by release /^release/.*/
+    - /^release/.*/
+    - tags
+  script:
+      - git config --global user.name 'InfraBot'
+      - git config --global user.email 'infra@marigold.dev'
+
+build_release_env_vars:
+  stage: pretooling
+  script:
+    - RELEASE_VERSION=${CI_COMMIT_BRANCH#"release/"}
+    - echo "RELEASE_VERSION=${RELEASE_VERSION}" >> releaseversion.env
+  artifacts:
+    reports:
+      dotenv: releaseversion.env
+  rules:
+    - if: ($CI_COMMIT_BRANCH =~ /^release/ )
+      when: always
+
+#######################################################################
+# Following script is executed when branch is create
+#######################################################################
+create-tag:
+  stage: release    
+  script:
+    - git remote rm origin && git remote add origin "git@gitlab.com:ligolang/ligo.git"
+    # Don't want to tag for testing
+    - git tag -a $RELEASE_VERSION -m "Tag version $RELEASE_VERSION"
+    - git push origin $RELEASE_VERSION
+  needs:
+    - job: initialize-ssh
+    - job: initialize-git
+    - job: build_release_env_vars
+      artifacts: true
+  rules:
+    - if: '$CI_COMMIT_BRANCH =~ /^release/ && $TRIGGER_DOC_UPDATE == null' 
+      when: always
+
+#######################################################################
+# Following script is executed when pipeline execute the release tag process
+# Related to release generation
+# Related to stable version
+# Related to metadata update
+#######################################################################
+determine_new_stable_version:
+  stage: pretooling
+  image: node:12.20.0-buster
+  tags:
+    - docker
+  before_script:
+    # Have to be done here because we are using an image for this job.
+    - apt-get update
+    - apt-get install -y --no-install-recommends jq
+  artifacts:
+    reports:
+      dotenv: stableversion.env
+  script:
+  # Determine new stable version from website docs.
+  # If we stop to use docusaurus we have to determine this value by another way
+    - STABLE_VERSION=`jq '.[1]' gitlab-pages/website/versions.json`
+    - echo "STABLE_VERSION=${STABLE_VERSION}" >> stableversion.env
+
+release:
+  stage: push
+  image: registry.gitlab.com/gitlab-org/release-cli
+  rules:
+    - if: '$CI_COMMIT_TAG =~ /[0-9]+\.[0-9]+\.[0-9]+/'
+      when: always
+  dependencies:
+    - docker_extract
+    - changelog
+    - initialize-git
+  ## FIXME find a better solution to upload the binary
+  artifacts:
+    expire_in: 1000 yrs
+    paths:
+      - ligo
+      - ligo.deb
+    reports:
+      dotenv: releaseCiJobId.env
+  script:
+    - release-cli create --name "Release $CI_COMMIT_TAG" --description "$(cat release-notes.md)" --assets-links-name "Static Linux binary" --assets-links-url "$CI_PROJECT_URL/-/jobs/$CI_JOB_ID/artifacts/raw/ligo" --assets-links-name "deb package" --assets-links-url "$CI_PROJECT_URL/-/jobs/$CI_JOB_ID/artifacts/raw/ligo.deb"
+    - echo "RELEASE_CI_JOB_ID=${CI_JOB_ID}" >> releaseCiJobId.env
+
+create_docker_stable_version:
+  stage: push
+  rules:
+    - if: '$CI_COMMIT_TAG =~ /[0-9]+\.[0-9]+\.[0-9]+/'
+      when: always
+  variables:
+    STABLE_VERSION: "${STABLE_VERSION}"
+  needs:
+    - job: determine_new_stable_version
+      artifacts: true
+  script:
+    - docker pull ligolang/ligo:$STABLE_VERSION
+    - docker tag ligolang/ligo:$STABLE_VERSION ligolang/ligo:stable
+    - docker push ligolang/ligo:stable
+
+update_release_metadata:
+  stage: push
+  rules:
+    - if: '$CI_COMMIT_TAG =~ /[0-9]+\.[0-9]+\.[0-9]+/'
+      when: always
+  needs:
+    - job: release
+    - job: determine_new_stable_version
+      artifacts: true
+  script:
+      # git cli initialized in .ci/gitlab-ci.yml. Update release branch metadata
+    - git remote rm origin && git remote add origin "git@gitlab.com:ligolang/ligo.git" 
+    - git fetch
+    - git checkout release/$CI_COMMIT_TAG  
+    - ./.ci/scripts/release_metadata/edit_release_metadata.sh LAST_TAG_JOB_ID $RELEASE_CI_JOB_ID 
+    - ./.ci/scripts/release_metadata/edit_release_metadata.sh LAST_STABLE_VERSION $STABLE_VERSION 
+    - git commit -am "[Bot] Update release metadata $CI_COMMIT_TAG"
+    - git push -o ci.variable="TRIGGER_DOC_UPDATE='true'" origin HEAD:release/$CI_COMMIT_TAG
+
+#######################################################################
+# Following script is executed when pipeline has executed Tag process
+# Related to documentation and web-ide
+#######################################################################
+update-versionned-doc:
+  stage: tooling  
+  image: node:12.20.0-buster
+  tags:
+    - docker
+  before_script:
+    # Have to be done here because we are using an image for this job.
+    - mkdir ~/.ssh
+    - chmod 766 ~/.ssh
+    - eval `ssh-agent -s`
+    - cat $SSH_PRIVATE_KEY_TOOLKIT  > ~/.ssh/id_rsa
+    - chmod 600 ~/.ssh/id_rsa
+    - ssh-keyscan gitlab.com  >> ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
+    - git config --global user.name 'InfraBot'
+    - git config --global user.email 'infra@marigold.dev'
+    - apt-get update
+    - apt-get install -y --no-install-recommends jq
+    - wget https://github.com/mikefarah/yq/releases/download/v4.18.1/yq_linux_amd64 -O /usr/bin/yq && chmod +x /usr/bin/yq
+  script:
+    - git remote rm origin && git remote add origin "git@gitlab.com:ligolang/ligo.git"
+    - node scripts/manpages/manpages.js ./ligo
+    - ./.ci/scripts/versioning_website.sh $RELEASE_VERSION
+    - LAST_TAG_JOB_ID=`./.ci/scripts/release_metadata/read_release_metadata.sh LAST_TAG_JOB_ID`
+    - ./.ci/scripts/update_distribution_references_with_release.sh $LAST_TAG_JOB_ID $RELEASE_VERSION
+    - git add gitlab-pages/website/versioned_docs/. gitlab-pages/website/versioned_sidebars/. gitlab-pages/website/versions.json tools/webide/Dockerfile gitlab-pages/docs/manpages
+    - git commit -m "[Bot] Docs $RELEASE_VERSION"
+    - git push -o ci.skip origin HEAD:$CI_COMMIT_REF_NAME
+  needs:
+    - job: docker_extract
+    - job: build_release_env_vars
+      artifacts: true
+  rules:
+    - if: ($CI_COMMIT_BRANCH =~ /^release/ &&  $TRIGGER_DOC_UPDATE != null) 
+      when: always
+
+create-doc-update-MR:
+  stage: tooling
+  dependencies:
+    - update-versionned-doc
+  script:
+    - HOST=${CI_PROJECT_URL} CI_PROJECT_ID=${CI_PROJECT_ID} CI_COMMIT_REF_NAME=${CI_COMMIT_REF_NAME} PRIVATE_TOKEN=${TOKEN_API} ./.ci/scripts/auto_merge_request.sh
+  rules:
+    - if: ($CI_COMMIT_BRANCH =~ /^release/ &&  $TRIGGER_DOC_UPDATE != null )
+      when: always
+
+#######################################################################
+# Following script is executed when pipeline has executed Tag process
+# Related to the update of Gitpod
+#######################################################################
+
+update-gitpod-ligo-version:
+  stage: tooling
+  variables:
+    RELEASE_VERSION: "${RELEASE_VERSION}"
+  trigger: 
+    project: ligolang/template-ligo
+  needs:
+    - job: build_release_env_vars
+      artifacts: true
+  rules:
+    - if: ($CI_COMMIT_BRANCH =~ /^release/ &&  $TRIGGER_DOC_UPDATE != null )
+      when: always

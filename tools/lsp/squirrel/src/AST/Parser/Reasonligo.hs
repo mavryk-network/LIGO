@@ -33,12 +33,12 @@ recognise (SomeRawTree dialect rawTree)
         "list"              -> List       <$> fields "element"
         "indexing"          -> ListAccess <$> field  "box"         <*> fields   "index"
         "annot_expr"        -> Annot      <$> field  "subject"     <*> field    "type"
-        "if"                -> If         <$> field  "selector"    <*> field    "then"     <*> fieldOpt "else"
+        "if_then_else"      -> If         <$> field  "selector"    <*> field    "then"     <*> fieldOpt "else"
         "record"            -> Record     <$> fields "assignment"
         "record_update"     -> RecordUpd  <$> field  "subject"     <*> fields   "field"
         "record_punning"    -> Record     <$> fields "assignment"
         "tuple"             -> Tuple      <$> fields "item"
-        "switch"            -> Case       <$> field  "subject"     <*> fields   "alt"
+        "switch_case"       -> Case       <$> field  "subject"     <*> fields   "alt"
         "lambda"            -> Lambda     <$> fields "argument"    <*> fieldOpt "type"     <*> field "body"
         "michelson_interop" -> Michelson  <$> field  "code"        <*> field    "type"     <*> fields "argument"
         "let_in"            -> Let        <$> field  "declaration" <*> field    "body"
@@ -154,12 +154,11 @@ recognise (SomeRawTree dialect rawTree)
         -- TODO: We forget "rec" field in let
         "let_decl"  -> BConst     <$> field "binding"   <*> fieldOpt "type"    <*> fieldOpt "value"
         "type_decl" -> BTypeDecl  <$> field "type_name" <*> fieldOpt "params"  <*> field "type_value"
-        "attr_decl" -> BAttribute <$> field "name"
         "p_include" -> BInclude   <$> field "filename"
         "p_import"  -> BImport    <$> field "filename" <*> field "alias"
         "fun_arg"   -> BParameter <$> field "argument" <*> fieldOpt "type"
         "module_decl" -> BModuleDecl <$> field "moduleName" <*> fields "declaration"
-        "module_alias" -> BModuleAlias <$> field "moduleName" <*> field "module"
+        "module_alias" -> BModuleAlias <$> field "moduleName" <*> fields "module"
         _           -> fallthrough
 
     -- TypeParams
@@ -223,7 +222,7 @@ recognise (SomeRawTree dialect rawTree)
     -- TField
   , Descent do
       boilerplate $ \case
-        "field_decl" -> TField <$> field "field_name" <*> field "field_type"
+        "field_decl" -> TField <$> field "field_name" <*> fieldOpt "field_type"
         _            -> fallthrough
 
     -- TypeName

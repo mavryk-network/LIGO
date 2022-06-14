@@ -1,17 +1,17 @@
 module Errors = Errors
 module Helpers = Helpers
 
-let all_module_passes ~add_warning ~raise = [
+let all_module_passes ~add_warning ~raise ~warn_unused_rec = [
   Unused.unused_map_module ~add_warning;
   Muchused.muchused_map_module ~add_warning;
   Helpers.map_module @@ Recursion.check_tail_expression ~raise ;
-  Helpers.map_module @@ Recursion.remove_rec_expression ;
+  Helpers.map_module @@ Recursion.remove_rec_expression ~add_warning ~warn_unused_rec ;
   Helpers.map_module @@ Pattern_matching_simpl.peephole_expression ~raise ;
 ]
 
-let all_expression_passes ~raise = [
+let all_expression_passes ~add_warning ~raise ~warn_unused_rec = [
   Helpers.map_expression @@ Recursion.check_tail_expression ~raise ;
-  Helpers.map_expression @@ Recursion.remove_rec_expression ;
+  Helpers.map_expression @@ Recursion.remove_rec_expression ~add_warning ~warn_unused_rec ;
   Pattern_matching_simpl.peephole_expression ~raise ;
 ]
 
@@ -22,11 +22,11 @@ let contract_passes ~raise = [
   Contract_passes.entrypoint_typing ~raise ;
 ]
 
-let all_module ~add_warning ~raise init =
-  List.fold ~f:(|>) (all_module_passes ~add_warning ~raise) ~init
+let all_module ~add_warning ~raise ~warn_unused_rec init =
+  List.fold ~f:(|>) (all_module_passes ~add_warning ~raise ~warn_unused_rec) ~init
 
-let all_expression ~raise init =
-  List.fold ~f:(|>) (all_expression_passes ~raise) ~init
+let all_expression ~add_warning ~raise ~warn_unused_rec init =
+  List.fold ~f:(|>) (all_expression_passes ~add_warning ~raise ~warn_unused_rec) ~init
 
 let all_contract ~raise main_name prg =
   let contract_type = Helpers.fetch_contract_type ~raise main_name prg in
@@ -34,9 +34,9 @@ let all_contract ~raise main_name prg =
     contract_type = contract_type ;
     main_name = main_name ;
     } in
-  let all_p = List.map ~f:(fun pass -> Helpers.fold_map_module pass data) @@ contract_passes ~raise in
+  let all_p = List.map ~f:(fun pass -> Ast_typed.Helpers.fold_map_module pass data) @@ contract_passes ~raise in
   let prg = List.fold ~f:(fun x f -> snd @@ f x) all_p ~init:prg in
-  let prg = Contract_passes.remove_unused ~raise main_name prg in
+  let prg = Contract_passes.remove_unused ~raise data prg in
   prg
 
 let all_view ~raise views_name main_name prg =
@@ -51,11 +51,5 @@ let all_view ~raise views_name main_name prg =
 let all = [
   Recursion.check_tail_expression
 ]
-
-let map_expression = Helpers.map_expression
-
-let fold_expression = Helpers.fold_expression
-
-let fold_map_expression = Helpers.fold_map_expression
 
 let remove_unused_expression = Contract_passes.remove_unused_expression

@@ -126,15 +126,6 @@ module Michelson_formatter = struct
     | `String s -> `String s
     | `Int n -> `String (string_of_int n)
 
-  let location_encoding : Ast_typed.location Data_encoding.t =
-    Data_encoding.(conv
-                     (fun loc ->
-                        if Location.is_virtual loc
-                        then `Null
-                        else `O [("location", yojson_to_json (Location.to_human_yojson loc))])
-                     (fun _s -> failwith ("internal error: not implemented @ " ^ __LOC__))
-                     Data_encoding.json)
-
   let location_to_json (location : Location.t) : Data_encoding.Json.t option =
     if Location.is_virtual location
     then None
@@ -311,7 +302,7 @@ module Michelson_formatter = struct
            Yojson.Safe.pretty_to_string in
        let code_no_newlines = Str.global_replace (Str.regexp_string "\\n") "\n" code in
        let hash = Format.asprintf "%a" Memory_proto_alpha.Protocol.Script_expr_hash.pp hash in
-       Format.fprintf f "Michelson consant as JSON string:@.%s@.This string can be passed in `--constants` argument when compiling a contract.@.@.Remember to register it in the network, e.g.:@.> tezos-client register global constant %s from bootstrap1@.@.Constant hash:@.%s" code code_no_newlines hash
+       Format.fprintf f "Michelson constant as JSON string:@.%s@.This string can be passed in `--constants` argument when compiling a contract.@.@.Remember to register it in the network, e.g.:@.> tezos-client register global constant %s from bootstrap1@.@.Constant hash:@.%s" code code_no_newlines hash
     )
 
   let michelson_constant_format : (Proto_alpha_utils.Memory_proto_alpha.Protocol.Script_expr_hash.t *

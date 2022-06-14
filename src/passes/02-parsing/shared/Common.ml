@@ -124,6 +124,15 @@ module MakeParser
       Ok tree -> tree
     | Error msg -> raise.raise @@ `Parsing msg
 
+    let lift_recov ~(raise:Errors.t Trace.raise)
+      = function
+          Ok (tree, errors)     -> List.iter (List.rev errors)
+                                       ~f:(fun e -> raise.log_error @@ `Parsing e);
+                                   tree
+        | Error (error, errors) -> List.iter (List.rev errors)
+                                       ~f:(fun e -> raise.log_error @@ `Parsing e);
+                                   raise.raise @@ `Parsing error
+
     (* We always parse a string buffer of type [Buffer.t], but the
        interpretation of its contents depends on the functions
        below. In [parse_file buffer file_path], the argument [buffer]
@@ -133,7 +142,7 @@ module MakeParser
 
     (* Parsing a file *)
 
-    let from_file ~raise buffer file_path : CST.tree =
+    let from_file ~add_warning ~raise buffer file_path : CST.tree =
       let module File =
         struct
           let input        = Some file_path
@@ -142,27 +151,26 @@ module MakeParser
           let project_root = None
         end in
       let module CLI = CLI (File) (Comments) in
+      let module Warning = struct let add_warning = add_warning end in
       let module MainLexer =
         LexerMainGen.Make
-          (File) (Token) (CLI.Lexer_CLI) (Self_tokens) in
+          (File) (Token) (CLI.Lexer_CLI) (Self_tokens) (Warning) in
       let module MainParser =
         ParserLib.API.Make (MainLexer) (Parser) (CLI.ParserConfig) in
-      let tree =
-        let string = Buffer.contents buffer in
-        if CLI.Preprocessor_CLI.show_pp then
+      let string = Buffer.contents buffer in
+      if CLI.Preprocessor_CLI.show_pp then
           Printf.printf "%s\n%!" string;
-        let lexbuf = Lexing.from_string string in
-        let     () = LexerLib.Core.reset ~file:file_path lexbuf in
-        let     () = MainLexer.clear () in
-        let parser = MainParser.incr_from_lexbuf in
-        parser (module ParErr: PAR_ERR) lexbuf
-      in lift ~raise tree
+      let lexbuf = Lexing.from_string string in
+      let     () = LexerLib.Core.reset ~file:file_path lexbuf in
+      let     () = MainLexer.clear () in
+      lift_recov ~raise
+      @@ MainParser.recov_from_lexbuf (module ParErr: PAR_ERR) lexbuf
 
     let parse_file = from_file
 
     (* Parsing a string *)
 
-    let from_string ~raise buffer : CST.tree =
+    let from_string ~add_warning ~raise buffer : CST.tree =
       let module File =
         struct
           let input        = None
@@ -171,20 +179,19 @@ module MakeParser
           let project_root = None
         end in
       let module CLI = CLI (File) (Comments) in
+      let module Warning = struct let add_warning = add_warning end in
       let module MainLexer =
         LexerMainGen.Make
-          (File) (Token) (CLI.Lexer_CLI) (Self_tokens) in
+          (File) (Token) (CLI.Lexer_CLI) (Self_tokens) (Warning) in
       let module MainParser =
         ParserLib.API.Make (MainLexer) (Parser) (CLI.ParserConfig) in
-      let tree =
-        let string = Buffer.contents buffer in
-        if CLI.Preprocessor_CLI.show_pp then
+      let string = Buffer.contents buffer in
+      if CLI.Preprocessor_CLI.show_pp then
           Printf.printf "%s\n%!" string;
-        let lexbuf = Lexing.from_string string in
-        let     () = MainLexer.clear () in
-        let parser = MainParser.incr_from_lexbuf in
-        parser (module ParErr: PAR_ERR) lexbuf
-      in lift ~raise tree
+      let lexbuf = Lexing.from_string string in
+      let     () = MainLexer.clear () in
+      lift_recov ~raise
+      @@ MainParser.recov_from_lexbuf (module ParErr: PAR_ERR) lexbuf
 
     let parse_string = from_string
   end
@@ -255,6 +262,7 @@ module MakeTwoParsers
                                      and module CST = CST) =
   struct
     type file_path = string
+    type 'a parser = raise:Errors.t Trace.raise -> Buffer.t -> 'a
     module Errors = Errors
 
     (* Results *)

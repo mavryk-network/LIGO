@@ -3,9 +3,19 @@ module Var      = Simple_utils.Var
 open Simple_utils.Trace
 open Simple_utils.Option
 
-module Tezos_protocol = Tezos_protocol_012_Psithaca
+module Tezos_protocol = Tezos_protocol_013_PtJakart
+module Tezos_raw_protocol = Tezos_raw_protocol_013_PtJakart
+
 
 let int_of_mutez t = Z.of_int64 @@ Memory_proto_alpha.Protocol.Alpha_context.Tez.to_mutez t
+let tez_to_z : Tezos_protocol.Protocol.Tez_repr.t -> Z.t = fun t ->
+  let enc = Tezos_protocol.Protocol.Tez_repr.encoding in
+  let c = Data_encoding.Binary.to_bytes_exn enc t in
+  int_of_mutez @@ Data_encoding.Binary.of_bytes_exn Tezos_protocol.Protocol.Alpha_context.Tez.encoding c
+let contract_to_contract : Tezos_protocol.Protocol.Contract_repr.t -> Tezos_protocol.Protocol.Alpha_context.Contract.t = fun t ->
+  let enc = Tezos_protocol.Protocol.Contract_repr.encoding in
+  let c = Data_encoding.Binary.to_bytes_exn enc t in
+  Data_encoding.Binary.of_bytes_exn Tezos_protocol.Protocol.Alpha_context.Contract.encoding c
 let string_of_contract t = Format.asprintf "%a" Tezos_protocol.Protocol.Alpha_context.Contract.pp t
 let string_of_key_hash t = Format.asprintf "%a" Tezos_crypto.Signature.Public_key_hash.pp t
 let string_of_key t = Format.asprintf "%a" Tezos_crypto.Signature.Public_key.pp t
@@ -44,7 +54,7 @@ module Tezos_eq = struct
     fun tz n ->
       let open Memory_proto_alpha.Protocol.Alpha_context.Script_timestamp in
       let t = of_zint tz in
-      add_delta t (Memory_proto_alpha.Protocol.Alpha_context.Script_int.of_zint n) |> to_zint
+      sub_delta t (Memory_proto_alpha.Protocol.Alpha_context.Script_int.of_zint n) |> to_zint
 
   let mutez_add : Z.t -> Z.t -> Z.t option = fun x y ->
     let open Memory_proto_alpha.Protocol.Alpha_context.Tez in
@@ -92,7 +102,7 @@ let compile_contract ~raise ~add_warning ~options source_file entry_point declar
   let open Ligo_compile in
   let michelson,env = Build.build_contract ~raise ~add_warning ~options entry_point source_file in
   let views = Build.build_views ~raise ~add_warning ~options entry_point (declared_views,env) source_file in
-  Of_michelson.build_contract ~raise ~disable_typecheck:false michelson views
+  Of_michelson.build_contract ~raise ~add_warning ~has_env_comments:false ~protocol_version:options.middle_end.protocol_version ~disable_typecheck:false michelson views
 
 let clean_location_with v x =
   let open Tezos_micheline.Micheline in
@@ -103,9 +113,9 @@ let clean_locations e t =
 
 let add_ast_env ?(name = Ast_aggregated.ValueVar.fresh ()) env binder body =
   let open Ast_aggregated in
-  let aux (let_binder , expr, no_mutation) (e : expression) =
+  let aux (let_binder , expr, no_mutation, inline) (e : expression) =
     if ValueVar.compare let_binder binder <> 0 && ValueVar.compare let_binder name <> 0 then
-      e_a_let_in let_binder expr e { inline = false ; no_mutation ; view = false ; public = false }
+      e_a_let_in {var=let_binder;ascr=None;attributes=Stage_common.Helpers.empty_attribute} expr e { inline ; no_mutation ; view = false ; public = false ; thunk = false ; hidden = false }
     else
       e in
   let typed_exp' = List.fold_right ~f:aux ~init:body env in
@@ -164,18 +174,26 @@ let compile_type ~raise type_exp =
   let ty = Of_aggregated.compile_type ~raise type_exp in
   Of_mini_c.compile_type ty
 
+let entrypoint_of_string x =
+  match Tezos_raw_protocol.Entrypoint_repr.of_annot_lax_opt (Tezos_raw_protocol.Non_empty_string.of_string_exn x) with
+  | Some x -> x
+  | None -> failwith (Format.asprintf "Testing framework: Invalid entrypoint %s" x)
+
 let compile_contract_ ~raise ~options subst_lst arg_binder rec_name in_ty out_ty aggregated_exp =
   let open Ligo_compile in
   let aggregated_exp' = add_ast_env subst_lst arg_binder aggregated_exp in
   let aggregated_exp = match rec_name with
-    | None -> Ast_aggregated.e_a_lambda { result = aggregated_exp'; binder = arg_binder } in_ty out_ty
-    | Some fun_name -> Ast_aggregated.e_a_recursive { fun_name ; fun_type  = (Ast_aggregated.t_arrow in_ty out_ty ()) ; lambda = { result = aggregated_exp';binder = arg_binder } } in
+    | None -> Ast_aggregated.e_a_lambda { result = aggregated_exp'; binder = {var=arg_binder;ascr=None;attributes=Stage_common.Helpers.empty_attribute} } in_ty out_ty
+    | Some fun_name -> Ast_aggregated.e_a_recursive { fun_name ; fun_type  = (Ast_aggregated.t_arrow in_ty out_ty ()) ; lambda = { result = aggregated_exp';binder = {var=arg_binder;ascr=None;attributes=Stage_common.Helpers.empty_attribute}}} in
+  let (parameter, storage) = trace_option ~raise (Errors.generic_error Location.generated "Trying to compile a non-contract?") @@
+                               Ast_aggregated.get_t_pair in_ty in
+  let aggregated_exp = trace ~raise Main_errors.self_ast_aggregated_tracer @@ Self_ast_aggregated.all_contract parameter storage aggregated_exp in
   let mini_c = Of_aggregated.compile_expression ~raise aggregated_exp in
   Of_mini_c.compile_contract ~raise ~options mini_c
 
 let make_function in_ty out_ty arg_binder body subst_lst =
   let typed_exp' = add_ast_env subst_lst arg_binder body in
-  Ast_aggregated.e_a_lambda {result=typed_exp'; binder=arg_binder} in_ty out_ty
+  Ast_aggregated.e_a_lambda {result=typed_exp'; binder={var=arg_binder;ascr=None;attributes=Stage_common.Helpers.empty_attribute}} in_ty out_ty
 
 let rec val_to_ast ~raise ~loc : Ligo_interpreter.Types.value ->
                           Ast_aggregated.type_expression ->
@@ -274,15 +292,6 @@ let rec val_to_ast ~raise ~loc : Ligo_interpreter.Types.value ->
                  (get_t_bls12_381_fr ty) in
      let x = bytes_of_bls12_381_fr b in
      e_a_bls12_381_fr x
-  | V_Construct (ctor, arg) when is_t_option ty ->
-     let ty' = trace_option ~raise (Errors.generic_error loc (Format.asprintf "Expected option but got %a" Ast_aggregated.PP.type_expression ty)) @@ get_t_option ty in
-     if String.equal ctor "Some" then
-       let arg = val_to_ast ~raise ~loc arg ty' in
-       e_a_some arg
-     else if String.equal ctor "None" then
-       e_a_none ty'
-     else
-       raise.raise @@ Errors.generic_error loc "Expected either None or Some"
   | V_Construct (ctor, arg) when is_t_sum ty ->
      let map_ty = trace_option ~raise (Errors.generic_error loc (Format.asprintf "Expected sum type but got %a" Ast_aggregated.PP.type_expression ty)) @@ get_t_sum_opt ty in
      let {associated_type=ty';michelson_annotation=_;decl_pos=_} = LMap.find (Label ctor) map_ty.content in
@@ -315,20 +324,20 @@ let rec val_to_ast ~raise ~loc : Ligo_interpreter.Types.value ->
      make_ast_map~raise ~loc key_ty value_ty kv
   | V_Map _ ->
      raise.raise @@ Errors.generic_error loc (Format.asprintf "Expected map or big_map but got %a" Ast_aggregated.PP.type_expression ty)
-  | V_Ligo _ ->
-     raise.raise @@ Errors.generic_error loc "Cannot be abstracted: ligo"
-  | V_Michelson (Contract _) ->
+  | V_Michelson_contract _ ->
      raise.raise @@ Errors.generic_error loc "Cannot be abstracted: michelson-contract"
+  | V_Michelson (Untyped_code _) ->
+     raise.raise @@ Errors.generic_error loc "Cannot be abstracted: untyped-michelson-code"
   | V_Mutation _ ->
      raise.raise @@ Errors.generic_error loc "Cannot be abstracted: mutation"
-  | V_Failure _ ->
-     raise.raise @@ Errors.generic_error loc "Cannot be abstracted: failure"
+  | V_Thunk { value ; _ } ->
+     value
 
 and make_ast_func ~raise ?name env arg body orig =
   let open Ast_aggregated in
   let env = make_subst_ast_env_exp ~raise env orig in
   let typed_exp' = add_ast_env ?name:name env arg body in
-  let lambda = { result=typed_exp' ; binder=arg} in
+  let lambda = { result=typed_exp' ; binder={var=arg;ascr=None;attributes=Stage_common.Helpers.empty_attribute}} in
   let typed_exp' = match name with
     | None ->
        let { type1 = in_ty ; type2 = out_ty } =
@@ -371,13 +380,12 @@ and make_ast_map ~raise ~loc key_ty value_ty kv =
                 (k, v)) kv in
   List.fold_right kv ~f:(fun (k, v) r -> Ast_aggregated.e_a_map_add k v r) ~init:(Ast_aggregated.e_a_map_empty key_ty value_ty)
 
-and compile_simple_value ~raise ?ctxt ~loc : Ligo_interpreter.Types.value ->
+and compile_simple_value ~raise ~options ?ctxt ~loc : Ligo_interpreter.Types.value ->
                       Ast_aggregated.type_expression ->
                       Ligo_interpreter.Types.typed_michelson_code =
   fun v ty ->
   let typed_exp = val_to_ast ~raise ~loc v ty in
   let (_: Ast_aggregated.expression) = trace ~raise Main_errors.self_ast_aggregated_tracer @@ Self_ast_aggregated.expression_obj typed_exp in
-  let options = Compiler_options.make ~raw_options:Compiler_options.default_raw_options () in
   let compiled_exp = compile_value ~raise ~options typed_exp in
   let expr, _ = run_expression_unwrap ~raise ?ctxt ~loc compiled_exp in
   (* TODO-er: check the ignored second component: *)
@@ -387,69 +395,38 @@ and compile_simple_value ~raise ?ctxt ~loc : Ligo_interpreter.Types.value ->
 and make_subst_ast_env_exp ~raise env expr =
   let open Ligo_interpreter.Types in
   let get_fv expr =
-   snd @@ Self_ast_aggregated.Helpers.Free_variables.expression expr in
+   Self_ast_aggregated.Helpers.Free_variables.expression expr in
   let rec aux (fv) acc = function
     | [] -> acc
-    | Expression { name; item ; no_mutation } :: tl ->
+    | Expression { name; item ; no_mutation ; inline } :: tl ->
        if List.mem fv name ~equal:ValueVar.equal then
          let expr = val_to_ast ~raise ~loc:(ValueVar.get_location name) item.eval_term item.ast_type in
          let expr_fv = get_fv expr in
          let fv = List.remove_element ~compare:ValueVar.compare name fv in
          let fv = List.dedup_and_sort ~compare:ValueVar.compare (fv @ expr_fv) in
-         aux fv ((name, expr, no_mutation) :: acc) tl
+         aux fv ((name, expr, no_mutation, inline) :: acc) tl
        else
          aux fv acc tl in
   aux (get_fv expr) [] env
 
-let get_literal_type : Ast_aggregated.literal -> Ast_aggregated.type_expression =
-  fun t ->
-  let open Ast_aggregated in
-  match t with
-  | (Literal_unit) -> t_unit ()
-  | (Literal_int _) -> t_int ()
-  | (Literal_nat _) -> t_nat ()
-  | (Literal_mutez _) -> t_mutez ()
-  | (Literal_string _) -> t_string ()
-  | (Literal_bytes _) -> t_bytes ()
-  | (Literal_timestamp _) -> t_timestamp ()
-  | (Literal_address _) -> t_address ()
-  | (Literal_signature _) -> t_signature ()
-  | (Literal_key _) -> t_key ()
-  | (Literal_key_hash _) -> t_key_hash ()
-  | (Literal_chain_id _) -> t_chain_id ()
-  | (Literal_operation _) -> t_operation ()
-  | (Literal_bls12_381_g1 _) -> t_bls12_381_g1 ()
-  | (Literal_bls12_381_g2 _) -> t_bls12_381_g2 ()
-  | (Literal_bls12_381_fr _) -> t_bls12_381_fr ()
-  | (Literal_chest _) -> t_chest ()
-  | (Literal_chest_key _) -> t_chest_key ()
-
-let compile_literal ~raise ~loc : Ast_aggregated.literal -> _ =
-  fun v ->
-  let open Ligo_interpreter.Types in
-  let type_lit = get_literal_type v in
-  let typed_exp = Ast_aggregated.e_a_literal v type_lit in
-  let options = Compiler_options.make ~raw_options:Compiler_options.default_raw_options () in
-  let compiled_exp = compile_value ~raise ~options typed_exp in
-  let expr, expr_ty = run_expression_unwrap ~raise ~loc compiled_exp in
-  (expr, expr_ty, typed_exp.type_expression)
 
 let storage_retreival_dummy_ty = Tezos_utils.Michelson.prim "int"
 
-let run_michelson_func ~raise ~loc (ctxt : Tezos_state.context) (code : (unit, string) Tezos_micheline.Micheline.node) func_ty arg arg_ty =
+let run_michelson_func ~raise ~options ~loc (ctxt : Tezos_state.context) (code : (unit, string) Tezos_micheline.Micheline.node) func_ty arg arg_ty =
   let open Ligo_interpreter.Types in
-  let { code = arg ; code_ty = arg_ty ; _ } = compile_simple_value ~raise ~loc arg arg_ty in
+  let { code = arg ; code_ty = arg_ty ; _ } = compile_simple_value ~raise ~options ~ctxt ~loc arg arg_ty in
   let func_ty = compile_type ~raise func_ty in
   let func = match code with
   | Seq (_, s) ->
      Tezos_utils.Michelson.(seq ([i_push arg_ty arg] @ s))
   | _ ->
      raise.raise (Errors.generic_error Location.generated "Could not parse") in
-  match Ligo_run.Of_michelson.run_expression ~raise func func_ty with
+  let options = make_options ~raise (Some ctxt) in
+  match Ligo_run.Of_michelson.run_expression ~raise ~options func func_ty with
   | Success (ty, value) ->
-      Michelson_to_value.decompile_to_untyped_value ~raise ~bigmaps:ctxt.transduced.bigmaps ty value
-  | _ ->
-     raise.raise (Errors.generic_error loc "Could not execute Michelson function")
+     Result.return @@ Michelson_to_value.decompile_to_untyped_value ~raise ~bigmaps:ctxt.transduced.bigmaps ty value
+  | Fail f ->
+     Result.fail f
 
 let parse_code ~raise code =
   let open Tezos_micheline in
@@ -480,14 +457,3 @@ let parse_raw_michelson_code ~raise code ty =
   let code = parse_code ~raise code in
   let code_ty = Micheline.map_node (fun _ -> ()) (fun x -> x) ty in
   (code, code_ty)
-
-let parse_and_run_raw_michelson_code ~raise ~loc code ty =
-  let open Tezos_micheline in
-  let code, code_ty = parse_raw_michelson_code ~raise code ty in
-  match Ligo_run.Of_michelson.run_expression ~raise code code_ty with
-  | Success (ty, value) ->
-    let code = Micheline.map_node (fun _ -> ()) (fun x -> x) value in
-    let code_ty = Micheline.map_node (fun _ -> ()) (fun x -> x) ty in
-    (code_ty, code)
-  | _ ->
-     raise.raise (Errors.generic_error loc "Could not execute Michelson code")

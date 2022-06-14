@@ -8,14 +8,9 @@ let make_raw_options = Raw_options.make
 
 let default_raw_options = Raw_options.default
 
-type formatter = {
-  show_warnings : bool ;
-  warning_as_error : bool ;
-}
-
 type frontend = {
-  syntax : string ;
-  dialect : string ;
+  syntax : Syntax_types.t option ;
+  (* dialect : string ; [@dead "frontend.dialect"]  *)
   entry_point : string ;
   libraries : string list ;
   project_root : string option ;
@@ -28,19 +23,20 @@ type tools = {
 
 type test_framework = {
   steps : int ;
-  generator : string ;
+  cli_expr_inj : string option ;
 }
 
 type middle_end = {
-  infer : bool ;
   test : bool ;
   init_env : Environment.t ;
   protocol_version : Protocols.t ;
+  warn_unused_rec : bool ;
 }
 
 type backend = {
   protocol_version : Protocols.t ;
   disable_michelson_typechecking : bool ;
+  enable_typed_opt : bool ;
   without_run : bool ;
   views : string list ;
   constants : string list ;
@@ -51,7 +47,6 @@ type backend = {
 }
 
 type t = {
-  formatter : formatter ;
   frontend : frontend ;
   tools : tools ;
   test_framework : test_framework ;
@@ -59,25 +54,28 @@ type t = {
   backend : backend ;
 }
 
-let make : 
+let warn_unused_rec ~syntax should_warn =
+  match syntax with
+    Some Syntax_types.JsLIGO -> false
+  | Some CameLIGO
+  | Some ReasonLIGO
+  | Some PascaLIGO _
+  | None -> should_warn
+
+let make :
   raw_options : raw ->
+  ?syntax : Syntax_types.t ->
   ?protocol_version:Protocols.t ->
-  ?test:bool ->
   ?has_env_comments : bool ->
   unit -> t =
-  fun 
+  fun
     ~raw_options
+    ?syntax
     ?(protocol_version = Protocols.current)
-    ?(test = false)
     ?(has_env_comments = false)
     () ->
-      let formatter = {
-        show_warnings = raw_options.show_warnings;
-        warning_as_error = raw_options.warning_as_error;
-      } in
       let frontend = {
-        syntax = raw_options.syntax ;
-        dialect = raw_options.dialect ;
+        syntax ;
         libraries = raw_options.libraries;
         entry_point = raw_options.entry_point;
         project_root = raw_options.project_root;
@@ -88,26 +86,26 @@ let make :
       } in
       let test_framework = {
         steps = raw_options.steps;
-        generator = raw_options.generator;
+        cli_expr_inj = raw_options.cli_expr_inj;
       } in
       let middle_end = {
-        infer = Default_options.infer ;
-        test ;
-        init_env = if test then default_with_test protocol_version else default protocol_version ;
-        protocol_version;
+        test = raw_options.test;
+        init_env = if raw_options.test then default_with_test protocol_version else default protocol_version ;
+        protocol_version ;
+        warn_unused_rec = warn_unused_rec ~syntax raw_options.warn_unused_rec ;
       } in
       let backend = {
         protocol_version ;
         disable_michelson_typechecking = raw_options.disable_michelson_typechecking;
+        enable_typed_opt = raw_options.enable_typed_opt;
         without_run = raw_options.without_run;
         views = raw_options.views ;
         constants = raw_options.constants ;
         file_constants = raw_options.file_constants ;
         has_env_comments = has_env_comments ;
-      } 
+      }
       in
-      { 
-        formatter ;
+      {
         frontend ;
         tools ;
         test_framework ;
@@ -115,7 +113,7 @@ let make :
         backend ;
       }
 
-let set_init_env opts init_env = 
+let set_init_env opts init_env =
   { opts with middle_end = { opts.middle_end with init_env } }
 
 let set_test_flag opts test =
