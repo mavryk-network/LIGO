@@ -586,7 +586,7 @@ let rec apply_operator ~raise ~add_warning ~steps ~(options : Compiler_options.t
                     ~f:(fun x -> trace_option ~raise (Errors.corner_case ()) @@ get_string x)
                     views
       in
-      let>> code = Compile_contract_from_file (source_file,entryp,views) in
+      let>> code = Compile_contract_from_file (source_file,[entryp],views) in
       return @@ code
     | ( C_TEST_COMPILE_CONTRACT_FROM_FILE , _  ) -> fail @@ error_type
     | ( C_TEST_EXTERNAL_CALL_TO_ADDRESS_EXN , [ (V_Ct (C_address address)) ; entrypoint ; V_Michelson (Ty_code { code = param ; _ }) ; V_Ct ( C_mutez amt ) ] ) -> (
@@ -994,11 +994,11 @@ and eval_ligo ~raise ~add_warning ~steps ~options : AST.expression -> calltrace 
     | E_type_abstraction {type_binder=_ ; result} -> (
       eval_ligo (result) calltrace env
     )
-    | E_let_in {let_binder ; rhs; let_result; attr = { no_mutation ; inline ; view=_ ; public=_ ; thunk=true ; hidden = _ }} -> (
+    | E_let_in {let_binder ; rhs; let_result; attr = { no_mutation ; inline ; entrypoint=_; view=_ ; public=_ ; thunk=true ; hidden = _ }} -> (
       let rhs' = LT.V_Thunk { value = rhs ; context = env }  in
       eval_ligo (let_result) calltrace (Env.extend env let_binder.var ~inline ~no_mutation (rhs.type_expression,rhs'))
     )
-    | E_let_in {let_binder ; rhs; let_result; attr = { no_mutation ; inline ; view=_ ; public=_ ; thunk=false ; hidden = _ }} -> (
+    | E_let_in {let_binder ; rhs; let_result; attr = { no_mutation ; inline ; entrypoint=_; view=_ ; public=_ ; thunk=false ; hidden = _ }} -> (
       let* rhs' = eval_ligo rhs calltrace env in
       eval_ligo (let_result) calltrace (Env.extend env let_binder.var ~inline ~no_mutation (rhs.type_expression,rhs'))
     )

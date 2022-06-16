@@ -47,7 +47,7 @@ let%expect_test _ =
       6 |
 
     Invalid view argument.
-    View 'bad_view' has storage type 'nat' and contract 'main' has storage type 'int'. |}]
+    View 'bad_view' has storage type 'nat' but contract has storage type 'int'. |}]
 
 (* view + #import : no view expected *)
 let%expect_test _ =

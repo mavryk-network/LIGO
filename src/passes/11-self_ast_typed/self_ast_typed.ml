@@ -1,6 +1,8 @@
 module Errors = Errors
 module Helpers = Helpers
 
+let get_final_entrypoint_name = Make_entry_point.get_final_entrypoint_name
+
 let all_module_passes ~add_warning ~raise ~warn_unused_rec = [
   Unused.unused_map_module ~add_warning;
   Muchused.muchused_map_module ~add_warning;
@@ -28,7 +30,8 @@ let all_module ~add_warning ~raise ~warn_unused_rec init =
 let all_expression ~add_warning ~raise ~warn_unused_rec init =
   List.fold ~f:(|>) (all_expression_passes ~add_warning ~raise ~warn_unused_rec) ~init
 
-let all_contract ~raise main_name prg =
+let all_contract ~raise entrypoints prg =
+  let main_name, prg = Make_entry_point.program ~raise entrypoints prg in
   let contract_type = Helpers.fetch_contract_type ~raise main_name prg in
   let data : Contract_passes.contract_pass_data = {
     contract_type = contract_type ;
@@ -43,7 +46,7 @@ let all_view ~raise views_name main_name prg =
   let f view_name =
     let view_type,view_loc = Helpers.fetch_view_type ~raise view_name prg in
     let contract_type = Helpers.fetch_contract_type ~raise main_name prg in
-    View_passes.check_view_type ~raise ~err_data:(view_loc,main_name,view_name) contract_type view_type
+    View_passes.check_view_type ~raise ~err_data:(view_loc,view_name) contract_type view_type
   in
   let () = List.iter ~f views_name in
   prg

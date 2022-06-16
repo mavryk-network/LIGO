@@ -19,9 +19,10 @@ let compile_expression ~raise ~add_warning ~options : Ast_typed.expression -> As
   let x = trace ~raise aggregation_tracer @@ compile_expression e in
   trace ~raise self_ast_aggregated_tracer @@ Self_ast_aggregated.all_expression ~add_warning ~options x
 
-let apply_to_entrypoint_contract ~raise ~add_warning ~options : Ast_typed.program -> Ast_typed.expression_variable -> Ast_aggregated.expression =
-    fun prg entrypoint ->
+let apply_to_entrypoint_contract ~raise ~add_warning ~options : Ast_typed.program -> Ast_typed.expression_variable list -> Ast_aggregated.expression =
+    fun prg entrypoints ->
   let aggregated_prg = compile_program ~raise prg in
+  let entrypoint = Self_ast_typed.get_final_entrypoint_name entrypoints prg in
   let Self_ast_typed.Helpers.{parameter=p_ty ; storage=s_ty} =
     trace ~raise self_ast_typed_tracer @@ Self_ast_typed.Helpers.fetch_contract_type entrypoint prg
   in

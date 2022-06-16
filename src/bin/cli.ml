@@ -8,7 +8,8 @@ let entry_point =
   let open Command.Param in
   let name = "e" in
   let doc = "ENTRY-POINT the entry-point that will be compiled." in
-  let spec = optional_with_default Default_options.entry_point string in
+  let spec = optional_with_default Default_options.entry_point
+    @@ Command.Arg_type.comma_separated ~strip_whitespace:true ~unique_values:true string in
   flag ~doc ~aliases:["--entry-point"] name spec
 
 let source_file =
@@ -458,20 +459,6 @@ let evaluate_call =
   Command.basic ~summary ~readme
   (f <$> source_file <*> expression "PARAMETER" <*>  entry_point <*> amount <*> balance <*> sender <*> source <*> now <*> syntax <*> protocol_version <*> display_format <*> warn <*> werror <*> project_root <*> warn_unused_rec)
 
-let evaluate_expr =
-  let f source_file entry_point amount balance sender source now syntax protocol_version display_format show_warnings warning_as_error project_root warn_unused_rec () =
-    let raw_options = Compiler_options.make_raw_options ~entry_point ~syntax ~protocol_version ~warning_as_error ~project_root ~warn_unused_rec () in
-    return_result ~return ~show_warnings @@
-    Api.Run.evaluate_expr raw_options source_file amount balance sender source now display_format
-    in
-  let summary   = "evaluate a given definition." in
-  let readme () = "This sub-command evaluates a LIGO definition. The \
-                  context is initialized from a source file where the \
-                  definition is written. The interpretation is done \
-                  using a Michelson interpreter." in
-  Command.basic ~summary ~readme
-  (f <$> source_file <*> entry_point <*> amount <*> balance <*> sender <*> source <*> now <*> syntax <*> protocol_version <*> display_format <*> warn <*> werror <*> project_root <*> warn_unused_rec)
-
 let interpret =
   let f expression init_file syntax protocol_version amount balance sender source now display_format project_root warn_unused_rec () =
     let raw_options = Compiler_options.make_raw_options ~syntax ~protocol_version ~project_root ~warn_unused_rec () in
@@ -492,7 +479,6 @@ let run_group =
     "test"         , test;
     "dry-run"      , dry_run;
     "evaluate-call", evaluate_call;
-    "evaluate-expr", evaluate_expr;
     "interpret"    , interpret;
   ]
 

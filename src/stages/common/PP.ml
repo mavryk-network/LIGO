@@ -39,10 +39,17 @@ let option_hidden ppf hidden =
   else
     fprintf ppf ""
 
-let e_attributes ppf { inline ; no_mutation ; view ; public ; thunk ; hidden } =
-  fprintf ppf "%a%a%a%a%a%a"
+let option_attribute string ppf condition =
+  if condition then
+    fprintf ppf "[@@%s]" string
+  else
+    fprintf ppf ""
+
+let e_attributes ppf { inline ; no_mutation ; entrypoint ; view ; public ; thunk ; hidden } =
+  fprintf ppf "%a%a%a%a%a%a%a"
     option_inline inline
     option_no_mutation no_mutation
+    (option_attribute "entrypoint") entrypoint
     option_view view
     option_public public
     option_thunk thunk

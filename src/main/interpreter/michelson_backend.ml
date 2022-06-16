@@ -100,7 +100,7 @@ let create_chest (payload:Bytes.t) (time:int) : _ =
 
 let compile_contract ~raise ~add_warning ~options source_file entry_point declared_views =
   let open Ligo_compile in
-  let michelson,env = Build.build_contract ~raise ~add_warning ~options entry_point source_file in
+  let michelson,env,entry_point = Build.build_contract ~raise ~add_warning ~options entry_point source_file in
   let views = Build.build_views ~raise ~add_warning ~options entry_point (declared_views,env) source_file in
   Of_michelson.build_contract ~raise ~add_warning ~has_env_comments:false ~protocol_version:options.middle_end.protocol_version ~disable_typecheck:false michelson views
 
@@ -115,7 +115,7 @@ let add_ast_env ?(name = Ast_aggregated.ValueVar.fresh ()) env binder body =
   let open Ast_aggregated in
   let aux (let_binder , expr, no_mutation, inline) (e : expression) =
     if ValueVar.compare let_binder binder <> 0 && ValueVar.compare let_binder name <> 0 then
-      e_a_let_in {var=let_binder;ascr=None;attributes=Stage_common.Helpers.empty_attribute} expr e { inline ; no_mutation ; view = false ; public = false ; thunk = false ; hidden = false }
+      e_a_let_in {var=let_binder;ascr=None;attributes=Stage_common.Helpers.empty_attribute} expr e { inline ; no_mutation ; entrypoint = false ; view = false ; public = false ; thunk = false ; hidden = false }
     else
       e in
   let typed_exp' = List.fold_right ~f:aux ~init:body env in

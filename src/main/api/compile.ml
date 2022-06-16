@@ -39,7 +39,7 @@ let contract (raw_options : Compiler_options.raw) source_file display_format mic
       in
       let Compiler_options.{ disable_michelson_typechecking = disable_typecheck ; views ; constants ; file_constants ; _ } = options.backend in
       let Compiler_options.{ entry_point ; _ } = options.frontend in
-      let code,env = Build.build_contract ~raise ~add_warning ~options entry_point source_file in
+      let code,env,entry_point = Build.build_contract ~raise ~add_warning ~options entry_point source_file in
       let views = Build.build_views ~raise ~add_warning ~options entry_point (views,env) source_file in
       let file_constants = read_file_constants ~raise file_constants in
       let constants = constants @ file_constants in
@@ -102,7 +102,7 @@ let parameter (raw_options : Compiler_options.raw) source_file entry_point expre
     Trace.warning_with @@ fun add_warning get_warnings ->
     format_result ~warning_as_error ~display_format (Formatter.Michelson_formatter.michelson_format michelson_format []) get_warnings @@
       fun ~raise ->
-        let entry_point = Ast_typed.ValueVar.of_input_var entry_point in
+        let entry_point = List.map ~f:Ast_typed.ValueVar.of_input_var entry_point in
         let protocol_version = Helpers.protocol_to_variant ~raise raw_options.protocol_version in
         let syntax = Syntax.of_string_opt ~raise (Syntax_name raw_options.syntax) (Some source_file) in
         let options = Compiler_options.make
@@ -128,6 +128,7 @@ let parameter (raw_options : Compiler_options.raw) source_file entry_point expre
         let aggregated_param = Ligo_compile.Of_typed.compile_expression_in_context ~raise ~add_warning ~options:options.middle_end typed_param aggregated_prg in
         let mini_c_param     = Ligo_compile.Of_aggregated.compile_expression ~raise aggregated_param in
         let compiled_param   = Ligo_compile.Of_mini_c.compile_expression ~raise ~options mini_c_param in
+        let entry_point = Self_ast_typed.get_final_entrypoint_name entry_point typed_prg in
         let ()               = Ligo_compile.Of_typed.assert_equal_contract_type ~raise Check_parameter entry_point app_typed_prg typed_param in
         let options = Run.make_dry_run_options ~raise ~constants { now ; amount ; balance ; sender;  source ; parameter_ty = None } in
         no_comment (Run.evaluate_expression ~raise ~options compiled_param.expr compiled_param.expr_ty)
@@ -149,7 +150,7 @@ let storage (raw_options : Compiler_options.raw) source_file expression amount b
         let Compiler_options.{ constants ; file_constants ; _ } = options.backend in
         let file_constants = read_file_constants ~raise file_constants in
         let constants = constants @ file_constants in
-        let entry_point = Ast_typed.ValueVar.of_input_var entry_point in
+        let entry_point = List.map ~f:Ast_typed.ValueVar.of_input_var entry_point in
         let app_typed_prg, typed_prg =
           Build.build_typed ~raise ~add_warning ~options (Ligo_compile.Of_core.Contract entry_point) source_file in
         let typed_param              = Ligo_compile.Utils.type_expression ~raise ~add_warning ~options syntax expression typed_prg in
@@ -164,6 +165,7 @@ let storage (raw_options : Compiler_options.raw) source_file expression amount b
         let aggregated_param = Ligo_compile.Of_typed.compile_expression_in_context ~raise ~add_warning ~options:options.middle_end typed_param aggregated_prg in
         let mini_c_param     = Ligo_compile.Of_aggregated.compile_expression ~raise aggregated_param in
         let compiled_param   = Ligo_compile.Of_mini_c.compile_expression ~raise ~options mini_c_param in
+        let entry_point      = Self_ast_typed.get_final_entrypoint_name entry_point typed_prg in
         let ()               = Ligo_compile.Of_typed.assert_equal_contract_type ~raise Check_storage entry_point app_typed_prg typed_param in
         let options = Run.make_dry_run_options ~raise ~constants { now ; amount ; balance ; sender;  source ; parameter_ty = None } in
         no_comment (Run.evaluate_expression ~raise ~options compiled_param.expr compiled_param.expr_ty)

@@ -21,6 +21,7 @@ type known_attributes = {
      TODO: we should change the type of such constants to be `unit -> 'a` instead of just 'a
   *)
   thunk : bool;
+  entrypoint : bool;
   view : bool;
   public: bool;
   (* Controls whether a declaration must be printed or not when using LIGO print commands (print ast-typed , ast-aggregated .. etc ..)

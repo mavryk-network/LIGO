@@ -108,7 +108,7 @@ let t_record_ez ?loc ?core ?(layout=default_layout) (lst:(string * type_expressi
 let t_bool ?loc ?core ()       : type_expression = t_sum_ez ?loc ?core
   [("True", t_unit ());("False", t_unit ())]
 
-let t_option ?loc ?core typ : type_expression = 
+let t_option ?loc ?core typ : type_expression =
   t_sum_ez ?loc ?core [
     ("Some", typ) ;
     ("None", t_unit ());
@@ -120,7 +120,7 @@ let t_option_abst ?loc ?core () : type_expression =
     t_sum_ez ?loc ?core [
       ("Some", t_variable ty_binder ()) ;
       ("None", t_unit ());
-    ]) 
+    ])
   } ()
 
 (* types specific to LIGO test framework*)
@@ -157,7 +157,7 @@ let get_t_bool (t:type_expression) : unit option = match t.type_content with
   | t when (Compare.type_content t (t_bool ()).type_content) = 0-> Some ()
   | _ -> None
 
-let get_t_option (t:type_expression) : type_expression option = 
+let get_t_option (t:type_expression) : type_expression option =
   match t.type_content with
   | T_sum {content;_} ->
     let keys = LMap.keys content in
@@ -165,7 +165,7 @@ let get_t_option (t:type_expression) : type_expression option =
       [Label "Some" ; Label "None"]
     | [Label "None" ; Label "Some"] ->
       let some = LMap.find (Label "Some") content in
-      Some some.associated_type 
+      Some some.associated_type
     | _ -> None)
   | _ -> None
 
@@ -323,6 +323,7 @@ let e_a_let_in let_binder rhs let_result attr = e_let_in { let_binder ; rhs ; le
 let e_a_raw_code language code t = e_raw_code { language ; code } t
 let e_a_type_inst forall type_ u = e_type_inst { forall ; type_ } u
 let e_a_mod_in module_binder rhs let_result = e_mod_in { module_binder ; rhs ; let_result } (get_type let_result)
+let e_a_matching matchee cases ty = e_matching { matchee ; cases } ty
 
 (* Constants *)
 let e_a_nil t = make_e (e_nil ()) (t_list t)

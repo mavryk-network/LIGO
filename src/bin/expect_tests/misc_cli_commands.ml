@@ -2,11 +2,11 @@ open Cli_expect
 
 (* evaluate-expr *)
 let%expect_test _ =
-  run_ligo_good ["run"; "evaluate-expr" ; "../../test/contracts/evaluation_tests.ligo" ; "--entry-point" ; "a" ] ;
+  run_ligo_good ["run"; "interpret" ; "a" ; "--init-file" ; "../../test/contracts/evaluation_tests.ligo" ] ;
   [%expect {|
     record[bar -> "bar" , foo -> +0] |} ];
 
-  run_ligo_good ["run"; "evaluate-expr" ; "../../test/contracts/evaluation_tests.ligo" ; "--entry-point" ; "b" ] ;
+  run_ligo_good ["run"; "interpret" ; "b" ; "--init-file" ; "../../test/contracts/evaluation_tests.ligo" ] ;
   [%expect {|
     2 |} ]
 

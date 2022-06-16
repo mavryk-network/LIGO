@@ -11,7 +11,7 @@ let default_raw_options = Raw_options.default
 type frontend = {
   syntax : Syntax_types.t option ;
   (* dialect : string ; [@dead "frontend.dialect"]  *)
-  entry_point : string ;
+  entry_point : string list ;
   libraries : string list ;
   project_root : string option ;
 }

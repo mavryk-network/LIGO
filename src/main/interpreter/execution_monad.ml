@@ -19,7 +19,7 @@ type execution_trace = unit
 
 type state = {
   tezos_context : Tezos_state.context ;
-  mod_res       : ModRes.t option ; 
+  mod_res       : ModRes.t option ;
 }
 
 let make_state ~raise ~(options : Compiler_options.t)  =
@@ -49,7 +49,7 @@ module Command = struct
     | Get_balance : Location.t * Ligo_interpreter.Types.calltrace * LT.value -> LT.value t
     | Get_last_originations : unit -> LT.value t
     | Check_obj_ligo : LT.expression -> unit t
-    | Compile_contract_from_file : string * string * string list -> LT.value t
+    | Compile_contract_from_file : string * string list * string list -> LT.value t
     | Read_contract_from_file : Location.t * LT.calltrace * string -> LT.value t
     | Run : Location.t * LT.func_val * LT.value -> LT.value t
     | Eval : Location.t * LT.value * Ast_aggregated.type_expression -> LT.value t
@@ -148,7 +148,7 @@ module Command = struct
       ((),ctxt)
     | Get_state () ->
       (ctxt,ctxt)
-    | Get_mod_res () -> 
+    | Get_mod_res () ->
       (state.mod_res,ctxt)
     | External_call (loc, calltrace, { address; entrypoint }, param, amt) -> (
       let entrypoint = Option.map ~f:(fun x -> Michelson_backend.entrypoint_of_string x) entrypoint in
@@ -184,7 +184,7 @@ module Command = struct
         | Ecoproto_error (Script_interpreter.Bad_contract_parameter _addr) :: _ -> (
           (fail_other () , ctxt)
         )
-        | _ -> 
+        | _ ->
           (fail_other (), ctxt)
       )
       (* this error is only caught because we have local modifications in tezos-ligo *)
@@ -465,7 +465,7 @@ let rec eval
   : type a.
     raise:Errors.interpreter_error raise ->
     add_warning: (Main_warnings.all -> unit) ->
-    options:Compiler_options.t ->  
+    options:Compiler_options.t ->
     a t ->
     state ->
     execution_trace ref option ->

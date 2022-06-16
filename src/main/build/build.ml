@@ -181,19 +181,19 @@ let build_expression ~raise ~add_warning : options:Compiler_options.t -> Syntax_
     (mini_c_exp ,aggregated)
 
 (* TODO: this function could be called build_michelson_code since it does not really reflect a "contract" (no views, parameter/storage types) *)
-let build_contract ~raise ~add_warning : options:Compiler_options.t -> string -> file_name -> Stacking.compiled_expression * Ast_typed.program =
+let build_contract ~raise ~add_warning : options:Compiler_options.t -> string list -> file_name -> Stacking.compiled_expression * Ast_typed.program * Ast_typed.expression_variable =
   fun ~options entry_point file_name ->
-    let entry_point = Ast_typed.ValueVar.of_input_var entry_point in
+    let entry_point = List.map ~f:Ast_typed.ValueVar.of_input_var entry_point in
     let typed_prg, contract = build_typed ~raise ~add_warning ~options (Ligo_compile.Of_core.Contract entry_point) file_name in
     let aggregated = Ligo_compile.Of_typed.apply_to_entrypoint_contract ~raise ~add_warning ~options:options.middle_end typed_prg entry_point in
+    let entry_point = Self_ast_typed.get_final_entrypoint_name entry_point typed_prg in
     let mini_c = Ligo_compile.Of_aggregated.compile_expression ~raise aggregated in
     let michelson  = Ligo_compile.Of_mini_c.compile_contract ~raise ~options mini_c in
-    michelson, contract
+    michelson, contract,entry_point
 
 let build_views ~raise ~add_warning :
-  options:Compiler_options.t -> string -> string list * Ast_typed.program -> file_name -> (Ast_typed.ValueVar.t * Stacking.compiled_expression) list =
+  options:Compiler_options.t -> Ast_typed.expression_variable -> string list * Ast_typed.program -> file_name -> (Ast_typed.ValueVar.t * Stacking.compiled_expression) list =
   fun ~options main_name (declared_views,program) source_file ->
-    let main_name = Ast_typed.ValueVar.of_input_var main_name in
     let views =
       let annotated_views = Ligo_compile.Of_typed.get_views @@ program in
       match declared_views with
