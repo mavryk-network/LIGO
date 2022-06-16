@@ -86,6 +86,7 @@ module Test = struct
   let set_baker_policy (bp : test_baker_policy) : unit = [%external "TEST_SET_BAKER"] bp
   let set_baker (a : address) : unit = set_baker_policy (By_account a)
   let originate_contract ((c, s, t) : michelson_contract * michelson_program * tez) : address = [%external "TEST_ORIGINATE"] c s t
+  let originate_contract_internal ((c, s, t) : michelson_contract * michelson_program * tez) : address = [%external "TEST_ORIGINATE_INTERNAL"] c s t
   let size (c : michelson_contract) : int = [%external "TEST_SIZE"] c
   let compile_contract (type p s) (f : p * s -> operation list * s) : michelson_contract = [%external "TEST_COMPILE_CONTRACT"] f
   let originate (type p s) ((f, s, t) : (p * s -> operation list * s) * s * tez) : ((p, s) typed_address * michelson_contract * int) =

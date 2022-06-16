@@ -193,12 +193,15 @@ let rec decompile_to_untyped_value ~raise ~bigmaps :
       let orig_lambda = e_a_lambda {binder={var=arg_binder;ascr=None;attributes=Stage_common.Helpers.empty_attribute}; result=body} t_input t_output in
       V_Func_val {rec_name = None; orig_lambda; arg_binder; body; env = Ligo_interpreter.Environment.empty_env }
   | Prim (loct, "ticket", [ty], _) , Prim (_, "Pair", [String (_,addr);vt;amt], _) ->
-    let () = Format.eprintf "Printing the ticket: %a" Tezos_utils.Michelson.pp value in
     let ty_nat = Prim (loct, "nat", [], []) in
     let addr =  V_Ct (C_address (contract_of_string ~raise addr)) in
     let vt = decompile_to_untyped_value ~raise ~bigmaps ty vt in
     let amt = decompile_to_untyped_value ~raise ~bigmaps ty_nat amt in
-    let lst = List.mapi ~f:(fun i x -> (Label (string_of_int i),x)) [addr ; vt ; amt] in
+    let comb =
+      let lst = List.mapi ~f:(fun i x -> (Label (string_of_int i),x)) [vt ; amt] in
+      V_Record (Stage_common.Types.LMap.of_list lst)
+    in
+    let lst = List.mapi ~f:(fun i x -> (Label (string_of_int i),x)) [addr ; comb] in
     V_Record (Stage_common.Types.LMap.of_list lst)
   | ty, v ->
     raise.raise (untranspilable ty v)

@@ -78,14 +78,18 @@ let compare_account = Memory_proto_alpha.Protocol.Alpha_context.Contract.compare
 
 type ligo_repr = unit Tezos_utils.Michelson.michelson
 type canonical_repr = Tezos_raw_protocol.Michelson_v1_primitives.prim Tezos_micheline.Micheline.canonical
-let ligo_to_canonical : raise:r -> loc:Location.t -> calltrace:calltrace -> ligo_repr -> canonical_repr Data_encoding.lazy_t =
+
+let ligo_to_canonical : raise:r -> loc:Location.t -> calltrace:calltrace -> ligo_repr -> canonical_repr =
   fun ~raise ~loc ~calltrace x ->
     let open Tezos_micheline.Micheline in
     let x = inject_locations (fun _ -> 0) (strip_locations x) in
     let x = strip_locations x in
-    let x = Trace.trace_alpha_tzresult ~raise (throw_obj_exc loc calltrace) @@
+    Trace.trace_alpha_tzresult ~raise (throw_obj_exc loc calltrace) @@
       Tezos_protocol.Protocol.Michelson_v1_primitives.prims_of_strings x
-    in
+
+let ligo_to_lazy_expr : raise:r -> loc:Location.t -> calltrace:calltrace -> ligo_repr -> canonical_repr Data_encoding.lazy_t =
+  fun ~raise ~loc ~calltrace x ->
+    let x = ligo_to_canonical ~raise ~loc ~calltrace x in
     Tezos_protocol.Protocol.Alpha_context.Script.lazy_expr x
 let canonical_to_ligo : canonical_repr -> ligo_repr =
   fun x ->
@@ -195,8 +199,8 @@ let implicit_account ~raise ~loc ~calltrace : string -> Tezos_protocol.Protocol.
 
 let script_of_compiled_code ~raise ~loc ~calltrace (contract : unit Tezos_utils.Michelson.michelson) (storage : unit Tezos_utils.Michelson.michelson) : Tezos_protocol.Protocol.Alpha_context.Script.t  =
   let open! Tezos_protocol.Protocol.Alpha_context.Script in
-  let code = ligo_to_canonical ~raise ~loc ~calltrace contract in
-  let storage = ligo_to_canonical ~raise ~loc ~calltrace storage in
+  let code = ligo_to_lazy_expr ~raise ~loc ~calltrace contract in
+  let storage = ligo_to_lazy_expr ~raise ~loc ~calltrace storage in
   { code ; storage }
 
 let extract_origination_from_result :
@@ -418,7 +422,7 @@ let register_delegate ~raise ~loc ~calltrace (ctxt : context) pkh =
 
 let register_constant ~raise ~loc ~calltrace (ctxt : context) ~source ~value =
   let open Tezos_alpha_test_helpers in
-  let value = ligo_to_canonical ~raise ~loc ~calltrace value in
+  let value = ligo_to_lazy_expr ~raise ~loc ~calltrace value in
   let hash = Trace.trace_alpha_tzresult ~raise (throw_obj_exc loc calltrace) @@ Tezos_protocol.Protocol.Script_repr.force_bytes value in
   let hash = Tezos_protocol.Protocol.Script_expr_hash.hash_bytes [hash] in
   let hash = Format.asprintf "%a" Tezos_protocol.Protocol.Script_expr_hash.pp hash in
@@ -439,7 +443,7 @@ let register_file_constants ~raise ~loc ~calltrace fn (ctxt : context) ~source =
   let open Tezos_alpha_test_helpers in
   let string_to_constant constant =
     let constant = parse_constant ~raise ~loc ~calltrace constant in
-    ligo_to_canonical ~raise ~loc ~calltrace constant in
+    ligo_to_lazy_expr ~raise ~loc ~calltrace constant in
   let constant_to_hash constant =
     let hash = Trace.trace_alpha_tzresult ~raise (throw_obj_exc loc calltrace) @@ Tezos_protocol.Protocol.Script_repr.force_bytes constant in
     let hash = Tezos_protocol.Protocol.Script_expr_hash.hash_bytes [hash] in
@@ -484,7 +488,7 @@ let sign_message ~raise ~loc ~calltrace (packed_payload : bytes) sk : Signature.
 let transfer ~raise ~loc ~calltrace (ctxt:context) ?entrypoint dst parameter amt : add_operation_outcome =
   let open Tezos_alpha_test_helpers in
   let source = unwrap_source ~raise ~loc ~calltrace ctxt.internals.source in
-  let parameters = ligo_to_canonical ~raise ~loc ~calltrace parameter in
+  let parameters = ligo_to_lazy_expr ~raise ~loc ~calltrace parameter in
   let operation : Tezos_raw_protocol.Alpha_context.packed_operation = Trace.trace_tzresult_lwt ~raise (throw_obj_exc loc calltrace) @@
     (* TODO: fee? *)
     let amt = Int64.of_int (Z.to_int amt) in
@@ -511,6 +515,49 @@ let originate_contract : raise:r -> loc:Location.t -> calltrace:calltrace -> con
       let storage_tys = (dst, ligo_ty) :: (ctxt.internals.storage_tys) in
       (addr, {ctxt with internals = { ctxt.internals with storage_tys}})
     | Fail errs -> raise.raise (target_lang_error loc calltrace errs)
+
+let originate_contract_internal : raise:r -> loc:Location.t -> calltrace:calltrace -> context -> value * value -> Z.t -> value * context =
+  fun ~raise ~loc ~calltrace ctxt (contract, storage) amt ->
+    let contract = trace_option ~raise (corner_case ()) @@ get_michelson_contract contract in
+    let { code = storage ; code_ty ; ast_ty = ligo_ty } = trace_option ~raise (corner_case ()) @@ get_michelson_expr storage in
+    let open Tezos_alpha_test_helpers in
+    let source = unwrap_source ~raise ~loc ~calltrace ctxt.internals.source in
+    let dst = Tezos_raw_protocol.Alpha_context.Contract.implicit_contract (Account.new_account ()).pkh in
+    let (alpha_context,_,_) =
+      let ctxt = get_alpha_context ~raise ctxt in
+      let (Ex_ty storage_type) = 
+        let x = Trace.trace_tzresult_lwt ~raise (throw_obj_exc loc calltrace) (Memory_proto_alpha.prims_of_strings code_ty) in
+        Trace.trace_tzresult_lwt ~raise (throw_obj_exc loc calltrace) (Memory_proto_alpha.parse_michelson_ty x)
+      in
+      let unparsed_code = ligo_to_canonical ~raise ~loc ~calltrace contract in
+      let storage =
+        let x =
+          let open Tezos_micheline.Micheline in
+          let x : (int, string) node = inject_locations (fun _ -> 0) (strip_locations storage) in
+          let x = Trace.trace_alpha_tzresult ~raise (throw_obj_exc loc calltrace) @@
+            Tezos_protocol.Protocol.Michelson_v1_primitives.prims_of_strings (strip_locations x)
+          in
+          inject_locations (fun _ -> 0) x
+        in
+        Trace.trace_tzresult_lwt ~raise (throw_obj_exc loc calltrace) (Memory_proto_alpha.parse_michelson_data ~tezos_context:ctxt x storage_type)
+      in
+      Trace.trace_alpha_tzresult_lwt ~raise (throw_obj_exc loc calltrace) @@
+      Tezos_protocol.Protocol.Apply.apply_origination
+        ~ctxt
+        ~storage_type
+        ~storage
+        ~unparsed_code
+        ~contract:dst
+        ~delegate:None
+        ~source
+        ~credit:(Test_tez.of_mutez_exn (Int64.of_int (Z.to_int amt)))
+        ~before_operation:ctxt
+    in
+    let internals =
+      { ctxt.internals with storage_tys = (dst, ligo_ty) :: (ctxt.internals.storage_tys) }
+    in
+    let raw = { ctxt.raw with context = Tezos_raw_protocol.Alpha_context.current_context alpha_context } in
+    (v_address dst, { ctxt with raw ; internals })
 
 let get_bootstrapped_contract ~raise (n : int) =
   (* TODO-er: this function repeats work each time called... improve *)

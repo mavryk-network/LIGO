@@ -57,7 +57,7 @@ module Command = struct
     | Decompile : LT.mcode * LT.mcode * Ast_aggregated.type_expression -> LT.value t
     | To_contract : Location.t * LT.value * string option * Ast_aggregated.type_expression -> LT.value t
     | Check_storage_address : Location.t * Tezos_protocol.Protocol.Alpha_context.Contract.t * Ast_aggregated.type_expression -> unit t
-    | Inject_script : Location.t * Ligo_interpreter.Types.calltrace * LT.value * LT.value * Z.t -> LT.value t
+    | Inject_script : Location.t * Ligo_interpreter.Types.calltrace * LT.value * LT.value * Z.t * bool -> LT.value t
     | Set_source : LT.value -> unit t
     | Set_baker : Location.t * LT.calltrace * LT.value -> unit t
     | Get_voting_power : Location.t * Ligo_interpreter.Types.calltrace * Tezos_protocol.Protocol.Alpha_context.public_key_hash -> LT.value t
@@ -329,8 +329,9 @@ module Command = struct
       let () = trace_option ~raise (Errors.generic_error loc "Storage type does not match expected type") @@
           (Ast_aggregated.Helpers.assert_type_expression_eq (ligo_ty, ty)) in
       ((), ctxt)
-    | Inject_script (loc, calltrace, code, storage, amt) ->
-      Tezos_state.originate_contract ~raise ~loc ~calltrace ctxt (code, storage) amt
+    | Inject_script (loc, calltrace, code, storage, amt, internal) ->
+      let f = if internal then Tezos_state.originate_contract_internal else Tezos_state.originate_contract in
+      f ~raise ~loc ~calltrace ctxt (code, storage) amt
     | Set_source source ->
       let source = trace_option ~raise (corner_case ()) @@ LC.get_address source in
       ((), {ctxt with internals = { ctxt.internals with source }})

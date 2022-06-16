@@ -68,6 +68,7 @@ module Test = struct
   let compile_contract_from_file  (_fn : string) (_e : string) (_v : string list) : michelson_contract = failwith "TEST_COMPILE_CONTRACT_FROM_FILE"
   let compile_contract (type p s) (_f : p * s -> operation list * s) : michelson_contract = failwith "TEST_COMPILE_CONTRACT"
   let originate_contract (_c : michelson_contract) (_s : michelson_program) (_t : tez) : address = failwith "TEST_ORIGINATE"
+  let originate_contract_internal (c : michelson_contract) (s : michelson_program) (t : tez) : address = failwith "TEST MODE"
   let size (_c : michelson_contract) : int = failwith "TEST_SIZE"
   let get_bootstrap_account (_n : nat) : address * key * string = failwith "TEST_GET_BOOTSTRAP_ACCOUNT"
   let sign (_sk : string) (_d : bytes) : signature = failwith "TEST_SIGN"

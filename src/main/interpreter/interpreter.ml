@@ -765,9 +765,13 @@ let rec apply_operator ~raise ~add_warning ~steps ~(options : Compiler_options.t
        return @@ size
     | ( C_TEST_SIZE , _  ) -> fail @@ error_type
     | ( C_TEST_ORIGINATE , [ contract ; storage ; V_Ct ( C_mutez amt ) ] ) ->
-       let>> addr  = Inject_script (loc, calltrace, contract, storage, amt) in
+       let>> addr  = Inject_script (loc, calltrace, contract, storage, amt, false) in
        return @@ addr
     | ( C_TEST_ORIGINATE , _  ) -> fail @@ error_type
+    | ( C_TEST_ORIGINATE_INTERNAL , [ contract ; storage ; V_Ct ( C_mutez amt ) ] ) ->
+      let>> addr  = Inject_script (loc, calltrace, contract, storage, amt, true) in
+      return @@ addr
+    | ( C_TEST_ORIGINATE_INTERNAL , _  ) -> fail @@ error_type
     | ( C_TEST_NTH_BOOTSTRAP_TYPED_ADDRESS , [ V_Ct (C_nat n) ] ) ->
       let n = Z.to_int n in
       let* parameter_ty', storage_ty' = monad_option (Errors.generic_error loc "Expected typed address") @@

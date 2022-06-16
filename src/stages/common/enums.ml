@@ -167,6 +167,7 @@ type constant' =
   (* Tests - ligo interpreter only *)
   | C_TEST_SIZE [@only_interpreter]
   | C_TEST_ORIGINATE [@only_interpreter]
+  | C_TEST_ORIGINATE_INTERNAL [@only_interpreter]
   | C_TEST_GET_STORAGE_OF_ADDRESS [@only_interpreter]
   | C_TEST_GET_BALANCE [@only_interpreter]
   | C_TEST_SET_SOURCE [@only_interpreter]
