@@ -2,6 +2,7 @@ open Api_helpers
 open Tezos_utils.Micheline
 
 module Compile   = Ligo_compile
+module Utils     = Simple_utils.Utils
 module Helpers   = Ligo_compile.Helpers
 module Location  = Simple_utils.Location
 
@@ -123,21 +124,21 @@ end (* of module Build_ast  *)
 module Build_cst_cameligo = struct
   open Cst_cameligo.CST
 
-  let the_unit : the_unit = (Wrap.ghost "(", Wrap.ghost ")") 
-  let wrapped_the_unit = Region.wrap_ghost the_unit 
+  let the_unit : the_unit = (Wrap.ghost "(", Wrap.ghost ")")
+  let wrapped_the_unit = Region.wrap_ghost the_unit
   let mk_eunit : expr =
     EUnit wrapped_the_unit
-  
+
   let mk_punit : pattern =
     PUnit wrapped_the_unit
 
-  let mk_var : string -> variable = fun var_name -> Region.wrap_ghost var_name 
+  let mk_var : string -> variable = fun var_name -> Region.wrap_ghost var_name
 
   let mk_var_pattern : string -> var_pattern = fun var_name -> {
     variable   = mk_var var_name;
     attributes = []
-  } 
-  let mk_pvar : string -> pattern = fun name -> PVar ( Region.wrap_ghost @@ mk_var_pattern name) 
+  }
+  let mk_pvar : string -> pattern = fun name -> PVar ( Region.wrap_ghost @@ mk_var_pattern name)
 
   let mk_par : 'a -> 'a par reg = fun i ->
     Region.wrap_ghost {
@@ -145,9 +146,13 @@ module Build_cst_cameligo = struct
       inside = i;
       rpar = Wrap.ghost ")";
     }
-  
+
   let mk_ppar : pattern -> pattern = fun p ->
     PPar (mk_par p)
+
+  let mk_ptuple : ?sep : lexeme -> pattern Utils.nseq -> pattern = fun ?(sep=",") (p, plist) ->
+    let sep = Wrap.ghost sep in
+    PTuple ( Region.wrap_ghost (p, List.map ~f:(fun elt -> sep, elt) plist))
 
   let mk_ptyped : pattern -> type_expr -> pattern =
     fun p te ->
@@ -159,7 +164,7 @@ module Build_cst_cameligo = struct
         }
       )
 
-  let mk_tvar type_name = TVar (Region.wrap_ghost type_name) 
+  let mk_tvar type_name = TVar (Region.wrap_ghost type_name)
 
   let mk_let_binding
     :  ?type_params:type_params option
@@ -249,15 +254,18 @@ module Build_cst_cameligo = struct
     -> Cst_cameligo.CST.t =
     fun ~raise param_type storage_type ->
 
+      let parameters_name = "parameters" in
+      let storage_name = "storage" in
       let params_type_expr = mk_type_expr_from_michelson ~raise param_type in
       let storage_type_expr = mk_type_expr_from_michelson ~raise storage_type in
-      let params_type_decl = mk_type_decl "parameters" params_type_expr in
-      let storage_type_decl = mk_type_decl "storage" storage_type_expr in
+      let params_type_decl = mk_type_decl parameters_name params_type_expr in
+      let storage_type_decl = mk_type_decl storage_name storage_type_expr in
       (* let type_d *)
-      let output_type = mk_tprod (mk_list @@ mk_tvar "operation") (mk_tvar "storage") in
-      let params_input = mk_ppar @@ mk_ptyped (mk_pvar "params") (mk_tvar "parameters") in
-      let storage_input = mk_ppar @@ mk_ptyped (mk_pvar "storage") (mk_tvar "storage") in
-      let main_declaration = mk_let_decl ~rhs_type:(Some output_type) ~args:[params_input; storage_input] "main" mk_eunit in
+      let input_pattern = mk_ptuple (mk_pvar "params", [mk_pvar "storage"]) in
+      let input_type = mk_tprod (mk_tvar parameters_name) (mk_tvar storage_name) in
+      let input_pattern = mk_ppar @@ mk_ptyped input_pattern input_type in
+      let output_type = mk_tprod (mk_list @@ mk_tvar "operation") (mk_tvar storage_name) in
+      let main_declaration = mk_let_decl ~rhs_type:(Some output_type) ~args:[input_pattern] "main" mk_eunit in
 
       { decl = (params_type_decl, [storage_type_decl ; main_declaration]);
         eof = Wrap.ghost "eof"
