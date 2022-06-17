@@ -1,0 +1,13 @@
+{
+  "name": "foo",
+  "version": "0.0.1",
+  "esy": {
+    "buildsInSource": true,
+    "build": "ocamlopt -o foo foo.ml",
+    "install": "cp ./foo #{self.bin}",
+    "release": {
+      "bin": ["foo"]
+    }
+  },
+  "dependencies": { "ocaml": "*" }
+}

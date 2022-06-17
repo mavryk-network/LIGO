@@ -1,0 +1,79 @@
+macos-intel:
+  script:
+    - mkdir -p ~/.npm
+    - npm config set prefix '~/.npm'
+    - export PATH=~/.npm/bin:$PATH
+    - npm i -g esy@beta
+    - esy i
+    - esy release
+    - mv _release platform-darwin
+  artifacts:
+    paths:
+      - platform-darwin
+  tags:
+    - mac
+    - i7
+  stage: build
+
+macos-m1:
+  script:
+    - mkdir -p ~/.npm
+    - npm config set prefix '~/.npm'
+    - export PATH=~/.npm/bin:$PATH
+    - npm i -g esy@beta
+    - esy i
+    - esy release
+    - mv _release platform-darwin-arm64
+  artifacts:
+    paths:
+      - platform-darwin-arm64
+  tags:
+    - mac
+    - m1
+  stage: build
+
+windows:
+  script:
+    - $env:GIT_CURL_VERBOSE = 1
+    - $env:GIT_TRACE = 1
+    - $env:GIT_TRACE_PACKET = 1
+    - git config http.postBuffer 1048576000
+    - npm i -g esy@beta --force
+    - $env:PATH = 'C:\Users\gitlabrunner\AppData\Roaming\npm;' + $env:PATH
+    - $env:HOME = 'C:/Users/gitlabrunner'
+    - esy i
+    - esy release
+    - mv _release platform-windows-x64
+  artifacts:
+    paths:
+      - platform-windows-x64
+  tags:
+    - windows
+  stage: build
+
+
+deploy:
+  needs:
+    - job: macos-m1
+      artifacts: true
+    - job: macos-intel
+      artifacts: true
+    - job: windows
+      artifacts: true
+  script:
+    - mkdir -p _release
+    - cp platform-darwin/esyInstallRelease.js _release
+    - mv platform-* _release/
+    - node scripts/pipelines-release.js
+    - cd _release && npm pack
+  artifacts:
+    paths:
+      - _release/ligo-*.tgz
+    
+  tags:
+    - docker
+  stage: deploy
+
+stages:
+  - build
+  - deploy
