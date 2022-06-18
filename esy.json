@@ -46,6 +46,18 @@
       "@opam/ocaml-lsp-server": "1.10.3"
     },
     "resolutions": {
+      "@opam/ctypes": {
+        "version": "opam:0.20.1",
+        "override": {
+          "buildEnv": {
+            "LIBFFI_CFLAGS": "-I#{esy-libffi.install / 'include'}",
+            "LIBFFI_LIBS": "-L#{esy-libffi.lib} -lffi"
+          },
+          "dependencies": {
+            "esy-libffi": "*"
+          }
+        }
+      },
       "ocaml": "4.12.0",
       "@opam/crunch": "mirage/ocaml-crunch:crunch.opam#e18888ce1f30ed6559ba977d405af2084812cbca",
       "@opam/core": "opam:v0.14.1",

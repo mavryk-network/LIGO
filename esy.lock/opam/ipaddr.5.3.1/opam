@@ -5,7 +5,7 @@ synopsis: "A library for manipulation of IP (and MAC) address representations"
 description: """
 Features:
  * Depends only on sexplib (conditionalization under consideration)
- * oUnit-based tests
+ * ounit2-based tests
  * IPv4 and IPv6 support
  * IPv4 and IPv6 CIDR prefix support
  * IPv4 and IPv6 [CIDR-scoped address](http://tools.ietf.org/html/rfc4291#section-2.3) support
@@ -27,12 +27,11 @@ homepage: "https://github.com/mirage/ocaml-ipaddr"
 doc: "https://mirage.github.io/ocaml-ipaddr/"
 bug-reports: "https://github.com/mirage/ocaml-ipaddr/issues"
 depends: [
-  "ocaml" {>= "4.04.0"}
+  "ocaml" {>= "4.08.0"}
   "dune" {>= "1.9.0"}
   "macaddr" {= version}
-  "stdlib-shims"
   "domain-name" {>= "0.3.0"}
-  "ounit" {with-test}
+  "ounit2" {with-test}
   "ppx_sexp_conv" {with-test & >= "v0.9.0"}
 ]
 build: [
@@ -43,10 +42,10 @@ build: [
 dev-repo: "git+https://github.com/mirage/ocaml-ipaddr.git"
 url {
   src:
-    "https://github.com/mirage/ocaml-ipaddr/releases/download/v5.3.0/ipaddr-5.3.0.tbz"
+    "https://github.com/mirage/ocaml-ipaddr/releases/download/v5.3.1/ipaddr-5.3.1.tbz"
   checksum: [
-    "sha256=36979edf64b464d44055f3504b97d61e22050e7369d983052c4ecc3d2b1ab755"
-    "sha512=06b16e319672c8182210296ed005accd9a4e190f99bd019f24232e213be8de6d198f9e8cb40ee00ec226184e1dd4ebd7e589d890b1f88f40f17eaf785dae975c"
+    "sha256=9820bcbccadb6e6d9e22fe26b2f9a044897c8f47c29d157f464b41a2f191e7d4"
+    "sha512=1d400f8344d1a8c2ac1c55e4a7167484034094e2227ce7c8f2f45843b0875a83030851400ceb96b5cdb756fa8798d83c77d839705fcb9e3f2bd5e46d337d63d0"
   ]
 }
-x-commit-hash: "842b88da1b699f8c087e15696f76f6e0f47055c8"
+x-commit-hash: "4fe91c7a7774d829a65e711be5d7df1501bc2e75"
