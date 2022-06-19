@@ -38,13 +38,6 @@ type storage = {
   total_supply : nat;
 }
 
-type parameter =
-  | Transfer of transfer
-  | Approve of approve
-  | GetAllowance of getAllowance
-  | GetBalance of getBalance
-  | GetTotalSupply of getTotalSupply
-
 type result = operation list * storage
 
 [@inline]
