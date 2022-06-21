@@ -137,7 +137,6 @@ and compile_type ~raise : I.type_expression -> O.type_expression =
       let type1 = self type1 in
       let type2 = self type2 in
       return (T_arrow { type1 ; type2 })
-    | T_module_accessor _ -> failwith "module accessor types should not end up here"
     | T_singleton x -> return (T_singleton x)
     | T_abstraction _ ->
       raise.raise @@ Errors.corner_case "Abstraction type uncaught"

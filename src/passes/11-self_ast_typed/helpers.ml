@@ -118,7 +118,6 @@ let rec iter_type_expression : ty_mapper -> type_expression -> unit = fun f t ->
   | T_arrow x ->
     let () = self x.type1 in
     self x.type2
-  | T_module_accessor _ -> ()
   | T_singleton _ -> ()
   | T_abstraction x -> self x.type_
   | T_for_all x -> self x.type_
