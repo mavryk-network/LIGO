@@ -13,10 +13,10 @@ install-deps:
 build-deps:
 	export PATH="/usr/local/bin$${PATH:+:}$${PATH:-}"
 #	Create opam dev switch locally for use with Ligo, add merlin/etc
-	if [ ! -d "./_opam" ];
-	then scripts/setup_switch.sh;
-	fi
-	eval $$(opam config env)
+	# if [ ! -d "./_opam" ];
+	# then scripts/setup_switch.sh;
+	# fi
+	# eval $$(opam config env)
 # NEW-PROTOCOL-TEMPORARY
 	git submodule sync --recursive
 	git submodule update --init --recursive --remote
