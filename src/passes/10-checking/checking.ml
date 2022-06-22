@@ -539,7 +539,7 @@ and type_expression' ~raise ~add_warning ~options : context -> ?tv_opt:O.type_ex
       let matcheevar = I.ValueVar.fresh () in
       let case_exp = Pattern_matching.compile_matching ~raise ~err_loc:e.location matcheevar eqs in
       let case_exp = { case_exp with location = e.location } in
-      let x = O.E_let_in { let_binder = {var=matcheevar;ascr=None;attributes={const_or_var=Some `Var}} ; rhs = matchee' ; let_result = case_exp ; attr = {inline = false; no_mutation = false; public = true ; entrypoint = false; view= false ; thunk = false ; hidden = false } } in
+      let x = O.E_let_in { let_binder = {var=matcheevar;ascr=None;attributes={const_or_var=Some `Var}} ; rhs = matchee' ; let_result = case_exp ; attr = {inline = false; no_mutation = false; public = true ; entry = false; view= false ; thunk = false ; hidden = false } } in
       return x case_exp.type_expression
   )
   | E_let_in {let_binder = {var ; ascr = None ; attributes} ; rhs ; let_result; attr } ->

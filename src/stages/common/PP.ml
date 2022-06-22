@@ -45,15 +45,15 @@ let option_attribute string ppf condition =
   else
     fprintf ppf ""
 
-let e_attributes ppf { inline ; no_mutation ; entrypoint ; view ; public ; thunk ; hidden } =
+let e_attributes ppf { inline ; no_mutation ; entry; view ; public ; thunk ; hidden } =
   fprintf ppf "%a%a%a%a%a%a%a"
-    option_inline inline
-    option_no_mutation no_mutation
-    (option_attribute "entrypoint") entrypoint
-    option_view view
+    (option_attribute "inline") inline
+    (option_attribute "no_mutation") no_mutation
+    (option_attribute "entry") entry
+    (option_attribute "view") view
     option_public public
-    option_thunk thunk
-    option_hidden hidden
+    (option_attribute "thunk") thunk
+    (option_attribute "hidden") hidden
 
 let label ppf (l:label) : unit =
   let Label l = l in fprintf ppf "%s" l

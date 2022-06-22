@@ -47,7 +47,7 @@ let inject_declaration ~options ~raise ~add_warning : Syntax_types.t -> Ast_core
   let inject_arg_declaration arg =
     let open Ast_core in
     let expr = Ligo_compile.Utils.core_expression_string ~raise ~add_warning syntax arg in
-    let attr = { inline = false ; no_mutation = true ; thunk = false ; entrypoint = false ; view = false ; public = false ; hidden = false } in
+    let attr = { inline = false ; no_mutation = true ; thunk = false ; entry  = false ; view = false ; public = false ; hidden = false } in
     let d = Location.wrap @@ Declaration_constant { binder = make_binder (ValueVar.of_input_var "cli_arg") ; expr ; attr } in
     d::prg
   in

@@ -192,7 +192,7 @@ and recursive ({fun_name=fna;fun_type=fta;lambda=la}) {fun_name=fnb;fun_type=ftb
     type_expression     fta ftb
     lambda               la  lb
 
-and let_in {let_binder=ba;rhs=ra;let_result=la;attr = { inline=aa;no_mutation=nma;entrypoint=ea;view=va;public=pua;thunk=ta;hidden=ha}} {let_binder=bb;rhs=rb;let_result=lb;attr = { inline=ab;no_mutation=nmb;entrypoint=eb;view=vb;public=pub;thunk=tb;hidden=hb}} =
+and let_in {let_binder=ba;rhs=ra;let_result=la;attr = { inline=aa;no_mutation=nma;entry=ea;view=va;public=pua;thunk=ta;hidden=ha}} {let_binder=bb;rhs=rb;let_result=lb;attr = { inline=ab;no_mutation=nmb;entry=eb;view=vb;public=pub;thunk=tb;hidden=hb}} =
   cmp10
     (binder type_expression) ba bb
     expression ra rb

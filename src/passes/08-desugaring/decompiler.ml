@@ -5,7 +5,7 @@ module Location = Simple_utils.Location
 module Pair     = Simple_utils.Pair
 open Stage_common.Maps
 
-let decompile_exp_attributes : O.known_attributes -> I.attributes = fun { inline ; no_mutation ; entrypoint ; view ; public ; thunk ; hidden } ->
+let decompile_exp_attributes : O.known_attributes -> I.attributes = fun { inline ; no_mutation ; entry ; view ; public ; thunk ; hidden } ->
   let aux : string list -> (unit -> string option) -> O.attributes = fun acc is_fun ->
     match is_fun () with
     | Some v -> v::acc
@@ -19,7 +19,7 @@ let decompile_exp_attributes : O.known_attributes -> I.attributes = fun { inline
       (fun () -> if public then None else Some "private") ;
       (fun () -> if thunk then Some "thunk" else None) ;
       (fun () -> if hidden then Some "hidden" else None) ;
-      (fun () -> if entrypoint then Some "entrypoint" else None);
+      (fun () -> if entry then Some "entry" else None);
     ]
 
 let decompile_type_attributes : O.type_attribute -> I.attributes = fun { public ; hidden } ->
@@ -109,7 +109,7 @@ let rec decompile_expression : O.expression -> I.expression =
     | O.E_recursive recs ->
       let recs = recursive self self_type recs in
       return @@ I.E_recursive recs
-    | O.E_let_in {let_binder = {var; ascr;attributes=_};attr={inline=false;no_mutation=_;entrypoint=_;view=_;public=_;thunk=_;hidden=_};rhs=expr1;let_result=expr2}
+    | O.E_let_in {let_binder = {var; ascr;attributes=_};attr={inline=false;no_mutation=_;entry=_;view=_;public=_;thunk=_;hidden=_};rhs=expr1;let_result=expr2}
       when O.ValueVar.is_name var "()"
            && Stdlib.(=) ascr (Some (O.t_unit ())) ->
       let expr1 = self expr1 in

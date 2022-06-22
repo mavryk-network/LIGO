@@ -136,12 +136,12 @@ and type_in {type_binder;rhs;let_result} =
   ]
 
 
-and known_attribute {inline;no_mutation;public;entrypoint;view;thunk;hidden} =
+and known_attribute {inline;no_mutation;public;entry;view;thunk;hidden} =
   `Assoc [
     ("inline", `Bool inline);
     ("no_mutation", `Bool no_mutation);
     ("public", `Bool public);
-    ("entrypoint", `Bool entrypoint);
+    ("entry", `Bool entry);
     ("view", `Bool view);
     ("thunk", `Bool thunk);
     ("hidden", `Bool hidden);

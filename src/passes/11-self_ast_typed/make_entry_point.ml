@@ -9,7 +9,7 @@ let get_entry_point_from_annotation : Ast_typed.program -> Ast_typed.expression_
     ~f:(fun prev el ->
       let open Simple_utils.Location in
       match el.wrap_content with
-      | Ast_typed.Declaration_constant {binder;attr;_} when attr.entrypoint -> binder.var::prev
+      | Ast_typed.Declaration_constant {binder;attr;_} when attr.entry -> binder.var::prev
       | _ -> prev)
     ~init:[] prg
 
@@ -55,7 +55,7 @@ let make_main_entrypoint ~raise :  Ast_typed.expression_variable Simple_utils.Li
     let entrypoint_function_decl =
       let expr = create_entrypoint_function_expr (entrypoint::rest) entrypoint_type storage in
       let binder = Ast_typed.{var=default_entrypoint_var;ascr=Some expr.type_expression;attributes={const_or_var=Some `Const}} in
-      Location.wrap @@ Ast_typed.Declaration_constant {binder;expr;attr=Ast_typed.{inline=false;no_mutation=false;entrypoint=false;view=false;public=true;thunk=false;hidden=false}}
+      Location.wrap @@ Ast_typed.Declaration_constant {binder;expr;attr=Ast_typed.{inline=false;no_mutation=false;entry=false;view=false;public=true;thunk=false;hidden=false}}
     in
     let prg = prg @ [entrypoint_type_decl;entrypoint_function_decl] in
     (default_entrypoint_var, prg)

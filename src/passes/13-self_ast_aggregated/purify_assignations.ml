@@ -523,7 +523,7 @@ let rec morph_expression ?(returned_effect) (effect : Effect.t) (e: expression) 
   | E_assign {binder;access_path;expression} ->
       let expression = self expression in
       let let_binder = binder in
-      let attr = {inline = false; no_mutation = false; entrypoint = false; view = false; public = false; thunk = false; hidden = false} in
+      let attr = {inline = false; no_mutation = false; entry = false; view = false; public = false; thunk = false; hidden = false} in
       (* This part is similar to desugaring of fonctional update. But is kept here for not wanting to desugar it if we
         keep the effect in the backend *)
       let rhs =

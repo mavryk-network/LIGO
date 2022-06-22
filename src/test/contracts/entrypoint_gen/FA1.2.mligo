@@ -46,7 +46,7 @@ let positive (n : nat) : nat option =
   then (None : nat option)
   else Some n
 
-[@entrypoint]
+[@entry]
 let transfer (param, storage : transfer * storage) : result =
   let allowances = storage.allowances in
   let tokens = storage.tokens in
@@ -83,7 +83,7 @@ let transfer (param, storage : transfer * storage) : result =
     Big_map.update param.address_to (positive to_balance) tokens in
   (([] : operation list), { storage with tokens = tokens; allowances = allowances })
 
-[@entrypoint]
+[@entry]
 let approve (param, storage : approve * storage) : result =
   let allowances = storage.allowances in
   let allowance_key = { owner = Tezos.get_sender () ; spender = param.spender } in
@@ -99,7 +99,7 @@ let approve (param, storage : approve * storage) : result =
     (([] : operation list), { storage with allowances = allowances })
   end
 
-[@entrypoint]
+[@entry]
 let getAllowance (param, storage : getAllowance * storage) : operation list * storage =
   let value =
     match Big_map.find_opt param.request storage.allowances with
@@ -107,7 +107,7 @@ let getAllowance (param, storage : getAllowance * storage) : operation list * st
     | None -> 0n in
   [Tezos.transaction value 0mutez param.callback], storage
 
-[@entrypoint]
+[@entry]
 let getBalance (param, storage : getBalance * storage) : operation list * storage =
   let value =
     match Big_map.find_opt param.owner storage.tokens with
@@ -115,7 +115,7 @@ let getBalance (param, storage : getBalance * storage) : operation list * storag
     | None -> 0n in
   [Tezos.transaction value 0mutez param.callback], storage
 
-[@entrypoint]
+[@entry]
 let getTotalSupply (param, storage : getTotalSupply * storage) : operation list * storage =
   let total = storage.total_supply in
   [Tezos.transaction total 0mutez param.callback],storage
