@@ -108,13 +108,6 @@ let internal_error loc msg =
        "@[<v>Internal error, please report this as a bug@ %s@ %s@ @]"
        loc msg)
 
-(* The translation. Given an expression in an environment, returns a
-   "co-de Bruijn" expression with an embedding (`list usage`) showing
-   which things in the environment were used. *)
-
-(* Let |-I and |-O be the input and output typing judgments. If
-   env |-I expr : a, and translate_expression expr env = (expr', us), then
-   select us env |-O expr' : a. *)
 let rec translate_expression ~raise ~proto (expr : I.expression) (env : I.environment) :
   (meta, base_type, I.literal, (meta, string) Micheline.node) O.expr =
   let meta : meta =
@@ -366,15 +359,6 @@ and translate_constant ~raise ~proto (meta : meta) (expr : I.constant) (ty : I.t
          let annot = Ligo_string.extract annot in
          return (O.Type_args (Some annot, [translate_type a]), arguments)
        | _ -> None)
-    (* TODO handle CREATE_CONTRACT sooner *)
-    (* | C_CREATE_CONTRACT -> *)
-    (*   (match expr.arguments with *)
-    (*    | { content= E_closure body ; type_expression = closure_ty ; location =_ } :: arguments -> *)
-    (*      let* (input_ty, _) = Mini_c.get_t_function closure_ty in *)
-    (*      let* (p, s) = Mini_c.get_t_pair input_ty in *)
-    (*      let body = translate_closed_function ~raise ~proto body input_ty in *)
-    (*      return (Script_arg (O.Script (translate_type p, translate_type s, body)), arguments) *)
-    (*    | _ -> None) *)
     | C_SAPLING_EMPTY_STATE ->
       let* memo_size = Mini_c.get_t_sapling_state ty in
       return (Type_args (None, [Int (nil, memo_size)]), expr.arguments)
