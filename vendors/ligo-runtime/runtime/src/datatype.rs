@@ -17,6 +17,7 @@ use alloc::vec::Vec;
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
 #[repr(C)]
+#[datatype_helper]
 pub struct Wrapped<T> {
   pub data: *mut T
 }
@@ -129,6 +130,7 @@ impl<T> Unwrap<T> for Wrapped<T> {
 
 #[derive(Copy, Clone, Serialize, Deserialize, Debug, PartialEq, Eq, PartialOrd, Ord)]
 #[repr(C)]
+#[datatype_helper]
 pub enum Option<T> {
   None,
   Some(T),
@@ -225,7 +227,6 @@ pub trait MemoryLayout {
 impl MemoryLayout for BigIntWrap {
   fn print(&self) {
     mem_layout!(self, size_of::<Self>() / 4);
-    print!("Contents: ");
     let start:u32 = self.data as u32;
     let mut n: usize = 0;
     while n < self.len {
@@ -341,6 +342,7 @@ impl MemoryLayout for Wrapped<DataType> {
  */
 #[derive(Copy, Clone, Serialize, Deserialize, Debug, PartialEq, Eq, PartialOrd, Ord)]
 #[repr(C)]
+#[datatype_helper]
 pub enum DataType {
   Int(Wrapped<BigIntWrap>), 
   Nat(Wrapped<BigIntWrap>), 
@@ -366,6 +368,7 @@ pub enum DataType {
  */
 #[derive(Copy, Clone, Serialize, Deserialize, Debug, PartialEq, Eq, PartialOrd, Ord)]
 #[repr(C)]
+#[datatype_helper]
 pub struct Node {
   pub value: Wrapped<DataType>,
   pub next: Option<Wrapped<Node>>
@@ -373,6 +376,7 @@ pub struct Node {
 
 #[derive(Copy, Clone, Serialize, Deserialize, Debug, PartialEq, Eq, PartialOrd, Ord)]
 #[repr(C)]
+#[datatype_helper]
 pub enum Operation {
   Transaction(Transaction), 
   Delegate(Delegate)
@@ -380,6 +384,7 @@ pub enum Operation {
 
 #[derive(Copy, Clone, Serialize, Deserialize, Debug, PartialEq, Eq, PartialOrd, Ord)]
 #[repr(C)]
+#[datatype_helper]
 pub struct OperationNode {
   pub value: Wrapped<Operation>,
   pub next: Option<Wrapped<OperationNode>>
@@ -387,6 +392,7 @@ pub struct OperationNode {
 
 #[derive(Copy, Clone, Serialize, Deserialize, Debug, PartialEq, Eq, PartialOrd, Ord)]
 #[repr(C)]
+#[datatype_helper]
 pub enum Color {
   Red,
   Black
@@ -394,9 +400,10 @@ pub enum Color {
 
 #[derive(Copy, Clone, Serialize, Deserialize, Debug, PartialEq, Eq, PartialOrd, Ord)]
 #[repr(C)]
+#[datatype_helper]
 pub struct RBNode {
   pub parent: Option<Wrapped<RBNode>>,
-  pub val:    Wrapped<DataType>,
+  pub value:    Wrapped<DataType>,
   pub depth:  usize,
   pub left:   Option<Wrapped<RBNode>>,
   pub right:  Option<Wrapped<RBNode>>,
@@ -405,6 +412,7 @@ pub struct RBNode {
 
 #[derive(Copy, Clone, Serialize, Deserialize, Debug, PartialEq, Eq, PartialOrd, Ord)]
 #[repr(C)]
+#[datatype_helper]
 pub struct Transaction {
   pub action: DataType,
   pub amount: BigIntWrap,
@@ -413,6 +421,7 @@ pub struct Transaction {
 
 #[derive(Copy, Clone, Serialize, Deserialize, Debug, PartialEq, Eq, PartialOrd, Ord)]
 #[repr(C)]
+#[datatype_helper]
 pub struct Delegate {
   pub delegate: Option<DataType>,
 }

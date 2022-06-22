@@ -59,6 +59,7 @@ let convert_to_memory: string -> S.region -> Z.t -> A.data_part A.segment list *
   let size =  Int32.(Z.to_int32 (Z.cdiv no_of_bits (Z.of_int 8))) in (* assuming 32 bit*)
   let capacity = size in
   let length = size in
+  let open Mem_helpers in
   let data = A.[
     S.{
       it = {
@@ -203,37 +204,18 @@ let rec expression ~raise : A.module_' -> locals -> I.expression -> A.module_' *
     ]
   | E_constant {cons_name = C_LIST_EMPTY; arguments = []} -> 
     (match e.type_expression.type_content with 
-      I.T_list {type_content = I.T_base TB_operation} -> 
-        print_endline "operations"; 
-        let malloc_local = var_to_string (ValueVar.fresh ~name:"malloc" ()) in
-        w, l @ [(malloc_local, I32Type)], [
-          S.{ it = A.Const { it = I32 12l; at}; at };
-          { it = Call "malloc"; at }; 
-          { it = LocalTee malloc_local; at};
-          { it = A.Const { it = I32 (Datatype.int32_of_datatype Datatype.Operations); at}; at };
-          { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-          
-          { it = LocalGet malloc_local; at};
-          { it = Const { it = I32 4l; at}; at };
-          { it = Binary (I32 Add); at };
-          { it = Const { it = I32 0l; at}; at };
-          { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-
-          { it = LocalGet malloc_local; at};
-          { it = Const { it = I32 8l; at}; at };
-          { it = Binary (I32 Add); at };
-          { it = Const { it = I32 0l; at}; at };
-          { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-
-          { it = LocalGet malloc_local; at};
-
-          
-        ]
-        
+      I.T_list {type_content = I.T_base TB_operation} ->
+        let open Mem_helpers in
+        (* let mem_alloc, mem_alloc_name = malloc "empty_list" 12l in *)
+        let no_operations = make_dt [const_0l] in
+        let operations = 
+          new datatype ~kind:Operations ~value:no_operations
+        in
+        let mem_alloc_name = operations#malloc_name in
+        w, l @ [(mem_alloc_name, I32Type)], operations#store
     | _ -> 
       w, l, [
       { it = DataSymbol "C_LIST_EMPTY"; at };
-      (* { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at } *)
     ]
     );
 
@@ -242,9 +224,35 @@ let rec expression ~raise : A.module_' -> locals -> I.expression -> A.module_' *
     let w, l, e1 = expression ~raise w l e1 in
     let w, l, e2 = expression ~raise w l e2 in
     let malloc_local = var_to_string (ValueVar.fresh ~name:"malloc" ()) in
-    let e1_local = var_to_string (ValueVar.fresh ~name:"e1" ()) in
-    let e2_local = var_to_string (ValueVar.fresh ~name:"e2" ()) in
-    w, l @ [(malloc_local, I32Type); (e1_local, I32Type); (e2_local, I32Type)], [
+    (* let e1_local = var_to_string (ValueVar.fresh ~name:"e1" ()) in *)
+    (* let e2_local = var_to_string (ValueVar.fresh ~name:"e2" ()) in *)
+   
+    let open Mem_helpers in
+    (* let mem, malloc_local_name = malloc "malloc" 36l in *)
+    let tuple = new datatype
+      ~kind: Tuple
+      ~value: (make_dt [])
+      
+      (* (
+        new wrapped 
+          ~data:(
+            new node 
+              ~value: (make_dt e1)
+              ~next: (
+                new wrapped 
+                  ~data: (new node 
+                    ~value: (make_dt e2)
+                    ~next: (make_dt [])
+                  )
+              )
+          )
+        ) *)
+    in
+    let wrapped_tuple = new wrapped ~data:tuple in
+    w, l @ wrapped_tuple#locals, 
+    wrapped_tuple#store
+(*     
+    [
       S.{ it = A.Const { it = I32 36l; at}; at };
       { it = Call "malloc"; at };
       { it = LocalSet malloc_local; at };
@@ -310,20 +318,12 @@ let rec expression ~raise : A.module_' -> locals -> I.expression -> A.module_' *
     S.[
       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
 
-      { it = LocalGet malloc_local; at };
-      { it = Const { it = I32 28l; at}; at };
-      { it = Binary (I32 Add); at };
-      { it = Const { it = I32 0l; at}; at };
-      { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-
-      { it = LocalGet malloc_local; at };
-      { it = Const { it = I32 32l; at}; at };
-      { it = Binary (I32 Add); at };
-      { it = Const { it = I32 0l; at}; at };
-      { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-
-      { it = LocalGet malloc_local; at };
     ]
+    @ store_option_none ~mem:mem
+    @
+    S.[
+      { it = A.LocalGet malloc_local; at };
+    ] *)
   | E_constant {cons_name = C_ADD; arguments = [e1; e2]} -> 
     let new_value = var_to_string (ValueVar.fresh ~name:"C_ADD" ()) in
     let w, l, e1 = expression ~raise w l e1 in

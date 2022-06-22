@@ -1,11 +1,13 @@
 use proc_macro::TokenStream;
 use proc_macro::TokenTree;
 use proc_macro::*;
-use syn::{parse_macro_input, Result, Item, ItemFn, ItemEnum, ItemStruct, FnArg, ReturnType};
+use syn::{parse_macro_input, Result, Item, ItemFn, ItemEnum, ItemStruct, FnArg, ReturnType, FieldsNamed, FieldsUnnamed, GenericParam, TypeParam};
 use syn::parse::{Parse, ParseStream};
+use syn::Fields::*;
 use std::fs::File;
 use std::fmt::Write;
 use core::iter::Map;
+use core::mem::ManuallyDrop;
 
 struct WasmFn {
   fn_name: String, 
@@ -13,7 +15,7 @@ struct WasmFn {
   no_of_return: usize
 }
 
-static mut exposed: Vec<WasmFn> = Vec::new();
+static mut EXPOSED: Vec<WasmFn> = Vec::new();
 
 #[proc_macro_attribute]
 pub fn expose(_attr: TokenStream, input: TokenStream) -> TokenStream {
@@ -28,7 +30,7 @@ pub fn expose(_attr: TokenStream, input: TokenStream) -> TokenStream {
     };
 
     unsafe {
-        exposed.push(WasmFn {
+      EXPOSED.push(WasmFn {
             fn_name, 
             no_of_arguments,
             no_of_return
@@ -39,7 +41,7 @@ pub fn expose(_attr: TokenStream, input: TokenStream) -> TokenStream {
 
 #[proc_macro_attribute]
 pub fn produce_file (_attr: TokenStream, input: TokenStream) -> TokenStream {
-    let wasm_fns: &Vec<WasmFn> = unsafe { &exposed };
+    let wasm_fns: &Vec<WasmFn> = unsafe { &EXPOSED };
     let mut types = String::new();
 
     for f in wasm_fns.iter() {
@@ -138,60 +140,449 @@ let env: module_ = {{
     input
 }
 
-static mut datatypes: Vec<Item> = Vec::new();
+struct StructData {
+  name:   String,
+  type_params: Vec<String>,
+  fields: Vec<(String, String)>
+}
+
+struct EnumData {
+  name: String,
+  type_params: Vec<String>,
+  variants: Vec<(String, Vec<String>)>
+}
+
+enum ItemData {
+  Struct(StructData),
+  Enum(EnumData)
+}
+
+static mut DATATYPES: Vec<ItemData> = Vec::new();
+
+fn ty_to_string (t: &syn::Type) -> String {
+    match t {
+        syn::Type::Path(syn::TypePath { path: syn::Path {segments, ..} , ..}) => {
+          let v:Vec<String> = segments.iter().map(|s| -> String {s.ident.to_string()}).collect();
+          let result = v.join(".");
+          return result
+        },
+        syn::Type::Ptr(syn::TypePtr { elem, ..}) => {
+         ty_to_string(elem)
+        },
+        _ => panic!("Type not supported yet")
+    }
+    
+}
 
 #[proc_macro_attribute]
 pub fn datatype_helper(_attr: TokenStream, input: TokenStream) -> TokenStream {
     let token_copy = input.clone();
-    let input: Item = syn::parse_macro_input!(input as Item);
+    let input = syn::parse_macro_input!(input as Item);
     match input {
-        Item::Enum(ItemEnum { .. }) |
-        Item::Struct(ItemStruct { .. }) => {
-            unsafe {
-                datatypes.push(input)
+        Item::Struct(ItemStruct { ident, fields, generics, .. }) => {
+            let type_params:Vec<String> = generics.params.iter().fold(vec![], |mut acc, param| -> _ {
+              match param {
+                GenericParam::Type(TypeParam {ident, ..}) => {
+                  acc.push(ident.to_string());
+                  acc
+                },
+                _ => acc
+              }
+            });
+            let i = &ident;
+            let name = ident.to_string();
+            match fields {
+                Named(FieldsNamed {named, ..}) => {
+                    let fields = named.iter().map(|f| -> (String, String) { 
+                        (f.ident.as_ref().unwrap().to_string(), ty_to_string(&f.ty))} 
+                    ).collect();
+                    unsafe {
+                      DATATYPES.push(
+                            ItemData::Struct(
+                                StructData {
+                                    name,
+                                    type_params,
+                                    fields
+                                }
+                            )
+                        )
+                    }
+                },
+                _ => panic!("Not supported fields kind")
             }
+
+            
+            
         },
+        Item::Enum(ItemEnum {ident, variants, generics, ..}) => {
+          let type_params:Vec<String> = generics.params.iter().fold(vec![], |mut acc, param| -> _ {
+            match param {
+              GenericParam::Type(TypeParam {ident, ..}) => {
+                acc.push(ident.to_string());
+                acc
+              },
+              _ => acc
+            }
+          });
+          let ident = &ident;
+          let name = ident.to_string();
+          let variants:Vec<(String, Vec<String>)> = variants.iter().map(|f| -> (String, Vec<String>) { 
+            match &f.fields {
+              Unnamed(FieldsUnnamed {unnamed, ..}) => {
+                //  println!("Test 123: {}", unnamed.iter().len());
+                let args:Vec<String> = unnamed.iter().map(|f| -> String { 
+                  ty_to_string(&f.ty)
+                }).collect();
+                return (f.ident.to_string(), args)
+              }
+              Named(FieldsNamed {named, ..}) => {
+                let args: Vec<String> = named.iter().map(|f| -> String { 
+                    ty_to_string(&f.ty)
+                  }
+                ).collect();
+                return (f.ident.to_string(), args)
+              }
+              Unit => {
+                return (f.ident.to_string(), vec![])
+              }
+              _ => panic!("Not supported fields kind 2")
+            }
+          }
+
+          ).collect();
+          // println!("{:?}", fields);
+
+
+          /* fields Unnamed... => arguments! 
+            - Can we use this as arguments???
+          
+          */
+
+          unsafe {
+            DATATYPES.push(
+              ItemData::Enum(
+                EnumData {
+                    name,
+                    type_params,
+                    variants
+                }
+              )
+            )
+          }
+        }
         _ => {
             panic!("Not supported yet...")
         }
     };
-  /* 
-    
-
-    Object Tuple {
-        method value (memory) {
-
-        };
-        method next (memory) {
-
-        }
-    }
-
-    module Tuple {
-        let value () = {
-            return the symbol
-        }
-
-        let next () = {
-            return the value
-        }
-
-    }
-    
-    Objects ?!
-
-        object Tuple {
-            method value;
-            method next;
-        }       
-  */
-
-
   return token_copy
 }
 
 #[proc_macro_attribute]
 pub fn produce_datatype_file (_attr: TokenStream, input: TokenStream) -> TokenStream {
-    println!("yas");
+    let d: &Vec<ItemData> = unsafe { &DATATYPES };
+    let mut datatype_file = String::new();
+    write!(&mut datatype_file, 
+"
+[@@@warning \"-27\"]
+
+(* Do not change, this file is generated by the Rust `datatype_helper` macro. *)
+module W = WasmObjectFile  
+module A = W.Ast
+module T = W.Types
+module S = W.Source
+module ValueVar = Stage_common.Types.ValueVar
+    
+let at = S.no_region
+
+let const_0l = S.{{ it = A.Const {{ it = I32 0l; at}}; at }}
+
+type dt = <
+  locals:       (string * T.value_type) list;
+  malloc_name:  string;
+  store:        A.instr' S.phrase list;
+  reference:    A.instr' S.phrase list
+>
+
+let make_dt = fun a ->
+  object
+    method locals = []
+    method malloc_name = \"\"
+    method store = a
+    method reference = []
+  end
+
+let var_to_string name =  
+  let name, hash = ValueVar.internal_get_name_and_counter name in
+  name ^ \"#\" ^ (string_of_int hash)
+
+");
+
+    for item in d.iter() {
+      let mut index = 0;
+      match item {
+        ItemData::Struct (StructData {name, type_params, fields}) => {
+          let fields2 = fields;
+          let fields:Vec<String> = fields.iter().map(|x| -> String { 
+            let result = format!(
+"  
+  val {0} = {0}
+  method {0} = {0}
+  method get_{0} = 
+     S.[
+       {{ it = A.LocalGet self#malloc_name; at }};
+       {{ it = Const {{ it = I32 {1}l; at  }}; at }};
+       {{ it = Binary (I32 Add); at }};
+       {{ it = Load {{ty = I32Type; align = 0; offset = 0l; sz = None}}; at }}
+     ]
+    
+  method store_{0} = 
+    S.[
+      {{ it = A.LocalGet self#malloc_name; at }};
+       {{ it = Const {{ it = I32 {1}l; at  }}; at }};
+       {{ it = Binary (I32 Add); at }};
+    ]
+    @
+    {0}#store
+    @
+    {0}#reference
+    @
+    S.[
+       {{ it = A.Store {{ty = I32Type; align = 0; offset = 0l; sz = None}}; at }};
+    ]
+            ", x.0.as_str(), index * 4);
+            index = index + 1;
+            result
+          } ).collect();
+          let fields = fields.join("\n");
+          index = 0;
+          let parameters:Vec<String> = fields2.iter().map(|x| -> String { 
+            let t = x.1.as_str();
+            let exists = type_params.iter().any(|x| x == t);
+              
+            let mut result = "".to_string(); 
+            if exists {
+              result =  format!(
+                "~({} : '{})", x.0.as_str(), t);
+                index = index + 1
+            }
+            else { 
+              result =  format!(
+                "~({} : dt)", x.0.as_str());
+                index = index + 1
+            }
+            result
+          } ).collect();
+          let parameters = parameters.join(" ");
+          let store_fields:Vec<String> = fields2.iter().map(|x| -> String {
+            
+            
+            // println!("Checking: {:?}", );
+            format!("  self#store_{0} ", x.0.as_str())
+          }).collect();
+          let store_fields = store_fields.join("@ ");
+          let child_locals:Vec<String> = fields2.iter().map(|x| -> String { 
+            let result = format!(
+              "self#{0}#locals", x.0.as_str());
+              index = index + 1;
+            result
+          }).collect();
+          let child_locals = child_locals.join("@");
+
+      
+          let mut class_params = "".to_string();
+          if type_params.len() > 0 {
+            let class_params2:Vec<String> = type_params.iter().map(|x| "'".to_string() + x).collect();
+            let class_params2:String = class_params2.join(";");
+            class_params = "[".to_string() + class_params2.as_str() + "]";
+          };
+
+            write!(&mut datatype_file, 
+"
+class {6} {0} {3} = object(self)
+  val size = {2}l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:\"{0}_malloc\" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    @
+    {5}
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{{ it = A.Const {{ it = I32 self#size; at}}; at }};
+        {{ it = Call \"malloc\"; at }};
+        {{ it = LocalSet self#malloc_name; at }};]
+    )
+     
+  {1}
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc @
+      {4}
+    )
+    
+  method reference =
+    S.[{{ it = A.LocalGet self#malloc_name; at }};]
+
+end
+
+", name.to_lowercase(), fields, fields2.iter().len() * 4, parameters, store_fields, child_locals, class_params);
+
+        }
+        ItemData::Enum(EnumData { name, variants, type_params }) => {
+          
+          let variants_:Vec<String> = variants.iter().map(|x| -> String {
+            x.0.to_string()
+          }).collect();
+          let mut counter = 0;
+          let kinds: Vec<String> = variants.iter().map(|x| -> String{
+            let result = format!("    | {} -> {}l", x.0.to_string(), counter);
+            counter = counter + 1;
+            result
+            //.to_string()
+          }).collect();
+          let kinds = kinds.join("\n");
+          let variants_ = variants_.join("\n| ");
+          // let parameters = ;
+
+          let mut class_params = "".to_string();
+          let type_params_exists = type_params.is_empty() == false;
+          if type_params_exists {
+            let class_params2:Vec<String> = type_params.iter().map(|x| "'".to_string() + x).collect();
+            let class_params2:String = class_params2.join(";");
+            class_params = "[".to_string() + class_params2.as_str() + "]";
+          };
+          let a = type_params.first();
+          let value_type;
+          match a {
+            Some(s) => value_type = "'".to_string() + s,
+            _ => value_type = "dt".to_string()
+          }
+
+          // type_params.po
+          
+          // if exists {
+          //   match &type_params.pop() {
+          //     Some (_s) => {
+          //       value_type = "dot".to_string()
+          //     }, 
+          //     _ => ()
+          //   }
+          // }
+
+          write!(&mut datatype_file, "
+
+type {0}_variant = 
+  {1}
+
+class {3} {0} ~(kind: {0}_variant) ~(value: {4}) = object(self)
+  val kind = kind
+  val value = value
+  
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:\"{0}_malloc\" ())
+  val mutable allocated = false
+  val mutable stored = false
+
+  method malloc_name = malloc_name
+  method size = 12l
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method kind = kind
+  method value = value
+  
+  (* [(malloc_local, I32Type); (e1_local, I32Type); (e2_local, I32Type)] *)
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)] 
+    @
+    value#locals
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{{ it = A.Const {{ it = I32 self#size; at}}; at }};
+        {{ it = Call \"malloc\"; at }};
+        {{ it = LocalSet self#malloc_name; at }};]
+    )
+
+  method store_value = 
+    S.[
+      {{ it = A.LocalGet self#malloc_name; at }};
+      {{ it = Const {{ it = I32 4l; at  }}; at }};
+      {{ it = Binary (I32 Add); at }};
+    ]
+    @
+    value#store
+    @
+    S.[
+      {{ it = A.Store {{ty = I32Type; align = 0; offset = 0l; sz = None}}; at }};
+    ]
+
+  method store_kind = 
+    let kind = match self#kind with 
+    {2} 
+    in
+    S.[
+      {{ it = A.LocalGet self#malloc_name; at }};
+      {{ it = Const {{ it = I32 kind; at  }}; at }};
+      {{ it = Store {{ty = I32Type; align = 0; offset = 0l; sz = None}}; at }};
+    ]
+
+  method get_value = 
+    S.[
+      {{ it = A.LocalGet self#malloc_name; at }};
+      {{ it = Const {{ it = I32 4l; at  }}; at  }};
+      {{ it = Binary (I32 Add); at }};
+      {{ it = Load {{ty = I32Type; align = 0; offset = 0l; sz = None}}; at }};
+    ]
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc 
+      @ self#store_kind
+      @ self#store_value
+   
+  )
+
+  method reference =
+    S.[{{ it = A.LocalGet self#malloc_name; at }};]
+  
+end
+          ", name.to_lowercase(), variants_, kinds, class_params, value_type);
+        }
+        _ => panic!("Not supported.")
+
+      }
+
+      
+    }
+
+    let output = File::create("../../src/passes/14-wasm/mem_helpers.ml");
+    match output {
+        Ok(mut f) => {
+            use std::io::Write;
+            write!(f, "{}", datatype_file)
+        }
+        Err(..) => panic!()
+    };
+
     return input
 }
