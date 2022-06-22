@@ -1,0 +1,7 @@
+(library
+ (name ast_unified)
+ (public_name ligo.ast_unified)
+ (libraries simple-utils stage_common)
+ (preprocess
+  (staged_pps ppx_import ppx_map ppx_woo))
+)

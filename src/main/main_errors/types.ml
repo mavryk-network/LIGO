@@ -35,6 +35,7 @@ type all =
  | `Cit_cameligo_tracer of Tree_abstraction.Cameligo.Errors.abs_error list
  | `Cit_reasonligo_tracer of Tree_abstraction.Reasonligo.Errors.abs_error list
  | `Cit_jsligo_tracer of Tree_abstraction.Jsligo.Errors.abs_error list
+ | `Unification_tracer of Unification.Errors.unification_error list 
  | `Self_ast_imperative_tracer of Self_ast_imperative.Errors.self_ast_imperative_error
  
  | `Desugaring_tracer of Desugaring.Errors.desugaring_error

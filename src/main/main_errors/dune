@@ -8,6 +8,7 @@
   BuildSystem
   preprocessing
   parsing
+  unification
   tree_abstraction
   self_ast_imperative
   desugaring

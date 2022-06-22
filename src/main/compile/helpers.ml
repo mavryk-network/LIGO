@@ -131,6 +131,45 @@ let parse_and_abstract ~raise ~(meta: meta) buffer file_path
     Self_ast_imperative.all_program abstracted ~js_style_no_shadowing in
   applied
 
+let parse_and_unify_cameligo ~raise buffer file_path =
+  let cst =
+    trace ~raise parser_tracer @@
+    Parsing.Cameligo.parse_file buffer file_path in
+  let unified =
+    trace ~raise unification_tracer @@
+    (Unification.Cameligo.compile_program cst) in
+  unified
+
+let parse_and_unify_pascaligo ~raise buffer file_path =
+  let cst =
+    trace ~raise parser_tracer @@
+    Parsing.Pascaligo.parse_file buffer file_path in
+  let unified =
+    trace ~raise unification_tracer @@
+    (Unification.Pascaligo.compile_program cst) in
+  unified
+
+let parse_and_unify_jsligo ~raise buffer file_path =
+  let cst =
+    trace ~raise parser_tracer @@
+    Parsing.Jsligo.parse_file buffer file_path in
+  let unified =
+    trace ~raise unification_tracer @@
+    (Unification.Jsligo.compile_program cst) in
+  unified
+
+let parse_and_unify ~raise ~meta (c_unit : Buffer.t) (source_filename : string) : Ast_unified.program =
+  let parse_and_unify =
+    match meta.syntax with
+    | CameLIGO    -> parse_and_unify_cameligo
+    | PascaLIGO   -> parse_and_unify_pascaligo
+    | JsLIGO      -> parse_and_unify_jsligo
+    | ReasonLIGO  -> parse_and_unify_cameligo (* TODO NP : Add syntax *)
+  in
+  let unified = parse_and_unify ~raise c_unit source_filename in
+  unified
+
+
 let parse_and_abstract_expression ~raise ~(meta: meta) buffer =
   let parse_and_abstract =
     match meta.syntax with

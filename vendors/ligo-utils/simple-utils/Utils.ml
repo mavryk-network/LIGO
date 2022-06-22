@@ -100,6 +100,10 @@ let sepseq_to_list = function
     None -> []
 | Some s -> nsepseq_to_list s
 
+(* Conversions to non-empty lists *)
+
+let nsepseq_to_nseq (hd, tl) = hd, (List.map ~f:snd tl)
+
 (* Optional values *)
 
 module Option =

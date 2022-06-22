@@ -1,0 +1,12 @@
+(library
+ (name unification)
+ (public_name ligo.unification)
+ ; (instrumentation
+ ;  (backend bisect_ppx))
+ (libraries unification_shared
+            unification_cameligo
+            unification_pascaligo
+            ; unification_reasonligo
+            unification_jsligo
+ )
+)

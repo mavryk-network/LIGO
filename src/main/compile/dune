@@ -12,6 +12,8 @@
   preprocessing
   parsing
   cst
+  unification
+  ast_unified
   tree_abstraction
   ast_imperative
   self_ast_imperative

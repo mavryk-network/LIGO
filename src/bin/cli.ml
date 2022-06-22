@@ -651,6 +651,18 @@ let print_cst =
   Command.basic ~summary ~readme @@
   (f <$> source_file <*> syntax <*> display_format)
 
+let print_ast_unified =
+  let f source_file syntax display_format () =
+    let raw_options = Compiler_options.Raw_options.make ~syntax () in
+    return_result ~return @@
+    Api.Print.ast_unified raw_options source_file display_format
+  in
+  let summary   = "print the AST unifying the CSTs of the different syntaxes. Intended for development of LIGO and can break at any time." in
+  let readme () = "This sub-command prints the source file in the AST \
+                  unified stage, after unification of parsed CST." in
+  Command.basic ~summary ~readme @@
+  (f <$> source_file <*> syntax <*> display_format)
+
 let print_ast =
   let f source_file syntax display_format () =
     let raw_options = Raw_options.make ~syntax () in
@@ -724,6 +736,7 @@ let print_group =
     "pretty"          , pretty_print;
     "dependency-graph", print_graph;
     "cst"             , print_cst;
+    "ast-unified"     , print_ast_unified;
     "ast-imperative"  , print_ast;
     "ast-core"        , print_ast_core;
     "ast-typed"       , print_ast_typed;

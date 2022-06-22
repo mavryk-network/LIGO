@@ -1,0 +1,13 @@
+(library
+ (name unification_shared)
+ (public_name ligo.unification_shared)
+ (libraries
+  ast_unified
+  ;; Vendors
+  LexerLib
+  simple-utils
+  )
+ (preprocess
+  (pps ppx_poly_constructor))
+ (modules Helpers Errors)
+)

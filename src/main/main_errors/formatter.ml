@@ -154,6 +154,7 @@ let rec error_ppformat : display_format:string display_format ->
     | `Cit_cameligo_tracer   e -> List.iter ~f:(Tree_abstraction.Cameligo.Errors.error_ppformat ~display_format f) e
     | `Cit_reasonligo_tracer e -> List.iter ~f:(Tree_abstraction.Reasonligo.Errors.error_ppformat ~display_format f) e
     | `Cit_jsligo_tracer     e -> List.iter ~f:(Tree_abstraction.Jsligo.Errors.error_ppformat ~display_format f) e
+    | `Unification_tracer    e -> List.iter ~f:(Unification.Errors.error_ppformat ~display_format f) e
     | `Self_ast_imperative_tracer e -> Self_ast_imperative.Errors.error_ppformat ~display_format f e
     | `Desugaring_tracer e -> Desugaring.Errors.error_ppformat ~display_format f e
     | `Checking_tracer e -> Checking.Errors.error_ppformat ~display_format f e
@@ -398,6 +399,7 @@ let rec error_json : Types.all -> Simple_utils.Error.t list = fun a ->
   | `Cit_reasonligo_tracer e -> List.map ~f:Tree_abstraction.Reasonligo.Errors.error_json e
   | `Cit_jsligo_tracer     e -> List.map ~f:Tree_abstraction.Jsligo.Errors.error_json e
   | `Self_ast_imperative_tracer e -> [Self_ast_imperative.Errors.error_json e]
+  | `Unification_tracer    e -> List.map ~f:Unification.Errors.error_jsonformat e
   | `Desugaring_tracer e -> [Desugaring.Errors.error_json e]
   | `Checking_tracer e -> [Checking.Errors.error_json e]
   | `Self_ast_typed_tracer e -> [Self_ast_typed.Errors.error_json e]
