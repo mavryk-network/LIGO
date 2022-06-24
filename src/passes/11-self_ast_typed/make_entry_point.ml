@@ -39,7 +39,7 @@ let create_entrypoint_function_expr entrypoints entrypoint_type storage =
   let result = e_a_matching (e_a_variable params param_storage.type_expression) (Match_record {fields;body;tv=oplst_storage}) oplst_storage  in
   e_lambda {binder={var=params;ascr=Some param_storage.type_expression;attributes={const_or_var=None}};result} fun_type
 
-let make_main_entrypoint ~raise :  Ast_typed.expression_variable Simple_utils.List.Ne.t -> Ast_typed.program -> Ast_typed.expression_variable * Ast_typed.program = fun entrypoints prg ->
+let make_main_entrypoint ?(layout=Ast_typed.default_layout) ~raise :  Ast_typed.expression_variable Simple_utils.List.Ne.t -> Ast_typed.program -> Ast_typed.expression_variable * Ast_typed.program = fun entrypoints prg ->
   match entrypoints with
     (entrypoint,[]) -> entrypoint, prg
   | (entrypoint,rest) ->
@@ -49,7 +49,7 @@ let make_main_entrypoint ~raise :  Ast_typed.expression_variable Simple_utils.Li
       let () = trace_option ~raise (storage_entrypoint_contract (Ast_typed.ValueVar.get_location ep) ep str entrypoint storage ) @@
         Ast_typed.assert_type_expression_eq (str,storage) in
       (Ast_typed.ValueVar.to_name_exn ep, parameter)::parameters) rest in
-    let entrypoint_type = Ast_typed.t_sum_ez ~layout:Ast_typed.L_comb parameter_list in
+    let entrypoint_type = Ast_typed.t_sum_ez ~layout parameter_list in
     let type_binder = Ast_typed.TypeVar.fresh ~name:"parameter" () in
     let entrypoint_type_decl = Location.wrap @@ Ast_typed.Declaration_type {type_binder;type_expr=entrypoint_type;type_attr=Ast_typed.{public=true;hidden=false}} in
     let entrypoint_function_decl =

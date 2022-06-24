@@ -6,19 +6,97 @@ let%expect_test _ =
   run_ligo_good [ "compile" ; "contract" ; contract "FA1.2.mligo" ] ;
   [%expect{|
     { parameter
-        (or (pair %transfer (address %from) (address %to) (nat %value))
-            (or (pair %approve (address %spender) (nat %value))
-                (or (pair %getAllowance
+        (or (or (or (pair %approve (address %spender) (nat %value))
+                    (pair %getAllowance
                        (pair %request (address %owner) (address %spender))
-                       (contract %callback nat))
-                    (or (pair %getBalance (address %owner) (contract %callback nat))
-                        (pair %getTotalSupply (unit %request) (contract %callback nat)))))) ;
+                       (contract %callback nat)))
+                (or (pair %getBalance (address %owner) (contract %callback nat))
+                    (pair %getTotalSupply (unit %request) (contract %callback nat))))
+            (pair %transfer (address %from) (address %to) (nat %value))) ;
       storage
         (pair (pair (big_map %allowances (pair (address %owner) (address %spender)) nat)
                     (big_map %tokens address nat))
               (nat %total_supply)) ;
       code { UNPAIR ;
              IF_LEFT
+               { IF_LEFT
+                   { IF_LEFT
+                       { DUP 2 ;
+                         CAR ;
+                         CAR ;
+                         DUP 2 ;
+                         CAR ;
+                         SENDER ;
+                         PAIR ;
+                         PUSH nat 0 ;
+                         DUP 4 ;
+                         CDR ;
+                         COMPARE ;
+                         GT ;
+                         PUSH nat 0 ;
+                         DUP 4 ;
+                         DUP 4 ;
+                         GET ;
+                         IF_NONE { PUSH nat 0 } {} ;
+                         COMPARE ;
+                         GT ;
+                         AND ;
+                         IF { PUSH string "UnsafeAllowanceChange" ; FAILWITH } {} ;
+                         DUP 4 ;
+                         CDR ;
+                         DIG 4 ;
+                         CAR ;
+                         CDR ;
+                         DIG 4 ;
+                         CDR ;
+                         DIG 4 ;
+                         PUSH nat 0 ;
+                         DUP 3 ;
+                         COMPARE ;
+                         EQ ;
+                         IF { SWAP ; DROP ; NONE nat } { SWAP ; SOME } ;
+                         DIG 4 ;
+                         UPDATE ;
+                         PAIR ;
+                         PAIR ;
+                         NIL operation }
+                       { DUP 2 ;
+                         NIL operation ;
+                         DUP 3 ;
+                         CDR ;
+                         PUSH mutez 0 ;
+                         DIG 5 ;
+                         CAR ;
+                         CAR ;
+                         DIG 5 ;
+                         CAR ;
+                         GET ;
+                         IF_NONE { PUSH nat 0 } {} ;
+                         TRANSFER_TOKENS ;
+                         CONS } }
+                   { IF_LEFT
+                       { DUP 2 ;
+                         NIL operation ;
+                         DUP 3 ;
+                         CDR ;
+                         PUSH mutez 0 ;
+                         DIG 5 ;
+                         CAR ;
+                         CDR ;
+                         DIG 5 ;
+                         CAR ;
+                         GET ;
+                         IF_NONE { PUSH nat 0 } {} ;
+                         TRANSFER_TOKENS }
+                       { DUP 2 ;
+                         NIL operation ;
+                         DIG 2 ;
+                         CDR ;
+                         PUSH mutez 0 ;
+                         DIG 4 ;
+                         CDR ;
+                         TRANSFER_TOKENS } ;
+                     CONS } }
                { DUP 2 ;
                  CAR ;
                  CAR ;
@@ -95,84 +173,7 @@ let%expect_test _ =
                  DIG 2 ;
                  PAIR ;
                  PAIR ;
-                 NIL operation }
-               { IF_LEFT
-                   { DUP 2 ;
-                     CAR ;
-                     CAR ;
-                     DUP 2 ;
-                     CAR ;
-                     SENDER ;
-                     PAIR ;
-                     PUSH nat 0 ;
-                     DUP 4 ;
-                     CDR ;
-                     COMPARE ;
-                     GT ;
-                     PUSH nat 0 ;
-                     DUP 4 ;
-                     DUP 4 ;
-                     GET ;
-                     IF_NONE { PUSH nat 0 } {} ;
-                     COMPARE ;
-                     GT ;
-                     AND ;
-                     IF { PUSH string "UnsafeAllowanceChange" ; FAILWITH } {} ;
-                     DUP 4 ;
-                     CDR ;
-                     DIG 4 ;
-                     CAR ;
-                     CDR ;
-                     DIG 4 ;
-                     CDR ;
-                     DIG 4 ;
-                     PUSH nat 0 ;
-                     DUP 3 ;
-                     COMPARE ;
-                     EQ ;
-                     IF { SWAP ; DROP ; NONE nat } { SWAP ; SOME } ;
-                     DIG 4 ;
-                     UPDATE ;
-                     PAIR ;
-                     PAIR ;
-                     NIL operation }
-                   { IF_LEFT
-                       { DUP 2 ;
-                         NIL operation ;
-                         DUP 3 ;
-                         CDR ;
-                         PUSH mutez 0 ;
-                         DIG 5 ;
-                         CAR ;
-                         CAR ;
-                         DIG 5 ;
-                         CAR ;
-                         GET ;
-                         IF_NONE { PUSH nat 0 } {} ;
-                         TRANSFER_TOKENS }
-                       { IF_LEFT
-                           { DUP 2 ;
-                             NIL operation ;
-                             DUP 3 ;
-                             CDR ;
-                             PUSH mutez 0 ;
-                             DIG 5 ;
-                             CAR ;
-                             CDR ;
-                             DIG 5 ;
-                             CAR ;
-                             GET ;
-                             IF_NONE { PUSH nat 0 } {} ;
-                             TRANSFER_TOKENS }
-                           { DUP 2 ;
-                             NIL operation ;
-                             DIG 2 ;
-                             CDR ;
-                             PUSH mutez 0 ;
-                             DIG 4 ;
-                             CDR ;
-                             TRANSFER_TOKENS } } ;
-                     CONS } } ;
+                 NIL operation } ;
              PAIR } } |}]
 
 let%expect_test _ =
