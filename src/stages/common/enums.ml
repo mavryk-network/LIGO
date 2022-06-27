@@ -175,7 +175,9 @@ type constant' =
   | C_TEST_EXTERNAL_CALL_TO_ADDRESS [@only_interpreter]
   | C_TEST_EXTERNAL_CALL_TO_ADDRESS_EXN [@only_interpreter]
   | C_TEST_GET_NTH_BS [@only_interpreter]
-  | C_TEST_LOG [@only_interpreter]
+  | C_TEST_PRINT [@only_interpreter]
+  | C_TEST_TO_STRING [@only_interpreter]
+  | C_TEST_UNESCAPE_STRING [@only_interpreter]
   | C_TEST_STATE_RESET [@only_interpreter]
   | C_TEST_BOOTSTRAP_CONTRACT [@only_interpreter]
   | C_TEST_NTH_BOOTSTRAP_CONTRACT [@only_interpreter]
@@ -213,6 +215,7 @@ type constant' =
   | C_TEST_FAILWITH [@only_interpreter]
   | C_TEST_READ_CONTRACT_FROM_FILE [@only_interpreter]
   | C_TEST_SIGN [@only_interpreter]
+  | C_TEST_GET_ENTRYPOINT [@only_interpreter]
   (* New with EDO*)
   | C_SAPLING_VERIFY_UPDATE
   | C_SAPLING_EMPTY_STATE
