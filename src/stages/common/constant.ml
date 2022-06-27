@@ -36,6 +36,7 @@ type t =
   | Michelson_contract
   | Typed_address
   | Mutation
+  | RandomST
   | Chest
   | Chest_key
   | Chest_opening_result
@@ -79,6 +80,7 @@ let to_string = function
   | Michelson_contract   -> "michelson_contract"
   | Typed_address        -> "typed_address"
   | Mutation             -> "mutation"
+  | RandomST             -> "randomST"
   | Chest                -> "chest"
   | Chest_key            -> "chest_key"
   | Chest_opening_result -> "chest_opening_result"
@@ -121,6 +123,7 @@ let to_string = function
   | "michelson_contract"   -> Michelson_contract
   | "typed_address"        -> Typed_address
   | "mutation"             -> Mutation
+  | "randomST"             -> RandomST
   | "chest"                -> Chest
   | "chest_key"            -> Chest_key
   | "chest_opening_result" -> Chest_opening_result
@@ -165,6 +168,7 @@ let michelson_program    = Michelson_program
 let michelson_contract   = Michelson_contract
 let typed_address        = Typed_address
 let mutation             = Mutation
+let randomST             = RandomST
 let chest                = Chest
 let chest_key            = Chest_key
 let chest_opening_result = Chest_opening_result
@@ -210,6 +214,7 @@ let v_test_michelson       : type_variable = TypeVar.of_input_var (to_string Mic
 let v_michelson_contract   : type_variable = TypeVar.of_input_var (to_string Michelson_contract)
 let v_typed_address        : type_variable = TypeVar.of_input_var (to_string Typed_address)
 let v_mutation             : type_variable = TypeVar.of_input_var (to_string Mutation)
+let v_randomST             : type_variable = TypeVar.of_input_var (to_string RandomST)
 let v_chest                : type_variable = TypeVar.of_input_var (to_string Chest)
 let v_chest_key            : type_variable = TypeVar.of_input_var (to_string Chest_key)
 let v_chest_opening_result : type_variable = TypeVar.of_input_var (to_string Chest_opening_result)

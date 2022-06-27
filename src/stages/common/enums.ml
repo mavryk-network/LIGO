@@ -198,6 +198,8 @@ type constant' =
   | C_TEST_CREATE_CHEST [@only_interpreter]
   | C_TEST_CREATE_CHEST_KEY [@only_interpreter]
   | C_TEST_RANDOM [@only_interpreter]
+  | C_TEST_BOUNDED_RANDOM [@only_interpreter]
+  | C_TEST_MAKE_RANDOM [@only_interpreter]
   | C_TEST_ADD_ACCOUNT [@only_interpreter]
   | C_TEST_NEW_ACCOUNT [@only_interpreter]
   | C_TEST_BAKER_ACCOUNT [@only_interpreter]

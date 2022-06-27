@@ -156,6 +156,7 @@ let make_options ~raise ?param ctxt =
 
 let run_expression_unwrap ~raise ?ctxt ?(loc = Location.generated) (c_expr : Stacking.compiled_expression) =
   let options = make_options ~raise ctxt in
+  (* let () = print_endline Caml.Printexc.(raw_backtrace_to_string @@ get_callstack 5) in *)
   let runres = Ligo_run.Of_michelson.run_expression ~raise ~options c_expr.expr c_expr.expr_ty in
   match runres with
   | Success (expr_ty, expr) ->
@@ -332,6 +333,8 @@ let rec val_to_ast ~raise ~loc : Ligo_interpreter.Types.value ->
      raise.raise @@ Errors.generic_error loc "Cannot be abstracted: mutation"
   | V_Thunk { value ; _ } ->
      value
+  | V_RandomST _ ->
+     raise.raise @@ Errors.generic_error loc "Cannot be abstracted: randomST"
 
 and make_ast_func ~raise ?name env arg body orig =
   let open Ast_aggregated in
@@ -398,7 +401,8 @@ and make_subst_ast_env_exp ~raise env expr =
    Self_ast_aggregated.Helpers.Free_variables.expression expr in
   let rec aux (fv) acc = function
     | [] -> acc
-    | Expression { name; item ; no_mutation ; inline } :: tl ->
+    | (_name, []) :: _tl -> failwith "empty"
+    | (name, { item ; no_mutation ; inline } :: _) :: tl ->
        if List.mem fv name ~equal:ValueVar.equal then
          let expr = val_to_ast ~raise ~loc:(ValueVar.get_location name) item.eval_term item.ast_type in
          let expr_fv = get_fv expr in
@@ -407,13 +411,15 @@ and make_subst_ast_env_exp ~raise env expr =
          aux fv ((name, expr, no_mutation, inline) :: acc) tl
        else
          aux fv acc tl in
-  aux (get_fv expr) [] env
+  aux (get_fv expr) [] (Caml.List.of_seq (VHashtbl.to_seq env))
 
 
 let storage_retreival_dummy_ty = Tezos_utils.Michelson.prim "int"
 
 let run_michelson_func ~raise ~options ~loc (ctxt : Tezos_state.context) (code : (unit, string) Tezos_micheline.Micheline.node) func_ty arg arg_ty =
   let open Ligo_interpreter.Types in
+  (* let exx = Tezos_micheline.Micheline.(map_node (fun _ -> Tezos_micheline.Micheline_printer.{ comment = None }) (fun x -> x) code) in
+   * print_endline (Format.asprintf "run: %a" Tezos_micheline.Micheline_printer.print_expr exx); *)
   let { code = arg ; code_ty = arg_ty ; _ } = compile_simple_value ~raise ~options ~ctxt ~loc arg arg_ty in
   let func_ty = compile_type ~raise func_ty in
   let func = match code with

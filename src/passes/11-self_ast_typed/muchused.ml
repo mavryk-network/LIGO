@@ -48,6 +48,7 @@ let rec is_dup (t : type_expression) =
     (* Test primitives are dup *)
     Typed_address       |
     Mutation            |
+    RandomST            |
     Tx_rollup_l2_address |
     Michelson_contract  |
     Michelson_program   |

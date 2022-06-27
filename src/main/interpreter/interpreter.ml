@@ -796,6 +796,14 @@ let rec apply_operator ~raise ~add_warning ~steps ~(options : Compiler_options.t
       let* value = eval_ligo expr_gen calltrace env in
       return value
     | ( C_TEST_RANDOM , _  ) -> fail @@ error_type
+    | ( C_TEST_BOUNDED_RANDOM , [ V_Ct (C_nat n) ; V_RandomST st ] ) ->
+      let n = Z.to_int n in
+      let v = Random.State.int st n in
+      return (v_nat @@ Z.of_int v)
+    | ( C_TEST_BOUNDED_RANDOM , _  ) -> fail @@ error_type
+    | ( C_TEST_MAKE_RANDOM , [ V_Ct (C_unit) ] ) ->
+      return (V_RandomST (Random.State.make_self_init ()))
+    | ( C_TEST_MAKE_RANDOM , _ ) -> fail @@ error_type
     | ( C_TEST_SET_BIG_MAP , [ V_Ct (C_int n) ; V_Map kv ] ) ->
       let bigmap_ty = List.nth_exn types 1 in
       let>> () = Set_big_map (n, kv, bigmap_ty) in
@@ -954,8 +962,6 @@ and eval_ligo ~raise ~add_warning ~steps ~options : AST.expression -> calltrace 
       | v -> return v in
     let* () = if steps <= 0 then fail (Errors.meta_lang_eval term.location calltrace (v_string "Out of fuel")) else return () in
     match term.expression_content with
-    | E_type_inst _ ->
-       fail @@ Errors.generic_error term.location "Polymorphism not supported: polymorphic expressions should be monomorphized before being interpreted. This could mean that the expression that you are trying to interpret is too generic, try adding a type annotation."
     | E_application {lamb = f; args} -> (
         let* f' = eval_ligo f calltrace env in
         let* args' = eval_ligo args calltrace env in
@@ -991,9 +997,6 @@ and eval_ligo ~raise ~add_warning ~steps ~options : AST.expression -> calltrace 
       )
     | E_lambda {binder; result;} ->
       return @@ V_Func_val {rec_name = None; orig_lambda = term ; arg_binder=binder.var ; body=result ; env}
-    | E_type_abstraction {type_binder=_ ; result} -> (
-      eval_ligo (result) calltrace env
-    )
     | E_let_in {let_binder ; rhs; let_result; attr = { no_mutation ; inline ; view=_ ; public=_ ; thunk=true ; hidden = _ }} -> (
       let rhs' = LT.V_Thunk { value = rhs ; context = env }  in
       eval_ligo (let_result) calltrace (Env.extend env let_binder.var ~inline ~no_mutation (rhs.type_expression,rhs'))
@@ -1137,6 +1140,11 @@ and eval_ligo ~raise ~add_warning ~steps ~options : AST.expression -> calltrace 
       | _ -> raise.raise @@ Errors.generic_error term.location "Embedded raw code can only have a functional type"
     )
     | E_assign _ -> raise.raise @@ Errors.generic_error term.location "Assignements should not reach interpreter"
+    | E_type_inst _ ->
+       fail @@ Errors.generic_error term.location "Polymorphism not supported: polymorphic expressions should be monomorphized before being interpreted. This could mean that the expression that you are trying to interpret is too generic, try adding a type annotation."
+    | E_type_abstraction {type_binder=_ ; result} -> (
+      eval_ligo (result) calltrace env
+    )
 
 and try_eval ~raise ~add_warning ~steps ~options expr env state r = Monad.eval ~raise ~add_warning ~options (eval_ligo ~raise ~add_warning ~steps ~options expr [] env) state r
 
