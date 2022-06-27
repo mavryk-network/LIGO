@@ -32,7 +32,7 @@ let var_to_string name =
   name ^ "#" ^ (string_of_int hash)
 
 
-class ['T] wrapped ~(data : 'T) = object(self)
+class ['T] wrapped ~(data : 'T)  = object(self)
   val size = 4l
   val malloc_name =  var_to_string (ValueVar.fresh ~name:"wrapped_malloc" ())
   val mutable allocated = false
@@ -44,8 +44,9 @@ class ['T] wrapped ~(data : 'T) = object(self)
 
   method locals: (string * T.value_type) list = 
     [(self#malloc_name, T.I32Type)]
-    @
-    self#data#locals
+    
+    @ self#data#locals 
+
 
   method alloc = 
     if allocated then 
@@ -89,8 +90,9 @@ class ['T] wrapped ~(data : 'T) = object(self)
       []
     else (
       self#set_stored true;
-      self#alloc @
-        self#store_data 
+      self#alloc
+      @  self#store_data 
+
     )
     
   method reference =
@@ -101,7 +103,8 @@ end
 
 
 type option_variant = 
-  None
+  
+| None
 | Some
 
 class ['T] option ~(kind: option_variant) ~(value: 'T) = object(self)
@@ -120,7 +123,6 @@ class ['T] option ~(kind: option_variant) ~(value: 'T) = object(self)
   method kind = kind
   method value = value
   
-  (* [(malloc_local, I32Type); (e1_local, I32Type); (e2_local, I32Type)] *)
   method locals: (string * T.value_type) list = 
     [(self#malloc_name, T.I32Type)] 
     @
@@ -151,8 +153,9 @@ class ['T] option ~(kind: option_variant) ~(value: 'T) = object(self)
 
   method store_kind = 
     let kind = match self#kind with 
-        | None -> 0l
-    | Some -> 1l 
+    
+  | None -> 0l
+  | Some -> 1l 
     in
     S.[
       { it = A.LocalGet self#malloc_name; at };
@@ -184,7 +187,7 @@ class ['T] option ~(kind: option_variant) ~(value: 'T) = object(self)
   
 end
           
-class  bigintwrap ~(data : dt) ~(len : dt) ~(capacity : dt) = object(self)
+class  bigintwrap ~(data : dt) ~(len : dt) ~(capacity : dt)  = object(self)
   val size = 12l
   val malloc_name =  var_to_string (ValueVar.fresh ~name:"bigintwrap_malloc" ())
   val mutable allocated = false
@@ -196,8 +199,11 @@ class  bigintwrap ~(data : dt) ~(len : dt) ~(capacity : dt) = object(self)
 
   method locals: (string * T.value_type) list = 
     [(self#malloc_name, T.I32Type)]
-    @
-    self#data#locals@self#len#locals@self#capacity#locals
+    
+    @ self#data#locals 
+@ self#len#locals 
+@ self#capacity#locals 
+
 
   method alloc = 
     if allocated then 
@@ -234,8 +240,7 @@ class  bigintwrap ~(data : dt) ~(len : dt) ~(capacity : dt) = object(self)
     S.[
        { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
     ]
-            
-  
+              
   val len = len
   method len = len
   method get_len = 
@@ -260,8 +265,7 @@ class  bigintwrap ~(data : dt) ~(len : dt) ~(capacity : dt) = object(self)
     S.[
        { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
     ]
-            
-  
+              
   val capacity = capacity
   method capacity = capacity
   method get_capacity = 
@@ -293,8 +297,11 @@ class  bigintwrap ~(data : dt) ~(len : dt) ~(capacity : dt) = object(self)
       []
     else (
       self#set_stored true;
-      self#alloc @
-        self#store_data @   self#store_len @   self#store_capacity 
+      self#alloc
+      @  self#store_data 
+@  self#store_len 
+@  self#store_capacity 
+
     )
     
   method reference =
@@ -305,7 +312,8 @@ end
 
 
 type datatype_variant = 
-  Int
+  
+| Int
 | Nat
 | Mutez
 | Timestamp
@@ -333,7 +341,6 @@ class  datatype ~(kind: datatype_variant) ~(value: dt) = object(self)
   method kind = kind
   method value = value
   
-  (* [(malloc_local, I32Type); (e1_local, I32Type); (e2_local, I32Type)] *)
   method locals: (string * T.value_type) list = 
     [(self#malloc_name, T.I32Type)] 
     @
@@ -364,17 +371,18 @@ class  datatype ~(kind: datatype_variant) ~(value: dt) = object(self)
 
   method store_kind = 
     let kind = match self#kind with 
-        | Int -> 0l
-    | Nat -> 1l
-    | Mutez -> 2l
-    | Timestamp -> 3l
-    | Bool -> 4l
-    | ListItem -> 5l
-    | Tuple -> 6l
-    | Set -> 7l
-    | Map -> 8l
-    | Operations -> 9l
-    | String -> 10l 
+    
+  | Int -> 0l
+  | Nat -> 1l
+  | Mutez -> 2l
+  | Timestamp -> 3l
+  | Bool -> 4l
+  | ListItem -> 5l
+  | Tuple -> 6l
+  | Set -> 7l
+  | Map -> 8l
+  | Operations -> 9l
+  | String -> 10l 
     in
     S.[
       { it = A.LocalGet self#malloc_name; at };
@@ -406,7 +414,7 @@ class  datatype ~(kind: datatype_variant) ~(value: dt) = object(self)
   
 end
           
-class  node ~(value : dt) ~(next : dt) = object(self)
+class  node ~(value : dt) ~(next : dt)  = object(self)
   val size = 8l
   val malloc_name =  var_to_string (ValueVar.fresh ~name:"node_malloc" ())
   val mutable allocated = false
@@ -418,8 +426,10 @@ class  node ~(value : dt) ~(next : dt) = object(self)
 
   method locals: (string * T.value_type) list = 
     [(self#malloc_name, T.I32Type)]
-    @
-    self#value#locals@self#next#locals
+    
+    @ self#value#locals 
+@ self#next#locals 
+
 
   method alloc = 
     if allocated then 
@@ -456,8 +466,7 @@ class  node ~(value : dt) ~(next : dt) = object(self)
     S.[
        { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
     ]
-            
-  
+              
   val next = next
   method next = next
   method get_next = 
@@ -489,8 +498,10 @@ class  node ~(value : dt) ~(next : dt) = object(self)
       []
     else (
       self#set_stored true;
-      self#alloc @
-        self#store_value @   self#store_next 
+      self#alloc
+      @  self#store_value 
+@  self#store_next 
+
     )
     
   method reference =
@@ -501,7 +512,8 @@ end
 
 
 type operation_variant = 
-  Transaction
+  
+| Transaction
 | Delegate
 
 class  operation ~(kind: operation_variant) ~(value: dt) = object(self)
@@ -520,7 +532,6 @@ class  operation ~(kind: operation_variant) ~(value: dt) = object(self)
   method kind = kind
   method value = value
   
-  (* [(malloc_local, I32Type); (e1_local, I32Type); (e2_local, I32Type)] *)
   method locals: (string * T.value_type) list = 
     [(self#malloc_name, T.I32Type)] 
     @
@@ -551,8 +562,9 @@ class  operation ~(kind: operation_variant) ~(value: dt) = object(self)
 
   method store_kind = 
     let kind = match self#kind with 
-        | Transaction -> 0l
-    | Delegate -> 1l 
+    
+  | Transaction -> 0l
+  | Delegate -> 1l 
     in
     S.[
       { it = A.LocalGet self#malloc_name; at };
@@ -584,7 +596,7 @@ class  operation ~(kind: operation_variant) ~(value: dt) = object(self)
   
 end
           
-class  operationnode ~(value : dt) ~(next : dt) = object(self)
+class  operationnode ~(value : dt) ~(next : dt)  = object(self)
   val size = 8l
   val malloc_name =  var_to_string (ValueVar.fresh ~name:"operationnode_malloc" ())
   val mutable allocated = false
@@ -596,8 +608,10 @@ class  operationnode ~(value : dt) ~(next : dt) = object(self)
 
   method locals: (string * T.value_type) list = 
     [(self#malloc_name, T.I32Type)]
-    @
-    self#value#locals@self#next#locals
+    
+    @ self#value#locals 
+@ self#next#locals 
+
 
   method alloc = 
     if allocated then 
@@ -634,8 +648,7 @@ class  operationnode ~(value : dt) ~(next : dt) = object(self)
     S.[
        { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
     ]
-            
-  
+              
   val next = next
   method next = next
   method get_next = 
@@ -667,8 +680,10 @@ class  operationnode ~(value : dt) ~(next : dt) = object(self)
       []
     else (
       self#set_stored true;
-      self#alloc @
-        self#store_value @   self#store_next 
+      self#alloc
+      @  self#store_value 
+@  self#store_next 
+
     )
     
   method reference =
@@ -679,7 +694,8 @@ end
 
 
 type color_variant = 
-  Red
+  
+| Red
 | Black
 
 class  color ~(kind: color_variant) ~(value: dt) = object(self)
@@ -698,7 +714,6 @@ class  color ~(kind: color_variant) ~(value: dt) = object(self)
   method kind = kind
   method value = value
   
-  (* [(malloc_local, I32Type); (e1_local, I32Type); (e2_local, I32Type)] *)
   method locals: (string * T.value_type) list = 
     [(self#malloc_name, T.I32Type)] 
     @
@@ -729,8 +744,9 @@ class  color ~(kind: color_variant) ~(value: dt) = object(self)
 
   method store_kind = 
     let kind = match self#kind with 
-        | Red -> 0l
-    | Black -> 1l 
+    
+  | Red -> 0l
+  | Black -> 1l 
     in
     S.[
       { it = A.LocalGet self#malloc_name; at };
@@ -762,7 +778,7 @@ class  color ~(kind: color_variant) ~(value: dt) = object(self)
   
 end
           
-class  rbnode ~(parent : dt) ~(value : dt) ~(depth : dt) ~(left : dt) ~(right : dt) ~(color : dt) = object(self)
+class  rbnode ~(parent : dt) ~(value : dt) ~(depth : dt) ~(left : dt) ~(right : dt) ~(color : dt)  = object(self)
   val size = 24l
   val malloc_name =  var_to_string (ValueVar.fresh ~name:"rbnode_malloc" ())
   val mutable allocated = false
@@ -774,8 +790,14 @@ class  rbnode ~(parent : dt) ~(value : dt) ~(depth : dt) ~(left : dt) ~(right : 
 
   method locals: (string * T.value_type) list = 
     [(self#malloc_name, T.I32Type)]
-    @
-    self#parent#locals@self#value#locals@self#depth#locals@self#left#locals@self#right#locals@self#color#locals
+    
+    @ self#parent#locals 
+@ self#value#locals 
+@ self#depth#locals 
+@ self#left#locals 
+@ self#right#locals 
+@ self#color#locals 
+
 
   method alloc = 
     if allocated then 
@@ -812,8 +834,7 @@ class  rbnode ~(parent : dt) ~(value : dt) ~(depth : dt) ~(left : dt) ~(right : 
     S.[
        { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
     ]
-            
-  
+              
   val value = value
   method value = value
   method get_value = 
@@ -838,8 +859,7 @@ class  rbnode ~(parent : dt) ~(value : dt) ~(depth : dt) ~(left : dt) ~(right : 
     S.[
        { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
     ]
-            
-  
+              
   val depth = depth
   method depth = depth
   method get_depth = 
@@ -864,8 +884,7 @@ class  rbnode ~(parent : dt) ~(value : dt) ~(depth : dt) ~(left : dt) ~(right : 
     S.[
        { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
     ]
-            
-  
+              
   val left = left
   method left = left
   method get_left = 
@@ -890,8 +909,7 @@ class  rbnode ~(parent : dt) ~(value : dt) ~(depth : dt) ~(left : dt) ~(right : 
     S.[
        { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
     ]
-            
-  
+              
   val right = right
   method right = right
   method get_right = 
@@ -916,8 +934,7 @@ class  rbnode ~(parent : dt) ~(value : dt) ~(depth : dt) ~(left : dt) ~(right : 
     S.[
        { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
     ]
-            
-  
+              
   val color = color
   method color = color
   method get_color = 
@@ -949,8 +966,14 @@ class  rbnode ~(parent : dt) ~(value : dt) ~(depth : dt) ~(left : dt) ~(right : 
       []
     else (
       self#set_stored true;
-      self#alloc @
-        self#store_parent @   self#store_value @   self#store_depth @   self#store_left @   self#store_right @   self#store_color 
+      self#alloc
+      @  self#store_parent 
+@  self#store_value 
+@  self#store_depth 
+@  self#store_left 
+@  self#store_right 
+@  self#store_color 
+
     )
     
   method reference =
@@ -959,7 +982,7 @@ class  rbnode ~(parent : dt) ~(value : dt) ~(depth : dt) ~(left : dt) ~(right : 
 end
 
 
-class  transaction ~(action : dt) ~(amount : dt) ~(contract : dt) = object(self)
+class  transaction ~(action : dt) ~(amount : dt) ~(contract : dt)  = object(self)
   val size = 12l
   val malloc_name =  var_to_string (ValueVar.fresh ~name:"transaction_malloc" ())
   val mutable allocated = false
@@ -971,8 +994,11 @@ class  transaction ~(action : dt) ~(amount : dt) ~(contract : dt) = object(self)
 
   method locals: (string * T.value_type) list = 
     [(self#malloc_name, T.I32Type)]
-    @
-    self#action#locals@self#amount#locals@self#contract#locals
+    
+    @ self#action#locals 
+@ self#amount#locals 
+@ self#contract#locals 
+
 
   method alloc = 
     if allocated then 
@@ -1009,8 +1035,7 @@ class  transaction ~(action : dt) ~(amount : dt) ~(contract : dt) = object(self)
     S.[
        { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
     ]
-            
-  
+              
   val amount = amount
   method amount = amount
   method get_amount = 
@@ -1035,8 +1060,7 @@ class  transaction ~(action : dt) ~(amount : dt) ~(contract : dt) = object(self)
     S.[
        { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
     ]
-            
-  
+              
   val contract = contract
   method contract = contract
   method get_contract = 
@@ -1068,8 +1092,11 @@ class  transaction ~(action : dt) ~(amount : dt) ~(contract : dt) = object(self)
       []
     else (
       self#set_stored true;
-      self#alloc @
-        self#store_action @   self#store_amount @   self#store_contract 
+      self#alloc
+      @  self#store_action 
+@  self#store_amount 
+@  self#store_contract 
+
     )
     
   method reference =
@@ -1078,7 +1105,7 @@ class  transaction ~(action : dt) ~(amount : dt) ~(contract : dt) = object(self)
 end
 
 
-class  delegate ~(delegate : dt) = object(self)
+class  delegate ~(delegate : dt)  = object(self)
   val size = 4l
   val malloc_name =  var_to_string (ValueVar.fresh ~name:"delegate_malloc" ())
   val mutable allocated = false
@@ -1090,8 +1117,9 @@ class  delegate ~(delegate : dt) = object(self)
 
   method locals: (string * T.value_type) list = 
     [(self#malloc_name, T.I32Type)]
-    @
-    self#delegate#locals
+    
+    @ self#delegate#locals 
+
 
   method alloc = 
     if allocated then 
@@ -1135,8 +1163,13713 @@ class  delegate ~(delegate : dt) = object(self)
       []
     else (
       self#set_stored true;
-      self#alloc @
-        self#store_delegate 
+      self#alloc
+      @  self#store_delegate 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+class ['T] wrapped ~(data : 'T)  = object(self)
+  val size = 4l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"wrapped_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#data#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val data = data
+  method data = data
+  method get_data = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_data = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    data#store
+    @
+    data#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_data 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+
+type option_variant = 
+  
+| None
+| Some
+
+class ['T] option ~(kind: option_variant) ~(value: 'T) = object(self)
+  val kind = kind
+  val value = value
+  
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"option_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+
+  method malloc_name = malloc_name
+  method size = 12l
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method kind = kind
+  method value = value
+  
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)] 
+    @
+    value#locals
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at };
+      { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    S.[
+      { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store_kind = 
+    let kind = match self#kind with 
+    
+  | None -> 0l
+  | Some -> 1l 
+    in
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 kind; at  }; at };
+      { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method get_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at  };
+      { it = Binary (I32 Add); at };
+      { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc 
+      @ self#store_kind
+      @ self#store_value
+   
+  )
+
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+  
+end
+          
+class  bigintwrap ~(data : dt) ~(len : dt) ~(capacity : dt)  = object(self)
+  val size = 12l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"bigintwrap_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#data#locals 
+@ self#len#locals 
+@ self#capacity#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val data = data
+  method data = data
+  method get_data = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_data = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    data#store
+    @
+    data#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val len = len
+  method len = len
+  method get_len = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_len = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    len#store
+    @
+    len#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val capacity = capacity
+  method capacity = capacity
+  method get_capacity = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 8l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_capacity = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 8l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    capacity#store
+    @
+    capacity#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_data 
+@  self#store_len 
+@  self#store_capacity 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+
+type datatype_variant = 
+  
+| Int
+| Nat
+| Mutez
+| Timestamp
+| Bool
+| ListItem
+| Tuple
+| Set
+| Map
+| Operations
+| String
+
+class  datatype ~(kind: datatype_variant) ~(value: dt) = object(self)
+  val kind = kind
+  val value = value
+  
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"datatype_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+
+  method malloc_name = malloc_name
+  method size = 12l
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method kind = kind
+  method value = value
+  
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)] 
+    @
+    value#locals
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at };
+      { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    S.[
+      { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store_kind = 
+    let kind = match self#kind with 
+    
+  | Int -> 0l
+  | Nat -> 1l
+  | Mutez -> 2l
+  | Timestamp -> 3l
+  | Bool -> 4l
+  | ListItem -> 5l
+  | Tuple -> 6l
+  | Set -> 7l
+  | Map -> 8l
+  | Operations -> 9l
+  | String -> 10l 
+    in
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 kind; at  }; at };
+      { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method get_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at  };
+      { it = Binary (I32 Add); at };
+      { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc 
+      @ self#store_kind
+      @ self#store_value
+   
+  )
+
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+  
+end
+          
+class  node ~(value : dt) ~(next : dt)  = object(self)
+  val size = 8l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"node_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#value#locals 
+@ self#next#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val value = value
+  method value = value
+  method get_value = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    value#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val next = next
+  method next = next
+  method get_next = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_next = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    next#store
+    @
+    next#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_value 
+@  self#store_next 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+
+type operation_variant = 
+  
+| Transaction
+| Delegate
+
+class  operation ~(kind: operation_variant) ~(value: dt) = object(self)
+  val kind = kind
+  val value = value
+  
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"operation_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+
+  method malloc_name = malloc_name
+  method size = 12l
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method kind = kind
+  method value = value
+  
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)] 
+    @
+    value#locals
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at };
+      { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    S.[
+      { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store_kind = 
+    let kind = match self#kind with 
+    
+  | Transaction -> 0l
+  | Delegate -> 1l 
+    in
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 kind; at  }; at };
+      { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method get_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at  };
+      { it = Binary (I32 Add); at };
+      { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc 
+      @ self#store_kind
+      @ self#store_value
+   
+  )
+
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+  
+end
+          
+class  operationnode ~(value : dt) ~(next : dt)  = object(self)
+  val size = 8l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"operationnode_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#value#locals 
+@ self#next#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val value = value
+  method value = value
+  method get_value = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    value#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val next = next
+  method next = next
+  method get_next = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_next = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    next#store
+    @
+    next#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_value 
+@  self#store_next 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+
+type color_variant = 
+  
+| Red
+| Black
+
+class  color ~(kind: color_variant) ~(value: dt) = object(self)
+  val kind = kind
+  val value = value
+  
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"color_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+
+  method malloc_name = malloc_name
+  method size = 12l
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method kind = kind
+  method value = value
+  
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)] 
+    @
+    value#locals
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at };
+      { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    S.[
+      { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store_kind = 
+    let kind = match self#kind with 
+    
+  | Red -> 0l
+  | Black -> 1l 
+    in
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 kind; at  }; at };
+      { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method get_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at  };
+      { it = Binary (I32 Add); at };
+      { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc 
+      @ self#store_kind
+      @ self#store_value
+   
+  )
+
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+  
+end
+          
+class  rbnode ~(parent : dt) ~(value : dt) ~(depth : dt) ~(left : dt) ~(right : dt) ~(color : dt)  = object(self)
+  val size = 24l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"rbnode_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#parent#locals 
+@ self#value#locals 
+@ self#depth#locals 
+@ self#left#locals 
+@ self#right#locals 
+@ self#color#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val parent = parent
+  method parent = parent
+  method get_parent = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_parent = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    parent#store
+    @
+    parent#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val value = value
+  method value = value
+  method get_value = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    value#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val depth = depth
+  method depth = depth
+  method get_depth = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 8l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_depth = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 8l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    depth#store
+    @
+    depth#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val left = left
+  method left = left
+  method get_left = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 12l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_left = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 12l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    left#store
+    @
+    left#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val right = right
+  method right = right
+  method get_right = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 16l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_right = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 16l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    right#store
+    @
+    right#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val color = color
+  method color = color
+  method get_color = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 20l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_color = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 20l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    color#store
+    @
+    color#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_parent 
+@  self#store_value 
+@  self#store_depth 
+@  self#store_left 
+@  self#store_right 
+@  self#store_color 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+class  transaction ~(action : dt) ~(amount : dt) ~(contract : dt)  = object(self)
+  val size = 12l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"transaction_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#action#locals 
+@ self#amount#locals 
+@ self#contract#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val action = action
+  method action = action
+  method get_action = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_action = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    action#store
+    @
+    action#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val amount = amount
+  method amount = amount
+  method get_amount = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_amount = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    amount#store
+    @
+    amount#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val contract = contract
+  method contract = contract
+  method get_contract = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 8l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_contract = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 8l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    contract#store
+    @
+    contract#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_action 
+@  self#store_amount 
+@  self#store_contract 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+class  delegate ~(delegate : dt)  = object(self)
+  val size = 4l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"delegate_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#delegate#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val delegate = delegate
+  method delegate = delegate
+  method get_delegate = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_delegate = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    delegate#store
+    @
+    delegate#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_delegate 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+class ['T] wrapped ~(data : 'T)  = object(self)
+  val size = 4l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"wrapped_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#data#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val data = data
+  method data = data
+  method get_data = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_data = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    data#store
+    @
+    data#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_data 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+
+type option_variant = 
+  
+| None
+| Some
+
+class ['T] option ~(kind: option_variant) ~(value: 'T) = object(self)
+  val kind = kind
+  val value = value
+  
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"option_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+
+  method malloc_name = malloc_name
+  method size = 12l
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method kind = kind
+  method value = value
+  
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)] 
+    @
+    value#locals
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at };
+      { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    S.[
+      { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store_kind = 
+    let kind = match self#kind with 
+    
+  | None -> 0l
+  | Some -> 1l 
+    in
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 kind; at  }; at };
+      { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method get_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at  };
+      { it = Binary (I32 Add); at };
+      { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc 
+      @ self#store_kind
+      @ self#store_value
+   
+  )
+
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+  
+end
+          
+class  bigintwrap ~(data : dt) ~(len : dt) ~(capacity : dt)  = object(self)
+  val size = 12l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"bigintwrap_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#data#locals 
+@ self#len#locals 
+@ self#capacity#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val data = data
+  method data = data
+  method get_data = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_data = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    data#store
+    @
+    data#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val len = len
+  method len = len
+  method get_len = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_len = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    len#store
+    @
+    len#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val capacity = capacity
+  method capacity = capacity
+  method get_capacity = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 8l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_capacity = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 8l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    capacity#store
+    @
+    capacity#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_data 
+@  self#store_len 
+@  self#store_capacity 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+
+type datatype_variant = 
+  
+| Int
+| Nat
+| Mutez
+| Timestamp
+| Bool
+| ListItem
+| Tuple
+| Set
+| Map
+| Operations
+| String
+
+class  datatype ~(kind: datatype_variant) ~(value: dt) = object(self)
+  val kind = kind
+  val value = value
+  
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"datatype_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+
+  method malloc_name = malloc_name
+  method size = 12l
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method kind = kind
+  method value = value
+  
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)] 
+    @
+    value#locals
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at };
+      { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    S.[
+      { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store_kind = 
+    let kind = match self#kind with 
+    
+  | Int -> 0l
+  | Nat -> 1l
+  | Mutez -> 2l
+  | Timestamp -> 3l
+  | Bool -> 4l
+  | ListItem -> 5l
+  | Tuple -> 6l
+  | Set -> 7l
+  | Map -> 8l
+  | Operations -> 9l
+  | String -> 10l 
+    in
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 kind; at  }; at };
+      { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method get_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at  };
+      { it = Binary (I32 Add); at };
+      { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc 
+      @ self#store_kind
+      @ self#store_value
+   
+  )
+
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+  
+end
+          
+class  node ~(value : dt) ~(next : dt)  = object(self)
+  val size = 8l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"node_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#value#locals 
+@ self#next#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val value = value
+  method value = value
+  method get_value = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    value#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val next = next
+  method next = next
+  method get_next = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_next = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    next#store
+    @
+    next#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_value 
+@  self#store_next 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+
+type operation_variant = 
+  
+| Transaction
+| Delegate
+
+class  operation ~(kind: operation_variant) ~(value: dt) = object(self)
+  val kind = kind
+  val value = value
+  
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"operation_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+
+  method malloc_name = malloc_name
+  method size = 12l
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method kind = kind
+  method value = value
+  
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)] 
+    @
+    value#locals
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at };
+      { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    S.[
+      { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store_kind = 
+    let kind = match self#kind with 
+    
+  | Transaction -> 0l
+  | Delegate -> 1l 
+    in
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 kind; at  }; at };
+      { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method get_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at  };
+      { it = Binary (I32 Add); at };
+      { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc 
+      @ self#store_kind
+      @ self#store_value
+   
+  )
+
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+  
+end
+          
+class  operationnode ~(value : dt) ~(next : dt)  = object(self)
+  val size = 8l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"operationnode_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#value#locals 
+@ self#next#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val value = value
+  method value = value
+  method get_value = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    value#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val next = next
+  method next = next
+  method get_next = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_next = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    next#store
+    @
+    next#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_value 
+@  self#store_next 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+
+type color_variant = 
+  
+| Red
+| Black
+
+class  color ~(kind: color_variant) ~(value: dt) = object(self)
+  val kind = kind
+  val value = value
+  
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"color_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+
+  method malloc_name = malloc_name
+  method size = 12l
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method kind = kind
+  method value = value
+  
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)] 
+    @
+    value#locals
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at };
+      { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    S.[
+      { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store_kind = 
+    let kind = match self#kind with 
+    
+  | Red -> 0l
+  | Black -> 1l 
+    in
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 kind; at  }; at };
+      { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method get_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at  };
+      { it = Binary (I32 Add); at };
+      { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc 
+      @ self#store_kind
+      @ self#store_value
+   
+  )
+
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+  
+end
+          
+class  rbnode ~(parent : dt) ~(value : dt) ~(depth : dt) ~(left : dt) ~(right : dt) ~(color : dt)  = object(self)
+  val size = 24l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"rbnode_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#parent#locals 
+@ self#value#locals 
+@ self#depth#locals 
+@ self#left#locals 
+@ self#right#locals 
+@ self#color#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val parent = parent
+  method parent = parent
+  method get_parent = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_parent = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    parent#store
+    @
+    parent#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val value = value
+  method value = value
+  method get_value = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    value#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val depth = depth
+  method depth = depth
+  method get_depth = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 8l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_depth = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 8l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    depth#store
+    @
+    depth#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val left = left
+  method left = left
+  method get_left = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 12l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_left = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 12l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    left#store
+    @
+    left#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val right = right
+  method right = right
+  method get_right = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 16l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_right = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 16l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    right#store
+    @
+    right#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val color = color
+  method color = color
+  method get_color = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 20l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_color = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 20l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    color#store
+    @
+    color#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_parent 
+@  self#store_value 
+@  self#store_depth 
+@  self#store_left 
+@  self#store_right 
+@  self#store_color 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+class  transaction ~(action : dt) ~(amount : dt) ~(contract : dt)  = object(self)
+  val size = 12l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"transaction_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#action#locals 
+@ self#amount#locals 
+@ self#contract#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val action = action
+  method action = action
+  method get_action = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_action = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    action#store
+    @
+    action#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val amount = amount
+  method amount = amount
+  method get_amount = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_amount = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    amount#store
+    @
+    amount#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val contract = contract
+  method contract = contract
+  method get_contract = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 8l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_contract = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 8l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    contract#store
+    @
+    contract#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_action 
+@  self#store_amount 
+@  self#store_contract 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+class  delegate ~(delegate : dt)  = object(self)
+  val size = 4l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"delegate_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#delegate#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val delegate = delegate
+  method delegate = delegate
+  method get_delegate = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_delegate = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    delegate#store
+    @
+    delegate#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_delegate 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+class ['T] wrapped ~(data : 'T)  = object(self)
+  val size = 4l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"wrapped_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#data#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val data = data
+  method data = data
+  method get_data = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_data = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    data#store
+    @
+    data#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_data 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+
+type option_variant = 
+  
+| None
+| Some
+
+class ['T] option ~(kind: option_variant) ~(value: 'T) = object(self)
+  val kind = kind
+  val value = value
+  
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"option_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+
+  method malloc_name = malloc_name
+  method size = 12l
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method kind = kind
+  method value = value
+  
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)] 
+    @
+    value#locals
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at };
+      { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    S.[
+      { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store_kind = 
+    let kind = match self#kind with 
+    
+  | None -> 0l
+  | Some -> 1l 
+    in
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 kind; at  }; at };
+      { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method get_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at  };
+      { it = Binary (I32 Add); at };
+      { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc 
+      @ self#store_kind
+      @ self#store_value
+   
+  )
+
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+  
+end
+          
+class  bigintwrap ~(data : dt) ~(len : dt) ~(capacity : dt)  = object(self)
+  val size = 12l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"bigintwrap_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#data#locals 
+@ self#len#locals 
+@ self#capacity#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val data = data
+  method data = data
+  method get_data = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_data = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    data#store
+    @
+    data#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val len = len
+  method len = len
+  method get_len = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_len = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    len#store
+    @
+    len#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val capacity = capacity
+  method capacity = capacity
+  method get_capacity = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 8l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_capacity = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 8l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    capacity#store
+    @
+    capacity#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_data 
+@  self#store_len 
+@  self#store_capacity 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+
+type datatype_variant = 
+  
+| Int
+| Nat
+| Mutez
+| Timestamp
+| Bool
+| ListItem
+| Tuple
+| Set
+| Map
+| Operations
+| String
+
+class  datatype ~(kind: datatype_variant) ~(value: dt) = object(self)
+  val kind = kind
+  val value = value
+  
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"datatype_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+
+  method malloc_name = malloc_name
+  method size = 12l
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method kind = kind
+  method value = value
+  
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)] 
+    @
+    value#locals
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at };
+      { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    S.[
+      { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store_kind = 
+    let kind = match self#kind with 
+    
+  | Int -> 0l
+  | Nat -> 1l
+  | Mutez -> 2l
+  | Timestamp -> 3l
+  | Bool -> 4l
+  | ListItem -> 5l
+  | Tuple -> 6l
+  | Set -> 7l
+  | Map -> 8l
+  | Operations -> 9l
+  | String -> 10l 
+    in
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 kind; at  }; at };
+      { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method get_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at  };
+      { it = Binary (I32 Add); at };
+      { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc 
+      @ self#store_kind
+      @ self#store_value
+   
+  )
+
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+  
+end
+          
+class  node ~(value : dt) ~(next : dt)  = object(self)
+  val size = 8l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"node_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#value#locals 
+@ self#next#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val value = value
+  method value = value
+  method get_value = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    value#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val next = next
+  method next = next
+  method get_next = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_next = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    next#store
+    @
+    next#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_value 
+@  self#store_next 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+
+type operation_variant = 
+  
+| Transaction
+| Delegate
+
+class  operation ~(kind: operation_variant) ~(value: dt) = object(self)
+  val kind = kind
+  val value = value
+  
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"operation_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+
+  method malloc_name = malloc_name
+  method size = 12l
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method kind = kind
+  method value = value
+  
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)] 
+    @
+    value#locals
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at };
+      { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    S.[
+      { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store_kind = 
+    let kind = match self#kind with 
+    
+  | Transaction -> 0l
+  | Delegate -> 1l 
+    in
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 kind; at  }; at };
+      { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method get_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at  };
+      { it = Binary (I32 Add); at };
+      { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc 
+      @ self#store_kind
+      @ self#store_value
+   
+  )
+
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+  
+end
+          
+class  operationnode ~(value : dt) ~(next : dt)  = object(self)
+  val size = 8l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"operationnode_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#value#locals 
+@ self#next#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val value = value
+  method value = value
+  method get_value = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    value#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val next = next
+  method next = next
+  method get_next = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_next = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    next#store
+    @
+    next#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_value 
+@  self#store_next 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+
+type color_variant = 
+  
+| Red
+| Black
+
+class  color ~(kind: color_variant) ~(value: dt) = object(self)
+  val kind = kind
+  val value = value
+  
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"color_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+
+  method malloc_name = malloc_name
+  method size = 12l
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method kind = kind
+  method value = value
+  
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)] 
+    @
+    value#locals
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at };
+      { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    S.[
+      { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store_kind = 
+    let kind = match self#kind with 
+    
+  | Red -> 0l
+  | Black -> 1l 
+    in
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 kind; at  }; at };
+      { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method get_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at  };
+      { it = Binary (I32 Add); at };
+      { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc 
+      @ self#store_kind
+      @ self#store_value
+   
+  )
+
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+  
+end
+          
+class  rbnode ~(parent : dt) ~(value : dt) ~(depth : dt) ~(left : dt) ~(right : dt) ~(color : dt)  = object(self)
+  val size = 24l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"rbnode_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#parent#locals 
+@ self#value#locals 
+@ self#depth#locals 
+@ self#left#locals 
+@ self#right#locals 
+@ self#color#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val parent = parent
+  method parent = parent
+  method get_parent = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_parent = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    parent#store
+    @
+    parent#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val value = value
+  method value = value
+  method get_value = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    value#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val depth = depth
+  method depth = depth
+  method get_depth = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 8l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_depth = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 8l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    depth#store
+    @
+    depth#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val left = left
+  method left = left
+  method get_left = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 12l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_left = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 12l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    left#store
+    @
+    left#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val right = right
+  method right = right
+  method get_right = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 16l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_right = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 16l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    right#store
+    @
+    right#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val color = color
+  method color = color
+  method get_color = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 20l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_color = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 20l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    color#store
+    @
+    color#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_parent 
+@  self#store_value 
+@  self#store_depth 
+@  self#store_left 
+@  self#store_right 
+@  self#store_color 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+class  transaction ~(action : dt) ~(amount : dt) ~(contract : dt)  = object(self)
+  val size = 12l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"transaction_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#action#locals 
+@ self#amount#locals 
+@ self#contract#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val action = action
+  method action = action
+  method get_action = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_action = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    action#store
+    @
+    action#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val amount = amount
+  method amount = amount
+  method get_amount = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_amount = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    amount#store
+    @
+    amount#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val contract = contract
+  method contract = contract
+  method get_contract = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 8l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_contract = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 8l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    contract#store
+    @
+    contract#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_action 
+@  self#store_amount 
+@  self#store_contract 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+class  delegate ~(delegate : dt)  = object(self)
+  val size = 4l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"delegate_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#delegate#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val delegate = delegate
+  method delegate = delegate
+  method get_delegate = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_delegate = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    delegate#store
+    @
+    delegate#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_delegate 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+class ['T] wrapped ~(data : 'T)  = object(self)
+  val size = 4l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"wrapped_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#data#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val data = data
+  method data = data
+  method get_data = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_data = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    data#store
+    @
+    data#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_data 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+
+type option_variant = 
+  
+| None
+| Some
+
+class ['T] option ~(kind: option_variant) ~(value: 'T) = object(self)
+  val kind = kind
+  val value = value
+  
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"option_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+
+  method malloc_name = malloc_name
+  method size = 12l
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method kind = kind
+  method value = value
+  
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)] 
+    @
+    value#locals
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at };
+      { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    S.[
+      { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store_kind = 
+    let kind = match self#kind with 
+    
+  | None -> 0l
+  | Some -> 1l 
+    in
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 kind; at  }; at };
+      { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method get_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at  };
+      { it = Binary (I32 Add); at };
+      { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc 
+      @ self#store_kind
+      @ self#store_value
+   
+  )
+
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+  
+end
+          
+class  bigintwrap ~(data : dt) ~(len : dt) ~(capacity : dt)  = object(self)
+  val size = 12l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"bigintwrap_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#data#locals 
+@ self#len#locals 
+@ self#capacity#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val data = data
+  method data = data
+  method get_data = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_data = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    data#store
+    @
+    data#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val len = len
+  method len = len
+  method get_len = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_len = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    len#store
+    @
+    len#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val capacity = capacity
+  method capacity = capacity
+  method get_capacity = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 8l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_capacity = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 8l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    capacity#store
+    @
+    capacity#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_data 
+@  self#store_len 
+@  self#store_capacity 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+
+type datatype_variant = 
+  
+| Int
+| Nat
+| Mutez
+| Timestamp
+| Bool
+| ListItem
+| Tuple
+| Set
+| Map
+| Operations
+| String
+
+class  datatype ~(kind: datatype_variant) ~(value: dt) = object(self)
+  val kind = kind
+  val value = value
+  
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"datatype_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+
+  method malloc_name = malloc_name
+  method size = 12l
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method kind = kind
+  method value = value
+  
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)] 
+    @
+    value#locals
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at };
+      { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    S.[
+      { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store_kind = 
+    let kind = match self#kind with 
+    
+  | Int -> 0l
+  | Nat -> 1l
+  | Mutez -> 2l
+  | Timestamp -> 3l
+  | Bool -> 4l
+  | ListItem -> 5l
+  | Tuple -> 6l
+  | Set -> 7l
+  | Map -> 8l
+  | Operations -> 9l
+  | String -> 10l 
+    in
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 kind; at  }; at };
+      { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method get_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at  };
+      { it = Binary (I32 Add); at };
+      { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc 
+      @ self#store_kind
+      @ self#store_value
+   
+  )
+
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+  
+end
+          
+class  node ~(value : dt) ~(next : dt)  = object(self)
+  val size = 8l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"node_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#value#locals 
+@ self#next#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val value = value
+  method value = value
+  method get_value = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    value#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val next = next
+  method next = next
+  method get_next = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_next = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    next#store
+    @
+    next#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_value 
+@  self#store_next 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+
+type operation_variant = 
+  
+| Transaction
+| Delegate
+
+class  operation ~(kind: operation_variant) ~(value: dt) = object(self)
+  val kind = kind
+  val value = value
+  
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"operation_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+
+  method malloc_name = malloc_name
+  method size = 12l
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method kind = kind
+  method value = value
+  
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)] 
+    @
+    value#locals
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at };
+      { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    S.[
+      { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store_kind = 
+    let kind = match self#kind with 
+    
+  | Transaction -> 0l
+  | Delegate -> 1l 
+    in
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 kind; at  }; at };
+      { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method get_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at  };
+      { it = Binary (I32 Add); at };
+      { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc 
+      @ self#store_kind
+      @ self#store_value
+   
+  )
+
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+  
+end
+          
+class  operationnode ~(value : dt) ~(next : dt)  = object(self)
+  val size = 8l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"operationnode_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#value#locals 
+@ self#next#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val value = value
+  method value = value
+  method get_value = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    value#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val next = next
+  method next = next
+  method get_next = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_next = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    next#store
+    @
+    next#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_value 
+@  self#store_next 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+
+type color_variant = 
+  
+| Red
+| Black
+
+class  color ~(kind: color_variant) ~(value: dt) = object(self)
+  val kind = kind
+  val value = value
+  
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"color_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+
+  method malloc_name = malloc_name
+  method size = 12l
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method kind = kind
+  method value = value
+  
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)] 
+    @
+    value#locals
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at };
+      { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    S.[
+      { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store_kind = 
+    let kind = match self#kind with 
+    
+  | Red -> 0l
+  | Black -> 1l 
+    in
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 kind; at  }; at };
+      { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method get_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at  };
+      { it = Binary (I32 Add); at };
+      { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc 
+      @ self#store_kind
+      @ self#store_value
+   
+  )
+
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+  
+end
+          
+class  rbnode ~(parent : dt) ~(value : dt) ~(depth : dt) ~(left : dt) ~(right : dt) ~(color : dt)  = object(self)
+  val size = 24l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"rbnode_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#parent#locals 
+@ self#value#locals 
+@ self#depth#locals 
+@ self#left#locals 
+@ self#right#locals 
+@ self#color#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val parent = parent
+  method parent = parent
+  method get_parent = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_parent = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    parent#store
+    @
+    parent#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val value = value
+  method value = value
+  method get_value = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    value#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val depth = depth
+  method depth = depth
+  method get_depth = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 8l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_depth = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 8l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    depth#store
+    @
+    depth#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val left = left
+  method left = left
+  method get_left = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 12l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_left = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 12l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    left#store
+    @
+    left#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val right = right
+  method right = right
+  method get_right = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 16l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_right = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 16l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    right#store
+    @
+    right#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val color = color
+  method color = color
+  method get_color = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 20l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_color = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 20l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    color#store
+    @
+    color#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_parent 
+@  self#store_value 
+@  self#store_depth 
+@  self#store_left 
+@  self#store_right 
+@  self#store_color 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+class  transaction ~(action : dt) ~(amount : dt) ~(contract : dt)  = object(self)
+  val size = 12l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"transaction_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#action#locals 
+@ self#amount#locals 
+@ self#contract#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val action = action
+  method action = action
+  method get_action = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_action = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    action#store
+    @
+    action#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val amount = amount
+  method amount = amount
+  method get_amount = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_amount = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    amount#store
+    @
+    amount#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val contract = contract
+  method contract = contract
+  method get_contract = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 8l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_contract = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 8l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    contract#store
+    @
+    contract#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_action 
+@  self#store_amount 
+@  self#store_contract 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+class  delegate ~(delegate : dt)  = object(self)
+  val size = 4l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"delegate_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#delegate#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val delegate = delegate
+  method delegate = delegate
+  method get_delegate = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_delegate = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    delegate#store
+    @
+    delegate#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_delegate 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+class ['T] wrapped ~(data : 'T)  = object(self)
+  val size = 4l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"wrapped_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#data#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val data = data
+  method data = data
+  method get_data = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_data = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    data#store
+    @
+    data#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_data 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+
+type option_variant = 
+  
+| None
+| Some
+
+class ['T] option ~(kind: option_variant) ~(value: 'T) = object(self)
+  val kind = kind
+  val value = value
+  
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"option_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+
+  method malloc_name = malloc_name
+  method size = 12l
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method kind = kind
+  method value = value
+  
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)] 
+    @
+    value#locals
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at };
+      { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    S.[
+      { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store_kind = 
+    let kind = match self#kind with 
+    
+  | None -> 0l
+  | Some -> 1l 
+    in
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 kind; at  }; at };
+      { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method get_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at  };
+      { it = Binary (I32 Add); at };
+      { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc 
+      @ self#store_kind
+      @ self#store_value
+   
+  )
+
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+  
+end
+          
+class  bigintwrap ~(data : dt) ~(len : dt) ~(capacity : dt)  = object(self)
+  val size = 12l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"bigintwrap_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#data#locals 
+@ self#len#locals 
+@ self#capacity#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val data = data
+  method data = data
+  method get_data = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_data = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    data#store
+    @
+    data#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val len = len
+  method len = len
+  method get_len = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_len = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    len#store
+    @
+    len#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val capacity = capacity
+  method capacity = capacity
+  method get_capacity = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 8l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_capacity = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 8l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    capacity#store
+    @
+    capacity#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_data 
+@  self#store_len 
+@  self#store_capacity 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+
+type datatype_variant = 
+  
+| Int
+| Nat
+| Mutez
+| Timestamp
+| Bool
+| ListItem
+| Tuple
+| Set
+| Map
+| Operations
+| String
+
+class  datatype ~(kind: datatype_variant) ~(value: dt) = object(self)
+  val kind = kind
+  val value = value
+  
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"datatype_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+
+  method malloc_name = malloc_name
+  method size = 12l
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method kind = kind
+  method value = value
+  
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)] 
+    @
+    value#locals
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at };
+      { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    S.[
+      { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store_kind = 
+    let kind = match self#kind with 
+    
+  | Int -> 0l
+  | Nat -> 1l
+  | Mutez -> 2l
+  | Timestamp -> 3l
+  | Bool -> 4l
+  | ListItem -> 5l
+  | Tuple -> 6l
+  | Set -> 7l
+  | Map -> 8l
+  | Operations -> 9l
+  | String -> 10l 
+    in
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 kind; at  }; at };
+      { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method get_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at  };
+      { it = Binary (I32 Add); at };
+      { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc 
+      @ self#store_kind
+      @ self#store_value
+   
+  )
+
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+  
+end
+          
+class  node ~(value : dt) ~(next : dt)  = object(self)
+  val size = 8l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"node_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#value#locals 
+@ self#next#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val value = value
+  method value = value
+  method get_value = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    value#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val next = next
+  method next = next
+  method get_next = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_next = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    next#store
+    @
+    next#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_value 
+@  self#store_next 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+
+type operation_variant = 
+  
+| Transaction
+| Delegate
+
+class  operation ~(kind: operation_variant) ~(value: dt) = object(self)
+  val kind = kind
+  val value = value
+  
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"operation_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+
+  method malloc_name = malloc_name
+  method size = 12l
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method kind = kind
+  method value = value
+  
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)] 
+    @
+    value#locals
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at };
+      { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    S.[
+      { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store_kind = 
+    let kind = match self#kind with 
+    
+  | Transaction -> 0l
+  | Delegate -> 1l 
+    in
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 kind; at  }; at };
+      { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method get_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at  };
+      { it = Binary (I32 Add); at };
+      { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc 
+      @ self#store_kind
+      @ self#store_value
+   
+  )
+
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+  
+end
+          
+class  operationnode ~(value : dt) ~(next : dt)  = object(self)
+  val size = 8l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"operationnode_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#value#locals 
+@ self#next#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val value = value
+  method value = value
+  method get_value = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    value#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val next = next
+  method next = next
+  method get_next = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_next = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    next#store
+    @
+    next#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_value 
+@  self#store_next 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+
+type color_variant = 
+  
+| Red
+| Black
+
+class  color ~(kind: color_variant) ~(value: dt) = object(self)
+  val kind = kind
+  val value = value
+  
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"color_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+
+  method malloc_name = malloc_name
+  method size = 12l
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method kind = kind
+  method value = value
+  
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)] 
+    @
+    value#locals
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at };
+      { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    S.[
+      { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store_kind = 
+    let kind = match self#kind with 
+    
+  | Red -> 0l
+  | Black -> 1l 
+    in
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 kind; at  }; at };
+      { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method get_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at  };
+      { it = Binary (I32 Add); at };
+      { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc 
+      @ self#store_kind
+      @ self#store_value
+   
+  )
+
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+  
+end
+          
+class  rbnode ~(parent : dt) ~(value : dt) ~(depth : dt) ~(left : dt) ~(right : dt) ~(color : dt)  = object(self)
+  val size = 24l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"rbnode_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#parent#locals 
+@ self#value#locals 
+@ self#depth#locals 
+@ self#left#locals 
+@ self#right#locals 
+@ self#color#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val parent = parent
+  method parent = parent
+  method get_parent = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_parent = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    parent#store
+    @
+    parent#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val value = value
+  method value = value
+  method get_value = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    value#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val depth = depth
+  method depth = depth
+  method get_depth = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 8l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_depth = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 8l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    depth#store
+    @
+    depth#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val left = left
+  method left = left
+  method get_left = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 12l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_left = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 12l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    left#store
+    @
+    left#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val right = right
+  method right = right
+  method get_right = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 16l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_right = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 16l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    right#store
+    @
+    right#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val color = color
+  method color = color
+  method get_color = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 20l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_color = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 20l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    color#store
+    @
+    color#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_parent 
+@  self#store_value 
+@  self#store_depth 
+@  self#store_left 
+@  self#store_right 
+@  self#store_color 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+class  transaction ~(action : dt) ~(amount : dt) ~(contract : dt)  = object(self)
+  val size = 12l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"transaction_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#action#locals 
+@ self#amount#locals 
+@ self#contract#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val action = action
+  method action = action
+  method get_action = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_action = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    action#store
+    @
+    action#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val amount = amount
+  method amount = amount
+  method get_amount = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_amount = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    amount#store
+    @
+    amount#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val contract = contract
+  method contract = contract
+  method get_contract = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 8l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_contract = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 8l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    contract#store
+    @
+    contract#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_action 
+@  self#store_amount 
+@  self#store_contract 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+class  delegate ~(delegate : dt)  = object(self)
+  val size = 4l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"delegate_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#delegate#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val delegate = delegate
+  method delegate = delegate
+  method get_delegate = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_delegate = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    delegate#store
+    @
+    delegate#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_delegate 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+class ['T] wrapped ~(data : 'T)  = object(self)
+  val size = 4l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"wrapped_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#data#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val data = data
+  method data = data
+  method get_data = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_data = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    data#store
+    @
+    data#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_data 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+
+type option_variant = 
+  
+| None
+| Some
+
+class ['T] option ~(kind: option_variant) ~(value: 'T) = object(self)
+  val kind = kind
+  val value = value
+  
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"option_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+
+  method malloc_name = malloc_name
+  method size = 12l
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method kind = kind
+  method value = value
+  
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)] 
+    @
+    value#locals
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at };
+      { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    S.[
+      { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store_kind = 
+    let kind = match self#kind with 
+    
+  | None -> 0l
+  | Some -> 1l 
+    in
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 kind; at  }; at };
+      { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method get_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at  };
+      { it = Binary (I32 Add); at };
+      { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc 
+      @ self#store_kind
+      @ self#store_value
+   
+  )
+
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+  
+end
+          
+class  bigintwrap ~(data : dt) ~(len : dt) ~(capacity : dt)  = object(self)
+  val size = 12l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"bigintwrap_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#data#locals 
+@ self#len#locals 
+@ self#capacity#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val data = data
+  method data = data
+  method get_data = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_data = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    data#store
+    @
+    data#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val len = len
+  method len = len
+  method get_len = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_len = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    len#store
+    @
+    len#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val capacity = capacity
+  method capacity = capacity
+  method get_capacity = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 8l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_capacity = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 8l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    capacity#store
+    @
+    capacity#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_data 
+@  self#store_len 
+@  self#store_capacity 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+
+type datatype_variant = 
+  
+| Int
+| Nat
+| Mutez
+| Timestamp
+| Bool
+| ListItem
+| Tuple
+| Set
+| Map
+| Operations
+| String
+
+class  datatype ~(kind: datatype_variant) ~(value: dt) = object(self)
+  val kind = kind
+  val value = value
+  
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"datatype_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+
+  method malloc_name = malloc_name
+  method size = 12l
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method kind = kind
+  method value = value
+  
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)] 
+    @
+    value#locals
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at };
+      { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    S.[
+      { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store_kind = 
+    let kind = match self#kind with 
+    
+  | Int -> 0l
+  | Nat -> 1l
+  | Mutez -> 2l
+  | Timestamp -> 3l
+  | Bool -> 4l
+  | ListItem -> 5l
+  | Tuple -> 6l
+  | Set -> 7l
+  | Map -> 8l
+  | Operations -> 9l
+  | String -> 10l 
+    in
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 kind; at  }; at };
+      { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method get_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at  };
+      { it = Binary (I32 Add); at };
+      { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc 
+      @ self#store_kind
+      @ self#store_value
+   
+  )
+
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+  
+end
+          
+class  node ~(value : dt) ~(next : dt)  = object(self)
+  val size = 8l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"node_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#value#locals 
+@ self#next#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val value = value
+  method value = value
+  method get_value = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    value#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val next = next
+  method next = next
+  method get_next = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_next = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    next#store
+    @
+    next#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_value 
+@  self#store_next 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+
+type operation_variant = 
+  
+| Transaction
+| Delegate
+
+class  operation ~(kind: operation_variant) ~(value: dt) = object(self)
+  val kind = kind
+  val value = value
+  
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"operation_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+
+  method malloc_name = malloc_name
+  method size = 12l
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method kind = kind
+  method value = value
+  
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)] 
+    @
+    value#locals
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at };
+      { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    S.[
+      { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store_kind = 
+    let kind = match self#kind with 
+    
+  | Transaction -> 0l
+  | Delegate -> 1l 
+    in
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 kind; at  }; at };
+      { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method get_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at  };
+      { it = Binary (I32 Add); at };
+      { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc 
+      @ self#store_kind
+      @ self#store_value
+   
+  )
+
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+  
+end
+          
+class  operationnode ~(value : dt) ~(next : dt)  = object(self)
+  val size = 8l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"operationnode_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#value#locals 
+@ self#next#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val value = value
+  method value = value
+  method get_value = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    value#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val next = next
+  method next = next
+  method get_next = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_next = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    next#store
+    @
+    next#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_value 
+@  self#store_next 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+
+type color_variant = 
+  
+| Red
+| Black
+
+class  color ~(kind: color_variant) ~(value: dt) = object(self)
+  val kind = kind
+  val value = value
+  
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"color_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+
+  method malloc_name = malloc_name
+  method size = 12l
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method kind = kind
+  method value = value
+  
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)] 
+    @
+    value#locals
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at };
+      { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    S.[
+      { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store_kind = 
+    let kind = match self#kind with 
+    
+  | Red -> 0l
+  | Black -> 1l 
+    in
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 kind; at  }; at };
+      { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method get_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at  };
+      { it = Binary (I32 Add); at };
+      { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc 
+      @ self#store_kind
+      @ self#store_value
+   
+  )
+
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+  
+end
+          
+class  rbnode ~(parent : dt) ~(value : dt) ~(depth : dt) ~(left : dt) ~(right : dt) ~(color : dt)  = object(self)
+  val size = 24l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"rbnode_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#parent#locals 
+@ self#value#locals 
+@ self#depth#locals 
+@ self#left#locals 
+@ self#right#locals 
+@ self#color#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val parent = parent
+  method parent = parent
+  method get_parent = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_parent = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    parent#store
+    @
+    parent#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val value = value
+  method value = value
+  method get_value = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    value#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val depth = depth
+  method depth = depth
+  method get_depth = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 8l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_depth = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 8l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    depth#store
+    @
+    depth#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val left = left
+  method left = left
+  method get_left = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 12l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_left = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 12l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    left#store
+    @
+    left#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val right = right
+  method right = right
+  method get_right = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 16l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_right = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 16l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    right#store
+    @
+    right#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val color = color
+  method color = color
+  method get_color = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 20l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_color = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 20l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    color#store
+    @
+    color#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_parent 
+@  self#store_value 
+@  self#store_depth 
+@  self#store_left 
+@  self#store_right 
+@  self#store_color 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+class  transaction ~(action : dt) ~(amount : dt) ~(contract : dt)  = object(self)
+  val size = 12l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"transaction_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#action#locals 
+@ self#amount#locals 
+@ self#contract#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val action = action
+  method action = action
+  method get_action = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_action = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    action#store
+    @
+    action#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val amount = amount
+  method amount = amount
+  method get_amount = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_amount = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    amount#store
+    @
+    amount#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val contract = contract
+  method contract = contract
+  method get_contract = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 8l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_contract = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 8l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    contract#store
+    @
+    contract#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_action 
+@  self#store_amount 
+@  self#store_contract 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+class  delegate ~(delegate : dt)  = object(self)
+  val size = 4l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"delegate_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#delegate#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val delegate = delegate
+  method delegate = delegate
+  method get_delegate = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_delegate = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    delegate#store
+    @
+    delegate#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_delegate 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+class ['T] wrapped ~(data : 'T)  = object(self)
+  val size = 4l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"wrapped_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#data#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val data = data
+  method data = data
+  method get_data = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_data = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    data#store
+    @
+    data#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_data 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+
+type option_variant = 
+  
+| None
+| Some
+
+class ['T] option ~(kind: option_variant) ~(value: 'T) = object(self)
+  val kind = kind
+  val value = value
+  
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"option_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+
+  method malloc_name = malloc_name
+  method size = 12l
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method kind = kind
+  method value = value
+  
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)] 
+    @
+    value#locals
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at };
+      { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    S.[
+      { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store_kind = 
+    let kind = match self#kind with 
+    
+  | None -> 0l
+  | Some -> 1l 
+    in
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 kind; at  }; at };
+      { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method get_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at  };
+      { it = Binary (I32 Add); at };
+      { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc 
+      @ self#store_kind
+      @ self#store_value
+   
+  )
+
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+  
+end
+          
+class  bigintwrap ~(data : dt) ~(len : dt) ~(capacity : dt)  = object(self)
+  val size = 12l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"bigintwrap_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#data#locals 
+@ self#len#locals 
+@ self#capacity#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val data = data
+  method data = data
+  method get_data = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_data = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    data#store
+    @
+    data#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val len = len
+  method len = len
+  method get_len = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_len = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    len#store
+    @
+    len#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val capacity = capacity
+  method capacity = capacity
+  method get_capacity = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 8l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_capacity = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 8l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    capacity#store
+    @
+    capacity#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_data 
+@  self#store_len 
+@  self#store_capacity 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+
+type datatype_variant = 
+  
+| Int
+| Nat
+| Mutez
+| Timestamp
+| Bool
+| ListItem
+| Tuple
+| Set
+| Map
+| Operations
+| String
+
+class  datatype ~(kind: datatype_variant) ~(value: dt) = object(self)
+  val kind = kind
+  val value = value
+  
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"datatype_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+
+  method malloc_name = malloc_name
+  method size = 12l
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method kind = kind
+  method value = value
+  
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)] 
+    @
+    value#locals
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at };
+      { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    S.[
+      { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store_kind = 
+    let kind = match self#kind with 
+    
+  | Int -> 0l
+  | Nat -> 1l
+  | Mutez -> 2l
+  | Timestamp -> 3l
+  | Bool -> 4l
+  | ListItem -> 5l
+  | Tuple -> 6l
+  | Set -> 7l
+  | Map -> 8l
+  | Operations -> 9l
+  | String -> 10l 
+    in
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 kind; at  }; at };
+      { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method get_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at  };
+      { it = Binary (I32 Add); at };
+      { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc 
+      @ self#store_kind
+      @ self#store_value
+   
+  )
+
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+  
+end
+          
+class  node ~(value : dt) ~(next : dt)  = object(self)
+  val size = 8l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"node_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#value#locals 
+@ self#next#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val value = value
+  method value = value
+  method get_value = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    value#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val next = next
+  method next = next
+  method get_next = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_next = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    next#store
+    @
+    next#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_value 
+@  self#store_next 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+
+type operation_variant = 
+  
+| Transaction
+| Delegate
+
+class  operation ~(kind: operation_variant) ~(value: dt) = object(self)
+  val kind = kind
+  val value = value
+  
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"operation_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+
+  method malloc_name = malloc_name
+  method size = 12l
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method kind = kind
+  method value = value
+  
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)] 
+    @
+    value#locals
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at };
+      { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    S.[
+      { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store_kind = 
+    let kind = match self#kind with 
+    
+  | Transaction -> 0l
+  | Delegate -> 1l 
+    in
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 kind; at  }; at };
+      { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method get_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at  };
+      { it = Binary (I32 Add); at };
+      { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc 
+      @ self#store_kind
+      @ self#store_value
+   
+  )
+
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+  
+end
+          
+class  operationnode ~(value : dt) ~(next : dt)  = object(self)
+  val size = 8l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"operationnode_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#value#locals 
+@ self#next#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val value = value
+  method value = value
+  method get_value = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    value#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val next = next
+  method next = next
+  method get_next = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_next = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    next#store
+    @
+    next#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_value 
+@  self#store_next 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+
+type color_variant = 
+  
+| Red
+| Black
+
+class  color ~(kind: color_variant) ~(value: dt) = object(self)
+  val kind = kind
+  val value = value
+  
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"color_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+
+  method malloc_name = malloc_name
+  method size = 12l
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method kind = kind
+  method value = value
+  
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)] 
+    @
+    value#locals
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at };
+      { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    S.[
+      { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store_kind = 
+    let kind = match self#kind with 
+    
+  | Red -> 0l
+  | Black -> 1l 
+    in
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 kind; at  }; at };
+      { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method get_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at  };
+      { it = Binary (I32 Add); at };
+      { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc 
+      @ self#store_kind
+      @ self#store_value
+   
+  )
+
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+  
+end
+          
+class  rbnode ~(parent : dt) ~(value : dt) ~(depth : dt) ~(left : dt) ~(right : dt) ~(color : dt)  = object(self)
+  val size = 24l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"rbnode_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#parent#locals 
+@ self#value#locals 
+@ self#depth#locals 
+@ self#left#locals 
+@ self#right#locals 
+@ self#color#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val parent = parent
+  method parent = parent
+  method get_parent = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_parent = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    parent#store
+    @
+    parent#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val value = value
+  method value = value
+  method get_value = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    value#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val depth = depth
+  method depth = depth
+  method get_depth = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 8l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_depth = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 8l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    depth#store
+    @
+    depth#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val left = left
+  method left = left
+  method get_left = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 12l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_left = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 12l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    left#store
+    @
+    left#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val right = right
+  method right = right
+  method get_right = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 16l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_right = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 16l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    right#store
+    @
+    right#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val color = color
+  method color = color
+  method get_color = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 20l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_color = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 20l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    color#store
+    @
+    color#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_parent 
+@  self#store_value 
+@  self#store_depth 
+@  self#store_left 
+@  self#store_right 
+@  self#store_color 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+class  transaction ~(action : dt) ~(amount : dt) ~(contract : dt)  = object(self)
+  val size = 12l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"transaction_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#action#locals 
+@ self#amount#locals 
+@ self#contract#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val action = action
+  method action = action
+  method get_action = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_action = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    action#store
+    @
+    action#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val amount = amount
+  method amount = amount
+  method get_amount = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_amount = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    amount#store
+    @
+    amount#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val contract = contract
+  method contract = contract
+  method get_contract = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 8l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_contract = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 8l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    contract#store
+    @
+    contract#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_action 
+@  self#store_amount 
+@  self#store_contract 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+class  delegate ~(delegate : dt)  = object(self)
+  val size = 4l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"delegate_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#delegate#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val delegate = delegate
+  method delegate = delegate
+  method get_delegate = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_delegate = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    delegate#store
+    @
+    delegate#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_delegate 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+class ['T] wrapped ~(data : 'T)  = object(self)
+  val size = 4l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"wrapped_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#data#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val data = data
+  method data = data
+  method get_data = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_data = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    data#store
+    @
+    data#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_data 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+
+type option_variant = 
+  
+| None
+| Some
+
+class ['T] option ~(kind: option_variant) ~(value: 'T) = object(self)
+  val kind = kind
+  val value = value
+  
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"option_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+
+  method malloc_name = malloc_name
+  method size = 12l
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method kind = kind
+  method value = value
+  
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)] 
+    @
+    value#locals
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at };
+      { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    S.[
+      { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store_kind = 
+    let kind = match self#kind with 
+    
+  | None -> 0l
+  | Some -> 1l 
+    in
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 kind; at  }; at };
+      { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method get_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at  };
+      { it = Binary (I32 Add); at };
+      { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc 
+      @ self#store_kind
+      @ self#store_value
+   
+  )
+
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+  
+end
+          
+class  bigintwrap ~(data : dt) ~(len : dt) ~(capacity : dt)  = object(self)
+  val size = 12l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"bigintwrap_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#data#locals 
+@ self#len#locals 
+@ self#capacity#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val data = data
+  method data = data
+  method get_data = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_data = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    data#store
+    @
+    data#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val len = len
+  method len = len
+  method get_len = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_len = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    len#store
+    @
+    len#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val capacity = capacity
+  method capacity = capacity
+  method get_capacity = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 8l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_capacity = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 8l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    capacity#store
+    @
+    capacity#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_data 
+@  self#store_len 
+@  self#store_capacity 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+
+type datatype_variant = 
+  
+| Int
+| Nat
+| Mutez
+| Timestamp
+| Bool
+| ListItem
+| Tuple
+| Set
+| Map
+| Operations
+| String
+
+class  datatype ~(kind: datatype_variant) ~(value: dt) = object(self)
+  val kind = kind
+  val value = value
+  
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"datatype_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+
+  method malloc_name = malloc_name
+  method size = 12l
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method kind = kind
+  method value = value
+  
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)] 
+    @
+    value#locals
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at };
+      { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    S.[
+      { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store_kind = 
+    let kind = match self#kind with 
+    
+  | Int -> 0l
+  | Nat -> 1l
+  | Mutez -> 2l
+  | Timestamp -> 3l
+  | Bool -> 4l
+  | ListItem -> 5l
+  | Tuple -> 6l
+  | Set -> 7l
+  | Map -> 8l
+  | Operations -> 9l
+  | String -> 10l 
+    in
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 kind; at  }; at };
+      { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method get_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at  };
+      { it = Binary (I32 Add); at };
+      { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc 
+      @ self#store_kind
+      @ self#store_value
+   
+  )
+
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+  
+end
+          
+class  node ~(value : dt) ~(next : dt)  = object(self)
+  val size = 8l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"node_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#value#locals 
+@ self#next#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val value = value
+  method value = value
+  method get_value = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    value#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val next = next
+  method next = next
+  method get_next = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_next = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    next#store
+    @
+    next#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_value 
+@  self#store_next 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+
+type operation_variant = 
+  
+| Transaction
+| Delegate
+
+class  operation ~(kind: operation_variant) ~(value: dt) = object(self)
+  val kind = kind
+  val value = value
+  
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"operation_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+
+  method malloc_name = malloc_name
+  method size = 12l
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method kind = kind
+  method value = value
+  
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)] 
+    @
+    value#locals
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at };
+      { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    S.[
+      { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store_kind = 
+    let kind = match self#kind with 
+    
+  | Transaction -> 0l
+  | Delegate -> 1l 
+    in
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 kind; at  }; at };
+      { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method get_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at  };
+      { it = Binary (I32 Add); at };
+      { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc 
+      @ self#store_kind
+      @ self#store_value
+   
+  )
+
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+  
+end
+          
+class  operationnode ~(value : dt) ~(next : dt)  = object(self)
+  val size = 8l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"operationnode_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#value#locals 
+@ self#next#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val value = value
+  method value = value
+  method get_value = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    value#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val next = next
+  method next = next
+  method get_next = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_next = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    next#store
+    @
+    next#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_value 
+@  self#store_next 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+
+type color_variant = 
+  
+| Red
+| Black
+
+class  color ~(kind: color_variant) ~(value: dt) = object(self)
+  val kind = kind
+  val value = value
+  
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"color_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+
+  method malloc_name = malloc_name
+  method size = 12l
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method kind = kind
+  method value = value
+  
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)] 
+    @
+    value#locals
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at };
+      { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    S.[
+      { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store_kind = 
+    let kind = match self#kind with 
+    
+  | Red -> 0l
+  | Black -> 1l 
+    in
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 kind; at  }; at };
+      { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method get_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at  };
+      { it = Binary (I32 Add); at };
+      { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc 
+      @ self#store_kind
+      @ self#store_value
+   
+  )
+
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+  
+end
+          
+class  rbnode ~(parent : dt) ~(value : dt) ~(depth : dt) ~(left : dt) ~(right : dt) ~(color : dt)  = object(self)
+  val size = 24l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"rbnode_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#parent#locals 
+@ self#value#locals 
+@ self#depth#locals 
+@ self#left#locals 
+@ self#right#locals 
+@ self#color#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val parent = parent
+  method parent = parent
+  method get_parent = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_parent = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    parent#store
+    @
+    parent#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val value = value
+  method value = value
+  method get_value = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    value#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val depth = depth
+  method depth = depth
+  method get_depth = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 8l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_depth = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 8l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    depth#store
+    @
+    depth#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val left = left
+  method left = left
+  method get_left = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 12l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_left = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 12l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    left#store
+    @
+    left#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val right = right
+  method right = right
+  method get_right = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 16l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_right = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 16l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    right#store
+    @
+    right#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val color = color
+  method color = color
+  method get_color = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 20l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_color = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 20l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    color#store
+    @
+    color#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_parent 
+@  self#store_value 
+@  self#store_depth 
+@  self#store_left 
+@  self#store_right 
+@  self#store_color 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+class  transaction ~(action : dt) ~(amount : dt) ~(contract : dt)  = object(self)
+  val size = 12l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"transaction_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#action#locals 
+@ self#amount#locals 
+@ self#contract#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val action = action
+  method action = action
+  method get_action = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_action = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    action#store
+    @
+    action#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val amount = amount
+  method amount = amount
+  method get_amount = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_amount = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    amount#store
+    @
+    amount#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val contract = contract
+  method contract = contract
+  method get_contract = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 8l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_contract = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 8l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    contract#store
+    @
+    contract#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_action 
+@  self#store_amount 
+@  self#store_contract 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+class  delegate ~(delegate : dt)  = object(self)
+  val size = 4l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"delegate_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#delegate#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val delegate = delegate
+  method delegate = delegate
+  method get_delegate = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_delegate = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    delegate#store
+    @
+    delegate#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_delegate 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+class ['T] wrapped ~(data : 'T)  = object(self)
+  val size = 4l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"wrapped_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#data#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val data = data
+  method data = data
+  method get_data = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_data = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    data#store
+    @
+    data#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_data 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+
+type option_variant = 
+  
+| None
+| Some
+
+class ['T] option ~(kind: option_variant) ~(value: 'T) = object(self)
+  val kind = kind
+  val value = value
+  
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"option_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+
+  method malloc_name = malloc_name
+  method size = 12l
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method kind = kind
+  method value = value
+  
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)] 
+    @
+    value#locals
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at };
+      { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    S.[
+      { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store_kind = 
+    let kind = match self#kind with 
+    
+  | None -> 0l
+  | Some -> 1l 
+    in
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 kind; at  }; at };
+      { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method get_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at  };
+      { it = Binary (I32 Add); at };
+      { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc 
+      @ self#store_kind
+      @ self#store_value
+   
+  )
+
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+  
+end
+          
+class  bigintwrap ~(data : dt) ~(len : dt) ~(capacity : dt)  = object(self)
+  val size = 12l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"bigintwrap_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#data#locals 
+@ self#len#locals 
+@ self#capacity#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val data = data
+  method data = data
+  method get_data = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_data = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    data#store
+    @
+    data#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val len = len
+  method len = len
+  method get_len = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_len = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    len#store
+    @
+    len#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val capacity = capacity
+  method capacity = capacity
+  method get_capacity = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 8l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_capacity = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 8l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    capacity#store
+    @
+    capacity#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_data 
+@  self#store_len 
+@  self#store_capacity 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+
+type datatype_variant = 
+  
+| Int
+| Nat
+| Mutez
+| Timestamp
+| Bool
+| ListItem
+| Tuple
+| Set
+| Map
+| Operations
+| String
+
+class  datatype ~(kind: datatype_variant) ~(value: dt) = object(self)
+  val kind = kind
+  val value = value
+  
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"datatype_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+
+  method malloc_name = malloc_name
+  method size = 12l
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method kind = kind
+  method value = value
+  
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)] 
+    @
+    value#locals
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at };
+      { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    S.[
+      { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store_kind = 
+    let kind = match self#kind with 
+    
+  | Int -> 0l
+  | Nat -> 1l
+  | Mutez -> 2l
+  | Timestamp -> 3l
+  | Bool -> 4l
+  | ListItem -> 5l
+  | Tuple -> 6l
+  | Set -> 7l
+  | Map -> 8l
+  | Operations -> 9l
+  | String -> 10l 
+    in
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 kind; at  }; at };
+      { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method get_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at  };
+      { it = Binary (I32 Add); at };
+      { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc 
+      @ self#store_kind
+      @ self#store_value
+   
+  )
+
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+  
+end
+          
+class  node ~(value : dt) ~(next : dt)  = object(self)
+  val size = 8l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"node_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#value#locals 
+@ self#next#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val value = value
+  method value = value
+  method get_value = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    value#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val next = next
+  method next = next
+  method get_next = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_next = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    next#store
+    @
+    next#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_value 
+@  self#store_next 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+
+type operation_variant = 
+  
+| Transaction
+| Delegate
+
+class  operation ~(kind: operation_variant) ~(value: dt) = object(self)
+  val kind = kind
+  val value = value
+  
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"operation_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+
+  method malloc_name = malloc_name
+  method size = 12l
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method kind = kind
+  method value = value
+  
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)] 
+    @
+    value#locals
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at };
+      { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    S.[
+      { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store_kind = 
+    let kind = match self#kind with 
+    
+  | Transaction -> 0l
+  | Delegate -> 1l 
+    in
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 kind; at  }; at };
+      { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method get_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at  };
+      { it = Binary (I32 Add); at };
+      { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc 
+      @ self#store_kind
+      @ self#store_value
+   
+  )
+
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+  
+end
+          
+class  operationnode ~(value : dt) ~(next : dt)  = object(self)
+  val size = 8l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"operationnode_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#value#locals 
+@ self#next#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val value = value
+  method value = value
+  method get_value = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    value#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val next = next
+  method next = next
+  method get_next = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_next = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    next#store
+    @
+    next#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_value 
+@  self#store_next 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+
+type color_variant = 
+  
+| Red
+| Black
+
+class  color ~(kind: color_variant) ~(value: dt) = object(self)
+  val kind = kind
+  val value = value
+  
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"color_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+
+  method malloc_name = malloc_name
+  method size = 12l
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method kind = kind
+  method value = value
+  
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)] 
+    @
+    value#locals
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at };
+      { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    S.[
+      { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store_kind = 
+    let kind = match self#kind with 
+    
+  | Red -> 0l
+  | Black -> 1l 
+    in
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 kind; at  }; at };
+      { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method get_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at  };
+      { it = Binary (I32 Add); at };
+      { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc 
+      @ self#store_kind
+      @ self#store_value
+   
+  )
+
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+  
+end
+          
+class  rbnode ~(parent : dt) ~(value : dt) ~(depth : dt) ~(left : dt) ~(right : dt) ~(color : dt)  = object(self)
+  val size = 24l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"rbnode_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#parent#locals 
+@ self#value#locals 
+@ self#depth#locals 
+@ self#left#locals 
+@ self#right#locals 
+@ self#color#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val parent = parent
+  method parent = parent
+  method get_parent = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_parent = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    parent#store
+    @
+    parent#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val value = value
+  method value = value
+  method get_value = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    value#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val depth = depth
+  method depth = depth
+  method get_depth = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 8l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_depth = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 8l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    depth#store
+    @
+    depth#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val left = left
+  method left = left
+  method get_left = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 12l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_left = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 12l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    left#store
+    @
+    left#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val right = right
+  method right = right
+  method get_right = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 16l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_right = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 16l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    right#store
+    @
+    right#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val color = color
+  method color = color
+  method get_color = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 20l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_color = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 20l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    color#store
+    @
+    color#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_parent 
+@  self#store_value 
+@  self#store_depth 
+@  self#store_left 
+@  self#store_right 
+@  self#store_color 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+class  transaction ~(action : dt) ~(amount : dt) ~(contract : dt)  = object(self)
+  val size = 12l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"transaction_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#action#locals 
+@ self#amount#locals 
+@ self#contract#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val action = action
+  method action = action
+  method get_action = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_action = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    action#store
+    @
+    action#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val amount = amount
+  method amount = amount
+  method get_amount = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_amount = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    amount#store
+    @
+    amount#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val contract = contract
+  method contract = contract
+  method get_contract = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 8l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_contract = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 8l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    contract#store
+    @
+    contract#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_action 
+@  self#store_amount 
+@  self#store_contract 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+class  delegate ~(delegate : dt)  = object(self)
+  val size = 4l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"delegate_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#delegate#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val delegate = delegate
+  method delegate = delegate
+  method get_delegate = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_delegate = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    delegate#store
+    @
+    delegate#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_delegate 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+class ['T] wrapped ~(data : 'T)  = object(self)
+  val size = 4l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"wrapped_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#data#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val data = data
+  method data = data
+  method get_data = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_data = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    data#store
+    @
+    data#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_data 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+
+type option_variant = 
+  
+| None
+| Some
+
+class ['T] option ~(kind: option_variant) ~(value: 'T) = object(self)
+  val kind = kind
+  val value = value
+  
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"option_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+
+  method malloc_name = malloc_name
+  method size = 12l
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method kind = kind
+  method value = value
+  
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)] 
+    @
+    value#locals
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at };
+      { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    S.[
+      { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store_kind = 
+    let kind = match self#kind with 
+    
+  | None -> 0l
+  | Some -> 1l 
+    in
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 kind; at  }; at };
+      { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method get_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at  };
+      { it = Binary (I32 Add); at };
+      { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc 
+      @ self#store_kind
+      @ self#store_value
+   
+  )
+
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+  
+end
+          
+class  bigintwrap ~(data : dt) ~(len : dt) ~(capacity : dt)  = object(self)
+  val size = 12l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"bigintwrap_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#data#locals 
+@ self#len#locals 
+@ self#capacity#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val data = data
+  method data = data
+  method get_data = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_data = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    data#store
+    @
+    data#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val len = len
+  method len = len
+  method get_len = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_len = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    len#store
+    @
+    len#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val capacity = capacity
+  method capacity = capacity
+  method get_capacity = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 8l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_capacity = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 8l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    capacity#store
+    @
+    capacity#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_data 
+@  self#store_len 
+@  self#store_capacity 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+
+type datatype_variant = 
+  
+| Int
+| Nat
+| Mutez
+| Timestamp
+| Bool
+| ListItem
+| Tuple
+| Set
+| Map
+| Operations
+| String
+
+class  datatype ~(kind: datatype_variant) ~(value: dt) = object(self)
+  val kind = kind
+  val value = value
+  
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"datatype_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+
+  method malloc_name = malloc_name
+  method size = 12l
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method kind = kind
+  method value = value
+  
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)] 
+    @
+    value#locals
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at };
+      { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    S.[
+      { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store_kind = 
+    let kind = match self#kind with 
+    
+  | Int -> 0l
+  | Nat -> 1l
+  | Mutez -> 2l
+  | Timestamp -> 3l
+  | Bool -> 4l
+  | ListItem -> 5l
+  | Tuple -> 6l
+  | Set -> 7l
+  | Map -> 8l
+  | Operations -> 9l
+  | String -> 10l 
+    in
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 kind; at  }; at };
+      { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method get_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at  };
+      { it = Binary (I32 Add); at };
+      { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc 
+      @ self#store_kind
+      @ self#store_value
+   
+  )
+
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+  
+end
+          
+class  node ~(value : dt) ~(next : dt)  = object(self)
+  val size = 8l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"node_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#value#locals 
+@ self#next#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val value = value
+  method value = value
+  method get_value = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    value#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val next = next
+  method next = next
+  method get_next = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_next = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    next#store
+    @
+    next#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_value 
+@  self#store_next 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+
+type operation_variant = 
+  
+| Transaction
+| Delegate
+
+class  operation ~(kind: operation_variant) ~(value: dt) = object(self)
+  val kind = kind
+  val value = value
+  
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"operation_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+
+  method malloc_name = malloc_name
+  method size = 12l
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method kind = kind
+  method value = value
+  
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)] 
+    @
+    value#locals
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at };
+      { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    S.[
+      { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store_kind = 
+    let kind = match self#kind with 
+    
+  | Transaction -> 0l
+  | Delegate -> 1l 
+    in
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 kind; at  }; at };
+      { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method get_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at  };
+      { it = Binary (I32 Add); at };
+      { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc 
+      @ self#store_kind
+      @ self#store_value
+   
+  )
+
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+  
+end
+          
+class  operationnode ~(value : dt) ~(next : dt)  = object(self)
+  val size = 8l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"operationnode_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#value#locals 
+@ self#next#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val value = value
+  method value = value
+  method get_value = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    value#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val next = next
+  method next = next
+  method get_next = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_next = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    next#store
+    @
+    next#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_value 
+@  self#store_next 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+
+type color_variant = 
+  
+| Red
+| Black
+
+class  color ~(kind: color_variant) ~(value: dt) = object(self)
+  val kind = kind
+  val value = value
+  
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"color_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+
+  method malloc_name = malloc_name
+  method size = 12l
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method kind = kind
+  method value = value
+  
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)] 
+    @
+    value#locals
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at };
+      { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    S.[
+      { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store_kind = 
+    let kind = match self#kind with 
+    
+  | Red -> 0l
+  | Black -> 1l 
+    in
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 kind; at  }; at };
+      { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method get_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at  };
+      { it = Binary (I32 Add); at };
+      { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc 
+      @ self#store_kind
+      @ self#store_value
+   
+  )
+
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+  
+end
+          
+class  rbnode ~(parent : dt) ~(value : dt) ~(depth : dt) ~(left : dt) ~(right : dt) ~(color : dt)  = object(self)
+  val size = 24l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"rbnode_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#parent#locals 
+@ self#value#locals 
+@ self#depth#locals 
+@ self#left#locals 
+@ self#right#locals 
+@ self#color#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val parent = parent
+  method parent = parent
+  method get_parent = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_parent = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    parent#store
+    @
+    parent#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val value = value
+  method value = value
+  method get_value = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    value#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val depth = depth
+  method depth = depth
+  method get_depth = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 8l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_depth = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 8l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    depth#store
+    @
+    depth#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val left = left
+  method left = left
+  method get_left = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 12l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_left = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 12l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    left#store
+    @
+    left#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val right = right
+  method right = right
+  method get_right = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 16l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_right = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 16l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    right#store
+    @
+    right#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val color = color
+  method color = color
+  method get_color = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 20l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_color = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 20l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    color#store
+    @
+    color#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_parent 
+@  self#store_value 
+@  self#store_depth 
+@  self#store_left 
+@  self#store_right 
+@  self#store_color 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+class  transaction ~(action : dt) ~(amount : dt) ~(contract : dt)  = object(self)
+  val size = 12l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"transaction_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#action#locals 
+@ self#amount#locals 
+@ self#contract#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val action = action
+  method action = action
+  method get_action = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_action = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    action#store
+    @
+    action#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val amount = amount
+  method amount = amount
+  method get_amount = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_amount = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    amount#store
+    @
+    amount#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val contract = contract
+  method contract = contract
+  method get_contract = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 8l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_contract = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 8l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    contract#store
+    @
+    contract#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_action 
+@  self#store_amount 
+@  self#store_contract 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+class  delegate ~(delegate : dt)  = object(self)
+  val size = 4l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"delegate_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#delegate#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val delegate = delegate
+  method delegate = delegate
+  method get_delegate = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_delegate = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    delegate#store
+    @
+    delegate#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_delegate 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+class ['T] wrapped ~(data : 'T)  = object(self)
+  val size = 4l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"wrapped_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#data#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val data = data
+  method data = data
+  method get_data = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_data = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    data#store
+    @
+    data#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_data 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+
+type option_variant = 
+  
+| None
+| Some
+
+class ['T] option ~(kind: option_variant) ~(value: 'T) = object(self)
+  val kind = kind
+  val value = value
+  
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"option_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+
+  method malloc_name = malloc_name
+  method size = 12l
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method kind = kind
+  method value = value
+  
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)] 
+    @
+    value#locals
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at };
+      { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    S.[
+      { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store_kind = 
+    let kind = match self#kind with 
+    
+  | None -> 0l
+  | Some -> 1l 
+    in
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 kind; at  }; at };
+      { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method get_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at  };
+      { it = Binary (I32 Add); at };
+      { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc 
+      @ self#store_kind
+      @ self#store_value
+   
+  )
+
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+  
+end
+          
+class  bigintwrap ~(data : dt) ~(len : dt) ~(capacity : dt)  = object(self)
+  val size = 12l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"bigintwrap_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#data#locals 
+@ self#len#locals 
+@ self#capacity#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val data = data
+  method data = data
+  method get_data = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_data = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    data#store
+    @
+    data#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val len = len
+  method len = len
+  method get_len = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_len = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    len#store
+    @
+    len#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val capacity = capacity
+  method capacity = capacity
+  method get_capacity = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 8l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_capacity = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 8l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    capacity#store
+    @
+    capacity#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_data 
+@  self#store_len 
+@  self#store_capacity 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+
+type datatype_variant = 
+  
+| Int
+| Nat
+| Mutez
+| Timestamp
+| Bool
+| ListItem
+| Tuple
+| Set
+| Map
+| Operations
+| String
+
+class  datatype ~(kind: datatype_variant) ~(value: dt) = object(self)
+  val kind = kind
+  val value = value
+  
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"datatype_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+
+  method malloc_name = malloc_name
+  method size = 12l
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method kind = kind
+  method value = value
+  
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)] 
+    @
+    value#locals
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at };
+      { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    S.[
+      { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store_kind = 
+    let kind = match self#kind with 
+    
+  | Int -> 0l
+  | Nat -> 1l
+  | Mutez -> 2l
+  | Timestamp -> 3l
+  | Bool -> 4l
+  | ListItem -> 5l
+  | Tuple -> 6l
+  | Set -> 7l
+  | Map -> 8l
+  | Operations -> 9l
+  | String -> 10l 
+    in
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 kind; at  }; at };
+      { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method get_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at  };
+      { it = Binary (I32 Add); at };
+      { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc 
+      @ self#store_kind
+      @ self#store_value
+   
+  )
+
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+  
+end
+          
+class  node ~(value : dt) ~(next : dt)  = object(self)
+  val size = 8l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"node_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#value#locals 
+@ self#next#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val value = value
+  method value = value
+  method get_value = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    value#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val next = next
+  method next = next
+  method get_next = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_next = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    next#store
+    @
+    next#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_value 
+@  self#store_next 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+
+type operation_variant = 
+  
+| Transaction
+| Delegate
+
+class  operation ~(kind: operation_variant) ~(value: dt) = object(self)
+  val kind = kind
+  val value = value
+  
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"operation_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+
+  method malloc_name = malloc_name
+  method size = 12l
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method kind = kind
+  method value = value
+  
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)] 
+    @
+    value#locals
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at };
+      { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    S.[
+      { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store_kind = 
+    let kind = match self#kind with 
+    
+  | Transaction -> 0l
+  | Delegate -> 1l 
+    in
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 kind; at  }; at };
+      { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method get_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at  };
+      { it = Binary (I32 Add); at };
+      { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc 
+      @ self#store_kind
+      @ self#store_value
+   
+  )
+
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+  
+end
+          
+class  operationnode ~(value : dt) ~(next : dt)  = object(self)
+  val size = 8l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"operationnode_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#value#locals 
+@ self#next#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val value = value
+  method value = value
+  method get_value = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    value#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val next = next
+  method next = next
+  method get_next = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_next = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    next#store
+    @
+    next#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_value 
+@  self#store_next 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+
+type color_variant = 
+  
+| Red
+| Black
+
+class  color ~(kind: color_variant) ~(value: dt) = object(self)
+  val kind = kind
+  val value = value
+  
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"color_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+
+  method malloc_name = malloc_name
+  method size = 12l
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method kind = kind
+  method value = value
+  
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)] 
+    @
+    value#locals
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at };
+      { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    S.[
+      { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store_kind = 
+    let kind = match self#kind with 
+    
+  | Red -> 0l
+  | Black -> 1l 
+    in
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 kind; at  }; at };
+      { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method get_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at  };
+      { it = Binary (I32 Add); at };
+      { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc 
+      @ self#store_kind
+      @ self#store_value
+   
+  )
+
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+  
+end
+          
+class  rbnode ~(parent : dt) ~(value : dt) ~(depth : dt) ~(left : dt) ~(right : dt) ~(color : dt)  = object(self)
+  val size = 24l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"rbnode_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#parent#locals 
+@ self#value#locals 
+@ self#depth#locals 
+@ self#left#locals 
+@ self#right#locals 
+@ self#color#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val parent = parent
+  method parent = parent
+  method get_parent = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_parent = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    parent#store
+    @
+    parent#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val value = value
+  method value = value
+  method get_value = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    value#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val depth = depth
+  method depth = depth
+  method get_depth = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 8l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_depth = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 8l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    depth#store
+    @
+    depth#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val left = left
+  method left = left
+  method get_left = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 12l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_left = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 12l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    left#store
+    @
+    left#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val right = right
+  method right = right
+  method get_right = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 16l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_right = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 16l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    right#store
+    @
+    right#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val color = color
+  method color = color
+  method get_color = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 20l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_color = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 20l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    color#store
+    @
+    color#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_parent 
+@  self#store_value 
+@  self#store_depth 
+@  self#store_left 
+@  self#store_right 
+@  self#store_color 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+class  transaction ~(action : dt) ~(amount : dt) ~(contract : dt)  = object(self)
+  val size = 12l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"transaction_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#action#locals 
+@ self#amount#locals 
+@ self#contract#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val action = action
+  method action = action
+  method get_action = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_action = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    action#store
+    @
+    action#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val amount = amount
+  method amount = amount
+  method get_amount = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_amount = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    amount#store
+    @
+    amount#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val contract = contract
+  method contract = contract
+  method get_contract = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 8l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_contract = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 8l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    contract#store
+    @
+    contract#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_action 
+@  self#store_amount 
+@  self#store_contract 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+class  delegate ~(delegate : dt)  = object(self)
+  val size = 4l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"delegate_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#delegate#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val delegate = delegate
+  method delegate = delegate
+  method get_delegate = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_delegate = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    delegate#store
+    @
+    delegate#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_delegate 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+class ['T] wrapped ~(data : 'T)  = object(self)
+  val size = 4l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"wrapped_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#data#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val data = data
+  method data = data
+  method get_data = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_data = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    data#store
+    @
+    data#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_data 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+
+type option_variant = 
+  
+| None
+| Some
+
+class ['T] option ~(kind: option_variant) ~(value: 'T) = object(self)
+  val kind = kind
+  val value = value
+  
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"option_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+
+  method malloc_name = malloc_name
+  method size = 12l
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method kind = kind
+  method value = value
+  
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)] 
+    @
+    value#locals
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at };
+      { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    S.[
+      { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store_kind = 
+    let kind = match self#kind with 
+    
+  | None -> 0l
+  | Some -> 1l 
+    in
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 kind; at  }; at };
+      { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method get_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at  };
+      { it = Binary (I32 Add); at };
+      { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc 
+      @ self#store_kind
+      @ self#store_value
+   
+  )
+
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+  
+end
+          
+class  bigintwrap ~(data : dt) ~(len : dt) ~(capacity : dt)  = object(self)
+  val size = 12l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"bigintwrap_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#data#locals 
+@ self#len#locals 
+@ self#capacity#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val data = data
+  method data = data
+  method get_data = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_data = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    data#store
+    @
+    data#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val len = len
+  method len = len
+  method get_len = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_len = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    len#store
+    @
+    len#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val capacity = capacity
+  method capacity = capacity
+  method get_capacity = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 8l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_capacity = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 8l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    capacity#store
+    @
+    capacity#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_data 
+@  self#store_len 
+@  self#store_capacity 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+
+type datatype_variant = 
+  
+| Int
+| Nat
+| Mutez
+| Timestamp
+| Bool
+| ListItem
+| Tuple
+| Set
+| Map
+| Operations
+| String
+
+class  datatype ~(kind: datatype_variant) ~(value: dt) = object(self)
+  val kind = kind
+  val value = value
+  
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"datatype_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+
+  method malloc_name = malloc_name
+  method size = 12l
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method kind = kind
+  method value = value
+  
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)] 
+    @
+    value#locals
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at };
+      { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    S.[
+      { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store_kind = 
+    let kind = match self#kind with 
+    
+  | Int -> 0l
+  | Nat -> 1l
+  | Mutez -> 2l
+  | Timestamp -> 3l
+  | Bool -> 4l
+  | ListItem -> 5l
+  | Tuple -> 6l
+  | Set -> 7l
+  | Map -> 8l
+  | Operations -> 9l
+  | String -> 10l 
+    in
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 kind; at  }; at };
+      { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method get_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at  };
+      { it = Binary (I32 Add); at };
+      { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc 
+      @ self#store_kind
+      @ self#store_value
+   
+  )
+
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+  
+end
+          
+class  node ~(value : dt) ~(next : dt)  = object(self)
+  val size = 8l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"node_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#value#locals 
+@ self#next#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val value = value
+  method value = value
+  method get_value = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    value#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val next = next
+  method next = next
+  method get_next = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_next = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    next#store
+    @
+    next#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_value 
+@  self#store_next 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+
+type operation_variant = 
+  
+| Transaction
+| Delegate
+
+class  operation ~(kind: operation_variant) ~(value: dt) = object(self)
+  val kind = kind
+  val value = value
+  
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"operation_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+
+  method malloc_name = malloc_name
+  method size = 12l
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method kind = kind
+  method value = value
+  
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)] 
+    @
+    value#locals
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at };
+      { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    S.[
+      { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store_kind = 
+    let kind = match self#kind with 
+    
+  | Transaction -> 0l
+  | Delegate -> 1l 
+    in
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 kind; at  }; at };
+      { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method get_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at  };
+      { it = Binary (I32 Add); at };
+      { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc 
+      @ self#store_kind
+      @ self#store_value
+   
+  )
+
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+  
+end
+          
+class  operationnode ~(value : dt) ~(next : dt)  = object(self)
+  val size = 8l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"operationnode_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#value#locals 
+@ self#next#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val value = value
+  method value = value
+  method get_value = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    value#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val next = next
+  method next = next
+  method get_next = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_next = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    next#store
+    @
+    next#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_value 
+@  self#store_next 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+
+type color_variant = 
+  
+| Red
+| Black
+
+class  color ~(kind: color_variant) ~(value: dt) = object(self)
+  val kind = kind
+  val value = value
+  
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"color_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+
+  method malloc_name = malloc_name
+  method size = 12l
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method kind = kind
+  method value = value
+  
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)] 
+    @
+    value#locals
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at };
+      { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    S.[
+      { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store_kind = 
+    let kind = match self#kind with 
+    
+  | Red -> 0l
+  | Black -> 1l 
+    in
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 kind; at  }; at };
+      { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method get_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+      { it = Const { it = I32 4l; at  }; at  };
+      { it = Binary (I32 Add); at };
+      { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc 
+      @ self#store_kind
+      @ self#store_value
+   
+  )
+
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+  
+end
+          
+class  rbnode ~(parent : dt) ~(value : dt) ~(depth : dt) ~(left : dt) ~(right : dt) ~(color : dt)  = object(self)
+  val size = 24l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"rbnode_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#parent#locals 
+@ self#value#locals 
+@ self#depth#locals 
+@ self#left#locals 
+@ self#right#locals 
+@ self#color#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val parent = parent
+  method parent = parent
+  method get_parent = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_parent = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    parent#store
+    @
+    parent#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val value = value
+  method value = value
+  method get_value = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_value = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    value#store
+    @
+    value#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val depth = depth
+  method depth = depth
+  method get_depth = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 8l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_depth = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 8l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    depth#store
+    @
+    depth#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val left = left
+  method left = left
+  method get_left = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 12l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_left = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 12l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    left#store
+    @
+    left#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val right = right
+  method right = right
+  method get_right = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 16l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_right = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 16l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    right#store
+    @
+    right#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val color = color
+  method color = color
+  method get_color = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 20l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_color = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 20l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    color#store
+    @
+    color#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_parent 
+@  self#store_value 
+@  self#store_depth 
+@  self#store_left 
+@  self#store_right 
+@  self#store_color 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+class  transaction ~(action : dt) ~(amount : dt) ~(contract : dt)  = object(self)
+  val size = 12l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"transaction_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#action#locals 
+@ self#amount#locals 
+@ self#contract#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val action = action
+  method action = action
+  method get_action = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_action = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    action#store
+    @
+    action#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val amount = amount
+  method amount = amount
+  method get_amount = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_amount = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 4l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    amount#store
+    @
+    amount#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+              
+  val contract = contract
+  method contract = contract
+  method get_contract = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 8l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_contract = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 8l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    contract#store
+    @
+    contract#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_action 
+@  self#store_amount 
+@  self#store_contract 
+
+    )
+    
+  method reference =
+    S.[{ it = A.LocalGet self#malloc_name; at };]
+
+end
+
+
+class  delegate ~(delegate : dt)  = object(self)
+  val size = 4l
+  val malloc_name =  var_to_string (ValueVar.fresh ~name:"delegate_malloc" ())
+  val mutable allocated = false
+  val mutable stored = false
+  method malloc_name = malloc_name
+  method size = size
+  method set_allocated a = allocated <- a
+  method set_stored a = stored <- a
+
+  method locals: (string * T.value_type) list = 
+    [(self#malloc_name, T.I32Type)]
+    
+    @ self#delegate#locals 
+
+
+  method alloc = 
+    if allocated then 
+      []
+    else (
+      self#set_allocated true;
+      S.[{ it = A.Const { it = I32 self#size; at}; at };
+        { it = Call "malloc"; at };
+        { it = LocalSet self#malloc_name; at };]
+    )
+     
+    
+  val delegate = delegate
+  method delegate = delegate
+  method get_delegate = 
+     S.[
+       { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }
+     ]
+    
+  method store_delegate = 
+    S.[
+      { it = A.LocalGet self#malloc_name; at };
+       { it = Const { it = I32 0l; at  }; at };
+       { it = Binary (I32 Add); at };
+    ]
+    @
+    delegate#store
+    @
+    delegate#reference
+    @
+    S.[
+       { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
+    ]
+            
+
+  method store = 
+    if stored then 
+      []
+    else (
+      self#set_stored true;
+      self#alloc
+      @  self#store_delegate 
+
     )
     
   method reference =
