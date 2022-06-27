@@ -6,27 +6,15 @@ module Tezos_raw_protocol = Tezos_raw_protocol_013_PtJakart
 module Tez = Proto_alpha_utils.Memory_proto_alpha.Protocol.Alpha_context.Tez
 module Timestamp = Memory_proto_alpha.Protocol.Alpha_context.Script_timestamp
 
-module VMap = Simple_utils.Map.Make(struct type t = expression_variable let compare x y = ValueVar.compare x y end)
-module VHash =
-  struct
-    type t = expression_variable
-    let equal i j = ValueVar.equal i j
-    let hash i =
-      let (s, i) = ValueVar.internal_get_name_and_counter i in
-      String.hash (Format.asprintf "%s%d" s i)
-  end
-
-module VHashtbl = Caml.Hashtbl.Make(VHash)
-
 type mcode = unit Tezos_utils.Michelson.michelson
 type mcontract = Tezos_protocol.Protocol.Alpha_context.Contract.t
 
 type mutation = Location.t * Ast_aggregated.expression
 
 type env_item =
-  { item: value_expr ; no_mutation : bool ; inline : bool }
+  | Expression of { name: expression_variable ; item: value_expr ; no_mutation : bool ; inline : bool }
 
-and env = (env_item list) VHashtbl.t
+and env = env_item list
 
 and func_val = {
     rec_name : expression_variable option ;
