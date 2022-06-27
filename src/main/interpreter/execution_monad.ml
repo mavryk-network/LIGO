@@ -37,7 +37,7 @@ module Command = struct
     | Bootstrap_contract : int * LT.value * LT.value * Ast_aggregated.type_expression  -> unit t
     | Nth_bootstrap_contract : int -> Tezos_protocol.Protocol.Alpha_context.Contract.t t
     | Nth_bootstrap_typed_address : Location.t * int -> (Tezos_protocol.Protocol.Alpha_context.Contract.t * Ast_aggregated.type_expression * Ast_aggregated.type_expression) t
-    | Reset_state : Location.t * LT.calltrace * LT.value * LT.value -> unit t
+    | Reset_state : Location.t * Z.t option * LT.calltrace * LT.value * LT.value -> unit t
     | Get_state : unit -> Tezos_state.context t
     | Get_mod_res : unit -> ModRes.t option t
     | External_call : Location.t * Ligo_interpreter.Types.calltrace * LT.contract * (execution_trace, string) Tezos_micheline.Micheline.node * Z.t
@@ -64,6 +64,7 @@ module Command = struct
     | Get_total_voting_power : Location.t * Ligo_interpreter.Types.calltrace -> LT.value t
     | Get_bootstrap : Location.t * LT.calltrace * LT.value -> LT.value t
     | Sign : Location.t * LT.calltrace * string * bytes -> LT.value t
+    | Add_cast : Location.t * LT.mcontract * Ast_aggregated.type_expression -> unit t
     (* TODO : move them ou to here *)
     | Michelson_equal : Location.t * LT.value * LT.value -> bool t
     | Implicit_account : Location.t * LT.calltrace * Tezos_protocol.Protocol.Alpha_context.public_key_hash -> LT.value t
@@ -78,6 +79,7 @@ module Command = struct
     | Register_file_constants : Location.t * Ligo_interpreter.Types.calltrace * string -> LT.value t
     | Push_context : unit -> unit t
     | Pop_context : unit -> unit t
+    | Drop_context : unit -> unit t
 
   let eval
     : type a.
@@ -127,7 +129,8 @@ module Command = struct
       let next_bootstrapped_contracts = (mutez, contract, storage, parameter_ty, storage_ty) :: ctxt.internals.next_bootstrapped_contracts in
       let ctxt = { ctxt with internals = { ctxt.internals with next_bootstrapped_contracts } } in
       ((),ctxt)
-    | Reset_state (loc,calltrace,n,amts) ->
+    | Reset_state (loc,initial_timestamp,calltrace,n,amts) ->
+      let initial_timestamp = Option.map initial_timestamp ~f:(fun x -> Proto_alpha_utils.Time.Protocol.of_seconds (Z.to_int64 x)) in
       let amts = trace_option ~raise (corner_case ()) @@ LC.get_list amts in
       let amts = List.map ~f:
         (fun x ->
@@ -139,7 +142,7 @@ module Command = struct
       let bootstrap_contracts = List.rev ctxt.internals.next_bootstrapped_contracts in
       let baker_accounts = List.rev ctxt.internals.next_baker_accounts in
       let ctxt = Tezos_state.init_ctxt
-        ~raise ~loc ~calltrace ~initial_balances:amts ~n:(Z.to_int n)
+        ~raise ~loc ~calltrace ~initial_balances:amts ~n:(Z.to_int n) ?initial_timestamp
         ctxt.internals.protocol_version bootstrap_contracts ~baker_accounts
       in
       ((),ctxt)
@@ -354,6 +357,15 @@ module Command = struct
     | Sign (loc, calltrace, sk, data) ->
       let signature = Tezos_state.sign_message ~raise ~loc ~calltrace data sk in
       (LT.V_Ct (LT.C_signature signature), ctxt)
+    | Add_cast (loc, addr, ty) ->
+      let () = match List.Assoc.find ~equal:(Tezos_state.equal_account) ctxt.internals.storage_tys addr with
+        | None -> ()
+        | Some ty' ->
+           if (Ast_aggregated.Helpers.type_expression_eq (ty, ty')) then ()
+           else Format.eprintf "@[<hv>%a:@.Run-time warning: cast changing the type of an address.\n@]" Simple_utils.Snippet.pp loc in
+      let storage_tys = List.Assoc.add ~equal:(Tezos_state.equal_account) ctxt.internals.storage_tys addr ty in
+      let internals = { ctxt.internals with storage_tys } in
+      ((), { ctxt with internals })
     | Michelson_equal (loc,a,b) ->
       let { code ; _ } : LT.typed_michelson_code = trace_option ~raise (Errors.generic_error loc "Can't compare contracts") @@
         LC.get_michelson_expr a in
@@ -430,6 +442,13 @@ module Command = struct
       match ! Tezos_state.contexts with
       | [] -> ((), ctxt)
       | ctxt :: ctxts ->
+         Tezos_state.contexts := ctxts ;
+         ((), ctxt)
+    )
+    | Drop_context () -> (
+      match ! Tezos_state.contexts with
+      | [] -> ((), ctxt)
+      | _ :: ctxts ->
          Tezos_state.contexts := ctxts ;
          ((), ctxt)
     )

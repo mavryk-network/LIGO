@@ -11,6 +11,8 @@ let eta_expand : expression -> type_expression -> type_expression -> anon_functi
     { binder = binder ; body = app }
 let get_t_function ~raise e =
   trace_option ~raise not_a_function @@ Mini_c.get_t_function e
+let get_t_pair ~raise e =
+  trace_option ~raise not_a_pair @@ Mini_c.get_t_pair e
 
 let get_function_or_eta_expand ~raise e =
   let in_ty, out_ty = match e.type_expression.type_content with
@@ -110,7 +112,9 @@ let is_pure_constant : constant' -> bool =
   | C_TEST_EXTERNAL_CALL_TO_ADDRESS
   | C_TEST_EXTERNAL_CALL_TO_ADDRESS_EXN
   | C_TEST_GET_NTH_BS
-  | C_TEST_LOG
+  | C_TEST_PRINT
+  | C_TEST_TO_STRING
+  | C_TEST_UNESCAPE_STRING
   | C_TEST_STATE_RESET
   | C_TEST_BOOTSTRAP_CONTRACT
   | C_TEST_NTH_BOOTSTRAP_CONTRACT
@@ -144,9 +148,11 @@ let is_pure_constant : constant' -> bool =
   | C_TEST_REGISTER_FILE_CONSTANTS
   | C_TEST_PUSH_CONTEXT
   | C_TEST_POP_CONTEXT
+  | C_TEST_DROP_CONTEXT
   | C_TEST_FAILWITH
   | C_TEST_READ_CONTRACT_FROM_FILE
   | C_TEST_SIGN
+  | C_TEST_GET_ENTRYPOINT
     -> false
 
 let rec is_pure : expression -> bool = fun e ->

@@ -263,7 +263,7 @@ let%expect_test _ =
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "test" ; test "test_no_mutation.mligo" ] ;
-  [%expect {|
+  [%expect{|
     Everything at the top-level was executed.
     - test exited with value ().
     - test_mutation exited with value ().
@@ -539,9 +539,14 @@ let%expect_test _ =
     3800000000000mutez
     3800100000000mutez
     3800000000000mutez
+    "test_drop:"
+    3800000000000mutez
+    3800100000000mutez
+    3800100000000mutez
     Everything at the top-level was executed.
     - test_contract exited with value ().
-    - test_move exited with value (). |}]
+    - test_move exited with value ().
+    - test_drop exited with value (). |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test" ; test "test_error_balance.jsligo"; "--no-warn" ] ;
@@ -598,6 +603,12 @@ let%expect_test _ =
     - test_cli_arg exited with value [1 ; 2 ; 3]. |}]
 
 let%expect_test _ =
+  run_ligo_good [ "run" ; "test" ; test "reset_time.mligo" ] ;
+  [%expect {|
+  Everything at the top-level was executed.
+  - test_x exited with value (timestamp(1970-01-01T00:00:00Z) , timestamp(2012-02-02T10:10:10Z)). |}]
+
+let%expect_test _ =
   run_ligo_good [ "run"; "test" ; test "test_get_account.mligo" ] ;
   [%expect {|
     (tz1MBWU1WkszFfkEER2pgn4ATKXE9ng7x1sR , edpkusHqa6fxkGPPL9YpgbcakvSTvcTBcwnLAmCdcevmws4Mh2MdHB , "edsk41aRaPPBpidY7w5xu54edk76uJJtJ6myTwYDEWhAwNHce9gKNo")
@@ -610,6 +621,35 @@ let%expect_test _ =
   [%expect {|
     Everything at the top-level was executed.
     - test exited with value (). |}]
+
+let%expect_test _ =
+  run_ligo_good [ "run"; "test" ; test "test_create.mligo" ] ;
+  [%expect {|
+    42
+    42
+    Everything at the top-level was executed.
+    - test exited with value (). |}]
+
+let%expect_test _ =
+  run_ligo_good [ "run"; "test" ; test "test_transfer_entrypoint.ligo" ] ;
+  [%expect {|
+    Everything at the top-level was executed.
+    - test exited with value (). |}]
+
+let%expect_test _ =
+  run_ligo_good [ "run"; "test" ; test "test_print.mligo" ] ;
+  [%expect {|
+    Hello world
+    @42
+    Everything at the top-level was executed.
+    - test exited with value "(true , 42n)". |}]
+
+let%expect_test _ =
+  run_ligo_good [ "run"; "test" ; test "test_eprint.mligo" ] ;
+  [%expect {|
+    Everything at the top-level was executed.
+    - test exited with value ().
+    Ooops |}]
 
 (* do not remove that :) *)
 let () = Sys.chdir pwd
@@ -711,12 +751,6 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_bad [ "run" ; "test" ; bad_test "test_mutation_loop.mligo" ; "--steps" ; "1000" ] ;
   [%expect {|
-    Mutation at: File "../../test/contracts/negative//interpreter_tests/test_mutation_loop.mligo", line 3, characters 29-30:
-      2 |     if rounds > 0 then
-      3 |         my_rec_fun (rounds - 1)
-      4 |     else
-
-    Replacing by: 2.
     File "../../test/contracts/negative//interpreter_tests/test_mutation_loop.mligo", line 17, character 28 to line 18, character 83:
      16 |     | None -> ()
      17 |     | Some (_, mutation) -> let () = Test.log(mutation) in
@@ -730,7 +764,13 @@ let%expect_test _ =
      17 |     | Some (_, mutation) -> let () = Test.log(mutation) in
      18 |                                     failwith "Some mutation also passes the tests!"
 
-    "Some mutation also passes the tests!" |}]
+    "Some mutation also passes the tests!"
+    Mutation at: File "../../test/contracts/negative//interpreter_tests/test_mutation_loop.mligo", line 3, characters 29-30:
+      2 |     if rounds > 0 then
+      3 |         my_rec_fun (rounds - 1)
+      4 |     else
+
+    Replacing by: 2. |}]
 
 let%expect_test _ =
   run_ligo_bad [ "run" ; "test" ; bad_test "test_source1.mligo" ] ;
@@ -817,6 +857,16 @@ let%expect_test _ =
 
     An uncaught error occured:
     Failwith: "failed assertion" |}]
+
+
+let%expect_test _ =
+  run_ligo_bad [ "run"; "test" ; bad_test "test_create.mligo" ] ;
+  [%expect {|
+    File "../../test/contracts/negative//interpreter_tests/test_create.mligo", line 11, characters 12-44:
+     10 |   let addr : address = Option.unopt (List.head_opt (Test.get_storage fact_ta)) in
+     11 |   Test.log (Test.get_storage_of_address addr)
+
+    Not supported (yet) when the provided account has been fetched from Test.get_last_originations |}]
 
 let pwd = Sys.getcwd ()
 let () = Sys.chdir "../../test/contracts/negative/interpreter_tests/"
