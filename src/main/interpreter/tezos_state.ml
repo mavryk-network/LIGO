@@ -385,8 +385,10 @@ let bake_ops : raise:r -> loc:Location.t -> calltrace:calltrace -> context -> (T
     let incr = Trace.trace_tzresult_lwt ~raise (throw_obj_exc loc calltrace) @@
                  Incremental.begin_construction ~policy:ctxt.internals.baker_policy ctxt.raw in
     let aux incr op = Lwt_main.run @@ Incremental.add_operation incr (op incr) in
+    Format.printf "ZZZ %s\n@;" __LOC__ ;
     match List.fold_result ~f:aux ~init:incr operation with
     | Ok incr ->
+      Format.printf "ZZZ %s\n@;" __LOC__ ;
        let last_operations = get_last_operations_result incr in
        let consum = get_consumed_gas (List.hd_exn last_operations) in
        let raw = Trace.trace_tzresult_lwt ~raise (throw_obj_exc loc calltrace) @@
@@ -485,6 +487,7 @@ let transfer ~raise ~loc ~calltrace (ctxt:context) ?entrypoint dst parameter amt
     (* TODO: fee? *)
     let amt = Int64.of_int (Z.to_int amt) in
     let gas_limit = (Memory_proto_alpha.Protocol.Alpha_context.Gas.Arith.integral_of_int_exn 999_999) in
+    Format.printf "LOL XD PTDR\n@;" ;
     Op.transaction ~gas_limit ~fee:(Test_tez.of_int 1) ~parameters ?entrypoint (B ctxt.raw) source dst (Test_tez.of_mutez_exn amt)
   in
   bake_op ~raise ~loc ~calltrace ctxt operation
@@ -548,6 +551,8 @@ let originate_contract_internal : raise:r -> loc:Location.t -> calltrace:calltra
     let internals =
       { ctxt.internals with storage_tys = (dst, ligo_ty) :: (ctxt.internals.storage_tys) }
     in
+    (* let tutu = Tezos_protocol.Protocol.Ticket_operations_diff.ticket_diffs_of_operations (get_alpha_context ~raise ctxt) in
+    let toto = Tezos_protocol.Protocol.Ticket_accounting.update_ticket_balances in *)
     let raw = { ctxt.raw with context = Tezos_raw_protocol.Alpha_context.current_context alpha_context } in
     (v_address dst, { ctxt with raw ; internals })
 
