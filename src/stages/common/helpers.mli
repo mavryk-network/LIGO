@@ -1,7 +1,5 @@
 open Types
 
-val label_range   : int -> int -> label list
-
 val is_tuple_lmap : 'a Types.label_map -> bool
 
 

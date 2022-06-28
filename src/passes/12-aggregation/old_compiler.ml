@@ -72,6 +72,14 @@ let aggregate_scope : Data.scope -> leaf:O.expression -> O.expression = fun scop
   in
   List.fold_left scope.decls ~f ~init:leaf
 
+(* I don't like the all function are defined in a big let rec and.
+  Since the types are define as
+  - Type_expression alone
+  - Value_expression depends on type_expression
+  - Declaration depends on value_expression and type_expression
+
+  I think it is better to have three separate let rec declarations
+*)
 let rec compile ~raise : Data.scope -> Data.path -> I.expression -> I.program -> O.expression =
   fun scope path hole module_ ->
     let scope = compile_declarations ~raise scope path module_ in
@@ -118,6 +126,7 @@ and compile_type ~raise : I.type_expression -> O.type_expression =
   fun ty ->
     let self = compile_type ~raise in
     let return type_content : O.type_expression = { type_content ; orig_var = ty.orig_var ; location = ty.location ; source_type = Some ty } in
+    (* That's a good helpers functions, we should have it in the ast ?*)
     let map_rows : I.row_element label_map -> O.row_element label_map = fun rows ->
       let f : I.row_element -> O.row_element = fun row -> { row with associated_type = self row.associated_type} in
       LMap.map f rows
@@ -137,9 +146,11 @@ and compile_type ~raise : I.type_expression -> O.type_expression =
       let type1 = self type1 in
       let type2 = self type2 in
       return (T_arrow { type1 ; type2 })
+      (* Why not ? *)
     | T_module_accessor _ -> failwith "module accessor types should not end up here"
     | T_singleton x -> return (T_singleton x)
     | T_abstraction _ ->
+      (* What ? *)
       raise.raise @@ Errors.corner_case "Abstraction type uncaught"
     | T_for_all { ty_binder ; kind ; type_ } ->
       let type_ = self type_ in

@@ -2,7 +2,6 @@ include Types
 include Combinators
 
 module PP = PP
-module PP_annotated = PP_annotated
 module To_yojson = To_yojson
 module Formatter = Formatter
 module Helpers = Helpers
