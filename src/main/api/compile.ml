@@ -128,7 +128,7 @@ let parameter (raw_options : Compiler_options.raw) source_file entry_point expre
         let aggregated_param = Ligo_compile.Of_typed.compile_expression_in_context ~raise ~add_warning ~options:options.middle_end typed_param aggregated_prg in
         let mini_c_param     = Ligo_compile.Of_aggregated.compile_expression ~raise aggregated_param in
         let compiled_param   = Ligo_compile.Of_mini_c.compile_expression ~raise ~options mini_c_param in
-        let entry_point = Self_ast_typed.get_final_entrypoint_name entry_point typed_prg in
+        let entry_point = Self_ast_typed.get_final_entrypoint_name ~add_warning entry_point typed_prg in
         let ()               = Ligo_compile.Of_typed.assert_equal_contract_type ~raise Check_parameter entry_point app_typed_prg typed_param in
         let options = Run.make_dry_run_options ~raise ~constants { now ; amount ; balance ; sender;  source ; parameter_ty = None } in
         no_comment (Run.evaluate_expression ~raise ~options compiled_param.expr compiled_param.expr_ty)
@@ -165,7 +165,7 @@ let storage (raw_options : Compiler_options.raw) source_file expression amount b
         let aggregated_param = Ligo_compile.Of_typed.compile_expression_in_context ~raise ~add_warning ~options:options.middle_end typed_param aggregated_prg in
         let mini_c_param     = Ligo_compile.Of_aggregated.compile_expression ~raise aggregated_param in
         let compiled_param   = Ligo_compile.Of_mini_c.compile_expression ~raise ~options mini_c_param in
-        let entry_point      = Self_ast_typed.get_final_entrypoint_name entry_point typed_prg in
+        let entry_point      = Self_ast_typed.get_final_entrypoint_name ~add_warning entry_point typed_prg in
         let ()               = Ligo_compile.Of_typed.assert_equal_contract_type ~raise Check_storage entry_point app_typed_prg typed_param in
         let options = Run.make_dry_run_options ~raise ~constants { now ; amount ; balance ; sender;  source ; parameter_ty = None } in
         no_comment (Run.evaluate_expression ~raise ~options compiled_param.expr compiled_param.expr_ty)

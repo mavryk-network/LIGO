@@ -119,3 +119,6 @@ let getBalance (param, storage : getBalance * storage) : operation list * storag
 let getTotalSupply (param, storage : getTotalSupply * storage) : operation list * storage =
   let total = storage.total_supply in
   [Tezos.transaction total 0mutez param.callback],storage
+
+let bad_transfer (_param, storage : transfer * unit) : operation list * unit =
+  (([] : operation list), storage)

@@ -70,7 +70,7 @@ let evaluate_call (raw_options : Compiler_options.raw) source_file parameter amo
         let typed_prg = Build.merge_and_type_libraries ~raise ~add_warning ~options source_file in
         let agg_prg         = Compile.Of_typed.compile_program ~raise typed_prg in
         let entry_point = List.map ~f:Ast_typed.ValueVar.of_input_var entry_point in
-        let entry_point = Self_ast_typed.get_final_entrypoint_name entry_point typed_prg in
+        let entry_point = Self_ast_typed.get_final_entrypoint_name ~add_warning entry_point typed_prg in
         typed_prg, agg_prg, entry_point
       in
       let meta             = Compile.Of_source.extract_meta syntax in

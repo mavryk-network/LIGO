@@ -155,7 +155,7 @@ let build_typed ~raise ~add_warning :
       let applied =
         match entry_point with
         | Ligo_compile.Of_core.Contract entrypoint ->
-          trace ~raise self_ast_typed_tracer @@ Self_ast_typed.all_contract entrypoint contract
+          trace ~raise self_ast_typed_tracer @@ Self_ast_typed.all_contract ~add_warning entrypoint contract
         | View (view_name,main_name) ->
           trace ~raise self_ast_typed_tracer @@ Self_ast_typed.all_view view_name main_name contract
         | Env -> contract
@@ -186,7 +186,7 @@ let build_contract ~raise ~add_warning : options:Compiler_options.t -> string li
     let entry_point = List.map ~f:Ast_typed.ValueVar.of_input_var entry_point in
     let typed_prg, contract = build_typed ~raise ~add_warning ~options (Ligo_compile.Of_core.Contract entry_point) file_name in
     let aggregated = Ligo_compile.Of_typed.apply_to_entrypoint_contract ~raise ~add_warning ~options:options.middle_end typed_prg entry_point in
-    let entry_point = Self_ast_typed.get_final_entrypoint_name entry_point typed_prg in
+    let entry_point = Self_ast_typed.get_final_entrypoint_name ~add_warning entry_point typed_prg in
     let mini_c = Ligo_compile.Of_aggregated.compile_expression ~raise aggregated in
     let michelson  = Ligo_compile.Of_mini_c.compile_contract ~raise ~options mini_c in
     michelson, contract,entry_point

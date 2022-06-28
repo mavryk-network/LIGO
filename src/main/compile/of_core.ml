@@ -13,7 +13,7 @@ let typecheck ~raise ~add_warning ~(options: Compiler_options.t) (cform : form) 
     fun ~raise ->
     let selfed = Self_ast_typed.all_module ~raise ~add_warning ~warn_unused_rec:options.middle_end.warn_unused_rec typed in
     match cform with
-    | Contract entrypoint -> Self_ast_typed.all_contract ~raise entrypoint selfed
+    | Contract entrypoint -> Self_ast_typed.all_contract ~raise ~add_warning entrypoint selfed
     | View (views_name,main_name) -> Self_ast_typed.all_view ~raise views_name main_name selfed
     | Env -> selfed in
   applied

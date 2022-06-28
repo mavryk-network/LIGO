@@ -10,6 +10,7 @@ type all =
   | `Self_ast_imperative_warning_layout of (Location.t * Ast_imperative.label)
   | `Self_ast_imperative_warning_deprecated_polymorphic_variable of Location.t * Stage_common.Types.TypeVar.t
   | `Self_ast_imperative_warning_deprecated_constant of Location.t * Ast_imperative.expression * Ast_imperative.expression * Ast_imperative.type_expression
+  | `Main_entry_ignored of Location.t
   | `Main_view_ignored of Location.t
   | `Michelson_typecheck_failed_with_different_protocol of (Environment.Protocols.t * Tezos_error_monad.Error_monad.error list)
   | `Jsligo_deprecated_failwith_no_return of Location.t
@@ -45,8 +46,11 @@ let pp : display_format:string display_format ->
       Snippet.pp loc
       Stage_common.PP.type_variable tv_chosen
       Stage_common.PP.type_variable tv_possible
+    | `Main_entry_ignored loc ->
+      Format.fprintf f "@[<hv>%a@ Warning: This entry will be ignored, command line option override [@entry] annotation@.@]"
+      Snippet.pp loc
     | `Main_view_ignored loc ->
-      Format.fprintf f "@[<hv>%a@ Warning: This view will be ignored, command line option override [@ view] annotation@.@]"
+      Format.fprintf f "@[<hv>%a@ Warning: This view will be ignored, command line option override [@view] annotation@.@]"
       Snippet.pp loc
     | `Self_ast_typed_warning_unused (loc, s) ->
         Format.fprintf f
@@ -59,7 +63,7 @@ let pp : display_format:string display_format ->
     | `Self_ast_typed_warning_unused_rec (loc, s) ->
       Format.fprintf f
         "@[<hv>%a:@.Warning: unused recursion .@.Hint: remove recursion from the function \"%s\" to prevent this warning.\n@]"
-        Snippet.pp loc s      
+        Snippet.pp loc s
     | `Self_ast_imperative_warning_layout (loc,Label s) ->
         Format.fprintf f
           "@[<hv>%a@ Warning: layout attribute only applying to %s, probably ignored.@.@]"
@@ -118,6 +122,15 @@ let to_json : all -> Yojson.Safe.t = fun a ->
                       ("location", loc);
                     ] in
     json_warning ~stage ~content
+  | `Main_entry_ignored loc ->
+    let message = `String "command line option overwrites annotated entries" in
+    let stage   = "Main" in
+    let loc = Location.to_yojson loc in
+    let content = `Assoc [
+                      ("message", message);
+                      ("location", loc);
+                    ] in
+    json_warning ~stage ~content
   | `Main_view_ignored loc ->
     let message = `String "command line option overwrites annotated views" in
     let stage   = "Main" in
@@ -159,7 +172,7 @@ let to_json : all -> Yojson.Safe.t = fun a ->
                         ("location", loc);
                         ("variable", description)
                       ] in
-      json_warning ~stage ~content  
+      json_warning ~stage ~content
   | `Self_ast_imperative_warning_layout (loc, s) ->
     let message = `String (Format.asprintf "Layout attribute on constructor %a" Ast_imperative.PP.label s) in
      let stage   = "self_ast_imperative" in

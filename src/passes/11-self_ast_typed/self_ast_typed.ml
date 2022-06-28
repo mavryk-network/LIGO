@@ -30,8 +30,8 @@ let all_module ~add_warning ~raise ~warn_unused_rec init =
 let all_expression ~add_warning ~raise ~warn_unused_rec init =
   List.fold ~f:(|>) (all_expression_passes ~add_warning ~raise ~warn_unused_rec) ~init
 
-let all_contract ~raise entrypoints prg =
-  let main_name, prg = Make_entry_point.program ~raise entrypoints prg in
+let all_contract ~raise ~add_warning entrypoints prg =
+  let main_name, prg = Make_entry_point.program ~raise ~add_warning entrypoints prg in
   let contract_type = Helpers.fetch_contract_type ~raise main_name prg in
   let data : Contract_passes.contract_pass_data = {
     contract_type = contract_type ;
