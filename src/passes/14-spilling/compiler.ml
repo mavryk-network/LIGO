@@ -103,7 +103,7 @@ let rec compile_type ~raise (t:AST.type_expression) : type_expression =
       Set          | Tez       | Michelson_pair       |
       Never        | Chest_key | Gen                  |
       Typed_address| Mutation  | Bytes                |
-      List         | RandomST  | Tx_rollup_l2_address
+      List         | RandomST  | Tx_rollup_l2_address |
       External    _), _::_) -> raise.raise @@ corner_case ~loc:__LOC__ "wrong constant"
   )
   | T_sum _ when Option.is_some (AST.get_t_option t) ->

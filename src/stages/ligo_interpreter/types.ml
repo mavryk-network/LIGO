@@ -81,8 +81,8 @@ and value =
   | V_Mutation of mutation
   | V_Func_val of func_val
   | V_Thunk of thunk_val
-  | V_RandomST of Random.State.t
   | V_Gen of gen
+  | V_RandomST of Random.State.t
 
 and calltrace = Location.t list
 
