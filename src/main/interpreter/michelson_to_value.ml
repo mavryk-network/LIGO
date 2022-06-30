@@ -253,12 +253,12 @@ let rec decompile_value ~raise ~(bigmaps : bigmap list) (v : value) (t : Ast_agg
           List.map ~f:aux lst in
         V_Set lst'
       )
-    | ((               Map           | Big_map             | List                 | Set              | Bool         |
+    | ((RandomST     | Map           | Big_map             | List                 | Set              | Bool         |
         String       | Bytes         | Int                 | Operation            | Nat              | Tez          |
         Unit         | Address       | Signature           | Key                  | Key_hash         | Timestamp    |
         Chain_id     | Contract      | Michelson_program   | Michelson_or         | Michelson_pair   | Baker_hash   |
         Pvss_key     | Sapling_state | Sapling_transaction | Baker_operation      | Bls12_381_g1     | Bls12_381_g2 |
-        Bls12_381_fr | Never         | Ticket              | Michelson_contract   | RandomST         | Chest        |
+        Bls12_381_fr | Never         | Ticket              | Michelson_contract   | Gen              | Chest        |
         Chest_key    | Typed_address | Mutation            | Chest_opening_result | External _       | Tx_rollup_l2_address), _) -> v
   )
   | T_sum _ when (Option.is_some (Ast_aggregated.get_t_option t)) -> (
