@@ -156,7 +156,6 @@ let make_options ~raise ?param ctxt =
 
 let run_expression_unwrap ~raise ?ctxt ?(loc = Location.generated) (c_expr : Stacking.compiled_expression) =
   let options = make_options ~raise ctxt in
-  (* let () = print_endline Caml.Printexc.(raw_backtrace_to_string @@ get_callstack 5) in *)
   let runres = Ligo_run.Of_michelson.run_expression ~raise ~options c_expr.expr c_expr.expr_ty in
   match runres with
   | Success (expr_ty, expr) ->
@@ -417,8 +416,6 @@ let storage_retreival_dummy_ty = Tezos_utils.Michelson.prim "int"
 
 let run_michelson_func ~raise ~options ~loc (ctxt : Tezos_state.context) (code : (unit, string) Tezos_micheline.Micheline.node) func_ty arg arg_ty =
   let open Ligo_interpreter.Types in
-  (* let exx = Tezos_micheline.Micheline.(map_node (fun _ -> Tezos_micheline.Micheline_printer.{ comment = None }) (fun x -> x) code) in
-   * print_endline (Format.asprintf "run: %a" Tezos_micheline.Micheline_printer.print_expr exx); *)
   let { code = arg ; code_ty = arg_ty ; _ } = compile_simple_value ~raise ~options ~ctxt ~loc arg arg_ty in
   let func_ty = compile_type ~raise func_ty in
   let func = match code with
