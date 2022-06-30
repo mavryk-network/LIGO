@@ -22,7 +22,7 @@ type self_ast_typed_error = [
   | `Self_ast_typed_expected_pair_out of Location.t
   | `Self_ast_typed_pattern_matching_anomaly of Location.t
   | `Self_ast_typed_storage_entrypoint_contract of Location.t * Ast_typed.expression_variable * Ast_typed.type_expression * Ast_typed.expression_variable * Ast_typed.type_expression
-  | `Self_ast_typed_storage_view_contract of Location.t * Ast_typed.expression_variable * Ast_typed.type_expression * Ast_typed.type_expression
+  | `Self_ast_typed_storage_view_contract       of Location.t * Ast_typed.expression_variable * Ast_typed.type_expression * Ast_typed.expression_variable * Ast_typed.type_expression
   | `Self_ast_typed_view_io of Location.t * Ast_typed.type_expression * [`In | `Out]
 ] [@@deriving poly_constructor { prefix = "self_ast_typed_" }]
 
@@ -45,12 +45,13 @@ let error_ppformat : display_format:string display_format ->
         Ast_typed.PP.type_expression     epta
         Ast_typed.PP.expression_variable epnb
         Ast_typed.PP.type_expression     eptb
-    | `Self_ast_typed_storage_view_contract (loc,view_name,ct,vt) ->
+    | `Self_ast_typed_storage_view_contract (loc,view_name,ct,entry_name,vt) ->
       Format.fprintf f
-        "@[<hv>%a@.Invalid view argument.@.View '%a' has storage type '%a' but contract has storage type '%a'.@]"
+        "@[<hv>%a@.Invalid view argument.@.View '%a' has storage type '%a' and contract '%a' has storage type '%a'.@]"
         Snippet.pp loc
         Ast_typed.PP.expression_variable view_name
         Ast_typed.PP.type_expression vt
+        Ast_typed.PP.expression_variable entry_name
         Ast_typed.PP.type_expression ct
     | `Self_ast_typed_view_io (loc,got,arg) ->
       let s = match arg with
@@ -150,11 +151,12 @@ let error_jsonformat : self_ast_typed_error -> Yojson.Safe.t = fun a ->
       ]
     in
     json_error ~stage ~content
-  | `Self_ast_typed_storage_view_contract (loc,view_name,_,_) ->
+  | `Self_ast_typed_storage_view_contract (loc,view_name,_,main_name,_) ->
     let message = `String "Invalid view argument" in
     let content = `Assoc [
       ("message", message);
       ("location", Location.to_yojson loc);
+      ("main_name", Ast_typed.ValueVar.to_yojson main_name);
       ("view_name", Ast_typed.ValueVar.to_yojson view_name);
       ]
     in

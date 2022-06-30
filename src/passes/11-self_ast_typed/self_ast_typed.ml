@@ -46,7 +46,7 @@ let all_view ~raise views_name main_name prg =
   let f view_name =
     let view_type,view_loc = Helpers.fetch_view_type ~raise view_name prg in
     let contract_type = Helpers.fetch_contract_type ~raise main_name prg in
-    View_passes.check_view_type ~raise ~err_data:(view_loc,view_name) contract_type view_type
+    View_passes.check_view_type ~raise ~err_data:(view_loc,view_name,main_name) contract_type view_type
   in
   let () = List.iter ~f views_name in
   prg

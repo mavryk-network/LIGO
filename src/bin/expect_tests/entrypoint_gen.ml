@@ -553,3 +553,37 @@ let%expect_test _ =
 
 let%expect_test _ =
   run_ligo_bad [ "compile" ; "contract" ; contract "FA1.2.mligo" ; "-e" ; "transfer,bad_transfer" ] ;
+  [%expect {|
+    File "../../test/contracts/entrypoint_gen/FA1.2.mligo", line 87, characters 4-11:
+     86 | [@entry]
+     87 | let approve (param, storage : approve * storage) : result =
+     88 |   let allowances = storage.allowances in
+
+    Warning: This entry will be ignored, command line option override [@entry] annotation
+
+    File "../../test/contracts/entrypoint_gen/FA1.2.mligo", line 103, characters 4-16:
+    102 | [@entry]
+    103 | let getAllowance (param, storage : getAllowance * storage) : operation list * storage =
+    104 |   let value =
+
+    Warning: This entry will be ignored, command line option override [@entry] annotation
+
+    File "../../test/contracts/entrypoint_gen/FA1.2.mligo", line 111, characters 4-14:
+    110 | [@entry]
+    111 | let getBalance (param, storage : getBalance * storage) : operation list * storage =
+    112 |   let value =
+
+    Warning: This entry will be ignored, command line option override [@entry] annotation
+
+    File "../../test/contracts/entrypoint_gen/FA1.2.mligo", line 119, characters 4-18:
+    118 | [@entry]
+    119 | let getTotalSupply (param, storage : getTotalSupply * storage) : operation list * storage =
+    120 |   let total = storage.total_supply in
+
+    Warning: This entry will be ignored, command line option override [@entry] annotation
+
+
+    Invalid entrypoint argument.
+    Entrypoint 'bad_transfer' has storage type 'unit'.
+    This is inconsitent with the first declared entrypoint 'transfer' with storage type '
+    record[allowances -> big_map (record[owner -> address , spender -> address] , nat) , tokens -> big_map (address , nat) , total_supply -> nat]'. |}]
