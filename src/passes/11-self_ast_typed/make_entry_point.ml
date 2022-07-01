@@ -84,6 +84,7 @@ let get_final_entrypoint_name ~add_warning : Ast_typed.expression_variable list 
           add_warning (`Main_entry_ignored (Ast_typed.ValueVar.get_location var))) lst in
       hd
     | [], hd::[] -> hd
+    | [], _ -> default_entrypoint_var
     | lst, _ ->
       let () = List.iter ~f:(fun var ->
         if Option.is_none (List.find ~f:(fun s -> Ast_typed.ValueVar.equal var s) lst) then
