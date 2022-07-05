@@ -244,7 +244,10 @@ and type_expression ~raise ~add_warning ~options : context -> ?tv_opt:O.type_exp
         | [] -> raise.raise (unbound_constructor constructor e.location)
       )
     in
-    let c_arg = self ~context:(App_context.update_expect (Some c_arg_t) app_context,context) element in
+    let c_arg =
+      let tv_opt = if List.is_empty avs then Some c_arg_t else None in
+      self ~context:(App_context.update_expect (Some c_arg_t) app_context,context) ?tv_opt element
+    in
     let table = Inference.infer_type_application ~raise ~loc:element.location avs Inference.TMap.empty c_arg_t c_arg.type_expression in
     let () = if Option.is_none tv_opt then trace_option ~raise (not_annotated e.location) @@
       if (List.for_all avs ~f:(fun v -> O.Helpers.TMap.mem v table)) then Some () else None

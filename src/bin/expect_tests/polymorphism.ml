@@ -297,6 +297,10 @@ let%expect_test _ =
 
 (* some test with polymorphism + parametric types + constructors *)
 let%expect_test _ =
+  run_ligo_good [ "compile" ; "expression" ; "cameligo" ; "(a,b)" ; "--init-file" ; (test "ctor1.mligo") ] ;
+  [%expect{| (Pair (Some {}) (Some {})) |}]
+
+let%expect_test _ =
   run_ligo_good [ "compile" ; "expression" ; "cameligo" ; "a" ; "--init-file" ; (test "ctor2.mligo") ] ;
   [%expect{| (Right (Left Unit)) |}]
 
