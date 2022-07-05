@@ -295,6 +295,11 @@ let%expect_test _ =
   run_ligo_good [ "compile" ; "expression" ; "cameligo" ; "x" ; "--init-file" ; (test "same_vars.mligo") ] ;
   [%expect{| 4 |}]
 
+(* some test with polymorphism + parametric types + constructors *)
+let%expect_test _ =
+  run_ligo_good [ "compile" ; "expression" ; "cameligo" ; "a" ; "--init-file" ; (test "ctor2.mligo") ] ;
+  [%expect{| (Right (Left Unit)) |}]
+
 let () = Sys.chdir pwd ;
          Sys.chdir "../../test/contracts/negative/polymorphism/"
 

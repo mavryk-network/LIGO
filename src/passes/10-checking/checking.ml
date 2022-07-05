@@ -237,13 +237,14 @@ and type_expression ~raise ~add_warning ~options : context -> ?tv_opt:O.type_exp
       )
       | None -> (
         let matching_t_sum = Context.Typing.get_sum constructor context in
-        (match matching_t_sum with
+        match matching_t_sum with
         | (v_ty,tvl,c_arg_t,sum_t) :: ignored  ->
           let () = warn_ambiguous_constructor ~add_warning e.location (v_ty,c_arg_t) ignored in
           (tvl,c_arg_t,sum_t)
-        | [] -> raise.raise (unbound_constructor constructor e.location)))
+        | [] -> raise.raise (unbound_constructor constructor e.location)
+      )
     in
-    let c_arg = self element in
+    let c_arg = self ~context:(App_context.update_expect (Some c_arg_t) app_context,context) element in
     let table = Inference.infer_type_application ~raise ~loc:element.location avs Inference.TMap.empty c_arg_t c_arg.type_expression in
     let () = if Option.is_none tv_opt then trace_option ~raise (not_annotated e.location) @@
       if (List.for_all avs ~f:(fun v -> O.Helpers.TMap.mem v table)) then Some () else None
