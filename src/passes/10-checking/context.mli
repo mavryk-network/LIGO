@@ -35,6 +35,7 @@ end
 
 module App : sig
   type t
+  val pp : Format.formatter -> t -> unit
   val pop : t -> type_expression list option
   val push : type_expression option -> type_expression list -> t -> t
   val create : type_expression option -> t

@@ -292,6 +292,15 @@ module App = struct
   type e = { args : type_expression list ; old_expect : type_expression option  }
   type t = { expect : type_expression option ;
              history : e list }
+  let pp ppf {expect ; history} =
+    let pp_e ppf {args;old_expect} =
+      Format.fprintf ppf "{args = %a ; old_expect = %a}"
+      (Simple_utils.PP_helpers.list_sep_d_par Ast_typed.PP.type_expression) args
+      (Simple_utils.PP_helpers.option Ast_typed.PP.type_expression) old_expect
+    in
+    Format.fprintf ppf "{ expect = %a ; history = %a }"
+      (Simple_utils.PP_helpers.option Ast_typed.PP.type_expression) expect
+      (Simple_utils.PP_helpers.list_sep_d_par pp_e) history
   let pop ({ history ; _ } : t) = match history with
       { args ; _ }  :: _ -> Some args | [] -> None
   let create expect : t = { expect ; history = [] }
