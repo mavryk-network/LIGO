@@ -49,7 +49,6 @@ esy-macos-intel:
     - npm config set prefix '~/.npm'
     - export PATH=~/.npm/bin:$PATH
     - npm i -g esy@beta
-    - brew install libffi
     - esy i
     - esy release
     - mv _release platform-darwin
