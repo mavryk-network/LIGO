@@ -107,7 +107,7 @@ esy-windows:
     paths:
       - platform-windows-x64
 
-deploy:
+prepare_npm_tarball:
   needs:
     - job: esy-macos-m1
       artifacts: true
