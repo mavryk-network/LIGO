@@ -32,8 +32,6 @@ let var_to_string name =
   let name, hash = ValueVar.internal_get_name_and_counter name in
   name ^ "#" ^ string_of_int hash
 
-(* | None -> name *)
-
 (* The data offset. This indicates where a block of data should be placed in the linear memory. *)
 let global_offset = ref 0l
 
@@ -43,6 +41,7 @@ let global_offset = ref 0l
 let convert_to_memory :
     string -> S.region -> Z.t -> A.data_part A.segment list * A.sym_info list =
  fun name at z ->
+  print_endline ("a number:" ^ name);
   let z = if Z.lt z Z.zero then Z.neg z else z in
   let no_of_bits = Z.of_int (Z.log2up z) in
   let no_of_bits =
@@ -52,129 +51,43 @@ let convert_to_memory :
   let capacity = size in
   let length = size in
   let open Mem_helpers in
+  let open Helpers in
+  let open Int32 in
   let data =
     A.
       [
-        S.
-          {
-            it =
-              {
-                index = {it = 0l; at};
-                offset =
-                  (* wrap [wrap (Const (wrap (I32 !global_offset)))]; *)
-                  {it = [{it = Const {it = I32 !global_offset; at}; at}]; at};
-                init =
-                  {
-                    name;
-                    detail =
-                      [
-                        Int32 (Datatype.int32_of_datatype Datatype.Int);
-                        Symbol (name ^ "__int_data");
-                      ];
-                  };
-              };
-            at;
-          };
-        {
-          it =
+        data ~offset:!global_offset
+          ~init:
             {
-              index = {it = 0l; at};
-              offset =
-                {
-                  it =
-                    [
-                      {it = Const {it = I32 Int32.(!global_offset + 8l); at}; at};
-                    ];
-                  at;
-                };
-              init =
-                {
-                  name = name ^ "__int_data";
-                  detail =
-                    [
-                      Symbol (name ^ "__int_data2"); Int32 capacity; Int32 length;
-                    ];
-                };
+              name;
+              detail =
+                [
+                  Int32 (Datatype.int32_of_datatype Datatype.Int);
+                  Symbol (name ^ "__int_data");
+                ];
             };
-          at;
-        };
-        {
-          it =
+        data ~offset:(!global_offset + 8l)
+          ~init:
             {
-              index = {it = 0l; at};
-              offset =
-                {
-                  it =
-                    [
-                      {
-                        it = Const {it = I32 Int32.(!global_offset + 20l); at};
-                        at;
-                      };
-                    ];
-                  at;
-                };
-              init =
-                {name = name ^ "__int_data2"; detail = [String (Z.to_bits z)]};
+              name = name ^ "__int_data";
+              detail =
+                [Symbol (name ^ "__int_data2"); Int32 capacity; Int32 length];
             };
-          at;
-        };
+        data
+          ~offset:Int32.(!global_offset + 20l)
+          ~init:{name = name ^ "__int_data2"; detail = [String (Z.to_bits z)]};
       ]
   in
   let symbols =
     [
-      S.
-        {
-          it =
-            A.
-              {
-                name;
-                details =
-                  Data
-                    {
-                      index = {it = 0l; at};
-                      relocation_offset = {it = 0l; at};
-                      size = {it = 8l; at};
-                      offset = {it = !global_offset; at};
-                    };
-              };
-          at;
-        };
-      {
-        it =
-          A.
-            {
-              name = name ^ "__int_data";
-              details =
-                Data
-                  {
-                    index = {it = 0l; at};
-                    relocation_offset = {it = 0l; at};
-                    size = {it = 12l; at};
-                    offset = {it = Int32.(!global_offset + 8l); at};
-                  };
-            };
-        at;
-      };
-      {
-        it =
-          A.
-            {
-              name = name ^ "__int_data2";
-              details =
-                Data
-                  {
-                    index = {it = 0l; at};
-                    relocation_offset = {it = 0l; at};
-                    size = {it = Int32.(size * 4l); at};
-                    offset = {it = Int32.(!global_offset + 20l); at};
-                  };
-            };
-        at;
-      };
+      symbol_data ~name ~index:0l ~size:8l ~offset:!global_offset;
+      symbol_data ~name:(name ^ "__int_data") ~index:0l ~size:12l
+        ~offset:(!global_offset + 8l);
+      symbol_data ~name:(name ^ "__int_data2") ~index:0l ~size:(size * 4l)
+        ~offset:(!global_offset + 20l);
     ]
   in
-  (global_offset := Int32.(!global_offset + (size * 4l) + 20l));
-  (* TODO: get proper size for limbs... *)
+  global_offset := !global_offset + (size * 4l) + 20l;
   (data, symbols)
 
 type locals = (string * T.value_type) list
@@ -189,7 +102,7 @@ let rec expression ~raise :
   match e.content with
   | E_literal Literal_unit -> (w, l, [{it = Nop; at}])
   | E_literal (Literal_int z) ->
-    let unique_name = ValueVar.fresh () in
+    let unique_name = ValueVar.fresh ~name:"Literal_int" () in
     let name = var_to_string unique_name in
     let data, symbols = convert_to_memory name at z in
     let w = {w with data = w.data @ data; symbols = w.symbols @ symbols} in
@@ -210,112 +123,27 @@ let rec expression ~raise :
     match e.type_expression.type_content with
     | I.T_list {type_content = I.T_base TB_operation} ->
       let open Mem_helpers in
-      (* let mem_alloc, mem_alloc_name = malloc "empty_list" 12l in *)
-      let no_operations = make_dt [const_0l] in
-      let operations = new datatype ~kind:Operations ~value:no_operations in
-      let mem_alloc_name = operations#malloc_name in
-      (w, l @ [(mem_alloc_name, I32Type)], operations#store)
-    | _ -> (w, l, [{it = DataSymbol "C_LIST_EMPTY"; at}]))
+      let o = Operations None in
+      let o_locals, o_instr = store_datatype o in
+      (w, l @ o_locals, o_instr)
+    | _ -> (w, l, []))
   | E_constant {cons_name = C_PAIR; arguments = [e1; e2]} ->
     let w, l, e1 = expression ~raise w l e1 in
     let w, l, e2 = expression ~raise w l e2 in
-    let malloc_local = var_to_string (ValueVar.fresh ~name:"malloc" ()) in
-    (* let e1_local = var_to_string (ValueVar.fresh ~name:"e1" ()) in *)
-    (* let e2_local = var_to_string (ValueVar.fresh ~name:"e2" ()) in *)
     let open Mem_helpers in
-    (* let mem, malloc_local_name = malloc "malloc" 36l in *)
-    let tuple =
-      new datatype ~kind:Tuple ~value:(make_dt [])
-      (* (
-           new wrapped
-             ~data:(
-               new node
-                 ~value: (make_dt e1)
-                 ~next: (
-                   new wrapped
-                     ~data: (new node
-                       ~value: (make_dt e2)
-                       ~next: (make_dt [])
-                     )
-                 )
-             )
-           ) *)
+    let t =
+      Tuple
+        {
+          data =
+            {
+              value = {data = Instructions e1};
+              next =
+                Some {data = {value = {data = Instructions e2}; next = None}};
+            };
+        }
     in
-    let wrapped_tuple = new wrapped ~data:tuple in
-    (w, l @ wrapped_tuple#locals, wrapped_tuple#store)
-  (*
-       [
-         S.{ it = A.Const { it = I32 36l; at}; at };
-         { it = Call "malloc"; at };
-         { it = LocalSet malloc_local; at };
-
-         (* box pointer *)
-         { it = LocalGet malloc_local; at };
-         { it = LocalGet malloc_local; at };
-         { it = Const { it = I32 4l; at}; at };
-         { it = Binary (I32 Add); at };
-         { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-
-         (* tuple *)
-         { it = LocalGet malloc_local; at };
-         { it = Const { it = I32 4l; at}; at };
-         { it = Binary (I32 Add); at };
-         { it = Const { it = I32 6l; at}; at };
-         { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-
-         (* pointer to node *)
-         { it = LocalGet malloc_local; at };
-         { it = Const { it = I32 8l; at}; at };
-         { it = Binary (I32 Add); at };
-         { it = LocalGet malloc_local; at };
-         { it = Const { it = I32 12l; at}; at };
-         { it = Binary (I32 Add); at };
-         { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-
-         (* node *)
-         { it = LocalGet malloc_local; at };
-         { it = Const { it = I32 12l; at}; at };
-         { it = Binary (I32 Add); at };
-       ]
-       @
-       e1
-       @
-       S.[
-         { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-
-         (* is there always a next value? *)
-         { it = LocalGet malloc_local; at };
-         { it = Const { it = I32 16l; at}; at };
-         { it = Binary (I32 Add); at };
-         { it = Const { it = I32 1l; at}; at };
-         { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-
-         { it = LocalGet malloc_local; at };
-         { it = Const { it = I32 20l; at}; at };
-         { it = Binary (I32 Add); at };
-         { it = LocalGet malloc_local; at };
-         { it = Const { it = I32 24l; at}; at };
-         { it = Binary (I32 Add); at };
-         { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-
-
-         (* another node appears *)
-         { it = LocalGet malloc_local; at };
-         { it = Const { it = I32 24l; at}; at };
-         { it = Binary (I32 Add); at };
-       ]
-       @
-       e2
-       @
-       S.[
-         { it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-
-       ]
-       @ store_option_none ~mem:mem
-       @
-       S.[
-         { it = A.LocalGet malloc_local; at };
-       ] *)
+    let d_locals, e = store_datatype t in
+    (w, l @ d_locals, e)
   | E_constant {cons_name = C_ADD; arguments = [e1; e2]} ->
     let new_value = var_to_string (ValueVar.fresh ~name:"C_ADD" ()) in
     let w, l, e1 = expression ~raise w l e1 in
@@ -428,7 +256,6 @@ let rec expression ~raise :
     (w, l, args @ [S.{it = A.Call name; at}])
   | E_variable name -> (
     let name = var_to_string name in
-    print_endline ("get variable:" ^ name);
     match List.find ~f:(fun (n, _) -> String.equal n name) l with
     | Some _ -> (w, l, [{it = LocalGet name; at}])
     | None -> (w, l, [{it = DataSymbol name; at}]))
@@ -638,36 +465,6 @@ let rec toplevel_bindings ~raise :
                 at;
               };
             ];
-        (*
-/**
- * A region of memory for scatter/gather writes.
- */
-typedef struct __wasi_ciovec_t {
-    /**
-     * The address of the buffer to be written.
-     */
-    const uint8_t * buf;
-
-    /**
-     * The length of the buffer to be written.
-     */
-    __wasi_size_t buf_len;
-
-} __wasi_ciovec_t;        
-        *)
-
-        (*
-          Todo: move towards:          
-          * Represented in memory as: 
-          * Operations (Vec<Operation>):
-          * - 32bit - pointer to vector data (null value?!)
-          * - 32bit - vector capacity 
-          * - 32bit - vector size
-          * Storage (DataType):
-          * - 32bit - which enum
-          * - 32bit enum data or pointer (null value?!)
-          *   
-        *)
         funcs =
           w.funcs
           @ [
@@ -676,49 +473,11 @@ typedef struct __wasi_ciovec_t {
                   {
                     name;
                     ftype = name ^ "_type";
-                    locals = [("entrypoint_tuple", I32Type); ("tempx", I32Type)];
+                    locals = [("entrypoint_tuple", I32Type)];
                     body =
                       [
-                        (* { it = LocalGet "return_tuple"; at };
-                             (* { it = Const {it = I32 0l; at}; at }; *)
-                             (* { it = Binary (I32 Add); at }; *)
-                             (* { it = Const {it = I32 12l; at}; at }; *)
-                             (* { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at }; *)
-                        *)
-
-                        (* this is a bit dumb but okay... *)
-                        (* { it = LocalGet "return_tuple"; at }; *)
                         {it = LocalGet "entrypoint_tuple"; at};
-                        {
-                          it =
-                            Load
-                              {ty = I32Type; align = 0; offset = 0l; sz = None};
-                          at;
-                        };
                         {it = Call actual_name; at};
-                        {
-                          it =
-                            Load
-                              {ty = I32Type; align = 0; offset = 0l; sz = None};
-                          at;
-                        }
-                        (* { it = LocalTee "tempx"; at};
-                             { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-                             { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-
-                             { it = LocalGet "return_tuple"; at};
-                             { it = Const {it = I32 4l; at}; at};
-                             { it = Binary (I32 Add); at };
-                             { it = LocalGet "tempx"; at};
-                             { it = Const {it = I32 4l; at}; at};
-                             { it = Binary (I32 Add); at };
-                             { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-                             { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at }; *)
-
-                        (* {
-                               it = Const { it = I32 0l; at };
-                               at
-                             } *);
                       ];
                   };
                 at;
@@ -731,729 +490,9 @@ typedef struct __wasi_ciovec_t {
     (* { w with types = w.types @ type_; funcs = w.funcs @ func; symbols = w.symbols @ symbol } *)
   | _ -> failwith "Instruction not supported at the toplevel."
 
-(*
-   (*
-     - place everything at once in memory
-     - however the pointers will be incorrect, the following code corrects this
-     - possible improvement: - in storage, store the offset and use that to store it.
-                             - if offset matches, it can be just a copy paste in memory...
-   *)
-   let rec generate_storage_loader: I.type_expression -> string -> (A.instr list * locals) = fun t offset ->
-     let at = S.no_region in
-     match t.type_content with
-       T_list t ->
-         let addr = var_to_string (ValueVar.fresh ~name:"addr" ()) in
-         let next_item = var_to_string (ValueVar.fresh ~name:"next_item" ()) in
-         let (list_item_loader, locals) = generate_storage_loader t offset in
-         [
-           S.{ it = A.LocalSet addr; at};
-           {
-             it = Loop (
-               ValBlockType None,
-               [
-                  (* change the first part of the list item *)
-                  S.{ it = A.LocalGet addr; at};
-                  { it = LocalGet addr; at};
-                  { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-                  { it = LocalGet offset; at };
-                  { it = Binary (I32 Add); at };
-                  { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-
-                  (* check if we should change the second part of the list item *)
-                  { it = LocalGet addr; at};
-                  { it = Const {it = I32 4l; at}; at };
-                   { it = Binary (I32 Add); at };
-                   { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-                   { it = DataSymbol "C_LIST_EMPTY"; at};
-                   { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-
-                   { it = Compare (I32 Ne); at };
-                   { it = If (
-                     ValBlockType None,
-                     [
-                       (* change the second part of the list item  *)
-                       { it = LocalGet addr; at};
-                       { it = Const {it = I32 4l; at}; at };
-                       { it = Binary (I32 Add); at };
-
-                       { it = LocalGet addr; at};
-                       { it = Const {it = I32 4l; at}; at };
-                       { it = Binary (I32 Add); at };
-
-                       { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-                       { it = LocalGet offset; at };
-                       { it = Binary (I32 Add); at };
-                       { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-                     ],
-                     [
-
-                     ]
-                   ); at
-                 };
-
-
-                  (* change the list item value *)
-                 { it = LocalGet addr; at};
-                 { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-               ]
-               @
-               list_item_loader
-               @
-               [
-                 (* set the next list item *)
-
-
-                 { it = LocalGet addr; at};
-                 { it = Const {it = I32 4l; at}; at };
-                 { it = Binary (I32 Add); at };
-                 { it = LocalTee next_item; at};
-                 { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-                 { it = DataSymbol "C_LIST_EMPTY"; at};
-                 { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-
-                 (* { it = Const {it = I32 0l; at}; at }; *)
-                 { it = Compare (I32 Ne); at };
-                 { it = If (
-                   ValBlockType None,
-                   [
-                     { it = LocalGet next_item; at};
-                     { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-                     { it = LocalSet addr; at};
-                     { it = Br {it = 1l; at}; at}
-                   ],
-                   [
-
-                   ]
-                 ); at
-                 }
-               ]
-             );
-             at
-           };
-         ], ((addr, I32Type) :: (next_item, I32Type) :: locals)
-     | T_tuple [(_, item1); (_, item2)] ->
-       (* ignore annotations for now *)
-       let addr = var_to_string (ValueVar.fresh ~name:"addr" ()) in
-       let a1, locals1 =  generate_storage_loader item1 offset in
-       let a2, locals2 =  generate_storage_loader item2 offset in
-       ([
-         S.{ it = A.LocalTee addr; at };
-
-         { it = LocalGet addr; at };
-         { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-         { it = LocalGet offset; at };
-         { it = Binary (I32 Add); at };
-         { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-
-         { it = LocalGet addr; at };
-         { it = Const {it = I32 4l; at}; at };
-         { it = Binary (I32 Add); at };
-
-         { it = LocalGet addr; at };
-         { it = Const {it = I32 4l; at}; at };
-         { it = Binary (I32 Add); at };
-         { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-         { it = LocalGet offset; at };
-         { it = Binary (I32 Add); at };
-
-         { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-
-         { it = A.LocalGet addr; at};
-         { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-       ]
-       @
-       a1
-       @
-       [
-         S.{ it = A.LocalGet addr; at};
-         { it = Const {it = I32 4l; at}; at };
-         { it = Binary (I32 Add); at };
-         { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-       ]
-       @
-       a2,
-       ((addr, T.I32Type) :: locals1) @ locals2)
-     | T_base TB_int ->
-       let addr     = var_to_string (ValueVar.fresh ~name:"addr" ()) in
-       [
-         S.{ it = A.LocalTee addr; at };
-         { it = Const {it = I32 8l; at}; at};
-         { it = Binary (I32 Add); at };
-         { it = LocalGet addr; at };
-         { it = Const {it = I32 8l; at}; at};
-         { it = Binary (I32 Add); at };
-         { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-         { it = LocalGet offset; at };
-         { it = Binary (I32 Add); at };
-         { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-       ], ((addr, I32Type) :: [])
-     | T_or ((annot_a, a), (annot_b, b)) ->
-       let addr       = var_to_string (ValueVar.fresh ~name:"addr" ()) in
-       let item_a     = var_to_string (ValueVar.fresh ~name:"item_a" ()) in
-       let item_b     = var_to_string (ValueVar.fresh ~name:"item_b" ()) in
-       let item_a_loader, locals_a = generate_storage_loader a offset in
-       let item_b_loader, locals_b = generate_storage_loader b offset in
-       [
-         S.{ it = A.LocalTee addr; at };
-         { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-         { it = LocalTee item_a; at };
-       ]
-       @
-       item_a_loader
-       @
-       [
-         S.{ it = A.LocalGet addr; at };
-         { it = Const {it = I32 4l; at}; at };
-         { it = Binary (I32 Add); at };
-         { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-         { it = LocalTee item_b; at };
-       ]
-       @
-       item_b_loader
-       @
-       [
-         { it = LocalGet addr; at };
-         { it = LocalGet item_a; at };
-         { it = LocalGet offset; at };
-         { it = Binary (I32 Add); at };
-
-         { it = LocalGet addr; at };
-         { it = Const {it = I32 4l; at}; at };
-         { it = Binary (I32 Add); at };
-         { it = LocalGet item_b; at };
-         { it = LocalGet offset; at };
-         { it = Binary (I32 Add); at };
-       ],
-       (((addr, T.I32Type) :: (item_a, I32Type) :: (item_b, I32Type) :: locals_a) @ locals_b)
-     | T_set ty ->
-       (* a set is expected to be:
-          - size, items of the set.
-          - there should not be any interruptions in the set, otherwise: oops.
-         *)
-       let addr     = var_to_string (ValueVar.fresh ~name:"addr" ()) in
-       let size     = var_to_string (ValueVar.fresh ~name:"size" ()) in
-       let counter  = var_to_string (ValueVar.fresh ~name:"counter" ()) in
-       let left     = var_to_string (ValueVar.fresh ~name:"left" ()) in
-       let item     = var_to_string (ValueVar.fresh ~name:"item" ()) in
-       let right    = var_to_string (ValueVar.fresh ~name:"right" ()) in
-       let set_item_loader, locals = generate_storage_loader ty offset in
-       [
-         S.{ it = A.LocalTee addr; at };
-         { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-         { it = LocalSet size; at };
-         { it = LocalGet addr; at };
-         { it = Const {it = I32 4l; at}; at };
-         { it = Binary (I32 Add); at };
-         { it = LocalSet addr; at };
-         { it = Const {it = I32 0l; at}; at };
-         { it = LocalSet counter; at };
-         { it = Loop (
-           ValBlockType (Some I32Type),
-           [
-             (* left *)
-             S.{ it = A.LocalGet addr; at };
-             { it = LocalGet addr; at };
-             { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-             { it = LocalTee left; at };
-             { it = LocalGet offset; at };
-             { it = Binary (I32 Add); at };
-             { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-
-             (* item *)
-             { it = LocalGet addr; at };
-             { it = Const {it = I32 4l; at}; at };
-             { it = Binary (I32 Add); at };
-             { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-             { it = LocalTee item; at };
-           ]
-           @
-           set_item_loader
-           @
-           [
-             { it = LocalGet addr; at };
-             { it = Const {it = I32 4l; at}; at };
-             { it = Binary (I32 Add); at };
-             { it = LocalGet item; at };
-             { it = LocalGet offset; at };
-             { it = Binary (I32 Add); at };
-             { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-
-             (* do nothing with depth *)
-
-             (* right *)
-             { it = LocalGet addr; at };
-             { it = Const {it = I32 12l; at}; at };
-             { it = Binary (I32 Add); at };
-             { it = LocalGet addr; at };
-             { it = Const {it = I32 12l; at}; at };
-             { it = Binary (I32 Add); at };
-             { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-             { it = LocalTee right; at };
-             { it = LocalGet offset; at };
-             { it = Binary (I32 Add); at };
-             { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-
-            (* counter *)
-             { it = LocalGet counter; at };
-             { it = Const {it = I32 1l; at}; at };
-             { it = LocalTee counter; at };
-             { it = LocalGet size; at };
-             { it = Compare (I32 LtU); at };
-             { it = If
-               (ValBlockType None,
-               [
-                 { it = LocalGet addr; at };
-                 { it = Const {it = I32 16l; at}; at };
-                 { it = Binary (I32 Add); at };
-                 { it = LocalSet addr; at }
-               ],
-               [
-                 {it = Br {it = 1l; at}; at };
-               ]
-               );
-               at
-             }
-           ]); at
-         }
-       ], ((addr, I32Type) :: (size, I32Type) :: (counter, I32Type) :: (left, I32Type) :: (item, I32Type) :: (right, I32Type) :: locals)
-     | T_function _ ->
-       print_endline "- function oh hai...";
-       ([], [])
-     | _ ->
-       print_endline "- Do nothing apparently...";
-       ([], [])
-
-   (*
-     Calculate the required storage that needs to be allocated for saving the storage in a compressed way.
-   *)
-   let rec calculate_storage_size: I.type_expression -> string -> string -> (A.instr list * locals) = fun t src_addr old_addr ->
-     let at = S.no_region in
-     match t.type_content with
-     | T_tuple [(_, item1); (_, item2)] ->
-         let tuple_addr     = var_to_string (ValueVar.fresh ~name:"tuple_addr" ()) in
-         let a1, locals1 = calculate_storage_size item1 src_addr old_addr in
-         let a2, locals2 = calculate_storage_size item2 src_addr old_addr in
-         ([
-           S.{ it = A.LocalGet src_addr; at};
-           { it = A.LocalTee tuple_addr; at};
-           { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-           { it = LocalSet src_addr; at };
-         ]
-         @
-         a1
-         @
-         [
-           S.{ it = A.LocalGet tuple_addr; at};
-           { it = Const {it = I32 4l; at}; at};
-           { it = Binary (I32 Add); at };
-           { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-           { it = LocalSet src_addr; at };
-         ]
-         @
-         a2
-         @
-         [{ it = Const {it = I32 8l; at}; at};
-           { it = Binary (I32 Add); at };
-           { it = Binary (I32 Add); at };
-         ], ((tuple_addr, T.I32Type) :: locals1) @ locals2)
-
-     | T_base TB_int ->
-       ([
-         S.{ it = A.LocalGet src_addr; at };
-         { it = Const {it = I32 4l; at}; at};
-         { it = Binary (I32 Add); at };
-         { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at }; (* get the size of the limbs *)
-         { it = Const {it = I32 4l; at}; at};
-         { it = Binary (I32 Mul); at };
-         { it = Const {it = I32 12l; at}; at};
-         { it = Binary (I32 Add); at };
-       ], [])
-     | T_list l ->
-       let list_addr     = var_to_string (ValueVar.fresh ~name:"list_addr" ()) in
-       let counter       = var_to_string (ValueVar.fresh ~name:"counter" ()) in
-       let next_addr     = var_to_string (ValueVar.fresh ~name:"next_addr" ()) in
-       let l, locals = calculate_storage_size l src_addr old_addr in
-       ([
-         S.{ it = A.LocalGet src_addr; at };
-         { it = LocalSet list_addr; at };
-         { it = Const {it = I32 0l; at}; at};
-         { it = LocalSet counter; at };
-         { it = Loop (
-           ValBlockType None,
-           [
-             S.{ it = A.LocalGet list_addr; at };
-             { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-             { it = LocalSet src_addr; at };
-           ]
-           @
-           l
-           @
-           [
-             S.{ it = A.Const {it = I32 8l; at}; at};
-             { it = Binary (I32 Add); at };
-             { it = LocalGet counter; at };
-             { it = Binary (I32 Add); at };
-             { it = LocalSet counter; at };
-             { it = LocalGet list_addr; at};
-             { it = Const {it = I32 4l; at}; at};
-             { it = Binary (I32 Add); at };
-             { it = A.LocalTee next_addr; at};
-             { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-             { it = DataSymbol "C_LIST_EMPTY"; at};
-             { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-             { it = Compare (I32 Ne); at };
-             { it = If (
-               ValBlockType None,
-               [
-                 { it = LocalGet next_addr; at};
-                 { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-                 { it = LocalSet list_addr; at};
-                 { it = Br {it = 1l; at}; at}
-               ],
-               [
-
-               ]
-             );
-             at};
-
-           ]);
-           at
-         };
-         { it = LocalGet counter; at };
-       ], (counter, I32Type) :: (next_addr, I32Type) :: (list_addr, I32Type) :: locals)
-     | _ ->
-       print_endline "uhhhhxxx";
-       [], []
-
-   let rec generate_storage_saver: I.type_expression -> string -> string -> string -> (A.instr list * locals) = fun t src_addr target_addr offset ->
-     let at = S.no_region in
-     match t.type_content with
-     | T_base TB_int ->
-       let mp_size = var_to_string (ValueVar.fresh ~name:"mp_size" ()) in
-       let counter = var_to_string (ValueVar.fresh ~name:"counter" ()) in
-       let limbs   = var_to_string (ValueVar.fresh ~name:"limbs" ()) in
-       [
-         S.
-         (* _mp_alloc *)
-         { it = LocalGet target_addr; at };
-         { it = LocalGet offset; at};
-         { it = Binary (I32 Add); at };
-         { it = LocalGet src_addr; at };
-         { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-         { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-
-         (* _mp_size *)
-         { it = A.LocalGet target_addr; at };
-         { it = A.LocalGet offset; at };
-         { it = Binary (I32 Add); at };
-         { it = Const {it = I32 4l; at}; at};
-         { it = Binary (I32 Add); at };
-         { it = LocalGet src_addr; at };
-         { it = Const {it = I32 4l; at}; at};
-         { it = Binary (I32 Add); at };
-         { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-         { it = LocalTee mp_size; at };
-         { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-
-         (* pointer to limbs *)
-         { it = LocalGet target_addr; at };
-         { it = A.LocalGet offset; at };
-         { it = Binary (I32 Add); at };
-         { it = Const {it = I32 8l; at}; at};
-         { it = Binary (I32 Add); at };
-         { it = A.LocalGet offset; at };
-         { it = Const {it = I32 12l; at}; at};
-         { it = Binary (I32 Add); at };
-         { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-
-         (* the limbs *)
-         { it = LocalGet src_addr; at };
-         { it = Const {it = I32 8l; at}; at};
-         { it = Binary (I32 Add); at };
-         { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-         { it = LocalSet limbs; at};
-
-         { it = Const {it = I32 0l; at}; at};
-         { it = LocalSet counter; at };
-         { it = Loop (ValBlockType None,
-             [
-               S.{ it = A.LocalGet target_addr; at };
-               { it = LocalGet offset; at};
-               { it = Binary (I32 Add); at };
-               { it = Const {it = I32 12l; at}; at};
-               { it = Binary (I32 Add); at };
-               { it = LocalGet counter; at};
-               { it = Const {it = I32 4l; at}; at};
-               { it = Binary (I32 Mul); at };
-               { it = Binary (I32 Add); at };
-
-               { it = LocalGet limbs; at };
-               { it = LocalGet counter; at};
-               { it = Const {it = I32 4l; at}; at};
-               { it = Binary (I32 Mul); at };
-               { it = Binary (I32 Add); at };
-               { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-               { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-
-               { it = LocalGet counter; at};
-               { it = LocalGet mp_size; at};
-               { it = Compare (I32 LtU); at };
-               { it = If (
-                 ValBlockType None,
-                 [
-                   { it = LocalGet counter; at};
-                   { it = Const {it = I32 1l; at}; at};
-                   { it = Binary (I32 Add); at };
-                   { it = LocalSet counter; at};
-                   { it = Br {it = 1l; at}; at}
-                 ],
-                 [
-
-                 ]
-               );
-               at}
-             ];
-           );
-           at
-         };
-         { it = LocalGet offset; at };
-         { it = Const {it = I32 12l; at}; at};
-         { it = Binary (I32 Add); at };
-         { it = LocalGet mp_size; at };
-         { it = Const {it = I32 4l; at}; at};
-         { it = Binary (I32 Mul); at };
-         { it = Binary (I32 Add); at };
-         { it = LocalSet offset; at };
-       ], ((mp_size, I32Type) :: (counter, I32Type) :: (limbs, I32Type) :: [])
-     | T_tuple [(_, item1); (_, item2)] ->
-       let tuple_offset = var_to_string (ValueVar.fresh ~name:"tuple_offset" ()) in
-       let tuple_src_addr = var_to_string (ValueVar.fresh ~name:"tuple_src_addr" ()) in
-
-       let a1, locals1 = generate_storage_saver item1 src_addr target_addr offset in
-       let a2, locals2 = generate_storage_saver item2 src_addr target_addr offset in
-       (([
-         S.{ it = A.LocalGet offset; at };
-         { it = LocalSet tuple_offset; at};
-         { it = LocalGet src_addr; at };
-         { it = LocalSet tuple_src_addr; at };
-         { it = A.LocalGet offset; at };
-         { it = Const {it = I32 8l; at}; at};
-         { it = Binary (I32 Add); at };
-         { it = LocalSet offset; at };
-
-         { it = LocalGet target_addr; at};
-         { it = LocalGet tuple_offset; at};
-         { it = Binary (I32 Add); at };
-         { it = LocalGet offset; at};
-         { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-
-         { it = LocalGet tuple_src_addr; at };
-         { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-         { it = LocalSet src_addr; at };
-       ]
-       @
-       a1
-       @
-       [
-         S.{ it = A.LocalGet target_addr; at};
-         { it = LocalGet tuple_offset; at};
-         { it = Binary (I32 Add); at };
-         { it = Const {it = I32 4l; at}; at};
-         { it = Binary (I32 Add); at };
-         { it = LocalGet offset; at};
-         { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-         { it = LocalGet tuple_src_addr; at };
-         { it = Const {it = I32 4l; at}; at};
-         { it = Binary (I32 Add); at };
-         { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-         { it = LocalSet src_addr; at };
-       ]
-       @
-       a2
-       ), ((tuple_src_addr, T.I32Type) :: (tuple_offset, I32Type) :: locals1) @ locals2)
-     | T_list l ->
-       let list_addr     = var_to_string (ValueVar.fresh ~name:"list_addr" ()) in
-       let counter       = var_to_string (ValueVar.fresh ~name:"counter" ()) in
-       let next_addr     = var_to_string (ValueVar.fresh ~name:"next_addr" ()) in
-       let old_offset    = var_to_string (ValueVar.fresh ~name:"old_offset" ()) in
-       let l, locals = generate_storage_saver l src_addr target_addr offset in
-       ([
-         S.{ it = A.LocalGet src_addr; at };
-         { it = LocalSet list_addr; at };
-         { it = Loop (
-           ValBlockType None,
-           [
-             (* take 8 bytes *)
-             (* child = right after *)
-             (* DO CHILD *)
-             (* next = after child or null *)
-             S.{ it = A.LocalGet target_addr; at };
-             { it = LocalGet offset; at };
-             { it = Binary (I32 Add); at };
-
-             (* { it = A.LocalGet target_addr; at }; *)
-             { it = LocalGet offset; at };
-             (* { it = Binary (I32 Add); at }; *)
-             { it = A.Const {it = I32 8l; at}; at};
-             { it = Binary (I32 Add); at };
-
-             { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-
-             { it = LocalGet list_addr; at };
-             { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-             { it = LocalSet src_addr; at };
-             { it = LocalGet offset; at};
-             { it = LocalTee old_offset; at};
-
-             { it = A.Const {it = I32 8l; at}; at};
-             { it = Binary (I32 Add); at };
-             { it = LocalSet offset; at};
-           ]
-           @
-           l
-           @
-           [
-             S.
-             { it = LocalGet list_addr; at};
-             { it = Const {it = I32 4l; at}; at};
-             { it = Binary (I32 Add); at };
-             { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-             { it = A.LocalTee next_addr; at};
-             { it = DataSymbol "C_LIST_EMPTY"; at};
-             { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-             { it = Compare (I32 Ne); at };
-             { it = If (
-               ValBlockType None,
-               [
-                 (* store the next item here *)
-                 { it = A.LocalGet target_addr; at };
-                 { it = LocalGet old_offset; at };
-                 { it = Binary (I32 Add); at };
-                 { it = Const {it = I32 4l; at}; at};
-                 { it = Binary (I32 Add); at };
-                 { it = LocalGet offset; at };
-                 { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-
-                 { it = LocalGet next_addr; at};
-
-                 { it = LocalSet list_addr; at};
-                 { it = Br {it = 1l; at}; at}
-               ],
-               [
-                 (* store null here *)
-                 { it = A.LocalGet target_addr; at };
-                 { it = LocalGet old_offset; at };
-                 { it = Binary (I32 Add); at };
-                 { it = Const {it = I32 4l; at}; at};
-                 { it = Binary (I32 Add); at };
-                 { it = DataSymbol "C_LIST_EMPTY"; at};
-                 { it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-                 { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-               ]
-             );
-             at};
-
-           ]);
-           at
-         };
-
-         (* { it = LocalGet counter; at }; *)
-       ], (next_addr, I32Type) :: (list_addr, I32Type) :: (old_offset, I32Type) :: locals)
-     | _ ->
-       print_endline "- Do nothing apparently...";
-       ([], []) *)
-
 let compile ~raise : I.expression -> string -> string -> W.Ast.module_ =
  fun e filename entrypoint ->
   let w = Default_env.env in
-  (* let at = S.no_region in *)
-  (* let input, output = match e.type_expression.type_content with
-      T_function (left, right) -> left, right
-     | _ -> failwith "should not happen, I think..."
-     in
-     let parameter_type, storage_type_input = match input.type_content with
-       T_tuple [(_, a); (_,b)] -> a, b
-     | _ -> failwith "should not happen, I think..."
-     in
-     let _operations_type, storage_type_output = match output.type_content with
-       T_tuple [(_, a); (_,b)] -> a, b
-     | _ -> failwith "should not happen, I think..."
-     in
-     let offset          = var_to_string (ValueVar.fresh ~name:"offset" ()) in
-     let addr            = var_to_string (ValueVar.fresh ~name:"addr" ()) in
-     (* let body, locals    = generate_storage_loader storage_type_input offset in *)
-
-     let target_addr     = var_to_string (ValueVar.fresh ~name:"target_addr" ()) in
-     let src_addr        = var_to_string (ValueVar.fresh ~name:"src_addr" ()) in
-     let src_addr_backup        = var_to_string (ValueVar.fresh ~name:"src_addr_backup" ()) in
-     let old_addr        = var_to_string (ValueVar.fresh ~name:"old_addr" ()) in
-     let storage_size    = var_to_string (ValueVar.fresh ~name:"storage_size" ()) in
-     let result_with_size    = var_to_string (ValueVar.fresh ~name:"result_with_size" ()) in
-     (* let body_calc, locals_calc = calculate_storage_size storage_type_output src_addr old_addr in *)
-     (* let body_save, locals_save = generate_storage_saver storage_type_output src_addr target_addr offset in *)
-     let w = {w with it = {
-       w.it with funcs = w.it.funcs @ [
-         {
-           it = {
-             name = "__load";
-             ftype = "__load_type";
-             locals = (offset, I32Type) :: locals;
-             body = {it = LocalGet offset; at = S.no_region} :: body;
-           };
-           at = S.no_region
-         };
-         {
-           it = {
-             name = "__save";
-             ftype = "__save_type";
-             locals =
-               ((src_addr, T.I32Type) ::
-               (result_with_size, T.I32Type) ::
-               (target_addr, I32Type) ::
-               (storage_size, I32Type) ::
-               (offset, I32Type) ::
-               (old_addr, I32Type) ::
-               (src_addr_backup, T.I32Type) ::
-               locals_save) @ locals_calc;
-             body =
-               [
-                 S.{it = A.LocalGet src_addr; at };
-                 {it = LocalSet src_addr_backup; at };
-               ]
-               @
-               body_calc
-               @
-               [
-                 S.{ it = A.LocalTee storage_size; at };
-                 { it = Call "malloc"; at};
-                 { it = LocalSet target_addr; at};
-                 { it = LocalGet src_addr_backup; at };
-                 { it = LocalSet src_addr; at };
-                 { it = Const {it = I32 0l;  at}; at};
-                 { it = LocalSet offset; at};
-               ] @
-               body_save
-               @
-               (* Here we return the compressed storage and the size of the compressed
-                  storage (which can directly used via `__wasi_ciovec_t` in C) *)
-               [
-                 S.
-                 { it = A.LocalGet result_with_size; at };
-                 { it = LocalGet target_addr; at};
-                 { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-                 { it = LocalGet result_with_size; at };
-                 { it = Const { it = I32 4l; at}; at };
-                 { it = Binary (I32 Add); at };
-                 { it = A.LocalGet storage_size; at };
-                 { it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at };
-               ]
-           };
-           at = S.no_region
-         };
-       ]
-       }
-     }
-     in *)
   let at = location_to_region e.location in
   global_offset := Default_env.offset;
   S.{it = toplevel_bindings ~raise e w.it; at}

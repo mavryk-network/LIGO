@@ -36,8 +36,8 @@ pub fn expose_fn(_attr: TokenStream, input: TokenStream) -> TokenStream {
 }
 
 /**
- * Turns the collected data of functions which have the `expose` macro into
- * a file: src/passes/14-wasm/interop.ml
+ * Turns the collected data of functions which have the `expose_fn` macro
+ * into a file: src/passes/14-wasm/interop.ml
  */
 #[proc_macro_attribute]
 pub fn produce_file(_attr: TokenStream, input: TokenStream) -> TokenStream {
@@ -56,7 +56,7 @@ pub fn expose_datatype(_attr: TokenStream, input: TokenStream) -> TokenStream {
 }
 
 /**  
- * Turns the collected data of datatypes which have the `datatype_helper`
+ * Turns the collected data of datatypes which have the `expose_datatype`
  * macro into a file: src/passes/14-wasm/mem_helpers.ml
  */
 #[proc_macro_attribute]

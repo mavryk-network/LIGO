@@ -6,8 +6,8 @@
 //  Important parts:
 //  - needs to work with interop
 //  - needs to work with Serde for serialization and deserialization
-//  - helper classes for the ligo wasm code generation are created with help 
-//    of the `expose_datatype` macro.
+//  - helper classes for the ligo wasm code generation are created with help of
+//    the `expose_datatype` macro.
 
 use core::fmt::Debug;
 use core::mem;
@@ -280,6 +280,9 @@ impl MemoryLayout for DataType {
       DataType::String(_s) => {
         panic!()
       }
+      DataType::Instructions => {
+        panic!("Do not use instructions in Rust")
+      }
     }
   }
 }
@@ -350,13 +353,12 @@ pub enum DataType {
   Tuple(Wrapped<Node>),
   Set(Wrapped<RBNode>),
   Map(Wrapped<RBNode>),
-  // Map(Box<RedBlackTreeMap<Box<Self>, Box<Self>>>),
   Operations(Option<Wrapped<OperationNode>>),
-  String(Wrapped<String>),
-  // Bytes(Box<String>),
-  // Address(Box<String>),
+  String(Wrapped<String>), /* Bytes(Box<String>),
+                            * Address(Box<String>), */
 
-  // TODO: add other data types
+  /* TODO: add other data types */
+  Instructions, // special indicator for expose_datatype to create certain helpers here
 }
 
 /**
