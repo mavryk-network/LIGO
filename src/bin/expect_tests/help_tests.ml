@@ -95,9 +95,8 @@ let%expect_test _ =
                                                (alias: --entry-point)
       [-p PROTOCOL]                            choose protocol's types/values
                                                pre-loaded into the LIGO environment
-                                               (jakarta ,
-                                               ithaca). By default, the current
-                                               protocol (ithaca) will be used
+                                               (jakarta). By default, the current
+                                               protocol (jakarta) will be used
                                                (alias: --protocol)
       [-help]                                  print this help text and exit
                                                (alias: -?)
@@ -161,9 +160,9 @@ let%expect_test _ =
       [-e ENTRY-POINT]                   the entry-point that will be compiled.
                                          (alias: --entry-point)
       [-p PROTOCOL]                      choose protocol's types/values pre-loaded
-                                         into the LIGO environment (jakarta ,
-                                         ithaca). By default, the current protocol
-                                         (ithaca) will be used
+                                         into the LIGO environment (jakarta). By
+                                         default, the current protocol (jakarta)
+                                         will be used
                                          (alias: --protocol)
       [-help]                            print this help text and exit
                                          (alias: -?)
@@ -227,9 +226,9 @@ let%expect_test _ =
       [-e ENTRY-POINT]                   the entry-point that will be compiled.
                                          (alias: --entry-point)
       [-p PROTOCOL]                      choose protocol's types/values pre-loaded
-                                         into the LIGO environment (jakarta ,
-                                         ithaca). By default, the current protocol
-                                         (ithaca) will be used
+                                         into the LIGO environment (jakarta). By
+                                         default, the current protocol (jakarta)
+                                         will be used
                                          (alias: --protocol)
       [-help]                            print this help text and exit
                                          (alias: -?)
@@ -261,9 +260,8 @@ let%expect_test _ =
       [--werror]                 treat warnings as errors
       [--without-run]            disable running of compiled expression.
       [-p PROTOCOL]              choose protocol's types/values pre-loaded into the
-                                 LIGO environment (jakarta ,
-                                 ithaca). By default, the current protocol (ithaca)
-                                 will be used
+                                 LIGO environment (jakarta). By default, the current
+                                 protocol (jakarta) will be used
                                  (alias: --protocol)
       [-help]                    print this help text and exit
                                  (alias: -?)
@@ -310,9 +308,8 @@ let%expect_test _ =
       [-e ENTRY-POINT]           the entry-point that will be compiled.
                                  (alias: --entry-point)
       [-p PROTOCOL]              choose protocol's types/values pre-loaded into the
-                                 LIGO environment (jakarta ,
-                                 ithaca). By default, the current protocol (ithaca)
-                                 will be used
+                                 LIGO environment (jakarta). By default, the current
+                                 protocol (jakarta) will be used
                                  (alias: --protocol)
       [-help]                    print this help text and exit
                                  (alias: -?)
@@ -359,9 +356,8 @@ let%expect_test _ =
       [-e ENTRY-POINT]           the entry-point that will be compiled.
                                  (alias: --entry-point)
       [-p PROTOCOL]              choose protocol's types/values pre-loaded into the
-                                 LIGO environment (jakarta ,
-                                 ithaca). By default, the current protocol (ithaca)
-                                 will be used
+                                 LIGO environment (jakarta). By default, the current
+                                 protocol (jakarta) will be used
                                  (alias: --protocol)
       [-help]                    print this help text and exit
                                  (alias: -?)
@@ -409,9 +405,8 @@ let%expect_test _ =
       [-e ENTRY-POINT]           the entry-point that will be compiled.
                                  (alias: --entry-point)
       [-p PROTOCOL]              choose protocol's types/values pre-loaded into the
-                                 LIGO environment (jakarta ,
-                                 ithaca). By default, the current protocol (ithaca)
-                                 will be used
+                                 LIGO environment (jakarta). By default, the current
+                                 protocol (jakarta) will be used
                                  (alias: --protocol)
       [-help]                    print this help text and exit
                                  (alias: -?)
@@ -456,9 +451,9 @@ let%expect_test _ =
       [--werror]                         treat warnings as errors
       [--without-run]                    disable running of compiled expression.
       [-p PROTOCOL]                      choose protocol's types/values pre-loaded
-                                         into the LIGO environment (jakarta ,
-                                         ithaca). By default, the current protocol
-                                         (ithaca) will be used
+                                         into the LIGO environment (jakarta). By
+                                         default, the current protocol (jakarta)
+                                         will be used
                                          (alias: --protocol)
       [-help]                            print this help text and exit
                                          (alias: -?)
