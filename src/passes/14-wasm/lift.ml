@@ -31,12 +31,17 @@ let var_type env v =
   | Some (_, type_) -> type_
   | None -> failwith "should not happen"
 
+let var_to_string name =
+  let name, hash = ValueVar.internal_get_name_and_counter name in
+  name ^ "#" ^ string_of_int hash
+
 let rec lift : env -> expression -> env * expression =
  fun env e ->
   let variable_exists = variable_exists env in
   match e.content with
   | E_literal _ -> (env, e)
   | E_closure {binder; body} ->
+    print_endline "some closure here...";
     let env =
       {env with variables = (binder, e.type_expression) :: env.variables}
     in
@@ -91,6 +96,11 @@ let rec lift : env -> expression -> env * expression =
             type_content = T_function (e1.type_expression, e2.type_expression);
           };
       } )
+  | E_application (({content = E_closure c; _} as e1), e2) ->
+    ignore e1;
+    ignore c;
+    ignore e2;
+    failwith "wrop"
   | E_application (e1, e2) ->
     let env, e1 = lift env e1 in
     let env, e2 = lift env e2 in
@@ -107,6 +117,8 @@ let rec lift : env -> expression -> env * expression =
   | E_variable v when variable_exists v -> (env, e)
   | E_variable v -> ({env with missing = v :: env.missing}, e)
   | E_iterator (cc, ((var_name, type_expression), e1), e2) ->
+    print_endline ("ITERATOR:" ^ var_to_string var_name);
+
     let variables = (var_name, type_expression) :: env.variables in
     let env = {env with variables} in
     let env, e1 = lift env e1 in
@@ -202,6 +214,7 @@ let rec lift : env -> expression -> env * expression =
         inline,
         thunk,
         ((var_name, type_expression), e2) ) ->
+    print_endline "wait...";
     let env2, c =
       lift
         {
@@ -355,11 +368,6 @@ let rec toplevel_inner : env -> expression -> expression =
         inline,
         thunk,
         ((var_name, type_expression), e2) ) ->
-    let var_to_string name =
-      let name, hash = ValueVar.internal_get_name_and_counter name in
-      name ^ "#" ^ string_of_int hash
-    in
-    print_endline ("e_let_in x:" ^ var_to_string var_name);
     let env, body =
       lift {empty_env with functions = var_name :: env.functions} body
     in
@@ -377,10 +385,6 @@ let rec toplevel_inner : env -> expression -> expression =
         }
       env.exported_funcs
   | E_let_in (e1, inline, thunk, ((var_name, type_expression), e2)) ->
-    let var_to_string name =
-      let name, hash = ValueVar.internal_get_name_and_counter name in
-      name ^ "#" ^ string_of_int hash
-    in
     print_endline ("e_let_in:" ^ var_to_string var_name);
     {
       e with

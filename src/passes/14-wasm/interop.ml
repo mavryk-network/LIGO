@@ -17,16 +17,13 @@ let env : module_ =
           [
             {
               it =
-                {
-                  tname = "int_neg";
-                  tdetails = FuncType ([I32Type; I32Type], []);
-                };
+                {tname = "c_neg"; tdetails = FuncType ([I32Type; I32Type], [])};
               at;
             };
             {
               it =
                 {
-                  tname = "int_add";
+                  tname = "c_add";
                   tdetails = FuncType ([I32Type; I32Type; I32Type], []);
                 };
               at;
@@ -34,7 +31,76 @@ let env : module_ =
             {
               it =
                 {
-                  tname = "int_sub";
+                  tname = "c_sub";
+                  tdetails = FuncType ([I32Type; I32Type; I32Type], []);
+                };
+              at;
+            };
+            {
+              it =
+                {
+                  tname = "c_mul";
+                  tdetails = FuncType ([I32Type; I32Type; I32Type], []);
+                };
+              at;
+            };
+            {
+              it =
+                {
+                  tname = "c_div";
+                  tdetails = FuncType ([I32Type; I32Type; I32Type], []);
+                };
+              at;
+            };
+            {
+              it =
+                {
+                  tname = "c_mod";
+                  tdetails = FuncType ([I32Type; I32Type; I32Type], []);
+                };
+              at;
+            };
+            {
+              it =
+                {tname = "c_not"; tdetails = FuncType ([I32Type; I32Type], [])};
+              at;
+            };
+            {
+              it =
+                {
+                  tname = "c_and";
+                  tdetails = FuncType ([I32Type; I32Type; I32Type], []);
+                };
+              at;
+            };
+            {
+              it =
+                {
+                  tname = "c_or";
+                  tdetails = FuncType ([I32Type; I32Type; I32Type], []);
+                };
+              at;
+            };
+            {
+              it =
+                {
+                  tname = "c_lsl";
+                  tdetails = FuncType ([I32Type; I32Type; I32Type], []);
+                };
+              at;
+            };
+            {
+              it =
+                {
+                  tname = "c_lsr";
+                  tdetails = FuncType ([I32Type; I32Type; I32Type], []);
+                };
+              at;
+            };
+            {
+              it =
+                {
+                  tname = "c_list_iter";
                   tdetails = FuncType ([I32Type; I32Type; I32Type], []);
                 };
               at;
@@ -46,8 +112,8 @@ let env : module_ =
               it =
                 {
                   module_name = name "env";
-                  item_name = name "int_neg";
-                  idesc = {it = FuncImport "int_neg"; at};
+                  item_name = name "c_neg";
+                  idesc = {it = FuncImport "c_neg"; at};
                 };
               at;
             };
@@ -55,8 +121,8 @@ let env : module_ =
               it =
                 {
                   module_name = name "env";
-                  item_name = name "int_add";
-                  idesc = {it = FuncImport "int_add"; at};
+                  item_name = name "c_add";
+                  idesc = {it = FuncImport "c_add"; at};
                 };
               at;
             };
@@ -64,8 +130,89 @@ let env : module_ =
               it =
                 {
                   module_name = name "env";
-                  item_name = name "int_sub";
-                  idesc = {it = FuncImport "int_sub"; at};
+                  item_name = name "c_sub";
+                  idesc = {it = FuncImport "c_sub"; at};
+                };
+              at;
+            };
+            {
+              it =
+                {
+                  module_name = name "env";
+                  item_name = name "c_mul";
+                  idesc = {it = FuncImport "c_mul"; at};
+                };
+              at;
+            };
+            {
+              it =
+                {
+                  module_name = name "env";
+                  item_name = name "c_div";
+                  idesc = {it = FuncImport "c_div"; at};
+                };
+              at;
+            };
+            {
+              it =
+                {
+                  module_name = name "env";
+                  item_name = name "c_mod";
+                  idesc = {it = FuncImport "c_mod"; at};
+                };
+              at;
+            };
+            {
+              it =
+                {
+                  module_name = name "env";
+                  item_name = name "c_not";
+                  idesc = {it = FuncImport "c_not"; at};
+                };
+              at;
+            };
+            {
+              it =
+                {
+                  module_name = name "env";
+                  item_name = name "c_and";
+                  idesc = {it = FuncImport "c_and"; at};
+                };
+              at;
+            };
+            {
+              it =
+                {
+                  module_name = name "env";
+                  item_name = name "c_or";
+                  idesc = {it = FuncImport "c_or"; at};
+                };
+              at;
+            };
+            {
+              it =
+                {
+                  module_name = name "env";
+                  item_name = name "c_lsl";
+                  idesc = {it = FuncImport "c_lsl"; at};
+                };
+              at;
+            };
+            {
+              it =
+                {
+                  module_name = name "env";
+                  item_name = name "c_lsr";
+                  idesc = {it = FuncImport "c_lsr"; at};
+                };
+              at;
+            };
+            {
+              it =
+                {
+                  module_name = name "env";
+                  item_name = name "c_list_iter";
+                  idesc = {it = FuncImport "c_list_iter"; at};
                 };
               at;
             };
@@ -73,13 +220,13 @@ let env : module_ =
         symbols =
           [
             {
-              it = {name = "int_neg"; details = Import ([I32Type; I32Type], [])};
+              it = {name = "c_neg"; details = Import ([I32Type; I32Type], [])};
               at;
             };
             {
               it =
                 {
-                  name = "int_add";
+                  name = "c_add";
                   details = Import ([I32Type; I32Type; I32Type], []);
                 };
               at;
@@ -87,7 +234,75 @@ let env : module_ =
             {
               it =
                 {
-                  name = "int_sub";
+                  name = "c_sub";
+                  details = Import ([I32Type; I32Type; I32Type], []);
+                };
+              at;
+            };
+            {
+              it =
+                {
+                  name = "c_mul";
+                  details = Import ([I32Type; I32Type; I32Type], []);
+                };
+              at;
+            };
+            {
+              it =
+                {
+                  name = "c_div";
+                  details = Import ([I32Type; I32Type; I32Type], []);
+                };
+              at;
+            };
+            {
+              it =
+                {
+                  name = "c_mod";
+                  details = Import ([I32Type; I32Type; I32Type], []);
+                };
+              at;
+            };
+            {
+              it = {name = "c_not"; details = Import ([I32Type; I32Type], [])};
+              at;
+            };
+            {
+              it =
+                {
+                  name = "c_and";
+                  details = Import ([I32Type; I32Type; I32Type], []);
+                };
+              at;
+            };
+            {
+              it =
+                {
+                  name = "c_or";
+                  details = Import ([I32Type; I32Type; I32Type], []);
+                };
+              at;
+            };
+            {
+              it =
+                {
+                  name = "c_lsl";
+                  details = Import ([I32Type; I32Type; I32Type], []);
+                };
+              at;
+            };
+            {
+              it =
+                {
+                  name = "c_lsr";
+                  details = Import ([I32Type; I32Type; I32Type], []);
+                };
+              at;
+            };
+            {
+              it =
+                {
+                  name = "c_list_iter";
                   details = Import ([I32Type; I32Type; I32Type], []);
                 };
               at;

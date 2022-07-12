@@ -395,6 +395,23 @@ and alloc_value: alloc:string -> A.instr list = fun ~alloc ->
     {{ it = A.LocalGet alloc; at }}
   ]
 
+and load: alloc:string -> offset:int32 -> string -> locals * A.instr list = 
+  fun ~alloc ~offset name ->
+    let name_l = var_to_string (ValueVar.fresh ~name ()) in
+    [name_l, T.I32Type], alloc_value ~alloc 
+    @
+    (if Int32.(offset = 0l) then 
+    []
+    else (
+      S.[{{ it = A.Const {{ it = I32 offset; at}}; at }};
+      {{ it = Binary (I32 Add); at }}]
+    ))
+    @
+    S.[
+      {{ it = Load {{ty = I32Type; align = 0; offset = 0l; sz = None}}; at }};
+      {{ it = LocalSet name_l; at }}
+    ]
+
 and store: alloc:string -> offset:int32 -> locals * A.instr list -> locals * A.instr list = fun ~alloc ~offset value ->
     let locals, value = value in
     locals,
@@ -462,10 +479,10 @@ and store_string : ?alloc:string -> ?offset:int32 -> string -> locals * A.instr 
         };
         let ty_p2 = ty_params2.join(" ").to_string();
         let mut counter = 0;
-        let (store_fields, locals, instructions) = fields.iter().fold(
-          (String::new(), String::new(), String::new()),
-          |acc, field| -> (String, String, String) {
-            let (store_fields, locals, instructions) = acc;
+        let (store_fields, load_fields, locals, instructions) = fields.iter().fold(
+          (String::new(), String::new(), String::new(), String::new()),
+          |acc, field| -> (String, String, String, String) {
+            let (store_fields, load_fields, locals, instructions) = acc;
             let field = &field;
             let field_type = field.1.split(" ");
             let field_type_vec: Vec<&str> = field_type.map(|x| x).collect();
@@ -507,13 +524,21 @@ and store_string : ?alloc:string -> ?offset:int32 -> string -> locals * A.instr 
               };
             let locals = locals + format!("locals_{0} @", field.0).as_str();
             let instructions = instructions + format!("{0}_instructions @", field.0).as_str();
+            let load_fields = load_fields + format!("let locals_{0}, {0}_instructions = load ~alloc ~offset:{1}l \"{0}\" in ", field.0, counter).as_str();
             counter = counter + 4;
-            (result, locals, instructions)
+            (result, load_fields, locals, instructions)
           },
         );
         write!(
           &mut datatype_file,
           "
+            
+and load_{0}: alloc:string -> locals * A.instr list = fun ~alloc ->
+  {8}
+  let locals = {6} [] in
+  let instructions = {7} [] in
+  locals, instructions
+
 and store_{0}: {3} ?alloc:string -> ?offset:int32 -> {1} -> {2} locals * A.instr list = fun ?alloc ?offset value {5} -> 
   let offset = match offset with 
     Some offset -> offset 
@@ -529,26 +554,27 @@ and store_{0}: {3} ?alloc:string -> ?offset:int32 -> {1} -> {2} locals * A.instr
   {7}
   return_
         ",
-          name.to_lowercase(),
-          ty,
-          if type_params_exists {
+          name.to_lowercase(), // 0
+          ty, // 1
+          if type_params_exists { // 2
             format!("(?alloc:string -> ?offset:int32 -> '{0} -> locals * A.instr list) ->", ty_p2)
           } else {
             "".to_string()
           },
-          if type_params_exists {
+          if type_params_exists { // 3
             "'".to_string() + ty_p2.as_str() + "."
           } else {
             "".to_string()
           },
-          store_fields,
-          if type_params_exists {
+          store_fields, // 4
+          if type_params_exists { // 5
             "store_".to_string() + ty_p2.as_str()
           } else {
             "".to_string()
           },
-          locals,
-          instructions
+          locals, // 6
+          instructions, // 7
+          load_fields // 8
         )
         .unwrap()
       }
@@ -573,17 +599,27 @@ and store_{0}: {3} ?alloc:string -> ?offset:int32 -> {1} -> {2} locals * A.instr
         } else {
           name.to_string().to_lowercase()
         };
-
         let ty_p2 = ty_params2.join(" ").to_string();
         let mut index = 0;
-        let variants_ = variants
+
+        let mut choices = String::new();
+        let mut counter = 0;
+        for _ in variants.iter() {
+          choices.push_str(format!("{{it = {0}l; at}}; ", counter).as_str());
+          counter = counter + 1
+        }
+
+        let (variants_, load_blocks) = variants
           .iter()
-          .fold(String::new(), |mut acc, param| -> String {
+          .fold((String::new(), String::new()), |acc, param| -> (String, String) {
+            let (mut acc, block) = acc;
+
             // sanity hack
             if param.0 == "Instructions" {
               acc.push_str("| Instructions e ->  [], e");
-              return acc
+              return (acc, block)
             }
+
             let p = &param.1;
             let type_name_orig = p.join("");
             let type_name_orig = type_name_orig.split(" ");
@@ -592,10 +628,6 @@ and store_{0}: {3} ?alloc:string -> ?offset:int32 -> {1} -> {2} locals * A.instr
             let type_names_tail:Vec<&&str> =  type_name_vec.iter().take(type_name_vec.len() - 1).collect();
             let additional_calls:String = type_names_tail.iter().fold(String::new(), |acc, x| -> String {
               format!("(fun ?alloc ?offset a -> let l, i = store_{0} ?alloc ?offset a {1} in l, i )", x.to_lowercase(), acc)              
-            //   format!("(fun a -> 
-            //     let l, i = store_{0} {2} a {1} in 
-            //     l, i @ S.[{{it = A.Load {{ty = I32Type; align = 0; offset = 0l; sz = None}}; at}}])", x.to_lowercase(), acc, if not_inline { "".to_string() } else { format!("~alloc ~offset:0l").to_string() } )
-            // });
             });
             let type_name_orig = type_name_orig.unwrap().to_lowercase();
             let mut type_size_name = "0l".to_string();
@@ -621,7 +653,6 @@ and store_{0}: {3} ?alloc:string -> ?offset:int32 -> {1} -> {2} locals * A.instr
               in  
               let header_locals, header_instructions = store_int32 ~alloc ~offset {4}l in
               {5}
-              
               alloc_l @ header_locals @ value_locals,
               alloc_instructions @
               header_instructions @
@@ -629,13 +660,20 @@ and store_{0}: {3} ?alloc:string -> ?offset:int32 -> {1} -> {2} locals * A.instr
               return_l
               ", 
               param.0, args, name, type_size_name, index, store_value).as_str());
+            let block = block + format!(
+              "and load_{0}_{1}: symbol:string -> locals * A.instr list = fun ~symbol ->
+                [], []
+              ", 
+              name.to_lowercase(), param.0.to_lowercase()).as_str();
             index = index + 1;
-            acc
+            (acc, block)
     });
 
         write!(
           &mut datatype_file,
           "
+{6}
+        
 and store_{0}: {5} ?alloc:string -> ?offset:int32 -> {1} -> {4} locals * A.instr list = fun ?alloc ?offset value {3} -> 
   let offset = match offset with 
     Some offset -> offset 
@@ -644,24 +682,25 @@ and store_{0}: {5} ?alloc:string -> ?offset:int32 -> {1} -> {4} locals * A.instr
   match value with 
   {2}
           ",
-          name.to_lowercase(),
-          ty,
-          variants_,
-          if type_params_exists {
+          name.to_lowercase(), // 0
+          ty, // 1
+          variants_, // 2
+          if type_params_exists { // 3
             "store_".to_string() + ty_p2.as_str()
           } else {
             "".to_string()
           },
-          if type_params_exists {
+          if type_params_exists { // 4
             format!("(?alloc:string -> ?offset:int32 -> '{0} -> locals * A.instr list) ->", ty_p2)
           } else {
             "".to_string()
           },
-          if type_params_exists {
+          if type_params_exists { // 5
             format!("'{0}.", ty_p2)
           } else {
             "".to_string()
           },
+          load_blocks
         )
         .unwrap()
       }

@@ -81,7 +81,18 @@ pub extern "C" fn store(er: &DataType) {
     buf:     vec.as_ptr() as *const _,
     buf_len: vec.len(),
   };
-  let fd = unsafe { wasi::path_open(3, 0, "storage", 0, wasi::RIGHTS_FD_WRITE, 0, 0).unwrap() };
+  let fd = unsafe {
+    wasi::path_open(
+      3,
+      0,
+      "storage",
+      wasi::OFLAGS_TRUNC,
+      wasi::RIGHTS_FD_WRITE,
+      0,
+      0,
+    )
+    .unwrap()
+  };
   unsafe { wasi::fd_write(fd, &[ciovec]).unwrap() };
   unsafe { wasi::fd_close(fd).unwrap() };
 }
@@ -91,28 +102,6 @@ extern "C" {
   /// wasm backend.
   pub fn entrypoint(er: &Wrapped<DataType>) -> Wrapped<DataType>;
 }
-
-// this is for debugging:
-//
-// #[no_mangle]
-// pub extern "C" fn entrypoint (er: Wrapped<DataType>) -> Wrapped<DataType> {
-
-//   let operations:DataType = DataType::Operations(Option::None);
-//   let b = BigInt::from(9313312u32) * BigInt::from(9313312u32)*
-// BigInt::from(9313312u32)* BigInt::from(9313312u32)* BigInt::from(9313312u32);
-//   int_neg(&to_wrap(&b));
-//   let storage:DataType = DataType::Int(to_wrap(&b).wrap());
-//   let result = DataType::Tuple(
-//     Node {
-//       value: operations.wrap(),
-//       next: Option::Some(Node {
-//           value: storage.wrap(),
-//           next: Option::None
-//       }.wrap())
-//     }.wrap()
-//   ).wrap();
-//   result
-// }
 
 /**  
  * The starting point of the generated wasm file.
@@ -148,10 +137,11 @@ pub extern "C" fn _start() {
           }
           .wrap(),
         );
+        println!("Input here: {:?}", x);
         let er: Wrapped<DataType> = unsafe { entrypoint(&x.wrap()) };
-        println!("Yes 3: {:?}", x);
         er.print();
         let er: &DataType = er.unwrap();
+
         println!("Yes 4: {:?}", er);
         er.print();
         store(er);

@@ -127,6 +127,23 @@ let rec malloc : name:string -> size:int32 -> string * A.instr list =
 and alloc_value : alloc:string -> A.instr list =
  fun ~alloc -> S.[{it = A.LocalGet alloc; at}]
 
+and load : alloc:string -> offset:int32 -> string -> locals * A.instr list =
+ fun ~alloc ~offset name ->
+  let name_l = var_to_string (ValueVar.fresh ~name ()) in
+  ( [(name_l, T.I32Type)],
+    alloc_value ~alloc
+    @ (if Int32.(offset = 0l) then []
+      else
+        S.
+          [
+            {it = A.Const {it = I32 offset; at}; at}; {it = Binary (I32 Add); at};
+          ])
+    @ S.
+        [
+          {it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at};
+          {it = LocalSet name_l; at};
+        ] )
+
 and store :
     alloc:string ->
     offset:int32 ->
@@ -170,6 +187,13 @@ and store_string :
     ?alloc:string -> ?offset:int32 -> string -> locals * A.instr list =
  fun ?alloc ?offset s -> failwith "todo"
 
+and load_wrapped : alloc:string -> locals * A.instr list =
+ fun ~alloc ->
+  let locals_data, data_instructions = load ~alloc ~offset:0l "data" in
+  let locals = locals_data @ [] in
+  let instructions = data_instructions @ [] in
+  (locals, instructions)
+
 and store_wrapped :
       't.
       ?alloc:string ->
@@ -197,6 +221,12 @@ and store_wrapped :
   ( ((alloc, T.I32Type) :: locals_data) @ [],
     alloc_instructions @ data_instructions @ return_ )
 
+and load_option_none : symbol:string -> locals * A.instr list =
+ fun ~symbol -> ([], [])
+
+and load_option_some : symbol:string -> locals * A.instr list =
+ fun ~symbol -> ([], [])
+
 and store_option :
       't.
       ?alloc:string ->
@@ -221,7 +251,6 @@ and store_option :
     in
     let header_locals, header_instructions = store_int32 ~alloc ~offset 0l in
     let value_locals, value_instructions = ([], []) in
-
     ( alloc_l @ header_locals @ value_locals,
       alloc_instructions @ header_instructions @ value_instructions @ return_l
     )
@@ -239,10 +268,22 @@ and store_option :
     let value_locals, value_instructions =
       store_t ~alloc ~offset:Int32.(offset + 4l) t
     in
-
     ( alloc_l @ header_locals @ value_locals,
       alloc_instructions @ header_instructions @ value_instructions @ return_l
     )
+
+and load_bigintwrap : alloc:string -> locals * A.instr list =
+ fun ~alloc ->
+  let locals_data, data_instructions = load ~alloc ~offset:0l "data" in
+  let locals_len, len_instructions = load ~alloc ~offset:4l "len" in
+  let locals_capacity, capacity_instructions =
+    load ~alloc ~offset:8l "capacity"
+  in
+  let locals = locals_data @ locals_len @ locals_capacity @ [] in
+  let instructions =
+    data_instructions @ len_instructions @ capacity_instructions @ []
+  in
+  (locals, instructions)
 
 and store_bigintwrap :
     ?alloc:string -> ?offset:int32 -> bigintwrap -> locals * A.instr list =
@@ -275,6 +316,39 @@ and store_bigintwrap :
     alloc_instructions @ data_instructions @ len_instructions
     @ capacity_instructions @ return_ )
 
+and load_datatype_int : symbol:string -> locals * A.instr list =
+ fun ~symbol -> ([], [])
+
+and load_datatype_nat : symbol:string -> locals * A.instr list =
+ fun ~symbol -> ([], [])
+
+and load_datatype_mutez : symbol:string -> locals * A.instr list =
+ fun ~symbol -> ([], [])
+
+and load_datatype_timestamp : symbol:string -> locals * A.instr list =
+ fun ~symbol -> ([], [])
+
+and load_datatype_bool : symbol:string -> locals * A.instr list =
+ fun ~symbol -> ([], [])
+
+and load_datatype_listitem : symbol:string -> locals * A.instr list =
+ fun ~symbol -> ([], [])
+
+and load_datatype_tuple : symbol:string -> locals * A.instr list =
+ fun ~symbol -> ([], [])
+
+and load_datatype_set : symbol:string -> locals * A.instr list =
+ fun ~symbol -> ([], [])
+
+and load_datatype_map : symbol:string -> locals * A.instr list =
+ fun ~symbol -> ([], [])
+
+and load_datatype_operations : symbol:string -> locals * A.instr list =
+ fun ~symbol -> ([], [])
+
+and load_datatype_string : symbol:string -> locals * A.instr list =
+ fun ~symbol -> ([], [])
+
 and store_datatype :
     ?alloc:string -> ?offset:int32 -> datatype -> locals * A.instr list =
  fun ?alloc ?offset value ->
@@ -303,7 +377,6 @@ and store_datatype :
           let l, i = store_bigintwrap ?alloc ?offset a in
           (l, i))
     in
-
     ( alloc_l @ header_locals @ value_locals,
       alloc_instructions @ header_instructions @ value_instructions @ return_l
     )
@@ -326,7 +399,6 @@ and store_datatype :
           let l, i = store_bigintwrap ?alloc ?offset a in
           (l, i))
     in
-
     ( alloc_l @ header_locals @ value_locals,
       alloc_instructions @ header_instructions @ value_instructions @ return_l
     )
@@ -350,7 +422,6 @@ and store_datatype :
           let l, i = store_bigintwrap ?alloc ?offset a in
           (l, i))
     in
-
     ( alloc_l @ header_locals @ value_locals,
       alloc_instructions @ header_instructions @ value_instructions @ return_l
     )
@@ -369,7 +440,6 @@ and store_datatype :
     let value_locals, value_instructions =
       store_int32 ~alloc ~offset:Int32.(offset + 4l) i
     in
-
     ( alloc_l @ header_locals @ value_locals,
       alloc_instructions @ header_instructions @ value_instructions @ return_l
     )
@@ -387,7 +457,6 @@ and store_datatype :
     let value_locals, value_instructions =
       store_bool ~alloc ~offset:Int32.(offset + 4l) b
     in
-
     ( alloc_l @ header_locals @ value_locals,
       alloc_instructions @ header_instructions @ value_instructions @ return_l
     )
@@ -411,7 +480,6 @@ and store_datatype :
           let l, i = store_node ?alloc ?offset a in
           (l, i))
     in
-
     ( alloc_l @ header_locals @ value_locals,
       alloc_instructions @ header_instructions @ value_instructions @ return_l
     )
@@ -435,7 +503,6 @@ and store_datatype :
           let l, i = store_node ?alloc ?offset a in
           (l, i))
     in
-
     ( alloc_l @ header_locals @ value_locals,
       alloc_instructions @ header_instructions @ value_instructions @ return_l
     )
@@ -458,7 +525,6 @@ and store_datatype :
           let l, i = store_rbnode ?alloc ?offset a in
           (l, i))
     in
-
     ( alloc_l @ header_locals @ value_locals,
       alloc_instructions @ header_instructions @ value_instructions @ return_l
     )
@@ -481,7 +547,6 @@ and store_datatype :
           let l, i = store_rbnode ?alloc ?offset a in
           (l, i))
     in
-
     ( alloc_l @ header_locals @ value_locals,
       alloc_instructions @ header_instructions @ value_instructions @ return_l
     )
@@ -509,7 +574,6 @@ and store_datatype :
           in
           (l, i))
     in
-
     ( alloc_l @ header_locals @ value_locals,
       alloc_instructions @ header_instructions @ value_instructions @ return_l
     )
@@ -533,11 +597,18 @@ and store_datatype :
           let l, i = store_string ?alloc ?offset a in
           (l, i))
     in
-
     ( alloc_l @ header_locals @ value_locals,
       alloc_instructions @ header_instructions @ value_instructions @ return_l
     )
   | Instructions e -> ([], e)
+
+and load_node : alloc:string -> locals * A.instr list =
+ fun ~alloc ->
+  let locals_value, value_instructions = load ~alloc ~offset:0l "value" in
+  let locals_next, next_instructions = load ~alloc ~offset:4l "next" in
+  let locals = locals_value @ locals_next @ [] in
+  let instructions = value_instructions @ next_instructions @ [] in
+  (locals, instructions)
 
 and store_node : ?alloc:string -> ?offset:int32 -> node -> locals * A.instr list
     =
@@ -578,6 +649,12 @@ and store_node : ?alloc:string -> ?offset:int32 -> node -> locals * A.instr list
   ( ((alloc, T.I32Type) :: locals_value) @ locals_next @ [],
     alloc_instructions @ value_instructions @ next_instructions @ return_ )
 
+and load_operation_transaction : symbol:string -> locals * A.instr list =
+ fun ~symbol -> ([], [])
+
+and load_operation_delegate : symbol:string -> locals * A.instr list =
+ fun ~symbol -> ([], [])
+
 and store_operation :
     ?alloc:string -> ?offset:int32 -> operation -> locals * A.instr list =
  fun ?alloc ?offset value ->
@@ -602,7 +679,6 @@ and store_operation :
     let value_locals, value_instructions =
       store_transaction ~alloc ~offset:Int32.(offset + 4l) t
     in
-
     ( alloc_l @ header_locals @ value_locals,
       alloc_instructions @ header_instructions @ value_instructions @ return_l
     )
@@ -621,10 +697,17 @@ and store_operation :
     let value_locals, value_instructions =
       store_delegate ~alloc ~offset:Int32.(offset + 4l) d
     in
-
     ( alloc_l @ header_locals @ value_locals,
       alloc_instructions @ header_instructions @ value_instructions @ return_l
     )
+
+and load_operationnode : alloc:string -> locals * A.instr list =
+ fun ~alloc ->
+  let locals_value, value_instructions = load ~alloc ~offset:0l "value" in
+  let locals_next, next_instructions = load ~alloc ~offset:4l "next" in
+  let locals = locals_value @ locals_next @ [] in
+  let instructions = value_instructions @ next_instructions @ [] in
+  (locals, instructions)
 
 and store_operationnode :
     ?alloc:string -> ?offset:int32 -> operationnode -> locals * A.instr list =
@@ -667,6 +750,12 @@ and store_operationnode :
   ( ((alloc, T.I32Type) :: locals_value) @ locals_next @ [],
     alloc_instructions @ value_instructions @ next_instructions @ return_ )
 
+and load_color_red : symbol:string -> locals * A.instr list =
+ fun ~symbol -> ([], [])
+
+and load_color_black : symbol:string -> locals * A.instr list =
+ fun ~symbol -> ([], [])
+
 and store_color :
     ?alloc:string -> ?offset:int32 -> color -> locals * A.instr list =
  fun ?alloc ?offset value ->
@@ -686,7 +775,6 @@ and store_color :
     in
     let header_locals, header_instructions = store_int32 ~alloc ~offset 0l in
     let value_locals, value_instructions = ([], []) in
-
     ( alloc_l @ header_locals @ value_locals,
       alloc_instructions @ header_instructions @ value_instructions @ return_l
     )
@@ -700,10 +788,27 @@ and store_color :
     in
     let header_locals, header_instructions = store_int32 ~alloc ~offset 1l in
     let value_locals, value_instructions = ([], []) in
-
     ( alloc_l @ header_locals @ value_locals,
       alloc_instructions @ header_instructions @ value_instructions @ return_l
     )
+
+and load_rbnode : alloc:string -> locals * A.instr list =
+ fun ~alloc ->
+  let locals_parent, parent_instructions = load ~alloc ~offset:0l "parent" in
+  let locals_value, value_instructions = load ~alloc ~offset:4l "value" in
+  let locals_depth, depth_instructions = load ~alloc ~offset:8l "depth" in
+  let locals_left, left_instructions = load ~alloc ~offset:12l "left" in
+  let locals_right, right_instructions = load ~alloc ~offset:16l "right" in
+  let locals_color, color_instructions = load ~alloc ~offset:20l "color" in
+  let locals =
+    locals_parent @ locals_value @ locals_depth @ locals_left @ locals_right
+    @ locals_color @ []
+  in
+  let instructions =
+    parent_instructions @ value_instructions @ depth_instructions
+    @ left_instructions @ right_instructions @ color_instructions @ []
+  in
+  (locals, instructions)
 
 and store_rbnode :
     ?alloc:string -> ?offset:int32 -> rbnode -> locals * A.instr list =
@@ -778,6 +883,19 @@ and store_rbnode :
     @ depth_instructions @ left_instructions @ right_instructions
     @ color_instructions @ return_ )
 
+and load_transaction : alloc:string -> locals * A.instr list =
+ fun ~alloc ->
+  let locals_action, action_instructions = load ~alloc ~offset:0l "action" in
+  let locals_amount, amount_instructions = load ~alloc ~offset:4l "amount" in
+  let locals_contract, contract_instructions =
+    load ~alloc ~offset:8l "contract"
+  in
+  let locals = locals_action @ locals_amount @ locals_contract @ [] in
+  let instructions =
+    action_instructions @ amount_instructions @ contract_instructions @ []
+  in
+  (locals, instructions)
+
 and store_transaction :
     ?alloc:string -> ?offset:int32 -> transaction -> locals * A.instr list =
  fun ?alloc ?offset value ->
@@ -808,6 +926,15 @@ and store_transaction :
   ( ((alloc, T.I32Type) :: locals_action) @ locals_amount @ locals_contract @ [],
     alloc_instructions @ action_instructions @ amount_instructions
     @ contract_instructions @ return_ )
+
+and load_delegate : alloc:string -> locals * A.instr list =
+ fun ~alloc ->
+  let locals_delegate, delegate_instructions =
+    load ~alloc ~offset:0l "delegate"
+  in
+  let locals = locals_delegate @ [] in
+  let instructions = delegate_instructions @ [] in
+  (locals, instructions)
 
 and store_delegate :
     ?alloc:string -> ?offset:int32 -> delegate -> locals * A.instr list =

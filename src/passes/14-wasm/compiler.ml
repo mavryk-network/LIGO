@@ -99,6 +99,32 @@ let rec expression ~raise :
     A.module_' -> locals -> I.expression -> A.module_' * locals * A.instr list =
  fun w l e ->
   let at = location_to_region e.location in
+  let host_call :
+      fn:string ->
+      response_size:int32 ->
+      instructions:I.expression list ->
+      A.module_' * locals * A.instr list =
+   fun ~fn ~response_size ~instructions ->
+    let new_value = var_to_string (ValueVar.fresh ~name:fn ()) in
+    let w, l, e =
+      List.fold_left
+        ~f:(fun all (a : I.expression) ->
+          let w, l, e = all in
+          let w, l, e2 = expression ~raise w l a in
+          (w, l, e @ e2))
+        ~init:(w, l, []) instructions
+    in
+    ( w,
+      l @ [(new_value, T.I32Type)],
+      S.
+        [
+          {it = A.Const {it = I32 response_size; at}; at};
+          {it = Call "malloc"; at};
+          {it = LocalTee new_value; at};
+        ]
+      @ e
+      @ S.[{it = A.Call fn; at}; {it = LocalGet new_value; at}] )
+  in
   match e.content with
   | E_literal Literal_unit -> (w, l, [{it = Nop; at}])
   | E_literal (Literal_int z) ->
@@ -128,6 +154,7 @@ let rec expression ~raise :
       (w, l @ o_locals, o_instr)
     | _ -> (w, l, []))
   | E_constant {cons_name = C_PAIR; arguments = [e1; e2]} ->
+    print_endline "C_PAIR";
     let w, l, e1 = expression ~raise w l e1 in
     let w, l, e2 = expression ~raise w l e2 in
     let open Mem_helpers in
@@ -144,34 +171,32 @@ let rec expression ~raise :
     in
     let d_locals, e = store_datatype t in
     (w, l @ d_locals, e)
+  (* MATH *)
+  | E_constant {cons_name = C_NEG; arguments} ->
+    host_call ~fn:"c_neg" ~response_size:4l ~instructions:arguments
   | E_constant {cons_name = C_ADD; arguments = [e1; e2]} ->
-    let new_value = var_to_string (ValueVar.fresh ~name:"C_ADD" ()) in
-    let w, l, e1 = expression ~raise w l e1 in
-    let w, l, e2 = expression ~raise w l e2 in
-    ( w,
-      [(new_value, T.I32Type)] @ l,
-      S.
-        [
-          {it = A.Const {it = I32 4l; at}; at};
-          {it = Call "malloc"; at};
-          {it = LocalTee new_value; at};
-        ]
-      @ e1 @ e2
-      @ S.[{it = A.Call "int_add"; at}; {it = LocalGet new_value; at}] )
+    host_call ~fn:"c_add" ~response_size:4l ~instructions:[e1; e2]
   | E_constant {cons_name = C_SUB; arguments = [e1; e2]} ->
-    let new_value = var_to_string (ValueVar.fresh ~name:"C_SUB" ()) in
-    let w, l, e1 = expression ~raise w l e1 in
-    let w, l, e2 = expression ~raise w l e2 in
-    ( w,
-      [(new_value, T.I32Type)] @ l,
-      S.
-        [
-          {it = A.Const {it = I32 4l; at}; at};
-          {it = Call "malloc"; at};
-          {it = LocalTee new_value; at};
-        ]
-      @ e1 @ e2
-      @ S.[{it = A.Call "int_sub"; at}; {it = LocalGet new_value; at}] )
+    host_call ~fn:"c_sub" ~response_size:4l ~instructions:[e1; e2]
+  | E_constant {cons_name = C_MUL; arguments = [e1; e2]} ->
+    host_call ~fn:"c_mul" ~response_size:4l ~instructions:[e1; e2]
+  | E_constant {cons_name = C_DIV; arguments = [e1; e2]} ->
+    host_call ~fn:"c_div" ~response_size:4l ~instructions:[e1; e2]
+  | E_constant {cons_name = C_MOD; arguments = [e1; e2]} ->
+    host_call ~fn:"c_mod" ~response_size:4l ~instructions:[e1; e2]
+  (* LOGIC *)
+  | E_constant {cons_name = C_NOT; arguments = [e1; e2]} ->
+    host_call ~fn:"c_not" ~response_size:4l ~instructions:[e1; e2]
+  | E_constant {cons_name = C_AND; arguments = [e1; e2]} ->
+    host_call ~fn:"c_and" ~response_size:4l ~instructions:[e1; e2]
+  | E_constant {cons_name = C_OR; arguments = [e1; e2]} ->
+    host_call ~fn:"c_or" ~response_size:4l ~instructions:[e1; e2]
+  | E_constant {cons_name = C_XOR; arguments = [e1; e2]} ->
+    host_call ~fn:"c_xor" ~response_size:4l ~instructions:[e1; e2]
+  | E_constant {cons_name = C_LSL; arguments = [e1; e2]} ->
+    host_call ~fn:"c_lsl" ~response_size:4l ~instructions:[e1; e2]
+  | E_constant {cons_name = C_LSR; arguments = [e1; e2]} ->
+    host_call ~fn:"c_lsr" ~response_size:4l ~instructions:[e1; e2]
   | E_constant {cons_name = C_CAR; arguments = [cons]} ->
     let w, l, cons = expression ~raise w l cons in
     ( w,
@@ -212,28 +237,17 @@ let rec expression ~raise :
           {it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at};
           {it = LocalGet cons; at};
         ] )
-  | E_constant {cons_name = C_NEG; arguments = [a]} ->
-    let neg_val = var_to_string (ValueVar.fresh ~name:"neg_val" ()) in
-    let w, l, a = expression ~raise w l a in
-    ( w,
-      [(neg_val, T.I32Type)] @ l,
-      [
-        S.{it = A.Const {it = I32 4l; at}; at};
-        {it = Call "malloc"; at};
-        {it = LocalSet neg_val; at};
-        {it = A.LocalGet neg_val; at};
-      ]
-      @ a
-      @ S.[{it = Call "int_neg"; at}; {it = A.LocalGet neg_val; at}] )
   | E_constant {cons_name = C_LIST_LITERAL; arguments = [l1]} ->
     failwith "not supported yet 15a2"
-  (* | E_constant {cons_name = C_SET_ADD; arguments = [a; b]} ->
-     let w, l, a = expression ~raise w l a in
-     let w, l, b = expression ~raise w l b in
-     a @
-     b @
+    (* | E_constant {cons_name = C_SET_ADD; arguments = [a; b]} ->
+       let w, l, a = expression ~raise w l a in
+       let w, l, b = expression ~raise w l b in
+       a @
+       b @
 
-     [S.{ it = A.Call "insertNode"; at }] *)
+       [S.{ it = A.Call "insertNode"; at }] *)
+  | E_constant {cons_name = C_LIST_ITER; arguments = [l1]} ->
+    failwith "not supported yet 15a4"
   | E_constant {cons_name; arguments} -> failwith "not supported yet 15b"
   | E_application _ ->
     let rec aux result expr =
@@ -256,10 +270,12 @@ let rec expression ~raise :
     (w, l, args @ [S.{it = A.Call name; at}])
   | E_variable name -> (
     let name = var_to_string name in
+    print_endline ("get variable:" ^ name);
     match List.find ~f:(fun (n, _) -> String.equal n name) l with
     | Some _ -> (w, l, [{it = LocalGet name; at}])
     | None -> (w, l, [{it = DataSymbol name; at}]))
-  | E_iterator _ -> failwith "not supported yet 18"
+  | E_iterator (b, ((name, _), body), expr) -> 
+    failwith "not supported yet 18"
   | E_fold _ -> failwith "not supported yet 19"
   | E_fold_right _ -> failwith "not supported yet 20"
   | E_if_bool _ -> failwith "not supported yet 21"
@@ -273,6 +289,7 @@ let rec expression ~raise :
         ((name, _type), e2) ) ->
     failwith "should not happen..."
   | E_let_in (e1, _inline, _thunk, ((name, typex), e2)) ->
+    print_endline ("assignment: " ^ var_to_string name);
     let name = var_to_string name in
     let w, l, e1 = expression ~raise w l e1 in
     let l = l @ [(name, T.I32Type)] in
@@ -280,19 +297,39 @@ let rec expression ~raise :
     (w, l, e1 @ [S.{it = A.LocalSet name; at}] @ e2)
   | E_tuple _ -> failwith "not supported yet 26"
   | E_let_tuple (tuple, (values, rhs)) ->
-    print_endline "oh hai a tuple";
-    (*
-      Tuple:
-      - 6
-      - pointer to node
-      --
-      pointer a,
-      some,
-      next val
-      ---
-      
-    *)
+    
+    let a_node: Node = load_datatype_tuple location in     
+
+    (* how to ensure some form of type safety: result must be something more...?! *)
+
+    print_endline "before 1";
     let w, l, tuple = expression ~raise w l tuple in
+
+    let m = new DataTypeLoader location in
+    let t = m#get_tuple in
+
+    let l = t#value() in
+
+    let n = t#next() in
+
+    (*
+      - load a tuple -> 
+          get a tuple back, but we don't want to load everything... soooo..
+
+          TupleLoader {
+            value (),
+            next ()
+          }
+
+      - 
+    
+    *)
+
+    (* let wrapper_node = load_datatype_tuple ~alloc in
+       let node = load_wrapper wrapper_node in
+       let fst = load ...  in *)
+    (* a, b *)
+    print_endline "before 2";
     let tuple_name = var_to_string (ValueVar.fresh ~name:"let_tuple" ()) in
     let t = tuple @ [S.{it = A.LocalSet tuple_name; at}] in
     let l = l @ [(tuple_name, T.I32Type)] in
