@@ -5,8 +5,8 @@ let default_entrypoint_var = Ast_typed.ValueVar.of_input_var default_entrypoint
 
 let get_entry_point_from_annotation : Ast_typed.program -> Ast_typed.expression_variable list =
   fun prg ->
-  List.fold_left
-    ~f:(fun prev el ->
+  List.fold_right
+    ~f:(fun el prev ->
       let open Simple_utils.Location in
       match el.wrap_content with
       | Ast_typed.Declaration_constant {binder;attr;_} when attr.entry -> binder.var::prev
@@ -60,7 +60,7 @@ let make_main_entrypoint ?(layout=Ast_typed.default_layout) ~raise :  Ast_typed.
     let prg = prg @ [entrypoint_type_decl;entrypoint_function_decl] in
     (default_entrypoint_var, prg)
 
-let program ~raise ~add_warning : Ast_typed.expression_variable list -> Ast_typed.program -> Ast_typed.expression_variable * Ast_typed.program =
+let program ~raise : Ast_typed.expression_variable list -> Ast_typed.program -> Ast_typed.expression_variable * Ast_typed.program =
   fun entry_points prg ->
     let annoted_entry_points = get_entry_point_from_annotation prg in
     match entry_points,annoted_entry_points with
@@ -68,25 +68,25 @@ let program ~raise ~add_warning : Ast_typed.expression_variable list -> Ast_type
     | hd::tl,_ ->
       let () = List.iter ~f:(fun var ->
         if Option.is_none (List.find ~f:(fun s -> Ast_typed.ValueVar.equal var s) entry_points) then
-          add_warning (`Main_entry_ignored (Ast_typed.ValueVar.get_location var))) annoted_entry_points  in
+          raise.warning (`Main_entry_ignored (Ast_typed.ValueVar.get_location var))) annoted_entry_points  in
       make_main_entrypoint ~raise (hd,tl) prg
     (* Second from annotations *)
     | [], hd::tl -> make_main_entrypoint ~raise (hd,tl) prg
     | [], [] -> default_entrypoint_var, prg
 
-let get_final_entrypoint_name ~add_warning : Ast_typed.expression_variable list -> Ast_typed.program -> Ast_typed.expression_variable =
+let get_final_entrypoint_name ~raise : Ast_typed.expression_variable list -> Ast_typed.program -> Ast_typed.expression_variable =
   fun entry_points prg ->
     let annoted_entry_points = get_entry_point_from_annotation prg in
     match entry_points,annoted_entry_points with
     | hd::[],lst ->
       let () = List.iter ~f:(fun var ->
         if not (Ast_typed.ValueVar.equal var hd) then
-          add_warning (`Main_entry_ignored (Ast_typed.ValueVar.get_location var))) lst in
+          raise.warning (`Main_entry_ignored (Ast_typed.ValueVar.get_location var))) lst in
       hd
     | [], hd::[] -> hd
     | [], _ -> default_entrypoint_var
     | lst, _ ->
       let () = List.iter ~f:(fun var ->
         if Option.is_none (List.find ~f:(fun s -> Ast_typed.ValueVar.equal var s) lst) then
-          add_warning (`Main_entry_ignored (Ast_typed.ValueVar.get_location var))) annoted_entry_points  in
+          raise.warning (`Main_entry_ignored (Ast_typed.ValueVar.get_location var))) annoted_entry_points  in
       default_entrypoint_var

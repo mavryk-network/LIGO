@@ -3,17 +3,17 @@ module Helpers = Helpers
 
 let get_final_entrypoint_name = Make_entry_point.get_final_entrypoint_name
 
-let all_module_passes ~add_warning ~raise ~warn_unused_rec = [
-  Unused.unused_map_module ~add_warning;
-  Muchused.muchused_map_module ~add_warning;
+let all_module_passes ~raise ~warn_unused_rec = [
+  Unused.unused_map_module ~raise;
+  Muchused.muchused_map_module ~raise;
   Helpers.map_module @@ Recursion.check_tail_expression ~raise ;
-  Helpers.map_module @@ Recursion.remove_rec_expression ~add_warning ~warn_unused_rec ;
+  Helpers.map_module @@ Recursion.remove_rec_expression ~raise ~warn_unused_rec ;
   Helpers.map_module @@ Pattern_matching_simpl.peephole_expression ;
 ]
 
-let all_expression_passes ~add_warning ~raise ~warn_unused_rec = [
+let all_expression_passes ~raise ~warn_unused_rec = [
   Helpers.map_expression @@ Recursion.check_tail_expression ~raise ;
-  Helpers.map_expression @@ Recursion.remove_rec_expression ~add_warning ~warn_unused_rec ;
+  Helpers.map_expression @@ Recursion.remove_rec_expression ~raise ~warn_unused_rec ;
   Pattern_matching_simpl.peephole_expression ;
 ]
 
@@ -24,14 +24,14 @@ let contract_passes ~raise = [
   Contract_passes.entrypoint_typing ~raise ;
 ]
 
-let all_module ~add_warning ~raise ~warn_unused_rec init =
-  List.fold ~f:(|>) (all_module_passes ~add_warning ~raise ~warn_unused_rec) ~init
+let all_module ~raise ~warn_unused_rec init =
+  List.fold ~f:(|>) (all_module_passes ~raise ~warn_unused_rec) ~init
 
-let all_expression ~add_warning ~raise ~warn_unused_rec init =
-  List.fold ~f:(|>) (all_expression_passes ~add_warning ~raise ~warn_unused_rec) ~init
+let all_expression ~raise ~warn_unused_rec init =
+  List.fold ~f:(|>) (all_expression_passes ~raise ~warn_unused_rec) ~init
 
-let all_contract ~raise ~add_warning entrypoints prg =
-  let main_name, prg = Make_entry_point.program ~raise ~add_warning entrypoints prg in
+let all_contract ~raise entrypoints prg =
+  let main_name, prg = Make_entry_point.program ~raise entrypoints prg in
   let contract_type = Helpers.fetch_contract_type ~raise main_name prg in
   let data : Contract_passes.contract_pass_data = {
     contract_type = contract_type ;
