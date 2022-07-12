@@ -274,8 +274,7 @@ let rec expression ~raise :
     match List.find ~f:(fun (n, _) -> String.equal n name) l with
     | Some _ -> (w, l, [{it = LocalGet name; at}])
     | None -> (w, l, [{it = DataSymbol name; at}]))
-  | E_iterator (b, ((name, _), body), expr) -> 
-    failwith "not supported yet 18"
+  | E_iterator (b, ((name, _), body), expr) -> failwith "not supported yet 18"
   | E_fold _ -> failwith "not supported yet 19"
   | E_fold_right _ -> failwith "not supported yet 20"
   | E_if_bool _ -> failwith "not supported yet 21"
@@ -297,20 +296,19 @@ let rec expression ~raise :
     (w, l, e1 @ [S.{it = A.LocalSet name; at}] @ e2)
   | E_tuple _ -> failwith "not supported yet 26"
   | E_let_tuple (tuple, (values, rhs)) ->
-    
-    let a_node: Node = load_datatype_tuple location in     
+    (* let a_node: Node = load_datatype_tuple location in
 
-    (* how to ensure some form of type safety: result must be something more...?! *)
+       (* how to ensure some form of type safety: result must be something more...?! *)
 
-    print_endline "before 1";
-    let w, l, tuple = expression ~raise w l tuple in
+       print_endline "before 1";
 
-    let m = new DataTypeLoader location in
-    let t = m#get_tuple in
 
-    let l = t#value() in
+       let m = new DataTypeLoader location in
+       let t = m#get_tuple in
 
-    let n = t#next() in
+       let l = t#value() in
+
+       let n = t#next() in *)
 
     (*
       - load a tuple -> 
@@ -329,6 +327,7 @@ let rec expression ~raise :
        let node = load_wrapper wrapper_node in
        let fst = load ...  in *)
     (* a, b *)
+    let w, l, tuple = expression ~raise w l tuple in
     print_endline "before 2";
     let tuple_name = var_to_string (ValueVar.fresh ~name:"let_tuple" ()) in
     let t = tuple @ [S.{it = A.LocalSet tuple_name; at}] in
@@ -362,7 +361,9 @@ let rec expression ~raise :
   | E_proj _ -> failwith "not supported yet 28"
   (* E_update (record, index, update, field_count): field_count as for E_proj *)
   | E_update _ -> failwith "not supported yet 29"
-  | E_raw_michelson _ -> raise.raise @@ michelson_insertion Location.dummy
+  | E_raw_michelson _ ->
+    failwith "TOODO: fix raw michelson error"
+    (* raise.raise @@ michelson_insertion Location.dummy *)
   | _ -> failwith "not supported x"
 
 (* | E_closure of anon_function
