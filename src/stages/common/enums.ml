@@ -174,6 +174,7 @@ type constant' =
   | C_TEST_SET_BAKER [@only_interpreter]
   | C_TEST_EXTERNAL_CALL_TO_ADDRESS [@only_interpreter]
   | C_TEST_EXTERNAL_CALL_TO_ADDRESS_EXN [@only_interpreter]
+  | C_TEST_INTERNAL_CALL [@only_interpreter]
   | C_TEST_GET_NTH_BS [@only_interpreter]
   | C_TEST_PRINT [@only_interpreter]
   | C_TEST_TO_STRING [@only_interpreter]

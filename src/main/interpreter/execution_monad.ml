@@ -42,6 +42,8 @@ module Command = struct
     | Get_mod_res : unit -> ModRes.t option t
     | External_call : Location.t * Ligo_interpreter.Types.calltrace * LT.contract * (execution_trace, string) Tezos_micheline.Micheline.node * Z.t
       -> [`Exec_failed of Tezos_state.state_error | `Exec_ok of Z.t] t
+    | Internal_call : Location.t * Ligo_interpreter.Types.calltrace * LT.mcontract * LT.michelson_code * Z.t
+    -> unit t
     | State_error_to_value : Tezos_state.state_error -> LT.value t
     | Get_storage : Location.t * Ligo_interpreter.Types.calltrace * LT.value * Ast_aggregated.type_expression -> LT.value t
     | Get_storage_of_address : Location.t * Ligo_interpreter.Types.calltrace * LT.value -> LT.value t
@@ -156,6 +158,12 @@ module Command = struct
       | Success (ctxt',gas_consumed) ->
         (`Exec_ok gas_consumed, ctxt')
       | Fail errs -> (`Exec_failed errs, ctxt)
+    )
+    | Internal_call (loc, calltrace, address, param, amt) -> (
+      let ctxt =
+        Tezos_state.transfer_internal ~raise ~loc ~calltrace ctxt address param amt
+      in
+      (() , ctxt)
     )
     | State_error_to_value errs -> (
       let open Tezos_protocol.Protocol in

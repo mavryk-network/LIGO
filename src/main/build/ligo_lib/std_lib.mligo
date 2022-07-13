@@ -438,7 +438,7 @@ module Test = struct
 
 
 #if CURRY
-  let originate_contract_internal (c : michelson_contract) (s : michelson_program) (t : tez) : address = [%external ("TEST_ORIGINATE_INTERNAL", c, s, t)]
+  let transfer_internal (a:address) (s:michelson_program) (t:tez) : unit = [%external ("TEST_INTERNAL_CALL", a, s, t)]
   let transfer (a : address) (s : michelson_program) (t : tez) : test_exec_result = [%external ("TEST_EXTERNAL_CALL_TO_ADDRESS", a, (None : string option), s, t)]
   let transfer_exn (a : address) (s : michelson_program) (t : tez) : nat = [%external ("TEST_EXTERNAL_CALL_TO_ADDRESS_EXN", a, (None : string option), s, t)]
   let log (type a) (v : a) : unit =
@@ -494,7 +494,7 @@ module Test = struct
 #endif
 
 #if UNCURRY
-  let originate_contract_internal (c,s,t : michelson_contract * michelson_program * tez) : address = [%external ("TEST_ORIGINATE_INTERNAL", c, s, t)]
+  let transfer_internal ((a, s, t) : address * michelson_program * tez) : unit = [%external ("TEST_INTERNAL_CALL", a, s, t)]
   let transfer ((a, s, t) : address * michelson_program * tez) : test_exec_result = [%external ("TEST_EXTERNAL_CALL_TO_ADDRESS", a, (None : string option), s, t)]
   let transfer_exn ((a, s, t) : address * michelson_program * tez) : nat = [%external ("TEST_EXTERNAL_CALL_TO_ADDRESS_EXN", a, (None : string option), s, t)]
   let log (type a) (v : a) : unit =

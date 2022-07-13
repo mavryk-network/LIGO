@@ -154,6 +154,7 @@ let is_pure_constant : constant' -> bool =
   | C_TEST_READ_CONTRACT_FROM_FILE
   | C_TEST_SIGN
   | C_TEST_ORIGINATE_INTERNAL
+  | C_TEST_INTERNAL_CALL
   | C_TEST_GET_ENTRYPOINT
     -> false
 

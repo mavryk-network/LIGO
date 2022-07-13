@@ -602,6 +602,10 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t) : Location.
       return_contract_exec res
     )
     | ( C_TEST_EXTERNAL_CALL_TO_ADDRESS , _  ) -> fail @@ error_type
+    | ( C_TEST_INTERNAL_CALL , [V_Ct (C_address address) ; V_Michelson param ; V_Ct (C_mutez amt)] ) ->
+      let>> () = Internal_call (loc,calltrace,address,param,amt) in
+      return_ct C_unit
+    | ( C_TEST_INTERNAL_CALL , _ ) -> fail @@ error_type
     | ( C_TEST_SET_SOURCE , [ addr ] ) ->
       let>> () = Set_source addr in
       return_ct C_unit
@@ -762,12 +766,12 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t) : Location.
     | ( C_TEST_RUN , _  ) -> fail @@ error_type
     | ( C_TEST_DECOMPILE , [ V_Michelson (Ty_code { code_ty ; code ; ast_ty }) ] ) ->
       let* loc = monad_option (Errors.generic_error loc "Could not recover locations") @@ List.nth locs 0 in
-      (* let () = trace_option ~raise
+      let () = trace_option ~raise
         (Errors.generic_error loc @@
           Format.asprintf "This Michelson value has assigned type '%a', which does not coincide with expected type '%a'."
             AST.PP.type_expression ast_ty AST.PP.type_expression expr_ty)
         (AST.Helpers.assert_type_expression_eq (ast_ty, expr_ty))
-      in *)
+      in
       let>> v = Decompile (code, code_ty, expr_ty) in
       return v
     | ( C_TEST_DECOMPILE , _  ) -> fail @@ error_type

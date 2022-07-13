@@ -488,6 +488,59 @@ let transfer ~raise ~loc ~calltrace (ctxt:context) ?entrypoint dst parameter amt
   in
   bake_op ~raise ~loc ~calltrace ctxt operation
 
+
+let transfer_internal ~raise ~loc ~calltrace (ctxt:context) ?entrypoint dst parameter amount : _ =
+  let source = unwrap_source ~raise ~loc ~calltrace ctxt.internals.source in
+  let parameter =
+    match parameter with
+    (* | Ty_code { code_ty ; code ; _ } ->
+      let x_ty = Tezos_micheline.Micheline.root @@ ligo_to_canonical ~raise ~loc ~calltrace code_ty in
+      let (Ex_ty x_ty) = Trace.trace_tzresult_lwt ~raise
+        (throw_obj_exc loc calltrace)
+        (Memory_proto_alpha.parse_michelson_ty ~allow_ticket:true x_ty) in
+      let x = Tezos_micheline.Micheline.root @@ ligo_to_canonical ~raise ~loc ~calltrace code in
+      let x = Trace.trace_tzresult_lwt ~raise (throw_obj_exc loc calltrace) (Memory_proto_alpha.parse_michelson_data x x_ty) in
+      Tezos_raw_protocol.Apply.Typed_arg (0,x_ty,x) *)
+    | Untyped_code x | Ty_code { code = x ; _ } ->
+      Tezos_raw_protocol.Apply.Untyped_arg (ligo_to_canonical ~raise ~loc ~calltrace x)
+  in
+  let entrypoint =
+    let ep = Option.value entrypoint ~default:"default" in
+    Trace.trace_alpha_tzresult ~raise (throw_obj_exc loc calltrace) @@
+      Tezos_raw_protocol.Entrypoint_repr.of_string_lax ep
+  in
+  (* not sure: *)
+  (* let chain_id = Memory_proto_alpha.Protocol.Environment.Chain_id.of_bytes_exn (Crypto.Block_hash.to_bytes ctxt.raw.hash) in *)
+  let chain_id = Memory_proto_alpha.Protocol.Environment.Chain_id.zero in
+  let payer =
+    match Tezos_raw_protocol.Alpha_context.Contract.is_implicit source with
+    | Some pkh -> pkh
+    | None ->
+      let pkh,_,_ = Signature.generate_key () in
+      pkh
+  in
+  let actxt_bef = get_alpha_context ~raise ctxt in
+  let actxt_aft,_,_ =
+    Trace.trace_alpha_tzresult_lwt ~raise (throw_obj_exc loc calltrace) @@
+      Tezos_protocol.Protocol.Apply.apply_transaction
+        ~ctxt:actxt_bef
+        ~parameter
+        ~source
+        ~contract:dst
+        ~amount:(
+          Tezos_alpha_test_helpers.Test_tez.of_mutez_exn (Int64.of_int (Z.to_int amount))
+        )
+        ~entrypoint
+        ~before_operation:actxt_bef
+        ~payer
+        ~chain_id
+        ~mode:Tezos_raw_protocol.Script_ir_translator.Readable
+        ~internal:true
+  in
+  let () = Format.eprintf "AAAA\n" in
+  let raw = { ctxt.raw with context = Tezos_raw_protocol.Alpha_context.current_context actxt_aft } in
+  { ctxt with raw }
+
 let originate_contract : raise:r -> loc:Location.t -> calltrace:calltrace -> context -> value * value -> Z.t -> value * context =
   fun ~raise ~loc ~calltrace ctxt (contract, storage) amt ->
     let contract = trace_option ~raise (corner_case ()) @@ get_michelson_contract contract in
