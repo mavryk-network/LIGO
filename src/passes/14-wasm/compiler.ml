@@ -13,6 +13,8 @@ module Z = Z
 module ValueVar = Stage_common.Types.ValueVar
 module Location = Simple_utils.Location
 
+open Helpers
+
 (**
  * Converts LIGO's location.t to WasmObjectFile's Source.region.
  *)
@@ -41,53 +43,13 @@ let global_offset = ref 0l
 let convert_to_memory :
     string -> S.region -> Z.t -> A.data_part A.segment list * A.sym_info list =
  fun name at z ->
-  print_endline ("a number:" ^ name);
-  let z = if Z.lt z Z.zero then Z.neg z else z in
-  let no_of_bits = Z.of_int (Z.log2up z) in
-  let no_of_bits =
-    if Z.equal no_of_bits Z.zero then Z.of_int 1 else no_of_bits
-  in
-  let size = Int32.(Z.to_int32 (Z.cdiv no_of_bits (Z.of_int 8))) in
-  let capacity = size in
-  let length = size in
-  let open Mem_helpers in
-  let open Helpers in
+  let z = Z.to_int32 z in
   let open Int32 in
-  let data =
-    A.
-      [
-        data ~offset:!global_offset
-          ~init:
-            {
-              name;
-              detail =
-                [
-                  Int32 (Datatype.int32_of_datatype Datatype.Int);
-                  Symbol (name ^ "__int_data");
-                ];
-            };
-        data ~offset:(!global_offset + 8l)
-          ~init:
-            {
-              name = name ^ "__int_data";
-              detail =
-                [Symbol (name ^ "__int_data2"); Int32 capacity; Int32 length];
-            };
-        data
-          ~offset:Int32.(!global_offset + 20l)
-          ~init:{name = name ^ "__int_data2"; detail = [String (Z.to_bits z)]};
-      ]
-  in
+  let data = A.[data ~offset:!global_offset ~init:{name; detail = [Int32 z]}] in
   let symbols =
-    [
-      symbol_data ~name ~index:0l ~size:8l ~offset:!global_offset;
-      symbol_data ~name:(name ^ "__int_data") ~index:0l ~size:12l
-        ~offset:(!global_offset + 8l);
-      symbol_data ~name:(name ^ "__int_data2") ~index:0l ~size:(size * 4l)
-        ~offset:(!global_offset + 20l);
-    ]
+    A.[symbol_data ~name ~index:0l ~size:4l ~offset:!global_offset]
   in
-  global_offset := !global_offset + (size * 4l) + 20l;
+  global_offset := !global_offset + 4l;
   (data, symbols)
 
 type locals = (string * T.value_type) list
@@ -116,14 +78,13 @@ let rec expression ~raise :
     in
     ( w,
       l @ [(new_value, T.I32Type)],
-      S.
-        [
-          {it = A.Const {it = I32 response_size; at}; at};
-          {it = Call "malloc"; at};
-          {it = LocalTee new_value; at};
-        ]
-      @ e
-      @ S.[{it = A.Call fn; at}; {it = LocalGet new_value; at}] )
+      (* S.
+         [
+           {it = A.Const {it = I32 response_size; at}; at};
+           {it = Call "malloc"; at};
+           {it = LocalTee new_value; at};
+         ] *)
+      e @ S.[{it = A.Call fn; at}] )
   in
   match e.content with
   | E_literal Literal_unit -> (w, l, [{it = Nop; at}])
@@ -145,37 +106,25 @@ let rec expression ~raise :
   | E_literal (Literal_chain_id _b) -> failwith "not supported yet 12"
   | E_literal (Literal_operation _b) -> failwith "not supported yet 13"
   | E_closure {binder; body} -> (w, l, [S.{it = A.Nop; at}])
-  | E_constant {cons_name = C_LIST_EMPTY; arguments = []} -> (
-    match e.type_expression.type_content with
-    | I.T_list {type_content = I.T_base TB_operation} ->
-      let open Mem_helpers in
-      let o = Operations None in
-      let o_locals, o_instr = store_datatype o in
-      (w, l @ o_locals, o_instr)
-    | _ -> (w, l, []))
+  | E_constant {cons_name = C_LIST_EMPTY; arguments = []} ->
+    (w, l, [data_symbol "C_LIST_EMPTY" at])
   | E_constant {cons_name = C_PAIR; arguments = [e1; e2]} ->
-    print_endline "C_PAIR";
+    let pair = var_to_string (ValueVar.fresh ~name:"C_PAIR" ()) in
     let w, l, e1 = expression ~raise w l e1 in
     let w, l, e2 = expression ~raise w l e2 in
-    let open Mem_helpers in
-    let t =
-      Tuple
-        {
-          data =
-            {
-              value = {data = Instructions e1};
-              next =
-                Some {data = {value = {data = Instructions e2}; next = None}};
-            };
-        }
+    let e =
+      S.[const 8l at; call "malloc" at; local_set pair at; local_get pair at]
+      @ e1
+      @ S.[store at; local_get pair at; const 4l at; i32_add at]
+      @ e2
+      @ S.[store at; local_get pair at]
     in
-    let d_locals, e = store_datatype t in
-    (w, l @ d_locals, e)
+    (w, l @ [(pair, I32Type)], e)
   (* MATH *)
   | E_constant {cons_name = C_NEG; arguments} ->
     host_call ~fn:"c_neg" ~response_size:4l ~instructions:arguments
   | E_constant {cons_name = C_ADD; arguments = [e1; e2]} ->
-    host_call ~fn:"c_add" ~response_size:4l ~instructions:[e1; e2]
+    host_call ~fn:"c_add_i32" ~response_size:4l ~instructions:[e1; e2]
   | E_constant {cons_name = C_SUB; arguments = [e1; e2]} ->
     host_call ~fn:"c_sub" ~response_size:4l ~instructions:[e1; e2]
   | E_constant {cons_name = C_MUL; arguments = [e1; e2]} ->
@@ -270,7 +219,6 @@ let rec expression ~raise :
     (w, l, args @ [S.{it = A.Call name; at}])
   | E_variable name -> (
     let name = var_to_string name in
-    print_endline ("get variable:" ^ name);
     match List.find ~f:(fun (n, _) -> String.equal n name) l with
     | Some _ -> (w, l, [{it = LocalGet name; at}])
     | None -> (w, l, [{it = DataSymbol name; at}]))
@@ -288,7 +236,6 @@ let rec expression ~raise :
         ((name, _type), e2) ) ->
     failwith "should not happen..."
   | E_let_in (e1, _inline, _thunk, ((name, typex), e2)) ->
-    print_endline ("assignment: " ^ var_to_string name);
     let name = var_to_string name in
     let w, l, e1 = expression ~raise w l e1 in
     let l = l @ [(name, T.I32Type)] in
@@ -328,7 +275,6 @@ let rec expression ~raise :
        let fst = load ...  in *)
     (* a, b *)
     let w, l, tuple = expression ~raise w l tuple in
-    print_endline "before 2";
     let tuple_name = var_to_string (ValueVar.fresh ~name:"let_tuple" ()) in
     let t = tuple @ [S.{it = A.LocalSet tuple_name; at}] in
     let l = l @ [(tuple_name, T.I32Type)] in

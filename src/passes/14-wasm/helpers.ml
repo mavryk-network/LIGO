@@ -43,3 +43,18 @@ let symbol_data ~name ~index ~size ~offset =
            size = {it = size; at};
            offset = {it = offset; at};
          })
+
+let const i at = {it = Const {it = I32 i; at}; at}
+
+let call name at = {it = Call name; at}
+
+let local_set name at = {it = LocalSet name; at}
+
+let local_get name at = {it = LocalGet name; at}
+
+let store at =
+  {it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at}
+
+let i32_add at = {it = Binary (I32 Add); at}
+
+let data_symbol symbol at = {it = DataSymbol symbol; at}

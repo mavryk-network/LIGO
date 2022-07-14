@@ -192,11 +192,10 @@ let build_wasm_code ~raise : options:Compiler_options.t -> string -> file_name -
     let mini_c = Ligo_compile.Of_aggregated.compile_expression ~raise aggregated in
     let wasm  = Ligo_compile.Of_wasm.compile_contract ~raise ~options mini_c file_name entry_point_orig in
     let wasm = WasmObjectFile.Encode.encode wasm in
-    let channel = Out_channel.create "work_in_progress.wasm" in
+    let channel = Out_channel.create ("temp.wasm") in
     Out_channel.output_string channel wasm;
     Out_channel.close channel; 
-    (* link with GMP *)
-    Ligo_compile.Of_wasm.link ["vendors/gmp/libgmp.a"; "vendors/wasi/wasi-sdk-14.0/lib/clang/13.0.0/lib/wasi/libclang_rt.builtins-wasm32.a"; "work_in_progress.wasm"] file_name;
+    Ligo_compile.Of_wasm.link [("temp.wasm")] (file_name ^ ".wasm");
     ()
     (* , contract *)
 
