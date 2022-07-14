@@ -31,12 +31,14 @@ let%expect_test _ =
 
       ligo compile contract SOURCE_FILE
 
-    This sub-command compiles a contract to Michelson. It expects a source file and an entrypoint function that has
+    This sub-command compiles a contract to Michelson code. It expects a source file and an entrypoint function that has
                       the type of a contract:
                       "parameter * storage -> operations list * storage".
 
     === flags ===
 
+      [--backend Compile]                      the contract to `michelson`(default)
+                                               or `wasm`.
       [--constants CONSTANTS]                  A list of global constants that will
                                                be assumed in the context, separated
                                                by ','

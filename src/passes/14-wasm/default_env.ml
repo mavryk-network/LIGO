@@ -17,16 +17,7 @@ let env : module_ =
         data =
           [
             data ~offset:0l ~init:{name = "C_SET_EMPTY"; detail = [Int32 0l]};
-            data ~offset:4l
-              ~init:
-                {
-                  name = "C_LIST_EMPTY";
-                  detail =
-                    [
-                      Int32 (Datatype.int32_of_datatype Datatype.ListItem);
-                      Int32 0l;
-                    ];
-                };
+            data ~offset:4l ~init:{name = "C_LIST_EMPTY"; detail = [Int32 0l]};
             data ~offset:8l ~init:{name = "C_MAP_EMPTY"; detail = [Int32 0l]};
             data ~offset:12l
               ~init:{name = "C_BIG_MAP_EMPTY"; detail = [Int32 0l]};
