@@ -1,0 +1,17 @@
+opam-version: "2.0"
+maintainer: "info@ligolang.org"
+authors: ["sander<removethis>mail@gmail.com"]
+homepage: "https://gitlab.com/ligolang/ligolang"
+bug-reports: "https://gitlab.com/ligolang/ligolang/issues"
+synopsis: "Ligo Runtime for WebAssembly"
+build: [
+    ["ls" "-l" "/"]
+    ["cargo" "build" "--lib" "--target" "wasm32-unknown-unknown" "--release"]
+    ["cp" "target/wasm32-unknown-unknown/release/libligo_runtime.a" "libligo_runtime.a"]
+    ["wasm-ld" "--help"]
+]
+depends: [
+    "ocaml" {build}
+    "conf-rust" 
+    "conf-llvm"
+]

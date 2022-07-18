@@ -40,8 +40,8 @@ extern "C" {
  *
  */
 #[no_mangle]
-pub extern "C" fn _start() {
+pub extern "C" fn _start() -> i32 {
   unsafe {
-    let result = entrypoint(1);
+    entrypoint(1)
   }
 }

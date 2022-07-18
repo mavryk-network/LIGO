@@ -56,6 +56,7 @@ depends: [
   "resto-cohttp-self-serving-client"
   "tezos-rust-libs"
   "crunch"
+  "ligo-runtime"
 ]
 build: [
   [ "dune" "build" "-p" name "-j" jobs ]

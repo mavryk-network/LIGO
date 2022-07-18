@@ -1,0 +1,6 @@
+(library
+ (name ligo_runtime)
+ (public_name ligo-runtime)
+ (wrapped true)
+ (foreign_archives ligo_runtime)
+)

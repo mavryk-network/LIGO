@@ -39,16 +39,16 @@ let contract (raw_options : Compiler_options.raw) source_file display_format mic
       let Compiler_options.{ disable_michelson_typechecking = disable_typecheck ; views ; constants ; file_constants ; backend ; _ } = options.backend in
       let Compiler_options.{ entry_point ; _ } = options.frontend in
       match backend with 
-      "michelson" ->
+      | `Michelson ->
         let code,env = Build.build_contract ~raise ~options entry_point source_file in
         let views = Build.build_views ~raise ~options entry_point (views,env) source_file in
         let file_constants = read_file_constants ~raise file_constants in
         let constants = constants @ file_constants in
         Ligo_compile.Of_michelson.build_contract ~raise ~enable_typed_opt:options.backend.enable_typed_opt ~protocol_version:options.middle_end.protocol_version ~has_env_comments:options.backend.has_env_comments ~disable_typecheck ~constants code views
-      | "wasm" ->
+      | `Wasm ->
         let _ = Build.build_wasm_code ~raise ~options entry_point source_file in
-        (String ({location = Location.dummy; env = []; binder = None}, "This should not be here"))
-      | _ -> failwith "properly handle not supported backend type"
+        (* TODO: improve this and remove the `{}` result in the CLI *)
+        (Seq ({location = Location.dummy; env = []; binder = None}, []))
 
 let expression (raw_options : Compiler_options.raw) expression init_file display_format michelson_format () =
     let warning_as_error = raw_options.warning_as_error in

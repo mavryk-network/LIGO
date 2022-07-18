@@ -1,1 +1,0 @@
-for file in temp/*; do ../../../../gmp/wabt/bin/wasm2wat --no-check $file -o $file.wat; done

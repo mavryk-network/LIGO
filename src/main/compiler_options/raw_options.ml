@@ -1,3 +1,8 @@
+
+type backend = 
+  [`Michelson
+| `Wasm]
+
 type raw = {
   (* Formatter *)
   warning_as_error : bool ;
@@ -29,7 +34,7 @@ type raw = {
   views : string list ;
   constants : string list ;
   file_constants : string option ;
-  backend : string ;
+  backend : backend;
 }
 
 module Default_options = struct 
@@ -66,7 +71,7 @@ module Default_options = struct
   let views = []
   let constants = []
   let file_constants = None
-  let backend = "michelson"
+  let backend = `Michelson
 end
 
 let make 

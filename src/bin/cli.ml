@@ -256,11 +256,10 @@ let backend =
   let docv = "--backend" in
   let doc = "Compile the contract to `michelson`(default) or `wasm`." in
   flag ~doc docv @@
-  optional_with_default "michelson" @@
+  optional_with_default `Michelson @@
   Command.Arg_type.create @@ function
-    | "michelson" -> "michelson"
-    | "wasm" -> "wasm"
-    | _ -> failwith "Not supported"
+    | "wasm" -> `Wasm
+    | _ -> `Michelson
 
 let project_root =
   let open Command.Param in

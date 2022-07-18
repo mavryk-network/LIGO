@@ -94,17 +94,17 @@ let rec expression ~raise :
     let data, symbols = convert_to_memory name at z in
     let w = {w with data = w.data @ data; symbols = w.symbols @ symbols} in
     (w, l, [{it = A.DataSymbol name; at}])
-  | E_literal (Literal_nat _z) -> failwith "not supported yet 3"
-  | E_literal (Literal_timestamp _z) -> failwith "not supported yet 4"
-  | E_literal (Literal_mutez _z) -> failwith "not supported yet 5"
-  | E_literal (Literal_string _s) -> failwith "not supported yet 6"
-  | E_literal (Literal_bytes _b) -> failwith "not supported yet 7"
-  | E_literal (Literal_address _b) -> failwith "not supported yet 8"
-  | E_literal (Literal_signature _b) -> failwith "not supported yet 9"
-  | E_literal (Literal_key _b) -> failwith "not supported yet 10"
-  | E_literal (Literal_key_hash _b) -> failwith "not supported yet 11"
-  | E_literal (Literal_chain_id _b) -> failwith "not supported yet 12"
-  | E_literal (Literal_operation _b) -> failwith "not supported yet 13"
+  | E_literal (Literal_nat _z) -> failwith "E_literal (Literal_nat) not supported"
+  | E_literal (Literal_timestamp _z) -> failwith "E_literal (Literal_timestamp) not supported"
+  | E_literal (Literal_mutez _z) -> failwith "E_literal (Literal_mutez) not supported"
+  | E_literal (Literal_string _s) -> failwith "E_literal (Literal_string) not supported"
+  | E_literal (Literal_bytes _b) -> failwith "E_literal (Literal_bytes) not supported"
+  | E_literal (Literal_address _b) -> failwith "E_literal (Literal_address) not supported"
+  | E_literal (Literal_signature _b) -> failwith "E_literal (Literal_signature) not supported"
+  | E_literal (Literal_key _b) -> failwith "E_literal (Literal_key) not supported"
+  | E_literal (Literal_key_hash _b) -> failwith "E_literal (Literal_key_hash) not supported"
+  | E_literal (Literal_chain_id _b) -> failwith "E_literal (Literal_chain_id) not supported"
+  | E_literal (Literal_operation _b) -> failwith "E_literal (Literal_operation) not supported"
   | E_closure {binder; body} -> (w, l, [S.{it = A.Nop; at}])
   | E_constant {cons_name = C_LIST_EMPTY; arguments = []} ->
     (w, l, [data_symbol "C_LIST_EMPTY" at])
@@ -187,17 +187,10 @@ let rec expression ~raise :
           {it = LocalGet cons; at};
         ] )
   | E_constant {cons_name = C_LIST_LITERAL; arguments = [l1]} ->
-    failwith "not supported yet 15a2"
-    (* | E_constant {cons_name = C_SET_ADD; arguments = [a; b]} ->
-       let w, l, a = expression ~raise w l a in
-       let w, l, b = expression ~raise w l b in
-       a @
-       b @
-
-       [S.{ it = A.Call "insertNode"; at }] *)
+    failwith "E_constant (C_LIST_LITERAL) not supported"
   | E_constant {cons_name = C_LIST_ITER; arguments = [l1]} ->
-    failwith "not supported yet 15a4"
-  | E_constant {cons_name; arguments} -> failwith "not supported yet 15b"
+    failwith "E_constant (C_LIST_ITER) not supported"
+  | E_constant {cons_name; arguments} -> failwith "E_constant (..) not supported"
   | E_application _ ->
     let rec aux result expr =
       match expr.I.content with
@@ -205,7 +198,11 @@ let rec expression ~raise :
       | E_variable v ->
         let name = var_to_string v in
         (name, List.rev result)
-      | _ -> failwith "Not supported yet x1"
+      | E_constant _ -> failwith "e_constant x1"
+      | E_closure _ -> failwith "e_closure x1"
+      | E_literal _ -> failwith "e_literal x1"
+      | E_raw_michelson _ -> failwith "e_raw_michelson fok"
+      | _ -> failwith "E_application (..) not supported"
     in
     let name, args = aux [] e in
     let w, l, args =
@@ -215,20 +212,19 @@ let rec expression ~raise :
           (w, l, a @ c))
         ~init:(w, l, []) args
     in
-    (* let args = List.rev args in *)
     (w, l, args @ [S.{it = A.Call name; at}])
   | E_variable name -> (
     let name = var_to_string name in
     match List.find ~f:(fun (n, _) -> String.equal n name) l with
     | Some _ -> (w, l, [{it = LocalGet name; at}])
     | None -> (w, l, [{it = DataSymbol name; at}]))
-  | E_iterator (b, ((name, _), body), expr) -> failwith "not supported yet 18"
-  | E_fold _ -> failwith "not supported yet 19"
-  | E_fold_right _ -> failwith "not supported yet 20"
-  | E_if_bool _ -> failwith "not supported yet 21"
-  | E_if_none _ -> failwith "not supported yet 22"
-  | E_if_cons _ -> failwith "not supported yet 23"
-  | E_if_left _ -> failwith "not supported yet 24"
+  | E_iterator (b, ((name, _), body), expr) -> failwith "E_iterator not supported"
+  | E_fold _ -> failwith "E_fold not supported"
+  | E_fold_right _ -> failwith "E_fold_right not supported"
+  | E_if_bool _ -> failwith "E_if_bool not supported"
+  | E_if_none _ -> failwith "E_if_none not supported"
+  | E_if_cons _ -> failwith "E_if_cons not supported"
+  | E_if_left _ -> failwith "E_if_left not supported"
   | E_let_in
       ( {content = E_closure {binder; body}},
         _inline,
@@ -241,39 +237,8 @@ let rec expression ~raise :
     let l = l @ [(name, T.I32Type)] in
     let w, l, e2 = expression ~raise w l e2 in
     (w, l, e1 @ [S.{it = A.LocalSet name; at}] @ e2)
-  | E_tuple _ -> failwith "not supported yet 26"
+  | E_tuple _ -> failwith "E_tuple not supported"
   | E_let_tuple (tuple, (values, rhs)) ->
-    (* let a_node: Node = load_datatype_tuple location in
-
-       (* how to ensure some form of type safety: result must be something more...?! *)
-
-       print_endline "before 1";
-
-
-       let m = new DataTypeLoader location in
-       let t = m#get_tuple in
-
-       let l = t#value() in
-
-       let n = t#next() in *)
-
-    (*
-      - load a tuple -> 
-          get a tuple back, but we don't want to load everything... soooo..
-
-          TupleLoader {
-            value (),
-            next ()
-          }
-
-      - 
-    
-    *)
-
-    (* let wrapper_node = load_datatype_tuple ~alloc in
-       let node = load_wrapper wrapper_node in
-       let fst = load ...  in *)
-    (* a, b *)
     let w, l, tuple = expression ~raise w l tuple in
     let tuple_name = var_to_string (ValueVar.fresh ~name:"let_tuple" ()) in
     let t = tuple @ [S.{it = A.LocalSet tuple_name; at}] in
@@ -298,64 +263,11 @@ let rec expression ~raise :
     in
     let w, l, e2 = expression ~raise w l rhs in
     (w, l, t @ e @ e2)
-  (* E_proj (record, index, field_count): we use the field_count to
-     know whether the index is the last field or not, since Michelson
-     treats the last element of a comb differently than the rest. We
-     could alternatively put `unit` at the end of all our combs, but
-     that would break compatibility and is not a standard Michelson
-     convention... *)
-  | E_proj _ -> failwith "not supported yet 28"
-  (* E_update (record, index, update, field_count): field_count as for E_proj *)
-  | E_update _ -> failwith "not supported yet 29"
-  | E_raw_michelson _ ->
-    failwith "TOODO: fix raw michelson error"
-    (* raise.raise @@ michelson_insertion Location.dummy *)
-  | _ -> failwith "not supported x"
-
-(* | E_closure of anon_function
-   | E_constant of constant
-   | E_application of (expression * expression)
-   | E_variable of var_name
-   | E_iterator of constant' * ((var_name * type_expression) * expression) * expression
-   | E_fold     of (((var_name * typex _expression) * expression) * expression * expression)
-   | E_fold_right of (((var_name * type_expression) * expression) * (expression * type_expression) * expression)
-   | E_if_bool  of (expression * expression * expression)
-   | E_if_none  of expression * expression * ((var_name * type_expression) * expression)
-   | E_if_cons  of expression * expression * (((var_name * type_expression) * (var_name * type_expression)) * expression)
-   | E_if_left  of expression * ((var_name * type_expression) * expression) * ((var_name * type_expression) * expression)
-   | E_let_in   of expression * inline * ((var_name * type_expression) * expression)
-   | E_tuple of expression list
-   | E_let_tuple of expression * (((var_name * type_expression) list) * expression)
-   (* E_proj (record, index, field_count): we use the field_count to
-      know whether the index is the last field or not, since Michelson
-      treats the last element of a comb differently than the rest. We
-      could alternatively put `unit` at the end of all our combs, but
-      that would break compatibility and is not a standard Michelson
-      convention... *)
-   | E_proj of expression * int * int
-   (* E_update (record, index, update, field_count): field_count as for E_proj *)
-   | E_update of expression * int * expression * int
-   | E_raw_michelson _ -> failwith "not supported" *)
-
-(* let func_type: I.expression -> W.AST.type_ = fun e ->
-   let type_expression = e.type_expression in
-   let type_content = type_expression.type_content in
-   let _location = type_expression.location in
-   match type_content with *)
-
-(* | T_tuple of type_expression annotated list
-   | T_or of (type_expression annotated * type_expression annotated)
-   | T_function of (type_expression * type_expression)
-   | T_base of type_base
-   | T_map of (type_expression * type_expression)
-   | T_big_map of (type_expression * type_expression)
-   | T_list of type_expression
-   | T_set of type_expression
-   | T_contract of type_expression
-   | T_ticket of type_expression
-   | T_sapling_state of Z.t
-   | T_sapling_transaction of Z.t
-   | T_option of type_expression *)
+  | E_raw_michelson nodes ->
+    List.iter ~f:(fun (_, s) -> print_endline s) nodes;
+    failwith "oh noes..."
+    
+  | _ -> failwith "Instruction not supported"
 
 let func I.{binder; body} =
   let rec aux arguments body =
@@ -415,39 +327,19 @@ let rec toplevel_bindings ~raise :
     let data, symbols = convert_to_memory name at z in
     toplevel_bindings ~raise e2
       {w with data = w.data @ data; symbols = w.symbols @ symbols}
-    (* | Literal_unit *)
-    (* | Literal_nat of z
-         | Literal_timestamp of z
-         | Literal_mutez of z *)
-    (* | Literal_string of ligo_string
-         | Literal_bytes of bytes
-         | Literal_address of string
-         | Literal_signature of string
-         | Literal_key of string
-         | Literal_key_hash of string
-         | Literal_chain_id of string
-         | Literal_operation of bytes
-         | Literal_bls12_381_g1 of bytes
-         | Literal_bls12_381_g2 of bytes
-         | Literal_bls12_381_fr of bytes *)
   | E_variable entrypoint ->
     let actual_name = var_to_string entrypoint in
     let name = "entrypoint" in
     let w =
       {
         w with
-        symbols = w.symbols @ [{it = {name; details = Function}; at}];
+        symbols = w.symbols @ [
+          symbol ~name ~details:Function   
+        ];
         types =
           w.types
           @ [
-              {
-                it =
-                  {
-                    tname = name ^ "_type";
-                    tdetails = FuncType ([I32Type], [I32Type]);
-                  };
-                at;
-              };
+            type_ ~name:(name ^ "_type") ~typedef:(FuncType ([I32Type], [I32Type]));
             ];
         funcs =
           w.funcs
@@ -460,8 +352,8 @@ let rec toplevel_bindings ~raise :
                     locals = [("entrypoint_tuple", I32Type)];
                     body =
                       [
-                        {it = LocalGet "entrypoint_tuple"; at};
-                        {it = Call actual_name; at};
+                        local_get "entrypoint_tuple" at;
+                        call actual_name at;
                       ];
                   };
                 at;
@@ -470,8 +362,6 @@ let rec toplevel_bindings ~raise :
       }
     in
     w
-    (* in *)
-    (* { w with types = w.types @ type_; funcs = w.funcs @ func; symbols = w.symbols @ symbol } *)
   | _ -> failwith "Instruction not supported at the toplevel."
 
 let compile ~raise : I.expression -> string -> string -> W.Ast.module_ =
