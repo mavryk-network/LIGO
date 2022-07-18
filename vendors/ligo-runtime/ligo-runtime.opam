@@ -4,12 +4,9 @@ authors: ["sander<removethis>mail@gmail.com"]
 homepage: "https://gitlab.com/ligolang/ligolang"
 bug-reports: "https://gitlab.com/ligolang/ligolang/issues"
 synopsis: "Ligo Runtime for WebAssembly"
-# build: [
-#     ["ls" "-l" "/"]
-#     ["cargo" "build" "--lib" "--target" "wasm32-unknown-unknown" "--release"]
-#     ["cp" "target/wasm32-unknown-unknown/release/libligo_runtime.a" "libligo_runtime.a"]
-# ]
+build: [
+    ["dune" "build" "-p" name "-j" jobs]
+]
 depends: [
     "ocaml" {build}
-    # "conf-rust"
 ]

@@ -3,7 +3,7 @@
  (public_name ligo-runtime)
  (c_library_flags
   (-lpthread -lc -lm))
- (foreign_archives ligo_runtime))
+ )
 
 (rule
  (enabled_if
