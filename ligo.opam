@@ -57,6 +57,7 @@ depends: [
   "tezos-rust-libs"
   "crunch"
   "ligo-runtime"
+  "conf-llvm"
 ]
 build: [
   [ "dune" "build" "-p" name "-j" jobs ]

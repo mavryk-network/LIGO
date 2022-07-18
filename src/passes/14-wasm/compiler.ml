@@ -201,7 +201,7 @@ let rec expression ~raise :
       | E_constant _ -> failwith "e_constant x1"
       | E_closure _ -> failwith "e_closure x1"
       | E_literal _ -> failwith "e_literal x1"
-      | E_raw_michelson _ -> failwith "e_raw_michelson fok"
+      | E_raw_michelson _ -> failwith "e_raw_michelson not supported x1"
       | _ -> failwith "E_application (..) not supported"
     in
     let name, args = aux [] e in
@@ -264,7 +264,15 @@ let rec expression ~raise :
     let w, l, e2 = expression ~raise w l rhs in
     (w, l, t @ e @ e2)
   | E_raw_michelson nodes ->
-    List.iter ~f:(fun (_, s) -> print_endline s) nodes;
+    (* List.iter ~f:(fun n -> 
+      match n with 
+        Int ()
+      | String
+      | Bytes
+      | Prim
+      | Seq  
+      print_endline s
+    ) nodes; *)
     failwith "oh noes..."
     
   | _ -> failwith "Instruction not supported"
