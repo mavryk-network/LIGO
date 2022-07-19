@@ -1,0 +1,5 @@
+author: lesenechal.remi
+description: '- improved typing inference on data constructors'
+merge_request: '1841'
+title: 'Draft: Poly ctor param fixes'
+type: fixed
