@@ -1,0 +1,13 @@
+[package]
+name = "ligo-runtime-i"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "ligo_runtime"
+path = "src/lib.rs"
+crate-type = ["staticlib"]
+
+[profile.release]
+lto = true
+opt-level = 's'

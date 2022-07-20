@@ -56,7 +56,6 @@ depends: [
   "resto-cohttp-self-serving-client"
   "tezos-rust-libs"
   "crunch"
-  "ligo-runtime"
   "conf-llvm"
 ]
 build: [

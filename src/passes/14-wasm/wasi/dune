@@ -1,0 +1,67 @@
+(library
+ (name ligo_wasi)
+ (public_name ligo.wasi)
+ (libraries core)
+ (c_library_flags
+  (-lpthread -lc -lm))
+  (modules foo)
+  ; (foreign_archives)
+ )
+
+(rule
+ (targets 
+    foo.ml 
+    libclang_rt.builtins-wasm32.a 
+    libc++.a 
+    libc++abi.a
+    libc-printscan-long-double.a
+    libc-printscan-no-floating-point.a 
+    libc.a
+    libc.imports
+    libcrypt.a 
+    libdl.a
+    libm.a 
+    libpthread.a
+    libresolv.a
+    librt.a
+    libutil.a
+    libwasi-emulated-getpid.a
+    libwasi-emulated-mman.a
+    libwasi-emulated-process-clocks.a
+    libwasi-emulated-signal.a
+    libxnet.a
+  )
+ (deps build.sh)
+ (action
+  (progn  
+   (bash ./build.sh)
+   (run touch foo.ml)
+   ))
+ )
+
+(install 
+ (section (site (ligo ligo_wasi)))
+ (files 
+  (libclang_rt.builtins-wasm32.a as libclang_rt.builtins-wasm32.a)
+  (libc++.a as lib/libc++.a  )
+  (libc++abi.a as lib/libc++abi.a )
+  (libc-printscan-long-double.a as lib/libc-printscan-long-double.a )
+  (libc-printscan-no-floating-point.a  as lib/libc-printscan-no-floating-point.a  )
+  (libc.a as lib/libc.a )
+  (libc.imports as lib/libc.imports )
+  (libcrypt.a  as lib/libcrypt.a  )
+  (libdl.a as lib/libdl.a )
+  (libm.a  as lib/libm.a  )
+  (libpthread.a as lib/libpthread.a )
+  (libresolv.a as lib/libresolv.a )
+  (librt.a as lib/librt.a )
+  (libutil.a as lib/libutil.a )
+  (libwasi-emulated-getpid.a as lib/libwasi-emulated-getpid.a )
+  (libwasi-emulated-mman.a as lib/libwasi-emulated-mman.a )
+  (libwasi-emulated-process-clocks.a as lib/libwasi-emulated-process-clocks.a )
+  (libwasi-emulated-signal.a as lib/libwasi-emulated-signal.a )
+  (libxnet.a as lib/libxnet.a )
+)
+)
+
+; wasi/wasi-sdk-14.0/lib/clang/13.0.0/lib/wasi/libclang_rt.builtins-wasm32.a

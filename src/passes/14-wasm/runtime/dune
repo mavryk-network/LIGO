@@ -1,0 +1,92 @@
+(library
+ (name ligo_runtime)
+ (public_name ligo.wasm_runtime)
+ (c_library_flags
+  (-lpthread -lc -lm))
+ (libraries dune-site core)
+ (modules ligo_runtime)
+ ; (foreign_archives ligo_runtime)
+)
+
+(install 
+ (section (site (ligo ligo_runtime)))
+ (files 
+  (libligo_runtime.a as libligo_runtime.a)
+ )  
+)
+
+(copy_files 
+ (files src/target/wasm32-unknown-unknown/release/*)
+)
+
+(generate_sites_module
+ (module ligo_runtime)
+ (sites ligo))
+
+; (dirs
+;  :standard
+;  \
+;  tools
+;  scripts
+;  nix
+;  esy.lock
+;  docker
+;  static.esy.esy.lock
+;  target)
+
+; (rule
+;  (targets libligo_runtime.a dllligo_runtime.so)
+;  (deps
+;   (source_tree runtime/))
+;  (action
+;   (progn
+;    (run cargo build --lib --target wasm32-unknown-unknown --release)
+;    (run
+;     sh
+;     -c
+;     "cp ./target/wasm32-unknown-unknown/release/libligo_runtime.so ./dllligo_runtime.so 2> /dev/null || cp ./target/wasm32-unknown-unknown/release/libligo_runtime.dylib ./dllligo_runtime.so")
+;    (run
+;     cp
+;     %{project_root}/../../target/wasm32-unknown-unknown/release/libligo_runtime.a
+;     ./))))
+
+; ; (rule
+; ;  (targets libligo_runtime.a)
+; ;  (deps
+; ;   (file Cargo.toml)
+; ;   (source_tree runtime/)
+; ;   )
+; ;  (action
+; ;   (progn
+; ;    (run cargo build --lib --target wasm32-unknown-unknown --release)
+; ;    (run
+; ;     sh
+; ;     -c
+; ;     "cp ./target/wasm32-unknown-unknown/release/libligo_runtime.so ./dllligo_runtime.so 2> /dev/null || cp ./target/wasm32-unknown-unknown/release/libligo_runtime.dylib ./dllligo_runtime.so")
+; ;    (run
+; ;     cp
+; ;     ./target/wasm32-unknown-unknown/release/libligo_runtime.a
+; ;     ./libligo_runtime.a)
+; ;     )
+    
+; ;   ))
+
+; ; ; (rule
+; ; ;  (enabled_if
+; ; ;   (= %{profile} debug))
+; ; ;  (targets libligo_runtime.a dllligo_runtime.so empty.ml)
+; ; ;  (deps
+; ; ;   (source_tree runtime/))
+; ; ;  (action
+; ; ;   (progn
+; ; ;    (run cargo build --lib --target wasm32-unknown-unknown)
+; ; ;    (run
+; ; ;     sh
+; ; ;     -c
+; ; ;     "cp ./target/wasm32-unknown-unknown/debug/libligo_runtime.so ./dllligo_runtime.so 2> /dev/null || cp ./target/wasm32-unknown-unknown/debug/libligo_runtime.dylib ./dllligo_runtime.so")
+; ; ;    (run
+; ; ;     cp
+; ; ;     ./target/wasm32-unknown-unknown/debug/libligo_runtime.a
+; ; ;     ./libligo_runtime.a)
+; ; ;     (run touch empty.ml)
+; ; ;     )))
