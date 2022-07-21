@@ -162,6 +162,7 @@ let rec is_pure : expression -> bool = fun e ->
   | E_closure _
   | E_variable _
   | E_raw_michelson _
+  | E_raw_wasm _
     -> true
 
   | E_if_bool (cond, bt, bf)

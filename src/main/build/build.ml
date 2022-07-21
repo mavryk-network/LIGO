@@ -183,11 +183,11 @@ let build_contract ~raise : options:Compiler_options.t -> string -> file_name ->
     let michelson  = Ligo_compile.Of_mini_c.compile_contract ~raise ~options mini_c in
     michelson, contract
 
-let build_wasm_code ~raise : options:Compiler_options.t -> string -> file_name -> unit =
+let build_wasm_code ~raise : options:Compiler_options.t -> string -> file_name -> unit * Ast_typed.program =
   fun ~options entry_point file_name ->
     let entry_point_orig = entry_point in
     let entry_point = Ast_typed.ValueVar.of_input_var entry_point in
-    let typed_prg, _contract = build_typed ~raise ~options (Ligo_compile.Of_core.Contract entry_point) file_name in
+    let typed_prg, contract = build_typed ~raise ~options (Ligo_compile.Of_core.Contract entry_point) file_name in
     let aggregated = Ligo_compile.Of_typed.apply_to_entrypoint_contract ~raise ~options:options.middle_end typed_prg entry_point in
     let mini_c = Ligo_compile.Of_aggregated.compile_expression ~raise aggregated in
     let wasm  = Ligo_compile.Of_wasm.compile_contract ~raise ~options mini_c file_name entry_point_orig in
@@ -195,9 +195,7 @@ let build_wasm_code ~raise : options:Compiler_options.t -> string -> file_name -
     let channel = Out_channel.create ("temp.wasm") in
     Out_channel.output_string channel wasm;
     Out_channel.close channel; 
-    Ligo_compile.Of_wasm.link [("temp.wasm")] (file_name ^ ".wasm");
-    ()
-    (* , contract *)
+    Ligo_compile.Of_wasm.link [("temp.wasm")] (file_name ^ ".wasm"), contract
 
 let build_views ~raise :
   options:Compiler_options.t -> string -> string list * Ast_typed.program -> file_name -> (Ast_typed.ValueVar.t * Stacking.compiled_expression) list =

@@ -52,6 +52,8 @@ let local_set name at = {it = LocalSet name; at}
 
 let local_get name at = {it = LocalGet name; at}
 
+let local_tee name at = {it = LocalTee name; at}
+
 let store at =
   {it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at}
 

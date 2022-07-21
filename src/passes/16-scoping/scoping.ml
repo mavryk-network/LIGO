@@ -217,6 +217,7 @@ let rec translate_expression ~raise ~proto (expr : I.expression) (env : I.enviro
       Tezos_micheline.Micheline.(inject_locations (fun _ -> l) (strip_locations e)) in
     let code = List.map ~f:(wipe_locations nil) code in
     E_raw_michelson (meta, translate_type a, translate_type b, code)
+  | E_raw_wasm _code -> failwith "Not implemented"
   | E_global_constant (hash, args) ->
     let args = translate_args args env in
     let output_ty = translate_type ty in

@@ -78,13 +78,19 @@ let rec expression ~raise :
     in
     ( w,
       l @ [(new_value, T.I32Type)],
-      (* S.
+      S.
          [
-           {it = A.Const {it = I32 response_size; at}; at};
-           {it = Call "malloc"; at};
-           {it = LocalTee new_value; at};
-         ] *)
-      e @ S.[{it = A.Call fn; at}] )
+           const response_size at;
+           call "malloc" at;
+           local_tee new_value at;
+         ]
+      @
+      e 
+      @ S.[ 
+          call fn at; 
+          store at; 
+          local_get new_value at
+        ] )
   in
   match e.content with
   | E_literal Literal_unit -> (w, l, [{it = Nop; at}])
@@ -198,6 +204,7 @@ let rec expression ~raise :
       | E_variable v ->
         let name = var_to_string v in
         (name, List.rev result)
+      | E_raw_wasm _code -> failwith "E_application (E_raw_wasm) not supported"
       | E_constant _ -> failwith "e_constant x1"
       | E_closure _ -> failwith "e_closure x1"
       | E_literal _ -> failwith "e_literal x1"
@@ -263,18 +270,8 @@ let rec expression ~raise :
     in
     let w, l, e2 = expression ~raise w l rhs in
     (w, l, t @ e @ e2)
-  | E_raw_michelson nodes ->
-    (* List.iter ~f:(fun n -> 
-      match n with 
-        Int ()
-      | String
-      | Bytes
-      | Prim
-      | Seq  
-      print_endline s
-    ) nodes; *)
-    failwith "oh noes..."
-    
+  (* | E_raw_wasm _ -> *)
+
   | _ -> failwith "Instruction not supported"
 
 let func I.{binder; body} =
@@ -347,7 +344,7 @@ let rec toplevel_bindings ~raise :
         types =
           w.types
           @ [
-            type_ ~name:(name ^ "_type") ~typedef:(FuncType ([I32Type], [I32Type]));
+            type_ ~name:(name ^ "_type") ~typedef:(FuncType ([I32Type; I32Type], [I32Type]));
             ];
         funcs =
           w.funcs
@@ -357,9 +354,22 @@ let rec toplevel_bindings ~raise :
                   {
                     name;
                     ftype = name ^ "_type";
-                    locals = [("entrypoint_tuple", I32Type)];
+                    locals = [("parameter", I32Type); ("storage", I32Type); ("entrypoint_tuple", I32Type)];
                     body =
                       [
+                        const 8l at;
+                        call "malloc" at;
+                        local_set "entrypoint_tuple" at;
+                        local_get "entrypoint_tuple" at;
+                        local_get "parameter" at;
+                        store at;
+
+                        local_get "entrypoint_tuple" at;
+                        const 4l at;
+                        i32_add at;
+                        local_get "storage" at;
+                        store at;
+
                         local_get "entrypoint_tuple" at;
                         call actual_name at;
                       ];

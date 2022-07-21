@@ -19,7 +19,6 @@ type extern_type =
 type pack_size = Pack8 | Pack16 | Pack32
 type extension = SX | ZX
 
-
 (* Attributes *)
 
 let size = function
@@ -30,7 +29,6 @@ let packed_size = function
   | Pack8 -> 1
   | Pack16 -> 2
   | Pack32 -> 4
-
 
 (* Subtyping *)
 

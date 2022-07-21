@@ -9,7 +9,7 @@ let rec map_expression : mapper -> expression -> expression = fun f e ->
   let e' = f e in
   let return content = { e' with content } in
   match e'.content with
-  | E_variable _ | E_literal _ | E_raw_michelson _
+  | E_variable _ | E_literal _ | E_raw_michelson _ | E_raw_wasm _
     as em -> return em
   | E_constant (c) -> (
       let lst = List.map ~f:self c.arguments in

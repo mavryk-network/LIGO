@@ -7,7 +7,9 @@
   simple-utils
   tezos-utils
   stage_common
-  ast_typed)
+  ast_typed
+  WasmObjectFile
+  )
  (inline_tests)
  (preprocess
   (pps ppx_expect)))

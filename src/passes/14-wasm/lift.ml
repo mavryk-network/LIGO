@@ -350,6 +350,7 @@ let rec lift : env -> expression -> env * expression =
     (env, {e with content = E_update (e1, a, e2, b)})
   | E_create_contract _ -> (env, e)
   | E_raw_michelson _ -> (env, e)
+  | E_raw_wasm _ -> (env, e)
   | E_global_constant (s, lst) ->
     let env, lst =
       List.fold_left

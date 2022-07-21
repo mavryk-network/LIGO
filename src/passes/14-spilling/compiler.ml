@@ -522,35 +522,35 @@ let rec compile_expression ~raise (ae:AST.expression) : expression =
         compile_record_matching ~raise expr' return self record
   )
   | E_raw_code { language; code} ->
-    let backend = Stage_common.Backends.michelson in
-    let () =
-      Assert.assert_true ~raise
-        (corner_case ~loc:__LOC__ "Language insert - backend mismatch only provide code insertion in the language you are compiling to")
-        (String.equal language backend)
-    in
-    let type_anno  = get_type code in
-    let type_anno' = compile_type ~raise type_anno in
-    let code = trace_option ~raise (corner_case ~loc:__LOC__ "could not get a string") @@ get_a_string code in
-    let open Tezos_micheline in
-    let orig_code = code in
-    let (code, errs) = Micheline_parser.tokenize code in
-    (match errs with
-    | _ :: _ -> raise.error (could_not_parse_raw_michelson ae.location orig_code)
-    | [] ->
-      let (code, errs) = Micheline_parser.parse_expression ~check:false code in
-      match errs with
+    (match language with 
+    | "michelson" ->
+      let type_anno  = get_type code in
+      let type_anno' = compile_type ~raise type_anno in
+      let code = trace_option ~raise (corner_case ~loc:__LOC__ "could not get a string") @@ get_a_string code in
+      let open Tezos_micheline in
+      let orig_code = code in
+      let (code, errs) = Micheline_parser.tokenize code in
+      (match errs with
       | _ :: _ -> raise.error (could_not_parse_raw_michelson ae.location orig_code)
       | [] ->
-        let code = Micheline.strip_locations code in
-        (* hmm *)
-        let code = Micheline.inject_locations (fun _ -> Location.generated) code in
-        match code with
-        | Seq (_, code) ->
-          return ~tv:type_anno' @@ E_raw_michelson code
-        | _ ->
-          raise.error (raw_michelson_must_be_seq ae.location code)
+        let (code, errs) = Micheline_parser.parse_expression ~check:false code in
+        match errs with
+        | _ :: _ -> raise.error (could_not_parse_raw_michelson ae.location orig_code)
+        | [] ->
+          let code = Micheline.strip_locations code in
+          (* hmm *)
+          let code = Micheline.inject_locations (fun _ -> Location.generated) code in
+          match code with
+          | Seq (_, code) ->
+            return ~tv:type_anno' @@ E_raw_michelson code
+          | _ ->
+            raise.error (raw_michelson_must_be_seq ae.location code)
+      )  
+    | "wasm" -> failwith "Hello wasm!"
+    | _ -> 
+      raise.error (corner_case ~loc:__LOC__ "Language insert - backend mismatch only provide code insertion in the language you are compiling to")
     )
-    | E_assign _ -> failwith "assign should be compiled to let in self-ast-aggregated"
+  | E_assign _ -> failwith "assign should be compiled to let in self-ast-aggregated"
 
 and compile_lambda ~raise l fun_type =
   let { binder ; result } : AST.lambda = l in

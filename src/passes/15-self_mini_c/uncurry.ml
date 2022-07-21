@@ -109,6 +109,8 @@ let rec usage_in_expr (f : expression_variable) (expr : expression) : usage =
     usages [self expr; self update]
   | E_raw_michelson _ ->
     Unused
+  | E_raw_wasm _ ->
+    Unused
   | E_global_constant (_hash, args) ->
     usages (List.map ~f:self args)
   | E_create_contract (_p, _s, _code, args) ->
@@ -195,6 +197,8 @@ let rec uncurry_in_expression
     let e2 = self_binder [v] e2 in
     return (E_let_in (e1, inline, thunk, ((v, t), e2)))
   | E_raw_michelson _ ->
+    return_id
+  | E_raw_wasm _ ->
     return_id
   | E_iterator (c, ((v1, t1), e1), e2) ->
     let e1 = self_binder [v1] e1 in

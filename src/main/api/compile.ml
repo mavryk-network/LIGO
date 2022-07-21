@@ -46,7 +46,7 @@ let contract (raw_options : Compiler_options.raw) source_file display_format mic
         let constants = constants @ file_constants in
         Ligo_compile.Of_michelson.build_contract ~raise ~enable_typed_opt:options.backend.enable_typed_opt ~protocol_version:options.middle_end.protocol_version ~has_env_comments:options.backend.has_env_comments ~disable_typecheck ~constants code views
       | `Wasm ->
-        let _ = Build.build_wasm_code ~raise ~options entry_point source_file in
+        let _, _env = Build.build_wasm_code ~raise ~options entry_point source_file in
         (* TODO: improve this and remove the `{}` result in the CLI *)
         (Seq ({location = Location.dummy; env = []; binder = None}, []))
 
