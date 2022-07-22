@@ -230,40 +230,11 @@ module Build_cst_cameligo = struct
       Region.wrap_ghost "list" , CArg t
     )))
 
-  (* TODO : Pattern-matching exhaustiveness is not ensured here, we currently have to manually of all Prim types, what can we do ? *)
-  let mk_type_expr_from_michelson ~(raise : (Main_errors.all, Main_warnings.all) Trace.raise) micheline_node =
-    let open Micheline in
-    let rec aux node =
-      match node with
-      | Prim (_, "int",    [], _ )         -> mk_tvar "int"
-      | Prim (_, "string", [], _ )         -> mk_tvar "string"
-      | Prim (_, "bytes",  [], _ )         -> mk_tvar "bytes"
-      | Prim (_, "nat",    [], _ )         -> mk_tvar "nat"
-      | Prim (_, "bool",   [], _ )         -> mk_tvar "bool"
-      | Prim (_, "list",   [n], _ )        -> mk_list (aux n)
-      | Prim (_, "pair",   [n1 ; n2], _ )  -> mk_tprod (aux n1) (aux n2)
-
-      (* TODO : Add appropriate error types in Main_errors *)
-      | Prim (_, name,     _, _ ) -> Printf.printf "Unsupported Prim() type : %s\n" name; raise.error @@ Main_errors.repl_unexpected
-      | _ -> Printf.printf "Unsupported type so far\n"; raise.error @@ Main_errors.repl_unexpected
-    in aux micheline_node
-
-
-
-
-
-
-  let toplevel
-    : raise:(Main_errors.all, Main_warnings.all) Trace.raise
-    -> ('a, lexeme) Micheline.node
-    -> ('a, lexeme) Micheline.node
-    -> Cst_cameligo.CST.t =
-    fun ~raise param_type storage_type ->
+  let toplevel : Cameligo.CST.type_expr -> Cameligo.CST.type_expr -> Cst_cameligo.CST.t =
+    fun params_type_expr storage_type_expr ->
 
       let parameters_name = "parameters" in
       let storage_name = "storage" in
-      let params_type_expr = mk_type_expr_from_michelson ~raise param_type in
-      let storage_type_expr = mk_type_expr_from_michelson ~raise storage_type in
       let params_type_decl = mk_type_decl parameters_name params_type_expr in
       let storage_type_decl = mk_type_decl storage_name storage_type_expr in
       (* let type_d *)
@@ -360,7 +331,7 @@ let contract_from_michelson syntax source_file display_format () =
     in
 
 
-    let _decompile : Micheline_parser.node -> _ =
+    let decompile : Micheline_parser.node -> _ =
       fun node ->
       node
       |> Stacking.To_micheline.untranslate_type
@@ -374,33 +345,13 @@ let contract_from_michelson syntax source_file display_format () =
       |> Tree_abstraction.Cameligo.decompile_type_expression
     in
 
+    let param_type = decompile param_node in
+    let storage_type = decompile storage_node in
+
+
     let () = ignore syntax in
 
-    let cst = Build_cst_cameligo.toplevel ~raise param_node storage_node in
+    let cst = Build_cst_cameligo.toplevel param_type storage_type in
     (* let buffer = Compile.Utils.pretty_print cst in *)
     let buffer = Parsing.Cameligo.pretty_print cst in
     buffer
-
-(* ======================================== PLAN ======================================== *)
-
-type start = string  (* We start with the michelson contract as a raw string *)
-let step_0 = Micheline_parser.tokenize
-type goal_0 = Micheline_parser.token list
-let step_1 = Micheline_parser.parse_toplevel
-type goal_1 = Micheline_parser.node (* = (location, string) Micheline.node *)
-let step_2 = Stacking.To_micheline.untranslate_type
-type ('meta, 'base_type) goal_2 = ('meta, 'base_type) Ligo_coq_ocaml.Compiler.ty   (* c.f. compiler.v or generated compiler.ml *)
-let step_3_write_the_reverse_of_this = Scoping.untranslate_type
-type goal_3 = Mini_c.Types.type_expression
-let step_4_write_the_reverse_of_this = Spilling.compile_type
-type goal_4 = Ast_aggregated.type_expression
-let step_5 = Aggregation.decompile_type
-type goal_5 = Ast_typed.type_expression
-let step_6 = Checking.untype_type_expression
-type goal_6 = Ast_core.type_expression
-let step_7 = Desugaring.decompile_type_expression
-type goal_7 = Ast_sugar.type_expression
-let step_8 =Purification.decompile_type_expression
-type goal_8 = Ast_imperative.type_expression
-let step_9 = Tree_abstraction.Cameligo.decompile_type_expression
-type goal_9 = Cst.Cameligo.type_expr
