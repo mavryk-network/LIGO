@@ -9,3 +9,4 @@ let compile_expression = Compiler.compile_program
 let compile_type       = Compiler.compile_type
 
 let decompile = Decompiler.decompile
+let decompile_type = Decompiler.decompile_type

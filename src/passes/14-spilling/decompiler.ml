@@ -229,3 +229,6 @@ let rec decompile ~raise (v : value) (t : AST.type_expression) : AST.expression 
     raise.error @@ corner_case ~loc:__LOC__ "no value is of type singleton"
   | T_for_all _ ->
     raise.error @@ corner_case ~loc:__LOC__ "trying to decompile a quantified type (no such thing ?)"
+
+let decompile_type ~raise (t:type_expression) : AST.type_expression =
+  let () = ignore (raise, t) in failwith "TODO NP"

@@ -14,6 +14,8 @@ type context = Context.t
 
 let untype_expression = Untyper.untype_expression
 let untype_program = Untyper.untype_program
+let untype_type_expression = Untyper.untype_type_expression
+
 let assert_type_expression_eq = Helpers.assert_type_expression_eq
 
 (*

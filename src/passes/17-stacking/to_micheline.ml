@@ -166,6 +166,9 @@ let rec translate_type (t : ('l, ('l, 'p) node) Compiler.ty) : ('l, 'p) node =
   | T_key_hash l ->
     Prim (l, "key_hash", [], [])
 
+let untranslate_type (node : ('l, 'p) node) : ('l, ('l, 'p) node) Compiler.ty =
+  let () = ignore node in failwith "TODO NP"
+
 let has_field_annot = function
   | Prim (_, _, _, anns) ->
     List.exists anns ~f:(fun ann -> String.length ann > 1 && String.equal "%" (String.sub ann ~pos:0 ~len:1))

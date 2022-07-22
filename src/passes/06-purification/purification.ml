@@ -8,3 +8,4 @@ let compile_expression = Compiler.compile_expression
 
 let decompile_program    = Decompiler.decompile_program
 let decompile_expression = Decompiler.decompile_expression
+let decompile_type_expression = Decompiler.decompile_type_expression

@@ -90,6 +90,9 @@ and tuple_comb_ann ts =
 and tuple_comb ts =
   snd (tuple_comb_ann ts)
 
+let untranslate_type ?var : oty -> I.type_expression = fun te ->
+  let () = ignore (var, te) in failwith "TODO NP"  
+
 let rec int_to_nat (x : int) : Ligo_coq_ocaml.Datatypes.nat =
   if x <= 0
   then O

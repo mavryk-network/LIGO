@@ -1,5 +1,6 @@
 open Api_helpers
 open Tezos_utils.Micheline
+open Simple_utils.Trace
 
 module Compile   = Ligo_compile
 module Utils     = Simple_utils.Utils
@@ -8,6 +9,11 @@ module Location  = Simple_utils.Location
 
 (* DEBUG PRINT *)
 (* TODO : Should we keep this function somewhere ? Could be handy *)
+
+let print_micheline_node (node : Micheline_parser.node) =
+  let convert_locations node = Micheline.map_node (fun _ -> {Micheline_printer.comment = None}) (fun x -> x) node in
+  Format.fprintf Format.err_formatter "Micheline node :\n%a\n\n" Micheline_printer.print_expr @@ convert_locations node
+
 module Micheline_debug_print = struct
 
   let rec print_node ppf node =
@@ -301,10 +307,6 @@ let contract_from_michelson syntax source_file display_format () =
     let tokens, _error_list = Micheline_parser.tokenize file_content in
     let ast_list, _error_list = Micheline_parser.parse_toplevel tokens in
 
-    (* Convert Micheline_parser.location to Micheline_print.location for further printing *)
-    (* let convert_locations node = Micheline.map_node (fun _ -> {Micheline_printer.comment = None}) (fun x -> x) node in *)
-    (* let ast_list = List.map ast_list ~f:convert_locations in *)
-
     (* Extract parameter and storage definition nodes from AST list *)
     let param_node, storage_node =
       match ast_list with
@@ -313,23 +315,92 @@ let contract_from_michelson syntax source_file display_format () =
     in
 
     (* DEBUG PRINT *)
-    (* let () = Micheline_debug_print.print_toplevel Format.std_formatter ast_list in *)
+    let () = print_micheline_node param_node in
+    let () = print_micheline_node storage_node in
 
-    let _syntax = syntax in
-    (* let ast = Build_ast.toplevel ~raise param_node storage_node in *)
-    (* ast *)
+    let rec map_ty : ('la -> 'lb) -> ('pa -> 'pb) -> ('la, 'pa) Ligo_coq_ocaml.Compiler.ty -> ('lb, 'pb) Ligo_coq_ocaml.Compiler.ty =
+      let open Ligo_coq_ocaml.Compiler in
+      fun fl fp ty ->
+        let self = map_ty fl fp in
+        match ty with
+        | T_base       ( l , p )                   -> T_base       ( fl l , fp p )
+        | T_unit       ( l )                       -> T_unit       ( fl l )
+        | T_pair       ( l , s1 , s2 , t1 , t2 )   -> T_pair       ( fl l , s1 , s2 , self t1 , self t2 )
+        | T_or         ( l , s1 , s2 , t1 , t2 )   -> T_or         ( fl l , s1 , s2 , self t1 , self t2 )
+        | T_func       ( l , t1 , t2 )             -> T_func       ( fl l , self t1 , self t2 )
+        | T_lambda     ( l , t1 , t2 )             -> T_lambda     ( fl l , self t1 , self t2 )
+        | T_option     ( l , t1 )                  -> T_option     ( fl l , self t1 )
+        | T_list       ( l , t1 )                  -> T_list       ( fl l , self t1 )
+        | T_set        ( l , t1 )                  -> T_set        ( fl l , self t1 )
+        | T_map        ( l , t1 , t2 )             -> T_map        ( fl l , self t1 , self t2 )
+        | T_big_map    ( l , t1 , t2 )             -> T_big_map    ( fl l , self t1 , self t2 )
+        | T_ticket     ( l , t1 )                  -> T_ticket     ( fl l , self t1 )
+        | T_contract   ( l , t1 )                  -> T_contract   ( fl l , self t1 )
+        | T_bool       ( l )                       -> T_bool       ( fl l )
+        | T_int        ( l )                       -> T_int        ( fl l )
+        | T_nat        ( l )                       -> T_nat        ( fl l )
+        | T_mutez      ( l )                       -> T_mutez      ( fl l )
+        | T_string     ( l )                       -> T_string     ( fl l )
+        | T_bytes      ( l )                       -> T_bytes      ( fl l )
+        | T_address    ( l )                       -> T_address    ( fl l )
+        | T_key_hash   ( l )                       -> T_key_hash   ( fl l )
+        | T_operation  ( l )                       -> T_operation  ( fl l )                                   
+    in
 
-    (* TODO : Error when decompiling [List is empty.], seems to come from [Decompile.Of_imperative.decompile] *)
-    (* let dialect       = "terse" in *)
-    (* let dialect       = Syntax_types.Dialect_name dialect in *)
-    (* let n_syntax      = Syntax.of_string_opt ~raise ~dialect (Syntax_name syntax) None in *)
-    (* let sugar         = Decompile.Of_core.decompile ast in
-    let imperative    = Decompile.Of_sugar.decompile sugar in
-    let buffer        = Decompile.Of_imperative.decompile ~raise imperative (Syntax_name syntax) in
+    let convert_meta :
+         (Micheline_parser.location, (Micheline_parser.location, string) Micheline.node) Ligo_coq_ocaml.Compiler.ty
+      -> (Mini_c.meta,               (Mini_c.meta,               string) Micheline.node) Ligo_coq_ocaml.Compiler.ty =
+      fun t ->
+        let make_dummy_meta = fun _ -> Mini_c.dummy_meta in
+        let id x = x in
+        map_ty
+        make_dummy_meta
+        (Micheline.map_node make_dummy_meta id)
+        t
+    in
+
+
+    let _decompile : Micheline_parser.node -> _ =
+      fun node ->
+      node
+      |> Stacking.To_micheline.untranslate_type
+      |> convert_meta
+      |> Scoping.untranslate_type
+      |> Decompile.Of_mini_c.decompile_type ~raise
+      |> Aggregation.decompile_type ~raise
+      |> Checking.untype_type_expression
+      |> Desugaring.decompile_type_expression
+      |> Purification.decompile_type_expression
+      |> Tree_abstraction.Cameligo.decompile_type_expression
+    in
+
+    let () = ignore syntax in
+
+    let cst = Build_cst_cameligo.toplevel ~raise param_node storage_node in
+    (* let buffer = Compile.Utils.pretty_print cst in *)
+    let buffer = Parsing.Cameligo.pretty_print cst in
     buffer
-*)
-      let cst = Build_cst_cameligo.toplevel ~raise param_node storage_node in
-      (* let buffer = Compile.Utils.pretty_print cst in *)
-      let buffer = Parsing.Cameligo.pretty_print cst in
-      buffer
 
+(* ======================================== PLAN ======================================== *)
+
+type start = string  (* We start with the michelson contract as a raw string *)
+let step_0 = Micheline_parser.tokenize
+type goal_0 = Micheline_parser.token list
+let step_1 = Micheline_parser.parse_toplevel
+type goal_1 = Micheline_parser.node (* = (location, string) Micheline.node *)
+let step_2 = Stacking.To_micheline.untranslate_type
+type ('meta, 'base_type) goal_2 = ('meta, 'base_type) Ligo_coq_ocaml.Compiler.ty   (* c.f. compiler.v or generated compiler.ml *)
+let step_3_write_the_reverse_of_this = Scoping.untranslate_type
+type goal_3 = Mini_c.Types.type_expression
+let step_4_write_the_reverse_of_this = Spilling.compile_type
+type goal_4 = Ast_aggregated.type_expression
+let step_5 = Aggregation.decompile_type
+type goal_5 = Ast_typed.type_expression
+let step_6 = Checking.untype_type_expression
+type goal_6 = Ast_core.type_expression
+let step_7 = Desugaring.decompile_type_expression
+type goal_7 = Ast_sugar.type_expression
+let step_8 =Purification.decompile_type_expression
+type goal_8 = Ast_imperative.type_expression
+let step_9 = Tree_abstraction.Cameligo.decompile_type_expression
+type goal_9 = Cst.Cameligo.type_expr

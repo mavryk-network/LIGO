@@ -11,3 +11,5 @@ let compile_program ~raise : Ast_typed.program -> Ast_typed.expression Ast_aggre
   fun prg hole -> Compiler.compile ~raise hole prg
 
 let decompile = Decompiler.decompile
+
+let decompile_type = Decompiler.decompile_type
