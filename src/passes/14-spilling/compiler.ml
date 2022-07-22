@@ -152,9 +152,9 @@ let rec compile_type' ~raise (t:AST.type_expression) : type_expression =
     raise.error @@ corner_case ~loc:__LOC__ "For all type uncaught"
 
 let compile_type ~raise (t:AST.type_expression) : type_expression =
-  let () = Format.printf "BEFORE Spilling.compile_type :\n %a\n" AST.PP.type_expression t in (* DEBUG PRINT before *)
+  (* let () = Format.printf "BEFORE Spilling.compile_type :\n %a\n" AST.PP.type_expression t in DEBUG PRINT before *)
   let result = compile_type' ~raise t in
-  let () = Format.printf "AFTER Spilling.compile_type :\n %a\n" PP.type_expression result in
+  (* let () = Format.printf "AFTER Spilling.compile_type :\n %a\n" PP.type_expression result in *)
   result
 
 (* probably should use result monad for conformity? but these errors
