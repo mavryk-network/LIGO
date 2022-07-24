@@ -521,6 +521,8 @@ module Constant_types = struct
                     (C_GT, typer_of_comparator (comparator ~cmp:"GT"));
                     (C_LE, typer_of_comparator (comparator ~cmp:"LE"));
                     (C_GE, typer_of_comparator (comparator ~cmp:"GE"));
+                    (* EXAMPLE *)
+                    of_type C_EXAMPLE (for_all "a" @@ fun a -> a)
                   ]
 
   let typer_of_type_no_tc t =

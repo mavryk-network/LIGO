@@ -83,6 +83,8 @@ module Tree_abstraction = struct
     | "Operator.cons"  -> some_const C_CONS
     | "Operator.neq"   -> some_const C_NEQ
 
+    | "example" -> some_const C_EXAMPLE
+
     | _ -> None
 
 
@@ -268,6 +270,7 @@ module Michelson = struct
       Some (special
         (fun with_args ->  with_args "PUSH")
         )
+    | C_EXAMPLE, _ -> Some (simple_unary (seq []))
     | _ -> None
 
 end
