@@ -121,53 +121,84 @@ let annotate (ann : string option) (x : ('meta, string) node) : ('meta, string) 
 
 let rec translate_type (t : ('l, ('l, 'p) node) Compiler.ty) : ('l, 'p) node =
   match t with
-  | T_base (_l, b) ->
-    b
+  | T_base (_l, b) ->              b
   (* func is a fictional version of lambda *)
-  | T_func (l, a1, a2) | T_lambda (l, a1, a2) ->
-    Prim (l, "lambda", [translate_type a1; translate_type a2], [])
-  | T_unit l ->
-    Prim (l, "unit", [], [])
-  | T_pair (l, n1, n2, a1, a2) ->
-    Prim (l, "pair", [annotate n1 (translate_type a1); annotate n2 (translate_type a2)], [])
-  | T_or (l, n1, n2, a1, a2) ->
-    Prim (l, "or", [annotate n1 (translate_type a1); annotate n2 (translate_type a2)], [])
-  | T_option (l, a) ->
-    Prim (l, "option", [translate_type a], [])
-  | T_list (l, a) ->
-    Prim (l, "list", [translate_type a], [])
-  | T_set (l, a) ->
-    Prim (l, "set", [translate_type a], [])
-  | T_map (l, a1, a2) ->
-    Prim (l, "map", [translate_type a1; translate_type a2], [])
-  | T_big_map (l, a1, a2) ->
-    Prim (l, "big_map", [translate_type a1; translate_type a2], [])
-  | T_ticket (l, a1) ->
-    Prim (l, "ticket", [translate_type a1], [])
-  | T_contract (l, a1) ->
-    Prim (l, "contract", [translate_type a1], [])
-  | T_bool l ->
-    Prim (l, "bool", [], [])
-  | T_int l ->
-    Prim (l, "int", [], [])
-  | T_nat l ->
-    Prim (l, "nat", [], [])
-  | T_mutez l ->
-    Prim (l, "mutez", [], [])
-  | T_string l ->
-    Prim (l, "string", [], [])
-  | T_bytes l ->
-    Prim (l, "bytes", [], [])
+  | T_func (l, a1, a2)
+  | T_lambda (l, a1, a2) ->        Prim (l, "lambda", [translate_type a1; translate_type a2], [])
+  | T_unit l ->                    Prim (l, "unit", [], [])
+  | T_pair (l, n1, n2, a1, a2) ->  Prim (l, "pair", [annotate n1 (translate_type a1); annotate n2 (translate_type a2)], [])
+  | T_or (l, n1, n2, a1, a2) ->    Prim (l, "or", [annotate n1 (translate_type a1); annotate n2 (translate_type a2)], [])
+  | T_option (l, a) ->             Prim (l, "option", [translate_type a], [])
+  | T_list (l, a) ->               Prim (l, "list", [translate_type a], [])
+  | T_set (l, a) ->                Prim (l, "set", [translate_type a], [])
+  | T_map (l, a1, a2) ->           Prim (l, "map", [translate_type a1; translate_type a2], [])
+  | T_big_map (l, a1, a2) ->       Prim (l, "big_map", [translate_type a1; translate_type a2], [])
+  | T_ticket (l, a1) ->            Prim (l, "ticket", [translate_type a1], [])
+  | T_contract (l, a1) ->          Prim (l, "contract", [translate_type a1], [])
+  | T_bool l ->                    Prim (l, "bool", [], [])
+  | T_int l ->                     Prim (l, "int", [], [])
+  | T_nat l ->                     Prim (l, "nat", [], [])
+  | T_mutez l ->                   Prim (l, "mutez", [], [])
+  | T_string l ->                  Prim (l, "string", [], [])
+  | T_bytes l ->                   Prim (l, "bytes", [], [])
+  | T_operation l ->               Prim (l, "operation", [], [])
+  | T_address l ->                 Prim (l, "address", [], [])
+  | T_key_hash l ->                Prim (l, "key_hash", [], [])
 
-  | T_operation l ->
-    Prim (l, "operation", [], [])
-  | T_address l ->
-    Prim (l, "address", [], [])
-  | T_key_hash l ->
-    Prim (l, "key_hash", [], [])
 
-let untranslate_type (node : ('l, 'p) node) : ('l, ('l, 'p) node) Compiler.ty =
-  let () = ignore node in failwith "TODO NP"
+let unannotate : ('meta, string) node -> ('meta, string) node * string option = fun node ->
+  let concat_list ?(delim = " ") strs = List.fold ~init:"" ~f:(fun str accu -> str ^ delim ^ accu) strs in
+  match node with
+  | Prim (_, _, _, [])         as node -> node, None
+  | Prim (l, p, args, [annot])         -> (
+    match String.split_on_chars ~on:['%'] annot with
+    | [""; name] ->  Prim (l, p, args, []), Some name
+    | _ -> failwith @@ Format.sprintf "Wrong format for annotation : %s" annot
+    )
+  | Prim (_, _, _, annots)             -> failwith @@ Format.sprintf "TODO NP : Several annotations : %s " (concat_list annots)
+  | base                               -> base, None
+
+let rec untranslate_type (node : ('l, 'p) node) : ('l, ('l, 'p) node) Compiler.ty =
+  let self = untranslate_type in
+  match node with
+  (* T_func is a fictional version of T_lambda *)
+  | Prim (l, "lambda", [t1; t2], [])        -> T_lambda (l, self t1, self t2)
+  | Prim (l, "unit", [], [])                -> T_unit l
+  | Prim (l, "pair", [t1; t2], [])          ->
+    let t1, n1 = unannotate t1 in
+    let t2, n2 = unannotate t2 in
+    T_pair (l, n1, n2, self t1, self t2)
+  | Prim (l, "or", [t1; t2], [])            ->
+    let t1, n1 = unannotate t1 in
+    let t2, n2 = unannotate t2 in
+     T_or (l, n1, n2, self t1, self t2)
+  | Prim (l, "option", [t], [])             -> T_option (l, self t)
+  | Prim (l, "list", [t], [])               -> T_list (l, self t)
+  | Prim (l, "set", [t], [])                -> T_set (l, self t)
+  | Prim (l, "map", [t1; t2], [])           -> T_map (l, self t1, self t2)
+  | Prim (l, "big_map", [t1; t2], [])       -> T_big_map (l, self t1, self t2)
+  | Prim (l, "ticket", [t], [])             -> T_ticket (l, self t)
+  | Prim (l, "contract", [t1], [])          -> T_contract (l, self t1)
+  | Prim (l, "bool", [], [])                -> T_bool l
+  | Prim (l, "int", [], [])                 -> T_int l
+  | Prim (l, "nat", [], [])                 -> T_nat l
+  | Prim (l, "mutez", [], [])               -> T_mutez l
+  | Prim (l, "string", [], [])              -> T_string l
+  | Prim (l, "bytes", [], [])               -> T_bytes l
+  | Prim (l, "operation", [], [])           -> T_operation l
+  | Prim (l, "address", [], [])             -> T_address l
+  | Prim (l, "key_hash", [], [])            -> T_key_hash l
+  | Prim (_, "lambda", _, [])               -> failwith "TODO NP : Node 'lambda' expects 2 arguments"
+  | Prim (_, "pair", _, [])                 -> failwith "TODO NP : Node 'pair' expects 2 arguments"
+  | Prim (_, "or",  _, [])                  -> failwith "TODO NP : Node 'or' expects 2 arguments"
+  | Prim (_, "map", _, [])                  -> failwith "TODO NP : Node 'map' expects 2 arguments"
+  | Prim (_, "big_map", _, [])              -> failwith "TODO NP : Node 'big_map' expects 2 arguments"
+  | Prim (_, "option", _, [])               -> failwith "TODO NP : Node 'option' expects 1 argument"
+  | Prim (_, "list", _, [])                 -> failwith "TODO NP : Node 'list' expects 1 argument"
+  | Prim (_, "set", _, [])                  -> failwith "TODO NP : Node 'set' expects 1 argument"
+  | Prim (_, "ticket", _, [])               -> failwith "TODO NP : Node 'ticket' expects 1 argument"
+  | Prim (_, "contract", _, [])             -> failwith "TODO NP : Node 'contract' expects 1 argument"
+  | base                                    -> T_base (null, base)
 
 let has_field_annot = function
   | Prim (_, _, _, anns) ->

@@ -330,12 +330,22 @@ let contract_from_michelson syntax source_file display_format () =
         t
     in
 
+    let convert_meta' :
+          (Micheline_parser.location, string) Micheline.node
+      ->  (Mini_c.meta, string) Micheline.node =
+      fun t ->
+        let make_dummy_meta = fun _ -> Mini_c.dummy_meta in
+        let id x = x in
+        Micheline.map_node make_dummy_meta id t
+    in
+    let () = ignore convert_meta in
 
     let decompile : Micheline_parser.node -> _ =
       fun node ->
       node
+      |> convert_meta'
       |> Stacking.To_micheline.untranslate_type
-      |> convert_meta
+      (* |> convert_meta *)
       |> Scoping.untranslate_type
       |> Decompile.Of_mini_c.decompile_type ~raise
       |> Aggregation.decompile_type ~raise
