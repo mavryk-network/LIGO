@@ -278,6 +278,8 @@ let contract_from_michelson syntax source_file display_format () =
     let tokens, _error_list = Micheline_parser.tokenize file_content in
     let ast_list, _error_list = Micheline_parser.parse_toplevel tokens in
 
+    let () = List.iter ~f:print_micheline_node ast_list in
+
     (* Extract parameter and storage definition nodes from AST list *)
     let param_node, storage_node =
       match ast_list with
@@ -342,11 +344,16 @@ let contract_from_michelson syntax source_file display_format () =
 
     let decompile : Micheline_parser.node -> _ =
       fun node ->
+      let dbg_print s t = let () = Format.eprintf s in t in
       node
       |> convert_meta'
+      |> dbg_print "\nUnstacking...\n"
       |> Stacking.To_micheline.untranslate_type
       (* |> convert_meta *)
+      |> dbg_print "\nUnscoping...\n"
       |> Scoping.untranslate_type
+      |> (fun mini_c -> let () = Mini_c.PP.type_expression Format.err_formatter mini_c in mini_c) (* debug print *)
+      |> dbg_print "\nUnspilling...\n"
       |> Decompile.Of_mini_c.decompile_type ~raise
       |> Aggregation.decompile_type ~raise
       |> Checking.untype_type_expression
