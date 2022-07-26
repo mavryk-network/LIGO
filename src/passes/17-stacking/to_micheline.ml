@@ -160,6 +160,17 @@ let unannotate : ('meta, string) node -> ('meta, string) node * string option = 
 
 let rec untranslate_type (node : ('l, 'p) node) : ('l, ('l, 'p) node) Compiler.ty =
   let self = untranslate_type in
+  (* Prim ("pair") and Prim("or") are converted into T_pair and T_or
+     However, T_pair and T_or take 2 arguments exactly,
+     while the Michelson "pair" and "or" can have more than two arguments, for example :
+     type (a * b) * c can be
+     - (pair (pair a b) c   (the combed version)
+     - (pair a b c)  (the flattened version)
+     The following helper transforms flattened pairs/ors into the combed form so it can be translated into T_pair/T_or *)
+  let comb prim_name l hd tl  =
+    let aux = Prim(l, prim_name, tl, []) in
+    Prim (l, prim_name, [hd; aux], [])
+  in
   match node with
   (* T_func is a fictional version of T_lambda *)
   | Prim (l, "lambda", [t1; t2], [])        -> T_lambda (l, self t1, self t2)
@@ -189,8 +200,8 @@ let rec untranslate_type (node : ('l, 'p) node) : ('l, ('l, 'p) node) Compiler.t
   | Prim (l, "address", [], [])             -> T_address l
   | Prim (l, "key_hash", [], [])            -> T_key_hash l
   | Prim (_, "lambda", _, [])               -> failwith "TODO NP : Node 'lambda' expects 2 arguments"
-  | Prim (_, "pair", _, [])                 -> failwith "TODO NP : Node 'pair' expects 2 arguments"
-  | Prim (_, "or",  _, [])                  -> failwith "TODO NP : Node 'or' expects 2 arguments"
+  | Prim (l, "pair", t::ts, [])             -> self @@ comb "pair" l t ts
+  | Prim (l, "or",  t::ts, [])              -> self @@ comb "or" l t ts
   | Prim (_, "map", _, [])                  -> failwith "TODO NP : Node 'map' expects 2 arguments"
   | Prim (_, "big_map", _, [])              -> failwith "TODO NP : Node 'big_map' expects 2 arguments"
   | Prim (_, "option", _, [])               -> failwith "TODO NP : Node 'option' expects 1 argument"
