@@ -36,45 +36,42 @@ let rec translate_type ?var : I.type_expression -> oty =
       env = [];
       binder = binder_meta var a } in
   match a.type_content with
-  | I.T_tuple ts ->
-    tuple_comb ts
-  | I.T_or ((ann1, a1), (ann2, a2)) ->
-    O.T_or (nil, ann1, ann2, translate_type a1, translate_type a2)
-  | I.T_function (a1, a2) ->
-    O.T_func (nil, translate_type a1, translate_type a2)
-  | I.T_base I.TB_unit -> T_base (nil, Prim (nil, "unit", [], []))
-  | I.T_base I.TB_bool -> T_base (nil, Prim (nil, "bool", [], []))
-  | I.T_base I.TB_string -> T_base (nil, Prim (nil, "string", [], []))
-  | I.T_base I.TB_bytes -> T_base (nil, Prim (nil, "bytes", [], []))
-  | I.T_base I.TB_nat -> T_base (nil, Prim (nil, "nat", [], []))
-  | I.T_base I.TB_int -> T_base (nil, Prim (nil, "int", [], []))
-  | I.T_base I.TB_mutez -> T_base (nil, Prim (nil, "mutez", [], []))
-  | I.T_base I.TB_operation -> T_base (nil, Prim (nil, "operation", [], []))
-  | I.T_base I.TB_address -> T_base (nil, Prim (nil, "address", [], []))
-  | I.T_base I.TB_key -> T_base (nil, Prim (nil, "key", [], []))
-  | I.T_base I.TB_key_hash -> T_base (nil, Prim (nil, "key_hash", [], []))
-  | I.T_base I.TB_chain_id -> T_base (nil, Prim (nil, "chain_id", [], []))
-  | I.T_base I.TB_signature -> T_base (nil, Prim (nil, "signature", [], []))
-  | I.T_base I.TB_timestamp -> T_base (nil, Prim (nil, "timestamp", [], []))
-  | I.T_base I.TB_baker_hash -> T_base (nil, Prim (nil, "baker_hash", [], []))
-  | I.T_base I.TB_pvss_key -> T_base (nil, Prim (nil, "pvss_key", [], []))
-  | I.T_base I.TB_baker_operation -> T_base (nil, Prim (nil, "baker_operation", [], []))
-  | I.T_base I.TB_bls12_381_g1 -> T_base (nil, Prim (nil, "bls12_381_g1", [], []))
-  | I.T_base I.TB_bls12_381_g2 -> T_base (nil, Prim (nil, "bls12_381_g2", [], []))
-  | I.T_base I.TB_bls12_381_fr -> T_base (nil, Prim (nil, "bls12_381_fr", [], []))
-  | I.T_base I.TB_never -> T_base (nil, Prim (nil, "never", [], []))
-  | I.T_base I.TB_chest -> T_base (nil, Prim (nil, "chest", [], []))
-  | I.T_base I.TB_chest_key -> T_base (nil, Prim (nil, "chest_key", [], []))
-  | I.T_base I.TB_tx_rollup_l2_address -> T_base (nil, Prim (nil, "tx_rollup_l2_address", [], []))
-  | I.T_ticket x -> T_ticket (nil, translate_type x)
-  | I.T_sapling_transaction memo_size -> T_base (nil, Prim (nil, "sapling_transaction", [Int (nil, memo_size)], []))
-  | I.T_sapling_state memo_size -> T_base (nil, Prim (nil, "sapling_state", [Int (nil, memo_size)], []))
-  | I.T_map (a1, a2) -> T_map  (nil, translate_type a1, translate_type a2)
-  | I.T_big_map (a1, a2) -> T_big_map (nil, translate_type a1, translate_type a2)
-  | I.T_list a -> T_list (nil, translate_type a)
-  | I.T_set a -> T_set (nil, translate_type a)
-  | I.T_contract a -> T_contract (nil, translate_type a)
-  | I.T_option a -> T_option (nil, translate_type a)
+  | I.T_tuple ts                        -> tuple_comb ts
+  | I.T_or ((ann1, a1), (ann2, a2))     -> O.T_or (nil, ann1, ann2, translate_type a1, translate_type a2)
+  | I.T_function (a1, a2)               -> O.T_func (nil, translate_type a1, translate_type a2)
+  | I.T_base I.TB_unit                  -> T_base (nil, Prim (nil, "unit", [], []))
+  | I.T_base I.TB_bool                  -> T_base (nil, Prim (nil, "bool", [], []))
+  | I.T_base I.TB_string                -> T_base (nil, Prim (nil, "string", [], []))
+  | I.T_base I.TB_bytes                 -> T_base (nil, Prim (nil, "bytes", [], []))
+  | I.T_base I.TB_nat                   -> T_base (nil, Prim (nil, "nat", [], []))
+  | I.T_base I.TB_int                   -> T_base (nil, Prim (nil, "int", [], []))
+  | I.T_base I.TB_mutez                 -> T_base (nil, Prim (nil, "mutez", [], []))
+  | I.T_base I.TB_operation             -> T_base (nil, Prim (nil, "operation", [], []))
+  | I.T_base I.TB_address               -> T_base (nil, Prim (nil, "address", [], []))
+  | I.T_base I.TB_key                   -> T_base (nil, Prim (nil, "key", [], []))
+  | I.T_base I.TB_key_hash              -> T_base (nil, Prim (nil, "key_hash", [], []))
+  | I.T_base I.TB_chain_id              -> T_base (nil, Prim (nil, "chain_id", [], []))
+  | I.T_base I.TB_signature             -> T_base (nil, Prim (nil, "signature", [], []))
+  | I.T_base I.TB_timestamp             -> T_base (nil, Prim (nil, "timestamp", [], []))
+  | I.T_base I.TB_baker_hash            -> T_base (nil, Prim (nil, "baker_hash", [], []))
+  | I.T_base I.TB_pvss_key              -> T_base (nil, Prim (nil, "pvss_key", [], []))
+  | I.T_base I.TB_baker_operation       -> T_base (nil, Prim (nil, "baker_operation", [], []))
+  | I.T_base I.TB_bls12_381_g1          -> T_base (nil, Prim (nil, "bls12_381_g1", [], []))
+  | I.T_base I.TB_bls12_381_g2          -> T_base (nil, Prim (nil, "bls12_381_g2", [], []))
+  | I.T_base I.TB_bls12_381_fr          -> T_base (nil, Prim (nil, "bls12_381_fr", [], []))
+  | I.T_base I.TB_never                 -> T_base (nil, Prim (nil, "never", [], []))
+  | I.T_base I.TB_chest                 -> T_base (nil, Prim (nil, "chest", [], []))
+  | I.T_base I.TB_chest_key             -> T_base (nil, Prim (nil, "chest_key", [], []))
+  | I.T_base I.TB_tx_rollup_l2_address  -> T_base (nil, Prim (nil, "tx_rollup_l2_address", [], []))
+  | I.T_ticket x                        -> T_ticket (nil, translate_type x)
+  | I.T_sapling_transaction memo_size   -> T_base (nil, Prim (nil, "sapling_transaction", [Int (nil, memo_size)], []))
+  | I.T_sapling_state memo_size         -> T_base (nil, Prim (nil, "sapling_state", [Int (nil, memo_size)], []))
+  | I.T_map (a1, a2)                    -> T_map  (nil, translate_type a1, translate_type a2)
+  | I.T_big_map (a1, a2)                -> T_big_map (nil, translate_type a1, translate_type a2)
+  | I.T_list a                          -> T_list (nil, translate_type a)
+  | I.T_set a                           -> T_set (nil, translate_type a)
+  | I.T_contract a                      -> T_contract (nil, translate_type a)
+  | I.T_option a                        -> T_option (nil, translate_type a)
 
 (* could consider delaying this to the next pass, in Coq, but
    currently the Coq pass type translation is the identity *)
@@ -90,8 +87,55 @@ and tuple_comb_ann ts =
 and tuple_comb ts =
   snd (tuple_comb_ann ts)
 
-let untranslate_type ?var : oty -> I.type_expression = fun te ->
-  let () = ignore (var, te) in failwith "TODO NP"  
+let rec untranslate_type : oty -> I.type_expression = fun te ->
+  let self = untranslate_type in
+  let return (t : I.type_content) : I.type_expression = {
+    type_content = t;
+    location = Location.dummy;
+    source_type = None;
+  } in
+  return @@ match te with
+  | O.T_pair (_, ann1, ann2, t1, t2)                            -> I.T_tuple [(ann1, self t1); (ann2, self t2)]  (* TODO NP : uncombing *)
+  | O.T_or (_, ann1, ann2, t1, t2)                              -> I.T_or ((ann1, self t1), (ann2, self t2))
+  | O.T_func (_, t1, t2)                                        -> I.T_function (self t1, self t2)
+  | O.T_lambda (_, t1, t2)                                      -> I.T_function (self t1, self t2)
+  | T_base (_, Prim (_, "unit", _, _))        | T_unit _        -> I.T_base I.TB_unit
+  | T_base (_, Prim (_, "bool", _, _))        | T_bool _        -> I.T_base I.TB_bool
+  | T_base (_, Prim (_, "string", _, _))      | T_string _      -> I.T_base I.TB_string
+  | T_base (_, Prim (_, "bytes", _, _))       | T_bytes _       -> I.T_base I.TB_bytes
+  | T_base (_, Prim (_, "nat", _, _))         | T_nat _         -> I.T_base I.TB_nat
+  | T_base (_, Prim (_, "int", _, _))         | T_int _         -> I.T_base I.TB_int
+  | T_base (_, Prim (_, "mutez", _, _))       | T_mutez _       -> I.T_base I.TB_mutez
+  | T_base (_, Prim (_, "operation", _, _))   | T_operation _   -> I.T_base I.TB_operation
+  | T_base (_, Prim (_, "address", _, _))     | T_address _     -> I.T_base I.TB_address
+  | T_base (_, Prim (_, "key", _, _))         | T_key_hash _    -> I.T_base I.TB_key
+  | T_base (_, Prim (_, "key_hash", _, _))                      -> I.T_base I.TB_key_hash
+  | T_base (_, Prim (_, "chain_id", _, _))                      -> I.T_base I.TB_chain_id
+  | T_base (_, Prim (_, "signature", _, _))                     -> I.T_base I.TB_signature
+  | T_base (_, Prim (_, "timestamp", _, _))                     -> I.T_base I.TB_timestamp
+  | T_base (_, Prim (_, "baker_hash", _, _))                    -> I.T_base I.TB_baker_hash
+  | T_base (_, Prim (_, "pvss_key", _, _))                      -> I.T_base I.TB_pvss_key
+  | T_base (_, Prim (_, "baker_operation", _, _))               -> I.T_base I.TB_baker_operation
+  | T_base (_, Prim (_, "bls12_381_g1", _, _))                  -> I.T_base I.TB_bls12_381_g1
+  | T_base (_, Prim (_, "bls12_381_g2", _, _))                  -> I.T_base I.TB_bls12_381_g2
+  | T_base (_, Prim (_, "bls12_381_fr", _, _))                  -> I.T_base I.TB_bls12_381_fr
+  | T_base (_, Prim (_, "never", _, _))                         -> I.T_base I.TB_never
+  | T_base (_, Prim (_, "chest", _, _))                         -> I.T_base I.TB_chest
+  | T_base (_, Prim (_, "chest_key", _, _))                     -> I.T_base I.TB_chest_key
+  | T_base (_, Prim (_, "tx_rollup_l2_address", _, _))          -> I.T_base I.TB_tx_rollup_l2_address
+  | T_ticket (_, t)                                             -> I.T_ticket (self t)
+  | T_base (_, Prim (_, "sapling_transaction", [Int (_, memo_size)] , _))  -> I.T_sapling_transaction memo_size
+  | T_base (_, Prim (_, "sapling_transaction", _                    , _))  -> failwith @@ "sapling_transaction expects argument [Int (_,memo_size)]"
+  | T_base (_, Prim (_, "sapling_state", [Int (_, memo_size)]       , _))  -> I.T_sapling_state memo_size
+  | T_base (_, Prim (_, "sapling_state", _                          , _))  -> failwith @@ "sapling_state expects argument [Int (_,memo_size)]"
+  | T_map  (_, t1, t2)                                          -> I.T_map (self t1, self t2)
+  | T_big_map (_, t1, t2)                                       -> I.T_big_map (self t1, self t2)
+  | T_list (_, t)                                               -> I.T_list (self t)
+  | T_set (_, t)                                                -> I.T_set (self t)
+  | T_contract (_, t)                                           -> I.T_contract (self t)
+  | T_option (_, t)                                             -> I.T_option (self t)
+  | T_base (_, Prim (_, s, _, _))                               -> failwith @@ Format.sprintf "Unexpected primitive : %s" s
+  | T_base (_, _)                                               -> failwith @@ "TODO NP : Unexpected base type"
 
 let rec int_to_nat (x : int) : Ligo_coq_ocaml.Datatypes.nat =
   if x <= 0
