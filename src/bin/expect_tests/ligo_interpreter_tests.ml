@@ -58,6 +58,7 @@ let%expect_test _ =
     - test_set_fold_desc exited with value ().
     - test_set_update exited with value ().
     - test_map_get_and_update exited with value ().
+    - test_big_map_get_and_update exited with value ().
     - test_add_mutez exited with value ().
     - test_sub_mutez exited with value ().
     - test_div_mutez exited with value ().
@@ -898,14 +899,3 @@ let%expect_test _ =
       3 |   begin
 
     Embedded raw code can only have a functional type |xxx}]
-
-let pwd = Sys.getcwd ()
-let () = Sys.chdir "../../test/projects/"
-
-let%expect_test _ =
-  run_ligo_good [ "run"; "test" ; "originate_contract/test.mligo" ; "--project-root" ; "originate_contract" ; "--no-warn" ] ;
-  [%expect{|
-    Everything at the top-level was executed.
-    - test exited with value KT1Riu7zn7S1PCTu197y2i29TGheSLzfeaZ6(None). |}]
-
-let () = Sys.chdir pwd

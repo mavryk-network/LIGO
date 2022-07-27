@@ -463,12 +463,8 @@ and type_expression ~raise ~options : context -> ?tv_opt:O.type_expression -> I.
     let context = List.fold av ~f:(fun c v -> Typing_context.add_type_var c v ()) ~init:context in
     let tv = Option.map ~f:(evaluate_type ~raise context) ascr in
     let rhs = self ?tv_opt:tv ~context:(app_context, context) rhs in
-    let rec aux t = function
-      | [] -> t
-      | (abs_var :: abs_vars) -> t_for_all abs_var Type (aux t abs_vars) in
-    let type_expression = aux rhs.type_expression (List.rev av) in
-    let rhs = { rhs with type_expression } in
-    let context = Typing_context.add_value pre_context var type_expression in
+    let rhs = Ast_typed.Helpers.build_type_abstractions rhs (List.rev av) in
+    let context = Typing_context.add_value pre_context var rhs.type_expression in
     let let_result = self ?tv_opt ~context:(app_context, context) let_result in
     return (E_let_in {let_binder = {var;ascr=tv;attributes}; rhs; let_result; attr }) let_result.type_expression
   | E_type_in {type_binder; rhs ; let_result} ->
@@ -509,29 +505,13 @@ and type_expression ~raise ~options : context -> ?tv_opt:O.type_expression -> I.
     let tc , tv = infer_t_insts ~raise ~options ~loc:e.location app_context (E_module_accessor {module_path; element}, tv') in
     return tc tv
   )
-  | E_assign {binder; access_path; expression} ->
+  | E_assign {binder; expression} ->
     let variable_type = trace_option ~raise (unbound_variable binder.var (O.ValueVar.get_location binder.var)) @@ Typing_context.get_value context binder.var in
     let binder = {binder with ascr=Some variable_type} in
-    let access_path   = List.map access_path ~f:(function Access_map e -> O.Access_map (self e) | Access_tuple z -> Access_tuple z | Access_record s -> Access_record s) in
-    let variable_type = List.fold ~init:variable_type access_path ~f:(
-      fun ty a -> match a with
-        Access_tuple z ->
-        let tuple_ty = trace_option ~raise (expected_record ty.location ty) @@ get_t_record ty in
-        let tuple_ty = trace_option ~raise (bad_record_access (O.Label (Z.to_string z)) (O.e_variable binder.var ty) ty.location) @@ I.LMap.find_opt (Label (Z.to_string z)) tuple_ty.content in
-        tuple_ty.associated_type
-      | Access_record s ->
-        let record_ty = trace_option ~raise (expected_record ty.location ty) @@ get_t_record ty in
-        let record_ty = trace_option ~raise (bad_record_access (O.Label s) (O.e_variable binder.var ty) ty.location) @@ I.LMap.find_opt (Label s) record_ty.content in
-        record_ty.associated_type
-      | Access_map e ->
-        let k_ty,v_ty = trace_option ~raise (expected_map ty.location ty) @@ get_t_map ty in
-        let () = assert_type_expression_eq ~raise e.location (k_ty,get_type e) in
-        v_ty
-    )  in
     let expression = self expression in
     let expression_type = expression.type_expression in
     let () = assert_type_expression_eq ~raise e.location (variable_type,expression_type) in
-    return (E_assign {binder; access_path; expression}) @@ O.t_unit ()
+    return (E_assign {binder; expression}) @@ O.t_unit ()
 
 and type_pattern ~raise (pattern : I.type_expression I.pattern) (expected_typ : O.type_expression) context =
   match pattern.wrap_content, expected_typ.type_content with
@@ -675,11 +655,7 @@ match Location.unwrap d with
     let expr =
       trace ~raise (constant_declaration_tracer loc var expr tv) @@
       type_expression ~options ?tv_opt:tv (App_context.create tv, env) expr in
-    let rec aux t = function
-      | [] -> t
-      | (abs_var :: abs_vars) -> t_for_all abs_var Type (aux t abs_vars) in
-    let type_expression = aux expr.type_expression (List.rev av) in
-    let expr = { expr with type_expression } in
+    let expr = Ast_typed.Helpers.build_type_abstractions expr (List.rev av) in
     let c = Typing_context.add_value c var expr.type_expression in
     return c @@ Declaration_constant { binder = { ascr = tv ; var ; attributes } ; expr ; attr }
   | Declaration_module { module_binder ; module_ ; module_attr = {public ; hidden} } -> (
