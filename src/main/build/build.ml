@@ -3,7 +3,6 @@ open Trace
 open Main_errors
 
 module Stdlib = Stdlib
-module Source_input = BuildSystem.Source_input
 
 module type Params = sig
   val raise : (all, Main_warnings.all) raise
@@ -14,21 +13,37 @@ module M (Params : Params) =
   struct
     let raise = Params.raise
     let options = Params.options
-    type file_name = Source_input.file_name
-    type raw_input = Source_input.raw_input
-    type code_input = Source_input.code_input
+    module File_name = struct
+      type raw = {id : Syntax_types.t option; code : string}
+        [@@deriving eq,compare,to_yojson]
+      type t = From_file of string | Raw of raw
+        [@@deriving eq,compare,to_yojson]
+      let pp ppf = function
+        From_file file_name -> Format.fprintf ppf "From_file %s" file_name
+      | Raw _ -> Format.fprintf ppf "Raw"
+      let of_file : string -> t = fun f -> From_file f
+      let of_raw : raw -> t = fun r -> Raw r
+      let to_string = function
+        From_file file_name -> file_name
+      | Raw _raw -> "root"
+    end
     type module_name = string
     type compilation_unit = Buffer.t
     type meta_data = Ligo_compile.Helpers.meta
 
-    let preprocess : code_input -> compilation_unit * meta_data * (file_name * module_name) list =
+    let preprocess : File_name.t -> compilation_unit * meta_data * (File_name.t * module_name) list =
       fun code_input ->
-      let syntax = Syntax.of_string_opt ~raise (Syntax_name "auto") (match code_input with From_file file_name -> Some file_name | Raw {id ; _} -> Some id) in
-      let meta = Ligo_compile.Of_source.extract_meta syntax in
-      let c_unit, deps = match code_input with
-        | From_file file_name -> Ligo_compile.Helpers.preprocess_file ~raise ~meta ~options:options.frontend file_name
-        | Raw {id = _ ; code} -> Ligo_compile.Helpers.preprocess_string ~raise ~meta ~options:options.frontend code
+      let meta,(c_unit, deps) = match code_input with
+        | From_file file_name ->
+          let syntax = Syntax.of_string_opt ~raise (Syntax_name "auto") (Some file_name) in
+          let meta = Ligo_compile.Of_source.extract_meta syntax in
+          meta,Ligo_compile.Helpers.preprocess_file ~raise ~meta ~options:options.frontend file_name
+        | Raw {id ; code} ->
+          let id = Option.value_exn id in
+          let meta = Ligo_compile.Of_source.extract_meta id in
+          meta, Ligo_compile.Helpers.preprocess_string ~raise ~meta ~options:options.frontend code
       in
+      let deps = List.map ~f:(fun (a,b) -> (File_name.From_file a,b)) deps in
       c_unit,meta,deps
     module AST = struct
       type declaration = Ast_typed.declaration
@@ -47,11 +62,15 @@ module M (Params : Params) =
         let module_binder = Ast_typed.ModuleVar.of_input_var module_binder in
         Location.wrap Ast_typed.(Declaration_module {module_binder;module_;module_attr={public=true;hidden=true}})
     end
-    let compile : AST.environment -> file_name -> meta_data -> compilation_unit -> AST.t =
+    let compile : AST.environment -> File_name.t -> meta_data -> compilation_unit -> AST.t =
       fun env file_name meta c_unit ->
       let options = Compiler_options.set_init_env options env in
       let stdlib = Stdlib.typed ~options meta.syntax in
       let options = Compiler_options.set_init_env options (Environment.append stdlib env) in
+      let file_name = match file_name with
+        | File_name.From_file file_name -> file_name
+        | File_name.Raw _ -> failwith "";
+      in
       let ast_core = Ligo_compile.Utils.to_core ~raise ~options ~meta c_unit file_name in
       let ast_core =
         let syntax = Syntax.of_string_opt ~raise (Syntax_name "auto") (Some file_name) in
@@ -82,9 +101,13 @@ module Infer (Params : Params) = struct
         Location.wrap Ast_core.(Declaration_module {module_binder;module_;module_attr={public=true;hidden=true}})
   end
 
-  let compile : AST.environment -> file_name -> meta_data -> compilation_unit -> AST.t =
+  let compile : AST.environment -> File_name.t -> meta_data -> compilation_unit -> AST.t =
     fun _ file_name meta c_unit ->
     let stdlib =  Stdlib.core ~options meta.syntax in
+    let file_name = match file_name with
+      | File_name.From_file file_name -> file_name
+      | File_name.Raw _ -> failwith "";
+    in
     let module_ = Ligo_compile.Utils.to_core ~raise ~options ~meta c_unit file_name in
     let module_ =
       let syntax = Syntax.of_string_opt ~raise (Syntax_name "auto") (Some file_name) in
@@ -96,55 +119,65 @@ end
 
 module Build(Params : Params) = BuildSystem.Make(M(Params))
 
+module Node = struct
+  type t = (
+    String.t
+  )
+    [@@deriving eq, compare]
+  let hash = Hashtbl.hash
+end
 
-let dependency_graph ~raise : options:Compiler_options.t -> Ligo_compile.Of_core.form -> Source_input.file_name -> _ =
+  module G = Graph.Persistent.Digraph.Concrete(Node)
+
+let dependency_graph ~raise : options:Compiler_options.t -> Ligo_compile.Of_core.form -> string -> _ =
   fun ~options _form file_name ->
     let open Build(struct
       let raise = raise
       let options = options
     end) in
-    dependency_graph (Source_input.From_file file_name)
+    let graph = dependency_graph (File_name.of_file file_name) in
+    convert_graph graph
 
-let infer_contract ~raise : options:Compiler_options.t -> Source_input.file_name -> Ast_core.module_ =
+let infer_contract ~raise : options:Compiler_options.t -> string -> Ast_core.module_ =
   fun ~options main_file_name ->
     let open BuildSystem.Make(Infer(struct
       let raise = raise
       let options = options
     end)) in
-    trace ~raise build_error_tracer @@ from_result (compile_separate (Source_input.From_file main_file_name))
+    trace ~raise build_error_tracer @@ from_result (compile_separate (File_name.of_file main_file_name))
 
-let type_contract ~raise : options:Compiler_options.t -> Source_input.file_name -> _ =
+let type_contract ~raise : options:Compiler_options.t -> string -> _ =
   fun ~options file_name ->
     let open Build(struct
       let raise = raise
       let options = options
     end) in
-    trace ~raise build_error_tracer @@ from_result (compile_separate (Source_input.From_file file_name))
+    trace ~raise build_error_tracer @@ from_result (compile_separate (File_name.of_file file_name))
 
-let merge_and_type_libraries ~raise : options:Compiler_options.t -> Source_input.file_name -> Ast_typed.program =
+let merge_and_type_libraries ~raise : options:Compiler_options.t -> string -> Ast_typed.program =
   fun ~options file_name ->
     let open BuildSystem.Make(Infer(struct
       let raise = raise
       let options = options
     end)) in
-    let contract = trace ~raise build_error_tracer @@ from_result (compile_combined (Source_input.From_file file_name)) in
+    let contract = trace ~raise build_error_tracer @@ from_result (compile_combined (File_name.of_file file_name)) in
     let contract = Ligo_compile.Of_core.typecheck ~raise ~options Env contract in
     contract
 
 let merge_and_type_libraries_str ~raise : options:Compiler_options.t -> string -> Ast_typed.program =
   fun ~options code ->
-    let open BuildSystem.Make(Infer(struct
+    let module Infer = Infer(struct
       let raise = raise
       let options = options
-    end)) in
-    let id = match options.frontend.syntax with Some s -> "from_build"^(Syntax.to_ext s) | None -> "from_build" in
-    let s = Source_input.Raw { code = code ; id } in
+    end) in
+    let open BuildSystem.Make(Infer) in
+    let s = File_name.of_raw { code ; id = options.frontend.syntax } in
     let contract = trace ~raise build_error_tracer @@ from_result (compile_combined s) in
     let contract = Ligo_compile.Of_core.typecheck ~raise ~options Env contract in
     contract
-    
+
 let build_typed ~raise :
-  options:Compiler_options.t -> Ligo_compile.Of_core.form -> Source_input.file_name -> Ast_typed.program =
+  options:Compiler_options.t -> Ligo_compile.Of_core.form -> string -> Ast_typed.program =
     fun ~options form file_name ->
       let open Build(struct
         let raise = raise
@@ -153,7 +186,7 @@ let build_typed ~raise :
       let contract = merge_and_type_libraries ~raise ~options file_name in
       trace ~raise self_ast_typed_tracer @@ Ligo_compile.Of_core.specific_passes form contract
 
-let build_expression ~raise : options:Compiler_options.t -> Syntax_types.t -> string -> Source_input.file_name option -> _ =
+let build_expression ~raise : options:Compiler_options.t -> Syntax_types.t -> string -> string option -> _ =
   fun ~options syntax expression file_name ->
     let contract, aggregated_prg =
       match file_name with
@@ -172,7 +205,7 @@ let build_expression ~raise : options:Compiler_options.t -> Syntax_types.t -> st
     (mini_c_exp ,aggregated)
 
 (* TODO: this function could be called build_michelson_code since it does not really reflect a "contract" (no views, parameter/storage types) *)
-let build_contract ~raise : options:Compiler_options.t -> string -> Source_input.file_name -> Stacking.compiled_expression =
+let build_contract ~raise : options:Compiler_options.t -> string -> string -> Stacking.compiled_expression =
   fun ~options entry_point file_name ->
     let entry_point = Ast_typed.ValueVar.of_input_var entry_point in
     let typed_prg = build_typed ~raise ~options (Ligo_compile.Of_core.Contract entry_point) file_name in
@@ -185,7 +218,7 @@ let build_contract ~raise : options:Compiler_options.t -> string -> Source_input
 
 
 let build_views ~raise :
-  options:Compiler_options.t -> string -> string list -> Source_input.file_name -> (Ast_typed.ValueVar.t * Stacking.compiled_expression) list =
+  options:Compiler_options.t -> string -> string list -> string -> (Ast_typed.ValueVar.t * Stacking.compiled_expression) list =
   fun ~options main_name cli_views source_file ->
     let form =
       let contract_entry = Ast_typed.ValueVar.of_input_var main_name in
