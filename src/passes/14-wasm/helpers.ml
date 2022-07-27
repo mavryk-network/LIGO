@@ -11,9 +11,17 @@ let data ~offset ~init =
   {
     it =
       {
-        index = {it = 0l; at};
-        offset = {it = [{it = Const {it = I32 offset; at}; at}]; at};
-        init;
+        dinit = init;
+        dmode = {
+          it = Active {
+            index = { it = 0l; at };
+            offset = {
+              it = [{it = Const {it = I32 offset; at}; at}];
+              at
+            }
+          };
+          at
+        }
       };
     at;
   }
@@ -55,7 +63,7 @@ let local_get name at = {it = LocalGet name; at}
 let local_tee name at = {it = LocalTee name; at}
 
 let store at =
-  {it = Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at}
+  {it = Store {ty = I32Type; align = 0; offset = 0l; pack = None}; at}
 
 let i32_add at = {it = Binary (I32 Add); at}
 

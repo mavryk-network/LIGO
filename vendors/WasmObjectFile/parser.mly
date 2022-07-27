@@ -3,12 +3,11 @@ open Source
 open Types
 open Ast
 open Operators
-open Script
 
 
 (* Error handling *)
 
-let error at msg = raise (Script.Syntax (at, msg))
+let error at msg = failwith msg
 
 let parse_error msg =
   error Source.no_region
@@ -197,7 +196,7 @@ let inline_type_explicit (c : context) x ft at =
 %token<string> FLOAT
 %token<string> STRING
 %token<string> VAR
-%token<Types.num_type> NUM_TYPE
+// %token<Types.num_type> NUM_TYPE
 %token<string Source.phrase -> Ast.instr' * Values.num> CONST
 %token<Ast.instr'> UNARY
 %token<Ast.instr'> BINARY
@@ -209,15 +208,16 @@ let inline_type_explicit (c : context) x ft at =
 %token<string> OFFSET_EQ_NAT
 %token<string> ALIGN_EQ_NAT
 
-%token<Script.nan> NAN
+// %token<Script.nan> NAN
 
 %nonassoc LOW
 %nonassoc VAR
 
-%start script script1 module1
-%type<Script.script> script
-%type<Script.script> script1
-%type<Script.var option * Script.definition> module1
+%start script 
+// script1 module1
+%type<Ast.t> script
+// %type<Script.script> script1
+// %type<Script.var option * Script.definition> module1
 
 %%
 
@@ -242,7 +242,7 @@ ref_type :
   | EXTERNREF { ExternRefType }
 
 value_type :
-  | NUM_TYPE { NumType $1 }
+//   | NUM_TYPE { NumType $1 }
   | ref_type { RefType $1 }
 
 value_type_list :
@@ -1031,17 +1031,17 @@ cmd :
   | assertion { Assertion $1 @@ at () }
   | script_module { Module (fst $1, snd $1) @@ at () }
   | LPAR REGISTER name module_var_opt RPAR { Register ($3, $4) @@ at () }
-  | meta { Meta $1 @@ at () }
+//   | meta { Meta $1 @@ at () }
 
 cmd_list :
   | /* empty */ { [] }
   | cmd cmd_list { $1 :: $2 }
 
-meta :
-  | LPAR SCRIPT script_var_opt cmd_list RPAR { Script ($3, $4) @@ at () }
-  | LPAR INPUT script_var_opt STRING RPAR { Input ($3, $4) @@ at () }
-  | LPAR OUTPUT script_var_opt STRING RPAR { Output ($3, Some $4) @@ at () }
-  | LPAR OUTPUT script_var_opt RPAR { Output ($3, None) @@ at () }
+// meta :
+//   | LPAR SCRIPT script_var_opt cmd_list RPAR { Script ($3, $4) @@ at () }
+//   | LPAR INPUT script_var_opt STRING RPAR { Input ($3, $4) @@ at () }
+//   | LPAR OUTPUT script_var_opt STRING RPAR { Output ($3, Some $4) @@ at () }
+//   | LPAR OUTPUT script_var_opt RPAR { Output ($3, None) @@ at () }
 
 literal_num :
   | LPAR CONST num RPAR { snd (num $2 $3) }
@@ -1060,7 +1060,7 @@ literal_list :
 
 result :
   | literal_num { NumResult (NumPat ($1 @@ at())) @@ at () }
-  | LPAR CONST NAN RPAR { NumResult (NanPat (nanop $2 ($3 @@ ati 3))) @@ at () }
+  | LPAR CONST RPAR { NumResult (NanPat (nanop $2 ($3 @@ ati 3))) @@ at () }
   | literal_ref { RefResult (RefPat ($1 @@ at ())) @@ at () }
   | LPAR REF_FUNC RPAR { RefResult (RefTypePat FuncRefType) @@ at () }
   | LPAR REF_EXTERN RPAR { RefResult (RefTypePat ExternRefType) @@ at () }

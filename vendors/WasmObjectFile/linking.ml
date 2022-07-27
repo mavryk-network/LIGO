@@ -1,9 +1,9 @@
 open Ast
 
-let data_index (data: data_part segment list) symbol = 
-  let rec iter_data (data: data_part segment list) count = 
+let data_index (data: data_segment list) symbol = 
+  let rec iter_data (data: data_segment list) count = 
     match data with
-    | Source.{it = {init = {name; _}; _}; _} :: remaining when name = symbol -> count
+    | Source.{it = {dinit = {name; _}; _}; _} :: remaining when name = symbol -> count
     | _ :: remaining -> iter_data remaining (Int32.add count 1l) 
     | [] -> (-1l)
   in iter_data data 0l
@@ -25,7 +25,7 @@ let func_index (funcs: Ast.func list) (imports: Ast.import list) symbol =
     in
     find_func funcs (Int32.of_int (List.length imports))
   else 
-    result
+  result
 
 let find_type types x = 
   let rec iter result = function

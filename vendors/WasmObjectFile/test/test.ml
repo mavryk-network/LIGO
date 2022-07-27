@@ -23,7 +23,7 @@ let () =
       };
       r {
         tname = "some_type2";
-        tdetails = FuncType ([], [I32Type])
+        tdetails = FuncType ([], [NumType I32Type])
       };
       
     ];
@@ -58,7 +58,7 @@ let () =
     ];
     start = None;
     elems = [];
-    data  = [];
+    datas  = [];
     imports = [];
     exports = [];
     symbols = [

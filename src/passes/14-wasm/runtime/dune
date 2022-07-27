@@ -16,7 +16,8 @@
 )
 
 (copy_files 
- (files src/target/wasm32-unknown-unknown/release/*)
+(files src/target/wasm32-unknown-unknown/release/*)
+ ; (files src/target/wasm32-wasi/release/*)
 )
 
 (generate_sites_module

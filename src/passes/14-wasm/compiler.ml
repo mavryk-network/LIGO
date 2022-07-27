@@ -41,7 +41,7 @@ let global_offset = ref 0l
  * Convert a Zarith number (used by LIGO and Tezos) to a num_bigint number (a Rust crate for big numbers).
  *)
 let convert_to_memory :
-    string -> S.region -> Z.t -> A.data_part A.segment list * A.sym_info list =
+    string -> S.region -> Z.t -> A.data_segment list * A.sym_info list =
  fun name at z ->
   let z = Z.to_int32 z in
   let open Int32 in
@@ -77,7 +77,7 @@ let rec expression ~raise :
         ~init:(w, l, []) instructions
     in
     ( w,
-      l @ [(new_value, T.I32Type)],
+      l @ [(new_value, T.NumType I32Type)],
       S.
          [
            const response_size at;
@@ -98,7 +98,7 @@ let rec expression ~raise :
     let unique_name = ValueVar.fresh ~name:"Literal_int" () in
     let name = var_to_string unique_name in
     let data, symbols = convert_to_memory name at z in
-    let w = {w with data = w.data @ data; symbols = w.symbols @ symbols} in
+    let w = {w with datas = w.datas @ data; symbols = w.symbols @ symbols} in
     (w, l, [{it = A.DataSymbol name; at}])
   | E_literal (Literal_nat _z) -> failwith "E_literal (Literal_nat) not supported"
   | E_literal (Literal_timestamp _z) -> failwith "E_literal (Literal_timestamp) not supported"
@@ -125,7 +125,7 @@ let rec expression ~raise :
       @ e2
       @ S.[store at; local_get pair at]
     in
-    (w, l @ [(pair, I32Type)], e)
+    (w, l @ [(pair, T.NumType I32Type)], e)
   (* MATH *)
   | E_constant {cons_name = C_NEG; arguments} ->
     host_call ~fn:"c_neg" ~response_size:4l ~instructions:arguments
@@ -156,7 +156,7 @@ let rec expression ~raise :
     let w, l, cons = expression ~raise w l cons in
     ( w,
       l,
-      cons @ [{it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at}]
+      cons @ [{it = Load {ty = I32Type; align = 0; offset = 0l; pack = None}; at}]
     )
   | E_constant {cons_name = C_CDR; arguments = [cons]} ->
     let w, l, cons = expression ~raise w l cons in
@@ -166,14 +166,14 @@ let rec expression ~raise :
       @ [
           {it = A.Const {it = I32 4l; at}; at};
           {it = Binary (I32 Add); at};
-          {it = Load {ty = I32Type; align = 0; offset = 0l; sz = None}; at};
+          {it = Load {ty = I32Type; align = 0; offset = 0l; pack = None}; at};
         ] )
   | E_constant {cons_name = C_CONS; arguments = [l1; l2]} ->
     let cons = var_to_string (ValueVar.fresh ~name:"C_CONS" ()) in
     let w, l, l1 = expression ~raise w l l1 in
     let w, l, l2 = expression ~raise w l l2 in
     ( w,
-      l @ [(cons, I32Type)],
+      l @ [(cons, T.NumType I32Type)],
       [
         S.{it = A.Const {it = I32 8l; at}; at};
         {it = A.Call "malloc"; at};
@@ -182,14 +182,14 @@ let rec expression ~raise :
       ]
       @ l1
       @ [
-          S.{it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at};
+          S.{it = A.Store {ty = I32Type; align = 0; offset = 0l; pack = None}; at};
           {it = LocalGet cons; at};
           {it = Const {it = I32 4l; at}; at};
           {it = Binary (I32 Add); at};
         ]
       @ l2
       @ [
-          {it = A.Store {ty = I32Type; align = 0; offset = 0l; sz = None}; at};
+          {it = A.Store {ty = I32Type; align = 0; offset = 0l; pack = None}; at};
           {it = LocalGet cons; at};
         ] )
   | E_constant {cons_name = C_LIST_LITERAL; arguments = [l1]} ->
@@ -241,7 +241,7 @@ let rec expression ~raise :
   | E_let_in (e1, _inline, _thunk, ((name, typex), e2)) ->
     let name = var_to_string name in
     let w, l, e1 = expression ~raise w l e1 in
-    let l = l @ [(name, T.I32Type)] in
+    let l = l @ [(name, T.NumType I32Type)] in
     let w, l, e2 = expression ~raise w l e2 in
     (w, l, e1 @ [S.{it = A.LocalSet name; at}] @ e2)
   | E_tuple _ -> failwith "E_tuple not supported"
@@ -249,19 +249,19 @@ let rec expression ~raise :
     let w, l, tuple = expression ~raise w l tuple in
     let tuple_name = var_to_string (ValueVar.fresh ~name:"let_tuple" ()) in
     let t = tuple @ [S.{it = A.LocalSet tuple_name; at}] in
-    let l = l @ [(tuple_name, T.I32Type)] in
+    let l = l @ [(tuple_name, T.NumType I32Type)] in
     let l, e =
       List.foldi
         ~f:(fun i (l, all) (name, _) ->
           let name = var_to_string name in
-          ( l @ [(name, T.I32Type)],
+          ( l @ [(name, T.NumType I32Type)],
             all
             @ [
                 S.{it = A.LocalGet tuple_name; at};
                 {it = Const {it = I32 Int32.(4l * Int32.of_int_exn i); at}; at};
                 {it = Binary (I32 Add); at};
                 {
-                  it = Load {ty = I32Type; align = 0; offset = 0l; sz = None};
+                  it = Load {ty = I32Type; align = 0; offset = 0l; pack = None};
                   at;
                 };
                 {it = LocalSet name; at};
@@ -292,14 +292,14 @@ let rec toplevel_bindings ~raise :
     let name = var_to_string name in
     let arguments, body = func c in
     let locals =
-      List.map ~f:(fun a -> (var_to_string a, T.I32Type)) arguments
+      List.map ~f:(fun a -> (var_to_string a, T.NumType I32Type)) arguments
     in
     let w, locals, body = expression ~raise w locals body in
-    let type_arg = List.map ~f:(fun _ -> T.I32Type) arguments in
+    let type_arg = List.map ~f:(fun _ -> T.NumType I32Type) arguments in
     let return_type =
       match type_.type_content with
       | I.T_function (_, {type_content = I.T_base TB_unit; _}) -> []
-      | _ -> [T.I32Type]
+      | _ -> [T.NumType I32Type]
     in
     let w =
       {
@@ -331,7 +331,7 @@ let rec toplevel_bindings ~raise :
     let name = var_to_string name in
     let data, symbols = convert_to_memory name at z in
     toplevel_bindings ~raise e2
-      {w with data = w.data @ data; symbols = w.symbols @ symbols}
+      {w with datas = w.datas @ data; symbols = w.symbols @ symbols}
   | E_variable entrypoint ->
     let actual_name = var_to_string entrypoint in
     let name = "entrypoint" in
@@ -344,7 +344,7 @@ let rec toplevel_bindings ~raise :
         types =
           w.types
           @ [
-            type_ ~name:(name ^ "_type") ~typedef:(FuncType ([I32Type; I32Type], [I32Type]));
+            type_ ~name:(name ^ "_type") ~typedef:(FuncType ([T.NumType I32Type; T.NumType I32Type], [T.NumType I32Type]));
             ];
         funcs =
           w.funcs
@@ -354,7 +354,7 @@ let rec toplevel_bindings ~raise :
                   {
                     name;
                     ftype = name ^ "_type";
-                    locals = [("parameter", I32Type); ("storage", I32Type); ("entrypoint_tuple", I32Type)];
+                    locals = [("parameter", T.NumType I32Type); ("storage", T.NumType I32Type); ("entrypoint_tuple", T.NumType I32Type)];
                     body =
                       [
                         const 8l at;
