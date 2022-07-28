@@ -9,6 +9,6 @@
 ;  (action (chdir %{workspace_root}
 ;           (run %{bin:ocamllex} -ml -q -o %{target} %{deps}))))
 
-; (menhir
-;  (modules parser)
-; )
+(ocamlyacc
+ (modules parser)
+)

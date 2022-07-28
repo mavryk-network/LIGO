@@ -229,14 +229,25 @@ let encode (m: Ast.module_) =
     | BrIf x -> op 0x0d; var x
     | BrTable (xs, x) -> op 0x0e; vec var xs; var x
     | Return -> op 0x0f
-    | Call symbol -> 
+    | Call x -> op 0x10; var x
+    | CallIndirect (x, y) -> op 0x11; var y; var x
+    | Drop -> op 0x1a
+    | Select None -> op 0x1b
+    | Select (Some ts) -> op 0x1c; vec value_type ts
+    | LocalGet x -> op 0x20; var x
+    | LocalSet x -> op 0x21; var x
+    | LocalTee x -> op 0x22; var x
+    | GlobalGet x -> op 0x23; var x
+    | GlobalSet x -> op 0x24; var x
+    
+    | Call_symbol symbol -> 
       op 0x10; 
       let p = pos s in
       let import_funcs = List.filter (fun i -> match i.it.idesc.it with FuncImport _ -> true | _ -> false) m.it.imports in
       let index = Linking.func_index m.it.funcs import_funcs symbol in
       code_relocations := !code_relocations @ [R_WASM_FUNCTION_INDEX_LEB (Int32.of_int p, symbol)];          
       reloc_index index
-    | CallIndirect symbol ->
+    | CallIndirect_symbol symbol ->
       
       op 0x11;        
       let p = pos s in
@@ -248,30 +259,25 @@ let encode (m: Ast.module_) =
       code_relocations := !code_relocations @ [R_WASM_TYPE_INDEX_LEB (Int32.of_int p, index)];
       reloc_index index.it;
       byte 0x00
-
-    | Drop -> op 0x1a
-    | Select None -> op 0x1b
-    | Select (Some ts) -> op 0x1c; vec value_type ts
-
-    | LocalGet x -> 
+    | LocalGet_symbol x -> 
       let x = get_local_position x in
       op 0x20; 
       var x
-    | LocalSet x -> 
+    | LocalSet_symbol x -> 
       let x = get_local_position x in
       op 0x21; 
       var x
-    | LocalTee x -> 
+    | LocalTee_symbol x -> 
       let x = get_local_position x in
       op 0x22; 
       var x
-    | GlobalGet x -> 
+    | GlobalGet_symbol x -> 
       op 0x23; 
       let p = pos s in
       code_relocations := !code_relocations @ [R_WASM_GLOBAL_INDEX_LEB (Int32.of_int p, x)];
       let x = Linking.find_global_index m.it.symbols e.at x in
       var x
-    | GlobalSet x -> 
+    | GlobalSet_symbol x -> 
       op 0x24; 
       let p = pos s in
       code_relocations := !code_relocations @ [R_WASM_GLOBAL_INDEX_LEB (Int32.of_int p, x)];

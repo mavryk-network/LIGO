@@ -54,13 +54,16 @@ let symbol_data ~name ~index ~size ~offset =
 
 let const i at = {it = Const {it = I32 i; at}; at}
 
-let call name at = {it = Call name; at}
+let call_s name at = {it = Call_symbol name; at}
 
-let local_set name at = {it = LocalSet name; at}
+let local_set_s name at = {it = LocalSet_symbol name; at}
 
-let local_get name at = {it = LocalGet name; at}
+let local_get_s name at = {it = LocalGet_symbol name; at}
 
-let local_tee name at = {it = LocalTee name; at}
+let local_tee_s name at = {it = LocalTee_symbol name; at}
+
+let load at = 
+  {it = Load {ty = I32Type; align = 0; offset = 0l; pack = None}; at}
 
 let store at =
   {it = Store {ty = I32Type; align = 0; offset = 0l; pack = None}; at}

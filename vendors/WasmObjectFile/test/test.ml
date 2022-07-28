@@ -44,7 +44,7 @@ let () =
         ftype = "some_type2";
         locals = [];
         body = [
-          r (Call "hello_world")
+          r (Call_symbol "hello_world")
         ]
       };
       r {
@@ -52,7 +52,7 @@ let () =
         ftype = "some_type2";
         locals = [];
         body = [
-          r (Call "entry");
+          r (Call_symbol "entry");
         ]
       }
     ];

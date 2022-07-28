@@ -81,15 +81,15 @@ let rec expression ~raise :
       S.
          [
            const response_size at;
-           call "malloc" at;
-           local_tee new_value at;
+           call_s "malloc" at;
+           local_tee_s new_value at;
          ]
       @
       e 
       @ S.[ 
-          call fn at; 
+          call_s fn at; 
           store at; 
-          local_get new_value at
+          local_get_s new_value at
         ] )
   in
   match e.content with
@@ -99,7 +99,7 @@ let rec expression ~raise :
     let name = var_to_string unique_name in
     let data, symbols = convert_to_memory name at z in
     let w = {w with datas = w.datas @ data; symbols = w.symbols @ symbols} in
-    (w, l, [{it = A.DataSymbol name; at}])
+    (w, l, [data_symbol name at])
   | E_literal (Literal_nat _z) -> failwith "E_literal (Literal_nat) not supported"
   | E_literal (Literal_timestamp _z) -> failwith "E_literal (Literal_timestamp) not supported"
   | E_literal (Literal_mutez _z) -> failwith "E_literal (Literal_mutez) not supported"
@@ -119,11 +119,11 @@ let rec expression ~raise :
     let w, l, e1 = expression ~raise w l e1 in
     let w, l, e2 = expression ~raise w l e2 in
     let e =
-      S.[const 8l at; call "malloc" at; local_set pair at; local_get pair at]
+      S.[const 8l at; call_s "malloc" at; local_set_s pair at; local_get_s pair at]
       @ e1
-      @ S.[store at; local_get pair at; const 4l at; i32_add at]
+      @ S.[store at; local_get_s pair at; const 4l at; i32_add at]
       @ e2
-      @ S.[store at; local_get pair at]
+      @ S.[store at; local_get_s pair at]
     in
     (w, l @ [(pair, T.NumType I32Type)], e)
   (* MATH *)
@@ -156,7 +156,7 @@ let rec expression ~raise :
     let w, l, cons = expression ~raise w l cons in
     ( w,
       l,
-      cons @ [{it = Load {ty = I32Type; align = 0; offset = 0l; pack = None}; at}]
+      cons @ [load at]
     )
   | E_constant {cons_name = C_CDR; arguments = [cons]} ->
     let w, l, cons = expression ~raise w l cons in
@@ -164,9 +164,9 @@ let rec expression ~raise :
       l,
       cons
       @ [
-          {it = A.Const {it = I32 4l; at}; at};
-          {it = Binary (I32 Add); at};
-          {it = Load {ty = I32Type; align = 0; offset = 0l; pack = None}; at};
+          const 4l at;
+          i32_add at;
+          load at
         ] )
   | E_constant {cons_name = C_CONS; arguments = [l1; l2]} ->
     let cons = var_to_string (ValueVar.fresh ~name:"C_CONS" ()) in
@@ -175,22 +175,22 @@ let rec expression ~raise :
     ( w,
       l @ [(cons, T.NumType I32Type)],
       [
-        S.{it = A.Const {it = I32 8l; at}; at};
-        {it = A.Call "malloc"; at};
+        const 8l at;
+        call_s "malloc" at;
         (* check if not 0 *)
-        {it = LocalTee cons; at};
+        local_tee_s cons at;
       ]
       @ l1
       @ [
-          S.{it = A.Store {ty = I32Type; align = 0; offset = 0l; pack = None}; at};
-          {it = LocalGet cons; at};
-          {it = Const {it = I32 4l; at}; at};
-          {it = Binary (I32 Add); at};
+        store at;
+        local_get_s cons at;
+        const 4l at;
+        i32_add at;
         ]
       @ l2
       @ [
-          {it = A.Store {ty = I32Type; align = 0; offset = 0l; pack = None}; at};
-          {it = LocalGet cons; at};
+        store at;
+        local_get_s cons at;
         ] )
   | E_constant {cons_name = C_LIST_LITERAL; arguments = [l1]} ->
     failwith "E_constant (C_LIST_LITERAL) not supported"
@@ -219,12 +219,12 @@ let rec expression ~raise :
           (w, l, a @ c))
         ~init:(w, l, []) args
     in
-    (w, l, args @ [S.{it = A.Call name; at}])
+    (w, l, args @ [call_s name at])
   | E_variable name -> (
     let name = var_to_string name in
     match List.find ~f:(fun (n, _) -> String.equal n name) l with
-    | Some _ -> (w, l, [{it = LocalGet name; at}])
-    | None -> (w, l, [{it = DataSymbol name; at}]))
+    | Some _ -> (w, l, [local_get_s name at])
+    | None -> (w, l, [data_symbol name at]))
   | E_iterator (b, ((name, _), body), expr) -> failwith "E_iterator not supported"
   | E_fold _ -> failwith "E_fold not supported"
   | E_fold_right _ -> failwith "E_fold_right not supported"
@@ -243,12 +243,12 @@ let rec expression ~raise :
     let w, l, e1 = expression ~raise w l e1 in
     let l = l @ [(name, T.NumType I32Type)] in
     let w, l, e2 = expression ~raise w l e2 in
-    (w, l, e1 @ [S.{it = A.LocalSet name; at}] @ e2)
+    (w, l, e1 @ [local_set_s name at] @ e2)
   | E_tuple _ -> failwith "E_tuple not supported"
   | E_let_tuple (tuple, (values, rhs)) ->
     let w, l, tuple = expression ~raise w l tuple in
     let tuple_name = var_to_string (ValueVar.fresh ~name:"let_tuple" ()) in
-    let t = tuple @ [S.{it = A.LocalSet tuple_name; at}] in
+    let t = tuple @ [local_set_s tuple_name at] in
     let l = l @ [(tuple_name, T.NumType I32Type)] in
     let l, e =
       List.foldi
@@ -257,14 +257,11 @@ let rec expression ~raise :
           ( l @ [(name, T.NumType I32Type)],
             all
             @ [
-                S.{it = A.LocalGet tuple_name; at};
-                {it = Const {it = I32 Int32.(4l * Int32.of_int_exn i); at}; at};
-                {it = Binary (I32 Add); at};
-                {
-                  it = Load {ty = I32Type; align = 0; offset = 0l; pack = None};
-                  at;
-                };
-                {it = LocalSet name; at};
+              local_get_s tuple_name at;
+              const Int32.(4l * Int32.of_int_exn i) at;
+              i32_add at;
+              load at;
+              local_set_s name at;
               ] ))
         ~init:(l, []) values
     in
@@ -358,20 +355,20 @@ let rec toplevel_bindings ~raise :
                     body =
                       [
                         const 8l at;
-                        call "malloc" at;
-                        local_set "entrypoint_tuple" at;
-                        local_get "entrypoint_tuple" at;
-                        local_get "parameter" at;
+                        call_s "malloc" at;
+                        local_set_s "entrypoint_tuple" at;
+                        local_get_s "entrypoint_tuple" at;
+                        local_get_s "parameter" at;
                         store at;
 
-                        local_get "entrypoint_tuple" at;
+                        local_get_s "entrypoint_tuple" at;
                         const 4l at;
                         i32_add at;
-                        local_get "storage" at;
+                        local_get_s "storage" at;
                         store at;
 
-                        local_get "entrypoint_tuple" at;
-                        call actual_name at;
+                        local_get_s "entrypoint_tuple" at;
+                        call_s actual_name at;
                       ];
                   };
                 at;

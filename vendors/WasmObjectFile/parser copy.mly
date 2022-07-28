@@ -142,7 +142,7 @@ let label (c : context) x =
 let func_type (c : context) x =
   try 
     (Lib.List32.nth c.types.list x.it).it.tdetails
-      with Failure _ -> error x.at ("unknown type " ^ Int32.to_string x.it)
+  with Failure _ -> error x.at ("unknown type " ^ Int32.to_string x.it)
 
 
 let anon category space n =
@@ -203,6 +203,11 @@ let inline_type_explicit (c : context) x ft at =
     error at "inline function type does not match explicit type";
   x
 
+let func_symbol   = "todo"
+let local_symbol  = "todo"
+let global_symbol = "todo"
+
+let string_of_type (index: int32) = "todo"
 %}
 
 %token LPAR RPAR
@@ -339,6 +344,7 @@ limits :
 
 type_use :
   | LPAR TYPE var RPAR { $3 }
+  // | LPAR TYPE STRING RPAR { $3 }
 
 
 /* Immediates */
@@ -414,12 +420,18 @@ plain_instr :
     { fun c -> let xs, x = Lib.List.split_last ($2 c label :: $3 c label) in
       br_table xs x }
   | RETURN { fun c -> return }
-  | CALL var { fun c -> call ($2 c func) }
-  | LOCAL_GET var { fun c -> local_get ($2 c local) }
-  | LOCAL_SET var { fun c -> local_set ($2 c local) }
-  | LOCAL_TEE var { fun c -> local_tee ($2 c local) }
-  | GLOBAL_GET var { fun c -> global_get ($2 c global) }
-  | GLOBAL_SET var { fun c -> global_set ($2 c global) }
+  | CALL var { fun c -> failwith "TODO: add support for using numbers instead of symbols" (*call ($2 c func)*) }
+  | LOCAL_GET var { fun c -> failwith "TODO: add support for using numbers instead of symbols" (* local_get ($2 c local) *) }
+  | LOCAL_SET var { fun c -> failwith "TODO: add support for using numbers instead of symbols" (*local_set ($2 c local) *) }
+  | LOCAL_TEE var { fun c -> failwith "TODO: add support for using numbers instead of symbols" (*local_tee ($2 c local) *) }
+  | GLOBAL_GET var { fun c -> failwith "TODO: add support for using numbers instead of symbols" (*global_get ($2 c global) *) }
+  | GLOBAL_SET var { fun c -> failwith "TODO: add support for using numbers instead of symbols" (*global_set ($2 c global) *) }
+  | CALL STRING { fun c -> call $2 }
+  | LOCAL_GET STRING { fun c -> local_get $2 }
+  | LOCAL_SET STRING { fun c -> local_set $2 }
+  | LOCAL_TEE STRING { fun c -> local_tee $2 }
+  | GLOBAL_GET STRING { fun c -> global_get $2 }
+  | GLOBAL_SET STRING { fun c -> global_set $2 }
   | TABLE_GET var { fun c -> table_get ($2 c table) }
   | TABLE_SET var { fun c -> table_set ($2 c table) }
   | TABLE_SIZE var { fun c -> table_size ($2 c table) }

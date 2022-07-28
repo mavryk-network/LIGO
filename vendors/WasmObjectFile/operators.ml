@@ -26,7 +26,8 @@ let br_table xs x = BrTable (xs, x)
 
 let return = Return
 let call x = Call x
-let call_indirect symbol = symbol
+let call_indirect x y = CallIndirect (x, y)
+let call_indirect_symbol symbol = CallIndirect_symbol symbol
 
 let local_get x = LocalGet x
 let local_set x = LocalSet x
