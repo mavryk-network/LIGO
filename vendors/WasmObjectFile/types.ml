@@ -1,3 +1,5 @@
+type symbol = string
+
 (* Types *)
 
 type num_type = I32Type | I64Type | F32Type | F64Type
@@ -13,10 +15,11 @@ type table_type = TableType of Int32.t limits * ref_type
 type memory_type = MemoryType of Int32.t limits
 type global_type = GlobalType of value_type * mutability
 type extern_type =
-  | ExternFuncType of string
+  | ExternFuncType of func_type
   | ExternTableType of table_type
   | ExternMemoryType of memory_type
   | ExternGlobalType of global_type
+  | ExternFuncType_symbol of symbol
 
 (* TODO: these types should move somewhere else *)
 type pack_size = Pack8 | Pack16 | Pack32 | Pack64
@@ -151,7 +154,8 @@ let string_of_func_type (FuncType (ins, out)) =
   string_of_result_type ins ^ " -> " ^ string_of_result_type out
 
 let string_of_extern_type = function
-  | ExternFuncType ft -> "func " ^ ft
+  | ExternFuncType ft -> "func " ^ string_of_func_type ft
   | ExternTableType tt -> "table " ^ string_of_table_type tt
   | ExternMemoryType mt -> "memory " ^ string_of_memory_type mt
   | ExternGlobalType gt -> "global " ^ string_of_global_type gt
+  | ExternFuncType_symbol symbol -> "func " ^ symbol

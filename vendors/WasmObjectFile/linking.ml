@@ -19,7 +19,7 @@ let func_index (funcs: Ast.func list) (imports: Ast.import list) symbol =
   if result = (-1l) then 
     let rec find_func funcs count = 
       match funcs with
-      | Source.{it = {name; ftype; _}; _} :: remaining when name = symbol -> count
+      | Source.{it = FuncSymbol {name; ftype; _}; _} :: remaining when name = symbol -> count
       | _ :: remaining -> find_func remaining (Int32.add count 1l)
       | [] -> failwith ("Could not find: " ^ symbol)
     in
@@ -29,8 +29,8 @@ let func_index (funcs: Ast.func list) (imports: Ast.import list) symbol =
 
 let find_type types x = 
   let rec iter result = function
-    | Source.{it = {tname; _}; _} :: remaining when tname = x -> result
-    | {it = {tname; _}; _} :: remaining -> iter (Int32.add result 1l) remaining
+    | Source.{it = TypeSymbol {tname; _}; _} :: remaining when tname = x -> result
+    | _ :: remaining -> iter (Int32.add result 1l) remaining
     | [] -> result
   in
   iter 0l types 

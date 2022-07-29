@@ -34,8 +34,8 @@ let env : module_ =
               ~desc:(MemoryImport (MemoryType {min = 0l; max = None}));
             import ~item:"__stack_pointer"
               ~desc:(GlobalImport (GlobalType (NumType I32Type, Mutable)));
-            import ~item:"malloc" ~desc:(FuncImport "malloc_type");
-            import ~item:"c_add_i32" ~desc:(FuncImport "c_add_i32_type");
+            import ~item:"malloc" ~desc:(FuncImport_symbol "malloc_type");
+            import ~item:"c_add_i32" ~desc:(FuncImport_symbol "c_add_i32_type");
           ];
         symbols =
           [

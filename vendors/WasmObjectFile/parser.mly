@@ -140,9 +140,12 @@ let label (c : context) x =
   with Not_found -> error x.at ("unknown label " ^ x.it)
 
 let func_type (c : context) x =
-  try 
-    (Lib.List32.nth c.types.list x.it).it.tdetails
-      with Failure _ -> error x.at ("unknown type " ^ Int32.to_string x.it)
+  try (
+   let type_symbol = (Lib.List32.nth c.types.list x.it).it in 
+    match type_symbol with 
+      TypeSymbol {tdetails; _} -> tdetails
+    | TypeNoSymbol ts -> ts)
+    with Failure _ -> error x.at ("unknown type " ^ Int32.to_string x.it)
 
 
 let anon category space n =
@@ -190,9 +193,19 @@ let anon_label (c : context) =
 
 
 let inline_type (c : context) ft at =
-  match Lib.List.index_where (fun ty -> ty.it = ft) c.types.list with
+  match Lib.List.index_where (fun ty -> 
+    match ty.it with 
+      TypeSymbol {tdetails; _} when tdetails = ft -> true 
+    | TypeNoSymbol f when f = ft -> true 
+    | _ -> false
+    ) c.types.list with
   | Some i -> Int32.of_int i @@ at
-  | None -> anon_type c (ft @@ at) @@ at
+  | None -> anon_type c (TypeNoSymbol ft @@ at) @@ at
+  
+let inline_type_symbol (c : context) ft at = 
+  let ft = inline_type c ft at in
+  let type_symbol = (Lib.List32.nth c.types.list ft.it).it in 
+  type_symbol
 
 let inline_type_explicit (c : context) x ft at =
   if ft = FuncType ([], []) then
@@ -270,11 +283,11 @@ let inline_type_explicit (c : context) x ft at =
 %nonassoc LOW
 %nonassoc VAR
 
-%start script script1 module1
+%start script script1 module1 instr_list
 %type<Script.script> script
 %type<Script.script> script1
 %type<Script.var option * Script.definition> module1
-
+%type<_ -> Ast.instr list> instr_list 
 %%
 
 /* Auxiliaries */
@@ -714,12 +727,12 @@ func_fields :
     { fun c x at ->
       let c' = enter_func c in
       let y = inline_type_explicit c' ($1 c' type_) (fst $2) at in
-      [{(snd $2 c') with ftype = y} @@ at], [], [] }
+      [FuncNoSymbol {(snd $2 c') with ftype = y} @@ at], [], [] }
   | func_fields_body  /* Sugar */
     { fun c x at ->
       let c' = enter_func c in
       let y = inline_type c' (fst $1) at in
-      [{(snd $1 c') with ftype = y} @@ at], [], [] }
+      [FuncNoSymbol {(snd $1 c') with ftype = y} @@ at], [], [] }
   | inline_import type_use func_fields_import  /* Sugar */
     { fun c x at ->
       let y = inline_type_explicit c ($2 c type_) $3 at in
@@ -765,16 +778,17 @@ func_result_body :
     { let FuncType (ins, out) = fst $5 in
       FuncType (ins, $3 @ out), snd $5 }
 
+
 func_body :
   | instr_list
     { fun c -> let c' = anon_label c in
       {ftype = -1l @@ at(); locals = []; body = $1 c'} }
   | LPAR LOCAL value_type_list RPAR func_body
     { fun c -> anon_locals c (lazy $3); let f = $5 c in
-      {f with locals = $3 @ f.locals} }
+      {f with locals = (List.map (fun f -> ("unknown", f)) $3) @ f.locals} }
   | LPAR LOCAL bind_var value_type RPAR func_body  /* Sugar */
     { fun c -> ignore (bind_local c $3); let f = $6 c in
-      {f with locals = $4 :: f.locals} }
+      {f with locals = ("unknown", $4) :: f.locals} }
 
 
 /* Tables, Memories & Globals */
@@ -882,17 +896,33 @@ data :
   | LPAR DATA bind_var_opt string_list RPAR
     { let at = at () in
       fun c -> ignore ($3 c anon_data bind_data);
-      fun () -> {dinit = $4; dmode = Passive @@ at} @@ at }
+      fun () -> 
+      let dinit = {
+        name = "unknown";
+        detail = [String $4]
+      }
+      in
+      {dinit; dmode = Passive @@ at} @@ at }
   | LPAR DATA bind_var_opt memory_use offset string_list RPAR
     { let at = at () in
       fun c -> ignore ($3 c anon_data bind_data);
       fun () ->
-      {dinit = $6; dmode = Active {index = $4 c memory; offset = $5 c} @@ at} @@ at }
+      let dinit = {
+        name = "unknown";
+        detail = [String $6]
+      }
+      in
+      {dinit; dmode = Active {index = $4 c memory; offset = $5 c} @@ at} @@ at }
   | LPAR DATA bind_var_opt offset string_list RPAR  /* Sugar */
     { let at = at () in
       fun c -> ignore ($3 c anon_data bind_data);
       fun () ->
-      {dinit = $5; dmode = Active {index = 0l @@ at; offset = $4 c} @@ at} @@ at }
+      let dinit = {
+        name = "unknown";
+        detail = [String $5]
+      }
+      in
+      {dinit; dmode = Active {index = 0l @@ at; offset = $4 c} @@ at} @@ at }
 
 memory :
   | LPAR MEMORY bind_var_opt memory_fields RPAR
@@ -915,8 +945,13 @@ memory_fields :
     { fun c x at ->
       let offset = [i32_const (0l @@ at) @@ at] @@ at in
       let size = Int32.(div (add (of_int (String.length $3)) 65535l) 65536l) in
+      let dinit = {
+        name = "unknown";
+        detail = [String $3]
+      }
+      in
       [{mtype = MemoryType {min = size; max = Some size}} @@ at],
-      [{dinit = $3; dmode = Active {index = x; offset} @@ at} @@ at],
+      [{dinit; dmode = Active {index = x; offset} @@ at} @@ at],
       [], [] }
 
 global :
@@ -927,7 +962,7 @@ global :
 
 global_fields :
   | global_type const_expr
-    { fun c x at -> [{gtype = $1; ginit = $2 c} @@ at], [], [] }
+    { fun c x at -> [{name = "unknown"; gtype = $1; ginit = $2 c} @@ at], [], [] }
   | inline_import global_type  /* Sugar */
     { fun c x at ->
       [],
@@ -986,7 +1021,7 @@ inline_export :
 /* Modules */
 
 type_ :
-  | def_type { $1 @@ at () }
+  | def_type { TypeNoSymbol $1 @@ at () }
 
 type_def :
   | LPAR TYPE type_ RPAR

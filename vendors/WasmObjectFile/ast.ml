@@ -226,13 +226,18 @@ type vec_laneop = (vec_type, pack_size) memop * int
  
  type func = func' Source.phrase
  and func' =
- {
+ FuncSymbol of {
    name  : symbol;
    ftype : symbol;
    locals : (symbol * value_type) list;
    body : instr list;
  }
- 
+| FuncNoSymbol of func_no_symbol
+and func_no_symbol = {
+  ftype : var;
+  locals : (symbol * value_type) list;
+  body : instr list;
+}
  
  (* Tables & Memories *)
  
@@ -288,10 +293,11 @@ and elem_segment' =
  (* Modules *)
  
  and type_symbol = 
- {
+ TypeSymbol of {
    tname : symbol;
    tdetails : func_type
  } 
+ | TypeNoSymbol of func_type
 
  and type_ = type_symbol Source.phrase
  
@@ -311,7 +317,8 @@ and elem_segment' =
  
  type import_desc = import_desc' Source.phrase
  and import_desc' =
-   | FuncImport of string
+   | FuncImport of var 
+   | FuncImport_symbol of string
    | TableImport of table_type
    | MemoryImport of memory_type
    | GlobalImport of global_type
@@ -392,19 +399,29 @@ and start' =
  
  let find_type types x = 
   let rec iter result = function
-    | Source.{it = {tname; _}; _} :: remaining when tname = x -> result
-    | {it = {tname; _}; _} :: remaining -> iter (Int32.add result 1l) remaining
+    | Source.{it = TypeSymbol {tname; _}; _} :: remaining when tname = x -> result
+    | _ :: remaining -> iter (Int32.add result 1l) remaining
     | [] -> result
   in
   iter 0l types 
 
- let func_type_for (m : module_) (s : symbol) : type_symbol =
+ let type_symbol_for (m : module_) (s : symbol) : type_symbol =
   (Lib.List32.nth m.it.types (find_type m.it.types s)).it
  
  let import_type (m : module_) (im : import) : extern_type =
    let {idesc; _} = im.it in
    match idesc.it with
-   | FuncImport x -> ExternFuncType (func_type_for m x).tname
+   | FuncImport_symbol x -> 
+    let ts = type_symbol_for m x in 
+    (match ts with 
+      TypeSymbol {tname; _} -> ExternFuncType_symbol tname
+     | TypeNoSymbol ft -> ExternFuncType ft )
+
+   | FuncImport t -> 
+      let ts = (Lib.List32.nth m.it.types t.it).it in 
+      (match ts with 
+      TypeSymbol {tname; _} -> ExternFuncType_symbol tname
+     | TypeNoSymbol ft -> ExternFuncType ft )
    | TableImport t -> ExternTableType t
    | MemoryImport t -> ExternMemoryType t
    | GlobalImport t -> ExternGlobalType t
@@ -415,9 +432,10 @@ and start' =
    let open Lib.List32 in
    match edesc.it with
    | FuncExport x ->
-     let fts =
+      failwith "Lazy solution: Not used when writing this. "
+     (* let fts =
        funcs its @ List.map (fun f -> (func_type_for m f.it.ftype).tname) m.it.funcs
-     in ExternFuncType (nth fts x.it)
+     in ExternFuncType (nth fts x.it) *)
    | TableExport x ->
      let tts = tables its @ List.map (fun t -> t.it.ttype) m.it.tables in
      ExternTableType (nth tts x.it)

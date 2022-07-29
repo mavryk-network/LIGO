@@ -156,7 +156,10 @@ let encode (m: Ast.module_) =
   let func_type = function
   | FuncType (ts1, ts2) ->
     s7 (-0x20); vec value_type ts1; vec value_type ts2
-    
+  
+  let type_symbol = function 
+    Ast.TypeSymbol {tdetails; _} -> func_type tdetails
+  | TypeNoSymbol ft -> func_type ft
 
   let limits vu {min; max} =
     bool (max <> None); vu min; opt vu max
@@ -239,7 +242,7 @@ let encode (m: Ast.module_) =
     | LocalTee x -> op 0x22; var x
     | GlobalGet x -> op 0x23; var x
     | GlobalSet x -> op 0x24; var x
-    
+
     | Call_symbol symbol -> 
       op 0x10; 
       let p = pos s in
@@ -869,7 +872,7 @@ let encode (m: Ast.module_) =
 
   (* Type section *)
 
-  let type_ t = func_type t.it.tdetails
+  let type_ t = type_symbol t.it
 
   let type_section ts =
     section 1 (vec type_) ts (ts <> [])
@@ -879,7 +882,8 @@ let encode (m: Ast.module_) =
 
   let import_desc d =
     match d.it with
-    | FuncImport x -> byte 0x00; u32 (Linking.find_type m.it.types x)
+    | FuncImport x -> byte 0x00; var x
+    | FuncImport_symbol x -> byte 0x00; u32 (Linking.find_type m.it.types x)
     | TableImport t -> byte 0x01; table_type t
     | MemoryImport t -> byte 0x02; memory_type t
     | GlobalImport t -> byte 0x03; global_type t
@@ -894,8 +898,12 @@ let encode (m: Ast.module_) =
 
   (* Function section *)
 
-  let func f = 
-    u32 (Linking.find_type m.it.types f.it.ftype)
+  let func (f: func' Source.phrase) = 
+    match f.it with 
+      FuncSymbol {ftype; _} ->
+        u32 (Linking.find_type m.it.types ftype)
+    | FuncNoSymbol f ->
+        var f.ftype
     
   let func_section fs =
     section 3 (vec func) fs (fs <> [])
@@ -960,22 +968,32 @@ let encode (m: Ast.module_) =
 
   (* Code section *)
 
-  let local ((_, t), n) = len n; value_type t
+  let local (t, n) = len n; value_type t
 
-  let locals locs =
+  let local_symbol ((_, t), n) = local (t, n)
+
+  let locals locs l =
     let combine t = function
       | (t', n) :: ts when t = t' -> (t, n + 1) :: ts
       | ts -> (t, 1) :: ts
-    in vec local (List.fold_right combine locs [])
+    in vec l (List.fold_right combine locs [])
 
   let code f =
-    let {locals = locs; body; name; _} = f.it in
-    let g = gap32 () in
-    let p = pos s in
-    locals locs;
-    list (instr locs) body;
-    end_ ();
-    patch_gap32 g (pos s - p)
+    match f.it with 
+      FuncSymbol {locals = locs; body;  _} -> 
+        let g = gap32 () in
+        let p = pos s in
+        locals locs local_symbol;
+        list (instr locs) body;
+        end_ ();
+        patch_gap32 g (pos s - p)
+    | FuncNoSymbol {locals = locs ; body; _} ->
+      let g = gap32 () in
+      let p = pos s in
+      locals locs local_symbol;
+      list (instr locs) body;
+      end_ ();
+      patch_gap32 g (pos s - p)
 
   let code_section fs =
     code_section_index := !section_counter;
@@ -1134,7 +1152,9 @@ let encode (m: Ast.module_) =
     ) import_funcs;
     List.iteri (fun i (f: Ast.func) ->
       u32 (Int32.of_int (List.length import_funcs + i));
-      string f.it.name;
+      (match f.it with 
+        FuncSymbol f -> string f.name;
+      | FuncNoSymbol f -> string (Int32.to_string f.ftype.it) )
     ) m.it.funcs;
     patch_gap32 g (pos s - p);
 
@@ -1144,11 +1164,19 @@ let encode (m: Ast.module_) =
     u32 (Int32.of_int (List.length m.it.funcs));
     List.iteri(fun i (f: Ast.func) ->
       u32 (Int32.of_int (List.length import_funcs + i));
-      u32 (Int32.of_int (List.length f.it.locals));
-      List.iteri(fun i (name, _) ->
-        u32 (Int32.of_int i);
-        string name;
-      ) f.it.locals
+      match f.it with 
+        FuncSymbol f ->
+          u32 (Int32.of_int (List.length f.locals));
+          List.iteri(fun i (name, _) ->
+            u32 (Int32.of_int i);
+            string name;
+          ) f.locals
+      | FuncNoSymbol f ->
+        u32 (Int32.of_int (List.length f.locals));
+        List.iteri(fun i (_, _) ->
+          u32 (Int32.of_int i);
+          string (string_of_int i);
+        ) f.locals
     ) m.it.funcs;
     patch_gap32 g (pos s - p)
 
@@ -1276,10 +1304,14 @@ let encode (m: Ast.module_) =
     in
     let exists = (match sym.details with      
     | Function -> 
-      (if not (List.exists (fun (f:Ast.func) -> f.it.name = sym.name) m.it.funcs) then ( 
+      (if not (List.exists (fun (f:Ast.func) -> 
+        match f.it with 
+          FuncSymbol f when f.name = sym.name -> true
+        | _ -> false  
+        ) m.it.funcs) then ( 
         failwith ("BUG: symbol " ^ sym.name ^ " appears to refer to a nonexisting function, perhaps it should refer to an import instead?"));            
       );
-      (List.exists (fun (f:Ast.func) -> f.it.name = sym.name) m.it.funcs)
+      (List.exists (fun (f:Ast.func) -> match f.it with FuncSymbol f when f.name = sym.name -> true | _ -> false ) m.it.funcs)
     | Import _ -> false
     | Data _ -> (Linking.data_index m.it.datas sym.name) <> -1l && sym.name <> "__heap_base"
     | Global _ -> true

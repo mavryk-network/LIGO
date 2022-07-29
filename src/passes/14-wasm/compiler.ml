@@ -307,7 +307,7 @@ let rec toplevel_bindings ~raise :
           @ [
               {
                 it =
-                  {
+                  TypeSymbol {
                     tname = name ^ "_type";
                     tdetails = FuncType (type_arg, return_type);
                   };
@@ -315,7 +315,7 @@ let rec toplevel_bindings ~raise :
               };
             ];
         funcs =
-          w.funcs @ [{it = {name; ftype = name ^ "_type"; locals; body}; at}];
+          w.funcs @ [{it = FuncSymbol {name; ftype = name ^ "_type"; locals; body}; at}];
       }
     in
     toplevel_bindings ~raise e2 w
@@ -348,7 +348,7 @@ let rec toplevel_bindings ~raise :
           @ [
               {
                 it =
-                  {
+                  FuncSymbol {
                     name;
                     ftype = name ^ "_type";
                     locals = [("parameter", T.NumType I32Type); ("storage", T.NumType I32Type); ("entrypoint_tuple", T.NumType I32Type)];

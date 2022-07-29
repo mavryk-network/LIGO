@@ -26,7 +26,7 @@ let data ~offset ~init =
     at;
   }
 
-let type_ ~name ~typedef = {it = {tname = name; tdetails = typedef}; at}
+let type_ ~name ~typedef = {it = TypeSymbol {tname = name; tdetails = typedef}; at}
 
 let import ~item ~desc =
   {
