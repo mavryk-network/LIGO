@@ -4,6 +4,7 @@ open Simple_utils.Trace
 open Simple_utils.Option
 
 module Tezos_protocol = Tezos_protocol_013_PtJakart
+module Tezos_protocol_env = Tezos_protocol_environment_013_PtJakart
 module Tezos_raw_protocol = Tezos_raw_protocol_013_PtJakart
 
 
@@ -115,7 +116,7 @@ let add_ast_env ?(name = Ast_aggregated.ValueVar.fresh ()) env binder body =
   let open Ast_aggregated in
   let aux (let_binder , expr, no_mutation, inline) (e : expression) =
     if ValueVar.compare let_binder binder <> 0 && ValueVar.compare let_binder name <> 0 then
-      e_a_let_in {var=let_binder;ascr=None;attributes=Stage_common.Helpers.empty_attribute} expr e { inline ; no_mutation ; view = false ; public = false ; thunk = false ; hidden = false }
+      e_a_let_in {var=let_binder;ascr=None;attributes=Stage_common.Helpers.empty_attribute} expr e { inline ; no_mutation ; view = false ; public = false ; hidden = false }
     else
       e in
   let typed_exp' = List.fold_right ~f:aux ~init:body env in
@@ -148,7 +149,7 @@ let make_options ~raise ?param ctxt =
       payer = source ;
       self = source ;
       amount = Memory_proto_alpha.Protocol.Alpha_context.Tez.of_mutez_exn 100000000L ;
-      chain_id = Memory_proto_alpha.Protocol.Environment.Chain_id.zero;
+      chain_id = Tezos_protocol_env.Chain_id.zero;
       balance = Memory_proto_alpha.Protocol.Alpha_context.Tez.zero ;
       now = timestamp ;
       level ;
@@ -244,12 +245,17 @@ let rec val_to_ast ~raise ~loc : Ligo_interpreter.Types.value ->
     )
   )
   | V_Ct (C_address a) when is_t_address ty ->
-     let () = trace_option ~raise (Errors.generic_error loc (Format.asprintf "Expected address but got %a" Ast_aggregated.PP.type_expression ty))
+     let () = trace_option ~raise (Errors.generic_error loc (Format.asprintf "Expected address or typed address but got %a" Ast_aggregated.PP.type_expression ty))
                  (get_t_address ty) in
      let x = string_of_contract a in
      e_a_address x
+  | V_Ct (C_address a) when is_t_typed_address ty ->
+    let _ = trace_option ~raise (Errors.generic_error loc (Format.asprintf "Expected address or typed address but got %a" Ast_aggregated.PP.type_expression ty))
+                (get_t_typed_address ty) in
+    let x = string_of_contract a in
+    e_a_address x
   | V_Ct (C_address _) ->
-     raise.error @@ (Errors.generic_error loc (Format.asprintf "Expected address but got %a" Ast_aggregated.PP.type_expression ty))
+     raise.error @@ (Errors.generic_error loc (Format.asprintf "Expected address or typed address but got %a" Ast_aggregated.PP.type_expression ty))
   | V_Ct (C_contract c) when is_t_contract ty ->
      let ty = trace_option ~raise (Errors.generic_error loc (Format.asprintf "Expected contract but got %a" Ast_aggregated.PP.type_expression ty))
                  (get_t_contract ty) in
@@ -308,6 +314,23 @@ let rec val_to_ast ~raise ~loc : Ligo_interpreter.Types.value ->
   | V_Record map when is_t_record ty ->
      let map_ty = trace_option ~raise (Errors.generic_error loc (Format.asprintf "Expected record type but got %a" Ast_aggregated.PP.type_expression ty)) @@  get_t_record_opt ty in
      make_ast_record ~raise ~loc map_ty map
+  | V_Record map when Option.is_some @@ get_t_ticket ty ->
+    let ty = trace_option ~raise (Errors.generic_error loc "impossible") @@ get_t_ticket ty in
+    let rows = trace_option ~raise (Errors.generic_error loc "impossible") @@ get_t_record (Ast_aggregated.t_unforged_ticket ty) in
+    let map =
+      let get l map = trace_option ~raise (Errors.generic_error loc "bad unforged ticket") (LMap.find_opt l map) in
+      (*  at this point the record value is a nested pair (extracted from michelson), e.g. (KT1RYW6Zm24t3rSquhw1djfcgQeH9gBdsmiL , (0x05010000000474657374 , 10n)) *)
+      let ticketer = get (Label "0") map in
+      let map = match get (Label "1") map with V_Record map -> map | _ -> raise.error @@ Errors.generic_error loc "unforged ticket badly decompiled" in
+      let value = get (Label "0") map in
+      let amt = get (Label "1") map in
+      LMap.of_list [
+        (Label "ticketer", ticketer) ;
+        (Label "value", value) ;
+        (Label "amount", amt) ;
+      ]
+    in
+    make_ast_record ~raise ~loc rows map
   | V_Record _ ->
      raise.error @@ Errors.generic_error loc (Format.asprintf "Expected record type but got %a" Ast_aggregated.PP.type_expression ty)
   | V_List l ->
@@ -330,8 +353,6 @@ let rec val_to_ast ~raise ~loc : Ligo_interpreter.Types.value ->
      raise.error @@ Errors.generic_error loc "Cannot be abstracted: untyped-michelson-code"
   | V_Mutation _ ->
      raise.error @@ Errors.generic_error loc "Cannot be abstracted: mutation"
-  | V_Thunk { value ; _ } ->
-     value
   | V_Gen _ ->
      raise.error @@ Errors.generic_error loc "Cannot be abstracted: generator"
 
@@ -351,7 +372,7 @@ and make_ast_func ~raise ?name env arg body orig =
                       lambda } in
   typed_exp'
 
-and make_ast_record ~raise ~loc map_ty map =
+and make_ast_record ~raise ~loc (map_ty: Ast_aggregated.t_sum) map =
   let open Ligo_interpreter.Types in
   let kv_list = Ast_aggregated.Helpers.kv_list_of_t_record_or_tuple ~layout:map_ty.layout map_ty.content in
   let kv_list = List.map ~f:(fun (l, ty) -> let value = LMap.find l map in let ast = val_to_ast ~raise ~loc value ty.associated_type in (l, ast)) kv_list in
@@ -424,7 +445,7 @@ let run_michelson_func ~raise ~options ~loc (ctxt : Tezos_state.context) (code :
   | _ ->
      raise.error (Errors.generic_error Location.generated "Could not parse") in
   let options = make_options ~raise (Some ctxt) in
-  match Ligo_run.Of_michelson.run_expression ~raise ~options func func_ty with
+  match Ligo_run.Of_michelson.run_expression ~raise ~legacy:true ~options func func_ty with
   | Success (ty, value) ->
      Result.return @@ Michelson_to_value.decompile_to_untyped_value ~raise ~bigmaps:ctxt.transduced.bigmaps ty value
   | Fail f ->

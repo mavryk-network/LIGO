@@ -9,6 +9,7 @@ module LT = Ligo_interpreter.Types
 module LC = Ligo_interpreter.Combinators
 module Exc = Ligo_interpreter_exc
 module Tezos_protocol = Tezos_protocol_013_PtJakart
+module Tezos_protocol_env = Tezos_protocol_environment_013_PtJakart
 module Tezos_client = Tezos_client_013_PtJakart
 
 module Location = Simple_utils.Location
@@ -68,6 +69,7 @@ module Command = struct
     (* TODO : move them ou to here *)
     | Michelson_equal : Location.t * LT.value * LT.value -> bool t
     | Implicit_account : Location.t * LT.calltrace * Tezos_protocol.Protocol.Alpha_context.public_key_hash -> LT.value t
+    | Contract : Location.t * LT.calltrace * LT.mcontract * string option * Ast_aggregated.type_expression -> LT.value t
     | Pairing_check : (Bls12_381.G1.t * Bls12_381.G2.t) list -> LT.value t
     | Add_account : Location.t * LT.calltrace * string * Tezos_protocol.Protocol.Alpha_context.public_key -> unit t
     | New_account : unit -> LT.value t
@@ -159,7 +161,7 @@ module Command = struct
     )
     | State_error_to_value errs -> (
       let open Tezos_protocol.Protocol in
-      let open Environment in
+      let open Tezos_protocol_env in
       let fail_ctor arg = LC.v_ctor "Fail" arg in
       let fail_other () =
         let errs_as_str =
@@ -380,17 +382,26 @@ module Command = struct
       let v = LT.V_Map (List.map ~f:aux ctxt.transduced.last_originations) in
       (v,ctxt)
     | Implicit_account (loc, calltrace, kh) -> (
-      let address = Tezos_protocol.Protocol.Environment.Signature.Public_key_hash.to_b58check kh in
+      let address = Tezos_protocol_env.Signature.Public_key_hash.to_b58check kh in
       let address = Tezos_state.implicit_account ~raise ~loc ~calltrace address in
       let v = LT.V_Ct (LT.C_contract { address ; entrypoint = None }) in
       (v, ctxt)
+    )
+    | Contract (loc, _calltrace, addr, entrypoint, value_ty) -> (
+      let expr = match entrypoint with
+        | None -> Ast_aggregated.(e_a_contract_opt (e_a_address @@ Michelson_backend.string_of_contract addr) value_ty)
+        | Some entrypoint -> Ast_aggregated.(e_a_contract_entrypoint_opt (e_a_string (Ligo_string.standard entrypoint)) (e_a_address @@ Michelson_backend.string_of_contract addr) value_ty) in
+      let mich = Michelson_backend.compile_value ~raise ~options expr in
+      let (ret_co, ret_ty) = Michelson_backend.run_expression_unwrap ~raise ~ctxt ~loc mich in
+      let ret = Michelson_to_value.decompile_to_untyped_value ~raise ~bigmaps:ctxt.transduced.bigmaps ret_ty ret_co in
+      (ret, ctxt)
     )
     | Pairing_check l -> (
       let check = Bls12_381.Pairing.pairing_check l in
       (LC.v_bool check, ctxt)
     )
     | Add_account (loc, calltrace, sk, pk) -> (
-      let pkh = Tezos_protocol.Protocol.Environment.Signature.Public_key.hash pk in
+      let pkh = Tezos_protocol_env.Signature.Public_key.hash pk in
       Tezos_state.add_account ~raise ~loc ~calltrace sk pk pkh;
       ((), ctxt)
     )

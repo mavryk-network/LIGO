@@ -444,7 +444,8 @@ and type_expression ~raise ~options : context -> ?tv_opt:O.type_expression -> I.
       let _,infered_eqs = Helpers.first_success ~raise type_cases permutations in
       List.map ~f:(fun (p,p_ty,body,_) -> (p,p_ty,body)) @@ List.sort infered_eqs ~compare:(fun (_,_,_,a) (_,_,_,b) -> Int.compare a b)
     in
-    let () = Pattern_anomalies.check_anomalies ~raise ~loc:e.location eqs matchee'.type_expression in
+    let syntax = options.syntax_for_errors in
+    let () = Pattern_anomalies.check_anomalies ~raise ~syntax ~loc:e.location eqs matchee'.type_expression in
     match matchee.expression_content with
     | E_variable matcheevar ->
       let case_exp = Pattern_matching.compile_matching ~raise ~err_loc:e.location matcheevar eqs in
@@ -454,7 +455,7 @@ and type_expression ~raise ~options : context -> ?tv_opt:O.type_expression -> I.
       let matcheevar = I.ValueVar.fresh () in
       let case_exp = Pattern_matching.compile_matching ~raise ~err_loc:e.location matcheevar eqs in
       let case_exp = { case_exp with location = e.location } in
-      let x = O.E_let_in { let_binder = {var=matcheevar;ascr=None;attributes={const_or_var=Some `Var}} ; rhs = matchee' ; let_result = case_exp ; attr = {inline = false; no_mutation = false; public = true ; view= false ; thunk = false ; hidden = false } } in
+      let x = O.E_let_in { let_binder = {var=matcheevar;ascr=None;attributes={const_or_var=Some `Var}} ; rhs = matchee' ; let_result = case_exp ; attr = {inline = false; no_mutation = false; public = true ; view= false ; hidden = false } } in
       return x case_exp.type_expression
   )
   | E_let_in {let_binder = {var ; ascr ; attributes} ; rhs ; let_result; attr } ->
