@@ -15,7 +15,7 @@ let bytes_to_yojson b = `String (Bytes.to_string b)
 
 type layout =
   | L_comb
-  | L_tree [@@deriving hash]
+  | L_tree [@@deriving compare, hash]
 
 let hash_fold_bytes st b = Hash.fold_string st (Bytes.to_string b)
 let hash_fold_z st z = Hash.fold_int64 st (Z.to_int64 z)
@@ -225,7 +225,7 @@ type constant' =
   | C_POLYMORPHIC_SUB [@print "C_POLYMORPHIC_SUB"]
   | C_SUB_MUTEZ
   | C_OPTION_MAP
-[@@deriving enum, yojson, print_constant, only_interpreter_tags, read_constant ]
+[@@deriving enum, compare, yojson, print_constant, only_interpreter_tags, read_constant ]
 
 type deprecated = {
   name : string ;

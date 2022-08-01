@@ -4,15 +4,16 @@ module Location  = Simple_utils.Location
 module List      = Simple_utils.List
 module ValueVar  = Var.ValueVar
 module TypeVar   = Var.TypeVar
+module TermVar   = Var.TermVar
 module ModuleVar = Var.ModuleVar
 include Enums
 
 module SMap = Simple_utils.Map.Make(String)
 
 type location = Location.t
-type 'a location_wrap = 'a Location.wrap
+type 'a location_wrap = 'a Location.wrap [@@deriving compare]
 
-type attributes = string list
+type attributes = string list [@@deriving compare]
 
 type known_attributes = {
   inline: bool ;
@@ -26,11 +27,12 @@ type known_attributes = {
      set to true for standard libraries
   *)
   hidden: bool;
-} [@@deriving hash]
+} [@@deriving compare, hash]
 
-type expression_variable = ValueVar.t [@@deriving hash]
-type type_variable       = TypeVar.t [@@deriving hash]
-type module_variable     = ModuleVar.t [@@deriving hash]
+type expression_variable = ValueVar.t [@@deriving compare, hash]
+type term_variable       = TermVar.t [@@deriving compare, hash]
+type type_variable       = TypeVar.t [@@deriving compare, hash]
+type module_variable     = ModuleVar.t [@@deriving compare, hash]
 
 type kind = | Type
             | Singleton [@@deriving yojson,equal,compare,hash]
@@ -42,7 +44,7 @@ let compare_label (Label a) (Label b) = String.compare a b
 module LMap = Simple_utils.Map.MakeHashable(struct type t = label [@@deriving hash]
                                            let compare = compare_label
                                             end)
-type 'a label_map = 'a LMap.t [@@deriving hash]
+type 'a label_map = 'a LMap.t [@@deriving compare, hash]
 
 let const_name = function
   | Const      const     -> const
@@ -51,7 +53,7 @@ type 'ty_expr row_element_mini_c = {
   associated_type      : 'ty_expr ;
   michelson_annotation : string option [@hash.ignore] ;
   decl_pos : int [@hash.ignore] ;
-  } [@@deriving hash]
+  } [@@deriving compare, hash]
 
 type 'ty_exp type_app = {
   type_operator : type_variable ;
@@ -63,11 +65,12 @@ type 'ty_expr row_element = {
   attributes      : string list ;
   decl_pos        : int ;
   }
+[@@deriving compare]
 
 type 'a module_access = {
   module_path : module_variable list ;
   element     : 'a ;
-} [@@deriving hash]
+} [@@deriving compare, hash]
 
 (* Type level types *)
 type 'ty_exp abstraction = {
@@ -76,49 +79,61 @@ type 'ty_exp abstraction = {
   type_ : 'ty_exp ;
 } [@@deriving hash]
 
+
 type 'ty_exp rows = {
   fields     : 'ty_exp row_element label_map;
   attributes : string list ;
   }
+[@@deriving compare]
 
 type 'ty_exp arrow = {
   type1: 'ty_exp ;
   type2: 'ty_exp ;
-  } [@@deriving hash]
+  } [@@deriving compare, hash]
 
 (* Expression level types *)
 type binder_attributes = {
     const_or_var : [`Const | `Var] option;
-  } [@@deriving hash]
+  } [@@deriving compare, hash]
 
 type 'ty_exp binder = {
   var  : expression_variable ;
   ascr : 'ty_exp option;
   attributes : binder_attributes ;
-  } [@@deriving hash]
+  } [@@deriving compare, hash]
 
 
 type 'exp application = {
   lamb: 'exp ;
   args: 'exp ;
   }
+[@@deriving compare]
 
 type 'exp constant = {
   cons_name: constant' ; (* this is in enum *)
   arguments: 'exp list ;
   }
+[@@deriving compare]
+
+type ('exp, 'ty_exp) pi = {
+  binder: 'ty_exp binder ;
+  result: 'exp ;
+}
+[@@deriving compare]
 
 type ('exp,'ty_exp) lambda = {
   binder: 'ty_exp binder ;
   output_type : 'ty_exp option;
   result: 'exp ;
   }
+[@@deriving compare]
 
 type ('exp, 'ty_exp) recursive = {
   fun_name :  expression_variable ;
   fun_type : 'ty_exp ;
   lambda   : ('exp, 'ty_exp) lambda ;
   }
+[@@deriving compare]
 
 type ('exp, 'ty_exp) let_in = {
     let_binder: 'ty_exp binder ;
@@ -126,6 +141,7 @@ type ('exp, 'ty_exp) let_in = {
     let_result: 'exp ;
     attributes: attributes ;
   }
+[@@deriving compare]
 
 type ('exp, 'ty_exp) type_in = {
     type_binder: type_variable ;
@@ -137,8 +153,9 @@ type 'exp raw_code = {
   language : string ;
   code : 'exp ;
   }
+[@@deriving compare]
 
-type 'exp constructor = {constructor: label; element: 'exp}
+type 'exp constructor = {constructor: label; element: 'exp} [@@deriving compare]
 
 type 'exp access =
   | Access_tuple of z
@@ -148,12 +165,12 @@ type 'exp access =
 type 'exp accessor = {record: 'exp; path: 'exp access list}
 type 'exp update   = {record: 'exp; path: 'exp access list; update: 'exp}
 
-type 'exp record_accessor = {record: 'exp; path: label}
-type 'exp record_update   = {record: 'exp; path: label; update: 'exp}
+type 'exp record_accessor = {record: 'exp; path: label} [@@deriving compare]
+type 'exp record_update   = {record: 'exp; path: label; update: 'exp} [@@deriving compare]
 
 type ('exp) type_abs = {type_binder:type_variable;result:'exp}
 
-type ('exp,'ty_exp) ascription = {anno_expr: 'exp; type_annotation: 'ty_exp}
+type ('exp,'ty_exp) ascription = {anno_expr: 'exp; type_annotation: 'ty_exp} [@@deriving compare]
 
 type 'exp conditional = {
   condition   : 'exp ;
@@ -170,6 +187,7 @@ and ('exp,'ty_exp) assign = {
   binder      : 'ty_exp binder ;
   expression  : 'exp ;
   }
+[@@deriving compare]
 
 and 'exp for_ = {
   binder : expression_variable ;
@@ -197,7 +215,9 @@ and 'exp while_loop = {
   body : 'exp ;
   }
 
-type 'ty_exp list_pattern =
+type 'ty_exp pattern = 'ty_exp pattern_repr Location.wrap
+
+and 'ty_exp list_pattern =
   | Cons of 'ty_exp pattern * 'ty_exp pattern
   | List of 'ty_exp pattern list
 
@@ -208,20 +228,28 @@ and 'ty_exp pattern_repr =
   | P_variant of label * 'ty_exp pattern
   | P_tuple of 'ty_exp pattern list
   | P_record of label list * 'ty_exp pattern list
+[@@deriving compare]
 
-and 'ty_exp pattern = 'ty_exp pattern_repr Location.wrap
+
 
 type ('exp , 'ty_exp) match_case = {
   pattern : 'ty_exp pattern ;
   body : 'exp
 }
+[@@deriving compare]
 
 type ('exp , 'ty_exp) match_exp = {
   matchee : 'exp ;
   cases : ('exp , 'ty_exp) match_case list
 }
+[@@deriving compare]
 
 (*** Declarations language ***)
+
+
+type module_path_' = module_variable List.Ne.t 
+
+let compare_module_path_' = List.Ne.compare ~compare:compare_module_variable
 
 type ('ty_exp,'attr) declaration_type' = {
     type_binder : type_variable ;
@@ -258,8 +286,7 @@ and ('exp,'ty_exp,'attr_e,'attr_t,'attr_m) mod_in' = {
   rhs           : ('exp,'ty_exp,'attr_e,'attr_t,'attr_m) module_expr' ;
   let_result    : 'exp ;
 }
-
-and module_path_' = module_variable List.Ne.t
+[@@deriving compare]
 
 and ('exp,'ty_exp,'attr_e,'attr_t,'attr_m) module_expr_content' =
   | M_struct of ('exp,'ty_exp,'attr_e,'attr_t,'attr_m) declarations'

@@ -63,8 +63,8 @@ let is_virtual = function
 
 type 'a wrap = {
   wrap_content : 'a ;
-  location : t [@hash.ignore] ;
-} [@@deriving hash]
+  location : t [@hash.ignore] [@compare.ignore] ;
+} [@@deriving compare, hash]
 
 let wrap_to_yojson f {wrap_content;location} =
   `Assoc [("wrap_content", f wrap_content); ("location",to_yojson location)]
@@ -81,11 +81,6 @@ let wrap_of_yojson f = function
   | _ ->
      Utils.error_yojson_format "{wrap_content: 'a; location: location}"
 
-
-let compare_wrap ~compare:compare_content { wrap_content = wca ; location = la } { wrap_content = wcb ; location = lb } =
-  match compare_content wca wcb with
-  | 0 -> compare la lb
-  | c -> c
 
 let compare_content ~compare:compare_content wa wb =
   compare_content wa.wrap_content wb.wrap_content
