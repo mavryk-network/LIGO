@@ -17,44 +17,44 @@ let r it = {
 let () = 
   let m = r {
     types = [
-      r {
+      r (TypeSymbol {
         tname = "some_type";
         tdetails = FuncType ([], [])
-      };
-      r {
+      });
+      r (TypeSymbol {
         tname = "some_type2";
         tdetails = FuncType ([], [NumType I32Type])
-      };
+      });
       
     ];
     globals = [];
     tables = [];
     memories = [];
     funcs = [
-      r {
+      r (FuncSymbol {
         name = "hello_world";
         ftype = "some_type2";
         locals = [];
         body = [
           r (Const (r (I32 10l)))
         ]
-      };
-      r {
+      });
+      r (FuncSymbol {
         name = "entry";
         ftype = "some_type2";
         locals = [];
         body = [
           r (Call_symbol "hello_world")
         ]
-      };
-      r {
+      });
+      r (FuncSymbol {
         name = "_start";
         ftype = "some_type2";
         locals = [];
         body = [
           r (Call_symbol "entry");
         ]
-      }
+      })
     ];
     start = None;
     elems = [];

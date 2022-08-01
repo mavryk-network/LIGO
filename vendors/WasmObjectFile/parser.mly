@@ -201,11 +201,6 @@ let inline_type (c : context) ft at =
     ) c.types.list with
   | Some i -> Int32.of_int i @@ at
   | None -> anon_type c (TypeNoSymbol ft @@ at) @@ at
-  
-let inline_type_symbol (c : context) ft at = 
-  let ft = inline_type c ft at in
-  let type_symbol = (Lib.List32.nth c.types.list ft.it).it in 
-  type_symbol
 
 let inline_type_explicit (c : context) x ft at =
   if ft = FuncType ([], []) then

@@ -226,13 +226,14 @@ type vec_laneop = (vec_type, pack_size) memop * int
  
  type func = func' Source.phrase
  and func' =
- FuncSymbol of {
-   name  : symbol;
-   ftype : symbol;
-   locals : (symbol * value_type) list;
-   body : instr list;
- }
+ FuncSymbol of func_symbol
 | FuncNoSymbol of func_no_symbol
+and func_symbol = {
+  name  : symbol;
+  ftype : symbol;
+  locals : (symbol * value_type) list;
+  body : instr list;
+}
 and func_no_symbol = {
   ftype : var;
   locals : (symbol * value_type) list;

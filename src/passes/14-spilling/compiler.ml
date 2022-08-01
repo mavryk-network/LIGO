@@ -524,7 +524,7 @@ let rec compile_expression ~raise (ae:AST.expression) : expression =
   )
   | E_raw_code { language; code} ->
     (match language with 
-    | "michelson" ->
+    | "Michelson" ->
       let type_anno  = get_type code in
       let type_anno' = compile_type ~raise type_anno in
       let code = trace_option ~raise (corner_case ~loc:__LOC__ "could not get a string") @@ get_a_string code in
@@ -547,7 +547,13 @@ let rec compile_expression ~raise (ae:AST.expression) : expression =
           | _ ->
             raise.error (raw_michelson_must_be_seq ae.location code)
       )  
-    | "wasm" -> failwith "Hello wasm!"
+    | "Wasm" -> 
+      let type_anno  = get_type code in
+      let type_anno' = compile_type ~raise type_anno in
+      let code = trace_option ~raise (corner_case ~loc:__LOC__ "could not get a string") @@ get_a_string code in
+      let instructions = WasmObjectFile.Parse.string_to_instructions code () in
+      return ~tv:type_anno' @@ E_raw_wasm instructions 
+      (* failwith "Hello wasm!" *)
     | _ -> 
       raise.error (corner_case ~loc:__LOC__ "Language insert - backend mismatch only provide code insertion in the language you are compiling to")
     )

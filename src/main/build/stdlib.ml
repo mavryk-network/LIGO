@@ -1,4 +1,4 @@
-let get_lib : Environment.Protocols.t -> Syntax_types.t -> test_enabled:bool -> string = fun protocol stx ~test_enabled ->
+let get_lib : Environment.Protocols.t -> Syntax_types.t -> backend:string -> test_enabled:bool -> string = fun protocol stx ~backend ~test_enabled ->
   let def str = "#define " ^ str ^ "\n" in
   let test_module = if test_enabled then def "TEST_LIB" else "" in
   let func_type =
@@ -6,14 +6,19 @@ let get_lib : Environment.Protocols.t -> Syntax_types.t -> test_enabled:bool -> 
     | ( PascaLIGO | ReasonLIGO | JsLIGO) -> def "UNCURRY"
     | CameLIGO                             -> def "CURRY"
   in
+  let backend = def (String.uppercase backend) in
   let std = match protocol with
     | Environment.Protocols.Jakarta -> def "JAKARTA"
   in
   let lib = Ligo_lib.get () in
-  test_module ^ func_type ^ std ^ lib
+  test_module ^ backend ^ func_type ^ std ^ lib
 
 let stdlib ~options syntax =
-  let lib = get_lib Compiler_options.(options.middle_end.protocol_version) syntax ~test_enabled:Compiler_options.(options.middle_end.test) in
+  let backend = match options.Compiler_options.backend.backend with 
+    `Michelson -> "MICHELSON"
+  | `Wasm -> "WASM"
+  in
+  let lib = get_lib Compiler_options.(options.middle_end.protocol_version) syntax ~backend ~test_enabled:Compiler_options.(options.middle_end.test) in
   match Simple_utils.Trace.to_stdlib_result @@
           Ligo_compile.Utils.type_program_string ~options CameLIGO lib with
   | Ok (s,_w) -> s

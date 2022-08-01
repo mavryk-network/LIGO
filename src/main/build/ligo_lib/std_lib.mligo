@@ -46,7 +46,12 @@ module Tezos = struct
   let get_contract (type a) (a : address) : (a contract) = [%external ("CONTRACT", a)]
   let get_contract_opt (type a) (a : address) : (a contract) option = [%external ("CONTRACT_OPT", a)]
   let get_contract_with_error (type a) (a : address) (s : string) : a contract = [%external ("CONTRACT_WITH_ERROR", a, s)]
+#if MICHELSON
   let create_ticket (type a) (v : a) (n : nat) : a ticket = [%Michelson ({| { UNPAIR ; TICKET } |} : a * nat -> a ticket)] (v, n)
+#endif
+#if WASM
+  let create_ticket (type a) (v : a) (n : nat) : a ticket = [%Wasm ({| local.get 0 local.get 1 |} : a * nat -> a ticket)] (v, n)
+#endif
   let transaction (type a) (a : a) (mu : tez) (c : a contract) : operation = [%external ("CALL", a, mu, c)]
   let open_chest (ck : chest_key) (c : chest) (n : nat) : chest_opening_result = [%external ("OPEN_CHEST", ck, c, n)]
   let call_view (type a b) (s : string) (x : a) (a : address)  : b option = [%external ("VIEW", s, x, a)]

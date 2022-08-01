@@ -198,28 +198,20 @@ let rec expression ~raise :
     failwith "E_constant (C_LIST_ITER) not supported"
   | E_constant {cons_name; arguments} -> failwith "E_constant (..) not supported"
   | E_application _ ->
-    let rec aux result expr =
+    let rec aux w l (result: A.instr list) (expr: I.expression) =
       match expr.I.content with
-      | E_application (func, e) -> aux (e :: result) func
+      | E_application (func, e) -> 
+        let w, l, e = expression ~raise w l e in 
+        aux w l (result @ e) func
       | E_variable v ->
         let name = var_to_string v in
-        (name, List.rev result)
-      | E_raw_wasm _code -> failwith "E_application (E_raw_wasm) not supported"
-      | E_constant _ -> failwith "e_constant x1"
-      | E_closure _ -> failwith "e_closure x1"
-      | E_literal _ -> failwith "e_literal x1"
-      | E_raw_michelson _ -> failwith "e_raw_michelson not supported x1"
+        (w, l, name, result)
+      | E_raw_wasm code -> 
+        (w, l, "", result @ code)
       | _ -> failwith "E_application (..) not supported"
     in
-    let name, args = aux [] e in
-    let w, l, args =
-      List.fold
-        ~f:(fun (w, l, a) f ->
-          let w, l, c = expression ~raise w l f in
-          (w, l, a @ c))
-        ~init:(w, l, []) args
-    in
-    (w, l, args @ [call_s name at])
+    let w, l, name, args = aux w l [] e in
+    (w, l, args  @ [call_s name at])
   | E_variable name -> (
     let name = var_to_string name in
     match List.find ~f:(fun (n, _) -> String.equal n name) l with

@@ -246,7 +246,7 @@ let encode (m: Ast.module_) =
     | Call_symbol symbol -> 
       op 0x10; 
       let p = pos s in
-      let import_funcs = List.filter (fun i -> match i.it.idesc.it with FuncImport _ -> true | _ -> false) m.it.imports in
+      let import_funcs = List.filter (fun i -> match i.it.idesc.it with FuncImport _ -> true | FuncImport_symbol _ -> true | _ -> false) m.it.imports in
       let index = Linking.func_index m.it.funcs import_funcs symbol in
       code_relocations := !code_relocations @ [R_WASM_FUNCTION_INDEX_LEB (Int32.of_int p, symbol)];          
       reloc_index index
@@ -836,7 +836,7 @@ let encode (m: Ast.module_) =
       let p = pos s in
       (* let _, index = Linking.find_symbol_index m.it.symbols (fun s -> match s.it.details with Function when s.it.name = symbol -> true | _ -> false) symbol in *)
       code_relocations := !code_relocations @ [R_WASM_TABLE_INDEX_SLEB (Int32.of_int p, symbol)];
-      let import_funcs = List.filter (fun i -> match i.it.idesc.it with FuncImport _ -> true | _ -> false) m.it.imports in
+      let import_funcs = List.filter (fun i -> match i.it.idesc.it with FuncImport _ -> true | FuncImport_symbol _ -> true | _ -> false) m.it.imports in
       vs32_fixed (Linking.func_index m.it.funcs import_funcs symbol)
     | DataSymbol symbol ->
       op 0x41;
@@ -848,7 +848,7 @@ let encode (m: Ast.module_) =
           vs32_fixed offset.it
       | Function ->
           code_relocations := !code_relocations @ [R_WASM_TABLE_INDEX_SLEB (Int32.of_int p, symbol)];
-          let import_funcs = List.filter (fun i -> match i.it.idesc.it with FuncImport _ -> true | _ -> false) m.it.imports in
+          let import_funcs = List.filter (fun i -> match i.it.idesc.it with FuncImport _ -> true | FuncImport_symbol _ -> true | _ -> false) m.it.imports in
           vs32_fixed (Linking.func_index m.it.funcs import_funcs symbol)
       | _ -> ()
 
@@ -1077,7 +1077,7 @@ let encode (m: Ast.module_) =
           | Function
           | Import _ when s.it.name = symbol ->
           found := true;
-          let import_funcs = List.filter (fun i -> match i.it.idesc.it with FuncImport _ -> true | _ -> false) m.it.imports in
+          let import_funcs = List.filter (fun i -> match i.it.idesc.it with FuncImport _ -> true | FuncImport_symbol _ -> true | _ -> false) m.it.imports in
           let symbol_index = Linking.func_index m.it.funcs import_funcs symbol in
           data_relocations := !data_relocations @ [R_WASM_TABLE_INDEX_I32 (Int32.of_int p, symbol)]; 
           word32 symbol_index
@@ -1090,7 +1090,7 @@ let encode (m: Ast.module_) =
         )
       | FunctionLoc symbol -> 
         let p = pos s in
-        let import_funcs = List.filter (fun i -> match i.it.idesc.it with FuncImport _ -> true | _ -> false) m.it.imports in
+        let import_funcs = List.filter (fun i -> match i.it.idesc.it with FuncImport _ -> true | FuncImport_symbol _ -> true | _ -> false) m.it.imports in
         let symbol_index = Linking.func_index m.it.funcs import_funcs symbol in
         data_relocations := !data_relocations @ [R_WASM_TABLE_INDEX_I32 (Int32.of_int p, symbol)];
         word32 symbol_index        
@@ -1325,7 +1325,7 @@ let encode (m: Ast.module_) =
     | Global _ -> flags := Int32.logor !flags 4l 
     | _ -> ());
     u32 !flags;  
-    let import_funcs = List.filter (fun i -> match i.it.idesc.it with FuncImport _ -> true | _ -> false) m.it.imports in
+    let import_funcs = List.filter (fun i -> match i.it.idesc.it with FuncImport _ -> true | FuncImport_symbol _ -> true | _ -> false) m.it.imports in
     (match sym.details with
     | Global f ->         
       u32 f.index.it;
