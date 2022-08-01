@@ -184,7 +184,7 @@ let build_contract ~raise : options:Compiler_options.t -> string -> Source_input
     Ligo_compile.Of_mini_c.compile_contract ~raise ~options mini_c
 
 
-let build_wasm_code ~raise : options:Compiler_options.t -> string -> file_name -> unit =
+let build_wasm_code ~raise : options:Compiler_options.t -> string -> Source_input.file_name -> unit =
   fun ~options entry_point file_name ->
     let entry_point_orig = entry_point in
     let entry_point = Ast_typed.ValueVar.of_input_var entry_point in

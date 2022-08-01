@@ -212,9 +212,7 @@ let rec lift : env -> expression -> env * expression =
   | E_let_in
       ( ({content = E_closure _} as c),
         inline,
-        thunk,
         ((var_name, type_expression), e2) ) ->
-    print_endline "wait...";
     let env2, c =
       lift
         {
@@ -301,7 +299,7 @@ let rec lift : env -> expression -> env * expression =
     let type_expression = export.type_expression in
     let export e =
       {
-        content = E_let_in (export, inline, thunk, ((v, type_expression), e));
+        content = E_let_in (export, inline, ((v, type_expression), e));
         type_expression;
         location = c.location;
       }
@@ -317,7 +315,7 @@ let rec lift : env -> expression -> env * expression =
     in
     let env, e2 = lift env e2 in
     (env, e2)
-  | E_let_in (e1, inline, thunk, ((var_name, type_expression), e2)) ->
+  | E_let_in (e1, inline, ((var_name, type_expression), e2)) ->
     let env =
       {env with variables = (var_name, type_expression) :: env.variables}
     in
@@ -326,7 +324,7 @@ let rec lift : env -> expression -> env * expression =
     ( env,
       {
         e with
-        content = E_let_in (e1, inline, thunk, ((var_name, type_expression), e2));
+        content = E_let_in (e1, inline, ((var_name, type_expression), e2));
       } )
   | E_tuple l ->
     let env, l =
@@ -367,7 +365,6 @@ let rec toplevel_inner : env -> expression -> expression =
   | E_let_in
       ( ({content = E_closure {binder; body}; _} as e1),
         inline,
-        thunk,
         ((var_name, type_expression), e2) ) ->
     let env, body =
       lift {empty_env with functions = var_name :: env.functions} body
@@ -381,19 +378,16 @@ let rec toplevel_inner : env -> expression -> expression =
             E_let_in
               ( {e1 with content = E_closure {binder; body}},
                 inline,
-                thunk,
                 ((var_name, type_expression), toplevel_inner env e2) );
         }
       env.exported_funcs
-  | E_let_in (e1, inline, thunk, ((var_name, type_expression), e2)) ->
-    print_endline ("e_let_in:" ^ var_to_string var_name);
+  | E_let_in (e1, inline, ((var_name, type_expression), e2)) ->
     {
       e with
       content =
         E_let_in
           ( e1,
             inline,
-            thunk,
             ((var_name, type_expression), toplevel_inner env e2) );
     }
   | _ -> e

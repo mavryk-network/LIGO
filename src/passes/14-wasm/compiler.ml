@@ -227,10 +227,9 @@ let rec expression ~raise :
   | E_let_in
       ( {content = E_closure {binder; body}},
         _inline,
-        _thunk,
         ((name, _type), e2) ) ->
     failwith "should not happen..."
-  | E_let_in (e1, _inline, _thunk, ((name, typex), e2)) ->
+  | E_let_in (e1, _inline, ((name, typex), e2)) ->
     let name = var_to_string name in
     let w, l, e1 = expression ~raise w l e1 in
     let l = l @ [(name, T.NumType I32Type)] in
@@ -276,7 +275,7 @@ let rec toplevel_bindings ~raise :
  fun e w ->
   let at = location_to_region e.location in
   match e.content with
-  | E_let_in ({content = E_closure c; _}, _inline, _thunk, ((name, type_), e2))
+  | E_let_in ({content = E_closure c; _}, _inline, ((name, type_), e2))
     ->
     let name = var_to_string name in
     let arguments, body = func c in
@@ -314,7 +313,6 @@ let rec toplevel_bindings ~raise :
   | E_let_in
       ( {content = E_literal (Literal_int z); _},
         _inline,
-        _thunk,
         ((name, _type), e2) ) ->
     (* we convert these to in memory values *)
     let name = var_to_string name in
