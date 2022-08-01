@@ -3,71 +3,70 @@ module Ligo_string = Simple_utils.Ligo_string
 
 include Stage_common.Types
 
-type sugar_type_expression_option = Ast_sugar.type_expression option
-type sugar_expression_option = Ast_sugar.expression option
 
-type string_option = string option
+type sugar = 
+  | Type_expr of Ast_sugar.type_expression
+  | Expr of Ast_sugar.expression
 
-type type_attribute = { public: bool ; hidden : bool }
+type sugar_option = sugar option 
+
+type string_option = string option [@@deriving compare]
+
+type type_attribute = { public: bool ; hidden : bool } 
 and module_attribute = type_attribute
 
-and module_              = (expression , ty_expr , known_attributes , type_attribute , module_attribute) declarations'
-and declaration          = (expression , ty_expr , known_attributes , type_attribute , module_attribute) declaration'
-and declaration_content  = (expression , ty_expr , known_attributes , type_attribute , module_attribute) declaration_content'
-and declaration_module   = (expression , ty_expr , known_attributes , type_attribute , module_attribute) declaration_module'
-and declaration_constant = (expression , ty_expr , known_attributes) declaration_constant'
-and declaration_type     = (ty_expr , type_attribute) declaration_type'
+and term_content = 
+  | T_variable of term_variable
+  | T_literal of literal
+  | T_constant of term constant
+  | T_application of term application
+  | T_lambda of (term, ty_expr) lambda
+  | T_recursive of (term, ty_expr) recursive
+  | T_let_in of let_in
+  | T_mod_in of mod_in
+  | T_module_accessor of term module_access
+  | T_raw_code of term raw_code
+  | T_constructor of term constructor
+  | T_matching of matching
+  | T_record of term_label_map
+  | T_record_accessor of term record_accessor
+  | T_record_update of term record_update
+  | T_ascription of (term, ty_expr) ascription
+  | T_assign of (term, ty_expr) assign
+  | T_sum of rows
+  | T_prod of rows
+  | T_arrow of term arrow
+  | T_type
+  | T_pi of (term, ty_expr) pi
+[@@deriving compare]
 
-and type_content =
-  | T_variable        of type_variable
-  | T_sum             of rows
-  | T_record          of rows
-  | T_arrow           of ty_expr arrow
-  | T_app             of ty_expr type_app
-  | T_module_accessor of type_variable module_access
-  | T_singleton       of literal
-  | T_abstraction     of ty_expr abstraction
-  | T_for_all         of ty_expr abstraction
+and term_label_map = term label_map
 
 and rows = { fields : row_element label_map ; layout : layout option }
 
-and row_element = ty_expr row_element_mini_c
+and row_element = term row_element_mini_c
 
-and type_expression = {
-  type_content  : type_content ;
-  sugar    : sugar_type_expression_option ;
-  location : location ;
-  }
-and ty_expr = type_expression
+and matching = (term, term) match_exp [@@deriving compare]
 
-and expression = {
-  expression_content  : expression_content ;
-  sugar    : sugar_expression_option ;
-  location : location ;
+and term = 
+  { term_content : term_content;
+    sugar : sugar_option [@compare.ignore];
+    location : location [@compare.ignore];
   }
+
+and type_content = term_content
+  
+and type_expression = term
+
+and ty_expr = term
+
+and expression = term
+
 and expr = expression
 
 and expression_label_map = expression label_map
-and expression_content =
-  | E_literal of literal
-  | E_constant of expr constant
-  | E_variable of expression_variable
-  | E_application of expr application
-  | E_lambda    of (expr, ty_expr) lambda
-  | E_type_abstraction of expr type_abs
-  | E_recursive of (expr, ty_expr) recursive
-  | E_let_in    of let_in
-  | E_type_in of (expr, ty_expr) type_in
-  | E_mod_in  of mod_in
-  | E_raw_code of expr raw_code
-  | E_constructor of expr constructor
-  | E_matching of matching_expr
-  | E_record of expression_label_map
-  | E_record_accessor of expr record_accessor
-  | E_record_update   of expr record_update
-  | E_ascription      of (expr,ty_expr) ascription
-  | E_module_accessor of expression_variable module_access
-  | E_assign   of (expr,ty_expr) assign
+
+and expression_content = term
 
 and type_expression_option = type_expression option
 
@@ -81,6 +80,13 @@ and let_in = {
     attr: known_attributes ;
   }
 
-and matching_expr = (expr, ty_expr) match_exp
+
+type module_              = (expression , ty_expr , known_attributes , type_attribute , module_attribute) declarations'
+and declaration          = (expression , ty_expr , known_attributes , type_attribute , module_attribute) declaration'
+and declaration_content  = (expression , ty_expr , known_attributes , type_attribute , module_attribute) declaration_content'
+and declaration_module   = (expression , ty_expr , known_attributes , type_attribute , module_attribute) declaration_module'
+and declaration_constant = (expression , ty_expr , known_attributes) declaration_constant'
+and declaration_type     = (ty_expr , type_attribute) declaration_type'
+
 
 type program = module_
