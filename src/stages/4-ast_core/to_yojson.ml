@@ -26,14 +26,17 @@ let layout = function
   | L_tree -> `List [ `String "L_tree"; `Null ]
 
 
-let rec type_expression {type_content=tc;sugar;location} =
-  `Assoc [
+let rec type_expression _ =
+  failwith "TODO: Re-implement with ppx"
+  (* `Assoc [
     ("type_content", type_content tc);
     ("sugar", option Ast_sugar.Yojson.type_expression sugar);
     ("location", Location.to_yojson location);
-  ]
+  ] *)
 
-and type_content = function
+and type_content = 
+  failwith "TODO: Re-implement with ppx"
+  (* function
   | T_variable        t -> `List [ `String "t_variable"; TypeVar.to_yojson t]
   | T_sum             t -> `List [ `String "t_sum"; rows t]
   | T_record          t -> `List [ `String "t_record"; rows t]
@@ -42,20 +45,23 @@ and type_content = function
   | T_module_accessor t -> `List [ `String "t_module_accessor"; module_access TypeVar.to_yojson t]
   | T_singleton       t -> `List [ `String "t_singleton" ; literal t ]
   | T_abstraction     t -> `List [ `String "t_abstraction" ; for_all type_expression t ]
-  | T_for_all         t -> `List [ `String "t_for_all" ; for_all type_expression t ]
+  | T_for_all         t -> `List [ `String "t_for_all" ; for_all type_expression t ] *)
 
 
-and rows {fields; layout = l } =
-  `Assoc [
+and rows _ =
+  failwith "TODO: Re-implement with ppx"
+  (* `Assoc [
     ("content", label_map row_element fields);
     ("layout", option layout l);
-  ]
-and row_element {associated_type; michelson_annotation; decl_pos} =
-  `Assoc [
+  ] *)
+
+and row_element _ =
+  failwith "TODO: Re-implement with ppx"
+  (* `Assoc [
     ("associated_type", type_expression associated_type);
     ("michelson_annotation", option (fun s -> `String s) michelson_annotation);
     ("decl_pos", `Int decl_pos);
-  ]
+  ] *)
 
 and arrow {type1;type2} =
   `Assoc [
@@ -63,14 +69,17 @@ and arrow {type1;type2} =
     ("type2", type_expression type2);
   ]
 
-let rec expression {expression_content=ec;location;sugar} =
-  `Assoc [
+let rec expression _ =
+  failwith "TODO: Re-implement with ppx"
+  (* `Assoc [
     ("expression_content", expression_content ec);
     ("location", Location.to_yojson location);
     ("core", option Ast_sugar.Yojson.expression sugar);
-  ]
+  ] *)
 
-and expression_content = function
+and expression_content _ = 
+  failwith "TODO: Re-implement with ppx"
+(* function
   (* Base *)
   | E_literal     e -> `List [ `String "E_literal"; Stage_common.To_yojson.literal e ]
   | E_constant    e -> `List [ `String "E_constant"; constant e ]
@@ -92,7 +101,7 @@ and expression_content = function
   | E_record_update   e -> `List [ `String "E_record_update"; record_update e ]
   | E_module_accessor e -> `List [ `String "E_module_accessor"; module_access ValueVar.to_yojson e]
   | E_ascription      e -> `List [ `String "E_module_accessor"; ascription expression type_expression e]
-  | E_assign          e -> `List [ `String "E_assign";   assign expression type_expression e ]
+  | E_assign          e -> `List [ `String "E_assign";   assign expression type_expression e ] *)
 
 and constant {cons_name;arguments} =
   `Assoc [
@@ -145,50 +154,56 @@ and known_attribute {inline;no_mutation;public;view;hidden} =
     ("hidden", `Bool hidden);
   ]
 
-and type_attribute ({public ; hidden}: type_attribute) =
-  `Assoc [
+and type_attribute _ =
+  failwith "TODO: Re-implement with ppx"
+  (* `Assoc [
     ("public", `Bool public);
     ("hidden", `Bool hidden);
-  ]
+  ] *)
 
-and module_attribute {public ; hidden} =
-  `Assoc [
+and module_attribute _ =
+  failwith "TODO: Re-implement with ppx"
+  (* `Assoc [
     ("public", `Bool public);
     ("hidden", `Bool hidden);
-  ]
+  ] *)
 
 
 and mod_in m =
   Stage_common.To_yojson.mod_in expression type_expression known_attribute type_attribute module_attribute m
 
-and raw_code {language;code} =
-  `Assoc [
+and raw_code _ =
+  failwith "TODO: R"
+  (* `Assoc [
     ("language", `String language);
     ("code", expression code);
-  ]
+  ] *)
 
-and constructor expression {constructor;element} =
-  `Assoc [
+and constructor _ =
+  failwith "TODO: Re-implement with ppx"
+  (* `Assoc [
     ("constructor", label constructor);
     ("element", expression element);
-  ]
+  ] *)
 
 and matching x = match_exp expression type_expression x
 
 and record r = label_map expression r
 
-and record_accessor {record; path} =
-  `Assoc [
+and record_accessor _ =
+  failwith "TODO: Re-implement with ppx"
+  (* `Assoc [
     ("record", expression record);
     ("path", label path);
-  ]
+  ] *)
 
-and record_update {record; path; update} =
-  `Assoc [
+and record_update _ =
+  failwith "TODO: Re-implement with ppx"
+  (* `Assoc [
     ("record", expression record);
     ("path", label path);
     ("update", expression update);
-  ]
+  ] *)
 
 
 and declaration_type x =

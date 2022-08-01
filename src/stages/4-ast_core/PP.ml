@@ -1,12 +1,13 @@
 [@@@coverage exclude_file]
 module Int64 = Caml.Int64
 open Types
+(* 
 open Format
 open Simple_utils.PP_helpers
-include Stage_common.PP
+include Stage_common.PP *)
 
 type 'a pretty_printer = Format.formatter -> 'a -> unit
-
+(* 
 let lmap_sep value sep ppf m =
   let lst = List.sort ~compare:(fun (Label a,_) (Label b,_) -> String.compare a b) m in
   let new_pp ppf (k, v) = fprintf ppf "@[<h>%a -> %a@]" label k value v in
@@ -141,6 +142,8 @@ and expression_content ppf (ec : expression_content) =
   | E_raw_code r -> raw_code expression ppf r
   | E_ascription a -> ascription expression type_expression ppf a
   | E_module_accessor ma -> module_access expression_variable ppf ma
-  | E_assign a -> assign expression type_expression ppf a
+  | E_assign a -> assign expression type_expression ppf a *)
 
-let module_ ppf (p : module_) = declarations expression type_expression e_attributes t_attributes m_attributes ppf p
+let module_ _ppf (_p : module_) = 
+  failwith "TODO: later"
+  (* declarations expression type_expression e_attributes t_attributes m_attributes ppf p *)
