@@ -39,3 +39,9 @@ end
 module ModuleVar : sig
    include VAR
 end
+
+module TermVar : sig
+   include VAR with type t = ValueVar.t
+
+   val of_type_var : TypeVar.t -> t
+end
