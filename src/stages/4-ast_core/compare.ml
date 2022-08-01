@@ -1,4 +1,4 @@
-open Types
+(* open Types
 open Compare_enum
 
 type 'a comparator = 'a -> 'a -> int
@@ -31,35 +31,61 @@ let layout_tag = function
 
 let layout a b = Int.compare (layout_tag a) (layout_tag b)
 
-let rec type_expression_tag ty_cont =
+let rec term_expression_tag ty_cont =
   match ty_cont with
-    T_variable        _ -> 1
-  | T_sum             _ -> 2
-  | T_record          _ -> 3
-  | T_arrow           _ -> 4
-  | T_app             _ -> 5
-  | T_module_accessor _ -> 6
-  | T_singleton       _ -> 7
-  | T_abstraction     _ -> 8
-  | T_for_all         _ -> 8
+  | T_variable _ -> 1
+  | T_literal _ -> 2
+  | T_constant _ -> 3
+  | T_application _ -> 4
+  | T_lambda _ -> 5
+  | T_recursive _ -> 6
+  | T_let_in _ -> 7
+  | T_mod_in _ -> 8
+  | T_module_accessor _ -> 9
+  | T_raw_code _ -> 10
+  | T_constructor _ -> 11
+  | T_matching _ -> 12
+  | T_record _ -> 13
+  | T_record_accessor _ -> 14
+  | T_record_update _ -> 15
+  | T_ascription _ -> 16
+  | T_assign _ -> 17
+  | T_sum _ -> 18
+  | T_prod _ -> 19
+  | T_arrow _ -> 20
+  | T_type -> 21
+  | T_pi _ -> 22
 
-and type_expression a b =
-  type_content a.type_content b.type_content
+and term a b =
+  term_content a.term_content b.term_content
 
-and type_content a b =
+and term_content a b =
   match a, b with
-    T_variable a, T_variable b -> type_variable a b
+  | T_variable a, T_variable b -> term_variable a b
+  | T_literal a, T_literal b -> literal a b
+  | T_constant a, T_constant b -> constant a b
+  | T_application a, T_application b -> application a b
+  | T_lambda a, T_lambda b -> lambda a b
+  | T_recursive a, T_recursive b -> recursive a b
+  | T_let_in a, T_let_in b -> let_in a b
+  | T_mod_in a, T_mod_in b -> mod_in a b
+  | T_module_accessor a, T_module_accessor b -> module_access a b
+  | T_raw_code a, T_raw_code b -> raw_code a b
+  | T_constructor a, T_constructor b -> constructor a b
+  | T_matching a, T_matching b -> matching a b
+  | T_record a, T_record b -> term_label_map a b
+  | T_record_accessor a, T_record_accessor b -> record_accessor a b 
+  | T_record_update a, T_record_update b -> record_update a b
+  | T_ascription a, T_ascription b -> ascription a b
+  | T_assign a, T_assign b -> assign a b
   | T_sum      a, T_sum      b -> rows a b
-  | T_record   a, T_record   b -> rows a b
-  | T_arrow    a, T_arrow    b -> arrow a b
-  | T_app      a, T_app      b -> app a b
+  | T_prod a, T_prod   b -> rows a b
+  | T_arrow a, T_arrow    b -> arrow a b
   | T_module_accessor a, T_module_accessor b -> module_access type_variable a b
-  | T_singleton a , T_singleton b -> literal a b
-  | T_abstraction a , T_abstraction b -> for_all a b
-  | T_for_all a , T_for_all b -> for_all a b
-  | (T_variable _| T_sum _| T_record _| T_arrow _ | T_app _ | T_module_accessor _ | T_singleton _ | T_abstraction _| T_for_all _),
-    (T_variable _| T_sum _| T_record _| T_arrow _ | T_app _ | T_module_accessor _ | T_singleton _ | T_abstraction _| T_for_all _) ->
-    Int.compare (type_expression_tag a) (type_expression_tag b)
+  | T_type, T_type -> 0
+  | T_pi a, T_pi b -> pi a b
+  | a, b ->
+    Int.compare (term_expression_tag a) (term_expression_tag b)
 
 
 and rows {fields=ca; layout=la} {fields=cb; layout=lb} =
@@ -86,4 +112,4 @@ and app {type_operator=ta;arguments=aa} {type_operator=tb;arguments=ab} =
 and for_all {ty_binder = ba ; kind = _ ; type_ = ta } {ty_binder = bb ; kind = _ ; type_ = tb } =
   cmp2
     type_expression ta tb
-    type_variable ba bb
+    type_variable ba bb *)
