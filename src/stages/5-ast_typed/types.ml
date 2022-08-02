@@ -19,8 +19,8 @@ type value_content =
 
 and value = 
   { value_content : value_content 
-  ; meta : meta [@hash.ignore]
-  ; location : location [@hash.ignore] 
+  ; meta : meta [@hash.ignore] [@compare.ignore]
+  ; location : location [@hash.ignore] [@compare.ignore]
   }
 
 and type_expression = value
@@ -29,7 +29,7 @@ and ty_expr = type_expression
 and term = 
   { term_content : term_content
   ; type_expression : type_expression
-  ; location : location
+  ; location : location [@compare.ignore]
   }
 
 and term_content = 
@@ -55,6 +55,7 @@ and term_content =
   | T_arrow of term arrow
   | T_type
   | T_pi of (term, ty_expr) pi
+[@@deriving hash, compare]
 
 and expression = term
 

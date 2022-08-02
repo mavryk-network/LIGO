@@ -11,7 +11,7 @@ include Enums
 module SMap = Simple_utils.Map.Make(String)
 
 type location = Location.t
-type 'a location_wrap = 'a Location.wrap [@@deriving compare]
+type 'a location_wrap = 'a Location.wrap [@@deriving hash, compare]
 
 type attributes = string list [@@deriving compare]
 
@@ -107,19 +107,19 @@ type 'exp application = {
   lamb: 'exp ;
   args: 'exp ;
   }
-[@@deriving compare]
+[@@deriving hash, compare]
 
 type 'exp constant = {
   cons_name: constant' ; (* this is in enum *)
   arguments: 'exp list ;
   }
-[@@deriving compare]
+[@@deriving hash, compare]
 
 type ('exp, 'ty_exp) pi = {
   binder: 'ty_exp binder ;
   result: 'exp ;
 }
-[@@deriving compare]
+[@@deriving hash, compare]
 
 type ('exp,'ty_exp) lambda = {
   binder: 'ty_exp binder ;
@@ -155,7 +155,7 @@ type 'exp raw_code = {
   }
 [@@deriving compare]
 
-type 'exp constructor = {constructor: label; element: 'exp} [@@deriving compare]
+type 'exp constructor = {constructor: label; element: 'exp} [@@deriving hash, compare]
 
 type 'exp access =
   | Access_tuple of z
@@ -165,12 +165,12 @@ type 'exp access =
 type 'exp accessor = {record: 'exp; path: 'exp access list}
 type 'exp update   = {record: 'exp; path: 'exp access list; update: 'exp}
 
-type 'exp record_accessor = {record: 'exp; path: label} [@@deriving compare]
-type 'exp record_update   = {record: 'exp; path: label; update: 'exp} [@@deriving compare]
+type 'exp record_accessor = {record: 'exp; path: label} [@@deriving hash, compare]
+type 'exp record_update   = {record: 'exp; path: label; update: 'exp} [@@deriving hash, compare]
 
 type ('exp) type_abs = {type_binder:type_variable;result:'exp}
 
-type ('exp,'ty_exp) ascription = {anno_expr: 'exp; type_annotation: 'ty_exp} [@@deriving compare]
+type ('exp,'ty_exp) ascription = {anno_expr: 'exp; type_annotation: 'ty_exp} [@@deriving hash, compare]
 
 type 'exp conditional = {
   condition   : 'exp ;
@@ -187,7 +187,7 @@ and ('exp,'ty_exp) assign = {
   binder      : 'ty_exp binder ;
   expression  : 'exp ;
   }
-[@@deriving compare]
+[@@deriving hash, compare]
 
 and 'exp for_ = {
   binder : expression_variable ;
@@ -247,7 +247,7 @@ type ('exp , 'ty_exp) match_exp = {
 (*** Declarations language ***)
 
 
-type module_path_' = module_variable List.Ne.t 
+type module_path_' = module_variable List.Ne.t [@@deriving hash]
 
 let compare_module_path_' = List.Ne.compare ~compare:compare_module_variable
 
@@ -286,7 +286,7 @@ and ('exp,'ty_exp,'attr_e,'attr_t,'attr_m) mod_in' = {
   rhs           : ('exp,'ty_exp,'attr_e,'attr_t,'attr_m) module_expr' ;
   let_result    : 'exp ;
 }
-[@@deriving compare]
+[@@deriving hash, compare]
 
 and ('exp,'ty_exp,'attr_e,'attr_t,'attr_m) module_expr_content' =
   | M_struct of ('exp,'ty_exp,'attr_e,'attr_t,'attr_m) declarations'

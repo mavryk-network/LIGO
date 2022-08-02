@@ -1,4 +1,4 @@
-module Location    = Simple_utils.Location
+(* module Location    = Simple_utils.Location
 module Var         = Simple_utils.Var
 module List        = Simple_utils.List
 module Ligo_string = Simple_utils.Ligo_string
@@ -91,4 +91,4 @@ and for_all {ty_binder = ba ; kind = _ ; type_ = ta } {ty_binder = bb ; kind = _
     type_expression ta tb
     type_variable ba bb
 
-and constant' = Compare_enum.constant'
+and constant' = Compare_enum.constant' *)

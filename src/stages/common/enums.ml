@@ -225,7 +225,7 @@ type constant' =
   | C_POLYMORPHIC_SUB [@print "C_POLYMORPHIC_SUB"]
   | C_SUB_MUTEZ
   | C_OPTION_MAP
-[@@deriving enum, compare, yojson, print_constant, only_interpreter_tags, read_constant ]
+[@@deriving enum, hash, compare, yojson, print_constant, only_interpreter_tags, read_constant ]
 
 type deprecated = {
   name : string ;
