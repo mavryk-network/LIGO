@@ -90,11 +90,8 @@ module ValueVar  = Internal ()
 module TypeVar   = Internal ()
 
 module TermVar = struct
-  include Internal ()
+  include ValueVar
 
-  let of_value_var (value_var : ValueVar.t) = 
-    fresh ~loc:value_var.location ~name:value_var.name ()
-    
   let of_type_var (type_var : TypeVar.t) = 
     fresh ~loc:type_var.location ~name:type_var.name ()
     
