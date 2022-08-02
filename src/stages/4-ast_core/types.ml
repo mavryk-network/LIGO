@@ -1,21 +1,23 @@
 [@@@warning "-30-32"]
-module Ligo_string = Simple_utils.Ligo_string
 
+module Ligo_string = Simple_utils.Ligo_string
 include Stage_common.Types
 
-
-type sugar = 
+type sugar =
   | Type_expr of Ast_sugar.type_expression
   | Expr of Ast_sugar.expression
 
-type sugar_option = sugar option 
-
+type sugar_option = sugar option
 type string_option = string option [@@deriving compare]
 
-type type_attribute = { public: bool ; hidden : bool } 
+type type_attribute =
+  { public : bool
+  ; hidden : bool
+  }
+
 and module_attribute = type_attribute
 
-and term_content = 
+and term_content =
   | T_variable of term_variable
   | T_literal of literal
   | T_constant of term constant
@@ -37,56 +39,92 @@ and term_content =
   | T_prod of rows
   | T_arrow of term arrow
   | T_type
-  | T_pi of (term, ty_expr) pi
+  | T_pi of term pi
 [@@deriving compare]
 
 and term_label_map = term label_map
 
-and rows = { fields : row_element label_map ; layout : layout option }
+and rows =
+  { fields : row_element label_map
+  ; layout : layout option
+  }
 
 and row_element = term row_element_mini_c
-
 and matching = (term, term) match_exp [@@deriving compare]
 
-and term = 
-  { term_content : term_content;
-    sugar : sugar_option [@compare.ignore];
-    location : location [@compare.ignore];
+and term =
+  { term_content : term_content
+  ; sugar : sugar_option [@compare.ignore]
+  ; location : location [@compare.ignore]
   }
 
 and type_content = term_content
-  
 and type_expression = term
-
 and ty_expr = term
-
 and expression = term
-
 and expr = expression
-
 and expression_label_map = expression label_map
-
 and expression_content = term
-
 and type_expression_option = type_expression option
 
-and mod_in = (expression,ty_expr,known_attributes,type_attribute,module_attribute) mod_in'
-and module_expr = (expression,ty_expr,known_attributes,type_attribute,module_attribute) module_expr'
+and mod_in =
+  ( expression
+  , ty_expr
+  , known_attributes
+  , type_attribute
+  , module_attribute )
+  mod_in'
 
-and let_in = {
-    let_binder: ty_expr binder ;
-    rhs: expression ;
-    let_result: expression ;
-    attr: known_attributes ;
+and module_expr =
+  ( expression
+  , ty_expr
+  , known_attributes
+  , type_attribute
+  , module_attribute )
+  module_expr'
+
+and let_in =
+  { let_binder : ty_expr binder
+  ; rhs : expression
+  ; let_result : expression
+  ; attr : known_attributes
   }
 
+type module_ =
+  ( expression
+  , ty_expr
+  , known_attributes
+  , type_attribute
+  , module_attribute )
+  declarations'
 
-type module_              = (expression , ty_expr , known_attributes , type_attribute , module_attribute) declarations'
-and declaration          = (expression , ty_expr , known_attributes , type_attribute , module_attribute) declaration'
-and declaration_content  = (expression , ty_expr , known_attributes , type_attribute , module_attribute) declaration_content'
-and declaration_module   = (expression , ty_expr , known_attributes , type_attribute , module_attribute) declaration_module'
-and declaration_constant = (expression , ty_expr , known_attributes) declaration_constant'
-and declaration_type     = (ty_expr , type_attribute) declaration_type'
+and declaration =
+  ( expression
+  , ty_expr
+  , known_attributes
+  , type_attribute
+  , module_attribute )
+  declaration'
 
+and declaration_content =
+  ( expression
+  , ty_expr
+  , known_attributes
+  , type_attribute
+  , module_attribute )
+  declaration_content'
+
+and declaration_module =
+  ( expression
+  , ty_expr
+  , known_attributes
+  , type_attribute
+  , module_attribute )
+  declaration_module'
+
+and declaration_constant =
+  (expression, ty_expr, known_attributes) declaration_constant'
+
+and declaration_type = (ty_expr, type_attribute) declaration_type'
 
 type program = module_
