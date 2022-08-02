@@ -46,6 +46,7 @@ let label ppf (l:label) : unit =
 
 let expression_variable ppf (t : expression_variable) : unit = fprintf ppf "%a" ValueVar.pp t
 let type_variable       ppf (t : type_variable)       : unit = fprintf ppf "%a" TypeVar.pp t
+let term_variable ppf (t : term_variable) : unit = fprintf ppf "%a" TermVar.pp t
 let module_variable     ppf (t : module_variable)     : unit = fprintf ppf "%a" ModuleVar.pp t
 let kind_               ppf (_ : kind)                : unit = fprintf ppf "*"
 
@@ -136,6 +137,10 @@ let type_tuple type_expression ppf = fun tuple ->
 
 let arrow type_expression ppf = fun {type1;type2} ->
   fprintf ppf "%a -> %a" type_expression type1 type_expression type2
+
+let pi type_expression ppf = fun { pi_binder; ascr; result } ->
+  fprintf ppf "(%a : %a) -> %a" term_variable pi_binder type_expression ascr type_expression result
+  
 
 let wildcard ppf = fun () ->
   fprintf ppf "_"

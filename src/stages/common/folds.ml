@@ -209,9 +209,9 @@ and module_expr : ('acc -> 'exp -> 'acc) -> ('acc -> 'ty_exp -> 'acc) -> 'acc ->
     | M_module_path _ -> acc
 
 
-let pi : ('acc -> 'a -> 'acc) -> ('acc -> 'c -> 'acc) -> 'acc -> ('a,'c) pi -> 'acc
-= fun f g acc { binder = b; result } ->
-  let acc = binder f acc b in
-  let acc = g acc result in
+let pi : ('acc -> 'a -> 'acc) -> 'acc -> 'a pi -> 'acc
+= fun f acc { ascr; result; _ } ->
+  let acc = f acc ascr in
+  let acc = f acc result in
   acc
   

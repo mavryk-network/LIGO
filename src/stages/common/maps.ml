@@ -219,9 +219,9 @@ and module_expr : ('e_src -> 'e_dst) -> ('ty_src -> 'ty_dst) -> ('ea_src -> 'ea_
       )
       mexp
 
-let pi : ('exp_src -> 'exp_dst) -> ('ty_src -> 'ty_dst) -> ('exp_src, 'ty_src) pi -> ('exp_dst, 'ty_dst) pi 
-= fun map_e map_ty { binder = b; result } ->
-  let b = binder map_ty b in
-  let result = map_e result in
-  { binder = b; result }
+let pi : ('ty_src -> 'ty_dst) -> 'ty_src pi -> 'ty_dst pi 
+= fun map_ty { pi_binder; ascr; result } ->
+  let ascr = map_ty ascr in
+  let result = map_ty result in
+  { pi_binder; ascr; result }
       

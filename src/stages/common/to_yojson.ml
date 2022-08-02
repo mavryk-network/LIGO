@@ -306,3 +306,11 @@ and mod_in expression type_expression a_e a_t a_m {module_binder;rhs;let_result}
     ("rhs", (module_expr expression type_expression a_e a_t a_m) rhs) ;
     ("let_result", expression let_result) ;
   ]
+
+let pi term { pi_binder; ascr; result } = 
+  `Assoc
+    [ "pi_binder", TermVar.to_yojson pi_binder
+    ; "ascr", term ascr
+    ; "result", term result
+    ]
+

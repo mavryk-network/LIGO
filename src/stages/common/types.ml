@@ -115,9 +115,10 @@ type 'exp constant = {
   }
 [@@deriving hash, compare]
 
-type ('exp, 'ty_exp) pi = {
-  binder: 'ty_exp binder ;
-  result: 'exp ;
+type 'ty_exp pi = {
+  pi_binder: term_variable;
+  ascr : 'ty_exp;
+  result: 'ty_exp ;
 }
 [@@deriving hash, compare]
 
