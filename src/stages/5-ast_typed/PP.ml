@@ -1,5 +1,8 @@
-[@@@coverage exclude_file]
-module Location    = Simple_utils.Location
+(* [@@@coverage exclude_file] *)
+
+let program _ _ = failwith "TODO: Implement later"
+
+(* module Location    = Simple_utils.Location
 module Var         = Simple_utils.Var
 module List        = Simple_utils.List
 module Ligo_string = Simple_utils.Ligo_string
@@ -7,10 +10,10 @@ module Int64       = Caml.Int64
 open Types
 open Format
 open Simple_utils.PP_helpers
-include Stage_common.PP
+include Stage_common.PP *)
 
-type 'a pretty_printer = Format.formatter -> 'a -> unit
-
+(* type 'a pretty_printer = Format.formatter -> 'a -> unit *)
+(* 
 let lmap_sep value sep ppf m =
   let lst = List.sort ~compare:(fun (Label a,_) (Label b,_) -> String.compare a b) m in
   let new_pp ppf (k, v) = fprintf ppf "@[<h>%a -> %a@]" label k value v in
@@ -241,4 +244,4 @@ and declaration ppf (d : declaration) =
 and module_ ppf (m : module_) =
   Stage_common.PP.(declarations ~print_type:false expression type_expression e_attributes type_and_module_attr type_and_module_attr)
     ppf m
-let program ppf p = module_ ppf p
+let program ppf p = module_ ppf p *)

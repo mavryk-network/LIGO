@@ -1,4 +1,6 @@
-module Location    = Simple_utils.Location
+
+let program _ = failwith "TODO: Implement using ppx"
+(* module Location    = Simple_utils.Location
 module Var         = Simple_utils.Var
 module List        = Simple_utils.List
 module Ligo_string = Simple_utils.Ligo_string
@@ -7,9 +9,9 @@ open Stage_common.To_yojson
 type json = Yojson.Safe.t
 type 'a json_printer = 'a -> json
 
-let constant' = Stage_common.To_yojson.constant'
+let constant' = Stage_common.To_yojson.constant' *)
 
-let label = label_to_yojson
+(* let label = label_to_yojson
 let option f o =
   match o with
   | None   -> `List [ `String "None" ; `Null ]
@@ -261,4 +263,4 @@ and declaration x =
 
 and module' x =
   Stage_common.To_yojson.(declarations expression type_expression known_attributes type_and_module_attr type_and_module_attr) x
-and program p = module' p
+and program p = module' p *)
