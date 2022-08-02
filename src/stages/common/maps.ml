@@ -218,3 +218,10 @@ and module_expr : ('e_src -> 'e_dst) -> ('ty_src -> 'ty_dst) -> ('ea_src -> 'ea_
       | M_module_path path -> M_module_path path
       )
       mexp
+
+let pi : ('exp_src -> 'exp_dst) -> ('ty_src -> 'ty_dst) -> ('exp_src, 'ty_src) pi -> ('exp_dst, 'ty_dst) pi 
+= fun map_e map_ty { binder = b; result } ->
+  let b = binder map_ty b in
+  let result = map_e result in
+  { binder = b; result }
+      

@@ -207,3 +207,11 @@ and module_expr : ('acc -> 'exp -> 'acc) -> ('acc -> 'ty_exp -> 'acc) -> 'acc ->
     | M_struct prg ->
       List.fold ~f:(fun acc d -> (declaration f g) acc d) ~init:acc prg
     | M_module_path _ -> acc
+
+
+let pi : ('acc -> 'a -> 'acc) -> ('acc -> 'c -> 'acc) -> 'acc -> ('a,'c) pi -> 'acc
+= fun f g acc { binder = b; result } ->
+  let acc = binder f acc b in
+  let acc = g acc result in
+  acc
+  
