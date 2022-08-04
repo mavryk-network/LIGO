@@ -48,6 +48,7 @@ install LIGO dependencies declared in package.json
 **login**
 [BETA] login to the LIGO package registry
 
+
 **version**
 print version information
 
