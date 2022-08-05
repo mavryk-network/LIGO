@@ -9,6 +9,7 @@ let get_lib : Environment.Protocols.t -> Syntax_types.t -> backend:string -> tes
   let backend = def (String.uppercase backend) in
   let std = match protocol with
     | Environment.Protocols.Jakarta -> def "JAKARTA"
+    | Environment.Protocols.Kathmandu -> def "KATHMANDU"
   in
   let lib = Ligo_lib.get () in
   test_module ^ backend ^ func_type ^ std ^ lib
