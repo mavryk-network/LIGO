@@ -454,11 +454,11 @@ let rec instr e =
     | CallIndirect (x, y) ->
       "call_indirect " ^ var x, [Node ("type " ^ var y, [])]
     
-    | LocalGet_symbol x -> "local.get $" ^ x, []
-    | LocalSet_symbol x -> "local.set $" ^ x, []
-    | LocalTee_symbol x -> "local.tee $" ^ x, []
-    | GlobalGet_symbol x -> "global.get $" ^ x, []
-    | GlobalSet_symbol x -> "global.set $" ^ x, []
+    | LocalGet_symbol x -> "local.get \"" ^ x ^ "\"", []
+    | LocalSet_symbol x -> "local.set \"" ^ x ^ "\"", []
+    | LocalTee_symbol x -> "local.tee \"" ^ x ^ "\"", []
+    | GlobalGet_symbol x -> "global.get \"" ^ x ^ "\"", []
+    | GlobalSet_symbol x -> "global.set \"" ^ x ^ "\"", []
     | Call_symbol x -> "call $" ^ x, []
     | CallIndirect_symbol s ->
       "call_indirect $" ^ s, []

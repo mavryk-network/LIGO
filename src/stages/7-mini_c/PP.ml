@@ -161,8 +161,7 @@ and expression_content ppf (e:expression_content) = match e with
     let code = Micheline.strip_locations code in
     let code = Micheline_printer.printable (fun prim -> prim) code in
     fprintf ppf "%a" Micheline_printer.print_expr code
-  | E_raw_wasm code ->
-    (* let formatter_of_out_channel stdout =  *)
+  | E_raw_wasm (_, code) ->
     let tmp, oc = Filename.open_temp_file  "temp" "wat" in
     WasmObjectFile.Print.instr_list oc 80 code;
     Out_channel.flush oc;
@@ -173,7 +172,6 @@ and expression_content ppf (e:expression_content) = match e with
     let _result = In_channel.input ic ~buf:b ~pos:0 ~len:length in    
     let x = Bytes.to_string b in 
     fprintf ppf "%s" x
-
   | E_global_constant (hash, args) ->
     fprintf ppf "@[constant(%s)( %a )@]"
       hash

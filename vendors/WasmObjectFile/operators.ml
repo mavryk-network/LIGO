@@ -26,6 +26,7 @@ let br_table xs x = BrTable (xs, x)
 
 let return = Return
 let call x = Call x
+let call_symbol x = Call_symbol x
 let call_indirect x y = CallIndirect (x, y)
 let call_indirect_symbol symbol = CallIndirect_symbol symbol
 
@@ -34,6 +35,11 @@ let local_set x = LocalSet x
 let local_tee x = LocalTee x
 let global_get x = GlobalGet x
 let global_set x = GlobalSet x
+let local_get_symbol x = LocalGet_symbol x
+let local_set_symbol x = LocalSet_symbol x
+let local_tee_symbol x = LocalTee_symbol x
+let global_get_symbol x = GlobalGet_symbol x
+let global_set_symbol x = GlobalSet_symbol x
 
 let table_get x = TableGet x
 let table_set x = TableSet x

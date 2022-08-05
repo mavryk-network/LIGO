@@ -553,8 +553,30 @@ let rec compile_expression ~raise (ae:AST.expression) : expression =
       let type_anno' = compile_type ~raise type_anno in
       let code = trace_option ~raise (corner_case ~loc:__LOC__ "could not get a string") @@ get_a_string code in
       let instructions = WasmObjectFile.Parse.string_to_instructions code () in
-      return ~tv:type_anno' @@ E_raw_wasm instructions 
-      (* failwith "Hello wasm!" *)
+      
+      let open WasmObjectFile.Ast in
+      let open WasmObjectFile.Types in
+      let rec extract_locals locals rest = 
+        let open WasmObjectFile.Source in
+        let exists = List.mem locals ~equal:String.equal in
+        match rest with
+          { it = LocalGet_symbol s; _ }  :: rest when not (exists s) -> extract_locals (s :: locals) rest
+        | { it = LocalSet_symbol s; _ }  :: rest when not (exists s) -> extract_locals (s :: locals) rest
+        | { it = LocalTee_symbol s; _ }  :: rest when not (exists s) -> extract_locals (s :: locals) rest
+        | { it = Block (_, il); _ }  :: rest
+        | { it = Loop (_, il); _ }   :: rest -> 
+            let locals = extract_locals locals il in
+            extract_locals locals rest
+        | { it = If (_, t, e); _ } :: rest -> 
+          let locals = extract_locals locals t in
+          let locals = extract_locals locals e in
+          extract_locals locals rest
+        | _ :: rest -> extract_locals locals rest
+        | [] -> locals 
+      in
+      let local_symbols = extract_locals [] instructions in
+      let local_symbols = List.map ~f:(fun e -> (e, NumType I32Type)) local_symbols in
+      return ~tv:type_anno' @@ E_raw_wasm (local_symbols, instructions)
     | _ -> 
       raise.error (corner_case ~loc:__LOC__ "Language insert - backend mismatch only provide code insertion in the language you are compiling to")
     )

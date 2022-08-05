@@ -3,10 +3,19 @@ module Tezos = struct
   let get_balance (_u : unit) : tez = [%Michelson ({| { DROP ; BALANCE } |} : unit -> tez)] ()
   let get_amount (_u : unit) : tez = [%Michelson ({| { DROP ; AMOUNT } |} : unit -> tez)] ()
   let get_now (_u : unit) : timestamp = [%Michelson ({| { DROP ; NOW } |} : unit -> timestamp)] ()
+
+#if MICHELSON
   let get_sender (_u : unit) : address = [%Michelson ({| { DROP ; SENDER } |} : unit -> address)] ()
   let get_source (_u : unit) : address = [%Michelson ({| { DROP ; SOURCE } |} : unit -> address)] ()
   let get_level (_u : unit) : nat = [%Michelson ({| { DROP ; LEVEL } |} : unit -> nat)] ()
   let get_self_address (_u : unit) : address = [%external ("SELF_ADDRESS")]
+#endif
+#if WASM
+  let get_sender (_u : unit) : address = [%Wasm ({| call "ffi_sender" |} : unit -> address)] ()
+  let get_source (_u : unit) : address = [%Wasm ({| { DROP ; SOURCE } |} : unit -> address)] ()
+  let get_level (_u : unit) : nat = [%Wasm ({| { DROP ; LEVEL } |} : unit -> nat)] ()
+  let get_self_address (_u : unit) : address = [%external ("SELF_ADDRESS")]
+#endif
   let get_chain_id (_u : unit) : chain_id = [%Michelson ({| { DROP ; CHAIN_ID } |} : unit -> chain_id)] ()
   let get_total_voting_power (_u : unit) : nat = [%Michelson ({| { DROP ; TOTAL_VOTING_POWER } |} : unit -> nat)] ()
   let get_min_block_time (_u : unit) : nat = [%Michelson ({| { DROP; MIN_BLOCK_TIME } |} : unit -> nat) ] ()
@@ -14,9 +23,29 @@ module Tezos = struct
   let voting_power (kh : key_hash) : nat = [%Michelson ({| { VOTING_POWER } |} : key_hash -> nat)] kh
   let address (type a) (c : a contract) : address = [%external ("ADDRESS", c)]
   let implicit_account (kh : key_hash) : unit contract = [%external ("IMPLICIT_ACCOUNT", kh)]
+#if MICHELSON
   let join_tickets (type a) (t : a ticket * a ticket) : (a ticket) option = [%Michelson ({| { JOIN_TICKETS } |} : a ticket * a ticket -> a ticket option)] t
   let read_ticket (type a) (t : a ticket) : (address * (a * nat)) * a ticket =
     [%Michelson ({| { READ_TICKET ; PAIR } |} : a ticket -> (address * (a * nat)) * a ticket)] t
+#endif
+#if WASM 
+  let join_tickets (type a) (t : a ticket * a ticket) : (a ticket) option = [%Wasm ({| 
+    local.tee "__ticket_tuple"
+    local.get "__ticket_tuple"
+    i32.const 4
+    i32.add
+    call "ffi_join_tickets"
+    local.tee "__joined_tickets"
+    if (result i32)
+      local.get "__joined_tickets"
+      i32.load
+    else 
+      i32.const 0
+    end
+    |} : a ticket * a ticket -> a ticket option)] t
+  let read_ticket (type a) (t : a ticket) : (address * (a * nat)) * a ticket =
+    [%Wasm ({| call "ffi_read_ticket" |} : a ticket -> (address * (a * nat)) * a ticket)] t
+#endif
   (* let create_contract (type a b) (c : a * b -> operation list * b) (kh : key_hash) (mu : tez) (s : b) : operation * address = [%external ("CREATE_CONTRACT", c, kh, mu, s)] *)
   let never (type a) (n : never) : a = [%Michelson ({| { NEVER } |} : never -> a)] n
   let pairing_check (l : (bls12_381_g1 * bls12_381_g2) list) : bool = [%Michelson ({| { PAIRING_CHECK } |} : (bls12_381_g1 * bls12_381_g2) list -> bool)] l
@@ -31,13 +60,58 @@ module Tezos = struct
   let create_ticket (type a) (v : a) (n : nat) : a ticket = [%Michelson ({| { UNPAIR ; TICKET } |} : a * nat -> a ticket)] (v, n)
 #endif
 #if WASM
-  let create_ticket (type a) (v : a) (n : nat) : a ticket = [%Wasm ({| local.get 0 local.get 1 |} : a * nat -> a ticket)] (v, n)
+  let create_ticket (type a) (v : a) (n : nat) : a ticket = [%Wasm ({| 
+    local.tee "__ticket"
+    i32.load
+    local.set "__ticket_data"
+    i32.const 12
+    call "malloc"
+    local.tee "__region"
+    local.get "__ticket_data"
+    i32.store
+    local.get "__region"
+    i32.const 4
+    i32.add
+    i32.const 1
+    i32.store
+    local.get "__region"
+    i32.const 8
+    i32.add
+    i32.const 1
+    i32.store
+    local.get "__region"
+    local.get "__ticket"
+    i32.const 4
+    i32.add
+    i64.load32_u
+    call "ffi_mint_ticket"
+  |} : a * nat -> a ticket)] (v, n)
 #endif
   let transaction (type a) (a : a) (mu : tez) (c : a contract) : operation = [%external ("CALL", a, mu, c)]
   let open_chest (ck : chest_key) (c : chest) (n : nat) : chest_opening_result = [%external ("OPEN_CHEST", ck, c, n)]
   let call_view (type a b) (s : string) (x : a) (a : address)  : b option = [%external ("VIEW", s, x, a)]
+#if MICHELSON
   let split_ticket (type a) (t : a ticket) (p : nat * nat) : (a ticket * a ticket) option =
       [%Michelson ({| { UNPAIR ; SPLIT_TICKET } |} : a ticket * (nat * nat) -> (a ticket * a ticket) option)] (t, p)
+#endif
+#if WASM
+let split_ticket (type a) (t : a ticket) (p : nat * nat) : (a ticket * a ticket) option =
+      [%Wasm ({| 
+        local.tee "__args"
+        i32.load
+        local.get "__args"
+        i32.const 4
+        i32.add
+        i32.load 
+        local.tee "__args_amounts"
+        i64.load32_u
+        local.get "__args_amounts"
+        i32.const 4
+        i32.add
+        i64.load32_u
+        call "ffi_split_ticket" 
+      |} : a ticket * (nat * nat) -> (a ticket * a ticket) option)] (t, p)
+#endif
 #endif
 
 #if UNCURRY

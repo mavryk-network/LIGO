@@ -22,7 +22,7 @@ let find_file name locations =
  *  https://dune.readthedocs.io/en/stable/sites.html.
  *
  * Annoying Dune issue: for some reason Dune wants to use the archives, while 
- * it should only copy them. This results in the following warning: 
+ * it should only copy them. This results in the following warning when doing a clean `dune build` : 
  * > ld: warning: ignoring file src/passes/14-wasm/wasi/libc.a, building for macOS-arm64 
  * >              but attempting to link with file built for unknown-unsupported file format 
  * >              ( 0x21 0x3C 0x61 0x72 0x63 0x68 0x3E 0x0A 0x2F 0x20 0x20 0x20 0x20 0x20 0x20 0x20 )
@@ -33,7 +33,7 @@ let link files output =
   let libligo_runtime_location = find_file "libligo_runtime.a" Ligo_runtime.Sites.ligo_runtime in
   let command =
     sprintf
-      "wasm-ld -m wasm32 -L%s -lc %s -lc %s %s --stack-first --fatal-warnings \
+      "wasm-ld -m wasm32 --import-undefined -L%s -lc %s -lc %s %s --stack-first --fatal-warnings \
        -z stack-size=8388608 -o %s --export=entrypoint"
       libligo_wasi_share_dir
       libligo_wasi

@@ -60,6 +60,8 @@ let name s =
 let rec expression ~raise :
     A.module_' -> locals -> I.expression -> A.module_' * locals * A.instr list =
  fun w l e ->
+  let open A in 
+  let open T in 
   let at = location_to_region e.location in
   let host_call :
       fn:string ->
@@ -100,7 +102,12 @@ let rec expression ~raise :
     let data, symbols = convert_to_memory name at z in
     let w = {w with datas = w.datas @ data; symbols = w.symbols @ symbols} in
     (w, l, [data_symbol name at])
-  | E_literal (Literal_nat _z) -> failwith "E_literal (Literal_nat) not supported"
+  | E_literal (Literal_nat z) -> 
+    let unique_name = ValueVar.fresh ~name:"Literal_nat" () in
+    let name = var_to_string unique_name in
+    let data, symbols = convert_to_memory name at z in
+    let w = {w with datas = w.datas @ data; symbols = w.symbols @ symbols} in
+    (w, l, [data_symbol name at])
   | E_literal (Literal_timestamp _z) -> failwith "E_literal (Literal_timestamp) not supported"
   | E_literal (Literal_mutez _z) -> failwith "E_literal (Literal_mutez) not supported"
   | E_literal (Literal_string _s) -> failwith "E_literal (Literal_string) not supported"
@@ -205,13 +212,13 @@ let rec expression ~raise :
         aux w l (result @ e) func
       | E_variable v ->
         let name = var_to_string v in
-        (w, l, name, result)
-      | E_raw_wasm code -> 
-        (w, l, "", result @ code)
+        (w, l, result @ [call_s name at])
+      | E_raw_wasm (local_symbols, code) -> 
+        (w, l @ local_symbols, result @ code)
       | _ -> failwith "E_application (..) not supported"
     in
-    let w, l, name, args = aux w l [] e in
-    (w, l, args  @ [call_s name at])
+    let w, l, args = aux w l [] e in
+    (w, l, args)
   | E_variable name -> (
     let name = var_to_string name in
     match List.find ~f:(fun (n, _) -> String.equal n name) l with
@@ -221,7 +228,37 @@ let rec expression ~raise :
   | E_fold _ -> failwith "E_fold not supported"
   | E_fold_right _ -> failwith "E_fold_right not supported"
   | E_if_bool _ -> failwith "E_if_bool not supported"
-  | E_if_none _ -> failwith "E_if_none not supported"
+  | E_if_none (test, none_e, (_, some_e)) -> 
+    (* TODO: check handling of locals *)
+    let w, l, test = expression ~raise w l test in
+    let w, l, none_e = expression ~raise w l none_e in
+    let w, l, some_e = expression ~raise w l some_e in
+    let return_type = Some (NumType I32Type) in (* TODO properly get this *)
+    w, l, [
+      S.{it = Block (ValBlockType return_type, 
+        [
+          {it = Block (ValBlockType None,
+            test 
+            @
+            [
+              {it = BrIf {it = 0l; at}; at };
+            ]
+            @ 
+            none_e
+            @ 
+            [
+              {it = Br {it = 1l; at}; at };
+            ]
+          );
+          at
+          }
+        ]
+        @ 
+        some_e
+      );
+      at
+      }
+    ]
   | E_if_cons _ -> failwith "E_if_cons not supported"
   | E_if_left _ -> failwith "E_if_left not supported"
   | E_let_in
@@ -258,8 +295,6 @@ let rec expression ~raise :
     in
     let w, l, e2 = expression ~raise w l rhs in
     (w, l, t @ e @ e2)
-  (* | E_raw_wasm _ -> *)
-
   | _ -> failwith "Instruction not supported"
 
 let func I.{binder; body} =

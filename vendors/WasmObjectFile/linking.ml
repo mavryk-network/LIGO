@@ -21,7 +21,7 @@ let func_index (funcs: Ast.func list) (imports: Ast.import list) symbol =
       match funcs with
       | Source.{it = FuncSymbol {name; ftype; _}; _} :: remaining when name = symbol -> count
       | _ :: remaining -> find_func remaining (Int32.add count 1l)
-      | [] -> failwith ("Could not find: " ^ symbol)
+      | [] -> failwith ("Could not find function: " ^ symbol)
     in
     find_func funcs (Int32.of_int (List.length imports))
   else 
@@ -60,57 +60,3 @@ let find_symbol_index symbols func =
     failwith "not found symbol"
   in
   aux 0 symbols
-
-
-(*type code_relocation =
-  | R_WASM_FUNCTION_INDEX_LEB of int32 * string
-  | R_WASM_MEMORY_ADDR_LEB of int32 * Ast.var  
-  | R_WASM_TYPE_INDEX_LEB of int32 * Ast.var
-  | R_WASM_GLOBAL_INDEX_LEB of int32 * string
-  | R_WASM_MEMORY_ADDR_SLEB of int32 * string
-  | R_WASM_TABLE_INDEX_SLEB  of int32 * string
-
-type data_relocation =
-  | R_WASM_TABLE_INDEX_I32 of int32 * string
-  | R_WASM_MEMORY_ADDR_I32 of int32 * string
-
-
-
-let func_symbol_index symbols symbol = 
-  let rec f symbol symbols result = 
-    match symbols with 
-    | {name; details = Function} :: remaining
-    | {name; details = Import _} :: remaining when name = symbol -> result
-    | _ :: remaining -> f symbol remaining (Int32.add result 1l)
-    | [] -> print_endline ("could not find:" ^ symbol); assert false
-  in
-  f symbol symbols 0l
-
-let func_index funcs imports symbol = 
-  let rec find_import imports count = 
-    match imports with
-    | {item_name} :: remaining when (Ast.string_of_name item_name) = symbol -> count
-    | _ :: remaining -> find_import remaining (Int32.add count 1l) 
-    | [] -> (-1l)
-  in
-  let result = find_import imports 0l in
-  if result = (-1l) then 
-    let rec find_func funcs count = 
-      match funcs with
-      | {name; _} :: remaining when name = symbol -> count
-      | _ :: remaining -> find_func remaining (Int32.add count 1l)
-      | [] -> failwith ("Could not find: " ^ symbol)
-    in
-    find_func funcs (Int32.of_int (List.length imports))
-  else 
-    result
-
-let data_index data symbol = 
-  let rec iter_data (data: data_part segment list) count = 
-    match data with
-    | {init = {name}} :: remaining when name = symbol -> count
-    | _ :: remaining -> iter_data remaining (Int32.add count 1l) 
-    | [] -> (-1l)
-  in iter_data data 0l
-
- *)

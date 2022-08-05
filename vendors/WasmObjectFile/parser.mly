@@ -125,8 +125,15 @@ let enter_func (c : context) =
 
 let lookup category space x =
   try VarMap.find x.it space.map
-  with Not_found -> error x.at ("unknown " ^ category ^ " " ^ x.it)
-
+  with 
+  Not_found -> (
+    let i = Int32.add space.count 1l in
+    space.count <- i;
+    space.map <- VarMap.add x.it i space.map;
+    i
+  )
+   
+  
 let type_ (c : context) x = lookup "type" c.types.space x
 let func (c : context) x = lookup "function" c.funcs x
 let local (c : context) x = force_locals c; lookup "local" c.locals x
@@ -173,7 +180,12 @@ let bind_memory (c : context) x = bind "memory" c.memories x
 let bind_elem (c : context) x = bind "elem segment" c.elems x
 let bind_data (c : context) x = bind "data segment" c.datas x
 let bind_label (c : context) x =
-  {c with labels = VarMap.add x.it 0l (VarMap.map (Int32.add 1l) c.labels)}
+  if VarMap.is_empty c.labels then (
+    c
+  )
+  else (
+    {c with labels = VarMap.add x.it 0l (VarMap.map (Int32.add 1l) c.labels)}
+  )
 
 let anon_type (c : context) ty =
   c.types.list <- c.types.list @ [ty];
@@ -188,8 +200,9 @@ let anon_table (c : context) = anon "table" c.tables 1l
 let anon_memory (c : context) = anon "memory" c.memories 1l
 let anon_elem (c : context) = anon "elem segment" c.elems 1l
 let anon_data (c : context) = anon "data segment" c.datas 1l
-let anon_label (c : context) =
-  {c with labels = VarMap.map (Int32.add 1l) c.labels}
+let anon_label (c : context) = (
+  {c with labels = VarMap.map (fun l -> (Int32.add l 1l)) c.labels}
+)
 
 
 let inline_type (c : context) ft at =
@@ -278,11 +291,11 @@ let inline_type_explicit (c : context) x ft at =
 %nonassoc LOW
 %nonassoc VAR
 
-%start script script1 module1 instr_list
+%start script script1 module1 instr_list_wrap
 %type<Script.script> script
 %type<Script.script> script1
 %type<Script.var option * Script.definition> module1
-%type<_ -> Ast.instr list> instr_list 
+%type<_ -> Ast.instr list> instr_list_wrap 
 %%
 
 /* Auxiliaries */
@@ -379,7 +392,9 @@ labeling_opt :
   | /* empty */ %prec LOW
     { fun c xs ->
       List.iter (fun x -> error x.at "mismatching label") xs;
-      anon_label c }
+      let result = anon_label c in 
+      result
+      }
   | bind_var
     { fun c xs ->
       List.iter
@@ -423,9 +438,13 @@ plain_instr :
       br_table xs x }
   | RETURN { fun c -> return }
   | CALL var { fun c -> call ($2 c func) }
+  | CALL STRING { fun _c -> call_symbol $2 }
   | LOCAL_GET var { fun c -> local_get ($2 c local) }
+  | LOCAL_GET STRING { fun _c -> local_get_symbol $2 }
   | LOCAL_SET var { fun c -> local_set ($2 c local) }
+  | LOCAL_SET STRING { fun _c -> local_set_symbol $2 }
   | LOCAL_TEE var { fun c -> local_tee ($2 c local) }
+  | LOCAL_TEE STRING { fun _c -> local_tee_symbol $2 }
   | GLOBAL_GET var { fun c -> global_get ($2 c global) }
   | GLOBAL_SET var { fun c -> global_set ($2 c global) }
   | TABLE_GET var { fun c -> table_get ($2 c table) }
@@ -575,7 +594,8 @@ block_instr :
   | IF labeling_opt block END labeling_end_opt
     { fun c -> let c' = $2 c $5 in let bt, es = $3 c' in if_ bt es [] }
   | IF labeling_opt block ELSE labeling_end_opt instr_list END labeling_end_opt
-    { fun c -> let c' = $2 c ($5 @ $8) in
+    { fun c -> 
+      let c' = $2 c ($5 @ $8) in
       let ts, es1 = $3 c' in if_ ts es1 ($6 c') }
 
 block :
@@ -695,6 +715,11 @@ if_ :
     { fun c c' -> [], $3 c', $7 c' }
   | LPAR THEN instr_list RPAR  /* Sugar */
     { fun c c' -> [], $3 c', [] }
+
+instr_list_wrap: 
+  instr_list {
+    fun _ -> $1 (empty_context ())
+  }
 
 instr_list :
   | /* empty */ { fun c -> [] }

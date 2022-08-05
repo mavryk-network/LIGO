@@ -20,7 +20,7 @@ let parse (type a) name lexbuf : a start -> a = function
   | Module -> parse' name lexbuf Parser.module1
   | Script -> parse' name lexbuf Parser.script
   | Script1 -> parse' name lexbuf Parser.script1
-  | Instructions -> parse' name lexbuf Parser.instr_list
+  | Instructions -> parse' name lexbuf Parser.instr_list_wrap
 
 let string_to start s =
   let lexbuf = Lexing.from_string s in
