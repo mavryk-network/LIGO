@@ -37,7 +37,16 @@ print intermediary program representation.
 Intended for development of LIGO and can break at any time
 
 **install**
-install ligo packages declared in package.json
+install LIGO dependencies declared in package.json
+
+**publish**
+[BETA] publish the LIGO package declared in package.json
+
+**add-user**
+[BETA] create a new user for the LIGO package registry
+
+**login**
+[BETA] login to the LIGO package registry
 
 **version**
 print version information
