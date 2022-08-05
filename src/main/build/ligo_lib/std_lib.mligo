@@ -8,14 +8,13 @@ module Tezos = struct
   let get_sender (_u : unit) : address = [%Michelson ({| { DROP ; SENDER } |} : unit -> address)] ()
   let get_source (_u : unit) : address = [%Michelson ({| { DROP ; SOURCE } |} : unit -> address)] ()
   let get_level (_u : unit) : nat = [%Michelson ({| { DROP ; LEVEL } |} : unit -> nat)] ()
-  let get_self_address (_u : unit) : address = [%external ("SELF_ADDRESS")]
 #endif
 #if WASM
   let get_sender (_u : unit) : address = [%Wasm ({| call "ffi_sender" |} : unit -> address)] ()
-  let get_source (_u : unit) : address = [%Wasm ({| { DROP ; SOURCE } |} : unit -> address)] ()
+  let get_source (_u : unit) : address = [%Wasm ({| call "ffi_source_" |} : unit -> address)] ()
   let get_level (_u : unit) : nat = [%Wasm ({| { DROP ; LEVEL } |} : unit -> nat)] ()
-  let get_self_address (_u : unit) : address = [%external ("SELF_ADDRESS")]
 #endif
+  let get_self_address (_u : unit) : address = [%external ("SELF_ADDRESS")]
   let get_chain_id (_u : unit) : chain_id = [%Michelson ({| { DROP ; CHAIN_ID } |} : unit -> chain_id)] ()
   let get_total_voting_power (_u : unit) : nat = [%Michelson ({| { DROP ; TOTAL_VOTING_POWER } |} : unit -> nat)] ()
   let get_min_block_time (_u : unit) : nat = [%Michelson ({| { DROP; MIN_BLOCK_TIME } |} : unit -> nat) ] ()
