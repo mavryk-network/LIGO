@@ -189,6 +189,97 @@ let build_contract ~raise : options:Compiler_options.t -> string -> Source_input
     let mini_c = Ligo_compile.Of_aggregated.compile_expression ~raise aggregated in
     Ligo_compile.Of_mini_c.compile_contract ~raise ~options mini_c
 
+module ValueVar = Stage_common.Types.ValueVar
+module LMap = Stage_common.Types.LMap
+module DepGraph = Caml.Map.Make(ValueVar)
+module DepSet = Caml.Set.Make(ValueVar)
+type dep_graph = DepSet.t DepGraph.t
+let rec build_dep_graph (ast : Ast_aggregated.expression) (g : dep_graph) : dep_graph =
+  match ast.expression_content with
+    E_let_in { let_binder ; rhs ; let_result ; _ } ->
+      let vars = DepSet.of_list (find_vars rhs) in
+      let g = DepGraph.add let_binder.var vars g in
+      build_dep_graph let_result g
+  | E_literal _ -> g
+  | E_variable _ -> g
+  | E_constant { arguments ; _ } -> List.fold_left arguments ~init:g ~f:(fun g e -> build_dep_graph e g)
+  | E_application { lamb ; args } -> 
+    let g = build_dep_graph lamb g in
+    let g = build_dep_graph args g in
+    g
+  | E_lambda { result ; _ } -> build_dep_graph result g
+  | E_recursive { lambda = { result ; _ } ; _ } -> build_dep_graph result g
+  | E_raw_code { code ; _ } -> build_dep_graph code g
+  | E_type_inst { forall ; _ } -> build_dep_graph forall g
+  | E_constructor { element ; _ } -> build_dep_graph element g
+  | E_matching { matchee ; cases } -> let g = build_dep_graph matchee g in
+    let g = (match cases with
+      Match_variant { cases ; _ } -> List.fold_left cases ~init:g ~f:(fun g e -> build_dep_graph e.body g)
+    | Match_record { body } -> build_dep_graph body g
+    ) in
+    g
+  | E_record m -> let vs = LMap.to_list m in List.fold_left vs ~init:g ~f:(fun g e -> build_dep_graph e g)
+  | E_record_accessor { record ; _ } -> build_dep_graph record g
+  | E_record_update { record ; update ; _ } -> 
+    let g = build_dep_graph record g in
+    let g = build_dep_graph update g in
+    g
+  | E_assign { expression ; _ } -> build_dep_graph expression g
+  | E_type_abstraction { result ; _ } -> build_dep_graph result g
+and find_vars (e : Ast_aggregated.expression) =
+  match e.expression_content with
+    E_literal _ -> []
+  | E_variable e -> [e]
+  | E_constant { arguments ; _ } -> List.fold_left arguments ~init:[] ~f:(fun xs e -> xs @ find_vars e)
+  | E_application { lamb ; args } -> find_vars lamb @ find_vars args
+  | E_lambda { result ; _ } -> find_vars result
+  | E_recursive { fun_name ; lambda = { binder ; result } ; _ } -> [fun_name] @ find_vars result
+  | E_let_in { let_binder ; rhs ; let_result } -> [let_binder.var] @ find_vars rhs @ find_vars let_result
+  | E_raw_code { code ; _ } -> find_vars code
+  | E_type_inst { forall ; _ } -> find_vars forall
+  | E_constructor { element ; _ } -> find_vars element
+  | E_matching { matchee ; cases } -> let vs = find_vars matchee in
+    let ms = (match cases with
+      Match_variant { cases ; _ } -> List.fold_left cases ~init:[] ~f:(fun xs e -> xs @ find_vars e.body)
+    | Match_record { body } -> find_vars body
+    ) in
+    vs @ ms
+  | E_record m -> let vs = LMap.to_list m in List.fold_left vs ~init:[] ~f:(fun xs e -> xs @ find_vars e)
+  | E_record_accessor { record ; _ } -> find_vars record
+  | E_record_update { record ; update ; _ } -> find_vars record @ find_vars update
+  | E_assign { binder ; expression } -> find_vars expression @ [binder.var]
+  | E_type_abstraction { result ; _ } -> find_vars result
+and pp_dep_grph g =
+    DepGraph.iter (fun v s -> Format.printf "%a *** " ValueVar.pp v; pp_dep_set s; Format.printf "\n---------------\n") g 
+and pp_dep_set s =
+    DepSet.iter (fun v -> Format.printf "%a, " ValueVar.pp v) s
+and find_reachable g v : DepSet.t =
+    let s = DepGraph.find_opt v g in
+    match s with
+    | None -> DepSet.singleton v
+    | Some s ->
+    let ss = DepSet.fold (fun v ss -> DepSet.union ss (find_reachable g v)) s (DepSet.singleton v) in
+    DepSet.union s ss
+and tree_shake (e : Ast_aggregated.expression) s =
+  match e.expression_content with
+    E_literal _ -> e
+  | E_variable _ -> e
+  | E_constant _ -> e
+  | E_application _ -> e
+  | E_lambda _ -> e
+  | E_recursive _ -> e
+  | E_let_in { let_binder ; rhs ; let_result } ->
+    (* TODO this is not proper ... *)
+    if DepSet.mem let_binder.var s then e else tree_shake let_result s
+  | E_raw_code _ -> e
+  | E_type_inst _ -> e
+  | E_constructor _ -> e
+  | E_matching _ -> e
+  | E_record _ -> e
+  | E_record_accessor _ -> e
+  | E_record_update _ -> e
+  | E_assign _ -> e
+  | E_type_abstraction _ -> e
 
 let build_views ~raise :
   options:Compiler_options.t -> string -> string list -> Source_input.file_name -> (Ast_typed.ValueVar.t * Stacking.compiled_expression) list =
@@ -206,16 +297,23 @@ let build_views ~raise :
     match view_names with
     | [] -> []
     | _ ->
+      (* print_endline "AAAAAAAAAAA"; *)
       let aggregated = Ligo_compile.Of_typed.apply_to_entrypoint_view ~raise:{raise with warning = fun _ -> ()} ~options:options.middle_end contract in
-      let mini_c = Ligo_compile.Of_aggregated.compile_expression ~raise aggregated in
-      let mini_c = trace ~raise self_mini_c_tracer @@ Self_mini_c.all_expression options mini_c in
-      let mini_c_tys = trace_option ~raise (`Self_mini_c_tracer (Self_mini_c.Errors.corner_case "Error reconstructing type of views")) @@
-                        Mini_c.get_t_tuple mini_c.type_expression in
+      let g = build_dep_graph aggregated DepGraph.empty in
+      (* pp_dep_grph g; *)
       let nb_of_views = List.length view_names in
       let aux i view =
+        let ss = find_reachable g view in
+        let aggregated = tree_shake aggregated ss in
+        (* Format.printf "%a" Ast_aggregated.PP.expression aggregated; *)
+        let mini_c = Ligo_compile.Of_aggregated.compile_expression ~raise aggregated in
+        let mini_c = trace ~raise self_mini_c_tracer @@ Self_mini_c.all_expression options mini_c in
+        let mini_c_tys = trace_option ~raise (`Self_mini_c_tracer (Self_mini_c.Errors.corner_case "Error reconstructing type of views")) @@
+                          Mini_c.get_t_tuple mini_c.type_expression in
         let idx_ty = trace_option ~raise (`Self_mini_c_tracer (Self_mini_c.Errors.corner_case "Error reconstructing type of view")) @@
                       List.nth mini_c_tys i in
         let idx = Mini_c.e_proj mini_c idx_ty i nb_of_views in
+        (* pp_dep_set ss; *)
         (* let idx = trace ~raise self_mini_c_tracer @@ Self_mini_c.all_expression options idx in *)
         (view, idx) in
       let views = List.mapi ~f:aux view_names in
