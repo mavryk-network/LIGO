@@ -143,8 +143,8 @@ let built_comparator = comparator
 
 module O = Ast_typed
 
-type typer = error:[`TC of O.type_expression list] list ref -> raise:Errors.typer_error raise -> options:Compiler_options.middle_end -> loc:Location.t -> O.type_expression list -> O.type_expression option -> O.type_expression option
-type typer_table = error:[`TC of O.type_expression list] list ref -> raise:Errors.typer_error raise -> options:Compiler_options.middle_end -> loc:Location.t -> O.type_expression list -> O.type_expression option -> (O.type_expression * type_expression Inference.TMap.t * O.type_expression) option
+type typer = error:[`TC of O.type_expression list] list ref -> raise:(Errors.typer_error,Main_warnings.all) raise -> options:Compiler_options.middle_end -> loc:Location.t -> O.type_expression list -> O.type_expression option -> O.type_expression option
+type typer_table = error:[`TC of O.type_expression list] list ref -> raise:(Errors.typer_error,Main_warnings.all) raise -> options:Compiler_options.middle_end -> loc:Location.t -> O.type_expression list -> O.type_expression option -> (O.type_expression * type_expression Inference.TMap.t * O.type_expression) option
 
 let typer_of_comparator (typer : raise:_ -> test:_ -> _ -> O.type_expression list -> O.type_expression option -> O.type_expression) : typer =
   fun ~error ~raise ~options ~loc lst tv_opt ->
@@ -155,14 +155,14 @@ let typer_of_comparator (typer : raise:_ -> test:_ -> _ -> O.type_expression lis
 let typer_of_ligo_type ?(add_tc = true) ?(fail = true) lamb_type : typer = fun ~error ~raise ~options ~loc lst tv_opt ->
   ignore options;
   let avs, lamb_type = O.Helpers.destruct_for_alls lamb_type in
-  Simple_utils.Trace.try_with (fun ~raise ->
+  Simple_utils.Trace.try_with (fun ~raise ~catch:_ ->
       let table = Inference.infer_type_applications ~raise ~loc ~default_error:(fun loc t t' -> `Outer_error (loc, t', t)) avs lamb_type lst tv_opt in
       let lamb_type = Inference.TMap.fold (fun tv t r -> Ast_typed.Helpers.subst_type tv t r) table lamb_type in
       let _, tv = Ast_typed.Helpers.destruct_arrows_n lamb_type (List.length lst) in
       Some tv)
-    (function
+    (fun ~catch:_ -> function
      | `Outer_error (loc, t', t) ->
-        if fail then raise.raise (assert_equal loc t' t) else None
+        if fail then raise.error (assert_equal loc t' t) else None
      | _ ->
         let arrs, _ = O.Helpers.destruct_arrows_n lamb_type (List.length lst) in
         if add_tc then error := `TC arrs :: ! error else ();
@@ -172,13 +172,13 @@ let typer_table_of_ligo_type ?(add_tc = true) ?(fail = true) lamb_type : typer_t
   ignore options;
   let original_type = lamb_type in
   let avs, lamb_type = O.Helpers.destruct_for_alls lamb_type in
-  Simple_utils.Trace.try_with (fun ~raise ->
+  Simple_utils.Trace.try_with (fun ~raise ~catch:_ ->
       let table = Inference.infer_type_applications ~raise ~loc ~default_error:(fun loc t t' -> `Outer_error (loc, t', t)) avs lamb_type lst tv_opt in
       let lamb_type = Inference.TMap.fold (fun tv t r -> Ast_typed.Helpers.subst_type tv t r) table lamb_type in
       Some (lamb_type, table, original_type))
-    (function
+    (fun ~catch:_ -> function
      | `Outer_error (loc, t', t) ->
-        if fail then raise.raise (assert_equal loc t' t) else None
+        if fail then raise.error (assert_equal loc t' t) else None
      | _ ->
         let arrs, _ = O.Helpers.destruct_arrows_n lamb_type (List.length lst) in
         if add_tc then error := `TC arrs :: ! error else ();
@@ -189,14 +189,14 @@ let typer_table_of_comparator ?(add_tc = true) ?(fail = true) ~cmp lamb_type : t
   let original_type = lamb_type in
   let avs, lamb_type = O.Helpers.destruct_for_alls lamb_type in
   let open Option in
-  let* r = Simple_utils.Trace.try_with (fun ~raise ->
+  let* r = Simple_utils.Trace.try_with (fun ~raise ~catch:_ ->
       let table = Inference.infer_type_applications ~raise ~loc ~default_error:(fun loc t t' -> `Outer_error (loc, t', t)) avs lamb_type lst tv_opt in
       let lamb_type = Inference.TMap.fold (fun tv t r -> Ast_typed.Helpers.subst_type tv t r) table lamb_type in
       Some (lamb_type, table, original_type)
     )
-    (function
+    (fun ~catch:_ -> function
      | `Outer_error (loc, t', t) ->
-        if fail then raise.raise (assert_equal loc t' t) else None
+        if fail then raise.error (assert_equal loc t' t) else None
      | _ ->
         let arrs, _ = O.Helpers.destruct_arrows_n lamb_type (List.length lst) in
         if add_tc then error := `TC arrs :: ! error else ();
@@ -212,12 +212,12 @@ let typer_table_of_ligo_type_on_protocol ~protocol ?(add_tc = true) ?(fail = tru
 
 let raise_of_errors ~raise ~loc lst = function
   | [] ->
-     raise.raise @@ (corner_case "Cannot find a suitable type for expression")
+     raise.error @@ (corner_case "Cannot find a suitable type for expression")
   | [`TC v] ->
-     raise.raise @@ expected loc v lst
+     raise.error @@ expected loc v lst
   | xs ->
      let tc = List.filter_map ~f:(function `TC v -> Some v) xs in
-     raise.raise @@ typeclass_error loc (List.rev tc) lst
+     raise.error @@ typeclass_error loc (List.rev tc) lst
 
 (* Given a list of typers, make a new typer that tries them in order *)
 let rec any_of : typer list -> typer = fun typers ->
@@ -244,7 +244,7 @@ let constant_since_protocol ~since ~constant typer : typer = fun ~error ~raise ~
   if (Environment.Protocols.compare options.protocol_version since) >= 0 then
     typer ~error ~raise ~options ~loc
   else
-    raise.raise (constant_since_protocol loc constant since)
+    raise.error (constant_since_protocol loc constant since)
 
 (* This prevents wraps a typer, allowing usage only in a particular protocol version *)
 let only_on_protocol ~protocol typer : typer = fun ~error ~raise ~options ~loc ->
@@ -369,25 +369,140 @@ module Constant_types = struct
                     of_type C_FALSE O.(t_bool ());
                     of_type C_OPEN_CHEST O.(t_chest_key () ^-> t_chest () ^-> t_nat () ^-> t_chest_opening_result ());
                     of_type C_VIEW O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> t_string () ^-> a ^-> t_address () ^-> t_option b);
+                    (* MATH *)
+                    of_types C_POLYMORPHIC_ADD [
+                        O.(t_string () ^-> t_string () ^-> t_string ());
+                        O.(t_bls12_381_g1 () ^-> t_bls12_381_g1 () ^-> t_bls12_381_g1 ());
+                        O.(t_bls12_381_g2 () ^-> t_bls12_381_g2 () ^-> t_bls12_381_g2 ());
+                        O.(t_bls12_381_fr () ^-> t_bls12_381_fr () ^-> t_bls12_381_fr ());
+                        O.(t_nat () ^-> t_nat () ^-> t_nat ());
+                        O.(t_int () ^-> t_int () ^-> t_int ());
+                        O.(t_mutez () ^-> t_mutez () ^-> t_mutez ());
+                        O.(t_nat () ^-> t_int () ^-> t_int ());
+                        O.(t_int () ^-> t_nat () ^-> t_int ());
+                        O.(t_timestamp () ^-> t_int () ^-> t_timestamp ());
+                        O.(t_int () ^-> t_timestamp () ^-> t_timestamp ());
+                      ];
+                    of_types C_POLYMORPHIC_SUB [
+                        O.(t_bls12_381_g1 () ^-> t_bls12_381_g1 () ^-> t_bls12_381_g1 ());
+                        O.(t_bls12_381_g2 () ^-> t_bls12_381_g2 () ^-> t_bls12_381_g2 ());
+                        O.(t_bls12_381_fr () ^-> t_bls12_381_fr () ^-> t_bls12_381_fr ());
+                        O.(t_nat () ^-> t_nat () ^-> t_int ());
+                        O.(t_int () ^-> t_int () ^-> t_int ());
+                        O.(t_nat () ^-> t_int () ^-> t_int ());
+                        O.(t_int () ^-> t_nat () ^-> t_int ());
+                        O.(t_timestamp () ^-> t_timestamp () ^-> t_int ());
+                        O.(t_timestamp () ^-> t_int () ^-> t_timestamp ());
+                        O.(t_mutez () ^-> t_mutez () ^-> t_option (t_mutez ())) ;
+                      ];
+                    of_types C_ADD [
+                        O.(t_bls12_381_g1 () ^-> t_bls12_381_g1 () ^-> t_bls12_381_g1 ());
+                        O.(t_bls12_381_g2 () ^-> t_bls12_381_g2 () ^-> t_bls12_381_g2 ());
+                        O.(t_bls12_381_fr () ^-> t_bls12_381_fr () ^-> t_bls12_381_fr ());
+                        O.(t_nat () ^-> t_nat () ^-> t_nat ());
+                        O.(t_int () ^-> t_int () ^-> t_int ());
+                        O.(t_mutez () ^-> t_mutez () ^-> t_mutez ());
+                        O.(t_nat () ^-> t_int () ^-> t_int ());
+                        O.(t_int () ^-> t_nat () ^-> t_int ());
+                        O.(t_timestamp () ^-> t_int () ^-> t_timestamp ());
+                        O.(t_int () ^-> t_timestamp () ^-> t_timestamp ());
+                      ];
+                    of_types C_MUL [
+                        O.(t_bls12_381_g1 () ^-> t_bls12_381_fr () ^-> t_bls12_381_g1 ());
+                        O.(t_bls12_381_g2 () ^-> t_bls12_381_fr () ^-> t_bls12_381_g2 ());
+                        O.(t_bls12_381_fr () ^-> t_bls12_381_fr () ^-> t_bls12_381_fr ());
+                        O.(t_nat () ^-> t_bls12_381_fr () ^-> t_bls12_381_fr ());
+                        O.(t_int () ^-> t_bls12_381_fr () ^-> t_bls12_381_fr ());
+                        O.(t_bls12_381_fr () ^-> t_nat () ^-> t_bls12_381_fr ());
+                        O.(t_bls12_381_fr () ^-> t_int () ^-> t_bls12_381_fr ());
+                        O.(t_nat () ^-> t_nat () ^-> t_nat ());
+                        O.(t_int () ^-> t_int () ^-> t_int ());
+                        O.(t_nat () ^-> t_mutez () ^-> t_mutez ());
+                        O.(t_mutez () ^-> t_nat () ^-> t_mutez ());
+                        O.(t_int () ^-> t_nat () ^-> t_int ());
+                        O.(t_nat () ^-> t_int () ^-> t_int ());
+                      ];
+                    of_types C_SUB [
+                        O.(t_bls12_381_g1 () ^-> t_bls12_381_fr () ^-> t_bls12_381_g1 ());
+                        O.(t_bls12_381_g2 () ^-> t_bls12_381_fr () ^-> t_bls12_381_g2 ());
+                        O.(t_bls12_381_fr () ^-> t_bls12_381_fr () ^-> t_bls12_381_fr ());
+                        O.(t_nat () ^-> t_nat () ^-> t_int ());
+                        O.(t_int () ^-> t_int () ^-> t_int ());
+                        O.(t_int () ^-> t_nat () ^-> t_int ());
+                        O.(t_nat () ^-> t_int () ^-> t_int ());
+                        O.(t_timestamp () ^-> t_timestamp () ^-> t_int ());
+                        O.(t_timestamp () ^-> t_int () ^-> t_timestamp ());
+                        O.(t_mutez () ^-> t_mutez () ^-> t_mutez ());
+                      ];
+                    of_type C_SUB_MUTEZ O.(t_mutez () ^-> t_mutez () ^-> t_option (t_mutez ()));
+                    of_types C_DIV [
+                        O.(t_nat () ^-> t_nat () ^-> t_nat ());
+                        O.(t_int () ^-> t_int () ^-> t_int ());
+                        O.(t_nat () ^-> t_int () ^-> t_int ());
+                        O.(t_int () ^-> t_nat () ^-> t_int ());
+                        O.(t_mutez () ^-> t_nat () ^-> t_mutez ());
+                        O.(t_mutez () ^-> t_mutez () ^-> t_nat ());
+                      ];
+                    of_types C_MOD [
+                        O.(t_nat () ^-> t_nat () ^-> t_nat ());
+                        O.(t_nat () ^-> t_int () ^-> t_nat ());
+                        O.(t_int () ^-> t_nat () ^-> t_nat ());
+                        O.(t_int () ^-> t_int () ^-> t_nat ());
+                        O.(t_mutez () ^-> t_nat () ^-> t_mutez ());
+                        O.(t_mutez () ^-> t_mutez () ^-> t_mutez ());
+                      ];
+                    of_types C_NEG [
+                        O.(t_int () ^-> t_int ());
+                        O.(t_nat () ^-> t_int ());
+                        O.(t_bls12_381_g1 () ^-> t_bls12_381_g1 ());
+                        O.(t_bls12_381_g2 () ^-> t_bls12_381_g2 ());
+                        O.(t_bls12_381_fr () ^-> t_bls12_381_fr ());
+                      ];
+                    (* LOGIC *)
+                    of_types C_NOT [
+                        O.(t_bool () ^-> t_bool ());
+                        O.(t_int () ^-> t_int ());
+                        O.(t_nat () ^-> t_int ());
+                      ];
+                    of_types C_AND [
+                        O.(t_bool () ^-> t_bool () ^-> t_bool ());
+                        O.(t_nat () ^-> t_nat () ^-> t_nat ());
+                        O.(t_int () ^-> t_nat () ^-> t_nat ());
+                      ];
+                    of_types C_OR [
+                        O.(t_bool () ^-> t_bool () ^-> t_bool ());
+                        O.(t_nat () ^-> t_nat () ^-> t_nat ());
+                      ];
+                    of_types C_XOR [
+                        O.(t_bool () ^-> t_bool () ^-> t_bool ());
+                        O.(t_nat () ^-> t_nat () ^-> t_nat ());
+                      ];
+                    of_type C_LSL O.(t_nat () ^-> t_nat () ^-> t_nat ());
+                    of_type C_LSR O.(t_nat () ^-> t_nat () ^-> t_nat ());
+                    of_type C_EMIT_EVENT O.(for_all "a" @@ fun a -> t_string () ^-> a ^-> t_operation ());
                     (* TEST *)
                     of_type C_TEST_COMPILE_CONTRACT O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> (t_pair a b ^-> t_pair (t_list (t_operation ())) b) ^-> t_michelson_contract ());
                     of_type C_TEST_SIZE O.(t_michelson_contract () ^-> t_int ());
                     of_type C_TEST_ORIGINATE O.(t_michelson_contract () ^-> t_michelson_code () ^-> t_mutez () ^-> t_address ());
                     of_type C_TEST_BOOTSTRAP_CONTRACT O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> (t_pair a b ^-> t_pair (t_list (t_operation ())) b) ^-> b ^-> t_mutez () ^-> t_unit ());
                     of_type C_TEST_LAST_ORIGINATIONS O.(t_unit () ^-> t_map (t_address ()) (t_list (t_address ())));
+                    of_type C_TEST_LAST_EVENTS O.(for_all "a" @@ fun a -> t_string () ^-> t_list (t_pair (t_address ()) a));
                     of_type C_TEST_NTH_BOOTSTRAP_TYPED_ADDRESS O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> t_nat () ^-> t_typed_address a b);
                     of_type C_TEST_SET_SOURCE O.(t_address () ^-> t_unit ());
                     of_type C_TEST_SET_BAKER O.(t_test_baker_policy () ^-> t_unit ());
                     of_type C_TEST_NTH_BOOTSTRAP_CONTRACT O.(t_nat () ^-> t_address ());
                     of_type C_TEST_GET_STORAGE_OF_ADDRESS O.(t_address () ^-> t_michelson_code ());
                     of_type C_TEST_GET_BALANCE O.(t_address () ^-> t_mutez ());
-                    of_type C_TEST_GET_NTH_BS O.(t_int () ^-> t_address ());
-                    of_type C_TEST_LOG O.(for_all "a" @@ fun a -> a ^-> t_unit ());
-                    of_type C_TEST_STATE_RESET O.(t_nat () ^-> t_list (t_mutez ()) ^-> t_unit ());
+                    of_type C_TEST_GET_NTH_BS O.(t_int () ^-> t_triplet (t_address ()) (t_key ()) (t_string ()));
+                    of_type C_TEST_PRINT O.(t_int () ^-> t_string () ^-> t_unit ());
+                    of_type C_TEST_TO_STRING O.(for_all "a" @@ fun a -> a ^-> t_string ());
+                    of_type C_TEST_UNESCAPE_STRING O.(t_string () ^-> t_string ());
+                    of_type C_TEST_STATE_RESET O.(t_option (t_timestamp ()) ^-> t_nat () ^-> t_list (t_mutez ()) ^-> t_unit ());
                     of_type C_TEST_GET_VOTING_POWER O.(t_key_hash () ^-> t_nat ());
-                    of_type C_TEST_GET_TOTAL_VOTING_POWER O.(t_nat ());
+                    of_type C_TEST_GET_TOTAL_VOTING_POWER O.(t_unit () ^-> t_nat ());
                     of_type C_TEST_CAST_ADDRESS O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> t_address () ^-> t_typed_address a b);
-                    of_type C_TEST_RANDOM O.(for_all "a" @@ fun a -> t_unit () ^-> a);
+                    of_type C_TEST_RANDOM O.(for_all "a" @@ fun a -> t_bool () ^-> t_gen a);
+                    of_type C_TEST_GENERATOR_EVAL O.(for_all "a" @@ fun a -> t_gen a ^-> a);
                     of_type C_TEST_MUTATE_VALUE O.(for_all "a" @@ fun a -> t_nat () ^-> a ^-> t_option (t_pair a (t_mutation ())));
                     of_type C_TEST_MUTATION_TEST O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> a ^-> (a ^-> b) ^-> t_option (t_pair b (t_mutation ())));
                     of_type C_TEST_MUTATION_TEST_ALL O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> (a ^-> (a ^-> b) ^-> t_list (t_pair b (t_mutation ()))));
@@ -397,8 +512,8 @@ module Constant_types = struct
                     of_type C_TEST_RUN O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> (a ^-> b) ^-> a ^-> t_michelson_code ());
                     of_type C_TEST_DECOMPILE O.(for_all "a" @@ fun a -> t_michelson_code () ^-> a);
                     of_type C_TEST_TO_TYPED_ADDRESS O.(for_all "a" @@ fun a -> (for_all "b" @@ fun b -> t_contract a ^-> t_typed_address a b));
-                    of_type C_TEST_EXTERNAL_CALL_TO_ADDRESS O.(t_address () ^-> t_michelson_code () ^-> t_mutez () ^-> t_test_exec_result ());
-                    of_type C_TEST_EXTERNAL_CALL_TO_ADDRESS_EXN O.(t_address () ^-> t_michelson_code () ^-> t_mutez () ^-> t_nat ());
+                    of_type C_TEST_EXTERNAL_CALL_TO_ADDRESS O.(t_address () ^-> t_option (t_string ()) ^-> t_michelson_code () ^-> t_mutez () ^-> t_test_exec_result ());
+                    of_type C_TEST_EXTERNAL_CALL_TO_ADDRESS_EXN O.(t_address () ^-> t_option (t_string ()) ^-> t_michelson_code () ^-> t_mutez () ^-> t_nat ());
                     of_type C_TEST_SET_BIG_MAP O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> t_int () ^-> t_big_map a b ^-> t_unit ());
                     of_type C_TEST_BAKER_ACCOUNT O.(t_pair (t_string ()) (t_key ()) ^-> t_option (t_mutez ()) ^-> t_unit ());
                     of_type C_TEST_REGISTER_DELEGATE O.(t_key_hash () ^-> t_unit ());
@@ -415,7 +530,10 @@ module Constant_types = struct
                     of_type C_TEST_FAILWITH (for_all "a" @@ fun a -> for_all "b" @@ fun b -> (a ^-> b));
                     of_type C_TEST_PUSH_CONTEXT O.(t_unit () ^-> t_unit ());
                     of_type C_TEST_POP_CONTEXT O.(t_unit () ^-> t_unit ());
+                    of_type C_TEST_DROP_CONTEXT O.(t_unit () ^-> t_unit ());
                     of_type C_TEST_READ_CONTRACT_FROM_FILE O.(t_string () ^-> t_michelson_contract ());
+                    of_type C_TEST_SIGN O.(t_string () ^-> t_bytes () ^-> t_signature ());
+                    of_type C_TEST_GET_ENTRYPOINT O.(for_all "a" @@ fun a -> t_contract a ^-> t_option (t_string ()));
                     (* SAPLING *)
                     of_type C_SAPLING_EMPTY_STATE O.(t_for_all a_var Singleton (t_sapling_state (t_variable a_var ())));
                     of_type C_SAPLING_VERIFY_UPDATE O.(t_for_all a_var Singleton (t_sapling_transaction (t_variable a_var ()) ^-> t_sapling_state (t_variable a_var ()) ^-> t_option (t_pair (t_int ()) (t_sapling_state (t_variable a_var ())))));
@@ -497,6 +615,15 @@ module Constant_types = struct
 
   let typer_of_type_no_tc t =
     typer_table_of_ligo_type ~add_tc:false ~fail:false t
+
+  let failwith_typer = any_table_of [
+                           typer_of_type_no_tc @@ O.(t_string () ^-> t_unit ());
+                           typer_of_type_no_tc @@ O.(t_nat () ^-> t_unit ());
+                           typer_of_type_no_tc @@ O.(t_int () ^-> t_unit ());
+                           typer_table_of_ligo_type O.(for_all "a" @@ fun a -> t_string () ^-> a);
+                           typer_table_of_ligo_type O.(for_all "a" @@ fun a -> t_nat () ^-> a);
+                           typer_table_of_ligo_type O.(for_all "a" @@ fun a -> t_int () ^-> a);
+                           ]
 
   let int_typer = any_table_of [
                       typer_table_of_ligo_type O.(t_nat () ^-> t_int ());
@@ -673,12 +800,12 @@ let external_typers ~raise ~options loc s =
     | "cmptest" | "u_cmptest" ->
        Constant_types.cmptest_typer
     | _ ->
-       raise.raise (corner_case @@ Format.asprintf "Typer not implemented for external %s" s) in
+       raise.error (corner_case @@ Format.asprintf "Typer not implemented for external %s" s) in
   fun lst tv_opt ->
   let error = ref [] in
   (match typer ~error ~raise ~options ~loc lst tv_opt with
    | Some (tv, table, ot) -> (tv, table, ot)
-   | None -> raise.raise (corner_case @@ Format.asprintf "Cannot type external %s" s))
+   | None -> raise.error (corner_case @@ Format.asprintf "Cannot type external %s" s))
 
 let constant_typers ~raise ~options loc c =
   match CTMap.find_opt c Constant_types.tbl with
@@ -687,6 +814,6 @@ let constant_typers ~raise ~options loc c =
      let error = ref [] in
      (match typer ~error ~raise ~options ~loc lst tv_opt with
       | Some tv -> tv
-      | None -> raise.raise (corner_case @@ Format.asprintf "Cannot type constant %a" PP.constant' c))
+      | None -> raise.error (corner_case @@ Format.asprintf "Cannot type constant %a" PP.constant' c))
   | _ ->
-     raise.raise (corner_case @@ Format.asprintf "Typer not implemented for constant %a" PP.constant' c)
+     raise.error (corner_case @@ Format.asprintf "Typer not implemented for constant %a" PP.constant' c)

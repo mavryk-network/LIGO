@@ -1,8 +1,7 @@
 open Types
 (* type constants *)
 type t =
-    Bool
-  | String
+    String
   | Bytes
   | Int
   | Operation
@@ -41,10 +40,10 @@ type t =
   | Chest_opening_result
   | Tx_rollup_l2_address 
   | External of string
+  | Gen
   [@@deriving ord, eq, hash]
 
 let to_string = function
-  | Bool                 -> "bool"
   | String               -> "string"
   | Bytes                -> "bytes"
   | Int                  -> "int"
@@ -84,9 +83,9 @@ let to_string = function
   | Chest_opening_result -> "chest_opening_result"
   | Tx_rollup_l2_address -> "tx_rollup_l2_address"
   | External s           -> "external_" ^ s
+  | Gen                  -> "pbt_gen"
 
   let of_string = function
-  | "bool"                 -> Bool
   | "string"               -> String
   | "bytes"                -> Bytes
   | "int"                  -> Int
@@ -154,9 +153,9 @@ let to_string = function
   | "external_u_concat"    -> External "u_concat"
   | "external_cmp"          -> External "cmp"
   | "external_u_cmp"        -> External "u_cmp"
+  | "pbt_gen"                  -> Gen
   | _ -> failwith "Forgot to add constant name in constant.ml?"
 
-let bool                 = Bool
 let string               = String
 let bytes                = Bytes
 let int                  = Int
@@ -225,8 +224,9 @@ let external_concat      = External "concat"
 let external_u_concat    = External "u_concat"
 let external_cmp          = External "cmp"
 let external_u_cmp        = External "u_cmp"
+let gen                  = Gen
 
-let v_bool                 : type_variable = TypeVar.of_input_var (to_string Bool)
+let v_bool                 : type_variable = TypeVar.of_input_var ("bool")
 let v_string               : type_variable = TypeVar.of_input_var (to_string String)
 let v_bytes                : type_variable = TypeVar.of_input_var (to_string Bytes)
 let v_int                  : type_variable = TypeVar.of_input_var (to_string Int)
@@ -295,3 +295,4 @@ let v_external_concat      : type_variable = TypeVar.of_input_var (to_string @@ 
 let v_external_u_concat    : type_variable = TypeVar.of_input_var (to_string @@ External "u_concat")
 let v_external_cmp          : type_variable = TypeVar.of_input_var (to_string @@ External "cmp")
 let v_external_u_cmp        : type_variable = TypeVar.of_input_var (to_string @@ External "u_cmp")
+let v_gen                  : type_variable = TypeVar.of_input_var (to_string @@ Gen)

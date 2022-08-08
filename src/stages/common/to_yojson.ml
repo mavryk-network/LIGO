@@ -36,13 +36,12 @@ let attributes attr =
   let list = List.map ~f:(fun string -> `String string) attr
   in `Assoc [("attributes", `List list)]
 
-let known_attributes { inline ; no_mutation ; view ; public ; thunk ; hidden } =
+let known_attributes { inline ; no_mutation ; view ; public ; hidden } =
   `Assoc [
     ("inline", `Bool inline) ;
     ("no_mutation", `Bool no_mutation) ;
     ("view", `Bool view) ;
     ("public", `Bool public) ;
-    ("thunk", `Bool thunk) ;
     ("hidden", `Bool hidden) ;
   ]
 
@@ -196,10 +195,9 @@ let sequence expression {expr1;expr2} =
     ("expr2", expression expr2);
   ]
 
-let assign expression type_expression {binder=b; access_path; expression=e} =
+let assign expression type_expression {binder=b; expression=e} =
   `Assoc [
     ("variable", binder type_expression b);
-    ("access_path", list (access expression) access_path);
     ("expression", expression e);
   ]
 

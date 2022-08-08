@@ -4,7 +4,7 @@ let contract = test
 
 let%expect_test _ =
   run_ligo_good [ "compile" ; "contract" ; contract "view.mligo" ] ;
-  [%expect{|
+  [%expect {|
     { parameter unit ;
       storage int ;
       code { CDR ; NIL operation ; PAIR } ;
@@ -13,7 +13,7 @@ let%expect_test _ =
 (* not warning is expected because the annotated view is still being included in the contract *)
 let%expect_test _ =
   run_ligo_good [ "compile" ; "contract" ; contract "view.mligo" ; "--views" ; "v1,v2" ] ;
-  [%expect{|
+  [%expect {|
     { parameter unit ;
       storage int ;
       code { CDR ; NIL operation ; PAIR } ;
@@ -23,7 +23,7 @@ let%expect_test _ =
 (* the following should trigger a warning because an annotated view is being ignored *)
 let%expect_test _ =
   run_ligo_good [ "compile" ; "contract" ; contract "view.mligo" ; "--views" ; "v2" ] ;
-  [%expect{|
+  [%expect {|
     File "../../test/contracts/view.mligo", line 3, characters 12-14:
       2 |
       3 | [@view] let v1 (n,s: int * int) : int = s + n + 1
@@ -41,7 +41,7 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_bad [ "compile" ; "contract" ; contract "view.mligo" ; "--views" ; "v1,bad_view" ] ;
   [%expect {|
-    File "../../test/contracts/view.mligo", line 5, characters 14-17:
+    File "../../test/contracts/view.mligo", line 5, characters 4-12:
       4 | let v2 (_,s: int * int) : int = s + 2
       5 | let bad_view (_,_: int * nat ) : nat = 1n
       6 |
@@ -66,7 +66,7 @@ let%expect_test _ =
 (* view + #import + alias : view expected *)
 let%expect_test _ =
   run_ligo_good [ "compile" ; "contract" ; contract "view_import_and_alias.mligo" ] ;
-  [%expect{|
+  [%expect {| 
     { parameter unit ;
       storage int ;
       code { CDR ; NIL operation ; PAIR } ;
@@ -116,3 +116,31 @@ let%expect_test _ =
                    { parameter unit ; storage int ; code { CDR ; NIL operation ; PAIR } } ;
                  PAIR } ;
              PACK } } |}]
+
+let%expect_test _ =
+  run_ligo_good [ "compile" ; "contract" ; contract "view_tuple_storage.mligo" ] ;
+  [%expect {|
+    { parameter int ;
+      storage (pair (pair (pair string nat) string nat) string) ;
+      code { CDR ; NIL operation ; PAIR } ;
+      view "v" int mutez { DROP ; PUSH mutez 1000000 } } |}]
+
+let%expect_test _ =
+  run_ligo_good [ "compile" ; "contract" ; contract "view_shadow_ann.mligo" ] ;
+  [%expect {|
+    { parameter unit ;
+      storage int ;
+      code { CDR ; NIL operation ; PAIR } ;
+      view "v1" int int { UNPAIR ; PUSH int 1 ; SWAP ; DIG 2 ; ADD ; ADD } } |}]
+
+let%expect_test _ =
+  run_ligo_bad [ "compile" ; "contract" ; bad_test "views_shadow.mligo" ] ;
+  [%expect {|
+    File "../../test/contracts/negative/views_shadow.mligo", line 3, characters 12-14:
+      2 |
+      3 | [@view] let v1 (n,s: int * int) : int = s + n + 1
+      4 | let v1 (n,s: int * int) : int = s + n + 111111
+
+    This declaration holds an annotation and is later shadowed. |}]
+
+    
