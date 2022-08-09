@@ -34,6 +34,7 @@ end
 module TypeVar : sig
    include VAR
    val is_name          : t -> string -> bool
+   val is_exists : t -> bool
 end
 
 module ModuleVar : sig

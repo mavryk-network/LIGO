@@ -32,8 +32,12 @@ type expression_variable = ValueVar.t [@@deriving hash]
 type type_variable       = TypeVar.t [@@deriving hash]
 type module_variable     = ModuleVar.t [@@deriving hash]
 
-type kind = | Type
-            | Singleton [@@deriving yojson,equal,compare,hash]
+type kind = 
+  | Type
+  (* TODO: Determine usage for [Singleton] kind. Could be dead code? *)
+  | Singleton 
+  | Arrow of kind * kind
+[@@deriving yojson,equal,compare,hash]
 
 type label = Label of string [@@deriving hash]
 let label_to_yojson (Label l) = `List [`String "Label"; `String l]
