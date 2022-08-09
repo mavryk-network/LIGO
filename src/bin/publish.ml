@@ -31,6 +31,7 @@ UI:
 - [ ] List packages
 - [ ] For a package list all versions
 - [ ] Stats about pakage (user, downloads) stuff what npmjs website shows
+- [ ] If multiple ppl publish maybe show all the users that have published
 
 *)
 

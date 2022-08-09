@@ -202,6 +202,7 @@ let run_command (cmd : command) =
         print_endline "mapping over status";
         match status with
           Caml.Unix.WEXITED 0 -> Ok ()
-        | _ -> Error ("unknown error"))
+        | Caml.Unix.WEXITED code -> Error (Format.sprintf "unknown error %d" code)
+        | _ -> Error "unknown error")
         p#status) in
   Lwt_main.run status
