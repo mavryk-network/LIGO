@@ -199,6 +199,7 @@ let run_command (cmd : command) =
   let status = Lwt_process.with_process_none ~stdout:`Keep ~stderr:`Keep cmd 
     (fun p -> Lwt.map  
       (fun status -> 
+        print_endline "mapping over status";
         match status with
           Caml.Unix.WEXITED 0 -> Ok ()
         | _ -> Error ("unknown error"))
