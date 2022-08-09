@@ -8,6 +8,7 @@ module Exists_var = struct
   let equal t1 t2 = compare t1 t2 = 0
   let of_type_var tvar = if TypeVar.is_exists tvar then Some tvar else None
   let pp ppf t = Format.fprintf ppf "%a" Ast_typed.PP.type_variable t
+  let fresh = TypeVar.fresh_exists
 end
 
 type exists_variable = Exists_var.t
@@ -19,13 +20,12 @@ and item =
   | C_type of type_variable * type_expression
   | C_type_var of type_variable * kind
   | C_exists_var of exists_variable * kind
-  | C_solved of exists_variable * kind * type_expression
+  | C_exists_eq of exists_variable * kind * type_expression
   | C_marker of exists_variable
   | C_module of module_variable * t
 
 module PP = struct
   open Ast_typed.PP
-  open Types
 
   let list ~pp ppf xs =
     let rec loop ppf = function
@@ -46,7 +46,7 @@ module PP = struct
         Format.fprintf ppf "%a :: %a" type_variable tvar kind_ kind
       | C_exists_var (evar, kind) ->
         Format.fprintf ppf "%a :: %a" Exists_var.pp evar kind_ kind
-      | C_solved (evar, kind, type_) ->
+      | C_exists_eq (evar, kind, type_) ->
         Format.fprintf
           ppf
           "%a :: %a = %a"
@@ -65,7 +65,6 @@ let pp = PP.context
 let empty = []
 let add t item = item :: t
 let join t1 t2 = t2 @ t1
-let of_list t = List.rev t
 
 (* Inifix notations for [add] and [join] *)
 let ( |:: ) = add
@@ -76,12 +75,6 @@ let add_type_var t tvar kind = t |:: C_type_var (tvar, kind)
 let add_exists_var t evar kind = t |:: C_exists_var (evar, kind)
 let add_marker t evar = t |:: C_marker evar
 let add_module t mvar mctx = t |:: C_module (mvar, mctx)
-
-let get_value t evar =
-  List.find_map t ~f:(function
-    | C_value (evar', type_) when ValueVar.equal evar evar' -> Some type_
-    | _ -> None)
-
 
 let get_value t evar =
   List.find_map t ~f:(function
@@ -121,8 +114,7 @@ let get_markers t =
 
 let get_exists_var t evar =
   List.find_map t ~f:(function
-    | (C_exists_var (evar', kind) | C_solved (evar', kind, _))
-      when Exists_var.equal evar evar' -> Some kind
+    | C_exists_var (evar', kind) when Exists_var.equal evar evar' -> Some kind
     | _ -> None)
 
 
@@ -130,6 +122,112 @@ let get_type_var t tvar =
   List.find_map t ~f:(function
     | C_type_var (tvar', kind) when TypeVar.equal tvar tvar' -> Some kind
     | _ -> None)
+
+
+let get_exists_eq t evar =
+  List.find_map t ~f:(function
+    | C_exists_eq (evar', _kind, type_) when Exists_var.equal evar evar' -> Some type_
+    | _ -> None)
+
+
+let rec equal_item : item -> item -> bool =
+ fun item1 item2 ->
+  match item1, item2 with
+  | C_value (x1, type1), C_value (x2, type2) ->
+    ValueVar.equal x1 x2 && Compare.type_expression type1 type2 = 0
+  | C_type (tvar1, type1), C_type (tvar2, type2) ->
+    TypeVar.equal tvar1 tvar2 && Compare.type_expression type1 type2 = 0
+  | C_type_var (tvar1, kind1), C_type_var (tvar2, kind2) ->
+    TypeVar.equal tvar1 tvar2 && compare_kind kind1 kind2 = 0
+  | C_exists_var (evar1, kind1), C_exists_var (evar2, kind2) ->
+    Exists_var.equal evar1 evar2 && compare_kind kind1 kind2 = 0
+  | C_exists_eq (evar1, kind1, type1), C_exists_eq (evar2, kind2, type2) ->
+    Exists_var.equal evar1 evar2
+    && compare_kind kind1 kind2 = 0
+    && Compare.type_expression type1 type2 = 0
+  | C_marker evar1, C_marker evar2 -> Exists_var.equal evar1 evar2
+  | C_module (mvar1, mctx1), C_module (mvar2, mctx2) ->
+    ModuleVar.equal mvar1 mvar2 && List.equal equal_item mctx1 mctx2
+  | _, _ -> false
+
+
+let drop_until t ~at =
+  let rec loop t =
+    match t with
+    | [] -> []
+    | item :: t when equal_item item at -> t
+    | item :: t -> item :: loop t
+  in
+  loop t
+
+
+let split_at t ~at =
+  let rec loop t =
+    match t with
+    | [] -> [], []
+    | item :: t ->
+      if equal_item item at
+      then [], t
+      else (
+        let t1, t2 = loop t in
+        item :: t1, t2)
+  in
+  loop t
+
+
+let insert_at t ~at ~hole =
+  let t1, t2 = split_at t ~at in
+  t1 @ hole @ t2
+
+
+let add_exists_eq t evar kind type_ =
+  let t1, t2 = split_at t ~at:(C_exists_var (evar, kind)) in
+  t1 @ [ C_exists_eq (evar, kind, type_) ] @ t2
+
+
+let rec apply t (type_ : type_expression) : type_expression =
+  let self = apply t in
+  let return content = { type_ with type_content = content } in
+  match type_.type_content with
+  | T_variable tvar ->
+    (match Exists_var.of_type_var tvar with
+     | Some evar ->
+       (match get_exists_eq t evar with
+        | Some type_' -> self type_'
+        | None -> type_)
+     | None -> type_)
+  | T_constant inj ->
+    let parameters = List.map ~f:self inj.parameters in
+    return @@ T_constant { inj with parameters }
+  | T_sum rows ->
+    let content =
+      LMap.map
+        (fun row_elem ->
+          let associated_type = self row_elem.associated_type in
+          { row_elem with associated_type })
+        rows.content
+    in
+    return @@ T_sum { rows with content }
+  | T_record rows ->
+    let content =
+      LMap.map
+        (fun row_elem ->
+          let associated_type = self row_elem.associated_type in
+          { row_elem with associated_type })
+        rows.content
+    in
+    return @@ T_record { rows with content }
+  | T_arrow { type1; type2 } ->
+    let type1 = self type1 in
+    let type2 = self type2 in
+    return @@ T_arrow { type1; type2 }
+  | T_singleton _ -> type_
+  | T_abstraction abs ->
+    let type_ = self abs.type_ in
+    return @@ T_abstraction { abs with type_ }
+  | T_for_all for_all ->
+    let type_ = self for_all.type_ in
+    return @@ T_for_all { for_all with type_ }
 
 
 module ValueMap = Simple_utils.Map.Make (ValueVar)
@@ -362,7 +460,7 @@ end = struct
          true
        | C_exists_var (evar, _) ->
          not (List.mem ~equal:Exists_var.equal (get_exists_vars ctx) evar)
-       | C_solved (evar, kind, type_) ->
+       | C_exists_eq (evar, kind, type_) ->
          (not (List.mem ~equal:Exists_var.equal (get_exists_vars ctx) evar))
          &&
          (match type_expr type_ ~ctx with

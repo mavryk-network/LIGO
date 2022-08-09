@@ -93,8 +93,13 @@ module ValueVar = Internal ()
 module TypeVar = struct
   include Internal ()
 
+  let exists_prefix = "^gen"
+
   let is_exists { name; generated; _ } = 
     (* String Hack for existentials. Used to avoid changes to [Ast_typed].
        Future MR: Add explicit [T_exists] to [Ast_typed] *)
-    String.is_prefix name ~prefix:"^gen" && generated
+    String.is_prefix name ~prefix:exists_prefix && generated
+
+  let fresh_exists ?(loc = Location.dummy) () = 
+    fresh ~loc ~name:exists_prefix ()
 end
