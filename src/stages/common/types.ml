@@ -43,6 +43,8 @@ type label = Label of string [@@deriving hash]
 let label_to_yojson (Label l) = `List [`String "Label"; `String l]
 let equal_label (Label a) (Label b) = String.equal a b
 let compare_label (Label a) (Label b) = String.compare a b
+module LSet = Caml.Set.Make(struct type t = label [@@deriving compare] end)
+
 module LMap = Simple_utils.Map.MakeHashable(struct type t = label [@@deriving hash]
                                            let compare = compare_label
                                             end)
