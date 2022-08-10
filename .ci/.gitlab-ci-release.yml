@@ -88,6 +88,7 @@ determine_stable_version:
     # Have to be done here because we are using an image for this job.
     - apt-get update
     - apt-get install -y --no-install-recommends jq
+    - wget https://github.com/mikefarah/yq/releases/download/v4.18.1/yq_linux_amd64 -O /usr/bin/yq && chmod +x /usr/bin/yq
   artifacts:
     reports:
       dotenv: stableversion.env
