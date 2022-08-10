@@ -97,10 +97,11 @@ determine_stable_version:
   # We don't want to generate a new version if the version is a fix
   # If we stop to use docusaurus we have to determine this value by another way
     - | 
-      STABLE_VERSION=`./.ci/scripts/release_metadata/read_release_metadata.sh LAST_STABLE_VERSION`
-      if [[ $CI_COMMIT_TAG =~ [0-9]+\.[0-9]+\.0$ || ($CI_COMMIT_BRANCH =~ ^release/[0-9]+\.[0-9]+\.0$ && $DRY_RUN_RELEASE != "") ]] then
+      STABLE_VERSION=\"`./.ci/scripts/release_metadata/read_release_metadata.sh LAST_STABLE_VERSION`\"
+      if [[ $CI_COMMIT_TAG =~ [0-9]+\.[0-9]+\.0$ || ($CI_COMMIT_BRANCH =~ ^release/[0-9]+\.[0-9]+\.0$ && $DRY_RUN_RELEASE != "") ]]; then
         STABLE_VERSION=`jq '.[1]' gitlab-pages/website/versions.json`
       fi
+    - echo "Stable version is ${STABLE_VERSION}"
     - echo "STABLE_VERSION=${STABLE_VERSION}" >> stableversion.env
 
 
