@@ -96,12 +96,12 @@ struct
 end
 
 type testop = (I32Op.testop, I64Op.testop, F32Op.testop, F64Op.testop) Values.op
- type unop = (I32Op.unop, I64Op.unop, F32Op.unop, F64Op.unop) Values.op
- type binop = (I32Op.binop, I64Op.binop, F32Op.binop, F64Op.binop) Values.op
- type relop = (I32Op.relop, I64Op.relop, F32Op.relop, F64Op.relop) Values.op
- type cvtop = (I32Op.cvtop, I64Op.cvtop, F32Op.cvtop, F64Op.cvtop) Values.op
- 
- type vec_testop = (V128Op.testop) Values.vecop
+type unop = (I32Op.unop, I64Op.unop, F32Op.unop, F64Op.unop) Values.op
+type binop = (I32Op.binop, I64Op.binop, F32Op.binop, F64Op.binop) Values.op
+type relop = (I32Op.relop, I64Op.relop, F32Op.relop, F64Op.relop) Values.op
+type cvtop = (I32Op.cvtop, I64Op.cvtop, F32Op.cvtop, F64Op.cvtop) Values.op
+
+type vec_testop = (V128Op.testop) Values.vecop
 type vec_relop = (V128Op.relop) Values.vecop
 type vec_unop = (V128Op.unop) Values.vecop
 type vec_binop = (V128Op.binop) Values.vecop
@@ -281,6 +281,7 @@ and elem_segment' =
  }
  and data_part_detail =
   | String of string
+  | Bytes of bytes
   | Int32 of int32
   | Int64 of int64
   | Nativeint of nativeint

@@ -108,35 +108,168 @@ let rec expression ~raise :
     let data, symbols = convert_to_memory name at z in
     let w = {w with datas = w.datas @ data; symbols = w.symbols @ symbols} in
     (w, l, [data_symbol name at])
-  | E_literal (Literal_timestamp _z) -> failwith "E_literal (Literal_timestamp) not supported"
-  | E_literal (Literal_mutez _z) -> failwith "E_literal (Literal_mutez) not supported"
-  | E_literal (Literal_string _s) -> failwith "E_literal (Literal_string) not supported"
-  | E_literal (Literal_bytes _b) -> failwith "E_literal (Literal_bytes) not supported"
-  | E_literal (Literal_address _b) -> failwith "E_literal (Literal_address) not supported"
-  | E_literal (Literal_signature _b) -> failwith "E_literal (Literal_signature) not supported"
-  | E_literal (Literal_key _b) -> failwith "E_literal (Literal_key) not supported"
-  | E_literal (Literal_key_hash _b) -> failwith "E_literal (Literal_key_hash) not supported"
-  | E_literal (Literal_chain_id _b) -> failwith "E_literal (Literal_chain_id) not supported"
-  | E_literal (Literal_operation _b) -> failwith "E_literal (Literal_operation) not supported"
-
-  | E_literal (Literal_bls12_381_g1 _b) -> failwith "E_literal (Literal_bls12_381_g1) not supported"
-  | E_literal (Literal_bls12_381_g2 _b) -> failwith "E_literal (Literal_bls12_381_g2) not supported"
-  | E_literal (Literal_bls12_381_fr _b) -> failwith "E_literal (Literal_bls12_381_fr) not supported"
-  | E_literal (Literal_chest _b) -> failwith "E_literal (Literal_chest) not supported"
-  | E_literal (Literal_chest_key _b) -> failwith "E_literal (Literal_chest_key) not supported"
+  | E_literal (Literal_timestamp z) -> 
+    let unique_name = ValueVar.fresh ~name:"Literal_timestamp" () in
+    let name = var_to_string unique_name in
+    let data, symbols = convert_to_memory name at z in
+    let w = {w with datas = w.datas @ data; symbols = w.symbols @ symbols} in
+    (w, l, [data_symbol name at])
+  | E_literal (Literal_mutez z) -> 
+    let unique_name = ValueVar.fresh ~name:"Literal_mutez" () in
+    let name = var_to_string unique_name in
+    let data, symbols = convert_to_memory name at z in
+    let w = {w with datas = w.datas @ data; symbols = w.symbols @ symbols} in
+    (w, l, [data_symbol name at])
+  | E_literal (Literal_string (Standard s)) -> 
+    let unique_name = ValueVar.fresh ~name:"Literal_string" () in
+    let name = var_to_string unique_name in
+    let data = [data ~offset:!global_offset ~init:{name; detail = [String s]}] in
+    let symbols =
+      [symbol_data ~name ~index:0l ~size:(Int32.of_int_exn(String.length s)) ~offset:!global_offset]
+    in
+    global_offset := Int32.(!global_offset + Int32.of_int_exn (String.length s));
+    let w = {w with datas = w.datas @ data; symbols = w.symbols @ symbols } in
+    (w, l, [data_symbol name at])
+  | E_literal (Literal_string (Verbatim s)) -> 
+    let unique_name = ValueVar.fresh ~name:"Literal_string_verbatim" () in
+    let name = var_to_string unique_name in
+    let data = [data ~offset:!global_offset ~init:{name; detail = [String s]}] in
+    let symbols =
+      [symbol_data ~name ~index:0l ~size:(Int32.of_int_exn(String.length s)) ~offset:!global_offset]
+    in
+    global_offset := Int32.(!global_offset + Int32.of_int_exn (String.length s));
+    let w = {w with datas = w.datas @ data; symbols = w.symbols @ symbols } in
+    (w, l, [data_symbol name at])
+  | E_literal (Literal_bytes b) -> 
+    let unique_name = ValueVar.fresh ~name:"Literal_bytes" () in
+    let name = var_to_string unique_name in
+    let data = [data ~offset:!global_offset ~init:{name; detail = [Bytes b]}] in
+    let symbols =
+      [symbol_data ~name ~index:0l ~size:(Int32.of_int_exn(Bytes.length b)) ~offset:!global_offset]
+    in
+    global_offset := Int32.(!global_offset + Int32.of_int_exn (Bytes.length b));
+    let w = {w with datas = w.datas @ data; symbols = w.symbols @ symbols } in
+    (w, l, [data_symbol name at])
+  | E_literal (Literal_address s) -> 
+    let unique_name = ValueVar.fresh ~name:"Literal_address" () in
+    let name = var_to_string unique_name in
+    let data = [data ~offset:!global_offset ~init:{name; detail = [String s]}] in
+    let symbols =
+      [symbol_data ~name ~index:0l ~size:(Int32.of_int_exn(String.length s)) ~offset:!global_offset]
+    in
+    global_offset := Int32.(!global_offset + Int32.of_int_exn (String.length s));
+    let w = {w with datas = w.datas @ data; symbols = w.symbols @ symbols } in
+    (w, l, [data_symbol name at])
+  | E_literal (Literal_signature s) ->
+    let unique_name = ValueVar.fresh ~name:"Literal_signature" () in
+    let name = var_to_string unique_name in
+    let data = [data ~offset:!global_offset ~init:{name; detail = [String s]}] in
+    let symbols =
+      [symbol_data ~name ~index:0l ~size:(Int32.of_int_exn(String.length s)) ~offset:!global_offset]
+    in
+    global_offset := Int32.(!global_offset + Int32.of_int_exn (String.length s));
+    let w = {w with datas = w.datas @ data; symbols = w.symbols @ symbols } in
+    (w, l, [data_symbol name at])
+  | E_literal (Literal_key s) -> 
+    let unique_name = ValueVar.fresh ~name:"Literal_key" () in
+    let name = var_to_string unique_name in
+    let data = [data ~offset:!global_offset ~init:{name; detail = [String s]}] in
+    let symbols =
+      [symbol_data ~name ~index:0l ~size:(Int32.of_int_exn(String.length s)) ~offset:!global_offset]
+    in
+    global_offset := Int32.(!global_offset + Int32.of_int_exn (String.length s));
+    let w = {w with datas = w.datas @ data; symbols = w.symbols @ symbols } in
+    (w, l, [data_symbol name at])
+  | E_literal (Literal_key_hash s) -> 
+    let unique_name = ValueVar.fresh ~name:"Literal_key_hash" () in
+    let name = var_to_string unique_name in
+    let data = [data ~offset:!global_offset ~init:{name; detail = [String s]}] in
+    let symbols =
+      [symbol_data ~name ~index:0l ~size:(Int32.of_int_exn(String.length s)) ~offset:!global_offset]
+    in
+    global_offset := Int32.(!global_offset + Int32.of_int_exn (String.length s));
+    let w = {w with datas = w.datas @ data; symbols = w.symbols @ symbols } in
+    (w, l, [data_symbol name at])
+  | E_literal (Literal_chain_id s) -> 
+    let unique_name = ValueVar.fresh ~name:"Literal_chain_id" () in
+    let name = var_to_string unique_name in
+    let data = [data ~offset:!global_offset ~init:{name; detail = [String s]}] in
+    let symbols =
+      [symbol_data ~name ~index:0l ~size:(Int32.of_int_exn(String.length s)) ~offset:!global_offset]
+    in
+    global_offset := Int32.(!global_offset + Int32.of_int_exn (String.length s));
+    let w = {w with datas = w.datas @ data; symbols = w.symbols @ symbols } in
+    (w, l, [data_symbol name at])
+  | E_literal (Literal_operation b) ->
+    let unique_name = ValueVar.fresh ~name:"Literal_operation" () in
+    let name = var_to_string unique_name in
+    let data = [data ~offset:!global_offset ~init:{name; detail = [Bytes b]}] in
+    let symbols =
+      [symbol_data ~name ~index:0l ~size:(Int32.of_int_exn(Bytes.length b)) ~offset:!global_offset]
+    in
+    global_offset := Int32.(!global_offset + Int32.of_int_exn (Bytes.length b));
+    let w = {w with datas = w.datas @ data; symbols = w.symbols @ symbols } in
+    (w, l, [data_symbol name at])
+  | E_literal (Literal_bls12_381_g1 b) -> 
+    let unique_name = ValueVar.fresh ~name:"Literal_bls12_381_g1" () in
+    let name = var_to_string unique_name in
+    let data = [data ~offset:!global_offset ~init:{name; detail = [Bytes b]}] in
+    let symbols =
+      [symbol_data ~name ~index:0l ~size:(Int32.of_int_exn(Bytes.length b)) ~offset:!global_offset]
+    in
+    global_offset := Int32.(!global_offset + Int32.of_int_exn (Bytes.length b));
+    let w = {w with datas = w.datas @ data; symbols = w.symbols @ symbols } in
+    (w, l, [data_symbol name at])
+  | E_literal (Literal_bls12_381_g2 b) -> 
+    let unique_name = ValueVar.fresh ~name:"Literal_bls12_381_g2" () in
+    let name = var_to_string unique_name in
+    let data = [data ~offset:!global_offset ~init:{name; detail = [Bytes b]}] in
+    let symbols =
+      [symbol_data ~name ~index:0l ~size:(Int32.of_int_exn(Bytes.length b)) ~offset:!global_offset]
+    in
+    global_offset := Int32.(!global_offset + Int32.of_int_exn (Bytes.length b));
+    let w = {w with datas = w.datas @ data; symbols = w.symbols @ symbols } in
+    (w, l, [data_symbol name at])
+  | E_literal (Literal_bls12_381_fr b) -> 
+    let unique_name = ValueVar.fresh ~name:"Literal_bls12_381_fr" () in
+    let name = var_to_string unique_name in
+    let data = [data ~offset:!global_offset ~init:{name; detail = [Bytes b]}] in
+    let symbols =
+      [symbol_data ~name ~index:0l ~size:(Int32.of_int_exn(Bytes.length b)) ~offset:!global_offset]
+    in
+    global_offset := Int32.(!global_offset + Int32.of_int_exn (Bytes.length b));
+    let w = {w with datas = w.datas @ data; symbols = w.symbols @ symbols } in
+    (w, l, [data_symbol name at])
+  | E_literal (Literal_chest b) -> 
+    let unique_name = ValueVar.fresh ~name:"Literal_chest" () in
+    let name = var_to_string unique_name in
+    let data = [data ~offset:!global_offset ~init:{name; detail = [Bytes b]}] in
+    let symbols =
+      [symbol_data ~name ~index:0l ~size:(Int32.of_int_exn(Bytes.length b)) ~offset:!global_offset]
+    in
+    global_offset := Int32.(!global_offset + Int32.of_int_exn (Bytes.length b));
+    let w = {w with datas = w.datas @ data; symbols = w.symbols @ symbols } in
+    (w, l, [data_symbol name at])
+  | E_literal (Literal_chest_key b) -> 
+    let unique_name = ValueVar.fresh ~name:"Literal_chest_key" () in
+    let name = var_to_string unique_name in
+    let data = [data ~offset:!global_offset ~init:{name; detail = [Bytes b]}] in
+    let symbols =
+      [symbol_data ~name ~index:0l ~size:(Int32.of_int_exn(Bytes.length b)) ~offset:!global_offset]
+    in
+    global_offset := Int32.(!global_offset + Int32.of_int_exn (Bytes.length b));
+    let w = {w with datas = w.datas @ data; symbols = w.symbols @ symbols } in
+    (w, l, [data_symbol name at])
 
   | E_closure {binder; body} -> (w, l, [S.{it = A.Nop; at}])
-  | E_constant {cons_name = C_LIST_EMPTY; arguments = []} ->
-    (w, l, [data_symbol "C_LIST_EMPTY" at])
   
   (* Loops *)
-  | E_constant {cons_name = C_ITER; arguments} -> failwith "Not implemented: C_ITER"
-  | E_constant {cons_name = C_LOOP_LEFT; arguments} -> failwith "Not implemented: C_LOOP_LEFT"
-  | E_constant {cons_name = C_LOOP_CONTINUE; arguments} -> failwith "Not implemented: C_LOOP_CONTINUE"
-  | E_constant {cons_name = C_LOOP_STOP; arguments} -> failwith "Not implemented: C_LOOP_STOP"
-  | E_constant {cons_name = C_FOLD; arguments} -> failwith "Not implemented: C_FOLD"
-  | E_constant {cons_name = C_FOLD_LEFT; arguments} -> failwith "Not implemented: C_FOLD_LEFT"
-  | E_constant {cons_name = C_FOLD_RIGHT; arguments} -> failwith "Not implemented: C_FOLD_RIGHT"
+  | E_constant {cons_name = C_ITER; arguments = [func; iter]} -> failwith "Not implemented: C_ITER"
+  | E_constant {cons_name = C_LOOP_LEFT; arguments = [func; init]} -> failwith "Not implemented: C_LOOP_LEFT"
+  
+  | E_constant {cons_name = C_FOLD; arguments = [func; list; init]} -> failwith "Not implemented: C_FOLD"
+  | E_constant {cons_name = C_FOLD_LEFT; arguments = [func; init; col]} -> failwith "Not implemented: C_FOLD_LEFT"
+  | E_constant {cons_name = C_FOLD_RIGHT; arguments = [func; col; init]} -> failwith "Not implemented: C_FOLD_RIGHT"
 
   (* MATH *)
   | E_constant {cons_name = C_NEG; arguments} ->
@@ -167,16 +300,24 @@ let rec expression ~raise :
     host_call ~fn:"c_lsr" ~response_size:4l ~instructions:[e1; e2]
 
   (* COMPARATOR *)
-  | E_constant {cons_name = C_EQ;  arguments = [e1; e2]} -> failwith "Not supported: C_EQ" 
-  | E_constant {cons_name = C_NEQ; arguments = [e1; e2]} -> failwith "Not supported: C_NEQ" 
-  | E_constant {cons_name = C_LT;  arguments = [e1; e2]} -> failwith "Not supported: C_LT" 
-  | E_constant {cons_name = C_GT;  arguments = [e1; e2]} -> failwith "Not supported: C_GT" 
-  | E_constant {cons_name = C_LE;  arguments = [e1; e2]} -> failwith "Not supported: C_LE" 
-  | E_constant {cons_name = C_GE;  arguments = [e1; e2]} -> failwith "Not supported: C_GE" 
+  | E_constant {cons_name = C_EQ;  arguments = [e1; e2]} -> 
+    host_call ~fn:"c_eq" ~response_size:4l ~instructions:[e1; e2]
+  | E_constant {cons_name = C_NEQ; arguments = [e1; e2]} -> 
+    host_call ~fn:"c_neq" ~response_size:4l ~instructions:[e1; e2]
+  | E_constant {cons_name = C_LT;  arguments = [e1; e2]} -> 
+    host_call ~fn:"c_lt" ~response_size:4l ~instructions:[e1; e2] 
+  | E_constant {cons_name = C_GT;  arguments = [e1; e2]} ->
+    host_call ~fn:"c_gt" ~response_size:4l ~instructions:[e1; e2]
+  | E_constant {cons_name = C_LE;  arguments = [e1; e2]} -> 
+    host_call ~fn:"c_le" ~response_size:4l ~instructions:[e1; e2]
+  | E_constant {cons_name = C_GE;  arguments = [e1; e2]} -> 
+    host_call ~fn:"c_ge" ~response_size:4l ~instructions:[e1; e2]
 
   (* Bytes/ String *)
-  | E_constant {cons_name = C_CONCAT; arguments } -> failwith "Not supported: C_CONCAT"
-  | E_constant {cons_name = C_BYTES_UNPACK; arguments } -> failwith "Not supported: C_BYTES_UNPACK"
+  | E_constant {cons_name = C_CONCAT; arguments = [e1; e2] } -> 
+    host_call ~fn:"c_concat" ~response_size:4l ~instructions:[e1; e2]
+  | E_constant {cons_name = C_BYTES_UNPACK; arguments = [e1] } -> 
+    host_call ~fn:"c_bytes_unpack" ~response_size:4l ~instructions:[e1]
   | E_constant {cons_name = C_CONS; arguments = [l1; l2]} ->
     let cons = var_to_string (ValueVar.fresh ~name:"C_CONS" ()) in
     let w, l, l1 = expression ~raise w l l1 in
@@ -231,70 +372,70 @@ let rec expression ~raise :
           i32_add at;
           load at
         ] )
-  | E_constant {cons_name = C_TRUE; arguments } -> failwith "Not supported: C_TRUE"
-  | E_constant {cons_name = C_FALSE; arguments } -> failwith "Not supported: C_FALSE"
-  | E_constant {cons_name = C_LEFT; arguments } -> failwith "Not supported: C_LEFT"
-  | E_constant {cons_name = C_RIGHT; arguments } -> failwith "Not supported: C_RIGHT"
-
+  | E_constant {cons_name = C_TRUE; arguments = [] } -> w, l, [const 1l at]
+  | E_constant {cons_name = C_FALSE; arguments = [] } -> w, l, [const 0l at]
+  
   (* Set *)
-  | E_constant {cons_name = C_SET_EMPTY; arguments } -> failwith "Not supported: C_SET_EMPTY"
-  | E_constant {cons_name = C_SET_LITERAL; arguments } -> failwith "Not supported: C_SET_LITERAL"
-  | E_constant {cons_name = C_SET_ADD; arguments } -> failwith "Not supported: C_SET_ADD"
-  | E_constant {cons_name = C_SET_REMOVE; arguments } -> failwith "Not supported: C_SET_REMOVE"
-  | E_constant {cons_name = C_SET_ITER; arguments } -> failwith "Not supported: C_SET_ITER"
-  | E_constant {cons_name = C_SET_FOLD; arguments } -> failwith "Not supported: C_SET_FOLD"
-  | E_constant {cons_name = C_SET_FOLD_DESC; arguments } -> failwith "Not supported: C_SET_FOLD_DESC"
-  | E_constant {cons_name = C_SET_MEM; arguments } -> failwith "Not supported: C_SET_MEM"
-  | E_constant {cons_name = C_SET_UPDATE; arguments } -> failwith "Not supported: C_SET_UPDATE"
+  | E_constant {cons_name = C_SET_EMPTY; arguments = [] } -> w, l, [data_symbol "C_SET_EMPTY" at]
+  | E_constant {cons_name = C_SET_LITERAL; arguments = [e1] } -> 
+    host_call ~fn:"c_set_literal" ~response_size:4l ~instructions:[e1]
+  | E_constant {cons_name = C_SET_ADD; arguments = [item; set] } -> 
+    host_call ~fn:"c_set_add" ~response_size:4l ~instructions:[item; set]
+  | E_constant {cons_name = C_SET_REMOVE; arguments = [item; set] } -> 
+    host_call ~fn:"c_set_remove" ~response_size:4l ~instructions:[item; set]
+  | E_constant {cons_name = C_SET_ITER; arguments = [func; set] } -> failwith "Not supported: C_SET_ITER"
+  | E_constant {cons_name = C_SET_FOLD; arguments = [func; set; init] } -> failwith "Not supported: C_SET_FOLD"
+  | E_constant {cons_name = C_SET_FOLD_DESC; arguments = [func; set; init] } -> failwith "Not supported: C_SET_FOLD_DESC"
+  | E_constant {cons_name = C_SET_MEM; arguments = [item; set] } -> 
+    host_call ~fn:"c_set_mem" ~response_size:4l ~instructions:[item; set]
+  | E_constant {cons_name = C_SET_UPDATE; arguments = [item; boolean; set] } -> 
+    host_call ~fn:"c_set_update" ~response_size:4l ~instructions:[item; boolean; set]
+    
   
   (* List *)
-  | E_constant {cons_name = C_LIST_EMPTY; arguments } -> failwith "Not supported: C_LIST_EMPTY"
-  | E_constant {cons_name = C_LIST_LITERAL; arguments } -> failwith "Not supported: C_LIST_LITERAL"
-  | E_constant {cons_name = C_LIST_ITER; arguments } -> failwith "Not supported: C_LIST_ITER"
-  | E_constant {cons_name = C_LIST_MAP; arguments } -> failwith "Not supported: C_LIST_MAP"
-  | E_constant {cons_name = C_LIST_FOLD; arguments } -> failwith "Not supported: C_LIST_FOLD"
-  | E_constant {cons_name = C_LIST_FOLD_LEFT; arguments } -> failwith "Not supported: C_LIST_FOLD_LEFT"
-  | E_constant {cons_name = C_LIST_FOLD_RIGHT; arguments } -> failwith "Not supported: C_LIST_FOLD_RIGHT"
+  | E_constant {cons_name = C_LIST_EMPTY; arguments = []} -> (w, l, [data_symbol "C_LIST_EMPTY" at])
+  | E_constant {cons_name = C_LIST_LITERAL; arguments = [e1] } -> failwith "Not supported: C_LIST_LITERAL"
+  | E_constant {cons_name = C_LIST_ITER; arguments = [func; list]  } -> failwith "Not supported: C_LIST_ITER"
+  | E_constant {cons_name = C_LIST_MAP; arguments = [func; list] } -> failwith "Not supported: C_LIST_MAP"
+  | E_constant {cons_name = C_LIST_FOLD; arguments = [func; list; init] } -> failwith "Not supported: C_LIST_FOLD"
+  | E_constant {cons_name = C_LIST_FOLD_LEFT; arguments = [func; init; list]  } -> failwith "Not supported: C_LIST_FOLD_LEFT"
+  | E_constant {cons_name = C_LIST_FOLD_RIGHT; arguments = [func; list; init] } -> failwith "Not supported: C_LIST_FOLD_RIGHT"
 
   (* Maps *)
-  | E_constant {cons_name = C_MAP; arguments } -> failwith "Not supported: C_MAP"
-  | E_constant {cons_name = C_MAP_EMPTY; arguments } -> failwith "Not supported: C_MAP_EMPTY"
-  | E_constant {cons_name = C_MAP_LITERAL; arguments } -> failwith "Not supported: C_MAP_LITERAL"
-  | E_constant {cons_name = C_MAP_GET; arguments } -> failwith "Not supported: C_MAP_GET"
-  | E_constant {cons_name = C_MAP_GET_FORCE; arguments } -> failwith "Not supported: C_MAP_GET_FORCE"
-  | E_constant {cons_name = C_MAP_ADD; arguments } -> failwith "Not supported: C_MAP_ADD"
-  | E_constant {cons_name = C_MAP_REMOVE; arguments } -> failwith "Not supported: C_MAP_REMOVE"
-  | E_constant {cons_name = C_MAP_UPDATE; arguments } -> failwith "Not supported: C_MAP_UPDATE"
-  | E_constant {cons_name = C_MAP_ITER; arguments } -> failwith "Not supported: C_MAP_ITER"
-  | E_constant {cons_name = C_MAP_MAP; arguments } -> failwith "Not supported: C_MAP_MAP"
-  | E_constant {cons_name = C_MAP_FOLD; arguments } -> failwith "Not supported: C_MAP_FOLD"
-  | E_constant {cons_name = C_MAP_FIND; arguments } -> failwith "Not supported: C_MAP_FIND"
-  | E_constant {cons_name = C_MAP_FIND_OPT; arguments } -> failwith "Not supported: C_MAP_FIND_OPT"
-  | E_constant {cons_name = C_MAP_GET_AND_UPDATE; arguments } -> failwith "Not supported: C_MAP_GET_AND_UPDATE"
+  | E_constant {cons_name = C_MAP_EMPTY; arguments = [] } -> failwith "Not supported: C_MAP_EMPTY"
+  | E_constant {cons_name = C_MAP_LITERAL; arguments = [e1] } -> failwith "Not supported: C_MAP_LITERAL"
+  
+  
+  | E_constant {cons_name = C_MAP_ADD; arguments = [key; value; map] } -> failwith "Not supported: C_MAP_ADD"
+  | E_constant {cons_name = C_MAP_REMOVE; arguments = [key; map] } -> failwith "Not supported: C_MAP_REMOVE"
+  | E_constant {cons_name = C_MAP_UPDATE; arguments = [key; value; map] } -> failwith "Not supported: C_MAP_UPDATE"
+  | E_constant {cons_name = C_MAP_ITER; arguments = [func; map] } -> failwith "Not supported: C_MAP_ITER"
+  | E_constant {cons_name = C_MAP_MAP; arguments = [func; map] } -> failwith "Not supported: C_MAP_MAP"
+  | E_constant {cons_name = C_MAP_FOLD; arguments = [func; map] } -> failwith "Not supported: C_MAP_FOLD"
+  | E_constant {cons_name = C_MAP_FIND; arguments = [key; map] } -> failwith "Not supported: C_MAP_FIND"
+  | E_constant {cons_name = C_MAP_FIND_OPT; arguments = [key; map] } -> failwith "Not supported: C_MAP_FIND_OPT"
+  | E_constant {cons_name = C_MAP_GET_AND_UPDATE; arguments = [key; value; map] } -> failwith "Not supported: C_MAP_GET_AND_UPDATE"
 
   (* Big Maps *)
-  | E_constant {cons_name = C_BIG_MAP; arguments } -> failwith "Not supported: C_BIG_MAP"
-  | E_constant {cons_name = C_BIG_MAP_EMPTY; arguments } -> failwith "Not supported: C_BIG_MAP_EMPTY"
-  | E_constant {cons_name = C_BIG_MAP_LITERAL; arguments } -> failwith "Not supported: C_BIG_MAP_LITERAL"
-  | E_constant {cons_name = C_BIG_MAP_GET_AND_UPDATE; arguments } -> failwith "Not supported: C_BIG_MAP_GET_AND_UPDATE"
+  | E_constant {cons_name = C_BIG_MAP_EMPTY; arguments = [] } -> failwith "Not supported: C_BIG_MAP_EMPTY"
+  | E_constant {cons_name = C_BIG_MAP_LITERAL; arguments = [e1] } -> failwith "Not supported: C_BIG_MAP_LITERAL"
+  | E_constant {cons_name = C_BIG_MAP_GET_AND_UPDATE; arguments = [key; value; big_map] } -> failwith "Not supported: C_BIG_MAP_GET_AND_UPDATE"
 
   (* Blockchain *)
-  | E_constant {cons_name = C_CALL; arguments } -> failwith "Not supported C_CALL"
-  | E_constant {cons_name = C_CONTRACT; arguments } -> failwith "Not supported C_CONTRACT"
-  | E_constant {cons_name = C_CONTRACT_OPT; arguments } -> failwith "Not supported C_CONTRACT_OPT"
-  | E_constant {cons_name = C_CONTRACT_WITH_ERROR; arguments } -> failwith "Not supported C_CONTRACT_WITH_ERROR"
-  | E_constant {cons_name = C_CONTRACT_ENTRYPOINT; arguments } -> failwith "Not supported C_CONTRACT_ENTRYPOINT"
-  | E_constant {cons_name = C_CONTRACT_ENTRYPOINT_OPT; arguments } -> failwith "Not supported C_CONTRACT_ENTRYPOINT_OPS"
-  | E_constant {cons_name = C_ADDRESS; arguments } -> failwith "Not supported C_ADDRESS"
-  | E_constant {cons_name = C_SELF; arguments } -> failwith "Not supported C_SELF"
-  | E_constant {cons_name = C_SELF_ADDRESS; arguments } -> failwith "Not supported C_SELF_ADDRESS"
-  | E_constant {cons_name = C_IMPLICIT_ACCOUNT; arguments } -> failwith "Not supported C_IMPLICIT_ACCOUNT"
-  | E_constant {cons_name = C_SET_DELEGATE; arguments } -> failwith "Not supported C_SET_DELEGATE"
-  | E_constant {cons_name = C_CREATE_CONTRACT; arguments } -> failwith "Not supported C_CREATE_CONTRACT"
-  | E_constant {cons_name = C_OPEN_CHEST; arguments } -> failwith "Not supported C_OPEN_CHESt"
-  | E_constant {cons_name = C_VIEW; arguments } -> failwith "Not supported C_VIEW"
-     
-  | E_constant _ -> failwith "E_constant (..) not supported"
+  | E_constant {cons_name = C_CALL; arguments = [param; mutez; contract] } -> failwith "Not supported C_CALL"
+  | E_constant {cons_name = C_CONTRACT; arguments = [address] } -> failwith "Not supported C_CONTRACT"
+  | E_constant {cons_name = C_CONTRACT_OPT; arguments = [address] } -> failwith "Not supported C_CONTRACT_OPT"
+  | E_constant {cons_name = C_CONTRACT_WITH_ERROR; arguments = [address; msg] } -> failwith "Not supported C_CONTRACT_WITH_ERROR"
+  | E_constant {cons_name = C_CONTRACT_ENTRYPOINT; arguments = [entrypoint; address] } -> failwith "Not supported C_CONTRACT_ENTRYPOINT"
+  | E_constant {cons_name = C_CONTRACT_ENTRYPOINT_OPT; arguments = [entrypoint; address] } -> failwith "Not supported C_CONTRACT_ENTRYPOINT_OPS"
+  | E_constant {cons_name = C_ADDRESS; arguments = [address] } -> failwith "Not supported C_ADDRESS"
+  | E_constant {cons_name = C_SELF; arguments = [entrypoint] } -> failwith "Not supported C_SELF"
+  | E_constant {cons_name = C_SELF_ADDRESS; arguments = [] } -> failwith "Not supported C_SELF_ADDRESS"
+  | E_constant {cons_name = C_IMPLICIT_ACCOUNT; arguments = [keyhash] } -> failwith "Not supported C_IMPLICIT_ACCOUNT"
+  | E_constant {cons_name = C_SET_DELEGATE; arguments = [keyhash] } -> failwith "Not supported C_SET_DELEGATE"
+  | E_constant {cons_name = C_CREATE_CONTRACT; arguments = [operation_list_init;keyhash;mutez;init] } -> failwith "Not supported C_CREATE_CONTRACT"
+  | E_constant {cons_name = C_OPEN_CHEST; arguments = [chest_key; chest; n] } -> failwith "Not supported C_OPEN_CHESt"
+  | E_constant {cons_name = C_VIEW; arguments = [view_name; t; address] } -> failwith "Not supported C_VIEW"
 
   | E_application _ ->
     let rec aux w l (result: A.instr list) (expr: I.expression) =
@@ -317,7 +458,9 @@ let rec expression ~raise :
     | Some _ -> (w, l, [local_get_s name at])
     | None -> (w, l, [data_symbol name at]))
   | E_iterator (b, ((name, _), body), expr) -> failwith "E_iterator not supported"
-  | E_fold _ -> failwith "E_fold not supported"
+  | E_fold (((name, tv), body), col, init) -> 
+    
+    failwith "E_fold not supported"
   | E_fold_right _ -> failwith "E_fold_right not supported"
   | E_if_bool (test, t, f) -> 
     let w, l, test = expression ~raise w l test in
@@ -380,8 +523,73 @@ let rec expression ~raise :
       at
       }
     ]
-  | E_if_cons _ -> failwith "E_if_cons not supported"
-  | E_if_left _ -> failwith "E_if_left not supported"
+  | E_if_cons (matchee, nil, (((hd, _), (tl, _)), cons)) -> 
+    let hd = var_to_string hd in
+    let tl = var_to_string tl in
+    let l = l @ [(hd, NumType I32Type); (tl, NumType I32Type)] in
+    let w, l, matchee_e = expression ~raise w l matchee in
+    let w, l, nil_e = expression ~raise w l nil in
+    let w, l, cons_e = expression ~raise w l cons in
+    let return_type = Some (NumType I32Type) in (* TODO properly get this *)
+    w, l, [
+      S.{it = Block (ValBlockType return_type, 
+        [
+          {it = Block (ValBlockType None,
+          matchee_e
+            @
+            [
+              data_symbol "C_LIST_EMPTY" at;
+              {it = Compare (I32 I32Op.Ne); at };
+              {it = BrIf {it = 0l; at}; at };
+            ]
+            @ 
+            nil_e
+            @ 
+            [
+              {it = Br {it = 1l; at}; at };
+            ]
+          );
+          at
+          }
+        ]
+        @ 
+        cons_e
+      );
+      at
+      }]
+  | E_if_left (matchee, ((name_l, _), left), ((name_r, _), right)) -> 
+    (* Variants *)
+    let name_l = var_to_string name_l in
+    let name_r = var_to_string name_r in
+    let l = l @ [(name_l, NumType I32Type); (name_r, NumType I32Type)] in
+    let w, l, matchee_e = expression ~raise w l matchee in
+    let w, l, left_e = expression ~raise w l left in
+    let w, l, right_e = expression ~raise w l right in
+    let return_type = Some (NumType I32Type) in (* TODO properly get this *)
+    w, l, [
+      S.{it = Block (ValBlockType return_type, 
+        [
+          {it = Block (ValBlockType None,
+          matchee_e
+            @
+            [
+              {it = BrIf {it = 0l; at}; at };
+            ]
+            @ 
+            left_e
+            @ 
+            [
+              {it = Br {it = 1l; at}; at };
+            ]
+          );
+          at
+          }
+        ]
+        @ 
+        right_e
+      );
+      at
+      }]
   | E_let_in
       ( {content = E_closure {binder; body}},
         _inline,
@@ -416,13 +624,36 @@ let rec expression ~raise :
     in
     let w, l, e2 = expression ~raise w l rhs in
     (w, l, t @ e @ e2)
-  | E_proj (_,_,_) -> failwith "E_proj not supported"
+  | E_proj (expr, i, count) -> 
+    let w, l, expr = expression ~raise w l expr in
+    w, l, 
+    expr 
+    @
+    [
+      const Int32.(4l * Int32.of_int_exn i) at;
+      load at
+    ]
   | E_update (_,_,_,_) -> failwith "E_update not supported"
-  | E_raw_michelson _ -> failwith "E_raw_michelson not supported"
   | E_raw_wasm (local_symbols, code) -> (w, l @ local_symbols, code)
+  | E_create_contract (_,_,_,_) -> failwith "E_create_contract not supported"
+
+  (* Are these actually used? *)
+  | E_constant {cons_name = C_LOOP_CONTINUE; arguments} -> failwith "Not implemented: C_LOOP_CONTINUE"
+  | E_constant {cons_name = C_LOOP_STOP; arguments} -> failwith "Not implemented: C_LOOP_STOP"
+  | E_constant {cons_name = C_MAP; arguments } -> failwith "Not supported: C_MAP"
+  | E_constant {cons_name = C_BIG_MAP; arguments } -> failwith "Not supported: C_BIG_MAP"
+  | E_constant {cons_name = C_LEFT; arguments = [a; b] } -> failwith "Not supported: C_LEFT"
+  | E_constant {cons_name = C_RIGHT; arguments = [a; b]} -> failwith "Not supported: C_RIGHT"
+  | E_constant {cons_name = C_MAP_GET; arguments } -> failwith "Not supported: C_MAP_GET"
+  | E_constant {cons_name = C_MAP_GET_FORCE; arguments } -> failwith "Not supported: C_MAP_GET_FORCE"  
+  | E_global_constant (_,_) -> failwith "E_global_constant not supported" (* is this actually used? *)
+
+  (* Inline Michelson is not supported in wasm contracts *)
+  | E_raw_michelson _ -> failwith "E_raw_michelson not supported"
+
+  (* catch all *)
+  | E_constant {cons_name; _} -> failwith ("E_constant with these arguments is not supported.")
   
-  | E_global_constant (_,_) -> failwith "E_global_constant not supported"
-  | E_create_contract (_,_,_,_) -> failwith "E_create_constract not supported"
 
 let func I.{binder; body} =
   let rec aux arguments body =

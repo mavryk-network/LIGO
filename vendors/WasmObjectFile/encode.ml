@@ -1058,6 +1058,8 @@ let encode (m: Ast.module_) =
       match f with
       | String bs -> 
         put_string s bs
+      | Bytes b ->
+        Buffer.add_bytes s.buf b
       | Float32 f -> 
         f32 f
       | Float64 f -> 
@@ -1338,7 +1340,7 @@ let encode (m: Ast.module_) =
         string sym.name
       )
 
-    | Import _ ->        
+    | Import _ ->     
       u32 (Linking.func_index m.it.funcs import_funcs sym.name);
     | Data d -> (    
       (if sym.name <> "" then (              

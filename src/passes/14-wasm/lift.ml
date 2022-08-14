@@ -26,14 +26,15 @@ let variable_exists env v =
   | Some _ -> true
   | None -> false
 
-let var_type env v =
-  match List.find ~f:(fun var -> ValueVar.equal v (fst var)) env.variables with
-  | Some (_, type_) -> type_
-  | None -> failwith "should not happen"
-
 let var_to_string name =
   let name, hash = ValueVar.internal_get_name_and_counter name in
   name ^ "#" ^ string_of_int hash
+
+let var_type env v =
+  match List.find ~f:(fun var -> ValueVar.equal v (fst var)) env.variables with
+  | Some (_, type_) -> type_
+  | None ->
+    failwith "should not happen"
 
 let rec lift : env -> expression -> env * expression =
  fun env e ->
@@ -41,6 +42,7 @@ let rec lift : env -> expression -> env * expression =
   match e.content with
   | E_literal _ -> (env, e)
   | E_closure {binder; body} ->
+    (* how to move closure to top level? *)
     print_endline "some closure here...";
     let env =
       {env with variables = (binder, e.type_expression) :: env.variables}
@@ -56,7 +58,7 @@ let rec lift : env -> expression -> env * expression =
         ~init:(env, []) (List.rev arguments)
     in
     (env, {e with content = E_constant {cons_name; arguments}})
-  | E_application (({content = E_variable v; _} as e1), e2) ->
+    | E_application (({content = E_variable v; _} as e1), e2) ->
     let env, e1 = lift env e1 in
     let env, e2 = lift env e2 in
     let env, e1 =
@@ -96,16 +98,12 @@ let rec lift : env -> expression -> env * expression =
             type_content = T_function (e1.type_expression, e2.type_expression);
           };
       } )
-  | E_application (({content = E_closure c; _} as e1), e2) ->
-    ignore e1;
-    ignore c;
-    ignore e2;
-    failwith "wrop"
   | E_application (e1, e2) ->
     let env, e1 = lift env e1 in
     let env, e2 = lift env e2 in
     ( env,
       {
+        
         e with
         content = E_application (e1, e2);
         type_expression =
@@ -127,6 +125,7 @@ let rec lift : env -> expression -> env * expression =
       {e with content = E_iterator (cc, ((var_name, type_expression), e1), e2)}
     )
   | E_fold (((var_name, type_expression), e1), e2, e3) ->
+    print_endline "Handle e_fold here...";
     let env =
       {env with variables = (var_name, type_expression) :: env.variables}
     in
@@ -223,7 +222,12 @@ let rec lift : env -> expression -> env * expression =
         c
     in
     let v = ValueVar.fresh_like var_name in
-    let env = {env with variables = (v, type_expression) :: env.variables} in
+    let env = {env with 
+      variables = (v, type_expression) :: env.variables; 
+      exported_funcs = env2.exported_funcs;
+      functions = env2.functions;
+      replacements = env2.replacements
+    } in
     let export_func remaining =
       List.fold_left
         ~f:(fun all binder ->
@@ -314,7 +318,15 @@ let rec lift : env -> expression -> env * expression =
       }
     in
     let env, e2 = lift env e2 in
-    (env, e2)
+    let e = {
+      e with 
+        content = E_let_in (
+          {c with content = E_variable v},
+          inline,
+          ((var_name, type_expression), e2))
+    }
+    in
+    (env, e)
   | E_let_in (e1, inline, ((var_name, type_expression), e2)) ->
     let env =
       {env with variables = (var_name, type_expression) :: env.variables}
