@@ -340,7 +340,7 @@ module Const_map = Simple_utils.Map.Make (struct
   let compare x y = O.Compare.constant' x y
 end)
 
-let table =
+let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
   let open O.Combinators in
   let open Type.Syntax in
   Const_map.of_list
@@ -1087,6 +1087,7 @@ let table =
             ~types:[ a ^-> (a @-> b) ^~> t_list (t_pair b (t_mutation ())) ]) )
     ]
 
+
 (*    TODO:
 
       ; of_type
@@ -1196,9 +1197,9 @@ let table =
       ; C_LE, typer_of_comparator (comparator ~cmp:"LE")
       ; C_GE, typer_of_comparator (comparator ~cmp:"GE")
       ] *)
-(* 
+
 let infer_constant ~raise ~infer ~check ~loc const =
-  match Const_map.find_opt constant_typer_tbl const with
+  match Const_map.find_opt const constant_typer_tbl with
   | Some typer -> typer ~raise ~infer ~check ~loc
   | None ->
     raise.error
@@ -1208,6 +1209,7 @@ let infer_constant ~raise ~infer ~check ~loc const =
            Stage_common.PP.constant'
            const)
 
+(* 
 
 let typer_of_type_no_tc t = typer_table_of_ligo_type ~add_tc:false ~fail:false t
 
