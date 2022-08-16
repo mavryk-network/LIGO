@@ -7,7 +7,6 @@ module Exists_var : sig
   val pp : Format.formatter -> t -> unit
   val yojson_of_t : t -> Yojson.json
   val loc : t -> Location.t
-
   val equal : t -> t -> bool
   val of_type_var : type_variable -> t option
   val fresh : ?loc:Location.t -> unit -> t
@@ -66,6 +65,15 @@ val get_sum
 module Well_formed : sig
   val context : t -> bool
   val type_expr : ctx:t -> type_expression -> kind option
+end
+
+module Elaboration : sig
+  type context := t
+  type 'a t
+
+  include Monad.S with type 'a t := 'a t
+
+  val run : 'a t -> ctx:context -> 'a
 end
 
 val context_of_module_expr : outer_context:t -> Ast_typed.module_expr -> t

@@ -5,10 +5,13 @@ open Ast_typed
 module Exists_var = struct
   type t = TypeVar.t [@@deriving compare]
 
+  module Map = Simple_utils.Map.Make (struct
+    type nonrec t = t [@@deriving compare]
+  end)
+
   let equal t1 t2 = compare t1 t2 = 0
   let yojson_of_t t = TypeVar.to_yojson t
   let loc = TypeVar.get_location
-
   let of_type_var tvar = if TypeVar.is_exists tvar then Some tvar else None
   let pp ppf t = Format.fprintf ppf "%a" Ast_typed.PP.type_variable t
   let fresh = TypeVar.fresh_exists
@@ -16,7 +19,10 @@ end
 
 type exists_variable = Exists_var.t
 
-type t = item list
+type t =
+  { items : item list
+  ; solved : (kind * type_expression) Exists_var.Map.t
+  }
 
 and item =
   | C_value of expression_variable * type_expression
@@ -39,7 +45,7 @@ module PP = struct
 
 
   let rec context ppf t =
-    list ppf t ~pp:(fun ppf item ->
+    list ppf t.items ~pp:(fun ppf item ->
       match item with
       | C_value (evar, type_) ->
         Format.fprintf ppf "%a : %a" expression_variable evar type_expression type_
@@ -65,11 +71,23 @@ module PP = struct
 end
 
 let pp = PP.context
-let empty = []
-let add t item = item :: t
-let join t1 t2 = t2 @ t1
+let empty = { items = []; solved = Exists_var.Map.empty }
+let add t item = { t with items = item :: t.items }
 
-let of_list items = List.rev items
+let join t1 t2 =
+  { items = t2.items @ t1.items
+  ; solved =
+      Exists_var.Map.merge
+        (fun _ eq1 eq2 ->
+          match eq1, eq2 with
+          | eq1, None -> eq1
+          | _, eq2 -> eq2)
+        t1.solved
+        t2.solved
+  }
+
+
+let of_list items = { empty with items = List.rev items }
 
 (* Inifix notations for [add] and [join] *)
 let ( |:: ) = add
@@ -82,55 +100,55 @@ let add_marker t evar = t |:: C_marker evar
 let add_module t mvar mctx = t |:: C_module (mvar, mctx)
 
 let get_value t evar =
-  List.find_map t ~f:(function
+  List.find_map t.items ~f:(function
     | C_value (evar', type_) when ValueVar.equal evar evar' -> Some type_
     | _ -> None)
 
 
 let get_type t tvar =
-  List.find_map t ~f:(function
+  List.find_map t.items ~f:(function
     | C_type (tvar', type_) when TypeVar.equal tvar tvar' -> Some type_
     | _ -> None)
 
 
 let get_module t mvar =
-  List.find_map t ~f:(function
+  List.find_map t.items ~f:(function
     | C_module (mvar', mctx) when ModuleVar.equal mvar mvar' -> Some mctx
     | _ -> None)
 
 
 let get_type_vars t =
-  List.filter_map t ~f:(function
+  List.filter_map t.items ~f:(function
     | C_type_var (tvar, _) -> Some tvar
     | _ -> None)
 
 
 let get_exists_vars t =
-  List.filter_map t ~f:(function
+  List.filter_map t.items ~f:(function
     | C_exists_var (evar, _) -> Some evar
     | _ -> None)
 
 
 let get_markers t =
-  List.filter_map t ~f:(function
+  List.filter_map t.items ~f:(function
     | C_marker evar -> Some evar
     | _ -> None)
 
 
 let get_exists_var t evar =
-  List.find_map t ~f:(function
+  List.find_map t.items ~f:(function
     | C_exists_var (evar', kind) when Exists_var.equal evar evar' -> Some kind
     | _ -> None)
 
 
 let get_type_var t tvar =
-  List.find_map t ~f:(function
+  List.find_map t.items ~f:(function
     | C_type_var (tvar', kind) when TypeVar.equal tvar tvar' -> Some kind
     | _ -> None)
 
 
 let get_exists_eq t evar =
-  List.find_map t ~f:(function
+  List.find_map t.items ~f:(function
     | C_exists_eq (evar', _kind, type_) when Exists_var.equal evar evar' -> Some type_
     | _ -> None)
 
@@ -152,16 +170,24 @@ let rec equal_item : item -> item -> bool =
     && Compare.type_expression type1 type2 = 0
   | C_marker evar1, C_marker evar2 -> Exists_var.equal evar1 evar2
   | C_module (mvar1, mctx1), C_module (mvar2, mctx2) ->
-    ModuleVar.equal mvar1 mvar2 && List.equal equal_item mctx1 mctx2
+    ModuleVar.equal mvar1 mvar2 && List.equal equal_item mctx1.items mctx2.items
   | _, _ -> false
 
 
 let drop_until t ~at =
   let rec loop t =
-    match t with
-    | [] -> []
-    | item :: t when equal_item item at -> t
-    | item :: t -> item :: loop t
+    match t.items with
+    | [] -> t
+    | item :: items when equal_item item at -> { t with items }
+    | item :: items ->
+      loop
+        { items
+        ; solved =
+            (match item with
+             | C_exists_eq (evar, kind, type_) ->
+               Exists_var.Map.add evar (kind, type_) t.solved
+             | _ -> t.solved)
+        }
   in
   loop t
 
@@ -177,17 +203,20 @@ let split_at t ~at =
         let t1, t2 = loop t in
         item :: t1, t2)
   in
-  loop t
+  (* Left context gets solved *)
+  let solved = t.solved in
+  let l, r = loop t.items in
+  { items = l; solved }, { empty with items = r }
 
 
 let insert_at t ~at ~hole =
   let t1, t2 = split_at t ~at in
-  t1 @ hole @ t2
+  t1 |@ hole |@ t2
 
 
 let add_exists_eq t evar kind type_ =
   let t1, t2 = split_at t ~at:(C_exists_var (evar, kind)) in
-  t1 @ [ C_exists_eq (evar, kind, type_) ] @ t2
+  t1 |@ of_list [ C_exists_eq (evar, kind, type_) ] |@ t2
 
 
 let rec apply t (type_ : type_expression) : type_expression =
@@ -240,14 +269,14 @@ module TypeMap = Ast_typed.Helpers.IdMap.Make (TypeVar)
 module ModuleMap = Ast_typed.Helpers.IdMap.Make (ModuleVar)
 
 let to_type_map t =
-  List.fold_left t ~init:TypeMap.empty ~f:(fun map item ->
+  List.fold_left t.items ~init:TypeMap.empty ~f:(fun map item ->
     match item with
     | C_type (tvar, type_) -> TypeMap.add map tvar type_
     | _ -> map)
 
 
 let to_module_map t =
-  List.fold_left t ~init:ModuleMap.empty ~f:(fun map item ->
+  List.fold_left t.items ~init:ModuleMap.empty ~f:(fun map item ->
     match item with
     | C_module (mvar, mctx) -> ModuleMap.add map mvar mctx
     | _ -> map)
@@ -449,34 +478,37 @@ module Well_formed : sig
   val type_expr : ctx:t -> type_expression -> kind option
 end = struct
   let rec context ctx =
-    match ctx with
-    | [] -> true
-    | item :: ctx ->
-      context ctx
-      &&
-      (match item with
-       | C_value (_evar, type_) ->
-         (match type_expr type_ ~ctx with
-          | Some Type -> true
-          | _ -> false)
-       | C_type (_tvar, type_) -> type_expr type_ ~ctx |> Option.is_some
-       | C_type_var _ ->
-         (* Shadowing permitted *)
-         true
-       | C_exists_var (evar, _) ->
-         not (List.mem ~equal:Exists_var.equal (get_exists_vars ctx) evar)
-       | C_exists_eq (evar, kind, type_) ->
-         (not (List.mem ~equal:Exists_var.equal (get_exists_vars ctx) evar))
-         &&
-         (match type_expr type_ ~ctx with
-          | Some kind' -> compare_kind kind kind' = 0
-          | _ -> false)
-       | C_marker evar ->
-         (not (List.mem ~equal:Exists_var.equal (get_markers ctx) evar))
-         && not (List.mem ~equal:Exists_var.equal (get_exists_vars ctx) evar)
-       | C_module (_mvar, mctx) ->
-         (* Shadowing permitted *)
-         context mctx)
+    let rec loop items =
+      match items with
+      | [] -> true
+      | item :: items ->
+        loop items
+        &&
+        (match item with
+         | C_value (_evar, type_) ->
+           (match type_expr type_ ~ctx with
+            | Some Type -> true
+            | _ -> false)
+         | C_type (_tvar, type_) -> type_expr type_ ~ctx |> Option.is_some
+         | C_type_var _ ->
+           (* Shadowing permitted *)
+           true
+         | C_exists_var (evar, _) ->
+           not (List.mem ~equal:Exists_var.equal (get_exists_vars ctx) evar)
+         | C_exists_eq (evar, kind, type_) ->
+           (not (List.mem ~equal:Exists_var.equal (get_exists_vars ctx) evar))
+           &&
+           (match type_expr type_ ~ctx with
+            | Some kind' -> compare_kind kind kind' = 0
+            | _ -> false)
+         | C_marker evar ->
+           (not (List.mem ~equal:Exists_var.equal (get_markers ctx) evar))
+           && not (List.mem ~equal:Exists_var.equal (get_exists_vars ctx) evar)
+         | C_module (_mvar, mctx) ->
+           (* Shadowing permitted *)
+           context mctx)
+    in
+    loop ctx.items
 
 
   and type_expr ~ctx t : kind option =
@@ -558,4 +590,146 @@ module Hashes = struct
 
   let find_type (t : type_expression) : (module_variable list * type_variable) option =
     HTBL.find_opt hashtbl t
+end
+
+module Elaboration = struct
+  type context = t
+  type 'a t = unit -> 'a
+
+  include Monad.Make (struct
+    type nonrec 'a t = 'a t
+
+    let return x () = x
+
+    let bind t ~f () =
+      let x = t () in
+      f x ()
+
+
+    let map = `Define_using_bind
+  end)
+
+  (* "Zonking" is performed by these context application functions *)
+
+  let rec t_apply ctx (type_ : type_expression) : type_expression =
+    let self = t_apply ctx in
+    let return content = { type_ with type_content = content } in
+    match type_.type_content with
+    | T_variable tvar ->
+      (match Exists_var.of_type_var tvar with
+       | Some evar ->
+         (match Exists_var.Map.find_opt evar ctx.solved with
+          | Some (_, type_') -> self type_'
+          | None ->
+            (match get_exists_eq ctx evar with
+             | Some type_' -> self type_'
+             | None -> type_))
+       | None -> type_)
+    | T_constant inj ->
+      let parameters = List.map ~f:self inj.parameters in
+      return @@ T_constant { inj with parameters }
+    | T_sum rows ->
+      let content =
+        LMap.map
+          (fun row_elem ->
+            let associated_type = self row_elem.associated_type in
+            { row_elem with associated_type })
+          rows.content
+      in
+      return @@ T_sum { rows with content }
+    | T_record rows ->
+      let content =
+        LMap.map
+          (fun row_elem ->
+            let associated_type = self row_elem.associated_type in
+            { row_elem with associated_type })
+          rows.content
+      in
+      return @@ T_record { rows with content }
+    | T_arrow { type1; type2 } ->
+      let type1 = self type1 in
+      let type2 = self type2 in
+      return @@ T_arrow { type1; type2 }
+    | T_singleton _ -> type_
+    | T_abstraction abs ->
+      let type_ = self abs.type_ in
+      return @@ T_abstraction { abs with type_ }
+    | T_for_all for_all ->
+      let type_ = self for_all.type_ in
+      return @@ T_for_all { for_all with type_ }
+
+
+  let rec e_apply ctx expr =
+    let self = e_apply ctx in
+    let return expression_content =
+      let type_expression = t_apply ctx expr.type_expression in
+      { expr with expression_content; type_expression }
+    in
+    return
+    @@
+    match expr.expression_content with
+    | E_literal lit -> E_literal lit
+    | E_constant { cons_name; arguments } ->
+      E_constant { cons_name; arguments = List.map ~f:self arguments }
+    | E_variable var -> E_variable var
+    | E_application { lamb; args } -> E_application { lamb = self lamb; args = self args }
+    | E_lambda lambda -> E_lambda (lambda_apply ctx lambda)
+    | E_recursive { fun_name; fun_type; lambda } ->
+      E_recursive
+        { fun_name; fun_type = t_apply ctx fun_type; lambda = lambda_apply ctx lambda }
+    | E_let_in { let_binder; rhs; let_result; attr } ->
+      E_let_in
+        { let_binder = binder_apply ctx let_binder
+        ; rhs = self rhs
+        ; let_result = self let_result
+        ; attr
+        }
+    | E_mod_in mod_in ->
+      (* TODO: Modules *)
+      E_mod_in { mod_in with let_result = self mod_in.let_result }
+    | E_raw_code { language; code } -> E_raw_code { language; code = self code }
+    | E_type_inst { forall; type_ } ->
+      E_type_inst { forall = self forall; type_ = t_apply ctx type_ }
+    | E_type_abstraction type_abs ->
+      E_type_abstraction { type_abs with result = self type_abs.result }
+    | E_constructor { constructor; element } ->
+      E_constructor { constructor; element = self element }
+    | E_matching { matchee; cases } ->
+      E_matching { matchee = self matchee; cases = matching_expr_apply ctx cases }
+    | E_record expr_label_map -> E_record (LMap.map self expr_label_map)
+    | E_record_accessor { record; path } ->
+      E_record_accessor { record = self record; path }
+    | E_record_update { record; path; update } ->
+      E_record_update { record = self record; path; update = self update }
+    | E_module_accessor mod_access -> E_module_accessor mod_access
+    | E_assign { binder; expression } ->
+      E_assign { binder = binder_apply ctx binder; expression = self expression }
+
+
+  and lambda_apply ctx { binder; result } =
+    { binder = binder_apply ctx binder; result = e_apply ctx result }
+
+
+  and binder_apply ctx binder =
+    { binder with ascr = Option.map ~f:(t_apply ctx) binder.ascr }
+
+
+  and matching_expr_apply ctx match_expr =
+    match match_expr with
+    | Match_variant { cases; tv } ->
+      Match_variant
+        { cases =
+            List.map cases ~f:(fun content ->
+              { content with body = e_apply ctx content.body })
+        ; tv = t_apply ctx tv
+        }
+    | Match_record { fields; body; tv } ->
+      Match_record
+        { fields = LMap.map (fun binder -> binder_apply ctx binder) fields
+        ; body = e_apply ctx body
+        ; tv = t_apply ctx tv
+        }
+
+
+  let run_e t ~ctx = e_apply ctx (t ())
 end
