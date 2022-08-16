@@ -6,6 +6,9 @@ module Exists_var = struct
   type t = TypeVar.t [@@deriving compare]
 
   let equal t1 t2 = compare t1 t2 = 0
+  let yojson_of_t t = TypeVar.to_yojson t
+  let loc = TypeVar.get_location
+
   let of_type_var tvar = if TypeVar.is_exists tvar then Some tvar else None
   let pp ppf t = Format.fprintf ppf "%a" Ast_typed.PP.type_variable t
   let fresh = TypeVar.fresh_exists
@@ -65,6 +68,8 @@ let pp = PP.context
 let empty = []
 let add t item = item :: t
 let join t1 t2 = t2 @ t1
+
+let of_list items = List.rev items
 
 (* Inifix notations for [add] and [join] *)
 let ( |:: ) = add

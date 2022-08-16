@@ -4,6 +4,10 @@ open Ast_typed
 module Exists_var : sig
   type t = private type_variable [@@deriving compare]
 
+  val pp : Format.formatter -> t -> unit
+  val yojson_of_t : t -> Yojson.json
+  val loc : t -> Location.t
+
   val equal : t -> t -> bool
   val of_type_var : type_variable -> t option
   val fresh : ?loc:Location.t -> unit -> t
@@ -24,6 +28,7 @@ and item =
 
 val empty : t
 val add : t -> item -> t
+val of_list : item list -> t
 val ( |:: ) : t -> item -> t
 val join : t -> t -> t
 val ( |@ ) : t -> t -> t
