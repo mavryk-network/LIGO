@@ -73,7 +73,7 @@ module Elaboration : sig
 
   include Monad.S with type 'a t := 'a t
 
-  val run : 'a t -> ctx:context -> 'a
+  val run : expression t -> ctx:context -> expression
 end
 
 val context_of_module_expr : outer_context:t -> Ast_typed.module_expr -> t

@@ -593,7 +593,6 @@ module Hashes = struct
 end
 
 module Elaboration = struct
-  type context = t
   type 'a t = unit -> 'a
 
   include Monad.Make (struct
@@ -731,5 +730,5 @@ module Elaboration = struct
         }
 
 
-  let run_e t ~ctx = e_apply ctx (t ())
+  let run t ~ctx = e_apply ctx (t ())
 end

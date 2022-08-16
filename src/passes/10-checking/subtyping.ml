@@ -140,7 +140,13 @@ let equal_domains lmap1 lmap2 =
   LSet.(equal (of_list (LMap.keys lmap1)) (of_list (LMap.keys lmap2)))
 
 
-let rec unify ~raise ~(ctx : Context.t) (type1 : type_expression) (type2 : type_expression) : Context.t =
+let rec unify
+  ~raise
+  ~(ctx : Context.t)
+  (type1 : type_expression)
+  (type2 : type_expression)
+  : Context.t
+  =
   let self ?(ctx = ctx) type1 type2 = unify ~raise ~ctx type1 type2 in
   let fail () = raise.error (cannot_unify type1.location type1 type2) in
   let unify_evar evar type_ =
@@ -206,9 +212,12 @@ let rec unify ~raise ~(ctx : Context.t) (type1 : type_expression) (type2 : type_
   | _ -> fail ()
 
 
-let rec subtype ~raise ~ctx ~recieved ~expected =
+let rec subtype ~raise ~ctx ~(recieved : type_expression) ~(expected : type_expression)
+  : Context.t * (expression -> expression)
+  =
+  let loc = expected.location in
   let self ?(ctx = ctx) recieved expected = subtype ~raise ~ctx ~recieved ~expected in
-  let fail () = raise.error (cannot_subtype ctx recieved expected) in
+  let fail () = raise.error (cannot_subtype loc recieved expected) in
   let subtype_evar ~mode evar type_ =
     let kind =
       Context.get_exists_var ctx evar
@@ -216,67 +225,52 @@ let rec subtype ~raise ~ctx ~recieved ~expected =
     in
     let ctx, type_ = lift ~raise ~ctx ~mode ~evar ~kind type_ in
     occurs_check ~raise ~evar type_;
-    Context.add_exists_eq ctx evar kind type_
+    Context.add_exists_eq ctx evar kind type_, fun x -> x
   in
   let subtype_var ~mode tvar type_ =
     match Exists_var.of_type_var tvar with
     | Some evar -> subtype_evar ~mode evar type_
     | None ->
       (match type_.type_content with
-       | T_variable tvar' when TypeVar.equal tvar tvar' -> ctx
+       | T_variable tvar' when TypeVar.equal tvar tvar' -> ctx, fun x -> x
        | _ -> fail ())
   in
   match recieved.type_content, expected.type_content with
-  | T_singleton lit1, T_singleton lit2 when equal_literal lit1 lit2 ->
-    (* TODO: Discuss any useful subtyping that could come from literals *)
-    ctx
-  | T_constant inj1, T_constant inj2 when consistent_injections inj1 inj2 ->
-    (match
-       List.fold2 inj1.parameters inj2.parameters ~init:ctx ~f:(fun ctx param1 param2 ->
-         unify ~raise ~ctx (Context.apply ctx param1) (Context.apply ctx param2))
-     with
-     | Ok ctx -> ctx
-     | Unequal_lengths ->
-       failwith "Cannot occur since injections are consistent and fully applied")
-  | ( T_sum { content = content1; layout = layout1 }
-    , T_sum { content = content2; layout = layout2 } )
-  | ( T_record { content = content1; layout = layout1 }
-    , T_record { content = content2; layout = layout2 } )
-    when layout_eq layout1 layout2 && equal_domains content1 content2 ->
-    (* Naive substyping. Layout and content must be consistent *)
-    LMap.fold
-      (fun label { associated_type = type1; _ } ctx ->
-        let { associated_type = type2; _ } = LMap.find label content2 in
-        self ~ctx (Context.apply ctx type1) (Context.apply ctx type2))
-      content1
-      ctx
   | T_arrow { type1 = type11; type2 = type12 }, T_arrow { type1 = type21; type2 = type22 }
     ->
-    let ctx = self ~ctx type21 type11 in
-    self ~ctx (Context.apply ctx type12) (Context.apply ctx type22)
-  | ( T_abstraction { ty_binder = tvar1; kind = kind1; type_ = type1 }
-    , T_abstraction { ty_binder = tvar2; kind = kind2; type_ = type2 } )
-    when equal_kind kind1 kind2 ->
-    let tvar' = TypeVar.fresh_like tvar1 in
-    let type1 = t_subst_var type1 ~tvar:tvar1 ~tvar' in
-    let type2 = t_subst_var type2 ~tvar:tvar2 ~tvar' in
-    self ~ctx:Context.(ctx |:: C_type_var (tvar', kind1)) type1 type2
-    |> Context.drop_until ~at:(C_type_var (tvar', kind1))
+    let ctx, f1 = self ~ctx type21 type11 in
+    let ctx, f2 = self ~ctx (Context.apply ctx type12) (Context.apply ctx type22) in
+    ( ctx
+    , fun hole ->
+        let x = ValueVar.fresh () in
+        let args = f1 (e_variable x type21) in
+        let binder =
+          { var = x; ascr = Some type21; attributes = { const_or_var = None } }
+        in
+        let result = f2 (e_application { lamb = hole; args } type11) in
+        e_a_lambda { binder; result } type21 type22 )
   | T_for_all { ty_binder = tvar; kind; type_ }, _ ->
     let loc = TypeVar.get_location tvar in
     let evar = Exists_var.fresh ~loc () in
-    self
-      ~ctx:Context.(ctx |:: C_marker evar |:: C_exists_var (evar, kind))
-      (t_subst type_ ~tvar ~type_:(t_exists ~loc evar))
-      recieved
-    |> Context.drop_until ~at:(C_marker evar)
+    let type' = t_subst type_ ~tvar ~type_:(t_exists ~loc evar) in
+    let ctx, f =
+      self
+        ~ctx:Context.(ctx |:: C_marker evar |:: C_exists_var (evar, kind))
+        type'
+        recieved
+    in
+    ( Context.drop_until ctx ~at:(C_marker evar)
+    , fun hole -> f (e_type_inst { forall = hole; type_ = t_exists ~loc evar } type') )
   | _, T_for_all { ty_binder = tvar; kind; type_ } ->
     let tvar' = TypeVar.fresh_like tvar in
-    self
-      ~ctx:Context.(ctx |:: C_type_var (tvar', kind))
-      type_
-      (t_subst_var type_ ~tvar ~tvar')
-    |> Context.drop_until ~at:(C_type_var (tvar', kind))
+    let ctx, f =
+      self
+        ~ctx:Context.(ctx |:: C_type_var (tvar', kind))
+        type_
+        (t_subst_var type_ ~tvar ~tvar')
+    in
+    ( Context.drop_until ctx ~at:(C_type_var (tvar', kind))
+    , fun hole -> e_type_abstraction { type_binder = tvar'; result = f hole } recieved )
   | T_variable tvar1, _ -> subtype_var ~mode:Contravariant tvar1 recieved
   | _, T_variable tvar2 -> subtype_var ~mode:Covariant tvar2 expected
-  | _ -> fail ()
+  | _, _ -> unify ~raise ~ctx recieved expected, fun x -> x
