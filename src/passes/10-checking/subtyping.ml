@@ -11,7 +11,8 @@ let rec occurs_check ~raise ~evar type_ =
   | T_variable tvar' ->
     (match Exists_var.of_type_var tvar' with
      | Some evar' ->
-       if Exists_var.equal evar evar' then raise.error (occurs_check_failed evar type_)
+       if Exists_var.equal evar evar'
+       then raise.error (occurs_check_failed (Exists_var.loc evar) evar type_)
      | None -> ())
   | T_arrow { type1; type2 } ->
     self type1;
@@ -20,7 +21,7 @@ let rec occurs_check ~raise ~evar type_ =
   | T_constant { parameters; _ } -> List.iter parameters ~f:self
   | T_record rows | T_sum rows ->
     LMap.iter (fun _label { associated_type; _ } -> self associated_type) rows.content
-  | T_singleton _ | T_variable _ -> ()
+  | T_singleton _ -> ()
 
 
 module Mode = struct
@@ -139,21 +140,21 @@ let equal_domains lmap1 lmap2 =
   LSet.(equal (of_list (LMap.keys lmap1)) (of_list (LMap.keys lmap2)))
 
 
-let rec unify ~raise ~(ctx : Context.t) type1 type2 : Context.t =
+let rec unify ~raise ~(ctx : Context.t) (type1 : type_expression) (type2 : type_expression) : Context.t =
   let self ?(ctx = ctx) type1 type2 = unify ~raise ~ctx type1 type2 in
-  let fail () = raise.error (cannot_unify ctx type1 type2) in
+  let fail () = raise.error (cannot_unify type1.location type1 type2) in
   let unify_evar evar type_ =
     occurs_check ~raise ~evar type_;
     let kind =
       Context.get_exists_var ctx evar
-      |> trace_option ~raise (unbound_exists_variable ctx evar)
+      |> trace_option ~raise (unbound_exists_variable (Exists_var.loc evar) evar)
     in
     let ctx, type_ = lift ~raise ~ctx ~mode:Invariant ~evar ~kind type_ in
     if not
          (match Well_formed.type_expr ~ctx type_ with
           | Some kind' -> equal_kind kind kind'
           | _ -> false)
-    then raise.error (ill_formed_type ctx type_ type_.location);
+    then raise.error (ill_formed_type type_.location type_);
     Context.add_exists_eq ctx evar kind type_
   in
   let unify_var tvar type_ =
@@ -207,11 +208,11 @@ let rec unify ~raise ~(ctx : Context.t) type1 type2 : Context.t =
 
 let rec subtype ~raise ~ctx ~recieved ~expected =
   let self ?(ctx = ctx) recieved expected = subtype ~raise ~ctx ~recieved ~expected in
-  let fail () = assert false in
+  let fail () = raise.error (cannot_subtype ctx recieved expected) in
   let subtype_evar ~mode evar type_ =
     let kind =
       Context.get_exists_var ctx evar
-      |> trace_option ~raise (unbound_exists_variable ctx evar)
+      |> trace_option ~raise (unbound_exists_variable (Exists_var.loc evar) evar)
     in
     let ctx, type_ = lift ~raise ~ctx ~mode ~evar ~kind type_ in
     occurs_check ~raise ~evar type_;
