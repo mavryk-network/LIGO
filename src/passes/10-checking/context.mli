@@ -76,6 +76,12 @@ module Elaboration : sig
   val run : expression t -> ctx:context -> expression
 end
 
+val enter : ctx:t -> at:item -> in_:(t -> t * type_expression * 'a) -> t * type_expression * 'a
+
+module Generalization : sig
+  val enter : ctx:t -> in_:(t -> t * type_expression * 'a) -> t * type_expression * 'a
+end
+
 val context_of_module_expr : outer_context:t -> Ast_typed.module_expr -> t
 val init : ?env:Environment.t -> unit -> t
 
