@@ -9,11 +9,17 @@ open Subtyping
 module TypeVar = Stage_common.Types.TypeVar
 module Pair = Simple_utils.Pair
 
-type context = Context.t
-
 let untype_expression = Untyper.untype_expression
 let untype_program = Untyper.untype_program
-let assert_type_expression_eq = Helpers.assert_type_expression_eq
+
+let assert_type_expression_eq
+  ~raise
+  (loc : Location.t)
+  ((tv', tv) : O.type_expression * O.type_expression)
+  : unit
+  =
+  trace_option ~raise (assert_equal loc tv' tv) @@ O.assert_type_expression_eq (tv', tv)
+
 
 (*
   This function operates on the return type of Context.get_sum.
@@ -573,9 +579,8 @@ and infer_lambda
         ~ctx:Context.(ctx |:: C_value (var, arg_type))
         result
     in
-    ( ctx
-    , O.t_arrow arg_type ret_type ()
-    , { binder = { binder with ascr = Some arg_type }; result } ))
+    let lambda : O.lambda = { binder = { binder with ascr = Some arg_type }; result } in
+    ctx, O.t_arrow arg_type ret_type (), lambda)
 
 
 and infer_application ~raise ~options ~ctx lamb_type args =
