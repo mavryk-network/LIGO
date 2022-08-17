@@ -16,6 +16,8 @@ type exists_variable = Exists_var.t
 
 type t
 
+and pos
+
 and item =
   | C_value of expression_variable * type_expression
   | C_type of type_variable * type_expression
@@ -24,6 +26,7 @@ and item =
   | C_exists_eq of exists_variable * kind * type_expression
   | C_marker of exists_variable
   | C_module of module_variable * t
+  | C_pos of pos
 
 val empty : t
 val add : t -> item -> t
@@ -49,8 +52,9 @@ val add_exists_eq : t -> exists_variable -> kind -> type_expression -> t
 val get_exists_eq : t -> exists_variable -> type_expression option
 val insert_at : t -> at:item -> hole:t -> t
 val split_at : t -> at:item -> t * t
-val drop_until : t -> at:item -> t
+val drop_until : t -> pos:pos -> t
 val apply : t -> type_expression -> type_expression
+val mark : t -> t * pos
 
 val get_record
   :  type_expression row_element_mini_c label_map
@@ -72,8 +76,9 @@ module Elaboration : sig
   type 'a t
 
   include Monad.S with type 'a t := 'a t
+  val all_lmap : 'a t LMap.t -> 'a LMap.t t
 
-  val run : expression t -> ctx:context -> expression
+  val run_expr : expression t -> ctx:context -> expression
 end
 
 val enter : ctx:t -> at:item -> in_:(t -> t * type_expression * 'a) -> t * type_expression * 'a

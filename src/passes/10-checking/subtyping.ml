@@ -76,21 +76,24 @@ let rec lift ~raise ~ctx ~(mode : Mode.t) ~kind ~evar (type_ : type_expression)
          ~mode:Contravariant
          (t_subst ~tvar:tvar' ~type_:(t_exists evar') type_)
      | Covariant ->
+       let ctx, pos = Context.mark ctx in
        let ctx, type_ =
          self ~ctx:Context.(ctx |:: C_type_var (tvar', kind')) ~mode:Covariant type_
        in
-       Context.drop_until ctx ~at:(C_type_var (tvar', kind')), type_
+       Context.drop_until ctx ~pos, type_
      | Invariant ->
+       let ctx, pos = Context.mark ctx in
        let ctx, type_ =
          self ~ctx:Context.(ctx |:: C_type_var (tvar', kind')) ~mode:Invariant type_
        in
-       ( Context.drop_until ctx ~at:(C_type_var (tvar', kind'))
+       ( Context.drop_until ctx ~pos
        , return @@ T_for_all { ty_binder = tvar'; kind = kind'; type_ } ))
   | T_abstraction { ty_binder = tvar'; kind; type_ } ->
     let tvar'' = TypeVar.fresh () in
     let type_ = t_subst_var ~loc type_ ~tvar:tvar' ~tvar':tvar'' in
+    let ctx, pos = Context.mark ctx in
     let ctx, type_ = self ~ctx:Context.(ctx |:: C_type_var (tvar'', kind)) ~mode type_ in
-    Context.drop_until ctx ~at:(C_type_var (tvar'', kind)), type_
+    Context.drop_until ctx ~pos, type_
   | T_arrow { type1; type2 } ->
     let ctx, type1 = self ~mode:(Mode.invert mode) type1 in
     let ctx, type2 = self ~mode (Context.apply ctx type2) in
@@ -195,8 +198,9 @@ let rec unify
     let tvar = TypeVar.fresh_like tvar1 in
     let type1 = t_subst_var ~tvar:tvar1 ~tvar':tvar type1 in
     let type2 = t_subst_var ~tvar:tvar2 ~tvar':tvar type2 in
+    let ctx, pos = Context.mark ctx in
     self ~ctx:Context.(ctx |:: C_type_var (tvar, kind1)) type1 type2
-    |> Context.drop_until ~at:(C_type_var (tvar, kind1))
+    |> Context.drop_until ~pos
   | ( T_sum { content = content1; layout = layout1 }
     , T_sum { content = content2; layout = layout2 } )
   | ( T_record { content = content1; layout = layout1 }
@@ -253,23 +257,25 @@ let rec subtype ~raise ~ctx ~(recieved : type_expression) ~(expected : type_expr
     let loc = TypeVar.get_location tvar in
     let evar = Exists_var.fresh ~loc () in
     let type' = t_subst type_ ~tvar ~type_:(t_exists ~loc evar) in
+    let ctx, pos = Context.mark ctx in
     let ctx, f =
       self
         ~ctx:Context.(ctx |:: C_marker evar |:: C_exists_var (evar, kind))
         type'
         recieved
     in
-    ( Context.drop_until ctx ~at:(C_marker evar)
+    ( Context.drop_until ctx ~pos
     , fun hole -> f (e_type_inst { forall = hole; type_ = t_exists ~loc evar } type') )
   | _, T_for_all { ty_binder = tvar; kind; type_ } ->
     let tvar' = TypeVar.fresh_like tvar in
+    let ctx, pos = Context.mark ctx in
     let ctx, f =
       self
         ~ctx:Context.(ctx |:: C_type_var (tvar', kind))
         type_
         (t_subst_var type_ ~tvar ~tvar')
     in
-    ( Context.drop_until ctx ~at:(C_type_var (tvar', kind))
+    ( Context.drop_until ctx ~pos
     , fun hole -> e_type_abstraction { type_binder = tvar'; result = f hole } recieved )
   | T_variable tvar1, _ -> subtype_var ~mode:Contravariant tvar1 recieved
   | _, T_variable tvar2 -> subtype_var ~mode:Covariant tvar2 expected

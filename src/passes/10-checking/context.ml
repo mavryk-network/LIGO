@@ -18,6 +18,7 @@ module Exists_var = struct
 end
 
 type exists_variable = Exists_var.t
+type pos = int
 
 type t =
   { items : item list
@@ -32,6 +33,7 @@ and item =
   | C_exists_eq of exists_variable * kind * type_expression
   | C_marker of exists_variable
   | C_module of module_variable * t
+  | C_pos of pos
 
 module PP = struct
   open Ast_typed.PP
@@ -67,7 +69,8 @@ module PP = struct
           type_
       | C_marker evar -> Format.fprintf ppf "|>%a" Exists_var.pp evar
       | C_module (mvar, ctx) ->
-        Format.fprintf ppf "module %a = %a" module_variable mvar context ctx)
+        Format.fprintf ppf "module %a = %a" module_variable mvar context ctx
+      | C_pos _ -> ())
 end
 
 let pp = PP.context
@@ -171,14 +174,15 @@ let rec equal_item : item -> item -> bool =
   | C_marker evar1, C_marker evar2 -> Exists_var.equal evar1 evar2
   | C_module (mvar1, mctx1), C_module (mvar2, mctx2) ->
     ModuleVar.equal mvar1 mvar2 && List.equal equal_item mctx1.items mctx2.items
+  | C_pos pos1, C_pos pos2 -> pos1 = pos2
   | _, _ -> false
 
 
-let drop_until t ~at =
+let drop_until t ~pos =
   let rec loop t =
     match t.items with
     | [] -> t
-    | item :: items when equal_item item at -> { t with items }
+    | C_pos pos' :: items when pos = pos' -> { t with items }
     | item :: items ->
       loop
         { items
@@ -207,6 +211,16 @@ let split_at t ~at =
   let solved = t.solved in
   let l, r = loop t.items in
   { items = l; solved }, { empty with items = r }
+
+
+let mark =
+  let next = ref 0 in
+  fun t ->
+    let pos =
+      Int.incr next;
+      !next
+    in
+    t |:: C_pos pos, pos
 
 
 let insert_at t ~at ~hole =
@@ -504,6 +518,7 @@ end = struct
          | C_marker evar ->
            (not (List.mem ~equal:Exists_var.equal (get_markers ctx) evar))
            && not (List.mem ~equal:Exists_var.equal (get_exists_vars ctx) evar)
+         | C_pos _ -> true
          | C_module (_mvar, mctx) ->
            (* Shadowing permitted *)
            context mctx)
@@ -730,7 +745,8 @@ module Elaboration = struct
         }
 
 
-  let run t ~ctx = e_apply ctx (t ())
+  let run_expr t ~ctx = e_apply ctx (t ())
+  let all_lmap lmap () = LMap.map (fun t -> t ()) lmap
 end
 
 let unsolved { items; solved } =
@@ -760,7 +776,6 @@ let t_subst t ~tvar ~type_ = Helpers.subst_no_capture_type tvar type_ t
 (* 
 let t_exists (evar : Exists_var.t) =
   t_variable ~loc:(Exists_var.loc evar) (evar :> type_variable) () *)
-
 
 (* let t_subst_var t ~tvar ~tvar' = t_subst t ~tvar ~type_:(t_variable tvar' ()) *)
 let t_subst_evar t ~evar ~type_ = t_subst t ~tvar:evar ~type_
