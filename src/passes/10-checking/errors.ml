@@ -91,7 +91,7 @@ type typer_error =
   | `Typer_match_error of
     Ast_typed.type_expression * Ast_typed.type_expression * Location.t
   | `Typer_should_be_a_function_type of Ast_typed.type_expression * Ast_core.expression
-  | `Typer_bad_record_access of Ast_typed.label * Ast_typed.expression * Location.t
+  | `Typer_bad_record_access of Ast_typed.label * Location.t
   | `Typer_expression_tracer of Ast_core.expression * typer_error
   | `Typer_assert_equal of
     Location.t * Ast_typed.type_expression * Ast_typed.type_expression
@@ -340,16 +340,14 @@ let rec error_ppformat
          e.location
          Ast_typed.PP.type_expression
          (type_improve actual)
-     | `Typer_bad_record_access (field, e, loc) ->
+     | `Typer_bad_record_access (field, loc) ->
        Format.fprintf
          f
-         "@[<hv>%a@.Invalid record field \"%a\" in record \"%a\". @]"
+         "@[<hv>%a@.Invalid record field \"%a\" in record. @]"
          Snippet.pp
          loc
          Ast_core.PP.label
          field
-         Ast_typed.PP.expression
-         e
      | `Typer_corner_case desc ->
        Format.fprintf f "@[<hv>A type system corner case occurred:@.%s@]" desc
      | `Typer_bad_collect_loop (t, loc) ->
@@ -768,14 +766,11 @@ let rec error_jsonformat : typer_error -> Yojson.Safe.t =
         ]
     in
     json_error ~stage ~content
-  | `Typer_bad_record_access (field, e, loc) ->
+  | `Typer_bad_record_access (field, loc) ->
     let message = `String "invalid record field" in
     let field = Ast_typed.Yojson.label field in
-    let value = Ast_typed.Yojson.expression e in
     let loc = `String (Format.asprintf "%a" Location.pp loc) in
-    let content =
-      `Assoc [ "message", message; "location", loc; "value", value; "field", field ]
-    in
+    let content = `Assoc [ "message", message; "location", loc; "field", field ] in
     json_error ~stage ~content
   | `Typer_expression_tracer (e, err) ->
     let expression = `String (Format.asprintf "%a" Ast_core.PP.expression e) in

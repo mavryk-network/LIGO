@@ -2,6 +2,7 @@ module Ligo_proto = Environment.Protocols
 module Option = Simple_utils.Option
 module List = Simple_utils.List
 module Trace = Simple_utils.Trace
+module Elaboration = Context.Elaboration
 open Trace
 open Errors
 module I = Ast_core
@@ -205,14 +206,14 @@ type ('err, 'wrn) infer =
   raise:('err, 'wrn) raise
   -> ctx:Context.t
   -> I.expression
-  -> Context.t * O.type_expression * O.expression
+  -> Context.t * O.type_expression * O.expression Elaboration.t
 
 type ('err, 'wrn) check =
   raise:('err, 'wrn) raise
   -> ctx:Context.t
   -> I.expression
   -> O.type_expression
-  -> Context.t * O.expression
+  -> Context.t * O.expression Elaboration.t
 
 type ('err, 'wrn) t =
   raise:('err, 'wrn) raise
@@ -222,7 +223,7 @@ type ('err, 'wrn) t =
   -> loc:Location.t
   -> ctx:Context.t
   -> I.expression list
-  -> Context.t * O.expression list * O.type_expression
+  -> Context.t * O.expression list Elaboration.t * O.type_expression
 
 let t_subst t ~tvar ~type_ = O.Helpers.subst_no_capture_type tvar type_ t
 
@@ -266,8 +267,8 @@ let of_type ({ for_alls; mode_annot; types } : Type.t) : _ t =
     (* Infer the inferred arguments *)
     let ctx =
       List.fold inferred ~init:ctx ~f:(fun ctx (i, arg) ->
-        let ctx, _, arg = infer ~raise ~ctx arg in
-        Hashtbl.set output_args ~key:i ~data:arg;
+        let ctx, arg_type, arg = infer ~raise ~ctx arg in
+        Hashtbl.set output_args ~key:i ~data:(arg_type, arg);
         ctx)
     in
     (* Select type using try-based unification on inferred types *)
@@ -293,7 +294,7 @@ let of_type ({ for_alls; mode_annot; types } : Type.t) : _ t =
                     match (mode i : Type.mode) with
                     | Inferred ->
                       (* [Hashtbl.find_exn] cannot raise error due to inference above. *)
-                      First (arg_type, (Hashtbl.find_exn output_args i).type_expression)
+                      First (arg_type, fst (Hashtbl.find_exn output_args i))
                     | Checked -> Second (i, arg_type, arg))
              in
              (* Unify the inferred types *)
@@ -312,11 +313,14 @@ let of_type ({ for_alls; mode_annot; types } : Type.t) : _ t =
     let ctx =
       List.fold checked ~init:ctx ~f:(fun ctx (i, arg_type, arg) ->
         let ctx, arg = check ~raise ~ctx arg (Context.apply ctx arg_type) in
-        Hashtbl.set output_args ~key:i ~data:arg;
+        Hashtbl.set output_args ~key:i ~data:(arg_type, arg);
         ctx)
     in
     (* Reconstruct arguments using [output_args] *)
-    let args = List.mapi args ~f:(fun i _ -> Hashtbl.find_exn output_args i) in
+    let args =
+      List.mapi args ~f:(fun i _ -> snd (Hashtbl.find_exn output_args i))
+      |> Elaboration.all
+    in
     ctx, args, ret_type
 
 
@@ -326,7 +330,9 @@ let of_comparator comparator : _ t =
   | [ arg1; arg2 ] ->
     let ctx, arg1_type, arg1 = infer ~raise ~ctx arg1 in
     let ctx, arg2_type, arg2 = infer ~raise ~ctx arg2 in
-    ctx, [ arg1; arg2 ], comparator ~raise ~test:options.test ~loc arg1_type arg2_type
+    ( ctx
+    , Elaboration.all [ arg1; arg2 ]
+    , comparator ~raise ~test:options.test ~loc arg1_type arg2_type )
   | _ ->
     raise.error
       (corner_case
