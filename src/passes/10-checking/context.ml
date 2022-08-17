@@ -749,20 +749,20 @@ let unsolved { items; solved } =
 
 
 let enter ~ctx ~at ~in_ =
-  let ctx, ret_type = in_ ctx in
+  let ctx, ret_type, expr = in_ ctx in
   let ctxl, ctxr = split_at ctx ~at in
   let ret_type = apply ctxr ret_type in
   let ctxr = unsolved ctxr in
-  ctxl |@ ctxr, ret_type
+  ctxl |@ ctxr, ret_type, expr
 
 
 let t_subst t ~tvar ~type_ = Helpers.subst_no_capture_type tvar type_ t
-
+(* 
 let t_exists (evar : Exists_var.t) =
-  t_variable ~loc:(Exists_var.loc evar) (evar :> type_variable) ()
+  t_variable ~loc:(Exists_var.loc evar) (evar :> type_variable) () *)
 
 
-let t_subst_var t ~tvar ~tvar' = t_subst t ~tvar ~type_:(t_variable tvar' ())
+(* let t_subst_var t ~tvar ~tvar' = t_subst t ~tvar ~type_:(t_variable tvar' ()) *)
 let t_subst_evar t ~evar ~type_ = t_subst t ~tvar:evar ~type_
 
 module Generalization = struct
@@ -800,10 +800,10 @@ module Generalization = struct
 
   let enter ~ctx ~in_ =
     let marker = C_marker (Exists_var.fresh ()) in
-    let ctx, ret_type = in_ (ctx |:: marker) in
+    let ctx, ret_type, expr = in_ (ctx |:: marker) in
     let ctxl, ctxr = split_at ctx ~at:marker in
     let ret_type = apply ctxr ret_type in
     let ctxr, tvars = unsolved ctxr in
     let tvars = Exists_var.Map.map (fun kind -> kind, TypeVar.fresh ()) tvars in
-    ctxl |@ ctxr, generalize_type ~tvars ret_type
+    ctxl |@ ctxr, generalize_type ~tvars ret_type, expr
 end
