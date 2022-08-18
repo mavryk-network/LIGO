@@ -843,11 +843,22 @@ module Generalization = struct
 
 
   let enter ~ctx ~in_ =
+    let open Elaboration.Let_syntax in
     let marker = C_marker (Exists_var.fresh ()) in
     let ctx, ret_type, expr = in_ (ctx |:: marker) in
     let ctxl, ctxr = split_at ctx ~at:marker in
     let ret_type = apply ctxr ret_type in
     let ctxr, tvars = unsolved ctxr in
     let tvars = Exists_var.Map.map (fun kind -> kind, TypeVar.fresh ()) tvars in
-    ctxl |@ ctxr, generalize_type ~tvars ret_type, expr
+    ( ctxl |@ ctxr
+    , generalize_type ~tvars ret_type
+    , let%bind expr = expr in
+      return
+      @@ Exists_var.Map.fold
+           (fun _evar (kind, tvar) expr ->
+             e_type_abstraction
+               { type_binder = tvar; result = expr }
+               (t_for_all tvar kind expr.type_expression))
+           tvars
+           expr )
 end

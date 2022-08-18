@@ -308,12 +308,7 @@ and infer_expression ~(raise : raise) ~options ~ctx (expr : I.expression)
       @@ Context.get_value ctx var
     in
     ctx, type_, return (E_variable var) type_
-  | E_lambda lambda ->
-    let ctx, type_, lambda = infer_lambda ~raise ~options ~ctx lambda in
-    ( ctx
-    , type_
-    , let%bind lambda = lambda in
-      return (E_lambda lambda) type_ )
+  | E_lambda lambda -> infer_lambda ~raise ~options ~loc ~ctx lambda
   | E_application { lamb; args } ->
     let ctx, lamb_type, lamb = infer lamb in
     let ctx, ret_type, f, args = infer_application ~raise ~options ~ctx lamb_type args in
@@ -507,9 +502,8 @@ and infer_expression ~(raise : raise) ~options ~ctx (expr : I.expression)
   | E_mod_in { module_binder = mvar; rhs; let_result } ->
     let mctx, rhs = infer_module_expr ~raise ~options ~ctx rhs in
     let ctx, ret_type, let_result =
-      Context.enter
-        ~ctx
-        ~in_:(fun ctx -> infer ~ctx:Context.(ctx |:: C_module (mvar, mctx)) let_result)
+      Context.enter ~ctx ~in_:(fun ctx ->
+        infer ~ctx:Context.(ctx |:: C_module (mvar, mctx)) let_result)
     in
     ( ctx
     , ret_type
@@ -621,11 +615,13 @@ and check_lambda
 and infer_lambda
   ~raise
   ~options
+  ~loc
   ~ctx
   ({ binder; output_type = ret_ascr; result } : _ I.lambda)
-  : Context.t * O.type_expression * O.lambda Elaboration.t
+  : Context.t * O.type_expression * O.expression Elaboration.t
   =
   let open Elaboration.Let_syntax in
+  let return content type_ = return @@ O.make_e ~location:loc content type_ in
   let ({ var; ascr = arg_ascr; _ } : _ I.binder) = binder in
   (* Desugar return ascription to (result : ret_ascr) *)
   let result =
@@ -647,11 +643,12 @@ and infer_lambda
         ~ctx:Context.(ctx |:: C_value (var, arg_type))
         result
     in
-    let lambda : O.lambda Elaboration.t =
+    let type_ = O.t_arrow arg_type ret_type () in
+    let lambda : O.expression Elaboration.t =
       let%bind result = result in
-      return ({ binder = { binder with ascr = Some arg_type }; result } : O.lambda)
+      return (E_lambda { binder = { binder with ascr = Some arg_type }; result }) type_
     in
-    ctx, O.t_arrow arg_type ret_type (), lambda)
+    ctx, type_, lambda)
 
 
 and infer_application ~raise ~options ~ctx lamb_type args

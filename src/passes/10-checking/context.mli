@@ -84,11 +84,14 @@ end
 
 val enter
   :  ctx:t
-  -> in_:(t -> t * type_expression * 'a)
-  -> t * type_expression * 'a
+  -> in_:(t -> t * type_expression * expression Elaboration.t)
+  -> t * type_expression * expression Elaboration.t
 
 module Generalization : sig
-  val enter : ctx:t -> in_:(t -> t * type_expression * 'a) -> t * type_expression * 'a
+  val enter
+    :  ctx:t
+    -> in_:(t -> t * type_expression * expression Elaboration.t)
+    -> t * type_expression * expression Elaboration.t
 end
 
 val context_of_module_expr : outer_context:t -> Ast_typed.module_expr -> t
