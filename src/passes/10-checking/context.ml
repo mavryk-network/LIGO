@@ -698,9 +698,9 @@ module Elaboration = struct
         ; let_result = self let_result
         ; attr
         }
-    | E_mod_in mod_in ->
-      (* TODO: Modules *)
-      E_mod_in { mod_in with let_result = self mod_in.let_result }
+    | E_mod_in { module_binder; rhs; let_result } ->
+      E_mod_in
+        { module_binder; rhs = module_expr_apply ctx rhs; let_result = self let_result }
     | E_raw_code { language; code } -> E_raw_code { language; code = self code }
     | E_type_inst { forall; type_ } ->
       E_type_inst { forall = self forall; type_ = t_apply ctx type_ }
@@ -745,7 +745,35 @@ module Elaboration = struct
         }
 
 
+  and decl_apply ctx (decl : declaration) =
+    let loc = decl.location in
+    let return content = Location.wrap ~loc content in
+    match decl.wrap_content with
+    | Declaration_type decl_type -> return @@ Declaration_type decl_type
+    | Declaration_constant { binder; expr; attr } ->
+      return
+      @@ Declaration_constant
+           { binder = binder_apply ctx binder; expr = e_apply ctx expr; attr }
+    | Declaration_module { module_binder; module_; module_attr } ->
+      return
+      @@ Declaration_module
+           { module_binder; module_ = module_expr_apply ctx module_; module_attr }
+
+
+  and module_apply ctx module_ : module_ = List.map ~f:(decl_apply ctx) module_
+
+  and module_expr_apply ctx module_expr =
+    let loc = module_expr.location in
+    let return content = Location.wrap ~loc content in
+    match module_expr.wrap_content with
+    | M_struct module_ -> return @@ M_struct (module_apply ctx module_)
+    | M_variable mvar -> return @@ M_variable mvar
+    | M_module_path path -> return @@ M_module_path path
+
+
   let run_expr t ~ctx = e_apply ctx (t ())
+  let run_decl t ~ctx = decl_apply ctx (t ())
+  let run_module t ~ctx = module_apply ctx (t ())
   let all_lmap lmap () = LMap.map (fun t -> t ()) lmap
 end
 

@@ -15,7 +15,6 @@ end
 type exists_variable = Exists_var.t
 
 type t
-
 and pos
 
 and item =
@@ -76,12 +75,18 @@ module Elaboration : sig
   type 'a t
 
   include Monad.S with type 'a t := 'a t
-  val all_lmap : 'a t LMap.t -> 'a LMap.t t
 
+  val all_lmap : 'a t LMap.t -> 'a LMap.t t
   val run_expr : expression t -> ctx:context -> expression
+  val run_decl : declaration t -> ctx:context -> declaration
+  val run_module : module_ t -> ctx:context -> module_
 end
 
-val enter : ctx:t -> at:item -> in_:(t -> t * type_expression * 'a) -> t * type_expression * 'a
+val enter
+  :  ctx:t
+  -> at:item
+  -> in_:(t -> t * type_expression * 'a)
+  -> t * type_expression * 'a
 
 module Generalization : sig
   val enter : ctx:t -> in_:(t -> t * type_expression * 'a) -> t * type_expression * 'a
