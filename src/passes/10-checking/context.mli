@@ -84,7 +84,6 @@ end
 
 val enter
   :  ctx:t
-  -> at:item
   -> in_:(t -> t * type_expression * 'a)
   -> t * type_expression * 'a
 

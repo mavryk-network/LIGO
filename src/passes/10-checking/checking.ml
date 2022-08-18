@@ -343,10 +343,8 @@ and infer_expression ~(raise : raise) ~options ~ctx (expr : I.expression)
     let ctx, rhs_type, rhs = infer rhs in
     let rhs_type = Context.apply ctx rhs_type in
     let ctx, res_type, let_result =
-      Context.enter
-        ~ctx
-        ~at:(C_value (var, rhs_type))
-        ~in_:(fun ctx -> infer ~ctx:Context.(ctx |:: C_value (var, rhs_type)) let_result)
+      Context.enter ~ctx ~in_:(fun ctx ->
+        infer ~ctx:Context.(ctx |:: C_value (var, rhs_type)) let_result)
     in
     ( ctx
     , res_type
@@ -511,7 +509,6 @@ and infer_expression ~(raise : raise) ~options ~ctx (expr : I.expression)
     let ctx, ret_type, let_result =
       Context.enter
         ~ctx
-        ~at:(C_module (mvar, mctx))
         ~in_:(fun ctx -> infer ~ctx:Context.(ctx |:: C_module (mvar, mctx)) let_result)
     in
     ( ctx
@@ -955,7 +952,7 @@ and infer_module ~raise ~options ~ctx (module_ : I.module_)
 let type_program ~raise ~options ?env module_ =
   let ctx = Context.init ?env () in
   let ctx, module_ = infer_module ~raise ~options ~ctx module_ in
-  Elaboration.run_module ~ctx module_ 
+  Elaboration.run_module ~ctx module_
 
 
 let type_declaration ~raise ~options ?env decl =

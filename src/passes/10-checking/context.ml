@@ -792,9 +792,10 @@ let unsolved { items; solved } =
   }
 
 
-let enter ~ctx ~at ~in_ =
+let enter ~ctx ~in_ =
+  let ctx, pos = mark ctx in
   let ctx, ret_type, expr = in_ ctx in
-  let ctxl, ctxr = split_at ctx ~at in
+  let ctxl, ctxr = split_at ctx ~at:(C_pos pos) in
   let ret_type = apply ctxr ret_type in
   let ctxr = unsolved ctxr in
   ctxl |@ ctxr, ret_type, expr
