@@ -79,7 +79,7 @@ module Comparable = struct
     let a_r = trace_option ~raise (comparator_composed loc a) @@ get_t_record a in
     let b_r = trace_option ~raise (expected_variant loc b) @@ get_t_record b in
     let aux a b : type_expression =
-      comparator ~cmp:s ~raise ~test loc a.associated_type b.associated_type
+      comparator ~cmp:s ~raise ~test ~loc a.associated_type b.associated_type
     in
     let _ = List.map2_exn ~f:aux (LMap.to_list a_r.content) (LMap.to_list b_r.content) in
     t_bool ()
@@ -92,7 +92,7 @@ module Comparable = struct
     let a_r = trace_option ~raise (comparator_composed loc a) @@ get_t_sum a in
     let b_r = trace_option ~raise (expected_variant loc b) @@ get_t_sum b in
     let aux a b : type_expression =
-      comparator ~cmp:s ~raise ~test loc a.associated_type b.associated_type
+      comparator ~cmp:s ~raise ~test ~loc a.associated_type b.associated_type
     in
     let _ = List.map2_exn ~f:aux (LMap.to_list a_r.content) (LMap.to_list b_r.content) in
     t_bool ()
@@ -105,7 +105,7 @@ module Comparable = struct
     in
     let a = trace_option ~raise (comparator_composed loc a_lst) @@ get_t_list a_lst in
     let b = trace_option ~raise (expected_option loc b_lst) @@ get_t_list b_lst in
-    comparator ~cmp:s ~raise ~test loc a b
+    comparator ~cmp:s ~raise ~test ~loc a b
 
 
   and set_comparator ~raise ~test : Location.t -> string -> t =
@@ -115,7 +115,7 @@ module Comparable = struct
     in
     let a = trace_option ~raise (comparator_composed loc a_set) @@ get_t_set a_set in
     let b = trace_option ~raise (expected_option loc b_set) @@ get_t_set b_set in
-    comparator ~cmp:s ~raise ~test loc a b
+    comparator ~cmp:s ~raise ~test ~loc a b
 
 
   and map_comparator ~raise ~test : Location.t -> string -> t =
@@ -129,8 +129,8 @@ module Comparable = struct
     let b_key, b_value =
       trace_option ~raise (expected_option loc b_map) @@ get_t_map b_map
     in
-    let _ = comparator ~cmp:s ~raise ~test loc a_key b_key in
-    let _ = comparator ~cmp:s ~raise ~test loc a_value b_value in
+    let _ = comparator ~cmp:s ~raise ~test ~loc a_key b_key in
+    let _ = comparator ~cmp:s ~raise ~test ~loc a_value b_value in
     t_bool ()
 
 
@@ -145,13 +145,13 @@ module Comparable = struct
     let b_key, b_value =
       trace_option ~raise (expected_option loc b_map) @@ get_t_big_map b_map
     in
-    let _ = comparator ~cmp:s ~raise ~test loc a_key b_key in
-    let _ = comparator ~cmp:s ~raise ~test loc a_value b_value in
+    let _ = comparator ~cmp:s ~raise ~test ~loc a_key b_key in
+    let _ = comparator ~cmp:s ~raise ~test ~loc a_value b_value in
     t_bool ()
 
 
-  and comparator ~cmp ~raise ~test : Location.t -> t =
-   fun loc a b ->
+  and comparator ~cmp ~raise ~test ~loc : t =
+   fun a b ->
     if test
     then
       bind_exists ~raise
@@ -1091,118 +1091,192 @@ let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
           create
             ~mode_annot:[ Inferred; Checked ]
             ~types:[ a ^-> (a @-> b) ^~> t_list (t_pair b (t_mutation ())) ]) )
+    ; ( C_TEST_SAVE_MUTATION
+      , of_type
+          (create
+             ~mode_annot:[ Checked; Checked ]
+             ~types:[ t_string () ^-> t_mutation () ^~> t_option (t_string ()) ]) )
+    ; ( C_TEST_ADD_ACCOUNT
+      , of_type
+          (create
+             ~mode_annot:[ Checked; Checked ]
+             ~types:[ t_string () ^-> t_key () ^~> t_unit () ]) )
+    ; ( C_TEST_NEW_ACCOUNT
+      , of_type
+          (create
+             ~mode_annot:[ Checked; Checked ]
+             ~types:[ t_unit () ^~> t_pair (t_string ()) (t_key ()) ]) )
+    ; ( C_TEST_RUN
+      , of_type
+          (for_all "a"
+          @@ fun a ->
+          for_all "b"
+          @@ fun b ->
+          create
+            ~mode_annot:[ Checked; Inferred ]
+            ~types:[ (a @-> b) ^-> a ^~> t_michelson_code () ]) )
+    ; ( C_TEST_DECOMPILE
+      , of_type
+          (for_all "a"
+          @@ fun a -> create ~mode_annot:[ Checked ] ~types:[ t_michelson_code () ^~> a ]
+          ) )
+    ; ( C_TEST_TO_TYPED_ADDRESS
+      , of_type
+          (for_all "a"
+          @@ fun a ->
+          for_all "b"
+          @@ fun b ->
+          create ~mode_annot:[ Inferred ] ~types:[ t_contract a ^~> t_typed_address a b ]
+          ) )
+    ; ( C_TEST_EXTERNAL_CALL_TO_ADDRESS
+      , of_type
+          (create
+             ~mode_annot:[ Checked; Checked; Checked; Checked ]
+             ~types:
+               [ t_address ()
+                 ^-> t_option (t_string ())
+                 ^-> t_michelson_code ()
+                 ^-> t_mutez ()
+                 ^~> t_test_exec_result ()
+               ]) )
+    ; ( C_TEST_EXTERNAL_CALL_TO_ADDRESS_EXN
+      , of_type
+          (create
+             ~mode_annot:[ Checked; Checked; Checked; Checked ]
+             ~types:
+               [ t_address ()
+                 ^-> t_option (t_string ())
+                 ^-> t_michelson_code ()
+                 ^-> t_mutez ()
+                 ^~> t_nat ()
+               ]) )
+    ; ( C_TEST_SET_BIG_MAP
+      , of_type
+          (for_all "a"
+          @@ fun a ->
+          for_all "b"
+          @@ fun b ->
+          create
+            ~mode_annot:[ Checked; Inferred ]
+            ~types:[ t_int () ^-> t_big_map a b ^~> t_unit () ]) )
+    ; ( C_TEST_BAKER_ACCOUNT
+      , of_type
+          (create
+             ~mode_annot:[ Checked; Checked ]
+             ~types:
+               [ t_pair (t_string ()) (t_key ()) ^-> t_option (t_mutez ()) ^~> t_unit () ])
+      )
+    ; ( C_TEST_REGISTER_DELEGATE
+      , of_type (create ~mode_annot:[ Checked ] ~types:[ t_key_hash () ^~> t_unit () ]) )
+    ; ( C_TEST_BAKE_UNTIL_N_CYCLE_END
+      , of_type (create ~mode_annot:[ Checked ] ~types:[ t_nat () ^~> t_unit () ]) )
+    ; ( C_TEST_TO_CONTRACT
+      , of_type
+          (for_all "a"
+          @@ fun a ->
+          for_all "b"
+          @@ fun b ->
+          create ~mode_annot:[ Inferred ] ~types:[ t_typed_address a b ^~> t_contract a ]
+          ) )
+    ; ( C_TEST_CREATE_CHEST
+      , of_type
+          (create
+             ~mode_annot:[ Checked; Checked ]
+             ~types:[ t_bytes () ^-> t_nat () ^~> t_pair (t_chest ()) (t_chest_key ()) ])
+      )
+    ; ( C_TEST_CREATE_CHEST_KEY
+      , of_type
+          (create
+             ~mode_annot:[ Checked; Checked ]
+             ~types:[ t_chest () ^-> t_nat () ^~> t_chest_key () ]) )
+    ; ( C_GLOBAL_CONSTANT
+      , of_type
+          (for_all "a"
+          @@ fun a -> create ~mode_annot:[ Checked ] ~types:[ t_string () ^~> a ]) )
+    ; ( C_TEST_COMPILE_CONTRACT_FROM_FILE
+      , of_type
+          (create
+             ~mode_annot:[ Checked; Checked; Checked ]
+             ~types:
+               [ t_string ()
+                 ^-> t_string ()
+                 ^-> t_list (t_string ())
+                 ^~> t_michelson_contract ()
+               ]) )
+    ; ( C_TEST_REGISTER_CONSTANT
+      , of_type
+          (create ~mode_annot:[ Checked ] ~types:[ t_michelson_code () ^~> t_string () ])
+      )
+    ; ( C_TEST_CONSTANT_TO_MICHELSON
+      , of_type
+          (create ~mode_annot:[ Checked ] ~types:[ t_string () ^~> t_michelson_code () ])
+      )
+    ; ( C_TEST_REGISTER_FILE_CONSTANTS
+      , of_type
+          (create ~mode_annot:[ Checked ] ~types:[ t_string () ^~> t_list (t_string ()) ])
+      )
+    ; ( C_TEST_TO_ENTRYPOINT
+      , of_type
+          (for_all "a"
+          @@ fun a ->
+          for_all "b"
+          @@ fun b ->
+          for_all "c"
+          @@ fun c ->
+          create
+            ~mode_annot:[ Checked; Checked ]
+            ~types:[ t_string () ^-> t_typed_address a b ^~> t_contract c ]) )
+    ; ( C_TEST_FAILWITH
+      , of_type
+          (for_all "a"
+          @@ fun a ->
+          for_all "b" @@ fun b -> create ~mode_annot:[ Inferred ] ~types:[ a ^~> b ]) )
+    ; ( C_TEST_PUSH_CONTEXT
+      , of_type (create ~mode_annot:[ Checked ] ~types:[ t_unit () ^~> t_unit () ]) )
+    ; ( C_TEST_POP_CONTEXT
+      , of_type (create ~mode_annot:[ Checked ] ~types:[ t_unit () ^~> t_unit () ]) )
+    ; ( C_TEST_DROP_CONTEXT
+      , of_type (create ~mode_annot:[ Checked ] ~types:[ t_unit () ^~> t_unit () ]) )
+    ; ( C_TEST_READ_CONTRACT_FROM_FILE
+      , of_type
+          (create
+             ~mode_annot:[ Checked ]
+             ~types:[ t_string () ^~> t_michelson_contract () ]) )
+    ; ( C_TEST_SIGN
+      , of_type
+          (create
+             ~mode_annot:[ Checked; Checked ]
+             ~types:[ t_string () ^-> t_bytes () ^~> t_signature () ]) )
+    ; ( C_TEST_GET_ENTRYPOINT
+      , of_type
+          (for_all "a"
+          @@ fun a ->
+          create
+            ~mode_annot:[ Checked ]
+            ~types:[ t_contract a ^~> t_option (t_string ()) ]) )
+    ; ( C_SAPLING_EMPTY_STATE
+      , of_type
+          (for_all ~kind:Singleton "a"
+          @@ fun a -> create ~mode_annot:[] ~types:[ return @@ t_sapling_state a ]) )
+    ; ( C_SAPLING_VERIFY_UPDATE
+      , of_type
+          (for_all ~kind:Singleton "a"
+          @@ fun a ->
+          create
+            ~mode_annot:[ Inferred; Checked ]
+            ~types:
+              [ t_sapling_transaction a
+                ^-> t_sapling_state a
+                ^~> t_option (t_pair (t_int ()) (t_sapling_state a))
+              ]) )
+    ; C_EQ, of_comparator (Comparable.comparator ~cmp:"EQ")
+    ; C_NEQ, of_comparator (Comparable.comparator ~cmp:"NEQ")
+    ; C_LT, of_comparator (Comparable.comparator ~cmp:"LT")
+    ; C_GT, of_comparator (Comparable.comparator ~cmp:"GT")
+    ; C_LE, of_comparator (Comparable.comparator ~cmp:"LE")
+    ; C_GE, of_comparator (Comparable.comparator ~cmp:"GE")
     ]
 
-
-(*    TODO:
-
-      ; of_type
-          C_TEST_MUTATION_TEST_ALL
-          O.(
-            for_all "a"
-            @@ fun a ->
-            for_all "b" @@ fun b -> a ^-> (a ^-> b) ^-> t_list (t_pair b (t_mutation ())))
-      ; of_type
-          C_TEST_SAVE_MUTATION
-          O.(t_string () ^-> t_mutation () ^-> t_option (t_string ()))
-      ; of_type C_TEST_ADD_ACCOUNT O.(t_string () ^-> t_key () ^-> t_unit ())
-      ; of_type C_TEST_NEW_ACCOUNT O.(t_unit () ^-> t_pair (t_string ()) (t_key ()))
-      ; of_type
-          C_TEST_RUN
-          O.(
-            for_all "a"
-            @@ fun a -> for_all "b" @@ fun b -> (a ^-> b) ^-> a ^-> t_michelson_code ())
-      ; of_type C_TEST_DECOMPILE O.(for_all "a" @@ fun a -> t_michelson_code () ^-> a)
-      ; of_type
-          C_TEST_TO_TYPED_ADDRESS
-          O.(
-            for_all "a"
-            @@ fun a -> for_all "b" @@ fun b -> t_contract a ^-> t_typed_address a b)
-      ; of_type
-          C_TEST_EXTERNAL_CALL_TO_ADDRESS
-          O.(
-            t_address ()
-            ^-> t_option (t_string ())
-            ^-> t_michelson_code ()
-            ^-> t_mutez ()
-            ^-> t_test_exec_result ())
-      ; of_type
-          C_TEST_EXTERNAL_CALL_TO_ADDRESS_EXN
-          O.(
-            t_address ()
-            ^-> t_option (t_string ())
-            ^-> t_michelson_code ()
-            ^-> t_mutez ()
-            ^-> t_nat ())
-      ; of_type
-          C_TEST_SET_BIG_MAP
-          O.(
-            for_all "a"
-            @@ fun a -> for_all "b" @@ fun b -> t_int () ^-> t_big_map a b ^-> t_unit ())
-      ; of_type
-          C_TEST_BAKER_ACCOUNT
-          O.(t_pair (t_string ()) (t_key ()) ^-> t_option (t_mutez ()) ^-> t_unit ())
-      ; of_type C_TEST_REGISTER_DELEGATE O.(t_key_hash () ^-> t_unit ())
-      ; of_type C_TEST_BAKE_UNTIL_N_CYCLE_END O.(t_nat () ^-> t_unit ())
-      ; of_type
-          C_TEST_TO_CONTRACT
-          O.(
-            for_all "a"
-            @@ fun a -> for_all "b" @@ fun b -> t_typed_address a b ^-> t_contract a)
-      ; of_type
-          C_TEST_CREATE_CHEST
-          O.(t_bytes () ^-> t_nat () ^-> t_pair (t_chest ()) (t_chest_key ()))
-      ; of_type C_TEST_CREATE_CHEST_KEY O.(t_chest () ^-> t_nat () ^-> t_chest_key ())
-      ; of_type C_GLOBAL_CONSTANT O.(for_all "a" @@ fun a -> t_string () ^-> a)
-      ; of_type
-          C_TEST_COMPILE_CONTRACT_FROM_FILE
-          O.(
-            t_string ()
-            ^-> t_string ()
-            ^-> t_list (t_string ())
-            ^-> t_michelson_contract ())
-      ; of_type C_TEST_REGISTER_CONSTANT O.(t_michelson_code () ^-> t_string ())
-      ; of_type C_TEST_CONSTANT_TO_MICHELSON O.(t_string () ^-> t_michelson_code ())
-      ; of_type C_TEST_REGISTER_FILE_CONSTANTS O.(t_string () ^-> t_list (t_string ()))
-      ; of_type
-          C_TEST_TO_ENTRYPOINT
-          O.(
-            for_all "a"
-            @@ fun a ->
-            for_all "b"
-            @@ fun b ->
-            for_all "c" @@ fun c -> t_string () ^-> t_typed_address a b ^-> t_contract c)
-      ; of_type C_TEST_FAILWITH (for_all "a" @@ fun a -> for_all "b" @@ fun b -> a ^-> b)
-      ; of_type C_TEST_PUSH_CONTEXT O.(t_unit () ^-> t_unit ())
-      ; of_type C_TEST_POP_CONTEXT O.(t_unit () ^-> t_unit ())
-      ; of_type C_TEST_DROP_CONTEXT O.(t_unit () ^-> t_unit ())
-      ; of_type C_TEST_READ_CONTRACT_FROM_FILE O.(t_string () ^-> t_michelson_contract ())
-      ; of_type C_TEST_SIGN O.(t_string () ^-> t_bytes () ^-> t_signature ())
-      ; of_type
-          C_TEST_GET_ENTRYPOINT
-          O.(for_all "a" @@ fun a -> t_contract a ^-> t_option (t_string ()))
-      ; (* SAPLING *)
-        of_type
-          C_SAPLING_EMPTY_STATE
-          O.(t_for_all a_var Singleton (t_sapling_state (t_variable a_var ())))
-      ; of_type
-          C_SAPLING_VERIFY_UPDATE
-          O.(
-            t_for_all
-              a_var
-              Singleton
-              (t_sapling_transaction (t_variable a_var ())
-              ^-> t_sapling_state (t_variable a_var ())
-              ^-> t_option (t_pair (t_int ()) (t_sapling_state (t_variable a_var ())))))
-      ; (* CUSTOM *)
-        (* COMPARATOR *)
-        C_EQ, typer_of_comparator (comparator ~cmp:"EQ")
-      ; C_NEQ, typer_of_comparator (comparator ~cmp:"NEQ")
-      ; C_LT, typer_of_comparator (comparator ~cmp:"LT")
-      ; C_GT, typer_of_comparator (comparator ~cmp:"GT")
-      ; C_LE, typer_of_comparator (comparator ~cmp:"LE")
-      ; C_GE, typer_of_comparator (comparator ~cmp:"GE")
-      ] *)
 
 let infer_constant ~raise ~infer ~check ~loc const =
   match Const_map.find_opt const constant_typer_tbl with
