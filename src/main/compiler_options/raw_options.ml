@@ -21,6 +21,7 @@ type t = {
   self_pass : bool ;
   
   (* Test framework *)
+  only_ep : bool ;
   test : bool ;
   steps : int ;
   generator : string ;
@@ -54,6 +55,7 @@ module Default_options = struct
   let project_root = None
 
   (* Tools *)
+  let only_ep = false
   let infer = false
   let with_types = false
   let self_pass = false
@@ -76,13 +78,14 @@ module Default_options = struct
   let backend = `Michelson
 end
 
-let make 
+let make
   ?(warning_as_error = Default_options.warning_as_error)
   ?(warn_unused_rec = Default_options.warn_unused_rec)
   ?(syntax = Default_options.syntax)
   ?(entry_point = Default_options.entry_point)
   ?(libraries = Default_options.libraries)
   ?(project_root = Default_options.project_root)
+  ?(only_ep = Default_options.only_ep)
   ?(with_types = Default_options.with_types)
   ?(self_pass = Default_options.self_pass)
   ?(test = Default_options.test)
@@ -113,6 +116,7 @@ let make
   project_root ;
   
   (* Tools *)
+  only_ep ;
   with_types ;
   self_pass ;
   
