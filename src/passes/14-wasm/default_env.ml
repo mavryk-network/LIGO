@@ -90,9 +90,10 @@ let env : module_ =
             symbol ~name:"ffi_source" ~details:(Import      ([], [NumType I32Type]));
             symbol ~name:"ffi_sender" ~details:(Import      ([], [NumType I32Type]));
           ];
+          tables = [{
+            it = {ttype = TableType ({min = 0l; max = Some 0l}, FuncRefType)}; at 
+          }];
       };
-
-      
     at;
   }
 

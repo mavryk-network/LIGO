@@ -56,6 +56,8 @@ let const i at = {it = Const {it = I32 i; at}; at}
 
 let call_s name at = {it = Call_symbol name; at}
 
+let call_indirect_s name at = {it = CallIndirect_symbol name; at}
+
 let local_set_s name at = {it = LocalSet_symbol name; at}
 
 let local_get_s name at = {it = LocalGet_symbol name; at}
@@ -71,3 +73,14 @@ let store at =
 let i32_add at = {it = Binary (I32 Add); at}
 
 let data_symbol symbol at = {it = DataSymbol symbol; at}
+
+let elem i at = {it = 
+  { 
+    etype = FuncRefType;
+    einit = [];
+    emode = {it = (Active {
+      index = { it = 0l; at };
+      offset = {it = [const (Int32.of_int_exn i) at]; at }
+    }); at };
+  }; 
+  at} 

@@ -8,7 +8,7 @@ type env = {
   variables: (var_name * type_expression) list;
   missing: var_name list;
   exported_funcs: (expression -> expression) list;
-  replacements: (var_name * var_name * expression) list;
+  replacements: (var_name * expression) list;
   functions: var_name list;
 }
 
@@ -33,8 +33,7 @@ let var_to_string name =
 let var_type env v =
   match List.find ~f:(fun var -> ValueVar.equal v (fst var)) env.variables with
   | Some (_, type_) -> type_
-  | None ->
-    failwith "should not happen"
+  | None -> failwith ("should not happen:" ^ var_to_string v)
 
 let rec lift : env -> expression -> env * expression =
  fun env e ->
@@ -42,13 +41,67 @@ let rec lift : env -> expression -> env * expression =
   match e.content with
   | E_literal _ -> (env, e)
   | E_closure {binder; body} ->
-    (* how to move closure to top level? *)
-    print_endline "some closure here...";
-    let env =
-      {env with variables = (binder, e.type_expression) :: env.variables}
+    let env2 = 
+      {empty_env with 
+          variables    = (binder, e.type_expression) :: []; 
+          replacements = env.replacements; 
+          functions    = env.functions;
+      }
     in
-    let env, body = lift env body in
-    (env, {e with content = E_closure {binder; body}})
+    let env2, body = lift env2 body in
+    let v = ValueVar.fresh () in
+    let env = { 
+      env2 with 
+        variables = (binder, e.type_expression) :: (v, e.type_expression) :: env.variables
+    } 
+    in
+    let export_func remaining =
+      List.fold_left
+        ~f:(fun all binder ->
+          let type_expression_item = body.type_expression  in
+          let type_expression =
+            {
+              type_content =
+                T_function (type_expression_item, all.type_expression);
+              location = e.type_expression.location;
+              source_type = None;
+            }
+          in
+          {
+            content = E_closure {binder; body = all};
+            type_expression;
+            location = e.location;
+          })
+        ~init:{e with content = E_closure {binder; body} } remaining
+    in
+    let in_function i =
+      match List.find env.functions ~f:(fun r -> ValueVar.equal r i) with
+      | Some _ -> true
+      | None -> false
+    in
+    let missing = env.missing in    
+    let missing = List.filter ~f:(fun f -> not (in_function f)) missing in
+    let export = export_func missing in
+    let type_expression = export.type_expression in
+    let export e =
+      {
+        content = E_let_in (export, false, ((v, type_expression), e));
+        type_expression;
+        location = e.location;
+      }
+    in
+    let env =
+      {
+        variables = env.variables;
+        exported_funcs = export :: env.exported_funcs;
+        functions = env.functions;
+        replacements = env.replacements;
+        missing = env.missing;
+      }
+    in
+    let e = { e with content = E_variable v} in
+    (env, e)
+
   | E_constant {cons_name; arguments} ->
     let env, arguments =
       List.fold_left
@@ -58,35 +111,15 @@ let rec lift : env -> expression -> env * expression =
         ~init:(env, []) (List.rev arguments)
     in
     (env, {e with content = E_constant {cons_name; arguments}})
-    | E_application (({content = E_variable v; _} as e1), e2) ->
+  | E_application (({content = E_variable v; _} as e1), e2) ->
     let env, e1 = lift env e1 in
     let env, e2 = lift env e2 in
     let env, e1 =
       match
-        List.find env.replacements ~f:(fun (r, _, _) -> ValueVar.equal r v)
+        List.find env.replacements ~f:(fun (r, _) -> ValueVar.equal r v)
       with
-      | Some (_, _, x) -> lift env x
+      | Some (_, x) -> lift env x
       | None -> (env, e1)
-    in
-    ( env,
-      {
-        e with
-        content = E_application (e1, e2);
-        type_expression =
-          {
-            e.type_expression with
-            type_content = T_function (e1.type_expression, e2.type_expression);
-          };
-      } )
-  | E_application (e1, ({content = E_variable v; _} as e2)) ->
-    let env, e1 = lift env e1 in
-    let env, e2 = lift env e2 in
-    let e2 =
-      match
-        List.find env.replacements ~f:(fun (r, _, _) -> ValueVar.equal r v)
-      with
-      | Some (_, x, _) -> {e2 with content = E_variable x}
-      | None -> e2
     in
     ( env,
       {
@@ -112,11 +145,10 @@ let rec lift : env -> expression -> env * expression =
             type_content = T_function (e1.type_expression, e2.type_expression);
           };
       } )
-  | E_variable v when variable_exists v -> (env, e)
+  | E_variable v when variable_exists v -> 
+    (env, e)
   | E_variable v -> ({env with missing = v :: env.missing}, e)
   | E_iterator (cc, ((var_name, type_expression), e1), e2) ->
-    print_endline ("ITERATOR:" ^ var_to_string var_name);
-
     let variables = (var_name, type_expression) :: env.variables in
     let env = {env with variables} in
     let env, e1 = lift env e1 in
@@ -125,7 +157,6 @@ let rec lift : env -> expression -> env * expression =
       {e with content = E_iterator (cc, ((var_name, type_expression), e1), e2)}
     )
   | E_fold (((var_name, type_expression), e1), e2, e3) ->
-    print_endline "Handle e_fold here...";
     let env =
       {env with variables = (var_name, type_expression) :: env.variables}
     in
@@ -208,125 +239,6 @@ let rec lift : env -> expression -> env * expression =
               ((var_name1, type_expression1), e2),
               ((var_name2, type_expression2), e3) );
       } )
-  | E_let_in
-      ( ({content = E_closure _} as c),
-        inline,
-        ((var_name, type_expression), e2) ) ->
-    let env2, c =
-      lift
-        {
-          empty_env with
-          replacements = env.replacements;
-          functions = env.functions;
-        }
-        c
-    in
-    let v = ValueVar.fresh_like var_name in
-    let env = {env with 
-      variables = (v, type_expression) :: env.variables; 
-      exported_funcs = env2.exported_funcs;
-      functions = env2.functions;
-      replacements = env2.replacements
-    } in
-    let export_func remaining =
-      List.fold_left
-        ~f:(fun all binder ->
-          let type_expression_item = var_type env binder in
-          let type_expression =
-            {
-              type_content =
-                T_function (type_expression_item, all.type_expression);
-              location = e.type_expression.location;
-              source_type = None;
-            }
-          in
-          {
-            content = E_closure {binder; body = all};
-            type_expression;
-            location = c.location;
-          })
-        ~init:c remaining
-    in
-    let var_replacement remaining init =
-      List.fold_left
-        ~f:(fun result argument ->
-          let type_expression_item = var_type env argument in
-          let e2 =
-            {
-              content = E_variable argument;
-              type_expression = type_expression_item;
-              location = c.location;
-            }
-          in
-          let t_type_expression =
-            {
-              type_content =
-                T_function (type_expression_item, result.type_expression);
-              location = e.type_expression.location;
-              source_type = None;
-            }
-          in
-          {
-            content = E_application (result, e2);
-            type_expression = t_type_expression;
-            location = c.location;
-          })
-        ~init remaining
-    in
-    let in_replacement i =
-      match
-        List.find env.replacements ~f:(fun (_, r, _) -> ValueVar.equal r i)
-      with
-      | Some _ -> true
-      | None -> false
-    in
-    let in_function i =
-      match List.find env.functions ~f:(fun r -> ValueVar.equal r i) with
-      | Some _ -> true
-      | None -> false
-    in
-    let missing =
-      List.filter ~f:(fun f -> not (in_replacement f)) env2.missing
-    in
-    let missing = List.filter ~f:(fun f -> not (in_function f)) missing in
-    let replacement =
-      ( var_name,
-        v,
-        var_replacement missing
-          {
-            content = E_variable v;
-            type_expression = e.type_expression;
-            location = c.location;
-          } )
-    in
-    let export = export_func missing in
-    let type_expression = export.type_expression in
-    let export e =
-      {
-        content = E_let_in (export, inline, ((v, type_expression), e));
-        type_expression;
-        location = c.location;
-      }
-    in
-    let env =
-      {
-        variables = (v, type_expression) :: env.variables;
-        exported_funcs = export :: env.exported_funcs;
-        functions = var_name :: env.functions;
-        replacements = (replacement :: env2.replacements) @ env.replacements;
-        missing = env2.missing @ env.missing;
-      }
-    in
-    let env, e2 = lift env e2 in
-    let e = {
-      e with 
-        content = E_let_in (
-          {c with content = E_variable v},
-          inline,
-          ((var_name, type_expression), e2))
-    }
-    in
-    (env, e)
   | E_let_in (e1, inline, ((var_name, type_expression), e2)) ->
     let env =
       {env with variables = (var_name, type_expression) :: env.variables}
@@ -377,9 +289,9 @@ let rec toplevel_inner : env -> expression -> expression =
   | E_let_in
       ( ({content = E_closure {binder; body}; _} as e1),
         inline,
-        ((var_name, type_expression), e2) ) ->
+        ((var_name, type_expression), e2) ) ->  
     let env, body =
-      lift {empty_env with functions = var_name :: env.functions} body
+      lift {empty_env with functions = var_name :: env.functions; variables = (binder, type_expression) :: env.variables} body
     in
     List.fold_left
       ~f:(fun prev el -> el prev)

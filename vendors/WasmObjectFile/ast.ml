@@ -226,7 +226,7 @@ type vec_laneop = (vec_type, pack_size) memop * int
  
  type func = func' Source.phrase
  and func' =
- FuncSymbol of func_symbol
+  FuncSymbol of func_symbol
 | FuncNoSymbol of func_no_symbol
 and func_symbol = {
   name  : symbol;
@@ -350,6 +350,8 @@ and start' =
   | Import of (result_type * result_type)
   | Global of sym_info_function
   | Data of sym_info_data
+  | Table
+
  and sym_info_function = 
  {
    index: var;

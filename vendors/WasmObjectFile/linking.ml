@@ -31,7 +31,7 @@ let find_type types x =
   let rec iter result = function
     | Source.{it = TypeSymbol {tname; _}; _} :: remaining when tname = x -> result
     | _ :: remaining -> iter (Int32.add result 1l) remaining
-    | [] -> result
+    | [] -> failwith ("Could not find type: " ^ x) 
   in
   iter 0l types 
 

@@ -251,7 +251,6 @@ let encode (m: Ast.module_) =
       code_relocations := !code_relocations @ [R_WASM_FUNCTION_INDEX_LEB (Int32.of_int p, symbol)];          
       reloc_index index
     | CallIndirect_symbol symbol ->
-      
       op 0x11;        
       let p = pos s in
       let index = Linking.find_type m.it.types symbol in
@@ -841,6 +840,7 @@ let encode (m: Ast.module_) =
     | DataSymbol symbol ->
       op 0x41;
       let p = pos s in
+      print_endline ("ds1:" ^ symbol);
       let s, _ = Linking.find_symbol_index m.it.symbols (fun s -> match s.it.details with Function when s.it.name = symbol -> true |  Data _ when s.it.name = symbol -> true | _ -> false) in
       match s.it.details with 
         Data {offset; _} ->
@@ -1216,6 +1216,7 @@ let encode (m: Ast.module_) =
         )
       )
       | R_WASM_FUNCTION_INDEX_LEB (offset, symbol) ->
+        print_endline "ds2";
         let _, symbol_index = 
           Linking.find_symbol_index 
             m.it.symbols 
@@ -1252,6 +1253,7 @@ let encode (m: Ast.module_) =
     List.iter (fun r ->
       match r with      
       | R_WASM_TABLE_INDEX_I32 (offset, symbol) -> ( 
+        print_endline "ds3";
         let _, symbol_index = 
           Linking.find_symbol_index 
             m.it.symbols 
@@ -1265,6 +1267,7 @@ let encode (m: Ast.module_) =
         u32 symbol_index;
       )
       | R_WASM_MEMORY_ADDR_I32 (offset, symbol_) -> (
+        print_endline "ds4";
         let _, symbol_index = 
           Linking.find_symbol_index 
             m.it.symbols 
@@ -1296,6 +1299,7 @@ let encode (m: Ast.module_) =
     | Function -> byte 0
     | Data _ ->  byte 1
     | Global _ -> byte 2
+    | Table _ -> byte 5
     );
 
     let flags = ref (
@@ -1317,6 +1321,7 @@ let encode (m: Ast.module_) =
     | Import _ -> false
     | Data _ -> (Linking.data_index m.it.datas sym.name) <> -1l && sym.name <> "__heap_base"
     | Global _ -> true
+    | Table -> true
     )
     in
     (if not exists then 
@@ -1339,7 +1344,6 @@ let encode (m: Ast.module_) =
       if exists then (
         string sym.name
       )
-
     | Import _ ->     
       u32 (Linking.func_index m.it.funcs import_funcs sym.name);
     | Data d -> (    
@@ -1355,6 +1359,9 @@ let encode (m: Ast.module_) =
         u32 d.size.it
       )
       )
+    | Table -> 
+      u32 0l; (* for now table we always use table 0 as tables are currently only used for indirect function calls *)
+      string sym.name
     )        
     
 

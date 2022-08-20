@@ -445,7 +445,23 @@ let rec expression ~raise :
         aux w l (result @ e) func
       | E_variable v ->
         let name = var_to_string v in
-        (w, l, result @ [call_s name at])
+        let is_func = List.exists ~f:(fun f -> match f.it with A.FuncSymbol {name; _} -> String.(=) name (var_to_string v) | _ -> false) w.funcs in
+        if is_func then 
+          (w, l, result @ [call_s name at])
+        else (
+          let lt = expr.type_expression in
+          let unique_name = ValueVar.fresh ~name:"Call_indirect" () in
+          let indirect_name = var_to_string unique_name in
+          let return_type = [NumType I32Type] in (* TODO properly get this *)
+          let type_arg = List.map ~f:(fun e -> NumType I32Type) result in
+          ({w with 
+            types = w.types
+              @ [
+                
+                type_ ~name:indirect_name ~typedef:(FuncType (type_arg, return_type));
+              ]
+          }, l, result @ [local_get_s name at; call_indirect_s indirect_name at])
+        )
       | E_raw_wasm (local_symbols, code) -> 
         (w, l @ local_symbols, result @ code)
       | _ -> failwith "E_application (..) not supported"
@@ -767,4 +783,19 @@ let compile ~raise : I.expression -> string -> string -> W.Ast.module_ =
   let w = Default_env.env in
   let at = location_to_region e.location in
   global_offset := Default_env.offset;
-  S.{it = toplevel_bindings ~raise e w.it; at}
+  let w = toplevel_bindings ~raise e w.it in
+  let elems_i = List.mapi ~f:(fun i _ -> elem i at) (List.filter ~f:(fun f -> match f.it.idesc.it with FuncImport _ | FuncImport_symbol _ -> true | _ -> false) w.imports) in
+  let elems = List.mapi ~f:(fun i _ -> elem (List.length elems_i + i) at) w.funcs in
+  let w = {w with 
+    elems = elems_i @ elems;
+    symbols = w.symbols @ [
+      {it = {
+        name = "ttt";
+        details = Table
+      };
+      at
+      }
+
+    ]
+  } in
+  S.{it = w; at}
