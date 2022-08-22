@@ -80,6 +80,7 @@ type typer_error =
   | `Typer_match_missing_case of Ast_core.label list * Ast_core.label list * Location.t
   | `Typer_match_extra_case of Ast_core.label list * Ast_core.label list * Location.t
   | `Typer_unbound_constructor of Ast_core.label * Location.t
+  | `Typer_bad_constructor of Location.t * Ast_core.label * Ast_typed.type_expression
   | `Typer_type_app_wrong_arity of Ast_core.type_variable option * int * int * Location.t
   | `Typer_michelson_or_no_annotation of Ast_core.label * Location.t
   | `Typer_constant_declaration_tracer of
@@ -154,13 +155,25 @@ let rec error_ppformat
      | `Typer_cannot_unify (loc, type1, type2) ->
        Format.fprintf
          f
-         "@[<hv>%a@.Cannot unify %a with %a.@]"
+         "@[<hv>%a@.%a@.Cannot unify %a with %a.@]"
          Snippet.pp
+         loc
+         Location.pp
          loc
          Ast_typed.PP.type_expression
          type1
          Ast_typed.PP.type_expression
          type2
+     | `Typer_bad_constructor (loc, label, type_) ->
+       Format.fprintf
+         f
+         "@[<hv>%a.Expected constructor %a in expected sum type %a.]"
+         Snippet.pp
+         loc
+         Ast_core.PP.label
+         label
+         Ast_typed.PP.type_expression
+         type_
      | `Typer_cannot_subtype (loc, type1, type2) ->
        Format.fprintf
          f
@@ -215,8 +228,10 @@ let rec error_ppformat
      | `Typer_unbound_type_variable (tv, loc) ->
        Format.fprintf
          f
-         "@[<hv>%a@.Type \"%a\" not found. @]"
+         "@[<hv>%a@.%a@.Type \"%a\" not found. @]"
          Snippet.pp
+         loc
+         Location.pp
          loc
          Ast_typed.PP.type_variable
          tv
@@ -376,8 +391,10 @@ let rec error_ppformat
      | `Typer_assert_equal (loc, expected, actual) ->
        Format.fprintf
          f
-         "@[<hv>%a@.Invalid type(s).@.Expected: \"%a\", but got: \"%a\". @]"
+         "@[<hv>%a@.%a@>Invalid type(s).@.Expected: \"%a\", but got: \"%a\". @]"
          Snippet.pp
+         loc
+         Location.pp
          loc
          Ast_typed.PP.type_expression_orig
          (type_improve expected)
@@ -704,6 +721,7 @@ let rec error_jsonformat : typer_error -> Yojson.Safe.t =
         ]
     in
     json_error ~stage ~content
+  | `Typer_bad_constructor (_loc, _label, _type_) -> assert false
   | `Typer_michelson_or_no_annotation (c, loc) ->
     let message = `String "michelson_or must be annotated with a sum type" in
     let loc = Format.asprintf "%a" Location.pp loc in

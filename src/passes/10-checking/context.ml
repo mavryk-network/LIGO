@@ -15,6 +15,10 @@ module Exists_var = struct
   let of_type_var tvar = if TypeVar.is_exists tvar then Some tvar else None
   let pp ppf t = Format.fprintf ppf "%a" Ast_typed.PP.type_variable t
   let fresh = TypeVar.fresh_exists
+
+  let of_type_var_exn tvar =
+    if not (TypeVar.is_exists tvar) then failwith "Invalid existential variable";
+    tvar
 end
 
 type exists_variable = Exists_var.t
@@ -56,7 +60,7 @@ module PP = struct
       | C_type_var (tvar, kind) ->
         Format.fprintf ppf "%a :: %a" type_variable tvar kind_ kind
       | C_exists_var (evar, kind) ->
-        Format.fprintf ppf "%a :: %a" Exists_var.pp evar kind_ kind
+        Format.fprintf ppf "%a ^: %a" Exists_var.pp evar kind_ kind
       | C_exists_eq (evar, kind, type_) ->
         Format.fprintf
           ppf
@@ -71,9 +75,58 @@ module PP = struct
       | C_module (mvar, ctx) ->
         Format.fprintf ppf "module %a = %a" module_variable mvar context ctx
       | C_pos _ -> ())
+
+
+  let context_local ~pos ppf t =
+    let rec loop ppf items =
+      match items with
+      | [] -> Format.fprintf ppf ""
+      | C_value (evar, type_) :: items ->
+        Format.fprintf
+          ppf
+          "%a : %a@,%a"
+          expression_variable
+          evar
+          type_expression
+          type_
+          loop
+          items
+      | C_type_var (tvar, kind) :: items ->
+        Format.fprintf ppf "%a :: %a@,%a" type_variable tvar kind_ kind loop items
+      | C_exists_var (evar, kind) :: items ->
+        Format.fprintf ppf "%a :: %a@,%a" Exists_var.pp evar kind_ kind loop items
+      | C_exists_eq (evar, kind, type_) :: items ->
+        Format.fprintf
+          ppf
+          "%a :: %a = %a@,%a"
+          Exists_var.pp
+          evar
+          kind_
+          kind
+          type_expression
+          type_
+          loop
+          items
+      | C_marker evar :: items ->
+        Format.fprintf ppf "|>%a@,%a" Exists_var.pp evar loop items
+      | C_type (tvar, type_) :: items ->
+        Format.fprintf
+          ppf
+          "type %a = %a@,%a"
+          type_variable
+          tvar
+          type_expression
+          type_
+          loop
+          items
+      | C_pos pos' :: _items when pos = pos' -> Format.fprintf ppf ""
+      | _ :: items -> loop ppf items
+    in
+    Format.fprintf ppf "@[<hv>%a@]" loop t.items
 end
 
 let pp = PP.context
+let pp_ = PP.context_local
 let empty = { items = []; solved = Exists_var.Map.empty }
 let add t item = { t with items = item :: t.items }
 
@@ -140,7 +193,8 @@ let get_markers t =
 
 let get_exists_var t evar =
   List.find_map t.items ~f:(function
-    | C_exists_var (evar', kind) when Exists_var.equal evar evar' -> Some kind
+    | (C_exists_var (evar', kind) | C_exists_eq (evar', kind, _))
+      when Exists_var.equal evar evar' -> Some kind
     | _ -> None)
 
 
@@ -196,16 +250,25 @@ let drop_until t ~pos =
   loop t
 
 
+let remove_pos t ~pos =
+  { t with
+    items =
+      List.filter t.items ~f:(function
+        | C_pos pos' when pos = pos' -> false
+        | _ -> true)
+  }
+
+
 let split_at t ~at =
   let rec loop t =
     match t with
     | [] -> [], []
     | item :: t ->
       if equal_item item at
-      then [], t
+      then t, []
       else (
         let t1, t2 = loop t in
-        item :: t1, t2)
+        t1, item :: t2)
   in
   (* Left context gets solved *)
   let solved = t.solved in
@@ -492,38 +555,67 @@ module Well_formed : sig
   val type_expr : ctx:t -> type_expression -> kind option
 end = struct
   let rec context ctx =
-    let rec loop items =
-      match items with
+    let rec loop t =
+      match t.items with
       | [] -> true
       | item :: items ->
-        loop items
+        let t = { t with items } in
+        loop t
         &&
         (match item with
-         | C_value (_evar, type_) ->
+         | C_value (var, type_) ->
            (match type_expr type_ ~ctx with
             | Some Type -> true
-            | _ -> false)
-         | C_type (_tvar, type_) -> type_expr type_ ~ctx |> Option.is_some
+            | _ ->
+              Format.printf
+                "Value %a has non-type type %a"
+                ValueVar.pp
+                var
+                Ast_typed.PP.type_expression
+                type_;
+              false)
+         | C_type (tvar, type_) ->
+           (match type_expr type_ ~ctx with
+            | Some _ -> true
+            | None ->
+              Format.printf
+                "Type %a = %a is ill-kinded"
+                TypeVar.pp
+                tvar
+                Ast_typed.PP.type_expression
+                type_;
+              false)
          | C_type_var _ ->
            (* Shadowing permitted *)
            true
          | C_exists_var (evar, _) ->
-           not (List.mem ~equal:Exists_var.equal (get_exists_vars ctx) evar)
+           if List.mem ~equal:Exists_var.equal (get_exists_vars t) evar
+           then (
+             Format.printf "Existential variable %a is shadowed" Exists_var.pp evar;
+             false)
+           else true
          | C_exists_eq (evar, kind, type_) ->
-           (not (List.mem ~equal:Exists_var.equal (get_exists_vars ctx) evar))
+           (not (List.mem ~equal:Exists_var.equal (get_exists_vars t) evar))
            &&
            (match type_expr type_ ~ctx with
             | Some kind' -> compare_kind kind kind' = 0
-            | _ -> false)
+            | _ ->
+              Format.printf
+                "Existential variable %a is ill-kinded. Expected: %a"
+                Exists_var.pp
+                evar
+                Ast_typed.PP.kind_
+                kind;
+              false)
          | C_marker evar ->
-           (not (List.mem ~equal:Exists_var.equal (get_markers ctx) evar))
-           && not (List.mem ~equal:Exists_var.equal (get_exists_vars ctx) evar)
+           (not (List.mem ~equal:Exists_var.equal (get_markers t) evar))
+           && not (List.mem ~equal:Exists_var.equal (get_exists_vars t) evar)
          | C_pos _ -> true
          | C_module (_mvar, mctx) ->
            (* Shadowing permitted *)
            context mctx)
     in
-    loop ctx.items
+    loop ctx
 
 
   and type_expr ~ctx t : kind option =
@@ -541,7 +633,12 @@ end = struct
         if List.for_all parameters ~f:(fun param ->
              match self param with
              | Some Type -> true
-             | _ -> false)
+             | _ ->
+               Format.printf
+                 "Ill-kinded parameter: %a\n"
+                 Ast_typed.PP.type_expression
+                 param;
+               false)
         then return Type
         else None
       | T_singleton _ -> return Type
@@ -755,6 +852,8 @@ module Elaboration = struct
       @@ Declaration_constant
            { binder = binder_apply ctx binder; expr = e_apply ctx expr; attr }
     | Declaration_module { module_binder; module_; module_attr } ->
+      (* Elaborate in the module's context *)
+      let ctx = Option.value_exn (get_module ctx module_binder) in
       return
       @@ Declaration_module
            { module_binder; module_ = module_expr_apply ctx module_; module_attr }
@@ -771,10 +870,91 @@ module Elaboration = struct
     | M_module_path path -> return @@ M_module_path path
 
 
-  let run_expr t ~ctx = e_apply ctx (t ())
-  let run_decl t ~ctx = decl_apply ctx (t ())
-  let run_module t ~ctx = module_apply ctx (t ())
   let all_lmap lmap () = LMap.map (fun t -> t ()) lmap
+
+  (* A pass to check all existentials are resolved *)
+  let rec t_pass (type_ : type_expression) : bool =
+    match type_.type_content with
+    | T_variable tvar -> not (TypeVar.is_exists tvar)
+    | T_constant inj -> List.for_all ~f:t_pass inj.parameters
+    | T_record rows | T_sum rows ->
+      LMap.for_all (fun _ row_elem -> t_pass row_elem.associated_type) rows.content
+    | T_arrow { type1; type2 } -> t_pass type1 && t_pass type2
+    | T_singleton _ -> true
+    | T_abstraction abs -> t_pass abs.type_
+    | T_for_all for_all -> t_pass for_all.type_
+
+
+  let rec e_pass expr =
+    t_pass expr.type_expression
+    &&
+    match expr.expression_content with
+    | E_literal _lit -> true
+    | E_constant { arguments; _ } -> List.for_all ~f:e_pass arguments
+    | E_variable _var -> true
+    | E_application { lamb; args } -> e_pass lamb && e_pass args
+    | E_lambda lambda -> lambda_pass lambda
+    | E_recursive { fun_type; lambda; _ } -> t_pass fun_type && lambda_pass lambda
+    | E_let_in { let_binder; rhs; let_result; _ } ->
+      binder_pass let_binder && e_pass rhs && e_pass let_result
+    | E_mod_in { rhs; let_result; _ } -> module_expr_pass rhs && e_pass let_result
+    | E_raw_code { code; _ } -> e_pass code
+    | E_type_inst { forall; type_ } -> e_pass forall && t_pass type_
+    | E_type_abstraction { result; _ } -> e_pass result
+    | E_constructor { element; _ } -> e_pass element
+    | E_matching { matchee; cases } -> e_pass matchee && matching_expr_pass cases
+    | E_record expr_label_map -> LMap.for_all (fun _ expr -> e_pass expr) expr_label_map
+    | E_record_accessor { record; _ } -> e_pass record
+    | E_record_update { record; update; _ } -> e_pass record && e_pass update
+    | E_module_accessor _mod_access -> true
+    | E_assign { binder; expression } -> binder_pass binder && e_pass expression
+
+
+  and lambda_pass { binder; result } = binder_pass binder && e_pass result
+  and binder_pass binder = Option.value_map binder.ascr ~default:true ~f:t_pass
+
+  and matching_expr_pass match_expr =
+    match match_expr with
+    | Match_variant { cases; tv } ->
+      t_pass tv && List.for_all cases ~f:(fun { body; _ } -> e_pass body)
+    | Match_record { fields; body; tv } ->
+      t_pass tv && LMap.for_all (fun _ binder -> binder_pass binder) fields && e_pass body
+
+
+  and decl_pass (decl : declaration) =
+    match decl.wrap_content with
+    | Declaration_type decl_type -> t_pass decl_type.type_expr
+    | Declaration_constant { binder; expr; _ } -> binder_pass binder && e_pass expr
+    | Declaration_module { module_; _ } -> module_expr_pass module_
+
+
+  and module_pass module_ = List.for_all ~f:decl_pass module_
+
+  and module_expr_pass module_expr =
+    match module_expr.wrap_content with
+    | M_struct module_ -> module_pass module_
+    | M_variable _mvar -> true
+    | M_module_path _path -> true
+
+
+  let run_expr t ~ctx =
+    let expr = e_apply ctx (t ()) in
+    assert (e_pass expr);
+    expr
+
+
+  let run_decl t ~ctx =
+    let decl = decl_apply ctx (t ()) in
+    assert (decl_pass decl);
+    decl
+
+
+  let run_module t ~ctx =
+    let module_ = module_apply ctx (t ()) in
+    if not (module_pass module_)
+    then (
+      Format.printf "Module contains existential %a" Ast_typed.PP.program module_);
+    module_
 end
 
 let unsolved { items; solved } =
@@ -844,12 +1024,23 @@ module Generalization = struct
 
   let enter ~ctx ~in_ =
     let open Elaboration.Let_syntax in
-    let marker = C_marker (Exists_var.fresh ()) in
-    let ctx, ret_type, expr = in_ (ctx |:: marker) in
-    let ctxl, ctxr = split_at ctx ~at:marker in
+    let ctx, pos = mark ctx in
+    let ctx, ret_type, expr = in_ ctx in
+    let ctxl, ctxr = split_at ctx ~at:(C_pos pos) in
     let ret_type = apply ctxr ret_type in
     let ctxr, tvars = unsolved ctxr in
     let tvars = Exists_var.Map.map (fun kind -> kind, TypeVar.fresh ()) tvars in
+    (* Add equation for later elaboration for existentials *)
+    let ctxr =
+      { ctxr with
+        solved =
+          Exists_var.Map.fold
+            (fun evar (kind, tvar) solved ->
+              Exists_var.Map.add evar (kind, t_variable tvar ()) solved)
+            tvars
+            ctxr.solved
+      }
+    in
     ( ctxl |@ ctxr
     , generalize_type ~tvars ret_type
     , let%bind expr = expr in

@@ -10,6 +10,8 @@ module Exists_var : sig
   val equal : t -> t -> bool
   val of_type_var : type_variable -> t option
   val fresh : ?loc:Location.t -> unit -> t
+
+  val of_type_var_exn : type_variable -> t
 end
 
 type exists_variable = Exists_var.t
@@ -34,6 +36,8 @@ val ( |:: ) : t -> item -> t
 val join : t -> t -> t
 val ( |@ ) : t -> t -> t
 val pp : Format.formatter -> t -> unit
+val pp_ : pos:pos -> Format.formatter -> t -> unit
+
 val add_value : t -> expression_variable -> type_expression -> t
 val add_type : t -> type_variable -> type_expression -> t
 val add_type_var : t -> type_variable -> kind -> t
@@ -49,6 +53,7 @@ val get_type_var : t -> type_variable -> kind option
 val get_exists_var : t -> exists_variable -> kind option
 val add_exists_eq : t -> exists_variable -> kind -> type_expression -> t
 val get_exists_eq : t -> exists_variable -> type_expression option
+val remove_pos : t -> pos:pos -> t
 val insert_at : t -> at:item -> hole:t -> t
 val split_at : t -> at:item -> t * t
 val drop_until : t -> pos:pos -> t

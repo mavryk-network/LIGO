@@ -5,23 +5,24 @@ module Errors = Errors
 open Errors
 open Ast_typed
 
-let rec occurs_check ~raise ~evar type_ =
-  let self = occurs_check ~raise ~evar in
-  match type_.type_content with
-  | T_variable tvar' ->
-    (match Exists_var.of_type_var tvar' with
-     | Some evar' ->
-       if Exists_var.equal evar evar'
-       then raise.error (occurs_check_failed (Exists_var.loc evar) evar type_)
-     | None -> ())
-  | T_arrow { type1; type2 } ->
-    self type1;
-    self type2
-  | T_for_all { type_; _ } | T_abstraction { type_; _ } -> self type_
-  | T_constant { parameters; _ } -> List.iter parameters ~f:self
-  | T_record rows | T_sum rows ->
-    LMap.iter (fun _label { associated_type; _ } -> self associated_type) rows.content
-  | T_singleton _ -> ()
+let occurs_check ~raise ~evar type_ =
+  let fail () = raise.error (occurs_check_failed (Exists_var.loc evar) evar type_) in
+  let rec loop type_ =
+    match type_.type_content with
+    | T_variable tvar' ->
+      (match Exists_var.of_type_var tvar' with
+       | Some evar' -> if Exists_var.equal evar evar' then fail ()
+       | None -> ())
+    | T_arrow { type1; type2 } ->
+      loop type1;
+      loop type2
+    | T_for_all { type_; _ } | T_abstraction { type_; _ } -> loop type_
+    | T_constant { parameters; _ } -> List.iter parameters ~f:loop
+    | T_record rows | T_sum rows ->
+      LMap.iter (fun _label { associated_type; _ } -> loop associated_type) rows.content
+    | T_singleton _ -> ()
+  in
+  loop type_
 
 
 module Mode = struct
@@ -166,14 +167,6 @@ let rec unify
     then raise.error (ill_formed_type type_.location type_);
     Context.add_exists_eq ctx evar kind type_
   in
-  let unify_var tvar type_ =
-    match Exists_var.of_type_var tvar with
-    | Some evar -> unify_evar evar type2
-    | None ->
-      (match type_.type_content with
-       | T_variable tvar' when TypeVar.equal tvar tvar' -> ctx
-       | _ -> fail ())
-  in
   match type1.type_content, type2.type_content with
   | T_singleton lit1, T_singleton lit2 when equal_literal lit1 lit2 -> ctx
   | T_constant inj1, T_constant inj2 when consistent_injections inj1 inj2 ->
@@ -184,8 +177,11 @@ let rec unify
      | Ok ctx -> ctx
      | Unequal_lengths ->
        failwith "Cannot occur since injections are consistent and fully applied")
-  | T_variable tvar1, _ -> unify_var tvar1 type2
-  | _, T_variable tvar2 -> unify_var tvar2 type1
+  | T_variable tvar1, T_variable tvar2 when TypeVar.equal tvar1 tvar2 -> ctx
+  | T_variable tvar1, _ when TypeVar.is_exists tvar1 ->
+    unify_evar (Exists_var.of_type_var_exn tvar1) type2
+  | _, T_variable tvar2 when TypeVar.is_exists tvar2 ->
+    unify_evar (Exists_var.of_type_var_exn tvar2) type1
   | T_arrow { type1 = type11; type2 = type12 }, T_arrow { type1 = type21; type2 = type22 }
     ->
     let ctx = self ~ctx type11 type21 in
@@ -219,9 +215,8 @@ let rec unify
 let rec subtype ~raise ~ctx ~(recieved : type_expression) ~(expected : type_expression)
   : Context.t * (expression -> expression)
   =
-  let loc = expected.location in
+  (* Format.printf "Subtype: %a, %a\n" PP.type_expression recieved PP.type_expression expected; *)
   let self ?(ctx = ctx) recieved expected = subtype ~raise ~ctx ~recieved ~expected in
-  let fail () = raise.error (cannot_subtype loc recieved expected) in
   let subtype_evar ~mode evar type_ =
     let kind =
       Context.get_exists_var ctx evar
@@ -231,28 +226,23 @@ let rec subtype ~raise ~ctx ~(recieved : type_expression) ~(expected : type_expr
     occurs_check ~raise ~evar type_;
     Context.add_exists_eq ctx evar kind type_, fun x -> x
   in
-  let subtype_var ~mode tvar type_ =
-    match Exists_var.of_type_var tvar with
-    | Some evar -> subtype_evar ~mode evar type_
-    | None ->
-      (match type_.type_content with
-       | T_variable tvar' when TypeVar.equal tvar tvar' -> ctx, fun x -> x
-       | _ -> fail ())
-  in
   match recieved.type_content, expected.type_content with
   | T_arrow { type1 = type11; type2 = type12 }, T_arrow { type1 = type21; type2 = type22 }
     ->
-    let ctx, f1 = self ~ctx type21 type11 in
-    let ctx, f2 = self ~ctx (Context.apply ctx type12) (Context.apply ctx type22) in
-    ( ctx
-    , fun hole ->
-        let x = ValueVar.fresh () in
-        let args = f1 (e_variable x type21) in
-        let binder =
-          { var = x; ascr = Some type21; attributes = { const_or_var = None } }
-        in
-        let result = f2 (e_application { lamb = hole; args } type11) in
-        e_a_lambda { binder; result } type21 type22 )
+    if type_expression_eq (type11, type21) && type_expression_eq (type12, type22)
+    then ctx, fun hole -> hole
+    else (
+      let ctx, f1 = self ~ctx type21 type11 in
+      let ctx, f2 = self ~ctx (Context.apply ctx type12) (Context.apply ctx type22) in
+      ( ctx
+      , fun hole ->
+          let x = ValueVar.fresh ~name:"sub" () in
+          let args = f1 (e_variable x type21) in
+          let binder =
+            { var = x; ascr = Some type21; attributes = { const_or_var = None } }
+          in
+          let result = f2 (e_application { lamb = hole; args } type11) in
+          e_a_lambda { binder; result } type21 type22 ))
   | T_for_all { ty_binder = tvar; kind; type_ }, _ ->
     let loc = TypeVar.get_location tvar in
     let evar = Exists_var.fresh ~loc () in
@@ -262,7 +252,7 @@ let rec subtype ~raise ~ctx ~(recieved : type_expression) ~(expected : type_expr
       self
         ~ctx:Context.(ctx |:: C_marker evar |:: C_exists_var (evar, kind))
         type'
-        recieved
+        expected
     in
     ( Context.drop_until ctx ~pos
     , fun hole -> f (e_type_inst { forall = hole; type_ = t_exists ~loc evar } type') )
@@ -272,11 +262,14 @@ let rec subtype ~raise ~ctx ~(recieved : type_expression) ~(expected : type_expr
     let ctx, f =
       self
         ~ctx:Context.(ctx |:: C_type_var (tvar', kind))
-        type_
+        recieved
         (t_subst_var type_ ~tvar ~tvar')
     in
     ( Context.drop_until ctx ~pos
     , fun hole -> e_type_abstraction { type_binder = tvar'; result = f hole } recieved )
-  | T_variable tvar1, _ -> subtype_var ~mode:Contravariant tvar1 recieved
-  | _, T_variable tvar2 -> subtype_var ~mode:Covariant tvar2 expected
+  | T_variable tvar1, T_variable tvar2 when TypeVar.equal tvar1 tvar2 -> ctx, fun x -> x
+  | T_variable tvar1, _ when TypeVar.is_exists tvar1 ->
+    subtype_evar ~mode:Contravariant (Exists_var.of_type_var_exn tvar1) expected
+  | _, T_variable tvar2 when TypeVar.is_exists tvar2 ->
+    subtype_evar ~mode:Covariant (Exists_var.of_type_var_exn tvar2) recieved
   | _, _ -> unify ~raise ~ctx recieved expected, fun x -> x
