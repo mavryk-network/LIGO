@@ -494,6 +494,16 @@ let rec compile_expression ~raise : CST.expr -> AST.expr = fun e ->
       (* collect type annotation for let function declaration *)
       let let_rhs, rhs_type = List.fold_right ~init:(let_rhs, rhs_type) ~f:(fun (b,fun_) (e,a) ->
         e_lambda ~loc:(ValueVar.get_location b.var) b a @@ fun_ e, Option.map2 ~f:t_arrow b.ascr a) binders in
+      (* Add polymorphic binder to ascription *)
+      let rhs_type = 
+        Option.map rhs_type ~f:(fun rhs_type -> 
+          Option.value_map type_params ~default:rhs_type ~f:(fun tp ->
+          let (tp, loc) = r_split tp in
+          let tp = tp.inside in
+          let type_vars = List.Ne.map compile_type_var tp.type_vars in
+          List.Ne.fold_right ~f:(fun tvar t -> t_for_all ~loc tvar Type t) ~init:rhs_type type_vars
+        ))
+      in
       let let_binder   = {let_binder with ascr = rhs_type} in
       (* This handle the recursion *)
       let let_rhs = match kwd_rec with
@@ -811,6 +821,16 @@ and compile_declaration ~raise : CST.declaration -> _ = fun decl ->
       (* collect type annotation for let function declaration *)
       let let_rhs,rhs_type = List.fold_right ~init:(let_rhs,rhs_type) ~f:(fun (b,fun_) (e,a) ->
         e_lambda ~loc:(ValueVar.get_location b.var) b a @@ fun_ e, Option.map2 ~f:t_arrow b.ascr a) binders in
+      (* Add polymorphic binder to ascription *)
+      let rhs_type = 
+        Option.map rhs_type ~f:(fun rhs_type -> 
+          Option.value_map type_params ~default:rhs_type ~f:(fun tp ->
+          let (tp, loc) = r_split tp in
+          let tp = tp.inside in
+          let type_vars = List.Ne.map compile_type_var tp.type_vars in
+          List.Ne.fold_right ~f:(fun tvar t -> t_for_all ~loc tvar Type t) ~init:rhs_type type_vars
+        ))
+      in
       let binder   = {binder with ascr = rhs_type} in
       (* This handle the recursion *)
       let let_rhs = match kwd_rec with
