@@ -585,7 +585,7 @@ let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
       , of_type
           (for_all "a"
           @@ fun a ->
-          create ~mode_annot:[ Inferred; Checked ] ~types:[ a ^-> t_set a ^~> t_set a ]) )
+          create ~mode_annot:[ Inferred; Checked ] ~types:[ a ^-> t_set a ^~> t_bool () ]) )
     ; ( C_SET_ADD
       , of_type
           (for_all "a"
@@ -676,7 +676,7 @@ let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
       , of_type
           (for_all "a"
           @@ fun a ->
-          create ~mode_annot:[ Inferred ] ~types:[ t_contract a ^~> t_address () ]) )
+          create ~mode_annot:[ Checked ] ~types:[ t_contract a ^~> t_address () ]) )
     ; ( C_CONTRACT
       , of_type
           (for_all "a"
@@ -1013,7 +1013,7 @@ let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
       )
     ; ( C_TEST_NTH_BOOTSTRAP_CONTRACT
       , of_type
-          (create ~mode_annot:[ Checked ] ~types:[ t_nat () ^~> t_michelson_code () ]) )
+          (create ~mode_annot:[ Checked ] ~types:[ t_nat () ^~> t_address () ]) )
     ; ( C_TEST_GET_STORAGE_OF_ADDRESS
       , of_type
           (create ~mode_annot:[ Checked ] ~types:[ t_address () ^~> t_michelson_code () ])
