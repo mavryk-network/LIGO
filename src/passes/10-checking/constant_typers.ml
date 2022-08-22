@@ -38,138 +38,173 @@ module TypeVar = Stage_common.Types.TypeVar
 module Comparable = struct
   open O
 
-  type t = type_expression -> type_expression -> type_expression
+  type t =
+    ctx:Context.t -> type_expression -> type_expression -> Context.t * type_expression
 
-  let equal t1 t2 = type_expression_eq (t1, t2)
+  let trace_compare ~raise ~loc a b ~in_ =
+    Trace.try_with
+      (fun ~raise ~catch:_ -> in_ ~raise)
+      (fun ~catch:_ _ -> raise.error (uncomparable_types loc a b))
+
 
   (* [simple_comparator ~raise loc name] checks 
      returns type [bool] if argument types are of the form [ t1; t2 ]
      where [t1 = t2] and [t1, t2] in [ address ; bool ; bytes ; chain_id; int; key; key_hash; mutez; nat ; ... ].
   *)
   let simple_comparator ~raise : Location.t -> string -> t =
-   fun loc _s a b ->
-    let () =
-      Assert.assert_true ~raise (uncomparable_types loc a b)
-      @@ List.exists
-           ~f:(fun t -> equal t a && equal t b)
-           [ t_address ()
-           ; t_bool ()
-           ; t_bytes ()
-           ; t_chain_id ()
-           ; t_int ()
-           ; t_key ()
-           ; t_key_hash ()
-           ; t_mutez ()
-           ; t_nat ()
-           ; t_signature ()
-           ; t_string ()
-           ; t_timestamp ()
-           ; t_unit ()
-           ; t_never ()
-           ; t_michelson_code ()
-           ]
+    let simple_types =
+      List.Ne.of_list
+        [ t_address ()
+        ; t_bool ()
+        ; t_bytes ()
+        ; t_chain_id ()
+        ; t_int ()
+        ; t_key ()
+        ; t_key_hash ()
+        ; t_mutez ()
+        ; t_nat ()
+        ; t_signature ()
+        ; t_string ()
+        ; t_timestamp ()
+        ; t_unit ()
+        ; t_never ()
+        ; t_michelson_code ()
+        ]
     in
-    t_bool ()
+    fun loc _s ~ctx a b ->
+      let ctx =
+        trace_compare ~raise ~loc a b ~in_:(fun ~raise ->
+          Trace.bind_exists ~raise
+          @@ List.Ne.map
+               (fun type_ ~raise ->
+                 let ctx = unify ~raise ~ctx a type_ in
+                 let ctx = unify ~raise ~ctx b type_ in
+                 ctx)
+               simple_types)
+      in
+      ctx, t_bool ()
 
 
   (* [record_comparator] is a simple extension of [comparator] to record types. *)
   let rec record_comparator ~raise ~test : Location.t -> string -> t =
-   fun loc s a b ->
-    let () = Assert.assert_true ~raise (uncomparable_types loc a b) @@ equal a b in
+   fun loc s ~ctx a b ->
+    let ctx = trace_compare ~raise ~loc a b ~in_:(fun ~raise -> unify ~raise ~ctx a b) in
     let a_r = trace_option ~raise (comparator_composed loc a) @@ get_t_record a in
-    let b_r = trace_option ~raise (expected_variant loc b) @@ get_t_record b in
-    let aux a b : type_expression =
-      comparator ~cmp:s ~raise ~test ~loc a.associated_type b.associated_type
+    let b_r = trace_option ~raise (comparator_composed loc b) @@ get_t_record b in
+    let aux ctx a b : Context.t =
+      let ctx, _ =
+        comparator ~cmp:s ~raise ~test ~loc ~ctx a.associated_type b.associated_type
+      in
+      ctx
     in
-    let _ = List.map2_exn ~f:aux (LMap.to_list a_r.content) (LMap.to_list b_r.content) in
-    t_bool ()
+    let ctx =
+      List.fold2_exn
+        ~init:ctx
+        ~f:aux
+        (LMap.to_list a_r.content)
+        (LMap.to_list b_r.content)
+    in
+    ctx, t_bool ()
 
 
   (* [sum_comparator] is a simple extension of [comparator] to sum types. *)
   and sum_comparator ~raise ~test : Location.t -> string -> t =
-   fun loc s a b ->
-    let () = Assert.assert_true ~raise (uncomparable_types loc a b) @@ equal a b in
+   fun loc s ~ctx a b ->
+    let ctx = trace_compare ~raise ~loc a b ~in_:(fun ~raise -> unify ~raise ~ctx a b) in
     let a_r = trace_option ~raise (comparator_composed loc a) @@ get_t_sum a in
-    let b_r = trace_option ~raise (expected_variant loc b) @@ get_t_sum b in
-    let aux a b : type_expression =
-      comparator ~cmp:s ~raise ~test ~loc a.associated_type b.associated_type
+    let b_r = trace_option ~raise (comparator_composed loc b) @@ get_t_sum b in
+    let aux ctx a b : Context.t =
+      let ctx, _ =
+        comparator ~cmp:s ~raise ~test ~loc ~ctx a.associated_type b.associated_type
+      in
+      ctx
     in
-    let _ = List.map2_exn ~f:aux (LMap.to_list a_r.content) (LMap.to_list b_r.content) in
-    t_bool ()
+    let ctx =
+      List.fold2_exn
+        ~init:ctx
+        ~f:aux
+        (LMap.to_list a_r.content)
+        (LMap.to_list b_r.content)
+    in
+    ctx, t_bool ()
 
 
   and list_comparator ~raise ~test : Location.t -> string -> t =
-   fun loc s a_lst b_lst ->
-    let () =
-      Assert.assert_true ~raise (uncomparable_types loc a_lst b_lst) @@ equal a_lst b_lst
+   fun loc s ~ctx a_lst b_lst ->
+    let ctx =
+      trace_compare ~raise ~loc a_lst b_lst ~in_:(fun ~raise ->
+        unify ~raise ~ctx a_lst b_lst)
     in
     let a = trace_option ~raise (comparator_composed loc a_lst) @@ get_t_list a_lst in
-    let b = trace_option ~raise (expected_option loc b_lst) @@ get_t_list b_lst in
-    comparator ~cmp:s ~raise ~test ~loc a b
+    let b = trace_option ~raise (comparator_composed loc b_lst) @@ get_t_list b_lst in
+    comparator ~cmp:s ~raise ~test ~loc ~ctx a b
 
 
   and set_comparator ~raise ~test : Location.t -> string -> t =
-   fun loc s a_set b_set ->
-    let () =
-      Assert.assert_true ~raise (uncomparable_types loc a_set b_set) @@ equal a_set b_set
+   fun loc s ~ctx a_set b_set ->
+    let ctx =
+      trace_compare ~raise ~loc a_set b_set ~in_:(fun ~raise ->
+        unify ~raise ~ctx a_set b_set)
     in
     let a = trace_option ~raise (comparator_composed loc a_set) @@ get_t_set a_set in
-    let b = trace_option ~raise (expected_option loc b_set) @@ get_t_set b_set in
-    comparator ~cmp:s ~raise ~test ~loc a b
+    let b = trace_option ~raise (comparator_composed loc b_set) @@ get_t_set b_set in
+    comparator ~cmp:s ~raise ~test ~loc ~ctx a b
 
 
   and map_comparator ~raise ~test : Location.t -> string -> t =
-   fun loc s a_map b_map ->
-    let () =
-      Assert.assert_true ~raise (uncomparable_types loc a_map b_map) @@ equal a_map b_map
+   fun loc s ~ctx a_map b_map ->
+    let ctx =
+      trace_compare ~raise ~loc a_map b_map ~in_:(fun ~raise ->
+        unify ~raise ~ctx a_map b_map)
     in
     let a_key, a_value =
       trace_option ~raise (comparator_composed loc a_map) @@ get_t_map a_map
     in
     let b_key, b_value =
-      trace_option ~raise (expected_option loc b_map) @@ get_t_map b_map
+      trace_option ~raise (comparator_composed loc b_map) @@ get_t_map b_map
     in
-    let _ = comparator ~cmp:s ~raise ~test ~loc a_key b_key in
-    let _ = comparator ~cmp:s ~raise ~test ~loc a_value b_value in
-    t_bool ()
+    let ctx, _ = comparator ~cmp:s ~raise ~test ~loc ~ctx a_key b_key in
+    let ctx, _ = comparator ~cmp:s ~raise ~test ~loc ~ctx a_value b_value in
+    ctx, t_bool ()
 
 
   and big_map_comparator ~raise ~test : Location.t -> string -> t =
-   fun loc s a_map b_map ->
-    let () =
-      Assert.assert_true ~raise (uncomparable_types loc a_map b_map) @@ equal a_map b_map
+   fun loc s ~ctx a_map b_map ->
+    let ctx =
+      trace_compare ~raise ~loc a_map b_map ~in_:(fun ~raise ->
+        unify ~raise ~ctx a_map b_map)
     in
     let a_key, a_value =
       trace_option ~raise (comparator_composed loc a_map) @@ get_t_big_map a_map
     in
     let b_key, b_value =
-      trace_option ~raise (expected_option loc b_map) @@ get_t_big_map b_map
+      trace_option ~raise (comparator_composed loc b_map) @@ get_t_big_map b_map
     in
-    let _ = comparator ~cmp:s ~raise ~test ~loc a_key b_key in
-    let _ = comparator ~cmp:s ~raise ~test ~loc a_value b_value in
-    t_bool ()
+    let ctx, _ = comparator ~cmp:s ~raise ~test ~loc ~ctx a_key b_key in
+    let ctx, _ = comparator ~cmp:s ~raise ~test ~loc ~ctx a_value b_value in
+    ctx, t_bool ()
 
 
   and comparator ~cmp ~raise ~test ~loc : t =
-   fun a b ->
+   fun ~ctx a b ->
     if test
     then
       bind_exists ~raise
       @@ List.Ne.of_list
-           [ list_comparator ~test loc cmp a b
-           ; set_comparator ~test loc cmp a b
-           ; map_comparator ~test loc cmp a b
-           ; simple_comparator loc cmp a b
-           ; record_comparator ~test loc cmp a b
-           ; sum_comparator ~test loc cmp a b
-           ; big_map_comparator ~test loc cmp a b
+           [ list_comparator ~test loc cmp ~ctx a b
+           ; set_comparator ~test loc cmp ~ctx a b
+           ; map_comparator ~test loc cmp ~ctx a b
+           ; simple_comparator loc cmp ~ctx a b
+           ; record_comparator ~test loc cmp ~ctx a b
+           ; sum_comparator ~test loc cmp ~ctx a b
+           ; big_map_comparator ~test loc cmp ~ctx a b
            ]
     else
       bind_exists ~raise
       @@ List.Ne.of_list
-           [ simple_comparator loc cmp a b
-           ; record_comparator ~test loc cmp a b
-           ; sum_comparator ~test loc cmp a b
+           [ simple_comparator loc cmp ~ctx a b
+           ; record_comparator ~test loc cmp ~ctx a b
+           ; sum_comparator ~test loc cmp ~ctx a b
            ]
 end
 
@@ -330,9 +365,16 @@ let of_comparator comparator : _ t =
   | [ arg1; arg2 ] ->
     let ctx, arg1_type, arg1 = infer ~raise ~ctx arg1 in
     let ctx, arg2_type, arg2 = infer ~raise ~ctx arg2 in
-    ( ctx
-    , Elaboration.all [ arg1; arg2 ]
-    , comparator ~raise ~test:options.test ~loc arg1_type arg2_type )
+    let ctx, ret_type =
+      comparator
+        ~raise
+        ~test:options.test
+        ~loc
+        ~ctx
+        (Context.apply ctx arg1_type)
+        (Context.apply ctx arg2_type)
+    in
+    ctx, Elaboration.all [ arg1; arg2 ], ret_type
   | _ ->
     raise.error
       (corner_case
@@ -585,7 +627,8 @@ let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
       , of_type
           (for_all "a"
           @@ fun a ->
-          create ~mode_annot:[ Inferred; Checked ] ~types:[ a ^-> t_set a ^~> t_bool () ]) )
+          create ~mode_annot:[ Inferred; Checked ] ~types:[ a ^-> t_set a ^~> t_bool () ]
+          ) )
     ; ( C_SET_ADD
       , of_type
           (for_all "a"
@@ -1012,8 +1055,7 @@ let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
           (create ~mode_annot:[ Checked ] ~types:[ t_test_baker_policy () ^~> t_unit () ])
       )
     ; ( C_TEST_NTH_BOOTSTRAP_CONTRACT
-      , of_type
-          (create ~mode_annot:[ Checked ] ~types:[ t_nat () ^~> t_address () ]) )
+      , of_type (create ~mode_annot:[ Checked ] ~types:[ t_nat () ^~> t_address () ]) )
     ; ( C_TEST_GET_STORAGE_OF_ADDRESS
       , of_type
           (create ~mode_annot:[ Checked ] ~types:[ t_address () ^~> t_michelson_code () ])
