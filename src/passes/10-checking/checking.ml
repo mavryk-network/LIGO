@@ -2,6 +2,7 @@ module Trace = Simple_utils.Trace
 open Trace
 module Errors = Errors
 open Errors
+module Signature = Context.Signature
 module Elaboration = Context.Elaboration
 module I = Ast_core
 module O = Ast_typed
@@ -13,8 +14,8 @@ module Pair = Simple_utils.Pair
 let debug = false
 let assertions = false
 let local_pos : Context.pos list ref = ref []
-let curr_pos () : Context.pos = List.hd_exn !local_pos
-let pp_local_context ppf ctx = Context.pp_ ~pos:(curr_pos ()) ppf ctx
+(* let curr_pos () : Context.pos = List.hd_exn !local_pos *)
+let pp_local_context ppf ctx = Context.pp ppf ctx
 let untype_expression = Untyper.untype_expression
 let untype_program = Untyper.untype_program
 
@@ -53,9 +54,27 @@ let t_exists (evar : Exists_var.t) =
 let t_subst_var t ~tvar ~tvar' = t_subst t ~tvar ~type_:(t_variable tvar' ())
 let t_subst_evar t ~tvar ~evar = t_subst t ~tvar ~type_:(t_exists evar)
 
+let get_signature ~raise ~loc ctx ((local_module, path) : O.module_variable List.Ne.t) =
+  let try_ ~f t mvar =
+    let sig_ = trace_option ~raise (unbound_module_variable mvar loc) @@ f t mvar in
+    if debug
+    then
+      Format.printf
+        "@[Get Signature@.MVar: %a@.Signature: %a@]\n"
+        O.ModuleVar.pp
+        mvar
+        Signature.pp
+        sig_;
+    sig_
+  in
+  List.fold path ~init:(try_ ~f:Context.get_module ctx local_module) ~f:(fun sig_ mvar ->
+    try_ ~f:Signature.get_module sig_ mvar)
+
+
 let rec evaluate_type ~raise ~(ctx : Context.t) (type_ : I.type_expression)
   : O.type_expression
   =
+  let loc = type_.location in
   let self ?(ctx = ctx) = evaluate_type ~raise ~ctx in
   let return content = make_t ~loc:type_.location content (Some type_) in
   match type_.type_content with
@@ -137,17 +156,9 @@ let rec evaluate_type ~raise ~(ctx : Context.t) (type_ : I.type_expression)
     in
     return res.type_content
   | T_module_accessor { module_path; element } ->
-    let f acc el =
-      trace_option
-        ~raise
-        (unbound_module_variable el type_.location)
-        (Context.get_module acc el)
-    in
-    let module_ = List.fold ~init:ctx ~f module_path in
-    trace_option
-      ~raise
-      (unbound_type_variable element type_.location)
-      (Context.get_type module_ element)
+    let sig_ = get_signature ~raise ~loc ctx (List.Ne.of_list module_path) in
+    trace_option ~raise (unbound_type_variable element type_.location)
+    @@ Signature.get_type sig_ element
   | T_singleton x -> return (T_singleton x)
   | T_abstraction x ->
     let ctx = Context.add_type_var ctx x.ty_binder x.kind in
@@ -344,6 +355,7 @@ and infer_expression ~(raise : raise) ~options ~ctx (expr : I.expression)
       ctx
       I.PP.expression
       expr;
+  Format.print_flush ();
   if assertions then assert (Well_formed.context ctx);
   let loc = expr.location in
   let return content type_ = return @@ O.make_e ~location:loc content type_ in
@@ -488,7 +500,8 @@ and infer_expression ~(raise : raise) ~options ~ctx (expr : I.expression)
     | E_record_accessor { record; path = field } ->
       let ctx, record_type, record = infer ~ctx record in
       let row =
-        trace_option ~raise (expected_record loc record_type) @@ get_t_record (Context.apply ctx record_type)
+        trace_option ~raise (expected_record loc record_type)
+        @@ get_t_record (Context.apply ctx record_type)
       in
       let field_row_elem =
         trace_option ~raise (bad_record_access field loc)
@@ -502,7 +515,8 @@ and infer_expression ~(raise : raise) ~options ~ctx (expr : I.expression)
     | E_record_update { record; path; update } ->
       let ctx, record_type, record = infer ~ctx record in
       let row =
-        trace_option ~raise (expected_record loc record_type) @@ get_t_record (Context.apply ctx record_type)
+        trace_option ~raise (expected_record loc record_type)
+        @@ get_t_record (Context.apply ctx record_type)
       in
       let field_row_elem =
         trace_option ~raise (bad_record_access path loc)
@@ -518,6 +532,8 @@ and infer_expression ~(raise : raise) ~options ~ctx (expr : I.expression)
       when String.(label = "M_right" || label = "M_left") ->
       raise.error (michelson_or_no_annotation constructor loc)
     | E_constructor { constructor; element = arg } ->
+      if debug then Format.printf "Finding constructor sum...\n";
+      Format.print_flush ();
       (* [tvars] are the parameters of the type *)
       let tvars, arg_type, sum_type =
         match Context.get_sum constructor ctx with
@@ -526,6 +542,15 @@ and infer_expression ~(raise : raise) ~options ~ctx (expr : I.expression)
           tvars, arg_type, sum_type
         | [] -> raise.error (unbound_constructor constructor loc)
       in
+      if debug
+      then (
+        let (Label constr) = constructor in
+        Format.printf
+          "Found constructor type for %s. Type: %a\n"
+          constr
+          O.PP.type_expression
+          sum_type);
+      Format.print_flush ();
       let module TMap = O.Helpers.TMap in
       (* Instantiate [tvars] (assumption: kind is [Type]) *)
       let tvars : Exists_var.t TMap.t =
@@ -572,10 +597,10 @@ and infer_expression ~(raise : raise) ~options ~ctx (expr : I.expression)
         in
         return match_ ret_type )
     | E_mod_in { module_binder = mvar; rhs; let_result } ->
-      let mctx, rhs = infer_module_expr ~raise ~options ~ctx rhs in
+      let ctx, sig_, rhs = infer_module_expr ~raise ~options ~ctx rhs in
       let ctx, ret_type, let_result =
         Context.enter ~ctx ~in_:(fun ctx ->
-          infer ~ctx:Context.(ctx |:: C_module (mvar, mctx)) let_result)
+          infer ~ctx:Context.(ctx |:: C_module (mvar, sig_)) let_result)
       in
       ( ctx
       , ret_type
@@ -583,16 +608,25 @@ and infer_expression ~(raise : raise) ~options ~ctx (expr : I.expression)
         and rhs = rhs in
         return (E_mod_in { module_binder = mvar; rhs; let_result }) ret_type )
     | E_module_accessor { module_path; element } ->
-      let mctx =
-        List.fold module_path ~init:ctx ~f:(fun ctx mvar ->
-          trace_option
-            ~raise
-            (unbound_module_variable mvar (I.ModuleVar.get_location mvar))
-            (Context.get_module ctx mvar))
+      let module_path' = List.Ne.of_list module_path in
+      let sig_ = get_signature ~raise ~loc ctx module_path' in
+      let pp_path ppf path =
+        List.Ne.iter (fun mvar -> Format.fprintf ppf "%a." O.ModuleVar.pp mvar) path
       in
+      if debug
+      then
+        Format.printf
+          "@[Path: %a@.Element: %a@.Signature: %a@]\n"
+          pp_path
+          module_path'
+          O.ValueVar.pp
+          element
+          Signature.pp
+          sig_;
+      Format.print_flush ();
       let elt_type =
         trace_option ~raise (unbound_variable element loc)
-        @@ Context.get_value mctx element
+        @@ Signature.get_value sig_ element
       in
       ctx, elt_type, return (E_module_accessor { module_path; element }) elt_type
     | E_assign { binder = { var; _ } as binder; expression } ->
@@ -673,7 +707,7 @@ and check_lambda
       (* TODO: Kinding check for ascription *)
       let ctx, _f = subtype ~raise ~ctx ~recieved:arg_type ~expected:arg_ascr in
       (* Generate let binding for ascription subtyping, will be inlined later on *)
-      ( ctx, fun hole -> hole )
+      ctx, fun hole -> hole
       (* , fun hole ->
           O.e_a_let_in
             { var; ascr = Some arg_ascr; attributes = { const_or_var = None } }
@@ -901,7 +935,9 @@ and check_cases
   let ctx, cases =
     List.fold_map ~init:ctx cases ~f:(fun ctx { pattern; body } ->
       let ctx, pos = Context.mark ctx in
-      let ctx, pattern = check_pattern ~raise ~ctx pattern (Context.apply ctx matchee_type) in
+      let matchee_type = Context.apply ctx matchee_type in
+      if debug then Format.printf "Matchee type: %a\n" O.PP.type_expression matchee_type;
+      let ctx, pattern = check_pattern ~raise ~ctx pattern matchee_type in
       let ctx, body = check_expression ~raise ~options ~ctx body ret_type in
       ( Context.drop_until ctx ~pos
       , let%map pattern = pattern
@@ -961,35 +997,33 @@ and compile_match
 
 
 and infer_module_expr ~raise ~options ~ctx (mod_expr : I.module_expr)
-  : Context.t * O.module_expr Elaboration.t
+  : Context.t * Signature.t * O.module_expr Elaboration.t
   =
   let open Elaboration.Let_syntax in
   let loc = mod_expr.location in
   let return content = return @@ Location.wrap ~loc content in
-  let access_module ctx mvar =
-    trace_option
-      ~raise
-      (unbound_module_variable mvar (I.ModuleVar.get_location mvar))
-      (Context.get_module ctx mvar)
-  in
   match mod_expr.wrap_content with
   | I.M_struct decls ->
-    let ctx, decls = infer_module ~raise ~options ~ctx decls in
+    let ctx, sig_, decls = infer_module ~raise ~options ~ctx decls in
     ( ctx
+    , sig_
     , let%bind decls = decls in
       return (O.M_struct decls) )
   | I.M_module_path path ->
     (* Check we can access every element in [path] *)
-    let ctx = List.fold ~f:access_module ~init:ctx (List.Ne.to_list path) in
-    ctx, return (O.M_module_path path)
+    let sig_ = get_signature ~raise ~loc ctx path in
+    ctx, sig_, return (O.M_module_path path)
   | I.M_variable mvar ->
     (* Check we can access [mvar] *)
-    let ctx = access_module ctx mvar in
-    ctx, return (O.M_variable mvar)
+    let sig_ =
+      trace_option ~raise (unbound_module_variable mvar loc)
+      @@ Context.get_module ctx mvar
+    in
+    ctx, sig_, return (O.M_variable mvar)
 
 
 and infer_declaration ~(raise : raise) ~options ~ctx (decl : I.declaration)
-  : Context.t * O.declaration Elaboration.t
+  : Context.t * Signature.item * O.declaration Elaboration.t
   =
   let open Elaboration.Let_syntax in
   (* Debug *)
@@ -997,66 +1031,82 @@ and infer_declaration ~(raise : raise) ~options ~ctx (decl : I.declaration)
   then Format.printf "@[<hv>Infer Declaration@.Decl: %a@]\n" I.PP.declaration decl;
   let loc = decl.location in
   let return (content : O.declaration_content) = return @@ Location.wrap ~loc content in
-  match decl.wrap_content with
-  | Declaration_type { type_binder; type_expr; type_attr = { public; hidden } } ->
-    let type_expr = evaluate_type ~raise ~ctx type_expr in
-    let type_expr = { type_expr with orig_var = Some type_binder } in
-    let ctx = Context.add_type ctx type_binder type_expr in
-    ( ctx
-    , return
-      @@ Declaration_type { type_binder; type_expr; type_attr = { public; hidden } } )
-  | Declaration_constant { binder = { ascr; var; attributes }; attr; expr } ->
-    let ctx, pos = Context.mark ctx in
-    local_pos := pos :: !local_pos;
-    let expr =
-      Option.value_map ascr ~default:expr ~f:(fun ascr -> I.e_ascription expr ascr)
-    in
-    let ascr = Option.map ascr ~f:(evaluate_type ~raise ~ctx) in
-    let ctx, expr_type, expr =
-      trace ~raise (constant_declaration_tracer loc var expr ascr)
-      @@ infer_expression ~options ~ctx expr
-    in
-    let ctx = Context.(ctx |:: C_value (var, expr_type)) in
-    local_pos := List.tl_exn !local_pos;
-    let ctx = Context.remove_pos ctx ~pos in
-    (* if debug then Format.printf "Ctx After Decl: %a\n" Context.pp_ ctx; *)
-    ( ctx
-    , let%bind expr = expr in
-      return
-      @@ Declaration_constant
-           { binder = { ascr = Some expr_type; var; attributes }; expr; attr } )
-  | Declaration_module { module_binder; module_; module_attr = { public; hidden } } ->
-    let module_ctx, module_ = infer_module_expr ~raise ~options ~ctx module_ in
-    let ctx = Context.add_module ctx module_binder module_ctx in
-    ( ctx
-    , let%bind module_ = module_ in
-      return
-      @@ Declaration_module { module_binder; module_; module_attr = { public; hidden } } )
+  let ctx, (sig_item : Signature.item), decl' =
+    match decl.wrap_content with
+    | Declaration_type { type_binder; type_expr; type_attr = { public; hidden } } ->
+      let type_expr = evaluate_type ~raise ~ctx type_expr in
+      let type_expr = { type_expr with orig_var = Some type_binder } in
+      ( ctx
+      , S_type (type_binder, type_expr)
+      , return
+        @@ Declaration_type { type_binder; type_expr; type_attr = { public; hidden } } )
+    | Declaration_constant { binder = { ascr; var; attributes }; attr; expr } ->
+      let ctx, pos = Context.mark ctx in
+      local_pos := pos :: !local_pos;
+      let expr =
+        Option.value_map ascr ~default:expr ~f:(fun ascr -> I.e_ascription expr ascr)
+      in
+      let ascr = Option.map ascr ~f:(evaluate_type ~raise ~ctx) in
+      let ctx, expr_type, expr =
+        trace ~raise (constant_declaration_tracer loc var expr ascr)
+        @@ infer_expression ~options ~ctx expr
+      in
+      local_pos := List.tl_exn !local_pos;
+      let ctx = Context.remove_pos ctx ~pos in
+      (* if debug then Format.printf "Ctx After Decl: %a\n" Context.pp_ ctx; *)
+      ( ctx
+      , S_value (var, expr_type)
+      , let%bind expr = expr in
+        return
+        @@ Declaration_constant
+             { binder = { ascr = Some expr_type; var; attributes }; expr; attr } )
+    | Declaration_module { module_binder; module_; module_attr = { public; hidden } } ->
+      let ctx, sig_, module_ = infer_module_expr ~raise ~options ~ctx module_ in
+      ( ctx
+      , S_module (module_binder, sig_)
+      , let%bind module_ = module_ in
+        return
+        @@ Declaration_module { module_binder; module_; module_attr = { public; hidden } }
+      )
+  in
+  if debug
+  then
+    Format.printf
+      "@[<hv>Infer Declaration@.Decl: %a@.Signature Item: %a@]\n"
+      I.PP.declaration
+      decl
+      Signature.pp_item
+      sig_item;
+  ctx, sig_item, decl'
 
 
 and infer_module ~raise ~options ~ctx (module_ : I.module_)
-  : Context.t * O.module_ Elaboration.t
+  : Context.t * Signature.t * O.module_ Elaboration.t
   =
-  (* This context use all the declaration so you can use private declaration to type the module. 
-    It should not be returned*)
-  let ctx, module_ =
-    List.fold_map
-      ~f:(fun ctx decl -> infer_declaration ~raise ~options ~ctx decl)
-      ~init:ctx
-      module_
-  in
-  ctx, Elaboration.all module_
+  let open Elaboration.Let_syntax in
+  match module_ with
+  | [] -> ctx, [], return []
+  | decl :: module_ ->
+    Context.decl_enter ~ctx ~in_:(fun ctx ->
+      let ctx, sig_item, decl = infer_declaration ~raise ~options ~ctx decl in
+      let ctx = Context.add_signature_item ctx sig_item in
+      let ctx, sig_, decls = infer_module ~raise ~options ~ctx module_ in
+      ( ctx
+      , sig_item :: sig_
+      , let%bind decl = decl
+        and decls = decls in
+        return (decl :: decls) ))
 
 
 let type_program ~raise ~options ?env module_ =
   let ctx = Context.init ?env () in
-  let ctx, module_ = infer_module ~raise ~options ~ctx module_ in
+  let ctx, _sig, module_ = infer_module ~raise ~options ~ctx module_ in
   Elaboration.run_module ~ctx module_
 
 
 let type_declaration ~raise ~options ?env decl =
   let ctx = Context.init ?env () in
-  let ctx, decl = infer_declaration ~raise ~options ~ctx decl in
+  let ctx, _sig_item, decl = infer_declaration ~raise ~options ~ctx decl in
   Elaboration.run_decl ~ctx decl
 
 

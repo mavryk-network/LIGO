@@ -10,8 +10,22 @@ module Exists_var : sig
   val equal : t -> t -> bool
   val of_type_var : type_variable -> t option
   val fresh : ?loc:Location.t -> unit -> t
-
   val of_type_var_exn : type_variable -> t
+end
+
+module Signature : sig
+  type t = item list
+
+  and item =
+    | S_value of expression_variable * type_expression
+    | S_type of type_variable * type_expression
+    | S_module of module_variable * t
+
+  val get_value : t -> expression_variable -> type_expression option
+  val get_type : t -> type_variable -> type_expression option
+  val get_module : t -> module_variable -> t option
+  val pp : Format.formatter -> t -> unit
+  val pp_item : Format.formatter -> item -> unit
 end
 
 type exists_variable = Exists_var.t
@@ -26,7 +40,7 @@ and item =
   | C_exists_var of exists_variable * kind
   | C_exists_eq of exists_variable * kind * type_expression
   | C_marker of exists_variable
-  | C_module of module_variable * t
+  | C_module of module_variable * Signature.t
   | C_pos of pos
 
 val empty : t
@@ -37,22 +51,23 @@ val join : t -> t -> t
 val ( |@ ) : t -> t -> t
 val pp : Format.formatter -> t -> unit
 val pp_ : pos:pos -> Format.formatter -> t -> unit
-
 val add_value : t -> expression_variable -> type_expression -> t
 val add_type : t -> type_variable -> type_expression -> t
 val add_type_var : t -> type_variable -> kind -> t
 val add_exists_var : t -> exists_variable -> kind -> t
 val add_marker : t -> exists_variable -> t
-val add_module : t -> module_variable -> t -> t
+val add_module : t -> module_variable -> Signature.t -> t
 val get_value : t -> expression_variable -> type_expression option
 val get_type : t -> type_variable -> type_expression option
-val get_module : t -> module_variable -> t option
+val get_module : t -> module_variable -> Signature.t option
 val get_type_vars : t -> type_variable list
 val get_exists_vars : t -> exists_variable list
 val get_type_var : t -> type_variable -> kind option
 val get_exists_var : t -> exists_variable -> kind option
 val add_exists_eq : t -> exists_variable -> kind -> type_expression -> t
 val get_exists_eq : t -> exists_variable -> type_expression option
+val get_signature : t -> module_variable List.Ne.t -> Signature.t option
+val add_signature_item : t -> Signature.item -> t
 val remove_pos : t -> pos:pos -> t
 val insert_at : t -> at:item -> hole:t -> t
 val split_at : t -> at:item -> t * t
@@ -92,6 +107,8 @@ val enter
   -> in_:(t -> t * type_expression * expression Elaboration.t)
   -> t * type_expression * expression Elaboration.t
 
+val decl_enter : ctx:t -> in_:(t -> t * Signature.t * 'a) -> t * Signature.t * 'a
+
 module Generalization : sig
   val enter
     :  ctx:t
@@ -99,7 +116,6 @@ module Generalization : sig
     -> t * type_expression * expression Elaboration.t
 end
 
-val context_of_module_expr : outer_context:t -> Ast_typed.module_expr -> t
 val init : ?env:Environment.t -> unit -> t
 
 module Hashes : sig
