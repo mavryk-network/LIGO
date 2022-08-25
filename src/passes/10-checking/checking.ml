@@ -988,6 +988,7 @@ and compile_match
           ; public = true
           ; view = false
           ; hidden = false
+          ; thunk = false
           }
       }
 

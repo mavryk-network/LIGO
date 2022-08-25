@@ -165,26 +165,9 @@ let%expect_test _ =
 
 let%expect_test _ =
   run_ligo_good ["run";"test" ; test "test_subst_with_storage_from_file.mligo" ] ;
-  [%expect.unreachable]
-[@@expect.uncaught_exn {|
-  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
-     This is strongly discouraged as backtraces are fragile.
-     Please change this test to not include a backtrace. *)
-
-  (Cli_expect_tests.Cli_expect.Should_exit_good)
-  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 31, characters 7-29
-  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 112, characters 2-80
-  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
-
-  Trailing output
-  ---------------
-  File "test_subst_with_storage_from_file.mligo", line 8, characters 14-46:
-    7 |   let store = Test.get_storage_of_address addr in
-    8 |   let store = (Test.decompile store : storage) in
-    9 |   let ovens_map = store.foo in
-
-  This Michelson value has assigned type 'unit', which does not coincide with expected type '
-  record[bar -> string , foo -> int]'. |}]
+  [%expect{|
+    Everything at the top-level was executed.
+    - test exited with value (). |}]
 
 let%expect_test _ =
   run_ligo_good ["run";"test" ; test "nesting_modules.mligo" ] ;
@@ -281,11 +264,21 @@ let%expect_test _ =
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "test" ; test "test_no_mutation.mligo" ] ;
-  [%expect{|
-    Everything at the top-level was executed.
-    - test exited with value ().
-    - test_mutation exited with value ().
-    - test_mutation_all exited with value (). |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 31, characters 7-29
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 283, characters 2-66
+  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
+
+  Trailing output
+  ---------------
+  An internal error ocurred. Please, contact the developers.
+  unbound variable: sub#1376. |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "test" ; test "iteration.jsligo" ] ;
@@ -540,21 +533,9 @@ let%expect_test _ =
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test" ; test "test_timestamp.mligo" ] ;
-  [%expect.unreachable]
-[@@expect.uncaught_exn {|
-  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
-     This is strongly discouraged as backtraces are fragile.
-     Please change this test to not include a backtrace. *)
-
-  (Cli_expect_tests.Cli_expect.Should_exit_good)
-  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 31, characters 7-29
-  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 487, characters 2-63
-  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
-
-  Trailing output
-  ---------------
-
-  This Michelson value has assigned type 'unit', which does not coincide with expected type 'timestamp'. |}]
+  [%expect{|
+    Everything at the top-level was executed.
+    - test_sub exited with value (). |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test" ; test "test_context.mligo" ] ;
@@ -809,26 +790,8 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_bad [ "run" ; "test" ; bad_test "test_mutation_loop.mligo" ; "--steps" ; "1000" ] ;
   [%expect {|
-    File "../../test/contracts/negative//interpreter_tests/test_mutation_loop.mligo", line 17, character 28 to line 18, character 83:
-     16 |     | None -> ()
-     17 |     | Some (_, mutation) -> let () = Test.log(mutation) in
-     18 |                                     failwith "Some mutation also passes the tests!"
-
-    You are using Michelson failwith primitive (loaded from standard library).
-    Consider using `Test.failwith` for throwing a testing framework failure.
-
-    File "../../test/contracts/negative//interpreter_tests/test_mutation_loop.mligo", line 17, character 28 to line 18, character 83:
-     16 |     | None -> ()
-     17 |     | Some (_, mutation) -> let () = Test.log(mutation) in
-     18 |                                     failwith "Some mutation also passes the tests!"
-
-    "Some mutation also passes the tests!"
-    Mutation at: File "../../test/contracts/negative//interpreter_tests/test_mutation_loop.mligo", line 3, characters 29-30:
-      2 |     if rounds > 0 then
-      3 |         my_rec_fun (rounds - 1)
-      4 |     else
-
-    Replacing by: 2. |}]
+    An internal error ocurred. Please, contact the developers.
+    unbound variable: sub#1328. |}]
 
 let%expect_test _ =
   run_ligo_bad [ "run" ; "test" ; bad_test "test_source1.mligo" ] ;

@@ -316,12 +316,12 @@ let rec subtype ~raise ~loc ~ctx ~(recieved : type_expression) ~(expected : type
       let ctx, f2 = self ~ctx (Context.apply ctx type12) (Context.apply ctx type22) in
       ( ctx
       , fun hole ->
-          let x = ValueVar.fresh ~name:"sub" () in
+          let x = ValueVar.fresh ~name:"_sub" () in
           let args = f1 (e_variable x type21) in
           let binder =
-            { var = x; ascr = Some type21; attributes = { const_or_var = None } }
+            { var = x; ascr = Some type21; attributes = { const_or_var = Some `Const } }
           in
-          let result = f2 (e_application { lamb = hole; args } type11) in
+          let result = f2 (e_application { lamb = hole; args } type12) in
           e_a_lambda { binder; result } type21 type22 ))
   | T_for_all { ty_binder = tvar; kind; type_ }, _ ->
     let evar = Exists_var.fresh ~loc () in
@@ -345,7 +345,7 @@ let rec subtype ~raise ~loc ~ctx ~(recieved : type_expression) ~(expected : type
         (t_subst_var type_ ~tvar ~tvar')
     in
     ( Context.drop_until ctx ~pos
-    , fun hole -> e_type_abstraction { type_binder = tvar'; result = f hole } recieved )
+    , fun hole -> e_type_abstraction { type_binder = tvar'; result = f hole } expected )
   | T_variable tvar1, T_variable tvar2 when TypeVar.equal tvar1 tvar2 -> ctx, fun x -> x
   | T_variable tvar1, _ when TypeVar.is_exists tvar1 ->
     subtype_evar ~mode:Contravariant (Exists_var.of_type_var_exn tvar1) expected
