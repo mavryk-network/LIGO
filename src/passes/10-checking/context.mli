@@ -1,5 +1,6 @@
 (* This file represente the context which give the association of values to types *)
 open Ast_typed
+open Simple_utils.Trace
 
 module Exists_var : sig
   type t = private type_variable [@@deriving compare]
@@ -92,28 +93,31 @@ end
 
 module Elaboration : sig
   type context := t
-  type 'a t
+  type ('a, 'err, 'wrn) t
 
-  include Monad.S with type 'a t := 'a t
+  include Monad.S3 with type ('a, 'err, 'wrn) t := ('a, 'err, 'wrn) t
 
-  val all_lmap : 'a t LMap.t -> 'a LMap.t t
-  val run_expr : expression t -> ctx:context -> expression
-  val run_decl : declaration t -> ctx:context -> declaration
-  val run_module : module_ t -> ctx:context -> module_
+  type error = [ `Typer_existential_found of Location.t * type_expression ]
+  val raise : (('err, 'wrn) raise, 'err, 'wrn) t
+
+  val all_lmap : ('a, 'err, 'wrn) t LMap.t -> ('a LMap.t, 'err, 'wrn) t
+  val run_expr : (expression, [> error] as 'err, 'wrn) t -> ctx:context -> raise:('err, 'wrn) raise -> expression
+  val run_decl : (declaration, [> error] as 'err, 'wrn) t -> ctx:context -> raise:('err, 'wrn) raise -> declaration
+  val run_module : (module_, [> error] as 'err, 'wrn)  t -> ctx:context -> raise:('err, 'wrn) raise -> module_
 end
 
 val enter
   :  ctx:t
-  -> in_:(t -> t * type_expression * expression Elaboration.t)
-  -> t * type_expression * expression Elaboration.t
+  -> in_:(t -> t * type_expression * (expression, 'err, 'wrn) Elaboration.t)
+  -> t * type_expression * (expression, 'err, 'wrn) Elaboration.t
 
 val decl_enter : ctx:t -> in_:(t -> t * Signature.t * 'a) -> t * Signature.t * 'a
 
 module Generalization : sig
   val enter
     :  ctx:t
-    -> in_:(t -> t * type_expression * expression Elaboration.t)
-    -> t * type_expression * expression Elaboration.t
+    -> in_:(t -> t * type_expression * (expression, 'err, 'wrn) Elaboration.t)
+    -> t * type_expression * (expression, 'err, 'wrn) Elaboration.t
 end
 
 val init : ?env:Environment.t -> unit -> t

@@ -6,8 +6,8 @@ module Errors = Errors
 open Errors
 open Ast_typed
 
-let occurs_check ~raise ~evar type_ =
-  let fail () = raise.error (occurs_check_failed (Exists_var.loc evar) evar type_) in
+let occurs_check ~raise ~loc ~evar type_ =
+  let fail () = raise.error (occurs_check_failed loc evar type_) in
   let rec loop type_ =
     match type_.type_content with
     | T_variable tvar' ->
@@ -97,8 +97,8 @@ let rec lift ~raise ~ctx ~(mode : Mode.t) ~kind ~evar (type_ : type_expression)
     let ctx, type_ = self ~ctx:Context.(ctx |:: C_type_var (tvar'', kind)) ~mode type_ in
     Context.drop_until ctx ~pos, type_
   | T_arrow { type1; type2 } ->
-    let ctx, type1 = self ~mode:(Mode.invert mode) type1 in
-    let ctx, type2 = self ~mode (Context.apply ctx type2) in
+    let ctx, type1 = self ~ctx ~mode:(Mode.invert mode) type1 in
+    let ctx, type2 = self ~ctx ~mode (Context.apply ctx type2) in
     ctx, return @@ T_arrow { type1; type2 }
   | T_sum { content; layout } ->
     let ctx, content =
@@ -212,15 +212,17 @@ end
 
 let rec unify
   ~raise
+  ~loc
   ~(ctx : Context.t)
   (type1 : type_expression)
   (type2 : type_expression)
   : Context.t
   =
+  let unify = unify ~loc in
   let self ?(ctx = ctx) type1 type2 = unify ~raise ~ctx type1 type2 in
   let fail () = raise.error (cannot_unify type1.location type1 type2) in
   let unify_evar evar type_ =
-    occurs_check ~raise ~evar type_;
+    occurs_check ~raise ~loc ~evar type_;
     let kind =
       Context.get_exists_var ctx evar
       |> trace_option ~raise (unbound_exists_variable (Exists_var.loc evar) evar)
@@ -290,18 +292,18 @@ let rec unify
   | _ -> fail ()
 
 
-let rec subtype ~raise ~ctx ~(recieved : type_expression) ~(expected : type_expression)
+let rec subtype ~raise ~loc ~ctx ~(recieved : type_expression) ~(expected : type_expression)
   : Context.t * (expression -> expression)
   =
   (* Format.printf "Subtype: %a, %a\n" PP.type_expression recieved PP.type_expression expected; *)
-  let self ?(ctx = ctx) recieved expected = subtype ~raise ~ctx ~recieved ~expected in
+  let self ?(ctx = ctx) recieved expected = subtype ~raise ~loc ~ctx ~recieved ~expected in
   let subtype_evar ~mode evar type_ =
     let kind =
       Context.get_exists_var ctx evar
       |> trace_option ~raise (unbound_exists_variable (Exists_var.loc evar) evar)
     in
     let ctx, type_ = lift ~raise ~ctx ~mode ~evar ~kind type_ in
-    occurs_check ~raise ~evar type_;
+    occurs_check ~raise ~loc ~evar type_;
     Context.add_exists_eq ctx evar kind type_, fun x -> x
   in
   match recieved.type_content, expected.type_content with
@@ -322,20 +324,19 @@ let rec subtype ~raise ~ctx ~(recieved : type_expression) ~(expected : type_expr
           let result = f2 (e_application { lamb = hole; args } type11) in
           e_a_lambda { binder; result } type21 type22 ))
   | T_for_all { ty_binder = tvar; kind; type_ }, _ ->
-    let loc = TypeVar.get_location tvar in
     let evar = Exists_var.fresh ~loc () in
     let type' = t_subst type_ ~tvar ~type_:(t_exists ~loc evar) in
     let ctx, pos = Context.mark ctx in
     let ctx, f =
       self
-        ~ctx:Context.(ctx |:: C_marker evar |:: C_exists_var (evar, kind))
+        ~ctx:Context.(ctx |:: C_exists_var (evar, kind))
         type'
         expected
     in
     ( Context.drop_until ctx ~pos
     , fun hole -> f (e_type_inst { forall = hole; type_ = t_exists ~loc evar } type') )
   | _, T_for_all { ty_binder = tvar; kind; type_ } ->
-    let tvar' = TypeVar.fresh_like tvar in
+    let tvar' = TypeVar.fresh_like ~loc tvar in
     let ctx, pos = Context.mark ctx in
     let ctx, f =
       self
@@ -350,4 +351,4 @@ let rec subtype ~raise ~ctx ~(recieved : type_expression) ~(expected : type_expr
     subtype_evar ~mode:Contravariant (Exists_var.of_type_var_exn tvar1) expected
   | _, T_variable tvar2 when TypeVar.is_exists tvar2 ->
     subtype_evar ~mode:Covariant (Exists_var.of_type_var_exn tvar2) recieved
-  | _, _ -> unify ~raise ~ctx recieved expected, fun x -> x
+  | _, _ -> unify ~raise ~loc ~ctx recieved expected, fun x -> x

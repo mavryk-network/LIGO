@@ -77,8 +77,8 @@ module Comparable = struct
           Trace.bind_exists ~raise
           @@ List.Ne.map
                (fun type_ ~raise ->
-                 let ctx = unify ~raise ~ctx a type_ in
-                 let ctx = unify ~raise ~ctx b type_ in
+                 let ctx = unify ~raise ~loc ~ctx a type_ in
+                 let ctx = unify ~raise ~loc ~ctx b type_ in
                  ctx)
                simple_types)
       in
@@ -88,7 +88,7 @@ module Comparable = struct
   (* [record_comparator] is a simple extension of [comparator] to record types. *)
   let rec record_comparator ~raise ~test : Location.t -> string -> t =
    fun loc s ~ctx a b ->
-    let ctx = trace_compare ~raise ~loc a b ~in_:(fun ~raise -> unify ~raise ~ctx a b) in
+    let ctx = trace_compare ~raise ~loc a b ~in_:(fun ~raise -> unify ~raise ~loc ~ctx a b) in
     let a_r = trace_option ~raise (comparator_composed loc a) @@ get_t_record a in
     let b_r = trace_option ~raise (comparator_composed loc b) @@ get_t_record b in
     let aux ctx a b : Context.t =
@@ -110,7 +110,7 @@ module Comparable = struct
   (* [sum_comparator] is a simple extension of [comparator] to sum types. *)
   and sum_comparator ~raise ~test : Location.t -> string -> t =
    fun loc s ~ctx a b ->
-    let ctx = trace_compare ~raise ~loc a b ~in_:(fun ~raise -> unify ~raise ~ctx a b) in
+    let ctx = trace_compare ~raise ~loc a b ~in_:(fun ~raise -> unify ~raise ~loc ~ctx a b) in
     let a_r = trace_option ~raise (comparator_composed loc a) @@ get_t_sum a in
     let b_r = trace_option ~raise (comparator_composed loc b) @@ get_t_sum b in
     let aux ctx a b : Context.t =
@@ -133,7 +133,7 @@ module Comparable = struct
    fun loc s ~ctx a_lst b_lst ->
     let ctx =
       trace_compare ~raise ~loc a_lst b_lst ~in_:(fun ~raise ->
-        unify ~raise ~ctx a_lst b_lst)
+        unify ~raise ~loc ~ctx a_lst b_lst)
     in
     let a = trace_option ~raise (comparator_composed loc a_lst) @@ get_t_list a_lst in
     let b = trace_option ~raise (comparator_composed loc b_lst) @@ get_t_list b_lst in
@@ -144,7 +144,7 @@ module Comparable = struct
    fun loc s ~ctx a_set b_set ->
     let ctx =
       trace_compare ~raise ~loc a_set b_set ~in_:(fun ~raise ->
-        unify ~raise ~ctx a_set b_set)
+        unify ~raise ~loc ~ctx a_set b_set)
     in
     let a = trace_option ~raise (comparator_composed loc a_set) @@ get_t_set a_set in
     let b = trace_option ~raise (comparator_composed loc b_set) @@ get_t_set b_set in
@@ -155,7 +155,7 @@ module Comparable = struct
    fun loc s ~ctx a_map b_map ->
     let ctx =
       trace_compare ~raise ~loc a_map b_map ~in_:(fun ~raise ->
-        unify ~raise ~ctx a_map b_map)
+        unify ~raise ~loc ~ctx a_map b_map)
     in
     let a_key, a_value =
       trace_option ~raise (comparator_composed loc a_map) @@ get_t_map a_map
@@ -172,7 +172,7 @@ module Comparable = struct
    fun loc s ~ctx a_map b_map ->
     let ctx =
       trace_compare ~raise ~loc a_map b_map ~in_:(fun ~raise ->
-        unify ~raise ~ctx a_map b_map)
+        unify ~raise ~loc ~ctx a_map b_map)
     in
     let a_key, a_value =
       trace_option ~raise (comparator_composed loc a_map) @@ get_t_big_map a_map
@@ -241,14 +241,14 @@ type ('err, 'wrn) infer =
   raise:('err, 'wrn) raise
   -> ctx:Context.t
   -> I.expression
-  -> Context.t * O.type_expression * O.expression Elaboration.t
+  -> Context.t * O.type_expression * (O.expression, 'err, 'wrn) Elaboration.t
 
 type ('err, 'wrn) check =
   raise:('err, 'wrn) raise
   -> ctx:Context.t
   -> I.expression
   -> O.type_expression
-  -> Context.t * O.expression Elaboration.t
+  -> Context.t * (O.expression, 'err, 'wrn) Elaboration.t
 
 type ('err, 'wrn) t =
   raise:('err, 'wrn) raise
@@ -258,7 +258,7 @@ type ('err, 'wrn) t =
   -> loc:Location.t
   -> ctx:Context.t
   -> I.expression list
-  -> Context.t * O.expression list Elaboration.t * O.type_expression
+  -> Context.t * (O.expression list, 'err, 'wrn) Elaboration.t * O.type_expression
 
 let t_subst t ~tvar ~type_ = O.Helpers.subst_no_capture_type tvar type_ t
 
@@ -337,6 +337,7 @@ let of_type ({ for_alls; mode_annot; types } : Type.t) : _ t =
                List.fold unify_worklist ~init:ctx ~f:(fun ctx (arg_type1, arg_type2) ->
                  unify
                    ~raise
+                   ~loc
                    ~ctx
                    (Context.apply ctx arg_type1)
                    (Context.apply ctx arg_type2))

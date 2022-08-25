@@ -1,5 +1,6 @@
 (* This file represente the context which give the association of values to types *)
 module Location = Simple_utils.Location
+open Simple_utils.Trace
 open Ast_typed
 module ValueMap = Simple_utils.Map.Make (ValueVar)
 module TypeMap = Ast_typed.Helpers.IdMap.Make (TypeVar)
@@ -134,12 +135,12 @@ module PP = struct
     Format.fprintf ppf "@[<hv>%a@]" loop xs
 
 
-  let rec context ppf t =
+  let context ppf t =
     list ppf t.items ~pp:(fun ppf item ->
       match item with
       | C_value (evar, type_) ->
         Format.fprintf ppf "%a : %a" expression_variable evar type_expression type_
-      | C_type (tvar, type_) ->
+      | C_type (tvar, type_) -> 
         Format.fprintf ppf "type %a = %a" type_variable tvar type_expression type_
       | C_type_var (tvar, kind) ->
         Format.fprintf ppf "%a :: %a" type_variable tvar kind_ kind
@@ -157,11 +158,10 @@ module PP = struct
           type_
       | C_marker evar -> Format.fprintf ppf "|>%a" Exists_var.pp evar
       | C_module (mvar, sig_) ->
-        Format.fprintf ppf "module %a = %a" module_variable mvar signature sig_
+        Format.fprintf ppf "module %a = %a" module_variable mvar Signature.pp sig_
       | C_pos _ -> ())
 
 
-  and signature ppf sig_ = Signature.pp ppf sig_
 
   let context_local ~pos ppf t =
     let rec loop ppf items =
@@ -545,7 +545,10 @@ let get_sum
         Since context is made of maps, all shadowed types are absent from the context.
         However we still want the shadowed nested t_sum, see [add_shadowed_nested_t_sum] *)
   let module_types =
-    List.fold (List.rev module_types) ~init:[] ~f:Ast_typed.Helpers.add_shadowed_nested_t_sum
+    List.fold
+      (List.rev module_types)
+      ~init:[]
+      ~f:Ast_typed.Helpers.add_shadowed_nested_t_sum
   in
   (* Format.printf "Module Types:\n";
   List.iter module_types ~f:(fun (tvar, type_) ->
@@ -857,20 +860,24 @@ module Hashes = struct
 end
 
 module Elaboration = struct
-  type 'a t = unit -> 'a
+  type ('a, 'err, 'wrn) t = raise:('err, 'wrn) raise -> 'a
 
-  include Monad.Make (struct
-    type nonrec 'a t = 'a t
+  include Monad.Make3 (struct
+    type nonrec ('a, 'err, 'wrn) t = ('a, 'err, 'wrn) t
 
-    let return x () = x
+    let return x ~raise:_ = x
 
-    let bind t ~f () =
-      let x = t () in
-      f x ()
+    let bind t ~f ~raise =
+      let x = t ~raise in
+      f x ~raise
 
 
     let map = `Define_using_bind
   end)
+
+  type error = [ `Typer_existential_found of Location.t * type_expression ]
+
+  let raise ~raise = raise
 
   (* "Zonking" is performed by these context application functions *)
 
@@ -1020,89 +1027,118 @@ module Elaboration = struct
     | M_module_path path -> return @@ M_module_path path
 
 
-  let all_lmap lmap () = LMap.map (fun t -> t ()) lmap
+  let all_lmap lmap ~raise = LMap.map (fun t -> t ~raise) lmap
 
   (* A pass to check all existentials are resolved *)
-  let rec t_pass (type_ : type_expression) : bool =
+  let rec type_pass ~raise (type_ : type_expression) : unit =
+    let self = type_pass ~raise in
     match type_.type_content with
-    | T_variable tvar -> not (TypeVar.is_exists tvar)
-    | T_constant inj -> List.for_all ~f:t_pass inj.parameters
+    | T_variable tvar ->
+      if TypeVar.is_exists tvar
+      then raise.error (`Typer_existential_found (type_.location, type_))
+    | T_constant inj -> List.iter ~f:self inj.parameters
     | T_record rows | T_sum rows ->
-      LMap.for_all (fun _ row_elem -> t_pass row_elem.associated_type) rows.content
-    | T_arrow { type1; type2 } -> t_pass type1 && t_pass type2
-    | T_singleton _ -> true
-    | T_abstraction abs -> t_pass abs.type_
-    | T_for_all for_all -> t_pass for_all.type_
+      LMap.iter (fun _ row_elem -> self row_elem.associated_type) rows.content
+    | T_arrow { type1; type2 } ->
+      self type1;
+      self type2
+    | T_singleton _ -> ()
+    | T_abstraction abs -> self abs.type_
+    | T_for_all for_all -> self for_all.type_
 
 
-  let rec e_pass expr =
-    t_pass expr.type_expression
-    &&
+  let rec expression_pass ~raise expr =
+    type_pass ~raise expr.type_expression;
+    let self = expression_pass ~raise in
     match expr.expression_content with
-    | E_literal _lit -> true
-    | E_constant { arguments; _ } -> List.for_all ~f:e_pass arguments
-    | E_variable _var -> true
-    | E_application { lamb; args } -> e_pass lamb && e_pass args
-    | E_lambda lambda -> lambda_pass lambda
-    | E_recursive { fun_type; lambda; _ } -> t_pass fun_type && lambda_pass lambda
+    | E_literal _lit -> ()
+    | E_constant { arguments; _ } -> List.iter ~f:self arguments
+    | E_variable _var -> ()
+    | E_application { lamb; args } ->
+      self lamb;
+      self args
+    | E_lambda lambda -> lambda_pass ~raise lambda
+    | E_recursive { fun_type; lambda; _ } ->
+      type_pass ~raise fun_type;
+      lambda_pass ~raise lambda
     | E_let_in { let_binder; rhs; let_result; _ } ->
-      binder_pass let_binder && e_pass rhs && e_pass let_result
-    | E_mod_in { rhs; let_result; _ } -> module_expr_pass rhs && e_pass let_result
-    | E_raw_code { code; _ } -> e_pass code
-    | E_type_inst { forall; type_ } -> e_pass forall && t_pass type_
-    | E_type_abstraction { result; _ } -> e_pass result
-    | E_constructor { element; _ } -> e_pass element
-    | E_matching { matchee; cases } -> e_pass matchee && matching_expr_pass cases
-    | E_record expr_label_map -> LMap.for_all (fun _ expr -> e_pass expr) expr_label_map
-    | E_record_accessor { record; _ } -> e_pass record
-    | E_record_update { record; update; _ } -> e_pass record && e_pass update
-    | E_module_accessor _mod_access -> true
-    | E_assign { binder; expression } -> binder_pass binder && e_pass expression
+      binder_pass ~raise let_binder;
+      self rhs;
+      self let_result
+    | E_mod_in { rhs; let_result; _ } ->
+      module_expr_pass ~raise rhs;
+      self let_result
+    | E_raw_code { code; _ } -> self code
+    | E_type_inst { forall; type_ } ->
+      self forall;
+      type_pass ~raise type_
+    | E_type_abstraction { result; _ } -> self result
+    | E_constructor { element; _ } -> self element
+    | E_matching { matchee; cases } ->
+      self matchee;
+      matching_expr_pass ~raise cases
+    | E_record expr_label_map -> LMap.iter (fun _ expr -> self expr) expr_label_map
+    | E_record_accessor { record; _ } -> self record
+    | E_record_update { record; update; _ } ->
+      self record;
+      self update
+    | E_module_accessor _mod_access -> ()
+    | E_assign { binder; expression } ->
+      binder_pass ~raise binder;
+      self expression
 
 
-  and lambda_pass { binder; result } = binder_pass binder && e_pass result
-  and binder_pass binder = Option.value_map binder.ascr ~default:true ~f:t_pass
+  and lambda_pass ~raise { binder; result } =
+    binder_pass ~raise binder;
+    expression_pass ~raise result
 
-  and matching_expr_pass match_expr =
+
+  and binder_pass ~raise binder = Option.iter binder.ascr ~f:(type_pass ~raise)
+
+  and matching_expr_pass ~raise match_expr =
     match match_expr with
     | Match_variant { cases; tv } ->
-      t_pass tv && List.for_all cases ~f:(fun { body; _ } -> e_pass body)
+      type_pass ~raise tv;
+      List.iter cases ~f:(fun { body; _ } -> expression_pass ~raise body)
     | Match_record { fields; body; tv } ->
-      t_pass tv && LMap.for_all (fun _ binder -> binder_pass binder) fields && e_pass body
+      type_pass ~raise tv;
+      LMap.iter (fun _ binder -> binder_pass ~raise binder) fields;
+      expression_pass ~raise body
 
 
-  and decl_pass (decl : declaration) =
+  and decl_pass ~raise (decl : declaration) =
     match decl.wrap_content with
-    | Declaration_type decl_type -> t_pass decl_type.type_expr
-    | Declaration_constant { binder; expr; _ } -> binder_pass binder && e_pass expr
-    | Declaration_module { module_; _ } -> module_expr_pass module_
+    | Declaration_type decl_type -> type_pass ~raise decl_type.type_expr
+    | Declaration_constant { binder; expr; _ } ->
+      binder_pass ~raise binder;
+      expression_pass ~raise expr
+    | Declaration_module { module_; _ } -> module_expr_pass ~raise module_
 
 
-  and module_pass module_ = List.for_all ~f:decl_pass module_
+  and module_pass ~raise module_ = List.iter ~f:(decl_pass ~raise) module_
 
-  and module_expr_pass module_expr =
+  and module_expr_pass ~raise module_expr =
     match module_expr.wrap_content with
-    | M_struct module_ -> module_pass module_
-    | M_variable _mvar -> true
-    | M_module_path _path -> true
+    | M_struct module_ -> module_pass ~raise module_
+    | M_variable _mvar -> ()
+    | M_module_path _path -> ()
 
 
-  let run_expr t ~ctx =
-    let expr = e_apply ctx (t ()) in
-    assert (e_pass expr);
+  let run_expr t ~ctx ~raise =
+    let expr = e_apply ctx (t ~raise) in
+    expression_pass ~raise expr;
     expr
 
 
-  let run_decl t ~ctx =
-    let decl = decl_apply ctx (t ()) in
-    assert (decl_pass decl);
+  let run_decl t ~ctx ~raise =
+    let decl = decl_apply ctx (t ~raise) in
+    decl_pass ~raise decl;
     decl
 
 
-  let run_module t ~ctx =
-    let module_ = module_apply ctx (t ()) in
-    if not (module_pass module_)
-    then Format.printf "Module contains existential %a" Ast_typed.PP.program module_;
+  let run_module t ~ctx ~raise =
+    let module_ = module_apply ctx (t ~raise) in
+    module_pass ~raise module_;
     module_
 end
 

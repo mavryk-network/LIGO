@@ -70,6 +70,8 @@ let type_improve t =
 
 type typer_error =
   [ `Typer_ill_formed_type of Location.t * Ast_typed.type_expression
+  | `Typer_existential_found of Location.t * Ast_typed.type_expression
+  | `Typer_record_mismatch of Location.t * Ast_core.expression * Ast_typed.type_expression
   | `Typer_cannot_subtype of
     Location.t * Ast_typed.type_expression * Ast_typed.type_expression
   | `Typer_missing_funarg_annotation of Ast_typed.expression_variable
@@ -144,10 +146,26 @@ let rec error_ppformat
   match display_format with
   | Human_readable | Dev ->
     (match a with
+     | `Typer_existential_found (loc, type_) ->
+       Format.fprintf
+         f
+         "@[<hv>%a@.Underspecified type %a.@.Please add additional annotations.@]"
+         Snippet.pp
+         loc
+         Ast_typed.PP.type_expression
+         type_
      | `Typer_ill_formed_type (loc, type_) ->
        Format.fprintf
          f
-         "@[<hv>%a@.Ill formed type %a.@]"
+         "@[<hv>%a@.Invalid type@.Ill formed type %a.@]"
+         Snippet.pp
+         loc
+         Ast_typed.PP.type_expression
+         type_
+     | `Typer_record_mismatch (loc, _record, type_) ->
+       Format.fprintf
+         f
+         "@[<hv>%a@.Mismatching record labels. Expected record of type %a.@]"
          Snippet.pp
          loc
          Ast_typed.PP.type_expression
@@ -155,10 +173,8 @@ let rec error_ppformat
      | `Typer_cannot_unify (loc, type1, type2) ->
        Format.fprintf
          f
-         "@[<hv>%a@.%a@.Cannot unify %a with %a.@]"
+         "@[<hv>%a@.Invalid type(s)@.Cannot unify %a with %a.@]"
          Snippet.pp
-         loc
-         Location.pp
          loc
          Ast_typed.PP.type_expression
          type1
@@ -228,10 +244,8 @@ let rec error_ppformat
      | `Typer_unbound_type_variable (tv, loc) ->
        Format.fprintf
          f
-         "@[<hv>%a@.%a@.Type \"%a\" not found. @]"
+         "@[<hv>%a@.Type \"%a\" not found. @]"
          Snippet.pp
-         loc
-         Location.pp
          loc
          Ast_typed.PP.type_variable
          tv
@@ -391,10 +405,8 @@ let rec error_ppformat
      | `Typer_assert_equal (loc, expected, actual) ->
        Format.fprintf
          f
-         "@[<hv>%a@.%a@>Invalid type(s).@.Expected: \"%a\", but got: \"%a\". @]"
+         "@[<hv>%a@.Invalid type(s).@.Expected: \"%a\", but got: \"%a\". @]"
          Snippet.pp
-         loc
-         Location.pp
          loc
          Ast_typed.PP.type_expression_orig
          (type_improve expected)
@@ -550,6 +562,27 @@ let rec error_jsonformat : typer_error -> Yojson.Safe.t =
     `Assoc [ "status", `String "error"; "stage", `String stage; "content", content ]
   in
   match a with
+  | `Typer_existential_found (loc, type_) ->
+    let message = "Existential found" in
+    let content =
+      `Assoc
+        [ "message", `String message
+        ; "type", Ast_typed.Yojson.type_expression type_
+        ; "location", Location.to_yojson loc
+        ]
+    in
+    json_error ~stage ~content
+  | `Typer_record_mismatch (loc, record, type_) ->
+    let message = "Record mismatch" in
+    let content =
+      `Assoc
+        [ "message", `String message
+        ; "record", Ast_core.Yojson.expression record
+        ; "type", Ast_typed.Yojson.type_expression type_
+        ; "location", Location.to_yojson loc
+        ]
+    in
+    json_error ~stage ~content
   | `Typer_ill_formed_type (loc, type_) ->
     let message = "Ill formed type" in
     let content =
