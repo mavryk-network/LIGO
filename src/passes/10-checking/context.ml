@@ -771,7 +771,7 @@ end = struct
                false)
         then return Type
         else None
-      | T_singleton _ -> return Type
+      | T_singleton _ -> return Singleton
       | T_arrow { type1 = arg_type; type2 = ret_type } ->
         let%bind arg_kind = self arg_type in
         let%bind ret_kind = self ret_type in
