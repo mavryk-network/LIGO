@@ -6,7 +6,7 @@ let () = Sys.chdir "../../test/contracts/interpreter_tests/"
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test" ; test "interpret_test.mligo" ] ;
-  [%expect {|
+  [%expect{|
     Everything at the top-level was executed.
     - test_lambda_call exited with value ().
     - test_higher_order1 exited with value ().
@@ -165,9 +165,26 @@ let%expect_test _ =
 
 let%expect_test _ =
   run_ligo_good ["run";"test" ; test "test_subst_with_storage_from_file.mligo" ] ;
-  [%expect {|
-  Everything at the top-level was executed.
-  - test exited with value (). |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 31, characters 7-29
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 112, characters 2-80
+  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
+
+  Trailing output
+  ---------------
+  File "test_subst_with_storage_from_file.mligo", line 8, characters 14-46:
+    7 |   let store = Test.get_storage_of_address addr in
+    8 |   let store = (Test.decompile store : storage) in
+    9 |   let ovens_map = store.foo in
+
+  This Michelson value has assigned type 'unit', which does not coincide with expected type '
+  record[bar -> string , foo -> int]'. |}]
 
 let%expect_test _ =
   run_ligo_good ["run";"test" ; test "nesting_modules.mligo" ] ;
@@ -523,9 +540,21 @@ let%expect_test _ =
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test" ; test "test_timestamp.mligo" ] ;
-  [%expect {|
-    Everything at the top-level was executed.
-    - test_sub exited with value (). |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 31, characters 7-29
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 487, characters 2-63
+  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
+
+  Trailing output
+  ---------------
+
+  This Michelson value has assigned type 'unit', which does not coincide with expected type 'timestamp'. |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test" ; test "test_context.mligo" ] ;
@@ -707,16 +736,9 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_bad ["run";"test" ; bad_test "test_failure1.mligo" ] ;
   [%expect {|
-    File "../../test/contracts/negative//interpreter_tests/test_failure1.mligo", line 2, characters 2-25:
-      1 | let test : unit =
-      2 |   failwith "I am failing"
-
-    You are using Michelson failwith primitive (loaded from standard library).
+     You are using Michelson failwith primitive (loaded from standard library).
     Consider using `Test.failwith` for throwing a testing framework failure.
 
-    File "../../test/contracts/negative//interpreter_tests/test_failure1.mligo", line 2, characters 2-25:
-      1 | let test : unit =
-      2 |   failwith "I am failing"
 
     "I am failing" |}]
 
@@ -741,12 +763,8 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_bad ["run";"test" ; bad_test "test_failure3.mligo" ] ;
   [%expect {|
-    File "../../test/contracts/negative//interpreter_tests/test_failure3.mligo", line 3, characters 2-16:
-      2 |   let f = (fun (_ : (unit * unit)) -> ()) in
-      3 |   Test.originate f () 0tez
-
-    Invalid type(s).
-    Expected: "( list (operation) * s )", but got: "unit". |}]
+    Invalid type(s)
+    Cannot unify unit with ( list (operation) * unit ). |}]
 
 let%expect_test _ =
   run_ligo_bad ["run";"test" ; bad_test "test_trace.mligo" ] ;
@@ -837,36 +855,20 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_bad [ "run" ; "test" ; bad_test "test_run_types.jsligo" ] ;
   [%expect {|
-    File "../../test/contracts/negative//interpreter_tests/test_run_types.jsligo", line 2, characters 12-20:
-      1 | const foo = (x: {field: int}): {field: int} => {return x};
-      2 | const bar = Test.run(foo, {property: "toto"});
-      3 |
-
-    These types are not matching:
-     - record[property -> string]
-     - record[field -> int] |}]
+    Invalid type(s)
+    Cannot unify record[property -> string] with record[field -> int]. |}]
 
 let%expect_test _ =
   run_ligo_bad [ "run" ; "test" ; bad_test "test_run_types2.jsligo" ] ;
   [%expect {|
-    File "../../test/contracts/negative//interpreter_tests/test_run_types2.jsligo", line 2, characters 12-20:
-      1 | const foo = (x:  {b:int}):  {b:int} => {return x};
-      2 | const bar = Test.run(foo, "toto");
-
-    These types are not matching:
-     - string
-     - record[b -> int] |}]
+    Invalid type(s)
+    Cannot unify string with record[b -> int]. |}]
 
 let%expect_test _ =
   run_ligo_bad [ "run" ; "test" ; bad_test "test_run_types3.jsligo" ] ;
   [%expect {|
-    File "../../test/contracts/negative//interpreter_tests/test_run_types3.jsligo", line 2, characters 12-20:
-      1 | const foo = (x: int): int => {return x};
-      2 | const bar = Test.run(foo, {field: "toto"});
-
-    These types are not matching:
-     - record[field -> string]
-     - int |}]
+    Invalid type(s)
+    Cannot unify record[field -> string] with int. |}]
 
 let%expect_test _ =
   run_ligo_bad [ "run" ; "test" ; bad_test "test_decompile.mligo" ] ;
@@ -918,11 +920,6 @@ let () = Sys.chdir pwd
 let%expect_test _ =
   run_ligo_bad [ "run"; "test" ; bad_test "test_michelson_non_func.mligo" ] ;
   [%expect {xxx|
-    File "../../test/contracts/negative//interpreter_tests/test_michelson_non_func.mligo", line 2, characters 16-55:
-      1 | let test =
-      2 |   let x : int = [%Michelson ({|{ PUSH int 1 }|} : int)] in
-      3 |   begin
-
     Embedded raw code can only have a functional type |xxx}]
 
 let%expect_test _ =
