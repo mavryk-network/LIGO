@@ -802,7 +802,7 @@ and infer_application ~raise ~options ~ctx lamb_type args
             (match kind with
              | Type -> true
              | _ -> false)
-       then raise.error (assert false);
+       then raise.error (corner_case "Existential variable used in application has invalid kind");
        let evar1 = Exists_var.fresh () in
        let evar2 = Exists_var.fresh () in
        let arg_type = t_exists evar1 in
