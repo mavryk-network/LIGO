@@ -34,13 +34,19 @@ type expression_variable = ValueVar.t [@@deriving hash]
 type type_variable       = TypeVar.t [@@deriving hash]
 type module_variable     = ModuleVar.t [@@deriving hash]
 
-type kind = | Type
-            | Singleton [@@deriving yojson,equal,compare,hash]
+type kind = 
+  | Type
+  (* TODO: Determine usage for [Singleton] kind. Could be dead code? *)
+  | Singleton 
+  | Arrow of kind * kind
+[@@deriving yojson,equal,compare,hash]
 
 type label = Label of string [@@deriving hash]
 let label_to_yojson (Label l) = `List [`String "Label"; `String l]
 let equal_label (Label a) (Label b) = String.equal a b
 let compare_label (Label a) (Label b) = String.compare a b
+module LSet = Caml.Set.Make(struct type t = label [@@deriving compare] end)
+
 module LMap = Simple_utils.Map.MakeHashable(struct type t = label [@@deriving hash]
                                            let compare = compare_label
                                             end)

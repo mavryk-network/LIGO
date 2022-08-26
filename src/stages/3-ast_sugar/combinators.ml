@@ -67,10 +67,10 @@ let t_sum ?loc m : type_expression =
   t_sum_ez ?loc lst
 
 let t_bool ?loc () : type_expression = 
-  let unit : ty_expr row_element = 
-    { associated_type = t_unit (); attributes = [] ; decl_pos = 0 } in
+  let unit decl_pos : ty_expr row_element = 
+    { associated_type = t_unit (); attributes = [] ; decl_pos } in
   t_sum_ez ?loc
-  [("True", unit);("False", unit)]
+  [("True", unit 0);("False", unit 1)]
 
 let t_arrow ?loc type1 type2  : type_expression = t_arrow ?loc {type1; type2} ()
 

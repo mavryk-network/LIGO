@@ -9,13 +9,8 @@ let good_test s = (test "")^"/deep_pattern_matching/"^s
 let%expect_test _ =
   run_ligo_bad [ "print" ; "ast-typed" ; (bad_test "pm_fail17.mligo") ] ;
   [%expect{|
-    File "../../test/contracts/negative//deep_pattern_matching/pm_fail17.mligo", line 15, characters 39-43:
-     14 |     (* testing that subtitution is stoping on resursive definitions *)
-     15 |     let rec a (b : int) : int =let x = fo a in b + 1 in
-     16 |     (a 1) + (fo b)
-
-    Invalid type(s).
-    Expected: "optioni", but got: "int -> int". |}]
+    Invalid type(s)
+    Cannot unify int -> int with option (int). |}]
 
 (* wrong type on constructor argument pattern *)
 let%expect_test _ =
@@ -48,7 +43,7 @@ let%expect_test _ =
       3 |   (([] : operation list), ())
 
     Invalid type(s).
-    Expected: "unit", but got: "nat". |}]
+    Expected: "nat", but got: "unit". |}]
 
 
 (* Trying to match on values *)
@@ -110,23 +105,14 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_bad [ "print" ; "ast-typed" ; (bad_test "pm_fail7.mligo") ] ;
   [%expect{|
-    File "../../test/contracts/negative//deep_pattern_matching/pm_fail7.mligo", line 6, characters 9-10:
-      5 |   | A -> "hey"
-      6 |   | B -> 2
-
-    Invalid type(s).
-    Expected: "string", but got: "int". |}]
+    Invalid type(s)
+    Cannot unify int with string. |}]
 
 let%expect_test _ =
   run_ligo_bad [ "print" ; "ast-typed" ; (bad_test "pm_fail8.mligo") ] ;
   [%expect{|
-    File "../../test/contracts/negative//deep_pattern_matching/pm_fail8.mligo", line 19, characters 22-31:
-     18 |         f (b+1)
-     19 |       | Cons (a,b) -> "invalid"
-     20 |     in
-
-    Invalid type(s).
-    Expected: "int", but got: "string". |}]
+    Invalid type(s)
+    Cannot unify string with int. |}]
 
 
 (* rendundancy detected while compiling the pattern matching *)
@@ -175,7 +161,7 @@ let%expect_test _ =
       7 |    | Decrement -> s -1
       8 |  in ([] : operation list), stor
 
-    Variant pattern argument is expected of type nat but is of type unit. |}]
+    Pattern not of the expected type nat |}]
 
 let%expect_test _ =
   run_ligo_bad [ "print" ; "ast-typed" ; (bad_test "pm_fail4.mligo") ] ;
@@ -194,143 +180,115 @@ let%expect_test _ =
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t1 (Nil,Nil)" ; "--init-file" ; (good_test "pm_test.mligo") ] ;
-  [%expect{|
-    1 |}]
+  [%expect{| 1 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t1 (Nil,Cons(1,2))" ; "--init-file" ; (good_test "pm_test.mligo") ] ;
-  [%expect{|
-    1 |}]
+  [%expect{| 1 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t1 (Cons(1,2),Nil)" ; "--init-file" ; (good_test "pm_test.mligo") ] ;
-  [%expect{|
-    2 |}]
+  [%expect{| 2 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t1 (Cons(1,2),Cons(3,4))" ; "--init-file" ; (good_test "pm_test.mligo") ] ;
-  [%expect{|
-    10 |}]
+  [%expect{| 10 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t2 Nil Nil" ; "--init-file" ; (good_test "pm_test.mligo") ] ;
-  [%expect{|
-    1 |}]
+  [%expect{| 1 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t2 Nil (Cons (1,2))" ; "--init-file" ; (good_test "pm_test.mligo") ] ;
-  [%expect{|
-    3 |}]
+  [%expect{| 3 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t2 (Cons(1,2)) (Cons(1,2))" ; "--init-file" ; (good_test "pm_test.mligo") ] ;
-  [%expect{|
-    6 |}]
+  [%expect{| 6 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t2 (Cons(1,2)) Nil" ; "--init-file" ; (good_test "pm_test.mligo") ] ;
-  [%expect{|
-    7 |}]
+  [%expect{| 7 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t3 (One (Nil))" ; "--init-file" ; (good_test "pm_test.mligo") ] ;
-  [%expect{|
-    1 |}]
+  [%expect{| 1 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t3 (One (Cons(1,2)))" ; "--init-file" ; (good_test "pm_test.mligo") ] ;
-  [%expect{|
-    3 |}]
+  [%expect{| 3 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t3 (Two {a = 1 ; b = 2n ; c = \"tri\"})" ; "--init-file" ; (good_test "pm_test.mligo") ] ;
-  [%expect{|
-    6 |}]
+  [%expect{| 6 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t2_3 (Cons(1,2)) Nil (One(Nil))" ; "--init-file" ; (good_test "pm_test.mligo") ] ;
-  [%expect{|
-    8 |}]
+  [%expect{| 8 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t4 (One(Nil)) (One (Nil))" ; "--init-file" ; (good_test "pm_test.mligo") ] ;
-  [%expect{|
-    1 |}]
+  [%expect{| 1 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t4 (One(Nil)) (Two {a=1;b=2n;c=\"tri\"})" ; "--init-file" ; (good_test "pm_test.mligo") ] ;
-  [%expect{|
-    2 |}]
+  [%expect{| 2 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t4 (One(Cons(1,2))) (Two {a=1;b=2n;c=\"tri\"})" ; "--init-file" ; (good_test "pm_test.mligo") ] ;
-  [%expect{|
-    3 |}]
+  [%expect{| 3 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t4 (Two {a=0;b=0n;c=\"\"}) (Two {a=1;b=2n;c=\"tri\"})" ; "--init-file" ; (good_test "pm_test.mligo") ] ;
-  [%expect{|
-    4 |}]
+  [%expect{| 4 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t5 1" ; "--init-file" ; (good_test "pm_test.mligo") ] ;
-  [%expect{|
-    1 |}]
+  [%expect{| 1 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t6 42" ; "--init-file" ; (good_test "pm_test.mligo") ] ;
-  [%expect{|
-    2 |}]
+  [%expect{| 2 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t7 (Some 10)" ; "--init-file" ; (good_test "pm_test.mligo") ] ;
-  [%expect{|
-    10 |}]
+  [%expect{| 10 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t7 (None: int option)" ; "--init-file" ; (good_test "pm_test.mligo") ] ;
-  [%expect{|
-    1 |}]
+  [%expect{| 1 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t8 (Some (1,2)) 2" ; "--init-file" ; (good_test "pm_test.mligo") ] ;
-  [%expect{|
-    3 |}]
+  [%expect{| 3 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t8 (None:(int * int) option) 2" ; "--init-file" ; (good_test "pm_test.mligo") ] ;
-  [%expect{|
-    2 |}]
+  [%expect{| 2 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t9 (None:int option) (None:int option)" ; "--init-file" ; (good_test "pm_test.mligo") ] ;
-  [%expect{|
-    1 |}]
+  [%expect{| 1 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t9 (None:int option) (Some 1)" ; "--init-file" ; (good_test "pm_test.mligo") ] ;
-  [%expect{|
-    1 |}]
+  [%expect{| 1 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t9 (Some 1) (None:int option)" ; "--init-file" ; (good_test "pm_test.mligo") ] ;
-  [%expect{|
-    2 |}]
+  [%expect{| 2 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t9 (Some 1) (Some 2)" ; "--init-file" ; (good_test "pm_test.mligo") ] ;
-  [%expect{|
-    3 |}]
+  [%expect{| 3 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t10 (Consi(None:int option)) (Consi(Some 100))" ; "--init-file" ; (good_test "pm_test.mligo") ] ;
-  [%expect{|
-    1 |}]
+  [%expect{| 1 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t11 (Consi(None:int option)) (Consi(Some 100))" ; "--init-file" ; (good_test "pm_test.mligo") ] ;
-  [%expect{|
-    4 |}]
+  [%expect{| 4 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t12 ([]: int list)" ; "--init-file" ; (good_test "pm_test.mligo") ] ;
@@ -338,53 +296,43 @@ let%expect_test _ =
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t12 [1]" ; "--init-file" ; (good_test "pm_test.mligo") ] ;
-  [%expect{|
-    1 |}]
+  [%expect{| 1 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t12 [1;2]" ; "--init-file" ; (good_test "pm_test.mligo") ] ;
-  [%expect{|
-    3 |}]
+  [%expect{| 3 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t12 [1;2;3]" ; "--init-file" ; (good_test "pm_test.mligo") ] ;
-  [%expect{|
-    6 |}]
+  [%expect{| 6 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t12 [1;2;3;4]" ; "--init-file" ; (good_test "pm_test.mligo") ] ;
-  [%expect{|
-    -1 |}]
+  [%expect{| -1 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t13 none_a some_a" ; "--init-file" ; (good_test "pm_test.mligo") ] ;
-  [%expect{|
-    -1 |}]
+  [%expect{| -1 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t13 some_a a_empty_b_not" ; "--init-file" ; (good_test "pm_test.mligo") ] ;
-  [%expect{|
-    111 |}]
+  [%expect{| 111 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t13 some_a b_empty_a_not" ; "--init-file" ; (good_test "pm_test.mligo") ] ;
-  [%expect{|
-    222 |}]
+  [%expect{| 222 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t13 some_a some_a" ; "--init-file" ; (good_test "pm_test.mligo") ] ;
-  [%expect{|
-    4 |}]
+  [%expect{| 4 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "nested_record_pm { a = 1 ; b = E }" ; "--init-file" ; (good_test "pm_test.mligo") ] ;
-  [%expect{|
-    5 |}]
+  [%expect{| 5 |}]
 
 let%expect_test _ =
   run_ligo_good [ "info" ; "measure-contract" ; (good_test "nested_record_sum.mligo") ] ;
-  [%expect{|
-    142 bytes |}]
+  [%expect{| 142 bytes |}]
 
 let%expect_test _ =
   run_ligo_good [ "info" ; "measure-contract" ; (good_test "edge_case_I.mligo") ] ;
@@ -474,42 +422,37 @@ type myr = record[a -> int , b -> nat , c -> string]
 type myd =
   sum[One -> sum[Cons -> ( int * int ) , Nil -> unit] , Two -> record[a -> int , b -> nat , c -> string]]
 const t1 =
-  lambda (x : ( sum[Cons -> ( int * int ) , Nil -> unit] * sum[Cons -> ( int * int ) , Nil -> unit] )) return let fr = lambda (_x :
-  sum[Cons -> ( int * int ) , Nil -> unit]) return 1 in let fl = lambda (_x :
-  sum[Cons -> ( int * int ) , Nil -> unit]) return 2 in  match x with
-                                                          | ( tuple_proj#16 , ys ) ->
-                                                           match tuple_proj#16 with
-                                                            | Cons ctor_proj#29 ->
-                                                               match
-                                                                ys with
-                                                                | Cons ctor_proj#27 ->
-                                                                   match
-                                                                    ctor_proj#29 with
-                                                                    |
-                                                                    ( a , b ) ->
-                                                                     match
-                                                                    ctor_proj#27 with
-                                                                    | ( c , d ) ->
-                                                                    ADD(ADD(ADD(a ,
-                                                                    b) , c) ,
-                                                                    d)
-                                                                | Nil unit_proj#26 ->
-                                                                  (fl)@(tuple_proj#16)
-                                                            | Nil unit_proj#28 ->
-                                                              (fr)@(ys)
+  lambda (x : ( sum[Cons -> ( int * int ) , Nil -> unit] * sum[Cons -> ( int * int ) , Nil -> unit] )) return let fr :
+  sum[Cons -> ( int * int ) , Nil -> unit] -> int = lambda (_x : sum[Cons -> ( int * int ) , Nil -> unit]) return 1 in let fl :
+  sum[Cons -> ( int * int ) , Nil -> unit] -> int = lambda (_x : sum[Cons -> ( int * int ) , Nil -> unit]) return 2 in
+   match x with
+    | ( tuple_proj#16 , ys ) ->
+     match tuple_proj#16 with
+      | Cons ctor_proj#29 ->
+         match ys with
+          | Cons ctor_proj#27 ->
+             match ctor_proj#29 with
+              | ( a , b ) ->
+               match ctor_proj#27 with
+                | ( c , d ) ->
+                ADD(ADD(ADD(a , b) , c) , d)
+          | Nil unit_proj#26 ->
+            (fl)@(tuple_proj#16)
+      | Nil unit_proj#28 ->
+        (fr)@(ys)
 const t2 =
   lambda (x : sum[Cons -> ( int * int ) , Nil -> unit]) return lambda (y :
   sum[Cons -> ( int * int ) , Nil -> unit]) return  match x with
                                                      | Cons ctor_proj#35 ->
                                                         match ctor_proj#35 with
                                                          | ( a , b ) ->
-                                                         let old_b = b in let b =
+                                                         let old_b : int = b in let b : int =
                                                           match y with
                                                            | Cons ctor_proj#34 ->
                                                              ADD(a ,
                                                              b)
                                                            | Nil unit_proj#33 ->
-                                                             let f = lambda (b : int) return ADD(a ,
+                                                             let f : int -> int = lambda (b : int) return ADD(a ,
                                                              b) in (f)@(ADD(b ,
                                                              1)) in ADD(ADD(a ,
                                                          old_b) , b)
@@ -518,7 +461,7 @@ const t2 =
                                                          | Cons ctor_proj#30 ->
                                                             match ctor_proj#30 with
                                                              | ( _a , b ) ->
-                                                             let a = "a" in ADD((int@{nat})@((String.length)@(a)) ,
+                                                             let a : string = "a" in ADD((int@{nat})@((String.length)@(a)) ,
                                                              b)
                                                          | Nil unit_proj#32 ->
                                                            1
@@ -543,51 +486,52 @@ const t3 =
         ADD(ADD(a , (int@{nat})@(b)) , (int@{nat})@((String.length)@(c)))
 const t2_3 =
   lambda (x : sum[Cons -> ( int * int ) , Nil -> unit]) return lambda (y :
-  sum[Cons -> ( int * int ) , Nil -> unit]) return lambda (x2 : sum[One -> sum[Cons -> ( int * int ) , Nil -> unit] , Two -> record[a -> int , b -> nat , c -> string]]) return let t2 =
+  sum[Cons -> ( int * int ) , Nil -> unit]) return lambda (x2 : sum[One -> sum[Cons -> ( int * int ) , Nil -> unit] , Two -> record[a -> int , b -> nat , c -> string]]) return let t2 : int =
    match x with
     | Cons ctor_proj#52 ->
        match ctor_proj#52 with
         | ( a , b ) ->
-        let old_b = b in let b =  match y with
-                                   | Cons ctor_proj#49 ->
-                                      match ctor_proj#49 with
-                                       | ( a , b ) ->
-                                       ADD(a , b)
-                                   | Nil unit_proj#51 ->
-                                     let f = lambda (b : int) return ADD(a ,
-                                     b) in (f)@(ADD(b ,
-                                     1)) in ADD(ADD(a ,
+        let old_b : int = b in let b : int =  match y with
+                                               | Cons ctor_proj#49 ->
+                                                  match ctor_proj#49 with
+                                                   | ( a , b ) ->
+                                                   ADD(a , b)
+                                               | Nil unit_proj#51 ->
+                                                 let f : int -> int = lambda (b : int) return ADD(a ,
+                                                 b) in (f)@(ADD(b ,
+                                                 1)) in ADD(ADD(a ,
         old_b) , b)
     | Nil unit_proj#54 ->
        match y with
         | Cons ctor_proj#46 ->
            match ctor_proj#46 with
             | ( _a , b ) ->
-            let a = "a" in ADD((int@{nat})@((String.length)@(a)) , b)
+            let a : string = "a" in ADD((int@{nat})@((String.length)@(a)) ,
+            b)
         | Nil unit_proj#48 ->
-          1 in let t3 =  match x2 with
-                          | One ctor_proj#58 ->
-                             match ctor_proj#58 with
-                              | Cons ctor_proj#60 ->
-                                 match ctor_proj#58 with
-                                  | Cons ctor_proj#55 ->
-                                     match ctor_proj#55 with
-                                      | ( a , b ) ->
-                                      ADD(a , b)
-                                  | Nil unit_proj#57 ->
-                                    2
-                              | Nil unit_proj#59 ->
-                                1
-                          | Two ctor_proj#61 ->
-                             match ctor_proj#61 with
-                              | record[a -> a , b -> b , c -> c] ->
-                              ADD(ADD(a , b) ,
-                              (int@{nat})@((String.length)@(c))) in ADD(t2 ,
+          1 in let t3 : int =  match x2 with
+                                | One ctor_proj#58 ->
+                                   match ctor_proj#58 with
+                                    | Cons ctor_proj#60 ->
+                                       match ctor_proj#58 with
+                                        | Cons ctor_proj#55 ->
+                                           match ctor_proj#55 with
+                                            | ( a , b ) ->
+                                            ADD(a , b)
+                                        | Nil unit_proj#57 ->
+                                          2
+                                    | Nil unit_proj#59 ->
+                                      1
+                                | Two ctor_proj#61 ->
+                                   match ctor_proj#61 with
+                                    | record[a -> a , b -> b , c -> c] ->
+                                    ADD(ADD(a , b) ,
+                                    (int@{nat})@((String.length)@(c))) in ADD(t2 ,
   t3)
 const t4 =
   lambda (x : sum[One -> sum[Cons -> ( int * int ) , Nil -> unit] , Two -> record[a -> int , b -> nat , c -> string]]) return lambda (y :
-  sum[One -> sum[Cons -> ( int * int ) , Nil -> unit] , Two -> record[a -> int , b -> nat , c -> string]]) return let gen#63[@var] =
-  ( x , y ) in  match gen#63 with
+  sum[One -> sum[Cons -> ( int * int ) , Nil -> unit] , Two -> record[a -> int , b -> nat , c -> string]]) return let match_#63[@var] =
+  ( x , y ) in  match match_#63 with
                  | ( a , tuple_proj#64 ) ->
                   match tuple_proj#64 with
                    | Two ctor_proj#78 ->
@@ -611,21 +555,23 @@ const t4 =
                    | One _x ->
                      1
 const t5 =
-  lambda (x : int) return let gen#79[@var] = ( x , unit ) in  match gen#79 with
-                                                               | ( a , tuple_proj#80 ) ->
-                                                               a
+  lambda (x : int) return let match_#79[@var] = ( x , unit ) in  match
+                                                                  match_#79 with
+                                                                  | ( a , tuple_proj#80 ) ->
+                                                                  a
 const t6 =
-  lambda (x : int) return let gen#82[@var] = ( x , unit ) in  match gen#82 with
-                                                               | ( gen#4 , gen#5 ) ->
-                                                               2
+  lambda (x : int) return let match_#82[@var] = ( x , unit ) in  match
+                                                                  match_#82 with
+                                                                  | ( gen#4 , gen#5 ) ->
+                                                                  2
 const t7 =
   lambda (x : option (int)) return  match x with
                                      | Some x ->
                                        x | None unit_proj#84 ->
                                            1
 const t8 =
-  lambda (x : option (( int * int ))) return lambda (y : int) return let gen#85[@var] =
-  ( x , y ) in  match gen#85 with
+  lambda (x : option (( int * int ))) return lambda (y : int) return let match_#85[@var] =
+  ( x , y ) in  match match_#85 with
                  | ( tuple_proj#86 , x ) ->
                   match tuple_proj#86 with
                    | Some ctor_proj#89 ->
@@ -635,8 +581,8 @@ const t8 =
                    | None unit_proj#91 ->
                      x
 const t9 =
-  lambda (x : option (int)) return lambda (y : option (int)) return let gen#92[@var] =
-  ( x , y ) in  match gen#92 with
+  lambda (x : option (int)) return lambda (y : option (int)) return let match_#92[@var] =
+  ( x , y ) in  match match_#92 with
                  | ( tuple_proj#93 , ys ) ->
                   match tuple_proj#93 with
                    | Some ctor_proj#102 ->
@@ -654,8 +600,8 @@ const fl = lambda (_x : sum[Consi -> option (int) , Nili -> unit]) return 1
 const fo = lambda (_x : option (int)) return 2
 const t10 =
   lambda (x : sum[Consi -> option (int) , Nili -> unit]) return lambda (y :
-  sum[Consi -> option (int) , Nili -> unit]) return let gen#103[@var] =
-  ( x , y ) in  match gen#103 with
+  sum[Consi -> option (int) , Nili -> unit]) return let match_#103[@var] =
+  ( x , y ) in  match match_#103 with
                  | ( tuple_proj#104 , ys ) ->
                   match tuple_proj#104 with
                    | Consi ctor_proj#120 ->
@@ -676,15 +622,15 @@ const t10 =
                                      ADD((fo)@(ctor_proj#120) ,
                                      (fo)@(ctor_proj#118))
                                    | Some _b ->
-                                     let b = 1 in b
+                                     let b : int = 1 in b
                        | Nili unit_proj#117 ->
                          (fl)@(tuple_proj#104)
                    | Nili unit_proj#119 ->
                      (fl)@(ys)
 const t11 =
   lambda (x : sum[Consi -> option (int) , Nili -> unit]) return lambda (y :
-  sum[Consi -> option (int) , Nili -> unit]) return let gen#122[@var] =
-  ( x , y ) in  match gen#122 with
+  sum[Consi -> option (int) , Nili -> unit]) return let match_#122[@var] =
+  ( x , y ) in  match match_#122 with
                  | ( tuple_proj#123 , ys ) ->
                   match tuple_proj#123 with
                    | Consi ctor_proj#138 ->
@@ -717,7 +663,7 @@ const t11 =
                                          ADD((fo)@(ctor_proj#138) ,
                                          (fo)@(ctor_proj#136))
                                    | Some b ->
-                                     let a = 1 in ADD(a ,
+                                     let a : int = 1 in ADD(a ,
                                      b)
                        | Nili unit_proj#135 ->
                          (fl)@(tuple_proj#123)
@@ -760,8 +706,8 @@ const b_empty_a_not =
   record[a -> Some(CONS(222 , LIST_EMPTY())) , b -> LIST_EMPTY()]
 const t13 =
   lambda (x : record[a -> option (list (int)) , b -> list (int)]) return lambda (y :
-  record[a -> option (list (int)) , b -> list (int)]) return let gen#157[@var] =
-  ( x , y ) in  match gen#157 with
+  record[a -> option (list (int)) , b -> list (int)]) return let match_#157[@var] =
+  ( x , y ) in  match match_#157 with
                  | ( tuple_proj#158 , tuple_proj#159 ) ->
                   match tuple_proj#158 with
                    | record[a -> record_proj#164 , b -> gen#7] ->

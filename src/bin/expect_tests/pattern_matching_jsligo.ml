@@ -22,7 +22,7 @@ let%expect_test _ =
       3 |     Success: () => "",
       4 |     Fail: (_ : test_exec_error) => ""
 
-    Variant pattern argument is expected of type nat but is of type unit. |}]
+    Pattern not of the expected type nat |}]
 
 let%expect_test _ =
   run_ligo_bad [ "print" ; "ast-typed" ; (bad_test "pattern_match5.jsligo") ; "--test" ] ;

@@ -330,23 +330,50 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_bad [ "print" ; "ast-typed" ; (test "constants.mligo") ] ;
   [%expect{|
-    File "./constants.mligo", line 5, characters 8-13:
-      4 |
-      5 | let m = merge (Map.empty : (int, string) foo)
-
-    These types are not matching:
-     - string
-     - int |}]
+    Invalid type(s)
+    Cannot unify string with int. |}]
 
 let%expect_test _ =
   run_ligo_bad [ "compile" ; "expression" ; "cameligo" ; "f" ; "--init-file" ; (test "cases_annotation.mligo") ] ;
-  [%expect{|
-    File "./cases_annotation.mligo", line 4, characters 20-22:
-      3 | let f (b : bool) (str : string) =
-      4 |   let k = if b then k1 else k2 in
-      5 |   k str (40 + 2)
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
 
-    Can't infer the type of this value, please add a type annotation. |}]
+  (Cli_expect_tests.Cli_expect.Should_exit_bad)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_bad in file "src/bin/expect_tests/cli_expect.ml", line 37, characters 7-28
+  Called from Cli_expect_tests__Polymorphism.(fun) in file "src/bin/expect_tests/polymorphism.ml", line 337, characters 2-112
+  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
+
+  Trailing output
+  ---------------
+  { LAMBDA
+      (pair bool string)
+      string
+      { UNPAIR ;
+        SWAP ;
+        PUSH int 2 ;
+        PUSH int 40 ;
+        ADD ;
+        SWAP ;
+        DIG 2 ;
+        IF { LAMBDA
+               string
+               (lambda int string)
+               { LAMBDA (pair string int) string { CAR } ; DUP 2 ; APPLY ; SWAP ; DROP } }
+           { LAMBDA
+               string
+               (lambda int string)
+               { LAMBDA (pair string int) string { CAR } ; DUP 2 ; APPLY ; SWAP ; DROP } } ;
+        SWAP ;
+        EXEC ;
+        SWAP ;
+        EXEC } ;
+    DUP 2 ;
+    APPLY ;
+    SWAP ;
+    DROP } |}]
 
 let%expect_test _ =
   run_ligo_bad [ "compile" ; "expression" ; "cameligo" ; "bar 0" ; "--init-file" ; (test "use_error.mligo") ] ;
@@ -357,43 +384,40 @@ let%expect_test _ =
 
 let%expect_test _ =
   run_ligo_bad [ "compile" ; "contract" ; (test "unresolved/contract.mligo") ] ;
-  [%expect{|
-    File "./unresolved/contract.mligo", line 6, characters 29-31:
-      5 |     let b                = List.length ys in
-      6 |     [], (a + b + List.length [])
-
-    Can't infer the type of this value, please add a type annotation. |}]
+  [%expect{xxx|
+    Underspecified type ^gen#240.
+    Please add additional annotations. |xxx}]
 
 let%expect_test _ =
   run_ligo_bad [ "compile" ; "contract" ; (test "unresolved/contract2.mligo") ] ;
-  [%expect{|
+  [%expect{xxx|
     File "./unresolved/contract2.mligo", line 4, characters 13-15:
       3 | let main (_, _ : int list * nat) : (operation list * nat) =
       4 |     [], (one [])
 
-    Can't infer the type of this value, please add a type annotation. |}]
+    Underspecified type ^gen#238.
+    Please add additional annotations. |xxx}]
 
 let%expect_test _ =
   run_ligo_bad [ "compile" ; "storage" ; (test "unresolved/storage.mligo") ; "s" ] ;
-  [%expect{|
-    File "./unresolved/storage.mligo", line 1, characters 20-22:
-      1 | let s = List.length []
-      2 |
-
-    Can't infer the type of this value, please add a type annotation. |}]
+  [%expect{xxx|
+    Underspecified type ^gen#235.
+    Please add additional annotations. |xxx}]
 
 let%expect_test _ =
   run_ligo_bad [ "compile" ; "parameter" ; (test "unresolved/parameter.mligo") ; "p" ] ;
-  [%expect{|
+  [%expect{xxx|
     File "./unresolved/parameter.mligo", line 1, characters 8-10:
       1 | let p = []
       2 |
 
-    Can't infer the type of this value, please add a type annotation. |}]
+    Underspecified type ^gen#235.
+    Please add additional annotations. |xxx}]
 
 let%expect_test _ =
   run_ligo_bad [ "compile" ; "expression" ; "cameligo" ; "[]" ] ;
   [%expect{|
-    Can't infer the type of this value, please add a type annotation. |}]
+    Underspecified type ^gen#2.
+    Please add additional annotations. |}]
 
 let () = Sys.chdir pwd

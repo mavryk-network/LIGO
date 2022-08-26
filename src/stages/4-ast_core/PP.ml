@@ -144,3 +144,5 @@ and expression_content ppf (ec : expression_content) =
   | E_assign a -> assign expression type_expression ppf a
 
 let module_ ppf (p : module_) = declarations expression type_expression e_attributes t_attributes m_attributes ppf p
+
+let declaration ppf (decl : declaration) = declaration expression type_expression e_attributes t_attributes m_attributes ppf decl

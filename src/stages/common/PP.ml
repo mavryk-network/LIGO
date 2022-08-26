@@ -54,7 +54,10 @@ let label ppf (l:label) : unit =
 let expression_variable ppf (t : expression_variable) : unit = fprintf ppf "%a" ValueVar.pp t
 let type_variable       ppf (t : type_variable)       : unit = fprintf ppf "%a" TypeVar.pp t
 let module_variable     ppf (t : module_variable)     : unit = fprintf ppf "%a" ModuleVar.pp t
-let kind_               ppf (_ : kind)                : unit = fprintf ppf "*"
+let rec kind_ ppf (kind : kind) : unit = 
+  match kind with
+  | Type | Singleton -> fprintf ppf "*"
+  | Arrow (kind1, kind2) -> fprintf ppf "%a -> %a" kind_ kind1 kind_ kind2
 
 and access f ppf a =
   match a with
