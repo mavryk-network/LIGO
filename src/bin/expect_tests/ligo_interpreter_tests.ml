@@ -272,13 +272,13 @@ let%expect_test _ =
 
   (Cli_expect_tests.Cli_expect.Should_exit_good)
   Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 31, characters 7-29
-  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 283, characters 2-66
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 266, characters 2-66
   Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
 
   Trailing output
   ---------------
   An internal error ocurred. Please, contact the developers.
-  unbound variable: sub#1376. |}]
+  unbound variable: _sub#1376. |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "test" ; test "iteration.jsligo" ] ;
@@ -791,7 +791,7 @@ let%expect_test _ =
   run_ligo_bad [ "run" ; "test" ; bad_test "test_mutation_loop.mligo" ; "--steps" ; "1000" ] ;
   [%expect {|
     An internal error ocurred. Please, contact the developers.
-    unbound variable: sub#1328. |}]
+    unbound variable: _sub#1328. |}]
 
 let%expect_test _ =
   run_ligo_bad [ "run" ; "test" ; bad_test "test_source1.mligo" ] ;
