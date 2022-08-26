@@ -1,0 +1,7 @@
+author: alistair.obrien
+description: '### Here replace this sentence and put what you want to share with ligo
+  users through changelog. Markdown formatted (### for title). If you don''t want
+  to describe the feature remove keyword \"Description details:\"'
+merge_request: '1905'
+title: 'Draft: Bidirectional type checking for LIGO'
+type: internal
