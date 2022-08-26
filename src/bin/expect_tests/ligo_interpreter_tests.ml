@@ -264,21 +264,11 @@ let%expect_test _ =
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "test" ; test "test_no_mutation.mligo" ] ;
-  [%expect.unreachable]
-[@@expect.uncaught_exn {|
-  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
-     This is strongly discouraged as backtraces are fragile.
-     Please change this test to not include a backtrace. *)
-
-  (Cli_expect_tests.Cli_expect.Should_exit_good)
-  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 31, characters 7-29
-  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 266, characters 2-66
-  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
-
-  Trailing output
-  ---------------
-  An internal error ocurred. Please, contact the developers.
-  unbound variable: _sub#1376. |}]
+  [%expect{|
+    Everything at the top-level was executed.
+    - test exited with value ().
+    - test_mutation exited with value ().
+    - test_mutation_all exited with value (). |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "test" ; test "iteration.jsligo" ] ;
@@ -790,8 +780,26 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_bad [ "run" ; "test" ; bad_test "test_mutation_loop.mligo" ; "--steps" ; "1000" ] ;
   [%expect {|
-    An internal error ocurred. Please, contact the developers.
-    unbound variable: _sub#1328. |}]
+    File "../../test/contracts/negative//interpreter_tests/test_mutation_loop.mligo", line 17, character 28 to line 18, character 83:
+     16 |     | None -> ()
+     17 |     | Some (_, mutation) -> let () = Test.log(mutation) in
+     18 |                                     failwith "Some mutation also passes the tests!"
+
+    You are using Michelson failwith primitive (loaded from standard library).
+    Consider using `Test.failwith` for throwing a testing framework failure.
+
+    File "../../test/contracts/negative//interpreter_tests/test_mutation_loop.mligo", line 17, character 28 to line 18, character 83:
+     16 |     | None -> ()
+     17 |     | Some (_, mutation) -> let () = Test.log(mutation) in
+     18 |                                     failwith "Some mutation also passes the tests!"
+
+    "Some mutation also passes the tests!"
+    Mutation at: File "../../test/contracts/negative//interpreter_tests/test_mutation_loop.mligo", line 3, characters 29-30:
+      2 |     if rounds > 0 then
+      3 |         my_rec_fun (rounds - 1)
+      4 |     else
+
+    Replacing by: 2. |}]
 
 let%expect_test _ =
   run_ligo_bad [ "run" ; "test" ; bad_test "test_source1.mligo" ] ;
