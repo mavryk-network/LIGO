@@ -636,10 +636,9 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t) ?source_fil
     | ( C_TEST_FAILWITH , [ v ]) -> fail @@ Errors.meta_lang_failwith loc calltrace v
     | ( C_TEST_FAILWITH , _ ) -> fail @@ error_type
     | ( C_TEST_TRY_WITH , [ V_Func_val { arg_binder = try_binder ; body = try_body ; env = try_env ; rec_name = _ ; orig_lambda = try_lambda } ; V_Func_val { arg_binder = catch_binder ; body = catch_body ; env = catch_env ; rec_name = _ ; orig_lambda = catch_lambda } ]) ->
-      let* unit_value = eval_ligo (AST.e_a_unit ()) calltrace env in
       let eval_branch arg_binder orig_lambda body calltrace env = 
         let AST.{ type1 = in_ty ; type2 = _ } = AST.get_t_arrow_exn orig_lambda.type_expression in
-        let f_env' = Env.extend env arg_binder (in_ty, unit_value) in
+        let f_env' = Env.extend env arg_binder (in_ty, v_unit ()) in
         eval_ligo { body with location = loc } (loc :: calltrace) f_env'
       in
        try_or (eval_branch try_binder try_lambda try_body calltrace try_env)
