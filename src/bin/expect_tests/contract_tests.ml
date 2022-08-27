@@ -36,6 +36,14 @@ let%expect_test _ =
   [%expect{|
     Invalid command line argument.
     The provided storage does not have the correct type for the contract.
+    File "../../test/contracts/coase.ligo", line 122, character 0 to line 127, character 3:
+    121 |
+    122 | function main (const action : parameter; const s : storage) : return is
+    123 |   case action of [
+    124 |     Buy_single (bs)      -> buy_single (bs, s)
+    125 |   | Sell_single (as)     -> sell_single (as, s)
+    126 |   | Transfer_single (at) -> transfer_single (at, s)
+    127 |   ]
 
     Invalid type(s).
     Expected: "storage", but got: "parameter". |}] ;
@@ -44,6 +52,14 @@ let%expect_test _ =
   [%expect{|
     Invalid command line argument.
     The provided parameter does not have the correct type for the given entrypoint.
+    File "../../test/contracts/coase.ligo", line 122, character 0 to line 127, character 3:
+    121 |
+    122 | function main (const action : parameter; const s : storage) : return is
+    123 |   case action of [
+    124 |     Buy_single (bs)      -> buy_single (bs, s)
+    125 |   | Sell_single (as)     -> sell_single (as, s)
+    126 |   | Transfer_single (at) -> transfer_single (at, s)
+    127 |   ]
 
     Invalid type(s).
     Expected: "parameter", but got: "storage". |}] ;
@@ -1260,6 +1276,15 @@ File "../../test/contracts/negative/create_contract_toplevel.mligo", line 3, cha
 Warning: unused variable "action".
 Hint: replace it by "_action" to prevent this warning.
 
+File "../../test/contracts/negative/create_contract_toplevel.mligo", line 4, character 2 to line 10, character 19:
+  3 | let main (action, store : string * string) : return =
+  4 |   let toto : operation * address = Tezos.create_contract
+  5 |     (fun (p, s : nat * string) -> (([] : operation list), store))
+  6 |     (None: key_hash option)
+  7 |     300tz
+  8 |     "un"
+  9 |   in
+ 10 |   ([toto.0], store)
 
 Not all free variables could be inlined in Tezos.create_contract usage: gen#34. |}] ;
 
@@ -1333,6 +1358,15 @@ Not all free variables could be inlined in Tezos.create_contract usage: gen#34. 
     Warning: unused variable "action".
     Hint: replace it by "_action" to prevent this warning.
 
+    File "../../test/contracts/negative/create_contract_modfv.mligo", line 7, character 2 to line 13, character 19:
+      6 |   end in
+      7 |   let toto : operation * address = Tezos.create_contract
+      8 |     (fun (p, s : nat * string) -> (([] : operation list), Foo.store))
+      9 |     (None: key_hash option)
+     10 |     300tz
+     11 |     "un"
+     12 |   in
+     13 |   ([toto.0], store)
 
     Not all free variables could be inlined in Tezos.create_contract usage: gen#37. |}] ;
 
@@ -1485,7 +1519,12 @@ let%expect_test _ =
     Warning: unused variable "p".
     Hint: replace it by "_p" to prevent this warning.
 
-     Warning: Tezos.self type annotation.
+    File "../../test/contracts/self_type_annotation_warn.ligo", line 8, characters 4-64:
+      7 |   {
+      8 |     const self_contract: contract(int) = Tezos.self ("%default");
+      9 |   }
+
+    Warning: Tezos.self type annotation.
     Annotation "contract (int)" was given, but contract being compiled would expect "contract (nat)".
     Note that "Tezos.self" refers to the current contract, so the parameters should be generally the same.
     { parameter nat ; storage int ; code { CDR ; NIL operation ; PAIR } } |}] ;
@@ -1531,6 +1570,10 @@ File "../../test/contracts/negative/bad_contract2.mligo", line 5, characters 10-
 Warning: unused variable "action".
 Hint: replace it by "_action" to prevent this warning.
 
+File "../../test/contracts/negative/bad_contract2.mligo", line 5, character 0 to line 6, character 19:
+  4 |
+  5 | let main (action, store : parameter * storage) : return =
+  6 |   ("bad",store + 1)
 
 Invalid type for entrypoint "main".
 An entrypoint must of type "parameter * storage -> operation list * storage".
@@ -1554,6 +1597,10 @@ File "../../test/contracts/negative/bad_contract3.mligo", line 5, characters 18-
 Warning: unused variable "store".
 Hint: replace it by "_store" to prevent this warning.
 
+File "../../test/contracts/negative/bad_contract3.mligo", line 5, character 0 to line 6, character 30:
+  4 |
+  5 | let main (action, store : parameter * storage) : return =
+  6 |   (([]: operation list),"bad")
 
 Invalid type for entrypoint "main".
 The storage type "int" of the function parameter must be the same as the storage type "string" of the return value. |}]
@@ -2001,6 +2048,11 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_bad [ "compile" ; "contract" ; bad_contract "compile_test.mligo" ] ;
   [%expect{|
+    File "../../test/contracts/negative/compile_test.mligo", line 21, characters 14-37:
+     20 |   let (taddr, _, _) = Test.originate main  initial_storage 0tez in
+     21 |   let contr = Test.to_contract(taddr) in
+     22 |   let _r = Test.transfer_to_contract_exn contr (Increment (32)) 1tez  in
+
     Underspecified type ^gen#241.
     Please add additional annotations. |}]
 
@@ -2023,6 +2075,9 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_bad [ "compile" ; "expression" ; "cameligo" ; "x" ; "--init-file" ; bad_contract "bad_annotation_unpack.mligo" ] ;
   [%expect {|
+    File "../../test/contracts/negative/bad_annotation_unpack.mligo", line 1, characters 9-42:
+      1 | let x = (Bytes.unpack (Bytes.pack "hello") : string)
+
     Invalid type(s)
     Cannot unify option (^gen#235) with string. |}]
 
@@ -2225,7 +2280,11 @@ let%expect_test _ =
       code { { /* _ */ } ;
              CDR ;
              { /* _ */ } ;
-             LAMBDA unit unit { { /* x#26 */ } } ;
+             LAMBDA
+               unit
+               unit
+               { { /* x#26 */ } }
+             /* File "../../test/contracts/noop.mligo", line 2, characters 9-10 */ ;
              { /* f#25, _ */ } ;
              SWAP ;
              DUP 2 ;
@@ -2448,7 +2507,14 @@ let%expect_test _ =
                       { "prim": "PAIR" } ] ] } ],
           "locations":
             [ {}, {}, {}, {}, {}, {}, {}, { "environment": [ null ] }, {},
-              { "environment": [ { "source_type": "0" } ] }, {}, {}, {}, {},
+              { "environment": [ { "source_type": "0" } ] },
+              { "location":
+                  { "start":
+                      { "file": "../../test/contracts/noop.mligo", "line": "2",
+                        "col": "9" },
+                    "stop":
+                      { "file": "../../test/contracts/noop.mligo", "line": "2",
+                        "col": "10" } } }, {}, {}, {},
               { "environment": [ { "name": "x#26", "source_type": "0" } ] },
               { "environment":
                   [ { "name": "f#25", "source_type": "1" },

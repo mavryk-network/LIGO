@@ -9,6 +9,11 @@ let good_test s = (test "")^"/deep_pattern_matching/"^s
 let%expect_test _ =
   run_ligo_bad [ "print" ; "ast-typed" ; (bad_test "pm_fail17.mligo") ] ;
   [%expect{|
+    File "../../test/contracts/negative//deep_pattern_matching/pm_fail17.mligo", line 15, characters 42-43:
+     14 |     (* testing that subtitution is stoping on resursive definitions *)
+     15 |     let rec a (b : int) : int =let x = fo a in b + 1 in
+     16 |     (a 1) + (fo b)
+
     Invalid type(s)
     Cannot unify int -> int with option (int). |}]
 
@@ -105,12 +110,21 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_bad [ "print" ; "ast-typed" ; (bad_test "pm_fail7.mligo") ] ;
   [%expect{|
+    File "../../test/contracts/negative//deep_pattern_matching/pm_fail7.mligo", line 6, characters 9-10:
+      5 |   | A -> "hey"
+      6 |   | B -> 2
+
     Invalid type(s)
     Cannot unify int with string. |}]
 
 let%expect_test _ =
   run_ligo_bad [ "print" ; "ast-typed" ; (bad_test "pm_fail8.mligo") ] ;
   [%expect{|
+    File "../../test/contracts/negative//deep_pattern_matching/pm_fail8.mligo", line 19, characters 22-31:
+     18 |         f (b+1)
+     19 |       | Cons (a,b) -> "invalid"
+     20 |     in
+
     Invalid type(s)
     Cannot unify string with int. |}]
 

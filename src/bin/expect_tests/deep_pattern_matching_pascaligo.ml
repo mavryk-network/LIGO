@@ -65,12 +65,22 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_bad [ "print" ; "ast-typed" ; (bad_test "pm_fail7.ligo") ] ;
   [%expect{|
+    File "../../test/contracts/negative//deep_pattern_matching/pm_fail7.ligo", line 6, characters 9-10:
+      5 |   | A -> "hey"
+      6 |   | B -> 2
+      7 |   ]
+
     Invalid type(s)
     Cannot unify int with string. |}]
 
 let%expect_test _ =
   run_ligo_bad [ "print" ; "ast-typed" ; (bad_test "pm_fail8.ligo") ] ;
   [%expect{|
+    File "../../test/contracts/negative//deep_pattern_matching/pm_fail8.ligo", line 23, characters 24-33:
+     22 |           } with f (b+1)
+     23 |         | Cons (a,b) -> "invalid"
+     24 |         ] ;
+
     Invalid type(s)
     Cannot unify string with int. |}]
 

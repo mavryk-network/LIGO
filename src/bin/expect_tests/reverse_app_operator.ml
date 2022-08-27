@@ -22,5 +22,9 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_bad [ "compile" ; "contract" ; (bad_test "error_reverse_app_2.mligo")] ;
   [%expect{|
+    File "../../test/contracts/negative/error_reverse_app_2.mligo", line 6, characters 19-29:
+      5 |
+      6 | let typing_error = f 42 |> gg |> h
+
     Invalid type(s)
     Cannot unify int -> int with int. |}]

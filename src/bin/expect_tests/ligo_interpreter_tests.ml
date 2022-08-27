@@ -707,9 +707,16 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_bad ["run";"test" ; bad_test "test_failure1.mligo" ] ;
   [%expect {|
-     You are using Michelson failwith primitive (loaded from standard library).
+    File "../../test/contracts/negative//interpreter_tests/test_failure1.mligo", line 1, character 0 to line 2, character 25:
+      1 | let test : unit =
+      2 |   failwith "I am failing"
+
+    You are using Michelson failwith primitive (loaded from standard library).
     Consider using `Test.failwith` for throwing a testing framework failure.
 
+    File "../../test/contracts/negative//interpreter_tests/test_failure1.mligo", line 1, character 0 to line 2, character 25:
+      1 | let test : unit =
+      2 |   failwith "I am failing"
 
     "I am failing" |}]
 
@@ -734,6 +741,10 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_bad ["run";"test" ; bad_test "test_failure3.mligo" ] ;
   [%expect {|
+    File "../../test/contracts/negative//interpreter_tests/test_failure3.mligo", line 3, characters 17-18:
+      2 |   let f = (fun (_ : (unit * unit)) -> ()) in
+      3 |   Test.originate f () 0tez
+
     Invalid type(s)
     Cannot unify unit with ( list (operation) * unit ). |}]
 
@@ -826,18 +837,31 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_bad [ "run" ; "test" ; bad_test "test_run_types.jsligo" ] ;
   [%expect {|
+    File "../../test/contracts/negative//interpreter_tests/test_run_types.jsligo", line 2, characters 26-44:
+      1 | const foo = (x: {field: int}): {field: int} => {return x};
+      2 | const bar = Test.run(foo, {property: "toto"});
+      3 |
+
     Invalid type(s)
     Cannot unify record[property -> string] with record[field -> int]. |}]
 
 let%expect_test _ =
   run_ligo_bad [ "run" ; "test" ; bad_test "test_run_types2.jsligo" ] ;
   [%expect {|
+    File "../../test/contracts/negative//interpreter_tests/test_run_types2.jsligo", line 2, characters 26-32:
+      1 | const foo = (x:  {b:int}):  {b:int} => {return x};
+      2 | const bar = Test.run(foo, "toto");
+
     Invalid type(s)
     Cannot unify string with record[b -> int]. |}]
 
 let%expect_test _ =
   run_ligo_bad [ "run" ; "test" ; bad_test "test_run_types3.jsligo" ] ;
   [%expect {|
+    File "../../test/contracts/negative//interpreter_tests/test_run_types3.jsligo", line 2, characters 26-41:
+      1 | const foo = (x: int): int => {return x};
+      2 | const bar = Test.run(foo, {field: "toto"});
+
     Invalid type(s)
     Cannot unify record[field -> string] with int. |}]
 
@@ -891,6 +915,15 @@ let () = Sys.chdir pwd
 let%expect_test _ =
   run_ligo_bad [ "run"; "test" ; bad_test "test_michelson_non_func.mligo" ] ;
   [%expect {xxx|
+    File "../../test/contracts/negative//interpreter_tests/test_michelson_non_func.mligo", line 2, character 2 to line 7, character 5:
+      1 | let test =
+      2 |   let x : int = [%Michelson ({|{ PUSH int 1 }|} : int)] in
+      3 |   begin
+      4 |     Test.log x;
+      5 |     assert (x = x);
+      6 |     assert (x = 1)
+      7 |   end
+
     Embedded raw code can only have a functional type |xxx}]
 
 let%expect_test _ =

@@ -330,6 +330,10 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_bad [ "print" ; "ast-typed" ; (test "constants.mligo") ] ;
   [%expect{|
+    File "./constants.mligo", line 5, characters 14-45:
+      4 |
+      5 | let m = merge (Map.empty : (int, string) foo)
+
     Invalid type(s)
     Cannot unify string with int. |}]
 
@@ -343,7 +347,7 @@ let%expect_test _ =
 
   (Cli_expect_tests.Cli_expect.Should_exit_bad)
   Raised at Cli_expect_tests__Cli_expect.run_ligo_bad in file "src/bin/expect_tests/cli_expect.ml", line 37, characters 7-28
-  Called from Cli_expect_tests__Polymorphism.(fun) in file "src/bin/expect_tests/polymorphism.ml", line 337, characters 2-112
+  Called from Cli_expect_tests__Polymorphism.(fun) in file "src/bin/expect_tests/polymorphism.ml", line 341, characters 2-112
   Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
 
   Trailing output
@@ -385,6 +389,10 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_bad [ "compile" ; "contract" ; (test "unresolved/contract.mligo") ] ;
   [%expect{xxx|
+    File "./unresolved/contract.mligo", line 6, characters 17-31:
+      5 |     let b                = List.length ys in
+      6 |     [], (a + b + List.length [])
+
     Underspecified type ^gen#240.
     Please add additional annotations. |xxx}]
 
@@ -401,6 +409,10 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_bad [ "compile" ; "storage" ; (test "unresolved/storage.mligo") ; "s" ] ;
   [%expect{xxx|
+    File "./unresolved/storage.mligo", line 1, characters 8-22:
+      1 | let s = List.length []
+      2 |
+
     Underspecified type ^gen#235.
     Please add additional annotations. |xxx}]
 
