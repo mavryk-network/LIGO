@@ -40,14 +40,13 @@ module Mode = struct
 end
 
 let t_subst t ~tvar ~type_ = Ast_typed.Helpers.subst_no_capture_type tvar type_ t
-let t_subst_var ?loc t ~tvar ~tvar' = t_subst t ~tvar ~type_:(t_variable ?loc tvar' ())
-let t_exists ?loc (evar : Exists_var.t) = t_variable ?loc (evar :> type_variable) ()
+let t_subst_var ~loc t ~tvar ~tvar' = t_subst t ~tvar ~type_:(t_variable ~loc tvar' ())
+let t_exists ~loc (evar : Exists_var.t) = t_variable ~loc (evar :> type_variable) ()
 
-let rec lift ~raise ~ctx ~(mode : Mode.t) ~kind ~evar (type_ : type_expression)
+let rec lift ~raise ~loc ~ctx ~(mode : Mode.t) ~kind ~evar (type_ : type_expression)
   : Context.t * type_expression
   =
-  let loc = type_.location in
-  let self ?(ctx = ctx) ~mode = lift ~raise ~ctx ~mode ~kind ~evar in
+  let self ?(ctx = ctx) ~mode = lift ~raise ~loc ~ctx ~mode ~kind ~evar in
   let return content = { type_ with type_content = content } in
   match type_.type_content with
   | T_variable tvar' ->
@@ -76,7 +75,7 @@ let rec lift ~raise ~ctx ~(mode : Mode.t) ~kind ~evar (type_ : type_expression)
            Context.(
              ctx1 |:: C_exists_var (evar', kind') |:: C_exists_var (evar, kind) |@ ctx2)
          ~mode:Contravariant
-         (t_subst ~tvar:tvar' ~type_:(t_exists evar') type_)
+         (t_subst ~tvar:tvar' ~type_:(t_exists ~loc evar') type_)
      | Covariant ->
        let ctx, pos = Context.mark ctx in
        let ctx, type_ =
@@ -91,7 +90,7 @@ let rec lift ~raise ~ctx ~(mode : Mode.t) ~kind ~evar (type_ : type_expression)
        ( Context.drop_until ctx ~pos
        , return @@ T_for_all { ty_binder = tvar'; kind = kind'; type_ } ))
   | T_abstraction { ty_binder = tvar'; kind; type_ } ->
-    let tvar'' = TypeVar.fresh () in
+    let tvar'' = TypeVar.fresh ~loc () in
     let type_ = t_subst_var ~loc type_ ~tvar:tvar' ~tvar':tvar'' in
     let ctx, pos = Context.mark ctx in
     let ctx, type_ = self ~ctx:Context.(ctx |:: C_type_var (tvar'', kind)) ~mode type_ in
@@ -220,14 +219,14 @@ let rec unify
   =
   let unify = unify ~loc in
   let self ?(ctx = ctx) type1 type2 = unify ~raise ~ctx type1 type2 in
-  let fail () = raise.error (cannot_unify type1.location type1 type2) in
+  let fail () = raise.error (cannot_unify loc type1 type2) in
   let unify_evar evar type_ =
     occurs_check ~raise ~loc ~evar type_;
     let kind =
       Context.get_exists_var ctx evar
       |> trace_option ~raise (unbound_exists_variable (Exists_var.loc evar) evar)
     in
-    let ctx, type_ = lift ~raise ~ctx ~mode:Invariant ~evar ~kind type_ in
+    let ctx, type_ = lift ~raise ~loc ~ctx ~mode:Invariant ~evar ~kind type_ in
     if not
          (match Well_formed.type_expr ~ctx type_ with
           | Some kind' -> equal_kind kind kind'
@@ -271,9 +270,9 @@ let rec unify
   | ( T_abstraction { ty_binder = tvar1; kind = kind1; type_ = type1 }
     , T_abstraction { ty_binder = tvar2; kind = kind2; type_ = type2 } )
     when equal_kind kind1 kind2 ->
-    let tvar = TypeVar.fresh_like tvar1 in
-    let type1 = t_subst_var ~tvar:tvar1 ~tvar':tvar type1 in
-    let type2 = t_subst_var ~tvar:tvar2 ~tvar':tvar type2 in
+    let tvar = TypeVar.fresh_like ~loc tvar1 in
+    let type1 = t_subst_var ~loc ~tvar:tvar1 ~tvar':tvar type1 in
+    let type2 = t_subst_var ~loc ~tvar:tvar2 ~tvar':tvar type2 in
     let ctx, pos = Context.mark ctx in
     self ~ctx:Context.(ctx |:: C_type_var (tvar, kind1)) type1 type2
     |> Context.drop_until ~pos
@@ -300,9 +299,9 @@ let rec subtype ~raise ~loc ~ctx ~(recieved : type_expression) ~(expected : type
   let subtype_evar ~mode evar type_ =
     let kind =
       Context.get_exists_var ctx evar
-      |> trace_option ~raise (unbound_exists_variable (Exists_var.loc evar) evar)
+      |> trace_option ~raise (unbound_exists_variable loc evar)
     in
-    let ctx, type_ = lift ~raise ~ctx ~mode ~evar ~kind type_ in
+    let ctx, type_ = lift ~raise ~loc ~ctx ~mode ~evar ~kind type_ in
     occurs_check ~raise ~loc ~evar type_;
     Context.add_exists_eq ctx evar kind type_, fun x -> x
   in
@@ -342,7 +341,7 @@ let rec subtype ~raise ~loc ~ctx ~(recieved : type_expression) ~(expected : type
       self
         ~ctx:Context.(ctx |:: C_type_var (tvar', kind))
         recieved
-        (t_subst_var type_ ~tvar ~tvar')
+        (t_subst_var ~loc type_ ~tvar ~tvar')
     in
     ( Context.drop_until ctx ~pos
     , fun hole -> e_type_abstraction { type_binder = tvar'; result = f hole } expected )

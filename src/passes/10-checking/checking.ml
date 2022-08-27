@@ -48,12 +48,12 @@ let warn_ambiguous_constructor ~raise loc (var_chosen, c_arg_t) ignored =
 
 let t_subst t ~tvar ~type_ = O.Helpers.subst_no_capture_type tvar type_ t
 
-let t_exists (evar : Exists_var.t) =
-  t_variable ~loc:(Exists_var.loc evar) (evar :> O.type_variable) ()
+let t_exists ~loc (evar : Exists_var.t) =
+  t_variable ~loc (evar :> O.type_variable) ()
 
 
-let t_subst_var t ~tvar ~tvar' = t_subst t ~tvar ~type_:(t_variable tvar' ())
-let t_subst_evar t ~tvar ~evar = t_subst t ~tvar ~type_:(t_exists evar)
+let t_subst_var ~loc t ~tvar ~tvar' = t_subst t ~tvar ~type_:(t_variable ~loc tvar' ())
+let t_subst_evar ~loc t ~tvar ~evar = t_subst t ~tvar ~type_:(t_exists ~loc evar)
 
 let get_signature ~raise ~loc ctx ((local_module, path) : O.module_variable List.Ne.t) =
   let try_ ~f t mvar =
@@ -175,22 +175,22 @@ let infer_literal ~loc lit : O.type_expression * (O.expression, _, _) Elaboratio
   let open Elaboration.Let_syntax in
   let return type_ = type_, return @@ O.make_e ~location:loc (E_literal lit) type_ in
   match lit with
-  | Literal_unit -> return @@ t_unit ()
-  | Literal_string _ -> return @@ t_string ()
-  | Literal_key _ -> return @@ t_key ()
-  | Literal_key_hash _ -> return @@ t_key_hash ()
-  | Literal_chain_id _ -> return @@ t_chain_id ()
-  | Literal_signature _ -> return @@ t_signature ()
-  | Literal_bytes _ -> return @@ t_bytes ()
-  | Literal_int _ -> return @@ t_int ()
-  | Literal_nat _ -> return @@ t_nat ()
-  | Literal_timestamp _ -> return @@ t_timestamp ()
-  | Literal_mutez _ -> return @@ t_mutez ()
-  | Literal_address _ -> return @@ t_address ()
-  | Literal_operation _ -> return @@ t_operation ()
-  | Literal_bls12_381_g1 _ -> return @@ t_bls12_381_g1 ()
-  | Literal_bls12_381_g2 _ -> return @@ t_bls12_381_g2 ()
-  | Literal_bls12_381_fr _ -> return @@ t_bls12_381_fr ()
+  | Literal_unit -> return @@ t_unit ~loc ()
+  | Literal_string _ -> return @@ t_string ~loc ()
+  | Literal_key _ -> return @@ t_key ~loc ()
+  | Literal_key_hash _ -> return @@ t_key_hash ~loc ()
+  | Literal_chain_id _ -> return @@ t_chain_id ~loc ()
+  | Literal_signature _ -> return @@ t_signature ~loc ()
+  | Literal_bytes _ -> return @@ t_bytes ~loc ()
+  | Literal_int _ -> return @@ t_int ~loc ()
+  | Literal_nat _ -> return @@ t_nat ~loc ()
+  | Literal_timestamp _ -> return @@ t_timestamp ~loc ()
+  | Literal_mutez _ -> return @@ t_mutez ~loc ()
+  | Literal_address _ -> return @@ t_address ~loc ()
+  | Literal_operation _ -> return @@ t_operation ~loc ()
+  | Literal_bls12_381_g1 _ -> return @@ t_bls12_381_g1 ~loc ()
+  | Literal_bls12_381_g2 _ -> return @@ t_bls12_381_g2 ~loc ()
+  | Literal_bls12_381_fr _ -> return @@ t_bls12_381_fr ~loc ()
   | Literal_chest _ | Literal_chest_key _ ->
     failwith "chest / chest_key not allowed in the syntax (only tests need this type)"
 
@@ -241,7 +241,7 @@ let rec check_expression
   let ctx, expr' =
     match expr.expression_content, type_.type_content with
     | E_literal lit, T_constant _ ->
-      let lit_type, expr = infer_literal ~loc:expr.location lit in
+      let lit_type, expr = infer_literal ~loc lit in
       Assert.assert_true
         ~raise
         (assert_equal loc lit_type type_)
@@ -259,13 +259,13 @@ let rec check_expression
       , let%bind result = result in
         return @@ E_type_abstraction { type_binder = tvar; result } )
     | _, T_for_all { ty_binder = tvar; kind; type_ } ->
-      let tvar' = TypeVar.fresh_like tvar in
+      let tvar' = TypeVar.fresh_like ~loc tvar in
       let ctx, pos = Context.mark ctx in
       let ctx, result =
         check
           ~ctx:Context.(ctx |:: C_type_var (tvar', kind))
           expr
-          (t_subst_var type_ ~tvar ~tvar')
+          (t_subst_var ~loc type_ ~tvar ~tvar')
       in
       ( Context.drop_until ctx ~pos
       , let%bind result = result in
@@ -387,7 +387,7 @@ and infer_expression ~(raise : raise) ~options ~ctx (expr : I.expression)
     | E_application { lamb; args } ->
       let ctx, lamb_type, lamb = infer lamb in
       let ctx, ret_type, f, args =
-        infer_application ~raise ~options ~ctx lamb_type args
+        infer_application ~raise ~loc ~options ~ctx lamb_type args
       in
       ( ctx
       , ret_type
@@ -409,7 +409,7 @@ and infer_expression ~(raise : raise) ~options ~ctx (expr : I.expression)
       let rhs =
         Option.value_map
           rhs_ascr
-          ~f:(fun rhs_ascr -> I.e_ascription rhs rhs_ascr)
+          ~f:(fun rhs_ascr -> I.e_ascription ~loc rhs rhs_ascr)
           ~default:rhs
       in
       let ctx, rhs_type, rhs = infer rhs in
@@ -458,12 +458,13 @@ and infer_expression ~(raise : raise) ~options ~ctx (expr : I.expression)
       let ctx, lambda =
         check
           ~ctx:Context.(ctx |:: C_value (fun_name, fun_type))
-          (I.make_e (E_lambda lambda))
+          (I.make_e ~loc (E_lambda lambda))
           fun_type
       in
       ( ctx
       , fun_type
       , let%bind lambda = lambda in
+        let%bind raise = Elaboration.raise in
         let lambda =
           trace_option ~raise (corner_case "Annotated lambda should return lambda")
           @@ O.get_e_lambda_opt lambda
@@ -492,8 +493,8 @@ and infer_expression ~(raise : raise) ~options ~ctx (expr : I.expression)
       in
       let record_type =
         match Context.get_record row ctx with
-        | None -> t_record ~layout:default_layout row
-        | Some (orig_var, row) -> make_t_orig_var (T_record row) None orig_var
+        | None -> t_record ~loc ~layout:default_layout row
+        | Some (orig_var, row) -> make_t_orig_var ~loc (T_record row) None orig_var
       in
       ( ctx
       , record_type
@@ -556,7 +557,7 @@ and infer_expression ~(raise : raise) ~options ~ctx (expr : I.expression)
       let module TMap = O.Helpers.TMap in
       (* Instantiate [tvars] (assumption: kind is [Type]) *)
       let tvars : Exists_var.t TMap.t =
-        tvars |> List.map ~f:(fun tvar -> tvar, Exists_var.fresh ()) |> TMap.of_list
+        tvars |> List.map ~f:(fun tvar -> tvar, Exists_var.fresh ~loc ()) |> TMap.of_list
       in
       let ctx =
         Context.(
@@ -566,13 +567,13 @@ and infer_expression ~(raise : raise) ~options ~ctx (expr : I.expression)
       in
       let arg_type =
         TMap.fold
-          (fun tvar evar arg_type -> t_subst_evar arg_type ~tvar ~evar)
+          (fun tvar evar arg_type -> t_subst_evar ~loc arg_type ~tvar ~evar)
           tvars
           arg_type
       in
       let sum_type =
         TMap.fold
-          (fun tvar evar sum_type -> t_subst_evar sum_type ~tvar ~evar)
+          (fun tvar evar sum_type -> t_subst_evar ~loc sum_type ~tvar ~evar)
           tvars
           sum_type
       in
@@ -588,7 +589,7 @@ and infer_expression ~(raise : raise) ~options ~ctx (expr : I.expression)
       (* Add existential for return type *)
       let evar = Exists_var.fresh ~loc () in
       let ctx = Context.(ctx |:: C_exists_var (evar, Type)) in
-      let ret_type = t_exists evar in
+      let ret_type = t_exists ~loc evar in
       (* Type check the match cases *)
       let ctx, cases = check_cases ~raise ~options ~ctx cases matchee_type ret_type in
       (* Elaborate (by compiling pattern) *)
@@ -636,7 +637,7 @@ and infer_expression ~(raise : raise) ~options ~ctx (expr : I.expression)
       in
       let binder = { binder with ascr = Some type_ } in
       let ctx, expression = check ~ctx expression type_ in
-      let ret_type = O.t_unit () in
+      let ret_type = O.t_unit~loc () in
       ( ctx
       , ret_type
       , let%bind expression = expression in
@@ -669,7 +670,8 @@ and infer_constant ~(raise : raise) ~options ~ctx ~loc const args
   let return args type_ =
     let%bind args = args in
     return
-    @@ O.make_e ~location:loc (E_constant { cons_name = const; arguments = args }) type_
+    (* Location updated due to implementation of Constant_typers. *)
+    @@ O.make_e ~location:loc (E_constant { cons_name = const; arguments = args }) { type_ with location = loc }
   in
   let ctx, args, ret_type =
     Constant_typers.infer_constant
@@ -699,7 +701,7 @@ and check_lambda
   let ({ var; ascr = arg_ascr; _ } : _ I.binder) = binder in
   let result =
     Option.value_map ret_ascr ~default:result ~f:(fun ret_ascr ->
-      I.e_ascription result ret_ascr)
+      I.e_ascription ~loc result ret_ascr)
   in
   let ctx, arg_type, f =
     match arg_ascr with
@@ -742,15 +744,15 @@ and infer_lambda
   (* Desugar return ascription to (result : ret_ascr) *)
   let result =
     Option.value_map ret_ascr ~default:result ~f:(fun ret_ascr ->
-      I.e_ascription result ret_ascr)
+      I.e_ascription ~loc result ret_ascr)
   in
   Context.Generalization.enter ~ctx ~in_:(fun ctx ->
     let ctx, arg_type =
       match arg_ascr with
       | Some arg_ascr -> ctx, evaluate_type ~raise ~ctx arg_ascr
       | None ->
-        let evar = Exists_var.fresh () in
-        Context.(ctx |:: C_exists_var (evar, Type)), t_exists evar
+        let evar = Exists_var.fresh ~loc () in
+        Context.(ctx |:: C_exists_var (evar, Type)), t_exists ~loc evar
     in
     let ctx, ret_type, result =
       infer_expression
@@ -759,7 +761,7 @@ and infer_lambda
         ~ctx:Context.(ctx |:: C_value (var, arg_type))
         result
     in
-    let type_ = O.t_arrow arg_type ret_type () in
+    let type_ = O.t_arrow ~loc arg_type ret_type () in
     let lambda : (O.expression, _, _) Elaboration.t =
       let%bind result = result in
       return (E_lambda { binder = { binder with ascr = Some arg_type }; result }) type_
@@ -767,25 +769,25 @@ and infer_lambda
     ctx, type_, lambda)
 
 
-and infer_application ~raise ~options ~ctx lamb_type args
+and infer_application ~raise ~loc ~options ~ctx lamb_type args
   : Context.t
     * O.type_expression
     * (O.expression -> O.expression)
     * (O.expression, _, _) Elaboration.t
   =
-  let self = infer_application ~raise ~options in
+  let self = infer_application ~raise ~loc ~options in
   let check = check_expression ~raise ~options in
   let fail () = raise.error (should_be_a_function_type lamb_type args) in
   match lamb_type.type_content with
   | T_for_all { ty_binder = tvar; kind; type_ } ->
-    let evar = Exists_var.fresh () in
-    let lamb_type = t_subst type_ ~tvar ~type_:(t_exists evar) in
+    let evar = Exists_var.fresh ~loc () in
+    let lamb_type = t_subst type_ ~tvar ~type_:(t_exists ~loc evar) in
     let ctx, ret_type, f, args =
       self ~ctx:Context.(ctx |:: C_exists_var (evar, kind)) lamb_type args
     in
     ( ctx
     , ret_type
-    , (fun hole -> f (O.e_type_inst { forall = hole; type_ = t_exists evar } lamb_type))
+    , (fun hole -> f (O.e_type_inst { forall = hole; type_ = t_exists ~loc evar } lamb_type))
     , args )
   | T_arrow { type1 = arg_type; type2 = ret_type } ->
     let ctx, args = check ~ctx args arg_type in
@@ -796,22 +798,22 @@ and infer_application ~raise ~options ~ctx lamb_type args
      | Some evar ->
        let kind =
          Context.get_exists_var ctx evar
-         |> trace_option ~raise (unbound_exists_variable (Exists_var.loc evar) evar)
+         |> trace_option ~raise (unbound_exists_variable loc evar)
        in
        if not
             (match kind with
              | Type -> true
              | _ -> false)
        then raise.error (corner_case "Existential variable used in application has invalid kind");
-       let evar1 = Exists_var.fresh () in
-       let evar2 = Exists_var.fresh () in
-       let arg_type = t_exists evar1 in
-       let ret_type = t_exists evar2 in
+       let evar1 = Exists_var.fresh ~loc () in
+       let evar2 = Exists_var.fresh ~loc () in
+       let arg_type = t_exists ~loc evar1 in
+       let ret_type = t_exists ~loc evar2 in
        let hole =
          Context.of_list
            [ C_exists_var (evar1, Type)
            ; C_exists_var (evar2, Type)
-           ; C_exists_eq (evar, Type, O.t_arrow arg_type ret_type ())
+           ; C_exists_eq (evar, Type, O.t_arrow ~loc arg_type ret_type ())
            ]
        in
        let ctx, args =
@@ -976,7 +978,7 @@ and compile_match
     let match_expr = Pattern_matching.compile_matching ~raise ~err_loc:loc var eqs in
     match_expr.expression_content
   | _ ->
-    let var = I.ValueVar.fresh ~name:"match_" () in
+    let var = I.ValueVar.fresh ~loc ~name:"match_" () in
     let match_expr = Pattern_matching.compile_matching ~raise ~err_loc:loc var eqs in
     O.E_let_in
       { let_binder = { var; ascr = None; attributes = { const_or_var = Some `Var } }
@@ -1041,7 +1043,7 @@ and infer_declaration ~(raise : raise) ~options ~ctx (decl : I.declaration)
       let ctx, pos = Context.mark ctx in
       local_pos := pos :: !local_pos;
       let expr =
-        Option.value_map ascr ~default:expr ~f:(fun ascr -> I.e_ascription expr ascr)
+        Option.value_map ascr ~default:expr ~f:(fun ascr -> I.e_ascription ~loc expr ascr)
       in
       let ascr = Option.map ascr ~f:(evaluate_type ~raise ~ctx) in
       let ctx, expr_type, expr =
