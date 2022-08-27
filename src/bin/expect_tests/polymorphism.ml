@@ -338,46 +338,34 @@ let%expect_test _ =
     Cannot unify string with int. |}]
 
 let%expect_test _ =
-  run_ligo_bad [ "compile" ; "expression" ; "cameligo" ; "f" ; "--init-file" ; (test "cases_annotation.mligo") ] ;
-  [%expect.unreachable]
-[@@expect.uncaught_exn {|
-  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
-     This is strongly discouraged as backtraces are fragile.
-     Please change this test to not include a backtrace. *)
-
-  (Cli_expect_tests.Cli_expect.Should_exit_bad)
-  Raised at Cli_expect_tests__Cli_expect.run_ligo_bad in file "src/bin/expect_tests/cli_expect.ml", line 37, characters 7-28
-  Called from Cli_expect_tests__Polymorphism.(fun) in file "src/bin/expect_tests/polymorphism.ml", line 341, characters 2-112
-  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
-
-  Trailing output
-  ---------------
-  { LAMBDA
-      (pair bool string)
-      string
-      { UNPAIR ;
-        SWAP ;
-        PUSH int 2 ;
-        PUSH int 40 ;
-        ADD ;
-        SWAP ;
-        DIG 2 ;
-        IF { LAMBDA
-               string
-               (lambda int string)
-               { LAMBDA (pair string int) string { CAR } ; DUP 2 ; APPLY ; SWAP ; DROP } }
-           { LAMBDA
-               string
-               (lambda int string)
-               { LAMBDA (pair string int) string { CAR } ; DUP 2 ; APPLY ; SWAP ; DROP } } ;
-        SWAP ;
-        EXEC ;
-        SWAP ;
-        EXEC } ;
-    DUP 2 ;
-    APPLY ;
-    SWAP ;
-    DROP } |}]
+  run_ligo_good [ "compile" ; "expression" ; "cameligo" ; "f" ; "--init-file" ; (test "cases_annotation.mligo") ] ;
+  [%expect{|
+    { LAMBDA
+        (pair bool string)
+        string
+        { UNPAIR ;
+          SWAP ;
+          PUSH int 2 ;
+          PUSH int 40 ;
+          ADD ;
+          SWAP ;
+          DIG 2 ;
+          IF { LAMBDA
+                 string
+                 (lambda int string)
+                 { LAMBDA (pair string int) string { CAR } ; DUP 2 ; APPLY ; SWAP ; DROP } }
+             { LAMBDA
+                 string
+                 (lambda int string)
+                 { LAMBDA (pair string int) string { CAR } ; DUP 2 ; APPLY ; SWAP ; DROP } } ;
+          SWAP ;
+          EXEC ;
+          SWAP ;
+          EXEC } ;
+      DUP 2 ;
+      APPLY ;
+      SWAP ;
+      DROP } |}]
 
 let%expect_test _ =
   run_ligo_bad [ "compile" ; "expression" ; "cameligo" ; "bar 0" ; "--init-file" ; (test "use_error.mligo") ] ;
