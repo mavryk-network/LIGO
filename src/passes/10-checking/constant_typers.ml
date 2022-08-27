@@ -1437,7 +1437,10 @@ let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
             ~types:
               [ t_sapling_transaction a
                 ^-> t_sapling_state a
-                ^~> t_option (t_pair (t_bytes ()) (t_pair (t_int ()) (t_sapling_state a)))
+                ^~> t_option
+                      (t_pair
+                         (t_bytes ())
+                         (t_pair (t_int ()) (t_sapling_state a)))
               ]) )
     ; C_EQ, of_comparator (Comparable.comparator ~cmp:"EQ")
     ; C_NEQ, of_comparator (Comparable.comparator ~cmp:"NEQ")
@@ -1458,6 +1461,78 @@ let infer_constant ~raise ~infer ~check ~loc const =
            "Typer not implemented for constant %a"
            Stage_common.PP.constant'
            const)
+
+
+module External_types = struct
+  open O
+
+  module Type = struct
+    type t = (type_expression list * type_expression) List.Ne.t
+
+    module Syntax = struct
+      let create xs = List.Ne.of_list xs
+      let ( ^~> ) arg_type ret_type = [ arg_type ], ret_type
+
+      let ( ^-> ) arg_type (arg_types, ret_type) =
+        arg_type :: arg_types, ret_type
+    end
+  end
+
+  type ('err, 'wrn) t =
+    raise:('err, 'wrn) raise
+    -> loc:Location.t
+    -> ctx:Context.t
+    -> type_expression list
+    -> Context.t * type_expression
+
+  let of_type (types : Type.t) : _ t =
+   fun ~raise ~loc ~ctx recieved_arg_types ->
+    Trace.bind_exists ~raise
+    @@ List.Ne.map
+         (fun (expected_arg_types, ret_type) ~raise ->
+           let arg_types =
+             match List.zip recieved_arg_types expected_arg_types with
+             | Ok result -> result
+             | Unequal_lengths ->
+               raise.error
+                 (corner_case
+                    "Unequal lengths between mode annotation and argument types")
+           in
+           (* Unify args types *)
+           let ctx =
+             List.fold arg_types ~init:ctx ~f:(fun ctx (recieved, expected) ->
+               unify
+                 ~raise
+                 ~loc
+                 ~ctx
+                 (Context.apply ctx recieved)
+                 (Context.apply ctx expected))
+           in
+           ctx, ret_type)
+         types
+
+
+  let int_types : (Errors.typer_error, Main_warnings.all) t =
+    let open Type.Syntax in
+    of_type (create [ t_nat () ^~> t_int (); t_bls12_381_fr () ^~> t_int () ])
+
+
+  let ediv_types : (Errors.typer_error, Main_warnings.all) t =
+    let open Type.Syntax in
+    of_type
+      (create
+         [ t_nat () ^-> t_nat () ^~> t_option (t_pair (t_nat ()) (t_nat ()))
+         ; t_int () ^-> t_int () ^~> t_option (t_pair (t_int ()) (t_nat ()))
+         ; t_nat () ^-> t_int () ^~> t_option (t_pair (t_int ()) (t_nat ()))
+         ; t_int () ^-> t_nat () ^~> t_option (t_pair (t_int ()) (t_nat ()))
+         ; t_mutez ()
+           ^-> t_mutez ()
+           ^~> t_option (t_pair (t_nat ()) (t_mutez ()))
+         ; t_mutez ()
+           ^-> t_nat ()
+           ^~> t_option (t_pair (t_mutez ()) (t_mutez ()))
+         ])
+end
 
 (* 
 
