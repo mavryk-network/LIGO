@@ -57,6 +57,16 @@ type locals = (string * T.value_type) list
 let name s =
   try W.Utf8.decode s with W.Utf8.Utf8 -> failwith "invalid UTF-8 encoding"
 
+let func_symbol_type w symbol = 
+  match List.find ~f:(fun f -> match f.it with FuncSymbol {name; _} -> String.equal name symbol | _ -> false ) w.A.funcs with 
+  | Some {it = FuncSymbol {ftype; _} as fs; _} -> (
+    let t = List.find ~f:(fun f -> match f.it with TypeSymbol {tname;_ } -> String.equal tname ftype | _ -> false ) w.A.types in
+    match t with 
+      Some t -> Some (fs, t.it)
+    | None -> None
+  )
+  | _ -> None
+
 let rec expression ~raise :
     A.module_' -> locals -> I.expression -> A.module_' * locals * A.instr list =
  fun w l e ->
@@ -443,24 +453,132 @@ let rec expression ~raise :
       | E_application (func, e) -> 
         let w, l, e = expression ~raise w l e in 
         aux w l (result @ e) func
-      | E_variable v ->
+      | E_variable v ->        
         let name = var_to_string v in
-        let is_func = List.exists ~f:(fun f -> match f.it with A.FuncSymbol {name; _} -> String.(=) name (var_to_string v) | _ -> false) w.funcs in
-        if is_func then 
-          (w, l, result @ [call_s name at])
-        else (
+        (match (func_symbol_type w name) with 
+        | Some (FuncSymbol fs, TypeSymbol {tdetails = FuncType (input, output); _}) -> 
+          let no_of_args = List.length input in
+          if no_of_args = List.length result then 
+            (w, l, result @ [call_s name at])
+          else (
+            let unique_name = ValueVar.fresh ~name:"e_variable_partial" () in
+            let func_alloc_name = var_to_string unique_name in
+            w, l @ [(func_alloc_name, NumType I32Type)], 
+            [
+              const Int32.(12l + of_int_exn (List.length result)) at;
+              call_s "malloc" at;
+              
+              local_tee_s func_alloc_name at;
+              func_symbol name at;
+              store at;
+
+              local_get_s func_alloc_name at;
+              const 4l at;
+              i32_add at;
+              const (Int32.of_int_exn no_of_args) at; 
+              store at;
+
+              local_get_s func_alloc_name at;
+              const 8l at;
+              i32_add at;
+              const (Int32.of_int_exn (List.length result)) at;
+              store at
+            ]
+            @
+            (let a, i = List.fold_left ~f:(fun (all, index) f -> 
+              (all @
+              [
+                local_get_s func_alloc_name at;
+                const Int32.(index * 4l) at;
+                i32_add at;
+                f;
+                store at
+              ], Int32.(index + 1l)
+              )
+            ) ~init:([], 3l) result
+            in a
+            )
+            @
+            [
+              local_get_s func_alloc_name at
+            ]
+          )
+        | _ -> 
           let lt = expr.type_expression in
           let unique_name = ValueVar.fresh ~name:"Call_indirect" () in
           let indirect_name = var_to_string unique_name in
+          
+          let total_args_length = ValueVar.fresh ~name:"total_args_length" () in
+          let total_args_length = var_to_string total_args_length in
+          
+          let current_args_length = ValueVar.fresh ~name:"current_args_length" () in
+          let current_args_length = var_to_string current_args_length in
+
+          let counter = ValueVar.fresh ~name:"counter" () in
+          let counter = var_to_string counter in
+
+          let unique_name = ValueVar.fresh ~name:"Call_indirect" () in
           let return_type = [NumType I32Type] in (* TODO properly get this *)
-          let type_arg = List.map ~f:(fun e -> NumType I32Type) result in
           ({w with 
             types = w.types
-              @ [
-                
-                type_ ~name:indirect_name ~typedef:(FuncType (type_arg, return_type));
+              @ 
+              [type_ ~name:indirect_name ~typedef:(FuncType ([NumType I32Type], [NumType I32Type]))]
+          }, l @ [(total_args_length, NumType I32Type); (current_args_length, NumType I32Type); (counter, NumType I32Type)], [
+            local_get_s name at; 
+            const 4l at;
+            i32_add at;
+            load at; 
+            local_set_s total_args_length at;
+
+            local_get_s name at; 
+            const 8l at;
+            i32_add at;
+            load at; 
+            local_set_s current_args_length at;
+
+          ]
+          @
+          (let a, i = List.fold_left ~f:(fun (all, index) f -> 
+            (all @
+            [
+              local_get_s name at;
+              
+              local_get_s current_args_length at;
+              const index at;
+              i32_add at;
+              const 4l at;
+              i32_mul at;
+              
+              i32_add at;
+              f;
+              store at
+            ], Int32.(index + 1l)
+            )
+          ) ~init:([], 3l) result
+          in a
+          )
+          @
+          [
+            local_get_s current_args_length at;
+            const (Int32.of_int_exn (List.length result)) at;
+            i32_add at;
+            local_get_s total_args_length at;
+            compare_eq at;
+            if_ 
+              (ValBlockType (Some (NumType I32Type))) 
+              [
+                local_get_s name at;
+                const 12l at;
+                i32_add at;
+                local_get_s name at;
+                load at;
+                call_indirect_s indirect_name at
               ]
-          }, l, result @ [local_get_s name at; call_indirect_s indirect_name at])
+              [
+                local_get_s name at
+              ]
+              at
+          ]) 
         )
       | E_raw_wasm (local_symbols, code) -> 
         (w, l @ local_symbols, result @ code)
@@ -472,8 +590,102 @@ let rec expression ~raise :
     let name = var_to_string name in
     match List.find ~f:(fun (n, _) -> String.equal n name) l with
     | Some _ -> (w, l, [local_get_s name at])
-    | None -> (w, l, [data_symbol name at]))
-  | E_iterator (b, ((name, _), body), expr) -> failwith "E_iterator not supported"
+    | None -> (
+      match func_symbol_type w name with 
+      | Some (FuncSymbol fs, TypeSymbol {tdetails = FuncType (input, output); _}) -> 
+        let unique_name = ValueVar.fresh ~name:"e_variable_func" () in
+        let func_alloc_name = var_to_string unique_name in
+        let no_of_args = List.length input in
+
+
+        (* create the function here *)
+        let func_name = "i32_" ^ (string_of_int no_of_args) in
+
+        (* does it exist ? *)
+        let exists = List.find ~f:(fun a -> match a.it with | FuncSymbol n -> (String.equal n.name func_name) | _ -> false) w.funcs  in
+        let w = match exists with 
+         Some _ -> 
+          w
+        | None -> (
+          let type_name = "i32_" ^ (string_of_int no_of_args) ^ "_type" in
+          let t = TypeSymbol {
+            tname = type_name;
+            tdetails = FuncType ([NumType I32Type], [NumType I32Type])
+          } in
+          let t = S.{it = t; at} in
+          let f = FuncSymbol {
+            name   = func_name;
+            ftype  = type_name;
+            locals = [("foo", NumType I32Type)];
+            body   = 
+            
+            (
+              List.fold_left ~f:(fun all i -> 
+                all @
+                [
+                local_get_s "foo" at;
+                const Int32.(of_int_exn i * 4l) at;
+                i32_add at;
+                load at]
+              )
+              ~init: []
+              (List.init no_of_args ~f:(fun i -> i)) 
+            )
+            @
+            [
+              call_s name at;
+            ]
+          } in
+          let f = S.{ it = f; at } in
+          let s = {
+            name = func_name;
+            details = Function;
+          }
+          in
+          let s = S.{ it = s; at } in
+          {w with funcs = f :: w.funcs; types = t :: w.types; symbols = s :: w.symbols}
+        )
+        in
+      w, l @ [(func_alloc_name, NumType I32Type)], [
+          const Int32.(12l + Int32.of_int_exn no_of_args) at;
+          call_s "malloc" at;
+          
+          local_tee_s func_alloc_name at;
+          func_symbol func_name at;
+          store at;
+
+          local_get_s func_alloc_name at;
+          const 4l at;
+          i32_add at;
+          const (Int32.of_int_exn no_of_args) at; 
+          store at;
+
+          local_get_s func_alloc_name at;
+          const 8l at;
+          i32_add at;
+          const 0l at;
+          store at;
+
+          local_get_s func_alloc_name at
+      ] 
+      | _ -> w,l, [data_symbol name at]
+
+    )
+        
+    )
+  | E_iterator (kind, ((item_name, item_type), body), collection) -> 
+    (* todo: how do we get information on the collection? *)
+
+    (* [
+      (* what kind of collection ?! *) (* C_ITER, C_MAP, C_LOOP_LEFT *)
+      Loop (
+        [], ...
+      )
+    ] *)
+    (* - collection
+    - next next next *)
+
+    failwith "E_iterator not supported"
   | E_fold (((name, tv), body), col, init) -> 
     
     failwith "E_fold not supported"
@@ -635,7 +847,9 @@ let rec expression ~raise :
               i32_add at;
               load at;
               local_set_s name at;
-              ] ))
+            ]
+          )
+        )
         ~init:(l, []) values
     in
     let w, l, e2 = expression ~raise w l rhs in

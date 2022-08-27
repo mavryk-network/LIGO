@@ -840,7 +840,6 @@ let encode (m: Ast.module_) =
     | DataSymbol symbol ->
       op 0x41;
       let p = pos s in
-      print_endline ("ds1:" ^ symbol);
       let s, _ = Linking.find_symbol_index m.it.symbols (fun s -> match s.it.details with Function when s.it.name = symbol -> true |  Data _ when s.it.name = symbol -> true | _ -> false) in
       match s.it.details with 
         Data {offset; _} ->
@@ -1216,7 +1215,6 @@ let encode (m: Ast.module_) =
         )
       )
       | R_WASM_FUNCTION_INDEX_LEB (offset, symbol) ->
-        print_endline "ds2";
         let _, symbol_index = 
           Linking.find_symbol_index 
             m.it.symbols 
@@ -1253,7 +1251,6 @@ let encode (m: Ast.module_) =
     List.iter (fun r ->
       match r with      
       | R_WASM_TABLE_INDEX_I32 (offset, symbol) -> ( 
-        print_endline "ds3";
         let _, symbol_index = 
           Linking.find_symbol_index 
             m.it.symbols 
@@ -1267,7 +1264,6 @@ let encode (m: Ast.module_) =
         u32 symbol_index;
       )
       | R_WASM_MEMORY_ADDR_I32 (offset, symbol_) -> (
-        print_endline "ds4";
         let _, symbol_index = 
           Linking.find_symbol_index 
             m.it.symbols 

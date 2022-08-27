@@ -72,7 +72,11 @@ let store at =
 
 let i32_add at = {it = Binary (I32 Add); at}
 
+let i32_mul at = {it = Binary (I32 Mul); at}
+
 let data_symbol symbol at = {it = DataSymbol symbol; at}
+
+let func_symbol symbol at = ({it = FuncSymbol symbol; at}: instr)
 
 let elem i at = {it = 
   { 
@@ -84,3 +88,14 @@ let elem i at = {it =
     }); at };
   }; 
   at} 
+
+let compare_eq at = {it = Compare (I32 I32Op.Eq); at }
+
+let if_ bt t e at = 
+  {it = If (bt, t, e); at}
+
+let br_if index at =
+  {it = BrIf {it = index; at}; at }
+  
+let loop b il at = 
+  {it = Loop (b, il); at}

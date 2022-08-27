@@ -290,9 +290,15 @@ let rec toplevel_inner : env -> expression -> expression =
       ( ({content = E_closure {binder; body}; _} as e1),
         inline,
         ((var_name, type_expression), e2) ) ->  
-    let env, body =
-      lift {empty_env with functions = var_name :: env.functions; variables = (binder, type_expression) :: env.variables} body
+    
+    let rec aux b =
+      match b.content with
+      | E_closure {binder; body} ->
+        let env, body = aux body in
+        env, {b with content = E_closure {binder; body} }
+      | _  -> lift {empty_env with functions = var_name :: env.functions; variables = (binder, type_expression) :: env.variables} b
     in
+    let env, body = aux body in 
     List.fold_left
       ~f:(fun prev el -> el prev)
       ~init:
