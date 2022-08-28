@@ -613,7 +613,7 @@ let rec expression ~raise :
             tdetails = FuncType ([NumType I32Type], [NumType I32Type])
           } in
           let t = S.{it = t; at} in
-          let f = FuncSymbol {
+          let f: A.func' = FuncSymbol {
             name   = func_name;
             ftype  = type_name;
             locals = [("foo", NumType I32Type)];
