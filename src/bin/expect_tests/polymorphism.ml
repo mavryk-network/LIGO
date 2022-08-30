@@ -377,47 +377,31 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_bad [ "compile" ; "contract" ; (test "unresolved/contract.mligo") ] ;
   [%expect{xxx|
-    File "./unresolved/contract.mligo", line 6, characters 17-31:
-      5 |     let b                = List.length ys in
-      6 |     [], (a + b + List.length [])
-
-    Underspecified type ^gen#240.
+    Underspecified type list (^gen#240) -> nat.
     Please add additional annotations. |xxx}]
 
 let%expect_test _ =
   run_ligo_bad [ "compile" ; "contract" ; (test "unresolved/contract2.mligo") ] ;
   [%expect{xxx|
-    File "./unresolved/contract2.mligo", line 4, characters 13-15:
-      3 | let main (_, _ : int list * nat) : (operation list * nat) =
-      4 |     [], (one [])
-
-    Underspecified type ^gen#238.
+    Underspecified type list (^gen#238) -> nat.
     Please add additional annotations. |xxx}]
 
 let%expect_test _ =
   run_ligo_bad [ "compile" ; "storage" ; (test "unresolved/storage.mligo") ; "s" ] ;
   [%expect{xxx|
-    File "./unresolved/storage.mligo", line 1, characters 8-22:
-      1 | let s = List.length []
-      2 |
-
-    Underspecified type ^gen#235.
+    Underspecified type list (^gen#235) -> nat.
     Please add additional annotations. |xxx}]
 
 let%expect_test _ =
   run_ligo_bad [ "compile" ; "parameter" ; (test "unresolved/parameter.mligo") ; "p" ] ;
   [%expect{xxx|
-    File "./unresolved/parameter.mligo", line 1, characters 8-10:
-      1 | let p = []
-      2 |
-
-    Underspecified type ^gen#235.
+    Underspecified type list (^gen#235).
     Please add additional annotations. |xxx}]
 
 let%expect_test _ =
   run_ligo_bad [ "compile" ; "expression" ; "cameligo" ; "[]" ] ;
   [%expect{|
-    Underspecified type ^gen#2.
+    Underspecified type list (^gen#2).
     Please add additional annotations. |}]
 
 let () = Sys.chdir pwd
