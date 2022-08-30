@@ -20,7 +20,9 @@ let occurs_check ~raise ~loc ~evar type_ =
     | T_for_all { type_; _ } | T_abstraction { type_; _ } -> loop type_
     | T_constant { parameters; _ } -> List.iter parameters ~f:loop
     | T_record rows | T_sum rows ->
-      LMap.iter (fun _label { associated_type; _ } -> loop associated_type) rows.content
+      LMap.iter
+        (fun _label { associated_type; _ } -> loop associated_type)
+        rows.content
     | T_singleton _ -> ()
   in
   loop type_
@@ -39,11 +41,26 @@ module Mode = struct
     | Invariant -> Invariant
 end
 
-let t_subst t ~tvar ~type_ = Ast_typed.Helpers.subst_no_capture_type tvar type_ t
-let t_subst_var ~loc t ~tvar ~tvar' = t_subst t ~tvar ~type_:(t_variable ~loc tvar' ())
-let t_exists ~loc (evar : Exists_var.t) = t_variable ~loc (evar :> type_variable) ()
+let t_subst t ~tvar ~type_ =
+  Ast_typed.Helpers.subst_no_capture_type tvar type_ t
 
-let rec lift ~raise ~loc ~ctx ~(mode : Mode.t) ~kind ~evar (type_ : type_expression)
+
+let t_subst_var ~loc t ~tvar ~tvar' =
+  t_subst t ~tvar ~type_:(t_variable ~loc tvar' ())
+
+
+let t_exists ~loc (evar : Exists_var.t) =
+  t_variable ~loc (evar :> type_variable) ()
+
+
+let rec lift
+  ~raise
+  ~loc
+  ~ctx
+  ~(mode : Mode.t)
+  ~kind
+  ~evar
+  (type_ : type_expression)
   : Context.t * type_expression
   =
   let self ?(ctx = ctx) ~mode = lift ~raise ~loc ~ctx ~mode ~kind ~evar in
@@ -73,19 +90,28 @@ let rec lift ~raise ~loc ~ctx ~(mode : Mode.t) ~kind ~evar (type_ : type_express
        self
          ~ctx:
            Context.(
-             ctx1 |:: C_exists_var (evar', kind') |:: C_exists_var (evar, kind) |@ ctx2)
+             ctx1
+             |:: C_exists_var (evar', kind')
+             |:: C_exists_var (evar, kind)
+             |@ ctx2)
          ~mode:Contravariant
          (t_subst ~tvar:tvar' ~type_:(t_exists ~loc evar') type_)
      | Covariant ->
        let ctx, pos = Context.mark ctx in
        let ctx, type_ =
-         self ~ctx:Context.(ctx |:: C_type_var (tvar', kind')) ~mode:Covariant type_
+         self
+           ~ctx:Context.(ctx |:: C_type_var (tvar', kind'))
+           ~mode:Covariant
+           type_
        in
        Context.drop_until ctx ~pos, type_
      | Invariant ->
        let ctx, pos = Context.mark ctx in
        let ctx, type_ =
-         self ~ctx:Context.(ctx |:: C_type_var (tvar', kind')) ~mode:Invariant type_
+         self
+           ~ctx:Context.(ctx |:: C_type_var (tvar', kind'))
+           ~mode:Invariant
+           type_
        in
        ( Context.drop_until ctx ~pos
        , return @@ T_for_all { ty_binder = tvar'; kind = kind'; type_ } ))
@@ -93,7 +119,9 @@ let rec lift ~raise ~loc ~ctx ~(mode : Mode.t) ~kind ~evar (type_ : type_express
     let tvar'' = TypeVar.fresh ~loc () in
     let type_ = t_subst_var ~loc type_ ~tvar:tvar' ~tvar':tvar'' in
     let ctx, pos = Context.mark ctx in
-    let ctx, type_ = self ~ctx:Context.(ctx |:: C_type_var (tvar'', kind)) ~mode type_ in
+    let ctx, type_ =
+      self ~ctx:Context.(ctx |:: C_type_var (tvar'', kind)) ~mode type_
+    in
     Context.drop_until ctx ~pos, type_
   | T_arrow { type1; type2 } ->
     let ctx, type1 = self ~ctx ~mode:(Mode.invert mode) type1 in
@@ -143,6 +171,7 @@ let consistent_injections
 let equal_domains lmap1 lmap2 =
   LSet.(equal (of_list (LMap.keys lmap1)) (of_list (LMap.keys lmap2)))
 
+
 let rec unify
   ~raise
   ~loc
@@ -158,7 +187,9 @@ let rec unify
     occurs_check ~raise ~loc ~evar type_;
     let kind =
       Context.get_exists_var ctx evar
-      |> trace_option ~raise (unbound_exists_variable (Exists_var.loc evar) evar)
+      |> trace_option
+           ~raise
+           (unbound_exists_variable (Exists_var.loc evar) evar)
     in
     let ctx, type_ = lift ~raise ~loc ~ctx ~mode:Invariant ~evar ~kind type_ in
     if not
@@ -172,7 +203,11 @@ let rec unify
   | T_singleton lit1, T_singleton lit2 when equal_literal lit1 lit2 -> ctx
   | T_constant inj1, T_constant inj2 when consistent_injections inj1 inj2 ->
     (match
-       List.fold2 inj1.parameters inj2.parameters ~init:ctx ~f:(fun ctx param1 param2 ->
+       List.fold2
+         inj1.parameters
+         inj2.parameters
+         ~init:ctx
+         ~f:(fun ctx param1 param2 ->
          self ~ctx (Context.apply ctx param1) (Context.apply ctx param2))
      with
      | Ok ctx -> ctx
@@ -183,8 +218,8 @@ let rec unify
     unify_evar (Exists_var.of_type_var_exn tvar1) type2
   | _, T_variable tvar2 when TypeVar.is_exists tvar2 ->
     unify_evar (Exists_var.of_type_var_exn tvar2) type1
-  | T_arrow { type1 = type11; type2 = type12 }, T_arrow { type1 = type21; type2 = type22 }
-    ->
+  | ( T_arrow { type1 = type11; type2 = type12 }
+    , T_arrow { type1 = type21; type2 = type22 } ) ->
     let ctx = self ~ctx type11 type21 in
     self ~ctx (Context.apply ctx type12) (Context.apply ctx type22)
   | ( T_for_all { ty_binder = tvar1; kind = kind1; type_ = type1 }
@@ -213,11 +248,18 @@ let rec unify
   | _ -> fail ()
 
 
-let rec subtype ~raise ~loc ~ctx ~(recieved : type_expression) ~(expected : type_expression)
+let rec subtype
+  ~raise
+  ~loc
+  ~ctx
+  ~(received : type_expression)
+  ~(expected : type_expression)
   : Context.t * (expression -> expression)
   =
-  (* Format.printf "Subtype: %a, %a\n" PP.type_expression recieved PP.type_expression expected; *)
-  let self ?(ctx = ctx) recieved expected = subtype ~raise ~loc ~ctx ~recieved ~expected in
+  (* Format.printf "Subtype: %a, %a\n" PP.type_expression received PP.type_expression expected; *)
+  let self ?(ctx = ctx) received expected =
+    subtype ~raise ~loc ~ctx ~received ~expected
+  in
   let subtype_evar ~mode evar type_ =
     let kind =
       Context.get_exists_var ctx evar
@@ -227,20 +269,25 @@ let rec subtype ~raise ~loc ~ctx ~(recieved : type_expression) ~(expected : type
     occurs_check ~raise ~loc ~evar type_;
     Context.add_exists_eq ctx evar kind type_, fun x -> x
   in
-  match recieved.type_content, expected.type_content with
-  | T_arrow { type1 = type11; type2 = type12 }, T_arrow { type1 = type21; type2 = type22 }
-    ->
+  match received.type_content, expected.type_content with
+  | ( T_arrow { type1 = type11; type2 = type12 }
+    , T_arrow { type1 = type21; type2 = type22 } ) ->
     if type_expression_eq (type11, type21) && type_expression_eq (type12, type22)
     then ctx, fun hole -> hole
     else (
       let ctx, f1 = self ~ctx type21 type11 in
-      let ctx, f2 = self ~ctx (Context.apply ctx type12) (Context.apply ctx type22) in
+      let ctx, f2 =
+        self ~ctx (Context.apply ctx type12) (Context.apply ctx type22)
+      in
       ( ctx
       , fun hole ->
           let x = ValueVar.fresh ~name:"_sub" () in
           let args = f1 (e_variable x type21) in
           let binder =
-            { var = x; ascr = Some type21; attributes = { const_or_var = Some `Const } }
+            { var = x
+            ; ascr = Some type21
+            ; attributes = { const_or_var = Some `Const }
+            }
           in
           let result = f2 (e_application { lamb = hole; args } type12) in
           e_a_lambda { binder; result } type21 type22 ))
@@ -249,27 +296,27 @@ let rec subtype ~raise ~loc ~ctx ~(recieved : type_expression) ~(expected : type
     let type' = t_subst type_ ~tvar ~type_:(t_exists ~loc evar) in
     let ctx, pos = Context.mark ctx in
     let ctx, f =
-      self
-        ~ctx:Context.(ctx |:: C_exists_var (evar, kind))
-        type'
-        expected
+      self ~ctx:Context.(ctx |:: C_exists_var (evar, kind)) type' expected
     in
     ( Context.drop_until ctx ~pos
-    , fun hole -> f (e_type_inst { forall = hole; type_ = t_exists ~loc evar } type') )
+    , fun hole ->
+        f (e_type_inst { forall = hole; type_ = t_exists ~loc evar } type') )
   | _, T_for_all { ty_binder = tvar; kind; type_ } ->
     let tvar' = TypeVar.fresh_like ~loc tvar in
     let ctx, pos = Context.mark ctx in
     let ctx, f =
       self
         ~ctx:Context.(ctx |:: C_type_var (tvar', kind))
-        recieved
+        received
         (t_subst_var ~loc type_ ~tvar ~tvar')
     in
     ( Context.drop_until ctx ~pos
-    , fun hole -> e_type_abstraction { type_binder = tvar'; result = f hole } expected )
-  | T_variable tvar1, T_variable tvar2 when TypeVar.equal tvar1 tvar2 -> ctx, fun x -> x
+    , fun hole ->
+        e_type_abstraction { type_binder = tvar'; result = f hole } expected )
+  | T_variable tvar1, T_variable tvar2 when TypeVar.equal tvar1 tvar2 ->
+    ctx, fun x -> x
   | T_variable tvar1, _ when TypeVar.is_exists tvar1 ->
     subtype_evar ~mode:Contravariant (Exists_var.of_type_var_exn tvar1) expected
   | _, T_variable tvar2 when TypeVar.is_exists tvar2 ->
-    subtype_evar ~mode:Covariant (Exists_var.of_type_var_exn tvar2) recieved
-  | _, _ -> unify ~raise ~loc ~ctx recieved expected, fun x -> x
+    subtype_evar ~mode:Covariant (Exists_var.of_type_var_exn tvar2) received
+  | _, _ -> unify ~raise ~loc ~ctx received expected, fun x -> x

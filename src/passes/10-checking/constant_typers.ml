@@ -1486,12 +1486,12 @@ module External_types = struct
     -> Context.t * type_expression
 
   let of_type (types : Type.t) : _ t =
-   fun ~raise ~loc ~ctx recieved_arg_types ->
+   fun ~raise ~loc ~ctx received_arg_types ->
     Trace.bind_exists ~raise
     @@ List.Ne.map
          (fun (expected_arg_types, ret_type) ~raise ->
            let arg_types =
-             match List.zip recieved_arg_types expected_arg_types with
+             match List.zip received_arg_types expected_arg_types with
              | Ok result -> result
              | Unequal_lengths ->
                raise.error
@@ -1500,12 +1500,12 @@ module External_types = struct
            in
            (* Unify args types *)
            let ctx =
-             List.fold arg_types ~init:ctx ~f:(fun ctx (recieved, expected) ->
+             List.fold arg_types ~init:ctx ~f:(fun ctx (received, expected) ->
                unify
                  ~raise
                  ~loc
                  ~ctx
-                 (Context.apply ctx recieved)
+                 (Context.apply ctx received)
                  (Context.apply ctx expected))
            in
            ctx, ret_type)

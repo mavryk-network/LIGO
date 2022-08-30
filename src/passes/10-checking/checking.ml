@@ -364,7 +364,7 @@ let rec check_expression
           ~raise
           ~loc
           ~ctx
-          ~recieved:(Context.apply ctx type_')
+          ~received:(Context.apply ctx type_')
           ~expected:(Context.apply ctx type_)
       in
       ctx, Elaboration.map ~f expr
@@ -770,7 +770,7 @@ and check_lambda
       let arg_ascr = evaluate_type ~raise ~ctx arg_ascr in
       (* TODO: Kinding check for ascription *)
       let ctx, _f =
-        subtype ~raise ~loc ~ctx ~recieved:arg_type ~expected:arg_ascr
+        subtype ~raise ~loc ~ctx ~received:arg_type ~expected:arg_ascr
       in
       (* Generate let binding for ascription subtyping, will be inlined later on *)
       ctx, arg_ascr, fun hole -> hole
