@@ -1030,22 +1030,24 @@ module Elaboration = struct
   let all_lmap lmap ~raise = LMap.map (fun t -> t ~raise) lmap
 
   (* A pass to check all existentials are resolved *)
-  let rec type_pass ~raise (type_ : type_expression) : unit =
-    let self = type_pass ~raise in
-    match type_.type_content with
-    | T_variable tvar ->
-      if TypeVar.is_exists tvar
-      then raise.error (`Typer_existential_found (type_.location, type_))
-    | T_constant inj -> List.iter ~f:self inj.parameters
-    | T_record rows | T_sum rows ->
-      LMap.iter (fun _ row_elem -> self row_elem.associated_type) rows.content
-    | T_arrow { type1; type2 } ->
-      self type1;
-      self type2
-    | T_singleton _ -> ()
-    | T_abstraction abs -> self abs.type_
-    | T_for_all for_all -> self for_all.type_
-
+  let type_pass ~raise (type_ : type_expression) : unit =
+    let fail () =
+      raise.error (`Typer_existential_found (type_.location, type_))
+    in
+    let rec loop type_ =
+      match type_.type_content with
+      | T_variable tvar -> if TypeVar.is_exists tvar then fail ()
+      | T_constant inj -> List.iter ~f:loop inj.parameters
+      | T_record rows | T_sum rows ->
+        LMap.iter (fun _ row_elem -> loop row_elem.associated_type) rows.content
+      | T_arrow { type1; type2 } ->
+        loop type1;
+        loop type2
+      | T_singleton _ -> ()
+      | T_abstraction abs -> loop abs.type_
+      | T_for_all for_all -> loop for_all.type_
+    in
+    loop type_
 
   let rec expression_pass ~raise expr =
     type_pass ~raise expr.type_expression;
