@@ -209,7 +209,7 @@ let rec error_ppformat
      | `Typer_cannot_subtype (loc, type1, type2) ->
        Format.fprintf
          f
-         "@[<hv>%a@.Expected %a, but recieved %a. Types are not compatitable.@]"
+         "@[<hv>%a@.Expected %a, but received %a. Types are not compatitable.@]"
          Snippet.pp
          loc
          Ast_typed.PP.type_expression
