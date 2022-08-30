@@ -52,17 +52,17 @@ let symbol_data ~name ~index ~size ~offset =
            offset = {it = offset; at};
          })
 
-let const i at = {it = Const {it = I32 i; at}; at}
+let const at i = {it = Const {it = I32 i; at}; at}
 
-let call_s name at = {it = Call_symbol name; at}
+let call_s at name = {it = Call_symbol name; at}
 
-let call_indirect_s name at = {it = CallIndirect_symbol name; at}
+let call_indirect_s at name = {it = CallIndirect_symbol name; at}
 
-let local_set_s name at = {it = LocalSet_symbol name; at}
+let local_set_s at name = {it = LocalSet_symbol name; at}
 
-let local_get_s name at = {it = LocalGet_symbol name; at}
+let local_get_s at name = {it = LocalGet_symbol name; at}
 
-let local_tee_s name at = {it = LocalTee_symbol name; at}
+let local_tee_s at name = {it = LocalTee_symbol name; at}
 
 let load at = 
   {it = Load {ty = I32Type; align = 0; offset = 0l; pack = None}; at}
@@ -74,28 +74,31 @@ let i32_add at = {it = Binary (I32 Add); at}
 
 let i32_mul at = {it = Binary (I32 Mul); at}
 
-let data_symbol symbol at = {it = DataSymbol symbol; at}
+let data_symbol at symbol = {it = DataSymbol symbol; at}
 
-let func_symbol symbol at = ({it = FuncSymbol symbol; at}: instr)
+let func_symbol at symbol = ({it = FuncSymbol symbol; at}: instr)
 
-let elem i at = {it = 
+let elem at i = {it = 
   { 
     etype = FuncRefType;
     einit = [];
     emode = {it = (Active {
       index = { it = 0l; at };
-      offset = {it = [const (Int32.of_int_exn i) at]; at }
+      offset = {it = [const at (Int32.of_int_exn i)]; at }
     }); at };
   }; 
   at} 
 
 let compare_eq at = {it = Compare (I32 I32Op.Eq); at }
 
-let if_ bt t e at = 
+let if_ at bt t e = 
   {it = If (bt, t, e); at}
 
-let br_if index at =
+let br_if at index =
   {it = BrIf {it = index; at}; at }
   
-let loop b il at = 
+let loop at b il = 
   {it = Loop (b, il); at}
+
+let nop at = 
+  {it = Nop; at}
