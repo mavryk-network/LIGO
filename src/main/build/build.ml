@@ -190,8 +190,8 @@ let build_contract ~raise : options:Compiler_options.t -> string -> Source_input
     Ligo_compile.Of_mini_c.compile_contract ~raise ~options mini_c
 
 
-let build_wasm_code ~raise : options:Compiler_options.t -> string -> Source_input.file_name -> unit =
-  fun ~options entry_point file_name ->
+let build_wasm_code ~raise : options:Compiler_options.t -> string -> Source_input.file_name -> string -> unit =
+  fun ~options entry_point file_name output_file ->
     let entry_point_orig = entry_point in
     let entry_point = Ast_typed.ValueVar.of_input_var entry_point in
     let typed_prg = build_typed ~raise ~options (Ligo_compile.Of_core.Contract entry_point) file_name in
@@ -199,10 +199,10 @@ let build_wasm_code ~raise : options:Compiler_options.t -> string -> Source_inpu
     let mini_c = Ligo_compile.Of_aggregated.compile_expression ~raise aggregated in
     let wasm  = Ligo_compile.Of_wasm.compile_contract ~raise ~options mini_c file_name entry_point_orig in
     let wasm = WasmObjectFile.Encode.encode wasm in
-    let channel = Out_channel.create ("temp.wasm") in
+    let channel = Out_channel.create ("temp.wasm") in (* TODO: remove file after linking *)
     Out_channel.output_string channel wasm;
     Out_channel.close channel; 
-    Ligo_compile.Of_wasm.link [("temp.wasm")] (file_name ^ ".wasm")
+    Ligo_compile.Of_wasm.link [("temp.wasm")] output_file
 
 let build_views ~raise :
   options:Compiler_options.t -> string -> string list -> Source_input.file_name -> (Ast_typed.ValueVar.t * Stacking.compiled_expression) list =

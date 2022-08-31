@@ -221,6 +221,16 @@ let michelson_code_format =
     | "hex"  -> `Hex
     | _ -> failwith "todo"
 
+let wasm_code_format =
+  let open Command.Param in
+  let docv = "--wasm-format" in
+  let doc = "CODE_FORMAT format that will be used by compile-contract for the resulting webassembly. Currently only 'binary' (default) is supported." in
+  flag ~doc docv @@
+  optional_with_default `Binary @@
+  Command.Arg_type.create @@ function
+    | "binary" -> `Binary
+    | _ -> failwith "todo"
+    
 let michelson_comments =
   let open Command.Param in
   let doc = "COMMENT_TYPE Selects kinds of comments to be added to the Michelson output. \
@@ -332,19 +342,25 @@ let (<$>) f a = Command.Param.return f <*> a
 I use a mutable variable to propagate back the effect of the result of f *)
 let return = ref Done
 let reset_return () = return := Done
-let compile_file =
-  let f source_file entry_point views syntax protocol_version display_format disable_michelson_typechecking experimental_disable_optimizations_for_debugging enable_typed_opt no_stdlib michelson_format output_file show_warnings warning_as_error michelson_comments constants file_constants project_root warn_unused_rec backend
-        () =
+let compile_file = 
+  let f source_file entry_point views syntax protocol_version display_format disable_michelson_typechecking experimental_disable_optimizations_for_debugging enable_typed_opt no_stdlib michelson_format wasm_format output_file show_warnings warning_as_error michelson_comments constants file_constants project_root warn_unused_rec backend
+        () = (
     let raw_options = Raw_options.make ~entry_point ~syntax ~views ~protocol_version ~disable_michelson_typechecking ~experimental_disable_optimizations_for_debugging ~enable_typed_opt ~no_stdlib ~warning_as_error ~constants ~file_constants ~project_root ~warn_unused_rec ~backend () in
-    return_result ~return ~show_warnings ?output_file @@
-    Api.Compile.contract raw_options source_file display_format michelson_format michelson_comments in
+    match raw_options.backend with 
+    | `Michelson ->
+      return_result ~return ~show_warnings ?output_file @@
+      Api.Compile.contract raw_options source_file display_format michelson_format michelson_comments
+    | `Wasm ->
+      return_result ~return ~show_warnings @@    
+      Api.Compile.contract_wasm raw_options source_file output_file display_format wasm_format 
+  ) in
   let summary   = "compile a contract." in
-  let readme () = "This sub-command compiles a contract to Michelson \
+  let readme () = "This sub-command compiles a contract to Michelson or WebAssembly \
                   code. It expects a source file and an entrypoint \
                   function that has the type of a contract: \"parameter \
                   * storage -> operations list * storage\"." in
   Command.basic ~summary ~readme
-  (f <$> source_file <*> entry_point <*> on_chain_views <*> syntax <*> protocol_version <*> display_format <*> disable_michelson_typechecking <*> experimental_disable_optimizations_for_debugging <*> enable_michelson_typed_opt <*> no_stdlib <*> michelson_code_format <*> output_file <*> warn <*> werror <*> michelson_comments <*> constants <*> file_constants <*> project_root <*> warn_unused_rec <*> backend)
+  (f <$> source_file <*> entry_point <*> on_chain_views <*> syntax <*> protocol_version <*> display_format <*> disable_michelson_typechecking <*> experimental_disable_optimizations_for_debugging <*> enable_michelson_typed_opt <*> no_stdlib <*> michelson_code_format <*> wasm_code_format <*> output_file <*> warn <*> werror <*> michelson_comments <*> constants <*> file_constants <*> project_root <*> warn_unused_rec <*> backend)
 
 let compile_parameter =
   let f source_file entry_point expression syntax protocol_version amount balance sender source now display_format michelson_format output_file show_warnings warning_as_error constants file_constants project_root warn_unused_rec () =

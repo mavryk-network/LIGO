@@ -20,6 +20,7 @@ type all =
  | `Main_execution_failed of (int, string) Tezos_micheline.Micheline.node
  | `Main_cannot_open_global_constants of string
  | `Main_cannot_parse_global_constants of string * string
+ | `Main_required_output_file
 
  | `Unparsing_michelson_tracer of tezos_alpha_error list
  | `Parsing_payload_tracer of tezos_alpha_error list

@@ -24,33 +24,49 @@ let read_file_constants ~raise file_constants =
         | Yojson.Json_error s -> raise.Trace.error (`Main_cannot_parse_global_constants (fn, s))
 
 let contract (raw_options : Raw_options.t) source_file display_format michelson_code_format michelson_comments () =
-    let warning_as_error = raw_options.warning_as_error in
-    format_result ~warning_as_error ~display_format (Formatter.Michelson_formatter.michelson_format michelson_code_format michelson_comments) @@
-      fun ~raise ->
-      let options =
-          let protocol_version = Helpers.protocol_to_variant ~raise raw_options.protocol_version in
-          let syntax = Syntax.of_string_opt ~raise (Syntax_name raw_options.syntax) (Some source_file) in
-          let has_env_comments = has_env_comments michelson_comments in
-          Compiler_options.make
-            ~raw_options
-            ~syntax
-            ~protocol_version
-            ~has_env_comments
-            ()
-      in
-      let Compiler_options.{ disable_michelson_typechecking = disable_typecheck ; views ; constants ; file_constants ; backend ; _ } = options.backend in
-      let Compiler_options.{ entry_point ; _ } = options.frontend in
-      match backend with 
-      | `Michelson ->
-        let code = Build.build_contract ~raise ~options entry_point source_file in
-        let views = Build.build_views ~raise ~options entry_point views source_file in
-        let file_constants = read_file_constants ~raise file_constants in
-        let constants = constants @ file_constants in
-        Ligo_compile.Of_michelson.build_contract ~raise ~enable_typed_opt:options.backend.enable_typed_opt ~protocol_version:options.middle_end.protocol_version ~has_env_comments:options.backend.has_env_comments ~disable_typecheck ~constants code views
-      | `Wasm ->
-        let _ = Build.build_wasm_code ~raise ~options entry_point source_file in
-        (* TODO: improve this and remove the `{}` result in the CLI *)
-        (Seq ({location = Location.dummy; env = []; binder = None}, []))
+  let warning_as_error = raw_options.warning_as_error in
+  format_result ~warning_as_error ~display_format (Formatter.Michelson_formatter.michelson_format michelson_code_format michelson_comments) @@
+    fun ~raise ->
+    let options =
+        let protocol_version = Helpers.protocol_to_variant ~raise raw_options.protocol_version in
+        let syntax = Syntax.of_string_opt ~raise (Syntax_name raw_options.syntax) (Some source_file) in
+        let has_env_comments = has_env_comments michelson_comments in
+        Compiler_options.make
+          ~raw_options
+          ~syntax
+          ~protocol_version
+          ~has_env_comments
+          ()
+    in
+    let Compiler_options.{ disable_michelson_typechecking = disable_typecheck ; views ; constants ; file_constants ; _ } = options.backend in
+    let Compiler_options.{ entry_point ; _ } = options.frontend in
+    let code = Build.build_contract ~raise ~options entry_point source_file in
+    let views = Build.build_views ~raise ~options entry_point views source_file in
+    let file_constants = read_file_constants ~raise file_constants in
+    let constants = constants @ file_constants in
+    Ligo_compile.Of_michelson.build_contract ~raise ~enable_typed_opt:options.backend.enable_typed_opt ~protocol_version:options.middle_end.protocol_version ~has_env_comments:options.backend.has_env_comments ~disable_typecheck ~constants code views
+
+let contract_wasm (raw_options : Raw_options.t) source_file output_file display_format wasm_code_format () =
+  let warning_as_error = raw_options.warning_as_error in  
+  format_result ~warning_as_error ~display_format (Formatter.Wasm_formatter.wasm_format wasm_code_format) @@
+    fun ~raise ->
+    let output_file = match output_file with 
+      Some o -> o
+    | None -> raise.Trace.error (`Main_required_output_file)
+    in
+    let options =
+        let protocol_version = Helpers.protocol_to_variant ~raise raw_options.protocol_version in
+        let syntax = Syntax.of_string_opt ~raise (Syntax_name raw_options.syntax) (Some source_file) in
+        Compiler_options.make
+          ~raw_options
+          ~syntax
+          ~protocol_version
+          ()
+    in
+    let Compiler_options.{ entry_point ; _ } = options.frontend in
+    Build.build_wasm_code ~raise ~options entry_point source_file output_file
+    
+
 
 let expression (raw_options : Raw_options.t) expression init_file display_format michelson_format () =
     let warning_as_error = raw_options.warning_as_error in

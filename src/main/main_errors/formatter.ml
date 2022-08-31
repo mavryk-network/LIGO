@@ -128,6 +128,7 @@ let rec error_ppformat : display_format:string display_format ->
     | `Main_invalid_timestamp t -> Format.fprintf f "@[<hv>Invalid command line option \"--now\". @.The provided now \"%s\" is invalid. It should use RFC3339 notation in a string, or the number of seconds since Epoch.@]" t
     | `Main_cannot_open_global_constants s -> Format.fprintf f "@[<hv>Cannot open global constants file. @.Check that the provided file \"%s\" exists.@]" s
     | `Main_cannot_parse_global_constants (fn, s) -> Format.fprintf f "@[<hv>Cannot parse global constants file: %s. @.Check that the provided file consists of JSON list of strings (one string per Michelson constant). @.JSON Error: %s@]" fn s
+    | `Main_required_output_file -> Format.fprintf f "@[<hv>Missing required --output[o] <filename>, which is required when targeting wasm. @]"
 
     | `Unparsing_michelson_tracer errs ->
       let errs = List.map ~f:( fun e -> match e with `Tezos_alpha_error a -> a) errs in
@@ -359,6 +360,8 @@ let rec error_jsonformat : Types.all -> Yojson.Safe.t = fun a ->
     json_error ~stage:"parsing command line parameters" ~message ~extra_content ()
   | `Main_cannot_open_global_constants _ ->
     json_error ~stage:"global constants parsing" ~message:"cannot open global constants file" ()
+  | `Main_required_output_file ->
+    json_error ~stage:"parsing command line parameters" ~message:"missing output filename" ()
   | `Main_cannot_parse_global_constants _ ->
     json_error ~stage:"global constants parsing" ~message:"cannot parse global constants file" ()
 
