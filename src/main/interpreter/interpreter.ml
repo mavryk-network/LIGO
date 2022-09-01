@@ -3,6 +3,7 @@ open Simple_utils
 open Ligo_interpreter.Types
 open Ligo_interpreter.Combinators
 
+open Ligo_prim
 module AST = Ast_aggregated
 
 include AST.Types
@@ -46,6 +47,7 @@ let monad_option error = fun v ->
 
 let wrap_compare_result comp cmpres loc calltrace =
   let open Monad in
+  let open Ligo_prim.Constant in
   match comp with
   | C_EQ -> return (cmpres = 0)
   | C_NEQ -> return (cmpres <> 0)
@@ -126,7 +128,7 @@ let compare_constants c o1 o2 loc calltrace =
 let rec apply_comparison :
     Location.t ->
     calltrace ->
-    AST.constant' ->
+    Ligo_prim.Constant.constant' ->
     value list ->
     value Monad.t =
   fun loc calltrace c operands ->
@@ -179,8 +181,9 @@ let rec apply_comparison :
             l) ;
       fail @@ Errors.meta_lang_eval loc calltrace not_comparable_string
 
-let rec apply_operator ~raise ~steps ~(options : Compiler_options.t) ?source_file : Location.t -> calltrace -> AST.type_expression -> env -> AST.constant' -> (value * AST.type_expression * Location.t) list -> value Monad.t =
+let rec apply_operator ~raise ~steps ~(options : Compiler_options.t) ?source_file : Location.t -> calltrace -> AST.type_expression -> env -> Constant.constant' -> (value * AST.type_expression * Location.t) list -> value Monad.t =
   fun loc calltrace expr_ty env c operands ->
+  let open Constant in
   let open Monad in
   let eval_ligo = eval_ligo ~raise ~steps ~options ?source_file in
   let types = List.map ~f:(fun (_, b, _) -> b) operands in
@@ -637,21 +640,19 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t) ?source_fil
     | ( C_TEST_FAILWITH , _ ) -> fail @@ error_type
     | ( C_TEST_TRY_WITH , [ V_Func_val { arg_binder = try_binder ; body = try_body ; env = try_env ; rec_name = _ ; orig_lambda = try_lambda } ; V_Func_val { arg_binder = catch_binder ; body = catch_body ; env = catch_env ; rec_name = _ ; orig_lambda = catch_lambda } ]) ->
       let eval_branch arg_binder orig_lambda body calltrace env = 
-        let AST.{ type1 = in_ty ; type2 = _ } = AST.get_t_arrow_exn orig_lambda.type_expression in
+        let Arrow.{ type1 = in_ty ; type2 = _ } = AST.get_t_arrow_exn orig_lambda.type_expression in
         let f_env' = Env.extend env arg_binder (in_ty, v_unit ()) in
         eval_ligo { body with location = loc } (loc :: calltrace) f_env'
       in
        try_or (eval_branch try_binder try_lambda try_body calltrace try_env)
          (eval_branch catch_binder catch_lambda catch_body calltrace catch_env)
     | ( C_TEST_TRY_WITH , _ ) -> fail @@ error_type
-    | ( C_TEST_COMPILE_CONTRACT_FROM_FILE, [ V_Ct (C_string contract_file) ; V_Ct (C_string entryp) ; V_List views ]) ->
+    | ( C_TEST_COMPILE_CONTRACT_FROM_FILE, [ V_Ct (C_string contract_file) ; V_Ct (C_string entryp) ; V_List views ; mutation ]) ->
       let>> mod_res = Get_mod_res () in
       let contract_file = resolve_contract_file ~mod_res ~source_file ~contract_file in
-      let views = List.map
-                    ~f:(fun x -> trace_option ~raise (Errors.corner_case ()) @@ get_string x)
-                    views
-      in
-      let>> code = Compile_contract_from_file (contract_file,entryp,views) in
+      let views = List.map ~f:(fun x -> trace_option ~raise (Errors.corner_case ()) @@ get_string x) views in
+      let* mutation = monad_option (Errors.generic_error loc "Expected option") @@ LC.get_nat_option mutation in
+      let>> code = Compile_contract_from_file (contract_file,entryp,views,mutation) in
       return @@ code
     | ( C_TEST_COMPILE_CONTRACT_FROM_FILE , _  ) -> fail @@ error_type
     | ( C_TEST_EXTERNAL_CALL_TO_ADDRESS_EXN , [ (V_Ct (C_address address)) ; entrypoint ; V_Michelson (Ty_code { code = param ; _ }) ; V_Ct ( C_mutez amt ) ] ) -> (
@@ -701,7 +702,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t) ?source_fil
     | ( C_TEST_BOOTSTRAP_CONTRACT , [ V_Ct (C_mutez z) ; contract ; storage ] ) ->
        let* contract_ty = monad_option (Errors.generic_error loc "Could not recover types") @@ List.nth types 1 in
        let* storage_ty = monad_option (Errors.generic_error loc "Could not recover types") @@ List.nth types 2 in
-       let>> code = Compile_contract (loc, contract, contract_ty) in
+       let>> code = Compile_contract (loc, contract) in
        let>> storage = Eval (loc, storage, storage_ty) in
        let>> () = Bootstrap_contract ((Z.to_int z), code, storage, contract_ty) in
        return_ct C_unit
@@ -743,6 +744,15 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t) ?source_fil
         fail @@ error_type
     )
     | ( C_TEST_LAST_EVENTS , _  ) -> fail @@ error_type
+    | ( C_TEST_MUTATE_CONTRACT , [ V_Ct (C_nat n); V_Ast_contract { main ; views } as v ] ) -> (
+      let* () = check_value v in
+      let v = Mutation.mutate_some_contract ~raise n main in
+      match v with
+      | None ->
+         return (v_none ())
+      | Some (main, m) ->
+         return @@ (v_some (V_Record (Record.LMap.of_list [ (Label "0", V_Ast_contract { main ; views }) ; (Label "1", V_Mutation m) ]))))
+    | ( C_TEST_MUTATE_CONTRACT , _  ) -> fail @@ error_type
     | ( C_TEST_MUTATE_VALUE , [ V_Ct (C_nat n); v ] ) -> (
       let* () = check_value v in
       let* value_ty = monad_option (Errors.generic_error loc "Could not recover types") @@ List.nth types 1 in
@@ -752,7 +762,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t) ?source_fil
          return (v_none ())
       | Some (e, m) ->
          let* v = eval_ligo e calltrace env in
-         return @@ (v_some (V_Record (LMap.of_list [ (Label "0", v) ; (Label "1", V_Mutation m) ]))))
+         return @@ (v_some (V_Record (Record.of_list [ (Label "0", v) ; (Label "1", V_Mutation m) ]))))
     | ( C_TEST_MUTATE_VALUE , _  ) -> fail @@ error_type
     | ( C_TEST_SAVE_MUTATION , [(V_Ct (C_string dir)) ; (V_Mutation ((loc, _, _) as mutation)) ] ) ->
       let* reg = monad_option (Errors.generic_error loc "Not a valid mutation") @@ Location.get_file loc in
@@ -802,10 +812,13 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t) ?source_fil
       return v
     | ( C_TEST_DECOMPILE , _  ) -> fail @@ error_type
     | ( C_TEST_COMPILE_CONTRACT , [ contract ] ) ->
-       let* contract_ty = monad_option (Errors.generic_error loc "Could not recover types") @@ List.nth types 0 in
-       let>> code = Compile_contract (loc, contract, contract_ty) in
+       let>> code = Compile_contract (loc, contract) in
        return @@ code
     | ( C_TEST_COMPILE_CONTRACT , _  ) -> fail @@ error_type
+    | ( C_TEST_COMPILE_AST_CONTRACT , [ contract ] ) ->
+       let>> code = Compile_ast_contract (loc, contract) in
+       return @@ code
+    | ( C_TEST_COMPILE_AST_CONTRACT , _  ) -> fail @@ error_type
     | ( C_TEST_SIZE , [ contract ] ) ->
        let>> size = Get_size contract in
        return @@ size
@@ -940,7 +953,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t) ?source_fil
   )
 
 (*interpreter*)
-and eval_literal : AST.literal -> value Monad.t = function
+and eval_literal : Ligo_prim.Literal_value.t -> value Monad.t = function
   | Literal_unit           -> Monad.return @@ V_Ct (C_unit)
   | Literal_int i          -> Monad.return @@ V_Ct (C_int i)
   | Literal_nat n          -> Monad.return @@ V_Ct (C_nat n)
@@ -998,11 +1011,11 @@ and eval_ligo ~raise ~steps ~options ?source_file : AST.expression -> calltrace 
         let* args' = eval_ligo args calltrace env in
         match f' with
           | V_Func_val {arg_binder ; body ; env; rec_name = None ; orig_lambda } ->
-            let AST.{ type1 = in_ty ; type2 = _ } = AST.get_t_arrow_exn orig_lambda.type_expression in
+            let Arrow.{ type1 = in_ty ; type2 = _ } = AST.get_t_arrow_exn orig_lambda.type_expression in
             let f_env' = Env.extend env arg_binder (in_ty, args') in
             eval_ligo { body with location = term.location } (term.location :: calltrace) f_env'
           | V_Func_val {arg_binder ; body ; env; rec_name = Some fun_name; orig_lambda} ->
-            let AST.{ type1 = in_ty ; type2 = _ } = AST.get_t_arrow_exn orig_lambda.type_expression in
+            let Arrow.{ type1 = in_ty ; type2 = _ } = AST.get_t_arrow_exn orig_lambda.type_expression in
             let f_env' = Env.extend env arg_binder (in_ty, args') in
             let f_env'' = Env.extend f_env' fun_name (orig_lambda.type_expression, f') in
             eval_ligo { body with location = term.location } (term.location :: calltrace) f_env''
@@ -1015,7 +1028,7 @@ and eval_ligo ~raise ~steps ~options ?source_file : AST.expression -> calltrace 
             match Michelson_backend.run_michelson_func ~raise ~options ~loc:term.location ctxt code term.type_expression args' args.type_expression with
             | Ok v -> return v
             | Error data -> (
-              let { type1 = data_t ; _ } = AST.get_t_arrow_exn f.type_expression in
+              let Arrow.{ type1 = data_t ; _ } = AST.get_t_arrow_exn f.type_expression in
               let data_t = Michelson_backend.compile_type ~raise data_t in
               let data_opt = to_option @@ Michelson_to_value.decompile_to_untyped_value ~bigmaps:[] (clean_locations data_t) (clean_locations data) in
               match data_opt with
@@ -1025,7 +1038,7 @@ and eval_ligo ~raise ~steps ~options ?source_file : AST.expression -> calltrace 
           )
           | _ -> fail @@ Errors.generic_error term.location "Trying to apply on something that is not a function?"
       )
-    | E_lambda {binder; result;} ->
+    | E_lambda {binder; output_type=_; result;} ->
       let fv = Self_ast_aggregated.Helpers.Free_variables.expression term in
       let env = List.filter ~f:(fun (v, _) -> List.mem fv v ~equal:ValueVar.equal) env in
       return @@ V_Func_val {rec_name = None; orig_lambda = term ; arg_binder=binder.var ; body=result ; env}
@@ -1040,31 +1053,31 @@ and eval_ligo ~raise ~steps ~options ?source_file : AST.expression -> calltrace 
       eval_literal l
     | E_variable var ->
       let fst (a, _, _) = a in
-      let {eval_term=v ; _} = try fst (Option.value_exn (Env.lookup env var)) with _ -> (failwith (Format.asprintf "unbound variable: %a" AST.PP.expression_variable var)) in
+      let {eval_term=v ; _} = try fst (Option.value_exn (Env.lookup env var)) with _ -> (failwith (Format.asprintf "unbound variable: %a" ValueVar.pp var)) in
       return v
     | E_record recmap ->
       let* lv' = Monad.bind_map_list
         (fun (label,(v:AST.expression)) ->
           let* v' = eval_ligo v calltrace env in
           return (label,v'))
-        (LMap.to_kv_list_rev recmap)
+        (Record.LMap.to_kv_list_rev recmap)
       in
-      return @@ V_Record (LMap.of_list lv')
-    | E_record_accessor { record ; path} -> (
+      return @@ V_Record (Record.of_list lv')
+    | E_accessor { record ; path} -> (
       let* record' = eval_ligo record calltrace env in
       match record' with
       | V_Record recmap ->
-        let a = LMap.find path recmap in
+        let a = Record.LMap.find path recmap in
         return a
       | _ -> failwith "trying to access a non-record"
     )
-    | E_record_update {record ; path ; update} -> (
+    | E_update {record ; path ; update} -> (
       let* record' = eval_ligo record calltrace env in
       match record' with
       | V_Record recmap ->
-        if LMap.mem path recmap then
+        if Record.LMap.mem path recmap then
           let* field' = eval_ligo update calltrace env in
-          return @@ V_Record (LMap.add path field' recmap)
+          return @@ V_Record (Record.LMap.add path field' recmap)
         else
           failwith "field l does not exist in record"
       | _ -> failwith "this expression isn't a record"
@@ -1112,10 +1125,10 @@ and eval_ligo ~raise ~steps ~options ?source_file : AST.expression -> calltrace 
         let env' = Env.extend env pattern (ty, proj) in
         eval_ligo body calltrace env'
       | Match_variant {cases;_}, V_Ct (C_bool b) ->
-        let ctor_body (case : matching_content_case) = (case.constructor, case.body) in
-        let cases = LMap.of_list (List.map ~f:ctor_body cases) in
+        let ctor_body (case : _ matching_content_case) = (case.constructor, case.body) in
+        let cases = Record.of_list (List.map ~f:ctor_body cases) in
         let get_case c =
-            (LMap.find (Label c) cases) in
+            (Record.LMap.find (Label c) cases) in
         let match_true  = get_case "True" in
         let match_false = get_case "False" in
         if b then eval_ligo match_true calltrace env
@@ -1123,8 +1136,8 @@ and eval_ligo ~raise ~steps ~options ?source_file : AST.expression -> calltrace 
       | Match_variant {cases ; tv} , V_Construct (matched_c , proj) ->
         let* tv = match AST.get_t_sum_opt tv with
           | Some tv ->
-             let {associated_type; michelson_annotation=_; decl_pos=_} = LMap.find
-                                  (Label matched_c) tv.content in
+             let {associated_type; michelson_annotation=_; decl_pos=_}: row_element = Record.LMap.find
+                                  (Label matched_c) tv.fields in
              return associated_type
           | None ->
              match AST.get_t_option tv with
@@ -1141,15 +1154,15 @@ and eval_ligo ~raise ~steps ~options ?source_file : AST.expression -> calltrace 
         let env' = Env.extend env pattern (tv, proj) in
         eval_ligo body calltrace env'
       | Match_record {fields ; body ; tv = _} , V_Record rv ->
-        let aux : label ->  _ binder -> env -> env =
+        let aux : Label.t ->  _ Binder.t -> env -> env =
           fun l {var;ascr;attributes=_} env ->
-            let iv = match LMap.find_opt l rv with
+            let iv = match Record.LMap.find_opt l rv with
               | Some x -> x
               | None -> failwith "label do not match"
             in
-            Env.extend env var (Option.value_exn ascr,iv)
+            Env.extend env var (ascr,iv)
         in
-        let env' = LMap.fold aux fields env in
+        let env' = Record.LMap.fold aux fields env in
         eval_ligo body calltrace env'
       | _ , v -> failwith ("not yet supported case "^ Format.asprintf "%a" Ligo_interpreter.PP.pp_value v^ Format.asprintf "%a" AST.PP.expression term)
     )
@@ -1164,7 +1177,7 @@ and eval_ligo ~raise ~steps ~options ?source_file : AST.expression -> calltrace 
     | E_raw_code {language ; code} -> (
       let open AST in
       match code.expression_content with
-      | E_literal (Literal_string x) when String.equal language Stage_common.Backends.michelson && (is_t_arrow (get_type code) || is_t_arrow (term.type_expression)) ->
+      | E_literal (Literal_string x) when String.equal language Backend.Michelson.name && (is_t_arrow (get_type code) || is_t_arrow (term.type_expression)) ->
         let ast_ty = get_type code in
         let exp_as_string = Ligo_string.extract x in
         let code, code_ty = Michelson_backend.parse_raw_michelson_code ~raise exp_as_string ast_ty in
@@ -1184,7 +1197,7 @@ let eval_test ~raise ~steps ~options ?source_file : Ast_typed.program -> ((strin
   let aux decl r =
     let ds, defs = r in
     match decl.Location.wrap_content with
-    | Ast_typed.Declaration_constant { binder ; expr ; _ } ->
+    | Ast_typed.Declaration.Declaration_constant { binder ; expr ; _ } ->
       let var = binder.var in
       if not (ValueVar.is_generated var) && (Base.String.is_prefix (ValueVar.to_name_exn var) ~prefix:"test") then
         let expr = Ast_typed.(e_a_variable var expr.type_expression) in
@@ -1198,9 +1211,9 @@ let eval_test ~raise ~steps ~options ?source_file : Ast_typed.program -> ((strin
   let ctxt = Ligo_compile.Of_typed.compile_program ~raise decl_lst in
   let initial_state = Execution_monad.make_state ~raise ~options in
   let f (n, t) r =
-    let s, _ = ValueVar.internal_get_name_and_counter n.var in
-    LMap.add (Label s) (Ast_typed.e_a_variable n.var t) r in
-  let map = List.fold_right lst ~f ~init:LMap.empty in
+    let s, _ = ValueVar.internal_get_name_and_counter n.Binder.var in
+    Record.LMap.add (Label s) (Ast_typed.e_a_variable n.var t) r in
+  let map = List.fold_right lst ~f ~init:Record.LMap.empty in
   let expr = Ast_typed.e_a_record map in
   let expr = ctxt expr in
   let expr = trace ~raise Main_errors.self_ast_aggregated_tracer @@ Self_ast_aggregated.all_expression ~options:options.middle_end expr in
@@ -1208,8 +1221,8 @@ let eval_test ~raise ~steps ~options ?source_file : Ast_typed.program -> ((strin
   match value with
   | V_Record m ->
     let f (n, _) r =
-      let s, _ = ValueVar.internal_get_name_and_counter n.var in
-      match LMap.find_opt (Label s) m with
+      let s, _ = ValueVar.internal_get_name_and_counter n.Binder.var in
+      match Record.LMap.find_opt (Label s) m with
       | None -> failwith "Cannot find"
       | Some v -> (s, v) :: r in
     List.fold_right ~f ~init:[] @@ lst

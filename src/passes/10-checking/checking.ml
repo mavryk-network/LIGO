@@ -8,8 +8,8 @@ module I = Ast_core
 module O = Ast_typed
 open O.Combinators
 open Subtyping
-module TypeVar = Stage_common.Types.TypeVar
 module Pair = Simple_utils.Pair
+open Ligo_prim
 
 let debug = false
 let assertions = false
@@ -76,7 +76,7 @@ let get_signature
     then
       Format.printf
         "@[Get Signature@.MVar: %a@.Signature: %a@]\n"
-        O.ModuleVar.pp
+        ModuleVar.pp
         mvar
         Signature.pp
         sig_;
@@ -108,8 +108,8 @@ let rec evaluate_type ~raise ~(ctx : Context.t) (type_ : I.type_expression)
         let associated_type = self associated_type in
         ({ associated_type; michelson_annotation; decl_pos } : O.row_element)
       in
-      let content = O.LMap.map aux m.fields in
-      O.{ content; layout }
+      let fields = Record.LMap.map aux m.fields in
+      O.{ fields; layout }
     in
     return @@ T_sum rows
   | T_record m ->
@@ -121,8 +121,8 @@ let rec evaluate_type ~raise ~(ctx : Context.t) (type_ : I.type_expression)
         let associated_type = self associated_type in
         ({ associated_type; michelson_annotation; decl_pos } : O.row_element)
       in
-      let content = O.LMap.map aux m.fields in
-      O.{ content; layout }
+      let fields = Record.LMap.map aux m.fields in
+      O.{ fields; layout }
     in
     return @@ T_record rows
   | T_variable name ->
@@ -195,6 +195,11 @@ let rec evaluate_type ~raise ~(ctx : Context.t) (type_ : I.type_expression)
     return @@ T_for_all { x with type_ }
 
 
+let type_value_attr : I.Attr.value -> O.Attr.value =
+ fun { inline; no_mutation; view; public; hidden; thunk } ->
+  { inline; no_mutation; view; public; hidden; thunk }
+
+
 let infer_literal ~loc lit
   : O.type_expression * (O.expression, _, _) Elaboration.t
   =
@@ -225,7 +230,7 @@ let infer_literal ~loc lit
 
 
 let equal_lmap_doms lmap1 lmap2 =
-  let open O in
+  let open Record in
   let dom lmap = LSet.of_list (LMap.keys lmap) in
   LSet.equal (dom lmap1) (dom lmap2)
 
@@ -308,33 +313,33 @@ let rec check_expression
         return @@ E_lambda lambda )
     | E_record record, T_record row ->
       (* Check domain of record and row are consistent *)
-      if not (equal_lmap_doms record row.content)
+      if not (equal_lmap_doms record row.fields)
       then raise.error (record_mismatch loc expr type_);
       (* Type check record using row *)
       let ctx, record =
-        O.LMap.fold_map record ~init:ctx ~f:(fun label expr ctx ->
-          let expr_type = O.LMap.find label row.content in
+        Record.LMap.fold_map record ~init:ctx ~f:(fun label expr ctx ->
+          let expr_type = Record.LMap.find label row.fields in
           check ~ctx expr expr_type.associated_type)
       in
       ( ctx
       , let%bind record = Elaboration.all_lmap record in
         return @@ E_record record )
-    | E_record_update { record; path; update }, T_record row ->
+    | E_update { record; path; update }, T_record row ->
       let ctx, record = check ~ctx record type_ in
       let field_row_elem =
         trace_option ~raise (bad_record_access path loc)
-        @@ O.LMap.find_opt path row.content
+        @@ Record.LMap.find_opt path row.fields
       in
       let ctx, update = check ~ctx update field_row_elem.associated_type in
       ( ctx
       , let%bind record = record
         and update = update in
-        return @@ E_record_update { record; path; update } )
+        return @@ E_update { record; path; update } )
     | E_constructor { constructor; element }, T_sum row ->
       (* Find row element *)
       let constructor_row_elem =
         trace_option ~raise (bad_constructor loc constructor type_)
-        @@ O.LMap.find_opt constructor row.content
+        @@ Record.LMap.find_opt constructor row.fields
       in
       (* Type check element *)
       let ctx, element =
@@ -459,13 +464,14 @@ and infer_expression ~(raise : raise) ~options ~ctx (expr : I.expression)
         Context.enter ~ctx ~in_:(fun ctx ->
           infer ~ctx:Context.(ctx |:: C_value (var, rhs_type)) let_result)
       in
+      let attr = type_value_attr attr in
       ( ctx
       , res_type
       , let%bind rhs = rhs
         and let_result = let_result in
         return
           (E_let_in
-             { let_binder = { var; ascr = Some rhs_type; attributes }
+             { let_binder = { var; ascr = rhs_type; attributes }
              ; rhs
              ; let_result
              ; attr
@@ -500,7 +506,7 @@ and infer_expression ~(raise : raise) ~options ~ctx (expr : I.expression)
       let ctx, lambda =
         check
           ~ctx:Context.(ctx |:: C_value (fun_name, fun_type))
-          (I.make_e ~loc (E_lambda lambda))
+          (I.make_e ~loc (E_lambda (Lambda.map Fn.id Option.some lambda)))
           fun_type
       in
       ( ctx
@@ -516,24 +522,27 @@ and infer_expression ~(raise : raise) ~options ~ctx (expr : I.expression)
         return (E_recursive { fun_name; fun_type; lambda }) fun_type )
     | E_record record ->
       let (ctx, row_content), record =
-        O.LMap.fold_map
+        Record.LMap.fold_map
           record
-          ~init:(ctx, O.LMap.empty)
+          ~init:(ctx, Record.LMap.empty)
           ~f:(fun label expr (ctx, row_content) ->
           let ctx, expr_type, expr = infer ~ctx expr in
-          let row_content = O.LMap.add label expr_type row_content in
+          let row_content = Record.LMap.add label expr_type row_content in
           (ctx, row_content), expr)
       in
       let _, row =
         (* No fold_mapi in utils :cry *)
-        O.LMap.fold_map row_content ~init:0 ~f:(fun label associated_type i ->
+        Record.LMap.fold_map
+          row_content
+          ~init:0
+          ~f:(fun label associated_type i ->
           let decl_pos =
             let (Label str) = label in
             match Int.of_string str with
             | i -> i
             | exception _ -> i
           in
-          i + 1, { O.associated_type; michelson_annotation = None; decl_pos })
+          i + 1, { Rows.associated_type; michelson_annotation = None; decl_pos })
       in
       let record_type =
         match Context.get_record row ctx with
@@ -545,7 +554,7 @@ and infer_expression ~(raise : raise) ~options ~ctx (expr : I.expression)
       , record_type
       , let%bind record = Elaboration.all_lmap record in
         return (E_record record) record_type )
-    | E_record_accessor { record; path = field } ->
+    | E_accessor { record; path = field } ->
       let ctx, record_type, record = infer ~ctx record in
       let row =
         trace_option ~raise (expected_record loc record_type)
@@ -553,14 +562,14 @@ and infer_expression ~(raise : raise) ~options ~ctx (expr : I.expression)
       in
       let field_row_elem =
         trace_option ~raise (bad_record_access field loc)
-        @@ O.LMap.find_opt field row.content
+        @@ Record.LMap.find_opt field row.fields
       in
       let field_type = field_row_elem.associated_type in
       ( ctx
       , field_type
       , let%bind record = record in
-        return (E_record_accessor { record; path = field }) field_type )
-    | E_record_update { record; path; update } ->
+        return (E_accessor { record; path = field }) field_type )
+    | E_update { record; path; update } ->
       let ctx, record_type, record = infer ~ctx record in
       let row =
         trace_option ~raise (expected_record loc record_type)
@@ -568,14 +577,14 @@ and infer_expression ~(raise : raise) ~options ~ctx (expr : I.expression)
       in
       let field_row_elem =
         trace_option ~raise (bad_record_access path loc)
-        @@ O.LMap.find_opt path row.content
+        @@ Record.LMap.find_opt path row.fields
       in
       let ctx, update = check ~ctx update field_row_elem.associated_type in
       ( ctx
       , record_type
       , let%bind record = record
         and update = update in
-        return (E_record_update { record; path; update }) record_type )
+        return (E_update { record; path; update }) record_type )
     | E_constructor { constructor = Label label as constructor; _ }
       when String.(label = "M_right" || label = "M_left") ->
       raise.error (michelson_or_no_annotation constructor loc)
@@ -665,7 +674,7 @@ and infer_expression ~(raise : raise) ~options ~ctx (expr : I.expression)
       let sig_ = get_signature ~raise ~loc ctx module_path' in
       let pp_path ppf path =
         List.Ne.iter
-          (fun mvar -> Format.fprintf ppf "%a." O.ModuleVar.pp mvar)
+          (fun mvar -> Format.fprintf ppf "%a." ModuleVar.pp mvar)
           path
       in
       if debug
@@ -674,7 +683,7 @@ and infer_expression ~(raise : raise) ~options ~ctx (expr : I.expression)
           "@[Path: %a@.Element: %a@.Signature: %a@]\n"
           pp_path
           module_path'
-          O.ValueVar.pp
+          ValueVar.pp
           element
           Signature.pp
           sig_;
@@ -690,10 +699,10 @@ and infer_expression ~(raise : raise) ~options ~ctx (expr : I.expression)
       let type_ =
         trace_option
           ~raise
-          (unbound_variable binder.var (O.ValueVar.get_location var))
+          (unbound_variable binder.var (ValueVar.get_location var))
         @@ Context.get_value ctx binder.var
       in
-      let binder = { binder with ascr = Some type_ } in
+      let binder = { binder with ascr = type_ } in
       let ctx, expression = check ~ctx expression type_ in
       let ret_type = O.t_unit ~loc () in
       ( ctx
@@ -753,13 +762,13 @@ and check_lambda
   ~loc
   ~options
   ~ctx
-  ({ binder; output_type = ret_ascr; result } : _ I.lambda)
+  ({ binder; output_type = ret_ascr; result } : _ Lambda.t)
   arg_type
   ret_type
-  : Context.t * (O.lambda, _, _) Elaboration.t
+  : Context.t * (_ Lambda.t, _, _) Elaboration.t
   =
   let open Elaboration.Let_syntax in
-  let ({ var; ascr = arg_ascr; _ } : _ I.binder) = binder in
+  let ({ var; ascr = arg_ascr; _ } : _ Binder.t) = binder in
   let result =
     Option.value_map ret_ascr ~default:result ~f:(fun ret_ascr ->
       I.e_ascription ~loc result ret_ascr)
@@ -790,8 +799,11 @@ and check_lambda
   ( Context.drop_until ctx ~pos
   , let%bind result = result in
     return
-      ({ binder = { binder with ascr = Some arg_type }; result = f result }
-        : O.lambda) )
+      Lambda.
+        { binder = { binder with ascr = arg_type }
+        ; result = f result
+        ; output_type = ret_type
+        } )
 
 
 and infer_lambda
@@ -799,12 +811,12 @@ and infer_lambda
   ~options
   ~loc
   ~ctx
-  ({ binder; output_type = ret_ascr; result } : _ I.lambda)
+  ({ binder; output_type = ret_ascr; result } : _ Lambda.t)
   : Context.t * O.type_expression * (O.expression, _, _) Elaboration.t
   =
   let open Elaboration.Let_syntax in
   let return content type_ = return @@ O.make_e ~location:loc content type_ in
-  let ({ var; ascr = arg_ascr; _ } : _ I.binder) = binder in
+  let ({ var; ascr = arg_ascr; _ } : _ Binder.t) = binder in
   (* Desugar return ascription to (result : ret_ascr) *)
   let result =
     Option.value_map ret_ascr ~default:result ~f:(fun ret_ascr ->
@@ -829,7 +841,11 @@ and infer_lambda
     let lambda : (O.expression, _, _) Elaboration.t =
       let%bind result = result in
       return
-        (E_lambda { binder = { binder with ascr = Some arg_type }; result })
+        (E_lambda
+           { binder = { binder with ascr = arg_type }
+           ; result
+           ; output_type = ret_type
+           })
         type_
     in
     ctx, type_, lambda)
@@ -919,44 +935,40 @@ and infer_application ~raise ~loc ~options ~ctx lamb_type args
 
 
 and check_pattern
-  ~raise
+  ~(raise : raise)
   ~ctx
-  (pat : I.type_expression I.pattern)
+  (pat : I.type_expression option Pattern.t)
   (type_ : O.type_expression)
-  : Context.t * (O.type_expression O.pattern, _, _) Elaboration.t
+  : Context.t * (O.type_expression option Pattern.t, _, _) Elaboration.t
   =
   let open Elaboration.Let_syntax in
   let loc = pat.location in
   let err () = pattern_do_not_conform_type pat type_ in
   let fail () = raise.error (err ()) in
-  let return content = return @@ Location.wrap ~loc content in
+  let return content =
+    return @@ (Location.wrap ~loc content : O.type_expression option Pattern.t)
+  in
   let self ?(raise = raise) = check_pattern ~raise in
   let ctx, pat =
     match pat.wrap_content, type_.type_content with
-    | I.P_unit, O.T_constant { injection = Stage_common.Constant.Unit; _ } ->
-      ctx, return @@ O.P_unit
-    | I.P_unit, _ -> fail ()
-    | I.P_var ({ var; _ } as binder), _ ->
+    | P_unit, O.T_constant { injection = Literal_types.Unit; _ } ->
+      ctx, return @@ P_unit
+    | P_unit, _ -> fail ()
+    | P_var ({ var; _ } as binder), _ ->
       ( Context.(ctx |:: C_value (var, type_))
-      , return @@ O.P_var { binder with ascr = Some type_ } )
-    | ( I.P_list (I.Cons (hd_pat, tl_pat))
+      , return @@ P_var { binder with ascr = Some type_ } )
+    | ( P_list (Cons (hd_pat, tl_pat))
       , O.T_constant
-          { injection = Stage_common.Constant.List
-          ; parameters = [ elt_type ]
-          ; _
-          } ) ->
+          { injection = Literal_types.List; parameters = [ elt_type ]; _ } ) ->
       let ctx, hd_pat = self ~ctx hd_pat elt_type in
       let ctx, tl_pat = self ~ctx tl_pat type_ in
       ( ctx
       , let%bind hd_pat = hd_pat
         and tl_pat = tl_pat in
-        return @@ O.P_list (O.Cons (hd_pat, tl_pat)) )
-    | ( I.P_list (I.List list_pat)
+        return @@ P_list (Cons (hd_pat, tl_pat)) )
+    | ( P_list (List list_pat)
       , O.T_constant
-          { injection = Stage_common.Constant.List
-          ; parameters = [ elt_type ]
-          ; _
-          } ) ->
+          { injection = Literal_types.List; parameters = [ elt_type ]; _ } ) ->
       let ctx, list_pat =
         List.fold_right list_pat ~init:(ctx, []) ~f:(fun elt (ctx, list_pat) ->
           let ctx, elt = self ~ctx elt elt_type in
@@ -964,31 +976,31 @@ and check_pattern
       in
       ( ctx
       , let%bind list_pat = Elaboration.all list_pat in
-        return @@ O.P_list (O.List list_pat) )
-    | I.P_variant (label, arg_pat), O.T_sum row ->
+        return @@ P_list (List list_pat) )
+    | P_variant (label, arg_pat), O.T_sum row ->
       let label_row_elem =
-        trace_option ~raise (err ()) @@ O.LMap.find_opt label row.content
+        trace_option ~raise (err ()) @@ Record.LMap.find_opt label row.fields
       in
       let ctx, arg_pat = self ~ctx arg_pat label_row_elem.associated_type in
       ( ctx
       , let%bind arg_pat = arg_pat in
-        return @@ O.P_variant (label, arg_pat) )
-    | I.P_tuple tuple_pat, O.T_record row ->
-      if O.LMap.cardinal row.content <> List.length tuple_pat
+        return @@ P_variant (label, arg_pat) )
+    | P_tuple tuple_pat, O.T_record row ->
+      if Record.LMap.cardinal row.fields <> List.length tuple_pat
       then raise.error (fail ());
       let ctx, tuple_pat =
         List.fold_mapi tuple_pat ~init:ctx ~f:(fun i ctx pat ->
           let pat_row_elem =
             trace_option ~raise (err ())
-            @@ O.LMap.find_opt (Label (Int.to_string i)) row.content
+            @@ Record.LMap.find_opt (Label (Int.to_string i)) row.fields
           in
           self ~ctx pat pat_row_elem.associated_type)
       in
       ( ctx
       , let%bind tuple_pat = Elaboration.all tuple_pat in
-        return @@ O.P_tuple tuple_pat )
-    | I.P_record (labels, pats), O.T_record row ->
-      if O.LMap.cardinal row.content <> List.length labels
+        return @@ P_tuple tuple_pat )
+    | P_record (labels, pats), O.T_record row ->
+      if Record.LMap.cardinal row.fields <> List.length labels
       then raise.error (fail ());
       let record_pat =
         match List.zip labels pats with
@@ -999,14 +1011,14 @@ and check_pattern
       (* Strange sorting required by anomalies check? *)
       let record_pat =
         List.sort
-          ~compare:(fun (label1, _) (label2, _) ->
-            O.compare_label label1 label2)
+          ~compare:(fun (label1, _) (label2, _) -> Label.compare label1 label2)
           record_pat
       in
       let ctx, record_pat =
         List.fold_map record_pat ~init:ctx ~f:(fun ctx (label, pat) ->
           let label_row_elem =
-            trace_option ~raise (err ()) @@ O.LMap.find_opt label row.content
+            trace_option ~raise (err ())
+            @@ Record.LMap.find_opt label row.fields
           in
           let ctx, pat = self ~ctx pat label_row_elem.associated_type in
           ctx, (label, pat))
@@ -1014,7 +1026,7 @@ and check_pattern
       let labels, pats = List.unzip record_pat in
       ( ctx
       , let%bind pats = Elaboration.all pats in
-        return @@ O.P_record (labels, pats) )
+        return @@ P_record (labels, pats) )
     | _ -> raise.error (fail ())
   in
   (* if debug then Format.printf "Ctx After Pattern (Check): %a\n" Context.pp_ ctx; *)
@@ -1022,18 +1034,21 @@ and check_pattern
 
 
 and check_cases
-  ~raise
+  ~(raise : raise)
   ~options
   ~ctx
-  (cases : (I.expression, I.type_expression) I.match_case list)
+  (cases : (I.expression, I.type_expression option) Match_expr.match_case list)
   matchee_type
   ret_type
   : Context.t
-    * ((O.type_expression O.pattern * O.expression) list, _, _) Elaboration.t
+    * ( (O.type_expression option Pattern.t * O.expression) list
+      , _
+      , _ )
+      Elaboration.t
   =
   let open Elaboration.Let_syntax in
   let ctx, cases =
-    List.fold_map ~init:ctx cases ~f:(fun ctx { pattern; body } ->
+    List.fold_map ~init:ctx cases ~f:(fun ctx Match_expr.{ pattern; body } ->
       let ctx, pos = Context.mark ctx in
       let matchee_type = Context.apply ctx matchee_type in
       if debug
@@ -1065,13 +1080,9 @@ and compile_match
   (* TODO: Assert matchee_type is fully resolved *)
   let eqs = List.map cases ~f:(fun (pat, body) -> pat, matchee_type, body) in
   let%bind raise = Elaboration.raise in
+  let syntax = options.Compiler_options.syntax_for_errors in
   let () =
-    Pattern_anomalies.check_anomalies
-      ~raise
-      ~syntax:options.syntax_for_errors
-      ~loc
-      eqs
-      matchee_type
+    Pattern_anomalies.check_anomalies ~raise ~syntax ~loc eqs matchee_type
   in
   (* Elaborate (by compiling pattern) *)
   return
@@ -1083,13 +1094,16 @@ and compile_match
     in
     match_expr.expression_content
   | _ ->
-    let var = I.ValueVar.fresh ~loc ~name:"match_" () in
+    let var = ValueVar.fresh ~loc ~name:"match_" () in
     let match_expr =
       Pattern_matching.compile_matching ~raise ~err_loc:loc var eqs
     in
     O.E_let_in
       { let_binder =
-          { var; ascr = None; attributes = { const_or_var = Some `Var } }
+          { var
+          ; ascr = matchee.type_expression
+          ; attributes = { const_or_var = Some `Var }
+          }
       ; rhs = matchee
       ; let_result = { match_expr with location = loc }
       ; attr =
@@ -1108,25 +1122,25 @@ and infer_module_expr ~raise ~options ~ctx (mod_expr : I.module_expr)
   =
   let open Elaboration.Let_syntax in
   let loc = mod_expr.location in
-  let return content = return @@ Location.wrap ~loc content in
+  let return content = return @@ (Location.wrap ~loc content : O.module_expr) in
   match mod_expr.wrap_content with
-  | I.M_struct decls ->
+  | M_struct decls ->
     let ctx, sig_, decls = infer_module ~raise ~options ~ctx decls in
     ( ctx
     , sig_
     , let%bind decls = decls in
-      return (O.M_struct decls) )
-  | I.M_module_path path ->
+      return (M_struct decls) )
+  | M_module_path path ->
     (* Check we can access every element in [path] *)
     let sig_ = get_signature ~raise ~loc ctx path in
-    ctx, sig_, return (O.M_module_path path)
-  | I.M_variable mvar ->
+    ctx, sig_, return (M_module_path path)
+  | M_variable mvar ->
     (* Check we can access [mvar] *)
     let sig_ =
       trace_option ~raise (unbound_module_variable mvar loc)
       @@ Context.get_module ctx mvar
     in
-    ctx, sig_, return (O.M_variable mvar)
+    ctx, sig_, return (M_variable mvar)
 
 
 and infer_declaration ~(raise : raise) ~options ~ctx (decl : I.declaration)
@@ -1166,6 +1180,7 @@ and infer_declaration ~(raise : raise) ~options ~ctx (decl : I.declaration)
       in
       local_pos := List.tl_exn !local_pos;
       let ctx = Context.remove_pos ctx ~pos in
+      let attr = type_value_attr attr in
       (* if debug then Format.printf "Ctx After Decl: %a\n" Context.pp_ ctx; *)
       ( ctx
       , S_value (var, expr_type)
@@ -1195,6 +1210,17 @@ and infer_declaration ~(raise : raise) ~options ~ctx (decl : I.declaration)
   ctx, sig_item, decl'
 
 
+and infer_decl ~(raise : raise) ~options ~ctx (Decl decl : I.decl)
+  : Context.t * Signature.item * (O.decl, _, _) Elaboration.t
+  =
+  let open Elaboration.Let_syntax in
+  let ctx, sig_item, decl = infer_declaration ~raise ~options ~ctx decl in
+  ( ctx
+  , sig_item
+  , let%bind decl = decl in
+    return (O.Decl decl) )
+
+
 and infer_module ~raise ~options ~ctx (module_ : I.module_)
   : Context.t * Signature.t * (O.module_, _, _) Elaboration.t
   =
@@ -1203,7 +1229,7 @@ and infer_module ~raise ~options ~ctx (module_ : I.module_)
   | [] -> ctx, [], return []
   | decl :: module_ ->
     Context.decl_enter ~ctx ~in_:(fun ctx ->
-      let ctx, sig_item, decl = infer_declaration ~raise ~options ~ctx decl in
+      let ctx, sig_item, decl = infer_decl ~raise ~options ~ctx decl in
       let ctx = Context.add_signature_item ctx sig_item in
       let ctx, sig_, decls = infer_module ~raise ~options ~ctx module_ in
       ( ctx
@@ -1213,16 +1239,34 @@ and infer_module ~raise ~options ~ctx (module_ : I.module_)
         return (decl :: decls) ))
 
 
-let type_program ~raise ~options ?env module_ =
+let rec infer_program ~raise ~options ~ctx (program : I.program)
+  : Context.t * Signature.t * (O.program, _, _) Elaboration.t
+  =
+  let open Elaboration.Let_syntax in
+  match program with
+  | [] -> ctx, [], return []
+  | decl :: program ->
+    Context.decl_enter ~ctx ~in_:(fun ctx ->
+      let ctx, sig_item, decl = infer_declaration ~raise ~options ~ctx decl in
+      let ctx = Context.add_signature_item ctx sig_item in
+      let ctx, sig_, decls = infer_program ~raise ~options ~ctx program in
+      ( ctx
+      , sig_item :: sig_
+      , let%bind decl = decl
+        and decls = decls in
+        return (decl :: decls) ))
+
+
+let type_program ~raise ~options ?env program =
   let ctx = Context.init ?env () in
-  let ctx, _sig, module_ = infer_module ~raise ~options ~ctx module_ in
-  Elaboration.run_module ~ctx ~raise module_
+  let ctx, _sig, program = infer_program ~raise ~options ~ctx program in
+  Elaboration.run_program ~ctx ~raise program
 
 
 let type_declaration ~raise ~options ?env decl =
   let ctx = Context.init ?env () in
   let ctx, _sig_item, decl = infer_declaration ~raise ~options ~ctx decl in
-  Elaboration.run_decl ~ctx ~raise decl
+  Elaboration.run_declaration ~ctx ~raise decl
 
 
 let type_expression ~raise ~options ?env ?tv_opt expr =

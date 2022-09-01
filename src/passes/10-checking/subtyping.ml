@@ -5,6 +5,7 @@ open Trace
 module Errors = Errors
 open Errors
 open Ast_typed
+open Ligo_prim
 
 let occurs_check ~raise ~loc ~evar type_ =
   let fail () = raise.error (occurs_check_failed loc evar type_) in
@@ -20,9 +21,10 @@ let occurs_check ~raise ~loc ~evar type_ =
     | T_for_all { type_; _ } | T_abstraction { type_; _ } -> loop type_
     | T_constant { parameters; _ } -> List.iter parameters ~f:loop
     | T_record rows | T_sum rows ->
-      LMap.iter
-        (fun _label { associated_type; _ } -> loop associated_type)
-        rows.content
+      Record.LMap.iter
+        (fun _label ({ associated_type; _ } : _ Rows.row_element_mini_c) ->
+          loop associated_type)
+        rows.fields
     | T_singleton _ -> ()
   in
   loop type_
@@ -127,26 +129,32 @@ let rec lift
     let ctx, type1 = self ~ctx ~mode:(Mode.invert mode) type1 in
     let ctx, type2 = self ~ctx ~mode (Context.apply ctx type2) in
     ctx, return @@ T_arrow { type1; type2 }
-  | T_sum { content; layout } ->
-    let ctx, content =
-      LMap.fold_map content ~init:ctx ~f:(fun _label row_elem ctx ->
+  | T_sum { fields; layout } ->
+    let ctx, fields =
+      Record.LMap.fold_map
+        fields
+        ~init:ctx
+        ~f:(fun _label (row_elem : _ Rows.row_element_mini_c) ctx ->
         (* TODO: Formalize addition of rows to calculus (including treatment of variance) *)
         let ctx, associated_type =
           self ~ctx ~mode:Invariant (Context.apply ctx row_elem.associated_type)
         in
         ctx, { row_elem with associated_type })
     in
-    ctx, return @@ T_sum { content; layout }
-  | T_record { content; layout } ->
-    let ctx, content =
-      LMap.fold_map content ~init:ctx ~f:(fun _label row_elem ctx ->
+    ctx, return @@ T_sum { fields; layout }
+  | T_record { fields; layout } ->
+    let ctx, fields =
+      Record.LMap.fold_map
+        fields
+        ~init:ctx
+        ~f:(fun _label (row_elem : _ Rows.row_element_mini_c) ctx ->
         (* TODO: Formalize addition of rows to calculus (including treatment of variance) *)
         let ctx, associated_type =
           self ~ctx ~mode:Invariant (Context.apply ctx row_elem.associated_type)
         in
         ctx, { row_elem with associated_type })
     in
-    ctx, return @@ T_record { content; layout }
+    ctx, return @@ T_record { fields; layout }
   | T_constant inj ->
     let ctx, parameters =
       List.fold_map inj.parameters ~init:ctx ~f:(fun ctx param ->
@@ -156,19 +164,17 @@ let rec lift
   | T_singleton _ -> ctx, type_
 
 
-let equal_literal lit1 lit2 =
-  let open Stage_common in
-  Enums.literal_to_enum lit1 = Enums.literal_to_enum lit2
-
+let equal_literal lit1 lit2 = Literal_value.compare lit1 lit2
 
 let consistent_injections
   { language = lang1; injection = inj1; _ }
   { language = lang2; injection = inj2; _ }
   =
-  String.(lang1 = lang2) && Stage_common.Constant.equal inj1 inj2
+  String.(lang1 = lang2) && Literal_types.equal inj1 inj2
 
 
 let equal_domains lmap1 lmap2 =
+  let open Record in
   LSet.(equal (of_list (LMap.keys lmap1)) (of_list (LMap.keys lmap2)))
 
 
@@ -194,13 +200,13 @@ let rec unify
     let ctx, type_ = lift ~raise ~loc ~ctx ~mode:Invariant ~evar ~kind type_ in
     if not
          (match Well_formed.type_expr ~ctx type_ with
-          | Some kind' -> equal_kind kind kind'
+          | Some kind' -> Kind.equal kind kind'
           | _ -> false)
     then raise.error (ill_formed_type type_.location type_);
     Context.add_exists_eq ctx evar kind type_
   in
   match type1.type_content, type2.type_content with
-  | T_singleton lit1, T_singleton lit2 when equal_literal lit1 lit2 -> ctx
+  | T_singleton lit1, T_singleton lit2 when Literal_value.equal lit1 lit2 -> ctx
   | T_constant inj1, T_constant inj2 when consistent_injections inj1 inj2 ->
     (match
        List.fold2
@@ -226,22 +232,26 @@ let rec unify
     , T_for_all { ty_binder = tvar2; kind = kind2; type_ = type2 } )
   | ( T_abstraction { ty_binder = tvar1; kind = kind1; type_ = type1 }
     , T_abstraction { ty_binder = tvar2; kind = kind2; type_ = type2 } )
-    when equal_kind kind1 kind2 ->
+    when Kind.equal kind1 kind2 ->
     let tvar = TypeVar.fresh_like ~loc tvar1 in
     let type1 = t_subst_var ~loc ~tvar:tvar1 ~tvar':tvar type1 in
     let type2 = t_subst_var ~loc ~tvar:tvar2 ~tvar':tvar type2 in
     let ctx, pos = Context.mark ctx in
     self ~ctx:Context.(ctx |:: C_type_var (tvar, kind1)) type1 type2
     |> Context.drop_until ~pos
-  | ( T_sum { content = content1; layout = layout1 }
-    , T_sum { content = content2; layout = layout2 } )
-  | ( T_record { content = content1; layout = layout1 }
-    , T_record { content = content2; layout = layout2 } )
-    when layout_eq layout1 layout2 && equal_domains content1 content2 ->
+  | ( T_sum { fields = content1; layout = layout1 }
+    , T_sum { fields = content2; layout = layout2 } )
+  | ( T_record { fields = content1; layout = layout1 }
+    , T_record { fields = content2; layout = layout2 } )
+    when Layout.equal layout1 layout2 && equal_domains content1 content2 ->
     (* Naive unification. Layout and content must be consistent *)
-    LMap.fold
-      (fun label { associated_type = type1; _ } ctx ->
-        let { associated_type = type2; _ } = LMap.find label content2 in
+    Record.LMap.fold
+      (fun label
+           ({ associated_type = type1; _ } : _ Rows.row_element_mini_c)
+           ctx ->
+        let ({ associated_type = type2; _ } : _ Rows.row_element_mini_c) =
+          Record.LMap.find label content2
+        in
         self ~ctx (Context.apply ctx type1) (Context.apply ctx type2))
       content1
       ctx
@@ -283,14 +293,14 @@ let rec subtype
       , fun hole ->
           let x = ValueVar.fresh ~name:"_sub" () in
           let args = f1 (e_variable x type21) in
-          let binder =
+          let binder : _ Binder.t =
             { var = x
-            ; ascr = Some type21
+            ; ascr = type21
             ; attributes = { const_or_var = Some `Const }
             }
           in
           let result = f2 (e_application { lamb = hole; args } type12) in
-          e_a_lambda { binder; result } type21 type22 ))
+          e_a_lambda { binder; result; output_type = type22 } type21 type22 ))
   | T_for_all { ty_binder = tvar; kind; type_ }, _ ->
     let evar = Exists_var.fresh ~loc () in
     let type' = t_subst type_ ~tvar ~type_:(t_exists ~loc evar) in

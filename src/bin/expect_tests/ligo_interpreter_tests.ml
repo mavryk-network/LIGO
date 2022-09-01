@@ -90,8 +90,14 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_good ["run"; "test" ; test "views_test.mligo" ] ;
   [%expect {|
+    File "./views_test.mligo", line 15, characters 29-85:
+     14 |   | Success _ ->
+     15 |     let x = Test.get_storage (Test.cast_address addr_c : (address,int) typed_address) in
+     16 |     assert (x = 2)
+    :
     Everything at the top-level was executed.
-    - test exited with value (). |}]
+    - test exited with value ().
+    Run-time warning: cast changing the type of an address. |}]
 
 let%expect_test _ =
   run_ligo_good ["run"; "test" ; test "test_timelock.mligo" ] ;
@@ -269,6 +275,17 @@ let%expect_test _ =
     - test exited with value ().
     - test_mutation exited with value ().
     - test_mutation_all exited with value (). |}]
+
+let%expect_test _ =
+  run_ligo_good [ "run" ; "test" ; test "test_mutate_from_file.mligo" ] ;
+  [%expect{|
+    Everything at the top-level was executed.
+    - tester exited with value <fun>.
+    - test exited with value [(() , Mutation at: File "adder.mligo", line 1, characters 59-64:
+      1 | let main ((p, k) : int * int) : operation list * int = [], p + k
+
+    Replacing by: (p - k).
+    )]. |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "test" ; test "iteration.jsligo" ] ;
@@ -903,6 +920,18 @@ let () = Sys.chdir "../../test/contracts/negative/interpreter_tests/"
 let%expect_test _ =
 run_ligo_bad [ "run" ; "test" ; "typed_addr_in_bytes_pack.mligo" ] ;
 [%expect{|
+  File "typed_addr_in_bytes_pack.mligo", line 4, character 4 to line 10, character 5:
+    3 |     let (addr, _, _) = Test.originate_from_file "./unit_contract.mligo" "main" ([]: string list) storage 0tez in
+    4 |     let taddr : (unit, unit) typed_address = Test.cast_address addr in
+    5 |     let contr = Test.to_contract taddr in
+    6 |     {
+    7 |         contr = contr ;
+    8 |         addr  = addr  ;
+    9 |         taddr = taddr ;
+   10 |     }
+   11 |
+  :
+  Run-time warning: cast changing the type of an address.
   File "typed_addr_in_bytes_pack.mligo", line 15, characters 52-53:
    14 |     let packed = Bytes.pack (fun() ->
    15 |         match (Tezos.get_entrypoint_opt "%transfer" r.addr : unit contract option) with

@@ -1064,8 +1064,11 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_good [ "print" ; "ast-typed" ; contract "sequence.mligo" ; ];
   [%expect {|
-    const y =
-      lambda (_#2 : unit) return let _x : nat = +1 in let ()#5 : unit = let _x : nat = +2 in unit in let ()#4 : unit = let _x : nat = +23 in unit in let ()#3 : unit = let _x : nat = +42 in unit in _x |}]
+    const y : unit -> nat =
+      lambda (_#2unit)nat return let _xnat = +1 in
+                                 let ()#5unit = let _xnat = +2 in unit in
+                                 let ()#4unit = let _xnat = +23 in unit in
+                                 let ()#3unit = let _xnat = +42 in unit in _x |}]
 
 let%expect_test _ =
   run_ligo_bad [ "compile" ; "contract" ; contract "bad_address_format.religo" ; "--werror" ] ;
@@ -1286,7 +1289,7 @@ File "../../test/contracts/negative/create_contract_toplevel.mligo", line 4, cha
   9 |   in
  10 |   ([toto.0], store)
 
-Not all free variables could be inlined in Tezos.create_contract usage: gen#34. |}] ;
+Not all free variables could be inlined in Tezos.create_contract usage: gen#35. |}] ;
 
   run_ligo_good [ "compile" ; "contract" ; contract "create_contract_var.mligo" ] ;
   [%expect{|
@@ -1368,7 +1371,7 @@ Not all free variables could be inlined in Tezos.create_contract usage: gen#34. 
      12 |   in
      13 |   ([toto.0], store)
 
-    Not all free variables could be inlined in Tezos.create_contract usage: gen#37. |}] ;
+    Not all free variables could be inlined in Tezos.create_contract usage: gen#38. |}] ;
 
   run_ligo_bad [ "compile" ; "contract" ; bad_contract "create_contract_no_inline.mligo" ] ;
   [%expect{|
@@ -1417,7 +1420,7 @@ Not all free variables could be inlined in Tezos.create_contract usage: gen#34. 
       9 |   let (op, addr) = Tezos.create_contract dummy_contract ((None: key_hash option)) 300tz 1 in
      10 |   let toto : operation list = [ op ] in
 
-    Not all free variables could be inlined in Tezos.create_contract usage: foo#53. |}] ;
+    Not all free variables could be inlined in Tezos.create_contract usage: foo#54. |}] ;
 
   run_ligo_good [ "compile" ; "contract" ; contract "create_contract.mligo" ] ;
   [%expect{|
@@ -1639,6 +1642,14 @@ let%expect_test _ =
     Warning: unused variable "p".
     Hint: replace it by "_p" to prevent this warning.
 
+    File "../../test/contracts/self_without_entrypoint.ligo", line 8, characters 4-63:
+      7 |   {
+      8 |     const self_contract: contract(int) = Tezos.self("%default") ;
+      9 |     const op : operation = Tezos.transaction (2, 300tz, self_contract) ;
+
+    Warning: Tezos.self type annotation.
+    Annotation "contract (int)" was given, but contract being compiled would expect "contract (int)".
+    Note that "Tezos.self" refers to the current contract, so the parameters should be generally the same.
     { parameter int ;
       storage nat ;
       code { CDR ;
@@ -1740,8 +1751,7 @@ const main : (int , storage) -> (list (operation) , storage) =
   lambda (n : (int , storage)) : (list (operation) , storage) return
   let x : (int , int) = let x : int = 7 in
                         (ADD(x ,n.0) , ADD(n.1.0 ,n.1.1)) in
-  (list[] : list (operation) , x)
-const f0 = lambda (_a : string) return true
+  (set[] : list (operation) , x)const f0 = lambda (_a : string) return true
 const f1 = lambda (_a : string) return true
 const f2 = lambda (_a : string) return true
 const letin_nesting =
@@ -1774,8 +1784,7 @@ const main =
   lambda (n : (int , storage)) : (list (operation) , storage) return
   let x : (int , int) = let x : int = 7 in
                         (ADD(x ,n.0) , ADD(n.1.0 ,n.1.1)) in
-  (list[] : list (operation) , x)
-const f0 = lambda (_a : string) return true
+  (set[] : list (operation) , x)const f0 = lambda (_a : string) return true
 const f1 = lambda (_a : string) return true
 const f2 = lambda (_a : string) return true
 const letin_nesting =
@@ -2053,7 +2062,7 @@ let%expect_test _ =
      21 |   let contr = Test.to_contract(taddr) in
      22 |   let _r = Test.transfer_to_contract_exn contr (Increment (32)) 1tez  in
 
-    Underspecified type ^gen#241.
+    Underspecified type ^gen#243.
     Please add additional annotations. |}]
 
 (* remove unused declarations *)
@@ -2079,7 +2088,7 @@ let%expect_test _ =
       1 | let x = (Bytes.unpack (Bytes.pack "hello") : string)
 
     Invalid type(s)
-    Cannot unify option (^gen#235) with string. |}]
+    Cannot unify option (^gen#237) with string. |}]
 
 (* check annotations' capitalization *)
 let%expect_test _ =
@@ -2100,22 +2109,29 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_good [ "print" ; "ast-typed" ; contract "remove_recursion.mligo" ] ;
   [%expect {|
-    const f =
-      lambda (n : int) return let f : int -> int = rec (f:int -> int => lambda (n : int) return let match_#2[@var] = EQ(n ,
-      0) in  match match_#2 with
-              | False unit_proj#3 ->
-                (f)@(C_POLYMORPHIC_SUB(n ,
-                1))
-              | True unit_proj#4 ->
-                1 ) in (f)@(4)
-    const g =
-      rec (g:int -> int -> int -> int => lambda (f : int -> int) return (g)@(let h : int -> int = rec (h:int -> int => lambda (n : int) return let match_#5[@var] = EQ(n ,
-      0) in  match match_#5 with
-              | False unit_proj#6 ->
-                (h)@(C_POLYMORPHIC_SUB(n ,
-                1))
-              | True unit_proj#7 ->
-                1 ) in h) ) |}]
+    const f : int -> int =
+      lambda (nint)int return let fint -> int =
+                                rec (fint -> int => lambda (nint)int return
+                              let match_#2[@var]bool = EQ(n , 0) in
+                               match match_#2 with
+                                | False unit_proj#3 ->
+                                  (f)@(C_POLYMORPHIC_SUB(n , 1))
+                                | True unit_proj#4 ->
+                                  1) in
+                              (f)@(4)
+    const g : int -> int -> int -> int =
+      rec (gint -> int -> int -> int => lambda (fint -> int)int -> int return
+      (g)@(let hint -> int =
+             rec (hint -> int => lambda (nint)int return let match_#5[@var]bool =
+                                                           EQ(n , 0) in
+                                                          match match_#5 with
+                                                           | False unit_proj#6 ->
+                                                             (h)@(C_POLYMORPHIC_SUB
+                                                                  (n ,
+                                                                   1))
+                                                           | True unit_proj#7 ->
+                                                             1) in
+           h)) |}]
 
 let%expect_test _ =
   run_ligo_bad [ "compile" ; "contract" ; bad_contract "reuse_variable_name_top.jsligo" ] ;
@@ -2151,15 +2167,19 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_good [ "print" ; "ast-typed" ; contract "attributes.jsligo" ] ;
   [%expect {|
-    const x = 1[@inline][@private]
-    const foo =
-      lambda (a : int) return let test[@var] : int = C_POLYMORPHIC_ADD(2 ,
-      a)[@inline] in test[@inline][@private]
-    const y = 1[@private]
-    const bar =
-      lambda (b : int) return let test[@var] : int -> int = lambda (z : int) return C_POLYMORPHIC_ADD(C_POLYMORPHIC_ADD(2 ,
-      b) , z)[@inline] in (test)@(b)[@private]
-    const check = 4[@private] |}]
+    const x[@var] : int = 1[@inline][@private]
+    const foo[@var] : int -> int =
+      lambda (aint)int return let test[@var]int =
+                                C_POLYMORPHIC_ADD(2 , a)[@inline][@private] in
+                              test[@inline][@private]
+    const y[@var] : int = 1[@private]
+    const bar[@var] : int -> int =
+      lambda (bint)int return let test[@var]int -> int =
+                                lambda (zint)int return C_POLYMORPHIC_ADD
+                                                        (C_POLYMORPHIC_ADD(2 , b) ,
+                                                         z)[@inline][@private] in
+                              (test)@(b)[@private]
+    const check[@var] : int = 4[@private] |}]
 
 (* literal type "casting" inside modules *)
 let%expect_test _ =
@@ -2283,20 +2303,20 @@ let%expect_test _ =
              LAMBDA
                unit
                unit
-               { { /* x#26 */ } }
+               { { /* x#27 */ } }
              /* File "../../test/contracts/noop.mligo", line 2, characters 9-10 */ ;
-             { /* f#25, _ */ } ;
+             { /* f#26, _ */ } ;
              SWAP ;
              DUP 2 ;
              SWAP ;
              EXEC ;
-             { /* s2#27, f#25 */ } ;
+             { /* s2#28, f#26 */ } ;
              DUP 2 ;
              SWAP ;
              EXEC ;
-             { /* s3#28, f#25 */ } ;
+             { /* s3#29, f#26 */ } ;
              EXEC ;
-             { /* s#29 */ } ;
+             { /* s#30 */ } ;
              NIL operation
                  /* File "../../test/contracts/noop.mligo", line 6, characters 3-24 */
              /* File "../../test/contracts/noop.mligo", line 6, characters 3-24 */ ;
@@ -2312,181 +2332,213 @@ let%expect_test _ =
   [%expect{|
     { "types":
         [ { "type_content":
-              [ "t_constant",
-                { "language": "Michelson", "injection": "unit",
-                  "parameters": [] } ], "type_meta": [ "None", null ],
-            "location": [ "Virtual", "generated" ],
-            "orig_var": [ "None", null ] },
+              [ "T_constant",
+                { "language": "Michelson", "injection": [ "Unit" ],
+                  "parameters": [] } ], "type_meta": null, "orig_var": null,
+            "location":
+              [ "File",
+                { "start":
+                    { "byte":
+                        { "pos_fname": "../../test/contracts/noop.mligo",
+                          "pos_lnum": "3", "pos_bol": "90", "pos_cnum": "108" },
+                      "point_num": "108", "point_bol": "90" },
+                  "stop":
+                    { "byte":
+                        { "pos_fname": "../../test/contracts/noop.mligo",
+                          "pos_lnum": "3", "pos_bol": "90", "pos_cnum": "111" },
+                      "point_num": "111", "point_bol": "90" } } ] },
           { "type_content":
-              [ "t_arrow",
+              [ "T_constant",
+                { "language": "Michelson", "injection": [ "Unit" ],
+                  "parameters": [] } ], "type_meta": null, "orig_var": null,
+            "location":
+              [ "File",
+                { "start":
+                    { "byte":
+                        { "pos_fname": "../../test/contracts/noop.mligo",
+                          "pos_lnum": "4", "pos_bol": "115", "pos_cnum": "133" },
+                      "point_num": "133", "point_bol": "115" },
+                  "stop":
+                    { "byte":
+                        { "pos_fname": "../../test/contracts/noop.mligo",
+                          "pos_lnum": "4", "pos_bol": "115", "pos_cnum": "137" },
+                      "point_num": "137", "point_bol": "115" } } ] },
+          { "type_content":
+              [ "T_constant",
+                { "language": "Michelson", "injection": [ "Unit" ],
+                  "parameters": [] } ], "type_meta": null, "orig_var": null,
+            "location":
+              [ "File",
+                { "start":
+                    { "byte":
+                        { "pos_fname": "../../test/contracts/noop.mligo",
+                          "pos_lnum": "5", "pos_bol": "141", "pos_cnum": "151" },
+                      "point_num": "151", "point_bol": "141" },
+                  "stop":
+                    { "byte":
+                        { "pos_fname": "../../test/contracts/noop.mligo",
+                          "pos_lnum": "5", "pos_bol": "141", "pos_cnum": "155" },
+                      "point_num": "155", "point_bol": "141" } } ] },
+          { "type_content":
+              [ "T_constant",
+                { "language": "Michelson", "injection": [ "Unit" ],
+                  "parameters": [] } ], "type_meta": null, "orig_var": null,
+            "location": [ "Virtual", "generated" ] },
+          { "type_content":
+              [ "T_arrow",
                 { "type1":
                     { "type_content":
-                        [ "t_constant",
-                          { "language": "Michelson", "injection": "unit",
-                            "parameters": [] } ], "type_meta": [ "None", null ],
-                      "location": [ "Virtual", "generated" ],
-                      "orig_var": [ "None", null ] },
+                        [ "T_constant",
+                          { "language": "Michelson", "injection": [ "Unit" ],
+                            "parameters": [] } ], "type_meta": null,
+                      "orig_var": null, "location": [ "Virtual", "generated" ] },
                   "type2":
                     { "type_content":
-                        [ "t_constant",
-                          { "language": "Michelson", "injection": "unit",
-                            "parameters": [] } ], "type_meta": [ "None", null ],
-                      "location": [ "Virtual", "generated" ],
-                      "orig_var": [ "None", null ] } } ],
+                        [ "T_constant",
+                          { "language": "Michelson", "injection": [ "Unit" ],
+                            "parameters": [] } ], "type_meta": null,
+                      "orig_var": null, "location": [ "Virtual", "generated" ] } } ],
             "type_meta":
-              [ "Some",
-                { "type_content":
-                    [ "t_arrow",
-                      { "type1":
-                          { "type_content":
-                              [ "t_variable",
-                                { "name": "unit", "counter": "0",
-                                  "generated": false,
-                                  "location": [ "Virtual", "dummy" ] } ],
-                            "sugar":
-                              [ "Some",
-                                { "type_content":
-                                    [ "t_variable",
-                                      { "name": "unit", "counter": "0",
-                                        "generated": false,
-                                        "location": [ "Virtual", "dummy" ] } ],
-                                  "location":
-                                    [ "File",
-                                      { "start":
-                                          { "byte":
-                                              { "pos_fname":
-                                                  "../../test/contracts/noop.mligo",
-                                                "pos_lnum": "2", "pos_bol": "57",
-                                                "pos_cnum": "70" },
-                                            "point_num": "70",
-                                            "point_bol": "57" },
-                                        "stop":
-                                          { "byte":
-                                              { "pos_fname":
-                                                  "../../test/contracts/noop.mligo",
-                                                "pos_lnum": "2", "pos_bol": "57",
-                                                "pos_cnum": "74" },
-                                            "point_num": "74",
-                                            "point_bol": "57" } } ] } ],
-                            "location":
-                              [ "File",
-                                { "start":
-                                    { "byte":
-                                        { "pos_fname":
-                                            "../../test/contracts/noop.mligo",
-                                          "pos_lnum": "2", "pos_bol": "57",
-                                          "pos_cnum": "70" }, "point_num": "70",
-                                      "point_bol": "57" },
-                                  "stop":
-                                    { "byte":
-                                        { "pos_fname":
-                                            "../../test/contracts/noop.mligo",
-                                          "pos_lnum": "2", "pos_bol": "57",
-                                          "pos_cnum": "74" }, "point_num": "74",
-                                      "point_bol": "57" } } ] },
-                        "type2":
-                          { "type_content":
-                              [ "t_variable",
-                                { "name": "unit", "counter": "0",
-                                  "generated": false,
-                                  "location": [ "Virtual", "dummy" ] } ],
-                            "sugar":
-                              [ "Some",
-                                { "type_content":
-                                    [ "t_variable",
-                                      { "name": "unit", "counter": "0",
-                                        "generated": false,
-                                        "location": [ "Virtual", "dummy" ] } ],
-                                  "location":
-                                    [ "File",
-                                      { "start":
-                                          { "byte":
-                                              { "pos_fname":
-                                                  "../../test/contracts/noop.mligo",
-                                                "pos_lnum": "2", "pos_bol": "57",
-                                                "pos_cnum": "78" },
-                                            "point_num": "78",
-                                            "point_bol": "57" },
-                                        "stop":
-                                          { "byte":
-                                              { "pos_fname":
-                                                  "../../test/contracts/noop.mligo",
-                                                "pos_lnum": "2", "pos_bol": "57",
-                                                "pos_cnum": "82" },
-                                            "point_num": "82",
-                                            "point_bol": "57" } } ] } ],
-                            "location":
-                              [ "File",
-                                { "start":
-                                    { "byte":
-                                        { "pos_fname":
-                                            "../../test/contracts/noop.mligo",
-                                          "pos_lnum": "2", "pos_bol": "57",
-                                          "pos_cnum": "78" }, "point_num": "78",
-                                      "point_bol": "57" },
-                                  "stop":
-                                    { "byte":
-                                        { "pos_fname":
-                                            "../../test/contracts/noop.mligo",
-                                          "pos_lnum": "2", "pos_bol": "57",
-                                          "pos_cnum": "82" }, "point_num": "82",
-                                      "point_bol": "57" } } ] } } ],
-                  "sugar":
-                    [ "Some",
-                      { "type_content":
-                          [ "t_arrow",
-                            { "type1":
-                                { "type_content":
-                                    [ "t_variable",
-                                      { "name": "unit", "counter": "0",
-                                        "generated": false,
-                                        "location": [ "Virtual", "dummy" ] } ],
-                                  "location":
-                                    [ "File",
-                                      { "start":
-                                          { "byte":
-                                              { "pos_fname":
-                                                  "../../test/contracts/noop.mligo",
-                                                "pos_lnum": "2", "pos_bol": "57",
-                                                "pos_cnum": "70" },
-                                            "point_num": "70",
-                                            "point_bol": "57" },
-                                        "stop":
-                                          { "byte":
-                                              { "pos_fname":
-                                                  "../../test/contracts/noop.mligo",
-                                                "pos_lnum": "2", "pos_bol": "57",
-                                                "pos_cnum": "74" },
-                                            "point_num": "74",
-                                            "point_bol": "57" } } ] },
-                              "type2":
-                                { "type_content":
-                                    [ "t_variable",
-                                      { "name": "unit", "counter": "0",
-                                        "generated": false,
-                                        "location": [ "Virtual", "dummy" ] } ],
-                                  "location":
-                                    [ "File",
-                                      { "start":
-                                          { "byte":
-                                              { "pos_fname":
-                                                  "../../test/contracts/noop.mligo",
-                                                "pos_lnum": "2", "pos_bol": "57",
-                                                "pos_cnum": "78" },
-                                            "point_num": "78",
-                                            "point_bol": "57" },
-                                        "stop":
-                                          { "byte":
-                                              { "pos_fname":
-                                                  "../../test/contracts/noop.mligo",
-                                                "pos_lnum": "2", "pos_bol": "57",
-                                                "pos_cnum": "82" },
-                                            "point_num": "82",
-                                            "point_bol": "57" } } ] } } ],
-                        "location": [ "Virtual", "generated" ] } ],
-                  "location": [ "Virtual", "generated" ] } ],
-            "location": [ "Virtual", "generated" ],
-            "orig_var": [ "None", null ] } ],
+              { "type_content":
+                  [ "T_arrow",
+                    { "type1":
+                        { "type_content":
+                            [ "T_variable",
+                              { "name": "unit", "counter": "0",
+                                "generated": false,
+                                "location": [ "Virtual", "dummy" ] } ],
+                          "sugar":
+                            { "type_content":
+                                [ "T_variable",
+                                  { "name": "unit", "counter": "0",
+                                    "generated": false,
+                                    "location": [ "Virtual", "dummy" ] } ],
+                              "location":
+                                [ "File",
+                                  { "start":
+                                      { "byte":
+                                          { "pos_fname":
+                                              "../../test/contracts/noop.mligo",
+                                            "pos_lnum": "2", "pos_bol": "57",
+                                            "pos_cnum": "70" },
+                                        "point_num": "70", "point_bol": "57" },
+                                    "stop":
+                                      { "byte":
+                                          { "pos_fname":
+                                              "../../test/contracts/noop.mligo",
+                                            "pos_lnum": "2", "pos_bol": "57",
+                                            "pos_cnum": "74" },
+                                        "point_num": "74", "point_bol": "57" } } ] },
+                          "location":
+                            [ "File",
+                              { "start":
+                                  { "byte":
+                                      { "pos_fname":
+                                          "../../test/contracts/noop.mligo",
+                                        "pos_lnum": "2", "pos_bol": "57",
+                                        "pos_cnum": "70" }, "point_num": "70",
+                                    "point_bol": "57" },
+                                "stop":
+                                  { "byte":
+                                      { "pos_fname":
+                                          "../../test/contracts/noop.mligo",
+                                        "pos_lnum": "2", "pos_bol": "57",
+                                        "pos_cnum": "74" }, "point_num": "74",
+                                    "point_bol": "57" } } ] },
+                      "type2":
+                        { "type_content":
+                            [ "T_variable",
+                              { "name": "unit", "counter": "0",
+                                "generated": false,
+                                "location": [ "Virtual", "dummy" ] } ],
+                          "sugar":
+                            { "type_content":
+                                [ "T_variable",
+                                  { "name": "unit", "counter": "0",
+                                    "generated": false,
+                                    "location": [ "Virtual", "dummy" ] } ],
+                              "location":
+                                [ "File",
+                                  { "start":
+                                      { "byte":
+                                          { "pos_fname":
+                                              "../../test/contracts/noop.mligo",
+                                            "pos_lnum": "2", "pos_bol": "57",
+                                            "pos_cnum": "78" },
+                                        "point_num": "78", "point_bol": "57" },
+                                    "stop":
+                                      { "byte":
+                                          { "pos_fname":
+                                              "../../test/contracts/noop.mligo",
+                                            "pos_lnum": "2", "pos_bol": "57",
+                                            "pos_cnum": "82" },
+                                        "point_num": "82", "point_bol": "57" } } ] },
+                          "location":
+                            [ "File",
+                              { "start":
+                                  { "byte":
+                                      { "pos_fname":
+                                          "../../test/contracts/noop.mligo",
+                                        "pos_lnum": "2", "pos_bol": "57",
+                                        "pos_cnum": "78" }, "point_num": "78",
+                                    "point_bol": "57" },
+                                "stop":
+                                  { "byte":
+                                      { "pos_fname":
+                                          "../../test/contracts/noop.mligo",
+                                        "pos_lnum": "2", "pos_bol": "57",
+                                        "pos_cnum": "82" }, "point_num": "82",
+                                    "point_bol": "57" } } ] } } ],
+                "sugar":
+                  { "type_content":
+                      [ "T_arrow",
+                        { "type1":
+                            { "type_content":
+                                [ "T_variable",
+                                  { "name": "unit", "counter": "0",
+                                    "generated": false,
+                                    "location": [ "Virtual", "dummy" ] } ],
+                              "location":
+                                [ "File",
+                                  { "start":
+                                      { "byte":
+                                          { "pos_fname":
+                                              "../../test/contracts/noop.mligo",
+                                            "pos_lnum": "2", "pos_bol": "57",
+                                            "pos_cnum": "70" },
+                                        "point_num": "70", "point_bol": "57" },
+                                    "stop":
+                                      { "byte":
+                                          { "pos_fname":
+                                              "../../test/contracts/noop.mligo",
+                                            "pos_lnum": "2", "pos_bol": "57",
+                                            "pos_cnum": "74" },
+                                        "point_num": "74", "point_bol": "57" } } ] },
+                          "type2":
+                            { "type_content":
+                                [ "T_variable",
+                                  { "name": "unit", "counter": "0",
+                                    "generated": false,
+                                    "location": [ "Virtual", "dummy" ] } ],
+                              "location":
+                                [ "File",
+                                  { "start":
+                                      { "byte":
+                                          { "pos_fname":
+                                              "../../test/contracts/noop.mligo",
+                                            "pos_lnum": "2", "pos_bol": "57",
+                                            "pos_cnum": "78" },
+                                        "point_num": "78", "point_bol": "57" },
+                                    "stop":
+                                      { "byte":
+                                          { "pos_fname":
+                                              "../../test/contracts/noop.mligo",
+                                            "pos_lnum": "2", "pos_bol": "57",
+                                            "pos_cnum": "82" },
+                                        "point_num": "82", "point_bol": "57" } } ] } } ],
+                    "location": [ "Virtual", "generated" ] },
+                "location": [ "Virtual", "generated" ] }, "orig_var": null,
+            "location": [ "Virtual", "generated" ] } ],
       "michelson":
         { "expression":
             [ { "prim": "parameter", "args": [ { "prim": "unit" } ] },
@@ -2507,7 +2559,7 @@ let%expect_test _ =
                       { "prim": "PAIR" } ] ] } ],
           "locations":
             [ {}, {}, {}, {}, {}, {}, {}, { "environment": [ null ] }, {},
-              { "environment": [ { "source_type": "0" } ] },
+              { "environment": [ { "source_type": "3" } ] },
               { "location":
                   { "start":
                       { "file": "../../test/contracts/noop.mligo", "line": "2",
@@ -2515,17 +2567,17 @@ let%expect_test _ =
                     "stop":
                       { "file": "../../test/contracts/noop.mligo", "line": "2",
                         "col": "10" } } }, {}, {}, {},
-              { "environment": [ { "name": "x#26", "source_type": "0" } ] },
+              { "environment": [ { "name": "x#27", "source_type": "3" } ] },
               { "environment":
-                  [ { "name": "f#25", "source_type": "1" },
-                    { "source_type": "0" } ] }, {}, {}, {}, {}, {},
+                  [ { "name": "f#26", "source_type": "4" },
+                    { "source_type": "3" } ] }, {}, {}, {}, {}, {},
               { "environment":
-                  [ { "name": "s2#27", "source_type": "0" },
-                    { "name": "f#25", "source_type": "1" } ] }, {}, {}, {}, {},
+                  [ { "name": "s2#28", "source_type": "0" },
+                    { "name": "f#26", "source_type": "4" } ] }, {}, {}, {}, {},
               { "environment":
-                  [ { "name": "s3#28", "source_type": "0" },
-                    { "name": "f#25", "source_type": "1" } ] }, {},
-              { "environment": [ { "name": "s#29", "source_type": "0" } ] },
+                  [ { "name": "s3#29", "source_type": "1" },
+                    { "name": "f#26", "source_type": "4" } ] }, {},
+              { "environment": [ { "name": "s#30", "source_type": "2" } ] },
               { "location":
                   { "start":
                       { "file": "../../test/contracts/noop.mligo", "line": "6",
@@ -2552,217 +2604,239 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_good [ "print" ; "ast-typed" ; contract "tuple_decl_pos.mligo" ] ;
   [%expect {|
-const c =
-  lambda (gen#5 : unit) return CREATE_CONTRACT(lambda (gen#2 : ( unit * unit )) return
-   match gen#2 with
-    | ( _#4 , _#3 ) ->
-    ( LIST_EMPTY() , unit ) ,
-  None(unit) , 0mutez , unit)
-const foo =
-  let match_#8[@var] = (c)@(unit) in  match match_#8 with
-                                       | ( _a , _b ) ->
-                                       unit
-const c =
-  lambda (gen#6 : unit) return ( 1 , "1" , +1 , 2 , "2" , +2 , 3 , "3" , +3 , 4 , "4" )
-const foo =
-  let match_#10[@var] = (c)@(unit) in  match match_#10 with
-                                        | ( _i1 , _s1 , _n1 , _i2 , _s2 , _n2 , _i3 , _s3 , _n3 , _i4 , _s4 ) ->
-                                        unit |} ]
+const c : unit -> ( operation * address ) =
+  lambda (gen#5unit)( operation * address ) return CREATE_CONTRACT(lambda (gen#2
+                                                                   ( unit * unit ))
+                                                                   ( list (operation) * unit ) return
+                                                                    match
+                                                                    gen#2 with
+                                                                    |
+                                                                    ( _#4 , _#3 ) ->
+                                                                    ( LIST_EMPTY
+                                                                    () ,
+                                                                    unit ) ,
+                                                                   None(unit) ,
+                                                                   0mutez ,
+                                                                   unit)
+const foo : unit =
+  let match_#8[@var]( operation * address ) = (c)@(unit) in
+   match match_#8 with
+    | ( _a , _b ) ->
+    unit
+const c : unit -> ( int * string * nat * int * string * nat * int * string * nat * int * string ) =
+  lambda (gen#6unit)( int * string * nat * int * string * nat * int * string * nat * int * string ) return
+  ( 1 ,
+    "1" ,
+    +1 ,
+    2 ,
+    "2" ,
+    +2 ,
+    3 ,
+    "3" ,
+    +3 ,
+    4 ,
+    "4" )
+const foo : unit =
+  let match_#10[@var]( int * string * nat * int * string * nat * int * string * nat * int * string ) =
+    (c)@(unit) in
+   match match_#10 with
+    | ( _i1 , _s1 , _n1 , _i2 , _s2 , _n2 , _i3 , _s3 , _n3 , _i4 , _s4 ) ->
+    unit |} ]
 
 (* Module being defined does not type with its own type *)
 let%expect_test _ =
   run_ligo_good [ "print" ; "mini-c" ; contract "modules_env.mligo" ] ;
   [%expect {|
-    let get_balance#10 =
-      fun _u#602 -> (({ DROP ; BALANCE })@(L(unit)))[@inline] in
-    let get_amount#11 = fun _u#604 -> (({ DROP ; AMOUNT })@(L(unit)))[@inline] in
-    let get_now#12 = fun _u#606 -> (({ DROP ; NOW })@(L(unit)))[@inline] in
-    let get_sender#13 = fun _u#608 -> (({ DROP ; SENDER })@(L(unit)))[@inline] in
-    let get_source#14 = fun _u#610 -> (({ DROP ; SOURCE })@(L(unit)))[@inline] in
-    let get_level#15 = fun _u#612 -> (({ DROP ; LEVEL })@(L(unit)))[@inline] in
-    let get_self_address#16 = fun _u#614 -> (SELF_ADDRESS())[@inline] in
-    let get_chain_id#17 =
-      fun _u#616 -> (({ DROP ; CHAIN_ID })@(L(unit)))[@inline] in
-    let get_total_voting_power#18 =
-      fun _u#618 -> (({ DROP ; TOTAL_VOTING_POWER })@(L(unit)))[@inline] in
-    let get_min_block_time#19 =
-      fun _u#620 -> (({ DROP ; MIN_BLOCK_TIME })@(L(unit)))[@inline] in
-    let voting_power#20 = fun kh#622 -> (({ VOTING_POWER })@(kh#622))[@inline] in
-    let implicit_account#22 =
-      fun kh#626 -> (IMPLICIT_ACCOUNT(kh#626))[@inline] in
-    let pairing_check#26 = fun l#634 -> (({ PAIRING_CHECK })@(l#634))[@inline] in
-    let set_delegate#28 = fun o#638 -> (SET_DELEGATE(o#638))[@inline] in
-    let open_chest#34 =
-      fun ck#654 ->
-      (fun c#655 -> (fun n#656 -> (OPEN_CHEST(ck#654 , c#655 , n#656))))[@inline] in
-    let xor#37 = fun l#665 -> (fun r#666 -> (XOR(l#665 , r#666)))[@inline] in
-    let shift_left#38 =
-      fun l#668 -> (fun r#669 -> (LSL(l#668 , r#669)))[@inline] in
-    let shift_right#39 =
-      fun l#671 -> (fun r#672 -> (LSR(l#671 , r#672)))[@inline] in
-    let length#80 = fun b#804 -> (({ SIZE })@(b#804))[@inline] in
-    let concat#81 =
-      fun b1#806 ->
-      (fun b2#807 -> (({ UNPAIR ; CONCAT })@(PAIR(b1#806 , b2#807))))[@inline] in
-    let sub#82 =
-      fun s#809 ->
-      (fun l#810 ->
-       (fun b#811 ->
+    let get_balance#11 =
+      fun _u#608 -> (({ DROP ; BALANCE })@(L(unit)))[@inline] in
+    let get_amount#12 = fun _u#610 -> (({ DROP ; AMOUNT })@(L(unit)))[@inline] in
+    let get_now#13 = fun _u#612 -> (({ DROP ; NOW })@(L(unit)))[@inline] in
+    let get_sender#14 = fun _u#614 -> (({ DROP ; SENDER })@(L(unit)))[@inline] in
+    let get_source#15 = fun _u#616 -> (({ DROP ; SOURCE })@(L(unit)))[@inline] in
+    let get_level#16 = fun _u#618 -> (({ DROP ; LEVEL })@(L(unit)))[@inline] in
+    let get_self_address#17 = fun _u#620 -> (SELF_ADDRESS())[@inline] in
+    let get_chain_id#18 =
+      fun _u#622 -> (({ DROP ; CHAIN_ID })@(L(unit)))[@inline] in
+    let get_total_voting_power#19 =
+      fun _u#624 -> (({ DROP ; TOTAL_VOTING_POWER })@(L(unit)))[@inline] in
+    let get_min_block_time#20 =
+      fun _u#626 -> (({ DROP ; MIN_BLOCK_TIME })@(L(unit)))[@inline] in
+    let voting_power#21 = fun kh#628 -> (({ VOTING_POWER })@(kh#628))[@inline] in
+    let implicit_account#23 =
+      fun kh#632 -> (IMPLICIT_ACCOUNT(kh#632))[@inline] in
+    let pairing_check#27 = fun l#640 -> (({ PAIRING_CHECK })@(l#640))[@inline] in
+    let set_delegate#29 = fun o#644 -> (SET_DELEGATE(o#644))[@inline] in
+    let open_chest#35 =
+      fun ck#660 ->
+      (fun c#661 -> (fun n#662 -> (OPEN_CHEST(ck#660 , c#661 , n#662))))[@inline] in
+    let xor#38 = fun l#671 -> (fun r#672 -> (XOR(l#671 , r#672)))[@inline] in
+    let shift_left#39 =
+      fun l#674 -> (fun r#675 -> (LSL(l#674 , r#675)))[@inline] in
+    let shift_right#40 =
+      fun l#677 -> (fun r#678 -> (LSR(l#677 , r#678)))[@inline] in
+    let length#81 = fun b#810 -> (({ SIZE })@(b#810))[@inline] in
+    let concat#82 =
+      fun b1#812 ->
+      (fun b2#813 -> (({ UNPAIR ; CONCAT })@(PAIR(b1#812 , b2#813))))[@inline] in
+    let sub#83 =
+      fun s#815 ->
+      (fun l#816 ->
+       (fun b#817 ->
         (({ UNPAIR ;
            UNPAIR ;
            SLICE ;
-           IF_NONE { PUSH string "SLICE" ; FAILWITH } {} })@(PAIR(PAIR(s#809 ,
-                                                                       l#810) ,
-                                                                  b#811)))))[@inline] in
-    let length#87 = fun b#822 -> (({ SIZE })@(b#822))[@inline] in
-    let concat#88 =
-      fun b1#824 ->
-      (fun b2#825 -> (({ UNPAIR ; CONCAT })@(PAIR(b1#824 , b2#825))))[@inline] in
-    let sub#89 =
-      fun s#827 ->
-      (fun l#828 ->
-       (fun b#829 ->
+           IF_NONE { PUSH string "SLICE" ; FAILWITH } {} })@(PAIR(PAIR(s#815 ,
+                                                                       l#816) ,
+                                                                  b#817)))))[@inline] in
+    let length#89 = fun b#832 -> (({ SIZE })@(b#832))[@inline] in
+    let concat#90 =
+      fun b1#834 ->
+      (fun b2#835 -> (({ UNPAIR ; CONCAT })@(PAIR(b1#834 , b2#835))))[@inline] in
+    let sub#91 =
+      fun s#837 ->
+      (fun l#838 ->
+       (fun b#839 ->
         (({ UNPAIR ;
            UNPAIR ;
            SLICE ;
-           IF_NONE { PUSH string "SLICE" ; FAILWITH } {} })@(PAIR(PAIR(s#827 ,
-                                                                       l#828) ,
-                                                                  b#829)))))[@inline] in
-    let blake2b#90 = fun b#831 -> (({ BLAKE2B })@(b#831))[@inline] in
-    let sha256#91 = fun b#833 -> (({ SHA256 })@(b#833))[@inline] in
-    let sha512#92 = fun b#835 -> (({ SHA512 })@(b#835))[@inline] in
-    let sha3#93 = fun b#837 -> (({ SHA3 })@(b#837))[@inline] in
-    let keccak#94 = fun b#839 -> (({ KECCAK })@(b#839))[@inline] in
-    let hash_key#95 = fun k#841 -> (({ HASH_KEY })@(k#841))[@inline] in
-    let check#96 =
-      fun k#843 ->
-      (fun s#844 ->
-       (fun b#845 ->
-        (({ UNPAIR ; UNPAIR ; CHECK_SIGNATURE })@(PAIR(PAIR(k#843 , s#844) ,
-                                                       b#845)))))[@inline] in
+           IF_NONE { PUSH string "SLICE" ; FAILWITH } {} })@(PAIR(PAIR(s#837 ,
+                                                                       l#838) ,
+                                                                  b#839)))))[@inline] in
+    let blake2b#92 = fun b#841 -> (({ BLAKE2B })@(b#841))[@inline] in
+    let sha256#93 = fun b#843 -> (({ SHA256 })@(b#843))[@inline] in
+    let sha512#94 = fun b#845 -> (({ SHA512 })@(b#845))[@inline] in
+    let sha3#95 = fun b#847 -> (({ SHA3 })@(b#847))[@inline] in
+    let keccak#96 = fun b#849 -> (({ KECCAK })@(b#849))[@inline] in
+    let hash_key#97 = fun k#851 -> (({ HASH_KEY })@(k#851))[@inline] in
+    let check#98 =
+      fun k#853 ->
+      (fun s#854 ->
+       (fun b#855 ->
+        (({ UNPAIR ; UNPAIR ; CHECK_SIGNATURE })@(PAIR(PAIR(k#853 , s#854) ,
+                                                       b#855)))))[@inline] in
     let assert =
-      fun b#847 ->
-      (({ IF { UNIT } { PUSH string "failed assertion" ; FAILWITH } })@(b#847))[@inline] in
-    let abs = fun i#853 -> (({ ABS })@(i#853))[@inline] in
-    let is_nat = fun i#855 -> (({ ISNAT })@(i#855))[@inline] in
+      fun b#857 ->
+      (({ IF { UNIT } { PUSH string "failed assertion" ; FAILWITH } })@(b#857))[@inline] in
+    let abs = fun i#863 -> (({ ABS })@(i#863))[@inline] in
+    let is_nat = fun i#865 -> (({ ISNAT })@(i#865))[@inline] in
     let true = TRUE()[@inline] in
     let false = FALSE()[@inline] in
     let unit = UNIT()[@inline] in
     let assert_with_error =
-      fun b#863 ->
-      (fun s#864 ->
-       (({ UNPAIR ; IF { DROP ; UNIT } { FAILWITH } })@(PAIR(b#863 , s#864))))[@inline] in
-    let poly_stub_39 = fun x#875 -> (({ FAILWITH })@(x#875))[@inline] in
-    let poly_stub_38 = fun x#875 -> (({ FAILWITH })@(x#875))[@inline] in
-    let poly_stub_37 = fun x#875 -> (({ FAILWITH })@(x#875))[@inline] in
-    let poly_stub_36 = fun x#875 -> (({ FAILWITH })@(x#875))[@inline] in
-    let poly_stub_35 = fun x#875 -> (({ FAILWITH })@(x#875))[@inline] in
-    let poly_stub_34 = fun x#875 -> (({ FAILWITH })@(x#875))[@inline] in
-    let poly_stub_33 = fun x#875 -> (({ FAILWITH })@(x#875))[@inline] in
-    let poly_stub_32 = fun x#875 -> (({ FAILWITH })@(x#875))[@inline] in
-    let poly_stub_31 = fun x#875 -> (({ FAILWITH })@(x#875))[@inline] in
-    let poly_stub_30 = fun x#875 -> (({ FAILWITH })@(x#875))[@inline] in
-    let poly_stub_29 = fun x#875 -> (({ FAILWITH })@(x#875))[@inline] in
-    let poly_stub_28 = fun x#875 -> (({ FAILWITH })@(x#875))[@inline] in
-    let poly_stub_27 = fun x#875 -> (({ FAILWITH })@(x#875))[@inline] in
-    let poly_stub_26 = fun x#875 -> (({ FAILWITH })@(x#875))[@inline] in
-    let poly_stub_25 = fun x#875 -> (({ FAILWITH })@(x#875))[@inline] in
-    let poly_stub_24 = fun x#875 -> (({ FAILWITH })@(x#875))[@inline] in
-    let poly_stub_23 = fun x#875 -> (({ FAILWITH })@(x#875))[@inline] in
-    let poly_stub_22 = fun x#875 -> (({ FAILWITH })@(x#875))[@inline] in
-    let poly_stub_21 = fun x#875 -> (({ FAILWITH })@(x#875))[@inline] in
-    let poly_stub_20 = fun x#875 -> (({ FAILWITH })@(x#875))[@inline] in
-    let poly_stub_19 = fun x#875 -> (({ FAILWITH })@(x#875))[@inline] in
-    let poly_stub_18 = fun x#875 -> (({ FAILWITH })@(x#875))[@inline] in
-    let poly_stub_17 = fun x#875 -> (({ FAILWITH })@(x#875))[@inline] in
-    let poly_stub_16 = fun x#875 -> (({ FAILWITH })@(x#875))[@inline] in
-    let poly_stub_15 = fun x#875 -> (({ FAILWITH })@(x#875))[@inline] in
-    let poly_stub_14 = fun x#875 -> (({ FAILWITH })@(x#875))[@inline] in
-    let poly_stub_13 = fun x#875 -> (({ FAILWITH })@(x#875))[@inline] in
-    let poly_stub_12 = fun x#875 -> (({ FAILWITH })@(x#875))[@inline] in
-    let poly_stub_11 = fun x#875 -> (({ FAILWITH })@(x#875))[@inline] in
-    let poly_stub_10 = fun x#875 -> (({ FAILWITH })@(x#875))[@inline] in
-    let poly_stub_9 = fun x#875 -> (({ FAILWITH })@(x#875))[@inline] in
-    let poly_stub_8 = fun x#875 -> (({ FAILWITH })@(x#875))[@inline] in
-    let poly_stub_7 = fun x#875 -> (({ FAILWITH })@(x#875))[@inline] in
-    let poly_stub_6 = fun x#875 -> (({ FAILWITH })@(x#875))[@inline] in
-    let poly_stub_5 = fun x#875 -> (({ FAILWITH })@(x#875))[@inline] in
-    let poly_stub_4 = fun x#875 -> (({ FAILWITH })@(x#875))[@inline] in
-    let poly_stub_3 = fun x#875 -> (({ FAILWITH })@(x#875))[@inline] in
-    let poly_stub_2 = fun x#875 -> (({ FAILWITH })@(x#875))[@inline] in
-    let poly_stub_1 = fun x#875 -> (({ FAILWITH })@(x#875))[@inline] in
-    let get_total_voting_power#101 =
-      fun _u#884 -> ((poly_stub_39)@(L(unit)))[@inline] in
-    let set_source#104 = fun _a#890 -> ((poly_stub_38)@(L(unit)))[@inline] in
-    let get_storage_of_address#105 =
-      fun _a#892 -> ((poly_stub_37)@(L(unit)))[@inline] in
-    let get_balance#106 = fun _a#894 -> ((poly_stub_36)@(L(unit)))[@inline] in
-    let print#107 = fun _v#896 -> ((poly_stub_35)@(L(unit)))[@inline] in
-    let eprint#108 = fun _v#898 -> ((poly_stub_34)@(L(unit)))[@inline] in
-    let get_voting_power#109 =
-      fun _kh#900 -> ((poly_stub_33)@(L(unit)))[@inline] in
-    let nth_bootstrap_contract#110 =
-      fun _i#902 -> ((poly_stub_32)@(L(unit)))[@inline] in
-    let nth_bootstrap_account#111 =
-      fun _i#904 -> ((poly_stub_31)@(L(unit)))[@inline] in
-    let get_bootstrap_account#112 =
-      fun _n#906 -> ((poly_stub_30)@(L(unit)))[@inline] in
-    let last_originations#114 =
-      fun _u#910 -> ((poly_stub_29)@(L(unit)))[@inline] in
-    let new_account#116 = fun _u#914 -> ((poly_stub_28)@(L(unit)))[@inline] in
-    let bake_until_n_cycle_end#118 =
-      fun _n#918 -> ((poly_stub_27)@(L(unit)))[@inline] in
-    let register_delegate#120 =
-      fun _kh#922 -> ((poly_stub_26)@(L(unit)))[@inline] in
-    let register_constant#121 =
-      fun _m#924 -> ((poly_stub_25)@(L(unit)))[@inline] in
-    let constant_to_michelson_program#123 =
-      fun _s#928 -> ((poly_stub_24)@(L(unit)))[@inline] in
-    let restore_context#124 =
-      fun _u#930 -> ((poly_stub_23)@(L(unit)))[@inline] in
-    let save_context#125 = fun _u#932 -> ((poly_stub_22)@(L(unit)))[@inline] in
-    let drop_context#126 = fun _u#934 -> ((poly_stub_21)@(L(unit)))[@inline] in
-    let set_baker_policy#129 =
-      fun _bp#940 -> ((poly_stub_20)@(L(unit)))[@inline] in
-    let set_baker#130 = fun _a#942 -> ((poly_stub_19)@(L(unit)))[@inline] in
-    let size#131 = fun _c#944 -> ((poly_stub_18)@(L(unit)))[@inline] in
-    let read_contract_from_file#133 =
-      fun _fn#948 -> ((poly_stub_17)@(L(unit)))[@inline] in
-    let chr#134 = fun _n#950 -> ((poly_stub_16)@(L(unit)))[@inline] in
-    let nl#135 = L("NEWLINE")[@inline] in
-    let println#136 = fun _v#953 -> ((poly_stub_15)@(L(unit)))[@inline] in
-    let transfer#137 =
-      fun _a#955 -> (fun _s#956 -> (fun _t#957 -> ((poly_stub_14)@(L(unit)))))[@inline] in
-    let transfer_exn#138 =
-      fun _a#959 -> (fun _s#960 -> (fun _t#961 -> ((poly_stub_13)@(L(unit)))))[@inline] in
-    let reset_state#140 =
-      fun _n#965 -> (fun _l#966 -> ((poly_stub_12)@(L(unit))))[@inline] in
-    let reset_state_at#141 =
-      fun _t#968 -> (fun _n#969 -> (fun _l#970 -> ((poly_stub_11)@(L(unit)))))[@inline] in
-    let save_mutation#144 =
-      fun _s#979 -> (fun _m#980 -> ((poly_stub_10)@(L(unit))))[@inline] in
-    let sign#147 =
-      fun _sk#988 -> (fun _d#989 -> ((poly_stub_9)@(L(unit))))[@inline] in
-    let add_account#148 =
-      fun _s#991 -> (fun _k#992 -> ((poly_stub_8)@(L(unit))))[@inline] in
-    let baker_account#149 =
-      fun _p#994 -> (fun _o#995 -> ((poly_stub_7)@(L(unit))))[@inline] in
-    let create_chest#151 =
-      fun _b#1000 -> (fun _n#1001 -> ((poly_stub_6)@(L(unit))))[@inline] in
-    let create_chest_key#152 =
-      fun _c#1003 -> (fun _n#1004 -> ((poly_stub_5)@(L(unit))))[@inline] in
-    let michelson_equal#155 =
-      fun _m1#1014 -> (fun _m2#1015 -> ((poly_stub_4)@(L(unit))))[@inline] in
-    let originate_contract#157 =
-      fun _c#1020 -> (fun _s#1021 -> (fun _t#1022 -> ((poly_stub_3)@(L(unit)))))[@inline] in
-    let compile_contract_from_file#159 =
-      fun _fn#1028 -> (fun _e#1029 -> (fun _v#1030 -> ((poly_stub_2)@(L(unit)))))[@inline] in
-    let originate_from_file#160 =
-      fun _fn#1032 ->
-      (fun _e#1033 ->
-       (fun _v#1034 ->
-        (fun _s#1035 -> (fun _t#1036 -> ((poly_stub_1)@(L(unit)))))))[@inline] in
-    let x#161 = L(54) in let y#162 = x#161 in L(unit) |}]
+      fun b#873 ->
+      (fun s#874 ->
+       (({ UNPAIR ; IF { DROP ; UNIT } { FAILWITH } })@(PAIR(b#873 , s#874))))[@inline] in
+    let poly_stub_39 = fun x#885 -> (({ FAILWITH })@(x#885))[@inline] in
+    let poly_stub_38 = fun x#885 -> (({ FAILWITH })@(x#885))[@inline] in
+    let poly_stub_37 = fun x#885 -> (({ FAILWITH })@(x#885))[@inline] in
+    let poly_stub_36 = fun x#885 -> (({ FAILWITH })@(x#885))[@inline] in
+    let poly_stub_35 = fun x#885 -> (({ FAILWITH })@(x#885))[@inline] in
+    let poly_stub_34 = fun x#885 -> (({ FAILWITH })@(x#885))[@inline] in
+    let poly_stub_33 = fun x#885 -> (({ FAILWITH })@(x#885))[@inline] in
+    let poly_stub_32 = fun x#885 -> (({ FAILWITH })@(x#885))[@inline] in
+    let poly_stub_31 = fun x#885 -> (({ FAILWITH })@(x#885))[@inline] in
+    let poly_stub_30 = fun x#885 -> (({ FAILWITH })@(x#885))[@inline] in
+    let poly_stub_29 = fun x#885 -> (({ FAILWITH })@(x#885))[@inline] in
+    let poly_stub_28 = fun x#885 -> (({ FAILWITH })@(x#885))[@inline] in
+    let poly_stub_27 = fun x#885 -> (({ FAILWITH })@(x#885))[@inline] in
+    let poly_stub_26 = fun x#885 -> (({ FAILWITH })@(x#885))[@inline] in
+    let poly_stub_25 = fun x#885 -> (({ FAILWITH })@(x#885))[@inline] in
+    let poly_stub_24 = fun x#885 -> (({ FAILWITH })@(x#885))[@inline] in
+    let poly_stub_23 = fun x#885 -> (({ FAILWITH })@(x#885))[@inline] in
+    let poly_stub_22 = fun x#885 -> (({ FAILWITH })@(x#885))[@inline] in
+    let poly_stub_21 = fun x#885 -> (({ FAILWITH })@(x#885))[@inline] in
+    let poly_stub_20 = fun x#885 -> (({ FAILWITH })@(x#885))[@inline] in
+    let poly_stub_19 = fun x#885 -> (({ FAILWITH })@(x#885))[@inline] in
+    let poly_stub_18 = fun x#885 -> (({ FAILWITH })@(x#885))[@inline] in
+    let poly_stub_17 = fun x#885 -> (({ FAILWITH })@(x#885))[@inline] in
+    let poly_stub_16 = fun x#885 -> (({ FAILWITH })@(x#885))[@inline] in
+    let poly_stub_15 = fun x#885 -> (({ FAILWITH })@(x#885))[@inline] in
+    let poly_stub_14 = fun x#885 -> (({ FAILWITH })@(x#885))[@inline] in
+    let poly_stub_13 = fun x#885 -> (({ FAILWITH })@(x#885))[@inline] in
+    let poly_stub_12 = fun x#885 -> (({ FAILWITH })@(x#885))[@inline] in
+    let poly_stub_11 = fun x#885 -> (({ FAILWITH })@(x#885))[@inline] in
+    let poly_stub_10 = fun x#885 -> (({ FAILWITH })@(x#885))[@inline] in
+    let poly_stub_9 = fun x#885 -> (({ FAILWITH })@(x#885))[@inline] in
+    let poly_stub_8 = fun x#885 -> (({ FAILWITH })@(x#885))[@inline] in
+    let poly_stub_7 = fun x#885 -> (({ FAILWITH })@(x#885))[@inline] in
+    let poly_stub_6 = fun x#885 -> (({ FAILWITH })@(x#885))[@inline] in
+    let poly_stub_5 = fun x#885 -> (({ FAILWITH })@(x#885))[@inline] in
+    let poly_stub_4 = fun x#885 -> (({ FAILWITH })@(x#885))[@inline] in
+    let poly_stub_3 = fun x#885 -> (({ FAILWITH })@(x#885))[@inline] in
+    let poly_stub_2 = fun x#885 -> (({ FAILWITH })@(x#885))[@inline] in
+    let poly_stub_1 = fun x#885 -> (({ FAILWITH })@(x#885))[@inline] in
+    let get_total_voting_power#103 =
+      fun _u#894 -> ((poly_stub_39)@(L(unit)))[@inline] in
+    let set_source#106 = fun _a#900 -> ((poly_stub_38)@(L(unit)))[@inline] in
+    let get_storage_of_address#107 =
+      fun _a#902 -> ((poly_stub_37)@(L(unit)))[@inline] in
+    let get_balance#108 = fun _a#904 -> ((poly_stub_36)@(L(unit)))[@inline] in
+    let print#109 = fun _v#906 -> ((poly_stub_35)@(L(unit)))[@inline] in
+    let eprint#110 = fun _v#908 -> ((poly_stub_34)@(L(unit)))[@inline] in
+    let get_voting_power#111 =
+      fun _kh#910 -> ((poly_stub_33)@(L(unit)))[@inline] in
+    let nth_bootstrap_contract#112 =
+      fun _i#912 -> ((poly_stub_32)@(L(unit)))[@inline] in
+    let nth_bootstrap_account#113 =
+      fun _i#914 -> ((poly_stub_31)@(L(unit)))[@inline] in
+    let get_bootstrap_account#114 =
+      fun _n#916 -> ((poly_stub_30)@(L(unit)))[@inline] in
+    let last_originations#116 =
+      fun _u#920 -> ((poly_stub_29)@(L(unit)))[@inline] in
+    let new_account#118 = fun _u#924 -> ((poly_stub_28)@(L(unit)))[@inline] in
+    let bake_until_n_cycle_end#120 =
+      fun _n#928 -> ((poly_stub_27)@(L(unit)))[@inline] in
+    let register_delegate#122 =
+      fun _kh#932 -> ((poly_stub_26)@(L(unit)))[@inline] in
+    let register_constant#123 =
+      fun _m#934 -> ((poly_stub_25)@(L(unit)))[@inline] in
+    let constant_to_michelson_program#125 =
+      fun _s#938 -> ((poly_stub_24)@(L(unit)))[@inline] in
+    let restore_context#126 =
+      fun _u#940 -> ((poly_stub_23)@(L(unit)))[@inline] in
+    let save_context#127 = fun _u#942 -> ((poly_stub_22)@(L(unit)))[@inline] in
+    let drop_context#128 = fun _u#944 -> ((poly_stub_21)@(L(unit)))[@inline] in
+    let set_baker_policy#131 =
+      fun _bp#950 -> ((poly_stub_20)@(L(unit)))[@inline] in
+    let set_baker#132 = fun _a#952 -> ((poly_stub_19)@(L(unit)))[@inline] in
+    let size#133 = fun _c#954 -> ((poly_stub_18)@(L(unit)))[@inline] in
+    let read_contract_from_file#135 =
+      fun _fn#958 -> ((poly_stub_17)@(L(unit)))[@inline] in
+    let chr#136 = fun _n#960 -> ((poly_stub_16)@(L(unit)))[@inline] in
+    let nl#137 = L("NEWLINE")[@inline] in
+    let println#138 = fun _v#963 -> ((poly_stub_15)@(L(unit)))[@inline] in
+    let transfer#139 =
+      fun _a#965 -> (fun _s#966 -> (fun _t#967 -> ((poly_stub_14)@(L(unit)))))[@inline] in
+    let transfer_exn#140 =
+      fun _a#969 -> (fun _s#970 -> (fun _t#971 -> ((poly_stub_13)@(L(unit)))))[@inline] in
+    let reset_state#142 =
+      fun _n#975 -> (fun _l#976 -> ((poly_stub_12)@(L(unit))))[@inline] in
+    let reset_state_at#143 =
+      fun _t#978 -> (fun _n#979 -> (fun _l#980 -> ((poly_stub_11)@(L(unit)))))[@inline] in
+    let save_mutation#146 =
+      fun _s#989 -> (fun _m#990 -> ((poly_stub_10)@(L(unit))))[@inline] in
+    let sign#149 =
+      fun _sk#998 -> (fun _d#999 -> ((poly_stub_9)@(L(unit))))[@inline] in
+    let add_account#150 =
+      fun _s#1001 -> (fun _k#1002 -> ((poly_stub_8)@(L(unit))))[@inline] in
+    let baker_account#151 =
+      fun _p#1004 -> (fun _o#1005 -> ((poly_stub_7)@(L(unit))))[@inline] in
+    let create_chest#153 =
+      fun _b#1010 -> (fun _n#1011 -> ((poly_stub_6)@(L(unit))))[@inline] in
+    let create_chest_key#154 =
+      fun _c#1013 -> (fun _n#1014 -> ((poly_stub_5)@(L(unit))))[@inline] in
+    let michelson_equal#157 =
+      fun _m1#1024 -> (fun _m2#1025 -> ((poly_stub_4)@(L(unit))))[@inline] in
+    let originate_contract#159 =
+      fun _c#1030 -> (fun _s#1031 -> (fun _t#1032 -> ((poly_stub_3)@(L(unit)))))[@inline] in
+    let compile_contract_from_file#161 =
+      fun _fn#1038 -> (fun _e#1039 -> (fun _v#1040 -> ((poly_stub_2)@(L(unit)))))[@inline] in
+    let originate_from_file#162 =
+      fun _fn#1042 ->
+      (fun _e#1043 ->
+       (fun _v#1044 ->
+        (fun _s#1045 -> (fun _t#1046 -> ((poly_stub_1)@(L(unit)))))))[@inline] in
+    let x#163 = L(54) in let y#164 = x#163 in L(unit) |}]
 
 let%expect_test _ =
   run_ligo_good [ "compile" ; "storage" ; contract "module_contract_simple.mligo" ; "999" ] ;

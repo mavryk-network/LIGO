@@ -9,7 +9,7 @@ module I = Ast_core
 module O = Ast_typed
 open O.Combinators
 open Subtyping
-module TypeVar = Stage_common.Types.TypeVar
+open Ligo_prim
 
 (*
   Each constant has its own type.
@@ -101,7 +101,9 @@ module Comparable = struct
     let b_r =
       trace_option ~raise (comparator_composed loc b) @@ get_t_record b
     in
-    let aux ctx a b : Context.t =
+    let aux ctx (a : _ Rows.row_element_mini_c) (b : _ Rows.row_element_mini_c)
+      : Context.t
+      =
       let ctx, _ =
         comparator
           ~cmp:s
@@ -118,8 +120,8 @@ module Comparable = struct
       List.fold2_exn
         ~init:ctx
         ~f:aux
-        (LMap.to_list a_r.content)
-        (LMap.to_list b_r.content)
+        (Record.LMap.to_list a_r.fields)
+        (Record.LMap.to_list b_r.fields)
     in
     ctx, t_bool ()
 
@@ -133,7 +135,9 @@ module Comparable = struct
     in
     let a_r = trace_option ~raise (comparator_composed loc a) @@ get_t_sum a in
     let b_r = trace_option ~raise (comparator_composed loc b) @@ get_t_sum b in
-    let aux ctx a b : Context.t =
+    let aux ctx (a : _ Rows.row_element_mini_c) (b : _ Rows.row_element_mini_c)
+      : Context.t
+      =
       let ctx, _ =
         comparator
           ~cmp:s
@@ -150,8 +154,8 @@ module Comparable = struct
       List.fold2_exn
         ~init:ctx
         ~f:aux
-        (LMap.to_list a_r.content)
-        (LMap.to_list b_r.content)
+        (Record.LMap.to_list a_r.fields)
+        (Record.LMap.to_list b_r.fields)
     in
     ctx, t_bool ()
 
@@ -249,13 +253,13 @@ module Type = struct
     | Checked
 
   type t =
-    { for_alls : (O.type_variable * O.kind) list
+    { for_alls : (O.type_variable * Kind.t) list
     ; mode_annot : mode list
     ; types : (O.type_expression list * O.type_expression) List.Ne.t
     }
 
   module Syntax = struct
-    let for_all tvar ?(kind = (Type : O.kind)) in_ =
+    let for_all tvar ?(kind = (Type : Kind.t)) in_ =
       let tvar = TypeVar.of_input_var ("'" ^ tvar) in
       let result = in_ (O.t_variable tvar ()) in
       { result with for_alls = (tvar, kind) :: result.for_alls }
@@ -311,7 +315,7 @@ let of_type ({ for_alls; mode_annot; types } : Type.t) : _ t =
   let mode =
     let table = Hashtbl.create (module Int) in
     List.iteri mode_annot ~f:(fun i mode -> Hashtbl.set table ~key:i ~data:mode);
-    fun i -> Hashtbl.find_exn table i
+    fun i -> try Hashtbl.find_exn table i with _ -> failwith "bad mode annot"
   in
   fun ~raise ~options:_ ~infer ~check ~loc ~ctx args ->
     (* Instantiate prenex quantifier *)
@@ -428,9 +432,9 @@ let of_comparator comparator : _ t =
 
 
 module Const_map = Simple_utils.Map.Make (struct
-  type t = O.constant'
+  type t = Constant.constant'
 
-  let compare x y = O.Compare.constant' x y
+  let compare x y = Constant.compare_constant' x y
 end)
 
 let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
@@ -1093,8 +1097,13 @@ let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
             ~mode_annot:[ Inferred ]
             ~types:
               [ (t_pair a b @-> t_pair (t_list (t_operation ())) b)
-                ^~> t_michelson_contract ()
+                ^~> t_ast_contract ()
               ]) )
+    ; ( C_TEST_COMPILE_AST_CONTRACT
+      , of_type
+          (create
+             ~mode_annot:[ Checked ]
+             ~types:[ t_ast_contract () ^~> t_michelson_contract () ]) )
     ; ( C_TEST_SIZE
       , of_type
           (create
@@ -1226,6 +1235,15 @@ let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
       , of_type
           (for_all "a"
           @@ fun a -> create ~mode_annot:[ Checked ] ~types:[ t_gen a ^~> a ]) )
+    ; ( C_TEST_MUTATE_CONTRACT
+      , of_type
+          (create
+             ~mode_annot:[ Checked; Checked ]
+             ~types:
+               [ t_nat ()
+                 ^-> t_ast_contract ()
+                 ^~> t_option (t_pair (t_ast_contract ()) (t_mutation ()))
+               ]) )
     ; ( C_TEST_MUTATE_VALUE
       , of_type
           (for_all "a"
@@ -1254,7 +1272,7 @@ let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
     ; ( C_TEST_NEW_ACCOUNT
       , of_type
           (create
-             ~mode_annot:[ Checked; Checked ]
+             ~mode_annot:[ Checked ]
              ~types:[ t_unit () ^~> t_pair (t_string ()) (t_key ()) ]) )
     ; ( C_TEST_RUN
       , of_type
@@ -1358,12 +1376,13 @@ let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
     ; ( C_TEST_COMPILE_CONTRACT_FROM_FILE
       , of_type
           (create
-             ~mode_annot:[ Checked; Checked; Checked ]
+             ~mode_annot:[ Checked; Checked; Checked; Checked ]
              ~types:
                [ t_string ()
                  ^-> t_string ()
                  ^-> t_list (t_string ())
-                 ^~> t_michelson_contract ()
+                 ^-> t_option (t_nat ())
+                 ^~> t_ast_contract ()
                ]) )
     ; ( C_TEST_REGISTER_CONSTANT
       , of_type
@@ -1459,7 +1478,7 @@ let infer_constant ~raise ~infer ~check ~loc const =
       (corner_case
       @@ Format.asprintf
            "Typer not implemented for constant %a"
-           Stage_common.PP.constant'
+           Constant.pp_constant'
            const)
 
 
