@@ -6,6 +6,7 @@
  (libraries
   simple-utils
   tezos-utils
+  ligo_prim
   stage_common
   ast_typed
   WasmObjectFile
