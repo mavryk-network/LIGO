@@ -2,7 +2,7 @@
    Lift functions outside, as WebAssembly has no support for nested functions.
 *)
 open Mini_c.Types
-module ValueVar = Stage_common.Types.ValueVar
+module ValueVar = Ligo_prim.ValueVar
 
 type env = {
   variables: (var_name * type_expression) list;

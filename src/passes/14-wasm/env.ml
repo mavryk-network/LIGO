@@ -4,7 +4,7 @@ module A = W.Ast
 module T = W.Types
 module S = W.Source
 module Z = Z
-module ValueVar = Stage_common.Types.ValueVar
+module ValueVar = Ligo_prim.ValueVar
 module Location = Simple_utils.Location
 
 type locals = (string * T.value_type) list
