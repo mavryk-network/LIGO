@@ -582,6 +582,47 @@ let get_bootstrapped_contract ~raise (n : int) =
   let contract = Tezos_protocol.Protocol.Alpha_context.Contract.of_b58check contract in
   Trace.trace_alpha_tzresult ~raise (fun _ -> generic_error Location.generated "Error parsing address") @@ contract
 
+let run_script ~raise ~calltrace ~loc :
+context -> string option -> value -> value -> value -> ligo_repr =
+  fun ctxt entrypoint_opt contract parameter storage ->
+    let code_to_str code kind =
+      let loc = Location.generated in
+      match code with
+      | Some (x: unit Tezos_utils.Michelson.michelson) -> Format.asprintf "%a" Tezos_utils.Michelson.pp x
+      | None -> raise.error (Errors.generic_error ~calltrace loc ("Expected "^kind))
+    in
+    (* let entrypoint = Option.map entrypoint_opt ~f:Tezos_raw_protocol.Entrypoint_repr.of_string_lax in *)
+    let entrypoint = Option.value_map entrypoint_opt
+      ~default:None
+      ~f:(fun x -> Tezos_raw_protocol.Entrypoint_repr.of_annot_lax_opt @@ Tezos_raw_protocol.Non_empty_string.of_string_exn x)
+    in
+    let contract = code_to_str (get_michelson_contract contract) "contract" in
+    let storage = code_to_str (Option.map (get_michelson_expr storage) ~f:(fun x -> x.code)) "expression" in
+    let parameter = code_to_str (Option.map (get_michelson_expr parameter) ~f:(fun x -> x.code)) "expression" in
+    
+    ignore ctxt;
+    (* For some reasons.. this do not work .. "gas limit"
+      let alpha_context = get_alpha_context ~raise ctxt in
+    *)
+    let alpha_context =
+      let (x,_) = Trace.trace_tzresult_lwt ~raise (throw_obj_exc loc calltrace) @@ Tezos_alpha_test_helpers.Context.init3 () in
+      let x = Trace.trace_tzresult_lwt ~raise (throw_obj_exc loc calltrace) @@ Tezos_alpha_test_helpers.Incremental.begin_construction x in
+      Tezos_alpha_test_helpers.Incremental.alpha_ctxt x
+    in
+    let step_constants = Tezos_alpha_test_helpers.Contract_helpers.default_step_constants in
+    let (res,_ctxt) = Trace.trace_tzresult_lwt ~raise (throw_obj_exc loc calltrace) @@
+      Tezos_alpha_test_helpers.Contract_helpers.run_script alpha_context
+        ~internal:true (* allows passing tickets as pairs ? *)
+        ~step_constants contract ?entrypoint ~storage ~parameter ()
+    in
+    (* let () =
+      let open Tezos_protocol.Protocol.Apply_internal_results in
+      let x = contents_of_packed_internal_operations res.operations in
+      let y = List.map ~f:(Data_encoding.Binary.to_string_exn internal_contents_encoding) x in
+      List.iter ~f:(fun str -> Format.print_string str) y
+    in *)
+    canonical_to_ligo res.storage
+
 let init ?rng_state ?commitments ?(initial_balances = []) ?(baker_accounts = []) ?(consensus_threshold=0)
     ?min_proposal_quorum ?bootstrap_contracts ?level ?cost_per_byte
     ?liquidity_baking_subsidy ?endorsing_reward_per_slot

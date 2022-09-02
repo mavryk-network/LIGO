@@ -155,6 +155,7 @@ type constant' =
   | C_TEST_GET_ENTRYPOINT [@only_interpreter]
   | C_TEST_LAST_EVENTS [@only_interpreter]
   | C_TEST_TRY_WITH [@only_interpreter]
+  |C_TEST_RUN_CONTRACT [@only_interpreter]
   (* New with EDO*)
   | C_SAPLING_VERIFY_UPDATE
   | C_SAPLING_EMPTY_STATE

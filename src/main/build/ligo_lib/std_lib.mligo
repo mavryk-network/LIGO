@@ -423,6 +423,9 @@ module Test = struct
   end
 
 #if CURRY
+  let run_contract (type p s) (c : p * s -> operation list * s) (p:p) (s:s) (ep_opt: string option) : s =
+    let code : michelson_program = [%external "TEST_RUN_CONTRACT" , compile_contract c, eval p, eval s, ep_opt] in
+    (decompile code : s)
   let get_last_events_from (type a p s) (addr : (p,s) typed_address) (rtag: string) : a list =
     let addr = Tezos.address (to_contract addr) in
     let event_map : (address * a) list = [%external ("TEST_LAST_EVENTS", rtag)] in
@@ -550,6 +553,9 @@ module Test = struct
 #endif
 
 #if UNCURRY
+  let run_contract (type p s) (c : p * s -> operation list * s) (p:p) (s:s) (ep_opt: string option) : s =
+    let code : michelson_program = [%external "TEST_RUN_CONTRACT" , compile_contract c, eval p, eval s, ep_opt] in
+    (decompile code : s)
   let get_last_events_from (type a p s) ( (addr,rtag) : (p,s) typed_address * string) : a list =
     let addr = Tezos.address (to_contract addr) in
     let event_map : (address * a) list = [%external ("TEST_LAST_EVENTS", rtag)] in
@@ -742,6 +748,8 @@ module Test = struct
   let println (_v : string) : unit = stub ()
 
 #if CURRY
+  let run_contract (type p s) (_c : p * s -> operation list * s) (_p:p) (_s:s) (_ep_opt: string option) : s = stub ()
+  let get_last_events_from (type a p s) (addr : (p,s) typed_address) (rtag: string) : a list = stub ()
   let transfer (_a : address) (_s : michelson_program) (_t : tez) : test_exec_result = stub ()
   let transfer_exn (_a : address) (_s : michelson_program) (_t : tez) : nat = stub ()
   let log (type a) (_v : a) : unit = stub ()
@@ -769,6 +777,8 @@ module Test = struct
 #endif
 
 #if UNCURRY
+  let run_contract (type p s) ((_c,_p,_s,_ep_opt) : (p * s -> operation list * s) * p * s * string option) : s = stub ()
+  let get_last_events_from (type a p s) ( (_addr,_rtag) : (p,s) typed_address * string) : a list = stub ()
   let transfer ((_a, _s, _t) : address * michelson_program * tez) : test_exec_result = stub ()
   let transfer_exn ((_a, _s, _t) : address * michelson_program * tez) : nat = stub ()
   let log (type a) (_v : a) : unit = stub ()

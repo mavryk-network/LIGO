@@ -158,6 +158,7 @@ let is_pure_constant : Constant.constant' -> bool =
   | C_TEST_GET_ENTRYPOINT
   | C_TEST_LAST_EVENTS
   | C_TEST_TRY_WITH
+  | C_TEST_RUN_CONTRACT
     -> false
 
 let rec is_pure : expression -> bool = fun e ->

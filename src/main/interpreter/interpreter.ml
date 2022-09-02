@@ -848,6 +848,13 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t) ?source_fil
       let bigmap_ty = List.nth_exn types 1 in
       let>> () = Set_big_map (n, kv, bigmap_ty) in
       return_ct (C_unit)
+    | ( C_TEST_RUN_CONTRACT , [ contract ; parameter ; storage ; entrypoint_opt] ) ->
+      let entrypoint_opt = trace_option ~raise error_type @@ LC.get_string_option entrypoint_opt in
+      let>> s = Run_contract (loc,calltrace,contract,parameter,storage,entrypoint_opt) in
+      let* old_storage = monad_option (Errors.generic_error loc "Expected michelson expression") @@ LC.get_michelson_expr storage in
+      let new_storage = { old_storage with code = s } in
+      return @@ v_typed_michelson new_storage
+    | ( C_TEST_RUN_CONTRACT , _ ) -> fail @@ error_type
     | ( C_TEST_SET_BIG_MAP , _  ) -> fail @@ error_type
     | ( C_TEST_CAST_ADDRESS , [ V_Ct (C_address x) ] ) ->
       let (_, ty) = trace_option ~raise (Errors.generic_error expr_ty.location "Expected typed_address type") @@

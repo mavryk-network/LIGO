@@ -9,6 +9,7 @@ module LT = Ligo_interpreter.Types
 module LC = Ligo_interpreter.Combinators
 module Exc = Ligo_interpreter_exc
 module Tezos_protocol = Tezos_protocol_014_PtKathma
+module Tezos_raw_protocol = Tezos_raw_protocol_014_PtKathma
 module Tezos_protocol_env = Tezos_protocol_environment_014_PtKathma
 module Tezos_client = Tezos_client_014_PtKathma
 
@@ -62,6 +63,8 @@ module Command = struct
     | To_contract : Location.t * LT.value * string option * Ast_aggregated.type_expression -> LT.value t
     | Check_storage_address : Location.t * Tezos_protocol.Protocol.Alpha_context.Contract.t * Ast_aggregated.type_expression -> unit t
     | Inject_script : Location.t * Ligo_interpreter.Types.calltrace * LT.value * LT.value * Z.t -> LT.value t
+    | Run_contract : Location.t * Ligo_interpreter.Types.calltrace * LT.value * LT.value * LT.value * string option ->
+      (execution_trace, string) Tezos_micheline.Micheline.node t
     | Set_source : LT.value -> unit t
     | Set_baker : Location.t * LT.calltrace * LT.value -> unit t
     | Get_voting_power : Location.t * Ligo_interpreter.Types.calltrace * Tezos_protocol.Protocol.Alpha_context.public_key_hash -> LT.value t
@@ -97,6 +100,9 @@ module Command = struct
     = fun ~raise ~options command state _log ->
     let ctxt = state.tezos_context in
     match command with
+    | Run_contract (loc,calltrace,c,p,s,e_opt) ->
+      let res = Tezos_state.run_script ~raise ~calltrace ~loc ctxt e_opt c p s in
+      (res, ctxt)
     | Set_big_map (id, kv, bigmap_ty) ->
       let (k_ty, v_ty) = trace_option ~raise (Errors.generic_error bigmap_ty.location "Expected big_map type") @@
                            Ast_aggregated.get_t_big_map bigmap_ty in

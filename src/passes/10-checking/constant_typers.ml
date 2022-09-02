@@ -504,6 +504,7 @@ module Constant_types = struct
                     of_type C_TEST_COMPILE_AST_CONTRACT O.(t_ast_contract () ^-> t_michelson_contract ());
                     of_type C_TEST_REGISTER_CONSTANT O.(t_michelson_code () ^-> t_string ());
                     of_type C_TEST_CONSTANT_TO_MICHELSON O.(t_string () ^-> t_michelson_code ());
+                    of_type C_TEST_RUN_CONTRACT O.(t_michelson_contract () ^-> t_michelson_code () ^-> t_michelson_code () ^-> t_option (t_string ()) ^-> t_michelson_code ()) ;
                     of_type C_TEST_REGISTER_FILE_CONSTANTS O.(t_string () ^-> t_list (t_string ()));
                     of_type C_TEST_TO_ENTRYPOINT O.(for_all "a" @@ fun a -> for_all "b" @@ fun b -> for_all "c" @@ fun c -> (t_string () ^-> t_typed_address a b ^-> t_contract c));
                     of_type C_TEST_FAILWITH (for_all "a" @@ fun a -> for_all "b" @@ fun b -> (a ^-> b));

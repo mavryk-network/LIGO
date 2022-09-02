@@ -55,6 +55,8 @@ let v_set : value list -> value =
 let v_map : (value * value) list -> value =
   fun xs -> V_Map xs
 
+let v_typed_michelson : typed_michelson_code -> value = fun x ->
+  V_Michelson (Ty_code x)
 let extract_pair : value -> (value * value) option =
   fun p ->
     ( match p with
