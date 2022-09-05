@@ -143,6 +143,12 @@ type typer_error =
     Location.t * Exists_var.t * Ast_typed.type_expression
   | `Typer_cannot_unify of
     Location.t * Ast_typed.type_expression * Ast_typed.type_expression
+  | `Typer_cannot_unify_diff_layout of
+    Location.t
+    * Ast_typed.type_expression
+    * Ast_typed.type_expression
+    * Layout.t
+    * Layout.t
   ]
 [@@deriving poly_constructor { prefix = "typer_" }]
 
@@ -197,6 +203,21 @@ let rec error_ppformat
          type1
          Ast_typed.PP.type_expression
          type2
+     | `Typer_cannot_unify_diff_layout (loc, type1, type2, layout1, layout2) ->
+       Format.fprintf
+         f
+         "@[<hv>%a@.Invalid type(s)@.Cannot unify %a with %a due to differing \
+          layouts (%a and %a).@]"
+         Snippet.pp
+         loc
+         Ast_typed.PP.type_expression
+         type1
+         Ast_typed.PP.type_expression
+         type2
+         Layout.pp
+         layout1
+         Layout.pp
+         layout2
      | `Typer_bad_constructor (loc, label, type_) ->
        Format.fprintf
          f
@@ -642,6 +663,19 @@ let rec error_jsonformat : typer_error -> Yojson.Safe.t =
         [ "message", `String message
         ; "type1", Ast_typed.type_expression_to_yojson type1
         ; "type2", Ast_typed.type_expression_to_yojson type2
+        ; "location", Location.to_yojson loc
+        ]
+    in
+    json_error ~stage ~content
+  | `Typer_cannot_unify_diff_layout (loc, type1, type2, layout1, layout2) ->
+    let message = "Cannot unify" in
+    let content =
+      `Assoc
+        [ "message", `String message
+        ; "type1", Ast_typed.type_expression_to_yojson type1
+        ; "type2", Ast_typed.type_expression_to_yojson type2
+        ; "layout1", Layout.to_yojson layout1
+        ; "layout2", Layout.to_yojson layout2
         ; "location", Location.to_yojson loc
         ]
     in
