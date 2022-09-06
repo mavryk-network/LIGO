@@ -315,7 +315,9 @@ let of_type ({ for_alls; mode_annot; types } : Type.t) : _ t =
   let mode =
     let table = Hashtbl.create (module Int) in
     List.iteri mode_annot ~f:(fun i mode -> Hashtbl.set table ~key:i ~data:mode);
-    fun ~raise i -> try Hashtbl.find_exn table i with _ -> raise.error (corner_case "bad mode annot")
+    fun ~raise i ->
+      try Hashtbl.find_exn table i with
+      | _ -> raise.error (corner_case "bad mode annot")
   in
   fun ~raise ~options:_ ~infer ~check ~loc ~ctx args ->
     (* Instantiate prenex quantifier *)
@@ -1467,6 +1469,29 @@ let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
     ; C_GT, of_comparator (Comparable.comparator ~cmp:"GT")
     ; C_LE, of_comparator (Comparable.comparator ~cmp:"LE")
     ; C_GE, of_comparator (Comparable.comparator ~cmp:"GE")
+    ; ( C_MAP_LITERAL
+      , of_type
+          (for_all "a"
+          @@ fun a ->
+          for_all "b"
+          @@ fun b ->
+          create
+            ~mode_annot:[ Inferred ]
+            ~types:[ t_list (t_pair a b) ^~> t_map a b ]) )
+    ; ( C_BIG_MAP_LITERAL
+      , of_type
+          (for_all "a"
+          @@ fun a ->
+          for_all "b"
+          @@ fun b ->
+          create
+            ~mode_annot:[ Inferred ]
+            ~types:[ t_list (t_pair a b) ^~> t_big_map a b ]) )
+    ; ( C_SET_LITERAL
+      , of_type
+          (for_all "a"
+          @@ fun a ->
+          create ~mode_annot:[ Inferred ] ~types:[ t_list a ^~> t_set a ]) )
     ]
 
 
