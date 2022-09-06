@@ -218,7 +218,7 @@ let rec unify
      with
      | Ok ctx -> ctx
      | Unequal_lengths ->
-       failwith "Cannot occur since injections are consistent and fully applied")
+       raise.error @@ corner_case "Cannot occur since injections are consistent and fully applied")
   | T_variable tvar1, T_variable tvar2 when TypeVar.equal tvar1 tvar2 -> ctx
   | T_variable tvar1, _ when TypeVar.is_exists tvar1 ->
     unify_evar (Exists_var.of_type_var_exn tvar1) type2

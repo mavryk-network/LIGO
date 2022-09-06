@@ -80,7 +80,7 @@ let rec to_simple_pattern (ty_pattern : _ option Pattern.t * AST.type_expression
         let hd_tl = to_simple_pattern (p, hd_ty) @ acc in
         [SP_Constructor (cons_label, hd_tl, hd_ty)])
   | P_variant (c, p) ->
-    let p_ty = get_variant_nested_type c (try Option.value_exn ~here:[%here] (C.get_t_sum ty) with _ -> failwith (Format.eprintf "Option.value_exn. Pattern: %a\n Type: %a\n" (Pattern.pp Ast_typed.PP.type_expression_option) pattern' Ast_typed.PP.type_expression ty; "Error")) in
+    let p_ty = get_variant_nested_type c (Option.value_exn ~here:[%here] (C.get_t_sum ty)) in
     [SP_Constructor (c, to_simple_pattern (p, p_ty), ty)]
   | P_tuple ps ->
     let row = Option.value_exn ~here:[%here] (C.get_t_record ty) in

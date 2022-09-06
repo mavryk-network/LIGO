@@ -315,7 +315,7 @@ let of_type ({ for_alls; mode_annot; types } : Type.t) : _ t =
   let mode =
     let table = Hashtbl.create (module Int) in
     List.iteri mode_annot ~f:(fun i mode -> Hashtbl.set table ~key:i ~data:mode);
-    fun i -> try Hashtbl.find_exn table i with _ -> failwith "bad mode annot"
+    fun ~raise i -> try Hashtbl.find_exn table i with _ -> raise.error (corner_case "bad mode annot")
   in
   fun ~raise ~options:_ ~infer ~check ~loc ~ctx args ->
     (* Instantiate prenex quantifier *)
@@ -337,7 +337,7 @@ let of_type ({ for_alls; mode_annot; types } : Type.t) : _ t =
     (* Determine arguments to be inferred *)
     let inferred =
       List.filter_mapi args ~f:(fun i arg ->
-        match mode i with
+        match mode ~raise i with
         | Inferred -> Some (i, arg)
         | Checked -> None)
     in
@@ -371,7 +371,7 @@ let of_type ({ for_alls; mode_annot; types } : Type.t) : _ t =
                args_types
                |> List.mapi ~f:(fun i x -> i, x)
                |> List.partition_map ~f:(fun (i, (arg_type, arg)) ->
-                    match (mode i : Type.mode) with
+                    match (mode ~raise i : Type.mode) with
                     | Inferred ->
                       (* [Hashtbl.find_exn] cannot raise error due to inference above. *)
                       First (arg_type, fst (Hashtbl.find_exn output_args i))

@@ -200,7 +200,7 @@ let type_value_attr : I.Attr.value -> O.Attr.value =
   { inline; no_mutation; view; public; hidden; thunk }
 
 
-let infer_literal ~loc lit
+let infer_literal ~raise ~loc lit
   : O.type_expression * (O.expression, _, _) Elaboration.t
   =
   let open Elaboration.Let_syntax in
@@ -225,8 +225,10 @@ let infer_literal ~loc lit
   | Literal_bls12_381_g2 _ -> return @@ t_bls12_381_g2 ~loc ()
   | Literal_bls12_381_fr _ -> return @@ t_bls12_381_fr ~loc ()
   | Literal_chest _ | Literal_chest_key _ ->
-    failwith
-      "chest / chest_key not allowed in the syntax (only tests need this type)"
+    raise.error
+      (corner_case
+         "chest / chest_key not allowed in the syntax (only tests need this \
+          type)")
 
 
 let equal_lmap_doms lmap1 lmap2 =
@@ -275,7 +277,7 @@ let rec check_expression
   let ctx, expr' =
     match expr.expression_content, type_.type_content with
     | E_literal lit, T_constant _ ->
-      let lit_type, expr = infer_literal ~loc lit in
+      let lit_type, expr = infer_literal ~raise ~loc lit in
       Assert.assert_true
         ~raise
         (assert_equal loc lit_type type_)
@@ -415,7 +417,7 @@ and infer_expression ~(raise : raise) ~options ~ctx (expr : I.expression)
   let ctx, type_, expr' =
     match expr.expression_content with
     | E_literal lit ->
-      let type_, expr = infer_literal ~loc lit in
+      let type_, expr = infer_literal ~raise ~loc lit in
       ctx, type_, expr
     | E_constant { cons_name = const; arguments = args } ->
       infer_constant ~raise ~options ~ctx ~loc const args
