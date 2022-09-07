@@ -125,7 +125,11 @@ type expression_content =
   | E_record of expr Record.t
   | E_accessor of expr Accessor.t
   | E_update   of expr Update.t
+  (* Imperative *)
   | E_assign   of (expr,ty_expr) Assign.t
+  | E_for      of expr For_loop.t
+  | E_for_each of expr For_each_loop.t
+  | E_while    of expr While_loop.t
 
 and type_inst = {
     forall: expression ;

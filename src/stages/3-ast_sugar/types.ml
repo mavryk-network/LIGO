@@ -72,7 +72,9 @@ type expression_content =
   | E_set     of expr Set_expr.t
   (* Imperative *)
   | E_assign   of (expr,ty_expr option) Assign.t
-
+  | E_for      of expr For_loop.t
+  | E_for_each of expr For_each_loop.t
+  | E_while    of expr While_loop.t
 
 and expression = {
   expression_content: expression_content;

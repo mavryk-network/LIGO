@@ -169,6 +169,12 @@ let rec swap_expression : Scope.swapper -> expression -> expression = fun swaper
     let ascr = self_type ascr in
     let expression = self expression in
     return @@ E_assign {binder={var;ascr;attributes};expression}
+  | E_for _ ->
+    failwith ("TODO "^__LOC__)
+  | E_for_each _ ->
+    failwith ("TODO "^__LOC__)
+  | E_while _ ->
+    failwith ("TODO "^__LOC__)
 
 and matching_cases : Scope.swapper -> matching_expr -> matching_expr = fun swaper me ->
   let self = swap_expression swaper in
@@ -302,6 +308,12 @@ let rec expression : Scope.t -> expression -> Scope.t * expression = fun scope e
     let ascr = self_type ascr in
     let _,expression = self expression in
     return @@ E_assign {binder={var;ascr;attributes};expression}
+  | E_for _ ->
+    failwith ("TODO "^__LOC__)
+  | E_for_each _ ->
+    failwith ("TODO "^__LOC__)
+  | E_while _ ->
+    failwith ("TODO "^__LOC__)
 
 and matching_cases : Scope.t -> matching_expr -> matching_expr = fun scope me ->
   let self ?(scope = scope) = expression scope in

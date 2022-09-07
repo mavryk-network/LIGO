@@ -203,6 +203,16 @@ let rec is_pure : expression -> bool = fun e ->
   | E_fold_right _
     -> false
 
+  (* TODO *)
+  | E_assign _ ->
+    failwith ("TODO "^__LOC__)
+  | E_for _ ->
+    failwith ("TODO "^__LOC__)
+  | E_for_each _ ->
+    failwith ("TODO "^__LOC__)
+  | E_while _ ->
+    failwith ("TODO "^__LOC__)
+
 let occurs_count : Value_var.t -> expression -> int =
   fun x e ->
   let fvs = Free_variables.expression [] e in

@@ -112,6 +112,10 @@ and expression_content =
   (* E_global_constant (hash, args) *)
   | E_global_constant of string * expression list
   | E_create_contract of type_expression * type_expression * ((var_name * type_expression) * expression) * expression list
+  | E_assign of (type_expression, expression) Assign.t
+  | E_for      of expression For_loop.t
+  | E_for_each of expression For_each_loop.t
+  | E_while    of expression While_loop.t
 
 and expression = {
   content : expression_content ;

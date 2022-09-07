@@ -77,6 +77,12 @@ let apply_table_expr table (expr : AST.expression) =
          let _,types = List.fold_map ~init:(e.type_expression) table ~f:(fun (te) (v,t) -> let te = AST.Helpers.subst_type v t te in te,te) in
          let expr = List.fold2_exn ~init:(e) ~f:(fun e (_v,t) u -> AST.e_a_type_inst e t u) (List.rev table) types in
          false, (), expr
+      | E_for _ ->
+         failwith ("TODO "^__LOC__)
+      | E_for_each _ ->
+         failwith ("TODO "^__LOC__)
+      | E_while _ ->
+         failwith ("TODO "^__LOC__)
       | E_literal _ | E_constant _ | E_variable _ | E_application _ | E_type_abstraction _
       | E_let_in _ | E_raw_code _ | E_constructor _ | E_record _
       | E_accessor _ | E_update _ -> return e.expression_content) () expr in
@@ -129,6 +135,12 @@ let subst_external_term et t (e : AST.expression) =
       | E_assign { binder = { var ; ascr ; attributes } ; expression } ->
          let ascr = (subst_external_type et t) ascr in
          return @@ E_assign { binder = { var ; ascr ; attributes } ; expression }
+      | E_for _ ->
+         failwith ("TODO "^__LOC__)
+      | E_for_each _ ->
+         failwith ("TODO "^__LOC__)
+      | E_while _ ->
+         failwith ("TODO "^__LOC__)
       | E_literal _ | E_constant _ | E_variable _ | E_application _ | E_type_abstraction _
       | E_let_in _ | E_raw_code _ | E_constructor _ | E_record _
       | E_accessor _ | E_update _ -> return e.expression_content) () e in
@@ -226,6 +238,12 @@ let rec mono_polymorphic_expression ~raise : Data.t -> AST.expression -> Data.t 
    | E_assign {binder;expression} ->
       let data, expression = self data expression in
       data, return (E_assign {binder;expression})
+  | E_for _ ->
+     failwith ("TODO "^__LOC__)
+  | E_for_each _ ->
+     failwith ("TODO "^__LOC__)
+  | E_while _ ->
+     failwith ("TODO "^__LOC__)
 
 and mono_polymorphic_cases ~raise : Data.t -> AST.matching_expr -> Data.t * AST.matching_expr = fun data m ->
    match m with

@@ -278,6 +278,15 @@ let rec fold_map_expression : 'a fold_mapper -> 'a -> expression -> 'a * express
   | E_assign a ->
     let (res,a) = Assign.fold_map self self_type init a in
     (res, return @@ E_assign a)
+  | E_for e ->
+    let (res, e) = For_loop.fold_map self init e in
+    (res, return @@ E_for e)
+  | E_for_each e ->
+    let (res, e) = For_each_loop.fold_map self init e in
+    (res, return @@ E_for_each e)
+  | E_while e ->
+    let (res, e) = While_loop.fold_map self init e in
+    (res, return @@ E_while e)
   | E_literal _ | E_variable _  | E_module_accessor _ as e' -> (init, return e')
 
 and fold_map_cases : 'a fold_mapper -> 'a -> matching_expr -> 'a * matching_expr = fun f init m ->

@@ -110,12 +110,16 @@ let rec substitute_var_in_body ~raise : Value_var.t -> Value_var.t -> O.expressi
           let rhs = substitute_var_in_body ~raise to_subst new_var letin.rhs in
           let letin = { letin with rhs } in
           ret false { exp with expression_content = E_let_in letin}
+        (* TODO wait what? *)
         | O.E_assign assign when Value_var.equal assign.binder.var to_subst ->
           let expression = substitute_var_in_body ~raise to_subst new_var assign.expression in
           let assign = { assign with expression } in
           ret false { exp with expression_content = E_assign assign}
         | O.E_lambda lamb when Value_var.equal lamb.binder.var to_subst -> ret false exp
         | O.E_recursive r when Value_var.equal r.fun_name to_subst -> ret false exp
+        | O.E_for _ -> failwith ("TODO "^__LOC__)
+        | O.E_for_each _ -> failwith ("TODO "^__LOC__)
+        | O.E_while _ -> failwith ("TODO "^__LOC__)
         | O.E_matching m -> (
           let matchee = substitute_var_in_body ~raise to_subst new_var m.matchee in
           let cases = match m.cases with

@@ -48,6 +48,9 @@ let rec fold_expression ~raise : ('a, 'err, 'warn) folder -> 'a -> expression ->
     res
   | E_recursive r -> Recursive.fold self idle init r
   | E_assign a -> Assign.fold self idle init a
+  | E_for e -> For_loop.fold self init e
+  | E_for_each e -> For_each_loop.fold self init e
+  | E_while e -> While_loop.fold self init e
 
 and fold_expression_in_module_expr : ('a -> expression -> 'a)  -> 'a -> module_expr -> 'a = fun self acc x ->
   match x.wrap_content with
@@ -131,6 +134,15 @@ let rec map_expression ~raise : ('err,'warn) exp_mapper -> expression -> express
   | E_assign a ->
     let a = Assign.map self (fun a -> a) a in
     return @@ E_assign a
+  | E_for e ->
+    let e = For_loop.map self e in
+    return @@ E_for e
+  | E_for_each e ->
+    let e = For_each_loop.map self e in
+    return @@ E_for_each e
+  | E_while e ->
+    let e = While_loop.map self e in
+    return @@ E_while e
   | E_literal _ | E_variable _ | E_raw_code _ | E_module_accessor _ as e' -> return e'
 
 and map_expression_in_declaration : (expression -> expression) -> declaration -> declaration = fun self xs ->
@@ -253,6 +265,15 @@ let rec fold_map_expression : type a . a fold_mapper -> a -> expression -> a * e
   | E_assign a ->
     let (res,a) = Assign.fold_map self idle init a in
     (res, return @@ E_assign a)
+  | E_for e ->
+    let (res,e) = For_loop.fold_map self init e in
+    (res, return @@ E_for e)
+  | E_for_each e ->
+    let (res,e) = For_each_loop.fold_map self init e in
+    (res, return @@ E_for_each e)
+  | E_while e ->
+    let (res,e) = While_loop.fold_map self init e in
+    (res, return @@ E_while e)
   | E_literal _ | E_variable _ | E_raw_code _ | E_module_accessor _ as e' -> (init, return e')
 
 and fold_map_expression_in_module_expr : type a . (a -> expression -> a * expression) -> a -> module_expr -> a * module_expr = fun self acc x ->

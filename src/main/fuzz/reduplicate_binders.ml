@@ -87,3 +87,6 @@ let rec reduplicate ~raise : expression -> expression =
       let binder = binder_remove_counter binder in
       let expression = self expression in
       return @@ E_assign {binder;expression}
+   | E_for _ -> failwith ("TODO "^__LOC__)
+   | E_for_each _ -> failwith ("TODO "^__LOC__)
+   | E_while _ -> failwith ("TODO "^__LOC__)

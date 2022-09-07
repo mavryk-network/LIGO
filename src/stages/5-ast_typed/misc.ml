@@ -48,6 +48,12 @@ module Free_variables = struct
     | E_assign {binder;expression=e} ->
       let b' = union (singleton binder.var) b in
       expression b' e
+    | E_for _e ->
+      failwith ("TODO "^__LOC__)
+    | E_for_each _e ->
+      failwith ("TODO "^__LOC__)
+    | E_while _e ->
+      failwith ("TODO "^__LOC__)
 
   and lambda : bindings -> (expr,ty_expr) Lambda.t -> bindings = fun b l ->
     let b' = union (singleton l.binder.var) b in

@@ -114,6 +114,14 @@ let rec usage_in_expr (f : Value_var.t) (expr : expression) : usage =
     usages (List.map ~f:self args)
   | E_create_contract (_p, _s, _code, args) ->
     usages (List.map ~f:self args)
+  | E_assign _ ->
+    failwith ("TODO "^__LOC__)
+  | E_for _ ->
+    failwith ("TODO "^__LOC__)
+  | E_for_each _ ->
+    failwith ("TODO "^__LOC__)
+  | E_while _ ->
+    failwith ("TODO "^__LOC__)
 
 let comb_type (ts : type_expression list) : type_expression =
   { type_content = T_tuple (List.map ~f:(fun t -> (None, t)) ts);
@@ -252,6 +260,14 @@ let rec uncurry_in_expression
   | E_create_contract (p, s, code, args) ->
     let args = List.map ~f:self args in
     return (E_create_contract (p, s, code, args))
+  | E_assign _ ->
+    failwith ("TODO "^__LOC__)
+  | E_for _ ->
+    failwith ("TODO "^__LOC__)
+  | E_for_each _ ->
+    failwith ("TODO "^__LOC__)
+  | E_while _ ->
+    failwith ("TODO "^__LOC__)
 
 (* hack to specialize map_expression to identity monad since there are
    no errors here *)

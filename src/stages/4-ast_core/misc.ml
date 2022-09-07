@@ -63,6 +63,7 @@ let rec assert_value_eq (a, b: (expression * expression )) : unit option =
   | (E_recursive _,_) | (E_accessor _, _)
   | (E_matching _, _)
   | E_module_accessor _, _
+  | (E_for _, _) | (E_for_each _, _) | (E_while _, _)
    -> None
 
   | E_literal _ , _

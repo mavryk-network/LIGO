@@ -76,6 +76,14 @@ let rec map_expression : mapper -> expression -> expression = fun f e ->
       let args = List.map ~f:self args in
       let code = self code in
       return @@ E_create_contract (p, s, ((x, t), code), args)
+  | E_assign _e ->
+    failwith ("TODO "^__LOC__)
+  | E_for _e ->
+    failwith ("TODO "^__LOC__)
+  | E_for_each _e ->
+    failwith ("TODO "^__LOC__)
+  | E_while _e ->
+    failwith ("TODO "^__LOC__)
 
 let map_sub_level_expression : mapper -> anon_function -> anon_function = fun f e ->
   let {binder ; body} : anon_function = e in

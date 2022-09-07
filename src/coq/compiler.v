@@ -132,6 +132,8 @@ Context {global_constant : meta -> string -> list micheline}.
 Inductive expr : Set :=
 | E_var : meta -> nat -> expr
 | E_let_in : meta -> expr -> binds -> expr
+| E_let_mut : meta -> expr -> binds -> expr
+| E_assign : meta -> nat -> expr -> expr
 
 | E_tuple : meta -> args -> expr
 | E_let_tuple : meta -> expr -> binds -> expr
@@ -821,6 +823,17 @@ Fixpoint compile_expr (r : ope) (env : list ty) (e : expr) {struct e} : prog :=
       let e2' := compile_binds r env e2 in
       [I_SEQ null e1';
        I_SEQ null e2']
+  | E_let_mut _ e1 e2 =>
+      let e1' := compile_expr r env e1 in
+      let e2' := compile_binds r env e2 in
+      [I_SEQ null e1';
+       I_SEQ null e2']
+  | E_assign _ n e1 =>
+      let e1' := compile_expr r env e1 in
+      [I_SEQ null e1';
+       I_DUG null (embed r n);
+       I_DIG null (S (embed r n));
+       I_DROP null 1]
   | E_tuple _ args =>
       [I_SEQ null (compile_args r env args);
        I_SEQ null (PAIR (args_length args))]

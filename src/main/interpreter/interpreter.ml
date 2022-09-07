@@ -1165,6 +1165,12 @@ and eval_ligo ~raise ~steps ~options ?source_file : AST.expression -> calltrace 
       | _ -> raise.error @@ Errors.generic_error term.location "Embedded raw code can only have a functional type"
     )
     | E_assign _ -> raise.error @@ Errors.generic_error term.location "Assignements should not reach interpreter"
+    | E_for _ ->
+      failwith ("TODO "^__LOC__)
+    | E_for_each _ ->
+      failwith ("TODO "^__LOC__)
+    | E_while _ ->
+      failwith ("TODO "^__LOC__)
 
 and try_eval ~raise ~steps ~options ?source_file expr env state r =
   Monad.eval ~raise ~options (eval_ligo ~raise ~steps ~options ?source_file expr [] env) state r

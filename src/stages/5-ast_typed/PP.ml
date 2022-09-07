@@ -139,6 +139,9 @@ and expression_content ppf (ec: expression_content) =
   | E_module_accessor ma -> Module_access.pp Value_var.pp ppf ma
   | E_assign     a -> Assign.pp     expression type_expression ppf a
   | E_type_inst ti -> type_inst ppf ti
+  | E_for e -> For_loop.pp expression ppf e
+  | E_for_each e -> For_each_loop.pp expression ppf e
+  | E_while e -> While_loop.pp expression ppf e
 
 and type_inst ppf {forall; type_} =
   fprintf ppf "%a@@{%a}" expression forall type_expression type_

@@ -63,6 +63,12 @@ let extract_variable_types :
           let aux = fun Binder.{var;ascr;attributes=_} -> (var, ascr) in
           return (List.map ~f:aux @@ Record.LMap.to_list fields)
       )
+      | E_for _ ->
+        failwith ("TODO "^__LOC__)
+      | E_for_each _ ->
+        failwith ("TODO "^__LOC__)
+      | E_while _ ->
+        failwith ("TODO "^__LOC__)
     in
     match decl with
     | D_value { attr = { hidden = true ; _ } ; _ } -> prev

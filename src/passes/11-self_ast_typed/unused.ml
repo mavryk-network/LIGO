@@ -102,6 +102,12 @@ let rec defuse_of_expr defuse expr : defuse =
      defuse_of_expr defuse forall
   | E_assign { binder=_; expression } ->
      defuse_of_expr defuse expression
+  | E_for _ ->
+     failwith ("TODO "^__LOC__)
+  | E_for_each _ ->
+     failwith ("TODO "^__LOC__)
+  | E_while _ ->
+     failwith ("TODO "^__LOC__)
 
 
 and defuse_of_lambda defuse {binder; output_type = _; result} =

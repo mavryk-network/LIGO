@@ -130,6 +130,12 @@ let scopes : with_types:bool -> options:Compiler_options.middle_end -> Ast_core.
       let all_defs = merge_defs env all_defs in
       find_scopes' (i,all_defs,env,scopes,expression.location) bindings expression
     )
+    | E_for _ ->
+      failwith ("TODO "^__LOC__)
+    | E_for_each _ ->
+      failwith ("TODO "^__LOC__)
+    | E_while _ ->
+      failwith ("TODO "^__LOC__)
   and find_scopes (i,top_lvl_defs,scopes,loc) bindings  e =
     let (i,defs,_,scopes) = find_scopes' (i,top_lvl_defs,top_lvl_defs,scopes,loc) bindings e in
     (i,defs,scopes)

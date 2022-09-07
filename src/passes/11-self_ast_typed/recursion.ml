@@ -46,6 +46,12 @@ let rec check_recursive_call ~raise : Value_var.t -> bool -> expression -> unit 
   | E_module_accessor _
   | E_type_inst _
   | E_assign _ -> ()
+  | E_for _ ->
+    failwith ("TODO "^__LOC__)
+  | E_for_each _ ->
+    failwith ("TODO "^__LOC__)
+  | E_while _ ->
+    failwith ("TODO "^__LOC__)
 
 and check_recursive_call_in_matching ~raise = fun n final_path c ->
   match c with

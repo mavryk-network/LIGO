@@ -711,6 +711,9 @@ and infer_expression ~(raise : raise) ~options ~ctx (expr : I.expression)
       , ret_type
       , let%bind expression = expression in
         return (E_assign { binder; expression }) ret_type )
+    | E_for _ -> failwith ("TODO "^__LOC__)
+    | E_for_each _ -> failwith ("TODO "^__LOC__)
+    | E_while _ -> failwith ("TODO "^__LOC__)
   in
   if debug
   then

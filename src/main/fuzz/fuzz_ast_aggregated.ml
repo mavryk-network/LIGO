@@ -267,6 +267,12 @@ module Mutator = struct
     | E_assign {binder;expression} ->
         let+ expression, mutation = self expression in
         return @@ E_assign {binder;expression}, mutation
+    | E_for _ ->
+      failwith ("TODO "^__LOC__)
+    | E_for_each _ ->
+      failwith ("TODO "^__LOC__)
+    | E_while _ ->
+      failwith ("TODO "^__LOC__)
 
   and mutate_cases : matching_expr -> (matching_expr * (Location.t * expression) option) list = fun m ->
     match m with

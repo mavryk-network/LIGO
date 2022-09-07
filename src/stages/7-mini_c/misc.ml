@@ -74,6 +74,14 @@ module Free_variables = struct
     | E_create_contract (_p, _s, ((x, _), code), args) ->
       let b = union (singleton x) b in
       union (expression b code) (unions (List.map ~f:self args))
+    | E_assign {binder = _; expression = _} ->
+      failwith ("TODO "^__LOC__)
+    | E_for {binder = _; start = _; final = _; incr = _; f_body = _} ->
+      failwith ("TODO "^__LOC__)
+    | E_for_each {fe_binder = _; collection = _; collection_type = _; fe_body = _} ->
+      failwith ("TODO "^__LOC__)
+    | E_while {cond = _; body = _} ->
+      failwith ("TODO "^__LOC__)
 
   and var_name : bindings -> var_name -> bindings = fun b n ->
     if mem b n

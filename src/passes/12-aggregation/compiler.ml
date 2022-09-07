@@ -336,6 +336,12 @@ let rec compile_expression ~raise path scope (expr : I.expression) =
     let binder = Binder.map self_type binder in
     let expression = self expression in
     return @@ E_assign {binder;expression}
+  | E_for _ ->
+    failwith ("TODO "^__LOC__)
+  | E_for_each _ ->
+    failwith ("TODO "^__LOC__)
+  | E_while _ ->
+    failwith ("TODO "^__LOC__)
 
 and compile_cases ~raise path scope cases : O.matching_expr =
   match cases with

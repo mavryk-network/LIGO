@@ -82,6 +82,12 @@ let rec decompile ~raise : Ast_aggregated.expression -> Ast_typed.expression =
       let binder = Binder.map (decompile_type ~raise) binder in
       let expression = decompile ~raise expression in
       return @@ O.E_assign {binder;expression}
+  | I.E_for _ ->
+    failwith ("TODO "^__LOC__)
+  | I.E_for_each _ ->
+    failwith ("TODO "^__LOC__)
+  | I.E_while _ ->
+    failwith ("TODO "^__LOC__)
 
 and decompile_type ~raise : Ast_aggregated.type_expression -> Ast_typed.type_expression =
   fun ty ->

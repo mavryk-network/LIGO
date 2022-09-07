@@ -1028,6 +1028,9 @@ module Elaboration = struct
     | E_assign { binder; expression } ->
       E_assign
         { binder = binder_apply ctx binder; expression = self expression }
+    | E_for _ -> failwith ("TODO "^__LOC__)
+    | E_for_each _ -> failwith ("TODO "^__LOC__)
+    | E_while _ -> failwith ("TODO "^__LOC__)
 
 
   and lambda_apply ctx ({ binder; result; output_type } : _ Lambda.t) =
@@ -1165,6 +1168,9 @@ module Elaboration = struct
     | E_assign { binder; expression } ->
       binder_pass ~raise binder;
       self expression
+    | E_for _ -> failwith ("TODO "^__LOC__)
+    | E_for_each _ -> failwith ("TODO "^__LOC__)
+    | E_while _ -> failwith ("TODO "^__LOC__)
 
 
   and lambda_pass ~raise { binder; result; output_type } =

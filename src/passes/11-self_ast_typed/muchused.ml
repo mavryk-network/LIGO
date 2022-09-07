@@ -160,6 +160,12 @@ let rec muchuse_of_expr expr : muchuse =
     (M.add name 1 M.empty,[])
   | E_assign { binder=_; expression } ->
     muchuse_of_expr expression
+  | E_for _ ->
+    failwith ("TODO "^__LOC__)
+  | E_for_each _ ->
+    failwith ("TODO "^__LOC__)
+  | E_while _ ->
+    failwith ("TODO "^__LOC__)
 
 and muchuse_of_lambda t {binder; output_type = _; result} =
   muchuse_of_binder binder.var t (muchuse_of_expr result)

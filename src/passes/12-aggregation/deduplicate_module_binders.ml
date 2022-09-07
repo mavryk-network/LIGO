@@ -131,6 +131,12 @@ let rec expression : Scope.t -> AST.expression -> AST.expression = fun scope e -
     let ascr = self_type ascr in
     let expression = self expression in
     return @@ E_assign {binder={var;ascr;attributes};expression}
+  | E_for _ ->
+    failwith ("TODO "^__LOC__)
+  | E_for_each _ ->
+    failwith ("TODO "^__LOC__)
+  | E_while _ ->
+    failwith ("TODO "^__LOC__)
 
 and matching_cases : Scope.t -> AST.matching_expr -> AST.matching_expr = fun scope me ->
   let self ?(scope = scope) = expression scope in

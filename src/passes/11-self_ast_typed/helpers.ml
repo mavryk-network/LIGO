@@ -59,6 +59,9 @@ let rec fold_expression : 'a folder -> 'a -> expression -> 'a = fun f init e ->
     res
   )
   | E_assign a -> Assign.fold self self_type init a
+  | E_for e -> For_loop.fold self init e
+  | E_for_each e -> For_each_loop.fold self init e
+  | E_while e -> While_loop.fold self init e
 
 and fold_expression_in_module_expr : ('a -> expression -> 'a)  -> 'a -> module_expr -> 'a = fun self acc x ->
   match x.wrap_content with
@@ -185,6 +188,15 @@ let rec map_expression : 'err mapper -> expression -> expression = fun f e ->
   | E_assign a ->
     let a = Assign.map self (fun a -> a) a in
     return @@ E_assign a
+  | E_for e ->
+    let e = For_loop.map self e in
+    return @@ E_for e
+  | E_for_each e ->
+    let e = For_each_loop.map self e in
+    return @@ E_for_each e
+  | E_while e ->
+    let e = While_loop.map self e in
+    return @@ E_while e
   | E_module_accessor ma-> return @@ E_module_accessor ma
   | E_literal _ | E_variable _ | E_raw_code _ as e' -> return e'
 
@@ -406,6 +418,9 @@ module Free_variables :
       {modVarSet = ModVarSet.of_list module_path (* not sure about that *) ;moduleEnv=VarMap.empty ;varSet=VarSet.empty}
     | E_assign { binder=_; expression } ->
       self expression
+    | E_for _ -> failwith ("TODO "^__LOC__)
+    | E_for_each _ -> failwith ("TODO "^__LOC__)
+    | E_while _ -> failwith ("TODO "^__LOC__)
 
   and get_fv_cases : matching_expr -> moduleEnv' = fun m ->
     match m with

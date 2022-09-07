@@ -31,6 +31,9 @@ let rec fold_expression : ('a , 'err) folder -> 'a -> expression -> 'a = fun f i
   | E_type_inst { forall = e; type_ = _} ->
     let res = self init e in
     res
+  | E_for e -> For_loop.fold self init e
+  | E_for_each e -> For_each_loop.fold self init e
+  | E_while e -> While_loop.fold self init e
 
 and fold_cases : ('a , 'err) folder -> 'a -> matching_expr -> 'a = fun f init m ->
   match m with
@@ -104,6 +107,15 @@ let rec map_expression : 'err mapper -> expression -> expression = fun f e ->
   | E_assign a ->
     let a = Assign.map self (fun a -> a) a in
     return @@ E_assign a
+  | E_for e ->
+    let e = For_loop.map self e in
+    return @@ E_for e
+  | E_for_each e ->
+    let e = For_each_loop.map self e in
+    return @@ E_for_each e
+  | E_while e ->
+    let e = While_loop.map self e in
+    return @@ E_while e
   | E_literal _ | E_variable _ | E_raw_code _ as e' -> return e'
 
 
@@ -186,6 +198,15 @@ let rec fold_map_expression : 'a fold_mapper -> 'a -> expression -> 'a * express
   | E_assign a ->
     let (res,a) = Assign.fold_map self idle init a in
     (res, return @@ E_assign a)
+  | E_for e ->
+    let (res,e) = For_loop.fold_map self init e in
+    (res, return @@ E_for e)
+  | E_for_each e ->
+    let (res,e) = For_each_loop.fold_map self init e in
+    (res, return @@ E_for_each e)
+  | E_while e ->
+    let (res,e) = While_loop.fold_map self init e in
+    (res, return @@ E_while e)
   | E_literal _ | E_variable _ as e' -> (init, return e')
 
 and fold_map_cases : 'a fold_mapper -> 'a -> matching_expr -> 'a * matching_expr = fun f init m ->
@@ -251,6 +272,12 @@ module Free_variables :
       VarSet.union (self rhs) fv2
     | E_assign { binder=_; expression } ->
       self expression
+    | E_for _ ->
+      failwith ("TODO "^__LOC__)
+    | E_for_each _ ->
+      failwith ("TODO "^__LOC__)
+    | E_while _ ->
+      failwith ("TODO "^__LOC__)
 
   and get_fv_cases : matching_expr -> VarSet.t = fun m ->
     match m with

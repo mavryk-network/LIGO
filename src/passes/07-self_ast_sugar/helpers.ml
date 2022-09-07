@@ -35,6 +35,9 @@ let rec fold_expression : ('a, 'err) folder -> 'a -> expression -> 'a = fun f in
   | E_recursive r -> Recursive.fold self self_type init r
   | E_sequence  s -> Sequence.fold self init s
   | E_assign    a -> Assign.fold self self_type init a
+  | E_for e -> For_loop.fold self init e
+  | E_for_each e -> For_each_loop.fold self init e
+  | E_while e -> While_loop.fold self init e
 
 type exp_mapper = expression -> expression
 type ty_exp_mapper = type_expression -> type_expression
@@ -131,6 +134,15 @@ let rec map_expression : exp_mapper -> expression -> expression = fun f e ->
   | E_assign a ->
     let a = Assign.map self (fun a -> a) a in
     return @@ E_assign a
+  | E_for e ->
+    let e = For_loop.map self e in
+    return @@ E_for e
+  | E_for_each e ->
+    let e = For_each_loop.map self e in
+    return @@ E_for_each e
+  | E_while e ->
+    let e = While_loop.map self e in
+    return @@ E_while e
   | E_literal _ | E_variable _ | E_raw_code _ | E_skip _ | E_module_accessor _ as e' -> return e'
 
 and map_type_expression : ty_exp_mapper -> type_expression -> type_expression = fun f te ->
@@ -289,4 +301,13 @@ let rec fold_map_expression : ('a, 'err) fold_mapper -> 'a -> expression -> 'a *
   | E_assign a ->
     let (res,a) = Assign.fold_map self idle init a in
     (res, return @@ E_assign a)
+  | E_for e ->
+    let (res,e) = For_loop.fold_map self init e in
+    (res, return @@ E_for e)
+  | E_for_each e ->
+    let (res,e) = For_each_loop.fold_map self init e in
+    (res, return @@ E_for_each e)
+  | E_while e ->
+    let (res,e) = While_loop.fold_map self init e in
+    (res, return @@ E_while e)
   | E_literal _ | E_variable _ | E_raw_code _ | E_skip _ | E_module_accessor _ as e' -> (init, return e')

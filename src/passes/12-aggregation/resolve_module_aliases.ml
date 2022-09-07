@@ -114,6 +114,12 @@ let rec expression : Aliases.t -> AST.expression -> AST.expression = fun aliases
     let binder = Binder.map self_type binder in
     let expression = self expression in
     return @@ E_assign {binder;expression}
+  | E_for _ ->
+    failwith ("TODO "^__LOC__)
+  | E_for_each _ ->
+    failwith ("TODO "^__LOC__)
+  | E_while _ ->
+    failwith ("TODO "^__LOC__)
 
 and matching_cases : Aliases.t -> AST.matching_expr -> AST.matching_expr = fun scope me ->
   let self ?(scope = scope) = expression scope in

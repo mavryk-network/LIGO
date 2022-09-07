@@ -151,6 +151,15 @@ and untype_expression_content (ec:O.expression_content) : I.expression =
   | E_assign a ->
     let a = Assign.map self self_type_opt a in
     return @@ make_e @@ E_assign a
+  | E_for e ->
+    let e = For_loop.map untype_expression e in
+    return @@ make_e @@ E_for e
+  | E_for_each e ->
+    let e = For_each_loop.map untype_expression e in
+    return @@ make_e @@ E_for_each e
+  | E_while e ->
+    let e = While_loop.map untype_expression e in
+    return @@ make_e @@ E_while e
   | E_type_inst {forall;type_=type_inst} ->
     match forall.type_expression.type_content with
     | T_for_all {ty_binder;type_;kind=_} ->

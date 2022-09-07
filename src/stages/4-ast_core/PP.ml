@@ -94,6 +94,9 @@ and expression_content ppf (ec : expression_content) =
   | E_ascription a -> Ascription.pp expression type_expression ppf a
   | E_module_accessor ma -> Module_access.pp Value_var.pp ppf ma
   | E_assign     a -> Assign.pp     expression type_expression_option ppf a
+  | E_for e -> For_loop.pp expression ppf e
+  | E_for_each e -> For_each_loop.pp expression ppf e
+  | E_while e -> While_loop.pp expression ppf e
 
 and declaration ppf (d : declaration) = match Location.unwrap d with
     D_value vd  -> Types.Value_decl.pp expression type_expression_option ppf vd

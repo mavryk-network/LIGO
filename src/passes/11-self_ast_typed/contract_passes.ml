@@ -95,6 +95,13 @@ and get_fv expr =
   | E_assign { binder; expression } ->
      let env, expression = self expression in
      return env @@ E_assign { binder; expression}
+  | E_for _ ->
+     failwith ("TODO "^__LOC__)
+  | E_for_each _ ->
+     failwith ("TODO "^__LOC__)
+  | E_while _ ->
+     failwith ("TODO "^__LOC__)
+
 and get_fv_cases : matching_expr -> env * matching_expr = fun m ->
   match m with
   | Match_variant {cases;tv} ->

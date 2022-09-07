@@ -271,6 +271,16 @@ let rec compile_expression : I.expression -> O.expression =
     | I.E_assign a ->
       let a = Assign.map self self_type_opt a in
       return @@ O.E_assign a
+    | I.E_for e ->
+      let e = For_loop.map self e in
+      return @@ O.E_for e
+    | I.E_for_each e ->
+      let e = For_each_loop.map self e in
+      return @@ O.E_for_each e
+    | I.E_while e ->
+      let e = While_loop.map self e in
+      return @@ O.E_while e
+
 
 and compile_declaration : I.declaration -> O.declaration = fun d ->
   let return wrap_content : O.declaration = {d with wrap_content} in

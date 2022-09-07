@@ -568,6 +568,13 @@ let rec compile_expression ~raise (ae:AST.expression) : expression =
           raise.error (raw_michelson_must_be_seq ae.location code)
     )
     | E_assign _ -> failwith "assign should be compiled to let in self-ast-aggregated"
+    | E_for _ ->
+      failwith ("TODO "^__LOC__)
+    | E_for_each _ ->
+      failwith ("TODO "^__LOC__)
+    | E_while _ ->
+      failwith ("TODO "^__LOC__)
+
 
 and compile_lambda ~raise l fun_type =
   let { binder ; output_type =_ ; result } : _ Lambda.t = l in

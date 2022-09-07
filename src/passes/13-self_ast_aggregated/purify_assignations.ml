@@ -257,6 +257,12 @@ let rec detect_effect_in_expression (mut_var : ValueVarSet.t) (e : expression) =
   | E_assign {binder;expression} ->
     let effect = self expression in
     return @@ Effect.add_effect effect binder.var binder.ascr
+  | E_for _ ->
+    failwith ("TODO "^__LOC__)
+  | E_for_each _ ->
+    failwith ("TODO "^__LOC__)
+  | E_while _ ->
+    failwith ("TODO "^__LOC__)
 
 (*
     This function attend to transform expression that have effect in an rhs.
@@ -537,6 +543,13 @@ let rec morph_expression ?(returned_effect) (effect : Effect.t) (e: expression) 
       (* Todo : Check for correct use *)
       let let_result = return ?returned_effect @@ e_unit () in
       return @@ E_let_in {let_binder;rhs;let_result;attr}
+  | E_for _ ->
+    failwith ("TODO "^__LOC__)
+  | E_for_each _ ->
+    failwith ("TODO "^__LOC__)
+  | E_while _ ->
+    failwith ("TODO "^__LOC__)
+
 
 let rec silent_cast_top_level_var_to_const ~raise e =
   let self = silent_cast_top_level_var_to_const ~raise in

@@ -86,6 +86,9 @@ let rec replace : expression -> Value_var.t -> Value_var.t -> expression =
   | E_assign { binder = { var ; ascr ; attributes } ; expression } ->
      let expression = replace expression in
      return @@ E_assign { binder = { var ; ascr ; attributes } ; expression }
+  | E_for _ -> failwith ("TODO "^__LOC__)
+  | E_for_each _ -> failwith ("TODO "^__LOC__)
+  | E_while _ -> failwith ("TODO "^__LOC__)
 
 (* Given an implementation of substitution on an arbitary type of
    body, implements substitution on a binder (pair of bound variable
@@ -208,3 +211,6 @@ let rec subst_expression : body:expression -> x:Value_var.t -> expr:expression -
   | E_assign { binder = { var ; ascr ; attributes } ; expression } ->
      let expression = self expression in
      return @@ E_assign { binder = { var ; ascr ; attributes } ; expression }
+  | E_for _ -> failwith ("TODO "^__LOC__)
+  | E_for_each _ -> failwith ("TODO "^__LOC__)
+  | E_while _ -> failwith ("TODO "^__LOC__)
