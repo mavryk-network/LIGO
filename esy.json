@@ -14,7 +14,7 @@
         "esy-gmp"
       ],
 
-      "rewritePrefix": false
+      "rewritePrefix": true
     }
   },
   "source": "./ligo.opam",
