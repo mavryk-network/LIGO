@@ -56,7 +56,7 @@ let rec compile_expression ~raise : CST.expr -> AST.expr = fun e ->
     let arg = self op.arg in
     e_constant ~loc (Const op_type) [arg]
   in
-  let translate_selection : CST.selection -> AST.selection = function
+  let translate_selection : CST.selection -> AST.Z.t AST.selection = function
   | FieldName name -> let (name, _)      = w_split name in FieldName name
   | Component comp -> let ((_,index), _) = w_split comp in Component index
   in

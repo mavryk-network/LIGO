@@ -27,7 +27,7 @@ let compile_pattern : CST.pattern -> AST.pattern = fun p ->
 (* ========================== EXPRESSIONS ================================== *)
 
 (* AST-agnostic definitions, these could be used on any pass *)
-let translate_selection (sel : CST.selection) : AST.selection =
+let translate_selection (sel : CST.selection) : Z.t AST.selection =
   match sel with
   | FieldName name -> let (name, _)      = r_split name in FieldName name
   | Component comp -> let ((_,index), _) = r_split comp in Component index

@@ -110,24 +110,18 @@ and field_assign = {
   expr : expr; 
 }
 
-and selection =
-  | FieldName of string
-  | Component of Z.t
-
-(* TODO NP : Merge [selection] and [selection_jsligo],
-   by making the Component argument's type generic *)
-and selection_jsligo =
+and 'a selection =
 | FieldName of string
-| Component of expr
+| Component of 'a
 
 and projection = {
   expr            : expr;
-  field_path      : selection Simple_utils.List.Ne.t;
+  field_path      : Z.t selection Simple_utils.List.Ne.t;
 }
 
 and projection_jsligo = {
   expr            : expr;
-  selection       : selection_jsligo;
+  selection       : expr selection;
 }
 
 and module_access = {

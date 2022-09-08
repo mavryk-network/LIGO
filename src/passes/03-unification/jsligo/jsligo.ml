@@ -48,7 +48,7 @@ let rec compile_expression ~raise : CST.expr -> AST.expr = fun e ->
     let arg = self op.arg in
     e_constant ~loc (Const op_type) [arg]
   in
-  let translate_selection_jsligo : CST.selection -> AST.selection_jsligo = function
+  let translate_selection_jsligo : CST.selection -> AST.expr AST.selection = function
   | FieldName name -> let name = r_fst (r_fst name).value in AST.FieldName name
   | Component comp -> let comp = self (r_fst comp).inside in AST.Component comp
   in
