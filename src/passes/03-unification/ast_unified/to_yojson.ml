@@ -1,5 +1,7 @@
 open Types
-include Stage_common.To_yojson
+(* include Stage_common.To_yojson *)
+
+type json = Yojson.Safe.t
 
 let rec type_expression {type_expression_content=ec;location=_} =
   `Assoc [

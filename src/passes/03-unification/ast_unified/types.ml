@@ -8,7 +8,11 @@ Here, both record_a and record_b have a field called [body],
 which triggers warning 30.
 *)
 
-include Stage_common.Types
+(* include Stage_common.Types *)
+open Ligo_prim
+
+module Location = Simple_utils.Location
+module List = Simple_utils.List
 
 open Simple_utils.Utils
 
