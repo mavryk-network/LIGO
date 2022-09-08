@@ -1,5 +1,6 @@
 module Utils     = Simple_utils.Utils
 module Region    = Simple_utils.Region
+module Location  = Simple_utils.Location
 
 module AST = Ast_unified
 
@@ -17,7 +18,7 @@ let filter_opt : 'a . 'a option list -> 'a list = fun decls ->
     decls
   |> List.rev
 
-let translate_directive : LexerLib.Directive.t -> (AST.Directive.t * AST.location) = fun d ->
+let translate_directive : LexerLib.Directive.t -> (AST.Directive.t * Location.t) = fun d ->
   let lm, loc = match d with Linemarker lm -> r_split lm in
   let linenum, file_path, flag_opt = lm in
   let flag_opt = Utils.Option.apply (fun flag ->
