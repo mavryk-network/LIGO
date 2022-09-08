@@ -68,11 +68,11 @@ let rec compile_expression ~raise : CST.expr -> AST.expr = fun e ->
     {field_path; field_expr}
   in
   let translate_update : CST.update -> AST.update_cameligo = fun up ->
-    let record = translate_path up.record in
+    let record_path = translate_path up.record in
     let updates = r_fst up.updates in
     let updates = nsepseq_to_nseq updates.ne_elements in
     let updates = nseq_map (translate_field_path_assignment <@ r_fst) updates in
-    {record; updates}
+    {record_path; updates}
   in
   let compile_type_params : CST.type_params CST.par CST.reg -> e_verbatim nseq =
     fun tp -> nseq_map r_fst @@ (r_fst tp).inside.type_vars

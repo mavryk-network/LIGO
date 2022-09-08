@@ -147,7 +147,7 @@ and field_path_assignment = {
 }
 
 and update_cameligo = {
-  record  : path;
+  record_path  : path;
   updates : field_path_assignment Simple_utils.List.Ne.t;
 }
 and update_pascaligo = {
