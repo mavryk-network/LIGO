@@ -14,6 +14,8 @@ open Ligo_prim
 module Location = Simple_utils.Location
 module List = Simple_utils.List
 
+module Z = Literal_value.Z
+
 (* open Simple_utils.Utils *)
 
 (* TODO NP : Copy/pasted from vendors/LexerLib, find a way to not copy/paste *)
