@@ -396,7 +396,7 @@ and constant =
 
 type program = declaration list (* TODO NP : Try to convert this into non-empty list (cannot use Trace.collect with non-empty lists) *)
   [@@deriving yojson]
-let program_to_yojson : program -> Yojson.Safe.t = fun _p -> `String "DUMMY"
+(* let program_to_yojson : program -> Yojson.Safe.t = fun _p -> `String "DUMMY" *)
 
 (* ========================== NANOPASS TODO ================================ *)
 
