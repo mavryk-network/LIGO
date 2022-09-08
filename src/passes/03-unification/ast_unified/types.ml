@@ -14,7 +14,7 @@ open Ligo_prim
 module Location = Simple_utils.Location
 module List = Simple_utils.List
 
-open Simple_utils.Utils
+(* open Simple_utils.Utils *)
 
 (* TODO NP : Copy/pasted from vendors/LexerLib, find a way to not copy/paste *)
 module Directive = struct
