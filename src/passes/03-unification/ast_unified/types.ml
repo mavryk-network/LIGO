@@ -18,15 +18,18 @@ module List = Simple_utils.List
 
 (* TODO NP : Copy/pasted from vendors/LexerLib, find a way to not copy/paste *)
 module Directive = struct
-  type linenum    = int
-  type file_path  = string
-  type flag       = Push | Pop
+  type linenum    = int [@@deriving yojson]
+  type file_path  = string [@@deriving yojson]
+  type flag       = Push | Pop [@@deriving yojson]
   type linemarker = linenum * file_path * flag option
+  [@@deriving yojson]
 
   type t =
     Linemarker of linemarker
+    [@@deriving yojson]
 
   type directive = t
+  [@@deriving yojson]
 end (* of module Directive *)
 
 (* ========================== TYPES ======================================== *)
@@ -63,6 +66,7 @@ and declaration = {
 }
 and decl_content = declaration_content
 and decl         = declaration
+  [@@deriving yojson]
 
 and let_binding = {
   type_params : string Simple_utils.List.Ne.t option;
@@ -392,6 +396,7 @@ and constant =
 (* ========================== PROGRAM ====================================== *)
 
 type program = declaration list (* TODO NP : Try to convert this into non-empty list (cannot use Trace.collect with non-empty lists) *)
+  [@@deriving yojson]
 let program_to_yojson : program -> Yojson.Safe.t = fun _p -> `String "DUMMY"
 
 (* ========================== NANOPASS TODO ================================ *)
