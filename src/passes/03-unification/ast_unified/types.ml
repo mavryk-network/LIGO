@@ -65,8 +65,8 @@ and decl_content = declaration_content
 and decl         = declaration
 
 and let_binding = {
-  type_params : string nseq option;
-  binders     : pattern nseq;
+  type_params : string Simple_utils.List.Ne.t option;
+  binders     : pattern Simple_utils.List.Ne.t;
   rhs_type    : type_expr option;
   let_rhs     : expression;
 }
@@ -116,7 +116,7 @@ and selection_jsligo =
 
 and projection = {
   expr            : expr;
-  field_path      : selection nseq;
+  field_path      : selection Simple_utils.List.Ne.t;
 }
 
 and projection_jsligo = {
@@ -130,7 +130,7 @@ and module_access = {
 }
 
 and module_path = {
-  module_path : string nseq;
+  module_path : string Simple_utils.List.Ne.t;
   field       : expr;
 }
 
@@ -145,7 +145,7 @@ and field_path_assignment = {
 
 and update_cameligo = {
   record  : path;
-  updates : field_path_assignment nseq;
+  updates : field_path_assignment Simple_utils.List.Ne.t;
 }
 and update_pascaligo = {
   structure : expr;
@@ -154,18 +154,18 @@ and update_pascaligo = {
 
 and updates = {
   record   : expr;
-  updates  : field_path_assignment nseq;
+  updates  : field_path_assignment Simple_utils.List.Ne.t;
 }
 
 and update = {
   record   : expr;
-  path     : expr access nseq;
+  path     : expr Module_access.t Simple_utils.List.Ne.t;
   update   : expr;
 }
 
 and fun_expr_cameligo = {
-  type_params  : string nseq option;
-  binders      : pattern nseq;
+  type_params  : string Simple_utils.List.Ne.t option;
+  binders      : pattern Simple_utils.List.Ne.t;
   rhs_type     : type_expr option;
   body         : expr;
 }
@@ -177,14 +177,14 @@ and param_decl = {
 }
 
 and fun_expr_pascaligo = {
-  type_params : string nseq option;
+  type_params : string Simple_utils.List.Ne.t option;
   parameters  : param_decl list;
   ret_type    : type_expr option;
   return      : expr;
 }
 
 and body_jsligo =
-| FunctionBody   of statement nseq
+| FunctionBody   of statement Simple_utils.List.Ne.t
 | ExpressionBody of expr
 
 and fun_expr_jsligo = {
@@ -200,7 +200,7 @@ and case_clause = {
 
 and case = {
   expr         : expr;
-  cases        : case_clause nseq;
+  cases        : case_clause Simple_utils.List.Ne.t;
 }
 
 and cond_expr = {
@@ -211,13 +211,13 @@ and cond_expr = {
 
 and map_lookup = {
   map  : expr;
-  keys : expr nseq;
+  keys : expr Simple_utils.List.Ne.t;
 }
 
 and let_in_cameligo = {
   is_rec       : bool;
-  type_params  : string nseq option;
-  binders      : pattern nseq;
+  type_params  : string Simple_utils.List.Ne.t option;
+  binders      : pattern Simple_utils.List.Ne.t;
   rhs_type     : type_expr option;
   let_rhs      : expr;
   body         : expr;
@@ -237,7 +237,7 @@ and mod_in = {
 
 and mod_alias = {
   module_name : string;
-  binders     : string nseq;
+  binders     : string Simple_utils.List.Ne.t;
   body        : expr;
 }
 
@@ -247,7 +247,7 @@ and raw_code = {
 }
 
 and block_with = {
-  block    : statement nseq;
+  block    : statement Simple_utils.List.Ne.t;
   expr     : expr
 }
 
@@ -267,7 +267,7 @@ and property_jsligo =
 | Property        of expr * expr
 | Property_rest   of expr
 
-and object_jsligo = property_jsligo nseq
+and object_jsligo = property_jsligo Simple_utils.List.Ne.t
 
 and assignment_operator_jsligo =
   Times_eq
@@ -304,16 +304,16 @@ and expression_content =
   | E_Verbatim of string                  (* {| hello |} *)
 
   (* Function calls *)
-  | E_Call       of expr * expr nseq      (* f x y , calling f with arguments x and y *)
-  | E_CallJsligo of expr * expr nseq      (* Contains "special" calls like 'list' *)
+  | E_Call       of expr * expr Simple_utils.List.Ne.t      (* f x y , calling f with arguments x and y *)
+  | E_CallJsligo of expr * expr Simple_utils.List.Ne.t      (* Contains "special" calls like 'list' *)
 
   (* Custom operators on functions *)
   | E_RevApp of rev_app                   (* x |> f *)
 
   (* Data structures *)
-  | E_Tuple  of expr nseq                 (* (x, y, z) *)
+  | E_Tuple  of expr Simple_utils.List.Ne.t                 (* (x, y, z) *)
   | E_Rec    of (expr, expr) field list   (* Fields can be punned : { x = 10; y; z } *)
-  | E_Record of field_assign nseq         (* Field are not punned : { x = 10; y = y } *)
+  | E_Record of field_assign Simple_utils.List.Ne.t         (* Field are not punned : { x = 10; y = y } *)
   | E_ArrayJsligo of array_jsligo         (* [1, 2, 3] or [42] or even [] *)
   | E_Array  of expr list                 (* [1, 2, 3] or [42] or even [] *)
 
@@ -338,7 +338,7 @@ and expression_content =
   | E_FunJsligo    of fun_expr_jsligo
 
   | E_Constr of (string * expr option)    (* let x = MyCtor 42 *)
-  | E_App of (expr * expr nseq option)    (* MyCtor (42, 43, 44), PascaLigo only *)
+  | E_App of (expr * expr Simple_utils.List.Ne.t option)    (* MyCtor (42, 43, 44), PascaLigo only *)
 
   | E_Case of case                        (* match e with | A -> ... | B -> ... *)
 
