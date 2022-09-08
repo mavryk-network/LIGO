@@ -42,6 +42,7 @@ type type_expression = {
 }
 and type_expr_content = type_expression_content
 and type_expr         = type_expression
+  [@@deriving yojson]
 
 and type_expression_content = T_Dummy  (* TODO NP : Add type expressions *)
 
@@ -57,6 +58,7 @@ and statement = {
 }
 and stmt_content = statement_content
 and stmt         = statement
+  [@@deriving yojson]
 
 and statement_content = S_Dummy  (* TODO NP : Add statements *)
 
@@ -95,6 +97,7 @@ and expression = {
 }
 and expr_content = expression_content
 and expr         = expression
+  [@@deriving yojson]
 
 and rev_app = {
   x : expr;
