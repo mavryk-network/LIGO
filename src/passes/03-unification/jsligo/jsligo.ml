@@ -37,13 +37,13 @@ let compile_statement : CST.statement -> AST.statement = fun s ->
 let rec compile_expression ~raise : CST.expr -> AST.expr = fun e ->
   let self = compile_expression ~raise in
   let return e = e in
-  let e_constant_of_bin_op_reg (op_type : AST.constant') (op : _ CST.bin_op CST.reg) =
+  let e_constant_of_bin_op_reg (op_type : Ligo_prim.Constant.constant') (op : _ CST.bin_op CST.reg) =
     let op, loc = r_split op in
     let a = self op.arg1 in
     let b = self op.arg2 in
     e_constant ~loc (Const op_type) [a; b]
   in
-  let e_constant_of_un_op_reg (op_type : AST.constant') (op : _ CST.un_op CST.reg) =
+  let e_constant_of_un_op_reg (op_type : Ligo_prim.Constant.constant') (op : _ CST.un_op CST.reg) =
     let op, loc = r_split op in
     let arg = self op.arg in
     e_constant ~loc (Const op_type) [arg]

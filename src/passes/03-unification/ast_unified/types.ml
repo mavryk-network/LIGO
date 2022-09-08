@@ -289,14 +289,14 @@ and assign_jsligo = {
 and expression_content = 
 
   (* Base *)
-  | E_Literal  of literal                 (* 42, 10tez *)
+  | E_Literal  of Literal_value.t         (* 42, 10tez *)
   | E_Constant of constant                (* Cons hd tl) or (plus i j) *)
   | E_Par      of expr                    (* ( my_expression ) *)
 
   (* Variables *)
   | E_UserVar  of string                  (* x            user-defined variable
                                              Tezos.self   pseudo-module constants  *)
-  | E_variable of expression_variable     (* user-defined or compiler-generated variables *)
+  | E_variable of Value_var.t             (* user-defined or compiler-generated variables *)
 
   (* Strings *)
   | E_Cat      of expr * expr             (* "hello" ^ "world" *)
@@ -386,7 +386,7 @@ and expression_content =
   | E_AssignJsligo of assign_jsligo
 
 and constant =
-  { cons_name: rich_constant (* this is at the end because it is huge *)
+  { cons_name: Constant.rich_constant (* this is at the end because it is huge *)
   ; arguments: expression list }
 
 (* ========================== PROGRAM ====================================== *)
