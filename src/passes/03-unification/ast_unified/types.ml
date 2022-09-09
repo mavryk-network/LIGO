@@ -98,12 +98,18 @@ and module_decl = {
   mod_expr : module_;
 }
 
+and module_alias = {
+  alias   : string;
+  binders : string nseq;
+}
+
 and declaration_content =
 | D_Directive      of Directive.t
 | D_ToplevelJsligo of statement
 | D_Let            of let_binding
 | D_Type           of type_decl
 | D_Module         of module_decl
+| D_ModuleAlias    of module_alias
 
 (* ========================== MODULES ====================================== *)
 

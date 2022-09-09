@@ -1,6 +1,6 @@
 open Simple_utils.Utils
 open Simple_utils.Trace
-open Unification_shared.Errors
+(* open Unification_shared.Errors *)
 
 module CST = Cst.Cameligo
 module AST = Ast_unified
@@ -331,7 +331,12 @@ and compile_declaration ~raise : CST.declaration -> AST.declaration = fun decl -
     let mod_expr : module_ = compile_module ~raise d.module_ in
     d_module {name; mod_expr} ~loc ()
   )
-  | _ -> raise.error @@ other_error "Declaration not supported yet." (* TODO NP : Add other declarations *)
+  | ModuleAlias d -> (
+    let d, loc = r_split d in
+    let alias : string = r_fst d.alias in
+    let binders : string nseq = nseq_map r_fst @@ nsepseq_to_nseq d.binders in
+    d_modulealias {alias; binders} ~loc ()
+  )
 
 and compile_module ~raise : CST.t -> AST.module_ = fun t ->
   let () = ignore (t, raise) in { module_content = M_Dummy; location = Location.dummy }
