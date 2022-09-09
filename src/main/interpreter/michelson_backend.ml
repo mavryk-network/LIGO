@@ -471,9 +471,15 @@ and compile_non_func_value ~raise ~options ?ctxt ~loc : Ligo_interpreter.Types.v
     let _ = trace_option ~raise (Errors.generic_error loc (Format.asprintf "Expected address or typed address but got %a" Ast_aggregated.PP.type_expression ty))
                 (get_t_typed_address ty) in
     let x = string_of_contract a in
-     Tezos_micheline.Micheline.String ((), x)
+    Tezos_micheline.Micheline.String ((), x)
   | V_Ct (C_address _) ->
     raise.error @@ (Errors.generic_error loc (Format.asprintf "Expected address or typed address but got %a" Ast_aggregated.PP.type_expression ty))
+  | V_Ct (C_contract c) when is_t_contract ty ->
+     let x = string_of_contract c.address in
+     (* TODO-er: if we want support for entrypoints, this should be fixed: *)
+     begin match c.entrypoint with
+       | None -> Tezos_micheline.Micheline.String ((), x)
+       | Some e -> Tezos_micheline.Micheline.String ((), x ^ "%" ^ e) end
   | V_Construct (ctor, arg) when Option.is_some (get_t_option ty) ->
     begin match ctor with
     | "None" -> Tezos_micheline.Micheline.Prim ((), "None", [], [])
@@ -507,8 +513,21 @@ and compile_non_func_value ~raise ~options ?ctxt ~loc : Ligo_interpreter.Types.v
     let lst_ty = trace_option ~raise (Errors.generic_error loc (Format.asprintf "Expected list type but got %a" Ast_aggregated.PP.type_expression ty)) @@  get_t_list ty in
     let lst = List.map ~f:(fun v -> compile_non_func_value ~raise ~options ?ctxt ~loc v lst_ty) lst in
     Tezos_micheline.Micheline.Seq ((), lst)
-  | V_Map map ->
+  | V_Set lst ->
+    let lst_ty = trace_option ~raise (Errors.generic_error loc (Format.asprintf "Expected set type but got %a" Ast_aggregated.PP.type_expression ty)) @@  get_t_set ty in
+    let lst = List.map ~f:(fun v -> compile_non_func_value ~raise ~options ?ctxt ~loc v lst_ty) lst in
+    Tezos_micheline.Micheline.Seq ((), lst)
+  | V_Map map when is_t_map ty ->
     let k_ty, v_ty = trace_option ~raise (Errors.generic_error loc (Format.asprintf "Expected map type but got %a" Ast_aggregated.PP.type_expression ty)) @@  get_t_map ty in
+    let map = List.map ~f:(fun (k, v) ->
+        let k = compile_non_func_value ~raise ~options ?ctxt ~loc k k_ty in
+        let v = compile_non_func_value ~raise ~options ?ctxt ~loc v v_ty in
+        (k, v)) map in
+    let map = List.sort ~compare:(fun (k1, _) (k2, _) -> Caml.compare k1 k2) map in
+    let map = List.map ~f:(fun (k, v) -> Tezos_micheline.Micheline.Prim ((), "Elt", [k; v], [])) map in
+    Tezos_micheline.Micheline.Seq ((), map)
+  | V_Map map when is_t_big_map ty ->
+    let k_ty, v_ty = trace_option ~raise (Errors.generic_error loc (Format.asprintf "Expected map type but got %a" Ast_aggregated.PP.type_expression ty)) @@  get_t_big_map ty in
     let map = List.map ~f:(fun (k, v) ->
         let k = compile_non_func_value ~raise ~options ?ctxt ~loc k k_ty in
         let v = compile_non_func_value ~raise ~options ?ctxt ~loc v v_ty in
