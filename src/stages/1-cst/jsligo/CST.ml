@@ -501,11 +501,22 @@ and body =
 | ExpressionBody of expr
 
 and fun_expr = {
-  parameters : expr;
+  parameters : parameters;
   lhs_type   : (colon * type_expr) option;
   arrow      : arrow;
   body       : body;
 }
+
+and parameters = 
+  | ParamList of (parameter reg, comma) sepseq par reg (* (param1, ..., paramn) => ... *)
+  | ParamVar of variable (* var => ... *)
+
+and parameter =  { 
+  pattern : pattern;
+  param_type : type_annotation option
+}
+
+and type_annotation = colon * type_expr
 
 and cond_statement = {
   kwd_if : kwd_if;
@@ -621,3 +632,7 @@ let property_to_region = function
 let array_item_to_region = function
   Expr_entry e -> expr_to_region e
 | Rest_entry {region; _} -> region
+
+let parameters_to_region = function
+  | ParamVar { region; _ } 
+  | ParamList { region; _ } -> region 

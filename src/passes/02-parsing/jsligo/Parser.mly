@@ -862,32 +862,31 @@ statements:
 (* Expressions *)
 
 fun_expr:
-  par(parameters) ioption(type_annotation) "=>" body {
-    let region = cover $1.region (body_to_region $4) in
-    let value  = {parameters = EPar $1; lhs_type=$2; arrow=$3; body=$4}
+  parameters ioption(type_annotation) "=>" body {
+    let region = cover (parameters_to_region $1) (body_to_region $4) in
+    let value  = {parameters = $1; lhs_type=$2; arrow=$3; body=$4}
     in {region; value}
   }
-| "(" ")" ioption(type_annotation) "=>" body {
-    let lpar = $1 in
-    let rpar = $2 in
-    let arrow = $4 in
-    let region     = cover lpar#region rpar#region in
-    let parameters = EUnit {region; value = (lpar,rpar)} in
-    let region     = cover lpar#region (body_to_region $5) in
-    let value      = {parameters; lhs_type=$3; arrow; body=$5}
-    in {region; value}
-  }
+// | "(" ")" ioption(type_annotation) "=>" body {
+//     let lpar = $1 in
+//     let rpar = $2 in
+//     let arrow = $4 in
+//     let region     = cover lpar#region rpar#region in
+//     let parameters = {region; value = []} in
+//     let region     = cover lpar#region (body_to_region $5) in
+//     let value      = {parameters; lhs_type=$3; arrow; body=$5}
+//     in {region; value}
+//   }
 | "<ident>" "=>" body {
     let params = unwrap $1 in
     let region     = cover params.region (body_to_region $3)
-    and parameters = EVar params in
+    and parameters = ParamVar params in
     let value = {parameters; lhs_type=None; arrow=$2; body=$3}
     in {region; value} }
 
 parameters:
-  nsepseq(parameter,",") {
-    let region = nsepseq_to_region expr_to_region $1
-    in ESeq {region; value=$1} }
+  par(ioption(nsepseq(parameter,","))) {
+    ParamList $1 }
 
 (* Note: we use [expr] to avoid an LR conflict, and obtain instead
    the item
@@ -895,14 +894,27 @@ parameters:
    ## parameter -> expr . type_annotation [ RPAR COMMA ]
 *)
 
+// parameter:
+//   expr type_annotation {
+//     let colon, type_expr = $2 in
+//     let start  = expr_to_region $1
+//     and stop   = type_expr_to_region type_expr in
+//     let region = cover start stop
+//     and value  = $1, colon, type_expr
+//     in EAnnot {region; value} }
+
 parameter:
-  expr type_annotation {
-    let colon, type_expr = $2 in
-    let start  = expr_to_region $1
-    and stop   = type_expr_to_region type_expr in
-    let region = cover start stop
-    and value  = $1, colon, type_expr
-    in EAnnot {region; value} }
+  binding_pattern ioption(type_annotation) {
+    let pattern = $1 in
+    let start = pattern_to_region pattern in
+    let stop = 
+      match $2 with
+      | Some (_, t) -> type_expr_to_region t
+      | None -> start
+    in
+    let region = cover start stop 
+    and value = { pattern; param_type = $2 }
+    in { region; value } }
 
 body:
   braces(statements) { FunctionBody   $1 }

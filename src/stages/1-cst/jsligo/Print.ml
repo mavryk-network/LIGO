@@ -61,6 +61,15 @@ let _print_verbatim state {value=name; region} =
 let print_loc_node state name region =
   print_ident state {value=name; region}
 
+let print_list :
+  state -> ?region:Region.t -> string -> 'a Tree.printer -> 'a list -> unit =
+  fun state ?region label print list ->
+    let children = List.map ~f:(Tree.mk_child print) list
+    in Tree.print ?region state label children
+
+let print_sepseq state ?region label print node =
+  print_list state ?region label print (Utils.sepseq_to_list node)
+
 let rec print_cst state {statements; _} =
   let statements = Utils.nseq_to_list statements in
   let apply len rank = print_toplevel_statement (state#pad len rank)
@@ -379,7 +388,7 @@ and print_fun_expr state node =
   let () =
     let state = state#pad fields 0 in
     print_node state "<parameters>";
-    print_expr (state#pad 1 0) parameters in
+    print_parameters (state#pad 1 0) parameters in
   let () =
     match lhs_type with
       None -> ()
@@ -401,6 +410,25 @@ and print_fun_expr state node =
         print_expr (state#pad 1 0) e_body
     )
   in ()
+
+and print_parameters state (node : parameters) = 
+  match node with
+  | ParamVar var -> 
+    print_node state "ParamVar";
+    print_ident (state#pad 1 0) var
+  | ParamList params ->
+    print_sepseq state "ParamList" print_parameter params.value.inside
+
+
+and print_parameter state (node : parameter reg) = 
+  let Region.{value; region} = node in
+  let children = [
+    Tree.mk_child print_pattern value.pattern;
+    Tree.mk_child_opt print_type_annotation value.param_type ]
+  in Tree.print state "<parameter>" ~region children
+
+and print_type_annotation state (_, type_expr) =
+  Tree.print_unary state "<type>" print_type_expr type_expr
 
 and print_code_inj state rc =
   let () =

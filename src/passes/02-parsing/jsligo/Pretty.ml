@@ -23,6 +23,13 @@ let pp_nsepseq :
     and sep   = string sep ^^ break 1
     in separate_map sep printer elems
 
+let pp_sepseq :
+  'a. string -> ('a -> document) -> ('a, lexeme Wrap.t) Utils.sepseq -> document =
+  fun sep printer elements ->
+    let elems = Utils.sepseq_to_list elements in
+    let sep   = string sep ^^ break 1
+    in separate_map sep printer elems
+
 let rec print cst =
   let stmt     = Utils.nseq_to_list cst.statements in
   let stmt     = List.filter_map ~f:pp_toplevel_statement stmt in
@@ -314,21 +321,21 @@ and pp_int {value; _} =
 and pp_par_expr value =
   string "(" ^^ nest 1 (pp_expr value.inside ^^ string ")")
 
-and pp_expr_fun = function
-  EPar {value; _} ->
-    string "(" ^^ nest 1 (pp_expr_fun value.inside ^^ string ")")
-| ESeq {value; _} ->
-    group (pp_nsepseq "," pp_expr_fun value)
-| EAnnot   {value; _} ->
-    let expr, _, type_expr = value in
-    group (nest 1 (pp_expr_fun expr ^^ string ": "
-                   ^^ pp_type_expr type_expr))
-| EUnit _ -> string "()"
-| _ as c -> pp_expr c
+and pp_parameters = function
+  | ParamVar var -> pp_ident var
+  | ParamList params -> 
+    string "(" ^^ nest 1 (group (pp_sepseq "," pp_parameter params.value.inside)) ^^ string ")"
+
+and pp_parameter (node : parameter reg) =
+  let { pattern; param_type } = node.value in
+  let thread = pp_pattern pattern in
+  match param_type with
+  | None -> thread
+  | Some (_, type_expr) -> (thread ^^ string " :") ^//^ pp_type_expr type_expr
 
 and pp_fun {value; _} =
   let {parameters; lhs_type; body; _} = value in
-  let parameters = pp_expr_fun parameters
+  let parameters = pp_parameters parameters
   and annot   =
     match lhs_type with
       None -> empty
