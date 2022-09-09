@@ -6,7 +6,6 @@ open Simple_utils.Option
 module Tezos_protocol = Tezos_protocol_014_PtKathma
 module Tezos_protocol_env = Tezos_protocol_environment_014_PtKathma
 module Tezos_raw_protocol = Tezos_raw_protocol_014_PtKathma
-open Ligo_prim
 
 let storage_retreival_dummy_ty = Tezos_utils.Michelson.prim "int"
 
@@ -108,11 +107,11 @@ let clean_location_with v x =
 let clean_locations e t =
   clean_location_with () e, clean_location_with () t
 
-let add_ast_env ?(name = Value_var.fresh ()) env binder body =
+let add_ast_env ?(name = Ligo_prim.Value_var.fresh ()) env binder body =
   let open Ast_aggregated in
   let aux (let_binder , expr, no_mutation, inline) (e : expression) =
-    if Value_var.compare let_binder binder <> 0 && Value_var.compare let_binder name <> 0 then
-      e_a_let_in {var=let_binder;ascr=expr.type_expression;attributes=Binder.empty_attribute} expr e { inline ; no_mutation ; view = false ; public = false ; hidden = false ; thunk = false}
+    if Ligo_prim.Value_var.compare let_binder binder <> 0 && Ligo_prim.Value_var.compare let_binder name <> 0 then
+      e_a_let_in {var=let_binder;ascr=expr.type_expression;attributes=Ligo_prim.Binder.empty_attribute} expr e { inline ; no_mutation ; view = false ; public = false ; hidden = false ; thunk = false}
     else
       e in
   let typed_exp' = List.fold_right ~f:aux ~init:body env in
@@ -178,8 +177,8 @@ let entrypoint_of_string x =
 let build_ast ~raise subst_lst arg_binder rec_name in_ty out_ty aggregated_exp =
   let aggregated_exp' = add_ast_env subst_lst arg_binder aggregated_exp in
   let aggregated_exp = match rec_name with
-    | None -> Ast_aggregated.e_a_lambda { result = aggregated_exp'; output_type = out_ty ; binder = {var=arg_binder;ascr=in_ty;attributes=Binder.empty_attribute} } in_ty out_ty
-    | Some fun_name -> Ast_aggregated.e_a_recursive { fun_name ; fun_type  = (Ast_aggregated.t_arrow in_ty out_ty ()) ; lambda = { result = aggregated_exp';output_type=out_ty;binder = {var=arg_binder;ascr=in_ty;attributes=Binder.empty_attribute}}} in
+    | None -> Ast_aggregated.e_a_lambda { result = aggregated_exp'; output_type = out_ty ; binder = {var=arg_binder;ascr=in_ty;attributes=Ligo_prim.Binder.empty_attribute} } in_ty out_ty
+    | Some fun_name -> Ast_aggregated.e_a_recursive { fun_name ; fun_type  = (Ast_aggregated.t_arrow in_ty out_ty ()) ; lambda = { result = aggregated_exp';output_type=out_ty;binder = {var=arg_binder;ascr=in_ty;attributes=Ligo_prim.Binder.empty_attribute}}} in
   let (parameter, storage) = trace_option ~raise (Errors.generic_error Location.generated "Trying to compile a non-contract?") @@
                                Ast_aggregated.get_t_pair in_ty in
   trace ~raise Main_errors.self_ast_aggregated_tracer @@ Self_ast_aggregated.all_contract parameter storage aggregated_exp
@@ -216,7 +215,7 @@ let compile_contract_file ~raise ~options source_file entry_point declared_views
 
 let make_function in_ty out_ty arg_binder body subst_lst =
   let typed_exp' = add_ast_env subst_lst arg_binder body in
-  Ast_aggregated.e_a_lambda {result=typed_exp'; output_type = out_ty ; binder={var=arg_binder;ascr=in_ty;attributes=Binder.empty_attribute}} in_ty out_ty
+  Ast_aggregated.e_a_lambda {result=typed_exp'; output_type = out_ty ; binder={var=arg_binder;ascr=in_ty;attributes=Ligo_prim.Binder.empty_attribute}} in_ty out_ty
 
 let rec val_to_ast ~raise ~loc : Ligo_interpreter.Types.value ->
                           Ast_aggregated.type_expression ->
@@ -322,7 +321,7 @@ let rec val_to_ast ~raise ~loc : Ligo_interpreter.Types.value ->
      e_a_bls12_381_fr x
   | V_Construct (ctor, arg) when is_t_sum ty ->
      let map_ty = trace_option ~raise (Errors.generic_error loc (Format.asprintf "Expected sum type but got %a" Ast_aggregated.PP.type_expression ty)) @@ get_t_sum_opt ty in
-     let {associated_type=ty';michelson_annotation=_;decl_pos=_} : row_element = Record.LMap.find (Label ctor) map_ty.fields in
+     let {associated_type=ty';michelson_annotation=_;decl_pos=_} : row_element = Ligo_prim.Record.LMap.find (Label ctor) map_ty.fields in
      let arg = val_to_ast ~raise ~loc arg ty' in
      e_a_constructor ctor arg ty
   | V_Construct _ ->
@@ -340,13 +339,13 @@ let rec val_to_ast ~raise ~loc : Ligo_interpreter.Types.value ->
     let ty = trace_option ~raise (Errors.generic_error loc "impossible") @@ get_t_ticket ty in
     let rows = trace_option ~raise (Errors.generic_error loc "impossible") @@ get_t_record (Ast_aggregated.t_unforged_ticket ty) in
     let map =
-      let get l map = trace_option ~raise (Errors.generic_error loc "bad unforged ticket") (Record.LMap.find_opt l map) in
+      let get l map = trace_option ~raise (Errors.generic_error loc "bad unforged ticket") (Ligo_prim.Record.LMap.find_opt l map) in
       (*  at this point the record value is a nested pair (extracted from michelson), e.g. (KT1RYW6Zm24t3rSquhw1djfcgQeH9gBdsmiL , (0x05010000000474657374 , 10n)) *)
       let ticketer = get (Label "0") map in
       let map = match get (Label "1") map with V_Record map -> map | _ -> raise.error @@ Errors.generic_error loc "unforged ticket badly decompiled" in
       let value = get (Label "0") map in
       let amt = get (Label "1") map in
-      Record.of_list [
+      Ligo_prim.Record.of_list [
         (Label "ticketer", ticketer) ;
         (Label "value", value) ;
         (Label "amount", amt) ;
@@ -384,8 +383,8 @@ and make_ast_func ~raise ?name env arg body orig =
   let open Ast_aggregated in
   let env = make_subst_ast_env_exp ~raise env in
   let typed_exp' = add_ast_env ?name:name env arg body in
-  let Arrow.{ type1 = in_ty ; type2 = out_ty } = get_t_arrow_exn orig.type_expression in
-  let lambda = Lambda.{ result=typed_exp' ; output_type = out_ty ; binder={var=arg;ascr=in_ty;attributes=Binder.empty_attribute}} in
+  let Ligo_prim.Arrow.{ type1 = in_ty ; type2 = out_ty } = get_t_arrow_exn orig.type_expression in
+  let lambda = Ligo_prim.Lambda.{ result=typed_exp' ; output_type = out_ty ; binder={var=arg;ascr=in_ty;attributes=Ligo_prim.Binder.empty_attribute}} in
   let typed_exp' = match name with
     | None -> e_a_lambda lambda in_ty out_ty
     | Some fun_name -> e_a_recursive {fun_name ; fun_type = orig.type_expression ; lambda }
@@ -395,7 +394,7 @@ and make_ast_func ~raise ?name env arg body orig =
 and make_ast_record ~raise ~loc (map_ty: Ast_aggregated.t_sum) map =
   let open Ligo_interpreter.Types in
   let kv_list = Ast_aggregated.Helpers.kv_list_of_t_record_or_tuple ~layout:map_ty.layout map_ty.fields in
-  let kv_list = List.map ~f:(fun (l, ty) -> let value = Record.LMap.find l map in let ast = val_to_ast ~raise ~loc value ty.associated_type in (l, ast)) kv_list in
+  let kv_list = List.map ~f:(fun (l, ty) -> let value = Ligo_prim.Record.LMap.find l map in let ast = val_to_ast ~raise ~loc value ty.associated_type in (l, ast)) kv_list in
   Ast_aggregated.ez_e_a_record ~layout:map_ty.layout kv_list
 
 and make_ast_list ~raise ~loc ty l =
@@ -423,24 +422,127 @@ and make_ast_map ~raise ~loc key_ty value_ty kv =
                 (k, v)) kv in
   List.fold_right kv ~f:(fun (k, v) r -> Ast_aggregated.e_a_map_add k v r) ~init:(Ast_aggregated.e_a_map_empty key_ty value_ty)
 
+and compile_non_func_value ~raise ~options ?ctxt ~loc : Ligo_interpreter.Types.value ->
+                                                        Ast_aggregated.type_expression ->
+                                                        Ligo_interpreter.Types.mcode =
+  fun v ty ->
+  ignore ctxt;
+  let open Ast_aggregated in
+  let open Ast_aggregated.Combinators in
+  match v with
+  | V_Ct (C_string s) ->
+     let () = trace_option ~raise (Errors.generic_error loc (Format.asprintf "Expected string but got %a" Ast_aggregated.PP.type_expression ty))
+                (get_t_string ty) in
+     Tezos_micheline.Micheline.String ((), s)
+  | V_Ct (C_bytes b) ->
+     let () = trace_option ~raise (Errors.generic_error loc (Format.asprintf "Expected bytes but got %a" Ast_aggregated.PP.type_expression ty))
+                (get_t_bytes ty) in
+     Tezos_micheline.Micheline.Bytes ((), b)
+  | V_Ct (C_int x) ->
+     let () = trace_option ~raise (Errors.generic_error loc (Format.asprintf "Expected int but got %a" Ast_aggregated.PP.type_expression ty))
+                 (get_t_int ty) in
+     Tezos_micheline.Micheline.Int ((), x)
+  | V_Ct (C_nat x) ->
+     let () = trace_option ~raise (Errors.generic_error loc (Format.asprintf "Expected nat but got %a" Ast_aggregated.PP.type_expression ty))
+                 (get_t_nat ty) in
+     Tezos_micheline.Micheline.Int ((), x)
+  | V_Ct (C_mutez x) ->
+     let () = trace_option ~raise (Errors.generic_error loc (Format.asprintf "Expected mutez but got %a" Ast_aggregated.PP.type_expression ty))
+                 (get_t_mutez ty) in
+     Tezos_micheline.Micheline.Int ((), x)
+  | V_Ct C_unit ->
+     let () = trace_option ~raise (Errors.generic_error loc (Format.asprintf "Expected unit but got %a" Ast_aggregated.PP.type_expression ty))
+                 (get_t_unit ty) in
+     Tezos_micheline.Micheline.Prim ((), "Unit", [], [])
+  | V_Ct (C_bool true) ->
+     let () = trace_option ~raise (Errors.generic_error loc (Format.asprintf "Expected bool but got %a" Ast_aggregated.PP.type_expression ty))
+                 (get_t_bool ty) in
+     Tezos_micheline.Micheline.Prim ((), "True", [], [])
+  | V_Ct (C_bool false) ->
+     let () = trace_option ~raise (Errors.generic_error loc (Format.asprintf "Expected bool but got %a" Ast_aggregated.PP.type_expression ty))
+                 (get_t_bool ty) in
+     Tezos_micheline.Micheline.Prim ((), "False", [], [])
+  | V_Ct (C_address a) when is_t_address ty ->
+     let () = trace_option ~raise (Errors.generic_error loc (Format.asprintf "Expected address or typed address but got %a" Ast_aggregated.PP.type_expression ty))
+                 (get_t_address ty) in
+     let x = string_of_contract a in
+     Tezos_micheline.Micheline.String ((), x)
+  | V_Ct (C_address a) when is_t_typed_address ty ->
+    let _ = trace_option ~raise (Errors.generic_error loc (Format.asprintf "Expected address or typed address but got %a" Ast_aggregated.PP.type_expression ty))
+                (get_t_typed_address ty) in
+    let x = string_of_contract a in
+     Tezos_micheline.Micheline.String ((), x)
+  | V_Ct (C_address _) ->
+    raise.error @@ (Errors.generic_error loc (Format.asprintf "Expected address or typed address but got %a" Ast_aggregated.PP.type_expression ty))
+  | V_Construct (ctor, arg) when Option.is_some (get_t_option ty) ->
+    begin match ctor with
+    | "None" -> Tezos_micheline.Micheline.Prim ((), "None", [], [])
+    | "Some" ->
+      let option_ty = trace_option ~raise (Errors.generic_error loc (Format.asprintf "Expected option type but got %a" Ast_aggregated.PP.type_expression ty)) @@ get_t_option ty in
+      let arg = compile_non_func_value ~raise ~options ~loc arg option_ty in
+      Tezos_micheline.Micheline.Prim ((), "Some", [arg], [])
+    | _ -> failwith "Unexpected" end
+  | V_Construct (ctor, arg) when is_t_sum ty ->
+    let map_ty = trace_option ~raise (Errors.generic_error loc (Format.asprintf "Expected sum type but got %a" Ast_aggregated.PP.type_expression ty)) @@ get_t_sum_opt ty in
+    let ({associated_type=ty';michelson_annotation=_;decl_pos=_} : row_element) = Ligo_prim.Record.LMap.find (Label ctor) map_ty.fields in
+    let arg = compile_non_func_value ~raise ~options ~loc arg ty' in
+    let ty' = Ligo_compile.Of_aggregated.compile_type ~raise ty in
+    let ty_variant =
+      trace_option ~raise (Errors.generic_error Location.generated "foo") @@
+      get_t_sum_opt ty in
+    let path = Layout.constructor_to_lr ~raise ~layout:ty_variant.layout ty' ty_variant.fields (Ligo_prim.Label.Label ctor) in
+    let aux = fun pred (_ty, lr) ->
+      match lr with
+      | `Left  -> Tezos_micheline.Micheline.Prim ((), "Left", [pred], [])
+      | `Right -> Tezos_micheline.Micheline.Prim ((), "Right", [pred], [])
+    in
+    List.fold ~f:aux ~init:arg path
+  | V_Construct _ ->
+     raise.error @@ Errors.generic_error loc (Format.asprintf "Expected sum type but got %a" Ast_aggregated.PP.type_expression ty)
+  | V_Record map when is_t_record ty ->
+     let map_ty = trace_option ~raise (Errors.generic_error loc (Format.asprintf "Expected record type but got %a" Ast_aggregated.PP.type_expression ty)) @@  get_t_record_opt ty in
+     let map_kv = Ligo_prim.Record.LMap.mapi (fun l v -> let ({ associated_type ; _ } : row_element) = Ligo_prim.Record.LMap.find l map_ty.fields in (associated_type, v)) map in
+     Layout.record_to_pairs ~raise (fun (t, v) -> compile_non_func_value ~raise ~options ?ctxt ~loc v t) (fun e1 e2 -> Tezos_micheline.Micheline.Prim ((), "Pair", [e1 ; e2], [])) (fun es -> Tezos_micheline.Micheline.Prim ((), "Pair", es, [])) map_ty map_kv
+  | V_List lst ->
+    let lst_ty = trace_option ~raise (Errors.generic_error loc (Format.asprintf "Expected list type but got %a" Ast_aggregated.PP.type_expression ty)) @@  get_t_list ty in
+    let lst = List.map ~f:(fun v -> compile_non_func_value ~raise ~options ?ctxt ~loc v lst_ty) lst in
+    Tezos_micheline.Micheline.Seq ((), lst)
+  | V_Map map ->
+    let k_ty, v_ty = trace_option ~raise (Errors.generic_error loc (Format.asprintf "Expected map type but got %a" Ast_aggregated.PP.type_expression ty)) @@  get_t_map ty in
+    let map = List.map ~f:(fun (k, v) ->
+        let k = compile_non_func_value ~raise ~options ?ctxt ~loc k k_ty in
+        let v = compile_non_func_value ~raise ~options ?ctxt ~loc v v_ty in
+        (k, v)) map in
+    let map = List.sort ~compare:(fun (k1, _) (k2, _) -> Caml.compare k1 k2) map in
+    let map = List.map ~f:(fun (k, v) -> Tezos_micheline.Micheline.Prim ((), "Elt", [k; v], [])) map in
+    Tezos_micheline.Micheline.Seq ((), map)
+  | _ -> raise.error @@ (Errors.generic_error loc (Format.asprintf "Cannot decompile %a" Ast_aggregated.PP.type_expression ty))
+
 and compile_simple_value ~raise ~options ?ctxt ~loc : Ligo_interpreter.Types.value ->
                       Ast_aggregated.type_expression ->
                       Ligo_interpreter.Types.typed_michelson_code =
   fun v ty ->
-  let typed_exp = val_to_ast ~raise ~loc v ty in
-  let (_: Ast_aggregated.expression) = trace ~raise Main_errors.self_ast_aggregated_tracer @@ Self_ast_aggregated.expression_obj typed_exp in
-  let compiled_exp = compile_value ~raise ~options typed_exp in
-  let expr, _ = run_expression_unwrap ~raise ?ctxt ~loc compiled_exp in
-  (* TODO-er: check the ignored second component: *)
-  let expr_ty = clean_location_with () compiled_exp.expr_ty in
-  { code = expr ; code_ty = expr_ty ; ast_ty = typed_exp.type_expression }
+  Simple_utils.Trace.try_with (fun ~raise ~catch:_ ->
+      let expr = compile_non_func_value ~raise ~options ?ctxt ~loc v ty in
+      let expr_ty = Ligo_compile.Of_aggregated.compile_type ~raise ty in
+      let expr_ty = Ligo_compile.Of_mini_c.compile_type expr_ty in
+      let expr_ty = clean_location_with () expr_ty in
+      Ligo_interpreter.Types.{ code = expr ; code_ty = expr_ty ; ast_ty = ty }) (fun ~catch:_ _ ->
+      let typed_exp = val_to_ast ~raise ~loc v ty in
+      let _ = failwith @@ Format.asprintf "OOPS %a = %a" Ligo_interpreter.PP.pp_value v Ast_aggregated.PP.expression typed_exp in
+      let (_: Ast_aggregated.expression) = trace ~raise Main_errors.self_ast_aggregated_tracer @@ Self_ast_aggregated.expression_obj typed_exp in
+      let compiled_exp = compile_value ~raise ~options typed_exp in
+      let expr, _ = run_expression_unwrap ~raise ?ctxt ~loc compiled_exp in
+      (* TODO-er: check the ignored second component: *)
+      let expr_ty = clean_location_with () compiled_exp.expr_ty in
+      { code = expr ; code_ty = expr_ty ; ast_ty = typed_exp.type_expression })
 
 and make_subst_ast_env_exp ~raise env =
   let open Ligo_interpreter.Types in
   let rec aux acc = function
     | [] -> acc
     | (name, { item ; no_mutation ; inline }) :: tl ->
-         let expr = val_to_ast ~raise ~loc:(Value_var.get_location name) item.eval_term item.ast_type in
+         let expr = val_to_ast ~raise ~loc:(Ligo_prim.Value_var.get_location name) item.eval_term item.ast_type in
          aux ((name, expr, no_mutation, inline) :: acc) tl in
   aux [] env
 
