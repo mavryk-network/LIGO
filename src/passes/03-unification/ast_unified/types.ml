@@ -87,15 +87,36 @@ and let_binding = {
   let_rhs     : expression;
 }
 
+and type_decl = {
+  name        : string;
+  params      : string nseq option;
+  type_expr   : type_expr;
+}
+
+and module_decl = {
+  name     : string;
+  mod_expr : module_;
+}
+
 and declaration_content =
 | D_Directive      of Directive.t
 | D_ToplevelJsligo of statement
 | D_Let            of let_binding
+| D_Type           of type_decl
+| D_Module         of module_decl
 
 (* ========================== MODULES ====================================== *)
 
-and module_     = Module_dummy (* TODO NP : Add modules *)
-and module_decl = Module_decl_dummy (* TODO NP : Add module declarations *)
+
+and module_ = {
+  module_content : module_content;
+  location       : Location.t;
+}
+
+and mod_ = module_
+  [@@deriving yojson]
+
+and module_content = M_Dummy
 
 (* ========================== EXPRESSIONS ================================== *)
 
@@ -242,7 +263,7 @@ and type_in = {
 
 and mod_in = {
   module_name : string;
-  rhs         : module_decl;
+  rhs         : module_;
   body        : expr;
 }
 

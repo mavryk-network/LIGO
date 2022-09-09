@@ -263,9 +263,9 @@ let rec compile_expression ~raise : CST.expr -> AST.expr = fun e ->
     )
   | EModIn mi -> (
       let mi, loc = r_split mi in
-      let {mod_decl={name;module_=module_decl; _}; kwd_in=_; body} : CST.mod_in = mi in
+      let {mod_decl={name;module_; _}; kwd_in=_; body} : CST.mod_in = mi in
       let module_name = r_fst name in
-      let rhs = compile_module ~raise module_decl in
+      let rhs = compile_module ~raise module_ in
       let body = self body in
       e_modin {module_name; rhs; body} ~loc ()
     )
@@ -308,10 +308,33 @@ and compile_declaration ~raise : CST.declaration -> AST.declaration = fun decl -
     let let_rhs = compile_expression ~raise e.let_rhs in
     d_let {type_params; binders; rhs_type; let_rhs} ~loc ()
   )
+  | TypeDecl d -> (
+    let d, loc = r_split d in
+    let name : string = r_fst d.name in
+    let params : string nseq option =
+      let compile_params : CST.type_vars -> string nseq = fun p ->
+        let p : CST.type_var nseq =
+          match p with
+          | QParam x      -> List.Ne.singleton (r_fst x)
+          | QParamTuple x -> nseq_map r_fst @@ nsepseq_to_nseq x.value.inside
+        in
+        nseq_map (fun (p : CST.type_var) -> r_fst p.name) p
+      in
+      Option.apply compile_params d.params
+    in
+    let type_expr = compile_type_expression d.type_expr in
+    d_type {name; params; type_expr} ~loc ()
+  )
+  | ModuleDecl d -> (
+    let d, loc = r_split d in
+    let name : string = r_fst d.name in
+    let mod_expr : module_ = compile_module ~raise d.module_ in
+    d_module {name; mod_expr} ~loc ()
+  )
   | _ -> raise.error @@ other_error "Declaration not supported yet." (* TODO NP : Add other declarations *)
 
-and compile_module ~raise : CST.t -> AST.module_decl = fun t ->
-  let () = ignore (t, raise) in Module_decl_dummy
+and compile_module ~raise : CST.t -> AST.module_ = fun t ->
+  let () = ignore (t, raise) in { module_content = M_Dummy; location = Location.dummy }
 
 let compile_program ~raise : CST.ast -> AST.program = fun t ->
   let declarations :                           CST.declaration  list = nseq_to_list t.decl in
