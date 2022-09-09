@@ -441,15 +441,16 @@ and compile_expression ~raise : CST.expr -> AST.expr = fun e ->
        JavaScript and TypeScript don't have native pattern matching. *)
     let fields' = Utils.nsepseq_to_list fields in
     let compile_simple_pattern p =
-      let rec aux = function
-        CST.EVar v -> Some (compile_variable v), v.region
-      | EPar par -> aux par.value.inside
-      | ESeq {value = (hd, []); _} -> aux hd
-      | EAnnot {value = (a, _, _); _} -> aux a
-      | EUnit u -> None, u.region
-      | _ as e -> raise.error @@ unsupported_match_pattern e
+      let aux : CST.parameter Region.reg list -> e_variable option * Region.t = fun patterns ->
+      match patterns with
+      | [ { value = { pattern = PVar v; _ }; _ } ]-> Some (compile_variable v.value.variable), v.region
+      | [] -> None, Region.ghost
+      | _ -> raise.error @@ unsupported_match_parameters p
       in
-      aux p
+      match p with
+      | CST.ParamList { value = { inside = params; _ }; _ } ->
+        aux (Utils.sepseq_to_list params)
+      | _ -> raise.error @@ unsupported_match_parameters p
     in
     let compile_constr_pattern = function
       CST.Property {value = {name = EVar {value = constr; region}; value; _}; _} -> (
@@ -488,17 +489,13 @@ and compile_expression ~raise : CST.expr -> AST.expr = fun e ->
     | None -> [])
     in
     let compile_simple_pattern p =
-      let rec aux = function
-        CST.EVar v -> compile_variable v
-      | EPar par -> aux par.value.inside
-      | ESeq {value = (hd, []); _} -> aux hd
-      | EAnnot {value = (a, _, _); _} -> aux a
-      | EUnit the_unit -> let (_,loc) = r_split the_unit in Value_var.of_input_var ~loc "()";
-      | _ as e -> raise.error @@ unsupported_match_pattern e
+      let aux = function
+      | CST.PVar v -> compile_variable v.value.variable
+      | _ -> raise.error @@ unsupported_match_pattern p
       in
       aux p
     in
-    let rec compile_parameter = function
+    (* let rec compile_parameter = function
       CST.EPar p -> compile_parameter p.value.inside
     | ESeq {value = (EAnnot {value = (EArray {value = {inside = None; _}; _}, _, _); _}, _); _} ->
       Match_nil (e_unit ())
@@ -508,10 +505,22 @@ and compile_expression ~raise : CST.expr -> AST.expr = fun e ->
       Match_cons (hd, tl)
     | _ as e ->
       raise.error @@ not_a_valid_parameter e
+    in *)
+    let compile_parameters = function
+      | CST.ParamList { value = { inside = Some ({ value = { CST.pattern; param_type = Some _ }; _ }, []); _ }; _ } -> 
+        (match pattern with
+        | CST.PArray { value = { inside = None; _ }; _ } -> Match_nil (e_unit ())
+        | CST.PArray { value = { inside = Some (hd, [ _, PRest { value = { rest; _ } ; _ }] ); _ }; _ } ->
+          let hd = compile_simple_pattern hd in
+          let tl = compile_variable rest in
+          Match_cons (hd, tl)
+        | _ as p -> raise.error @@ unsupported_match_pattern p
+        )
+      | params -> raise.error @@ unsupported_match_parameters params
     in
     let compile_case = function
       CST.EFun {value = {parameters; body; _}; _} ->
-        let args = compile_parameter parameters in
+        let args = compile_parameters parameters in
         let b    = compile_function_body_to_expression ~raise body in
         (args, b)
     | _ as e -> raise.error @@ expected_a_function e
@@ -659,7 +668,7 @@ and compile_expression ~raise : CST.expr -> AST.expr = fun e ->
     let (func, loc) = r_split func in
     let ({parameters; lhs_type; body;arrow=_} : CST.fun_expr) = func in
     let lhs_type = Option.map ~f:(compile_type_expression ~raise <@ snd) lhs_type in
-    let (binder,exprs) = compile_parameter ~raise parameters in
+    let (binder,exprs) = compile_parameters ~raise parameters in
     let body = compile_function_body_to_expression ~raise body in
     let expr = exprs body  in
     return @@ e_lambda ~loc binder lhs_type expr
@@ -762,8 +771,7 @@ and conv ~raise : const:bool -> CST.pattern -> AST.ty_expr option Pattern.t =
     Location.wrap ~loc (Pattern.P_var {var ; ascr = None ; attributes})
   | PArray tuple ->
     let (tuple, loc) = r_split tuple in
-    let lst = npseq_to_ne_list tuple.inside in
-    let patterns = List.Ne.to_list lst in
+    let patterns = Utils.sepseq_to_list tuple.inside in
     let nested = List.map ~f:(conv ~raise ~const) patterns in
     Location.wrap ~loc (Pattern.P_tuple nested)
   | PObject record ->
@@ -789,6 +797,72 @@ and compile_object_let_destructuring ~raise : const:bool -> AST.expression -> CS
     let pattern = conv ~raise ~const (CST.PObject record) in
     (fun body -> e_matching ~loc matchee [{pattern ; body}])
 
+and compile_parameters ~raise : CST.parameters -> _ Binder.t * (expression -> expression) = 
+  let return ?ascr ?(cont = Fn.id) var = 
+    Binder.{ var; ascr; attributes = const_attribute }, cont
+  in
+  function
+  | ParamVar var ->
+    let var = compile_variable var in
+    return var
+  | ParamList params ->
+    let loc = Location.lift params.region in
+    let params = Utils.sepseq_to_list params.value.inside in
+    match params with
+    | [] -> 
+      return ~ascr:(t_unit ~loc ()) @@ Value_var.fresh ~loc ~name:"()" ()
+    | params -> 
+      let cont, binders = 
+        List.fold_map params ~init:Fn.id ~f:(fun cont param ->
+          let binder, cont' = compile_parameter ~raise param.value in
+          (cont' <@ cont), binder)
+      in
+      (match binders with
+      | [ binder ] ->
+        binder, cont
+      | binders -> 
+        let var = Value_var.fresh ~loc () in
+        let cont = fun body ->
+          e_matching_tuple ~loc (e_variable ~loc var) binders (cont body)
+        in
+        let ascr = 
+          binders
+          |> List.map ~f:(fun binder -> binder.Binder.ascr)
+          |> Option.all
+          |> Option.map ~f:t_tuple
+        in
+        return ?ascr ~cont var)
+    
+and compile_parameter ~raise : CST.parameter -> _ Binder.t * (expression -> expression) = 
+  fun { pattern; param_type } ->
+    let binder, cont = compile_pattern ~raise ~const:true pattern in 
+    let ascr = Option.map param_type ~f:(fun (_, type_expr) -> compile_type_expression ~raise type_expr) in
+    Binder.{ binder with ascr = Option.merge ascr binder.ascr ~f:(fun ascr _ -> ascr) }, cont
+
+and compile_pattern ~raise : const:bool -> CST.pattern -> type_expression option Binder.t * (_ -> _) =
+  fun ~const pattern ->
+  let return ?ascr fun_ var attributes =
+    ({var; ascr; attributes} : _ Binder.t), fun_ in
+  let return_1 ?ascr var = return ?ascr (fun e -> e) var in
+  match pattern with
+    PVar var ->
+    let (var,_loc) = r_split var in
+    let attributes = if const then Binder.const_attribute else Binder.var_attribute in
+    let var = compile_variable var.variable in
+    return_1 var attributes
+  | PArray tuple ->
+    let (tuple, loc) = r_split tuple in
+    let var = Value_var.fresh ~loc () in
+    let aux pattern (binder_lst, fun_) =
+      let (binder, fun_') = compile_pattern ~raise ~const pattern in
+      (binder :: binder_lst, fun_' <@ fun_)
+    in
+    let binder_lst, fun_ = List.fold_right ~f:aux ~init:([], fun e -> e) @@ Utils.sepseq_to_list tuple.inside in
+    let expr = fun expr -> e_matching_tuple (e_variable var) binder_lst @@ fun_ expr in
+    return expr var Binder.empty_attribute
+  | _ -> raise.error @@ unsupported_pattern_type pattern
+
+(* 
 and compile_parameter ~raise : CST.expr -> _ Binder.t * (expression -> expression) = fun expr ->
   let return ?ascr ?(attributes = Binder.const_attribute) fun_ var =
      ({var; ascr; attributes} : _ Binder.t), fun_ in
@@ -842,7 +916,7 @@ and compile_parameter ~raise : CST.expr -> _ Binder.t * (expression -> expressio
   | EUnit the_unit ->
     let loc = Location.lift the_unit.region in
     return_1 ~ascr:(t_unit ~loc ()) @@ Value_var.fresh ~loc ~name:"()" ()
-  | _ -> raise.error @@ not_a_valid_parameter expr
+  | _ -> raise.error @@ not_a_valid_parameter expr *)
 
 
 and compile_function_body_to_expression ~raise : CST.body -> AST.expression = fun body ->
@@ -906,28 +980,7 @@ and is_failwith_call = function
 | _ ->
   false
 
-and compile_pattern ~raise : const:bool -> CST.pattern -> type_expression option Binder.t * (_ -> _) =
-  fun ~const pattern ->
-  let return ?ascr fun_ var attributes =
-    ({var; ascr; attributes} : _ Binder.t), fun_ in
-  let return_1 ?ascr var = return ?ascr (fun e -> e) var in
-  match pattern with
-    PVar var ->
-    let (var,_loc) = r_split var in
-    let attributes = if const then Binder.const_attribute else Binder.var_attribute in
-    let var = compile_variable var.variable in
-    return_1 var attributes
-  | PArray tuple ->
-    let (tuple, loc) = r_split tuple in
-    let var = Value_var.fresh ~loc () in
-    let aux pattern (binder_lst, fun_) =
-      let (binder, fun_') = compile_pattern ~raise ~const pattern in
-      (binder :: binder_lst, fun_' <@ fun_)
-    in
-    let binder_lst, fun_ = List.fold_right ~f:aux ~init:([], fun e -> e) @@ Utils.nsepseq_to_list tuple.inside in
-    let expr = fun expr -> e_matching_tuple (e_variable var) binder_lst @@ fun_ expr in
-    return expr var Binder.empty_attribute
-  | _ -> raise.error @@ unsupported_pattern_type pattern
+
 
 and filter_private (attributes: CST.attributes) =
   List.filter ~f:(fun v -> not @@ String.equal v.value "private") attributes
@@ -962,7 +1015,7 @@ and compile_let_binding ~raise : const:bool -> CST.attributes -> CST.expr -> (CS
     | CST.PArray a ->  (* tuple destructuring (for top-level only) *)
       let matchee = expr in
       let (tuple, _loc) = r_split a in
-      let array_items = npseq_to_list tuple.inside in
+      let array_items = Utils.sepseq_to_list tuple.inside in
       let lst = List.map ~f:(compile_pattern ~raise ~const) array_items in
       let (lst, exprs) = List.unzip lst in
       let expr = List.fold_right ~f:(@@) exprs ~init:matchee in

@@ -248,7 +248,7 @@ and print_pattern state = function
     List.iteri ~f:(List.length properties |> apply) properties
 | PArray {value = {inside; _}; region} ->
     print_loc_node state "<array>" region;
-    let items = Utils.nsepseq_to_list inside in
+    let items = Utils.sepseq_to_list inside in
     let apply len rank = print_pattern (state#pad len rank) in
     List.iteri ~f:(List.length items |> apply) items
 

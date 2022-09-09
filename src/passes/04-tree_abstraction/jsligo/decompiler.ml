@@ -675,9 +675,15 @@ and decompile_lambda : (AST.expr, AST.ty_expr option) Lambda.t -> _ =
   fun {binder;output_type;result} ->
     let type_expr = Option.map ~f:decompile_type_expr binder.ascr in
     let type_expr = Option.value ~default:(TVar {value = "_"; region = Region.ghost}) type_expr in
+    let annotation : CST.type_annotation = prefix_colon type_expr in
     let v = decompile_variable binder.var in
-    let seq = CST.ESeq (Region.wrap_ghost (CST.EAnnot (Region.wrap_ghost (CST.EVar v,Token.ghost_as,type_expr)), [])) in
-    let parameters = CST.EPar (Region.wrap_ghost @@ par seq ) in
+    let parameters = 
+      let pattern = 
+        CST.(PVar (Region.wrap_ghost { variable = v; attributes = [] }))
+      in
+      let params = list_to_sepseq ~sep:Token.ghost_comma [ Region.wrap_ghost ({ CST.pattern ; param_type = Some annotation }) ] 
+      in CST.ParamList (Region.wrap_ghost @@ par params) 
+    in
     let lhs_type = Option.map ~f:(prefix_colon <@ decompile_type_expr) output_type in
     let body = decompile_expression_in result in
     let body = function_body body in
@@ -879,7 +885,7 @@ let rec decompile_pattern p =
       | Error e -> Error e
     in
     Result.map (aux lst) ~f:(fun pl ->
-      let pl = list_to_nsepseq ~sep:Token.ghost_comma pl in
+      let pl = list_to_sepseq ~sep:Token.ghost_comma pl in
       CST.PArray (Region.wrap_ghost (brackets pl))
     )
   | P_list pl -> Error "no PList in JsLIGO CST"

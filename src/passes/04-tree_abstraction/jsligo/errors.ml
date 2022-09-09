@@ -27,7 +27,8 @@ type abs_error = [
   | `Concrete_jsligo_new_not_supported of Raw.expr
   | `Concrete_jsligo_invalid_case of string * Raw.expr
   | `Concrete_jsligo_invalid_constructor of Raw.type_expr
-  | `Concrete_jsligo_unsupported_match_pattern of Raw.expr
+  | `Concrete_jsligo_unsupported_match_pattern of Raw.pattern
+  | `Concrete_jsligo_unsupported_match_parameters of Raw.parameters
   | `Concrete_jsligo_unsupported_match_object_property of Raw.property
   | `Concrete_jsligo_expected_a_function of Raw.expr
   | `Concrete_jsligo_not_supported_assignment of Raw.expr
@@ -130,9 +131,13 @@ let error_ppformat : display_format:string display_format ->
       Format.fprintf f "@[<hv>%a@.Invalid constructor. Expected a constructor like: `[\"Foo\"]` or `[\"Foo\", int, string]`.@]"
           Snippet.pp_lift (Raw.type_expr_to_region e)
     )
-    | `Concrete_jsligo_unsupported_match_pattern e -> (
+    | `Concrete_jsligo_unsupported_match_pattern p -> (
       Format.fprintf f "@[<hv>%a@.Unsupported match pattern.@]"
-          Snippet.pp_lift (Raw.expr_to_region e)
+          Snippet.pp_lift (Raw.pattern_to_region p)
+    )
+    | `Concrete_jsligo_unsupported_match_parameters p -> (
+      Format.fprintf f "@[<hv>%a@.Unsupported match parameters.@]"
+          Snippet.pp_lift (Raw.parameters_to_region p)
     )
     | `Concrete_jsligo_unsupported_match_object_property p -> (
       Format.fprintf f "@[<hv>%a@.Unsupported pattern match object property.@]"
@@ -301,9 +306,16 @@ let error_jsonformat : abs_error -> Yojson.Safe.t = fun a ->
       ("message", message);
       ("location", Location.to_yojson loc);] in
     json_error ~stage ~content
-  | `Concrete_jsligo_unsupported_match_pattern e ->
+  | `Concrete_jsligo_unsupported_match_pattern p ->
     let message = `String "Unsupported match pattern." in
-    let loc = Location.lift (Raw.expr_to_region e) in
+    let loc = Location.lift (Raw.pattern_to_region p) in
+    let content = `Assoc [
+      ("message", message);
+      ("location", Location.to_yojson loc);] in
+    json_error ~stage ~content
+  | `Concrete_jsligo_unsupported_match_parameters p ->
+    let message = `String "Unsupported match parameters." in
+    let loc = Location.lift (Raw.parameters_to_region p) in
     let content = `Assoc [
       ("message", message);
       ("location", Location.to_yojson loc);] in

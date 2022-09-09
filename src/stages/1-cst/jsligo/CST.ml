@@ -260,7 +260,7 @@ and pattern =
 | PObject   of object_pattern
 | PArray    of array_pattern
 
-and array_pattern = (pattern, comma) nsepseq brackets reg
+and array_pattern = (pattern, comma) sepseq brackets reg
 
 and object_pattern = (pattern, comma) nsepseq braces reg
 
