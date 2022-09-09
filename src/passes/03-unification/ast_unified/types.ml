@@ -1,11 +1,16 @@
 [@@@warning "-30"]
 (*
-Ignoring warning 30 allows using the same field name for two different record types.
-For example :
-  type record_a = { body : type_a ; foo : int }
-  type record_b = { body : type_b ; bar : string } 
-Here, both record_a and record_b have a field called [body],
-which triggers warning 30.
+  Warning 30 is triggered on multiply-defined record labels
+  For example :
+    type record_a = { body : type_a ; foo : int }
+    type record_b = { body : type_b ; bar : string } 
+  Here, both record_a and record_b have a field called [body].
+  It triggers warning 30.
+
+  CAREFUL : If record labels are defined multiple times,
+  they should always the same type.
+  Otherwise, this causes several errors with the json ppx.
+  (in above example, record_a's body and record_b's body should have the same type)
 *)
 
 (* include Stage_common.Types *)
