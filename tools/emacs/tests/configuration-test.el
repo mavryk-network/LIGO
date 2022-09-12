@@ -28,7 +28,6 @@
 (ert-deftest ligo-auto-mode-alist-test ()
   "Check that file extensions are properly binded to according mode"
   (should (member '("\\.mligo\\'" . ligo-caml-mode) auto-mode-alist))
-  (should (member '("\\.religo\\'" . ligo-reason-mode) auto-mode-alist))
   (should (member '("\\.ligo\\'" . ligo-pascal-mode) auto-mode-alist))
   )
 
@@ -41,6 +40,5 @@
   "Check that `setup-lsp-test' works properly"
   (should (member '(ligo-pascal-mode . "ligo") lsp-language-id-configuration))
   (should (member '(ligo-caml-mode . "ligo") lsp-language-id-configuration))
-  (should (member '(ligo-reason-mode . "ligo") lsp-language-id-configuration))
   (should (gethash 'ligo lsp-clients))
   )

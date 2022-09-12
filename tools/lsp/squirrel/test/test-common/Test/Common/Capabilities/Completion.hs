@@ -87,17 +87,6 @@ caseInfos =
     , tiGraph = Includes G.empty
     }
   , TestInfo
-    { tiContract = "type-attribute.religo"
-    , tiPosition = (13, 33)
-    , tiExpected =
-      [ Completion (Just CiField) (NameCompletion "id") (Just $ TypeCompletion "nat") (DocCompletion "")
-      , Completion (Just CiField) (NameCompletion "is_admin") (Just $ TypeCompletion "bool") (DocCompletion "")
-      , CompletionKeyword (NameCompletion "if")
-      , CompletionKeyword (NameCompletion "switch")
-      ]
-    , tiGraph = Includes G.empty
-    }
-  , TestInfo
     { tiContract = "type-attribute.jsligo"
     , tiPosition = (13, 33)
     , tiExpected =
@@ -121,14 +110,6 @@ caseInfos =
     }
   , TestInfo
     { tiContract = "type-constructor.mligo"
-    , tiPosition = (5, 19)
-    , tiExpected =
-      [ Completion (Just CiConstructor) (NameCompletion "Increment") (Just $ TypeCompletion "action") (DocCompletion "")
-      ]
-    , tiGraph = Includes G.empty
-    }
-  , TestInfo
-    { tiContract = "type-constructor.religo"
     , tiPosition = (5, 19)
     , tiExpected =
       [ Completion (Just CiConstructor) (NameCompletion "Increment") (Just $ TypeCompletion "action") (DocCompletion "")
@@ -178,18 +159,6 @@ caseInfos =
     , tiExpected =
       [ Completion (Just CiField) (NameCompletion "series") (Just $ TypeCompletion "int") (DocCompletion "")
       , CompletionKeyword (NameCompletion "struct")
-      , CompletionKeyword (NameCompletion "lsl")
-      , CompletionKeyword (NameCompletion "else")
-      , CompletionKeyword (NameCompletion "lsr")
-      ]
-    , tiGraph = Includes G.empty
-    }
-  , TestInfo
-    { tiContract = "nested-fields.religo"
-    , tiPosition = (18, 36)
-    , tiExpected =
-      [ Completion (Just CiField) (NameCompletion "series") (Just $ TypeCompletion "int") (DocCompletion "")
-      , CompletionKeyword (NameCompletion "switch")
       , CompletionKeyword (NameCompletion "lsl")
       , CompletionKeyword (NameCompletion "else")
       , CompletionKeyword (NameCompletion "lsr")

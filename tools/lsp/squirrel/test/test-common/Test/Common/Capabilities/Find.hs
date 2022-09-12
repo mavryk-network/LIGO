@@ -218,12 +218,6 @@ invariants =
     , driRefs = [interval 3 3 6]
     }
   , DefinitionReferenceInvariant
-    { driFile = contractsDir </> "type-attributes-tuple.religo"
-    , driDesc = "tuple member"
-    , driDef = Just (interval 2 13 16)
-    , driRefs = [interval 3 3 6]
-    }
-  , DefinitionReferenceInvariant
     { driFile = contractsDir </> "type-attributes-tuple.jsligo"
     , driDesc = "tuple member"
     , driDef = Just (interval 2 15 18)
@@ -237,30 +231,6 @@ invariants =
     }
   , DefinitionReferenceInvariant
     { driFile = contractsDir </> "type-attributes-in-rec.mligo"
-    , driDesc = "counter, function"
-    , driDef = Just (interval 6 9 16)
-    , driRefs = []
-    }
-  , DefinitionReferenceInvariant
-    { driFile = contractsDir </> "type-attributes.religo"
-    , driDesc = "counter, type attribute"
-    , driDef = Nothing  -- type attributes don't have a declaration
-    , driRefs = [interval 9 14 21, interval 7 35 42]
-    }
-  , DefinitionReferenceInvariant
-    { driFile = contractsDir </> "type-attributes.religo"
-    , driDesc = "counter, function"
-    , driDef = Just (interval 6 5 12)
-    , driRefs = []
-    }
-  , DefinitionReferenceInvariant
-    { driFile = contractsDir </> "type-attributes-in-rec.religo"
-    , driDesc = "counter, type attribute"
-    , driDef = Nothing  -- type attributes don't have a declaration
-    , driRefs = [interval 9 14 21, interval 7 35 42]
-    }
-  , DefinitionReferenceInvariant
-    { driFile = contractsDir </> "type-attributes-in-rec.religo"
     , driDesc = "counter, function"
     , driDef = Just (interval 6 9 16)
     , driRefs = []
@@ -308,17 +278,6 @@ invariants =
     , driRefs = [interval 5 16 19]
     }
 
-  -- FIXME:
-  -- * Does not pass because we have troubles with recursive functions
-  -- * in ReasonLIGO: https://issues.serokell.io/issue/LIGO-70
-  --
-  -- , DefinitionReferenceInvariant
-  --   { driFile = contractsDir </> "recursion.religo"
-  --   , driDesc = "sum"
-  --   , driDef = Just (interval 1 9 12)
-  --   , driRefs = [interval 2 29 32]
-  --   }
-
   , DefinitionReferenceInvariant
     { driFile = contractsDir </> "type-constructor.ligo"
     , driDesc = "Increment, type constructor"
@@ -329,12 +288,6 @@ invariants =
     { driFile = contractsDir </> "type-constructor.mligo"
     , driDesc = "Increment, type constructor"
     , driDef = Just (interval 2 3 12)
-    , driRefs = [interval 5 18 27]
-    }
-  , DefinitionReferenceInvariant
-    { driFile = contractsDir </> "type-constructor.religo"
-    , driDesc = "Increment, type constructor"
-    , driDef = Just (interval 2 5 14)
     , driRefs = [interval 5 18 27]
     }
   , DefinitionReferenceInvariant

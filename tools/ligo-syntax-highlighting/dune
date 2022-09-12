@@ -1,16 +1,5 @@
 (executable
  (name LigoSyntaxHighlighting)
  ; (link_flags (-ccopt -static))
- (modules
-  regexp
-  CameLIGO
-  ReasonLIGO
-  PascaLIGO
-  JsLIGO
-  LigoSyntaxHighlighting
- )
- (libraries 
-  SyntaxHighlighting
-  cmdliner
- )
-)
+ (modules regexp CameLIGO PascaLIGO JsLIGO LigoSyntaxHighlighting)
+ (libraries SyntaxHighlighting cmdliner))

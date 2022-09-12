@@ -22,7 +22,7 @@ export interface MethodType {
 
 const Container = styled.div<TopPaneStyled>`
   height: ${props => props.editorHeight - 100}px;
-  
+
   /* This font size is used to calcuate code font size */
   font-size: 0.8em;
 `;
@@ -133,7 +133,7 @@ const MonacoComponent = (props) => {
         }
 
         if (editorState && editorState.language !== model.getModeId()) {
-          if (['reasonligo', 'jsligo'].includes(editorState.language)) {
+          if (['jsligo'].includes(editorState.language)) {
             monaco.editor.setModelLanguage(model, 'javascript');
           } else {
             monaco.editor.setModelLanguage(model, editorState.language);
@@ -156,7 +156,7 @@ const MonacoComponent = (props) => {
 
 const mapStateToProps = state => {
   const { editor } = state
-  return { 
+  return {
     code : editor.code,
     language: editor.language
    }

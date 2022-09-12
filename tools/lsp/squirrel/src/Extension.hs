@@ -39,7 +39,6 @@ extGlobs = Text.pack . (("**" </>) . ("*" <>)) <$> supportedExtensions
 getExt :: MonadError UnsupportedExtension m => FilePath -> m Lang
 getExt path =
   case takeExtension path of
-    ".religo" -> return Reason
     ".ligo"   -> return Pascal
     ".pligo"  -> return Pascal
     ".mligo"  -> return Caml
@@ -58,4 +57,4 @@ onExt ee path =
     Js     -> eeJs     ee
 
 supportedExtensions :: [FilePath]
-supportedExtensions = [".ligo", ".pligo", ".mligo", ".religo", ".jsligo"]
+supportedExtensions = [".ligo", ".pligo", ".mligo", ".jsligo"]

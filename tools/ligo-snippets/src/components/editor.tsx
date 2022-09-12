@@ -57,16 +57,6 @@ Prism.languages = {
         ],
         'punctuation': /\(\.|\.\)|[()\[\]:;,.]/
     },
-    reasonligo:
-    {
-        ...Prism.languages.reason,
-        'comment': [
-            /(^|[^\\])\/\*[\s\S]*?\*\//,
-            /\(\*[\s\S]*?\*\)/,
-            /\/\/.*/
-        ]
-
-    },
     cameligo: {
         ...Prism.languages.ocaml,
         'comment': [
@@ -221,15 +211,13 @@ function getLanguageHighlight(language) {
     switch (language) {
         case 'cameligo':
             return Prism.languages.cameligo
-        case 'reasonligo':
-            return Prism.languages.reasonligo
         default:
             return Prism.languages.pascaligo
     }
 }
 
 export const LigoSnippet = (props) => {
-    
+
     const data = props.data
     const editorParams = parseEditorConfigs(data);
 
@@ -247,16 +235,16 @@ export const LigoSnippet = (props) => {
             response = await axios.post(data.api, {
                 syntax,
                 code,
-                entrypoint  
+                entrypoint
             });
         } else {
             response = await axios.post('https://cors-anywhere.herokuapp.com/https://ide.ligolang.org/api/compile-contract', {
                 syntax,
                 code,
-                entrypoint  
+                entrypoint
             });
         }
-        
+
         const output = await response.data;
         setOutput(JSON.stringify(output).replace(/\\n/g, "\n"));
         setLoading(false);
@@ -284,7 +272,7 @@ export const LigoSnippet = (props) => {
                     {output}
                 </div></div>
             </div>
-            
+
         </div>
     );
 }

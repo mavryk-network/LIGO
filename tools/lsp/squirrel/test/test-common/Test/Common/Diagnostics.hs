@@ -67,33 +67,6 @@ simpleTest = do
       }
     }
 
--- LIGO-474 regression test
-treeDoesNotContainNameTest :: IO DiagnosticTest
-treeDoesNotContainNameTest = do
-  dtFile <- makeAbsolute $ inputDir </> "LIGO-474.religo"
-  let
-    msgGroup = MessageGroup
-      { mgParserMsgs =
-        [ Message (Unexpected "r") SeverityError (mkRange (1, 17) (1, 18) dtFile)
-        ]
-      , mgCompilerMsgs =
-        [ Message (FromLIGO "Syntax error #200.") SeverityError (mkRange (1, 14) (1, 16) dtFile)
-        , Message (FromLIGO "Syntax error #233.") SeverityError (mkRange (1, 17) (1, 18) dtFile)
-        , Message
-          (FromLIGO "@[Reasonligo is depreacted, support will be dropped in a few versions.@.@]")
-          SeverityWarning
-          (mkRange (0, 0) (0, 0) "")
-        ]
-      , mgFallbackMsgs =
-        [ Message (FromLanguageServer "Expected to find a name, but got `42`") SeverityError (mkRange (1, 14) (1, 16) dtFile)
-        ]
-      }
-  pure DiagnosticTest
-    { dtFile
-    , dtAllMsgs = msgGroup
-    , dtFilteredMsgs = msgGroup
-    }
-
 inputDir :: FilePath
 inputDir = Util.contractsDir </> "diagnostic"
 

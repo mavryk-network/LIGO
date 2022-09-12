@@ -17,9 +17,9 @@ type parameter is
 | Reset
 type return is list (operation) * storage
 // Two entrypoints
-function add (const store : storage; const delta : int) : storage is 
+function add (const store : storage; const delta : int) : storage is
   store + delta
-function sub (const store : storage; const delta : int) : storage is 
+function sub (const store : storage; const delta : int) : storage is
   store - delta
 (* Main access point that dispatches to the entrypoints according to
    the smart contract parameter. *)
@@ -32,13 +32,13 @@ function main (const action : parameter; const store : storage) : return is
   end)`
 
     const snippetData = {
-        "language": "pascaligo", // Required - Takes a string value of a Ligo language (e.g. "pascaligo", "reasonligo" or "cameligo").
+        "language": "pascaligo", // Required - Takes a string value of a Ligo language (e.g. "pascaligo", "jsligo" or "cameligo").
         "code": code, // Required - Takes a string value of your code snippet.
         "name": "PascaLigo Code Snippet Example", // Optional - Takes a string value to display as your snippet's title on the Ligo Web IDE.
         "theme": "dark", // Optional - Takes a string value of either "dark" or "light".
         "height": "" // Optional - Takes a string value of a CSS height (e.g. "100px").
     }
-    
+
     return <LigoSnippet data={snippetData} />
 }
 
@@ -46,17 +46,17 @@ render(<App />, document.getElementById("root"));
 
 ```
 
-The `snippetData` values of `language` and `code` are required. These values determine the code displayed and the syntax highlighting. The `name` value is optional and will be used as the title of your code when sent to the Ligo Web IDE. 
+The `snippetData` values of `language` and `code` are required. These values determine the code displayed and the syntax highlighting. The `name` value is optional and will be used as the title of your code when sent to the Ligo Web IDE.
 
 
-# Ligo Web IDE 
+# Ligo Web IDE
 
-Ligo Snippets can be opened in the Ligo Web IDE [(https://ide.ligolang.org/)](https://ide.ligolang.org/) by clicking the IDE button at the bottom of the snippet. The Ligo Web IDE can take in preset configurations for the available features. 
+Ligo Snippets can be opened in the Ligo Web IDE [(https://ide.ligolang.org/)](https://ide.ligolang.org/) by clicking the IDE button at the bottom of the snippet. The Ligo Web IDE can take in preset configurations for the available features.
 
 ## Available Configurations
 
 ```json
-"name": string,      
+"name": string,
 "language": string,
 "compile": {
     "entrypoint": string
@@ -84,9 +84,9 @@ Ligo Snippets can be opened in the Ligo Web IDE [(https://ide.ligolang.org/)](ht
 ```
 ## Setting Configurations
 
-When using the configurations to set preset default values for the Ligo Web IDE, please note that the `name` and `language` values are required. When present, these values will replace the `name` and `language` values from your `snippetData`. Everything else is optional. 
+When using the configurations to set preset default values for the Ligo Web IDE, please note that the `name` and `language` values are required. When present, these values will replace the `name` and `language` values from your `snippetData`. Everything else is optional.
 
-Add the configuration in a yaml format at the top of your the code you are trying to display. 
+Add the configuration in a yaml format at the top of your the code you are trying to display.
 
 ```js
 (*_*

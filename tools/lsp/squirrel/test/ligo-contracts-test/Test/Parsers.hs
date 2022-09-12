@@ -63,7 +63,6 @@ okayTests =
       , "polymorphism" </> "cases_annotation2.mligo"
       , "polymorphism" </> "comb.ligo"
       , "polymorphism" </> "comb.mligo"
-      , "polymorphism" </> "comb.religo"
       , "polymorphism" </> "ctrct.mligo"
       , "polymorphism" </> "error_monad.mligo"
       , "polymorphism" </> "lambda.mligo"
@@ -74,7 +73,6 @@ okayTests =
       , "polymorphism" </> "set_monad.mligo"
       , "polymorphism" </> "test.mligo"
       , "polymorphism" </> "modules.mligo"
-      , "polymorphism" </> "modules.religo"
       , "polymorphism" </> "annotate.mligo"
       , "polymorphism" </> "same_vars.mligo"
       , "negative" </> "interpreter_tests" </> "test_random.mligo"
@@ -82,9 +80,6 @@ okayTests =
       , "negative" </> "polymorphism" </> "constants.mligo"
       , "negative" </> "polymorphism" </> "error_monad.mligo"
       , "negative" </> "polymorphism" </> "unresolved" </> "contract2.mligo"
-
-        -- LIGO-477
-      , "negative" </> "missing_funarg_annotation.religo"
 
         -- LIGO-757
       , "negative" </> "error_reverse_app.mligo"
@@ -96,7 +91,6 @@ okayTests =
         -- LIGO fails to parse these:
       , "match.ligo"
       , "negative" </> "vars_consts" </> "capture_var_params.mligo"
-      , "negative" </> "error_function_arguments.religo"
       , "negative" </> "error_syntax.ligo"
       , "negative" </> "modules_access_not_open1.ligo"
       , "negative" </> "modules_access_not_open1.mligo"
@@ -117,16 +111,6 @@ okayTests =
     , tdIgnoreDirs = []
     }
   , TestDir
-    { tdRoot = testDir </> "error-recovery" </> "simple" </> "reasonligo" </> "original"
-    , tdIgnoreFiles =
-      [ -- LIGO-479
-        "two_extra_parenthesis_in_function_application.religo"
-      , "extra_vbar_in_type_declaration.religo"
-      , "missing_vbar_in_type_declaration.religo"
-      ]
-    , tdIgnoreDirs = []
-    }
-  , TestDir
     { tdRoot = testDir </> "error-recovery" </> "simple" </> "cameligo" </> "original"
     , tdIgnoreFiles = []
     , tdIgnoreDirs = []
@@ -138,11 +122,6 @@ okayTests =
     }
   , TestDir
     { tdRoot = testDir </> "error-recovery" </> "fuzzing" </> "pascaligo" </> "original"
-    , tdIgnoreFiles = []
-    , tdIgnoreDirs = []
-    }
-  , TestDir
-    { tdRoot = testDir </> "error-recovery" </> "fuzzing" </> "reasonligo" </> "original"
     , tdIgnoreFiles = []
     , tdIgnoreDirs = []
     }
@@ -164,14 +143,9 @@ badTests =
     { tdRoot = testDir </> "error-recovery"
     , tdIgnoreFiles =
       [ -- LIGO-476
-        "simple" </> "reasonligo" </> "unfinished_code06.religo"
-      , "simple" </> "reasonligo" </> "unfinished_code10.religo"
-      , "simple" </> "reasonligo" </> "unfinished_code12.religo"
-      , "simple" </> "reasonligo" </> "unfinished_code05.religo"
       , "simple" </> "cameligo" </> "extra_then_kw.mligo"
       , "simple" </> "cameligo" </> "unfinished_code10.mligo"
       , "simple" </> "cameligo" </> "unfinished_code05.mligo"
-      , "fuzzing" </> "reasonligo" </> "4tuples_no_annotation.religo"
       , "fuzzing" </> "cameligo" </> "1match_bis.mligo"
       , "fuzzing" </> "cameligo" </> "4michelson_or_tree.mligo"
       , "fuzzing" </> "cameligo" </> "1incr_decr.mligo"
@@ -201,11 +175,9 @@ badTests =
     , tdIgnoreDirs =
       [ "fuzzing" </> "cameligo" </> "original"
       , "fuzzing" </> "pascaligo" </> "original"
-      , "fuzzing" </> "reasonligo" </> "original"
       , "fuzzing" </> "jsligo" </> "original"
       , "simple" </> "cameligo" </> "original"
       , "simple" </> "pascaligo" </> "original"
-      , "simple" </> "reasonligo" </> "original"
       , "simple" </> "jsligo" </> "original"
       ]
     }
@@ -213,14 +185,11 @@ badTests =
     { tdRoot = testDir </> "lexer"
     , tdIgnoreFiles =
       [ --LIGO-475
-        "negative_byte_sequence.religo"
       , "negative_byte_sequence.ligo"
-      , "reserved_name.religo"
       , "negative_byte_sequence.mligo"
        -- Lexer cases
       , "LexerLib" </> "invalid_character_in_string.ligo"
       , "LexerLib" </> "invalid_character_in_string.jsligo"
-      , "LexerLib" </> "invalid_character_in_string.religo"
       , "Style"    </> "odd_lengthed_bytes.ligo"
       , "Lexing"   </> "underflow_mutez.ligo"
       , "Lexing"   </> "overflow_mutez.ligo"

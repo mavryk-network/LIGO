@@ -48,7 +48,6 @@ hasLigoExtension file =
     [ ".ligo"
     , ".pligo"
     , ".mligo"
-    , ".religo"
     , ".jsligo"
     ]
 

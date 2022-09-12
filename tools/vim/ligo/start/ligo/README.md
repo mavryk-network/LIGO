@@ -1,13 +1,13 @@
 # LIGO language support for Vim
 
-This plugin adds support for PascaLIGO, CameLIGO, and ReasonLIGO to Vim.
+This plugin adds support for PascaLIGO, Cameligo to Vim.
 
 Syntax highlighting is supported out-of-the box. Language features are provided
 via LSP. The language server (`ligo-squirrel`) should be installed separately.
 See the [README](../../../../lsp/README.md) for `ligo-squirrel` for instructions.
 
 ## Installation
-Simply copy the plugin to the `~/.vim/pack` directory: 
+Simply copy the plugin to the `~/.vim/pack` directory:
 ```
 mkdir -p ~/.vim/pack
 cp -rv <path-to-ligo-repo>/tools/vim/ligo ~/.vim/pack/ligo
@@ -23,7 +23,7 @@ You can use the following language client plugins:
 "languageserver": {
   "Ligo": {
     "command": "path/to/ligo-squirrel",
-    "filetypes": ["ligo", "mligo", "religo"]
+    "filetypes": ["ligo", "mligo"]
   }
 }
 ```
@@ -33,6 +33,5 @@ You can use the following language client plugins:
 let g:LanguageClient_serverCommands = {
     \ 'ligo': ['path/to/ligo-squirrel'],
     \ 'mligo': ['path/to/ligo-squirrel'],
-    \ 'religo': ['path/to/ligo-squirrel'],
     \ }
 ```

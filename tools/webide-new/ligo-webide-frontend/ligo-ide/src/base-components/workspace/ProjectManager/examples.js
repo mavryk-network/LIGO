@@ -15,7 +15,7 @@ let sub (store, delta : storage * int) : storage = store - delta
 
 (* Main access point that dispatches to the entrypoints according to
    the smart contract parameter. *)
-   
+
 let main (action, store : parameter * storage) : return =
  ([] : operation list),    // No operations
  (match action with
@@ -37,15 +37,15 @@ type return is list (operation) * storage
 
 // Two entrypoints
 
-function add (const store : storage; const delta : int) : storage is 
+function add (const store : storage; const delta : int) : storage is
   store + delta
 
-function sub (const store : storage; const delta : int) : storage is 
+function sub (const store : storage; const delta : int) : storage is
   store - delta
 
 (* Main access point that dispatches to the entrypoints according to
    the smart contract parameter. *)
-   
+
 function main (const action : parameter; const store : storage) : return is
  ((nil : list (operation)),    // No operations
   case action of
@@ -73,7 +73,7 @@ let sub = ((store, delta) : (storage, int)) : storage => store - delta;
 
 /* Main access point that dispatches to the entrypoints according to
    the smart contract parameter. */
-   
+
 let main = ((action, store) : (parameter, storage)) : return => {
  (([] : list (operation)),    // No operations
  (switch (action) {
@@ -169,9 +169,9 @@ be to deter people from doing it just to chew up address space.
 *)
 
 let buy (parameter, storage: buy * storage) =
-  let void: unit = 
-    if amount = storage.name_price 
-    then () 
+  let void: unit =
+    if amount = storage.name_price
+    then ()
     else (failwith "Incorrect amount paid.": unit)
   in
   let profile = parameter.profile in
@@ -193,7 +193,7 @@ let buy (parameter, storage: buy * storage) =
     Big_map.update new_id (Some new_id_details) identities
   in
   ([]: operation list), {identities = updated_identities;
-                         next_id = new_id + 1; 
+                         next_id = new_id + 1;
                          name_price = storage.name_price;
                          skip_price = storage.skip_price;
                         }
@@ -222,7 +222,7 @@ let update_owner (parameter, storage: update_owner * storage) =
   }
   in
   let updated_identities = Big_map.update id (Some updated_id_details) identities in
-  ([]: operation list), {identities = updated_identities; 
+  ([]: operation list), {identities = updated_identities;
                          next_id = storage.next_id;
                          name_price = storage.name_price;
                          skip_price = storage.skip_price;
@@ -952,7 +952,7 @@ function commit (const p : bytes; var s: storage) : return is
   begin
     const commit : commit = record [date = Tezos.now + 86_400; salted_hash = p];
     const updated_map: commit_set = Big_map.update(Tezos.sender, Some(commit), s.commits);
-    s := s with record [commits = updated_map];    
+    s := s with record [commits = updated_map];
   end with ((nil : list(operation)), s)
 
 function reveal (const p: reveal; var s: storage) : return is
@@ -1162,10 +1162,6 @@ export const getExamples = (name, template) => {
         name: `.workspaces/${name}/contracts/Increment.ligo`,
         content: incrementL,
       },
-      storageR: {
-        name: `.workspaces/${name}/contracts/Increment.religo`,
-        content: incrementR,
-      },
       storageJ: {
         name: `.workspaces/${name}/contracts/Increment.jsligo`,
         content: incrementJ,
@@ -1184,10 +1180,6 @@ export const getExamples = (name, template) => {
         content: idM,
       },
       storageL: { name: `.workspaces/${name}/contracts/ID.ligo`, content: idL },
-      storageR: {
-        name: `.workspaces/${name}/contracts/ID.religo`,
-        content: idR,
-      },
       storageJ: {
         name: `.workspaces/${name}/contracts/ID.jsligo`,
         content: idJ,
@@ -1208,10 +1200,6 @@ export const getExamples = (name, template) => {
       storageL: {
         name: `.workspaces/${name}/contracts/Hashlock.ligo`,
         content: hashlockL,
-      },
-      storageR: {
-        name: `.workspaces/${name}/contracts/Hashlock.religo`,
-        content: hashlockR,
       },
       storageJ: {
         name: `.workspaces/${name}/contracts/Hashlock.jsligo`,

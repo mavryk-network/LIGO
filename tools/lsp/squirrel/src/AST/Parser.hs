@@ -25,7 +25,6 @@ import UnliftIO.Exception (Handler (..), catches, displayException, fromEither)
 import AST.Includes (includesGraph)
 import AST.Parser.Camligo qualified as Caml
 import AST.Parser.Pascaligo qualified as Pascal
-import AST.Parser.Reasonligo qualified as Reason
 import AST.Parser.Jsligo qualified as Js
 import AST.Skeleton
 import AST.Scope

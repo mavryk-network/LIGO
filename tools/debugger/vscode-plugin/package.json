@@ -20,7 +20,6 @@
     "activationEvents": [
         "onDebugResolve:ligo",
         "onDebugResolve:mligo",
-        "onDebugResolve:religo",
         "onDebugResolve:jsligo",
         "onCommand:extension.ligo-debugger.requestEntrypoint",
         "onCommand:extension.ligo-debugger.requestMichelsonEntrypoint",
@@ -50,9 +49,6 @@
                 "language": "mligo"
             },
             {
-                "language": "religo"
-            },
-            {
                 "language": "jsligo"
             }
         ],
@@ -77,15 +73,6 @@
                 ]
             },
             {
-                "id": "religo",
-                "aliases": [
-                    "ReasonLIGO"
-                ],
-                "extensions": [
-                    ".religo"
-                ]
-            },
-            {
                 "id": "jsligo",
                 "aliases": [
                     "JsLIGO"
@@ -102,7 +89,6 @@
                 "languages": [
                     "ligo",
                     "mligo",
-                    "religo",
                     "jsligo"
                 ],
                 "configurationAttributes": {

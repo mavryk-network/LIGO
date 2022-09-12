@@ -30,9 +30,6 @@ modelSessionManager.registerModeDetector((filePath) => {
   if (base.endsWith(".sol")) {
     return "solidity";
   }
-  if (base.endsWith(".religo")) {
-    return "javascript";
-  }
   if (base.endsWith(".ligo")) {
     return "pascaligo";
   }

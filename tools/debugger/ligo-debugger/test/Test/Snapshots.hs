@@ -368,68 +368,6 @@ test_Snapshots = testGroup "Snapshots collection"
             } -> pass
           sp -> unexpectedSnapshot sp
 
-  , testCaseSteps "check shadowing" \_step -> do
-      let file = contractsDir </> "shadowing.religo"
-      let runData = ContractRunData
-            { crdProgram = file
-            , crdEntrypoint = Nothing
-            , crdParam = ()
-            , crdStorage = 4 :: Integer
-            }
-
-      testWithSnapshots runData do
-        N.switchBreakpoint (N.SourcePath file) (SrcPos (Pos 12) (Pos 0))
-        N.switchBreakpoint (N.SourcePath file) (SrcPos (Pos 13) (Pos 0))
-        N.switchBreakpoint (N.SourcePath file) (SrcPos (Pos 18) (Pos 0))
-
-        let checkStackItem :: Text -> SomeValue -> StackItem -> Bool
-            checkStackItem expectedVar expectedVal = \case
-              StackItem
-                { siLigoDesc = LigoStackEntry LigoExposedStackEntry
-                    { leseDeclaration = Just (LigoVariable actualVar)
-                    }
-                , siValue = actualVal
-                } -> actualVal == expectedVal && expectedVar == actualVar
-              _ -> False
-
-        goToNextBreakpoint
-        checkSnapshot \snap -> do
-          let stackItems = snap ^?! isStackFramesL . ix 0 . sfStackL
-
-          -- check that current snapshot has "s1" variable and it's type is @VInt@
-          unless (any (checkStackItem "s1" $ T.SomeConstrainedValue (T.VInt 8)) stackItems) do
-            unexpectedSnapshot snap
-
-        goToNextBreakpoint
-        checkSnapshot \snap -> do
-          let stackItems = snap ^?! isStackFramesL . ix 0 . sfStackL
-
-          -- we should be confident that we have only one "s1" variable in snapshot
-          let s1Count = stackItems
-                & filter \case
-                    StackItem
-                      { siLigoDesc = LigoStackEntry LigoExposedStackEntry
-                          { leseDeclaration = Just (LigoVariable "s1")
-                          }
-                      } -> True
-                    _ -> False
-                & length
-
-          -- check that current snapshot has "s1" variable and it's type is @VOption VInt@
-          unless (any (checkStackItem "s1" $ T.SomeConstrainedValue (T.VOption (Just (T.VInt 16)))) stackItems) do
-            unexpectedSnapshot snap
-
-          when (s1Count /= 1) do
-            assertFailure [int||Expected 1 "s1" variable, found #{s1Count} "s1" variables|]
-
-        goToNextBreakpoint
-        checkSnapshot \snap -> do
-          let stackItems = snap ^?! isStackFramesL . ix 0 . sfStackL
-
-          -- check that current snapshot has "s" variable and it's value not 4
-          unless (any (checkStackItem "s" $ T.SomeConstrainedValue (T.VInt 96)) stackItems) do
-            unexpectedSnapshot snap
-
   , testCaseSteps "multiple contracts" \step -> do
       let modulePath = contractsDir </> "module_contracts"
       let file = modulePath </> "importer.mligo"

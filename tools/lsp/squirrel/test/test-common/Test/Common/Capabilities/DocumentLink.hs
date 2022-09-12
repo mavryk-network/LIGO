@@ -43,8 +43,8 @@ simplifiedBLinks = do
 simplifiedCLinks :: IO [SimpleDocumentLink]
 simplifiedCLinks = do
   contractsDir <- getContractsDir
-  pure [ ((0, 0), (1, 0), Just (contractsDir </> "C2.religo"))
-       , ((1, 0), (2, 0), Just (contractsDir </> "C3.mligo"))
+  pure [
+       ((1, 0), (2, 0), Just (contractsDir </> "C3.mligo"))
        ]
 
 documentLinkBDriver :: forall impl. ScopeTester impl => Assertion
