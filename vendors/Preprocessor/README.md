@@ -1042,7 +1042,6 @@ The regular expression `block_comment_openings` in `API.mll`:
 let block_comment_openings =
   pascaligo_block_comment_opening
 | cameligo_block_comment_opening
-| reasonligo_block_comment_opening
 | michelson_block_comment_opening
 ```
 
@@ -1055,7 +1054,6 @@ The regular expression `line_comments`:
 let line_comments =
   pascaligo_line_comment
 | cameligo_line_comment
-| reasonligo_line_comment
 | michelson_line_comment
 ```
 

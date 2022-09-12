@@ -526,10 +526,6 @@ let cameligo_block_comment_opening   = "(*"
 let cameligo_block_comment_closing   = "*)"
 let cameligo_line_comment            = "//"
 
-let reasonligo_block_comment_opening = "/*"
-let reasonligo_block_comment_closing = "*/"
-let reasonligo_line_comment          = "//"
-
 let michelson_block_comment_opening = "/*"
 let michelson_block_comment_closing = "*/"
 let michelson_line_comment          = "#"
@@ -541,21 +537,18 @@ let jsligo_line_comment             = "//"
 let block_comment_openings =
   pascaligo_block_comment_opening
 | cameligo_block_comment_opening
-| reasonligo_block_comment_opening
 | michelson_block_comment_opening
 | jsligo_block_comment_opening
 
 let block_comment_closings =
   pascaligo_block_comment_closing
 | cameligo_block_comment_closing
-| reasonligo_block_comment_closing
 | michelson_block_comment_closing
 | jsligo_block_comment_opening
 
 let line_comments =
   pascaligo_line_comment
 | cameligo_line_comment
-| reasonligo_line_comment
 | michelson_line_comment
 | jsligo_line_comment
 
