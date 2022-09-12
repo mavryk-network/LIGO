@@ -55,7 +55,7 @@ let t_exists ~loc (evar : Exists_var.t) =
   t_variable ~loc (evar :> type_variable) ()
 
 
-let rec lift
+let[@landmark] rec lift
   ~raise
   ~loc
   ~ctx
@@ -178,7 +178,7 @@ let equal_domains lmap1 lmap2 =
   LSet.(equal (of_list (LMap.keys lmap1)) (of_list (LMap.keys lmap2)))
 
 
-let rec unify
+let[@landmark] rec unify
   ~raise
   ~loc
   ~(ctx : Context.t)
@@ -262,7 +262,7 @@ let rec unify
   | _ -> fail ()
 
 
-let rec subtype
+let[@landmark] rec subtype
   ~raise
   ~loc
   ~ctx

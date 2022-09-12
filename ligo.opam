@@ -109,4 +109,5 @@ pin-depends: [
   [ "tezos-version.dev" "./vendors/tezos-ligo/opam" ]
   [ "tezos-workers.dev" "./vendors/tezos-ligo/opam" ]
   [ "ocaml-recovery-parser.0.2.4" "git+https://github.com/serokell/ocaml-recovery-parser.git#0.2.4" ]
+  [ "landmarks-ppx" "git@github.com:johnyob/landmarks.git" ]
 ]
