@@ -24,13 +24,6 @@ let a : string = "Hello Alice"
 ```
 
 </Syntax>
-<Syntax syntax="reasonligo">
-
-```reasonligo
-let a : string = "Hello Alice";
-```
-
-</Syntax>
 <Syntax syntax="jsligo">
 
 ```jsligo
@@ -63,17 +56,6 @@ Strings can be concatenated using the `^` operator.
 let name : string = "Alice"
 let greeting : string = "Hello"
 let full_greeting : string = greeting ^ " " ^ name
-```
-
-</Syntax>
-<Syntax syntax="reasonligo">
-
-Strings can be concatenated using the `++` operator.
-
-```reasonligo group=a
-let name : string = "Alice";
-let greeting : string = "Hello";
-let full_greeting : string = greeting ++ " " ++ name;
 ```
 
 </Syntax>
@@ -110,14 +92,6 @@ const slice : string = String.sub (0n, 1n, name)
 ```cameligo group=b
 let name  : string = "Alice"
 let slice : string = String.sub 0n 1n name
-```
-
-</Syntax>
-<Syntax syntax="reasonligo">
-
-```reasonligo group=b
-let name  : string = "Alice";
-let slice : string = String.sub (0n, 1n, name);
 ```
 
 </Syntax>
@@ -159,16 +133,6 @@ let length : nat = String.length name  // length = 5
 > Note that `String.size` is *deprecated*.
 
 </Syntax>
-<Syntax syntax="reasonligo">
-
-```reasonligo group=c
-let name : string = "Alice";
-let length : nat = String.length (name);  // length == 5
-```
-
-> Note that `String.size` is *deprecated*.
-
-</Syntax>
 <Syntax syntax="jsligo">
 
 ```jsligo group=c
@@ -194,13 +158,6 @@ const b : bytes = 0x7070
 
 ```cameligo
 let b : bytes = 0x7070
-```
-
-</Syntax>
-<Syntax syntax="reasonligo">
-
-```reasonligo
-let b : bytes = 0x7070;
 ```
 
 </Syntax>
@@ -233,15 +190,6 @@ const mixed : bytes = Bytes.concat (white, black) // 0xffff0000
 let white : bytes = 0xffff
 let black : bytes = 0x0000
 let mixed : bytes = Bytes.concat white black (* 0xffff0000 *)
-```
-
-</Syntax>
-<Syntax syntax="reasonligo">
-
-```reasonligo group=d
-let white : bytes = 0xffff;
-let black : bytes = 0x0000;
-let mixed : bytes = Bytes.concat(white, black); // 0xffff0000
 ```
 
 </Syntax>
@@ -279,14 +227,6 @@ let slice : bytes = Bytes.sub 1n 2n b (* 0x3456 *)
 ```
 
 </Syntax>
-<Syntax syntax="reasonligo">
-
-```reasonligo group=e
-let b     : bytes = 0x12345678;
-let slice : bytes = Bytes.sub (1n, 2n, b); // 0x3456
-```
-
-</Syntax>
 <Syntax syntax="jsligo">
 
 ```jsligo group=e
@@ -314,14 +254,6 @@ const length : nat   = Bytes.length (b) // length = 3
 ```cameligo group=f
 let b      : bytes = 0x123456
 let length : nat   = Bytes.length b  (* length = 3 *)
-```
-
-</Syntax>
-<Syntax syntax="reasonligo">
-
-```reasonligo group=f
-let b      : bytes = 0x123456;
-let length : nat   = Bytes.length (b);  // length = 3
 ```
 
 </Syntax>

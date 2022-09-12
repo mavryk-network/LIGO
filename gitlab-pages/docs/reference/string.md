@@ -14,9 +14,6 @@ val length : string -> nat
 <SyntaxTitle syntax="cameligo">
 val length : string -> nat
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let length: string => nat
-</SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let length: (s: string) => nat
 </SyntaxTitle>
@@ -44,15 +41,6 @@ let size_op (s : string) : nat = String.length s
 > Note that `String.size` is *deprecated*.
 
 </Syntax>
-<Syntax syntax="reasonligo">
-
-```reasonligo
-let size_op = (s: string): nat => String.length(s);
-```
-
-> Note that `String.size` is *deprecated*.
-
-</Syntax>
 <Syntax syntax="jsligo">
 
 ```jsligo
@@ -66,9 +54,6 @@ val sub : nat -> nat -> string -> string
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
 val sub : nat -> nat -> string -> string
-</SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let sub: (nat, nat, string) => string
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let sub: (offset: nat, length: nat, s: string) => string
@@ -96,15 +81,6 @@ let slice_op (s: string) : string = String.sub 1n 2n s
 > Note that `String.slice` is *deprecated*.
 
 </Syntax>
-<Syntax syntax="reasonligo">
-
-```reasonligo
-let slice_op = (s: string): string => String.sub(1n, 2n, s);
-```
-
-> Note that `String.slice` is *deprecated*.
-
-</Syntax>
 <Syntax syntax="jsligo">
 
 ```jsligo
@@ -120,9 +96,6 @@ val concat : string -> string -> string
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
 val concat : string -> string -> string
-</SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let concat: (string, string) => string
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let concat: (a: string, b: string) => string
@@ -157,19 +130,6 @@ Alternatively:
 let concat_syntax_alt (s: string) = s ^ "test_literal"
 ```
 
-
-</Syntax>
-<Syntax syntax="reasonligo">
-
-```reasonligo
-let concat_syntax = (s: string) => String.concat(s, "test_literal");
-```
-
-Alternatively:
-
-```reasonligo
-let concat_syntax_alt = (s: string) => s ++ "test_literal";
-```
 
 </Syntax>
 <Syntax syntax="jsligo">

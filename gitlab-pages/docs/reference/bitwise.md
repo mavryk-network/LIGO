@@ -14,9 +14,6 @@ val and : 'a -> nat -> nat
 <SyntaxTitle syntax="cameligo">
 val and : 'a -> nat -> nat
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let and: ('a, nat) => nat
-</SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let and: (a: &apos;a, b: nat) => nat
 </SyntaxTitle>
@@ -39,13 +36,6 @@ let zero : nat = Bitwise.and 2n 1n
 ```
 
 </Syntax>
-<Syntax syntax="reasonligo">
-
-```reasonligo
-let zero: nat = Bitwise.and(2n, 1n);
-```
-
-</Syntax>
 <Syntax syntax="jsligo">
 
 ```jsligo
@@ -60,9 +50,6 @@ val or : nat -> nat -> nat
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
 val or :  nat -> nat -> nat
-</SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let or: (nat, nat) => nat
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let or: (a: nat, b: nat) => nat
@@ -84,13 +71,6 @@ let three : nat = Bitwise.or 2n 1n
 ```
 
 </Syntax>
-<Syntax syntax="reasonligo">
-
-```reasonligo
-let three: nat = Bitwise.or(2n, 1n);
-```
-
-</Syntax>
 <Syntax syntax="jsligo">
 
 ```jsligo
@@ -104,9 +84,6 @@ val xor : nat -> nat -> nat
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
 val xor :  nat -> nat -> nat
-</SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let xor: (nat, nat) => nat
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let xor: (a: nat, b: nat) => nat
@@ -128,13 +105,6 @@ let three : nat = Bitwise.xor 2n 1n
 ```
 
 </Syntax>
-<Syntax syntax="reasonligo">
-
-```reasonligo
-let three: nat = Bitwise.xor(2n, 1n);
-```
-
-</Syntax>
 <Syntax syntax="jsligo">
 
 ```jsligo group=other
@@ -148,9 +118,6 @@ val shift_left : nat -> nat -> nat
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
 val shift_left :  nat -> nat -> nat
-</SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let shift_left: (nat, nat) => nat
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let shift_left: (a: nat, b: nat) => nat
@@ -172,13 +139,6 @@ let four : nat = Bitwise.shift_left 2n 1n
 ```
 
 </Syntax>
-<Syntax syntax="reasonligo">
-
-```reasonligo
-let four: nat = Bitwise.shift_left(2n, 1n);
-```
-
-</Syntax>
 <Syntax syntax="jsligo">
 
 ```jsligo
@@ -192,9 +152,6 @@ val shift_right : nat -> nat -> nat
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
 val shift_right :  nat -> nat -> nat
-</SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let shift_right: (nat, nat) => nat
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let shift_right: (a: nat, b: nat) => nat
@@ -213,13 +170,6 @@ const one : nat = Bitwise.shift_right (2n, 1n)
 
 ```cameligo
 let one : nat = Bitwise.shift_right 2n 1n
-```
-
-</Syntax>
-<Syntax syntax="reasonligo">
-
-```reasonligo
-let one: nat = Bitwise.shift_right(2n, 1n);
 ```
 
 </Syntax>

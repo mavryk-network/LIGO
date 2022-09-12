@@ -44,10 +44,7 @@ LIGO currently offers four syntaxes:
   - **CameLIGO**, an [OCaml](https://ocaml.org/) inspired
     syntax that allows you to write in a functional style.
 
-  - **ReasonLIGO**, a [ReasonML](https://reasonml.github.io/) inspired syntax
-    that builds on the strong points of OCaml.
-  
-  - **JsLIGO**, a TypeScript/JavaScript inspired syntax that aims to be familiar 
+  - **JsLIGO**, a TypeScript/JavaScript inspired syntax that aims to be familiar
     to those coming from TypeScript/JavaScript.
 
 Let's define some LIGO contract in the four flavours above. Do
@@ -60,7 +57,6 @@ the syntax in the upcoming sections of the documentation.
   values={[
     { label: 'PascaLIGO', value: 'pascaligo', },
     { label: 'CameLIGO', value: 'cameligo', },
-    { label: 'ReasonLIGO', value: 'reasonligo', },
     { label: 'JsLIGO', value: 'jsligo', },
   ]
 }>
@@ -104,28 +100,6 @@ let main (action, store : parameter * storage) : return =
      Increment n -> store + n
    | Decrement n -> store - n
    | Reset       -> 0)
-```
-
-</TabItem>
-<TabItem value="reasonligo">
-
-```reasonligo group=a
-type storage = int;
-
-type parameter =
-  Increment (int)
-| Decrement (int)
-| Reset;
-
-type return = (list (operation), storage);
-
-let main = ((action, store): (parameter, storage)) : return => {
-  (([] : list (operation)),
-  (switch (action) {
-   | Increment (n) => store + n
-   | Decrement (n) => store - n
-   | Reset         => 0}));
-};
 ```
 
 </TabItem>

@@ -18,10 +18,10 @@ type return is list (operation) * storage
 
 // Two entrypoints
 
-function add (const store : storage; const delta : int) : storage is 
+function add (const store : storage; const delta : int) : storage is
   store + delta
 
-function sub (const store : storage; const delta : int) : storage is 
+function sub (const store : storage; const delta : int) : storage is
   store - delta
 
 (* Main access point that dispatches to the entrypoints according to
@@ -92,49 +92,6 @@ let test_increment =
  assert (Test.get_storage taddr = initial_storage + 1)
 `;
 
-const REASONLIGO_EXAMPLE = `
-type storage = int;
-
-type parameter =
-  Increment (int)
-| Decrement (int)
-| Reset;
-
-type return = (list (operation), storage);
-
-// Two entrypoints
-
-let add = ((store, delta) : (storage, int)) : storage => store + delta;
-let sub = ((store, delta) : (storage, int)) : storage => store - delta;
-
-/* Main access point that dispatches to the entrypoints according to
-   the smart contract parameter. */
-
-let main = ((action, store) : (parameter, storage)) : return => {
- (([] : list (operation)),    // No operations
- (switch (action) {
-  | Increment (n) => add ((store, n))
-  | Decrement (n) => sub ((store, n))
-  | Reset         => 0}))
-};
-
-/* Tests for main access point */
-
-let test_initial_storage = {
-  let initial_storage = 42;
-  let (taddr, _, _) = Test.originate(main, initial_storage, 0tez);
-  assert (Test.get_storage(taddr) == initial_storage)
-};
-
-let test_increment = {
-  let initial_storage = 42;
-  let (taddr, _, _) = Test.originate(main, initial_storage, 0tez);
-  let contr = Test.to_contract(taddr);
-  let _ = Test.transfer_to_contract_exn(contr, (Increment (1)), 1mutez);
-  assert (Test.get_storage(taddr) == initial_storage + 1)
-};
-`;
-
 const JSLIGO_EXAMPLE = `
 type storage = int;
 
@@ -202,7 +159,6 @@ function CodeExamples(props) {
         { label: "JsLIGO", value: "jsligo" },
         { label: "CameLIGO", value: "cameligo" },
         { label: "PascaLIGO", value: "pascaligo" },
-        { label: "ReasonLIGO", value: "reasonligo" },
       ]}
     >
       <TabItem value="jsligo">
@@ -268,26 +224,6 @@ function CodeExamples(props) {
         </Highlight>
       </TabItem>
 
-      <TabItem value="reasonligo">
-        <Highlight
-          {...defaultProps}
-          language="reasonligo"
-          code={REASONLIGO_EXAMPLE}
-          theme={prismTheme}
-        >
-          {({ className, style, tokens, getLineProps, getTokenProps }) => (
-            <pre className={className} style={style}>
-              {tokens.map((line, i) => (
-                <div {...getLineProps({ line, key: i })}>
-                  {line.map((token, key) => (
-                    <span {...getTokenProps({ token, key })} />
-                  ))}
-                </div>
-              ))}
-            </pre>
-          )}
-        </Highlight>
-      </TabItem>
     </Tabs>
   );
 }

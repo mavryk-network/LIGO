@@ -15,7 +15,7 @@ the format that will be used by the CLI. Available formats are 'dev', 'json', an
 Only display declarations that have the type of an entrypoint
 
 **--syntax SYNTAX**
-the syntax that will be used. Currently supported syntaxes are "pascaligo", "cameligo", "reasonligo" and "jsligo". By default, the syntax is guessed from the extension (.ligo, .mligo, .religo, and .jsligo respectively). (alias: -s)
+the syntax that will be used. Currently supported syntaxes are "pascaligo", "cameligo", and "jsligo". By default, the syntax is guessed from the extension (.ligo, .mligo, and .jsligo respectively). (alias: -s)
 
 **-help**
 print this help text and exit (alias: -?)

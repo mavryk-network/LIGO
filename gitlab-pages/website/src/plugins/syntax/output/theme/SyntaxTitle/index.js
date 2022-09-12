@@ -46,9 +46,6 @@ Prism.languages = { ...Prism.languages,
     }],
     'punctuation': /\(\.|\.\)|[()\[\]:;,.]/
   },
-  reasonligo: { ...Prism.languages.reason,
-    'comment': [/(^|[^\\])\/\*[\s\S]*?\*\//, /\(\*[\s\S]*?\*\)/, /\/\/.*/]
-  },
   cameligo: { ...Prism.languages.ocaml,
     'comment': [/(^|[^\\])\/\*[\s\S]*?\*\//, /\(\*[\s\S]*?\*\)/, /\/\/.*/]
   },

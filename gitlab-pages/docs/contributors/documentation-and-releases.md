@@ -30,7 +30,7 @@ type: added|fixed|changed|deprecated|removed|performance|other
 Obviously, you can add those files manually too if you want.
 
 - Any API change **must** have a changelog entry. Example: "Removed list_iter function"
-- Any user-facing change **should** have a changelog entry. Example: “Improved error reporting for ReasonLIGO”
+- Any user-facing change **should** have a changelog entry. Example: “Improved error reporting forJSLIGO”
 - Performance improvements **should** have a changelog entry.
 - Any docs-only changes **should not** have a changelog entry.
 - A fix for a regression introduced and then fixed in the same release **should not**

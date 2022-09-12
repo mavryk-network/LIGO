@@ -32,13 +32,6 @@ let today : timestamp = Tezos.get_now ()
 ```
 
 </Syntax>
-<Syntax syntax="reasonligo">
-
-```reasonligo group=a
-let today : timestamp = Tezos.get_now ();
-```
-
-</Syntax>
 <Syntax syntax="jsligo">
 
 ```jsligo group=a
@@ -81,17 +74,6 @@ let one_day_later : timestamp = some_date + one_day
 ```
 
 </Syntax>
-<Syntax syntax="reasonligo">
-
-```reasonligo group=b
-let today : timestamp = Tezos.get_now ();
-let one_day : int = 86_400;
-let in_24_hrs : timestamp = today + one_day;
-let some_date : timestamp = ("2000-01-01t10:10:10Z" : timestamp);
-let one_day_later : timestamp = some_date + one_day;
-```
-
-</Syntax>
 <Syntax syntax="jsligo">
 
 ```jsligo group=b
@@ -126,15 +108,6 @@ let in_24_hrs : timestamp = today - one_day
 ```
 
 </Syntax>
-<Syntax syntax="reasonligo">
-
-```reasonligo group=c
-let today : timestamp = Tezos.get_now ();
-let one_day : int = 86400;
-let in_24_hrs : timestamp = today - one_day;
-```
-
-</Syntax>
 <Syntax syntax="jsligo">
 
 ```jsligo group=c
@@ -163,13 +136,6 @@ const not_tommorow : bool = (Tezos.get_now() = in_24_hrs)
 
 ```cameligo group=c
 let not_tomorrow : bool = (Tezos.get_now () = in_24_hrs)
-```
-
-</Syntax>
-<Syntax syntax="reasonligo">
-
-```reasonligo group=c
-let not_tomorrow : bool = (Tezos.get_now () == in_24_hrs);
 ```
 
 </Syntax>
@@ -203,14 +169,6 @@ const my_account : address =
 ```cameligo group=d
 let my_account : address =
   ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address)
-```
-
-</Syntax>
-<Syntax syntax="reasonligo">
-
-```reasonligo group=d
-let my_account : address =
-  ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address);
 ```
 
 </Syntax>
@@ -250,15 +208,6 @@ let my_sig : signature =
 ```
 
 </Syntax>
-<Syntax syntax="reasonligo">
-
-```reasonligo group=e
-let my_sig : signature =
-("edsigthTzJ8X7MPmNeEwybRAvdxS1pupqcM5Mk4uCuyZAe7uEk68YpuGDeViW8wSXMrCi5CwoNgqs8V2w8ayB5dMJzrYCHhD8C7" :
-signature);
-```
-
-</Syntax>
 <Syntax syntax="jsligo">
 
 ```jsligo group=e
@@ -292,14 +241,6 @@ const my_key : key =
 ```cameligo group=f
 let my_key : key =
   ("edpkuBknW28nW72KG6RoHtYW7p12T6GKc7nAbwYX5m8Wd9sDVC9yav" : key)
-```
-
-</Syntax>
-<Syntax syntax="reasonligo">
-
-```reasonligo group=f
-let my_key : key =
-  ("edpkuBknW28nW72KG6RoHtYW7p12T6GKc7nAbwYX5m8Wd9sDVC9yav" : key);
 ```
 
 </Syntax>

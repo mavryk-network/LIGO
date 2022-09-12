@@ -70,16 +70,6 @@ Prism.languages = {
     ],
     'punctuation': /\(\.|\.\)|[()\[\]:;,.]/
   },
-  reasonligo:
-  {
-    ...Prism.languages.reason,
-    'comment': [
-      /(^|[^\\])\/\*[\s\S]*?\*\//,
-      /\(\*[\s\S]*?\*\)/,
-      /\/\/.*/
-    ]
-
-  },
   cameligo: {
     ...Prism.languages.ocaml,
     'comment': [
@@ -218,7 +208,7 @@ export default ({
 
   // @ts-ignore
   if (!language && prism.defaultLanguage) {
-    // @ts-ignore   
+    // @ts-ignore
     language = prism.defaultLanguage;
   }
 
@@ -278,7 +268,7 @@ export default ({
     setTimeout(() => setShowCopied(false), 2000);
   };
 
-  // ligo snippet don't work and looks to not be used ? 
+  // ligo snippet don't work and looks to not be used ?
 
   return (
     <Highlight

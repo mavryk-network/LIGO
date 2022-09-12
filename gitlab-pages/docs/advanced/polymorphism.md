@@ -31,13 +31,6 @@ let id (x : int) = x
 ```
 
 </Syntax>
-<Syntax syntax="reasonligo">
-
-```reasonligo group=mono
-let id = (x : int) : int => x;
-```
-
-</Syntax>
 <Syntax syntax="jsligo">
 
 ```jsligo group=mono
@@ -60,13 +53,6 @@ function idnat (const x : nat) : nat is x
 
 ```cameligo group=mono
 let idnat (x : nat) = x
-```
-
-</Syntax>
-<Syntax syntax="reasonligo">
-
-```reasonligo group=mono
-let idnat = (x : nat) : nat => x;
 ```
 
 </Syntax>
@@ -105,16 +91,6 @@ Here we introduce a type variable `a` which can be generalised using
 `(type a)` after the function name in the declaration.
 
 </Syntax>
-<Syntax syntax="reasonligo">
-
-```reasonligo group=poly
-let id =  (type a, x : a) => x;
-```
-
-Here, `a` is a type variable which can be generalised. In general,
-types prefixed with `_` are treated as generalisable.
-
-</Syntax>
 <Syntax syntax="jsligo">
 
 ```jsligo group=poly
@@ -142,14 +118,6 @@ const three_s : string = id ("three");
 ```cameligo group=poly
 let three_i : int = id 3
 let three_s : string = id "three"
-```
-
-</Syntax>
-<Syntax syntax="reasonligo">
-
-```reasonligo group=poly
-let three_i : int = id(3);
-let three_s : string = id("three");
 ```
 
 </Syntax>
@@ -203,19 +171,6 @@ let rev (type a) (xs : a list) : a list =
 ```
 
 </Syntax>
-<Syntax syntax="reasonligo">
-
-```reasonligo group=poly
-let rev = (type a, xs : list (a)) : list (a) =>
-  let rec rev : ((list (a), list (a)) => list (a)) = ((xs, acc) : (list (a), list (a))) : list (a) =>
-    switch xs {
-    | [] => acc
-    | [x,... xs] => rev (xs, [x,... acc])
-    };
-  rev (xs, ([] : list (a)));
-```
-
-</Syntax>
 <Syntax syntax="jsligo">
 
 ```jsligo group=poly
@@ -251,14 +206,6 @@ const lnat : list (nat) = rev (list [1n; 2n; 3n]);
 ```cameligo group=poly
 let lint : int list = rev [1; 2; 3]
 let lnat : nat list = rev [1n; 2n; 3n]
-```
-
-</Syntax>
-<Syntax syntax="reasonligo">
-
-```reasonligo group=poly
-let lint : list (int) = rev([1, 2, 3]);
-let lnat : list (nat) = rev([1n, 2n, 3n]);
 ```
 
 </Syntax>

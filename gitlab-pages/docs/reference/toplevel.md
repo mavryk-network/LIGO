@@ -16,9 +16,6 @@ type address
 <SyntaxTitle syntax="cameligo">
 type address
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-type address
-</SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 type address
 </SyntaxTitle>
@@ -30,9 +27,6 @@ type big_map (key, value)
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
 type ('key, 'value) big_map
-</SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-type big_map ('key, 'value)
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 type big_map &lt;&apos;key, &apos;value&gt;
@@ -60,17 +54,6 @@ type register = (address, move) big_map
 ```
 
 </Syntax>
-<Syntax syntax="reasonligo">
-
-The type of a big map from values of type `key` to
-values of type `value` is `big_map(key, value)`.
-
-```reasonligo group=big_map
-type move = (int, int);
-type register = big_map(address, move);
-```
-
-</Syntax>
 <Syntax syntax="jsligo">
 
 The type of a big map from values of type `key` to
@@ -91,9 +74,6 @@ type bool
 <SyntaxTitle syntax="cameligo">
 type bool
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-type bool
-</SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 type bool
 </SyntaxTitle>
@@ -102,9 +82,6 @@ type bool
 type bytes
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
-type bytes
-</SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
 type bytes
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
@@ -116,9 +93,6 @@ type contract (param)
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
 type 'param contract
-</SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-type contract('param)
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 type contract&lt;&apos;param&gt;
@@ -134,9 +108,6 @@ type chain_id
 <SyntaxTitle syntax="cameligo">
 type chain_id
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-type chain_id
-</SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 type chain_id
 </SyntaxTitle>
@@ -147,9 +118,6 @@ The identifier of a chain, used to indicate test or main chains.
 type int
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
-type int
-</SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
 type int
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
@@ -166,9 +134,6 @@ type key
 <SyntaxTitle syntax="cameligo">
 type key
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-type key
-</SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 type key
 </SyntaxTitle>
@@ -179,9 +144,6 @@ A public cryptographic key.
 type key_hash
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
-type key_hash
-</SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
 type key_hash
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
@@ -196,9 +158,6 @@ type list (t)
 <SyntaxTitle syntax="cameligo">
 type 't list
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-type list('t)
-</SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 type list&lt;&apos;t&gt;
 </SyntaxTitle>
@@ -210,9 +169,6 @@ type map (key, value)
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
 type ('key, 'value) map
-</SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-type map ('key, 'value)
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 type map &lt;&apos;key, &apos;value&gt;
@@ -240,17 +196,6 @@ type register = (address, move) map
 ```
 
 </Syntax>
-<Syntax syntax="reasonligo">
-
-The type of a map from values of type `key` to
-values of type `value` is `map (key, value)`.
-
-```reasonligo group=maps
-type move = (int, int);
-type register = map (address, move);
-```
-
-</Syntax>
 <Syntax syntax="jsligo">
 
 The type of a map from values of type `key` to
@@ -269,9 +214,6 @@ type nat
 <SyntaxTitle syntax="cameligo">
 type nat
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-type nat
-</SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 type nat
 </SyntaxTitle>
@@ -284,9 +226,6 @@ The only size limit to natural numbers is gas.
 type operation
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
-type operation
-</SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
 type operation
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
@@ -302,9 +241,6 @@ type set ('value)
 <SyntaxTitle syntax="cameligo">
 type 'value set
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-type set('value)
-</SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 type set&lt;&apos;value&gt;
 </SyntaxTitle>
@@ -313,9 +249,6 @@ type set&lt;&apos;value&gt;
 type signature
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
-type signature
-</SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
 type signature
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
@@ -331,9 +264,6 @@ type string
 <SyntaxTitle syntax="cameligo">
 type string
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-type string
-</SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 type string
 </SyntaxTitle>
@@ -344,9 +274,6 @@ A sequence of characters.
 type tez
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
-type tez
-</SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
 type tez
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
@@ -361,9 +288,6 @@ type timestamp
 <SyntaxTitle syntax="cameligo">
 type timestamp
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-type timestamp
-</SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 type timestamp
 </SyntaxTitle>
@@ -374,9 +298,6 @@ A date in the real world.
 type unit
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
-type unit
-</SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
 type unit
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
@@ -390,9 +311,6 @@ val is_nat : int -> option (nat)
 <SyntaxTitle syntax="cameligo">
 val is_nat: int -> nat option
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let is_nat: int => option(nat)
-</SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let is_nat: (i: int) => option&lt;nat&gt;
 </SyntaxTitle>
@@ -404,9 +322,6 @@ val abs : int -> nat
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
 val abs: int -> nat
-</SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let abs: int => nat
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let abs: (i: int) => nat
@@ -420,9 +335,6 @@ val int : nat -> int
 <SyntaxTitle syntax="cameligo">
 val int: nat -> int
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let int: nat => int
-</SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let int: (n: nat) => int
 </SyntaxTitle>
@@ -434,9 +346,6 @@ const unit : unit
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
 val unit: unit
-</SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let (): unit
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let unit: unit
@@ -450,9 +359,6 @@ val failwith&lt;a&gt; : a -> b
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
 val failwith : 'a -> 'b
-</SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let failwith: 'a => 'b
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let failwith: (message: &apos;a) => &apos;b
@@ -480,14 +386,6 @@ let main (p,s : int * unit) = if p > 10 then failwith "Failure."
 ```
 
 </Syntax>
-<Syntax syntax="reasonligo">
-
-```reasonligo
-let main = ((p,s) : (int, unit)) =>
-  if (p > 10) { failwith ("Failure."); };
-```
-
-</Syntax>
 <Syntax syntax="jsligo">
 
 ```jsligo
@@ -503,9 +401,6 @@ val assert : bool -> unit
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
 val assert : bool -> unit
-</SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let assert: bool => unit
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let assert: (condition: bool) => unit
@@ -539,18 +434,6 @@ val ediv : mutez -> mutez -> (nat * mutez) option
 val ediv : nat -> nat -> (nat * nat) option
 </SyntaxTitle>
 
-<SyntaxTitle syntax="reasonligo">
-let ediv: (int, int) => option((int, nat))
-</SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let ediv: (mutez, nat) => option((mutez, mutez))
-</SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let ediv: (mutez, mutez) => option((nat, mutez))
-</SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let ediv: (nat, nat) => option((nat, nat))
-</SyntaxTitle>
 
 <SyntaxTitle syntax="jsligo">
 let ediv: (value: int, divided_by: int) => option&lt;[int, nat]&gt;
@@ -573,18 +456,12 @@ type sapling_state (n)
 <SyntaxTitle syntax="cameligo">
 type 'n sapling_state
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-type sapling_state('a)
-</SyntaxTitle>
 
 <SyntaxTitle syntax="pascaligo">
 type sapling_transaction (n)
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
 type 'n sapling_transaction
-</SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-type sapling_transaction('n)
 </SyntaxTitle>
 
 
@@ -593,9 +470,6 @@ type ticket (v)
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
 type 'v ticket
-</SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-type ticket('v)
 </SyntaxTitle>
 
 Edo protocol introduced the following ticket type.
@@ -626,22 +500,11 @@ type my_ticket = va ticket
 
 </Syntax>
 
-<Syntax syntax="reasonligo">
-
-```reasonligo group=ticket_t
-type va = int;
-type my_ticket = ticket(va);
-```
-
-</Syntax>
 
 <SyntaxTitle syntax="pascaligo">
 type tx_rollup_l2_address
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
-type tx_rollup_l2_address
-</SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
 type tx_rollup_l2_address
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">

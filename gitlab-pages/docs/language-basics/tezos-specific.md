@@ -43,16 +43,6 @@ let id_string (p : string) : string option =
 ```
 
 </Syntax>
-<Syntax syntax="reasonligo">
-
-```reasonligo group=a
-let id_string = (p : string) : option (string) => {
-  let packed : bytes = Bytes.pack (p);
-  (Bytes.unpack(packed) : option (string));
-};
-```
-
-</Syntax>
 <Syntax syntax="jsligo">
 
 ```jsligo group=a
@@ -92,16 +82,6 @@ function check_hash_key (const kh1 : key_hash; const k2 : key) : bool * key_hash
 let check_hash_key (kh1, k2 : key_hash * key) : bool * key_hash =
   let kh2 : key_hash = Crypto.hash_key k2 in
   (kh1 = kh2), kh2
-```
-
-</Syntax>
-<Syntax syntax="reasonligo">
-
-```reasonligo group=b
-let check_hash_key = ((kh1, k2) : (key_hash, key)) : (bool, key_hash) => {
-  let kh2 : key_hash = Crypto.hash_key (k2);
-  ((kh1 == kh2), kh2);
-};
 ```
 
 </Syntax>
@@ -150,15 +130,6 @@ let check_signature (pk, signed, msg : key * signature * bytes) : bool =
 ```
 
 </Syntax>
-<Syntax syntax="reasonligo">
-
-```reasonligo group=c
-let check_signature =
-  ((pk, signed, msg) : (key, signature, bytes)) : bool =>
-  Crypto.check (pk, signed, msg);
-```
-
-</Syntax>
 <Syntax syntax="jsligo">
 
 ```jsligo group=c
@@ -192,13 +163,6 @@ const current_addr : address = Tezos.get_self_address()
 
 ```cameligo group=d
 let current_addr : address = Tezos.get_self_address ()
-```
-
-</Syntax>
-<Syntax syntax="reasonligo">
-
-```reasonligo group=d
-let current_addr : address = Tezos.get_self_address ();
 ```
 
 </Syntax>
@@ -237,17 +201,6 @@ let origination : operation * address = Tezos.create_contract
   (None: key_hash option)
   3tz
   "initial_storage"
-```
-
-</Syntax>
-<Syntax syntax="reasonligo">
-
-```reasonligo group=e
-let origination : (operation, address) = Tezos.create_contract (
-  ((p, s) : (nat,string)) : (list(operation),string) => (([] : list(operation)), s),
-  None: option(key_hash),
-  3tz,
-  "initial_storage")
 ```
 
 </Syntax>

@@ -59,21 +59,12 @@ Prism.languages = {
     ],
     'punctuation': /\(\.|\.\)|[()\[\]:;,.]/
   },
-  reasonligo: 
-  {...Prism.languages.reason, 
-    'comment': [
-      /(^|[^\\])\/\*[\s\S]*?\*\//,
-      /\(\*[\s\S]*?\*\)/,   
-      /\/\/.*/   
-    ]
-      
-  },
   cameligo: {
-    ...Prism.languages.ocaml, 
+    ...Prism.languages.ocaml,
     'comment': [
       /(^|[^\\])\/\*[\s\S]*?\*\//,
-      /\(\*[\s\S]*?\*\)/,   
-      /\/\/.*/   
+      /\(\*[\s\S]*?\*\)/,
+      /\/\/.*/
     ]},
   jsligo: Prism.languages.typescript
 };
@@ -97,11 +88,11 @@ function SyntaxTitle(props) {
     setMounted(true);
   }, []);
 
-  return ( 
+  return (
     <SyntaxContext.Consumer>
       {( ({syntax}) => {
         if (syntax === props.syntax) {
-          return ( 
+          return (
             <Highlight {...defaultProps} key={mounted} language={props.syntax} code={props.children} theme={lightModeTheme}>
               {({ className, tokens, getLineProps, getTokenProps }) => (
                   <pre className={className} style={{backgroundColor: 'var(--ifm-background-color)', fontSize: '1.1rem', fontWeight: 'bold', padding: 0, whiteSpace: 'break-spaces', marginTop: '3rem' }}>

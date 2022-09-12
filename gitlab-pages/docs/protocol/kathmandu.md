@@ -22,9 +22,6 @@ val emit&lt;a&gt; :  string -> a -> operation
 <SyntaxTitle syntax="cameligo">
 val emit : string -> 'a -> operation
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let emit: string => 'a => operation
-</SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let emit: string => &apos;a => operation
 </SyntaxTitle>
@@ -41,9 +38,6 @@ val get_last_events_from&lt;a,p,s&gt; : typed_address (p,s) -> string -> list (a
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
 val get_last_events_from : ('p,'s) typed_address -> string -> 'a list
-</SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let get_last_events_from: typed_address ('p,'s) => string => list ('a)
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let get_last_events_from: typed_address &lt;&apos;p,&apos;s&gt; => string => list &lt;&apos;a&gt;

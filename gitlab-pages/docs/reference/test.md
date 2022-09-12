@@ -17,9 +17,6 @@ type michelson_program
 <SyntaxTitle syntax="cameligo">
 type michelson_program
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-type michelson_program
-</SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 type michelson_program
 </SyntaxTitle>
@@ -30,9 +27,6 @@ A type for code that is compiled to Michelson.
 type michelson_contract
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
-type michelson_contract
-</SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
 type michelson_contract
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
@@ -47,9 +41,6 @@ type test_exec_error_balance_too_low = record [ contract_too_low : address ; con
 <SyntaxTitle syntax="cameligo">
 type test_exec_error_balance_too_low = &#x007b; contract_too_low : address ; contract_balance : tez ; spend_request : tez &#x007d;
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-type test_exec_error_balance_too_low = &#x007b; contract_too_low : address , contract_balance : tez , spend_request : tez &#x007d;
-</SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 type test_exec_error_balance_too_low = &#x007b; contract_too_low : address , contract_balance : tez , spend_request : tez &#x007d;
 </SyntaxTitle>
@@ -63,12 +54,6 @@ type test_exec_error =
 <SyntaxTitle syntax="cameligo">
 type test_exec_error =
   Rejected of michelson_program * address
-| Balance_too_low of test_exec_error_balance_too_low
-| Other of string
-</SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-type test_exec_error =
-  Rejected(michelson_program, address)
 | Balance_too_low of test_exec_error_balance_too_low
 | Other of string
 </SyntaxTitle>
@@ -95,11 +80,6 @@ type test_exec_result =
   Success of nat
 | Fail of test_exec_error
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-type test_exec_result =
-  Success of nat
-| Fail(test_exec_error)
-</SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 type test_exec_result =
   ["Success", nat]
@@ -121,12 +101,6 @@ type test_baker_policy =
   | By_round of int
   | By_account of address
   | Excluding of address list
-</SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-type test_baker_policy =
-    By_round of int
-  | By_account of address
-  | Excluding of list (address)
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 type test_baker_policy =
@@ -150,9 +124,6 @@ type typed_address (param, storage)
 <SyntaxTitle syntax="cameligo">
 type ('param, 'storage) typed_address
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-type typed_address ('param, 'storage)
-</SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 type typed_address &lt;&apos;param, &apos;s&gt;
 </SyntaxTitle>
@@ -167,9 +138,6 @@ type unforged_ticket(s) is record [ ticketer : address ; value : s ; amount : na
 <SyntaxTitle syntax="cameligo">
 type 's unforged_ticket = &#x007b; ticketer : address ; value : 's ; amount : nat &#x007d;
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-type unforged_ticket s = &#x007b; ticketer : address , value : s , amount : nat &#x007d;
-</SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 type unforged_ticket &lt;s&gt; = &#x007b; ticketer : address , value : s , amount : nat &#x007d;
 </SyntaxTitle>
@@ -181,9 +149,6 @@ val to_contract&lt;param,storage&gt; : typed_address (param, storage) -> contrac
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
 val to_contract : ('param, 'storage) typed_address -> 'param contract
-</SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let to_contract : (typed_address ('param, 'storage)) => contract ('param)
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let to_contract = (account: typed_address &lt;&apos;param, &apos;storage&gt;) => contract &lt;&apos;param&gt;
@@ -200,9 +165,6 @@ val to_entrypoint &lt;param, storage, e&gt; : string -> typed_address (param, st
 <SyntaxTitle syntax="cameligo">
 val to_entrypoint : string -> ('param, 'storage) typed_address -> 'e contract
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let to_entrypoint : string => (typed_address ('param, 'storage)) => contract ('e)
-</SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let to_entrypoint = (entrypoint: string, account: typed_address &lt;&apos;param, &apos;storage&gt;) => contract &lt;&apos;e&gt;
 </SyntaxTitle>
@@ -218,9 +180,6 @@ val originate_from_file : string -> string -> list (string) -> michelson_program
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
 val originate_from_file : string -> string -> string list -> michelson_program -> tez -> address * michelson_contract * int
-</SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let originate_from_file : string => string => list(string) => michelson_program => tez => (address, michelson_contract, int)
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let originate_from_file = (filepath: string, entrypoint: string, views: list&lt;string&gt;, init: michelson_program, balance: tez) => [address, michelson_contract, int]
@@ -248,13 +207,6 @@ let addr, contract, size =
 ```
 
 </Syntax>
-<Syntax syntax="reasonligo">
-
-```reasonligo skip
-let (addr, contract, size) = Test.originate_from_file(testme_test, "main", ([] : list(string)), init_storage, 0tez);
-```
-
-</Syntax>
 <Syntax syntax="jsligo">
 
 ```jsligo skip
@@ -269,9 +221,6 @@ val compile_contract_from_file : string -> string -> list (string) -> michelson_
 <SyntaxTitle syntax="cameligo">
 val compile_contract_from_file : string -> string -> string list -> michelson_contract
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let compile_contract_from_file : string => string => list(string) => michelson_contract
-</SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let compile_contract_from_file = (filepath: string, entrypoint: string, views: list&lt;string&gt;) => michelson_contract
 </SyntaxTitle>
@@ -283,9 +232,6 @@ val originate &lt;param, storage&gt; : (param * storage -> list (operation) * st
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
 val originate : ('param * 'storage -> operation list * 'storage) -> 'storage -> tez -> (('param, 'storage) typed_address * michelson_contract * int)
-</SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let originate : (('param, 'storage) -> (list(operation), 'storage)) => 'storage => tez => (typed_address ('param, 'storage), michelson_contract, int)
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let originate = (contract: ('param, 'storage) => (list &lt;operation&gt;, &apos;storage), init: 'storage, balance: tez) => [typed_address &lt;&apos;param, &apos;storage&gt;, michelson_contract, int]
@@ -299,9 +245,6 @@ val compile_contract &lt;param, storage&gt; : (param * storage -> list (operatio
 <SyntaxTitle syntax="cameligo">
 val compile_contract : ('param * 'storage -> operation list * 'storage) -> michelson_contract
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let compile_contract : (('param, 'storage) -> (list(operation), 'storage)) => michelson_contract
-</SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let compile_contract = (contract: ('param, 'storage) => (list &lt;operation&gt;, &apos;storage)) => michelson_contract
 </SyntaxTitle>
@@ -313,9 +256,6 @@ val read_contract_from_file : string -> michelson_contract
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
 val read_contract_from_file : string -> michelson_contract
-</SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let read_contract_from_file : string => michelson_contract
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let read_contract_from_file = (filepath: string) => michelson_contract
@@ -329,9 +269,6 @@ val originate_contract : michelson_contract -> michelson_program -> tez -> addre
 <SyntaxTitle syntax="cameligo">
 val originate_contract : michelson_contract -> michelson_program -> tez -> address
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let originate_contract : michelson_contract => michelson_program => tez => address
-</SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let originate_contract = (contract: michelson_contract, init: michelson_program, balance: tez) => address
 </SyntaxTitle>
@@ -343,9 +280,6 @@ val size : michelson_contract -> int
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
 val size : michelson_contract -> int
-</SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let size : michelson_contract => int
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let size = (contract: michelson_contract) => int
@@ -359,9 +293,6 @@ val set_source : address -> unit
 <SyntaxTitle syntax="cameligo">
 val set_source : address -> unit
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let set_source: address => unit
-</SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let set_source = (source: address) => unit
 </SyntaxTitle>
@@ -372,9 +303,6 @@ val set_baker_policy : test_baker_policy -> unit
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
 val set_baker_policy : test_baker_policy -> unit
-</SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let set_baker_policy: test_baker_policy => unit
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let set_baker_policy = (policy: test_baker_policy) => unit
@@ -387,9 +315,6 @@ val set_baker : address -> unit
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
 val set_baker : address -> unit
-</SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let set_baker: address => unit
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let set_baker = (source: address) => unit
@@ -404,9 +329,6 @@ val transfer : address -> michelson_program -> tez -> test_exec_result
 <SyntaxTitle syntax="cameligo">
 val transfer : address -> michelson_program -> tez -> test_exec_result
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let transfer: (address, michelson_program, tez) => test_exec_result
-</SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let transfer = (addr: address, param: michelson_program, amount: tez) => test_exec_result
 </SyntaxTitle>
@@ -419,9 +341,6 @@ function transfer_exn : address -> michelson_program -> tez -> nat
 <SyntaxTitle syntax="cameligo">
 val transfer_exn : address -> michelson_program -> tez -> nat
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let transfer_exn: (address, michelson_program, tez) => nat
-</SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let transfer_exn = (addr: address, parameter: michelson_program, amount: tez) => nat
 </SyntaxTitle>
@@ -432,9 +351,6 @@ val transfer_to_contract &lt;param&gt; : contract (param) -> p -> tez -> test_ex
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
 val transfer_to_contract : 'param contract -> 'param -> tez -> test_exec_result
-</SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let transfer_to_contract: (contract ('param), 'param, tez) => test_exec_result
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let transfer_to_contract = (addr: contract&lt;&apos;p&gt;, param: &apos;p, amount: tez) => test_exec_result
@@ -448,9 +364,6 @@ function transfer_to_contract_exn : contract ('p) -> 'p -> tez -> nat
 <SyntaxTitle syntax="cameligo">
 val transfer_to_contract_exn : 'p contract -> 'p -> tez -> nat
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let transfer_to_contract_exn: (contract ('p), 'p, tez) => nat
-</SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let transfer_to_contract_exn = (addr: contract&lt;&apos;p&gt;, parameter: &apos;p, amount: tez) => nat
 </SyntaxTitle>
@@ -461,9 +374,6 @@ val get_storage_of_address : address -> michelson_program
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
 val get_storage_of_address : address -> michelson_program
-</SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let get_storage_of_address : (address) => michelson_program
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let get_storage_of_address = (account: address) => michelson_program
@@ -476,9 +386,6 @@ val get_storage &lt;param, storage&gt; : typed_address (param, storage) -> stora
 <SyntaxTitle syntax="cameligo">
 val get_storage : ('param, 'storage) typed_address -> 'storage
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let get_storage: (typed_address ('param, 'storage)) => 'storage
-</SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let get_storage = (account: typed_address &lt;&apos;p, &apos;s&gt;) => &apos;s
 </SyntaxTitle>
@@ -489,9 +396,6 @@ val get_balance : address -> tez
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
 val get_balance : address -> tez
-</SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let get_balance: (address) => tez
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let get_balance = (account: address) => tez
@@ -504,9 +408,6 @@ function get_voting_power : key_hash -> nat
 <SyntaxTitle syntax="cameligo">
 val get_voting_power : key_hash -> nat
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let get_voting_power: (key_hash) => nat
-</SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let get_voting_power = (kh: key_hash) => nat
 </SyntaxTitle>
@@ -517,9 +418,6 @@ val get_total_voting_power : nat
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
 val get_total_voting_power : nat
-</SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let get_total_voting_power: nat
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let get_total_voting_power = nat
@@ -532,9 +430,6 @@ val michelson_equal : michelson_program -> michelson_program -> bool
 <SyntaxTitle syntax="cameligo">
 val michelson_equal : michelson_program -> michelson_program -> bool
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let michelson_equal: (michelson_program, michelson_program) => bool
-</SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let michelson_equal = (a: michelson_program, b: michelson_program) => bool
 </SyntaxTitle>
@@ -545,9 +440,6 @@ val log&lt;a&gt; : a -> unit
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
 val log : 'a -> unit
-</SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let log: 'a => unit
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let log = (a: 'a) => unit
@@ -560,9 +452,6 @@ val to_string&lt;a&gt; : a -> string
 <SyntaxTitle syntax="cameligo">
 val to_string : 'a -> string
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let to_string: 'a => string
-</SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let to_string = (a: 'a) => string
 </SyntaxTitle>
@@ -573,9 +462,6 @@ val print : string -> unit
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
 val print : string -> unit
-</SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let print: string => unit
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let print = (s: string) => unit
@@ -588,9 +474,6 @@ val println : string -> unit
 <SyntaxTitle syntax="cameligo">
 val println : string -> unit
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let println: string => unit
-</SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let println = (s: string) => unit
 </SyntaxTitle>
@@ -601,9 +484,6 @@ val eprint : string -> unit
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
 val eprint : string -> unit
-</SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let eprint: string => unit
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let eprint = (s: string) => unit
@@ -616,9 +496,6 @@ val nl : string
 <SyntaxTitle syntax="cameligo">
 val nl : string
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let nl: string
-</SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let nl : string
 </SyntaxTitle>
@@ -630,9 +507,6 @@ val chr : nat -> option string
 <SyntaxTitle syntax="cameligo">
 val chr : nat -> string option
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let chr: nat => option (string)
-</SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let chr = (c: nat) => option&lt;string&gt;
 </SyntaxTitle>
@@ -643,9 +517,6 @@ val reset_state : nat -> list (tez) -> unit
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
 val reset_state : nat -> tez list -> unit
-</SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let reset_state: (nat, list(tez)) => unit
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let reset_state = (no_of_accounts: nat, amount: list&lt;tez&gt;) => unit
@@ -667,9 +538,6 @@ val reset_state_at : timestamp -> nat -> list (tez) -> unit
 <SyntaxTitle syntax="cameligo">
 val reset_state_at : timestamp -> nat -> tez list -> unit
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let reset_state_at: (timestamp, nat, list(tez)) => unit
-</SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let reset_state_at = (initial_timestamp : timestamp, no_of_accounts: nat, amount: list&lt;tez&gt;) => unit
 </SyntaxTitle>
@@ -682,9 +550,6 @@ val baker_account : (string * key) -> option tez -> unit
 <SyntaxTitle syntax="cameligo">
 val baker_account : (string * key) -> tez option -> unit
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let baker_account: ((string, key), option(tez)) => unit
-</SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let baker_account = ([string, key], amount : option&lt;tez&gt;) => unit
 </SyntaxTitle>
@@ -696,9 +561,6 @@ val register_delegate : key_hash -> unit
 <SyntaxTitle syntax="cameligo">
 val register_delegate : key_hash -> unit
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let register_delegate: key_hash => unit
-</SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let register_delegate = (account : key_hash) => unit
 </SyntaxTitle>
@@ -709,9 +571,6 @@ val register_constant : michelson_program -> string
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
 val register_constant : michelson_program -> string
-</SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let register_constant: michelson_program => string
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let register_constant = (constant : michelson_program) => string
@@ -728,9 +587,6 @@ val constant_to_michelson_program : string -> michelson_program
 <SyntaxTitle syntax="cameligo">
 val constant_to_michelson_program : string -> michelson_program
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let constant_to_michelson_program: string => michelson_program
-</SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let constant_to_michelson_program = (constant : string) => michelson_program
 </SyntaxTitle>
@@ -741,9 +597,6 @@ val register_file_constants : string -> list (string)
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
 val register_file_constants : string -> string list
-</SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let register_file_constants: string => list (string)
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let register_file_constants = (filepath : string) => list&lt;string&gt;
@@ -758,9 +611,6 @@ val bake_until_n_cycle_end : nat -> unit
 <SyntaxTitle syntax="cameligo">
 val bake_until_n_cycle_end : nat -> unit
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let bake_until_n_cycle_end: nat => unit
-</SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let bake_until_n_cycle_end = (cycles : nat) => unit
 </SyntaxTitle>
@@ -771,9 +621,6 @@ val new_account : unit -> (string * key)
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
 val new_account : unit -> (string * key)
-</SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let new_account: unit => (string, key)
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let new_account = (_: unit) => (string, key)
@@ -786,9 +633,6 @@ val add_account : (string * key) -> unit
 <SyntaxTitle syntax="cameligo">
 val add_account : (string * key) -> unit
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let add_account: (string, key) => unit
-</SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let add_account = (sk: string, pk: key) => unit
 </SyntaxTitle>
@@ -799,9 +643,6 @@ val nth_bootstrap_account : int -> address
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
 val nth_bootstrap_account : int -> address
-</SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let nth_bootstrap_account: int => address
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let nth_bootstrap_account = (nth: int) => address
@@ -814,9 +655,6 @@ val nth_bootstrap_contract : nat -> address
 <SyntaxTitle syntax="cameligo">
 val nth_bootstrap_contract : nat -> address
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let nth_bootstrap_contract: nat => address
-</SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let nth_bootstrap_contract = (nth: nat) => address
 </SyntaxTitle>
@@ -827,9 +665,6 @@ val bootstrap_contract&lt;param,storage&gt; : tez -> (param * storage -> list (o
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
 val bootstrap_contract : tez -> ('param * 'storage -> operation list * 'storage) -> 'storage -> unit
-</SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let bootstrap_contract : tez => (('param, 'storage) -> (list(operation), 'storage)) => 'storage => unit
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let bootstrap_contract = (balance: tez, contract: ('param, 'storage) => (list &lt;operation&gt;, &apos;storage), init: 'storage) => unit
@@ -845,9 +680,6 @@ val nth_bootstrap_typed_address &lt;param, storage&gt; : nat -> typed_address (p
 <SyntaxTitle syntax="cameligo">
 val nth_bootstrap_typed_address : int -> ('param, 'storage) typed_address
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let nth_bootstrap_typed_address: int => typed_address ('param, 'storage)
-</SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let nth_bootstrap_typed_address = (nth: int) => typed_address &lt;&apos;p, &apos;s&gt;
 </SyntaxTitle>
@@ -861,9 +693,6 @@ val get_bootstrap_account : nat -> address * key * string
 <SyntaxTitle syntax="cameligo">
 val get_bootstrap_account : nat -> address * key * string
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let get_bootstrap_account: nat => (address, key, string)
-</SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let get_bootstrap_account = (nth: nat) => [address, key, string]
 </SyntaxTitle>
@@ -874,9 +703,6 @@ val last_originations : unit -> map (address * list (address))
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
 val last_originations : unit -> (address * address list) map
-</SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let last_originations: unit => map (address , list(address))
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let last_originations = (_: unit) => map&lt;address , address list&gt;
@@ -890,9 +716,6 @@ val compile_value&lt;a&gt; : a -> michelson_program
 <SyntaxTitle syntax="cameligo">
 val compile_value : 'a -> michelson_program
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let compile_value: 'a => michelson_program
-</SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let compile_value = (value: 'a) => michelson_program
 </SyntaxTitle>
@@ -903,9 +726,6 @@ val eval&lt;a&gt; : a -> michelson_program
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
 val eval : 'a -> michelson_program
-</SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let eval: 'a => michelson_program
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let eval = (value: 'a) => michelson_program
@@ -918,9 +738,6 @@ val run&lt;a,b&gt; : (a -> b) -> a -> michelson_program
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
 val run : ('a -> 'b) -> 'a -> michelson_program
-</SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let run : ('a => 'b) => 'a => michelson_program
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let run = (func: ('a => 'b), value: 'a) => michelson_program
@@ -966,18 +783,6 @@ let test_example =
 ```
 
 </Syntax>
-<Syntax syntax="reasonligo">
-
-```reasonligo test-ligo group=test_run
-type some_r = [@layout:comb] { one : int , two : nat , three : string , four : bytes , five : unit };
-let f = (x:some_r) => x.one;
-
-let test_example =
-  Test.run (((x : (int, nat, string, bytes, unit)) => f ({ one : x[0] , two : x[1] , three : x[2] , four : x[3] , five : x[4] } : some_r)),
-           (1 + 3 + 2, 1n + 2n, ("a" ++ "b"), 0xFF00, ()));
-```
-
-</Syntax>
 <Syntax syntax="jsligo">
 
 ```jsligo test-ligo group=test_run
@@ -997,9 +802,6 @@ val decompile&lt;a&gt; : michelson_program -> a
 <SyntaxTitle syntax="cameligo">
 val decompile : michelson_program -> 'a
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let decompile: michelson_program => 'a
-</SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let decompile = (value: michelson_program) => 'a
 </SyntaxTitle>
@@ -1013,9 +815,6 @@ val mutate_value&lt;a&gt; : nat -> a -> option (a * mutation)
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
 val mutate_value : nat -> 'a -> ('a * mutation) option
-</SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let mutate_value : (nat, 'a) => option ('a, mutation)
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let mutate_value : (index: nat, value: 'a) => option &lt;[&apos;a, mutation]&gt;
@@ -1031,9 +830,6 @@ val mutation_test&lt;a,b&gt; : a -> (a -> b) -> option (b * mutation)
 <SyntaxTitle syntax="cameligo">
 val mutation_test : 'a -> ('a -> 'b) -> ('b * mutation) option
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let mutation_test : ('a, ('a -> 'b)) => option ('b, mutation)
-</SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let mutation_test : (value: 'a, tester: ('a -> 'b)) => option &lt;[&apos;b, mutation]&gt;
 </SyntaxTitle>
@@ -1048,9 +844,6 @@ val mutation_test_all&lt;a,b&gt; : a -> (a -> b) -> list (b * mutation)
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
 val mutation_test_all : 'a -> ('a -> 'b) -> ('b * mutation) list
-</SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let mutation_test_all : ('a, ('a -> 'b)) => list ('b, mutation)
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let mutation_test_all : (value: 'a, tester: ('a -> 'b)) => list &lt;[&apos;b, mutation]&gt;
@@ -1068,9 +861,6 @@ val originate_from_file_and_mutate&lt;b&gt; : string -> string -> list string ->
 <SyntaxTitle syntax="cameligo">
 val originate_from_file_and_mutate : string -> string -> string list -> michelson_program -> tez -> (address * michelson_contract * int -> 'b) -> ('b * mutation) option
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let originate_from_file_and_mutate : (string, string, list (string), michelson_program, tez, ((address, michelson_contract, int) => 'b)) => option ('b, mutation)
-</SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let originate_from_file_and_mutate : (filepath: string, entrypoint: string, views: list&lt;string&gt;, init: michelson_program, balance: tez, (tester: (originated_address: address, code: michelson_contract, size: int) => 'b)) => option&lt;[&apos;b, mutation]&gt;
 </SyntaxTitle>
@@ -1086,9 +876,6 @@ val originate_from_file_and_mutate_all&lt;b&gt; : string -> string -> list strin
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
 val originate_from_file_and_mutate_all : string -> string -> string list -> michelson_program -> tez -> (address * michelson_contract * int -> 'b) -> ('b * mutation) list
-</SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let originate_from_file_and_mutate_all : (string, string, list (string), michelson_program, tez, ((address, michelson_contract, int) => 'b)) => list ('b, mutation)
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let originate_from_file_and_mutate_all : (filepath: string, entrypoint: string, views: list&lt;string&gt;, init: michelson_program, balance: tez, (tester: (originated_address: address, code: michelson_contract, size: int) => 'b)) => list&lt;[&apos;b, mutation]&gt;
@@ -1107,9 +894,6 @@ val save_mutation : string -> mutation -> option (string)
 <SyntaxTitle syntax="cameligo">
 val save_mutation : string -> mutation -> string option
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let save_mutation : (string, mutation) => option (string)
-</SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let save_mutation : (path: string, mutation: mutation) => option &lt;string&gt;
 </SyntaxTitle>
@@ -1125,9 +909,6 @@ val random&lt;a&gt; : unit -> a
 <SyntaxTitle syntax="cameligo">
 val random : unit -> 'a
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let random : unit => 'a
-</SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let random : (u: unit) => 'a
 </SyntaxTitle>
@@ -1140,9 +921,6 @@ val cast_address &lt;param, storage&gt; : address -> typed_address (param, stora
 <SyntaxTitle syntax="cameligo">
 val cast_address : address -> ('param,'storage) typed_address
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let cast_address : address => typed_address ('param, 'storage)
-</SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let cast_address : (addr: adress) => typed_address &lt;&apos;param, &apos;storage&gt;
 </SyntaxTitle>
@@ -1154,9 +932,6 @@ val set_big_map &lt;key, value&gt; : int -> big_map (key, value) -> unit
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
 val set_big_map : int -> ('key, 'value) big_map  -> unit
-</SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let set_big_map: (int, big_map('key, 'value)) => unit
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let set_big_map: (id: &apos;int, big_map: big_map&lt;&apos;key, &apos;value&gt;) => unit
@@ -1175,9 +950,6 @@ val create_chest : bytes -> nat -> chest * chest_key
 <SyntaxTitle syntax="cameligo">
 val create_chest : bytes -> nat -> chest * chest_key
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let create_chest : bytes => nat => (chest , chest_key)
-</SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let create_chest : bytes => nat => [chest , chest_key]
 </SyntaxTitle>
@@ -1190,9 +962,6 @@ val create_chest_key : chest -> nat -> chest_key
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
 val create_chest_key : chest -> nat -> chest_key
-</SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let create_chest_key : chest => nat => chest_key
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let create_chest_key : chest => nat => chest_key
@@ -1208,9 +977,6 @@ val save_context : unit -> unit
 <SyntaxTitle syntax="cameligo">
 val save_context : unit -> unit
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let save_context: unit => unit
-</SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let save_context: (u: unit) => unit
 </SyntaxTitle>
@@ -1223,9 +989,6 @@ val restore_context : unit -> unit
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
 val restore_context : unit -> unit
-</SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let restore_context: unit => unit
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let restore_context: (u: unit) => unit
@@ -1241,9 +1004,6 @@ val drop_context : unit -> unit
 <SyntaxTitle syntax="cameligo">
 val drop_context : unit -> unit
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let drop_context: unit => unit
-</SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let drop_context: (u: unit) => unit
 </SyntaxTitle>
@@ -1256,9 +1016,6 @@ val sign : string -> bytes -> signature
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
 val sign : string -> bytes -> signature
-</SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let sign: (string, bytes) => signature
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let sign: (secret_key: string, data: bytes) => signature

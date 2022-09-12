@@ -50,27 +50,6 @@ let m (x : int) =
 ```
 
 </Syntax>
-<Syntax syntax="reasonligo">
-
-In ReasonLIGO, the unique value of the `unit` type is `()`, following
-the OCaml convention.
-```reasonligo group=a
-let n : unit = ();
-```
-
-Sequences of expressions that return the `unit` type can be written
-using braces, separating expressions using semi-colons. The last
-expression, which represents the value returned, can have a different
-type to `unit`:
-
-```reasonligo group=a
-let m = (x : int) =>
-  { assert (x > 0);
-    assert (x < 10);
-    x }
-```
-
-</Syntax>
 <Syntax syntax="jsligo">
 
 In JsLIGO, the unique value of the `unit` type is `unit`.
@@ -107,15 +86,6 @@ const tail : coin = Tail
 type coin = Head | Tail
 let head : coin = Head
 let tail : coin = Tail
-```
-
-</Syntax>
-<Syntax syntax="reasonligo">
-
-```reasonligo group=b
-type coin = Head | Tail;
-let head : coin = Head;
-let tail : coin = Tail;
 ```
 
 </Syntax>
@@ -175,25 +145,6 @@ let g : user = Guest
 In CameLIGO, a constant constructor is equivalent to the same constructor
 taking an argument of type `unit`, so, for example, `Guest` is the
 same value as `Guest ()`.
-
-</Syntax>
-<Syntax syntax="reasonligo">
-
-```reasonligo group=c
-type id = nat;
-
-type user =
-| Admin   (id)
-| Manager (id)
-| Guest;
-
-let u : user = Admin (1000n);
-let g : user = Guest;
-```
-
-In ReasonLIGO, a constant constructor is equivalent to the same constructor
-taking an argument of type `unit`, so, for example, `Guest` is the
-same value as `Guest (unit)`.
 
 </Syntax>
 <Syntax syntax="jsligo">
@@ -277,28 +228,6 @@ type t1 = A of int | G of tez
 let x = A 42
 ```
 </Syntax>
-<Syntax syntax="reasonligo">
-
-```reasonligo group=multi_sum
-module MyModule = {
-  type t5 = A (int) | C (bool)
-  type t4 = A (int) | D (int)
-
-  module MySubModule = {
-    type t6 = A (int) | E (tez)
-  }
-}
-
-module MySecondModule = {
-  type t3 = A (int) | F (int)
-}
-
-type t1 = A (int) | G (tez)
-
-// The compiler will search above for sum types with an 'A' constructor
-let x = A(42)
-```
-</Syntax>
 <Syntax syntax="jsligo">
 
 ```jsligo group=multi_sum
@@ -358,23 +287,6 @@ end
 // let x = A 42
 ```
 </Syntax>
-<Syntax syntax="reasonligo">
-
-In ReasonLigo when looking for a matching sum type, the compiler will not look in shadowed modules.
-The below code will throw an error because type `t1` is in a shadowed module and thus not accessible.
-
-```reasonligo group=sum_shadow
-module M = {
-  type t1 = A (int) | B (int)
-}
-module M = {
-  let y = 10
-}
-
-// This will fail because A will not be found
-// let x = A 42
-```
-</Syntax>
 
 ## Optional values
 
@@ -400,14 +312,6 @@ function div (const a : nat; const b : nat) : option (nat) is
 ```cameligo group=d
 let div (a, b : nat * nat) : nat option =
   if b = 0n then (None: nat option) else Some (a/b)
-```
-
-</Syntax>
-<Syntax syntax="reasonligo">
-
-```reasonligo group=d
-let div = ((a, b) : (nat, nat)) : option (nat) =>
-  if (b == 0n) { (None: option (nat)); } else { Some (a/b); };
 ```
 
 </Syntax>
@@ -443,11 +347,6 @@ LIGO will warn about unused variables bound in patterns in the same
 way that function arguments are warned about. Variable names beginning
 with `_` can be used as a binder to prevent warnings.
 
-<Syntax syntax="reasonligo">
-
-> Note: Support for pattern matching isn't yet stable for ReasonLIGO.
-
-</Syntax>
 
 <Syntax syntax="jsligo">
 
@@ -489,23 +388,6 @@ let int_of_color (c : color) : int =
   | RGB (r,g,b) -> 16 + b + g * 6 + r * 36
   | Gray i -> 232 + i
   | Default -> 0
-```
-
-</Syntax>
-<Syntax syntax="reasonligo">
-
-```reasonligo group=pm_variant
-type color =
-  | RGB  ((int, int, int))
-  | Gray (int)
-  | Default
-
-let int_of_color = (c : color) : int =>
-  switch (c) {
-  | RGB (r,g,b) => (16 + b + g * 6 + r * 36)
-  | Gray i => 232 + i
-  | Default => 0
-  };
 ```
 
 </Syntax>
@@ -566,24 +448,6 @@ function on_tuple (const v : my_tuple) : int is
 ```
 
 </Syntax>
-<Syntax syntax="reasonligo">
-
-```reasonligo group=pm_rec_tuple
-type my_record = { a : int , b : nat , c : string } ;
-type my_tuple = ( int , nat , string ) ;
-
-let on_record = (v : my_record) : int =>
-  switch v {
-  | { a , b : b_renamed , c : _ } => a + int(b_renamed)
-  };
-
-let on_tuple = (v : my_tuple) : int =>
-  switch v {
-  | (x,y,_) => x + int(y)
-  };
-```
-
-</Syntax>
 <Syntax syntax="jsligo">
 
 Pattern-matching on records and tuples are not supported in JsLIGO yet.
@@ -612,19 +476,6 @@ function weird_length (const v : list (int)) : int is
   | list [a; b; c] -> -2
   | x -> int (List.length (x))
   ]
-```
-
-</Syntax>
-<Syntax syntax="reasonligo">
-
-```reasonligo group=pm_lists
-let weird_length = (v : list(int)) : int =>
-  switch v {
-  | [] => 1
-  | [a, ...[b, ...[c, ...[]]]] => -2
-  | x => int (List.length (x))
-  }
-
 ```
 
 </Syntax>
@@ -672,23 +523,6 @@ function complex (const x : complex_t; const y : complex_t) is
   | (_, record [a = Some (hd#tl); b=nil])   -> hd
   | (record [a = Some (a); b=_], _)         -> int (List.length (a))
   ]
-```
-
-</Syntax>
-<Syntax syntax="reasonligo">
-
-```reasonligo group=pm_complex
-type complex_t = { a : option(list(int)) , b : list(int) };
-
-let t13 =
-  ((x: complex_t) =>
-     ((y: complex_t) =>
-        switch (x, y) {
-        | {a : None, b : _}, {a : _, b : _} => -1
-        | {a : _, b : _ }, {a : Some([]), b : [hd, ...tl]} => hd
-        | {a : _, b : _ }, {a : Some([hd, ...tl]), b : []} => hd
-        | {a : Some(a), b : _}, _ => int(List.length(a))
-        }));
 ```
 
 </Syntax>

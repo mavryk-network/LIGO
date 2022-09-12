@@ -21,7 +21,7 @@ Alternatively, you can decide to use our [webide](https://ide.ligolang.org/). Th
 
   If you are on linux, we have a `.deb` package ready for you. Those package are widely supported by linux distribution
 
-  * On debian or unbuntun, download [the package](https://ligolang.org/deb/ligo.deb), and then install using: 
+  * On debian or unbuntun, download [the package](https://ligolang.org/deb/ligo.deb), and then install using:
     ```zsh
     sudo apt install ./ligo.deb
     ```
@@ -51,7 +51,7 @@ Alternatively, you can decide to use our [webide](https://ide.ligolang.org/). Th
 
 
 
-## Setting up the editor 
+## Setting up the editor
 
   You can see the updated list of supported editor [here](https://ligolang.org/docs/intro/editor-support)
 
@@ -78,9 +78,9 @@ Alternatively, you can decide to use our [webide](https://ide.ligolang.org/). Th
 
 In this section and the following one we will use a simple smart-contract that is present as example on our webide. We will cover the ligo language and smart-contract development in the following tutorials.
 
-First, create a `ligo_tutorial` folder on your computer. Then download and put the contract in this folder. It is availiable in [Pascaligo](https://gitlab.com/ligolang/ligo/-/raw/dev/src/test/contracts/increment.ligo), [Cameligo](https://gitlab.com/ligolang/ligo/-/raw/dev/src/test/contracts/increment.mligo), [Reasonligo](https://gitlab.com/ligolang/ligo/-/raw/dev/src/test/contracts/increment.religo) and [Jsligo](https://gitlab.com/ligolang/ligo/-/raw/dev/src/test/contracts/increment.jsligo)
+First, create a `ligo_tutorial` folder on your computer. Then download and put the contract in this folder. It is availiable in [Pascaligo](https://gitlab.com/ligolang/ligo/-/raw/dev/src/test/contracts/increment.ligo), [Cameligo](https://gitlab.com/ligolang/ligo/-/raw/dev/src/test/contracts/increment.mligo), and [Jsligo](https://gitlab.com/ligolang/ligo/-/raw/dev/src/test/contracts/increment.jsligo)
 
-In the following, we consider that you are using the Cameligo contract, simply change the extension (`.mligo` for cameligo, `.ligo` for pascaligo, `.religo` for reasonligo, `.jsligo`) in case you use another one.
+In the following, we consider that you are using the Cameligo contract, simply change the extension (`.mligo` for cameligo, `.ligo` for pascaligo, `.jsligo`) in case you use another one.
 
 Open your editor in the folder and the file in the editor. you should have this code
 
@@ -98,10 +98,10 @@ type return is list (operation) * storage
 
 // Two entrypoints
 
-function add (const store : storage; const delta : int) : storage is 
+function add (const store : storage; const delta : int) : storage is
   store + delta
 
-function sub (const store : storage; const delta : int) : storage is 
+function sub (const store : storage; const delta : int) : storage is
   store - delta
 
 (* Main access point that dispatches to the entrypoints according to
@@ -141,36 +141,6 @@ let main (action, store : parameter * storage) : return =
    Increment (n) -> add (store, n)
  | Decrement (n) -> sub (store, n)
  | Reset         -> 0)
-```
-
-</Syntax>
-<Syntax syntax="reasonligo">
-
-```reasonligo test-ligo group=a
-type storage = int;
-
-type parameter =
-  Increment (int)
-| Decrement (int)
-| Reset;
-
-type return = (list (operation), storage);
-
-// Two entrypoints
-
-let add = ((store, delta) : (storage, int)) : storage => store + delta;
-let sub = ((store, delta) : (storage, int)) : storage => store - delta;
-
-/* Main access point that dispatches to the entrypoints according to
-   the smart contract parameter. */
-let main = ((action, store) : (parameter, storage)) : return => {
- (([] : list (operation)),    // No operations
- (switch (action) {
-  | Increment (n) => add ((store, n))
-  | Decrement (n) => sub ((store, n))
-  | Reset         => 0}))
-};
-
 ```
 
 </Syntax>
@@ -225,7 +195,7 @@ As we can never underline enough the importance of tests in the context of smart
 
   ```zsh
   ligo run interpret "<code>" --init-file increment.mligo
-  ``` 
+  ```
 
   will run `<code>` after evaluating everything in increment.mligo. This is usefull to test arbitrary function and variable in your code.
 
@@ -247,7 +217,7 @@ As we can never underline enough the importance of tests in the context of smart
 
 ## Test the code with ligo test framework.
 
-  In ligo, you are able to write test directly in the source file, using the test module. 
+  In ligo, you are able to write test directly in the source file, using the test module.
 
   Add the following line at the end of `increment.mligo`
 
@@ -274,19 +244,6 @@ const test_increment = {
     let _ = Test.transfer_to_contract_exn contr (Increment (32)) 1mutez  in
     assert (Test.get_storage(taddr) = initial_storage + 32)
   ```
-</Syntax>
-<Syntax syntax="reasonligo">
-
-```reasonligo test-ligo group=a
-let test_increment = {
-  let initial_storage = 10;
-  let (taddr, _, _) = Test.originate(main, initial_storage, 0tez);
-  let contr = Test.to_contract(taddr);
-  let _ = Test.transfer_to_contract_exn(contr, (Increment (1)), 1mutez);
-  assert (Test.get_storage(taddr) == initial_storage + 1)
-};
-```
-
 </Syntax>
 <Syntax syntax="jsligo">
 
@@ -317,13 +274,13 @@ const test_increment = _test_increment();
 
 ## Testing the michelson contract
 
-  The ligo compiler is made so the produced michelson program types and correspond to the initial ligo program. However until we have tools for formal verification, we advise testing that the michelson code will behave as the ligo one. For this purpose, you should also write a test for the michelson code. 
+  The ligo compiler is made so the produced michelson program types and correspond to the initial ligo program. However until we have tools for formal verification, we advise testing that the michelson code will behave as the ligo one. For this purpose, you should also write a test for the michelson code.
 
   There is different methods for testing michelson code. In this tutorial we will focus on tezos-client mockup. More information [here](https://ligolang.org/docs/advanced/michelson_testing)
 
   This method consist in running a "mockup" tezos chain on our computer, push the contract on the chain and send transaction to the chain to test the contract behavior.
 
-  First, create a temporary folder for the mockup chain by runnig 
+  First, create a temporary folder for the mockup chain by runnig
   ```zsh
   mkdir /tmp/mockup
   ```
@@ -337,12 +294,12 @@ const test_increment = _test_increment();
     create mockup
   ```
 
-  This will run the node using the `Edo` protocol and return a few address, aliased from bootstrap1 to 5. For other version, check 
+  This will run the node using the `Edo` protocol and return a few address, aliased from bootstrap1 to 5. For other version, check
   `tezos-client list mockup protocols`
 
   You can now originate the contract to the mock net with :
   ```zsh
-  tezos-client \                                                      
+  tezos-client \
     --protocol PtEdo2ZkT9oKpimTah6x2embF25oss54njMuPzkJTEi5RqfdZFA \
     --base-dir /tmp/mockup \
     --mode mockup \
@@ -357,7 +314,7 @@ const test_increment = _test_increment();
 
   To check its storage run :
   ```zsh
-  tezos-client \                                                      
+  tezos-client \
     --protocol PtEdo2ZkT9oKpimTah6x2embF25oss54njMuPzkJTEi5RqfdZFA \
     --base-dir /tmp/mockup \
     --mode mockup \
@@ -399,7 +356,7 @@ Download the json file and place it in the `ligo_tutorial` folder. $!$ The accou
 
 Then we are going to point the client on a tezos node
 ```zsh
-tezos-client --endpoint https://testnet-tezos.giganode.io config update 
+tezos-client --endpoint https://testnet-tezos.giganode.io config update
 ```
 This is the testnet, which is a seperate network from Tezos, use for testing.
 
@@ -423,7 +380,7 @@ Again, you will receive several messages from the node and you should get the co
 
 You can search your contract on the network using the portal [Better call dev](https://better-call.dev/)
 
-You can know  call your contract with 
+You can know  call your contract with
 ```zsh
 tezos-client call increment from alice \
              --arg "(Left (Right 32))" \

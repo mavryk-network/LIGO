@@ -39,17 +39,6 @@ let e : tez option = 1mutez - 5mutez (* None *)
 ```
 
 </Syntax>
-<Syntax syntax="reasonligo">
-
-```reasonligo group=b
-
-let d : option(tez) = 5mutez - 1mutez /* Some (4mutez) */
-
-let e : option(tez) = 1mutez - 5mutez /* None */
-
-```
-
-</Syntax>
 <Syntax syntax="jsligo">
 
 ```jsligo group=b
@@ -72,9 +61,6 @@ val map : ('a -> 'b) -> option ('a) -> option ('b)
 <SyntaxTitle syntax="cameligo">
 val map : ('a -> 'b) -> 'a option -> 'b option
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let map: ('a => 'b) => option('a) => option('b)
-</SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let map: (f : ((item: 'a) => 'b), value : option&lt;'a&gt;) => option&lt;'b&gt;
 </SyntaxTitle>
@@ -94,9 +80,6 @@ val set_now : timestamp -> unit
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
 val set_now : timestamp -> unit
-</SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let set_now: timestamp => unit
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let set_now = (now: timestamp) => unit

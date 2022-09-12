@@ -11,8 +11,6 @@ function SyntaxSwitch(props) {
   }, "PascaLIGO"), /*#__PURE__*/React.createElement("option", {
     value: "cameligo"
   }, "CameLIGO"), /*#__PURE__*/React.createElement("option", {
-    value: "reasonligo"
-  }, "ReasonLIGO"), /*#__PURE__*/React.createElement("option", {
     value: "jsligo"
   }, "JsLIGO"));
 }

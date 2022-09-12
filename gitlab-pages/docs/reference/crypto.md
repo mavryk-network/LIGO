@@ -14,9 +14,6 @@ val blake2b : bytes -> bytes
 <SyntaxTitle syntax="cameligo">
 val blake2b : bytes -> bytes
 </SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let blake2b: bytes => bytes
-</SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let blake2b: (b: bytes) => bytes
 </SyntaxTitle>
@@ -42,13 +39,6 @@ let hasherman_blake (s: bytes) : bytes = Crypto.blake2b s
 
 
 </Syntax>
-<Syntax syntax="reasonligo">
-
-```reasonligo
-let hasherman_blake = (s: bytes) => Crypto.blake2b(s);
-```
-
-</Syntax>
 <Syntax syntax="jsligo">
 
 ```jsligo
@@ -62,9 +52,6 @@ val sha256 : bytes -> bytes
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
 val sha256 : bytes -> bytes
-</SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let sha256: bytes => bytes
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let sha256: (b: bytes) => bytes
@@ -89,13 +76,6 @@ let hasherman (s : bytes) : bytes = Crypto.sha256 s
 ```
 
 </Syntax>
-<Syntax syntax="reasonligo">
-
-```reasonligo
-let hasherman = (s: bytes): bytes => Crypto.sha256(s);
-```
-
-</Syntax>
 <Syntax syntax="jsligo">
 
 ```jsligo
@@ -109,9 +89,6 @@ val sha512 : bytes -> bytes
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
 val sha512 : bytes -> bytes
-</SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let sha512: bytes => bytes
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let sha512: (b: bytes) => bytes
@@ -136,13 +113,6 @@ let hasherman512 (s: bytes) : bytes = Crypto.sha512 s
 ```
 
 </Syntax>
-<Syntax syntax="reasonligo">
-
-```reasonligo
-let hasherman512 = (s: bytes) => Crypto.sha512(s);
-```
-
-</Syntax>
 <Syntax syntax="jsligo">
 
 ```jsligo
@@ -156,9 +126,6 @@ val sha3 : bytes -> bytes
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
 val sha3 : bytes -> bytes
-</SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let sha3: bytes => bytes
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let sha3: (b: bytes) => bytes
@@ -183,13 +150,6 @@ let hasherman3 (s: bytes) : bytes = Crypto.sha3 s
 ```
 
 </Syntax>
-<Syntax syntax="reasonligo">
-
-```reasonligo
-let hasherman3 = (s: bytes) => Crypto.sha3(s);
-```
-
-</Syntax>
 <Syntax syntax="jsligo">
 
 ```jsligo
@@ -202,9 +162,6 @@ val keccak : bytes -> bytes
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
 val keccak : bytes -> bytes
-</SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let keccak: bytes => bytes
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let keccak: (b: bytes) => bytes
@@ -227,13 +184,6 @@ let hasherman_keccak (s: bytes) : bytes = Crypto.keccak s
 ```
 
 </Syntax>
-<Syntax syntax="reasonligo">
-
-```reasonligo
-let hasherman_keccak = (s: bytes) => Crypto.keccak(s);
-```
-
-</Syntax>
 <Syntax syntax="jsligo">
 
 ```jsligo
@@ -247,9 +197,6 @@ val hash_key : key -> key_hash
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
 val hash_key : key -> key_hash
-</SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let hash_key: key => key_hash
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let hash_key: (k: key) => key_hash
@@ -279,16 +226,6 @@ let check_hash_key (kh1, k2: key_hash * key) : bool * key_hash =
 ```
 
 </Syntax>
-<Syntax syntax="reasonligo">
-
-```reasonligo
-let check_hash_key = ((kh1, k2): (key_hash, key)) : (bool, key_hash) => {
-  let kh2 : key_hash = Crypto.hash_key(k2);
-  if (kh1 == kh2) { (true, kh2); } else { (false, kh2); }
-};
-```
-
-</Syntax>
 <Syntax syntax="jsligo">
 
 ```jsligo
@@ -305,9 +242,6 @@ val check : key -> signature -> bytes -> bool
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
 val check : key -> signature -> bytes -> bool
-</SyntaxTitle>
-<SyntaxTitle syntax="reasonligo">
-let check: (key, signature, bytes) => bool
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let check: (k: key, s: signature, b: bytes) => bool
@@ -335,15 +269,6 @@ function check_signature
 ```cameligo
 let check_signature (pk, signed, msg : key * signature * bytes) : bool =
   Crypto.check pk signed msg
-```
-
-</Syntax>
-<Syntax syntax="reasonligo">
-
-```reasonligo
-let check_signature = ((pk, signed, msg): (key, signature, bytes)) : bool => {
-  Crypto.check(pk, signed, msg);
-};
 ```
 
 </Syntax>
