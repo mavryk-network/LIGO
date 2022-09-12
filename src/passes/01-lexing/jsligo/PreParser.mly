@@ -14,7 +14,7 @@ module Wrap = Lexing_shared.Wrap
 module Region = Simple_utils.Region
 
 open Token
-open State  
+open State
 
 
 let es6fun_token = ES6FUN (Wrap.wrap "=>" Region.ghost)
@@ -24,7 +24,7 @@ let solve = function
 | Inject t     -> es6fun_token :: t
 | Suggestion f -> f (Some es6fun_token)
 
-(* 
+(*
   Add token a to list b.
 
   A list can be either:
@@ -32,59 +32,59 @@ let solve = function
    -     Inject: an ES6FUN token might need to be inserted
    - Suggestion: an ES6FUN token might need to be inserted at the suggested location
  *)
-let cons a b = 
-  match a, b with     
+let cons a b =
+  match a, b with
     (* let foo = a:int => a *)
   | (EQ _ | COLON _  as s), Suggestion f  -> Solved (s :: es6fun_token :: (f None))
     (* let foo:int => a *)
   | (Let _  | Const _ as l), Suggestion f  -> Solved (l :: (f (Some es6fun_token)))
     (* | Foo, y =>  *)
-  | (VBAR _ as v),          Suggestion f  -> Solved (v :: (f None))  
+  | (VBAR _ as v),          Suggestion f  -> Solved (v :: (f None))
     (* let foo = () => 2 *)
   | (EQ _ as s),            Inject tokens -> Solved (s :: es6fun_token :: tokens)
     (* Bar => *)
 
     (* let x = (x: int, b: int => int) => b(x) *)
-    
-  | (COMMA _ as s),         Inject tokens -> Suggestion (fun c -> 
-    match c with 
+
+  | (COMMA _ as s),         Inject tokens -> Suggestion (fun c ->
+    match c with
      Some c ->
       s :: c :: tokens
     | None -> s :: tokens)
     (* | [] => *)
   | (VBAR _ as v),          Inject tokens -> Solved (v :: tokens)
-    (* : bar 
-      
-      It's not clear yet what needs to happen here, so we make a suggestion. 
+    (* : bar
+
+      It's not clear yet what needs to happen here, so we make a suggestion.
       See also the above cases that use Suggestion.
     *)
-  | (COLON _ as c),         Inject tokens -> Suggestion (fun t -> 
-      match t with 
-        Some t -> 
+  | (COLON _ as c),         Inject tokens -> Suggestion (fun t ->
+      match t with
+        Some t ->
           c :: t :: tokens
       | None ->
           c :: tokens
       )
   | (_ as s),               Inject tokens -> Inject (s :: tokens)
   | _,                      Solved s      -> Solved (a :: s)
-  | _,                      Suggestion f  -> Suggestion (fun c -> a :: f c)   
- 
+  | _,                      Suggestion f  -> Suggestion (fun c -> a :: f c)
 
-(* 
+
+(*
   Concat lists
 *)
-let concat a b = 
-  match a, b with   
+let concat a b =
+  match a, b with
     Solved a,     Solved b                  -> Solved (a @ b)
   | Solved a,     Inject b
   | Inject a,     Solved b                  -> Inject (a @ b)
-  | Inject a,     Inject b                  -> Inject (a @ (es6fun_token :: b))  
-  | Solved a, Suggestion f                  -> Suggestion (fun c -> 
-    match c with 
+  | Inject a,     Inject b                  -> Inject (a @ (es6fun_token :: b))
+  | Solved a, Suggestion f                  -> Suggestion (fun c ->
+    match c with
       Some c ->
         c :: a @ (f None)
     | None ->
-        a @ (f None)    
+        a @ (f None)
     )
   | Inject a,     Suggestion f              -> Inject (a @ solve (Inject(f None)))
   | Suggestion a, Suggestion b              -> Suggestion (fun c -> a c @ (b None))
@@ -92,7 +92,7 @@ let concat a b =
   | Suggestion a, Solved b                  -> Suggestion (fun c -> a c @ b)
 %}
 
-(* See [../../02-parsing/reasonligo/ParToken.mly] for the definition of tokens. *)
+(* See [../../02-parsing/jsligo/ParToken.mly] for the definition of tokens. *)
 
 (* Entry points *)
 
@@ -101,7 +101,7 @@ let concat a b =
 
 %%
 
-everything_else: 
+everything_else:
   "<block_comment>" { BlockCom $1 }
 | "<line_comment>"  { LineCom $1 }
 | "<directive>"     { Directive $1 }
@@ -160,15 +160,15 @@ everything_else:
 | ZWSP              { ZWSP $1     }
 
 inner:
-  /* nothing */ { Solved [] }  
-| everything_else inner { 
+  /* nothing */ { Solved [] }
+| everything_else inner {
     cons $1 $2
   }
 | everything_else "=>" inner {
   Inject ($1 :: (ARROW $2) :: solve $3)
 }
 | parenthesized inner
-// | chevrons inner 
+// | chevrons inner
 | braces inner
 | brackets inner {
   concat $1 $2
@@ -182,7 +182,7 @@ parenthesized:
     Solved ((ES6FUN $1 :: LPAR $1 :: solve $2) @ (RPAR $3 :: ARROW $4 :: []))
 }
 
-braces: 
+braces:
   "{" inner "}" {
   Solved ((LBRACE $1 :: solve $2) @ (RBRACE $3 :: []))
   }
@@ -190,7 +190,7 @@ braces:
     Inject ((LBRACE $1 :: solve $2) @ (RBRACE $3 :: ARROW $4 :: []))
   }
 
-brackets: 
+brackets:
   "[" inner "]" {
   Solved ((LBRACKET $1 :: solve $2) @ (RBRACKET $3 :: []))
 }
@@ -198,13 +198,13 @@ brackets:
   Inject ((LBRACKET $1 :: solve $2) @ (RBRACKET $3 :: ARROW $4 :: []))
 }
 
-// chevrons: 
+// chevrons:
 // "<" inner ">" {
 //   Solved ((LT $1 :: solve $2) @ (GT $3 :: []))
 // }
 
 
-self_pass_inner: 
+self_pass_inner:
   everything_else self_pass_inner {
     cons $1 $2
   }
@@ -219,9 +219,9 @@ self_pass_inner:
 }
 | EOF { Solved [EOF $1] }
 
-self_pass: 
-  self_pass_inner {  
-    match $1 with 
+self_pass:
+  self_pass_inner {
+    match $1 with
       Solved s     -> s
     | Inject s     -> s      (* let it fail in the parser *)
     | Suggestion f -> f None (* let it fail in the parser *)
