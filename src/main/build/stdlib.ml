@@ -21,7 +21,7 @@ let stdlib ~options syntax =
      let core = Helpers.internalize_core @@ core in
      begin match Simple_utils.Trace.to_stdlib_result @@
              Ligo_compile.Of_core.typecheck ~options Env core with
-     Ok (typed, _w) -> typed, core
+     Ok (typed, _w) -> typed
      | Error (e, _w) ->
         let error_msg = Format.asprintf "%a" (Main_errors.Formatter.error_ppformat ~display_format:Human_readable) e in
         failwith ("Error typing the stdlib: " ^ error_msg)
@@ -38,20 +38,7 @@ let typed ~options (syntax : Syntax_types.t) =
     let k = build_key ~options syntax in
     match LanguageMap.find_opt k @@ ! std_lib_cache with
       | None ->
-         let typed, core = stdlib ~options syntax in
-         std_lib_cache := LanguageMap.add k (typed, core) @@ !std_lib_cache;
+         let typed = stdlib ~options syntax in
+         std_lib_cache := LanguageMap.add k (typed) @@ !std_lib_cache;
          typed
-      | Some (typed, _) -> typed
-
-let core ~options (syntax : Syntax_types.t) =
-  let open Helpers in
-  if options.Compiler_options.middle_end.no_stdlib then
-    []
-  else
-    let k = build_key ~options syntax in
-    match LanguageMap.find_opt k @@ ! std_lib_cache with
-      | None ->
-         let typed, core = stdlib ~options syntax in
-         std_lib_cache := LanguageMap.add k (typed, core) @@ ! std_lib_cache;
-         core
-      | Some (_, core) -> core
+      | Some typed -> typed

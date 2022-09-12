@@ -84,13 +84,12 @@ module Infer (Params : Params) = struct
 
   let compile : AST.environment -> file_name -> meta_data -> compilation_unit -> AST.t =
     fun _ file_name meta c_unit ->
-    let stdlib =  Stdlib.core ~options meta.syntax in
     let module_ = Ligo_compile.Utils.to_core ~raise ~options ~meta c_unit file_name in
     let module_ =
       let syntax = Syntax.of_string_opt ~raise (Syntax_name "auto") (Some file_name) in
       Helpers.inject_declaration ~options ~raise syntax module_
     in
-    stdlib @ module_
+    module_
 
 end
 
@@ -128,7 +127,10 @@ let merge_and_type_libraries ~raise : options:Compiler_options.t -> Source_input
       let options = options
     end)) in
     let contract = trace ~raise build_error_tracer @@ from_result (compile_combined (Source_input.From_file file_name)) in
-    let contract = Ligo_compile.Of_core.typecheck ~raise ~options Env contract in
+    let syntax = Syntax.of_string_opt ~raise (Syntax_name "auto") (Some file_name) in
+    let stdlib = Stdlib.typed ~options syntax in
+    let options = Compiler_options.set_init_env options (Environment.append options.middle_end.init_env stdlib) in
+    let contract = stdlib @ Ligo_compile.Of_core.typecheck ~raise ~options Env contract in
     contract
 
 let merge_and_type_libraries_str ~raise : options:Compiler_options.t -> string -> Ast_typed.program =
@@ -140,7 +142,10 @@ let merge_and_type_libraries_str ~raise : options:Compiler_options.t -> string -
     let id = match options.frontend.syntax with Some s -> "from_build"^(Syntax.to_ext s) | None -> "from_build" in
     let s = Source_input.Raw { code = code ; id } in
     let contract = trace ~raise build_error_tracer @@ from_result (compile_combined s) in
-    let contract = Ligo_compile.Of_core.typecheck ~raise ~options Env contract in
+    let syntax = Syntax.of_string_opt ~raise (Syntax_name "auto") (Some id) in
+    let stdlib = Stdlib.typed ~options syntax in
+    let options = Compiler_options.set_init_env options (Environment.append options.middle_end.init_env stdlib) in
+    let contract = stdlib @ Ligo_compile.Of_core.typecheck ~raise ~options Env contract in
     contract
 
 let build_typed ~raise :

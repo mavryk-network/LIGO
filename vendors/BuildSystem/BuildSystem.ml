@@ -152,7 +152,7 @@ module Make (M : M) =
   let compile_file_with_deps asts (file_name, (mangled_name,meta,c_unit,deps)) =
     let env_with_deps = add_deps_to_env asts (file_name, (meta,c_unit,deps)) in
     let ast = M.compile env_with_deps file_name meta c_unit in
-    let ast_env = M.AST.add_ast_to_env ast env_with_deps in
+    let ast_env = M.AST.add_ast_to_env (ast:ast) env_with_deps in
     SMap.add file_name (ast,ast_env) asts
 
   let compile_separate : code_input -> ast build_error =

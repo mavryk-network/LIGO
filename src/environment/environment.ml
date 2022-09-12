@@ -6,7 +6,7 @@ module Protocols = Protocols
 
 (* This is an env use by repl and build *)
 (* Environment records declarations already seen in reverse orders. Use for different kind of processes *)
-type t = module_
+type t = program
 let pp ppf m = PP.module_ ppf @@ m
 let add_module : ?public:unit -> ?hidden:unit -> Ligo_prim.Module_var.t -> Ast_typed.module_ -> t -> t = fun ?public ?hidden module_binder module_ env ->
   let module_ = Location.wrap @@ Module_expr.M_struct module_ in

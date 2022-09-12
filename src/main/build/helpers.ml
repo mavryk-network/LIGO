@@ -72,7 +72,7 @@ module LanguageMap = Simple_utils.Map.Make(struct
   type t = Syntax_types.t * Environment.Protocols.t * bool
   let compare (sa,pa,ta) (sb,pb,tb) = Int.( abs (Syntax_types.compare sa sb) + abs (Environment.Protocols.compare pa pb) + abs (compare_bool ta tb) )
 end)
-type cache = (Ast_typed.program * Ast_core.program) LanguageMap.t
+type cache = (Ast_typed.program) LanguageMap.t
 let std_lib_cache = ref (LanguageMap.empty : cache)
 let build_key ~options syntax =
   let open Compiler_options in

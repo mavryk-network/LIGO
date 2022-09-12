@@ -2,7 +2,7 @@ module Protocols = Protocols
 
 
 (* Environment records declarations already seen in reverse orders. Use for different kind of processes *)
-type t
+type t = Ast_typed.program
 val pp : Format.formatter -> t -> unit
 
 val add_declaration : Ast_typed.decl -> t -> t
