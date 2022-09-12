@@ -47,8 +47,6 @@ let decompile_pattern_to_string ~syntax pattern =
       Tree_abstraction.Jsligo.decompile_pattern_to_string p
   | Some CameLIGO ->
       Tree_abstraction.Cameligo.decompile_pattern_to_string p
-  | Some ReasonLIGO ->
-      Tree_abstraction.Reasonligo.decompile_pattern_to_string p
   | Some PascaLIGO ->
       Tree_abstraction.Pascaligo.decompile_pattern_to_string p
   | None ->

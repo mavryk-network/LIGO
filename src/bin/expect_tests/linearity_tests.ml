@@ -18,14 +18,6 @@ let%expect_test _ =
     Duplicated field or variant name.
     Hint: Change the name. |}];
 
-  run_ligo_bad ["run"; "interpret" ; "foo"  ; "--init-file"; bad_test "linearity.religo" ] ;
-  [%expect {|
-    File "../../test/contracts/negative/linearity.religo", line 1, characters 14-39:
-      1 | type foofoo = {foo : string, foo : int};
-
-    Duplicated field or variant name.
-    Hint: Change the name. |}];
-
 (* Checking binders linearity *)
   run_ligo_bad ["run"; "interpret" ; "let foo (x, x : int * int) : int = x in foo 1"  ; "--syntax";"cameligo" ] ;
   [%expect {|
@@ -52,16 +44,6 @@ let%expect_test _ =
     Repeated variable in pattern.
     Hint: Change the name. |}];
 
-  run_ligo_bad ["run"; "interpret" ; "yy"  ; "--init-file"; bad_test "linearity_pattern_matching.religo" ] ;
-  [%expect{|
-    File "../../test/contracts/negative/linearity_pattern_matching.religo", line 4, characters 4-30:
-      3 | let yy : string = switch ({ a : 1 , b : 2n , c : "33" }) {
-      4 |   | { a : a ,  b : b , c : a } => a
-      5 |   }
-
-    Repeated variable in pattern.
-    Hint: Change the name. |}];
-  
   run_ligo_bad ["run"; "interpret" ; "yy"  ; "--init-file"; bad_test "linearity_pattern_matching.ligo" ] ;
   [%expect{|
     File "../../test/contracts/negative/linearity_pattern_matching.ligo", line 4, characters 4-37:

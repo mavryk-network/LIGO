@@ -57,16 +57,6 @@ let mutate_cst (raw_options : Raw_options.t) source_file display_format seed () 
          let buffer = (Parsing.Cameligo.pretty_print mutated_prg) in
          buffer
        end
-      | {syntax = ReasonLIGO} ->
-         begin
-           let module Fuzzer = Fuzz.Reasonligo.Mutator(Gen) in
-           let raw =
-             trace ~raise Main_errors.parser_tracer @@
-               Parsing.Reasonligo.parse_file c_unit source_file in
-           let _, mutated_prg = Fuzzer.mutate_module_ ?n:seed raw in
-           let buffer = (Parsing.Reasonligo.pretty_print mutated_prg) in
-           buffer
-         end
       | {syntax = PascaLIGO} ->
          begin
            let module Fuzzer = Fuzz.Pascaligo.Mutator(Gen) in

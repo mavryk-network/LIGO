@@ -33,18 +33,6 @@ let cameligo_sdata = {
       Parsing.Cameligo.parse_expression buffer
 }
 
-let reasonligo_sdata = {
-  erroneous_source_file =
-    "../passes/02-parsing/reasonligo/all.religo" ;
-  preproc =
-    (fun ~raise s -> trace ~raise preproc_tracer @@
-    fun ~raise -> Trace.from_result ~raise @@
-    Preprocessing.Reasonligo.preprocess_string [] s);
-  parser =
-    fun ~raise buffer -> trace ~raise parser_tracer @@
-      Parsing.Reasonligo.parse_expression buffer
-}
-
 let get_exp_as_string filename =
   let lines = ref [] in
   let chan = In_channel.create filename in
@@ -75,7 +63,6 @@ let () =
     test_suite "Parser negative tests" [
       test_w "pascaligo"  @@ assert_syntax_error pascaligo_sdata ;
       test_w "cameligo"   @@ assert_syntax_error cameligo_sdata ;
-      test_w "reasonligo" @@ assert_syntax_error reasonligo_sdata ;
     ]
   ] ;
   ()

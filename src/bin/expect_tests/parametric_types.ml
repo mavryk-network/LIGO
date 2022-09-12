@@ -18,33 +18,6 @@ let%expect_test _ =
     CONS(1 , CONS(2 , CONS(3 , LIST_EMPTY()))) |}]
 
 let%expect_test _ =
-  run_ligo_good [ "run" ; "interpret" ; "t1" ; "--init-file" ; (test "parametric_types.religo") ] ;
-  [%expect{|
-    ( 1 , "one" ) |}]
-let%expect_test _ =
-  run_ligo_good [ "run" ; "interpret" ; "t2" ; "--init-file" ; (test "parametric_types.religo") ] ;
-  [%expect{|
-    CONS(2 , CONS(3 , CONS(4 , LIST_EMPTY()))) |}]
-let%expect_test _ =
-  run_ligo_good [ "run" ; "interpret" ; "t3" ; "--init-file" ; (test "parametric_types.religo") ] ;
-  [%expect{|
-    ( +1 , 1 ) |}]
-let%expect_test _ =
-  run_ligo_good [ "run" ; "interpret" ; "t4" ; "--init-file" ; (test "parametric_types.religo") ] ;
-  [%expect{|
-    CONS(1 , CONS(2 , CONS(3 , LIST_EMPTY()))) |}]
-  
-(* let%expect_test _ =
-  run_ligo_good [ "interpret" ; "--init-file="^(test "parametric_types.jsligo") ; "t1" ] ;
-  [%expect{|
-    ( 1 , "one" ) |}]
-
-let%expect_test _ =
-  run_ligo_good [ "interpret" ; "--init-file="^(test "parametric_types.jsligo") ; "t2" ] ;
-  [%expect{|
-    CONS(2 , CONS(3 , CONS(4 , LIST_EMPTY()))) |}] *)
-
-let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t1" ; "--init-file" ; (test "parametric_types.ligo") ] ;
   [%expect{|
     ( 1 , "one" ) |}]
@@ -135,45 +108,6 @@ let%expect_test _ =
   [%expect{|
     File "../../test/contracts/negative/parametric_types5.ligo", line 1, characters 0-22:
       1 | type foo(a,a) is a * a
-
-    Repeated type variable in type.
-    Hint: Change the name. |}]
-
-let%expect_test _ =
-  run_ligo_bad [ "print" ; "ast-typed" ; (bad_test "parametric_types1.religo")] ;
-  [%expect{|
-    File "../../test/contracts/negative/parametric_types1.religo", line 1, characters 20-29:
-      1 | type fail_big_map = map(bool);
-
-    Type map is applied to a wrong number of arguments, expected: 2 got: 1 |}]
-let%expect_test _ =
-  run_ligo_bad [ "print" ; "ast-typed" ; (bad_test "parametric_types2.religo")] ;
-  [%expect{|
-    File "../../test/contracts/negative/parametric_types2.religo", line 2, characters 11-27:
-      1 | type foo('a) = ('a , 'a);
-      2 | type bar = foo (int,string);
-
-    Type foo is applied to a wrong number of arguments, expected: 1 got: 2 |}]
-let%expect_test _ =
-  run_ligo_bad [ "print" ; "ast-typed" ; (bad_test "parametric_types3.religo")] ;
-  [%expect{|
-    File "../../test/contracts/negative/parametric_types3.religo", line 2, characters 11-19:
-      1 | type foo('a,'b,'c) = ('a , 'b , 'c);
-      2 | type bar = foo(int);
-
-    Type foo is applied to a wrong number of arguments, expected: 3 got: 1 |}]
-let%expect_test _ =
-  run_ligo_bad [ "print" ; "ast-typed" ; (bad_test "parametric_types4.religo")] ;
-  [%expect{|
-    File "../../test/contracts/negative/parametric_types4.religo", line 1, characters 14-20:
-      1 | type x = list(option);
-
-    Type is applied to a wrong number of arguments, expected: 1 got: 0 |}]
-let%expect_test _ =
-  run_ligo_bad [ "print" ; "ast-typed" ; (bad_test "parametric_types5.religo")] ;
-  [%expect{|
-    File "../../test/contracts/negative/parametric_types5.religo", line 1, characters 0-27:
-      1 | type foo('a,'a) = ('a , 'a);
 
     Repeated type variable in type.
     Hint: Change the name. |}]

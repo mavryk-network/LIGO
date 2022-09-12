@@ -55,7 +55,7 @@ let project_name =
 
 let syntax =
   let open Command.Param in
-  let doc  = "SYNTAX the syntax that will be used. Currently supported syntaxes are \"pascaligo\", \"cameligo\", \"reasonligo\" and \"jsligo\". By default, the syntax is guessed from the extension (.ligo, .mligo, .religo, and .jsligo respectively)." in
+  let doc  = "SYNTAX the syntax that will be used. Currently supported syntaxes are \"pascaligo\", \"cameligo\", and \"jsligo\". By default, the syntax is guessed from the extension (.ligo, .mligo, and .jsligo respectively)." in
   let spec = optional_with_default Default_options.syntax string in
   flag ~doc ~aliases:["s"] "--syntax" spec
 
@@ -103,7 +103,7 @@ let cli_expr_inj =
 let req_syntax =
   let open Command.Param in
   let name = "SYNTAX" in
-  let _desc = "the syntax that will be used. Currently supported syntaxes are \"pascaligo\", \"cameligo\" and \"reasonligo\". By default, the syntax is guessed from the extension (.ligo, .mligo, .religo, .jsligo respectively)." in
+  let _desc = "the syntax that will be used. Currently supported syntaxes are \"pascaligo\", \"cameligo\" and \"jsligo\". By default, the syntax is guessed from the extension (.ligo, .mligo, .jsligo respectively)." in
   anon (name %: string)
 let init_file =
   let open Command.Param in

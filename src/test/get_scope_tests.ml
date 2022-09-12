@@ -59,7 +59,7 @@ let files_in_dir dir_path =
   |> List.filter
          ~f:(fun x -> match (Filename.split_extension x) with
                         _, Some "mligo" | _, Some "jsligo"
-                      | _, Some "ligo"  | _, Some "religo" -> true
+                      | _, Some "ligo" -> true
                       | _ -> false
          )
   |> List.map ~f:(fun x -> dir_path ^ "/" ^ x)
@@ -97,14 +97,11 @@ let main =
       List.map (files_in_all_dirs [
             "error-recovery/simple/cameligo/original";
             "error-recovery/simple/jsligo/original";
-            "error-recovery/simple/reasonligo/original";
             "error-recovery/simple/pascaligo/original";
             "contracts"
           ] ~except:[
             "contracts/tuples_no_annotation.jsligo"; (* syntax error: wrong brackets + untyped recursion *)
             "contracts/parametric_types.jsligo";      (* TODO: syntax error *)
-            "contracts/double_fold_converter.religo"; (* TODO: abstracter: unknown constant *)
-            "contracts/modules.religo";               (* TODO: syntax error *)
             "contracts/heap.ligo";                    (* TODO: syntax error in case *)
             "contracts/k.ligo";                       (* TODO: syntax error in case *)
             "contracts/existential.mligo";            (* TODO: syntax error: missing type annotation *)
@@ -118,7 +115,6 @@ let main =
       List.map (files_in_all_dirs [
             "error-recovery/simple/cameligo";
             "error-recovery/simple/jsligo";
-            "error-recovery/simple/reasonligo";
             "error-recovery/simple/pascaligo";
           ] ~except:[
             "error-recovery/simple/jsligo/missing_semicolon_in_top_level.jsligo"; (* not negative *)

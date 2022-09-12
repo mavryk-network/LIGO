@@ -114,12 +114,11 @@ This sub-command compiles a contract to Michelson code. It expects a source file
                                                         used. Currently
                                                         supported syntaxes are
                                                         "pascaligo", "cameligo",
-                                                        "reasonligo" and
-                                                        "jsligo". By default,
-                                                        the syntax is guessed
-                                                        from the extension
-                                                        (.ligo, .mligo, .religo,
-                                                        and .jsligo
+                                                        and "jsligo". By
+                                                        default, the syntax is
+                                                        guessed from the
+                                                        extension (.ligo,
+                                                        .mligo, and .jsligo
                                                         respectively).
                                                         (alias: -s)
   [--views VIEWS]                                       A list of declaration
@@ -194,10 +193,9 @@ let%expect_test _ =
                                          transaction will use.
       [--syntax SYNTAX]                  the syntax that will be used. Currently
                                          supported syntaxes are "pascaligo",
-                                         "cameligo", "reasonligo" and "jsligo". By
-                                         default, the syntax is guessed from the
-                                         extension (.ligo, .mligo, .religo, and
-                                         .jsligo respectively).
+                                         "cameligo", and "jsligo". By default, the
+                                         syntax is guessed from the extension
+                                         (.ligo, .mligo, and .jsligo respectively).
                                          (alias: -s)
       [--warn-unused-rec]                warn about unused recursion in a recursive
                                          function
@@ -260,10 +258,9 @@ let%expect_test _ =
                                          transaction will use.
       [--syntax SYNTAX]                  the syntax that will be used. Currently
                                          supported syntaxes are "pascaligo",
-                                         "cameligo", "reasonligo" and "jsligo". By
-                                         default, the syntax is guessed from the
-                                         extension (.ligo, .mligo, .religo, and
-                                         .jsligo respectively).
+                                         "cameligo", and "jsligo". By default, the
+                                         syntax is guessed from the extension
+                                         (.ligo, .mligo, and .jsligo respectively).
                                          (alias: -s)
       [--warn-unused-rec]                warn about unused recursion in a recursive
                                          function
@@ -344,10 +341,10 @@ let%expect_test _ =
       [--source ADDRESS]         the source the Michelson interpreter transaction
                                  will use.
       [--syntax SYNTAX]          the syntax that will be used. Currently supported
-                                 syntaxes are "pascaligo", "cameligo", "reasonligo"
-                                 and "jsligo". By default, the syntax is guessed
-                                 from the extension (.ligo, .mligo, .religo, and
-                                 .jsligo respectively).
+                                 syntaxes are "pascaligo", "cameligo", and "jsligo".
+                                 By default, the syntax is guessed from the
+                                 extension (.ligo, .mligo, and .jsligo
+                                 respectively).
                                  (alias: -s)
       [--warn-unused-rec]        warn about unused recursion in a recursive function
       [--werror]                 treat warnings as errors
@@ -393,10 +390,10 @@ let%expect_test _ =
       [--source ADDRESS]         the source the Michelson interpreter transaction
                                  will use.
       [--syntax SYNTAX]          the syntax that will be used. Currently supported
-                                 syntaxes are "pascaligo", "cameligo", "reasonligo"
-                                 and "jsligo". By default, the syntax is guessed
-                                 from the extension (.ligo, .mligo, .religo, and
-                                 .jsligo respectively).
+                                 syntaxes are "pascaligo", "cameligo", and "jsligo".
+                                 By default, the syntax is guessed from the
+                                 extension (.ligo, .mligo, and .jsligo
+                                 respectively).
                                  (alias: -s)
       [--warn-unused-rec]        warn about unused recursion in a recursive function
       [--werror]                 treat warnings as errors
@@ -443,10 +440,10 @@ let%expect_test _ =
       [--source ADDRESS]         the source the Michelson interpreter transaction
                                  will use.
       [--syntax SYNTAX]          the syntax that will be used. Currently supported
-                                 syntaxes are "pascaligo", "cameligo", "reasonligo"
-                                 and "jsligo". By default, the syntax is guessed
-                                 from the extension (.ligo, .mligo, .religo, and
-                                 .jsligo respectively).
+                                 syntaxes are "pascaligo", "cameligo", and "jsligo".
+                                 By default, the syntax is guessed from the
+                                 extension (.ligo, .mligo, and .jsligo
+                                 respectively).
                                  (alias: -s)
       [--warn-unused-rec]        warn about unused recursion in a recursive function
       [--werror]                 treat warnings as errors
@@ -530,10 +527,10 @@ let%expect_test _ =
       [--only-ep]                Only display declarations that have the type of an
                                  entrypoint
       [--syntax SYNTAX]          the syntax that will be used. Currently supported
-                                 syntaxes are "pascaligo", "cameligo", "reasonligo"
-                                 and "jsligo". By default, the syntax is guessed
-                                 from the extension (.ligo, .mligo, .religo, and
-                                 .jsligo respectively).
+                                 syntaxes are "pascaligo", "cameligo", and "jsligo".
+                                 By default, the syntax is guessed from the
+                                 extension (.ligo, .mligo, and .jsligo
+                                 respectively).
                                  (alias: -s)
       [-help]                    print this help text and exit
                                  (alias: -?)

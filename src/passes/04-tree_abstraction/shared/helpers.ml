@@ -12,7 +12,7 @@ let binder_attributes_of_strings (ss : string list) : Binder.binder_attributes =
     empty_attribute
 
 let strings_of_binder_attributes
-      (lang : [`CameLIGO | `ReasonLIGO | `PascaLIGO | `JsLIGO ])
+      (lang : [`CameLIGO | `PascaLIGO | `JsLIGO ])
       (attributes : Binder.binder_attributes) : string list =
   let pureligo {Binder.const_or_var} =
     match const_or_var with
@@ -24,7 +24,7 @@ let strings_of_binder_attributes
                 | Some `Const -> ["const"]
                 | _ -> [] in
   match lang with
-  | `CameLIGO | `ReasonLIGO -> pureligo attributes
+  | `CameLIGO -> pureligo attributes
   | `PascaLIGO | `JsLIGO -> impureligo attributes
 
 let decompile_attributes lst =
