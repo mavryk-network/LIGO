@@ -50,6 +50,61 @@ let internalize_core ?(inner = false) (ds : Ast_core.program) : Ast_core.program
 
   List.map ~f:(declaration ~inner) ds
 
+(* [get_aliases_prelude] [var] [typed_program] returns aliases for all non-private module and value declarations
+   in [typed_program] accessed through [var].
+  
+  e.g. with [var] == Curry
+    ```
+    module A = <..>
+    module B = struct
+      module C = <..>
+    end
+    [@private] module D = <..>
+    let foo = <..>
+    ```
+  we return
+    ```
+    module A = Curry.A
+    module B = Curry.B
+    let foo = Curry.foo
+    ```
+*)
+let get_aliases_prelude : Ast_typed.module_variable -> Ast_typed.program -> Ast_core.program =
+  fun mod_binder prg ->
+    let get_mod_bindings acc d =
+      let open Ast_typed in
+      match Location.unwrap d with
+      | D_module { module_binder ; module_attr = _ ; _ } (* when TypeOrModuleAttr.(module_attr.public) *) -> module_binder::acc
+      | _ -> acc in
+    let get_top_bindings acc d =
+      let open Ast_typed in
+      match Location.unwrap d with
+      | D_value { binder ; attr = _ ; _ } (* when ValueAttr.(attr.public) *) -> binder::acc | _ -> acc in
+    let module_attr = Ast_core.TypeOrModuleAttr.{ public = true ; hidden = true } in
+    let attr = Ast_core.ValueAttr.
+      { inline = false ; no_mutation = true ; view = false ;
+        public = true ; hidden = true ; thunk = false }
+    in
+    let mod_bindings = List.(rev (fold prg ~init:[] ~f:get_mod_bindings)) in
+    let top_level_bindings = List.(rev (fold prg ~init:[] ~f:get_top_bindings)) in
+    let prelude_mod : Ast_core.program =
+      let open Ast_core in
+      let prelude = List.map mod_bindings ~f:(fun module_binder ->
+        let module_ = Location.wrap @@ Ligo_prim.Module_expr.M_module_path (mod_binder,[module_binder]) in
+        Location.wrap @@ D_module {module_binder ; module_attr ; module_ })
+      in
+      prelude
+    in
+    let prelude_top : Ast_core.program =
+      let open Ast_core in
+      let prelude = List.map top_level_bindings ~f:(fun binder ->
+        let expr = make_e @@ E_module_accessor {module_path = [mod_binder] ; element = binder.var } in
+        Location.wrap @@ D_value { binder = {binder with ascr = None} ; attr ; expr })
+      in
+      prelude
+    in
+    prelude_mod @ prelude_top
+
 (* [inject_declaration] [syntax] [module_] fetch expression argument passed through CLI options and inject a declaration `let cli_arg = [options.cli_expr_inj]`
          on top of an existing core program
 *)
@@ -63,17 +118,3 @@ let inject_declaration ~options ~raise : Syntax_types.t -> Ast_core.program -> A
   in
   (Option.value_map Compiler_options.(options.test_framework.cli_expr_inj) ~default:prg ~f:inject_arg_declaration)
 
-
-(* LanguageMap are used to cache compilation of standard libs across :
-   - multiple imports (#imports)
-   - multiple compilation of contract in "ligo test"
-*)
-module LanguageMap = Simple_utils.Map.Make(struct
-  type t = Syntax_types.t * Environment.Protocols.t * bool
-  let compare (sa,pa,ta) (sb,pb,tb) = Int.( abs (Syntax_types.compare sa sb) + abs (Environment.Protocols.compare pa pb) + abs (compare_bool ta tb) )
-end)
-type cache = (Ast_typed.program) LanguageMap.t
-let std_lib_cache = ref (LanguageMap.empty : cache)
-let build_key ~options syntax =
-  let open Compiler_options in
-  (syntax, options.middle_end.protocol_version, options.middle_end.test)

@@ -115,7 +115,7 @@ let parameter (raw_options : Raw_options.t) source_file expression amount balanc
         let file_constants = read_file_constants ~raise file_constants in
         let constants = constants @ file_constants in
         let entry_point = Value_var.of_input_var entry_point in
-        let app_typed_prg = Build.build_typed ~raise ~options Env source_file in
+        let app_typed_prg = Build.qualified_typed ~raise ~options Env source_file in
         let typed_param              = Ligo_compile.Utils.type_expression ~raise ~options syntax expression app_typed_prg in
         let typed_param, typed_prg   = Self_ast_typed.remove_unused_expression typed_param app_typed_prg in
         let aggregated_prg           = Ligo_compile.Of_typed.compile_program ~raise typed_prg in
@@ -149,7 +149,7 @@ let storage (raw_options : Raw_options.t) source_file expression amount balance 
         let file_constants = read_file_constants ~raise file_constants in
         let constants = constants @ file_constants in
         let entry_point = Value_var.of_input_var entry_point in
-        let app_typed_prg = Build.build_typed ~raise ~options Ligo_compile.Of_core.Env source_file in
+        let app_typed_prg = Build.qualified_typed ~raise ~options Ligo_compile.Of_core.Env source_file in
         let typed_param              = Ligo_compile.Utils.type_expression ~raise ~options syntax expression app_typed_prg in
         let typed_param, typed_prg   = Self_ast_typed.remove_unused_expression typed_param app_typed_prg in
         let aggregated_prg           = Ligo_compile.Of_typed.compile_program ~raise typed_prg in

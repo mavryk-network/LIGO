@@ -144,7 +144,7 @@ let import_file ~raise ~raw_options state file_name module_name =
   let options = Compiler_options.make ~raw_options ~syntax:state.syntax ~protocol_version:state.protocol () in
   let options = Compiler_options.set_init_env options state.env in
   let module_ =
-    let prg = Build.merge_and_type_libraries ~raise ~options file_name in
+    let prg = Build.unqualified_typed ~raise Env ~options file_name in
     Simple_utils.Location.wrap (Module_expr.M_struct prg)
   in
   let module_ = Ast_typed.([Simple_utils.Location.wrap @@ D_module {module_binder=Module_var.of_input_var module_name;module_;module_attr={public=true;hidden=false}}]) in
@@ -157,7 +157,7 @@ let use_file ~raise ~raw_options state file_name =
   let options = Compiler_options.make ~raw_options ~syntax:state.syntax ~protocol_version:state.protocol () in
   let options = Compiler_options.set_init_env options state.env in
   (* Missing typer environment? *)
-  let module' = Build.merge_and_type_libraries ~raise ~options file_name in
+  let module' = Build.unqualified_typed ~raise Env ~options file_name in
   let env = Environment.append module' state.env in
   let state = { state with env = env;
                             top_level = concat_modules ~declaration:false state.top_level module'
@@ -216,11 +216,11 @@ Included directives:
   #import \"file_path\" \"module_name\";;"
 
 let make_initial_state syntax protocol dry_run_opts project_root options =
-  let top_level = Build.Stdlib.typed ~options syntax in
-  let env = Environment.append top_level @@ Environment.default protocol in
+  let lib = Build.Stdlib.get ~options in
+  let env = Environment.append lib.typed_mod_def @@ Environment.default protocol in
   {
     env;
-    top_level;
+    top_level = lib.typed_mod_def;
     syntax = syntax;
     protocol = protocol;
     dry_run_opts = dry_run_opts;
