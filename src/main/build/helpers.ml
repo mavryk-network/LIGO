@@ -98,8 +98,8 @@ let get_aliases_prelude : Ast_typed.module_variable -> Ast_typed.program -> Ast_
     let prelude_top : Ast_core.program =
       let open Ast_core in
       let prelude = List.map top_level_bindings ~f:(fun binder ->
-        let expr = make_e @@ E_module_accessor {module_path = [mod_binder] ; element = binder.var } in
-        Location.wrap @@ D_value { binder = {binder with ascr = None} ; attr ; expr })
+        let expr = make_e @@ E_module_accessor {module_path = [mod_binder] ; element = Ligo_prim.Binder.get_var binder } in
+        Location.wrap @@ D_value { binder = Ligo_prim.Binder.set_ascr binder None ; attr ; expr })
       in
       prelude
     in

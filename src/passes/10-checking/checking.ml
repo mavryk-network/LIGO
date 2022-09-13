@@ -1171,8 +1171,6 @@ and infer_declaration ~(raise : raise) ~options ~ctx (decl : I.declaration)
         @@ D_type
              { type_binder; type_expr; type_attr = { public; hidden } } )
     | D_value { binder; attr; expr } ->
-      let ctx, pos = Context.mark ctx in
-      local_pos := pos :: !local_pos;
       let var  = Binder.get_var binder in
       let ascr = Binder.get_ascr binder in
       let expr =
