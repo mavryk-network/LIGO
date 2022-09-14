@@ -1031,4 +1031,15 @@ type program = declaration list (* TODO NP : Try to convert this into non-empty 
     |->
     let x = E_lambda(x, E_lambda(y, E_xxx))
 
+  pass 'd_let_type_params'
+    remove : D_let (type_params = ...)
+    add    : D_let (type_params = [] 
+    )
+    Add polymorphic binder to ascription
+    For each type parameter "alpha",
+    Replace rhs type : T_xxx |-> T_For_All(alpha, T_xxx)
+  
+  pass 'd_let_rec'
+    remove : D_Let (is_rec = 1, expr = E_xxx)
+    add    : D_Let (is_rec = 0, expr = E_Recursive (E_xxx...))
 *)
