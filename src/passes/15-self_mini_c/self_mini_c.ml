@@ -159,6 +159,7 @@ let is_pure_constant : Constant.constant' -> bool =
   | C_TEST_LAST_EVENTS
   | C_TEST_TRY_WITH
     -> false
+  | C_ID -> true
 
 let rec is_pure : expression -> bool = fun e ->
   match e.content with

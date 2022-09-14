@@ -938,7 +938,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t) ?source_fil
          C_FOLD_LEFT | C_FOLD_RIGHT | C_PAIR | C_CAR | C_CDR | C_LEFT | C_RIGHT |
          C_SET_LITERAL | C_LIST_LITERAL | C_MAP | C_MAP_LITERAL | C_MAP_GET | C_MAP_GET_FORCE |
          C_BIG_MAP | C_BIG_MAP_LITERAL | C_CALL | C_SET_DELEGATE |
-         C_CREATE_CONTRACT | C_OPEN_CHEST | C_VIEW | C_GLOBAL_CONSTANT ) , _ ) ->
+         C_CREATE_CONTRACT | C_OPEN_CHEST | C_VIEW | C_GLOBAL_CONSTANT | C_ID ) , _ ) ->
       fail @@ Errors.generic_error loc "Unbound primitive."
   )
 

@@ -165,6 +165,7 @@ type constant' =
   | C_POLYMORPHIC_SUB [@print "C_POLYMORPHIC_SUB"]
   | C_SUB_MUTEZ
   | C_OPTION_MAP
+  | C_ID
 [@@deriving eq,compare,yojson,hash, print_constant, only_interpreter_tags, read_constant ]
 
 

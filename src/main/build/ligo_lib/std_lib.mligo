@@ -24,7 +24,7 @@ module Tezos = struct
   let set_delegate (o : key_hash option) : operation = [%external ("SET_DELEGATE", o)]
   [@inline] [@thunk] let self (type a) (s : string) : a contract = [%external ("SELF", s)]
   [@inline] [@thunk] let constant (type a) (s : string) : a = [%external ("GLOBAL_CONSTANT", s)]
-  [@inline] [@thunk] let sapling_empty_state (type sap_a) : sap_a sapling_state = [%external ("SAPLING_EMPTY_STATE")]
+  [@inline] [@thunk] let sapling_empty_state (type sap_a) : sap_a sapling_state = [%external ("ID", [%external ("SAPLING_EMPTY_STATE")])]
 
 #if CURRY
   let get_contract (type a) (a : address) : (a contract) = [%external ("CONTRACT", a)]

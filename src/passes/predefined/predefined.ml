@@ -170,6 +170,8 @@ module Michelson = struct
         (fun with_args ->  with_args "PUSH")
         )
     | C_EMIT_EVENT , Kathmandu -> Some (trivial_special "EMIT")
+    (* temporary example *)
+    | C_ID , _ -> Some (simple_unary @@ seq [])
     | _ -> None
 
 end

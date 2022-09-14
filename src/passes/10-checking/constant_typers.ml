@@ -1120,6 +1120,13 @@ let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
           (create
              ~mode_annot:[ Inferred; Inferred ]
              ~types:[ t_nat () ^-> t_nat () ^~> t_nat () ]) )
+    ; ( C_ID
+      , of_type
+          (for_all "a"
+          @@ fun a ->
+          create
+            ~mode_annot:[ Inferred ]
+            ~types:[ a ^~> a ]) )
       (* Tests *)
     ; ( C_TEST_COMPILE_CONTRACT
       , of_type
