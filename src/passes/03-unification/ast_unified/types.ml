@@ -974,5 +974,60 @@ type program = declaration list (* TODO NP : Try to convert this into non-empty 
     | EAssign (EVar {value; region} as e1, op, e2) ->
     | EAssign (EProj {value = {expr = EVar {value = evar_value; _}; selection = Component {value = {inside = EArith (Int _); _}; _} as selection}; region=_}, ({value = Eq; _} as op), e2) ->
     | EAssign _ as e ->
+  
+  
+  D_Type
+  =============================================================================
+  pass 'd_type'
+    remove : D_TypeDecl
+    add    : D_Type
+
+    The goal is to remove the type parameters in the D_TypeDecl node
+    and inject them as T_Abstraction.
+
+    D_TypeDecl
+      name : my_type_name
+      parameters : [ alpha ]
+      type_expression : T_xxx
+    |->
+    D_Type
+      binder : my_type_name
+      type_expresion :
+        T_abstraction( alpha, T_xxx )
+
+  D_Let
+  =============================================================================
+  pass 'd_let_tuple'
+    remove : D_Let ( binder = CST.PTuple, ... )
+    add    : D_Let
+
+    The let declarations with a tuple as lhs :
+      let x, y = (42, 24)
+    Are actually abstracted into several let declarations, one per tuple element :
+      let x = (42, 24).0  // (access 1st element of the tuple)
+      let y = (42, 24).1  // (access 2nd element of the tuple)
+  
+  pass 'd_let_record'
+    remove : D_Let (binder = CST.PRecord, ...)
+    add    : D_Let
+
+    Similarly to nanopass d_let_tuple, this nanopass split let declarations
+    with records into several declarations, one per record element.
+    For example :
+      let {x=z, y} = my_record
+    After unpunning, it becomes :
+      let {x=z, y=y} = my_record
+    With this nanopass d_let_record, it should become :
+      let x = my_record.z
+      let y = my_record.y
+  
+  pass 'd_let_lambda'
+    remove : D_Let (binders : pattern nseq)
+    add    : D_Let' (binder : pattern)
+
+    Replace the list of patterns by E_Lambda :
+    let x y z = E_xxx
+    |->
+    let x = E_lambda(x, E_lambda(y, E_xxx))
 
 *)
