@@ -96,6 +96,22 @@ and let_binding = {
   let_rhs     : expression;
 }
 
+and param_decl = {
+  param_kind : [`Var | `Const];
+  pattern    : pattern;
+  param_type : type_expression option
+}
+
+(* TODO NP : Merge this type with 'let_binding' ? *)
+and fun_decl = {
+  is_rec      : bool;
+  fun_name    : string;
+  type_params : string nseq option;
+  parameters  : param_decl list;
+  ret_type    : type_expression option;
+  return      : expression;
+}
+
 and type_decl = {
   name        : string;
   params      : string nseq option;
@@ -120,6 +136,7 @@ and declaration_content =
 | D_Type           of type_decl
 | D_Module         of module_decl
 | D_ModuleAlias    of module_alias
+| D_Fun            of fun_decl
 
 (* ========================== MODULES ====================================== *)
 
@@ -216,12 +233,6 @@ and fun_expr_cameligo = {
   binders      : pattern nseq;
   rhs_type     : type_expr option;
   body         : expr;
-}
-
-and param_decl = {
-  param_kind : [`Var | `Const];
-  pattern    : pattern;
-  param_type : type_expression option
 }
 
 and fun_expr_pascaligo = {

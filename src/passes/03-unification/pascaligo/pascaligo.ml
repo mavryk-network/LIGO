@@ -294,6 +294,9 @@ let rec compile_expression ~raise : CST.expr -> AST.expr = fun e ->
 
 and compile_declaration ~raise : CST.declaration -> AST.declaration = fun decl ->
   let self = compile_declaration ~raise in
+  let compile_type_params : CST.type_params CST.chevrons Region.reg -> string nseq =
+    fun tp -> nseq_map w_fst @@ nsepseq_to_nseq (r_fst tp).inside
+  in
   match decl with
   | D_Directive d -> (
     let d, loc = Helpers.translate_directive d in
@@ -313,12 +316,7 @@ and compile_declaration ~raise : CST.declaration -> AST.declaration = fun decl -
     let d, loc = r_split d in
     (* TODO NP : Should we really use the 'let_binding' record for D_Const ? *)
     let is_rec = false in
-    let type_params =
-      let compile_type_params : CST.type_params CST.chevrons Region.reg -> string nseq =
-        fun tp -> nseq_map w_fst @@ nsepseq_to_nseq (r_fst tp).inside
-      in
-      Option.apply compile_type_params d.type_params
-    in
+    let type_params = Option.apply compile_type_params d.type_params in
     let binders = List.Ne.singleton @@ compile_pattern d.pattern in
     let rhs_type = Option.apply (compile_type_expression <@ snd) d.const_type in
     let let_rhs = compile_expression ~raise d.init in
@@ -335,6 +333,28 @@ and compile_declaration ~raise : CST.declaration -> AST.declaration = fun decl -
     in
     let decl = self decl in
     d_attr (attr, decl) ~loc ()
+  )
+  | D_Fun d -> (
+    let d, loc = r_split d in
+    let is_rec = match d.kwd_recursive with Some _ -> true | None -> false in
+    let fun_name = w_fst d.fun_name in
+    let type_params = Option.apply compile_type_params d.type_params in
+    let parameters =
+      let compile_param_decl : CST.param_decl -> AST.param_decl = fun pd ->
+        let param_kind = (
+          match pd.param_kind with
+          | `Const _ -> `Const
+          | `Var   _ -> `Var
+        ) in
+        let pattern = compile_pattern pd.pattern in
+        let param_type = Option.apply (compile_type_expression <@ snd) pd.param_type in
+        {param_kind; pattern; param_type}
+      in
+      List.map ~f:(compile_param_decl <@ r_fst) @@ sepseq_to_list (r_fst d.parameters).inside
+    in
+    let ret_type = Option.apply (compile_type_expression <@ snd) d.ret_type in
+    let return = compile_expression ~raise d.return in
+    d_fun {is_rec; fun_name; type_params; parameters; ret_type; return} ~loc ()
   )
   | _ -> raise.error @@ other_error "Declaration not supported yet." (* TODO NP : Add other declarations *)
 
