@@ -298,6 +298,16 @@ and compile_declaration ~raise : CST.declaration -> AST.declaration = fun decl -
     let d, loc = Helpers.translate_directive d in
     d_directive d ~loc ()
   )
+  | D_Type d -> (
+    let d, loc = r_split d in
+    let name = w_fst d.name in
+    let params = Option.apply (fun (tp : _ CST.par CST.reg) ->
+      List.Ne.map w_fst @@ nsepseq_to_nseq (r_fst tp).inside
+      ) d.params
+    in
+    let type_expr = compile_type_expression d.type_expr in
+    d_type {name; params; type_expr} ~loc ()
+  )
   | D_Const d -> (
     let d, loc = r_split d in
     (* TODO NP : Should we really use the 'let_binding' record for D_Const ? *)
