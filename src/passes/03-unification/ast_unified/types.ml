@@ -66,6 +66,17 @@ and type_expression_content = T_Dummy  (* TODO NP : Add type expressions *)
 
 and pattern = P_Dummy  (* TODO NP : Add pattern expressions *)
 
+(* ========================== INSTRUCTIONS ================================= *)
+type instruction = {
+  instruction_content : instruction_content;
+  location                : Location.t
+}
+and instr_content = instruction_content
+and instr         = instruction
+  [@@deriving yojson]
+
+and instruction_content = I_Dummy  (* TODO NP : Add instructions *)
+
 (* ========================== STATEMENTS =================================== *)
 
 and statement = {
@@ -76,7 +87,78 @@ and stmt_content = statement_content
 and stmt         = statement
   [@@deriving yojson]
 
-and statement_content = S_Dummy  (* TODO NP : Add statements *)
+and var_decl = {
+  pattern     : pattern;
+  type_params : string nseq option;
+  var_type    : type_expression option;
+  init        : expr;
+}
+
+(* TODO NP : Merge with 'cond_expr' type ? *)
+and cond_statement = {
+  test     : expr;
+  s_ifso   : statement;
+  s_ifnot  : statement option;
+}
+
+(* TODO NP : Merge with 'case' record ? *)
+and switch_case =
+| Switch_case          of (expr * statement nseq option)
+| Switch_default_case  of statement nseq option
+
+and switch = {
+  switch_expr  : expr;
+  switch_cases : switch_case nseq;
+}
+
+and namespace_statement = {
+  module_name        : string;
+  namespace_content  : statement nseq;
+}
+
+(* TODO NP : Merge with type 'module_alias' ? *)
+and import = {
+  alias        : string;
+  module_path  : string nseq;
+}
+
+and while_stmt = {
+  expr        : expr;
+  while_body  : statement;
+}
+
+and index_kind = Let | Const
+
+and for_of = {
+  index_kind : index_kind;
+  index      : string;
+  expr       : expr;
+  for_stmt   : statement;
+}
+
+(* TODO NP : Separate statement into statement_pascaligo / statement_jsligo ? *)
+and statement_content =
+| S_Dummy  (* TODO NP : Remove *)
+  (* Pascaligo *)
+| S_Attr      of (Attribute.t * statement) 
+| S_Decl      of declaration
+| S_Instr     of instruction
+| S_VarDecl   of var_decl
+  (* Jsligo *)
+| SBlock      of statement nseq
+| SExpr       of expr
+| SCond       of cond_statement
+| SReturn     of expr option
+| SLet        of let_binding nseq
+| SConst      of let_binding nseq
+| SType       of type_decl
+| SSwitch     of switch
+| SBreak
+| SNamespace  of namespace_statement
+| SExport     of statement
+| SImport     of import
+| SWhile      of while_stmt
+| SForOf      of for_of
 
 (* ========================== DECLARATIONS ================================= *)
 
