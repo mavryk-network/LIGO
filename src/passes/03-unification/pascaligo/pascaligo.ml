@@ -356,8 +356,20 @@ and compile_declaration ~raise : CST.declaration -> AST.declaration = fun decl -
     let return = compile_expression ~raise d.return in
     d_fun {is_rec; fun_name; type_params; parameters; ret_type; return} ~loc ()
   )
-  | _ -> raise.error @@ other_error "Declaration not supported yet." (* TODO NP : Add other declarations *)
+  | D_Module d -> (
+    let d, loc = r_split d in
+    let name = w_fst d.name in
+    let mod_expr = compile_module d.module_expr in
+    d_module {name; mod_expr} ~loc ()
+  )
 
+(* ========================== MODULES ===================================== *)
+
+and compile_module : CST.module_expr -> AST.module_ = fun m ->
+  let () = ignore m in
+  m_dummy ()
+
+(* ========================== PROGRAM ===================================== *)
 let compile_program ~raise : CST.t -> AST.program = fun t ->
   let declarations :                           CST.declaration  list = nseq_to_list t.decl in
   let declarations : (raise: ('e, 'w) raise -> AST.declaration) list = List.map ~f:(fun a ~raise -> compile_declaration ~raise a) declarations in
