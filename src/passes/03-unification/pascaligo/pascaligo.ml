@@ -300,6 +300,8 @@ and compile_declaration ~raise : CST.declaration -> AST.declaration = fun decl -
   )
   | D_Const d -> (
     let d, loc = r_split d in
+    (* TODO NP : Should we really use the 'let_binding' record for D_Const ? *)
+    let is_rec = false in
     let type_params =
       let compile_type_params : CST.type_params CST.chevrons Region.reg -> string nseq =
         fun tp -> nseq_map w_fst @@ nsepseq_to_nseq (r_fst tp).inside
@@ -309,7 +311,7 @@ and compile_declaration ~raise : CST.declaration -> AST.declaration = fun decl -
     let binders = List.Ne.singleton @@ compile_pattern d.pattern in
     let rhs_type = Option.apply (compile_type_expression <@ snd) d.const_type in
     let let_rhs = compile_expression ~raise d.init in
-    d_let {type_params; binders; rhs_type; let_rhs} ~loc ()
+    d_let {is_rec; type_params; binders; rhs_type; let_rhs} ~loc ()
   )
   | _ -> raise.error @@ other_error "Declaration not supported yet." (* TODO NP : Add other declarations *)
 

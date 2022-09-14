@@ -81,6 +81,7 @@ and decl         = declaration
   [@@deriving yojson]
 
 and let_binding = {
+  is_rec      : bool;
   type_params : string nseq option;
   binders     : pattern nseq;
   rhs_type    : type_expr option;

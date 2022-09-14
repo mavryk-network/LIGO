@@ -296,7 +296,8 @@ and compile_declaration ~raise : CST.declaration -> AST.declaration = fun decl -
     d_directive d ~loc ()
   )
   | Let e -> (
-    let (_kwd_let, _kwd_rec, e, _attr), loc = r_split e in
+    let (_kwd_let, kwd_rec, e, _attr), loc = r_split e in
+    let is_rec = match kwd_rec with None -> false | Some _ -> true in
     let type_params =
       let compile_type_params : CST.type_params CST.par CST.reg -> string nseq =
         fun tp -> nseq_map r_fst (r_fst tp).inside.type_vars
@@ -306,7 +307,7 @@ and compile_declaration ~raise : CST.declaration -> AST.declaration = fun decl -
     let binders = nseq_map compile_pattern e.binders in
     let rhs_type = Option.apply (compile_type_expression <@ snd) e.rhs_type in
     let let_rhs = compile_expression ~raise e.let_rhs in
-    d_let {type_params; binders; rhs_type; let_rhs} ~loc ()
+    d_let {is_rec; type_params; binders; rhs_type; let_rhs} ~loc ()
   )
   | TypeDecl d -> (
     let d, loc = r_split d in
