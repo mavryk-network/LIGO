@@ -293,6 +293,7 @@ let rec compile_expression ~raise : CST.expr -> AST.expr = fun e ->
 (* ========================== DECLARATIONS ================================= *)
 
 and compile_declaration ~raise : CST.declaration -> AST.declaration = fun decl ->
+  let self = compile_declaration ~raise in
   match decl with
   | D_Directive d -> (
     let d, loc = Helpers.translate_directive d in
@@ -322,6 +323,18 @@ and compile_declaration ~raise : CST.declaration -> AST.declaration = fun decl -
     let rhs_type = Option.apply (compile_type_expression <@ snd) d.const_type in
     let let_rhs = compile_expression ~raise d.init in
     d_let {is_rec; type_params; binders; rhs_type; let_rhs} ~loc ()
+  )
+  | D_Attr d -> (
+    let attr, decl = d in
+    let attr, loc = r_split attr in
+    let attr =
+      let translate_attr : CST.Attr.t -> AST.Attribute.t = fun (k, v_opt) ->
+        k, Option.apply (fun (CST.Attr.String s) -> AST.Attribute.String s) v_opt
+      in
+      translate_attr attr
+    in
+    let decl = self decl in
+    d_attr (attr, decl) ~loc ()
   )
   | _ -> raise.error @@ other_error "Declaration not supported yet." (* TODO NP : Add other declarations *)
 
