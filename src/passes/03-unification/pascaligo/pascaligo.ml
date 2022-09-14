@@ -16,6 +16,11 @@ let w_split (x: 'a CST.Wrap.t) : 'a * Location.t =
   (x#payload, Location.lift x#region)
 let w_fst x = fst (w_split x)
 
+let translate_attr_pascaligo : CST.Attr.t -> AST.attr_pascaligo = fun attr ->
+  let key, value = attr in
+  let value : string option = Option.apply (fun (CST.Attr.String s) ->  s) value in
+  {key; value}
+
 (* ========================== TYPES ======================================== *)
 
 let compile_type_expression : CST.type_expr -> AST.type_expr = fun te ->
@@ -30,9 +35,16 @@ let compile_pattern : CST.pattern -> AST.pattern = fun p ->
 
 (* ========================== STATEMENTS ================================= *)
 
-let compile_statement : CST.statement -> AST.statement = fun s ->
-  let () = ignore s in
-  s_dummy ()
+let rec compile_statement : CST.statement -> AST.statement = fun s ->
+  let self = compile_statement in
+  match s with
+  | S_Attr (attr, stmt) -> (
+    let attr, loc = r_split attr in
+    let attr = translate_attr_pascaligo attr in
+    let stmt = self stmt in
+    s_attr (attr, stmt) ~loc ()
+  )
+  | _ -> failwith "todo"
 
 (* ========================== EXPRESSIONS ================================== *)
 
@@ -277,15 +289,7 @@ let rec compile_expression ~raise : CST.expr -> AST.expr = fun e ->
     )
   | E_Attr (attr, expr) -> (
       let attr, loc = r_split attr in
-      let attr : AST.attr_pascaligo =
-        let key, value = attr in
-        let value : string option = (
-          match value with
-          | None -> None
-          | Some (String s) -> Some s
-        ) in
-        {key; value}
-      in
+      let attr = translate_attr_pascaligo attr in
       let expr = self expr in
       e_attr (attr, expr) ~loc ()
     )
@@ -325,12 +329,7 @@ and compile_declaration ~raise : CST.declaration -> AST.declaration = fun decl -
   | D_Attr d -> (
     let attr, decl = d in
     let attr, loc = r_split attr in
-    let attr =
-      let translate_attr : CST.Attr.t -> AST.Attribute.t = fun (k, v_opt) ->
-        k, Option.apply (fun (CST.Attr.String s) -> AST.Attribute.String s) v_opt
-      in
-      translate_attr attr
-    in
+    let attr = translate_attr_pascaligo attr in
     let decl = self decl in
     d_attr (attr, decl) ~loc ()
   )

@@ -42,13 +42,10 @@ module Directive = struct
   [@@deriving yojson]
 end (* of module Directive *)
 
-(* Copy/pasted from Pascaligo CST's Attr module, find a way to remove code duplication *)
-module Attribute = struct
-  type key        = string  [@@deriving yojson]
-  type value      = String of string  [@@deriving yojson]
-  type attribute  = key * value option  [@@deriving yojson]
-  type t          = attribute  [@@deriving yojson]
-end (* of module Attribute *)
+type attr_pascaligo = {
+  key      : string;
+  value    : string option;
+} [@@deriving yojson]
 
 (* ========================== TYPES ======================================== *)
 
@@ -140,7 +137,7 @@ and for_of = {
 and statement_content =
 | S_Dummy  (* TODO NP : Remove *)
   (* Pascaligo *)
-| S_Attr      of (Attribute.t * statement) 
+| S_Attr      of (attr_pascaligo * statement) 
 | S_Decl      of declaration
 | S_Instr     of instruction
 | S_VarDecl   of var_decl
@@ -212,7 +209,7 @@ and module_alias = {
 
 and declaration_content =
 | D_Directive      of Directive.t
-| D_Attr           of (Attribute.t * declaration)
+| D_Attr           of (attr_pascaligo * declaration)
 | D_ToplevelJsligo of statement
 | D_Let            of let_binding
 | D_Type           of type_decl
@@ -390,11 +387,6 @@ and raw_code = {
 and block_with = {
   block    : statement nseq;
   expr     : expr
-}
-
-and attr_pascaligo = {
-  key      : string;
-  value    : string option;
 }
 
 and array_item_jsligo =
