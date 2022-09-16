@@ -13,30 +13,144 @@ open AST
 
 let r_split = Simple_utils.Location.r_split  (* TODO NP : Factor with cameligo into helpers *)
 let r_fst x = fst (r_split x)
+let w_split (x: 'a CST.Wrap.t) : 'a * Location.t =
+  (x#payload, Location.lift x#region)
 
 (* ========================== TYPES ======================================== *)
 
-let compile_type_expression : CST.type_expr -> AST.type_expr = fun te ->
+let rec compile_type_expression : CST.type_expr -> AST.type_expr = fun te ->
   let () = ignore te in
   t_dummy ()
 
 (* ========================== PATTERNS ===================================== *)
 
-(* let compile_pattern : CST.pattern -> AST.pattern = fun p ->
+and compile_pattern : CST.pattern -> AST.pattern = fun p ->
   let () = ignore p in
-  p_dummy *)
+  P_Dummy
 
 (* ========================== STATEMENTS ================================= *)
 
-let rec compile_statement ~raise : CST.statement -> AST.statement = fun s ->
+and compile_statement ~raise : CST.statement -> AST.statement = fun s ->
   let self = compile_statement ~raise in
   let () = ignore (self, raise) in
+  let extract_type_vars : CST.type_vars -> string nseq = fun tv ->
+    List.Ne.map r_fst @@ nsepseq_to_nseq (r_fst tv).inside
+  in
+  let compile_val_binding : CST.val_binding -> AST.let_binding = fun b ->
+    let is_rec = false in
+    let binders = List.Ne.singleton @@ compile_pattern b.binders in
+    let type_params = Option.map b.type_params ~f:(fun (tp : CST.type_generics) ->
+      List.Ne.map r_fst @@ nsepseq_to_nseq (r_fst tp).inside)
+    in
+    let rhs_type = Option.map ~f:(compile_type_expression <@ snd) b.lhs_type in
+    let let_rhs = compile_expression ~raise b.expr in
+    {is_rec; type_params; binders; rhs_type; let_rhs}
+  in
   match s with
-  | _ -> failwith "TODO NP : Add statements"
+  | SBlock s -> (
+    let s, loc = r_split s in
+    let statements = List.Ne.map self @@ nsepseq_to_nseq s.inside in
+    s_block statements ~loc ()
+  )
+  | SExpr s -> (
+    let expr = compile_expression ~raise s in
+    let loc = expr.location in
+    s_expr expr ~loc ()
+  )
+  | SCond s -> (
+    let s, loc = r_split s in
+    let test = compile_expression ~raise s.test.inside in
+    let s_ifso = self s.ifso in
+    let s_ifnot = Option.map ~f:(self <@ snd) s.ifnot in
+    s_cond {test; s_ifso; s_ifnot} ~loc ()
+  )
+  | SReturn s -> (
+    let s, loc = r_split s in
+    let expr_opt = Option.map ~f:(compile_expression ~raise) s.expr in
+    s_return expr_opt ~loc ()
+  )
+  | SLet s -> (
+    let s, loc = r_split s in
+    let bindings = List.Ne.map (compile_val_binding <@ r_fst) @@ nsepseq_to_nseq s.bindings in
+    s_let bindings ~loc ()
+  )
+  | SConst s -> (
+    let s, loc = r_split s in
+    let bindings = List.Ne.map (compile_val_binding <@ r_fst) @@ nsepseq_to_nseq s.bindings in
+    s_const bindings ~loc ()
+  )
+  | SType s -> (
+    let s, loc = r_split s in
+    let name      = r_fst s.name in
+    let params    = Option.map ~f:extract_type_vars s.params in
+    let type_expr = compile_type_expression s.type_expr in
+    s_type {name; params; type_expr} ~loc ()
+  )
+  | SSwitch s -> (
+    let s, loc = r_split s in
+    let switch_expr = compile_expression ~raise s.expr in
+    let switch_cases =
+      let translate_statements_opt = Option.map ~f:(List.Ne.map self <@ nsepseq_to_nseq) in
+      let translate_switch_case : CST.switch_case -> AST.switch_case = function
+      | CST.Switch_case c -> (
+        let e     = compile_expression ~raise c.expr in
+        let s_opt = translate_statements_opt c.statements in
+        AST.Switch_case (e, s_opt)
+      )
+      | CST.Switch_default_case c -> (
+        let s_opt = translate_statements_opt c.statements in
+        AST.Switch_default_case s_opt
+      )
+      in
+      List.Ne.map translate_switch_case s.cases
+    in
+    s_switch {switch_expr; switch_cases} ~loc ()
+  )
+  | SBreak s -> (
+    let _, loc = w_split s  in
+    s_break ~loc ()
+  )
+  | SNamespace s -> (
+    let s, loc = r_split s in
+    let (_, module_name, statements, _) = s in
+    let module_name       = r_fst module_name in
+    let namespace_content =
+      List.Ne.map self @@ nsepseq_to_nseq (r_fst statements).inside
+    in
+    s_namespace {module_name; namespace_content} ~loc ()
+  )
+  | SExport s -> (
+    let (_, s), loc = r_split s in
+    let s = self s in
+    s_export s ~loc ()
+  )
+  | SImport s -> (
+    let s, loc = r_split s in
+    let alias       = r_fst s.alias in
+    let module_path = List.Ne.map r_fst @@ nsepseq_to_nseq s.module_path in
+    s_import {alias; module_path} ~loc ()
+  )
+  | SWhile s -> (
+    let s, loc = r_split s in
+    let expr       = compile_expression ~raise s.expr in
+    let while_body = self s.statement in
+    s_while {expr; while_body } ~loc ()
+  )
+  | SForOf s -> (
+    let s, loc = r_split s in
+    let index_kind = match s.index_kind with
+      | `Let   _ -> AST.Let
+      | `Const _ -> AST.Const
+    in
+    let index = r_fst s.index in
+    let expr  = compile_expression ~raise s.expr in
+    let for_stmt = self s.statement in
+    s_forof {index_kind; index; expr; for_stmt} ~loc ()
+  )
 
 (* ========================== EXPRESSIONS ================================== *)
 
-let rec compile_expression ~raise : CST.expr -> AST.expr = fun e ->
+and compile_expression ~raise : CST.expr -> AST.expr = fun e ->
   let self = compile_expression ~raise in
   let return e = e in
   let e_constant_of_bin_op_reg (op_type : Ligo_prim.Constant.constant') (op : _ CST.bin_op CST.reg) =

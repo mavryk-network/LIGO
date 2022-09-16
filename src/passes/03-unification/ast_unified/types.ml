@@ -141,20 +141,20 @@ and statement_content =
 | S_Instr     of instruction
 | S_VarDecl   of var_decl
   (* Jsligo *)
-| SBlock      of statement nseq
-| SExpr       of expr
-| SCond       of cond_statement
-| SReturn     of expr option
-| SLet        of let_binding nseq
-| SConst      of let_binding nseq
-| SType       of type_decl
-| SSwitch     of switch
-| SBreak
-| SNamespace  of namespace_statement
-| SExport     of statement
-| SImport     of import
-| SWhile      of while_stmt
-| SForOf      of for_of
+| S_Block      of statement nseq
+| S_Expr       of expr
+| S_Cond       of cond_statement
+| S_Return     of expr option
+| S_Let        of let_binding nseq
+| S_Const      of let_binding nseq
+| S_Type       of type_decl
+| S_Switch     of switch
+| S_Break
+| S_Namespace  of namespace_statement
+| S_Export     of statement
+| S_Import     of import
+| S_While      of while_stmt
+| S_ForOf      of for_of
 
 (* ========================== DECLARATIONS ================================= *)
 
