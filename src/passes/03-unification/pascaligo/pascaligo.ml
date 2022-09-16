@@ -21,22 +21,31 @@ let translate_attr_pascaligo : CST.Attr.t -> AST.attr_pascaligo = fun attr ->
   let value : string option = Option.apply (fun (CST.Attr.String s) ->  s) value in
   {key; value}
 
+let extract_type_params : CST.type_params CST.chevrons CST.reg -> string nseq =
+  fun tp -> nseq_map w_fst @@ nsepseq_to_nseq @@ (r_fst tp).inside
+
 (* ========================== TYPES ======================================== *)
 
-let compile_type_expression : CST.type_expr -> AST.type_expr = fun te ->
+let rec compile_type_expression : CST.type_expr -> AST.type_expr = fun te ->
   let () = ignore te in
   t_dummy ()
 
 (* ========================== PATTERNS ===================================== *)
 
-let compile_pattern : CST.pattern -> AST.pattern = fun p ->
+and compile_pattern : CST.pattern -> AST.pattern = fun p ->
   let () = ignore p in
   P_Dummy
 
+(* ========================== INSTRUCTIONS ================================= *)
+
+and compile_instruction : CST.instruction -> AST.instruction = fun i ->
+  let () = ignore i in
+  i_dummy ()
+
 (* ========================== STATEMENTS ================================= *)
 
-let rec compile_statement : CST.statement -> AST.statement = fun s ->
-  let self = compile_statement in
+and compile_statement ~raise : CST.statement -> AST.statement = fun s ->
+  let self = compile_statement ~raise in
   match s with
   | S_Attr (attr, stmt) -> (
     let attr, loc = r_split attr in
@@ -44,17 +53,34 @@ let rec compile_statement : CST.statement -> AST.statement = fun s ->
     let stmt = self stmt in
     s_attr (attr, stmt) ~loc ()
   )
-  | _ -> failwith "todo"
+  | S_Decl s -> (
+    let s = compile_declaration ~raise s in
+    let loc = s.location in
+    s_decl s ~loc ()
+  )
+  | S_Instr s -> (
+    let s = compile_instruction s in
+    let loc = s.location in
+    s_instr s ~loc ()
+  )
+  | S_VarDecl s -> (
+    let s, loc = r_split s in
+    let pattern     = compile_pattern s.pattern in
+    let type_params = Option.apply extract_type_params s.type_params in
+    let var_type    = Option.apply (compile_type_expression <@ snd) s.var_type in
+    let init        = compile_expression ~raise s.init in
+    s_vardecl {pattern; type_params; var_type; init} ~loc ()
+  )
 
 (* ========================== EXPRESSIONS ================================== *)
 
-let extract_tuple : 'a. ('a, CST.comma) nsepseq CST.par CST.reg -> 'a nseq =
+and extract_tuple : 'a. ('a, CST.comma) nsepseq CST.par CST.reg -> 'a nseq =
   fun t -> nsepseq_to_nseq (r_fst t).inside
 
-let extract_key : 'a. 'a CST.brackets CST.reg -> 'a =
+and extract_key : 'a. 'a CST.brackets CST.reg -> 'a =
   fun k -> (r_fst k).inside
 
-let rec compile_expression ~raise : CST.expr -> AST.expr = fun e ->
+and compile_expression ~raise : CST.expr -> AST.expr = fun e ->
   let self = compile_expression ~raise in
   let return e = e in
   let e_constant_of_bin_op_reg (op_type : Ligo_prim.Constant.constant') (op : _ CST.bin_op CST.reg) =
@@ -76,9 +102,6 @@ let rec compile_expression ~raise : CST.expr -> AST.expr = fun e ->
     let expr       = self proj.record_or_tuple in
     let field_path = nseq_map translate_selection @@ nsepseq_to_nseq proj.field_path in
     {expr; field_path}
-  in
-  let extract_type_params : CST.type_params CST.chevrons CST.reg -> string nseq =
-    fun tp -> nseq_map w_fst @@ nsepseq_to_nseq @@ (r_fst tp).inside
   in
   let compile_param_decl : CST.param_decl -> AST.param_decl = fun p ->
     let param_kind = match p.param_kind with `Var _ -> `Var | `Const _ -> `Const in
@@ -278,7 +301,7 @@ let rec compile_expression ~raise : CST.expr -> AST.expr = fun e ->
   | E_Block be -> (
       let be, loc = r_split be in
       let block : statement nseq =
-        nseq_map compile_statement @@ nsepseq_to_nseq (r_fst be.block).statements
+        nseq_map (compile_statement ~raise) @@ nsepseq_to_nseq (r_fst be.block).statements
       in
       let expr  = self be.expr in
       e_block {block; expr} ~loc ()
