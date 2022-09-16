@@ -1135,4 +1135,20 @@ type program = declaration list (* TODO NP : Try to convert this into non-empty 
   pass 'd_let_rec'
     remove : D_Let (is_rec = 1, expr = E_xxx)
     add    : D_Let (is_rec = 0, expr = E_Recursive (E_xxx...))
+
+  S_VarDecl
+  =============================================================================
+  pass 's_var_decl'
+    remove : S_VarDecl
+    add    : E_Matching
+
+    The general case is S_VarDecl |-> E_Matching, this is the purpose of this nanopass.
+
+    CAUTION : When the pattern is just a variable, the abstractor does
+      S_VarDecl |-> E_LetIn
+    However, other parts of the abstractor transform E_LetIn into E_Matching
+    (which led to the idea of making nanopass 'matching_let_in')
+    TODO : Between E_Matching ( pattern = just a variable ) and E_LetIn,
+    which one to choose and when ?
+
 *)
