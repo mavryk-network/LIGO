@@ -135,7 +135,6 @@ and for_of = {
 
 (* TODO NP : Separate statement into statement_pascaligo / statement_jsligo ? *)
 and statement_content =
-| S_Dummy  (* TODO NP : Remove *)
   (* Pascaligo *)
 | S_Attr      of (attr_pascaligo * statement) 
 | S_Decl      of declaration

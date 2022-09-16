@@ -28,9 +28,11 @@ let compile_type_expression : CST.type_expr -> AST.type_expr = fun te ->
 
 (* ========================== STATEMENTS ================================= *)
 
-let compile_statement : CST.statement -> AST.statement = fun s ->
-  let () = ignore s in
-  s_dummy ()
+let rec compile_statement ~raise : CST.statement -> AST.statement = fun s ->
+  let self = compile_statement ~raise in
+  let () = ignore (self, raise) in
+  match s with
+  | _ -> failwith "TODO NP : Add statements"
 
 (* ========================== EXPRESSIONS ================================== *)
 
@@ -169,7 +171,7 @@ let rec compile_expression ~raise : CST.expr -> AST.expr = fun e ->
     let lhs_type   = Option.map ~f:(compile_type_expression <@ snd) f.lhs_type in
     let body =
       let compile_body : CST.body -> AST.body_jsligo = function
-      | FunctionBody   b -> AST.FunctionBody   (nseq_map compile_statement @@ nsepseq_to_nseq (r_fst b).inside)
+      | FunctionBody   b -> AST.FunctionBody   (nseq_map (compile_statement ~raise) @@ nsepseq_to_nseq (r_fst b).inside)
       | ExpressionBody e -> AST.ExpressionBody (self e)
       in
       compile_body f.body
@@ -216,10 +218,6 @@ let rec compile_expression ~raise : CST.expr -> AST.expr = fun e ->
   )
 
 (* ========================== DECLARATIONS ================================= *)
-
-let compile_statement ~raise : CST.statement -> AST.statement = fun s ->
-  let () = ignore (raise, s) in
-  s_dummy ()
 
 let compile_toplevel_statement ~raise : CST.toplevel_statement -> AST.declaration = fun s -> 
   match s with
