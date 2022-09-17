@@ -10,7 +10,7 @@ module A = W.Ast
 module T = W.Types
 module S = W.Source
 module Z = Z
-module ValueVar = Ligo_prim.ValueVar
+module Value_var = Ligo_prim.Value_var
 module Location = Simple_utils.Location
 
 open Helpers
@@ -32,7 +32,7 @@ let location_to_region (l : Location.t) : S.region =
  * Convert a variable to a string which we can use for symbols 
  *)
 let var_to_string name =
-  let name, hash = ValueVar.internal_get_name_and_counter name in
+  let name, hash = Value_var.internal_get_name_and_counter name in
   name ^ "#" ^ string_of_int hash
 
 (* The data offset. This indicates where a block of data should be placed in the linear memory. *)
@@ -96,7 +96,7 @@ let rec expression ~raise :
       instructions:I.expression list ->
       A.module_' * Env.t * A.instr list =
    fun ~fn ~response_size ~instructions ->
-    let new_value = var_to_string (ValueVar.fresh ~name:fn ()) in
+    let new_value = var_to_string (Value_var.fresh ~name:fn ()) in
     let w, env, e =
       List.fold_left
         ~f:(fun all (a : I.expression) ->
@@ -122,7 +122,7 @@ let rec expression ~raise :
       ] 
   in
   let unique_name name =
-    let unique_name = ValueVar.fresh ~name () in
+    let unique_name = Value_var.fresh ~name () in
     let name = var_to_string unique_name in
     name
   in
@@ -231,7 +231,7 @@ let rec expression ~raise :
   | E_constant {cons_name = C_BYTES_UNPACK; arguments = [e1] } -> 
     host_call ~fn:"c_bytes_unpack" ~response_size:4l ~instructions:[e1]
   | E_constant {cons_name = C_CONS; arguments = [l1; l2]} ->
-    let cons = var_to_string (ValueVar.fresh ~name:"C_CONS" ()) in
+    let cons = var_to_string (Value_var.fresh ~name:"C_CONS" ()) in
     let w, env, l1 = expression ~raise w env l1 in
     let w, env, l2 = expression ~raise w env l2 in
     ( w,
@@ -257,7 +257,7 @@ let rec expression ~raise :
 
   (* Pair *)
   | E_constant {cons_name = C_PAIR; arguments = [e1; e2]} ->
-    let pair = var_to_string (ValueVar.fresh ~name:"C_PAIR" ()) in
+    let pair = var_to_string (Value_var.fresh ~name:"C_PAIR" ()) in
     let w, env, e1 = expression ~raise w env e1 in
     let w, env, e2 = expression ~raise w env e2 in
     let e =
@@ -363,7 +363,7 @@ let rec expression ~raise :
           if no_of_args = List.length result then 
             (w, env, result @ [call_s name])
           else (
-            let unique_name = ValueVar.fresh ~name:"e_variable_partial" () in
+            let unique_name = Value_var.fresh ~name:"e_variable_partial" () in
             let func_alloc_name = var_to_string unique_name in
             w, add_local env (func_alloc_name, NumType I32Type), 
             [
@@ -407,19 +407,19 @@ let rec expression ~raise :
           )
         | _ -> 
           let lt = expr.type_expression in
-          let unique_name = ValueVar.fresh ~name:"Call_indirect" () in
+          let unique_name = Value_var.fresh ~name:"Call_indirect" () in
           let indirect_name = var_to_string unique_name in
           
-          let total_args_length = ValueVar.fresh ~name:"total_args_length" () in
+          let total_args_length = Value_var.fresh ~name:"total_args_length" () in
           let total_args_length = var_to_string total_args_length in
           
-          let current_args_length = ValueVar.fresh ~name:"current_args_length" () in
+          let current_args_length = Value_var.fresh ~name:"current_args_length" () in
           let current_args_length = var_to_string current_args_length in
 
-          let counter = ValueVar.fresh ~name:"counter" () in
+          let counter = Value_var.fresh ~name:"counter" () in
           let counter = var_to_string counter in
 
-          let unique_name = ValueVar.fresh ~name:"Call_indirect" () in
+          let unique_name = Value_var.fresh ~name:"Call_indirect" () in
           ({w with 
             types = w.types
               @ 
@@ -494,7 +494,7 @@ let rec expression ~raise :
     | None -> (
       match func_symbol_type w name with 
       | Some (FuncSymbol fs, TypeSymbol {tdetails = FuncType (input, output); _}) -> 
-        let unique_name = ValueVar.fresh ~name:"e_variable_func" () in
+        let unique_name = Value_var.fresh ~name:"e_variable_func" () in
         let func_alloc_name = var_to_string unique_name in
         let no_of_args = List.length input in
 
@@ -719,7 +719,7 @@ let rec expression ~raise :
   | E_tuple _ -> raise.error (not_supported e)
   | E_let_tuple (tuple, (values, rhs)) ->
     let w, env, tuple = expression ~raise w env tuple in
-    let tuple_name = var_to_string (ValueVar.fresh ~name:"let_tuple" ()) in
+    let tuple_name = var_to_string (Value_var.fresh ~name:"let_tuple" ()) in
     let t = tuple @ [local_set_s tuple_name] in
     let env = add_local env (tuple_name, T.NumType I32Type) in
     let env, e =

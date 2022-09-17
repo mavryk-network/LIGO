@@ -392,7 +392,7 @@ let set_arithmetic ~raise f : unit =
     expect_eq ~raise program "iter_op"
       (e_set [e_int 2 ; e_int 4 ; e_int 7])
       (e_int 0) in
-  (* can't work without effect
+  (* capture of non constant variable
   let () =
     expect_eq ~raise program "iter_op_with_effect"
       (e_set [e_int 2 ; e_int 4 ; e_int 7])
@@ -795,6 +795,10 @@ let list ~raise () : unit =
       (e_list [e_int 2 ; e_int 4 ; e_int 7])
       (e_list [e_int 3 ; e_int 5 ; e_int 8])
   in
+  let () = expect_eq_evaluate ~raise program "find_x" (e_none ()) in
+  let () = expect_eq_evaluate ~raise program "find_y4" (e_some (e_int 4)) in
+  let () = expect_eq_evaluate ~raise program "find_y6" (e_none ()) in
+  let () = expect_eq_evaluate ~raise program "find_z2" (e_some (e_int 2)) in
   ()
 
 let condition ~raise f : unit =
@@ -998,6 +1002,14 @@ let loop19 ~raise () : unit =
     expect_eq_n_pos_mid ~raise program "nested_loops" make_input make_expected in
   ()
 
+let nested_for_loop ~raise () : unit =
+  let program = type_file ~raise "./contracts/nested_for_loop.ligo" in
+  let () =
+    let make_input = e_int in
+    let make_expected = fun n -> e_int (n * n * n) in
+    expect_eq_n_pos_mid ~raise program "main" make_input make_expected in
+  ()
+
 let loop ~raise () : unit =
   let program = type_file ~raise "./contracts/loop.ligo" in
   let () =
@@ -1123,6 +1135,11 @@ let loop_jsligo ~raise () : unit =
     let input = e_int 100 in
     let expected = e_int 10000 in
     expect_eq ~raise program "counter_nest" input expected
+  in
+  let () =
+    let input = e_variable_ez "testmap" in
+    let expected = e_list [e_pair (e_int 2) (e_int 4) ; e_pair (e_int 1) (e_int 2) ; e_pair (e_int 0) (e_int 1)] in
+    expect_eq ~raise program "entries" input expected
   in ()
 
 let loop2_jsligo ~raise () : unit =
@@ -1532,6 +1549,10 @@ let mligo_list ~raise () : unit =
   let () = expect_eq_evaluate ~raise program "x" (e_list []) in
   let () = expect_eq_evaluate ~raise program "y" (e_list @@ List.map ~f:e_int [3 ; 4 ; 5]) in
   let () = expect_eq_evaluate ~raise program "z" (e_list @@ List.map ~f:e_int [2 ; 3 ; 4 ; 5]) in
+  let () = expect_eq_evaluate ~raise program "find_x" (e_none ()) in
+  let () = expect_eq_evaluate ~raise program "find_y4" (e_some (e_int 4)) in
+  let () = expect_eq_evaluate ~raise program "find_y6" (e_none ()) in
+  let () = expect_eq_evaluate ~raise program "find_z2" (e_some (e_int 2)) in
   let () = expect_eq ~raise program "map_op" (aux [2 ; 3 ; 4 ; 5]) (aux [3 ; 4 ; 5 ; 6]) in
   let () = expect_eq ~raise program "iter_op" (aux [2 ; 3 ; 4 ; 5]) (e_unit ()) in
   ()
@@ -1576,6 +1597,10 @@ let jsligo_list ~raise () : unit =
   let () = expect_eq_evaluate ~raise program "x" (e_list []) in
   let () = expect_eq_evaluate ~raise program "y" (e_list @@ List.map ~f:e_int [3 ; 4 ; 5]) in
   let () = expect_eq_evaluate ~raise program "z" (e_list @@ List.map ~f:e_int [2 ; 3 ; 4 ; 5]) in
+  let () = expect_eq_evaluate ~raise program "find_x" (e_none ()) in
+  let () = expect_eq_evaluate ~raise program "find_y4" (e_some (e_int 4)) in
+  let () = expect_eq_evaluate ~raise program "find_y6" (e_none ()) in
+  let () = expect_eq_evaluate ~raise program "find_z2" (e_some (e_int 2)) in
   let () = expect_eq ~raise program "map_op" (aux [2 ; 3 ; 4 ; 5]) (aux [3 ; 4 ; 5 ; 6]) in
   let () = expect_eq ~raise program "iter_op" (aux [2 ; 3 ; 4 ; 5]) (e_unit ()) in
   ()
@@ -2372,6 +2397,7 @@ let main = test_suite "Integration (End to End)"
     test_w "loop17" loop17 ;
     test_w "loop18" loop18 ;
     test_w "loop19" loop19 ;
+    test_w "nested_for_loop" nested_for_loop;
     test_w "loop" loop ;
     test_w "loop (mligo)" loop_mligo ;
     test_w "loop (religo)" loop_religo ;

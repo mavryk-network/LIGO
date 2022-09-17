@@ -25,7 +25,7 @@ let read_file_constants ~raise file_constants =
      with Sys_error _ -> raise.Trace.error (`Main_cannot_open_global_constants fn)
         | Yojson.Json_error s -> raise.Trace.error (`Main_cannot_parse_global_constants (fn, s))
 
-let contract (raw_options : Raw_options.t) source_file display_format michelson_code_format michelson_comments () =
+let contract (raw_options : Raw_options.t) source_file display_format michelson_code_format michelson_comments () =  
   let warning_as_error = raw_options.warning_as_error in
   format_result ~warning_as_error ~display_format (Formatter.Michelson_formatter.michelson_format michelson_code_format michelson_comments) @@
     fun ~raise ->
@@ -42,8 +42,7 @@ let contract (raw_options : Raw_options.t) source_file display_format michelson_
     in
     let Compiler_options.{ disable_michelson_typechecking = disable_typecheck ; views ; constants ; file_constants ; _ } = options.backend in
     let Compiler_options.{ entry_point ; _ } = options.frontend in
-    let code = Build.build_contract ~raise ~options entry_point source_file in
-    let views = Build.build_views ~raise ~options entry_point views source_file in
+    let code,views = Build.build_contract ~raise ~options entry_point views source_file in
     let file_constants = read_file_constants ~raise file_constants in
     let constants = constants @ file_constants in
     Ligo_compile.Of_michelson.build_contract ~raise ~enable_typed_opt:options.backend.enable_typed_opt ~protocol_version:options.middle_end.protocol_version ~has_env_comments:options.backend.has_env_comments ~disable_typecheck ~constants code views
@@ -136,8 +135,8 @@ let parameter (raw_options : Raw_options.t) source_file expression amount balanc
         let Compiler_options.{ entry_point ; _ } = options.frontend in
         let file_constants = read_file_constants ~raise file_constants in
         let constants = constants @ file_constants in
-        let entry_point = ValueVar.of_input_var entry_point in
-        let app_typed_prg = Build.build_typed ~raise ~options Env source_file in
+        let entry_point = Value_var.of_input_var entry_point in
+        let app_typed_prg = Build.qualified_typed ~raise ~options Env source_file in
         let typed_param              = Ligo_compile.Utils.type_expression ~raise ~options syntax expression app_typed_prg in
         let typed_param, typed_prg   = Self_ast_typed.remove_unused_expression typed_param app_typed_prg in
         let aggregated_prg           = Ligo_compile.Of_typed.compile_program ~raise typed_prg in
@@ -170,8 +169,8 @@ let storage (raw_options : Raw_options.t) source_file expression amount balance 
         let Compiler_options.{ constants ; file_constants ; _ } = options.backend in
         let file_constants = read_file_constants ~raise file_constants in
         let constants = constants @ file_constants in
-        let entry_point = ValueVar.of_input_var entry_point in
-        let app_typed_prg = Build.build_typed ~raise ~options Ligo_compile.Of_core.Env source_file in
+        let entry_point = Value_var.of_input_var entry_point in
+        let app_typed_prg = Build.qualified_typed ~raise ~options Ligo_compile.Of_core.Env source_file in
         let typed_param              = Ligo_compile.Utils.type_expression ~raise ~options syntax expression app_typed_prg in
         let typed_param, typed_prg   = Self_ast_typed.remove_unused_expression typed_param app_typed_prg in
         let aggregated_prg           = Ligo_compile.Of_typed.compile_program ~raise typed_prg in

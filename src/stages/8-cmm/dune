@@ -1,0 +1,15 @@
+(library
+ (name cmm)
+ (public_name ligo.cmm)
+ (instrumentation
+  (backend bisect_ppx))
+ (libraries
+  simple-utils
+  tezos-utils
+  ligo_prim
+  ast_typed
+  WasmObjectFile
+  )
+ (inline_tests)
+ (preprocess
+  (pps ppx_expect)))

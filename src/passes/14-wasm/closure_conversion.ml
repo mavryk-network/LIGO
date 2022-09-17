@@ -2,7 +2,7 @@
    Lift functions outside, as WebAssembly has no support for nested functions.
 *)
 open Mini_c.Types
-module ValueVar = Ligo_prim.ValueVar
+module Value_var = Ligo_prim.Value_var
 
 type env = {
   variables: (var_name * type_expression) list;
@@ -22,16 +22,16 @@ let empty_env =
   }
 
 let variable_exists env v =
-  match List.find ~f:(fun var -> ValueVar.equal v (fst var)) env.variables with
+  match List.find ~f:(fun var -> Value_var.equal v (fst var)) env.variables with
   | Some _ -> true
   | None -> false
 
 let var_to_string name =
-  let name, hash = ValueVar.internal_get_name_and_counter name in
+  let name, hash = Value_var.internal_get_name_and_counter name in
   name ^ "#" ^ string_of_int hash
 
 let var_type env v =
-  match List.find ~f:(fun var -> ValueVar.equal v (fst var)) env.variables with
+  match List.find ~f:(fun var -> Value_var.equal v (fst var)) env.variables with
   | Some (_, type_) -> type_
   | None -> failwith ("should not happen:" ^ var_to_string v)
 
@@ -49,7 +49,7 @@ let rec lift : env -> expression -> env * expression =
       }
     in
     let env2, body = lift env2 body in
-    let v = ValueVar.fresh () in
+    let v = Value_var.fresh () in
     let env = { 
       env2 with 
         variables = (binder, e.type_expression) :: (v, e.type_expression) :: env.variables
@@ -75,7 +75,7 @@ let rec lift : env -> expression -> env * expression =
         ~init:{e with content = E_closure {binder; body} } remaining
     in
     let in_function i =
-      match List.find env.functions ~f:(fun r -> ValueVar.equal r i) with
+      match List.find env.functions ~f:(fun r -> Value_var.equal r i) with
       | Some _ -> true
       | None -> false
     in
@@ -116,7 +116,7 @@ let rec lift : env -> expression -> env * expression =
     let env, e2 = lift env e2 in
     let env, e1 =
       match
-        List.find env.replacements ~f:(fun (r, _) -> ValueVar.equal r v)
+        List.find env.replacements ~f:(fun (r, _) -> Value_var.equal r v)
       with
       | Some (_, x) -> lift env x
       | None -> (env, e1)
