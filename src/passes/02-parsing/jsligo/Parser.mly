@@ -294,7 +294,34 @@ expr_stmt:
 | as_expr_level "%=" expr_stmt { EAssign     ($1, {value = Assignment_operator Mod_eq;   region = $2#region}, $3) }
 | as_expr_level "+=" expr_stmt { EAssign     ($1, {value = Assignment_operator Plus_eq;  region = $2#region}, $3) }
 | as_expr_level "-=" expr_stmt { EAssign     ($1, {value = Assignment_operator Min_eq;   region = $2#region}, $3) }
-| fun_expr                    { EFun    $1         }
+| fun_expr                     { EFun     $1 }
+| ternary_expr                 { $1 }
+
+ternary_expr:
+| disj_expr_level "?" ternary_expr ":" ternary_expr {   
+  let start = expr_to_region $1 in
+  let stop  = expr_to_region $5 in
+  ETernary { 
+    value = {
+      condition = { 
+        value = $1;
+        region = start
+      };
+      qmark = $2;
+      truthy = {
+        value = $3;
+        region = expr_to_region $3;
+      };
+      colon = $4;
+      falsy = {
+        value  = $5;
+        region = expr_to_region $5;
+      }
+    };
+    region = cover start stop
+  }
+}
+  
 | as_expr_level               { $1 }
 
 as_expr_level:

@@ -714,6 +714,8 @@ and compile_expression ~raise : CST.expr -> AST.expr = fun e ->
     e_assign_ez ~loc:outer_loc evar_value @@ e_update (e_variable_ez evar_value) [sels] e2
   | EAssign _ as e ->
     raise.error @@ not_supported_assignment e
+  | ETernary _ ->
+    failwith "TODO eternary"
 
 and conv ~raise : const:bool -> CST.pattern -> AST.ty_expr option Pattern.t =
   fun ~const p ->
