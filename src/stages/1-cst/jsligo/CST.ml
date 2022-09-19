@@ -351,11 +351,11 @@ and expr =
 | ETernary of ternary reg
 
 and ternary = {
-  condition: expr reg;
+  condition: expr;
   qmark  : qmark;
-  truthy : expr reg;
+  truthy : expr;
   colon  : colon;
-  falsy  : expr reg
+  falsy  : expr
 }
 
 and assignment_operator =

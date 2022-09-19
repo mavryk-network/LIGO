@@ -503,8 +503,16 @@ and print_annotated state annot =
   print_expr      (state#pad 2 0) expr;
   print_type_expr (state#pad 2 1) t_expr
 
-and print_ternary _state _ternary = 
-  failwith "todo"
+and print_ternary state ternary = 
+  let state = state#pad 3 0 in
+  print_node state "<condition>";
+  print_expr (state#pad 1 0) ternary.condition;
+  let state = state#pad 3 1 in
+  print_node state "<truthy>";
+  print_expr (state#pad 1 0) ternary.truthy;
+  let state = state#pad 3 2 in
+  print_node state "<falsy>";
+  print_expr (state#pad 1 0) @@ ternary.falsy
 
 and print_cond_statement state (cond: cond_statement) =
   let () =
