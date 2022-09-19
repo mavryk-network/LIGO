@@ -867,5 +867,21 @@ gitlab-pages/docs/language-basics/src/boolean-if-else/switch.jsligo '5' --entry-
 # Outputs: "Q2"
 ```
 
+### Ternary expression
+JsLIGO also supports JavaScript's ternary expression:
+
+```jsligo
+let f = a => a == 1 ? true : false
+```
+
+which can also be nested:
+```jsligo
+let f = a => 
+  a == 1 ? "one"   : 
+  a == 2 ? "two"   : 
+  a == 3 ? "three" : 
+          "other"
+```
 
 </Syntax>
+
