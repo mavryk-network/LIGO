@@ -74,6 +74,7 @@ let private_attribute = {
 (*%on_error_reduce nsepseq(type_expr,COMMA)*)
 %on_error_reduce nsepseq(statement,SEMI)
 %on_error_reduce nsepseq(variant,VBAR)
+%on_error_reduce ternary_expr
 
 (* See [ParToken.mly] for the definition of tokens. *)
 
