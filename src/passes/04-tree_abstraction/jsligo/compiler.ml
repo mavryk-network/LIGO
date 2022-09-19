@@ -132,8 +132,10 @@ module Compile_type = struct
     )
     | _ -> None
 
-  (* this is a bad design, michelson_or and pair should be an operator
-  see AnnotType *)
+  (*
+  this is a bad design, michelson_or and pair should be an operator (see AnnotType) => already the case ?
+  here, we just want to check that the 2nd and 4th parameters are "string singleton"'s
+  *)
   and compile_michelson_pair_or ~raise : type_compiler_opt = fun te ->
     match te with
     | TApp app -> (
@@ -279,6 +281,27 @@ module Compile_type = struct
         | _ -> raise.error (expected_a_variable (CST.type_expr_to_region ma.field))
       in
       return @@ aux [module_name] ma.field
+
+(*
+    propagate_type_left_to_right
+
+
+    let <var> : <ascr> = <rhs>
+    
+
+*)
+let propagate_type_left_to_right (type_params_opt : CST.type_generics option) binder : type_expression option Binder.t =
+  let aux ascr =
+    let open Option in
+    let* rhs_type = ascr in
+    return @@ Option.value_map type_params_opt ~default:rhs_type ~f:(fun tp ->
+      let (tp, loc) = r_split tp in
+      let type_vars = List.Ne.map compile_type_var @@ npseq_to_ne_list tp.inside in
+      List.Ne.fold_right ~f:(fun tvar t -> t_for_all ~loc tvar Type t) ~init:rhs_type type_vars
+    )
+  in
+  let binder = Binder.map aux binder in
+  binder
 
 end
 
@@ -819,19 +842,11 @@ and compile_function_body_to_expression ~raise : CST.body -> AST.expression = fu
 and compile_let_to_declaration ~raise : const:bool -> CST.attributes -> CST.val_binding Region.reg -> AST.declaration list =
     fun ~const attributes let_binding ->
       let ({binders; type_params; lhs_type; expr = let_rhs; _} : CST.val_binding) = let_binding.value in
-      let lst = compile_let_binding ~raise ~const attributes let_rhs lhs_type type_params binders let_binding.region in
-      let aux : (type_expression option Binder.t * Types.attributes * CST.type_generics option * expression) -> declaration =
-        fun (binder,attr,type_params,expr) ->
+      let lst = compile_let_binding ~raise ~const attributes let_rhs lhs_type binders let_binding.region in
+      let aux : (type_expression option Binder.t * Types.attributes * expression) -> declaration =
+        fun (binder,attr,expr) ->
           (* This handle polymorphic annotation *)
-          let map_ascr ascr =
-            Option.map ascr ~f:(fun rhs_type ->
-              Option.value_map type_params ~default:rhs_type ~f:(fun tp ->
-              let (tp, loc) = r_split tp in
-              let type_vars = List.Ne.map compile_type_var @@ npseq_to_ne_list tp.inside in
-              List.Ne.fold_right ~f:(fun tvar t -> t_for_all ~loc tvar Type t) ~init:rhs_type type_vars
-            ))
-          in
-          let binder = Binder.map map_ascr binder in
+          let binder = propagate_type_left_to_right type_params binder in
           let expr = Option.value_map ~default:expr ~f:(fun tp ->
             let (tp,loc) = r_split tp in
             let type_vars = List.Ne.map compile_type_var @@ npseq_to_ne_list tp.inside in
@@ -897,8 +912,9 @@ and compile_pattern ~raise : const:bool -> CST.pattern -> type_expression option
 and filter_private (attributes: CST.attributes) =
   List.filter ~f:(fun v -> not @@ String.equal v.value "private") attributes
 
-and compile_let_binding ~raise : const:bool -> CST.attributes -> CST.expr -> (CST.colon * CST.type_expr) option -> CST.type_generics option -> CST.pattern -> Region.t -> (type_expression option Binder.t * Ast_imperative__.Types.attributes * _ * expression) list =
-  fun ~const attributes let_rhs type_expr type_params binders _region ->
+(* type_params unused ????? *)
+and compile_let_binding ~raise : const:bool -> CST.attributes -> CST.expr -> (CST.colon * CST.type_expr) option -> CST.pattern -> Region.t -> (type_expression option Binder.t * Ast_imperative__.Types.attributes * expression) list =
+  fun ~const attributes let_rhs type_expr binders _region ->
   let attributes = compile_attributes attributes in
   let expr = compile_expression ~raise let_rhs in
   let lhs_type = Option.map ~f:(compile_type_expression ~raise <@ snd) type_expr in
@@ -922,7 +938,8 @@ and compile_let_binding ~raise : const:bool -> CST.attributes -> CST.expr -> (CS
         | _ -> expr
         )
       in
-      [(Binder.make ~mut:(not const) fun_binder lhs_type), attributes, type_params, expr]
+      let binder = (Binder.make ~mut:(not const) fun_binder lhs_type) in
+      [binder, attributes, expr]
     | CST.PArray a ->  (* tuple destructuring (for top-level only) *)
       let matchee = expr in
       let (tuple, _loc) = r_split a in
@@ -930,7 +947,7 @@ and compile_let_binding ~raise : const:bool -> CST.attributes -> CST.expr -> (CS
       let lst = List.map ~f:(compile_pattern ~raise ~const) array_items in
       let (lst, exprs) = List.unzip lst in
       let expr = List.fold_right ~f:(@@) exprs ~init:matchee in
-      let aux i binder = Z.add i Z.one, (binder, attributes, type_params, e_accessor expr @@ [Access_tuple i]) in
+      let aux i binder = Z.add i Z.one, (binder, attributes, e_accessor expr @@ [Access_tuple i]) in
       let lst = snd @@ List.fold_map ~f:aux ~init:Z.zero @@ lst in
       lst
     | _ -> raise.error @@ unsupported_pattern_type @@ binders
@@ -977,23 +994,22 @@ and compile_statement ?(wrap=false) ~raise : CST.statement -> statement_result
       let matchee = self_expr let_rhs in
       compile_object_let_destructuring ~raise ~const matchee o
     | _ ->
-      let lst = compile_let_binding ~raise ~const attributes let_rhs lhs_type type_params binders region in
-      let aux (binder,attr,type_params,rhs) expr =
+      let lst = compile_let_binding ~raise ~const attributes let_rhs lhs_type binders region in
+      let aux (binder,attr,rhs) expr =
         match rhs.expression_content with
           E_assign {binder=b; _} ->
+            (* transitivity assignation :
+              const lol = (x:int) : [ int , int ] => {
+                let y = 0 ;
+                let toto = (y = x + 1) ;
+                return toto
+              }
+            *)
             let var = {expression_content = E_variable (Binder.get_var b); location = rhs.location} in
             let e2 = e_let_in ~loc: (Location.lift region) binder attr var expr in
             e_sequence rhs e2
         | _ ->
-          let map_ascr ascr =
-            Option.map ascr ~f:(fun rhs_type ->
-              Option.value_map type_params ~default:rhs_type ~f:(fun (tp : CST.type_generics)  ->
-              let (tp, loc) = r_split tp in
-              let type_vars = List.Ne.map compile_type_var @@ npseq_to_ne_list tp.inside in
-              List.Ne.fold_right ~f:(fun tvar t -> t_for_all ~loc tvar Type t) ~init:rhs_type type_vars
-            ))
-          in
-          let binder = Binder.map map_ascr binder in
+          let binder = propagate_type_left_to_right type_params binder in
           (* This handle polymorphic annotation *)
           let rhs = Option.value_map ~default:rhs ~f:(fun (tp : CST.type_generics) ->
             let (tp,loc) = r_split tp in
