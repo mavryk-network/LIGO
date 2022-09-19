@@ -303,20 +303,11 @@ ternary_expr:
   let stop  = expr_to_region $5 in
   ETernary { 
     value = {
-      condition = { 
-        value = $1;
-        region = start
-      };
+      condition = $1;
       qmark = $2;
-      truthy = {
-        value = $3;
-        region = expr_to_region $3;
-      };
+      truthy = $3;
       colon = $4;
-      falsy = {
-        value  = $5;
-        region = expr_to_region $5;
-      }
+      falsy = $5;
     };
     region = cover start stop
   }
