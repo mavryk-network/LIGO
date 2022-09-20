@@ -32,15 +32,131 @@ let rec compile_type_expression : CST.type_expr -> AST.type_expr = fun te ->
 
 (* ========================== PATTERNS ===================================== *)
 
-and compile_pattern : CST.pattern -> AST.pattern = fun p ->
-  let () = ignore p in
+and compile_pattern ~raise : CST.pattern -> AST.pattern = fun p ->
+  let () = ignore (p, raise) in
   P_Dummy
 
 (* ========================== INSTRUCTIONS ================================= *)
 
-and compile_instruction : CST.instruction -> AST.instruction = fun i ->
-  let () = ignore i in
-  i_dummy ()
+and compile_block ~raise : CST.block -> AST.block = fun b ->
+  List.Ne.map (compile_statement ~raise) @@ nsepseq_to_nseq b.statements
+
+and compile_test_clause : raise:_ -> CST.test_clause -> AST.test_clause = fun ~raise c ->
+  match c with
+  | CST.ClauseInstr i -> AST.ClauseInstr (compile_instruction ~raise i)
+  | CST.ClauseBlock b -> AST.ClauseBlock (compile_block ~raise @@ r_fst b)
+
+and compile_case_clause : 'a 'b. raise:_ -> ('a -> 'b) -> 'a CST.case_clause -> 'b AST.case_clause = fun ~raise f c ->
+  let pattern = compile_pattern ~raise c.pattern in
+  let rhs     = f c.rhs in
+  {pattern; rhs}
+
+and compile_case : 'a 'b. raise:_ -> ('a -> 'b) -> 'a CST.case -> 'b AST.case = fun ~raise f c ->
+  let expr = compile_expression ~raise c.expr in
+  let cases = List.Ne.map (compile_case_clause ~raise f <@ r_fst) @@ nsepseq_to_nseq c.cases in
+  {expr; cases}
+
+and compile_cond : 'a 'b. raise:_ -> ('a -> 'b) -> 'a CST.conditional -> 'b AST.cond = fun ~raise f c ->
+  let test  = compile_expression ~raise c.test in
+  let ifso  = f c.if_so in
+  let ifnot = Option.apply (f <@ snd) c.if_not in
+  {test; ifso; ifnot}
+
+and compile_for_map ~raise : CST.for_map -> AST.for_map = fun m ->
+  let binding =
+    let k, _, v = m.binding in
+    w_fst k, w_fst v
+  in
+  let collection = compile_expression ~raise m.collection in
+  let block      = compile_block ~raise @@ r_fst m.block in
+  {binding; collection; block}
+
+and compile_for_set_or_list ~raise : CST.for_set_or_list -> AST.for_set_or_list = fun s ->
+  let var = w_fst s.var in
+  let for_kind = match s.for_kind with
+  | `Set  _ -> `Set
+  | `List _ -> `List
+  in
+  let collection = compile_expression ~raise s.collection in
+  let block      = compile_block ~raise @@ r_fst s.block in
+  {var; for_kind; collection; block}
+
+and compile_instruction ~raise : CST.instruction -> AST.instruction = fun i ->
+  let compile_expr = compile_expression ~raise in
+  match i with
+  | I_Assign i -> (
+    let i, loc = r_split i in
+    let lhs_expr = compile_expr i.lhs in
+    let rhs_expr = compile_expr i.rhs in
+    i_assign {lhs_expr; rhs_expr} ~loc ()
+  )
+  | I_Call i -> (
+    let i, loc = r_split i in
+    let f, args = i in
+    let f = compile_expression ~raise f in
+    let args : expr list = List.map ~f:compile_expr @@ sepseq_to_list (r_fst args).inside in
+    i_call f args ~loc ()
+  )
+  | I_Case i -> (
+    let i, loc = r_split i in
+    let i : test_clause case = compile_case ~raise (compile_test_clause ~raise) i in
+    i_case i ~loc ()
+  )
+  | I_Cond i -> (
+    let i, loc = r_split i in
+    let i : test_clause cond = compile_cond ~raise (compile_test_clause ~raise) i in
+    i_cond i ~loc ()
+  )
+  | I_For i -> (
+    let i, loc = r_split i in
+    let index = w_fst i.index in
+    let init  = compile_expr i.init in
+    let bound = compile_expr i.bound in
+    let step = Option.apply (compile_expr <@ snd) i.step in
+    let block = compile_block ~raise @@ r_fst i.block in
+    i_for {index; init; bound; step; block} ~loc ()
+  )
+  | I_ForIn  i -> (
+    let i, loc =
+      match i with
+      | ForMap       m -> let m, loc = r_split m in ForMap (compile_for_map ~raise m), loc
+      | ForSetOrList s -> let s, loc = r_split s in ForSetOrList (compile_for_set_or_list ~raise s), loc
+    in
+    i_forin i ~loc ()
+  )
+  | I_Patch  i -> (
+    let i, loc = r_split i in
+    let collection = compile_expr i.collection in
+    let patch_kind =
+      match i.patch_kind with
+      | `Map    _ -> `Map
+      | `Record _ -> `Record
+      | `Set    _ -> `Set
+    in
+    let patch = compile_expr i.patch in
+    i_patch {collection; patch_kind; patch} ~loc ()
+  )
+  | I_Remove i -> (
+    let i, loc = r_split i in
+    let item_expr = compile_expr i.item in
+    let remove_kind =
+      match i.remove_kind with
+      | `Set _ -> `Set
+      | `Map _ -> `Map
+    in
+    let collection = compile_expr i.collection in
+    i_remove {item_expr; remove_kind; collection} ~loc ()
+  )
+  | I_Skip   i -> (
+    let _, loc = w_split i in
+    i_skip ~loc ()
+  )
+  | I_While  i -> (
+    let i, loc = r_split i in
+    let cond = compile_expr i.cond in
+    let block = compile_block ~raise @@ r_fst i.block in
+    i_while {cond; block} ~loc ()
+  )
 
 (* ========================== STATEMENTS ================================= *)
 
@@ -59,13 +175,13 @@ and compile_statement ~raise : CST.statement -> AST.statement = fun s ->
     s_decl s ~loc ()
   )
   | S_Instr s -> (
-    let s = compile_instruction s in
+    let s = compile_instruction ~raise s in
     let loc = s.location in
     s_instr s ~loc ()
   )
   | S_VarDecl s -> (
     let s, loc = r_split s in
-    let pattern     = compile_pattern s.pattern in
+    let pattern     = compile_pattern ~raise s.pattern in
     let type_params = Option.apply extract_type_params s.type_params in
     let var_type    = Option.apply (compile_type_expression <@ snd) s.var_type in
     let init        = compile_expression ~raise s.init in
@@ -105,7 +221,7 @@ and compile_expression ~raise : CST.expr -> AST.expr = fun e ->
   in
   let compile_param_decl : CST.param_decl -> AST.param_decl = fun p ->
     let param_kind = match p.param_kind with `Var _ -> `Var | `Const _ -> `Const in
-    let pattern    = compile_pattern p.pattern in
+    let pattern    = compile_pattern ~raise p.pattern in
     let param_type = Option.apply (compile_type_expression <@ snd) p.param_type in
     {param_kind; pattern; param_type}
   in
@@ -225,14 +341,8 @@ and compile_expression ~raise : CST.expr -> AST.expr = fun e ->
     )
   | E_Case case -> (
       let case, loc = r_split case in
-      let expr = self case.expr in
-      let cases : case_clause nseq =
-        let compile_case_clause : CST.expr CST.case_clause -> AST.case_clause =
-          fun c -> { pattern = compile_pattern c.pattern; rhs = self c.rhs }
-        in
-        nseq_map (compile_case_clause <@ r_fst) @@ nsepseq_to_nseq case.cases
-      in
-      e_case {expr; cases} ~loc ()
+      let case = compile_case ~raise self case in
+      e_case case ~loc ()
     )
   | E_Typed annot -> (
       let annot, loc = r_split annot in
@@ -344,7 +454,7 @@ and compile_declaration ~raise : CST.declaration -> AST.declaration = fun decl -
     (* TODO NP : Should we really use the 'let_binding' record for D_Const ? *)
     let is_rec = false in
     let type_params = Option.apply compile_type_params d.type_params in
-    let binders = List.Ne.singleton @@ compile_pattern d.pattern in
+    let binders = List.Ne.singleton @@ compile_pattern ~raise d.pattern in
     let rhs_type = Option.apply (compile_type_expression <@ snd) d.const_type in
     let let_rhs = compile_expression ~raise d.init in
     d_let {is_rec; type_params; binders; rhs_type; let_rhs} ~loc ()
@@ -368,7 +478,7 @@ and compile_declaration ~raise : CST.declaration -> AST.declaration = fun decl -
           | `Const _ -> `Const
           | `Var   _ -> `Var
         ) in
-        let pattern = compile_pattern pd.pattern in
+        let pattern = compile_pattern ~raise pd.pattern in
         let param_type = Option.apply (compile_type_expression <@ snd) pd.param_type in
         {param_kind; pattern; param_type}
       in

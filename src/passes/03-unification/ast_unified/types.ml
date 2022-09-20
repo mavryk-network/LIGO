@@ -72,7 +72,86 @@ and instr_content = instruction_content
 and instr         = instruction
   [@@deriving yojson]
 
-and instruction_content = I_Dummy  (* TODO NP : Add instructions *)
+and block = statement nseq
+
+and 'clause case_clause = {
+  pattern : pattern;
+  rhs     : 'clause;
+}
+
+and test_clause =
+| ClauseInstr of instruction
+| ClauseBlock of block
+
+and 'clause case = {
+  expr         : expr;
+  cases        : 'clause case_clause nseq;
+}
+
+and assignment = {
+  lhs_expr : expr;
+  rhs_expr : expr;
+}
+
+and 'branch cond = {
+  test         : expr;
+  ifso         : 'branch;
+  ifnot        : 'branch option;
+}
+
+and for_int = {
+  index   : string;
+  init    : expr;
+  bound   : expr;
+  step    : expr option; (* [1] if [None] *)
+  block   : block;
+}
+
+and for_in =
+| ForMap       of for_map
+| ForSetOrList of for_set_or_list
+
+and for_map = {
+  binding    : string * string;
+  collection : expr;
+  block      : block;
+}
+
+and for_set_or_list = {
+  var        : string;
+  for_kind   : [`Set | `List];
+  collection : expr;
+  block      : block;
+}
+
+and patch = {
+  collection : expr;
+  patch_kind : [`Map | `Record | `Set];
+  patch      : expr;
+}
+
+and removal = {
+  item_expr   : expr;
+  remove_kind : [`Set | `Map];
+  collection  : expr;
+}
+
+and while_loop = {
+  cond      : expr;
+  block     : block;
+}
+
+and instruction_content =
+| I_Assign of assignment
+| I_Call   of expr * expr list
+| I_Case   of test_clause case
+| I_Cond   of test_clause cond
+| I_For    of for_int
+| I_ForIn  of for_in
+| I_Patch  of patch
+| I_Remove of removal
+| I_Skip
+| I_While  of while_loop
 
 (* ========================== STATEMENTS =================================== *)
 
@@ -89,13 +168,6 @@ and var_decl = {
   type_params : string nseq option;
   var_type    : type_expression option;
   init        : expr;
-}
-
-(* TODO NP : Merge with 'cond_expr' type ? *)
-and cond_statement = {
-  test     : expr;
-  s_ifso   : statement;
-  s_ifnot  : statement option;
 }
 
 (* TODO NP : Merge with 'case' record ? *)
@@ -143,7 +215,7 @@ and statement_content =
   (* Jsligo *)
 | S_Block      of statement nseq
 | S_Expr       of expr
-| S_Cond       of cond_statement
+| S_Cond       of statement cond
 | S_Return     of expr option
 | S_Let        of let_binding nseq
 | S_Const      of let_binding nseq
@@ -330,22 +402,6 @@ and fun_expr_jsligo = {
   body       : body_jsligo;
 }
 
-and case_clause = {
-  pattern      : pattern;
-  rhs          : expr;
-}
-
-and case = {
-  expr         : expr;
-  cases        : case_clause nseq;
-}
-
-and cond_expr = {
-  test         : expr;
-  ifso         : expr;
-  ifnot        : expr option;
-}
-
 and map_lookup = {
   map  : expr;
   keys : expr nseq;
@@ -472,14 +528,14 @@ and expression_content =
   | E_Constr of (string * expr option)    (* let x = MyCtor 42 *)
   | E_App of (expr * expr nseq option)    (* MyCtor (42, 43, 44), PascaLigo only *)
 
-  | E_Case of case                        (* match e with | A -> ... | B -> ... *)
+  | E_Case of expr case                   (* match e with | A -> ... | B -> ... *)
 
   (* Type annotation *)
   | E_Annot       of (expr * type_expr)   (* 42 : int *)
   | E_AnnotJsligo of (expr * type_expr)   (* Same as E_Annot, but some annots are special *)
 
   (* Conditionals *)
-  | E_Cond of cond_expr                   (* if b then 42 else 24 *)
+  | E_Cond of expr cond                   (* if b then 42 else 24 *)
 
   (* Lists *)
   | E_List of expr list                   (* [ 1; 2; 3; 4; 5] *)

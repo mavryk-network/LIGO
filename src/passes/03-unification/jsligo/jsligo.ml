@@ -60,9 +60,9 @@ and compile_statement ~raise : CST.statement -> AST.statement = fun s ->
   | SCond s -> (
     let s, loc = r_split s in
     let test = compile_expression ~raise s.test.inside in
-    let s_ifso = self s.ifso in
-    let s_ifnot = Option.map ~f:(self <@ snd) s.ifnot in
-    s_cond {test; s_ifso; s_ifnot} ~loc ()
+    let ifso = self s.ifso in
+    let ifnot = Option.map ~f:(self <@ snd) s.ifnot in
+    s_cond {test; ifso; ifnot} ~loc ()
   )
   | SReturn s -> (
     let s, loc = r_split s in

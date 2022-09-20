@@ -207,8 +207,8 @@ let rec compile_expression ~raise : CST.expr -> AST.expr = fun e ->
   | ECase case -> (
       let case, loc = r_split case in
       let expr : expression = self case.expr in
-      let cases : case_clause nseq =
-        let compile_case_clause : CST.expr CST.case_clause -> AST.case_clause =
+      let cases : expr case_clause nseq =
+        let compile_case_clause : CST.expr CST.case_clause -> AST.expr AST.case_clause =
           fun c -> { pattern = compile_pattern c.pattern; rhs = self c.rhs }
         in
         nseq_map (compile_case_clause <@ r_fst) @@ nsepseq_to_nseq @@ r_fst case.cases
