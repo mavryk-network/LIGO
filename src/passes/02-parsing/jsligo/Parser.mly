@@ -74,6 +74,7 @@ let private_attribute = {
 (*%on_error_reduce nsepseq(type_expr,COMMA)*)
 %on_error_reduce nsepseq(statement,SEMI)
 %on_error_reduce nsepseq(variant,VBAR)
+%on_error_reduce nsepseq(object_type,VBAR)
 %on_error_reduce ternary_expr
 
 (* See [ParToken.mly] for the definition of tokens. *)
@@ -299,7 +300,7 @@ expr_stmt:
 | ternary_expr                 { $1 }
 
 ternary_expr:
-| disj_expr_level "?" ternary_expr ":" ternary_expr {   
+| as_expr_level "?" expr_stmt ":" expr_stmt {   
   let start = expr_to_region $1 in
   let stop  = expr_to_region $5 in
   ETernary { 
@@ -784,7 +785,11 @@ core_type:
 | "_"                   { TVar    {value="_"; region=$1#region} }
 | type_name             { TVar    $1 }
 | module_access_t       { TModA   $1 }
-| object_type           { TObject $1 }
+| nsepseq(object_type, "|") { 
+    match $1 with 
+      (obj, []) -> TObject obj
+    | _ as u    -> TDisc u
+  }
 | type_ctor_app         { TApp    $1 }
 | attributes type_tuple { TProd   {inside=$2; attributes=$1} }
 | par(type_expr)        { TPar    $1 }
