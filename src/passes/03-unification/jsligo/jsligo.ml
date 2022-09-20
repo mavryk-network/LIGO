@@ -330,6 +330,13 @@ and compile_expression ~raise : CST.expr -> AST.expr = fun e ->
     let expr2 = self expr2 in
     e_assignjsligo {expr1; op; expr2} ~loc ()
   )
+  | ETernary e -> (
+    let e, loc = r_split e in
+    let test   = self e.condition in
+    let truthy = self e.truthy in
+    let falsy = self e.falsy in
+    e_ternary {test; truthy; falsy} ~loc ()
+  )
 
 (* ========================== DECLARATIONS ================================= *)
 

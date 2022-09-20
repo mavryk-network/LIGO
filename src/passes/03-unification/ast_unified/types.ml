@@ -474,6 +474,12 @@ and assign_jsligo = {
   expr2 : expression;
 }
 
+and ternary = {
+  test   : expr;
+  truthy : expr;
+  falsy  : expr;
+}
+
 and expression_content = 
 
   (* Base *)
@@ -572,6 +578,9 @@ and expression_content =
 
   (* Assign jsligo *)
   | E_AssignJsligo of assign_jsligo
+  
+  (* Ternary operator *)
+  | E_Ternary of ternary                  (* x > 0 ? 42 : 24 *)
 
 and constant =
   { cons_name: Constant.rich_constant (* this is at the end because it is huge *)
