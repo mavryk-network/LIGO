@@ -12,6 +12,7 @@ module SMap = Map.Make (String)
 module Wrap = Lexing_shared.Wrap
 module Attr = Lexing_shared.Attr
 
+
 let sprintf = Printf.sprintf
 
 let wrap = Wrap.wrap
@@ -62,6 +63,7 @@ module T =
     | SLASH    of lexeme Wrap.t  (* /    *)
     | TIMES    of lexeme Wrap.t  (* *    *)
     | REM      of lexeme Wrap.t  (* %    *)
+    | QMARK    of lexeme Wrap.t  (* ?    *)
  (* | PLUS2    of lexeme Wrap.t  (* ++   *)
     | MINUS2   of lexeme Wrap.t  (* --   *) *)
     | LPAR     of lexeme Wrap.t  (* (    *)
@@ -133,7 +135,8 @@ module T =
 
     (* Virtual tokens *)
 
-    | ZWSP of lexeme Wrap.t  (* Zero-Width SPace *)
+    | ZWSP   of lexeme Wrap.t  (* Zero-Width SPace *)
+    | ES6FUN of lexeme Wrap.t (* indicate an arrow function *)
 
     (* End-Of-File *)
 
@@ -173,6 +176,7 @@ module T =
     | SLASH    t
     | TIMES    t
     | REM      t
+    | QMARK    t
  (* | PLUS2    t
     | MINUS2   t *)
     | LPAR     t
@@ -244,7 +248,9 @@ module T =
 
     (* Virtual tokens *)
 
-    | ZWSP _ -> ""
+    | ZWSP _ 
+    | ES6FUN _ -> ""
+    
 
     (* End-Of-File *)
 
@@ -401,6 +407,7 @@ module T =
     let wrap_slash    = wrap "/"
     let wrap_times    = wrap "*"
     let wrap_rem      = wrap "%"
+    let wrap_qmark    = wrap "?"
  (* let wrap_plus2    = wrap "++"
     let wrap_minus2   = wrap "--" *)
     let wrap_lpar     = wrap "("
@@ -450,6 +457,7 @@ module T =
     let mk_SLASH    region = SLASH    (wrap_slash    region)
     let mk_TIMES    region = TIMES    (wrap_times    region)
     let mk_REM      region = REM      (wrap_rem      region)
+    let mk_QMARK    region = QMARK    (wrap_qmark    region)
  (* let mk_PLUS2    region = PLUS2    (wrap_plus2    region)
     let mk_MINUS2   region = MINUS2   (wrap_minus2   region) *)
     let mk_LPAR     region = LPAR     (wrap_lpar     region)
@@ -500,6 +508,7 @@ module T =
       mk_SLASH;
       mk_TIMES;
       mk_REM;
+      mk_QMARK;
  (*   mk_PLUS2;
       mk_MINUS2; *)
       mk_LPAR;
@@ -561,6 +570,7 @@ module T =
     let ghost_slash    = wrap_slash    Region.ghost
     let ghost_times    = wrap_times    Region.ghost
     let ghost_rem      = wrap_rem      Region.ghost
+    let ghost_qmark    = wrap_qmark      Region.ghost
  (* let ghost_plus2    = wrap_plus2    Region.ghost
     let ghost_minus2   = wrap_minus2   Region.ghost *)
     let ghost_lpar     = wrap_lpar     Region.ghost
@@ -608,6 +618,7 @@ module T =
     let ghost_SLASH    = SLASH    ghost_slash
     let ghost_TIMES    = TIMES    ghost_times
     let ghost_REM      = REM      ghost_rem
+    let ghost_QMARK    = QMARK    ghost_qmark
  (* let ghost_PLUS2    = PLUS2    ghost_plus2
     let ghost_MINUS2   = MINUS2   ghost_minus *)
     let ghost_LPAR     = LPAR     ghost_lpar
@@ -713,6 +724,11 @@ module T =
     let mk_ZWSP region = ZWSP (wrap_zwsp region)
     let ghost_ZWSP     = mk_ZWSP Region.ghost
 
+    let wrap_es6fun      = wrap ""
+    let ghost_es6fun     = wrap_es6fun Region.ghost
+    let mk_ES6FUN region = ES6FUN (wrap_es6fun region)
+    let ghost_ES6FUN     = mk_ES6FUN Region.ghost
+
     (* END-OF-FILE TOKEN *)
 
     let wrap_eof      = wrap ""
@@ -744,6 +760,7 @@ module T =
     | "SLASH"    -> ghost_slash#payload
     | "TIMES"    -> ghost_times#payload
     | "REM"      -> ghost_rem#payload
+    | "QMARK"    -> ghost_qmark#payload
  (* | "PLUS2"    -> ghost_plus2#payload
     | "MINUS2"   -> ghost_minus2#payload *)
     | "LPAR"     -> ghost_lpar#payload
@@ -817,6 +834,7 @@ module T =
     (* Virtual tokens *)
 
     | "ZWSP" -> ""
+    | "ES6FUN" -> ""
 
     (* End-Of-File *)
 
@@ -876,6 +894,7 @@ module T =
     | SLASH    t -> t#region, "SLASH"
     | TIMES    t -> t#region, "TIMES"
     | REM      t -> t#region, "REM"
+    | QMARK    t -> t#region, "QMARK"
  (* | PLUS2    t -> t#region, "PLUS2"
     | MINUS2   t -> t#region, "MINUS2" *)
     | LPAR     t -> t#region, "LPAR"
@@ -948,7 +967,8 @@ module T =
 
     (* Virtual tokens *)
 
-    | ZWSP t -> t#region, "ZWSP"
+    | ZWSP t   -> t#region, "ZWSP"
+    | ES6FUN t -> t#region, "ES6FUN"
 
     (* End-Of-File *)
 
@@ -1057,10 +1077,11 @@ module T =
     let hex_digits = ["A"; "B"; "C"; "D"; "E"; "F";
                       "a"; "b"; "c"; "d"; "e"; "f"]
 
-    let is_hex = function
-      UIdent t | Ident t ->
-        List.mem hex_digits t#payload ~equal:String.equal
-    | _ -> false
+   let is_hex = function
+     UIdent t | Ident t ->
+       List.mem hex_digits t#payload ~equal:String.equal
+   | _ -> false
+                
 
     let is_sym = function
       MINUS _
@@ -1068,6 +1089,7 @@ module T =
     | SLASH _
     | TIMES _
     | REM _
+    | QMARK _
  (* | PLUS2 _
     | MINUS2 _ *)
     | LPAR _
@@ -1113,7 +1135,7 @@ module T =
 
     (* String delimiters *)
 
-    let support_string_delimiter c = Char.(c = '"')
+    let support_string_delimiter c = Char.equal c '"'
 
     (* Verbatim strings *)
 

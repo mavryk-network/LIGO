@@ -5,7 +5,7 @@ variables:
 
 stages:
   - pretooling                      # changelog
-  - build                    # build, test, produces binaries/.deb/doc within docker
+  - build                           # build, test, produces binaries/.deb/doc within docker
   - post-build-action               # Post build action
   - docker-extract                  # extract what have been built and expose them as artifact
   - tooling                         # build miscellaneous tooling-related things (website, changelog..)
@@ -16,8 +16,6 @@ stages:
 include:
   # jobs for managing process around changelog generation
   - '/.ci/.gitlab-ci-changelog.yml'
-  # jobs for building and testing LSP
-  - '/tools/lsp/.gitlab-ci.yml'
   # jobs for managing process around release
   - '/.ci/.gitlab-ci-release.yml'
 
@@ -26,14 +24,15 @@ include:
     - sed -i 's;without-tests;prometheansacrifice/v12.0-ligo-windows-compat;' .git/modules/vendors/tezos-ligo/config
     - git submodule sync --recursive
     - git submodule update --init --recursive --remote
+
 .nix:
   extends: .submodule-clone
   before_script:
     - find "$CI_PROJECT_DIR" -path "$CI_PROJECT_DIR/.git" -prune -o "(" -type d -a -not -perm -u=w ")" -exec chmod --verbose u+w {} ";"
     - export COMMIT_DATE="$(git show --no-patch --format=%ci)"
+
 changelog:
   stage: pretooling
-  extends : .nix
   only:
     - merge_requests
     - dev
@@ -41,9 +40,7 @@ changelog:
     - /^release/.*$/
     - /[0-9]+\.[0-9]+\.[0-9]+/
   script:
-    - echo $CI_WORKFLOW
-    - nix-build nix -A ligo-changelog
-    - cp -L result/* .
+    - ./scripts/changelog-generation.sh
   artifacts:
     paths:
       - changelog.md
@@ -97,7 +94,6 @@ docker_extract:
     - /^.*-run-dev$/
     - /^release/.*$/
     - /[0-9]+\.[0-9]+\.[0-9]+/
-  extends: .nix
   dependencies :
     - docker_build
   script:
@@ -108,8 +104,8 @@ docker_extract:
     - ldd ligo | grep 'statically' # TODO: there is maybe a better way to do that ?
     - docker cp -La $(docker create ${LIGO_IMAGE_TAG}):/root/doc .
     - docker cp $(docker create ${LIGO_IMAGE_TAG}):/root/highlighting ./highlighting
-    - nix-build nix -A ligo-deb
-    - cp -L result/ligo.deb .
+    # Generate ligo.deb
+    - ./scripts/create-package-deb-file.sh
   after_script:
     - docker image rm -f "${LIGO_IMAGE_TAG}" >/dev/null 2>&1 || true
   artifacts:
@@ -125,7 +121,9 @@ check-generated-highlighting:
     - docker_extract
   script:
     - scripts/diff_dir.sh highlighting/emacs tools/emacs
-    - scripts/diff_dir.sh highlighting/vim tools/vim/ligo/start/ligo/syntax
+    - scripts/diff_dir.sh highlighting/vim/ftdetect tools/vim/ligo/start/ligo/ftdetect
+    - scripts/diff_dir.sh highlighting/vim/plugin tools/vim/ligo/start/ligo/plugin
+    - scripts/diff_dir.sh highlighting/vim/syntax tools/vim/ligo/start/ligo/syntax
     - scripts/diff_dir.sh highlighting/vscode tools/lsp/vscode-plugin/syntaxes
     - scripts/diff_dir.sh highlighting/textmate tools/ligo-syntax-highlighting/textmate
   rules:

@@ -11,17 +11,16 @@ module Tezos = struct
   let get_chain_id (_u : unit) : chain_id = [%Michelson ({| { DROP ; CHAIN_ID } |} : unit -> chain_id)] ()
   let get_total_voting_power (_u : unit) : nat = [%Michelson ({| { DROP ; TOTAL_VOTING_POWER } |} : unit -> nat)] ()
   let get_min_block_time (_u : unit) : nat = [%Michelson ({| { DROP; MIN_BLOCK_TIME } |} : unit -> nat) ] ()
-  [@thunk] let balance : tez = get_balance ()
-  [@thunk] let amount : tez = get_amount ()
-  [@thunk] let now : timestamp = get_now ()
-  [@thunk] let sender : address = get_sender ()
-  [@thunk] let source : address = get_source ()
-  [@thunk] let level : nat = get_level ()
-  [@thunk] let self_address : address = get_self_address ()
-  [@thunk] let chain_id : chain_id = get_chain_id ()
-  [@thunk] let total_voting_power : nat = get_total_voting_power ()
-  [@thunk] let min_block_time : nat = get_min_block_time ()
-  (* [@thunk] let self (type a) (s : string) : a contract = [%external ("SELF", s)] *)
+  [@inline] [@thunk] let balance : tez = get_balance ()
+  [@inline] [@thunk] let amount : tez = get_amount ()
+  [@inline] [@thunk] let now : timestamp = get_now ()
+  [@inline] [@thunk] let sender : address = get_sender ()
+  [@inline] [@thunk] let source : address = get_source ()
+  [@inline] [@thunk] let level : nat = get_level ()
+  [@inline] [@thunk] let self_address : address = get_self_address ()
+  [@inline] [@thunk] let chain_id : chain_id = get_chain_id ()
+  [@inline] [@thunk] let total_voting_power : nat = get_total_voting_power ()
+  [@inline] [@thunk] let min_block_time : nat = get_min_block_time ()
   let voting_power (kh : key_hash) : nat = [%Michelson ({| { VOTING_POWER } |} : key_hash -> nat)] kh
   let address (type a) (c : a contract) : address = [%external ("ADDRESS", c)]
   let implicit_account (kh : key_hash) : unit contract = [%external ("IMPLICIT_ACCOUNT", kh)]
@@ -33,6 +32,9 @@ module Tezos = struct
   let pairing_check (l : (bls12_381_g1 * bls12_381_g2) list) : bool = [%Michelson ({| { PAIRING_CHECK } |} : (bls12_381_g1 * bls12_381_g2) list -> bool)] l
   let constant (type a) (s : string) : a = [%external ("GLOBAL_CONSTANT", s)]
   let set_delegate (o : key_hash option) : operation = [%external ("SET_DELEGATE", o)]
+  [@inline] [@thunk] let self (type a) (s : string) : a contract = [%external ("SELF", s)]
+  [@inline] [@thunk] let constant (type a) (s : string) : a = [%external ("GLOBAL_CONSTANT", s)]
+  [@inline] [@thunk] let sapling_empty_state (type sap_a) : sap_a sapling_state = [%external ("SAPLING_EMPTY_STATE")]
 
 #if CURRY
   let get_contract (type a) (a : address) : (a contract) = [%external ("CONTRACT", a)]
@@ -44,6 +46,13 @@ module Tezos = struct
   let call_view (type a b) (s : string) (x : a) (a : address)  : b option = [%external ("VIEW", s, x, a)]
   let split_ticket (type a) (t : a ticket) (p : nat * nat) : (a ticket * a ticket) option =
       [%Michelson ({| { UNPAIR ; SPLIT_TICKET } |} : a ticket * (nat * nat) -> (a ticket * a ticket) option)] (t, p)
+  [@inline] [@thunk] let create_contract (type p s) (f : p * s -> operation list * s) (kh : key_hash option) (t : tez) (s : s) : (operation * address) =
+      [%external ("CREATE_CONTRACT", f, kh, t, s)]
+  [@inline] [@thunk] let get_entrypoint_opt (type p) (e : string) (a : address) : p contract option = [%external ("CONTRACT_ENTRYPOINT_OPT", e, a)]
+  [@inline] [@thunk] let get_entrypoint (type p) (e : string) (a : address) : p contract = [%external ("CONTRACT_ENTRYPOINT", e, a)]
+  [@inline] [@thunk] let call_view (type a b) (s : string) (v : a) (a : address) : b option = [%external ("VIEW", s, v, a)]
+  [@inline] [@thunk] let emit (type a) (s : string) (v : a) : operation = [%external ("EMIT_EVENT", s, v)]
+  [@inline] [@thunk] let sapling_verify_update (type sap_a) (t : sap_a sapling_transaction) (s : sap_a sapling_state) : (bytes * (int * sap_a sapling_state)) option = [%external ("SAPLING_VERIFY_UPDATE", t, s)]
 #endif
 
 #if UNCURRY
@@ -56,23 +65,30 @@ module Tezos = struct
   let call_view (type a b) ((s, x, a) : string * a * address)  : b option = [%external ("VIEW", s, x, a)]
   let split_ticket (type a) ((t, p) : (a ticket) * (nat * nat)) : (a ticket * a ticket) option =
     [%Michelson ({| { UNPAIR ; SPLIT_TICKET } |} : a ticket * (nat * nat) -> (a ticket * a ticket) option)] (t, p)
+  [@inline] [@thunk] let create_contract (type p s) ((f, kh, t, s) : (p * s -> operation list * s) * key_hash option * tez * s) : (operation * address) =
+      [%external ("CREATE_CONTRACT", f, kh, t, s)]
+  [@inline] [@thunk] let get_entrypoint_opt (type p) ((e, a) : string * address) : p contract option = [%external ("CONTRACT_ENTRYPOINT_OPT", e, a)]
+  [@inline] [@thunk] let get_entrypoint (type p) ((e, a) : string * address) : p contract = [%external ("CONTRACT_ENTRYPOINT", e, a)]
+  [@inline] [@thunk] let call_view (type a b) ((s, v, a) : string * a * address) : b option = [%external ("VIEW", s, v, a)]
+  [@inline] [@thunk] let emit (type a) ((s, v) : string * a) : operation = [%external ("EMIT_EVENT", s, v)]
+  [@inline] [@thunk] let sapling_verify_update (type sap_a) ((t, s) : sap_a sapling_transaction * sap_a sapling_state) : (bytes * (int * sap_a sapling_state)) option = [%external ("SAPLING_VERIFY_UPDATE", t, s)]
 #endif
 
 end
 
 module Bitwise = struct
 #if CURRY
-  (* let and (type a b) (l : a) (r : b) : (a, b) external_and = [%external ("AND", l, r)] *)
+  let @and (type a b) (l : a) (r : b) : (a, b) external_and = [%Michelson ({| { UNPAIR ; AND } |} : a * b -> (a, b) external_and)] (l, r)
   let xor (l : nat) (r : nat) : nat = [%external ("XOR", l, r)]
-  (* let or (l : nat) (r : nat) : nat = [%external ("OR", l, r)] *)
+  let @or (l : nat) (r : nat) : nat = [%external ("OR", l, r)]
   let shift_left (l : nat) (r : nat) : nat = [%external ("LSL", l, r)]
   let shift_right (l : nat) (r : nat) : nat = [%external ("LSR", l, r)]
 #endif
 
 #if UNCURRY
-  (* let and (type a b) ((l, r) : (a, b)) : (a, b) external_and = [%external ("AND", l, r)] *)
+  let @and (type a b) ((l, r) : (a * b)) : (a, b) external_u_and = [%Michelson ({| { UNPAIR ; AND } |} : a * b -> (a, b) external_u_and)] (l, r)
   let xor ((l, r) : nat * nat) : nat = [%external ("XOR", l, r)]
-  (* let or ((l, r) : nat * nat) : nat = [%external ("OR", l, r)] *)
+  let @or ((l, r) : nat * nat) : nat = [%external ("OR", l, r)]
   let shift_left ((l, r) : nat * nat) : nat = [%external ("LSL", l, r)]
   let shift_right ((l, r) : nat * nat) : nat = [%external ("LSR", l, r)]
 #endif
@@ -80,6 +96,7 @@ end
 
 module Big_map = struct
   [@inline] let empty (type k v) : (k, v) big_map = [%external ("BIG_MAP_EMPTY")]
+  [@thunk] [@inline] let literal (type k v) (l : (k * v) list) : (k, v) big_map = [%external ("BIG_MAP_LITERAL", l)]
 
 #if CURRY
   let mem (type k v) (k : k) (m : (k, v) big_map) : bool = [%Michelson ({| { UNPAIR ; MEM } |} : k * (k, v) big_map -> bool)] (k, m)
@@ -106,6 +123,7 @@ end
 module Map = struct
   let empty (type k v) : (k, v) map = [%external ("MAP_EMPTY")]
   let size (type k v) (m : (k, v) map) : nat = [%Michelson ({| { SIZE } |} : (k, v) map -> nat)] m
+  [@thunk] [@inline] let literal (type k v) (l : (k * v) list) : (k, v) map = [%external ("MAP_LITERAL", l)]
 
 #if CURRY
   let mem (type k v) (k : k) (m : (k, v) map) : bool = [%Michelson ({| { UNPAIR ; MEM } |} : k * (k, v) map -> bool)] (k, m)
@@ -139,6 +157,7 @@ module Set = struct
   let empty (type a) : a set = [%external ("SET_EMPTY")]
   let size (type a) (s : a set) : nat = [%Michelson ({| { SIZE } |} : a set -> nat)]  s
   let cardinal (type a) (s : a set) : nat = [%Michelson ({| { SIZE } |} : a set -> nat)] s
+  [@thunk] [@inline] let literal (type a) (l : a list) : a set = [%external ("SET_LITERAL", l)]
 
 #if CURRY
   let mem (type a) (x : a) (s : a set) : bool = [%external ("SET_MEM", x, s)]
@@ -175,6 +194,8 @@ module List = struct
   let fold_left (type a b) (f : b * a -> b) (i : b) (xs : a list) : b = [%external ("LIST_FOLD_LEFT", f, i, xs)]
   let fold_right (type a b) (f : a * b -> b) (xs : a list) (i : b) : b = [%external ("LIST_FOLD_RIGHT", f, xs, i)]
   let cons (type a) (x : a) (xs : a list) : a list = [%external ("CONS", x, xs)]
+  let find_opt (type a) (f : a -> bool) (xs : a list) : a option = 
+    fold_right (fun (a : a * a option) -> if f a.0 then Some a.0 else a.1) xs None
 #endif
 
 #if UNCURRY
@@ -184,6 +205,8 @@ module List = struct
   let fold_left (type a b) ((f, i, xs) : (b * a -> b) * b * a list) : b = [%external ("LIST_FOLD_LEFT", f, i, xs)]
   let fold_right (type a b) ((f, xs, i) : (a * b -> b) * a list * b) : b = [%external ("LIST_FOLD_RIGHT", f, xs, i)]
   let cons (type a) ((x, xs) : a * a list) : a list = [%external ("CONS", x, xs)]
+  let find_opt (type a) ((f, xs) : (a -> bool) * a list) : a option = 
+    fold_right ((fun (a : a * a option) -> if f a.0 then Some a.0 else a.1), xs, None)
 #endif
 
 end
@@ -208,12 +231,12 @@ module Option = struct
 
 #if CURRY
   let unopt_with_error (type a) (v : a option) (s : string) : a = [%external ("UNOPT_WITH_ERROR", v, s)]
-  (* let map (type a b) (f : a -> b) (v : a option) : b option = [%external ("OPTION_MAP", f, v)] *)
+  [@thunk] let map (type a b) (f : a -> b) (v : a option) : b option = [%external ("OPTION_MAP", f, v)]
 #endif
 
 #if UNCURRY
   let unopt_with_error (type a) ((v, s) : (a option) * string) : a = [%external ("UNOPT_WITH_ERROR", v, s)]
-  (* let map (type a b) ((f, v) : (a -> b) * (a option)) : b option = [%external ("OPTION_MAP", f, v)] *)
+  [@thunk] let map (type a b) ((f, v) : (a -> b) * (a option)) : b option = [%external ("OPTION_MAP", f, v)]
 #endif
 
 end
@@ -253,51 +276,34 @@ module Crypto = struct
 
 end
 
-[@private]
   let assert (b : bool) : unit = [%Michelson ({| { IF { UNIT } { PUSH string "failed assertion" ; FAILWITH } } |} : bool -> unit)] b
-[@private]
   let assert_some (type a) (v : a option) : unit =
     [%Michelson ({| { IF_NONE { PUSH string "failed assert some" ; FAILWITH } { DROP ; UNIT } } |} : a option -> unit)] v
-[@private]
   let assert_none (type a) (v : a option) : unit =
     [%Michelson ({| { IF_NONE { UNIT } { PUSH string "failed assert none" ; FAILWITH } } |} : a option -> unit)] v
-[@private]
   let abs (i : int) : nat = [%Michelson ({| { ABS } |} : int -> nat)] i
-[@private]
   let is_nat (i : int) : nat option = [%Michelson ({| { ISNAT } |} : int -> nat option)] i
-[@private]
   let true : bool = [%external ("TRUE")]
-[@private]
   let false : bool = [%external ("FALSE")]
-[@private]
   let unit : unit = [%external ("UNIT")]
-[@private]
   let failwith (type a b) = [%Michelson ({|{ FAILWITH }|} : a -> b)]
-[@private]
   let int (type a) (v : a) : a external_int = [%Michelson ({| { INT } |} : a -> a external_int)] v
+  let ignore (type a) (_ : a) : unit = ()
 
 #if CURRY
-[@private]
   let assert_with_error (b : bool) (s : string) =
     [%Michelson ({| { UNPAIR ; IF { DROP ; UNIT } { FAILWITH } } |} : bool * string -> unit)] (b, s)
-[@private]
   let assert_some_with_error (type a) (v : a option) (s : string) : unit =
     [%Michelson ({| { UNPAIR ; IF_NONE { FAILWITH } { DROP 2 ; UNIT } } |} : a option * string -> unit)] (v, s)
-[@private]
   let assert_none_with_error (type a) (v : a option) (s : string) : unit =
     [%Michelson ({| { UNPAIR ; IF_NONE { DROP ; UNIT } { DROP ; FAILWITH } } |} : a option * string -> unit)] (v, s)
-[@private]
   let ediv (type a b) (l : a) (r : b) : (a, b) external_ediv = [%Michelson ({| { UNPAIR ; EDIV } |} : a * b -> (a, b) external_ediv)] (l, r)
 #endif
 
 #if UNCURRY
-[@private]
   let assert_with_error ((b, s) : bool * string) = [%Michelson ({| { UNPAIR ; IF { DROP ; UNIT } { FAILWITH } } |} : bool * string -> unit)] (b, s)
-[@private]
   let assert_some_with_error (type a) ((v, s) : a option * string) : unit = [%Michelson ({| { UNPAIR ; IF_NONE { FAILWITH } { DROP 2 ; UNIT } } |} : a option * string -> unit)] (v, s)
-[@private]
   let assert_none_with_error (type a) ((v, s) : a option * string) : unit = [%Michelson ({| { UNPAIR ; IF_NONE { DROP ; UNIT } { DROP ; FAILWITH } } |} : a option * string -> unit)] (v, s)
-[@private]
   let ediv (type a b) ((l, r) : (a * b)) : (a, b) external_u_ediv = [%Michelson ({| { UNPAIR ; EDIV } |} : a * b -> (a, b) external_u_ediv)] (l, r)
 #endif
 
@@ -379,7 +385,9 @@ module Test = struct
   let set_baker_policy (bp : test_baker_policy) : unit = [%external ("TEST_SET_BAKER", bp)]
   let set_baker (a : address) : unit = set_baker_policy (By_account a)
   let size (c : michelson_contract) : int = [%external ("TEST_SIZE", c)]
-  let compile_contract (type p s) (f : p * s -> operation list * s) : michelson_contract = [%external ("TEST_COMPILE_CONTRACT", f)]
+  let compile_contract (type p s) (f : p * s -> operation list * s) : michelson_contract =
+    let ast_c : ast_contract = [%external ("TEST_COMPILE_CONTRACT", f)] in
+    [%external ("TEST_COMPILE_AST_CONTRACT", ast_c)]
   let read_contract_from_file (fn : string) : michelson_contract = [%external ("TEST_READ_CONTRACT_FROM_FILE", fn)]
   let chr (n : nat) : string option =
     let backslash = "\\" in
@@ -483,7 +491,9 @@ module Test = struct
     let c = size f in
     let a : (p, s) typed_address = cast_address a in
     (a, f, c)
-  let compile_contract_from_file (fn : string) (e : string) (v : string list) : michelson_contract = [%external ("TEST_COMPILE_CONTRACT_FROM_FILE", fn, e, v)]
+  let compile_contract_from_file (fn : string) (e : string) (v : string list) : michelson_contract =
+    let ast_c : ast_contract = [%external ("TEST_COMPILE_CONTRACT_FROM_FILE", fn, e, v, (None : nat option))] in
+    [%external ("TEST_COMPILE_AST_CONTRACT", ast_c)]
   let originate_from_file (fn : string) (e : string) (v : string list) (s : michelson_program)  (t : tez) : address * michelson_contract * int =
     let f = compile_contract_from_file fn e v in
     let a = originate_contract f s t in
@@ -507,6 +517,46 @@ module Test = struct
     let rec mutation_nth (acc : (b * mutation) list) (n : nat) : (b * mutation) list =
       let curr = match mutate_value n v with
         | Some (v, m) -> try_with (fun (_ : unit) -> let b = tester v in Passed (b, m)) (fun (_ : unit) -> Continue)
+        | None -> Stop in
+      match curr with
+      | Stop -> acc
+      | Continue -> mutation_nth acc (n + 1n)
+      | Passed (b, m) -> mutation_nth ((b, m) :: acc) (n + 1n) in
+    mutation_nth ([] : (b * mutation) list) 0n
+  let originate_from_file_and_mutate (type b) (fn : string) (e : string) (v : string list) (s : michelson_program) (t : tez)
+                                     (tester : address * michelson_contract * int -> b) : (b * mutation) option =
+    let wrap_tester (v : ast_contract) : b =
+      let f = [%external ("TEST_COMPILE_AST_CONTRACT", v)] in
+      let a = originate_contract f s t in
+      let c = size f in
+      tester (a, f, c) in
+    let ast_c : ast_contract = [%external ("TEST_COMPILE_CONTRACT_FROM_FILE", fn, e, v, (None : nat option))] in
+    let try_with (type a) (v : unit -> a) (c : unit -> a) = [%external ("TEST_TRY_WITH", v, c)] in
+    type ret_code = Passed of (b * mutation) | Continue | Stop in
+    let rec mutation_nth (n : nat) : (b * mutation) option =
+      let mutated = [%external ("TEST_MUTATE_CONTRACT", n, ast_c)] in
+      let curr = match mutated with
+        | Some (v, m) -> try_with (fun (_ : unit) -> let b = wrap_tester v in Passed (b, m)) (fun (_ : unit) -> Continue)
+        | None -> Stop in
+      match curr with
+      | Stop -> None
+      | Continue -> mutation_nth (n + 1n)
+      | Passed (b, m) -> Some (b, m) in
+    mutation_nth 0n
+  let originate_from_file_and_mutate_all (type b) (fn : string) (e : string) (v : string list) (s : michelson_program) (t : tez)
+                                         (tester : address * michelson_contract * int -> b) : (b * mutation) list =
+    let wrap_tester (v : ast_contract) : b =
+      let f = [%external ("TEST_COMPILE_AST_CONTRACT", v)] in
+      let a = originate_contract f s t in
+      let c = size f in
+      tester (a, f, c) in
+    let ast_c : ast_contract = [%external ("TEST_COMPILE_CONTRACT_FROM_FILE", fn, e, v, (None : nat option))] in
+    let try_with (type a) (v : unit -> a) (c : unit -> a) = [%external ("TEST_TRY_WITH", v, c)] in
+    type ret_code = Passed of (b * mutation) | Continue | Stop in
+    let rec mutation_nth (acc : (b * mutation) list) (n : nat) : (b * mutation) list =
+      let mutated = [%external ("TEST_MUTATE_CONTRACT", n, ast_c)] in
+      let curr = match mutated with
+        | Some (v, m) -> try_with (fun (_ : unit) -> let b = wrap_tester v in Passed (b, m)) (fun (_ : unit) -> Continue)
         | None -> Stop in
       match curr with
       | Stop -> acc
@@ -568,7 +618,9 @@ module Test = struct
     let c = size f in
     let a : (p, s) typed_address = cast_address a in
     (a, f, c)
-  let compile_contract_from_file ((fn, e, v) : string * string * string list) : michelson_contract = [%external ("TEST_COMPILE_CONTRACT_FROM_FILE", fn, e, v)]
+  let compile_contract_from_file ((fn, e, v) : string * string * string list) : michelson_contract =
+    let ast_c : ast_contract = [%external ("TEST_COMPILE_CONTRACT_FROM_FILE", fn, e, v, (None : nat option))] in
+    [%external ("TEST_COMPILE_AST_CONTRACT", ast_c)]
   let originate_from_file ((fn, e, v, s, t) : string * string * string list * michelson_program * tez) : address * michelson_contract * int =
     let f = compile_contract_from_file (fn, e, v) in
     let a = originate_contract (f, s, t) in
@@ -592,6 +644,44 @@ module Test = struct
     let rec mutation_nth (acc : (b * mutation) list) (n : nat) : (b * mutation) list =
       let curr = match mutate_value (n, v) with
         | Some (v, m) -> try_with (fun (_ : unit) -> let b = tester v in Passed (b, m)) (fun (_ : unit) -> Continue)
+        | None -> Stop in
+      match curr with
+      | Stop -> acc
+      | Continue -> mutation_nth acc (n + 1n)
+      | Passed (b, m) -> mutation_nth ((b, m) :: acc) (n + 1n) in
+    mutation_nth ([] : (b * mutation) list) 0n
+  let originate_from_file_and_mutate (type b) ((fn, e, v, s, t, tester) : string * string * string list * michelson_program * tez * (address * michelson_contract * int -> b)) : (b * mutation) option =
+    let wrap_tester (v : ast_contract) : b =
+      let f = [%external ("TEST_COMPILE_AST_CONTRACT", v)] in
+      let a = originate_contract (f, s, t) in
+      let c = size f in
+      tester (a, f, c) in
+    let ast_c : ast_contract = [%external ("TEST_COMPILE_CONTRACT_FROM_FILE", fn, e, v, (None : nat option))] in
+    let try_with (type a) (v : unit -> a) (c : unit -> a) = [%external ("TEST_TRY_WITH", v, c)] in
+    type ret_code = Passed of (b * mutation) | Continue | Stop in
+    let rec mutation_nth (n : nat) : (b * mutation) option =
+      let mutated = [%external ("TEST_MUTATE_CONTRACT", n, ast_c)] in
+      let curr = match mutated with
+        | Some (v, m) -> try_with (fun (_ : unit) -> let b = wrap_tester v in Passed (b, m)) (fun (_ : unit) -> Continue)
+        | None -> Stop in
+      match curr with
+      | Stop -> None
+      | Continue -> mutation_nth (n + 1n)
+      | Passed (b, m) -> Some (b, m) in
+    mutation_nth 0n
+  let originate_from_file_and_mutate_all (type b) ((fn, e, v, s, t, tester) : string * string * string list * michelson_program * tez * (address * michelson_contract * int -> b)) : (b * mutation) list =
+    let wrap_tester (v : ast_contract) : b =
+      let f = [%external ("TEST_COMPILE_AST_CONTRACT", v)] in
+      let a = originate_contract (f, s, t) in
+      let c = size f in
+      tester (a, f, c) in
+    let ast_c : ast_contract = [%external ("TEST_COMPILE_CONTRACT_FROM_FILE", fn, e, v, (None : nat option))] in
+    let try_with (type a) (v : unit -> a) (c : unit -> a) = [%external ("TEST_TRY_WITH", v, c)] in
+    type ret_code = Passed of (b * mutation) | Continue | Stop in
+    let rec mutation_nth (acc : (b * mutation) list) (n : nat) : (b * mutation) list =
+      let mutated = [%external ("TEST_MUTATE_CONTRACT", n, ast_c)] in
+      let curr = match mutated with
+        | Some (v, m) -> try_with (fun (_ : unit) -> let b = wrap_tester v in Passed (b, m)) (fun (_ : unit) -> Continue)
         | None -> Stop in
       match curr with
       | Stop -> acc

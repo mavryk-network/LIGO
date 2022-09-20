@@ -6,9 +6,9 @@ let%expect_test _ =
   run_ligo_good [ "run"; "test" ; "originate_contract/test.mligo" ; "--project-root" ; "originate_contract" ; "--no-warn" ] ;
   [%expect{|
     Everything at the top-level was executed.
-    - test exited with value KT1EMmL4W1wQMgt36Vet6EmGBarD1czMwQMC(None). |}]
+    - test exited with value KT1KD4LM2SpR88dNjniDUb2EXKYDNj1phjkE(None). |}]
 
-let%expect_test _ = 
+let%expect_test _ =
   run_ligo_good [ "info"; "measure-contract" ; "using_scope_pkg_project/src/a/b/c/contract.mligo" ; "--project-root" ; "using_scope_pkg_project" ] ;
   [%expect{|
     95 bytes |}]

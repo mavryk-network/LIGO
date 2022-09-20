@@ -1,41 +1,54 @@
+open Ligo_prim
 open Ast_typed
-open Stage_common.Constant
+open Literal_types
 module Protocols = Protocols
 
 
 (* This is an env use by repl and build *)
 (* Environment records declarations already seen in reverse orders. Use for different kind of processes *)
-type t = module_
+type t = program
 let pp ppf m = PP.module_ ppf @@ m
-let add_module : ?public:unit -> ?hidden:unit -> Ast_typed.module_variable -> Ast_typed.module_ -> t -> t = fun ?public ?hidden module_binder module_ env ->
-  let module_ = Location.wrap @@ Ast_core.M_struct module_ in
-  let new_d = Location.wrap @@ Declaration_module {module_binder;module_=module_;module_attr={public=Option.is_some public;hidden=Option.is_some hidden}} in
+let add_module : ?public:unit -> ?hidden:unit -> Ligo_prim.Module_var.t -> Ast_typed.module_ -> t -> t = fun ?public ?hidden module_binder module_ env ->
+  let module_ = Location.wrap @@ Module_expr.M_struct module_ in
+  let new_d = Location.wrap @@ D_module ({module_binder;module_=module_;module_attr={public=Option.is_some public;hidden=Option.is_some hidden}}) in
   new_d :: env
 
 let add_declaration decl env = decl :: env
-let append program env = List.fold_left ~f:(fun l m -> m :: l ) ~init:env program
+let append env (program : program) : t = List.rev_append program env
+  
+let fold ~f ~init (env:t) = List.fold ~f ~init (List.rev env)
+let foldi ~f ~init (env:t) = List.foldi ~f ~init (List.rev env)
 
-let fold ~f ~init (env:t) = List.fold ~f ~init @@ List.rev env
 
 (* Artefact for build system *)
 type core = Ast_core.module_
-let add_core_module ?public ?hidden : Ast_core.module_variable -> Ast_core.module_ -> core -> core =
+
+let add_core_module ?public ?hidden : Module_var.t -> Ast_core.module_ -> core -> core =
   fun module_binder module_ env ->
-    let module_ = Location.wrap @@ Ast_core.M_struct module_ in
-    let new_d = Location.wrap @@ Ast_core.Declaration_module {module_binder;module_;module_attr={public=Option.is_some public;hidden=Option.is_some hidden}} in
+    let module_ = Location.wrap @@ Module_expr.M_struct module_ in
+    let new_d = Location.wrap @@ Ast_core.D_module {module_binder;module_;module_attr={public=Option.is_some public;hidden=Option.is_some hidden}} in
     new_d :: env
 
-let to_program env = List.rev env
-let init_core p = append p []
-let to_core_program env = List.rev env
-let append_core = append
+let to_module (env:t) : module_ = List.rev env
+
+let to_program (env:t) : program = List.rev env
+
+let append_core (env:core) (program : Ast_core.program) : core = List.rev_append program env
+
+let init_core program = List.rev program
+
+let to_core_module env = List.rev env
+
+let to_core_program (env:core) : S.program = List.rev env
+
+
 
 (* This is an stdlib *)
-let star = Type
+let star = Kind.Type
 (*
   Make sure all the type value laoded in the environment have a `Ast_core` value attached to them (`type_meta` field of `type_expression`)
 *)
-let basic_types : (type_variable * type_expression) list = [
+let basic_types : (Type_var.t * type_expression) list = [
     (v_bool   , t_bool                  ()) ;
     (v_string , t_string                ()) ;
     (v_bytes  , t_bytes                 ()) ;
@@ -45,7 +58,7 @@ let basic_types : (type_variable * type_expression) list = [
     (v_option , t_option_abst           ()) ;
   ]
 
-let michelson_base : (type_variable * type_expression) list = [
+let michelson_base : (Type_var.t * type_expression) list = [
     (v_operation          , t_operation                          ()) ;
     (v_tez                , t_constant     Tez                   []) ;
     (v_address            , t_address                            ()) ;
@@ -54,7 +67,7 @@ let michelson_base : (type_variable * type_expression) list = [
     (v_key_hash           , t_key_hash                           ()) ;
     (v_chest              , t_chest                              ()) ;
     (v_chest_key          , t_chest_key                          ()) ;
-    (v_chest_opening_result , t_chest_opening_result             ()) ;  
+    (v_chest_opening_result , t_chest_opening_result             ()) ;
     (v_timestamp          , t_timestamp                          ()) ;
     (v_list               , t_abstraction1 List                star) ;
     (v_big_map            , t_abstraction2 Big_map        star star) ;
@@ -77,23 +90,30 @@ let michelson_base : (type_variable * type_expression) list = [
     (v_external_int       , t_abstraction1 (External "int")           star) ;
     (v_external_ediv      , t_abstraction2 (External "ediv")     star star) ;
     (v_external_u_ediv    , t_abstraction2 (External "u_ediv")     star star) ;
+    (v_external_and       , t_abstraction2 (External "and")     star star) ;
+    (v_external_u_and     , t_abstraction2 (External "u_and")     star star) ;
     (v_tx_rollup_l2_address, t_tx_rollup_l2_address ()             ) ;
 ]
 
 let base = basic_types @ michelson_base
 let jakarta_types = base
 
-let meta_ligo_types : (type_variable * type_expression) list -> (type_variable * type_expression) list =
+let meta_ligo_types : (Type_var.t * type_expression) list -> (Type_var.t * type_expression) list =
   fun proto_types ->
     proto_types @ [
     (v_test_michelson     , t_constant Michelson_program        []) ;
     (v_typed_address      , t_abstraction2 Typed_address star star) ;
     (v_mutation           , t_constant Mutation                 []) ;
     (v_michelson_contract , t_constant Michelson_contract       []) ;
+    (v_ast_contract       , t_constant Ast_contract             []) ;
     (v_gen                , t_abstraction1 Gen star               ) ;
+    (v_int64              , t_constant Int64                    []) ;
   ]
 
-let of_list_type : (type_variable * type_expression) list -> t = List.map ~f:(fun (type_binder,type_expr) -> Location.wrap @@ Ast_typed.Declaration_type {type_binder;type_expr;type_attr={public=true;hidden=false}})
+let of_list_type : (Type_var.t * type_expression) list -> t =
+  List.map ~f:(fun (type_binder,type_expr) ->
+    Location.wrap @@ D_type {type_binder;type_expr;type_attr={public=true;hidden=false}}
+  )
 
 let default : Protocols.t -> t = function
   | Protocols.Jakarta -> of_list_type jakarta_types
