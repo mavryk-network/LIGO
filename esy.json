@@ -167,7 +167,7 @@
       "@opam/tezos-test-helpers": "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-test-helpers.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2",
       "@opam/tezos-version": "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-version.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2",
       "@opam/tezos-workers": "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-workers.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2",
-      "@opam/ocaml-recovery-parser": "git+https://github.com/serokell/ocaml-recovery-parser.git#e05c872d1a0e8074940d995b57556121eddbf0f2",
+      "@opam/ocaml-recovery-parser": "git+https://github.com/serokell/ocaml-recovery-parser.git:ocaml-recovery-parser.opam#e05c872d1a0e8074940d995b57556121eddbf0f2",
 
       "@opam/ctypes": {
         "version": "opam:0.20.1",
