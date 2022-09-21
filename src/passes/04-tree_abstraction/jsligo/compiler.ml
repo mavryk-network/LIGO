@@ -856,10 +856,8 @@ and compile_parameter ~raise : CST.expr -> _ Binder.t * (expression -> expressio
     let (arguments, loc) = r_split array_items in
     let { inside = arguments ; _ } : _ CST.brackets = arguments in
     let array_item = function
-        CST.Expr_entry EVar var ->
-         return_1 @@ compile_variable var
+        CST.Expr_entry e -> compile_parameter ~raise e
       | Rest_entry _ as r -> raise.error @@ array_rest_not_supported r
-      | _ -> raise.error @@ not_a_valid_parameter expr
     in
     let arguments = Utils.sepseq_to_list arguments in
     let aux (binder, fun_') (binder_lst, fun_) =
