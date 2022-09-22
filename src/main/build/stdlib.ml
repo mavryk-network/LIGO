@@ -61,7 +61,6 @@ let get : options:Compiler_options.t -> unit -> t = fun ~options () ->
       `Michelson -> def "MICHELSON"
     | `Wasm -> def "WASM"
   in
-  let test_module = if options.middle_end.test then def "TEST_LIB" else "" in
   let std = match options.middle_end.protocol_version with
     | Environment.Protocols.Jakarta -> def "JAKARTA"
     | Environment.Protocols.Kathmandu -> def "KATHMANDU"
@@ -69,9 +68,9 @@ let get : options:Compiler_options.t -> unit -> t = fun ~options () ->
   let lib = Ligo_lib.get () in
   let binder_curry = Ligo_prim.Module_var.fresh ~name:"Curry_lib" () in
   let binder_uncurry = Ligo_prim.Module_var.fresh ~name:"Uncurry_lib" () in
-  let curry_content_core = compile ~options (test_module ^ (def "CURRY") ^ std ^ lib ^ backend) in
+  let curry_content_core = compile ~options ((def "CURRY") ^ std ^ lib) in
   let curry_content_typed = type_ ~options curry_content_core in
-  let uncurry_content_core = compile ~options (test_module ^ (def "UNCURRY") ^ std ^ lib ^ backend) in
+  let uncurry_content_core = compile ~options ((def "UNCURRY") ^ std ^ lib) in
   let uncurry_content_typed = type_ ~options uncurry_content_core in
   (* TODO: sanity check ? curry_content_typed and uncurry_content_typed should have the same signature modulo curry/uncurry style *)
   let typed_mod_def =

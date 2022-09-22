@@ -449,7 +449,7 @@ let iter_op = (l : list (int)) : unit => {
 
 ```jsligo group=lists
 let iter_op = (l: list<int>): unit => {
-  let predicate = (i) : unit => assert(i > 3);
+  let predicate = i => assert(i > 3);
   List.iter(predicate, l);
 };
 ```
@@ -501,7 +501,7 @@ let plus_one : list (int) = List.map (increment, larger_list);
 <Syntax syntax="jsligo">
 
 ```jsligo group=lists
-let increment = (i) => i + 1;
+let increment = i => i + 1;
 
 // Creates a new list with all elements incremented by 1
 let plus_one: list<int> = List.map(increment, larger_list);
@@ -558,7 +558,7 @@ let sum_of_elements : int = List.fold_left (sum, 0, my_list);
 <Syntax syntax="jsligo">
 
 ```jsligo group=lists
-let sum = ([result, i]: [int, int]) => result + i;
+let sum = (result: int, i: int) => result + i;
 let sum_of_elements: int = List.fold (sum, my_list, 0);
 ```
 
@@ -952,7 +952,7 @@ let iter_op = (s : set (int)) : unit => {
 
 ```jsligo group=sets
 let iter_op = (s: set<int>): unit => {
-  let predicate = (i) => assert(i > 3);
+  let predicate = i => assert(i > 3);
   Set.iter(predicate, s);
 };
 ```
@@ -1077,7 +1077,7 @@ signature `val fold_right : ('acc * 'elt -> 'acc) * 'elt set * 'acc ->
 'acc`.
 
 ```jsligo group=sets
-let sum = ([acc, i]: [int, int]): int => acc + i;
+let sum = (acc: int, i: int): int => acc + i;
 let sum_of_elements: int = Set.fold (sum, my_set, 0);
 ```
 

@@ -107,6 +107,7 @@ let meta_ligo_types : (Type_var.t * type_expression) list -> (Type_var.t * type_
     (v_michelson_contract , t_constant Michelson_contract       []) ;
     (v_ast_contract       , t_constant Ast_contract             []) ;
     (v_gen                , t_abstraction1 Gen star               ) ;
+    (v_int64              , t_constant Int64                    []) ;
   ]
 
 let of_list_type : (Type_var.t * type_expression) list -> t =
@@ -115,9 +116,5 @@ let of_list_type : (Type_var.t * type_expression) list -> t =
   )
 
 let default : Protocols.t -> t = function
-  | Protocols.Jakarta -> of_list_type jakarta_types
-  | Protocols.Kathmandu -> of_list_type jakarta_types
-
-let default_with_test : Protocols.t -> t = function
   | Protocols.Jakarta -> of_list_type (meta_ligo_types jakarta_types)
   | Protocols.Kathmandu -> of_list_type (meta_ligo_types jakarta_types)
