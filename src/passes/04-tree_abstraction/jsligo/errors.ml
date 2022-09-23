@@ -41,6 +41,7 @@ type abs_error = [
   | `Concrete_jsligo_wrong_matchee_disc of Region.t
   | `Concrete_jsligo_case_break_disc of Region.t
   | `Concrete_jsligo_not_implemented of Region.t
+  | `Concrete_jsligo_import_only_toplevel of Region.t
   ] [@@deriving poly_constructor { prefix = "concrete_jsligo_" }]
 
 let error_ppformat : display_format:string display_format ->
@@ -185,6 +186,9 @@ let error_ppformat : display_format:string display_format ->
       Snippet.pp_lift r
     | `Concrete_jsligo_not_implemented r ->
       Format.fprintf f "@[<hv>%aThis has not been implemented yet. @]"
+      Snippet.pp_lift r
+    | `Concrete_jsligo_import_only_toplevel r ->
+      Format.fprintf f "@[<hv>%aImports are only allowed at the toplevel of the file. @]"
       Snippet.pp_lift r
   )
 
@@ -417,6 +421,13 @@ let error_jsonformat : abs_error -> Yojson.Safe.t = fun a ->
     json_error ~stage ~content
   | `Concrete_jsligo_not_implemented reg ->
     let message = `String "Not implemented." in
+    let loc = Location.lift reg in
+    let content = `Assoc [
+      ("message", message);
+      ("location", Location.to_yojson loc);] in
+    json_error ~stage ~content
+  | `Concrete_jsligo_import_only_toplevel reg ->
+    let message = `String "Import only allowed at the toplevel." in
     let loc = Location.lift reg in
     let content = `Assoc [
       ("message", message);

@@ -1354,18 +1354,7 @@ and compile_statement ?(wrap=false) ~raise : CST.statement -> statement_result
     let ((_, statement), _) = r_split e in
     self statement
   | SImport i' ->
-    let (i, loc) = r_split i' in 
-    (match i with 
-      Import_rename {alias; module_path; _} -> (
-        let alias = compile_mod_var alias in
-        let module_ =
-          let path = List.Ne.map compile_mod_var @@ npseq_to_ne_list module_path in
-          m_path ~loc:Location.generated path
-        in
-        binding (e_mod_in ~loc alias module_)
-      )
-    | Import_all_as   _ -> raise.error @@ not_implemented i'.region
-    | Import_selected _ -> raise.error @@ not_implemented i'.region)
+    raise.error @@ import_only_toplevel i'.region
   | SForOf s ->
     let (forOf, loc) = r_split s in
     let binder = ( compile_variable forOf.index , None ) in
