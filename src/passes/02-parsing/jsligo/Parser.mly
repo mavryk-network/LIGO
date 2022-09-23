@@ -861,7 +861,8 @@ object_type:
     in {region; value} }
 
 field_decl:
-  attributes field_name {
+  attributes module_name
+| attributes field_name {
     let value = {
       field_name=$2;
       colon=ghost;  (* TODO: Create a "new" CST node *)
@@ -869,6 +870,7 @@ field_decl:
       attributes=$1}
     in {$2 with value}
   }
+| attributes module_name type_annotation
 | attributes field_name type_annotation {
     let colon, field_type = $3 in
     let stop   = type_expr_to_region field_type in
@@ -905,6 +907,7 @@ import_stmt:
     in 
     {region; value}
   }
+| "import" braces(nsepseq(module_name, ",")) "from" "<string>"
 | "import" braces(nsepseq(field_name, ",")) "from" "<string>" {
   let kwd_import  = $1 in 
 
@@ -1001,7 +1004,8 @@ object_literal: (* TODO: keep the terminator *)
   braces(sep_or_term_list(property,",") { fst $1 }) { EObject $1 }
 
 property:
-  field_name {
+  module_name
+| field_name {
     let region = $1.region
     and value  = EVar $1 in
     Punned_property {region; value}
