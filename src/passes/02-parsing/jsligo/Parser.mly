@@ -258,7 +258,8 @@ closed_stmt:
 (* Bounded loops *)
 
 for_of_stmt(right_stmt):
-  "for" "(" index_kind "<ident>" "of" expr_stmt ")" right_stmt {
+  "for" "(" index_kind "<uident>" "of" expr_stmt ")" right_stmt
+| "for" "(" index_kind "<ident>" "of" expr_stmt ")" right_stmt {
     let kwd_for = $1 in
     let lpar    = $2 in
     let index   = unwrap $4 in
@@ -607,7 +608,8 @@ array_item_pattern:
 | array_pattern { $1                }
 
 array_rest_pattern:
-  "..." "<ident>" {
+  "..." "<uident>" 
+| "..." "<ident>" {
     let ellipsis = $1 in
     let rest = unwrap $2 in
     let region = cover ellipsis#region rest.region
@@ -667,7 +669,8 @@ binding_pattern:
 | array_pattern  { $1 }
 
 var_pattern:
-  attributes "<ident>" {
+  attributes "<uident>"
+| attributes "<ident>" {
     let variable = unwrap $2 in
     let value = {variable; attributes=$1}
     in {variable with value} }
@@ -688,13 +691,15 @@ property_patterns:
     Utils.(nsepseq_rev $1 |> nsepseq_cons $3 ($2) |> nsepseq_rev) }
 
 property_pattern:
-  "<ident>" "=" expr {
+  "<uident>" "=" expr
+| "<ident>" "=" expr {
     let property = unwrap $1 in
     let eq = $2 in
     let region = cover property.region (expr_to_region $3) in
     let value  = {property; eq; value=$3}
     in PAssign {region; value}
   }
+| "<uident>" ":" binding_initializer
 | "<ident>" ":" binding_initializer {
     let property = unwrap $1 in
     let colon = $2 in
@@ -705,7 +710,8 @@ property_pattern:
 | var_pattern { PVar $1 }
 
 object_rest_pattern:
-  "..." "<ident>" {
+  "..." "<uident>"
+| "..." "<ident>" {
     let ellipsis = $1 in
     let rest = unwrap $2 in
     let region = cover ellipsis#region rest.region
@@ -745,7 +751,8 @@ fun_type:
     in TFun {region; value} }
 
 fun_param:
-  "<ident>" type_annotation {
+  "<uident>" type_annotation
+| "<ident>" type_annotation {
     let name = unwrap $1 in
     let colon, type_expr = $2
     in {name; colon; type_expr} }
@@ -822,7 +829,8 @@ type_ctor_arg:
 (* Selection of types in modules (a.k.a. qualified type name) *)
 
 module_access_t:
-  "<uident>" "." module_var_t {
+  "<uident>" "." module_var_t 
+| "<ident>" "." module_var_t {
     let module_name = unwrap $1 in
     let selector = $2 in
     let start  = module_name.region
@@ -833,6 +841,7 @@ module_access_t:
 
 module_var_t:
   module_access_t { TModA $1 }
+| "<uident>"
 | "<ident>"       { TVar  (unwrap $1) }
 | type_ctor_app   { TApp $1 }
 
@@ -939,6 +948,7 @@ fun_expr:
     let value      = {parameters; lhs_type=$4; arrow; body=$6}
     in {region; value}
   }
+| ES6FUN "<uident>" "=>" body
 | ES6FUN "<ident>" "=>" body
 | ES6FUN "_" "=>" body {
     let params = unwrap $2 in
