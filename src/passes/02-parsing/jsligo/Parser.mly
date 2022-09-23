@@ -227,7 +227,8 @@ namespace_stmt:
 | namespace { $1 }
 
 namespace:
- "namespace" module_name braces(stmts_or_namespace) {
+  "namespace" field_name braces(stmts_or_namespace)
+| "namespace" module_name braces(stmts_or_namespace) {
     let kwd_namespace = $1 in
     let region = cover kwd_namespace#region $3.region
     in SNamespace {region; value=kwd_namespace,$2,$3, [private_attribute]} }
@@ -882,13 +883,15 @@ field_decl:
 (* Import statement *)
 
 import_stmt:
-  "import" module_name "=" nsepseq(module_name,".") {
+  "import" module_name "=" nsepseq(module_name,".")
+| "import" field_name "=" nsepseq(module_name,".") {
     let kwd_import = $1 in
     let equal = $3 in
     let region = cover kwd_import#region (nsepseq_to_region (fun a -> a.region) $4)
     and value = Import_rename {kwd_import; alias=$2; equal; module_path=$4}
     in {region; value} }
-| "import" "*" "as" module_name "from" "<string>" {
+| "import" "*" "as" module_name "from" "<string>" 
+| "import" "*" "as" field_name "from" "<string>"{
     let kwd_import = $1 in
     let times = $2 in 
     let kwd_as = $3 in
