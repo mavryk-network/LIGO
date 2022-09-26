@@ -77,6 +77,7 @@ let private_attribute = {
 %on_error_reduce nsepseq(object_type,VBAR)
 %on_error_reduce ternary_expr
 %on_error_reduce nsepseq(field_name,COMMA)
+%on_error_reduce module_var_t
 
 (* See [ParToken.mly] for the definition of tokens. *)
 
