@@ -219,7 +219,9 @@ and var_decl = {
   init        : expr;
 }
 
-(* TODO NP : Merge with 'case' record ? *)
+(* TODO NP : Merge with 'case' record ?
+   remi: I think not until they are merged a CST level
+*)
 and switch_case =
 | Switch_case          of (expr * statement nseq option)
 | Switch_default_case  of statement nseq option
@@ -254,7 +256,12 @@ and for_of = {
   for_stmt   : statement;
 }
 
-(* TODO NP : Separate statement into statement_pascaligo / statement_jsligo ? *)
+(* TODO NP :
+  - Separate statement into statement_pascaligo / statement_jsligo ?
+  - unfify them at the CST level ?
+    S_Decl VS S_Let/S_Const
+  - beware of assignnment transitivity
+*)
 and statement_content =
   (* Pascaligo *)
 | S_Attr      of (attr_pascaligo * statement) 
@@ -1249,5 +1256,50 @@ type program = declaration list (* TODO NP : Try to convert this into non-empty 
     (which led to the idea of making nanopass 'matching_let_in')
     TODO : Between E_Matching ( pattern = just a variable ) and E_LetIn,
     which one to choose and when ?
+
+
+  E_Block
+  ==============================================================================
+  pass 'assign_transitivity'
+    remove : E_block
+    add    : -
+  
+  [ JsLigo only ?? ]
+  historically: https://gitlab.com/ligolang/ligo/-/issues/1462
+  
+
+  currently done in the same "pass" as "statements to let-in" / "pattern to let-in" / "switch case" to ifs
+  const f = x => {
+    let y = 0 ;
+    let toto = (y = x + 1) ;
+    return toto
+  };
+  /* f(1) == 2 both in jsligo and js */
+
+
+  E_Block
+  ==============================================================================
+  pass 'block_to_let_in'
+    remove :  E_block
+    add    : --
+  
+  SHOULD NOT BE NEEDED SOON
+
+  S_decl S_let S_const
+  ==============================================================================
+  pass 'pattern removal (?)'
+    remove :  S_Decl S_Let S_Const
+    add    : ??
+  
+  SHOULD NOT BE NEEDED SOON
+  ```
+  <pattern> = .. ;
+  ```
+  |->
+  ```
+  <pattern_destruct1> = .. ;
+  ...
+  <pattern_destructN> = .. ;
+  ```
 
 *)
