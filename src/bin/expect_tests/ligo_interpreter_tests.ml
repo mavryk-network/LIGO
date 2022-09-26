@@ -478,6 +478,12 @@ let%expect_test _ =
     - test_get_totalSupply exited with value (). |}]
 
 let%expect_test _ =
+  run_ligo_good [ "run"; "test" ; test "test_vote_from_file.mligo" ] ;
+  [%expect {|
+    Everything at the top-level was executed.
+    - test exited with value (). |}]
+
+let%expect_test _ =
   run_ligo_good [ "run"; "test" ; test "pack_unpack.mligo" ] ;
   [%expect {|
     Everything at the top-level was executed.
