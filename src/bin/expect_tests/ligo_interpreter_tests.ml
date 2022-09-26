@@ -469,6 +469,15 @@ let%expect_test _ =
     - test_get_total_supply exited with value (). |}]
 
 let%expect_test _ =
+  run_ligo_good [ "run"; "test" ; test "test_FA1_from_file.mligo" ] ;
+  [%expect {|
+    Everything at the top-level was executed.
+    - test_transfer exited with value ().
+    - test_transfer_not_e_balance exited with value ().
+    - test_get_balance exited with value ().
+    - test_get_totalSupply exited with value (). |}]
+
+let%expect_test _ =
   run_ligo_good [ "run"; "test" ; test "pack_unpack.mligo" ] ;
   [%expect {|
     Everything at the top-level was executed.
