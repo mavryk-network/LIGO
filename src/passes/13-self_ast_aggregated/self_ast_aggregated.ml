@@ -138,7 +138,8 @@ let all_aggregated_expression ~raise e =
   let e = Uncurry.uncurry_expression e in
   let e = thunk e in
   let e = Helpers.map_expression (Literal_replace.expression ~raise) e in
-  e
+  (* print_endline (Format.asprintf ">>>\n%a\n>>>>" Ast_aggregated.PP.expression (Monadic.expression e)); *)
+  (Monadic.expression e)
 
 let all_expression ~raise ~(options : Compiler_options.middle_end) e =
   let e = Helpers.map_expression Polymorphic_replace.expression e in
