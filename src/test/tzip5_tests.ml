@@ -82,9 +82,4 @@ let get_total_supply ~raise f s () =
 
 let main = test_suite "tzip-5" [
   test_w "compile"                           (compile_main             mfile_FA1 "cameligo");
-  (* test_w "transfer"                          (transfer                 mfile_FA1 "cameligo");
-  test_w "transfer (not enough balance)"     (transfer_not_e_balance   mfile_FA1 "cameligo"); can't test curried entrypoint yet *)
-  (* test "getAllowance"                      (get_allowance            mfile_FA12 "cameligo");
-  test "getBalance"                        (get_balance              mfile_FA12 "cameligo");
-  test "getTotalSupply"                    (get_total_supply         mfile_FA12 "cameligo"); waiting for a dummy_contract with type nat contractt*)
   ]
