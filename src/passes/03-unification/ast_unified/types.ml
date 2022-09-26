@@ -57,14 +57,63 @@ and type_expr_content = type_expression_content
 and type_expr         = type_expression
   [@@deriving yojson]
 
-and type_expression_content = T_Dummy  (* TODO NP : Add type expressions *)
+and cartesian = type_expr nseq
+and cartesian_pascaligo = type_expr * type_expr nseq
+and variant   = {
+  constr  : string;
+  arg_opt : type_expr option;
+}
+and sum_type  = variant nseq
+
+and 'a field_assign = {
+  name : string;
+  expr : 'a; 
+}
+
+and 'constr type_app = {
+  constr     : 'constr;
+  type_args  : type_expr nseq;
+}
+
+and 'a module_access = {
+  module_name : string;
+  field       : 'a;
+}
+
+and 'a module_path = {
+  module_path : string nseq;
+  field       : 'a;
+}
+
+and type_record           = type_expr field_assign nseq
+and type_record_pascaligo = type_expr field_assign list
+
+and type_expression_content =
+| T_Prod    of cartesian
+| T_Sum     of sum_type
+| T_Record  of type_record  (* Cameligo *)
+| T_Object  of type_record  (* Jsligo *)
+| T_App     of string type_app
+| T_Fun     of type_expr * type_expr
+| T_Par     of type_expr
+| T_Var     of string
+| T_String  of string
+| T_Int     of string * Z.t
+| T_ModA    of type_expr module_access
+| T_ModPath of type_expr module_path
+| T_Arg     of string
+(* Pascaligo *)
+| T_RecordPascaligo of type_record_pascaligo       (* CST.Pascaligo.T_Record *)
+| T_Attr            of attr_pascaligo * type_expr  (* T_Attr *)
+| T_AppPascaligo    of type_expr type_app          (* T_App *)
+| T_Cart            of cartesian_pascaligo         (* T_Cart *)
 
 (* ========================== PATTERNS ===================================== *)
 
 and pattern = P_Dummy  (* TODO NP : Add pattern expressions *)
 
 (* ========================== INSTRUCTIONS ================================= *)
-type instruction = {
+and instruction = {
   instruction_content : instruction_content;
   location                : Location.t
 }
@@ -320,11 +369,6 @@ and ('lhs, 'rhs) field =
   | Punned of 'lhs
   | Complete of ('lhs * 'rhs)
 
-and field_assign = {
-  name : string;
-  expr : expr; 
-}
-
 and 'a selection =
 | FieldName of string
 | Component of 'a
@@ -337,16 +381,6 @@ and projection = {
 and projection_jsligo = {
   expr            : expr;
   selection       : expr selection;
-}
-
-and module_access = {
-  module_name : string;
-  field       : expr;
-}
-
-and module_path = {
-  module_path : string nseq;
-  field       : expr;
 }
 
 and path =
@@ -507,7 +541,7 @@ and expression_content =
   (* Data structures *)
   | E_Tuple  of expr nseq                 (* (x, y, z) *)
   | E_Rec    of (expr, expr) field list   (* Fields can be punned : { x = 10; y; z } *)
-  | E_Record of field_assign nseq         (* Field are not punned : { x = 10; y = y } *)
+  | E_Record of expr field_assign nseq         (* Field are not punned : { x = 10; y = y } *)
   | E_ArrayJsligo of array_jsligo         (* [1, 2, 3] or [42] or even [] *)
   | E_Array  of expr list                 (* [1, 2, 3] or [42] or even [] *)
 
@@ -518,8 +552,8 @@ and expression_content =
   | E_ProjJsligo of projection_jsligo     (* x.y.z   Nested version of E_Proj, with only 1 selector *)
 
   (* Module access *)                     (* M.N.a *)
-  | E_ModA    of module_access            (* nested version, E_ModA( M, E_ModA( N, E_Var var ) ) *)
-  | E_ModPath of module_path              (* flat version,   E_ModAccess { [M, N], E_var var } *)
+  | E_ModA    of expr module_access       (* nested version, E_ModA( M, E_ModA( N, E_Var var ) ) *)
+  | E_ModPath of expr module_path         (* flat version,   E_ModAccess { [M, N], E_var var } *)
 
   (* Updates *)
   | E_UpdateCameligo  of update_cameligo  (* { my_record with field1 = a; field2 = b } *)

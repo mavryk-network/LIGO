@@ -14,9 +14,84 @@ let r_fst x = fst (r_split x)
 
 (* ========================== TYPES ======================================== *)
 
-let compile_type_expression : CST.type_expr -> AST.type_expr = fun te ->
-  let () = ignore te in
-  t_dummy ()
+let rec compile_type_expression : CST.type_expr -> AST.type_expr = fun te ->
+  let self = compile_type_expression in
+  match te with
+  | TProd t -> (
+    let t, loc = r_split t in
+    let t = List.Ne.map self @@ nsepseq_to_nseq t in
+    t_prod t ~loc ()
+  )
+  | TSum t -> (
+    let t, loc = r_split t in
+    let variants =
+      let compile_variant : CST.variant -> AST.variant = fun v ->
+        let constr  = r_fst v.constr in
+        let arg_opt = Option.apply (self <@ snd) v.arg in
+        {constr; arg_opt}
+      in
+      List.Ne.map (compile_variant <@ r_fst) @@ nsepseq_to_nseq t.variants
+    in
+    t_sum variants ~loc ()
+  )
+  | TRecord t -> (
+    let t, loc = r_split t in
+    let t =
+      let field_decls : CST.field_decl nseq = nseq_map r_fst @@ nsepseq_to_nseq t.ne_elements in
+      let compile_field_decl : CST.field_decl -> AST.type_expr AST.field_assign = fun fd ->
+        let name : string = r_fst fd.field_name in
+        let expr : type_expr = self fd.field_type in
+        {name; expr}
+      in
+      nseq_map compile_field_decl field_decls
+    in
+    t_record t ~loc ()
+  )
+  | TApp t -> (
+    let t, loc = r_split t in
+    let constr, args = t in
+    let constr : string = r_fst constr in
+    let type_args : type_expr nseq =
+      match args with
+      | CST.CArg te       -> List.Ne.singleton (self te)
+      | CST.CArgTuple tes -> List.Ne.map self @@ nsepseq_to_nseq (r_fst tes).inside
+    in
+    t_app {constr; type_args} ~loc ()
+  )
+  | TFun t -> (
+    let (te1, _, te2), loc = r_split t in
+    let te1 = self te1 in
+    let te2 = self te2 in
+    t_fun te1 te2 ~loc ()
+  )
+  | TPar t -> (
+    let t, loc = r_split t in
+    let t = self t.inside in
+    t_par t ~loc ()
+  )
+  | TVar t -> (
+    let t, loc = r_split t in
+    t_var t ~loc ()
+  )
+  | TString t -> (
+    let t, loc = r_split t in
+    t_string t ~loc ()
+  )
+  | TInt t -> (
+    let (s, z), loc = r_split t in
+    t_int s z ~loc ()
+  )
+  | TModA t -> (
+    let t, loc = r_split t in
+    let module_name = r_fst t.module_name in
+    let field = self t.field in
+    t_moda {module_name; field} ~loc ()
+  )
+  | TArg t -> (
+    let t, loc = r_split t in
+    let t = r_fst t.name in
+    t_arg t ~loc ()
+  )
 
 (* ========================== PATTERNS ===================================== *)
 
@@ -53,7 +128,7 @@ let rec compile_expression ~raise : CST.expr -> AST.expr = fun e ->
     let arg = self op.arg in
     e_constant ~loc (Const op_type) [arg]
   in
-  let translate_field_assign (fa : CST.field_assign) : AST.field_assign =
+  let translate_field_assign (fa : CST.field_assign) : AST.expr AST.field_assign =
     let name, _ = r_split fa.field_name in
     let expr = self fa.field_expr in
     {name; expr}

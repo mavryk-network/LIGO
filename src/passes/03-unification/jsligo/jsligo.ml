@@ -19,8 +19,8 @@ let w_split (x: 'a CST.Wrap.t) : 'a * Location.t =
 (* ========================== TYPES ======================================== *)
 
 let rec compile_type_expression : CST.type_expr -> AST.type_expr = fun te ->
-  let () = ignore te in
-  t_dummy ()
+  match te with
+  | _ -> failwith "TODO : Missing case"
 
 (* ========================== PATTERNS ===================================== *)
 
