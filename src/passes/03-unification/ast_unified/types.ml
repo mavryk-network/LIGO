@@ -86,7 +86,7 @@ and 'a module_path = {
 }
 
 and type_record           = type_expr field_assign nseq
-and type_record_pascaligo = type_expr field_assign list
+and type_record_pascaligo = type_expr option field_assign list
 
 and fun_type_arg = {
   name      : string;
@@ -105,7 +105,6 @@ and type_expression_content =
 | T_String  of string
 | T_Int     of string * Z.t
 | T_ModA    of type_expr module_access
-| T_ModPath of type_expr module_path
 | T_Arg     of string
 (* Jsligo *)
 | T_Object          of type_record
@@ -116,6 +115,7 @@ and type_expression_content =
 | T_Attr            of attr_pascaligo * type_expr  (* T_Attr *)
 | T_AppPascaligo    of type_expr type_app          (* T_App *)
 | T_Cart            of cartesian_pascaligo         (* T_Cart *)
+| T_ModPath         of type_expr module_path
 
 (* ========================== PATTERNS ===================================== *)
 

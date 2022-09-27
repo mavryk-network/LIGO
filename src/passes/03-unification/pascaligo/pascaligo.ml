@@ -27,8 +27,82 @@ let extract_type_params : CST.type_params CST.chevrons CST.reg -> string nseq =
 (* ========================== TYPES ======================================== *)
 
 let rec compile_type_expression : CST.type_expr -> AST.type_expr = fun te ->
+  let self = compile_type_expression in
   match te with
-  | _ -> failwith "TODO : Missing case"
+  | T_App     t -> (
+    let (te, ttuple), loc = r_split t in
+    let constr = self te in
+    let type_args : type_expr nseq =
+      List.Ne.map self @@ nsepseq_to_nseq (r_fst ttuple).inside
+    in
+    t_apppascaligo {constr; type_args} ~loc ()
+  )
+  | T_Attr    t -> (
+    let attr, te = t in
+    let attr, loc = r_split attr in
+    let attr = translate_attr_pascaligo attr in
+    let te   = self te in
+    t_attr attr te ~loc ()
+  )
+  | T_Cart    t -> (
+    let (te, _, tes), loc = r_split t in
+    let te = self te in
+    let tes = List.Ne.map self @@ nsepseq_to_nseq tes in
+    t_cart (te, tes) ~loc ()
+  )
+  | T_Fun t -> (
+    let (te1, _, te2), loc = r_split t in
+    let te1 = self te1 in
+    let te2 = self te2 in
+    t_fun te1 te2 ~loc ()
+  )
+  | T_Int     t -> (
+    let (s, z), loc = w_split t in
+    t_int s z ~loc ()
+  )
+  | T_ModPath t -> (
+    let t, loc = r_split t in
+    let module_path : string nseq = List.Ne.map w_fst @@ nsepseq_to_nseq t.module_path in
+    let field : type_expr = self t.field in
+    t_modpath {module_path; field} ~loc ()
+  )
+  | T_Par     t -> (
+    let t, loc = r_split t in
+    let t = self t.inside in
+    t_par t ~loc ()
+  )
+  | T_Record  t -> (
+    let t, loc = r_split t in
+    let t : type_record_pascaligo =
+      let compile_field_decl : CST.field_decl -> AST.type_expr option AST.field_assign = fun fd ->
+        let name : string = w_fst fd.field_name in
+        let expr : type_expr option = Option.apply (self <@ snd) fd.field_type in
+        {name; expr}
+      in
+      List.map ~f:(compile_field_decl <@ r_fst) @@ sepseq_to_list t.elements
+    in
+    t_recordpascaligo t ~loc ()
+  )
+  | T_String  t -> (
+    let t, loc = w_split t in
+    t_string t ~loc ()
+  )
+  | T_Sum     t -> (
+    let t, loc = r_split t in
+    let variants =
+      let compile_variant : CST.variant -> AST.variant = fun v ->
+        let constr  = w_fst v.ctor in
+        let arg_opt = Option.apply (self <@ snd) v.ctor_args in
+        {constr; arg_opt}
+      in
+      List.Ne.map (compile_variant <@ r_fst) @@ nsepseq_to_nseq t.variants
+    in
+    t_sum variants ~loc ()
+  )
+  | T_Var     t -> (
+    let t, loc = w_split t in
+    t_var t ~loc ()
+  )
 
 (* ========================== PATTERNS ===================================== *)
 
