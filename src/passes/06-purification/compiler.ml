@@ -261,6 +261,10 @@ and compile_declaration ~raise : I.declaration -> O.declaration = fun d ->
     let binder = Binder.map (compile_type_expression_option ~raise) binder in
     let expr   = compile_expression ~raise ~last:true expr in
     return @@ D_value {binder;expr;attr}
+  | D_pattern {pattern;expr;attr} ->
+    let pattern = Pattern.map (compile_type_expression_option ~raise) pattern in
+    let expr   = compile_expression ~raise ~last:true expr in
+    return @@ D_pattern {pattern;expr;attr}
   | D_type {type_binder;type_expr;type_attr} ->
     let type_expr = compile_type_expression ~raise type_expr in
     return @@ D_type {type_binder;type_expr;type_attr}

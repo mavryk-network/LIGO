@@ -301,6 +301,11 @@ and fold_map_declaration = fun m acc (x : declaration) ->
     let wrap_content = D_value {binder ; expr ; attr} in
     (acc', {x with wrap_content})
   )
+  | D_pattern {pattern ; expr ; attr } -> (
+    let (acc', expr) = fold_map_expression m acc expr in
+    let wrap_content = D_pattern {pattern ; expr ; attr} in
+    (acc', {x with wrap_content})
+  )
   | D_type t -> (
     let wrap_content = D_type t in
     (acc, {x with wrap_content})

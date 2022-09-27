@@ -33,6 +33,32 @@ module Value_decl (Attr : Attr) = struct
 
 end
 
+module Pattern_decl (Attr : Attr) = struct
+  type ('e,'t) t = {
+    pattern : 't Pattern.t;
+    expr : 'e ;
+    attr : Attr.t;
+  } [@@deriving eq,compare,yojson,hash,fold,map]
+
+  let fold_map : ('acc -> 'a -> 'acc * 'b) -> ('acc -> 'c -> 'acc * 'd) -> 'acc -> ('a,'c) t -> 'acc * ('b,'d) t
+  = fun f g acc {pattern; attr; expr} ->
+    let acc,pattern = Pattern.fold_map g acc pattern in
+    let acc,expr   = f acc expr     in
+    (acc, {pattern;attr;expr})
+  
+  let pp ?(print_type = true) f g ppf = fun {pattern; attr ; expr} ->
+    let cond ppf b =
+      if print_type then
+        Format.fprintf ppf "%a" (Pattern.pp g) b
+      else
+        Format.fprintf ppf "%a" (Pattern.pp (fun _ _ -> ())) b
+    in
+    Format.fprintf ppf "@[<2>pat %a =@ %a%a@]"
+      cond pattern
+      f expr
+      Attr.pp attr
+end
+
 module Type_decl (Attr:Attr) = struct
   type 't t = {
       type_binder : Var.Type_var.t ;

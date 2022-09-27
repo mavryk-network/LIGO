@@ -206,6 +206,7 @@ let get_entry (lst : program) (name : Value_var.t) : expression option =
       then Some expr
       else None
     )
+    | D_pattern _
     | D_type   _
     | D_module _ -> None
   in

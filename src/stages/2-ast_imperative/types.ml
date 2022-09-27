@@ -46,6 +46,7 @@ let pp ppf lst =
 end
 
 module Value_decl = Value_decl(Attr)
+module Pattern_decl = Pattern_decl(Attr)
 module Type_decl  = Type_decl(Attr)
 module Module_decl= Module_decl(Attr)
 
@@ -104,9 +105,10 @@ and expr = expression
   [@@deriving eq,compare,yojson,hash]
 
 and declaration_content =
-    D_value  of (expr,ty_expr option) Value_decl.t
-  | D_type   of ty_expr Type_decl.t
-  | D_module of module_expr Module_decl.t
+    D_value   of (expr,ty_expr option) Value_decl.t
+  | D_pattern of (expr,ty_expr option) Pattern_decl.t
+  | D_type    of ty_expr Type_decl.t
+  | D_module  of module_expr Module_decl.t
 
 and  declaration = declaration_content Location.wrap
 and  decl = declaration
