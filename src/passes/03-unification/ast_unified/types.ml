@@ -88,11 +88,16 @@ and 'a module_path = {
 and type_record           = type_expr field_assign nseq
 and type_record_pascaligo = type_expr field_assign list
 
+and fun_type_arg = {
+  name      : string;
+  type_expr : type_expr
+}
+and fun_type_args = fun_type_arg nseq
+
 and type_expression_content =
 | T_Prod    of cartesian
 | T_Sum     of sum_type
 | T_Record  of type_record  (* Cameligo *)
-| T_Object  of type_record  (* Jsligo *)
 | T_App     of string type_app
 | T_Fun     of type_expr * type_expr
 | T_Par     of type_expr
@@ -102,6 +107,10 @@ and type_expression_content =
 | T_ModA    of type_expr module_access
 | T_ModPath of type_expr module_path
 | T_Arg     of string
+(* Jsligo *)
+| T_Object          of type_record
+| T_FunJsligo       of fun_type_args * type_expr
+| T_Disc            of type_record nseq
 (* Pascaligo *)
 | T_RecordPascaligo of type_record_pascaligo       (* CST.Pascaligo.T_Record *)
 | T_Attr            of attr_pascaligo * type_expr  (* T_Attr *)

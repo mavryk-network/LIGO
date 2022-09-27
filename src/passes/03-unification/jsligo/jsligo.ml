@@ -19,8 +19,103 @@ let w_split (x: 'a CST.Wrap.t) : 'a * Location.t =
 (* ========================== TYPES ======================================== *)
 
 let rec compile_type_expression : CST.type_expr -> AST.type_expr = fun te ->
+  let self = compile_type_expression in
+  (* This function is declared here on top because it's used by both TObject and TDisc *)
+  let compile_type_record : CST.obj_type -> AST.type_record = fun obj ->
+    let obj, loc = r_split obj in
+    let compile_field_decl : CST.field_decl -> AST.type_expr AST.field_assign = fun fd ->
+      let name : string = r_fst fd.field_name in
+      let expr : type_expr = self fd.field_type in
+      {name; expr}
+    in
+    nseq_map (compile_field_decl <@ r_fst) @@ nsepseq_to_nseq obj.ne_elements
+  in
   match te with
-  | _ -> failwith "TODO : Missing case"
+  | TProd t -> (
+    let t, loc = r_split t.inside in
+    let t = List.Ne.map self @@ nsepseq_to_nseq t.inside in
+    t_prod t ~loc ()
+  )
+  | TSum t -> (
+    let t, loc = r_split t in
+    let variants =
+      let compile_variant : CST.variant -> AST.variant = fun v ->
+        let v = (r_fst v.tuple).inside in
+        let constr  = r_fst v.constr in
+        let arg_opt : type_expr nseq option = Option.map ~f:(List.Ne.map self <@ nsepseq_to_nseq <@ snd) v.params in
+        (* In other syntaxes, when there are several types associated with a variant,
+           they are written in a tuple [MyVariant of int * string * tez], so we have one type, which is a tuple.
+           However in JsLIGO, we write ["MyVariant", int, string, tez] and have a list of types [int; string; tez].
+           Here, we put those types in a tuple, for unification with other syntaxes. *)
+        let arg_opt : type_expr option = Option.map ~f:(fun te -> t_prod te ()) arg_opt in
+        {constr; arg_opt}
+      in
+      List.Ne.map (compile_variant <@ r_fst) @@ nsepseq_to_nseq @@ r_fst t.variants
+    in
+    t_sum variants ~loc ()
+  )
+  | TObject t -> (
+    let _, loc = r_split t in
+    let t = compile_type_record t in
+    t_record t ~loc ()
+  )
+  | TApp t -> (
+    let t, loc = r_split t in
+    let constr, args = t in
+    let constr : string = r_fst constr in
+    let type_args : type_expr nseq =
+      List.Ne.map self @@ nsepseq_to_nseq (r_fst args).inside
+    in
+    t_app {constr; type_args} ~loc ()
+  )
+  | TFun t -> (
+    let (fta, _, te2), loc = r_split t in
+    let fun_type_args =
+      let compile_fun_type_arg : CST.fun_type_arg -> AST.fun_type_arg = fun fta ->
+        let name = r_fst fta.name in
+        let type_expr = self fta.type_expr in
+        {name; type_expr}
+      in
+      List.Ne.map compile_fun_type_arg @@ nsepseq_to_nseq fta.inside in
+    let type_expr = self te2 in
+    t_funjsligo fun_type_args type_expr ~loc ()
+  )
+  | TPar t -> (
+    let t, loc = r_split t in
+    let t = self t.inside in
+    t_par t ~loc ()
+  )
+  | TVar t -> (
+    let t, loc = r_split t in
+    t_var t ~loc ()
+  )
+  | TString t -> (
+    let t, loc = r_split t in
+    t_string t ~loc ()
+  )
+  | TInt t -> (
+    let (s, z), loc = r_split t in
+    t_int s z ~loc ()
+  )
+  | TModA t -> (
+    let t, loc = r_split t in
+    let module_name = r_fst t.module_name in
+    let field = self t.field in
+    t_moda {module_name; field} ~loc ()
+  )
+  | TDisc t -> (
+    let objs = nsepseq_to_nseq t in
+    let loc =
+      (* The region of the discriminated union TDisc
+      is the union of all its objects' regions *)
+      let locations = List.Ne.map (fun obj -> snd @@ r_split obj) objs in
+      List.Ne.fold_left locations ~init:Location.dummy ~f:Location.cover
+    in
+    let t = List.Ne.map compile_type_record objs in
+    t_disc t ~loc ()
+  )
+
+
 
 (* ========================== PATTERNS ===================================== *)
 
