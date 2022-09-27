@@ -484,6 +484,74 @@ let%expect_test _ =
     - test exited with value (). |}]
 
 let%expect_test _ =
+  run_ligo_good [ "run"; "test" ; test "test_hashlock_mligo.mligo" ] ;
+  [%expect {|
+    Everything at the top-level was executed.
+    - test_commit exited with value ().
+    - test_reveal_no_commit exited with value ().
+    - test_reveal_young_commit exited with value ().
+    - test_reveal_breaks_commit exited with value ().
+    - test_reveal_wrong_commit exited with value ().
+    - test_reveal_no_reuse exited with value ().
+    - test_reveal exited with value (). |}]
+
+let%expect_test _ =
+  run_ligo_good [ "run"; "test" ; test "test_hashlock_religo.mligo" ] ;
+  [%expect {|
+    Reasonligo is depreacted, support will be dropped in a few versions.
+
+    Reasonligo is depreacted, support will be dropped in a few versions.
+
+    Reasonligo is depreacted, support will be dropped in a few versions.
+
+    Reasonligo is depreacted, support will be dropped in a few versions.
+
+    Reasonligo is depreacted, support will be dropped in a few versions.
+
+    Reasonligo is depreacted, support will be dropped in a few versions.
+
+    Reasonligo is depreacted, support will be dropped in a few versions.
+
+    Reasonligo is depreacted, support will be dropped in a few versions.
+
+    Reasonligo is depreacted, support will be dropped in a few versions.
+
+    Reasonligo is depreacted, support will be dropped in a few versions.
+
+    Reasonligo is depreacted, support will be dropped in a few versions.
+
+    Reasonligo is depreacted, support will be dropped in a few versions.
+
+    Reasonligo is depreacted, support will be dropped in a few versions.
+
+    Reasonligo is depreacted, support will be dropped in a few versions.
+
+    Reasonligo is depreacted, support will be dropped in a few versions.
+
+    Reasonligo is depreacted, support will be dropped in a few versions.
+
+    Everything at the top-level was executed.
+    - test_commit exited with value ().
+    - test_reveal_no_commit exited with value ().
+    - test_reveal_young_commit exited with value ().
+    - test_reveal_breaks_commit exited with value ().
+    - test_reveal_wrong_commit exited with value ().
+    - test_reveal_no_reuse exited with value ().
+    - test_reveal exited with value (). |}]
+
+let%expect_test _ =
+  run_ligo_good [ "run"; "test" ; test "test_hashlock_ligo.mligo" ] ;
+  [%expect {|
+    Everything at the top-level was executed.
+    - test_commit exited with value ().
+    - test_reveal_no_commit exited with value ().
+    - test_reveal_young_commit exited with value ().
+    - test_reveal_breaks_commit exited with value ().
+    - test_reveal_wrong_commit exited with value ().
+    - test_reveal_no_reuse exited with value ().
+    - test_reveal exited with value (). |}]
+
+let%expect_test _ =
   run_ligo_good [ "run"; "test" ; test "pack_unpack.mligo" ] ;
   [%expect {|
     Everything at the top-level was executed.
