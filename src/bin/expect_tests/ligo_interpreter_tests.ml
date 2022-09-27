@@ -552,6 +552,46 @@ let%expect_test _ =
     - test_reveal exited with value (). |}]
 
 let%expect_test _ =
+  run_ligo_good [ "run"; "test" ; test "test_pledge_mligo.mligo" ] ;
+  [%expect {|
+    Everything at the top-level was executed.
+    - test_pledge exited with value ().
+    - test_distribute exited with value ().
+    - test_distribute_unauthorized exited with value (). |}]
+
+let%expect_test _ =
+  run_ligo_good [ "run"; "test" ; test "test_pledge_religo.mligo" ] ;
+  [%expect {|
+    Reasonligo is depreacted, support will be dropped in a few versions.
+
+    Reasonligo is depreacted, support will be dropped in a few versions.
+
+    Reasonligo is depreacted, support will be dropped in a few versions.
+
+    Reasonligo is depreacted, support will be dropped in a few versions.
+
+    Reasonligo is depreacted, support will be dropped in a few versions.
+
+    Reasonligo is depreacted, support will be dropped in a few versions.
+
+    Reasonligo is depreacted, support will be dropped in a few versions.
+
+    Reasonligo is depreacted, support will be dropped in a few versions.
+
+    Everything at the top-level was executed.
+    - test_pledge exited with value ().
+    - test_distribute exited with value ().
+    - test_distribute_unauthorized exited with value (). |}]
+
+let%expect_test _ =
+  run_ligo_good [ "run"; "test" ; test "test_pledge_ligo.mligo" ] ;
+  [%expect {|
+    Everything at the top-level was executed.
+    - test_pledge exited with value ().
+    - test_distribute exited with value ().
+    - test_distribute_unauthorized exited with value (). |}]
+
+let%expect_test _ =
   run_ligo_good [ "run"; "test" ; test "pack_unpack.mligo" ] ;
   [%expect {|
     Everything at the top-level was executed.
