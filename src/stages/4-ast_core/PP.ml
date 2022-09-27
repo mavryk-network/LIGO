@@ -97,7 +97,7 @@ and expression_content ppf (ec : expression_content) =
 
 and declaration ppf (d : declaration) = match Location.unwrap d with
     D_value vd  -> Types.Value_decl.pp expression type_expression_option ppf vd
-  | D_type  td  -> Types.Type_decl.pp type_expression ppf td
+  | D_type  td  -> td + 1
   | D_module md -> Types.Module_decl.pp module_expr ppf md
 
 and decl ppf d = declaration ppf d
