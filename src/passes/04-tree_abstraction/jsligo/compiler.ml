@@ -916,9 +916,9 @@ and compile_function_body_to_expression ~raise : CST.body -> AST.expression = fu
 and compile_let_to_declaration ~raise : const:bool -> CST.attributes -> CST.val_binding Region.reg -> AST.declaration list =
     fun ~const attributes let_binding ->
       let ({binders; type_params; lhs_type; expr = let_rhs; _} : CST.val_binding) = let_binding.value in
-      let lst = compile_let_binding ~raise ~const attributes let_rhs lhs_type type_params binders let_binding.region in
-      let aux : (type_expression option Binder.t * Types.attributes * CST.type_generics option * expression) -> declaration =
-        fun (binder,attr,type_params,expr) ->
+      let lst = compile_let_binding ~raise ~const attributes let_rhs lhs_type binders in
+      let aux : (type_expression option Binder.t * Types.attributes * expression) -> declaration =
+        fun (binder,attr,expr) ->
           (* This handle polymorphic annotation *)
           let map_ascr ascr =
             Option.map ascr ~f:(fun rhs_type ->
@@ -934,7 +934,8 @@ and compile_let_to_declaration ~raise : const:bool -> CST.attributes -> CST.val_
             let type_vars = List.Ne.map compile_type_var @@ npseq_to_ne_list tp.inside in
             List.Ne.fold_right ~f:(fun t e -> e_type_abs ~loc t e) ~init:expr type_vars
           ) type_params in
-          Location.wrap ~loc:expr.location @@ AST.D_value {binder; attr; expr} in
+          Location.wrap ~loc:expr.location @@ AST.D_value {binder; attr; expr}
+      in
       List.map ~f:aux lst
 
 (*
@@ -1015,8 +1016,8 @@ and compile_pattern ~raise : const:bool -> CST.pattern -> type_expression option
 and filter_private (attributes: CST.attributes) =
   List.filter ~f:(fun v -> not @@ String.equal v.value "private") attributes
 
-and compile_let_binding ~raise : const:bool -> CST.attributes -> CST.expr -> (CST.colon * CST.type_expr) option -> CST.type_generics option -> CST.pattern -> Region.t -> (type_expression option Binder.t * Ast_imperative__.Types.attributes * _ * expression) list =
-  fun ~const attributes let_rhs type_expr type_params binders _region ->
+and compile_let_binding ~raise : const:bool -> CST.attributes -> CST.expr -> (CST.colon * CST.type_expr) option -> CST.pattern -> (type_expression option Binder.t * Ast_imperative__.Types.attributes * expression) list =
+  fun ~const attributes let_rhs type_expr binders ->
   let attributes = compile_attributes attributes in
   let expr = compile_expression ~raise let_rhs in
   let lhs_type = Option.map ~f:(compile_type_expression ~raise <@ snd) type_expr in
@@ -1040,7 +1041,7 @@ and compile_let_binding ~raise : const:bool -> CST.attributes -> CST.expr -> (CS
         | _ -> expr
         )
       in
-      [(Binder.make ~mut:(not const) fun_binder lhs_type), attributes, type_params, expr]
+      [(Binder.make ~mut:(not const) fun_binder lhs_type), attributes, expr]
     | CST.PArray a ->  (* tuple destructuring (for top-level only) *)
       let matchee = expr in
       let (tuple, _loc) = r_split a in
@@ -1048,7 +1049,7 @@ and compile_let_binding ~raise : const:bool -> CST.attributes -> CST.expr -> (CS
       let lst = List.map ~f:(compile_pattern ~raise ~const) array_items in
       let (lst, exprs) = List.unzip lst in
       let expr = List.fold_right ~f:(@@) exprs ~init:matchee in
-      let aux i binder = Z.add i Z.one, (binder, attributes, type_params, e_accessor expr @@ [Access_tuple i]) in
+      let aux i binder = Z.add i Z.one, (binder, attributes, e_accessor expr @@ [Access_tuple i]) in
       let lst = snd @@ List.fold_map ~f:aux ~init:Z.zero @@ lst in
       lst
     | _ -> raise.error @@ unsupported_pattern_type @@ binders
@@ -1095,8 +1096,8 @@ and compile_statement ?(wrap=false) ~raise : CST.statement -> statement_result
       let matchee = self_expr let_rhs in
       compile_object_let_destructuring ~raise ~const matchee o
     | _ ->
-      let lst = compile_let_binding ~raise ~const attributes let_rhs lhs_type type_params binders region in
-      let aux (binder,attr,type_params,rhs) expr =
+      let lst = compile_let_binding ~raise ~const attributes let_rhs lhs_type binders in
+      let aux (binder,attr,rhs) expr =
         match rhs.expression_content with
           E_assign {binder=b; _} ->
             let var = {expression_content = E_variable (Binder.get_var b); location = rhs.location} in
