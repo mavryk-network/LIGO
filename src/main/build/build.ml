@@ -116,9 +116,8 @@ module Infer (Params : Params) = struct
 
 end
 
-(*  unfortunately slow:
-  module Build_typed(Params : Params) = BuildSystem.Make(M(Params))
-*)
+(*  unfortunately slow: *)
+module Build_typed(Params : Params) = BuildSystem.Make(M(Params))
 module Build_core(Params : Params) = BuildSystem.Make(Infer(Params))
 
 let get_top_level_syntax ~options ?filename () : Syntax_types.t =
@@ -154,16 +153,14 @@ let unqualified_core ~raise : options:Compiler_options.t -> Source_input.file_na
 
 let unqualified_typed ~raise : options:Compiler_options.t -> Ligo_compile.Of_core.form -> Source_input.file_name -> Ast_typed.program =
   fun ~options form filename ->
-    (* let open Build_typed(struct
+    let open Build_typed(struct
       let raise = raise
       let options = options
       let std_lib = Stdlib.get ~options
       let top_level_syntax = get_top_level_syntax ~options ~filename ()
     end) in
     let x = trace ~raise build_error_tracer @@ from_result (compile_unqualified (Source_input.From_file filename)) in
-    trace ~raise self_ast_typed_tracer @@ Ligo_compile.Of_core.specific_passes form x *)
-    let prg = unqualified_core ~raise ~options filename in
-    Ligo_compile.Of_core.typecheck ~raise ~options form prg
+    trace ~raise self_ast_typed_tracer @@ Ligo_compile.Of_core.specific_passes form x
 
 let qualified_core ~raise : options:Compiler_options.t -> Source_input.file_name -> Ast_core.program =
   fun ~options filename ->
