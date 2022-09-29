@@ -101,6 +101,7 @@
           },
           "dependencies": {
             "@opam/hacl-star-raw": "*",
+	    "@opam/tezos-protocol-compiler": "*",
             "esy-libffi": "*",
             "esy-libev": "*"
           },
@@ -112,9 +113,9 @@
               "#{@opam/tezos-protocol-compiler.lib}/tezos-protocol-compiler/dune_protocol.template.v1",
               "dune",
               "#{@opam/tezos-protocol-compiler.lib}/tezos-protocol-compiler/final_protocol_versions",
-              "013_PtJakart"
+              "014-PtKathma"
             ],
-            ["dune", "build", "-p", "tezos-protocol-013-PtJakart", "-j", "4"]
+            ["dune", "build", "-p", "tezos-protocol-014-PtKathma", "-j", "4"]
           ]
         }
       },
@@ -186,6 +187,16 @@
       "@opam/core": "opam:v0.14.1",
       "@opam/dune": "opam:2.9.2",
       "@opam/dune-configurator": "opam:2.9.1",
+      "@opam/class_group_vdf": {
+	"version": "opam:0.0.4",
+	"override": {
+	  "build": "bash -c 'dune build -p class_group_vdf || dune build -p class_group_vdf'",
+	  "dependencies": {
+	    "esy-gmp": "*"
+	  }
+	}
+      },
+      "esy-gmp": "esy-packages/esy-gmp#26bf00576a607422364e32ef3cbcc60590f8a28f",
       "@opam/dune-build-info": "opam:2.9.3",
       "@opam/terminal_size": "DiningPhilosophersCo/terminal_size:terminal_size.opam#4fa00d7e812a59e669bfc0392d6539252afa5fb",
       "@opam/mtime": {
