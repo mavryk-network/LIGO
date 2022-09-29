@@ -1,0 +1,5 @@
+author: lesenechal.remi
+description: '- fixing `info list-declaration`. Might introduce perf problem ?'
+merge_request: '2034'
+title: fixing list declarations
+type: fixed
