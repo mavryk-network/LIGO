@@ -1037,7 +1037,12 @@ and compile_let_binding ~raise : const:bool -> CST.attributes -> CST.expr -> (CS
             let lambda = Lambda.{binder=Binder.map (Fn.const type1) binder;result;output_type = type2} in
             e_recursive ~loc:(Location.lift name.region) fun_binder fun_type lambda
           else make_e ~loc:(Location.lift name.region) @@ E_lambda lambda
-        | _ -> expr
+        | EAssign (EProj proj, _, _) -> 
+          let (proj, loc) = r_split proj in
+          let (sels , _) = compile_selection ~raise proj.selection in
+          e_sequence expr (e_accessor ~loc (compile_expression ~raise proj.expr) [sels])        
+        | _ -> 
+          expr
         )
       in
       [(Binder.make ~mut:(not const) fun_binder lhs_type), attributes, type_params, expr]
