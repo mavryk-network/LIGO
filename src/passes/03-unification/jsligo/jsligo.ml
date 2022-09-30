@@ -21,7 +21,7 @@ let w_split (x: 'a CST.Wrap.t) : 'a * Location.t =
 let rec compile_type_expression : CST.type_expr -> AST.type_expr = fun te ->
   let self = compile_type_expression in
   (* This function is declared here on top because it's used by both TObject and TDisc *)
-  let compile_type_record : CST.obj_type -> AST.type_record = fun obj ->
+  let compile_obj_type : CST.obj_type -> AST.type_ne_record = fun obj ->
     let obj, loc = r_split obj in
     let compile_field_decl : CST.field_decl -> AST.type_expr AST.field_assign = fun fd ->
       let name : string = r_fst fd.field_name in
@@ -56,8 +56,8 @@ let rec compile_type_expression : CST.type_expr -> AST.type_expr = fun te ->
   )
   | TObject t -> (
     let _, loc = r_split t in
-    let t = compile_type_record t in
-    t_record t ~loc ()
+    let t = compile_obj_type t in
+    t_object t ~loc ()
   )
   | TApp t -> (
     let t, loc = r_split t in
@@ -111,7 +111,7 @@ let rec compile_type_expression : CST.type_expr -> AST.type_expr = fun te ->
       let locations = List.Ne.map (fun obj -> snd @@ r_split obj) objs in
       List.Ne.fold_left locations ~init:Location.dummy ~f:Location.cover
     in
-    let t = List.Ne.map compile_type_record objs in
+    let t = List.Ne.map compile_obj_type objs in
     t_disc t ~loc ()
   )
 

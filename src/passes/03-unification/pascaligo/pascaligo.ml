@@ -73,7 +73,7 @@ let rec compile_type_expression : CST.type_expr -> AST.type_expr = fun te ->
   )
   | T_Record  t -> (
     let t, loc = r_split t in
-    let t : type_record_pascaligo =
+    let t : type_record_opt =
       let compile_field_decl : CST.field_decl -> AST.type_expr option AST.field_assign = fun fd ->
         let name : string = w_fst fd.field_name in
         let expr : type_expr option = Option.apply (self <@ snd) fd.field_type in

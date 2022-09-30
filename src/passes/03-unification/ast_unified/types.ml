@@ -85,8 +85,9 @@ and 'a module_path = {
   field       : 'a;
 }
 
-and type_record           = type_expr field_assign nseq
-and type_record_pascaligo = type_expr option field_assign list
+and type_record     = type_expr        field_assign list
+and type_ne_record  = type_expr        field_assign nseq
+and type_record_opt = type_expr option field_assign list
 
 and fun_type_arg = {
   name      : string;
@@ -95,9 +96,13 @@ and fun_type_arg = {
 and fun_type_args = fun_type_arg nseq
 
 and type_expression_content =
+| T_Record  of type_record
+(* *)
+(* Above variants are produced by nanopasses, not directly by unification *)
+(* Below variants are produced by directly unification pass *)
+(* Shared *)
 | T_Prod    of cartesian
 | T_Sum     of sum_type
-| T_Record  of type_record  (* Cameligo *)
 | T_App     of string type_app
 | T_Fun     of type_expr * type_expr
 | T_Par     of type_expr
@@ -106,15 +111,17 @@ and type_expression_content =
 | T_Int     of string * Z.t
 | T_ModA    of type_expr module_access
 | T_Arg     of string
+(* Cameligo *)
+| T_RecordCameligo  of type_ne_record
 (* Jsligo *)
-| T_Object          of type_record
+| T_Object          of type_ne_record
 | T_FunJsligo       of fun_type_args * type_expr
-| T_Disc            of type_record nseq
+| T_Disc            of type_ne_record nseq
 (* Pascaligo *)
-| T_RecordPascaligo of type_record_pascaligo       (* CST.Pascaligo.T_Record *)
-| T_Attr            of attr_pascaligo * type_expr  (* T_Attr *)
-| T_AppPascaligo    of type_expr type_app          (* T_App *)
-| T_Cart            of cartesian_pascaligo         (* T_Cart *)
+| T_RecordPascaligo of type_record_opt             (* CST.T_Record *)
+| T_Attr            of attr_pascaligo * type_expr  (* CST.T_Attr *)
+| T_AppPascaligo    of type_expr type_app          (* CST.T_App *)
+| T_Cart            of cartesian_pascaligo         (* CST.T_Cart *)
 | T_ModPath         of type_expr module_path
 
 (* ========================== PATTERNS ===================================== *)
@@ -1250,6 +1257,136 @@ type program = declaration list (* TODO NP : Try to convert this into non-empty 
   pass 'd_let_rec'
     remove : D_Let (is_rec = 1, expr = E_xxx)
     add    : D_Let (is_rec = 0, expr = E_Recursive (E_xxx...))
+
+  T_Sum / T_Prod / T_Fun / T_Var / T_Arg
+  =============================================================================
+  pass 't_sum'
+      remove : T_Sum
+      add    : AST_I.T_Tuple
+  pass 't_prod'
+      remove : T_Prof
+      add    : AST_I.T_Prod
+  pass 't_fun'
+      remove : T_Fun
+      add    : AST_I.T_Arrow
+  pass 't_var'
+      remove : T_Var
+      add    : AST_I.T_variable
+  pass 't_arg'
+      remove : T_Arg
+      add    : AST_I.T_variable
+  pass 't_record' :
+      remove : AST_U.T_Record
+      add    : AST_I.T_Record
+  
+  T_RecordCameligo
+  =============================================================================
+  pass 't_recordcameligo'
+    remove : T_RecordCameligo
+    add    : T_Record (just converting nseq into list)
+
+  T_Par
+  =============================================================================
+  pass 't_par'
+    remove : T_Par
+    add    : nothing, just unwrap T_Par( te ) |-> te
+
+  T_AppPascaligo
+  =============================================================================
+  pass 't_app_pascaligo'
+    remove : T_AppPascaligo
+    add    : T_App | exception
+
+    T_AppPascaligo (constr = T_Var s, type_args)
+    |->
+    T_App          (constr = s      , type_args)
+
+    T_AppPascaligo (constr = _      , type_args)
+    |->
+    exception, a variable was expected
+
+  T_App
+  =============================================================================
+  pass 't_app_michelson_types'
+    remove : T_App ( "michelson_or" | "michelson_pair" | "sapling_state" )
+    add    : AST_I.T_michelson_or
+           | AST_I.T_michelson_pair
+           | AST_I.T_sapling_state
+           | AST_I.T_sapling_transaction
+    needs  : - t_app_pascaligo
+
+  pass 't_app'
+    remove : T_App
+    add    : AST_I.T_app
+    needs  : t_app_michelson_types
+  
+  T_String / T_Int
+  =============================================================================
+  pass 't_string_and_int_unsupported' :
+    remove : T_String | T_Int
+    add    : exception
+    needs  : - t_app_michelson_types
+             - t_disc
+      
+    The T_String and T_Int can appear only in the context
+    of a michelson type (see t_app_michelson_types)
+    or a discriminated union (see t_disc).
+    Once these are converted by the appropriate nanopasses,
+    there should not be any remaining T_String / T_Int.
+    Otherwise, it's an error.
+
+  T_ModA
+  =============================================================================
+  pass 't_moda'
+      remove : T_ModA
+      add    : AST_I.T_module_accessor | exception
+
+      T_ModA m1 ( T_ModA m2 ( ... ( T_Mod A mk ( T_Var s ))))
+      |->
+      T_module_accessor {
+        module_path : [m1; m2; ...; mk]
+        element     : s
+      }
+
+      T_ModA ( _ )
+      |->
+      exception "Expect a variable access"
+  
+  T_ModPath
+  =============================================================================
+  pass 't_modpath'
+      remove : T_ModPath
+      add    : AST_I.T_module_accessor | exception
+
+      T_ModPath ( ["M1"; "M2"; "M3"], T_Var v )
+      |->
+      T_module_accessor {
+        module_path = ["M1"; "M2"; "M3"]
+        element     = v
+      }
+
+      T_ModPath ( ["M1"; "M2"; "M3"], _ ) |-> exception "Expected a variable"
+
+  T_Attr
+  =============================================================================
+  pass 't_attr'
+      remove : T_Attr
+      add : ???
+    
+    Accumulate the attributes in a list
+    and do whatever is done with them in the abstractor.
+    Though I didn't quite understand what we do with them.
+  
+  T_RecordPascaligo
+  =============================================================================
+  pass 't_record_pascaligo'
+    remove : T_RecordPascaligo
+    add    : T_Record
+  
+    Remove type punning : { x } -> { x : x }
+    Replace type_expr option by type_expr :
+    Some te -> te
+    None    -> T_unit
 
   S_VarDecl
   =============================================================================

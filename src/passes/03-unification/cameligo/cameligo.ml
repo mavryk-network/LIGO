@@ -45,7 +45,7 @@ let rec compile_type_expression : CST.type_expr -> AST.type_expr = fun te ->
       in
       nseq_map compile_field_decl field_decls
     in
-    t_record t ~loc ()
+    t_recordcameligo t ~loc ()
   )
   | TApp t -> (
     let t, loc = r_split t in
