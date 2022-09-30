@@ -1951,52 +1951,48 @@ let eval_test ~raise ~steps ~options
   (* Pass over declarations, for each "test"-prefixed one, add a new
      declaration and in the end, gather all of them together *)
   let aux decl r =
-    let ds, defs = r in
+    let ds = r in
     match decl.Location.wrap_content with
-    | Ast_typed.D_value { binder; expr; _ } ->
+    | Ast_typed.D_value { binder; expr; attr } ->
       let var = Binder.get_var binder in
       if (not (Value_var.is_generated var))
          && Base.String.is_prefix (Value_var.to_name_exn var) ~prefix:"test"
       then (
-        let expr = Ast_typed.(e_a_variable var expr.type_expression) in
+        let test_name = (Value_var.to_name_exn var) in
+        let to_string = Ast_typed.(e_a_test_to_string expr) in
+        let str = Ast_typed.(e_a_string @@ Ligo_string.standard @@ "- " ^ test_name ^ " exited with value ") in
+        let str = Ast_typed.(e_a_concat str to_string) in
+        let str = Ast_typed.(e_a_concat str @@ e_a_string @@ Ligo_string.standard "\n") in
+        let expr = Ast_typed.(e_a_test_print (Z.of_int 1) str) in
         (* TODO: check that variables are unique, as they are ignored *)
-        decl :: ds, (binder, expr.type_expression) :: defs)
-      else decl :: ds, defs
-    | _ -> decl :: ds, defs
+        let binder = Binder.make (Value_var.fresh ()) (Some (Ast_typed.t_unit ())) in
+        let decl = Location.wrap ~loc:(Location.get_location decl) @@ Ast_typed.D_value { binder ; expr ; attr } in
+        decl :: ds)
+      else decl :: ds
+    | _ -> decl :: ds
   in
-  let decl_lst, lst = List.fold_right ~f:aux ~init:([], []) decl_lst in
+  let welcome =
+    let open Ast_typed in
+    let expr = e_a_test_print (Z.of_int 1) @@ e_a_string @@ Ligo_string.standard @@ "Everything at the top-level was executed.\n" in
+    D_value { binder = Binder.make (Value_var.fresh ()) (Some (t_unit ())) ; expr ; attr = { no_mutation = false ; inline = false ; view = false ; public = false ; hidden = true ; thunk = false } } in
+  let decl_lst = List.fold_right ~f:aux ~init:[] decl_lst in
+  let decl_lst = Location.wrap welcome :: decl_lst in
   (* Compile new context *)
   let initial_state = Execution_monad.make_state ~raise ~options in
-  let f (n, t) r =
-    let s, _ = Value_var.internal_get_name_and_counter @@ Binder.get_var n in
-    Record.LMap.add (Label s) (Ast_typed.e_a_variable (Binder.get_var n) t) r
-  in
-  let map = List.fold_right lst ~f ~init:Record.LMap.empty in
-  let expr = Ast_typed.e_a_record map in
   let expr =
     Ligo_compile.Of_typed.compile_expression_in_context
       ~raise
       ~options:options.middle_end
-      decl_lst
-      expr
+      decl_lst @@
+      Ast_typed.e_a_unit ()
   in
   let expr =
     trace ~raise Main_errors.self_ast_aggregated_tracer
     @@ Self_ast_aggregated.all_expression ~options:options.middle_end expr
   in
-  let value, _ =
+  let _value, _ =
     try_eval ~raise ~steps ~options expr Env.empty_env initial_state None
   in
-  match value with
-  | V_Record m ->
-    let f (n, _) r =
-      let s, _ = Value_var.internal_get_name_and_counter @@ Binder.get_var n in
-      match Record.LMap.find_opt (Label s) m with
-      | None -> failwith "Cannot find"
-      | Some v -> (s, v) :: r
-    in
-    List.fold_right ~f ~init:[] @@ lst
-  | _ -> failwith "Not a tuple?"
-
+  []
 
 let () = Printexc.record_backtrace true
