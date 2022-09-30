@@ -51,8 +51,15 @@ end = struct
     | E_tuple t -> unions @@ List.map ~f:self t
     | E_constructor { element; _ } -> self element
     | E_application { lamb; args } -> VarSet.union (self lamb) (self args)
-    | E_let_in { let_binder; rhs; let_result; _ }
-      -> VarSet.union (self rhs) (VarSet.remove (Binder.get_var let_binder) (self let_result))
+    | E_let_in { let_binder; rhs; let_result; _ } ->
+      VarSet.union (self rhs) (VarSet.remove (Binder.get_var let_binder) (self let_result))
+    | E_let_pattern_in { let_pattern; rhs; let_result; _ } ->
+      let bound = List.map ~f:Binder.get_var (Pattern.binders let_pattern) in
+      let fv_let_result = List.fold bound
+        ~init:(self let_result)
+        ~f:(fun acc x -> VarSet.remove x acc)
+      in
+      VarSet.union (self rhs) fv_let_result
     | E_type_in { let_result; type_binder = _; rhs = _ } -> self let_result
     | E_mod_in { rhs; let_result; module_binder = _ } ->
       VarSet.union (get_fv_module_expr rhs.wrap_content) (self let_result)

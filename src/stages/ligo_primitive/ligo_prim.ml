@@ -23,6 +23,7 @@ module Lambda = Lambda
 module Recursive = Recursive
 module Application = Application
 module Let_in = Let_in
+module Let_pattern_in = Let_pattern_in
 module Type_in = Type_in
 module Raw_code = Raw_code
 module Ascription = Ascription

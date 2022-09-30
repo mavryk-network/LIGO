@@ -88,6 +88,7 @@ and expression_content ppf (ec : expression_content) =
       expression rhs
       Types.ValueAttr.pp attr
       expression let_result
+  | E_let_pattern_in x -> Let_pattern_in.pp expression type_expression_option ppf x
   | E_type_in   ti -> Type_in.pp expression type_expression ppf ti
   | E_mod_in    mi -> Mod_in.pp  expression module_expr ppf mi
   | E_raw_code   r -> Raw_code.pp   expression ppf r

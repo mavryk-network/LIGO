@@ -118,6 +118,7 @@ type expression_content =
   | E_recursive of (expr, ty_expr) Recursive.t
   | E_type_abstraction of expr Type_abs.t
   | E_let_in of let_in
+  | E_let_pattern_in of (expr, ty_expr option) Let_pattern_in.t
   | E_type_in of (expr, ty_expr) Type_in.t
   | E_mod_in of (expr, module_expr) Mod_in.t
   | E_raw_code  of expr Raw_code.t

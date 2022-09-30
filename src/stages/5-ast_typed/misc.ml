@@ -37,6 +37,14 @@ module Free_variables = struct
       union
         (expression b' let_result)
         (self rhs)
+    | E_let_pattern_in { let_pattern ; rhs; let_result; _} ->
+      let b' = List.fold (Pattern.binders let_pattern)
+        ~f:(fun b pb -> union (Binder.apply singleton pb) b)
+        ~init:b
+      in
+      union
+        (expression b' let_result)
+        (self rhs)
     | E_type_abstraction { type_binder=_; result} -> self result
     | E_mod_in { module_binder=_; rhs=_; let_result} -> self let_result
     | E_raw_code _ -> empty

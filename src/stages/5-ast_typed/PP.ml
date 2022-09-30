@@ -136,6 +136,7 @@ and expression_content ppf (ec: expression_content) =
       expression let_result
   | E_let_in {let_binder = _; rhs = _; let_result; attr = { inline = _; no_mutation = _; public=__LOC__ ; view = _ ; hidden = true ; thunk = _ } } ->
       fprintf ppf "%a" expression let_result
+  | E_let_pattern_in x -> Let_pattern_in.pp expression type_expression ppf x
   | E_mod_in    mi -> Mod_in.pp  expression module_expr ppf mi
   | E_raw_code   r -> Raw_code.pp   expression ppf r
   | E_module_accessor ma -> Module_access.pp Value_var.pp ppf ma
