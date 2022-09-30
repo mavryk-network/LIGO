@@ -15,7 +15,7 @@ type ('e, 't) t = {
   } [@@deriving eq,compare,yojson,hash,fold,map]
 
 let pp f g ppf = fun {let_pattern; rhs; let_result; attributes=attr} ->
-  Format.fprintf ppf "@[<v>let %a = %a%a in@,%a@]"
+  Format.fprintf ppf "@[<v>let (%a) = %a%a in@,%a@]"
     (Pattern.pp g) let_pattern
     f rhs
     pp_attributes attr

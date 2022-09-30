@@ -399,6 +399,21 @@ and decompile_eos : eos -> AST.expression -> ((CST.statement List.Ne.t option)* 
     | None -> (CST.S_Decl lin, [])
     in
     return @@ (Some lst, expr)
+  | E_let_pattern_in {let_pattern;rhs;let_result;attributes} ->
+    let lin =
+      let attributes = Shared_helpers.decompile_attributes attributes in
+      let wrap_attr x = List.fold ~f:(fun acc attr -> CST.D_Attr (attr,acc)) ~init:x attributes in
+      let pattern = decompile_pattern let_pattern in
+      let init = decompile_expression expr in
+      let const_decl : CST.const_decl = {kwd_const=Token.ghost_const; pattern ;type_params = None;const_type=None;equal=Token.ghost_eq;init;terminator} in
+      wrap_attr @@ CST.D_Const (Region.wrap_ghost const_decl)
+    in
+    let (lst, expr) = decompile_eos Expression let_result in
+    let lst = match lst with
+      Some lst -> List.Ne.cons (CST.S_Decl lin) lst
+    | None -> (CST.S_Decl lin, [])
+    in
+    return @@ (Some lst, expr)
   | E_type_in {type_binder;rhs;let_result} ->
     let kwd_type = Token.ghost_type
     and name = decompile_type_var type_binder
@@ -757,6 +772,12 @@ and decompile_declaration : AST.declaration -> CST.declaration = fun decl ->
       let const_decl : CST.const_decl = {kwd_const=Token.ghost_const;pattern = CST.P_Var name;type_params=None;const_type=const_type;equal=Token.ghost_eq;init;terminator} in
       wrap_attr attributes @@ CST.D_Const (Region.wrap_ghost const_decl)
   )
+  | D_pattern {pattern; attr; expr} ->
+    let attributes = Shared_helpers.decompile_attributes attr in
+    let pattern = decompile_pattern pattern in
+    let init = decompile_expression expr in
+    let const_decl : CST.const_decl = {kwd_const=Token.ghost_const;pattern;type_params=None;const_type=None;equal=Token.ghost_eq;init;terminator} in
+    wrap_attr attributes @@ CST.D_Const (Region.wrap_ghost const_decl)
   | D_module {module_binder;module_;module_attr} -> (
     let module_attr = Shared_helpers.decompile_attributes module_attr in
     let module_decl : CST.module_decl = {

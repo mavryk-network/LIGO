@@ -339,6 +339,15 @@ let rec decompile_expression : AST.expression -> CST.expr = fun expr ->
     let attributes = Shared_helpers.decompile_attributes attributes in
     let lin : CST.let_in = {kwd_let=Token.ghost_let;kwd_rec=None;binding;kwd_in=Token.ghost_in;body;attributes} in
     return_expr @@ CST.ELetIn (wrap lin)
+  | E_let_pattern_in { let_pattern; rhs; let_result; attributes } ->
+    let binders = (decompile_pattern let_pattern, []) in
+    let type_params, rhs_type = None , None in
+    let let_rhs = decompile_expression rhs in
+    let binding : CST.let_binding = {binders;type_params;rhs_type;eq=Token.ghost_eq;let_rhs} in
+    let body = decompile_expression let_result in
+    let attributes = Shared_helpers.decompile_attributes attributes in
+    let lin : CST.let_in = {kwd_let=Token.ghost_let;kwd_rec=None;binding;kwd_in=Token.ghost_in;body;attributes} in
+    return_expr @@ CST.ELetIn (wrap lin)
   | E_type_in {type_binder;rhs;let_result} ->
     let name = decompile_type_var type_binder in
     let type_expr = decompile_type_expr rhs in
@@ -676,6 +685,14 @@ and decompile_declaration : AST.declaration -> CST.declaration = fun decl ->
       let let_decl : CST.let_decl = (Token.ghost_let,None,let_binding,attributes) in
       CST.Let (wrap @@ let_decl)
   )
+  | D_pattern {pattern;attr;expr} ->
+    let attributes : CST.attributes = Shared_helpers.decompile_attributes attr in
+    let binders = (decompile_pattern pattern,[]) in
+    let type_params, rhs_type = None, None in
+    let let_rhs = decompile_expression expr in
+    let let_binding : CST.let_binding = {binders;type_params;rhs_type;eq=Token.ghost_eq;let_rhs} in
+    let let_decl : CST.let_decl = (Token.ghost_let,None,let_binding,attributes) in
+    CST.Let (wrap @@ let_decl)
   | D_module {module_binder;module_;module_attr=_} -> (
     let name    = decompile_mod_var module_binder in
     match module_.wrap_content with

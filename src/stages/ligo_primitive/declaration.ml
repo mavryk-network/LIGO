@@ -53,7 +53,7 @@ module Pattern_decl (Attr : Attr) = struct
       else
         Format.fprintf ppf "%a" (Pattern.pp (fun _ _ -> ())) b
     in
-    Format.fprintf ppf "@[<2>pat %a =@ %a%a@]"
+    Format.fprintf ppf "@[<2>let (%a) =@ %a%a@]"
       cond pattern
       f expr
       Attr.pp attr

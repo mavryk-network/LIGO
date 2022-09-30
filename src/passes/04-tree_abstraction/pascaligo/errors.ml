@@ -15,7 +15,6 @@ type abs_error = [
   | `Concrete_pascaligo_michelson_type_wrong_arity of Location.t * string
   | `Concrete_pascaligo_untyped_recursive_fun of Location.t
   | `Concrete_pascaligo_block_start_with_attribute of Raw.block Region.reg
-  | `Concrete_pascaligo_unsupported_top_level_destructuring of Region.t
   | `Concrete_pascaligo_unsupported_type_ann_on_patterns of Region.t
   | `Concrete_pascaligo_ignored_attribute of Location.t
   | `Concrete_pascaligo_expected_variable of Location.t
@@ -105,10 +104,6 @@ let error_ppformat : display_format:string display_format ->
       Format.fprintf f
         "@[<hv>%a@.Invalid attribute declaration.@.Attributes have to follow the declaration it is attached to. @]"
         Snippet.pp_lift @@ block.region
-    | `Concrete_pascaligo_unsupported_top_level_destructuring loc ->
-      Format.fprintf f
-        "@[<hv>%a@.Unsupported destructuring at top-level. @]"
-        Snippet.pp_lift @@ loc
   )
 
 
@@ -131,12 +126,6 @@ let error_jsonformat : abs_error -> Yojson.Safe.t = fun a ->
   | `Concrete_pascaligo_ignored_attribute _
   | `Concrete_pascaligo_wrong_functional_updator _
     -> failwith "WAIT"
-  | `Concrete_pascaligo_unsupported_top_level_destructuring loc ->
-    let message = `String "Unsupported destructuring at top-level" in
-    let content = `Assoc [
-      ("message", message );
-      ("location", Location.to_yojson (Snippet.lift loc));] in
-    json_error ~stage ~content
   | `Concrete_pascaligo_unknown_constant (s,loc) ->
     let message = `String ("Unknow constant: " ^ s) in
     let content = `Assoc [
