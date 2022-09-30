@@ -599,6 +599,13 @@ let%expect_test _ =
     - test_call_on_time exited with value (). |}]
 
 let%expect_test _ =
+  run_ligo_good [ "run"; "test" ; test "test_timelock_repeat_mligo.mligo" ] ;
+  [%expect {|
+    Everything at the top-level was executed.
+    - test_early_call exited with value ().
+    - test_interval_advance exited with value (). |}]
+
+let%expect_test _ =
   run_ligo_good [ "run"; "test" ; test "pack_unpack.mligo" ] ;
   [%expect {|
     Everything at the top-level was executed.
