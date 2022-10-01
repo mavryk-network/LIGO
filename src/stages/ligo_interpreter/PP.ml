@@ -61,6 +61,8 @@ let rec pp_value : Format.formatter -> value -> unit = fun ppf v ->
      Format.fprintf ppf "Generator"
   | V_location _ -> 
      Format.fprintf ppf "Heap location"
+  | V_Constant { ct ; type_ } ->
+     Format.fprintf ppf "(constant \"%s\" : %a)" ct Ast_aggregated.PP.type_expression type_
 
 let pp_value_expr : Format.formatter -> value_expr -> unit = fun ppf v ->
   Format.fprintf ppf "%a" pp_value v.eval_term

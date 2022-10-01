@@ -661,6 +661,8 @@ let rec val_to_ast ~raise ~loc
          | _ -> None)
     in
     e_a_chain_id s
+  | V_Constant { ct ; type_ } ->
+    e_constant { cons_name = Ligo_prim.Constant.C_GLOBAL_CONSTANT ; arguments = [e_a_string @@ Ligo_string.standard ct] } type_
   | V_Construct (ctor, arg) when is_t_sum ty ->
     let map_ty =
       trace_option
@@ -986,6 +988,9 @@ and compile_non_func_value ~raise ~options ~run_options ~loc : Ligo_interpreter.
      begin match c.entrypoint with
        | None -> Tezos_micheline.Micheline.String ((), x)
        | Some e -> Tezos_micheline.Micheline.String ((), x ^ "%" ^ e) end
+  | V_Constant { ct ; type_ = _ } ->
+    let ct = Tezos_micheline.Micheline.String ((), ct) in
+    Tezos_micheline.Micheline.Prim ((), "constant", [ct], [])
   | V_Construct (ctor, arg) when Option.is_some (get_t_option ty) ->
     begin match ctor with
     | "None" -> Tezos_micheline.Micheline.Prim ((), "None", [], [])

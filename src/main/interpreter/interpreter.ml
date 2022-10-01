@@ -990,6 +990,9 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
      | None -> fail @@ Errors.meta_lang_failwith loc calltrace (LC.v_string msg)
      | Some value -> return @@ value)
   | C_CONTRACT_WITH_ERROR, _ -> fail @@ error_type ()
+  | C_GLOBAL_CONSTANT, [ V_Ct (C_string s) ] ->
+    return @@ LC.v_constant s expr_ty
+  | C_GLOBAL_CONSTANT, _ -> fail @@ error_type ()
   (*
     >>>>>>>>
       Test operators
@@ -1476,8 +1479,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
       | C_SET_DELEGATE
       | C_CREATE_CONTRACT
       | C_OPEN_CHEST
-      | C_VIEW
-      | C_GLOBAL_CONSTANT )
+      | C_VIEW)
     , _ ) -> fail @@ Errors.generic_error loc "Unbound primitive."
 
 

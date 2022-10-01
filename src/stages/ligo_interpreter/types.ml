@@ -87,6 +87,7 @@ and value =
   | V_Func_val of func_val
   | V_Gen of gen
   | V_location of location
+  | V_Constant of { ct: string; type_: Ast_aggregated.type_expression }
 
 and calltrace = Location.t list
 
