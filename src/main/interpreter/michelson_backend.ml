@@ -1167,10 +1167,7 @@ and compile_non_func_value ~raise ~options ~run_options ~loc : Ligo_interpreter.
       v.body
       v.orig_lambda in
     let compiled_exp = compile_value ~raise ~options typed_exp in
-    (* print_endline (Format.asprintf "%a" Ast_aggregated.PP.expression typed_exp); *)
-    let compiled_exp = Tezos_micheline.Micheline.map_node (fun _ -> Tezos_micheline.Micheline_printer.{ comment = None }) (fun x -> x) compiled_exp.expr in
-    (* print_endline (Format.asprintf "%a" Tezos_micheline.Micheline_printer.print_expr compiled_exp); *)
-    (match compiled_exp with
+    (match compiled_exp.expr with
     | Seq (_, [ Prim (_, "LAMBDA", [ _ ; _ ; compiled_exp ], _) ]) ->
       let compiled_exp = Tezos_micheline.Micheline.map_node (fun _ -> ()) (fun x -> x) compiled_exp in
       compiled_exp
@@ -1181,20 +1178,11 @@ and compile_simple_value ~raise ~options ~run_options ~loc : Ligo_interpreter.Ty
                       Ast_aggregated.type_expression ->
                       Ligo_interpreter.Types.typed_michelson_code =
   fun v ty ->
-  Simple_utils.Trace.try_with (fun ~raise ~catch:_ ->
-      let expr = compile_non_func_value ~raise ~options ~run_options ~loc v ty in
-      let expr_ty = Ligo_compile.Of_aggregated.compile_type ~raise ty in
-      let expr_ty = Ligo_compile.Of_mini_c.compile_type expr_ty in
-      let expr_ty = clean_location_with () expr_ty in
-      Ligo_interpreter.Types.{ code = expr ; code_ty = expr_ty ; ast_ty = ty }) (fun ~catch:_ _ ->
-      let typed_exp = val_to_ast ~raise ~loc v ty in
-      let _ = failwith @@ Format.asprintf "OOPS %a = %a" Ligo_interpreter.PP.pp_value v Ast_aggregated.PP.expression typed_exp in
-      let () = trace ~raise Main_errors.self_ast_aggregated_tracer @@ Self_ast_aggregated.expression_obj typed_exp in
-      let compiled_exp = compile_value ~raise ~options typed_exp in
-      let expr, _ = run_expression_unwrap ~raise ~run_options ~loc compiled_exp in
-      (* TODO-er: check the ignored second component: *)
-      let expr_ty = clean_location_with () compiled_exp.expr_ty in
-      { code = expr ; code_ty = expr_ty ; ast_ty = typed_exp.type_expression })
+  let expr = compile_non_func_value ~raise ~options ~run_options ~loc v ty in
+  let expr_ty = Ligo_compile.Of_aggregated.compile_type ~raise ty in
+  let expr_ty = Ligo_compile.Of_mini_c.compile_type expr_ty in
+  let expr_ty = clean_location_with () expr_ty in
+  Ligo_interpreter.Types.{ code = expr ; code_ty = expr_ty ; ast_ty = ty }
 
 and make_subst_ast_env_exp ~raise env =
   let open Ligo_interpreter.Types in
