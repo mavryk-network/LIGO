@@ -121,6 +121,7 @@ type constant' =
   | C_TEST_MUTATE_VALUE [@only_interpreter]
   | C_TEST_SAVE_MUTATION [@only_interpreter]
   | C_TEST_RUN [@only_interpreter]
+  | C_TEST_COMPILE [@only_interpreter]
   | C_TEST_COMPILE_CONTRACT [@only_interpreter]
   | C_TEST_DECOMPILE [@only_interpreter]
   | C_TEST_TO_CONTRACT [@only_interpreter]

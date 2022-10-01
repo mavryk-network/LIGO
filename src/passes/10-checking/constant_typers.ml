@@ -1330,6 +1330,13 @@ let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
           create
             ~mode_annot:[ Checked; Inferred ]
             ~types:[ (a @-> b) ^-> a ^~> t_michelson_code () ]) )
+    ; ( C_TEST_COMPILE
+      , of_type
+          (for_all "a"
+          @@ fun a ->
+          create
+            ~mode_annot:[ Inferred ]
+            ~types:[ a ^~> t_michelson_code () ]) )
     ; ( C_TEST_DECOMPILE
       , of_type
           (for_all "a"

@@ -1249,6 +1249,10 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
     let>> code = Run (loc, f, v) in
     return code
   | C_TEST_RUN, _ -> fail @@ error_type ()
+  | C_TEST_COMPILE, [ v ] ->
+    let>> v = Eval (loc, v, nth_type 0) in
+    return v
+  | C_TEST_COMPILE, _ -> fail @@ error_type ()
   | C_TEST_DECOMPILE, [ V_Michelson (Ty_code { code_ty; code; ast_ty }) ] ->
     let () =
       trace_option
