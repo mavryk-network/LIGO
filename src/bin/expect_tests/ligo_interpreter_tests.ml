@@ -956,13 +956,22 @@ let () = Sys.chdir "../../test/contracts/negative/interpreter_tests/"
 (* using typed_address in Bytes.pack *)
 let%expect_test _ =
 run_ligo_bad [ "run" ; "test" ; "typed_addr_in_bytes_pack.mligo" ] ;
-[%expect{|
-  File "typed_addr_in_bytes_pack.mligo", line 15, characters 52-53:
-   14 |     let packed = Bytes.pack (fun() ->
-   15 |         match (Tezos.get_entrypoint_opt "%transfer" r.addr : unit contract option) with
-   16 |           Some(c) -> let op = Tezos.transaction () 0mutez c in [op]
+[%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
 
-  Invalid usage of a Test primitive or type in object ligo. |}]
+  (Cli_expect_tests.Cli_expect.Should_exit_bad)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_bad in file "src/bin/expect_tests/cli_expect.ml", line 45, characters 7-28
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 958, characters 0-66
+  Called from Expect_test_collector.Make.Instance.exec in file "collector/expect_test_collector.ml", line 244, characters 12-19
+
+  Trailing output
+  ---------------
+  0x0502000000d103200743036e0a000000160174113f30c3f2c17ac93913c0459fb500de6e0f64000743036e0a000000160174113f30c3f2c17ac93913c0459fb500de6e0f64000555036c072f020000002707430368010000001c626164206164647265737320666f72206765745f636f6e7472616374032702000000000743036e0a000000160174113f30c3f2c17ac93913c0459fb500de6e0f64000342034c032003160655036c00000009257472616e73666572072f0200000004053d036d02000000120743036a0000034f034d053d036d034c031b
+  Everything at the top-level was executed.
+  - test exited with value (). |}]
 
 let () = Sys.chdir pwd
 

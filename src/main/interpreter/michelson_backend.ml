@@ -943,9 +943,22 @@ and compile_non_func_value ~raise ~options ~run_options ~loc : Ligo_interpreter.
                 (get_t_string ty) in
      Tezos_micheline.Micheline.String ((), s)
   | V_Ct (C_bytes b) ->
-     let () = trace_option ~raise (Errors.generic_error loc (Format.asprintf "Expected bytes but got %a" Ast_aggregated.PP.type_expression ty))
-                (get_t_bytes ty) in
-     Tezos_micheline.Micheline.Bytes ((), b)
+    (match get_t_bytes ty with
+     | Some () -> Tezos_micheline.Micheline.Bytes ((), b)
+     | None ->
+       (match get_t_chest ty with
+        | Some () -> Tezos_micheline.Micheline.Bytes ((), b)
+        | None ->
+          (match get_t_chest_key ty with
+           | Some () -> Tezos_micheline.Micheline.Bytes ((), b)
+           | None ->
+             raise.error
+               (Errors.generic_error
+                  loc
+                  (Format.asprintf
+                     "Expected bytes, chest, or chest_key but got %a"
+                     Ast_aggregated.PP.type_expression
+                     ty)))))
   | V_Ct (C_int x) ->
      let () = trace_option ~raise (Errors.generic_error loc (Format.asprintf "Expected int but got %a" Ast_aggregated.PP.type_expression ty))
                  (get_t_int ty) in
@@ -988,6 +1001,105 @@ and compile_non_func_value ~raise ~options ~run_options ~loc : Ligo_interpreter.
      begin match c.entrypoint with
        | None -> Tezos_micheline.Micheline.String ((), x)
        | Some e -> Tezos_micheline.Micheline.String ((), x ^ "%" ^ e) end
+  | V_Ct (C_key_hash kh) ->
+    let () =
+      trace_option
+        ~raise
+        (Errors.generic_error
+           loc
+           (Format.asprintf
+              "Expected key_hash but got %a"
+              Ast_aggregated.PP.type_expression
+              ty))
+        (get_t_key_hash ty)
+    in
+    let x = string_of_key_hash kh in
+    Tezos_micheline.Micheline.String ((), x)
+  | V_Ct (C_key k) ->
+    let () =
+      trace_option
+        ~raise
+        (Errors.generic_error
+           loc
+           (Format.asprintf
+              "Expected key but got %a"
+              Ast_aggregated.PP.type_expression
+              ty))
+        (get_t_key ty)
+    in
+    let x = string_of_key k in
+    Tezos_micheline.Micheline.String ((), x)
+  | V_Ct (C_signature s) ->
+    let () =
+      trace_option
+        ~raise
+        (Errors.generic_error
+           loc
+           (Format.asprintf
+              "Expected signature but got %a"
+              Ast_aggregated.PP.type_expression
+              ty))
+        (get_t_signature ty)
+    in
+    let x = string_of_signature s in
+    Tezos_micheline.Micheline.String ((), x)
+  | V_Ct (C_chain_id s) ->
+    let () =
+      trace_option
+        ~raise
+        (Errors.generic_error
+           loc
+           (Format.asprintf
+              "Expected chain_id but got %a"
+              Ast_aggregated.PP.type_expression
+              ty))
+        (match ty.type_content with
+         | T_constant { injection = Chain_id ; _ } -> Some ()
+         | _ -> None)
+    in
+    Tezos_micheline.Micheline.String ((), s)
+  | V_Ct (C_bls12_381_g1 b) ->
+    let () =
+      trace_option
+        ~raise
+        (Errors.generic_error
+           loc
+           (Format.asprintf
+              "Expected bls12_381_g1 but got %a"
+              Ast_aggregated.PP.type_expression
+              ty))
+        (get_t_bls12_381_g1 ty)
+    in
+    let x = bytes_of_bls12_381_g1 b in
+    Tezos_micheline.Micheline.Bytes ((), x)
+  | V_Ct (C_bls12_381_g2 b) ->
+    let () =
+      trace_option
+        ~raise
+        (Errors.generic_error
+           loc
+           (Format.asprintf
+              "Expected bls12_381_g2 but got %a"
+              Ast_aggregated.PP.type_expression
+              ty))
+        (get_t_bls12_381_g2 ty)
+    in
+    let x = bytes_of_bls12_381_g2 b in
+    Tezos_micheline.Micheline.Bytes ((), x)
+  | V_Ct (C_bls12_381_fr b) ->
+    let () =
+      trace_option
+        ~raise
+        (Errors.generic_error
+           loc
+           (Format.asprintf
+              "Expected bls12_381_fr but got %a"
+              Ast_aggregated.PP.type_expression
+              ty))
+        (get_t_bls12_381_fr ty)
+    in
+    let x = bytes_of_bls12_381_fr b in
+    Tezos_micheline.Micheline.Bytes ((), x)
   | V_Constant { ct ; type_ = _ } ->
     let ct = Tezos_micheline.Micheline.String ((), ct) in
     Tezos_micheline.Micheline.Prim ((), "constant", [ct], [])
@@ -1046,6 +1158,23 @@ and compile_non_func_value ~raise ~options ~run_options ~loc : Ligo_interpreter.
     let map = List.sort ~compare:(fun (k1, _) (k2, _) -> Caml.compare k1 k2) map in
     let map = List.map ~f:(fun (k, v) -> Tezos_micheline.Micheline.Prim ((), "Elt", [k; v], [])) map in
     Tezos_micheline.Micheline.Seq ((), map)
+  | V_Func_val v ->
+    let typed_exp = make_ast_func
+      ~raise
+      ?name:v.rec_name
+      v.env
+      v.arg_binder
+      v.body
+      v.orig_lambda in
+    let compiled_exp = compile_value ~raise ~options typed_exp in
+    (* print_endline (Format.asprintf "%a" Ast_aggregated.PP.expression typed_exp); *)
+    let compiled_exp = Tezos_micheline.Micheline.map_node (fun _ -> Tezos_micheline.Micheline_printer.{ comment = None }) (fun x -> x) compiled_exp.expr in
+    (* print_endline (Format.asprintf "%a" Tezos_micheline.Micheline_printer.print_expr compiled_exp); *)
+    (match compiled_exp with
+    | Seq (_, [ Prim (_, "LAMBDA", [ _ ; _ ; compiled_exp ], _) ]) ->
+      let compiled_exp = Tezos_micheline.Micheline.map_node (fun _ -> ()) (fun x -> x) compiled_exp in
+      compiled_exp
+    | _ -> raise.error @@ (Errors.generic_error loc (Format.asprintf "Expected LAMBDA")))
   | _ -> raise.error @@ (Errors.generic_error loc (Format.asprintf "Cannot decompile %a" Ast_aggregated.PP.type_expression ty))
 
 and compile_simple_value ~raise ~options ~run_options ~loc : Ligo_interpreter.Types.value ->
@@ -1059,7 +1188,7 @@ and compile_simple_value ~raise ~options ~run_options ~loc : Ligo_interpreter.Ty
       let expr_ty = clean_location_with () expr_ty in
       Ligo_interpreter.Types.{ code = expr ; code_ty = expr_ty ; ast_ty = ty }) (fun ~catch:_ _ ->
       let typed_exp = val_to_ast ~raise ~loc v ty in
-      (* let _ = failwith @@ Format.asprintf "OOPS %a = %a" Ligo_interpreter.PP.pp_value v Ast_aggregated.PP.expression typed_exp in *)
+      let _ = failwith @@ Format.asprintf "OOPS %a = %a" Ligo_interpreter.PP.pp_value v Ast_aggregated.PP.expression typed_exp in
       let () = trace ~raise Main_errors.self_ast_aggregated_tracer @@ Self_ast_aggregated.expression_obj typed_exp in
       let compiled_exp = compile_value ~raise ~options typed_exp in
       let expr, _ = run_expression_unwrap ~raise ~run_options ~loc compiled_exp in
