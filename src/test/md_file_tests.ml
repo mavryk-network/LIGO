@@ -124,17 +124,18 @@ let compile_groups ~raise filename grp_list =
       match lang with
       | Meta ->
         let options =
-          let init_env = Environment.default_with_test protocol_version in
+          let init_env = Environment.default protocol_version in
           Compiler_options.set_init_env options init_env in
         let options = Compiler_options.set_test_flag options true in
-        let typed = Build.merge_and_type_libraries_str ~raise ~options contents in
+        let typed = Build.qualified_typed_str ~raise ~options contents in
+        Format.printf "Typed AST: %a\n" (Ast_typed.PP.program ~use_hidden:true) typed;
         let _ : (group_name * Ligo_interpreter.Types.value) list = Interpreter.eval_test ~options ~raise ~steps:5000 typed in
         ()
       | Object ->
-        let typed = Build.merge_and_type_libraries_str ~raise ~options contents in
-        let agg_prg   = Ligo_compile.Of_typed.compile_program ~raise typed in
-        let aggregated_with_unit = Ligo_compile.Of_typed.compile_expression_in_context ~raise ~options:options.middle_end (Ast_typed.e_a_unit ()) agg_prg in
+        let typed = Build.qualified_typed_str ~raise ~options contents in
+        let aggregated_with_unit = Ligo_compile.Of_typed.compile_expression_in_context ~raise ~options:options.middle_end typed (Ast_typed.e_a_unit ()) in
         let mini_c = Ligo_compile.Of_aggregated.compile_expression ~raise aggregated_with_unit in
+        Format.printf "Mini_c AST: %a\n" (Mini_c.PP.expression) mini_c;
         let _michelson : Stacking__Compiler_program.compiled_expression = Ligo_compile.Of_mini_c.compile_expression ~raise ~options mini_c in
         ()
   in
@@ -142,6 +143,7 @@ let compile_groups ~raise filename grp_list =
   ()
 
 let compile ~raise filename () =
+  (* Format.printf "[compile] Filename: %s@." filename; *)
   let groups = get_groups filename in
   let groups_map = SnippetsGroup.bindings groups in
   let () = compile_groups ~raise filename groups_map in
@@ -174,6 +176,7 @@ let main =
     List.map
       ~f:(fun md_file ->
         let test_name = "File : "^md_file^"\"" in
+        (* Format.eprintf "%s\n" test_name; *)
         test test_name (compile md_file)
       )
       (get_all_md_files ())

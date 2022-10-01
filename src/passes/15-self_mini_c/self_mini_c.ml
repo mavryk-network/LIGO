@@ -69,7 +69,6 @@ let is_pure_constant : Constant.constant' -> bool =
   | C_UNOPT
   | C_UNOPT_WITH_ERROR
   | C_OPTION_MAP
-  | C_ASSERT_INFERRED
   | C_MAP_FIND
   | C_CALL
   | C_ITER
@@ -156,8 +155,13 @@ let is_pure_constant : Constant.constant' -> bool =
   | C_TEST_READ_CONTRACT_FROM_FILE
   | C_TEST_SIGN
   | C_TEST_GET_ENTRYPOINT
+  | C_TEST_INT64_OF_INT
+  | C_TEST_INT64_TO_INT
   | C_TEST_LAST_EVENTS
   | C_TEST_TRY_WITH
+  | C_TEST_ABS
+  | C_TEST_INT
+  | C_TEST_SLICE
     -> false
 
 let rec is_pure : expression -> bool = fun e ->
@@ -195,6 +199,20 @@ let rec is_pure : expression -> bool = fun e ->
   | E_create_contract _ ->
     (* very not pure *)
     false
+
+  (* TODO E_let_mut_in is pure when the rhs is pure and the body's
+     only impurity is assign/deref of the bound mutable variable *)
+  | E_let_mut_in _
+  | E_assign _
+  | E_deref _ ->
+     false
+
+  (* these could be pure through the exception above for
+     E_let_mut_in *)
+  | E_for _ | E_for_each _ -> false
+
+  (* never pure in any important case *)
+  | E_while _ -> false
 
   (* I'm not sure about these. Maybe can be tested better? *)
   | E_application _

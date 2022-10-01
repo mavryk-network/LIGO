@@ -1,9 +1,9 @@
 open Ligo_prim
 module Location = Simple_utils.Location
 
-type type_variable       = Type_var.t [@@deriving compare]
-type expression_variable = Value_var.t [@@deriving compare]
-type module_variable     = Module_var.t [@@deriving compare]
+type type_variable       = Type_var.t [@@deriving compare, hash]
+type expression_variable = Value_var.t [@@deriving compare, hash]
+type module_variable     = Module_var.t [@@deriving compare, hash]
 
 type ast_core_type_expression = Ast_core.type_expression
   [@@deriving eq,compare,yojson,hash]
@@ -154,7 +154,13 @@ type expression_content =
   | E_accessor of expr Accessor.t
   | E_update   of expr Update.t
   | E_module_accessor of Value_var.t Module_access.t
+  (* Imperative *)
+  | E_let_mut_in of let_in
   | E_assign   of (expr,ty_expr) Assign.t
+  | E_deref    of Value_var.t
+  | E_for      of expr For_loop.t
+  | E_for_each of expr For_each_loop.t
+  | E_while    of expr While_loop.t
 
 and type_inst = {
     forall: expression ;

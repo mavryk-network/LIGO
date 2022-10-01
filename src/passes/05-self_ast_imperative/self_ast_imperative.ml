@@ -2,11 +2,9 @@ module Errors = Errors
 
 let all_expression_mapper ~raise ~js_style_no_shadowing = [
   Vars.capture_expression ~raise ;
-  Consts.assign_expression ~raise ;
   Tezos_type_annotation.peephole_expression ~raise ;
   Literals.peephole_expression ~raise ;
   Expression_soundness.linearity ~raise ;
-  Expression_soundness.reserved_names_exp ~raise ;
   External.replace ;
 ] @
   (if js_style_no_shadowing
@@ -22,9 +20,7 @@ let all_type_expression_mapper ~raise =
   ]
 
 let all_module_mapper ~raise ~js_style_no_shadowing =
-  [ Expression_soundness.reserved_names_program ~raise ]
-  @
-    if js_style_no_shadowing then [ No_shadowing.peephole_program ~raise ] else []
+  if js_style_no_shadowing then [ No_shadowing.peephole_program ~raise ] else []
 
 let all_program ~raise ~js_style_no_shadowing =
   List.map

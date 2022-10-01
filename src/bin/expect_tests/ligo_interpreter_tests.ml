@@ -4,6 +4,13 @@ let test basename = "./" ^ basename
 let pwd = Sys.getcwd ()
 let () = Sys.chdir "../../test/contracts/interpreter_tests/"
 
+(* events payload being records and not decompiled to pairs in the interpreter *)
+let%expect_test _ =
+  run_ligo_good ["run";"test" ; test "test_events_pair_vs_record.mligo" ; "--protocol" ; "kathmandu" ] ;
+  [%expect{|
+    Everything at the top-level was executed.
+    - test_foo exited with value 3n. |}]
+
 let%expect_test _ =
   run_ligo_good [ "run"; "test" ; test "interpret_test.mligo" ] ;
   [%expect{|
@@ -90,14 +97,8 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_good ["run"; "test" ; test "views_test.mligo" ] ;
   [%expect {|
-    File "./views_test.mligo", line 15, characters 29-85:
-     14 |   | Success _ ->
-     15 |     let x = Test.get_storage (Test.cast_address addr_c : (address,int) typed_address) in
-     16 |     assert (x = 2)
-    :
     Everything at the top-level was executed.
-    - test exited with value ().
-    Run-time warning: cast changing the type of an address. |}]
+    - test exited with value (). |}]
 
 let%expect_test _ =
   run_ligo_good ["run"; "test" ; test "test_timelock.mligo" ] ;
@@ -189,6 +190,12 @@ let%expect_test _ =
     111
     Everything at the top-level was executed.
     - test exited with value (). |}]
+
+let%expect_test _ =
+  run_ligo_good [ "run"; "test" ; test "map_map.jsligo" ] ;
+  [%expect{|
+    Everything at the top-level was executed.
+    - test exited with value ["one" -> "foo" ; "two" -> "foo"]. |}]
 
 (* DEPRECATED
 let%expect_test _ =
@@ -689,6 +696,19 @@ let%expect_test _ =
     Everything at the top-level was executed.
     - test exited with value Success (2796n). |}]
 
+let%expect_test _ =
+  run_ligo_good [ "run" ; "test" ; test "test_tickets_and_bigmaps.mligo" ] ;
+  [%expect {|
+    Success (3498n)
+    Everything at the top-level was executed.
+    - test_one exited with value (). |}]
+
+let%expect_test _ =
+  run_ligo_good [ "run" ; "test" ; test "test_chain_id.mligo" ] ;
+  [%expect {|
+    Everything at the top-level was executed.
+    - test exited with value 0x050a0000000400000000. |}]
+
 (* do not remove that :) *)
 let () = Sys.chdir pwd
 
@@ -697,7 +717,13 @@ let%expect_test _ =
   run_ligo_good [ "run"; "test" ; test "test.mligo" ] ;
   [%expect {|
     Everything at the top-level was executed.
-    - test_originate_from_file_relative_path exited with value KT1KAUcMCQs7Q4mxLzoUZVH9yCCLETERrDtj. |}]
+    - test_originate_from_file_relative_path exited with value KT1KAUcMCQs7Q4mxLzoUZVH9yCCLETERrDtj.
+    - test_originate_from_file_relative_path_w_r_t_imported_file exited with value true. |}] ;
+  run_ligo_good [ "run"; "test" ; test "test.jsligo" ] ;
+  [%expect {|
+    Everything at the top-level was executed.
+    - test_originate_from_file_relative_path exited with value KT1KAUcMCQs7Q4mxLzoUZVH9yCCLETERrDtj.
+    - test_originate_from_file_relative_path_w_r_t_imported_file exited with value true. |}]
 let () = Sys.chdir pwd
 
 let () = Sys.chdir "../../test/contracts/interpreter_tests/originate_from_relative_path/"
@@ -705,7 +731,13 @@ let%expect_test _ =
   run_ligo_good [ "run"; "test" ; test "test/a/b/test.mligo" ] ;
   [%expect{|
     Everything at the top-level was executed.
-    - test_originate_from_file_relative_path exited with value KT1KAUcMCQs7Q4mxLzoUZVH9yCCLETERrDtj. |}]
+    - test_originate_from_file_relative_path exited with value KT1KAUcMCQs7Q4mxLzoUZVH9yCCLETERrDtj.
+    - test_originate_from_file_relative_path_w_r_t_imported_file exited with value true. |}] ;
+  run_ligo_good [ "run"; "test" ; test "test/a/b/test.jsligo" ] ;
+  [%expect{|
+    Everything at the top-level was executed.
+    - test_originate_from_file_relative_path exited with value KT1KAUcMCQs7Q4mxLzoUZVH9yCCLETERrDtj.
+    - test_originate_from_file_relative_path_w_r_t_imported_file exited with value true. |}]
 let () = Sys.chdir pwd
 
 
@@ -925,18 +957,6 @@ let () = Sys.chdir "../../test/contracts/negative/interpreter_tests/"
 let%expect_test _ =
 run_ligo_bad [ "run" ; "test" ; "typed_addr_in_bytes_pack.mligo" ] ;
 [%expect{|
-  File "typed_addr_in_bytes_pack.mligo", line 4, character 4 to line 10, character 5:
-    3 |     let (addr, _, _) = Test.originate_from_file "./unit_contract.mligo" "main" ([]: string list) storage 0tez in
-    4 |     let taddr : (unit, unit) typed_address = Test.cast_address addr in
-    5 |     let contr = Test.to_contract taddr in
-    6 |     {
-    7 |         contr = contr ;
-    8 |         addr  = addr  ;
-    9 |         taddr = taddr ;
-   10 |     }
-   11 |
-  :
-  Run-time warning: cast changing the type of an address.
   File "typed_addr_in_bytes_pack.mligo", line 15, characters 52-53:
    14 |     let packed = Bytes.pack (fun() ->
    15 |         match (Tezos.get_entrypoint_opt "%transfer" r.addr : unit contract option) with

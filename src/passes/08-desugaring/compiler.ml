@@ -258,7 +258,7 @@ let rec compile_expression : I.expression -> O.expression =
     | I.E_sequence {expr1; expr2} ->
       let expr1 = self expr1 in
       let expr2 = self expr2 in
-      let let_binder : _ Binder.t = {var = Value_var.fresh ~name:"()" () ; ascr = Some (O.t_unit ()) ; attributes = Binder.empty_attribute} in
+      let let_binder = Binder.make (Value_var.fresh ~name:"()" ()) (Some (O.t_unit ())) in
       return @@ O.E_let_in {let_binder; rhs=expr1;let_result=expr2; attr = {inline=false; no_mutation=false; view = false ; public=true ; hidden = false ; thunk = false }}
     | I.E_skip () -> O.e_unit ~loc:sugar.location ~sugar ()
     | I.E_tuple t ->
@@ -271,6 +271,21 @@ let rec compile_expression : I.expression -> O.expression =
     | I.E_assign a ->
       let a = Assign.map self self_type_opt a in
       return @@ O.E_assign a
+    | I.E_for for_loop ->
+      let for_loop = For_loop.map self for_loop in
+      return @@ O.E_for for_loop
+    | I.E_for_each for_each_loop ->
+      let for_each_loop = For_each_loop.map self for_each_loop in
+      return @@ O.E_for_each for_each_loop
+    | I.E_while while_loop ->
+      let while_loop = While_loop.map self while_loop in
+      return @@ O.E_while while_loop
+    | I.E_let_mut_in { let_binder; rhs; let_result; attributes } ->
+      let let_binder = Binder.map self_type_opt let_binder in
+      let rhs = self rhs in
+      let let_result = self let_result in
+      let attr = compile_exp_attributes attributes in
+      return @@ O.E_let_mut_in { let_binder; attr; rhs; let_result }
 
 and compile_declaration : I.declaration -> O.declaration = fun d ->
   let return wrap_content : O.declaration = {d with wrap_content} in

@@ -78,9 +78,11 @@ and type_expression ppf (te : type_expression) : unit =
   else
     fprintf ppf "%a" type_content te.type_content
 
+let type_expression_annot ppf (te : type_expression) : unit =
+  fprintf ppf " : %a" type_expression te
 let type_expression_option ppf (te : type_expression option) : unit =
   match te with
-  | Some te -> fprintf ppf " : %a" type_expression te
+  | Some te -> type_expression_annot ppf te
   | None    -> fprintf ppf ""
 
 let rec type_content_orig : formatter -> type_content -> unit =
@@ -128,7 +130,7 @@ and expression_content ppf (ec: expression_content) =
   | E_recursive  r -> Recursive.pp expression type_expression ppf r
   | E_let_in {let_binder; rhs; let_result; attr = { hidden = false ; _ } as attr } ->
     fprintf ppf "@[let %a =@;<1 2>%a%a in@ %a@]"
-      (Binder.pp type_expression) let_binder
+      (Binder.pp type_expression_annot) let_binder
       expression rhs
       Types.ValueAttr.pp attr
       expression let_result
@@ -137,8 +139,21 @@ and expression_content ppf (ec: expression_content) =
   | E_mod_in    mi -> Mod_in.pp  expression module_expr ppf mi
   | E_raw_code   r -> Raw_code.pp   expression ppf r
   | E_module_accessor ma -> Module_access.pp Value_var.pp ppf ma
-  | E_assign     a -> Assign.pp     expression type_expression ppf a
   | E_type_inst ti -> type_inst ppf ti
+  | E_let_mut_in { let_binder; rhs; let_result; attr } ->
+    Format.fprintf ppf "@[let mut %a =@;<1 2>%a%a in@ %a@]"
+      (Binder.pp type_expression_annot) let_binder
+      expression rhs
+      Types.ValueAttr.pp attr
+      expression let_result
+  | E_assign a -> Assign.pp expression type_expression ppf a
+  | E_deref n -> Format.fprintf ppf "!%a" Value_var.pp n
+  | E_for for_loop ->
+    For_loop.pp expression ppf for_loop
+  | E_for_each for_each ->
+    For_each_loop.pp expression ppf for_each
+  | E_while while_loop ->
+    While_loop.pp expression ppf while_loop
 
 and type_inst ppf {forall; type_} =
   fprintf ppf "%a@@{%a}" expression forall type_expression type_
@@ -158,15 +173,14 @@ and matching : (formatter -> expression -> unit) -> _ -> matching_expr -> unit =
       fprintf ppf "@[%a@]" (list_sep (matching_variant_case f) (tag "@ ")) cases
   | Match_record {fields ; body ; tv = _} ->
       (* let with_annots f g ppf (a , b) = fprintf ppf "%a:%a" f a g b in *)
-      let fields = Rows.LMap.map (fun b -> b.Binder.var) fields in
       fprintf ppf "| @[%a@] ->@ @[%a@]"
-        (tuple_or_record_sep_expr Value_var.pp) fields
+        (tuple_or_record_sep_expr (Binder.pp type_expression_annot)) fields
         f body
 
-and declaration ppf (d : declaration) = match Location.unwrap d with
-    D_value vd  -> Types.Value_decl.pp expression type_expression_option ppf vd
-  | D_type  td  -> Types.Type_decl.pp type_expression ppf td
-  | D_module md -> Types.Module_decl.pp module_expr ppf md
+and declaration ?(use_hidden=true) ppf (d : declaration) = match Location.unwrap d with
+    D_value vd  -> if (vd.attr.hidden && use_hidden) then () else Types.Value_decl.pp expression type_expression_option ppf vd
+  | D_type  td  -> if (td.type_attr.hidden && use_hidden) then () else Types.Type_decl.pp type_expression ppf td
+  | D_module md -> if (md.module_attr.hidden && use_hidden) then () else Types.Module_decl.pp module_expr ppf md
 
 and decl ppf d = declaration ppf d
 and module_expr ppf (me : module_expr) : unit =
@@ -174,4 +188,4 @@ and module_expr ppf (me : module_expr) : unit =
 
 let module_ ppf (m : module_) = list_sep decl (tag "@,") ppf m
 
-let program ppf (p : program) = list_sep declaration (tag "@,") ppf p
+let program ?(use_hidden=false) ppf (p : program) = list_sep (declaration ~use_hidden) (tag "@,") ppf p

@@ -114,9 +114,9 @@ let rec decompile_expression : O.expression -> I.expression =
     | O.E_recursive recs ->
       let recs = Recursive.map self self_type recs in
       return @@ I.E_recursive recs
-    | O.E_let_in {let_binder = {var; ascr;attributes=_};attr={inline=false;no_mutation=_;view=_;public=_;hidden=_;thunk=false};rhs=expr1;let_result=expr2}
-      when Value_var.is_name var "()"
-           && Stdlib.(=) ascr (Some (O.t_unit ())) ->
+    | O.E_let_in {let_binder;attr={inline=false;no_mutation=_;view=_;public=_;hidden=_;thunk=false};rhs=expr1;let_result=expr2}
+      when Value_var.is_name (Binder.get_var let_binder) "()"
+           && Stdlib.(=) (Binder.get_ascr let_binder) (Some (O.t_unit ())) ->
       let expr1 = self expr1 in
       let expr2 = self expr2 in
       return @@ I.E_sequence {expr1;expr2}
@@ -163,6 +163,21 @@ let rec decompile_expression : O.expression -> I.expression =
     | O.E_assign a ->
       let a = Assign.map self self_type_opt a in
       return @@ I.E_assign a
+    | O.E_for for_loop ->
+      let for_loop = For_loop.map self for_loop in
+      return @@ I.E_for for_loop
+    | O.E_for_each for_each_loop ->
+      let for_each_loop = For_each_loop.map self for_each_loop in
+      return @@ I.E_for_each for_each_loop
+    | O.E_while while_loop ->
+      let while_loop = While_loop.map self while_loop in
+      return @@ I.E_while while_loop
+    | O.E_let_mut_in { let_binder; rhs; let_result; attr } ->
+      let let_binder = Binder.map self_type_opt let_binder in
+      let rhs = self rhs in
+      let let_result = self let_result in
+      let attributes = decompile_exp_attributes attr in
+      return @@ I.E_let_mut_in { let_binder; attributes; rhs; let_result }
 
 and decompile_declaration : O.declaration -> I.declaration = fun d ->
   let return wrap_content : I.declaration = {d with wrap_content} in

@@ -227,7 +227,7 @@ and decompile_pattern : AST.type_expression option Pattern.t -> CST.pattern =
     | P_unit ->
       CST.P_Ctor (Wrap.ghost "Unit")
     | P_var v ->
-      let name = decompile_variable v.var in
+      let name = decompile_variable @@ Binder.get_var v in
       CST.P_Var name
     | P_list pl -> (
       match pl with
@@ -591,7 +591,7 @@ and decompile_eos : eos -> AST.expression -> ((CST.statement List.Ne.t option)* 
     let compound : CST.expr CST.compound = inject Token.ghost_set set in
     return_expr @@ CST.E_Set (Region.wrap_ghost @@ compound)
   | E_assign {binder;expression} ->
-    let lhs = decompile_to_lhs binder.var [] in
+    let lhs = decompile_to_lhs (Binder.get_var binder) [] in
     let rhs = decompile_expression expression in
     let assign : CST.assignment = {lhs;assign=Token.ghost_ass;rhs} in
     return_inst @@ I_Assign (Region.wrap_ghost assign)
@@ -631,6 +631,27 @@ and decompile_eos : eos -> AST.expression -> ((CST.statement List.Ne.t option)* 
     let block = Region.wrap_ghost @@ Option.value ~default:empty_block block in
     let while_ : CST.while_loop = { kwd_while = Token.ghost_while ; cond ; block } in
     return_inst @@ CST.I_While (Region.wrap_ghost while_)
+  | E_let_mut_in { let_binder; rhs; let_result; _ } -> 
+    let pattern = CST.P_Var (decompile_variable @@ Binder.get_var let_binder) in
+    let var_type = Option.map ~f:(prefix_colon <@ decompile_type_expr) @@ Binder.get_ascr let_binder in
+    let rhs = decompile_expression rhs in
+    let var_decl = 
+      Region.wrap_ghost 
+      @@ { CST.kwd_var = Token.ghost_var
+         ; pattern
+         ; type_params = None
+         ; var_type
+         ; assign = Token.ghost_ass
+         ; init = rhs
+         ; terminator = Some Token.ghost_semi
+         }
+    in
+    let (lst, expr) = decompile_eos Expression let_result in
+    let lst = match lst with
+      Some lst -> List.Ne.cons (CST.S_VarDecl var_decl) lst
+    | None -> (CST.S_VarDecl var_decl, [])
+    in
+    return @@ (Some lst, expr)
 
 and decompile_if_clause : AST.expression -> CST.test_clause = fun e ->
   let clause = decompile_statements e in
@@ -643,11 +664,11 @@ and decompile_if_clause : AST.expression -> CST.test_clause = fun e ->
 
 and decompile_to_data_decl : _ Binder.t -> AST.expression -> AST.attributes -> CST.declaration =
     fun binder expr attributes ->
-  let name = decompile_variable binder.var in
+  let name = decompile_variable @@ Binder.get_var binder in
   let const_type =
     Option.map
       ~f:(prefix_colon <@ decompile_type_expr)
-      binder.ascr in
+      @@ Binder.get_ascr binder in
   let attributes = Shared_helpers.decompile_attributes attributes in
   let fun_name = name in
   let wrap_attr x = List.fold ~f:(fun acc attr -> CST.D_Attr (attr,acc)) ~init:x attributes in
@@ -696,8 +717,8 @@ and decompile_to_selection : _ Access_path.access -> CST.selection = fun access 
 
 and decompile_lambda : (AST.expr, AST.ty_expr option) Lambda.t -> CST.parameters * CST.type_annotation option * CST.expr =
   fun {binder;result;output_type=_} ->
-    let var = decompile_variable binder.var in
-    let param_type = Option.map ~f:(prefix_colon <@ decompile_type_expr) binder.ascr in
+    let var = decompile_variable @@ Param.get_var binder in
+    let param_type = Option.map ~f:(prefix_colon <@ decompile_type_expr) @@ Param.get_ascr binder in
     let param_const : CST.param_decl = { param_kind = `Const Token.ghost_const ; pattern = CST.P_Var var ; param_type } in
     let parameters : CST.parameters = Region.wrap_ghost @@ par (list_to_sepseq ~sep:Token.ghost_comma [Region.wrap_ghost param_const]) in
     let result,ret_type =
@@ -739,7 +760,7 @@ and decompile_declaration : AST.declaration -> CST.declaration = fun decl ->
     CST.D_Type (Region.wrap_ghost (CST.{kwd_type; name; kwd_is; type_expr; terminator ; params}))
   | D_value {binder; attr; expr} -> (
     let attributes = Shared_helpers.decompile_attributes attr in
-    let name = decompile_variable binder.var in
+    let name = decompile_variable @@ Binder.get_var binder in
     let fun_name = name in
     match expr.expression_content with
     | E_lambda lambda ->
@@ -752,7 +773,7 @@ and decompile_declaration : AST.declaration -> CST.declaration = fun decl ->
       let fun_decl = fun_decl ~is_rec:true fun_name parameters ret_type return terminator in
       wrap_attr attributes @@ CST.D_Fun (Region.wrap_ghost fun_decl)
     | _ ->
-      let const_type = Option.map ~f:(prefix_colon <@ decompile_type_expr) binder.ascr in
+      let const_type = Option.map ~f:(prefix_colon <@ decompile_type_expr) @@ Binder.get_ascr binder in
       let init = decompile_expression expr in
       let const_decl : CST.const_decl = {kwd_const=Token.ghost_const;pattern = CST.P_Var name;type_params=None;const_type=const_type;equal=Token.ghost_eq;init;terminator} in
       wrap_attr attributes @@ CST.D_Const (Region.wrap_ghost const_decl)

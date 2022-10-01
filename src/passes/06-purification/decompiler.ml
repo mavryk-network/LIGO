@@ -81,11 +81,10 @@ let rec decompile_expression : O.expression -> I.expression =
     let recs = Recursive.map self self_type recs in
     return @@ I.E_recursive recs
   | O.E_let_in {let_binder;attributes;rhs;let_result} ->
-    let {var;ascr;attributes=var_attributes} : _ Binder.t = let_binder in
-    let ascr = Option.map ~f:decompile_type_expression ascr in
+    let let_binder = Binder.map (Option.map ~f:decompile_type_expression) let_binder in
     let rhs = decompile_expression rhs in
     let let_result = decompile_expression let_result in
-    return @@ I.E_let_in {let_binder={var;ascr;attributes=var_attributes};attributes;rhs;let_result}
+    return @@ I.E_let_in {let_binder;attributes;rhs;let_result}
   | O.E_type_in ti ->
     let ti = Type_in.map self self_type ti in
     return @@ I.E_type_in ti
@@ -146,6 +145,25 @@ let rec decompile_expression : O.expression -> I.expression =
   | O.E_assign a ->
     let a = Assign.map self self_type_opt a in
     return @@ I.E_assign a
+  | O.E_for { binder; start; final; incr; f_body } ->
+    let start = self start in
+    let final = self final in
+    let incr = self incr in
+    let f_body = self f_body in
+    return @@ I.E_for { binder; start; final; incr; f_body }
+  | O.E_for_each { fe_binder; collection; collection_type; fe_body } ->
+    let collection = self collection in
+    let fe_body = self fe_body in
+    return @@ I.E_for_each { fe_binder; collection; collection_type; fe_body }
+  | O.E_while { cond; body } ->
+    let cond = self cond in
+    let body = self body in
+    return @@ I.E_while { cond; body }
+  | O.E_let_mut_in { let_binder; attributes; rhs; let_result } ->
+    let let_binder = Binder.map (Option.map ~f:decompile_type_expression) let_binder in
+    let rhs = decompile_expression rhs in
+    let let_result = decompile_expression let_result in
+    return @@ I.E_let_mut_in { let_binder; attributes; rhs; let_result }
 
 and decompile_declaration : O.declaration -> I.declaration = fun d ->
   let return wrap_content : I.declaration = {d with wrap_content} in

@@ -11,18 +11,21 @@ module Scope : sig
   val get_value_var  : t -> Value_var.t -> Value_var.t
   val new_type_var   : t -> Type_var.t -> t * Type_var.t
   val get_type_var   : t -> Type_var.t -> Type_var.t
+  val new_mut_var : t -> Value_var.t -> t * Value_var.t
+  val get_mut_var : t -> Value_var.t -> Value_var.t
   val diff           : t -> t -> t
   type swapper = {
     value   : Value_var.t -> Value_var.t;
     type_   : Type_var.t       -> Type_var.t;
+    mut : Value_var.t -> Value_var.t
   }
   val make_swapper : t -> swapper
 end =
 struct
   module VMap = Simple_utils.Map.Make(Value_var)
   module TMap = Simple_utils.Map.Make(Type_var)
-  type t = {value:Value_var.t VMap.t;type_:Type_var.t TMap.t}
-  let empty = {value = VMap.empty;type_ = TMap.empty}
+  type t = {value:Value_var.t VMap.t;type_:Type_var.t TMap.t ; mut : Value_var.t VMap.t }
+  let empty = {value = VMap.empty;type_ = TMap.empty; mut = VMap.empty }
   let new_value_var map var =
     let var' = match VMap.find_opt var map.value with
       Some (v) -> Value_var.fresh_like ~loc:(Value_var.get_location var) v
@@ -49,20 +52,36 @@ struct
   let diff (a:t) (b:t) = {
     value   = VMap.diff Value_var.equal  a.value   b.value  ;
     type_   = TMap.diff Type_var.equal   a.type_   b.type_  ;
+    mut     = VMap.diff Value_var.equal a.mut b.mut
   }
 
   type swapper = {
     value   : Value_var.t -> Value_var.t;
     type_   : Type_var.t       -> Type_var.t;
+    mut : Value_var.t -> Value_var.t
   }
   let make_swapper (scope:t) : swapper =
     let swap_value   = List.map ~f:(fun (k,v) -> v,k) in
     let value   = VMap.of_list @@ swap_value @@ VMap.to_kv_list scope.value in
     let type_   = TMap.of_list @@ swap_value @@ TMap.to_kv_list scope.type_ in
+    let mut = VMap.of_list @@ swap_value @@ VMap.to_kv_list scope.mut in
     {
       value   = (fun map v -> Option.value ~default:v @@ VMap.find_opt v map) value ;
       type_   = (fun map v -> Option.value ~default:v @@ TMap.find_opt v map) type_;
+      mut   = (fun map v -> Option.value ~default:v @@ VMap.find_opt v map) mut
     }
+
+
+  let get_mut_var (map : t) var = 
+    Option.value ~default:var @@ VMap.find_opt var map.mut
+    |> Value_var.set_location  @@ Value_var.get_location var
+
+  let new_mut_var (map : t) var =
+    let var' = match VMap.find_opt var map.mut with
+      Some (v) -> Value_var.fresh_like ~loc:(Value_var.get_location var) v
+    | None -> Value_var.fresh_like var in
+    let mut = VMap.add var var' map.mut in
+    {map with mut}, var'
 
 end
 
@@ -99,6 +118,31 @@ let rec swap_type_expression : Scope.swapper -> type_expression -> type_expressi
     let type_ = self type_ in
     return @@ T_for_all {ty_binder;kind;type_}
 
+let swap_binder : Scope.swapper -> _ Binder.t -> _ Binder.t = fun swaper binder ->
+  let self_type = swap_type_expression swaper in
+  let var = Binder.apply swaper.value binder in
+  let binder = Binder.map self_type binder in
+  let binder = Binder.set_var binder var in
+  binder
+
+let swap_param : Scope.swapper -> _ Param.t -> _ Param.t = fun swaper param ->
+  let self_type = swap_type_expression swaper in
+  let var_swapper = 
+    match Param.get_mut_flag param with
+    | Immutable -> swaper.value
+    | Mutable -> swaper.mut
+  in
+  let param = Param.map self_type param in
+  let param = Param.set_var param (var_swapper @@ Param.get_var param) in
+  param
+
+let swap_mut_binder : Scope.swapper -> _ Binder.t -> _ Binder.t = fun swaper binder ->
+  let self_type = swap_type_expression swaper in
+  let var = Binder.apply swaper.mut binder in
+  let binder = Binder.map self_type binder in
+  let binder = Binder.set_var binder var in
+  binder
+
 let rec swap_expression : Scope.swapper -> expression -> expression = fun swaper e ->
   let self = swap_expression swaper in
   let self_type = swap_type_expression swaper in
@@ -116,30 +160,27 @@ let rec swap_expression : Scope.swapper -> expression -> expression = fun swaper
     let lamb = self lamb in
     let args = self args in
     return @@ E_application {lamb;args}
-  | E_lambda {binder={var;ascr;attributes};output_type;result} ->
-    let var = swaper.value var in
-    let ascr = self_type ascr in
+  | E_lambda {binder;output_type;result} ->
+    let binder = swap_param swaper binder in
     let output_type = self_type output_type in
     let result = self result in
-    return @@ E_lambda {binder={var;ascr;attributes};output_type;result}
+    return @@ E_lambda {binder;output_type;result}
   | E_type_abstraction {type_binder;result} ->
     let type_binder = swaper.type_ type_binder in
     let result = self result in
     return @@ E_type_abstraction {type_binder;result}
-  | E_recursive {fun_name;fun_type;lambda={binder={var;ascr;attributes};output_type;result}} ->
+  | E_recursive {fun_name;fun_type;lambda={binder;output_type;result}} ->
     let fun_name = swaper.value fun_name in
     let fun_type = self_type fun_type in
-    let var = swaper.value var in
-    let ascr = self_type ascr in
+    let binder = swap_param swaper binder in
     let output_type = self_type output_type in
     let result = self result in
-    return @@ E_recursive {fun_name;fun_type;lambda={binder={var;ascr;attributes};output_type;result}}
-  | E_let_in {let_binder={var;ascr;attributes};rhs;let_result;attr} ->
-    let var = swaper.value var in
-    let ascr = self_type ascr in
+    return @@ E_recursive {fun_name;fun_type;lambda={binder;output_type;result}}
+  | E_let_in {let_binder;rhs;let_result;attr} ->
+    let let_binder = swap_binder swaper let_binder in
     let rhs = self rhs in
     let let_result = self let_result in
-    return @@ E_let_in {let_binder={var;ascr;attributes};rhs;let_result;attr}
+    return @@ E_let_in {let_binder;rhs;let_result;attr}
   | E_type_inst {forall; type_} ->
     let forall = self forall in
     let type_  = self_type type_ in
@@ -164,11 +205,35 @@ let rec swap_expression : Scope.swapper -> expression -> expression = fun swaper
     let struct_ = self struct_ in
     let update = self update in
     return @@ E_update {struct_;path;update}
-  | E_assign {binder={var;ascr;attributes};expression} ->
-    let var = swaper.value var in
-    let ascr = self_type ascr in
+  | E_assign {binder;expression} ->
+    let binder = swap_mut_binder swaper binder in
     let expression = self expression in
-    return @@ E_assign {binder={var;ascr;attributes};expression}
+    return @@ E_assign {binder;expression}
+  | E_let_mut_in {let_binder;rhs;let_result;attr} ->
+    let let_binder = swap_mut_binder swaper let_binder in
+    let rhs = self rhs in
+    let let_result = self let_result in
+    return @@ E_let_mut_in {let_binder;rhs;let_result;attr}
+  | E_while while_loop ->
+    let while_loop = While_loop.map self while_loop in
+    return @@ E_while while_loop
+  | E_for { binder; start; final; incr; f_body } ->
+    let binder = swaper.value binder in
+    let start = self start
+    and final = self final
+    and incr = self incr
+    and f_body = self f_body in
+    return @@ E_for { binder; start; final; incr; f_body }
+  | E_for_each { fe_binder = binder1, binder2; collection; collection_type; fe_body } ->
+    let fe_binder = 
+      swaper.value binder1, Option.map binder2 ~f:swaper.value
+    in
+    let collection = self collection 
+    and fe_body = self fe_body in
+    return @@ E_for_each { fe_binder; collection; collection_type; fe_body }
+  | E_deref mut_var -> return @@ E_deref (swaper.mut mut_var)
+
+
 
 and matching_cases : Scope.swapper -> matching_expr -> matching_expr = fun swaper me ->
   let self = swap_expression swaper in
@@ -183,14 +248,18 @@ and matching_cases : Scope.swapper -> matching_expr -> matching_expr = fun swape
     let tv   = self_type tv in
     return @@ Match_variant {cases;tv}
   | Match_record {fields;body;tv} ->
-    let fields = Record.map (fun ({var;ascr;attributes} : _ Binder.t) : _ Binder.t ->
-      let ascr = self_type ascr in
-      {var;ascr;attributes}
-    ) fields in
+    let fields = Record.map (Binder.map self_type) fields in
     let body = self body in
     let tv   = self_type tv in
     return @@ Match_record {fields;body;tv}
 
+let swap_declaration : Scope.swapper -> declaration -> declaration = fun swaper decl ->
+  match Location.unwrap decl with
+  | D_value { binder ; expr ; attr } ->
+    let binder = swap_binder swaper binder in
+    let expr = swap_expression swaper expr in
+    Location.wrap ~loc:(Location.get_location decl) @@ D_value { binder ; expr ; attr }
+  
 let rec type_expression : Scope.t -> type_expression -> type_expression = fun scope te ->
   let self ?(scope = scope) = type_expression scope in
   let return type_content = {te with type_content} in
@@ -225,6 +294,44 @@ let rec type_expression : Scope.t -> type_expression -> type_expression = fun sc
     let type_ = self ~scope type_ in
     return @@ T_for_all {ty_binder;kind;type_}
 
+let binder_new : Scope.t -> _ Binder.t -> Scope.t * _ Binder.t = fun scope binder ->
+  let self_type ?(scope = scope) = type_expression scope in
+  let scope,var = Binder.apply (Scope.new_value_var scope) binder in
+  let binder = Binder.map self_type binder in
+  let binder = Binder.set_var binder var in
+  scope, binder
+
+let mut_binder_new : Scope.t -> _ Binder.t -> Scope.t * _ Binder.t = fun scope binder ->
+  let self_type ?(scope = scope) = type_expression scope in
+  let scope,var = Binder.apply (Scope.new_mut_var scope) binder in
+  let binder = Binder.map self_type binder in
+  let binder = Binder.set_var binder var in
+  scope, binder
+
+let param_new : Scope.t -> _ Param.t -> Scope.t * _ Param.t = fun scope param ->
+  let self_type ?(scope = scope) = type_expression scope in
+  let new_var = 
+    match Param.get_mut_flag param with
+    | Immutable -> Scope.new_value_var
+    | Mutable -> Scope.new_mut_var
+  in
+  let scope, var = new_var scope @@ Param.get_var param in 
+  let param = Param.map self_type param in
+  let param = Param.set_var param var in
+  scope, param
+
+let binder_get : Scope.t -> _ Binder.t -> _ Binder.t = fun scope binder ->
+  let self_type ?(scope = scope) = type_expression scope in
+  let var = Binder.apply (Scope.get_value_var scope) binder in
+  let binder = Binder.map self_type binder in
+  Binder.set_var binder var
+
+let mut_binder_get : Scope.t -> _ Binder.t -> _ Binder.t = fun scope binder ->
+  let self_type ?(scope = scope) = type_expression scope in
+  let var = Binder.apply (Scope.get_mut_var scope) binder in
+  let binder = Binder.map self_type binder in
+  Binder.set_var binder var
+
 let rec expression : Scope.t -> expression -> Scope.t * expression = fun scope e ->
   let self ?(scope = scope) = expression scope in
   let self_type ?(scope = scope) = type_expression scope in
@@ -242,37 +349,33 @@ let rec expression : Scope.t -> expression -> Scope.t * expression = fun scope e
     let _,lamb = self lamb in
     let _,args = self args in
     return @@ E_application {lamb;args}
-  | E_lambda {binder={var;ascr;attributes};output_type;result} ->
-    let scope,var = Scope.new_value_var scope var in
-    let ascr = self_type ascr in
+  | E_lambda {binder;output_type;result} ->
+    let scope,binder = param_new scope binder in
     let output_type = self_type output_type in
     let _,result = self ~scope result in
-    return @@ E_lambda {binder={var;ascr;attributes};output_type;result}
+    return @@ E_lambda {binder;output_type;result}
   | E_type_abstraction {type_binder;result} ->
     (* With current implementation of polymorphism, deshadowing type var breaks stuff *)
     (* let scope,type_binder = Scope.new_type_var scope type_binder in *)
     let _,result = self ~scope result in
     return @@ E_type_abstraction {type_binder;result}
-  | E_recursive {fun_name;fun_type;lambda={binder={var;ascr;attributes};output_type;result}} ->
+  | E_recursive {fun_name;fun_type;lambda={binder;output_type;result}} ->
     let fun_name = Scope.get_value_var scope fun_name in
     let fun_type = self_type fun_type in
-    let scope,var = Scope.new_value_var scope var in
-    let ascr = self_type ascr in
+    let scope,binder = param_new scope binder in
     let output_type = self_type output_type in
     let _,result = self ~scope result in
-    return @@ E_recursive {fun_name;fun_type;lambda={binder={var;ascr;attributes};output_type;result}}
-  | E_let_in {let_binder={var;ascr;attributes};rhs={expression_content=E_recursive _;} as rhs;let_result;attr} ->
-    let scope,var = Scope.new_value_var scope var in
-    let ascr = self_type ascr in
+    return @@ E_recursive {fun_name;fun_type;lambda={binder;output_type;result}}
+  | E_let_in {let_binder;rhs={expression_content=E_recursive _;} as rhs;let_result;attr} ->
+    let scope,let_binder = binder_new scope let_binder in
     let _,rhs = self ~scope rhs in
     let scope,let_result = self ~scope let_result in
-    return ~scope @@ E_let_in {let_binder={var;ascr;attributes};rhs;let_result;attr}
-  | E_let_in {let_binder={var;ascr;attributes};rhs;let_result;attr} ->
-    let scope,var = Scope.new_value_var scope var in
-    let ascr = self_type ascr in
+    return ~scope @@ E_let_in {let_binder;rhs;let_result;attr}
+  | E_let_in {let_binder;rhs;let_result;attr} ->
+    let scope,let_binder = binder_new scope let_binder in
     let _,rhs = self rhs in
     let scope,let_result = self ~scope let_result in
-    return ~scope @@ E_let_in {let_binder={var;ascr;attributes};rhs;let_result;attr}
+    return ~scope @@ E_let_in {let_binder;rhs;let_result;attr}
   | E_type_inst {forall; type_} ->
     let _,forall = self forall in
     let type_  = self_type type_ in
@@ -297,11 +400,34 @@ let rec expression : Scope.t -> expression -> Scope.t * expression = fun scope e
     let _,struct_ = self struct_ in
     let _,update = self update in
     return @@ E_update {struct_;path;update}
-  | E_assign {binder={var;ascr;attributes};expression} ->
-    let var = Scope.get_value_var scope var in
-    let ascr = self_type ascr in
+  | E_assign {binder;expression} ->
+    let binder = mut_binder_get scope binder in
     let _,expression = self expression in
-    return @@ E_assign {binder={var;ascr;attributes};expression}
+    return @@ E_assign {binder;expression}
+  | E_let_mut_in {let_binder;rhs;let_result;attr} ->
+    let scope, let_binder = mut_binder_new scope let_binder in
+    let _, rhs = self rhs in
+    let scope, let_result = self ~scope let_result in
+    return ~scope @@ E_let_mut_in {let_binder;rhs;let_result;attr}
+  | E_while { cond; body } ->
+    let _, cond = self cond in
+    let _, body = self body in
+    return @@ E_while { cond; body }
+  | E_for { binder; start; final; incr; f_body } ->
+    let scope, binder = Scope.new_value_var scope binder in
+    let _, start = self start
+    and _, final = self final
+    and _, incr = self incr
+    and scope, f_body = self ~scope f_body in
+    return ~scope @@ E_for { binder; start; final; incr; f_body }
+  | E_for_each { fe_binder = binder1, binder2; collection; collection_type; fe_body } ->
+    let scope, binder1 = Scope.new_value_var scope binder1 in
+    let scope, binder2 = Option.fold_map Scope.new_value_var scope binder2 in
+    let _, collection = self collection 
+    and scope, fe_body = self ~scope fe_body in
+    return ~scope @@ E_for_each { fe_binder = binder1, binder2; collection; collection_type; fe_body }
+  | E_deref mut_var -> return @@ E_deref (Scope.get_mut_var scope mut_var)
+  
 
 and matching_cases : Scope.t -> matching_expr -> matching_expr = fun scope me ->
   let self ?(scope = scope) = expression scope in
@@ -317,11 +443,7 @@ and matching_cases : Scope.t -> matching_expr -> matching_expr = fun scope me ->
     let tv   = self_type tv in
     return @@ Match_variant {cases;tv}
   | Match_record {fields;body;tv} ->
-    let scope,fields = Record.fold_map (fun scope ({var;ascr;attributes} : _ Binder.t) ->
-      let scope,var = Scope.new_value_var scope var in
-      let ascr = self_type ascr in
-      scope,({var;ascr;attributes}: _ Binder.t)
-    ) scope fields in
+    let scope,fields = Record.fold_map (binder_new) scope fields in
     let _,body = self ~scope body in
     let tv   = self_type tv in
     return @@ Match_record {fields;body;tv}
@@ -333,3 +455,21 @@ let program : expression -> expression = fun e ->
   let swapper = Scope.make_swapper scope in
   let e = swap_expression swapper e in
   e
+
+let declaration : Scope.t -> declaration -> Scope.t * declaration = fun scope decl ->
+  match Location.unwrap decl with
+  | D_value { binder ; expr ; attr } ->
+    let scope,binder = binder_new scope binder in
+    let _,expr = expression scope expr in
+    scope, Location.wrap ~loc:(Location.get_location decl) @@ D_value { binder ; expr ; attr }
+
+let program_ : program -> program = fun (ctxt, prg) ->
+  let scope = Scope.empty in
+  let scope, prg = expression scope prg in
+  let f decl (scope, ctxt) = let scope, decl = declaration scope decl in scope, decl :: ctxt in
+  let scope, ctxt = List.fold_right ctxt ~init:(scope, []) ~f in
+  let swapper = Scope.make_swapper scope in
+  let prg = swap_expression swapper prg in
+  let f decl ctxt = let decl = swap_declaration swapper decl in decl :: ctxt in
+  let ctxt = List.fold_right ctxt ~init:[] ~f in
+  ctxt, prg

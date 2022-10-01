@@ -65,7 +65,7 @@ and untype_expression_content (ec:O.expression_content) : I.expression =
       let arg' = self args in
       return (e_application f' arg')
   | E_lambda {binder ; output_type; result} -> (
-      let binder = Binder.map self_type_opt binder in
+      let binder = Param.map self_type_opt binder in
       let output_type = self_type_opt output_type in
       let result = self result in
       return (e_lambda binder output_type result)
@@ -101,7 +101,7 @@ and untype_expression_content (ec:O.expression_content) : I.expression =
           let pattern =
             match tv with
             | _ ->
-              let proj = Location.wrap @@ Pattern.P_var { ascr = None ; var = pattern ; attributes = Binder.empty_attribute } in
+              let proj = Location.wrap @@ Pattern.P_var (Binder.make pattern None) in
               Location.wrap @@ Pattern.P_variant (constructor, proj)
           in
           let body = self body in
@@ -113,7 +113,7 @@ and untype_expression_content (ec:O.expression_content) : I.expression =
     | Match_record {fields ; body ; tv=_} -> (
       let aux : (Label.t * Ast_typed.type_expression Binder.t) -> Label.t * Ast_core.type_expression option Pattern.t =
         fun (Label label, binder) -> (
-          let proj = Location.wrap @@ Pattern.P_var {binder with ascr = Option.return @@ self_type binder.Binder.ascr} in
+          let proj = Location.wrap @@ Pattern.P_var (Binder.map (Fn.compose Option.return self_type) binder) in
           (Label label, proj)
         )
       in
@@ -135,7 +135,7 @@ and untype_expression_content (ec:O.expression_content) : I.expression =
       let rhs = self rhs in
       let result = self let_result in
       let attr : ValueAttr.t = untype_value_attr attr in
-      return (e_let_in {let_binder with ascr=(Some tv)} rhs result attr)
+      return (e_let_mut_in (Binder.map (Fn.const @@ Some tv) let_binder) rhs result attr)
   | E_mod_in {module_binder;rhs;let_result} ->
       let rhs = untype_module_expr rhs in
       let result = self let_result in
@@ -148,9 +148,26 @@ and untype_expression_content (ec:O.expression_content) : I.expression =
       let lambda = Lambda.map self self_type lambda in
       return @@ e_recursive fun_name fun_type lambda
   | E_module_accessor ma -> return @@ I.make_e @@ E_module_accessor ma
+  | E_let_mut_in {let_binder;rhs;let_result; attr} ->
+    let tv = self_type rhs.type_expression in
+    let rhs = self rhs in
+    let result = self let_result in
+    let attr : ValueAttr.t = untype_value_attr attr in
+    return (e_let_in (Binder.map (Fn.const @@ Some tv) let_binder) rhs result attr)
   | E_assign a ->
     let a = Assign.map self self_type_opt a in
     return @@ make_e @@ E_assign a
+  | E_for for_loop ->
+    let for_loop = For_loop.map self for_loop in
+    return @@ I.make_e @@ E_for for_loop
+  | E_for_each for_each_loop ->
+    let for_each_loop = For_each_loop.map self for_each_loop in
+    return @@ I.make_e @@ E_for_each for_each_loop
+  | E_while while_loop ->
+    let while_loop = While_loop.map self while_loop in
+    return @@ I.make_e @@ E_while while_loop
+  | E_deref var ->
+    return @@ I.make_e @@ E_variable var
   | E_type_inst {forall;type_=type_inst} ->
     match forall.type_expression.type_content with
     | T_for_all {ty_binder;type_;kind=_} ->
@@ -177,8 +194,7 @@ and untype_module_expr : O.module_expr -> I.module_expr =
 and untype_declaration_constant : (O.expression -> I.expression) -> _ O.Value_decl.t -> _ I.Value_decl.t =
   fun untype_expression {binder;expr;attr} ->
     let ty = untype_type_expression expr.O.type_expression in
-    let var = binder.var in
-    let binder = ({var;ascr=Some ty;attributes=Binder.empty_attribute}: _ Binder.t) in
+    let binder = Binder.map (Fn.const @@ Some ty) binder in
     let expr = untype_expression expr in
     let expr = I.e_ascription expr ty in
     let attr = untype_value_attr attr in

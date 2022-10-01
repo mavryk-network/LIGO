@@ -72,6 +72,7 @@ module Comparable = struct
         ; t_unit ()
         ; t_never ()
         ; t_michelson_code ()
+        ; t_int64 ()
         ]
     in
     fun loc _s ~ctx a b ->
@@ -206,7 +207,6 @@ module Comparable = struct
     let ctx, _ = comparator ~cmp:s ~raise ~test ~loc ~ctx a_value b_value in
     ctx, t_bool ()
 
-
   and big_map_comparator ~raise ~test : Location.t -> string -> t =
    fun loc s ~ctx a_map b_map ->
     let ctx =
@@ -222,7 +222,6 @@ module Comparable = struct
     let ctx, _ = comparator ~cmp:s ~raise ~test ~loc ~ctx a_key b_key in
     let ctx, _ = comparator ~cmp:s ~raise ~test ~loc ~ctx a_value b_value in
     ctx, t_bool ()
-
 
   and comparator ~cmp ~raise ~test ~loc : t =
    fun ~ctx a b ->
@@ -252,26 +251,50 @@ module Type = struct
     | Inferred
     | Checked
 
-  type t =
+  type type_ =
     { for_alls : (O.type_variable * Kind.t) list
-    ; mode_annot : mode list
-    ; types : (O.type_expression list * O.type_expression) List.Ne.t
+    ; arg_types : O.type_expression list
+    ; ret_type : O.type_expression
+    }
+
+  type t =
+    { mode_annot : mode list
+    ; types : type_ List.Ne.t
     }
 
   module Syntax = struct
     let for_all tvar ?(kind = (Type : Kind.t)) in_ =
       let tvar = Type_var.of_input_var ("'" ^ tvar) in
       let result = in_ (O.t_variable tvar ()) in
+      let types =
+        List.Ne.map
+          (fun type_ ->
+            { type_ with for_alls = (tvar, kind) :: type_.for_alls })
+          result.types
+      in
+      { result with types }
+
+
+    let t_for_all tvar ?(kind = (Type : Kind.t)) in_ =
+      let tvar = Type_var.of_input_var ("'" ^ tvar) in
+      let result = in_ (O.t_variable tvar ()) in
       { result with for_alls = (tvar, kind) :: result.for_alls }
 
 
     let create ~mode_annot ~types =
-      { for_alls = []; mode_annot; types = List.Ne.of_list types }
+      { mode_annot; types = List.Ne.of_list types }
 
 
-    let return ret_type = [], ret_type
-    let ( ^~> ) arg_type ret_type = [ arg_type ], ret_type
-    let ( ^-> ) arg_type (arg_types, ret_type) = arg_type :: arg_types, ret_type
+    let return ret_type = { for_alls = []; arg_types = []; ret_type }
+
+    let ( ^~> ) arg_type ret_type =
+      { for_alls = []; arg_types = [ arg_type ]; ret_type }
+
+
+    let ( ^-> ) arg_type type_ =
+      { type_ with arg_types = arg_type :: type_.arg_types }
+
+
     let ( @-> ) t1 t2 = O.t_arrow t1 t2 ()
   end
 end
@@ -310,7 +333,7 @@ let t_exists (evar : Exists_var.t) =
 let t_subst_var t ~tvar ~tvar' = t_subst t ~tvar ~type_:(t_variable tvar' ())
 let t_subst_evar t ~tvar ~evar = t_subst t ~tvar ~type_:(t_exists evar)
 
-let of_type ({ for_alls; mode_annot; types } : Type.t) : _ t =
+let of_type ({ mode_annot; types } : Type.t) : _ t =
   (* The function [mode] is used to determine the mode of an argument at position [i] *)
   let mode =
     let table = Hashtbl.create (module Int) in
@@ -321,20 +344,23 @@ let of_type ({ for_alls; mode_annot; types } : Type.t) : _ t =
   in
   fun ~raise ~options:_ ~infer ~check ~loc ~ctx args ->
     (* Instantiate prenex quantifier *)
-    let exists =
-      List.map for_alls ~f:(fun (tvar, kind) ->
-        tvar, kind, Exists_var.fresh ~loc ())
-    in
-    let subst type_ =
-      List.fold exists ~init:type_ ~f:(fun type_ (tvar, _, evar) ->
-        t_subst_evar type_ ~tvar ~evar)
-    in
-    let ctx =
-      Context.(
-        ctx
-        |@ of_list
-             (List.map exists ~f:(fun (_, kind, evar) ->
-                C_exists_var (evar, kind))))
+    let inst ctx { Type.for_alls; arg_types; ret_type } =
+      let exists =
+        List.map for_alls ~f:(fun (tvar, kind) ->
+          tvar, kind, Exists_var.fresh ~loc ())
+      in
+      let subst type_ =
+        List.fold exists ~init:type_ ~f:(fun type_ (tvar, _, evar) ->
+          t_subst_evar type_ ~tvar ~evar)
+      in
+      let ctx =
+        Context.(
+          ctx
+          |@ of_list
+               (List.map exists ~f:(fun (_, kind, evar) ->
+                  C_exists_var (evar, kind))))
+      in
+      ctx, List.map arg_types ~f:subst, subst ret_type
     in
     (* Determine arguments to be inferred *)
     let inferred =
@@ -356,9 +382,9 @@ let of_type ({ for_alls; mode_annot; types } : Type.t) : _ t =
     let ctx, checked, ret_type =
       Trace.bind_exists ~raise
       @@ List.Ne.map
-           (fun (arg_types, ret_type) ~raise ->
-             let arg_types = List.map arg_types ~f:subst in
-             let ret_type = subst ret_type in
+           (fun type_ ~raise ->
+             (* Instantiate *)
+             let ctx, arg_types, ret_type = inst ctx type_ in
              (* Split types accordingly for [arg_types] *)
              let args_types =
                match List.zip arg_types args with
@@ -476,17 +502,19 @@ let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
             ~types:[ a ^~> t_sum_ez [ "left", a; "right", a ] ]) )
     ; ( C_ITER
       , of_type
-          (for_all "a"
-          @@ fun a ->
-          for_all "b"
-          @@ fun b ->
-          create
-            ~mode_annot:[ Checked; Inferred ]
-            ~types:
-              [ (a @-> t_unit ()) ^-> t_list a ^~> t_unit ()
-              ; (a @-> t_unit ()) ^-> t_set a ^~> t_unit ()
-              ; (t_pair a b @-> t_unit ()) ^-> t_map a b ^~> t_unit ()
-              ]) )
+          (create
+             ~mode_annot:[ Checked; Inferred ]
+             ~types:
+               [ (t_for_all "a"
+                 @@ fun a -> (a @-> t_unit ()) ^-> t_list a ^~> t_unit ())
+               ; (t_for_all "a"
+                 @@ fun a -> (a @-> t_unit ()) ^-> t_set a ^~> t_unit ())
+               ; (t_for_all "a"
+                 @@ fun a ->
+                 t_for_all "b"
+                 @@ fun b ->
+                 (t_pair a b @-> t_unit ()) ^-> t_map a b ^~> t_unit ())
+               ]) )
     ; ( C_FOLD
       , of_type
           (for_all "a"
@@ -926,6 +954,7 @@ let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
                ; O.(t_int () ^-> t_nat () ^~> t_int ())
                ; O.(t_timestamp () ^-> t_int () ^~> t_timestamp ())
                ; O.(t_int () ^-> t_timestamp () ^~> t_timestamp ())
+               ; O.(t_int64 () ^-> t_int64 () ^~> t_int64 ())
                ]) )
     ; ( C_POLYMORPHIC_SUB
       , of_type
@@ -945,6 +974,7 @@ let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
                ; O.(t_timestamp () ^-> t_timestamp () ^~> t_int ())
                ; O.(t_timestamp () ^-> t_int () ^~> t_timestamp ())
                ; O.(t_mutez () ^-> t_mutez () ^~> t_option (t_mutez ()))
+               ; O.(t_int64 () ^-> t_int64 () ^~> t_int64 ())
                ]) )
     ; ( C_ADD
       , of_type
@@ -964,6 +994,7 @@ let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
                ; O.(t_int () ^-> t_nat () ^~> t_int ())
                ; O.(t_timestamp () ^-> t_int () ^~> t_timestamp ())
                ; O.(t_int () ^-> t_timestamp () ^~> t_timestamp ())
+               ; O.(t_int64 () ^-> t_int64 () ^~> t_int64 ())
                ]) )
     ; ( C_MUL
       , of_type
@@ -986,6 +1017,7 @@ let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
                ; O.(t_mutez () ^-> t_nat () ^~> t_mutez ())
                ; O.(t_int () ^-> t_nat () ^~> t_int ())
                ; O.(t_nat () ^-> t_int () ^~> t_int ())
+               ; O.(t_int64 () ^-> t_int64 () ^~> t_int64 ())
                ]) )
     ; ( C_SUB
       , of_type
@@ -1005,6 +1037,7 @@ let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
                ; O.(t_timestamp () ^-> t_timestamp () ^~> t_int ())
                ; O.(t_timestamp () ^-> t_int () ^~> t_timestamp ())
                ; O.(t_mutez () ^-> t_mutez () ^~> t_mutez ())
+               ; O.(t_int64 () ^-> t_int64 () ^~> t_int64 ())
                ]) )
     ; ( C_SUB_MUTEZ
       , of_type
@@ -1022,6 +1055,7 @@ let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
                ; O.(t_int () ^-> t_nat () ^~> t_int ())
                ; O.(t_mutez () ^-> t_nat () ^~> t_mutez ())
                ; O.(t_mutez () ^-> t_mutez () ^~> t_nat ())
+               ; O.(t_int64 () ^-> t_int64 () ^~> t_int64 ())
                ]) )
     ; ( C_MOD
       , of_type
@@ -1034,6 +1068,7 @@ let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
                ; O.(t_int () ^-> t_int () ^~> t_nat ())
                ; O.(t_mutez () ^-> t_nat () ^~> t_mutez ())
                ; O.(t_mutez () ^-> t_mutez () ^~> t_mutez ())
+               ; O.(t_int64 () ^-> t_int64 () ^~> t_int64 ())
                ]) )
     ; ( C_NEG
       , of_type
@@ -1064,6 +1099,7 @@ let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
                [ O.(t_bool () ^-> t_bool () ^~> t_bool ())
                ; O.(t_nat () ^-> t_nat () ^~> t_nat ())
                ; O.(t_int () ^-> t_nat () ^~> t_nat ())
+               ; O.(t_int64 () ^-> t_int64 () ^~> t_int64 ())
                ]) )
     ; ( C_OR
       , of_type
@@ -1072,6 +1108,7 @@ let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
              ~types:
                [ O.(t_bool () ^-> t_bool () ^~> t_bool ())
                ; O.(t_nat () ^-> t_nat () ^~> t_nat ())
+               ; O.(t_int64 () ^-> t_int64 () ^~> t_int64 ())
                ]) )
     ; ( C_XOR
       , of_type
@@ -1080,17 +1117,22 @@ let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
              ~types:
                [ O.(t_bool () ^-> t_bool () ^~> t_bool ())
                ; O.(t_nat () ^-> t_nat () ^~> t_nat ())
+               ; O.(t_int64 () ^-> t_int64 () ^~> t_int64 ())
                ]) )
     ; ( C_LSL
       , of_type
           (create
              ~mode_annot:[ Inferred; Inferred ]
-             ~types:[ t_nat () ^-> t_nat () ^~> t_nat () ]) )
+             ~types:[ t_nat () ^-> t_nat () ^~> t_nat ()
+                    ; t_int64 () ^-> t_nat () ^~> t_int64 ()
+                    ]) )
     ; ( C_LSR
       , of_type
           (create
              ~mode_annot:[ Inferred; Inferred ]
-             ~types:[ t_nat () ^-> t_nat () ^~> t_nat () ]) )
+             ~types:[ t_nat () ^-> t_nat () ^~> t_nat ()
+                    ; t_int64 () ^-> t_nat () ^~> t_int64 ()
+                    ]) )
       (* Tests *)
     ; ( C_TEST_COMPILE_CONTRACT
       , of_type
@@ -1495,6 +1537,21 @@ let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
           (for_all "a"
           @@ fun a ->
           create ~mode_annot:[ Inferred ] ~types:[ t_list a ^~> t_set a ]) )
+    ; ( C_TEST_INT64_OF_INT
+      , of_type
+          (create ~mode_annot:[ Checked ] ~types:[ t_int () ^~> t_int64 () ]))
+    ; ( C_TEST_INT64_TO_INT
+      , of_type
+          (create ~mode_annot:[ Checked ] ~types:[ t_int64 () ^~> t_int () ]))
+    ; ( C_TEST_INT
+      , of_type
+          (create ~mode_annot:[ Checked ] ~types:[ t_nat () ^~> t_int () ]))
+    ; ( C_TEST_ABS
+      , of_type
+          (create ~mode_annot:[ Checked ] ~types:[ t_int () ^~> t_nat () ]))
+    ; ( C_TEST_SLICE
+      , of_type
+          (create ~mode_annot:[ Checked ; Checked ; Inferred ] ~types:[ t_nat () ^-> t_nat () ^-> t_string () ^~> t_string () ; t_nat () ^-> t_nat () ^-> t_bytes () ^~> t_bytes () ]))
     ]
 
 
@@ -1563,6 +1620,7 @@ module External_types = struct
     let open Type.Syntax in
     of_type (create [ t_nat () ^~> t_int (); t_bls12_381_fr () ^~> t_int () ])
 
+
   let ediv_types : (Errors.typer_error, Main_warnings.all) t =
     let open Type.Syntax in
     of_type
@@ -1579,9 +1637,14 @@ module External_types = struct
            ^~> t_option (t_pair (t_mutez ()) (t_mutez ()))
          ])
 
+
   let and_types : (Errors.typer_error, Main_warnings.all) t =
     let open Type.Syntax in
-    of_type (create [ t_nat () ^-> t_nat () ^~> t_nat (); t_int () ^-> t_nat () ^~> t_nat() ])
+    of_type
+      (create
+         [ t_nat () ^-> t_nat () ^~> t_nat ()
+         ; t_int () ^-> t_nat () ^~> t_nat ()
+         ])
 end
 
 (*

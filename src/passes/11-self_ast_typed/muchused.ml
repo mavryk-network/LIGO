@@ -6,6 +6,7 @@ type contract_pass_data = Contract_passes.contract_pass_data
 module V = Ligo_prim.Value_var
 module M = Simple_utils.Map.Make(V)
 
+(* var -> # of uses * unused vars *)
 type muchuse = int M.t * V.t list
 
 let muchuse_neutral : muchuse = M.empty, []
@@ -53,6 +54,7 @@ let rec is_dup (t : type_expression) =
     Ast_contract        |
     Michelson_program   |
     Gen                 |
+    Int64               |
     (* Externals are dup *)
     External _
   ); _} ->
@@ -134,7 +136,7 @@ let rec muchuse_of_expr expr : muchuse =
      muchuse_of_expr result
   | E_let_in {let_binder;rhs;let_result;_} ->
      muchuse_union (muchuse_of_expr rhs)
-       (muchuse_of_binder let_binder.var rhs.type_expression
+       (muchuse_of_binder (Binder.get_var let_binder) rhs.type_expression
           (muchuse_of_expr let_result))
   | E_recursive {fun_name;lambda;fun_type} ->
      muchuse_of_binder fun_name fun_type (muchuse_of_lambda fun_type lambda)
@@ -158,11 +160,52 @@ let rec muchuse_of_expr expr : muchuse =
     let name = V.of_input_var ~loc:expr.location @@
       pref ^ "." ^ (Format.asprintf "%a" Value_var.pp element) in
     (M.add name 1 M.empty,[])
-  | E_assign { binder=_; expression } ->
-    muchuse_of_expr expression
+  | E_assign { binder; expression } ->
+    muchuse_union
+    (M.add (Binder.get_var binder) 1 M.empty, [])
+    (muchuse_of_expr expression)
+  | E_deref var -> M.add var 1 M.empty, []
+  | E_let_mut_in {let_binder;rhs;let_result;_} ->
+    muchuse_union (muchuse_of_expr rhs)
+      (muchuse_of_binder (Binder.get_var let_binder) rhs.type_expression
+         (muchuse_of_expr let_result))
+  | E_for { binder; start; final; incr; f_body } ->
+    muchuse_unions
+      [ muchuse_of_expr start
+      ; muchuse_of_expr final
+      ; muchuse_of_expr incr
+      ; muchuse_of_binder binder start.type_expression (muchuse_of_expr f_body) 
+      ]
+  | E_for_each { fe_binder = binder1, binder2; collection; fe_body; _ } ->
+    (* Recover type of binders *)
+    let binders = 
+      let type_ = collection.type_expression in
+      if is_t_map type_ then
+        let key_type, val_type = get_t_map_exn type_ in
+        (match binder2 with
+        | None ->
+          [ binder1, t_pair key_type val_type ]
+        | Some binder2 -> 
+          [ binder1, key_type; binder2, val_type ]) 
+      else if is_t_set type_ then
+        [ binder1, get_t_set_exn type_ ]
+      else if is_t_list type_ then
+        [ binder1, get_t_list_exn type_ ]
+      else
+        failwith "corner case"
+    in
+    muchuse_unions
+      [ muchuse_of_expr collection
+      ; List.fold_left binders ~init:(muchuse_of_expr fe_body) ~f:(fun muchuse (binder, type_) -> muchuse_of_binder binder type_ muchuse) 
+      ]
+  | E_while { cond; body } ->
+    muchuse_unions
+      [ muchuse_of_expr cond
+      ; muchuse_of_expr body 
+      ]
 
 and muchuse_of_lambda t {binder; output_type = _; result} =
-  muchuse_of_binder binder.var t (muchuse_of_expr result)
+  muchuse_of_binder (Param.get_var binder) t (muchuse_of_expr result)
 
 and muchuse_of_cases = function
   | Match_variant x -> muchuse_of_variant x
@@ -194,7 +237,7 @@ and muchuse_of_variant {cases;tv} =
 
 and muchuse_of_record {body;fields;_} =
   let typed_vars = Record.LMap.to_list fields in
-  List.fold_left ~f:(fun (c,m) b -> muchuse_of_binder b.var b.ascr (c,m))
+  List.fold_left ~f:(fun (c,m) b -> muchuse_of_binder (Binder.get_var b) (Binder.get_ascr b) (c,m))
     ~init:(muchuse_of_expr body) typed_vars
 
 let rec get_all_declarations (module_name : Module_var.t) : module_ ->
@@ -203,7 +246,7 @@ let rec get_all_declarations (module_name : Module_var.t) : module_ ->
     let aux = fun ({wrap_content=x;location} : decl) ->
       match x with
       | D_value {binder;expr;_} ->
-          let name = V.of_input_var ~loc:location @@ (Format.asprintf "%a" Module_var.pp module_name) ^ "." ^ (Format.asprintf "%a" Value_var.pp binder.var) in
+          let name = V.of_input_var ~loc:location @@ (Format.asprintf "%a" Module_var.pp module_name) ^ "." ^ (Format.asprintf "%a" Value_var.pp @@ Binder.get_var binder) in
           [(name, expr.type_expression)]
       | D_module {module_binder;module_ = { wrap_content = M_struct module_ ; _ } ;module_attr=_} ->
          let recs = get_all_declarations module_binder module_ in
@@ -224,7 +267,7 @@ and muchuse_declaration = fun (x : declaration) s ->
   match Location.unwrap x with
   | D_value {expr ; binder; _} ->
       muchuse_union (muchuse_of_expr expr)
-        (muchuse_of_binder binder.var expr.type_expression s)
+        (muchuse_of_binder (Binder.get_var binder) expr.type_expression s)
   | D_module {module_ = { wrap_content = M_struct module_ ; _ } ;module_binder;module_attr=_} ->
       let decls = get_all_declarations module_binder module_ in
       List.fold_right ~f:(fun (v, t) (c,m) -> muchuse_of_binder v t (c, m))

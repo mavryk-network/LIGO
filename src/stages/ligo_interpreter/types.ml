@@ -24,6 +24,7 @@ and func_val = {
     rec_name : Value_var.t option ;
     orig_lambda : Ast_aggregated.expression ;
     arg_binder : Value_var.t ;
+    arg_mut_flag : Param.mutable_flag;
     body : Ast_aggregated.expression ;
     env : env ;
   }
@@ -47,6 +48,7 @@ and constant_val =
   | C_unit
   | C_bool of bool
   | C_int of Z.t
+  | C_int64 of Int64.t
   | C_nat of Z.t
   | C_timestamp of Z.t
   | C_string of string
@@ -60,6 +62,7 @@ and constant_val =
   | C_bls12_381_g1 of Bls12_381.G1.t
   | C_bls12_381_g2 of Bls12_381.G2.t
   | C_bls12_381_fr of Bls12_381.Fr.t
+  | C_chain_id of string
 
 and micheline_value = (unit, string) Tezos_micheline.Micheline.node *
                         (unit, string) Tezos_micheline.Micheline.node
@@ -83,8 +86,11 @@ and value =
   | V_Mutation of mutation
   | V_Func_val of func_val
   | V_Gen of gen
+  | V_location of location
 
 and calltrace = Location.t list
+
+and location = int
 
 type bigmap_state = (value * value) list
 type bigmap_data = {

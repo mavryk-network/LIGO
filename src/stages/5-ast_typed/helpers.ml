@@ -278,6 +278,21 @@ let rec fold_map_expression : 'a fold_mapper -> 'a -> expression -> 'a * express
   | E_assign a ->
     let (res,a) = Assign.fold_map self self_type init a in
     (res, return @@ E_assign a)
+  | E_let_mut_in { let_binder ; rhs ; let_result; attr } -> (
+    let (res,rhs) = self init rhs in
+    let (res,let_result) = self res let_result in
+    (res, return @@ E_let_mut_in { let_binder ; rhs ; let_result ; attr })
+  )
+  | E_for f ->
+    let res, f = For_loop.fold_map self init f in
+    res, return @@ E_for f
+  | E_for_each fe ->
+    let res, fe = For_each_loop.fold_map self init fe in
+    res, return @@ E_for_each fe
+  | E_while w ->
+    let res, w = While_loop.fold_map self init w in
+    res, return @@ E_while w
+  | E_deref _
   | E_literal _ | E_variable _  | E_module_accessor _ as e' -> (init, return e')
 
 and fold_map_cases : 'a fold_mapper -> 'a -> matching_expr -> 'a * matching_expr = fun f init m ->
@@ -499,7 +514,7 @@ let get_views : program -> (Value_var.t * Location.t) list = fun p ->
   let f : declaration -> (Value_var.t * Location.t) list -> (Value_var.t * Location.t) list =
     fun {wrap_content=decl ; location=_ } acc ->
       match decl with
-      | D_value { binder ; expr=_ ; attr } when attr.view -> (binder.var, Value_var.get_location binder.var)::acc
+      | D_value { binder ; expr=_ ; attr } when attr.view -> let var = Binder.get_var binder in (var, Value_var.get_location var)::acc
       | _ -> acc
   in
   List.fold_right ~init:[] ~f p
