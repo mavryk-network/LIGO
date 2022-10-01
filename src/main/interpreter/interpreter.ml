@@ -1949,7 +1949,29 @@ and try_eval ~raise ~steps ~options expr env state r =
     r
 
 
-let rec eval_test ~raise ~steps ~options
+let eval_expression ~raise ~steps ~options
+  : Ast_typed.program -> Ast_typed.expression -> value
+  =
+ fun prg expr ->
+  (* Compile new context *)
+  let initial_state = Execution_monad.make_state ~raise ~options in
+  let expr =
+    Ligo_compile.Of_typed.compile_expression_in_context
+      ~raise
+      ~options:options.middle_end
+      prg
+      expr
+  in
+  let expr =
+    trace ~raise Main_errors.self_ast_aggregated_tracer
+    @@ Self_ast_aggregated.all_expression ~options:options.middle_end expr
+  in
+  let value, _ =
+    try_eval ~raise ~steps ~options expr Env.empty_env initial_state None
+  in
+  value
+
+let eval_test ~raise ~steps ~options
   : Ast_typed.program -> (string * value) list
   =
  fun prg ->
@@ -1988,27 +2010,5 @@ let rec eval_test ~raise ~steps ~options
     in
     List.fold_right ~f ~init:[] @@ lst
   | _ -> failwith "Not a tuple?"
-
-and eval_expression ~raise ~steps ~options
-  : Ast_typed.program -> Ast_typed.expression -> value
-  =
- fun prg expr ->
-  (* Compile new context *)
-  let initial_state = Execution_monad.make_state ~raise ~options in
-  let expr =
-    Ligo_compile.Of_typed.compile_expression_in_context
-      ~raise
-      ~options:options.middle_end
-      prg
-      expr
-  in
-  let expr =
-    trace ~raise Main_errors.self_ast_aggregated_tracer
-    @@ Self_ast_aggregated.all_expression ~options:options.middle_end expr
-  in
-  let value, _ =
-    try_eval ~raise ~steps ~options expr Env.empty_env initial_state None
-  in
-  value
 
 let () = Printexc.record_backtrace true
