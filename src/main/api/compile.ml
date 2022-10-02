@@ -163,9 +163,9 @@ let storage (raw_options : Raw_options.t) source_file expression amount balance 
         let options = Run.make_dry_run_options ~raise ~constants { now ; amount ; balance ; sender;  source ; parameter_ty = None } in
         no_comment (Run.evaluate_expression ~raise ~options compiled_param.expr compiled_param.expr_ty)
 
-let storage_test (raw_options : Raw_options.t) source_file expression display_format () =
+let storage_test (raw_options : Raw_options.t) source_file expression display_format michelson_format () =
     let warning_as_error = raw_options.warning_as_error in
-    format_result ~warning_as_error ~display_format (Ligo_interpreter.Formatter.value_format) @@
+    format_result ~warning_as_error ~display_format (Ligo_interpreter.Formatter.value_format michelson_format) @@
       fun ~raise ->
         let protocol_version = Helpers.protocol_to_variant ~raise raw_options.protocol_version in
         let syntax = Syntax.of_string_opt ~raise (Syntax_name raw_options.syntax) (Some source_file) in
