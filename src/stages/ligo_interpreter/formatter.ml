@@ -15,42 +15,32 @@ let pp_comment ppf michelson =
   let michelson = printable (fun prim -> prim) michelson in
   print_expr ppf michelson
 
-let value_jsonformat michelson_format b : json =
-  match b with
-  | Types.V_Michelson (Ty_code { code ; _ } | Untyped_code code) ->
-    (match michelson_format with
-     | `Text ->
-       let code_as_str = Format.asprintf "%a" pp_comment code in
-       `Assoc [("text_code" , `String code_as_str)]
-     | `Hex ->
-       let code_as_hex = Format.asprintf "%a" pp_hex code in
-       `Assoc [("hex_code" , `String code_as_hex)]
-     | `Json ->
-       let code_as_str = Format.asprintf "%a" pp_result_json code in
-       `Assoc [("json_code" , `String code_as_str)])
-  | _ -> `Null
+let mich_value_jsonformat michelson_format code : json =
+  match michelson_format with
+  | `Text ->
+    let code_as_str = Format.asprintf "%a" pp_comment code in
+    `Assoc [("text_code" , `String code_as_str)]
+  | `Hex ->
+    let code_as_hex = Format.asprintf "%a" pp_hex code in
+    `Assoc [("hex_code" , `String code_as_hex)]
+  | `Json ->
+    let code_as_str = Format.asprintf "%a" pp_result_json code in
+    `Assoc [("json_code" , `String code_as_str)]
 
-let value_ppformat michelson_format ~display_format f value =
-  match value with
-  | Types.V_Michelson (Ty_code { code ; _ } | Untyped_code code) ->
-    let mich_pp = fun michelson_format ->  match michelson_format with
-      | `Text -> pp_comment
-      | `Json -> pp_result_json
-      | `Hex -> pp_hex in
-    (match display_format with
-    | Human_readable | Dev -> (
+let mich_value_ppformat michelson_format ~display_format f code =
+  let mich_pp = fun michelson_format ->  match michelson_format with
+    | `Text -> pp_comment
+    | `Json -> pp_result_json
+    | `Hex -> pp_hex in
+  match display_format with
+   | Human_readable | Dev -> (
        let m = Format.asprintf "%a\n" (mich_pp michelson_format) code in
        Format.pp_print_string f m
-     ))
-  | _ ->
-    match display_format with
-    | Dev | Human_readable ->
-      Format.fprintf f "%a" PP.pp_value value
+     )
 
-
-let value_format michelson_format : 'a format = {
-  pp = value_ppformat michelson_format;
-  to_json = value_jsonformat michelson_format;
+let mich_value_format michelson_format : 'a format = {
+  pp = mich_value_ppformat michelson_format;
+  to_json = mich_value_jsonformat michelson_format;
 }
 
 let tests_ppformat ~display_format f (toplevel_env) =
