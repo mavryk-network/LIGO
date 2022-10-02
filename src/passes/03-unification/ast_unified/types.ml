@@ -1420,8 +1420,19 @@ type program = declaration list (* TODO NP : Try to convert this into non-empty 
 
     T_SumJsligo [int; string; tez]  |->  T_Sum (T_Tuple [int; string; tez])
   
+  T_Object
+  =============================================================================
+  pass 't_object'
+    remove : T_Object
+    add    : T_Record
   
+  T_Disc
+  =============================================================================
+  pass 't_disc'
+    remove : T_Disc [("a", Some b); ("c", Some d); ("e", None)]
+    add    : T_Sum  [("a",      b); ("c",      d); ("e", unit)] | exception
 
+    See handling of TDisc in JsLIGO abstractor
 
   S_VarDecl
   =============================================================================
