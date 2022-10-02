@@ -2538,6 +2538,10 @@ let%expect_test _ =
     Constant hash:
     exprtr7GE1A1cR39zNGRGF44aGfAX23tC7szWrnLzs9fkUhasLEcQT |}]
 
+let%expect_test _ =
+  run_ligo_good [ "compile" ; "storage-test" ; contract "test_global_constant.mligo" ; "k" ] ;
+  [%expect{| (Pair 5 (constant "expruCKsgmUZjC7k8NRcwbcGbFSuLHv5rUyApNd972MwArLuxEZQm2")) |}]
+
 (* Test pairing_check and bls12_381_g1/g2/fr literals *)
 let%expect_test _ =
   run_ligo_good [ "compile" ; "expression" ; "cameligo" ; "test" ; "--init-file" ; contract "pairing_check.mligo" ] ;
