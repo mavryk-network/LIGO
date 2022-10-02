@@ -397,6 +397,23 @@ let compile_storage_test =
   Command.basic ~summary ~readme
   (f <$> source_file <*> expression "STORAGE" <*> entry_point <*> syntax <*> steps <*> protocol_version <*> display_format <*> michelson_code_format <*> output_file <*> warn <*> werror <*> constants <*> file_constants <*> project_root <*> warn_unused_rec)
 
+let compile_parameter_test =
+  let f source_file expression entry_point syntax steps protocol_version display_format michelson_format output_file show_warnings warning_as_error constants file_constants project_root warn_unused_rec () =
+    let raw_options = Raw_options.make ~entry_point ~syntax ~steps ~protocol_version ~warning_as_error ~constants ~file_constants ~project_root ~warn_unused_rec ~test:true () in
+    return_result ~return ~show_warnings ?output_file @@
+    Api.Compile.storage_test raw_options source_file expression display_format michelson_format
+  in
+  let summary   = "compile parameters to a Michelson expression." in
+  let readme () = "This sub-command compiles a parameter for a given \
+                  contract to a Michelson expression. The resulting \
+                  Michelson expression can be passed as an argument in \
+                  a transaction which calls a contract. \
+                  Its difference with respect to `compile storage` is \
+                  that it uses the testing framework for interpreting \
+                  the code. As a result, it can handle global constants." in
+  Command.basic ~summary ~readme
+  (f <$> source_file <*> expression "parameter" <*> entry_point <*> syntax <*> steps <*> protocol_version <*> display_format <*> michelson_code_format <*> output_file <*> warn <*> werror <*> constants <*> file_constants <*> project_root <*> warn_unused_rec)
+
 let compile_constant =
   let f syntax expression protocol_version init_file display_format without_run show_warnings warning_as_error project_root warn_unused_rec () =
     let raw_options = Raw_options.make ~syntax ~protocol_version ~without_run ~warning_as_error ~project_root ~warn_unused_rec () in
@@ -413,12 +430,13 @@ let compile_constant =
   (f <$> req_syntax <*> expression "" <*> protocol_version <*> init_file <*> display_format  <*> without_run <*> warn <*> werror <*> project_root <*> warn_unused_rec)
 
 let compile_group = Command.group ~summary:"compile a ligo program to michelson" @@
-  [ "contract",     compile_file;
-    "expression",   compile_expression;
-    "parameter",    compile_parameter;
-    "storage",      compile_storage;
-    "storage-test", compile_storage_test;
-    "constant",     compile_constant;]
+  [ "contract",       compile_file;
+    "expression",     compile_expression;
+    "parameter",      compile_parameter;
+    "parameter-test", compile_parameter_test;
+    "storage",        compile_storage;
+    "storage-test",   compile_storage_test;
+    "constant",       compile_constant;]
 
 (** Transpile commands *)
 let transpile_contract =
