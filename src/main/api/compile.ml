@@ -176,9 +176,8 @@ let storage_test (raw_options : Raw_options.t) source_file expression display_fo
             ~has_env_comments:false
             () in
         let app_typed_prg = Build.qualified_typed ~raise ~options Ligo_compile.Of_core.Env source_file in
-        let Compiler_options.{ views ; _ } = options.backend in
         let Compiler_options.{ entry_point ; _ } = options.frontend in
-        let _ = Build.build_contract_aggregated ~raise ~options entry_point views source_file in
+        let _ = Build.build_contract_aggregated ~raise ~options entry_point [] source_file in
         let typed_param              = Ligo_compile.Utils.type_expression ~raise ~options syntax expression app_typed_prg in
         let typed_param, typed_prg   = Self_ast_typed.remove_unused_expression typed_param app_typed_prg in
         let Compiler_options.{ steps ; _ } = options.test_framework in
