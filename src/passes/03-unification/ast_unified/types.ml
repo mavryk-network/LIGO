@@ -1272,14 +1272,14 @@ type program = declaration list (* TODO NP : Try to convert this into non-empty 
     remove : D_Let (is_rec = 1, expr = E_xxx)
     add    : D_Let (is_rec = 0, expr = E_Recursive (E_xxx...))
 
-  T_Sum / T_Prod / T_Fun / T_Var / T_Arg
+  T_Sum / T_Prod / T_Fun / T_Var / T_Arg  (AST_U |-> AST_I)
   =============================================================================
   pass 't_sum'
       remove : T_Sum
-      add    : AST_I.T_Tuple
+      add    : AST_I.T_Sum
   pass 't_prod'
-      remove : T_Prof
-      add    : AST_I.T_Prod
+      remove : T_Prod
+      add    : AST_I.T_Tuple
   pass 't_fun'
       remove : T_Fun
       add    : AST_I.T_Arrow
@@ -1289,8 +1289,11 @@ type program = declaration list (* TODO NP : Try to convert this into non-empty 
   pass 't_arg'
       remove : T_Arg
       add    : AST_I.T_variable
+      T_xxx (T_arg 'a) |-> T_Abstraction('a, T_xxx (T_var 'a) )
+      The 'd_type' pass take care of wrapping the type into a T_Abstraction
+      This pass just takes care of T_arg 'a |-> T_Var 'a
   pass 't_record' :
-      remove : AST_U.T_Record
+      remove : T_Record
       add    : AST_I.T_Record
   
   T_RecordCameligo
