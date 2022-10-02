@@ -390,7 +390,10 @@ let compile_storage_test =
   let readme () = "This sub-command compiles an initial storage for a \
                   given contract to a Michelson expression. The \
                   resulting Michelson expression can be passed as an \
-                  argument in a transaction which originates a contract." in
+                  argument in a transaction which originates a contract.\
+                  Its difference with respect to `compile storage` is \
+                  that it uses the testing framework for interpreting \
+                  the code. As a result, it can handle global constants." in
   Command.basic ~summary ~readme
   (f <$> source_file <*> expression "STORAGE" <*> entry_point <*> syntax <*> steps <*> protocol_version <*> display_format <*> michelson_code_format <*> output_file <*> warn <*> werror <*> constants <*> file_constants <*> project_root <*> warn_unused_rec)
 
