@@ -216,9 +216,24 @@ and compile_statement ~raise : CST.statement -> AST.statement = fun s ->
   )
   | SImport s -> (
     let s, loc = r_split s in
-    let alias       = r_fst s.alias in
-    let module_path = List.Ne.map r_fst @@ nsepseq_to_nseq s.module_path in
-    s_import {alias; module_path} ~loc ()
+    let s : AST.import = match s with
+    | CST.Import_rename s -> (
+      let alias       = r_fst s.alias in
+      let module_path = List.Ne.map r_fst @@ nsepseq_to_nseq s.module_path in
+      AST.Import_rename {alias; module_path}
+    )
+    | CST.Import_all_as s -> (
+      let alias      = r_fst s.alias in
+      let module_str = r_fst s.module_path in
+      AST.Import_all_as {alias; module_str}
+    )  
+    | CST.Import_selected s -> (
+      let imported   = List.Ne.map r_fst @@ nsepseq_to_nseq (r_fst s.imported).inside in
+      let module_str = r_fst s.module_path in
+      AST.Import_selected {imported; module_str}
+    )
+    in
+    s_import s ~loc ()
   )
   | SWhile s -> (
     let s, loc = r_split s in

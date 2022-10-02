@@ -258,10 +258,18 @@ and namespace_statement = {
   namespace_content  : statement nseq;
 }
 
-(* TODO NP : Merge with type 'module_alias' ? *)
-and import = {
-  alias        : string;
-  module_path  : string nseq;
+and import =
+| Import_rename of {
+  alias       : string;
+  module_path : string nseq;
+}
+| Import_all_as of {
+  alias       : string;
+  module_str  : string;
+}
+| Import_selected of {
+  imported    : string nseq;
+  module_str  : string;
 }
 
 and while_stmt = {
