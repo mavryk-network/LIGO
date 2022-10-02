@@ -238,11 +238,11 @@ let rec build_contract_aggregated ~raise : options:Compiler_options.t -> string 
       Ast_aggregated.get_t_pair input_ty ) in
     let aggregated = trace ~raise self_ast_aggregated_tracer @@ Self_ast_aggregated.all_contract parameter_ty storage_ty aggregated_contract in
     let agg_views = build_aggregated_views ~raise ~options typed_views in
-    aggregated, agg_views
+    (parameter_ty, storage_ty), aggregated, agg_views
 
 and build_contract_stacking ~raise : options:Compiler_options.t -> string -> string list -> Source_input.file_name -> (Stacking.compiled_expression * _ ) * ((Value_var.t * Stacking.compiled_expression) list * _) =
   fun ~options entry_point cli_views file_name ->
-    let aggregated, agg_views = build_contract_aggregated ~raise ~options entry_point cli_views file_name in
+    let _, aggregated, agg_views = build_contract_aggregated ~raise ~options entry_point cli_views file_name in
     let mini_c = Ligo_compile.Of_aggregated.compile_expression ~raise aggregated in
     let contract = Ligo_compile.Of_mini_c.compile_contract ~raise ~options mini_c in
     let views = build_views ~raise ~options agg_views in

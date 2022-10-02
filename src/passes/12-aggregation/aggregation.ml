@@ -1,5 +1,7 @@
 module Errors = Errors
 
+let compile_type = Compiler.compile_type_expression
+
 let compile_expression ~raise : Ast_typed.expression -> Ast_aggregated.expression =
   fun x -> Compiler.compile_expression ~raise x
 

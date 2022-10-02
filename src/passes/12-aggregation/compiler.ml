@@ -214,8 +214,8 @@ end
 let compile_value_attr : I.ValueAttr.t -> O.ValueAttr.t =
   fun {inline;no_mutation;view;public;hidden;thunk} -> {inline;no_mutation;view;public;hidden;thunk}
 
-let rec compile_type_expression ~raise path scope (type_expression : I.type_expression) : O.type_expression =
-  let self ?(path=path) ?(scope=scope) = compile_type_expression ~raise path scope in
+let rec compile_type_expression ~raise (type_expression : I.type_expression) : O.type_expression =
+  let self = compile_type_expression ~raise in
   let return type_content = O.{type_content;location=type_expression.location;orig_var=type_expression.orig_var;source_type=Some type_expression } in
   match type_expression.type_content with
     T_variable type_variable ->
@@ -245,7 +245,7 @@ let rec compile_type_expression ~raise path scope (type_expression : I.type_expr
 
 let rec compile_expression ~raise path scope (expr : I.expression) =
   let self ?(path = path) ?(scope=scope) = compile_expression ~raise path scope in
-  let self_type ?(path = path) ?(scope=scope) = compile_type_expression ~raise path scope in
+  let self_type = compile_type_expression ~raise in
   let self_cases ?(path = path) ?(scope=scope) = compile_cases ~raise path scope in
   let return expression_content =
     let type_expression = self_type expr.type_expression in
@@ -373,14 +373,14 @@ and compile_cases ~raise path scope cases : O.matching_expr =
       let body = compile_expression ~raise path scope body in
       O.{constructor;pattern;body})
     in
-    let tv = compile_type_expression ~raise path scope tv in
+    let tv = compile_type_expression ~raise tv in
     Match_variant {cases;tv}
   | Match_record {fields;body;tv} ->
     let scope, fields = Record.fold_map (fun scope' binder ->
         Scope.push_func_or_case_binder scope' @@ Binder.get_var binder,
-        Binder.map (compile_type_expression ~raise path scope) binder) scope fields in
+        Binder.map (compile_type_expression ~raise) binder) scope fields in
     let body   = compile_expression ~raise path scope body in
-    let tv     = compile_type_expression ~raise path scope tv in
+    let tv     = compile_type_expression ~raise tv in
     Match_record {fields;body;tv}
 
 
