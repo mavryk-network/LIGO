@@ -59,11 +59,16 @@ and type_expr         = type_expression
 
 and cartesian = type_expr nseq
 and cartesian_pascaligo = type_expr * type_expr nseq
-and variant   = {
+
+and 'a variant'   = {
   constr  : string;
-  arg_opt : type_expr option;
+  arg_opt : 'a option;
 }
-and sum_type  = variant nseq
+and variant          = type_expr      variant'
+and variant_jsligo   = type_expr nseq variant'
+
+and sum_type         = variant        nseq
+and sum_type_jsligo  = variant_jsligo nseq
 
 and 'a field_assign = {
   name : string;
@@ -117,6 +122,7 @@ and type_expression_content =
 | T_Object          of type_ne_record
 | T_FunJsligo       of fun_type_args * type_expr
 | T_Disc            of type_ne_record nseq
+| T_SumJsligo       of sum_type_jsligo
 (* Pascaligo *)
 | T_RecordPascaligo of type_record_opt             (* CST.T_Record *)
 | T_Attr            of attr_pascaligo * type_expr  (* CST.T_Attr *)
@@ -1387,6 +1393,24 @@ type program = declaration list (* TODO NP : Try to convert this into non-empty 
     Replace type_expr option by type_expr :
     Some te -> te
     None    -> T_unit
+  
+  T_SumJsligo
+  =============================================================================
+  pass 't_sum_jsligo'
+    remove : T_SumJsligo
+    add    : T_Sum
+
+    In other syntaxes, when there are several types associated with a variant,
+    they are written in a tuple [MyVariant of int * string * tez],
+    so we have one type, which is a tuple.
+    However in JsLIGO, we write ["MyVariant", int, string, tez]
+    and have a list of types [int; string; tez].
+    Here, we put those types in a tuple, for unification with other syntaxes.
+
+    T_SumJsligo [int; string; tez]  |->  T_Sum (T_Tuple [int; string; tez])
+  
+  
+
 
   S_VarDecl
   =============================================================================

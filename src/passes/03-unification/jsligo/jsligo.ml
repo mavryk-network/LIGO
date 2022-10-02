@@ -39,20 +39,15 @@ let rec compile_type_expression : CST.type_expr -> AST.type_expr = fun te ->
   | TSum t -> (
     let t, loc = r_split t in
     let variants =
-      let compile_variant : CST.variant -> AST.variant = fun v ->
+      let compile_variant : CST.variant -> AST.variant_jsligo = fun v ->
         let v = (r_fst v.tuple).inside in
         let constr  = r_fst v.constr in
         let arg_opt : type_expr nseq option = Option.map ~f:(List.Ne.map self <@ nsepseq_to_nseq <@ snd) v.params in
-        (* In other syntaxes, when there are several types associated with a variant,
-           they are written in a tuple [MyVariant of int * string * tez], so we have one type, which is a tuple.
-           However in JsLIGO, we write ["MyVariant", int, string, tez] and have a list of types [int; string; tez].
-           Here, we put those types in a tuple, for unification with other syntaxes. *)
-        let arg_opt : type_expr option = Option.map ~f:(fun te -> t_prod te ()) arg_opt in
         {constr; arg_opt}
       in
       List.Ne.map (compile_variant <@ r_fst) @@ nsepseq_to_nseq @@ r_fst t.variants
     in
-    t_sum variants ~loc ()
+    t_sumjsligo variants ~loc ()
   )
   | TObject t -> (
     let _, loc = r_split t in
