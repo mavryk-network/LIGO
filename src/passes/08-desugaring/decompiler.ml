@@ -130,6 +130,7 @@ let rec decompile_expression : O.expression -> I.expression =
       let let_pattern = Pattern.map self_type_opt let_pattern in
       let rhs = self rhs in
       let let_result = self let_result in
+      let attributes = decompile_exp_attributes attributes in
       return @@ I.E_let_pattern_in {let_pattern;attributes;rhs;let_result}
     | O.E_type_in {type_binder; rhs; let_result} ->
       let rhs = self_type rhs in

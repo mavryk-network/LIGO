@@ -4,10 +4,10 @@ module Var         = Simple_utils.Var
 module List        = Simple_utils.List
 module Ligo_string = Simple_utils.Ligo_string
 module Int64       = Caml.Int64
+open Ligo_prim
 open Types
 open Format
 open Simple_utils.PP_helpers
-open Ligo_prim
 
 let lmap_sep value sep ppf m =
   let lst = List.sort ~compare:(fun (a,_) (b,_) -> Label.compare a b) m in

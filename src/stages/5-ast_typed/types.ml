@@ -112,6 +112,7 @@ module Access_label = struct
   let map _ = Fun.id
   let fold_map _ = fun a b -> a,b
 end
+module Let_pattern_in=Let_pattern_in(ValueAttr)
 module Accessor = Accessor(Access_label)
 module Update   = Update(Access_label)
 

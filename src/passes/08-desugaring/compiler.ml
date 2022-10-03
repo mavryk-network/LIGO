@@ -151,6 +151,7 @@ let rec compile_expression : I.expression -> O.expression =
       let let_pattern = Pattern.map self_type_opt let_pattern in
       let rhs = self rhs in
       let let_result = self let_result in
+      let attributes = compile_exp_attributes attributes in
       return @@ O.E_let_pattern_in {let_pattern;attributes;rhs;let_result}
     | I.E_type_in {type_binder; rhs; let_result} ->
       let rhs = self_type rhs in

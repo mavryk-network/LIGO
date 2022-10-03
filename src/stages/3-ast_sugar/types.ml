@@ -36,6 +36,7 @@ module Pattern_decl = Pattern_decl(Attr)
 module Type_decl  = Type_decl(Attr)
 module Module_decl= Module_decl(Attr)
 
+module Let_pattern_in = Let_pattern_in(Attr)
 module Accessor = Accessor(Access_path)
 module Update   = Update(Access_path)
 type expression_content =
