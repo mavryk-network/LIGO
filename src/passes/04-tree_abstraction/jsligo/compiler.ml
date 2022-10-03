@@ -1,3 +1,4 @@
+[@@@warning "-26-27"]
 open Errors
 open Simple_utils.Trace
 open Simple_utils.Function
@@ -745,10 +746,23 @@ and compile_expression ~raise : CST.expr -> AST.expr = fun e ->
       in
       aux hd @@ tl
   )
-  | EAssign (EVar {value=_; region=_} as e1, op, (EAssign     (EVar _ as ev, _, _) as e2)) ->
+  | EAssign (e1, op, (EAssign     (EVar _ as ev, _, _) as e2)) ->
     let e2 = self e2 in
     let e1 = self (EAssign (e1, op, ev)) in
     e_sequence e2 e1
+  | EAssign (e1, {value = Eq; region}, (EAssign ((EProj {value = {expr=proj_expr; selection}; _}), _, _) as e2)) ->
+    let loc = Location.lift region in
+    let e2 = compile_expression ~raise e2 in
+    let (sels, _) = compile_selection ~raise selection in
+    let e2 = e_sequence e2 (e_accessor ~loc (compile_expression ~raise proj_expr) [sels]) in
+    (match e1 with 
+      EVar {value = evar_value; _ } -> e_assign_ez ~loc evar_value @@ e2
+    | EProj {value = {expr = EVar {value = evar_value; _}; selection; _}; _} -> 
+      let (sels, _) = compile_selection ~raise selection in
+      e_assign_ez ~loc evar_value @@ e_update (e_variable_ez evar_value) [sels] e2
+    | _ -> raise.error @@ not_supported_assignment e
+    )
+  | EAssign (e1, {value = Eq; region}, (EAssign _ as e2)) -> failwith "bla"
   | EAssign (EVar {value; region} as e1, op, e2) ->
     let loc = Location.lift region in
     let outer_loc = Location.lift op.region in
@@ -782,7 +796,7 @@ and compile_expression ~raise : CST.expr -> AST.expr = fun e ->
       })
     in
     e_assign ~loc:outer_loc (Binder.make ~mut:true (Value_var.of_input_var ~loc value) None) e2
-
+    
   | EAssign (EProj {value = {expr = EVar {value = evar_value; _}; selection = Component {value = {inside = EArith (Int _); _}; _} as selection}; region=_}, ({value = Eq; _} as op), e2) ->
     let e2 = self e2 in
     let outer_loc = Location.lift op.region in
@@ -1037,17 +1051,13 @@ and compile_let_binding ~raise : const:bool -> CST.attributes -> CST.expr -> (CS
             let lambda = Lambda.{binder=Binder.map (Fn.const type1) binder;result;output_type = type2} in
             e_recursive ~loc:(Location.lift name.region) fun_binder fun_type lambda
           else make_e ~loc:(Location.lift name.region) @@ E_lambda lambda
-        | EAssign (EProj proj, _, _) -> 
-          let (proj, loc) = r_split proj in
-          let (sels , _) = compile_selection ~raise proj.selection in
-          e_sequence expr (e_accessor ~loc (compile_expression ~raise proj.expr) [sels])        
         | _ -> 
           expr
         )
       in
       [(Binder.make ~mut:(not const) fun_binder lhs_type), attributes, type_params, expr]
     | CST.PArray a ->  (* tuple destructuring (for top-level only) *)
-      let matchee = expr in
+    let matchee = expr in
       let (tuple, _loc) = r_split a in
       let array_items = npseq_to_list tuple.inside in
       let lst = List.map ~f:(compile_pattern ~raise ~const) array_items in
