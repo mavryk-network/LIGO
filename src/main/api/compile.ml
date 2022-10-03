@@ -208,7 +208,7 @@ let parameter_test (raw_options : Raw_options.t) source_file expression display_
         let () = Trace.trace_option ~raise `Main_unknown @@ Ast_aggregated.Helpers.assert_type_expression_eq (parameter_ty, typed_param_ty) in
         let typed_param, typed_prg   = Self_ast_typed.remove_unused_expression typed_param app_typed_prg in
         let Compiler_options.{ steps ; _ } = options.test_framework in
-        let typed_param = Ast_typed.(e_constant { cons_name = C_TEST_COMPILE ; arguments = [ typed_param ] } (t_michelson_code ())) in
+        let typed_param = Ast_typed.e_a_test_compile typed_param in
         match Interpreter.eval_expression ~raise ~steps ~options typed_prg typed_param with
         | Ligo_interpreter.Types.V_Michelson (Ty_code { code ; _ } | Untyped_code code) -> code
         | _ -> raise.Trace.error `Main_unknown

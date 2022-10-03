@@ -1613,6 +1613,11 @@ and eval_ligo ~raise ~steps ~options
            , args.type_expression )
        in
        return v
+     | V_Constant _ ->
+       fail
+       @@ Errors.generic_error
+            term.location
+            "Cannot reduce a global constant in the test interpreter"
      | _ ->
        fail
        @@ Errors.generic_error
@@ -1724,6 +1729,11 @@ and eval_ligo ~raise ~steps ~options
   | E_matching { matchee; cases } ->
     let* e' = eval_ligo matchee calltrace env in
     (match cases, e' with
+     | _, V_Constant _ ->
+       fail
+       @@ Errors.generic_error
+            term.location
+            "Cannot reduce a global constant in the test interpreter"
      | Match_variant { cases; _ }, V_List [] ->
        let { constructor = _; pattern = _; body } =
          List.find_exn

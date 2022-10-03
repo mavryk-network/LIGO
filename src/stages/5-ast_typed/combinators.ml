@@ -343,6 +343,7 @@ let e_a_contract a t = make_e (e_contract a) (t_contract t)
 let e_a_contract_entrypoint e a t = make_e (e_contract_entrypoint e a) (t_contract t)
 let e_a_contract_entrypoint_opt e a t = make_e (e_contract_entrypoint_opt e a) (t_option (t_contract t))
 let e_a_unpack e t = make_e (e_unpack e) (t_option t)
+let e_a_test_compile e = e_constant { cons_name = C_TEST_COMPILE ; arguments = [ e ] } (t_michelson_code ())
 
 let get_a_int (t:expression) =
   match t.expression_content with
