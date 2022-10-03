@@ -126,6 +126,11 @@ let rec decompile_expression : O.expression -> I.expression =
       let let_result = self let_result in
       let attributes = if attr.inline then ["inline"] else [] in
       return @@ I.E_let_in {let_binder;attributes;rhs;let_result}
+    | O.E_let_pattern_in {let_pattern;attributes;rhs;let_result} ->
+      let let_pattern = Pattern.map self_type_opt let_pattern in
+      let rhs = self rhs in
+      let let_result = self let_result in
+      return @@ I.E_let_pattern_in {let_pattern;attributes;rhs;let_result}
     | O.E_type_in {type_binder; rhs; let_result} ->
       let rhs = self_type rhs in
       let let_result = self let_result in
@@ -172,6 +177,11 @@ and decompile_declaration : O.declaration -> I.declaration = fun d ->
     let expr   = decompile_expression expr in
     let attr   = decompile_exp_attributes attr in
     return @@ D_value {binder;expr;attr}
+  | D_pattern {pattern;expr;attr} ->
+    let pattern = Pattern.map decompile_type_expression_option pattern in
+    let expr   = decompile_expression expr in
+    let attr   = decompile_exp_attributes attr in
+    return @@ D_pattern {pattern;expr;attr}
   | D_type {type_binder;type_expr;type_attr} ->
     let type_expr = decompile_type_expression type_expr in
     let type_attr = decompile_type_attributes type_attr in

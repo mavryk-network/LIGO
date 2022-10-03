@@ -119,6 +119,11 @@ and compile_expression' ~raise ~last : I.expression -> O.expression option -> O.
       let rhs = self rhs in
       let let_result = self let_result in
       return @@ O.E_let_in {let_binder;attributes; rhs; let_result}
+    | I.E_let_pattern_in {let_pattern;attributes;rhs;let_result} ->
+      let let_pattern = Pattern.map self_type_option let_pattern in
+      let rhs = self rhs in
+      let let_result = self let_result in
+      return @@ O.E_let_pattern_in {let_pattern;attributes; rhs; let_result}
     | I.E_type_in ti ->
       let ti = Type_in.map self self_type ti in
       return @@ O.E_type_in ti

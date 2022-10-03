@@ -318,6 +318,7 @@ let rec decompile_expression : AST.expression -> CST.expr = fun expr ->
   | E_type_abstraction _ -> failwith "type_abstraction not supported yet"
   | E_recursive _ ->
     failwith "corner case : annonymous recursive function"
+  | E_let_pattern_in _ -> failwith "TODO"
   | E_let_in {let_binder;rhs;let_result;attributes} ->
     let var_attributes = let_binder |> Tree_abstraction_shared.Helpers.strings_of_binder_attributes `ReasonLIGO |> decompile_attributes in
     let var =
@@ -676,6 +677,7 @@ and decompile_declaration : AST.declaration -> CST.declaration = fun decl ->
       let let_decl = wrap (ghost,None,let_binding,attributes) in
       CST.ConstDecl let_decl
   )
+  | D_pattern _ -> failwith "lol"
   | D_module {module_binder;module_; module_attr=_} -> (
     let name    = decompile_mod_var module_binder in
     match module_.wrap_content with

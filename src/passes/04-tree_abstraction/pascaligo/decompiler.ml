@@ -404,7 +404,7 @@ and decompile_eos : eos -> AST.expression -> ((CST.statement List.Ne.t option)* 
       let attributes = Shared_helpers.decompile_attributes attributes in
       let wrap_attr x = List.fold ~f:(fun acc attr -> CST.D_Attr (attr,acc)) ~init:x attributes in
       let pattern = decompile_pattern let_pattern in
-      let init = decompile_expression expr in
+      let init = decompile_expression rhs in
       let const_decl : CST.const_decl = {kwd_const=Token.ghost_const; pattern ;type_params = None;const_type=None;equal=Token.ghost_eq;init;terminator} in
       wrap_attr @@ CST.D_Const (Region.wrap_ghost const_decl)
     in

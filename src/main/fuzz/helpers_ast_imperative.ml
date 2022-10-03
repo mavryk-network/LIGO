@@ -33,6 +33,12 @@ module Fold_helpers(M : Monad) = struct
     let* let_result = f let_result in
     ok @@ Let_in.{let_binder; rhs; let_result; attributes}
 
+  let let_pattern_in :  ('a -> 'b monad) -> ('c -> 'd monad) -> ('a,'c) Let_pattern_in.t -> (('b,'d) Let_pattern_in.t) monad
+  = fun f g {let_pattern; rhs; let_result; attributes} ->
+  let* rhs        = f rhs in
+  let* let_result = f let_result in
+  ok @@ Let_pattern_in.{let_pattern; rhs; let_result; attributes}
+
   let type_in :  ('a -> 'b monad) -> ('c -> 'd monad) -> ('a,'c) Type_in.t -> (('b,'d) Type_in.t) monad
     = fun f g {type_binder; rhs; let_result} ->
     let* rhs        = g rhs in
@@ -232,6 +238,10 @@ module Fold_helpers(M : Monad) = struct
     | E_let_in li -> (
       let* li = let_in self ok li in
       return @@ E_let_in li
+    )
+    | E_let_pattern_in li -> (
+      let* li = let_pattern_in self ok li in
+      return @@ E_let_pattern_in li
     )
     | E_type_in ti -> (
       let* ti = type_in self ok ti in

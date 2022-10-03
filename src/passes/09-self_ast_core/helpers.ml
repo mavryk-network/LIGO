@@ -39,6 +39,7 @@ let rec fold_expression ~raise : ('a, 'err, 'warn) folder -> 'a -> expression ->
       let res = self res let_result in
       res
     )
+  | E_let_pattern_in x -> Let_pattern_in.fold self (fun a _ -> a) init x
   | E_type_in { type_binder = _; rhs = _ ; let_result } ->
     let res = self init let_result in
     res
@@ -56,6 +57,7 @@ and fold_expression_in_module_expr : ('a -> expression -> 'a)  -> 'a -> module_e
       ~f:( fun acc x ->
         match x.wrap_content with
         | D_value  x -> self acc x.expr
+        | D_pattern  x -> self acc x.expr
         | D_type   _ ->  acc
         | D_module x -> fold_expression_in_module_expr self acc x.module_
       )
@@ -105,6 +107,9 @@ let rec map_expression ~raise : ('err,'warn) exp_mapper -> expression -> express
       let let_result = self let_result in
       return @@ E_let_in { let_binder ; rhs ; let_result; attr }
     )
+  | E_let_pattern_in x ->
+    let x = Let_pattern_in.map self Fun.id x in
+    return (E_let_pattern_in x)
   | E_type_in {type_binder; rhs; let_result} -> (
       let let_result = self let_result in
       return @@ E_type_in { type_binder ; rhs; let_result }
@@ -139,6 +144,9 @@ and map_expression_in_declaration : (expression -> expression) -> declaration ->
     | D_value x ->
       let expr = self x.expr in
       return (D_value { x with expr })
+    | D_pattern x ->
+      let expr = self x.expr in
+      return (D_pattern { x with expr })
     | D_type   _ -> xs
     | D_module x ->
       let module_ = map_expression_in_module_expr self x.module_ in
@@ -227,6 +235,9 @@ let rec fold_map_expression : type a . a fold_mapper -> a -> expression -> a * e
       let (res,let_result) = self res let_result in
       (res, return @@ E_let_in { let_binder ; rhs ; let_result ; attr })
     )
+  | E_let_pattern_in x ->
+    let res,x = Let_pattern_in.fold_map self (fun a b -> a,b) init x in
+    res, return (E_let_pattern_in x)
   | E_type_in ti -> (
       let res,ti = Type_in.fold_map self idle init ti in
       (res, return @@ E_type_in ti)
@@ -266,6 +277,9 @@ and fold_map_expression_in_module_expr : type a . (a -> expression -> a * expres
         | D_value x ->
           let res,expr = self acc x.expr in
           return res (D_value { x with expr })
+        | D_pattern x ->
+          let res,expr = self acc x.expr in
+          return res (D_pattern { x with expr })
         | D_type _ -> return acc x.wrap_content
         | D_module x ->
           let res,module_ = fold_map_expression_in_module_expr self acc x.module_ in
