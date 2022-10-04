@@ -1,58 +1,58 @@
+open Ligo_prim
 open Types
 
 (* This function transforms an application expression `l e1 ... en` into the pair `([ e1 ; ... ; en ] , l)` *)
 let destruct_applications (e : expression) =
   let rec destruct_applications acc (lamb : expression) =
     match lamb.expression_content with
-    | E_application {lamb;args} ->
-       destruct_applications (args :: acc) lamb
-    | _ ->
-       (lamb, acc) in
+    | E_application { lamb; args } -> destruct_applications (args :: acc) lamb
+    | _ -> lamb, acc
+  in
   destruct_applications [] e
+
 
 (* This function transforms a type `∀ v1 ... vn . t` into the pair `([ v1 ; .. ; vn ] , t)` *)
 let destruct_for_alls (t : type_expression) =
-  let rec destruct_for_alls type_vars (t : type_expression) = match t.type_content with
-    | T_for_all { ty_binder ; type_ ; _ } ->
-       destruct_for_alls (ty_binder :: type_vars) type_
-    | _ -> (List.rev type_vars, t)
-  in destruct_for_alls [] t
+  let rec destruct_for_alls type_vars (t : type_expression) =
+    match t.type_content with
+    | T_for_all { ty_binder; type_; _ } ->
+      destruct_for_alls (ty_binder :: type_vars) type_
+    | _ -> List.rev type_vars, t
+  in
+  destruct_for_alls [] t
+
 
 module Free_type_variables = struct
-  open Ligo_prim
+  module Set = Type_var.Set
 
-  module VarSet = Caml.Set.Make(Type_var)
+  let rec map_type_expression : bound:Set.t -> type_expression -> Set.t =
+   fun ~bound type_ ->
+    let self ?(bound = bound) type_ = map_type_expression ~bound type_ in
+    match type_.type_content with
+    | T_sum row | T_record row -> map_row ~bound row
+    | T_tuple types -> types |> List.map ~f:self |> Set.union_list
+    | T_arrow { type1; type2 } -> Set.union (self type1) (self type2)
+    | T_app { arguments; _ } -> arguments |> List.map ~f:self |> Set.union_list
+    | T_variable tvar when Set.mem bound tvar -> Set.empty
+    | T_variable tvar -> Set.singleton tvar
+    | T_module_accessor _ -> Set.empty
+    | T_singleton _ -> Set.empty
+    | T_abstraction { ty_binder; type_; _ } ->
+      self ~bound:(Set.add bound ty_binder) type_
+    | T_for_all { ty_binder; type_; _ } ->
+      self ~bound:(Set.add bound ty_binder) type_
 
-  let unions : VarSet.t list -> VarSet.t =
-    fun l -> List.fold l ~init:VarSet.empty
-      ~f:(fun y1 y2 -> VarSet.union y1 y2)
 
-  let rec map_type_expression : Type_var.t list -> type_expression -> VarSet.t = fun type_env te ->
-    let self = map_type_expression type_env in
-    match te.type_content with
-    | T_sum { fields ; _ } ->
-       let fields = Record.LMap.to_list fields |> List.map ~f:(fun ({ associated_type ; _ } : _ Rows.row_element_mini_c) -> self associated_type) in
-       unions fields
-    | T_record { fields ; _ } ->
-       let fields = Record.LMap.to_list fields |> List.map ~f:(fun ({ associated_type ; _ } : _ Rows.row_element_mini_c) -> self associated_type) in
-       unions fields
-    | T_arrow { type1 ; type2 } ->
-       VarSet.union (self type1) (self type2)
-    | T_app { arguments ; _ } ->
-       let arguments = List.map ~f:self arguments in
-       unions arguments
-    | T_variable v when List.mem type_env v ~equal:(fun v1 v2 -> Type_var.compare v1 v2 = 0) -> VarSet.empty
-    | T_variable _ -> VarSet.empty
-    | T_module_accessor _ -> VarSet.empty
-       (* self element *)
-    | T_singleton _ -> VarSet.empty
-    | T_abstraction { ty_binder ; type_ ; _ } ->
-       let v = self type_ in
-       VarSet.remove ty_binder v
-    | T_for_all { ty_binder ; type_ ; _ } ->
-       let v = self type_ in
-       VarSet.remove ty_binder v
+  and map_row : bound:Set.t -> ty_expr Rows.t -> Set.t =
+   fun ~bound row ->
+    row.fields
+    |> Map.data
+    |> List.map ~f:(fun { Rows.Elem.associated_type; _ } ->
+           map_type_expression ~bound associated_type)
+    |> Set.union_list
 
-  let type_expression : Type_var.t list -> type_expression -> Type_var.t list = fun type_env t ->
-    VarSet.fold (fun v r -> v :: r) (map_type_expression type_env t) []
+
+  let type_expression : Type_var.t list -> type_expression -> Type_var.t list =
+   fun bound type_ ->
+    map_type_expression ~bound:(Set.of_list bound) type_ |> Set.to_list
 end

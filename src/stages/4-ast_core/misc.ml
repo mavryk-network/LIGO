@@ -1,75 +1,65 @@
-open Types
 open Ligo_prim
+open Types
 
-let rec assert_list_eq f = fun a b -> match (a,b) with
-  | [], [] -> Some ()
-  | [], _  -> None
-  | _ , [] -> None
-  | hda::tla, hdb::tlb -> Simple_utils.Option.(
-    let* () = f hda hdb in
-    assert_list_eq f tla tlb
-  )
-
-
-(* TODO this was supposed to mean equality of _values_; if
-   assert_value_eq (a, b) = Some (), then a and b should be values *)
-let rec assert_value_eq (a, b: (expression * expression )) : unit option =
-  match (a.expression_content , b.expression_content) with
-  | E_literal a , E_literal b ->
-    Literal_value.assert_eq (a, b)
-  | E_constant (ca) , E_constant (cb) when Caml.(=) ca.cons_name cb.cons_name -> (
-      let lst = List.zip_exn ca.arguments cb.arguments in
-      let all = List.map ~f:assert_value_eq lst in
-      if List.exists ~f:(Option.is_none) all then None else Some ()
-    )
-  | E_constructor (ca), E_constructor (cb) when Caml.(=) ca.constructor cb.constructor -> (
-      assert_value_eq (ca.element, cb.element)
-    )
-  | E_module_accessor {module_path=maa;element=a}, E_module_accessor {module_path=mab;element=b} -> (
-    let open Simple_utils.Option in
-    let* _ = if Value_var.equal a b then Some () else None in
-    assert_list_eq (fun a b -> if Module_var.equal a b then Some () else None) maa mab
-  )
-  | E_record sma, E_record smb -> (
-      let aux _ a b =
-        match a, b with
-        | Some a, Some b -> assert_value_eq (a, b)
-        | _ -> None
-      in
-      let all = Record.LMap.merge aux sma smb in
-      if    ((Record.LMap.cardinal all) = (Record.LMap.cardinal sma))
-         || ((Record.LMap.cardinal all) = (Record.LMap.cardinal smb)) then
-        Some ()
-      else None
-    )
-  | E_update ura, E_update urb -> (
-    match assert_value_eq (ura.struct_, urb.struct_) with
-    | None -> None
-    | Some () ->
-      let aux (a, b) =
-        assert (Label.equal a b)
-      in
-      let () = aux (ura.path, urb.path) in
-      assert_value_eq (ura.update,urb.update)
-  )
-  | E_update _, _ -> None
-  | (E_ascription a ,  _b') -> assert_value_eq (a.anno_expr , b)
-  | (_a' , E_ascription b) -> assert_value_eq (a , b.anno_expr)
-  | (E_variable _, _) | (E_lambda _, _) | (E_type_abstraction _, _)
-
-  | (E_application _, _) | (E_let_in _, _) | (E_let_mut_in _, _) | (E_assign _, _)
-  | (E_for _, _) | (E_for_each _, _) | (E_while _, _)
-  | (E_type_in _, _) | (E_mod_in _, _)
-  | (E_raw_code _, _)
-  | (E_recursive _,_) | (E_accessor _, _)
-  | (E_matching _, _)
+let rec equal_value expr1 expr2 : bool =
+  match expr1.expression_content, expr2.expression_content with
+  | E_literal lit1, E_literal lit2 -> Literal_value.equal lit1 lit2
+  | ( E_constant { cons_name = const1; arguments = args1 }
+    , E_constant { cons_name = const2; arguments = args2 } )
+    when Constant.equal_constant' const1 const2 ->
+    List.for_all2_exn args1 args2 ~f:equal_value
+  | ( E_constructor { constructor = constr1; element = elem1 }
+    , E_constructor { constructor = constr2; element = elem2 } )
+    when Label.equal constr1 constr2 -> equal_value elem1 elem2
+  | ( E_module_accessor { module_path = path1; element = var1 }
+    , E_module_accessor { module_path = path2; element = var2 } ) ->
+    Value_var.equal var1 var2 && List.equal Module_var.equal path1 path2
+  | E_record record1, E_record record2 -> Map.equal equal_value record1 record2
+  | ( E_update { struct_ = struct1; path = path1; update = update1 }
+    , E_update { struct_ = struct2; path = path2; update = update2 } )
+    when Label.equal path1 path2 ->
+    equal_value struct1 struct2 && equal_value update1 update2
+  | E_tuple tuple1, E_tuple tuple2 ->
+    (match List.for_all2 tuple1 tuple2 ~f:equal_value with
+    | Ok result -> result
+    | Unequal_lengths -> false)
+  | E_ascription { anno_expr = expr1; _ }, _ -> equal_value expr1 expr2
+  | _, E_ascription { anno_expr = expr2; _ } -> equal_value expr1 expr2
+  | E_skip, E_skip -> true
+  | E_list list1, E_list list2 ->
+    (match List.for_all2 list1 list2 ~f:equal_value with
+    | Ok result -> result
+    | Unequal_lengths -> false)
+  | E_variable _, _
+  | E_lambda _, _
+  | E_type_abstraction _, _
+  | E_application _, _
+  | E_let_in _, _
+  | E_let_mut_in _, _
+  | E_assign _, _
+  | E_for _, _
+  | E_for_each _, _
+  | E_while _, _
+  | E_type_in _, _
+  | E_mod_in _, _
+  | E_raw_code _, _
+  | E_recursive _, _
+  | E_accessor _, _
+  | E_matching _, _
   | E_module_accessor _, _
-   -> None
-
-  | E_literal _ , _
-  | E_constant _ , E_constant _
-  | E_constant _ , _
+  | E_update _, _
+  | E_literal _, _
+  | E_constant _, E_constant _
+  | E_constant _, _
   | E_constructor _, E_constructor _
   | E_record _, _
-  | E_constructor _, _ ->
-      None
+  | E_constructor _, _
+  | E_cond _, _
+  | E_sequence _, _
+  | E_skip, _
+  | E_tuple _, _
+  (* These should be values, but requires an improvement in the datastructures *)
+  | E_set _, _
+  | E_map _, _
+  | E_big_map _, _
+  | E_list _, _ -> false
