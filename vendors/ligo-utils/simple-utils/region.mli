@@ -80,6 +80,7 @@ type t = <
   to_string : ?file:bool -> ?offsets:bool -> [`Byte | `Point] -> string;
   compact   : ?file:bool -> ?offsets:bool -> [`Byte | `Point] -> string;
 >
+[@@deriving sexp]
 
 (* The type [region] is a synonym of [t] to use after [open Region]. *)
 

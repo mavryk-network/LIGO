@@ -7,11 +7,12 @@
 (* } *)
 
 type virtual_location = string
-  [@@deriving hash]
+  [@@deriving sexp, hash]
 
 type t =
   | File of Region.t (* file_location *)
   | Virtual of virtual_location
+[@@deriving sexp]
 
 let to_yojson = function
   | File reg  -> `List [`String "File"; Region.to_yojson reg]

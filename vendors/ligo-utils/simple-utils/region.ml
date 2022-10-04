@@ -32,13 +32,6 @@ type t = <
   compact   : ?file:bool -> ?offsets:bool -> [`Byte | `Point] -> string
 >
 
-(* A synonym *)
-
-type region = t
-
-(* A convenience *)
-
-type 'a reg = {region : t; value : 'a}
 
 (* Injections *)
 
@@ -119,6 +112,23 @@ let make ~(start : Pos.t) ~(stop : Pos.t) =
           else sprintf "%s:%s-%s:%s"
                        start#file start_str stop#file stop_str
     end
+
+let sexp_of_t t =
+  [%sexp_of: Pos.t * Pos.t] (t#start, t#stop)
+
+let t_of_sexp sexp = 
+  let start, stop = [%of_sexp: Pos.t * Pos.t] sexp in
+  make ~start ~stop
+  
+
+(* A synonym *)
+
+type region = t [@@deriving sexp]
+
+(* A convenience *)
+
+type 'a reg = {region : t; value : 'a} [@@deriving sexp]
+
 
 (* Special regions *)
 

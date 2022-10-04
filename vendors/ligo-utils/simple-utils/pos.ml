@@ -152,6 +152,10 @@ let to_yojson x =
       "point_bol", `Int (x#point_bol)
     ]
 
+let sexp_of_t t = 
+  Sexp.Atom (to_yojson t |> Yojson.to_string)
+
+
 let to_human_yojson x =
   `Assoc
     [("file", `String x#byte.Lexing.pos_fname);
@@ -167,6 +171,12 @@ let of_yojson x =
                        (position_of_yojson byte)
   | _ ->
       Utils.error_yojson_format "{byte: Lexing.position, point_num: int, point_bol: int}\nwhere Lexing.position is {pos_fname: string, pos_lnum: int, pos_bol: int, pos_cnum: int}"
+
+
+let t_of_sexp sexp = 
+  match sexp with
+  | Sexp.Atom json -> of_yojson (Yojson.Safe.from_string json) |> Result.ok |> Option.value_exn
+  | _ -> assert false
 
 let from_byte byte =
   let point_num = byte.Lexing.pos_cnum
