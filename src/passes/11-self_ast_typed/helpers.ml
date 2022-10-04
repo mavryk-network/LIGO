@@ -53,6 +53,7 @@ let rec fold_expression : 'a folder -> 'a -> expression -> 'a = fun f init e ->
       let res = self res let_result in
       res
     )
+  | E_let_pattern_in x -> Let_pattern_in.fold self (fun a _ -> a) init x
   | E_mod_in { module_binder = _ ; rhs ; let_result } -> (
     let res = fold_expression_in_module_expr self init rhs in
     let res = self res let_result in
@@ -67,6 +68,7 @@ and fold_expression_in_module_expr : ('a -> expression -> 'a)  -> 'a -> module_e
       ~f:( fun acc x ->
         match x.wrap_content with
         | D_value  x -> self acc x.expr
+        | D_pattern  x -> self acc x.expr
         | D_module x -> fold_expression_in_module_expr self acc x.module_
         | D_type   _ ->  acc
       )
@@ -91,10 +93,12 @@ and fold_module : 'a folder -> 'a -> module_ -> 'a = fun f init m ->
   let aux = fun acc x ->
     let return (d : 'a) = d in
     match Location.unwrap x with
-    | D_value {binder=_; expr ; attr = { inline=_ ; no_mutation = _ ; view = _ ;public = _ ; hidden = _ ; thunk = _ }} -> (
-        let res = fold_expression f acc expr in
-        return @@ res
-    )
+    | D_value {binder=_; expr ; attr = { inline=_ ; no_mutation = _ ; view = _ ;public = _ ; hidden = _ ; thunk = _ }} ->
+      let res = fold_expression f acc expr in
+      return @@ res
+    | D_pattern {pattern=_; expr ; attr = { inline=_ ; no_mutation = _ ; view = _ ;public = _ ; hidden = _ ; thunk = _ }} ->
+      let res = fold_expression f acc expr in
+      return @@ res
     | D_type _t -> return @@ acc
     | D_module {module_binder=_;module_ ; module_attr=_} ->
       let res = fold_expression_in_module_expr f acc module_ in
@@ -157,6 +161,10 @@ let rec map_expression : 'err mapper -> expression -> expression = fun f e ->
     let let_result = self let_result in
     return @@ E_let_in { let_binder ; rhs ; let_result; attr }
   )
+  | E_let_pattern_in x -> (
+    let x = Let_pattern_in.map self Fun.id x in
+    return @@ E_let_pattern_in x
+  )
   | E_mod_in { module_binder ; rhs ; let_result } -> (
     let rhs = map_expression_in_module_expr f rhs in
     let let_result = self let_result in
@@ -214,10 +222,12 @@ and map_cases : 'err mapper -> matching_expr -> matching_expr = fun f m ->
 and map_declaration m = fun (x : declaration) ->
   let return (d : declaration_content) = { x with wrap_content=d} in
   match x.wrap_content with
-  | D_value {binder; expr ; attr} -> (
-      let expr = map_expression m expr in
-      return @@ D_value {binder; expr ; attr}
-  )
+  | D_value {binder; expr ; attr} ->
+    let expr = map_expression m expr in
+    return @@ D_value {binder; expr ; attr}
+  | D_pattern {pattern ; expr ; attr} ->
+    let expr = map_expression m expr in
+    return @@ D_pattern {pattern; expr ; attr}
   | D_type t -> return @@ D_type t
   | D_module {module_binder;module_;module_attr} ->
     let module_ = map_expression_in_module_expr m module_ in
@@ -236,6 +246,7 @@ let fetch_entry_type ~raise : string -> program -> (type_expression * Location.t
         if Value_var.is_name (Binder.get_var binder) main_fname
         then Some p
         else None
+    | D_pattern _
     | D_type   _
     | D_module _ ->
       None
@@ -259,6 +270,7 @@ let fetch_contract_type ~raise : Value_var.t -> program -> contract_type = fun m
        if Value_var.equal (Binder.get_var binder) main_fname
        then Some p
        else None
+    | D_pattern _
     | D_type   _
     | D_module _ ->
       None
@@ -397,6 +409,14 @@ module Free_variables :
       let {modVarSet;moduleEnv;varSet=fv2} = (self let_result) in
       let fv2 = VarSet.remove (Binder.get_var let_binder) fv2 in
       merge (self rhs) {modVarSet;moduleEnv;varSet=fv2}
+    | E_let_pattern_in { let_pattern ; rhs ; let_result ; attributes=_} ->
+      let {modVarSet;moduleEnv;varSet=fv2} = (self let_result) in
+      let bound = List.map ~f:Binder.get_var (Pattern.binders let_pattern) in
+      let fv2 = List.fold bound
+        ~init:fv2
+        ~f:(fun acc x -> VarSet.remove x acc)
+      in
+      merge (self rhs) {modVarSet;moduleEnv;varSet=fv2}
     | E_mod_in { module_binder; rhs ; let_result } ->
       let {modVarSet;moduleEnv;varSet} = (self let_result) in
       let modVarSet = ModVarSet.remove module_binder modVarSet in
@@ -430,6 +450,8 @@ module Free_variables :
     let aux = fun x ->
       match Location.unwrap x with
       | D_value {binder=_; expr ; attr=_} ->
+        get_fv_expr expr
+      | D_pattern {pattern=_; expr ; attr=_} ->
         get_fv_expr expr
       | D_module {module_binder=_;module_; module_attr=_} ->
         get_fv_module_expr module_

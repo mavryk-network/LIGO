@@ -167,7 +167,7 @@ and matching : (formatter -> expression -> unit) -> _ -> matching_expr -> unit =
 
 and declaration ?(use_hidden=true) ppf (d : declaration) = match Location.unwrap d with
     D_value vd  -> if (vd.attr.hidden && use_hidden) then () else Types.Value_decl.pp expression type_expression_option ppf vd
-  | D_pattern pd -> if (pd.attr.hidden && use_hidden) then () else Types.Pattern_decl.pp expression type_expression_option ppf pd
+  | D_pattern pd -> if (pd.attr.hidden && use_hidden) then () else Types.Pattern_decl.pp expression type_expression ppf pd
   | D_type  td  -> if (td.type_attr.hidden && use_hidden) then () else Types.Type_decl.pp type_expression ppf td
   | D_module md -> if (md.module_attr.hidden && use_hidden) then () else Types.Module_decl.pp module_expr ppf md
 

@@ -192,7 +192,7 @@ and expr = expression
 
 and declaration_content =
     D_value  of (expr,ty_expr option) Value_decl.t
-  | D_pattern of (expr,ty_expr option) Pattern_decl.t
+  | D_pattern of (expr,ty_expr) Pattern_decl.t
   | D_type   of ty_expr Type_decl.t
   | D_module of module_expr Module_decl.t
 

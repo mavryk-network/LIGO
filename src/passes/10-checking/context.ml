@@ -849,6 +849,9 @@ and signature_item_of_decl : ctx:t -> Ast_typed.decl -> bool * Signature.item =
   match Location.unwrap decl with
   | D_value { binder; expr; attr = { public; _ } } ->
     public, S_value (Binder.get_var binder, expr.type_expression)
+  | D_pattern { pattern ; expr = _ ; attr = { public ; _ }} ->
+    let x = Pattern.binders pattern in
+    public, failwith "need to destruct expr.type_expression together with the pattern"
   | D_type { type_binder = tvar; type_expr = type_; type_attr = { public; _ } }
     -> public, S_type (tvar, type_)
   | D_module { module_binder = mvar; module_; module_attr = { public; _ } } ->

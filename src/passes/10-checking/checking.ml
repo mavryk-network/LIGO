@@ -661,6 +661,27 @@ and infer_expression ~(raise : raise) ~options ~ctx (expr : I.expression)
           compile_match ~options ~loc ~ctx matchee cases matchee_type
         in
         return match_ ret_type )
+    | E_let_pattern_in { let_pattern; rhs; let_result; attributes } ->
+      (* TODO: attributes !! *)
+      ignore attributes;
+      (* Infer type of rhs *)
+      let ctx, rhs_type, rhs = infer ~ctx rhs in
+      (* Add existential for return type *)
+      let evar = Exists_var.fresh ~loc () in
+      let ctx = Context.(ctx |:: C_exists_var (evar, Type)) in
+      let ret_type = t_exists ~loc evar in
+      (* Type check the match cases *)
+      let ctx, cases =
+        let cases = [ Match_expr.{pattern = let_pattern ; body = let_result} ] in
+        check_cases ~raise ~options ~ctx cases rhs_type ret_type
+      in
+      (* Elaborate (by compiling pattern) *)
+      ( ctx
+      , ret_type
+      , let%bind match_ =
+          compile_match ~options ~loc ~ctx rhs cases ret_type
+        in
+        return match_ ret_type )
     | E_mod_in { module_binder = mvar; rhs; let_result } ->
       let ctx, sig_, rhs = infer_module_expr ~raise ~options ~ctx rhs in
       let ctx, ret_type, let_result =
@@ -1191,6 +1212,8 @@ and infer_declaration ~(raise : raise) ~options ~ctx (decl : I.declaration)
         @@ D_value
              { binder = Binder.map (Fn.const @@ Some expr_type) binder; expr; attr }
       )
+    | D_pattern _ ->
+      failwith "need rebase "
     | D_module
         { module_binder; module_; module_attr = { public; hidden } } ->
       let ctx, sig_, module_ = infer_module_expr ~raise ~options ~ctx module_ in

@@ -136,6 +136,12 @@ and untype_expression_content (ec:O.expression_content) : I.expression =
       let result = self let_result in
       let attr : ValueAttr.t = untype_value_attr attr in
       return (e_let_in (Binder.map (Fn.const @@ Some tv) let_binder) rhs result attr)
+  | E_let_pattern_in {let_pattern;rhs;let_result; attributes} ->
+    let rhs = self rhs in
+    let let_result = self let_result in
+    let attributes : ValueAttr.t = untype_value_attr attributes in
+    let let_pattern = Pattern.map (fun ty -> Some (untype_type_expression ty)) let_pattern in
+    return (e_let_pattern_in {let_pattern;rhs;let_result; attributes} ())
   | E_mod_in {module_binder;rhs;let_result} ->
       let rhs = untype_module_expr rhs in
       let result = self let_result in
@@ -183,6 +189,15 @@ and untype_declaration_constant : (O.expression -> I.expression) -> _ O.Value_de
     let attr = untype_value_attr attr in
     {binder;attr;expr;}
 
+and untype_declaration_pattern : (O.expression -> I.expression) -> _ O.Pattern_decl.t -> _ I.Pattern_decl.t =
+  fun untype_expression {pattern;expr;attr} ->
+    let ty = untype_type_expression expr.O.type_expression in
+    let pattern = Pattern.map (Fn.const @@ Some ty) pattern in
+    let expr = untype_expression expr in
+    let expr = I.e_ascription expr ty in
+    let attr= untype_value_attr attr in
+    {pattern;attr;expr;}
+
 and untype_declaration_type : _ O.Type_decl.t -> _ I.Type_decl.t =
   fun {type_binder; type_expr; type_attr={public;hidden}} ->
     let type_expr = untype_type_expression type_expr in
@@ -201,6 +216,9 @@ and untype_declaration =
   | D_value dc ->
     let dc = untype_declaration_constant untype_expression dc in
     return @@ D_value dc
+  | D_pattern x ->
+    let x = untype_declaration_pattern untype_expression x in
+    return @@ D_pattern x
   | D_type dt ->
     let dt = untype_declaration_type dt in
     return @@ D_type dt
