@@ -1,22 +1,22 @@
+open Ligo_prim
 open Types
 open Format
 open Simple_utils.PP_helpers
 
-open Ligo_prim
 
 let sum_set_t value sep ppf m =
   let lst = List.sort ~compare:(fun (a,_) (b,_) -> Label.compare a b) m in
-  let new_pp ppf (k, Rows.{associated_type;_}) = fprintf ppf "@[<h>%a -> %a@]" Label.pp k value associated_type in
+  let new_pp ppf (k, Rows.Elem.{associated_type;_}) = fprintf ppf "@[<h>%a -> %a@]" Label.pp k value associated_type in
   fprintf ppf "%a" (list_sep new_pp sep) lst
 
 let sum_set_t x = sum_set_t x (tag " ,@ ")
 
-let record_sep_t value sep ppf (m : (Label.t * type_expression Rows.row_element) list) =
+let record_sep_t value sep ppf (m : (Label.t * type_expression Rows.Elem.t) list) =
   let attributes_2 (attr: string list) : string =
     List.map ~f:(fun s -> "[@@" ^ s ^ "]") attr |> String.concat
   in
   let lst = List.sort ~compare:(fun (a,_) (b,_) -> Label.compare a b) m in
-  let new_pp ppf (k, Rows.{associated_type; attributes; _}) =
+  let new_pp ppf (k, Rows.Elem.{associated_type; attributes; _}) =
     let attr = attributes_2 attributes in
     fprintf ppf "@[<h>%a -> %a %s@]" Label.pp k value associated_type attr
   in fprintf ppf "%a" (list_sep new_pp sep) lst
@@ -43,7 +43,7 @@ let rec type_content : formatter -> type_content -> unit =
       fprintf ppf "({%a} %s)" r m.fields attr
   )
   | T_variable        tv -> Type_var.pp ppf tv
-  | T_tuple            t -> Rows.PP.type_tuple  type_expression ppf t
+  | T_tuple            t -> Tuple.pp_type  type_expression ppf t
   | T_arrow            a -> Arrow.pp      type_expression ppf a
   | T_annoted  (ty, str) -> fprintf ppf "(%a%%%s)" type_expression ty str
   | T_app            app -> Type_app.pp      type_expression ppf app
@@ -76,7 +76,7 @@ and expression_content ppf (ec : expression_content) =
         Constant.pp_constant' ((fun (Constant.Const c) -> c) c.cons_name)
         (list_sep expression (tag " ,")) c.arguments
   | E_record      r -> record ppf r
-  | E_tuple       t -> Record.pp_tuple       expression ppf t
+  | E_tuple       t -> Tuple.pp_expr      expression ppf t
   | E_accessor    a -> Types.Accessor.pp    expression ppf a
   | E_update      u -> Types.Update.pp      expression ppf u
   | E_lambda      l -> Lambda.pp      expression type_expression_option ppf l

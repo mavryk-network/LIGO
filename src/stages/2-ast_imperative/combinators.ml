@@ -1,3 +1,6 @@
+
+open Ligo_prim
+open Literal_types
 open Types
 module Option = Simple_utils.Option
 
@@ -37,8 +40,6 @@ type module_expr_content = [%import: Types.module_expr_content]
       wrap_get = ("module_content" , get) ;
     } ]
 
-open Ligo_prim
-open Literal_types
 
 let t_variable ?loc variable  = make_t ?loc @@ T_variable variable
 let t_singleton ?loc x = make_t ?loc @@ T_singleton x
@@ -56,7 +57,7 @@ let t__type_ ?loc t t' :type_expression = t_app ?loc v__type_ [t; t']
 let t_record ?loc struct_  : type_expression = make_t ?loc @@ T_record struct_
 let t_record_ez_attr ?loc ?(attr=[]) fields =
   let aux i (name, t_expr, attributes) =
-    (Label.of_string name, Rows.{associated_type=t_expr; decl_pos=i; attributes}) in
+    (Label.of_string name, Rows.Elem.{associated_type=t_expr; decl_pos=i; attributes}) in
   let fields = List.mapi ~f:aux fields in
   t_record ?loc {fields; attributes=attr}
 let t_record_ez ?loc ?attr lst =
@@ -70,7 +71,7 @@ let t_pair ?loc (a , b) : type_expression = t_tuple ?loc [a; b]
 let t_sum ?loc sum : type_expression = make_t ?loc @@ T_sum sum
 let t_sum_ez_attr ?loc ?(attr=[]) fields =
   let aux i (name, t_expr, attributes) =
-    (Label.of_string name, Rows.{associated_type=t_expr; decl_pos=i; attributes}) in
+    (Label.of_string name, Rows.Elem.{associated_type=t_expr; decl_pos=i; attributes}) in
   let fields = List.mapi ~f:aux fields in
   t_sum ?loc {fields; attributes=attr}
 
