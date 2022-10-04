@@ -1,4 +1,6 @@
-type 'a t = 'a list [@@deriving eq, compare, hash, yojson]
+type 'a t = 'a list [@@deriving eq, compare, hash, yojson, map, fold]
+
+let fold_map f init t = List.fold_map ~f ~init t
 
 let pp_expr ppa ppf t =
   Format.fprintf
