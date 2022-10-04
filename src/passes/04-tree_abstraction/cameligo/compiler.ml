@@ -453,7 +453,7 @@ let rec compile_expression ~raise : CST.expr -> AST.expr = fun e ->
     let let_rhs = compile_expression ~raise let_rhs in
     let rhs_type = Option.map ~f:(compile_type_expression ~raise <@ snd) rhs_type in
     match binders with
-    | pattern, [] when is_var_pattern pattern -> (* matchin *)
+    | pattern, [] when is_var_pattern pattern ->
       let matchee = match rhs_type with
         | Some t -> (e_annotation let_rhs t)
         | None -> (
@@ -815,25 +815,15 @@ and compile_declaration ~raise : CST.declaration -> AST.declaration option = fun
     let {type_params; binders; rhs_type; eq=_; let_rhs} : CST.let_binding = let_binding in
     let (pattern, args) = binders in
     let rhs_type = Option.map ~f:(compile_type_expression ~raise <@ snd) rhs_type in
+    let let_rhs = compile_expression ~raise let_rhs in
     match (unepar pattern,args) with
-    | CST.PVar v, [] ->
+    | pattern, [] when not (is_var_pattern pattern) ->
       let attr = compile_attributes attributes in
-      let let_rhs = compile_expression ~raise let_rhs in
-      let binder =
-        let (pvar,_loc) = r_split v in
-        let var = compile_variable pvar.variable in
-        Binder.make ~mut:false var rhs_type
-      in
-      return region (D_value {binder ; attr ; expr = let_rhs})
-    | pattern , [] ->
-      let attr = compile_attributes attributes in
-      let let_rhs = compile_expression ~raise let_rhs in
       let pattern = compile_pattern ~raise pattern in
       return region (D_pattern {pattern ; attr ; expr = let_rhs})
     | _,_ ->
-      let let_rhs = compile_expression ~raise let_rhs in
-      let binder,_fun_ = compile_parameter ~raise pattern in
-      let binders = List.map ~f:(compile_parameter ~raise) args in
+      let binder,_fun_ = compile_binder ~raise pattern in
+      let params = List.map ~f:(compile_parameter ~raise) args in
       (* collect type annotation for let function declaration *)
       let let_rhs,rhs_type = List.fold_right ~init:(let_rhs,rhs_type) ~f:(fun (b,fun_) (e,a) ->
         e_lambda ~loc:(Value_var.get_location @@ Param.get_var b) b a @@ fun_ e, Option.map2 ~f:t_arrow (Param.get_ascr b) a) params in

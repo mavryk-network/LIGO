@@ -387,7 +387,7 @@ let rec compile_expression ~(raise :(Errors.abs_error,Main_warnings.all) Simple_
   )
   | E_Fun { value = { parameters; ret_type ; return ; _ } ; region} -> (
     check_no_attributes ~raise (Location.lift region) attr ;
-    let compile_param : CST.param_decl CST.reg -> _ Binder.t  = fun { value = { param_kind ; pattern ; param_type } ; region = _ } ->
+    let compile_param : CST.param_decl CST.reg -> _ Param.t  = fun { value = { param_kind ; pattern ; param_type } ; region = _ } ->
       let var =
         match pattern with
         | P_Var x -> compile_variable x
