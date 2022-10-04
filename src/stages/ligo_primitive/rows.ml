@@ -2,24 +2,30 @@ module type Attr = sig
   type t [@@deriving eq, compare, yojson, hash]
 end
 
-module Make (Map : Record.Map) (Attr : Attr) (Elem_attr : Attr) = struct
+module Make (Map : Record.Map) (Attr : Attr) (Annot : Annotation.S) = struct
   module Elem = struct
-    type 'a t =
+    type 'a t = 'a content Annot.t
+
+    and 'a content =
       { associated_type : 'a
-      ; attributes : Elem_attr.t
       ; decl_pos : int [@hash.ignore]
       }
     [@@deriving eq, compare, yojson, hash]
 
-    let map f { associated_type; attributes; decl_pos } =
-      { associated_type = f associated_type; attributes; decl_pos }
+    let map_content f { associated_type; decl_pos } =
+      { associated_type = f associated_type; decl_pos }
 
 
-    let fold f init { associated_type; _ } = f init associated_type
+    let map f t = Annot.map (map_content f) t
+    let fold_content f init { associated_type; _ } = f init associated_type
+    let fold f init t = Annot.fold (fold_content f) init t
 
-    let fold_map g init { associated_type; attributes; decl_pos } =
-      let acc, associated_type = g init associated_type in
-      acc, { associated_type; attributes; decl_pos }
+    let fold_map_content f init { associated_type; decl_pos } =
+      let acc, associated_type = f init associated_type in
+      acc, { associated_type; decl_pos }
+
+
+    let fold_map f init t = Annot.fold_map (fold_map_content f) init t
   end
 
   type 'a t =
@@ -44,7 +50,13 @@ module Make (Map : Record.Map) (Attr : Attr) (Elem_attr : Attr) = struct
       Simple_utils.PP_helpers.(
         list_sep
           (fun ppf (label, elem) ->
-            Format.fprintf ppf "@[<hv>%a -> %a@]" Label.pp label ppa elem.Elem.associated_type)
+            Format.fprintf
+              ppf
+              "@[<hv>%a -> %a@]"
+              Label.pp
+              label
+              ppa
+              (Annot.content elem).Elem.associated_type)
           (tag " ,@ "))
         ppf
         bindings
