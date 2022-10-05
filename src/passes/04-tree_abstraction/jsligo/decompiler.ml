@@ -598,7 +598,7 @@ let rec decompile_expression_in : AST.expression -> statement_or_expr list = fun
     let lhs_type =
       let x = match let_binder.wrap_content with
         | P_var x -> Binder.get_ascr x
-        | (P_unit | P_list _ | P_variant (_, _) | P_tuple _ | P_record (_, _)) -> None
+        | (P_unit | P_list _ | P_variant (_, _) | P_tuple _ | P_record _) -> None
       in  
       Option.map ~f:(prefix_colon <@ decompile_type_expr) @@ x
     in

@@ -18,6 +18,10 @@ and 't t = 't pattern_repr Location.wrap
 let var_pattern : ?loc:Location.t -> 'ty Binder.t -> 'ty t =
   fun ?loc b -> Location.wrap ?loc (P_var b)
 
+(* get top level ascription if any *)
+let get_ascr : 'ty t -> 'ty option =
+  fun x -> match x.wrap_content with P_var b -> Some (Binder.get_ascr b) | _ -> None
+
 let rec pp_list g ppf = fun pl ->
   let mpp = pp g in
   match pl with

@@ -674,27 +674,6 @@ and infer_expression ~(raise : raise) ~options ~ctx (expr : I.expression)
           compile_match ~options ~loc ~ctx matchee cases matchee_type
         in
         return match_ ret_type )
-    | E_let_pattern_in { let_pattern; rhs; let_result; attributes } ->
-      (* TODO: attributes !! *)
-      ignore attributes;
-      (* Infer type of rhs *)
-      let ctx, rhs_type, rhs = infer ~ctx rhs in
-      (* Add existential for return type *)
-      let evar = Exists_var.fresh ~loc () in
-      let ctx = Context.(ctx |:: C_exists_var (evar, Type)) in
-      let ret_type = t_exists ~loc evar in
-      (* Type check the match cases *)
-      let ctx, cases =
-        let cases = [ Match_expr.{pattern = let_pattern ; body = let_result} ] in
-        check_cases ~raise ~options ~ctx cases rhs_type ret_type
-      in
-      (* Elaborate (by compiling pattern) *)
-      ( ctx
-      , ret_type
-      , let%bind match_ =
-          compile_match ~options ~loc ~ctx rhs cases ret_type
-        in
-        return match_ ret_type )
     | E_mod_in { module_binder = mvar; rhs; let_result } ->
       let ctx, sig_, rhs = infer_module_expr ~raise ~options ~ctx rhs in
       let ctx, ret_type, let_result =
@@ -732,8 +711,8 @@ and infer_expression ~(raise : raise) ~options ~ctx (expr : I.expression)
       ( ctx
       , elt_type
       , return (E_module_accessor { module_path; element }) elt_type )
-    | E_let_mut_in { let_binder; rhs; let_result; attr } ->
-      let rhs_ascr = Binder.get_ascr let_binder in
+    | E_let_mut_in { let_binder; rhs; let_result; attributes } ->
+      let rhs_ascr = Option.value_map (Pattern.get_ascr let_binder) ~default:None ~f:Fun.id in
       let rhs =
         Option.value_map
           rhs_ascr
@@ -753,7 +732,7 @@ and infer_expression ~(raise : raise) ~options ~ctx (expr : I.expression)
                   ctx |:: C_value (Binder.get_var let_binder, Mutable, rhs_type))
               let_result)
       in
-      let attr = type_value_attr attr in
+      let attributes = type_value_attr attributes in
       ( ctx
       , res_type
       , let%bind rhs = rhs

@@ -641,7 +641,7 @@ and decompile_eos : eos -> AST.expression -> ((CST.statement List.Ne.t option)* 
   | E_let_mut_in { let_binder; rhs; let_result; _ } ->
     let pattern = match let_binder.wrap_content with
       | P_var x -> Binder.get_ascr x
-      | (P_unit | P_list _ | P_variant (_, _) | P_tuple _ | P_record (_, _)) -> None
+      | (P_unit | P_list _ | P_variant (_, _) | P_tuple _ | P_record _) -> None
     in  
     let var_type = Option.map ~f:(prefix_colon <@ decompile_type_expr) @@ pattern in
     let rhs = decompile_expression rhs in
