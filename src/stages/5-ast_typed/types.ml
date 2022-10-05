@@ -112,7 +112,7 @@ module Access_label = struct
   let map _ = Fun.id
   let fold_map _ = fun a b -> a,b
 end
-module Let_pattern_in=Let_pattern_in(ValueAttr)
+module Let_in=Let_in(ValueAttr)
 module Accessor = Accessor(Access_label)
 module Update   = Update(Access_label)
 
@@ -144,8 +144,7 @@ type expression_content =
   | E_application of expr Application.t
   | E_lambda of (expr, ty_expr) Lambda.t
   | E_recursive of (expr, ty_expr) Recursive.t
-  | E_let_in    of let_in
-  | E_let_pattern_in of (expr, ty_expr) Let_pattern_in.t
+  | E_let_in    of (expr, ty_expr) Let_in.t
   | E_mod_in of (expr, module_expr) Mod_in.t
   | E_raw_code  of expr Raw_code.t
   | E_type_inst of type_inst
@@ -159,7 +158,7 @@ type expression_content =
   | E_update   of expr Update.t
   | E_module_accessor of Value_var.t Module_access.t
   (* Imperative *)
-  | E_let_mut_in of let_in
+  | E_let_mut_in of (expr, ty_expr) Let_in.t
   | E_assign   of (expr,ty_expr) Assign.t
   | E_deref    of Value_var.t
   | E_for      of expr For_loop.t
@@ -169,13 +168,6 @@ type expression_content =
 and type_inst = {
     forall: expression ;
     type_: type_expression ;
-  }
-
-and let_in = {
-    let_binder: ty_expr Binder.t ;
-    rhs: expression ;
-    let_result: expression ;
-    attr: ValueAttr.t ;
   }
 
 and matching_expr =

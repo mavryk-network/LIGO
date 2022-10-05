@@ -370,6 +370,8 @@ let add_signature_item t (sig_item : Signature.item) =
   | S_type (tvar, type_) -> add_type t tvar type_
   | S_module (mvar, sig_) -> add_module t mvar sig_
 
+let add_signature_items t (sig_items : Signature.item list) =
+  List.fold ~f:add_signature_item ~init:t (List.rev sig_items)
 
 let get_value =
   memoize2
@@ -897,24 +899,24 @@ and signature_of_module : ctx:t -> Ast_typed.module_ -> Signature.t =
   | decl :: module_ ->
     let public, sig_item = signature_item_of_decl ~ctx decl in
     let sig_ =
-      signature_of_module ~ctx:(add_signature_item ctx sig_item) module_
+      signature_of_module ~ctx:(add_signature_items ctx sig_item) module_
     in
-    if public then sig_item :: sig_ else sig_
+    if public then sig_item @ sig_ else sig_
 
 
-and signature_item_of_decl : ctx:t -> Ast_typed.decl -> bool * Signature.item =
+and signature_item_of_decl : ctx:t -> Ast_typed.decl -> bool * (Signature.item list) =
  fun ~ctx decl ->
   match Location.unwrap decl with
   | D_value { binder; expr; attr = { public; _ } } ->
-    public, S_value (Binder.get_var binder, expr.type_expression)
+    public, [ S_value (Binder.get_var binder, expr.type_expression) ]
   | D_pattern { pattern ; expr = _ ; attr = { public ; _ }} ->
-    let x = Pattern.binders pattern in
-    public, failwith "need to destruct expr.type_expression together with the pattern"
+    let sigs = List.map (Pattern.binders pattern) ~f:(fun b -> Signature.S_value (Binder.get_var b, Binder.get_ascr b)) in
+    public, sigs
   | D_type { type_binder = tvar; type_expr = type_; type_attr = { public; _ } }
-    -> public, S_type (tvar, type_)
+    -> public, [ S_type (tvar, type_) ]
   | D_module { module_binder = mvar; module_; module_attr = { public; _ } } ->
     let sig_' = signature_of_module_expr ~ctx module_ in
-    public, S_module (mvar, sig_')
+    public, [ S_module (mvar, sig_') ]
 
 
 (* Load context from the outside declarations *)
@@ -923,10 +925,13 @@ let init ?env () =
   | None -> empty
   | Some env ->
     Environment.fold env ~init:empty ~f:(fun ctx decl ->
-      (* Format.printf "%d: %a\n" i (Ast_typed.PP.declaration ~use_hidden:false) decl; *)
       match Location.unwrap decl with
       | D_value { binder; expr; attr = _ } ->
         add_imm ctx (Binder.get_var binder) expr.type_expression
+      | D_pattern { pattern; expr; attr = _ } ->
+        List.fold (Pattern.binders pattern)
+          ~init:ctx
+          ~f:(fun acc x -> add_imm acc (Binder.get_var x) (Binder.get_ascr x))
       | D_type { type_binder; type_expr; type_attr = _ } ->
         add_type ctx type_binder type_expr
       | D_module { module_binder; module_; module_attr = _ } ->
@@ -1210,12 +1215,12 @@ module Elaboration = struct
         ; fun_type = t_apply ctx fun_type
         ; lambda = lambda_apply ctx lambda
         }
-    | E_let_in { let_binder; rhs; let_result; attr } ->
+    | E_let_in { let_binder; rhs; let_result; attributes } ->
       E_let_in
         { let_binder = binder_apply ctx let_binder
         ; rhs = self rhs
         ; let_result = self let_result
-        ; attr
+        ; attributes
         }
     | E_mod_in { module_binder; rhs; let_result } ->
       E_mod_in
@@ -1300,6 +1305,14 @@ module Elaboration = struct
       @@ D_value
            { binder = binder_apply_opt ctx binder
            ; expr = e_apply ctx expr
+           ; attr
+           }
+    | D_pattern { pattern; expr; attr } ->
+      let pattern = Pattern.map (t_apply ctx) pattern in 
+      return
+      @@ D_pattern
+           { pattern
+           ; expr
            ; attr
            }
     | D_module { module_binder; module_; module_attr } ->
@@ -1446,6 +1459,9 @@ module Elaboration = struct
     | D_type decl_type -> type_pass ~raise decl_type.type_expr
     | D_value { binder; expr; _ } ->
       binder_pass_opt ~raise binder;
+      expression_pass ~raise expr
+    | D_pattern { pattern ; expr; _ } ->
+      List.iter ~f:(binder_pass ~raise) (Pattern.binders pattern);
       expression_pass ~raise expr
     | D_module { module_; _ } -> module_expr_pass ~raise module_
 

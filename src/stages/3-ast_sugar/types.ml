@@ -36,7 +36,7 @@ module Pattern_decl = Pattern_decl(Attr)
 module Type_decl  = Type_decl(Attr)
 module Module_decl= Module_decl(Attr)
 
-module Let_pattern_in = Let_pattern_in(Attr)
+module Let_in = Let_in(Attr)
 module Accessor = Accessor(Access_path)
 module Update   = Update(Access_path)
 type expression_content =
@@ -49,7 +49,6 @@ type expression_content =
   | E_type_abstraction of expr Type_abs.t
   | E_recursive of (expr, ty_expr) Recursive.t
   | E_let_in of (expr, ty_expr option) Let_in.t
-  | E_let_pattern_in of (expr, ty_expr option) Let_pattern_in.t
   | E_type_in of (expr, ty_expr) Type_in.t
   | E_mod_in of (expr, module_expr) Mod_in.t
   | E_raw_code  of expr Raw_code.t

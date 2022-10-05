@@ -357,29 +357,7 @@ let rec decompile_expression_in : AST.expression -> statement_or_expr list = fun
   | E_let_in {let_binder;rhs;let_result;attributes} ->
     let attributes = decompile_attributes attributes in
     let attributes = filter_private attributes in
-    let var = CST.PVar (decompile_variable2 @@ Binder.get_var let_binder) in
-    let binders = var in
-    let lhs_type = Option.map ~f:(prefix_colon <@ decompile_type_expr) @@ Binder.get_ascr let_binder in
-    let expr = decompile_expression_in rhs in
-    let expr = e_hd expr in
-    let let_binding = CST.{
-      binders;
-      lhs_type;
-      type_params=None;
-      eq = Token.ghost_eq;
-      expr
-    } in
-    let const = CST.SConst (Region.wrap_ghost CST.{
-      kwd_const = Token.ghost_const;
-      bindings  = (Region.wrap_ghost let_binding, []);
-      attributes
-    }) in
-    let body = decompile_expression_in let_result in
-    return_expr @@ Statement const :: body
-  | E_let_pattern_in {let_pattern;rhs;let_result;attributes} ->
-    let attributes = decompile_attributes attributes in
-    let attributes = filter_private attributes in
-    let binders = match decompile_pattern let_pattern with Ok x -> x | _ -> failwith "what?" in
+    let binders = match decompile_pattern let_binder with Ok x -> x | _ -> failwith "what?" in
     let lhs_type = None in
     let expr = decompile_expression_in rhs in
     let expr = e_hd expr in
@@ -616,9 +594,14 @@ let rec decompile_expression_in : AST.expression -> statement_or_expr list = fun
     failwith @@ Format.asprintf "Decompiling a for loop to JsLIGO %a"
     AST.PP.expression expr
   | E_let_mut_in { let_binder; rhs; let_result; _ } ->
-    let var = CST.PVar (decompile_variable2 @@ Binder.get_var let_binder) in
-    let binders = var in
-    let lhs_type = Option.map ~f:(prefix_colon <@ decompile_type_expr) @@ Binder.get_ascr let_binder in
+    let binders = match decompile_pattern let_binder with Ok x -> x | _ -> failwith "what?" in
+    let lhs_type =
+      let x = match let_binder.wrap_content with
+        | P_var x -> Binder.get_ascr x
+        | (P_unit | P_list _ | P_variant (_, _) | P_tuple _ | P_record (_, _)) -> None
+      in  
+      Option.map ~f:(prefix_colon <@ decompile_type_expr) @@ x
+    in
     let expr = decompile_expression_in rhs in
     let expr = e_hd expr in
     let let_binding = CST.{

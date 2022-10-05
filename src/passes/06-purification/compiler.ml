@@ -115,15 +115,10 @@ and compile_expression' ~raise ~last : I.expression -> O.expression option -> O.
       let recs = Recursive.map self self_type recs in
       return @@ O.E_recursive recs
     | I.E_let_in {let_binder;attributes;rhs;let_result} ->
-      let let_binder = Binder.map self_type_option let_binder in
+      let let_binder = Pattern.map self_type_option let_binder in
       let rhs = self rhs in
       let let_result = self let_result in
       return @@ O.E_let_in {let_binder;attributes; rhs; let_result}
-    | I.E_let_pattern_in {let_pattern;attributes;rhs;let_result} ->
-      let let_pattern = Pattern.map self_type_option let_pattern in
-      let rhs = self rhs in
-      let let_result = self let_result in
-      return @@ O.E_let_pattern_in {let_pattern;attributes; rhs; let_result}
     | I.E_type_in ti ->
       let ti = Type_in.map self self_type ti in
       return @@ O.E_type_in ti
@@ -208,7 +203,7 @@ and compile_expression' ~raise ~last : I.expression -> O.expression option -> O.
       let body = compile_expression ~raise ~last body in
       return @@ O.E_while { cond; body }
     | I.E_let_mut_in {let_binder;attributes;rhs;let_result} ->
-      let let_binder = Binder.map self_type_option let_binder in
+      let let_binder = Pattern.map self_type_option let_binder in
       let rhs = self rhs in
       let let_result = self let_result in
       return @@ O.E_let_mut_in {let_binder;attributes; rhs; let_result}

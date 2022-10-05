@@ -107,7 +107,7 @@ module Access_label = struct
   let fold_map _ = fun a b -> a,b
 end
 
-module Let_pattern_in=Let_pattern_in(ValueAttr)
+module Let_in=Let_in(ValueAttr)
 module Accessor = Accessor(Access_label)
 module Update   = Update(Access_label)
 type expression_content =
@@ -119,8 +119,7 @@ type expression_content =
   | E_lambda of (expr, ty_expr option) Lambda.t
   | E_recursive of (expr, ty_expr) Recursive.t
   | E_type_abstraction of expr Type_abs.t
-  | E_let_in of let_in
-  | E_let_pattern_in of (expr, ty_expr option) Let_pattern_in.t
+  | E_let_in of (expr, ty_expr option) Let_in.t
   | E_type_in of (expr, ty_expr) Type_in.t
   | E_mod_in of (expr, module_expr) Mod_in.t
   | E_raw_code  of expr Raw_code.t
@@ -135,18 +134,13 @@ type expression_content =
   | E_ascription of (expr, ty_expr) Ascription.t
   | E_module_accessor of Value_var.t Module_access.t
   (* Imperative *)
-  | E_let_mut_in  of let_in
+  | E_let_mut_in  of (expr, ty_expr option) Let_in.t
   | E_assign   of (expr, ty_expr option) Assign.t
   | E_for      of expr For_loop.t
   | E_for_each of expr For_each_loop.t
   | E_while    of expr While_loop.t
 
-and let_in = {
-    let_binder: ty_expr option Binder.t ;
-    rhs: expression ;
-    let_result: expression ;
-    attr: ValueAttr.t ;
-  }
+
 and expression = {
   expression_content  : expression_content ;
   sugar    : sugar_expression_option ;

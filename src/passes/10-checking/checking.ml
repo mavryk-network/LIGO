@@ -458,7 +458,7 @@ and infer_expression ~(raise : raise) ~options ~ctx (expr : I.expression)
         , ret_type
         , let%bind result = result in
           return (E_type_abstraction { type_binder = tvar; result }) ret_type ))
-    | E_let_in { let_binder; rhs; let_result; attr } ->
+    | E_let_in { let_binder; rhs; let_result; attributes } ->
       let rhs_ascr = Binder.get_ascr let_binder in
       let rhs =
         Option.value_map
@@ -1362,7 +1362,7 @@ and infer_declaration ~(raise : raise) ~options ~ctx (decl : I.declaration)
         @@ D_value
              { binder = Binder.map (Fn.const @@ Some expr_type) binder; expr; attr }
       )
-    | D_pattern _ ->
+    | D_pattern { pattern; expr; attr } ->
       failwith "need rebase "
     | D_module { module_binder; module_; module_attr = { public; hidden } } ->
       let ctx, sig_, module_ = infer_module_expr ~raise ~options ~ctx module_ in

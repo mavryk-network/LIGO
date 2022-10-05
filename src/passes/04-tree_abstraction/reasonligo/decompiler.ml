@@ -318,15 +318,13 @@ let rec decompile_expression : AST.expression -> CST.expr = fun expr ->
   | E_type_abstraction _ -> failwith "type_abstraction not supported yet"
   | E_recursive _ ->
     failwith "corner case : annonymous recursive function"
-  | E_let_pattern_in _ -> failwith "TODO"
   | E_let_in {let_binder;rhs;let_result;attributes} ->
-    let var_attributes = [] in
-    let var =
-      CST.PVar (wrap @@ CST.{
-                    variable = decompile_variable @@ Binder.get_var let_binder;
-                    attributes = var_attributes }) in
-    let binders = var in
-    let lhs_type = Option.map ~f:(prefix_colon <@ decompile_type_expr) @@ Binder.get_ascr let_binder in
+    let binders = decompile_pattern let_binder in
+    let lhs_pattern = match let_binder.wrap_content with
+      | P_var x -> Binder.get_ascr x
+      | (P_unit | P_list _ | P_variant (_, _) | P_tuple _ | P_record (_, _)) -> None
+    in  
+    let lhs_type = Option.map ~f:(prefix_colon <@ decompile_type_expr) @@ lhs_pattern in
     let let_rhs = decompile_expression rhs in
     let binding : CST.let_binding = {binders;lhs_type;eq=ghost;let_rhs} in
     let body = decompile_expression let_result in

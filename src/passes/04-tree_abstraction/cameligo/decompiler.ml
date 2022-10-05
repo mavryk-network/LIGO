@@ -326,21 +326,8 @@ let rec decompile_expression : AST.expression -> CST.expr = fun expr ->
   | E_type_abstraction _ -> failwith "corner case : annonymous type abstraction"
   | E_recursive _ ->
     failwith "corner case : annonymous recursive function"
-  | E_let_in {let_binder;rhs;let_result;attributes} ->
-    let var_attributes = [] in
-    let var : CST.pattern = CST.PVar (wrap ({variable = decompile_variable @@ Binder.get_var let_binder; attributes = var_attributes } : CST.var_pattern)) in
-    let binders = (var,[]) in
-    let type_params, rhs_type = Option.value_map (Binder.get_ascr let_binder) ~default:(None, None)
-                                           ~f:(fun t -> let type_params, rhs_type = decompile_type_params t in
-                                                        type_params, Some (prefix_colon rhs_type)) in
-    let let_rhs = decompile_expression rhs in
-    let binding : CST.let_binding = {binders;type_params;rhs_type;eq=Token.ghost_eq;let_rhs} in
-    let body = decompile_expression let_result in
-    let attributes = Shared_helpers.decompile_attributes attributes in
-    let lin : CST.let_in = {kwd_let=Token.ghost_let;kwd_rec=None;binding;kwd_in=Token.ghost_in;body;attributes} in
-    return_expr @@ CST.ELetIn (wrap lin)
-  | E_let_pattern_in { let_pattern; rhs; let_result; attributes } ->
-    let binders = (decompile_pattern let_pattern, []) in
+  | E_let_in { let_binder; rhs; let_result; attributes } ->
+    let binders = (decompile_pattern let_binder, []) in
     let type_params, rhs_type = None , None in
     let let_rhs = decompile_expression rhs in
     let binding : CST.let_binding = {binders;type_params;rhs_type;eq=Token.ghost_eq;let_rhs} in

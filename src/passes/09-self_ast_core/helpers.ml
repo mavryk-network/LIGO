@@ -37,12 +37,11 @@ let rec fold_expression ~raise
   | E_record m -> Record.fold self init m
   | E_update ru -> Types.Update.fold self init ru
   | E_accessor ra -> Types.Accessor.fold self init ra
-  | E_let_in { let_binder = _ ; rhs ; let_result ; attr=_ } -> (
+  | E_let_in { let_binder = _ ; rhs ; let_result ; attributes=_ } -> (
       let res = self init rhs in
       let res = self res let_result in
       res
     )
-  | E_let_pattern_in x -> Let_pattern_in.fold self (fun a _ -> a) init x
   | E_type_in { type_binder = _; rhs = _ ; let_result } ->
     let res = self init let_result in
     res
@@ -55,7 +54,7 @@ let rec fold_expression ~raise
   | E_for f -> For_loop.fold self init f
   | E_for_each fe -> For_each_loop.fold self init fe
   | E_while w -> While_loop.fold self init w
-  | E_let_mut_in { let_binder = _; rhs; let_result; attr = _ } ->
+  | E_let_mut_in { let_binder = _; rhs; let_result; attributes = _ } ->
     let res = self init rhs in
     let res = self res let_result in
     res
@@ -116,13 +115,10 @@ let rec map_expression ~raise
   | E_application app ->
     let app = Application.map self app in
     return @@ E_application app
-  | E_let_in { let_binder; rhs; let_result; attr } ->
+  | E_let_in { let_binder; rhs; let_result; attributes } ->
     let rhs = self rhs in
     let let_result = self let_result in
-    return @@ E_let_in { let_binder; rhs; let_result; attr }
-  | E_let_pattern_in x ->
-    let x = Let_pattern_in.map self Fun.id x in
-    return (E_let_pattern_in x)
+    return @@ E_let_in { let_binder; rhs; let_result; attributes }
   | E_type_in { type_binder; rhs; let_result } ->
     let let_result = self let_result in
     return @@ E_type_in { type_binder; rhs; let_result }
@@ -154,10 +150,10 @@ let rec map_expression ~raise
   | E_while w ->
     let w = While_loop.map self w in
     return @@ E_while w
-  | E_let_mut_in { let_binder; rhs; let_result; attr } ->
+  | E_let_mut_in { let_binder; rhs; let_result; attributes } ->
     let rhs = self rhs in
     let let_result = self let_result in
-    return @@ E_let_mut_in { let_binder; rhs; let_result; attr }
+    return @@ E_let_mut_in { let_binder; rhs; let_result; attributes }
   | (E_literal _ | E_variable _ | E_raw_code _ | E_module_accessor _) as e' ->
     return e'
 
@@ -266,13 +262,10 @@ let rec fold_map_expression
     | E_application app ->
       let res, app = Application.fold_map self init app in
       res, return @@ E_application app
-    | E_let_in { let_binder; rhs; let_result; attr } ->
+    | E_let_in { let_binder; rhs; let_result; attributes } ->
       let res, rhs = self init rhs in
       let res, let_result = self res let_result in
-      res, return @@ E_let_in { let_binder; rhs; let_result; attr }
-    | E_let_pattern_in x ->
-      let res,x = Let_pattern_in.fold_map self (fun a b -> a,b) init x in
-      res, return (E_let_pattern_in x)
+      res, return @@ E_let_in { let_binder; rhs; let_result; attributes }
     | E_type_in ti ->
       let res, ti = Type_in.fold_map self idle init ti in
       res, return @@ E_type_in ti
@@ -303,10 +296,10 @@ let rec fold_map_expression
     | E_while w ->
       let res, w = While_loop.fold_map self init w in
       res, return @@ E_while w
-    | E_let_mut_in { let_binder; rhs; let_result; attr } ->
+    | E_let_mut_in { let_binder; rhs; let_result; attributes } ->
       let res, rhs = self init rhs in
       let res, let_result = self res let_result in
-      res, return @@ E_let_mut_in { let_binder; rhs; let_result; attr }
+      res, return @@ E_let_mut_in { let_binder; rhs; let_result; attributes }
     | (E_literal _ | E_variable _ | E_raw_code _ | E_module_accessor _) as e' ->
       init, return e')
 

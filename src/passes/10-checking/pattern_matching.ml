@@ -106,15 +106,11 @@ let rec substitute_var_in_body ~raise : Value_var.t -> Value_var.t -> O.expressi
         match exp.expression_content with
         | O.E_variable var when Value_var.equal var to_subst ->
           ret true { exp with expression_content = E_variable new_var }
-        | O.E_let_in letin when Binder.apply (Value_var.equal to_subst) letin.let_binder ->
+        | O.E_let_in letin
+          when List.exists (Pattern.binders letin.let_binder) ~f:(fun binder -> Binder.apply (Value_var.equal to_subst) binder) ->
           let rhs = substitute_var_in_body ~raise to_subst new_var letin.rhs in
           let letin = { letin with rhs } in
-          ret false { exp with expression_content = E_let_in letin}
-        | O.E_let_pattern_in letin
-          when List.exists (Pattern.binders letin.let_pattern) ~f:(fun binder -> Binder.apply (Value_var.equal to_subst) binder) ->
-          let rhs = substitute_var_in_body ~raise to_subst new_var letin.rhs in
-          let letin = { letin with rhs } in
-          ret false { exp with expression_content = E_let_pattern_in letin }
+          ret false { exp with expression_content = E_let_in letin }
         | O.E_assign assign when Binder.apply (Value_var.equal to_subst) assign.binder ->
           let expression = substitute_var_in_body ~raise to_subst new_var assign.expression in
           let assign = { assign with expression } in
@@ -141,7 +137,7 @@ let rec substitute_var_in_body ~raise : Value_var.t -> Value_var.t -> O.expressi
           in
           ret false { exp with expression_content = O.E_matching {matchee ; cases}}
         )
-        | (E_literal _ | E_constant _ | E_variable _ | E_application _ | E_lambda _ | E_assign _ | E_let_mut_in _ | E_let_pattern_in _ | E_while _ | E_for _ | E_for_each _ | E_deref _
+        | (E_literal _ | E_constant _ | E_variable _ | E_application _ | E_lambda _ | E_assign _ | E_let_mut_in _ | E_while _ | E_for _ | E_for_each _ | E_deref _
            | E_type_abstraction _ | E_recursive _ | E_let_in _ | E_mod_in _ |
            E_raw_code _ | E_constructor _ | E_record _ | E_accessor _ |
            E_update _ | E_type_inst _ | E_module_accessor _ ) -> ret true exp

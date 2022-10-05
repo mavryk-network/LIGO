@@ -68,11 +68,11 @@ let rec expression : Aliases.t -> AST.expression -> AST.expression = fun aliases
   | E_recursive r ->
     let r = Recursive.map self self_type r in
     return @@ E_recursive r
-  | E_let_in {let_binder;rhs;let_result;attr} ->
-    let let_binder =  Binder.map self_type let_binder in
+  | E_let_in {let_binder;rhs;let_result;attributes} ->
+    let let_binder =  Pattern.map self_type let_binder in
     let rhs = self rhs in
     let let_result = self let_result in
-    return @@ E_let_in {let_binder;rhs;let_result;attr}
+    return @@ E_let_in {let_binder;rhs;let_result;attributes}
   | E_type_inst {forall; type_} ->
     let forall = self forall in
     let type_  = self_type type_ in
@@ -110,11 +110,11 @@ let rec expression : Aliases.t -> AST.expression -> AST.expression = fun aliases
         aliases, Option.value ~default:(mvar::module_path) path) in
     let module_path = List.rev module_path in
     return @@ E_module_accessor {module_path;element}
-  | E_let_mut_in { let_binder ; rhs ; let_result ; attr } ->
+  | E_let_mut_in { let_binder ; rhs ; let_result ; attributes } ->
     let rhs = self rhs in
     let let_result = self let_result in
-    let let_binder = Binder.map self_type let_binder in
-    return (E_let_mut_in { let_binder ; rhs ; let_result ; attr })
+    let let_binder = Pattern.map self_type let_binder in
+    return (E_let_mut_in { let_binder ; rhs ; let_result ; attributes })
   | E_deref var -> return (E_deref var)
   | E_assign {binder;expression} ->
     let binder = Binder.map self_type binder in

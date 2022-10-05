@@ -32,13 +32,8 @@ module Free_variables = struct
     | E_accessor {struct_;_} -> self struct_
     | E_update {struct_; update;_} -> union (self struct_) @@ self update
     | E_matching {matchee; cases;_} -> union (self matchee) (matching_expression b cases)
-    | E_let_in { let_binder; rhs; let_result; _} ->
-      let b' = union (Binder.apply singleton let_binder) b in
-      union
-        (expression b' let_result)
-        (self rhs)
-    | E_let_pattern_in { let_pattern ; rhs; let_result; _} ->
-      let b' = List.fold (Pattern.binders let_pattern)
+    | E_let_in { let_binder ; rhs; let_result; _} ->
+      let b' = List.fold (Pattern.binders let_binder)
         ~f:(fun b pb -> union (Binder.apply singleton pb) b)
         ~init:b
       in

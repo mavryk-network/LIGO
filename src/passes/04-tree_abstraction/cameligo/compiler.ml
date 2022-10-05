@@ -463,7 +463,7 @@ let rec compile_expression ~raise : CST.expr -> AST.expr = fun e ->
         )
       in
       let pattern = compile_pattern ~raise pattern in
-      e_let_pattern_in ~loc pattern let_attr matchee body
+      e_let_in ~loc pattern let_attr matchee body
     | pattern, args -> (* function *)
       let let_binder, fun_ = compile_binder ~raise pattern in
       let binders = List.map ~f:(compile_parameter ~raise) args in
@@ -502,7 +502,8 @@ let rec compile_expression ~raise : CST.expr -> AST.expr = fun e ->
         List.Ne.fold_right ~f:(fun t e -> e_type_abs ~loc t e) ~init:let_rhs type_vars
       ) type_params
       in
-      return @@ e_let_in ~loc let_binder let_attr let_rhs @@ fun_ body
+      let pattern = Pattern.var_pattern ~loc:(Location.lift (CST.pattern_to_region pattern)) let_binder in
+      return @@ e_let_in ~loc pattern let_attr let_rhs @@ fun_ body
   )
   | ETypeIn ti ->
     let (ti, loc) = r_split ti in

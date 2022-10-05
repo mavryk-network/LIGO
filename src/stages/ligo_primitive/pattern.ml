@@ -15,6 +15,9 @@ and 'ty_exp pattern_repr =
 and 't t = 't pattern_repr Location.wrap
   [@@deriving eq,compare,yojson,hash]
 
+let var_pattern : ?loc:Location.t -> 'ty Binder.t -> 'ty t =
+  fun ?loc b -> Location.wrap ?loc (P_var b)
+
 let rec pp_list g ppf = fun pl ->
   let mpp = pp g in
   match pl with

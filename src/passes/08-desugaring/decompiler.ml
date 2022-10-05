@@ -114,24 +114,16 @@ let rec decompile_expression : O.expression -> I.expression =
     | O.E_recursive recs ->
       let recs = Recursive.map self self_type recs in
       return @@ I.E_recursive recs
-    | O.E_let_in {let_binder;attr={inline=false;no_mutation=_;view=_;public=_;hidden=_;thunk=false};rhs=expr1;let_result=expr2}
-      when Value_var.is_name (Binder.get_var let_binder) "()"
-           && Stdlib.(=) (Binder.get_ascr let_binder) (Some (O.t_unit ())) ->
+    | O.E_let_in {let_binder = { wrap_content = P_unit ; _ };attributes={inline=false;no_mutation=_;view=_;public=_;hidden=_;thunk=false};rhs=expr1;let_result=expr2} ->
       let expr1 = self expr1 in
       let expr2 = self expr2 in
       return @@ I.E_sequence {expr1;expr2}
-    | O.E_let_in {let_binder;attr;rhs;let_result} ->
-      let let_binder = Binder.map self_type_opt let_binder in
+    | O.E_let_in {let_binder;rhs;let_result;attributes} ->
+      let let_binder = Pattern.map self_type_opt let_binder in
       let rhs = self rhs in
       let let_result = self let_result in
-      let attributes = if attr.inline then ["inline"] else [] in
+      let attributes = if attributes.inline then ["inline"] else [] in
       return @@ I.E_let_in {let_binder;attributes;rhs;let_result}
-    | O.E_let_pattern_in {let_pattern;attributes;rhs;let_result} ->
-      let let_pattern = Pattern.map self_type_opt let_pattern in
-      let rhs = self rhs in
-      let let_result = self let_result in
-      let attributes = decompile_exp_attributes attributes in
-      return @@ I.E_let_pattern_in {let_pattern;attributes;rhs;let_result}
     | O.E_type_in {type_binder; rhs; let_result} ->
       let rhs = self_type rhs in
       let let_result = self let_result in
@@ -178,11 +170,11 @@ let rec decompile_expression : O.expression -> I.expression =
     | O.E_while while_loop ->
       let while_loop = While_loop.map self while_loop in
       return @@ I.E_while while_loop
-    | O.E_let_mut_in { let_binder; rhs; let_result; attr } ->
-      let let_binder = Binder.map self_type_opt let_binder in
+    | O.E_let_mut_in { let_binder; rhs; let_result; attributes } ->
+      let let_binder = Pattern.map self_type_opt let_binder in
       let rhs = self rhs in
       let let_result = self let_result in
-      let attributes = decompile_exp_attributes attr in
+      let attributes = decompile_exp_attributes attributes in
       return @@ I.E_let_mut_in { let_binder; attributes; rhs; let_result }
 
 and decompile_declaration : O.declaration -> I.declaration = fun d ->

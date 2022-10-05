@@ -242,16 +242,11 @@ let rec fold_map_expression : 'a fold_mapper -> 'a -> expression -> 'a * express
       let (res,(a,b)) = Pair.fold_map ~f:self ~init ab in
       (res, return @@ E_application {lamb=a;args=b})
     )
-  | E_let_in { let_binder ; rhs ; let_result; attr } -> (
+  | E_let_in { let_binder ; rhs ; let_result; attributes } -> (
       let (res,rhs) = self init rhs in
       let (res,let_result) = self res let_result in
-      (res, return @@ E_let_in { let_binder ; rhs ; let_result ; attr })
+      (res, return @@ E_let_in { let_binder ; rhs ; let_result ; attributes })
     )
-  | E_let_pattern_in { let_pattern ; rhs ; let_result; attributes } -> (
-    let (res,rhs) = self init rhs in
-    let (res,let_result) = self res let_result in
-    (res, return @@ E_let_pattern_in { let_pattern ; rhs ; let_result ; attributes })
-  )
   | E_mod_in { module_binder ; rhs ; let_result } -> (
     let (res,let_result) = self init let_result in
     let (res,rhs) = fold_map_expression_in_module_expr f res rhs in
@@ -283,10 +278,10 @@ let rec fold_map_expression : 'a fold_mapper -> 'a -> expression -> 'a * express
   | E_assign a ->
     let (res,a) = Assign.fold_map self self_type init a in
     (res, return @@ E_assign a)
-  | E_let_mut_in { let_binder ; rhs ; let_result; attr } -> (
+  | E_let_mut_in { let_binder ; rhs ; let_result; attributes } -> (
     let (res,rhs) = self init rhs in
     let (res,let_result) = self res let_result in
-    (res, return @@ E_let_mut_in { let_binder ; rhs ; let_result ; attr })
+    (res, return @@ E_let_mut_in { let_binder ; rhs ; let_result ; attributes })
   )
   | E_for f ->
     let res, f = For_loop.fold_map self init f in

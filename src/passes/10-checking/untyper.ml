@@ -130,18 +130,12 @@ and untype_expression_content (ec:O.expression_content) : I.expression =
       return (e_matching matchee [case])
     )
   )
-  | E_let_in {let_binder;rhs;let_result; attr} ->
+  | E_let_in {let_binder;rhs;let_result; attributes} ->
     let tv = self_type rhs.type_expression in
     let rhs = self rhs in
     let result = self let_result in
-    let attr : ValueAttr.t = untype_value_attr attr in
-    return (e_let_mut_in (Binder.map (Fn.const @@ Some tv) let_binder) rhs result attr)
-  | E_let_pattern_in {let_pattern;rhs;let_result; attributes} ->
-    let rhs = self rhs in
-    let let_result = self let_result in
-    let attributes : ValueAttr.t = untype_value_attr attributes in
-    let let_pattern = Pattern.map (fun ty -> Some (untype_type_expression ty)) let_pattern in
-    return (e_let_pattern_in {let_pattern;rhs;let_result; attributes} ())
+    let attr : ValueAttr.t = untype_value_attr attributes in
+    return (e_let_mut_in (Pattern.map (Fn.const @@ Some tv) let_binder) rhs result attr)
   | E_mod_in {module_binder;rhs;let_result} ->
       let rhs = untype_module_expr rhs in
       let result = self let_result in
@@ -154,12 +148,12 @@ and untype_expression_content (ec:O.expression_content) : I.expression =
       let lambda = Lambda.map self self_type lambda in
       return @@ e_recursive fun_name fun_type lambda
   | E_module_accessor ma -> return @@ I.make_e @@ E_module_accessor ma
-  | E_let_mut_in {let_binder;rhs;let_result; attr} ->
+  | E_let_mut_in {let_binder;rhs;let_result; attributes} ->
     let tv = self_type rhs.type_expression in
     let rhs = self rhs in
     let result = self let_result in
-    let attr : ValueAttr.t = untype_value_attr attr in
-    return (e_let_in (Binder.map (Fn.const @@ Some tv) let_binder) rhs result attr)
+    let attr : ValueAttr.t = untype_value_attr attributes in
+    return (e_let_in (Pattern.map (Fn.const @@ Some tv) let_binder) rhs result attr)
   | E_assign a ->
     let a = Assign.map self self_type_opt a in
     return @@ make_e @@ E_assign a

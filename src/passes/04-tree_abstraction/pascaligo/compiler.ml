@@ -911,7 +911,7 @@ and compile_data_declaration ~raise : ?attr:CST.attribute list -> next:AST.expre
     e_let_in_ez ~loc ?ascr ?mut var attr init next
   in
   let return_let_pattern_in ~loc pattern attr init =
-    e_let_pattern_in ~loc pattern attr init next
+    e_let_in ~loc pattern attr init next
   in
   match data_decl with
   | D_Attr (a,x) -> compile_data_declaration ~raise ~attr:(a::attr) ~next x
@@ -962,18 +962,17 @@ and compile_statement ~raise : ?next:AST.expression -> CST.statement -> AST.expr
     (Some dd)
   | S_VarDecl var_decl -> (
     let vd, loc = r_split var_decl in
-    let type_ = Option.map ~f:(compile_type_expression ~raise <@ snd) vd.var_type in
     let attr = [] in
     let init = compile_expression ~raise vd.init in
-    match vd.pattern with
-    | P_Var name ->
-      let var = compile_variable name in
-      Option.map next
-        ~f:(fun next -> e_let_mut_in ~loc (Binder.make var type_) init init next)
-    | pattern ->
-      let pattern = compile_pattern ~raise pattern in
-      Option.map next
-        ~f:(fun next -> e_let_pattern_in ~loc pattern attr init next)
+    let init = Option.value_map vd.var_type
+      ~default:init
+      ~f:(fun (_,ty) ->
+        let type_annotation = compile_type_expression ~raise ty in
+        e_ascription ~loc:init.location {type_annotation ; anno_expr = init } ()) 
+    in
+    let pattern = compile_pattern ~raise vd.pattern in
+    Option.map next
+      ~f:(fun next -> e_let_in ~loc pattern attr init next)
   )
 
 and compile_block ~raise : ?next:AST.expression -> CST.block CST.reg -> AST.expression =
@@ -1068,7 +1067,7 @@ and compile_declaration ~raise : ?attr:CST.attribute list -> CST.declaration -> 
       let ast = D_value {binder; attr; expr} in
       return region ast
     | pattern ->
-      let pattern = compile_pattern ~raise ~const:true pattern in
+      let pattern = compile_pattern ~raise pattern in
       let expr = Option.value_map ascr (* TODO: should be possible to annotate a pattern *)
         ~default:expr
         ~f:(fun ty -> e_ascription ~loc:expr.location {type_annotation = ty; anno_expr = expr} ())

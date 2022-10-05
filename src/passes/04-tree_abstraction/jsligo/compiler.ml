@@ -962,17 +962,16 @@ and is_failwith_call = function
 and filter_private (attributes: CST.attributes) =
   List.filter ~f:(fun v -> not @@ String.equal v.value "private") attributes
 
-and compile_val_binding ~raise : CST.attributes -> CST.val_binding Region.reg
-                  -> [> `Pattern of type_expression option Pattern.t | `Binder of type_expression option Binder.t ]
-                     * string list * expression =
+(* can probably be cleaned up *)
+and compile_val_binding ~raise : CST.attributes -> CST.val_binding Region.reg -> type_expression option Pattern.t* string list * expression =
   fun attributes val_binding ->
     let CST.{binders; type_params; lhs_type; expr = let_rhs; _} = val_binding.value in
     let attr = compile_attributes attributes in
     let expr = compile_expression ~raise let_rhs in
     let lhs_type = Option.map ~f:(compile_type_expression ~raise <@ snd) lhs_type in
     match binders with
-    | CST.PVar name -> (*function or const *)
-      let fun_binder = compile_variable name.value.variable in
+    | CST.PVar name -> (* function or const *)
+      let fun_binder : Value_var.t = compile_variable name.value.variable in
       let expr = (match let_rhs with
         CST.EFun _ ->
           let lambda = trace_option ~raise (recursion_on_non_function expr.location) @@ get_e_lambda expr.expression_content in
@@ -990,37 +989,28 @@ and compile_val_binding ~raise : CST.attributes -> CST.val_binding Region.reg
         | _ -> expr
         )
       in
-      let binder = Binder.make fun_binder lhs_type in
-      (`Binder binder, attr, expr)
+      let binder = Pattern.var_pattern ~loc:(Location.lift name.region) (Binder.make fun_binder lhs_type) in
+      (binder, attr, expr)
     | p ->
       let () = if Option.is_some type_params then failwith "impossible?" else () in
       let pattern = compile_pattern ~raise p in
-      (* TODO: what to do with lhs_type here ? we might need pattern ascription ?*)
+      (* TODO: what to do with lhs_type here : we need pattern ascription *)
       let expr = Option.value_map lhs_type ~default:expr ~f:(fun ty -> AST.e_ascription ~loc:expr.location {anno_expr = expr ; type_annotation = ty} ()) in
-      (`Pattern pattern, attr, expr)
+      (pattern, attr, expr)
 
 and compile_let_binding ~raise : CST.attributes -> CST.val_binding Region.reg -> AST.declaration =
   fun attributes val_binding ->
-    let (b,attr,expr) = compile_val_binding ~raise attributes val_binding in
-    match b with
-    | `Binder binder -> Location.wrap ~loc:expr.location @@ AST.D_value {binder; attr; expr}
-    | `Pattern pattern -> Location.wrap ~loc:expr.location @@ AST.D_pattern {pattern; attr; expr}
+    let (pattern,attr,expr) = compile_val_binding ~raise attributes val_binding in
+    Location.wrap ~loc:expr.location (AST.D_pattern {pattern; attr; expr})
 
 and compile_let_in_binding ~raise : const:bool -> CST.attributes -> CST.val_binding Region.reg -> (AST.expression -> AST.expression) =
   fun ~const attributes val_binding ->
-    let (b,attr,rhs) = compile_val_binding ~raise attributes val_binding in
+    let (pattern,attr,rhs) = compile_val_binding ~raise attributes val_binding in
     let binding rhs body =
-      match b with
-      | `Binder binder ->
         if const then
-          e_let_in ~loc:rhs.location binder attr rhs body
+          e_let_in ~loc:rhs.location pattern attr rhs body
         else
-          e_let_mut_in ~loc:rhs.location binder attr rhs body
-      | `Pattern pattern ->
-        if const then
-          e_let_pattern_in ~loc:rhs.location pattern attr rhs body
-        else
-          failwith "the worst rebase of my life"
+          e_let_mut_in ~loc:rhs.location pattern attr rhs body
     in
     match rhs.expression_content with
     (* Assignment transitivity *)
@@ -1030,9 +1020,8 @@ and compile_let_in_binding ~raise : const:bool -> CST.attributes -> CST.val_bind
         let loc = Value_var.get_location v in
         e_variable ~loc v
       in
-      fun body -> e_sequence rhs (binding var body)
-    | _ ->
-      fun body -> binding rhs body
+      (fun body -> e_sequence rhs (binding var body))
+    | _ -> (fun body -> binding rhs body)
 
 and compile_statements ?(wrap=false) ~raise : CST.statements -> statement_result
 = fun statements ->
@@ -1074,7 +1063,7 @@ and compile_statement ?(wrap=false) ~raise : CST.statement -> statement_result
     statements
   | SBlock {value = {inside; _}; region=_} ->
     let block_scope_var = Value_var.fresh () in
-    let block_binder = Binder.make block_scope_var None in
+    let block_binder = Pattern.var_pattern (Binder.make block_scope_var None) in
     let statements = self_statements ~wrap:true inside in
     let statements_e = statement_result_to_expression statements in
     let let_in = e_let_in block_binder [] statements_e in
@@ -1191,9 +1180,9 @@ and compile_statement ?(wrap=false) ~raise : CST.statement -> statement_result
       let dummy_binder       = binder (Value_var.fresh ()) in
 
       let initial = Binding (fun x ->
-        e_let_mut_in dummy_binder [] switch_expr (* this is done so that in case of only default we don't the un-used variable warning *)
-          (e_let_mut_in fallthrough_binder [] (e_false ())
-            (e_let_mut_in found_case_binder [] (e_false ()) x))) in
+        e_let_mut_in (Pattern.var_pattern dummy_binder) [] switch_expr (* this is done so that in case of only default we don't the un-used variable warning *)
+          (e_let_mut_in (Pattern.var_pattern fallthrough_binder) [] (e_false ())
+            (e_let_mut_in (Pattern.var_pattern found_case_binder) [] (e_false ()) x))) in
 
       let cases = Utils.nseq_to_list s.cases in
       let fallthrough_assign_false = e_assign fallthrough_binder (e_false ()) in

@@ -50,11 +50,7 @@ end = struct
     | E_application { lamb; args } -> VarSet.union (self lamb) (self args)
     | E_let_mut_in { let_binder; rhs; let_result; _ }
     | E_let_in { let_binder; rhs; let_result; _ } ->
-      VarSet.union
-        (self rhs)
-        (VarSet.remove (Binder.get_var let_binder) (self let_result))
-    | E_let_pattern_in { let_pattern; rhs; let_result; _ } ->
-      let bound = List.map ~f:Binder.get_var (Pattern.binders let_pattern) in
+      let bound = List.map ~f:Binder.get_var (Pattern.binders let_binder) in
       let fv_let_result = List.fold bound
         ~init:(self let_result)
         ~f:(fun acc x -> VarSet.remove x acc)

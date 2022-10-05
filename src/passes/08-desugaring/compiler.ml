@@ -142,17 +142,11 @@ let rec compile_expression : I.expression -> O.expression =
       let recs = Recursive.map self self_type recs in
       return @@ O.E_recursive recs
     | I.E_let_in {let_binder;attributes;rhs;let_result} ->
-      let let_binder = Binder.map self_type_opt let_binder in
-      let rhs = self rhs in
-      let let_result = self let_result in
-      let attr = compile_exp_attributes attributes in
-      return @@ O.E_let_in {let_binder;attr;rhs;let_result}
-    | I.E_let_pattern_in {let_pattern;attributes;rhs;let_result} ->
-      let let_pattern = Pattern.map self_type_opt let_pattern in
+      let let_binder = Pattern.map self_type_opt let_binder in
       let rhs = self rhs in
       let let_result = self let_result in
       let attributes = compile_exp_attributes attributes in
-      return @@ O.E_let_pattern_in {let_pattern;attributes;rhs;let_result}
+      return @@ O.E_let_in {let_binder;attributes;rhs;let_result}
     | I.E_type_in {type_binder; rhs; let_result} ->
       let rhs = self_type rhs in
       let let_result = self let_result in
@@ -264,8 +258,8 @@ let rec compile_expression : I.expression -> O.expression =
     | I.E_sequence {expr1; expr2} ->
       let expr1 = self expr1 in
       let expr2 = self expr2 in
-      let let_binder = Binder.make (Value_var.fresh ~name:"()" ()) (Some (O.t_unit ())) in
-      return @@ O.E_let_in {let_binder; rhs=expr1;let_result=expr2; attr = {inline=false; no_mutation=false; view = false ; public=true ; hidden = false ; thunk = false }}
+      let let_binder = Pattern.var_pattern (Binder.make (Value_var.fresh ~name:"()" ()) (Some (O.t_unit ()))) in
+      return @@ O.E_let_in {let_binder; rhs=expr1;let_result=expr2; attributes = {inline=false; no_mutation=false; view = false ; public=true ; hidden = false ; thunk = false }}
     | I.E_skip () -> O.e_unit ~loc:sugar.location ~sugar ()
     | I.E_tuple t ->
       let aux (i,acc) el =
@@ -287,11 +281,11 @@ let rec compile_expression : I.expression -> O.expression =
       let while_loop = While_loop.map self while_loop in
       return @@ O.E_while while_loop
     | I.E_let_mut_in { let_binder; rhs; let_result; attributes } ->
-      let let_binder = Binder.map self_type_opt let_binder in
+      let let_binder = Pattern.map self_type_opt let_binder in
       let rhs = self rhs in
       let let_result = self let_result in
-      let attr = compile_exp_attributes attributes in
-      return @@ O.E_let_mut_in { let_binder; attr; rhs; let_result }
+      let attributes = compile_exp_attributes attributes in
+      return @@ O.E_let_mut_in { let_binder; attributes; rhs; let_result }
 
 and compile_declaration : I.declaration -> O.declaration = fun d ->
   let return wrap_content : O.declaration = {d with wrap_content} in

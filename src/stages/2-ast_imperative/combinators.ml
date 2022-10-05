@@ -136,18 +136,12 @@ let e_lambda    ?loc binder output_type result : expression = make_e ?loc @@ E_l
 let e_type_abs  ?loc type_binder result : expression = e_type_abstraction ?loc {type_binder;result} ()
 let e_lambda_ez ?loc var ?ascr ?mut_flag output_type result : expression = e_lambda ?loc (Ligo_prim.Param.make ?mut_flag var ascr) output_type result
 let e_recursive ?loc fun_name fun_type lambda = make_e ?loc @@ E_recursive {fun_name; fun_type; lambda}
-
-(* let e_recursive_ez ?loc fun_name fun_type lambda = e_recursive ?loc (Var.of_input_var fun_name) fun_type lambda *)
 let e_let_in    ?loc let_binder attributes rhs let_result = make_e ?loc @@ E_let_in { let_binder; rhs ; let_result; attributes }
 let e_let_mut_in ?loc let_binder attributes rhs let_result = make_e ?loc @@ E_let_mut_in { let_binder; rhs; let_result; attributes }
-
 let e_let_in_ez ?loc var ?ascr ?(mut = false) attributes rhs let_result = 
-  let binder = Ligo_prim.Binder.make var ascr in
+  let binder = Pattern.var_pattern (Ligo_prim.Binder.make var ascr) in
   if mut then e_let_mut_in ?loc binder attributes rhs let_result
   else e_let_in ?loc binder attributes rhs let_result
-
-(* let e_let_in_ez ?loc binder ascr inline rhs let_result = e_let_in ?loc (Var.of_input_var binder, ascr) inline rhs let_result *)
-let e_let_pattern_in ?loc let_pattern attributes rhs let_result = make_e ?loc @@ E_let_pattern_in { let_pattern; rhs ; let_result; attributes }
 let e_type_in   ?loc type_binder rhs let_result = make_e ?loc @@ E_type_in { type_binder; rhs ; let_result}
 let e_mod_in    ?loc module_binder rhs let_result = make_e ?loc @@ E_mod_in  { module_binder; rhs ; let_result }
 let m_path ?loc path = make_m ?loc (M_module_path path)
@@ -175,7 +169,7 @@ let e_param_matching_tuple ?loc matchee (params: _ Param.t list) body : expressi
     List.fold_left params ~init:body ~f:(fun body param ->
       match Param.get_mut_flag param with
       | Immutable -> body
-      | Mutable -> e_let_mut_in ?loc (Param.to_binder param) [] (e_variable ?loc @@ Param.get_var param) body
+      | Mutable -> e_let_mut_in ?loc (Pattern.var_pattern (Param.to_binder param)) [] (e_variable ?loc @@ Param.get_var param) body
       )
   in
   let cases = [ Match_expr.{ pattern ; body } ] in
@@ -199,7 +193,7 @@ let e_param_matching_record ?loc matchee (params: (string * _ Param.t) list) bod
     List.fold_left params ~init:body ~f:(fun body param ->
       match Param.get_mut_flag param with
       | Immutable -> body
-      | Mutable -> e_let_mut_in ?loc (Param.to_binder param) [] (e_variable ?loc @@ Param.get_var param) body
+      | Mutable -> e_let_mut_in ?loc (Pattern.var_pattern (Param.to_binder param)) [] (e_variable ?loc @@ Param.get_var param) body
       )
   in
   let cases = [ Match_expr.{ pattern ; body } ] in

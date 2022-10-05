@@ -31,7 +31,6 @@ let rec fold_expression : 'a folder -> 'a -> expression -> 'a = fun f init e ->
   | E_accessor  a -> Types.Accessor.fold self init a
   | E_tuple     t -> List.fold ~f:self ~init t
   | E_let_in   li -> Let_in.fold self self_type init li
-  | E_let_pattern_in li -> Let_pattern_in.fold self self_type init li
   | E_type_in  ti -> Type_in.fold self self_type init ti
   | E_mod_in   mi -> Mod_in.fold  self self_type init mi
   | E_cond      c -> Conditional.fold self init c
@@ -110,10 +109,6 @@ let rec map_expression : exp_mapper -> expression -> expression = fun f e ->
       let li = Let_in.map self (fun a -> a) li in
       return @@ E_let_in li
     )
-  | E_let_pattern_in li -> (
-    let li = Let_pattern_in.map self (fun a -> a) li in
-    return @@ E_let_pattern_in li
-  )
   | E_type_in ti -> (
       let ti = Type_in.map self (fun a -> a) ti in
       return @@ E_type_in ti
@@ -300,10 +295,6 @@ let rec fold_map_expression : ('a, 'err) fold_mapper -> 'a -> expression -> 'a *
       let res,li = Let_in.fold_map self idle init li in
       (res, return @@ E_let_in li)
     )
-  | E_let_pattern_in li -> (
-    let res,li = Let_pattern_in.fold_map self idle init li in
-    (res, return @@ E_let_pattern_in li)
-  )
   | E_type_in ti -> (
       let res,ti = Type_in.fold_map self idle init ti in
       (res, return @@ E_type_in ti)

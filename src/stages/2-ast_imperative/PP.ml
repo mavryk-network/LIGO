@@ -84,7 +84,6 @@ and expression_content ppf (ec : expression_content) =
   | E_matching    m -> Match_expr.pp expression type_expression_option ppf m
   | E_recursive  r -> Recursive.pp expression type_expression_annot ppf r
   | E_let_in     li -> Let_in.pp expression type_expression_option ppf li
-  | E_let_pattern_in li -> Let_pattern_in.pp expression type_expression_option ppf li
   | E_type_in   ti -> Type_in.pp expression type_expression ppf ti
   | E_mod_in    mi -> Mod_in.pp  expression module_expr ppf mi
   | E_raw_code   r -> Raw_code.pp   expression ppf r
