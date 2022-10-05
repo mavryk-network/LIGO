@@ -322,7 +322,7 @@ and product_rule ~raise : err_loc:Location.t -> typed_pattern -> matchees -> equ
             (l, b)
         in
         List.mapi ~f:aux ps
-      | P_record (labels,patterns) , t ->
+      | P_record lps , t ->
         let aux : (Label.t * _ Pattern.t)  -> (Label.t * (O.type_expression Binder.t)) =
           fun (l,proj_pattern) ->
             let field_t = extract_record_type ~raise p l t in
@@ -332,7 +332,7 @@ and product_rule ~raise : err_loc:Location.t -> typed_pattern -> matchees -> equ
             in
             (l, b)
         in
-        List.map ~f:aux (List.zip_exn labels patterns)
+        List.map ~f:aux (Record.LMap.to_kv_list lps)
       | _ -> raise.error @@ corner_case __LOC__
     in
     let aux : typed_pattern list * O.expression ->
@@ -349,12 +349,12 @@ and product_rule ~raise : err_loc:Location.t -> typed_pattern -> matchees -> equ
           in
           let tps = List.mapi ~f:aux ps in
           (tps @ var_filler::ptl , body)
-        | P_record (labels,ps) ->
-          let aux label p =
+        | P_record lps ->
+          let aux (label, p) =
             let field_t = extract_record_type ~raise p label t in
             (p,field_t)
           in
-          let tps = List.map2_exn ~f:aux labels ps in
+          let tps = List.map ~f:aux (Record.LMap.to_kv_list lps) in
           (tps @ var_filler::ptl , body)
         | P_var _ ->
           let filler =
@@ -370,8 +370,8 @@ and product_rule ~raise : err_loc:Location.t -> typed_pattern -> matchees -> equ
                 (v,field_t)
               in
               List.mapi ~f:aux ps
-            | P_record (labels,patterns) , t ->
-              let aux l p =
+            | P_record lps , t ->
+              let aux (l, p) =
                 let field_t = extract_record_type ~raise p l t in
                 let v = match p.wrap_content with
                   | P_var _ -> p
@@ -379,7 +379,7 @@ and product_rule ~raise : err_loc:Location.t -> typed_pattern -> matchees -> equ
                 in
                 (v,field_t)
               in
-              List.map2_exn ~f:aux labels patterns
+              List.map ~f:aux (Record.LMap.to_kv_list lps)
             | _ -> raise.error @@ corner_case __LOC__
           in
           (filler @ pl , body)

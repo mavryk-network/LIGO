@@ -812,12 +812,12 @@ and compile_pattern ~raise : CST.pattern -> AST.ty_expr option Pattern.t =
     Location.wrap ~loc (Pattern.P_tuple nested)
   | PObject record ->
     let (record, loc) = r_split record in
-    let ps = List.map ~f:(compile_pattern ~raise) @@ Utils.nsepseq_to_list record.inside in
-    let labels = List.map
-        (Utils.nsepseq_to_list record.inside)
-        ~f:(function PVar var -> Label.of_string var.value.variable.value | _ -> raise.error @@ unsupported_pattern_type p)
-    in
-    Location.wrap ~loc (Pattern.P_record (labels,ps))
+    let lps = List.map ~f:(fun p ->  
+      let l = match p with
+        CST.PVar var -> Label.of_string var.value.variable.value 
+      | _ -> raise.error @@ unsupported_pattern_type p in
+      l, compile_pattern ~raise p) @@ Utils.nsepseq_to_list record.inside in
+    Location.wrap ~loc (Pattern.P_record (Record.of_list lps))
   | (PRest _|PAssign _|PConstr _|PDestruct _) ->
     raise.error @@ unsupported_pattern_type p
 
