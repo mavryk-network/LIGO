@@ -3,10 +3,6 @@ module Location = Simple_utils.Location
 module List = Simple_utils.List
 module Ligo_string = Simple_utils.Ligo_string
 
-module Michelson_annot_attr = struct
-  type t = { michelson_annotation : string option }
-  [@@deriving eq, compare, hash, yojson]
-end
 
 module Layout_attr = struct
   type t = { layout : Layout.t option } [@@deriving eq, compare, hash, yojson]
@@ -98,7 +94,10 @@ end
 module Accessor = Accessor (Access_label)
 module Update = Update (Access_label)
 module Record = Record.Map
-module Rows = Rows.Map (Layout_attr) (Michelson_annot_attr)
+module Rows = Rows.Map (Layout_attr) (Annotation.Michelson)
+type 'a annotation = [%import: 'a Ligo_prim.Annotation.Michelson.t]
+
+
 module Let_in = Let_in.Make (Value_attr)
 
 type type_content =

@@ -1,46 +1,55 @@
-open Types
 open Ligo_prim
+open Types
 
-let kv_list_of_t_sum ?(layout = Layout.L_tree) (m: row_element Record.t) =
-  let lst = Record.LMap.to_kv_list m in
+let kv_list_of_t_sum
+    ?(layout = Layout.L_tree)
+    (fields : _ Rows.Elem.t Label.Map.t)
+  =
+  let fields = Map.to_alist fields in
   match layout with
-  | L_tree -> lst
-  | L_comb -> (
-      let aux (_ , ({ associated_type = _ ; decl_pos = a ; _ }: row_element)) (_ , ({ associated_type = _ ; decl_pos = b ; _ } : row_element)) = Int.compare a b in
-      List.sort ~compare:aux lst
-    )
+  | L_tree -> fields
+  | L_comb ->
+    List.sort
+      fields
+      ~compare:(fun (_, (row_elem1 : _ Rows.Elem.t)) (_, row_elem2) ->
+        Int.compare row_elem1.content.decl_pos row_elem2.content.decl_pos)
 
-let kv_list_of_t_record_or_tuple ?(layout = Layout.L_tree) (m: row_element Record.t) =
-  let lst =
-    if (Record.is_tuple m)
-    then Record.tuple_of_record m
-    else Record.LMap.to_kv_list m
-  in
+
+let kv_list_of_t_record
+    ?(layout = Layout.L_tree)
+    (fields : _ Rows.Elem.t Label.Map.t)
+  =
+  let fields = Map.to_alist fields in
   match layout with
-  | L_tree -> lst
-  | L_comb -> (
-      let aux (_ , ({ associated_type = _ ; decl_pos = a ; _ }: row_element)) (_ , ({ associated_type = _ ; decl_pos = b ; _ } : row_element)) = Int.compare a b in
-      List.sort ~compare:aux lst
-    )
+  | L_tree -> fields
+  | L_comb ->
+    List.sort
+      fields
+      ~compare:(fun (_, (row_elem1 : _ Rows.Elem.t)) (_, row_elem2) ->
+        Int.compare row_elem1.content.decl_pos row_elem2.content.decl_pos)
 
-let kv_list_of_record_or_tuple ~layout record_t_content record =
-  let exps =
-    if (Record.is_tuple record)
-    then Record.tuple_of_record record
-    else Record.LMap.to_kv_list record
-  in
+
+let kv_list_of_record ~layout record_t_content record =
   match (layout : Layout.t) with
-  | L_tree -> List.map ~f:snd exps
-  | L_comb -> (
-    let types = if (Record.is_tuple record)
-                then Record.tuple_of_record record_t_content
-                else Record.LMap.to_kv_list record_t_content in
-    let te = List.map ~f:(fun ((label_t,t),(label_e,e)) ->
-      assert (Label.equal label_t label_e) ; (*TODO TEST*)
-      (t,e)) (List.zip_exn types exps) in
-    let s = List.sort ~compare:(fun (({ associated_type = _ ; decl_pos = a ; _ }: row_element),_) ({ associated_type = _ ; decl_pos = b ; _ },_) -> Int.compare a b) te in
+  | L_tree -> List.map ~f:snd record
+  | L_comb ->
+    let types = Map.to_alist record_t_content in
+    let te =
+      List.map
+        ~f:(fun ((label_t, t), (label_e, e)) ->
+          assert (Label.equal label_t label_e);
+          (*TODO TEST*)
+          t, e)
+        (List.zip_exn types record)
+    in
+    let s =
+      List.sort
+        ~compare:(fun ((row_elem1 : _ Rows.Elem.t), _) (row_elem2, _) ->
+          Int.compare row_elem1.content.decl_pos row_elem2.content.decl_pos)
+        te
+    in
     List.map ~f:snd s
-  )
+
 
 let remove_empty_annotation (ann : string option) : string option =
   match ann with
@@ -48,148 +57,206 @@ let remove_empty_annotation (ann : string option) : string option =
   | Some ann -> Some ann
   | None -> None
 
-let is_michelson_or (t: _ Record.t) =
-  let s = List.sort ~compare:(fun (k1, _) (k2, _) -> Label.compare k1 k2) @@
-    Record.LMap.to_kv_list t in
+
+let is_michelson_or (t : _ Record.t) =
+  let s =
+    List.sort ~compare:(fun (k1, _) (k2, _) -> Label.compare k1 k2)
+    @@ Map.to_alist t
+  in
   match s with
-  | [ (Label "M_left", ta) ; (Label "M_right", tb) ] -> Some (ta,tb)
+  | [ (Label "M_left", ta); (Label "M_right", tb) ] -> Some (ta, tb)
   | _ -> None
 
-let is_michelson_pair (t: row_element Record.t) : (row_element * row_element) option =
-  match Record.LMap.to_list t with
-  | [ a ; b ] -> (
-      if List.for_all ~f:(fun i -> Record.LMap.mem i t) @@ (Label.range 0 2)
-      && Option.(
-        is_some a.michelson_annotation || is_some b.michelson_annotation
-      )
-      then Some (a , b)
-      else None
-    )
+
+let is_michelson_pair (t : _ Rows.Elem.t Label.Map.t)
+    : (_ Rows.Elem.t * _ Rows.Elem.t) option
+  =
+  match Map.data t with
+  | [ a; b ] ->
+    if (List.for_all ~f:(fun i -> Map.mem t i) @@ Label.range 0 2)
+       && Option.(
+            is_some a.michelson_annotation || is_some b.michelson_annotation)
+    then Some (a, b)
+    else None
   | _ -> None
+
 
 (* This function parse te and replace all occurence of binder by value *)
-let rec subst_type (binder : Type_var.t) (value : type_expression) (te : type_expression) =
+let rec subst_type
+    (binder : Type_var.t)
+    (value : type_expression)
+    (te : type_expression)
+  =
   let self = subst_type binder value in
-  let return type_content = {te with type_content} in
+  let return type_content = { te with type_content } in
   match te.type_content with
-    T_variable var when Type_var.equal binder var -> value
-  | T_variable  _ -> te
-  | T_constant  {language;injection;parameters} ->
-      let parameters = List.map ~f:self parameters in
-      return @@ T_constant {language;injection;parameters}
+  | T_variable var when Type_var.equal binder var -> value
+  | T_variable _ -> te
+  | T_constant { language; injection; parameters } ->
+    let parameters = List.map ~f:self parameters in
+    return @@ T_constant { language; injection; parameters }
   | T_singleton _ -> te
-  | T_arrow {type1;type2} ->
-      let type1 = self type1 in
-      let type2 = self type2 in
-      return @@ T_arrow {type1;type2}
-  | T_sum m -> (
-    let aux ({associated_type;michelson_annotation;decl_pos} : row_element) =
+  | T_arrow { type1; type2 } ->
+    let type1 = self type1 in
+    let type2 = self type2 in
+    return @@ T_arrow { type1; type2 }
+  | T_sum m ->
+    let aux
+        ({ content = { associated_type; decl_pos }; michelson_annotation } :
+          _ Rows.Elem.t)
+      =
       let associated_type = self associated_type in
-      ({associated_type;michelson_annotation;decl_pos} : row_element)
+      ({ content = { associated_type; decl_pos }; michelson_annotation }
+        : _ Rows.Elem.t)
     in
     return @@ T_sum { m with fields = Record.map aux m.fields }
-  )
-  | T_record m -> (
-    let aux ({associated_type;michelson_annotation;decl_pos} : row_element) =
+  | T_record m ->
+    let aux
+        ({ content = { associated_type; decl_pos }; michelson_annotation } :
+          _ Rows.Elem.t)
+      =
       let associated_type = self associated_type in
-      ({associated_type;michelson_annotation;decl_pos} : row_element)
+      ({ content = { associated_type; decl_pos }; michelson_annotation }
+        : _ Rows.Elem.t)
     in
     return @@ T_record { m with fields = Record.map aux m.fields }
-  )
-  | T_for_all {ty_binder;kind;type_} ->
+  | T_for_all { ty_binder; kind; type_ } ->
     let type_ = self type_ in
-    return @@ T_for_all {ty_binder;kind;type_}
+    return @@ T_for_all { ty_binder; kind; type_ }
+  | T_tuple tup ->
+    let tup = Tuple.map self tup in
+    return @@ T_tuple tup
+
 
 (* This function transforms a type `∀ v1 ... vn . t` into the pair `([ v1 ; .. ; vn ] , t)` *)
 let destruct_for_alls (t : type_expression) =
-  let rec destruct_for_alls type_vars (t : type_expression) = match t.type_content with
-    | T_for_all { ty_binder ; type_ ; _ } ->
-       destruct_for_alls (ty_binder :: type_vars) type_
-    | _ -> (type_vars, t)
-  in destruct_for_alls [] t
+  let rec destruct_for_alls type_vars (t : type_expression) =
+    match t.type_content with
+    | T_for_all { ty_binder; type_; _ } ->
+      destruct_for_alls (ty_binder :: type_vars) type_
+    | _ -> type_vars, t
+  in
+  destruct_for_alls [] t
+
 
 (* This function transforms a type `t1 -> ... -> tn -> t` into the pair `([ t1 ; .. ; tn ] , t)` *)
 let destruct_arrows_n (t : type_expression) (n : int) =
-  let rec destruct_arrows type_vars (t : type_expression) = match t.type_content with
-    | T_arrow { type1 ; type2 } when List.length type_vars < n ->
-       destruct_arrows (type1 :: type_vars) type2
-    | _ -> (List.rev type_vars, t)
-  in destruct_arrows [] t
+  let rec destruct_arrows type_vars (t : type_expression) =
+    match t.type_content with
+    | T_arrow { type1; type2 } when List.length type_vars < n ->
+      destruct_arrows (type1 :: type_vars) type2
+    | _ -> List.rev type_vars, t
+  in
+  destruct_arrows [] t
+
 
 (* This function transforms a type `t1 -> ... -> tn -> t` into the pair `([ t1 ; .. ; tn ] , t)` *)
 let destruct_arrows (t : type_expression) =
-  let rec destruct_arrows type_vars (t : type_expression) = match t.type_content with
-    | T_arrow { type1 ; type2 } ->
-       destruct_arrows (type1 :: type_vars) type2
-    | _ -> (List.rev type_vars, t)
-  in destruct_arrows [] t
+  let rec destruct_arrows type_vars (t : type_expression) =
+    match t.type_content with
+    | T_arrow { type1; type2 } -> destruct_arrows (type1 :: type_vars) type2
+    | _ -> List.rev type_vars, t
+  in
+  destruct_arrows [] t
 
-let assert_eq = fun a b -> if Caml.(=) a b then Some () else None
-let assert_same_size = fun a b -> if (List.length a = List.length b) then Some () else None
+
+let assert_eq a b = if Caml.( = ) a b then Some () else None
+
+let assert_same_size a b =
+  if List.length a = List.length b then Some () else None
+
 
 (* ~unforged_tickets allows type containing tickets to be decompiled to 'unforged' tickets (e.g. `int * int ticket` |-> `int * {ticketer : address ; value : int ; amount : nat }
    TODO: we could think of a better way to inject those "comparison expeptions" to assert_type_expression `*)
-let rec assert_type_expression_eq ?(unforged_tickets=false)(a, b: (type_expression * type_expression)) : unit option =
+let rec assert_type_expression_eq
+    ?(unforged_tickets = false)
+    ((a, b) : type_expression * type_expression)
+    : unit option
+  =
   let open Simple_utils.Option in
-  match (a.type_content, b.type_content) with
-  | T_constant {language=_;injection=Ligo_prim.Literal_types.Ticket ;parameters=[_ty]} , _human_t | _human_t , T_constant {language=_;injection=Ligo_prim.Literal_types.Ticket;parameters=[_ty]} -> (
-    if unforged_tickets then
-      Some ()
-    else
-      None
-  )
-  | T_constant {language=la;injection=ia;parameters=lsta}, T_constant {language=lb;injection=ib;parameters=lstb} -> (
-    if (String.equal la lb) && (Literal_types.equal ia ib) then (
+  match a.type_content, b.type_content with
+  | ( T_constant
+        { language = _
+        ; injection = Ligo_prim.Literal_types.Ticket
+        ; parameters = [ _ty ]
+        }
+    , _human_t )
+  | ( _human_t
+    , T_constant
+        { language = _
+        ; injection = Ligo_prim.Literal_types.Ticket
+        ; parameters = [ _ty ]
+        } ) -> if unforged_tickets then Some () else None
+  | ( T_constant { language = la; injection = ia; parameters = lsta }
+    , T_constant { language = lb; injection = ib; parameters = lstb } ) ->
+    if String.equal la lb && Literal_types.equal ia ib
+    then
       let* _ = assert_same_size lsta lstb in
-      List.fold_left ~f:(fun acc p -> match acc with | None -> None | Some () -> assert_type_expression_eq ~unforged_tickets p) ~init:(Some ()) (List.zip_exn lsta lstb)
-    ) else
-      None
-  )
+      List.fold_left
+        ~f:(fun acc p ->
+          match acc with
+          | None -> None
+          | Some () -> assert_type_expression_eq ~unforged_tickets p)
+        ~init:(Some ())
+        (List.zip_exn lsta lstb)
+    else None
   | T_constant _, _ -> None
-  | T_sum sa, T_sum sb -> (
-      let sa' = Record.LMap.to_kv_list_rev sa.fields in
-      let sb' = Record.LMap.to_kv_list_rev sb.fields in
-      let aux ((ka, ({associated_type=va;_} : row_element)), (kb, ({associated_type=vb;_} : row_element))) =
-        let* _ = assert_eq ka kb in
-        assert_type_expression_eq ~unforged_tickets (va, vb)
-      in
-      let* _ = assert_same_size sa' sb' in
-      List.fold_left ~f:(fun acc p -> match acc with | None -> None | Some () -> aux p) ~init:(Some ()) (List.zip_exn sa' sb')
-    )
+  | T_sum sa, T_sum sb -> assert_row_eq ~unforged_tickets (sa, sb)
   | T_sum _, _ -> None
-  | T_record ra, T_record rb
-       when Bool.(<>) (Record.is_tuple ra.fields) (Record.is_tuple rb.fields) -> None
-  | T_record ra, T_record rb -> (
-      let sort_lmap r' = List.sort ~compare:(fun (a,_) (b,_) -> Label.compare a b) r' in
-      let ra' = sort_lmap @@ Record.LMap.to_kv_list_rev ra.fields in
-      let rb' = sort_lmap @@ Record.LMap.to_kv_list_rev rb.fields in
-      let aux ((ka, ({associated_type=va;_}: row_element)), (kb, ({associated_type=vb;_}: row_element))) =
-        let* _ = assert_eq ka kb in
-        assert_type_expression_eq ~unforged_tickets (va, vb)
-      in
-      let* _ = assert_eq ra.layout rb.layout in
-      let* _ = assert_same_size ra' rb' in
-      List.fold_left ~f:(fun acc p -> match acc with | None -> None | Some () -> aux p) ~init:(Some ()) (List.zip_exn ra' rb')
-
-    )
+  | T_record ra, T_record rb -> assert_row_eq ~unforged_tickets (ra, rb)
   | T_record _, _ -> None
-  | T_arrow {type1;type2}, T_arrow {type1=type1';type2=type2'} ->
+  | T_arrow { type1; type2 }, T_arrow { type1 = type1'; type2 = type2' } ->
     let* _ = assert_type_expression_eq ~unforged_tickets (type1, type1') in
     assert_type_expression_eq ~unforged_tickets (type2, type2')
   | T_arrow _, _ -> None
   | T_variable x, T_variable y ->
-     (* TODO : we must check that the two types were bound at the same location (even if they have the same name), i.e. use something like De Bruijn indices or a propper graph encoding *)
-     if Type_var.equal x y then Some () else None
+    (* TODO : we must check that the two types were bound at the same location (even if they have the same name), i.e. use something like De Bruijn indices or a propper graph encoding *)
+    if Type_var.equal x y then Some () else None
   | T_variable _, _ -> None
-  | T_singleton a , T_singleton b -> assert_literal_eq (a , b)
-  | T_singleton _ , _ -> None
-  | T_for_all a , T_for_all b ->
-    assert_type_expression_eq ~unforged_tickets (a.type_, b.type_) >>= fun _ ->
-    Some (assert (Kind.equal a.kind b.kind))
-  | T_for_all _ , _ -> None
+  | T_singleton a, T_singleton b -> assert_literal_eq (a, b)
+  | T_singleton _, _ -> None
+  | T_for_all a, T_for_all b ->
+    assert_type_expression_eq ~unforged_tickets (a.type_, b.type_)
+    >>= fun _ -> Some (assert (Kind.equal a.kind b.kind))
+  | T_for_all _, _ -> None
+  | T_tuple tup1, T_tuple tup2 ->
+    (match
+       List.for_all2 tup1 tup2 ~f:(fun type1 type2 ->
+           Option.is_some
+             (assert_type_expression_eq ~unforged_tickets (type1, type2)))
+     with
+    | Ok result -> Option.some_if result ()
+    | Unequal_lengths -> None)
+  | T_tuple _, _ -> None
+
+
+and assert_row_eq ?(unforged_tickets = false) ((r1, r2) : _ Rows.t * _ Rows.t) =
+  let open Option.Let_syntax in
+  let sort_lmap r' =
+    List.sort ~compare:(fun (a, _) (b, _) -> Label.compare a b) r'
+  in
+  let ra' = sort_lmap @@ Map.to_alist r1.fields in
+  let rb' = sort_lmap @@ Map.to_alist r1.fields in
+  let aux
+      ( (ka, ({ content = { associated_type = va; _ }; _ } : _ Rows.Elem.t))
+      , (kb, ({ content = { associated_type = vb; _ }; _ } : _ Rows.Elem.t)) )
+    =
+    let%bind () = assert_eq ka kb in
+    assert_type_expression_eq ~unforged_tickets (va, vb)
+  in
+  let%bind () = assert_eq r1.attributes.layout r2.attributes.layout in
+  let%bind () = assert_same_size ra' rb' in
+  List.fold_left
+    ~f:(fun acc p ->
+      match acc with
+      | None -> None
+      | Some () -> aux p)
+    ~init:(Some ())
+    (List.zip_exn ra' rb')
+
 
 and type_expression_eq ab = Option.is_some @@ assert_type_expression_eq ab
 
-
-and assert_literal_eq (a, b : Literal_value.t * Literal_value.t) : unit option =
+and assert_literal_eq ((a, b) : Literal_value.t * Literal_value.t) : unit option
+  =
   if Literal_value.equal a b then Some () else None

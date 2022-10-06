@@ -164,7 +164,7 @@ let rec assert_type_expression_eq ((a, b) : type_expression * type_expression)
       (Map.equal
          (fun (row_elem1 : _ Rows.Elem.t) row_elem2 ->
            assert_type_expression_eq
-             (row_elem1.associated_type, row_elem2.associated_type)
+             (row_elem1.content.associated_type, row_elem2.content.associated_type)
            |> Option.is_some)
          row1.fields
          row2.fields)

@@ -1,17 +1,17 @@
-open Types
 open Ligo_prim
+open Types
 
 let v_pair : value * value -> value =
-  fun (a, b) -> V_Record (Record.of_list [(Label.of_int 0, a) ; (Label.of_int 1, b)])
+  fun (a, b) -> V_Record (Label.Map.of_alist_exn [(Label.of_int 0, a) ; (Label.of_int 1, b)])
 
 let v_triple : value * value * value -> value =
-  fun (a, b, c) -> V_Record (Record.of_list [(Label.of_int 0, a) ; (Label.of_int 1, b) ; (Label.of_int 2, c)])
+  fun (a, b, c) -> V_Record (Label.Map.of_alist_exn [(Label.of_int 0, a) ; (Label.of_int 1, b) ; (Label.of_int 2, c)])
 
 let v_record : (string * value) list -> value =
   fun lst ->
     if List.contains_dup ~compare:(fun (l1,_) (l2,_) -> String.compare l1 l2) lst then
       failwith "trying to create a record value with duplicate field" ;
-    V_Record (Record.of_list (List.map ~f:(fun (l,v) -> (Label.of_string l , v)) lst))
+    V_Record (Label.Map.of_alist_exn (List.map ~f:(fun (l,v) -> (Label.of_string l , v)) lst))
 
 let v_bool : bool -> value =
   fun b -> V_Ct (C_bool b)
@@ -83,8 +83,8 @@ let extract_pair : value -> (value * value) option =
   fun p ->
     ( match p with
       | V_Record lmap ->
-        let fst = Record.LMap.find (Label.of_int 0) lmap in
-        let snd = Record.LMap.find (Label.of_int 1) lmap in
+        let fst = Map.find_exn lmap (Label.of_int 0) in
+        let snd = Map.find_exn lmap (Label.of_int 1) in
         Some (fst,snd)
       | _ -> None
     )
@@ -192,7 +192,7 @@ let get_pair : value -> (value * value) option =
   fun value ->
     match value with
     | V_Record lm -> (
-      let x = Record.LMap.to_kv_list lm in
+      let x = Map.to_alist lm in
       match x with
       | [ (Label "0", x ) ; (Label "1", y) ] -> Some (x,y)
       | _ -> None
@@ -309,6 +309,7 @@ let tag_value : value -> int = function
   | V_Ast_contract _ -> 10
   | V_Gen _ -> 11
   | V_location _ -> 12
+  | V_tuple _ -> 13
 
 let rec compare_value (v : value) (v' : value) : int =
   match v, v' with
@@ -318,8 +319,8 @@ let rec compare_value (v : value) (v' : value) : int =
      let compare (l, v) (l', v') = match Label.compare l l' with
          0 -> compare_value v v'
        | c -> c in
-     let r  = Record.LMap.to_kv_list r |> List.sort ~compare in
-     let r' = Record.LMap.to_kv_list r' |> List.sort ~compare in
+     let r  = Map.to_alist r |> List.sort ~compare in
+     let r' = Map.to_alist r' |> List.sort ~compare in
      List.compare compare r r'
   | V_Map m, V_Map m' ->
      let compare (k1, v1) (k2, v2) = match compare_value k1 k2 with
@@ -353,7 +354,9 @@ let rec compare_value (v : value) (v' : value) : int =
   | V_Gen v, V_Gen v' -> Caml.compare v v'
   | V_location loc, V_location loc' ->
     Int.compare loc loc'
-  | (V_Ct _ | V_List _ | V_Record _ | V_Map _ | V_Set _ | V_Construct _ | V_Michelson _ | V_Mutation _ | V_Func_val _ | V_Michelson_contract _ | V_Ast_contract _ | V_Gen _ | V_location _), (V_Ct _ | V_List _ | V_Record _ | V_Map _ | V_Set _ | V_Construct _ | V_Michelson _ | V_Mutation _ | V_Func_val _ | V_Michelson_contract _ | V_Ast_contract _ | V_Gen _ | V_location _) -> Int.compare (tag_value v) (tag_value v')
+  | V_tuple tup1, V_tuple tup2 ->
+    List.compare compare_value tup1 tup2
+  | (V_Ct _ | V_List _ | V_Record _ | V_Map _ | V_Set _ | V_Construct _ | V_Michelson _ | V_Mutation _ | V_Func_val _ | V_Michelson_contract _ | V_Ast_contract _ | V_Gen _ | V_location _ | V_tuple _), (V_Ct _ | V_List _ | V_Record _ | V_Map _ | V_Set _ | V_Construct _ | V_Michelson _ | V_Mutation _ | V_Func_val _ | V_Michelson_contract _ | V_Ast_contract _ | V_Gen _ | V_location _ | V_tuple _) -> Int.compare (tag_value v) (tag_value v')
 
 let equal_constant_val (c : constant_val) (c' : constant_val) : bool = Int.equal (compare_constant_val c c') 0
 let equal_value (v : value) (v' : value) : bool = Int.equal (compare_value v v') 0

@@ -16,6 +16,7 @@ module Abstraction = Abstraction
 module Type_app = Type_app
 module Type_abs = Type_abs
 module Tuple = Tuple
+module Annotation = Annotation
 
 (* Value level constructs *)
 module Value_var = Var.Value_var

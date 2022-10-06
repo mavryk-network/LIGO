@@ -11,7 +11,9 @@ module Attr = struct
       t
 end
 
-module Rows = Rows.List (Attr) (Attr)
+module Rows = Rows.List (Attr) (Annotation.Attr)
+type 'a annotation = [%import: 'a Ligo_prim.Annotation.Attr.t]
+
 
 type type_content =
   | T_variable of Type_var.t

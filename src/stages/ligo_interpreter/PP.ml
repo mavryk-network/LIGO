@@ -39,16 +39,12 @@ let rec pp_value : Format.formatter -> value -> unit = fun ppf v ->
     in
     Format.fprintf ppf "[%a]" (list_sep aux (tag " ; ")) vmap
   | V_Record recmap  ->
-    if (Record.is_tuple recmap) then
-      let aux : Format.formatter -> value -> unit = fun ppf v ->
-        Format.fprintf ppf "%a" pp_value v
-      in
-      Format.fprintf ppf "(%a)" (list_sep aux (tag " , ")) (Record.LMap.to_list recmap)
-    else
       let aux : Format.formatter -> (Label.t * value) -> unit = fun ppf (Label l, v) ->
         Format.fprintf ppf "%s = %a" l pp_value v
       in
-      Format.fprintf ppf "{%a}" (list_sep aux (tag " ; ")) (Record.LMap.to_kv_list recmap)
+      Format.fprintf ppf "{%a}" (list_sep aux (tag " ; ")) (Map.to_alist recmap)
+  | V_tuple tuple ->
+      Tuple.pp_expr pp_value ppf tuple
   | V_Michelson (Ty_code { code ; _ } | Untyped_code code) ->
     Format.fprintf ppf "%a" Tezos_utils.Michelson.pp code
   | V_Michelson_contract code ->

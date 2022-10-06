@@ -16,7 +16,9 @@ module Layout_attr = struct
   type t = { layout : Layout.t } [@@deriving eq, compare, hash, yojson]
 end
 
-module Rows = Rows.Map (Layout_attr) (Michelson_annot_attr)
+module Rows = Rows.Map (Layout_attr) (Annotation.Michelson)
+(* import for adding labels into the scope (without including the module) *)
+type 'a annotation = [%import: 'a Ligo_prim.Annotation.Michelson.t]
 
 module Value_attr = struct
   type t =

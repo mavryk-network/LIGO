@@ -5,14 +5,40 @@ module type S = sig
   val content : 'a t -> 'a
 end
 
-module No_annot : S with type 'a t = 'a = struct
+module None : S with type 'a t = 'a = struct
   type 'a t = 'a [@@deriving eq, compare, yojson, hash, map, fold]
 
   let fold_map f init t = f init t
   let content t = t
 end
 
-module Michelson_annot : sig
+module Attr : sig
+  type 'a t =
+    { content : 'a
+    ; attributes : string list
+    }
+
+  val create : ?attributes:string list -> 'a -> 'a t
+
+  include S with type 'a t := 'a t
+end = struct
+  type 'a t =
+    { content : 'a
+    ; attributes : string list
+    }
+  [@@deriving eq, compare, hash, yojson, map, fold]
+
+  let content { content; _ } = content
+
+  let fold_map f init { content; attributes } =
+    let acc, content = f init content in
+    acc, { content; attributes }
+
+
+  let create ?(attributes = []) content = { content; attributes }
+end
+
+module Michelson : sig
   type 'a t =
     { content : 'a
     ; michelson_annotation : string option

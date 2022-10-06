@@ -47,7 +47,7 @@ module Free_type_variables = struct
    fun ~bound row ->
     row.fields
     |> Map.data
-    |> List.map ~f:(fun { Rows.Elem.associated_type; _ } ->
+    |> List.map ~f:(fun { content = { Rows.Elem.associated_type; _ }; _ } ->
            map_type_expression ~bound associated_type)
     |> Set.union_list
 

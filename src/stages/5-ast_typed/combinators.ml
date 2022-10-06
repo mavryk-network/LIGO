@@ -162,9 +162,8 @@ let make_t_ez_record
   row
   |> List.mapi ~f:(fun i (x, y) ->
          ( Label.of_string x
-         , { Rows.Elem.associated_type = y
-           ; attributes = { michelson_annotation = None }
-           ; decl_pos = i
+         , { content = { Rows.Elem.associated_type = y; decl_pos = i }
+           ; michelson_annotation = None
            } ))
   |> Label.Map.of_alist_exn
   |> t_record ?loc ?core ~layout
@@ -200,9 +199,8 @@ let t_sum_ez
   row
   |> List.mapi ~f:(fun i (x, y) ->
          ( Label.of_string x
-         , { Rows.Elem.associated_type = y
-           ; attributes = { michelson_annotation = None }
-           ; decl_pos = i
+         , { content = { Rows.Elem.associated_type = y; decl_pos = i }
+           ; michelson_annotation = None
            } ))
   |> Label.Map.of_alist_exn
   |> t_sum ?loc ?core ~layout
@@ -219,9 +217,8 @@ let t_record_ez
   row
   |> List.mapi ~f:(fun i (x, y) ->
          ( Label.of_string x
-         , { Rows.Elem.associated_type = y
-           ; attributes = { michelson_annotation = None }
-           ; decl_pos = i
+         , { content = { Rows.Elem.associated_type = y; decl_pos = i }
+           ; michelson_annotation = None
            } ))
   |> Label.Map.of_alist_exn
   |> t_record ?loc ?core ~layout
@@ -320,7 +317,7 @@ let get_t_option (t : type_expression) : type_expression option =
     (match labels with
     | [ Label "Some"; Label "None" ] | [ Label "None"; Label "Some" ] ->
       let some_type = Map.find_exn fields (Label "Some") in
-      Some some_type.associated_type
+      Some some_type.content.associated_type
     | _ -> None)
   | _ -> None
 
@@ -419,7 +416,8 @@ let get_t_or (t : type_expression) : (type_expression * type_expression) option 
     let fields =
       row.fields
       |> Map.to_alist
-      |> List.map ~f:(fun (label, { Rows.Elem.associated_type; _ }) ->
+      |> List.map
+           ~f:(fun (label, { content = { Rows.Elem.associated_type; _ }; _ }) ->
              label, associated_type)
     in
     (match fields with
@@ -620,9 +618,8 @@ let e_a_record ?(layout = default_layout) r =
           (fun t ->
             let associated_type = get_type t in
             Rows.Elem.
-              { associated_type
-              ; attributes = { michelson_annotation = None }
-              ; decl_pos = 0
+              { content = { associated_type; decl_pos = 0 }
+              ; michelson_annotation = None
               })
           r))
 
@@ -636,9 +633,9 @@ let ez_e_a_record ?layout r =
           ~f:(fun i (x, y) ->
             ( x
             , Rows.Elem.
-                { associated_type = y.type_expression
-                ; attributes = { michelson_annotation = None }
-                ; decl_pos = i
+                { content =
+                    { associated_type = y.type_expression; decl_pos = i }
+                ; michelson_annotation = None
                 } ))
           r))
 
@@ -722,7 +719,7 @@ let get_record_field_type (t : type_expression) (label : Label.t)
   | Some row ->
     (match Map.find row.fields label with
     | None -> None
-    | Some row_element -> Some row_element.associated_type)
+    | Some row_element -> Some row_element.content.associated_type)
 
 
 let get_record_fields (t : type_expression)
@@ -732,7 +729,7 @@ let get_record_fields (t : type_expression)
   | None -> None
   | Some row ->
     row.fields
-    |> Map.map ~f:(fun elem -> elem.Rows.Elem.associated_type)
+    |> Map.map ~f:(fun elem -> elem.content.Rows.Elem.associated_type)
     |> Map.to_alist
     |> Option.some
 
@@ -745,7 +742,7 @@ let get_sum_label_type (t : type_expression) (label : Label.t)
   | Some row ->
     (match Map.find row.fields label with
     | None -> None
-    | Some row_element -> Some row_element.associated_type)
+    | Some row_element -> Some row_element.content.associated_type)
 
 
 (* getter for a function of the form p * s -> ret *)

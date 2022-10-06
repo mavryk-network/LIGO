@@ -113,7 +113,7 @@ let rec get_fv_type_expression : type_expression -> Type_var.Set.t =
     parameters |> List.map ~f:self |> Set.union_list
   | T_sum { fields; _ } | T_record { fields; _ } ->
     fields
-    |> Map.map ~f:(fun elem -> self elem.Rows.Elem.associated_type)
+    |> Map.map ~f:(fun elem -> self elem.content.Rows.Elem.associated_type)
     |> Map.data
     |> Set.union_list
   | T_tuple types -> types |> List.map ~f:self |> Set.union_list
@@ -174,7 +174,11 @@ and subst_row ~fv v t (row : ty_expr Rows.t) =
     row.fields
     |> Map.map ~f:(fun (row_elem : _ Rows.Elem.t) ->
            { row_elem with
-             associated_type = subst_type ~fv v t row_elem.associated_type
+             content =
+               { row_elem.content with
+                 associated_type =
+                   subst_type ~fv v t row_elem.content.associated_type
+               }
            })
   in
   { row with fields }
@@ -228,7 +232,11 @@ and psubst_row t (row : ty_expr Rows.t) =
     row.fields
     |> Map.map ~f:(fun (row_elem : _ Rows.Elem.t) ->
            { row_elem with
-             associated_type = psubst_type t row_elem.associated_type
+             content =
+               { row_elem.content with
+                 associated_type =
+                   psubst_type t row_elem.content.associated_type
+               }
            })
   in
   { row with fields }
@@ -329,8 +337,8 @@ let rec fold_map_expression
     | E_list list_expr ->
       let res, list_expr = List_expr.fold_map self init list_expr in
       res, return @@ E_list list_expr
-    | (E_deref _ | E_skip | E_literal _ | E_variable _ | E_module_accessor _) as e' ->
-      init, return e')
+    | (E_deref _ | E_skip | E_literal _ | E_variable _ | E_module_accessor _) as
+      e' -> init, return e')
 
 
 and fold_map_cases : 'a fold_mapper -> 'a -> matching_expr -> 'a * matching_expr
@@ -401,7 +409,7 @@ let rec fold_type_expression
       fields
       ~init
       ~f:(fun ~key:_ ~data:(row_elem : _ Rows.Elem.t) acc ->
-        self ~init:acc row_elem.associated_type)
+        self ~init:acc row_elem.content.associated_type)
   | T_arrow { type1; type2 } -> self type2 ~init:(self type1 ~init)
   | T_singleton _ -> init
   | T_abstraction { type_; _ } | T_for_all { type_; _ } -> self type_ ~init
