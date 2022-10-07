@@ -239,7 +239,11 @@ let rec lift : env -> expression -> env * expression =
               ((var_name1, type_expression1), e2),
               ((var_name2, type_expression2), e3) );
       } )
-  | E_let_in (e1, inline, ((var_name, type_expression), e2)) ->
+  | E_let_mut_in (e1, (b, e2)) ->
+    let env, e1 = lift env e1 in 
+    let env, e2 = lift env e2 in 
+    (env, {e with content = E_let_mut_in (e1, (b, e2))})
+  | E_let_in     (e1, inline, ((var_name, type_expression), e2)) ->
     let env =
       {env with variables = (var_name, type_expression) :: env.variables}
     in
@@ -282,6 +286,24 @@ let rec lift : env -> expression -> env * expression =
         ~init:(env, []) (List.rev lst)
     in
     (env, {e with content = E_global_constant (s, lst)})
+  | E_deref _ -> (env, e)
+  | E_assign (binder, expression) -> 
+    let env, expression = lift env expression in 
+    (env, {e with content = E_assign (binder, expression) })
+  | E_for_each (collection, collection_type, (fe_binder, fe_body)) ->
+    let env, collection = lift env collection in 
+    let env, fe_body = lift env fe_body in 
+    (env, {e with content = E_for_each (collection, collection_type, (fe_binder, fe_body)) })
+  | E_for (start, final, inc, (b, f_body))  ->
+    let env, start = lift env start in 
+    let env, final = lift env final in 
+    let env, inc = lift env inc in 
+    let env, f_body = lift env f_body in 
+    (env, {e with content = E_for (start, final, inc, (b, f_body)) })
+  | E_while (cond, body) ->
+    let env, cond = lift env cond in 
+    let env, body = lift env body in
+    (env, {e with content = E_while (cond, body)})
 
 let rec toplevel_inner : env -> expression -> expression =
  fun env e ->

@@ -226,6 +226,7 @@ let rec expression: I.expression -> O.expression * O.data list = fun e ->
     let e1, e1_data = expression e1 in
     let el, el_data = List.fold ~f:(fun (l, data) i -> let e, d = expression i in (e :: l, d @ data) ) ~init:([], []) el in
     E_create_contract (type_expression t1, type_expression t2, ((v, type_expression t3), e1), el), (e1_data @ el_data)
+  | _ -> failwith "TODO"
   in
   let content, data = content in 
   let e = o_expression e content in

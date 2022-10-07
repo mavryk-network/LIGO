@@ -770,6 +770,15 @@ let rec expression ~raise :
 
   (* catch all *)
   | E_constant {cons_name; _} -> raise.error (not_supported e)  
+
+  (* Mutability stuff *)
+  | E_let_mut_in (_, _)       -> raise.error (not_supported e)
+  | E_deref       _           -> raise.error (not_supported e)
+  | E_assign     (_, _)       -> raise.error (not_supported e)
+  | E_for_each   (_, _,_)     -> raise.error (not_supported e)
+  | E_for        (_, _, _, _) -> raise.error (not_supported e)
+  | E_while      (_, _)       -> raise.error (not_supported e)
+
   
 
 let func I.{binder; body} =
