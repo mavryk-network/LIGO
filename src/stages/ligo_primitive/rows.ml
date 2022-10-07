@@ -28,6 +28,12 @@ module Make (Map : Record.Map) (Attr : Attr) (Annot : Annotation.S) = struct
     let fold_map f init t = Annot.fold_map (fold_map_content f) init t
   end
 
+  type 'a fields = 'a Elem.t Map.t [@@deriving eq, compare, yojson, hash]
+
+  let map_fields f fields = Map.map (Elem.map f) fields
+  let fold_fields f init fields = Map.fold f init fields
+  let fold_map_fields f init fields = Map.fold_map f init fields
+
   type 'a t =
     { fields : 'a Elem.t Map.t
     ; attributes : Attr.t

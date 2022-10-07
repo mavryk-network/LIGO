@@ -12,6 +12,7 @@ module Location = Simple_utils.Location
 module Pair     = Simple_utils.Pair
 
 open Ligo_prim
+module Rows = AST.Rows
 
 (* Utils *)
 
@@ -84,7 +85,7 @@ let rec decompile_type_expr : AST.type_expression -> CST.type_expr = fun te ->
   match te.type_content with
     T_sum { attributes ; fields } ->
     let attributes = Shared_helpers.decompile_attributes attributes in
-    let aux (Label.Label c, Rows.{associated_type; attributes=row_attr; _}) =
+    let aux (Label.Label c, ({ content = { associated_type; _}; attributes=row_attr} : _ Rows.Elem.t)) =
       let constr = wrap c in
       let arg = decompile_type_expr associated_type in
       let arg = Some (Token.ghost_of, arg) in
@@ -97,7 +98,7 @@ let rec decompile_type_expr : AST.type_expression -> CST.type_expr = fun te ->
     let sum : CST.sum_type = {lead_vbar; variants; attributes} in
     return @@ CST.TSum (wrap sum)
   | T_record {fields; attributes} ->
-     let aux (Label.Label c, Rows.{associated_type; attributes=field_attr; _}) =
+     let aux (Label.Label c, ({ content = { associated_type; _}; attributes=field_attr} : _ Rows.Elem.t)) =
       let field_name = wrap c in
       let field_type = decompile_type_expr associated_type in
       let field_attr = Shared_helpers.decompile_attributes field_attr in

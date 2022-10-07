@@ -102,7 +102,7 @@ module Comparable = struct
     let b_r =
       trace_option ~raise (comparator_composed loc b) @@ get_t_record b
     in
-    let aux ctx (a : _ Rows.row_element_mini_c) (b : _ Rows.row_element_mini_c)
+    let aux ctx (a : _ Rows.Elem.t) (b : _ Rows.Elem.t)
       : Context.t
       =
       let ctx, _ =
@@ -112,8 +112,8 @@ module Comparable = struct
           ~test
           ~loc
           ~ctx
-          a.associated_type
-          b.associated_type
+          a.content.associated_type
+          b.content.associated_type
       in
       ctx
     in
@@ -121,8 +121,8 @@ module Comparable = struct
       List.fold2_exn
         ~init:ctx
         ~f:aux
-        (Record.LMap.to_list a_r.fields)
-        (Record.LMap.to_list b_r.fields)
+        (Map.data a_r.fields)
+        (Map.data b_r.fields)
     in
     ctx, t_bool ()
 
@@ -136,7 +136,7 @@ module Comparable = struct
     in
     let a_r = trace_option ~raise (comparator_composed loc a) @@ get_t_sum a in
     let b_r = trace_option ~raise (comparator_composed loc b) @@ get_t_sum b in
-    let aux ctx (a : _ Rows.row_element_mini_c) (b : _ Rows.row_element_mini_c)
+    let aux ctx (a : _ Rows.Elem.t) (b : _ Rows.Elem.t)
       : Context.t
       =
       let ctx, _ =
@@ -146,8 +146,8 @@ module Comparable = struct
           ~test
           ~loc
           ~ctx
-          a.associated_type
-          b.associated_type
+          a.content.associated_type
+          b.content.associated_type
       in
       ctx
     in
@@ -155,8 +155,8 @@ module Comparable = struct
       List.fold2_exn
         ~init:ctx
         ~f:aux
-        (Record.LMap.to_list a_r.fields)
-        (Record.LMap.to_list b_r.fields)
+        (Map.data a_r.fields)
+        (Map.data b_r.fields)
     in
     ctx, t_bool ()
 

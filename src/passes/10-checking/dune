@@ -2,16 +2,14 @@
  (name checking)
  (public_name ligo.checking)
  (libraries
-  simple-utils
   tezos-utils
   ast_core
   ast_typed
+  tree_abstraction
   predefined
   environment
-  self_ast_core
   compiler_options
   main_warnings
-  desugaring
   syntax_types)
  (preprocess
   (pps ppx_poly_constructor ppx_compare ppx_let ppx_here ppx_hash)))

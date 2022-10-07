@@ -25,7 +25,7 @@ let quote_var var = "'"^var
 let compile_variable var = let (var,loc) = r_split var in Value_var.of_input_var ~loc var
 let compile_type_var var  = let (var,loc) = r_split var in Type_var.of_input_var ~loc var
 let compile_mod_var var = let (var,loc) = r_split var in Module_var.of_input_var ~loc var
-let compile_attributes (attributes : string Region.reg list) : Let_in.attributes =
+let compile_attributes (attributes : string Region.reg list) : Attr.t =
   List.map ~f:(fst <@ r_split) attributes
 
 let rec compile_type_expression ~raise : CST.type_expr -> type_expression =

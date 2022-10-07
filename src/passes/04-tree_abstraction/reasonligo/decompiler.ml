@@ -12,6 +12,8 @@ module Wrap     = Lexing_shared.Wrap
 open Simple_utils.Function
 open Ligo_prim
 
+module Rows = AST.Rows
+
 (* Utils *)
 let wrap = Region.wrap_ghost
 let ghost = Wrap.ghost ""
@@ -83,7 +85,7 @@ let rec decompile_type_expr : AST.type_expression -> _ = fun te ->
   let return te = te in
   match te.type_content with
     T_sum { attributes ; fields } ->
-    let aux (Label.Label c, Rows.{associated_type;attributes;decl_pos=_}) =
+    let aux (Label.Label c, ({ content = { associated_type; _}; attributes } : _ Rows.Elem.t)) =
       let constr = wrap c in
       let args = decompile_type_expr associated_type in
       let args =
@@ -100,7 +102,7 @@ let rec decompile_type_expr : AST.type_expression -> _ = fun te ->
     let sum : CST.sum_type = { lead_vbar ; variants ; attributes} in
     return @@ CST.TSum (wrap sum)
   | T_record {fields; attributes} ->
-    let aux (Label.Label c, Rows.{associated_type;attributes;decl_pos=_}) =
+    let aux (Label.Label c, ({ content = { associated_type; _}; attributes } : _ Rows.Elem.t)) =
       let field_name = wrap c in
       let colon = ghost in
       let field_type = decompile_type_expr associated_type in

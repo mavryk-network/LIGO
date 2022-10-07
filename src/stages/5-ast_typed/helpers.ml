@@ -355,6 +355,9 @@ and fold_map_cases : 'a fold_mapper -> 'a -> matching_expr -> 'a * matching_expr
   | Match_record { fields; body; tv } ->
     let init, body = fold_map_expression f init body in
     init, Match_record { fields; body; tv }
+  | Match_tuple { binders; body; tv } ->
+    let init, body = fold_map_expression f init body in
+    init, Match_tuple { binders; body; tv }
 
 
 and fold_map_declaration m acc (x : declaration) =

@@ -1,7 +1,7 @@
 module Pair = Simple_utils.Pair
 module Var  = Simple_utils.Var
-open Ast_imperative
 open Ligo_prim
+open Ast_imperative
 
 include Ast_imperative.Helpers
 
@@ -162,10 +162,10 @@ and map_type_expression : ty_exp_mapper -> type_expression -> type_expression = 
   let return type_content = { type_content; location=te.location } in
   match te'.type_content with
   | T_sum temap ->
-    let fields = List.map ~f:(fun (k,v) -> (k, Rows.map_row_element self v)) temap.fields in
+    let fields = List.map ~f:(fun (k,v) -> (k, Rows.Elem.map self v)) temap.fields in
     return @@ T_sum {temap with fields}
   | T_record temap ->
-    let fields = List.map ~f:(fun (k,v) -> (k, Rows.map_row_element self v)) temap.fields in
+    let fields = List.map ~f:(fun (k,v) -> (k, Rows.Elem.map self v)) temap.fields in
     return @@ T_record {temap with fields}
   | T_tuple telst ->
     let telst' = List.map ~f:self telst in

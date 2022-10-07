@@ -160,6 +160,14 @@ type 'e matching_content_record =
   }
 [@@deriving eq, compare, yojson, hash]
 
+type 'e matching_content_tuple =
+  { binders : type_expression Binder.t list
+  ; body : 'e
+  ; tv : type_expression
+  }
+[@@deriving eq, compare, yojson, hash]
+
+
 type expression_content =
   (* Base *)
   | E_variable of Value_var.t
@@ -208,6 +216,8 @@ and type_inst =
 and matching_expr =
   | Match_variant of expr matching_content_variant
   | Match_record of expr matching_content_record
+  | Match_tuple of expr matching_content_tuple
+
 
 and matching =
   { matchee : expression

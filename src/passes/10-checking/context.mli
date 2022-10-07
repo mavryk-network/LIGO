@@ -95,9 +95,9 @@ val apply : t -> type_expression -> type_expression
 val mark : t -> mut:bool -> t * pos
 
 val get_record
-  :  type_expression Rows.row_element_mini_c Rows.LMap.t
+  :  type_expression Rows.fields
   -> t
-  -> (type_variable option * rows) option
+  -> (type_variable option * type_expression Rows.t) option
 
 val get_sum
   :  Label.t
@@ -115,14 +115,16 @@ module Elaboration : sig
   type ('a, 'err, 'wrn) t
 
   include Monad.S3 with type ('a, 'err, 'wrn) t := ('a, 'err, 'wrn) t
+  val both : ('a, 'err, 'wrn) t -> ('b, 'err, 'wrn) t -> ('a * 'b, 'err, 'wrn) t
+
 
   type error = [ `Typer_existential_found of Location.t * type_expression ]
 
   val raise : (('err, 'wrn) raise, 'err, 'wrn) t
 
   val all_lmap
-    :  ('a, 'err, 'wrn) t Rows.LMap.t
-    -> ('a Rows.LMap.t, 'err, 'wrn) t
+    :  ('a, 'err, 'wrn) t Label.Map.t
+    -> ('a Label.Map.t, 'err, 'wrn) t
 
   val run_expr
     :  (expression, ([> error ] as 'err), 'wrn) t

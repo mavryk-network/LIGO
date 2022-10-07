@@ -15,6 +15,8 @@ module Token = CST.Token
 open Simple_utils.Function
 open Ligo_prim
 
+module Rows = AST.Rows
+
 (* Utils *)
 
 let decompile_attributes : string list -> CST.attribute list = fun kvl ->
@@ -94,7 +96,7 @@ let rec decompile_type_expr : AST.type_expression -> CST.type_expr = fun te ->
   let return te = te in
   match te.type_content with
     T_sum { attributes ; fields } ->
-    let aux (Label.Label c,Rows.{associated_type;attributes=row_attr; _}) =
+    let aux (Label.Label c, ({ content = { associated_type; _}; attributes=row_attr} : _ Rows.Elem.t)) =
       let constr = Region.wrap_ghost c in
       let arg = decompile_type_expr associated_type in
       let arg = (match arg with
@@ -118,7 +120,7 @@ let rec decompile_type_expr : AST.type_expression -> CST.type_expr = fun te ->
     let sum : CST.sum_type = { leading_vbar = (match attributes with [] -> None | _ -> Some Token.ghost_vbar); variants ; attributes} in
     return @@ CST.TSum (Region.wrap_ghost sum)
   | T_record {fields; attributes} ->
-     let aux (Label.Label c, Rows.{associated_type; attributes; _}) =
+     let aux (Label.Label c, ({ content = { associated_type; _}; attributes} : _ Rows.Elem.t)) =
        let field_name = Region.wrap_ghost c in
        let colon = Token.ghost_colon in
        let field_type: CST.type_expr = decompile_type_expr associated_type in

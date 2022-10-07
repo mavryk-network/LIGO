@@ -185,6 +185,14 @@ and matching
       fields
       f
       body
+  | Match_tuple { binders; body; _ } ->
+    Format.fprintf
+      ppf
+      "| @[%a@] ->@ @[%a@]"
+      (Tuple.pp_expr (Binder.pp type_expression_annot))
+      binders
+      f
+      body
 
 
 and declaration ?(use_hidden = true) ppf (d : declaration) =
