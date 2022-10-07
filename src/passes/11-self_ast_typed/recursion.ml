@@ -38,7 +38,7 @@ let rec check_recursive_call ~raise : Value_var.t -> bool -> expression -> unit 
     check_recursive_call ~raise n false matchee;
     check_recursive_call_in_matching ~raise n final_path cases
   | E_record elm ->
-    List.iter ~f:(check_recursive_call ~raise n false) @@ Record.LMap.to_list elm
+    List.iter ~f:(check_recursive_call ~raise n false) @@ Map.data elm
   | E_accessor {struct_;_} ->
     check_recursive_call ~raise n false struct_
   | E_update {struct_;update;_} ->
@@ -57,6 +57,8 @@ and check_recursive_call_in_matching ~raise = fun n final_path c ->
     in
     List.iter ~f:aux cases
   | Match_record {fields = _; body; tv = _} ->
+    check_recursive_call ~raise n final_path body
+  | Match_tuple { body; _ } ->
     check_recursive_call ~raise n final_path body
 
 let check_rec_binder_shadowed ~fun_name ~(lambda : _ Lambda.t) =
