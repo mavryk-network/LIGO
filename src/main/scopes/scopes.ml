@@ -266,12 +266,16 @@ let rec expression : with_types:bool -> options:Compiler_options.middle_end -> t
         defs_result @ defs_rhs @ defs, refs_result @ refs_rhs, tenv, scopes
       | E_let_mut_in { let_binder ; rhs ; let_result ; _ }
       | E_let_in { let_binder ; rhs ; let_result ; _ } ->
-        let var = Binder.get_var let_binder in
-        let core_type = Binder.get_ascr let_binder in
         let defs_binder =
-          if VVar.is_generated var then [] else
-          let binder_loc =  VVar.get_location var in
-          [ Misc.make_v_def ~with_types ?core_type tenv.bindings Local var binder_loc rhs.location ]
+          let f acc binder =
+            let var = Binder.get_var binder in
+            let core_type = Binder.get_ascr binder in
+            if VVar.is_generated var then acc
+            else
+              let binder_loc =  VVar.get_location var in
+              Misc.make_v_def ~with_types ?core_type tenv.bindings Local var binder_loc rhs.location :: acc
+          in
+          List.fold (Pattern.binders let_binder) ~init:[] ~f
         in
         let defs_rhs, refs_rhs, tenv, scopes = expression tenv rhs in
         let defs_result, refs_result, tenv, scopes' = expression tenv let_result in

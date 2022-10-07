@@ -27,6 +27,12 @@ module Fold_helpers(M : Monad) = struct
     let binder = Binder.map (Fn.const ascr) binder in
     ok @@ binder
 
+  and binder : ('a -> 'b monad) -> 'a Pattern.t -> ('b Pattern.t) monad
+    = fun f pattern ->
+    let ascr = Binder.get_ascr a in
+    let* ascr = f ascr in
+    let binder = Binder.map (Fn.const ascr) binder in
+    ok @@ binder
   and param : ('a -> 'b monad) -> 'a Param.t -> ('b Param.t) monad
     = fun f param ->
     let ascr = Param.get_ascr param in

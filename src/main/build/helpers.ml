@@ -39,6 +39,7 @@ let internalize_core (ds : Ast_core.program) : Ast_core.program =
       D_module { module_binder ; module_ ; module_attr }
     | D_type { type_binder ; type_expr ; type_attr } ->
       D_type { type_binder ; type_expr ; type_attr }
+    | D_pattern x -> D_pattern x
     | D_value x ->
       let binder = sap_for_all x.binder in
       let binder = at_prefix binder in
