@@ -1,0 +1,4 @@
+{
+  "build": "",
+  "install": "dune install -p tar --create-install-files tar --prefix $cur__install"
+}

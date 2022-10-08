@@ -38,8 +38,11 @@
       "@opam/hacl-star-raw": "*",
       "@opam/tezos-rust-libs": "*",
       "esy-libev": "*",
+      "@opam/tezos-micheline": "*",
+      "@opam/tezos-client-014-PtKathma": "*",
+      "@opam/tezos-hacl": "*",
       "@opam/tezos-014-PtKathma-test-helpers": "*",
-      "@opam/tezos-client-013-PtJakart": "*",
+      "@opam/tezos-client-014-PtKathma": "*",
       "esy-libffi": "*"
     },
     "devDependencies": {
@@ -101,11 +104,14 @@
           },
           "dependencies": {
             "@opam/hacl-star-raw": "*",
-	    "@opam/tezos-protocol-compiler": "*",
+            "@opam/tezos-protocol-compiler": "*",
             "esy-libffi": "*",
             "esy-libev": "*"
           },
           "build": [
+            ["dune", "build", "-p", "tezos-protocol-014-PtKathma", "-j", "4"]
+          ],
+          "x-build": [
             [
               "env",
               "#{ os == 'darwin' ? 'DY': ''}LD_LIBRARY_PATH=#{esy-libev.lib : esy-libffi.lib : @opam/hacl-star-raw.lib / 'hacl-star-raw'}",
@@ -185,16 +191,16 @@
       "ocaml": "4.12.0",
       "@opam/crunch": "mirage/ocaml-crunch:crunch.opam#e18888ce1f30ed6559ba977d405af2084812cbca",
       "@opam/core": "opam:v0.14.1",
-      "@opam/dune": "opam:2.9.2",
+      "@opam/dune": "opam:3.4.1",
       "@opam/dune-configurator": "opam:2.9.1",
       "@opam/class_group_vdf": {
-	"version": "opam:0.0.4",
-	"override": {
-	  "build": "bash -c 'dune build -p class_group_vdf || dune build -p class_group_vdf'",
-	  "dependencies": {
-	    "esy-gmp": "*"
-	  }
-	}
+        "version": "opam:0.0.4",
+        "override": {
+          "build": "bash -c 'dune build -p class_group_vdf || dune build -p class_group_vdf'",
+          "dependencies": {
+            "esy-gmp": "*"
+          }
+        }
       },
       "esy-gmp": "esy-packages/esy-gmp#26bf00576a607422364e32ef3cbcc60590f8a28f",
       "@opam/dune-build-info": "opam:2.9.3",
@@ -267,6 +273,22 @@
       "esy-hidapi": "esy-packages/esy-hidapi:esy.json#e21f930d6474e460fa5bb955a26505f6c3500c7a",
       "libtool": "ManasJayanth/esy-libtool:esy.json#d6725b52f8d021539e92d182d29979951e706836",
       "@opam/linenoise": "DiningPhilosophersCo/ocaml-linenoise:linenoise.opam#1ba074f9bedbaa46280146d834b49064e4722695",
+      "@opam/tezos-scoru-wasm": {
+        "source": "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-scoru-wasm.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2",
+        "override": {
+          "dependencies": {
+            "@opam/tezos-lwt-result-stdlib": "*"
+          }
+        }
+      },
+      "@opam/tezos-webassembly-interpreter": {
+        "source": "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-webassembly-interpreter.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2",
+        "override": {
+          "dependencies": {
+            "@opam/tezos-lwt-result-stdlib": "*"
+          }
+        }
+      },
       "@opam/tezos-clic": {
         "source": "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-clic.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2",
         "override": {

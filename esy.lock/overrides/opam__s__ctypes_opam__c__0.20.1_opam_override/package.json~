@@ -1,0 +1,28 @@
+{
+        "dependencies": {
+          "@opam/conf-libffi": "*"
+        }
+  "build": [
+    [
+      "bash",
+      "-c",
+      "patch -p1 < no-homebrew.patch"
+    ],
+    [
+      "make",
+      "XEN=false",
+      "libffi.config"
+    ],
+    [
+      "make",
+      "XEN=false",
+      "ctypes-base",
+      "ctypes-stubs"
+    ],
+    [
+      "make",
+      "XEN=false",
+      "ctypes-foreign"
+    ]
+  ]
+}

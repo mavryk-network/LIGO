@@ -51,10 +51,10 @@ conflicts: [
 ]
 url {
   src:
-    "https://github.com/mirage/checkseum/releases/download/v0.3.4/checkseum-0.3.4.tbz"
+    "https://github.com/mirage/checkseum/releases/download/v0.4.0/checkseum-0.4.0.tbz"
   checksum: [
-    "sha256=04be013b0c57391ae438e6dae108d149eb66f1b17d26694a1d214fab6e3ed738"
-    "sha512=b7b587475964ce4f7bbb603454ceec7b1616ed8f46aeb66fe4e3f9928d839732880ff38b76b6942ab9c0c3dc96297edf3ab07dccee4f83da93bde62bcf7fb2e4"
+    "sha256=2ba40f32db39fa1c47d9af96435374970301a2c846d93d1b4a8ccd83346f025a"
+    "sha512=3edee66d3fa8fb0e11cf05d24f925341c96c53864cb4fb5b6173e29038882d33e3ee82819a3a2bedde717a3658c866278d09196862735d2ac9da889badd26e7b"
   ]
 }
-x-commit-hash: "ccf3427bad1003f8abf32b8d858221a55b5b2989"
+x-commit-hash: "a09c7397401e5f7dee4ea58a2af521f47d84c0ee"
