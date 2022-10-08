@@ -107,8 +107,9 @@ let rec compile_type_expression : CST.type_expr -> AST.type_expr = fun te ->
 (* ========================== PATTERNS ===================================== *)
 
 and compile_pattern ~raise : CST.pattern -> AST.pattern = fun p ->
-  let () = ignore (p, raise) in
-  P_Dummy
+  let () = ignore raise in
+  match p with
+  | _ -> failwith "TODO NP"
 
 (* ========================== INSTRUCTIONS ================================= *)
 

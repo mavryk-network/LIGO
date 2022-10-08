@@ -132,7 +132,73 @@ and type_expression_content =
 
 (* ========================== PATTERNS ===================================== *)
 
-and pattern = P_Dummy  (* TODO NP : Add pattern expressions *)
+and pattern = {
+  pattern_content : pattern_content;
+  location        : Location.t
+}
+and ptrn_content = pattern_content
+and ptrn         = pattern
+  [@@deriving yojson]
+
+and list_pattern =
+| PListComp of pattern list
+| PCons     of pattern * pattern
+
+and ptrn_record     = ptrn        field_assign list
+and ptrn_ne_record  = ptrn        field_assign nseq
+
+and rest_pattern = string
+and assign_pattern = {
+  property  : string;
+  value     : expr
+}
+
+and let_binding = {
+  is_rec      : bool;
+  type_params : string nseq option;
+  binders     : pattern nseq;
+  rhs_type    : type_expr option;
+  let_rhs     : expression;
+}
+
+and destruct = {
+  property  : string;
+  target    : let_binding;
+}
+
+and pattern_content =
+(* Shared *)
+| P_Constr   of string * ptrn option
+| P_Unit
+| P_Var      of string
+| P_Int      of string * Z.t
+| P_Nat      of string * Z.t
+| P_Bytes    of string * bytes (* No [Hex.to_yojson], hence [bytes] instead *)
+| P_String   of string
+| P_Verbatim of string
+| P_List     of list_pattern
+| P_Tuple    of ptrn nseq
+| P_Par      of ptrn
+| P_Typed    of ptrn * type_expr option
+(* Cameligo *)
+| P_RecordCameligo   of ptrn_ne_record
+(* Pascaligo *)
+| P_App      of ptrn * ptrn nseq option
+| P_Attr     of attr_pascaligo * ptrn
+| P_ModPath  of ptrn module_path
+| P_Mutez    of string * Int64.t
+| P_Nil
+| P_Ctor     of string
+| P_Record   of ptrn_record
+(* Jsligo *)
+| P_Rest     of rest_pattern
+| P_Assign   of assign_pattern
+| P_Destruct of destruct
+| P_Object   of ptrn nseq
+| P_Array    of ptrn nseq
+
+(* P_App (P_Ctor x, ...) |-> P_Constr (x, ...)
+P_RecordCameligo |-> P_Record  // ne-list into list *)
 
 (* ========================== INSTRUCTIONS ================================= *)
 and instruction = {
@@ -323,14 +389,6 @@ and declaration = {
 and decl_content = declaration_content
 and decl         = declaration
   [@@deriving yojson]
-
-and let_binding = {
-  is_rec      : bool;
-  type_params : string nseq option;
-  binders     : pattern nseq;
-  rhs_type    : type_expr option;
-  let_rhs     : expression;
-}
 
 and param_decl = {
   param_kind : [`Var | `Const];
