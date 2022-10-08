@@ -95,9 +95,90 @@ let rec compile_type_expression : CST.type_expr -> AST.type_expr = fun te ->
 
 (* ========================== PATTERNS ===================================== *)
 
-let compile_pattern : CST.pattern -> AST.pattern = fun p ->
+let rec compile_pattern : CST.pattern -> AST.pattern = fun p ->
+  let self = compile_pattern in
   match p with
-  | _ -> failwith "TODO NP"
+  | PConstr   p -> (
+    let (ctor, ptrn_opt), loc = r_split p in
+    let ctor = ctor.value in
+    let ptrn_opt = Option.apply self ptrn_opt in
+    p_constr ctor ptrn_opt ~loc ()
+  )
+  | PUnit     p -> (
+    let _, loc = r_split p in
+    p_unit ~loc ()
+  )
+  | PVar      p -> (
+    let p, loc = r_split p in
+    let v  = r_fst p.variable in
+    p_var v ~loc ()
+  )
+  | PInt      p -> (
+    let (s, z), loc = r_split p in
+    p_int s z ~loc ()
+  )
+  | PNat      p -> (
+    let (s, z), loc = r_split p in
+    p_nat s z ~loc ()
+  )
+  | PBytes    p -> (
+    let (s, hex), loc = r_split p in
+    let bytes_ = Hex.to_bytes hex in
+    p_bytes s bytes_ ~loc ()
+  )
+  | PString   p -> (
+    let s, loc = r_split p in
+    p_string s ~loc ()
+  )
+  | PVerbatim p -> (
+    let s, loc = r_split p in
+    p_verbatim s ~loc ()
+  )
+  | PList     p -> (
+    let p, loc = match p with
+    | CST.PListComp p -> (
+      let p, loc = r_split p in
+      let ps : pattern list = List.map ~f:self @@ sepseq_to_list p.elements in
+      AST.PListComp ps, loc
+    )
+    | CST.PCons p -> (
+      let (p1, _, p2), loc = r_split p in
+      let p1 = self p1 in
+      let p2 = self p2 in
+      AST.PCons (p1, p2), loc
+    )
+    in
+    p_list p ~loc ()
+  )
+  | PTuple    p -> (
+    let p, loc = r_split p in
+    let p = List.Ne.map self @@ nsepseq_to_nseq p in
+    p_tuple p ~loc ()
+  )
+  | PPar      p -> (
+    let p, loc = r_split p in
+    let p = self p.inside in
+    p_par p ~loc ()
+  )
+  | PRecord   p -> (
+    let p, loc = r_split p in
+    let p =
+      let compile_field_pattern : CST.field_pattern -> AST.ptrn AST.field_assign = fun fp -> 
+        { name = r_fst fp.field_name
+        ; expr = self fp.pattern
+        }
+      in
+      nseq_map (compile_field_pattern <@ r_fst) @@ nsepseq_to_nseq p.ne_elements
+    in
+    p_recordcameligo p ~loc ()
+  )
+  | PTyped    p -> (
+    let p, loc = r_split p in
+    let ptrn = self p.pattern in
+    let te_opt = Some (compile_type_expression p.type_expr) in
+    p_typed ptrn te_opt ~loc ()
+  )
+
 
 (* ========================== EXPRESSIONS ================================== *)
 
