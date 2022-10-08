@@ -7,14 +7,15 @@ type all =
   | `Self_ast_typed_warning_unused of Location.t * string
   | `Self_ast_typed_warning_muchused of Location.t * string
   | `Self_ast_typed_warning_unused_rec of Location.t * string
-  | `Checking_ambiguous_constructor of Location.t * TypeVar.t * TypeVar.t
+  | `Checking_ambiguous_constructor of Location.t * Type_var.t * Type_var.t
   | `Self_ast_imperative_warning_layout of (Location.t * Label.t)
-  | `Self_ast_imperative_warning_deprecated_polymorphic_variable of Location.t * TypeVar.t
+  | `Self_ast_imperative_warning_deprecated_polymorphic_variable of Location.t * Type_var.t
   | `Self_ast_imperative_warning_deprecated_constant of Location.t * Ast_imperative.expression * Ast_imperative.expression * Ast_imperative.type_expression
   | `Main_view_ignored of Location.t
   | `Michelson_typecheck_failed_with_different_protocol of (Environment.Protocols.t * Tezos_error_monad.Error_monad.error list)
   | `Jsligo_deprecated_failwith_no_return of Location.t
   | `Jsligo_deprecated_toplevel_let of Location.t
+  | `Jsligo_unreachable_code of Location.t
   | `Use_meta_ligo of Location.t
   | `Self_ast_aggregated_warning_bad_self_type of Ast_aggregated.type_expression * Ast_aggregated.type_expression * Location.t
   | `Deprecated_reasonligo
@@ -47,8 +48,8 @@ let pp : display_format:string display_format ->
     | `Checking_ambiguous_constructor (loc,tv_chosen,tv_possible) ->
       Format.fprintf f "@[<hv>%a@ Warning: The type of this value is ambiguous: Inferred type is %a but could be of type %a.@ Hint: You might want to add a type annotation. @.@]"
       Snippet.pp loc
-      TypeVar.pp tv_chosen
-      TypeVar.pp tv_possible
+      Type_var.pp tv_chosen
+      Type_var.pp tv_possible
     | `Main_view_ignored loc ->
       Format.fprintf f "@[<hv>%a@ Warning: This view will be ignored, command line option override [@ view] annotation@.@]"
       Snippet.pp loc
@@ -71,7 +72,7 @@ let pp : display_format:string display_format ->
     | `Self_ast_imperative_warning_deprecated_polymorphic_variable (loc, name) ->
         Format.fprintf f
           "@[<hv>%a@ Warning: %a is not recognize as a polymorphic variable anymore. If you want to make a polymorphic function, please consult the online documentation @.@]"
-          Snippet.pp loc TypeVar.pp name
+          Snippet.pp loc Type_var.pp name
     | `Self_ast_imperative_warning_deprecated_constant (l, curr, alt, ty) ->
        Format.fprintf f
          "@[<hv>%a@ Warning: the constant %a is soon to be deprecated. Use instead %a : %a. @]"
@@ -85,6 +86,9 @@ let pp : display_format:string display_format ->
     | `Jsligo_deprecated_toplevel_let loc ->
       Format.fprintf f "@[<hv>%a@.Toplevel let declaration are silently change to const declaration.@.@]"
       Snippet.pp loc
+    | `Jsligo_unreachable_code loc ->
+      Format.fprintf f "@[<hv>%a@ Warning: Unreachable code. @]"
+      Snippet.pp loc
     | `Self_ast_aggregated_warning_bad_self_type (got,expected,loc) ->
       Format.fprintf f
         "@[<hv>%a@ Warning: Tezos.self type annotation.@.Annotation \"%a\" was given, but contract being compiled would expect \"%a\".@.Note that \"Tezos.self\" refers to the current contract, so the parameters should be generally the same. @]"
@@ -93,6 +97,7 @@ let pp : display_format:string display_format ->
         Ast_aggregated.PP.type_expression expected
     | `Deprecated_reasonligo ->
       Format.fprintf f "@[Reasonligo is depreacted, support will be dropped in a few versions.@.@]"
+    
   )
 let to_json : all -> Yojson.Safe.t = fun a ->
   let json_warning ~stage ~content =
@@ -182,7 +187,7 @@ let to_json : all -> Yojson.Safe.t = fun a ->
     ] in
     json_warning ~stage ~content
   | `Self_ast_imperative_warning_deprecated_polymorphic_variable (loc, name) ->
-    let message = `String (Format.asprintf "Deprecated polymorphic var %a" TypeVar.pp name) in
+    let message = `String (Format.asprintf "Deprecated polymorphic var %a" Type_var.pp name) in
     let stage   = "self_ast_imperative" in
     let loc = Location.to_yojson loc in
     let content = `Assoc [
@@ -210,6 +215,15 @@ let to_json : all -> Yojson.Safe.t = fun a ->
     json_warning ~stage ~content
   | `Jsligo_deprecated_toplevel_let loc ->
     let message = `String "Toplevel let declarations are silently convert to const declarations" in
+    let stage   = "lexer" in
+    let loc = Location.to_yojson loc in
+    let content = `Assoc [
+                      ("message", message);
+                      ("location", loc);
+                    ] in
+    json_warning ~stage ~content
+  | `Jsligo_unreachable_code loc ->
+    let message = `String "Unreachable code" in
     let stage   = "lexer" in
     let loc = Location.to_yojson loc in
     let content = `Assoc [

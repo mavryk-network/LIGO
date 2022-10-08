@@ -4,7 +4,7 @@ module I = Ast_core
 module O = Ast_typed
 open Ligo_prim
 
-let untype_value_attr : O.Attr.value -> I.Attr.value =
+let untype_value_attr : O.ValueAttr.t -> I.ValueAttr.t =
   fun {inline;no_mutation;view;public;hidden;thunk} -> {inline;no_mutation;view;public;hidden;thunk}
 let rec untype_type_expression (t:O.type_expression) : I.type_expression =
   let self = untype_type_expression in
@@ -31,7 +31,7 @@ let rec untype_type_expression (t:O.type_expression) : I.type_expression =
     return @@ I.T_arrow arr
   | O.T_constant {language=_;injection;parameters} ->
     let arguments = List.map ~f:self parameters in
-    let type_operator = TypeVar.fresh ~name:(Literal_types.to_string injection) () in
+    let type_operator = Type_var.fresh ~name:(Literal_types.to_string injection) () in
     return @@ I.T_app {type_operator;arguments}
   | O.T_singleton l ->
     return @@ I.T_singleton l
@@ -65,7 +65,7 @@ and untype_expression_content (ec:O.expression_content) : I.expression =
       let arg' = self args in
       return (e_application f' arg')
   | E_lambda {binder ; output_type; result} -> (
-      let binder = Binder.map self_type_opt binder in
+      let binder = Param.map self_type_opt binder in
       let output_type = self_type_opt output_type in
       let result = self result in
       return (e_lambda binder output_type result)
@@ -80,11 +80,11 @@ and untype_expression_content (ec:O.expression_content) : I.expression =
   | E_record r ->
     let r' = Record.map self r in
     return (e_record r' ())
-  | E_accessor {record; path} ->
-      let r' = self record in
+  | E_accessor {struct_; path} ->
+      let r' = self struct_ in
       let Label s = path in
       return (e_record_accessor r' (Label s))
-  | E_update {record=r; path=Label l; update=e} ->
+  | E_update {struct_=r; path=Label l; update=e} ->
     let r' = self r in
     let e = self e in
     return (e_record_update r' (Label l) e)
@@ -101,7 +101,7 @@ and untype_expression_content (ec:O.expression_content) : I.expression =
           let pattern =
             match tv with
             | _ ->
-              let proj = Location.wrap @@ Pattern.P_var { ascr = None ; var = pattern ; attributes = Binder.empty_attribute } in
+              let proj = Location.wrap @@ Pattern.P_var (Binder.make pattern None) in
               Location.wrap @@ Pattern.P_variant (constructor, proj)
           in
           let body = self body in
@@ -111,19 +111,22 @@ and untype_expression_content (ec:O.expression_content) : I.expression =
       let cases = List.map ~f:aux cases in
       return (e_matching matchee cases)
     | Match_record {fields ; body ; tv=_} -> (
-      let aux : (Label.t * Ast_typed.type_expression Binder.t) -> Label.t * Ast_core.type_expression option Pattern.t =
-        fun (Label label, binder) -> (
-          let proj = Location.wrap @@ Pattern.P_var {binder with ascr = Option.return @@ self_type binder.Binder.ascr} in
-          (Label label, proj)
+      let aux : (Ast_typed.type_expression Binder.t) -> Ast_core.type_expression option Pattern.t =
+        fun binder -> (
+          let proj = Location.wrap @@ Pattern.P_var (Binder.map (Fn.compose Option.return self_type) binder) in
+          proj
         )
       in
-      let (labels,patterns) = List.unzip @@ List.map ~f:aux (Record.LMap.to_kv_list fields) in
       let body = self body in
       let case = match Record.is_tuple fields with
         | false ->
-          let pattern = Location.wrap (Pattern.P_record (labels,patterns)) in
+          let open Ligo_prim.Pattern.Container in
+          let fields = Record.of_record fields in
+          let pattern = Location.wrap (Pattern.P_record (Record.map aux fields)) in
           ({ pattern ; body } : _ Match_expr.match_case)
         | true ->
+          let patterns = Record.map aux fields in
+          let patterns = Record.LMap.values patterns in
           let pattern = Location.wrap (Pattern.P_tuple patterns) in
           ({ pattern ; body } : _ Match_expr.match_case)
       in
@@ -134,8 +137,8 @@ and untype_expression_content (ec:O.expression_content) : I.expression =
       let tv = self_type rhs.type_expression in
       let rhs = self rhs in
       let result = self let_result in
-      let attr : Attr.value = untype_value_attr attr in
-      return (e_let_in {let_binder with ascr=(Some tv)} rhs result attr)
+      let attr : ValueAttr.t = untype_value_attr attr in
+      return (e_let_mut_in (Binder.map (Fn.const @@ Some tv) let_binder) rhs result attr)
   | E_mod_in {module_binder;rhs;let_result} ->
       let rhs = untype_module_expr rhs in
       let result = self let_result in
@@ -148,9 +151,26 @@ and untype_expression_content (ec:O.expression_content) : I.expression =
       let lambda = Lambda.map self self_type lambda in
       return @@ e_recursive fun_name fun_type lambda
   | E_module_accessor ma -> return @@ I.make_e @@ E_module_accessor ma
+  | E_let_mut_in {let_binder;rhs;let_result; attr} ->
+    let tv = self_type rhs.type_expression in
+    let rhs = self rhs in
+    let result = self let_result in
+    let attr : ValueAttr.t = untype_value_attr attr in
+    return (e_let_in (Binder.map (Fn.const @@ Some tv) let_binder) rhs result attr)
   | E_assign a ->
     let a = Assign.map self self_type_opt a in
     return @@ make_e @@ E_assign a
+  | E_for for_loop ->
+    let for_loop = For_loop.map self for_loop in
+    return @@ I.make_e @@ E_for for_loop
+  | E_for_each for_each_loop ->
+    let for_each_loop = For_each_loop.map self for_each_loop in
+    return @@ I.make_e @@ E_for_each for_each_loop
+  | E_while while_loop ->
+    let while_loop = While_loop.map self while_loop in
+    return @@ I.make_e @@ E_while while_loop
+  | E_deref var ->
+    return @@ I.make_e @@ E_variable var
   | E_type_inst {forall;type_=type_inst} ->
     match forall.type_expression.type_content with
     | T_for_all {ty_binder;type_;kind=_} ->
@@ -174,43 +194,41 @@ and untype_module_expr : O.module_expr -> I.module_expr =
       return (M_module_path path)
     | M_variable v ->
       return (M_variable v)
-and untype_declaration_constant : (O.expression -> I.expression) -> _ O.Declaration.declaration_constant -> _ I.Declaration.declaration_constant =
+and untype_declaration_constant : (O.expression -> I.expression) -> _ O.Value_decl.t -> _ I.Value_decl.t =
   fun untype_expression {binder;expr;attr} ->
     let ty = untype_type_expression expr.O.type_expression in
-    let var = binder.var in
-    let binder = ({var;ascr=Some ty;attributes=Binder.empty_attribute}: _ Binder.t) in
+    let binder = Binder.map (Fn.const @@ Some ty) binder in
     let expr = untype_expression expr in
     let expr = I.e_ascription expr ty in
     let attr = untype_value_attr attr in
     {binder;attr;expr;}
 
-and untype_declaration_type : _ O.Declaration.declaration_type -> _ I.Declaration.declaration_type =
+and untype_declaration_type : _ O.Type_decl.t -> _ I.Type_decl.t =
   fun {type_binder; type_expr; type_attr={public;hidden}} ->
     let type_expr = untype_type_expression type_expr in
-    let type_attr = ({public;hidden}: I.Attr.type_) in
+    let type_attr = ({public;hidden}: I.TypeOrModuleAttr.t) in
     {type_binder; type_expr; type_attr}
 
-and untype_declaration_module : _ O.Declaration.declaration_module -> _ I.Declaration.declaration_module =
+and untype_declaration_module : _ O.Module_decl.t -> _ I.Module_decl.t =
   fun {module_binder; module_; module_attr={public;hidden}} ->
     let module_ = untype_module_expr module_ in
-    let module_attr = ({public;hidden}: I.Attr.module_) in
+    let module_attr = ({public;hidden}: I.TypeOrModuleAttr.t) in
     {module_binder; module_ ; module_attr}
 
 and untype_declaration =
   let return (d: I.declaration_content) = d in
   fun (d: O.declaration_content) -> match d with
-  | Declaration_constant dc ->
+  | D_value dc ->
     let dc = untype_declaration_constant untype_expression dc in
-    return @@ Declaration_constant dc
-  | Declaration_type dt ->
+    return @@ D_value dc
+  | D_type dt ->
     let dt = untype_declaration_type dt in
-    return @@ Declaration_type dt
-  | Declaration_module dm ->
+    return @@ D_type dt
+  | D_module dm ->
     let dm = untype_declaration_module dm in
-    return @@ Declaration_module dm
+    return @@ D_module dm
 
-and untype_decl : O.decl -> I.decl =
-  fun (Decl d) -> Decl (Location.map untype_declaration d)
+and untype_decl : O.decl -> I.decl = fun d -> Location.map untype_declaration d
 
 and untype_module : O.module_ -> I.module_ = fun p ->
   List.map ~f:(untype_decl) p

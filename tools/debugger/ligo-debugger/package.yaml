@@ -2,7 +2,7 @@ name: ligo-debugger
 
 dependencies:
   - base-noprelude
-  - universum
+  - morley-prelude
 
 default-extensions:
   - AllowAmbiguousTypes
@@ -68,16 +68,20 @@ library:
     - aeson
     - bytestring
     - conduit
+    - conduit-extra
     - containers
     - data-default
     - directory
+    - dlist
+    - duplo
     - filepath
     - fmt
+    - hashable
     - lens
     - lens-aeson
+    - ligo-squirrel
     - morley
     - morley-debugger
-    - morley-prelude
     - mtl
     - nyan-interpolation
     - process
@@ -131,6 +135,7 @@ tests:
       - fmt
       - lens
       - ligo-debugger
+      - ligo-squirrel
       - nyan-interpolation
       - nyan-interpolation-core
       - morley
@@ -138,6 +143,8 @@ tests:
       - singletons
       - tasty
       - text
+      - unliftio
+      - unordered-containers
       - HUnit
       - tasty-hunit-compat
 

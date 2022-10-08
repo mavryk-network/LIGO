@@ -38,7 +38,9 @@ let%expect_test _ =
       6 |   | (Nil , record [a ; b ; c ]) -> 1
       7 |   | (xs  , Nil) -> 2
 
-    Pattern not of the expected type myt |}]
+    Invalid type(s)
+    Cannot unify record[a -> ^gen#496 , b -> ^gen#497 , c -> ^gen#498] with
+    sum[Cons -> ( int * int ) , Nil -> unit]. |}]
 
 let%expect_test _ =
   run_ligo_bad [ "print" ; "ast-typed" ; (bad_test "pm_fail2.ligo") ] ;
@@ -48,7 +50,8 @@ let%expect_test _ =
       5 |   | (Nil , (a,b,c)) -> 1
       6 |   | (xs  , Nil) -> 2
 
-    Pattern not of the expected type myt |}]
+    Invalid type(s)
+    Cannot unify ( ^gen#496 * ^gen#497 * ^gen#498 ) with sum[Cons -> ( int * int ) , Nil -> unit]. |}]
 
 let%expect_test _ =
   run_ligo_bad [ "print" ; "ast-typed" ; (bad_test "pm_fail5.ligo") ] ;
@@ -70,8 +73,8 @@ let%expect_test _ =
       6 |   | B -> 2
       7 |   ]
 
-    Invalid type(s).
-    Expected: "string", but got: "int". |}]
+    Invalid type(s)
+    Cannot unify int with string. |}]
 
 let%expect_test _ =
   run_ligo_bad [ "print" ; "ast-typed" ; (bad_test "pm_fail8.ligo") ] ;
@@ -81,8 +84,8 @@ let%expect_test _ =
      23 |         | Cons (a,b) -> "invalid"
      24 |         ] ;
 
-    Invalid type(s).
-    Expected: "int", but got: "string". |}]
+    Invalid type(s)
+    Cannot unify string with int. |}]
 
 
 (* rendundancy detected while compiling the pattern matching *)
@@ -124,7 +127,7 @@ let%expect_test _ =
 
     Error : this pattern-matching is not exhaustive.
     Here are examples of cases that are not matched:
-    - record [a = None; b = _] |}]
+    - record [b = _; a = None] |}]
 
 let%expect_test _ =
   run_ligo_bad [ "print" ; "ast-typed" ; (bad_test "pm_fail4.ligo") ] ;
@@ -148,29 +151,25 @@ let%expect_test _ =
      10 |       | Decrement -> s - 1
      11 |     ]
 
-    Variant pattern argument is expected of type nat but is of type unit. |}]
+    Pattern not of the expected type nat |}]
 
 (* Positives *)
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t1 (Nil,Nil)" ; "--init-file";(good_test "pm_test.ligo") ] ;
-  [%expect{|
-    1 |}]
+  [%expect{| 1 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t1 (Nil,Cons(1,2))" ; "--init-file";(good_test "pm_test.ligo") ] ;
-  [%expect{|
-    1 |}]
+  [%expect{| 1 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t1 (Cons(1,2),Nil)" ; "--init-file";(good_test "pm_test.ligo") ] ;
-  [%expect{|
-    2 |}]
+  [%expect{| 2 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t1 (Cons(1,2),Cons(3,4))" ; "--init-file";(good_test "pm_test.ligo") ] ;
-  [%expect{|
-    10 |}]
+  [%expect{| 10 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t2 (Nil, Nil)" ; "--init-file" ; (good_test "pm_test.ligo") ] ;
@@ -190,13 +189,11 @@ let%expect_test _ =
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t3 (One (Nil))" ; "--init-file" ; (good_test "pm_test.ligo") ] ;
-  [%expect{|
-    1 |}]
+  [%expect{| 1 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t3 (One (Cons(1,2)))" ; "--init-file" ; (good_test "pm_test.ligo") ] ;
-  [%expect{|
-    3 |}]
+  [%expect{| 3 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t3 (Two (record [a = 1 ; b = 2n ; c = \"tri\"]))" ; "--init-file" ; (good_test "pm_test.ligo") ] ;
@@ -307,20 +304,9 @@ let%expect_test _ =
   [%expect{| 4 |}]
 
 let%expect_test _ =
-  run_ligo_good [ "print" ; "ast-core" ; (good_test "list_pattern.ligo") ] ;
-  [%expect{|
-    const a =
-       match CONS(1 , LIST_EMPTY()) with
-        | [] -> 1
-        | a::b::c::[] -> 2
-        | _#2 -> 3 |}]
-
-let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "nested_record_pm (record [ a = 1 ; b = E ])" ; "--init-file" ; (good_test "pm_test.ligo") ] ;
-  [%expect{|
-    5 |}]
+  [%expect{| 5 |}]
 
 let%expect_test _ =
   run_ligo_good [ "info" ; "measure-contract" ; (good_test "nested_record_sum.ligo") ] ;
-  [%expect{|
-    142 bytes |}]
+  [%expect{| 142 bytes |}]

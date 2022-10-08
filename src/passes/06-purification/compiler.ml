@@ -4,7 +4,7 @@ module Errors = Errors
 module I = Ast_imperative
 module O = Ast_sugar
 open Simple_utils.Trace
-module VMap = Simple_utils.Map.Make(Ligo_prim.ValueVar)
+module VMap = Simple_utils.Map.Make(Ligo_prim.Value_var)
 open Ligo_prim
 
 let rec add_to_end (expression: O.expression) to_add =
@@ -47,7 +47,7 @@ let rec compile_type_expression ~raise : I.type_expression -> O.type_expression 
       let arr = Arrow.map self arr in
       return @@ T_arrow arr
     | I.T_variable type_variable -> return @@ T_variable type_variable
-    | I.T_app {type_operator;arguments=[l;r]} when TypeVar.equal Literal_types.v_michelson_or type_operator ->
+    | I.T_app {type_operator;arguments=[l;r]} when Type_var.equal Literal_types.v_michelson_or type_operator ->
       let (l, l_ann) = trace_option ~raise (Errors.corner_case "not an annotated type") @@ I.get_t_annoted l in
       let (r, r_ann) = trace_option ~raise (Errors.corner_case "not an annotated type") @@ I.get_t_annoted r in
       let (l,r) = Pair.map ~f:(compile_type_expression ~raise) (l,r) in
@@ -56,7 +56,7 @@ let rec compile_type_expression ~raise : I.type_expression -> O.type_expression 
         (Label "M_right", {associated_type = r ; attributes = [ "annot:"^r_ann ] ; decl_pos = 1}); ]
       in
       return @@ O.T_sum { fields = O.LMap.of_list sum ; attributes = [] }
-    | I.T_app {type_operator;arguments=[l;r]} when TypeVar.equal Literal_types.v_michelson_pair type_operator ->
+    | I.T_app {type_operator;arguments=[l;r]} when Type_var.equal Literal_types.v_michelson_pair type_operator ->
       let (l, l_ann) = trace_option ~raise (Errors.corner_case "not an annotated type") @@ I.get_t_annoted l in
       let (r, r_ann) = trace_option ~raise (Errors.corner_case "not an annotated type") @@ I.get_t_annoted r in
       let (l,r) = Pair.map ~f:(compile_type_expression ~raise) (l,r) in
@@ -134,10 +134,12 @@ and compile_expression' ~raise ~last : I.expression -> O.expression option -> O.
       return @@ O.E_constructor const
     | I.E_matching {matchee;cases} ->
       let matchee = self matchee in
-      let aux Match_expr.{pattern;body} =
-        let pattern = Pattern.map (Option.map ~f:(compile_type_expression ~raise)) pattern in
-        Match_expr.{pattern;body = self body} in
+      let aux I.Match_expr.{pattern;body} =
+        let pattern = Pattern.Conv.l_to_r pattern in
+        let pattern = O.Pattern.map (Option.map ~f:(compile_type_expression ~raise)) pattern in
+        O.Match_expr.{pattern;body = self body} in
       let cases   = List.map ~f:aux cases in
+      (* let cases = Record.LMap.of_list cases in *)
       return @@ O.E_matching {matchee;cases}
     | I.E_record recd ->
       (* at this point record expression become linear wrt labels *)
@@ -189,90 +191,38 @@ and compile_expression' ~raise ~last : I.expression -> O.expression option -> O.
       let expression = self expression in
       return @@ O.E_assign {binder; expression}
     | I.E_for {binder;start;final;incr;f_body} ->
-      (*Make the cond and the step *)
       let final = compile_expression ~raise ~last final in
       let start = compile_expression ~raise ~last start in
-      let step = compile_expression ~raise ~last incr in
-      let for_body = compile_expression ~raise ~last f_body in
-
-      let rec_func = ValueVar.fresh ~name:"fun_for_loop" () in
-      let recursive_call arg = O.e_application (O.e_variable rec_func) arg in
-
-      (* Modify the body loop*)
-      let ctrl =
-          O.e_let_in_ez binder [] (O.e_constant C_ADD [ O.e_variable binder ; step ]) @@
-          recursive_call (O.e_variable binder)
-      in
-      let cond = O.e_annotation (O.e_constant (C_LE) [O.e_variable binder ; final]) (O.t_bool ()) in
-      let continue_expr = add_to_end for_body ctrl in
-      let stop_expr      = (O.e_unit ()) in
-        let loop = O.e_recursive rec_func (O.t_arrow (O.t_int ()) (O.t_unit ())) @@
-          {
-            binder={
-              var=binder;
-              ascr=O.t_int ();
-              attributes={const_or_var=None}};
-            output_type=O.t_unit ();
-            result=O.e_cond cond continue_expr stop_expr
-          } in
-        return @@
-          O.E_let_in {let_binder={var=rec_func;ascr=None;attributes={const_or_var=None}}; rhs=loop; let_result=recursive_call start;attributes=[]}
+      let incr = compile_expression ~raise ~last incr in
+      let f_body = compile_expression ~raise ~last f_body in
+      return @@ O.E_for { binder; start; final; incr; f_body }
     | I.E_for_each {fe_binder;collection;collection_type; fe_body} ->
-      let body = compile_expression ~raise ~last fe_body in
+      let fe_body = compile_expression ~raise ~last fe_body in
       let collection = compile_expression ~raise ~last collection in
-      let op_name : Constant.constant' =
-        match collection_type with
-      | Map -> C_MAP_ITER | Set -> C_SET_ITER | List -> C_LIST_ITER | Any -> C_ITER
-      in
-
-      let args    = ValueVar.fresh ~name:"args" () in
-      let k,v = fe_binder in
-      let pattern : O.type_expression option Pattern.t = match v with
-        | Some v -> Location.wrap @@ Pattern.P_tuple [Location.wrap @@ Pattern.P_var {var=k;ascr=None;attributes={const_or_var=None}}; Location.wrap @@ Pattern.P_var {var=v;ascr=None;attributes={const_or_var=None}}]
-        | None -> Location.wrap @@ Pattern.P_var {var=k;ascr=None;attributes={const_or_var=None}}
-      in
-
-      let lambda = O.e_lambda_ez (args) None @@
-                  O.e_matching (O.e_variable args) [
-                    {pattern;body}
-                  ] in
-      return @@
-        O.E_constant {cons_name=op_name;arguments=[lambda;collection]}
-
+      return @@ O.E_for_each { fe_binder; collection; collection_type; fe_body }
     | I.E_while {cond;body} ->
-      (* compile while*)
       let cond = compile_expression ~raise ~last cond in
       let body = compile_expression ~raise ~last body in
-
-      let rec_func = ValueVar.fresh ~name:"fun_while_loop" () in
-      let recursive_call = O.e_application (O.e_variable rec_func) (O.e_unit ()) in
-      let continue_expr  = add_to_end body recursive_call in
-      let stop_expr      = (O.e_unit ()) in
-      let loop = O.e_recursive rec_func (O.t_arrow (O.t_unit ()) (O.t_unit ())) @@
-        {
-          binder={
-            var=ValueVar.fresh ~name:"()" ();
-            ascr=O.t_unit ();
-            attributes={const_or_var=None}};
-          output_type=O.t_unit ();
-          result=O.e_cond cond continue_expr stop_expr
-        } in
-      return @@
-        O.E_let_in {let_binder={var=rec_func;ascr=None;attributes={const_or_var=None}}; rhs=loop; let_result=recursive_call;attributes=[]}
+      return @@ O.E_while { cond; body }
+    | I.E_let_mut_in {let_binder;attributes;rhs;let_result} ->
+      let let_binder = Binder.map self_type_option let_binder in
+      let rhs = self rhs in
+      let let_result = self let_result in
+      return @@ O.E_let_mut_in {let_binder;attributes; rhs; let_result}
 
 and compile_declaration ~raise : I.declaration -> O.declaration = fun d ->
   let return wrap_content : O.declaration = {d with wrap_content} in
   match Location.unwrap d with
-  | Declaration_type {type_binder;type_expr;type_attr} ->
-    let type_expr = compile_type_expression ~raise type_expr in
-    return @@ Declaration_type {type_binder;type_expr;type_attr}
-  | Declaration_constant {binder;expr;attr} ->
+  | D_value {binder;expr;attr} ->
     let binder = Binder.map (compile_type_expression_option ~raise) binder in
     let expr   = compile_expression ~raise ~last:true expr in
-    return @@ Declaration_constant {binder;expr;attr}
-  | Declaration_module {module_binder;module_;module_attr} ->
+    return @@ D_value {binder;expr;attr}
+  | D_type {type_binder;type_expr;type_attr} ->
+    let type_expr = compile_type_expression ~raise type_expr in
+    return @@ D_type {type_binder;type_expr;type_attr}
+  | D_module {module_binder;module_;module_attr} ->
     let module_ = compile_module_expr ~raise module_ in
-    return @@ Declaration_module {module_binder;module_;module_attr}
+    return @@ D_module {module_binder;module_;module_attr}
 
 and compile_module_expr ~raise : I.module_expr -> O.module_expr = fun me ->
   let return wrap_content : O.module_expr = {me with wrap_content} in
@@ -285,7 +235,7 @@ and compile_module_expr ~raise : I.module_expr -> O.module_expr = fun me ->
   | M_module_path mp ->
       return @@ M_module_path mp
 
-and compile_decl ~raise : I.decl -> O.decl = fun (Decl d) -> Decl (compile_declaration ~raise d)
+and compile_decl ~raise : I.decl -> O.decl = fun d -> compile_declaration ~raise d
 and compile_module ~raise : I.module_ -> O.module_ = fun m ->
   List.map ~f:(compile_decl ~raise) m
 

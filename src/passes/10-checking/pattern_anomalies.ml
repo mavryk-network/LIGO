@@ -18,9 +18,8 @@ let nil_label  = Label.of_string "#NIL"
 
 let t_unit = AST.t_unit ()
 let wild_binder =
-  let var = ValueVar.wildcard in
-  let attributes = Binder.empty_attribute in
-  Binder.{ var ; ascr = None ; attributes }
+  let var = Value_var.wildcard in
+  Binder.make var None
 
 type simple_pattern =
     SP_Wildcard of AST.type_expression
@@ -54,13 +53,13 @@ let rec destructure_type (t : AST.type_expression) =
         fields []
   | _ -> [t]
 
-let rec to_simple_pattern (ty_pattern : _ Pattern.t * AST.type_expression) =
+let rec to_simple_pattern (ty_pattern : _ option AST.Pattern.t * AST.type_expression) =
   let pattern', ty = ty_pattern in
   let pattern = Location.unwrap pattern' in
   match pattern with
     P_unit -> [SP_Wildcard ty]
   | P_var _ when C.is_t_record ty ->
-    let fields = Option.value_exn (C.get_record_fields ty) in
+    let fields = Option.value_exn ~here:[%here] (C.get_record_fields ty) in
     let fields = List.map ~f:snd fields in
     let ps     = XList.repeat pattern' (List.length fields) in
     let ps     = List.zip_exn ps fields in
@@ -68,50 +67,57 @@ let rec to_simple_pattern (ty_pattern : _ Pattern.t * AST.type_expression) =
     List.concat ps
   | P_var _    -> [SP_Wildcard ty]
   | P_list (Cons (hd, tl)) ->
-    let hd_ty = Option.value_exn (C.get_t_list ty) in
+    let hd_ty = Option.value_exn ~here:[%here] (C.get_t_list ty) in
     let hd_tl =
       to_simple_pattern (hd, hd_ty) @
       to_simple_pattern (tl, ty) in
     [SP_Constructor (cons_label, hd_tl, ty)]
   | P_list (List ps) ->
-    let hd_ty = Option.value_exn (C.get_t_list ty) in
+    let hd_ty = Option.value_exn ~here:[%here] (C.get_t_list ty) in
     List.fold_right ps ~init:([nil_constructor ty])
       ~f:(fun p acc ->
         let hd_tl = to_simple_pattern (p, hd_ty) @ acc in
         [SP_Constructor (cons_label, hd_tl, hd_ty)])
   | P_variant (c, p) ->
-    let p_ty = get_variant_nested_type c (Option.value_exn (C.get_t_sum ty)) in
+    let p_ty = get_variant_nested_type c (Option.value_exn ~here:[%here] (C.get_t_sum ty)) in
     [SP_Constructor (c, to_simple_pattern (p, p_ty), ty)]
-  | P_tuple ps
-  | P_record (_, ps) ->
-    let ps_tys = Option.value_exn (C.get_record_fields ty) in
-    let ps_tys = List.map ~f:snd ps_tys in
-    let ps = List.zip_exn ps ps_tys in
-    let ps = List.map ps ~f:to_simple_pattern in
+  | P_tuple ps ->
+    let row = Option.value_exn ~here:[%here] (C.get_t_record ty) in
+    let ps = List.mapi ps ~f:(fun i p ->
+      let row_elem = Option.value_exn ~here:[%here] (LMap.find_opt (Label (Int.to_string i)) row.fields) in
+      to_simple_pattern (p, row_elem.associated_type))
+    in
+    List.concat ps
+  | P_record lps ->
+    let row = Option.value_exn ~here:[%here] (C.get_t_record ty) in
+    let ps = List.map (Pattern.Container.Record.to_list lps) ~f:(fun (label, p) ->
+      let row_elem = Option.value_exn ~here:[%here] (LMap.find_opt label row.fields) in
+      to_simple_pattern (p, row_elem.associated_type))
+    in
     List.concat ps
 
 let are_keys_numeric keys =
   List.for_all keys
     ~f:(fun (l) -> Option.is_some @@ int_of_string_opt @@ Label.to_string l)
 
-let rec to_list_pattern ~(raise : raise) simple_pattern : _ Pattern.t =
+let rec to_list_pattern ~(raise : raise) simple_pattern : _ AST.Pattern.t =
   match simple_pattern with
-    SP_Wildcard _ -> Location.wrap @@ Pattern.P_var wild_binder
+    SP_Wildcard _ -> Location.wrap @@ AST.Pattern.P_var wild_binder
   | SP_Constructor (Label "#NIL", _, _) ->
-    Location.wrap @@ Pattern.P_list (List [])
+    Location.wrap @@ AST.Pattern.P_list (List [])
   | SP_Constructor (Label "#CONS", sps, t) ->
     let rsps = List.rev sps in
     let tl = List.hd_exn rsps in
     let hd = List.rev (List.tl_exn rsps) in
     let hd = to_original_pattern ~raise hd (C.get_t_list_exn t) in
     let tl = to_list_pattern ~raise tl in
-    Location.wrap @@ Pattern.P_list (Cons (hd, tl))
+    Location.wrap @@ AST.Pattern.P_list (Cons (hd, tl))
   | SP_Constructor (Label c, _, _) ->
     raise.error @@
       Errors.corner_case (Format.sprintf "edge case: %s in to_list_pattern" c)
 
 and to_original_pattern ~raise simple_patterns (ty : AST.type_expression) =
-  let open Pattern in
+  let open AST.Pattern in
   match simple_patterns with
     [] -> raise.error @@
       Errors.corner_case "edge case: to_original_pattern empty patterns"
@@ -121,14 +127,13 @@ and to_original_pattern ~raise simple_patterns (ty : AST.type_expression) =
   | (SP_Constructor (Label "#NIL", _, _) as simple_pattern)::[] ->
     to_list_pattern ~raise simple_pattern
   | SP_Constructor (c, sps, t)::[] ->
-    let t = get_variant_nested_type c (Option.value_exn (C.get_t_sum t)) in
+    let t = get_variant_nested_type c (Option.value_exn ~here:[%here] (C.get_t_sum t)) in
     let ps = to_original_pattern ~raise sps t in
     Location.wrap @@ P_variant (c, ps)
   | _ ->
     (match ty.type_content with
     AST.T_record { fields ; _ } ->
-      let kvs = List.sort (LMap.to_kv_list fields)
-        ~compare:(fun (l1, _) (l2, _) -> Label.compare l1 l2) in
+      let kvs = LMap.to_kv_list fields in
       let labels, tys = List.unzip kvs in
       let tys = List.map tys ~f:(fun ty -> ty.associated_type) in
 
@@ -142,7 +147,7 @@ and to_original_pattern ~raise simple_patterns (ty : AST.type_expression) =
       if are_keys_numeric labels then
         Location.wrap @@ P_tuple ps
       else
-        Location.wrap @@ P_record (labels, ps)
+        Location.wrap @@ P_record (Pattern.Container.Record.of_list (List.zip_exn labels ps))
     | _ -> raise.error @@ Errors.corner_case "edge case: not a record/tuple")
 
 let print_matrix matrix =
@@ -234,7 +239,7 @@ let find_constuctor_arity c (t : AST.type_expression) =
     destructure_type t' @ [t]
   | Label "#NIL"  -> [t]
   | _             ->
-    let te = get_variant_nested_type c (Option.value_exn (C.get_t_sum t)) in
+    let te = get_variant_nested_type c (Option.value_exn ~here:[%here] (C.get_t_sum t)) in
     destructure_type te
 
 let get_all_constructors (t : AST.type_expression) =
@@ -469,7 +474,7 @@ let redundant_case_analysis ~raise matrix =
    missing pattern to the original pattern representation
    using [to_original_pattern].
    e. If there are no missing cases we check for redundant cases. *)
-let check_anomalies ~(raise : raise) ~syntax ~loc eqs t =
+let check_anomalies ~(raise : raise) ~syntax ~loc (eqs : (AST.type_expression option AST.Pattern.t * AST.type_expression * AST.expression) list) t =
 
   let matrix = List.map eqs ~f:(fun (p, t, _) -> to_simple_pattern (p, t)) in
 

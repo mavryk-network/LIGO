@@ -63,7 +63,7 @@ ligo run evaluate-expr gitlab-pages/docs/language-basics/src/variables-and-const
 
 ```jsligo skip
 let x = (a : int) : int => {
-  const age : int = 25;
+  const age = 25;
   age = 3; // Yields an error
 };
 ```
@@ -71,19 +71,19 @@ let x = (a : int) : int => {
 Unlike the other syntaxes, JsLIGO doesn't allow variable names to be reused in the same block scope:
 
 ```jsligo skip
-let x = (a : int) : int => {
-  const age : int = 25;
-  const age : int = 3; // Yields an error
+let x = a => {
+  const age = 25;
+  const age = 3; // Yields an error
 };
 ```
 
 However, the following does work:
 
 ```jsligo group=d
-let x = (a: int): int => {
-  const age: int = 25;
+let x = a => {
+  const age = 25;
   {
-   const age : int = 3; // does not give an error
+   const age = 3; // does not give an error
    return age;
   }
 };
@@ -117,10 +117,10 @@ or as function parameters.
 
 ```pascaligo group=b
 // The following is invalid: use `const` for global values instead.
-// var four : int := 4
+// var four := 4
 
-function add (const a : int; const b : int) : int is {
-  var c : int := a + 2 * b;
+function add (const a : int; const b : int) is {
+  var c := a + 2 * b;
   c := c - b
 } with c
 ```
@@ -144,8 +144,8 @@ features *constant values*: once they are declared, the value cannot
 be changed (or "mutated").
 
 ```cameligo group=c
-let add (a, b : int * int) : int =
-  let c : int = a + b in c
+let add (a, b : int * int) =
+  let c = a + b in c
 ```
 
 You can run the `add` function defined above using the LIGO compiler
@@ -164,7 +164,7 @@ cannot be changed (or "mutated").
 
 ```reasonligo group=c
 let add = ((a, b): (int, int)): int => {
-  let c : int = a + b;
+  let c = a + b;
   c;
 };
 ```
@@ -204,6 +204,8 @@ ligo run evaluate-call gitlab-pages/docs/language-basics/src/variables-and-const
 # Outputs: 2
 ```
 
+</Syntax>
+
 ## Escaped Identifiers
 
 Both variables and constants are, at the level of the lexicon,
@@ -217,5 +219,32 @@ complain about the value being not used.) But this is not a good
 practice because we do not pronounce aloud the underscores, and there
 is the issue of one or two underscores. To solve all those problems,
 in LIGO, you can prefix you identifier with `@`, like `@amount`.
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=a
+const @Unique_name = true
+```
+
+</Syntax>
+<Syntax syntax="cameligo">
+
+```cameligo group=a
+let @Unique_name = true
+```
+
+</Syntax>
+<Syntax syntax="reasonligo">
+
+```reasonligo group=a
+let @Unique_name = true
+```
+
+</Syntax>
+<Syntax syntax="jsligo">
+
+```jsligo group=a
+let @Unique_name = true
+```
 
 </Syntax>

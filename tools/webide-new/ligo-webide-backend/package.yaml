@@ -13,6 +13,7 @@ default-extensions:
   - DeriveAnyClass
   - DeriveFoldable
   - DeriveFunctor
+  - DeriveGeneric
   - DeriveTraversable
   - DerivingStrategies
   - DerivingVia
@@ -65,10 +66,20 @@ library:
   dependencies:
   - aeson
   - bytestring
+  - containers
+  - directory
+  - filepath
   - katip
+  - megaparsec
+  - morley
+  - morley-client
   - mtl
   - process
+  - servant-client
   - servant-server
+  - servant-swagger
+  - servant-swagger-ui
+  - swagger2
   - temporary
   - text
   - wai
@@ -99,6 +110,7 @@ tests:
     dependencies:
     - aeson
     - bytestring
+    - filepath
     - http-types
     - hspec
     - hspec-wai

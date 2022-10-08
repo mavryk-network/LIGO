@@ -5,19 +5,22 @@ let () = Sys.chdir "../../test/projects/"
 let%expect_test _ =
   run_ligo_good [ "run"; "test" ; "originate_contract/test.mligo" ; "--project-root" ; "originate_contract" ; "--no-warn" ] ;
   [%expect{|
-    File "originate_contract/test.mligo", line 9, characters 77-99:
-      8 |     let (addr, _, _) = Test.originate_from_file f "main" ([]: string list) v_mich 0tez in
-      9 |     let taddr : (SingleAsset.parameter, SingleAsset.storage) typed_address = Test.cast_address addr in
-     10 |     let contr = Test.to_contract taddr in
-    :
     Everything at the top-level was executed.
-    - test exited with value KT1EMmL4W1wQMgt36Vet6EmGBarD1czMwQMC(None).
-    Run-time warning: cast changing the type of an address. |}]
+    - test exited with value KT1QVWJTnMi6XJFPpnASjbfi53qokforNwdP(None). |}]
 
 let%expect_test _ =
   run_ligo_good [ "info"; "measure-contract" ; "using_scope_pkg_project/src/a/b/c/contract.mligo" ; "--project-root" ; "using_scope_pkg_project" ] ;
   [%expect{|
     95 bytes |}]
+
+let%expect_test _ =
+  run_ligo_bad [ "compile"; "contract" ; "originate_contract/main.mligo" ; "--project-root" ; "originate_contract" ] ;
+  [%expect{|
+    File "originate_contract/main.mligo", line 1, characters 8-30:
+      1 | #import "tezos-ligo-fa2" "FA2"
+      2 |
+    File "originate_contract/main.mligo", line 1, characters 8-30:
+    File "tezos-ligo-fa2" to include not found. |}]
 
 let pwd = Sys.getcwd ()
 let () = Sys.chdir "using_scope_pkg_project"

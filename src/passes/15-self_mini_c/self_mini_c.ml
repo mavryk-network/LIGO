@@ -6,7 +6,7 @@ open Ligo_prim
 
 let eta_expand : expression -> type_expression -> type_expression -> anon_function =
   fun e in_ty out_ty ->
-    let binder = ValueVar.fresh () in
+    let binder = Value_var.fresh () in
     let var = e_var binder in_ty in
     let app = e_application e out_ty var in
     { binder = binder ; body = app }
@@ -50,10 +50,11 @@ let is_pure_constant : Constant.constant' -> bool =
   | C_LOOP_CONTINUE | C_LOOP_STOP
   | C_SUB_MUTEZ
   | C_BYTES_UNPACK
-  | C_SET_EMPTY | C_SET_LITERAL
-  | C_LIST_EMPTY | C_LIST_LITERAL
-  | C_MAP_EMPTY | C_MAP_LITERAL
-  | C_MAP_GET | C_MAP_REMOVE
+  | C_SIZE | C_SLICE
+  | C_SET_EMPTY | C_SET_LITERAL | C_SET_SIZE
+  | C_LIST_EMPTY | C_LIST_LITERAL | C_LIST_SIZE
+  | C_MAP_EMPTY | C_MAP_LITERAL | C_MAP_SIZE
+  | C_MAP_GET | C_MAP_REMOVE | C_MAP_MEM
   | C_MAP_GET_AND_UPDATE | C_BIG_MAP_GET_AND_UPDATE
   | C_BIG_MAP_EMPTY
   | C_SAPLING_EMPTY_STATE
@@ -66,10 +67,7 @@ let is_pure_constant : Constant.constant' -> bool =
   | C_ADD | C_SUB |C_MUL|C_DIV|C_MOD | C_LSL | C_LSR
   | C_POLYMORPHIC_ADD | C_POLYMORPHIC_SUB
   (* impure: *)
-  | C_UNOPT
-  | C_UNOPT_WITH_ERROR
   | C_OPTION_MAP
-  | C_ASSERT_INFERRED
   | C_MAP_FIND
   | C_CALL
   | C_ITER
@@ -156,8 +154,12 @@ let is_pure_constant : Constant.constant' -> bool =
   | C_TEST_READ_CONTRACT_FROM_FILE
   | C_TEST_SIGN
   | C_TEST_GET_ENTRYPOINT
+  | C_TEST_INT64_OF_INT
+  | C_TEST_INT64_TO_INT
   | C_TEST_LAST_EVENTS
   | C_TEST_TRY_WITH
+  | C_ABS
+  | C_INT
     -> false
 
 let rec is_pure : expression -> bool = fun e ->
@@ -196,6 +198,20 @@ let rec is_pure : expression -> bool = fun e ->
     (* very not pure *)
     false
 
+  (* TODO E_let_mut_in is pure when the rhs is pure and the body's
+     only impurity is assign/deref of the bound mutable variable *)
+  | E_let_mut_in _
+  | E_assign _
+  | E_deref _ ->
+     false
+
+  (* these could be pure through the exception above for
+     E_let_mut_in *)
+  | E_for _ | E_for_each _ -> false
+
+  (* never pure in any important case *)
+  | E_while _ -> false
+
   (* I'm not sure about these. Maybe can be tested better? *)
   | E_application _
   | E_iterator _
@@ -203,7 +219,7 @@ let rec is_pure : expression -> bool = fun e ->
   | E_fold_right _
     -> false
 
-let occurs_count : ValueVar.t -> expression -> int =
+let occurs_count : Value_var.t -> expression -> int =
   fun x e ->
   let fvs = Free_variables.expression [] e in
   Free_variables.mem_count x fvs
@@ -232,7 +248,7 @@ let is_variable : expression -> bool =
   | E_variable _ -> true
   | _ -> false
 
-let should_inline : ValueVar.t -> expression -> expression -> bool =
+let should_inline : Value_var.t -> expression -> expression -> bool =
   fun x e1 e2 ->
   occurs_count x e2 <= 1 || is_variable e1
 
@@ -304,7 +320,7 @@ let beta : bool ref -> expression -> expression =
 
   (** (let x = (let y = e1 in e2) in e3) ↦ (let y = e1 in let x = e2 in e3) *)
   | E_let_in ({ content = E_let_in (e1, inline2, ((y, b), e2)); _ }, inline1, ((x, a), e3)) ->
-    let y' = ValueVar.fresh_like y in
+    let y' = Value_var.fresh_like y in
     let e2 = Subst.replace e2 y y' in
     changed := true;
     {e with content = E_let_in (e1, inline2, ((y', b), {e with content = E_let_in (e2, inline1, ((x, a), e3))}))}
@@ -316,7 +332,7 @@ let beta : bool ref -> expression -> expression =
   | E_application ({ content = E_let_in (e1, inline, ((x, a), e2)); _ }, e3) ->
     if is_pure e1 || is_pure e3
     then
-      let x' = ValueVar.fresh_like x in
+      let x' = Value_var.fresh_like x in
       let e2 = Subst.replace e2 x x' in
       changed := true;
       {e with content = E_let_in (e1, inline, ((x', a), {e with content = E_application (e2, e3)}))}
@@ -326,7 +342,7 @@ let beta : bool ref -> expression -> expression =
   | E_application ({ content = E_let_tuple (e1, (vars, e2)); _ }, e3) ->
     if is_pure e1 || is_pure e3
     then
-      let vars = List.map ~f:(fun (x, a) -> (x, ValueVar.fresh_like x, a)) vars in
+      let vars = List.map ~f:(fun (x, a) -> (x, Value_var.fresh_like x, a)) vars in
       let e2 = List.fold_left vars ~init:e2 ~f:(fun e2 (x, x', _a) -> Subst.replace e2 x x') in
       let vars = List.map ~f:(fun (_x, x', a) -> (x', a)) vars in
       changed := true;
@@ -359,7 +375,7 @@ let eta : bool ref -> expression -> expression =
                                                   { content = E_constant {cons_name = C_CDR; arguments = [ e2 ]} ; type_expression = _ ; location = _}]} ->
     (match (e1.content, e2.content) with
      | E_variable x1, E_variable x2 ->
-       if ValueVar.equal x1 x2
+       if Value_var.equal x1 x2
        then
          (changed := true;
           { e with content = e1.content })
@@ -386,7 +402,7 @@ let eta : bool ref -> expression -> expression =
      | Some vars ->
        match vars with
        | var :: _ ->
-         if List.for_all ~f:(ValueVar.equal var) vars
+         if List.for_all ~f:(Value_var.equal var) vars
          then { e with content = E_variable var }
          else e
        | _ -> e)

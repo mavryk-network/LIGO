@@ -27,8 +27,8 @@ let rec assert_value_eq (a, b: (expression * expression )) : unit option =
     )
   | E_module_accessor {module_path=maa;element=a}, E_module_accessor {module_path=mab;element=b} -> (
     let open Simple_utils.Option in
-    let* _ = if ValueVar.equal a b then Some () else None in
-    assert_list_eq (fun a b -> if ModuleVar.equal a b then Some () else None) maa mab
+    let* _ = if Value_var.equal a b then Some () else None in
+    assert_list_eq (fun a b -> if Module_var.equal a b then Some () else None) maa mab
   )
   | E_record sma, E_record smb -> (
       let aux _ a b =
@@ -43,7 +43,7 @@ let rec assert_value_eq (a, b: (expression * expression )) : unit option =
       else None
     )
   | E_update ura, E_update urb -> (
-    match assert_value_eq (ura.record, urb.record) with
+    match assert_value_eq (ura.struct_, urb.struct_) with
     | None -> None
     | Some () ->
       let aux (a, b) =
@@ -57,7 +57,8 @@ let rec assert_value_eq (a, b: (expression * expression )) : unit option =
   | (_a' , E_ascription b) -> assert_value_eq (a , b.anno_expr)
   | (E_variable _, _) | (E_lambda _, _) | (E_type_abstraction _, _)
 
-  | (E_application _, _) | (E_let_in _, _) | (E_assign _, _)
+  | (E_application _, _) | (E_let_in _, _) | (E_let_mut_in _, _) | (E_assign _, _)
+  | (E_for _, _) | (E_for_each _, _) | (E_while _, _)
   | (E_type_in _, _) | (E_mod_in _, _)
   | (E_raw_code _, _)
   | (E_recursive _,_) | (E_accessor _, _)

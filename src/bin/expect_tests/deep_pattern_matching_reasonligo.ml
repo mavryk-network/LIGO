@@ -38,7 +38,9 @@ let%expect_test _ =
       6 |   | (Nil , {a : a , b : b , c : c}) => 1
       7 |   | (xs  , Nil) => 2
 
-    Pattern not of the expected type myt |}]
+    Invalid type(s)
+    Cannot unify record[a -> ^gen#496 , b -> ^gen#497 , c -> ^gen#498] with
+    sum[Cons -> ( int * int ) , Nil -> unit]. |}]
 
 let%expect_test _ =
   run_ligo_bad [ "print" ; "ast-typed" ; (bad_test "pm_fail2.religo") ] ;
@@ -48,7 +50,8 @@ let%expect_test _ =
       5 |   | (Nil , (a,b,c)) => 1
       6 |   | (xs  , Nil) => 2
 
-    Pattern not of the expected type myt |}]
+    Invalid type(s)
+    Cannot unify ( ^gen#496 * ^gen#497 * ^gen#498 ) with sum[Cons -> ( int * int ) , Nil -> unit]. |}]
 
 let%expect_test _ =
   run_ligo_bad [ "print" ; "ast-typed" ; (bad_test "pm_fail5.religo") ] ;
@@ -80,8 +83,8 @@ let%expect_test _ =
       6 |   | B => 2
       7 |   }
 
-    Invalid type(s).
-    Expected: "string", but got: "int". |}]
+    Invalid type(s)
+    Cannot unify int with string. |}]
 
 let%expect_test _ =
   run_ligo_bad [ "print" ; "ast-typed" ; (bad_test "pm_fail8.religo") ] ;
@@ -91,8 +94,8 @@ let%expect_test _ =
      20 |       | Cons ((a,b)) => "invalid"
      21 |       };
 
-    Invalid type(s).
-    Expected: "int", but got: "string". |}]
+    Invalid type(s)
+    Cannot unify string with int. |}]
 
 
 (* rendundancy detected while compiling the pattern matching *)
@@ -134,7 +137,7 @@ let%expect_test _ =
 
     Error : this pattern-matching is not exhaustive.
     Here are examples of cases that are not matched:
-    - {a : None,b : _} |}]
+    - {b : _,a : None} |}]
 
 let%expect_test _ =
   run_ligo_bad [ "print" ; "ast-typed" ; (bad_test "pm_fail4.religo") ] ;
@@ -158,7 +161,7 @@ let%expect_test _ =
       8 |         | Decrement    => s - 1
       9 |         };
 
-    Variant pattern argument is expected of type nat but is of type unit. |}]
+    Pattern not of the expected type nat |}]
 
 (* wrong unit pattern in a let destructuring *)
 let%expect_test _ =
@@ -350,15 +353,6 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "(t13 (some_a))(some_a)" ; "--init-file";(good_test "pm_test.religo") ] ;
   [%expect{| 4 |}]
-
-let%expect_test _ =
-  run_ligo_good [ "print" ; "ast-core" ; (good_test "list_pattern.religo") ] ;
-  [%expect{|
-    const a =
-       match CONS(1 , LIST_EMPTY()) with
-        | [] -> 1
-        | a::b::c::[] -> 2
-        | gen#2 -> 3 |}]
 
 let%expect_test _ =
   run_ligo_good [ "compile" ; "contract" ; (good_test "pm_ticket.religo") ] ;

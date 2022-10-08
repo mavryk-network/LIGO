@@ -15,12 +15,11 @@ open Ast_aggregated
 let rec reduplicate ~raise : expression -> expression =
   fun exp ->
   let self = reduplicate ~raise in
-  let remove_counter v = if ValueVar.is_generated v then v else ValueVar.(of_input_var ~loc:(get_location v) (to_name_exn v)) in
+  let remove_counter v = if Value_var.is_generated v then v else Value_var.(of_input_var ~loc:(get_location v) (to_name_exn v)) in
   let return expression_content : expression =
     { exp with expression_content } in
-  let binder_remove_counter = fun Binder.{var; ascr; attributes} ->
-    let var = remove_counter var in
-    Binder.{var; ascr; attributes} in
+  let binder_remove_counter = fun b -> Binder.set_var b (Binder.apply remove_counter b) in
+  let param_remove_counter = fun b -> Param.set_var b (remove_counter @@ Param.get_var b) in
   match exp.expression_content with
     | E_literal l ->
        return (E_literal l)
@@ -34,7 +33,7 @@ let rec reduplicate ~raise : expression -> expression =
        let lamb = self lamb in
        return (E_application { lamb ; args })
     | E_lambda { binder ; output_type ; result } ->
-       let binder = binder_remove_counter binder in
+       let binder = param_remove_counter binder in
        let result = self result in
        return (E_lambda { binder ; output_type ; result })
     | E_type_abstraction { type_binder ; result } ->
@@ -42,7 +41,7 @@ let rec reduplicate ~raise : expression -> expression =
        return (E_type_abstraction { type_binder ; result })
     | E_recursive { fun_name ; fun_type ; lambda = { binder ; output_type ; result } } ->
        let result = self result in
-       let binder = binder_remove_counter binder in
+       let binder = param_remove_counter binder in
        return (E_recursive { fun_name ; fun_type ; lambda = { binder ; output_type ; result } })
     | E_let_in { let_binder ; rhs ; let_result ; attr } ->
        let rhs = self rhs in
@@ -76,14 +75,38 @@ let rec reduplicate ~raise : expression -> expression =
     | E_record map ->
        let map = Record.map (self) map in
        return (E_record map)
-    | E_accessor { record ; path } ->
-       let record = self record in
-       return (E_accessor { record ; path })
-    | E_update { record ; path ; update } ->
-       let record = self record in
+    | E_accessor { struct_ ; path } ->
+       let struct_ = self struct_ in
+       return (E_accessor { struct_ ; path })
+    | E_update { struct_ ; path ; update } ->
+       let struct_ = self struct_ in
        let update = self update in
-       return (E_update { record ; path ; update })
+       return (E_update { struct_ ; path ; update })
    | E_assign {binder;expression} ->
       let binder = binder_remove_counter binder in
       let expression = self expression in
       return @@ E_assign {binder;expression}
+   | E_let_mut_in { let_binder; rhs; let_result; attr } ->
+      let let_binder = binder_remove_counter let_binder in
+      let rhs = self rhs in
+      let let_result = self let_result in
+      return @@ E_let_mut_in { let_binder; rhs; let_result; attr }
+   | E_for { binder; start; incr; final; f_body } ->
+      let binder = remove_counter binder in
+      let start = self start in
+      let incr = self incr in
+      let final = self final in
+      let f_body = self f_body in
+      return @@ E_for { binder; start; incr; final; f_body }
+   | E_while { cond; body } ->
+      let cond = self cond in
+      let body = self body in
+      return @@ E_while { cond; body }
+   | E_for_each { fe_binder = binder1, binder2; collection; collection_type; fe_body } ->
+      let fe_binder = 
+         remove_counter binder1, Option.map ~f:remove_counter binder2
+      in
+      let collection = self collection in
+      let fe_body = self fe_body in
+      return @@ E_for_each { fe_binder; collection; collection_type; fe_body }
+   | E_deref mut_var -> return @@ E_deref (remove_counter mut_var)
