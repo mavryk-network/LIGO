@@ -16,20 +16,20 @@ let r_fst x = fst (r_split x)
 let w_split (x: 'a CST.Wrap.t) : 'a * Location.t =
   (x#payload, Location.lift x#region)
 
-let rec compile_val_binding : CST.val_binding -> AST.let_binding = fun b ->
+let rec compile_val_binding ~(raise: ('e, 'w) raise) : CST.val_binding -> AST.let_binding = fun b ->
   let is_rec = false in
   let binders = List.Ne.singleton @@ compile_pattern ~raise b.binders in
   let type_params = Option.map b.type_params ~f:(fun (tp : CST.type_generics) ->
     List.Ne.map r_fst @@ nsepseq_to_nseq (r_fst tp).inside)
   in
-  let rhs_type = Option.map ~f:(compile_type_expression <@ snd) b.lhs_type in
+  let rhs_type = Option.map ~f:(compile_type_expression ~raise <@ snd) b.lhs_type in
   let let_rhs = compile_expression ~raise b.expr in
   {is_rec; type_params; binders; rhs_type; let_rhs}
 
 (* ========================== TYPES ======================================== *)
 
-and compile_type_expression : CST.type_expr -> AST.type_expr = fun te ->
-  let self = compile_type_expression in
+and compile_type_expression ~(raise: ('e, 'w) raise) : CST.type_expr -> AST.type_expr = fun te ->
+  let self = compile_type_expression ~raise in
   (* This function is declared here on top because it's used by both TObject and TDisc *)
   let compile_obj_type : CST.obj_type -> AST.type_ne_record = fun obj ->
     let obj, loc = r_split obj in
@@ -124,7 +124,7 @@ and compile_type_expression : CST.type_expr -> AST.type_expr = fun te ->
 
 (* ========================== PATTERNS ===================================== *)
 
-and compile_pattern ~raise : CST.pattern -> AST.pattern = fun p ->
+and compile_pattern ~(raise: ('e, 'w) raise) : CST.pattern -> AST.pattern = fun p ->
   let self = compile_pattern ~raise in
   match p with
   | PRest     p -> (
@@ -151,7 +151,7 @@ and compile_pattern ~raise : CST.pattern -> AST.pattern = fun p ->
   | PDestruct p -> (
     let p, loc = r_split p in
     let property = r_fst p.property in
-    let target = compile_val_binding @@ r_fst p.target in
+    let target = compile_val_binding ~raise @@ r_fst p.target in
     p_destruct {property; target} ~loc ()
   )
   | PObject   p -> (
@@ -167,7 +167,7 @@ and compile_pattern ~raise : CST.pattern -> AST.pattern = fun p ->
 
 (* ========================== STATEMENTS ================================= *)
 
-and compile_statement ~raise : CST.statement -> AST.statement = fun s ->
+and compile_statement ~(raise: ('e, 'w) raise) : CST.statement -> AST.statement = fun s ->
   let self = compile_statement ~raise in
   let () = ignore (self, raise) in
   let extract_type_vars : CST.type_vars -> string nseq = fun tv ->
@@ -198,19 +198,19 @@ and compile_statement ~raise : CST.statement -> AST.statement = fun s ->
   )
   | SLet s -> (
     let s, loc = r_split s in
-    let bindings = List.Ne.map (compile_val_binding <@ r_fst) @@ nsepseq_to_nseq s.bindings in
+    let bindings = List.Ne.map (compile_val_binding ~raise <@ r_fst) @@ nsepseq_to_nseq s.bindings in
     s_let bindings ~loc ()
   )
   | SConst s -> (
     let s, loc = r_split s in
-    let bindings = List.Ne.map (compile_val_binding <@ r_fst) @@ nsepseq_to_nseq s.bindings in
+    let bindings = List.Ne.map (compile_val_binding ~raise <@ r_fst) @@ nsepseq_to_nseq s.bindings in
     s_const bindings ~loc ()
   )
   | SType s -> (
     let s, loc = r_split s in
     let name      = r_fst s.name in
     let params    = Option.map ~f:extract_type_vars s.params in
-    let type_expr = compile_type_expression s.type_expr in
+    let type_expr = compile_type_expression ~raise s.type_expr in
     s_type {name; params; type_expr} ~loc ()
   )
   | SSwitch s -> (
@@ -292,7 +292,7 @@ and compile_statement ~raise : CST.statement -> AST.statement = fun s ->
 
 (* ========================== EXPRESSIONS ================================== *)
 
-and compile_expression ~raise : CST.expr -> AST.expr = fun e ->
+and compile_expression ~(raise: ('e, 'w) raise) : CST.expr -> AST.expr = fun e ->
   let self = compile_expression ~raise in
   let return e = e in
   let e_constant_of_bin_op_reg (op_type : Ligo_prim.Constant.constant') (op : _ CST.bin_op CST.reg) =
@@ -424,7 +424,7 @@ and compile_expression ~raise : CST.expr -> AST.expr = fun e ->
   | EFun f -> (
     let f, loc = r_split f in
     let parameters = self f.parameters in
-    let lhs_type   = Option.map ~f:(compile_type_expression <@ snd) f.lhs_type in
+    let lhs_type   = Option.map ~f:(compile_type_expression ~raise <@ snd) f.lhs_type in
     let body =
       let compile_body : CST.body -> AST.body_jsligo = function
       | FunctionBody   b -> AST.FunctionBody   (nseq_map (compile_statement ~raise) @@ nsepseq_to_nseq (r_fst b).inside)
@@ -437,7 +437,7 @@ and compile_expression ~raise : CST.expr -> AST.expr = fun e ->
   | EAnnot a -> (
     let (e, _, te), loc = r_split a in
     let e = self e in
-    let te = compile_type_expression te in
+    let te = compile_type_expression ~raise te in
     e_annotjsligo (e, te) ~loc ()
   )
 
@@ -482,7 +482,7 @@ and compile_expression ~raise : CST.expr -> AST.expr = fun e ->
 
 (* ========================== DECLARATIONS ================================= *)
 
-let compile_toplevel_statement ~raise : CST.toplevel_statement -> AST.declaration = fun s -> 
+let compile_toplevel_statement ~(raise: ('e, 'w) raise) : CST.toplevel_statement -> AST.declaration = fun s -> 
   match s with
   | Directive d -> (
     let d, loc = Helpers.translate_directive d in
