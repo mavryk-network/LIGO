@@ -144,9 +144,6 @@ and list_pattern =
 | PListComp of pattern list
 | PCons     of pattern * pattern
 
-and ptrn_record     = ptrn        field_assign list
-and ptrn_ne_record  = ptrn        field_assign nseq
-
 and rest_pattern = string
 and assign_pattern = {
   property  : string;
@@ -181,7 +178,7 @@ and pattern_content =
 | P_Par      of ptrn
 | P_Typed    of ptrn * type_expr option
 (* Cameligo *)
-| P_RecordCameligo   of ptrn_ne_record
+| P_RecordCameligo   of ptrn field_assign nseq
 (* Pascaligo *)
 | P_App      of ptrn * ptrn nseq option
 | P_Attr     of attr_pascaligo * ptrn
@@ -189,7 +186,7 @@ and pattern_content =
 | P_Mutez    of string * Int64.t
 | P_Nil
 | P_Ctor     of string
-| P_Record   of ptrn_record
+| P_RecordPascaligo   of (ptrn, ptrn) field list
 (* Jsligo *)
 | P_Rest     of rest_pattern
 | P_Assign   of assign_pattern

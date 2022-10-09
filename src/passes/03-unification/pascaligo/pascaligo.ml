@@ -107,9 +107,105 @@ let rec compile_type_expression : CST.type_expr -> AST.type_expr = fun te ->
 (* ========================== PATTERNS ===================================== *)
 
 and compile_pattern ~raise : CST.pattern -> AST.pattern = fun p ->
-  let () = ignore raise in
+  let self = compile_pattern ~raise in
   match p with
-  | _ -> failwith "TODO NP"
+  | P_App      p -> (
+    let (p, pt_opt), loc = r_split p in
+    let p : pattern = self p in
+    let pt_opt : pattern nseq option = Option.apply (fun (v : CST.pattern CST.tuple) ->
+      nseq_map self @@ nsepseq_to_nseq v.value.inside
+    ) pt_opt
+    in
+    p_app p pt_opt ~loc ()
+  )
+  | P_Attr     p -> (
+    let attr, ptrn = p in
+    let attr, loc = r_split attr in
+    let attr = translate_attr_pascaligo attr in
+    let ptrn = self ptrn in
+    p_attr attr ptrn ~loc ()
+  )
+  | P_Bytes    p -> (
+    let (s, hex), loc = w_split p in
+    let b = Hex.to_bytes hex in
+    p_bytes s b ~loc ()
+  )
+  | P_Cons     p -> (
+    let (p1, _, p2), loc = r_split p in
+    let p1 = self p1 in
+    let p2 = self p2 in
+    p_list (AST.PCons (p1, p2)) ~loc ()
+  )
+  | P_Ctor     p -> (
+    let s, loc = w_split p in
+    p_constr s None ~loc ()
+  )
+  | P_Int      p -> (
+    let (s, z), loc = w_split p in
+    p_int s z ~loc ()
+  )
+  | P_List     p -> (
+    let p, loc = r_split p in
+    let p : pattern list = List.map ~f:self @@ sepseq_to_list p.elements in
+    p_list (AST.PListComp p) ~loc ()
+  )
+  | P_ModPath  p -> (
+    let p, loc = r_split p in
+    let module_path : string nseq = List.Ne.map w_fst @@ nsepseq_to_nseq p.module_path in
+    let field : ptrn = self p.field in
+    p_modpath {module_path; field} ~loc ()
+  )
+  | P_Mutez    p -> (
+    let (s, z), loc = w_split p in
+    p_mutez s z ~loc ()
+  )
+  | P_Nat      p -> (
+    let (s, z), loc = w_split p in
+    p_nat s z ~loc ()
+  )
+  | P_Nil      p -> (
+    let _, loc = w_split p in
+    p_nil ~loc ()
+  )
+  | P_Par      p -> (
+    let p, loc = r_split p in
+    let p = self p.inside in
+    p_par p ~loc ()
+  )
+  | P_Record   p -> (
+    let p, loc = r_split p in
+    let fields =
+      let translate_field_assign : (CST.pattern, CST.pattern) CST.field -> (ptrn, ptrn) AST.field = function
+      | Punned    p -> Punned (self p.pun)
+      | Complete  c -> Complete (self c.field_lhs, self c.field_rhs)
+      in
+      List.map ~f:(translate_field_assign <@ r_fst) @@ sepseq_to_list p.elements
+    in
+    p_recordpascaligo fields ~loc ()
+  )
+  | P_String   p -> (
+    let s, loc = w_split p in
+    p_string s ~loc ()
+  )
+  | P_Tuple    p -> (
+    let p, loc = r_split p in
+    let p : ptrn nseq = List.Ne.map self @@ nsepseq_to_nseq p.inside in
+    p_tuple p ~loc ()
+  )
+  | P_Typed    p -> (
+    let p, loc = r_split p in
+    let ptrn = self p.pattern in
+    let te_opt = Some( compile_type_expression @@ snd p.type_annot ) in
+    p_typed ptrn te_opt ~loc ()
+  )
+  | P_Var      p -> (
+    let s, loc = w_split p in
+    p_var s ~loc ()
+  )
+  | P_Verbatim p -> (
+    let s, loc = w_split p in
+    p_verbatim s ~loc ()
+  )
 
 (* ========================== INSTRUCTIONS ================================= *)
 
