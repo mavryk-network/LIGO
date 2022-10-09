@@ -144,7 +144,6 @@ and list_pattern =
 | PListComp of pattern list
 | PCons     of pattern * pattern
 
-and rest_pattern = string
 and assign_pattern = {
   property  : string;
   value     : expr
@@ -188,7 +187,7 @@ and pattern_content =
 | P_Ctor     of string
 | P_RecordPascaligo   of (ptrn, ptrn) field list
 (* Jsligo *)
-| P_Rest     of rest_pattern
+| P_Rest     of string
 | P_Assign   of assign_pattern
 | P_Destruct of destruct
 | P_Object   of ptrn nseq
