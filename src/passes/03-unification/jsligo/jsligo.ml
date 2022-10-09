@@ -16,9 +16,19 @@ let r_fst x = fst (r_split x)
 let w_split (x: 'a CST.Wrap.t) : 'a * Location.t =
   (x#payload, Location.lift x#region)
 
+let rec compile_val_binding : CST.val_binding -> AST.let_binding = fun b ->
+  let is_rec = false in
+  let binders = List.Ne.singleton @@ compile_pattern ~raise b.binders in
+  let type_params = Option.map b.type_params ~f:(fun (tp : CST.type_generics) ->
+    List.Ne.map r_fst @@ nsepseq_to_nseq (r_fst tp).inside)
+  in
+  let rhs_type = Option.map ~f:(compile_type_expression <@ snd) b.lhs_type in
+  let let_rhs = compile_expression ~raise b.expr in
+  {is_rec; type_params; binders; rhs_type; let_rhs}
+
 (* ========================== TYPES ======================================== *)
 
-let rec compile_type_expression : CST.type_expr -> AST.type_expr = fun te ->
+and compile_type_expression : CST.type_expr -> AST.type_expr = fun te ->
   let self = compile_type_expression in
   (* This function is declared here on top because it's used by both TObject and TDisc *)
   let compile_obj_type : CST.obj_type -> AST.type_ne_record = fun obj ->
@@ -114,9 +124,46 @@ let rec compile_type_expression : CST.type_expr -> AST.type_expr = fun te ->
 
 (* ========================== PATTERNS ===================================== *)
 
-and compile_pattern : CST.pattern -> AST.pattern = fun p ->
+and compile_pattern ~raise : CST.pattern -> AST.pattern = fun p ->
+  let self = compile_pattern ~raise in
   match p with
-  | _ -> failwith "TODO NP"
+  | PRest     p -> (
+    let p, loc = r_split p in
+    let s = r_fst p.rest in
+    p_rest s ~loc ()
+  )
+  | PAssign   p -> (
+    let p, loc = r_split p in
+    let property = r_fst p.property in
+    let value = compile_expression ~raise p.value in
+    p_assign {property; value} ~loc ()
+  )
+  | PVar      p -> (
+    let p, loc = r_split p in
+    let s = r_fst p.variable in
+    p_var s ~loc ()
+  )
+  | PConstr   p -> (
+    let s, loc = r_split p in
+    let ptrn_opt = None in (* Only CameLIGO PConstr have an associated pattern *)
+    p_constr s ptrn_opt ~loc ()
+  )
+  | PDestruct p -> (
+    let p, loc = r_split p in
+    let property = r_fst p.property in
+    let target = compile_val_binding @@ r_fst p.target in
+    p_destruct {property; target} ~loc ()
+  )
+  | PObject   p -> (
+    let p, loc = r_split p in
+    let p = nseq_map self @@ nsepseq_to_nseq p.inside in
+    p_object p ~loc ()
+  )
+  | PArray    p -> (
+    let p, loc = r_split p in
+    let p = nseq_map self @@ nsepseq_to_nseq p.inside in
+    p_array p ~loc ()
+  )
 
 (* ========================== STATEMENTS ================================= *)
 
@@ -125,16 +172,6 @@ and compile_statement ~raise : CST.statement -> AST.statement = fun s ->
   let () = ignore (self, raise) in
   let extract_type_vars : CST.type_vars -> string nseq = fun tv ->
     List.Ne.map r_fst @@ nsepseq_to_nseq (r_fst tv).inside
-  in
-  let compile_val_binding : CST.val_binding -> AST.let_binding = fun b ->
-    let is_rec = false in
-    let binders = List.Ne.singleton @@ compile_pattern b.binders in
-    let type_params = Option.map b.type_params ~f:(fun (tp : CST.type_generics) ->
-      List.Ne.map r_fst @@ nsepseq_to_nseq (r_fst tp).inside)
-    in
-    let rhs_type = Option.map ~f:(compile_type_expression <@ snd) b.lhs_type in
-    let let_rhs = compile_expression ~raise b.expr in
-    {is_rec; type_params; binders; rhs_type; let_rhs}
   in
   match s with
   | SBlock s -> (
