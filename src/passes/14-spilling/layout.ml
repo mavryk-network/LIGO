@@ -20,7 +20,7 @@ let t_sum ~raise ~layout return compile_type m =
       (None, t)
     in
     let m' = Append_tree.fold_ne
-      (fun (Label.Label label, ({associated_type;michelson_annotation;decl_pos=_}: AST.row_element)) ->
+      (fun (Label.Label label, ({ content = { associated_type; _}; michelson_annotation }: _ Rows.Elem.t)) ->
           let label = String.uncapitalize label in
           let a = compile_type associated_type in
           (Some (annotation_or_label michelson_annotation label), a)
@@ -30,9 +30,9 @@ let t_sum ~raise ~layout return compile_type m =
   )
   | L_comb -> (
     (* Right combs *)
-    let aux (Label.Label l , (x : row_element )) =
+    let aux (Label.Label l , (x : _ Rows.Elem.t )) =
       let l = String.uncapitalize l in
-      let t = compile_type x.associated_type in
+      let t = compile_type x.content.associated_type in
       let annot_opt = Some (annotation_or_label x.michelson_annotation l) in
       (annot_opt,t)
     in
@@ -66,8 +66,7 @@ and record_tree = {
    correct, I'm not sure? *)
 let record_tree ~layout ?source_type compile_type m =
   let open AST.Helpers in
-  let is_tuple_lmap = Record.is_tuple m in
-  let lst = kv_list_of_t_record_or_tuple ~layout m in
+  let lst = kv_list_of_t_record ~layout m in
   match layout with
   | L_tree -> (
       let node = Append_tree.of_list lst in
@@ -76,12 +75,9 @@ let record_tree ~layout ?source_type compile_type m =
                     type_ = Expression.make_t ?source_type (T_tuple [(a_annot, a.type_); (b_annot, b.type_)]) })
       in
       let m' = Append_tree.fold_ne
-          (fun (Label.Label label, ({associated_type;michelson_annotation;decl_pos=_}: AST.row_element)) ->
+          (fun (Label.Label label, ({ content = { associated_type; _ }; michelson_annotation }: _ Rows.Elem.t)) ->
              let a = compile_type associated_type in
-             let annot = (if is_tuple_lmap then
-                            None
-                          else
-                            Some (annotation_or_label michelson_annotation label)) in
+             let annot = (Some (annotation_or_label michelson_annotation label)) in
              (annot, { content = Field (Label label) ;
                           type_ = a })
           )
@@ -97,8 +93,7 @@ let record_tree ~layout ?source_type compile_type m =
 
 let t_record_to_pairs ~layout return compile_type m =
   let open AST.Helpers in
-  let is_tuple_lmap = Record.is_tuple m in
-  let lst = kv_list_of_t_record_or_tuple ~layout m in
+  let lst = kv_list_of_t_record ~layout m in
   match layout with
   | L_tree -> (
       let node = Append_tree.of_list lst in
@@ -107,12 +102,9 @@ let t_record_to_pairs ~layout return compile_type m =
         (None, t)
       in
       let m' = Append_tree.fold_ne
-          (fun (Label.Label label, ({associated_type;michelson_annotation;decl_pos=_}: AST.row_element)) ->
+          (fun (Label.Label label, ({ content = { associated_type; _ }; michelson_annotation }: _ AST.Rows.Elem.t)) ->
              let a = compile_type associated_type in
-             ((if is_tuple_lmap then
-                    None
-                  else
-                    Some (annotation_or_label michelson_annotation label)),
+             ((Some (annotation_or_label michelson_annotation label)),
                  a)
           )
           aux node in
@@ -120,8 +112,8 @@ let t_record_to_pairs ~layout return compile_type m =
     )
   | L_comb -> (
       (* Right combs *)
-      let aux (Label.Label l , (x : row_element)) =
-        let t = compile_type x.associated_type in
+      let aux (Label.Label l , (x : _ AST.Rows.Elem.t)) =
+        let t = compile_type x.content.associated_type in
         let annot_opt = Some (annotation_or_label x.michelson_annotation l) in
         (annot_opt,t)
       in
@@ -131,7 +123,7 @@ let t_record_to_pairs ~layout return compile_type m =
 
 let record_access_to_lr ~raise ~layout ty m_ty index =
   let open AST.Helpers in
-  let lst = kv_list_of_t_record_or_tuple ~layout m_ty in
+  let lst = kv_list_of_t_record ~layout m_ty in
   match layout with
   | L_tree -> (
       let node_tv = Append_tree.of_list lst in
@@ -180,10 +172,10 @@ let record_access_to_lr ~raise ~layout ty m_ty index =
       aux index ty last
     )
 
-let record_to_pairs ~raise compile_expression return record_t record : Mini_c.expression =
+let record_to_pairs ~raise compile_expression return (record_t : _ Rows.t) record : Mini_c.expression =
   let open AST.Helpers in
-  let lst = kv_list_of_record_or_tuple ~layout:record_t.layout record_t.fields record in
-  match record_t.layout with
+  let lst = kv_list_of_record ~layout:record_t.attributes.layout record_t.fields record in
+  match record_t.attributes.layout with
   | L_tree -> (
     let node = Append_tree.of_list lst in
     let aux a b : expression =
@@ -257,7 +249,7 @@ let match_variant_to_tree ~raise ~layout ~compile_type content : variant_pair =
   match (layout : Layout.t) with
   | L_tree -> (
       let kt_tree =
-        let kt_list = List.map ~f:(fun (k,({associated_type;_}:AST.row_element)) -> (k,associated_type)) (Record.LMap.to_kv_list content) in
+        let kt_list = List.map ~f:(fun (k,({ content = { associated_type;_ }; _ }: _ Rows.Elem.t)) -> (k,associated_type)) (Map.to_alist content) in
         Append_tree.of_list kt_list
       in
       let ne_tree = match kt_tree with
@@ -293,7 +285,7 @@ let match_variant_to_tree ~raise ~layout ~compile_type content : variant_pair =
             let left = `Leaf khd , thd' in
             (`Node (left , (tl' , ttl)) , tv')
           ) in
-      let lst = List.map ~f:(fun (k,({associated_type;_} : row_element)) -> (k,associated_type)) @@ Helpers.kv_list_of_t_sum ~layout content in
+      let lst = List.map ~f:(fun (k,({ content = {associated_type;_}; _ } : _ Rows.Elem.t)) -> (k,associated_type)) @@ Helpers.kv_list_of_t_sum ~layout content in
       let vp = aux lst in
       vp
     )
@@ -336,6 +328,23 @@ let extract_record (type value) ~raise ~(layout:Layout.t) (v : value) (lst : (La
     in
     aux lst v
   )
+
+let extract_tuple ~raise (value : value) t_tuple = 
+  let rec loop value t_tuple = 
+    match value, t_tuple with
+    | _, [] -> raise.error @@ corner_case ~loc:__LOC__ "empty tuple"
+    | v, [ t ] -> [ v, t ]
+    | v, [ t1; t2 ] when Option.is_some (get_pair v) ->
+      let v1, v2 = Option.value_exn (get_pair v) in
+      [ v1, t1; v2, t2 ]
+    | v, t1 :: t_tuple when Option.is_some (get_pair v) ->
+      let v1, v2 = Option.value_exn (get_pair v) in
+      let v_tuple = loop v2 t_tuple in
+      (v1, t1) :: v_tuple
+    | _ -> raise.error @@ corner_case ~loc:__LOC__ "bad tuple"
+  in
+  loop value t_tuple
+
 
 let extract_constructor (type value) ~raise ~(layout:Layout.t) (v : value) (lst : (Label.t * AST.type_expression) list) get_left get_right : (Label.t * value * AST.type_expression) =
   match layout with

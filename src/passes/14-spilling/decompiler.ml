@@ -206,17 +206,21 @@ let rec decompile ~raise (v : value) (t : AST.type_expression) : AST.expression 
       return (E_constructor {constructor=Label "None";element=make_e (e_unit ()) (t_unit ())})
     | _ -> raise.error @@ corner_case ~loc:"unspiller" "impossible"
     )
-  | T_sum {layout ; fields} ->
-      let lst = List.map ~f:(fun (k,({associated_type;_} : row_element)) -> (k,associated_type)) @@ AST.Helpers.kv_list_of_t_sum ~layout fields in
+  | T_sum { attributes = { layout } ; fields} ->
+      let lst = List.map ~f:(fun (k,({ content = { associated_type;_}; _ } : _ Rows.Elem.t)) -> (k,associated_type)) @@ AST.Helpers.kv_list_of_t_sum ~layout fields in
       let (constructor, v, tv) = Layout.extract_constructor ~raise ~layout v lst get_left get_right in
       let sub = self v tv in
       return (E_constructor {constructor;element=sub})
-  | T_record {layout ; fields } ->
-      let lst = List.map ~f:(fun (k,({associated_type;_} : row_element)) -> (k,associated_type)) @@ AST.Helpers.kv_list_of_t_record_or_tuple ~layout fields in
+  | T_record { attributes = { layout } ; fields } ->
+      let lst = List.map ~f:(fun (k,({ content = { associated_type ; _ }; _ } : _ Rows.Elem.t)) -> (k,associated_type)) @@ AST.Helpers.kv_list_of_t_record ~layout fields in
       let lst = Layout.extract_record ~raise ~layout v lst get_pair in
       let lst = List.Assoc.map ~f:(fun (y, z) -> self y z) lst in
-      let m' = Ligo_prim.Record.of_list lst in
+      let m' = Ligo_prim.Label.Map.of_alist_exn lst in
       return (E_record m')
+  | T_tuple types ->
+    let v_tuple = Layout.extract_tuple ~raise v types in
+    let e_tuple = List.map ~f:(fun (v, t) -> self v t) v_tuple in
+    return (E_tuple e_tuple)
   | T_arrow _ ->
       let n =
         trace_option ~raise (wrong_mini_c_value t v) @@

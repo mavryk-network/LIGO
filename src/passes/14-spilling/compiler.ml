@@ -133,12 +133,12 @@ let rec compile_type ~raise (t:AST.type_expression) : type_expression =
     let o = trace_option ~raise (corner_case ~loc:__LOC__ ("impossible")) @@ AST.get_t_option t in
     let o' = compile_type o in
     return (T_option o')
-  | T_sum { fields = m ; layout } -> (
+  | T_sum { fields = m ; attributes = { layout } } -> (
       let open AST.Helpers in
       match is_michelson_or m with
       | Some (a , b) -> (
-          let aux (x : AST.row_element) =
-            let t = compile_type x.associated_type in
+          let aux (x : _ AST.Rows.Elem.t) =
+            let t = compile_type x.content.associated_type in
             let annot = remove_empty_annotation x.michelson_annotation in
             (annot , t)
           in
@@ -148,12 +148,12 @@ let rec compile_type ~raise (t:AST.type_expression) : type_expression =
         )
       | None -> Layout.t_sum ~raise ~layout return compile_type m
     )
-  | T_record { fields = m ; layout } -> (
+  | T_record { fields = m ; attributes = { layout } } -> (
       let open AST.Helpers in
       match is_michelson_pair m with
       | Some (a , b) -> (
-          let aux (x : AST.row_element) =
-            let t = compile_type x.associated_type in
+          let aux (x : _ AST.Rows.Elem.t) =
+            let t = compile_type x.content.associated_type in
             let annot = remove_empty_annotation x.michelson_annotation in
             (annot , t)
           in
@@ -164,6 +164,9 @@ let rec compile_type ~raise (t:AST.type_expression) : type_expression =
         )
       | None -> Layout.t_record_to_pairs ~layout return compile_type m
     )
+  | T_tuple tuple ->
+    let tuple = List.map ~f:(fun type_ -> (None, compile_type type_)) tuple in
+    return @@ T_tuple tuple
   | T_arrow {type1;type2} -> (
       let param' = compile_type type1 in
       let result' = compile_type type2 in
@@ -187,17 +190,17 @@ let compile_record_matching ~raise expr' return k ({ fields; body; tv } : _ AST.
   let record =
     trace_option ~raise (corner_case ~loc:__LOC__ "compile_record_matching: getting lr tree") @@
     get_t_record_opt tv in
-  match record.layout with
+  match record.attributes.layout with
   (* TODO unify with or simplify other case below? *)
   | L_comb ->
-    let record_fields = AST.Helpers.kv_list_of_t_record_or_tuple ~layout:L_comb record.fields in
+    let record_fields = AST.Helpers.kv_list_of_t_record ~layout:L_comb record.fields in
     let fields =
       List.map
-        ~f:(fun (l, (row_element : AST.row_element)) ->
-          let t = compile_type ~raise row_element.associated_type in
+        ~f:(fun (l, (row_element : _ AST.Rows.Elem.t)) ->
+          let t = compile_type ~raise row_element.content.associated_type in
           let x = trace_option ~raise
             (corner_case ~loc:__LOC__ ("missing label in record"))
-            Record.(LMap.find_opt l fields)
+            @@ Map.find fields l
           in
           (Binder.get_var x, t)
         )
@@ -206,14 +209,14 @@ let compile_record_matching ~raise expr' return k ({ fields; body; tv } : _ AST.
     let body = k body in
     return (E_let_tuple (expr', (fields, body)))
   | _ ->
-    let tree = Layout.record_tree ~layout:record.layout ?source_type:tv.source_type (compile_type ~raise) record.fields in
+    let tree = Layout.record_tree ~layout:record.attributes.layout ?source_type:tv.source_type (compile_type ~raise) record.fields in
     let body = k body in
     let rec aux expr (tree : Layout.record_tree) body =
       match tree.content with
       | Field l ->
         let x = trace_option ~raise
           (corner_case ~loc:__LOC__ ("missing label in record"))
-          (Record.LMap.find_opt l fields)
+          @@ Map.find fields l
         in
         let var = Binder.get_var x in
         return @@ E_let_in (expr, false, ((var, tree.type_), body))
@@ -230,6 +233,13 @@ let compile_record_matching ~raise expr' return k ({ fields; body; tv } : _ AST.
     in
     aux expr' tree body
 
+let compile_tuple_matching ~raise matchee return k ({ binders; body; tv } : _ AST.matching_content_tuple) = 
+  let body = k body in
+  let types = AST.get_t_tuple_exn tv in
+  let binders = List.map2_exn binders types ~f:(fun binder type_ -> Binder.get_var binder, compile_type ~raise type_) in
+  return @@ E_let_tuple (matchee, (binders, body))
+
+
 let rec compile_expression ~raise (ae:AST.expression) : expression =
   let tv = compile_type ~raise ae.type_expression in
   let self = compile_expression ~raise in
@@ -239,7 +249,7 @@ let rec compile_expression ~raise (ae:AST.expression) : expression =
   | E_type_abstraction _
   | E_type_inst _ ->
     raise.error @@ corner_case ~loc:__LOC__ (Format.asprintf "Type instance: This program should be monomorphised")
-  | E_let_in {let_binder; rhs; let_result; attr = { inline; no_mutation=_; view=_; public=_ ; hidden = _ ; thunk = _ } } ->
+  | E_let_in {let_binder; rhs; let_result; attributes = { inline; no_mutation=_; view=_; public=_ ; hidden = _ ; thunk = _ } } ->
     let rhs' = self rhs in
     let result' = self let_result in
     return (E_let_in (rhs', inline, ((Binder.get_var let_binder, rhs'.type_expression), result')))
@@ -263,7 +273,7 @@ let rec compile_expression ~raise (ae:AST.expression) : expression =
     let ty_variant =
       trace_option ~raise (corner_case ~loc:__LOC__ "not a record") @@
       get_t_sum_opt (get_type ae) in
-    let path = Layout.constructor_to_lr ~raise ~layout:ty_variant.layout ty' ty_variant.fields constructor in
+    let path = Layout.constructor_to_lr ~raise ~layout:ty_variant.attributes.layout ty' ty_variant.fields constructor in
     let aux = fun pred (ty, lr) ->
       let c : Constant.constant' = match lr with
         | `Left  -> C_LEFT
@@ -278,21 +288,24 @@ let rec compile_expression ~raise (ae:AST.expression) : expression =
   | E_record m -> (
       let record_t = trace_option ~raise (corner_case ~loc:__LOC__ "record expected") (AST.get_t_record_opt ae.type_expression) in
       (* Note: now returns E_tuple, not pairs, for combs *)
-      Layout.record_to_pairs ~raise self return record_t m
+      Layout.record_to_pairs ~raise self return record_t (Map.to_alist m)
     )
+  | E_tuple tuple ->
+    let tuple = Tuple.map self tuple in
+    return @@ E_tuple tuple
   | E_accessor {struct_; path} -> (
     let ty' = compile_type ~raise (get_type struct_) in
     let record_ty = trace_option ~raise (corner_case ~loc:__LOC__ "not a record") @@
       get_t_record_opt (get_type struct_) in
-    match record_ty.layout with
+    match record_ty.attributes.layout with
     | L_comb ->
-      let record_fields = AST.Helpers.kv_list_of_t_record_or_tuple ~layout:record_ty.layout record_ty.fields in
+      let record_fields = AST.Helpers.kv_list_of_t_record ~layout:record_ty.attributes.layout record_ty.fields in
       let i = fst @@ Option.value_exn  (List.findi ~f:(fun _ (label, _) -> 0 = Label.compare path label) record_fields) in
       let n = List.length record_fields in
       let struct_ = compile_expression ~raise struct_ in
       return (E_proj (struct_, i, n))
     | _ ->
-    let path = Layout.record_access_to_lr ~raise ~layout:record_ty.layout ty' record_ty.fields path in
+    let path = Layout.record_access_to_lr ~raise ~layout:record_ty.attributes.layout ty' record_ty.fields path in
     let aux = fun pred (ty, lr) ->
       let c : Constant.constant' = match lr with
         | `Left  -> C_CAR
@@ -313,9 +326,9 @@ let rec compile_expression ~raise (ae:AST.expression) : expression =
         trace_option ~raise (corner_case ~loc:__LOC__ "not a record") @@
         get_t_record_opt (ty) in
       let ty' = compile_type ~raise (ty) in
-      match record_ty.layout with
+      match record_ty.attributes.layout with
       | L_comb ->
-        let record_fields = AST.Helpers.kv_list_of_t_record_or_tuple ~layout:record_ty.layout record_ty.fields in
+        let record_fields = AST.Helpers.kv_list_of_t_record ~layout:record_ty.attributes.layout record_ty.fields in
         let struct_ = self struct_ in
         let update = self update in
         let i = fst @@ Option.value_exn  (List.findi ~f:(fun _ (label, _) -> 0 = Label.compare path label) record_fields) in
@@ -324,7 +337,7 @@ let rec compile_expression ~raise (ae:AST.expression) : expression =
       | _ ->
       let path =
         trace_strong ~raise (corner_case ~loc:__LOC__ "record access") @@
-        (fun ~raise:_ -> Layout.record_access_to_lr ~raise ~layout:record_ty.layout ty' record_ty.fields path) in
+        (fun ~raise:_ -> Layout.record_access_to_lr ~raise ~layout:record_ty.attributes.layout ty' record_ty.fields path) in
       let path = List.map ~f:snd path in
       let update = self update in
       let struct_ = self struct_ in
@@ -460,11 +473,11 @@ let rec compile_expression ~raise (ae:AST.expression) : expression =
           | T_constant { injection = Literal_types.List ; parameters = [list_ty];language =_ } ->
             let list_ty = compile_type ~raise list_ty in
             let get_c_body (case : _ AST.matching_content_case) = (case.constructor, (case.body, case.pattern)) in
-            let c_body_lst = Record.of_list (List.map ~f:get_c_body cases) in
+            let c_body_lst = Label.Map.of_alist_exn (List.map ~f:get_c_body cases) in
             let get_case c =
               trace_option ~raise
                 (corner_case ~loc:__LOC__ ("missing " ^ c ^ " case in match"))
-                (Record.LMap.find_opt (Label c) c_body_lst) in
+                @@ Map.find c_body_lst (Label c) in
             let match_nil = get_case "Nil" in
             let match_cons = get_case "Cons" in
             let nil = self (fst match_nil) in
@@ -481,11 +494,11 @@ let rec compile_expression ~raise (ae:AST.expression) : expression =
           | T_sum _ when Option.is_some (AST.get_t_option expr.type_expression) ->
             let opt_tv = trace_option ~raise (corner_case ~loc:__LOC__ ("impossible")) @@ AST.get_t_option expr.type_expression in
             let get_c_body (case : _ AST.matching_content_case) = (case.constructor, (case.body, case.pattern)) in
-            let c_body_lst = Record.of_list (List.map ~f:get_c_body cases) in
+            let c_body_lst = Label.Map.of_alist_exn (List.map ~f:get_c_body cases) in
             let get_case c =
               trace_option ~raise
                 (corner_case ~loc:__LOC__ ("missing " ^ c ^ " case in match"))
-                (Record.LMap.find_opt (Label c) c_body_lst) in
+                @@ Map.find c_body_lst (Label c) in
             let match_none = get_case "None" in
             let match_some = get_case "Some" in
             let n = self (fst match_none) in
@@ -497,11 +510,11 @@ let rec compile_expression ~raise (ae:AST.expression) : expression =
             return @@ E_if_none (expr' , n , ((snd match_some , tv') , s'))
           | T_sum _ when Option.is_some (AST.get_t_bool expr.type_expression) ->
             let ctor_body (case : _ AST.matching_content_case) = (case.constructor, case.body) in
-            let cases = Record.of_list (List.map ~f:ctor_body cases) in
+            let cases = Label.Map.of_alist_exn (List.map ~f:ctor_body cases) in
             let get_case c =
               trace_option ~raise
                 (corner_case ~loc:__LOC__ ("missing " ^ c ^ " case in match"))
-                (Record.LMap.find_opt (Label c) cases) in
+                @@ Map.find cases (Label c) in
             let match_true  = get_case "True" in
             let match_false = get_case "False" in
             let (t , f) = Pair.map ~f:self (match_true, match_false) in
@@ -509,7 +522,7 @@ let rec compile_expression ~raise (ae:AST.expression) : expression =
           | _ -> (
               let record_ty = trace_option ~raise (corner_case ~loc:__LOC__ "compile_expression: getting lr tree") @@
                 get_t_sum_opt tv in
-              let tree = Layout.match_variant_to_tree ~raise ~layout:record_ty.layout ~compile_type:(compile_type ~raise) record_ty.fields in
+              let tree = Layout.match_variant_to_tree ~raise ~layout:record_ty.attributes.layout ~compile_type:(compile_type ~raise) record_ty.fields in
               let rec aux top t =
                 match t with
                 | ((`Leaf (Label.Label constructor_name)) , tv) -> (
@@ -542,6 +555,8 @@ let rec compile_expression ~raise (ae:AST.expression) : expression =
       )
       | Match_record record ->
         compile_record_matching ~raise expr' return self record
+      | Match_tuple tuple ->
+        compile_tuple_matching ~raise expr' return self tuple
   )
   | E_raw_code { language; code} ->
     let backend = Backend.Michelson.name in
@@ -572,7 +587,7 @@ let rec compile_expression ~raise (ae:AST.expression) : expression =
         | _ ->
           raise.error (raw_michelson_must_be_seq ae.location code)
     )
-  | E_let_mut_in { let_binder; rhs; let_result; attr = _ } ->
+  | E_let_mut_in { let_binder; rhs; let_result; attributes = _ } ->
     let binder = compile_binder ~raise let_binder in
     let rhs = self rhs in
     let let_result = self let_result in
@@ -670,7 +685,7 @@ and compile_recursive ~raise {fun_name; fun_type; lambda} =
         let rhs = compile_expression ~raise li.rhs in
         let ty  = compile_type ~raise li.rhs.type_expression in
         let let_binder = Binder.get_var li.let_binder in
-        e_let_in let_binder ty li.attr.inline rhs let_result
+        e_let_in let_binder ty li.attributes.inline rhs let_result
       | E_let_mut_in li ->
         (* Not possible for mut to shadow fun_name *)
         let let_result = replace_callback ~raise fun_name loop_type shadowed li.let_result in
@@ -704,11 +719,11 @@ and compile_recursive ~raise {fun_name; fun_type; lambda} =
         | T_constant { injection = Literal_types.List ; parameters = [list_ty];language=_ } ->
           let list_ty = compile_type ~raise list_ty in
           let get_c_body (case : _ AST.matching_content_case) = (case.constructor, (case.body, case.pattern)) in
-          let c_body_lst = Record.of_list (List.map ~f:get_c_body cases) in
+          let c_body_lst = Label.Map.of_alist_exn (List.map ~f:get_c_body cases) in
           let get_case c =
             trace_option ~raise
               (corner_case ~loc:__LOC__ ("missing " ^ c ^ " case in match"))
-              (Record.LMap.find_opt (Label.of_string c) c_body_lst) in
+              (Map.find c_body_lst (Label.of_string c)) in
           let match_nil = get_case "Nil" in
           let match_cons = get_case "Cons" in
           let nil = self (fst match_nil) in
@@ -725,11 +740,11 @@ and compile_recursive ~raise {fun_name; fun_type; lambda} =
         | T_sum _ when Option.is_some (AST.get_t_option m.matchee.type_expression) ->
           let opt_tv = trace_option ~raise (corner_case ~loc:__LOC__ ("impossible")) @@ AST.get_t_option m.matchee.type_expression in
           let get_c_body (case : _ AST.matching_content_case) = (case.constructor, (case.body, case.pattern)) in
-          let c_body_lst = Record.of_list (List.map ~f:get_c_body cases) in
+          let c_body_lst = Label.Map.of_alist_exn (List.map ~f:get_c_body cases) in
           let get_case c =
             trace_option ~raise
               (corner_case ~loc:__LOC__ ("missing " ^ c ^ " case in match"))
-              (Record.LMap.find_opt (Label.of_string c) c_body_lst) in
+              (Map.find c_body_lst (Label.of_string c)) in
           let match_none = get_case "None" in
           let match_some = get_case "Some" in
           let n = self (fst match_none) in
@@ -741,11 +756,11 @@ and compile_recursive ~raise {fun_name; fun_type; lambda} =
           return @@ E_if_none (expr' , n , (((snd match_some) , tv') , s'))
         | T_sum _ when Option.is_some (AST.get_t_bool m.matchee.type_expression) ->
           let ctor_body (case : _ AST.matching_content_case) = (case.constructor, case.body) in
-          let cases = Record.of_list (List.map ~f:ctor_body cases) in
+          let cases = Label.Map.of_alist_exn (List.map ~f:ctor_body cases) in
           let get_case c =
             trace_option ~raise
               (corner_case ~loc:__LOC__ ("missing " ^ c ^ " case in match"))
-              (Record.LMap.find_opt (Label c) cases) in
+              (Map.find cases (Label c)) in
           let match_true  = get_case "True" in
           let match_false = get_case "False" in
           let (t , f) = Pair.map ~f:self (match_true, match_false) in
@@ -753,7 +768,7 @@ and compile_recursive ~raise {fun_name; fun_type; lambda} =
         | _ -> (
             let record_ty = trace_option ~raise (corner_case ~loc:__LOC__ "compile_recursive: getting lr tree") @@
               get_t_sum_opt tv in
-            let tree = Layout.match_variant_to_tree ~raise ~layout:record_ty.layout ~compile_type:(compile_type ~raise) record_ty.fields in
+            let tree = Layout.match_variant_to_tree ~raise ~layout:record_ty.attributes.layout ~compile_type:(compile_type ~raise) record_ty.fields in
             let rec aux top t =
               match t with
               | ((`Leaf (Label.Label constructor_name)) , tv) -> (
@@ -786,6 +801,8 @@ and compile_recursive ~raise {fun_name; fun_type; lambda} =
       )
       | Match_record record ->
         compile_record_matching ~raise expr' return (replace_callback ~raise fun_name loop_type shadowed) record
+      | Match_tuple tuple ->
+        compile_tuple_matching ~raise expr' return (replace_callback ~raise fun_name loop_type shadowed) tuple
   in
   let fun_type = compile_type ~raise fun_type in
   let (input_type,output_type) = trace_option ~raise (corner_case ~loc:__LOC__ "wrongtype") @@ get_t_function fun_type in
