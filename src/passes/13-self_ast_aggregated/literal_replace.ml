@@ -1,6 +1,6 @@
-open Ast_aggregated
+open Simple_utils.Trace
 open Ligo_prim.Constant
-open Trace
+open Ast_aggregated
 
 let rec list_expression ~raise : expression -> expression list = fun expr ->
   let self = list_expression ~raise in
@@ -19,7 +19,7 @@ let pair_expression ~raise : expression -> expression * expression = fun expr ->
   | E_constant { cons_name = C_PAIR ; arguments = [l; r] } ->
      (l, r)
   | E_record p ->
-     trace_option ~raise (Errors.corner_case "Not a pair?") @@ List.to_pair @@ Ligo_prim.Record.LMap.to_list p
+     trace_option ~raise (Errors.corner_case "Not a pair?") @@ List.to_pair @@ Map.data p
   | _ ->
      raise.error (Errors.corner_case @@ Format.asprintf "Not a pair expression: %a" PP.expression expr)
 

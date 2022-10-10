@@ -1,3 +1,5 @@
+module Snippet = Simple_utils.Snippet
+module Location = Simple_utils.Location
 open Simple_utils.Display
 open Ligo_prim
 
