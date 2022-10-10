@@ -32,7 +32,7 @@ and compile_type_expression ~(raise: ('e, 'w) raise) : CST.type_expr -> AST.type
   let self = compile_type_expression ~raise in
   (* This function is declared here on top because it's used by both TObject and TDisc *)
   let compile_obj_type : CST.obj_type -> AST.type_ne_record = fun obj ->
-    let obj, loc = r_split obj in
+    let obj = r_fst obj in
     let compile_field_decl : CST.field_decl -> AST.type_expr AST.field_assign = fun fd ->
       let name : string = r_fst fd.field_name in
       let expr : type_expr = self fd.field_type in
