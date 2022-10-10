@@ -1,0 +1,8 @@
+(library
+ (name corification)
+ (public_name ligo.corification)
+ (instrumentation
+  (backend bisect_ppx))
+ (libraries simple-utils ast_imperative ast_core  syntax_types)
+ (preprocess
+  (pps ppx_poly_constructor)))

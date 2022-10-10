@@ -152,6 +152,30 @@ let t_sum_ez ?loc ?layout (row : (string * type_expression) list)
   |> t_record ?loc ?layout
 
 
+let t_michelson_sum ?loc l l_ann r r_ann =
+  let row decl_pos associated_type michelson_annotation =
+    { content = { Rows.Elem.associated_type; decl_pos }
+    ; michelson_annotation = Some michelson_annotation
+    }
+  in
+  t_sum
+    ?loc
+    (Label.Map.of_alist_exn
+       [ Label "M_left", row 0 l l_ann; Label "M_right", row 1 r r_ann ])
+
+
+let t_michelson_pair ?loc l l_ann r r_ann =
+  let row decl_pos associated_type michelson_annotation =
+    { content = { Rows.Elem.associated_type; decl_pos }
+    ; michelson_annotation = Some michelson_annotation
+    }
+  in
+  t_sum
+    ?loc
+    (Label.Map.of_alist_exn
+       [ Label "0", row 0 l l_ann; Label "1", row 1 r r_ann ])
+
+
 let t_bool ?loc () : type_expression =
   t_sum_ez ?loc [ "True", t_unit (); "False", t_unit () ]
 
