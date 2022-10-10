@@ -485,7 +485,7 @@ and compile_expression ~(raise: ('e, 'w) raise) : CST.expr -> AST.expr = fun e -
 let compile_toplevel_statement ~(raise: ('e, 'w) raise) : CST.toplevel_statement -> AST.declaration = fun s -> 
   match s with
   | Directive d -> (
-    let d, loc = Helpers.translate_directive d in
+    let loc = Simple_utils.Location.lift (Preprocessor.Directive.to_region d) in
     d_directive d ~loc ()
   )
   | TopLevel (statement, _semicolon_opt) -> (

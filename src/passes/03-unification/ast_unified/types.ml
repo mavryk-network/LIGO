@@ -24,23 +24,20 @@ module Z = Literal_value.Z
 type 'a nseq = 'a Simple_utils.List.Ne.t
   [@@deriving yojson]
 
-(* open Simple_utils.Utils *)
-
-(* TODO NP : Copy/pasted from vendors/LexerLib, find a way to not copy/paste *)
+(* The preprocessor directives are left unchanged during unification pass.
+   So, the type of a directive is Preprocessor.Directive.t
+   in both the CST and here in the AST unified.
+   However, the Directive module is augmented here with
+   yojson functions for the yojson ppx to work correctly. *)
 module Directive = struct
-  type linenum    = int [@@deriving yojson]
-  type file_path  = string [@@deriving yojson]
-  type flag       = Push | Pop [@@deriving yojson]
-  type linemarker = linenum * file_path * flag option
-  [@@deriving yojson]
+  include Preprocessor.Directive
 
-  type t =
-    Linemarker of linemarker
-    [@@deriving yojson]
-
-  type directive = t
-  [@@deriving yojson]
-end (* of module Directive *)
+  let to_yojson : t -> Yojson.Safe.t =
+    fun _ -> `String "JSON printing of directives is not supported"
+  let dummy_directive = PP_Endif Region.ghost
+  let of_yojson : Yojson.Safe.t -> (t, string) Result.t =
+    fun _ -> Error "JSON parsing of directive is not supported"
+end
 
 type attr_pascaligo = {
   key      : string;

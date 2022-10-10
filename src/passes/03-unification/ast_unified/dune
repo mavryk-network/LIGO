@@ -1,7 +1,7 @@
 (library
  (name ast_unified)
  (public_name ligo.ast_unified)
- (libraries simple-utils ligo_prim)
+ (libraries LexerLib simple-utils ligo_prim)
  (preprocess
   (staged_pps
    ppx_import

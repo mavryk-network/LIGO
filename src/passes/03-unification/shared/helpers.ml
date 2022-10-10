@@ -17,13 +17,3 @@ let filter_opt : 'a . 'a option list -> 'a list = fun decls ->
       | Some d -> d :: acc )
     decls
   |> List.rev
-
-let translate_directive : LexerLib.Directive.t -> (AST.Directive.t * Location.t) = fun d ->
-  let lm, loc = match d with Linemarker lm -> r_split lm in
-  let linenum, file_path, flag_opt = lm in
-  let flag_opt = Utils.Option.apply (fun flag ->
-    match flag with
-    | LexerLib.Directive.Push -> AST.Directive.Push
-    | LexerLib.Directive.Pop  -> AST.Directive.Pop
-  ) flag_opt in
-  AST.Directive.Linemarker (linenum, file_path, flag_opt), loc

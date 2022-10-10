@@ -448,7 +448,7 @@ let rec compile_expression ~raise : CST.expr -> AST.expr = fun e ->
 and compile_declaration ~raise : CST.declaration -> AST.declaration = fun decl ->
   match decl with
   | Directive d -> (
-    let d, loc = Helpers.translate_directive d in
+    let loc = Simple_utils.Location.lift (Preprocessor.Directive.to_region d) in
     d_directive d ~loc ()
   )
   | Let e -> (

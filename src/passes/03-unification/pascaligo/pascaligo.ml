@@ -607,7 +607,7 @@ and compile_declaration ~raise : CST.declaration -> AST.declaration = fun decl -
   in
   match decl with
   | D_Directive d -> (
-    let d, loc = Helpers.translate_directive d in
+    let loc = Simple_utils.Location.lift (Preprocessor.Directive.to_region d) in
     d_directive d ~loc ()
   )
   | D_Type d -> (
