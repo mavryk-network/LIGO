@@ -182,7 +182,6 @@ let rec compile_pattern : CST.pattern -> AST.pattern = fun p ->
 
 (* ========================== EXPRESSIONS ================================== *)
 
-(* AST-agnostic definitions, these could be used on any pass *)
 let translate_selection (sel : CST.selection) : Z.t AST.selection =
   match sel with
   | FieldName name -> let (name, _)      = r_split name in FieldName name
@@ -209,19 +208,33 @@ let rec compile_expression ~raise : CST.expr -> AST.expr = fun e ->
     let arg = self op.arg in
     e_constant ~loc (Const op_type) [arg]
   in
-  let translate_field_assign (fa : CST.field_assign) : AST.expr AST.field_assign =
-    let name, _ = r_split fa.field_name in
-    let expr = self fa.field_expr in
-    {name; expr}
+  let translate_field_assign (fa : CST.field_assign) : (string, AST.expr) AST.field =
+    match fa with
+    | CST.Property fap -> (
+      let s = r_fst fap.field_name in
+      let e = self fap.field_expr in
+      AST.Complete (s, e)
+    )
+    | Punned_property fn -> (
+      let s = r_fst fn in
+      AST.Punned s
+    )
   in
   let translate_path : CST.path -> AST.path = function
     | Name name  -> Name (r_fst name)
     | Path proj  -> Path (translate_projection @@ r_fst proj)
   in
-  let translate_field_path_assignment : CST.field_path_assignment -> AST.field_path_assignment = fun fpa ->
-    let field_path = translate_path fpa.field_path in
-    let field_expr = self fpa.field_expr in
-    {field_path; field_expr}
+  let translate_field_path_assignment : CST.field_path_assignment -> (path, expr) field =
+    function
+    | CST.Path_property p -> (
+      let path = translate_path p.field_path in
+      let expr = self p.field_expr in
+      AST.Complete (path, expr)
+    )
+    | CST.Path_punned_property p -> (
+      let name = r_fst p in
+      AST.Punned (AST.Name name)
+    )
   in
   let translate_update : CST.update -> AST.update_cameligo = fun up ->
     let record_path = translate_path up.record in
@@ -328,7 +341,7 @@ let rec compile_expression ~raise : CST.expr -> AST.expr = fun e ->
         |> nsepseq_to_nseq
         |> nseq_map (translate_field_assign <@ r_fst)
       in
-      e_record fields ~loc ()
+      e_recordcameligo fields ~loc ()
     )
   | EProj proj -> (
       let proj, loc = r_split proj in

@@ -44,6 +44,16 @@ type attr_pascaligo = {
   value    : string option;
 } [@@deriving yojson]
 
+type ('lhs, 'rhs) field =
+| Punned of 'lhs
+| Complete of ('lhs * 'rhs)
+  [@@deriving yojson]
+
+type 'a field_assign = {
+  name : string;
+  expr : 'a; 
+} [@@deriving yojson]
+
 (* ========================== TYPES ======================================== *)
 
 type type_expression = {
@@ -66,11 +76,6 @@ and variant_jsligo   = type_expr nseq variant'
 
 and sum_type         = variant        nseq
 and sum_type_jsligo  = variant_jsligo nseq
-
-and 'a field_assign = {
-  name : string;
-  expr : 'a; 
-}
 
 and 'constr type_app = {
   constr     : 'constr;
@@ -455,10 +460,6 @@ and rev_app = {
   f : expr;
 }
 
-and ('lhs, 'rhs) field =
-  | Punned of 'lhs
-  | Complete of ('lhs * 'rhs)
-
 and 'a selection =
 | FieldName of string
 | Component of 'a
@@ -477,14 +478,9 @@ and path =
 | Name of string
 | Path of projection
 
-and field_path_assignment = {
-  field_path : path;
-  field_expr : expr;
-}
-
 and update_cameligo = {
   record_path  : path;
-  updates : field_path_assignment nseq;
+  updates : (path, expr) field nseq;
 }
 and update_pascaligo = {
   structure : expr;
@@ -493,7 +489,7 @@ and update_pascaligo = {
 
 and updates = {
   record   : expr;
-  updates  : field_path_assignment nseq;
+  updates  : (path, expr) field nseq;
 }
 
 and update = {
@@ -630,8 +626,8 @@ and expression_content =
 
   (* Data structures *)
   | E_Tuple  of expr nseq                 (* (x, y, z) *)
-  | E_Rec    of (expr, expr) field list   (* Fields can be punned : { x = 10; y; z } *)
-  | E_Record of expr field_assign nseq         (* Field are not punned : { x = 10; y = y } *)
+  | E_RecordPascaligo of (expr,   expr) field list (* { x = 10; y; z } *)
+  | E_RecordCameligo  of (string, expr) field nseq
   | E_ArrayJsligo of array_jsligo         (* [1, 2, 3] or [42] or even [] *)
   | E_Array  of expr list                 (* [1, 2, 3] or [42] or even [] *)
 

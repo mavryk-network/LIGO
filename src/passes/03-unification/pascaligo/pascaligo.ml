@@ -471,7 +471,7 @@ and compile_expression ~(raise: ('e, 'w) raise) : CST.expr -> AST.expr = fun e -
         in
         List.map ~f:(translate_field_assign <@ r_fst) @@ sepseq_to_list record.elements
       in
-      e_rec fields ~loc ()
+      e_recordpascaligo fields ~loc ()
     )
   | E_Proj proj -> (
       let proj, loc = r_split proj in
