@@ -1,5 +1,5 @@
 {
-  "checksum": "8af261e6863bf27da96e787143a6287a",
+  "checksum": "3b64760e5ee86a2c71f53c6802f33037",
   "root": "ligo-dev@link-dev:./ligo.opam",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -134,17 +134,21 @@
         "@opam/alcotest@opam:1.6.0@89577431"
       ]
     },
-    "esy-rustup@1.51.1@d41d8cd9": {
-      "id": "esy-rustup@1.51.1@d41d8cd9",
+    "esy-rustup@archive:https://github.com/rust-lang/rustup/archive/refs/tags/1.24.2.tar.gz#sha1:979e8139734d39313b0147e0db3bfd2675f49507@17ed193b": {
+      "id":
+        "esy-rustup@archive:https://github.com/rust-lang/rustup/archive/refs/tags/1.24.2.tar.gz#sha1:979e8139734d39313b0147e0db3bfd2675f49507@17ed193b",
       "name": "esy-rustup",
-      "version": "1.51.1",
+      "version":
+        "archive:https://github.com/rust-lang/rustup/archive/refs/tags/1.24.2.tar.gz#sha1:979e8139734d39313b0147e0db3bfd2675f49507",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/esy-rustup/-/esy-rustup-1.51.1.tgz#sha1:2b07e522c917640770e50c2b545bf3ac1974b27e"
+          "archive:https://github.com/rust-lang/rustup/archive/refs/tags/1.24.2.tar.gz#sha1:979e8139734d39313b0147e0db3bfd2675f49507"
         ]
       },
-      "overrides": [],
+      "overrides": [
+        "esy.lock/overrides/17ed193b2e4031403841fe4b093679e9/esy.json"
+      ],
       "dependencies": [],
       "devDependencies": []
     },
@@ -7475,7 +7479,9 @@
       "overrides": [
         { "build": [ "true" ], "dependencies": { "esy-rustup": "*" } }
       ],
-      "dependencies": [ "esy-rustup@1.51.1@d41d8cd9" ],
+      "dependencies": [
+        "esy-rustup@archive:https://github.com/rust-lang/rustup/archive/refs/tags/1.24.2.tar.gz#sha1:979e8139734d39313b0147e0db3bfd2675f49507@17ed193b"
+      ],
       "devDependencies": []
     },
     "@opam/conf-pkg-config@opam:2@85f8644d": {

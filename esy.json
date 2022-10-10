@@ -259,6 +259,7 @@
           }
         }
       },
+      "esy-rustup": "esy-packages/esy-rustup:esy.json#b12694a9690845765efb312cf8bb76df27c93669",
       "@opam/tezos-rust-libs": "opam:1.1",
       "@opam/zarith": "opam:1.12",
       "@opam/conf-hidapi": {
