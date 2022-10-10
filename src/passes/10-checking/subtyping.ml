@@ -177,7 +177,6 @@ let equal_domains lmap1 lmap2 =
   let open Record in
   LSet.(equal (of_list (LMap.keys lmap1)) (of_list (LMap.keys lmap2)))
 
-
 let rec unify
   ~raise
   ~loc
@@ -188,7 +187,8 @@ let rec unify
   =
   let unify = unify ~loc in
   let self ?(ctx = ctx) type1 type2 = unify ~raise ~ctx type1 type2 in
-  let fail () = raise.error (cannot_unify loc type1 type2) in
+  let type_diff : Typediff.t = Typediff.get_diff type1 type2 in
+  let fail () = raise.error (cannot_unify loc type1 type2 type_diff) in
   let unify_evar evar type_ =
     occurs_check ~raise ~loc ~evar type_;
     let kind =

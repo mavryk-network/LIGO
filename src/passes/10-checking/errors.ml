@@ -143,7 +143,7 @@ type typer_error =
   | `Typer_occurs_check_failed of
     Location.t * Exists_var.t * Ast_typed.type_expression
   | `Typer_cannot_unify of
-    Location.t * Ast_typed.type_expression * Ast_typed.type_expression
+    Location.t * Ast_typed.type_expression * Ast_typed.type_expression * Typediff.t
   | `Typer_cannot_unify_diff_layout of
     Location.t
     * Ast_typed.type_expression
@@ -207,16 +207,18 @@ let rec error_ppformat
          loc
          Ast_typed.PP.type_expression
          type_
-     | `Typer_cannot_unify (loc, type1, type2) ->
+     | `Typer_cannot_unify (loc, type1, type2, type_diff) ->
        Format.fprintf
          f
-         "@[<hv>%a@.Invalid type(s)@.Cannot unify %a with %a.@]"
+         "@[<hv>%a@.Invalid type(s)@.Cannot unify %a with %a.@]%a"
          Snippet.pp
          loc
          Ast_typed.PP.type_expression
          type1
          Ast_typed.PP.type_expression
          type2
+         Typediff.pp
+         type_diff
      | `Typer_cannot_unify_diff_layout (loc, type1, type2, layout1, layout2) ->
        Format.fprintf
          f
@@ -724,8 +726,9 @@ let rec error_jsonformat : typer_error -> Yojson.Safe.t =
         ]
     in
     json_error ~stage ~content
-  | `Typer_cannot_unify (loc, type1, type2) ->
+  | `Typer_cannot_unify (loc, type1, type2, type_diff) ->
     let message = "Cannot unify" in
+    let () = ignore type_diff in
     let content =
       `Assoc
         [ "message", `String message
