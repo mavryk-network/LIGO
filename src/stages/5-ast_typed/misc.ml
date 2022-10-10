@@ -105,6 +105,10 @@ module Free_variables = struct
             (of_list (fields |> Map.data |> List.map ~f:Binder.get_var)))
       in
       f ~bound body
+    | Match_tuple { binders; body; _ } ->
+      let vars = Set.of_list (List.map ~f:Binder.get_var binders) in
+      let bound = Set.union bound vars in
+      f ~bound body
 
 
   and matching_expression ~bound match_expr =
@@ -164,7 +168,8 @@ let rec assert_type_expression_eq ((a, b) : type_expression * type_expression)
       (Map.equal
          (fun (row_elem1 : _ Rows.Elem.t) row_elem2 ->
            assert_type_expression_eq
-             (row_elem1.content.associated_type, row_elem2.content.associated_type)
+             ( row_elem1.content.associated_type
+             , row_elem2.content.associated_type )
            |> Option.is_some)
          row1.fields
          row2.fields)
@@ -278,7 +283,7 @@ let get_type_of_contract ty =
   match ty with
   | T_arrow { type1; type2 } ->
     (match type1.type_content, type2.type_content with
-    | T_tuple [ parameter; storage ], T_tuple [ listop; storage' ]  ->
+    | T_tuple [ parameter; storage ], T_tuple [ listop; storage' ] ->
       let open Option.Let_syntax in
       let%bind () = Combinators.assert_t_list_operation listop in
       let%bind () = assert_type_expression_eq (storage, storage') in

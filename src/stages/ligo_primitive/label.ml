@@ -50,4 +50,6 @@ module Map = struct
 
     let fold f init t = fold t ~init ~f:(fun ~key:_ ~data acc -> f acc data)
   end
+
+  let fold_map t ~init ~f = Deriving.fold_map f init t
 end

@@ -94,6 +94,7 @@ and expression_content ppf (ec : expression_content) =
   | E_constructor c -> Constructor.pp expression ppf c
   | E_constant c -> Constant.pp expression ppf c
   | E_record m -> Record.pp expression ppf m
+  | E_tuple tuple -> Tuple.pp_expr expression ppf tuple
   | E_accessor a -> Types.Accessor.pp expression ppf a
   | E_update u -> Types.Update.pp expression ppf u
   | E_lambda l -> Lambda.pp expression type_expression_annot ppf l

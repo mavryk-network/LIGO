@@ -172,6 +172,7 @@ type expression_content =
   | E_matching of matching
   (* Record *)
   | E_record of expr Record.t
+  | E_tuple of expr Tuple.t
   | E_accessor of expr Accessor.t
   | E_update of expr Update.t
   (* Imperative *)
