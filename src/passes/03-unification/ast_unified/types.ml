@@ -427,7 +427,6 @@ and declaration_content =
 
 (* ========================== MODULES ====================================== *)
 
-
 and module_ = {
   module_content : module_content;
   location       : Location.t;
@@ -436,7 +435,10 @@ and module_ = {
 and mod_ = module_
   [@@deriving yojson]
 
-and module_content = M_Dummy
+and module_content =
+| M_Body of declaration nseq
+| M_Path of string module_path
+| M_Var  of string
 
 (* ========================== EXPRESSIONS ================================== *)
 

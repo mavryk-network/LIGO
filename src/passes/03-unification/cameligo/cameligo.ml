@@ -495,8 +495,14 @@ and compile_declaration ~raise : CST.declaration -> AST.declaration = fun decl -
     d_modulealias {alias; binders} ~loc ()
   )
 
-and compile_module ~raise : CST.t -> AST.module_ = fun t ->
-  let () = ignore (t, raise) in { module_content = M_Dummy; location = Location.dummy }
+and compile_module ~raise : CST.t -> AST.module_ = fun m ->
+  let ds : AST.declaration nseq = nseq_map (compile_declaration ~raise) m.decl in
+  let loc =
+    (* The region of the module is the union of all its declarations' regions *)
+    let locations = nseq_map (fun (d : AST.declaration) -> d.location) ds in
+    List.Ne.fold_left locations ~init:Location.dummy ~f:Location.cover
+  in
+  m_body ds ~loc ()
 
 let compile_program ~raise : CST.ast -> AST.program = fun t ->
   let declarations :                           CST.declaration  list = nseq_to_list t.decl in
