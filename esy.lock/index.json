@@ -1,5 +1,5 @@
 {
-  "checksum": "3b64760e5ee86a2c71f53c6802f33037",
+  "checksum": "2c10b3f353b06b1e180a460e3ff7d83b",
   "root": "ligo-dev@link-dev:./ligo.opam",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -43,13 +43,13 @@
         "@opam/yojson@opam:2.0.2@eb65f292", "@opam/tls@opam:0.15.4@85e2053a",
         "@opam/tezos-rust-libs@opam:1.1@63a9618e",
         "@opam/tezos-plonk@opam:0.1.3@89e34ecc",
-        "@opam/tezos-micheline@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-micheline.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-hacl@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-hacl.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-crypto@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-crypto.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@ac44ca2e",
-        "@opam/tezos-client-014-PtKathma@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-client-014-PtKathma.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-clic@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-clic.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@0fb68dda",
-        "@opam/tezos-base@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-014-PtKathma-test-helpers@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-014-PtKathma-test-helpers.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-micheline@path:vendors/tezos-ligo/opam/tezos-micheline.opam@d41d8cd9",
+        "@opam/tezos-hacl@path:vendors/tezos-ligo/opam/tezos-hacl.opam@d41d8cd9",
+        "@opam/tezos-crypto@path:vendors/tezos-ligo/opam/tezos-crypto.opam@ac44ca2e",
+        "@opam/tezos-client-014-PtKathma@path:vendors/tezos-ligo/opam/tezos-client-014-PtKathma.opam@d41d8cd9",
+        "@opam/tezos-clic@path:vendors/tezos-ligo/opam/tezos-clic.opam@0fb68dda",
+        "@opam/tezos-base@path:vendors/tezos-ligo/opam/tezos-base.opam@d41d8cd9",
+        "@opam/tezos-014-PtKathma-test-helpers@path:vendors/tezos-ligo/opam/tezos-014-PtKathma-test-helpers.opam@d41d8cd9",
         "@opam/terminal_size@github:DiningPhilosophersCo/terminal_size:terminal_size.opam#4fa00d7e812a59e669bfc0392d6539252afa5fb@d41d8cd9",
         "@opam/tar-unix@opam:2.1.0@9dfb8709",
         "@opam/tar@opam:2.1.0@585e1bfd", "@opam/semver@opam:0.1.0@0f5037df",
@@ -93,10 +93,10 @@
         "@opam/yojson@opam:2.0.2@eb65f292", "@opam/tls@opam:0.15.4@85e2053a",
         "@opam/tezos-rust-libs@opam:1.1@63a9618e",
         "@opam/tezos-plonk@opam:0.1.3@89e34ecc",
-        "@opam/tezos-micheline@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-micheline.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-crypto@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-crypto.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@ac44ca2e",
-        "@opam/tezos-clic@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-clic.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@0fb68dda",
-        "@opam/tezos-base@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-micheline@path:vendors/tezos-ligo/opam/tezos-micheline.opam@d41d8cd9",
+        "@opam/tezos-crypto@path:vendors/tezos-ligo/opam/tezos-crypto.opam@ac44ca2e",
+        "@opam/tezos-clic@path:vendors/tezos-ligo/opam/tezos-clic.opam@0fb68dda",
+        "@opam/tezos-base@path:vendors/tezos-ligo/opam/tezos-base.opam@d41d8cd9",
         "@opam/terminal_size@github:DiningPhilosophersCo/terminal_size:terminal_size.opam#4fa00d7e812a59e669bfc0392d6539252afa5fb@d41d8cd9",
         "@opam/tar-unix@opam:2.1.0@9dfb8709",
         "@opam/tar@opam:2.1.0@585e1bfd", "@opam/semver@opam:0.1.0@0f5037df",
@@ -811,16 +811,16 @@
         "@opam/dune@opam:3.4.1@f4972aea", "@opam/base@opam:v0.14.3@b3ddb868"
       ]
     },
-    "@opam/tezos-webassembly-interpreter@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-webassembly-interpreter.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@0fb68dda": {
+    "@opam/tezos-webassembly-interpreter@path:vendors/tezos-ligo/opam/tezos-webassembly-interpreter.opam@0fb68dda": {
       "id":
-        "@opam/tezos-webassembly-interpreter@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-webassembly-interpreter.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@0fb68dda",
+        "@opam/tezos-webassembly-interpreter@path:vendors/tezos-ligo/opam/tezos-webassembly-interpreter.opam@0fb68dda",
       "name": "@opam/tezos-webassembly-interpreter",
       "version":
-        "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-webassembly-interpreter.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2",
+        "path:vendors/tezos-ligo/opam/tezos-webassembly-interpreter.opam",
       "source": {
         "type": "install",
         "source": [
-          "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-webassembly-interpreter.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2"
+          "path:vendors/tezos-ligo/opam/tezos-webassembly-interpreter.opam"
         ]
       },
       "overrides": [
@@ -828,52 +828,46 @@
       ],
       "dependencies": [
         "@opam/zarith@opam:1.12@232cc7f2",
-        "@opam/tezos-lwt-result-stdlib@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-lwt-result-stdlib.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-lwt-result-stdlib@path:vendors/tezos-ligo/opam/tezos-lwt-result-stdlib.opam@d41d8cd9",
         "@opam/dune@opam:3.4.1@f4972aea", "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": [
         "@opam/zarith@opam:1.12@232cc7f2",
-        "@opam/tezos-lwt-result-stdlib@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-lwt-result-stdlib.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-lwt-result-stdlib@path:vendors/tezos-ligo/opam/tezos-lwt-result-stdlib.opam@d41d8cd9",
         "@opam/dune@opam:3.4.1@f4972aea"
       ]
     },
-    "@opam/tezos-version@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-version.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9": {
+    "@opam/tezos-version@path:vendors/tezos-ligo/opam/tezos-version.opam@d41d8cd9": {
       "id":
-        "@opam/tezos-version@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-version.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-version@path:vendors/tezos-ligo/opam/tezos-version.opam@d41d8cd9",
       "name": "@opam/tezos-version",
-      "version":
-        "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-version.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2",
+      "version": "path:vendors/tezos-ligo/opam/tezos-version.opam",
       "source": {
         "type": "install",
-        "source": [
-          "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-version.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2"
-        ]
+        "source": [ "path:vendors/tezos-ligo/opam/tezos-version.opam" ]
       },
       "overrides": [],
       "dependencies": [
-        "@opam/tezos-base@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-base@path:vendors/tezos-ligo/opam/tezos-base.opam@d41d8cd9",
         "@opam/ppx_deriving@opam:5.2.1@089e5dd3",
         "@opam/dune-configurator@opam:2.9.1@b7cf7a02",
         "@opam/dune@opam:3.4.1@f4972aea", "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": [
-        "@opam/tezos-base@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-base@path:vendors/tezos-ligo/opam/tezos-base.opam@d41d8cd9",
         "@opam/ppx_deriving@opam:5.2.1@089e5dd3",
         "@opam/dune-configurator@opam:2.9.1@b7cf7a02",
         "@opam/dune@opam:3.4.1@f4972aea"
       ]
     },
-    "@opam/tezos-test-helpers@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-test-helpers.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9": {
+    "@opam/tezos-test-helpers@path:vendors/tezos-ligo/opam/tezos-test-helpers.opam@d41d8cd9": {
       "id":
-        "@opam/tezos-test-helpers@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-test-helpers.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-test-helpers@path:vendors/tezos-ligo/opam/tezos-test-helpers.opam@d41d8cd9",
       "name": "@opam/tezos-test-helpers",
-      "version":
-        "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-test-helpers.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2",
+      "version": "path:vendors/tezos-ligo/opam/tezos-test-helpers.opam",
       "source": {
         "type": "install",
-        "source": [
-          "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-test-helpers.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2"
-        ]
+        "source": [ "path:vendors/tezos-ligo/opam/tezos-test-helpers.opam" ]
       },
       "overrides": [],
       "dependencies": [
@@ -896,25 +890,22 @@
         "@opam/alcotest@opam:1.6.0@89577431"
       ]
     },
-    "@opam/tezos-stdlib-unix@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-stdlib-unix.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@afa1477a": {
+    "@opam/tezos-stdlib-unix@path:vendors/tezos-ligo/opam/tezos-stdlib-unix.opam@afa1477a": {
       "id":
-        "@opam/tezos-stdlib-unix@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-stdlib-unix.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@afa1477a",
+        "@opam/tezos-stdlib-unix@path:vendors/tezos-ligo/opam/tezos-stdlib-unix.opam@afa1477a",
       "name": "@opam/tezos-stdlib-unix",
-      "version":
-        "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-stdlib-unix.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2",
+      "version": "path:vendors/tezos-ligo/opam/tezos-stdlib-unix.opam",
       "source": {
         "type": "install",
-        "source": [
-          "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-stdlib-unix.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2"
-        ]
+        "source": [ "path:vendors/tezos-ligo/opam/tezos-stdlib-unix.opam" ]
       },
       "overrides": [ { "dependencies": {} } ],
       "dependencies": [
         "@opam/uri@opam:4.2.0@9c45eeb8",
-        "@opam/tezos-stdlib@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-stdlib.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-lwt-result-stdlib@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-lwt-result-stdlib.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-event-logging@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-event-logging.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@0ab68e7a",
-        "@opam/tezos-error-monad@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-error-monad.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@0fb68dda",
+        "@opam/tezos-stdlib@path:vendors/tezos-ligo/opam/tezos-stdlib.opam@d41d8cd9",
+        "@opam/tezos-lwt-result-stdlib@path:vendors/tezos-ligo/opam/tezos-lwt-result-stdlib.opam@d41d8cd9",
+        "@opam/tezos-event-logging@path:vendors/tezos-ligo/opam/tezos-event-logging.opam@0ab68e7a",
+        "@opam/tezos-error-monad@path:vendors/tezos-ligo/opam/tezos-error-monad.opam@0fb68dda",
         "@opam/re@opam:1.10.4@c4910ba6", "@opam/ptime@opam:1.0.0@e04fef10",
         "@opam/mtime@opam:1.3.0@94690749",
         "@opam/lwt_log@opam:1.1.2@35f097e3", "@opam/lwt@opam:5.5.0@5f354b35",
@@ -928,10 +919,10 @@
       ],
       "devDependencies": [
         "@opam/uri@opam:4.2.0@9c45eeb8",
-        "@opam/tezos-stdlib@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-stdlib.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-lwt-result-stdlib@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-lwt-result-stdlib.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-event-logging@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-event-logging.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@0ab68e7a",
-        "@opam/tezos-error-monad@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-error-monad.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@0fb68dda",
+        "@opam/tezos-stdlib@path:vendors/tezos-ligo/opam/tezos-stdlib.opam@d41d8cd9",
+        "@opam/tezos-lwt-result-stdlib@path:vendors/tezos-ligo/opam/tezos-lwt-result-stdlib.opam@d41d8cd9",
+        "@opam/tezos-event-logging@path:vendors/tezos-ligo/opam/tezos-event-logging.opam@0ab68e7a",
+        "@opam/tezos-error-monad@path:vendors/tezos-ligo/opam/tezos-error-monad.opam@0fb68dda",
         "@opam/re@opam:1.10.4@c4910ba6", "@opam/ptime@opam:1.0.0@e04fef10",
         "@opam/mtime@opam:1.3.0@94690749",
         "@opam/lwt_log@opam:1.1.2@35f097e3", "@opam/lwt@opam:5.5.0@5f354b35",
@@ -943,17 +934,14 @@
         "@opam/base-unix@opam:base@87d0b2eb"
       ]
     },
-    "@opam/tezos-stdlib@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-stdlib.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9": {
+    "@opam/tezos-stdlib@path:vendors/tezos-ligo/opam/tezos-stdlib.opam@d41d8cd9": {
       "id":
-        "@opam/tezos-stdlib@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-stdlib.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-stdlib@path:vendors/tezos-ligo/opam/tezos-stdlib.opam@d41d8cd9",
       "name": "@opam/tezos-stdlib",
-      "version":
-        "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-stdlib.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2",
+      "version": "path:vendors/tezos-ligo/opam/tezos-stdlib.opam",
       "source": {
         "type": "install",
-        "source": [
-          "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-stdlib.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2"
-        ]
+        "source": [ "path:vendors/tezos-ligo/opam/tezos-stdlib.opam" ]
       },
       "overrides": [],
       "dependencies": [
@@ -973,145 +961,136 @@
         "@opam/dune@opam:3.4.1@f4972aea"
       ]
     },
-    "@opam/tezos-signer-services@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-signer-services.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9": {
+    "@opam/tezos-signer-services@path:vendors/tezos-ligo/opam/tezos-signer-services.opam@d41d8cd9": {
       "id":
-        "@opam/tezos-signer-services@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-signer-services.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-signer-services@path:vendors/tezos-ligo/opam/tezos-signer-services.opam@d41d8cd9",
       "name": "@opam/tezos-signer-services",
-      "version":
-        "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-signer-services.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2",
+      "version": "path:vendors/tezos-ligo/opam/tezos-signer-services.opam",
       "source": {
         "type": "install",
         "source": [
-          "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-signer-services.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2"
+          "path:vendors/tezos-ligo/opam/tezos-signer-services.opam"
         ]
       },
       "overrides": [],
       "dependencies": [
-        "@opam/tezos-rpc@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-rpc.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-client-base@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-client-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-base@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-rpc@path:vendors/tezos-ligo/opam/tezos-rpc.opam@d41d8cd9",
+        "@opam/tezos-client-base@path:vendors/tezos-ligo/opam/tezos-client-base.opam@d41d8cd9",
+        "@opam/tezos-base@path:vendors/tezos-ligo/opam/tezos-base.opam@d41d8cd9",
         "@opam/dune@opam:3.4.1@f4972aea", "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": [
-        "@opam/tezos-rpc@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-rpc.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-client-base@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-client-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-base@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-rpc@path:vendors/tezos-ligo/opam/tezos-rpc.opam@d41d8cd9",
+        "@opam/tezos-client-base@path:vendors/tezos-ligo/opam/tezos-client-base.opam@d41d8cd9",
+        "@opam/tezos-base@path:vendors/tezos-ligo/opam/tezos-base.opam@d41d8cd9",
         "@opam/dune@opam:3.4.1@f4972aea"
       ]
     },
-    "@opam/tezos-signer-backends@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-signer-backends.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9": {
+    "@opam/tezos-signer-backends@path:vendors/tezos-ligo/opam/tezos-signer-backends.opam@d41d8cd9": {
       "id":
-        "@opam/tezos-signer-backends@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-signer-backends.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-signer-backends@path:vendors/tezos-ligo/opam/tezos-signer-backends.opam@d41d8cd9",
       "name": "@opam/tezos-signer-backends",
-      "version":
-        "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-signer-backends.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2",
+      "version": "path:vendors/tezos-ligo/opam/tezos-signer-backends.opam",
       "source": {
         "type": "install",
         "source": [
-          "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-signer-backends.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2"
+          "path:vendors/tezos-ligo/opam/tezos-signer-backends.opam"
         ]
       },
       "overrides": [],
       "dependencies": [
         "@opam/uri@opam:4.2.0@9c45eeb8",
-        "@opam/tezos-stdlib-unix@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-stdlib-unix.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@afa1477a",
-        "@opam/tezos-stdlib@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-stdlib.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-signer-services@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-signer-services.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-shell-services@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-shell-services.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-rpc-http-client-unix@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-rpc-http-client-unix.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-rpc-http-client@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-rpc-http-client.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-rpc-http@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-rpc-http.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-client-base@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-client-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-base@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-stdlib-unix@path:vendors/tezos-ligo/opam/tezos-stdlib-unix.opam@afa1477a",
+        "@opam/tezos-stdlib@path:vendors/tezos-ligo/opam/tezos-stdlib.opam@d41d8cd9",
+        "@opam/tezos-signer-services@path:vendors/tezos-ligo/opam/tezos-signer-services.opam@d41d8cd9",
+        "@opam/tezos-shell-services@path:vendors/tezos-ligo/opam/tezos-shell-services.opam@d41d8cd9",
+        "@opam/tezos-rpc-http-client-unix@path:vendors/tezos-ligo/opam/tezos-rpc-http-client-unix.opam@d41d8cd9",
+        "@opam/tezos-rpc-http-client@path:vendors/tezos-ligo/opam/tezos-rpc-http-client.opam@d41d8cd9",
+        "@opam/tezos-rpc-http@path:vendors/tezos-ligo/opam/tezos-rpc-http.opam@d41d8cd9",
+        "@opam/tezos-client-base@path:vendors/tezos-ligo/opam/tezos-client-base.opam@d41d8cd9",
+        "@opam/tezos-base@path:vendors/tezos-ligo/opam/tezos-base.opam@d41d8cd9",
         "@opam/ocplib-endian@opam:1.2@008dc942",
         "@opam/fmt@opam:0.9.0@87213963", "@opam/dune@opam:3.4.1@f4972aea",
         "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": [
         "@opam/uri@opam:4.2.0@9c45eeb8",
-        "@opam/tezos-stdlib-unix@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-stdlib-unix.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@afa1477a",
-        "@opam/tezos-stdlib@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-stdlib.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-signer-services@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-signer-services.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-shell-services@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-shell-services.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-rpc-http-client-unix@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-rpc-http-client-unix.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-rpc-http-client@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-rpc-http-client.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-rpc-http@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-rpc-http.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-client-base@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-client-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-base@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-stdlib-unix@path:vendors/tezos-ligo/opam/tezos-stdlib-unix.opam@afa1477a",
+        "@opam/tezos-stdlib@path:vendors/tezos-ligo/opam/tezos-stdlib.opam@d41d8cd9",
+        "@opam/tezos-signer-services@path:vendors/tezos-ligo/opam/tezos-signer-services.opam@d41d8cd9",
+        "@opam/tezos-shell-services@path:vendors/tezos-ligo/opam/tezos-shell-services.opam@d41d8cd9",
+        "@opam/tezos-rpc-http-client-unix@path:vendors/tezos-ligo/opam/tezos-rpc-http-client-unix.opam@d41d8cd9",
+        "@opam/tezos-rpc-http-client@path:vendors/tezos-ligo/opam/tezos-rpc-http-client.opam@d41d8cd9",
+        "@opam/tezos-rpc-http@path:vendors/tezos-ligo/opam/tezos-rpc-http.opam@d41d8cd9",
+        "@opam/tezos-client-base@path:vendors/tezos-ligo/opam/tezos-client-base.opam@d41d8cd9",
+        "@opam/tezos-base@path:vendors/tezos-ligo/opam/tezos-base.opam@d41d8cd9",
         "@opam/ocplib-endian@opam:1.2@008dc942",
         "@opam/fmt@opam:0.9.0@87213963", "@opam/dune@opam:3.4.1@f4972aea"
       ]
     },
-    "@opam/tezos-shell-services@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-shell-services.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9": {
+    "@opam/tezos-shell-services@path:vendors/tezos-ligo/opam/tezos-shell-services.opam@d41d8cd9": {
       "id":
-        "@opam/tezos-shell-services@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-shell-services.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-shell-services@path:vendors/tezos-ligo/opam/tezos-shell-services.opam@d41d8cd9",
       "name": "@opam/tezos-shell-services",
-      "version":
-        "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-shell-services.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2",
+      "version": "path:vendors/tezos-ligo/opam/tezos-shell-services.opam",
       "source": {
         "type": "install",
         "source": [
-          "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-shell-services.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2"
+          "path:vendors/tezos-ligo/opam/tezos-shell-services.opam"
         ]
       },
       "overrides": [],
       "dependencies": [
-        "@opam/tezos-version@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-version.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-p2p-services@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-p2p-services.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-base@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-version@path:vendors/tezos-ligo/opam/tezos-version.opam@d41d8cd9",
+        "@opam/tezos-p2p-services@path:vendors/tezos-ligo/opam/tezos-p2p-services.opam@d41d8cd9",
+        "@opam/tezos-base@path:vendors/tezos-ligo/opam/tezos-base.opam@d41d8cd9",
         "@opam/dune@opam:3.4.1@f4972aea", "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": [
-        "@opam/tezos-version@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-version.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-p2p-services@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-p2p-services.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-base@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-version@path:vendors/tezos-ligo/opam/tezos-version.opam@d41d8cd9",
+        "@opam/tezos-p2p-services@path:vendors/tezos-ligo/opam/tezos-p2p-services.opam@d41d8cd9",
+        "@opam/tezos-base@path:vendors/tezos-ligo/opam/tezos-base.opam@d41d8cd9",
         "@opam/dune@opam:3.4.1@f4972aea"
       ]
     },
-    "@opam/tezos-scoru-wasm@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-scoru-wasm.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@0fb68dda": {
+    "@opam/tezos-scoru-wasm@path:vendors/tezos-ligo/opam/tezos-scoru-wasm.opam@0fb68dda": {
       "id":
-        "@opam/tezos-scoru-wasm@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-scoru-wasm.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@0fb68dda",
+        "@opam/tezos-scoru-wasm@path:vendors/tezos-ligo/opam/tezos-scoru-wasm.opam@0fb68dda",
       "name": "@opam/tezos-scoru-wasm",
-      "version":
-        "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-scoru-wasm.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2",
+      "version": "path:vendors/tezos-ligo/opam/tezos-scoru-wasm.opam",
       "source": {
         "type": "install",
-        "source": [
-          "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-scoru-wasm.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2"
-        ]
+        "source": [ "path:vendors/tezos-ligo/opam/tezos-scoru-wasm.opam" ]
       },
       "overrides": [
         { "dependencies": { "@opam/tezos-lwt-result-stdlib": "*" } }
       ],
       "dependencies": [
-        "@opam/tezos-webassembly-interpreter@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-webassembly-interpreter.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@0fb68dda",
-        "@opam/tezos-lwt-result-stdlib@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-lwt-result-stdlib.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-context@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-context.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-base@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-webassembly-interpreter@path:vendors/tezos-ligo/opam/tezos-webassembly-interpreter.opam@0fb68dda",
+        "@opam/tezos-lwt-result-stdlib@path:vendors/tezos-ligo/opam/tezos-lwt-result-stdlib.opam@d41d8cd9",
+        "@opam/tezos-context@path:vendors/tezos-ligo/opam/tezos-context.opam@d41d8cd9",
+        "@opam/tezos-base@path:vendors/tezos-ligo/opam/tezos-base.opam@d41d8cd9",
         "@opam/dune@opam:3.4.1@f4972aea",
         "@opam/data-encoding@opam:0.6@713694f0",
         "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": [
-        "@opam/tezos-webassembly-interpreter@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-webassembly-interpreter.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@0fb68dda",
-        "@opam/tezos-lwt-result-stdlib@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-lwt-result-stdlib.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-context@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-context.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-base@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-webassembly-interpreter@path:vendors/tezos-ligo/opam/tezos-webassembly-interpreter.opam@0fb68dda",
+        "@opam/tezos-lwt-result-stdlib@path:vendors/tezos-ligo/opam/tezos-lwt-result-stdlib.opam@d41d8cd9",
+        "@opam/tezos-context@path:vendors/tezos-ligo/opam/tezos-context.opam@d41d8cd9",
+        "@opam/tezos-base@path:vendors/tezos-ligo/opam/tezos-base.opam@d41d8cd9",
         "@opam/dune@opam:3.4.1@f4972aea",
         "@opam/data-encoding@opam:0.6@713694f0"
       ]
     },
-    "@opam/tezos-sapling@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-sapling.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@0925dfd7": {
+    "@opam/tezos-sapling@path:vendors/tezos-ligo/opam/tezos-sapling.opam@0925dfd7": {
       "id":
-        "@opam/tezos-sapling@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-sapling.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@0925dfd7",
+        "@opam/tezos-sapling@path:vendors/tezos-ligo/opam/tezos-sapling.opam@0925dfd7",
       "name": "@opam/tezos-sapling",
-      "version":
-        "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-sapling.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2",
+      "version": "path:vendors/tezos-ligo/opam/tezos-sapling.opam",
       "source": {
         "type": "install",
-        "source": [
-          "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-sapling.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2"
-        ]
+        "source": [ "path:vendors/tezos-ligo/opam/tezos-sapling.opam" ]
       },
       "overrides": [
         {
@@ -1128,11 +1107,11 @@
         }
       ],
       "dependencies": [
-        "@opam/tezos-stdlib@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-stdlib.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-stdlib@path:vendors/tezos-ligo/opam/tezos-stdlib.opam@d41d8cd9",
         "@opam/tezos-rust-libs@opam:1.1@63a9618e",
-        "@opam/tezos-lwt-result-stdlib@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-lwt-result-stdlib.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-error-monad@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-error-monad.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@0fb68dda",
-        "@opam/tezos-crypto@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-crypto.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@ac44ca2e",
+        "@opam/tezos-lwt-result-stdlib@path:vendors/tezos-ligo/opam/tezos-lwt-result-stdlib.opam@d41d8cd9",
+        "@opam/tezos-error-monad@path:vendors/tezos-ligo/opam/tezos-error-monad.opam@0fb68dda",
+        "@opam/tezos-crypto@path:vendors/tezos-ligo/opam/tezos-crypto.opam@ac44ca2e",
         "@opam/integers_stubs_js@opam:1.0@8df7df87",
         "@opam/integers@opam:0.7.0@a0bd70b4",
         "@opam/dune@opam:3.4.1@f4972aea",
@@ -1144,11 +1123,11 @@
         "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": [
-        "@opam/tezos-stdlib@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-stdlib.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-stdlib@path:vendors/tezos-ligo/opam/tezos-stdlib.opam@d41d8cd9",
         "@opam/tezos-rust-libs@opam:1.1@63a9618e",
-        "@opam/tezos-lwt-result-stdlib@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-lwt-result-stdlib.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-error-monad@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-error-monad.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@0fb68dda",
-        "@opam/tezos-crypto@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-crypto.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@ac44ca2e",
+        "@opam/tezos-lwt-result-stdlib@path:vendors/tezos-ligo/opam/tezos-lwt-result-stdlib.opam@d41d8cd9",
+        "@opam/tezos-error-monad@path:vendors/tezos-ligo/opam/tezos-error-monad.opam@0fb68dda",
+        "@opam/tezos-crypto@path:vendors/tezos-ligo/opam/tezos-crypto.opam@ac44ca2e",
         "@opam/integers_stubs_js@opam:1.0@8df7df87",
         "@opam/integers@opam:0.7.0@a0bd70b4",
         "@opam/dune@opam:3.4.1@f4972aea",
@@ -1186,105 +1165,98 @@
       ],
       "devDependencies": [ "@opam/conf-rust@no-source:@3165ff25" ]
     },
-    "@opam/tezos-rpc-http-client-unix@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-rpc-http-client-unix.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9": {
+    "@opam/tezos-rpc-http-client-unix@path:vendors/tezos-ligo/opam/tezos-rpc-http-client-unix.opam@d41d8cd9": {
       "id":
-        "@opam/tezos-rpc-http-client-unix@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-rpc-http-client-unix.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-rpc-http-client-unix@path:vendors/tezos-ligo/opam/tezos-rpc-http-client-unix.opam@d41d8cd9",
       "name": "@opam/tezos-rpc-http-client-unix",
       "version":
-        "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-rpc-http-client-unix.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2",
+        "path:vendors/tezos-ligo/opam/tezos-rpc-http-client-unix.opam",
       "source": {
         "type": "install",
         "source": [
-          "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-rpc-http-client-unix.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2"
+          "path:vendors/tezos-ligo/opam/tezos-rpc-http-client-unix.opam"
         ]
       },
       "overrides": [],
       "dependencies": [
-        "@opam/tezos-stdlib-unix@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-stdlib-unix.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@afa1477a",
-        "@opam/tezos-rpc-http-client@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-rpc-http-client.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-base@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-stdlib-unix@path:vendors/tezos-ligo/opam/tezos-stdlib-unix.opam@afa1477a",
+        "@opam/tezos-rpc-http-client@path:vendors/tezos-ligo/opam/tezos-rpc-http-client.opam@d41d8cd9",
+        "@opam/tezos-base@path:vendors/tezos-ligo/opam/tezos-base.opam@d41d8cd9",
         "@opam/resto-cohttp-client@opam:0.8@d39ee38e",
         "@opam/dune@opam:3.4.1@f4972aea",
         "@opam/cohttp-lwt-unix@opam:4.0.0@7bdd7707",
         "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": [
-        "@opam/tezos-stdlib-unix@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-stdlib-unix.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@afa1477a",
-        "@opam/tezos-rpc-http-client@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-rpc-http-client.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-base@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-stdlib-unix@path:vendors/tezos-ligo/opam/tezos-stdlib-unix.opam@afa1477a",
+        "@opam/tezos-rpc-http-client@path:vendors/tezos-ligo/opam/tezos-rpc-http-client.opam@d41d8cd9",
+        "@opam/tezos-base@path:vendors/tezos-ligo/opam/tezos-base.opam@d41d8cd9",
         "@opam/resto-cohttp-client@opam:0.8@d39ee38e",
         "@opam/dune@opam:3.4.1@f4972aea",
         "@opam/cohttp-lwt-unix@opam:4.0.0@7bdd7707"
       ]
     },
-    "@opam/tezos-rpc-http-client@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-rpc-http-client.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9": {
+    "@opam/tezos-rpc-http-client@path:vendors/tezos-ligo/opam/tezos-rpc-http-client.opam@d41d8cd9": {
       "id":
-        "@opam/tezos-rpc-http-client@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-rpc-http-client.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-rpc-http-client@path:vendors/tezos-ligo/opam/tezos-rpc-http-client.opam@d41d8cd9",
       "name": "@opam/tezos-rpc-http-client",
-      "version":
-        "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-rpc-http-client.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2",
+      "version": "path:vendors/tezos-ligo/opam/tezos-rpc-http-client.opam",
       "source": {
         "type": "install",
         "source": [
-          "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-rpc-http-client.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2"
+          "path:vendors/tezos-ligo/opam/tezos-rpc-http-client.opam"
         ]
       },
       "overrides": [],
       "dependencies": [
-        "@opam/tezos-rpc-http@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-rpc-http.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-base@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-rpc-http@path:vendors/tezos-ligo/opam/tezos-rpc-http.opam@d41d8cd9",
+        "@opam/tezos-base@path:vendors/tezos-ligo/opam/tezos-base.opam@d41d8cd9",
         "@opam/resto-cohttp-client@opam:0.8@d39ee38e",
         "@opam/dune@opam:3.4.1@f4972aea", "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": [
-        "@opam/tezos-rpc-http@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-rpc-http.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-base@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-rpc-http@path:vendors/tezos-ligo/opam/tezos-rpc-http.opam@d41d8cd9",
+        "@opam/tezos-base@path:vendors/tezos-ligo/opam/tezos-base.opam@d41d8cd9",
         "@opam/resto-cohttp-client@opam:0.8@d39ee38e",
         "@opam/dune@opam:3.4.1@f4972aea"
       ]
     },
-    "@opam/tezos-rpc-http@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-rpc-http.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9": {
+    "@opam/tezos-rpc-http@path:vendors/tezos-ligo/opam/tezos-rpc-http.opam@d41d8cd9": {
       "id":
-        "@opam/tezos-rpc-http@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-rpc-http.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-rpc-http@path:vendors/tezos-ligo/opam/tezos-rpc-http.opam@d41d8cd9",
       "name": "@opam/tezos-rpc-http",
-      "version":
-        "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-rpc-http.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2",
+      "version": "path:vendors/tezos-ligo/opam/tezos-rpc-http.opam",
       "source": {
         "type": "install",
-        "source": [
-          "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-rpc-http.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2"
-        ]
+        "source": [ "path:vendors/tezos-ligo/opam/tezos-rpc-http.opam" ]
       },
       "overrides": [],
       "dependencies": [
         "@opam/uri@opam:4.2.0@9c45eeb8",
-        "@opam/tezos-base@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-base@path:vendors/tezos-ligo/opam/tezos-base.opam@d41d8cd9",
         "@opam/resto-cohttp@opam:0.8@f1a50c2d",
         "@opam/dune@opam:3.4.1@f4972aea", "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": [
         "@opam/uri@opam:4.2.0@9c45eeb8",
-        "@opam/tezos-base@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-base@path:vendors/tezos-ligo/opam/tezos-base.opam@d41d8cd9",
         "@opam/resto-cohttp@opam:0.8@f1a50c2d",
         "@opam/dune@opam:3.4.1@f4972aea"
       ]
     },
-    "@opam/tezos-rpc@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-rpc.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9": {
+    "@opam/tezos-rpc@path:vendors/tezos-ligo/opam/tezos-rpc.opam@d41d8cd9": {
       "id":
-        "@opam/tezos-rpc@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-rpc.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-rpc@path:vendors/tezos-ligo/opam/tezos-rpc.opam@d41d8cd9",
       "name": "@opam/tezos-rpc",
-      "version":
-        "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-rpc.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2",
+      "version": "path:vendors/tezos-ligo/opam/tezos-rpc.opam",
       "source": {
         "type": "install",
-        "source": [
-          "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-rpc.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2"
-        ]
+        "source": [ "path:vendors/tezos-ligo/opam/tezos-rpc.opam" ]
       },
       "overrides": [],
       "dependencies": [
         "@opam/uri@opam:4.2.0@9c45eeb8",
-        "@opam/tezos-error-monad@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-error-monad.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@0fb68dda",
+        "@opam/tezos-error-monad@path:vendors/tezos-ligo/opam/tezos-error-monad.opam@0fb68dda",
         "@opam/resto-directory@opam:0.8@5be56abe",
         "@opam/resto@opam:0.8@0eb9d7a9", "@opam/dune@opam:3.4.1@f4972aea",
         "@opam/data-encoding@opam:0.6@713694f0",
@@ -1292,85 +1264,82 @@
       ],
       "devDependencies": [
         "@opam/uri@opam:4.2.0@9c45eeb8",
-        "@opam/tezos-error-monad@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-error-monad.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@0fb68dda",
+        "@opam/tezos-error-monad@path:vendors/tezos-ligo/opam/tezos-error-monad.opam@0fb68dda",
         "@opam/resto-directory@opam:0.8@5be56abe",
         "@opam/resto@opam:0.8@0eb9d7a9", "@opam/dune@opam:3.4.1@f4972aea",
         "@opam/data-encoding@opam:0.6@713694f0"
       ]
     },
-    "@opam/tezos-proxy@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-proxy.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9": {
+    "@opam/tezos-proxy@path:vendors/tezos-ligo/opam/tezos-proxy.opam@d41d8cd9": {
       "id":
-        "@opam/tezos-proxy@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-proxy.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-proxy@path:vendors/tezos-ligo/opam/tezos-proxy.opam@d41d8cd9",
       "name": "@opam/tezos-proxy",
-      "version":
-        "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-proxy.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2",
+      "version": "path:vendors/tezos-ligo/opam/tezos-proxy.opam",
       "source": {
         "type": "install",
-        "source": [
-          "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-proxy.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2"
-        ]
+        "source": [ "path:vendors/tezos-ligo/opam/tezos-proxy.opam" ]
       },
       "overrides": [],
       "dependencies": [
         "@opam/uri@opam:4.2.0@9c45eeb8",
-        "@opam/tezos-shell-services@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-shell-services.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-rpc@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-rpc.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-protocol-environment@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-protocol-environment.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-mockup-proxy@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-mockup-proxy.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-context@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-context.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-client-base@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-client-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-clic@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-clic.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@0fb68dda",
-        "@opam/tezos-base@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-shell-services@path:vendors/tezos-ligo/opam/tezos-shell-services.opam@d41d8cd9",
+        "@opam/tezos-rpc@path:vendors/tezos-ligo/opam/tezos-rpc.opam@d41d8cd9",
+        "@opam/tezos-protocol-environment@path:vendors/tezos-ligo/opam/tezos-protocol-environment.opam@d41d8cd9",
+        "@opam/tezos-mockup-proxy@path:vendors/tezos-ligo/opam/tezos-mockup-proxy.opam@d41d8cd9",
+        "@opam/tezos-context@path:vendors/tezos-ligo/opam/tezos-context.opam@d41d8cd9",
+        "@opam/tezos-client-base@path:vendors/tezos-ligo/opam/tezos-client-base.opam@d41d8cd9",
+        "@opam/tezos-clic@path:vendors/tezos-ligo/opam/tezos-clic.opam@0fb68dda",
+        "@opam/tezos-base@path:vendors/tezos-ligo/opam/tezos-base.opam@d41d8cd9",
         "@opam/ringo-lwt@opam:0.9@462e312d",
         "@opam/dune@opam:3.4.1@f4972aea", "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": [
         "@opam/uri@opam:4.2.0@9c45eeb8",
-        "@opam/tezos-shell-services@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-shell-services.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-rpc@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-rpc.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-protocol-environment@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-protocol-environment.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-mockup-proxy@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-mockup-proxy.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-context@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-context.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-client-base@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-client-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-clic@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-clic.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@0fb68dda",
-        "@opam/tezos-base@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-shell-services@path:vendors/tezos-ligo/opam/tezos-shell-services.opam@d41d8cd9",
+        "@opam/tezos-rpc@path:vendors/tezos-ligo/opam/tezos-rpc.opam@d41d8cd9",
+        "@opam/tezos-protocol-environment@path:vendors/tezos-ligo/opam/tezos-protocol-environment.opam@d41d8cd9",
+        "@opam/tezos-mockup-proxy@path:vendors/tezos-ligo/opam/tezos-mockup-proxy.opam@d41d8cd9",
+        "@opam/tezos-context@path:vendors/tezos-ligo/opam/tezos-context.opam@d41d8cd9",
+        "@opam/tezos-client-base@path:vendors/tezos-ligo/opam/tezos-client-base.opam@d41d8cd9",
+        "@opam/tezos-clic@path:vendors/tezos-ligo/opam/tezos-clic.opam@0fb68dda",
+        "@opam/tezos-base@path:vendors/tezos-ligo/opam/tezos-base.opam@d41d8cd9",
         "@opam/ringo-lwt@opam:0.9@462e312d", "@opam/dune@opam:3.4.1@f4972aea"
       ]
     },
-    "@opam/tezos-protocol-plugin-014-PtKathma@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-protocol-plugin-014-PtKathma.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9": {
+    "@opam/tezos-protocol-plugin-014-PtKathma@path:vendors/tezos-ligo/opam/tezos-protocol-plugin-014-PtKathma.opam@d41d8cd9": {
       "id":
-        "@opam/tezos-protocol-plugin-014-PtKathma@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-protocol-plugin-014-PtKathma.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-protocol-plugin-014-PtKathma@path:vendors/tezos-ligo/opam/tezos-protocol-plugin-014-PtKathma.opam@d41d8cd9",
       "name": "@opam/tezos-protocol-plugin-014-PtKathma",
       "version":
-        "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-protocol-plugin-014-PtKathma.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2",
+        "path:vendors/tezos-ligo/opam/tezos-protocol-plugin-014-PtKathma.opam",
       "source": {
         "type": "install",
         "source": [
-          "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-protocol-plugin-014-PtKathma.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2"
+          "path:vendors/tezos-ligo/opam/tezos-protocol-plugin-014-PtKathma.opam"
         ]
       },
       "overrides": [],
       "dependencies": [
-        "@opam/tezos-protocol-014-PtKathma@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-protocol-014-PtKathma.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@9597d3bd",
-        "@opam/tezos-base@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-protocol-014-PtKathma@path:vendors/tezos-ligo/opam/tezos-protocol-014-PtKathma.opam@9597d3bd",
+        "@opam/tezos-base@path:vendors/tezos-ligo/opam/tezos-base.opam@d41d8cd9",
         "@opam/dune@opam:3.4.1@f4972aea", "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": [
-        "@opam/tezos-protocol-014-PtKathma@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-protocol-014-PtKathma.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@9597d3bd",
-        "@opam/tezos-base@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-protocol-014-PtKathma@path:vendors/tezos-ligo/opam/tezos-protocol-014-PtKathma.opam@9597d3bd",
+        "@opam/tezos-base@path:vendors/tezos-ligo/opam/tezos-base.opam@d41d8cd9",
         "@opam/dune@opam:3.4.1@f4972aea"
       ]
     },
-    "@opam/tezos-protocol-environment@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-protocol-environment.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9": {
+    "@opam/tezos-protocol-environment@path:vendors/tezos-ligo/opam/tezos-protocol-environment.opam@d41d8cd9": {
       "id":
-        "@opam/tezos-protocol-environment@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-protocol-environment.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-protocol-environment@path:vendors/tezos-ligo/opam/tezos-protocol-environment.opam@d41d8cd9",
       "name": "@opam/tezos-protocol-environment",
       "version":
-        "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-protocol-environment.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2",
+        "path:vendors/tezos-ligo/opam/tezos-protocol-environment.opam",
       "source": {
         "type": "install",
         "source": [
-          "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-protocol-environment.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2"
+          "path:vendors/tezos-ligo/opam/tezos-protocol-environment.opam"
         ]
       },
       "overrides": [],
@@ -1378,16 +1347,16 @@
         "ocaml@4.12.0@d41d8cd9",
         "@opam/zarith_stubs_js@opam:v0.15.0@48805f60",
         "@opam/zarith@opam:1.12@232cc7f2",
-        "@opam/tezos-stdlib@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-stdlib.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-scoru-wasm@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-scoru-wasm.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@0fb68dda",
-        "@opam/tezos-sapling@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-sapling.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@0925dfd7",
+        "@opam/tezos-stdlib@path:vendors/tezos-ligo/opam/tezos-stdlib.opam@d41d8cd9",
+        "@opam/tezos-scoru-wasm@path:vendors/tezos-ligo/opam/tezos-scoru-wasm.opam@0fb68dda",
+        "@opam/tezos-sapling@path:vendors/tezos-ligo/opam/tezos-sapling.opam@0925dfd7",
         "@opam/tezos-plonk@opam:0.1.3@89e34ecc",
-        "@opam/tezos-micheline@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-micheline.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-lwt-result-stdlib@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-lwt-result-stdlib.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-event-logging@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-event-logging.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@0ab68e7a",
-        "@opam/tezos-crypto@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-crypto.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@ac44ca2e",
-        "@opam/tezos-context@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-context.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-base@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-micheline@path:vendors/tezos-ligo/opam/tezos-micheline.opam@d41d8cd9",
+        "@opam/tezos-lwt-result-stdlib@path:vendors/tezos-ligo/opam/tezos-lwt-result-stdlib.opam@d41d8cd9",
+        "@opam/tezos-event-logging@path:vendors/tezos-ligo/opam/tezos-event-logging.opam@0ab68e7a",
+        "@opam/tezos-crypto@path:vendors/tezos-ligo/opam/tezos-crypto.opam@ac44ca2e",
+        "@opam/tezos-context@path:vendors/tezos-ligo/opam/tezos-context.opam@d41d8cd9",
+        "@opam/tezos-base@path:vendors/tezos-ligo/opam/tezos-base.opam@d41d8cd9",
         "@opam/ringo-lwt@opam:0.9@462e312d", "@opam/ringo@opam:0.9@e47e0ec5",
         "@opam/dune@opam:3.4.1@f4972aea",
         "@opam/data-encoding@opam:0.6@713694f0",
@@ -1399,16 +1368,16 @@
         "ocaml@4.12.0@d41d8cd9",
         "@opam/zarith_stubs_js@opam:v0.15.0@48805f60",
         "@opam/zarith@opam:1.12@232cc7f2",
-        "@opam/tezos-stdlib@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-stdlib.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-scoru-wasm@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-scoru-wasm.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@0fb68dda",
-        "@opam/tezos-sapling@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-sapling.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@0925dfd7",
+        "@opam/tezos-stdlib@path:vendors/tezos-ligo/opam/tezos-stdlib.opam@d41d8cd9",
+        "@opam/tezos-scoru-wasm@path:vendors/tezos-ligo/opam/tezos-scoru-wasm.opam@0fb68dda",
+        "@opam/tezos-sapling@path:vendors/tezos-ligo/opam/tezos-sapling.opam@0925dfd7",
         "@opam/tezos-plonk@opam:0.1.3@89e34ecc",
-        "@opam/tezos-micheline@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-micheline.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-lwt-result-stdlib@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-lwt-result-stdlib.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-event-logging@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-event-logging.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@0ab68e7a",
-        "@opam/tezos-crypto@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-crypto.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@ac44ca2e",
-        "@opam/tezos-context@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-context.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-base@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-micheline@path:vendors/tezos-ligo/opam/tezos-micheline.opam@d41d8cd9",
+        "@opam/tezos-lwt-result-stdlib@path:vendors/tezos-ligo/opam/tezos-lwt-result-stdlib.opam@d41d8cd9",
+        "@opam/tezos-event-logging@path:vendors/tezos-ligo/opam/tezos-event-logging.opam@0ab68e7a",
+        "@opam/tezos-crypto@path:vendors/tezos-ligo/opam/tezos-crypto.opam@ac44ca2e",
+        "@opam/tezos-context@path:vendors/tezos-ligo/opam/tezos-context.opam@d41d8cd9",
+        "@opam/tezos-base@path:vendors/tezos-ligo/opam/tezos-base.opam@d41d8cd9",
         "@opam/ringo-lwt@opam:0.9@462e312d", "@opam/ringo@opam:0.9@e47e0ec5",
         "@opam/dune@opam:3.4.1@f4972aea",
         "@opam/data-encoding@opam:0.6@713694f0",
@@ -1416,25 +1385,24 @@
         "@opam/bls12-381@github:ligolang/ocaml-bls12-381:bls12-381.opam#70e45476620cce203ae8cb2a77871ec9da4e78b5@d41d8cd9"
       ]
     },
-    "@opam/tezos-protocol-compiler@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-protocol-compiler.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9": {
+    "@opam/tezos-protocol-compiler@path:vendors/tezos-ligo/opam/tezos-protocol-compiler.opam@d41d8cd9": {
       "id":
-        "@opam/tezos-protocol-compiler@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-protocol-compiler.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-protocol-compiler@path:vendors/tezos-ligo/opam/tezos-protocol-compiler.opam@d41d8cd9",
       "name": "@opam/tezos-protocol-compiler",
-      "version":
-        "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-protocol-compiler.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2",
+      "version": "path:vendors/tezos-ligo/opam/tezos-protocol-compiler.opam",
       "source": {
         "type": "install",
         "source": [
-          "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-protocol-compiler.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2"
+          "path:vendors/tezos-ligo/opam/tezos-protocol-compiler.opam"
         ]
       },
       "overrides": [],
       "dependencies": [
         "ocaml@4.12.0@d41d8cd9",
-        "@opam/tezos-version@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-version.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-stdlib-unix@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-stdlib-unix.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@afa1477a",
-        "@opam/tezos-protocol-environment@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-protocol-environment.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-base@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-version@path:vendors/tezos-ligo/opam/tezos-version.opam@d41d8cd9",
+        "@opam/tezos-stdlib-unix@path:vendors/tezos-ligo/opam/tezos-stdlib-unix.opam@afa1477a",
+        "@opam/tezos-protocol-environment@path:vendors/tezos-ligo/opam/tezos-protocol-environment.opam@d41d8cd9",
+        "@opam/tezos-base@path:vendors/tezos-ligo/opam/tezos-base.opam@d41d8cd9",
         "@opam/ocp-ocamlres@opam:0.4@df29645c",
         "@opam/lwt@opam:5.5.0@5f354b35", "@opam/dune@opam:3.4.1@f4972aea",
         "@opam/base-unix@opam:base@87d0b2eb",
@@ -1442,25 +1410,25 @@
       ],
       "devDependencies": [
         "ocaml@4.12.0@d41d8cd9",
-        "@opam/tezos-version@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-version.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-stdlib-unix@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-stdlib-unix.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@afa1477a",
-        "@opam/tezos-protocol-environment@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-protocol-environment.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-base@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-version@path:vendors/tezos-ligo/opam/tezos-version.opam@d41d8cd9",
+        "@opam/tezos-stdlib-unix@path:vendors/tezos-ligo/opam/tezos-stdlib-unix.opam@afa1477a",
+        "@opam/tezos-protocol-environment@path:vendors/tezos-ligo/opam/tezos-protocol-environment.opam@d41d8cd9",
+        "@opam/tezos-base@path:vendors/tezos-ligo/opam/tezos-base.opam@d41d8cd9",
         "@opam/ocp-ocamlres@opam:0.4@df29645c",
         "@opam/lwt@opam:5.5.0@5f354b35", "@opam/dune@opam:3.4.1@f4972aea",
         "@opam/base-unix@opam:base@87d0b2eb"
       ]
     },
-    "@opam/tezos-protocol-014-PtKathma@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-protocol-014-PtKathma.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@9597d3bd": {
+    "@opam/tezos-protocol-014-PtKathma@path:vendors/tezos-ligo/opam/tezos-protocol-014-PtKathma.opam@9597d3bd": {
       "id":
-        "@opam/tezos-protocol-014-PtKathma@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-protocol-014-PtKathma.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@9597d3bd",
+        "@opam/tezos-protocol-014-PtKathma@path:vendors/tezos-ligo/opam/tezos-protocol-014-PtKathma.opam@9597d3bd",
       "name": "@opam/tezos-protocol-014-PtKathma",
       "version":
-        "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-protocol-014-PtKathma.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2",
+        "path:vendors/tezos-ligo/opam/tezos-protocol-014-PtKathma.opam",
       "source": {
         "type": "install",
         "source": [
-          "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-protocol-014-PtKathma.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2"
+          "path:vendors/tezos-ligo/opam/tezos-protocol-014-PtKathma.opam"
         ]
       },
       "overrides": [
@@ -1500,15 +1468,15 @@
       ],
       "dependencies": [
         "esy-libffi@3.3.1@d41d8cd9", "esy-libev@4.33.1@d41d8cd9",
-        "@opam/tezos-protocol-environment@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-protocol-environment.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-protocol-compiler@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-protocol-compiler.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-base@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-protocol-environment@path:vendors/tezos-ligo/opam/tezos-protocol-environment.opam@d41d8cd9",
+        "@opam/tezos-protocol-compiler@path:vendors/tezos-ligo/opam/tezos-protocol-compiler.opam@d41d8cd9",
+        "@opam/tezos-base@path:vendors/tezos-ligo/opam/tezos-base.opam@d41d8cd9",
         "@opam/hacl-star-raw@opam:0.4.1@20994502",
         "@opam/dune@opam:3.4.1@f4972aea", "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": [
-        "@opam/tezos-protocol-environment@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-protocol-environment.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-base@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-protocol-environment@path:vendors/tezos-ligo/opam/tezos-protocol-environment.opam@d41d8cd9",
+        "@opam/tezos-base@path:vendors/tezos-ligo/opam/tezos-base.opam@d41d8cd9",
         "@opam/dune@opam:3.4.1@f4972aea"
       ]
     },
@@ -1586,47 +1554,41 @@
         "@opam/bls12-381@github:ligolang/ocaml-bls12-381:bls12-381.opam#70e45476620cce203ae8cb2a77871ec9da4e78b5@d41d8cd9"
       ]
     },
-    "@opam/tezos-p2p-services@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-p2p-services.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9": {
+    "@opam/tezos-p2p-services@path:vendors/tezos-ligo/opam/tezos-p2p-services.opam@d41d8cd9": {
       "id":
-        "@opam/tezos-p2p-services@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-p2p-services.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-p2p-services@path:vendors/tezos-ligo/opam/tezos-p2p-services.opam@d41d8cd9",
       "name": "@opam/tezos-p2p-services",
-      "version":
-        "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-p2p-services.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2",
+      "version": "path:vendors/tezos-ligo/opam/tezos-p2p-services.opam",
       "source": {
         "type": "install",
-        "source": [
-          "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-p2p-services.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2"
-        ]
+        "source": [ "path:vendors/tezos-ligo/opam/tezos-p2p-services.opam" ]
       },
       "overrides": [],
       "dependencies": [
-        "@opam/tezos-base@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-base@path:vendors/tezos-ligo/opam/tezos-base.opam@d41d8cd9",
         "@opam/dune@opam:3.4.1@f4972aea", "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": [
-        "@opam/tezos-base@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-base@path:vendors/tezos-ligo/opam/tezos-base.opam@d41d8cd9",
         "@opam/dune@opam:3.4.1@f4972aea"
       ]
     },
-    "@opam/tezos-p2p@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-p2p.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9": {
+    "@opam/tezos-p2p@path:vendors/tezos-ligo/opam/tezos-p2p.opam@d41d8cd9": {
       "id":
-        "@opam/tezos-p2p@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-p2p.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-p2p@path:vendors/tezos-ligo/opam/tezos-p2p.opam@d41d8cd9",
       "name": "@opam/tezos-p2p",
-      "version":
-        "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-p2p.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2",
+      "version": "path:vendors/tezos-ligo/opam/tezos-p2p.opam",
       "source": {
         "type": "install",
-        "source": [
-          "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-p2p.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2"
-        ]
+        "source": [ "path:vendors/tezos-ligo/opam/tezos-p2p.opam" ]
       },
       "overrides": [],
       "dependencies": [
-        "@opam/tezos-version@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-version.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-stdlib-unix@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-stdlib-unix.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@afa1477a",
-        "@opam/tezos-stdlib@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-stdlib.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-p2p-services@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-p2p-services.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-base@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-version@path:vendors/tezos-ligo/opam/tezos-version.opam@d41d8cd9",
+        "@opam/tezos-stdlib-unix@path:vendors/tezos-ligo/opam/tezos-stdlib-unix.opam@afa1477a",
+        "@opam/tezos-stdlib@path:vendors/tezos-ligo/opam/tezos-stdlib.opam@d41d8cd9",
+        "@opam/tezos-p2p-services@path:vendors/tezos-ligo/opam/tezos-p2p-services.opam@d41d8cd9",
+        "@opam/tezos-base@path:vendors/tezos-ligo/opam/tezos-base.opam@d41d8cd9",
         "@opam/ringo@opam:0.9@e47e0ec5",
         "@opam/prometheus@opam:1.2@b809dd59",
         "@opam/lwt-watcher@opam:0.2@b3006e0f",
@@ -1634,11 +1596,11 @@
         "@opam/dune@opam:3.4.1@f4972aea", "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": [
-        "@opam/tezos-version@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-version.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-stdlib-unix@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-stdlib-unix.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@afa1477a",
-        "@opam/tezos-stdlib@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-stdlib.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-p2p-services@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-p2p-services.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-base@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-version@path:vendors/tezos-ligo/opam/tezos-version.opam@d41d8cd9",
+        "@opam/tezos-stdlib-unix@path:vendors/tezos-ligo/opam/tezos-stdlib-unix.opam@afa1477a",
+        "@opam/tezos-stdlib@path:vendors/tezos-ligo/opam/tezos-stdlib.opam@d41d8cd9",
+        "@opam/tezos-p2p-services@path:vendors/tezos-ligo/opam/tezos-p2p-services.opam@d41d8cd9",
+        "@opam/tezos-base@path:vendors/tezos-ligo/opam/tezos-base.opam@d41d8cd9",
         "@opam/ringo@opam:0.9@e47e0ec5",
         "@opam/prometheus@opam:1.2@b809dd59",
         "@opam/lwt-watcher@opam:0.2@b3006e0f",
@@ -1646,164 +1608,154 @@
         "@opam/dune@opam:3.4.1@f4972aea"
       ]
     },
-    "@opam/tezos-mockup-registration@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-mockup-registration.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9": {
+    "@opam/tezos-mockup-registration@path:vendors/tezos-ligo/opam/tezos-mockup-registration.opam@d41d8cd9": {
       "id":
-        "@opam/tezos-mockup-registration@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-mockup-registration.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-mockup-registration@path:vendors/tezos-ligo/opam/tezos-mockup-registration.opam@d41d8cd9",
       "name": "@opam/tezos-mockup-registration",
       "version":
-        "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-mockup-registration.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2",
+        "path:vendors/tezos-ligo/opam/tezos-mockup-registration.opam",
       "source": {
         "type": "install",
         "source": [
-          "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-mockup-registration.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2"
+          "path:vendors/tezos-ligo/opam/tezos-mockup-registration.opam"
         ]
       },
       "overrides": [],
       "dependencies": [
         "@opam/uri@opam:4.2.0@9c45eeb8",
-        "@opam/tezos-shell-services@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-shell-services.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-protocol-environment@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-protocol-environment.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-client-base@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-client-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-base@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-shell-services@path:vendors/tezos-ligo/opam/tezos-shell-services.opam@d41d8cd9",
+        "@opam/tezos-protocol-environment@path:vendors/tezos-ligo/opam/tezos-protocol-environment.opam@d41d8cd9",
+        "@opam/tezos-client-base@path:vendors/tezos-ligo/opam/tezos-client-base.opam@d41d8cd9",
+        "@opam/tezos-base@path:vendors/tezos-ligo/opam/tezos-base.opam@d41d8cd9",
         "@opam/dune@opam:3.4.1@f4972aea", "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": [
         "@opam/uri@opam:4.2.0@9c45eeb8",
-        "@opam/tezos-shell-services@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-shell-services.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-protocol-environment@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-protocol-environment.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-client-base@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-client-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-base@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-shell-services@path:vendors/tezos-ligo/opam/tezos-shell-services.opam@d41d8cd9",
+        "@opam/tezos-protocol-environment@path:vendors/tezos-ligo/opam/tezos-protocol-environment.opam@d41d8cd9",
+        "@opam/tezos-client-base@path:vendors/tezos-ligo/opam/tezos-client-base.opam@d41d8cd9",
+        "@opam/tezos-base@path:vendors/tezos-ligo/opam/tezos-base.opam@d41d8cd9",
         "@opam/dune@opam:3.4.1@f4972aea"
       ]
     },
-    "@opam/tezos-mockup-proxy@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-mockup-proxy.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9": {
+    "@opam/tezos-mockup-proxy@path:vendors/tezos-ligo/opam/tezos-mockup-proxy.opam@d41d8cd9": {
       "id":
-        "@opam/tezos-mockup-proxy@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-mockup-proxy.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-mockup-proxy@path:vendors/tezos-ligo/opam/tezos-mockup-proxy.opam@d41d8cd9",
       "name": "@opam/tezos-mockup-proxy",
-      "version":
-        "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-mockup-proxy.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2",
+      "version": "path:vendors/tezos-ligo/opam/tezos-mockup-proxy.opam",
       "source": {
         "type": "install",
-        "source": [
-          "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-mockup-proxy.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2"
-        ]
+        "source": [ "path:vendors/tezos-ligo/opam/tezos-mockup-proxy.opam" ]
       },
       "overrides": [],
       "dependencies": [
         "@opam/uri@opam:4.2.0@9c45eeb8",
-        "@opam/tezos-shell-services@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-shell-services.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-rpc-http-client@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-rpc-http-client.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-rpc-http@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-rpc-http.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-protocol-environment@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-protocol-environment.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-client-base@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-client-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-base@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-shell-services@path:vendors/tezos-ligo/opam/tezos-shell-services.opam@d41d8cd9",
+        "@opam/tezos-rpc-http-client@path:vendors/tezos-ligo/opam/tezos-rpc-http-client.opam@d41d8cd9",
+        "@opam/tezos-rpc-http@path:vendors/tezos-ligo/opam/tezos-rpc-http.opam@d41d8cd9",
+        "@opam/tezos-protocol-environment@path:vendors/tezos-ligo/opam/tezos-protocol-environment.opam@d41d8cd9",
+        "@opam/tezos-client-base@path:vendors/tezos-ligo/opam/tezos-client-base.opam@d41d8cd9",
+        "@opam/tezos-base@path:vendors/tezos-ligo/opam/tezos-base.opam@d41d8cd9",
         "@opam/resto-cohttp-self-serving-client@opam:0.8@8bd711bc",
         "@opam/dune@opam:3.4.1@f4972aea", "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": [
         "@opam/uri@opam:4.2.0@9c45eeb8",
-        "@opam/tezos-shell-services@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-shell-services.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-rpc-http-client@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-rpc-http-client.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-rpc-http@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-rpc-http.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-protocol-environment@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-protocol-environment.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-client-base@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-client-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-base@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-shell-services@path:vendors/tezos-ligo/opam/tezos-shell-services.opam@d41d8cd9",
+        "@opam/tezos-rpc-http-client@path:vendors/tezos-ligo/opam/tezos-rpc-http-client.opam@d41d8cd9",
+        "@opam/tezos-rpc-http@path:vendors/tezos-ligo/opam/tezos-rpc-http.opam@d41d8cd9",
+        "@opam/tezos-protocol-environment@path:vendors/tezos-ligo/opam/tezos-protocol-environment.opam@d41d8cd9",
+        "@opam/tezos-client-base@path:vendors/tezos-ligo/opam/tezos-client-base.opam@d41d8cd9",
+        "@opam/tezos-base@path:vendors/tezos-ligo/opam/tezos-base.opam@d41d8cd9",
         "@opam/resto-cohttp-self-serving-client@opam:0.8@8bd711bc",
         "@opam/dune@opam:3.4.1@f4972aea"
       ]
     },
-    "@opam/tezos-mockup-commands@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-mockup-commands.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9": {
+    "@opam/tezos-mockup-commands@path:vendors/tezos-ligo/opam/tezos-mockup-commands.opam@d41d8cd9": {
       "id":
-        "@opam/tezos-mockup-commands@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-mockup-commands.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-mockup-commands@path:vendors/tezos-ligo/opam/tezos-mockup-commands.opam@d41d8cd9",
       "name": "@opam/tezos-mockup-commands",
-      "version":
-        "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-mockup-commands.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2",
+      "version": "path:vendors/tezos-ligo/opam/tezos-mockup-commands.opam",
       "source": {
         "type": "install",
         "source": [
-          "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-mockup-commands.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2"
+          "path:vendors/tezos-ligo/opam/tezos-mockup-commands.opam"
         ]
       },
       "overrides": [],
       "dependencies": [
-        "@opam/tezos-mockup-registration@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-mockup-registration.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-mockup@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-mockup.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-client-commands@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-client-commands.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-client-base@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-client-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-base@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-mockup-registration@path:vendors/tezos-ligo/opam/tezos-mockup-registration.opam@d41d8cd9",
+        "@opam/tezos-mockup@path:vendors/tezos-ligo/opam/tezos-mockup.opam@d41d8cd9",
+        "@opam/tezos-client-commands@path:vendors/tezos-ligo/opam/tezos-client-commands.opam@d41d8cd9",
+        "@opam/tezos-client-base@path:vendors/tezos-ligo/opam/tezos-client-base.opam@d41d8cd9",
+        "@opam/tezos-base@path:vendors/tezos-ligo/opam/tezos-base.opam@d41d8cd9",
         "@opam/dune@opam:3.4.1@f4972aea", "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": [
-        "@opam/tezos-mockup-registration@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-mockup-registration.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-mockup@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-mockup.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-client-commands@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-client-commands.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-client-base@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-client-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-base@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-mockup-registration@path:vendors/tezos-ligo/opam/tezos-mockup-registration.opam@d41d8cd9",
+        "@opam/tezos-mockup@path:vendors/tezos-ligo/opam/tezos-mockup.opam@d41d8cd9",
+        "@opam/tezos-client-commands@path:vendors/tezos-ligo/opam/tezos-client-commands.opam@d41d8cd9",
+        "@opam/tezos-client-base@path:vendors/tezos-ligo/opam/tezos-client-base.opam@d41d8cd9",
+        "@opam/tezos-base@path:vendors/tezos-ligo/opam/tezos-base.opam@d41d8cd9",
         "@opam/dune@opam:3.4.1@f4972aea"
       ]
     },
-    "@opam/tezos-mockup@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-mockup.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9": {
+    "@opam/tezos-mockup@path:vendors/tezos-ligo/opam/tezos-mockup.opam@d41d8cd9": {
       "id":
-        "@opam/tezos-mockup@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-mockup.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-mockup@path:vendors/tezos-ligo/opam/tezos-mockup.opam@d41d8cd9",
       "name": "@opam/tezos-mockup",
-      "version":
-        "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-mockup.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2",
+      "version": "path:vendors/tezos-ligo/opam/tezos-mockup.opam",
       "source": {
         "type": "install",
-        "source": [
-          "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-mockup.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2"
-        ]
+        "source": [ "path:vendors/tezos-ligo/opam/tezos-mockup.opam" ]
       },
       "overrides": [],
       "dependencies": [
-        "@opam/tezos-stdlib-unix@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-stdlib-unix.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@afa1477a",
-        "@opam/tezos-rpc-http-client@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-rpc-http-client.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-rpc-http@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-rpc-http.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-rpc@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-rpc.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-protocol-environment@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-protocol-environment.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-p2p-services@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-p2p-services.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-p2p@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-p2p.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-mockup-registration@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-mockup-registration.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-mockup-proxy@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-mockup-proxy.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-client-base@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-client-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-base@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-stdlib-unix@path:vendors/tezos-ligo/opam/tezos-stdlib-unix.opam@afa1477a",
+        "@opam/tezos-rpc-http-client@path:vendors/tezos-ligo/opam/tezos-rpc-http-client.opam@d41d8cd9",
+        "@opam/tezos-rpc-http@path:vendors/tezos-ligo/opam/tezos-rpc-http.opam@d41d8cd9",
+        "@opam/tezos-rpc@path:vendors/tezos-ligo/opam/tezos-rpc.opam@d41d8cd9",
+        "@opam/tezos-protocol-environment@path:vendors/tezos-ligo/opam/tezos-protocol-environment.opam@d41d8cd9",
+        "@opam/tezos-p2p-services@path:vendors/tezos-ligo/opam/tezos-p2p-services.opam@d41d8cd9",
+        "@opam/tezos-p2p@path:vendors/tezos-ligo/opam/tezos-p2p.opam@d41d8cd9",
+        "@opam/tezos-mockup-registration@path:vendors/tezos-ligo/opam/tezos-mockup-registration.opam@d41d8cd9",
+        "@opam/tezos-mockup-proxy@path:vendors/tezos-ligo/opam/tezos-mockup-proxy.opam@d41d8cd9",
+        "@opam/tezos-client-base@path:vendors/tezos-ligo/opam/tezos-client-base.opam@d41d8cd9",
+        "@opam/tezos-base@path:vendors/tezos-ligo/opam/tezos-base.opam@d41d8cd9",
         "@opam/resto-cohttp-self-serving-client@opam:0.8@8bd711bc",
         "@opam/dune@opam:3.4.1@f4972aea", "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": [
-        "@opam/tezos-stdlib-unix@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-stdlib-unix.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@afa1477a",
-        "@opam/tezos-rpc-http-client@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-rpc-http-client.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-rpc-http@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-rpc-http.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-rpc@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-rpc.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-protocol-environment@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-protocol-environment.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-p2p-services@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-p2p-services.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-p2p@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-p2p.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-mockup-registration@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-mockup-registration.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-mockup-proxy@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-mockup-proxy.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-client-base@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-client-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-base@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-stdlib-unix@path:vendors/tezos-ligo/opam/tezos-stdlib-unix.opam@afa1477a",
+        "@opam/tezos-rpc-http-client@path:vendors/tezos-ligo/opam/tezos-rpc-http-client.opam@d41d8cd9",
+        "@opam/tezos-rpc-http@path:vendors/tezos-ligo/opam/tezos-rpc-http.opam@d41d8cd9",
+        "@opam/tezos-rpc@path:vendors/tezos-ligo/opam/tezos-rpc.opam@d41d8cd9",
+        "@opam/tezos-protocol-environment@path:vendors/tezos-ligo/opam/tezos-protocol-environment.opam@d41d8cd9",
+        "@opam/tezos-p2p-services@path:vendors/tezos-ligo/opam/tezos-p2p-services.opam@d41d8cd9",
+        "@opam/tezos-p2p@path:vendors/tezos-ligo/opam/tezos-p2p.opam@d41d8cd9",
+        "@opam/tezos-mockup-registration@path:vendors/tezos-ligo/opam/tezos-mockup-registration.opam@d41d8cd9",
+        "@opam/tezos-mockup-proxy@path:vendors/tezos-ligo/opam/tezos-mockup-proxy.opam@d41d8cd9",
+        "@opam/tezos-client-base@path:vendors/tezos-ligo/opam/tezos-client-base.opam@d41d8cd9",
+        "@opam/tezos-base@path:vendors/tezos-ligo/opam/tezos-base.opam@d41d8cd9",
         "@opam/resto-cohttp-self-serving-client@opam:0.8@8bd711bc",
         "@opam/dune@opam:3.4.1@f4972aea"
       ]
     },
-    "@opam/tezos-micheline@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-micheline.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9": {
+    "@opam/tezos-micheline@path:vendors/tezos-ligo/opam/tezos-micheline.opam@d41d8cd9": {
       "id":
-        "@opam/tezos-micheline@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-micheline.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-micheline@path:vendors/tezos-ligo/opam/tezos-micheline.opam@d41d8cd9",
       "name": "@opam/tezos-micheline",
-      "version":
-        "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-micheline.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2",
+      "version": "path:vendors/tezos-ligo/opam/tezos-micheline.opam",
       "source": {
         "type": "install",
-        "source": [
-          "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-micheline.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2"
-        ]
+        "source": [ "path:vendors/tezos-ligo/opam/tezos-micheline.opam" ]
       },
       "overrides": [],
       "dependencies": [
         "@opam/zarith_stubs_js@opam:v0.15.0@48805f60",
         "@opam/zarith@opam:1.12@232cc7f2", "@opam/uutf@opam:1.0.3@47c95a18",
-        "@opam/tezos-stdlib@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-stdlib.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-error-monad@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-error-monad.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@0fb68dda",
+        "@opam/tezos-stdlib@path:vendors/tezos-ligo/opam/tezos-stdlib.opam@d41d8cd9",
+        "@opam/tezos-error-monad@path:vendors/tezos-ligo/opam/tezos-error-monad.opam@0fb68dda",
         "@opam/ppx_expect@opam:v0.14.2@b6279606",
         "@opam/dune@opam:3.4.1@f4972aea",
         "@opam/data-encoding@opam:0.6@713694f0",
@@ -1812,23 +1764,22 @@
       "devDependencies": [
         "@opam/zarith_stubs_js@opam:v0.15.0@48805f60",
         "@opam/zarith@opam:1.12@232cc7f2", "@opam/uutf@opam:1.0.3@47c95a18",
-        "@opam/tezos-stdlib@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-stdlib.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-error-monad@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-error-monad.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@0fb68dda",
+        "@opam/tezos-stdlib@path:vendors/tezos-ligo/opam/tezos-stdlib.opam@d41d8cd9",
+        "@opam/tezos-error-monad@path:vendors/tezos-ligo/opam/tezos-error-monad.opam@0fb68dda",
         "@opam/ppx_expect@opam:v0.14.2@b6279606",
         "@opam/dune@opam:3.4.1@f4972aea",
         "@opam/data-encoding@opam:0.6@713694f0"
       ]
     },
-    "@opam/tezos-lwt-result-stdlib@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-lwt-result-stdlib.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9": {
+    "@opam/tezos-lwt-result-stdlib@path:vendors/tezos-ligo/opam/tezos-lwt-result-stdlib.opam@d41d8cd9": {
       "id":
-        "@opam/tezos-lwt-result-stdlib@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-lwt-result-stdlib.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-lwt-result-stdlib@path:vendors/tezos-ligo/opam/tezos-lwt-result-stdlib.opam@d41d8cd9",
       "name": "@opam/tezos-lwt-result-stdlib",
-      "version":
-        "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-lwt-result-stdlib.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2",
+      "version": "path:vendors/tezos-ligo/opam/tezos-lwt-result-stdlib.opam",
       "source": {
         "type": "install",
         "source": [
-          "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-lwt-result-stdlib.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2"
+          "path:vendors/tezos-ligo/opam/tezos-lwt-result-stdlib.opam"
         ]
       },
       "overrides": [],
@@ -1841,17 +1792,14 @@
         "@opam/dune@opam:3.4.1@f4972aea"
       ]
     },
-    "@opam/tezos-hacl@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-hacl.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9": {
+    "@opam/tezos-hacl@path:vendors/tezos-ligo/opam/tezos-hacl.opam@d41d8cd9": {
       "id":
-        "@opam/tezos-hacl@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-hacl.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-hacl@path:vendors/tezos-ligo/opam/tezos-hacl.opam@d41d8cd9",
       "name": "@opam/tezos-hacl",
-      "version":
-        "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-hacl.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2",
+      "version": "path:vendors/tezos-ligo/opam/tezos-hacl.opam",
       "source": {
         "type": "install",
-        "source": [
-          "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-hacl.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2"
-        ]
+        "source": [ "path:vendors/tezos-ligo/opam/tezos-hacl.opam" ]
       },
       "overrides": [],
       "dependencies": [
@@ -1872,17 +1820,14 @@
         "@opam/ctypes@opam:0.20.1@ba687a5d"
       ]
     },
-    "@opam/tezos-event-logging@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-event-logging.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@0ab68e7a": {
+    "@opam/tezos-event-logging@path:vendors/tezos-ligo/opam/tezos-event-logging.opam@0ab68e7a": {
       "id":
-        "@opam/tezos-event-logging@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-event-logging.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@0ab68e7a",
+        "@opam/tezos-event-logging@path:vendors/tezos-ligo/opam/tezos-event-logging.opam@0ab68e7a",
       "name": "@opam/tezos-event-logging",
-      "version":
-        "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-event-logging.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2",
+      "version": "path:vendors/tezos-ligo/opam/tezos-event-logging.opam",
       "source": {
         "type": "install",
-        "source": [
-          "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-event-logging.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2"
-        ]
+        "source": [ "path:vendors/tezos-ligo/opam/tezos-event-logging.opam" ]
       },
       "overrides": [
         {
@@ -1894,9 +1839,9 @@
       ],
       "dependencies": [
         "@opam/uri@opam:4.2.0@9c45eeb8",
-        "@opam/tezos-stdlib@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-stdlib.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-lwt-result-stdlib@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-lwt-result-stdlib.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-error-monad@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-error-monad.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@0fb68dda",
+        "@opam/tezos-stdlib@path:vendors/tezos-ligo/opam/tezos-stdlib.opam@d41d8cd9",
+        "@opam/tezos-lwt-result-stdlib@path:vendors/tezos-ligo/opam/tezos-lwt-result-stdlib.opam@d41d8cd9",
+        "@opam/tezos-error-monad@path:vendors/tezos-ligo/opam/tezos-error-monad.opam@0fb68dda",
         "@opam/lwt_log@opam:1.1.2@35f097e3",
         "@opam/dune@opam:3.4.1@f4972aea",
         "@opam/data-encoding@opam:0.6@713694f0",
@@ -1904,33 +1849,30 @@
       ],
       "devDependencies": [
         "@opam/uri@opam:4.2.0@9c45eeb8",
-        "@opam/tezos-stdlib@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-stdlib.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-lwt-result-stdlib@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-lwt-result-stdlib.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-error-monad@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-error-monad.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@0fb68dda",
+        "@opam/tezos-stdlib@path:vendors/tezos-ligo/opam/tezos-stdlib.opam@d41d8cd9",
+        "@opam/tezos-lwt-result-stdlib@path:vendors/tezos-ligo/opam/tezos-lwt-result-stdlib.opam@d41d8cd9",
+        "@opam/tezos-error-monad@path:vendors/tezos-ligo/opam/tezos-error-monad.opam@0fb68dda",
         "@opam/lwt_log@opam:1.1.2@35f097e3",
         "@opam/dune@opam:3.4.1@f4972aea",
         "@opam/data-encoding@opam:0.6@713694f0"
       ]
     },
-    "@opam/tezos-error-monad@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-error-monad.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@0fb68dda": {
+    "@opam/tezos-error-monad@path:vendors/tezos-ligo/opam/tezos-error-monad.opam@0fb68dda": {
       "id":
-        "@opam/tezos-error-monad@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-error-monad.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@0fb68dda",
+        "@opam/tezos-error-monad@path:vendors/tezos-ligo/opam/tezos-error-monad.opam@0fb68dda",
       "name": "@opam/tezos-error-monad",
-      "version":
-        "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-error-monad.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2",
+      "version": "path:vendors/tezos-ligo/opam/tezos-error-monad.opam",
       "source": {
         "type": "install",
-        "source": [
-          "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-error-monad.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2"
-        ]
+        "source": [ "path:vendors/tezos-ligo/opam/tezos-error-monad.opam" ]
       },
       "overrides": [
         { "dependencies": { "@opam/tezos-lwt-result-stdlib": "*" } }
       ],
       "dependencies": [
         "ocaml@4.12.0@d41d8cd9",
-        "@opam/tezos-stdlib@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-stdlib.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-lwt-result-stdlib@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-lwt-result-stdlib.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-stdlib@path:vendors/tezos-ligo/opam/tezos-stdlib.opam@d41d8cd9",
+        "@opam/tezos-lwt-result-stdlib@path:vendors/tezos-ligo/opam/tezos-lwt-result-stdlib.opam@d41d8cd9",
         "@opam/lwt-canceler@opam:0.3@64a4b548",
         "@opam/lwt@opam:5.5.0@5f354b35", "@opam/dune@opam:3.4.1@f4972aea",
         "@opam/data-encoding@opam:0.6@713694f0",
@@ -1938,34 +1880,31 @@
       ],
       "devDependencies": [
         "ocaml@4.12.0@d41d8cd9",
-        "@opam/tezos-stdlib@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-stdlib.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-lwt-result-stdlib@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-lwt-result-stdlib.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-stdlib@path:vendors/tezos-ligo/opam/tezos-stdlib.opam@d41d8cd9",
+        "@opam/tezos-lwt-result-stdlib@path:vendors/tezos-ligo/opam/tezos-lwt-result-stdlib.opam@d41d8cd9",
         "@opam/lwt-canceler@opam:0.3@64a4b548",
         "@opam/lwt@opam:5.5.0@5f354b35", "@opam/dune@opam:3.4.1@f4972aea",
         "@opam/data-encoding@opam:0.6@713694f0"
       ]
     },
-    "@opam/tezos-crypto@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-crypto.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@ac44ca2e": {
+    "@opam/tezos-crypto@path:vendors/tezos-ligo/opam/tezos-crypto.opam@ac44ca2e": {
       "id":
-        "@opam/tezos-crypto@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-crypto.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@ac44ca2e",
+        "@opam/tezos-crypto@path:vendors/tezos-ligo/opam/tezos-crypto.opam@ac44ca2e",
       "name": "@opam/tezos-crypto",
-      "version":
-        "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-crypto.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2",
+      "version": "path:vendors/tezos-ligo/opam/tezos-crypto.opam",
       "source": {
         "type": "install",
-        "source": [
-          "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-crypto.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2"
-        ]
+        "source": [ "path:vendors/tezos-ligo/opam/tezos-crypto.opam" ]
       },
       "overrides": [ { "dependencies": { "@opam/tezos-error-monad": "*" } } ],
       "dependencies": [
         "@opam/zarith_stubs_js@opam:v0.15.0@48805f60",
         "@opam/zarith@opam:1.12@232cc7f2",
-        "@opam/tezos-stdlib@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-stdlib.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-rpc@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-rpc.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-lwt-result-stdlib@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-lwt-result-stdlib.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-hacl@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-hacl.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-error-monad@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-error-monad.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@0fb68dda",
+        "@opam/tezos-stdlib@path:vendors/tezos-ligo/opam/tezos-stdlib.opam@d41d8cd9",
+        "@opam/tezos-rpc@path:vendors/tezos-ligo/opam/tezos-rpc.opam@d41d8cd9",
+        "@opam/tezos-lwt-result-stdlib@path:vendors/tezos-ligo/opam/tezos-lwt-result-stdlib.opam@d41d8cd9",
+        "@opam/tezos-hacl@path:vendors/tezos-ligo/opam/tezos-hacl.opam@d41d8cd9",
+        "@opam/tezos-error-monad@path:vendors/tezos-ligo/opam/tezos-error-monad.opam@0fb68dda",
         "@opam/tezos-bls12-381-polynomial@opam:0.1.3@e30c9348",
         "@opam/secp256k1-internal@git:https://gitlab.com/nomadic-labs/ocaml-secp256k1-internal:secp256k1-internal.opam#18012dcbe3169d51a2b2d6e991150a9a02a85494@d41d8cd9",
         "@opam/ringo@opam:0.9@e47e0ec5", "@opam/lwt@opam:5.5.0@5f354b35",
@@ -1977,11 +1916,11 @@
       "devDependencies": [
         "@opam/zarith_stubs_js@opam:v0.15.0@48805f60",
         "@opam/zarith@opam:1.12@232cc7f2",
-        "@opam/tezos-stdlib@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-stdlib.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-rpc@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-rpc.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-lwt-result-stdlib@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-lwt-result-stdlib.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-hacl@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-hacl.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-error-monad@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-error-monad.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@0fb68dda",
+        "@opam/tezos-stdlib@path:vendors/tezos-ligo/opam/tezos-stdlib.opam@d41d8cd9",
+        "@opam/tezos-rpc@path:vendors/tezos-ligo/opam/tezos-rpc.opam@d41d8cd9",
+        "@opam/tezos-lwt-result-stdlib@path:vendors/tezos-ligo/opam/tezos-lwt-result-stdlib.opam@d41d8cd9",
+        "@opam/tezos-hacl@path:vendors/tezos-ligo/opam/tezos-hacl.opam@d41d8cd9",
+        "@opam/tezos-error-monad@path:vendors/tezos-ligo/opam/tezos-error-monad.opam@0fb68dda",
         "@opam/tezos-bls12-381-polynomial@opam:0.1.3@e30c9348",
         "@opam/secp256k1-internal@git:https://gitlab.com/nomadic-labs/ocaml-secp256k1-internal:secp256k1-internal.opam#18012dcbe3169d51a2b2d6e991150a9a02a85494@d41d8cd9",
         "@opam/ringo@opam:0.9@e47e0ec5", "@opam/lwt@opam:5.5.0@5f354b35",
@@ -1990,24 +1929,21 @@
         "@opam/bls12-381@github:ligolang/ocaml-bls12-381:bls12-381.opam#70e45476620cce203ae8cb2a77871ec9da4e78b5@d41d8cd9"
       ]
     },
-    "@opam/tezos-context@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-context.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9": {
+    "@opam/tezos-context@path:vendors/tezos-ligo/opam/tezos-context.opam@d41d8cd9": {
       "id":
-        "@opam/tezos-context@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-context.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-context@path:vendors/tezos-ligo/opam/tezos-context.opam@d41d8cd9",
       "name": "@opam/tezos-context",
-      "version":
-        "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-context.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2",
+      "version": "path:vendors/tezos-ligo/opam/tezos-context.opam",
       "source": {
         "type": "install",
-        "source": [
-          "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-context.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2"
-        ]
+        "source": [ "path:vendors/tezos-ligo/opam/tezos-context.opam" ]
       },
       "overrides": [],
       "dependencies": [
-        "@opam/tezos-stdlib-unix@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-stdlib-unix.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@afa1477a",
-        "@opam/tezos-stdlib@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-stdlib.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-shell-services@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-shell-services.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-base@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-stdlib-unix@path:vendors/tezos-ligo/opam/tezos-stdlib-unix.opam@afa1477a",
+        "@opam/tezos-stdlib@path:vendors/tezos-ligo/opam/tezos-stdlib.opam@d41d8cd9",
+        "@opam/tezos-shell-services@path:vendors/tezos-ligo/opam/tezos-shell-services.opam@d41d8cd9",
+        "@opam/tezos-base@path:vendors/tezos-ligo/opam/tezos-base.opam@d41d8cd9",
         "@opam/logs@opam:0.7.0@46a3dffc",
         "@opam/irmin-pack@opam:3.3.2@8e80c222",
         "@opam/irmin@opam:3.3.2@833f70db", "@opam/fmt@opam:0.9.0@87213963",
@@ -2017,10 +1953,10 @@
         "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": [
-        "@opam/tezos-stdlib-unix@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-stdlib-unix.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@afa1477a",
-        "@opam/tezos-stdlib@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-stdlib.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-shell-services@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-shell-services.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-base@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-stdlib-unix@path:vendors/tezos-ligo/opam/tezos-stdlib-unix.opam@afa1477a",
+        "@opam/tezos-stdlib@path:vendors/tezos-ligo/opam/tezos-stdlib.opam@d41d8cd9",
+        "@opam/tezos-shell-services@path:vendors/tezos-ligo/opam/tezos-shell-services.opam@d41d8cd9",
+        "@opam/tezos-base@path:vendors/tezos-ligo/opam/tezos-base.opam@d41d8cd9",
         "@opam/logs@opam:0.7.0@46a3dffc",
         "@opam/irmin-pack@opam:3.3.2@8e80c222",
         "@opam/irmin@opam:3.3.2@833f70db", "@opam/fmt@opam:0.9.0@87213963",
@@ -2029,208 +1965,200 @@
         "@opam/bigstringaf@opam:0.9.0@5762d1bc"
       ]
     },
-    "@opam/tezos-client-commands@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-client-commands.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9": {
+    "@opam/tezos-client-commands@path:vendors/tezos-ligo/opam/tezos-client-commands.opam@d41d8cd9": {
       "id":
-        "@opam/tezos-client-commands@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-client-commands.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-client-commands@path:vendors/tezos-ligo/opam/tezos-client-commands.opam@d41d8cd9",
       "name": "@opam/tezos-client-commands",
-      "version":
-        "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-client-commands.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2",
+      "version": "path:vendors/tezos-ligo/opam/tezos-client-commands.opam",
       "source": {
         "type": "install",
         "source": [
-          "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-client-commands.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2"
+          "path:vendors/tezos-ligo/opam/tezos-client-commands.opam"
         ]
       },
       "overrides": [],
       "dependencies": [
         "@opam/uri@opam:4.2.0@9c45eeb8",
-        "@opam/tezos-stdlib-unix@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-stdlib-unix.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@afa1477a",
-        "@opam/tezos-signer-backends@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-signer-backends.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-shell-services@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-shell-services.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-rpc@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-rpc.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-p2p-services@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-p2p-services.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-client-base@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-client-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-clic@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-clic.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@0fb68dda",
-        "@opam/tezos-base@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-stdlib-unix@path:vendors/tezos-ligo/opam/tezos-stdlib-unix.opam@afa1477a",
+        "@opam/tezos-signer-backends@path:vendors/tezos-ligo/opam/tezos-signer-backends.opam@d41d8cd9",
+        "@opam/tezos-shell-services@path:vendors/tezos-ligo/opam/tezos-shell-services.opam@d41d8cd9",
+        "@opam/tezos-rpc@path:vendors/tezos-ligo/opam/tezos-rpc.opam@d41d8cd9",
+        "@opam/tezos-p2p-services@path:vendors/tezos-ligo/opam/tezos-p2p-services.opam@d41d8cd9",
+        "@opam/tezos-client-base@path:vendors/tezos-ligo/opam/tezos-client-base.opam@d41d8cd9",
+        "@opam/tezos-clic@path:vendors/tezos-ligo/opam/tezos-clic.opam@0fb68dda",
+        "@opam/tezos-base@path:vendors/tezos-ligo/opam/tezos-base.opam@d41d8cd9",
         "@opam/dune@opam:3.4.1@f4972aea",
         "@opam/data-encoding@opam:0.6@713694f0",
         "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": [
         "@opam/uri@opam:4.2.0@9c45eeb8",
-        "@opam/tezos-stdlib-unix@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-stdlib-unix.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@afa1477a",
-        "@opam/tezos-signer-backends@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-signer-backends.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-shell-services@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-shell-services.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-rpc@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-rpc.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-p2p-services@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-p2p-services.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-client-base@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-client-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-clic@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-clic.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@0fb68dda",
-        "@opam/tezos-base@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-stdlib-unix@path:vendors/tezos-ligo/opam/tezos-stdlib-unix.opam@afa1477a",
+        "@opam/tezos-signer-backends@path:vendors/tezos-ligo/opam/tezos-signer-backends.opam@d41d8cd9",
+        "@opam/tezos-shell-services@path:vendors/tezos-ligo/opam/tezos-shell-services.opam@d41d8cd9",
+        "@opam/tezos-rpc@path:vendors/tezos-ligo/opam/tezos-rpc.opam@d41d8cd9",
+        "@opam/tezos-p2p-services@path:vendors/tezos-ligo/opam/tezos-p2p-services.opam@d41d8cd9",
+        "@opam/tezos-client-base@path:vendors/tezos-ligo/opam/tezos-client-base.opam@d41d8cd9",
+        "@opam/tezos-clic@path:vendors/tezos-ligo/opam/tezos-clic.opam@0fb68dda",
+        "@opam/tezos-base@path:vendors/tezos-ligo/opam/tezos-base.opam@d41d8cd9",
         "@opam/dune@opam:3.4.1@f4972aea",
         "@opam/data-encoding@opam:0.6@713694f0"
       ]
     },
-    "@opam/tezos-client-base-unix@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-client-base-unix.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9": {
+    "@opam/tezos-client-base-unix@path:vendors/tezos-ligo/opam/tezos-client-base-unix.opam@d41d8cd9": {
       "id":
-        "@opam/tezos-client-base-unix@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-client-base-unix.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-client-base-unix@path:vendors/tezos-ligo/opam/tezos-client-base-unix.opam@d41d8cd9",
       "name": "@opam/tezos-client-base-unix",
-      "version":
-        "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-client-base-unix.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2",
+      "version": "path:vendors/tezos-ligo/opam/tezos-client-base-unix.opam",
       "source": {
         "type": "install",
         "source": [
-          "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-client-base-unix.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2"
+          "path:vendors/tezos-ligo/opam/tezos-client-base-unix.opam"
         ]
       },
       "overrides": [],
       "dependencies": [
         "@opam/uri@opam:4.2.0@9c45eeb8",
-        "@opam/tezos-stdlib-unix@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-stdlib-unix.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@afa1477a",
-        "@opam/tezos-signer-backends@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-signer-backends.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-shell-services@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-shell-services.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-rpc-http-client-unix@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-rpc-http-client-unix.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-rpc-http@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-rpc-http.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-proxy@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-proxy.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-mockup-registration@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-mockup-registration.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-mockup-commands@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-mockup-commands.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-mockup@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-mockup.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-client-commands@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-client-commands.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-client-base@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-client-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-base@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-stdlib-unix@path:vendors/tezos-ligo/opam/tezos-stdlib-unix.opam@afa1477a",
+        "@opam/tezos-signer-backends@path:vendors/tezos-ligo/opam/tezos-signer-backends.opam@d41d8cd9",
+        "@opam/tezos-shell-services@path:vendors/tezos-ligo/opam/tezos-shell-services.opam@d41d8cd9",
+        "@opam/tezos-rpc-http-client-unix@path:vendors/tezos-ligo/opam/tezos-rpc-http-client-unix.opam@d41d8cd9",
+        "@opam/tezos-rpc-http@path:vendors/tezos-ligo/opam/tezos-rpc-http.opam@d41d8cd9",
+        "@opam/tezos-proxy@path:vendors/tezos-ligo/opam/tezos-proxy.opam@d41d8cd9",
+        "@opam/tezos-mockup-registration@path:vendors/tezos-ligo/opam/tezos-mockup-registration.opam@d41d8cd9",
+        "@opam/tezos-mockup-commands@path:vendors/tezos-ligo/opam/tezos-mockup-commands.opam@d41d8cd9",
+        "@opam/tezos-mockup@path:vendors/tezos-ligo/opam/tezos-mockup.opam@d41d8cd9",
+        "@opam/tezos-client-commands@path:vendors/tezos-ligo/opam/tezos-client-commands.opam@d41d8cd9",
+        "@opam/tezos-client-base@path:vendors/tezos-ligo/opam/tezos-client-base.opam@d41d8cd9",
+        "@opam/tezos-base@path:vendors/tezos-ligo/opam/tezos-base.opam@d41d8cd9",
         "@opam/lwt-exit@opam:1.0@7669b970", "@opam/dune@opam:3.4.1@f4972aea",
         "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": [
         "@opam/uri@opam:4.2.0@9c45eeb8",
-        "@opam/tezos-stdlib-unix@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-stdlib-unix.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@afa1477a",
-        "@opam/tezos-signer-backends@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-signer-backends.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-shell-services@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-shell-services.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-rpc-http-client-unix@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-rpc-http-client-unix.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-rpc-http@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-rpc-http.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-proxy@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-proxy.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-mockup-registration@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-mockup-registration.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-mockup-commands@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-mockup-commands.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-mockup@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-mockup.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-client-commands@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-client-commands.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-client-base@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-client-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-base@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-stdlib-unix@path:vendors/tezos-ligo/opam/tezos-stdlib-unix.opam@afa1477a",
+        "@opam/tezos-signer-backends@path:vendors/tezos-ligo/opam/tezos-signer-backends.opam@d41d8cd9",
+        "@opam/tezos-shell-services@path:vendors/tezos-ligo/opam/tezos-shell-services.opam@d41d8cd9",
+        "@opam/tezos-rpc-http-client-unix@path:vendors/tezos-ligo/opam/tezos-rpc-http-client-unix.opam@d41d8cd9",
+        "@opam/tezos-rpc-http@path:vendors/tezos-ligo/opam/tezos-rpc-http.opam@d41d8cd9",
+        "@opam/tezos-proxy@path:vendors/tezos-ligo/opam/tezos-proxy.opam@d41d8cd9",
+        "@opam/tezos-mockup-registration@path:vendors/tezos-ligo/opam/tezos-mockup-registration.opam@d41d8cd9",
+        "@opam/tezos-mockup-commands@path:vendors/tezos-ligo/opam/tezos-mockup-commands.opam@d41d8cd9",
+        "@opam/tezos-mockup@path:vendors/tezos-ligo/opam/tezos-mockup.opam@d41d8cd9",
+        "@opam/tezos-client-commands@path:vendors/tezos-ligo/opam/tezos-client-commands.opam@d41d8cd9",
+        "@opam/tezos-client-base@path:vendors/tezos-ligo/opam/tezos-client-base.opam@d41d8cd9",
+        "@opam/tezos-base@path:vendors/tezos-ligo/opam/tezos-base.opam@d41d8cd9",
         "@opam/lwt-exit@opam:1.0@7669b970", "@opam/dune@opam:3.4.1@f4972aea"
       ]
     },
-    "@opam/tezos-client-base@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-client-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9": {
+    "@opam/tezos-client-base@path:vendors/tezos-ligo/opam/tezos-client-base.opam@d41d8cd9": {
       "id":
-        "@opam/tezos-client-base@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-client-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-client-base@path:vendors/tezos-ligo/opam/tezos-client-base.opam@d41d8cd9",
       "name": "@opam/tezos-client-base",
-      "version":
-        "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-client-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2",
+      "version": "path:vendors/tezos-ligo/opam/tezos-client-base.opam",
       "source": {
         "type": "install",
-        "source": [
-          "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-client-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2"
-        ]
+        "source": [ "path:vendors/tezos-ligo/opam/tezos-client-base.opam" ]
       },
       "overrides": [],
       "dependencies": [
         "@opam/uri@opam:4.2.0@9c45eeb8",
-        "@opam/tezos-shell-services@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-shell-services.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-sapling@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-sapling.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@0925dfd7",
-        "@opam/tezos-rpc@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-rpc.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-base@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-shell-services@path:vendors/tezos-ligo/opam/tezos-shell-services.opam@d41d8cd9",
+        "@opam/tezos-sapling@path:vendors/tezos-ligo/opam/tezos-sapling.opam@0925dfd7",
+        "@opam/tezos-rpc@path:vendors/tezos-ligo/opam/tezos-rpc.opam@d41d8cd9",
+        "@opam/tezos-base@path:vendors/tezos-ligo/opam/tezos-base.opam@d41d8cd9",
         "@opam/dune@opam:3.4.1@f4972aea", "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": [
         "@opam/uri@opam:4.2.0@9c45eeb8",
-        "@opam/tezos-shell-services@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-shell-services.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-sapling@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-sapling.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@0925dfd7",
-        "@opam/tezos-rpc@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-rpc.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-base@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-shell-services@path:vendors/tezos-ligo/opam/tezos-shell-services.opam@d41d8cd9",
+        "@opam/tezos-sapling@path:vendors/tezos-ligo/opam/tezos-sapling.opam@0925dfd7",
+        "@opam/tezos-rpc@path:vendors/tezos-ligo/opam/tezos-rpc.opam@d41d8cd9",
+        "@opam/tezos-base@path:vendors/tezos-ligo/opam/tezos-base.opam@d41d8cd9",
         "@opam/dune@opam:3.4.1@f4972aea"
       ]
     },
-    "@opam/tezos-client-014-PtKathma@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-client-014-PtKathma.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9": {
+    "@opam/tezos-client-014-PtKathma@path:vendors/tezos-ligo/opam/tezos-client-014-PtKathma.opam@d41d8cd9": {
       "id":
-        "@opam/tezos-client-014-PtKathma@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-client-014-PtKathma.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-client-014-PtKathma@path:vendors/tezos-ligo/opam/tezos-client-014-PtKathma.opam@d41d8cd9",
       "name": "@opam/tezos-client-014-PtKathma",
       "version":
-        "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-client-014-PtKathma.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2",
+        "path:vendors/tezos-ligo/opam/tezos-client-014-PtKathma.opam",
       "source": {
         "type": "install",
         "source": [
-          "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-client-014-PtKathma.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2"
+          "path:vendors/tezos-ligo/opam/tezos-client-014-PtKathma.opam"
         ]
       },
       "overrides": [],
       "dependencies": [
         "@opam/uri@opam:4.2.0@9c45eeb8",
-        "@opam/tezos-stdlib-unix@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-stdlib-unix.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@afa1477a",
-        "@opam/tezos-signer-backends@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-signer-backends.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-shell-services@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-shell-services.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-rpc@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-rpc.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-proxy@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-proxy.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-protocol-plugin-014-PtKathma@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-protocol-plugin-014-PtKathma.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-protocol-environment@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-protocol-environment.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-protocol-014-PtKathma@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-protocol-014-PtKathma.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@9597d3bd",
-        "@opam/tezos-mockup-registration@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-mockup-registration.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-mockup-commands@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-mockup-commands.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-mockup@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-mockup.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-crypto@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-crypto.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@ac44ca2e",
-        "@opam/tezos-client-commands@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-client-commands.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-client-base-unix@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-client-base-unix.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-client-base@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-client-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-base@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-stdlib-unix@path:vendors/tezos-ligo/opam/tezos-stdlib-unix.opam@afa1477a",
+        "@opam/tezos-signer-backends@path:vendors/tezos-ligo/opam/tezos-signer-backends.opam@d41d8cd9",
+        "@opam/tezos-shell-services@path:vendors/tezos-ligo/opam/tezos-shell-services.opam@d41d8cd9",
+        "@opam/tezos-rpc@path:vendors/tezos-ligo/opam/tezos-rpc.opam@d41d8cd9",
+        "@opam/tezos-proxy@path:vendors/tezos-ligo/opam/tezos-proxy.opam@d41d8cd9",
+        "@opam/tezos-protocol-plugin-014-PtKathma@path:vendors/tezos-ligo/opam/tezos-protocol-plugin-014-PtKathma.opam@d41d8cd9",
+        "@opam/tezos-protocol-environment@path:vendors/tezos-ligo/opam/tezos-protocol-environment.opam@d41d8cd9",
+        "@opam/tezos-protocol-014-PtKathma@path:vendors/tezos-ligo/opam/tezos-protocol-014-PtKathma.opam@9597d3bd",
+        "@opam/tezos-mockup-registration@path:vendors/tezos-ligo/opam/tezos-mockup-registration.opam@d41d8cd9",
+        "@opam/tezos-mockup-commands@path:vendors/tezos-ligo/opam/tezos-mockup-commands.opam@d41d8cd9",
+        "@opam/tezos-mockup@path:vendors/tezos-ligo/opam/tezos-mockup.opam@d41d8cd9",
+        "@opam/tezos-crypto@path:vendors/tezos-ligo/opam/tezos-crypto.opam@ac44ca2e",
+        "@opam/tezos-client-commands@path:vendors/tezos-ligo/opam/tezos-client-commands.opam@d41d8cd9",
+        "@opam/tezos-client-base-unix@path:vendors/tezos-ligo/opam/tezos-client-base-unix.opam@d41d8cd9",
+        "@opam/tezos-client-base@path:vendors/tezos-ligo/opam/tezos-client-base.opam@d41d8cd9",
+        "@opam/tezos-base@path:vendors/tezos-ligo/opam/tezos-base.opam@d41d8cd9",
         "@opam/ppx_expect@opam:v0.14.2@b6279606",
         "@opam/dune@opam:3.4.1@f4972aea", "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": [
         "@opam/uri@opam:4.2.0@9c45eeb8",
-        "@opam/tezos-stdlib-unix@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-stdlib-unix.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@afa1477a",
-        "@opam/tezos-signer-backends@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-signer-backends.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-shell-services@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-shell-services.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-rpc@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-rpc.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-proxy@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-proxy.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-protocol-plugin-014-PtKathma@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-protocol-plugin-014-PtKathma.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-protocol-environment@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-protocol-environment.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-protocol-014-PtKathma@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-protocol-014-PtKathma.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@9597d3bd",
-        "@opam/tezos-mockup-registration@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-mockup-registration.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-mockup-commands@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-mockup-commands.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-mockup@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-mockup.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-crypto@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-crypto.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@ac44ca2e",
-        "@opam/tezos-client-commands@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-client-commands.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-client-base-unix@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-client-base-unix.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-client-base@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-client-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-base@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-stdlib-unix@path:vendors/tezos-ligo/opam/tezos-stdlib-unix.opam@afa1477a",
+        "@opam/tezos-signer-backends@path:vendors/tezos-ligo/opam/tezos-signer-backends.opam@d41d8cd9",
+        "@opam/tezos-shell-services@path:vendors/tezos-ligo/opam/tezos-shell-services.opam@d41d8cd9",
+        "@opam/tezos-rpc@path:vendors/tezos-ligo/opam/tezos-rpc.opam@d41d8cd9",
+        "@opam/tezos-proxy@path:vendors/tezos-ligo/opam/tezos-proxy.opam@d41d8cd9",
+        "@opam/tezos-protocol-plugin-014-PtKathma@path:vendors/tezos-ligo/opam/tezos-protocol-plugin-014-PtKathma.opam@d41d8cd9",
+        "@opam/tezos-protocol-environment@path:vendors/tezos-ligo/opam/tezos-protocol-environment.opam@d41d8cd9",
+        "@opam/tezos-protocol-014-PtKathma@path:vendors/tezos-ligo/opam/tezos-protocol-014-PtKathma.opam@9597d3bd",
+        "@opam/tezos-mockup-registration@path:vendors/tezos-ligo/opam/tezos-mockup-registration.opam@d41d8cd9",
+        "@opam/tezos-mockup-commands@path:vendors/tezos-ligo/opam/tezos-mockup-commands.opam@d41d8cd9",
+        "@opam/tezos-mockup@path:vendors/tezos-ligo/opam/tezos-mockup.opam@d41d8cd9",
+        "@opam/tezos-crypto@path:vendors/tezos-ligo/opam/tezos-crypto.opam@ac44ca2e",
+        "@opam/tezos-client-commands@path:vendors/tezos-ligo/opam/tezos-client-commands.opam@d41d8cd9",
+        "@opam/tezos-client-base-unix@path:vendors/tezos-ligo/opam/tezos-client-base-unix.opam@d41d8cd9",
+        "@opam/tezos-client-base@path:vendors/tezos-ligo/opam/tezos-client-base.opam@d41d8cd9",
+        "@opam/tezos-base@path:vendors/tezos-ligo/opam/tezos-base.opam@d41d8cd9",
         "@opam/ppx_expect@opam:v0.14.2@b6279606",
         "@opam/dune@opam:3.4.1@f4972aea"
       ]
     },
-    "@opam/tezos-clic@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-clic.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@0fb68dda": {
+    "@opam/tezos-clic@path:vendors/tezos-ligo/opam/tezos-clic.opam@0fb68dda": {
       "id":
-        "@opam/tezos-clic@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-clic.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@0fb68dda",
+        "@opam/tezos-clic@path:vendors/tezos-ligo/opam/tezos-clic.opam@0fb68dda",
       "name": "@opam/tezos-clic",
-      "version":
-        "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-clic.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2",
+      "version": "path:vendors/tezos-ligo/opam/tezos-clic.opam",
       "source": {
         "type": "install",
-        "source": [
-          "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-clic.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2"
-        ]
+        "source": [ "path:vendors/tezos-ligo/opam/tezos-clic.opam" ]
       },
       "overrides": [
         { "dependencies": { "@opam/tezos-lwt-result-stdlib": "*" } }
       ],
       "dependencies": [
-        "@opam/tezos-stdlib-unix@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-stdlib-unix.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@afa1477a",
-        "@opam/tezos-stdlib@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-stdlib.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-lwt-result-stdlib@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-lwt-result-stdlib.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-error-monad@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-error-monad.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@0fb68dda",
+        "@opam/tezos-stdlib-unix@path:vendors/tezos-ligo/opam/tezos-stdlib-unix.opam@afa1477a",
+        "@opam/tezos-stdlib@path:vendors/tezos-ligo/opam/tezos-stdlib.opam@d41d8cd9",
+        "@opam/tezos-lwt-result-stdlib@path:vendors/tezos-ligo/opam/tezos-lwt-result-stdlib.opam@d41d8cd9",
+        "@opam/tezos-error-monad@path:vendors/tezos-ligo/opam/tezos-error-monad.opam@0fb68dda",
         "@opam/re@opam:1.10.4@c4910ba6", "@opam/lwt@opam:5.5.0@5f354b35",
         "@opam/dune@opam:3.4.1@f4972aea", "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": [
-        "@opam/tezos-stdlib-unix@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-stdlib-unix.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@afa1477a",
-        "@opam/tezos-stdlib@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-stdlib.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-lwt-result-stdlib@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-lwt-result-stdlib.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-error-monad@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-error-monad.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@0fb68dda",
+        "@opam/tezos-stdlib-unix@path:vendors/tezos-ligo/opam/tezos-stdlib-unix.opam@afa1477a",
+        "@opam/tezos-stdlib@path:vendors/tezos-ligo/opam/tezos-stdlib.opam@d41d8cd9",
+        "@opam/tezos-lwt-result-stdlib@path:vendors/tezos-ligo/opam/tezos-lwt-result-stdlib.opam@d41d8cd9",
+        "@opam/tezos-error-monad@path:vendors/tezos-ligo/opam/tezos-error-monad.opam@0fb68dda",
         "@opam/re@opam:1.10.4@c4910ba6", "@opam/lwt@opam:5.5.0@5f354b35",
         "@opam/dune@opam:3.4.1@f4972aea"
       ]
@@ -2266,30 +2194,27 @@
         "@opam/bigstringaf@opam:0.9.0@5762d1bc"
       ]
     },
-    "@opam/tezos-base@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9": {
+    "@opam/tezos-base@path:vendors/tezos-ligo/opam/tezos-base.opam@d41d8cd9": {
       "id":
-        "@opam/tezos-base@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-base@path:vendors/tezos-ligo/opam/tezos-base.opam@d41d8cd9",
       "name": "@opam/tezos-base",
-      "version":
-        "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2",
+      "version": "path:vendors/tezos-ligo/opam/tezos-base.opam",
       "source": {
         "type": "install",
-        "source": [
-          "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2"
-        ]
+        "source": [ "path:vendors/tezos-ligo/opam/tezos-base.opam" ]
       },
       "overrides": [],
       "dependencies": [
         "@opam/uri@opam:4.2.0@9c45eeb8",
-        "@opam/tezos-stdlib-unix@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-stdlib-unix.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@afa1477a",
-        "@opam/tezos-stdlib@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-stdlib.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-rpc@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-rpc.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-micheline@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-micheline.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-hacl@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-hacl.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-event-logging@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-event-logging.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@0ab68e7a",
-        "@opam/tezos-error-monad@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-error-monad.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@0fb68dda",
-        "@opam/tezos-crypto@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-crypto.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@ac44ca2e",
-        "@opam/tezos-clic@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-clic.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@0fb68dda",
+        "@opam/tezos-stdlib-unix@path:vendors/tezos-ligo/opam/tezos-stdlib-unix.opam@afa1477a",
+        "@opam/tezos-stdlib@path:vendors/tezos-ligo/opam/tezos-stdlib.opam@d41d8cd9",
+        "@opam/tezos-rpc@path:vendors/tezos-ligo/opam/tezos-rpc.opam@d41d8cd9",
+        "@opam/tezos-micheline@path:vendors/tezos-ligo/opam/tezos-micheline.opam@d41d8cd9",
+        "@opam/tezos-hacl@path:vendors/tezos-ligo/opam/tezos-hacl.opam@d41d8cd9",
+        "@opam/tezos-event-logging@path:vendors/tezos-ligo/opam/tezos-event-logging.opam@0ab68e7a",
+        "@opam/tezos-error-monad@path:vendors/tezos-ligo/opam/tezos-error-monad.opam@0fb68dda",
+        "@opam/tezos-crypto@path:vendors/tezos-ligo/opam/tezos-crypto.opam@ac44ca2e",
+        "@opam/tezos-clic@path:vendors/tezos-ligo/opam/tezos-clic.opam@0fb68dda",
         "@opam/ptime@opam:1.0.0@e04fef10", "@opam/lwt@opam:5.5.0@5f354b35",
         "@opam/ipaddr@opam:5.3.1@fe286ff4",
         "@opam/ezjsonm@opam:1.3.0@7e3d4a08",
@@ -2299,15 +2224,15 @@
       ],
       "devDependencies": [
         "@opam/uri@opam:4.2.0@9c45eeb8",
-        "@opam/tezos-stdlib-unix@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-stdlib-unix.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@afa1477a",
-        "@opam/tezos-stdlib@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-stdlib.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-rpc@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-rpc.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-micheline@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-micheline.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-hacl@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-hacl.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-event-logging@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-event-logging.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@0ab68e7a",
-        "@opam/tezos-error-monad@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-error-monad.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@0fb68dda",
-        "@opam/tezos-crypto@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-crypto.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@ac44ca2e",
-        "@opam/tezos-clic@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-clic.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@0fb68dda",
+        "@opam/tezos-stdlib-unix@path:vendors/tezos-ligo/opam/tezos-stdlib-unix.opam@afa1477a",
+        "@opam/tezos-stdlib@path:vendors/tezos-ligo/opam/tezos-stdlib.opam@d41d8cd9",
+        "@opam/tezos-rpc@path:vendors/tezos-ligo/opam/tezos-rpc.opam@d41d8cd9",
+        "@opam/tezos-micheline@path:vendors/tezos-ligo/opam/tezos-micheline.opam@d41d8cd9",
+        "@opam/tezos-hacl@path:vendors/tezos-ligo/opam/tezos-hacl.opam@d41d8cd9",
+        "@opam/tezos-event-logging@path:vendors/tezos-ligo/opam/tezos-event-logging.opam@0ab68e7a",
+        "@opam/tezos-error-monad@path:vendors/tezos-ligo/opam/tezos-error-monad.opam@0fb68dda",
+        "@opam/tezos-crypto@path:vendors/tezos-ligo/opam/tezos-crypto.opam@ac44ca2e",
+        "@opam/tezos-clic@path:vendors/tezos-ligo/opam/tezos-clic.opam@0fb68dda",
         "@opam/ptime@opam:1.0.0@e04fef10", "@opam/lwt@opam:5.5.0@5f354b35",
         "@opam/ipaddr@opam:5.3.1@fe286ff4",
         "@opam/ezjsonm@opam:1.3.0@7e3d4a08",
@@ -2315,44 +2240,44 @@
         "@opam/data-encoding@opam:0.6@713694f0"
       ]
     },
-    "@opam/tezos-014-PtKathma-test-helpers@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-014-PtKathma-test-helpers.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9": {
+    "@opam/tezos-014-PtKathma-test-helpers@path:vendors/tezos-ligo/opam/tezos-014-PtKathma-test-helpers.opam@d41d8cd9": {
       "id":
-        "@opam/tezos-014-PtKathma-test-helpers@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-014-PtKathma-test-helpers.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-014-PtKathma-test-helpers@path:vendors/tezos-ligo/opam/tezos-014-PtKathma-test-helpers.opam@d41d8cd9",
       "name": "@opam/tezos-014-PtKathma-test-helpers",
       "version":
-        "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-014-PtKathma-test-helpers.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2",
+        "path:vendors/tezos-ligo/opam/tezos-014-PtKathma-test-helpers.opam",
       "source": {
         "type": "install",
         "source": [
-          "git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-014-PtKathma-test-helpers.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2"
+          "path:vendors/tezos-ligo/opam/tezos-014-PtKathma-test-helpers.opam"
         ]
       },
       "overrides": [],
       "dependencies": [
-        "@opam/tezos-test-helpers@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-test-helpers.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-stdlib-unix@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-stdlib-unix.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@afa1477a",
-        "@opam/tezos-shell-services@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-shell-services.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-protocol-plugin-014-PtKathma@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-protocol-plugin-014-PtKathma.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-protocol-environment@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-protocol-environment.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-protocol-014-PtKathma@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-protocol-014-PtKathma.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@9597d3bd",
-        "@opam/tezos-micheline@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-micheline.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-client-014-PtKathma@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-client-014-PtKathma.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-base@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-test-helpers@path:vendors/tezos-ligo/opam/tezos-test-helpers.opam@d41d8cd9",
+        "@opam/tezos-stdlib-unix@path:vendors/tezos-ligo/opam/tezos-stdlib-unix.opam@afa1477a",
+        "@opam/tezos-shell-services@path:vendors/tezos-ligo/opam/tezos-shell-services.opam@d41d8cd9",
+        "@opam/tezos-protocol-plugin-014-PtKathma@path:vendors/tezos-ligo/opam/tezos-protocol-plugin-014-PtKathma.opam@d41d8cd9",
+        "@opam/tezos-protocol-environment@path:vendors/tezos-ligo/opam/tezos-protocol-environment.opam@d41d8cd9",
+        "@opam/tezos-protocol-014-PtKathma@path:vendors/tezos-ligo/opam/tezos-protocol-014-PtKathma.opam@9597d3bd",
+        "@opam/tezos-micheline@path:vendors/tezos-ligo/opam/tezos-micheline.opam@d41d8cd9",
+        "@opam/tezos-client-014-PtKathma@path:vendors/tezos-ligo/opam/tezos-client-014-PtKathma.opam@d41d8cd9",
+        "@opam/tezos-base@path:vendors/tezos-ligo/opam/tezos-base.opam@d41d8cd9",
         "@opam/qcheck-alcotest@opam:0.19.1@9c40e637",
         "@opam/dune@opam:3.4.1@f4972aea",
         "@opam/alcotest-lwt@opam:1.6.0@990f59a4",
         "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": [
-        "@opam/tezos-test-helpers@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-test-helpers.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-stdlib-unix@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-stdlib-unix.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@afa1477a",
-        "@opam/tezos-shell-services@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-shell-services.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-protocol-plugin-014-PtKathma@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-protocol-plugin-014-PtKathma.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-protocol-environment@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-protocol-environment.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-protocol-014-PtKathma@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-protocol-014-PtKathma.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@9597d3bd",
-        "@opam/tezos-micheline@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-micheline.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-client-014-PtKathma@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-client-014-PtKathma.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
-        "@opam/tezos-base@git:https://gitlab.com/ligolang/tezos-ligo:opam/tezos-base.opam#de7e9bb06b9a6fb85ce94cea43df5a1a67b14dd2@d41d8cd9",
+        "@opam/tezos-test-helpers@path:vendors/tezos-ligo/opam/tezos-test-helpers.opam@d41d8cd9",
+        "@opam/tezos-stdlib-unix@path:vendors/tezos-ligo/opam/tezos-stdlib-unix.opam@afa1477a",
+        "@opam/tezos-shell-services@path:vendors/tezos-ligo/opam/tezos-shell-services.opam@d41d8cd9",
+        "@opam/tezos-protocol-plugin-014-PtKathma@path:vendors/tezos-ligo/opam/tezos-protocol-plugin-014-PtKathma.opam@d41d8cd9",
+        "@opam/tezos-protocol-environment@path:vendors/tezos-ligo/opam/tezos-protocol-environment.opam@d41d8cd9",
+        "@opam/tezos-protocol-014-PtKathma@path:vendors/tezos-ligo/opam/tezos-protocol-014-PtKathma.opam@9597d3bd",
+        "@opam/tezos-micheline@path:vendors/tezos-ligo/opam/tezos-micheline.opam@d41d8cd9",
+        "@opam/tezos-client-014-PtKathma@path:vendors/tezos-ligo/opam/tezos-client-014-PtKathma.opam@d41d8cd9",
+        "@opam/tezos-base@path:vendors/tezos-ligo/opam/tezos-base.opam@d41d8cd9",
         "@opam/qcheck-alcotest@opam:0.19.1@9c40e637",
         "@opam/dune@opam:3.4.1@f4972aea",
         "@opam/alcotest-lwt@opam:1.6.0@990f59a4"
