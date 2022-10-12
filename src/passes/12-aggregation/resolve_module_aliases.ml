@@ -69,7 +69,7 @@ let rec expression : Aliases.t -> AST.expression -> AST.expression = fun aliases
     let r = Recursive.map self self_type r in
     return @@ E_recursive r
   | E_let_in {let_binder;rhs;let_result;attributes} ->
-    let let_binder =  Pattern.map self_type let_binder in
+    let let_binder = AST.Pattern.map self_type let_binder in
     let rhs = self rhs in
     let let_result = self let_result in
     return @@ E_let_in {let_binder;rhs;let_result;attributes}
@@ -130,23 +130,13 @@ let rec expression : Aliases.t -> AST.expression -> AST.expression = fun aliases
     let while_loop = While_loop.map self while_loop in
     return @@ E_while while_loop
 
-and matching_cases : Aliases.t -> AST.matching_expr -> AST.matching_expr = fun scope me ->
+and matching_cases 
+: Aliases.t -> (AST.expression, AST.type_expression) AST.Match_expr.match_case list
+  -> (AST.expression, AST.type_expression) AST.Match_expr.match_case list
+= fun scope me ->
   let self ?(scope = scope) = expression scope in
   let self_type ?(scope = scope) = type_expression scope in
-  let return x = x in
-  match me with
-    Match_variant {cases;tv} ->
-    let cases = List.map ~f:AST.(fun {constructor;pattern;body} ->
-        let body = self body in
-        {constructor;pattern;body}
-      ) cases in
-    let tv   = self_type tv in
-    return @@ AST.Match_variant {cases;tv}
-  | Match_record {fields;body;tv} ->
-    let fields = Record.map (Binder.map self_type) fields in
-    let body = self body in
-    let tv   = self_type tv in
-    return @@ AST.Match_record {fields;body;tv}
+  List.map me ~f:(AST.Match_expr.map_match_case self self_type)
 
 and compile_declaration aliases (d : AST.declaration) : Aliases.t * AST.declaration option =
   let return_s aliases wrap_content = aliases, Some {d with wrap_content} in

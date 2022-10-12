@@ -7,7 +7,7 @@ module AST = Ast_aggregated
 include AST.Types
 module Env = Ligo_interpreter.Environment
 module Monad = Execution_monad
-module ModResHelpers = Preprocessor.ModRes.Helpers
+module ModRes = Preprocessor.ModRes
 
 type interpreter_error = Errors.interpreter_error
 
@@ -18,18 +18,18 @@ let not_comparable_string = v_string "Not comparable"
    if that fails it tries to resolve it as a relative path w.r.t. directory of [source_file]
    if that fails it tries to resolve it as a package path using [mod_res] *)
 let resolve_contract_file ~mod_res ~source_file ~contract_file =
-  match Sys.file_exists contract_file with
+  match Sys_unix.file_exists contract_file with
   | `Yes -> contract_file
   | `No | `Unknown ->
     (match source_file with
      | Some source_file ->
        let d = Filename.dirname source_file in
        let s = Filename.concat d contract_file in
-       (match Sys.file_exists s with
+       (match Sys_unix.file_exists s with
         | `Yes -> s
         | `No | `Unknown ->
-          ModResHelpers.resolve_file_name contract_file mod_res)
-     | None -> ModResHelpers.resolve_file_name contract_file mod_res)
+          ModRes.Helpers.resolve ~file:contract_file mod_res)
+     | None -> ModRes.Helpers.resolve ~file:contract_file mod_res)
 
 
 let get_file_from_location loc =
@@ -227,6 +227,7 @@ let bind_param
       let@ () = Free loc in
       return result
 
+
 let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
   :  Location.t -> calltrace -> AST.type_expression -> env -> Constant.constant'
   -> (value * AST.type_expression * Location.t) list -> value Monad.t
@@ -289,6 +290,12 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
   | C_NEG, [ V_Ct (C_bls12_381_fr a') ] ->
     return @@ v_bls12_381_fr (Bls12_381.Fr.negate a')
   | C_NEG, _ -> fail @@ error_type ()
+  | C_INT, [ V_Ct (C_nat a') ] -> return @@ v_int a'
+  | C_INT, [ V_Ct (C_bls12_381_fr a') ] ->
+    return @@ v_int (Bls12_381.Fr.to_z a')
+  | C_INT, _ -> fail @@ error_type ()
+  | C_ABS, [ V_Ct (C_int a') ] -> return @@ v_nat (Z.abs a')
+  | C_ABS, _ -> fail @@ error_type ()
   | C_SOME, [ v ] -> return @@ v_some v
   | C_SOME, _ -> fail @@ error_type ()
   | C_ADDRESS, [ V_Ct (C_contract { address; entrypoint = _ }) ] ->
@@ -299,19 +306,6 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
     let>> value = Unpack (loc, bytes, value_ty) in
     return value
   | C_BYTES_UNPACK, _ -> fail @@ error_type ()
-  | C_UNOPT, [ v ] ->
-    (match get_option v with
-     | Some (Some value) -> return @@ value
-     | Some None ->
-       fail @@ Errors.meta_lang_eval loc calltrace (v_string "option is None")
-     | None -> fail @@ Errors.generic_error loc "Expected option type")
-  | C_UNOPT, _ -> fail @@ error_type ()
-  | C_UNOPT_WITH_ERROR, [ v; V_Ct (C_string s) ] ->
-    (match get_option v with
-     | Some (Some value) -> return @@ value
-     | Some None -> fail @@ Errors.meta_lang_eval loc calltrace (v_string s)
-     | None -> fail @@ Errors.generic_error loc "Expected option type")
-  | C_UNOPT_WITH_ERROR, _ -> fail @@ error_type ()
   | C_MAP_FIND_OPT, [ k; V_Map l ] ->
     (match List.Assoc.find ~equal:LC.equal_value l k with
      | Some v -> return @@ v_some v
@@ -776,6 +770,9 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
        return @@ V_Map (List.Assoc.remove ~equal:LC.equal_value kvs k)
      | _ -> assert false)
   | C_MAP_UPDATE, _ -> fail @@ error_type ()
+  | C_MAP_MEM, [ k; V_Map kvs ] ->
+    return @@ v_bool (List.Assoc.mem ~equal:LC.equal_value kvs k)
+  | C_MAP_MEM, _ -> fail @@ error_type ()
   | C_BIG_MAP_GET_AND_UPDATE, [ k; option; V_Map kvs ]
   | C_MAP_GET_AND_UPDATE, [ k; option; V_Map kvs ] ->
     let old_value = List.Assoc.find ~equal:LC.equal_value kvs k in
@@ -990,6 +987,28 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
      | None -> fail @@ Errors.meta_lang_failwith loc calltrace (LC.v_string msg)
      | Some value -> return @@ value)
   | C_CONTRACT_WITH_ERROR, _ -> fail @@ error_type ()
+  | C_LIST_SIZE, [ V_List l ] -> return @@ v_nat (Z.of_int @@ List.length l)
+  | C_LIST_SIZE, _ -> fail @@ error_type ()
+  | C_SET_SIZE, [ V_Set l ] -> return @@ v_nat (Z.of_int @@ List.length l)
+  | C_SET_SIZE, _ -> fail @@ error_type ()
+  | C_MAP_SIZE, [ V_Map l ] -> return @@ v_nat (Z.of_int @@ List.length l)
+  | C_MAP_SIZE, _ -> fail @@ error_type ()
+  | C_SIZE, [ V_Ct (C_string s) ] ->
+    return @@ v_nat (Z.of_int @@ String.length s)
+  | C_SIZE, [ V_Ct (C_bytes b) ] -> return @@ v_nat (Z.of_int @@ Bytes.length b)
+  | C_SIZE, _ -> fail @@ error_type ()
+  | C_SLICE, [ V_Ct (C_nat st); V_Ct (C_nat ed); V_Ct (C_string s) ] ->
+    (*TODO : allign with tezos*)
+    return @@ v_string (String.sub s ~pos:(Z.to_int st) ~len:(Z.to_int ed))
+  | C_SLICE, [ V_Ct (C_nat start); V_Ct (C_nat length); V_Ct (C_bytes bytes) ]
+    ->
+    let start = Z.to_int start in
+    let length = Z.to_int length in
+    if start > Bytes.length bytes || start + length > Bytes.length bytes
+    then
+      fail @@ Errors.meta_lang_failwith loc calltrace (V_Ct (C_string "SLICE"))
+    else return @@ v_bytes (Bytes.sub bytes ~pos:start ~len:length)
+  | C_SLICE, _ -> fail @@ error_type ()
   (*
     >>>>>>>>
       Test operators
@@ -1210,8 +1229,8 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
     let id = Fuzz.Ast_aggregated.get_mutation_id mutation in
     let file_path = reg#file in
     (try
-       let odir = Sys.getcwd () in
-       let () = Sys.chdir dir in
+       let odir = Sys_unix.getcwd () in
+       let () = Sys_unix.chdir dir in
        let file_path = Filename.basename file_path in
        let file_path =
          Caml.Filename.remove_extension file_path
@@ -1221,7 +1240,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
        in
        let out_chan = Out_channel.create file_path in
        let () = Caml.Buffer.output_buffer out_chan file_contents in
-       let () = Sys.chdir odir in
+       let () = Sys_unix.chdir odir in
        return (v_some (v_string file_path))
      with
      | Sys_error _ -> return (v_none ()))
@@ -1426,26 +1445,6 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
   | C_TEST_INT64_TO_INT, [ V_Ct (C_int64 n) ] ->
     return @@ V_Ct (C_int (Z.of_int64 n))
   | C_TEST_INT64_TO_INT, _ -> fail @@ error_type ()
-  (* Added only for performance *)
-  | C_TEST_INT, [ V_Ct (C_nat a') ] -> return @@ v_int a'
-  | C_TEST_INT, [ V_Ct (C_bls12_381_fr a') ] ->
-    return @@ v_int (Bls12_381.Fr.to_z a')
-  | C_TEST_INT, _ -> fail @@ error_type ()
-  | C_TEST_ABS, [ V_Ct (C_int a') ] -> return @@ v_nat (Z.abs a')
-  | C_TEST_ABS, _ -> fail @@ error_type ()
-  | C_TEST_SLICE, [ V_Ct (C_nat st); V_Ct (C_nat ed); V_Ct (C_string s) ] ->
-    (*TODO : allign with tezos*)
-    return
-    @@ V_Ct (C_string (String.sub s ~pos:(Z.to_int st) ~len:(Z.to_int ed)))
-  | ( C_TEST_SLICE
-    , [ V_Ct (C_nat start); V_Ct (C_nat length); V_Ct (C_bytes bytes) ] ) ->
-    let start = Z.to_int start in
-    let length = Z.to_int length in
-    if start > Bytes.length bytes || start + length > Bytes.length bytes
-    then
-      fail @@ Errors.meta_lang_failwith loc calltrace (V_Ct (C_string "SLICE"))
-    else return @@ V_Ct (C_bytes (Bytes.sub bytes ~pos:start ~len:length))
-  | C_TEST_SLICE, _ -> fail @@ error_type ()
   | (C_SAPLING_VERIFY_UPDATE | C_SAPLING_EMPTY_STATE), _ ->
     fail @@ Errors.generic_error loc "Sapling is not supported."
   | C_EMIT_EVENT, _ -> fail @@ Errors.generic_error loc "Can't emit event here"
@@ -1845,12 +1844,12 @@ and eval_ligo ~raise ~steps ~options
       | Some ({ eval_term = V_location loc; _ }, _, _) -> loc
       | _ ->
         failwith
-        (Format.asprintf
-           "@[<hv>%a@.unbound variable mutable: %a@]"
-           Snippet.pp
-           term.location
-           Value_var.pp
-           mut_var)
+          (Format.asprintf
+             "@[<hv>%a@.unbound variable mutable: %a@]"
+             Snippet.pp
+             term.location
+             Value_var.pp
+             mut_var)
     in
     let@ val_ = Deref loc in
     return val_
@@ -1861,7 +1860,10 @@ and eval_ligo ~raise ~steps ~options
       eval_ligo
         let_result
         calltrace
-        (Env.extend env (Binder.get_var let_binder) (rhs.type_expression, V_location loc))
+        (Env.extend
+           env
+           (Binder.get_var let_binder)
+           (rhs.type_expression, V_location loc))
     in
     let@ () = Free loc in
     return let_result

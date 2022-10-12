@@ -115,7 +115,7 @@ and compile_expression' ~raise ~last : I.expression -> O.expression option -> O.
       let recs = Recursive.map self self_type recs in
       return @@ O.E_recursive recs
     | I.E_let_in {let_binder;attributes;rhs;let_result} ->
-      let let_binder = Pattern.map self_type_option let_binder in
+      let let_binder = I.Pattern.map self_type_option let_binder in
       let rhs = self rhs in
       let let_result = self let_result in
       return @@ O.E_let_in {let_binder;attributes; rhs; let_result}
@@ -134,10 +134,12 @@ and compile_expression' ~raise ~last : I.expression -> O.expression option -> O.
       return @@ O.E_constructor const
     | I.E_matching {matchee;cases} ->
       let matchee = self matchee in
-      let aux Match_expr.{pattern;body} =
-        let pattern = Pattern.map (Option.map ~f:(compile_type_expression ~raise)) pattern in
-        Match_expr.{pattern;body = self body} in
+      let aux I.Match_expr.{pattern;body} =
+        let pattern = Pattern.Conv.l_to_r pattern in
+        let pattern = O.Pattern.map (Option.map ~f:(compile_type_expression ~raise)) pattern in
+        O.Match_expr.{pattern;body = self body} in
       let cases   = List.map ~f:aux cases in
+      (* let cases = Record.LMap.of_list cases in *)
       return @@ O.E_matching {matchee;cases}
     | I.E_record recd ->
       (* at this point record expression become linear wrt labels *)
@@ -203,7 +205,7 @@ and compile_expression' ~raise ~last : I.expression -> O.expression option -> O.
       let body = compile_expression ~raise ~last body in
       return @@ O.E_while { cond; body }
     | I.E_let_mut_in {let_binder;attributes;rhs;let_result} ->
-      let let_binder = Pattern.map self_type_option let_binder in
+      let let_binder = I.Pattern.map self_type_option let_binder in
       let rhs = self rhs in
       let let_result = self let_result in
       return @@ O.E_let_mut_in {let_binder;attributes; rhs; let_result}
@@ -216,7 +218,7 @@ and compile_declaration ~raise : I.declaration -> O.declaration = fun d ->
     let expr   = compile_expression ~raise ~last:true expr in
     return @@ D_value {binder;expr;attr}
   | D_pattern {pattern;expr;attr} ->
-    let pattern = Pattern.map (compile_type_expression_option ~raise) pattern in
+    let pattern = I.Pattern.map (compile_type_expression_option ~raise) pattern in
     let expr   = compile_expression ~raise ~last:true expr in
     return @@ D_pattern {pattern;expr;attr}
   | D_type {type_binder;type_expr;type_attr} ->

@@ -168,7 +168,7 @@ let e_module_accessor ?loc ?sugar module_path element = e_module_accessor ?loc ?
 let e_ascription ?loc ?sugar anno_expr type_annotation  : expression = e_ascription ?loc ?sugar {anno_expr;type_annotation} ()
 let e_lambda_ez  ?loc var ?ascr ?mut_flag output_type result : expression = e_lambda ?loc (Ligo_prim.Param.make ?mut_flag var ascr) output_type result
 let e_let_in_ez  ?loc var ?ascr ?(mut = false) attributes rhs let_result = 
-  let binder = Pattern.var_pattern (Binder.make var ascr) in
+  let binder = Types.Pattern.var_pattern (Binder.make var ascr) in
   if mut then e_let_mut_in ?loc binder attributes rhs let_result
   else e_let_in ?loc binder attributes rhs let_result
 

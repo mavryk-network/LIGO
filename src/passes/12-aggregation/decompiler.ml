@@ -40,8 +40,9 @@ let rec decompile ~raise : Ast_aggregated.expression -> Ast_typed.expression =
        let rhs = decompile ~raise rhs in
        let let_result = decompile ~raise let_result in
        let let_binder = Binder.map (decompile_type ~raise) let_binder in
-         let attr = decompile_value_attr attr in
-       return (O.E_let_in { let_binder ; rhs ; let_result ; attr })
+       let let_binder = O.Pattern.var_pattern let_binder in
+       let attributes = decompile_value_attr attr in
+       return (O.E_let_in { let_binder ; rhs ; let_result ; attributes })
     | E_raw_code { language ; code } ->
        let code = decompile ~raise code in
        return (O.E_raw_code { language ; code })
@@ -54,19 +55,48 @@ let rec decompile ~raise : Ast_aggregated.expression -> Ast_typed.expression =
        let element = decompile ~raise element in
        return (O.E_constructor { constructor ; element })
     | E_matching { matchee ; cases = Match_variant { cases ; tv } } ->
-       let matchee = decompile ~raise matchee in
-       let tv = decompile_type ~raise tv in
-       let f { I.constructor ; pattern ; body } =
-         let body = decompile ~raise body in
-         { O.constructor ; pattern ; body } in
-       let cases = List.map ~f cases in
-       return (O.E_matching { matchee ; cases = Match_variant { cases ; tv } })
-    | E_matching { matchee ; cases = Match_record { fields ; body ; tv } } ->
-       let matchee = decompile ~raise matchee in
-       let tv = decompile_type ~raise tv in
-       let body = decompile ~raise body in
-       let fields = Record.map (Binder.map (decompile_type ~raise)) fields in
-       return (O.E_matching { matchee ; cases = Match_record { fields ; body ; tv } })
+      let matchee = decompile ~raise matchee in
+      let aux : _ I.matching_content_case -> _ Ast_typed.Match_expr.match_case =
+         fun { constructor ; pattern ; body } -> (
+           let pattern =
+            (* Note copied from Ast_typed untyper:
+              If one day this code is actually executed, and if the list type is still not a tuple type.
+              A special case for lists might be required here
+            *)
+            let tv = decompile_type ~raise tv in
+            let proj = Location.wrap @@ Ast_typed.Pattern.P_var (Binder.make pattern tv) in
+            Location.wrap @@ Ast_typed.Pattern.P_variant (constructor, proj)
+           in
+           let body = decompile ~raise body in
+           ({pattern ; body } : (O.expression, O.type_expression) Ast_typed.Match_expr.match_case)
+         )
+       in
+       let cases = List.map ~f:aux cases in
+      return (O.E_matching { matchee ; cases })
+    | E_matching { matchee ; cases = Match_record { fields ; body ; tv=_ } } ->
+        let matchee = decompile ~raise matchee in
+        let aux : (I.type_expression Binder.t) -> O.type_expression Ast_typed.Pattern.t =
+          fun binder -> (
+            let proj = Location.wrap 
+              @@ Ast_typed.Pattern.P_var (Binder.map (decompile_type ~raise) binder) in
+            proj
+          )
+        in
+        let body = decompile ~raise body in
+        let case = match Record.is_tuple fields with
+          | false ->
+            let fields = Record.map aux fields in
+            let fields = Pattern.Container.Record.of_record fields in
+            let pattern = Location.wrap (O.Pattern.P_record fields) in
+            ({ pattern ; body } : _ O.Match_expr.match_case)
+          | true ->
+            let patterns = Record.map aux fields in
+            let patterns = Record.LMap.values patterns in
+            let pattern = Location.wrap (O.Pattern.P_tuple patterns) in
+            ({ pattern ; body } : _ O.Match_expr.match_case)
+        in
+        let cases = [case] in
+       return (O.E_matching { matchee ; cases })
     (* Record *)
     | E_record map ->
        let map = Record.map (decompile ~raise) map in
@@ -83,8 +113,9 @@ let rec decompile ~raise : Ast_aggregated.expression -> Ast_typed.expression =
       let rhs = decompile ~raise rhs in
       let let_result = decompile ~raise let_result in
       let let_binder = Binder.map (decompile_type ~raise) let_binder in
-      let attr = decompile_value_attr attr in
-      return (O.E_let_mut_in { let_binder ; rhs ; let_result ; attr })
+      let let_binder = O.Pattern.var_pattern let_binder in
+      let attributes = decompile_value_attr attr in
+      return (O.E_let_mut_in { let_binder ; rhs ; let_result ; attributes })
    | I.E_deref var -> return (O.E_deref var)
    | I.E_assign {binder;expression} ->
       let binder = Binder.map (decompile_type ~raise) binder in

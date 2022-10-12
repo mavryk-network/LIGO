@@ -4,7 +4,10 @@ module type Attr = sig
   val  pp : Format.formatter -> t -> unit
 end
 
-module Make (Attr : Attr) = struct
+
+module Container = Pattern.Container
+module Make (Pattern : Pattern.S) (Container : Container.S) (Attr : Attr) = struct
+  module Pattern = Pattern(Container)
   type ('e, 't) t = {
       let_binder: 't Pattern.t ;
       rhs       : 'e ;

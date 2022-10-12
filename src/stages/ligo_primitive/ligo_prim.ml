@@ -2,6 +2,7 @@
 module Label = Label
 module Binder = Binder
 module Param = Param
+module Container = Pattern.Container
 module Pattern = Pattern
 module Access_path = Access_path
 module Layout = Layout
@@ -23,7 +24,7 @@ module Constant = Constant
 module Lambda = Lambda
 module Recursive = Recursive
 module Application = Application
-module Let_in(Attr:Let_in.Attr) = Let_in.Make(Attr)
+module Let_in = Let_in
 module Type_in = Type_in
 module Raw_code = Raw_code
 module Ascription = Ascription
@@ -60,4 +61,5 @@ module Mod_in        = Mod_in
 module Value_decl (Attr:Declaration.Attr) = Declaration.Value_decl(Attr)
 module Type_decl  (Attr:Declaration.Attr) = Declaration.Type_decl(Attr)
 module Module_decl(Attr:Declaration.Attr) = Declaration.Module_decl(Attr)
-module Pattern_decl(Attr:Declaration.Attr) = Declaration.Pattern_decl(Attr)
+module Pattern_decl(Pattern : Pattern.S)(Container : Container.S)(Attr:Declaration.Attr) 
+  = Declaration.Pattern_decl(Pattern)(Container)(Attr)

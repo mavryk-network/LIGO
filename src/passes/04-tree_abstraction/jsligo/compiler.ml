@@ -745,14 +745,14 @@ and compile_expression ~raise : CST.expr -> AST.expr = fun e ->
       in
       aux hd @@ tl
   )
-  | EAssign (EVar {value=_; region=_} as e1, op, (EAssign     (EVar _ as ev, _, _) as e2)) ->
+  | EAssign (e1, op, (EAssign     (EVar _ as ev, _, _) as e2)) ->
     let e2 = self e2 in
     let e1 = self (EAssign (e1, op, ev)) in
     e_sequence e2 e1
   | EAssign (EVar {value; region} as e1, op, e2) ->
     let loc = Location.lift region in
     let outer_loc = Location.lift op.region in
-    let e2 = (match op.value with
+    let e2x = (match op.value with
       Eq ->
         self e2
     | Assignment_operator ao ->
@@ -781,7 +781,26 @@ and compile_expression ~raise : CST.expr -> AST.expr = fun e ->
         region = op.region
       })
     in
-    e_assign ~loc:outer_loc (Binder.make (Value_var.of_input_var ~loc value) None) e2
+    (match e2 with 
+    | EAssign (EProj {value = {expr; selection}; region=_}, {value = Eq; _}, _) -> 
+      let (sels , _) = compile_selection ~raise selection in
+      let expr = self expr in
+      e_sequence 
+        e2x 
+        (e_assign ~loc:outer_loc (Binder.make (Value_var.of_input_var ~loc value) None) (e_accessor ~loc expr [sels]))
+
+    | _ -> 
+      e_assign ~loc:outer_loc (Binder.make (Value_var.of_input_var ~loc value) None) e2x  
+    )
+  | EAssign (
+      e1, 
+      ({value = Eq; _} as op), 
+      (EAssign ((EProj _ as eproj), _, _) as e2)
+    ) -> 
+    let e2 = self e2 in
+    let e1 = CST.EAssign (e1, op, eproj) in
+    let e1 = self e1 in
+    e_sequence e2 e1
 
   | EAssign (EProj {value = {expr = EVar {value = evar_value; _}; selection = Component {value = {inside = EArith (Int _); _}; _} as selection}; region=_}, ({value = Eq; _} as op), e2) ->
     let e2 = self e2 in
@@ -816,8 +835,8 @@ and compile_pattern ~raise : CST.pattern -> AST.ty_expr option Pattern.t =
       let l = match p with
         CST.PVar var -> Label.of_string var.value.variable.value 
       | _ -> raise.error @@ unsupported_pattern_type p in
-      l, compile_pattern ~raise p) @@ Utils.nsepseq_to_list record.inside in
-    Location.wrap ~loc (Pattern.P_record (Record.of_list lps))
+      l, compile_pattern  ~raise p) @@ Utils.nsepseq_to_list record.inside in
+    Location.wrap ~loc (Pattern.P_record (Container.List.of_list  lps))
   | (PRest _|PAssign _|PConstr _|PDestruct _) ->
     raise.error @@ unsupported_pattern_type p
 
@@ -986,6 +1005,12 @@ and compile_val_binding ~raise : CST.attributes -> CST.val_binding Region.reg ->
             let lambda = Lambda.{binder=Param.map (Fn.const type1) binder;result;output_type = type2} in
             e_recursive ~loc:(Location.lift name.region) fun_binder fun_type lambda
           else make_e ~loc:(Location.lift name.region) @@ E_lambda lambda
+        (* | EAssign (EVar _ as v, _, _) -> 
+          e_sequence expr (compile_expression ~raise v)
+        | EAssign (EProj {value = {expr = proj_expr; selection}; _}, _, _) -> 
+          let var = compile_expression ~raise proj_expr in
+          let (sels , _) = compile_selection ~raise selection in
+          e_sequence expr (e_accessor ~loc:(Location.lift region) var [sels]) *)
         | _ -> expr
         )
       in

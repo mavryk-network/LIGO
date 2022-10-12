@@ -41,7 +41,8 @@ let rec decompile_type_expression : O.type_expression -> I.type_expression =
 let decompile_type_expression_option = Option.map ~f:decompile_type_expression
 
 let decompile_pattern_to_string ~syntax pattern =
-  let p = Pattern.map (decompile_type_expression_option) pattern in
+  let pattern = Pattern.Conv.r_to_l pattern in
+  let p = I.Pattern.map (decompile_type_expression_option) pattern in
   let s = match syntax with
     Some Syntax_types.JsLIGO ->
       Tree_abstraction.Jsligo.decompile_pattern_to_string p
@@ -81,7 +82,7 @@ let rec decompile_expression : O.expression -> I.expression =
     let recs = Recursive.map self self_type recs in
     return @@ I.E_recursive recs
   | O.E_let_in {let_binder;attributes;rhs;let_result} ->
-    let let_binder = Pattern.map (Option.map ~f:decompile_type_expression) let_binder in
+    let let_binder = I.Pattern.map (Option.map ~f:decompile_type_expression) let_binder in
     let rhs = decompile_expression rhs in
     let let_result = decompile_expression let_result in
     return @@ I.E_let_in {let_binder;attributes;rhs;let_result}
@@ -99,8 +100,11 @@ let rec decompile_expression : O.expression -> I.expression =
     let const = Constructor.map self const in
     return @@ I.E_constructor const
   | O.E_matching m ->
-    let m = Match_expr.map self self_type_opt m in
-    return @@ I.E_matching m
+    let O.Match_expr.{matchee;cases} = O.Match_expr.map self self_type_opt m in
+    let cases = List.map cases ~f:(fun {pattern;body} -> 
+      let pattern = Pattern.Conv.r_to_l pattern in
+      I.Match_expr.{pattern;body}) in
+    return @@ I.E_matching {matchee;cases}
   | O.E_record recd ->
     let recd = Record.map self recd in
     return @@ I.E_record (Record.LMap.to_kv_list recd)
@@ -160,7 +164,7 @@ let rec decompile_expression : O.expression -> I.expression =
     let body = self body in
     return @@ I.E_while { cond; body }
   | O.E_let_mut_in { let_binder; attributes; rhs; let_result } ->
-    let let_binder = Pattern.map (Option.map ~f:decompile_type_expression) let_binder in
+    let let_binder = I.Pattern.map (Option.map ~f:decompile_type_expression) let_binder in
     let rhs = decompile_expression rhs in
     let let_result = decompile_expression let_result in
     return @@ I.E_let_mut_in { let_binder; attributes; rhs; let_result }
@@ -173,7 +177,7 @@ and decompile_declaration : O.declaration -> I.declaration = fun d ->
     let expr   = decompile_expression expr in
     return @@ D_value {binder;expr;attr}
   | D_pattern {pattern;expr;attr} ->
-    let pattern = Pattern.map decompile_type_expression_option pattern in
+    let pattern = I.Pattern.map decompile_type_expression_option pattern in
     let expr   = decompile_expression expr in
     return @@ D_pattern {pattern;expr;attr}
   | D_type {type_binder;type_expr;type_attr} ->

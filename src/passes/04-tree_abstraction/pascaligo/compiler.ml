@@ -639,7 +639,7 @@ and compile_pattern ~raise : CST.pattern -> AST.ty_expr option Pattern.t =
             in
             (Label lhs, self field_rhs)
       in
-      let lst' = Record.of_list (List.map ~f:aux lst) in
+      let lst' = Container.List.of_list (List.map ~f:aux lst) in
       Location.wrap ~loc (P_record lst')
     )
     | P_Typed {region ; value = { pattern ; type_annot = (_,ty_expr) }} -> (
