@@ -43,12 +43,10 @@ COPY scripts/version.sh /ligo/scripts/version.sh
 
 COPY tools/ligo-syntax-highlighting ligo-syntax-highlighting
 # Run tests
-RUN opam exec -- dune build -p ligo \
-  && opam exec -- dune runtest --profile static --no-buffer \
+RUN opam exec -- dune runtest --profile static --no-buffer \
 # Coverage (only the overall)
   && find . -name '*.coverage' | xargs rm -f \
   && opam exec -- dune clean \
-  && opam exec -- dune build -p ligo \
   && mkdir highlighting highlighting/vim highlighting/emacs highlighting/vscode highlighting/textmate \
     # Generate syntax highlighting files
   && opam exec -- dune exec ligo-syntax-highlighting/LigoSyntaxHighlighting.exe -- --vim=highlighting/vim --emacs=highlighting/emacs --vscode=highlighting/vscode --textmate=highlighting/textmate
