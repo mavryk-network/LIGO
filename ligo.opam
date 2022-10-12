@@ -68,6 +68,7 @@ depends: [
   "conf-llvm"
   "class_group_vdf"
   "tezos-plonk"
+  "dune-site"
 ]
 build: [
   [ "dune" "build" "-p" name "-j" jobs ]
