@@ -7,7 +7,7 @@ let find_file name locations =
   | [] -> failwith "Linker could not find: " ^ name ^ ". Most likely it was not installed yet. "
   | dir::dirs ->
     let filename' = Filename.concat dir filename in
-    match Sys.file_exists filename' with 
+    match Sys_unix.file_exists filename' with 
     | `No ->  aux filename dirs
     | `Unknown -> aux filename dirs
     | `Yes -> filename'
@@ -41,4 +41,4 @@ let link files output =
       (String.concat ?sep:(Some " ") files)
       output
   in
-  Sys.command_exn command
+  Sys_unix.command_exn command

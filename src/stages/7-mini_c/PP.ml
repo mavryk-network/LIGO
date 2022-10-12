@@ -168,7 +168,7 @@ and expression_content ppf (e:expression_content) = match e with
     let code = Micheline_printer.printable (fun prim -> prim) code in
     fprintf ppf "%a" Micheline_printer.print_expr code
   | E_raw_wasm (_, code) ->
-    let tmp, oc = Filename.open_temp_file  "temp" "wat" in
+    let tmp, oc = Filename_unix.open_temp_file  "temp" "wat" in
     WasmObjectFile.Print.instr_list oc 80 code;
     Out_channel.flush oc;
     let ic = In_channel.create tmp in  
