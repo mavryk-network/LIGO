@@ -982,8 +982,8 @@ and filter_private (attributes: CST.attributes) =
   List.filter ~f:(fun v -> not @@ String.equal v.value "private") attributes
 
 (* can probably be cleaned up *)
-and compile_val_binding ~raise : CST.attributes -> CST.val_binding Region.reg -> type_expression option Pattern.t* string list * expression =
-  fun attributes val_binding ->
+and compile_val_binding ~raise : CST.attributes -> CST.val_binding Region.reg ->  Region.t -> type_expression option Pattern.t* string list * expression =
+  fun attributes val_binding region ->
     let CST.{binders; type_params; lhs_type; expr = let_rhs; _} = val_binding.value in
     let attr = compile_attributes attributes in
     let expr = compile_expression ~raise let_rhs in
@@ -1005,12 +1005,12 @@ and compile_val_binding ~raise : CST.attributes -> CST.val_binding Region.reg ->
             let lambda = Lambda.{binder=Param.map (Fn.const type1) binder;result;output_type = type2} in
             e_recursive ~loc:(Location.lift name.region) fun_binder fun_type lambda
           else make_e ~loc:(Location.lift name.region) @@ E_lambda lambda
-        (* | EAssign (EVar _ as v, _, _) -> 
+        | EAssign (EVar _ as v, _, _) -> 
           e_sequence expr (compile_expression ~raise v)
         | EAssign (EProj {value = {expr = proj_expr; selection}; _}, _, _) -> 
           let var = compile_expression ~raise proj_expr in
           let (sels , _) = compile_selection ~raise selection in
-          e_sequence expr (e_accessor ~loc:(Location.lift region) var [sels]) *)
+          e_sequence expr (e_accessor ~loc:(Location.lift region) var [sels])
         | _ -> expr
         )
       in
@@ -1023,14 +1023,14 @@ and compile_val_binding ~raise : CST.attributes -> CST.val_binding Region.reg ->
       let expr = Option.value_map lhs_type ~default:expr ~f:(fun ty -> AST.e_ascription ~loc:expr.location {anno_expr = expr ; type_annotation = ty} ()) in
       (pattern, attr, expr)
 
-and compile_let_binding ~raise : CST.attributes -> CST.val_binding Region.reg -> AST.declaration =
-  fun attributes val_binding ->
-    let (pattern,attr,expr) = compile_val_binding ~raise attributes val_binding in
+and compile_let_binding ~raise : CST.attributes -> CST.val_binding Region.reg -> Region.t -> AST.declaration =
+  fun attributes val_binding region ->
+    let (pattern,attr,expr) = compile_val_binding ~raise attributes val_binding region in
     Location.wrap ~loc:expr.location (AST.D_pattern {pattern; attr; expr})
 
-and compile_let_in_binding ~raise : const:bool -> CST.attributes -> CST.val_binding Region.reg -> (AST.expression -> AST.expression) =
-  fun ~const attributes val_binding ->
-    let (pattern,attr,rhs) = compile_val_binding ~raise attributes val_binding in
+and compile_let_in_binding ~raise : const:bool -> CST.attributes -> CST.val_binding Region.reg -> Region.t -> (AST.expression -> AST.expression) =
+  fun ~const attributes val_binding region ->
+    let (pattern,attr,rhs) = compile_val_binding ~raise attributes val_binding region in
     let binding rhs body =
         if const then
           e_let_in ~loc:rhs.location pattern attr rhs body
@@ -1137,18 +1137,18 @@ and compile_statement ?(wrap=false) ~raise : CST.statement -> statement_result
     | None ->
         return (e_unit ~loc:(Location.lift region) ())
     )
-  | SLet li ->
+  | SLet li' ->
     (* TODO: ensure assignment can only happen to let values, not const values. *)
-    let (li, _loc) = r_split li in
+    let (li, _loc) = r_split li' in
     let {bindings; attributes; _} : CST.let_decl = li in
     let lst = npseq_to_list bindings in
-    let x = List.fold lst ~f:(fun acc x -> acc <@ (compile_let_in_binding ~const:false ~raise attributes x)) ~init:Fun.id in
+    let x = List.fold lst ~f:(fun acc x -> acc <@ (compile_let_in_binding ~const:false ~raise attributes x li'.region)) ~init:Fun.id in
     binding x
-  | SConst li ->
-    let (li, _loc) = r_split li in
+  | SConst li' ->
+    let (li, _loc) = r_split li' in
     let {bindings; attributes; _} : CST.const_decl = li in
     let lst = npseq_to_list bindings in
-    let x = List.fold lst ~f:(fun acc x -> acc <@ (compile_let_in_binding ~const:true ~raise attributes x)) ~init:Fun.id in
+    let x = List.fold lst ~f:(fun acc x -> acc <@ (compile_let_in_binding ~const:true ~raise attributes x li'.region)) ~init:Fun.id in
     binding x
   | SSwitch s' ->
     let (s, loc)    = r_split s' in
@@ -1392,13 +1392,13 @@ and compile_statement_to_declaration ~raise ~export : CST.statement -> AST.decla
       raise.warning (`Jsligo_deprecated_toplevel_let (Location.lift region));
     let attributes = if export then filter_private attributes else attributes in
     let bindings = npseq_to_list bindings in
-    let aux acc binding = acc @ [compile_let_binding ~raise attributes binding] in
+    let aux acc binding = acc @ [compile_let_binding ~raise attributes binding region] in
     List.fold ~f:aux ~init:[] bindings
   )
-  | SConst {value = {bindings; attributes; _}; _} -> (
+  | SConst {value = {bindings; attributes; _}; region } -> (
     let attributes = if export then filter_private attributes else attributes in
     let bindings = npseq_to_list bindings in
-    let aux acc binding = acc @ [compile_let_binding ~raise attributes binding] in
+    let aux acc binding = acc @ [compile_let_binding ~raise attributes binding region] in
     List.fold ~f:aux ~init:[] bindings
   )
   | SNamespace {value = (_, ident, {value = {inside = statements; _}; region = region_in }, attributes); region } ->
