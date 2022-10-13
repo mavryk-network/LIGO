@@ -65,6 +65,7 @@ depends: [
   "domain-name" {= "0.4.0"}
   "dune" {= "3.4.1"}
   "dune-configurator" {= "3.4.1"}
+  "dune-site" {= "3.4.1"}
   "duration" {= "0.2.0"}
   "either" {= "1.0.0"}
   "eqaf" {= "0.9"}
