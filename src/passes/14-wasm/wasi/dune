@@ -31,7 +31,11 @@
     libwasi-emulated-signal.a
     libxnet.a
   )
- (deps build.sh)
+ (deps 
+  build.sh 
+  wasi-sdk-14.0-linux.tar.gz 
+  wasi-sdk-14.0-macos.tar.gz
+  )
  (action
   (progn  
    (bash ./build.sh)
