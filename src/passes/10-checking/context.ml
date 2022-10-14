@@ -1217,7 +1217,7 @@ module Elaboration = struct
         }
     | E_let_in { let_binder; rhs; let_result; attributes } ->
       E_let_in
-        { let_binder = binder_apply ctx let_binder
+        { let_binder = pattern_apply ctx let_binder
         ; rhs = self rhs
         ; let_result = self let_result
         ; attributes
@@ -1246,7 +1246,7 @@ module Elaboration = struct
     | E_module_accessor mod_access -> E_module_accessor mod_access
     | E_let_mut_in { let_binder; rhs; let_result; attributes } ->
       E_let_mut_in
-        { let_binder = binder_apply ctx let_binder
+        { let_binder = pattern_apply ctx let_binder
         ; rhs = self rhs
         ; let_result = self let_result
         ; attributes
@@ -1274,6 +1274,8 @@ module Elaboration = struct
   and binder_apply_opt ctx (binder : 'a option Binder.t) =
     Binder.map (Option.map ~f:(t_apply ctx)) binder
 
+  and pattern_apply ctx (pattern : 'a Ast_typed.Pattern.t) = 
+    Ast_typed.Pattern.map (t_apply ctx) pattern
 
   and matching_expr_apply ctx match_exprs =
     List.map match_exprs 
@@ -1366,7 +1368,7 @@ module Elaboration = struct
       type_pass ~raise fun_type;
       lambda_pass ~raise lambda
     | E_let_in { let_binder; rhs; let_result; _ } ->
-      binder_pass ~raise let_binder;
+      pattern_pass ~raise let_binder;
       self rhs;
       self let_result
     | E_mod_in { rhs; let_result; _ } ->
@@ -1389,7 +1391,7 @@ module Elaboration = struct
       self update
     | E_module_accessor _mod_access -> ()
     | E_let_mut_in { let_binder; rhs; let_result; _ } ->
-      binder_pass ~raise let_binder;
+      pattern_pass ~raise let_binder;
       self rhs;
       self let_result
     | E_deref _var -> ()
@@ -1420,8 +1422,11 @@ module Elaboration = struct
 
 
   and binder_pass ~raise (binder : _ Binder.t) =
-    type_pass ~raise @@ Binder.get_ascr binder
-
+  type_pass ~raise @@ Binder.get_ascr binder
+  
+  and pattern_pass ~raise (pattern : _ Ast_typed.Pattern.t) =
+    let binders = Ast_typed.Pattern.binders pattern in
+    List.iter binders ~f:(binder_pass ~raise)
 
   and binder_pass_opt ~raise (binder : _ option Binder.t) =
     Option.iter (Binder.get_ascr binder) ~f:(type_pass ~raise)
@@ -1440,7 +1445,7 @@ module Elaboration = struct
       binder_pass_opt ~raise binder;
       expression_pass ~raise expr
     | D_pattern { pattern ; expr; _ } ->
-      List.iter ~f:(binder_pass ~raise) (Pattern.binders pattern);
+      pattern_pass ~raise pattern;
       expression_pass ~raise expr
     | D_module { module_; _ } -> module_expr_pass ~raise module_
 

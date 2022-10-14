@@ -48,18 +48,18 @@ let rec fold_expression : 'a folder -> 'a -> expression -> 'a = fun f init e ->
     let res = self init struct_ in
     res
   )
-  | E_let_in { let_binder = _ ; rhs ; let_result ; attr=_} -> (
+  | E_let_in { let_binder = _ ; rhs ; let_result ; attributes=_} -> (
       let res = self init rhs in
       let res = self res let_result in
       res
     )
-  | E_let_pattern_in x -> Let_pattern_in.fold self (fun a _ -> a) init x
+  (* | E_let_pattern_in x -> Let_pattern_in.fold self (fun a _ -> a) init x *)
   | E_mod_in { module_binder = _ ; rhs ; let_result } -> (
     let res = fold_expression_in_module_expr self init rhs in
     let res = self res let_result in
     res
   )
-  | E_let_mut_in { let_binder = _ ; rhs ; let_result ; attr=_} -> (
+  | E_let_mut_in { let_binder = _ ; rhs ; let_result ; attributes=_} -> (
     let res = self init rhs in
     let res = self res let_result in
     res
@@ -158,15 +158,15 @@ let rec map_expression : 'err mapper -> expression -> expression = fun f e ->
     let (a,b) = Pair.map ~f:self ab in
     return @@ E_application {lamb=a;args=b}
   )
-  | E_let_in { let_binder ; rhs ; let_result; attr } -> (
+  | E_let_in { let_binder ; rhs ; let_result; attributes } -> (
     let rhs = self rhs in
     let let_result = self let_result in
-    return @@ E_let_in { let_binder ; rhs ; let_result; attr }
+    return @@ E_let_in { let_binder ; rhs ; let_result; attributes }
   )
-  | E_let_pattern_in x -> (
+  (* | E_let_pattern_in x -> (
     let x = Let_pattern_in.map self Fun.id x in
     return @@ E_let_pattern_in x
-  )
+  ) *)
   | E_mod_in { module_binder ; rhs ; let_result } -> (
     let rhs = map_expression_in_module_expr f rhs in
     let let_result = self let_result in
@@ -205,10 +205,10 @@ let rec map_expression : 'err mapper -> expression -> expression = fun f e ->
   | E_while w ->
     let w = While_loop.map self w in
     return @@ E_while w
-  | E_let_mut_in { let_binder; rhs; let_result; attr } ->
+  | E_let_mut_in { let_binder; rhs; let_result; attributes } ->
     let rhs = self rhs in
     let let_result = self let_result in
-    return @@ E_let_mut_in { let_binder; rhs; let_result; attr }
+    return @@ E_let_mut_in { let_binder; rhs; let_result; attributes }
   | E_deref _
   | E_literal _ | E_variable _ | E_raw_code _ as e' -> return e'
 
@@ -415,18 +415,20 @@ module Free_variables :
       merge (self struct_) (self update)
     | E_accessor {struct_;path=_} ->
       self struct_
-    | E_let_in { let_binder ; rhs ; let_result ; attr=_} ->
+    | E_let_in { let_binder ; rhs ; let_result ; attributes=_} ->
       let {modVarSet;moduleEnv;varSet=fv2;mutSet} = (self let_result) in
-      let fv2 = VarSet.remove (Binder.get_var let_binder) fv2 in
+      let binders = Pattern.binders let_binder in
+      let fv2 = List.fold binders ~init:fv2 
+        ~f:(fun fv2 b -> VarSet.remove (Binder.get_var b) fv2) in
       merge (self rhs) {modVarSet;moduleEnv;varSet=fv2;mutSet}
-    | E_let_pattern_in { let_pattern ; rhs ; let_result ; attributes=_} ->
+    (* | E_let_pattern_in { let_pattern ; rhs ; let_result ; attributes=_} ->
       let {modVarSet;moduleEnv;varSet=fv2;mutSet} = (self let_result) in
       let bound = List.map ~f:Binder.get_var (Pattern.binders let_pattern) in
       let fv2 = List.fold bound
         ~init:fv2
         ~f:(fun acc x -> VarSet.remove x acc)
       in
-      merge (self rhs) {modVarSet;moduleEnv;varSet=fv2;mutSet}
+      merge (self rhs) {modVarSet;moduleEnv;varSet=fv2;mutSet} *)
     | E_mod_in { module_binder; rhs ; let_result } ->
       let {modVarSet;moduleEnv;varSet;mutSet} = (self let_result) in
       let modVarSet = ModVarSet.remove module_binder modVarSet in
@@ -455,9 +457,11 @@ module Free_variables :
       unions [ self cond; self body ]
     | E_deref mut_var ->
       { empty with mutSet = VarSet.singleton mut_var }
-    | E_let_mut_in { let_binder ; rhs ; let_result ; attr=_} ->
+    | E_let_mut_in { let_binder ; rhs ; let_result ; attributes=_} ->
       let {modVarSet;moduleEnv;varSet;mutSet=fv2} = (self let_result) in
-      let fv2 = VarSet.remove (Binder.get_var let_binder) fv2 in
+      let binders = Pattern.binders let_binder in
+      let fv2 = List.fold binders ~init:fv2 
+        ~f:(fun fv2 b -> VarSet.remove (Binder.get_var b) fv2) in
       merge (self rhs) {modVarSet;moduleEnv;varSet;mutSet=fv2}
     
   and get_fv_cases : _ Match_expr.match_case list -> moduleEnv' = fun m ->

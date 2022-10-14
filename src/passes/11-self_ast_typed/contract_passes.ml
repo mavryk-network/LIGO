@@ -80,11 +80,14 @@ and get_fv expr =
   | E_accessor {struct_;path} ->
      let env, struct_ = self struct_ in
      return env @@ E_accessor {struct_;path}
-  | E_let_in { let_binder ; rhs ; let_result ; attr} ->
+  | E_let_in { let_binder ; rhs ; let_result ; attributes} ->
      let env,let_result = (self let_result) in
-     let env = {env with used_var=VVarSet.remove (Binder.get_var let_binder) env.used_var} in
+     let binders = Pattern.binders let_binder in
+     let used_var = List.fold binders ~init:env.used_var
+       ~f:(fun used_var b -> VVarSet.remove (Binder.get_var b) used_var) in
+     let env = {env with used_var } in
      let env', rhs = self rhs in
-     return (merge_env env env') @@ E_let_in {let_binder; rhs; let_result; attr}
+     return (merge_env env env') @@ E_let_in {let_binder; rhs; let_result; attributes}
   | E_mod_in { module_binder; rhs ; let_result } ->
      let env,let_result = (self let_result) in
      (match MVarMap.find_opt module_binder env.env with
@@ -102,11 +105,14 @@ and get_fv expr =
   | E_assign { binder; expression } ->
      let env, expression = self expression in
      return env @@ E_assign { binder; expression }
-  | E_let_mut_in { let_binder ; rhs ; let_result ; attr} ->
+  | E_let_mut_in { let_binder ; rhs ; let_result ; attributes} ->
     let env,let_result = (self let_result) in
-    let env = {env with used_mut_var=VVarSet.remove (Binder.get_var let_binder) env.used_mut_var} in
+    let binders = Pattern.binders let_binder in
+    let used_mut_var = List.fold binders ~init:env.used_mut_var
+       ~f:(fun used_var b -> VVarSet.remove (Binder.get_var b) used_var) in
+    let env = {env with used_mut_var } in
     let env', rhs = self rhs in
-    return (merge_env env env') @@ E_let_mut_in {let_binder; rhs; let_result; attr}
+    return (merge_env env env') @@ E_let_mut_in {let_binder; rhs; let_result; attributes}
   | E_deref var ->
     return { empty_env with used_mut_var = VVarSet.singleton var }
     @@ E_deref var

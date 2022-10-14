@@ -96,7 +96,9 @@ and untype_expression_content (ec:O.expression_content) : I.expression =
       let rhs = self rhs in
       let result = self let_result in
       let attr : ValueAttr.t = untype_value_attr attributes in
-      return (e_let_mut_in (Pattern.map (Fn.const @@ Some tv) let_binder) rhs result attributes)
+      let let_binder = O.Pattern.map (Fn.const @@ Some tv) let_binder in
+      let let_binder = untype_pattern let_binder in
+      return (e_let_mut_in let_binder rhs result attr)
   | E_mod_in {module_binder;rhs;let_result} ->
       let rhs = untype_module_expr rhs in
       let result = self let_result in
@@ -114,7 +116,9 @@ and untype_expression_content (ec:O.expression_content) : I.expression =
     let rhs = self rhs in
     let result = self let_result in
     let attr : ValueAttr.t = untype_value_attr attributes in
-    return (e_let_in (Pattern.map (Fn.const @@ Some tv) let_binder) rhs result attr)
+    let let_binder = O.Pattern.map (Fn.const @@ Some tv) let_binder in
+      let let_binder = untype_pattern let_binder in
+    return (e_let_in let_binder rhs result attr)
   | E_assign a ->
     let a = Assign.map self self_type_opt a in
     return @@ make_e @@ E_assign a
@@ -200,7 +204,8 @@ and untype_declaration_constant : (O.expression -> I.expression) -> _ O.Value_de
 and untype_declaration_pattern : (O.expression -> I.expression) -> _ O.Pattern_decl.t -> _ I.Pattern_decl.t =
   fun untype_expression {pattern;expr;attr} ->
     let ty = untype_type_expression expr.O.type_expression in
-    let pattern = Pattern.map (Fn.const @@ Some ty) pattern in
+    let pattern = O.Pattern.map (Fn.const @@ Some ty) pattern in
+    let pattern = untype_pattern pattern in
     let expr = untype_expression expr in
     let expr = I.e_ascription expr ty in
     let attr= untype_value_attr attr in
