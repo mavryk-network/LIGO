@@ -102,7 +102,7 @@ let e_recursive ?loc fun_name fun_type lambda = make_e ?loc @@ E_recursive {fun_
 let e_let_in    ?loc let_binder attributes rhs let_result = make_e ?loc @@ E_let_in { let_binder ; rhs ; let_result; attributes }
 let e_let_mut_in ?loc let_binder attributes rhs let_result = make_e ?loc @@ E_let_mut_in { let_binder; rhs; let_result; attributes }
 let e_let_in_ez ?loc var ?(mut = false) ?ascr attributes rhs let_result = 
-  let binder = Let_in.Pattern.var_pattern (Ligo_prim.Binder.make var ascr) in
+  let binder = Types.Pattern.var_pattern (Ligo_prim.Binder.make var ascr) in
   if mut then e_let_mut_in ?loc binder attributes rhs let_result
   else e_let_in ?loc binder attributes rhs let_result
 

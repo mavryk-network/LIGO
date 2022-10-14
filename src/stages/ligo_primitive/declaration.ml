@@ -34,8 +34,7 @@ module Value_decl (Attr : Attr) = struct
 end
 
 module Container = Pattern.Container
-module Pattern_decl (Pattern : Pattern.S) (Container : Container.S) (Attr : Attr) = struct
-  module Pattern = Pattern(Container)
+module Pattern_decl (Pattern : Pattern.S) (Attr : Attr) = struct
   type ('e,'t) t = {
     pattern : 't Pattern.t;
     expr : 'e ;

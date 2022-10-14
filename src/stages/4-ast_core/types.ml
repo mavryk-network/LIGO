@@ -106,16 +106,16 @@ end
 module Accessor = Accessor(Access_label)
 module Update   = Update(Access_label)
 
-module Match_expr = Match_expr.Make(Pattern.Make)(Pattern.Container.Record)
 
-module Let_in=Let_in.Make(Pattern.Make)(Pattern.Container.Record)(ValueAttr)
 
 module Value_decl  = Value_decl(ValueAttr)
-module Pattern_decl = Pattern_decl(Pattern.Make)(Pattern.Container.Record)(ValueAttr)
 module Type_decl   = Type_decl(TypeOrModuleAttr)
 module Module_decl = Module_decl(TypeOrModuleAttr)
 
-module Pattern = Pattern.Make(Pattern.Container.Record)
+module Pattern = Pattern.Make(Pattern.Container.Record)()
+module Match_expr = Match_expr.Make(Pattern)
+module Pattern_decl = Pattern_decl(Pattern)(ValueAttr)
+module Let_in = Let_in.Make(Pattern)(ValueAttr)
 
 type expression_content =
   (* Base *)

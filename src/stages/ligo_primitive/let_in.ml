@@ -6,8 +6,7 @@ end
 
 
 module Container = Pattern.Container
-module Make (Pattern : Pattern.S) (Container : Container.S) (Attr : Attr) = struct
-  module Pattern = Pattern(Container)
+module Make (Pattern : Pattern.S)(Attr : Attr) = struct
   type ('e, 't) t = {
       let_binder: 't Pattern.t ;
       rhs       : 'e ;

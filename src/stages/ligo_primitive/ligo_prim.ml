@@ -10,8 +10,8 @@ module Layout = Layout
 (* Type level constructs *)
 module Type_var = Var.Type_var
 module Literal_types = Literal_types
-module Kind  = Kind
-module Rows  = Rows
+module Kind = Kind
+module Rows = Rows
 module Arrow = Arrow
 module Abstraction = Abstraction
 module Type_app = Type_app
@@ -31,8 +31,8 @@ module Ascription = Ascription
 module Constructor = Constructor
 module Match_expr = Match_expr
 module Record = Record
-module Accessor (Path: Access_path.S) = Accessor.Make(Path)
-module Update   (Path: Access_path.S) = Update.Make(Path)
+module Accessor (Path : Access_path.S) = Accessor.Make (Path)
+module Update (Path : Access_path.S) = Update.Make (Path)
 
 (* Sugar *)
 module Conditional = Conditional
@@ -43,23 +43,23 @@ module Skip = Skip
 module For_loop = For_loop
 module For_each_loop = For_each_loop
 module While_loop = While_loop
-module Assign     = Assign
+module Assign = Assign
 
 (* Containers *)
 module Map_expr = Map_expr
 module Set_expr = Set_expr
 module List_expr = List_expr
 
-
 (* Module language *)
-module Module_var    = Var.Module_var
+module Module_var = Var.Module_var
 module Module_access = Module_access
-module Module_expr   = Module_expr
-module Mod_in        = Mod_in
+module Module_expr = Module_expr
+module Mod_in = Mod_in
 
 (* Declarations *)
-module Value_decl (Attr:Declaration.Attr) = Declaration.Value_decl(Attr)
-module Type_decl  (Attr:Declaration.Attr) = Declaration.Type_decl(Attr)
-module Module_decl(Attr:Declaration.Attr) = Declaration.Module_decl(Attr)
-module Pattern_decl(Pattern : Pattern.S)(Container : Container.S)(Attr:Declaration.Attr) 
-  = Declaration.Pattern_decl(Pattern)(Container)(Attr)
+module Value_decl (Attr : Declaration.Attr) = Declaration.Value_decl (Attr)
+module Type_decl (Attr : Declaration.Attr) = Declaration.Type_decl (Attr)
+module Module_decl (Attr : Declaration.Attr) = Declaration.Module_decl (Attr)
+
+module Pattern_decl (Pattern : Pattern.S) (Attr : Declaration.Attr) =
+  Declaration.Pattern_decl (Pattern) (Attr)

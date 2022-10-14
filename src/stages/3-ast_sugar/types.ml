@@ -32,16 +32,16 @@ module Attr = struct
 end
 
 module Value_decl = Value_decl(Attr)
-module Pattern_decl = Pattern_decl(Pattern.Make)(Pattern.Container.List)(Attr)
 module Type_decl  = Type_decl(Attr)
 module Module_decl= Module_decl(Attr)
 
-module Let_in = Let_in.Make(Pattern.Make)(Pattern.Container.List)(Attr)
 module Accessor = Accessor(Access_path)
 module Update   = Update(Access_path)
 
-module Match_expr = Match_expr.Make(Pattern.Make)(Pattern.Container.Record)
-module Pattern = Pattern.Make(Pattern.Container.Record)
+module Pattern = Pattern.Make(Pattern.Container.Record)()
+module Match_expr = Match_expr.Make(Pattern)
+module Pattern_decl = Pattern_decl(Pattern)(Attr)
+module Let_in = Let_in.Make(Pattern)(Attr)
 
 
 type expression_content =

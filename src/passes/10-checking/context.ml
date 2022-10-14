@@ -910,7 +910,7 @@ and signature_item_of_decl : ctx:t -> Ast_typed.decl -> bool * (Signature.item l
   | D_value { binder; expr; attr = { public; _ } } ->
     public, [ S_value (Binder.get_var binder, expr.type_expression) ]
   | D_pattern { pattern ; expr = _ ; attr = { public ; _ }} ->
-    let sigs = List.map (Pattern.binders pattern) ~f:(fun b -> Signature.S_value (Binder.get_var b, Binder.get_ascr b)) in
+    let sigs = List.map (Ast_typed.Pattern.binders pattern) ~f:(fun b -> Signature.S_value (Binder.get_var b, Binder.get_ascr b)) in
     public, sigs
   | D_type { type_binder = tvar; type_expr = type_; type_attr = { public; _ } }
     -> public, [ S_type (tvar, type_) ]
@@ -929,7 +929,7 @@ let init ?env () =
       | D_value { binder; expr; attr = _ } ->
         add_imm ctx (Binder.get_var binder) expr.type_expression
       | D_pattern { pattern; expr; attr = _ } ->
-        List.fold (Pattern.binders pattern)
+        List.fold (Ast_typed.Pattern.binders pattern)
           ~init:ctx
           ~f:(fun acc x -> add_imm acc (Binder.get_var x) (Binder.get_ascr x))
       | D_type { type_binder; type_expr; type_attr = _ } ->
@@ -1244,12 +1244,12 @@ module Elaboration = struct
     | E_update { struct_; path; update } ->
       E_update { struct_ = self struct_; path; update = self update }
     | E_module_accessor mod_access -> E_module_accessor mod_access
-    | E_let_mut_in { let_binder; rhs; let_result; attr } ->
+    | E_let_mut_in { let_binder; rhs; let_result; attributes } ->
       E_let_mut_in
         { let_binder = binder_apply ctx let_binder
         ; rhs = self rhs
         ; let_result = self let_result
-        ; attr
+        ; attributes
         }
     | E_deref var -> E_deref var
     | E_while while_loop -> E_while (While_loop.map self while_loop)
@@ -1294,7 +1294,7 @@ module Elaboration = struct
            ; attr
            }
     | D_pattern { pattern; expr; attr } ->
-      let pattern = Pattern.map (t_apply ctx) pattern in 
+      let pattern = Ast_typed.Pattern.map (t_apply ctx) pattern in 
       return
       @@ D_pattern
            { pattern
