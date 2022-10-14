@@ -113,7 +113,7 @@ let rec expression : Aliases.t -> AST.expression -> AST.expression = fun aliases
   | E_let_mut_in { let_binder ; rhs ; let_result ; attributes } ->
     let rhs = self rhs in
     let let_result = self let_result in
-    let let_binder = Pattern.map self_type let_binder in
+    let let_binder = AST.Pattern.map self_type let_binder in
     return (E_let_mut_in { let_binder ; rhs ; let_result ; attributes })
   | E_deref var -> return (E_deref var)
   | E_assign {binder;expression} ->
@@ -146,6 +146,10 @@ and compile_declaration aliases (d : AST.declaration) : Aliases.t * AST.declarat
       let expr   = expression aliases expr in
       let binder = Binder.map (Option.map ~f:(type_expression aliases)) binder in
       return_s aliases @@ AST.D_value {binder;expr;attr}
+  | D_pattern { pattern ; expr ; attr } ->
+      let expr   = expression aliases expr in
+      let pattern = AST.Pattern.map (type_expression aliases) pattern in 
+      return_s aliases @@ AST.D_pattern {pattern;expr;attr}
   | D_type {type_binder;type_expr;type_attr} ->
       let type_expr = type_expression aliases type_expr in
       return_s aliases @@ AST.D_type {type_binder;type_expr;type_attr}

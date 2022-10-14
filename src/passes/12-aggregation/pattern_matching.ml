@@ -107,7 +107,7 @@ let rec substitute_var_in_body ~raise : Value_var.t -> Value_var.t -> O.expressi
         | O.E_variable var when Value_var.equal var to_subst ->
           ret true { exp with expression_content = E_variable new_var }
         | O.E_let_in letin
-          when List.exists (Pattern.binders letin.let_binder) ~f:(fun binder -> Binder.apply (Value_var.equal to_subst) binder) ->
+          when Binder.apply (Value_var.equal to_subst) letin.let_binder ->
           let rhs = substitute_var_in_body ~raise to_subst new_var letin.rhs in
           let letin = { letin with rhs } in
           ret false { exp with expression_content = E_let_in letin }
