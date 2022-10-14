@@ -158,13 +158,17 @@ let parse_and_unify_jsligo ~raise buffer file_path =
     (Unification.Jsligo.compile_program cst) in
   unified
 
+let parse_and_unify_reasonligo ~raise buffer file_path =
+  trace ~raise unification_tracer @@ (fun ~raise -> raise.error @@
+  [ Unification.Errors.unsupported_syntax "ReasonLIGO" ])
+
 let parse_and_unify ~raise ~meta (c_unit : Buffer.t) (source_filename : string) : Ast_unified.program =
   let parse_and_unify =
     match meta.syntax with
     | CameLIGO    -> parse_and_unify_cameligo
     | PascaLIGO   -> parse_and_unify_pascaligo
     | JsLIGO      -> parse_and_unify_jsligo
-    | ReasonLIGO  -> parse_and_unify_cameligo (* TODO NP : Add syntax *)
+    | ReasonLIGO  -> parse_and_unify_reasonligo
   in
   let unified = parse_and_unify ~raise c_unit source_filename in
   unified
