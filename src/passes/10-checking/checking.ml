@@ -461,37 +461,26 @@ and infer_expression ~(raise : raise) ~options ~ctx (expr : I.expression)
             return (E_type_abstraction { type_binder = tvar; result }) ret_type
           ))
     | E_let_in { let_binder; rhs; let_result; attributes } ->
-      let rhs_ascr = Binder.get_ascr let_binder in
+      (* let rhs_ascr = Binder.get_ascr let_binder in
       let rhs =
         Option.value_map
           rhs_ascr
           ~f:(fun rhs_ascr -> I.e_ascription ~loc rhs rhs_ascr)
           ~default:rhs
-      in
+      in *)
       let ctx, rhs_type, rhs = infer rhs in
-      let rhs_type = Context.apply ctx rhs_type in
+      let ctx, let_binder = check_pattern ~raise ~ctx let_binder rhs_type in
+      (* let rhs_type = Context.apply ctx rhs_type in *)
       let ctx, res_type, let_result =
-        Context.enter ~ctx ~mut:false ~in_:(fun ctx ->
-            infer
-              ~ctx:
-                Context.(
-                  ctx
-                  |:: C_value (Binder.get_var let_binder, Immutable, rhs_type))
-              let_result)
+        Context.enter ~ctx ~mut:false ~in_:(fun ctx -> infer ~ctx let_result)
       in
-      let attr = type_value_attr attr in
+      let attributes = type_value_attr attributes in
       ( ctx
       , res_type
       , let%bind rhs = rhs
+        and let_binder = let_binder
         and let_result = let_result in
-        return
-          (E_let_in
-             { let_binder = Binder.map (Fn.const rhs_type) let_binder
-             ; rhs
-             ; let_result
-             ; attr
-             })
-          res_type )
+        return (E_let_in { let_binder; rhs; let_result; attributes }) res_type )
     | E_type_in { type_binder = tvar; rhs; let_result } ->
       let rhs = evaluate_type ~raise ~ctx rhs in
       let ctx, res_type, let_result =
@@ -712,38 +701,32 @@ and infer_expression ~(raise : raise) ~options ~ctx (expr : I.expression)
       , elt_type
       , return (E_module_accessor { module_path; element }) elt_type )
     | E_let_mut_in { let_binder; rhs; let_result; attributes } ->
-      let rhs_ascr = Option.value_map (Pattern.get_ascr let_binder) ~default:None ~f:Fun.id in
+      (* let rhs_ascr =
+        Option.value_map (Pattern.get_ascr let_binder) ~default:None ~f:Fun.id
+      in
       let rhs =
         Option.value_map
           rhs_ascr
           ~f:(fun rhs_ascr -> I.e_ascription ~loc rhs rhs_ascr)
           ~default:rhs
-      in
+      in *)
       let ctx, rhs_type, rhs = infer rhs in
+      let ctx, let_binder = check_pattern ~raise ~ctx let_binder rhs_type in
       let rhs_type = Context.apply ctx rhs_type in
       (* TODO: Improve inference here -- we could subtype it to get a monotype? *)
       if is_t_for_all rhs_type
       then raise.error (mut_is_polymorphic loc rhs_type);
       let ctx, res_type, let_result =
-        Context.enter ~ctx ~mut:false ~in_:(fun ctx ->
-            infer
-              ~ctx:
-                Context.(
-                  ctx |:: C_value (Binder.get_var let_binder, Mutable, rhs_type))
-              let_result)
+        Context.enter ~ctx ~mut:false ~in_:(fun ctx -> infer ~ctx let_result)
       in
       let attributes = type_value_attr attributes in
       ( ctx
       , res_type
       , let%bind rhs = rhs
-        and let_result = let_result in
+        and let_result = let_result
+        and let_binder = let_binder in
         return
-          (E_let_mut_in
-             { let_binder = Binder.map (Fn.const rhs_type) let_binder
-             ; rhs
-             ; let_result
-             ; attr
-             })
+          (E_let_mut_in { let_binder; rhs; let_result; attributes })
           res_type )
     | E_assign { binder; expression } ->
       let type_ =
@@ -1482,10 +1465,11 @@ and infer_declaration ~(raise : raise) ~options ~ctx (decl : I.declaration)
       , let%bind expr = expr in
         return
         @@ D_value
-             { binder = Binder.map (Fn.const @@ Some expr_type) binder; expr; attr }
-      )
-    | D_pattern { pattern; expr; attr } ->
-      failwith "need rebase "
+             { binder = Binder.map (Fn.const @@ Some expr_type) binder
+             ; expr
+             ; attr
+             } )
+    | D_pattern { pattern; expr; attr } -> failwith "need rebase "
     | D_module { module_binder; module_; module_attr = { public; hidden } } ->
       let ctx, sig_, module_ = infer_module_expr ~raise ~options ~ctx module_ in
       ( ctx
