@@ -283,13 +283,23 @@ let rec compile_expression ~raise path scope (expr : I.expression) =
     let output_type = self_type output_type in
     let result   = self ~scope result in
     return @@ E_recursive {fun_name;fun_type;lambda={binder;output_type;result}}
-  | E_let_in {let_binder;rhs;let_result;attr} ->
-    let let_binder   = Binder.map self_type let_binder in
-    let rhs = self rhs in
-    let attr = compile_value_attr attr in
-    let scope = Scope.push_value scope let_binder rhs.type_expression attr Path.empty  in
-    let let_result = self ~scope let_result in
-    return @@ E_let_in {let_binder;rhs;let_result;attr}
+  | E_let_in {let_binder;rhs;let_result;attributes} ->
+    (match let_binder.wrap_content with
+    | P_var _ ->
+      let let_binder = List.hd_exn @@ I.Pattern.binders let_binder in
+      let let_binder = Binder.map self_type let_binder in
+      let rhs = self rhs in
+      let attr = compile_value_attr attributes in
+      let scope = Scope.push_value scope let_binder rhs.type_expression attr Path.empty  
+      in
+      let let_result = self ~scope let_result in
+      return @@ E_let_in {let_binder;rhs;let_result;attr}
+    | _ ->
+      (* TODO: What to do about attributes ???? *)
+      let matchee = self rhs in
+      let cases = I.Match_expr.([{ pattern = let_binder ; body = let_result }]) in
+      let cases   = self_cases matchee cases in
+      return @@ cases)
   | E_raw_code {language;code} ->
     let code = self code in
     return @@ E_raw_code {language;code}
@@ -332,13 +342,22 @@ let rec compile_expression ~raise path scope (expr : I.expression) =
     let path    = Path.append path2 path in
     let _,element = Scope.add_path_to_var scope path element in
     return @@ E_variable element)
-  | E_let_mut_in { let_binder ; rhs ; let_result ; attr } ->
-    let let_binder   = Binder.map self_type let_binder in
-    let rhs = self rhs in
-    let attr = compile_value_attr attr in
-    let scope = Scope.push_value scope let_binder rhs.type_expression attr Path.empty  in
-    let let_result = self ~scope let_result in
-    return (E_let_mut_in { let_binder ; rhs ; let_result ; attr })
+  | E_let_mut_in { let_binder ; rhs ; let_result ; attributes } ->
+    (match let_binder.wrap_content with
+    | P_var _ ->
+      let let_binder = List.hd_exn @@ I.Pattern.binders let_binder in
+      let let_binder   = Binder.map self_type let_binder in
+      let rhs = self rhs in
+      let attr = compile_value_attr attributes in
+      let scope = Scope.push_value scope let_binder rhs.type_expression attr Path.empty  in
+      let let_result = self ~scope let_result in
+      return (E_let_mut_in { let_binder ; rhs ; let_result ; attr })
+    | _ ->
+      (* TODO: What to do about attributes ???? *)
+      let matchee = self rhs in
+      let cases = I.Match_expr.([{ pattern = let_binder ; body = let_result }]) in
+      let cases   = self_cases matchee cases in
+      return @@ cases)
   | E_deref var -> 
     let path = Scope.find_value scope var in
     let _,expression_variable = Scope.add_path_to_var scope path var in
@@ -410,6 +429,25 @@ and compile_declaration ~raise ~(super_attr : O.ModuleAttr.t) path scope (d : I.
       let scope,var = Scope.add_path_to_var scope path @@ Binder.get_var binder in
       let binder = Binder.set_var binder var in
       scope, O.context_decl binder expr attr
+  | D_pattern {pattern;expr;attr} ->
+    (match pattern.wrap_content with
+    | P_var _ ->
+      let binder = List.hd_exn @@ I.Pattern.binders pattern in
+      let attr = {attr with hidden = attr.hidden || super_attr.hidden; public = attr.public && super_attr.public} in
+      let expr = compile_expression ~raise path scope expr in
+      let attr = compile_value_attr attr in
+      let binder = Binder.map (fun _ -> expr.type_expression) binder in
+      let scope  = Scope.push_value scope binder expr.type_expression attr path in
+      let scope,var = Scope.add_path_to_var scope path @@ Binder.get_var binder in
+      let binder = Binder.set_var binder var in
+      scope, O.context_decl binder expr attr
+    (* | _ ->    
+      (* TODO: What to do about attributes ???? *)
+      let matchee = compile_expression ~raise path scope expr in
+      let cases = I.Match_expr.([{ pattern = let_binder ; body = let_result }]) in
+      let cases   = self_cases matchee cases in
+      return @@ cases) *)
+      )
   | D_type _ ->
       scope, O.context_id
   | D_module {module_binder;module_;module_attr} ->
