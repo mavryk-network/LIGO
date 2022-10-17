@@ -77,7 +77,15 @@ let check_obj_ligo_program ~raise ?(blacklist = []) ((ctxt, e) : AST.program) : 
   let f decl () =
     match Location.unwrap decl with
     | AST.D_value { binder = _ ; expr ; attr = _ } ->
-      check_obj_ligo ~raise ~blacklist expr in
+      check_obj_ligo ~raise ~blacklist expr 
+    | AST.D_pattern { matchee ; cases } -> 
+      check_obj_ligo ~raise ~blacklist matchee;
+      let (), _ = AST.Helpers.fold_map_cases (fun () case ->
+        check_obj_ligo ~raise ~blacklist case;
+        true, (), case  
+      ) () cases in
+      ()
+    in
   let () = List.fold_right ctxt ~f ~init:() in
   check_obj_ligo ~raise ~blacklist e
 
@@ -132,7 +140,22 @@ let purge_meta_ligo_program ~raise ((ctxt, e) : AST.program) : AST.program =
       if expr_is_meta then
         blacklist, ctxt
       else
-        blacklist, decl :: ctxt in
+        blacklist, decl :: ctxt 
+    | AST.D_pattern { matchee ; cases } ->
+      let expr_is_meta = not (Trace.to_bool (check_obj_ligo ~blacklist matchee)) in
+      let blacklist = if expr_is_meta then
+        let rec get_binders (m : AST.matching_expr) = 
+          match m with
+          | Match_variant { cases ; _ } -> List.map cases ~f:(fun {pattern;_} -> pattern)
+          | Match_record _ -> []
+        in
+        (binder, matchee.location) :: blacklist 
+      else blacklist in
+      if expr_is_meta then
+        blacklist, ctxt
+      else
+        blacklist, decl :: ctxt
+    in
   let blacklist, ctxt = List.fold_left ctxt ~init:([], []) ~f in
   let ctxt = List.rev ctxt in
   let () = check_obj_ligo ~raise ~blacklist e in

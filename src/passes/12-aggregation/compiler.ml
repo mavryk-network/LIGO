@@ -396,12 +396,14 @@ and compile_cases ~raise ~loc path scope matchee cases : O.expression_content =
   match matchee.expression_content with
   | E_variable var ->
     let match_expr =
+      let var = Binder.make var matchee.type_expression in
       Pattern_matching.compile_matching ~raise ~err_loc:loc var eqs
     in
     match_expr.expression_content
   | _ ->
     let var = Value_var.fresh ~loc ~name:"match_" () in
     let match_expr =
+      let var = Binder.make var matchee.type_expression in
       Pattern_matching.compile_matching ~raise ~err_loc:loc var eqs
     in
     O.E_let_in

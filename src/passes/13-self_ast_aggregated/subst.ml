@@ -74,7 +74,7 @@ let rec replace : expression -> Value_var.t -> Value_var.t -> expression =
   | E_matching { matchee; cases = Match_variant { cases; tv } } ->
     let matchee = replace matchee in
     let f ({ constructor; pattern; body } : _ matching_content_case) =
-      let body = if pattern = x then body else replace body in
+      let body = if (Binder.get_var pattern) = x then body else replace body in
       { constructor; pattern; body }
     in
     let cases = List.map ~f cases in
@@ -257,7 +257,8 @@ let rec subst_expression
   | E_matching { matchee; cases = Match_variant { cases; tv } } ->
     let matchee = self matchee in
     let f ({ constructor; pattern; body } : _ matching_content_case) cs =
-      let pattern, body = subst_binder1 ~body:(pattern, body) ~x ~expr in
+      let pvar, body = subst_binder1 ~body:((Binder.get_var pattern), body) ~x ~expr in
+      let pattern = Binder.set_var pattern pvar in
       { constructor; pattern; body } :: cs
     in
     let cases = List.fold_right cases ~f ~init:[] in

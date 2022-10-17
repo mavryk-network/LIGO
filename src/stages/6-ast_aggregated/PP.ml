@@ -158,7 +158,7 @@ and option_inline ppf inline =
 
 and matching_variant_case : (formatter -> expression -> unit) -> formatter -> expression matching_content_case -> unit =
   fun f ppf {constructor=c; pattern; body} ->
-  fprintf ppf "@[<v 2>| %a %a ->@ %a@]" Label.pp c Value_var.pp pattern f body
+  fprintf ppf "@[<v 2>| %a %a ->@ %a@]" Label.pp c (Binder.pp type_expression) pattern f body
 
 and matching : (formatter -> expression -> unit) -> _ -> matching_expr -> unit = fun f ppf m -> match m with
   | Match_variant {cases ; tv=_} ->

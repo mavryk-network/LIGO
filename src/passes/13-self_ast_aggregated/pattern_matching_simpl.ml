@@ -66,7 +66,7 @@ let rec do_while : (expression -> (bool * expression)) -> expression -> expressi
     else exp
 
 let make_le : _ matching_content_variant -> (Label.t * Value_var.t) list = fun ml ->
-  List.map ~f:(fun (m:_ matching_content_case) -> (m.constructor,m.pattern)) ml.cases
+  List.map ~f:(fun (m:_ matching_content_case) -> (m.constructor, Binder.get_var m.pattern)) ml.cases
 
 let substitute_var_in_body : Value_var.t -> Value_var.t -> expression -> expression =
   fun to_subst new_var body ->
@@ -99,7 +99,7 @@ let compress_matching : expression -> expression =
                 match no_fw, fw with
                 | [{constructor= Label constructor;pattern;body}] , lst when List.length lst >= 1 ->
                   let (_,proj) = List.find_exn ~f:(fun (Label constructor',_) -> String.equal constructor' constructor) le in
-                  let body' = substitute_var_in_body pattern proj body in
+                  let body' = substitute_var_in_body (Binder.get_var pattern) proj body in
                   stop body'
                 | _ , _ -> continue smap
               )

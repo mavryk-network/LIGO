@@ -104,7 +104,7 @@ module Update   = Update(Access_label)
 
 type 'e matching_content_case = {
     constructor : Label.t ;
-    pattern : Value_var.t ;
+    pattern : type_expression Binder.t ;
     body : 'e ;
   }
 

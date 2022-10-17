@@ -145,7 +145,13 @@ and map_cases : 'err mapper -> matching_expr -> matching_expr = fun f m ->
     Match_record {fields; body; tv}
 
 and map_program : 'err mapper -> program -> program = fun g (ctxt, expr) ->
-  let f d = Location.map (function D_value { binder ; expr ; attr } -> D_value { binder ; expr = map_expression g expr ; attr }) d in
+  let f d = Location.map (function 
+  | D_value { binder ; expr ; attr } -> D_value { binder ; expr = map_expression g expr ; attr }
+  | D_pattern { matchee ; cases } -> 
+    let matchee = map_expression g matchee in
+    let cases = map_cases g cases in
+    D_pattern { matchee ; cases }
+  ) d in
   let ctxt = List.map ~f ctxt in
   let expr = map_expression g expr in
   (ctxt, expr)
@@ -229,6 +235,7 @@ module Free_variables :
     match m with
     | Match_variant {cases;tv=_} ->
       let aux {constructor=_; pattern ; body} =
+        let pattern = Binder.get_var pattern in
         let varSet = get_fv_expr body in
         VarSet.remove pattern @@ varSet in
       unions @@  List.map ~f:aux cases

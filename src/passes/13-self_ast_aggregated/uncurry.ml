@@ -113,7 +113,7 @@ let rec usage_in_expr (f : Value_var.t) (expr : expression) : usage =
     self element
   | E_matching { matchee; cases = Ast_aggregated.Match_variant { cases; tv = _ } } ->
     usages (self matchee ::
-            List.map ~f:(fun { constructor = _; pattern; body } -> self_binder [pattern] body) cases)
+            List.map ~f:(fun { constructor = _; pattern; body } -> self_binder [Binder.get_var pattern] body) cases)
   | E_matching { matchee; cases = Ast_aggregated.Match_record { fields; body; tv = _ } } ->
     usages [self matchee; self_binder (List.map ~f:Binder.get_var (Record.LMap.to_list fields)) body]
   | E_record fields ->
@@ -268,7 +268,7 @@ let rec uncurry_in_expression ~raise
     let cases =
       List.map
         ~f:(fun { constructor; pattern; body } ->
-           let body = self_binder [pattern] body in
+           let body = self_binder [Binder.get_var pattern] body in
            { constructor; pattern; body })
         cases in
     return (E_matching { matchee; cases = Match_variant { cases; tv } } )

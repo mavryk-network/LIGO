@@ -19,7 +19,7 @@ open Simple_utils.Trace
 open Errors
 open Ligo_prim
 
-type matchees = Value_var.t list
+type matchees = O.type_expression Binder.t list
 type pattern = O.type_expression I.Pattern.t
 type typed_pattern = pattern * O.type_expression
 type equations = (typed_pattern list * O.expression) list
@@ -128,7 +128,8 @@ let rec substitute_var_in_body ~raise : Value_var.t -> Value_var.t -> O.expressi
               Match_record {fields;body;tv}
           | Match_variant {cases;tv} ->
             let cases = List.fold_right cases ~init:[] ~f:(fun case cases ->
-              if Value_var.equal case.pattern to_subst then case::cases
+              let bvar = Binder.get_var case.pattern in
+              if Value_var.equal bvar to_subst then case::cases
               else
                 let body = substitute_var_in_body ~raise to_subst new_var case.body in
                 {case with body}::cases
@@ -237,7 +238,7 @@ and var_rule ~raise : err_loc:Location.t -> typed_pattern option -> matchees -> 
         | (phd,_)::ptl -> (
           match phd.wrap_content with
           | P_var b ->
-            let body' = substitute_var_in_body ~raise (Binder.get_var b) mhd body in
+            let body' = substitute_var_in_body ~raise (Binder.get_var b) (Binder.get_var mhd) body in
             (ptl , body')
           | P_unit -> (ptl , body)
           |  _ -> raise.error @@ corner_case __LOC__
@@ -255,49 +256,52 @@ and ctor_rule ~raise : err_loc:Location.t -> matchees -> equations -> rest -> O.
   | mhd::mtl ->
     let matchee_t = get_pattern_type ~raise eqs in
     let body_t = get_body_type ~raise eqs in
-    let matchee = O.e_a_variable mhd matchee_t in
+    let matchee = O.e_a_variable (Binder.get_var mhd) matchee_t in
     let eq_map = group_equations ~raise eqs in
     let aux_p :  Label.t * equations -> _ O.matching_content_case  =
       fun (constructor,eq) ->
         let proj =
           match eq with
           | [(tp,_)] -> (
-            let (pattern,_) = List.hd_exn tp in
+            let (pattern,t) = List.hd_exn tp in
             match pattern.wrap_content with
-            | P_var x -> Binder.get_var x
-            | P_unit -> Value_var.fresh ~name:"unit_proj" ()
-            | _ -> Value_var.fresh ~name:"ctor_proj" ()
+            | P_var x -> x
+            | P_unit -> Binder.make (Value_var.fresh ~name:"unit_proj" ()) t
+            | _ -> Binder.make (Value_var.fresh ~name:"ctor_proj" ()) t
           )
           | _ ->
-            Value_var.fresh ~name:"ctor_proj" ()
+            let (tp,_) = List.hd_exn eq in
+            let (_,t) = List.hd_exn tp in
+            Binder.make (Value_var.fresh ~name:"ctor_proj" ()) t
         in
         let new_ms = proj::mtl in
         let nested = match_ ~raise ~err_loc new_ms eq def in
         O.{ constructor ; pattern = proj ; body = nested }
     in
-    let aux_m : Label.t * O.type_expression -> _ O.matching_content_case =
-      fun (constructor,t) ->
+    let aux_m : O.type_expression * Label.t * O.type_expression -> _ O.matching_content_case =
+      fun (tb,constructor,t) ->
         let proj = Value_var.fresh ~name:"ctor_proj" () in
+        let pattern = Binder.make proj tb in
         let body = O.make_e def t in
-        { constructor ; pattern = proj ; body }
+        { constructor ; pattern ; body }
     in
     let grouped_eqs =
       match O.get_t_sum matchee_t with
       | Some _ when Option.is_some (O.get_t_option matchee_t) ->
-        List.map ~f:(fun label -> (label, Record.LMap.find_opt label eq_map)) [Label.of_string "Some"; Label.of_string "None"]
+        List.map ~f:(fun label -> (matchee_t, label, Record.LMap.find_opt label eq_map)) [Label.of_string "Some"; Label.of_string "None"]
       | Some rows ->
         let eq_opt_map = Record.LMap.mapi (fun label _ -> Record.LMap.find_opt label eq_map) rows.fields in
-        Record.LMap.to_kv_list @@ eq_opt_map
+        List.map (Record.LMap.to_kv_list @@ eq_opt_map) ~f:(fun (a,b) -> matchee_t, a, b)
       | None -> (
         (* REMITODO: parametric types in env ? *)
         match O.get_t_list matchee_t with
-        | Some _ -> List.map ~f:(fun label -> (label, Record.LMap.find_opt label eq_map)) [Label.of_string "Cons"; Label.of_string "Nil"]
+        | Some _ -> List.map ~f:(fun label -> (matchee_t, label, Record.LMap.find_opt label eq_map)) [Label.of_string "Cons"; Label.of_string "Nil"]
         | None -> raise.error @@ corner_case __LOC__ (* should be caught when typing the matchee *)
       )
     in
-    let present = List.filter_map ~f:(fun (c,eq_opt) -> match eq_opt with Some eq -> Some (c,eq) | None -> None) grouped_eqs in
+    let present = List.filter_map ~f:(fun (_,c,eq_opt) -> match eq_opt with Some eq -> Some (c,eq) | None -> None) grouped_eqs in
     let present_cases = List.map present ~f:aux_p in
-    let missing = List.filter_map ~f:(fun (c,eq_opt) -> match eq_opt with Some _ -> None | None -> Some (c,body_t)) grouped_eqs in
+    let missing = List.filter_map ~f:(fun (tb,c,eq_opt) -> match eq_opt with Some _ -> None | None -> Some (tb,c,body_t)) grouped_eqs in
     let missing_cases = List.map ~f:aux_m missing in
     let cases = O.Match_variant { cases = missing_cases @ present_cases ; tv = matchee_t } in
     O.make_e (O.E_matching { matchee ; cases }) body_t
@@ -393,10 +397,10 @@ and product_rule ~raise : err_loc:Location.t -> typed_pattern -> matchees -> equ
     let matchee_t = get_pattern_type ~raise eqs in
     let eqs' = List.map ~f:aux eqs in
     let fields = Record.LMap.of_list lb in
-    let new_matchees = List.map ~f:(Fn.compose Binder.get_var snd) lb in
+    let new_matchees = List.map ~f:(snd) lb in
     let body = match_ ~raise ~err_loc (new_matchees @ ms) eqs' def in
     let cases = O.Match_record { fields; body ; tv = snd product_shape } in
-    let matchee = O.e_a_variable mhd matchee_t in
+    let matchee = O.e_a_variable (Binder.get_var mhd) matchee_t in
     O.make_e (O.E_matching { matchee ; cases }) body.type_expression
   )
   | [] -> raise.error @@ corner_case __LOC__
