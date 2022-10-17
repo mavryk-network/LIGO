@@ -58,6 +58,7 @@ module type S = sig
   [@@deriving eq, compare, yojson, hash, iter]
 
   val fold_pattern : ('a -> 'b t -> 'a) -> 'a -> 'b t -> 'a
+  val fold_map_pattern : ('a -> 'b t -> 'a * 'c t) -> 'a -> 'b t -> 'a * 'c t
   val fold : ('a -> 'b -> 'a) -> 'a -> 'b t -> 'a
   val map : ('a -> 'b) -> 'a t -> 'b t
   val fold_map : ('a -> 'b -> 'a * 'b) -> 'a -> 'b t -> 'a * 'b t
@@ -133,12 +134,37 @@ module Make (Container : Container.S) () = struct
     | P_var _ -> f acc p
     | P_list lp ->
       (match lp with
-      | Cons (pa, pb) -> fold_pattern f (fold_pattern f acc pb) pa
+      | Cons (pa, pb) -> 
+        let acc = fold_pattern f acc pa in
+        let acc = fold_pattern f acc pb in
+        acc
       | List lp -> List.fold_left ~f:(fold_pattern f) ~init:acc lp)
     | P_variant (_, p) -> fold_pattern f acc p
     | P_tuple lp -> List.fold_left ~f:(fold_pattern f) ~init:acc lp
     | P_record lps -> Container.fold (fold_pattern f) acc lps
 
+  let rec fold_map_pattern : ('a -> 'b t -> 'a * 'c t) -> 'a -> 'b t -> 'a * 'c t =
+    fun f acc p ->
+      let loc = Location.get_location p in
+      match Location.unwrap p with
+      | P_unit -> f acc p
+      | P_var _ -> f acc p
+      | P_list lp ->
+        (match lp with
+        | Cons (pa, pb) -> 
+          let acc, pa = fold_map_pattern f acc pa in 
+          let acc, pb = fold_map_pattern f acc pb in
+          acc, Location.wrap ~loc (P_list (Cons (pa, pb)))
+        | List lp ->   
+          let acc, lp = List.fold_map ~f:(fold_map_pattern f) ~init:acc lp in
+          acc, Location.wrap ~loc (P_list (List lp)))
+      | P_variant (_, p) -> fold_map_pattern f acc p
+      | P_tuple lp -> 
+        let acc, lp = List.fold_map ~f:(fold_map_pattern f) ~init:acc lp in
+        acc, Location.wrap ~loc (P_tuple lp)
+      | P_record lps -> 
+        let acc, lps = Container.fold_map (fold_map_pattern f) acc lps in
+        acc, Location.wrap ~loc (P_record lps)
 
   let rec fold : ('a -> 'b -> 'a) -> 'a -> 'b t -> 'a =
    fun f acc p ->
