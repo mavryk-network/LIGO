@@ -386,7 +386,7 @@ let context_apply (p : context) (e : expression) : expression =
   let f d e = match Location.unwrap d with
   | D_value { binder ; expr ; attr } -> e_a_let_in binder expr e attr 
   | D_pattern { matchee ; cases } ->
-    let (), cases = Helpers.fold_map_cases (fun () case ->
+    let (), cases = Helpers.fold_map_cases (fun () _ ->
       true, (), e  
     ) () cases in
     e_a_matching matchee cases e.type_expression

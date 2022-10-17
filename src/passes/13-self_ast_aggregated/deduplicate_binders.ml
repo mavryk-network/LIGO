@@ -233,8 +233,6 @@ let rec swap_expression : Scope.swapper -> expression -> expression = fun swaper
     return @@ E_for_each { fe_binder; collection; collection_type; fe_body }
   | E_deref mut_var -> return @@ E_deref (swaper.mut mut_var)
 
-
-
 and matching_cases : Scope.swapper -> matching_expr -> matching_expr = fun swaper me ->
   let self = swap_expression swaper in
   let self_type = swap_type_expression swaper in
@@ -259,10 +257,23 @@ let swap_declaration : Scope.swapper -> declaration -> declaration = fun swaper 
     let binder = swap_binder swaper binder in
     let expr = swap_expression swaper expr in
     Location.wrap ~loc:(Location.get_location decl) @@ D_value { binder ; expr ; attr }
-  (* | D_pattern { matchee ; cases } ->
-    let matchee = swap_expression swaper matchee in *)
+  | D_pattern { matchee ; cases } ->
+    let matchee = swap_expression swaper matchee in
+    let swap_binders case = 
+      match case with
+      | Match_variant {cases;tv} -> 
+        let cases = List.map cases ~f:(fun {constructor;pattern;body} ->
+          let pattern = swap_binder swaper pattern in
+          {constructor;pattern;body}
+        ) in
+        Match_variant {cases;tv}
+      | Match_record {fields;body;tv} -> 
+        let fields = Record.map (swap_binder swaper) fields in
+        Match_record {fields;body;tv}
+    in
+    let cases = swap_binders cases in
+    Location.wrap ~loc:(Location.get_location decl) @@ D_pattern { matchee ; cases }
     
-  
 let rec type_expression : Scope.t -> type_expression -> type_expression = fun scope te ->
   let self ?(scope = scope) = type_expression scope in
   let return type_content = {te with type_content} in
@@ -466,6 +477,25 @@ let declaration : Scope.t -> declaration -> Scope.t * declaration = fun scope de
     let scope,binder = binder_new scope binder in
     let _,expr = expression scope expr in
     scope, Location.wrap ~loc:(Location.get_location decl) @@ D_value { binder ; expr ; attr }
+  | D_pattern { matchee ; cases } ->
+    let binders_new scope case = 
+      match case with
+      | Match_variant {cases;tv} -> 
+        let scope, cases = List.fold_map cases ~init:scope 
+          ~f:(fun scope {constructor;pattern;body} ->
+            let scope, pattern = binder_new scope pattern in
+            scope, {constructor;pattern;body}
+          ) 
+        in
+        scope, Match_variant {cases;tv}
+      | Match_record {fields;body;tv} -> 
+        let scope, fields = Record.fold_map (binder_new) scope fields in
+        scope, Match_record {fields;body;tv}
+    in
+    let scope, cases = binders_new scope cases in
+    let _, matchee = expression scope matchee in
+    scope, Location.wrap ~loc:(Location.get_location decl) @@ D_pattern { matchee ; cases }
+  
 
 let program_ : program -> program = fun (ctxt, prg) ->
   let scope = Scope.empty in
