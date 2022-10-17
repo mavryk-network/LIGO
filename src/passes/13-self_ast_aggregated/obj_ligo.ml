@@ -144,12 +144,13 @@ let purge_meta_ligo_program ~raise ((ctxt, e) : AST.program) : AST.program =
     | AST.D_pattern { matchee ; cases } ->
       let expr_is_meta = not (Trace.to_bool (check_obj_ligo ~blacklist matchee)) in
       let blacklist = if expr_is_meta then
-        let rec get_binders (m : AST.matching_expr) = 
+        let get_binders (m : AST.matching_expr) = 
           match m with
           | Match_variant { cases ; _ } -> List.map cases ~f:(fun {pattern;_} -> pattern)
-          | Match_record _ -> []
+          | Match_record { fields ; _ } -> Record.fold (fun bs b -> b :: bs) [] fields
         in
-        (binder, matchee.location) :: blacklist 
+        let binders = get_binders cases in
+        (List.map binders ~f:(fun b -> b, matchee.location)) @ blacklist 
       else blacklist in
       if expr_is_meta then
         blacklist, ctxt

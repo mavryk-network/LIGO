@@ -259,6 +259,9 @@ let swap_declaration : Scope.swapper -> declaration -> declaration = fun swaper 
     let binder = swap_binder swaper binder in
     let expr = swap_expression swaper expr in
     Location.wrap ~loc:(Location.get_location decl) @@ D_value { binder ; expr ; attr }
+  (* | D_pattern { matchee ; cases } ->
+    let matchee = swap_expression swaper matchee in *)
+    
   
 let rec type_expression : Scope.t -> type_expression -> type_expression = fun scope te ->
   let self ?(scope = scope) = type_expression scope in
@@ -436,7 +439,8 @@ and matching_cases : Scope.t -> matching_expr -> matching_expr = fun scope me ->
   match me with
     Match_variant {cases;tv} ->
     let cases = List.map ~f:(fun {constructor;pattern;body} ->
-        let scope,pattern = Scope.new_value_var scope pattern in
+        let scope,pvar = Scope.new_value_var scope (Binder.get_var pattern) in
+        let pattern = Binder.set_var pattern pvar in
         let _,body = self ~scope body in
         {constructor;pattern;body}
       ) cases in

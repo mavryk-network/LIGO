@@ -62,7 +62,8 @@ let rec reduplicate ~raise : expression -> expression =
        let matchee = self matchee in
        let f { constructor ; pattern ; body } =
          let body = self body in
-         let pattern = remove_counter pattern in
+         let bvar = remove_counter (Binder.get_var pattern) in
+         let pattern = Binder.set_var pattern bvar in
          { constructor ; pattern ; body } in
        let cases = List.map ~f cases in
        return (E_matching { matchee ; cases = Match_variant { cases ; tv } })

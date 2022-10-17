@@ -1725,7 +1725,7 @@ and eval_ligo ~raise ~steps ~options
        let hd = List.hd_exn lst in
        let tl = V_List (List.tl_exn lst) in
        let proj = v_pair (hd, tl) in
-       let env' = Env.extend env pattern (ty, proj) in
+       let env' = Env.extend env (Binder.get_var pattern) (ty, proj) in
        eval_ligo body calltrace env'
      | Match_variant { cases; _ }, V_Ct (C_bool b) ->
        let ctor_body (case : _ matching_content_case) =
@@ -1760,7 +1760,7 @@ and eval_ligo ~raise ~steps ~options
            cases
        in
        (* TODO-er: check *)
-       let env' = Env.extend env pattern (tv, proj) in
+       let env' = Env.extend env (Binder.get_var pattern) (tv, proj) in
        eval_ligo body calltrace env'
      | Match_record { fields; body; tv = _ }, V_Record rv ->
        let aux : Label.t -> _ Binder.t -> env -> env =

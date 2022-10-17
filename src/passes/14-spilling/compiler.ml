@@ -474,7 +474,7 @@ let rec compile_expression ~raise (ae:AST.expression) : expression =
               let proj_t = t_pair (None,list_ty) (None,expr'.type_expression) in
               let proj = Expression.make (ec_pair (e_var hd list_ty) (e_var tl expr'.type_expression)) proj_t in
               let cons_body = self (fst match_cons) in
-              let cons_body' = e_let_in (snd match_cons) proj_t false proj cons_body in
+              let cons_body' = e_let_in (Binder.get_var (snd match_cons)) proj_t false proj cons_body in
               (((hd,list_ty), (tl,expr'.type_expression)), cons_body')
             in
             return @@ E_if_cons (expr' , nil , cons)
@@ -494,7 +494,7 @@ let rec compile_expression ~raise (ae:AST.expression) : expression =
               let s' = self (fst match_some) in
               (tv' , s')
             in
-            return @@ E_if_none (expr' , n , ((snd match_some , tv') , s'))
+            return @@ E_if_none (expr' , n , ((Binder.get_var (snd match_some) , tv') , s'))
           | T_sum _ when Option.is_some (AST.get_t_bool expr.type_expression) ->
             let ctor_body (case : _ AST.matching_content_case) = (case.constructor, case.body) in
             let cases = Record.of_list (List.map ~f:ctor_body cases) in
@@ -519,7 +519,7 @@ let rec compile_expression ~raise (ae:AST.expression) : expression =
                         (String.equal c constructor_name) in
                       List.find ~f:aux cases in
                     let body' = self body in
-                    return @@ E_let_in (top, false, ((pattern , tv) , body'))
+                    return @@ E_let_in (top, false, (((Binder.get_var pattern) , tv) , body'))
                   )
                 | ((`Node (a , b)) , tv) ->
                   let a' =
@@ -718,7 +718,7 @@ and compile_recursive ~raise {fun_name; fun_type; lambda} =
             let proj_t = t_pair (None,list_ty) (None,expr'.type_expression) in
             let proj = Expression.make (ec_pair (e_var hd list_ty) (e_var tl expr'.type_expression)) proj_t in
             let cons_body = self (fst match_cons) in
-            let cons_body' = e_let_in (snd match_cons) proj_t false proj cons_body in
+            let cons_body' = e_let_in (Binder.get_var (snd match_cons)) proj_t false proj cons_body in
             (((hd,list_ty), (tl,expr'.type_expression)), cons_body')
           in
           return @@ E_if_cons (expr' , nil , cons)
@@ -738,7 +738,7 @@ and compile_recursive ~raise {fun_name; fun_type; lambda} =
             let s' = self (fst match_some) in
             (tv' , s')
           in
-          return @@ E_if_none (expr' , n , (((snd match_some) , tv') , s'))
+          return @@ E_if_none (expr' , n , (((Binder.get_var (snd match_some)) , tv') , s'))
         | T_sum _ when Option.is_some (AST.get_t_bool m.matchee.type_expression) ->
           let ctor_body (case : _ AST.matching_content_case) = (case.constructor, case.body) in
           let cases = Record.of_list (List.map ~f:ctor_body cases) in
@@ -763,7 +763,7 @@ and compile_recursive ~raise {fun_name; fun_type; lambda} =
                       (String.equal c constructor_name) in
                     List.find ~f:aux cases in
                   let body' = self body in
-                  return @@ E_let_in (top, false, ((pattern , tv) , body'))
+                  return @@ E_let_in (top, false, (((Binder.get_var pattern) , tv) , body'))
                 )
               | ((`Node (a , b)) , tv) ->
                 let a' =

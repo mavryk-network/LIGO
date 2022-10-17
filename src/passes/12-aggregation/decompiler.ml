@@ -64,7 +64,8 @@ let rec decompile ~raise : Ast_aggregated.expression -> Ast_typed.expression =
               A special case for lists might be required here
             *)
             let tv = decompile_type ~raise tv in
-            let proj = Location.wrap @@ Ast_typed.Pattern.P_var (Binder.make pattern tv) in
+            let pattern = Binder.set_ascr pattern tv in
+            let proj = Location.wrap @@ Ast_typed.Pattern.P_var pattern in
             Location.wrap @@ Ast_typed.Pattern.P_variant (constructor, proj)
            in
            let body = decompile ~raise body in
