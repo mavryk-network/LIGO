@@ -27,30 +27,63 @@ module Fold_helpers(M : Monad) = struct
     let binder = Binder.map (Fn.const ascr) binder in
     ok @@ binder
 
-  and binder : ('a -> 'b monad) -> 'a Pattern.t -> ('b Pattern.t) monad
-    = fun f pattern ->
-    let ascr = Binder.get_ascr a in
-    let* ascr = f ascr in
-    let binder = Binder.map (Fn.const ascr) binder in
-    ok @@ binder
+  let rec pattern : ('a -> 'b monad) -> 'a Pattern.t -> ('b Pattern.t) monad
+    = fun f p ->
+    let loc = p.location in
+    match p.wrap_content with
+    | P_unit -> ok @@ p
+    | P_var b -> 
+      let* b = binder f b in
+      ok @@ Location.wrap ~loc (Pattern.P_var b)
+    | P_list (Cons (h,t)) ->
+      let* h = pattern f h in
+      let* t = pattern f t in
+      ok @@ Location.wrap ~loc (Pattern.P_list (Cons (h,t)))
+    | P_list (List ps) ->
+      let* ps = pattern_list f ps in
+      ok @@ Location.wrap ~loc (Pattern.P_list (List ps))
+    | P_variant (c,p) ->
+      let* p = pattern f p in
+      ok @@ Location.wrap ~loc (Pattern.P_variant (c, p))
+    | P_tuple ps ->
+      let* ps = pattern_list f ps in
+      ok @@ Location.wrap ~loc (Pattern.P_tuple ps)
+    | P_record lps ->
+      let lps    = Container.List.to_list lps in
+      let ls, ps = List.unzip lps in
+      let* ps    = pattern_list f ps in 
+      let lps    = List.zip_exn ls ps in
+      let lps    = Container.List.of_list lps in
+      ok @@ Location.wrap ~loc (Pattern.P_record lps)
+
+  and pattern_list : ('a -> 'b monad) -> 'a Pattern.t list -> ('b Pattern.t list) monad 
+  = fun f ps ->
+    match ps with
+    | [] -> ok @@ ps
+    | p::ps ->
+      let* ps = pattern_list f ps in
+      let* p = pattern f p in
+      ok @@ p::ps
+
   and param : ('a -> 'b monad) -> 'a Param.t -> ('b Param.t) monad
     = fun f param ->
     let ascr = Param.get_ascr param in
     let* ascr = f ascr in
     let binder = Param.map (Fn.const ascr) param in
     ok @@ binder
+
   let let_in :  ('a -> 'b monad) -> ('c -> 'd monad) -> ('a,'c) Let_in.t -> (('b,'d) Let_in.t) monad
     = fun f g {let_binder; rhs; let_result; attributes} ->
-    let* let_binder = binder g let_binder in
+    let* let_binder = pattern g let_binder in
     let* rhs        = f rhs in
     let* let_result = f let_result in
     ok @@ Let_in.{let_binder; rhs; let_result; attributes}
 
-  let let_pattern_in :  ('a -> 'b monad) -> ('c -> 'd monad) -> ('a,'c) Let_pattern_in.t -> (('b,'d) Let_pattern_in.t) monad
+  (* let let_pattern_in :  ('a -> 'b monad) -> ('c -> 'd monad) -> ('a,'c) Let_pattern_in.t -> (('b,'d) Let_pattern_in.t) monad
   = fun f g {let_pattern; rhs; let_result; attributes} ->
   let* rhs        = f rhs in
   let* let_result = f let_result in
-  ok @@ Let_pattern_in.{let_pattern; rhs; let_result; attributes}
+  ok @@ Let_pattern_in.{let_pattern; rhs; let_result; attributes} *)
 
   let type_in :  ('a -> 'b monad) -> ('c -> 'd monad) -> ('a,'c) Type_in.t -> (('b,'d) Type_in.t) monad
     = fun f g {type_binder; rhs; let_result} ->
@@ -252,10 +285,10 @@ module Fold_helpers(M : Monad) = struct
       let* li = let_in self ok li in
       return @@ E_let_in li
     )
-    | E_let_pattern_in li -> (
+    (* | E_let_pattern_in li -> (
       let* li = let_pattern_in self ok li in
       return @@ E_let_pattern_in li
-    )
+    ) *)
     | E_type_in ti -> (
       let* ti = type_in self ok ti in
       return @@ E_type_in ti
