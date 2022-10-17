@@ -5,9 +5,6 @@ module Helpers = Helpers
 let reset_counter () = Monomorphisation.poly_counter_reset ()
 let expression_obj ~raise e = Obj_ligo.check_obj_ligo ~raise e
 
-let simplify_pattern_matching =
-  Helpers.map_program @@ Pattern_matching_simpl.peephole_expression
-
 let eta_reduce : Ast_aggregated.expression -> Ast_aggregated.expression option =
   fun e ->
   match e.expression_content with
@@ -160,7 +157,7 @@ let all_expression ~raise ~(options : Compiler_options.middle_end) e =
 
 let all_program ~raise ~(options : Compiler_options.middle_end) (prg : Ast_aggregated.program) =
   let prg = Helpers.map_program Polymorphic_replace.expression prg in
-  let prg = simplify_pattern_matching prg in
+  let prg = Helpers.map_program Pattern_matching_simpl.peephole_expression prg in
   let prg = if not options.test then
       let prg = Obj_ligo.purge_meta_ligo_program ~raise prg in
       let () = Obj_ligo.check_obj_ligo_program ~raise prg in (* for good measure .. *)

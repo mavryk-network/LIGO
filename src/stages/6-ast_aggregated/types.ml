@@ -178,7 +178,8 @@ and expression = {
 and expr = expression
 
 and declaration_content =
-    D_value of (expr, ty_expr) Value_decl.t
+  | D_value of (expr, ty_expr) Value_decl.t
+  | D_pattern of matching
   [@@deriving eq,compare,yojson,hash]
 
 and  declaration = declaration_content Location.wrap

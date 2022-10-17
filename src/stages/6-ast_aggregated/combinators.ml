@@ -274,6 +274,7 @@ let e_a_application lamb args t = e_application {lamb;args} t
 let e_a_lambda l in_ty out_ty = e_lambda l (t_arrow in_ty out_ty ())
 let e_a_recursive l= e_recursive l l.fun_type
 let e_a_let_in let_binder rhs let_result attr = e_let_in { let_binder ; rhs ; let_result ; attr } (get_type let_result)
+let e_a_matching matchee cases t = e_matching {matchee;cases} t
 let e_a_raw_code language code t = e_raw_code { language ; code } t
 let e_a_type_inst forall type_ u = e_type_inst { forall ; type_ } u
 let e_a_bool b = make_e (e_bool b) (t_bool ())
@@ -374,11 +375,20 @@ let forall_expand (e : expression) =
 let context_decl ?(loc = Location.generated) (binder : type_expression Binder.t) (expr : expression) (attr : ValueAttr.t) : context =
   [Location.wrap ~loc @@ D_value { binder ; expr ; attr }]
 
+let context_decl_pattern ?(loc = Location.generated) (m : matching) : context =
+  [Location.wrap ~loc @@ D_pattern m]
+
 let context_id : context = []
 
 let context_append (l : context) (r : context) : context = l @ r
 
 let context_apply (p : context) (e : expression) : expression =
   let f d e = match Location.unwrap d with
-    | D_value { binder ; expr ; attr } -> e_a_let_in binder expr e attr in
+  | D_value { binder ; expr ; attr } -> e_a_let_in binder expr e attr 
+  | D_pattern { matchee ; cases } ->
+    let (), cases = Helpers.fold_map_cases (fun () case ->
+      true, (), e  
+    ) () cases in
+    e_a_matching matchee cases e.type_expression
+  in
   List.fold_right ~f ~init:e p

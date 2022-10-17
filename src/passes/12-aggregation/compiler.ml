@@ -429,25 +429,23 @@ and compile_declaration ~raise ~(super_attr : O.ModuleAttr.t) path scope (d : I.
       let scope,var = Scope.add_path_to_var scope path @@ Binder.get_var binder in
       let binder = Binder.set_var binder var in
       scope, O.context_decl binder expr attr
-  | D_pattern {pattern;expr;attr} ->
-    (match pattern.wrap_content with
-    | P_var _ ->
-      let binder = List.hd_exn @@ I.Pattern.binders pattern in
-      let attr = {attr with hidden = attr.hidden || super_attr.hidden; public = attr.public && super_attr.public} in
-      let expr = compile_expression ~raise path scope expr in
-      let attr = compile_value_attr attr in
-      let binder = Binder.map (fun _ -> expr.type_expression) binder in
-      let scope  = Scope.push_value scope binder expr.type_expression attr path in
-      let scope,var = Scope.add_path_to_var scope path @@ Binder.get_var binder in
-      let binder = Binder.set_var binder var in
-      scope, O.context_decl binder expr attr
-    (* | _ ->    
-      (* TODO: What to do about attributes ???? *)
-      let matchee = compile_expression ~raise path scope expr in
-      let cases = I.Match_expr.([{ pattern = let_binder ; body = let_result }]) in
-      let cases   = self_cases matchee cases in
-      return @@ cases) *)
-      )
+  | D_pattern {pattern;expr;attr=_} ->
+    (* TODO: Use attr *)
+    let loc = Location.get_location d in
+    let cases = [I.Match_expr.({ pattern ; body = I.e_a_unit ()})] in
+    let matchee = compile_expression ~raise path scope expr in
+    let me = compile_cases ~raise ~loc path scope matchee cases in
+    (match me with
+    | O.E_let_in { let_binder ; rhs ; let_result ; attr } ->
+      let d = O.context_decl let_binder rhs attr in
+      let d' = (match let_result.expression_content with
+      | O.E_matching m -> O.context_decl_pattern m
+      | _ -> []
+      ) in
+      scope, d @ d'
+    | O.E_matching m -> scope, O.context_decl_pattern m
+    | _ -> scope, O.context_id
+    )
   | D_type _ ->
       scope, O.context_id
   | D_module {module_binder;module_;module_attr} ->
