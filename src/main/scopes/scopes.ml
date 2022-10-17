@@ -275,7 +275,7 @@ let rec expression : with_types:bool -> options:Compiler_options.middle_end -> t
               let binder_loc =  VVar.get_location var in
               Misc.make_v_def ~with_types ?core_type tenv.bindings Local var binder_loc rhs.location :: acc
           in
-          List.fold (Pattern.binders let_binder) ~init:[] ~f
+          List.fold (AST.Pattern.binders let_binder) ~init:[] ~f
         in
         let defs_rhs, refs_rhs, tenv, scopes = expression tenv rhs in
         let defs_result, refs_result, tenv, scopes' = expression tenv let_result in
@@ -409,24 +409,23 @@ and module_expression
 
 and declaration_expression
     :  with_types:bool -> options:Compiler_options.middle_end
-    -> ?core_type:AST.type_expression -> typing_env -> VVar.t -> AST.expression
+    -> ?core_type:AST.type_expression -> typing_env -> VVar.t list -> AST.expression
     -> def list * reference list * typing_env * scopes
   =
- fun ~with_types ~options ?core_type tenv ev e ->
+ fun ~with_types ~options ?core_type tenv evs e ->
   let defs, refs, tenv, scopes = expression ~with_types ~options tenv e in
+  let defs' = List.map evs ~f:(fun ev ->
   let range = VVar.get_location ev in
   let body_range = e.location in
-  let def =
-    Misc.make_v_def
+  Misc.make_v_def
       ~with_types
       ?core_type
       tenv.bindings
       Global
       ev
       range
-      body_range
-  in
-  [ def ] @ defs, refs, tenv, scopes
+      body_range) in
+  defs' @ defs, refs, tenv, scopes
 
 
 and declaration
@@ -439,6 +438,7 @@ and declaration
   | D_value { attr = { hidden; _ }; _ }
   | D_module { module_attr = { hidden; _ }; _ }
   | D_type { type_attr = { hidden; _ }; _ }
+  | D_pattern { attr = { hidden ; _} ; _}
     when hidden -> [], [], tenv, []
   | D_value
       { binder = _
@@ -453,15 +453,22 @@ and declaration
     in
     let def, defs_expr = drop_last defs_expr in
     defs_expr @ [ def ], refs_rhs, tenv, scopes
+  | D_pattern { pattern; expr; _ } ->
+    let vars = AST.Pattern.binders pattern |> List.map ~f:Binder.get_var in
+    (* 
+     TODO: neeed to handle core_type when P_ascr   
+    let core_type = Binder.get_ascr binder in *)
+    declaration_expression ~with_types ~options tenv vars expr
   | D_value { binder; expr; _ } ->
     let var = Binder.get_var binder in
     let core_type = Binder.get_ascr binder in
-    declaration_expression ~with_types ~options ?core_type tenv var expr
+    declaration_expression ~with_types ~options ?core_type tenv [var] expr
   | D_type { type_binder; type_expr; _ } ->
     let def = type_expression type_binder Global type_expr in
     [ def ], [], tenv, []
   | D_module { module_binder; module_; _ } ->
     module_expression ~with_types ~options tenv Global module_binder module_
+
 
 
 and declarations
