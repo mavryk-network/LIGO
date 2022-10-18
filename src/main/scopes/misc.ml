@@ -61,7 +61,7 @@ let rec extract_variable_types
         | _ -> failwith "rec fun does not have type arrow"
       in
       return [ fun_name, fun_type; Param.get_var binder, in_t ]
-    | E_let_in { let_binder; rhs; _ } ->
+    | E_let_in { let_binder; rhs=_; _ } ->
       let x = List.map ~f:(fun binder -> (Binder.get_var binder , Binder.get_ascr binder)) (Pattern.binders let_binder) in
       return x
     | E_matching { matchee=_; cases } ->

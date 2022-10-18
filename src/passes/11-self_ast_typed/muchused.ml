@@ -134,13 +134,13 @@ let rec muchuse_of_expr expr : muchuse =
      end
   | E_type_abstraction {result;_} ->
      muchuse_of_expr result
-  | E_let_in {let_binder;rhs;let_result;_} ->
+  | E_let_in {let_binder;rhs=_;let_result;_} ->
     let binders = Pattern.binders let_binder in
     let muchuse_expr = muchuse_of_expr expr in
     List.fold binders ~init:muchuse_expr
       ~f:(fun m b ->
         muchuse_union m
-          (muchuse_of_binder (Binder.get_var b) expr.type_expression 
+          (muchuse_of_binder (Binder.get_var b) (Binder.get_ascr b) 
             (muchuse_of_expr let_result)))
   | E_recursive {fun_name;lambda;fun_type} ->
      muchuse_of_binder fun_name fun_type (muchuse_of_lambda fun_type lambda)
@@ -169,13 +169,13 @@ let rec muchuse_of_expr expr : muchuse =
     (M.add (Binder.get_var binder) 1 M.empty, [])
     (muchuse_of_expr expression)
   | E_deref var -> M.add var 1 M.empty, []
-  | E_let_mut_in {let_binder;rhs;let_result;_} ->
+  | E_let_mut_in {let_binder;rhs=_;let_result;_} ->
     let binders = Pattern.binders let_binder in
     let muchuse_expr = muchuse_of_expr expr in
     List.fold binders ~init:muchuse_expr
       ~f:(fun m b ->
         muchuse_union m
-          (muchuse_of_binder (Binder.get_var b) expr.type_expression 
+          (muchuse_of_binder (Binder.get_var b) (Binder.get_ascr b) 
             (muchuse_of_expr let_result)))
   | E_for { binder; start; final; incr; f_body } ->
     muchuse_unions

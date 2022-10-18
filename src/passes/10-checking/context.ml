@@ -928,7 +928,7 @@ let init ?env () =
       match Location.unwrap decl with
       | D_value { binder; expr; attr = _ } ->
         add_imm ctx (Binder.get_var binder) expr.type_expression
-      | D_pattern { pattern; expr; attr = _ } ->
+      | D_pattern { pattern; expr = _; attr = _ } ->
         List.fold (Ast_typed.Pattern.binders pattern)
           ~init:ctx
           ~f:(fun acc x -> add_imm acc (Binder.get_var x) (Binder.get_ascr x))
