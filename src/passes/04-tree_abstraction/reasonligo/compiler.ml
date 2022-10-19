@@ -554,6 +554,17 @@ and compile_pattern ~raise : CST.pattern -> AST.ty_expr option Pattern.t =
   | CST.PUnit p ->
     let loc = Location.lift p.region in
     Location.wrap ~loc @@ P_unit
+  | PTyped tp -> (
+    let ({pattern ; type_expr ; _} : CST.typed_pattern), _loc = r_split tp in
+    let type_expr = compile_type_expression ~raise type_expr in
+    match pattern with
+    | CST.PVar _ ->
+      let pattern = compile_pattern ~raise pattern in
+      Pattern.map (fun _ -> Some type_expr) pattern
+    | _ ->
+      (* THIS IS VERY BAD, TODO !*)
+      compile_pattern ~raise pattern
+  )
   | _ ->raise.error @@ unsupported_pattern_type p
 
 and compile_matching_expr ~raise :  'a CST.case_clause CST.reg List.Ne.t -> (AST.expression, AST.ty_expr option) Match_expr.match_case list =
