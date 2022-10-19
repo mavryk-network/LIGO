@@ -158,7 +158,7 @@ let parse_and_unify_jsligo ~raise buffer file_path =
     (Unification.Jsligo.compile_program cst) in
   unified
 
-let parse_and_unify_reasonligo ~raise buffer file_path =
+let parse_and_unify_reasonligo ~raise _buffer _file_path =
   trace ~raise unification_tracer @@ (fun ~raise -> raise.error @@
   [ Unification.Errors.unsupported_syntax "ReasonLIGO" ])
 
