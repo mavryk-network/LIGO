@@ -10,13 +10,13 @@ let rec type_expression {type_expression_content=ec;location=_} =
   ]
 
 and type_expression_content = function
-  | _ -> `String "type expressions not supported yet"  (* TODO NP : Add formatting *)
+  | _ -> `String "type expressions not supported yet"
 
-and pattern = fun _ -> `String "patterns not supported yet" (* TODO NP : Add patterns *)
+and pattern = fun _ -> `String "patterns not supported yet"
 
-and statement = fun _ -> `String "statements not supported yet" (* TODO NP : Add statements *)
+and statement = fun _ -> `String "statements not supported yet"
 
-and module_decl = fun _ -> `String "module decl not supported yet" (* TODO NP : Add module decl *)
+and module_decl = fun _ -> `String "module decl not supported yet"
 
 let rec expression {expression_content = ec; location = loc} : json =
   `Assoc (
