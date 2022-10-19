@@ -307,7 +307,6 @@ and translate_binderN ~raise ~proto (vars, body) env =
            body)
 
 and translate_args ~raise ~proto (arguments : I.expression list) env : _ O.args =
-  let arguments = List.rev arguments in
   let arguments = List.map ~f:(fun argument -> translate_expression ~raise ~proto argument env) arguments in
   List.fold_right
     ~f:(fun arg args -> O.Args_cons (nil, arg, args))

@@ -387,7 +387,7 @@ with args_typed : list ty -> args -> list ty -> Prop :=
 | Args_cons_typed {e args d a} :
     `{expr_typed g e a ->
       args_typed g args d ->
-      args_typed g (Args_cons l e args) (d ++ [a])}
+      args_typed g (Args_cons l e args) (a :: d)}
 .
 
 Hint Constructors expr_typed : ligo.
@@ -981,8 +981,8 @@ compile_args
   match e with
   | Args_nil l => []
   | Args_cons l e args =>
-    [I_SEQ null (compile_expr r env e);
-     I_SEQ null (compile_args (false :: r) env args)]
+    [I_SEQ null (compile_args r env args);
+     I_SEQ null (compile_expr (repeat false (args_length args) ++ r) env e)]
   end
 with
 compile_binds
