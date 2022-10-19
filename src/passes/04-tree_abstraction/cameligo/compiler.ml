@@ -565,9 +565,9 @@ let rec compile_expression ~raise : CST.expr -> AST.expr = fun e ->
 
 and is_var_pattern : CST.pattern -> bool =
   fun p -> match unepar p with
-    CST.PVar _  -> false
+    CST.PVar _  -> true
   | CST.PUnit _ | CST.PInt _ | CST.PNat _ | CST.PBytes _ | CST.PString _ | CST.PVerbatim _
-  | CST.PPar _ | CST.PTyped _ | CST.PTuple _ | CST.PRecord _ | CST.PConstr _ | CST.PList _ -> true
+  | CST.PPar _ | CST.PTyped _ | CST.PTuple _ | CST.PRecord _ | CST.PConstr _ | CST.PList _ -> false
 
 and compile_pattern ~raise : CST.pattern -> AST.ty_expr option Pattern.t =
   fun p ->
@@ -829,8 +829,42 @@ and compile_declaration ~raise : CST.declaration -> AST.declaration option = fun
     let rhs_type = Option.map ~f:(compile_type_expression ~raise <@ snd) rhs_type in
     let let_rhs = compile_expression ~raise let_rhs in
     match (unepar pattern,args) with
-    | pattern, [] when not (is_var_pattern pattern) ->
+    | pattern, [] when (is_var_pattern pattern) ->
       let attr = compile_attributes attributes in
+      let pattern = compile_pattern ~raise pattern in
+      let rhs_type =
+        Option.map rhs_type ~f:(fun rhs_type ->
+          Option.value_map type_params ~default:rhs_type ~f:(fun tp ->
+          let (tp, loc) = r_split tp in
+          let tp = tp.inside in
+          let type_vars = List.Ne.map compile_type_var tp.type_vars in
+          List.Ne.fold_right ~f:(fun tvar t -> t_for_all ~loc tvar Type t) ~init:rhs_type type_vars
+        ))
+      in
+      let pattern   = Pattern.map (Fn.const rhs_type) pattern in
+      (* This handle the recursion *)
+      let let_rhs = match kwd_rec with
+        Some reg ->
+          let fun_type = trace_option ~raise (untyped_recursive_fun reg#region) @@ rhs_type in
+          let _, fun_type = destruct_for_alls fun_type in
+          let rec get_first_non_annotation e = Option.value_map ~default:e ~f:(fun e -> get_first_non_annotation e.Ascription.anno_expr) @@ get_e_annotation e  in
+          let lambda = trace_option ~raise (recursion_on_non_function @@ Location.lift region) @@ get_e_lambda @@ (get_first_non_annotation let_rhs).expression_content in
+          let Arrow.{type1; type2} = get_t_arrow_exn fun_type in
+          let lambda = Lambda.{lambda with binder = Param.map (Fn.const type1) lambda.binder; output_type = type2} in
+          e_recursive ~loc:(Location.lift reg#region) (Binder.get_var (List.hd_exn @@ Pattern.binders pattern)) fun_type lambda
+      | None   -> let_rhs
+      in
+      (* This handle polymorphic annotation *)
+      let let_rhs = Option.value_map ~default:let_rhs ~f:(fun tp ->
+        let (tp,loc) = r_split tp in
+        let tp : CST.type_params = tp.inside in
+        let type_vars = List.Ne.map compile_type_var tp.type_vars in
+        List.Ne.fold_right ~f:(fun t e -> e_type_abs ~loc t e) ~init:let_rhs type_vars
+      ) type_params in
+      return region (D_pattern {pattern ; attr ; expr = let_rhs})
+    | pattern, [] ->
+      let attr = compile_attributes attributes in
+      let () = assert (Option.is_none type_params) in
       let pattern = compile_pattern ~raise pattern in
       return region (D_pattern {pattern ; attr ; expr = let_rhs})
     | _,_ ->
