@@ -1,8 +1,8 @@
 (* This file represente the context which give the association of values to types *)
 module Location = Simple_utils.Location
 open Simple_utils.Trace
-open Ast_typed
 open Ligo_prim
+open Ast_typed
 module ValueMap = Simple_utils.Map.Make (Value_var)
 module TypeMap = Ast_typed.Helpers.IdMap.Make (Type_var)
 module ModuleMap = Ast_typed.Helpers.IdMap.Make (Module_var)
@@ -903,7 +903,6 @@ and signature_of_module : ctx:t -> Ast_typed.module_ -> Signature.t =
     in
     if public then sig_item @ sig_ else sig_
 
-
 and signature_item_of_decl : ctx:t -> Ast_typed.decl -> bool * (Signature.item list) =
  fun ~ctx decl ->
   match Location.unwrap decl with
@@ -925,6 +924,7 @@ let init ?env () =
   | None -> empty
   | Some env ->
     Environment.fold env ~init:empty ~f:(fun ctx decl ->
+      (* Format.printf "%d: %a\n" i (Ast_typed.PP.declaration ~use_hidden:false) decl; *)
       match Location.unwrap decl with
       | D_value { binder; expr; attr = _ } ->
         add_imm ctx (Binder.get_var binder) expr.type_expression
@@ -936,7 +936,8 @@ let init ?env () =
         add_type ctx type_binder type_expr
       | D_module { module_binder; module_; module_attr = _ } ->
         let sig_ = signature_of_module_expr ~ctx module_ in
-        add_module ctx module_binder sig_)
+        add_module ctx module_binder sig_
+    )
 
 
 module Well_formed : sig
@@ -1270,12 +1271,10 @@ module Elaboration = struct
 
   and param_apply ctx (param : 'a Param.t) = Param.map (t_apply ctx) param
   and binder_apply ctx (binder : 'a Binder.t) = Binder.map (t_apply ctx) binder
+  and pattern_apply ctx (binder : 'a Ast_typed.Pattern.t) = Pattern.map (t_apply ctx) binder
 
   and binder_apply_opt ctx (binder : 'a option Binder.t) =
     Binder.map (Option.map ~f:(t_apply ctx)) binder
-
-  and pattern_apply ctx (pattern : 'a Ast_typed.Pattern.t) = 
-    Ast_typed.Pattern.map (t_apply ctx) pattern
 
   and matching_expr_apply ctx match_exprs =
     List.map match_exprs 
@@ -1422,11 +1421,9 @@ module Elaboration = struct
 
 
   and binder_pass ~raise (binder : _ Binder.t) =
-  type_pass ~raise @@ Binder.get_ascr binder
-  
-  and pattern_pass ~raise (pattern : _ Ast_typed.Pattern.t) =
-    let binders = Ast_typed.Pattern.binders pattern in
-    List.iter binders ~f:(binder_pass ~raise)
+    type_pass ~raise @@ Binder.get_ascr binder
+  and pattern_pass ~raise (pattern : _ Pattern.t) =
+    List.iter (Pattern.binders pattern) ~f:(fun ty -> binder_pass ~raise ty) 
 
   and binder_pass_opt ~raise (binder : _ option Binder.t) =
     Option.iter (Binder.get_ascr binder) ~f:(type_pass ~raise)
