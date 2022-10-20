@@ -7,14 +7,16 @@ type form =
   | Contract of Value_var.t list
   | View of {
       command_line_views : string list option ; (* views declared as command line arguments if any *)
-      contract_entry : Value_var.t (* contract main function name *)
+      contract_entry : Value_var.t ; (* contract main function name *)
+      contract_type : Self_ast_typed.Helpers.contract_type
     }
   | Env
 
 let specific_passes ~raise cform prg =
   match cform with
   | Contract entrypoint -> Self_ast_typed.all_contract ~raise entrypoint prg
-  | View { command_line_views ; contract_entry } -> None, Self_ast_typed.all_view ~raise command_line_views contract_entry prg
+  | View { command_line_views ; contract_entry ; contract_type } ->
+    None, Self_ast_typed.all_view ~raise command_line_views contract_entry contract_type prg
   | Env -> None, prg
 
 let typecheck ~raise ~(options: Compiler_options.t) (cform : form) (p : Ast_core.program) : Ast_typed.program =

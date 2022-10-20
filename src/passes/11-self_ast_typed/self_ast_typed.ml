@@ -37,9 +37,9 @@ let all_contract ~raise entrypoints (prg : Ast_typed.program) =
   let all_p = List.map ~f:(fun pass -> Ast_typed.Helpers.fold_map_program pass data) @@ contract_passes ~raise in
   let prg = List.fold ~f:(fun x f -> snd @@ f x) all_p ~init:prg in
   let prg = Contract_passes.remove_unused ~raise data prg in
-  Some main_name, prg
+  Some (main_name, contract_type), prg
 
-let all_view ~raise command_line_views main_name prg =
+let all_view ~raise command_line_views main_name contract_type prg =
   let () =
     (* detects whether a declared view (passed with --views command line option) overwrites an annotated view ([@view] let ..) *)
     let user_views = Ast_typed.Helpers.get_views prg in
@@ -65,7 +65,6 @@ let all_view ~raise command_line_views main_name prg =
     | Some command_line_views ->
       Helpers.strip_view_annotations prg |> Helpers.annotate_with_view ~raise command_line_views
   in
-  let contract_type = Helpers.fetch_contract_type ~raise main_name prg in
   let f decl =
     match Ast_typed.Helpers.fetch_view_type decl with
     | None -> ()
