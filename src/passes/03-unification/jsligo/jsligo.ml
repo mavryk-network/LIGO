@@ -167,7 +167,7 @@ and compile_pattern ~(raise: ('e, 'w) raise) : CST.pattern -> AST.pattern = fun 
 
 (* ========================== STATEMENTS ================================= *)
 
-and compile_statement ~(raise: ('e, 'w) raise) : CST.statement -> AST.statement = fun s ->
+and compile_statement ~(raise: ('e, 'w) raise) : CST.statement -> AST.statement_jsligo = fun s ->
   let self = compile_statement ~raise in
   let () = ignore (self, raise) in
   let extract_type_vars : CST.type_vars -> string nseq = fun tv ->

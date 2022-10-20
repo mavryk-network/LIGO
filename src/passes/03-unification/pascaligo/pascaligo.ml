@@ -209,7 +209,7 @@ and compile_pattern ~(raise: ('e, 'w) raise) : CST.pattern -> AST.pattern = fun 
 
 (* ========================== INSTRUCTIONS ================================= *)
 
-and compile_block ~(raise: ('e, 'w) raise) : CST.block -> AST.block = fun b ->
+and compile_block ~(raise: ('e, 'w) raise) : CST.block -> AST.block_pascaligo = fun b ->
   List.Ne.map (compile_statement ~raise) @@ nsepseq_to_nseq b.statements
 
 and compile_test_clause : raise:_ -> CST.test_clause -> AST.test_clause = fun ~raise c ->
@@ -331,7 +331,7 @@ and compile_instruction ~(raise: ('e, 'w) raise) : CST.instruction -> AST.instru
 
 (* ========================== STATEMENTS ================================= *)
 
-and compile_statement ~raise : CST.statement -> AST.statement = fun s ->
+and compile_statement ~raise : CST.statement -> AST.statement_pascaligo = fun s ->
   let self = compile_statement ~raise in
   match s with
   | S_Attr (attr, stmt) -> (
@@ -581,11 +581,11 @@ and compile_expression ~(raise: ('e, 'w) raise) : CST.expr -> AST.expr = fun e -
     )
   | E_Block be -> (
       let be, loc = r_split be in
-      let block : statement nseq =
+      let block : block_pascaligo =
         nseq_map (compile_statement ~raise) @@ nsepseq_to_nseq (r_fst be.block).statements
       in
       let expr  = self be.expr in
-      e_block {block; expr} ~loc ()
+      e_blockpascaligo {block; expr} ~loc ()
     )
   | E_Nil nil -> (
       let (_,loc) = w_split nil in

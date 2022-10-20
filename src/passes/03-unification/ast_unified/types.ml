@@ -207,7 +207,7 @@ and instr_content = instruction_content
 and instr         = instruction
   [@@deriving yojson]
 
-and block = statement nseq
+and block_pascaligo = statement_pascaligo nseq
 
 and 'clause case_clause = {
   pattern : pattern;
@@ -216,7 +216,7 @@ and 'clause case_clause = {
 
 and test_clause =
 | ClauseInstr of instruction
-| ClauseBlock of block
+| ClauseBlock of block_pascaligo
 
 and 'clause case = {
   expr         : expr;
@@ -239,7 +239,7 @@ and for_int = {
   init    : expr;
   bound   : expr;
   step    : expr option; (* [1] if [None] *)
-  block   : block;
+  block   : block_pascaligo;
 }
 
 and for_in =
@@ -249,14 +249,14 @@ and for_in =
 and for_map = {
   binding    : string * string;
   collection : expr;
-  block      : block;
+  block      : block_pascaligo;
 }
 
 and for_set_or_list = {
   var        : string;
   for_kind   : [`Set | `List];
   collection : expr;
-  block      : block;
+  block      : block_pascaligo;
 }
 
 and patch = {
@@ -273,7 +273,7 @@ and removal = {
 
 and while_loop = {
   cond      : expr;
-  block     : block;
+  block     : block_pascaligo;
 }
 
 and instruction_content =
@@ -288,15 +288,16 @@ and instruction_content =
 | I_Skip
 | I_While  of while_loop
 
-(* ========================== STATEMENTS =================================== *)
+(* ========================== STATEMENTS PASCALIGO ========================= *)
 
-and statement = {
-  statement_content : statement_content;
-  location          : Location.t
+and statement_pascaligo = {
+  statement_pascaligo_content : statement_pascaligo_content;
+  location                    : Location.t
 }
-and stmt_content = statement_content
-and stmt         = statement
+and stmt_pascaligo_content = statement_pascaligo_content
+and stmt_pascaligo         = statement_pascaligo
   [@@deriving yojson]
+
 
 and var_decl = {
   pattern     : pattern;
@@ -305,18 +306,34 @@ and var_decl = {
   init        : expr;
 }
 
+and statement_pascaligo_content =
+| S_Attr      of (attr_pascaligo * statement_pascaligo) 
+| S_Decl      of declaration
+| S_Instr     of instruction
+| S_VarDecl   of var_decl
+
+(* ========================== STATEMENTS JSLIGO ============================ *)
+
+and statement_jsligo = {
+  statement_jsligo_content : statement_jsligo_content;
+  location                 : Location.t
+}
+and stmt_jsligo_content = statement_jsligo_content
+and stmt_jsligo         = statement_jsligo
+  [@@deriving yojson]
+
 and switch_case =
-| Switch_case          of (expr * statement nseq option)
-| Switch_default_case  of statement nseq option
+| Switch_case          of (expr * statement_jsligo nseq option)
+| Switch_default_case  of statement_jsligo nseq option
 
 and switch = {
   switch_expr  : expr;
   switch_cases : switch_case nseq;
 }
 
-and namespace_statement = {
+and namespace_statement_jsligo = {
   module_name        : string;
-  namespace_content  : statement nseq;
+  namespace_content  : statement_jsligo nseq;
 }
 
 and import =
@@ -333,9 +350,9 @@ and import =
   module_str  : string;
 }
 
-and while_stmt = {
+and while_stmt_jsligo = {
   expr        : expr;
-  while_body  : statement;
+  while_body  : statement_jsligo;
 }
 
 and index_kind = Let | Const
@@ -344,35 +361,23 @@ and for_of = {
   index_kind : index_kind;
   index      : string;
   expr       : expr;
-  for_stmt   : statement;
+  for_stmt   : statement_jsligo;
 }
 
-(* TODO NP :
-  - Separate statement into statement_pascaligo / statement_jsligo ?
-  - unfify them at the CST level ?
-    S_Decl VS S_Let/S_Const
-  - beware of assignnment transitivity
-*)
-and statement_content =
-  (* Pascaligo *)
-| S_Attr      of (attr_pascaligo * statement) 
-| S_Decl      of declaration
-| S_Instr     of instruction
-| S_VarDecl   of var_decl
-  (* Jsligo *)
-| S_Block      of statement nseq
+and statement_jsligo_content =
+| S_Block      of statement_jsligo nseq
 | S_Expr       of expr
-| S_Cond       of statement cond
+| S_Cond       of statement_jsligo cond
 | S_Return     of expr option
 | S_Let        of let_binding nseq
 | S_Const      of let_binding nseq
 | S_Type       of type_decl
 | S_Switch     of switch (* TODO : Use [case] record instead ? *)
 | S_Break
-| S_Namespace  of namespace_statement
-| S_Export     of statement
+| S_Namespace  of namespace_statement_jsligo
+| S_Export     of statement_jsligo
 | S_Import     of import
-| S_While      of while_stmt
+| S_While      of while_stmt_jsligo
 | S_ForOf      of for_of
 
 (* ========================== DECLARATIONS ================================= *)
@@ -420,7 +425,7 @@ and module_alias = {
 and declaration_content =
 | D_Directive      of Directive.t
 | D_Attr           of (attr_pascaligo * declaration)
-| D_ToplevelJsligo of statement
+| D_ToplevelJsligo of statement_jsligo
 | D_Let            of let_binding
 | D_Type           of type_decl
 | D_Module         of module_decl
@@ -510,7 +515,7 @@ and fun_expr_pascaligo = {
 }
 
 and body_jsligo =
-| FunctionBody   of statement nseq
+| FunctionBody   of statement_jsligo nseq
 | ExpressionBody of expr
 
 and fun_expr_jsligo = {
@@ -556,8 +561,8 @@ and raw_code = {
   code        : expression; (* Typically EAnnot( EString (raw code), TFun(signature) ) *)
 }
 
-and block_with = {
-  block    : statement nseq;
+and block_with_pascaligo = {
+  block    : block_pascaligo;
   expr     : expr
 }
 
@@ -688,7 +693,7 @@ and expression_content =
   | E_Sequence of (expr * expr)           (* nested version : E_Sequence (A, E_Sequence(B, C)) *)
 
   (* Block *)                             (* function f ... is { const res = a + b; } with res *)
-  | E_Block of block_with
+  | E_BlockPascaligo of block_with_pascaligo
 
   (* Attributes (PascaLigo) *)
   | E_Attr of (attr_pascaligo * expr)     (* [@a] (x,y)      *)
