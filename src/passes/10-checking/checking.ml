@@ -738,7 +738,7 @@ and infer_expression ~(raise : raise) ~options ~ctx (expr : I.expression)
           Signature.pp
           sig_;
       Format.print_flush ();
-      let elt_type =
+      let elt_type, _ =
         trace_option ~raise (unbound_variable element loc)
         @@ Signature.get_value sig_ element
       in
@@ -1509,7 +1509,7 @@ and infer_declaration ~(raise : raise) ~options ~ctx (decl : I.declaration)
       let attr = type_value_attr attr in
       (* if debug then Format.printf "Ctx After Decl: %a\n" Context.pp_ ctx; *)
       ( ctx
-      , S_value (var, expr_type)
+      , S_value (var, expr_type, attr.entry)
       , let%bind expr = expr in
         return
         @@ D_value
@@ -1519,6 +1519,7 @@ and infer_declaration ~(raise : raise) ~options ~ctx (decl : I.declaration)
              } )
     | D_module { module_binder; module_; module_attr = { public; hidden } } ->
       let ctx, sig_, module_ = infer_module_expr ~raise ~options ~ctx module_ in
+      let ctx, sig_, module_ = Generator.make_main ~raise ~options ~ctx sig_ module_ in
       ( ctx
       , S_module (module_binder, sig_)
       , let%bind module_ = module_ in

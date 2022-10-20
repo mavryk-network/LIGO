@@ -19,11 +19,11 @@ module Signature : sig
   type t = item list
 
   and item =
-    | S_value of expression_variable * type_expression
+    | S_value of expression_variable * type_expression * bool
     | S_type of type_variable * type_expression
     | S_module of module_variable * t
 
-  val get_value : t -> expression_variable -> type_expression option
+  val get_value : t -> expression_variable -> (type_expression * bool) option
   val get_type : t -> type_variable -> type_expression option
   val get_module : t -> module_variable -> t option
   val pp : Format.formatter -> t -> unit

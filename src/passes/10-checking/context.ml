@@ -91,7 +91,7 @@ module Signature = struct
     type t = item list
 
     and item =
-      | S_value of expression_variable * type_expression
+      | S_value of expression_variable * type_expression * bool
       | S_type of type_variable * type_expression
       | S_module of module_variable * t
     [@@deriving hash]
@@ -108,7 +108,7 @@ module Signature = struct
       (module Value_var)
       (fun t var ->
         (find_map t ~f:(function
-          | S_value (var', type_) when Value_var.equal var var' -> Some type_
+          | S_value (var', type_, b) when Value_var.equal var var' -> Some (type_, b)
           | _ -> None) [@landmark "get_value"]))
 
 
@@ -135,7 +135,7 @@ module Signature = struct
   let rec equal_item : item -> item -> bool =
    fun item1 item2 ->
     match item1, item2 with
-    | S_value (var1, type1), S_value (var2, type2) ->
+    | S_value (var1, type1, _), S_value (var2, type2, _) ->
       Value_var.equal var1 var2 && type_expression_eq (type1, type2)
     | S_type (tvar1, type1), S_type (tvar2, type2) ->
       Type_var.equal tvar1 tvar2 && type_expression_eq (type1, type2)
@@ -175,7 +175,7 @@ module Signature = struct
 
     let rec pp_item ppf item =
       match item with
-      | S_value (var, type_) ->
+      | S_value (var, type_, _) ->
         Format.fprintf ppf "%a : %a" Value_var.pp var type_expression type_
       | S_type (tvar, type_) ->
         Format.fprintf ppf "type %a = %a" Type_var.pp tvar type_expression type_
@@ -366,7 +366,7 @@ let add_module t mvar mctx = t |:: C_module (mvar, mctx)
 
 let add_signature_item t (sig_item : Signature.item) =
   match sig_item with
-  | S_value (var, type_) -> add_imm t var type_
+  | S_value (var, type_, _) -> add_imm t var type_
   | S_type (tvar, type_) -> add_type t tvar type_
   | S_module (mvar, sig_) -> add_module t mvar sig_
 
@@ -626,7 +626,7 @@ let rec apply t (type_ : type_expression) : type_expression =
 let rec signature_item_apply t (sig_item : Signature.item) : Signature.item =
   match sig_item with
   | S_type (tvar, type_) -> S_type (tvar, apply t type_)
-  | S_value (var, type_) -> S_value (var, apply t type_)
+  | S_value (var, type_, b) -> S_value (var, apply t type_, b)
   | S_module (mvar, sig_) -> S_module (mvar, signature_apply t sig_)
 
 
@@ -905,8 +905,8 @@ and signature_of_module : ctx:t -> Ast_typed.module_ -> Signature.t =
 and signature_item_of_decl : ctx:t -> Ast_typed.decl -> bool * Signature.item =
  fun ~ctx decl ->
   match Location.unwrap decl with
-  | D_value { binder; expr; attr = { public; _ } } ->
-    public, S_value (Binder.get_var binder, expr.type_expression)
+  | D_value { binder; expr; attr = { public; entry; _ } } ->
+    public, S_value (Binder.get_var binder, expr.type_expression, entry)
   | D_type { type_binder = tvar; type_expr = type_; type_attr = { public; _ } }
     -> public, S_type (tvar, type_)
   | D_module { module_binder = mvar; module_; module_attr = { public; _ } } ->
@@ -1063,7 +1063,7 @@ end = struct
 
   and signature_item ~ctx (sig_item : Signature.item) =
     match sig_item with
-    | S_value (_var, type_) ->
+    | S_value (_var, type_, _) ->
       (match type_expr ~ctx type_ with
        | Some Type -> true
        | _ -> false)
