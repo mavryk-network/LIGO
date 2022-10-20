@@ -616,13 +616,12 @@ and compile_declaration ~(raise: ('e, 'w) raise) : CST.declaration -> AST.declar
   )
   | D_Const d -> (
     let d, loc = r_split d in
-    (* TODO NP : Should we really use the 'let_binding' record for D_Const ? *)
     let is_rec = false in
     let type_params = Option.map ~f:compile_type_params d.type_params in
     let binders = List.Ne.singleton @@ compile_pattern ~raise d.pattern in
     let rhs_type = Option.map ~f:(compile_type_expression ~raise <@ snd) d.const_type in
     let let_rhs = compile_expression ~raise d.init in
-    d_let {is_rec; type_params; binders; rhs_type; let_rhs} ~loc ()
+    d_const {is_rec; type_params; binders; rhs_type; let_rhs} ~loc ()
   )
   | D_Attr d -> (
     let attr, decl = d in

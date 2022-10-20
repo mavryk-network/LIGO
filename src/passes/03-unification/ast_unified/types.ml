@@ -426,6 +426,7 @@ and declaration_content =
 | D_Attr           of (attr_pascaligo * declaration)
 | D_ToplevelJsligo of statement_jsligo
 | D_Let            of let_binding
+| D_Const          of let_binding
 | D_Type           of type_decl
 | D_Module         of module_decl
 | D_ModuleAlias    of module_alias
