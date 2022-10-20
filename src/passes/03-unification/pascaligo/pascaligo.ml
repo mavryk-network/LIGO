@@ -1,14 +1,14 @@
 open Simple_utils.Utils
 open Simple_utils.Trace
-open Unification_shared.Errors
 
 module CST = Cst.Pascaligo
 module AST = Ast_unified
 
 module Helpers = Unification_shared.Helpers
+module Option = Simple_utils.Option
+module Region  = Simple_utils.Region
 
-(* Brings types and combinators functions *)
-open AST
+open AST  (* Brings types and combinators functions *)
 
 let r_split = Simple_utils.Location.r_split  (* TODO NP : Factor with cameligo into helpers *)
 let r_fst x = fst (r_split x)
@@ -18,7 +18,7 @@ let w_fst x = fst (w_split x)
 
 let translate_attr_pascaligo : CST.Attr.t -> AST.attr_pascaligo = fun attr ->
   let key, value = attr in
-  let value : string option = Option.apply (fun (CST.Attr.String s) ->  s) value in
+  let value : string option = Option.map ~f:(fun (CST.Attr.String s) ->  s) value in
   {key; value}
 
 let extract_type_params : CST.type_params CST.chevrons CST.reg -> string nseq =
@@ -76,7 +76,7 @@ let rec compile_type_expression ~(raise: ('e, 'w) raise) : CST.type_expr -> AST.
     let t : type_record_opt =
       let compile_field_decl : CST.field_decl -> AST.type_expr option AST.field_assign = fun fd ->
         let name : string = w_fst fd.field_name in
-        let expr : type_expr option = Option.apply (self <@ snd) fd.field_type in
+        let expr : type_expr option = Option.map ~f:(self <@ snd) fd.field_type in
         {name; expr}
       in
       List.map ~f:(compile_field_decl <@ r_fst) @@ sepseq_to_list t.elements
@@ -92,7 +92,7 @@ let rec compile_type_expression ~(raise: ('e, 'w) raise) : CST.type_expr -> AST.
     let variants =
       let compile_variant : CST.variant -> AST.variant = fun v ->
         let constr  = w_fst v.ctor in
-        let arg_opt = Option.apply (self <@ snd) v.ctor_args in
+        let arg_opt = Option.map ~f:(self <@ snd) v.ctor_args in
         {constr; arg_opt}
       in
       List.Ne.map (compile_variant <@ r_fst) @@ nsepseq_to_nseq t.variants
@@ -112,7 +112,7 @@ and compile_pattern ~(raise: ('e, 'w) raise) : CST.pattern -> AST.pattern = fun 
   | P_App      p -> (
     let (p, pt_opt), loc = r_split p in
     let p : pattern = self p in
-    let pt_opt : pattern nseq option = Option.apply (fun (v : CST.pattern CST.tuple) ->
+    let pt_opt : pattern nseq option = Option.map ~f:(fun (v : CST.pattern CST.tuple) ->
       nseq_map self @@ nsepseq_to_nseq v.value.inside
     ) pt_opt
     in
@@ -230,7 +230,7 @@ and compile_case : 'a 'b. raise:_ -> ('a -> 'b) -> 'a CST.case -> 'b AST.case = 
 and compile_cond : 'a 'b. raise:_ -> ('a -> 'b) -> 'a CST.conditional -> 'b AST.cond = fun ~raise f c ->
   let test  = compile_expression ~raise c.test in
   let ifso  = f c.if_so in
-  let ifnot = Option.apply (f <@ snd) c.if_not in
+  let ifnot = Option.map ~f:(f <@ snd) c.if_not in
   {test; ifso; ifnot}
 
 and compile_for_map ~raise : CST.for_map -> AST.for_map = fun m ->
@@ -283,7 +283,7 @@ and compile_instruction ~(raise: ('e, 'w) raise) : CST.instruction -> AST.instru
     let index = w_fst i.index in
     let init  = compile_expr i.init in
     let bound = compile_expr i.bound in
-    let step = Option.apply (compile_expr <@ snd) i.step in
+    let step = Option.map ~f:(compile_expr <@ snd) i.step in
     let block = compile_block ~raise @@ r_fst i.block in
     i_for {index; init; bound; step; block} ~loc ()
   )
@@ -353,8 +353,8 @@ and compile_statement ~raise : CST.statement -> AST.statement_pascaligo = fun s 
   | S_VarDecl s -> (
     let s, loc = r_split s in
     let pattern     = compile_pattern ~raise s.pattern in
-    let type_params = Option.apply extract_type_params s.type_params in
-    let var_type    = Option.apply (compile_type_expression ~raise <@ snd) s.var_type in
+    let type_params = Option.map ~f:extract_type_params s.type_params in
+    let var_type    = Option.map ~f:(compile_type_expression ~raise <@ snd) s.var_type in
     let init        = compile_expression ~raise s.init in
     s_vardecl {pattern; type_params; var_type; init} ~loc ()
   )
@@ -393,7 +393,7 @@ and compile_expression ~(raise: ('e, 'w) raise) : CST.expr -> AST.expr = fun e -
   let compile_param_decl : CST.param_decl -> AST.param_decl = fun p ->
     let param_kind = match p.param_kind with `Var _ -> `Var | `Const _ -> `Const in
     let pattern    = compile_pattern ~raise p.pattern in
-    let param_type = Option.apply (compile_type_expression ~raise <@ snd) p.param_type in
+    let param_type = Option.map ~f:(compile_type_expression ~raise <@ snd) p.param_type in
     {param_kind; pattern; param_type}
   in
   return @@ match e with
@@ -492,11 +492,11 @@ and compile_expression ~(raise: ('e, 'w) raise) : CST.expr -> AST.expr = fun e -
     )
   | E_Fun f -> (
       let f, loc = r_split f in
-      let type_params = Option.apply extract_type_params f.type_params in
+      let type_params = Option.map ~f:extract_type_params f.type_params in
       let parameters  = List.map ~f:(compile_param_decl <@ r_fst)
         @@ sepseq_to_list @@ (r_fst f.parameters).inside
       in
-      let ret_type    = Option.apply (compile_type_expression ~raise <@ snd) f.ret_type in
+      let ret_type    = Option.map ~f:(compile_type_expression ~raise <@ snd) f.ret_type in
       let return      = self f.return in
       e_funpascaligo {type_params; parameters; ret_type; return} ~loc ()
     )
@@ -507,7 +507,7 @@ and compile_expression ~(raise: ('e, 'w) raise) : CST.expr -> AST.expr = fun e -
   | E_App app -> (
       let (func, args), loc = r_split app in
       let func = self func in
-      let args = Option.apply (nseq_map self <@ extract_tuple) args in
+      let args = Option.map ~f:(nseq_map self <@ extract_tuple) args in
       e_app (func, args) ~loc ()
     )
   | E_Case case -> (
@@ -526,7 +526,7 @@ and compile_expression ~(raise: ('e, 'w) raise) : CST.expr -> AST.expr = fun e -
       let cond, loc = r_split cond in
       let test = self cond.test in
       let ifso = self cond.if_so in
-      let ifnot = Option.apply (self <@ snd) cond.if_not in
+      let ifnot = Option.map ~f:(self <@ snd) cond.if_not in
       e_cond {test; ifso; ifnot} ~loc ()
     )
   | E_List list -> (
@@ -613,7 +613,7 @@ and compile_declaration ~(raise: ('e, 'w) raise) : CST.declaration -> AST.declar
   | D_Type d -> (
     let d, loc = r_split d in
     let name = w_fst d.name in
-    let params = Option.apply (fun (tp : _ CST.par CST.reg) ->
+    let params = Option.map ~f:(fun (tp : _ CST.par CST.reg) ->
       List.Ne.map w_fst @@ nsepseq_to_nseq (r_fst tp).inside
       ) d.params
     in
@@ -624,9 +624,9 @@ and compile_declaration ~(raise: ('e, 'w) raise) : CST.declaration -> AST.declar
     let d, loc = r_split d in
     (* TODO NP : Should we really use the 'let_binding' record for D_Const ? *)
     let is_rec = false in
-    let type_params = Option.apply compile_type_params d.type_params in
+    let type_params = Option.map ~f:compile_type_params d.type_params in
     let binders = List.Ne.singleton @@ compile_pattern ~raise d.pattern in
-    let rhs_type = Option.apply (compile_type_expression ~raise <@ snd) d.const_type in
+    let rhs_type = Option.map ~f:(compile_type_expression ~raise <@ snd) d.const_type in
     let let_rhs = compile_expression ~raise d.init in
     d_let {is_rec; type_params; binders; rhs_type; let_rhs} ~loc ()
   )
@@ -641,7 +641,7 @@ and compile_declaration ~(raise: ('e, 'w) raise) : CST.declaration -> AST.declar
     let d, loc = r_split d in
     let is_rec = match d.kwd_recursive with Some _ -> true | None -> false in
     let fun_name = w_fst d.fun_name in
-    let type_params = Option.apply compile_type_params d.type_params in
+    let type_params = Option.map ~f:compile_type_params d.type_params in
     let parameters =
       let compile_param_decl : CST.param_decl -> AST.param_decl = fun pd ->
         let param_kind = (
@@ -650,12 +650,12 @@ and compile_declaration ~(raise: ('e, 'w) raise) : CST.declaration -> AST.declar
           | `Var   _ -> `Var
         ) in
         let pattern = compile_pattern ~raise pd.pattern in
-        let param_type = Option.apply (compile_type_expression ~raise <@ snd) pd.param_type in
+        let param_type = Option.map ~f:(compile_type_expression ~raise <@ snd) pd.param_type in
         {param_kind; pattern; param_type}
       in
       List.map ~f:(compile_param_decl <@ r_fst) @@ sepseq_to_list (r_fst d.parameters).inside
     in
-    let ret_type = Option.apply (compile_type_expression ~raise <@ snd) d.ret_type in
+    let ret_type = Option.map ~f:(compile_type_expression ~raise <@ snd) d.ret_type in
     let return = compile_expression ~raise d.return in
     d_fun {is_rec; fun_name; type_params; parameters; ret_type; return} ~loc ()
   )

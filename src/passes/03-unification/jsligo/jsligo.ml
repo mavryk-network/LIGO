@@ -1,6 +1,5 @@
 open Simple_utils.Utils
 open Simple_utils.Trace
-(* open Unification_shared.Errors *)
 
 module CST = Cst.Jsligo
 module AST = Ast_unified
@@ -8,8 +7,7 @@ module AST = Ast_unified
 module Helpers = Unification_shared.Helpers
 module Option = Simple_utils.Option
 
-(* Brings types and combinators functions *)
-open AST
+open AST  (* Brings types and combinators functions *)
 
 let r_split = Simple_utils.Location.r_split  (* TODO NP : Factor with cameligo into helpers *)
 let r_fst x = fst (r_split x)

@@ -396,7 +396,6 @@ and param_decl = {
   param_type : type_expression option
 }
 
-(* TODO NP : Merge this type with 'let_binding' ? *)
 and fun_decl = {
   is_rec      : bool;
   fun_name    : string;
@@ -710,7 +709,7 @@ and constant =
 
 (* ========================== PROGRAM ====================================== *)
 
-type program = declaration list (* TODO NP : Try to convert this into non-empty list (cannot use Trace.collect with non-empty lists) *)
+type program = declaration list
   [@@deriving yojson]
 (* let program_to_yojson : program -> Yojson.Safe.t = fun _p -> `String "DUMMY" *)
 

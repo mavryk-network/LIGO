@@ -1,11 +1,11 @@
 open Simple_utils.Utils
 open Simple_utils.Trace
-(* open Unification_shared.Errors *)
 
 module CST = Cst.Cameligo
 module AST = Ast_unified
 
 module Helpers = Unification_shared.Helpers
+module Option = Simple_utils.Option
 
 open AST  (* Brings types and combinators functions *)
 
@@ -27,7 +27,7 @@ let rec compile_type_expression : CST.type_expr -> AST.type_expr = fun te ->
     let variants =
       let compile_variant : CST.variant -> AST.variant = fun v ->
         let constr  = r_fst v.constr in
-        let arg_opt = Option.apply (self <@ snd) v.arg in
+        let arg_opt = Option.map ~f:(self <@ snd) v.arg in
         {constr; arg_opt}
       in
       List.Ne.map (compile_variant <@ r_fst) @@ nsepseq_to_nseq t.variants
@@ -101,7 +101,7 @@ let rec compile_pattern : CST.pattern -> AST.pattern = fun p ->
   | PConstr   p -> (
     let (ctor, ptrn_opt), loc = r_split p in
     let ctor = ctor.value in
-    let ptrn_opt = Option.apply self ptrn_opt in
+    let ptrn_opt = Option.map ~f:self ptrn_opt in
     p_constr ctor ptrn_opt ~loc ()
   )
   | PUnit     p -> (
@@ -361,16 +361,16 @@ let rec compile_expression ~raise : CST.expr -> AST.expr = fun e ->
     )
   | EFun f -> (
       let f, loc = r_split f in
-      let type_params = Option.apply compile_type_params f.type_params in
+      let type_params = Option.map ~f:compile_type_params f.type_params in
       let binders     = nseq_map compile_pattern f.binders in
-      let rhs_type    = Option.apply compile_rhs_type f.rhs_type in
+      let rhs_type    = Option.map ~f:compile_rhs_type f.rhs_type in
       let body        = self f.body in
       e_funcameligo {type_params; binders; rhs_type; body} ~loc ()
     )
   | EConstr constr -> (
       let (name, expr), loc = r_split constr in
       let name = r_fst name in
-      let expr = Option.apply self expr in
+      let expr = Option.map ~f:self expr in
       e_constr (name, expr) ~loc ()
     )
   | ECase case -> (
@@ -395,7 +395,7 @@ let rec compile_expression ~raise : CST.expr -> AST.expr = fun e ->
       let cond, loc = r_split cond in
       let test = self cond.test in
       let ifso = self cond.ifso in
-      let ifnot = Option.apply (self <@ snd) cond.ifnot in
+      let ifnot = Option.map ~f:(self <@ snd) cond.ifnot in
       e_cond {test; ifso; ifnot} ~loc ()
     )
   | EList list -> (
@@ -415,9 +415,9 @@ let rec compile_expression ~raise : CST.expr -> AST.expr = fun e ->
       let {kwd_let=_; kwd_rec; binding; kwd_in=_; body; attributes=_} : CST.let_in = li in
       let {type_params; binders; rhs_type; eq=_; let_rhs} : CST.let_binding = binding in
       let is_rec      = match kwd_rec with Some _ -> true | None -> false in
-      let type_params = Option.apply compile_type_params type_params in
+      let type_params = Option.map ~f:compile_type_params type_params in
       let binders     = nseq_map compile_pattern binders in
-      let rhs_type    = Option.apply compile_rhs_type rhs_type in
+      let rhs_type    = Option.map ~f:compile_rhs_type rhs_type in
       let let_rhs     = self let_rhs in
       let body        = self body in
       e_letincameligo {is_rec; type_params; binders; rhs_type; let_rhs; body} ~loc ()
@@ -471,10 +471,10 @@ and compile_declaration ~raise : CST.declaration -> AST.declaration = fun decl -
       let compile_type_params : CST.type_params CST.par CST.reg -> string nseq =
         fun tp -> nseq_map r_fst (r_fst tp).inside.type_vars
       in
-      Option.apply compile_type_params e.type_params
+      Option.map ~f:compile_type_params e.type_params
     in
     let binders = nseq_map compile_pattern e.binders in
-    let rhs_type = Option.apply (compile_type_expression <@ snd) e.rhs_type in
+    let rhs_type = Option.map ~f:(compile_type_expression <@ snd) e.rhs_type in
     let let_rhs = compile_expression ~raise e.let_rhs in
     d_let {is_rec; type_params; binders; rhs_type; let_rhs} ~loc ()
   )
@@ -490,7 +490,7 @@ and compile_declaration ~raise : CST.declaration -> AST.declaration = fun decl -
         in
         nseq_map (fun (p : CST.type_var) -> r_fst p.name) p
       in
-      Option.apply compile_params d.params
+      Option.map ~f:compile_params d.params
     in
     let type_expr = compile_type_expression d.type_expr in
     d_type {name; params; type_expr} ~loc ()
