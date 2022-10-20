@@ -508,6 +508,14 @@ module Test = struct
     let a = originate_contract f s t in
     let c = size f in
     (a, f, c)
+  let compile_entries_from_file (fn : string) (es : string list) (v : string list) : michelson_contract =
+    let ast_c : ast_contract = [%external ("TEST_COMPILE_CONTRACT_FROM_FILE", fn, es, v, (None : nat option))] in
+    [%external ("TEST_COMPILE_AST_CONTRACT", ast_c)]
+  let originate_entries_from_file (fn : string) (es : string list) (v : string list) (s : michelson_program)  (t : tez) : address * michelson_contract * int =
+    let f = compile_entries_from_file fn es v in
+    let a = originate_contract f s t in
+    let c = size f in
+    (a, f, c)
   let mutation_test (type a b) (v : a) (tester : a -> b) : (b * mutation) option =
     let try_with (type a) (v : unit -> a) (c : unit -> a) = [%external ("TEST_TRY_WITH", v, c)] in
     type ret_code = Passed of (b * mutation) | Continue | Stop in
@@ -632,6 +640,14 @@ module Test = struct
     [%external ("TEST_COMPILE_AST_CONTRACT", ast_c)]
   let originate_from_file ((fn, e, v, s, t) : string * string * string list * michelson_program * tez) : address * michelson_contract * int =
     let f = compile_contract_from_file (fn, e, v) in
+    let a = originate_contract (f, s, t) in
+    let c = size f in
+    (a, f, c)
+  let compile_entries_from_file ((fn, es, v) : string * string list * string list) : michelson_contract =
+    let ast_c : ast_contract = [%external ("TEST_COMPILE_CONTRACT_FROM_FILE", fn, es, v, (None : nat option))] in
+    [%external ("TEST_COMPILE_AST_CONTRACT", ast_c)]
+  let originate_entries_from_file ((fn, es, v, s, t) : string * string list * string list * michelson_program * tez) : address * michelson_contract * int =
+    let f = compile_entries_from_file (fn, es, v) in
     let a = originate_contract (f, s, t) in
     let c = size f in
     (a, f, c)
