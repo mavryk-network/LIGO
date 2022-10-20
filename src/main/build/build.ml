@@ -229,7 +229,7 @@ let rec build_contract_aggregated ~raise : options:Compiler_options.t -> string 
         let command_line_views = match cli_views with [] -> None | x -> Some x in
         Ligo_compile.Of_core.View { command_line_views ; contract_entry = entry_point }
       in  
-      trace ~raise self_ast_typed_tracer @@ Ligo_compile.Of_core.specific_passes form typed_prg in
+      trace ~raise self_ast_typed_tracer @@ Ligo_compile.Of_core.specific_passes form typed_contract in
     let aggregated_contract = Ligo_compile.Of_typed.apply_to_entrypoint_contract ~raise ~options:options.middle_end typed_contract entry_points in
     let (parameter_ty, storage_ty) =
     trace_option ~raise (`Self_ast_aggregated_tracer (Self_ast_aggregated.Errors.corner_case "Could not recover types from contract")) (
