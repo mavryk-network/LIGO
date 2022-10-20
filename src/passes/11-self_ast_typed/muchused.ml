@@ -134,14 +134,13 @@ let rec muchuse_of_expr expr : muchuse =
      end
   | E_type_abstraction {result;_} ->
      muchuse_of_expr result
-  | E_let_in {let_binder;rhs=_;let_result;_} ->
+  | E_let_in {let_binder;rhs;let_result;_} ->
     let binders = Pattern.binders let_binder in
-    let muchuse_expr = muchuse_of_expr expr in
-    List.fold binders ~init:muchuse_expr
-      ~f:(fun m b ->
-        muchuse_union m
-          (muchuse_of_binder (Binder.get_var b) (Binder.get_ascr b) 
-            (muchuse_of_expr let_result)))
+    let muchuse_let_result = muchuse_of_expr let_result in
+    let muchuse_let_binder = List.fold binders ~init:muchuse_let_result
+      ~f:(fun m b -> muchuse_of_binder (Binder.get_var b) (Binder.get_ascr b) m)
+    in
+    muchuse_union (muchuse_of_expr rhs) muchuse_let_binder
   | E_recursive {fun_name;lambda;fun_type} ->
      muchuse_of_binder fun_name fun_type (muchuse_of_lambda fun_type lambda)
   | E_matching {matchee;cases} ->
