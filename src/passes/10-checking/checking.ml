@@ -460,19 +460,10 @@ and infer_expression ~(raise : raise) ~options ~ctx (expr : I.expression)
             return (E_type_abstraction { type_binder = tvar; result }) ret_type
           ))
     | E_let_in { let_binder; rhs; let_result; attributes } ->
-      (* 
-      let rhs_ascr = Binder.get_ascr let_binder in
-      let rhs =
-        Option.value_map
-          rhs_ascr
-          ~f:(fun rhs_ascr -> I.e_ascription ~loc rhs rhs_ascr)
-          ~default:rhs
-      in *)
       let ctx, rhs_type, rhs = infer rhs in
       let rhs_type = Context.apply ctx rhs_type in
-      let ctx, sigs, let_binder = check_pattern ~raise ~ctx let_binder rhs_type in
+      let ctx, _sigs, let_binder = check_pattern ~raise ~ctx let_binder rhs_type in
       let ctx, res_type, let_result =
-
         Context.enter ~ctx ~mut:false ~in_:(fun ctx ->
             infer
               ~ctx 
@@ -492,7 +483,6 @@ and infer_expression ~(raise : raise) ~options ~ctx (expr : I.expression)
              ; attributes
              })
           res_type )
-          (* failwith "TODO" *)
     | E_type_in { type_binder = tvar; rhs; let_result } ->
       let rhs = evaluate_type ~raise ~ctx rhs in
       let ctx, res_type, let_result =
@@ -713,47 +703,31 @@ and infer_expression ~(raise : raise) ~options ~ctx (expr : I.expression)
       , elt_type
       , return (E_module_accessor { module_path; element }) elt_type )
   | E_let_mut_in { let_binder; rhs; let_result; attributes } ->
-    (* 
-    let rhs_ascr = Binder.get_ascr let_binder in
-    let rhs =
-      Option.value_map
-        rhs_ascr
-        ~f:(fun rhs_ascr -> I.e_ascription ~loc rhs rhs_ascr)
-        ~default:rhs
-    in *)
-    (* let ctx, rhs_type, rhs = infer rhs in
-      let rhs_type = Context.apply ctx rhs_type in
-       (* TODO: Improve inference here -- we could subtype it to get a monotype? *)
-      if is_t_for_all rhs_type
-      then raise.error (mut_is_polymorphic loc rhs_type);
-      let vts = get_var_types let_binder rhs_type in
-      let ctx, _, let_binder = check_top_pattern ~raise ~ctx let_binder rhs_type in
-      let ctx, res_type, let_result =
-        Context.enter ~ctx ~mut:false ~in_:(fun ctx ->
-            infer
-              ~ctx:
-              (List.fold vts ~init:ctx ~f:(fun ctx (v,t) ->
-                Context.(
-                  ctx
-                  |:: C_value (v, Mutable, t))
-                )) 
-              let_result)
-      in
+    let ctx, rhs_type, rhs = infer rhs in
+    let rhs_type = Context.apply ctx rhs_type in
+    if is_t_for_all rhs_type then raise.error (mut_is_polymorphic loc rhs_type);
+    (* check_pattern take Immutable/Mutable ? *)
+    let ctx, _sigs, let_binder = check_pattern ~raise ~ctx let_binder rhs_type in
+    let ctx, res_type, let_result =
+      Context.enter ~ctx ~mut:false ~in_:(fun ctx ->
+          infer
+            ~ctx 
+            let_result)
+    in
     let attributes = type_value_attr attributes in
     ( ctx
     , res_type
     , let%bind rhs = rhs
-      and let_binder = let_binder 
+      and let_binder = let_binder
       and let_result = let_result in
       return
         (E_let_mut_in
-            { let_binder
-            ; rhs
-            ; let_result
-            ; attributes
-            })
-        res_type ) *)
-        failwith "TODO"
+           { let_binder
+           ; rhs
+           ; let_result
+           ; attributes
+           })
+        res_type )
     | E_assign { binder; expression } ->
       let type_ =
         trace_option
@@ -1402,30 +1376,6 @@ and check_cases
           pattern, body ))
   in
   ctx, Elaboration.all cases
-
-and check_top_pattern
-  ~(raise : raise)
-  ~ctx
-  (pattern :
-    (I.type_expression option) I.Pattern.t)
-  matchee_type
-  : Context.t
-    * Signature.item list
-    * ( O.type_expression O.Pattern.t
-      , _
-      , _ )
-      Elaboration.t
-=
-let open Elaboration.Let_syntax in
-let ctx, pos = Context.mark ctx ~mut:false in
-let matchee_type = Context.apply ctx matchee_type in
-if debug
-then
-  Format.printf "Matchee type: %a\n" O.PP.type_expression matchee_type;
-let ctx, sigs, pattern = check_pattern ~raise ~ctx pattern matchee_type in
-( Context.drop_until ctx ~pos
-, sigs
-, pattern )
 
 and compile_match
     ~options
