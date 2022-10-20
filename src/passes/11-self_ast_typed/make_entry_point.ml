@@ -31,11 +31,11 @@ let create_entrypoint_function_expr entrypoints entrypoint_type storage =
   let cases = List.map entrypoints ~f:(fun entrypoint ->
     let constructor = Label.of_string (Value_var.to_name_exn entrypoint) in
     let pattern = Value_var.fresh ~name:"pattern" () in
-    let pattern = Location.wrap @@ Pattern.(P_variant (constructor, Location.wrap @@ P_var (Binder.make pattern param_storage.type_expression))) in
     let body = e_a_application
       (e_a_variable entrypoint fun_type)
-        (e_a_pair p s)
+        (e_a_pair (e_variable pattern (t_unit ())) s)
         oplst_storage in
+    let pattern = Location.wrap @@ Pattern.(P_variant (constructor, Location.wrap @@ P_var (Binder.make pattern param_storage.type_expression))) in
     ({pattern;body} : _ Match_expr.match_case)) in
   let body = e_a_matching p cases oplst_storage in
   let pattern = Location.wrap @@ Pattern.(P_record fields) in

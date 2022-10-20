@@ -341,7 +341,7 @@ let annotate_with_view ~raise : string list -> Ast_typed.program -> Ast_typed.pr
         | _ -> continue
     )
   in
-  let () = match not_found with [] -> () | not_found::_ -> raise.error (corner_case (Format.asprintf "View %s does not exist" not_found : string)) in
+  let () = match not_found with [] -> () | not_found::_ -> raise.error (corner_case (Format.asprintf "View %s does not exist %s" not_found Caml.Printexc.(raw_backtrace_to_string @@ get_callstack 10) : string)) in
   prg
 
 module Free_variables :
