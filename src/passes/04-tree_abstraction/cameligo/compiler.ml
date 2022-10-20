@@ -826,55 +826,36 @@ and compile_declaration ~raise : CST.declaration -> AST.declaration option = fun
     let attr = compile_attributes attributes in
     let {type_params; binders; rhs_type; eq=_; let_rhs} : CST.let_binding = let_binding in
     let (pattern, args) = binders in
-    let rhs_type = Option.map ~f:(compile_type_expression ~raise <@ snd) rhs_type in
     let let_rhs = compile_expression ~raise let_rhs in
-    match (unepar pattern,args) with
-    | pattern, [] when (is_var_pattern pattern) ->
+    let rhs_type = Option.map ~f:(compile_type_expression ~raise <@ snd) rhs_type in
+    (*
+    function :
+      let (type a b) x = ..
+      let x foo bar = ..
+      let (type a b) foo bar = ..
+    not function:
+      let x = ..
+      let (x,y) = ..   
+    *)
+    match args , type_params with
+    | [] , None -> (* not function *)
+      (*
+        let x : ty = body
+        let x = (body : ty)
+      *)
       let attr = compile_attributes attributes in
       let pattern = compile_pattern ~raise pattern in
-      let rhs_type =
-        Option.map rhs_type ~f:(fun rhs_type ->
-          Option.value_map type_params ~default:rhs_type ~f:(fun tp ->
-          let (tp, loc) = r_split tp in
-          let tp = tp.inside in
-          let type_vars = List.Ne.map compile_type_var tp.type_vars in
-          List.Ne.fold_right ~f:(fun tvar t -> t_for_all ~loc tvar Type t) ~init:rhs_type type_vars
-        ))
-      in
-      let pattern   = Pattern.map (Fn.const rhs_type) pattern in
-      (* This handle the recursion *)
-      let let_rhs = match kwd_rec with
-        Some reg ->
-          let fun_type = trace_option ~raise (untyped_recursive_fun reg#region) @@ rhs_type in
-          let _, fun_type = destruct_for_alls fun_type in
-          let rec get_first_non_annotation e = Option.value_map ~default:e ~f:(fun e -> get_first_non_annotation e.Ascription.anno_expr) @@ get_e_annotation e  in
-          let lambda = trace_option ~raise (recursion_on_non_function @@ Location.lift region) @@ get_e_lambda @@ (get_first_non_annotation let_rhs).expression_content in
-          let Arrow.{type1; type2} = get_t_arrow_exn fun_type in
-          let lambda = Lambda.{lambda with binder = Param.map (Fn.const type1) lambda.binder; output_type = type2} in
-          e_recursive ~loc:(Location.lift reg#region) (Binder.get_var (List.hd_exn @@ Pattern.binders pattern)) fun_type lambda
-      | None   -> let_rhs
-      in
-      (* This handle polymorphic annotation *)
-      let let_rhs = Option.value_map ~default:let_rhs ~f:(fun tp ->
-        let (tp,loc) = r_split tp in
-        let tp : CST.type_params = tp.inside in
-        let type_vars = List.Ne.map compile_type_var tp.type_vars in
-        List.Ne.fold_right ~f:(fun t e -> e_type_abs ~loc t e) ~init:let_rhs type_vars
-      ) type_params in
+      (* For patterns, we annotate the rhs : let <pattern> : <type> = <expr> |-> let <pattern> = <expr> : <type> *)
+      let let_rhs = Option.value_map rhs_type ~default:let_rhs ~f:(fun ty -> e_annotation ~loc:let_rhs.location let_rhs ty) in
       return region (D_pattern {pattern ; attr ; expr = let_rhs})
-    | pattern, [] ->
-      let attr = compile_attributes attributes in
-      let () = assert (Option.is_none type_params) in
-      let pattern = compile_pattern ~raise pattern in
-      return region (D_pattern {pattern ; attr ; expr = let_rhs})
-    | _,_ ->
+    | _ , _ -> (* function *)
       let binder,_fun_ = compile_binder ~raise pattern in
       let params = List.map ~f:(compile_parameter ~raise) args in
       (* collect type annotation for let function declaration *)
       let let_rhs,rhs_type = List.fold_right ~init:(let_rhs,rhs_type) ~f:(fun (b,fun_) (e,a) ->
         e_lambda ~loc:(Value_var.get_location @@ Param.get_var b) b a @@ fun_ e, Option.map2 ~f:t_arrow (Param.get_ascr b) a) params in
-      (* Add polymorphic binder to ascription *)
-      let rhs_type =
+      (* This handle polymorphic annotation *)
+      let rhs_type : type_expression option =
         Option.map rhs_type ~f:(fun rhs_type ->
           Option.value_map type_params ~default:rhs_type ~f:(fun tp ->
           let (tp, loc) = r_split tp in
@@ -896,7 +877,7 @@ and compile_declaration ~raise : CST.declaration -> AST.declaration option = fun
           e_recursive ~loc:(Location.lift reg#region) (Binder.get_var binder) fun_type lambda
       | None   -> let_rhs
       in
-      (* This handle polymorphic annotation *)
+      (* This handle polymorphic functions (type abstraction) *)
       let let_rhs = Option.value_map ~default:let_rhs ~f:(fun tp ->
         let (tp,loc) = r_split tp in
         let tp : CST.type_params = tp.inside in
