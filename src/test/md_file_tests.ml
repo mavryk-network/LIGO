@@ -2,7 +2,7 @@ open Simple_utils.Trace
 open Test_helpers
 open Main_errors
 
-let () = Unix.putenv ~key:"LIGO_FORCE_NEW_TYPER" ~data:"false"
+let () = Core_unix.putenv ~key:"LIGO_FORCE_NEW_TYPER" ~data:"false"
 type syntax = string
 type group_name = string
 type lang = Meta | Object (* Object = normal LIGO code ; Meta = ligo test framework code *)
@@ -119,30 +119,23 @@ let compile_groups ~raise filename grp_list =
     fun ((syntax , grp, protocol_version) , (lang , contents)) ->
       trace ~raise (test_md_file filename syntax grp contents) @@
       fun ~raise ->
-      let options    = Compiler_options.make ~raw_options:Compiler_options.default_raw_options ~protocol_version () in
-      let syntax     = Syntax.of_string_opt ~raise (Syntax_name syntax) (Some filename) in
-      let meta       = Ligo_compile.Of_source.make_meta syntax in
-      let c_unit,_   = Ligo_compile.Of_source.compile_string ~raise ~options:options.frontend ~meta contents in
-      let imperative = Ligo_compile.Of_c_unit.compile ~raise ~meta c_unit filename in
-      let sugar      = Ligo_compile.Of_imperative.compile ~raise imperative in
-      let core       = Ligo_compile.Of_sugar.compile sugar in
+      let syntax     = Syntax.of_string_opt ~raise (Syntax_name syntax) None in
+      let options    = Compiler_options.make ~syntax ~raw_options:(Raw_options.make ()) ~protocol_version () in
       match lang with
       | Meta ->
-        let init_env = Environment.default_with_test protocol_version in
-        let options = Compiler_options.set_init_env options init_env in
+        let options =
+          let init_env = Environment.default protocol_version in
+          Compiler_options.set_init_env options init_env in
         let options = Compiler_options.set_test_flag options true in
-        let stdlib     = Build.Stdlib.core ~options meta.syntax in
-        let core = stdlib @ core in
-        let typed   = Ligo_compile.Of_core.typecheck ~raise ~options Env core in
-        let _ = Interpreter.eval_test ~options ~raise ~steps:5000 typed in
+        let typed = Build.qualified_typed_str ~raise ~options contents in
+        Format.printf "Typed AST: %a\n" (Ast_typed.PP.program ~use_hidden:true) typed;
+        let _ : bool * (group_name * Ligo_interpreter.Types.value) list = Interpreter.eval_test ~options ~raise ~steps:5000 typed in
         ()
       | Object ->
-        let stdlib     = Build.Stdlib.core ~options meta.syntax in
-        let core = stdlib @ core in
-        let typed     = Ligo_compile.Of_core.typecheck ~raise ~options Env core in
-        let agg_prg   = Ligo_compile.Of_typed.compile_program ~raise typed in
-        let aggregated_with_unit = Ligo_compile.Of_typed.compile_expression_in_context ~raise ~options:options.middle_end (Ast_typed.e_a_unit ()) agg_prg in
+        let typed = Build.qualified_typed_str ~raise ~options contents in
+        let aggregated_with_unit = Ligo_compile.Of_typed.compile_expression_in_context ~raise ~options:options.middle_end typed (Ast_typed.e_a_unit ()) in
         let mini_c = Ligo_compile.Of_aggregated.compile_expression ~raise aggregated_with_unit in
+        Format.printf "Mini_c AST: %a\n" (Mini_c.PP.expression) mini_c;
         let _michelson : Stacking__Compiler_program.compiled_expression = Ligo_compile.Of_mini_c.compile_expression ~raise ~options mini_c in
         ()
   in
@@ -150,6 +143,7 @@ let compile_groups ~raise filename grp_list =
   ()
 
 let compile ~raise filename () =
+  (* Format.printf "[compile] Filename: %s@." filename; *)
   let groups = get_groups filename in
   let groups_map = SnippetsGroup.bindings groups in
   let () = compile_groups ~raise filename groups_map in
@@ -159,7 +153,7 @@ let get_all_md_files () =
   let exclude_files = [
     "./gitlab-pages/docs/demo/ligo-snippet.md" ;
   ] in
-  let ic = Unix.open_process_in "find ./gitlab-pages/docs -iname \"*.md\"" in
+  let ic = Core_unix.open_process_in "find ./gitlab-pages/docs -iname \"*.md\"" in
   let all_input = ref [] in
   let () =
     try
@@ -177,11 +171,12 @@ let get_all_md_files () =
   !all_input
 
 let main =
-  Sys.chdir "../.." ;
+  Sys_unix.chdir "../.." ;
   test_suite "Markdown files" @@
     List.map
       ~f:(fun md_file ->
         let test_name = "File : "^md_file^"\"" in
+        (* Format.eprintf "%s\n" test_name; *)
         test test_name (compile md_file)
       )
       (get_all_md_files ())

@@ -40,6 +40,7 @@ let mk_wild region =
 %on_error_reduce bin_op(conj_expr_level,BOOL_AND,comp_expr_level)
 %on_error_reduce bin_op(disj_expr_level,Or,conj_expr_level)
 %on_error_reduce bin_op(disj_expr_level,BOOL_OR,conj_expr_level)
+%on_error_reduce bin_op(disj_expr_level,REV_APP,conj_expr_level)
 %on_error_reduce base_expr(expr)
 %on_error_reduce base_expr(base_cond)
 %on_error_reduce base_expr(closed_expr)
@@ -705,7 +706,11 @@ lambda_app_type:
 disj_expr_level:
   bin_op(disj_expr_level, "||", conj_expr_level)
 | bin_op(disj_expr_level, "or", conj_expr_level) {
-    ELogic (BoolExpr (Or $1)) }
+    ELogic (BoolExpr (Or $1))
+  }
+| bin_op(disj_expr_level, "|>", conj_expr_level) {
+    ERevApp $1
+  }
 | conj_expr_level { $1 }
 
 bin_op(arg1,op,arg2):
@@ -902,15 +907,25 @@ update_record:
     in {region; value} }
 
 field_path_assignment:
-  path "=" expr {
+  field_name {
+     let region = $1.region
+      and value  = Path_punned_property $1
+        in {region; value} 
+  }
+| path "=" expr {
     let region = cover (path_to_region $1) (expr_to_region $3)
-    and value  = {field_path=$1; assignment=$2; field_expr=$3}
+    and value  = Path_property {field_path=$1; assignment=$2; field_expr=$3}
     in {region; value} }
 
 field_assignment:
-  field_name "=" expr {
+  field_name {
+    let region = $1.region
+    and value  = Punned_property $1
+      in {region; value} 
+  }
+| field_name "=" expr {
     let region = cover $1.region (expr_to_region $3)
-    and value  = {field_name=$1; assignment=$2; field_expr=$3}
+    and value  = Property {field_name=$1; assignment=$2; field_expr=$3}
     in {region; value} }
 
 path:

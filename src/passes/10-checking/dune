@@ -8,8 +8,9 @@
   ast_typed
   predefined
   environment
-  self_ast_core
   compiler_options
-  main_warnings)
+  main_warnings
+  desugaring
+  syntax_types)
  (preprocess
-  (pps ppx_poly_constructor)))
+  (pps ppx_poly_constructor ppx_compare ppx_let ppx_here ppx_hash)))

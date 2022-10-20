@@ -9,7 +9,7 @@ hide_table_of_contents: true
 import Syntax from '@theme/Syntax';
 import SyntaxTitle from '@theme/SyntaxTitle';
 
-> Important: The `Test` module is only available inside the `ligo run test` command. See also [Testing LIGO](../advanced/testing).
+> Important: The `Test` module is only available inside the `ligo run test` command. See also [Testing LIGO](../advanced/testing.md).
 
 <SyntaxTitle syntax="pascaligo">
 type michelson_program
@@ -160,6 +160,22 @@ type typed_address &lt;&apos;param, &apos;s&gt;
 A type for an address of a contract with parameter `'param` and storage
 `'storage`.
 
+
+<SyntaxTitle syntax="pascaligo">
+type unforged_ticket(s) is record [ ticketer : address ; value : s ; amount : nat ]
+</SyntaxTitle>
+<SyntaxTitle syntax="cameligo">
+type 's unforged_ticket = &#x007b; ticketer : address ; value : 's ; amount : nat &#x007d;
+</SyntaxTitle>
+<SyntaxTitle syntax="reasonligo">
+type unforged_ticket s = &#x007b; ticketer : address , value : s , amount : nat &#x007d;
+</SyntaxTitle>
+<SyntaxTitle syntax="jsligo">
+type unforged_ticket &lt;s&gt; = &#x007b; ticketer : address , value : s , amount : nat &#x007d;
+</SyntaxTitle>
+
+A type for decompile tickets.
+
 <SyntaxTitle syntax="pascaligo">
 val to_contract&lt;param,storage&gt; : typed_address (param, storage) -> contract (param)
 </SyntaxTitle>
@@ -216,7 +232,7 @@ Originate a contract with a path to the contract file, an entrypoint, and a list
 
 ```pascaligo skip
 const originated =
-  Test.originate_from_file (testme_test, "main", nil : list (string), init_storage, 0tez)
+  Test.originate_from_file (testme_test, "main", nil, init_storage, 0tez)
 const addr = originated.0
 const contract = originated.1
 const size = originated.2
@@ -227,7 +243,7 @@ const size = originated.2
 
 ```cameligo skip
 let addr, contract, size =
-  Test.originate_from_file testme_test "main" ([] : string list) init_storage 0tez
+  Test.originate_from_file testme_test "main" [] init_storage 0tez
 ...
 ```
 
@@ -235,14 +251,14 @@ let addr, contract, size =
 <Syntax syntax="reasonligo">
 
 ```reasonligo skip
-let (addr, contract, size) = Test.originate_from_file(testme_test, "main", ([] : list(string)), init_storage, 0tez);
+let (addr, contract, size) = Test.originate_from_file(testme_test, "main", [], init_storage, 0tez);
 ```
 
 </Syntax>
 <Syntax syntax="jsligo">
 
 ```jsligo skip
-let [addr, contract, size] = Test.originate_from_file(testme_test, "main", (list([]) : list<string>), init_storage, 0 as tez);
+let [addr, contract, size] = Test.originate_from_file(testme_test, "main", list([]), init_storage, 0 as tez);
 ```
 
 </Syntax>
@@ -553,6 +569,20 @@ let to_string = (a: 'a) => string
 Convert a value to a string (same conversion as used by `log`).
 
 <SyntaxTitle syntax="pascaligo">
+val to_json&lt;a&gt; : a -> string
+</SyntaxTitle>
+<SyntaxTitle syntax="cameligo">
+val to_json : 'a -> string
+</SyntaxTitle>
+<SyntaxTitle syntax="reasonligo">
+let to_json: 'a => string
+</SyntaxTitle>
+<SyntaxTitle syntax="jsligo">
+let to_json = (a: 'a) => string
+</SyntaxTitle>
+Convert a value to its JSON representation (as a string).
+
+<SyntaxTitle syntax="pascaligo">
 val print : string -> unit
 </SyntaxTitle>
 <SyntaxTitle syntax="cameligo">
@@ -702,8 +732,7 @@ let register_constant = (constant : michelson_program) => string
 </SyntaxTitle>
 Registers a global constant `constant`, returns its hash as a string.
 
-See the [documentation for global
-constants](../advanced/global-constants#global-constants-in-the-testing-framework)
+See the [documentation for global constants](../advanced/global-constants.md#global-constants-in-the-testing-framework)
 for an example of usage.
 
 <SyntaxTitle syntax="pascaligo">
@@ -942,10 +971,10 @@ const test_example = {
 
 ```cameligo test-ligo group=test_run
 type some_r = [@layout:comb] { one : int ; two : nat ; three : string ; four : bytes ; five : unit }
-let f = fun (x:some_r) -> x.one
+let f = fun (x : some_r) -> x.one
 
 let test_example =
-  Test.run (fun (x : (int * nat * string * bytes * unit)) -> f ({ one = x.0 ; two = x.1 ; three = x.2 ; four = x.3 ; five = x.4 } : some_r))
+  Test.run (fun (x : (int * nat * string * bytes * unit)) -> f ({ one = x.0 ; two = x.1 ; three = x.2 ; four = x.3 ; five = x.4 }))
            (1 + 3 + 2, 1n + 2n, "a" ^ "b", 0xFF00, ())
 ```
 
@@ -954,10 +983,10 @@ let test_example =
 
 ```reasonligo test-ligo group=test_run
 type some_r = [@layout:comb] { one : int , two : nat , three : string , four : bytes , five : unit };
-let f = (x:some_r) => x.one;
+let f = (x: some_r) => x.one;
 
 let test_example =
-  Test.run (((x : (int, nat, string, bytes, unit)) => f ({ one : x[0] , two : x[1] , three : x[2] , four : x[3] , five : x[4] } : some_r)),
+  Test.run (((x : (int, nat, string, bytes, unit)) => f ({ one : x[0] , two : x[1] , three : x[2] , four : x[3] , five : x[4] })),
            (1 + 3 + 2, 1n + 2n, ("a" ++ "b"), 0xFF00, ()));
 ```
 
@@ -966,7 +995,7 @@ let test_example =
 
 ```jsligo test-ligo group=test_run
 type some_r = [@layout:comb] { one : int , two : nat , three : string , four : bytes , five : unit };
-let f = (x:some_r) : int => x.one;
+let f = (x: some_r) : int => x.one;
 
 let test_example =
   Test.run (((x : [int, nat, string, bytes, unit]) => f ({ one : x[0] , two : x[1] , three : x[2] , four : x[3] , five : x[4] })),
@@ -1043,6 +1072,45 @@ let mutation_test_all : (value: 'a, tester: ('a -> 'b)) => list &lt;[&apos;b, mu
 Given a value to mutate (first argument), it will try all the
 mutations of it, passing each one to the function (second argument).
 In case no failure arises when running the function on a mutation, the
+failure and mutation involved will be added to the list to be
+returned.
+
+<SyntaxTitle syntax="pascaligo">
+val originate_from_file_and_mutate&lt;b&gt; : string -> string -> list string -> michelson_program -> tez -> (address * michelson_contract * int -> b) -> option (b * mutation)
+</SyntaxTitle>
+<SyntaxTitle syntax="cameligo">
+val originate_from_file_and_mutate : string -> string -> string list -> michelson_program -> tez -> (address * michelson_contract * int -> 'b) -> ('b * mutation) option
+</SyntaxTitle>
+<SyntaxTitle syntax="reasonligo">
+let originate_from_file_and_mutate : (string, string, list (string), michelson_program, tez, ((address, michelson_contract, int) => 'b)) => option ('b, mutation)
+</SyntaxTitle>
+<SyntaxTitle syntax="jsligo">
+let originate_from_file_and_mutate : (filepath: string, entrypoint: string, views: list&lt;string&gt;, init: michelson_program, balance: tez, (tester: (originated_address: address, code: michelson_contract, size: int) => 'b)) => option&lt;[&apos;b, mutation]&gt;
+</SyntaxTitle>
+
+Given a contract from a file (passed by filepath, entrypoint and
+views), an initial storage and balance, it will originate mutants of
+the contract and pass the result to the function (last argument). On
+the first case of non failure when running the function on a mutation,
+the value and mutation involved will be returned.
+
+<SyntaxTitle syntax="pascaligo">
+val originate_from_file_and_mutate_all&lt;b&gt; : string -> string -> list string -> michelson_program -> tez -> (address * michelson_contract * int -> b) -> list (b * mutation)
+</SyntaxTitle>
+<SyntaxTitle syntax="cameligo">
+val originate_from_file_and_mutate_all : string -> string -> string list -> michelson_program -> tez -> (address * michelson_contract * int -> 'b) -> ('b * mutation) list
+</SyntaxTitle>
+<SyntaxTitle syntax="reasonligo">
+let originate_from_file_and_mutate_all : (string, string, list (string), michelson_program, tez, ((address, michelson_contract, int) => 'b)) => list ('b, mutation)
+</SyntaxTitle>
+<SyntaxTitle syntax="jsligo">
+let originate_from_file_and_mutate_all : (filepath: string, entrypoint: string, views: list&lt;string&gt;, init: michelson_program, balance: tez, (tester: (originated_address: address, code: michelson_contract, size: int) => 'b)) => list&lt;[&apos;b, mutation]&gt;
+</SyntaxTitle>
+
+Given a contract from a file (passed by filepath, entrypoint and
+views), an initial storage and balance, it will originate mutants of
+the contract and pass the result to the function (last argument). In
+case no failure arises when running the function on a mutation, the
 failure and mutation involved will be added to the list to be
 returned.
 
@@ -1211,3 +1279,86 @@ let sign: (secret_key: string, data: bytes) => signature
 
 Creates a signature of `bytes` from a `string` representing a secret
 key, it can be checked with `Crypto.check`.
+
+
+### Failwith and asserts
+
+
+<SyntaxTitle syntax="pascaligo">
+val failwith&lt;a&gt; : a -> unit
+</SyntaxTitle>
+<SyntaxTitle syntax="cameligo">
+val failwith : 'a -> unit
+</SyntaxTitle>
+<SyntaxTitle syntax="reasonligo">
+let failwith: 'a -> unit
+</SyntaxTitle>
+<SyntaxTitle syntax="jsligo">
+let failwith: (message: &apos;a) => unit
+</SyntaxTitle>
+
+Cause the testing framework to fail.
+
+
+<SyntaxTitle syntax="pascaligo">
+val assert : bool -> unit
+</SyntaxTitle>
+<SyntaxTitle syntax="cameligo">
+val assert : bool -> unit
+</SyntaxTitle>
+<SyntaxTitle syntax="reasonligo">
+let assert: bool => unit
+</SyntaxTitle>
+<SyntaxTitle syntax="jsligo">
+let assert: (condition: bool) => unit
+</SyntaxTitle>
+
+Check if a certain condition has been met. If not the testing framework will fail.
+
+
+<SyntaxTitle syntax="pascaligo">
+val assert_with_error : bool -> string -> unit
+</SyntaxTitle>
+<SyntaxTitle syntax="cameligo">
+val assert_with_error : bool -> string -> unit
+</SyntaxTitle>
+<SyntaxTitle syntax="reasonligo">
+let assert_with_error: (bool, string) => unit
+</SyntaxTitle>
+<SyntaxTitle syntax="jsligo">
+let assert_with_error: (condition: bool, message: string) => unit
+</SyntaxTitle>
+
+Check if a certain condition has been met. If not the testing framework will fail with the string passed as message.
+
+
+<SyntaxTitle syntax="pascaligo">
+val set_print_values : unit -> unit
+</SyntaxTitle>
+<SyntaxTitle syntax="cameligo">
+val set_print_values : unit -> unit
+</SyntaxTitle>
+<SyntaxTitle syntax="reasonligo">
+let set_print_values: unit => unit
+</SyntaxTitle>
+<SyntaxTitle syntax="jsligo">
+let set_print_values = (u: unit) => unit
+</SyntaxTitle>
+
+Turns on the printing of `test` prefixed values at the end of tests. This is the default behaviour.
+
+
+<SyntaxTitle syntax="pascaligo">
+val unset_print_values : unit -> unit
+</SyntaxTitle>
+<SyntaxTitle syntax="cameligo">
+val unset_print_values : unit -> unit
+</SyntaxTitle>
+<SyntaxTitle syntax="reasonligo">
+let unset_print_values: unit => unit
+</SyntaxTitle>
+<SyntaxTitle syntax="jsligo">
+let unset_print_values = (u: unit) => unit
+</SyntaxTitle>
+
+Turns off the printing of `test` prefixed values at the end of tests.

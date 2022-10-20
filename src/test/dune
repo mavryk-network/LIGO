@@ -13,17 +13,26 @@
   simple-utils
   tezos-memory-proto-alpha
   ligo
+  bos
   repl
   interpreter
   alcotest
   tezos-utils
   tezos-crypto
-  ligo_api))
+  ligo_api
+  core_unix.filename_unix))
 
 (rule
  (alias doc-test)
  (action
   (run ./doc_test.exe))
+ (deps
+  (source_tree ../../gitlab-pages/docs)))
+
+(rule
+ (alias md_update)
+ (action
+  (run echo ".md files pushed in _build"))
  (deps
   (source_tree ../../gitlab-pages/docs)))
 

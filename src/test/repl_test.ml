@@ -1,9 +1,11 @@
 open Test_helpers
 open Simple_utils.Trace
 
+module Raw_options = Compiler_options.Raw_options
+
 let dry_run_options = Proto_alpha_utils.Memory_proto_alpha.(make_options ~env:(test_environment ()) ())
 
-let raw_options = Compiler_options.default_raw_options
+let raw_options = Raw_options.make ()
 let options = Compiler_options.make ~raw_options ()
 
 let make_init_state_cameligo ?(project_root=None) () = Repl.make_initial_state
@@ -46,11 +48,6 @@ let test_stdlib ~raise ~raw_options () =
   if (String.compare s "\"Hello world!\"" = 0)
   then ()
   else raise.error @@ `Test_repl (["\"Hello world!\""], [s])
-
-let test_empty ~raise ~raw_options () =
-  test_seq ~raise ~raw_options init_state_cameligo [""]
-                               ["unexpected error, missing expression?"]
-                               ()
 
 let test_def ~raise () =
   test_seq ~raise init_state_cameligo ["let f (x : int) = x * 2"; "f 3"]
@@ -115,11 +112,6 @@ let test_stdlib_jsligo ~raise ~raw_options () =
   then ()
   else raise.error @@ `Test_repl (["\"Hello world!\""], [s])
 
-let test_empty_jsligo ~raise ~raw_options () =
-  test_seq ~raise ~raw_options init_state_jsligo [""]
-                               ["unexpected error, missing expression?"]
-                               ()
-
 let test_def_jsligo ~raise ~raw_options () =
   test_seq ~raise ~raw_options init_state_jsligo ["let f = (x : int) : int => x * 2"; "f(3)"]
                              ["f"; "6"]
@@ -171,7 +163,7 @@ let test_long_jsligo ~raise ~raw_options () =
         "+32"]
         ()
 
-let test_use_external_packages ~raise ~(raw_options : Compiler_options.raw) () =
+let test_use_external_packages ~raise ~(raw_options : Raw_options.t) () =
   let project_root = Some "projects/demo" in
   let raw_options = { raw_options with project_root = project_root } in
   (* Here we #use (equivalent of #include) the dependencies of the root project *)
@@ -184,8 +176,8 @@ let test_use_external_packages ~raise ~(raw_options : Compiler_options.raw) () =
       "x";
     ]
     [
-      "uniq_concat , reverse , concat ,\nSetX";
-      "sum , reverse ,\nconcat";
+      "SetX , concat , reverse ,\nuniq_concat";
+      "concat , reverse ,\nsum";
       "y";
       "24";
       "x";
@@ -193,7 +185,7 @@ let test_use_external_packages ~raise ~(raw_options : Compiler_options.raw) () =
     ]
     ()
 
-let test_import_external_packages ~raise ~(raw_options : Compiler_options.raw) () =
+let test_import_external_packages ~raise ~(raw_options : Raw_options.t) () =
   let project_root = Some "projects/demo" in
   let raw_options = { raw_options with project_root = project_root } in
   (* Here we #import the dependecies of the root project under separate namespaces *)
@@ -212,7 +204,36 @@ let test_import_external_packages ~raise ~(raw_options : Compiler_options.raw) (
       "Done.";
       "42";
       "24";
-      ]
+    ]
+    ()
+
+let test_use_scoped_package ~raise ~(raw_options : Raw_options.t) () =
+  let project_root = Some "projects/using_scope_pkg_project" in
+  let raw_options = { raw_options with project_root = project_root } in
+  (* Here we #use (equivalent of #include) *)
+  test_seq ~raise ~raw_options (make_init_state_cameligo ~project_root ()) [
+      "#use \"@ligo/bigarray-cameligo/lib/bigarray.mligo\"";
+      "reverse [3 ; 2 ; 1]";
+    ]
+    [
+      "big_array , construct , last , reverse , concat , find , set , insert ,\n\
+      drop , take , slice , split , rotate , equal ,\n\
+      remove";
+      "CONS(1 , CONS(2 , CONS(3 , LIST_EMPTY())))";
+    ]
+    ()
+
+let test_import_scoped_packages ~raise ~(raw_options : Raw_options.t) () =
+  let project_root = Some "projects/using_scope_pkg_project" in
+  let raw_options = { raw_options with project_root = project_root } in
+  test_seq ~raise ~raw_options (make_init_state_cameligo ~project_root ()) [
+      "#import \"@ligo/bigarray-cameligo/lib/bigarray.mligo\" \"BA\"";
+      "BA.reverse [3 ; 2 ; 1]";
+    ]
+    [
+      "Done.";
+      "CONS(1 , CONS(2 , CONS(3 , LIST_EMPTY())))";
+    ]
     ()
 
 let () =
@@ -221,7 +242,6 @@ let () =
     test_suite "REPL (cameligo)" [
         test "basic" (test_basic ~raw_options);
         test "stdlib" (test_stdlib ~raw_options);
-        test "empty" (test_empty ~raw_options);
         test "def&eval" (test_def ~raw_options);
         test "mod" (test_mod ~raw_options);
         test "use" (test_use ~raw_options);
@@ -230,15 +250,16 @@ let () =
     test_suite "REPL (jsligo)" [
         test "basic" (test_basic_jsligo ~raw_options);
         test "stdlib" (test_stdlib_jsligo ~raw_options);
-        test "empty" (test_empty_jsligo ~raw_options);
         test "def&eval" (test_def_jsligo ~raw_options);
         test "mod" (test_mod_jsligo ~raw_options);
         test "use" (test_use_jsligo ~raw_options);
         test "long" (test_long_jsligo ~raw_options)
       ] ;
     test_suite "REPL + package-management" [
-      test "#use external packages" (test_use_external_packages ~raw_options);
-      test "#import external packages" (test_import_external_packages ~raw_options);
+      test "#use ext pkgs" (test_use_external_packages ~raw_options);
+      test "#import ext pkgs" (test_import_external_packages ~raw_options);
+      test "#use scoped ext pkg" (test_use_scoped_package ~raw_options);
+      test "#import scoped ext pkg" (test_import_scoped_packages ~raw_options);
     ] ;
   ] ;
   ()

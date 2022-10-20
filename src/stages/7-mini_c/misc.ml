@@ -1,17 +1,18 @@
 open Types
+open Ligo_prim
 
 module Free_variables = struct
 
-  type bindings = expression_variable list
-  let mem : bindings -> expression_variable -> bool = List.mem ~equal:ValueVar.equal
-  let singleton : expression_variable -> bindings = fun s -> [ s ]
-  let mem_count : expression_variable -> bindings -> int =
+  type bindings = Value_var.t list
+  let mem : bindings -> Value_var.t -> bool = List.mem ~equal:Value_var.equal
+  let singleton : Value_var.t -> bindings = fun s -> [ s ]
+  let mem_count : Value_var.t -> bindings -> int =
     fun x fvs ->
-    List.length (List.filter ~f:(ValueVar.equal x) fvs)
+    List.length (List.filter ~f:(Value_var.equal x) fvs)
   let union : bindings -> bindings -> bindings = (@)
   let unions : bindings list -> bindings = List.concat
   let empty : bindings = []
-  let of_list : expression_variable list -> bindings = fun x -> x
+  let of_list : Value_var.t list -> bindings = fun x -> x
 
   let rec expression : bindings -> expression -> bindings = fun b e ->
     let self = expression b in
@@ -51,7 +52,7 @@ module Free_variables = struct
                expression (union (singleton l) b) bl ;
                expression (union (singleton r) b) br ;
              ]
-    | E_let_in (expr, _ , _, ((v , _) , body) )->
+    | E_let_in (expr, _ , ((v , _) , body) )->
       unions [ self expr ;
                expression (union (singleton v) b) body ;
              ]
@@ -73,6 +74,24 @@ module Free_variables = struct
     | E_create_contract (_p, _s, ((x, _), code), args) ->
       let b = union (singleton x) b in
       union (expression b code) (unions (List.map ~f:self args))
+    | E_let_mut_in (expr, ((x, _), body)) ->
+      union (self expr) (expression (union (singleton x) b) body)
+    | E_deref x ->
+      var_name b x
+    | E_assign (x, e) ->
+      union (var_name b x) (self e)
+    | E_for (start, final, incr, ((x, _), body)) ->
+      unions [ self start;
+               self final;
+               self incr;
+               expression (union (singleton x) b) body ]
+    | E_for_each (coll, _, (xs, body)) ->
+       let b' = unions (List.map ~f:(fun (x, _) -> singleton x) xs @ [b]) in
+       unions [ self coll;
+                expression b' body ]
+    | E_while (cond, body) ->
+       unions [ self cond;
+                self body ]
 
   and var_name : bindings -> var_name -> bindings = fun b n ->
     if mem b n
