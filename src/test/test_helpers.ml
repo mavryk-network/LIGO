@@ -199,7 +199,7 @@ let typed_program_with_imperative_input_to_michelson ~raise (program : Ast_typed
   Ligo_compile.Of_mini_c.compile_expression ~raise ~options mini_c, aggregated.type_expression
 
 let run_typed_program_with_imperative_input ~raise ?options (program : Ast_typed.program) (entry_point: string) (input: Ast_imperative.expression) : Ast_core.expression =
-  let entry_point = Ast_typed.ValueVar.of_input_var entry_point in
+  let entry_point = Ligo_prim.Value_var.of_input_var entry_point in
   let michelson_program,ty = typed_program_with_imperative_input_to_michelson ~raise program entry_point input in
   let michelson_output  = Ligo_run.Of_michelson.run_no_failwith ~raise ?options michelson_program.expr michelson_program.expr_ty in
   let res =  Decompile.Of_michelson.decompile_expression ~raise ty (Runned_result.Success michelson_output) in
@@ -219,7 +219,7 @@ let expect_fail ~(raise: (all,Main_warnings.all) raise) ?options program entry_p
     run_typed_program_with_imperative_input ?options program entry_point input
 
 let expect_string_failwith ~raise ?options program entry_point input expected_failwith =
-  let entry_point = Ast_typed.ValueVar.of_input_var entry_point in
+  let entry_point = Ligo_prim.Value_var.of_input_var entry_point in
   let michelson_program,_ = typed_program_with_imperative_input_to_michelson ~raise program entry_point input in
   let err = Ligo_run.Of_michelson.run_failwith ~raise
     ?options michelson_program.expr michelson_program.expr_ty in

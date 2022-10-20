@@ -385,7 +385,8 @@ let%expect_test _ =
                                    lacks details (we are still tweaking it), please
                                    contact us and use another format in the
                                    meanwhile.
-      [--no-warn]                . disable warning messages
+      [--init-file FILENAME]     . the path to the smart contract file to be used
+                                   for context initialization.
       [--now TIMESTAMP]          . the NOW value the Michelson interpreter will use
                                    (e.g. '2000-01-01T10:10:10Z')
       [--project-root PATH]      . The path to root of the project.
@@ -400,9 +401,6 @@ let%expect_test _ =
                                    .religo, and .jsligo respectively).
       [--warn-unused-rec]        . warn about unused recursion in a recursive
                                    function
-      [--werror]                 . treat warnings as errors
-      [-e ENTRY-POINT], --entry-point
-                                 . the entry-point that will be compiled.
       [-p PROTOCOL], --protocol  . choose protocol's types/values pre-loaded into
                                    the LIGO environment (jakarta ,
                                    kathmandu). By default, the current protocol

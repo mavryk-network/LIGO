@@ -207,7 +207,7 @@ let%expect_test _ =
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "test" ; contract "views_using_view.test.mligo" ] ;
-  [%expect {|
+  [%expect{|
     File "../../test/contracts/views_using_view.jsligo", line 23, characters 0-98:
      22 | // @view
      23 | let super_not_funny = ([_,s]:[unit, storage]): storage => not_funny(unit, s) + get_storage(unit,s);
