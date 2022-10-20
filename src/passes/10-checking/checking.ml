@@ -387,6 +387,29 @@ let rec check_expression
   ctx, expr'
 
 
+and get_var_types (p : I.type_expression option I.Pattern.t) (t : O.type_expression) =
+  match p.wrap_content with
+  | I.Pattern.P_unit -> []
+  | P_var b -> [Binder.get_var b, t]
+  | P_list (Cons (hd, tl)) ->
+    let v = get_var_types hd (O.Combinators.get_t_list_exn t) in
+    let v' = get_var_types tl t in
+    v @ v'
+  | P_list (List ps) ->
+    let t = get_t_list_exn t in
+    List.concat @@ List.map ps ~f:(fun p -> get_var_types p t)
+  | P_variant (l, p) ->
+    let t = Option.value_exn (O.Combinators.get_sum_label_type t l) in
+    get_var_types p t
+  | P_tuple ps ->
+    let ts = Option.value_exn (O.Combinators.get_t_tuple t) in
+    List.concat @@ List.map2_exn ps ts ~f:get_var_types
+  | P_record lps ->
+    Record.LMap.fold (fun l p vs ->
+      let t = Option.value_exn (O.Combinators.get_record_field_type t l) in
+      vs @ get_var_types p t
+    ) (Container.Record.to_record lps) []
+
 and infer_expression ~(raise : raise) ~options ~ctx (expr : I.expression)
     : Context.t * O.type_expression * (O.expression, _, _) Elaboration.t
   =
@@ -460,39 +483,46 @@ and infer_expression ~(raise : raise) ~options ~ctx (expr : I.expression)
           , let%bind result = result in
             return (E_type_abstraction { type_binder = tvar; result }) ret_type
           ))
-    | E_let_in _ -> failwith "TODO"
-    (* | E_let_in { let_binder; rhs; let_result; attributes } ->
+    | E_let_in { let_binder; rhs; let_result; attributes } ->
+      (* 
       let rhs_ascr = Binder.get_ascr let_binder in
       let rhs =
         Option.value_map
           rhs_ascr
           ~f:(fun rhs_ascr -> I.e_ascription ~loc rhs rhs_ascr)
           ~default:rhs
-      in
-      let ctx, rhs_type, rhs = infer rhs in
+      in *)
+      (* let ctx, rhs_type, rhs = infer rhs in
       let rhs_type = Context.apply ctx rhs_type in
+      let vts = get_var_types let_binder rhs_type in
+      let ctx, _, let_binder = check_top_pattern ~raise ~ctx let_binder rhs_type in
       let ctx, res_type, let_result =
+
         Context.enter ~ctx ~mut:false ~in_:(fun ctx ->
             infer
               ~ctx:
+              (List.fold vts ~init:ctx ~f:(fun ctx (v,t) ->
                 Context.(
                   ctx
-                  |:: C_value (Binder.get_var let_binder, Immutable, rhs_type))
+                  |:: C_value (v, Immutable, t))
+                )) 
               let_result)
       in
-      let attr = type_value_attr attr in
+      let attributes = type_value_attr attributes in
       ( ctx
       , res_type
       , let%bind rhs = rhs
+        and let_binder = let_binder
         and let_result = let_result in
         return
           (E_let_in
-             { let_binder = Binder.map (Fn.const rhs_type) let_binder
+             { let_binder
              ; rhs
              ; let_result
-             ; attr
+             ; attributes
              })
           res_type ) *)
+          failwith "TODO"
     | E_type_in { type_binder = tvar; rhs; let_result } ->
       let rhs = evaluate_type ~raise ~ctx rhs in
       let ctx, res_type, let_result =
@@ -712,41 +742,48 @@ and infer_expression ~(raise : raise) ~options ~ctx (expr : I.expression)
       ( ctx
       , elt_type
       , return (E_module_accessor { module_path; element }) elt_type )
-    | E_let_mut_in _ -> failwith "TODO"
-    (* | E_let_mut_in { let_binder; rhs; let_result; attributes } ->
-      let rhs_ascr = Binder.get_ascr let_binder in
-      let rhs =
-        Option.value_map
-          rhs_ascr
-          ~f:(fun rhs_ascr -> I.e_ascription ~loc rhs rhs_ascr)
-          ~default:rhs
-      in
-      let ctx, rhs_type, rhs = infer rhs in
+  | E_let_mut_in { let_binder; rhs; let_result; attributes } ->
+    (* 
+    let rhs_ascr = Binder.get_ascr let_binder in
+    let rhs =
+      Option.value_map
+        rhs_ascr
+        ~f:(fun rhs_ascr -> I.e_ascription ~loc rhs rhs_ascr)
+        ~default:rhs
+    in *)
+    (* let ctx, rhs_type, rhs = infer rhs in
       let rhs_type = Context.apply ctx rhs_type in
-      (* TODO: Improve inference here -- we could subtype it to get a monotype? *)
+       (* TODO: Improve inference here -- we could subtype it to get a monotype? *)
       if is_t_for_all rhs_type
       then raise.error (mut_is_polymorphic loc rhs_type);
+      let vts = get_var_types let_binder rhs_type in
+      let ctx, _, let_binder = check_top_pattern ~raise ~ctx let_binder rhs_type in
       let ctx, res_type, let_result =
         Context.enter ~ctx ~mut:false ~in_:(fun ctx ->
             infer
               ~ctx:
+              (List.fold vts ~init:ctx ~f:(fun ctx (v,t) ->
                 Context.(
-                  ctx |:: C_value (Binder.get_var let_binder, Mutable, rhs_type))
+                  ctx
+                  |:: C_value (v, Mutable, t))
+                )) 
               let_result)
       in
-      let attributes = type_value_attr attributes in
-      ( ctx
-      , res_type
-      , let%bind rhs = rhs
-        and let_result = let_result in
-        return
-          (E_let_mut_in
-             { let_binder = Binder.map (Fn.const rhs_type) let_binder
-             ; rhs
-             ; let_result
-             ; attributes
-             })
-          res_type ) *)
+    let attributes = type_value_attr attributes in
+    ( ctx
+    , res_type
+    , let%bind rhs = rhs
+      and let_binder = let_binder 
+      and let_result = let_result in
+      return
+        (E_let_mut_in
+            { let_binder
+            ; rhs
+            ; let_result
+            ; attributes
+            })
+        res_type ) *)
+        failwith "TODO"
     | E_assign { binder; expression } ->
       let type_ =
         trace_option
@@ -1133,7 +1170,7 @@ and infer_pattern
     ctx, type_, return @@ P_var (Binder.set_ascr binder type_)
   | P_list (Cons (hd_pat, tl_pat)) ->
     let ctx, elt_type, hd_pat = infer ~ctx hd_pat in
-    let ctx, tl_pat = check ~ctx tl_pat (t_list ~loc elt_type) in
+    let ctx, _, tl_pat = check ~ctx tl_pat (t_list ~loc elt_type) in
     ( ctx
     , t_list ~loc elt_type
     , let%bind hd_pat = hd_pat
@@ -1145,7 +1182,7 @@ and infer_pattern
     let elt_type = t_exists ~loc evar in
     let ctx, list_pat =
       List.fold_right list_pat ~init:(ctx, []) ~f:(fun elt (ctx, list_pat) ->
-          let ctx, elt = check ~ctx elt elt_type in
+          let ctx, _, elt = check ~ctx elt elt_type in
           ctx, elt :: list_pat)
     in
     ( ctx
@@ -1187,7 +1224,7 @@ and infer_pattern
         sum_type
     in
     (* Check argument *)
-    let ctx, arg_pat = check ~ctx arg_pat arg_type in
+    let ctx, _, arg_pat = check ~ctx arg_pat arg_type in
     ( ctx
     , sum_type
     , let%bind arg_pat = arg_pat in
@@ -1262,6 +1299,7 @@ and check_pattern
     : Context.t * Signature.item list * (O.type_expression O.Pattern.t, _, _) Elaboration.t
   =
   let open Elaboration.Let_syntax in
+  let open Signature in
   let loc = pat.location in
   let err () = pattern_do_not_conform_type pat type_ in
   let fail () = raise.error (err ()) in
@@ -1273,71 +1311,77 @@ and check_pattern
   let ctx, sigs, pat =
     match pat.wrap_content, type_.type_content with
     | P_unit, O.T_constant { injection = Literal_types.Unit; _ } ->
-      ctx, return @@ P_unit
+      ctx, [], return @@ P_unit
     | P_unit, _ -> fail ()
     | P_var binder, _ ->
       (* TODO: Check if the binder annot is consistent with expected type *)
-      let binder = Binder.get_var binder in
-      ( Context.(ctx |:: C_value (binder, Immutable, type_))
-      , [S_value (binder, type_)]
+      let var = Binder.get_var binder in
+      ( Context.(ctx |:: C_value (var, Immutable, type_))
+      , [S_value (var, type_)]
       , return @@ P_var (Binder.map (Fn.const @@ type_) binder) )
     | ( P_list (Cons (hd_pat, tl_pat))
       , O.T_constant
           { injection = Literal_types.List; parameters = [ elt_type ]; _ } ) ->
-      let ctx, hd_pat = self ~ctx hd_pat elt_type in
-      let ctx, tl_pat = self ~ctx tl_pat type_ in
+      let ctx, h, hd_pat = self ~ctx hd_pat elt_type in
+      let ctx, t, tl_pat = self ~ctx tl_pat type_ in
       ( ctx
+      , h @ t
       , let%bind hd_pat = hd_pat
         and tl_pat = tl_pat in
         return @@ P_list (Cons (hd_pat, tl_pat)) )
     | ( P_list (List list_pat)
       , O.T_constant
           { injection = Literal_types.List; parameters = [ elt_type ]; _ } ) ->
-      let ctx, list_pat =
-        List.fold_right list_pat ~init:(ctx, []) ~f:(fun elt (ctx, list_pat) ->
-            let ctx, elt = self ~ctx elt elt_type in
-            ctx, elt :: list_pat)
+      let ctx, sigs, list_pat =
+        List.fold_right list_pat ~init:(ctx, [], []) ~f:(fun elt (ctx, sigs, list_pat) ->
+            let ctx, sigs', elt = self ~ctx elt elt_type in
+            ctx, sigs @ sigs', elt :: list_pat)
       in
       ( ctx
+      , sigs
       , let%bind list_pat = Elaboration.all list_pat in
         return @@ P_list (List list_pat) )
     | P_variant (label, arg_pat), O.T_sum row ->
       let label_row_elem =
         trace_option ~raise (err ()) @@ Record.LMap.find_opt label row.fields
       in
-      let ctx, arg_pat = self ~ctx arg_pat label_row_elem.associated_type in
+      let ctx, sigs, arg_pat = self ~ctx arg_pat label_row_elem.associated_type in
       ( ctx
+      , sigs
       , let%bind arg_pat = arg_pat in
         return @@ P_variant (label, arg_pat) )
     | P_tuple tuple_pat, O.T_record row ->
       if Record.LMap.cardinal row.fields <> List.length tuple_pat
       then raise.error (fail ());
-      let ctx, tuple_pat =
-        List.fold_mapi tuple_pat ~init:ctx ~f:(fun i ctx pat ->
+      let (ctx, sigs), tuple_pat =
+        List.fold_mapi tuple_pat ~init:(ctx, []) ~f:(fun i (ctx, sigs) pat ->
             let pat_row_elem =
               trace_option ~raise (err ())
               @@ Record.LMap.find_opt (Label (Int.to_string i)) row.fields
             in
-            self ~ctx pat pat_row_elem.associated_type)
+            let ctx, sigs', p = self ~ctx pat pat_row_elem.associated_type in
+            (ctx, sigs @ sigs'), p)
       in
       ( ctx
+      , sigs
       , let%bind tuple_pat = Elaboration.all tuple_pat in
         return @@ P_tuple tuple_pat )
     | P_record lps, O.T_record row ->
       let lps = Pattern.Container.Record.to_record lps in
       if Record.LMap.cardinal row.fields <> Record.LMap.cardinal lps
       then raise.error (fail ());
-      let ctx, record_pat =
-        Record.LMap.fold_map lps ~init:ctx ~f:(fun label pat ctx ->
+      let (ctx, sigs), record_pat =
+        Record.LMap.fold_map lps ~init:(ctx, []) ~f:(fun label pat (ctx, sigs) ->
             let label_row_elem =
               trace_option ~raise (err ())
               @@ Record.LMap.find_opt label row.fields
             in
-            let ctx, pat = self ~ctx pat label_row_elem.associated_type in
-            ctx, (label, pat))
+            let ctx, sigs', pat = self ~ctx pat label_row_elem.associated_type in
+            (ctx, sigs @ sigs'), (label, pat))
       in
       let labels, pats = List.unzip (Record.LMap.values record_pat) in
       ( ctx
+      , sigs
       , let%bind pats = Elaboration.all pats in
         return
         @@ P_record
@@ -1352,10 +1396,10 @@ and check_pattern
           ~received:(Context.apply ctx type_')
           ~expected:(Context.apply ctx type_)
       in
-      ctx, pat
+      ctx, [], pat
   in
   (* if debug then Format.printf "Ctx After Pattern (Check): %a\n" Context.pp_ ctx; *)
-  ctx, pat
+  ctx, sigs, pat
 
 
 and check_cases
@@ -1389,6 +1433,29 @@ and check_cases
   in
   ctx, Elaboration.all cases
 
+and check_top_pattern
+  ~(raise : raise)
+  ~ctx
+  (pattern :
+    (I.type_expression option) I.Pattern.t)
+  matchee_type
+  : Context.t
+    * Signature.item list
+    * ( O.type_expression O.Pattern.t
+      , _
+      , _ )
+      Elaboration.t
+=
+let open Elaboration.Let_syntax in
+let ctx, pos = Context.mark ctx ~mut:false in
+let matchee_type = Context.apply ctx matchee_type in
+if debug
+then
+  Format.printf "Matchee type: %a\n" O.PP.type_expression matchee_type;
+let ctx, sigs, pattern = check_pattern ~raise ~ctx pattern matchee_type in
+( Context.drop_until ctx ~pos
+, sigs
+, pattern )
 
 and compile_match
     ~options
@@ -1500,14 +1567,12 @@ and infer_declaration ~(raise : raise) ~options ~ctx (decl : I.declaration)
       in
       let attr = type_value_attr attr in
       let matchee_type = Context.apply ctx matchee_type in
-      let ctx, sigs ,pattern = check_pattern ~raise ~ctx pattern matchee_type in
+      let ctx, sigs ,pattern = check_top_pattern ~raise ~ctx pattern matchee_type in
       (* let ctx, binders, pattern = ignore (pattern,matchee_type,ctx) ; failwith "TODO" in
       let binders = List.map ~f:(Binder.map (Context.apply ctx)) binders in *)
       if debug then Format.printf "Ctx After Decl: %a\n" Context.pp ctx;
-
       ( ctx
-      , List.map binders ~f:(fun b ->
-            Signature.S_value (Binder.get_var b, Binder.get_ascr b))
+      , sigs
       , let%bind expr = expr
         and pattern = pattern in
         return @@ D_pattern { pattern; expr; attr } )
