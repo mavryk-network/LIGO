@@ -386,30 +386,6 @@ let rec check_expression
       expr;
   ctx, expr'
 
-
-and get_var_types (p : I.type_expression option I.Pattern.t) (t : O.type_expression) =
-  match p.wrap_content with
-  | I.Pattern.P_unit -> []
-  | P_var b -> [Binder.get_var b, t]
-  | P_list (Cons (hd, tl)) ->
-    let v = get_var_types hd (O.Combinators.get_t_list_exn t) in
-    let v' = get_var_types tl t in
-    v @ v'
-  | P_list (List ps) ->
-    let t = get_t_list_exn t in
-    List.concat @@ List.map ps ~f:(fun p -> get_var_types p t)
-  | P_variant (l, p) ->
-    let t = Option.value_exn (O.Combinators.get_sum_label_type t l) in
-    get_var_types p t
-  | P_tuple ps ->
-    let ts = Option.value_exn (O.Combinators.get_t_tuple t) in
-    List.concat @@ List.map2_exn ps ts ~f:get_var_types
-  | P_record lps ->
-    Record.LMap.fold (fun l p vs ->
-      let t = Option.value_exn (O.Combinators.get_record_field_type t l) in
-      vs @ get_var_types p t
-    ) (Container.Record.to_record lps) []
-
 and infer_expression ~(raise : raise) ~options ~ctx (expr : I.expression)
     : Context.t * O.type_expression * (O.expression, _, _) Elaboration.t
   =
@@ -492,20 +468,14 @@ and infer_expression ~(raise : raise) ~options ~ctx (expr : I.expression)
           ~f:(fun rhs_ascr -> I.e_ascription ~loc rhs rhs_ascr)
           ~default:rhs
       in *)
-      (* let ctx, rhs_type, rhs = infer rhs in
+      let ctx, rhs_type, rhs = infer rhs in
       let rhs_type = Context.apply ctx rhs_type in
-      let vts = get_var_types let_binder rhs_type in
-      let ctx, _, let_binder = check_top_pattern ~raise ~ctx let_binder rhs_type in
+      let ctx, sigs, let_binder = check_pattern ~raise ~ctx let_binder rhs_type in
       let ctx, res_type, let_result =
 
         Context.enter ~ctx ~mut:false ~in_:(fun ctx ->
             infer
-              ~ctx:
-              (List.fold vts ~init:ctx ~f:(fun ctx (v,t) ->
-                Context.(
-                  ctx
-                  |:: C_value (v, Immutable, t))
-                )) 
+              ~ctx 
               let_result)
       in
       let attributes = type_value_attr attributes in
@@ -521,8 +491,8 @@ and infer_expression ~(raise : raise) ~options ~ctx (expr : I.expression)
              ; let_result
              ; attributes
              })
-          res_type ) *)
-          failwith "TODO"
+          res_type )
+          (* failwith "TODO" *)
     | E_type_in { type_binder = tvar; rhs; let_result } ->
       let rhs = evaluate_type ~raise ~ctx rhs in
       let ctx, res_type, let_result =
@@ -1567,7 +1537,7 @@ and infer_declaration ~(raise : raise) ~options ~ctx (decl : I.declaration)
       in
       let attr = type_value_attr attr in
       let matchee_type = Context.apply ctx matchee_type in
-      let ctx, sigs ,pattern = check_top_pattern ~raise ~ctx pattern matchee_type in
+      let ctx, sigs ,pattern = check_pattern ~raise ~ctx pattern matchee_type in
       (* let ctx, binders, pattern = ignore (pattern,matchee_type,ctx) ; failwith "TODO" in
       let binders = List.map ~f:(Binder.map (Context.apply ctx)) binders in *)
       if debug then Format.printf "Ctx After Decl: %a\n" Context.pp ctx;

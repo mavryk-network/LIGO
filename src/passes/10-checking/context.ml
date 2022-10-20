@@ -931,7 +931,7 @@ let init ?env () =
       | D_pattern { pattern; expr = _; attr = _ } ->
         List.fold (Ast_typed.Pattern.binders pattern)
           ~init:ctx
-          ~f:(fun acc x -> add_imm acc (Binder.get_var x) (Binder.get_ascr x))
+          ~f:(fun ctx x -> add_imm ctx (Binder.get_var x) (Binder.get_ascr x))
       | D_type { type_binder; type_expr; type_attr = _ } ->
         add_type ctx type_binder type_expr
       | D_module { module_binder; module_; module_attr = _ } ->
@@ -1299,7 +1299,7 @@ module Elaboration = struct
       return
       @@ D_pattern
            { pattern
-           ; expr
+           ; expr = e_apply ctx expr
            ; attr
            }
     | D_module { module_binder; module_; module_attr } ->
