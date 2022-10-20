@@ -305,9 +305,6 @@ and var_decl = {
   init        : expr;
 }
 
-(* TODO NP : Merge with 'case' record ?
-   remi: I think not until they are merged a CST level
-*)
 and switch_case =
 | Switch_case          of (expr * statement nseq option)
 | Switch_default_case  of statement nseq option
@@ -370,7 +367,7 @@ and statement_content =
 | S_Let        of let_binding nseq
 | S_Const      of let_binding nseq
 | S_Type       of type_decl
-| S_Switch     of switch
+| S_Switch     of switch (* TODO : Use [case] record instead ? *)
 | S_Break
 | S_Namespace  of namespace_statement
 | S_Export     of statement
