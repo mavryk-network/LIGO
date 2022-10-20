@@ -1,6 +1,7 @@
+open Ligo_prim
 open Mini_c
 
-let rec uncurry_lambda (depth : int) (expr : expression) : expression_variable list * expression =
+let rec uncurry_lambda (depth : int) (expr : expression) : Value_var.t list * expression =
   match expr.content with
   | E_closure { binder; body } when depth > 0 ->
     let (vars, body) = uncurry_lambda (depth - 1) body in
@@ -28,7 +29,7 @@ let curried_depth_in_lambda (rhs : expression) : int =
 
 let isvar f x : bool =
   match x.content with
-  | E_variable x -> ValueVar.equal f x
+  | E_variable x -> Value_var.equal f x
   | _ -> false
 
 (* Finding the usage of a function in an expression: we will look for
@@ -52,16 +53,16 @@ let combine_usage (u1 : usage) (u2 : usage) : usage =
 
 let usages = List.fold_left ~f:combine_usage ~init:Unused
 
-let rec usage_in_expr (f : expression_variable) (expr : expression) : usage =
+let rec usage_in_expr (f : Value_var.t) (expr : expression) : usage =
   let self = usage_in_expr f in
   let self_binder vars e =
-    if List.mem ~equal:ValueVar.equal vars f
+    if List.mem ~equal:Value_var.equal vars f
     then Unused
     else usage_in_expr f e in
   match expr.content with
   (* interesting cases: *)
   | E_variable x ->
-    if ValueVar.equal f x
+    if Value_var.equal f x
     (* if we got here, f wasn't only used in applications *)
     then Other
     else Unused
@@ -97,7 +98,7 @@ let rec usage_in_expr (f : expression_variable) (expr : expression) : usage =
     usages [self e1; self e2; self_binder [v3h; v3t] e3]
   | E_if_left (e1, ((v2, _), e2), ((v3, _), e3)) ->
     usages [self e1; self_binder [v2] e2; self_binder [v3] e3]
-  | E_let_in (e1, _, _, ((v2, _), e2)) ->
+  | E_let_in (e1, _, ((v2, _), e2)) ->
     usages [self e1; self_binder [v2] e2]
   | E_tuple exprs ->
     usages (List.map ~f:self exprs)
@@ -113,6 +114,27 @@ let rec usage_in_expr (f : expression_variable) (expr : expression) : usage =
     usages (List.map ~f:self args)
   | E_create_contract (_p, _s, _code, args) ->
     usages (List.map ~f:self args)
+  | E_let_mut_in (e1, ((x, _), e2)) ->
+    usages [self e1; self_binder [x] e2]
+  | E_deref x ->
+    if Value_var.equal f x
+    then Other
+    else Unused
+  | E_assign (x, e) ->
+    if Value_var.equal f x
+    then Other
+    else self e
+  | E_for (start, final, incr, ((x, _), body)) ->
+    usages [self start;
+            self final;
+            self incr;
+            self_binder [x] body]
+  | E_for_each (coll, _coll_type, (xs, body)) ->
+    usages [self coll;
+            self_binder (List.map ~f:fst xs) body]
+  | E_while (cond, body) ->
+    usages [self cond;
+            self body]
 
 let comb_type (ts : type_expression list) : type_expression =
   { type_content = T_tuple (List.map ~f:(fun t -> (None, t)) ts);
@@ -128,11 +150,11 @@ let uncurry_rhs (depth : int) (expr : expression) : expression =
   let (arg_types, ret_type) = uncurry_arrow depth expr.type_expression in
 
   let (vars, body) = uncurry_lambda depth expr in
-  let binder = ValueVar.fresh () in
+  let binder = Value_var.fresh () in
 
   (* generate fresh vars in order to specify binding precedence for
      duplicate vars *)
-  let fresh_vars = List.map ~f:(ValueVar.fresh_like) vars in
+  let fresh_vars = List.map ~f:(Value_var.fresh_like) vars in
   let binder_expr = { content = E_variable binder;
                       type_expression = comb_type arg_types;
                       location = Location.generated } in
@@ -145,7 +167,7 @@ let uncurry_rhs (depth : int) (expr : expression) : expression =
            { content = E_variable fresh_var;
              type_expression = arg_type;
              location = Location.generated } in
-         { content = E_let_in (fresh_var_expr, true, false, ((var, arg_type), body));
+         { content = E_let_in (fresh_var_expr, true, ((var, arg_type), body));
            type_expression = body.type_expression;
            location = Location.generated })
       (List.zip_exn (List.zip_exn vars fresh_vars) arg_types)
@@ -157,11 +179,11 @@ let uncurry_rhs (depth : int) (expr : expression) : expression =
                         type_content = T_function (comb_type arg_types, ret_type) } }
 
 let rec uncurry_in_expression
-    (f : expression_variable) (depth : int) (expr : expression) : expression =
+    (f : Value_var.t) (depth : int) (expr : expression) : expression =
   let self = uncurry_in_expression f depth in
   let self_list = List.map ~f:self in
   let self_binder vars e =
-    if List.mem ~equal:ValueVar.equal vars f
+    if List.mem ~equal:Value_var.equal vars f
     then e
     else uncurry_in_expression f depth e in
   let return e' = { expr with content = e' } in
@@ -190,10 +212,10 @@ let rec uncurry_in_expression
   | E_closure { binder; body } ->
     let body = self_binder [binder] body in
     return (E_closure { binder; body })
-  | E_let_in (e1, inline, thunk, ((v, t), e2)) ->
+  | E_let_in (e1, inline, ((v, t), e2)) ->
     let e1 = self e1 in
     let e2 = self_binder [v] e2 in
-    return (E_let_in (e1, inline, thunk, ((v, t), e2)))
+    return (E_let_in (e1, inline, ((v, t), e2)))
   | E_raw_michelson _ ->
     return_id
   | E_iterator (c, ((v1, t1), e1), e2) ->
@@ -251,6 +273,29 @@ let rec uncurry_in_expression
   | E_create_contract (p, s, code, args) ->
     let args = List.map ~f:self args in
     return (E_create_contract (p, s, code, args))
+  | E_let_mut_in (e1, ((v, t), e2)) ->
+    let e1 = self e1 in
+    let e2 = self_binder [v] e2 in
+    return (E_let_mut_in (e1, ((v, t), e2)))
+  | E_deref _ ->
+    return_id
+  | E_assign (x, e) ->
+    let e = self e in
+    return (E_assign (x, e))
+  | E_for (start, final, incr, ((x, a), body)) ->
+    let start = self start in
+    let final = self final in
+    let incr = self incr in
+    let body = self_binder [x] body in
+    return (E_for (start, final, incr, ((x, a), body)))
+  | E_for_each (e1, coll_type, (xs, e2)) ->
+    let e1 = self e1 in
+    let e2 = self_binder (List.map ~f:fst xs) e2 in
+    return (E_for_each (e1, coll_type, (xs, e2)))
+  | E_while (cond, body) ->
+    let cond = self cond in
+    let body = self body in
+    return (E_while (cond, body))
 
 (* hack to specialize map_expression to identity monad since there are
    no errors here *)
@@ -260,9 +305,9 @@ let uncurry_expression : expression -> expression =
   map_expression
     (fun e ->
        match e.content with
-       | E_let_in (e1, inline, thunk, ((v, _t), e2)) ->
+       | E_let_in (e1, inline, ((v, _t), e2)) ->
          let return e1 e2 =
-           { e with content = E_let_in (e1, inline, thunk, ((v, e1.type_expression), e2)) } in
+           { e with content = E_let_in (e1, inline, ((v, e1.type_expression), e2)) } in
          let depth_in_rhs = curried_depth_in_lambda e1 in
          if depth_in_rhs > 0
          then

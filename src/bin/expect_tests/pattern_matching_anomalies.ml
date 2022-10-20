@@ -15,7 +15,7 @@ let%expect_test _ =
     Error : this pattern-matching is not exhaustive.
     Here are examples of cases that are not matched:
     - Three
-    - Two(_) |}]
+    - Two _ |}]
 
 let%expect_test _ =
   run_ligo_bad [ "print" ; "ast-typed" ; (bad_missing_test "c_c.mligo") ] ;
@@ -29,8 +29,8 @@ let%expect_test _ =
 
     Error : this pattern-matching is not exhaustive.
     Here are examples of cases that are not matched:
-    - One(Four)
-    - One(Six) |}]
+    - One Four
+    - One Six |}]
 
 let%expect_test _ =
   run_ligo_bad [ "print" ; "ast-typed" ; (bad_missing_test "t_c.mligo") ] ;
@@ -44,8 +44,8 @@ let%expect_test _ =
 
     Error : this pattern-matching is not exhaustive.
     Here are examples of cases that are not matched:
-    - (_,One,Five)
-    - (_,One,Four) |}]
+    - (_, One, Five)
+    - (_, One, Four) |}]
 
 let%expect_test _ =
   run_ligo_bad [ "print" ; "ast-typed" ; (bad_missing_test "r_c.mligo") ] ;
@@ -59,8 +59,8 @@ let%expect_test _ =
 
     Error : this pattern-matching is not exhaustive.
     Here are examples of cases that are not matched:
-    - { a = _ ; b = One ; c = Five }
-    - { a = _ ; b = One ; c = Four } |}]
+    - {c = Five; b = One; a = _}
+    - {c = Four; b = One; a = _} |}]
 
 let%expect_test _ =
   run_ligo_bad [ "print" ; "ast-typed" ; (bad_missing_test "c_t_c.mligo") ] ;
@@ -74,8 +74,8 @@ let%expect_test _ =
 
     Error : this pattern-matching is not exhaustive.
     Here are examples of cases that are not matched:
-    - One((_,Five))
-    - One((_,Four)) |}]
+    - One (_, Five)
+    - One (_, Four) |}]
 
 let%expect_test _ =
   run_ligo_bad [ "print" ; "ast-typed" ; (bad_missing_test "c_r_c.mligo") ] ;
@@ -89,8 +89,8 @@ let%expect_test _ =
 
     Error : this pattern-matching is not exhaustive.
     Here are examples of cases that are not matched:
-    - One({ a = _ ; b = Five })
-    - One({ a = _ ; b = Four }) |}]
+    - One {b = Five; a = _}
+    - One {b = Four; a = _} |}]
 
 let%expect_test _ =
   run_ligo_bad [ "print" ; "ast-typed" ; (bad_missing_test "t_t_c.mligo") ] ;
@@ -104,8 +104,8 @@ let%expect_test _ =
 
     Error : this pattern-matching is not exhaustive.
     Here are examples of cases that are not matched:
-    - ((_,_,_),(One,Five))
-    - ((_,_,_),(One,Four)) |}]
+    - ((_, _, _), (One, Five))
+    - ((_, _, _), (One, Four)) |}]
 
 let%expect_test _ =
   run_ligo_bad [ "print" ; "ast-typed" ; (bad_missing_test "t_r_c.mligo") ] ;
@@ -118,8 +118,39 @@ let%expect_test _ =
 
     Error : this pattern-matching is not exhaustive.
     Here are examples of cases that are not matched:
-    - (_,({ a = _ ; b = Three ; c = _ },_))
-    - (_,({ a = _ ; b = Two ; c = _ },_)) |}]
+    - (_, ({c = _; b = Three; a = _}, _))
+    - (_, ({c = _; b = Two; a = _}, _)) |}]
+
+let%expect_test _ =
+  run_ligo_bad [ "print" ; "ast-typed" ; (bad_missing_test "t_r_c.ligo") ] ;
+  [%expect{|
+    File "../../test/contracts/negative//pattern_matching_anomalies/missing_cases/t_r_c.ligo", line 7, character 2 to line 10, character 3:
+      6 | function s (const x : t) is
+      7 |   case x of [
+      8 |   | (n, (record [ a = _ ; c = _ ; b = One ], s))  -> Unit
+      9 |   | (n, (record [ a = _ ; b = Four ; c = _ ], s)) -> Unit
+     10 |   ]
+
+    Error : this pattern-matching is not exhaustive.
+    Here are examples of cases that are not matched:
+    - (_, (record [c = _; b = Three; a = _], _))
+    - (_, (record [c = _; b = Two; a = _], _)) |}]
+
+let%expect_test _ =
+  run_ligo_bad [ "print" ; "ast-typed" ; (bad_missing_test "t_r_c.religo") ] ;
+  [%expect{|
+    File "../../test/contracts/negative//pattern_matching_anomalies/missing_cases/t_r_c.religo", line 7, character 2 to line 10, character 3:
+      6 | let s = (x : t) =>
+      7 |   switch (x) {
+      8 |   | (n, ({ a, c, b: One }, s))  => ()
+      9 |   | (n, ({ a, b: Four, c }, s)) => ()
+     10 |   }
+
+    Error : this pattern-matching is not exhaustive.
+    Here are examples of cases that are not matched:
+    - (_, ({c : _,b : Three,a : _}, _))
+    - (_, ({c : _,b : Two,a : _}, _)) |}]
+
 
 let%expect_test _ =
   run_ligo_bad [ "print" ; "ast-typed" ; (bad_missing_test "r_t_c.mligo") ] ;
@@ -132,8 +163,38 @@ let%expect_test _ =
 
     Error : this pattern-matching is not exhaustive.
     Here are examples of cases that are not matched:
-    - { a = _ ; b = ((_,_),(Four,_)) ; c = _ }
-    - { a = _ ; b = ((_,_),(Three,_)) ; c = _ } |}]
+    - {c = _; b = ((_, _), (Four, _)); a = _}
+    - {c = _; b = ((_, _), (Three, _)); a = _} |}]
+
+let%expect_test _ =
+  run_ligo_bad [ "print" ; "ast-typed" ; (bad_missing_test "r_t_c.ligo") ] ;
+  [%expect{|
+    File "../../test/contracts/negative//pattern_matching_anomalies/missing_cases/r_t_c.ligo", line 7, character 2 to line 10, character 3:
+      6 | function s (const x : t) is
+      7 |   case x of [
+      8 |   | record [ a = _ ; c = _ ; b = ((x, y), (One, z)) ] -> Unit
+      9 |   | record [ a = _; b = ((x, y), (Two, z)) ; c = _ ] -> Unit
+     10 |   ]
+
+    Error : this pattern-matching is not exhaustive.
+    Here are examples of cases that are not matched:
+    - record [c = _; b = ((_, _), (Four, _)); a = _]
+    - record [c = _; b = ((_, _), (Three, _)); a = _] |}]
+
+let%expect_test _ =
+  run_ligo_bad [ "print" ; "ast-typed" ; (bad_missing_test "r_t_c.religo") ] ;
+  [%expect{|
+    File "../../test/contracts/negative//pattern_matching_anomalies/missing_cases/r_t_c.religo", line 7, character 2 to line 9, character 3:
+      6 | let s = (x : t) =>
+      7 |   switch (x) {
+      8 |   | { a, c, b: ((x, y), (One, z)) } => ()
+      9 |   }
+
+    Error : this pattern-matching is not exhaustive.
+    Here are examples of cases that are not matched:
+    - {c : _,b : ((_, _), (Four, _)),a : _}
+    - {c : _,b : ((_, _), (Three, _)),a : _}
+    - {c : _,b : ((_, _), (Two, _)),a : _} |}]
 
 let%expect_test _ =
   run_ligo_bad [ "print" ; "ast-typed" ; (bad_missing_test "r_r_c.mligo") ] ;
@@ -146,8 +207,8 @@ let%expect_test _ =
 
     Error : this pattern-matching is not exhaustive.
     Here are examples of cases that are not matched:
-    - { a = _ ; b = { d = { e = _ ; f = _ } ; i = { g = Four ; h = _ } } ; c = _ }
-    - { a = _ ; b = { d = { e = _ ; f = _ } ; i = { g = One ; h = _ } } ; c = _ } |}]
+    - {c = _; b = {i = {h = _; g = Four}; d = {f = _; e = _}}; a = _}
+    - {c = _; b = {i = {h = _; g = One}; d = {f = _; e = _}}; a = _} |}]
 
 let%expect_test _ =
   run_ligo_bad [ "print" ; "ast-typed" ; (bad_missing_test "last.mligo") ] ;
@@ -173,7 +234,7 @@ let%expect_test _ =
 
     Error : this pattern-matching is not exhaustive.
     Here are examples of cases that are not matched:
-    - One(_)
+    - One
     - Three |}]
 
 let%expect_test _ =
@@ -196,7 +257,7 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_bad [ "print" ; "ast-typed" ; (bad_redundant_test "c1_c1_c2_c3.mligo") ] ;
   [%expect{|
-    File "../../test/contracts/negative//pattern_matching_anomalies/redundant_case/c1_c1_c2_c3.mligo", line 6, characters 8-9:
+    File "../../test/contracts/negative//pattern_matching_anomalies/redundant_case/c1_c1_c2_c3.mligo", line 6, characters 4-9:
       5 |     One a -> ()
       6 |   | One b -> ()
       7 |   | Two c -> ()
@@ -206,7 +267,7 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_bad [ "print" ; "ast-typed" ; (bad_redundant_test "c1_c2_c1_c3.mligo") ] ;
   [%expect{|
-    File "../../test/contracts/negative//pattern_matching_anomalies/redundant_case/c1_c2_c1_c3.mligo", line 7, characters 8-9:
+    File "../../test/contracts/negative//pattern_matching_anomalies/redundant_case/c1_c2_c1_c3.mligo", line 7, characters 4-9:
       6 |   | Two c -> ()
       7 |   | One b -> ()
       8 |   | Three -> ()
@@ -216,7 +277,7 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_bad [ "print" ; "ast-typed" ; (bad_redundant_test "c1_c2_c3_c1.mligo") ] ;
   [%expect{|
-    File "../../test/contracts/negative//pattern_matching_anomalies/redundant_case/c1_c2_c3_c1.mligo", line 8, characters 8-9:
+    File "../../test/contracts/negative//pattern_matching_anomalies/redundant_case/c1_c2_c3_c1.mligo", line 8, characters 4-9:
       7 |   | Three -> ()
       8 |   | One b -> ()
 
@@ -234,7 +295,7 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_bad [ "print" ; "ast-typed" ; (bad_redundant_test "c1_w_c2_c3.mligo") ] ;
   [%expect{|
-    File "../../test/contracts/negative//pattern_matching_anomalies/redundant_case/c1_w_c2_c3.mligo", line 7, characters 8-9:
+    File "../../test/contracts/negative//pattern_matching_anomalies/redundant_case/c1_w_c2_c3.mligo", line 7, characters 4-9:
       6 |   | _     -> ()
       7 |   | Two c -> ()
       8 |   | Three -> ()
@@ -244,7 +305,7 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_bad [ "print" ; "ast-typed" ; (bad_redundant_test "w_c1_c2_c3.mligo") ] ;
   [%expect{|
-    File "../../test/contracts/negative//pattern_matching_anomalies/redundant_case/w_c1_c2_c3.mligo", line 6, characters 8-9:
+    File "../../test/contracts/negative//pattern_matching_anomalies/redundant_case/w_c1_c2_c3.mligo", line 6, characters 4-9:
       5 |     _     -> ()
       6 |   | One a -> ()
       7 |   | Two c -> ()
@@ -312,7 +373,7 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_bad [ "print" ; "ast-typed" ; (bad_redundant_test "c_c.mligo") ] ;
   [%expect{|
-    File "../../test/contracts/negative//pattern_matching_anomalies/redundant_case/c_c.mligo", line 11, characters 8-12:
+    File "../../test/contracts/negative//pattern_matching_anomalies/redundant_case/c_c.mligo", line 11, characters 4-12:
      10 |   | Three    -> ()
      11 |   | One Four -> ()
 
@@ -321,7 +382,7 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_bad [ "print" ; "ast-typed" ; (bad_redundant_test "c1_c1_c2_c3.jsligo") ] ;
   [%expect{|
-    File "../../test/contracts/negative//pattern_matching_anomalies/redundant_case/c1_c1_c2_c3.jsligo", line 6, characters 12-13:
+    File "../../test/contracts/negative//pattern_matching_anomalies/redundant_case/c1_c1_c2_c3.jsligo", line 6, characters 4-7:
       5 |     One:   (a : int) => unit,
       6 |     One:   (b : int) => unit,
       7 |     Two:   (c : nat) => unit,
@@ -332,7 +393,7 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_bad [ "print" ; "ast-typed" ; (bad_redundant_test "c1_c2_c1_c3.jsligo") ] ;
   [%expect{|
-    File "../../test/contracts/negative//pattern_matching_anomalies/redundant_case/c1_c2_c1_c3.jsligo", line 7, characters 12-13:
+    File "../../test/contracts/negative//pattern_matching_anomalies/redundant_case/c1_c2_c1_c3.jsligo", line 7, characters 4-7:
       6 |     Two:   (c : nat) => unit,
       7 |     One:   (b : int) => unit,
       8 |     Three: () => unit
@@ -342,7 +403,7 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_bad [ "print" ; "ast-typed" ; (bad_redundant_test "c1_c2_c3_c1.jsligo") ] ;
   [%expect{|
-    File "../../test/contracts/negative//pattern_matching_anomalies/redundant_case/c1_c2_c3_c1.jsligo", line 8, characters 12-13:
+    File "../../test/contracts/negative//pattern_matching_anomalies/redundant_case/c1_c2_c3_c1.jsligo", line 8, characters 4-7:
       7 |     Three: ()        => unit,
       8 |     One:   (b : int) => unit,
       9 |   })

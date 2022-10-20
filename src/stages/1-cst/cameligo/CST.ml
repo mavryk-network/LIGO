@@ -6,7 +6,7 @@
 
 (* Vendor dependencies *)
 
-module Directive = LexerLib.Directive
+module Directive = Preprocessor.Directive
 module Utils     = Simple_utils.Utils
 module Region    = Simple_utils.Region
 
@@ -18,6 +18,7 @@ module Attr = Lexing_shared.Attr
 (* Utilities *)
 
 type 'a reg = 'a Region.reg
+type 'payload wrap = 'payload Wrap.t
 
 open Utils
 
@@ -25,9 +26,7 @@ open Utils
 
 type lexeme = string
 
-type 'payload wrap = 'payload Wrap.wrap
-
-(* Keywords of OCaml *)
+(* Keywords of CameLIGO *)
 
 type keyword       = lexeme wrap
 type kwd_and       = lexeme wrap
@@ -76,6 +75,10 @@ type times    = lexeme wrap  (* "*" *)
 
 type bool_or  = lexeme wrap  (* "||" *)
 type bool_and = lexeme wrap  (* "&&" *)
+
+(* Reverse application *)
+
+type rev_app = lexeme wrap (* "|>" *)
 
 (* Comparisons *)
 
@@ -305,6 +308,7 @@ and expr =
 | EFun      of fun_expr reg
 | ESeq      of expr injection reg
 | ECodeInj  of code_inj reg
+| ERevApp   of rev_app bin_op reg
 
 and annot_expr = expr * colon * type_expr
 
@@ -398,7 +402,11 @@ and selection =
   FieldName of variable
 | Component of (string * Z.t) reg
 
-and field_assign = {
+and field_assign = 
+  Property of field_assign_property 
+| Punned_property of field_name
+
+and field_assign_property = {
   field_name : field_name;
   assignment : equal;
   field_expr : expr
@@ -412,7 +420,11 @@ and update = {
   rbrace   : rbrace
 }
 
-and field_path_assignment = {
+and field_path_assignment = 
+  Path_property of field_path_assignment_property
+| Path_punned_property of field_name
+
+and field_path_assignment_property =  {
   field_path : path;
   assignment : equal;
   field_expr : expr
@@ -568,8 +580,8 @@ let expr_to_region = function
 | ECall {region;_}   | EVar {region; _}    | EProj {region; _}
 | EUnit {region;_}   | EPar {region;_}     | EBytes {region; _}
 | ESeq {region; _}   | ERecord {region; _} | EUpdate {region; _}
-| EModA {region; _}
-| ECodeInj {region; _} -> region
+| EModA {region; _} | ECodeInj {region; _}
+| ERevApp {region; _} -> region
 
 let declaration_to_region = function
   Let         {region;_}

@@ -13,7 +13,7 @@ let%expect_test _ =
 (* list-declarations *)
 let%expect_test _ =
   run_ligo_good [ "info"; "list-declarations" ; "../../test/contracts/loop.ligo" ] ;
-  [%expect {|
+  [%expect{|
     ../../test/contracts/loop.ligo declarations:
     inner_capture_in_conditional_block
     dummy
@@ -34,7 +34,7 @@ let%expect_test _ =
     counter |} ];
 
   run_ligo_good [ "info"; "list-declarations" ; "../../test/contracts/loop.mligo" ; "--format" ;"json" ] ;
-  [%expect {|
+  [%expect{|
     {
       "source_file": "../../test/contracts/loop.mligo",
       "declarations": [
@@ -44,7 +44,7 @@ let%expect_test _ =
 
 
   run_ligo_good [ "info"; "list-declarations" ; "../../test/contracts/loop.mligo" ] ;
-  [%expect {|
+  [%expect{|
     ../../test/contracts/loop.mligo declarations:
     counter_nest
     aux_nest
@@ -53,7 +53,7 @@ let%expect_test _ =
     aux_simple |} ];
 
   run_ligo_good ["info"; "list-declarations" ; "../../test/contracts/loop.religo" ] ;
-  [%expect {|
+  [%expect{|
     ../../test/contracts/loop.religo declarations:
     counter_nest
     aux_nest
@@ -62,14 +62,15 @@ let%expect_test _ =
     aux_simple |} ];
 
   run_ligo_bad ["run" ; "interpret" ; "1" ; "--syntax"; "cameligo" ; "--protocol"; "do_not_exist" ] ;
-  [%expect {|
-    Invalid protocol version 'do_not_exist'. Available versions: jakarta |}] ;
+  [%expect{|
+    Invalid protocol version 'do_not_exist'. Available versions: jakarta ,
+    kathmandu |}] ;
 
   run_ligo_bad [ "repl" ; "camelig0" ] ;
-  [%expect {| Please check syntax name. |}] ;
+  [%expect{| Please check syntax name. |}] ;
 
   run_ligo_bad [ "repl" ; "cameligo" ; "--protocol" ; "h" ] ;
-  [%expect {| Please check protocol name. |}] ;
+  [%expect{| Please check protocol name. |}] ;
 
   run_ligo_bad [ "repl" ; "cameligo" ; "--sender" ; "foo" ] ;
-  [%expect {| Please check run options. |}] ;
+  [%expect{| Please check run options. |}] ;

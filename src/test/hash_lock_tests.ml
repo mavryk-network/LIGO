@@ -1,6 +1,7 @@
 module Var = Simple_utils.Var
 open Simple_utils.Trace
 open Test_helpers
+open Ligo_prim
 open Ast_imperative
 open Main_errors
 
@@ -12,10 +13,10 @@ let compile_main ~raise () =
 
 let call msg = e_constructor "Call" msg
 let mk_time ~raise st =
-  match Memory_proto_alpha.Protocol.Alpha_context.Script_timestamp.of_string st with
+  match Memory_proto_alpha.Protocol.Script_timestamp.of_string st with
   | Some s -> s
   | None -> raise.error @@ test_internal "bad timestamp notation"
-let to_sec t = Memory_proto_alpha.Protocol.Alpha_context.Script_timestamp.to_zint t
+let to_sec t = Memory_proto_alpha.Protocol.Script_timestamp.to_zint t
 let storage hashed used commits =
   e_record_ez [("hashed", hashed);
                ("unused", e_bool used);
@@ -29,7 +30,7 @@ let (first_committer , first_contract) =
 
 let empty_op_list =
   (e_typed_list [] (t_operation ()))
-let empty_message = e_lambda_ez (ValueVar.of_input_var "arguments")
+let empty_message = e_lambda_ez (Value_var.of_input_var "arguments")
   ~ascr:(t_unit ()) (Some (t_list (t_operation ())))
   empty_op_list
 
@@ -43,7 +44,7 @@ let commit ~raise () =
       ())
   in
   let now = options.now in
-  let lock_time = Alpha_context.Script_timestamp.add_delta now (Alpha_context.Script_int.of_int 86_400) in
+  let lock_time = Memory_proto_alpha.Protocol.Script_timestamp.add_delta now (Memory_proto_alpha.Protocol.Script_int.of_int 86_400) in
   let test_hash_raw = sha_256_hash (Bytes.of_string "hello world") in
   let test_hash = e_bytes_raw test_hash_raw in
   let packed_sender = pack_payload ~raise program (e_address first_committer) in

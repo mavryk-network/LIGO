@@ -10,9 +10,9 @@
   LigoSyntaxHighlighting
  )
  (libraries 
-  ligo
-  ligo.lexing.cameligo
   SyntaxHighlighting
   cmdliner
+  core_unix
+  core_unix.sys_unix
  )
 )

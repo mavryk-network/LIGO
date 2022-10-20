@@ -20,30 +20,16 @@ let pp_braces printer (node : 'a braces reg) =
   in string "{" ^^ nest 1 (printer inside ^^ string "}")
 
 let rec print cst =
-  let decl = Utils.nseq_to_list cst.decl in
-  let decl = List.filter_map ~f:pp_declaration decl
-  in separate_map (hardline ^^ hardline) group decl
+    Utils.nseq_to_list cst.decl
+  |> List.map ~f:pp_declaration
+  |> separate_map hardline group
 
 and pp_declaration = function
-  ConstDecl   decl -> Some (pp_const_decl decl)
-| TypeDecl    decl -> Some (pp_type_decl  decl)
-| ModuleDecl  decl -> Some (pp_module_decl  decl)
-| ModuleAlias decl -> Some (pp_module_alias decl)
-| Directive      _ -> None
-
-(*
-and pp_dir_decl = function
-  Directive.Linemarker {value; _} ->
-    let open Directive in
-    let linenum, file_path, flag_opt = value in
-    let flag =
-      match flag_opt with
-        Some Push -> " 1"
-      | Some Pop  -> " 2"
-      | None      -> "" in
-    let lexeme = Printf.sprintf "# %d %S%s" linenum file_path flag
-    in string lexeme
-*)
+  ConstDecl   decl -> pp_const_decl   decl ^^ hardline
+| TypeDecl    decl -> pp_type_decl    decl ^^ hardline
+| ModuleDecl  decl -> pp_module_decl  decl ^^ hardline
+| ModuleAlias decl -> pp_module_alias decl ^^ hardline
+| Directive   dir  -> string (Directive.to_lexeme dir).Region.value
 
 and pp_const_decl = function
 | {value = (_,rec_opt, binding, attr); _} ->
@@ -147,11 +133,11 @@ and pp_ptuple {value; _} =
      then nest 1 (pp_pattern head)
      else nest 1 (pp_pattern head ^^ string "," ^^ app (List.map ~f:snd tail))
 
-and pp_precord fields = pp_ne_injection pp_field_pattern fields
+and pp_precord fields = pp_ne_injection ~should_break:false pp_field_pattern fields
 
 and pp_field_pattern {value; _} =
   let {field_name; pattern; _} = value in
-  prefix 2 1 (pp_ident field_name ^^ string " =") (pp_pattern pattern)
+  prefix 2 1 (pp_ident field_name ^^ string " :") (pp_pattern pattern)
 
 and pp_ptyped {value; _} =
   let {pattern; type_expr; _} = value in
@@ -341,25 +327,28 @@ and pp_field_assign {value; _} =
       prefix 2 1 (pp_ident field_name ^^ string ":") (pp_expr field_expr)
 
 and pp_ne_injection :
-  'a.('a -> document) -> 'a ne_injection reg -> document =
-  fun printer {value; _} ->
+  'a. ?should_break:bool -> ('a -> document) -> 'a ne_injection reg -> document =
+  fun ?(should_break = true) printer {value; _} ->
     let {compound; ne_elements; attributes; _} = value in
-    let elements = pp_nsepseq "," printer ne_elements in
+    let elements = pp_nsepseq ~should_break "," printer ne_elements in
     let inj =
       match Option.map ~f:pp_compound compound with
         None -> elements
       | Some (opening, closing) ->
-          string opening ^^ nest 2 (break 0 ^^ elements)
+          string opening ^^
+          (if should_break then nest 2 (break 0 ^^ elements) else elements)
           ^^ string closing in
     let inj = if List.is_empty attributes then inj
-              else break 0 ^^ pp_attributes attributes ^/^ inj
+              else
+              (if should_break then break 0 ^^ pp_attributes attributes ^/^ inj
+              else pp_attributes attributes ^/^ inj)
     in inj
 
 and pp_nsepseq :
-  'a.string -> ('a -> document) -> ('a, lexeme Wrap.t) Utils.nsepseq -> document =
-  fun sep printer elements ->
+  'a. ?should_break:bool -> string -> ('a -> document) -> ('a, lexeme Wrap.t) Utils.nsepseq -> document =
+  fun ?(should_break = true) sep printer elements ->
     let elems = Utils.nsepseq_to_list elements
-    and sep   = string sep ^^ break 1
+    and sep   = if should_break then string sep ^^ break 1 else string sep
     in separate_map sep printer elems
 
 and pp_projection {value; _} =

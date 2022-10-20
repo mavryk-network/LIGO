@@ -11,98 +11,7 @@ module Ligo_string = Simple_utils.Ligo_string
 
 module Tree_abstraction = struct
 
-  open Ast_imperative
-
-  let some_const c = Some (Const c)
-
-  (*
-    Each front-end has its owns constants.
-
-    Constants are special names that have their own case in the AST. E_constant
-    for regular constants, and T_constant for type constants. Both types are
-    defined in `Ast_core/types.ml`.
-    For instance, "2 + 2" in Pascaligo is translated to `E_constant ("ADD" , [
-      E_literal (Literal_int 2) ;
-      E_literal (Literal_int 2) ;
-    ])`.
-
-    They are used to represent what can't expressed in the languages:
-    - Primitives. Like "int", "string", "unit" for types. Or "+" for values.
-    - Tezos specific stuff. Like "operation" for types. Or "source" for values.
-    - What can't be represented in the language yet. Like "list" or "List.fold".
-
-    Each constant is expressed as a pair:
-    - The left-hand-side is the reserved name in the given front-end.
-    - The right-hand-side is the name that will be used in the AST.
-  *)
-  let pseudo_modules x =
-    match x with
-    | "Tezos.self"               -> some_const C_SELF
-    | "Tezos.create_contract"    -> some_const C_CREATE_CONTRACT
-    | "Tezos.get_entrypoint_opt" -> some_const C_CONTRACT_ENTRYPOINT_OPT
-    | "Tezos.get_entrypoint"     -> some_const C_CONTRACT_ENTRYPOINT
-    | "Tezos.call_view"          -> some_const C_VIEW
-    | "Tezos.constant"           -> some_const C_GLOBAL_CONSTANT
-
-    (* Sapling *)
-    | "Tezos.sapling_empty_state" -> some_const C_SAPLING_EMPTY_STATE
-    | "Tezos.sapling_verify_update" -> some_const C_SAPLING_VERIFY_UPDATE
-
-    (* Options module *)
-    | "Option.map"              -> some_const C_OPTION_MAP
-
-    (* Set module *)
-    | "Set.literal"    -> some_const C_SET_LITERAL
-
-    (* Map module *)
-    | "Map.literal"  -> some_const C_MAP_LITERAL
-
-    (* Big_map module *)
-    | "Big_map.literal"  -> some_const C_BIG_MAP_LITERAL
-
-    (* Bitwise module *)
-    | "Bitwise.or"          -> some_const C_OR
-    | "Bitwise.and"         -> some_const C_AND
-
-    (* Operator module *)
-    | "Operator.neg"   -> some_const C_NEG
-    | "Operator.add"   -> some_const C_ADD
-    | "Operator.sub"   -> some_const C_POLYMORPHIC_SUB
-    | "Operator.sub_mutez" -> some_const C_SUB_MUTEZ
-    | "Operator.times" -> some_const C_MUL
-    | "Operator.div"   -> some_const C_DIV
-    | "Operator.modulus" -> some_const C_MOD
-    | "Operator.eq"    -> some_const C_EQ
-    | "Operator.not"   -> some_const C_NOT
-    | "Operator.and"   -> some_const C_AND
-    | "Operator.or"    -> some_const C_OR
-    | "Operator.gt"    -> some_const C_GT
-    | "Operator.ge"    -> some_const C_GE
-    | "Operator.lt"    -> some_const C_LT
-    | "Operator.le"    -> some_const C_LE
-    | "Operator.cons"  -> some_const C_CONS
-    | "Operator.neq"   -> some_const C_NEQ
-
-    | _ -> None
-
-
-  let pseudo_module_to_string = function
-    | C_ADDRESS                 -> "Tezos.address"
-    | C_SELF                    -> "Tezos.self"
-    | C_SELF_ADDRESS            -> "Tezos.self_address"
-    | C_IMPLICIT_ACCOUNT        -> "Tezos.implicit_account"
-    | C_CREATE_CONTRACT         -> "Tezos.create_contract"
-    | C_CALL                    -> "Tezos.transaction"
-    | C_SET_DELEGATE            -> "Tezos.set_delegate"
-    | C_CONTRACT_WITH_ERROR     -> "Tezos.get_contract_with_error"
-    | C_CONTRACT_OPT            -> "Tezos.get_contract_opt"
-    | C_CONTRACT_ENTRYPOINT_OPT -> "Tezos.get_entrypoint_opt"
-    | C_CONTRACT                -> "Tezos.get_contract"
-    | C_CONTRACT_ENTRYPOINT     -> "Tezos.get_entrypoint"
-    | C_OPEN_CHEST              -> "Tezos.open_chest"
-    | C_VIEW                    -> "Tezos.call_view"
-    | C_GLOBAL_CONSTANT         -> "Tezos.constant"
-
+  let pseudo_module_to_string (c : Ligo_prim.Constant.constant') = match c with
     (* Operator module *)
     | C_NEG  -> "Operator.neg"
     | C_ADD  -> "Operator.add"
@@ -123,28 +32,20 @@ module Tree_abstraction = struct
     | C_CONS -> "Operator.cons"
     | C_NEQ  -> "Operator.neq"
 
-    (* Set module *)
-    | C_SET_LITERAL    -> "Set.literal"
-
     (* Map module *)
-    | C_MAP_LITERAL  -> "Map.literal"
     | C_MAP_ADD      -> "Map.add"
     | C_MAP_REMOVE   -> "Map.remove"
-
-    (* Big_map module *)
-    | C_BIG_MAP_LITERAL -> "Big_map.literal"
 
     (* Bitwise module *)
     | C_XOR -> "Bitwise.xor"
     | C_LSL -> "Bitwise.shift_left"
     | C_LSR -> "Bitwise.shift_right"
 
-    | _ as c -> failwith @@ Format.asprintf "Constant not handled : %a" Stage_common.PP.constant' c
+    | _ as c -> failwith @@ Format.asprintf "Constant not handled : %a" Ligo_prim.Constant.pp_constant' c
 
 
-  let constants x = pseudo_modules x
   let constant_to_string = function
-      | Const x -> pseudo_module_to_string x
+      | Ligo_prim.Constant.Const x -> pseudo_module_to_string x
 end
 
 module Michelson = struct
@@ -164,7 +65,7 @@ module Michelson = struct
   type protocol_type = Environment.Protocols.t
   include Helpers.Michelson
   open Tezos_utils.Michelson
-  open Stage_common.Types
+  open Ligo_prim.Constant
 
   let get_operators (protocol_version: protocol_type) c : predicate option =
     match c , protocol_version with
@@ -200,22 +101,14 @@ module Michelson = struct
     | C_MAP_UPDATE         , _   -> Some ( simple_ternary @@ prim "UPDATE")
     | (C_MAP_GET_AND_UPDATE|C_BIG_MAP_GET_AND_UPDATE) , _ ->
       Some (simple_ternary @@ seq [prim "GET_AND_UPDATE"; prim "PAIR"])
-    | C_UNOPT                 , _   -> Some ( simple_binary @@ i_if_none (seq [i_push_string "option is None"; i_failwith]) (seq []))
-    | C_UNOPT_WITH_ERROR      , _   -> Some ( simple_binary @@ i_if_none (i_failwith) (seq [ i_swap; i_drop]))
-    | C_ASSERT_INFERRED    , _   -> Some ( simple_binary @@ i_if (seq [i_failwith]) (seq [i_drop ; i_push_unit]))
     | C_CONS               , _   -> Some ( simple_binary @@ prim "CONS")
     | C_UNIT               , _   -> Some ( simple_constant @@ prim "UNIT")
-    | C_ADDRESS            , _   -> Some ( simple_unary @@ prim "ADDRESS")
-    | C_SELF_ADDRESS       , _   -> Some ( simple_constant @@ seq [prim "SELF_ADDRESS"])
-    | C_IMPLICIT_ACCOUNT   , _   -> Some ( simple_unary @@ prim "IMPLICIT_ACCOUNT")
-    | C_SET_DELEGATE       , _   -> Some ( simple_unary @@ prim "SET_DELEGATE")
-    | C_CALL               , _   -> Some ( simple_ternary @@ prim "TRANSFER_TOKENS")
     | C_SET_MEM            , _   -> Some ( simple_binary @@ prim "MEM")
     | C_SET_ADD            , _   -> Some ( simple_binary @@ seq [dip (i_push (prim "bool") (prim "True")) ; prim "UPDATE"])
     | C_SET_REMOVE         , _   -> Some ( simple_binary @@ seq [dip (i_push (prim "bool") (prim "False")) ; prim "UPDATE"])
     | C_SET_UPDATE         , _   -> Some ( simple_ternary @@ prim "UPDATE" )
     | C_CONCAT             , _   -> Some ( simple_binary @@ prim "CONCAT")
-    | C_SELF               , _   -> Some (trivial_special "SELF")
+    | C_SLICE              , _   -> Some ( simple_ternary @@ seq [prim "SLICE" ; i_assert_some_msg (i_push_string "SLICE")])
     | C_NONE               , _   -> Some (trivial_special "NONE")
     | C_NIL                , _   -> Some (trivial_special "NIL")
     | C_LOOP_CONTINUE      , _   -> Some (trivial_special "LEFT")
@@ -224,46 +117,19 @@ module Michelson = struct
     | C_SET_EMPTY          , _   -> Some (trivial_special "EMPTY_SET")
     | C_MAP_EMPTY          , _   -> Some (trivial_special "EMPTY_MAP")
     | C_BIG_MAP_EMPTY      , _   -> Some (trivial_special "EMPTY_BIG_MAP")
-    | C_BYTES_UNPACK       , _   -> Some (trivial_special "UNPACK")
+    | C_LIST_SIZE          , _   -> Some (trivial_special "SIZE")
+    | C_SET_SIZE           , _   -> Some (trivial_special "SIZE")
+    | C_MAP_SIZE           , _   -> Some (trivial_special "SIZE")
+    | C_SIZE               , _   -> Some (trivial_special "SIZE")
+    | C_MAP_MEM            , _   -> Some (simple_binary @@ prim "MEM")
     | C_MAP_REMOVE         , _   -> Some (special (fun with_args -> seq [dip (with_args "NONE"); prim "UPDATE"]))
     | C_LEFT               , _   -> Some (trivial_special "LEFT")
     | C_RIGHT              , _   -> Some (trivial_special "RIGHT")
-    | C_SAPLING_EMPTY_STATE, _ -> Some (trivial_special "SAPLING_EMPTY_STATE")
-    | C_SAPLING_VERIFY_UPDATE , _ -> Some (simple_binary @@ prim "SAPLING_VERIFY_UPDATE")
-    | C_CONTRACT           , _   ->
-      Some (special
-              (fun with_args ->
-                 seq [with_args "CONTRACT";
-                      i_assert_some_msg (i_push_string "bad address for get_contract")]))
-    | C_CONTRACT_WITH_ERROR, _   ->
-      Some (special
-              (fun with_args ->
-                 seq [with_args "CONTRACT";
-                      i_if_none (i_failwith) (seq [i_swap; i_drop])]))
-    | C_CONTRACT_OPT         , _   -> Some (trivial_special "CONTRACT")
-    | C_CONTRACT_ENTRYPOINT , _  ->
-      Some (special
-              (fun with_args ->
-                 seq [with_args "CONTRACT";
-                      i_assert_some_msg (i_push_string "bad address for get_entrypoint")]))
-    | C_CONTRACT_ENTRYPOINT_OPT , _ -> Some (trivial_special "CONTRACT")
     | C_CREATE_CONTRACT , _ ->
       Some (special
               (fun with_args ->
                  seq [with_args "CREATE_CONTRACT";
                       i_pair]))
-    | C_OPEN_CHEST , _ -> (
-      Some (simple_ternary @@ seq [
-        prim "OPEN_CHEST" ;
-        i_if_left
-          ( prim "RIGHT" ~children:[t_or t_unit t_unit])
-          ( i_if
-            (seq [ i_push_unit ; prim "LEFT" ~children:[t_unit] ; prim "LEFT" ~children:[t_bytes] ])
-            (seq [ i_push_unit ; prim "RIGHT" ~children:[t_unit] ; prim "LEFT" ~children:[t_bytes] ])
-          )
-      ])
-    )
-    | C_VIEW , _ -> Some (trivial_special "VIEW")
     | C_GLOBAL_CONSTANT , _ ->
       Some (special
         (fun with_args ->  with_args "PUSH")
