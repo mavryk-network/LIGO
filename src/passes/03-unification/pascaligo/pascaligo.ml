@@ -1,20 +1,14 @@
 open Simple_utils.Utils
 open Simple_utils.Trace
+open Unification_shared.Helpers
 
 module CST = Cst.Pascaligo
 module AST = Ast_unified
 
-module Helpers = Unification_shared.Helpers
 module Option = Simple_utils.Option
 module Region  = Simple_utils.Region
 
 open AST  (* Brings types and combinators functions *)
-
-let r_split = Simple_utils.Location.r_split  (* TODO NP : Factor with cameligo into helpers *)
-let r_fst x = fst (r_split x)
-let w_split (x: 'a CST.Wrap.t) : 'a * Location.t =
-  (x#payload, Location.lift x#region)
-let w_fst x = fst (w_split x)
 
 let translate_attr_pascaligo : CST.Attr.t -> AST.attr_pascaligo = fun attr ->
   let key, value = attr in

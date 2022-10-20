@@ -1,16 +1,14 @@
 open Simple_utils.Utils
 open Simple_utils.Trace
+open Unification_shared.Helpers
 
 module CST = Cst.Cameligo
 module AST = Ast_unified
 
-module Helpers = Unification_shared.Helpers
 module Option = Simple_utils.Option
 
 open AST  (* Brings types and combinators functions *)
 
-let r_split = Simple_utils.Location.r_split
-let r_fst x = fst (r_split x)
 
 (* ========================== TYPES ======================================== *)
 

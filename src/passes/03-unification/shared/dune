@@ -3,6 +3,7 @@
  (public_name ligo.unification_shared)
  (libraries
   ast_unified
+  lexing_shared
   ;; Vendors
   LexerLib
   simple-utils

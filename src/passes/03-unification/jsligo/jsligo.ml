@@ -1,18 +1,13 @@
 open Simple_utils.Utils
 open Simple_utils.Trace
+open Unification_shared.Helpers
 
 module CST = Cst.Jsligo
 module AST = Ast_unified
 
-module Helpers = Unification_shared.Helpers
 module Option = Simple_utils.Option
 
 open AST  (* Brings types and combinators functions *)
-
-let r_split = Simple_utils.Location.r_split  (* TODO NP : Factor with cameligo into helpers *)
-let r_fst x = fst (r_split x)
-let w_split (x: 'a CST.Wrap.t) : 'a * Location.t =
-  (x#payload, Location.lift x#region)
 
 let rec compile_val_binding ~(raise: ('e, 'w) raise) : CST.val_binding -> AST.let_binding = fun b ->
   let is_rec = false in
