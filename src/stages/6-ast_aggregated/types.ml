@@ -106,26 +106,6 @@ module Let_in = Let_in.Make(Pattern)(ValueAttr)
 module Match_expr = Match_expr.Make(Pattern)
 module Pattern_decl = Pattern_decl(Pattern)(ValueAttr)
 
-
-type 'e matching_content_case = {
-    constructor : Label.t ;
-    pattern : type_expression Binder.t ;
-    body : 'e ;
-  }
-
-and 'e matching_content_case_list = 'e matching_content_case list
-
-and 'e matching_content_variant = {
-    cases: 'e matching_content_case_list;
-    tv: type_expression;
-  } [@@deriving eq,compare,yojson,hash]
-
-type 'e matching_content_record = {
-  fields : type_expression Binder.t Record.LMap.t;
-  body : 'e;
-  tv : type_expression;
-} [@@deriving eq,compare,yojson,hash]
-
 type expression_content =
   (* Base *)
   | E_variable of Value_var.t

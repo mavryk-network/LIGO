@@ -4,8 +4,13 @@ module type Attr = sig
   val  pp : Format.formatter -> t -> unit
 end
 
+module type S = sig
+  type 'a t [@@deriving eq,compare,yojson,hash,fold,map]
+  val fold_map : ('a -> 'b -> 'a * 'b) -> 'a -> 'b t -> 'a * 'b t
+  val pp : (Format.formatter -> 'a -> unit) -> Format.formatter -> 'a t -> unit
+end
 
-module Make (Pattern : Pattern.S)(Attr : Attr) = struct
+module Make (Pattern : S)(Attr : Attr) = struct
   type ('e, 't) t = {
       let_binder: 't Pattern.t ;
       rhs       : 'e ;
