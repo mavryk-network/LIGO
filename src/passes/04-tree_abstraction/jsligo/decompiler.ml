@@ -805,7 +805,7 @@ and decompile_pattern p =
     )
   | P_list pl -> Error "no PList in JsLIGO CST"
   | P_record lps ->
-    let lps = Pattern.Container.List.to_record lps in
+    let lps = Container.List.to_record lps in
     let fields_name = List.map ~f:(fun (Label x) ->
       CST.PVar (
         Region.wrap_ghost

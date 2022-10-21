@@ -1196,7 +1196,7 @@ and infer_pattern
     , let%bind tuple_pat = Elaboration.all tuple_pat in
       return @@ P_tuple tuple_pat )
   | P_record lps ->
-    let lps = Pattern.Container.Record.to_record lps in
+    let lps = Container.Record.to_record lps in
     let (ctx, row_content), record_pat =
       Record.LMap.fold_map
         lps
@@ -1231,7 +1231,7 @@ and infer_pattern
     , record_type
     , let%bind pats = Elaboration.all pats in
       return
-      @@ P_record (Pattern.Container.Record.of_list (List.zip_exn labels pats))
+      @@ P_record (Container.Record.of_list (List.zip_exn labels pats))
     )
 
 
@@ -1311,7 +1311,7 @@ and check_pattern
       , let%bind tuple_pat = Elaboration.all tuple_pat in
         return @@ P_tuple tuple_pat )
     | P_record lps, O.T_record row ->
-      let lps = Pattern.Container.Record.to_record lps in
+      let lps = Container.Record.to_record lps in
       if Record.LMap.cardinal row.fields <> Record.LMap.cardinal lps
       then raise.error (fail ());
       let (ctx, sigs), record_pat =
@@ -1329,7 +1329,7 @@ and check_pattern
       , let%bind pats = Elaboration.all pats in
         return
         @@ P_record
-             (Pattern.Container.Record.of_list (List.zip_exn labels pats)) )
+             (Container.Record.of_list (List.zip_exn labels pats)) )
     | _ ->
       let ctx, type_', pat = infer ~ctx pat in
       let ctx, _f =

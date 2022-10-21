@@ -67,7 +67,7 @@ module type S = sig
   val pp : (Format.formatter -> 'a -> unit) -> Format.formatter -> 'a t -> unit
 end
 
-module Make (Container : Container.S) () = struct
+module Make (Container : Container.S) = struct
   type 'ty_exp list_pattern =
     | Cons of 'ty_exp t * 'ty_exp t
     | List of 'ty_exp t list
@@ -166,6 +166,7 @@ module Make (Container : Container.S) () = struct
         let acc, lps = Container.fold_map (fold_map_pattern f) acc lps in
         acc, Location.wrap ~loc (P_record lps)
 
+  let map_pattern f p = fold_map_pattern (fun () x -> (), f x) () p
   let rec fold : ('a -> 'b -> 'a) -> 'a -> 'b t -> 'a =
    fun f acc p ->
     match Location.unwrap p with
@@ -255,3 +256,7 @@ module Make (Container : Container.S) () = struct
       []
       t
 end
+
+
+module Non_linear_pattern = Make(Container.List)
+module Linear_pattern = Make(Container.Record)
