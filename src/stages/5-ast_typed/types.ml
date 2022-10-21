@@ -117,7 +117,7 @@ module Value_decl  = Value_decl(ValueAttr)
 module Type_decl   = Type_decl(TypeOrModuleAttr)
 module Module_decl = Module_decl(TypeOrModuleAttr)
 
-module Pattern = Pattern.Make(Pattern.Container.Record)()
+module Pattern = Linear_pattern
 module Match_expr = Match_expr.Make(Pattern)
 module Let_in = Let_in.Make(Pattern)(ValueAttr)
 module Pattern_decl = Pattern_decl(Pattern)(ValueAttr)

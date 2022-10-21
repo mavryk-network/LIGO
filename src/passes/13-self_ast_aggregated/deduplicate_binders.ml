@@ -176,11 +176,13 @@ let rec swap_expression : Scope.swapper -> expression -> expression = fun swaper
     let output_type = self_type output_type in
     let result = self result in
     return @@ E_recursive {fun_name;fun_type;lambda={binder;output_type;result}}
-  | E_let_in {let_binder;rhs;let_result;attr} ->
-    let let_binder = swap_binder swaper let_binder in
+  | E_let_in {let_binder;rhs;let_result;attributes} ->
+    let _,let_binder = Pattern.map_pattern
+      (fun p -> match p.wrap_content with P_var b -> {p with wrap_content = P_var (swap_binder swaper b)} | _ -> p)
+      let_binder in
     let rhs = self rhs in
     let let_result = self let_result in
-    return @@ E_let_in {let_binder;rhs;let_result;attr}
+    return @@ E_let_in {let_binder;rhs;let_result;attributes}
   | E_type_inst {forall; type_} ->
     let forall = self forall in
     let type_  = self_type type_ in
@@ -209,11 +211,15 @@ let rec swap_expression : Scope.swapper -> expression -> expression = fun swaper
     let binder = swap_mut_binder swaper binder in
     let expression = self expression in
     return @@ E_assign {binder;expression}
-  | E_let_mut_in {let_binder;rhs;let_result;attr} ->
-    let let_binder = swap_mut_binder swaper let_binder in
+  | E_let_mut_in {let_binder;rhs;let_result;attributes} ->
+    let _,let_binder = Pattern.map_pattern
+      (fun p -> match p.wrap_content with
+        | P_var b -> {p with wrap_content = P_var (swap_mut_binder swaper b)}
+        | _ -> p)
+      let_binder in
     let rhs = self rhs in
     let let_result = self let_result in
-    return @@ E_let_mut_in {let_binder;rhs;let_result;attr}
+    return @@ E_let_mut_in {let_binder;rhs;let_result;attributes}
   | E_while while_loop ->
     let while_loop = While_loop.map self while_loop in
     return @@ E_while while_loop
@@ -233,7 +239,7 @@ let rec swap_expression : Scope.swapper -> expression -> expression = fun swaper
     return @@ E_for_each { fe_binder; collection; collection_type; fe_body }
   | E_deref mut_var -> return @@ E_deref (swaper.mut mut_var)
 
-and matching_cases : Scope.swapper -> matching_expr -> matching_expr = fun swaper me ->
+and matching_cases : Scope.swapper -> _ -> _ = fun swaper me ->
   let self = swap_expression swaper in
   let self_type = swap_type_expression swaper in
   let return x = x in

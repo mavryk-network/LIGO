@@ -98,8 +98,13 @@ module Access_label = struct
   let map _ = Fun.id
   let fold_map _ = fun a b -> a,b
 end
+
+module Pattern = Linear_pattern
 module Accessor = Accessor(Access_label)
 module Update   = Update(Access_label)
+module Let_in = Let_in.Make(Pattern)(ValueAttr)
+module Match_expr = Match_expr.Make(Pattern)
+module Pattern_decl = Pattern_decl(Pattern)(ValueAttr)
 
 
 type 'e matching_content_case = {
@@ -129,19 +134,19 @@ type expression_content =
   | E_application of expr Application.t
   | E_lambda of (expr, ty_expr) Lambda.t
   | E_recursive of (expr, ty_expr) Recursive.t
-  | E_let_in    of let_in
+  | E_let_in    of (expr, ty_expr) Let_in.t
   | E_raw_code  of expr Raw_code.t
   | E_type_inst of type_inst
   | E_type_abstraction of expr Type_abs.t
   (* Variant *)
   | E_constructor of expr Constructor.t (* For user defined constructors *)
-  | E_matching of matching
+  | E_matching of (expr, ty_expr) Match_expr.t
   (* Record *)
   | E_record of expr Record.t
   | E_accessor of expr Accessor.t
   | E_update   of expr Update.t
   (* Imperative *)
-  | E_let_mut_in of let_in
+  | E_let_mut_in of (expr, ty_expr) Let_in.t
   | E_assign   of (expr,ty_expr) Assign.t
   | E_deref    of Value_var.t
   | E_for      of expr For_loop.t
@@ -151,22 +156,6 @@ type expression_content =
 and type_inst = {
     forall: expression ;
     type_: type_expression ;
-  }
-
-and let_in = {
-    let_binder: ty_expr Binder.t ;
-    rhs: expression ;
-    let_result: expression ;
-    attr: ValueAttr.t ;
-  }
-
-and matching_expr =
-  | Match_variant of expr matching_content_variant
-  | Match_record  of expr matching_content_record
-
-and matching = {
-    matchee: expression ;
-    cases: matching_expr ;
   }
 
 and expression = {
@@ -179,7 +168,7 @@ and expr = expression
 
 and declaration_content =
   | D_value of (expr, ty_expr) Value_decl.t
-  | D_pattern of matching
+  | D_pattern of (expr,ty_expr) Pattern_decl.t
   [@@deriving eq,compare,yojson,hash]
 
 and  declaration = declaration_content Location.wrap

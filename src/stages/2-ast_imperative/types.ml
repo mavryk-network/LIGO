@@ -52,7 +52,7 @@ module Module_decl= Module_decl(Attr)
 module Accessor = Accessor(Access_path)
 module Update   = Update(Access_path)
 
-module Pattern = Pattern.Make(Pattern.Container.List)()
+module Pattern = Non_linear_pattern
 module Match_expr = Match_expr.Make(Pattern)
 module Pattern_decl = Pattern_decl(Pattern)(Attr)
 module Let_in=Let_in.Make(Pattern)(Attr)

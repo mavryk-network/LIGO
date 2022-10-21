@@ -3,7 +3,8 @@ module Label = Label
 module Binder = Binder
 module Param = Param
 module Container = Pattern.Container
-module Pattern = Pattern
+module Linear_pattern = Pattern.Linear_pattern
+module Non_linear_pattern = Pattern.Non_linear_pattern
 module Access_path = Access_path
 module Layout = Layout
 
