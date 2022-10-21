@@ -369,7 +369,7 @@ and compile_pattern ~raise : _ I.Pattern.t -> _ O.Pattern.t =
   | P_record record ->
     (* conversion hell here - code smell. Alistair *)
     let record =
-      Container.(Record.map self @@ Record.of_list (List.to_list record))
+      Record.map ~f:self @@ Record.of_list record
     in
     return @@ O.Pattern.P_record record
 

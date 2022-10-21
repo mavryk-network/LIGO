@@ -171,17 +171,16 @@ let e_param_matching_tuple ?loc matchee (params: _ Param.t list) body : expressi
     List.fold_left params ~init:body ~f:(fun body param ->
       match Param.get_mut_flag param with
       | Immutable -> body
-      | Mutable -> e_let_mut_in ?loc (Pattern.var_pattern (Param.to_binder param)) [] (e_variable ?loc @@ Param.get_var param) body
+      | Mutable -> e_let_mut_in ?loc (Location.wrap (Pattern.P_var (Param.to_binder param))) [] (e_variable ?loc @@ Param.get_var param) body
       )
   in
   let cases = [ Match_expr.{ pattern ; body } ] in
   make_e ?loc @@ E_matching {matchee;cases}
   
 let e_matching_record ?loc matchee (binders: (string * _ Binder.t) list) body : expression =
-  let binders = List.map binders ~f:(fun (l,b) ->
+  let lps = List.map binders ~f:(fun (l,b) ->
     Label.of_string l, Location.wrap ?loc (Pattern.P_var b)
   ) in
-  let lps = Container.List.of_list binders in
   let pattern = Location.wrap ?loc (Pattern.P_record lps) in
   let cases = [ Match_expr.{ pattern ; body } ] in
   make_e ?loc @@ E_matching {matchee;cases}
@@ -191,13 +190,12 @@ let e_param_matching_record ?loc matchee (params: (string * _ Param.t) list) bod
     List.fold_left params ~init:body ~f:(fun body (_,param) ->
       match Param.get_mut_flag param with
       | Immutable -> body
-      | Mutable -> e_let_mut_in ?loc (Pattern.var_pattern (Param.to_binder param)) [] (e_variable ?loc @@ Param.get_var param) body
+      | Mutable -> e_let_mut_in ?loc (Location.wrap (Pattern.P_var (Param.to_binder param))) [] (e_variable ?loc @@ Param.get_var param) body
       )
   in
-  let params = List.map params ~f:(fun (l,p) ->
+  let lps = List.map params ~f:(fun (l,p) ->
     Label.of_string l, Location.wrap ?loc (Pattern.P_var (Param.to_binder p))
   ) in
-  let lps = Container.List.of_list params in
   let pattern = Location.wrap ?loc @@ Types.Pattern.P_record lps in
   let cases = [ Match_expr.{ pattern ; body } ] in
   make_e ?loc @@ E_matching {matchee;cases}

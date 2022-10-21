@@ -5,7 +5,6 @@ module type Attr = sig
 end
 
 
-module Container = Pattern.Container
 module Make (Pattern : Pattern.S)(Attr : Attr) = struct
   type ('e, 't) t = {
       let_binder: 't Pattern.t ;

@@ -18,7 +18,7 @@ let rec fold_expression : ('a , 'err) folder -> 'a -> expression -> 'a = fun f i
     let res = fold_cases f res cases in
     res
   )
-  | E_record    m -> Record.fold self init m
+  | E_record    m -> Record.fold ~f:self ~init m
   | E_update    u -> Types.Update.fold self init u
   | E_accessor  a -> Types.Accessor.fold self init a
   | E_let_in { let_binder = _ ; rhs ; let_result } -> (
@@ -30,7 +30,7 @@ let rec fold_expression : ('a , 'err) folder -> 'a -> expression -> 'a = fun f i
   | E_type_inst { forall = e; type_ = _} ->
     let res = self init e in
     res
-  | E_let_mut_in { let_binder = _ ; rhs ; let_result ; attr=_} -> (
+  | E_let_mut_in { let_binder = _ ; rhs ; let_result ; attributes=_} -> (
     let res = self init rhs in
     let res = self res let_result in
     res
