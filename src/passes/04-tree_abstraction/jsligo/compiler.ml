@@ -836,7 +836,7 @@ and compile_pattern ~raise : CST.pattern -> AST.ty_expr option Pattern.t =
         CST.PVar var -> Label.of_string var.value.variable.value 
       | _ -> raise.error @@ unsupported_pattern_type p in
       l, compile_pattern  ~raise p) @@ Utils.nsepseq_to_list record.inside in
-    Location.wrap ~loc (Pattern.P_record (Container.List.of_list  lps))
+    Location.wrap ~loc (Pattern.P_record (List.of_list  lps))
   | (PRest _|PAssign _|PConstr _|PDestruct _) ->
     raise.error @@ unsupported_pattern_type p
 
@@ -1014,7 +1014,8 @@ and compile_val_binding ~raise : CST.attributes -> CST.val_binding Region.reg ->
         | _ -> expr
         )
       in
-      let binder = Pattern.var_pattern ~loc:(Location.lift name.region) (Binder.make fun_binder lhs_type) in
+      let loc = Location.lift name.region in
+      let binder = Location.wrap ~loc (Pattern.P_var (Binder.make fun_binder lhs_type)) in
       (binder, attr, expr)
     | p ->
       let () = if Option.is_some type_params then failwith "impossible?" else () in

@@ -93,13 +93,13 @@ let rec swap_type_expression : Scope.swapper -> type_expression -> type_expressi
     let ty_var = swaper.type_ ty_var in
     return @@ T_variable ty_var
   | T_sum {fields;layout} ->
-    let fields = Record.map (fun ({associated_type;michelson_annotation;decl_pos} : row_element) : row_element ->
+    let fields = Record.map ~f:(fun ({associated_type;michelson_annotation;decl_pos} : row_element) : row_element ->
       let associated_type = self associated_type in
       {associated_type;michelson_annotation;decl_pos}
     ) fields in
     return @@ T_sum {fields;layout}
   | T_record {fields;layout} ->
-    let fields = Record.map (fun ({associated_type;michelson_annotation;decl_pos} : row_element) : row_element ->
+    let fields = Record.map ~f:(fun ({associated_type;michelson_annotation;decl_pos} : row_element) : row_element ->
       let associated_type = self associated_type in
       {associated_type;michelson_annotation;decl_pos}
     ) fields in
@@ -288,13 +288,13 @@ let rec type_expression : Scope.t -> type_expression -> type_expression = fun sc
     let ty_var = Scope.get_type_var scope ty_var in
     return @@ T_variable ty_var
   | T_sum {fields;layout} ->
-    let fields = Record.map (fun ({associated_type;michelson_annotation;decl_pos} : row_element) : row_element ->
+    let fields = Record.map ~f:(fun ({associated_type;michelson_annotation;decl_pos} : row_element) : row_element ->
       let associated_type = self associated_type in
       {associated_type;michelson_annotation;decl_pos}
     ) fields in
     return @@ T_sum {fields;layout}
   | T_record {fields;layout} ->
-    let fields = Record.map (fun ({associated_type;michelson_annotation;decl_pos} : row_element) : row_element ->
+    let fields = Record.map ~f:(fun ({associated_type;michelson_annotation;decl_pos} : row_element) : row_element ->
       let associated_type = self associated_type in
       {associated_type;michelson_annotation;decl_pos}
     ) fields in
