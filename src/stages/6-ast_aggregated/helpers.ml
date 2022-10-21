@@ -202,11 +202,11 @@ let rec fold_map_expression : 'a fold_mapper -> 'a -> expression -> 'a * express
   else
   let return expression_content = { e' with expression_content } in
   match e'.expression_content with
-  | E_matching {matchee=e;cases} -> (
-      let (res, e') = self init e in
-      let (res,cases') = fold_map_cases f res cases in
-      (res, return @@ E_matching {matchee=e';cases=cases'})
-    )
+  | E_matching { matchee; cases } -> (
+    let (res, e') = self init e in
+    let (res,cases') = fold_map_cases f res cases in
+    (res, return @@ E_matching {matchee=e';cases=cases'})
+  )
   | E_record m -> (
     let (res, m') = Record.fold_map ~f:self ~init m in
     (res, return @@ E_record m')

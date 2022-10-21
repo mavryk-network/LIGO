@@ -1,9 +1,10 @@
 open Ligo_prim
+module I = Ast_aggregated
+module O = Ast_typed
 
-let rec decompile ~raise : Ast_aggregated.expression -> Ast_typed.expression =
+let rec decompile ~raise : I.expression -> O.expression =
   fun exp ->
-  let module I = Ast_aggregated in
-  let module O = Ast_typed in
+
    let decompile_value_attr : I.ValueAttr.t -> O.ValueAttr.t =
       fun {inline;no_mutation;view;public;hidden;thunk} -> {inline;no_mutation;view;public;hidden;thunk}
    in
@@ -36,12 +37,11 @@ let rec decompile ~raise : Ast_aggregated.expression -> Ast_typed.expression =
        let output_type = decompile_type ~raise output_type in
        let binder = Param.map (decompile_type ~raise) binder in
        return (O.E_recursive { fun_name ; fun_type ; lambda = { binder ; output_type ; result } })
-    | E_let_in { let_binder ; rhs ; let_result ; attr } ->
+    | E_let_in { let_binder ; rhs ; let_result ; attributes } ->
        let rhs = decompile ~raise rhs in
        let let_result = decompile ~raise let_result in
-       let let_binder = Binder.map (decompile_type ~raise) let_binder in
-       let let_binder = O.Pattern.var_pattern let_binder in
-       let attributes = decompile_value_attr attr in
+       let let_binder = I.Pattern.map (decompile_type ~raise) let_binder in
+       let attributes = decompile_value_attr attributes in
        return (O.E_let_in { let_binder ; rhs ; let_result ; attributes })
     | E_raw_code { language ; code } ->
        let code = decompile ~raise code in
@@ -54,53 +54,12 @@ let rec decompile ~raise : Ast_aggregated.expression -> Ast_typed.expression =
     | E_constructor { constructor ; element } ->
        let element = decompile ~raise element in
        return (O.E_constructor { constructor ; element })
-    | E_matching { matchee ; cases = Match_variant { cases ; tv } } ->
-      let matchee = decompile ~raise matchee in
-      let aux : _ I.matching_content_case -> _ Ast_typed.Match_expr.match_case =
-         fun { constructor ; pattern ; body } -> (
-           let pattern =
-            (* Note copied from Ast_typed untyper:
-              If one day this code is actually executed, and if the list type is still not a tuple type.
-              A special case for lists might be required here
-            *)
-            let tv = decompile_type ~raise tv in
-            let pattern = Binder.set_ascr pattern tv in
-            let proj = Location.wrap @@ Ast_typed.Pattern.P_var pattern in
-            Location.wrap @@ Ast_typed.Pattern.P_variant (constructor, proj)
-           in
-           let body = decompile ~raise body in
-           ({pattern ; body } : (O.expression, O.type_expression) Ast_typed.Match_expr.match_case)
-         )
-       in
-       let cases = List.map ~f:aux cases in
+    | E_matching m ->
+      let O.Match_expr.{ matchee ; cases } = decompile_match_expr m in 
       return (O.E_matching { matchee ; cases })
-    | E_matching { matchee ; cases = Match_record { fields ; body ; tv=_ } } ->
-        let matchee = decompile ~raise matchee in
-        let aux : (I.type_expression Binder.t) -> O.type_expression Ast_typed.Pattern.t =
-          fun binder -> (
-            let proj = Location.wrap 
-              @@ Ast_typed.Pattern.P_var (Binder.map (decompile_type ~raise) binder) in
-            proj
-          )
-        in
-        let body = decompile ~raise body in
-        let case = match Record.is_tuple fields with
-          | false ->
-            let fields = Record.map aux fields in
-            let fields = Pattern.Container.Record.of_record fields in
-            let pattern = Location.wrap (O.Pattern.P_record fields) in
-            ({ pattern ; body } : _ O.Match_expr.match_case)
-          | true ->
-            let patterns = Record.map aux fields in
-            let patterns = Record.LMap.values patterns in
-            let pattern = Location.wrap (O.Pattern.P_tuple patterns) in
-            ({ pattern ; body } : _ O.Match_expr.match_case)
-        in
-        let cases = [case] in
-       return (O.E_matching { matchee ; cases })
     (* Record *)
     | E_record map ->
-       let map = Record.map (decompile ~raise) map in
+       let map = Record.map ~f:(decompile ~raise) map in
        return (O.E_record map)
     | E_accessor { struct_ ; path } ->
        let struct_ = decompile ~raise struct_ in
@@ -110,12 +69,11 @@ let rec decompile ~raise : Ast_aggregated.expression -> Ast_typed.expression =
        let update = decompile ~raise update in
        return (O.E_update { struct_ ; path ; update })
    (* Imperative *)
-   | I.E_let_mut_in { let_binder ; rhs ; let_result ; attr } ->
+   | I.E_let_mut_in { let_binder ; rhs ; let_result ; attributes } ->
       let rhs = decompile ~raise rhs in
       let let_result = decompile ~raise let_result in
-      let let_binder = Binder.map (decompile_type ~raise) let_binder in
-      let let_binder = O.Pattern.var_pattern let_binder in
-      let attributes = decompile_value_attr attr in
+      let let_binder = I.Pattern.map (decompile_type ~raise) let_binder in
+      let attributes = decompile_value_attr attributes in
       return (O.E_let_mut_in { let_binder ; rhs ; let_result ; attributes })
    | I.E_deref var -> return (O.E_deref var)
    | I.E_assign {binder;expression} ->
@@ -132,10 +90,8 @@ let rec decompile ~raise : Ast_aggregated.expression -> Ast_typed.expression =
       let while_loop = While_loop.map (decompile ~raise) while_loop in
       return @@ O.E_while while_loop
 
-and decompile_type ~raise : Ast_aggregated.type_expression -> Ast_typed.type_expression =
+and decompile_type ~raise : I.type_expression -> O.type_expression =
   fun ty ->
-  let module I = Ast_aggregated in
-  let module O = Ast_typed in
   let return type_content : O.type_expression =
     { type_content ; location = ty.location ; orig_var = ty.orig_var ; type_meta = None } in
   match ty.type_content with
@@ -148,13 +104,13 @@ and decompile_type ~raise : Ast_aggregated.type_expression -> Ast_typed.type_exp
      let f ({ associated_type ; michelson_annotation ; decl_pos } : I.row_element) : O.row_element =
        let associated_type = decompile_type ~raise associated_type in
        { associated_type ; michelson_annotation ; decl_pos } in
-     let fields = Record.map f fields in
+     let fields = Record.map ~f fields in
      return (O.T_sum { fields ; layout })
   | T_record { fields ; layout } ->
      let f ({ associated_type ; michelson_annotation ; decl_pos } : I.row_element) : O.row_element =
        let associated_type = decompile_type ~raise associated_type in
        { associated_type ; michelson_annotation ; decl_pos } in
-     let fields = Record.map f fields in
+     let fields = Record.map ~f fields in
      return (O.T_record { fields ; layout })
   | T_arrow { type1 ; type2 } ->
      let type1 = decompile_type ~raise type1 in
@@ -165,3 +121,14 @@ and decompile_type ~raise : Ast_aggregated.type_expression -> Ast_typed.type_exp
   | T_for_all { ty_binder ; kind ; type_ } ->
      let type_ = decompile_type ~raise type_ in
      return (O.T_for_all { ty_binder ; kind ; type_ })
+
+and decompile_match_expr  : (I.expression, I.type_expression) I.Match_expr.t -> (O.expression, O.type_expression) O.Match_expr.t
+= fun { matchee ; cases } ->
+  let matchee = decompile ~raise matchee in
+  let cases = List.map cases 
+    ~f:(fun { pattern ; body } ->
+      let pattern = I.Pattern.map (decompile_type ~raise) pattern in
+      let body = decompile ~raise body in
+      O.Match_expr.{ pattern ; body }
+  ) in
+  O.Match_expr.{ matchee ; cases }

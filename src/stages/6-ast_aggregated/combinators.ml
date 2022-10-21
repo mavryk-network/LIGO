@@ -273,7 +273,8 @@ let e_a_variable v ty = e_variable v ty
 let e_a_application lamb args t = e_application {lamb;args} t
 let e_a_lambda l in_ty out_ty = e_lambda l (t_arrow in_ty out_ty ())
 let e_a_recursive l= e_recursive l l.fun_type
-let e_a_let_in let_binder rhs let_result attributes = e_let_in { let_binder ; rhs ; let_result ; attributes } (get_type let_result)
+let e_a_let_in let_binder rhs let_result attributes =
+  e_let_in { let_binder ; rhs ; let_result ; attributes } (get_type let_result)
 let e_a_matching matchee cases t = e_matching {matchee;cases} t
 let e_a_raw_code language code t = e_raw_code { language ; code } t
 let e_a_type_inst forall type_ u = e_type_inst { forall ; type_ } u
@@ -375,8 +376,8 @@ let forall_expand (e : expression) =
 let context_decl ?(loc = Location.generated) (binder : type_expression Binder.t) (expr : expression) (attr : ValueAttr.t) : context =
   [Location.wrap ~loc @@ D_value { binder ; expr ; attr }]
 
-(* let context_decl_pattern ?(loc = Location.generated) (m : matching) : context =
-  [Location.wrap ~loc @@ D_pattern m] *)
+let context_decl_pattern ?(loc = Location.generated) (pattern : type_expression Pattern.t) (expr : expression) (attr : ValueAttr.t)  : context =
+  [Location.wrap ~loc @@ D_pattern { pattern ; expr ; attr }]
 
 let context_id : context = []
 
@@ -384,12 +385,7 @@ let context_append (l : context) (r : context) : context = l @ r
 
 let context_apply (p : context) (e : expression) : expression =
   let f d e = match Location.unwrap d with
-  | D_value { binder ; expr ; attr } ->
-    let loc = Value_var.get_location (Binder.get_var binder) in
-    let binder = Location.wrap ~loc (Pattern.P_var binder) in
-    e_a_let_in binder expr e attr 
-  | D_pattern { pattern ;expr ; _ } ->
-    let cases = [Types.Match_expr.{ pattern ; body=e }] in
-    e_a_matching expr cases e.type_expression
-  in
+    | D_value { binder ; expr ; attr } -> e_a_let_in (Types.Pattern.var_pattern binder) expr e attr
+    | D_pattern { pattern ; expr ; attr } -> e_a_let_in pattern expr e attr in
   List.fold_right ~f ~init:e p
+

@@ -20,15 +20,11 @@ let eta_reduce : Ast_aggregated.expression -> Ast_aggregated.expression option =
 let get_abstraction_tuple e =
   let open Ast_aggregated in
   match e.expression_content with
-  | E_lambda { binder ; result ; _ } ->
-    let var = Param.get_var binder in
+  | E_lambda { binder =_ ; result ; _ } ->
+    (* let var = Param.get_var binder in *)
     begin match result.expression_content with
-    | E_matching { matchee = { expression_content = E_variable u ; _ } ; cases = Match_record { fields ; body ; _ } }
-      when Value_var.equal u var && Param.is_imm binder && Record.is_tuple fields ->
-      let acc = Record.tuple_of_record fields in
-      let acc = List.map ~f:snd acc in
-      let acc = List.map ~f:(Binder.get_var) acc in
-      Some (acc, body)
+    | E_matching { matchee = { expression_content = E_variable _ ; _ } ; cases = _ } ->
+      failwith "NEED REBASE THIS FUNCTION DO NOT EXIST ON DEV ANYMORE "
     | _ -> None end
   | _ -> None
 
@@ -104,8 +100,12 @@ let get_const acc e =
 let inline_let : bool ref -> Ast_aggregated.expression -> Ast_aggregated.expression =
   fun changed e ->
   match e.expression_content with
-  | E_let_in { let_binder ; rhs ; let_result ; attr = { thunk = true ; _ } } ->
-     let e2' = Subst.subst_expression ~body:let_result ~x:(Binder.get_var let_binder) ~expr:rhs in
+  | E_let_in { let_binder ; rhs ; let_result ; attributes = { thunk = true ; _ } } ->
+     let e2' =
+       List.fold (Ast_aggregated.Pattern.binders let_binder)
+       ~init:let_result
+       ~f:(fun let_result let_binder -> Subst.subst_expression ~body:let_result ~x:(Binder.get_var let_binder) ~expr:rhs)
+     in
      (changed := true ; e2')
   | E_application _ ->
     (* This case tries to reduce
@@ -142,12 +142,10 @@ let all_aggregated_expression ~raise e =
   let e = Uncurry.uncurry_expression e in
   let e = thunk e in
   let e = Helpers.map_expression (Literal_replace.expression ~raise) e in
-  let e = Helpers.map_expression Pattern_matching_simpl.peephole_expression e in
   e
 
 let all_expression ~raise ~(options : Compiler_options.middle_end) e =
   let e = Helpers.map_expression Polymorphic_replace.expression e in
-  let e = Helpers.map_expression Pattern_matching_simpl.peephole_expression e in
   let e =
     if not options.test then
       let () = Obj_ligo.check_obj_ligo ~raise e in (* for good measure .. *)
@@ -157,7 +155,6 @@ let all_expression ~raise ~(options : Compiler_options.middle_end) e =
 
 let all_program ~raise ~(options : Compiler_options.middle_end) (prg : Ast_aggregated.program) =
   let prg = Helpers.map_program Polymorphic_replace.expression prg in
-  let prg = Helpers.map_program Pattern_matching_simpl.peephole_expression prg in
   let prg = if not options.test then
       let prg = Obj_ligo.purge_meta_ligo_program ~raise prg in
       let () = Obj_ligo.check_obj_ligo_program ~raise prg in (* for good measure .. *)
@@ -175,5 +172,4 @@ let all_contract ~raise parameter storage prg =
   let contract_type : Contract_passes.contract_type = { parameter ; storage } in
   let all_p = List.map ~f:(fun pass -> Ast_aggregated.Helpers.fold_map_expression pass contract_type) @@ contract_passes ~raise in
   let prg = List.fold ~f:(fun x f -> snd @@ f x) all_p ~init:prg in
-  let prg = Helpers.map_expression Pattern_matching_simpl.peephole_expression prg in
   prg

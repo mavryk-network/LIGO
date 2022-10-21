@@ -76,15 +76,9 @@ let check_obj_ligo ~raise ?(blacklist = []) (t : AST.expression) : unit =
 let check_obj_ligo_program ~raise ?(blacklist = []) ((ctxt, e) : AST.program) : unit =
   let f decl () =
     match Location.unwrap decl with
-    | AST.D_value { binder = _ ; expr ; attr = _ } ->
-      check_obj_ligo ~raise ~blacklist expr 
-    | AST.D_pattern { matchee ; cases } -> 
-      check_obj_ligo ~raise ~blacklist matchee;
-      let (), _ = AST.Helpers.fold_map_cases (fun () case ->
-        check_obj_ligo ~raise ~blacklist case;
-        true, (), case  
-      ) () cases in
-      ()
+    | AST.D_value { binder = _ ; expr ; attr = _ }
+    | AST.D_pattern { pattern = _ ; expr ; attr = _ } -> 
+      check_obj_ligo ~raise ~blacklist expr
     in
   let () = List.fold_right ctxt ~f ~init:() in
   check_obj_ligo ~raise ~blacklist e
@@ -141,21 +135,13 @@ let purge_meta_ligo_program ~raise ((ctxt, e) : AST.program) : AST.program =
         blacklist, ctxt
       else
         blacklist, decl :: ctxt 
-    | AST.D_pattern { matchee ; cases } ->
-      let expr_is_meta = not (Trace.to_bool (check_obj_ligo ~blacklist matchee)) in
-      let blacklist = if expr_is_meta then
-        let get_binders (m : AST.matching_expr) = 
-          match m with
-          | Match_variant { cases ; _ } -> List.map cases ~f:(fun {pattern;_} -> pattern)
-          | Match_record { fields ; _ } -> Record.fold (fun bs b -> b :: bs) [] fields
-        in
-        let binders = get_binders cases in
-        (List.map binders ~f:(fun b -> b, matchee.location)) @ blacklist 
-      else blacklist in
+    | AST.D_pattern { pattern ; expr ; attr = _ } ->
+      let expr_is_meta = not (Trace.to_bool (check_obj_ligo ~blacklist expr)) in
+      let blacklist = if expr_is_meta then List.map (AST.Pattern.binders pattern) ~f:(fun b -> b, expr.location) @ blacklist else blacklist in
       if expr_is_meta then
         blacklist, ctxt
       else
-        blacklist, decl :: ctxt
+        blacklist, decl :: ctxt 
     in
   let blacklist, ctxt = List.fold_left ctxt ~init:([], []) ~f in
   let ctxt = List.rev ctxt in

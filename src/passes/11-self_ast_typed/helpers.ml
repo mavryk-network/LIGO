@@ -421,14 +421,6 @@ module Free_variables :
       let fv2 = List.fold binders ~init:fv2 
         ~f:(fun fv2 b -> VarSet.remove (Binder.get_var b) fv2) in
       merge (self rhs) {modVarSet;moduleEnv;varSet=fv2;mutSet}
-    (* | E_let_pattern_in { let_pattern ; rhs ; let_result ; attributes=_} ->
-      let {modVarSet;moduleEnv;varSet=fv2;mutSet} = (self let_result) in
-      let bound = List.map ~f:Binder.get_var (Pattern.binders let_pattern) in
-      let fv2 = List.fold bound
-        ~init:fv2
-        ~f:(fun acc x -> VarSet.remove x acc)
-      in
-      merge (self rhs) {modVarSet;moduleEnv;varSet=fv2;mutSet} *)
     | E_mod_in { module_binder; rhs ; let_result } ->
       let {modVarSet;moduleEnv;varSet;mutSet} = (self let_result) in
       let modVarSet = ModVarSet.remove module_binder modVarSet in
