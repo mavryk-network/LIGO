@@ -28,6 +28,10 @@ let mod_ : module_ =
             type_ ~name:"c_add_i32_type"
               ~typedef:(FuncType ([NumType I32Type; NumType I32Type], [NumType I32Type]));
 
+            (* for testing *)
+            type_ ~name:"print_type"
+              ~typedef:(FuncType ([NumType I32Type], []));
+
             (* deku specific *)
             type_ ~name:"ffi_read_ticket_type"
               ~typedef:(FuncType ([NumType I32Type], [NumType I32Type]));
@@ -57,6 +61,9 @@ let mod_ : module_ =
             import ~item:"malloc" ~desc:(FuncImport_symbol "malloc_type");
             import ~item:"c_add_i32" ~desc:(FuncImport_symbol "c_add_i32_type");
 
+            (* for testing *)
+            import_m ~module_name:"host" ~item:"print" ~desc:(FuncImport_symbol "print_type") ();
+
             (* deku specific *)
             import ~item:"ffi_read_ticket" ~desc:(FuncImport_symbol "ffi_read_ticket_type");
             import ~item:"ffi_split_ticket" ~desc:(FuncImport_symbol "ffi_split_ticket_type");
@@ -78,6 +85,9 @@ let mod_ : module_ =
             symbol ~name:"malloc" ~details:(Import ([NumType I32Type], [NumType I32Type]));
             symbol ~name:"c_add_i32"
               ~details:(Import ([NumType I32Type; NumType I32Type], [NumType I32Type]));
+
+            (* for testing *)
+            symbol ~name:"print" ~details:(Import ([NumType I32Type], []));
 
             (* deku specific *)
             symbol ~name:"ffi_read_ticket" ~details:(Import ([NumType I32Type], [NumType I32Type]));

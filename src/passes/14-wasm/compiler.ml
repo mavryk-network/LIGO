@@ -16,24 +16,7 @@ module Location = Simple_utils.Location
 open Helpers
 open Validation
 
-(**
- * Converts LIGO's location.t to WasmObjectFile's Source.region.
- *)
-let location_to_region (l : Location.t) : S.region =
-  match l with
-  | File l ->
-    {
-      left = {file = l#file; line = l#start#line; column = l#start#column `Byte};
-      right = {file = l#file; line = l#stop#line; column = l#stop#column `Byte};
-    }
-  | Virtual _ -> S.no_region
 
-(** 
- * Convert a variable to a string which we can use for symbols 
- *)
-let var_to_string name =
-  let name, hash = Value_var.internal_get_name_and_counter name in
-  name ^ "#" ^ string_of_int hash
 
 (* The data offset. This indicates where a block of data should be placed in the linear memory. *)
 let global_offset = ref 0l
@@ -79,12 +62,15 @@ let rec expression ~raise :
   let store = store at in
   let i32_add = i32_add at in 
   let i32_mul = i32_mul at in
+  let i32_ne  = i32_ne at in
+  let i32_eq  = i32_eq at in
   let data_symbol = data_symbol at in
   let func_symbol = func_symbol at in
   let elem = elem at in
   let compare_eq = compare_eq at in
   let if_ = if_ at in 
   let br_if = br_if at in
+  let br = br at in
   let loop = loop at in 
   let nop = nop at in
   let convert_to_memory = convert_to_memory at in
@@ -121,6 +107,17 @@ let rec expression ~raise :
         local_get_s new_value
       ] 
   in
+  let uni_op op w env e1 = 
+    let w, env, e1 = expression ~raise w env e1 in
+    let env, e = op env e1 in
+    w, env, e
+  in 
+  let bin_op op w env e1 e2 = 
+    let w, env, e1 = expression ~raise w env e1 in
+    let w, env, e2 = expression ~raise w env e2 in
+    let env, e = op env e1 e2 in
+    w, env, e
+  in 
   let unique_name name =
     let unique_name = Value_var.fresh ~name () in
     let name = var_to_string unique_name in
@@ -183,47 +180,47 @@ let rec expression ~raise :
   | E_constant {cons_name = C_FOLD_RIGHT; arguments = [func; col; init]} -> raise.error (not_supported e)
 
   (* MATH *)
-  | E_constant {cons_name = C_NEG; arguments} ->
-    host_call ~fn:"c_neg" ~response_size:4l ~instructions:arguments
+  | E_constant {cons_name = C_NEG; arguments = [e1]} ->
+    uni_op Datatype.Int.neg w env e1
   | E_constant {cons_name = C_ADD; arguments = [e1; e2]} ->
-    host_call ~fn:"c_add_i32" ~response_size:4l ~instructions:[e1; e2]
+    bin_op Datatype.Int.add w env e1 e2          
   | E_constant {cons_name = C_SUB; arguments = [e1; e2]} ->
-    host_call ~fn:"c_sub" ~response_size:4l ~instructions:[e1; e2]
+    bin_op Datatype.Int.sub w env e1 e2
   | E_constant {cons_name = C_MUL; arguments = [e1; e2]} ->
-    host_call ~fn:"c_mul" ~response_size:4l ~instructions:[e1; e2]
+    bin_op Datatype.Int.mul w env e1 e2
   | E_constant {cons_name = C_DIV; arguments = [e1; e2]} ->
-    host_call ~fn:"c_div" ~response_size:4l ~instructions:[e1; e2]
+    bin_op Datatype.Int.div w env e1 e2
   | E_constant {cons_name = C_MOD; arguments = [e1; e2]} ->
-    host_call ~fn:"c_mod" ~response_size:4l ~instructions:[e1; e2]
+    raise.error (not_supported e)
 
   (* LOGIC *)
   | E_constant {cons_name = C_NOT; arguments = [e1; e2]} ->
-    host_call ~fn:"c_not" ~response_size:4l ~instructions:[e1; e2]
+    (* TODO: CHECK: is this the same?? *)
+    uni_op Datatype.Int.neg w env e1
   | E_constant {cons_name = C_AND; arguments = [e1; e2]} ->
-    host_call ~fn:"c_and" ~response_size:4l ~instructions:[e1; e2]
+    bin_op Datatype.Int.and_ w env e1 e2
   | E_constant {cons_name = C_OR; arguments = [e1; e2]} ->
-    host_call ~fn:"c_or" ~response_size:4l ~instructions:[e1; e2]
+    bin_op Datatype.Int.or_ w env e1 e2
   | E_constant {cons_name = C_XOR; arguments = [e1; e2]} ->
-    host_call ~fn:"c_xor" ~response_size:4l ~instructions:[e1; e2]
+    bin_op Datatype.Int.xor w env e1 e2
   | E_constant {cons_name = C_LSL; arguments = [e1; e2]} ->
-    host_call ~fn:"c_lsl" ~response_size:4l ~instructions:[e1; e2]
+    bin_op Datatype.Int.lsl_ w env e1 e2
   | E_constant {cons_name = C_LSR; arguments = [e1; e2]} ->
-    host_call ~fn:"c_lsr" ~response_size:4l ~instructions:[e1; e2]
+    bin_op Datatype.Int.lsr_ w env e1 e2
 
   (* COMPARATOR *)
   | E_constant {cons_name = C_EQ;  arguments = [e1; e2]} -> 
-    host_call ~fn:"c_eq" ~response_size:4l ~instructions:[e1; e2]
+    bin_op Datatype.Int.eq w env e1 e2
   | E_constant {cons_name = C_NEQ; arguments = [e1; e2]} -> 
-    host_call ~fn:"c_neq" ~response_size:4l ~instructions:[e1; e2]
+    bin_op Datatype.Int.ne w env e1 e2
   | E_constant {cons_name = C_LT;  arguments = [e1; e2]} -> 
-    host_call ~fn:"c_lt" ~response_size:4l ~instructions:[e1; e2] 
+    bin_op Datatype.Int.lt w env e1 e2
   | E_constant {cons_name = C_GT;  arguments = [e1; e2]} ->
-    host_call ~fn:"c_gt" ~response_size:4l ~instructions:[e1; e2]
+    bin_op Datatype.Int.gt w env e1 e2
   | E_constant {cons_name = C_LE;  arguments = [e1; e2]} -> 
-    host_call ~fn:"c_le" ~response_size:4l ~instructions:[e1; e2]
+    bin_op Datatype.Int.le w env e1 e2
   | E_constant {cons_name = C_GE;  arguments = [e1; e2]} -> 
-
-    host_call ~fn:"c_ge" ~response_size:4l ~instructions:[e1; e2]
+    bin_op Datatype.Int.ge w env e1 e2
 
   (* Bytes/ String *)
   | E_constant {cons_name = C_CONCAT; arguments = [e1; e2] } -> 
@@ -242,39 +239,38 @@ let rec expression ~raise :
         (* check if not 0 *)
         local_tee_s cons;
       ]
-      @ l1
-      @ [
+      @ 
+      l1
+      @ 
+      [
         store;
         local_get_s cons;
         const 4l;
         i32_add;
-        ]
-      @ l2
-      @ [
+      ]
+      @ 
+      l2
+      @ 
+      [
         store;
         local_get_s cons;
-        ] )
+      ] 
+    )
 
   (* Pair *)
   | E_constant {cons_name = C_PAIR; arguments = [e1; e2]} ->
-    let pair = var_to_string (Value_var.fresh ~name:"C_PAIR" ()) in
     let w, env, e1 = expression ~raise w env e1 in
     let w, env, e2 = expression ~raise w env e2 in
-    let e =
-      S.[const 8l; call_s "malloc"; local_set_s pair; local_get_s pair]
-      @ e1
-      @ S.[store; local_get_s pair; const 4l; i32_add]
-      @ e2
-      @ S.[store; local_get_s pair]
-    in
-    (w, add_local env (pair, T.NumType I32Type), e)
+    Datatype.Pair.create w env e1 e2
   | E_constant {cons_name = C_CAR; arguments = [cons]} ->
+    (* TODO: move to Datatype.ml *)
     let w, env, cons = expression ~raise w env cons in
     ( w,
       env,
       cons @ [load]
     )
   | E_constant {cons_name = C_CDR; arguments = [cons]} ->
+    (* TODO: move to Datatype.ml *)
     let w, env, cons = expression ~raise w env cons in
     ( w,
       env,
@@ -348,6 +344,75 @@ let rec expression ~raise :
   | E_constant {cons_name = C_CREATE_CONTRACT; arguments = [operation_list_init;keyhash;mutez;init] } -> raise.error (not_supported e)
   | E_constant {cons_name = C_OPEN_CHEST; arguments = [chest_key; chest; n] } -> raise.error (not_supported e)
   | E_constant {cons_name = C_VIEW; arguments = [view_name; t; address] } -> raise.error (not_supported e)
+  | E_constant {cons_name = C_SOME; arguments = [arg]} ->
+    let w, l, arg = expression ~raise w env arg in
+    let some = unique_name "c_some" in  
+    let env = Env.add_local env (some, T.NumType I32Type) in
+    w, env, [ 
+      const 8l; 
+      call_s "malloc";
+      local_tee_s some;
+      const 1l;
+      store;
+      local_get_s some;
+      const 4l;
+      i32_add
+    ]
+    @ 
+    arg
+    @
+    [
+      store;
+      local_get_s some
+    ] 
+  | E_constant {cons_name = C_NONE; arguments = []} ->  
+    w, env, [
+      const 0l;
+    ]
+  | E_constant {cons_name = C_LEFT; arguments = [a]} -> 
+    let c_left = unique_name "c_left" in
+    let env = Env.add_local env (c_left, T.NumType I32Type) in
+    let w, env, a = expression ~raise w env a in
+    w, env, 
+   [
+      const 8l;
+      call_s "malloc";
+      local_tee_s c_left;
+      const 0l;
+      store;
+      local_get_s c_left;
+      const 4l;
+      i32_add;
+    ]
+    @
+    a
+    @
+    [
+      store;
+      local_get_s c_left
+    ]
+  | E_constant {cons_name = C_RIGHT; arguments = [a]} -> 
+    let c_right = unique_name "c_right" in
+    let env = Env.add_local env (c_right, T.NumType I32Type) in
+    let w, env, a = expression ~raise w env a in
+    w, env, 
+   [
+      const 8l;
+      call_s "malloc";
+      local_tee_s c_right;
+      const 1l;
+      store;
+      local_get_s c_right;
+      const 4l;
+      i32_add;
+    ]
+    @
+    a
+    @
+    [
+      store;
+      local_get_s c_right
+    ]
 
   | E_application _ ->
     let rec aux w env (result: A.instr list) (expr: I.expression) =
@@ -585,7 +650,7 @@ let rec expression ~raise :
     w, env, [
       S.{it = A.Block (ValBlockType return_type, 
         [
-          {it = A.Block (ValBlockType None,
+          {it = A.Block (ValBlockType return_type,
             test 
             @
             [
@@ -607,100 +672,151 @@ let rec expression ~raise :
       at
       }
     ]
-  | E_if_none (test, none_e, (_, some_e)) -> 
+  | E_if_none (test, none_e, ((some_arg, some_arg_type), some_e)) -> 
     (* TODO: check handling of locals *)
+    let some_arg = var_to_string some_arg in
+    let testing = unique_name "testing" in
+    let env = Env.add_local env (some_arg, T.NumType I32Type) in
+    let env = Env.add_local env (testing, T.NumType I32Type) in
     let w, env, test = expression ~raise w env test in
     let w, env, none_e = expression ~raise w env none_e in
     let w, env, some_e = expression ~raise w env some_e in
+    
     let return_type = Some (T.NumType I32Type) in (* TODO properly get this *)
-    w, env, [
-      S.{it = A.Block (ValBlockType return_type, 
-        [
-          {it = A.Block (ValBlockType None,
-            test 
-            @
-            [
-              br_if 0l
-            ]
-            @ 
-            none_e
-            @ 
-            [
-              br_if 1l
-            ]
-          );
-          at
-          }
-        ]
-        @ 
-        some_e
-      );
-      at
-      }
+    w, env, 
+      test 
+      @
+      [
+        local_set_s testing;
+        S.{it = A.Block (ValBlockType return_type, 
+          [
+            {it = A.Block (ValBlockType None,
+              [
+                local_get_s testing;
+                br_if 0l
+              ]
+              @ 
+              none_e
+              @ 
+              [
+                br 1l
+              ]
+            );
+            at
+            }
+          ]
+          @ 
+          [
+            local_get_s testing;
+            const 4l;
+            i32_add;
+            load;
+            local_set_s some_arg;
+          ]
+          @
+          some_e
+        );
+        at
+        }
     ]
   | E_if_cons (matchee, nil, (((hd, _), (tl, _)), cons)) -> 
     let hd = var_to_string hd in
     let tl = var_to_string tl in
-    let env = add_locals env [(hd, NumType I32Type); (tl, NumType I32Type)] in
+    let data = unique_name "data" in
+    let env = add_locals env [(hd, NumType I32Type); (tl, NumType I32Type); (data, NumType I32Type)] in
     let w, env, matchee_e = expression ~raise w env matchee in
     let w, env, nil_e = expression ~raise w env nil in
     let w, env, cons_e = expression ~raise w env cons in
     let return_type = Some (T.NumType I32Type) in (* TODO properly get this *)
-    w, env, [
-      S.{it = A.Block (ValBlockType return_type, 
-        [
-          {it = A.Block (ValBlockType None,
-          matchee_e
-            @
-            [
-              data_symbol "C_LIST_EMPTY";
-              {it = A.Compare (I32 A.I32Op.Ne); at };
-              br_if 0l
-            ]
-            @ 
-            nil_e
-            @ 
-            [
-              br_if 1l
-            ]
-          );
-          at
-          }
-        ]
-        @ 
-        cons_e
-      );
-      at
-      }]
+    w, env,
+      matchee_e
+      @
+      [
+        local_tee_s data;
+        load;
+        local_set_s hd;
+        local_get_s data;
+        const 4l;
+        i32_add;
+        load;
+        local_set_s tl;
+
+        S.{it = A.Block (ValBlockType return_type, 
+          [
+            {it = A.Block (ValBlockType None,
+              [ local_get_s data;
+              
+                data_symbol "C_LIST_EMPTY";
+                i32_eq;
+                
+                (* {it = A.Compare (I32 A.I32Op.Ne); at }; *)
+                br_if 0l
+              ]
+              @ 
+              cons_e
+              @ 
+              [
+                br 1l
+              ]
+            );
+            at
+            }
+          ]
+          @ 
+          nil_e  
+        );
+        at
+      };  
+    ]
   | E_if_left (matchee, ((name_l, _), left), ((name_r, _), right)) -> 
     (* Variants *)
+    let matchee_name = unique_name "matchee" in
     let name_l = var_to_string name_l in
     let name_r = var_to_string name_r in
-    let env = add_locals env [(name_l, NumType I32Type); (name_r, NumType I32Type)] in
+    let env = add_locals env [(name_l, NumType I32Type); (name_r, NumType I32Type); (matchee_name, NumType I32Type)] in
     let w, env, matchee_e = expression ~raise w env matchee in
     let w, env, left_e = expression ~raise w env left in
     let w, env, right_e = expression ~raise w env right in
     let return_type = Some (T.NumType I32Type) in (* TODO properly get this *)
-    w, env, [
+    w, env, 
+    
+    
+    matchee_e 
+    @
+    [
+      local_set_s matchee_name; 
       S.{it = A.Block (ValBlockType return_type, 
         [
           {it = A.Block (ValBlockType None,
-          matchee_e
-            @
             [
-              br_if 0l
+              local_get_s matchee_name;
+              load;
+              br_if 0l;
+              local_get_s matchee_name;
+              const 4l;
+              i32_add;
+              load;
+              local_set_s name_l;
             ]
             @ 
             left_e
             @ 
             [
-              br_if 1l
+              br 1l
             ]
           );
           at
           }
         ]
         @ 
+        [
+          local_get_s matchee_name;
+          const 4l;
+          i32_add;
+          load;
+          local_set_s name_r;
+        ]
+        @
         right_e
       );
       at
@@ -759,8 +875,7 @@ let rec expression ~raise :
   | E_constant {cons_name = C_LOOP_STOP; arguments} -> raise.error (not_supported e)
   | E_constant {cons_name = C_MAP; arguments } -> raise.error (not_supported e)
   | E_constant {cons_name = C_BIG_MAP; arguments } -> raise.error (not_supported e)
-  | E_constant {cons_name = C_LEFT; arguments = [a; b] } -> raise.error (not_supported e)
-  | E_constant {cons_name = C_RIGHT; arguments = [a; b]} -> raise.error (not_supported e)
+  
   | E_constant {cons_name = C_MAP_GET; arguments } -> raise.error (not_supported e)
   | E_constant {cons_name = C_MAP_GET_FORCE; arguments } -> raise.error (not_supported e)  
   | E_global_constant (_,_) -> raise.error (not_supported e) (* is this actually used? *)
@@ -769,7 +884,7 @@ let rec expression ~raise :
   | E_raw_michelson _ -> raise.error (michelson_insertion e.location)
 
   (* catch all *)
-  | E_constant {cons_name; _} -> raise.error (not_supported e)  
+  | E_constant {cons_name; _} -> print_endline "wut"; raise.error (not_supported e)  
 
   (* Mutability stuff *)
   | E_let_mut_in (_, _)       -> raise.error (not_supported e)
@@ -793,6 +908,7 @@ let rec toplevel_bindings ~raise :
     I.expression -> W.Ast.module_' -> W.Ast.module_' =
  fun e w ->
   let at = location_to_region e.location in
+  let drop = drop at in
   let const = const at in
   let call_s = call_s at in
   let call_indirect_s = call_indirect_s at in
@@ -808,6 +924,7 @@ let rec toplevel_bindings ~raise :
   let elem = elem at in
   let compare_eq = compare_eq at in
   let if_ = if_ at in 
+  let br = br at in
   let br_if = br_if at in
   let loop = loop at in 
   let nop = nop at in
@@ -887,7 +1004,12 @@ let rec toplevel_bindings ~raise :
                   FuncSymbol {
                     name;
                     ftype = name ^ "_type";
-                    locals = [("parameter", T.NumType I32Type); ("storage", T.NumType I32Type); ("entrypoint_tuple", T.NumType I32Type)];
+                    locals = [
+                      ("parameter", T.NumType I32Type); 
+                      ("storage", T.NumType I32Type); 
+                      ("entrypoint_tuple", T.NumType I32Type);
+                      ("result", T.NumType I32Type); 
+                    ];
                     body =
                       [
                         const 8l ;
@@ -904,7 +1026,23 @@ let rec toplevel_bindings ~raise :
                         store ;
 
                         local_get_s "entrypoint_tuple" ;
-                        call_s actual_name ;
+                        call_s actual_name;
+                        local_tee_s "result";
+                        const 4l;
+                        i32_add;
+                        load;
+                        load;
+                        
+                        call_s "print";
+
+                        local_get_s "parameter" ;
+                        call_s "print";
+                        local_get_s "storage" ;
+                        call_s "print";
+                        local_get_s "result";
+                        (* const 4l;
+                        i32_add; *)
+                        (* load; *)
                       ];
                   };
                 at;
