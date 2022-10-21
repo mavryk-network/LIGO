@@ -245,3 +245,17 @@ let get_type_of_contract ty =
     |  _ -> None
   )
   | _ -> None
+
+let get_entry_form ty =
+  let open Combinators in
+  let open Simple_utils.Option in
+  let* { type1 ; type2 } = get_t_arrow ty in
+  let* parameter, storage = get_t_pair type1 in
+  let* op_list, storage' = get_t_pair type2 in
+  let* () = assert_t_list_operation op_list in
+  let* () = assert_type_expression_eq (storage, storage') in
+  return (parameter, storage)
+
+let build_entry_type p_ty s_ty =
+  let open Combinators in
+  t_arrow (t_pair p_ty s_ty) (t_pair (t_list (t_operation ())) s_ty) ()
