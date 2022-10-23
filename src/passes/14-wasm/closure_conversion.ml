@@ -46,6 +46,7 @@ let rec lift : env -> expression -> env * expression =
           variables    = (binder, e.type_expression) :: []; 
           replacements = env.replacements; 
           functions    = env.functions;
+          exported_funcs = env.exported_funcs
       }
     in
     let env2, body = lift env2 body in

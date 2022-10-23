@@ -415,24 +415,26 @@ let rec expression ~raise :
     ]
 
   | E_application _ ->
-    let rec aux w env (result: A.instr list) (expr: I.expression) =
+    let rec aux w env (result: A.instr list) (result_vars: string list) (expr: I.expression) =
       match expr.I.content with
       | E_application (func, e) -> 
+        let name = unique_name "e_application_" in
+        let env = Env.add_local env (name, T.NumType I32Type) in
         let w, env, e = expression ~raise w env e in 
-        aux w env (result @ e) func
+        aux w env (result @ e @ [local_set_s name]) (name :: result_vars) func
       | E_variable v ->        
         let name = var_to_string v in
         (match (func_symbol_type w name) with 
         | Some (FuncSymbol fs, TypeSymbol {tdetails = FuncType (input, output); _}) -> 
           let no_of_args = List.length input in
-          if no_of_args = List.length result then 
+          if no_of_args = List.length result_vars then 
             (w, env, result @ [call_s name])
           else (
             let unique_name = Value_var.fresh ~name:"e_variable_partial" () in
             let func_alloc_name = var_to_string unique_name in
             w, add_local env (func_alloc_name, NumType I32Type), 
             [
-              const Int32.(12l + of_int_exn (List.length result));
+              const Int32.(12l + of_int_exn Int.(List.length result_vars * 4) );
               call_s "malloc";
               
               local_tee_s func_alloc_name;
@@ -448,9 +450,11 @@ let rec expression ~raise :
               local_get_s func_alloc_name;
               const 8l;
               i32_add;
-              const (Int32.of_int_exn (List.length result));
+              const (Int32.of_int_exn (List.length result_vars));
               store
             ]
+            @
+            result
             @
             (let a, i = List.fold_left ~f:(fun (all, index) f -> 
               (all @
@@ -458,11 +462,11 @@ let rec expression ~raise :
                 local_get_s func_alloc_name;
                 const Int32.(index * 4l);
                 i32_add;
-                f;
+                local_get_s f;
                 store
               ], Int32.(index + 1l)
               )
-            ) ~init:([], 3l) result
+            ) ~init:([], 3l) result_vars
             in a
             )
             @
@@ -471,10 +475,9 @@ let rec expression ~raise :
             ]
           )
         | _ -> 
-          let lt = expr.type_expression in
           let unique_name = Value_var.fresh ~name:"Call_indirect" () in
-          let indirect_name = var_to_string unique_name in
-          
+          let indirect_name = var_to_string unique_name in    
+         
           let total_args_length = Value_var.fresh ~name:"total_args_length" () in
           let total_args_length = var_to_string total_args_length in
           
@@ -483,8 +486,6 @@ let rec expression ~raise :
 
           let counter = Value_var.fresh ~name:"counter" () in
           let counter = var_to_string counter in
-
-          let unique_name = Value_var.fresh ~name:"Call_indirect" () in
           ({w with 
             types = w.types
               @ 
@@ -504,29 +505,30 @@ let rec expression ~raise :
 
           ]
           @
+          result
+          @
           (let a, i = List.fold_left ~f:(fun (all, index) f -> 
             (all @
             [
               local_get_s name;
-
+              
               local_get_s current_args_length;
               const index;
               i32_add;
               const 4l;
               i32_mul;
-              
               i32_add;
-              f;
+              local_get_s f;
               store
             ], Int32.(index + 1l)
             )
-          ) ~init:([], 3l) result
+          ) ~init:([], 3l) result_vars
           in a
           )
           @
           [
             local_get_s current_args_length;
-            const (Int32.of_int_exn (List.length result));
+            const (Int32.of_int_exn (List.length result_vars));
             i32_add;
             local_get_s total_args_length;
             compare_eq;
@@ -544,13 +546,13 @@ let rec expression ~raise :
                 local_get_s name
               ]
              
-          ]) 
+          ])
         )
       | E_raw_wasm (local_symbols, code) -> 
         (w, add_locals env local_symbols, result @ code)
       | _ -> raise.error (not_supported e)
     in
-    let w, env, args = aux w env [] e in
+    let w, env, args = aux w env [] [] e in
     (w, env, args)
   | E_variable name -> (
     let name = var_to_string name in
@@ -640,7 +642,83 @@ let rec expression ~raise :
       )
     )
   | E_iterator (kind, ((item_name, item_type), body), collection) -> raise.error (not_supported e)
-  | E_fold (((name, tv), body), col, init) -> raise.error (not_supported e)
+  | E_fold (((name, tv), body), ({type_expression = {type_content = T_list _; _}; _} as col), init) -> 
+    let item = unique_name "item" in
+    let next_item = unique_name "next_item" in
+    let name = var_to_string name in
+    let env = add_locals env [
+      (item, T.NumType I32Type); 
+      (next_item, T.NumType I32Type);
+      (name, T.NumType I32Type)
+    ]
+  in
+    let w, env, init = expression ~raise w env init in
+    let w, env, col = expression ~raise w env col in
+    let w, env, body = expression ~raise w env body in
+    
+    
+    (* in *)
+    w, env, 
+    init 
+    @
+    [
+      load;
+      local_set_s name;
+    ]
+    @
+    col 
+    @
+    [
+      (* load; *)
+      local_set_s item;
+      local_get_s name;
+      (* load; *)
+      (* const 4l;
+      i32_add;
+      load; *)
+      call_s "print";
+      (* load;
+      const 8l;
+      i32_add;
+      load;
+      call_s "print"; *)
+      (* local_get_s name *)
+      loop (ValBlockType (Some (T.NumType I32Type))) 
+      
+      (
+      [
+        (* local_get_s name; *)
+      ] 
+      @ 
+      body 
+      @
+      [
+        load;
+        
+        i32_add;
+        local_tee_s name;
+        (* call_s "print";
+        local_get_s name; *)
+        local_get_s item;
+        load;
+        const 4l;
+        i32_add;
+        local_tee_s next_item;
+        (* call_s "print"; *)
+        (* const 0l; *)
+        const 0l;
+        i32_eq;
+        br_if 1l;
+        local_get_s next_item;
+        (* load; *)
+        local_set_s item;
+      ]);
+      (* drop at;
+      local_get_s name; *)
+    ]
+  | E_fold (((name, tv), body), ({type_expression = {type_content = _; _}; _} as col), init) -> 
+    raise.error (not_supported e)
+    (* raise.error (not_supported e) *)
   | E_fold_right _ -> raise.error (not_supported e)
   | E_if_bool (test, t, f) -> 
     let w, env, test = expression ~raise w env test in
@@ -884,7 +962,7 @@ let rec expression ~raise :
   | E_raw_michelson _ -> raise.error (michelson_insertion e.location)
 
   (* catch all *)
-  | E_constant {cons_name; _} -> print_endline "wut"; raise.error (not_supported e)  
+  | E_constant {cons_name; _} -> raise.error (not_supported e)  
 
   (* Mutability stuff *)
   | E_let_mut_in (_, _)       -> raise.error (not_supported e)

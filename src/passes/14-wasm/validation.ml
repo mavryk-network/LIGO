@@ -12,7 +12,7 @@ let find_local_type (env: Env.t) name =
   let l = List.find ~f:(fun (n, _) -> String.equal n name) env.locals in
   match l with 
     Some (_, t) -> t
-  | None -> failwith "Not expected"
+  | None -> failwith ("Not expected:" ^ name)
 
 let find_type w symbol = 
   let t = List.find ~f:(fun f -> match f.it with TypeSymbol {tname;_ } -> String.equal tname symbol | _ -> false ) w.A.types in
@@ -50,7 +50,8 @@ let stack_pop (env: Env.t) (v2: T.value_type) =
       {env with operand_stack}
   | Some (_, _) ->
       failwith "Bug for the developers. The item popped from the operand stack does not match the expected type, which should not happen."
-  | None -> failwith "Bug for the developers. There's nothing on the operand stack, which should not happen."
+  | None -> 
+    failwith "Bug for the developers. There's nothing on the operand stack, which should not happen."
 
 let stack_pop_any (env: Env.t) = 
   match env.operand_stack with 
@@ -70,6 +71,8 @@ let block_n (env: Env.t) n =
   match List.nth env.blocks n with 
     Some n -> n
   | None -> failwith "Bug for developers. Not present block."
+
+  
 
 let rec check w env e : Env.t =
   match e with 
@@ -130,7 +133,7 @@ let rec check w env e : Env.t =
         let env = List.fold_left ~f:(fun env i -> stack_pop env i) ~init:env input in
         let env = List.fold_left ~f:(fun env i -> stack_push env i) ~init:env output in
         env
-    | _ -> failwith "Errr..")
+    | _ -> failwith "Incorrect usage of CallIndirect")
     in
     check w env rest
   | {it = LocalGet_symbol symbol; _} :: rest -> 
