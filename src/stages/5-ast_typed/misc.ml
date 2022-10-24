@@ -266,7 +266,7 @@ let parameter_from_entrypoints : (Value_var.t * type_expression) List.Ne.t -> (t
   let open Result.Let_syntax in
   let%bind parameter, storage = Result.of_option ~error:(`Not_entry_point_form entrypoint_type) @@ get_entry_form entrypoint_type in
   let%bind parameter_list = List.fold_result ~init:[Value_var.to_name_exn entrypoint,parameter] ~f:(fun parameters (ep, ep_type) ->
-      let%bind parameter_, storage_ = Result.of_option ~error:(`Not_entry_point_form ep_type) @@  get_entry_form ep_type in
+      let%bind parameter_, storage_ = Result.of_option ~error:(`Not_entry_point_form ep_type) @@ get_entry_form ep_type in
       let%bind () = Result.of_option ~error:(`Storage_does_not_match (storage_, storage)) @@
         assert_type_expression_eq (storage_,storage) in
       return ((Value_var.to_name_exn ep, parameter_)::parameters)) rest in
