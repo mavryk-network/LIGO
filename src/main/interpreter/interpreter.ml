@@ -36,16 +36,23 @@ let rec pattern_extend_ ~(attributes : ValueAttr.t) ~(mut : bool)
   =
  fun (locs,env) pattern ty value ->
   let open Monad in
+  let error_type () =
+    Errors.generic_error
+      Location.generated
+      AST.(Format.asprintf "Type error: evaluating pattern %a with type:@.%a@."
+        (Pattern.pp PP.type_expression) pattern
+        PP.type_expression ty)
+  in
   let self = pattern_extend_ ~attributes ~mut in
   let get_row_ty ty label =
     match AST.get_record_field_type ty label with
-    | Some s -> s
-    | None -> failwith "fail @@ error_type ()"
+    | Some s -> return s
+    | None -> fail @@ error_type ()
   in
   let get_t_list ty =
     match AST.get_t_list ty with
-    | Some s -> s
-    | None -> failwith "fail @@ error_type ()"
+    | Some s -> return s
+    | None -> fail @@ error_type ()
   in
   match pattern.wrap_content, value with
   | P_unit, _ -> return (locs,env)
@@ -66,41 +73,40 @@ let rec pattern_extend_ ~(attributes : ValueAttr.t) ~(mut : bool)
          (Binder.get_ascr x, v))
   | P_variant (label, p), V_Construct (label', value) ->
     assert (Label.equal label (Label label'));
-    let ty = get_row_ty ty label in
+    let* ty = get_row_ty ty label in
     self (locs,env) p ty value
   | P_record pf, V_Record vf ->
-    let lst =
+    let* lst =
       match List.zip (Record.to_list pf) (Record.to_list vf) with
-      | List.Or_unequal_lengths.Ok pf -> pf
-      | List.Or_unequal_lengths.Unequal_lengths -> failwith "fail @@ error_type ()"
+      | List.Or_unequal_lengths.Ok pf -> return pf
+      | List.Or_unequal_lengths.Unequal_lengths -> fail @@ error_type ()
     in
     bind_fold_list lst ~init:(locs,env) ~f:(fun (locs,env) ((label, pattern), (label', value)) ->
-        let ty = get_row_ty ty label in
+        let* ty = get_row_ty ty label in
         self (locs,env) pattern ty value)
   | P_tuple tups, V_Record vf ->
     let pf = List.mapi ~f:(fun i x -> Label.of_int i, x) tups in
-    let lst =
+    let* lst =
       match List.zip pf (Record.to_list vf) with
-      | List.Or_unequal_lengths.Ok pf -> pf
-      | List.Or_unequal_lengths.Unequal_lengths -> failwith "fail @@ error_type ()"
+      | List.Or_unequal_lengths.Ok pf -> return pf
+      | List.Or_unequal_lengths.Unequal_lengths -> fail @@ error_type ()
     in
     bind_fold_list lst ~init:(locs,env) ~f:(fun (locs,env) ((label, pattern), (label', value)) ->
         assert (Label.equal label label');
-        let ty = get_row_ty ty label in
+        let* ty = get_row_ty ty label in
         self (locs,env) pattern ty value)
   | P_list (Cons (phd, ptl)), V_List (vhd :: vtl) ->
     let* (locs,env) =
-      let ty = get_t_list ty in
+      let* ty = get_t_list ty in
       self (locs,env) phd ty vhd
     in
     self (locs,env) ptl ty (V_List vtl)
   | P_list (List ps), V_List vs ->
     assert (List.length ps = List.length vs);
     let lst = List.zip_exn ps vs in
-    let ty = get_t_list ty in
+    let* ty = get_t_list ty in
     bind_fold_list lst ~init:(locs,env) ~f:(fun (locs,env) (pattern, value) -> self (locs,env) pattern ty value)
-  | _, V_Michelson _ -> failwith "hummmmmmm"
-  | _ -> failwith "fail @@ error_type ()"
+  | _ -> fail @@ error_type ()
 and pattern_extend_mutable ~attributes env pattern ty value =
   pattern_extend_ ~attributes ~mut:true ([],env) pattern ty value
 and pattern_extend ~attributes env pattern ty value =
