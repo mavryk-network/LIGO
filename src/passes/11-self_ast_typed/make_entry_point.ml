@@ -71,9 +71,6 @@ let make_main_modules ~raise (program : Ast_typed.program) =
     | _ -> d in
   Helpers.Declaration_mapper.map_module f program
 
-let default_entrypoint = "main"
-let default_entrypoint_var = Value_var.of_input_var default_entrypoint
-
 let get_entry_point_from_annotation : Ast_typed.program -> Value_var.t list =
   fun prg ->
   List.fold_right
@@ -83,33 +80,6 @@ let get_entry_point_from_annotation : Ast_typed.program -> Value_var.t list =
       | Ast_typed.D_value {binder;attr;_} when attr.entry -> (Binder.get_var binder)::prev
       | _ -> prev)
     ~init:[] prg
-
-let create_entrypoint_function_expr entrypoints entrypoint_type storage =
-  let open Ast_typed in
-  let p_var = (Value_var.of_input_var "p") in
-  let s_var = (Value_var.of_input_var "s") in
-  let p = e_a_variable p_var entrypoint_type in
-  let s = e_a_variable s_var storage in
-  let params = Value_var.fresh ~name:"param" () in
-  let fields = Record.LMap.of_list
-    [(Label "0", Location.wrap @@ Pattern.(P_var (Binder.make p_var entrypoint_type)));
-     (Label "1", Location.wrap @@ Pattern.(P_var (Binder.make s_var storage)))] in
-  let param_storage = e_a_pair p s in
-  let oplst_storage = t_pair (t_list @@ t_operation ()) storage in
-  let fun_type = t_arrow param_storage.type_expression oplst_storage () in
-  let cases = List.map entrypoints ~f:(fun entrypoint ->
-    let constructor = Label.of_string (Value_var.to_name_exn entrypoint) in
-    let pattern = Value_var.fresh ~name:"pattern" () in
-    let body = e_a_application
-      (e_a_variable entrypoint fun_type)
-        (e_a_pair (e_variable pattern (t_unit ())) s)
-        oplst_storage in
-    let pattern = Location.wrap @@ Pattern.(P_variant (constructor, Location.wrap @@ P_var (Binder.make pattern param_storage.type_expression))) in
-    ({pattern;body} : _ Match_expr.match_case)) in
-  let body = e_a_matching p cases oplst_storage in
-  let pattern = Location.wrap @@ Pattern.(P_record fields) in
-  let result = e_a_matching (e_a_variable params param_storage.type_expression) [{pattern;body}] oplst_storage  in
-  e_lambda {binder=Param.(make params param_storage.type_expression);result;output_type=oplst_storage} fun_type
 
 let make_main_entrypoint ?(layout=Ast_typed.default_layout) ~raise :  Ast_typed.expression_variable Simple_utils.List.Ne.t -> Ast_typed.program -> Ast_typed.expression_variable * Ast_typed.program = fun entrypoints prg ->
   let prg = make_main_modules ~raise prg in
