@@ -31,6 +31,83 @@ let resolve_contract_file ~mod_res ~source_file ~contract_file =
      | None -> ModRes.Helpers.resolve ~file:contract_file mod_res)
 
 
+let rec pattern_extend_ ~(attributes : ValueAttr.t) ~(mut : bool)
+  : location list * env -> _ AST.Pattern.t -> AST.type_expression -> value -> (location list * env) Monad.t
+  =
+ fun (locs,env) pattern ty value ->
+  let open Monad in
+  let self = pattern_extend_ ~attributes ~mut in
+  let get_row_ty ty label =
+    match AST.get_record_field_type ty label with
+    | Some s -> s
+    | None -> failwith "fail @@ error_type ()"
+  in
+  let get_t_list ty =
+    match AST.get_t_list ty with
+    | Some s -> s
+    | None -> failwith "fail @@ error_type ()"
+  in
+  match pattern.wrap_content, value with
+  | P_unit, _ -> return (locs,env)
+  | P_var x, v ->
+    let* (locs,v) =
+      if mut
+      then
+        let@ loc = Alloc v in
+        return (loc::locs, (V_Location loc))
+      else return (locs,v)
+    in
+    return
+      (locs, Env.extend
+         env
+         (Binder.get_var x)
+         ?inline:(if mut then None else Some attributes.inline)
+         ?no_mutation:(if mut then None else Some attributes.no_mutation)
+         (Binder.get_ascr x, v))
+  | P_variant (label, p), V_Construct (label', value) ->
+    assert (Label.equal label (Label label'));
+    let ty = get_row_ty ty label in
+    self (locs,env) p ty value
+  | P_record pf, V_Record vf ->
+    let lst =
+      match List.zip (Record.to_list pf) (Record.to_list vf) with
+      | List.Or_unequal_lengths.Ok pf -> pf
+      | List.Or_unequal_lengths.Unequal_lengths -> failwith "fail @@ error_type ()"
+    in
+    bind_fold_list lst ~init:(locs,env) ~f:(fun (locs,env) ((label, pattern), (label', value)) ->
+        let ty = get_row_ty ty label in
+        self (locs,env) pattern ty value)
+  | P_tuple tups, V_Record vf ->
+    let pf = List.mapi ~f:(fun i x -> Label.of_int i, x) tups in
+    let lst =
+      match List.zip pf (Record.to_list vf) with
+      | List.Or_unequal_lengths.Ok pf -> pf
+      | List.Or_unequal_lengths.Unequal_lengths -> failwith "fail @@ error_type ()"
+    in
+    bind_fold_list lst ~init:(locs,env) ~f:(fun (locs,env) ((label, pattern), (label', value)) ->
+        assert (Label.equal label label');
+        let ty = get_row_ty ty label in
+        self (locs,env) pattern ty value)
+  | P_list (Cons (phd, ptl)), V_List (vhd :: vtl) ->
+    let* (locs,env) =
+      let ty = get_t_list ty in
+      self (locs,env) phd ty vhd
+    in
+    self (locs,env) ptl ty (V_List vtl)
+  | P_list (List ps), V_List vs ->
+    assert (List.length ps = List.length vs);
+    let lst = List.zip_exn ps vs in
+    let ty = get_t_list ty in
+    bind_fold_list lst ~init:(locs,env) ~f:(fun (locs,env) (pattern, value) -> self (locs,env) pattern ty value)
+  | _, V_Michelson _ -> failwith "hummmmmmm"
+  | _ -> failwith "fail @@ error_type ()"
+and pattern_extend_mutable ~attributes env pattern ty value =
+  pattern_extend_ ~attributes ~mut:true ([],env) pattern ty value
+and pattern_extend ~attributes env pattern ty value =
+  let open Monad in
+  let* (_,env) = pattern_extend_ ~attributes ~mut:false ([],env) pattern ty value in
+  return env
+
 let get_file_from_location loc =
   let open Option in
   let* reg = Location.get_file loc in
@@ -557,10 +634,10 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
       @@ AST.get_t_list lst_ty
     in
     Monad.bind_fold_list
-      (fun _ elt ->
+      ~f:(fun _ elt ->
         bind_param env arg_binder arg_mut_flag (ty, elt) ~in_:(fun env ->
           eval_ligo body calltrace env))
-      (v_unit ())
+      ~init:(v_unit ())
       elts
   | C_LIST_ITER, _ -> fail @@ error_type ()
   | ( C_MAP_ITER
@@ -574,14 +651,14 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
       @@ AST.get_t_map map_ty
     in
     Monad.bind_fold_list
-      (fun _ kv ->
+      ~f:(fun _ kv ->
         bind_param
           env
           arg_binder
           arg_mut_flag
           (AST.t_pair k_ty v_ty, v_pair kv)
           ~in_:(fun env -> eval_ligo body calltrace env))
-      (v_unit ())
+      ~init:(v_unit ())
       elts
   | C_MAP_ITER, _ -> fail @@ error_type ()
   (* ternary *)
@@ -623,7 +700,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
       @@ AST.get_t_list lst_ty
     in
     Monad.bind_fold_list
-      (fun prev elt ->
+      ~f:(fun prev elt ->
         let fold_args = v_pair (prev, elt) in
         bind_param
           env
@@ -631,7 +708,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
           arg_mut_flag
           (AST.t_pair acc_ty ty, fold_args)
           ~in_:(fun env' -> eval_ligo body calltrace env'))
-      init
+      ~init
       elts
   | C_LIST_FOLD_LEFT, _ -> fail @@ error_type ()
   | ( C_FOLD
@@ -653,7 +730,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
       @@ AST.get_t_list lst_ty
     in
     Monad.bind_fold_list
-      (fun prev elt ->
+      ~f:(fun prev elt ->
         let fold_args = v_pair (prev, elt) in
         bind_param
           env
@@ -661,7 +738,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
           arg_mut_flag
           (AST.t_pair acc_ty ty, fold_args)
           ~in_:(fun env' -> eval_ligo body calltrace env'))
-      init
+      ~init
       elts
   | ( C_FOLD
     , [ V_Func_val
@@ -682,7 +759,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
       @@ AST.get_t_set set_ty
     in
     Monad.bind_fold_list
-      (fun prev elt ->
+      ~f:(fun prev elt ->
         let fold_args = v_pair (prev, elt) in
         bind_param
           env
@@ -690,7 +767,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
           arg_mut_flag
           (AST.(t_pair acc_ty ty), fold_args)
           ~in_:(fun env' -> eval_ligo body calltrace env'))
-      init
+      ~init
       elts
   | C_FOLD, _ -> fail @@ error_type ()
   | C_LIST_FOLD, _ -> fail @@ error_type ()
@@ -736,7 +813,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
       @@ AST.get_t_map map_ty
     in
     Monad.bind_fold_list
-      (fun prev kv ->
+      ~f:(fun prev kv ->
         let fold_args = v_pair (prev, v_pair kv) in
         bind_param
           env
@@ -744,7 +821,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
           arg_mut_flag
           (AST.(t_pair acc_ty (t_pair k_ty v_ty)), fold_args)
           ~in_:(fun env' -> eval_ligo body calltrace env'))
-      init
+      ~init
       kvs
   | C_MAP_FOLD, _ -> fail @@ error_type ()
   | C_MAP_ADD, [ k; v; V_Map kvs ] ->
@@ -825,10 +902,10 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
       @@ AST.get_t_set set_ty
     in
     Monad.bind_fold_list
-      (fun _ elt ->
+      ~f:(fun _ elt ->
         bind_param env arg_binder arg_mut_flag (ty, elt) ~in_:(fun env' ->
           eval_ligo body calltrace env'))
-      (v_unit ())
+      ~init:(v_unit ())
       elts
   | C_SET_ITER, _ -> fail @@ error_type ()
   | C_SET_MEM, [ v; V_Set elts ] ->
@@ -1505,23 +1582,13 @@ and eval_ligo ~raise ~steps ~options
          ; body = result
          ; env
          }
-  | E_let_in
-      { let_binder
-      ; rhs
-      ; let_result
-      ; attr =
-          { no_mutation; inline; view = _; public = _; hidden = _; thunk = _ }
-      } ->
+  | E_let_in { let_binder; rhs; let_result; attributes } ->
     let* rhs' = eval_ligo rhs calltrace env in
+    let* env = pattern_extend ~attributes env let_binder rhs.type_expression rhs' in
     eval_ligo
       let_result
       calltrace
-      (Env.extend
-         env
-         (Binder.get_var let_binder)
-         ~inline
-         ~no_mutation
-         (rhs.type_expression, rhs'))
+      env
   | E_literal l -> eval_literal l
   | E_variable var ->
     let fst (a, _, _) = a in
@@ -1593,7 +1660,8 @@ and eval_ligo ~raise ~steps ~options
     let* v' = eval_ligo element calltrace env in
     return @@ V_Construct (c, v')
   | E_matching { matchee; cases } ->
-    let* e' = eval_ligo matchee calltrace env in
+    failwith "l"
+    (* let* e' = eval_ligo matchee calltrace env in
     (match cases, e' with
      | Match_variant { cases; _ }, V_List [] ->
        let { constructor = _; pattern = _; body } =
@@ -1667,7 +1735,7 @@ and eval_ligo ~raise ~steps ~options
        failwith
          ("not yet supported case "
          ^ Format.asprintf "%a" Ligo_interpreter.PP.pp_value v
-         ^ Format.asprintf "%a" AST.PP.expression term))
+         ^ Format.asprintf "%a" AST.PP.expression term)) *)
   | E_recursive { fun_name; fun_type = _; lambda } ->
     let fv = Self_ast_aggregated.Helpers.Free_variables.expression term in
     let env =
@@ -1834,19 +1902,16 @@ and eval_ligo ~raise ~steps ~options
     in
     let@ val_ = Deref loc in
     return val_
-  | E_let_mut_in { let_binder; rhs; let_result; attr = _ } ->
+  | E_let_mut_in { let_binder; rhs; let_result; attributes } ->
     let* rhs' = eval_ligo rhs calltrace env in
-    let@ loc = Alloc rhs' in
+    let* locs,env = pattern_extend_mutable ~attributes env let_binder rhs.type_expression rhs' in
     let* let_result =
       eval_ligo
         let_result
         calltrace
-        (Env.extend
-           env
-           (Binder.get_var let_binder)
-           (rhs.type_expression, V_Location loc))
+        env
     in
-    let@ () = Free loc in
+    let* () = bind_iter_list locs ~f:(fun loc -> let@ () = Free loc in return ()) in
     return let_result
   | E_while { cond; body } ->
     let rec loop () =
@@ -1870,11 +1935,11 @@ and eval_ligo ~raise ~steps ~options
     (match collection with
      | V_Map elts ->
        Monad.bind_fold_list
-         (fun _ (k_val, v_val) ->
+         ~f:(fun _ (k_val, v_val) ->
            let env = Env.extend env binder1 (k_ty, k_val) in
            let env = Env.extend env binder2 (v_ty, v_val) in
            eval_ligo fe_body calltrace env)
-         (v_unit ())
+         ~init:(v_unit ())
          elts
      | _ -> failwith (Format.asprintf "Expected map value for for-each loop"))
   | E_for_each { fe_binder = binder1, None; collection; fe_body; _ } ->
@@ -1892,10 +1957,10 @@ and eval_ligo ~raise ~steps ~options
     (match collection with
      | V_Set elts | V_List elts ->
        Monad.bind_fold_list
-         (fun _ v_val ->
+         ~f:(fun _ v_val ->
            let env = Env.extend env binder1 (v_ty, v_val) in
            eval_ligo fe_body calltrace env)
-         (v_unit ())
+         ~init:(v_unit ())
          elts
      | _ ->
        failwith (Format.asprintf "Expected list or set value for for-each loop"))
@@ -1937,7 +2002,7 @@ and try_eval ~raise ~steps ~options expr env state r =
 
 
 let eval_expression ~raise ~steps ~options
-  : Ast_typed.program -> Ast_typed.expression -> bool * value
+    : Ast_typed.program -> Ast_typed.expression -> bool * value
   =
  fun prg expr ->
   (* Compile new context *)
