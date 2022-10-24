@@ -259,3 +259,15 @@ let get_entry_form ty =
 let build_entry_type p_ty s_ty =
   let open Combinators in
   t_arrow (t_pair p_ty s_ty) (t_pair (t_list (t_operation ())) s_ty) ()
+
+
+let parameter_from_entrypoints : (Value_var.t * type_expression) List.Ne.t -> (type_expression * type_expression, [> `Not_entry_point_form of Types.type_expression | `Storage_does_not_match of Types.type_expression * Types.type_expression ]) result =
+  fun ((entrypoint, entrypoint_type), rest) ->
+  let open Result.Let_syntax in
+  let%bind parameter, storage = Result.of_option ~error:(`Not_entry_point_form entrypoint_type) @@ get_entry_form entrypoint_type in
+  let%bind parameter_list = List.fold_result ~init:[Value_var.to_name_exn entrypoint,parameter] ~f:(fun parameters (ep, ep_type) ->
+      let%bind parameter_, storage_ = Result.of_option ~error:(`Not_entry_point_form ep_type) @@  get_entry_form ep_type in
+      let%bind () = Result.of_option ~error:(`Storage_does_not_match (storage_, storage)) @@
+        assert_type_expression_eq (storage_,storage) in
+      return ((Value_var.to_name_exn ep, parameter_)::parameters)) rest in
+  return (Combinators.t_sum_ez ~layout:Combinators.default_layout parameter_list, storage)

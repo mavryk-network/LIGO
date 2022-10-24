@@ -7,16 +7,6 @@ module O = Ast_typed
 open O.Combinators
 open Ligo_prim
 
-let parameter_from_entry_points ~raise : (e_variable * O.type_expression) List.Ne.t -> O.type_expression * O.type_expression =
-  fun ((entrypoint, entrypoint_type), rest) ->
-  let parameter, storage = trace_option ~raise (corner_case "Entrypoint has not entrypoint type") @@ O.Misc.get_entry_form entrypoint_type in
-  let parameter_list = List.fold ~init:[Value_var.to_name_exn entrypoint,parameter] ~f:(fun parameters (ep, ep_type) ->
-      let parameter_, storage_ = trace_option ~raise (corner_case "Entrypoint has not entrypoint type") @@ O.Misc.get_entry_form ep_type in
-      let () = trace_option ~raise (corner_case "Storage types do not match") @@
-        Ast_typed.assert_type_expression_eq (storage_,storage) in
-      (Value_var.to_name_exn ep, parameter_)::parameters) rest in
-  Ast_typed.t_sum_ez ~layout:O.default_layout parameter_list, storage
-
 let default_entrypoint = "main"
 let default_entrypoint_var = Value_var.of_input_var default_entrypoint
 
@@ -55,7 +45,10 @@ let program ~raise : Ast_typed.module_ -> (Ast_typed.declaration * Ast_typed.dec
     | _ -> None in
   let open Simple_utils.Option in
   let* entries = List.Ne.of_list_opt @@ List.filter_map ~f module_ in
-  let parameter_type, storage_type = parameter_from_entry_points ~raise entries in
+  let parameter_type, storage_type = match O.Misc.parameter_from_entrypoints entries with
+    | Error (`Not_entry_point_form ep_type) -> raise.error (corner_case @@ Format.asprintf "Not an entrypoint form: %a" Ast_typed.PP.type_expression ep_type)
+    | Error (`Storage_does_not_match (storage', storage)) -> raise.error (corner_case @@ Format.asprintf "Storage types do not match: %a %a" Ast_typed.PP.type_expression storage' Ast_typed.PP.type_expression storage)
+    | Ok (p, s) -> (p, s) in
   let type_binder = Type_var.fresh ~name:"parameter" () in
   let entrypoint_type_decl = Location.wrap @@ Ast_typed.D_type {type_binder;type_expr=parameter_type;type_attr={public=true;hidden=false}} in
   let entrypoint_function_decl =
@@ -71,7 +64,7 @@ let make_main_module ~raise (module_ : O.module_expr) =
     match program ~raise ds with
     | None -> module_
     | Some (type_decl, main_decl) ->
-      Location.wrap @@ Module_expr.M_struct (ds @ [type_decl; main_decl])
+      Location.wrap ~loc:(Location.get_location module_) @@ Module_expr.M_struct (ds @ [type_decl; main_decl])
   )
   | _ -> module_
 
@@ -82,23 +75,17 @@ let program_sig_ ~raise : Signature.t -> (Signature.item * Signature.item) optio
     | _ -> None in
   let open Simple_utils.Option in
   let* entries = List.Ne.of_list_opt @@ List.filter_map ~f sig_ in
-  let parameter_type, storage_type = parameter_from_entry_points ~raise entries in
+  let parameter_type, storage_type = match O.Misc.parameter_from_entrypoints entries with
+    | Error (`Not_entry_point_form ep_type) -> raise.error (corner_case @@ Format.asprintf "Not an entrypoint form: %a" Ast_typed.PP.type_expression ep_type)
+    | Error (`Storage_does_not_match (storage', storage)) -> raise.error (corner_case @@ Format.asprintf "Storage types do not match: %a %a" Ast_typed.PP.type_expression storage' Ast_typed.PP.type_expression storage)
+    | Ok (p, s) -> (p, s) in
   let type_binder = Type_var.fresh ~name:"parameter" () in
   let parameter_type_decl = Signature.S_type (type_binder, parameter_type) in
   let contract_type = O.Misc.build_entry_type parameter_type storage_type in
   let contract_decl = Signature.S_value (default_entrypoint_var, contract_type, false) in
   return (parameter_type_decl, contract_decl)
 
-let make_main_sig_ ~raise (sig_ : Signature.t) =
+let make_main_signature ~raise (sig_ : Signature.t) =
   sig_ @ match program_sig_ ~raise sig_ with
   | None -> []
   | Some (type_decl, main_decl) -> [type_decl; main_decl]
-
-let make_main ~raise ~options ~ctx sig_ (module_ : (O.module_expr, typer_error, Main_warnings.all) Elaboration.t) =
-  ignore options; ignore ctx;
-  let sig_ = make_main_sig_ ~raise sig_ in
-  ctx, sig_,
-  let open Elaboration.Let_syntax in
-  let%bind module_ = module_ in
-  let module_ = make_main_module ~raise module_ in
-  return @@ module_

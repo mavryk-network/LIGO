@@ -1519,10 +1519,11 @@ and infer_declaration ~(raise : raise) ~options ~ctx (decl : I.declaration)
              } )
     | D_module { module_binder; module_; module_attr = { public; hidden } } ->
       let ctx, sig_, module_ = infer_module_expr ~raise ~options ~ctx module_ in
-      let ctx, sig_, module_ = Generator.make_main ~raise ~options ~ctx sig_ module_ in
+      let sig_ = Generator.make_main_signature ~raise sig_ in
       ( ctx
       , S_module (module_binder, sig_)
       , let%bind module_ = module_ in
+        let module_ = Generator.make_main_module ~raise module_ in
         return
         @@ D_module { module_binder; module_; module_attr = { public; hidden } }
       )
