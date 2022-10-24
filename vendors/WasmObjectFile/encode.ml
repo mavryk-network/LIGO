@@ -838,6 +838,7 @@ let encode (m: Ast.module_) =
       let import_funcs = List.filter (fun i -> match i.it.idesc.it with FuncImport _ -> true | FuncImport_symbol _ -> true | _ -> false) m.it.imports in
       vs32_fixed (Linking.func_index m.it.funcs import_funcs symbol)
     | DataSymbol symbol ->
+      (* print_endline ("symbol here:" ^ symbol); *)
       op 0x41;
       let p = pos s in
       let s, _ = Linking.find_symbol_index m.it.symbols (fun s -> match s.it.details with Function when s.it.name = symbol -> true |  Data _ when s.it.name = symbol -> true | _ -> false) in
@@ -1215,6 +1216,7 @@ let encode (m: Ast.module_) =
         )
       )
       | R_WASM_FUNCTION_INDEX_LEB (offset, symbol) ->
+        (* print_endline ("find:" ^ symbol); *)
         let _, symbol_index = 
           Linking.find_symbol_index 
             m.it.symbols 

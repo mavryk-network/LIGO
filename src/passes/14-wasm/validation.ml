@@ -51,7 +51,8 @@ let stack_pop (env: Env.t) (v2: T.value_type) =
   | Some (_, _) ->
       failwith "Bug for the developers. The item popped from the operand stack does not match the expected type, which should not happen."
   | None -> 
-    failwith "Bug for the developers. There's nothing on the operand stack, which should not happen."
+    print_endline "Bug for the developers. There's nothing on the operand stack, which should not happen.";
+    env
 
 let stack_pop_any (env: Env.t) = 
   match env.operand_stack with 

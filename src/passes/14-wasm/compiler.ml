@@ -236,6 +236,7 @@ let rec expression ~raise :
       [
         const 8l;
         call_s "malloc";
+
         (* check if not 0 *)
         local_tee_s cons;
       ]
@@ -427,8 +428,9 @@ let rec expression ~raise :
         (match (func_symbol_type w name) with 
         | Some (FuncSymbol fs, TypeSymbol {tdetails = FuncType (input, output); _}) -> 
           let no_of_args = List.length input in
-          if no_of_args = List.length result_vars then 
-            (w, env, result @ [call_s name])
+          if no_of_args = List.length result_vars then (
+            (w, env, result @ (List.map ~f:(fun s -> local_get_s s) result_vars) @ [call_s name])
+          )
           else (
             let unique_name = Value_var.fresh ~name:"e_variable_partial" () in
             let func_alloc_name = var_to_string unique_name in
@@ -651,70 +653,73 @@ let rec expression ~raise :
       (next_item, T.NumType I32Type);
       (name, T.NumType I32Type)
     ]
-  in
+    in
     let w, env, init = expression ~raise w env init in
     let w, env, col = expression ~raise w env col in
     let w, env, body = expression ~raise w env body in
-    
-    
-    (* in *)
     w, env, 
     init 
     @
     [
-      load;
       local_set_s name;
     ]
     @
     col 
     @
     [
-      (* load; *)
       local_set_s item;
-      local_get_s name;
-      (* load; *)
-      (* const 4l;
-      i32_add;
-      load; *)
-      call_s "print";
-      (* load;
-      const 8l;
-      i32_add;
-      load;
-      call_s "print"; *)
+     
       (* local_get_s name *)
       loop (ValBlockType (Some (T.NumType I32Type))) 
       
       (
       [
-        (* local_get_s name; *)
-      ] 
-      @ 
+        const 13l;
+        call_s "print"; 
+      ]
+      @
       body 
       @
-      [
-        load;
+      [        
+        const 17l;
+        call_s "print"; 
+
+        (* drop at; *)
+        (* load; *)
+        local_set_s name;
         
-        i32_add;
-        local_tee_s name;
-        (* call_s "print";
-        local_get_s name; *)
         local_get_s item;
-        load;
         const 4l;
         i32_add;
-        local_tee_s next_item;
-        (* call_s "print"; *)
-        (* const 0l; *)
-        const 0l;
-        i32_eq;
-        br_if 1l;
-        local_get_s next_item;
+        load;
+        local_set_s next_item;
+
+        const 555l;
+        call_s "print";
+
+        
+        local_get_s item;
+        load;
+        load;
+        call_s "print";
+
+        local_get_s name;
         (* load; *)
+        (* load; *)
+        (* load;
+        load; *)
+        call_s "print";
+
+        local_get_s next_item;
         local_set_s item;
+
+        local_get_s name;
+        local_get_s next_item;
+        load;
+        const 0l;
+        i32_ne;
+        br_if 0l;
       ]);
-      (* drop at;
-      local_get_s name; *)
     ]
   | E_fold (((name, tv), body), ({type_expression = {type_content = _; _}; _} as col), init) -> 
     raise.error (not_supported e)
@@ -1012,6 +1017,7 @@ let rec toplevel_bindings ~raise :
   match e.content with
   | E_let_in ({content = E_closure c; _}, _inline, ((name, type_), e2))
     ->
+      
     let name = var_to_string name in
     let arguments, body = func c in
     let env =
@@ -1029,7 +1035,6 @@ let rec toplevel_bindings ~raise :
         assert(Poly.equal env.operand_stack (Some (T.NumType I32Type, Next None)));
         [T.NumType I32Type]
     in
-    
     let w =
       {
         w with
