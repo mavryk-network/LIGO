@@ -71,32 +71,24 @@ let make_main_module ~raise (program : Ast_typed.program) =
     | _ -> d in
   Helpers.Declaration_mapper.map_module f program
 
-let get_entry_point_from_annotation : Ast_typed.program -> Value_var.t list =
-  fun prg ->
-  List.fold_right
-    ~f:(fun el prev ->
-      let open Simple_utils.Location in
-      match el.wrap_content with
-      | Ast_typed.D_value {binder;attr;_} when attr.entry -> (Binder.get_var binder)::prev
-      | _ -> prev)
-    ~init:[] prg
-
-let make_main_entrypoint ?(layout=Ast_typed.default_layout) ~raise :  Ast_typed.expression_variable Simple_utils.List.Ne.t -> Ast_typed.program -> Ast_typed.expression_variable * Ast_typed.program = fun entrypoints prg ->
+let make_main_entrypoint ~raise :  Ast_typed.expression_variable Simple_utils.List.Ne.t -> Ast_typed.program -> Ast_typed.expression_variable * Ast_typed.program = fun entrypoints prg ->
   let prg = make_main_module ~raise prg in
   match entrypoints with
     (entrypoint,[]) -> entrypoint, prg
   | (entrypoint,rest) ->
-    let Helpers.{parameter;storage} = Helpers.fetch_contract_type ~raise entrypoint prg in
-    let parameter_list = List.fold ~init:[Value_var.to_name_exn entrypoint,parameter] ~f:(fun parameters ep ->
-      let Helpers.{parameter;storage=str} = Helpers.fetch_contract_type ~raise ep prg in
-      let () = trace_option ~raise (storage_entrypoint_contract (Value_var.get_location ep) ep str entrypoint storage ) @@
-        Ast_typed.assert_type_expression_eq (str,storage) in
-      (Value_var.to_name_exn ep, parameter)::parameters) rest in
-    let entrypoint_type = Ast_typed.t_sum_ez ~layout parameter_list in
+    let f d = match Location.unwrap d with
+      | Ast_typed.D_value {binder;attr;_} when attr.entry && Option.is_some (Binder.get_ascr binder) ->
+        Some (Binder.get_var binder, Option.value_exn @@ Binder.get_ascr binder)
+      | _ -> None in
+    let entries = trace_option ~raise (corner_case "Could not get entries") @@ Simple_utils.List.Ne.of_list_opt @@ List.filter_map ~f prg in
+    let parameter_type, storage_type = match Ast_typed.Misc.parameter_from_entrypoints entries with
+      | Error (`Not_entry_point_form ep_type) -> raise.error (corner_case @@ Format.asprintf "Not an entrypoint form: %a" Ast_typed.PP.type_expression ep_type)
+      | Error (`Storage_does_not_match (storage', storage)) -> raise.error (corner_case @@ Format.asprintf "Storage types do not match: %a %a" Ast_typed.PP.type_expression storage' Ast_typed.PP.type_expression storage)
+      | Ok (p, s) -> (p, s) in
     let type_binder = Type_var.fresh ~name:"parameter" () in
-    let entrypoint_type_decl = Location.wrap @@ Ast_typed.D_type {type_binder;type_expr=entrypoint_type;type_attr={public=true;hidden=false}} in
+    let entrypoint_type_decl = Location.wrap @@ Ast_typed.D_type {type_binder;type_expr=parameter_type;type_attr={public=true;hidden=false}} in
     let entrypoint_function_decl =
-      let expr = create_entrypoint_function_expr (entrypoint::rest) entrypoint_type storage in
+      let expr = create_entrypoint_function_expr (entrypoint::rest) parameter_type storage_type in
       let binder = Binder.make default_entrypoint_var (Some expr.type_expression) in
       Location.wrap @@ Ast_typed.D_value {binder;expr;attr={inline=false;no_mutation=false;entry=false;view=false;public=true;thunk=false;hidden=false}}
     in
@@ -105,8 +97,12 @@ let make_main_entrypoint ?(layout=Ast_typed.default_layout) ~raise :  Ast_typed.
 
 let program ~raise : Ast_typed.expression_variable list -> Ast_typed.program -> Ast_typed.expression_variable * Ast_typed.program =
   fun entry_points prg ->
-    let annoted_entry_points = get_entry_point_from_annotation prg in
-    match entry_points,annoted_entry_points with
+    let f d = match Location.unwrap d with
+      | Ast_typed.D_value {binder;attr;_} when attr.entry && Option.is_some (Binder.get_ascr binder) ->
+        Some (Binder.get_var binder, Option.value_exn @@ Binder.get_ascr binder)
+      | _ -> None in
+    let annoted_entry_points = prg |> List.filter_map ~f |> List.map ~f:fst in
+    match entry_points, annoted_entry_points with
     (* First make the entrypoint from the provided list *)
     | hd::tl,_ ->
       let () = List.iter ~f:(fun var ->
@@ -119,7 +115,11 @@ let program ~raise : Ast_typed.expression_variable list -> Ast_typed.program -> 
 
 let get_final_entrypoint_name ~raise : Ast_typed.expression_variable list -> Ast_typed.program -> Ast_typed.expression_variable =
   fun entry_points prg ->
-    let annoted_entry_points = get_entry_point_from_annotation prg in
+    let f d = match Location.unwrap d with
+      | Ast_typed.D_value {binder;attr;_} when attr.entry && Option.is_some (Binder.get_ascr binder) ->
+        Some (Binder.get_var binder, Option.value_exn @@ Binder.get_ascr binder)
+      | _ -> None in
+    let annoted_entry_points = prg |> List.filter_map ~f |> List.map ~f:fst in
     match entry_points,annoted_entry_points with
     | hd::[],lst ->
       let () = List.iter ~f:(fun var ->
