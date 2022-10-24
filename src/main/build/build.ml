@@ -214,7 +214,8 @@ let build_expression ~raise : options:Compiler_options.t -> Syntax_types.t -> st
     in
     let typed_exp  = Ligo_compile.Utils.type_expression ~raise ~options syntax expression init_prg in
     let aggregated = Ligo_compile.Of_typed.compile_expression_in_context ~raise ~options:options.middle_end init_prg typed_exp in
-    let mini_c_exp = Ligo_compile.Of_aggregated.compile_expression ~raise aggregated in
+    let expanded_exp = Ligo_compile.Of_aggregated.compile_expression ~raise aggregated in
+    let mini_c_exp = Ligo_compile.Of_expanded.compile_expression ~raise expanded_exp in
     (mini_c_exp ,aggregated)
 
 let rec build_contract_aggregated ~raise : options:Compiler_options.t -> string -> string list -> Source_input.file_name -> _ =

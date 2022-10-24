@@ -101,10 +101,12 @@ let mini_c (raw_options : Raw_options.t) source_file display_format optimize () 
       match optimize with
         | None ->
           let expr = Compile.Of_typed.compile_expression_in_context ~raise ~options:options.middle_end typed (Ast_typed.e_a_unit ()) in
-          let mini_c = Compile.Of_aggregated.compile_expression ~raise expr in
+          let expanded = Compile.Of_aggregated.compile_expression ~raise expr in
+          let mini_c = Compile.Of_expanded.compile_expression ~raise expanded in
           Mini_c.Formatter.Raw mini_c
         | Some entry_point ->
           let expr = Compile.Of_typed.apply_to_entrypoint ~raise ~options:options.middle_end typed entry_point in
-          let mini_c = Compile.Of_aggregated.compile_expression ~raise expr in
+          let expanded = Compile.Of_aggregated.compile_expression ~raise expr in
+          let mini_c = Compile.Of_expanded.compile_expression ~raise expanded in
           let _,o = Compile.Of_mini_c.optimize_for_contract ~raise options mini_c in
           Mini_c.Formatter.Optimized o.body
