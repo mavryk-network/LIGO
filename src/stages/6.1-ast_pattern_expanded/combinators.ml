@@ -71,3 +71,14 @@ let get_t_option (t:type_expression) : type_expression option =
       Some some.Rows.associated_type
     | _ -> None)
   | _ -> None
+
+let e_a_let_mut_in x =
+  e_let_mut_in x (get_type x.let_result)
+
+let get_sum_type (t : type_expression) (label : Label.t) : type_expression =
+  match get_t_sum t with
+  | None -> failwith "pattern expanded: could not get sum type"
+  | Some struct_ ->
+    match Record.LMap.find_opt label struct_.fields with
+    | None -> failwith "pattern expanded: could not get row from its label"
+    | Some row_element -> row_element.associated_type

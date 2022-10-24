@@ -26,7 +26,6 @@ end
 module Pattern = Linear_pattern
 module Accessor = Ast_aggregated.Accessor
 module Update   = Ast_aggregated.Update
-module Fake = Let_in.Make(Pattern)(ValueAttr)
 module Let_in = Let_in.Make(Binder)(ValueAttr)
 
 type expression_content =
@@ -49,14 +48,14 @@ type expression_content =
   | E_accessor of expr Accessor.t
   | E_update   of expr Update.t
   (* Imperative *)
-  | E_temporary_ of (expr, ty_expr) Fake.t
-  | E_let_mut_in of (expr, ty_expr) Fake.t
+  | E_let_mut_in of (expr, ty_expr) Let_in.t
   | E_assign   of (expr,ty_expr) Assign.t
   | E_deref    of Value_var.t
   | E_for      of expr For_loop.t
   | E_for_each of expr For_each_loop.t
   | E_while    of expr While_loop.t
-  and 'e matching_content_case = {
+
+and 'e matching_content_case = {
     constructor : Label.t ;
     pattern : Value_var.t ;
     body : 'e ;

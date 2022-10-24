@@ -136,7 +136,7 @@ let rec substitute_var_in_body : Value_var.t -> Value_var.t -> O.expression -> O
           in
           ret false { exp with expression_content = O.E_matching {matchee ; cases}}
         )
-        | (E_literal _ | E_constant _ | E_variable _ | E_application _ | E_lambda _ | E_assign _ |(* E_let_mut_in _ |*) E_while _ | E_for _ | E_for_each _ | E_deref _
+        | (E_literal _ | E_constant _ | E_variable _ | E_application _ | E_lambda _ | E_assign _ | E_let_mut_in _ | E_while _ | E_for _ | E_for_each _ | E_deref _
            | E_type_abstraction _ | E_recursive _ | E_let_in _ |
            E_raw_code _ | E_constructor _ | E_record _ | E_accessor _ |
            E_update _ | E_type_inst _ ) -> ret true exp
@@ -278,6 +278,13 @@ and ctor_rule : err_loc:Location.t -> matchees -> equations -> rest -> O.express
     in
     let aux_m : O.type_expression * Label.t * O.type_expression -> _ O.matching_content_case =
       fun (tb,constructor,t) ->
+        ignore tb ;
+        (* TODO : remove this tb thing *)
+        (* TODO : remove this tb thing *)
+        (* TODO : remove this tb thing *)
+        (* TODO : remove this tb thing *)
+        (* TODO : remove this tb thing *)
+        (* TODO : remove this tb thing *)
         let proj = Value_var.fresh ~name:"ctor_proj" () in
         let body = O.make_e def t in
         { constructor ; pattern = proj ; body }
