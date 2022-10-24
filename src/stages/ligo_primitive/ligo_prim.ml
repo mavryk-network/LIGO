@@ -63,3 +63,6 @@ module Module_decl (Attr : Declaration.Attr) = Declaration.Module_decl (Attr)
 
 module Pattern_decl (Pattern : Pattern.S) (Attr : Declaration.Attr) =
   Declaration.Pattern_decl (Pattern) (Attr)
+
+(* Misc *)
+module Error = Error

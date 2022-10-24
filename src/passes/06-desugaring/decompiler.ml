@@ -227,7 +227,7 @@ and decompile_pattern : _ O.Pattern.t -> _ I.Pattern.t =
     Location.wrap ~loc (I.Pattern.P_tuple ps)
   | P_record lps ->
     let lps = Record.map ~f:decompile_pattern lps in
-    let lps = Record.to_list lps in
+    let lps = Record.to_list lps  in
     Location.wrap ~loc (I.Pattern.P_record lps)
 
 

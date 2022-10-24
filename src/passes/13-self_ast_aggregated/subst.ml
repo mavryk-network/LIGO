@@ -83,7 +83,9 @@ let rec replace : expression -> Value_var.t -> Value_var.t -> expression =
         ({pattern ; body } : _ Types.Match_expr.match_case)) in
     return @@ E_matching { matchee ; cases }
   | E_literal _ -> e
-  | E_raw_code _ -> e
+  | E_raw_code { language ; code } ->
+    let code = replace code in
+    return @@ E_raw_code { language ; code }
   | E_record m ->
     let m = Record.map ~f:replace m in
     return @@ E_record m
@@ -264,7 +266,10 @@ let rec subst_expression
         let body,pattern = subst_pattern (pattern,body) ~x ~expr in
         ({pattern ; body} : _ Match_expr.match_case)) in
     return @@ E_matching { matchee; cases }
-  | E_literal _ | E_raw_code _ -> return_id
+  | E_literal _ -> return_id
+  | E_raw_code { language ; code } ->
+    let code = self code in
+    return @@ E_raw_code { language ; code }
   | E_record m ->
     let m = Record.map ~f:self m in
     return @@ E_record m

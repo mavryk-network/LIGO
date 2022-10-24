@@ -367,10 +367,8 @@ and compile_pattern ~raise : _ I.Pattern.t -> _ O.Pattern.t =
     let pats = List.map ~f:self pats in
     return @@ O.Pattern.P_tuple pats
   | P_record record ->
-    (* conversion hell here - code smell. Alistair *)
-    let record =
-      Record.map ~f:self @@ Record.of_list record
-    in
+    let record = Record.of_list record in
+    let record = Record.map record ~f:self in
     return @@ O.Pattern.P_record record
 
 

@@ -155,6 +155,31 @@ and untype_match_expr
     ) in
     I.Match_expr.{ matchee ; cases }
 
+(* TODO: check usage *)
+and untype_pattern 
+  : _ O.Pattern.t -> _ I.Pattern.t
+  = fun p ->
+    let self = untype_pattern in
+    let loc = Location.get_location p in
+    match (Location.unwrap p) with
+    | P_unit -> Location.wrap ~loc I.Pattern.P_unit
+    | P_var b -> Location.wrap ~loc (I.Pattern.P_var b)
+    | P_list Cons (h, t) ->
+      let h = self h in
+      let t = self t in
+      Location.wrap ~loc (I.Pattern.P_list (Cons(h, t)))
+    | P_list List ps ->
+      let ps = List.map ~f:self ps in
+      Location.wrap ~loc (I.Pattern.P_list (List ps))
+    | P_variant (l, p) ->
+      let p = self p in
+      Location.wrap ~loc (I.Pattern.P_variant (l, p))
+    | P_tuple ps -> 
+      let ps = List.map ~f:self ps in
+      Location.wrap ~loc (I.Pattern.P_tuple ps)
+    | P_record lps ->
+      let lps = Record.map ~f:self lps in
+      Location.wrap ~loc (I.Pattern.P_record lps)
 and untype_module_expr : O.module_expr -> I.module_expr =
   fun module_expr ->
     let return wrap_content : I.module_expr = { module_expr with wrap_content } in
