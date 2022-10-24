@@ -43,7 +43,10 @@ module Make (Container : Container) = struct
 
   let var_pattern : ?loc:Location.t -> 'ty Binder.t -> 'ty t =
    fun ?loc b -> Location.wrap ?loc (P_var b)
-
+  let record_pattern : ?loc:Location.t -> 'ty_exp t Container.t -> 'ty t =
+    fun ?loc b -> Location.wrap ?loc (P_record b)
+  let variant_pattern : ?loc:Location.t -> Label.t * 'ty_exp t -> 'ty t =
+    fun ?loc (label,pat) -> Location.wrap ?loc (P_variant (label,pat))
 
   (* get top level ascription if any *)
   let get_ascr : 'ty t -> 'ty option =

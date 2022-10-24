@@ -42,31 +42,6 @@ let kv_list_of_record_or_tuple ~layout record_t_content record =
     List.map ~f:snd s
   )
 
-let remove_empty_annotation (ann : string option) : string option =
-  match ann with
-  | Some "" -> None
-  | Some ann -> Some ann
-  | None -> None
-
-let is_michelson_or (t: _ Record.t) =
-  let s = List.sort ~compare:(fun (k1, _) (k2, _) -> Label.compare k1 k2) @@
-    Record.LMap.to_kv_list t in
-  match s with
-  | [ (Label "M_left", ta) ; (Label "M_right", tb) ] -> Some (ta,tb)
-  | _ -> None
-
-let is_michelson_pair (t: row_element Record.t) : (row_element * row_element) option =
-  match Record.LMap.to_list t with
-  | [ a ; b ] -> (
-      if List.for_all ~f:(fun i -> Record.LMap.mem i t) @@ (Label.range 0 2)
-      && Option.(
-        is_some a.michelson_annotation || is_some b.michelson_annotation
-      )
-      then Some (a , b)
-      else None
-    )
-  | _ -> None
-
 (* This function parse te and replace all occurence of binder by value *)
 let rec subst_type (binder : Type_var.t) (value : type_expression) (te : type_expression) =
   let self = subst_type binder value in

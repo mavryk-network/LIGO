@@ -1,5 +1,5 @@
 open Ligo_prim
-module AST = Ast_aggregated
+module AST = Ast_pattern_expanded
 open AST
 open Errors
 module Append_tree = Tree.Append
@@ -14,7 +14,7 @@ let nonempty = function
 let annotation_or_label annot label = nonempty (Option.value ~default:label annot)
 
 let t_sum ~raise ~layout return compile_type m =
-  let open AST.Helpers in
+  let open AST.Combinators in
   let lst = kv_list_of_t_sum ~layout m in
   match layout with
   | L_tree -> (
@@ -184,7 +184,7 @@ let record_access_to_lr ~raise ~layout ty m_ty index =
       aux index ty last
     )
 
-let record_to_pairs (type exp) ~raise (compile_expression : _ -> exp) (ec_pair : exp -> exp -> exp) (e_tuple : exp list -> exp) record_t record : exp =
+let record_to_pairs (type exp) ~raise (compile_expression : _ -> exp) (ec_pair : exp -> exp -> exp) (e_tuple : exp list -> exp) (record_t : AST.t_sum) record : exp =
   let open AST.Helpers in
   let lst = kv_list_of_record_or_tuple ~layout:record_t.layout record_t.fields record in
   match record_t.layout with
@@ -297,7 +297,7 @@ let match_variant_to_tree ~raise ~layout ~compile_type content : variant_pair =
             let left = `Leaf khd , thd' in
             (`Node (left , (tl' , ttl)) , tv')
           ) in
-      let lst = List.map ~f:(fun (k,({associated_type;_} : row_element)) -> (k,associated_type)) @@ Helpers.kv_list_of_t_sum ~layout content in
+      let lst = List.map ~f:(fun (k,({associated_type;_} : row_element)) -> (k,associated_type)) @@ kv_list_of_t_sum ~layout content in
       let vp = aux lst in
       vp
     )

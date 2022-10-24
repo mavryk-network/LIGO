@@ -49,11 +49,9 @@ module Fold_helpers(M : Monad) = struct
       let* ps = pattern_list f ps in
       ok @@ Location.wrap ~loc (Pattern.P_tuple ps)
     | P_record lps ->
-      let lps    = Container.List.to_list lps in
       let ls, ps = List.unzip lps in
-      let* ps    = pattern_list f ps in 
+      let* ps    = pattern_list f ps in
       let lps    = List.zip_exn ls ps in
-      let lps    = Container.List.of_list lps in
       ok @@ Location.wrap ~loc (Pattern.P_record lps)
 
   and pattern_list : ('a -> 'b monad) -> 'a Pattern.t list -> ('b Pattern.t list) monad 

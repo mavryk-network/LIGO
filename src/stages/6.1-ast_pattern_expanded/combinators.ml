@@ -43,6 +43,14 @@ let t__type_ ?loc () : type_expression = t_constant ?loc _type_ []
 [@@map (_type_, ("signature","chain_id", "string", "bytes", "key", "key_hash", "int", "address", "operation", "nat", "tez", "timestamp", "unit", "bls12_381_g1", "bls12_381_g2", "bls12_381_fr", "never", "mutation", "pvss_key", "baker_hash", "chest_key", "chest"))]
 let get_t__type_ (t : type_expression) : type_expression option = get_t_unary_inj t _type_
 [@@map (_type_, ("contract", "list", "set", "ticket", "sapling_state", "sapling_transaction", "gen"))]
+let get_t__type__exn t =
+  let get_t__type_ (t : type_expression) : type_expression option = get_t_unary_inj t _type_
+    [@@map (_type_, ("map", "contract", "list", "set", "ticket", "sapling_state", "sapling_transaction", "gen"))]
+  in
+  match get_t__type_ t with
+  | Some x -> x
+  | None -> raise (Failure ("Internal error: broken invariant at " ^ __LOC__))
+    [@@map (_type_, ("map", "contract", "list", "set", "ticket", "sapling_state", "sapling_transaction", "gen"))]
 let default_layout = Layout.L_tree
 
 let t_record ?loc ~layout fields  : type_expression = make_t ?loc (T_record {fields;layout})
@@ -82,3 +90,114 @@ let get_sum_type (t : type_expression) (label : Label.t) : type_expression =
     match Record.LMap.find_opt label struct_.fields with
     | None -> failwith "pattern expanded: could not get row from its label"
     | Some row_element -> row_element.associated_type
+
+let t_sum ?loc ~layout fields : type_expression = make_t ?loc (T_sum {fields;layout})
+let t_sum_ez ?loc ?(layout=default_layout) (lst:(string * type_expression) list) : type_expression =
+  let lst = List.mapi ~f:(fun i (x,y) -> (Label.of_string x, ({associated_type=y;michelson_annotation=None;decl_pos=i}:row_element)) ) lst in
+  let map = Record.of_list lst in
+  t_sum ?loc ~layout map
+let t_bool ?loc ()       : type_expression = t_sum_ez ?loc
+  [("True", t_unit ());("False", t_unit ())]
+let get_t_bool (t:type_expression) : unit option = match t.type_content with
+  | t when (compare_type_content t (t_bool ()).type_content) = 0 -> Some ()
+  | _ -> None
+
+let t_option ?loc typ : type_expression =
+  t_sum_ez ?loc [
+    ("Some", typ) ;
+    ("None", t_unit ());
+  ]
+
+let t_record ?loc ~layout fields  : type_expression = make_t ?loc (T_record {fields;layout})
+let default_layout = Layout.L_tree
+let ez_t_record ?loc ?(layout=default_layout) lst : type_expression =
+  let m = Record.of_list lst in
+  t_record ?loc ~layout m
+let t_pair ?loc a b : type_expression =
+  ez_t_record ?loc [
+    (Label.of_int 0,{associated_type=a;michelson_annotation=None ; decl_pos = 0}) ;
+    (Label.of_int 1,{associated_type=b;michelson_annotation=None ; decl_pos = 1}) ]
+
+let is_t__type_ t =
+  let get_t__type_ (t : type_expression) : type_expression option = get_t_unary_inj t _type_
+    [@@map (_type_, ("contract", "list", "set", "ticket", "sapling_state", "sapling_transaction", "gen"))]
+  in
+  Option.is_some (get_t__type_ t)
+  [@@map (_type_, ("list", "set", "nat", "string", "bytes", "int", "unit", "address", "tez", "contract", "map", "big_map" , "typed_address"))]
+let is_michelson_or (t: _ Record.t) =
+  let s = List.sort ~compare:(fun (k1, _) (k2, _) -> Label.compare k1 k2) @@
+    Record.LMap.to_kv_list t in
+  match s with
+  | [ (Label "M_left", ta) ; (Label "M_right", tb) ] -> Some (ta,tb)
+  | _ -> None
+
+let is_michelson_pair (t: row_element Record.t) : (row_element * row_element) option =
+  match Record.LMap.to_list t with
+  | [ a ; b ] -> (
+      if List.for_all ~f:(fun i -> Record.LMap.mem i t) @@ (Label.range 0 2)
+      && Option.(
+        is_some a.michelson_annotation || is_some b.michelson_annotation
+      )
+      then Some (a , b)
+      else None
+    )
+  | _ -> None
+
+let kv_list_of_t_sum ?(layout = Layout.L_tree) (m: row_element Record.t) =
+  let lst = Record.LMap.to_kv_list m in
+  match layout with
+  | L_tree -> lst
+  | L_comb -> (
+      let aux (_ , ({ associated_type = _ ; decl_pos = a ; _ }: row_element)) (_ , ({ associated_type = _ ; decl_pos = b ; _ } : row_element)) = Int.compare a b in
+      List.sort ~compare:aux lst
+    )
+
+let kv_list_of_t_record_or_tuple ?(layout = Layout.L_tree) (m: row_element Record.t) =
+  let lst =
+    if (Record.is_tuple m)
+    then Record.tuple_of_record m
+    else Record.LMap.to_kv_list m
+  in
+  match layout with
+  | L_tree -> lst
+  | L_comb -> (
+      let aux (_ , ({ associated_type = _ ; decl_pos = a ; _ }: row_element)) (_ , ({ associated_type = _ ; decl_pos = b ; _ } : row_element)) = Int.compare a b in
+      List.sort ~compare:aux lst
+    )
+
+let kv_list_of_record_or_tuple ~layout record_t_content record =
+  let exps =
+    if (Record.is_tuple record)
+    then Record.tuple_of_record record
+    else Record.LMap.to_kv_list record
+  in
+  match (layout : Layout.t) with
+  | L_tree -> List.map ~f:snd exps
+  | L_comb -> (
+    let types = if (Record.is_tuple record)
+                then Record.tuple_of_record record_t_content
+                else Record.LMap.to_kv_list record_t_content in
+    let te = List.map ~f:(fun ((label_t,t),(label_e,e)) ->
+      assert (Label.equal label_t label_e) ; (*TODO TEST*)
+      (t,e)) (List.zip_exn types exps) in
+    let s = List.sort ~compare:(fun (({ associated_type = _ ; decl_pos = a ; _ }: row_element),_) ({ associated_type = _ ; decl_pos = b ; _ },_) -> Int.compare a b) te in
+    List.map ~f:snd s
+  )
+
+let e_unit () : expression_content = E_literal (Literal_unit)
+
+let get_e_tuple = fun t ->
+  match t with
+  | E_record r -> Some (List.map ~f:snd @@ Record.tuple_of_record r)
+  | _ -> None
+
+let get_t_map_exn t : (type_expression * type_expression) =
+  match t.type_content with
+  | T_constant {language=_;injection; parameters = [k;v]} when Ligo_prim.Literal_types.equal injection Ligo_prim.Literal_types.Map -> (k,v)
+  | _ -> failwith "pattern expanded: get_t_map"
+
+let e_bool b : expression_content =
+  if b then
+    E_constructor { constructor = (Label "True") ; element = (make_e (e_unit ()) (t_unit ())) }
+  else
+    E_constructor { constructor = (Label "False") ; element = (make_e (e_unit ()) (t_unit ())) }

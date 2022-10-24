@@ -9,7 +9,7 @@ open Simple_utils.Trace
 module Pair = Simple_utils.Pair
 open Errors
 
-module AST = Ast_aggregated
+module AST = Ast_pattern_expanded
 module Append_tree = Tree.Append
 open AST.Combinators
 open Mini_c
@@ -17,7 +17,11 @@ open Mini_c
 module SMap = Map.Make(String)
 
 let temp_unwrap_loc_list = List.map ~f:Location.unwrap
-
+let remove_empty_annotation (ann : string option) : string option =
+  match ann with
+  | Some "" -> None
+  | Some ann -> Some ann
+  | None -> None
 
 let compile_constant' : Constant.constant' -> Constant.constant' = fun x ->
   if Constant.ppx_is_only_interpreter x then
@@ -98,8 +102,8 @@ let rec compile_type ~raise (t:AST.type_expression) : type_expression =
       | T_base TB_int, T_base TB_int -> return (t_int ()) (t_nat ())
       | T_base TB_nat, T_base TB_int -> return (t_int ()) (t_nat ())
       | T_base TB_int, T_base TB_nat -> return (t_int ()) (t_nat ())
-      | T_base TB_mutez, T_base TB_mutez -> return (t_nat ()) (t_mutez ())
-      | T_base TB_mutez, T_base TB_nat -> return (t_mutez ()) (t_mutez ())
+      | T_base TB_mutez, T_base TB_mutez -> return (t_nat ()) (t_tez ())
+      | T_base TB_mutez, T_base TB_nat -> return (t_tez ()) (t_tez ())
       | _ -> raise.error (corner_case ~loc:__LOC__ "invalid external_(ediv|u_ediv) application"))
     | (External ("and" | "u_and"), [ param1; param2 ]) ->
       (match (compile_type param1).type_content, (compile_type param2).type_content with
@@ -192,7 +196,7 @@ let compile_record_matching ~raise expr' return k ({ fields; body; tv } : _ AST.
   match record.layout with
   (* TODO unify with or simplify other case below? *)
   | L_comb ->
-    let record_fields = AST.Helpers.kv_list_of_t_record_or_tuple ~layout:L_comb record.fields in
+    let record_fields = kv_list_of_t_record_or_tuple ~layout:L_comb record.fields in
     let fields =
       List.map
         ~f:(fun (l, (row_element : AST.row_element)) ->
@@ -288,7 +292,7 @@ let rec compile_expression ~raise (ae:AST.expression) : expression =
       get_t_record_opt (get_type struct_) in
     match record_ty.layout with
     | L_comb ->
-      let record_fields = AST.Helpers.kv_list_of_t_record_or_tuple ~layout:record_ty.layout record_ty.fields in
+      let record_fields = kv_list_of_t_record_or_tuple ~layout:record_ty.layout record_ty.fields in
       let i = fst @@ Option.value_exn  (List.findi ~f:(fun _ (label, _) -> 0 = Label.compare path label) record_fields) in
       let n = List.length record_fields in
       let struct_ = compile_expression ~raise struct_ in
@@ -317,7 +321,7 @@ let rec compile_expression ~raise (ae:AST.expression) : expression =
       let ty' = compile_type ~raise (ty) in
       match record_ty.layout with
       | L_comb ->
-        let record_fields = AST.Helpers.kv_list_of_t_record_or_tuple ~layout:record_ty.layout record_ty.fields in
+        let record_fields = kv_list_of_t_record_or_tuple ~layout:record_ty.layout record_ty.fields in
         let struct_ = self struct_ in
         let update = self update in
         let i = fst @@ Option.value_exn  (List.findi ~f:(fun _ (label, _) -> 0 = Label.compare path label) record_fields) in
@@ -476,7 +480,7 @@ let rec compile_expression ~raise (ae:AST.expression) : expression =
               let proj_t = t_pair (None,list_ty) (None,expr'.type_expression) in
               let proj = Expression.make (ec_pair (e_var hd list_ty) (e_var tl expr'.type_expression)) proj_t in
               let cons_body = self (fst match_cons) in
-              let cons_body' = e_let_in (Binder.get_var (snd match_cons)) proj_t false proj cons_body in
+              let cons_body' = e_let_in (snd match_cons) proj_t false proj cons_body in
               (((hd,list_ty), (tl,expr'.type_expression)), cons_body')
             in
             return @@ E_if_cons (expr' , nil , cons)
@@ -496,7 +500,7 @@ let rec compile_expression ~raise (ae:AST.expression) : expression =
               let s' = self (fst match_some) in
               (tv' , s')
             in
-            return @@ E_if_none (expr' , n , ((Binder.get_var (snd match_some) , tv') , s'))
+            return @@ E_if_none (expr' , n , ((snd match_some , tv') , s'))
           | T_sum _ when Option.is_some (AST.get_t_bool expr.type_expression) ->
             let ctor_body (case : _ AST.matching_content_case) = (case.constructor, case.body) in
             let cases = Record.of_list (List.map ~f:ctor_body cases) in
@@ -521,7 +525,7 @@ let rec compile_expression ~raise (ae:AST.expression) : expression =
                         (String.equal c constructor_name) in
                       List.find ~f:aux cases in
                     let body' = self body in
-                    return @@ E_let_in (top, false, (((Binder.get_var pattern) , tv) , body'))
+                    return @@ E_let_in (top, false, ((pattern , tv) , body'))
                   )
                 | ((`Node (a , b)) , tv) ->
                   let a' =
@@ -608,7 +612,7 @@ let rec compile_expression ~raise (ae:AST.expression) : expression =
         | _ ->
           raise.error (raw_michelson_must_be_seq ae.location code)
     )
-  | E_let_mut_in { let_binder; rhs; let_result; attr = _ } ->
+  | E_let_mut_in { let_binder; rhs; let_result; attributes = _ } ->
     let binder = compile_binder ~raise let_binder in
     let rhs = self rhs in
     let let_result = self let_result in
@@ -628,7 +632,7 @@ let rec compile_expression ~raise (ae:AST.expression) : expression =
   | E_for_each { fe_binder = binder1, Some binder2; collection; fe_body; _ } ->
     let type_ = compile_type ~raise collection.type_expression in
     let key_type, val_type = 
-      Ast_aggregated.get_t_map_exn collection.type_expression
+      AST.get_t_map_exn collection.type_expression
     in
     let binders = [ binder1, compile_type ~raise key_type; binder2, compile_type ~raise val_type ] in
     let collection = self collection in
@@ -641,7 +645,7 @@ let rec compile_expression ~raise (ae:AST.expression) : expression =
       if is_t_list type_ then get_t_list_exn type_
       else if is_t_set type_ then get_t_set_exn type_
       else if is_t_map type_ then
-        let key_type, val_type = get_t_map_exn type_
+        let key_type, val_type = AST.get_t_map_exn type_
         in AST.t_pair key_type val_type
       else failwith "Expected set, map or list type for for-each loop (should have been caught earlier)"
     in
@@ -706,7 +710,7 @@ and compile_recursive ~raise {fun_name; fun_type; lambda} =
         let rhs = compile_expression ~raise li.rhs in
         let ty  = compile_type ~raise li.rhs.type_expression in
         let let_binder = Binder.get_var li.let_binder in
-        e_let_in let_binder ty li.attr.inline rhs let_result
+        e_let_in let_binder ty li.attributes.inline rhs let_result
       | E_let_mut_in li ->
         (* Not possible for mut to shadow fun_name *)
         let let_result = replace_callback ~raise fun_name loop_type shadowed li.let_result in
@@ -754,7 +758,7 @@ and compile_recursive ~raise {fun_name; fun_type; lambda} =
             let proj_t = t_pair (None,list_ty) (None,expr'.type_expression) in
             let proj = Expression.make (ec_pair (e_var hd list_ty) (e_var tl expr'.type_expression)) proj_t in
             let cons_body = self (fst match_cons) in
-            let cons_body' = e_let_in (Binder.get_var (snd match_cons)) proj_t false proj cons_body in
+            let cons_body' = e_let_in (snd match_cons) proj_t false proj cons_body in
             (((hd,list_ty), (tl,expr'.type_expression)), cons_body')
           in
           return @@ E_if_cons (expr' , nil , cons)
@@ -774,7 +778,7 @@ and compile_recursive ~raise {fun_name; fun_type; lambda} =
             let s' = self (fst match_some) in
             (tv' , s')
           in
-          return @@ E_if_none (expr' , n , (((Binder.get_var (snd match_some)) , tv') , s'))
+          return @@ E_if_none (expr' , n , ((snd match_some , tv') , s'))
         | T_sum _ when Option.is_some (AST.get_t_bool m.matchee.type_expression) ->
           let ctor_body (case : _ AST.matching_content_case) = (case.constructor, case.body) in
           let cases = Record.of_list (List.map ~f:ctor_body cases) in
@@ -799,7 +803,7 @@ and compile_recursive ~raise {fun_name; fun_type; lambda} =
                       (String.equal c constructor_name) in
                     List.find ~f:aux cases in
                   let body' = self body in
-                  return @@ E_let_in (top, false, (((Binder.get_var pattern) , tv) , body'))
+                  return @@ E_let_in (top, false, ((pattern, tv) , body'))
                 )
               | ((`Node (a , b)) , tv) ->
                 let a' =

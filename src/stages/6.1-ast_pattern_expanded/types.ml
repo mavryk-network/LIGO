@@ -23,7 +23,6 @@ module Access_label = struct
   include Ast_aggregated.Access_label
 end
 
-module Pattern = Linear_pattern
 module Accessor = Ast_aggregated.Accessor
 module Update   = Ast_aggregated.Update
 module Let_in = Let_in.Make(Binder)(ValueAttr)

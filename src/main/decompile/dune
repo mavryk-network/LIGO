@@ -11,6 +11,7 @@
   tree_abstraction
   ast_imperative
   self_ast_imperative
+  expand_pattern
   desugaring
   ast_core
   checking

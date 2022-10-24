@@ -20,6 +20,7 @@
   checking
   ast_typed
   self_ast_typed
+  expand_pattern
   spilling
   mini_c
   self_mini_c

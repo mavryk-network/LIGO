@@ -75,10 +75,10 @@ let rec fold_map_expression : 'a fold_mapper -> 'a -> expression -> 'a * express
   | E_while w ->
     let res, w = While_loop.fold_map self init w in
     res, return @@ E_while w
-  (* | E_let_mut_in { let_binder; rhs; let_result; attributes } ->
+  | E_let_mut_in { let_binder; rhs; let_result; attributes } ->
     let res, rhs = self init rhs in
     let res, let_result = self res let_result in
-    res, return @@ E_let_mut_in { let_binder; rhs; let_result; attributes } *)
+    res, return @@ E_let_mut_in { let_binder; rhs; let_result; attributes }
   | E_deref _
   | E_literal _ | E_variable _ as e' -> (init, return e')
 
