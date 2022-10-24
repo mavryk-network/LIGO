@@ -1523,7 +1523,6 @@ and infer_declaration ~(raise : raise) ~options ~ctx (decl : I.declaration)
       ( ctx
       , S_module (module_binder, sig_)
       , let%bind module_ = module_ in
-        let module_ = Generator.make_main_module ~raise module_ in
         return
         @@ D_module { module_binder; module_; module_attr = { public; hidden } }
       )

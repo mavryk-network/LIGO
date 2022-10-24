@@ -22,6 +22,7 @@ let contract_passes ~raise = [
 ]
 
 let all_program ~raise ~warn_unused_rec init =
+  let init = Make_entry_point.make_main_modules ~raise init in
   List.fold ~f:(|>) (all_program_passes ~raise ~warn_unused_rec) ~init
 
 let all_expression ~raise ~warn_unused_rec init =
