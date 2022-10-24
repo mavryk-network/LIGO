@@ -53,7 +53,7 @@ let program ~raise : Ast_typed.module_ -> (Ast_typed.declaration * Ast_typed.dec
   in
   return (entrypoint_type_decl, entrypoint_function_decl)
 
-let make_main_module ~raise (module_ : Ast_typed.module_expr) =
+let make_main_module_expr ~raise (module_ : Ast_typed.module_expr) =
   match Location.unwrap module_ with
   | M_struct ds -> (
     match program ~raise ds with
@@ -63,10 +63,10 @@ let make_main_module ~raise (module_ : Ast_typed.module_expr) =
   )
   | _ -> module_
 
-let make_main_modules ~raise (program : Ast_typed.program) =
+let make_main_module ~raise (program : Ast_typed.program) =
   let f d = match Location.unwrap d with
     | Ast_typed.D_module {module_binder;module_attr;module_} ->
-      let module_ = make_main_module ~raise module_ in
+      let module_ = make_main_module_expr ~raise module_ in
       Location.wrap ~loc:(Location.get_location d) @@ Ast_typed.D_module {module_binder;module_attr;module_}
     | _ -> d in
   Helpers.Declaration_mapper.map_module f program
@@ -82,7 +82,7 @@ let get_entry_point_from_annotation : Ast_typed.program -> Value_var.t list =
     ~init:[] prg
 
 let make_main_entrypoint ?(layout=Ast_typed.default_layout) ~raise :  Ast_typed.expression_variable Simple_utils.List.Ne.t -> Ast_typed.program -> Ast_typed.expression_variable * Ast_typed.program = fun entrypoints prg ->
-  let prg = make_main_modules ~raise prg in
+  let prg = make_main_module ~raise prg in
   match entrypoints with
     (entrypoint,[]) -> entrypoint, prg
   | (entrypoint,rest) ->
