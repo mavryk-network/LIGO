@@ -1,0 +1,14 @@
+(library
+ (name self_mini_c_coq)
+ (public_name ligo.self_mini_c_coq)
+ (instrumentation
+  (backend bisect_ppx))
+ (libraries mini_c
+            scoping
+            ligo_coq_ocaml
+            tezos-hacl)
+ (inline_tests)
+ (preprocess
+  (pps ppx_expect ppx_poly_constructor))
+ (flags
+  (:standard -open Core)))

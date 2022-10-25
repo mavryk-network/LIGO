@@ -30,4 +30,9 @@
   ast_aggregated
   self_ast_aggregated
   compiler_options
-  syntax))
+  syntax
+  purification
+  ast_sugar
+  self_ast_sugar
+  self_ast_core
+  self_mini_c_coq))

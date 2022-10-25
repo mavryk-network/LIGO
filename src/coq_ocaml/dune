@@ -19,6 +19,7 @@
    PeanoNat
    List
    Specif
+   Compare_dec
    ;; LIGO /src/coq stuff
    ope
    compiler)

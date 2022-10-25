@@ -8,14 +8,13 @@ module Option      = Simple_utils.Option
 module Var = Ligo_prim.Value_var
 module Errors = Errors
 
+open Simple_utils.Trace
+
 type meta = Mini_c.meta
 type binder_meta = Mini_c.binder_meta
 
 (* We should use this less: *)
-let nil : meta =
-  { location = Location.generated;
-    env = [];
-    binder = None }
+let nil : meta = { Mini_c.dummy_meta with location = Location.generated }
 
 type base_type = (meta, string) Micheline.node
 
@@ -31,10 +30,10 @@ let binder_meta (var : Var.t option) (source_type : I.type_expression) : binder_
 (* Next stage uses Micheline for its types: *)
 let rec translate_type ?var : I.type_expression -> oty =
   fun a ->
-  let nil : meta =
-    { location = Location.generated;
-      env = [];
-      binder = binder_meta var a } in
+  let nil : meta = { Mini_c.dummy_meta with
+                     location = Location.generated;
+                     binder = binder_meta var a;
+                   } in
   match a.type_content with
   | I.T_tuple ts ->
     tuple_comb ts
@@ -119,9 +118,8 @@ let internal_error loc msg =
 let rec translate_expression ~raise ~proto (expr : I.expression) (env : I.environment) :
   (meta, base_type, Ligo_prim.Literal_value.t, (meta, string) Micheline.node) O.expr =
   let meta : meta =
-    { location = expr.location;
-      env = [];
-      binder = None } in
+    { Mini_c.dummy_meta with
+      location = expr.location } in
   let ty = expr.type_expression in
   let translate_expression = translate_expression ~raise ~proto in
   let translate_args = translate_args ~raise ~proto in
@@ -146,7 +144,8 @@ let rec translate_expression ~raise ~proto (expr : I.expression) (env : I.enviro
     O.E_lam (meta, binder, translate_type return_type)
   | E_constant constant ->
     let (mich, args) = translate_constant ~raise ~proto meta constant expr.type_expression env in
-    O.E_inline_michelson (meta, mich, args)
+    let is_pure = Predefined.Michelson.is_pure_constant constant.cons_name in
+    O.E_inline_michelson (meta, is_pure, mich, args)
   | E_application (f, x) ->
     let args = translate_args [f; x] env in
     E_app (meta, args)
@@ -192,10 +191,10 @@ let rec translate_expression ~raise ~proto (expr : I.expression) (env : I.enviro
     let e2 = translate_binder e2 env in
     let e3 = translate_binder e3 env in
     E_if_left (meta, e1, e2, e3)
-  | E_let_in (e1, _inline, e2) ->
+  | E_let_in (e1, inline, e2) ->
     let e1 = translate_expression e1 env in
     let e2 = translate_binder e2 env in
-    E_let_in (meta, e1, e2)
+    E_let_in ({meta with inline_let_in = inline}, e1, e2)
   | E_tuple exprs ->
     let exprs = translate_args exprs env in
     E_tuple (meta, exprs)
@@ -253,7 +252,11 @@ let rec translate_expression ~raise ~proto (expr : I.expression) (env : I.enviro
     let args = translate_args args env in
     let output_ty = translate_type ty in
     E_global_constant (meta, output_ty, hash, args)
-  | E_create_contract (p, s, code, args) ->
+  | E_create_contract (p, s, (((x, _), lambda) as code), args) ->
+    (* check lambda passed into [create_contract] has no free variable *)
+    let fvs = I.Free_variables.expression [x] lambda in
+    if Int.equal (List.length fvs) 0 then ()
+    else raise.error @@ Errors.fvs_in_create_contract_lambda expr (List.hd_exn fvs);
     let p = translate_type p in
     let s = translate_type s in
     let code = translate_binder code [] in
@@ -354,7 +357,7 @@ and translate_constant ~raise ~proto (meta : meta) (expr : I.constant) (ty : I.t
     let return (x : static_args * I.expression list) : _ = Some x in
     match expr.cons_name with
     | C_GLOBAL_CONSTANT -> (
-      match expr.arguments with
+        match expr.arguments with
       | { content = E_literal (Literal_string hash); type_expression = _ ; _} :: arguments ->
         let hash = Ligo_string.extract hash in
         return (Type_args (None, [translate_type ty; Prim (nil, "constant", [String (nil, hash)], [])]), arguments)
@@ -412,7 +415,6 @@ and translate_constant ~raise ~proto (meta : meta) (expr : I.constant) (ty : I.t
          x)],
       arguments)
   | None ->
-    let open Simple_utils.Trace in
     (raise.error) (Errors.unsupported_primitive expr.cons_name proto)
 
 and translate_closed_function ~raise ~proto ?(env=[]) ({ binder ; body } : I.anon_function) input_ty : _ O.binds =

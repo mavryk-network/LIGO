@@ -195,7 +195,7 @@ module Michelson_formatter = struct
     let type_set : TypeSet.t =
       fold_micheline node
         ~f:(fun init node ->
-            let Mini_c.{ location = _; env; binder = _ } = Tezos_micheline.Micheline.location node in
+            let Mini_c.{ env;  _ } = Tezos_micheline.Micheline.location node in
             List.fold_left
               env ~init
               ~f:(fun init binder_meta ->
@@ -213,7 +213,7 @@ module Michelson_formatter = struct
     (* now substitute all source types for their indices *)
     let node =
       Micheline.map_node
-        (fun Mini_c.{ location; env; binder = _ } ->
+        (fun Mini_c.{ location; env; _ } ->
            let env =
              List.map
                ~f:(Option.map

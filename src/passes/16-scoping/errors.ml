@@ -11,6 +11,7 @@ type scoping_error = [
   | `Scoping_could_not_parse_michelson of string
   | `Scoping_untranspilable of int Michelson.t * int Michelson.t
   | `Scoping_unsupported_primitive of Constant.constant' * Environment.Protocols.t
+  | `Scoping_fvs_in_create_contract_lambda of Mini_c.expression * Value_var.t
 ] [@@deriving poly_constructor { prefix = "scoping_" }]
 
 let stage = "scoping"
@@ -55,6 +56,11 @@ let error_ppformat : display_format:string display_format ->
       Format.fprintf f "Could not untranspile Michelson value: %a %a"
         Michelson.pp ty
         Michelson.pp value
+    | `Scoping_fvs_in_create_contract_lambda (e, v) ->
+       Format.fprintf f
+           "@[<hv>%a@.Not all free variables could be inlined in Tezos.create_contract usage: %a.@]"
+           Simple_utils.Snippet.pp e.location
+           Value_var.pp v
   )
 
 let error_jsonformat : scoping_error -> Yojson.Safe.t = fun a ->
@@ -110,3 +116,13 @@ let error_jsonformat : scoping_error -> Yojson.Safe.t = fun a ->
               ("type", `String (Format.asprintf "%a" Michelson.pp ty));
               ("value", `String (Format.asprintf "%a" Michelson.pp value))] in
     json_error ~stage ~content
+  | `Scoping_fvs_in_create_contract_lambda (e, v) ->
+     let loc = Value_var.get_location v in
+     let message = `String "Free variables are not allowed in CREATE_CONTRACT lambdas" in
+     let loc = `String (Format.asprintf "%a" Simple_utils.Location.pp loc) in
+     let expression = `String (Format.asprintf "%a" Mini_c.PP.expression e) in
+     let content =
+      `Assoc [("message", message);
+              ("location", loc);
+              ("expression", expression)] in
+     json_error ~stage ~content

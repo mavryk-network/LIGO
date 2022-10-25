@@ -5,10 +5,7 @@ open Trace
 open! Stacking
 open Tezos_micheline
 
-let dummy : Stacking.meta =
-  { location = Location.dummy;
-    env = [];
-    binder = None }
+let dummy : Stacking.meta = dummy_meta
 
 let dummy_locations : 'l 'p. ('l, 'p) Micheline.node -> (meta, 'p) Micheline.node =
   fun e ->
@@ -18,7 +15,7 @@ let dummy_locations : 'l 'p. ('l, 'p) Micheline.node -> (meta, 'p) Micheline.nod
    to preserve Seq nodes which are used only for comments. Currently
    only env data is important. *)
 let has_comment : Compiler_options.t -> meta -> bool =
-  fun options { env; location = _; binder = _ } ->
+  fun options { env; _ } ->
   options.backend.has_env_comments && not (List.is_empty env)
 
 (* this function exist to satisfy 'print mini-c' .. *)
@@ -37,8 +34,32 @@ let compile_contract ~raise : options:Compiler_options.t -> expression -> Stacki
   let (input_ty , contract) = optimize_for_contract ~raise options e in
   let protocol_version = options.backend.protocol_version in
   let de_bruijn = trace ~raise scoping_tracer @@ Scoping.translate_closed_function ~proto:protocol_version contract input_ty in
-  let de_bruijn = Stacking.Program.compile_function_body de_bruijn in
-  let expr = Self_michelson.optimize protocol_version ~has_comment:(has_comment options) de_bruijn in
+  (* Format.printf "%a\n\n" Self_mini_c_coq.Helpers.pp_binds de_bruijn; *)
+  let expr = Stacking.Program.compile_function_body de_bruijn in
+  let expr = Self_michelson.optimize protocol_version ~has_comment:(has_comment options) expr in
+  let expr_ty = compile_type e.type_expression in
+  let expr_ty = dummy_locations expr_ty in
+  ({ expr_ty ; expr } : Stacking.Program.compiled_expression)
+
+let compile_contract_dev ~raise : options:Compiler_options.t -> expression -> Stacking.compiled_expression  =
+  fun ~options e ->
+  let (input_ty , _) = trace ~raise self_mini_c_tracer @@
+                       Self_mini_c.get_t_function e.type_expression in
+  let contract : anon_function = trace ~raise self_mini_c_tracer @@
+                       Self_mini_c.get_function_or_eta_expand e in
+  let protocol_version = options.backend.protocol_version in
+  let open Ligo_coq_ocaml.Compiler in
+  (* Mini_c.Formatter.program_ppformat ~display_format:Human_readable Format.std_formatter (Mini_c.Formatter.Optimized contract.body); *)
+  let Binds (m, tys, body) as _de_bruijn =
+    trace ~raise scoping_tracer @@
+    Scoping.translate_closed_function ~proto:protocol_version contract input_ty in
+  (* Format.printf "%a\n\n" Self_mini_c_coq.Helpers.pp_binds _de_bruijn; *)
+  let de_bruijn = Binds (m, tys, Self_mini_c_coq.Self_mini_c.all_expression ~raise body) in
+  let de_bruijn = trace ~raise self_mini_c_tracer @@
+                  Self_mini_c_coq.Self_mini_c.contract_check de_bruijn in
+  (* Format.printf "%a\n\n" Self_mini_c_coq.Helpers.pp_binds de_bruijn; *)
+  let expr = Stacking.Program.compile_function_body de_bruijn in
+  let expr = Self_michelson.optimize protocol_version ~has_comment:(has_comment options) expr in
   let expr_ty = compile_type e.type_expression in
   let expr_ty = dummy_locations expr_ty in
   ({ expr_ty ; expr } : Stacking.Program.compiled_expression)

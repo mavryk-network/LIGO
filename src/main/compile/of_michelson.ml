@@ -44,10 +44,7 @@ let parse_constant ~raise code =
   Trace.trace_alpha_tzresult ~raise unparsing_michelson_tracer @@
     Memory_proto_alpha.node_to_canonical code
 
-let dummy : Stacking.meta =
-  { location = Location.dummy;
-    env = [];
-    binder = None }
+let dummy : Stacking.meta = Mini_c.dummy_meta
 
 (* should preserve locations, currently wipes them *)
 let build_contract ~raise :
@@ -116,7 +113,7 @@ let build_contract ~raise :
                            Proto_alpha_utils.Memory_proto_alpha.typecheck_map_contract ~environment c in
             map in
           let has_comment : Mini_c.meta -> bool =
-            fun { env; location = _; binder = _ } ->
+            fun { env; _ } ->
             has_env_comments && not (List.is_empty env) in
           Self_michelson.optimize_with_types ~raise ~typer_oracle protocol_version ~has_comment contract
         else

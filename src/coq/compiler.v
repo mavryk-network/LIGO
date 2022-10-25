@@ -5,6 +5,11 @@ From Coq Require Extraction.
 Import ListNotations.
 Open Scope string_scope.
 
+(* For Mini_c *)
+(* Require Import Coq.Classes.RelationClasses. *)
+From Coq.Relations Require Import Relation_Operators Operators_Properties Relation_Definitions.
+Require Import Coq.Program.Equality.
+
 From ligo_coq Require Import ope.
 
 (* http://poleiro.info/posts/2018-10-15-checking-for-constructors.html *)
@@ -58,6 +63,16 @@ Ltac clear_done :=
     | [H : done ?A |- _] =>
       change A in H
     end.
+
+Lemma cut_and1 : forall {a b c : Prop}, (c -> (a /\ b)) <-> ((c -> a) /\ (c -> b)).
+Proof. intuition. Qed.
+
+Lemma cut_and2 : forall {A : Type} {P1 P2 : A -> Prop}, (forall x, (P1 x /\ P2 x)) <-> ((forall x, P1 x) /\ (forall x, P2 x)).
+Proof. firstorder. Qed.
+
+Ltac cut_IH H :=
+  repeat setoid_rewrite cut_and1 in H;
+  repeat setoid_rewrite cut_and2 in H.
 
 Axiom bytes : Set.
 Extract Inlined Constant bytes => "bytes".
@@ -174,7 +189,7 @@ Inductive expr : Set :=
 | E_failwith : meta -> expr -> expr
 
 | E_raw_michelson : meta -> ty -> ty -> list micheline -> expr
-| E_inline_michelson : meta -> list micheline -> args -> expr
+| E_inline_michelson : meta -> bool -> list micheline -> args -> expr
 | E_global_constant : meta -> ty -> string -> args -> expr
 | E_create_contract : meta -> ty -> ty -> binds -> args -> expr
 
@@ -350,10 +365,10 @@ Inductive expr_typed : list ty -> expr -> ty -> Prop :=
    constants" in predefined.ml, but could be exposed to users
    someday. TODO we should probably have a [ty] in the syntax for the
    return type [b], since it cannot be inferred? *)
-| E_inline_michelson_typed {code args az b} :
+| E_inline_michelson_typed {code args az b p} :
     `{args_typed g args az ->
       (* TODO should postulate some typing *)
-      expr_typed g (E_inline_michelson l1 code args) b}
+      expr_typed g (E_inline_michelson l1 p code args) b}
 (* E_global_constant is for Tezos "global constants". It is very
    similar to E_inline_michelson, but accepts the string hash of a
    Tezos "global constant" in place of the Michelson code. *)
@@ -394,7 +409,1038 @@ Hint Constructors expr_typed : ligo.
 Hint Constructors binds_typed : ligo.
 Hint Constructors args_typed : ligo.
 
+(****************************
+ *   MINI_C OPTIMIZATIONS   *
+ ****************************)
 
+Section Mini_c.
+
+(** * Definitions *)
+
+Local Generalizable Variable m.
+
+(** Shift all variables [i] that equal or above [k] by [n] *)
+Fixpoint shift (n : nat) (k : nat) (e : expr) : expr :=
+let shift' e := shift n k e in
+let shift_binds' b := shift_binds n k b in
+let shift_args' args := shift_args n k args in
+match e with
+| E_var m i
+  => E_var m (if le_lt_dec k i then i+n else i)
+| E_let_in m e body
+  => let e'    := shift n k e in
+    let body' := shift_binds n k body in
+    E_let_in m e' body'
+
+| E_deref m i
+  => E_deref m (if le_lt_dec k i then i+n else i)
+| E_let_mut_in m e body
+  => let e'    := shift n k e in
+    let body' := shift_binds n k body in
+    E_let_mut_in m e' body'
+| E_assign m i e
+  => let e' := shift' e in
+     E_assign m (if le_lt_dec k i then i+n else i) e'
+
+| E_tuple m args => E_tuple m (shift_args n k args)
+| E_let_tuple m e body
+  => let e' := shift n k e in (* e ≡ E_tuple _ *)
+    let body' := shift_binds n k body in
+    E_let_tuple m e' body'
+| E_proj m e i l
+  => let e' := shift n k e in
+    E_proj m e' i l
+| E_update m args i j => E_update m (shift_args n k args) i j
+| E_app m args        => E_app m (shift_args n k args)
+| E_lam m b t         => E_lam m (shift_binds' b) t
+
+| E_literal m l => E_literal m l
+| E_pair m args => E_pair m (shift_args' args)
+| E_car m e => E_car m (shift' e)
+| E_cdr m e => E_cdr m (shift' e)
+| E_unit m => E_unit m
+| E_left m t e => E_left m t (shift' e)
+| E_right m t e => E_right m t (shift' e)
+| E_if_left m e b1 b2 => E_if_left m (shift' e) (shift_binds' b1) (shift_binds' b2)
+| E_if_bool m e1 e2 e3 => E_if_bool m (shift' e1) (shift' e2) (shift' e3)
+| E_if_none m e1 e2 b => E_if_none m (shift' e1) (shift' e2) (shift_binds' b)
+| E_if_cons m e1 b e2 => E_if_cons m (shift' e1) (shift_binds' b) (shift' e2)
+| E_iter m b e => E_iter m (shift_binds' b) (shift' e)
+| E_map m b e  => E_map m (shift_binds' b) (shift' e)
+| E_loop_left m b t e => E_loop_left m (shift_binds' b) t (shift' e)
+| E_fold m e1 e2 b => E_fold m (shift' e1) (shift' e2) (shift_binds' b)
+| E_fold_right m t e1 e2 b => E_fold_right m t (shift' e1) (shift' e2) (shift_binds' b)
+| E_failwith m e => E_failwith m (shift' e)
+| E_raw_michelson m t1 t2 l => E_raw_michelson m t1 t2 l
+| E_inline_michelson m p l args => E_inline_michelson m p l (shift_args' args)
+| E_global_constant m t s args => E_global_constant m t s (shift_args' args)
+| E_create_contract m t1 t2 b args => E_create_contract m t1 t2 b (shift_args' args)
+
+| E_for m e1 e2 =>
+    let e1' := shift_args' e1 in
+    let e2' := shift_binds' e2 in
+    E_for m e1' e2'
+| E_for_each m e1 e2 =>
+    let e1' := shift' e1 in
+    let e2' := shift_binds' e2 in
+    E_for_each m e1' e2'
+| E_while m e1 e2 =>
+    let e1' := shift' e1 in
+    let e2' := shift' e2 in
+    E_while m e1' e2'
+
+end
+with shift_args (n : nat) (k : nat) (args : args) :=
+match args with
+| Args_nil m       => Args_nil m
+| Args_cons m x xs => Args_cons m (shift n k x) (shift_args n k xs)
+end
+with shift_binds (n : nat) (k : nat) (binds : binds) :=
+match binds with
+| Binds m tys e => Binds m tys (shift n (length tys + k) e)
+end
+.
+
+Definition shift_env (k : nat) (env : list ty)
+           (l : list ty) {Hlen: length l = k} : list ty :=
+  l ++ env.
+(* Example: shift_env 1 2 [0][1][2][3] --> [0][3][4][5]
+   [0] + [ ][ ] + [1][2][3]
+   [0] + [1][2] + [3][4][5]  *)
+
+(* TODO update for mutable let *)
+Inductive free_in : nat -> expr -> Prop :=
+| Free_in_var {k i} : i <> k -> `{free_in k (E_var m i)}
+| Free_in_let_in {k e b} :
+  free_in k e -> free_in_binds k b ->
+  `{free_in k (E_let_in m e b)}
+
+| Free_in_deref {k i} : i <> k -> `{free_in k (E_deref m i)}
+| Free_in_let_mut_in {k e b} :
+  free_in k e -> free_in_binds k b ->
+  `{free_in k (E_let_mut_in m e b)}
+| Free_in_assign {k i e} :
+  i <> k -> free_in k e -> (* wrong (like many other cases here) *)
+  `{free_in k (E_assign m i e)}
+| Free_in_for {k e1 e2} :
+  free_in_args k e1 -> free_in_binds k e2 ->
+  `{free_in k (E_for m e1 e2)}
+| Free_in_for_each {k e1 e2} :
+  free_in k e1 -> free_in_binds k e2 ->
+  `{free_in k (E_for_each m e1 e2)}
+| Free_in_while {k e1 e2} :
+  free_in k e1 -> free_in k e2 ->
+  `{free_in k (E_while m e1 e2)}
+
+| Free_in_tuple {k a} :
+  free_in_args k a ->
+  `{free_in k (E_tuple m a)}
+| Free_in_let_tuple {k e b} :
+  free_in k e -> free_in_binds k b ->
+  `{free_in k (E_let_tuple m e b)}
+| Free_in_proj {k e i l} :
+  free_in k e ->
+  `{free_in k (E_proj m e i l)}
+| Free_in_update {k m args i j} :
+  free_in_args k args ->
+  `{free_in k (E_update m args i j)}
+| Free_in_app {k a} :
+  free_in_args k a ->
+  `{free_in k (E_app m a)}
+| Free_in_lam {k b t} :
+  free_in_binds k b ->
+  `{free_in k (E_lam m b t)}
+
+| Free_in_literal {k m l} :
+  `{free_in k (E_literal m l)}
+| Free_in_pair {k m args} :
+  free_in_args k args ->
+  `{free_in k (E_pair m args)}
+| Free_in_car {k m e} :
+  free_in k e ->
+  `{free_in k (E_car m e)}
+| Free_in_cdr {k m e} :
+  free_in k e ->
+  `{free_in k (E_cdr m e)}
+| Free_in_unit {k} :
+  `{free_in k (E_unit m)}
+| Free_in_left {k m t e} :
+  free_in k e ->
+  `{free_in k (E_left m t e)}
+| Free_in_right {k m t e} :
+  free_in k e ->
+  `{free_in k (E_right m t e)}
+| Free_in_if_left {k m e b1 b2} :
+  free_in k e ->  free_in_binds k b1 -> free_in_binds k b2 ->
+  `{free_in k (E_if_left m e (b1) (b2))}
+| Free_in_if_bool {k m e1 e2 e3} :
+  free_in k e1 -> free_in k e2 -> free_in k e3 ->
+  `{free_in k (E_if_bool m (e1) (e2) (e3))}
+| Free_in_if_none {k m e1 e2 b} :
+  free_in k e1 -> free_in k e2 -> free_in_binds k b ->
+  `{free_in k (E_if_none m (e1) (e2) (b))}
+| Free_in_if_cons {k m e1 b e2} :
+  free_in k e1 -> free_in k e2 -> free_in_binds k b ->
+  `{free_in k (E_if_cons m (e1) (b) (e2))}
+| Free_in_iter {k m b e} :
+  free_in k e ->  free_in_binds k b ->
+  `{free_in k (E_iter m (b) (e))}
+| Free_in_map {k m b e}  :
+  free_in k e -> free_in_binds k b ->
+  `{free_in k (E_map m (b) (e))}
+| Free_in_loop_left {k m b t e} :
+  free_in k e -> free_in_binds k b ->
+  `{free_in k (E_loop_left m (b) t (e))}
+| Free_in_fold {k m e1 e2 b} :
+  free_in k e1 -> free_in k e2 -> free_in_binds k b ->
+  `{free_in k (E_fold m (e1) (e2) (b))}
+| Free_in_fold_right {k m t e1 e2 b} :
+  free_in k e1 -> free_in k e2 -> free_in_binds k b ->
+  `{free_in k (E_fold_right m t (e1) (e2) (b))}
+| Free_in_failwith {k m e} :
+  free_in k e ->
+  `{free_in k (E_failwith m (e))}
+| Free_in_raw_michelson {k m t1 t2 l} :
+  `{free_in k (E_raw_michelson m t1 t2 l)}
+| Free_in_inline_michelson {k m l args p} :
+  free_in_args k args ->
+  `{free_in k (E_inline_michelson m p l (args))}
+| Free_in_global_constant {k m t s args} :
+  free_in_args k args ->
+  `{free_in k (E_global_constant m t s (args))}
+| Free_in_create_contract {k m t1 t2 b args} :
+  free_in_args k args ->
+  `{free_in k (E_create_contract m t1 t2 (b) (args))}
+
+with free_in_binds : nat -> binds -> Prop :=
+| Free_in_binds {k e tys} :
+  free_in (length tys + k) e ->
+  `{free_in_binds k (Binds m tys e)}
+
+with free_in_args : nat -> args -> Prop :=
+| Free_in_nil {k} : `{free_in_args k (Args_nil m)}
+| Free_in_cons {k e args} :
+  free_in k e -> free_in_args k args ->
+  `{free_in_args k (Args_cons m e args)}
+.
+
+Scheme free_in_expr_ind' := Induction for free_in Sort Prop
+with free_in_binds_ind' := Induction for free_in_binds Sort Prop
+with free_in_args_ind' := Induction for free_in_args Sort Prop.
+Combined Scheme free_in_mutind from free_in_expr_ind', free_in_binds_ind', free_in_args_ind'.
+
+(** [body[k:=E]] without shifting down *)
+Fixpoint subst (E : expr) (k : nat) (body : expr) : expr :=
+let subst' e := subst E k e in
+let subst_binds' b := subst_to_binds E k b in
+let subst_args' args := subst_to_args E k args in
+match body with
+| E_var m i
+  => if le_lt_dec i k
+    then if Nat.eq_dec i k then shift k 0 E else E_var m i
+    else E_var m i
+| E_let_in m e body => E_let_in m (subst E k e) (subst_to_binds E k body)
+
+| E_deref m i
+  (* TODO hmm, this shouldn't happen *)
+  => if le_lt_dec i k
+    then if Nat.eq_dec i k then shift k 0 E else E_deref m i
+    else E_deref m i
+| E_let_mut_in m e body => E_let_mut_in m (subst E k e) (subst_to_binds E k body)
+
+| E_assign m i e =>
+    (* TODO hmm, we assume that i <> k, otherwise the substitution was invalid! *)
+    let e := subst' e in
+    E_assign m i e
+| E_for m e1 e2 =>
+    let e1' := subst_args' e1 in
+    let e2' := subst_binds' e2 in
+    E_for m e1' e2'
+| E_for_each m e1 e2 =>
+    let e1' := subst' e1 in
+    let e2' := subst_binds' e2 in
+    E_for_each m e1' e2'
+| E_while m e1 e2 =>
+    let e1' := subst' e1 in
+    let e2' := subst' e2 in
+    E_while m e1' e2'
+
+| E_tuple m args    => E_tuple m (subst_to_args E k args)
+| E_let_tuple m e body => E_let_tuple m (subst E k e) (subst_to_binds E k body)
+| E_proj m e i l => E_proj m (subst E k e) i l
+| E_update m args i j => E_update m (subst_args' args) i j
+| E_app m args        => E_app m (subst_args' args)
+| E_lam m b t         => E_lam m (subst_binds' b) t
+
+| E_literal m l => E_literal m l
+| E_pair m args => E_pair m (subst_args' args)
+| E_car m e => E_car m (subst' e)
+| E_cdr m e => E_cdr m (subst' e)
+| E_unit m => E_unit m
+| E_left m t e => E_left m t (subst' e)
+| E_right m t e => E_right m t (subst' e)
+| E_if_left m e b1 b2 => E_if_left m (subst' e) (subst_binds' b1) (subst_binds' b2)
+| E_if_bool m e1 e2 e3 => E_if_bool m (subst' e1) (subst' e2) (subst' e3)
+| E_if_none m e1 e2 b => E_if_none m (subst' e1) (subst' e2) (subst_binds' b)
+| E_if_cons m e1 b e2 => E_if_cons m (subst' e1) (subst_binds' b) (subst' e2)
+| E_iter m b e => E_iter m (subst_binds' b) (subst' e)
+| E_map m b e  => E_map m (subst_binds' b) (subst' e)
+| E_loop_left m b t e => E_loop_left m (subst_binds' b) t (subst' e)
+| E_fold m e1 e2 b => E_fold m (subst' e1) (subst' e2) (subst_binds' b)
+| E_fold_right m t e1 e2 b => E_fold_right m t (subst' e1) (subst' e2) (subst_binds' b)
+| E_failwith m e => E_failwith m (subst' e)
+| E_raw_michelson m t1 t2 l => E_raw_michelson m t1 t2 l
+| E_inline_michelson m p l args => E_inline_michelson m p l (subst_args' args)
+| E_global_constant m t s args => E_global_constant m t s (subst_args' args)
+| E_create_contract m t1 t2 b args => E_create_contract m t1 t2 b (subst_args' args)
+end
+with subst_to_args (E : expr) (k : nat) (args : args) :=
+match args with
+| Args_nil m => Args_nil m
+| Args_cons m x xs => Args_cons m (subst E k x) (subst_to_args E k xs)
+end
+with subst_to_binds (E : expr) (k : nat) (binds : binds) :=
+match binds with
+| Binds m tys e => Binds m tys (subst E (length tys + k) e)
+end
+.
+
+Notation "x .1" := (proj1 x) (at level 1, left associativity, format "x .1").
+Notation "x .2" := (proj2 x) (at level 1, left associativity, format "x .2").
+
+Fixpoint shift_down (k : nat) (e : expr) :=
+let shift_down' e := shift_down k e in
+let shift_down_binds' b := shift_down_binds k b in
+let shift_down_args' args := shift_down_args k args in
+match e with
+| E_var m i => E_var m (if le_lt_dec k i then pred i else i)
+| E_let_in m e b => E_let_in m (shift_down k e) (shift_down_binds k b)
+
+| E_deref m i => E_deref m (if le_lt_dec k i then pred i else i)
+| E_let_mut_in m e b => E_let_mut_in m (shift_down k e) (shift_down_binds k b)
+
+| E_assign m i e => E_assign m i (shift_down' e)
+| E_for m e1 e2 => E_for m (shift_down_args' e1) (shift_down_binds' e2)
+| E_for_each m e1 e2 => E_for_each m (shift_down' e1) (shift_down_binds' e2)
+| E_while m e1 e2 => E_while m (shift_down' e1) (shift_down' e2)
+
+| E_tuple m args => E_tuple m (shift_down_args k args)
+| E_let_tuple m e b => E_let_tuple m (shift_down k e) (shift_down_binds k b)
+| E_proj m e i l => E_proj m (shift_down k e) i l
+| E_update m args i j => E_update m (shift_down_args' args) i j
+| E_app m args => E_app m (shift_down_args k args)
+| E_lam m b t  => E_lam m (shift_down_binds k b) t
+| E_literal m l => E_literal m l
+| E_pair m args => E_pair m (shift_down_args' args)
+| E_car m e => E_car m (shift_down' e)
+| E_cdr m e => E_cdr m (shift_down' e)
+| E_unit m => E_unit m
+| E_left m t e => E_left m t (shift_down' e)
+| E_right m t e => E_right m t (shift_down' e)
+| E_if_left m e b1 b2 => E_if_left m (shift_down' e) (shift_down_binds' b1) (shift_down_binds' b2)
+| E_if_bool m e1 e2 e3 => E_if_bool m (shift_down' e1) (shift_down' e2) (shift_down' e3)
+| E_if_none m e1 e2 b => E_if_none m (shift_down' e1) (shift_down' e2) (shift_down_binds' b)
+| E_if_cons m e1 b e2 => E_if_cons m (shift_down' e1) (shift_down_binds' b) (shift_down' e2)
+| E_iter m b e => E_iter m (shift_down_binds' b) (shift_down' e)
+| E_map m b e  => E_map m (shift_down_binds' b) (shift_down' e)
+| E_loop_left m b t e => E_loop_left m (shift_down_binds' b) t (shift_down' e)
+| E_fold m e1 e2 b => E_fold m (shift_down' e1) (shift_down' e2) (shift_down_binds' b)
+| E_fold_right m t e1 e2 b => E_fold_right m t (shift_down' e1) (shift_down' e2) (shift_down_binds' b)
+| E_failwith m e => E_failwith m (shift_down' e)
+| E_raw_michelson m t1 t2 l => E_raw_michelson m t1 t2 l
+| E_inline_michelson m p l args => E_inline_michelson m p l (shift_down_args' args)
+| E_global_constant m t s args => E_global_constant m t s (shift_down_args' args)
+| E_create_contract m t1 t2 b args => E_create_contract m t1 t2 b (shift_down_args' args)
+end
+with shift_down_binds (k : nat) (b : binds) :=
+match b with
+| Binds m tys e => Binds m tys (shift_down (length tys + k) e)
+end
+with shift_down_args (k : nat) (args : args) :=
+match args with
+| Args_nil m => Args_nil m
+| Args_cons m x xs => Args_cons m (shift_down k x) (shift_down_args k xs)
+end
+.
+
+(* TODO: Actually we can shift from the [S k], because k is free after subst. *)
+Definition subst' e k body := shift_down k (subst (shift 1 0 e) k body).
+Definition subst_to_binds' e k body := shift_down_binds k (subst_to_binds (shift 1 0 e) k body).
+Definition subst_to_args' e k body := shift_down_args k (subst_to_args (shift 1 0 e) k body).
+Transparent subst' subst_to_binds' subst_to_args'.
+
+(** ** Optimizations *)
+
+Context {should_inline : meta -> expr -> expr -> bool}.
+
+(* TODO: try to implement iteration process (maybe we braga method) *)
+Fixpoint inline (e : expr) : expr :=
+match e with
+| E_let_in m1 E (Binds m2 [t] e) =>
+  (* TODO: optimize *)
+  if should_inline m1 E e
+  then shift_down 0 (subst (shift 1 0 E) 0 e)
+  else
+    let E' := inline E in
+    let e' := inline e in
+    E_let_in m1 E' (Binds m2 [t] e')
+| E_let_in m1 E (Binds m2 ts e) =>
+  E_let_in m1 (inline E) (Binds m2 ts (inline e))
+| E_let_tuple m1 E (Binds m2 tys e) =>
+  E_let_tuple m1 (inline E) (Binds m2 tys (inline e))
+| E_var m i => E_var m i
+
+| E_deref m i => E_deref m i
+(* in some cases we could inline a letmut, but we won't for now *)
+| E_let_mut_in m1 E (Binds m2 ts e) =>
+  E_let_mut_in m1 (inline E) (Binds m2 ts (inline e))
+| E_assign m i e => E_assign m i (inline e)
+| E_for m e1 e2 => E_for m (inline_in_args e1) (inline_in_binds e2)
+| E_for_each m e1 e2 => E_for_each m (inline e1) (inline_in_binds e2)
+| E_while m e1 e2 => E_while m (inline e1) (inline e2)
+
+| E_tuple m args => E_tuple m (inline_in_args args)
+| E_proj m e i l => E_proj m (inline e) i l
+| E_update m args i j => E_update m (inline_in_args args) i j
+| E_app m args => E_app m (inline_in_args args)
+| E_lam m b t  => E_lam m (inline_in_binds b) t
+| E_literal m l => E_literal m l
+| E_pair m args => E_pair m (inline_in_args args)
+| E_car m e => E_car m (inline e)
+| E_cdr m e => E_cdr m (inline e)
+| E_unit m => E_unit m
+| E_left m t e => E_left m t (inline e)
+| E_right m t e => E_right m t (inline e)
+| E_if_left m e b1 b2 => E_if_left m (inline e) (inline_in_binds b1) (inline_in_binds b2)
+| E_if_bool m e1 e2 e3 => E_if_bool m (inline e1) (inline e2) (inline e3)
+| E_if_none m e1 e2 b => E_if_none m (inline e1) (inline e2) (inline_in_binds b)
+| E_if_cons m e1 b e2 => E_if_cons m (inline e1) (inline_in_binds b) (inline e2)
+| E_iter m b e => E_iter m (inline_in_binds b) (inline e)
+| E_map m b e  => E_map m (inline_in_binds b) (inline e)
+| E_loop_left m b t e => E_loop_left m (inline_in_binds b) t (inline e)
+| E_fold m e1 e2 b => E_fold m (inline e1) (inline e2) (inline_in_binds b)
+| E_fold_right m t e1 e2 b => E_fold_right m t (inline e1) (inline e2) (inline_in_binds b)
+| E_failwith m e => E_failwith m (inline e)
+| E_raw_michelson m t1 t2 l => E_raw_michelson m t1 t2 l
+| E_inline_michelson m p l args => E_inline_michelson m p l (inline_in_args args)
+| E_global_constant m t s args => E_global_constant m t s (inline_in_args args)
+| E_create_contract m t1 t2 b args => E_create_contract m t1 t2 (inline_in_binds b) (inline_in_args args)
+end
+with inline_in_binds (b : binds) :=
+match b with
+| Binds m tys e => Binds m tys (inline e)
+end
+with inline_in_args (args : args) :=
+match args with
+| Args_nil m => Args_nil m
+| Args_cons m x xs => Args_cons m (inline x) (inline_in_args xs)
+end
+.
+
+(** * General Tactics
+
+     TODO: We should move it into separate file *)
+
+Ltac destruct_exists :=
+    repeat
+      match goal with
+      | H : exists _, _ |- _ => destruct H as [?t ?H]
+      end.
+
+Ltac clear_ctx :=
+  repeat match goal with
+  | H : ?T |- _ => lazymatch type of T with
+                 | Prop => fail
+                 | ?TT => clear H
+                 end
+  end.
+Tactic Notation "dep_ind'" ident(X1) := dependent induction X1.
+Tactic Notation "dep_ind" ident(X1)
+  := clear_ctx; dep_ind' X1.
+Tactic Notation "dep_ind" ident(X1) "," ident(X2)
+  := clear_ctx; dep_ind' X1; dep_ind' X2.
+Tactic Notation "dep_ind" ident(X1) "," ident(X2) "," ident(X3)
+  := clear_ctx; dep_ind' X1; dep_ind' X2; dep_ind' X3.
+
+(* split on depth [N] (not optimal) *)
+Ltac splits N :=
+  match N with
+  | O => idtac
+  | S ?N' => tryif split then splits N' else idtac
+  end.
+
+(* Inspired by https://softwarefoundations.cis.upenn.edu/plf-current/LibTactics.html *)
+
+Tactic Notation "gen" ident(X1) := generalize dependent X1.
+Tactic Notation "gen" ident(X1) ident(X2) := gen X1; gen X2.
+Tactic Notation "gen" ident(X1) ident(X2) ident(X3) := gen X1; gen X2; gen X3.
+Tactic Notation "gen" ident(X1) ident(X2) ident(X3) ident(X4) := gen X1; gen X2; gen X3; gen X4.
+
+Tactic Notation "admit_rewrite" constr(T) :=
+  let M := fresh "TEMP" in
+  assert (M: T) by admit; repeat rewrite M in *; clear M.
+
+Tactic Notation "assert_rewrite" constr(E) :=
+  let EQ := fresh "TEMP" in
+  assert (EQ : E); [> idtac | rewrite EQ; clear EQ].
+Tactic Notation "assert_rewrite" constr(E) "by" tactic(tac):=
+  let EQ := fresh "TEMP" in
+  assert (EQ : E); [> tac | (rewrite EQ; clear EQ)].
+Tactic Notation "assert_rewrite" constr(E) "at" integer(n) "by" tactic(tac):=
+  let EQ := fresh "TEMP" in
+  assert (EQ : E); [> tac | (rewrite EQ at n; clear EQ)].
+
+(** check that [e] is head of type [t] *)
+Ltac head_constructor' e t :=
+  let et := type of e in
+  match et with
+  | t => head_constructor e
+  | t _ => head_constructor e
+  | t _ _ => head_constructor e
+  | t _ _ _ => head_constructor e
+  | t _ _ _ _ => head_constructor e
+  end.
+
+Local Set Warnings "-cast-in-pattern". (* TODO ? *)
+Ltac invert_inductive t :=
+  match goal with
+  | [H : ?p (?e : t) |- _ ]
+    => first [ head_constructor' e t ]; invert H
+  | [H : ?p ?e1 ?e2 |- _ ]
+    => first [ head_constructor' e1 t | head_constructor' e2 t ]; invert H
+  | [H : ?p ?e1 ?e2 ?e3 |- _]
+    => first [ head_constructor' e1 t | head_constructor' e2 t
+            | head_constructor' e3 t ]; invert H
+  | [H : ?p ?e1 ?e2 ?e3 ?e4 |- _]
+    => first [ head_constructor' e1 t | head_constructor' e2 t
+            | head_constructor' e3 t | head_constructor' e4 t ]; invert H
+  | [H : ?p ?e1 ?e2 ?e3 ?e4 ?e5 |- _]
+    => first [ head_constructor' e1 t | head_constructor' e2 t
+            | head_constructor' e3 t | head_constructor' e4 t
+            | head_constructor' e5 t ]; invert H
+  end.
+
+Hint Extern 1 => match goal with | H : _ /\ _ |- _ => destruct H end : core.
+
+(** * General properties of de Bruijn operations and predicates *)
+
+(** ** Auxiliary tactics *)
+
+Ltac invert_expr := repeat (invert_inductive expr || invert_inductive binds || invert_inductive args).
+
+Lemma fold_subst :
+  (forall e1 e2 k, shift_down k (subst (shift 1 0 e1) k e2) = subst' e1 k e2)
+  /\ (forall e1 e2 k, shift_down_binds k (subst_to_binds (shift 1 0 e1) k e2) = subst_to_binds' e1 k e2)
+  /\ (forall e1 e2 k, shift_down_args k (subst_to_args (shift 1 0 e1) k e2) = subst_to_args' e1 k e2).
+Proof.
+  splits 2; reflexivity.
+Qed.
+
+(* For convenient reading goal after simplification through constructors *)
+Ltac fold_subst := repeat (rewrite fold_subst.1 || rewrite fold_subst.2.1 || rewrite fold_subst.2.2).
+
+(** ** Extra stdlib proofs *)
+
+Lemma add_0_r {n} : n + 0 = n.
+Proof. induction n; [> reflexivity | simpl; f_equal; assumption]. Qed.
+
+(* Lemma nth_error_app2 l l' n : length l <= n -> *)
+(*     nth_error (l++l') n = nth_error l' (n-length l). *)
+
+Lemma nth_error_hd : forall {A : Type} {l : list A} {a n},
+      n <> 0 ->
+      nth_error l (pred n) = nth_error (a :: l) n.
+Proof.
+  induction n.
+  - intro H; exfalso; exact (H eq_refl).
+  - intro H; simpl; reflexivity.
+Qed.
+
+(** ** Simplification lemmas about de Bruijn operations *)
+
+Lemma shift0_simpl :
+  (forall {e k}, shift 0 k e = e)
+  /\ (forall {b k}, shift_binds 0 k b = b)
+  /\ (forall {args k}, shift_args 0 k args = args).
+Proof.
+  apply expr_mutind;
+  simpl; intros; try destruct (le_lt_dec k n); try f_equal; try lia; auto.
+Qed.
+
+Lemma shift_extend :
+  (forall {e l k n}, (forall i, k <= i < k + l -> free_in i e) ->
+                shift n (k + l) e = shift n k e)
+  /\ (forall {b l k n}, (forall i, k <= i < k + l -> free_in_binds i b) ->
+                  shift_binds n (k + l) b = shift_binds n k b)
+  /\ (forall {a l k n}, (forall i, k <= i < k + l -> free_in_args i a) ->
+                  shift_args n (k + l) a = shift_args n k a).
+Proof.
+  apply expr_mutind.
+  all: intros; simpl; f_equal.
+  all: try (apply H || apply H1 || apply H2 || apply H0).
+  all: try intros i Hi; try (
+      (specialize (H1 i Hi); inversion_clear H1; assumption)
+    || (specialize (H0 i Hi); inversion_clear H0; assumption)
+    || (specialize (H2 i Hi); inversion_clear H2; assumption)).
+  - destruct (le_lt_dec k n); destruct (le_lt_dec (k + l) n); try lia.
+    + specialize (H n (conj l0 l1)).
+      inversion_clear H.
+      exfalso; apply H0; reflexivity.
+  - destruct (le_lt_dec k n); destruct (le_lt_dec (k + l) n); try lia.
+    + specialize (H n (conj l0 l1)).
+      inversion_clear H.
+      exfalso; apply H0; reflexivity.
+  - admit. (* E_assign *)
+  - rewrite Nat.add_assoc. apply H. intros i Hi.
+    assert (k <= i - length l < k + l0) as H' by lia.
+    specialize (H0 (i - length l) H'); inversion_clear H0.
+    assert (length l + (i - length l) = i) as Hsimp by lia.
+    rewrite <- Hsimp.
+    assumption.
+Admitted.
+
+(* More handy version of previous one *)
+Lemma shift_specialize :
+  forall {k1 k2 e n}, k1 <= k2 -> (forall i, k1 <= i < k2 -> free_in i e) ->
+                 shift n k1 e = shift n k2 e.
+Proof.
+  intros.
+  destruct (Nat.le_exists_sub _ _ H) as [k' [? _]].
+  rewrite H1 in *.
+  rewrite Nat.add_comm. rewrite shift_extend.1.
+  reflexivity. rewrite Nat.add_comm. assumption.
+Qed.
+
+Lemma shift_down_extend :
+  (forall {e l k}, (forall i, k <= i < k + l -> free_in i e) ->
+                shift_down (k + l) e = shift_down k e)
+  /\ (forall {b l k}, (forall i, k <= i < k + l -> free_in_binds i b) ->
+                  shift_down_binds (k + l) b = shift_down_binds k b)
+  /\ (forall {a l k}, (forall i, k <= i < k + l -> free_in_args i a) ->
+                  shift_down_args (k + l) a = shift_down_args k a).
+Proof.
+  apply expr_mutind.
+  all: intros; simpl; f_equal.
+  all: try (apply H || apply H1 || apply H2 || apply H0).
+  all: try intros i Hi; try (
+      (specialize (H1 i Hi); inversion_clear H1; assumption)
+    || (specialize (H0 i Hi); inversion_clear H0; assumption)
+    || (specialize (H2 i Hi); inversion_clear H2; assumption)).
+  - destruct (le_lt_dec k n); destruct (le_lt_dec (k + l) n); try lia.
+    + specialize (H n (conj l0 l1)).
+      inversion_clear H.
+      exfalso; apply H0; reflexivity.
+  - admit. (* E_deref *)
+  - rewrite Nat.add_assoc. apply H. intros i Hi.
+    assert (k <= i - length l < k + l0) as H' by lia.
+    specialize (H0 (i - length l) H'); inversion_clear H0.
+    assert (length l + (i - length l) = i) as Hsimp by lia.
+    rewrite <- Hsimp.
+    assumption.
+Admitted.
+
+(* More handy version of previous one *)
+Lemma shift_down_specialize :
+  forall {k1 k2 e}, k1 <= k2 -> (forall i, k1 <= i < k2 -> free_in i e) ->
+                 shift_down k1 e = shift_down k2 e.
+Proof.
+  intros.
+  destruct (Nat.le_exists_sub _ _ H) as [k' [? _]].
+  rewrite H1 in *.
+  rewrite Nat.add_comm. rewrite shift_down_extend.1.
+  reflexivity. rewrite Nat.add_comm. assumption.
+Qed.
+
+Lemma shift_shift_simpl :
+  (forall {e k n1 n2}, shift n1 (k + n2) (shift n2 k e) = shift (n1 + n2) k e)
+  /\ (forall {b k n1 n2}, shift_binds n1 (k + n2) (shift_binds n2 k b) = shift_binds (n1 + n2) k b)
+  /\ (forall {a k n1 n2}, shift_args n1 (k + n2) (shift_args n2 k a) = shift_args (n1 + n2) k a).
+Proof.
+ apply expr_mutind.
+ all: intros; simpl.
+ all: try congruence.
+ - destruct (le_lt_dec k n).
+   + destruct (le_lt_dec (k + n2) (n + n2)); [> f_equal| exfalso]; lia.
+   + destruct (le_lt_dec (k + n2) n); [> exfalso; lia | reflexivity].
+ - admit. (* E_deref *)
+ - admit. (* E_assign *)
+ - apply f_equal.
+   rewrite <- H, Nat.add_assoc.
+   reflexivity.
+Admitted.
+
+Lemma shift_down_shift_simpl :
+  (forall {e k}, shift_down (S k) (shift 1 k e) = e)
+  /\ (forall {b k}, shift_down_binds (S k) (shift_binds 1 k b) = b)
+  /\ (forall {args k}, shift_down_args (S k) (shift_args 1 k args) = args).
+Proof.
+  apply expr_mutind; intros.
+  1: unfold shift, shift_down; destruct (le_lt_dec k n); f_equal;
+       destruct le_lt_dec; lia.
+  24: unfold shift, shift_down; destruct (le_lt_dec k n); f_equal;
+       destruct le_lt_dec; lia.
+  all: simpl; f_equal; trivial.
+  admit. (* TODO hmm, what happened here *)
+  specialize (H (length l + k)).
+  rewrite <- H at 2.
+  rewrite Nat.add_succ_r; reflexivity.
+Admitted.
+
+Create HintDb expr_simpl_hints.
+Ltac simpl_expr := autorewrite with expr_simpl_hints.
+
+Hint Rewrite ->
+     shift0_simpl.1 shift0_simpl.2.1 shift0_simpl.2.2
+     shift_down_shift_simpl.1 shift_down_shift_simpl.2.1 shift_down_shift_simpl.2.2
+  : expr_simpl_hints.
+
+(** ** Lemmas about [free_in] predicate *)
+
+Lemma free_in_shifted0 :
+  (forall {e k n}, 0 < n -> free_in k (shift n k e))
+  /\ (forall {b k n}, 0 < n -> free_in_binds k (shift_binds n k b))
+  /\ (forall {args k n}, 0 < n -> free_in_args k (shift_args n k args)).
+Proof.
+  apply expr_mutind.
+  all: intros; simpl.
+  all: try (econstructor; eauto).
+  - destruct le_lt_dec; lia.
+  - destruct le_lt_dec; lia.
+  - destruct le_lt_dec; lia.
+Qed.
+
+Lemma free_in_shifted :
+  (forall {e k n i}, k <= i < k + n -> free_in i (shift n k e))
+  /\ (forall {b k n i}, k <= i < k + n -> free_in_binds i (shift_binds n k b))
+  /\ (forall {args k n i}, k <= i < k + n -> free_in_args i (shift_args n k args)).
+Proof.
+  apply expr_mutind.
+  all: intros; simpl.
+  all: try econstructor.
+  all: try ((apply H; eauto) || (apply H0; eauto) || (apply H1; eauto)).
+  - destruct le_lt_dec; lia.
+  - destruct le_lt_dec; lia.
+  - destruct le_lt_dec; lia.
+  - lia.
+Qed.
+
+Lemma free_after_shift :
+  (forall {e k i n}, k <= i -> free_in i e <-> free_in (i + n) (shift n k e))
+  /\ (forall {b k i n}, k <= i -> free_in_binds i b <-> free_in_binds (i + n) (shift_binds n k b))
+  /\ (forall {args k i n}, k <= i -> free_in_args i args <-> free_in_args (i + n) (shift_args n k args)).
+Proof.
+  apply expr_mutind.
+  all: split; simpl.
+  all: intro H'; inversion_clear H'; simpl; constructor.
+  all: try (rewrite <-H0; eauto); try (rewrite ->H0; eauto).
+  all: try (rewrite <-H ; eauto); try (rewrite ->H; eauto).
+  all: try (rewrite <-H1; eauto); try (rewrite ->H1; eauto).
+  all: try (destruct (le_lt_dec k n); lia).
+  - rewrite Nat.add_assoc. rewrite <- H. apply H1. lia.
+  - rewrite <-(H _ _ n) by lia.
+    rewrite Nat.add_assoc in H1.
+    rewrite <-H in H1 by lia.
+    assumption.
+Qed.
+
+Lemma helper1 {e k n} : free_in k (shift k 0 e) -> free_in (n + k) (shift (n + k) 0 e).
+Proof.
+  intro H.
+  rewrite <- (@free_after_shift.1 _ 0 0 k) in H by reflexivity.
+  rewrite -> (@free_after_shift.1 _ 0 0 (n + k)) in H by reflexivity.
+  simpl in H.
+  exact H.
+Qed.
+
+Lemma free_after_subst :
+  (forall {e : expr}  {E : expr} {k : nat},
+      free_in k (shift k 0 E) ->
+      free_in k (subst E k e)) /\
+  (forall {b : binds} {E : expr} {k : nat},
+      free_in (binds_length b + k) (shift (binds_length b + k) 0 E) ->
+      free_in_binds k (subst_to_binds E k b)) /\
+  (forall {a : args}  {E : expr} {k : nat},
+      free_in k (shift k 0 E) ->
+      free_in_args k (subst_to_args E k a)).
+Proof.
+  apply expr_mutind; intros.
+  all: try (simpl; constructor; auto).
+  all: try ((apply H0 || apply H || apply H1); apply helper1; assumption).
+  -  simpl; destruct (le_lt_dec n k); [> destruct (Nat.eq_dec n k) |].
+    + assumption. (* TODO *)
+    + constructor; assumption.
+    + constructor; lia.
+  - admit. (* E_deref *)
+  - admit. (* ??? *)
+Admitted.
+
+Lemma shift_free_simpl :
+  (forall {e k n} (HF: forall i, k <= i -> free_in i e), shift n k e = e) /\
+  (forall {e k n} (HF: forall i, k <= i -> free_in_binds i e), shift_binds n k e = e) /\
+  (forall {e k n} (HF: forall i, k <= i -> free_in_args i e), shift_args n k e = e).
+Proof.
+  apply expr_mutind; simpl; intros.
+  all: try solve [ f_equal; (apply H || apply H0 || apply H1); intros i H';
+                   specialize (HF i H'); invert_expr; auto].
+  - destruct le_lt_dec; try reflexivity.
+    specialize (HF _ l). invert HF. lia.
+  - admit. (* E_deref *)
+  - admit. (* E_assign *)
+  - f_equal.
+    apply (H). intros i H'.
+    assert (k <= i - length l) by lia.
+    specialize (HF (i - length l) H0). invert_expr.
+    rewrite le_plus_minus_r in H3 by lia.
+    assumption.
+Admitted.
+
+Lemma subst_free_simpl :
+  (forall {k e2} {HF: free_in k e2} {e1}, subst e1 k e2 = e2)
+  /\ (forall {k e2} {HF: free_in_binds k e2} {e1}, subst_to_binds e1 k e2 = e2)
+  /\ (forall {k e2} {HF: free_in_args k e2} {e1}, subst_to_args e1 k e2 = e2).
+Proof.
+  apply free_in_mutind; simpl; intros.
+  all: try f_equal; auto.
+  - destruct le_lt_dec; try destruct Nat.eq_dec; lia || reflexivity.
+  - admit. (* E_deref *)
+Admitted.
+
+(** ** Auxiliary forms of simplification lemmas *)
+
+(* TODO: generalize for binds and args *)
+Lemma shift_shift_simpl' : forall {e n1 n2},
+    shift n1 0 (shift n2 0 e) = shift (n1 + n2) 0 e.
+Proof.
+  intros.
+  rewrite <-(shift_extend.1 _ n2) by (apply free_in_shifted; lia).
+  rewrite shift_shift_simpl.1. reflexivity.
+Qed.
+
+Lemma shift_down_shift_simpl' :
+  (forall {e k}, shift_down k (shift 1 k e) = e)
+  /\ (forall {b k}, shift_down_binds k (shift_binds 1 k b) = b)
+  /\ (forall {args k}, shift_down_args k (shift_args 1 k args) = args).
+Proof.
+  splits 2; intros.
+  all: erewrite <- (@shift_down_extend.1 _ 1)
+     || erewrite <- (@shift_down_extend.2.1 _ 1)
+     || erewrite <- (@shift_down_extend.2.2 _ 1).
+  all: try (rewrite Nat.add_1_r; apply shift_down_shift_simpl).
+  all: intros; eapply free_in_shifted; assumption.
+Qed.
+
+Hint Rewrite ->
+     @shift_shift_simpl'
+     shift_down_shift_simpl'.1 shift_down_shift_simpl'.2.1 shift_down_shift_simpl'.2.2
+  : expr_simpl_hints.
+
+Lemma shift_down_shift_simpl''' :
+  forall {e k1 k2}, shift_down k2 (shift (k2 + S k1) 0 e) = (shift (k2 + k1) 0 e).
+Proof.
+  intros.
+  assert_rewrite (k2 + S k1 = 1 + (k2 + k1)) by lia.
+  rewrite <-(shift_shift_simpl.1).
+  assert_rewrite (0 + (k2 + k1) = k2 + k1) by lia.
+  rewrite shift_extend.1 by (intros; apply free_in_shifted; lia).
+  rewrite shift_down_shift_simpl'.1.
+  reflexivity.
+Qed.
+
+Lemma shift_down_shift_simpl'' :
+  forall {e k}, shift_down k (shift k 0 (shift 1 0 e)) = shift k 0 e.
+Proof.
+  intros e k.
+  destruct k; [> simpl_expr; reflexivity |].
+  rewrite (@shift_specialize 0 1); try lia || (intros; apply free_in_shifted; lia).
+  assert_rewrite (1 = 0 + 1) at 1 by lia.
+  rewrite shift_shift_simpl.1.
+  rewrite shift_down_shift_simpl'''.
+  assert_rewrite (S k + 0 = S k) by lia.
+  reflexivity.
+Qed.
+
+Hint Rewrite ->
+     @shift_down_shift_simpl'' @shift_down_shift_simpl''' : expr_simpl_hints.
+
+(** * Type preservation theorems *)
+
+Lemma shift_type_preservation :
+  (forall {e l gl gr t}, expr_typed (gl ++ gr) e t ->
+                    expr_typed (gl ++ l ++ gr) (shift (length l) (length gl) e) t)
+  /\ (forall {b l gl gr t ts}, binds_typed (gl ++ gr) b ts t ->
+                         binds_typed (gl ++ l ++ gr) (shift_binds (length l) (length gl) b) ts t)
+  /\ (forall {args l gl gr ts} , args_typed (gl ++ gr) args ts ->
+                           args_typed (gl ++ l ++ gr) (shift_args (length l) (length gl) args) ts).
+Proof.
+  apply expr_mutind; intros; simpl.
+  all: invert_expr.
+  all: try (econstructor; try eassumption; try reflexivity); eauto.
+  - destruct (le_lt_dec _ _).
+    + rewrite nth_error_app2 by lia.
+      rewrite nth_error_app2 by lia.
+      rewrite nth_error_app2 in H4 by lia.
+      rewrite <-H4; f_equal; lia.
+    + rewrite nth_error_app1 by lia.
+      rewrite nth_error_app1 in H4 by lia.
+      exact H4.
+  - specialize (H l0 (ts ++ gl)%list gr t).
+    do 2 rewrite <-app_assoc in H.
+    rewrite app_length in H.
+    exact (H H7).
+Qed.
+
+Lemma shift_type_preservation0 :
+  (forall {e l g t}, expr_typed g e t ->
+                expr_typed (l ++ g) (shift (length l) 0 e) t)
+  /\ (forall {b l g t ts}, binds_typed g b ts t ->
+                       binds_typed (l ++ g) (shift_binds (length l) 0 b) ts t)
+  /\ (forall {args l g ts} , args_typed g args ts ->
+                         args_typed (l ++ g) (shift_args (length l) 0 args) ts).
+Proof.
+  split; [> | split ]; intros x l.
+  - epose (shift_type_preservation.1 x l []) as H; simpl in H; exact H.
+  - epose (shift_type_preservation.2.1 x l []) as H; simpl in H; exact H.
+  - epose (shift_type_preservation.2.2 x l []) as H; simpl in H; exact H.
+Qed.
+
+(* without shifting down *)
+Theorem subst_type_preservation :
+  (forall {expr g E t tE k}, expr_typed g (shift k 0 E) tE ->
+                        expr_typed g expr t ->
+                        nth_error g k = Some tE ->
+    expr_typed g (subst E k expr) t) /\
+  (forall {b g E t ts tE k}, expr_typed g (shift k 0 E) tE ->
+                        binds_typed g b ts t ->
+                        nth_error g k = Some tE ->
+    binds_typed g (subst_to_binds E k b) ts t) /\
+  (forall {args g E ts tE k}, expr_typed g (shift k 0 E) tE ->
+                         args_typed g args ts ->
+                         nth_error g k = Some tE ->
+    args_typed g (subst_to_args E k args) ts).
+Proof.
+  apply expr_mutind; intros; simpl.
+  all: try invert_expr.
+  all: try econstructor; try eassumption; try reflexivity.
+  all: try ((eapply H || eapply H0 || eapply H1); try econstructor; eassumption).
+  - destruct (le_lt_dec n k); destruct (Nat.eq_dec n k);
+      try (constructor; assumption).
+    + subst k. rewrite H1 in H6; invert H6. assumption.
+  - eapply H; try eassumption.
+    + rewrite <- shift_shift_simpl.1.
+      rewrite shift_extend.1.
+      apply shift_type_preservation0.1; eassumption.
+      intro i; exact (@free_in_shifted.1 E 0 k i).
+    + rewrite nth_error_app2 by lia.
+      rewrite <-H2; f_equal; lia.
+Qed.
+
+Lemma shift_down_type_preservasion :
+  (forall {e a gl gr t}, free_in (length gl) e ->
+                  expr_typed (gl ++ a :: gr) e t ->
+                  expr_typed (gl ++ gr) (shift_down (length gl) e) t)
+  /\ (forall {b a gl gr t ts}, free_in_binds (length gl) b ->
+                    binds_typed (gl ++ a :: gr) b ts t ->
+                    binds_typed (gl ++ gr) (shift_down_binds (length gl) b) ts t)
+  /\ (forall {args a gl gr ts}, free_in_args (length gl) args ->
+                     args_typed (gl ++ a :: gr) args ts ->
+                     args_typed (gl ++ gr) (shift_down_args (length gl) args) ts).
+Proof.
+  apply expr_mutind; intros; simpl.
+  all: invert_expr.
+  all: try econstructor; try eassumption; try reflexivity.
+  all: try ((try eapply H; try eapply H0); eauto).
+  all: try (assumption).
+  - destruct (le_lt_dec _ _).
+    + rewrite nth_error_app2 by lia.
+      rewrite nth_error_app2 in H5 by lia.
+      rewrite <-H5.
+      assert (pred n - length gl = pred (n - length gl)) as h1 by lia.
+      rewrite h1; clear h1.
+      erewrite nth_error_hd by lia.
+      reflexivity.
+   + rewrite nth_error_app1 in * by lia.
+     assumption.
+  - epose (H a (ts ++ gl)%list gr t) as H'.
+    do 2 rewrite <-app_assoc in H'.
+    rewrite app_length in H'.
+    exact (H' H4 H8).
+Qed.
+
+Lemma shift_down_type_preservasion0 :
+  (forall {e a g t}, free_in 0 e ->
+                  expr_typed (a :: g) e t ->
+                  expr_typed g (shift_down 0 e) t)
+  /\ (forall {b a g t ts}, free_in_binds 0 b ->
+                    binds_typed (a :: g) b ts t ->
+                    binds_typed g (shift_down_binds 0 b) ts t)
+  /\ (forall {args a g ts}, free_in_args 0 args ->
+                     args_typed (a :: g) args ts ->
+                     args_typed g (shift_down_args 0 args) ts).
+Proof.
+  split; [> | split]; intros x a.
+  - pose (shift_down_type_preservasion.1 x a []) as H; simpl in H; exact H.
+  - pose (shift_down_type_preservasion.2.1 x a []) as H; simpl in H; exact H.
+  - pose (shift_down_type_preservasion.2.2 x a []) as H; simpl in H; exact H.
+Qed.
+
+Lemma subst'0_type_preservation :
+  forall {e1 e2 g t1 t2}, expr_typed g e1 t1 ->
+                     expr_typed ([t1] ++ g) e2 t2 ->
+                     expr_typed g (subst' e1 0 e2) t2.
+Proof.
+  intros; unfold subst'.
+  eapply (shift_down_type_preservasion0.1).
+  - eapply free_after_subst; rewrite shift0_simpl.1; eapply free_in_shifted0.1; lia.
+  - eapply (subst_type_preservation.1).
+    + rewrite shift0_simpl.1.
+      epose (@shift_type_preservation.1 e1 [t1] [] g t1) as H1.
+      simpl in H1. apply H1, H.
+    + simpl in H0; apply H0.
+    + reflexivity.
+Qed.
+
+Theorem inline_type_preservasion :
+  (forall {e t g}, expr_typed g e t -> expr_typed g (inline e) t)
+  /\ (forall {b t ts g}, binds_typed g b ts t -> binds_typed g (inline_in_binds b) ts t)
+  /\ (forall {args ts g}, args_typed g args ts -> args_typed g (inline_in_args args) ts).
+Proof.
+  apply expr_mutind;
+    simpl; intros; try assumption.
+  all: try (try destruct b; inversion_clear H0; econstructor; eauto).
+  all: try (try destruct b; inversion_clear H1; econstructor; eauto).
+  all: try (try destruct b; inversion_clear H2; econstructor; eauto).
+  - (* E_let_in *)
+    destruct b.
+    destruct (should_inline m e e0).
+    2: { destruct l; [>| destruct l];
+         inversion_clear H1; econstructor; eauto. }
+    inversion_clear H1.
+    inversion H3; subst.
+    rename e into E'; rename e0 into e'.
+    eassert (expr_typed (a :: g) (subst (shift 1 0 E') 0 e') t) as H'.
+    { eapply subst_type_preservation.1.
+      - rewrite shift0_simpl.1.
+        assert (@shift_env 1 g [a] eq_refl = a :: g) by reflexivity.
+        rewrite <- H1.
+        eapply shift_type_preservation0.1.
+        apply H2.
+      - simpl in H0.
+        enough (binds_typed g (inline_in_binds (Binds m0 [a] e')) [a] t).
+        * inversion_clear H1; subst; simpl in *; assumption.
+        * apply H0.
+          constructor; assumption.
+      - simpl. reflexivity.
+    }
+    eapply shift_down_type_preservasion0.
+    apply (free_after_subst.1).
+    rewrite shift0_simpl.1.
+    apply (free_in_shifted0); lia.
+    apply H'.
+Qed.
+
+Local Generalizable No Variables.
+
+End Mini_c.
 
 (*************
  * Michelson *
@@ -965,7 +2011,7 @@ Fixpoint compile_expr (r : ope) (env : list ty) (e : expr) {struct e} : prog :=
        I_FAILWITH null]
   | E_raw_michelson l a b code =>
       [I_LAMBDA null a b [I_RAW l 1 code]]
-  | E_inline_michelson l code args =>
+  | E_inline_michelson l _ code args =>
       compile_args r env args ++ [I_RAW l (args_length args) code]
   | E_global_constant l b hash args =>
       [I_SEQ null (compile_args r env args);

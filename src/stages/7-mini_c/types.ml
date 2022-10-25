@@ -156,9 +156,13 @@ type meta =
     binder : binder_meta option;
     (* binder descriptor on the translated type of binders (since
        backend environments are lists of types) *)
+    inline_let_in : bool ;
+    (* Attributes for E_let_in node that are needed for self_mini_c
+       optimizations. They have no sense for other nodes. *)
   }
 
 let dummy_meta : meta =
   { location = Location.dummy ;
     env = [] ;
-    binder = None }
+    binder = None ;
+    inline_let_in = false }

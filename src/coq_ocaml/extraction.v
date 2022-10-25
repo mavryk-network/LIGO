@@ -40,4 +40,4 @@ Extract Inductive N => "Zarith.t"
 (* TODO *)
 Local Set Warnings "-extraction-logical-axiom".
 
-Separate Extraction compile_ope compile_expr compile_binds strengthen_prog.
+Separate Extraction compile_ope compile_expr compile_binds strengthen_prog inline.

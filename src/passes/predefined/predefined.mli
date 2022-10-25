@@ -9,4 +9,5 @@ module Michelson : sig
   include module type of Helpers.Michelson
   open Ligo_prim
   val get_operators : Environment.Protocols.t -> Constant.constant' -> predicate option
+  val is_pure_constant : Constant.constant' -> bool
 end

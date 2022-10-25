@@ -244,7 +244,10 @@ and build_contract_stacking ~raise : options:Compiler_options.t -> string -> str
   fun ~options entry_point cli_views file_name ->
     let _, aggregated, agg_views = build_contract_aggregated ~raise ~options entry_point cli_views file_name in
     let mini_c = Ligo_compile.Of_aggregated.compile_expression ~raise aggregated in
-    let contract = Ligo_compile.Of_mini_c.compile_contract ~raise ~options mini_c in
+    let contract  = if true (* TODO(tomjack) I removed the dev flag *)
+                    then Ligo_compile.Of_mini_c.compile_contract_dev ~raise ~options mini_c
+                    else Ligo_compile.Of_mini_c.compile_contract ~raise ~options mini_c
+    in
     let views = build_views ~raise ~options agg_views in
     (contract,aggregated),(views,agg_views)
 
