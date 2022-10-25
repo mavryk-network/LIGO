@@ -28,7 +28,6 @@ We provides implementation of:
 
 build: [
   [ "dune" "build" "-p" name "-j" jobs ]
-  [ "ocaml" "./install/install.ml" ]
   [ "dune" "runtest" "-p" name "-j" jobs ] {with-test}
 ]
 install:  [
@@ -49,20 +48,17 @@ depends: [
   "rresult"        {with-test}
   "ocamlfind"      {with-test}
 ]
-depopts: [
-  "ocaml-freestanding"
-]
 
 conflicts: [
   "mirage-xen" {< "6.0.0"}
-  "ocaml-freestanding" {< "0.6.0"}
+  "ocaml-freestanding"
 ]
 url {
   src:
-    "https://github.com/mirage/digestif/releases/download/v1.1.2/digestif-1.1.2.tbz"
+    "https://github.com/mirage/digestif/releases/download/v1.1.3/digestif-1.1.3.tbz"
   checksum: [
-    "sha256=79d34ce513b114857e380aabdf6f1473218f1b05dd7e51d03890779ed01b4666"
-    "sha512=83e41de192443029baf86212488e986b2c73c19fb4ba59342685d44b36b2dcaf070aa9687277577058437c6513b76c204164ad96151dacdfb796b4080db7e50c"
+    "sha256=c32b8ecbc40b22645ae3d6e386bb9c9c5ab2fde130a252e994b18eb0d580c92e"
+    "sha512=1f76d1ca38cc0e5a04359d197783bc5cf479d01d732a92b4e8e5a7ef0651a645a12d9c51535531e274a894b445d78d98da1fd3201bf47c232f1f6b74ff051f80"
   ]
 }
-x-commit-hash: "71af93d9608a4cb593ddd15763b69d42dd5c5262"
+x-commit-hash: "5a959baee61a19e4a4243dd00cdefa5e726d4109"

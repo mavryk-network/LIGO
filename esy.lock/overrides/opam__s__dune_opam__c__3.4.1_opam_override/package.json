@@ -3,7 +3,7 @@
     [
       "bash",
       "-c",
-      "#{os == 'windows' ? 'patch -p1 < winpatch.patch' : 'true' }"
+      "patch --ignore-whitespace -p1 < winpatch.patch"
     ],
     [
       "ocaml",

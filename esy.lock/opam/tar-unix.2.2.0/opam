@@ -17,7 +17,6 @@ depends: [
   "cstruct" {>= "6.0.0"}
   "cstruct-lwt"
   "lwt"
-  "re" {>= "1.7.2"}
   "tar" {= version}
   "odoc" {with-doc}
 ]
@@ -40,10 +39,10 @@ build: [
 dev-repo: "git+https://github.com/mirage/ocaml-tar.git"
 url {
   src:
-    "https://github.com/mirage/ocaml-tar/releases/download/v2.1.0/tar-2.1.0.tbz"
+    "https://github.com/mirage/ocaml-tar/releases/download/v2.2.0/tar-2.2.0.tbz"
   checksum: [
-    "sha256=05cf662c9cfc3fc6cf1e04785b8f65c125df5a617686c4ee86567c59d219cf2c"
-    "sha512=ac0307d3d99c8335f40a86257b328fa78603a6d558477fd7802ec14802e308c8dcddca3ae6609be23e715b4e6e554c10e876f315e5fefa96632f5c992dc0b782"
+    "sha256=c28647b0491a2e95c315b7c47b2e8ff43e9731375e9945c813a7c6cc866d7d63"
+    "sha512=ac1ef2d86fd4cd55fabf8ce796bd08b44108748a71d46872a22f2abb0e8cb8e58e8eef4935adfe2ab3a831c3ad5633065ce4be46f72c565e426699a52d6a3994"
   ]
 }
-x-commit-hash: "43ac8b8035296165dab5f5f3880c0ff385c1e18f"
+x-commit-hash: "aea89ef02ea6756bae43c4dd7adc450336a0f00b"
