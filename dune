@@ -12,4 +12,4 @@
    (:standard -strict-sequence -strict-formats -short-paths -keep-locs -open
      Core))))
 
-(vendored_dirs vendors)
+(vendored_dirs vendored_utils)

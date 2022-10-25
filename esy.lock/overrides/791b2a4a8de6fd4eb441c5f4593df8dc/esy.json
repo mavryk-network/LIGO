@@ -1,0 +1,18 @@
+{
+  "name": "esy-libev",
+  "version": "4.33.0",
+  "description": "hello packaged for esy",
+  "source": "http://dist.schmorp.de/libev/Attic/libev-4.33.tar.gz#sha256:507eb7b8d1015fbec5b935f34ebed15bf346bed04a11ab82b8eee848c4205aea",
+  "override": {
+    "build": ["./configure #{os == 'windows' ? '--host x86_64-w64-mingw32': ''}", "make"],
+    "install": "make install",
+    "buildsInSource": true,
+    "exportedEnv": {
+      "PKG_CONFIG_PATH": {
+        "val": "#{self.lib / 'pkgconfig'}",
+        "scope": "global"
+      }
+    },
+    "dependencies": {}
+  }
+}
