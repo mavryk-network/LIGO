@@ -25,16 +25,15 @@ let error_ppformat
       | `Unification_other_error msg -> Format.fprintf f "@[<hv>Error during unification stage: %s.@]" msg
       )
 
-
-let error_jsonformat : unification_error -> Yojson.Safe.t = fun a ->
-  let json_error ~stage ~message =
-    `Assoc [
-      ("status", `String "error") ;
-      ("stage", `String stage) ;
-      ("message",  `String message )]
-  in
-  match a with
+let error_json : unification_error -> Simple_utils.Error.t =
+  fun e ->
+    let open Simple_utils.Error in 
+    match e with
   | `Unification_unsupported_syntax s ->
-    json_error ~stage ~message:(sprintf "Syntax %s is not supported by the syntax unification stage." s)
-  | `Unification_other_error message ->
-    json_error ~stage ~message
+    let message = Format.sprintf "Syntax %s is not supported by the syntax unification stage." s in
+    let content = make_content ~message () in
+    make ~stage ~content
+  | `Unification_other_error s ->
+    let message = Format.sprintf "Error during unification stage : %s" s in
+    let content = make_content ~message () in
+    make ~stage ~content
