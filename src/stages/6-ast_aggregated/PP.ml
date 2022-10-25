@@ -107,10 +107,6 @@ let rec expression ppf (e : expression) =
   fprintf ppf "%a"
     expression_content e.expression_content
 
-and toto ppf (e : expression) =
-  fprintf ppf "%a : %a"
-    expression_content e.expression_content type_expression e.type_expression
-
 and expression_content ppf (ec: expression_content) =
   match ec with
   | E_literal     l -> Literal_value.pp   ppf l
@@ -124,16 +120,11 @@ and expression_content ppf (ec: expression_content) =
   | E_lambda      l -> Lambda.pp      expression type_expression_annot ppf l
   | E_type_abstraction e -> Type_abs.pp expression ppf e
   | E_matching m ->
-    Types.Match_expr.pp toto type_expression ppf m
+    Types.Match_expr.pp expression type_expression ppf m
   | E_recursive  r -> Recursive.pp expression type_expression_annot ppf r
-  | E_let_in {let_binder; rhs; let_result; attributes = { hidden = false ; _ } as attr } ->
-    fprintf ppf "@[let %a =@;<1 2>%a%a in@ %a@]"
-      (Pattern.pp type_expression_annot) let_binder
-      expression rhs
-      Types.ValueAttr.pp attr
-      expression let_result
-  | E_let_in {let_binder = _ ; rhs = _ ; let_result; attributes = { inline = _ ; no_mutation = _ ; public=__LOC__ ; view = _ ; hidden = true ; thunk = _ } } ->
-      fprintf ppf "@[<h>%a@]" expression let_result
+  | E_let_in x when (not x.attributes.hidden) ->
+    Let_in.pp expression type_expression ppf x
+  | E_let_in x -> expression ppf x.let_result
   | E_raw_code   r -> Raw_code.pp   expression ppf r
   | E_type_inst ti -> type_inst ppf ti
   | E_let_mut_in { let_binder; rhs; let_result; attributes } ->
