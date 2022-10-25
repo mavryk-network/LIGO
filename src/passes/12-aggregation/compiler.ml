@@ -210,10 +210,10 @@ end = struct
         {scope with name_map=PathVarMap.add (p,v) var scope.name_map},var
 end
 
-let push_pattern_in_scope scope pattern attributes =
+let push_pattern_in_scope scope pattern attributes path =
   List.fold (O.Pattern.binders pattern)
     ~f:(fun scope binder ->
-      Scope.push_value scope binder (Binder.get_ascr binder) attributes Path.empty)
+      Scope.push_value scope binder (Binder.get_ascr binder) attributes path)
     ~init:scope
 
 let compile_value_attr : I.ValueAttr.t -> O.ValueAttr.t =
@@ -291,7 +291,7 @@ let rec compile_expression ~raise path scope (expr : I.expression) =
     let let_binder = I.Pattern.map self_type let_binder in
     let rhs = self rhs in
     let attributes = compile_value_attr attributes in
-    let scope = push_pattern_in_scope scope let_binder attributes in
+    let scope = push_pattern_in_scope scope let_binder attributes Path.empty in
     let let_result = self ~scope let_result in
     return @@ E_let_in {let_binder;rhs;let_result;attributes}
   | E_raw_code {language;code} ->
@@ -312,7 +312,7 @@ let rec compile_expression ~raise path scope (expr : I.expression) =
       List.map cases
         ~f:(fun {pattern ; body} ->
           let pattern = I.Pattern.map self_type pattern in
-          let scope = push_pattern_in_scope scope pattern attributes in
+          let scope = push_pattern_in_scope scope pattern attributes Path.empty in
           ({pattern ; body = self ~scope body} : _ O.Match_expr.match_case))
       in
     return @@ E_matching {matchee;cases}
@@ -347,7 +347,7 @@ let rec compile_expression ~raise path scope (expr : I.expression) =
     let let_binder = I.Pattern.map self_type let_binder in
     let rhs = self rhs in
     let attributes = compile_value_attr attributes in
-    let scope = push_pattern_in_scope scope let_binder attributes in
+    let scope = push_pattern_in_scope scope let_binder attributes Path.empty in
     let let_result = self ~scope let_result in
     return @@ E_let_mut_in {let_binder;rhs;let_result;attributes}
   | E_deref var -> 
@@ -392,7 +392,7 @@ and compile_declaration ~raise ~(super_attr : O.ModuleAttr.t) path scope (d : I.
     let expr = compile_expression ~raise path scope expr in
     let attr = compile_value_attr attr in
     let pattern = I.Pattern.map (fun _ -> expr.type_expression) pattern in
-    let scope  = push_pattern_in_scope scope pattern attr in
+    let scope  = push_pattern_in_scope scope pattern attr path in
     let scope,pattern =
       O.Pattern.fold_map_pattern
         (fun scope pattern ->

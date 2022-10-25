@@ -464,8 +464,9 @@ let rec compile_expression ~raise : CST.expr -> AST.expr = fun e ->
     let {type_params; binders; rhs_type; eq=_; let_rhs} : CST.let_binding = binding in
     let let_rhs = compile_expression ~raise let_rhs in
     let rhs_type = Option.map ~f:(compile_type_expression ~raise <@ snd) rhs_type in
-    match binders with
-    | pattern, [] when is_var_pattern pattern ->
+    let pattern, args = binders in
+    match args, type_params with
+    | [], None  ->
       let matchee = match rhs_type with
         | Some t -> (e_annotation let_rhs t)
         | None -> (
@@ -476,7 +477,7 @@ let rec compile_expression ~raise : CST.expr -> AST.expr = fun e ->
       in
       let pattern = compile_pattern ~raise pattern in
       e_let_in ~loc pattern let_attr matchee body
-    | pattern, args -> (* function *)
+    | _, _ -> (* function *)
       let let_binder, fun_ = compile_binder ~raise pattern in
       let binders = List.map ~f:(compile_parameter ~raise) args in
       (* collect type annotation for let function declaration *)
@@ -562,12 +563,6 @@ let rec compile_expression ~raise : CST.expr -> AST.expr = fun e ->
       | hd :: tl -> (return <@ e_sequence ~loc prev) @@ aux hd tl
       in
       aux hd @@ tl
-
-and is_var_pattern : CST.pattern -> bool =
-  fun p -> match unepar p with
-    CST.PVar _  -> true
-  | CST.PUnit _ | CST.PInt _ | CST.PNat _ | CST.PBytes _ | CST.PString _ | CST.PVerbatim _
-  | CST.PPar _ | CST.PTyped _ | CST.PTuple _ | CST.PRecord _ | CST.PConstr _ | CST.PList _ -> false
 
 and compile_pattern ~raise : CST.pattern -> AST.ty_expr option Pattern.t =
   fun p ->

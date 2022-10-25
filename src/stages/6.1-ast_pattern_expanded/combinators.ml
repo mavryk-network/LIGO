@@ -42,11 +42,8 @@ let get_t_unary_inj (t:type_expression) (v:Ligo_prim.Literal_types.t) : type_exp
 let t__type_ ?loc () : type_expression = t_constant ?loc _type_ []
 [@@map (_type_, ("signature","chain_id", "string", "bytes", "key", "key_hash", "int", "address", "operation", "nat", "tez", "timestamp", "unit", "bls12_381_g1", "bls12_381_g2", "bls12_381_fr", "never", "mutation", "pvss_key", "baker_hash", "chest_key", "chest"))]
 let get_t__type_ (t : type_expression) : type_expression option = get_t_unary_inj t _type_
-[@@map (_type_, ("contract", "list", "set", "ticket", "sapling_state", "sapling_transaction", "gen"))]
+[@@map (_type_, ("map", "contract", "list", "set", "ticket", "sapling_state", "sapling_transaction", "gen"))]
 let get_t__type__exn t =
-  let get_t__type_ (t : type_expression) : type_expression option = get_t_unary_inj t _type_
-    [@@map (_type_, ("map", "contract", "list", "set", "ticket", "sapling_state", "sapling_transaction", "gen"))]
-  in
   match get_t__type_ t with
   | Some x -> x
   | None -> raise (Failure ("Internal error: broken invariant at " ^ __LOC__))

@@ -104,8 +104,8 @@ let type_expression_annot ppf (te : type_expression) : unit =
   fprintf ppf " : %a" type_expression te
 
 let rec expression ppf (e : expression) =
-  fprintf ppf "%a : %a"
-    expression_content e.expression_content type_expression e.type_expression
+  fprintf ppf "%a"
+    expression_content e.expression_content
 
 and expression_content ppf (ec: expression_content) =
   match ec with
