@@ -462,7 +462,7 @@ and infer_expression ~(raise : raise) ~options ~ctx (expr : I.expression)
     | E_let_in { let_binder; rhs; let_result; attributes } ->
       let ctx, rhs_type, rhs = infer rhs in
       let rhs_type = Context.apply ctx rhs_type in
-      let ctx, _sigs, let_binder = check_pattern ~raise ~ctx let_binder rhs_type in
+      let ctx, _sigs, let_binder = check_pattern ~raise ~ctx ~mut:false let_binder rhs_type in
       let ctx, res_type, let_result =
         Context.enter ~ctx ~mut:false ~in_:(fun ctx ->
             infer
@@ -741,7 +741,7 @@ and infer_expression ~(raise : raise) ~options ~ctx (expr : I.expression)
     let rhs_type = Context.apply ctx rhs_type in
     if is_t_for_all rhs_type then raise.error (mut_is_polymorphic loc rhs_type);
     (* check_pattern take Immutable/Mutable ? *)
-    let ctx, _sigs, let_binder = check_pattern ~raise ~ctx let_binder rhs_type in
+    let ctx, _sigs, let_binder = check_pattern ~raise ~ctx ~mut:true let_binder rhs_type in
     let ctx, res_type, let_result =
       Context.enter ~ctx ~mut:false ~in_:(fun ctx ->
           infer
@@ -1119,6 +1119,7 @@ and infer_application ~raise ~loc ~options ~ctx lamb_type args
 and infer_pattern
     ~(raise : raise)
     ~ctx
+    ~mut
     (pat : I.type_expression option I.Pattern.t)
     : Context.t
       * O.type_expression
@@ -1129,8 +1130,8 @@ and infer_pattern
   let return content =
     return @@ (Location.wrap ~loc content : O.type_expression O.Pattern.t)
   in
-  let infer ~ctx pat = infer_pattern ~raise ~ctx pat in
-  let check ~ctx pat type_ = check_pattern ~raise ~ctx pat type_ in
+  let infer ~ctx pat = infer_pattern ~raise ~ctx ~mut pat in
+  let check ~ctx pat type_ = check_pattern ~raise ~ctx ~mut pat type_ in
   match pat.wrap_content with
   | P_unit -> ctx, t_unit ~loc (), return @@ P_unit
   | P_var binder ->
@@ -1144,7 +1145,7 @@ and infer_pattern
         let evar = Exists_var.fresh ~loc () in
         Context.(ctx |:: C_exists_var (evar, Type)), t_exists ~loc evar
     in
-    let ctx = Context.(ctx |:: C_value (var, Immutable, type_)) in
+    let ctx = Context.(ctx |:: C_value (var, (if mut then Mutable else Immutable), type_)) in
     ctx, type_, return @@ P_var (Binder.set_ascr binder type_)
   | P_list (Cons (hd_pat, tl_pat)) ->
     let ctx, elt_type, hd_pat = infer ~ctx hd_pat in
@@ -1271,6 +1272,7 @@ and infer_pattern
 and check_pattern
     ~(raise : raise)
     ~ctx
+    ~mut
     (pat : I.type_expression option I.Pattern.t)
     (type_ : O.type_expression)
     : Context.t * Signature.item list * (O.type_expression O.Pattern.t, _, _) Elaboration.t
@@ -1283,8 +1285,8 @@ and check_pattern
   let return content =
     return @@ (Location.wrap ~loc content : O.type_expression O.Pattern.t)
   in
-  let self ?(raise = raise) = check_pattern ~raise in
-  let infer ~ctx pat = infer_pattern ~raise ~ctx pat in
+  let self ?(raise = raise) = check_pattern ~raise ~mut in
+  let infer ~ctx pat = infer_pattern ~raise ~ctx pat ~mut in
   let ctx, sigs, pat =
     match pat.wrap_content, type_.type_content with
     | P_unit, O.T_constant { injection = Literal_types.Unit; _ } ->
@@ -1293,7 +1295,7 @@ and check_pattern
     | P_var binder, _ ->
       (* TODO: Check if the binder annot is consistent with expected type *)
       let var = Binder.get_var binder in
-      ( Context.(ctx |:: C_value (var, Immutable, type_))
+      ( Context.(ctx |:: C_value (var, (if mut then Mutable else Immutable), type_))
       , [S_value (var, type_)]
       , return @@ P_var (Binder.map (Fn.const @@ type_) binder) )
     | ( P_list (Cons (hd_pat, tl_pat))
@@ -1399,7 +1401,7 @@ and check_cases
         if debug
         then
           Format.printf "Matchee type: %a\n" O.PP.type_expression matchee_type;
-        let ctx, _, pattern = check_pattern ~raise ~ctx pattern matchee_type in
+        let ctx, _, pattern = check_pattern ~raise ~ctx ~mut:false pattern matchee_type in
         let ctx, body = check_expression ~raise ~options ~ctx body ret_type in
         ( Context.drop_until ctx ~pos
         , let%map pattern = pattern
@@ -1518,7 +1520,7 @@ and infer_declaration ~(raise : raise) ~options ~ctx (decl : I.declaration)
       in
       let attr = type_value_attr attr in
       let matchee_type = Context.apply ctx matchee_type in
-      let ctx, sigs ,pattern = check_pattern ~raise ~ctx pattern matchee_type in
+      let ctx, sigs ,pattern = check_pattern ~raise ~ctx ~mut:false pattern matchee_type in
       (* let ctx, binders, pattern = ignore (pattern,matchee_type,ctx) ; failwith "TODO" in
       let binders = List.map ~f:(Binder.map (Context.apply ctx)) binders in *)
       if debug then Format.printf "Ctx After Decl: %a\n" Context.pp ctx;
