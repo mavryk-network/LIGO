@@ -242,7 +242,13 @@ let rec subst_expression
     return @@ E_recursive { fun_name; fun_type; lambda }
   | E_let_in { let_binder; rhs; let_result; attributes } ->
     let rhs = self rhs in
-    let let_result, let_binder = subst_pattern (let_binder,let_result) ~x ~expr in
+    (* Bellow is weird (need to fold on the pattern to set the variables, but also need to call subst_binders) *)
+    let _, let_binder = subst_pattern (let_binder,let_result) ~x ~expr in
+    let _,let_result =
+    let binders = List.map (Pattern.binders let_binder) ~f:(Binder.get_var) in
+      subst_binders subst_expression replace ~body:(binders, let_result) ~x ~expr
+    in
+    (* Above is weird *)
     return @@ E_let_in { let_binder; rhs; let_result; attributes }
   | E_constant { cons_name; arguments } ->
     let arguments = List.map ~f:self arguments in
@@ -263,7 +269,13 @@ let rec subst_expression
     let matchee = self matchee in
     let cases = List.map cases
       ~f:(fun { pattern ; body } ->
-        let body,pattern = subst_pattern (pattern,body) ~x ~expr in
+        (* Bellow is weird  (need to fold on the pattern to set the variables, but also need to call subst_binders) *)
+        let _,pattern = subst_pattern (pattern,body) ~x ~expr in
+        let _,body =
+          let binders = List.map (Pattern.binders pattern) ~f:(Binder.get_var) in
+          subst_binders subst_expression replace ~body:(binders, body) ~x ~expr
+        in
+        (* Above is weird *)
         ({pattern ; body} : _ Match_expr.match_case)) in
     return @@ E_matching { matchee; cases }
   | E_literal _ -> return_id
@@ -284,6 +296,7 @@ let rec subst_expression
     let expression = self expression in
     return @@ E_assign { binder; expression }
   | E_let_mut_in { let_binder; rhs; let_result; attributes } ->
+    (* in case of mutable variable, we don't substitute *)
     let rhs = self rhs in
     let let_result = self let_result in
     return @@ E_let_mut_in { let_binder; rhs; let_result; attributes }
