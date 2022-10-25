@@ -1,0 +1,6 @@
+author: alistair.obrien
+description: Fixed bug which swapped the \"expected\" and \"received\" types in the
+  mismatching constant \ntypes error message.
+merge_request: '2095'
+title: Fix Error Message for Checked Constants
+type: fixed
