@@ -904,6 +904,21 @@ and compile_instruction ~raise : ?next: AST.expression -> CST.instruction -> AST
     return @@ compile_expression ~raise (E_Call { region ; value = (f,args)})
   )
 
+and compile_binding ~raise : CST.pattern * CST.expr -> (_ * CST.type_expr) option -> _ AST.Pattern.t * AST.expression =
+  fun (lhs,rhs) ascr_opt ->
+    let lhs = compile_pattern ~raise lhs in
+    let rhs =
+      let rhs = compile_expression ~raise rhs in
+      Option.value_map ~default:rhs ascr_opt ~f:(fun (_, ty) ->
+          e_ascription
+            ~loc:rhs.location
+            { anno_expr = rhs
+            ; type_annotation = compile_type_expression ~raise ty
+            }
+            ())
+    in
+    (lhs,rhs)
+
 and compile_data_declaration ~raise : ?attr:CST.attribute list -> next:AST.expression -> CST.declaration -> AST.expression =
   fun ?(attr = []) ~next data_decl ->
   let return_let_in ~loc ?mut var ascr attr init =
@@ -915,17 +930,10 @@ and compile_data_declaration ~raise : ?attr:CST.attribute list -> next:AST.expre
   match data_decl with
   | D_Attr (a,x) -> compile_data_declaration ~raise ~attr:(a::attr) ~next x
   | D_Const const_decl -> (
-    let cd, loc = r_split const_decl in
-    let type_ = Option.map ~f:(compile_type_expression ~raise <@ snd) cd.const_type in
-    let init = compile_expression ~raise cd.init in
+    let CST.{pattern ; init ; const_type ; _}, loc = r_split const_decl in
+    let lhs,rhs = compile_binding ~raise (pattern,init) const_type in
     let attr = compile_attributes attr in
-    match cd.pattern with
-    | P_Var name ->
-      let p = compile_variable name in
-      return_let_in ~loc ~mut:false p type_ attr init
-    | pattern ->
-      let pattern = compile_pattern ~raise pattern in
-      return_let_pattern_in ~loc pattern attr init
+    return_let_pattern_in ~loc lhs attr rhs
   )
   | D_Directive _ -> next
   | D_Fun fun_decl -> (
@@ -1057,22 +1065,9 @@ and compile_declaration ~raise : ?attr:CST.attribute list -> CST.declaration -> 
 
   | D_Const {value={pattern; const_type; init; _}; region} -> (
     let attr = compile_attributes attr in
-    let expr = compile_expression ~raise init in
-    let ascr = Option.map ~f:(compile_type_expression ~raise <@ snd) const_type in
-    match (unepar pattern) with
-    | P_Var name ->
-      let var = compile_variable name in
-      let binder = Binder.make var ascr in
-      let ast = D_value {binder; attr; expr} in
-      return region ast
-    | pattern ->
-      let pattern = compile_pattern ~raise pattern in
-      let expr = Option.value_map ascr (* TODO: should be possible to annotate a pattern *)
-        ~default:expr
-        ~f:(fun ty -> e_ascription ~loc:expr.location {type_annotation = ty; anno_expr = expr} ())
-      in
-      let ast = D_pattern {pattern; attr; expr} in
-      return region ast
+    let lhs,rhs = compile_binding ~raise (pattern,init) const_type in
+    let ast = D_pattern {pattern = lhs ; attr; expr = rhs} in
+    return region ast
   )
   | D_Fun {value; region} ->
     let var, ascr, expr = compile_fun_decl (Location.lift region) ~raise value in

@@ -156,18 +156,6 @@ and get_fv_cases : _ Match_expr.match_case list -> env * _ Match_expr.match_case
 
 and get_fv_module (env:env) acc = function
   | [] -> env, acc
-  | ({Location.wrap_content = D_pattern {pattern; expr;attr}; _} as hd) :: tl ->
-    let binders = List.filter (Pattern.binders pattern) ~f:(fun binder' -> VVarSet.mem (Binder.get_var binder') env.used_var) in
-    if not (List.is_empty binders) then
-      let env =
-        List.fold binders ~init:env ~f:(fun env binder' ->
-        {env with used_var = VVarSet.remove (Binder.get_var binder') env.used_var})
-      in
-      let env',expr = get_fv expr in
-      let env = merge_env env @@ env' in
-      get_fv_module env ({hd with wrap_content = D_pattern {pattern;expr;attr}} :: acc) tl
-    else
-      get_fv_module env acc tl
   | ({Location.wrap_content = D_value {binder; expr;attr}; _} as hd) :: tl ->
     let binder' = binder in
     if VVarSet.mem (Binder.get_var binder') env.used_var then
@@ -260,9 +248,9 @@ let remove_unused ~raise : contract_pass_data -> program -> program = fun contra
   let main_decl, prg_decls = trace_option ~raise (Errors.corner_case "Entrypoint not found") @@ Simple_utils.List.uncons prg_decls in
   let main_dc = trace_option ~raise (Errors.corner_case "Entrypoint not found") @@ match main_decl with
       {Location.wrap_content = D_value dc; _} -> Some dc
-    | {Location.wrap_content = D_pattern ({ pattern = { wrap_content = P_var binder} ; _} as dc)} -> 
+    | {Location.wrap_content = D_pattern { pattern = { wrap_content = P_var binder ; _} ; expr ; attr  } ; _} -> 
       let binder = Binder.map Option.some binder in
-      Some { binder ; expr = dc.expr ; attr = dc.attr }
+      Some { binder ; expr = expr ; attr = attr }
     | _ -> None in
   let env,main_expr = get_fv main_dc.expr in
   let main_dc = {main_dc with expr = main_expr} in

@@ -982,7 +982,8 @@ and filter_private (attributes: CST.attributes) =
   List.filter ~f:(fun v -> not @@ String.equal v.value "private") attributes
 
 (* can probably be cleaned up *)
-and compile_val_binding ~raise : CST.attributes -> CST.val_binding Region.reg ->  Region.t -> type_expression option Pattern.t* string list * expression =
+and compile_val_binding ~raise : CST.attributes -> CST.val_binding Region.reg ->  Region.t
+  -> [ `Fun of type_expression option Binder.t | `Val of type_expression option Pattern.t ] * string list * expression =
   fun attributes val_binding region ->
     let CST.{binders; type_params; lhs_type; expr = let_rhs; _} = val_binding.value in
     let attr = compile_attributes attributes in
@@ -993,8 +994,8 @@ and compile_val_binding ~raise : CST.attributes -> CST.val_binding Region.reg ->
       let pattern = compile_pattern ~raise p in
       let expr = Option.value_map lhs_type ~default:expr 
         ~f:(fun ty -> AST.e_ascription ~loc:expr.location {anno_expr = expr ; type_annotation = ty} ()) in
-      (pattern, attr, expr)
-    | CST.PVar name, _ -> (* function or const *)
+      (`Val pattern, attr, expr)
+    | CST.PVar name, _ -> (* function *)
       let fun_binder : Value_var.t = compile_variable name.value.variable in
       let expr = (match let_rhs with
         CST.EFun _ ->
@@ -1019,26 +1020,28 @@ and compile_val_binding ~raise : CST.attributes -> CST.val_binding Region.reg ->
         | _ -> expr
         )
       in
-      let loc = Location.lift name.region in
-      let binder = Location.wrap ~loc (Pattern.P_var (Binder.make fun_binder lhs_type)) in
-      (binder, attr, expr)
+      let binder = Binder.make fun_binder lhs_type in
+      (`Fun binder, attr, expr)
     | _ -> raise.error @@ unsupported_pattern_type binders
 
 and compile_let_binding ~raise : CST.attributes -> CST.val_binding Region.reg -> Region.t -> AST.declaration =
   fun attributes val_binding region ->
-    let (pattern,attr,expr) = compile_val_binding ~raise attributes val_binding region in
-    match pattern.wrap_content with
-    | P_var binder -> Location.wrap ~loc:expr.location (AST.D_value {binder; attr; expr})
-    | _ -> Location.wrap ~loc:expr.location (AST.D_pattern {pattern; attr; expr})
+    let (lhs,attr,expr) = compile_val_binding ~raise attributes val_binding region in
+    match lhs with
+    | `Fun binder -> Location.wrap ~loc:expr.location (AST.D_value {binder; attr; expr})
+    | `Val pattern -> Location.wrap ~loc:expr.location (AST.D_pattern {pattern; attr; expr})
 
 and compile_let_in_binding ~raise : const:bool -> CST.attributes -> CST.val_binding Region.reg -> Region.t -> (AST.expression -> AST.expression) =
   fun ~const attributes val_binding region ->
-    let (pattern,attr,rhs) = compile_val_binding ~raise attributes val_binding region in
+    let (lhs,attr,rhs) = compile_val_binding ~raise attributes val_binding region in
     let binding rhs body =
-        if const then
-          e_let_in ~loc:rhs.location pattern attr rhs body
-        else
-          e_let_mut_in ~loc:rhs.location pattern attr rhs body
+      let pattern = match lhs with
+        | `Fun binder -> Location.wrap ~loc:(Binder.get_loc binder) (Pattern.P_var binder)
+        | `Val pattern -> pattern
+      in
+      if const
+      then e_let_in ~loc:rhs.location pattern attr rhs body
+      else e_let_mut_in ~loc:rhs.location pattern attr rhs body
     in
     match rhs.expression_content with
     (* Assignment transitivity *)

@@ -13,7 +13,7 @@ let set_var (b : _ t) (var : Var.Value_var.t) = {b with var}
 let get_var (b : 'a t) = b.var
 let get_ascr (b : 'a t) = b.ascr
 let set_ascr b ascr = { b with ascr }
-
+let get_loc (b: 'a t) = Var.Value_var.get_location b.var
 
 let apply f (b : 'a t) = f b.var
 
