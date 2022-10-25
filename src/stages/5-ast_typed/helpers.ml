@@ -515,6 +515,9 @@ let get_views : program -> (Value_var.t * Location.t) list = fun p ->
     fun {wrap_content=decl ; location=_ } acc ->
       match decl with
       | D_value { binder ; expr=_ ; attr } when attr.view -> let var = Binder.get_var binder in (var, Value_var.get_location var)::acc
+      | D_pattern { pattern = { wrap_content = P_var binder} ; expr=_ ; attr } when attr.view -> 
+        let var = Binder.get_var binder in (var, Value_var.get_location var)::acc
+      (* TODO: exhaustive here ... *)
       | _ -> acc
   in
   List.fold_right ~init:[] ~f p
