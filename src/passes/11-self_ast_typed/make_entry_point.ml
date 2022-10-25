@@ -169,31 +169,30 @@ let make_main_entrypoint ~raise
   match entrypoints with
   | entrypoint, [] -> entrypoint, prg
   | entrypoint, rest ->
+    let Helpers.{ parameter; storage = storage_type } =
+      Helpers.fetch_contract_type ~raise entrypoint prg
+    in
+    let f ep =
+      let Helpers.{ parameter; storage = str } =
+        Helpers.fetch_contract_type ~raise ep prg
+      in
+      let () =
+        trace_option
+          ~raise
+          (storage_entrypoint_contract
+             (Value_var.get_location ep)
+             ep
+             str
+             entrypoint
+             storage_type)
+        @@ Ast_typed.assert_type_expression_eq (str, storage_type)
+      in
+      Value_var.to_name_exn ep, parameter
+    in
     let entries =
-      trace_option ~raise (corner_case "Could not get entries")
-      @@ Simple_utils.List.Ne.of_list_opt
-      @@ get_entries_of_module prg
+      (Value_var.to_name_exn entrypoint, parameter) :: List.map ~f rest
     in
-    let parameter_type, storage_type =
-      match Ast_typed.Misc.parameter_from_entrypoints entries with
-      | Error (`Not_entry_point_form ep_type) ->
-        raise.error
-          (corner_case
-          @@ Format.asprintf
-               "Not an entrypoint form: %a"
-               Ast_typed.PP.type_expression
-               ep_type)
-      | Error (`Storage_does_not_match (storage', storage)) ->
-        raise.error
-          (corner_case
-          @@ Format.asprintf
-               "Storage types do not match: %a %a"
-               Ast_typed.PP.type_expression
-               storage'
-               Ast_typed.PP.type_expression
-               storage)
-      | Ok (p, s) -> p, s
-    in
+    let parameter_type = Ast_typed.t_sum_ez entries in
     let type_binder = Type_var.fresh ~name:"parameter" () in
     let entrypoint_type_decl =
       Location.wrap
