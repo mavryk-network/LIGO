@@ -46,7 +46,7 @@
       "esy-libffi": "*"
     },
     "devDependencies": {
-      "@opam/ocaml-lsp-server": "1.10.3"
+      "@opam/ocaml-lsp-server": "*"
     },
     "resolutions": {
       "@opam/tezos-014-PtKathma-test-helpers": "./vendors/tezos-ligo/opam/tezos-014-PtKathma-test-helpers.opam",
@@ -187,7 +187,6 @@
           }
         }
       },
-      "ocaml": "4.12.0",
       "@opam/crunch": "mirage/ocaml-crunch:crunch.opam#e18888ce1f30ed6559ba977d405af2084812cbca",
       "@opam/core": "opam:v0.14.1",
       "@opam/dune": "opam:3.4.1",
@@ -303,8 +302,6 @@
           "build": "true"
         }
       },
-      "@opam/ocamlfind": "opam:1.9.1",
-      "@opam/ocamlbuild": "opam:0.14.0",
       "@opam/conf-gmp": "opam:3",
       "@opam/easy-format": "opam:1.3.3",
       "@opam/ocamlformat": {
