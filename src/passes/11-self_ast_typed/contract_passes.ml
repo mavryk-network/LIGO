@@ -265,6 +265,7 @@ let remove_unused_for_views ~raise ~(view_names:Value_var.t list ) : program -> 
   let prg_decls = List.rev prg in
   let pred = fun _ -> function
       {Location.wrap_content = D_value {binder;_}; _} -> (is_view_name @@ Binder.get_var binder)
+    | {Location.wrap_content = D_pattern {pattern = { wrap_content = P_var binder};_}; _} -> (is_view_name @@ Binder.get_var binder)
     | _ -> false in
   let idx,_ = trace_option ~raise (Errors.corner_case "View not found") @@ List.findi prg_decls ~f:pred in
   (* Remove the definition after the last view (can't be relevant), mostly remove the test *)
@@ -272,18 +273,25 @@ let remove_unused_for_views ~raise ~(view_names:Value_var.t list ) : program -> 
   let view_decls = List.rev @@ List.filter_map prg_decls
     ~f:(fun decl ->
       match decl with
-        {Location.wrap_content = D_value dc; _} when is_view_name @@ Binder.get_var dc.binder -> Some dc
+        {Location.wrap_content = D_value dc; _} when is_view_name @@ Binder.get_var dc.binder -> Some (dc.binder, dc.expr, dc.attr)
+      | {Location.wrap_content = D_pattern { pattern = { wrap_content = P_var binder} ; expr ; attr }; _} when is_view_name @@ Binder.get_var binder -> 
+        let binder = Binder.map Option.some binder in
+        Some (binder, expr, attr)
+      
+      (* TODO: compelete exhaustiveness check to prevent future errors *)
       | _ -> None)
   in
-  let env,_ = List.fold view_decls ~init:(empty_env, []) ~f:(fun (env, decls) view_decl ->
-    let env',_ = get_fv view_decl.expr in
+  let env,_ = List.fold view_decls ~init:(empty_env, []) ~f:(fun (env, decls) (view_binder, view_expr, _) ->
+    let env',_ = get_fv view_expr in
     let used_var = List.fold_right decls ~init:env'.used_var
       ~f:(fun decl_var used_var -> VVarSet.remove decl_var used_var )
     in
     let env' = { env' with used_var } in
-    merge_env env env', (Binder.get_var view_decl.binder)::decls
+    merge_env env env', (Binder.get_var view_binder)::decls
   ) in
-  let view_decls = List.map view_decls ~f:(fun decl -> Location.wrap (D_value decl)) in
+  let view_decls = List.map view_decls ~f:(fun (view_binder,view_expr,view_attr) -> 
+    let decl = Value_decl.{ binder = view_binder; expr = view_expr ; attr = view_attr } in
+    Location.wrap (D_value decl)) in
   let _, prg_decls = trace_option ~raise (Errors.corner_case "View not found") @@ Simple_utils.List.uncons prg_decls in
   let _,module_ = get_fv_program env view_decls prg_decls in
   module_
