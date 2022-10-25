@@ -116,7 +116,29 @@ let rec expression ~raise :
     let w, env, e1 = expression ~raise w env e1 in
     let w, env, e2 = expression ~raise w env e2 in
     let env, e = op env e1 e2 in
-    w, env, e
+    w, env, 
+    
+    [
+      const 1234321l;
+      call_s "print";
+    ]
+    @
+    e1 
+    @
+    [
+      load;
+      call_s "print"
+    ]
+    @
+    e2
+    @
+    [
+      load;
+      call_s "print"
+    ]
+    @
+    e
+
   in 
   let unique_name name =
     let unique_name = Value_var.fresh ~name () in
@@ -436,6 +458,10 @@ let rec expression ~raise :
             let func_alloc_name = var_to_string unique_name in
             w, add_local env (func_alloc_name, NumType I32Type), 
             [
+              (* This is problematic: 
+                  - can't be reused as this is static.   
+              *)
+
               const Int32.(12l + of_int_exn Int.(List.length result_vars * 4) );
               call_s "malloc";
               
@@ -477,22 +503,22 @@ let rec expression ~raise :
             ]
           )
         | _ -> 
-          let unique_name = Value_var.fresh ~name:"Call_indirect" () in
-          let indirect_name = var_to_string unique_name in    
-         
-          let total_args_length = Value_var.fresh ~name:"total_args_length" () in
-          let total_args_length = var_to_string total_args_length in
-          
-          let current_args_length = Value_var.fresh ~name:"current_args_length" () in
-          let current_args_length = var_to_string current_args_length in
+          let indirect_name = unique_name "call_indirect" in
+          let total_args_length = unique_name "total_args_length"in
+          let current_args_length = unique_name "current_args_length" in
+          let counter = unique_name "counter" in
+          let dest = unique_name "dest" in
 
-          let counter = Value_var.fresh ~name:"counter" () in
-          let counter = var_to_string counter in
           ({w with 
             types = w.types
               @ 
               [type_ ~name:indirect_name ~typedef:(FuncType ([NumType I32Type], [NumType I32Type]))]
-          }, add_locals env [(total_args_length, NumType I32Type); (current_args_length, NumType I32Type); (counter, NumType I32Type)], [
+          }, add_locals env [
+            (total_args_length, NumType I32Type); 
+            (current_args_length, NumType I32Type); 
+            (counter, NumType I32Type);
+            (dest, NumType I32Type)
+            ], [
             local_get_s name; 
             const 4l;
             i32_add;
@@ -505,6 +531,35 @@ let rec expression ~raise :
             load; 
             local_set_s current_args_length;
 
+            (* copy the current args - which does not help - why... or is tgh name not unique enough? *)
+            const 12l; 
+            local_get_s total_args_length;
+            const 4l;
+            i32_mul;
+            i32_add;
+            call_s "malloc";
+            local_tee_s dest;
+
+
+
+            local_get_s name;
+
+            const 12l; 
+            local_get_s total_args_length;
+            const 4l;
+            i32_mul;
+            i32_add;
+
+
+
+           
+            
+            
+            { it = MemoryCopy; at };
+
+            (* local_get_s dest;
+            local_set_s name; *)
+
           ]
           @
           result
@@ -512,7 +567,7 @@ let rec expression ~raise :
           (let a, i = List.fold_left ~f:(fun (all, index) f -> 
             (all @
             [
-              local_get_s name;
+              local_get_s dest;
               
               local_get_s current_args_length;
               const index;
@@ -529,6 +584,35 @@ let rec expression ~raise :
           )
           @
           [
+            const 4444l;
+            call_s "print";
+            local_get_s current_args_length;
+            call_s "print";
+            local_get_s current_args_length;
+            const (Int32.of_int_exn (List.length result_vars));
+            i32_add;
+            call_s "print";
+            const 5555l;
+            call_s "print";
+
+            (* update the current args *)
+            local_get_s dest; 
+            const 8l;
+            i32_add;
+            local_get_s current_args_length;
+            const (Int32.of_int_exn (List.length result_vars));
+            i32_add;
+            store; 
+
+            local_get_s current_args_length;
+            const (Int32.of_int_exn (List.length result_vars));
+            i32_add;
+            call_s "print";
+
+            local_get_s total_args_length;
+            call_s "print";
+
+
             local_get_s current_args_length;
             const (Int32.of_int_exn (List.length result_vars));
             i32_add;
@@ -537,15 +621,28 @@ let rec expression ~raise :
             if_ 
               (ValBlockType (Some (NumType I32Type))) 
               [
-                local_get_s name;
+                const 99999l;
+                call_s "print";
+
+                local_get_s dest;
                 const 12l;
                 i32_add;
-                local_get_s name;
+                load;
+                call_s "print";
+
+                local_get_s dest;
+                load;
+                call_s "print";
+
+                local_get_s dest;
+                const 12l;
+                i32_add;
+                local_get_s dest;
                 load;
                 call_indirect_s indirect_name
               ]
               [
-                local_get_s name
+                local_get_s dest
               ]
              
           ])

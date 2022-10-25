@@ -225,7 +225,7 @@ let rec check w env e : Env.t =
   | {it = GlobalGet_symbol symbol; _} :: rest -> check w env rest
   | {it = GlobalSet_symbol symbol; _} :: rest -> check w env rest
   
-  (*| {it = TableGet _; _} :: rest -> check w env rest
+  (* | {it = TableGet _; _} :: rest -> check w env rest
   | {it = TableSet _; _} :: rest -> check w env rest
   | {it = TableSize _; _} :: rest -> check w env rest
   | {it = TableGrow _; _} :: rest -> check w env rest
@@ -240,9 +240,13 @@ let rec check w env e : Env.t =
   | {it = VecStoreLane _; _} :: rest -> check w env rest
   | {it = MemorySize; _} :: rest -> check w env rest
   | {it = MemoryGrow; _} :: rest -> check w env rest
-  | {it = MemoryFill; _} :: rest -> check w env rest
-  | {it = MemoryCopy; _} :: rest -> check w env rest
-  | {it = MemoryInit _; _} :: rest -> check w env rest
+  | {it = MemoryFill; _} :: rest -> check w env rest *)
+  | {it = MemoryCopy; _} :: rest -> 
+    let env = stack_pop env (T.NumType I32Type) in
+    let env = stack_pop env (T.NumType I32Type) in
+    let env = stack_pop env (T.NumType I32Type) in
+    check w env rest
+  (* | {it = MemoryInit _; _} :: rest -> check w env rest
   | {it = DataDrop _; _} :: rest -> check w env rest
   | {it = RefNull _; _} :: rest -> check w env rest
   | {it = RefFunc _; _} :: rest -> check w env rest
