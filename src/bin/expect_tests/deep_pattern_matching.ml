@@ -48,7 +48,7 @@ let%expect_test _ =
       3 |   (([] : operation list), ())
 
     Invalid type(s).
-    Expected: "nat", but got: "unit". |}]
+    Expected: "unit", but got: "nat". |}]
 
 
 (* Trying to match on values *)

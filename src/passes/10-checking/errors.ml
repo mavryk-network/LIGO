@@ -460,7 +460,7 @@ let rec error_ppformat
           two element are allowed to be compared. @]"
          Snippet.pp
          loc
-     | `Typer_assert_equal (loc, expected, actual) ->
+     | `Typer_assert_equal (loc, expected, recieved) ->
        Format.fprintf
          f
          "@[<hv>%a@.Invalid type(s).@.Expected: \"%a\", but got: \"%a\". @]"
@@ -469,7 +469,7 @@ let rec error_ppformat
          Ast_typed.PP.type_expression_orig
          (type_improve expected)
          Ast_typed.PP.type_expression_orig
-         (type_improve actual)
+         (type_improve recieved)
      | `Typer_expected_record (loc, t) ->
        Format.fprintf
          f
