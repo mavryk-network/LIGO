@@ -50,6 +50,8 @@ let get_t__type__exn t =
     [@@map (_type_, ("map", "contract", "list", "set", "ticket", "sapling_state", "sapling_transaction", "gen"))]
 let default_layout = Layout.L_tree
 
+let t_arrow param result ?loc ?source_type () : type_expression = t_arrow ?loc ?source_type {type1=param; type2=result} ()
+
 let t_record ?loc ~layout fields  : type_expression = make_t ?loc (T_record {fields;layout})
 let make_t_ez_record ?loc ?(layout=default_layout) (lst:(string * type_expression) list) : type_expression =
   let lst = List.mapi ~f:(fun i (x,y) -> (Label.of_string x, ({associated_type=y;michelson_annotation=None;decl_pos=i} : row_element)) ) lst in

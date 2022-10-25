@@ -7,7 +7,21 @@ open Ligo_prim
 Compile patterns (let destructuring, mutable let destructuring and pattern matching) into case expressions.
 Mutable let destructuring (E_let_mut_in) is handled in a slightly different way (see destruct_mut_let_in)
 
+
+
+let x = 1
+let y = 2
+let z = match (1,2) with (a,b) -> a + b
+
+
+let x = 1 in
+let y = 2 in
+let z = 
+
 *)
+
+let default_attr : I.ValueAttr.t =
+  { inline = false; no_mutation = false; public = true; view = false; hidden = false; thunk = false }
 
 let rec compile_expression : I.expression -> O.expression =
  fun exp ->
@@ -17,9 +31,21 @@ let rec compile_expression : I.expression -> O.expression =
     { expression_content; type_expression = exp.type_expression; location = exp.location }
   in
   match exp.expression_content with
+  | E_matching { matchee = rhs ; cases = [ {pattern = {wrap_content = P_var let_binder ; _ } ; body = let_result }]} ->
+    let rhs = self rhs in
+    let let_result = self let_result in
+    return (O.E_let_in {let_binder; rhs; let_result; attributes = default_attr} )
   | E_matching { matchee; cases } ->
     let matchee = self matchee in
     return (compile_matching ~loc:exp.location ~mut:false matchee cases)
+  | E_let_in { let_binder = {wrap_content = P_var let_binder ; _}; rhs; let_result; attributes } ->
+    let rhs = self rhs in
+    let let_result = self let_result in
+    return (O.E_let_in {let_binder; rhs; let_result; attributes} )
+  | E_let_mut_in { let_binder = {wrap_content = P_var let_binder ; _}; rhs; let_result; attributes } ->
+    let rhs = self rhs in
+    let let_result = self let_result in
+    return (O.E_let_mut_in {let_binder; rhs; let_result; attributes} )
   | E_let_in { let_binder; rhs; let_result; attributes } ->
     let matchee = self rhs in
     return
@@ -93,9 +119,6 @@ let rec compile_expression : I.expression -> O.expression =
 TODO : stop doint the 'match matchee.expression_content with E_var _' thing
 *)
 
-and default_attr : I.ValueAttr.t =
-  { inline = false; no_mutation = false; public = true; view = false; hidden = false; thunk = false }
-
 
 and compile_matching
     :  loc:Location.t -> ?attributes:O.ValueAttr.t -> mut:bool -> O.expression
@@ -103,6 +126,10 @@ and compile_matching
   =
  fun ~loc ?attributes ~mut matchee cases ->
   let matchee_type = matchee.type_expression in
+  let () = Option.iter attributes 
+    ~f:(fun attributes -> 
+      if (not attributes.hidden) 
+      then print_endline (Format.asprintf " matchee = %a \n" Ast_pattern_expanded.PP.expression matchee)) in
   let eqs =
     List.map cases ~f:(fun { pattern; body } ->
         let body = compile_expression body in
@@ -111,17 +138,16 @@ and compile_matching
   match matchee.expression_content with
   | E_variable var ->
     let match_expr =
-      let var = Binder.make var matchee.type_expression in
-      Pattern_matching.compile_matching ~err_loc:loc var eqs
+      Pattern_matching.compile_matching var eqs
     in
     let match_expr = if mut then destruct_mut_let_in match_expr else match_expr in
     match_expr.expression_content
   | _ ->
-    let var = Binder.make (Value_var.fresh ~loc ~name:"match_" ()) matchee_type in
-    let match_expr = Pattern_matching.compile_matching ~err_loc:loc var eqs in
+    let var = Value_var.fresh ~loc ~name:"match_" () in
+    let match_expr = Pattern_matching.compile_matching var eqs in
     let match_expr = if mut then destruct_mut_let_in match_expr else match_expr in
     E_let_in
-      { let_binder = var
+      { let_binder = Binder.make var matchee_type
       ; rhs = matchee
       ; let_result = { match_expr with location = loc }
       ; attributes = Option.value attributes ~default:default_attr

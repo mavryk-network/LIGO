@@ -89,6 +89,19 @@ let ast_aggregated (raw_options : Raw_options.t) source_file display_format () =
       let typed = Build.qualified_typed ~raise Env ~options source_file in
       Compile.Of_typed.compile_expression_in_context ~raise ~options:options.middle_end ~self_pass typed (Ast_typed.e_a_unit ())
 
+let ast_expanded (raw_options : Raw_options.t) source_file display_format () =
+  format_result ~display_format (Ast_pattern_expanded.Formatter.expression_format) @@
+  fun ~raise ->
+    let options = (* TODO: options should be computed outside of the API *)
+      let syntax           = Syntax.of_string_opt ~raise (Syntax_name raw_options.syntax) (Some source_file) in
+      let protocol_version = Helpers.protocol_to_variant ~raise raw_options.protocol_version in
+      Compiler_options.make ~protocol_version ~raw_options ~syntax ()
+    in
+    let Compiler_options.{ self_pass ; _ } = options.tools in
+    let typed = Build.qualified_typed ~raise Env ~options source_file in
+    let aggregated = Compile.Of_typed.compile_expression_in_context ~raise ~options:options.middle_end ~self_pass typed (Ast_typed.e_a_unit ()) in
+    Compile.Of_aggregated.compile_expression ~raise aggregated
+
 let mini_c (raw_options : Raw_options.t) source_file display_format optimize () =
     format_result ~display_format (Mini_c.Formatter.program_format) @@
     fun ~raise ->
