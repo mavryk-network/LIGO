@@ -138,7 +138,6 @@ let rec compile_type ~raise (t:AST.type_expression) : type_expression =
     let o' = compile_type o in
     return (T_option o')
   | T_sum { fields = m ; layout } -> (
-      let open AST.Helpers in
       match is_michelson_or m with
       | Some (a , b) -> (
           let aux (x : AST.row_element) =
@@ -153,7 +152,6 @@ let rec compile_type ~raise (t:AST.type_expression) : type_expression =
       | None -> Layout.t_sum ~raise ~layout return compile_type m
     )
   | T_record { fields = m ; layout } -> (
-      let open AST.Helpers in
       match is_michelson_pair m with
       | Some (a , b) -> (
           let aux (x : AST.row_element) =

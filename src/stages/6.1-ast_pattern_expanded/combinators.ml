@@ -1,6 +1,6 @@
 open Types
 open Simple_utils
-
+[@@@warning "-32"]
 
 type expression_content = [%import: Types.expression_content]
 [@@deriving ez {
@@ -51,6 +51,7 @@ let get_t__type__exn t =
   | Some x -> x
   | None -> raise (Failure ("Internal error: broken invariant at " ^ __LOC__))
 [@@map (_type_, ("map", "list", "set", "signature","chain_id", "string", "bytes", "key", "key_hash", "int", "address", "operation", "nat", "tez", "timestamp", "unit", "bls12_381_g1", "bls12_381_g2", "bls12_381_fr", "never", "mutation", "pvss_key", "baker_hash", "chest_key", "chest"))]
+let () = ignore get_t_map_exn
 let default_layout = Layout.L_tree
 
 let t_arrow param result ?loc ?source_type () : type_expression = t_arrow ?loc ?source_type {type1=param; type2=result} ()

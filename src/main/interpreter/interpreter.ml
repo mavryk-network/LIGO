@@ -82,6 +82,7 @@ let rec pattern_extend_ ~(attributes : ValueAttr.t) ~(mut : bool)
       | List.Or_unequal_lengths.Unequal_lengths -> fail @@ error_type ()
     in
     bind_fold_list lst ~init:(locs,env) ~f:(fun (locs,env) ((label, pattern), (label', value)) ->
+        assert (Label.equal label label');
         let* ty = get_row_ty ty label in
         self (locs,env) pattern ty value)
   | P_tuple tups, V_Record vf ->
@@ -1666,6 +1667,8 @@ and eval_ligo ~raise ~steps ~options
     let* v' = eval_ligo element calltrace env in
     return @@ V_Construct (c, v')
   | E_matching { matchee; cases } ->
+    let* e' = eval_ligo matchee calltrace env in
+    ignore (e',cases);
     failwith "l"
     (* let* e' = eval_ligo matchee calltrace env in
     (match cases, e' with

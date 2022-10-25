@@ -69,7 +69,6 @@ and record_tree = {
 (* ...also there must be a better way to write this, is it even
    correct, I'm not sure? *)
 let record_tree ~layout ?source_type compile_type m =
-  let open AST.Helpers in
   let is_tuple_lmap = Record.is_tuple m in
   let lst = kv_list_of_t_record_or_tuple ~layout m in
   match layout with
@@ -100,7 +99,6 @@ let record_tree ~layout ?source_type compile_type m =
                   source_type = None }}
 
 let t_record_to_pairs ~layout return compile_type m =
-  let open AST.Helpers in
   let is_tuple_lmap = Record.is_tuple m in
   let lst = kv_list_of_t_record_or_tuple ~layout m in
   match layout with
@@ -134,7 +132,6 @@ let t_record_to_pairs ~layout return compile_type m =
     )
 
 let record_access_to_lr ~raise ~layout ty m_ty index =
-  let open AST.Helpers in
   let lst = kv_list_of_t_record_or_tuple ~layout m_ty in
   match layout with
   | L_tree -> (
@@ -185,7 +182,6 @@ let record_access_to_lr ~raise ~layout ty m_ty index =
     )
 
 let record_to_pairs (type exp) ~raise (compile_expression : _ -> exp) (ec_pair : exp -> exp -> exp) (e_tuple : exp list -> exp) (record_t : AST.t_sum) record : exp =
-  let open AST.Helpers in
   let lst = kv_list_of_record_or_tuple ~layout:record_t.layout record_t.fields record in
   match record_t.layout with
   | L_tree -> (
@@ -202,7 +198,6 @@ let record_to_pairs (type exp) ~raise (compile_expression : _ -> exp) (ec_pair :
     )
 
 let constructor_to_lr ~raise ~(layout) ty m_ty index =
-  let open AST.Helpers in
   let lst = kv_list_of_t_sum ~layout m_ty in
   match layout with
   | L_tree -> (
