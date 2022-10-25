@@ -1621,8 +1621,8 @@ Warning: Error(s) occurred while type checking the produced michelson contract:
         { "prim": "option",
           "args": [ { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] },
       "other_type": { "prim": "ticket", "args": [ { "prim": "unit" } ] } } }
-Note: You compiled your contract with protocol jakarta although we internally use protocol kathmandu to typecheck the produced Michelson contract
-so you might want to ignore this error if related to a breaking change in protocol kathmandu
+Note: You compiled your contract with protocol kathmandu although we internally use protocol lima to typecheck the produced Michelson contract
+so you might want to ignore this error if related to a breaking change in protocol lima
 
 { parameter
     (or (ticket %burn unit)
@@ -1784,8 +1784,8 @@ let%expect_test _ =
       "description":
         "Failed to read a valid destination from a b58check_encoding data",
       "data": { "input": "KT1badaddr" } }
-    Note: You compiled your contract with protocol jakarta although we internally use protocol kathmandu to typecheck the produced Michelson contract
-    so you might want to ignore this error if related to a breaking change in protocol kathmandu
+    Note: You compiled your contract with protocol kathmandu although we internally use protocol lima to typecheck the produced Michelson contract
+    so you might want to ignore this error if related to a breaking change in protocol lima
 
     Reasonligo is depreacted, support will be dropped in a few versions.
 
@@ -1824,8 +1824,8 @@ let%expect_test _ =
       "description":
         "Failed to read a valid destination from a b58check_encoding data",
       "data": { "input": "KT1badaddr" } }
-    Note: You compiled your contract with protocol jakarta although we internally use protocol kathmandu to typecheck the produced Michelson contract
-    so you might want to ignore this error if related to a breaking change in protocol kathmandu |}]
+    Note: You compiled your contract with protocol kathmandu although we internally use protocol lima to typecheck the produced Michelson contract
+    so you might want to ignore this error if related to a breaking change in protocol lima |}]
 
 let%expect_test _ =
   run_ligo_bad [ "compile" ; "contract" ; contract "bad_timestamp.ligo" ] ;
@@ -2543,8 +2543,8 @@ let%expect_test _ =
       "description":
         "A deprecated instruction usage is disallowed in newly created contracts",
       "data": { "prim": "chest" } }
-    Note: You compiled your contract with protocol jakarta although we internally use protocol kathmandu to typecheck the produced Michelson contract
-    so you might want to ignore this error if related to a breaking change in protocol kathmandu
+    Note: You compiled your contract with protocol kathmandu although we internally use protocol lima to typecheck the produced Michelson contract
+    so you might want to ignore this error if related to a breaking change in protocol lima
 
     { parameter (pair (chest %c) (chest_key %ck)) ;
       storage int ;

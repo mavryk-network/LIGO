@@ -59,8 +59,8 @@ let%expect_test _ =
       "description":
         "A deprecated instruction usage is disallowed in newly created contracts",
       "data": { "prim": "chest_key" } }
-    Note: You compiled your contract with protocol jakarta although we internally use protocol kathmandu to typecheck the produced Michelson contract
-    so you might want to ignore this error if related to a breaking change in protocol kathmandu
+    Note: You compiled your contract with protocol kathmandu although we internally use protocol lima to typecheck the produced Michelson contract
+    so you might want to ignore this error if related to a breaking change in protocol lima
 
     { parameter (pair chest_key chest) ;
       storage bytes ;

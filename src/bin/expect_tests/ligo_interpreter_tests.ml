@@ -183,8 +183,8 @@ let%expect_test _ =
     "description":
       "A deprecated instruction usage is disallowed in newly created contracts",
     "data": { "prim": "chest_key" } }
-  Note: You compiled your contract with protocol jakarta although we internally use protocol kathmandu to typecheck the produced Michelson contract
-  so you might want to ignore this error if related to a breaking change in protocol kathmandu
+  Note: You compiled your contract with protocol kathmandu although we internally use protocol lima to typecheck the produced Michelson contract
+  so you might want to ignore this error if related to a breaking change in protocol lima
 
   File "./test_timelock.mligo", line 25, characters 19-56:
    24 |   let init_storage : bytes = 0x00 in
@@ -847,8 +847,8 @@ let%expect_test _ =
     "description":
       "A deprecated instruction usage is disallowed in newly created contracts",
     "data": { "prim": "chest" } }
-  Note: You compiled your contract with protocol jakarta although we internally use protocol kathmandu to typecheck the produced Michelson contract
-  so you might want to ignore this error if related to a breaking change in protocol kathmandu
+  Note: You compiled your contract with protocol kathmandu although we internally use protocol lima to typecheck the produced Michelson contract
+  so you might want to ignore this error if related to a breaking change in protocol lima
 
   Error(s) occurred while parsing the Michelson input:
   { "id": "proto.015-PtLimaPt.michelson_v1.deprecated_instruction",
@@ -1365,8 +1365,8 @@ let%expect_test _ =
                 [ { "prim": "address" },
                   { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] },
             { "prim": "address" }, { "prim": "mutez" } ] } }
-  Note: You compiled your contract with protocol jakarta although we internally use protocol kathmandu to typecheck the produced Michelson contract
-  so you might want to ignore this error if related to a breaking change in protocol kathmandu
+  Note: You compiled your contract with protocol kathmandu although we internally use protocol lima to typecheck the produced Michelson contract
+  so you might want to ignore this error if related to a breaking change in protocol lima
 
   File "./test_tickets_and_bigmaps.mligo", line 49, characters 22-61:
    48 |
