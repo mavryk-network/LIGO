@@ -568,6 +568,14 @@ and compile_pattern ~raise : CST.pattern -> AST.ty_expr option Pattern.t =
   fun p ->
   let open Pattern in
   match unepar p with
+  | CST.PTyped  { region ; value = { pattern = CST.PVar x ; type_expr ; _} } ->
+    let (pvar,loc) = r_split x in
+    let b =
+      let var = compile_variable pvar.variable in
+      Binder.make ~loc var (Some (compile_type_expression ~raise type_expr))
+    in
+    let loc = Location.lift region in
+    Location.wrap ~loc @@ P_var b
   | CST.PVar x ->
     let (pvar,loc) = r_split x in
     let b =
