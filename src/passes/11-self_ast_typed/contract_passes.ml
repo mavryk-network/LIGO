@@ -265,7 +265,7 @@ let remove_unused_for_views ~raise ~(view_names:Value_var.t list ) : program -> 
   let prg_decls = List.rev prg in
   let pred = fun _ -> function
       {Location.wrap_content = D_value {binder;_}; _} -> (is_view_name @@ Binder.get_var binder)
-    | {Location.wrap_content = D_pattern {pattern = { wrap_content = P_var binder};_}; _} -> (is_view_name @@ Binder.get_var binder)
+    | {Location.wrap_content = D_pattern {pattern = { wrap_content = P_var binder ; _ };_}; _} -> (is_view_name @@ Binder.get_var binder)
     | _ -> false in
   let idx,_ = trace_option ~raise (Errors.corner_case "View not found") @@ List.findi prg_decls ~f:pred in
   (* Remove the definition after the last view (can't be relevant), mostly remove the test *)
@@ -274,7 +274,7 @@ let remove_unused_for_views ~raise ~(view_names:Value_var.t list ) : program -> 
     ~f:(fun decl ->
       match decl with
         {Location.wrap_content = D_value dc; _} when is_view_name @@ Binder.get_var dc.binder -> Some (dc.binder, dc.expr, dc.attr)
-      | {Location.wrap_content = D_pattern { pattern = { wrap_content = P_var binder} ; expr ; attr }; _} when is_view_name @@ Binder.get_var binder -> 
+      | {Location.wrap_content = D_pattern { pattern = { wrap_content = P_var binder ; _ } ; expr ; attr }; _} when is_view_name @@ Binder.get_var binder -> 
         let binder = Binder.map Option.some binder in
         Some (binder, expr, attr)
       
