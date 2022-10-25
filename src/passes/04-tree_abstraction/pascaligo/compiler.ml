@@ -979,7 +979,7 @@ and compile_statement ~raise : ?next:AST.expression -> CST.statement -> AST.expr
     in
     let pattern = compile_pattern ~raise vd.pattern in
     Option.map next
-      ~f:(fun next -> e_let_in ~loc pattern attr init next)
+      ~f:(fun next -> e_let_mut_in ~loc pattern attr init next)
   )
 
 and compile_block ~raise : ?next:AST.expression -> CST.block CST.reg -> AST.expression =
