@@ -200,6 +200,18 @@ and get_fv_module_expr env x =
 
 and get_fv_program (env:env) acc : program -> _ * program = function
   | [] -> env, acc
+  | ({Location.wrap_content = D_pattern {pattern; expr;attr}; _} as hd) :: tl ->
+    let binders = List.filter (Pattern.binders pattern) ~f:(fun binder' -> VVarSet.mem (Binder.get_var binder') env.used_var) in
+    if (List.is_empty binders) then
+      get_fv_module env acc tl
+    else
+      let env =
+        List.fold binders ~init:env ~f:(fun env binder' ->
+        {env with used_var = VVarSet.remove (Binder.get_var binder') env.used_var})
+      in
+      let env',expr = get_fv expr in
+      let env = merge_env env @@ env' in
+      get_fv_module env ({hd with wrap_content = D_pattern {pattern;expr;attr}} :: acc) tl  
   | ({Location.wrap_content = D_value {binder; expr;attr}; _} as hd) :: tl ->
     let binder' = binder in
     if VVarSet.mem (Binder.get_var binder') env.used_var then
@@ -224,15 +236,21 @@ and get_fv_program (env:env) acc : program -> _ * program = function
 
 let remove_unused ~raise : contract_pass_data -> program -> program = fun contract_pass_data prg ->
   (* Process declaration in reverse order *)
+  (* TODO: try to clean this : D_value binder just type_expression*)
   let prg_decls = List.rev prg in
   let aux = function
-      {Location.wrap_content = D_value {binder;_}; _} -> not (Value_var.equal (Binder.get_var binder) contract_pass_data.main_name)
+      {Location.wrap_content = D_value {binder = { var ; _};_}; _}  
+    | {Location.wrap_content = D_pattern {pattern={wrap_content=P_var { var ; _}; _};_};_} ->
+        not (Value_var.equal var contract_pass_data.main_name)
     | _ -> true in
   (* Remove the definition after the main entry_point (can't be relevant), mostly remove the test *)
   let _, prg_decls = List.split_while prg_decls ~f:aux in
   let main_decl, prg_decls = trace_option ~raise (Errors.corner_case "Entrypoint not found") @@ Simple_utils.List.uncons prg_decls in
   let main_dc = trace_option ~raise (Errors.corner_case "Entrypoint not found") @@ match main_decl with
       {Location.wrap_content = D_value dc; _} -> Some dc
+    | {Location.wrap_content = D_pattern ({ pattern = { wrap_content = P_var binder} ; _} as dc)} -> 
+      let binder = Binder.map Option.some binder in
+      Some { binder ; expr = dc.expr ; attr = dc.attr }
     | _ -> None in
   let env,main_expr = get_fv main_dc.expr in
   let main_dc = {main_dc with expr = main_expr} in

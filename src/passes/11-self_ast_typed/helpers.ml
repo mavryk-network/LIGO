@@ -271,9 +271,10 @@ type contract_type = {
 
 let fetch_contract_type ~raise : Value_var.t -> program -> contract_type = fun main_fname m ->
   let aux declt = match Location.unwrap declt with
-    | D_value ({ binder ; expr=_ ; attr=_} as p) ->
-       if Value_var.equal (Binder.get_var binder) main_fname
-       then Some p
+    | D_value { binder = { var ; _ } ; expr ; attr=_}
+    | D_pattern { pattern = { wrap_content = P_var { var ; _ } ; _} ; expr ; attr=_ } ->
+      if Value_var.equal var main_fname
+       then Some (var, expr)
        else None
     | D_pattern _
     | D_type   _
@@ -285,7 +286,7 @@ let fetch_contract_type ~raise : Value_var.t -> program -> contract_type = fun m
     trace_option ~raise (corner_case (Format.asprintf "Entrypoint %a does not exist" Value_var.pp main_fname : string)) @@
       main_decl_opt
   in
-  let Value_decl.{ binder ; expr ; attr=_} = main_decl in
+  let (var, expr) = main_decl in
   match expr.type_expression.type_content with
   | T_arrow {type1 ; type2} -> (
     match Ast_typed.Combinators.(get_t_pair type1 , get_t_pair type2) with
@@ -296,9 +297,9 @@ let fetch_contract_type ~raise : Value_var.t -> program -> contract_type = fun m
         Ast_typed.assert_type_expression_eq (storage,storage') in
       (* TODO: on storage/parameter : asert_storable, assert_passable ? *)
       { parameter ; storage }
-    |  _ -> raise.error @@ bad_contract_io main_fname expr (Value_var.get_location @@ Binder.get_var binder)
+    |  _ -> raise.error @@ bad_contract_io main_fname expr (Value_var.get_location var)
   )
-  | _ -> raise.error @@ bad_contract_io main_fname expr (Value_var.get_location @@ Binder.get_var binder)
+  | _ -> raise.error @@ bad_contract_io main_fname expr (Value_var.get_location var)
 
 (* get_shadowed_decl [prg] [predicate] returns the location of the last shadowed annotated top-level declaration of program [prg] if any
    [predicate] defines the annotation (or set of annotation) you want to match on
@@ -356,6 +357,7 @@ let annotate_with_view ~raise : string list -> Ast_typed.program -> Ast_typed.pr
   let () = match not_found with [] -> () | not_found::_ -> raise.error (corner_case (Format.asprintf "View %s does not exist" not_found : string)) in
   prg
 
+(* TODO: this is unused ; used this instead of Contract_passes.get_fv_program I think??? *)
 module Free_variables :
   sig
     val expression : expression -> (Module_var.t list * Value_var.t list *  Value_var.t list)
