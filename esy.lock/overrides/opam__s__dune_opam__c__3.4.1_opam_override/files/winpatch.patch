@@ -8,3 +8,14 @@
 +        | l -> String.concat l ~sep:(if Sys.unix then "/" else "\\"))
      in
      loop (to_list t) (to_list from)
+
+--- ./otherlibs/xdg/xdg_stubs.c
++++ ./otherlibs/xdg/xdg_stubs.c
+@@ -8,6 +8,7 @@
+ #include <Windows.h>
+ #include <Knownfolders.h>
+ #include <Shlobj.h>
++#define WC_ERR_INVALID_CHARS 0x00000080
+ 
+ value dune_xdg__get_known_folder_path(value v_known_folder)
+ {
