@@ -137,7 +137,9 @@ module Make (Container : Container) = struct
       | List lp ->
         let acc, lp = List.fold_map ~f:(fold_map_pattern f) ~init:acc lp in
         acc, Location.wrap ~loc (P_list (List lp)))
-    | P_variant (_, p) -> fold_map_pattern f acc p
+    | P_variant (l, p) ->
+      let acc, lp = fold_map_pattern f acc p in
+      acc , Location.wrap ~loc (P_variant (l,lp))
     | P_tuple lp ->
       let acc, lp = List.fold_map ~f:(fold_map_pattern f) ~init:acc lp in
       acc, Location.wrap ~loc (P_tuple lp)
