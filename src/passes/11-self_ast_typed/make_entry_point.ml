@@ -89,15 +89,15 @@ let program ~raise
              "Not an entrypoint form: %a"
              Ast_typed.PP.type_expression
              ep_type)
-    | Error (`Storage_does_not_match (storage', storage)) ->
+    | Error (`Storage_does_not_match (ep_1, storage_1, ep_2, storage_2)) ->
       raise.error
         (corner_case
         @@ Format.asprintf
-             "Storage types do not match: %a %a"
-             Ast_typed.PP.type_expression
-             storage'
-             Ast_typed.PP.type_expression
-             storage)
+             "@[<hv>Storage types do not match for different entrypoints:@.%a : %a@.%a : %a@]"
+             Value_var.pp ep_1
+             Ast_typed.PP.type_expression storage_1
+             Value_var.pp ep_2
+             Ast_typed.PP.type_expression storage_2)
     | Ok (p, s) -> p, s
   in
   let type_binder = Type_var.fresh ~name:"parameter" () in
@@ -186,15 +186,15 @@ let make_main_entrypoint ~raise
                "Not an entrypoint form: %a"
                Ast_typed.PP.type_expression
                ep_type)
-      | Error (`Storage_does_not_match (storage', storage)) ->
+      | Error (`Storage_does_not_match (ep_1, storage_1, ep_2, storage_2)) ->
         raise.error
           (corner_case
-          @@ Format.asprintf
-               "Storage types do not match: %a %a"
-               Ast_typed.PP.type_expression
-               storage'
-               Ast_typed.PP.type_expression
-               storage)
+           @@ Format.asprintf
+             "@[<hv>Storage types do not match for different entrypoints:@.%a : %a@.%a : %a@]"
+             Value_var.pp ep_1
+             Ast_typed.PP.type_expression storage_1
+             Value_var.pp ep_2
+             Ast_typed.PP.type_expression storage_2)
       | Ok (p, s) -> p, s
     in
     let type_binder = Type_var.fresh ~name:"parameter" () in

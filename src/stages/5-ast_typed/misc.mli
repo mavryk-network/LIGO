@@ -20,4 +20,4 @@ val assert_list_eq : ('a -> 'a -> unit option) -> 'a list -> 'a list -> unit opt
 val get_type_of_contract : type_content -> (type_expression * type_expression) option
 val get_entry_form : type_expression -> (type_expression * type_expression) option
 val build_entry_type : type_expression -> type_expression -> type_expression
-val parameter_from_entrypoints  : (Ligo_prim.Value_var.t * type_expression) Simple_utils.List.Ne.t -> (type_expression * type_expression, [> `Not_entry_point_form of Types.type_expression | `Storage_does_not_match of Types.type_expression * Types.type_expression ]) result
+val parameter_from_entrypoints  : (Ligo_prim.Value_var.t * type_expression) Simple_utils.List.Ne.t -> (type_expression * type_expression, [> `Not_entry_point_form of Types.type_expression | `Storage_does_not_match of Ligo_prim.Value_var.t * Types.type_expression * Ligo_prim.Value_var.t * Types.type_expression ]) result

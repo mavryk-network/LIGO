@@ -624,8 +624,6 @@ let%expect_test _ =
 
     Warning: This entry will be ignored, command line option override [@entry] annotation
 
-
-    Invalid entrypoint argument.
-    Entrypoint 'bad_transfer' has storage type 'unit'.
-    This is inconsitent with the first declared entrypoint 'transfer' with storage type '
-    record[allowances -> big_map (record[owner -> address , spender -> address] , nat) , tokens -> big_map (address , nat) , total_supply -> nat]'. |}]
+    Internal error: Storage types do not match for different entrypoints:
+    transfer : record[allowances -> big_map (record[owner -> address , spender -> address] , nat) , tokens -> big_map (address , nat) , total_supply -> nat]
+    bad_transfer : unit |}]
