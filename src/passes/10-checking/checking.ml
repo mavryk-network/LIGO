@@ -23,11 +23,11 @@ let untype_program = Untyper.untype_program
 let assert_type_expression_eq
     ~raise
     (loc : Location.t)
-    ((tv', tv) : O.type_expression * O.type_expression)
+    ((expected, recieved) : O.type_expression * O.type_expression)
     : unit
   =
-  trace_option ~raise (assert_equal loc tv' tv)
-  @@ O.assert_type_expression_eq (tv', tv)
+  trace_option ~raise (assert_equal loc expected recieved)
+  @@ O.assert_type_expression_eq (expected, recieved)
 
 
 (*
@@ -280,7 +280,7 @@ let rec check_expression
       let lit_type, expr = infer_literal ~raise ~loc lit in
       Assert.assert_true
         ~raise
-        (assert_equal loc lit_type type_)
+        (assert_equal loc type_ lit_type)
         (O.type_expression_eq (lit_type, type_));
       ctx, expr
     (* TODO: Not keen about this (add alpha equiv in type) *)
