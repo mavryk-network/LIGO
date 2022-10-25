@@ -78,15 +78,21 @@ let get_aliases_prelude : Ast_typed.module_variable -> Ast_typed.program -> Ast_
       let open Ast_typed in
       match Location.unwrap d with
       | D_module { module_binder ; module_attr ; _ } when TypeOrModuleAttr.(module_attr.public) -> module_binder::acc
-      | _ -> acc in
+      | (D_type _ | D_module _ | D_value _ | D_pattern _) -> acc in
     let get_val_bindings acc d =
       let open Ast_typed in
       match Location.unwrap d with
-      | D_value { binder ; attr ; _ } when ValueAttr.(attr.public) -> binder::acc | _ -> acc in
+      | D_value { binder ; attr ; _ } when ValueAttr.(attr.public) -> binder::acc
+      | D_pattern { pattern ; attr ; _ } when ValueAttr.(attr.public) ->
+        let binders = Pattern.binders pattern in
+        let acc' = List.map binders ~f:(Binder.map Option.some) in
+        acc' @ acc
+      | (D_type _ | D_module _ | D_value _ | D_pattern _) -> acc in
     let get_ty_bindings acc d =
       let open Ast_typed in
       match Location.unwrap d with
-      | D_type { type_binder ; type_attr ; _ } when (type_attr.public) -> type_binder::acc | _ -> acc in
+      | D_type { type_binder ; type_attr ; _ } when (type_attr.public) -> type_binder::acc
+      | (D_type _ | D_module _ | D_value _ | D_pattern _) -> acc in
     let module_attr = Ast_core.TypeOrModuleAttr.{ public = true ; hidden = true } in
     let attr = Ast_core.ValueAttr.
       { inline = true ; no_mutation = true ; view = false ;
