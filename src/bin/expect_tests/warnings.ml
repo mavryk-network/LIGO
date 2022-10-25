@@ -49,8 +49,15 @@ run_ligo_bad [ "compile" ; "expression" ; "cameligo" ; "x" ; "--init-file" ; con
   Warning: variable "Foo.x" cannot be used more than once.
 
   Error(s) occurred while checking the contract:
-  At (unshown) location 8, type ticket nat cannot be used here because it is not duplicable. Only duplicable types can be used with the DUP instruction and as view inputs and outputs.
-  At (unshown) location 8, Ticket in unauthorized position (type error). |}]
+  { "id": "proto.015-PtLimaPt.michelson_v1.non_dupable_type",
+    "description": "DUP was used on a non-dupable type (e.g. tickets).",
+    "data":
+      { "loc": 8,
+        "type":
+          { "prim": "option",
+            "args": [ { "prim": "ticket", "args": [ { "prim": "nat" } ] } ] } } }
+  { "id": "proto.015-PtLimaPt.michelson_v1.unexpected_ticket",
+    "description": "A ticket type has been found", "data": { "loc": 8 } } |}]
 
 
 let%expect_test _ =
@@ -63,8 +70,15 @@ run_ligo_bad [ "compile" ; "expression" ; "cameligo" ; "x" ; "--init-file" ; con
   Warning: variable "x" cannot be used more than once.
 
   Error(s) occurred while checking the contract:
-  At (unshown) location 8, type ticket nat cannot be used here because it is not duplicable. Only duplicable types can be used with the DUP instruction and as view inputs and outputs.
-  At (unshown) location 8, Ticket in unauthorized position (type error). |}]
+  { "id": "proto.015-PtLimaPt.michelson_v1.non_dupable_type",
+    "description": "DUP was used on a non-dupable type (e.g. tickets).",
+    "data":
+      { "loc": 8,
+        "type":
+          { "prim": "option",
+            "args": [ { "prim": "ticket", "args": [ { "prim": "nat" } ] } ] } } }
+  { "id": "proto.015-PtLimaPt.michelson_v1.unexpected_ticket",
+    "description": "A ticket type has been found", "data": { "loc": 8 } } |}]
 
   (* some check about the warnings of the E_constructor cases *)
 let%expect_test _ =

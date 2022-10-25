@@ -3,6 +3,65 @@ open Cli_expect
 let%expect_test _ =
   run_ligo_good ["compile" ; "contract" ; test "timelock.mligo" ] ;
   [%expect {|
+    Warning: Error(s) occurred while type checking the produced michelson contract:
+    { "id": "proto.015-PtLimaPt.michelson_v1.ill_formed_type",
+      "description":
+        "The toplevel error thrown when trying to parse a type expression (always followed by more precise errors).",
+      "data":
+        { "identifier": "parameter",
+          "ill_formed_expression":
+            [ { "prim": "parameter",
+                "args":
+                  [ { "prim": "pair",
+                      "args": [ { "prim": "chest_key" }, { "prim": "chest" } ] } ] },
+              { "prim": "storage", "args": [ { "prim": "bytes" } ] },
+              { "prim": "code",
+                "args":
+                  [ [ { "prim": "CAR" }, { "prim": "UNPAIR" },
+                      { "prim": "PUSH",
+                        "args": [ { "prim": "nat" }, { "int": "1000" } ] },
+                      { "prim": "DUG", "args": [ { "int": "2" } ] },
+                      { "prim": "OPEN_CHEST" },
+                      { "prim": "IF_LEFT",
+                        "args":
+                          [ [ { "prim": "RIGHT",
+                                "args":
+                                  [ { "prim": "or",
+                                      "args":
+                                        [ { "prim": "unit" },
+                                          { "prim": "unit" } ] } ] } ],
+                            [ { "prim": "IF",
+                                "args":
+                                  [ [ { "prim": "UNIT" },
+                                      { "prim": "LEFT",
+                                        "args": [ { "prim": "unit" } ] } ],
+                                    [ { "prim": "UNIT" },
+                                      { "prim": "RIGHT",
+                                        "args": [ { "prim": "unit" } ] } ] ] },
+                              { "prim": "LEFT", "args": [ { "prim": "bytes" } ] } ] ] },
+                      { "prim": "IF_LEFT",
+                        "args":
+                          [ [ { "prim": "IF_LEFT",
+                                "args":
+                                  [ [ { "prim": "DROP" },
+                                      { "prim": "PUSH",
+                                        "args":
+                                          [ { "prim": "bytes" },
+                                            { "bytes": "01" } ] } ],
+                                    [ { "prim": "DROP" },
+                                      { "prim": "PUSH",
+                                        "args":
+                                          [ { "prim": "bytes" },
+                                            { "bytes": "00" } ] } ] ] } ], [] ] },
+                      { "prim": "NIL", "args": [ { "prim": "operation" } ] },
+                      { "prim": "PAIR" } ] ] } ], "location": 2 } }
+    { "id": "proto.015-PtLimaPt.michelson_v1.deprecated_instruction",
+      "description":
+        "A deprecated instruction usage is disallowed in newly created contracts",
+      "data": { "prim": "chest_key" } }
+    Note: You compiled your contract with protocol jakarta although we internally use protocol kathmandu to typecheck the produced Michelson contract
+    so you might want to ignore this error if related to a breaking change in protocol kathmandu
+
     { parameter (pair chest_key chest) ;
       storage bytes ;
       code { CAR ;

@@ -24,13 +24,13 @@ let pp_ct : Format.formatter -> constant_val -> unit =
     Format.fprintf
       ppf
       "%a"
-      Tezos_protocol_014_PtKathma.Protocol.Alpha_context.Contract.pp
+      Tezos_protocol.Protocol.Alpha_context.Contract.pp
       c
   | C_contract c ->
     Format.fprintf
       ppf
       "%a(%a)"
-      Tezos_protocol_014_PtKathma.Protocol.Alpha_context.Contract.pp
+      Tezos_protocol.Protocol.Alpha_context.Contract.pp
       c.address
       (PP_helpers.option PP_helpers.string)
       c.entrypoint
@@ -95,7 +95,7 @@ let rec pp_value : Format.formatter -> value -> unit =
     Format.fprintf
       ppf
       "%a"
-      Tezos_protocol_014_PtKathma.Protocol.Alpha_context.Contract.pp
+      Tezos_protocol.Protocol.Alpha_context.Contract.pp
       c
 
 

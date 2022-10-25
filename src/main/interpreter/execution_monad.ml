@@ -7,9 +7,9 @@ open Simple_utils.Trace
 module LT = Ligo_interpreter.Types
 module LC = Ligo_interpreter.Combinators
 module Exc = Ligo_interpreter_exc
-module Tezos_protocol = Tezos_protocol_014_PtKathma
-module Tezos_protocol_env = Tezos_protocol_environment_014_PtKathma
-module Tezos_client = Tezos_client_014_PtKathma
+module Tezos_protocol = Tezos_protocol_015_PtLimaPt
+module Tezos_protocol_env = Tezos_protocol_environment_015_PtLimaPt
+module Tezos_client = Tezos_client_015_PtLimaPt
 module Location = Simple_utils.Location
 module ModRes = Preprocessor.ModRes
 open Ligo_prim
@@ -317,7 +317,7 @@ module Command = struct
       in
       (), ctxt
     | Reset_state (loc, initial_timestamp, calltrace, n, amts) ->
-      let initial_timestamp =
+      let _initial_timestamp =
         Option.map initial_timestamp ~f:(fun x ->
           Proto_alpha_utils.Time.Protocol.of_seconds (Z.to_int64 x))
       in
@@ -341,7 +341,7 @@ module Command = struct
           ~calltrace
           ~initial_balances:amts
           ~n:(Z.to_int n)
-          ?initial_timestamp
+          (* ?initial_timestamp *)
           ctxt.internals.protocol_version
           bootstrap_contracts
           ~baker_accounts

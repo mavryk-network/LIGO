@@ -913,6 +913,717 @@ File "../../test/contracts/ticket_builder.mligo", line 29, characters 28-34:
 Warning: unused variable "ticket".
 Hint: replace it by "_ticket" to prevent this warning.
 
+Warning: Error(s) occurred while type checking the produced michelson contract:
+{ "id": "proto.015-PtLimaPt.michelson_v1.ill_typed_contract",
+  "description":
+    "The toplevel error thrown when trying to typecheck a contract code against given input, output and storage types (always followed by more precise errors).",
+  "data":
+    { "ill_typed_code":
+        [ { "prim": "parameter",
+            "args":
+              [ { "prim": "or",
+                  "args":
+                    [ { "prim": "ticket", "args": [ { "prim": "unit" } ],
+                        "annots": [ "%burn" ] },
+                      { "prim": "pair",
+                        "args":
+                          [ { "prim": "contract",
+                              "args":
+                                [ { "prim": "ticket",
+                                    "args": [ { "prim": "unit" } ] } ],
+                              "annots": [ "%destination" ] },
+                            { "prim": "nat", "annots": [ "%amount" ] } ],
+                        "annots": [ "%mint" ] } ] } ] },
+          { "prim": "storage", "args": [ { "prim": "address" } ] },
+          { "prim": "code",
+            "args":
+              [ [ { "prim": "PUSH",
+                    "args": [ { "prim": "mutez" }, { "int": "0" } ] },
+                  { "prim": "AMOUNT" }, { "prim": "COMPARE" },
+                  { "prim": "EQ" },
+                  { "prim": "IF",
+                    "args":
+                      [ [],
+                        [ { "prim": "PUSH",
+                            "args":
+                              [ { "prim": "string" },
+                                { "string": "failed assertion" } ] },
+                          { "prim": "FAILWITH" } ] ] }, { "prim": "UNPAIR" },
+                  { "prim": "IF_LEFT",
+                    "args":
+                      [ [ { "prim": "READ_TICKET" }, { "prim": "SWAP" },
+                          { "prim": "DROP" }, { "prim": "CAR" },
+                          { "prim": "SELF_ADDRESS" }, { "prim": "SWAP" },
+                          { "prim": "COMPARE" }, { "prim": "EQ" },
+                          { "prim": "IF",
+                            "args":
+                              [ [],
+                                [ { "prim": "PUSH",
+                                    "args":
+                                      [ { "prim": "string" },
+                                        { "string": "failed assertion" } ] },
+                                  { "prim": "FAILWITH" } ] ] },
+                          { "prim": "NIL",
+                            "args": [ { "prim": "operation" } ] } ],
+                        [ { "prim": "DUP", "args": [ { "int": "2" } ] },
+                          { "prim": "SENDER" }, { "prim": "COMPARE" },
+                          { "prim": "EQ" },
+                          { "prim": "IF",
+                            "args":
+                              [ [],
+                                [ { "prim": "PUSH",
+                                    "args":
+                                      [ { "prim": "string" },
+                                        { "string": "failed assertion" } ] },
+                                  { "prim": "FAILWITH" } ] ] },
+                          { "prim": "DUP" }, { "prim": "CDR" },
+                          { "prim": "UNIT" }, { "prim": "TICKET" },
+                          { "prim": "SWAP" }, { "prim": "CAR" },
+                          { "prim": "PUSH",
+                            "args": [ { "prim": "mutez" }, { "int": "0" } ] },
+                          { "prim": "DIG", "args": [ { "int": "2" } ] },
+                          { "prim": "TRANSFER_TOKENS" }, { "prim": "SWAP" },
+                          { "prim": "NIL",
+                            "args": [ { "prim": "operation" } ] },
+                          { "prim": "DIG", "args": [ { "int": "2" } ] },
+                          { "prim": "CONS" } ] ] }, { "prim": "PAIR" } ] ] } ],
+      "type_map":
+        [ { "location": 69,
+            "stack_before":
+              [ { "prim": "mutez" },
+                { "prim": "contract",
+                  "args":
+                    [ { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] },
+                { "prim": "option",
+                  "args":
+                    [ { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] },
+                { "prim": "address" } ],
+            "stack_after":
+              [ { "prim": "option",
+                  "args":
+                    [ { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] },
+                { "prim": "mutez" },
+                { "prim": "contract",
+                  "args":
+                    [ { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] },
+                { "prim": "address" } ] },
+          { "location": 66,
+            "stack_before":
+              [ { "prim": "contract",
+                  "args":
+                    [ { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] },
+                { "prim": "option",
+                  "args":
+                    [ { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] },
+                { "prim": "address" } ],
+            "stack_after":
+              [ { "prim": "mutez" },
+                { "prim": "contract",
+                  "args":
+                    [ { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] },
+                { "prim": "option",
+                  "args":
+                    [ { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] },
+                { "prim": "address" } ] },
+          { "location": 65,
+            "stack_before":
+              [ { "prim": "pair",
+                  "args":
+                    [ { "prim": "contract",
+                        "args":
+                          [ { "prim": "ticket",
+                              "args": [ { "prim": "unit" } ] } ] },
+                      { "prim": "nat" } ] },
+                { "prim": "option",
+                  "args":
+                    [ { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] },
+                { "prim": "address" } ],
+            "stack_after":
+              [ { "prim": "contract",
+                  "args":
+                    [ { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] },
+                { "prim": "option",
+                  "args":
+                    [ { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] },
+                { "prim": "address" } ] },
+          { "location": 64,
+            "stack_before":
+              [ { "prim": "option",
+                  "args":
+                    [ { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] },
+                { "prim": "pair",
+                  "args":
+                    [ { "prim": "contract",
+                        "args":
+                          [ { "prim": "ticket",
+                              "args": [ { "prim": "unit" } ] } ] },
+                      { "prim": "nat" } ] }, { "prim": "address" } ],
+            "stack_after":
+              [ { "prim": "pair",
+                  "args":
+                    [ { "prim": "contract",
+                        "args":
+                          [ { "prim": "ticket",
+                              "args": [ { "prim": "unit" } ] } ] },
+                      { "prim": "nat" } ] },
+                { "prim": "option",
+                  "args":
+                    [ { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] },
+                { "prim": "address" } ] },
+          { "location": 63,
+            "stack_before":
+              [ { "prim": "unit" }, { "prim": "nat" },
+                { "prim": "pair",
+                  "args":
+                    [ { "prim": "contract",
+                        "args":
+                          [ { "prim": "ticket",
+                              "args": [ { "prim": "unit" } ] } ] },
+                      { "prim": "nat" } ] }, { "prim": "address" } ],
+            "stack_after":
+              [ { "prim": "option",
+                  "args":
+                    [ { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] },
+                { "prim": "pair",
+                  "args":
+                    [ { "prim": "contract",
+                        "args":
+                          [ { "prim": "ticket",
+                              "args": [ { "prim": "unit" } ] } ] },
+                      { "prim": "nat" } ] }, { "prim": "address" } ] },
+          { "location": 62,
+            "stack_before":
+              [ { "prim": "nat" },
+                { "prim": "pair",
+                  "args":
+                    [ { "prim": "contract",
+                        "args":
+                          [ { "prim": "ticket",
+                              "args": [ { "prim": "unit" } ] } ] },
+                      { "prim": "nat" } ] }, { "prim": "address" } ],
+            "stack_after":
+              [ { "prim": "unit" }, { "prim": "nat" },
+                { "prim": "pair",
+                  "args":
+                    [ { "prim": "contract",
+                        "args":
+                          [ { "prim": "ticket",
+                              "args": [ { "prim": "unit" } ] } ] },
+                      { "prim": "nat" } ] }, { "prim": "address" } ] },
+          { "location": 61,
+            "stack_before":
+              [ { "prim": "pair",
+                  "args":
+                    [ { "prim": "contract",
+                        "args":
+                          [ { "prim": "ticket",
+                              "args": [ { "prim": "unit" } ] } ] },
+                      { "prim": "nat" } ] },
+                { "prim": "pair",
+                  "args":
+                    [ { "prim": "contract",
+                        "args":
+                          [ { "prim": "ticket",
+                              "args": [ { "prim": "unit" } ] } ] },
+                      { "prim": "nat" } ] }, { "prim": "address" } ],
+            "stack_after":
+              [ { "prim": "nat" },
+                { "prim": "pair",
+                  "args":
+                    [ { "prim": "contract",
+                        "args":
+                          [ { "prim": "ticket",
+                              "args": [ { "prim": "unit" } ] } ] },
+                      { "prim": "nat" } ] }, { "prim": "address" } ] },
+          { "location": 60,
+            "stack_before":
+              [ { "prim": "pair",
+                  "args":
+                    [ { "prim": "contract",
+                        "args":
+                          [ { "prim": "ticket",
+                              "args": [ { "prim": "unit" } ] } ] },
+                      { "prim": "nat" } ] }, { "prim": "address" } ],
+            "stack_after":
+              [ { "prim": "pair",
+                  "args":
+                    [ { "prim": "contract",
+                        "args":
+                          [ { "prim": "ticket",
+                              "args": [ { "prim": "unit" } ] } ] },
+                      { "prim": "nat" } ] },
+                { "prim": "pair",
+                  "args":
+                    [ { "prim": "contract",
+                        "args":
+                          [ { "prim": "ticket",
+                              "args": [ { "prim": "unit" } ] } ] },
+                      { "prim": "nat" } ] }, { "prim": "address" } ] },
+          { "location": 59,
+            "stack_before":
+              [ { "prim": "string" },
+                { "prim": "pair",
+                  "args":
+                    [ { "prim": "contract",
+                        "args":
+                          [ { "prim": "ticket",
+                              "args": [ { "prim": "unit" } ] } ] },
+                      { "prim": "nat" } ] }, { "prim": "address" } ],
+            "stack_after": [] },
+          { "location": 56,
+            "stack_before":
+              [ { "prim": "pair",
+                  "args":
+                    [ { "prim": "contract",
+                        "args":
+                          [ { "prim": "ticket",
+                              "args": [ { "prim": "unit" } ] } ] },
+                      { "prim": "nat" } ] }, { "prim": "address" } ],
+            "stack_after":
+              [ { "prim": "string" },
+                { "prim": "pair",
+                  "args":
+                    [ { "prim": "contract",
+                        "args":
+                          [ { "prim": "ticket",
+                              "args": [ { "prim": "unit" } ] } ] },
+                      { "prim": "nat" } ] }, { "prim": "address" } ] },
+          { "location": 54,
+            "stack_before":
+              [ { "prim": "pair",
+                  "args":
+                    [ { "prim": "contract",
+                        "args":
+                          [ { "prim": "ticket",
+                              "args": [ { "prim": "unit" } ] } ] },
+                      { "prim": "nat" } ] }, { "prim": "address" } ],
+            "stack_after":
+              [ { "prim": "pair",
+                  "args":
+                    [ { "prim": "contract",
+                        "args":
+                          [ { "prim": "ticket",
+                              "args": [ { "prim": "unit" } ] } ] },
+                      { "prim": "nat" } ] }, { "prim": "address" } ] },
+          { "location": 52,
+            "stack_before":
+              [ { "prim": "int" },
+                { "prim": "pair",
+                  "args":
+                    [ { "prim": "contract",
+                        "args":
+                          [ { "prim": "ticket",
+                              "args": [ { "prim": "unit" } ] } ] },
+                      { "prim": "nat" } ] }, { "prim": "address" } ],
+            "stack_after":
+              [ { "prim": "bool" },
+                { "prim": "pair",
+                  "args":
+                    [ { "prim": "contract",
+                        "args":
+                          [ { "prim": "ticket",
+                              "args": [ { "prim": "unit" } ] } ] },
+                      { "prim": "nat" } ] }, { "prim": "address" } ] },
+          { "location": 51,
+            "stack_before":
+              [ { "prim": "address" }, { "prim": "address" },
+                { "prim": "pair",
+                  "args":
+                    [ { "prim": "contract",
+                        "args":
+                          [ { "prim": "ticket",
+                              "args": [ { "prim": "unit" } ] } ] },
+                      { "prim": "nat" } ] }, { "prim": "address" } ],
+            "stack_after":
+              [ { "prim": "int" },
+                { "prim": "pair",
+                  "args":
+                    [ { "prim": "contract",
+                        "args":
+                          [ { "prim": "ticket",
+                              "args": [ { "prim": "unit" } ] } ] },
+                      { "prim": "nat" } ] }, { "prim": "address" } ] },
+          { "location": 50,
+            "stack_before":
+              [ { "prim": "address" },
+                { "prim": "pair",
+                  "args":
+                    [ { "prim": "contract",
+                        "args":
+                          [ { "prim": "ticket",
+                              "args": [ { "prim": "unit" } ] } ] },
+                      { "prim": "nat" } ] }, { "prim": "address" } ],
+            "stack_after":
+              [ { "prim": "address" }, { "prim": "address" },
+                { "prim": "pair",
+                  "args":
+                    [ { "prim": "contract",
+                        "args":
+                          [ { "prim": "ticket",
+                              "args": [ { "prim": "unit" } ] } ] },
+                      { "prim": "nat" } ] }, { "prim": "address" } ] },
+          { "location": 48,
+            "stack_before":
+              [ { "prim": "pair",
+                  "args":
+                    [ { "prim": "contract",
+                        "args":
+                          [ { "prim": "ticket",
+                              "args": [ { "prim": "unit" } ] } ] },
+                      { "prim": "nat" } ] }, { "prim": "address" } ],
+            "stack_after":
+              [ { "prim": "address" },
+                { "prim": "pair",
+                  "args":
+                    [ { "prim": "contract",
+                        "args":
+                          [ { "prim": "ticket",
+                              "args": [ { "prim": "unit" } ] } ] },
+                      { "prim": "nat" } ] }, { "prim": "address" } ] },
+          { "location": 45, "stack_before": [ { "prim": "address" } ],
+            "stack_after":
+              [ { "prim": "list", "args": [ { "prim": "operation" } ] },
+                { "prim": "address" } ] },
+          { "location": 44,
+            "stack_before": [ { "prim": "string" }, { "prim": "address" } ],
+            "stack_after": [] },
+          { "location": 41, "stack_before": [ { "prim": "address" } ],
+            "stack_after": [ { "prim": "string" }, { "prim": "address" } ] },
+          { "location": 39, "stack_before": [ { "prim": "address" } ],
+            "stack_after": [ { "prim": "address" } ] },
+          { "location": 37,
+            "stack_before": [ { "prim": "int" }, { "prim": "address" } ],
+            "stack_after": [ { "prim": "bool" }, { "prim": "address" } ] },
+          { "location": 36,
+            "stack_before":
+              [ { "prim": "address" }, { "prim": "address" },
+                { "prim": "address" } ],
+            "stack_after": [ { "prim": "int" }, { "prim": "address" } ] },
+          { "location": 35,
+            "stack_before":
+              [ { "prim": "address" }, { "prim": "address" },
+                { "prim": "address" } ],
+            "stack_after":
+              [ { "prim": "address" }, { "prim": "address" },
+                { "prim": "address" } ] },
+          { "location": 34,
+            "stack_before": [ { "prim": "address" }, { "prim": "address" } ],
+            "stack_after":
+              [ { "prim": "address" }, { "prim": "address" },
+                { "prim": "address" } ] },
+          { "location": 33,
+            "stack_before":
+              [ { "prim": "pair",
+                  "args":
+                    [ { "prim": "address" }, { "prim": "unit" },
+                      { "prim": "nat" } ] }, { "prim": "address" } ],
+            "stack_after": [ { "prim": "address" }, { "prim": "address" } ] },
+          { "location": 32,
+            "stack_before":
+              [ { "prim": "ticket", "args": [ { "prim": "unit" } ] },
+                { "prim": "pair",
+                  "args":
+                    [ { "prim": "address" }, { "prim": "unit" },
+                      { "prim": "nat" } ] }, { "prim": "address" } ],
+            "stack_after":
+              [ { "prim": "pair",
+                  "args":
+                    [ { "prim": "address" }, { "prim": "unit" },
+                      { "prim": "nat" } ] }, { "prim": "address" } ] },
+          { "location": 31,
+            "stack_before":
+              [ { "prim": "pair",
+                  "args":
+                    [ { "prim": "address" }, { "prim": "unit" },
+                      { "prim": "nat" } ] },
+                { "prim": "ticket", "args": [ { "prim": "unit" } ] },
+                { "prim": "address" } ],
+            "stack_after":
+              [ { "prim": "ticket", "args": [ { "prim": "unit" } ] },
+                { "prim": "pair",
+                  "args":
+                    [ { "prim": "address" }, { "prim": "unit" },
+                      { "prim": "nat" } ] }, { "prim": "address" } ] },
+          { "location": 30,
+            "stack_before":
+              [ { "prim": "ticket", "args": [ { "prim": "unit" } ] },
+                { "prim": "address" } ],
+            "stack_after":
+              [ { "prim": "pair",
+                  "args":
+                    [ { "prim": "address" }, { "prim": "unit" },
+                      { "prim": "nat" } ] },
+                { "prim": "ticket", "args": [ { "prim": "unit" } ] },
+                { "prim": "address" } ] },
+          { "location": 27,
+            "stack_before":
+              [ { "prim": "pair",
+                  "args":
+                    [ { "prim": "or",
+                        "args":
+                          [ { "prim": "ticket",
+                              "args": [ { "prim": "unit" } ] },
+                            { "prim": "pair",
+                              "args":
+                                [ { "prim": "contract",
+                                    "args":
+                                      [ { "prim": "ticket",
+                                          "args": [ { "prim": "unit" } ] } ] },
+                                  { "prim": "nat" } ] } ] },
+                      { "prim": "address" } ] } ],
+            "stack_after":
+              [ { "prim": "or",
+                  "args":
+                    [ { "prim": "ticket", "args": [ { "prim": "unit" } ] },
+                      { "prim": "pair",
+                        "args":
+                          [ { "prim": "contract",
+                              "args":
+                                [ { "prim": "ticket",
+                                    "args": [ { "prim": "unit" } ] } ] },
+                            { "prim": "nat" } ] } ] },
+                { "prim": "address" } ] },
+          { "location": 26,
+            "stack_before":
+              [ { "prim": "string" },
+                { "prim": "pair",
+                  "args":
+                    [ { "prim": "or",
+                        "args":
+                          [ { "prim": "ticket",
+                              "args": [ { "prim": "unit" } ] },
+                            { "prim": "pair",
+                              "args":
+                                [ { "prim": "contract",
+                                    "args":
+                                      [ { "prim": "ticket",
+                                          "args": [ { "prim": "unit" } ] } ] },
+                                  { "prim": "nat" } ] } ] },
+                      { "prim": "address" } ] } ], "stack_after": [] },
+          { "location": 23,
+            "stack_before":
+              [ { "prim": "pair",
+                  "args":
+                    [ { "prim": "or",
+                        "args":
+                          [ { "prim": "ticket",
+                              "args": [ { "prim": "unit" } ] },
+                            { "prim": "pair",
+                              "args":
+                                [ { "prim": "contract",
+                                    "args":
+                                      [ { "prim": "ticket",
+                                          "args": [ { "prim": "unit" } ] } ] },
+                                  { "prim": "nat" } ] } ] },
+                      { "prim": "address" } ] } ],
+            "stack_after":
+              [ { "prim": "string" },
+                { "prim": "pair",
+                  "args":
+                    [ { "prim": "or",
+                        "args":
+                          [ { "prim": "ticket",
+                              "args": [ { "prim": "unit" } ] },
+                            { "prim": "pair",
+                              "args":
+                                [ { "prim": "contract",
+                                    "args":
+                                      [ { "prim": "ticket",
+                                          "args": [ { "prim": "unit" } ] } ] },
+                                  { "prim": "nat" } ] } ] },
+                      { "prim": "address" } ] } ] },
+          { "location": 21,
+            "stack_before":
+              [ { "prim": "pair",
+                  "args":
+                    [ { "prim": "or",
+                        "args":
+                          [ { "prim": "ticket",
+                              "args": [ { "prim": "unit" } ] },
+                            { "prim": "pair",
+                              "args":
+                                [ { "prim": "contract",
+                                    "args":
+                                      [ { "prim": "ticket",
+                                          "args": [ { "prim": "unit" } ] } ] },
+                                  { "prim": "nat" } ] } ] },
+                      { "prim": "address" } ] } ],
+            "stack_after":
+              [ { "prim": "pair",
+                  "args":
+                    [ { "prim": "or",
+                        "args":
+                          [ { "prim": "ticket",
+                              "args": [ { "prim": "unit" } ] },
+                            { "prim": "pair",
+                              "args":
+                                [ { "prim": "contract",
+                                    "args":
+                                      [ { "prim": "ticket",
+                                          "args": [ { "prim": "unit" } ] } ] },
+                                  { "prim": "nat" } ] } ] },
+                      { "prim": "address" } ] } ] },
+          { "location": 19,
+            "stack_before":
+              [ { "prim": "int" },
+                { "prim": "pair",
+                  "args":
+                    [ { "prim": "or",
+                        "args":
+                          [ { "prim": "ticket",
+                              "args": [ { "prim": "unit" } ] },
+                            { "prim": "pair",
+                              "args":
+                                [ { "prim": "contract",
+                                    "args":
+                                      [ { "prim": "ticket",
+                                          "args": [ { "prim": "unit" } ] } ] },
+                                  { "prim": "nat" } ] } ] },
+                      { "prim": "address" } ] } ],
+            "stack_after":
+              [ { "prim": "bool" },
+                { "prim": "pair",
+                  "args":
+                    [ { "prim": "or",
+                        "args":
+                          [ { "prim": "ticket",
+                              "args": [ { "prim": "unit" } ] },
+                            { "prim": "pair",
+                              "args":
+                                [ { "prim": "contract",
+                                    "args":
+                                      [ { "prim": "ticket",
+                                          "args": [ { "prim": "unit" } ] } ] },
+                                  { "prim": "nat" } ] } ] },
+                      { "prim": "address" } ] } ] },
+          { "location": 18,
+            "stack_before":
+              [ { "prim": "mutez" }, { "prim": "mutez" },
+                { "prim": "pair",
+                  "args":
+                    [ { "prim": "or",
+                        "args":
+                          [ { "prim": "ticket",
+                              "args": [ { "prim": "unit" } ] },
+                            { "prim": "pair",
+                              "args":
+                                [ { "prim": "contract",
+                                    "args":
+                                      [ { "prim": "ticket",
+                                          "args": [ { "prim": "unit" } ] } ] },
+                                  { "prim": "nat" } ] } ] },
+                      { "prim": "address" } ] } ],
+            "stack_after":
+              [ { "prim": "int" },
+                { "prim": "pair",
+                  "args":
+                    [ { "prim": "or",
+                        "args":
+                          [ { "prim": "ticket",
+                              "args": [ { "prim": "unit" } ] },
+                            { "prim": "pair",
+                              "args":
+                                [ { "prim": "contract",
+                                    "args":
+                                      [ { "prim": "ticket",
+                                          "args": [ { "prim": "unit" } ] } ] },
+                                  { "prim": "nat" } ] } ] },
+                      { "prim": "address" } ] } ] },
+          { "location": 17,
+            "stack_before":
+              [ { "prim": "mutez" },
+                { "prim": "pair",
+                  "args":
+                    [ { "prim": "or",
+                        "args":
+                          [ { "prim": "ticket",
+                              "args": [ { "prim": "unit" } ] },
+                            { "prim": "pair",
+                              "args":
+                                [ { "prim": "contract",
+                                    "args":
+                                      [ { "prim": "ticket",
+                                          "args": [ { "prim": "unit" } ] } ] },
+                                  { "prim": "nat" } ] } ] },
+                      { "prim": "address" } ] } ],
+            "stack_after":
+              [ { "prim": "mutez" }, { "prim": "mutez" },
+                { "prim": "pair",
+                  "args":
+                    [ { "prim": "or",
+                        "args":
+                          [ { "prim": "ticket",
+                              "args": [ { "prim": "unit" } ] },
+                            { "prim": "pair",
+                              "args":
+                                [ { "prim": "contract",
+                                    "args":
+                                      [ { "prim": "ticket",
+                                          "args": [ { "prim": "unit" } ] } ] },
+                                  { "prim": "nat" } ] } ] },
+                      { "prim": "address" } ] } ] },
+          { "location": 14,
+            "stack_before":
+              [ { "prim": "pair",
+                  "args":
+                    [ { "prim": "or",
+                        "args":
+                          [ { "prim": "ticket",
+                              "args": [ { "prim": "unit" } ] },
+                            { "prim": "pair",
+                              "args":
+                                [ { "prim": "contract",
+                                    "args":
+                                      [ { "prim": "ticket",
+                                          "args": [ { "prim": "unit" } ] } ] },
+                                  { "prim": "nat" } ] } ] },
+                      { "prim": "address" } ] } ],
+            "stack_after":
+              [ { "prim": "mutez" },
+                { "prim": "pair",
+                  "args":
+                    [ { "prim": "or",
+                        "args":
+                          [ { "prim": "ticket",
+                              "args": [ { "prim": "unit" } ] },
+                            { "prim": "pair",
+                              "args":
+                                [ { "prim": "contract",
+                                    "args":
+                                      [ { "prim": "ticket",
+                                          "args": [ { "prim": "unit" } ] } ] },
+                                  { "prim": "nat" } ] } ] },
+                      { "prim": "address" } ] } ] } ] } }
+{ "id": "proto.015-PtLimaPt.michelson_v1.bad_stack",
+  "description": "The stack has an unexpected length or contents.",
+  "data":
+    { "location": 71, "primitive_name": "TRANSFER_TOKENS",
+      "relevant_stack_portion": 4, "wrong_stack_type": [] } }
+{ "id": "proto.015-PtLimaPt.michelson_v1.bad_stack_item",
+  "description":
+    "The type of a stack item is unexpected (this error is always accompanied by a more precise one).",
+  "data": { "item_level": 1 } }
+{ "id": "proto.015-PtLimaPt.michelson_v1.inconsistent_types",
+  "description":
+    "This is the basic type clash error, that appears in several places where the equality of two types have to be proven, it is always accompanied with another error that provides more context.",
+  "data":
+    { "loc": 71,
+      "first_type":
+        { "prim": "option",
+          "args": [ { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] },
+      "other_type": { "prim": "ticket", "args": [ { "prim": "unit" } ] } } }
+{ "id": "proto.015-PtLimaPt.michelson_v1.inconsistent_types",
+  "description":
+    "This is the basic type clash error, that appears in several places where the equality of two types have to be proven, it is always accompanied with another error that provides more context.",
+  "data":
+    { "loc": 71,
+      "first_type":
+        { "prim": "option",
+          "args": [ { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] },
+      "other_type": { "prim": "ticket", "args": [ { "prim": "unit" } ] } } }
+Note: You compiled your contract with protocol jakarta although we internally use protocol kathmandu to typecheck the produced Michelson contract
+so you might want to ignore this error if related to a breaking change in protocol kathmandu
+
 { parameter
     (or (ticket %burn unit)
         (pair %mint (contract %destination (ticket unit)) (nat %amount))) ;
@@ -1043,13 +1754,33 @@ let%expect_test _ =
     Reasonligo is depreacted, support will be dropped in a few versions.
 
     Warning: Error(s) occurred while type checking the produced michelson contract:
-    Ill typed contract:
-      1: { parameter int ;
-      2:   storage address ;
-      3:   code { DROP /* [] */ ; PUSH address "KT1badaddr" ; NIL operation ; PAIR } }
-    At line 3 characters 38 to 50, value "KT1badaddr"
-    is invalid for type address.
-    { "id": "proto.014-PtKathma.destination_repr.invalid_b58check",
+    { "id": "proto.015-PtLimaPt.michelson_v1.ill_typed_contract",
+      "description":
+        "The toplevel error thrown when trying to typecheck a contract code against given input, output and storage types (always followed by more precise errors).",
+      "data":
+        { "ill_typed_code":
+            [ { "prim": "parameter", "args": [ { "prim": "int" } ] },
+              { "prim": "storage", "args": [ { "prim": "address" } ] },
+              { "prim": "code",
+                "args":
+                  [ [ { "prim": "DROP" },
+                      { "prim": "PUSH",
+                        "args":
+                          [ { "prim": "address" }, { "string": "KT1badaddr" } ] },
+                      { "prim": "NIL", "args": [ { "prim": "operation" } ] },
+                      { "prim": "PAIR" } ] ] } ],
+          "type_map":
+            [ { "location": 7,
+                "stack_before":
+                  [ { "prim": "pair",
+                      "args": [ { "prim": "int" }, { "prim": "address" } ] } ],
+                "stack_after": [] } ] } }
+    { "id": "proto.015-PtLimaPt.michelson_v1.invalid_constant",
+      "description": "A data expression was invalid for its expected type.",
+      "data":
+        { "location": 10, "expected_type": { "prim": "address" },
+          "wrong_expression": { "string": "KT1badaddr" } } }
+    { "id": "proto.015-PtLimaPt.destination_repr.invalid_b58check",
       "description":
         "Failed to read a valid destination from a b58check_encoding data",
       "data": { "input": "KT1badaddr" } }
@@ -1063,13 +1794,33 @@ let%expect_test _ =
     Reasonligo is depreacted, support will be dropped in a few versions.
 
     Warning: Error(s) occurred while type checking the produced michelson contract:
-    Ill typed contract:
-      1: { parameter int ;
-      2:   storage address ;
-      3:   code { DROP /* [] */ ; PUSH address "KT1badaddr" ; NIL operation ; PAIR } }
-    At line 3 characters 38 to 50, value "KT1badaddr"
-    is invalid for type address.
-    { "id": "proto.014-PtKathma.destination_repr.invalid_b58check",
+    { "id": "proto.015-PtLimaPt.michelson_v1.ill_typed_contract",
+      "description":
+        "The toplevel error thrown when trying to typecheck a contract code against given input, output and storage types (always followed by more precise errors).",
+      "data":
+        { "ill_typed_code":
+            [ { "prim": "parameter", "args": [ { "prim": "int" } ] },
+              { "prim": "storage", "args": [ { "prim": "address" } ] },
+              { "prim": "code",
+                "args":
+                  [ [ { "prim": "DROP" },
+                      { "prim": "PUSH",
+                        "args":
+                          [ { "prim": "address" }, { "string": "KT1badaddr" } ] },
+                      { "prim": "NIL", "args": [ { "prim": "operation" } ] },
+                      { "prim": "PAIR" } ] ] } ],
+          "type_map":
+            [ { "location": 7,
+                "stack_before":
+                  [ { "prim": "pair",
+                      "args": [ { "prim": "int" }, { "prim": "address" } ] } ],
+                "stack_after": [] } ] } }
+    { "id": "proto.015-PtLimaPt.michelson_v1.invalid_constant",
+      "description": "A data expression was invalid for its expected type.",
+      "data":
+        { "location": 10, "expected_type": { "prim": "address" },
+          "wrong_expression": { "string": "KT1badaddr" } } }
+    { "id": "proto.015-PtLimaPt.destination_repr.invalid_b58check",
       "description":
         "Failed to read a valid destination from a b58check_encoding data",
       "data": { "input": "KT1badaddr" } }
@@ -1767,6 +2518,34 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_good [ "compile" ; "contract" ; contract "warning_duplicate3.mligo" ] ;
   [%expect{|
+    Warning: Error(s) occurred while type checking the produced michelson contract:
+    { "id": "proto.015-PtLimaPt.michelson_v1.ill_formed_type",
+      "description":
+        "The toplevel error thrown when trying to parse a type expression (always followed by more precise errors).",
+      "data":
+        { "identifier": "parameter",
+          "ill_formed_expression":
+            [ { "prim": "parameter",
+                "args":
+                  [ { "prim": "pair",
+                      "args":
+                        [ { "prim": "chest", "annots": [ "%c" ] },
+                          { "prim": "chest_key", "annots": [ "%ck" ] } ] } ] },
+              { "prim": "storage", "args": [ { "prim": "int" } ] },
+              { "prim": "code",
+                "args":
+                  [ [ { "prim": "DROP" },
+                      { "prim": "PUSH",
+                        "args": [ { "prim": "int" }, { "int": "1" } ] },
+                      { "prim": "NIL", "args": [ { "prim": "operation" } ] },
+                      { "prim": "PAIR" } ] ] } ], "location": 2 } }
+    { "id": "proto.015-PtLimaPt.michelson_v1.deprecated_instruction",
+      "description":
+        "A deprecated instruction usage is disallowed in newly created contracts",
+      "data": { "prim": "chest" } }
+    Note: You compiled your contract with protocol jakarta although we internally use protocol kathmandu to typecheck the produced Michelson contract
+    so you might want to ignore this error if related to a breaking change in protocol kathmandu
+
     { parameter (pair (chest %c) (chest_key %ck)) ;
       storage int ;
       code { DROP ; PUSH int 1 ; NIL operation ; PAIR } } |}]

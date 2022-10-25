@@ -102,9 +102,166 @@ let%expect_test _ =
 
 let%expect_test _ =
   run_ligo_good ["run"; "test" ; test "test_timelock.mligo" ] ;
-  [%expect {|
-    Everything at the top-level was executed.
-    - test exited with value (). |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 39, characters 7-29
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 104, characters 2-61
+  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
+
+  Trailing output
+  ---------------
+  Warning: Error(s) occurred while type checking the produced michelson contract:
+  { "id": "proto.015-PtLimaPt.michelson_v1.ill_formed_type",
+    "description":
+      "The toplevel error thrown when trying to parse a type expression (always followed by more precise errors).",
+    "data":
+      { "identifier": "parameter",
+        "ill_formed_expression":
+          [ { "prim": "parameter",
+              "args":
+                [ { "prim": "or",
+                    "args":
+                      [ { "prim": "unit", "annots": [ "%nothing" ] },
+                        { "prim": "pair",
+                          "args":
+                            [ { "prim": "chest_key" }, { "prim": "chest" } ],
+                          "annots": [ "%reveal" ] } ] } ] },
+            { "prim": "storage", "args": [ { "prim": "bytes" } ] },
+            { "prim": "code",
+              "args":
+                [ [ { "prim": "UNPAIR" },
+                    { "prim": "IF_LEFT",
+                      "args":
+                        [ [ { "prim": "DROP" } ],
+                          [ { "prim": "SWAP" }, { "prim": "DROP" },
+                            { "prim": "UNPAIR" },
+                            { "prim": "PUSH",
+                              "args": [ { "prim": "nat" }, { "int": "10" } ] },
+                            { "prim": "DUG", "args": [ { "int": "2" } ] },
+                            { "prim": "OPEN_CHEST" },
+                            { "prim": "IF_LEFT",
+                              "args":
+                                [ [ { "prim": "RIGHT",
+                                      "args":
+                                        [ { "prim": "or",
+                                            "args":
+                                              [ { "prim": "unit" },
+                                                { "prim": "unit" } ] } ] } ],
+                                  [ { "prim": "IF",
+                                      "args":
+                                        [ [ { "prim": "UNIT" },
+                                            { "prim": "LEFT",
+                                              "args": [ { "prim": "unit" } ] } ],
+                                          [ { "prim": "UNIT" },
+                                            { "prim": "RIGHT",
+                                              "args": [ { "prim": "unit" } ] } ] ] },
+                                    { "prim": "LEFT",
+                                      "args": [ { "prim": "bytes" } ] } ] ] },
+                            { "prim": "IF_LEFT",
+                              "args":
+                                [ [ { "prim": "IF_LEFT",
+                                      "args":
+                                        [ [ { "prim": "DROP" },
+                                            { "prim": "PUSH",
+                                              "args":
+                                                [ { "prim": "bytes" },
+                                                  { "bytes": "01" } ] } ],
+                                          [ { "prim": "DROP" },
+                                            { "prim": "PUSH",
+                                              "args":
+                                                [ { "prim": "bytes" },
+                                                  { "bytes": "00" } ] } ] ] } ],
+                                  [] ] } ] ] },
+                    { "prim": "NIL", "args": [ { "prim": "operation" } ] },
+                    { "prim": "PAIR" } ] ] } ], "location": 2 } }
+  { "id": "proto.015-PtLimaPt.michelson_v1.deprecated_instruction",
+    "description":
+      "A deprecated instruction usage is disallowed in newly created contracts",
+    "data": { "prim": "chest_key" } }
+  Note: You compiled your contract with protocol jakarta although we internally use protocol kathmandu to typecheck the produced Michelson contract
+  so you might want to ignore this error if related to a breaking change in protocol kathmandu
+
+  File "./test_timelock.mligo", line 25, characters 19-56:
+   24 |   let init_storage : bytes = 0x00 in
+   25 |   let (addr,_,_) = Test.originate main init_storage 0tez in
+   26 |   let payload = 0x0101 in
+
+  An uncaught error occured:
+  { "id": "proto.015-PtLimaPt.michelson_v1.ill_formed_type",
+    "description":
+      "The toplevel error thrown when trying to parse a type expression (always followed by more precise errors).",
+    "data":
+      { "identifier": "parameter",
+        "ill_formed_expression":
+          [ { "prim": "parameter",
+              "args":
+                [ { "prim": "or",
+                    "args":
+                      [ { "prim": "unit", "annots": [ "%nothing" ] },
+                        { "prim": "pair",
+                          "args":
+                            [ { "prim": "chest_key" }, { "prim": "chest" } ],
+                          "annots": [ "%reveal" ] } ] } ] },
+            { "prim": "storage", "args": [ { "prim": "bytes" } ] },
+            { "prim": "code",
+              "args":
+                [ [ { "prim": "UNPAIR" },
+                    { "prim": "IF_LEFT",
+                      "args":
+                        [ [ { "prim": "DROP" } ],
+                          [ { "prim": "SWAP" }, { "prim": "DROP" },
+                            { "prim": "UNPAIR" },
+                            { "prim": "PUSH",
+                              "args": [ { "prim": "nat" }, { "int": "10" } ] },
+                            { "prim": "DUG", "args": [ { "int": "2" } ] },
+                            { "prim": "OPEN_CHEST" },
+                            { "prim": "IF_LEFT",
+                              "args":
+                                [ [ { "prim": "RIGHT",
+                                      "args":
+                                        [ { "prim": "or",
+                                            "args":
+                                              [ { "prim": "unit" },
+                                                { "prim": "unit" } ] } ] } ],
+                                  [ { "prim": "IF",
+                                      "args":
+                                        [ [ { "prim": "UNIT" },
+                                            { "prim": "LEFT",
+                                              "args": [ { "prim": "unit" } ] } ],
+                                          [ { "prim": "UNIT" },
+                                            { "prim": "RIGHT",
+                                              "args": [ { "prim": "unit" } ] } ] ] },
+                                    { "prim": "LEFT",
+                                      "args": [ { "prim": "bytes" } ] } ] ] },
+                            { "prim": "IF_LEFT",
+                              "args":
+                                [ [ { "prim": "IF_LEFT",
+                                      "args":
+                                        [ [ { "prim": "DROP" },
+                                            { "prim": "PUSH",
+                                              "args":
+                                                [ { "prim": "bytes" },
+                                                  { "bytes": "01" } ] } ],
+                                          [ { "prim": "DROP" },
+                                            { "prim": "PUSH",
+                                              "args":
+                                                [ { "prim": "bytes" },
+                                                  { "bytes": "00" } ] } ] ] } ],
+                                  [] ] } ] ] },
+                    { "prim": "NIL", "args": [ { "prim": "operation" } ] },
+                    { "prim": "PAIR" } ] ] } ], "location": 2 } }
+  { "id": "proto.015-PtLimaPt.michelson_v1.deprecated_instruction",
+    "description":
+      "A deprecated instruction usage is disallowed in newly created contracts",
+    "data": { "prim": "chest_key" } }
+  Trace:
+  File "./test_timelock.mligo", line 25, characters 19-56 ,
+  File "./test_timelock.mligo", line 25, characters 19-56 |}]
 
 let%expect_test _ =
   run_ligo_good ["run"; "test" ; test "interpret_test_log.mligo" ] ;
@@ -489,7 +646,7 @@ let%expect_test _ =
   run_ligo_good [ "run"; "test" ; test "gas_consum.mligo" ] ;
   [%expect {|
     Everything at the top-level was executed.
-    - test exited with value (1802n , 1985n , 1985n). |}]
+    - test exited with value (2136n , 2331n , 2331n). |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test" ; test "test_implicit_account.jsligo" ] ;
@@ -592,36 +749,112 @@ let%expect_test _ =
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test" ; test "test_inline.mligo" ] ;
-  [%expect {|
-    Everything at the top-level was executed.
-    - test_x exited with value (KT1XhV1uDy9VDHHMCFwS6BaoY9yEhMxpZecN , { parameter unit ;
-      storage
-        (pair (pair (big_map %metadata string bytes) (set %participants address))
-              (map %secrets address chest)) ;
-      code { CDR ;
-             PUSH bool True ;
-             DUP 2 ;
-             CAR ;
-             CDR ;
-             ITER { SWAP ;
-                    DUP 3 ;
-                    CDR ;
-                    DIG 2 ;
-                    GET ;
-                    IF_NONE { PUSH bool False ; AND } { DROP ; PUSH bool True ; AND } } ;
-             DROP ;
-             PUSH bool True ;
-             DUP 2 ;
-             CAR ;
-             CDR ;
-             ITER { SWAP ;
-                    EMPTY_MAP address bool ;
-                    DIG 2 ;
-                    GET ;
-                    IF_NONE { PUSH bool False ; AND } { DROP ; PUSH bool True ; AND } } ;
-             DROP ;
-             NIL operation ;
-             PAIR } } , 222). |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 39, characters 7-29
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 751, characters 2-60
+  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
+
+  Trailing output
+  ---------------
+  Warning: Error(s) occurred while type checking the produced michelson contract:
+  { "id": "proto.015-PtLimaPt.michelson_v1.ill_formed_type",
+    "description":
+      "The toplevel error thrown when trying to parse a type expression (always followed by more precise errors).",
+    "data":
+      { "identifier": "storage",
+        "ill_formed_expression":
+          [ { "prim": "parameter", "args": [ { "prim": "unit" } ] },
+            { "prim": "storage",
+              "args":
+                [ { "prim": "pair",
+                    "args":
+                      [ { "prim": "pair",
+                          "args":
+                            [ { "prim": "big_map",
+                                "args":
+                                  [ { "prim": "string" }, { "prim": "bytes" } ],
+                                "annots": [ "%metadata" ] },
+                              { "prim": "set",
+                                "args": [ { "prim": "address" } ],
+                                "annots": [ "%participants" ] } ] },
+                        { "prim": "map",
+                          "args":
+                            [ { "prim": "address" }, { "prim": "chest" } ],
+                          "annots": [ "%secrets" ] } ] } ] },
+            { "prim": "code",
+              "args":
+                [ [ { "prim": "CDR" },
+                    { "prim": "PUSH",
+                      "args": [ { "prim": "bool" }, { "prim": "True" } ] },
+                    { "prim": "DUP", "args": [ { "int": "2" } ] },
+                    { "prim": "CAR" }, { "prim": "CDR" },
+                    { "prim": "ITER",
+                      "args":
+                        [ [ { "prim": "SWAP" },
+                            { "prim": "DUP", "args": [ { "int": "3" } ] },
+                            { "prim": "CDR" },
+                            { "prim": "DIG", "args": [ { "int": "2" } ] },
+                            { "prim": "GET" },
+                            { "prim": "IF_NONE",
+                              "args":
+                                [ [ { "prim": "PUSH",
+                                      "args":
+                                        [ { "prim": "bool" },
+                                          { "prim": "False" } ] },
+                                    { "prim": "AND" } ],
+                                  [ { "prim": "DROP" },
+                                    { "prim": "PUSH",
+                                      "args":
+                                        [ { "prim": "bool" },
+                                          { "prim": "True" } ] },
+                                    { "prim": "AND" } ] ] } ] ] },
+                    { "prim": "DROP" },
+                    { "prim": "PUSH",
+                      "args": [ { "prim": "bool" }, { "prim": "True" } ] },
+                    { "prim": "DUP", "args": [ { "int": "2" } ] },
+                    { "prim": "CAR" }, { "prim": "CDR" },
+                    { "prim": "ITER",
+                      "args":
+                        [ [ { "prim": "SWAP" },
+                            { "prim": "EMPTY_MAP",
+                              "args":
+                                [ { "prim": "address" }, { "prim": "bool" } ] },
+                            { "prim": "DIG", "args": [ { "int": "2" } ] },
+                            { "prim": "GET" },
+                            { "prim": "IF_NONE",
+                              "args":
+                                [ [ { "prim": "PUSH",
+                                      "args":
+                                        [ { "prim": "bool" },
+                                          { "prim": "False" } ] },
+                                    { "prim": "AND" } ],
+                                  [ { "prim": "DROP" },
+                                    { "prim": "PUSH",
+                                      "args":
+                                        [ { "prim": "bool" },
+                                          { "prim": "True" } ] },
+                                    { "prim": "AND" } ] ] } ] ] },
+                    { "prim": "DROP" },
+                    { "prim": "NIL", "args": [ { "prim": "operation" } ] },
+                    { "prim": "PAIR" } ] ] } ], "location": 4 } }
+  { "id": "proto.015-PtLimaPt.michelson_v1.deprecated_instruction",
+    "description":
+      "A deprecated instruction usage is disallowed in newly created contracts",
+    "data": { "prim": "chest" } }
+  Note: You compiled your contract with protocol jakarta although we internally use protocol kathmandu to typecheck the produced Michelson contract
+  so you might want to ignore this error if related to a breaking change in protocol kathmandu
+
+  Error(s) occurred while parsing the Michelson input:
+  { "id": "proto.015-PtLimaPt.michelson_v1.deprecated_instruction",
+    "description":
+      "A deprecated instruction usage is disallowed in newly created contracts",
+    "data": { "prim": "chest" } } |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test" ; test "test_read_contract.mligo" ] ;
@@ -640,7 +873,7 @@ let%expect_test _ =
   run_ligo_good [ "run" ; "test" ; test "reset_time.mligo" ] ;
   [%expect {|
   Everything at the top-level was executed.
-  - test_x exited with value (timestamp(1970-01-01T00:00:00Z) , timestamp(2012-02-02T10:10:10Z)). |}]
+  - test_x exited with value (timestamp(1970-01-01T00:00:00Z) , timestamp(1970-01-01T00:00:00Z)). |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test" ; test "test_get_account.mligo" ] ;
@@ -703,14 +936,508 @@ let%expect_test _ =
   [%expect {|
     edpkuPiWEAMNmxsNYRNnjnHgpox275MR1svXTB9hbeshMUkTZwrB1P
     Everything at the top-level was executed.
-    - test exited with value Success (2796n). |}]
+    - test exited with value Success (2797n). |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "test" ; test "test_tickets_and_bigmaps.mligo" ] ;
-  [%expect {|
-    Success (3497n)
-    Everything at the top-level was executed.
-    - test_one exited with value (). |}]
+  [%expect.unreachable]
+[@@expect.uncaught_exn {|
+  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
+     This is strongly discouraged as backtraces are fragile.
+     Please change this test to not include a backtrace. *)
+
+  (Cli_expect_tests.Cli_expect.Should_exit_good)
+  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 39, characters 7-29
+  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 942, characters 2-74
+  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
+
+  Trailing output
+  ---------------
+  Warning: Error(s) occurred while type checking the produced michelson contract:
+  { "id": "proto.015-PtLimaPt.michelson_v1.ill_typed_contract",
+    "description":
+      "The toplevel error thrown when trying to typecheck a contract code against given input, output and storage types (always followed by more precise errors).",
+    "data":
+      { "ill_typed_code":
+          [ { "prim": "parameter", "args": [ { "prim": "unit" } ] },
+            { "prim": "storage",
+              "args":
+                [ { "prim": "pair",
+                    "args":
+                      [ { "prim": "mutez", "annots": [ "%data" ] },
+                        { "prim": "big_map",
+                          "args":
+                            [ { "prim": "address" },
+                              { "prim": "ticket",
+                                "args": [ { "prim": "unit" } ] } ],
+                          "annots": [ "%tickets" ] } ] } ] },
+            { "prim": "code",
+              "args":
+                [ [ { "prim": "CDR" }, { "prim": "UNPAIR" }, { "prim": "DUP" },
+                    { "prim": "AMOUNT" }, { "prim": "COMPARE" },
+                    { "prim": "EQ" },
+                    { "prim": "IF",
+                      "args":
+                        [ [],
+                          [ { "prim": "PUSH",
+                              "args":
+                                [ { "prim": "string" }, { "string": "1" } ] },
+                            { "prim": "FAILWITH" } ] ] }, { "prim": "SENDER" },
+                    { "prim": "DIG", "args": [ { "int": "2" } ] },
+                    { "prim": "NONE",
+                      "args":
+                        [ { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] },
+                    { "prim": "DUP", "args": [ { "int": "3" } ] },
+                    { "prim": "GET_AND_UPDATE" },
+                    { "prim": "PUSH",
+                      "args": [ { "prim": "nat" }, { "int": "1" } ] },
+                    { "prim": "UNIT" }, { "prim": "TICKET" },
+                    { "prim": "SWAP" },
+                    { "prim": "IF_NONE",
+                      "args":
+                        [ [],
+                          [ { "prim": "PAIR" }, { "prim": "JOIN_TICKETS" },
+                            { "prim": "IF_NONE",
+                              "args":
+                                [ [ { "prim": "PUSH",
+                                      "args":
+                                        [ { "prim": "string" },
+                                          { "string": "2" } ] },
+                                    { "prim": "FAILWITH" } ], [] ] } ] ] },
+                    { "prim": "SOME" },
+                    { "prim": "DIG", "args": [ { "int": "2" } ] },
+                    { "prim": "GET_AND_UPDATE" }, { "prim": "DROP" },
+                    { "prim": "SWAP" }, { "prim": "PAIR" },
+                    { "prim": "NIL", "args": [ { "prim": "operation" } ] },
+                    { "prim": "PAIR" } ] ] } ],
+        "type_map":
+          [ { "location": 43,
+              "stack_before":
+                [ { "prim": "ticket", "args": [ { "prim": "unit" } ] },
+                  { "prim": "option",
+                    "args":
+                      [ { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] },
+                  { "prim": "big_map",
+                    "args":
+                      [ { "prim": "address" },
+                        { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] },
+                  { "prim": "address" }, { "prim": "mutez" } ],
+              "stack_after":
+                [ { "prim": "pair",
+                    "args":
+                      [ { "prim": "ticket", "args": [ { "prim": "unit" } ] },
+                        { "prim": "option",
+                          "args":
+                            [ { "prim": "ticket",
+                                "args": [ { "prim": "unit" } ] } ] } ] },
+                  { "prim": "big_map",
+                    "args":
+                      [ { "prim": "address" },
+                        { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] },
+                  { "prim": "address" }, { "prim": "mutez" } ] },
+            { "location": 41,
+              "stack_before":
+                [ { "prim": "option",
+                    "args":
+                      [ { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] },
+                  { "prim": "big_map",
+                    "args":
+                      [ { "prim": "address" },
+                        { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] },
+                  { "prim": "address" }, { "prim": "mutez" } ],
+              "stack_after":
+                [ { "prim": "option",
+                    "args":
+                      [ { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] },
+                  { "prim": "big_map",
+                    "args":
+                      [ { "prim": "address" },
+                        { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] },
+                  { "prim": "address" }, { "prim": "mutez" } ] },
+            { "location": 39,
+              "stack_before":
+                [ { "prim": "option",
+                    "args":
+                      [ { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] },
+                  { "prim": "option",
+                    "args":
+                      [ { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] },
+                  { "prim": "big_map",
+                    "args":
+                      [ { "prim": "address" },
+                        { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] },
+                  { "prim": "address" }, { "prim": "mutez" } ],
+              "stack_after":
+                [ { "prim": "option",
+                    "args":
+                      [ { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] },
+                  { "prim": "option",
+                    "args":
+                      [ { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] },
+                  { "prim": "big_map",
+                    "args":
+                      [ { "prim": "address" },
+                        { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] },
+                  { "prim": "address" }, { "prim": "mutez" } ] },
+            { "location": 38,
+              "stack_before":
+                [ { "prim": "unit" }, { "prim": "nat" },
+                  { "prim": "option",
+                    "args":
+                      [ { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] },
+                  { "prim": "big_map",
+                    "args":
+                      [ { "prim": "address" },
+                        { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] },
+                  { "prim": "address" }, { "prim": "mutez" } ],
+              "stack_after":
+                [ { "prim": "option",
+                    "args":
+                      [ { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] },
+                  { "prim": "option",
+                    "args":
+                      [ { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] },
+                  { "prim": "big_map",
+                    "args":
+                      [ { "prim": "address" },
+                        { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] },
+                  { "prim": "address" }, { "prim": "mutez" } ] },
+            { "location": 37,
+              "stack_before":
+                [ { "prim": "nat" },
+                  { "prim": "option",
+                    "args":
+                      [ { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] },
+                  { "prim": "big_map",
+                    "args":
+                      [ { "prim": "address" },
+                        { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] },
+                  { "prim": "address" }, { "prim": "mutez" } ],
+              "stack_after":
+                [ { "prim": "unit" }, { "prim": "nat" },
+                  { "prim": "option",
+                    "args":
+                      [ { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] },
+                  { "prim": "big_map",
+                    "args":
+                      [ { "prim": "address" },
+                        { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] },
+                  { "prim": "address" }, { "prim": "mutez" } ] },
+            { "location": 34,
+              "stack_before":
+                [ { "prim": "option",
+                    "args":
+                      [ { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] },
+                  { "prim": "big_map",
+                    "args":
+                      [ { "prim": "address" },
+                        { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] },
+                  { "prim": "address" }, { "prim": "mutez" } ],
+              "stack_after":
+                [ { "prim": "nat" },
+                  { "prim": "option",
+                    "args":
+                      [ { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] },
+                  { "prim": "big_map",
+                    "args":
+                      [ { "prim": "address" },
+                        { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] },
+                  { "prim": "address" }, { "prim": "mutez" } ] },
+            { "location": 33,
+              "stack_before":
+                [ { "prim": "address" },
+                  { "prim": "option",
+                    "args":
+                      [ { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] },
+                  { "prim": "big_map",
+                    "args":
+                      [ { "prim": "address" },
+                        { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] },
+                  { "prim": "address" }, { "prim": "mutez" } ],
+              "stack_after":
+                [ { "prim": "option",
+                    "args":
+                      [ { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] },
+                  { "prim": "big_map",
+                    "args":
+                      [ { "prim": "address" },
+                        { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] },
+                  { "prim": "address" }, { "prim": "mutez" } ] },
+            { "location": 31,
+              "stack_before":
+                [ { "prim": "option",
+                    "args":
+                      [ { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] },
+                  { "prim": "big_map",
+                    "args":
+                      [ { "prim": "address" },
+                        { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] },
+                  { "prim": "address" }, { "prim": "mutez" } ],
+              "stack_after":
+                [ { "prim": "address" },
+                  { "prim": "option",
+                    "args":
+                      [ { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] },
+                  { "prim": "big_map",
+                    "args":
+                      [ { "prim": "address" },
+                        { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] },
+                  { "prim": "address" }, { "prim": "mutez" } ] },
+            { "location": 28,
+              "stack_before":
+                [ { "prim": "big_map",
+                    "args":
+                      [ { "prim": "address" },
+                        { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] },
+                  { "prim": "address" }, { "prim": "mutez" } ],
+              "stack_after":
+                [ { "prim": "option",
+                    "args":
+                      [ { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] },
+                  { "prim": "big_map",
+                    "args":
+                      [ { "prim": "address" },
+                        { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] },
+                  { "prim": "address" }, { "prim": "mutez" } ] },
+            { "location": 26,
+              "stack_before":
+                [ { "prim": "address" }, { "prim": "mutez" },
+                  { "prim": "big_map",
+                    "args":
+                      [ { "prim": "address" },
+                        { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] } ],
+              "stack_after":
+                [ { "prim": "big_map",
+                    "args":
+                      [ { "prim": "address" },
+                        { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] },
+                  { "prim": "address" }, { "prim": "mutez" } ] },
+            { "location": 25,
+              "stack_before":
+                [ { "prim": "mutez" },
+                  { "prim": "big_map",
+                    "args":
+                      [ { "prim": "address" },
+                        { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] } ],
+              "stack_after":
+                [ { "prim": "address" }, { "prim": "mutez" },
+                  { "prim": "big_map",
+                    "args":
+                      [ { "prim": "address" },
+                        { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] } ] },
+            { "location": 24,
+              "stack_before":
+                [ { "prim": "string" }, { "prim": "mutez" },
+                  { "prim": "big_map",
+                    "args":
+                      [ { "prim": "address" },
+                        { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] } ],
+              "stack_after": [] },
+            { "location": 21,
+              "stack_before":
+                [ { "prim": "mutez" },
+                  { "prim": "big_map",
+                    "args":
+                      [ { "prim": "address" },
+                        { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] } ],
+              "stack_after":
+                [ { "prim": "string" }, { "prim": "mutez" },
+                  { "prim": "big_map",
+                    "args":
+                      [ { "prim": "address" },
+                        { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] } ] },
+            { "location": 19,
+              "stack_before":
+                [ { "prim": "mutez" },
+                  { "prim": "big_map",
+                    "args":
+                      [ { "prim": "address" },
+                        { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] } ],
+              "stack_after":
+                [ { "prim": "mutez" },
+                  { "prim": "big_map",
+                    "args":
+                      [ { "prim": "address" },
+                        { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] } ] },
+            { "location": 17,
+              "stack_before":
+                [ { "prim": "int" }, { "prim": "mutez" },
+                  { "prim": "big_map",
+                    "args":
+                      [ { "prim": "address" },
+                        { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] } ],
+              "stack_after":
+                [ { "prim": "bool" }, { "prim": "mutez" },
+                  { "prim": "big_map",
+                    "args":
+                      [ { "prim": "address" },
+                        { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] } ] },
+            { "location": 16,
+              "stack_before":
+                [ { "prim": "mutez" }, { "prim": "mutez" },
+                  { "prim": "mutez" },
+                  { "prim": "big_map",
+                    "args":
+                      [ { "prim": "address" },
+                        { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] } ],
+              "stack_after":
+                [ { "prim": "int" }, { "prim": "mutez" },
+                  { "prim": "big_map",
+                    "args":
+                      [ { "prim": "address" },
+                        { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] } ] },
+            { "location": 15,
+              "stack_before":
+                [ { "prim": "mutez" }, { "prim": "mutez" },
+                  { "prim": "big_map",
+                    "args":
+                      [ { "prim": "address" },
+                        { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] } ],
+              "stack_after":
+                [ { "prim": "mutez" }, { "prim": "mutez" },
+                  { "prim": "mutez" },
+                  { "prim": "big_map",
+                    "args":
+                      [ { "prim": "address" },
+                        { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] } ] },
+            { "location": 14,
+              "stack_before":
+                [ { "prim": "mutez" },
+                  { "prim": "big_map",
+                    "args":
+                      [ { "prim": "address" },
+                        { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] } ],
+              "stack_after":
+                [ { "prim": "mutez" }, { "prim": "mutez" },
+                  { "prim": "big_map",
+                    "args":
+                      [ { "prim": "address" },
+                        { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] } ] },
+            { "location": 13,
+              "stack_before":
+                [ { "prim": "pair",
+                    "args":
+                      [ { "prim": "mutez" },
+                        { "prim": "big_map",
+                          "args":
+                            [ { "prim": "address" },
+                              { "prim": "ticket",
+                                "args": [ { "prim": "unit" } ] } ] } ] } ],
+              "stack_after":
+                [ { "prim": "mutez" },
+                  { "prim": "big_map",
+                    "args":
+                      [ { "prim": "address" },
+                        { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] } ] },
+            { "location": 12,
+              "stack_before":
+                [ { "prim": "pair",
+                    "args":
+                      [ { "prim": "unit" }, { "prim": "mutez" },
+                        { "prim": "big_map",
+                          "args":
+                            [ { "prim": "address" },
+                              { "prim": "ticket",
+                                "args": [ { "prim": "unit" } ] } ] } ] } ],
+              "stack_after":
+                [ { "prim": "pair",
+                    "args":
+                      [ { "prim": "mutez" },
+                        { "prim": "big_map",
+                          "args":
+                            [ { "prim": "address" },
+                              { "prim": "ticket",
+                                "args": [ { "prim": "unit" } ] } ] } ] } ] } ] } }
+  { "id": "proto.015-PtLimaPt.michelson_v1.bad_stack",
+    "description": "The stack has an unexpected length or contents.",
+    "data":
+      { "location": 44, "primitive_name": "JOIN_TICKETS",
+        "relevant_stack_portion": 1,
+        "wrong_stack_type":
+          [ { "prim": "pair",
+              "args":
+                [ { "prim": "ticket", "args": [ { "prim": "unit" } ] },
+                  { "prim": "option",
+                    "args":
+                      [ { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] } ] },
+            { "prim": "big_map",
+              "args":
+                [ { "prim": "address" },
+                  { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] },
+            { "prim": "address" }, { "prim": "mutez" } ] } }
+  Note: You compiled your contract with protocol jakarta although we internally use protocol kathmandu to typecheck the produced Michelson contract
+  so you might want to ignore this error if related to a breaking change in protocol kathmandu
+
+  File "./test_tickets_and_bigmaps.mligo", line 49, characters 22-61:
+   48 |
+   49 |   let (taddr, _, _) = Test.originate main init_storage 0mutez in
+   50 |   let contr = Test.to_contract taddr in
+
+  An uncaught error occured:
+  { "id": "proto.015-PtLimaPt.michelson_v1.ill_typed_contract",
+    "description":
+      "The toplevel error thrown when trying to typecheck a contract code against given input, output and storage types (always followed by more precise errors).",
+    "data":
+      { "ill_typed_code":
+          [ { "prim": "parameter", "args": [ { "prim": "unit" } ] },
+            { "prim": "storage",
+              "args":
+                [ { "prim": "pair",
+                    "args":
+                      [ { "prim": "mutez", "annots": [ "%data" ] },
+                        { "prim": "big_map",
+                          "args":
+                            [ { "prim": "address" },
+                              { "prim": "ticket",
+                                "args": [ { "prim": "unit" } ] } ],
+                          "annots": [ "%tickets" ] } ] } ] },
+            { "prim": "code",
+              "args":
+                [ [ { "prim": "CDR" }, { "prim": "UNPAIR" }, { "prim": "DUP" },
+                    { "prim": "AMOUNT" }, { "prim": "COMPARE" },
+                    { "prim": "EQ" },
+                    { "prim": "IF",
+                      "args":
+                        [ [],
+                          [ { "prim": "PUSH",
+                              "args":
+                                [ { "prim": "string" }, { "string": "1" } ] },
+                            { "prim": "FAILWITH" } ] ] }, { "prim": "SENDER" },
+                    { "prim": "DIG", "args": [ { "int": "2" } ] },
+                    { "prim": "NONE",
+                      "args":
+                        [ { "prim": "ticket", "args": [ { "prim": "unit" } ] } ] },
+                    { "prim": "DUP", "args": [ { "int": "3" } ] },
+                    { "prim": "GET_AND_UPDATE" },
+                    { "prim": "PUSH",
+                      "args": [ { "prim": "nat" }, { "int": "1" } ] },
+                    { "prim": "UNIT" }, { "prim": "TICKET" },
+                    { "prim": "SWAP" },
+                    { "prim": "IF_NONE",
+                      "args":
+                        [ [],
+                          [ { "prim": "PAIR" }, { "prim": "JOIN_TICKETS" },
+                            { "prim": "IF_NONE",
+                              "args":
+                                [ [ { "prim": "PUSH",
+                                      "args":
+                                        [ { "prim": "string" },
+                                          { "string": "2" } ] },
+                                    { "prim": "FAILWITH" } ], [] ] } ] ] },
+                    { "prim": "SOME" },
+                    { "prim": "DIG", "args": [ { "int": "2" } ] },
+                    { "prim": "GET_AND_UPDATE" }, { "prim": "DROP" },
+                    { "prim": "SWAP" }, { "prim": "PAIR" },
+                    { "prim": "NIL", "args": [ { "prim": "operation" } ] },
+                    { "prim": "PAIR" } ] ] } ], "type_map": [] } }
+  { "id": "proto.015-PtLimaPt.michelson_v1.bad_stack",
+    "description": "The stack has an unexpected length or contents.",
+    "data":
+      { "location": 44, "primitive_name": "JOIN_TICKETS",
+        "relevant_stack_portion": 1, "wrong_stack_type": [] } }
+  Trace:
+  File "./test_tickets_and_bigmaps.mligo", line 49, characters 22-61 ,
+  File "./test_tickets_and_bigmaps.mligo", line 49, characters 22-61 |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "test" ; test "test_chain_id.mligo" ] ;
