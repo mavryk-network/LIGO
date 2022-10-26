@@ -592,9 +592,10 @@ and compile_let_binding ~raise ?kwd_rec attributes binding =
   let ({binders; lhs_type; let_rhs; _} : CST.let_binding) = binding in
   let attributes = compile_attributes attributes in
   let lhs_type = Option.map ~f:(compile_type_expression ~raise <@ snd) lhs_type in
+  (* There is no type_params in CST *)
   match unepar binders with
   | PVar {value={variable=name;attributes=_}; _} ->
-     (*function or const *) (* Fix here *)
+     (*function or const *)
     let fun_binder = compile_variable name in
     let expr = compile_expression ~raise ?fun_rec:(Option.map ~f:(fun _ -> fun_binder) kwd_rec) let_rhs in
     let pattern = Pattern.var_pattern (Binder.make fun_binder lhs_type) in
@@ -717,9 +718,10 @@ and compile_declaration ~raise : CST.declaration -> AST.declaration option = fun
     return region @@ D_module { module_binder; module_ ; module_attr = [] }
   | Directive _ -> skip
   | ConstDecl {value = (_kwd_let, kwd_rec, let_binding, attributes); region} ->
-    let (pattern,attr, expr) = compile_let_binding ~raise ?kwd_rec attributes let_binding in
-    (* Fix here *)
-    return region @@ D_pattern {pattern; attr; expr}
+    let (pattern, attr, expr) = compile_let_binding ~raise ?kwd_rec attributes let_binding in
+    (match expr.expression_content, pattern.wrap_content with
+    | E_lambda _, P_var binder -> return region @@ D_value {binder ; attr; expr}
+    | _, _ -> return region @@ D_pattern {pattern; attr; expr})
 
 
 and compile_module ~raise : CST.ast -> AST.module_ = fun t ->

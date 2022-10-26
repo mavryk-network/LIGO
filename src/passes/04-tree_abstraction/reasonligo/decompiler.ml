@@ -676,7 +676,14 @@ and decompile_declaration : AST.declaration -> CST.declaration = fun decl ->
       let let_decl = wrap (ghost,None,let_binding,attributes) in
       CST.ConstDecl let_decl
   )
-  | D_pattern _ -> failwith "lol"
+  | D_pattern {pattern;expr;attr} ->
+    let attributes : CST.attributes = decompile_attributes attr in
+    let binders = decompile_pattern pattern in
+    let lhs_type = None in
+    let let_rhs = decompile_expression expr in
+    let let_binding : CST.let_binding = {binders;lhs_type;eq=ghost;let_rhs} in
+    let let_decl = wrap (ghost,None,let_binding,attributes) in
+    CST.ConstDecl let_decl
   | D_module {module_binder;module_; module_attr=_} -> (
     let name    = decompile_mod_var module_binder in
     match module_.wrap_content with
