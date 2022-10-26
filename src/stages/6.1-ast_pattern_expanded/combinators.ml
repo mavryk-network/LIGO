@@ -39,10 +39,16 @@ let get_t_unary_inj (t:type_expression) (v:Ligo_prim.Literal_types.t) : type_exp
   match get_t_inj t v with
   | Some [a] -> Some a
   | _ -> None
+let get_t_map (t:type_expression) : (type_expression * type_expression) option =
+  match t.type_content with
+  | T_constant {language=_;injection; parameters = [k;v]} when Ligo_prim.Literal_types.equal injection Ligo_prim.Literal_types.Map -> Some (k,v)
+  | _ -> None
 let t__type_ ?loc () : type_expression = t_constant ?loc _type_ []
-[@@map (_type_, ("map", "list", "set", "signature","chain_id", "string", "bytes", "key", "key_hash", "int", "address", "operation", "nat", "tez", "timestamp", "unit", "bls12_381_g1", "bls12_381_g2", "bls12_381_fr", "never", "mutation", "pvss_key", "baker_hash", "chest_key", "chest"))]
+[@@map (_type_, ("list", "set", "signature","chain_id", "string", "bytes", "key", "key_hash", "int", "address", "operation", "nat", "tez", "timestamp", "unit", "bls12_381_g1", "bls12_381_g2", "bls12_381_fr", "never", "mutation", "pvss_key", "baker_hash", "chest_key", "chest"))]
+let t__type_ ?loc t t' : type_expression = t_constant ?loc _type_ [t; t']
+[@@map (_type_, ("map"))]
 let get_t__type_ (t : type_expression) : type_expression option = get_t_unary_inj t _type_
-[@@map (_type_, ("map", "list", "set", "signature","chain_id", "string", "bytes", "key", "key_hash", "int", "address", "operation", "nat", "tez", "timestamp", "unit", "bls12_381_g1", "bls12_381_g2", "bls12_381_fr", "never", "mutation", "pvss_key", "baker_hash", "chest_key", "chest"))]
+[@@map (_type_, ("list", "set", "signature","chain_id", "string", "bytes", "key", "key_hash", "int", "address", "operation", "nat", "tez", "timestamp", "unit", "bls12_381_g1", "bls12_381_g2", "bls12_381_fr", "never", "mutation", "pvss_key", "baker_hash", "chest_key", "chest"))]
 let is_t__type_ t =
   Option.is_some (get_t__type_ t)
 [@@map (_type_, ("map", "list", "set", "signature","chain_id", "string", "bytes", "key", "key_hash", "int", "address", "operation", "nat", "tez", "timestamp", "unit", "bls12_381_g1", "bls12_381_g2", "bls12_381_fr", "never", "mutation", "pvss_key", "baker_hash", "chest_key", "chest"))]
@@ -51,7 +57,6 @@ let get_t__type__exn t =
   | Some x -> x
   | None -> raise (Failure ("Internal error: broken invariant at " ^ __LOC__))
 [@@map (_type_, ("map", "list", "set", "signature","chain_id", "string", "bytes", "key", "key_hash", "int", "address", "operation", "nat", "tez", "timestamp", "unit", "bls12_381_g1", "bls12_381_g2", "bls12_381_fr", "never", "mutation", "pvss_key", "baker_hash", "chest_key", "chest"))]
-let () = ignore get_t_map_exn
 let default_layout = Layout.L_tree
 
 let t_arrow param result ?loc ?source_type () : type_expression = t_arrow ?loc ?source_type {type1=param; type2=result} ()
@@ -190,11 +195,6 @@ let get_e_tuple = fun t ->
   match t with
   | E_record r -> Some (List.map ~f:snd @@ Record.tuple_of_record r)
   | _ -> None
-
-let get_t_map_exn t : (type_expression * type_expression) =
-  match t.type_content with
-  | T_constant {language=_;injection; parameters = [k;v]} when Ligo_prim.Literal_types.equal injection Ligo_prim.Literal_types.Map -> (k,v)
-  | _ -> failwith "pattern expanded: get_t_map"
 
 let e_bool b : expression_content =
   if b then
