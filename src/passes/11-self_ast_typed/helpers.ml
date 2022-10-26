@@ -247,21 +247,24 @@ and map_program : 'err mapper -> program -> program = fun m ->
 
 let fetch_entry_type ~raise : string -> program -> (type_expression * Location.t) = fun main_fname m ->
   let aux (declt : declaration) = match Location.unwrap declt with
-    | D_value ({ binder ; expr=_ ; attr=_ } as p) ->
+    | D_value ({ binder ; expr ; attr=_ }) ->
         if Value_var.is_name (Binder.get_var binder) main_fname
-        then Some p
+        then Some expr
         else None
+    | D_pattern ({ pattern = { wrap_content = P_var binder ; _} ; expr ; attr=_ }) ->
+      if Value_var.is_name (Binder.get_var binder) main_fname
+      then Some expr
+      else None
     | D_pattern _
     | D_type   _
     | D_module _ ->
       None
   in
   let main_decl_opt = List.find_map ~f:aux @@ List.rev m in
-  let main_decl =
+  let expr =
     trace_option ~raise (corner_case ("Entrypoint '"^main_fname^"' does not exist")) @@
       main_decl_opt
     in
-  let Value_decl.{ binder=_ ; expr ; attr=_} = main_decl in
   expr.type_expression, expr.location
 
 type contract_type = {
