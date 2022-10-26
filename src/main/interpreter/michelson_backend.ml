@@ -2,9 +2,9 @@ module Location = Simple_utils.Location
 module Var = Simple_utils.Var
 open Simple_utils.Trace
 open Simple_utils.Option
-module Tezos_protocol = Tezos_protocol_014_PtKathma
-module Tezos_protocol_env = Tezos_protocol_environment_014_PtKathma
-module Tezos_raw_protocol = Tezos_raw_protocol_014_PtKathma
+module Tezos_protocol = Tezos_protocol_015_PtLimaPt
+module Tezos_protocol_env = Tezos_protocol_environment_015_PtLimaPt
+module Tezos_raw_protocol = Tezos_raw_protocol_015_PtLimaPt
 
 let storage_retreival_dummy_ty = Tezos_utils.Michelson.prim "int"
 

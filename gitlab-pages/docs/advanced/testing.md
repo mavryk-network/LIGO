@@ -396,14 +396,15 @@ Here is the proposed interface for creating proxy-contracts:
 
 <Syntax syntax="cameligo">
 
-```cameligo test-ligo group=proxy_ticket
+```cameligo test-ligo group=proxy_ticket protocol=lima
 (* proxy_ticket.mligo *)
 [@private] let proxy_transfer_contract (type vt whole_p)
     ( mk_param : vt ticket -> whole_p)
     ( (p,_)    : ((vt * nat) * address) * unit )
     : operation list * unit =
   let ((v,amt),dst_addr) = p in
-  let tx_param = mk_param (Tezos.create_ticket v amt) in
+  let ticket = Option.unopt (Tezos.create_ticket v amt) in
+  let tx_param = mk_param ticket in
   let c : whole_p contract = Tezos.get_contract_with_error dst_addr "Testing proxy: you provided a wrong address" in
   let op = Tezos.transaction tx_param 1mutez c in
   [op], ()
@@ -414,7 +415,8 @@ Here is the proposed interface for creating proxy-contracts:
     ( (p,_)      : (vt * nat) * address option )
     : operation list * address option =
   let (v,amt) = p in
-  let init_storage : whole_s = mk_storage (Tezos.create_ticket v amt) in
+  let ticket = Option.unopt (Tezos.create_ticket v amt) in
+  let init_storage : whole_s = mk_storage ticket in
   let op,addr = Tezos.create_contract main (None: key_hash option) 0mutez init_storage in
   [op], Some addr
 
@@ -455,7 +457,7 @@ let originate (type vt whole_s vp)
 
 <Syntax syntax="jsligo">
 
-```jsligo test-ligo group=proxy_ticket
+```jsligo test-ligo group=proxy_ticket protocol=lima
 /* proxy_ticket.jsligo */
 
 /* @private */
@@ -466,7 +468,8 @@ const proxy_transfer_contract :
     (p : [[[vt , nat] , address] , unit] ) => {
     let [p,_] = p ;
     let [[v,amt],dst_addr] = p ;
-    let tx_param = mk_param (Tezos.create_ticket (v, amt)) ;
+    let ticket = Option.unopt (Tezos.create_ticket (v, amt)) ;
+    let tx_param = mk_param (ticket) ;
     let c : contract<whole_p> =
       Tezos.get_contract_with_error (dst_addr, "Testing proxy: you provided a wrong address") ;
     let op = Tezos.transaction (tx_param, 1 as mutez, c) ;
@@ -489,7 +492,8 @@ const proxy_originate_contract :
       (p : [[vt , nat] , option<address>]) => {
         let [p,_] = p;
         let [v,amt] = p ;
-        let init_storage : whole_s = mk_storage (Tezos.create_ticket (v, amt)) ;
+	let ticket = Option.unopt (Tezos.create_ticket (v, amt)) ;
+        let init_storage : whole_s = mk_storage (ticket) ;
         let [op,addr] = Tezos.create_contract(main, (None () as option<key_hash>), (0 as mutez), init_storage) ;
         return ([list([op]), Some(addr)])
   };
@@ -581,7 +585,7 @@ Here is an example using `Proxy_ticket.init_transfer` and `Proxy_ticket.transfer
 
 <Syntax syntax="cameligo">
 
-```cameligo test-ligo group=usage_transfer
+```cameligo test-ligo group=usage_transfer protocol=lima
 #import "./gitlab-pages/docs/advanced/src/proxy_ticket.mligo" "Proxy_ticket"
 
 type param = int * string ticket
@@ -624,7 +628,7 @@ let test_transfer_to_contract =
 
 <Syntax syntax="jsligo">
 
-```jsligo test-ligo group=usage_transfer
+```jsligo test-ligo group=usage_transfer protocol=lima
 #import "./gitlab-pages/docs/advanced/src/proxy_ticket.jsligo" "Proxy_ticket"
 
 type param = [ int , ticket<string>]
@@ -692,7 +696,7 @@ Here is an example using `Proxy_ticket.originate` and the type `unforged_ticket`
 
 <Syntax syntax="cameligo">
 
-```cameligo test-ligo group=usage_orig
+```cameligo test-ligo group=usage_orig protocol=lima
 (* originate.mligo *)
 #import "./gitlab-pages/docs/advanced/src/proxy_ticket.mligo" "Proxy_ticket"
 
@@ -731,7 +735,7 @@ let test_originate_contract =
 
 <Syntax syntax="jsligo">
 
-```jsligo test-ligo group=usage_orig
+```jsligo test-ligo group=usage_orig protocol=lima
 #import "./gitlab-pages/docs/advanced/src/proxy_ticket.jsligo" "Proxy_ticket"
 
 
@@ -1303,3 +1307,53 @@ arguments:
 --source=SOURCE
     SOURCE is the source the Michelson interpreter transaction will use.
 ```
+
+### Event testing
+
+Here is how you emit events and fetch them from your tests:
+
+<Syntax syntax="pascaligo">
+
+```pascaligo test-ligo group=test_ex protocol=kathmandu
+function main ( const x : (int*int) * unit ) is
+  (list [Tezos.emit ("%foo", x.0) ; Tezos.emit ("%foo", x.0.0)], Unit)
+
+const test_foo = {
+  const (ta, _, _) = Test.originate (main, Unit, 0tez) ;
+  const _ = Test.transfer_to_contract_exn (Test.to_contract (ta), (1,2), 0tez) ;
+  const x = (Test.get_last_events_from (ta, "foo") : list (int*int)) ;
+  const y = (Test.get_last_events_from (ta, "foo") : list (int)) ;
+} with (x,y)
+```
+
+</Syntax>
+<Syntax syntax="cameligo">
+
+```cameligo test-ligo group=test_ex protocol=kathmandu
+let main (p,_ : (int*int) * unit ) =
+  [Tezos.emit "%foo" p ; Tezos.emit "%foo" p.0],()
+
+let test_foo =
+  let (ta, _, _) = Test.originate main () 0tez in
+  let _ = Test.transfer_to_contract_exn (Test.to_contract ta) (1,2) 0tez in
+  (Test.get_last_events_from ta "foo" : (int*int) list),(Test.get_last_events_from ta "foo" : int list)
+```
+
+</Syntax>
+<Syntax syntax="jsligo">
+
+```jsligo test-ligo group=test_ex protocol=kathmandu
+let main = ([p, _] : [[int, int], unit]) => {
+  let op1 = Tezos.emit("%foo", p);
+  let op2 = Tezos.emit("%foo", p[0]);
+  return [list([op1, op2]), unit];
+  };
+
+let test = (() : [list<[int,int]>, list<int>] => {
+  let [ta, _, _] = Test.originate(main, unit, 0 as tez);
+  let _ = Test.transfer_to_contract_exn(Test.to_contract(ta), [1,2], 0 as tez);
+  return [Test.get_last_events_from(ta, "foo") as list<[int, int]>, Test.get_last_events_from(ta, "foo") as list<int>];
+}) ();
+```
+
+</Syntax>

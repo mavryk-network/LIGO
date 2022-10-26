@@ -903,7 +903,7 @@ let%expect_test _ =
                      PAIR } } } } } |} ]
 
 let%expect_test _ =
-  run_ligo_good [ "compile" ; "contract" ; contract "ticket_builder.mligo" ] ;
+  run_ligo_good [ "compile" ; "contract" ; contract "ticket_builder.mligo" ; "--protocol" ; "lima" ] ;
   [%expect {|
 File "../../test/contracts/ticket_builder.mligo", line 29, characters 28-34:
  28 |       begin
@@ -943,6 +943,7 @@ Hint: replace it by "_ticket" to prevent this warning.
              CDR ;
              UNIT ;
              TICKET ;
+             IF_NONE { PUSH string "option is None" ; FAILWITH } {} ;
              SWAP ;
              CAR ;
              PUSH mutez 0 ;
@@ -1049,12 +1050,12 @@ let%expect_test _ =
       3:   code { DROP /* [] */ ; PUSH address "KT1badaddr" ; NIL operation ; PAIR } }
     At line 3 characters 38 to 50, value "KT1badaddr"
     is invalid for type address.
-    { "id": "proto.014-PtKathma.destination_repr.invalid_b58check",
+    { "id": "proto.015-PtLimaPt.destination_repr.invalid_b58check",
       "description":
         "Failed to read a valid destination from a b58check_encoding data",
       "data": { "input": "KT1badaddr" } }
-    Note: You compiled your contract with protocol jakarta although we internally use protocol kathmandu to typecheck the produced Michelson contract
-    so you might want to ignore this error if related to a breaking change in protocol kathmandu
+    Note: You compiled your contract with protocol kathmandu although we internally use protocol lima to typecheck the produced Michelson contract
+    so you might want to ignore this error if related to a breaking change in protocol lima
 
     Reasonligo is depreacted, support will be dropped in a few versions.
 
@@ -1069,12 +1070,12 @@ let%expect_test _ =
       3:   code { DROP /* [] */ ; PUSH address "KT1badaddr" ; NIL operation ; PAIR } }
     At line 3 characters 38 to 50, value "KT1badaddr"
     is invalid for type address.
-    { "id": "proto.014-PtKathma.destination_repr.invalid_b58check",
+    { "id": "proto.015-PtLimaPt.destination_repr.invalid_b58check",
       "description":
         "Failed to read a valid destination from a b58check_encoding data",
       "data": { "input": "KT1badaddr" } }
-    Note: You compiled your contract with protocol jakarta although we internally use protocol kathmandu to typecheck the produced Michelson contract
-    so you might want to ignore this error if related to a breaking change in protocol kathmandu |}]
+    Note: You compiled your contract with protocol kathmandu although we internally use protocol lima to typecheck the produced Michelson contract
+    so you might want to ignore this error if related to a breaking change in protocol lima |}]
 
 let%expect_test _ =
   run_ligo_bad [ "compile" ; "contract" ; contract "bad_timestamp.ligo" ] ;
@@ -1767,6 +1768,15 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_good [ "compile" ; "contract" ; contract "warning_duplicate3.mligo" ] ;
   [%expect{|
+    Warning: Error(s) occurred while type checking the produced michelson contract:
+    At (unshown) location 2, ill formed type:
+      1: { parameter (pair (chest %c) (chest_key %ck)) ;
+      2:   storage int ;
+      3:   code { DROP ; PUSH int 1 ; NIL operation ; PAIR } }
+    Use of deprecated instruction: chest
+    Note: You compiled your contract with protocol kathmandu although we internally use protocol lima to typecheck the produced Michelson contract
+    so you might want to ignore this error if related to a breaking change in protocol lima
+
     { parameter (pair (chest %c) (chest_key %ck)) ;
       storage int ;
       code { DROP ; PUSH int 1 ; NIL operation ; PAIR } } |}]
