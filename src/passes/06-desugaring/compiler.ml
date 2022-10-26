@@ -402,6 +402,11 @@ and desugar_cond_to_match ~loc condition then_clause else_clause =
 
 
 and desugar_sequence_to_let ~loc expr1 expr2 =
+  let expr1 = 
+    if O.is_e_ascription expr1 
+    then expr1 
+    else O.e_ascription expr1 (O.t_unit ~loc ()) 
+  in
   O.e_let_in_ez
     (Value_var.fresh ~loc ~name:"()" ())
     ~ascr:(O.t_unit ~loc ())

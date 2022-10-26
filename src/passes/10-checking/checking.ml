@@ -475,7 +475,6 @@ and infer_expression ~(raise : raise) ~options ~ctx (expr : I.expression)
       , let%bind rhs = rhs
         and let_binder = let_binder
         and let_result = let_result in
-        (* let () = List.iter (O.Pattern.binders let_binder) ~f:(fun b -> Format.printf "%a = %a\n" Value_var.pp (Binder.get_var b) Location.pp (Value_var.get_location (Binder.get_var b))) in *)
         return
           (E_let_in
              { let_binder
