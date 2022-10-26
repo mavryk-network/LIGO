@@ -466,7 +466,7 @@ let rec compile_expression ~raise : CST.expr -> AST.expr = fun e ->
     let rhs_type = Option.map ~f:(compile_type_expression ~raise <@ snd) rhs_type in
     let pattern, args = binders in
     match args, type_params with
-    | [], None  ->
+    | [], None when not (is_e_lambda let_rhs) ->
       let matchee = match rhs_type with
         | Some t -> (e_annotation let_rhs t)
         | None -> (
