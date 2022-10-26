@@ -749,112 +749,36 @@ let%expect_test _ =
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test" ; test "test_inline.mligo" ] ;
-  [%expect.unreachable]
-[@@expect.uncaught_exn {|
-  (* CR expect_test_collector: This test expectation appears to contain a backtrace.
-     This is strongly discouraged as backtraces are fragile.
-     Please change this test to not include a backtrace. *)
-
-  (Cli_expect_tests.Cli_expect.Should_exit_good)
-  Raised at Cli_expect_tests__Cli_expect.run_ligo_good in file "src/bin/expect_tests/cli_expect.ml", line 39, characters 7-29
-  Called from Cli_expect_tests__Ligo_interpreter_tests.(fun) in file "src/bin/expect_tests/ligo_interpreter_tests.ml", line 751, characters 2-60
-  Called from Expect_test_collector.Make.Instance_io.exec in file "collector/expect_test_collector.ml", line 262, characters 12-19
-
-  Trailing output
-  ---------------
-  Warning: Error(s) occurred while type checking the produced michelson contract:
-  { "id": "proto.015-PtLimaPt.michelson_v1.ill_formed_type",
-    "description":
-      "The toplevel error thrown when trying to parse a type expression (always followed by more precise errors).",
-    "data":
-      { "identifier": "storage",
-        "ill_formed_expression":
-          [ { "prim": "parameter", "args": [ { "prim": "unit" } ] },
-            { "prim": "storage",
-              "args":
-                [ { "prim": "pair",
-                    "args":
-                      [ { "prim": "pair",
-                          "args":
-                            [ { "prim": "big_map",
-                                "args":
-                                  [ { "prim": "string" }, { "prim": "bytes" } ],
-                                "annots": [ "%metadata" ] },
-                              { "prim": "set",
-                                "args": [ { "prim": "address" } ],
-                                "annots": [ "%participants" ] } ] },
-                        { "prim": "map",
-                          "args":
-                            [ { "prim": "address" }, { "prim": "chest" } ],
-                          "annots": [ "%secrets" ] } ] } ] },
-            { "prim": "code",
-              "args":
-                [ [ { "prim": "CDR" },
-                    { "prim": "PUSH",
-                      "args": [ { "prim": "bool" }, { "prim": "True" } ] },
-                    { "prim": "DUP", "args": [ { "int": "2" } ] },
-                    { "prim": "CAR" }, { "prim": "CDR" },
-                    { "prim": "ITER",
-                      "args":
-                        [ [ { "prim": "SWAP" },
-                            { "prim": "DUP", "args": [ { "int": "3" } ] },
-                            { "prim": "CDR" },
-                            { "prim": "DIG", "args": [ { "int": "2" } ] },
-                            { "prim": "GET" },
-                            { "prim": "IF_NONE",
-                              "args":
-                                [ [ { "prim": "PUSH",
-                                      "args":
-                                        [ { "prim": "bool" },
-                                          { "prim": "False" } ] },
-                                    { "prim": "AND" } ],
-                                  [ { "prim": "DROP" },
-                                    { "prim": "PUSH",
-                                      "args":
-                                        [ { "prim": "bool" },
-                                          { "prim": "True" } ] },
-                                    { "prim": "AND" } ] ] } ] ] },
-                    { "prim": "DROP" },
-                    { "prim": "PUSH",
-                      "args": [ { "prim": "bool" }, { "prim": "True" } ] },
-                    { "prim": "DUP", "args": [ { "int": "2" } ] },
-                    { "prim": "CAR" }, { "prim": "CDR" },
-                    { "prim": "ITER",
-                      "args":
-                        [ [ { "prim": "SWAP" },
-                            { "prim": "EMPTY_MAP",
-                              "args":
-                                [ { "prim": "address" }, { "prim": "bool" } ] },
-                            { "prim": "DIG", "args": [ { "int": "2" } ] },
-                            { "prim": "GET" },
-                            { "prim": "IF_NONE",
-                              "args":
-                                [ [ { "prim": "PUSH",
-                                      "args":
-                                        [ { "prim": "bool" },
-                                          { "prim": "False" } ] },
-                                    { "prim": "AND" } ],
-                                  [ { "prim": "DROP" },
-                                    { "prim": "PUSH",
-                                      "args":
-                                        [ { "prim": "bool" },
-                                          { "prim": "True" } ] },
-                                    { "prim": "AND" } ] ] } ] ] },
-                    { "prim": "DROP" },
-                    { "prim": "NIL", "args": [ { "prim": "operation" } ] },
-                    { "prim": "PAIR" } ] ] } ], "location": 4 } }
-  { "id": "proto.015-PtLimaPt.michelson_v1.deprecated_instruction",
-    "description":
-      "A deprecated instruction usage is disallowed in newly created contracts",
-    "data": { "prim": "chest" } }
-  Note: You compiled your contract with protocol kathmandu although we internally use protocol lima to typecheck the produced Michelson contract
-  so you might want to ignore this error if related to a breaking change in protocol lima
-
-  Error(s) occurred while parsing the Michelson input:
-  { "id": "proto.015-PtLimaPt.michelson_v1.deprecated_instruction",
-    "description":
-      "A deprecated instruction usage is disallowed in newly created contracts",
-    "data": { "prim": "chest" } } |}]
+  [%expect{|
+    Everything at the top-level was executed.
+    - test_x exited with value (KT19hFZZxPTue1oBw7cc46L1p6pJ3xTo3vRF , { parameter unit ;
+      storage
+        (pair (pair (big_map %metadata string bytes) (set %participants address))
+              (map %secrets address bool)) ;
+      code { CDR ;
+             PUSH bool True ;
+             DUP 2 ;
+             CAR ;
+             CDR ;
+             ITER { SWAP ;
+                    DUP 3 ;
+                    CDR ;
+                    DIG 2 ;
+                    GET ;
+                    IF_NONE { PUSH bool False ; AND } { DROP ; PUSH bool True ; AND } } ;
+             DROP ;
+             PUSH bool True ;
+             DUP 2 ;
+             CAR ;
+             CDR ;
+             ITER { SWAP ;
+                    EMPTY_MAP address bool ;
+                    DIG 2 ;
+                    GET ;
+                    IF_NONE { PUSH bool False ; AND } { DROP ; PUSH bool True ; AND } } ;
+             DROP ;
+             NIL operation ;
+             PAIR } } , 222). |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test" ; test "test_read_contract.mligo" ] ;
