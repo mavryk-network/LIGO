@@ -23,7 +23,8 @@ Module Assertions.
     Definition kind_inferable s k : t := Co_kind_inferable s k.
     Definition kind_bound_inferable s k r : t := Co_kind_bound_inferable s k r.
 
-    Definition fold {A} (a:t) {type_variable} {kind_variable} {kind_bound_variable} {exist_marker} {kind_inferable} {kind_bound_inferable} : A :=
+    Definition fold {A} (a:t) {type_variable} {kind_variable} {kind_bound_variable} 
+                              {exist_marker} {kind_inferable} {kind_bound_inferable} : A :=
         match a with
         | Co_type_variable s t => type_variable s t
         | Co_kind_variable s t => kind_variable s t
@@ -33,7 +34,7 @@ Module Assertions.
         | Co_kind_bound_inferable s k t => kind_bound_inferable s k t
         end.
 
-    Definition domains (a:t) : list string :=        
+    Definition domain (a:t) : list string :=        
         fold a 
             (type_variable := fun n _ => [n]) 
             (kind_variable := fun n _ => [n]) 

@@ -16,7 +16,7 @@ Module Types.
     (* Variables and basic types *)
     | Ty_exist {A} : string -> t A
     | Ty_variable {A} : string -> t A
-    | Ty_one {A} : unit -> t A
+    | Ty_one {A} : t A
     (* Function, universal quantification and application *)
     | Ty_arrow {A} : t A -> t A -> t A
     | Ty_for_all : string -> Kinds.t -> t C_poly -> t C_poly
@@ -29,7 +29,7 @@ Module Types.
 
     Definition exist {A} s : t A := Ty_exist s.
     Definition var {A} s : t A := Ty_variable s.
-    Definition one {A} : t A := Ty_one tt.
+    Definition one {A} : t A := Ty_one.
     Definition arrow {A} l r : t A := Ty_arrow l r.
     Definition for_all s k l : t C_poly := Ty_for_all s k l.
     Definition lambda {A} s k l : t A := Ty_lambda s k l.
@@ -41,7 +41,7 @@ Module Types.
         match v with
         | Ty_exist s => exist s
         | Ty_variable v => var v
-        | Ty_one tt => one tt
+        | Ty_one => one tt
         | @Ty_arrow A l r => @arrow A l r
         | Ty_for_all s k l => for_all s k l
         | @Ty_lambda A s k l => @lambda A s k l
