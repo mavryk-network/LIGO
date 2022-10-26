@@ -7,17 +7,6 @@ open Ligo_prim
 Compile patterns (let destructuring, mutable let destructuring and pattern matching) into case expressions.
 Mutable let destructuring (E_let_mut_in) is handled in a slightly different way (see destruct_mut_let_in)
 
-
-
-let x = 1
-let y = 2
-let z = match (1,2) with (a,b) -> a + b
-
-
-let x = 1 in
-let y = 2 in
-let z = 
-
 *)
 
 let rec compile_expression : I.expression -> O.expression =
@@ -31,62 +20,36 @@ let rec compile_expression : I.expression -> O.expression =
     }
   in
   match exp.expression_content with
-  | E_matching
-      { matchee = rhs
-      ; cases =
-          [ { pattern = { wrap_content = P_var let_binder; _ }
-            ; body = let_result
-            }
-          ]
-      } ->
-    let rhs = self rhs in
-    let let_result = self let_result in
-    return
-      (O.E_let_in
-         { let_binder
-         ; rhs
-         ; let_result
-         ; attributes = I.ValueAttr.default_attributes
-         })
   | E_matching { matchee; cases } ->
     let matchee = self matchee in
-    return (compile_matching ~loc:exp.location ~mut:false matchee cases)
-  | E_let_in
-      { let_binder = { wrap_content = P_var let_binder; _ }
-      ; rhs
-      ; let_result
-      ; attributes
-      } ->
-    let rhs = self rhs in
-    let let_result = self let_result in
-    return (O.E_let_in { let_binder; rhs; let_result; attributes })
+    compile_matching ~loc:exp.location ~mut:false matchee cases
+  | E_let_in { let_binder; rhs; let_result; attributes } ->
+    let matchee = self rhs in
+    compile_matching
+      ~loc:exp.location
+      ~attributes
+      ~mut:false
+      matchee
+      [ { pattern = let_binder; body = let_result } ]
   | E_let_mut_in
       { let_binder = { wrap_content = P_var let_binder; _ }
       ; rhs
       ; let_result
       ; attributes
       } ->
+    (* if lhs is a simple pattern, we do not bother executing Pattern_matching *)
     let rhs = self rhs in
     let let_result = self let_result in
     return (O.E_let_mut_in { let_binder; rhs; let_result; attributes })
-  | E_let_in { let_binder; rhs; let_result; attributes } ->
-    let matchee = self rhs in
-    return
-      (compile_matching
-         ~loc:exp.location
-         ~attributes
-         ~mut:false
-         matchee
-         [ { pattern = let_binder; body = let_result } ])
   | E_let_mut_in { let_binder; rhs; let_result; attributes } ->
     let matchee = self rhs in
-    return
-      (compile_matching
-         ~loc:exp.location
-         ~attributes
-         ~mut:true
-         matchee
-         [ { pattern = let_binder; body = let_result } ])
+    compile_matching
+      ~loc:exp.location
+      ~attributes
+      ~mut:true
+      matchee
+      [ { pattern = let_binder; body = let_result } ]
+  (* Bellow is no-op *)
   | E_record m ->
     let m = Record.map ~f:self m in
     return (O.E_record m)
@@ -138,14 +101,10 @@ let rec compile_expression : I.expression -> O.expression =
   | E_variable x -> return (O.E_variable x)
 
 
-(*
-TODO : stop doint the 'match matchee.expression_content with E_var _' thing
-*)
-
 and compile_matching
     :  loc:Location.t -> ?attributes:O.ValueAttr.t -> mut:bool -> O.expression
     -> (I.expression, I.type_expression) I.Match_expr.match_case list
-    -> O.expression_content
+    -> O.expression
   =
  fun ~loc ?attributes ~mut matchee cases ->
   let matchee_type = matchee.type_expression in
@@ -154,26 +113,17 @@ and compile_matching
         let body = compile_expression body in
         pattern, matchee_type, body)
   in
-  match matchee.expression_content with
-  | E_variable var ->
-    let match_expr = Pattern_matching.compile_matching var eqs in
-    let match_expr =
-      if mut then destruct_mut_let_in match_expr else match_expr
-    in
-    match_expr.expression_content
-  | _ ->
-    let var = Value_var.fresh ~loc ~name:"match_" () in
-    let match_expr = Pattern_matching.compile_matching var eqs in
-    let match_expr =
-      if mut then destruct_mut_let_in match_expr else match_expr
-    in
-    E_let_in
-      { let_binder = Binder.make var matchee_type
-      ; rhs = matchee
-      ; let_result = { match_expr with location = loc }
-      ; attributes =
-          Option.value attributes ~default:O.ValueAttr.default_attributes
-      }
+  let var = Value_var.fresh ~loc ~name:"match_" () in
+  let match_expr = Pattern_matching.compile_matching var eqs in
+  let match_expr = if mut then destruct_mut_let_in match_expr else match_expr in
+  O.e_a_let_in
+    ~loc
+    { let_binder = Binder.make var matchee_type
+    ; rhs = matchee
+    ; let_result = { match_expr with location = loc }
+    ; attributes =
+        Option.value attributes ~default:O.ValueAttr.default_attributes
+    }
 
 
 (*
@@ -216,6 +166,7 @@ and destruct_mut_let_in : O.expression -> O.expression =
         binders
         ~f:(fun acc b ->
           O.e_a_let_mut_in
+            ~loc:acc.location
             { let_binder = b
             ; rhs = O.e_variable (Binder.get_var b) (Binder.get_ascr b)
             ; let_result = acc
@@ -232,6 +183,7 @@ and destruct_mut_let_in : O.expression -> O.expression =
           let b = Binder.make pattern ty in
           let body =
             O.e_a_let_mut_in
+              ~loc:body.location
               { let_binder = b
               ; rhs = O.e_variable pattern ty
               ; let_result = body
