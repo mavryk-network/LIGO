@@ -247,21 +247,20 @@ let remove_unused ~raise : contract_pass_data -> program -> program = fun contra
   (* Remove the definition after the main entry_point (can't be relevant), mostly remove the test *)
   let prg_decls = List.drop_while prg_decls ~f:aux in
   let main_decl, prg_decls = trace_option ~raise (Errors.corner_case "Entrypoint not found") @@ Simple_utils.List.uncons prg_decls in
-  let env,main_dc = trace_option ~raise (Errors.corner_case "Entrypoint not found") @@
-    let return env wrap_content = Some (env, { main_decl with wrap_content }) in
+  let env = trace_option ~raise (Errors.corner_case "Entrypoint not found") @@
     match main_decl.wrap_content with
-    | D_value {binder;expr;attr} ->
-      let env, expr = get_fv expr in
-      return env (D_value { binder ; expr ; attr })
-    | D_pattern { pattern = ({ wrap_content = P_var _ ; _} as pattern) ; expr ; attr } ->
-      let env, expr = get_fv expr in
-      return env (D_pattern { pattern ; expr ; attr })
-    | D_pattern _ | D_type _ | D_module _ -> None
+    | D_value dc ->
+      let env, _ = get_fv dc.expr in
+      Some env
+    | D_pattern dc ->
+      let env, _ = get_fv dc.expr in
+      Some env
+    | D_type _ | D_module _ -> None
   in
   let _,module_ = get_fv_program env [main_decl] prg_decls in
   module_
 
-let remove_unused_for_views ~raise : program -> program = fun prg ->
+let remove_unused_for_views : program -> program = fun prg ->
   (* Process declaration in reverse order *)
   let is_view = fun (decl:declaration) -> match decl.wrap_content with
     | D_value {attr;_} | D_pattern {attr;_} -> not attr.view
@@ -273,19 +272,17 @@ let remove_unused_for_views ~raise : program -> program = fun prg ->
     ~f:(fun decl ->
       match decl.wrap_content with
       | D_value dc when dc.attr.view ->
-        let rhs_env,expr = get_fv dc.expr in
+        let rhs_env,_ = get_fv dc.expr in
         let lhs_env = { empty_env with used_var = VVarSet.of_list [Binder.get_var dc.binder] } in
-        let dc' = { decl with wrap_content = D_value { dc with expr = expr}} in
-        Some (dc',lhs_env,rhs_env)
+        Some (lhs_env,rhs_env)
       | D_pattern dc when dc.attr.view ->
-        let rhs_env,expr = get_fv dc.expr in
+        let rhs_env,_ = get_fv dc.expr in
         let lhs_env = { empty_env with used_var = VVarSet.of_list (List.map ~f:Binder.get_var (Pattern.binders dc.pattern)) } in
-        let dc' = { decl with wrap_content = D_pattern { dc with expr = expr}} in
-        Some (dc',lhs_env,rhs_env)
+        Some (lhs_env,rhs_env)
       | D_value _ | D_pattern _ | D_type _ | D_module _ -> None)
   in
   (* lhs_envs = variables bound by declaration ; rhs_envs = free variables in declaration rhs *)
-  let view_decls,lhs_envs,rhs_envs = List.unzip3 view_decls_env in
+  let lhs_envs,rhs_envs = List.unzip view_decls_env in
   let rhs_env = merge_env (unions lhs_envs) (unions rhs_envs)in
   let _,module_ = get_fv_program rhs_env [] prg_decls in
   module_
