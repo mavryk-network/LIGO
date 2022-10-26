@@ -121,7 +121,7 @@ and expression_content ppf (ec: expression_content) =
   | E_update      u -> Types.Update.pp      expression ppf u
   | E_lambda      l -> Lambda.pp      expression type_expression ppf l
   | E_type_abstraction e -> Type_abs.pp expression ppf e
-  | E_matching    m -> Types.Match_expr.pp expression type_expression ppf m
+  | E_matching    m -> Types.Match_expr.pp expression type_expression_annot ppf m
   | E_recursive   r -> Recursive.pp expression type_expression ppf r
   | E_let_in {let_binder; rhs; let_result; attributes = { hidden = false ; _ } as attr } ->
     fprintf ppf "@[let %a =@;<1 2>%a%a in@ %a@]"
@@ -160,8 +160,8 @@ and option_inline ppf inline =
     fprintf ppf ""
 
 and declaration ?(use_hidden=true) ppf (d : declaration) = match Location.unwrap d with
-    D_value vd  -> if (vd.attr.hidden && use_hidden) then () else Types.Value_decl.pp expression type_expression ppf vd
-  | D_pattern pd -> if (pd.attr.hidden && use_hidden) then () else Types.Pattern_decl.pp expression type_expression ppf pd
+    D_value vd  -> if (vd.attr.hidden && use_hidden) then () else Types.Value_decl.pp expression type_expression_annot ppf vd
+  | D_pattern pd -> if (pd.attr.hidden && use_hidden) then () else Types.Pattern_decl.pp expression type_expression_annot ppf pd
   | D_type  td  -> if (td.type_attr.hidden && use_hidden) then () else Types.Type_decl.pp type_expression ppf td
   | D_module md -> if (md.module_attr.hidden && use_hidden) then () else Types.Module_decl.pp module_expr ppf md
 

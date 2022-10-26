@@ -125,7 +125,7 @@ and expression_content ppf (ec: expression_content) =
   | E_let_in x when x.attributes.hidden ->
       fprintf ppf "@[<h>%a@]" expression x.let_result
   | E_let_in x ->
-    Let_in.pp expression type_expression ppf x
+    Let_in.pp expression type_expression_annot ppf x
   | E_raw_code   r -> Raw_code.pp   expression ppf r
   | E_type_inst ti -> type_inst ppf ti
   | E_let_mut_in x ->
