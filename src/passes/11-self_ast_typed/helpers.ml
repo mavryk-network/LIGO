@@ -332,6 +332,11 @@ let strip_view_annotations : program -> program = fun m ->
 
    e.g:
     annotate_with_view [p] ["a";"b"]
+
+    let a = <..>
+    let b = <..>
+    let b = <..>
+    let c = <..>
       |->
     [@view] let a = <..>
     let b = <..>
