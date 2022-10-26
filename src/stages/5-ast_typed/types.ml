@@ -49,66 +49,9 @@ and type_expression = {
 and ty_expr = type_expression
   [@@deriving eq,compare,yojson,hash]
 
-module ValueAttr = struct
-  type t = {
-    inline: bool ;
-    no_mutation: bool;
-    (* Some external constant (e.g. `Test.balance`) do not accept any argument. This annotation is used to prevent LIGO interpreter to evaluate (V_Thunk values) and forces inlining in the compiling (15-self_mini_c)
-      TODO: we should change the type of such constants to be `unit -> 'a` instead of just 'a
-    *)
-    view : bool;
-    public: bool;
-    (* Controls whether a declaration must be printed or not when using LIGO print commands (print ast-typed , ast-aggregated .. etc ..)
-      set to true for standard libraries
-    *)
-    hidden: bool;
-    (* Controls whether it should be inlined at AST level *)
-    thunk: bool ;
-  } [@@deriving eq,compare,yojson,hash]
-  open Format
-  let pp_if_set str ppf attr =
-    if attr then fprintf ppf "[@@%s]" str
-    else fprintf ppf ""
-
-  let pp ppf { inline ; no_mutation ; view ; public ; hidden ; thunk } =
-    fprintf ppf "%a%a%a%a%a%a"
-      (pp_if_set "inline") inline
-      (pp_if_set "no_mutation") no_mutation
-      (pp_if_set "view") view
-      (pp_if_set "private") (not public)
-      (pp_if_set "hidden") hidden
-      (pp_if_set "thunk") thunk
-
-end
-
-module TypeOrModuleAttr = struct
-  type t = { public: bool ; hidden : bool }
-    [@@deriving eq,compare,yojson,hash]
-
-  open Format
-  let pp_if_set str ppf attr =
-    if attr then fprintf ppf "[@@%s]" str
-    else fprintf ppf ""
-  let pp ppf { public ; hidden } =
-    fprintf ppf "%a%a"
-      (pp_if_set "private") (not public)
-      (pp_if_set "hidden") hidden
-
-end
-
-
-module Access_label = struct
-  type 'a t = Label.t
-  let equal _ = Label.equal
-  let compare _ = Label.compare
-  let to_yojson _ = Label.to_yojson
-  let of_yojson _ = Label.of_yojson
-  let hash_fold_t _ = Label.hash_fold_t
-  let pp _ = Label.pp
-  let fold _ = Fun.const
-  let map _ = Fun.id
-  let fold_map _ = fun a b -> a,b
-end
+module ValueAttr = Ast_core.ValueAttr
+module TypeOrModuleAttr = Ast_core.TypeOrModuleAttr
+module Access_label = Ast_core.Access_label
 module Accessor = Accessor(Access_label)
 module Update   = Update(Access_label)
 

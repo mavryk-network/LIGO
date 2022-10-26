@@ -42,6 +42,7 @@ let pp ppf lst =
   let attr =
     List.map ~f:(fun attr -> "[@@" ^ attr ^ "]") lst |> String.concat
   in Format.fprintf ppf "%s" attr
+  let default_attributes = []
 
 end
 

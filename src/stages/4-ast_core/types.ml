@@ -70,6 +70,15 @@ module ValueAttr = struct
       (pp_if_set "private") (not public)
       (pp_if_set "hidden") hidden
       (pp_if_set "thunk") thunk
+  
+  let default_attributes = {
+    inline = false
+  ; no_mutation = false
+  ; view = false
+  ; public = true
+  ; hidden = false
+  ; thunk = false
+  }
 
 end
 
@@ -87,6 +96,8 @@ module TypeOrModuleAttr = struct
     fprintf ppf "%a%a"
       (pp_if_set "private") (not public)
       (pp_if_set "hidden") hidden
+  
+  let default_attributes = { public = true ; hidden = false }
 
 end
 

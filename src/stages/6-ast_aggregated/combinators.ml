@@ -343,6 +343,14 @@ let get_record_field_type (t : type_expression) (label : Label.t) : type_express
     | None -> None
     | Some row_element -> Some row_element.associated_type
 
+let get_variant_field_type (t : type_expression) (label : Label.t) : type_expression option =
+  match get_t_sum_opt t with
+  | None -> None
+  | Some struct_ ->
+    match Record.LMap.find_opt label struct_.fields with
+    | None -> None
+    | Some row_element -> Some row_element.associated_type
+
 let get_type_abstractions (e : expression) =
   let rec aux tv e = match get_e_type_abstraction e with
   | None -> tv, e
