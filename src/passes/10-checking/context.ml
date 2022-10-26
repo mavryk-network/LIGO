@@ -1273,9 +1273,6 @@ module Elaboration = struct
   and binder_apply ctx (binder : 'a Binder.t) = Binder.map (t_apply ctx) binder
   and pattern_apply ctx (binder : 'a Ast_typed.Pattern.t) = Pattern.map (t_apply ctx) binder
 
-  and binder_apply_opt ctx (binder : 'a option Binder.t) =
-    Binder.map (Option.map ~f:(t_apply ctx)) binder
-
   and matching_expr_apply ctx match_exprs =
     List.map match_exprs 
       ~f:(Types.Match_expr.map_match_case (e_apply ctx) (t_apply ctx))
@@ -1290,7 +1287,7 @@ module Elaboration = struct
     | D_value { binder; expr; attr } ->
       return
       @@ D_value
-           { binder = binder_apply_opt ctx binder
+           { binder = binder_apply ctx binder
            ; expr = e_apply ctx expr
            ; attr
            }
@@ -1440,7 +1437,7 @@ module Elaboration = struct
     match decl.wrap_content with
     | D_type decl_type -> type_pass ~raise decl_type.type_expr
     | D_value { binder; expr; _ } ->
-      binder_pass_opt ~raise binder;
+      binder_pass ~raise binder;
       expression_pass ~raise expr
     | D_pattern { pattern ; expr; _ } ->
       pattern_pass ~raise pattern;

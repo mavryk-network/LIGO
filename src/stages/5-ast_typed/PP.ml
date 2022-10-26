@@ -80,10 +80,6 @@ and type_expression ppf (te : type_expression) : unit =
 
 let type_expression_annot ppf (te : type_expression) : unit =
   fprintf ppf " : %a" type_expression te
-let type_expression_option ppf (te : type_expression option) : unit =
-  match te with
-  | Some te -> type_expression_annot ppf te
-  | None    -> fprintf ppf ""
 
 let rec type_content_orig : formatter -> type_content -> unit =
   fun ppf tc ->
@@ -164,7 +160,7 @@ and option_inline ppf inline =
     fprintf ppf ""
 
 and declaration ?(use_hidden=true) ppf (d : declaration) = match Location.unwrap d with
-    D_value vd  -> if (vd.attr.hidden && use_hidden) then () else Types.Value_decl.pp expression type_expression_option ppf vd
+    D_value vd  -> if (vd.attr.hidden && use_hidden) then () else Types.Value_decl.pp expression type_expression ppf vd
   | D_pattern pd -> if (pd.attr.hidden && use_hidden) then () else Types.Pattern_decl.pp expression type_expression ppf pd
   | D_type  td  -> if (td.type_attr.hidden && use_hidden) then () else Types.Type_decl.pp type_expression ppf td
   | D_module md -> if (md.module_attr.hidden && use_hidden) then () else Types.Module_decl.pp module_expr ppf md
