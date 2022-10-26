@@ -242,7 +242,7 @@ let remove_unused ~raise : contract_pass_data -> program -> program = fun contra
       {Location.wrap_content = D_value {binder = { var ; _};_}; _}  
     | {Location.wrap_content = D_pattern {pattern={wrap_content=P_var { var ; _}; _};_};_} ->
         not (Value_var.equal var contract_pass_data.main_name)
-    | _ -> true in
+    | {Location.wrap_content = (D_pattern _ | D_type _ | D_module _); _} -> true in
   (* Remove the definition after the main entry_point (can't be relevant), mostly remove the test *)
   let _, prg_decls = List.split_while prg_decls ~f:aux in
   let main_decl, prg_decls = trace_option ~raise (Errors.corner_case "Entrypoint not found") @@ Simple_utils.List.uncons prg_decls in
@@ -251,7 +251,7 @@ let remove_unused ~raise : contract_pass_data -> program -> program = fun contra
     | {Location.wrap_content = D_pattern { pattern = { wrap_content = P_var binder ; _} ; expr ; attr  } ; _} -> 
       let binder = Binder.map Option.some binder in
       Some { binder ; expr = expr ; attr = attr }
-    | _ -> None in
+    | {Location.wrap_content = (D_pattern _ | D_type _ | D_module _); _} -> None in
   let env,main_expr = get_fv main_dc.expr in
   let main_dc = {main_dc with expr = main_expr} in
   let main_decl = {main_decl with wrap_content = D_value main_dc} in
@@ -266,7 +266,7 @@ let remove_unused_for_views ~raise ~(view_names:Value_var.t list ) : program -> 
   let pred = fun _ -> function
       {Location.wrap_content = D_value {binder;_}; _} -> (is_view_name @@ Binder.get_var binder)
     | {Location.wrap_content = D_pattern {pattern = { wrap_content = P_var binder ; _ };_}; _} -> (is_view_name @@ Binder.get_var binder)
-    | _ -> false in
+    | {Location.wrap_content = (D_pattern _ | D_type _ | D_module _ );_} -> false in
   let idx,_ = trace_option ~raise (Errors.corner_case "View not found") @@ List.findi prg_decls ~f:pred in
   (* Remove the definition after the last view (can't be relevant), mostly remove the test *)
   let _,prg_decls = List.split_n prg_decls idx in
@@ -277,9 +277,7 @@ let remove_unused_for_views ~raise ~(view_names:Value_var.t list ) : program -> 
       | {Location.wrap_content = D_pattern { pattern = { wrap_content = P_var binder ; _ } ; expr ; attr }; _} when is_view_name @@ Binder.get_var binder -> 
         let binder = Binder.map Option.some binder in
         Some (binder, expr, attr)
-      
-      (* TODO: compelete exhaustiveness check to prevent future errors *)
-      | _ -> None)
+      | {Location.wrap_content = (D_value _ | D_pattern _ | D_type _ | D_module _); _} -> None)
   in
   let env,_ = List.fold view_decls ~init:(empty_env, []) ~f:(fun (env, decls) (view_binder, view_expr, _) ->
     let env',_ = get_fv view_expr in
