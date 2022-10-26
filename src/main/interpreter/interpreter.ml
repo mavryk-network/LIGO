@@ -2029,6 +2029,7 @@ let eval_test ~raise ~steps ~options
   let aux decl r =
     let ds, defs = r in
     match decl.Location.wrap_content with
+    | Ast_typed.D_pattern { pattern = {wrap_content = P_var binder}; expr; _ }
     | Ast_typed.D_value { binder; expr; _ } ->
       let var = Binder.get_var binder in
       if (not (Value_var.is_generated var))
