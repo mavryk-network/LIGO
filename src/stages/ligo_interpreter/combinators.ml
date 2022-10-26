@@ -52,15 +52,11 @@ let v_ctor : string -> value -> value =
  fun ctor value -> V_Construct (ctor, value)
 
 
-let v_address
-  : Tezos_protocol.Protocol.Alpha_context.Contract.t -> value
-  =
+let v_address : Tezos_protocol.Protocol.Alpha_context.Contract.t -> value =
  fun a -> V_Ct (C_address a)
 
 
-let v_typed_address
-  : Tezos_protocol.Protocol.Alpha_context.Contract.t -> value
-  =
+let v_typed_address : Tezos_protocol.Protocol.Alpha_context.Contract.t -> value =
  fun a -> V_Typed_address a
 
 
@@ -106,8 +102,7 @@ let counter_of_address : string -> int =
 
 
 let get_address
-  :  value
-  -> Tezos_protocol.Protocol.Alpha_context.Contract.t option
+  : value -> Tezos_protocol.Protocol.Alpha_context.Contract.t option
   = function
   | V_Ct (C_address x) -> Some x
   | _ -> None
@@ -302,9 +297,7 @@ let compare_constant_val (c : constant_val) (c' : constant_val) : int =
     Tezos_protocol.Protocol.Alpha_context.Contract.compare a a'
   | ( C_contract { address = a; entrypoint = e }
     , C_contract { address = a'; entrypoint = e' } ) ->
-    (match
-       Tezos_protocol.Protocol.Alpha_context.Contract.compare a a'
-     with
+    (match Tezos_protocol.Protocol.Alpha_context.Contract.compare a a' with
      | 0 -> Option.compare String.compare e e'
      | c -> c)
   | C_key_hash kh, C_key_hash kh' ->
