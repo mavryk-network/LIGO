@@ -23,8 +23,7 @@ let rec pp_env ppf env =
 let rec merge_env {env=x1;used_var=y1; used_mut_var = z1} {env=x2;used_var=y2; used_mut_var = z2} =
   let aux _ a b = Some (merge_env a b) in
   {env = MVarMap.union aux x1 x2; used_var = VVarSet.union y1 y2; used_mut_var = VVarSet.union z1 z2 }
-and unions = fun l ->
-      List.fold l ~init:{env=MVarMap.empty;used_var=VVarSet.empty; used_mut_var = VVarSet.empty } ~f:merge_env
+and unions = fun l -> List.fold l ~init:empty_env ~f:merge_env
 and get_fv expr =
   let self = get_fv in
   let return env expression_content = env, {expr with expression_content} in
@@ -81,10 +80,12 @@ and get_fv expr =
      let env, struct_ = self struct_ in
      return env @@ E_accessor {struct_;path}
   | E_let_in { let_binder ; rhs ; let_result ; attributes} ->
-     let env,let_result = (self let_result) in
-     let binders = Pattern.binders let_binder in
-     let used_var = List.fold binders ~init:env.used_var
-       ~f:(fun used_var b -> VVarSet.remove (Binder.get_var b) used_var) in
+     let env,let_result = self let_result in
+     let used_var =
+        List.fold (Pattern.binders let_binder)
+          ~init:env.used_var
+          ~f:(fun used_var b -> VVarSet.remove (Binder.get_var b) used_var)
+     in
      let env = {env with used_var } in
      let env', rhs = self rhs in
      return (merge_env env env') @@ E_let_in {let_binder; rhs; let_result; attributes}
@@ -146,12 +147,13 @@ and get_fv expr =
 and get_fv_cases : _ Match_expr.match_case list -> env * _ Match_expr.match_case list = fun ms ->
   let envs = List.map ms 
   ~f:(fun {pattern;body} ->
-    let env,_= get_fv body in
+    let env,body = get_fv body in
     let binders = Pattern.binders pattern |> List.map ~f:Binder.get_var in
     let used_var = List.fold_right binders ~init:env.used_var ~f:VVarSet.remove in
     let env = { env with used_var } in
-    env
+    env, Match_expr.{ pattern ; body }
   ) in
+  let envs , ms = List.unzip envs in
   unions envs, ms
 
 and get_fv_module (env:env) acc = function
@@ -203,7 +205,7 @@ and get_fv_program (env:env) acc : program -> _ * program = function
   | ({Location.wrap_content = D_pattern {pattern; expr;attr}; _} as hd) :: tl ->
     let binders = List.filter (Pattern.binders pattern) ~f:(fun binder' -> VVarSet.mem (Binder.get_var binder') env.used_var) in
     if (List.is_empty binders) then
-      get_fv_module env acc tl
+      get_fv_program env acc tl
     else
       let env =
         List.fold binders ~init:env ~f:(fun env binder' ->
@@ -211,7 +213,7 @@ and get_fv_program (env:env) acc : program -> _ * program = function
       in
       let env',expr = get_fv expr in
       let env = merge_env env @@ env' in
-      get_fv_module env ({hd with wrap_content = D_pattern {pattern;expr;attr}} :: acc) tl  
+      get_fv_program env ({hd with wrap_content = D_pattern {pattern;expr;attr}} :: acc) tl  
   | ({Location.wrap_content = D_value {binder; expr;attr}; _} as hd) :: tl ->
     let binder' = binder in
     if VVarSet.mem (Binder.get_var binder') env.used_var then
@@ -236,60 +238,56 @@ and get_fv_program (env:env) acc : program -> _ * program = function
 
 let remove_unused ~raise : contract_pass_data -> program -> program = fun contract_pass_data prg ->
   (* Process declaration in reverse order *)
-  (* TODO: try to clean this : D_value binder just type_expression*)
   let prg_decls = List.rev prg in
-  let aux = function
-      {Location.wrap_content = D_value {binder = { var ; _};_}; _}  
-    | {Location.wrap_content = D_pattern {pattern={wrap_content=P_var { var ; _}; _};_};_} ->
+  let aux = fun (decl:declaration) -> match decl.wrap_content with
+    | D_value {binder = { var ; _} ;_ }
+    | D_pattern {pattern= { wrap_content=P_var { var ; _}; _};_} ->
         not (Value_var.equal var contract_pass_data.main_name)
-    | {Location.wrap_content = (D_pattern _ | D_type _ | D_module _); _} -> true in
+    | D_pattern _ | D_type _ | D_module _ -> true in
   (* Remove the definition after the main entry_point (can't be relevant), mostly remove the test *)
-  let _, prg_decls = List.split_while prg_decls ~f:aux in
+  let prg_decls = List.drop_while prg_decls ~f:aux in
   let main_decl, prg_decls = trace_option ~raise (Errors.corner_case "Entrypoint not found") @@ Simple_utils.List.uncons prg_decls in
-  let main_dc = trace_option ~raise (Errors.corner_case "Entrypoint not found") @@ match main_decl with
-      {Location.wrap_content = D_value dc; _} -> Some dc
-    | {Location.wrap_content = D_pattern { pattern = { wrap_content = P_var binder ; _} ; expr ; attr  } ; _} -> 
-      Some { binder ; expr = expr ; attr = attr }
-    | {Location.wrap_content = (D_pattern _ | D_type _ | D_module _); _} -> None in
-  let env,main_expr = get_fv main_dc.expr in
-  let main_dc = {main_dc with expr = main_expr} in
-  let main_decl = {main_decl with wrap_content = D_value main_dc} in
+  let env,main_dc = trace_option ~raise (Errors.corner_case "Entrypoint not found") @@
+    let return env wrap_content = Some (env, { main_decl with wrap_content }) in
+    match main_decl.wrap_content with
+    | D_value {binder;expr;attr} ->
+      let env, expr = get_fv expr in
+      return env (D_value { binder ; expr ; attr })
+    | D_pattern { pattern = ({ wrap_content = P_var _ ; _} as pattern) ; expr ; attr } ->
+      let env, expr = get_fv expr in
+      return env (D_pattern { pattern ; expr ; attr })
+    | D_pattern _ | D_type _ | D_module _ -> None
+  in
   let _,module_ = get_fv_program env [main_decl] prg_decls in
   module_
 
-let remove_unused_for_views ~raise ~(view_names:Value_var.t list ) : program -> program = fun prg ->
-  let view_names = List.rev view_names in
-  let is_view_name var = List.mem view_names var ~equal:Value_var.equal in
+let remove_unused_for_views ~raise : program -> program = fun prg ->
   (* Process declaration in reverse order *)
-  let prg_decls = List.rev prg in
-  let pred = fun _ -> function
-      {Location.wrap_content = D_value {binder;_}; _} -> (is_view_name @@ Binder.get_var binder)
-    | {Location.wrap_content = D_pattern {pattern = { wrap_content = P_var binder ; _ };_}; _} -> (is_view_name @@ Binder.get_var binder)
-    | {Location.wrap_content = (D_pattern _ | D_type _ | D_module _ );_} -> false in
-  let idx,_ = trace_option ~raise (Errors.corner_case "View not found") @@ List.findi prg_decls ~f:pred in
-  (* Remove the definition after the last view (can't be relevant), mostly remove the test *)
-  let _,prg_decls = List.split_n prg_decls idx in
-  let view_decls = List.rev @@ List.filter_map prg_decls
-    ~f:(fun decl ->
-      match decl with
-        {Location.wrap_content = D_value dc; _} when is_view_name @@ Binder.get_var dc.binder -> Some (dc.binder, dc.expr, dc.attr)
-      | {Location.wrap_content = D_pattern { pattern = { wrap_content = P_var binder ; _ } ; expr ; attr }; _} when is_view_name @@ Binder.get_var binder -> 
-        Some (binder, expr, attr)
-      | {Location.wrap_content = (D_value _ | D_pattern _ | D_type _ | D_module _); _} -> None)
+  let is_view = fun (decl:declaration) -> match decl.wrap_content with
+    | D_value {attr;_} | D_pattern {attr;_} -> not attr.view
+    | D_type _ | D_module _ -> true
   in
-  let env,_ = List.fold view_decls ~init:(empty_env, []) ~f:(fun (env, decls) (view_binder, view_expr, _) ->
-    let env',_ = get_fv view_expr in
-    let used_var = List.fold_right decls ~init:env'.used_var
-      ~f:(fun decl_var used_var -> VVarSet.remove decl_var used_var )
-    in
-    let env' = { env' with used_var } in
-    merge_env env env', (Binder.get_var view_binder)::decls
-  ) in
-  let view_decls = List.map view_decls ~f:(fun (view_binder,view_expr,view_attr) -> 
-    let decl = Value_decl.{ binder = view_binder; expr = view_expr ; attr = view_attr } in
-    Location.wrap (D_value decl)) in
-  let _, prg_decls = trace_option ~raise (Errors.corner_case "View not found") @@ Simple_utils.List.uncons prg_decls in
-  let _,module_ = get_fv_program env view_decls prg_decls in
+  (* Remove the definition after the last view (can't be relevant), mostly remove the test *)
+  let prg_decls = List.drop_while (List.rev prg) ~f:(fun x -> not (is_view x)) in
+  let view_decls_env = List.filter_map prg_decls
+    ~f:(fun decl ->
+      match decl.wrap_content with
+      | D_value dc when dc.attr.view ->
+        let rhs_env,expr = get_fv dc.expr in
+        let lhs_env = { empty_env with used_var = VVarSet.of_list [Binder.get_var dc.binder] } in
+        let dc' = { decl with wrap_content = D_value { dc with expr = expr}} in
+        Some (dc',lhs_env,rhs_env)
+      | D_pattern dc when dc.attr.view ->
+        let rhs_env,expr = get_fv dc.expr in
+        let lhs_env = { empty_env with used_var = VVarSet.of_list (List.map ~f:Binder.get_var (Pattern.binders dc.pattern)) } in
+        let dc' = { decl with wrap_content = D_pattern { dc with expr = expr}} in
+        Some (dc',lhs_env,rhs_env)
+      | D_value _ | D_pattern _ | D_type _ | D_module _ -> None)
+  in
+  (* lhs_envs = variables bound by declaration ; rhs_envs = free variables in declaration rhs *)
+  let view_decls,lhs_envs,rhs_envs = List.unzip3 view_decls_env in
+  let rhs_env = merge_env (unions lhs_envs) (unions rhs_envs)in
+  let _,module_ = get_fv_program rhs_env [] prg_decls in
   module_
 
 let remove_unused_expression : expression -> program -> expression * program = fun expr prg ->
