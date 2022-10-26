@@ -4,6 +4,7 @@ module type Attr = sig
   type t
     [@@deriving eq,compare,yojson,hash]
   val  pp : Format.formatter -> t -> unit
+  val default_attributes : t
 end
 
 module Value_decl (Attr : Attr) = struct

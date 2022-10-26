@@ -50,6 +50,7 @@ let map : 'a t -> f:('a -> 'b) -> 'b t
 
 let of_list = LMap.of_list
 
+let find_opt = LMap.find_opt
 let is_tuple m =
   List.for_all ~f:(fun i -> LMap.mem i m) @@ (Label.range 0 (LMap.cardinal m))
 

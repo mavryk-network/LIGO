@@ -39,52 +39,8 @@ and type_expression_list = type_expression list
 and ty_expr = type_expression
   [@@deriving equal,compare,yojson,hash]
 
-module ValueAttr = struct
-  type t = {
-    inline: bool ;
-    no_mutation: bool;
-    (* Some external constant (e.g. `Test.balance`) do not accept any argument. This annotation is used to prevent LIGO interpreter to evaluate (V_Thunk values) and forces inlining in the compiling (15-self_mini_c)
-      TODO: we should change the type of such constants to be `unit -> 'a` instead of just 'a
-    *)
-    view : bool;
-    public: bool;
-    (* Controls whether a declaration must be printed or not when using LIGO print commands (print ast-typed , ast-aggregated .. etc ..)
-      set to true for standard libraries
-    *)
-    hidden: bool;
-    (* Controls whether it should be inlined at AST level *)
-    thunk: bool ;
-  } [@@deriving eq,compare,yojson,hash]
-  open Format
-  let pp_if_set str ppf attr =
-    if attr then fprintf ppf "[@@%s]" str
-    else fprintf ppf ""
-
-  let pp ppf { inline ; no_mutation ; view ; public ; hidden ; thunk } =
-    fprintf ppf "%a%a%a%a%a%a"
-      (pp_if_set "inline") inline
-      (pp_if_set "no_mutation") no_mutation
-      (pp_if_set "view") view
-      (pp_if_set "private") (not public)
-      (pp_if_set "hidden") hidden
-      (pp_if_set "thunk") thunk
-
-end
-
-module ModuleAttr = struct
-  type t = { public: bool ; hidden : bool }
-    [@@deriving eq,compare,yojson,hash]
-
-  open Format
-  let pp_if_set str ppf attr =
-    if attr then fprintf ppf "[@@%s]" str
-    else fprintf ppf ""
-  let pp ppf { public ; hidden } =
-    fprintf ppf "%a%a"
-      (pp_if_set "private") (not public)
-      (pp_if_set "hidden") hidden
-
-end
+module ValueAttr = Ast_typed.ValueAttr
+module ModuleAttr = Ast_typed.TypeOrModuleAttr
 module Value_decl  = Value_decl(ValueAttr)
 module Access_label = struct
   type 'a t = Label.t
