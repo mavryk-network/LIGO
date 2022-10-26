@@ -83,8 +83,12 @@ let get_t_option (t:type_expression) : type_expression option =
     | _ -> None)
   | _ -> None
 
-let e_a_let_mut_in x =
-  e_let_mut_in x (get_type x.let_result)
+let e_a_let_mut_in ~loc x =
+  let exp = e_let_mut_in x (get_type x.let_result) in
+  { exp with location = loc }
+let e_a_let_in ~loc x =
+  let exp = e_let_in x (get_type x.let_result) in
+  { exp with location = loc }
 
 let get_sum_type (t : type_expression) (label : Label.t) : type_expression =
   match get_t_sum t with
