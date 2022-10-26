@@ -144,6 +144,7 @@ and compile_declaration aliases (d : AST.declaration) : Aliases.t * AST.declarat
   match Location.unwrap d with
     D_value {binder;expr;attr} ->
       let expr   = expression aliases expr in
+      let binder = Binder.map (type_expression aliases) binder in
       return_s aliases @@ AST.D_value {binder;expr;attr}
   | D_pattern { pattern ; expr ; attr } ->
       let expr   = expression aliases expr in
