@@ -1044,32 +1044,12 @@ let%expect_test _ =
     Reasonligo is depreacted, support will be dropped in a few versions.
 
     Warning: Error(s) occurred while type checking the produced michelson contract:
-    { "id": "proto.015-PtLimaPt.michelson_v1.ill_typed_contract",
-      "description":
-        "The toplevel error thrown when trying to typecheck a contract code against given input, output and storage types (always followed by more precise errors).",
-      "data":
-        { "ill_typed_code":
-            [ { "prim": "parameter", "args": [ { "prim": "int" } ] },
-              { "prim": "storage", "args": [ { "prim": "address" } ] },
-              { "prim": "code",
-                "args":
-                  [ [ { "prim": "DROP" },
-                      { "prim": "PUSH",
-                        "args":
-                          [ { "prim": "address" }, { "string": "KT1badaddr" } ] },
-                      { "prim": "NIL", "args": [ { "prim": "operation" } ] },
-                      { "prim": "PAIR" } ] ] } ],
-          "type_map":
-            [ { "location": 7,
-                "stack_before":
-                  [ { "prim": "pair",
-                      "args": [ { "prim": "int" }, { "prim": "address" } ] } ],
-                "stack_after": [] } ] } }
-    { "id": "proto.015-PtLimaPt.michelson_v1.invalid_constant",
-      "description": "A data expression was invalid for its expected type.",
-      "data":
-        { "location": 10, "expected_type": { "prim": "address" },
-          "wrong_expression": { "string": "KT1badaddr" } } }
+    Ill typed contract:
+      1: { parameter int ;
+      2:   storage address ;
+      3:   code { DROP /* [] */ ; PUSH address "KT1badaddr" ; NIL operation ; PAIR } }
+    At line 3 characters 38 to 50, value "KT1badaddr"
+    is invalid for type address.
     { "id": "proto.015-PtLimaPt.destination_repr.invalid_b58check",
       "description":
         "Failed to read a valid destination from a b58check_encoding data",
@@ -1084,32 +1064,12 @@ let%expect_test _ =
     Reasonligo is depreacted, support will be dropped in a few versions.
 
     Warning: Error(s) occurred while type checking the produced michelson contract:
-    { "id": "proto.015-PtLimaPt.michelson_v1.ill_typed_contract",
-      "description":
-        "The toplevel error thrown when trying to typecheck a contract code against given input, output and storage types (always followed by more precise errors).",
-      "data":
-        { "ill_typed_code":
-            [ { "prim": "parameter", "args": [ { "prim": "int" } ] },
-              { "prim": "storage", "args": [ { "prim": "address" } ] },
-              { "prim": "code",
-                "args":
-                  [ [ { "prim": "DROP" },
-                      { "prim": "PUSH",
-                        "args":
-                          [ { "prim": "address" }, { "string": "KT1badaddr" } ] },
-                      { "prim": "NIL", "args": [ { "prim": "operation" } ] },
-                      { "prim": "PAIR" } ] ] } ],
-          "type_map":
-            [ { "location": 7,
-                "stack_before":
-                  [ { "prim": "pair",
-                      "args": [ { "prim": "int" }, { "prim": "address" } ] } ],
-                "stack_after": [] } ] } }
-    { "id": "proto.015-PtLimaPt.michelson_v1.invalid_constant",
-      "description": "A data expression was invalid for its expected type.",
-      "data":
-        { "location": 10, "expected_type": { "prim": "address" },
-          "wrong_expression": { "string": "KT1badaddr" } } }
+    Ill typed contract:
+      1: { parameter int ;
+      2:   storage address ;
+      3:   code { DROP /* [] */ ; PUSH address "KT1badaddr" ; NIL operation ; PAIR } }
+    At line 3 characters 38 to 50, value "KT1badaddr"
+    is invalid for type address.
     { "id": "proto.015-PtLimaPt.destination_repr.invalid_b58check",
       "description":
         "Failed to read a valid destination from a b58check_encoding data",
@@ -1809,30 +1769,11 @@ let%expect_test _ =
   run_ligo_good [ "compile" ; "contract" ; contract "warning_duplicate3.mligo" ] ;
   [%expect{|
     Warning: Error(s) occurred while type checking the produced michelson contract:
-    { "id": "proto.015-PtLimaPt.michelson_v1.ill_formed_type",
-      "description":
-        "The toplevel error thrown when trying to parse a type expression (always followed by more precise errors).",
-      "data":
-        { "identifier": "parameter",
-          "ill_formed_expression":
-            [ { "prim": "parameter",
-                "args":
-                  [ { "prim": "pair",
-                      "args":
-                        [ { "prim": "chest", "annots": [ "%c" ] },
-                          { "prim": "chest_key", "annots": [ "%ck" ] } ] } ] },
-              { "prim": "storage", "args": [ { "prim": "int" } ] },
-              { "prim": "code",
-                "args":
-                  [ [ { "prim": "DROP" },
-                      { "prim": "PUSH",
-                        "args": [ { "prim": "int" }, { "int": "1" } ] },
-                      { "prim": "NIL", "args": [ { "prim": "operation" } ] },
-                      { "prim": "PAIR" } ] ] } ], "location": 2 } }
-    { "id": "proto.015-PtLimaPt.michelson_v1.deprecated_instruction",
-      "description":
-        "A deprecated instruction usage is disallowed in newly created contracts",
-      "data": { "prim": "chest" } }
+    At (unshown) location 2, ill formed type:
+      1: { parameter (pair (chest %c) (chest_key %ck)) ;
+      2:   storage int ;
+      3:   code { DROP ; PUSH int 1 ; NIL operation ; PAIR } }
+    Use of deprecated instruction: chest
     Note: You compiled your contract with protocol kathmandu although we internally use protocol lima to typecheck the produced Michelson contract
     so you might want to ignore this error if related to a breaking change in protocol lima
 
