@@ -14,9 +14,15 @@ Module Rows.
     Definition single {A} p : t A := T_single p.
     Definition rows {A} p b : t A := T_rows p b.
 
+    Definition fold {A B} (v:t A) {single} {rows} : B :=
+        match v with
+        | T_single vs => single vs
+        | T_rows vs v => rows vs v
+        end.
+
 End Rows.
 
 (**
  * TODO:
- * - Define catamorphisms and defaulted catamorphisms
+ * - Define defaulted catamorphisms
  *)
