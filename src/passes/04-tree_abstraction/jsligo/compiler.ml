@@ -584,9 +584,6 @@ and compile_expression ~raise : CST.expr -> AST.expr = fun e ->
       | _ -> raise.error @@ invalid_list_pattern_match args
     )
     | _ -> raise.error @@ invalid_list_pattern_match args)
-
-  (* This case is due to a bad besign of our constant it as to change
-    with the new typer so LIGO-684 on Jira *)
   | ECall {value=(EVar var,args);region} ->
     let loc = Location.lift region in
     let (var, loc_var) = r_split var in
