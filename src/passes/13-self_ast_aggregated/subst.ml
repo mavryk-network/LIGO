@@ -220,15 +220,34 @@ let rec subst_expression
     Lambda.{ binder; output_type; result }
   in
   let subst_pattern (pattern,body) ~x ~expr =
-    Pattern.fold_map_pattern
-    (fun let_result pattern ->
-      match pattern.wrap_content with
-      | P_var binder ->
-        let var, let_result = subst_binder1 ~body:(Binder.get_var binder, let_result) ~x ~expr in
-        let_result , { pattern with wrap_content = P_var (Binder.set_var binder var) }
-      | _ -> let_result,pattern)
-    body
-    pattern
+    let ys = List.map (Pattern.binders pattern) ~f:(Binder.get_var) in
+    (* if x is shadowed, binder doesn't change *)
+    if List.mem ~equal:Value_var.equal ys x
+      then pattern, body (* else, if no capture, subst in binder *)
+      else (
+        let fvs = Free_variables.expression expr in
+        let f body y =
+          if not (List.mem ~equal:Value_var.equal fvs y)
+          then y, body (* else, avoid capture and subst in binder *)
+          else (
+            let fresh = Value_var.fresh_like y in
+            let body = replace body y fresh in
+            fresh, body)
+        in
+        let body, pattern = Pattern.fold_map_pattern 
+        (fun body pattern ->
+          match pattern.wrap_content with
+          | P_var binder ->
+            let y = Binder.get_var binder in
+            let y, body = f body y in
+            let binder = Binder.set_var binder y in
+            body , { pattern with wrap_content = P_var binder }
+          | _ -> body,pattern)
+        body
+        pattern
+        in
+        (* let ys, body = List.fold ~f ~init:([], body) ys in *)
+        pattern, subst_expression ~body ~x ~expr)
   in
   match body.expression_content with
   | E_variable x' -> if Value_var.equal x' x then expr else return_id
@@ -243,11 +262,11 @@ let rec subst_expression
   | E_let_in { let_binder; rhs; let_result; attributes } ->
     let rhs = self rhs in
     (* Bellow is weird (need to fold on the pattern to set the variables, but also need to call subst_binders) *)
-    let _, let_binder = subst_pattern (let_binder,let_result) ~x ~expr in
-    let _,let_result =
+    let let_binder, let_result = subst_pattern (let_binder,let_result) ~x ~expr in
+    (* let _,let_result =
     let binders = List.map (Pattern.binders let_binder) ~f:(Binder.get_var) in
       subst_binders subst_expression replace ~body:(binders, let_result) ~x ~expr
-    in
+    in *)
     (* Above is weird *)
     return @@ E_let_in { let_binder; rhs; let_result; attributes }
   | E_constant { cons_name; arguments } ->
@@ -270,11 +289,11 @@ let rec subst_expression
     let cases = List.map cases
       ~f:(fun { pattern ; body } ->
         (* Bellow is weird  (need to fold on the pattern to set the variables, but also need to call subst_binders) *)
-        let _,pattern = subst_pattern (pattern,body) ~x ~expr in
-        let _,body =
+        let pattern, body = subst_pattern (pattern,body) ~x ~expr in
+        (* let _,body =
           let binders = List.map (Pattern.binders pattern) ~f:(Binder.get_var) in
           subst_binders subst_expression replace ~body:(binders, body) ~x ~expr
-        in
+        in *)
         (* Above is weird *)
         ({pattern ; body} : _ Match_expr.match_case)) in
     return @@ E_matching { matchee; cases }
