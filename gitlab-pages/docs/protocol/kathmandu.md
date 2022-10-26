@@ -7,7 +7,7 @@ description: Kathmandu changes
 import Syntax from '@theme/Syntax';
 import SyntaxTitle from '@theme/SyntaxTitle';
 
-> Note: those feature are enabled when using the `--protocol kathmandu` flag in LIGO CLI
+> Note: as LIGO uses Lima protocol to Michelson type-check your programs, the flag `--disable-michelson-typechecking` is recommended to compile contracts to Kathmandu when using tickets / chest.
  
 ## API
 
