@@ -67,6 +67,8 @@ let rec pattern_env_extend_ ~(attributes : ValueAttr.t) ~(mut : bool)
     | None -> fail @@ error_type ()
   in
   match pattern.wrap_content, value with
+  | P_variant (Label "True", _) , V_Ct C_bool true
+  | P_variant (Label "False", _) , V_Ct C_bool false
   | P_unit, _ -> return (locs,env)
   | P_var x, v ->
     let* (locs,v) =
@@ -84,7 +86,7 @@ let rec pattern_env_extend_ ~(attributes : ValueAttr.t) ~(mut : bool)
          ?no_mutation:(if mut then None else Some attributes.no_mutation)
          (Binder.get_ascr x, v))
   | P_variant (label, p), V_Construct (label', value) ->
-    assert (Label.equal label (Label label'));
+    if (Label.equal label (Label label')) then () else Format.eprintf "%a %s" Label.pp label label' ;
     let* ty = get_sum_ty ty label in
     self (locs,env) p ty value
   | P_record pf, V_Record vf ->
@@ -1679,50 +1681,51 @@ and eval_ligo ~raise ~steps ~options
     let* v' = eval_ligo element calltrace env in
     return @@ V_Construct (c, v')
   | E_matching { matchee; cases } ->
+    let* matchee' = eval_ligo matchee calltrace env in
     let matched_case =
-      let ty_eq (ty1,ty2) = Option.is_some @@ AST.Helpers.assert_type_expression_eq ~unforged_tickets:true (ty1,ty2) in
-      (* find pattern matching the matchee type *)
-      let rec pat_match_type ty (pattern: _ Pattern.t) : bool =
-        match pattern.wrap_content with
-        | P_unit when AST.is_t_unit ty -> true
-        | P_var x when ty_eq (ty,Binder.get_ascr x) -> true 
-        | P_list pl when AST.is_t_list ty -> (
-          let el_ty = AST.get_t_list_exn ty in
-          match pl with
-          | List lst -> List.for_all lst ~f:(pat_match_type el_ty)
-          | Cons (hd,tl) -> (pat_match_type el_ty hd) && (pat_match_type ty tl)
+      (* find pattern matching the matchee value *)
+      let rec pat_match_type value (pattern: _ Pattern.t) : bool =
+        match pattern.wrap_content , value with
+        | P_unit , V_Ct (C_unit) -> true
+        | P_var _ , _ -> true
+        | P_variant (Label "True", p) , V_Ct (C_bool true)
+        | P_variant (Label "False", p) , V_Ct (C_bool false) ->
+          pat_match_type (V_Ct (C_unit)) p
+        | P_list (List pl) , V_List lst -> (
+          match List.zip lst pl with
+          | List.Or_unequal_lengths.Ok lst -> List.for_all ~f:(fun (x,y) -> pat_match_type x y) lst
+          | List.Or_unequal_lengths.Unequal_lengths -> true
         )
-        | P_variant (label, p) when Option.is_some (AST.get_variant_field_type ty label) ->
-          let field_ty = Option.value_exn (AST.get_variant_field_type ty label) in
-          pat_match_type field_ty p
-        | Pattern.P_tuple lst when (AST.is_t_sum ty) -> (
-          let rows = Option.value_exn (AST.get_t_record ty) in
+        | P_list (Cons (hd,tl)) , V_List (hd'::tl') -> (
+          pat_match_type hd' hd && pat_match_type (V_List tl') tl
+        )
+        | P_variant (label, p) , V_Construct (label', v) ->
+          if Label.equal label (Label.of_string label')
+          then pat_match_type v p
+          else false
+        | Pattern.P_tuple lst , V_Record v -> (
           List.for_alli lst
             ~f:(fun i p ->
-              match Record.find_opt (Label.of_int i) rows.fields with
-              | Some ty -> pat_match_type ty.associated_type p
+              match Record.find_opt (Label.of_int i) v with
+              | Some v -> pat_match_type v p
               | None -> false
             )
         )
-        | Pattern.P_record lst when (AST.is_t_record ty) -> (
-          let rows = Option.value_exn (AST.get_t_record ty) in
+        | Pattern.P_record lst , V_Record v -> (
           List.for_all (Record.to_list lst)
-            ~f:(fun (label,p) ->
-              match Record.find_opt label rows.fields with
-              | Some ty -> pat_match_type ty.associated_type p
-              | None -> false
-            )
+          ~f:(fun (l,p) ->
+            match Record.find_opt l v with
+            | Some v -> pat_match_type v p
+            | None -> false
+          )
         )
-        | (P_unit | P_var _ | P_list _ | P_variant _ | P_tuple _ | P_record _) -> false
+        | (P_unit | P_list _ | P_variant _ | P_tuple _ | P_record _) , _ -> false
       in
       let x = List.find cases
-        ~f:(fun {pattern ; body = _} -> pat_match_type matchee.type_expression pattern)
+        ~f:(fun {pattern ; body = _} -> pat_match_type matchee' pattern)
       in
-      match x with
-      | Some x -> x
-      | None -> failwith "no pattern match the type"
+      Option.value_exn ~here:[%here] ~message:"no pattern match the type" x 
     in
-    let* matchee' = eval_ligo matchee calltrace env in
     let* env =
       pattern_env_extend
         ~attributes:ValueAttr.default_attributes
