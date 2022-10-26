@@ -990,11 +990,6 @@ and compile_val_binding ~raise : CST.attributes -> CST.val_binding Region.reg ->
     let expr = compile_expression ~raise let_rhs in
     let lhs_type = Option.map ~f:(compile_type_expression ~raise <@ snd) lhs_type in
     match binders, type_params with
-    | p, None ->
-      let pattern = compile_pattern ~raise p in
-      let expr = Option.value_map lhs_type ~default:expr 
-        ~f:(fun ty -> AST.e_ascription ~loc:expr.location {anno_expr = expr ; type_annotation = ty} ()) in
-      (`Val pattern, attr, expr)
     | CST.PVar name, _ -> (* function *)
       let fun_binder : Value_var.t = compile_variable name.value.variable in
       let expr = (match let_rhs with
@@ -1022,6 +1017,11 @@ and compile_val_binding ~raise : CST.attributes -> CST.val_binding Region.reg ->
       in
       let binder = Binder.make fun_binder lhs_type in
       (`Fun binder, attr, expr)
+    | p, None ->
+      let pattern = compile_pattern ~raise p in
+      let expr = Option.value_map lhs_type ~default:expr 
+        ~f:(fun ty -> AST.e_ascription ~loc:expr.location {anno_expr = expr ; type_annotation = ty} ()) in
+      (`Val pattern, attr, expr)
     | _ -> raise.error @@ unsupported_pattern_type binders
 
 and compile_let_binding ~raise : CST.attributes -> CST.val_binding Region.reg -> Region.t -> AST.declaration =
