@@ -139,6 +139,16 @@ let%expect_test _ =
     This declaration holds an annotation and is later shadowed. |}]
 
 let%expect_test _ =
+  run_ligo_bad [ "compile" ; "contract" ; bad_test "views_shadow_top_pat.mligo" ] ;
+  [%expect {|
+    File "../../test/contracts/negative/views_shadow_top_pat.mligo", line 3, characters 12-14:
+      2 |
+      3 | [@view] let v1 = fun (n,s: int * int) : int -> s + n + 1
+      4 | let v1 = fun (n,s: int * int) : int -> s + n + 111111
+
+    This declaration holds an annotation and is later shadowed. |}]
+
+let%expect_test _ =
   run_ligo_good [ "compile" ; "contract" ; contract "views_using_view.jsligo" ] ;
   [%expect {|
     { parameter unit ;

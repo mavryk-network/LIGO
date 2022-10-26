@@ -315,7 +315,12 @@ let get_shadowed_decl : program -> (ValueAttr.t -> bool) -> Location.t option = 
       | Some x -> (seen , Value_var.get_location x::shadows)
       | None -> if predicate attr then ((Binder.get_var binder)::seen , shadows) else seen,shadows
     )
-    | _ -> seen,shadows
+    | D_pattern { pattern = { wrap_content = P_var binder ; _} ; attr ; _ } -> (
+      match List.find seen ~f:(Value_var.equal (Binder.get_var binder)) with
+      | Some x -> (seen , Value_var.get_location x::shadows)
+      | None -> if predicate attr then ((Binder.get_var binder)::seen , shadows) else seen,shadows
+    )
+    | (D_pattern _ | D_type _ | D_module _) -> seen,shadows
   in
   let _,shadows = List.fold ~f:aux ~init:([],[]) prg in
   match shadows with [] -> None | hd::_ -> Some hd
