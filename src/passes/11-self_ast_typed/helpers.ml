@@ -351,7 +351,14 @@ let annotate_with_view ~raise : string list -> Ast_typed.program -> Ast_typed.pr
             decorated::prg, (List.remove_element ~compare:String.compare found views)
           | None -> continue
         )
-        | _ -> continue
+        | D_pattern ({pattern = { wrap_content = P_var binder} ; _} as decl) -> (
+          match List.find views ~f:(Value_var.is_name @@ Binder.get_var binder) with
+          | Some found ->
+            let decorated = { x with wrap_content = D_pattern { decl with attr = {decl.attr with view = true} }} in
+            decorated::prg, (List.remove_element ~compare:String.compare found views)
+          | None -> continue
+        ) 
+        | D_pattern _ | D_type _ | D_module _ -> continue
     )
   in
   let () = match not_found with [] -> () | not_found::_ -> raise.error (corner_case (Format.asprintf "View %s does not exist" not_found : string)) in
