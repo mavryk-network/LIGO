@@ -263,12 +263,13 @@ let remove_unused ~raise : contract_pass_data -> program -> program = fun contra
 let remove_unused_for_views : program -> program = fun prg ->
   (* Process declaration in reverse order *)
   let is_view = fun (decl:declaration) -> match decl.wrap_content with
-    | D_value {attr;_} | D_pattern {attr;_} -> not attr.view
-    | D_type _ | D_module _ -> true
+    | D_value {attr;_} | D_pattern {attr;_} -> attr.view
+    | D_type _ | D_module _ -> false
   in
   (* Remove the definition after the last view (can't be relevant), mostly remove the test *)
   let prg_decls = List.drop_while (List.rev prg) ~f:(fun x -> not (is_view x)) in
-  let view_decls_env = List.filter_map prg_decls
+  (* Format.eprintf "prg_decls:%a\n" (Ast_typed.PP.program ~use_hidden:false) prg ; *)
+  let envs = List.filter_map prg_decls
     ~f:(fun decl ->
       match decl.wrap_content with
       | D_value dc when dc.attr.view ->
@@ -282,9 +283,9 @@ let remove_unused_for_views : program -> program = fun prg ->
       | D_value _ | D_pattern _ | D_type _ | D_module _ -> None)
   in
   (* lhs_envs = variables bound by declaration ; rhs_envs = free variables in declaration rhs *)
-  let lhs_envs,rhs_envs = List.unzip view_decls_env in
-  let rhs_env = merge_env (unions lhs_envs) (unions rhs_envs)in
-  let _,module_ = get_fv_program rhs_env [] prg_decls in
+  let lhs_envs,rhs_envs = List.unzip envs in
+  let env = merge_env (unions lhs_envs) (unions rhs_envs) in
+  let _,module_ = get_fv_program env [] prg_decls in
   module_
 
 let remove_unused_expression : expression -> program -> expression * program = fun expr prg ->
