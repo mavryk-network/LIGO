@@ -1000,7 +1000,7 @@ let init
   ?baking_reward_fixed_portion
   ?origination_size
   ?blocks_per_cycle
-  (* ?initial_timestamp *)
+  ?initial_timestamp
   n
   =
   let open Tezos_alpha_test_helpers in
@@ -1039,7 +1039,7 @@ let init
       ?baking_reward_fixed_portion
       ?origination_size
       ?blocks_per_cycle
-      (* ?initial_timestamp *)
+      ?initial_timestamp
       accounts
   in
   raw, contracts
@@ -1050,7 +1050,7 @@ let init_ctxt
   ?(loc = Location.generated)
   ?(calltrace = [])
   ?(initial_balances = [])
-  (* ?initial_timestamp *)
+  ?initial_timestamp
   ?(baker_accounts = [])
   ?(n = 2)
   protocol_version
@@ -1102,7 +1102,7 @@ let init_ctxt
       ~level:(Int32.of_int_exn 0)
       ~initial_balances
       ~baker_accounts
-      (* ?initial_timestamp *)
+      ?initial_timestamp
       n
   in
   let init_raw_ctxt =
