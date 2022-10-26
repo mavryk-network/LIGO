@@ -388,9 +388,7 @@ let extract_origination_from_result
       ; internal_operation_results
       ; balance_updates = _
       } ->
-    let aux
-      (x : Apply_internal_results.packed_internal_operation_result)
-      =
+    let aux (x : Apply_internal_results.packed_internal_operation_result) =
       match x with
       | Internal_operation_result
           ({ source; _ }, Applied (IOrigination_result x)) ->
@@ -426,10 +424,7 @@ let extract_event_from_result
       ; internal_operation_results
       ; balance_updates = _
       } ->
-    let aux
-      acc
-      (x : Apply_internal_results.packed_internal_operation_result)
-      =
+    let aux acc (x : Apply_internal_results.packed_internal_operation_result) =
       match x with
       | Internal_operation_result
           ( { operation = Event { tag; payload; ty }; source; _ }
@@ -459,9 +454,7 @@ let extract_lazy_storage_diff_from_result
       ; internal_operation_results
       ; balance_updates = _
       } ->
-    let aux
-      (x : Apply_internal_results.packed_internal_operation_result)
-      =
+    let aux (x : Apply_internal_results.packed_internal_operation_result) =
       match x with
       | Internal_operation_result
           ({ source = _; _ }, Applied (IOrigination_result x)) ->
