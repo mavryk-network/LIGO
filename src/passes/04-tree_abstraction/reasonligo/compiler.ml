@@ -599,6 +599,7 @@ and compile_let_binding ~raise ?kwd_rec attributes binding =
     let fun_binder = compile_variable name in
     let expr = compile_expression ~raise ?fun_rec:(Option.map ~f:(fun _ -> fun_binder) kwd_rec) let_rhs in
     let pattern = Pattern.var_pattern (Binder.make fun_binder lhs_type) in
+    let expr = Option.value_map lhs_type ~default:expr ~f:(fun ty -> e_annotation ~loc:expr.location expr ty) in
     (pattern, attributes, expr)
   | pattern ->
     let pattern = compile_pattern ~raise pattern in
