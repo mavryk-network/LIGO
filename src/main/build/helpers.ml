@@ -85,8 +85,7 @@ let get_aliases_prelude : Ast_typed.module_variable -> Ast_typed.program -> Ast_
       | D_value { binder ; attr ; _ } when ValueAttr.(attr.public) -> binder::acc
       | D_pattern { pattern ; attr ; _ } when ValueAttr.(attr.public) ->
         let binders = Pattern.binders pattern in
-        let acc' = List.map binders ~f:(Binder.map Option.some) in
-        acc' @ acc
+        binders @ acc
       | (D_type _ | D_module _ | D_value _ | D_pattern _) -> acc in
     let get_ty_bindings acc d =
       let open Ast_typed in

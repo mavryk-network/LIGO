@@ -160,7 +160,6 @@ and compile_declaration scope (d : AST.declaration) : Scope.t * AST.declaration 
   match Location.unwrap d with
     D_value {binder;expr;attr} ->
       let expr   = expression scope expr in
-      let binder = Binder.map (Option.map ~f:(type_expression scope)) binder in
       return scope @@ AST.D_value {binder;expr;attr}
   | D_pattern {pattern;expr;attr} ->
       let expr    = expression scope expr in

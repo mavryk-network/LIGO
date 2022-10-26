@@ -126,10 +126,6 @@ and compile_matching
   =
  fun ~loc ?attributes ~mut matchee cases ->
   let matchee_type = matchee.type_expression in
-  let () = Option.iter attributes 
-    ~f:(fun attributes -> 
-      if (not attributes.hidden) 
-      then print_endline (Format.asprintf " matchee = %a \n" Ast_pattern_expanded.PP.expression matchee)) in
   let eqs =
     List.map cases ~f:(fun { pattern; body } ->
         let body = compile_expression body in

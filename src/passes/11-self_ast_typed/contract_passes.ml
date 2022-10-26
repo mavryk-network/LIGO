@@ -249,7 +249,6 @@ let remove_unused ~raise : contract_pass_data -> program -> program = fun contra
   let main_dc = trace_option ~raise (Errors.corner_case "Entrypoint not found") @@ match main_decl with
       {Location.wrap_content = D_value dc; _} -> Some dc
     | {Location.wrap_content = D_pattern { pattern = { wrap_content = P_var binder ; _} ; expr ; attr  } ; _} -> 
-      let binder = Binder.map Option.some binder in
       Some { binder ; expr = expr ; attr = attr }
     | {Location.wrap_content = (D_pattern _ | D_type _ | D_module _); _} -> None in
   let env,main_expr = get_fv main_dc.expr in
@@ -275,7 +274,6 @@ let remove_unused_for_views ~raise ~(view_names:Value_var.t list ) : program -> 
       match decl with
         {Location.wrap_content = D_value dc; _} when is_view_name @@ Binder.get_var dc.binder -> Some (dc.binder, dc.expr, dc.attr)
       | {Location.wrap_content = D_pattern { pattern = { wrap_content = P_var binder ; _ } ; expr ; attr }; _} when is_view_name @@ Binder.get_var binder -> 
-        let binder = Binder.map Option.some binder in
         Some (binder, expr, attr)
       | {Location.wrap_content = (D_value _ | D_pattern _ | D_type _ | D_module _); _} -> None)
   in
