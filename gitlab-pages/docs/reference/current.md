@@ -1434,3 +1434,20 @@ let constant : string => 'a
 
 The new primitive `Tezos.constant` allows you to use a predefined constant already registered on chain.
 It accepts a hash in the form of a string and will require a type annotation.
+
+## Events
+
+<SyntaxTitle syntax="pascaligo">
+val emit&lt;a&gt; :  string -> a -> operation
+</SyntaxTitle>
+<SyntaxTitle syntax="cameligo">
+val emit : string -> 'a -> operation
+</SyntaxTitle>
+<SyntaxTitle syntax="reasonligo">
+let emit: string => 'a => operation
+</SyntaxTitle>
+<SyntaxTitle syntax="jsligo">
+let emit: string => &apos;a => operation
+</SyntaxTitle>
+
+Build an event operation. To actually emit an event, this operation must be returned the same way as other operations (origination / transfer ..)
