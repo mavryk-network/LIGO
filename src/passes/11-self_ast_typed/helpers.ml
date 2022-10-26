@@ -351,7 +351,7 @@ let annotate_with_view ~raise : string list -> Ast_typed.program -> Ast_typed.pr
             decorated::prg, (List.remove_element ~compare:String.compare found views)
           | None -> continue
         )
-        | D_pattern ({pattern = { wrap_content = P_var binder} ; _} as decl) -> (
+        | D_pattern ({pattern = { wrap_content = P_var binder; _} ; _} as decl) -> (
           match List.find views ~f:(Value_var.is_name @@ Binder.get_var binder) with
           | Some found ->
             let decorated = { x with wrap_content = D_pattern { decl with attr = {decl.attr with view = true} }} in

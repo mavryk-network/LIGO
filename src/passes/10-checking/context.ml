@@ -1423,10 +1423,6 @@ module Elaboration = struct
   and pattern_pass ~raise (pattern : _ Pattern.t) =
     List.iter (Pattern.binders pattern) ~f:(fun ty -> binder_pass ~raise ty) 
 
-  and binder_pass_opt ~raise (binder : _ option Binder.t) =
-    Option.iter (Binder.get_ascr binder) ~f:(type_pass ~raise)
-
-
   and matching_expr_pass ~raise match_exprs =
     List.iter match_exprs
       ~f:(Types.Match_expr.iter_match_case (expression_pass ~raise) (type_pass ~raise))
