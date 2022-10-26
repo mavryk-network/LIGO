@@ -524,10 +524,11 @@ let get_views : program -> (Value_var.t * Location.t) list = fun p ->
 
 let fetch_view_type : declaration -> (type_expression * type_expression Binder.t) option = fun declt ->
   match Location.unwrap declt with
-  | D_value { binder ; expr ; attr } when attr.view -> (
+  | D_value { binder ; expr ; attr }
+  | D_pattern { pattern = { wrap_content = P_var binder} ; expr ; attr } when attr.view -> (
     Some (expr.type_expression, Binder.map (fun _ -> expr.type_expression) binder)
   )
-  | _ -> None
+  | (D_value _ | D_pattern _ | D_type _ | D_module _) -> None
 
 let fetch_views_in_program : program -> (type_expression * type_expression Binder.t) list = fun prg ->
   List.filter_map ~f:fetch_view_type prg
