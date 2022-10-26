@@ -306,7 +306,7 @@ let rec compile_expression ~raise path scope (expr : I.expression) =
     let element = self element in
     return @@ E_constructor {constructor;element}
   | E_matching {matchee;cases} ->
-    let attributes : O.ValueAttr.t = { inline = false ; no_mutation = false ; public = true ; view = false ; hidden = false ; thunk = false } in
+    let attributes = O.ValueAttr.default_attributes in
     let matchee = self matchee in
     let cases : _ O.Match_expr.match_case list =
       List.map cases

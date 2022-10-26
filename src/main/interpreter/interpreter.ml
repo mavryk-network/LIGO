@@ -30,8 +30,15 @@ let resolve_contract_file ~mod_res ~source_file ~contract_file =
         | `No | `Unknown -> ModRes.Helpers.resolve ~file:contract_file mod_res)
      | None -> ModRes.Helpers.resolve ~file:contract_file mod_res)
 
+(*
+pattern_env_extend_ [locs,env] [pattern] [ty] [value]
+  For a [pattern] of type [ty] matched with [value] will recursively destruct [value]
+  to extend the environment with corresponding binders
 
-let rec pattern_extend_ ~(attributes : ValueAttr.t) ~(mut : bool)
+  Bounded variable in [pattern] can also be mutable -- in which case locations are push through
+  the execution monad
+*)
+let rec pattern_env_extend_ ~(attributes : ValueAttr.t) ~(mut : bool)
   : location list * env -> _ AST.Pattern.t -> AST.type_expression -> value -> (location list * env) Monad.t
   =
  fun (locs,env) pattern ty value ->
@@ -43,9 +50,14 @@ let rec pattern_extend_ ~(attributes : ValueAttr.t) ~(mut : bool)
         (Pattern.pp PP.type_expression) pattern
         PP.type_expression ty)
   in
-  let self = pattern_extend_ ~attributes ~mut in
-  let get_row_ty ty label =
+  let self = pattern_env_extend_ ~attributes ~mut in
+  let get_prod_ty ty label =
     match AST.get_record_field_type ty label with
+    | Some s -> return s
+    | None -> fail @@ error_type ()
+  in
+  let get_sum_ty ty label =
+    match AST.get_variant_field_type ty label with
     | Some s -> return s
     | None -> fail @@ error_type ()
   in
@@ -73,7 +85,7 @@ let rec pattern_extend_ ~(attributes : ValueAttr.t) ~(mut : bool)
          (Binder.get_ascr x, v))
   | P_variant (label, p), V_Construct (label', value) ->
     assert (Label.equal label (Label label'));
-    let* ty = get_row_ty ty label in
+    let* ty = get_sum_ty ty label in
     self (locs,env) p ty value
   | P_record pf, V_Record vf ->
     let* lst =
@@ -83,7 +95,7 @@ let rec pattern_extend_ ~(attributes : ValueAttr.t) ~(mut : bool)
     in
     bind_fold_list lst ~init:(locs,env) ~f:(fun (locs,env) ((label, pattern), (label', value)) ->
         assert (Label.equal label label');
-        let* ty = get_row_ty ty label in
+        let* ty = get_prod_ty ty label in
         self (locs,env) pattern ty value)
   | P_tuple tups, V_Record vf ->
     let pf = List.mapi ~f:(fun i x -> Label.of_int i, x) tups in
@@ -94,7 +106,7 @@ let rec pattern_extend_ ~(attributes : ValueAttr.t) ~(mut : bool)
     in
     bind_fold_list lst ~init:(locs,env) ~f:(fun (locs,env) ((label, pattern), (label', value)) ->
         assert (Label.equal label label');
-        let* ty = get_row_ty ty label in
+        let* ty = get_prod_ty ty label in
         self (locs,env) pattern ty value)
   | P_list (Cons (phd, ptl)), V_List (vhd :: vtl) ->
     let* (locs,env) =
@@ -108,11 +120,11 @@ let rec pattern_extend_ ~(attributes : ValueAttr.t) ~(mut : bool)
     let* ty = get_t_list ty in
     bind_fold_list lst ~init:(locs,env) ~f:(fun (locs,env) (pattern, value) -> self (locs,env) pattern ty value)
   | _ -> fail @@ error_type ()
-and pattern_extend_mutable ~attributes env pattern ty value =
-  pattern_extend_ ~attributes ~mut:true ([],env) pattern ty value
-and pattern_extend ~attributes env pattern ty value =
+and pattern_extend_extend_mut ~attributes env pattern ty value =
+  pattern_env_extend_ ~attributes ~mut:true ([],env) pattern ty value
+and pattern_env_extend ~attributes env pattern ty value =
   let open Monad in
-  let* (_,env) = pattern_extend_ ~attributes ~mut:false ([],env) pattern ty value in
+  let* (_,env) = pattern_env_extend_ ~attributes ~mut:false ([],env) pattern ty value in
   return env
 
 let get_file_from_location loc =
@@ -1591,7 +1603,7 @@ and eval_ligo ~raise ~steps ~options
          }
   | E_let_in { let_binder; rhs; let_result; attributes } ->
     let* rhs' = eval_ligo rhs calltrace env in
-    let* env = pattern_extend ~attributes env let_binder rhs.type_expression rhs' in
+    let* env = pattern_env_extend ~attributes env let_binder rhs.type_expression rhs' in
     eval_ligo
       let_result
       calltrace
@@ -1667,84 +1679,58 @@ and eval_ligo ~raise ~steps ~options
     let* v' = eval_ligo element calltrace env in
     return @@ V_Construct (c, v')
   | E_matching { matchee; cases } ->
-    let* e' = eval_ligo matchee calltrace env in
-    ignore (e',cases);
-    failwith "l"
-    (* let* e' = eval_ligo matchee calltrace env in
-    (match cases, e' with
-     | Match_variant { cases; _ }, V_List [] ->
-       let { constructor = _; pattern = _; body } =
-         List.find_exn
-           ~f:(fun { constructor = Label c; pattern = _; body = _ } ->
-             String.equal "Nil" c)
-           cases
-       in
-       eval_ligo body calltrace env
-     | Match_variant { cases; tv }, V_List lst ->
-       let { constructor = _; pattern; body } =
-         List.find_exn
-           ~f:(fun { constructor = Label c; pattern = _; body = _ } ->
-             String.equal "Cons" c)
-           cases
-       in
-       let ty = AST.get_t_list_exn tv in
-       let hd = List.hd_exn lst in
-       let tl = V_List (List.tl_exn lst) in
-       let proj = v_pair (hd, tl) in
-       let env' = Env.extend env (Binder.get_var pattern) (ty, proj) in
-       eval_ligo body calltrace env'
-     | Match_variant { cases; _ }, V_Ct (C_bool b) ->
-       let ctor_body (case : _ matching_content_case) =
-         case.constructor, case.body
-       in
-       let cases = Record.of_list (List.map ~f:ctor_body cases) in
-       let get_case c = Record.LMap.find (Label c) cases in
-       let match_true = get_case "True" in
-       let match_false = get_case "False" in
-       if b
-       then eval_ligo match_true calltrace env
-       else eval_ligo match_false calltrace env
-     | Match_variant { cases; tv }, V_Construct (matched_c, proj) ->
-       let* tv =
-         match AST.get_t_sum_opt tv with
-         | Some tv ->
-           let ({ associated_type; michelson_annotation = _; decl_pos = _ }
-                 : row_element)
-             =
-             Record.LMap.find (Label matched_c) tv.fields
-           in
-           return associated_type
-         | None ->
-           (match AST.get_t_option tv with
-            | Some tv -> return tv
-            | None -> fail @@ Errors.generic_error tv.location "Expected sum")
-       in
-       let { constructor = _; pattern; body } =
-         List.find_exn
-           ~f:(fun { constructor = Label c; pattern = _; body = _ } ->
-             String.equal matched_c c)
-           cases
-       in
-       (* TODO-er: check *)
-       let env' = Env.extend env (Binder.get_var pattern) (tv, proj) in
-       eval_ligo body calltrace env'
-     | Match_record { fields; body; tv = _ }, V_Record rv ->
-       let aux : Label.t -> _ Binder.t -> env -> env =
-        fun l b env ->
-         let iv =
-           match Record.LMap.find_opt l rv with
-           | Some x -> x
-           | None -> failwith "label do not match"
-         in
-         Env.extend env (Binder.get_var b) (Binder.get_ascr b, iv)
-       in
-       let env' = Record.LMap.fold aux fields env in
-       eval_ligo body calltrace env'
-     | _, v ->
-       failwith
-         ("not yet supported case "
-         ^ Format.asprintf "%a" Ligo_interpreter.PP.pp_value v
-         ^ Format.asprintf "%a" AST.PP.expression term)) *)
+    let matched_case =
+      let ty_eq (ty1,ty2) = Option.is_some @@ AST.Helpers.assert_type_expression_eq ~unforged_tickets:true (ty1,ty2) in
+      (* find pattern matching the matchee type *)
+      let rec pat_match_type ty (pattern: _ Pattern.t) : bool =
+        match pattern.wrap_content with
+        | P_unit when AST.is_t_unit ty -> true
+        | P_var x when ty_eq (ty,Binder.get_ascr x) -> true 
+        | P_list pl when AST.is_t_list ty -> (
+          let el_ty = AST.get_t_list_exn ty in
+          match pl with
+          | List lst -> List.for_all lst ~f:(pat_match_type el_ty)
+          | Cons (hd,tl) -> (pat_match_type el_ty hd) && (pat_match_type ty tl)
+        )
+        | P_variant (label, p) when Option.is_some (AST.get_variant_field_type ty label) ->
+          let field_ty = Option.value_exn (AST.get_variant_field_type ty label) in
+          pat_match_type field_ty p
+        | Pattern.P_tuple lst when (AST.is_t_sum ty) -> (
+          let rows = Option.value_exn (AST.get_t_record ty) in
+          List.for_alli lst
+            ~f:(fun i p ->
+              match Record.find_opt (Label.of_int i) rows.fields with
+              | Some ty -> pat_match_type ty.associated_type p
+              | None -> false
+            )
+        )
+        | Pattern.P_record lst when (AST.is_t_record ty) -> (
+          let rows = Option.value_exn (AST.get_t_record ty) in
+          List.for_all (Record.to_list lst)
+            ~f:(fun (label,p) ->
+              match Record.find_opt label rows.fields with
+              | Some ty -> pat_match_type ty.associated_type p
+              | None -> false
+            )
+        )
+        | (P_unit | P_var _ | P_list _ | P_variant _ | P_tuple _ | P_record _) -> false
+      in
+      let x = List.find cases
+        ~f:(fun {pattern ; body = _} -> pat_match_type matchee.type_expression pattern)
+      in
+      match x with
+      | Some x -> x
+      | None -> failwith "no pattern match the type"
+    in
+    let* matchee' = eval_ligo matchee calltrace env in
+    let* env =
+      pattern_env_extend
+        ~attributes:ValueAttr.default_attributes
+        env
+        matched_case.pattern
+        matchee.type_expression matchee'
+    in
+    eval_ligo matched_case.body calltrace env
   | E_recursive { fun_name; fun_type = _; lambda } ->
     let fv = Self_ast_aggregated.Helpers.Free_variables.expression term in
     let env =
@@ -1913,7 +1899,7 @@ and eval_ligo ~raise ~steps ~options
     return val_
   | E_let_mut_in { let_binder; rhs; let_result; attributes } ->
     let* rhs' = eval_ligo rhs calltrace env in
-    let* locs,env = pattern_extend_mutable ~attributes env let_binder rhs.type_expression rhs' in
+    let* locs,env = pattern_extend_extend_mut ~attributes env let_binder rhs.type_expression rhs' in
     let* let_result =
       eval_ligo
         let_result

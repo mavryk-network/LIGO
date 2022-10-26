@@ -20,32 +20,55 @@ let z =
 
 *)
 
-let default_attr : I.ValueAttr.t =
-  { inline = false; no_mutation = false; public = true; view = false; hidden = false; thunk = false }
-
 let rec compile_expression : I.expression -> O.expression =
  fun exp ->
   let self = compile_expression in
   let return : O.expression_content -> O.expression =
    fun expression_content ->
-    { expression_content; type_expression = exp.type_expression; location = exp.location }
+    { expression_content
+    ; type_expression = exp.type_expression
+    ; location = exp.location
+    }
   in
   match exp.expression_content with
-  | E_matching { matchee = rhs ; cases = [ {pattern = {wrap_content = P_var let_binder ; _ } ; body = let_result }]} ->
+  | E_matching
+      { matchee = rhs
+      ; cases =
+          [ { pattern = { wrap_content = P_var let_binder; _ }
+            ; body = let_result
+            }
+          ]
+      } ->
     let rhs = self rhs in
     let let_result = self let_result in
-    return (O.E_let_in {let_binder; rhs; let_result; attributes = default_attr} )
+    return
+      (O.E_let_in
+         { let_binder
+         ; rhs
+         ; let_result
+         ; attributes = I.ValueAttr.default_attributes
+         })
   | E_matching { matchee; cases } ->
     let matchee = self matchee in
     return (compile_matching ~loc:exp.location ~mut:false matchee cases)
-  | E_let_in { let_binder = {wrap_content = P_var let_binder ; _}; rhs; let_result; attributes } ->
+  | E_let_in
+      { let_binder = { wrap_content = P_var let_binder; _ }
+      ; rhs
+      ; let_result
+      ; attributes
+      } ->
     let rhs = self rhs in
     let let_result = self let_result in
-    return (O.E_let_in {let_binder; rhs; let_result; attributes} )
-  | E_let_mut_in { let_binder = {wrap_content = P_var let_binder ; _}; rhs; let_result; attributes } ->
+    return (O.E_let_in { let_binder; rhs; let_result; attributes })
+  | E_let_mut_in
+      { let_binder = { wrap_content = P_var let_binder; _ }
+      ; rhs
+      ; let_result
+      ; attributes
+      } ->
     let rhs = self rhs in
     let let_result = self let_result in
-    return (O.E_let_mut_in {let_binder; rhs; let_result; attributes} )
+    return (O.E_let_mut_in { let_binder; rhs; let_result; attributes })
   | E_let_in { let_binder; rhs; let_result; attributes } ->
     let matchee = self rhs in
     return
@@ -119,10 +142,10 @@ let rec compile_expression : I.expression -> O.expression =
 TODO : stop doint the 'match matchee.expression_content with E_var _' thing
 *)
 
-
 and compile_matching
     :  loc:Location.t -> ?attributes:O.ValueAttr.t -> mut:bool -> O.expression
-    -> (I.expression, I.type_expression) I.Match_expr.match_case list -> O.expression_content
+    -> (I.expression, I.type_expression) I.Match_expr.match_case list
+    -> O.expression_content
   =
  fun ~loc ?attributes ~mut matchee cases ->
   let matchee_type = matchee.type_expression in
@@ -133,20 +156,23 @@ and compile_matching
   in
   match matchee.expression_content with
   | E_variable var ->
+    let match_expr = Pattern_matching.compile_matching var eqs in
     let match_expr =
-      Pattern_matching.compile_matching var eqs
+      if mut then destruct_mut_let_in match_expr else match_expr
     in
-    let match_expr = if mut then destruct_mut_let_in match_expr else match_expr in
     match_expr.expression_content
   | _ ->
     let var = Value_var.fresh ~loc ~name:"match_" () in
     let match_expr = Pattern_matching.compile_matching var eqs in
-    let match_expr = if mut then destruct_mut_let_in match_expr else match_expr in
+    let match_expr =
+      if mut then destruct_mut_let_in match_expr else match_expr
+    in
     E_let_in
       { let_binder = Binder.make var matchee_type
       ; rhs = matchee
       ; let_result = { match_expr with location = loc }
-      ; attributes = Option.value attributes ~default:default_attr
+      ; attributes =
+          Option.value attributes ~default:O.ValueAttr.default_attributes
       }
 
 
@@ -193,11 +219,12 @@ and destruct_mut_let_in : O.expression -> O.expression =
             { let_binder = b
             ; rhs = O.e_variable (Binder.get_var b) (Binder.get_ascr b)
             ; let_result = acc
-            ; attributes = default_attr
+            ; attributes = O.ValueAttr.default_attributes
             })
         ~init:case.body
     in
-    return (O.E_matching { prod_case with cases = O.Match_record { case with body } })
+    return
+      (O.E_matching { prod_case with cases = O.Match_record { case with body } })
   | O.E_matching ({ cases = O.Match_variant sums; _ } as sum_case) ->
     let cases =
       List.map sums.cases ~f:(fun (O.{ pattern; body; constructor } as x) ->
@@ -205,9 +232,15 @@ and destruct_mut_let_in : O.expression -> O.expression =
           let b = Binder.make pattern ty in
           let body =
             O.e_a_let_mut_in
-              { let_binder = b; rhs = O.e_variable pattern ty; let_result = body; attributes = default_attr }
+              { let_binder = b
+              ; rhs = O.e_variable pattern ty
+              ; let_result = body
+              ; attributes = O.ValueAttr.default_attributes
+              }
           in
           { x with body })
     in
-    return (O.E_matching { sum_case with cases = O.Match_variant { sums with cases } })
+    return
+      (O.E_matching
+         { sum_case with cases = O.Match_variant { sums with cases } })
   | _ -> failwith "compiling pattern did not result in a matching expression"
