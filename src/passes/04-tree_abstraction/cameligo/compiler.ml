@@ -580,7 +580,7 @@ and compile_pattern ~raise : CST.pattern -> AST.ty_expr option Pattern.t =
     let (pvar,loc) = r_split x in
     let b =
       let var = compile_variable pvar.variable in
-      Binder.make var None
+      Binder.make ~loc var None
     in
     Location.wrap ~loc @@ P_var b
   | CST.PTuple tuple ->
