@@ -104,8 +104,8 @@ let type_expression_annot ppf (te : type_expression) : unit =
   fprintf ppf " : %a" type_expression te
 
 let rec expression ppf (e : expression) =
-  fprintf ppf "%a : %a"
-    expression_content e.expression_content type_expression e.type_expression
+  fprintf ppf "%a"
+    expression_content e.expression_content
 
 and expression_content ppf (ec: expression_content) =
   match ec with
@@ -117,15 +117,15 @@ and expression_content ppf (ec: expression_content) =
   | E_record      m -> Record.pp expression ppf m
   | E_accessor    a -> Types.Accessor.pp    expression ppf a
   | E_update      u -> Types.Update.pp      expression ppf u
-  | E_lambda      l -> Lambda.pp      expression type_expression_annot ppf l
+  | E_lambda      l -> Lambda.pp      expression (fun _ _ -> ()) ppf l
   | E_type_abstraction e -> Type_abs.pp expression ppf e
   | E_matching {matchee ; cases} ->
     fprintf ppf "@[<v 2> match @[%a@] with@ %a@]" expression matchee (matching expression) cases
-  | E_recursive  r -> Recursive.pp expression type_expression_annot ppf r
+  | E_recursive  r -> Recursive.pp expression (fun _ _ -> ()) ppf r
   | E_let_in x when x.attributes.hidden ->
       fprintf ppf "@[<h>%a@]" expression x.let_result
   | E_let_in x ->
-    Let_in.pp expression type_expression_annot ppf x
+    Let_in.pp expression (fun _ _ -> ()) ppf x
   | E_raw_code   r -> Raw_code.pp   expression ppf r
   | E_type_inst ti -> type_inst ppf ti
   | E_let_mut_in x ->
@@ -158,5 +158,5 @@ and matching : (formatter -> expression -> unit) -> _ -> matching_expr -> unit =
   | Match_record {fields ; body ; tv = _} ->
       (* let with_annots f g ppf (a , b) = fprintf ppf "%a:%a" f a g b in *)
       fprintf ppf "| @[%a@] ->@ @[%a@]"
-        (tuple_or_record_sep_expr (Binder.pp type_expression_annot)) fields
+        (tuple_or_record_sep_expr (Binder.pp (fun _ _ -> ()))) fields
         f body
