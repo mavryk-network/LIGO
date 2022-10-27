@@ -437,6 +437,10 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_bad [ "compile" ; "contract" ; (test "unresolved/contract2.mligo") ] ;
   [%expect{xxx|
+    File "./unresolved/contract2.mligo", line 1, characters 18-19:
+      1 | let one (type a) (_ : a) = 1n
+      2 |
+
     Underspecified type list (^gen#492) -> nat.
     Please add additional annotations. |xxx}]
 
