@@ -7727,8 +7727,8 @@
       ],
       "devDependencies": []
     },
-    "@opam/conf-g++@opam:1.0@ebf1726c": {
-      "id": "@opam/conf-g++@opam:1.0@ebf1726c",
+    "@opam/conf-g++@opam:1.0@347b1b6a": {
+      "id": "@opam/conf-g++@opam:1.0@347b1b6a",
       "name": "@opam/conf-g++",
       "version": "opam:1.0",
       "source": {
@@ -7740,7 +7740,12 @@
           "path": "esy.lock/opam/conf-g++.1.0"
         }
       },
-      "overrides": [],
+      "overrides": [
+        {
+          "opamoverride":
+            "esy.lock/overrides/opam__s__conf_g++_opam__c__1.0_opam_override"
+        }
+      ],
       "dependencies": [ "@esy-ocaml/substs@0.0.1@d41d8cd9" ],
       "devDependencies": []
     },
@@ -8036,7 +8041,7 @@
         "@opam/dune-configurator@opam:3.5.0@5f776796",
         "@opam/dune@opam:3.4.1@435f4e65",
         "@opam/conf-pkg-config@opam:2@85f8644d",
-        "@opam/conf-gmp@opam:3@a623586f", "@opam/conf-g++@opam:1.0@ebf1726c",
+        "@opam/conf-gmp@opam:3@a623586f", "@opam/conf-g++@opam:1.0@347b1b6a",
         "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": [
@@ -8045,7 +8050,7 @@
         "@opam/dune-configurator@opam:3.5.0@5f776796",
         "@opam/dune@opam:3.4.1@435f4e65",
         "@opam/conf-pkg-config@opam:2@85f8644d",
-        "@opam/conf-gmp@opam:3@a623586f", "@opam/conf-g++@opam:1.0@ebf1726c"
+        "@opam/conf-gmp@opam:3@a623586f", "@opam/conf-g++@opam:1.0@347b1b6a"
       ]
     },
     "@opam/chrome-trace@opam:3.5.0@845aba37": {
