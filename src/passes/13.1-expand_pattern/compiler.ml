@@ -23,6 +23,16 @@ let rec compile_expression : I.expression -> O.expression =
   | E_matching { matchee; cases } ->
     let matchee = self matchee in
     compile_matching ~loc:exp.location ~mut:false matchee cases
+  | E_let_in
+    { let_binder = { wrap_content = P_var let_binder; _ }
+    ; rhs
+    ; let_result
+    ; attributes
+    } ->
+    (* if lhs is a simple pattern, we do not bother executing Pattern_matching *)
+    let rhs = self rhs in
+    let let_result = self let_result in
+    return (O.E_let_in { let_binder; rhs; let_result; attributes })
   | E_let_in { let_binder; rhs; let_result; attributes } ->
     let matchee = self rhs in
     compile_matching

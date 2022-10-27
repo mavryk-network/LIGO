@@ -177,12 +177,25 @@ and get_fv_module (env:env) acc = function
     | None ->
       get_fv_module env acc tl
   )
+  | ({Location.wrap_content = D_pattern {pattern; expr;attr}; _} as hd) :: tl ->
+    let binders = List.filter (Pattern.binders pattern) ~f:(fun binder' -> VVarSet.mem (Binder.get_var binder') env.used_var) in
+    if (List.is_empty binders) then
+      get_fv_module env acc tl
+    else
+      let env =
+        List.fold binders ~init:env ~f:(fun env binder' ->
+        {env with used_var = VVarSet.remove (Binder.get_var binder') env.used_var})
+      in
+      let env',expr = get_fv expr in
+      let env = merge_env env @@ env' in
+      get_fv_module env ({hd with wrap_content = D_pattern {pattern;expr;attr}} :: acc) tl   
   | hd :: tl ->
     get_fv_module env (hd :: acc) tl
 
 and get_fv_module_expr env x =
   match x.wrap_content with
   | M_struct prg -> (
+    (* TODO: user [get_fv_program] & removed [get_fv_module] *)
     let new_env,prg = get_fv_module env [] @@ List.rev prg in
     new_env, { x with wrap_content = M_struct prg }
   )
