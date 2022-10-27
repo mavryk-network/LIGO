@@ -776,14 +776,14 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_bad ["run";"test" ; bad_test "test_failure1.mligo" ] ;
   [%expect {|
-    File "../../test/contracts/negative//interpreter_tests/test_failure1.mligo", line 1, character 0 to line 2, character 25:
+    File "../../test/contracts/negative//interpreter_tests/test_failure1.mligo", line 2, characters 2-25:
       1 | let test : unit =
       2 |   failwith "I am failing"
 
     You are using Michelson failwith primitive (loaded from standard library).
     Consider using `Test.failwith` for throwing a testing framework failure.
 
-    File "../../test/contracts/negative//interpreter_tests/test_failure1.mligo", line 1, character 0 to line 2, character 25:
+    File "../../test/contracts/negative//interpreter_tests/test_failure1.mligo", line 2, characters 2-25:
       1 | let test : unit =
       2 |   failwith "I am failing"
 
@@ -871,16 +871,14 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_bad [ "run" ; "test" ; bad_test "test_mutation_loop.mligo" ; "--steps" ; "1000" ] ;
   [%expect {|
-    File "../../test/contracts/negative//interpreter_tests/test_mutation_loop.mligo", line 17, character 28 to line 18, character 83:
-     16 |     | None -> ()
+    File "../../test/contracts/negative//interpreter_tests/test_mutation_loop.mligo", line 18, characters 36-83:
      17 |     | Some (_, mutation) -> let () = Test.log(mutation) in
      18 |                                     failwith "Some mutation also passes the tests!"
 
     You are using Michelson failwith primitive (loaded from standard library).
     Consider using `Test.failwith` for throwing a testing framework failure.
 
-    File "../../test/contracts/negative//interpreter_tests/test_mutation_loop.mligo", line 17, character 28 to line 18, character 83:
-     16 |     | None -> ()
+    File "../../test/contracts/negative//interpreter_tests/test_mutation_loop.mligo", line 18, characters 36-83:
      17 |     | Some (_, mutation) -> let () = Test.log(mutation) in
      18 |                                     failwith "Some mutation also passes the tests!"
 

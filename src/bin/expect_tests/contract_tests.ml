@@ -1938,7 +1938,7 @@ let%expect_test _ =
       1 | let x = (Bytes.unpack (Bytes.pack "hello") : string)
 
     Invalid type(s)
-    Cannot unify option (^gen#491) with string. |}]
+    Cannot unify option (^gen#489) with string. |}]
 
 (* check annotations' capitalization *)
 let%expect_test _ =
@@ -2152,20 +2152,20 @@ let%expect_test _ =
              LAMBDA
                unit
                unit
-               { { /* x#9 */ } }
+               { { /* x#16 */ } }
              /* File "../../test/contracts/noop.mligo", line 2, characters 9-10 */ ;
-             { /* f#8, _ */ } ;
+             { /* f#15, _ */ } ;
              SWAP ;
              DUP 2 ;
              SWAP ;
              EXEC ;
-             { /* s2#10, f#8 */ } ;
+             { /* s2#17, f#15 */ } ;
              DUP 2 ;
              SWAP ;
              EXEC ;
-             { /* s3#11, f#8 */ } ;
+             { /* s3#18, f#15 */ } ;
              EXEC ;
-             { /* s#12 */ } ;
+             { /* s#19 */ } ;
              NIL operation
                  /* File "../../test/contracts/noop.mligo", line 6, characters 3-24 */
              /* File "../../test/contracts/noop.mligo", line 6, characters 3-24 */ ;
@@ -2416,17 +2416,17 @@ let%expect_test _ =
                     "stop":
                       { "file": "../../test/contracts/noop.mligo", "line": "2",
                         "col": "10" } } }, {}, {}, {},
-              { "environment": [ { "name": "x#9", "source_type": "3" } ] },
+              { "environment": [ { "name": "x#16", "source_type": "3" } ] },
               { "environment":
-                  [ { "name": "f#8", "source_type": "4" },
+                  [ { "name": "f#15", "source_type": "4" },
                     { "source_type": "3" } ] }, {}, {}, {}, {}, {},
               { "environment":
-                  [ { "name": "s2#10", "source_type": "0" },
-                    { "name": "f#8", "source_type": "4" } ] }, {}, {}, {}, {},
+                  [ { "name": "s2#17", "source_type": "0" },
+                    { "name": "f#15", "source_type": "4" } ] }, {}, {}, {}, {},
               { "environment":
-                  [ { "name": "s3#11", "source_type": "1" },
-                    { "name": "f#8", "source_type": "4" } ] }, {},
-              { "environment": [ { "name": "s#12", "source_type": "2" } ] },
+                  [ { "name": "s3#18", "source_type": "1" },
+                    { "name": "f#15", "source_type": "4" } ] }, {},
+              { "environment": [ { "name": "s#19", "source_type": "2" } ] },
               { "location":
                   { "start":
                       { "file": "../../test/contracts/noop.mligo", "line": "6",
