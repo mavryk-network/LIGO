@@ -489,7 +489,7 @@ const proxy_originate_contract :
       (p : [[vt , nat] , option<address>]) => {
         let [p,_] = p;
         let [v,amt] = p ;
-        let init_storage : whole_s = mk_storage (Tezos.create_ticket (v, amt)) ;
+        const init_storage : whole_s = mk_storage (Tezos.create_ticket (v, amt)) ;
         let [op,addr] = Tezos.create_contract(main, (None () as option<key_hash>), (0 as mutez), init_storage) ;
         return ([list([op]), Some(addr)])
   };
