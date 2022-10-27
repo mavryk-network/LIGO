@@ -468,10 +468,10 @@ let rec compile_expression ~raise : CST.expr -> AST.expr = fun e ->
     match args, type_params with
     | [], None when not (is_e_lambda let_rhs) ->
       let matchee = match rhs_type with
-        | Some t -> (e_annotation let_rhs t)
+        | Some t -> (e_annotation ~loc:let_rhs.location let_rhs t)
         | None -> (
           match unepar pattern with
-          | CST.PUnit _ -> (e_annotation let_rhs (AST.t_unit ()))
+          | CST.PUnit _ -> (e_annotation ~loc:let_rhs.location let_rhs (AST.t_unit ()))
           | _ -> let_rhs
         )
       in
