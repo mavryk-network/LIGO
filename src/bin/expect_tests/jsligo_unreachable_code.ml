@@ -28,13 +28,13 @@ let%expect_test _ =
      38 |     default:
 
     Warning: Unreachable code.
-    File "../../test/contracts/jsligo_unreachable_code.jsligo", line 18, characters 8-73:
+    File "../../test/contracts/jsligo_unreachable_code.jsligo", line 18, characters 13-73:
      17 |     return "b";
      18 |     let _x = "Unreachable post-return code that should trigger a warning";
      19 |   }
 
     Warning: Unreachable code.
-    File "../../test/contracts/jsligo_unreachable_code.jsligo", line 9, characters 6-71:
+    File "../../test/contracts/jsligo_unreachable_code.jsligo", line 9, characters 11-71:
       8 |   return "end";
       9 |   let _x = "Unreachable post-return code that should trigger a warning";
      10 | }

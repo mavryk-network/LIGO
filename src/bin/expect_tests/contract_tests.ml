@@ -1218,41 +1218,16 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_bad [ "compile" ; "contract" ; bad_contract "create_contract_toplevel.mligo" ] ;
   [%expect {|
-File "../../test/contracts/negative/create_contract_toplevel.mligo", line 5, characters 10-11:
+File "../../test/contracts/negative/create_contract_toplevel.mligo", line 4, character 35 to line 8, character 8:
+  3 | let main (_, store : string * string) : return =
   4 |   let toto : operation * address = Tezos.create_contract
-  5 |     (fun (p, s : nat * string) -> (([] : operation list), store))
-  6 |     (None: key_hash option)
-:
-Warning: unused variable "p".
-Hint: replace it by "_p" to prevent this warning.
-
-File "../../test/contracts/negative/create_contract_toplevel.mligo", line 5, characters 13-14:
-  4 |   let toto : operation * address = Tezos.create_contract
-  5 |     (fun (p, s : nat * string) -> (([] : operation list), store))
-  6 |     (None: key_hash option)
-:
-Warning: unused variable "s".
-Hint: replace it by "_s" to prevent this warning.
-
-File "../../test/contracts/negative/create_contract_toplevel.mligo", line 3, characters 10-16:
-  2 |
-  3 | let main (action, store : string * string) : return =
-  4 |   let toto : operation * address = Tezos.create_contract
-:
-Warning: unused variable "action".
-Hint: replace it by "_action" to prevent this warning.
-
-File "../../test/contracts/negative/create_contract_toplevel.mligo", line 4, character 2 to line 10, character 19:
-  3 | let main (action, store : string * string) : return =
-  4 |   let toto : operation * address = Tezos.create_contract
-  5 |     (fun (p, s : nat * string) -> (([] : operation list), store))
+  5 |     (fun (_p, _s : nat * string) -> (([] : operation list), store))
   6 |     (None: key_hash option)
   7 |     300tz
   8 |     "un"
   9 |   in
- 10 |   ([toto.0], store)
 
-Not all free variables could be inlined in Tezos.create_contract usage: gen#24. |}] ;
+Not all free variables could be inlined in Tezos.create_contract usage: gen#35. |}] ;
 
   run_ligo_good [ "compile" ; "contract" ; contract "create_contract_var.mligo" ] ;
   [%expect{|
@@ -1324,7 +1299,7 @@ Not all free variables could be inlined in Tezos.create_contract usage: gen#24. 
     Warning: unused variable "action".
     Hint: replace it by "_action" to prevent this warning.
 
-    File "../../test/contracts/negative/create_contract_modfv.mligo", line 7, character 2 to line 13, character 19:
+    File "../../test/contracts/negative/create_contract_modfv.mligo", line 7, character 35 to line 11, character 8:
       6 |   end in
       7 |   let toto : operation * address = Tezos.create_contract
       8 |     (fun (p, s : nat * string) -> (([] : operation list), Foo.store))
@@ -1332,9 +1307,8 @@ Not all free variables could be inlined in Tezos.create_contract usage: gen#24. 
      10 |     300tz
      11 |     "un"
      12 |   in
-     13 |   ([toto.0], store)
 
-    Not all free variables could be inlined in Tezos.create_contract usage: gen#26. |}] ;
+    Not all free variables could be inlined in Tezos.create_contract usage: gen#37. |}] ;
 
   run_ligo_bad [ "compile" ; "contract" ; bad_contract "create_contract_no_inline.mligo" ] ;
   [%expect{|
@@ -1383,7 +1357,7 @@ Not all free variables could be inlined in Tezos.create_contract usage: gen#24. 
       9 |   let (op, addr) = Tezos.create_contract dummy_contract ((None: key_hash option)) 300tz 1 in
      10 |   let toto : operation list = [ op ] in
 
-    Not all free variables could be inlined in Tezos.create_contract usage: foo#35. |}] ;
+    Not all free variables could be inlined in Tezos.create_contract usage: foo#45. |}] ;
 
   run_ligo_good [ "compile" ; "contract" ; contract "create_contract.mligo" ] ;
   [%expect{|
@@ -1485,7 +1459,7 @@ let%expect_test _ =
     Warning: unused variable "p".
     Hint: replace it by "_p" to prevent this warning.
 
-    File "../../test/contracts/self_type_annotation_warn.ligo", line 8, characters 4-64:
+    File "../../test/contracts/self_type_annotation_warn.ligo", line 8, characters 41-64:
       7 |   {
       8 |     const self_contract: contract(int) = Tezos.self ("%default");
       9 |   }
@@ -1628,7 +1602,7 @@ File "../../test/contracts/negative/self_bad_entrypoint_format.ligo", line 6, ch
 Warning: unused variable "p".
 Hint: replace it by "_p" to prevent this warning.
 
-File "../../test/contracts/negative/self_bad_entrypoint_format.ligo", line 8, characters 4-59:
+File "../../test/contracts/negative/self_bad_entrypoint_format.ligo", line 8, characters 41-59:
   7 |   {
   8 |     const self_contract: contract(int) = Tezos.self("Toto") ;
   9 |     const op : operation = Tezos.transaction (2, 300tz, self_contract) ;
