@@ -49,15 +49,15 @@
       "@opam/ocaml-lsp-server": "*"
     },
     "resolutions": {
-      "@opam/tezos-014-PtKathma-test-helpers": "./vendors/tezos-ligo/opam/tezos-014-PtKathma-test-helpers.opam",
-      "@opam/tezos-base": "./vendors/tezos-ligo/opam/tezos-base.opam",
-      "@opam/tezos-client-014-PtKathma": "./vendors/tezos-ligo/opam/tezos-client-014-PtKathma.opam",
-      "@opam/tezos-client-base": "./vendors/tezos-ligo/opam/tezos-client-base.opam",
-      "@opam/tezos-client-base-unix": "./vendors/tezos-ligo/opam/tezos-client-base-unix.opam",
-      "@opam/tezos-client-commands": "./vendors/tezos-ligo/opam/tezos-client-commands.opam",
-      "@opam/tezos-context": "./vendors/tezos-ligo/opam/tezos-context.opam",
+      "@opam/tezos-014-PtKathma-test-helpers": "./vendors/tezos-ligo",
+      "@opam/tezos-base": "./vendors/tezos-ligo",
+      "@opam/tezos-client-014-PtKathma": "./vendors/tezos-ligo",
+      "@opam/tezos-client-base": "./vendors/tezos-ligo",
+      "@opam/tezos-client-base-unix": "./vendors/tezos-ligo",
+      "@opam/tezos-client-commands": "./vendors/tezos-ligo",
+      "@opam/tezos-context": "./vendors/tezos-ligo",
       "@opam/tezos-crypto": {
-        "source": "./vendors/tezos-ligo/opam/tezos-crypto.opam",
+        "source": "./vendors/tezos-ligo",
         "override": {
           "dependencies": {
             "@opam/tezos-error-monad": "*"
@@ -66,7 +66,7 @@
       },
 
       "@opam/tezos-error-monad": {
-        "source": "./vendors/tezos-ligo/opam/tezos-error-monad.opam",
+        "source": "./vendors/tezos-ligo",
         "override": {
           "dependencies": {
             "@opam/tezos-lwt-result-stdlib": "*"
@@ -75,7 +75,7 @@
       },
 
       "@opam/tezos-event-logging": {
-        "source": "./vendors/tezos-ligo/opam/tezos-event-logging.opam",
+        "source": "./vendors/tezos-ligo",
         "override": {
           "dependencies": {
             "@opam/tezos-error-monad": "*",
@@ -84,18 +84,18 @@
         }
       },
 
-      "@opam/tezos-hacl": "./vendors/tezos-ligo/opam/tezos-hacl.opam",
-      "@opam/tezos-lwt-result-stdlib": "./vendors/tezos-ligo/opam/tezos-lwt-result-stdlib.opam",
-      "@opam/tezos-micheline": "./vendors/tezos-ligo/opam/tezos-micheline.opam",
-      "@opam/tezos-mockup": "./vendors/tezos-ligo/opam/tezos-mockup.opam",
-      "@opam/tezos-mockup-commands": "./vendors/tezos-ligo/opam/tezos-mockup-commands.opam",
-      "@opam/tezos-mockup-proxy": "./vendors/tezos-ligo/opam/tezos-mockup-proxy.opam",
-      "@opam/tezos-mockup-registration": "./vendors/tezos-ligo/opam/tezos-mockup-registration.opam",
-      "@opam/tezos-p2p": "./vendors/tezos-ligo/opam/tezos-p2p.opam",
-      "@opam/tezos-p2p-services": "./vendors/tezos-ligo/opam/tezos-p2p-services.opam",
+      "@opam/tezos-hacl": "./vendors/tezos-ligo",
+      "@opam/tezos-lwt-result-stdlib": "./vendors/tezos-ligo",
+      "@opam/tezos-micheline": "./vendors/tezos-ligo",
+      "@opam/tezos-mockup": "./vendors/tezos-ligo",
+      "@opam/tezos-mockup-commands": "./vendors/tezos-ligo",
+      "@opam/tezos-mockup-proxy": "./vendors/tezos-ligo",
+      "@opam/tezos-mockup-registration": "./vendors/tezos-ligo",
+      "@opam/tezos-p2p": "./vendors/tezos-ligo",
+      "@opam/tezos-p2p-services": "./vendors/tezos-ligo",
 
       "@opam/tezos-protocol-014-PtKathma": {
-        "source": "./vendors/tezos-ligo/opam/tezos-protocol-014-PtKathma.opam",
+        "source": "./vendors/tezos-ligo",
         "override": {
           "buildEnvOverride": {
             "LD_LIBRARY_PATH": "#{@opam/hacl-star-raw.lib / 'hacl-star-raw' : $LD_LIBRARY_PATH}",
@@ -125,7 +125,7 @@
         }
       },
 
-      "@opam/tezos-protocol-compiler": "./vendors/tezos-ligo/opam/tezos-protocol-compiler.opam",
+      "@opam/tezos-protocol-compiler": "./vendors/tezos-ligo",
       "see-if-its-useful-later-@opam/tezos-protocol-compiler": {
         "source": "./vendors/tezos-ligo/src/lib_protocol_compiler/tezos-protocol-compiler.opam",
         "override": {
@@ -136,15 +136,15 @@
         }
       },
 
-      "@opam/tezos-protocol-environment": "./vendors/tezos-ligo/opam/tezos-protocol-environment.opam",
-      "@opam/tezos-protocol-plugin-014-PtKathma": "./vendors/tezos-ligo/opam/tezos-protocol-plugin-014-PtKathma.opam",
-      "@opam/tezos-proxy": "./vendors/tezos-ligo/opam/tezos-proxy.opam",
-      "@opam/tezos-rpc": "./vendors/tezos-ligo/opam/tezos-rpc.opam",
-      "@opam/tezos-rpc-http": "./vendors/tezos-ligo/opam/tezos-rpc-http.opam",
-      "@opam/tezos-rpc-http-client": "./vendors/tezos-ligo/opam/tezos-rpc-http-client.opam",
-      "@opam/tezos-rpc-http-client-unix": "./vendors/tezos-ligo/opam/tezos-rpc-http-client-unix.opam",
+      "@opam/tezos-protocol-environment": "./vendors/tezos-ligo",
+      "@opam/tezos-protocol-plugin-014-PtKathma": "./vendors/tezos-ligo",
+      "@opam/tezos-proxy": "./vendors/tezos-ligo",
+      "@opam/tezos-rpc": "./vendors/tezos-ligo",
+      "@opam/tezos-rpc-http": "./vendors/tezos-ligo",
+      "@opam/tezos-rpc-http-client": "./vendors/tezos-ligo",
+      "@opam/tezos-rpc-http-client-unix": "./vendors/tezos-ligo",
       "@opam/tezos-sapling": {
-        "source": "./vendors/tezos-ligo/opam/tezos-sapling.opam",
+        "source": "./vendors/tezos-ligo",
         "override": {
           "buildEnvOverride": {
             "OPAM_SWITCH_PREFIX": "#{ @opam/tezos-rust-libs.install }"
@@ -159,20 +159,20 @@
         }
       },
 
-      "@opam/tezos-shell-services": "./vendors/tezos-ligo/opam/tezos-shell-services.opam",
-      "@opam/tezos-signer-backends": "./vendors/tezos-ligo/opam/tezos-signer-backends.opam",
-      "@opam/tezos-signer-services": "./vendors/tezos-ligo/opam/tezos-signer-services.opam",
-      "@opam/tezos-stdlib": "./vendors/tezos-ligo/opam/tezos-stdlib.opam",
+      "@opam/tezos-shell-services": "./vendors/tezos-ligo",
+      "@opam/tezos-signer-backends": "./vendors/tezos-ligo",
+      "@opam/tezos-signer-services": "./vendors/tezos-ligo",
+      "@opam/tezos-stdlib": "./vendors/tezos-ligo",
       "@opam/tezos-stdlib-unix": {
-        "source": "./vendors/tezos-ligo/opam/tezos-stdlib-unix.opam",
+        "source": "./vendors/tezos-ligo",
         "override": {
           "dependencies": {}
         }
       },
 
-      "@opam/tezos-test-helpers": "./vendors/tezos-ligo/opam/tezos-test-helpers.opam",
-      "@opam/tezos-version": "./vendors/tezos-ligo/opam/tezos-version.opam",
-      "@opam/tezos-workers": "./vendors/tezos-ligo/opam/tezos-workers.opam",
+      "@opam/tezos-test-helpers": "./vendors/tezos-ligo",
+      "@opam/tezos-version": "./vendors/tezos-ligo",
+      "@opam/tezos-workers": "./vendors/tezos-ligo",
       "@opam/ocaml-recovery-parser": "git+https://github.com/serokell/ocaml-recovery-parser.git:ocaml-recovery-parser.opam#e05c872d1a0e8074940d995b57556121eddbf0f2",
 
       "@opam/ctypes": {
@@ -262,7 +262,7 @@
       "libtool": "ManasJayanth/esy-libtool:esy.json#d6725b52f8d021539e92d182d29979951e706836",
       "@opam/linenoise": "DiningPhilosophersCo/ocaml-linenoise:linenoise.opam#1ba074f9bedbaa46280146d834b49064e4722695",
       "@opam/tezos-scoru-wasm": {
-        "source": "./vendors/tezos-ligo/opam/tezos-scoru-wasm.opam",
+        "source": "./vendors/tezos-ligo",
         "override": {
           "dependencies": {
             "@opam/tezos-lwt-result-stdlib": "*"
@@ -271,7 +271,7 @@
       },
       "@opam/semver": "callistonianembrace/ocaml-semver:semver.opam#bf23370adb1cdf8efa60c19fe6e1ff195ee1f2ae",
       "@opam/tezos-webassembly-interpreter": {
-        "source": "./vendors/tezos-ligo/opam/tezos-webassembly-interpreter.opam",
+        "source": "./vendors/tezos-ligo",
         "override": {
           "dependencies": {
             "@opam/tezos-lwt-result-stdlib": "*"
@@ -279,7 +279,7 @@
         }
       },
       "@opam/tezos-clic": {
-        "source": "./vendors/tezos-ligo/opam/tezos-clic.opam",
+        "source": "./vendors/tezos-ligo",
         "override": {
           "dependencies": {
             "@opam/tezos-lwt-result-stdlib": "*"
