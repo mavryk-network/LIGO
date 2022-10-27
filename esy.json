@@ -269,7 +269,7 @@
           }
         }
       },
-      "@opam/semver": "callistonianembrace/semver:semver.opam#316caec0692c0f6a8756ef6b25ed13c8a91c8d34",
+      "@opam/semver": "callistonianembrace/ocaml-semver:semver.opam#316caec0692c0f6a8756ef6b25ed13c8a91c8d34",
       "@opam/tezos-webassembly-interpreter": {
         "source": "./vendors/tezos-ligo/opam/tezos-webassembly-interpreter.opam",
         "override": {
