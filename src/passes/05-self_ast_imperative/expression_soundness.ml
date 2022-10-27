@@ -5,6 +5,9 @@ open Ast_imperative
 open Errors
 open Simple_utils.Trace
 
+let is_pattern_linear p =
+  List.contains_dup ~compare:(Binder.compare_var) (Pattern.binders p)
+
 let check_linearity_record_fields ~raise : expression -> unit = fun exp ->
   match exp.expression_content with
   | E_record x ->
@@ -14,31 +17,37 @@ let check_linearity_record_fields ~raise : expression -> unit = fun exp ->
 
 let check_linearity_patterns ~raise : expression -> unit = fun exp ->
   match exp.expression_content with
+  | E_let_in {let_binder;_}
+  | E_let_mut_in {let_binder;_} ->
+    if is_pattern_linear let_binder
+    then raise.error (non_linear_pattern let_binder)
+    else ()
   | E_matching x ->
     let _patterns = List.map ~f:(fun x -> x.pattern) x.cases in
-    let rec aux : Value_var.t list -> type_expression option Pattern.t -> Value_var.t list = fun vlst p ->
-      match p.wrap_content with
-      | P_var (x : type_expression option Binder.t) -> Binder.get_var x::vlst
-      | P_unit -> vlst
-      | P_variant (_,p) -> aux vlst p
-      | P_list (Cons (p1,p2)) ->
-        List.fold ~init:vlst ~f:aux [p1;p2]
-      | P_list (List lst) | P_tuple lst ->
-        List.fold ~init:vlst ~f:aux lst
-      | P_record lps -> Label.Assoc.fold lps ~f:aux ~init:vlst  
-    in
     List.iter _patterns
       ~f:(fun p ->
-        let lst = aux [] p in
-        if List.contains_dup ~compare:Value_var.compare lst then raise.error (non_linear_pattern p)
+        if is_pattern_linear p then raise.error (non_linear_pattern p)
       )
   | _ -> ()
 
-let checks_linearity : raise:([<Errors.self_ast_imperative_error],_) Trace.raise -> expression -> unit =
-  fun ~raise x ->
+let checks_linearity ~raise : expression -> unit =
+  fun x ->
     check_linearity_record_fields ~raise x;
     check_linearity_patterns ~raise x;
     ()
 
+let linearity_prg ~raise : program -> program =
+  fun x ->
+    let f : declaration -> unit = fun x ->
+      match x.wrap_content with
+      | D_pattern { pattern; expr; attr } ->
+        if is_pattern_linear pattern
+        then ()
+        else raise.error (non_linear_pattern pattern)
+      | D_value _ | D_type _ | D_module _ -> ()
+    in
+    let _ : unit list = List.map ~f x in
+    x
 
-let linearity ~(raise:([<Errors.self_ast_imperative_error],_) Trace.raise) m = (fun x -> checks_linearity ~raise x ; x) m
+
+let linearity ~raise m = (fun x -> checks_linearity ~raise x ; x) m
