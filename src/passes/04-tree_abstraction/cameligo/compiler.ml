@@ -575,7 +575,7 @@ and compile_pattern ~raise : CST.pattern -> AST.ty_expr option Pattern.t =
     in
     let loc = Location.lift region in
     Location.wrap ~loc @@ P_var b
-  | CST.PVar { region; value = { variable ; attributes = _todo } } ->
+  | CST.PVar { region = _ ; value = { variable ; attributes = _todo } } ->
     let b =
       let var = compile_variable variable in
       Binder.make var None
