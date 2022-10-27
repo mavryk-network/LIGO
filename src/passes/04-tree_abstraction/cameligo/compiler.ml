@@ -569,20 +569,18 @@ and compile_pattern ~raise : CST.pattern -> AST.ty_expr option Pattern.t =
   let open Pattern in
   match unepar p with
   | CST.PTyped  { region ; value = { pattern = CST.PVar x ; type_expr ; _} } ->
-    let (pvar,loc) = r_split x in
     let b =
-      let var = compile_variable pvar.variable in
-      Binder.make ~loc var (Some (compile_type_expression ~raise type_expr))
+      let var = compile_variable { x.value.variable with region = region } in
+      Binder.make var (Some (compile_type_expression ~raise type_expr))
     in
     let loc = Location.lift region in
     Location.wrap ~loc @@ P_var b
-  | CST.PVar x ->
-    let (pvar,loc) = r_split x in
+  | CST.PVar { region; value = { variable ; attributes = _todo } } ->
     let b =
-      let var = compile_variable pvar.variable in
-      Binder.make ~loc var None
+      let var = compile_variable variable in
+      Binder.make var None
     in
-    Location.wrap ~loc @@ P_var b
+    Location.wrap ~loc:(Binder.get_loc b) @@ P_var b
   | CST.PTuple tuple ->
     let (tuple, loc) = r_split tuple in
     let lst = npseq_to_ne_list tuple in
@@ -721,7 +719,7 @@ and compile_binder ~raise : CST.pattern -> _ Binder.t * (_ -> _) =
       ((field_name,binder)::binder_lst,fun_ <@ fun_')
     in
     let binder_lst, fun_ = List.fold_right ~f:aux ~init:([],fun e -> e) @@ npseq_to_list record.ne_elements in
-    let expr = fun expr -> e_matching_record ~loc (e_variable var) binder_lst @@ fun_ expr in
+    let expr = fun expr -> e_matching_record ~loc (e_variable ~loc:(Value_var.get_location var) var) binder_lst @@ fun_ expr in
     let ascr = Option.all @@ List.map ~f:(Fn.compose Binder.get_ascr snd) binder_lst in
     let ascr = Option.map ~f:(t_tuple) ascr in
     return ?ascr expr var

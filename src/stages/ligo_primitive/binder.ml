@@ -5,8 +5,8 @@ type 'a t = {
   ascr : 'a ;
   } [@@deriving eq,compare,yojson,hash,fold,map,iter]
 
-let make ?(loc=Simple_utils.Location.generated) var ascr = {
-  var = Var.Value_var.set_location loc var ; ascr 
+let make var ascr = {
+  var ; ascr 
 }
 
 let set_var (b : _ t) (var : Var.Value_var.t) = {b with var}
