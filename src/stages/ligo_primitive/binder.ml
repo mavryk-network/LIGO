@@ -18,6 +18,7 @@ let get_loc (b: 'a t) = Var.Value_var.get_location b.var
 let apply f (b : 'a t) = f b.var
 
 let equal_var (a : 'a t) (b : _ t) = Var.Value_var.equal a.var b.var
+let compare_var (a : 'a t) (b : _ t) = Var.Value_var.compare a.var b.var
 
 
 let fold_map : ('acc -> 'a -> 'acc * 'b) -> 'acc -> 'a t -> 'acc * 'b t
