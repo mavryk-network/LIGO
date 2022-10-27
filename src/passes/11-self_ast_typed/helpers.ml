@@ -331,7 +331,9 @@ let strip_view_annotations : program -> program = fun m ->
     match Location.unwrap x with
     | D_value ( {attr ; _} as decl ) when attr.view ->
       { x with wrap_content = D_value { decl with attr = {attr with view = false} } }
-    | _ -> x
+    | D_pattern ( {attr ; _} as decl ) when attr.view ->
+      { x with wrap_content = D_pattern { decl with attr = {attr with view = false} } }
+    | (D_module _ | D_type _ | D_value _ | D_pattern _ ) -> x
   in
   List.map ~f:aux m
 
