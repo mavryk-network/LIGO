@@ -984,42 +984,57 @@ and compile_val_binding ~raise : CST.attributes -> CST.val_binding Region.reg ->
   fun attributes val_binding region ->
     let CST.{binders; type_params; lhs_type; expr = let_rhs; _} = val_binding.value in
     let attr = compile_attributes attributes in
-    let expr = compile_expression ~raise let_rhs in
     let lhs_type = Option.map ~f:(compile_type_expression ~raise <@ snd) lhs_type in
-    match binders, type_params with
-    | CST.PVar name, _ -> (* function *)
+    let let_rhs' = compile_expression ~raise let_rhs in
+    match binders, let_rhs with
+    | CST.PVar name, EFun _ -> (* function *)
       let fun_binder : Value_var.t = compile_variable name.value.variable in
-      let expr = (match let_rhs with
-        CST.EFun _ ->
-          let lambda = trace_option ~raise (recursion_on_non_function expr.location) @@ get_e_lambda expr.expression_content in
-          let lhs_type = match lhs_type with
-            | Some lhs_type -> Some lhs_type
-            | None ->  Option.map ~f:(Utils.uncurry t_arrow) @@ Option.bind_pair (Param.get_ascr lambda.binder, lambda.output_type)
-          in
-          if is_recursive_lambda fun_binder lambda then
-            let fun_type = trace_option ~raise (untyped_recursive_fun name.region) @@ lhs_type in
-            let Lambda.{binder;result;output_type=_} = lambda in
-            let Arrow.{type1;type2} = get_t_arrow_exn fun_type in
-            let lambda = Lambda.{binder=Param.map (Fn.const type1) binder;result;output_type = type2} in
-            e_recursive ~loc:(Location.lift name.region) fun_binder fun_type lambda
-          else make_e ~loc:(Location.lift name.region) @@ E_lambda lambda
+      let expr =
+        let lambda = trace_option ~raise (recursion_on_non_function let_rhs'.location) @@ get_e_lambda let_rhs'.expression_content in
+        let lhs_type = match lhs_type with
+          | Some lhs_type -> Some lhs_type
+          | None ->  Option.map ~f:(Utils.uncurry t_arrow) @@ Option.bind_pair (Param.get_ascr lambda.binder, lambda.output_type)
+        in
+        if is_recursive_lambda fun_binder lambda then
+          let fun_type = trace_option ~raise (untyped_recursive_fun name.region) @@ lhs_type in
+          let Lambda.{binder;result;output_type=_} = lambda in
+          let Arrow.{type1;type2} = get_t_arrow_exn fun_type in
+          let lambda = Lambda.{binder=Param.map (Fn.const type1) binder;result;output_type = type2} in
+          e_recursive ~loc:(Location.lift name.region) fun_binder fun_type lambda
+        else make_e ~loc:(Location.lift name.region) @@ E_lambda lambda
+      in
+      (* This handle polymorphic annotation *)
+      let map_ascr ascr =
+        Option.map ascr ~f:(fun rhs_type ->
+          Option.value_map type_params ~default:rhs_type ~f:(fun tp ->
+          let (tp, loc) = r_split tp in
+          let type_vars = List.Ne.map compile_type_var @@ npseq_to_ne_list tp.inside in
+          List.Ne.fold_right ~f:(fun tvar t -> t_for_all ~loc tvar Type t) ~init:rhs_type type_vars
+        ))
+      in
+      let expr = Option.value_map ~default:expr ~f:(fun tp ->
+        let (tp,loc) = r_split tp in
+        let type_vars = List.Ne.map compile_type_var @@ npseq_to_ne_list tp.inside in
+        List.Ne.fold_right ~f:(fun t e -> e_type_abs ~loc t e) ~init:expr type_vars
+      ) type_params in
+      let binder = Binder.make fun_binder lhs_type in
+      let binder = Binder.map map_ascr binder in
+      (`Fun binder, attr, expr)
+    | p, _ ->
+      let pattern = compile_pattern ~raise p in
+      let expr =
+        match let_rhs with
         | EAssign (EVar _ as v, _, _) -> 
-          e_sequence expr (compile_expression ~raise v)
+          e_sequence let_rhs' (compile_expression ~raise v)
         | EAssign (EProj {value = {expr = proj_expr; selection}; _}, _, _) -> 
           let var = compile_expression ~raise proj_expr in
           let (sels , _) = compile_selection ~raise selection in
-          e_sequence expr (e_accessor ~loc:(Location.lift region) var [sels])
-        | _ -> expr
-        )
+          e_sequence let_rhs' (e_accessor ~loc:(Location.lift region) var [sels])
+        | _ -> let_rhs'
       in
-      let binder = Binder.make fun_binder lhs_type in
-      (`Fun binder, attr, expr)
-    | p, None ->
-      let pattern = compile_pattern ~raise p in
       let expr = Option.value_map lhs_type ~default:expr 
         ~f:(fun ty -> AST.e_ascription ~loc:expr.location {anno_expr = expr ; type_annotation = ty} ()) in
       (`Val pattern, attr, expr)
-    | _ -> raise.error @@ unsupported_pattern_type binders
 
 and compile_let_binding ~raise : CST.attributes -> CST.val_binding Region.reg -> Region.t -> AST.declaration =
   fun attributes val_binding region ->
@@ -1040,16 +1055,7 @@ and compile_let_in_binding ~raise : const:bool -> CST.attributes -> CST.val_bind
       then e_let_in ~loc:rhs.location pattern attr rhs body
       else e_let_mut_in ~loc:rhs.location pattern attr rhs body
     in
-    match rhs.expression_content with
-    (* Assignment transitivity *)
-    | E_assign {binder=assigned_var; _} ->
-      let var =
-        let v = Binder.get_var assigned_var in
-        let loc = Value_var.get_location v in
-        e_variable ~loc v
-      in
-      (fun body -> e_sequence rhs (binding var body))
-    | _ -> (fun body -> binding rhs body)
+    (fun body -> binding rhs body)
 
 and compile_statements ?(wrap=false) ~raise : CST.statements -> statement_result
 = fun statements ->
