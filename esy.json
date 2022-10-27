@@ -190,15 +190,6 @@
       "@opam/crunch": "mirage/ocaml-crunch:crunch.opam#e18888ce1f30ed6559ba977d405af2084812cbca",
       "@opam/core": "opam:v0.14.1",
       "@opam/dune": "opam:3.4.1",
-      "@opam/class_group_vdf": {
-        "version": "opam:0.0.4",
-        "override": {
-          "build": "bash -c 'dune build -p class_group_vdf || dune build -p class_group_vdf'",
-          "dependencies": {
-            "esy-gmp": "*"
-          }
-        }
-      },
       "esy-gmp": "esy-packages/esy-gmp#d687430bc25447529f2d215ca65c21a824cfef92",
       "@opam/terminal_size": "DiningPhilosophersCo/terminal_size:terminal_size.opam#4fa00d7e812a59e669bfc0392d6539252afa5fb",
       "@opam/mtime": {
@@ -278,6 +269,7 @@
           }
         }
       },
+      "@opam/semver": "callistonianembrace/semver:semver.opam#316caec0692c0f6a8756ef6b25ed13c8a91c8d34",
       "@opam/tezos-webassembly-interpreter": {
         "source": "./vendors/tezos-ligo/opam/tezos-webassembly-interpreter.opam",
         "override": {
