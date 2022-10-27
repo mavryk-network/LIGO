@@ -683,8 +683,7 @@ and check_annotation ~raise = function
 and compile_binder ~raise : CST.pattern -> _ Binder.t * (_ -> _) =
   fun pattern ->
   let return ?ascr fun_ var =
-    let loc = Value_var.get_location var in
-    (Binder.make ~loc var ascr, fun_) in
+    (Binder.make var ascr, fun_) in
   let return_1 ?ascr var = return ?ascr (fun e -> e) var in
   match pattern with
     PConstr _ -> raise.error @@ unsupported_pattern_type [pattern]
