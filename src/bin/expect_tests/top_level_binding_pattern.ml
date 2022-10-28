@@ -372,3 +372,24 @@ let%expect_test _ =
              PAIR ;
              NIL operation ;
              PAIR } } |}]
+
+(* Testing *)
+
+let test_ file = test ("top_level_patterns/interpreter/" ^ file)
+
+let%expect_test _ =
+  run_ligo_good [ "run" ; "test" ; test_ "cameligo/nested_record.mligo" ] ;
+  [%expect{|
+    "Once"
+    Everything at the top-level was executed.
+    - test exited with value (). |}]
+
+let%expect_test _ =
+  run_ligo_good [ "run" ; "test" ; test_ "cameligo/nested_tuple.mligo" ] ;
+  [%expect{|
+    "Once"
+    Everything at the top-level was executed.
+    - test exited with value (). |}]
+
+
+(* Negative *)
