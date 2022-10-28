@@ -391,5 +391,32 @@ let%expect_test _ =
     Everything at the top-level was executed.
     - test exited with value (). |}]
 
+let%expect_test _ =
+  run_ligo_good [ "run" ; "test" ; test_ "cameligo/record_tuple.mligo" ] ;
+  [%expect{|
+    "Once"
+    Everything at the top-level was executed.
+    - test exited with value (). |}]
 
+let%expect_test _ =
+  run_ligo_good [ "run" ; "test" ; test_ "cameligo/tuple_record.mligo" ] ;
+  [%expect{|
+    "Once"
+    Everything at the top-level was executed.
+    - test exited with value (). |}]
+    
+let%expect_test _ =
+  run_ligo_good [ "run" ; "test" ; test_ "cameligo/record.mligo" ] ;
+  [%expect{|
+    "Once"
+    Everything at the top-level was executed.
+    - test exited with value (). |}]
+
+let%expect_test _ =
+  run_ligo_good [ "run" ; "test" ; test_ "cameligo/tuple.mligo" ] ;
+  [%expect{|
+    "Once"
+    Everything at the top-level was executed.
+    - test exited with value (). |}]
+    
 (* Negative *)

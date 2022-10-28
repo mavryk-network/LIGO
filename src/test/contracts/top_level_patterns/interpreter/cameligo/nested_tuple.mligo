@@ -1,3 +1,5 @@
+let () = Test.set_print_values ()
+
 let f () = 
     let () = Test.log "Once" in
     ((1n, 1, "H"), (2n, 2, "E"), (3n, 3, "L"))

@@ -1,3 +1,5 @@
+let () = Test.set_print_values ()
+
 type t = { c : nat ; d : int ; e : string }
 type r = { a : t   ; b : t   ; c : t      }
 
