@@ -955,7 +955,7 @@ and merge_statement_results ~raise : statement_result -> statement_result -> sta
   | Return  a, Return x ->         
     raise.warning (`Jsligo_unreachable_code x.location); 
     Return a
-  | Return  a, Expr x ->         
+  | Return  a, Expr x -> 
     raise.warning (`Jsligo_unreachable_code x.location); 
     Return a
   | Return a, Binding b -> 
@@ -1045,15 +1045,17 @@ and compile_let_binding ~raise : CST.attributes -> CST.val_binding Region.reg ->
 
 and compile_let_in_binding ~raise : const:bool -> CST.attributes -> CST.val_binding Region.reg -> Region.t -> (AST.expression -> AST.expression) =
   fun ~const attributes val_binding region ->
+    let loc = Location.r_extract val_binding in
     let (lhs,attr,rhs) = compile_val_binding ~raise attributes val_binding region in
     let binding rhs body =
       let pattern = match lhs with
         | `Fun binder -> Location.wrap ~loc:(Binder.get_loc binder) (Pattern.P_var binder)
-        | `Val pattern -> pattern
+        | `Val pattern ->
+          pattern
       in
       if const
-      then e_let_in ~loc:rhs.location pattern attr rhs body
-      else e_let_mut_in ~loc:rhs.location pattern attr rhs body
+      then e_let_in ~loc pattern attr rhs body
+      else e_let_mut_in ~loc pattern attr rhs body
     in
     (fun body -> binding rhs body)
 
