@@ -26,7 +26,7 @@ top-lvel nested record destructuring Test.log
 top-level record pattern linearity
 *)
 open Cli_expect
-let contract file = test ("top_level_patterns/contracts/" ^ file) 
+let contract file = test ("top_level_patterns/contracts/" ^ file)
 
 let%expect_test _ =
   run_ligo_good [ "compile" ; "contract" ; contract "cameligo/nested_record.mligo" ] ;
@@ -420,3 +420,74 @@ let%expect_test _ =
     - test exited with value (). |}]
     
 (* Negative *)
+
+let contract file = test ("top_level_patterns/negative/" ^ file)
+
+let%expect_test _ =
+  run_ligo_bad [ "compile" ; "contract" ; contract "cameligo/nested_record.mligo" ] ;
+  [%expect{|
+    File "../../test/contracts/top_level_patterns/negative/cameligo/nested_record.mligo", line 8, character 4 to line 11, character 5:
+      7 |         }
+      8 | let { a = { c = c1 ; d = d1 ; e = e1 }
+      9 |     ; b = { c = c2 ; d = d2 ; e = e2 }
+     10 |     ; c = { c = c3 ; d = c1 ; e = e3 }
+     11 |     } = r
+
+    Repeated variable in pattern.
+    Hint: Change the name. |}]
+
+let%expect_test _ =
+  run_ligo_bad [ "compile" ; "contract" ; contract "cameligo/nested_tuple.mligo" ] ;
+  [%expect{|
+    File "../../test/contracts/top_level_patterns/negative/cameligo/nested_tuple.mligo", line 2, characters 5-45:
+      1 | let r = ((1n, 1, "H"), (2n, 2, "E"), (3n, 3, "Hello"))
+      2 | let ((a1, a2, a3), (b1, a2, b3), (c1, c2, c3)) = r
+
+    Repeated variable in pattern.
+    Hint: Change the name. |}]
+
+let%expect_test _ =
+  run_ligo_bad [ "compile" ; "contract" ; contract "cameligo/record.mligo" ] ;
+  [%expect{|
+    File "../../test/contracts/top_level_patterns/negative/cameligo/record.mligo", line 4, characters 4-21:
+      3 | let r = { a = 1n ; b = 1 ; c = "Hello" }
+      4 | let { a ; b = a ; c } = r
+
+    Repeated variable in pattern.
+    Hint: Change the name. |}]
+
+let%expect_test _ =
+  run_ligo_bad [ "compile" ; "contract" ; contract "cameligo/tuple.mligo" ] ;
+  [%expect{|
+    File "../../test/contracts/top_level_patterns/negative/cameligo/tuple.mligo", line 2, characters 5-12:
+      1 | let r = (1n, 1, "Hello")
+      2 | let (a, a, c) = r
+
+    Repeated variable in pattern.
+    Hint: Change the name. |}]
+
+let%expect_test _ =
+  run_ligo_bad [ "compile" ; "contract" ; contract "cameligo/record_tuple.mligo" ] ;
+  [%expect{|
+    File "../../test/contracts/top_level_patterns/negative/cameligo/record_tuple.mligo", line 10, character 4 to line 13, character 5:
+      9 |         }
+     10 | let { a = (a1, a2, a3)
+     11 |     ; b = (b1, a2, b3)
+     12 |     ; c = (c1, c2, c3)
+     13 |     } = r
+
+    Repeated variable in pattern.
+    Hint: Change the name. |}]
+
+let%expect_test _ =
+  run_ligo_bad [ "compile" ; "contract" ; contract "cameligo/tuple_record.mligo" ] ;
+  [%expect{|
+    File "../../test/contracts/top_level_patterns/negative/cameligo/tuple_record.mligo", line 7, character 6 to line 9, character 34:
+      6 |         )
+      7 | let ( { a = a1 ; b = b1 ; c = c1 }
+      8 |     , { a = a2 ; b = b2 ; c = a2 }
+      9 |     , { a = a3 ; b = b3 ; c = c3 }
+     10 |     ) = r
+
+    Repeated variable in pattern.
+    Hint: Change the name. |}]
