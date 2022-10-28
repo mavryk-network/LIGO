@@ -1521,8 +1521,6 @@ and infer_declaration ~(raise : raise) ~options ~ctx (decl : I.declaration)
       let attr = type_value_attr attr in
       let matchee_type = Context.apply ctx matchee_type in
       let ctx, sigs ,pattern = check_pattern ~raise ~ctx ~mut:false pattern matchee_type in
-      (* let ctx, binders, pattern = ignore (pattern,matchee_type,ctx) ; failwith "TODO" in
-      let binders = List.map ~f:(Binder.map (Context.apply ctx)) binders in *)
       if debug then Format.printf "Ctx After Decl: %a\n" Context.pp ctx;
       ( ctx
       , sigs
