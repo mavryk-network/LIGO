@@ -1,4 +1,4 @@
-module AST = Ast_pattern_expanded
+module AST = Ast_expanded
 module Append_tree = Simple_utils.Tree.Append
 module Ligo_string = Simple_utils.Ligo_string
 module Errors = Errors

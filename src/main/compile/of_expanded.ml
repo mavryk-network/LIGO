@@ -1,5 +1,5 @@
 open Simple_utils.Trace
-open Ast_pattern_expanded
+open Ast_expanded
 open Spilling
 open Main_errors
 

@@ -9,7 +9,7 @@ open Simple_utils.Trace
 module Pair = Simple_utils.Pair
 open Errors
 
-module AST = Ast_pattern_expanded
+module AST = Ast_expanded
 module Append_tree = Tree.Append
 open AST.Combinators
 open Mini_c

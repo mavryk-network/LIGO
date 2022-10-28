@@ -1,5 +1,5 @@
 module I = Ast_aggregated
-module O = Ast_pattern_expanded
+module O = Ast_expanded
 open Ligo_prim
 
 (*

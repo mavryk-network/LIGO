@@ -6,7 +6,7 @@
  (libraries
   simple-utils
   tezos-utils
-  ast_pattern_expanded
+  ast_expanded
   mini_c
   self_mini_c
   predefined)

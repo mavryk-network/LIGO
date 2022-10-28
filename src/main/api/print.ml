@@ -90,7 +90,7 @@ let ast_aggregated (raw_options : Raw_options.t) source_file display_format () =
       Compile.Of_typed.compile_expression_in_context ~raise ~options:options.middle_end ~self_pass typed (Ast_typed.e_a_unit ())
 
 let ast_expanded (raw_options : Raw_options.t) source_file display_format () =
-  format_result ~display_format (Ast_pattern_expanded.Formatter.expression_format) @@
+  format_result ~display_format (Ast_expanded.Formatter.expression_format) @@
   fun ~raise ->
     let options = (* TODO: options should be computed outside of the API *)
       let syntax           = Syntax.of_string_opt ~raise (Syntax_name raw_options.syntax) (Some source_file) in

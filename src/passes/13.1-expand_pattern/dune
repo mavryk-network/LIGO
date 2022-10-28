@@ -3,7 +3,7 @@
  (public_name ligo.expand_pattern)
  (instrumentation
   (backend bisect_ppx))
- (libraries simple-utils ast_aggregated ast_pattern_expanded)
+ (libraries simple-utils ast_aggregated ast_expanded)
  (preprocess
   (pps ppx_poly_constructor ppx_here))
  (flags

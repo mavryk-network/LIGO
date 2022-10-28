@@ -1,5 +1,5 @@
 open Ligo_prim
-module AST = Ast_pattern_expanded
+module AST = Ast_expanded
 open AST
 open Errors
 module Append_tree = Tree.Append

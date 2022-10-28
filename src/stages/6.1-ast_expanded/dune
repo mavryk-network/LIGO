@@ -1,6 +1,6 @@
 (library
- (name ast_pattern_expanded)
- (public_name ligo.ast_pattern_expanded)
+ (name ast_expanded)
+ (public_name ligo.ast_expanded)
  (instrumentation
   (backend bisect_ppx))
  (libraries simple-utils ast_aggregated ligo_prim)

@@ -12,7 +12,7 @@ Option patterns are treated as the variant type `Some a | None` would be
 **)
 
 module I = Ast_aggregated
-module O = Ast_pattern_expanded
+module O = Ast_expanded
 module Ligo_string = Simple_utils.Ligo_string
 
 open Ligo_prim
