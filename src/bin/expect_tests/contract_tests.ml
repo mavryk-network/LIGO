@@ -88,6 +88,34 @@ let%expect_test _  =
     "2042-01-01T00:00:29Z" |}]
 
 let%expect_test _ =
+  run_ligo_good [ "compile" ; "contract" ; contract "const.mligo" ] ;
+  [%expect{|
+    File "../../test/contracts/const.mligo", line 1, characters 31-32:
+      1 | let const = fun (type a b) (a, b : a * b) : a -> a
+      2 |
+    :
+    Warning: unused variable "b".
+    Hint: replace it by "_b" to prevent this warning.
+
+    { parameter unit ;
+      storage unit ;
+      code { DROP ; UNIT ; NIL operation ; PAIR } } |}]
+  
+let%expect_test _ =
+  run_ligo_good [ "compile" ; "contract" ; contract "const1.mligo" ] ;
+  [%expect{|
+    { parameter unit ;
+      storage unit ;
+      code { DROP ; UNIT ; NIL operation ; PAIR } } |}]
+
+let%expect_test _ =
+  run_ligo_good [ "compile" ; "contract" ; contract "const2.mligo" ] ;
+  [%expect{|
+    { parameter unit ;
+      storage unit ;
+      code { DROP ; UNIT ; NIL operation ; PAIR } } |}]
+
+let%expect_test _ =
   run_ligo_good [ "compile" ; "contract" ; contract "coase.ligo" ] ;
   [%expect{|
     { parameter

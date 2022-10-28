@@ -822,10 +822,17 @@ and compile_declaration ~raise : CST.declaration -> AST.declaration option = fun
       m_path ~loc:Location.generated path (* wrong location *)
     in
     return region (D_module { module_binder; module_ ; module_attr = [] })
-
   | Let {value = (_kwd_let, kwd_rec, let_binding, attributes); region} ->
     let attr = compile_attributes attributes in
     let {type_params; binders; rhs_type; eq=_; let_rhs} : CST.let_binding = let_binding in
+    let type_params =
+      match type_params with
+      | Some _ -> type_params
+      | None -> 
+        (match let_rhs with
+        | EFun {value={type_params;_};_} -> type_params
+        | _ -> None) 
+    in
     let (pattern, args) = binders in
     let let_rhs = compile_expression ~raise let_rhs in
     let rhs_type = Option.map ~f:(compile_type_expression ~raise <@ snd) rhs_type in
