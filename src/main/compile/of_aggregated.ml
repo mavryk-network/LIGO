@@ -1,4 +1,4 @@
-open Expand_pattern
+open Expansion
 
 module SMap = Map.Make(String)
 

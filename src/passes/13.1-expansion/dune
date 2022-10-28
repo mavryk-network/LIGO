@@ -1,6 +1,6 @@
 (library
- (name expand_pattern)
- (public_name ligo.expand_pattern)
+ (name expansion)
+ (public_name ligo.expansion)
  (instrumentation
   (backend bisect_ppx))
  (libraries simple-utils ast_aggregated ast_expanded)
