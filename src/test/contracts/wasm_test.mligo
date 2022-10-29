@@ -8,6 +8,14 @@ type check =
 | Bar of int 
 | Barx of int
 
+let other_c a b = 
+  a + b
+
+let other_c2 (a, b) = 
+  a + b
+
+
+
 let main ((_, _s):(parameter * storage)) =
   let b = [2; 3; 6] in
   let x = match b with
@@ -22,12 +30,10 @@ let main ((_, _s):(parameter * storage)) =
     Foo n -> n
   | _ -> 10
   in
-
-(* TODO:
-  let a1 = List.fold_left (fun (a, i)  -> 
-    a + i
-  ) 0 [1; 2; 3; 4; 5]
-  in *)
+ 
+  let x3 (a, i) = a + i in
+  let a1 = List.fold_left x3 0 [1; 2; 3; 4; 5]
+  in 
 
   let a2x a b = a + b in
   let a2 = a2x 2 3 in
@@ -38,6 +44,10 @@ let main ((_, _s):(parameter * storage)) =
   let a5 = a4 2 in
   let a6 = a4 3 in
   
+  let a7 = other_c 7 in
+  let a8 = a7 8 in
+  let a9 = other_c2 (3, 2) in
+
   let a = 
     4 + 5 +  (* 9 *)
     40 / 5 + (* 9 + 8 = 17 *)
@@ -48,7 +58,10 @@ let main ((_, _s):(parameter * storage)) =
     a2 +     (* 44 + 5 = 59 *)
     a3 +     (* 59 + 6 = 65 *) 
     a5 +     (* 65 + 4 = 69 *)
-    a6 +       (* 69 + 5 = 74 *) 
-    1000
+    a6 +     (* 69 + 5 = 74 *) 
+    a8 +     (* 74 + 15 = 89 *)
+    a9 +     (* 89 + 5 = 94 *)
+    // 1000
+    0
   in 
   ([]: operation list), a

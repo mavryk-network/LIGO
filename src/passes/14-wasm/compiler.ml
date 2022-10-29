@@ -16,6 +16,135 @@ module Location = Simple_utils.Location
 open Helpers
 open Validation
 
+(**
+ * Grouped instructions for partial calls.
+ *)
+module Partial_call = struct
+  
+  let create_memory_block env at ~f ~no_of_args ~current_args =
+    let const = const at in
+    let call_s = call_s at in
+    let local_set_s = local_set_s at in
+    let local_get_s = local_get_s at in
+    let store = store at in 
+    let load = load at in 
+    let i32_add = i32_add at in
+    let func_alloc_name = unique_name "partial_call" in
+    let env = Env.add_local env (func_alloc_name, NumType I32Type) in
+    env, func_alloc_name, [
+      const Int32.(12l + Int32.of_int_exn no_of_args);
+      call_s "malloc";
+      local_set_s func_alloc_name;
+
+      local_get_s func_alloc_name;
+    ]
+    @
+    f
+    @  
+    [
+      store;
+
+      local_get_s func_alloc_name;
+      const 4l;
+      i32_add;
+      const (Int32.of_int_exn no_of_args); 
+      store;
+
+      local_get_s func_alloc_name;
+      const 8l;
+      i32_add;
+      const (Int32.of_int_exn (List.length current_args));
+      store;
+
+    ]
+
+  let create_helper w at ~name ~no_of_args = 
+    let open A in
+    let func_name = "i32_" ^ (string_of_int no_of_args) in    
+    let const = const at in
+    let call_s = call_s at in
+    let local_set_s = local_set_s at in
+    let local_get_s = local_get_s at in
+    let store = store at in 
+    let load = load at in 
+    let i32_add = i32_add at in
+    let func_alloc_name = unique_name "partial_call" in
+    let exists = List.find ~f:(fun a -> match a.it with | FuncSymbol n -> (String.equal n.name func_name) | _ -> false) w.funcs  in
+    match exists with 
+      Some _ -> 
+      func_name, w
+    | None -> (
+      let type_name = "i32_" ^ (string_of_int no_of_args) ^ "_type" in
+      let t = A.TypeSymbol {
+        tname = type_name;
+        tdetails = FuncType ([NumType I32Type], [NumType I32Type])
+      } in
+      let t = S.{it = t; at} in
+      let f: A.func' = FuncSymbol {
+        name   = func_name;
+        ftype  = type_name;
+        locals = [("arg", NumType I32Type)];
+        body   = 
+        
+        (
+          List.fold_left ~f:(fun all i -> 
+            all @
+            [
+            local_get_s "arg";
+            const Int32.(of_int_exn i * 4l);
+            i32_add;
+            load]
+          )
+          ~init: []
+          (List.init no_of_args ~f:(fun i -> i)) 
+        )
+        @
+        [
+          call_s name;
+        ]
+      } in
+      let f = S.{ it = f; at } in
+      let s = A.{
+        name = func_name;
+        details = Function;
+      }
+      in
+      let s = S.{ it = s; at } in
+      func_name, {w with funcs = f :: w.funcs; types = t :: w.types; symbols = s :: w.symbols}
+    )
+
+  let memory_copy env at ~func_name ~total_args_length ~dest = 
+    let const = const at in
+    let call_s = call_s at in
+    let local_set_s = local_set_s at in
+    let local_get_s = local_get_s at in
+    let local_tee_s = local_tee_s at in
+    let store = store at in 
+    let i32_add = i32_add at in
+    let i32_mul = i32_mul at in
+    let load = load at in
+
+    [
+      const 12l; 
+      local_get_s total_args_length;
+      const 4l;
+      i32_mul;
+      i32_add;
+      call_s "malloc";
+      local_tee_s dest;
+
+      local_get_s func_name;
+
+      const 12l; 
+      local_get_s total_args_length;
+      const 4l;
+      i32_mul;
+      i32_add;
+
+      { it = MemoryCopy; at };
+    ]
+
+end
 
 
 (* The data offset. This indicates where a block of data should be placed in the linear memory. *)
@@ -116,29 +245,7 @@ let rec expression ~raise :
     let w, env, e1 = expression ~raise w env e1 in
     let w, env, e2 = expression ~raise w env e2 in
     let env, e = op env e1 e2 in
-    w, env, 
-    
-    [
-      const 1234321l;
-      call_s "print";
-    ]
-    @
-    e1 
-    @
-    [
-      load;
-      call_s "print"
-    ]
-    @
-    e2
-    @
-    [
-      load;
-      call_s "print"
-    ]
-    @
-    e
-
+    w, env, e
   in 
   let unique_name name =
     let unique_name = Value_var.fresh ~name () in
@@ -454,33 +561,10 @@ let rec expression ~raise :
             (w, env, result @ (List.map ~f:(fun s -> local_get_s s) result_vars) @ [call_s name])
           )
           else (
-            let unique_name = Value_var.fresh ~name:"e_variable_partial" () in
-            let func_alloc_name = var_to_string unique_name in
-            w, add_local env (func_alloc_name, NumType I32Type), 
-            [
-              (* This is problematic: 
-                  - can't be reused as this is static.   
-              *)
-
-              const Int32.(12l + of_int_exn Int.(List.length result_vars * 4) );
-              call_s "malloc";
-              
-              local_tee_s func_alloc_name;
-              func_symbol name;
-              store;
-
-              local_get_s func_alloc_name;
-              const 4l;
-              i32_add;
-              const (Int32.of_int_exn no_of_args); 
-              store;
-
-              local_get_s func_alloc_name;
-              const 8l;
-              i32_add;
-              const (Int32.of_int_exn (List.length result_vars));
-              store
-            ]
+            let func_name, w = Partial_call.create_helper w at ~name ~no_of_args in 
+            let env, func_alloc_name, e = Partial_call.create_memory_block env at ~f:[func_symbol func_name] ~no_of_args ~current_args:result_vars in
+            w, env,
+            e
             @
             result
             @
@@ -503,22 +587,25 @@ let rec expression ~raise :
             ]
           )
         | _ -> 
-          let indirect_name = unique_name "call_indirect" in
+          let indirect_name = unique_name "call_indirect " in
           let total_args_length = unique_name "total_args_length"in
           let current_args_length = unique_name "current_args_length" in
           let counter = unique_name "counter" in
           let dest = unique_name "dest" in
 
-          ({w with 
-            types = w.types
-              @ 
-              [type_ ~name:indirect_name ~typedef:(FuncType ([NumType I32Type], [NumType I32Type]))]
-          }, add_locals env [
+          let env = add_locals env [
             (total_args_length, NumType I32Type); 
             (current_args_length, NumType I32Type); 
             (counter, NumType I32Type);
             (dest, NumType I32Type)
-            ], [
+            ]
+          in
+          ({w with 
+            types = w.types @ 
+              [type_ ~name:indirect_name ~typedef:(FuncType ([NumType I32Type], [NumType I32Type]))]
+          }, 
+          env, 
+          [
             local_get_s name; 
             const 4l;
             i32_add;
@@ -530,37 +617,9 @@ let rec expression ~raise :
             i32_add;
             load; 
             local_set_s current_args_length;
-
-            (* copy the current args - which does not help - why... or is tgh name not unique enough? *)
-            const 12l; 
-            local_get_s total_args_length;
-            const 4l;
-            i32_mul;
-            i32_add;
-            call_s "malloc";
-            local_tee_s dest;
-
-
-
-            local_get_s name;
-
-            const 12l; 
-            local_get_s total_args_length;
-            const 4l;
-            i32_mul;
-            i32_add;
-
-
-
-           
-            
-            
-            { it = MemoryCopy; at };
-
-            (* local_get_s dest;
-            local_set_s name; *)
-
           ]
+          @ 
+          Partial_call.memory_copy env at ~func_name:name ~total_args_length ~dest
           @
           result
           @
@@ -584,17 +643,6 @@ let rec expression ~raise :
           )
           @
           [
-            const 4444l;
-            call_s "print";
-            local_get_s current_args_length;
-            call_s "print";
-            local_get_s current_args_length;
-            const (Int32.of_int_exn (List.length result_vars));
-            i32_add;
-            call_s "print";
-            const 5555l;
-            call_s "print";
-
             (* update the current args *)
             local_get_s dest; 
             const 8l;
@@ -604,15 +652,7 @@ let rec expression ~raise :
             i32_add;
             store; 
 
-            local_get_s current_args_length;
-            const (Int32.of_int_exn (List.length result_vars));
-            i32_add;
-            call_s "print";
-
-            local_get_s total_args_length;
-            call_s "print";
-
-
+            (* check to see if all the arguments are entered, if not: still a partial *)
             local_get_s current_args_length;
             const (Int32.of_int_exn (List.length result_vars));
             i32_add;
@@ -621,25 +661,14 @@ let rec expression ~raise :
             if_ 
               (ValBlockType (Some (NumType I32Type))) 
               [
-                const 99999l;
-                call_s "print";
-
                 local_get_s dest;
                 const 12l;
                 i32_add;
-                load;
-                call_s "print";
+
 
                 local_get_s dest;
                 load;
-                call_s "print";
-
-                local_get_s dest;
-                const 12l;
-                i32_add;
-                local_get_s dest;
-                load;
-                call_indirect_s indirect_name
+                call_indirect_s indirect_name;
               ]
               [
                 local_get_s dest
@@ -659,158 +688,76 @@ let rec expression ~raise :
     | Some _ -> (w, env, [local_get_s name])
     | None -> (
       match func_symbol_type w name with 
-      | Some (FuncSymbol fs, TypeSymbol {tdetails = FuncType (input, output); _}) -> 
-        let unique_name = Value_var.fresh ~name:"e_variable_func" () in
-        let func_alloc_name = var_to_string unique_name in
+      | Some (FuncSymbol fs, TypeSymbol {tdetails = FuncType (input, output); _}) ->         
         let no_of_args = List.length input in
-
-
-        (* create the function here *)
-        let func_name = "i32_" ^ (string_of_int no_of_args) in
-
-        (* does it exist ? *)
-        let exists = List.find ~f:(fun a -> match a.it with | FuncSymbol n -> (String.equal n.name func_name) | _ -> false) w.funcs  in
-        let w = match exists with 
-         Some _ -> 
-          w
-        | None -> (
-          let type_name = "i32_" ^ (string_of_int no_of_args) ^ "_type" in
-          let t = A.TypeSymbol {
-            tname = type_name;
-            tdetails = FuncType ([NumType I32Type], [NumType I32Type])
-          } in
-          let t = S.{it = t; at} in
-          let f: A.func' = FuncSymbol {
-            name   = func_name;
-            ftype  = type_name;
-            locals = [("foo", NumType I32Type)];
-            body   = 
-            
-            (
-              List.fold_left ~f:(fun all i -> 
-                all @
-                [
-                local_get_s "foo";
-                const Int32.(of_int_exn i * 4l);
-                i32_add;
-                load]
-              )
-              ~init: []
-              (List.init no_of_args ~f:(fun i -> i)) 
-            )
-            @
-            [
-              call_s name;
-            ]
-          } in
-          let f = S.{ it = f; at } in
-          let s = A.{
-            name = func_name;
-            details = Function;
-          }
-          in
-          let s = S.{ it = s; at } in
-          {w with funcs = f :: w.funcs; types = t :: w.types; symbols = s :: w.symbols}
-        )
-        in
-        let env = add_local env (func_alloc_name, NumType I32Type) in
-        w, env, [
-          const Int32.(12l + Int32.of_int_exn no_of_args);
-          call_s "malloc";
-          
-          local_tee_s func_alloc_name;
-          func_symbol func_name;
-          store;
-
-          local_get_s func_alloc_name;
-          const 4l;
-          i32_add;
-          const (Int32.of_int_exn no_of_args); 
-          store;
-
-          local_get_s func_alloc_name;
-          const 8l;
-          i32_add;
-          const 0l;
-          store;
-
-          local_get_s func_alloc_name
-      ] 
+        let func_name, w = Partial_call.create_helper w at ~name ~no_of_args in 
+        let env, func_alloc_name, e = Partial_call.create_memory_block env at ~f:[func_symbol func_name] ~no_of_args ~current_args:[] in
+        w, env, e @ [local_get_s func_alloc_name]
+        
       | _ -> 
         w, env, [data_symbol name]
       )
     )
   | E_iterator (kind, ((item_name, item_type), body), collection) -> raise.error (not_supported e)
-  | E_fold (((name, tv), body), ({type_expression = {type_content = T_list _; _}; _} as col), init) -> 
+  | E_fold (((name, tv), body), ({type_expression = {type_content = T_list _; _}; _} as col), initial) -> 
     let item = unique_name "item" in
+    let init = unique_name "init" in
     let next_item = unique_name "next_item" in
+    let result = unique_name "result" in
     let name = var_to_string name in
     let env = add_locals env [
+      (name, T.NumType I32Type);  
+      (init, T.NumType I32Type); 
       (item, T.NumType I32Type); 
       (next_item, T.NumType I32Type);
-      (name, T.NumType I32Type)
+      (result, T.NumType I32Type);
     ]
     in
-    let w, env, init = expression ~raise w env init in
+    let w, env, initial = expression ~raise w env initial in
     let w, env, col = expression ~raise w env col in
     let w, env, body = expression ~raise w env body in
+    let w, env, tuple = Datatype.Pair.create w env [local_get_s init] [local_get_s item; load]  in
+
     w, env, 
-    init 
+    initial 
     @
     [
-      local_set_s name;
+      local_set_s init;
     ]
     @
     col 
     @
     [
       local_set_s item;
-     
       (* local_get_s name *)
       loop (ValBlockType (Some (T.NumType I32Type))) 
-      
       (
+      tuple
+      @ 
       [
-        const 13l;
-        call_s "print"; 
+        local_set_s name;
       ]
       @
       body 
       @
       [        
-        const 17l;
-        call_s "print"; 
-
-        (* drop at; *)
-        (* load; *)
-        local_set_s name;
+        local_set_s result;
         
+        local_get_s result;
+        local_set_s init;
+
+        (* check to see if the loop needs to continue *)
         local_get_s item;
         const 4l;
         i32_add;
         load;
         local_set_s next_item;
 
-        const 555l;
-        call_s "print";
-
-        
-        local_get_s item;
-        load;
-        load;
-        call_s "print";
-
-        local_get_s name;
-        (* load; *)
-        (* load; *)
-        (* load;
-        load; *)
-        call_s "print";
-
         local_get_s next_item;
         local_set_s item;
 
-        local_get_s name;
+        local_get_s result;
+
         local_get_s next_item;
         load;
         const 0l;
@@ -1215,10 +1162,7 @@ let rec toplevel_bindings ~raise :
                         
                         call_s "print";
 
-                        local_get_s "parameter" ;
-                        call_s "print";
-                        local_get_s "storage" ;
-                        call_s "print";
+                        
                         local_get_s "result";
                         (* const 4l;
                         i32_add; *)
