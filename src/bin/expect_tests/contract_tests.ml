@@ -2884,3 +2884,27 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_good [ "compile" ; "expression" ;  "cameligo" ; "tests" ; "--init-file" ; contract "bytes_literals.mligo" ] ;
   [%expect{| { True ; True ; True } |}]
+
+(* get_entrypoint_opt in uncurried language *)
+let%expect_test _ =
+  run_ligo_good [ "compile" ; "contract" ;  contract "get_entrypoint.jsligo" ] ;
+  [%expect{|
+    { parameter unit ;
+      storage address ;
+      code { DROP ;
+             SENDER ;
+             CONTRACT %foo int ;
+             IF_NONE { PUSH string "option is None" ; FAILWITH } {} ;
+             ADDRESS ;
+             NIL operation ;
+             PAIR } } |}]
+
+(* make sure that in compile storage/expression we can check ENTRYPOINT/EMIT *)
+let%expect_test _ =
+  run_ligo_good [ "compile" ; "storage" ;  contract "emit.mligo" ; "()" ] ;
+  [%expect{| Unit |}]
+
+(* make sure that in compile storage/expression we can check SELF *)
+let%expect_test _ =
+  run_ligo_good [ "compile" ; "storage" ;  contract "self_annotations.mligo" ; "()" ] ;
+  [%expect{| Unit |}]
