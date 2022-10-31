@@ -419,7 +419,7 @@ let%expect_test _ =
     Everything at the top-level was executed.
     - test exited with value (). |}]
     
-(* Negative *)
+(* Negative - linearity *)
 
 let contract file = test ("top_level_patterns/negative/" ^ file)
 
@@ -491,3 +491,24 @@ let%expect_test _ =
 
     Repeated variable in pattern.
     Hint: Change the name. |}]
+
+(* Negative - much use *)
+
+let%expect_test _ =
+  run_ligo_bad [ "compile" ; "contract" ; contract "cameligo/ticket_record.mligo" ; "--werror" ; "--disable-michelson-typechecking" ] ;
+  [%expect{|
+    File "../../test/contracts/top_level_patterns/negative/cameligo/ticket_record.mligo", line 3, characters 6-7:
+      2 |
+      3 | let { b } = { b = Tezos.create_ticket "one" 10n }
+      4 |
+    :
+    Warning: variable "b" cannot be used more than once. |}]
+
+let%expect_test _ =
+  run_ligo_bad [ "compile" ; "contract" ; contract "cameligo/ticket_tuple.mligo" ; "--werror" ; "--disable-michelson-typechecking" ] ;
+  [%expect{|
+    File "../../test/contracts/top_level_patterns/negative/cameligo/ticket_tuple.mligo", line 1, characters 5-6:
+      1 | let (b, _) = (Tezos.create_ticket "one" 10n, 1)
+      2 |
+    :
+    Warning: variable "b" cannot be used more than once. |}]

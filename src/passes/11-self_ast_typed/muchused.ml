@@ -264,10 +264,10 @@ and muchuse_declaration = fun (x : declaration) s ->
   | D_pattern { expr ; pattern ; _ } ->
       let binders = Pattern.binders pattern in
       let muchuse_expr = muchuse_of_expr expr in
-      List.fold binders ~init:muchuse_expr
-        ~f:(fun m b ->
-          muchuse_union m
-            (muchuse_of_binder (Binder.get_var b) expr.type_expression s))
+      let muchuse_pattern = List.map binders
+        ~f:(fun b ->
+            (muchuse_of_binder (Binder.get_var b) expr.type_expression s)) in
+      muchuse_union muchuse_expr (muchuse_unions muchuse_pattern)
   | D_module {module_ = { wrap_content = M_struct module_ ; _ } ;module_binder;module_attr=_} ->
       let decls = get_all_declarations module_binder module_ in
       List.fold_right ~f:(fun (v, t) (c,m) -> muchuse_of_binder v t (c, m))
