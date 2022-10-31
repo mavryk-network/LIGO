@@ -523,30 +523,8 @@ let rec val_to_ast ~raise ~loc
             "Expected address or typed address but got %a"
             Ast_aggregated.PP.type_expression
             ty)
-  | V_Ct (C_contract c) when is_t_contract ty ->
-    let ty =
-      trace_option
-        ~raise
-        (Errors.generic_error
-           loc
-           (Format.asprintf
-              "Expected contract but got %a"
-              Ast_aggregated.PP.type_expression
-              ty))
-        (get_t_contract ty)
-    in
-    let x = string_of_contract c.address in
-    (* TODO-er: if we want support for entrypoints, this should be fixed: *)
-    let t =
-      match c.entrypoint with
-      | None -> e_a_contract (e_a_address x) ty
-      | Some e ->
-        e_a_contract_entrypoint
-          (e_a_string (Ligo_string.Standard ("%" ^ e)))
-          (e_a_address x)
-          ty
-    in
-    t
+  | V_Ct (C_contract _) when is_t_contract ty ->
+    raise.error (Errors.generic_error loc "Not implemented: contract to ast")
   | V_Ct (C_contract _) ->
     raise.error
     @@ Errors.generic_error
@@ -689,7 +667,7 @@ let rec val_to_ast ~raise ~loc
       v.arg_binder
       v.body
       v.orig_lambda
-  | V_Michelson (Ty_code { code; code_ty = _; ast_ty }) ->
+  | V_Michelson (Ty_code { micheline_repr = { code; code_ty = _ }; ast_ty }) ->
     let s = Format.asprintf "%a" Tezos_utils.Michelson.pp code in
     let s = Ligo_string.verbatim s in
     e_a_raw_code Backend.Michelson.name (make_e (e_string s) ast_ty) ast_ty
@@ -1192,6 +1170,32 @@ let rec compile_value ~raise ~options ~loc
     in
     let x = bytes_of_bls12_381_fr b in
     Tezos_micheline.Micheline.Bytes ((), x)
+  | V_Ct (C_timestamp t) ->
+    let () =
+      trace_option
+        ~raise
+        (Errors.generic_error
+            loc
+            (Format.asprintf
+              "Expected timestamp but got %a"
+              Ast_aggregated.PP.type_expression
+              ty))
+        (get_t_timestamp ty)
+    in
+    Tezos_micheline.Micheline.Int ((),t)
+  | V_Ct (C_int64 x) ->
+    let () =
+      trace_option
+        ~raise
+        (Errors.generic_error
+            loc
+            (Format.asprintf
+              "Expected timestamp but got %a"
+              Ast_aggregated.PP.type_expression
+              ty))
+        (get_t_int ty)
+    in
+    Tezos_micheline.Micheline.Int ((),Z.of_int64 x)
   | V_Construct (ctor, arg) when Option.is_some (get_t_option ty) ->
     (match ctor with
      | "None" -> Tezos_micheline.Micheline.Prim ((), "None", [], [])
@@ -1371,7 +1375,7 @@ let rec compile_value ~raise ~options ~loc
         map
     in
     Tezos_micheline.Micheline.Seq ((), map)
-  | V_Func_val v ->
+  | V_Func_val v -> (
     let make_subst_ast_env_exp ~raise env =
       let open Ligo_interpreter.Types in
       let rec aux acc = function
@@ -1457,7 +1461,7 @@ let rec compile_value ~raise ~options ~loc
         v.orig_lambda
     in
     let compiled_exp = compile_ast ~raise ~options typed_exp in
-    (match compiled_exp.expr with
+    match compiled_exp.expr with
      | Seq (_, [ Prim (_, "LAMBDA", [ _; _; compiled_exp ], _) ]) ->
        let compiled_exp =
          Tezos_micheline.Micheline.map_node
@@ -1469,14 +1473,14 @@ let rec compile_value ~raise ~options ~loc
      | _ ->
        raise.error
        @@ Errors.generic_error loc (Format.asprintf "Expected LAMBDA"))
-  | _ ->
+  | v ->
     raise.error
     @@ Errors.generic_error
          loc
          (Format.asprintf
-            "Cannot decompile %a"
-            Ast_aggregated.PP.type_expression
-            ty)
+            "Cannot decompile value %a of type %a"
+            Ligo_interpreter.PP.pp_value v
+            Ast_aggregated.PP.type_expression ty)
 
 
 let compile_value ~raise ~options ~loc
@@ -1488,7 +1492,8 @@ let compile_value ~raise ~options ~loc
   let expr_ty = Ligo_compile.Of_aggregated.compile_type ~raise ty in
   let expr_ty = Ligo_compile.Of_mini_c.compile_type expr_ty in
   let expr_ty = clean_location_with () expr_ty in
-  Ligo_interpreter.Types.{ code = expr; code_ty = expr_ty; ast_ty = ty }
+  Ligo_interpreter.Types.
+    { micheline_repr = { code = expr; code_ty = expr_ty }; ast_ty = ty }
 
 
 let run_michelson_func
@@ -1503,7 +1508,7 @@ let run_michelson_func
   =
   let open Ligo_interpreter.Types in
   let run_options = make_options ~raise (Some ctxt) in
-  let { code = arg; code_ty = arg_ty; _ } =
+  let { micheline_repr = { code = arg; code_ty = arg_ty }; _ } =
     compile_value ~raise ~options ~loc arg arg_ty
   in
   let func_ty = compile_type ~raise func_ty in

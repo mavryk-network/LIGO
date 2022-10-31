@@ -11,6 +11,14 @@ let%expect_test _ =
     Everything at the top-level was executed.
     - test_foo exited with value 3n. |}]
 
+(* decompilation of timestamp *)
+let%expect_test _ =
+  run_ligo_good ["run" ; "test" ; test "test_timestamp_contract.mligo" ] ;
+  [%expect {|
+    Success (2109n)
+    Everything at the top-level was executed.
+    - test_timestamp exited with value (). |}]
+
 let%expect_test _ =
   run_ligo_good [ "run"; "test" ; test "interpret_test.mligo" ] ;
   [%expect{|
@@ -85,7 +93,8 @@ let%expect_test _ =
     - test_sha3 exited with value ().
     - test_key_hash exited with value ().
     - test_check exited with value ().
-    - test_int_bls exited with value (). |}]
+    - test_int_bls exited with value ().
+    - test_not exited with value (). |}]
 
 let%expect_test _ =
   (* This tests a possible regression on the way modules are evaluated. It is possible that the number of element in the environment explodes. *)
@@ -694,7 +703,7 @@ let%expect_test _ =
 
 let%expect_test _ =
   run_ligo_good ["run";"test" ; test "get_contract.mligo" ] ;
-  [%expect {|
+  [%expect{|
     Everything at the top-level was executed.
     - test exited with value (). |}]
 
@@ -717,6 +726,17 @@ let%expect_test _ =
   [%expect {|
     Everything at the top-level was executed.
     - test exited with value 0x050a0000000400000000. |}]
+
+let%expect_test _ =
+  run_ligo_good [ "run" ; "test" ; test "test_print_values.mligo" ] ;
+  [%expect {| aloh |}]
+
+
+let%expect_test _ =
+  run_ligo_good [ "run" ; "test" ; test "test_to_json.mligo" ] ;
+  [%expect {|
+    ["typed_address","KT1Eip4VjDintiWphUf9fAM7cCikw3NajBAG"]
+    ["record",{"foo":["constant",["int","42"]],"bar":["list",[["constant",["string","hello"]],["constant",["string","world"]]]]}] |}]
 
 (* do not remove that :) *)
 let () = Sys_unix.chdir pwd
@@ -982,7 +1002,7 @@ run_ligo_bad [ "run" ; "test" ; "typed_addr_in_bytes_pack.mligo" ] ;
    18 |     ) in
    19 |     let () = Test.log(packed) in
 
-  Cannot decompile typed_address (unit ,
+  Cannot decompile value KT1KAUcMCQs7Q4mxLzoUZVH9yCCLETERrDtj of type typed_address (unit ,
   unit) |}]
 
 let () = Sys_unix.chdir pwd
@@ -1009,6 +1029,15 @@ let%expect_test _ =
      15 |   let _ = (Tezos.get_contract_with_error a "foo" : (int contract)) in
      16 |   ()
 
-    Test failed with "foo"
+    You are using Michelson failwith primitive (loaded from standard library).
+    Consider using `Test.failwith` for throwing a testing framework failure.
+
+    File "../../test/contracts/negative//interpreter_tests/get_contract.mligo", line 15, characters 10-66:
+     14 |   let _ = (Tezos.get_contract a : (parameter contract)) in
+     15 |   let _ = (Tezos.get_contract_with_error a "foo" : (int contract)) in
+     16 |   ()
+
+    An uncaught error occured:
+    Failwith: "foo"
     Trace:
     File "../../test/contracts/negative//interpreter_tests/get_contract.mligo", line 15, characters 10-66 |}]

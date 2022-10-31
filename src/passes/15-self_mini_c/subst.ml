@@ -104,8 +104,12 @@ let rec replace : expression -> var_name -> var_name -> expression =
     let expr = replace expr in
     let update = replace update in
     return @@ E_update (expr, i, update, n)
-  | E_raw_michelson _ -> e
-  | E_raw_wasm _ -> e
+  | E_raw_wasm (env, instr, args) -> 
+    let args = List.map ~f:replace args in
+    return @@ E_raw_wasm (env, instr, args)
+  | E_raw_michelson (code, args) ->
+    let args = List.map ~f:replace args in
+    return @@ E_raw_michelson (code, args)
   | E_global_constant (hash, args) ->
     let args = List.map ~f:replace args in
     return @@ E_global_constant (hash, args)
@@ -277,7 +281,13 @@ let rec subst_expression : body:expression -> x:var_name -> expr:expression -> e
     let (name_r, r) = self_binder1 ~body:(name_r, r) in
     return @@ E_if_left (c, ((name_l, tvl) , l), ((name_r, tvr) , r))
   )
-  | E_literal _ | E_raw_michelson _ | E_raw_wasm _ ->
+  | E_raw_michelson (code, args) ->
+    let args = List.map ~f:self args in
+    return @@ E_raw_michelson (code, args)
+  | E_raw_wasm (env, instrs, args) -> 
+    let args = List.map ~f:self args in
+    return @@ E_raw_wasm (env, instrs, args)
+  | E_literal _ ->
     return_id
   | E_constant {cons_name; arguments} -> (
       let arguments = List.map ~f:self arguments in
