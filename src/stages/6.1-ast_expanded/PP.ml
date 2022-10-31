@@ -129,8 +129,8 @@ and expression_content ppf (ec: expression_content) =
   | E_raw_code   r -> Raw_code.pp   expression ppf r
   | E_type_inst ti -> type_inst ppf ti
   | E_let_mut_in x ->
-    Let_in.pp_mut expression type_expression ppf x
-  | E_assign a -> Assign.pp expression type_expression ppf a
+    Let_in.pp_mut expression type_expression_annot ppf x
+  | E_assign a -> Assign.pp expression type_expression_annot ppf a
   | E_deref var -> Format.fprintf ppf "!%a" Value_var.pp var
   | E_for for_loop ->
     For_loop.pp expression ppf for_loop
@@ -140,7 +140,7 @@ and expression_content ppf (ec: expression_content) =
     While_loop.pp expression ppf while_loop
 
 and type_inst ppf {forall; type_} =
-  fprintf ppf "%a@@{%a}" expression forall type_expression type_
+  fprintf ppf "%a@@{%a}" expression forall type_expression_annot type_
 
 and option_inline ppf inline =
   if inline then
