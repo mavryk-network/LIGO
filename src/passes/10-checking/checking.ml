@@ -475,6 +475,7 @@ and infer_expression ~(raise : raise) ~options ~ctx (expr : I.expression)
       , let%bind rhs = rhs
         and let_binder = let_binder
         and let_result = let_result in
+        let () = check_pattern_anomalies ~raise ~options let_binder rhs_type in
         return
           (E_let_in
              { let_binder
@@ -754,6 +755,7 @@ and infer_expression ~(raise : raise) ~options ~ctx (expr : I.expression)
     , let%bind rhs = rhs
       and let_binder = let_binder
       and let_result = let_result in
+      let () = check_pattern_anomalies ~raise ~options let_binder rhs_type in
       return
         (E_let_mut_in
            { let_binder
@@ -1410,6 +1412,18 @@ and check_cases
   in
   ctx, Elaboration.all cases
 
+and check_pattern_anomalies
+    ~raise
+    ~options
+    pattern
+    rhs_type
+    : unit
+    = 
+    let loc = Location.get_location pattern in
+    let syntax = options.Compiler_options.syntax_for_errors in
+    let eqs = [pattern, rhs_type] in
+    Pattern_anomalies.check_anomalies ~raise ~syntax ~loc eqs rhs_type
+
 and compile_match
     ~options
     ~loc
@@ -1425,7 +1439,7 @@ and compile_match
   (* Check anomalies *)
   let matchee_type = Context.apply ctx matchee_type in
   (* TODO: Assert matchee_type is fully resolved *)
-  let eqs = List.map cases ~f:(fun (pat, body) -> pat, matchee_type, body) in
+  let eqs = List.map cases ~f:(fun (pat, _) -> pat, matchee_type) in
   let%bind raise = Elaboration.raise in
   let syntax = options.Compiler_options.syntax_for_errors in
   let () =
@@ -1526,6 +1540,7 @@ and infer_declaration ~(raise : raise) ~options ~ctx (decl : I.declaration)
       , sigs
       , let%bind expr = expr
         and pattern = pattern in
+        let () = check_pattern_anomalies ~raise ~options pattern matchee_type in
         return @@ D_pattern { pattern; expr; attr } )
     | D_module { module_binder; module_; module_attr = { public; hidden } } ->
       let ctx, sig_, module_ = infer_module_expr ~raise ~options ~ctx module_ in

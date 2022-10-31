@@ -1,30 +1,3 @@
-(* 
-(* compilation *)
-tuple
-record
-nested tuple
-tuple record
-nested record
-record tuple
-
-top-level ticket tuple
-top-level ticket record
-
----
-(* interpreter *)
-
-top-level tuple destructuring Test.log
-top-lvel record destructuring Test.log
-top-lvel record tuple destructuring Test.log
-top-lvel tuple record destructuring Test.log
-top-lvel nested record destructuring Test.log
-top-lvel nested record destructuring Test.log
-
----
-(* negative *)
-
-top-level record pattern linearity
-*)
 open Cli_expect
 let contract file = test ("top_level_patterns/contracts/" ^ file)
 
@@ -334,6 +307,36 @@ let%expect_test _ =
              NIL operation ;
              PAIR } } |}]
 
+let%expect_test _ =
+  run_ligo_good [ "compile" ; "contract" ; contract "cameligo/constr_tuple_destructuring.mligo" ] ;
+  [%expect{|
+    { parameter unit ;
+      storage int ;
+      code { DROP ;
+             PUSH string "hey" ;
+             SIZE ;
+             PUSH int 2 ;
+             PUSH int 1 ;
+             ADD ;
+             ADD ;
+             NIL operation ;
+             PAIR } } |}]
+
+let%expect_test _ =
+  run_ligo_good [ "compile" ; "contract" ; contract "cameligo/constr_record_destructuring.mligo" ] ;
+  [%expect{|
+    { parameter unit ;
+      storage int ;
+      code { DROP ;
+             PUSH string "hey" ;
+             SIZE ;
+             PUSH int 2 ;
+             PUSH int 1 ;
+             ADD ;
+             ADD ;
+             NIL operation ;
+             PAIR } } |}]
+
 (* Testing *)
 
 let test_ file = test ("top_level_patterns/interpreter/" ^ file)
@@ -380,6 +383,20 @@ let%expect_test _ =
     Everything at the top-level was executed.
     - test exited with value (). |}]
     
+let%expect_test _ =
+    run_ligo_good [ "run" ; "test" ; test_ "cameligo/constr_tuple_destructuring.mligo" ] ;
+    [%expect{|
+      "Once"
+      Everything at the top-level was executed.
+      - test exited with value (). |}]
+
+let%expect_test _ =
+  run_ligo_good [ "run" ; "test" ; test_ "cameligo/constr_record_destructuring.mligo" ] ;
+  [%expect{|
+    "Once"
+    Everything at the top-level was executed.
+    - test exited with value (). |}]
+
 (* Negative - linearity *)
 
 let contract file = test ("top_level_patterns/negative/" ^ file)
@@ -473,3 +490,15 @@ let%expect_test _ =
       2 |
     :
     Warning: variable "b" cannot be used more than once. |}]
+
+let%expect_test _ =
+  run_ligo_bad [ "compile" ; "contract" ; contract "cameligo/constr_record_destructuring.mligo" ; "--werror" ; "--disable-michelson-typechecking" ] ;
+  [%expect{|
+    File "../../test/contracts/top_level_patterns/negative/cameligo/constr_record_destructuring.mligo", line 4, characters 4-26:
+      3 |
+      4 | let { a ; b = (Foo x) ; c} = { a = 1 ; b = Foo 2 ; c = "hey" }
+      5 |
+
+    Error : this pattern-matching is not exhaustive.
+    Here are examples of cases that are not matched:
+    - {c = _; b = Bar; a = _} |}]
