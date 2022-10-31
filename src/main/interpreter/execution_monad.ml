@@ -7,9 +7,9 @@ open Simple_utils.Trace
 module LT = Ligo_interpreter.Types
 module LC = Ligo_interpreter.Combinators
 module Exc = Ligo_interpreter_exc
-module Tezos_protocol = Tezos_protocol_015_PtLimaPt
-module Tezos_protocol_env = Tezos_protocol_environment_015_PtLimaPt
-module Tezos_client = Tezos_client_015_PtLimaPt
+module Tezos_protocol = Memory_proto_alpha
+module Tezos_protocol_env = Memory_proto_alpha.Alpha_environment
+module Tezos_client = Memory_proto_alpha.Client
 module Location = Simple_utils.Location
 module ModRes = Preprocessor.ModRes
 open Ligo_prim

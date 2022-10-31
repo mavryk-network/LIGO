@@ -1,14 +1,14 @@
 open Simple_utils.Trace
 open Proto_alpha_utils
-module Tezos_alpha_test_helpers = Tezos_015_PtLimaPt_test_helpers
+module Tezos_alpha_test_helpers = Memory_proto_alpha.Test_helpers
 open Errors
 open Ligo_interpreter_exc
 open Ligo_interpreter.Types
 open Ligo_interpreter.Combinators
-module Tezos_protocol = Tezos_protocol_015_PtLimaPt
-module Tezos_protocol_env = Tezos_protocol_environment_015_PtLimaPt
-module Tezos_raw_protocol = Tezos_raw_protocol_015_PtLimaPt
-module Tezos_protocol_parameters = Tezos_protocol_015_PtLimaPt_parameters
+module Tezos_protocol = Memory_proto_alpha
+module Tezos_protocol_env = Memory_proto_alpha.Alpha_environment
+module Tezos_raw_protocol = Memory_proto_alpha.Raw_protocol
+module Tezos_protocol_parameters = Memory_proto_alpha.Parameters
 
 type r = (Errors.interpreter_error, Main_warnings.all) raise
 
