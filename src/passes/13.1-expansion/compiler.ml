@@ -187,6 +187,7 @@ and destruct_mut_let_in : O.expression -> O.expression =
     return
       (O.E_matching { prod_case with cases = O.Match_record { case with body } })
   | O.E_matching ({ cases = O.Match_variant sums; _ } as sum_case) ->
+    (* because this would only happens for mutable let-ins, sum.cases should always be of size 1 *)
     let cases =
       List.map sums.cases ~f:(fun (O.{ pattern; body; constructor } as x) ->
           let ty = O.get_sum_type sums.tv constructor in
