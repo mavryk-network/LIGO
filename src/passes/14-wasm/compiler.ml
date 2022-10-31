@@ -600,12 +600,14 @@ let rec expression ~raise :
             (dest, NumType I32Type)
             ]
           in
+
           ({w with 
             types = w.types @ 
               [type_ ~name:indirect_name ~typedef:(FuncType ([NumType I32Type], [NumType I32Type]))]
           }, 
           env, 
           [
+            
             local_get_s name; 
             const 4l;
             i32_add;
@@ -657,14 +659,13 @@ let rec expression ~raise :
             const (Int32.of_int_exn (List.length result_vars));
             i32_add;
             local_get_s total_args_length;
-            compare_eq;
+            i32_eq;
             if_ 
               (ValBlockType (Some (NumType I32Type))) 
               [
                 local_get_s dest;
                 const 12l;
                 i32_add;
-
 
                 local_get_s dest;
                 load;
@@ -698,7 +699,15 @@ let rec expression ~raise :
         w, env, [data_symbol name]
       )
     )
-  | E_iterator (kind, ((item_name, item_type), body), collection) -> raise.error (not_supported e)
+  | E_iterator (C_MAP, ((item_name, item_type), body), ({type_expression = {type_content = T_list _; _}; _} as col)) -> 
+    (* loop over collection 
+    set item name... *)
+  
+    (* Ligo_prim.Constant.pp_constant' Format.std_formatter name; *)
+    (* print_endline ""; *)
+    raise.error (not_supported e)
+  | E_iterator (kind, ((item_name, item_type), body), col) -> 
+    raise.error (not_supported e)
   | E_fold (((name, tv), body), ({type_expression = {type_content = T_list _; _}; _} as col), initial) -> 
     let item = unique_name "item" in
     let init = unique_name "init" in
@@ -717,7 +726,7 @@ let rec expression ~raise :
     let w, env, col = expression ~raise w env col in
     let w, env, body = expression ~raise w env body in
     let w, env, tuple = Datatype.Pair.create w env [local_get_s init] [local_get_s item; load]  in
-
+    
     w, env, 
     initial 
     @
@@ -729,7 +738,6 @@ let rec expression ~raise :
     @
     [
       local_set_s item;
-      (* local_get_s name *)
       loop (ValBlockType (Some (T.NumType I32Type))) 
       (
       tuple
@@ -767,8 +775,132 @@ let rec expression ~raise :
     ]
   | E_fold (((name, tv), body), ({type_expression = {type_content = _; _}; _} as col), init) -> 
     raise.error (not_supported e)
-    (* raise.error (not_supported e) *)
-  | E_fold_right _ -> raise.error (not_supported e)
+  | E_fold_right (((name , tv) , body) , (({type_expression = {type_content = T_list _; _}; _} as collection), elem_tv) , initial) -> 
+    let item = unique_name "item" in
+    let init = unique_name "init" in
+    let helper_fn_name = unique_name "helper_fn" in
+    let name = var_to_string name in
+    
+    let locals_backup = env.locals in
+    let env = add_locals env [
+      (init, T.NumType I32Type);   
+      (item, T.NumType I32Type);         
+      (name, T.NumType I32Type);  
+    ]
+    in
+    let w, env, initial = expression ~raise w env initial in
+    let w, env, col = expression ~raise w env collection in
+    let w, env, body = expression ~raise w env body in
+    let w, env, tuple = Datatype.Pair.create w env [local_get_s init] [local_get_s item; load]  in
+    
+    (* create a helper function here *)
+    let s = A.{
+      name    = helper_fn_name;
+      details = Function;
+    }
+    in
+    let s = S.{ it = s; at } in
+    let w = {w with symbols = s :: w.symbols } in
+    let hd  = unique_name "hd" in
+    let tl  = unique_name "tl" in
+    let result = unique_name "result" in
+        
+    let f = A.FuncSymbol {
+      name   = helper_fn_name;
+      ftype  =  helper_fn_name ^ "_type";
+      locals =
+        env.locals
+        @ [
+          (hd, T.NumType I32Type);
+          (tl, T.NumType I32Type);
+          (result, T.NumType I32Type);
+      ];
+      body = [
+        local_get_s item;
+        load;
+        load;
+        const 0l;
+        compare_eq;
+        if_ (ValBlockType (Some (NumType I32Type)))
+          [
+            local_get_s init
+          ]
+          ([
+
+            local_get_s item;
+            load;
+            load;
+            local_set_s hd;
+
+            local_get_s item;
+            const 4l;
+            i32_add;
+            load;
+            
+            local_set_s tl;
+
+            local_get at 0l;
+            local_get at 1l;
+            local_get at 2l;
+            local_get_s init;
+            local_get_s tl;
+            call_s helper_fn_name;
+            local_set_s init; 
+          ]
+          @
+          tuple
+          @ 
+          [
+            local_set_s name;
+          ]
+          @
+          body 
+          @
+          [
+            local_set_s result;            
+            local_get_s result;
+          ])
+      ]
+    } 
+    in
+    let f = S.{it = f; at} in
+    
+    let t = A.TypeSymbol {
+      tname = helper_fn_name ^ "_type";
+      tdetails = FuncType ([NumType I32Type; NumType I32Type; NumType I32Type; NumType I32Type; NumType I32Type], [NumType I32Type])
+    } 
+    in
+    let t = S.{ it = t; at } in
+
+    (* call the helper function here *)
+    let w = {
+      w with
+        types   = t :: w.types;
+        funcs   = f :: w.funcs;
+    } in 
+    w, {env with locals = locals_backup @ [  (init, T.NumType I32Type);   
+    (item, T.NumType I32Type);         
+    (name, T.NumType I32Type);  ] }, 
+    initial 
+    @
+    [
+      local_set_s init;
+    ]
+    @
+    col 
+    @
+    [
+      local_set_s item;
+
+      local_get at 0l;
+      local_get at 1l;
+      local_get at 2l;
+      local_get_s init;
+      local_get_s item;
+      call_s helper_fn_name;
+    ]
+  | E_fold_right _ ->
+    raise.error (not_supported e)
   | E_if_bool (test, t, f) -> 
     let w, env, test = expression ~raise w env test in
     let w, env, t = expression ~raise w env t in
@@ -876,7 +1008,6 @@ let rec expression ~raise :
                 data_symbol "C_LIST_EMPTY";
                 i32_eq;
                 
-                (* {it = A.Compare (I32 A.I32Op.Ne); at }; *)
                 br_if 0l
               ]
               @ 

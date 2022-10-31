@@ -100,6 +100,8 @@ let local_set_s at name = {it = LocalSet_symbol name; at}
 
 let local_get_s at name = {it = LocalGet_symbol name; at}
 
+let local_get at index = {it = LocalGet { it = index; at}; at}
+
 let local_tee_s at name = {it = LocalTee_symbol name; at}
 
 let load at = 

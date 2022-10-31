@@ -14,8 +14,6 @@ let other_c a b =
 let other_c2 (a, b) = 
   a + b
 
-
-
 let main ((_, _s):(parameter * storage)) =
   let b = [2; 3; 6] in
   let x = match b with
@@ -48,6 +46,11 @@ let main ((_, _s):(parameter * storage)) =
   let a8 = a7 8 in
   let a9 = other_c2 (3, 2) in
 
+
+  let a10 = List.fold_right (fun (i, a) -> a + i) [10;20;30] 100 in
+  // let a11 = [1; 2; 3; 4] in
+  // let a11 = List.map (fun i -> i * 10) a11 in
+
   let a = 
     4 + 5 +  (* 9 *)
     40 / 5 + (* 9 + 8 = 17 *)
@@ -61,7 +64,8 @@ let main ((_, _s):(parameter * storage)) =
     a6 +     (* 69 + 5 = 74 *) 
     a8 +     (* 74 + 15 = 89 *)
     a9 +     (* 89 + 5 = 94 *)
+    a10    (* 94 + 160 = 254 *)
     // 1000
-    0
+    // 0
   in 
   ([]: operation list), a
