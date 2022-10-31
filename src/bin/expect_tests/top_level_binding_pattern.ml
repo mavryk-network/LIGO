@@ -183,27 +183,6 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_good [ "compile" ; "contract" ; contract "cameligo/ticket_record.mligo" ] ;
   [%expect{|
-    File "../../test/contracts/top_level_patterns/contracts/cameligo/ticket_record.mligo", line 3, characters 10-12:
-      2 |
-      3 | let { a = a1 ; b = b1 ; c = c1 }
-      4 |     = { a = Tezos.create_ticket 1 10n
-    :
-    Warning: variable "a1" cannot be used more than once.
-
-    File "../../test/contracts/top_level_patterns/contracts/cameligo/ticket_record.mligo", line 3, characters 19-21:
-      2 |
-      3 | let { a = a1 ; b = b1 ; c = c1 }
-      4 |     = { a = Tezos.create_ticket 1 10n
-    :
-    Warning: variable "b1" cannot be used more than once.
-
-    File "../../test/contracts/top_level_patterns/contracts/cameligo/ticket_record.mligo", line 3, characters 28-30:
-      2 |
-      3 | let { a = a1 ; b = b1 ; c = c1 }
-      4 |     = { a = Tezos.create_ticket 1 10n
-    :
-    Warning: variable "c1" cannot be used more than once.
-
     { parameter unit ;
       storage (pair (pair (ticket int) (ticket string)) (ticket nat)) ;
       code { DROP ;
@@ -249,24 +228,6 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_good [ "compile" ; "contract" ; contract "cameligo/ticket_tuple.mligo" ] ;
   [%expect{|
-    File "../../test/contracts/top_level_patterns/contracts/cameligo/ticket_tuple.mligo", line 1, characters 5-7:
-      1 | let (a1, a2, a3)
-      2 |   = ( Tezos.create_ticket 1 10n
-    :
-    Warning: variable "a1" cannot be used more than once.
-
-    File "../../test/contracts/top_level_patterns/contracts/cameligo/ticket_tuple.mligo", line 1, characters 9-11:
-      1 | let (a1, a2, a3)
-      2 |   = ( Tezos.create_ticket 1 10n
-    :
-    Warning: variable "a2" cannot be used more than once.
-
-    File "../../test/contracts/top_level_patterns/contracts/cameligo/ticket_tuple.mligo", line 1, characters 13-15:
-      1 | let (a1, a2, a3)
-      2 |   = ( Tezos.create_ticket 1 10n
-    :
-    Warning: variable "a3" cannot be used more than once.
-
     { parameter unit ;
       storage (pair (pair (ticket int) (ticket string)) (ticket nat)) ;
       code { DROP ;
