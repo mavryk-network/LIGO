@@ -360,8 +360,6 @@ let rec error_json : Types.all -> Simple_utils.Error.t list = fun a ->
   | `Main_required_output_file ->
     let content = make_content ~message:"missing output filename" () in
     [make ~stage:"parsing command line parameters" ~content]
-
-    json_error ~stage:"parsing command line parameters" ~message:"missing output filename" ()
   | `Main_cannot_parse_global_constants _ ->
     let content = make_content ~message:"cannot parse global constants file" () in
     [make ~stage:"global constants parsing" ~content]
@@ -414,7 +412,7 @@ let rec error_json : Types.all -> Simple_utils.Error.t list = fun a ->
   | `Self_mini_c_tracer e -> [Self_mini_c.Errors.error_json e]
   | `Scoping_tracer e -> [Scoping.Errors.error_json e]
   | `Stacking_tracer e -> [Stacking.Errors.error_json e]
-  | `Wasm_tracer e -> [Wasm_pass.Errors.error_jsonformat e]
+  | `Wasm_tracer e -> [Wasm_pass.Errors.error_json e]
 
   | `Main_interpret_test_entry_not_found _
   | `Main_interpret_target_lang_error _

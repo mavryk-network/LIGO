@@ -249,7 +249,7 @@ let rec translate_expression ~raise ~proto (expr : I.expression) (env : I.enviro
     in
     let code = List.map ~f:(Tezos_utils.Michelson.map replace) code in
     E_raw_michelson (meta, translate_type a, translate_type b, code)
-  | E_raw_wasm (_, _) -> failwith "Not implemented"
+  | E_raw_wasm (_, _, _) -> failwith "Not implemented"
   | E_global_constant (hash, args) ->
     let args = translate_args args env in
     let output_ty = translate_type ty in

@@ -354,8 +354,6 @@ let rec expression ~raise :
   (* Bytes/ String *)
   | E_constant {cons_name = C_CONCAT; arguments = [e1; e2] } -> 
     host_call ~fn:"c_concat" ~response_size:4l ~instructions:[e1; e2]
-  | E_constant {cons_name = C_BYTES_UNPACK; arguments = [e1] } -> 
-    host_call ~fn:"c_bytes_unpack" ~response_size:4l ~instructions:[e1]
   | E_constant {cons_name = C_CONS; arguments = [l1; l2]} ->
     let cons = var_to_string (Value_var.fresh ~name:"C_CONS" ()) in
     let w, env, l1 = expression ~raise w env l1 in
@@ -460,20 +458,20 @@ let rec expression ~raise :
   | E_constant {cons_name = C_BIG_MAP_GET_AND_UPDATE; arguments = [key; value; big_map] } -> raise.error (not_supported e)
 
   (* Blockchain *)
-  | E_constant {cons_name = C_CALL; arguments = [param; mutez; contract] } -> raise.error (not_supported e)
-  | E_constant {cons_name = C_CONTRACT; arguments = [address] } -> raise.error (not_supported e)
-  | E_constant {cons_name = C_CONTRACT_OPT; arguments = [address] } -> raise.error (not_supported e)
-  | E_constant {cons_name = C_CONTRACT_WITH_ERROR; arguments = [address; msg] } -> raise.error (not_supported e)
-  | E_constant {cons_name = C_CONTRACT_ENTRYPOINT; arguments = [entrypoint; address] } -> raise.error (not_supported e)
-  | E_constant {cons_name = C_CONTRACT_ENTRYPOINT_OPT; arguments = [entrypoint; address] } -> raise.error (not_supported e)
-  | E_constant {cons_name = C_ADDRESS; arguments = [address] } -> raise.error (not_supported e)
-  | E_constant {cons_name = C_SELF; arguments = [entrypoint] } -> raise.error (not_supported e)
-  | E_constant {cons_name = C_SELF_ADDRESS; arguments = [] } -> raise.error (not_supported e)
-  | E_constant {cons_name = C_IMPLICIT_ACCOUNT; arguments = [keyhash] } -> raise.error (not_supported e)
-  | E_constant {cons_name = C_SET_DELEGATE; arguments = [keyhash] } -> raise.error (not_supported e)
+  (* | E_constant {cons_name = C_CALL; arguments = [param; mutez; contract] } -> raise.error (not_supported e) *)
+  (* | E_constant {cons_name = C_CONTRACT; arguments = [address] } -> raise.error (not_supported e) *)
+  (* | E_constant {cons_name = C_CONTRACT_OPT; arguments = [address] } -> raise.error (not_supported e) *)
+  (* | E_constant {cons_name = C_CONTRACT_WITH_ERROR; arguments = [address; msg] } -> raise.error (not_supported e) *)
+  (* | E_constant {cons_name = C_CONTRACT_ENTRYPOINT; arguments = [entrypoint; address] } -> raise.error (not_supported e) *)
+  (* | E_constant {cons_name = C_CONTRACT_ENTRYPOINT_OPT; arguments = [entrypoint; address] } -> raise.error (not_supported e) *)
+  (* | E_constant {cons_name = C_ADDRESS; arguments = [address] } -> raise.error (not_supported e) *)
+  (* | E_constant {cons_name = C_SELF; arguments = [entrypoint] } -> raise.error (not_supported e) *)
+  (* | E_constant {cons_name = C_SELF_ADDRESS; arguments = [] } -> raise.error (not_supported e) *)
+  (* | E_constant {cons_name = C_IMPLICIT_ACCOUNT; arguments = [keyhash] } -> raise.error (not_supported e) *)
+  (* | E_constant {cons_name = C_SET_DELEGATE; arguments = [keyhash] } -> raise.error (not_supported e) *)
   | E_constant {cons_name = C_CREATE_CONTRACT; arguments = [operation_list_init;keyhash;mutez;init] } -> raise.error (not_supported e)
-  | E_constant {cons_name = C_OPEN_CHEST; arguments = [chest_key; chest; n] } -> raise.error (not_supported e)
-  | E_constant {cons_name = C_VIEW; arguments = [view_name; t; address] } -> raise.error (not_supported e)
+  (* | E_constant {cons_name = C_OPEN_CHEST; arguments = [chest_key; chest; n] } -> raise.error (not_supported e) *)
+  (* | E_constant {cons_name = C_VIEW; arguments = [view_name; t; address] } -> raise.error (not_supported e) *)
   | E_constant {cons_name = C_SOME; arguments = [arg]} ->
     let w, l, arg = expression ~raise w env arg in
     let some = unique_name "c_some" in  
@@ -677,8 +675,13 @@ let rec expression ~raise :
              
           ])
         )
-      | E_raw_wasm (local_symbols, code) -> 
-        (w, add_locals env local_symbols, result @ code)
+      | E_raw_wasm (local_symbols, code, args) -> 
+        let w, env, args = List.fold_left ~f:(fun (w, env, e) i -> 
+          let w, env, expr = expression ~raise w env i in
+          w, env, e @ expr
+        ) ~init:(w, env, []) args 
+        in
+        (w, add_locals env local_symbols, result @ args @ code)
       | _ -> raise.error (not_supported e)
     in
     let w, env, args = aux w env [] [] e in
@@ -1125,7 +1128,14 @@ let rec expression ~raise :
       load
     ]
   | E_update (_,_,_,_) -> raise.error (not_supported e)
-  | E_raw_wasm (local_symbols, code) -> (w, add_locals env local_symbols, code)
+  | E_raw_wasm (local_symbols, code, args) -> 
+    
+    let w, env, args = List.fold_left ~f:(fun (w, env, e) i -> 
+      let w, env, expr = expression ~raise w env i in
+      w, env, e @ expr
+    ) ~init:(w, env, []) args 
+    in
+    (w, add_locals env local_symbols, args @ code)
   | E_create_contract (_,_,_,_) -> raise.error (not_supported e)
 
   (* Are these actually used? *)

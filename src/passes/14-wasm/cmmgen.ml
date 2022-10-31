@@ -71,6 +71,7 @@ and t_base: I.type_base -> O.type_base = fun tb ->
   | TB_chest                -> TB_chest
   | TB_chest_key            -> TB_chest_key
   | TB_tx_rollup_l2_address -> TB_tx_rollup_l2_address
+  | TB_type_int x           -> TB_type_int x
 
 
 let o_expression: I.expression -> O.expression_content -> O.expression = 
@@ -217,8 +218,8 @@ let rec expression: I.expression -> O.expression * O.data list = fun e ->
     let e1, e1_data = expression e1 in
     let e2, e2_data = expression e2 in
     E_update (e1, i1, e2, i2), (e1_data @ e2_data)
-  | E_raw_michelson l -> E_raw_michelson l, []
-  | E_raw_wasm (sl, w) -> E_raw_wasm (sl, w), []
+  (* | E_raw_michelson (l, a) -> E_raw_michelson (l, a), []
+  | E_raw_wasm (e, i, a) -> E_raw_wasm (e, i, a), [] *)
   | E_global_constant (s, l) -> 
     let l, data = List.fold ~f:(fun (l, data) i -> let e, d = expression i in (e :: l, d @ data) ) ~init:([], []) l in
     E_global_constant (s, l), data

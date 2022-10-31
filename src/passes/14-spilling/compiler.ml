@@ -597,14 +597,20 @@ let rec compile_expression ~raise (ae:AST.expression) : expression =
       (match errs with
       | _ :: _ -> raise.error (could_not_parse_raw_michelson ae.location orig_code)
       | [] ->
-        let code = Micheline.strip_locations code in
-        let code = Micheline.inject_locations (fun _ -> Location.generated) code in
-        match code with
-        | Seq (_, code) ->
-          return ~tv:type_anno' @@ E_raw_michelson (code, [])
-        | _ ->
-          raise.error (raw_michelson_must_be_seq ae.location code)
+        let (code, errs) = Micheline_parser.parse_expression ~check:false code in
+        match errs with
+        | _ :: _ -> raise.error (could_not_parse_raw_michelson ae.location orig_code)
+        | [] ->
+          let code = Micheline.strip_locations code in
+          (* hmm *)
+          let code = Micheline.inject_locations (fun _ -> Location.generated) code in
+          match code with
+          | Seq (_, code) ->
+            return ~tv:type_anno' @@ E_raw_michelson (code, [])
+          | _ ->
+            raise.error (raw_michelson_must_be_seq ae.location code)
       )  
+
     | "Wasm" -> 
       let type_anno  = get_type code in
       let type_anno' = compile_type ~raise type_anno in
@@ -633,7 +639,7 @@ let rec compile_expression ~raise (ae:AST.expression) : expression =
       in
       let local_symbols = extract_locals [] instructions in
       let local_symbols = List.map ~f:(fun e -> (e, NumType I32Type)) local_symbols in
-      return ~tv:type_anno' @@ E_raw_wasm (local_symbols, instructions)
+      return ~tv:type_anno' @@ E_raw_wasm (local_symbols, instructions, [])
     | _ -> 
       raise.error (corner_case ~loc:__LOC__ "Language insert - backend mismatch only provide code insertion in the language you are compiling to")
     )

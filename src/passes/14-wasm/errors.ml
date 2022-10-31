@@ -43,38 +43,20 @@ let error_ppformat :
         Mini_c.PP.expression e
     )
 
-let error_jsonformat : wasm_error -> Yojson.Safe.t =
+let error_json : wasm_error -> Simple_utils.Error.t =
  fun a ->
-  let json_error ~stage ~content =
-    `Assoc
-      [
-        ("status", `String "error");
-        ("stage", `String stage);
-        ("content", content);
-      ]
-  in
-  match a with
-  | `Wasm_pass_michelson_insertion loc ->
-    let message = `String (Format.asprintf "impossible michelson insertion") in
-    let loc = Location.to_yojson loc in
-    let content = `Assoc [
-      ("message", message);
-      ("location", loc);
-    ] in
-    json_error ~stage ~content
-  | `Wasm_pass_invalid_utf8 loc ->
-    let message = `String (Format.asprintf "impossible michelson insertion") in
-    let loc = Location.to_yojson loc in
-    let content = `Assoc [
-      ("message", message);
-      ("location", loc);
-    ] in
-    json_error ~stage ~content
+    let open Simple_utils.Error in
+    match a with
+  | `Wasm_pass_michelson_insertion location ->
+    let message = Format.asprintf "impossible michelson insertion" in
+    let content = make_content ~message ~location () in
+    make ~stage ~content
+  | `Wasm_pass_invalid_utf8 location ->
+    let message = Format.asprintf "invalid utf8" in
+    let content = make_content ~message ~location () in
+    make ~stage ~content
   | `Wasm_pass_not_supported e ->
-    let message = `String (Format.asprintf "not supported") in
-    let expression = `String (Format.asprintf "%a" Mini_c.PP.expression e) in
-    let content = `Assoc [
-      ("message", message);
-      ("expression", expression);
-    ] in
-    json_error ~stage ~content
+    let message = Format.asprintf "not supported %a" Mini_c.PP.expression e in
+    let content = make_content ~message () in
+    make ~stage ~content
+
