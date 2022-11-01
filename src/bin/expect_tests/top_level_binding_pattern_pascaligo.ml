@@ -308,7 +308,7 @@ let%expect_test _ =
              PAIR } } |}]
 
 (* Testing *)
-(* 
+ 
 let test_ file = test ("top_level_patterns/interpreter/" ^ file)
 
 let%expect_test _ =
@@ -354,7 +354,7 @@ let%expect_test _ =
     - test exited with value (). |}]
     
 (* Negative - linearity *)
-
+(*
 let contract file = test ("top_level_patterns/negative/" ^ file)
 
 let%expect_test _ =
