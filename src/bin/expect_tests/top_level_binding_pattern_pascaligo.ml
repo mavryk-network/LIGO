@@ -354,18 +354,19 @@ let%expect_test _ =
     - test exited with value (). |}]
     
 (* Negative - linearity *)
-(*
+
 let contract file = test ("top_level_patterns/negative/" ^ file)
 
 let%expect_test _ =
   run_ligo_bad [ "compile" ; "contract" ; contract "pascaligo/nested_record.ligo" ] ;
   [%expect{|
-    File "../../test/contracts/top_level_patterns/negative/pascaligo/nested_record.ligo", line 8, character 4 to line 11, character 5:
-      7 |         }
-      8 | let { a = { c = c1 ; d = d1 ; e = e1 }
-      9 |     ; b = { c = c2 ; d = d2 ; e = e2 }
-     10 |     ; c = { c = c3 ; d = c1 ; e = e3 }
-     11 |     } = r
+    File "../../test/contracts/top_level_patterns/negative/pascaligo/nested_record.ligo", line 10, character 6 to line 14, character 9:
+      9 |
+     10 | const record
+     11 |         [ a = record[ c = c1 ; d = d1 ; e = e1 ]
+     12 |         ; b = record[ c = c2 ; d = d2 ; e = e2 ]
+     13 |         ; c = record[ c = c3 ; d = c1 ; e = e3 ]
+     14 |         ] = r
 
     Repeated variable in pattern.
     Hint: Change the name. |}]
@@ -373,9 +374,9 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_bad [ "compile" ; "contract" ; contract "pascaligo/nested_tuple.ligo" ] ;
   [%expect{|
-    File "../../test/contracts/top_level_patterns/negative/pascaligo/nested_tuple.ligo", line 2, characters 5-45:
-      1 | let r = ((1n, 1, "H"), (2n, 2, "E"), (3n, 3, "Hello"))
-      2 | let ((a1, a2, a3), (b1, a2, b3), (c1, c2, c3)) = r
+    File "../../test/contracts/top_level_patterns/negative/pascaligo/nested_tuple.ligo", line 2, characters 6-48:
+      1 | const r = ((1n, 1, "H"), (2n, 2, "E"), (3n, 3, "Hello"))
+      2 | const ((a1, a2, a3), (b1, a2, b3), (c1, c2, c3)) = r
 
     Repeated variable in pattern.
     Hint: Change the name. |}]
@@ -383,9 +384,9 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_bad [ "compile" ; "contract" ; contract "pascaligo/record.ligo" ] ;
   [%expect{|
-    File "../../test/contracts/top_level_patterns/negative/pascaligo/record.ligo", line 4, characters 4-21:
-      3 | let r = { a = 1n ; b = 1 ; c = "Hello" }
-      4 | let { a ; b = a ; c } = r
+    File "../../test/contracts/top_level_patterns/negative/pascaligo/record.ligo", line 4, characters 6-29:
+      3 | const r = record[ a = 1n ; b = 1 ; c = "Hello" ]
+      4 | const record[ a ; b = a ; c ] = r
 
     Repeated variable in pattern.
     Hint: Change the name. |}]
@@ -393,9 +394,9 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_bad [ "compile" ; "contract" ; contract "pascaligo/tuple.ligo" ] ;
   [%expect{|
-    File "../../test/contracts/top_level_patterns/negative/pascaligo/tuple.ligo", line 2, characters 5-12:
-      1 | let r = (1n, 1, "Hello")
-      2 | let (a, a, c) = r
+    File "../../test/contracts/top_level_patterns/negative/pascaligo/tuple.ligo", line 2, characters 6-15:
+      1 | const r = (1n, 1, "Hello")
+      2 | const (a, a, c) = r
 
     Repeated variable in pattern.
     Hint: Change the name. |}]
@@ -403,12 +404,13 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_bad [ "compile" ; "contract" ; contract "pascaligo/record_tuple.ligo" ] ;
   [%expect{|
-    File "../../test/contracts/top_level_patterns/negative/pascaligo/record_tuple.ligo", line 10, character 4 to line 13, character 5:
-      9 |         }
-     10 | let { a = (a1, a2, a3)
-     11 |     ; b = (b1, a2, b3)
-     12 |     ; c = (c1, c2, c3)
-     13 |     } = r
+    File "../../test/contracts/top_level_patterns/negative/pascaligo/record_tuple.ligo", line 12, character 6 to line 16, character 9:
+     11 |         ]
+     12 | const record
+     13 |         [ a = (a1, a2, a3)
+     14 |         ; b = (b1, a2, b3)
+     15 |         ; c = (c1, c2, c3)
+     16 |         ] = r
 
     Repeated variable in pattern.
     Hint: Change the name. |}]
@@ -416,12 +418,12 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_bad [ "compile" ; "contract" ; contract "pascaligo/tuple_record.ligo" ] ;
   [%expect{|
-    File "../../test/contracts/top_level_patterns/negative/pascaligo/tuple_record.ligo", line 7, character 6 to line 9, character 34:
-      6 |         )
-      7 | let ( { a = a1 ; b = b1 ; c = c1 }
-      8 |     , { a = a2 ; b = b2 ; c = a2 }
-      9 |     , { a = a3 ; b = b3 ; c = c3 }
-     10 |     ) = r
+    File "../../test/contracts/top_level_patterns/negative/pascaligo/tuple_record.ligo", line 7, character 6 to line 10, character 7:
+      6 |           )
+      7 | const ( record[ a = a1 ; b = b1 ; c = c1 ]
+      8 |       , record[ a = a2 ; b = b2 ; c = a2 ]
+      9 |       , record[ a = a3 ; b = b3 ; c = c3 ]
+     10 |       ) = r
 
     Repeated variable in pattern.
     Hint: Change the name. |}]
@@ -431,9 +433,9 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_bad [ "compile" ; "contract" ; contract "pascaligo/ticket_record.ligo" ; "--werror" ; "--disable-michelson-typechecking" ] ;
   [%expect{|
-    File "../../test/contracts/top_level_patterns/negative/pascaligo/ticket_record.ligo", line 3, characters 6-7:
+    File "../../test/contracts/top_level_patterns/negative/pascaligo/ticket_record.ligo", line 3, characters 14-15:
       2 |
-      3 | let { b } = { b = Tezos.create_ticket "one" 10n }
+      3 | const record[ b ] = record[ b = Tezos.create_ticket ("one", 10n) ]
       4 |
     :
     Warning: variable "b" cannot be used more than once. |}]
@@ -441,8 +443,32 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_bad [ "compile" ; "contract" ; contract "pascaligo/ticket_tuple.ligo" ; "--werror" ; "--disable-michelson-typechecking" ] ;
   [%expect{|
-    File "../../test/contracts/top_level_patterns/negative/pascaligo/ticket_tuple.ligo", line 1, characters 5-6:
-      1 | let (b, _) = (Tezos.create_ticket "one" 10n, 1)
+    File "../../test/contracts/top_level_patterns/negative/pascaligo/ticket_tuple.ligo", line 1, characters 7-8:
+      1 | const (b, _) = (Tezos.create_ticket ("one", 10n), 1)
       2 |
     :
-    Warning: variable "b" cannot be used more than once. |}] *)
+    Warning: variable "b" cannot be used more than once. |}]
+
+let%expect_test _ =
+  run_ligo_bad [ "compile" ; "contract" ; contract "pascaligo/constr_record_destructuring.ligo" ; "--werror" ; "--disable-michelson-typechecking" ] ;
+  [%expect{|
+    File "../../test/contracts/top_level_patterns/negative/pascaligo/constr_record_destructuring.ligo", line 4, characters 6-37:
+      3 |
+      4 | const record[ a ; b = (Foo (x)) ; c ] = record[ a = 1 ; b = Foo (2) ; c = "hey" ]
+      5 |
+
+    Error : this pattern-matching is not exhaustive.
+    Here are examples of cases that are not matched:
+    - record [c = _; b = Bar; a = _] |}]
+  
+let%expect_test _ =
+  run_ligo_bad [ "compile" ; "contract" ; contract "pascaligo/constr_tuple_destructuring.ligo" ; "--werror" ; "--disable-michelson-typechecking" ] ;
+  [%expect{|
+    File "../../test/contracts/top_level_patterns/negative/pascaligo/constr_tuple_destructuring.ligo", line 3, characters 6-23:
+      2 |
+      3 | const (a, (Foo (x)), c) = (1, Foo (2), "hey")
+      4 |
+
+    Error : this pattern-matching is not exhaustive.
+    Here are examples of cases that are not matched:
+    - (_, Bar, _) |}]
