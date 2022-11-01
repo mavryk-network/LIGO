@@ -514,3 +514,27 @@ let%expect_test _ =
     Error : this pattern-matching is not exhaustive.
     Here are examples of cases that are not matched:
     - (_, Bar, _) |}]
+
+let%expect_test _ =
+  run_ligo_bad [ "run" ; "test" ; contract "cameligo/constr_let_in.mligo" ] ;
+  [%expect{|
+    File "../../test/contracts/top_level_patterns/negative/cameligo/constr_let_in.mligo", line 4, characters 6-7:
+      3 | let test =
+      4 |   let B = B in
+      5 |   ()
+
+    Error : this pattern-matching is not exhaustive.
+    Here are examples of cases that are not matched:
+    - A |}]
+
+let%expect_test _ =
+  run_ligo_bad [ "run" ; "test" ; contract "cameligo/constr_let_in2.mligo" ] ;
+  [%expect{|
+    File "../../test/contracts/top_level_patterns/negative/cameligo/constr_let_in2.mligo", line 2, characters 6-10:
+      1 | let test =
+      2 |   let True = true in
+      3 |   42
+
+    Error : this pattern-matching is not exhaustive.
+    Here are examples of cases that are not matched:
+    - False |}]

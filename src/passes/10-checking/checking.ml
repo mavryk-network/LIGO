@@ -475,6 +475,7 @@ and infer_expression ~(raise : raise) ~options ~ctx (expr : I.expression)
       , let%bind rhs = rhs
         and let_binder = let_binder
         and let_result = let_result in
+        let%bind raise = Elaboration.raise in
         let () = check_pattern_anomalies ~raise ~options let_binder rhs_type in
         return
           (E_let_in
