@@ -33,6 +33,33 @@ include:
     - find "$CI_PROJECT_DIR" -path "$CI_PROJECT_DIR/.git" -prune -o "(" -type d -a -not -perm -u=w ")" -exec chmod --verbose u+w {} ";"
     - export COMMIT_DATE="$(git show --no-patch --format=%ci)"
 
+esy-windows:
+  extends: .submodule-clone
+  tags:
+    - windows
+  stage: esy
+  only:
+  - merge_requests
+  - dev
+  - /^.*-run-dev$/
+  - /^release/.*$/
+  - /[0-9]+\.[0-9]+\.[0-9]+/
+  script:
+    # - $env:GIT_CURL_VERBOSE = 1
+    # - $env:GIT_TRACE = 1
+    # - $env:GIT_TRACE_PACKET = 1
+    - git config http.postBuffer 1048576000
+    - npm i -g esy@beta --force
+    - $env:PATH = 'C:\Users\gitlabrunner\AppData\Roaming\npm;' + $env:PATH
+    - $env:HOME = 'C:/Users/gitlabrunner'
+    - esy i
+    - "C:\Program Files\Git\bin\bash.exe" -c "esy release || esy release || esy release"
+    - rm -Recurse -Force _esy
+    - mv _release platform-windows-x64
+  artifacts:
+    paths:
+      - platform-windows-x64
+
 changelog:
   stage: pretooling
   only:

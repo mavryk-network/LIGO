@@ -1,7 +1,7 @@
 module Constants = Cli_helpers.Constants
 
 let does_json_manifest_exist () =
-  let cwd = Unix.getcwd () in
+  let cwd = Caml.Sys.getcwd () in
   let package_json = Filename.concat cwd "package.json" in
   match Unix.file_exists package_json with
    `Yes -> 

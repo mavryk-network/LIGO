@@ -187,7 +187,7 @@ let os_type =
   | _ -> Gz.Unix
 
 let gzip fname fd =
-  let file_size = Int.of_int64_exn (Unix.stat fname).st_size in
+  let file_size = Int.of_int64_exn (Ligo_unix.stat fname).st_size in
   let level = 4 in
   let buffer_len = De.io_buffer_size in
   let time () = Int32.of_float (Unix.gettimeofday ()) in
@@ -224,7 +224,7 @@ let rec get_all_files : string -> string list Lwt.t = fun file_or_dir ->
   | S_DIR ->
     if SSet.mem ignore_dirs (Filename.basename file_or_dir) 
     then Lwt.return [] else 
-    let all = Unix.ls_dir file_or_dir in
+    let all = Ligo_unix.ls_dir file_or_dir in
     let* files = 
     Lwt_list.fold_left_s (fun acc f -> 
       let* fs = get_all_files (Filename.concat file_or_dir f) in
