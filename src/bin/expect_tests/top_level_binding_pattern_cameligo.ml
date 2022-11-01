@@ -502,3 +502,15 @@ let%expect_test _ =
     Error : this pattern-matching is not exhaustive.
     Here are examples of cases that are not matched:
     - {c = _; b = Bar; a = _} |}]
+
+let%expect_test _ =
+  run_ligo_bad [ "compile" ; "contract" ; contract "cameligo/constr_tuple_destructuring.mligo" ; "--werror" ; "--disable-michelson-typechecking" ] ;
+  [%expect{|
+    File "../../test/contracts/top_level_patterns/negative/cameligo/constr_tuple_destructuring.mligo", line 3, characters 5-19:
+      2 |
+      3 | let (a,  (Foo x), c) = (1, Foo 2, "hey")
+      4 |
+
+    Error : this pattern-matching is not exhaustive.
+    Here are examples of cases that are not matched:
+    - (_, Bar, _) |}]
