@@ -32,54 +32,55 @@ include:
     - find "$CI_PROJECT_DIR" -path "$CI_PROJECT_DIR/.git" -prune -o "(" -type d -a -not -perm -u=w ")" -exec chmod --verbose u+w {} ";"
     - export COMMIT_DATE="$(git show --no-patch --format=%ci)"
 
-esy-macos-intel:
-  tags:
-    - mac
-    - i7
-  stage: esy
-  only:
-  - merge_requests
-  - dev
-  - /^.*-run-dev$/
-  - /^release/.*$/
-  - /[0-9]+\.[0-9]+\.[0-9]+/
-  script:
-    - mkdir -p ~/.npm
-    - npm config set prefix '~/.npm'
-    - export PATH=~/.npm/bin:$PATH
-    - npm i -g esy@beta
-    - esy i
-    - esy release
-    - mv _release platform-darwin
-  artifacts:
-    paths:
-      - platform-darwin
+# esy-macos-intel:
+#   tags:
+#     - mac
+#     - i7
+#   stage: esy
+#   only:
+#   - merge_requests
+#   - dev
+#   - /^.*-run-dev$/
+#   - /^release/.*$/
+#   - /[0-9]+\.[0-9]+\.[0-9]+/
+#   script:
+#     - mkdir -p ~/.npm
+#     - npm config set prefix '~/.npm'
+#     - export PATH=~/.npm/bin:$PATH
+#     - npm i -g esy@beta
+#     - esy i
+#     - esy release
+#     - mv _release platform-darwin
+#   artifacts:
+#     paths:
+#       - platform-darwin
 
-esy-macos-m1:
-  stage: esy
-  only:
-  - merge_requests
-  - dev
-  - /^.*-run-dev$/
-  - /^release/.*$/
-  - /[0-9]+\.[0-9]+\.[0-9]+/
-  script:
-    - mkdir -p ~/.npm
-    - npm config set prefix '~/.npm'
-    - export PATH=~/.npm/bin:$PATH
-    - npm i -g esy@beta
-    - esy i
-    - esy release
-    - mv _release platform-darwin-arm64
-  artifacts:
-    paths:
-      - platform-darwin-arm64
-  tags:
-    - mac
-    - m1
+# esy-macos-m1:
+#   stage: esy
+#   only:
+#   - merge_requests
+#   - dev
+#   - /^.*-run-dev$/
+#   - /^release/.*$/
+#   - /[0-9]+\.[0-9]+\.[0-9]+/
+#   script:
+#     - mkdir -p ~/.npm
+#     - npm config set prefix '~/.npm'
+#     - export PATH=~/.npm/bin:$PATH
+#     - npm i -g esy@beta
+#     - esy i
+#     - esy release
+#     - mv _release platform-darwin-arm64
+#   artifacts:
+#     paths:
+#       - platform-darwin-arm64
+#   tags:
+#     - mac
+#     - m1
 
 
 esy-windows:
+  extends: .submodule-clone
   tags:
     - windows
   stage: esy
@@ -105,32 +106,32 @@ esy-windows:
     paths:
       - platform-windows-x64
 
-prepare_npm_tarball:
-  tags:
-  - docker
-  stage: push
-  needs:
-    - job: esy-macos-m1
-      artifacts: true
-    - job: esy-macos-intel
-      artifacts: true
-    - job: esy-windows
-      artifacts: true
-  only:
-    - merge_requests
-    - dev
-    - /^.*-run-dev$/
-    - /^release/.*$/
-    - /[0-9]+\.[0-9]+\.[0-9]+/
-  script:
-    - mkdir -p _release
-    - cp platform-darwin/esyInstallRelease.js _release
-    - mv platform-* _release/
-    - node scripts/pipelines-release.js
-    - cd _release && npm pack
-  artifacts:
-    paths:
-      - _release/ligo-*.tgz
+# prepare_npm_tarball:
+#   tags:
+#   - docker
+#   stage: push
+#   needs:
+#     - job: esy-macos-m1
+#       artifacts: true
+#     - job: esy-macos-intel
+#       artifacts: true
+#     - job: esy-windows
+#       artifacts: true
+#   only:
+#     - merge_requests
+#     - dev
+#     - /^.*-run-dev$/
+#     - /^release/.*$/
+#     - /[0-9]+\.[0-9]+\.[0-9]+/
+#   script:
+#     - mkdir -p _release
+#     - cp platform-darwin/esyInstallRelease.js _release
+#     - mv platform-* _release/
+#     - node scripts/pipelines-release.js
+#     - cd _release && npm pack
+#   artifacts:
+#     paths:
+#       - _release/ligo-*.tgz
 
 changelog:
   stage: pretooling
