@@ -113,8 +113,14 @@ let rec check w env e : Env.t =
   | {it = Return; _} :: rest ->  check w env rest
   | {it = Call v; _} :: rest -> check w env rest
   | {it = CallIndirect (v, v2); _} :: rest -> check w env rest
-  | {it = LocalGet v; _} :: rest -> check w env rest
-  | {it = LocalSet v; _} :: rest -> check w env rest
+  | {it = LocalGet v; _} :: rest -> 
+    (* TODO: take type from env*)
+    let env = stack_push env (T.NumType I32Type) in
+    check w env rest;
+  | {it = LocalSet v; _} :: rest -> 
+    (* TODO: take type from env *)
+    let env = stack_pop env (T.NumType I32Type) in
+    check w env rest;
   | {it = LocalTee v; _} :: rest -> check w env rest
   | {it = GlobalGet _; _} :: rest -> check w env rest
   | {it = GlobalSet _; _} :: rest -> check w env rest

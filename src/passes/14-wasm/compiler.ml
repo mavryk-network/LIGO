@@ -245,7 +245,7 @@ let rec expression ~raise :
     let w, env, e1 = expression ~raise w env e1 in
     let w, env, e2 = expression ~raise w env e2 in
     let env, e = op env e1 e2 in
-    w, env, e
+    w, env, e    
   in 
   let unique_name name =
     let unique_name = Value_var.fresh ~name () in
@@ -670,6 +670,9 @@ let rec expression ~raise :
                 call_indirect_s indirect_name;
               ]
               [
+                const 222222l;
+                call_s "print";
+
                 local_get_s dest
               ]
              
@@ -692,7 +695,7 @@ let rec expression ~raise :
     | Some _ -> (w, env, [local_get_s name])
     | None -> (
       match func_symbol_type w name with 
-      | Some (FuncSymbol fs, TypeSymbol {tdetails = FuncType (input, output); _}) ->         
+      | Some (FuncSymbol fs, TypeSymbol {tdetails = FuncType (input, output); _}) ->
         let no_of_args = List.length input in
         let func_name, w = Partial_call.create_helper w at ~name ~no_of_args in 
         let env, func_alloc_name, e = Partial_call.create_memory_block env at ~f:[func_symbol func_name] ~no_of_args ~current_args:[] in
@@ -703,12 +706,156 @@ let rec expression ~raise :
       )
     )
   | E_iterator (C_MAP, ((item_name, item_type), body), ({type_expression = {type_content = T_list _; _}; _} as col)) -> 
-    (* loop over collection 
-    set item name... *)
-  
-    (* Ligo_prim.Constant.pp_constant' Format.std_formatter name; *)
-    (* print_endline ""; *)
-    raise.error (not_supported e)
+    let item = var_to_string item_name in
+    let next_item = unique_name "next_item" in
+    let result = unique_name "result" in
+    let result_iter = unique_name "result_iter" in
+    let result_iter_next = unique_name "result_iter_next" in
+
+    let env = add_locals env [(item, T.NumType I32Type); (result, T.NumType I32Type); (result_iter, T.NumType I32Type); (result_iter_next, T.NumType I32Type); (next_item, T.NumType I32Type)] in
+    let w, env, col = expression ~raise w env col in
+    let w, env, body = expression ~raise w env body in
+    
+    w, env, 
+      col 
+      @
+      [
+      local_set_s item;
+
+      const 121212l;
+      call_s "print";
+
+      local_get_s item;
+      load;
+      load;
+      call_s "print";
+
+      local_get_s item;
+      if_ 
+        (ValBlockType (Some (T.NumType I32Type)))
+        ([ 
+          const 8l;
+          call_s "malloc";
+          local_tee_s result_iter;
+          local_set_s result;
+          
+
+          loop (ValBlockType (Some (T.NumType I32Type))) 
+          (
+            [
+              
+              (* get the next item *)
+              local_get_s item;
+              const 4l;
+              i32_add;
+              load;
+              local_set_s next_item;
+
+
+              (* allocate memory for the next item in the list if necessary *)
+              local_get_s next_item;
+              load;
+              if_ 
+                (ValBlockType None)
+                [
+                  const 8l;
+                  call_s "malloc";
+                  local_set_s result_iter_next;
+                ]
+                [
+                  const 0l;
+                  local_set_s result_iter_next;
+                ];
+
+              (* store the item of the previous list in the new one *)  
+              local_get_s result_iter;
+              local_get_s item;
+              load;
+              load;
+              store;
+
+              const 161616l;
+              call_s "print";
+              local_get_s result_iter;
+              load;
+              call_s "print";
+
+              local_get_s result_iter;
+
+
+              local_set_s item;
+              (* local_get_s item; *)
+              (* drop at; *)
+            
+
+              
+
+              local_get_s result_iter;
+            ]
+            @
+            body
+            @
+            [
+              (* load; *)
+              store;
+
+              const 171717l;
+              call_s "print";
+
+              local_get_s result_iter;
+              load;
+              call_s "print";
+
+              local_get_s result_iter;
+              const 4l; 
+              i32_add;
+              local_get_s result_iter_next;
+              store;
+              
+              local_get_s result_iter_next;
+              local_set_s result_iter;
+
+
+              local_get_s result;
+              load;
+              load;
+              call_s "print";
+(* 
+              local_get_s result;
+              const 4l;
+              i32_add;
+              load;
+              load;
+              call_s "print"; *)
+
+
+
+
+              (* check to see if the loop needs to continue *)
+              local_get_s next_item;
+              local_set_s item;
+      
+              local_get_s result;
+      (* load; *)
+              local_get_s next_item;
+              load;
+              const 0l;
+              i32_ne;
+              br_if 0l;
+            ]
+          );
+          
+
+          
+         
+        ]
+        
+        )
+        [
+          const 0l
+        ];
+      ]
+      
   | E_iterator (kind, ((item_name, item_type), body), col) -> 
     raise.error (not_supported e)
   | E_fold (((name, tv), body), ({type_expression = {type_content = T_list _; _}; _} as col), initial) -> 
@@ -796,6 +943,8 @@ let rec expression ~raise :
     let w, env, body = expression ~raise w env body in
     let w, env, tuple = Datatype.Pair.create w env [local_get_s init] [local_get_s item; load]  in
     
+    (* List.iter ~f:(fun (f, _) -> print_endline ("check: " ^ f)) env.locals; *)
+
     (* create a helper function here *)
     let s = A.{
       name    = helper_fn_name;
@@ -1088,10 +1237,12 @@ let rec expression ~raise :
         ((name, _type), e2) ) ->
     raise.error (not_supported e)
   | E_let_in (e1, _inline, ((name, typex), e2)) ->
+    
     let name = var_to_string name in
     let w, env, e1 = expression ~raise w env e1 in
     let env = add_local env (name, T.NumType I32Type) in
     let w, env, e2 = expression ~raise w env e2 in
+    (*    print_endline ("set variable: " ^ name); *)
     (w, env, e1 @ [local_set_s name] @ e2)
   | E_tuple _ -> raise.error (not_supported e)
   | E_let_tuple (tuple, (values, rhs)) ->
