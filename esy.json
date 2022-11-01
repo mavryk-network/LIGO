@@ -24,6 +24,10 @@
       "OPAM_SWITCH_PREFIX": "#{ @opam/tezos-rust-libs.install }"
     },
     "exportedEnv": {
+      "PATH": {
+        "val": "#{self.bin : $PATH}",
+        "scope": "global"
+      },
       "LD_LIBRARY_PATH": {
         "val": "#{@opam/hacl-star-raw.lib / 'hacl-star-raw' : esy-libffi.lib : esy-libev.lib : $LD_LIBRARY_PATH}",
         "scope": "global"

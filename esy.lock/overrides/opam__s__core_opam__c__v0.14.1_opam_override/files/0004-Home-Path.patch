@@ -1,0 +1,13 @@
+--- ./src/core_sys.ml
++++ ./src/core_sys.ml
+@@ -147,6 +147,10 @@
+ let home_directory () =
+   match getenv "HOME" with
+   | Some home -> home
++  | None when Sys.win32-> (match getenv "USERPROFILE", getenv "HOMEDRIVE", getenv "HOMEPATH" with
++                          | Some home, _, _ -> home
++                          | _, Some home_drive, Some home_path -> home_drive ^ home_path
++                          | _ -> "")
+   | None -> (Unix.getpwuid (Unix.geteuid ())).pw_dir
+ 
+ external opaque_identity : 'a -> 'a = "%opaque"
