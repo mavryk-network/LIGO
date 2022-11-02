@@ -97,7 +97,7 @@ esy-windows:
     - $env:PATH = 'C:\Users\gitlabrunner\AppData\Roaming\npm;' + $env:PATH
     - $env:HOME = 'C:/Users/gitlabrunner'
     - esy i
-    - bash -c "esy release || esy release || esy release"
+    - "C:\Program Files\Git\bin\bash.exe" -c "esy release || esy release || esy release"
     - rm -Recurse -Force _esy
     - mv _release platform-windows-x64
   artifacts:
