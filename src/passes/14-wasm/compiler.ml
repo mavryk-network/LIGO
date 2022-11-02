@@ -60,7 +60,7 @@ module Partial_call = struct
 
   let create_helper w at ~name ~no_of_args = 
     let open A in
-    let func_name = "i32_" ^ (string_of_int no_of_args) in    
+    let func_name = unique_name ("helper_" ^ name) in    
     let const = const at in
     let call_s = call_s at in
     let local_set_s = local_set_s at in
@@ -68,11 +68,10 @@ module Partial_call = struct
     let store = store at in 
     let load = load at in 
     let i32_add = i32_add at in
-    let func_alloc_name = unique_name "partial_call" in
-    let exists = List.find ~f:(fun a -> match a.it with | FuncSymbol n -> (String.equal n.name func_name) | _ -> false) w.funcs  in
+    let exists = List.find ~f:(fun a -> match a.it with | FuncSymbol n -> (String.equal n.name func_name) | FuncNoSymbol _ -> false) w.funcs  in
     match exists with 
       Some _ -> 
-      func_name, w
+        func_name, w
     | None -> (
       let type_name = "i32_" ^ (string_of_int no_of_args) ^ "_type" in
       let t = A.TypeSymbol {
@@ -181,6 +180,7 @@ let rec expression ~raise :
     A.module_' -> Env.t -> I.expression -> A.module_' * Env.t * A.instr list =
  fun w env e ->
   let at = location_to_region e.location in
+
   let const = const at in
   let call_s = call_s at in
   let call_indirect_s = call_indirect_s at in
@@ -585,7 +585,7 @@ let rec expression ~raise :
             ]
           )
         | _ -> 
-          let indirect_name = unique_name "call_indirect " in
+          let indirect_name = unique_name "call_indirect" in
           let total_args_length = unique_name "total_args_length"in
           let current_args_length = unique_name "current_args_length" in
           let counter = unique_name "counter" in
@@ -670,9 +670,6 @@ let rec expression ~raise :
                 call_indirect_s indirect_name;
               ]
               [
-                const 222222l;
-                call_s "print";
-
                 local_get_s dest
               ]
              
@@ -722,24 +719,17 @@ let rec expression ~raise :
       [
       local_set_s item;
 
-      const 121212l;
-      call_s "print";
-
-      local_get_s item;
-      load;
-      load;
-      call_s "print";
-
       local_get_s item;
       if_ 
         (ValBlockType (Some (T.NumType I32Type)))
         ([ 
+
+          (* allocate memory for the first block *)
           const 8l;
           call_s "malloc";
           local_tee_s result_iter;
           local_set_s result;
           
-
           loop (ValBlockType (Some (T.NumType I32Type))) 
           (
             [
@@ -763,7 +753,7 @@ let rec expression ~raise :
                   local_set_s result_iter_next;
                 ]
                 [
-                  const 0l;
+                  data_symbol "C_LIST_EMPTY";
                   local_set_s result_iter_next;
                 ];
 
@@ -774,38 +764,18 @@ let rec expression ~raise :
               load;
               store;
 
-              const 161616l;
-              call_s "print";
               local_get_s result_iter;
-              load;
-              call_s "print";
-
-              local_get_s result_iter;
-
-
               local_set_s item;
-              (* local_get_s item; *)
-              (* drop at; *)
-            
-
               
-
               local_get_s result_iter;
+              
             ]
             @
             body
             @
             [
-              (* load; *)
               store;
-
-              const 171717l;
-              call_s "print";
-
-              local_get_s result_iter;
-              load;
-              call_s "print";
-
+              
               local_get_s result_iter;
               const 4l; 
               i32_add;
@@ -816,20 +786,7 @@ let rec expression ~raise :
               local_set_s result_iter;
 
 
-              local_get_s result;
-              load;
-              load;
-              call_s "print";
-(* 
-              local_get_s result;
-              const 4l;
-              i32_add;
-              load;
-              load;
-              call_s "print"; *)
-
-
-
+              
 
               (* check to see if the loop needs to continue *)
               local_get_s next_item;
@@ -852,7 +809,7 @@ let rec expression ~raise :
         
         )
         [
-          const 0l
+          data_symbol "C_LIST_EMPTY"
         ];
       ]
       
@@ -882,12 +839,15 @@ let rec expression ~raise :
     @
     [
       local_set_s init;
+
+      
     ]
     @
     col 
     @
     [
       local_set_s item;
+
       loop (ValBlockType (Some (T.NumType I32Type))) 
       (
       tuple
@@ -943,8 +903,6 @@ let rec expression ~raise :
     let w, env, body = expression ~raise w env body in
     let w, env, tuple = Datatype.Pair.create w env [local_get_s init] [local_get_s item; load]  in
     
-    (* List.iter ~f:(fun (f, _) -> print_endline ("check: " ^ f)) env.locals; *)
-
     (* create a helper function here *)
     let s = A.{
       name    = helper_fn_name;
@@ -1242,7 +1200,6 @@ let rec expression ~raise :
     let w, env, e1 = expression ~raise w env e1 in
     let env = add_local env (name, T.NumType I32Type) in
     let w, env, e2 = expression ~raise w env e2 in
-    (*    print_endline ("set variable: " ^ name); *)
     (w, env, e1 @ [local_set_s name] @ e2)
   | E_tuple _ -> raise.error (not_supported e)
   | E_let_tuple (tuple, (values, rhs)) ->
@@ -1453,12 +1410,8 @@ let rec toplevel_bindings ~raise :
                         load;
                         
                         call_s "print";
-
                         
                         local_get_s "result";
-                        (* const 4l;
-                        i32_add; *)
-                        (* load; *)
                       ];
                   };
                 at;
@@ -1490,3 +1443,4 @@ let compile ~raise : I.expression -> string -> string -> W.Ast.module_ =
     ]
   } in
   S.{it = w; at}
+ 

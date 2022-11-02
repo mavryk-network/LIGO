@@ -34,7 +34,8 @@ let main ((_, _s):(parameter * storage)) =
   in 
 
   let a2x a b = a + b in
-  let a2 = a2x 2 3 in
+  let a2 = a2x 2 in
+  let a2 = a2 3 in
   
   let a3x (a, b) = a + b in
   let a3 = a3x (3, 3) in
@@ -47,10 +48,14 @@ let main ((_, _s):(parameter * storage)) =
   let a9 = other_c2 (3, 2) in
 
 
-  let a10 = List.fold_right (fun (i, a) -> a + i) [10;20;30] 100 in
-  // let a11 = [1; 2; 3; 4] in
-  // let a11 = List.map (fun i -> i * 10) a11 in
+  let a12 = [1; 2; 3] in
 
+  let a11 = List.map (fun i -> i * 10) a12 in
+
+  let a10 = 
+    List.fold_left (fun (a, i) -> a + i) 100 a11 + 
+    List.fold_left (fun (a, i) -> a + i) 100 a12 in
+  
   let a = 
     4 + 5 +  (* 9 *)
     40 / 5 + (* 9 + 8 = 17 *)
@@ -64,8 +69,8 @@ let main ((_, _s):(parameter * storage)) =
     a6 +     (* 69 + 5 = 74 *) 
     a8 +     (* 74 + 15 = 89 *)
     a9 +     (* 89 + 5 = 94 *)
-    a10    (* 94 + 160 = 254 *)
-    // 1000
-    // 0
+    a10  +  (* 94 + 266 = 360 *)
+    // 1000 
+    0
   in 
   ([]: operation list), a

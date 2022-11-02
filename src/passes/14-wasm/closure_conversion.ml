@@ -37,7 +37,6 @@ let var_type env v =
 
 let rec lift : env -> expression -> env * expression =
  fun env e ->
-  let variable_exists = variable_exists env in
   match e.content with
   | E_literal _ -> (env, e)
   | E_closure {binder; body} ->
@@ -49,11 +48,23 @@ let rec lift : env -> expression -> env * expression =
           exported_funcs = env.exported_funcs
       }
     in
-    let env2, body = lift env2 body in
+    
+    let rec find_body env2 a = 
+      match a.content with 
+        E_closure {binder; body} -> 
+          let env2 = {env2 with variables = (binder, a.type_expression) :: env2.variables } in 
+          let env2, body = find_body env2 body in
+          env2, {a with content = E_closure { binder; body }}
+      | _ -> 
+        lift env2 a
+    in
+    let env, body = find_body env2 body in
+    
     let v = Value_var.fresh () in
     let env = { 
       env2 with 
-        variables = (binder, e.type_expression) :: (v, e.type_expression) :: env.variables
+        variables = 
+            (v, e.type_expression) :: env.variables
     } 
     in
     let export_func remaining =
@@ -146,7 +157,7 @@ let rec lift : env -> expression -> env * expression =
             type_content = T_function (e1.type_expression, e2.type_expression);
           };
       } )
-  | E_variable v when variable_exists v -> 
+  | E_variable v when variable_exists env v -> 
     (env, e)
   | E_variable v -> ({env with missing = v :: env.missing}, e)
   | E_iterator (cc, ((var_name, type_expression), e1), e2) ->
@@ -319,7 +330,8 @@ let rec toplevel_inner : env -> expression -> expression =
       | E_closure {binder; body} ->
         let env, body = aux body in
         env, {b with content = E_closure {binder; body} }
-      | _  -> lift {empty_env with functions = var_name :: env.functions; variables = (binder, type_expression) :: env.variables} b
+      | _  -> 
+        lift {empty_env with functions = var_name :: env.functions; variables = (binder, type_expression) :: env.variables} b
     in
     let env, body = aux body in 
     List.fold_left
