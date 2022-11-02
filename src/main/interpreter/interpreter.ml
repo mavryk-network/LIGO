@@ -123,7 +123,7 @@ let rec pattern_env_extend_ ~(attributes : ValueAttr.t) ~(mut : bool)
     let* ty = get_t_list ty in
     bind_fold_list lst ~init:(locs,env) ~f:(fun (locs,env) (pattern, value) -> self (locs,env) pattern ty value)
   | _ -> fail @@ error_type ()
-and pattern_extend_extend_mut ~attributes env pattern ty value =
+and pattern_env_extend_mut ~attributes env pattern ty value =
   pattern_env_extend_ ~attributes ~mut:true ([],env) pattern ty value
 and pattern_env_extend ~attributes env pattern ty value =
   let open Monad in
@@ -1902,7 +1902,7 @@ and eval_ligo ~raise ~steps ~options
     return val_
   | E_let_mut_in { let_binder; rhs; let_result; attributes } ->
     let* rhs' = eval_ligo rhs calltrace env in
-    let* locs,env = pattern_extend_extend_mut ~attributes env let_binder rhs.type_expression rhs' in
+    let* locs,env = pattern_env_extend_mut ~attributes env let_binder rhs.type_expression rhs' in
     let* let_result =
       eval_ligo
         let_result
