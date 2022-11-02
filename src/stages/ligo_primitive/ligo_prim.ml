@@ -6,6 +6,7 @@ module Linear_pattern = Pattern.Linear_pattern
 module Non_linear_pattern = Pattern.Non_linear_pattern
 module Access_path = Access_path
 module Layout = Layout
+module Layout_var = Var.Layout_var
 
 (* Type level constructs *)
 module Type_var = Var.Type_var
