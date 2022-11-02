@@ -1,8 +1,8 @@
 (* This file represente the context which give the association of values to types *)
 module Location = Simple_utils.Location
 open Simple_utils.Trace
-open Ast_typed
 open Ligo_prim
+open Ast_typed
 module ValueMap = Simple_utils.Map.Make (Value_var)
 module TypeMap = Ast_typed.Helpers.IdMap.Make (Type_var)
 module ModuleMap = Ast_typed.Helpers.IdMap.Make (Module_var)
@@ -394,6 +394,8 @@ let add_signature_item t (sig_item : Signature.item) =
   | S_type (tvar, type_) -> add_type t tvar type_
   | S_module (mvar, sig_) -> add_module t mvar sig_
 
+let add_signature_items t (sig_items : Signature.item list) =
+  List.fold ~f:add_signature_item ~init:t (List.rev sig_items)
 
 let get_value =
   memoize2
@@ -957,21 +959,23 @@ and signature_of_module : ctx:t -> Ast_typed.module_ -> Signature.t =
   | decl :: module_ ->
     let public, sig_item = signature_item_of_decl ~ctx decl in
     let sig_ =
-      signature_of_module ~ctx:(add_signature_item ctx sig_item) module_
+      signature_of_module ~ctx:(add_signature_items ctx sig_item) module_
     in
-    if public then sig_item :: sig_ else sig_
+    if public then sig_item @ sig_ else sig_
 
-
-and signature_item_of_decl : ctx:t -> Ast_typed.decl -> bool * Signature.item =
+and signature_item_of_decl : ctx:t -> Ast_typed.decl -> bool * (Signature.item list) =
  fun ~ctx decl ->
   match Location.unwrap decl with
   | D_value { binder; expr; attr = { public; _ } } ->
-    public, S_value (Binder.get_var binder, expr.type_expression)
+    public, [ S_value (Binder.get_var binder, expr.type_expression) ]
+  | D_pattern { pattern ; expr = _ ; attr = { public ; _ }} ->
+    let sigs = List.map (Ast_typed.Pattern.binders pattern) ~f:(fun b -> Signature.S_value (Binder.get_var b, Binder.get_ascr b)) in
+    public, sigs
   | D_type { type_binder = tvar; type_expr = type_; type_attr = { public; _ } }
-    -> public, S_type (tvar, type_)
+    -> public, [ S_type (tvar, type_) ]
   | D_module { module_binder = mvar; module_; module_attr = { public; _ } } ->
     let sig_' = signature_of_module_expr ~ctx module_ in
-    public, S_module (mvar, sig_')
+    public, [ S_module (mvar, sig_') ]
 
 
 (* Load context from the outside declarations *)
@@ -984,6 +988,10 @@ let init ?env () =
         match Location.unwrap decl with
         | D_value { binder; expr; attr = _ } ->
           add_imm ctx (Binder.get_var binder) expr.type_expression
+        | D_pattern { pattern; expr = _; attr = _ } ->
+          List.fold (Ast_typed.Pattern.binders pattern)
+            ~init:ctx
+            ~f:(fun ctx x -> add_imm ctx (Binder.get_var x) (Binder.get_ascr x))
         | D_type { type_binder; type_expr; type_attr = _ } ->
           add_type ctx type_binder type_expr
         | D_module { module_binder; module_; module_attr = _ } ->
@@ -1292,12 +1300,12 @@ module Elaboration = struct
         ; fun_type = t_apply ctx fun_type
         ; lambda = lambda_apply ctx lambda
         }
-    | E_let_in { let_binder; rhs; let_result; attr } ->
+    | E_let_in { let_binder; rhs; let_result; attributes } ->
       E_let_in
-        { let_binder = binder_apply ctx let_binder
+        { let_binder = pattern_apply ctx let_binder
         ; rhs = self rhs
         ; let_result = self let_result
-        ; attr
+        ; attributes
         }
     | E_mod_in { module_binder; rhs; let_result } ->
       E_mod_in
@@ -1321,12 +1329,12 @@ module Elaboration = struct
     | E_update { struct_; path; update } ->
       E_update { struct_ = self struct_; path; update = self update }
     | E_module_accessor mod_access -> E_module_accessor mod_access
-    | E_let_mut_in { let_binder; rhs; let_result; attr } ->
+    | E_let_mut_in { let_binder; rhs; let_result; attributes } ->
       E_let_mut_in
-        { let_binder = binder_apply ctx let_binder
+        { let_binder = pattern_apply ctx let_binder
         ; rhs = self rhs
         ; let_result = self let_result
-        ; attr
+        ; attributes
         }
     | E_deref var -> E_deref var
     | E_while while_loop -> E_while (While_loop.map self while_loop)
@@ -1347,10 +1355,7 @@ module Elaboration = struct
 
   and param_apply ctx (param : 'a Param.t) = Param.map (t_apply ctx) param
   and binder_apply ctx (binder : 'a Binder.t) = Binder.map (t_apply ctx) binder
-
-  and binder_apply_opt ctx (binder : 'a option Binder.t) =
-    Binder.map (Option.map ~f:(t_apply ctx)) binder
-
+  and pattern_apply ctx (binder : 'a Ast_typed.Pattern.t) = Pattern.map (t_apply ctx) binder
 
   and matching_expr_apply ctx match_exprs =
     List.map
@@ -1368,7 +1373,15 @@ module Elaboration = struct
     | D_value { binder; expr; attr } ->
       return
       @@ D_value
-           { binder = binder_apply_opt ctx binder
+           { binder = binder_apply ctx binder
+           ; expr = e_apply ctx expr
+           ; attr
+           }
+    | D_pattern { pattern; expr; attr } ->
+      let pattern = Ast_typed.Pattern.map (t_apply ctx) pattern in 
+      return
+      @@ D_pattern
+           { pattern
            ; expr = e_apply ctx expr
            ; attr
            }
@@ -1438,7 +1451,7 @@ module Elaboration = struct
       type_pass ~raise fun_type;
       lambda_pass ~raise lambda
     | E_let_in { let_binder; rhs; let_result; _ } ->
-      binder_pass ~raise let_binder;
+      pattern_pass ~raise let_binder;
       self rhs;
       self let_result
     | E_mod_in { rhs; let_result; _ } ->
@@ -1461,7 +1474,7 @@ module Elaboration = struct
       self update
     | E_module_accessor _mod_access -> ()
     | E_let_mut_in { let_binder; rhs; let_result; _ } ->
-      binder_pass ~raise let_binder;
+      pattern_pass ~raise let_binder;
       self rhs;
       self let_result
     | E_deref _var -> ()
@@ -1493,11 +1506,8 @@ module Elaboration = struct
 
   and binder_pass ~raise (binder : _ Binder.t) =
     type_pass ~raise @@ Binder.get_ascr binder
-
-
-  and binder_pass_opt ~raise (binder : _ option Binder.t) =
-    Option.iter (Binder.get_ascr binder) ~f:(type_pass ~raise)
-
+  and pattern_pass ~raise (pattern : _ Pattern.t) =
+    List.iter (Pattern.binders pattern) ~f:(fun ty -> binder_pass ~raise ty) 
 
   and matching_expr_pass ~raise match_exprs =
     List.iter
@@ -1514,7 +1524,10 @@ module Elaboration = struct
     match decl.wrap_content with
     | D_type decl_type -> type_pass ~raise decl_type.type_expr
     | D_value { binder; expr; _ } ->
-      binder_pass_opt ~raise binder;
+      binder_pass ~raise binder;
+      expression_pass ~raise expr
+    | D_pattern { pattern ; expr; _ } ->
+      pattern_pass ~raise pattern;
       expression_pass ~raise expr
     | D_module { module_; _ } -> module_expr_pass ~raise module_
 

@@ -430,25 +430,29 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_bad [ "compile" ; "contract" ; (test "unresolved/contract.mligo") ] ;
   [%expect{xxx|
-    Underspecified type list (^gen#496) -> nat.
+    Underspecified type list (^gen#494) -> nat.
     Please add additional annotations. |xxx}]
 
 let%expect_test _ =
   run_ligo_bad [ "compile" ; "contract" ; (test "unresolved/contract2.mligo") ] ;
   [%expect{xxx|
-    Underspecified type list (^gen#494) -> nat.
+    File "./unresolved/contract2.mligo", line 1, characters 18-19:
+      1 | let one (type a) (_ : a) = 1n
+      2 |
+
+    Underspecified type list (^gen#492) -> nat.
     Please add additional annotations. |xxx}]
 
 let%expect_test _ =
   run_ligo_bad [ "compile" ; "storage" ; (test "unresolved/storage.mligo") ; "s" ] ;
   [%expect{xxx|
-    Underspecified type list (^gen#491) -> nat.
+    Underspecified type list (^gen#489) -> nat.
     Please add additional annotations. |xxx}]
 
 let%expect_test _ =
   run_ligo_bad [ "compile" ; "parameter" ; (test "unresolved/parameter.mligo") ; "p" ] ;
   [%expect{xxx|
-    Underspecified type list (^gen#491).
+    Underspecified type list (^gen#489).
     Please add additional annotations. |xxx}]
 
 let%expect_test _ =
