@@ -8,5 +8,6 @@
             unification_pascaligo
             ; unification_reasonligo
             unification_jsligo
+            ast_unified
  )
 )
