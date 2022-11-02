@@ -588,7 +588,6 @@ let rec error_ppformat
        let ps =
          List.fold ps ~init:"" ~f:(fun s p ->
            let s' =
-             let p = Untyper.untype_pattern p in
              Desugaring.Decompiler.decompile_pattern_to_string ~syntax p
            in
            s ^ "- " ^ s' ^ "\n")

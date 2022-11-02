@@ -39,7 +39,7 @@ let%expect_test _ =
       7 |   | (xs  , Nil) => 2
 
     Invalid type(s)
-    Cannot unify record[a -> ^gen#492 , b -> ^gen#493 , c -> ^gen#494] with
+    Cannot unify record[a -> ^gen#490 , b -> ^gen#491 , c -> ^gen#492] with
     sum[Cons -> ( int * int ) , Nil -> unit]. |}]
 
 let%expect_test _ =
@@ -51,7 +51,7 @@ let%expect_test _ =
       6 |   | (xs  , Nil) => 2
 
     Invalid type(s)
-    Cannot unify ( ^gen#492 * ^gen#493 * ^gen#494 ) with sum[Cons -> ( int * int ) , Nil -> unit]. |}]
+    Cannot unify ( ^gen#490 * ^gen#491 * ^gen#492 ) with sum[Cons -> ( int * int ) , Nil -> unit]. |}]
 
 let%expect_test _ =
   run_ligo_bad [ "print" ; "ast-typed" ; (bad_test "pm_fail5.religo") ] ;
@@ -172,8 +172,7 @@ let%expect_test _ =
       2 |   let () = 42n;
       3 |   ([] : list(operation), ())
 
-    Invalid pattern matching.
-    Can't match on values. |}]
+    Pattern not of the expected type nat |}]
 
 (* wrong fields on record pattern *)
 (* wrong type on constructor argument pattern *)

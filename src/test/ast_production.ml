@@ -66,6 +66,7 @@ let mini_c_file_ ~raise f test syntax () =
   let ctxt, exp = trace ~raise self_ast_aggregated_tracer @@ Self_ast_aggregated.all_program ~options:options.middle_end (ctxt, exp) in
   let x = Ast_aggregated.context_apply ctxt exp in
   let x = trace ~raise self_ast_aggregated_tracer @@ Self_ast_aggregated.all_expression ~options:options.middle_end x in
+  let x = Expansion.compile x in
   let _ : Mini_c.expression = trace ~raise spilling_tracer @@ Spilling.compile_expression x in
   ()
 
