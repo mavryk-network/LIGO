@@ -1,4 +1,5 @@
 open Cli_expect
+
 let contract file = test ("top_level_patterns/contracts/" ^ file)
 
 (* let%expect_test _ =
@@ -7,8 +8,9 @@ let contract file = test ("top_level_patterns/contracts/" ^ file)
 [@@expect.uncaught_exn {| TODO |}] *)
 
 let%expect_test _ =
-  run_ligo_good [ "compile" ; "contract" ; contract "jsligo/nested_tuple.jsligo" ] ;
-  [%expect{|
+  run_ligo_good [ "compile"; "contract"; contract "jsligo/nested_tuple.jsligo" ];
+  [%expect
+    {|
     { parameter unit ;
       storage (pair (pair nat int) string) ;
       code { DROP ;
@@ -66,8 +68,9 @@ let%expect_test _ =
 [@@expect.uncaught_exn {| TODO|}] *)
 
 let%expect_test _ =
-  run_ligo_good [ "compile" ; "contract" ; contract "jsligo/ticket_tuple.jsligo" ] ;
-  [%expect{|
+  run_ligo_good [ "compile"; "contract"; contract "jsligo/ticket_tuple.jsligo" ];
+  [%expect
+    {|
     { parameter unit ;
       storage (pair (pair (ticket int) (ticket string)) (ticket nat)) ;
       code { DROP ;
@@ -116,8 +119,9 @@ let%expect_test _ =
 [@@expect.uncaught_exn {| TODO|}] *)
 
 let%expect_test _ =
-  run_ligo_good [ "compile" ; "contract" ; contract "jsligo/tuple.jsligo" ] ;
-  [%expect{|
+  run_ligo_good [ "compile"; "contract"; contract "jsligo/tuple.jsligo" ];
+  [%expect
+    {|
     { parameter unit ;
       storage (pair (pair nat int) string) ;
       code { DROP ;
@@ -144,8 +148,9 @@ let test_ file = test ("top_level_patterns/interpreter/" ^ file)
   [%expect{| TODO |}] *)
 
 let%expect_test _ =
-  run_ligo_good [ "run" ; "test" ; test_ "jsligo/nested_tuple.jsligo" ] ;
-  [%expect{|
+  run_ligo_good [ "run"; "test"; test_ "jsligo/nested_tuple.jsligo" ];
+  [%expect
+    {|
     "Once"
     Everything at the top-level was executed.
     - test exited with value (). |}]
@@ -157,19 +162,20 @@ let%expect_test _ =
 (* let%expect_test _ =
   run_ligo_good [ "run" ; "test" ; test_ "jsligo/tuple_record.jsligo" ] ;
   [%expect{| Everything at the top-level was executed. |}] *)
-    
+
 (* let%expect_test _ =
   run_ligo_good [ "run" ; "test" ; test_ "jsligo/record.jsligo" ] ;
   [%expect.unreachable]
 [@@expect.uncaught_exn {| TODO |}] *)
 
 let%expect_test _ =
-  run_ligo_good [ "run" ; "test" ; test_ "jsligo/tuple.jsligo" ] ;
-  [%expect{|
+  run_ligo_good [ "run"; "test"; test_ "jsligo/tuple.jsligo" ];
+  [%expect
+    {|
     "Once"
     Everything at the top-level was executed.
     - test exited with value (). |}]
-    
+
 (* Negative - linearity *)
 
 let contract file = test ("top_level_patterns/negative/" ^ file)
@@ -180,8 +186,9 @@ let contract file = test ("top_level_patterns/negative/" ^ file)
     Internal error: Entrypoint main does not exist |}] *)
 
 let%expect_test _ =
-  run_ligo_bad [ "compile" ; "contract" ; contract "jsligo/nested_tuple.jsligo" ] ;
-  [%expect{|
+  run_ligo_bad [ "compile"; "contract"; contract "jsligo/nested_tuple.jsligo" ];
+  [%expect
+    {|
     File "../../test/contracts/top_level_patterns/negative/jsligo/nested_tuple.jsligo", line 2, characters 6-48:
       1 | const r = [[1 as nat, 1, "H"], [2 as nat, 2, "E"], [3 as nat, 3, "Hello"]]
       2 | const [[a1, a2, a3], [b1, a2, b3], [c1, c2, c3]] = r
@@ -195,8 +202,9 @@ let%expect_test _ =
     Internal error: Entrypoint main does not exist |}] *)
 
 let%expect_test _ =
-  run_ligo_bad [ "compile" ; "contract" ; contract "jsligo/tuple.jsligo" ] ;
-  [%expect{|
+  run_ligo_bad [ "compile"; "contract"; contract "jsligo/tuple.jsligo" ];
+  [%expect
+    {|
     File "../../test/contracts/top_level_patterns/negative/jsligo/tuple.jsligo", line 2, characters 6-15:
       1 | const r = [1 as nat, 1, "Hello"]
       2 | const [a, a, c] = r
@@ -217,8 +225,15 @@ let%expect_test _ =
 (* Negative - much use *)
 
 let%expect_test _ =
-  run_ligo_bad [ "compile" ; "contract" ; contract "jsligo/ticket_record.jsligo" ; "--werror" ; "--disable-michelson-typechecking" ] ;
-  [%expect{|
+  run_ligo_bad
+    [ "compile"
+    ; "contract"
+    ; contract "jsligo/ticket_record.jsligo"
+    ; "--werror"
+    ; "--disable-michelson-typechecking"
+    ];
+  [%expect
+    {|
     File "../../test/contracts/top_level_patterns/negative/jsligo/ticket_record.jsligo", line 3, characters 8-9:
       2 |
       3 | const { b } = { b : Tezos.create_ticket("one", 10 as nat) }
@@ -227,8 +242,15 @@ let%expect_test _ =
     Warning: variable "b" cannot be used more than once. |}]
 
 let%expect_test _ =
-  run_ligo_bad [ "compile" ; "contract" ; contract "jsligo/ticket_tuple.jsligo" ; "--werror" ; "--disable-michelson-typechecking" ] ;
-  [%expect{|
+  run_ligo_bad
+    [ "compile"
+    ; "contract"
+    ; contract "jsligo/ticket_tuple.jsligo"
+    ; "--werror"
+    ; "--disable-michelson-typechecking"
+    ];
+  [%expect
+    {|
     File "../../test/contracts/top_level_patterns/negative/jsligo/ticket_tuple.jsligo", line 1, characters 7-8:
       1 | const [b, _] = [Tezos.create_ticket("one", 10 as nat), 1]
       2 |
