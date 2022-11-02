@@ -96,6 +96,8 @@ let call_s at name = {it = Call_symbol name; at}
 
 let call_indirect_s at name = {it = CallIndirect_symbol name; at}
 
+let local_set at index = {it = LocalSet { it = index; at}; at}
+
 let local_set_s at name = {it = LocalSet_symbol name; at}
 
 let local_get_s at name = {it = LocalGet_symbol name; at}

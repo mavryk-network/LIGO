@@ -59,7 +59,12 @@ let main ((_, _s):(parameter * storage)) =
 
   let a13 = [3; 2; 1; 0] in
   let xz (i, a) = a - i in
+
+  (* revisit e_fold_right as it's broken in the version with self_michelson... *)
   let a12 = List.fold_right xz a13 10 in
+
+
+  // let _ = assert(5 = 5) in
 
   let a = 
     4 + 5 +  (* 9 *)
@@ -75,8 +80,8 @@ let main ((_, _s):(parameter * storage)) =
     a8 +     (* 74 + 15 = 89 *)
     a9 +     (* 89 + 5 = 94 *)
     a10 +    (* 94 + 266 = 360 *)
-    a12 +    (* 360 + 4       *)
-    
+    a12 +    (* 360 + 4 = 364 *)
+
     // 1000 
     0
   in 

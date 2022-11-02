@@ -258,27 +258,28 @@ and build_contract_meta_ligo ~raise ~options entry_point views file_name =
   contract,views
 
 and build_wasm_code ~raise : options:Compiler_options.t -> string -> Source_input.file_name -> string -> unit =
-    fun ~options entry_point file_name output_file ->
-      let entry_point_orig = entry_point in
-      let entry_point = Value_var.of_input_var entry_point in
-    let typed_prg = qualified_typed ~raise ~options Ligo_compile.Of_core.Env file_name in
-    let typed_contract =
-      trace ~raise self_ast_typed_tracer @@ Ligo_compile.Of_core.specific_passes (Ligo_compile.Of_core.Contract entry_point) typed_prg in
-      let aggregated_contract = Ligo_compile.Of_typed.apply_to_entrypoint_contract ~raise ~options:options.middle_end typed_contract entry_point in
-      let (parameter_ty, storage_ty) =
-      trace_option ~raise (`Self_ast_aggregated_tracer (Self_ast_aggregated.Errors.corner_case "Could not recover types from contract")) (
-        let open Option in
-        let open Ast_aggregated in
-        let* { type1 = input_ty ; _ }= Ast_aggregated.get_t_arrow aggregated_contract.type_expression in
-        Ast_aggregated.get_t_pair input_ty ) in
-      let aggregated = trace ~raise self_ast_aggregated_tracer @@ Self_ast_aggregated.all_contract parameter_ty storage_ty aggregated_contract in
-      let mini_c = Ligo_compile.Of_aggregated.compile_expression ~raise aggregated in
-      let wasm  = Ligo_compile.Of_wasm.compile_contract ~raise ~options mini_c file_name entry_point_orig in
-      let wasm = WasmObjectFile.Encode.encode wasm in
-      let channel = Out_channel.create ("temp.wasm") in (* TODO: remove file after linking *)
-      Out_channel.output_string channel wasm;
-      Out_channel.close channel; 
-      Ligo_compile.Of_wasm.link [("temp.wasm")] output_file
+  fun ~options entry_point file_name output_file ->
+    let entry_point_orig = entry_point in
+    let entry_point = Value_var.of_input_var entry_point in
+  let typed_prg = qualified_typed ~raise ~options Ligo_compile.Of_core.Env file_name in
+  let typed_contract =
+    trace ~raise self_ast_typed_tracer @@ Ligo_compile.Of_core.specific_passes (Ligo_compile.Of_core.Contract entry_point) typed_prg in
+    let aggregated_contract = Ligo_compile.Of_typed.apply_to_entrypoint_contract ~raise ~options:options.middle_end typed_contract entry_point in
+    let (parameter_ty, storage_ty) =
+    trace_option ~raise (`Self_ast_aggregated_tracer (Self_ast_aggregated.Errors.corner_case "Could not recover types from contract")) (
+      let open Option in
+      let open Ast_aggregated in
+      let* { type1 = input_ty ; _ }= Ast_aggregated.get_t_arrow aggregated_contract.type_expression in
+      Ast_aggregated.get_t_pair input_ty ) in
+    let aggregated = trace ~raise self_ast_aggregated_tracer @@ Self_ast_aggregated.all_contract parameter_ty storage_ty aggregated_contract in
+    let mini_c = Ligo_compile.Of_aggregated.compile_expression ~raise aggregated in
+    let mini_c = trace ~raise self_mini_c_tracer @@ Self_mini_c.all_expression options mini_c in
+    let wasm  = Ligo_compile.Of_wasm.compile_contract ~raise ~options mini_c file_name entry_point_orig in
+    let wasm = WasmObjectFile.Encode.encode wasm in
+    let channel = Out_channel.create ("temp.wasm") in (* TODO: remove file after linking *)
+    Out_channel.output_string channel wasm;
+    Out_channel.close channel; 
+    Ligo_compile.Of_wasm.link [("temp.wasm")] output_file
 
 and build_aggregated_views ~raise :
   options:Compiler_options.t -> Ast_typed.program -> (Value_var.t list * Ast_aggregated.expression) option =

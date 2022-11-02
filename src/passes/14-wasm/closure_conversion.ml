@@ -317,8 +317,8 @@ let rec lift : env -> expression -> env * expression =
     let env, body = lift env body in
     (env, {e with content = E_while (cond, body)})
 
-let rec toplevel_inner : env -> expression -> expression =
- fun env e ->
+let rec toplevel_inner : env -> string -> expression -> expression =
+ fun env entrypoint e ->
   match e.content with
   | E_let_in
       ( ({content = E_closure {binder; body}; _} as e1),
@@ -343,7 +343,7 @@ let rec toplevel_inner : env -> expression -> expression =
             E_let_in
               ( {e1 with content = E_closure {binder; body}},
                 inline,
-                ((var_name, type_expression), toplevel_inner env e2) );
+                ((var_name, type_expression), toplevel_inner env entrypoint e2) );
         }
       env.exported_funcs
   | E_let_in (e1, inline, ((var_name, type_expression), e2)) ->
@@ -353,8 +353,15 @@ let rec toplevel_inner : env -> expression -> expression =
         E_let_in
           ( e1,
             inline,
-            ((var_name, type_expression), toplevel_inner env e2) );
+            ((var_name, type_expression), toplevel_inner env entrypoint  e2) );
     }
+  | E_closure _ as e1 -> 
+    let ep = Value_var.of_input_var entrypoint in
+    toplevel_inner env entrypoint { e with 
+      content = E_let_in (
+        {e with content = e1}, 
+        false, 
+        ((ep, e.type_expression), {content = E_variable ep; location = (Location.generated) ; type_expression = { type_content = T_base TB_unit; location = Location.generated; source_type = None }}))} 
   | _ -> e
 
 let toplevel = toplevel_inner empty_env

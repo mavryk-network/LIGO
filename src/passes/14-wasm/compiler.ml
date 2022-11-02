@@ -682,7 +682,8 @@ let rec expression ~raise :
         ) ~init:(w, env, []) args 
         in
         (w, add_locals env local_symbols, result @ args @ code)
-      | _ -> raise.error (not_supported e)
+      | _ ->
+        raise.error (not_supported e)
     in
     let w, env, args = aux w env [] [] e in
     (w, env, args)
@@ -833,14 +834,11 @@ let rec expression ~raise :
     let w, env, col = expression ~raise w env col in
     let w, env, body = expression ~raise w env body in
     let w, env, tuple = Datatype.Pair.create w env [local_get_s init] [local_get_s item; load]  in
-    
     w, env, 
     initial 
     @
     [
       local_set_s init;
-
-      
     ]
     @
     col 
@@ -891,18 +889,24 @@ let rec expression ~raise :
     let helper_fn_name = unique_name "helper_fn" in
     let name = var_to_string name in
     
-    let locals_backup = env.locals in
+    let before_locals = env.locals in
     let env = add_locals env [
       (init, T.NumType I32Type);   
       (item, T.NumType I32Type);         
       (name, T.NumType I32Type);  
     ]
     in
-    let w, env, initial = expression ~raise w env initial in
+    let before_count = List.length env.locals in 
+    let w, env, initial = expression ~raise w env initial in    
     let w, env, col = expression ~raise w env collection in
+    let (_, after_locals) = List.split_n env.locals before_count in
+
+
+    (* List.iter ~f:(fun (a, _) -> print_endline ("ssss:" ^ a)) locals_backup; *)
     let w, env, body = expression ~raise w env body in
+
     let w, env, tuple = Datatype.Pair.create w env [local_get_s item; load] [local_get_s init] in
-    
+
     (* create a helper function here *)
     let s = A.{
       name    = helper_fn_name;
@@ -917,7 +921,7 @@ let rec expression ~raise :
         
     let f = A.FuncSymbol {
       name   = helper_fn_name;
-      ftype  =  helper_fn_name ^ "_type";
+      ftype  = helper_fn_name ^ "_type";
       locals =
         env.locals
         @ [
@@ -988,9 +992,12 @@ let rec expression ~raise :
         types   = t :: w.types;
         funcs   = f :: w.funcs;
     } in 
-    w, {env with locals = locals_backup @ [  (init, T.NumType I32Type);   
+    w, {env with locals = before_locals @ [  (init, T.NumType I32Type);   
     (item, T.NumType I32Type);         
-    (name, T.NumType I32Type);  ] }, 
+    (name, T.NumType I32Type);  ]
+    @ 
+    after_locals
+    }, 
     initial 
     @
     [
@@ -1190,12 +1197,11 @@ let rec expression ~raise :
       at
       }]
   | E_let_in
-      ( {content = E_closure {binder; body}},
+      ( {content = E_closure _; _ },
         _inline,
         ((name, _type), e2) ) ->
     raise.error (not_supported e)
   | E_let_in (e1, _inline, ((name, typex), e2)) ->
-    
     let name = var_to_string name in
     let w, env, e1 = expression ~raise w env e1 in
     let env = add_local env (name, T.NumType I32Type) in
@@ -1281,8 +1287,8 @@ let func I.{binder; body} =
   aux [binder] body
 
 let rec toplevel_bindings ~raise :
-    I.expression -> W.Ast.module_' -> W.Ast.module_' =
- fun e w ->
+    I.expression -> string -> W.Ast.module_' -> W.Ast.module_' =
+ fun e entrypoint w ->
   let at = location_to_region e.location in
   let drop = drop at in
   let const = const at in
@@ -1310,7 +1316,6 @@ let rec toplevel_bindings ~raise :
   match e.content with
   | E_let_in ({content = E_closure c; _}, _inline, ((name, type_), e2))
     ->
-      
     let name = var_to_string name in
     let arguments, body = func c in
     let env =
@@ -1348,7 +1353,7 @@ let rec toplevel_bindings ~raise :
           w.funcs @ [{it = FuncSymbol {name; ftype = name ^ "_type"; locals = env.locals; body}; at}];
       }
     in
-    toplevel_bindings ~raise e2 w
+    toplevel_bindings ~raise e2 entrypoint w
   | E_let_in
       ( {content = E_literal (Literal_int z); _},
         _inline,
@@ -1356,7 +1361,7 @@ let rec toplevel_bindings ~raise :
     (* we convert these to in memory values *)
     let name = var_to_string name in
     let data, symbols = convert_to_memory name z in
-    toplevel_bindings ~raise e2
+    toplevel_bindings ~raise e2 entrypoint
       {w with datas = w.datas @ data; symbols = w.symbols @ symbols}
   | E_variable entrypoint ->
     let actual_name = var_to_string entrypoint in
@@ -1427,7 +1432,7 @@ let compile ~raise : I.expression -> string -> string -> W.Ast.module_ =
   let w = Default_module.mod_ in
   let at = location_to_region e.location in
   global_offset := Default_module.offset;
-  let w = toplevel_bindings ~raise e w.it in
+  let w = toplevel_bindings ~raise e entrypoint w.it in
   let elems_i = List.mapi ~f:(fun i _ -> elem at i) (List.filter ~f:(fun f -> match f.it.idesc.it with FuncImport _ | FuncImport_symbol _ -> true | _ -> false) w.imports) in
   let elems = List.mapi ~f:(fun i _ -> elem at (List.length elems_i + i)) w.funcs in
   let w = {w with 
