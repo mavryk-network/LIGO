@@ -10,4 +10,4 @@ let compile_expression = Compiler.compile_expression
 let decompile_program   _ = failwith "Nah"
 let decompile_expression = failwith "Nah"
 
-let decompile_pattern_to_string p = failwith "Nah"
+let decompile_pattern_to_string _p = failwith "Nah"
