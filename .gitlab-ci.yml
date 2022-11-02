@@ -98,7 +98,7 @@ esy-windows:
     - $env:HOME = 'C:/Users/gitlabrunner'
     - esy i
     - bash -c "esy release || esy release || esy release"
-    - rm -Recurse -Force _esy
+    # - rm -Recurse -Force _esy
     - mv _release platform-windows-x64
   artifacts:
     paths:
