@@ -56,6 +56,11 @@ let main ((_, _s):(parameter * storage)) =
     List.fold_left (fun (a, i) -> a + i) 100 a11 + 
     List.fold_left (fun (a, i) -> a + i) 100 a12 in
   
+
+  let a13 = [3; 2; 1; 0] in
+  let xz (i, a) = a - i in
+  let a12 = List.fold_right xz a13 10 in
+
   let a = 
     4 + 5 +  (* 9 *)
     40 / 5 + (* 9 + 8 = 17 *)
@@ -69,7 +74,9 @@ let main ((_, _s):(parameter * storage)) =
     a6 +     (* 69 + 5 = 74 *) 
     a8 +     (* 74 + 15 = 89 *)
     a9 +     (* 89 + 5 = 94 *)
-    a10  +  (* 94 + 266 = 360 *)
+    a10 +    (* 94 + 266 = 360 *)
+    a12 +    (* 360 + 4       *)
+    
     // 1000 
     0
   in 

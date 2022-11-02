@@ -901,7 +901,7 @@ let rec expression ~raise :
     let w, env, initial = expression ~raise w env initial in
     let w, env, col = expression ~raise w env collection in
     let w, env, body = expression ~raise w env body in
-    let w, env, tuple = Datatype.Pair.create w env [local_get_s init] [local_get_s item; load]  in
+    let w, env, tuple = Datatype.Pair.create w env [local_get_s item; load] [local_get_s init] in
     
     (* create a helper function here *)
     let s = A.{
