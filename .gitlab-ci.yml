@@ -94,11 +94,10 @@ esy-windows:
     # - $env:GIT_TRACE = 1
     # - $env:GIT_TRACE_PACKET = 1
     - git config http.postBuffer 1048576000
-    - npm i -g @esy-nightly/esy --force
     - $env:PATH = 'C:\Users\gitlabrunner\AppData\Roaming\npm;' + $env:PATH
     - $env:HOME = 'C:/Users/gitlabrunner'
     - esy i
-    - esy release
+    - bash -c "esy release || esy release || esy release"
     - rm -Recurse -Force _esy
     - mv _release platform-windows-x64
   artifacts:
