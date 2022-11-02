@@ -1,6 +1,6 @@
 open Simple_utils.Trace
 open Proto_alpha_utils
-module Tezos_alpha_test_helpers = Tezos_014_PtKathma_test_helpers
+module Tezos_alpha_test_helpers = P014_test_helpers
 open Errors
 open Ligo_interpreter_exc
 open Ligo_interpreter.Types
