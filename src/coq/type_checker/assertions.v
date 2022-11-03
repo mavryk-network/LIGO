@@ -8,12 +8,12 @@ From ligo_coq_type_checker Require Import types.
 Module Assertions.
 
     Inductive t : Set := 
-    | Co_type_variable : string -> Types.t Types.C_poly -> t
+    | Co_type_variable : string -> Types.t Types.S_type Types.C_poly -> t
     | Co_kind_variable : string -> Kinds.t -> t
-    | Co_kind_bound_variable : string -> Kinds.t -> Types.t Types.C_poly -> t
+    | Co_kind_bound_variable : string -> Kinds.t -> Types.t Types.S_type Types.C_poly -> t
     | Co_exist_marker : string -> t
     | Co_kind_inferable : string -> Kinds.t -> t
-    | Co_kind_bound_inferable : string -> Kinds.t -> Types.t Types.C_mono -> t
+    | Co_kind_bound_inferable : string -> Kinds.t -> Types.t Types.S_type Types.C_mono -> t
     .
 
     Definition type_variable s r : t := Co_type_variable s r.

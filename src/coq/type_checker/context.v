@@ -20,7 +20,7 @@ Module Context.
         | Co_empty => empty tt
         | Co_assertion c a => assertion c a
         end.
-    
+
     (**
      * TODO:
      * - Define defaulted catamorphisms
@@ -36,26 +36,25 @@ Module Context.
 
 End Context.
 
-Module Context_Rules.
+Module Context_Properties.
 
-    Fixpoint Contains (c:Context.t) (a:Assertions.t) : Prop :=
-        Context.fold c 
-            (empty := fun _ => False)
-            (assertion := fun c a' => a' = a \/ Contains c a).
+    Lemma in_empty_domain : 
+        forall (v:string), 
+        Context.In_domain Context.empty v = False.
+    Proof.
+        simpl. 
+        reflexivity.
+    Qed.
 
-    Definition Check_assertion (a:Assertions.t) (c:Context.t) : Prop :=
-        Assertions.fold a
-            (type_variable := fun n _ => not (Context.In_domain c n))
-            (kind_variable := fun n _ => not (Context.In_domain c n)) 
-            (kind_bound_variable := fun n _ _ => not (Context.In_domain c n))
-            (exist_marker := fun n => not (Contains c (Assertions.exist_marker n) \/ Context.In_domain c n))
-            (kind_inferable := fun n _ => not (Context.In_domain c n))
-            (kind_bound_inferable := fun n _ _ => not (Context.In_domain c n)).
+    (* Really basic lemma *)
+    Lemma in_non_empty_domain : 
+        forall (v:string), forall (c:Context.t),
+        Context.domain c = [v] -> Context.In_domain c v.
+    Proof.
+        intros.
+        unfold Context.In_domain.
+        rewrite H.
+        intuition. (* i.e. simpl. left. reflexivity. *)
+    Qed.
 
-    (*  Gamma ctx *)
-    Fixpoint Check (c:Context.t) : Prop :=
-        Context.fold c 
-            (empty := fun _ => True)
-            (assertion := fun c a => Check_assertion a c \/ Check c).
-
-End Context_Rules.
+End Context_Properties.
