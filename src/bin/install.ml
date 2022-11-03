@@ -1,15 +1,15 @@
 module Constants = Cli_helpers.Constants
 
 let does_json_manifest_exist () =
-  let cwd = Sys_unix.getcwd () in
+  let cwd = Caml.Sys.getcwd () in
   let package_json = Filename.concat cwd "package.json" in
-  match Sys_unix.file_exists package_json with
-   `Yes -> 
+  match Caml.Sys.file_exists package_json with
+  | true -> 
     (try 
       let _ = Yojson.Safe.from_file package_json in
       Ok ()
     with _ -> Error "Invalid package.json")
-  | (`No | `Unknown) -> Error "A package.json does not exist"
+  | _ -> Error "A package.json does not exist"
   
 let install ~package_name ~cache_path ~ligo_registry =
   match does_json_manifest_exist () with
