@@ -44,10 +44,9 @@
       "esy-libev": "*",
       "@opam/tezos-base": "*",
       "@opam/tezos-micheline": "*",
-      "@opam/tezos-client-014-PtKathma": "*",
+      "@opam/tezos-client-015-PtLimaPt": "*",
       "@opam/tezos-hacl": "*",
-      "@opam/tezos-014-PtKathma-test-helpers": "*",
-      "@opam/tezos-client-014-PtKathma": "*",
+      "@opam/tezos-015-PtLimaPt-test-helpers": "*",
       "esy-libffi": "*"
     },
     "devDependencies": {
@@ -57,9 +56,12 @@
       "@opam/lwt": "opam:5.6.0",
       "@opam/tar": "opam:2.1.0",
       "@opam/tar-unix": "opam:2.1.0",
-      "@opam/tezos-014-PtKathma-test-helpers": "./vendors/tezos-ligo",
+      "@opam/tezos-015-PtLimaPt-test-helpers": "./vendors/tezos-ligo",
       "@opam/tezos-base": "./vendors/tezos-ligo",
-      "@opam/tezos-client-014-PtKathma": "./vendors/tezos-ligo",
+      "@opam/tezos-lazy-containers": "./vendors/tezos-ligo",
+      "@opam/tezos-crypto-dal": "./vendors/tezos-ligo",
+      "@opam/tezos-tree-encoding": "./vendors/tezos-ligo",
+      "@opam/tezos-client-015-PtLimaPt": "./vendors/tezos-ligo",
       "@opam/tezos-client-base": "./vendors/tezos-ligo",
       "@opam/tezos-client-base-unix": "./vendors/tezos-ligo",
       "@opam/tezos-client-commands": "./vendors/tezos-ligo",
@@ -101,7 +103,7 @@
       "@opam/tezos-p2p": "./vendors/tezos-ligo",
       "@opam/tezos-p2p-services": "./vendors/tezos-ligo",
 
-      "@opam/tezos-protocol-014-PtKathma": {
+      "@opam/tezos-protocol-015-PtLimaPt": {
         "source": "./vendors/tezos-ligo",
         "override": {
           "buildEnvOverride": {
@@ -110,30 +112,30 @@
           },
           "dependencies": {
             "@opam/hacl-star-raw": "*",
-            "@opam/tezos-protocol-compiler": "*",
+            "@opam/octez-protocol-compiler": "*",
             "esy-libffi": "*",
             "esy-libev": "*"
           },
           "build": [
-            ["dune", "build", "-p", "tezos-protocol-014-PtKathma", "-j", "4"]
+            ["dune", "build", "-p", "tezos-protocol-015-PtLimaPt", "-j", "4"]
           ],
           "x-build": [
             [
               "env",
               "#{ os == 'darwin' ? 'DY': ''}LD_LIBRARY_PATH=#{esy-libev.lib : esy-libffi.lib : @opam/hacl-star-raw.lib / 'hacl-star-raw'}",
-              "#{@opam/tezos-protocol-compiler.lib}/tezos-protocol-compiler/replace#{os == 'windows' ? '.exe': ''}",
-              "#{@opam/tezos-protocol-compiler.lib}/tezos-protocol-compiler/dune_protocol.template.v1",
+              "#{@opam/octez-protocol-compiler.lib}/tezos-protocol-compiler/replace#{os == 'windows' ? '.exe': ''}",
+              "#{@opam/octez-protocol-compiler.lib}/tezos-protocol-compiler/dune_protocol.template.v1",
               "dune",
-              "#{@opam/tezos-protocol-compiler.lib}/tezos-protocol-compiler/final_protocol_versions",
-              "014-PtKathma"
+              "#{@opam/octez-protocol-compiler.lib}/tezos-protocol-compiler/final_protocol_versions",
+              "015-PtLimaPt"
             ],
-            ["dune", "build", "-p", "tezos-protocol-014-PtKathma", "-j", "4"]
+            ["dune", "build", "-p", "tezos-protocol-015-PtLimaPt", "-j", "4"]
           ]
         }
       },
 
-      "@opam/tezos-protocol-compiler": "./vendors/tezos-ligo",
-      "see-if-its-useful-later-@opam/tezos-protocol-compiler": {
+      "@opam/octez-protocol-compiler": "./vendors/tezos-ligo",
+      "see-if-its-useful-later-@opam/octez-protocol-compiler": {
         "source": "./vendors/tezos-ligo/src/lib_protocol_compiler/tezos-protocol-compiler.opam",
         "override": {
           "build": [
@@ -144,7 +146,7 @@
       },
 
       "@opam/tezos-protocol-environment": "./vendors/tezos-ligo",
-      "@opam/tezos-protocol-plugin-014-PtKathma": "./vendors/tezos-ligo",
+      "@opam/tezos-protocol-plugin-015-PtLimaPt": "./vendors/tezos-ligo",
       "@opam/tezos-proxy": "./vendors/tezos-ligo",
       "@opam/tezos-rpc": "./vendors/tezos-ligo",
       "@opam/tezos-rpc-http": "./vendors/tezos-ligo",
@@ -245,7 +247,7 @@
         }
       },
       "@opam/expect_test_helpers_core": {
-        "source": "no-source:",
+        "version": "opam:v0.15.0",
         "override": {
           "build": ["true"]
         }
