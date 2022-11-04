@@ -176,10 +176,8 @@ let rec expression : with_types:bool -> options:Compiler_options.middle_end -> t
         defs, refs, tenv, merge_same_scopes scopes
       | E_application { lamb ; args } ->
         let defs, refs, tenv, scopes = expression tenv lamb  in
-        let scopes = merge_same_scopes scopes in
         let defs', refs', tenv, scopes' = expression tenv args in
-        let scopes' = merge_same_scopes scopes' in
-        let scopes_final = merge_same_scopes (scopes @ scopes') in
+        let scopes_final = (scopes @ scopes') in
         defs' @ defs, refs' @ refs, tenv, scopes_final
       | E_lambda { binder ; result ; output_type = _ } ->
         let var = Param.get_var binder in
@@ -190,7 +188,6 @@ let rec expression : with_types:bool -> options:Compiler_options.middle_end -> t
           [Misc.make_v_def ~with_types ?core_type tenv.bindings Local var binder_loc result.location]
         in
         let defs_result, refs_result, tenv, scopes = expression tenv result in
-        let scopes = merge_same_scopes scopes in
         let defs, refs_result = update_references refs_result def in
         defs_result @ defs, refs_result, tenv, add_defs_to_scopes def scopes
       | E_type_abstraction { result ; _ } -> expression tenv result
@@ -200,11 +197,11 @@ let rec expression : with_types:bool -> options:Compiler_options.middle_end -> t
       | E_update { struct_ ; update ; _ } ->
         let defs, refs, tenv, scopes =  expression tenv struct_ in
         let defs', refs', tenv, scopes' = expression tenv update in
-        defs' @ defs, refs' @ refs, tenv, merge_same_scopes scopes @ scopes'
+        defs' @ defs, refs' @ refs, tenv, scopes @ scopes'
       | E_while { cond; body } ->
         let defs, refs, tenv, scopes =  expression tenv cond in
         let defs', refs', tenv, scopes' = expression tenv body in
-        defs' @ defs, refs' @ refs, tenv, merge_same_scopes scopes @ scopes'
+        defs' @ defs, refs' @ refs, tenv, scopes @ scopes'
       | E_for { binder; start; incr; final; f_body } ->
         let def =
           if VVar.is_generated binder then [] else
@@ -216,7 +213,7 @@ let rec expression : with_types:bool -> options:Compiler_options.middle_end -> t
         let defs_final, refs_final, tenv, scopes3 = expression tenv final in
         let defs_body, refs_body, tenv, scopes4 = expression tenv f_body in
         let scopes4 = add_defs_to_scopes def scopes4 in
-        let scopes = merge_same_scopes scopes1 @ merge_same_scopes scopes2 @ merge_same_scopes scopes3 @ scopes4 in
+        let scopes = scopes1 @ scopes2 @ scopes3 @ scopes4 in
         let defs, refs_body = update_references refs_body def in
         defs_start @ defs_incr @ defs_final @ defs_body @ defs, refs_start @ refs_incr @ refs_final @ refs_body, tenv, add_defs_to_scopes def scopes
       | E_for_each { fe_binder = binder1, binder2; collection; fe_body; _ } ->
@@ -231,14 +228,13 @@ let rec expression : with_types:bool -> options:Compiler_options.middle_end -> t
         let defs_coll, refs_coll, tenv, scopes_coll = expression tenv collection in
         let defs_body, refs_body, tenv, scopes_body = expression tenv fe_body in
         let scopes_body = add_defs_to_scopes defs scopes_body in
-        let scopes = merge_same_scopes scopes_coll @ scopes_body in
+        let scopes = scopes_coll @ scopes_body in
         let defs, refs_body = update_references refs_body defs in
         defs_body @ defs_coll @ defs, refs_body @ refs_coll, tenv, scopes
       | E_record e_lable_map ->
         let defs, refs, tenv, scopes = Record.LMap.fold (fun _ e (defs, refs, tenv, scopes) ->
           let defs', refs', tenv, scopes' = expression tenv e in
-          let scopes' = merge_same_scopes scopes' in
-          defs' @ defs, refs' @ refs, tenv, merge_same_scopes scopes @ scopes')
+          defs' @ defs, refs' @ refs, tenv, scopes @ scopes')
         e_lable_map
         ([], [], tenv, [])
     in
@@ -246,7 +242,6 @@ let rec expression : with_types:bool -> options:Compiler_options.middle_end -> t
   | E_assign { binder; expression = e } ->
     let refs' = [ Variable (Binder.get_var binder) ] in
     let defs, refs, tenv, scopes = expression tenv e in
-    let scopes = merge_same_scopes scopes in
     defs, refs @ refs', tenv, scopes
   | E_let_in
       { let_binder = _
@@ -261,9 +256,8 @@ let rec expression : with_types:bool -> options:Compiler_options.middle_end -> t
         let def, defs_rhs = drop_last defs_rhs in
         let defs_result, refs_result, tenv, scopes' = expression tenv let_result in
         let scopes' = add_defs_to_scopes [def] scopes' in
-        let scopes = merge_same_scopes scopes @ scopes' in
         let defs, refs_result = update_references refs_result [def] in
-        defs_result @ defs_rhs @ defs, refs_result @ refs_rhs, tenv, scopes
+        defs_result @ defs_rhs @ defs, refs_result @ refs_rhs, tenv, scopes @ scopes'
       | E_let_mut_in { let_binder ; rhs ; let_result ; _ }
       | E_let_in { let_binder ; rhs ; let_result ; _ } ->
         let var = Binder.get_var let_binder in
@@ -276,9 +270,8 @@ let rec expression : with_types:bool -> options:Compiler_options.middle_end -> t
         let defs_rhs, refs_rhs, tenv, scopes = expression tenv rhs in
         let defs_result, refs_result, tenv, scopes' = expression tenv let_result in
         let scopes' = add_defs_to_scopes defs_binder scopes' in
-        let scopes = merge_same_scopes scopes @ scopes' in
         let defs, refs_result = update_references refs_result defs_binder in
-        defs_result @ defs_rhs @ defs, refs_result @ refs_rhs, tenv, scopes
+        defs_result @ defs_rhs @ defs, refs_result @ refs_rhs, tenv, scopes @ scopes'
       | E_recursive { fun_name ; fun_type ; lambda = { binder ; result ; _ } } ->
         let def_fun =
           let binder_loc =  VVar.get_location fun_name in
@@ -292,18 +285,15 @@ let rec expression : with_types:bool -> options:Compiler_options.middle_end -> t
           [Misc.make_v_def ~with_types ~core_type tenv.bindings Local var binder_loc (result.location)]
         in
         let defs_result, refs_result, tenv, scopes = expression tenv result in
-        let scopes = merge_same_scopes scopes in
         let defs = def_par @ [def_fun] in
         let defs, refs_result = update_references refs_result defs in
         defs_result @ defs, refs_result, tenv, add_defs_to_scopes (def_par @ [def_fun]) scopes
       | E_type_in { type_binder ; rhs ; let_result } ->
         let def = type_expression type_binder Local rhs in
         let defs, refs, tenv, scopes = expression tenv let_result in
-        let scopes = merge_same_scopes scopes in
         [def] @ defs, refs, tenv, scopes
       | E_matching { matchee ; cases } ->
         let defs_matchee, refs_matchee, tenv, scopes = expression tenv matchee in
-        let scopes = merge_same_scopes scopes in
         let defs_cases, refs_cases, tenv, scopes' = List.fold_left cases ~init:([], [], tenv, [])
           ~f:(fun (defs, refs, tenv, scopes) { pattern ; body } ->
             let defs_pat = AST.Pattern.fold_pattern (
@@ -329,13 +319,12 @@ let rec expression : with_types:bool -> options:Compiler_options.middle_end -> t
               pattern
           in
           let defs_body, refs_body, tenv, scopes' = expression tenv body in
-          let scopes' = merge_same_scopes scopes' in
           let scopes' = add_defs_to_scopes defs_pat scopes' in
           let defs_pat, refs_body = update_references refs_body defs_pat in
           ( defs_body @ defs_pat @ defs
           , refs_body @ refs
           , tenv
-          , merge_same_scopes scopes @ scopes' ))
+          , scopes @ scopes' ))
     in
     defs_matchee @ defs_cases, refs_matchee @ refs_cases, tenv, scopes @ scopes'
   | E_mod_in { module_binder; rhs; let_result } ->
@@ -343,13 +332,12 @@ let rec expression : with_types:bool -> options:Compiler_options.middle_end -> t
       module_expression ~with_types ~options tenv Local module_binder rhs
     in
     let defs_result, refs_result, tenv, scopes' = expression tenv let_result in
-    let scopes' = merge_same_scopes scopes' in
     let scopes' = add_defs_to_scopes defs_module scopes' in
     let defs_module, refs_result = update_references refs_result defs_module in
     let defs, refs_result =
       update_references refs_result (defs_result @ defs_module)
     in
-    defs, refs_result @ refs_module, tenv, merge_same_scopes scopes @ scopes'
+    defs, refs_result @ refs_module, tenv, scopes @ scopes'
 
 
 and type_expression : TVar.t -> def_type -> AST.type_expression -> def =
