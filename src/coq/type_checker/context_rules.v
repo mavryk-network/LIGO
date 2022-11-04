@@ -82,7 +82,7 @@ Module Context_Rules.
             (*  
             G ctx  G |- A ctx 
             -----------------
-            G, x : A ctx
+            G, A ctx
             *)            
             (assertion := fun c a => 
                 Check_assertion a c \/ Check c
