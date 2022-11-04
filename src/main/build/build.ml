@@ -273,7 +273,7 @@ and build_wasm_code ~raise : options:Compiler_options.t -> string -> Source_inpu
       Ast_aggregated.get_t_pair input_ty ) in
     let aggregated = trace ~raise self_ast_aggregated_tracer @@ Self_ast_aggregated.all_contract parameter_ty storage_ty aggregated_contract in
     let mini_c = Ligo_compile.Of_aggregated.compile_expression ~raise aggregated in
-    let mini_c = trace ~raise self_mini_c_tracer @@ Self_mini_c.all_expression options mini_c in
+    (* let mini_c = trace ~raise self_mini_c_tracer @@ Self_mini_c.all_expression options mini_c in *)
     let wasm  = Ligo_compile.Of_wasm.compile_contract ~raise ~options mini_c file_name entry_point_orig in
     let wasm = WasmObjectFile.Encode.encode wasm in
     let channel = Out_channel.create ("temp.wasm") in (* TODO: remove file after linking *)

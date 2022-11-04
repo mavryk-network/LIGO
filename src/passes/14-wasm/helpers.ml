@@ -167,3 +167,67 @@ let nop at =
 
 let drop at = 
   {it = Drop; at}
+
+type missing_env = {
+  arguments:          symbol list;
+  locals:             symbol list;
+  functions:          symbol list;
+  missing_arguments:  symbol list;
+  missing_locals:     symbol list;
+  missing_functions:  symbol list;
+}
+
+let find_missing e = 
+  let function_exists env v =
+    match List.find ~f:(fun func -> String.equal v func) env.functions with
+    | Some _ -> true
+    | None -> 
+      (match List.find ~f:(fun func -> String.equal v func) env.missing_functions with 
+        Some _ -> true 
+      | None -> false)
+  in
+  
+  let argument_exists env v =
+    match List.find ~f:(fun var -> String.equal v var) env.arguments with
+    | Some _ -> true
+    | None -> 
+      (match List.find ~f:(fun func -> String.equal v func) env.missing_arguments with 
+        Some _ -> true 
+      | None -> false)
+  in
+  let local_exists env v =
+    match List.find ~f:(fun var -> String.equal v var) env.locals with
+    | Some _ -> true
+    | None -> 
+      (match List.find ~f:(fun func -> String.equal v func) env.missing_locals with 
+        Some _ -> true 
+      | None -> argument_exists env v)
+  in
+  let rec aux env e = 
+    match e with 
+      {it = Block (_, bl); _} :: remaining
+    | {it = Loop  (_, bl); _} :: remaining ->
+        let env = aux env bl in
+        aux env remaining
+    | {it = If (_, th, el); _} :: remaining ->
+      let env = aux env th in
+      let env = aux env el in
+      aux env remaining
+    | {it = Call_symbol s; _} :: remaining
+    | {it = CallIndirect_symbol s; _} :: remaining ->
+      aux {env with missing_functions = if function_exists env s then env.missing_functions else s :: env.missing_functions} remaining 
+    | {it = LocalGet_symbol s; _}  :: remaining -> 
+      let env = if local_exists env s then  
+        env 
+      else (
+        {env with missing_arguments = if argument_exists env s then env.missing_arguments else  s :: env.missing_arguments}
+      )
+      in 
+      aux env remaining
+    | {it = LocalSet_symbol s; _}  :: remaining
+    | {it = LocalTee_symbol s; _}  :: remaining ->
+      aux {env with missing_locals = if local_exists env s then env.missing_locals else s :: env.missing_locals} remaining 
+    | _ :: remaining -> aux env remaining
+    | [] -> env
+  in 
+  aux { missing_arguments = []; missing_locals = []; missing_functions = []; arguments = []; locals = []; functions = []} e

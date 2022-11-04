@@ -884,28 +884,24 @@ let rec expression ~raise :
   | E_fold (((name, tv), body), ({type_expression = {type_content = _; _}; _} as col), init) -> 
     raise.error (not_supported e)
   | E_fold_right (((name , tv) , body) , (({type_expression = {type_content = T_list _; _}; _} as collection), elem_tv) , initial) -> 
-    let item = unique_name "item" in
+    let col_item = unique_name "item" in
     let init = unique_name "init" in
     let helper_fn_name = unique_name "helper_fn" in
+    let helper_fn_name = unique_name "tl" in
     let name = var_to_string name in
     
-    let before_locals = env.locals in
+    let result = unique_name "result" in
     let env = add_locals env [
       (init, T.NumType I32Type);   
-      (item, T.NumType I32Type);         
+      (col_item, T.NumType I32Type);         
       (name, T.NumType I32Type);  
+     
     ]
     in
-    let before_count = List.length env.locals in 
+
     let w, env, initial = expression ~raise w env initial in    
     let w, env, col = expression ~raise w env collection in
-    let (_, after_locals) = List.split_n env.locals before_count in
-
-
-    (* List.iter ~f:(fun (a, _) -> print_endline ("ssss:" ^ a)) locals_backup; *)
     let w, env, body = expression ~raise w env body in
-
-    let w, env, tuple = Datatype.Pair.create w env [local_get_s item; load] [local_get_s init] in
 
     (* create a helper function here *)
     let s = A.{
@@ -916,72 +912,86 @@ let rec expression ~raise :
     let s = S.{ it = s; at } in
     let w = {w with symbols = s :: w.symbols } in
     let hd  = unique_name "hd" in
-    let tl  = unique_name "tl" in
-    let result = unique_name "result" in
-        
-    let f = A.FuncSymbol {
-      name   = helper_fn_name;
-      ftype  = helper_fn_name ^ "_type";
-      locals =
-        env.locals
-        @ [
-          (hd, T.NumType I32Type);
-          (tl, T.NumType I32Type);
-          (result, T.NumType I32Type);
-      ];
-      body = [
-        local_get_s item;
-        load;
-        load;
-        const 0l;
-        compare_eq;
-        if_ (ValBlockType (Some (NumType I32Type)))
-          [
-            local_get_s init
-          ]
-          ([
+    let tl = unique_name "tl" in
+    let w, env, tuple = Datatype.Pair.create w env [local_get_s hd; load] [local_get_s init] in
 
-            local_get_s item;
-            load;
-            load;
+    
+    let f_body args = [
+      (* check if the item points to an empty list *)
+      local_get_s col_item;
+      data_symbol "C_LIST_EMPTY";
+      compare_eq;
+      if_ (ValBlockType (Some (NumType I32Type)))
+        [
+          local_get_s init
+        ]
+        (
+          [
+
+            local_get_s col_item;
             local_set_s hd;
 
-            local_get_s item;
+            (* iterate through the items in the list from left to right *)
+            local_get_s col_item;
             const 4l;
             i32_add;
             load;
-            
-            local_set_s tl;
-
-            local_get at 0l;
-            local_get at 1l;
-            local_get at 2l;
-            local_get_s init;
-            local_get_s tl;
+            local_set_s col_item;
+          ]
+          @
+          args 
+          @
+         [
             call_s helper_fn_name;
-            local_set_s init; 
-          ]
-          @
-          tuple
-          @ 
-          [
-            local_set_s name;
-          ]
-          @
-          body 
-          @
-          [
-            local_set_s result;            
-            local_get_s result;
-          ])
-      ]
+            local_set_s init;
+
+            local_get_s hd;
+            local_set_s col_item;            
+
+        ]
+        @
+        tuple
+        @ 
+        [
+          local_set_s name;
+        ]
+        @
+        body 
+        @
+        [
+          local_set_s result;     
+          local_get_s result;
+        ])
+    ]
+    in
+    let required = find_missing (f_body []) in
+    let required_arguments = (
+      List.fold_left 
+        ~f:(fun a s -> 
+            a @ 
+            [
+              local_get_s s              
+            ]
+          ) 
+        ~init:[] 
+        required.missing_arguments
+    )
+    in
+    let f_body = f_body required_arguments in
+    let required_locals = List.map ~f:(fun f -> (f, T.NumType I32Type)) required.missing_arguments @ List.map ~f:(fun f -> (f, T.NumType I32Type)) required.missing_locals in
+    let f = A.FuncSymbol {
+      name   = helper_fn_name;
+      ftype  = helper_fn_name ^ "_type";
+      locals = required_locals;
+      body = f_body
     } 
     in
+
     let f = S.{it = f; at} in
     
     let t = A.TypeSymbol {
       tname = helper_fn_name ^ "_type";
-      tdetails = FuncType ([NumType I32Type; NumType I32Type; NumType I32Type; NumType I32Type; NumType I32Type], [NumType I32Type])
+      tdetails = FuncType (List.map ~f:(fun f -> T.NumType I32Type) required.missing_arguments, [NumType I32Type])
     } 
     in
     let t = S.{ it = t; at } in
@@ -992,12 +1002,7 @@ let rec expression ~raise :
         types   = t :: w.types;
         funcs   = f :: w.funcs;
     } in 
-    w, {env with locals = before_locals @ [  (init, T.NumType I32Type);   
-    (item, T.NumType I32Type);         
-    (name, T.NumType I32Type);  ]
-    @ 
-    after_locals
-    }, 
+    w, env, 
     initial 
     @
     [
@@ -1007,13 +1012,13 @@ let rec expression ~raise :
     col 
     @
     [
-      local_set_s item;
+      local_set_s col_item;
 
-      local_get at 0l;
-      local_get at 1l;
-      local_get at 2l;
-      local_get_s init;
-      local_get_s item;
+    ]
+    @
+    required_arguments
+    @
+    [
       call_s helper_fn_name;
     ]
   | E_fold_right _ ->
