@@ -21,8 +21,3 @@ Module Kinds.
             (arrow:=fun _ _ => False).
 
 End Kinds.
-
-(**
- * TODO:
- * - Define defaulted catamorphisms
- *)

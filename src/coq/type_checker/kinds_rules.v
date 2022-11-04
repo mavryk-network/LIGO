@@ -2,11 +2,11 @@ Set Implicit Arguments.
 
 From Coq Require Import List String.
 
-From ligo_coq_type_checker Require Import types.
-From ligo_coq_type_checker Require Import kinds.
-From ligo_coq_type_checker Require Import context.
-From ligo_coq_type_checker Require Import assertions.
 From ligo_coq_type_checker Require Import options.
+From ligo_coq_type_checker Require Import kinds.
+From ligo_coq_type_checker Require Import types.
+From ligo_coq_type_checker Require Import assertions.
+From ligo_coq_type_checker Require Import context.
 
 Module Kinds_Rules.
 

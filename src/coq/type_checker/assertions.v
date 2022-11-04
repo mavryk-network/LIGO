@@ -57,8 +57,3 @@ Module Assertions.
 
 
 End Assertions.
-
-(**
- * TODO:
- * - Define defaulted catamorphisms
- *)

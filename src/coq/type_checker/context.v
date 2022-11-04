@@ -22,11 +22,6 @@ Module Context.
         | Co_assertion c a => assertion c a
         end.
 
-    (**
-     * TODO:
-     * - Define defaulted catamorphisms
-     *)
-
     Fixpoint domain (c:t) : list string :=
         fold c 
             (empty  := fun _ => []) 

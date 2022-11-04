@@ -60,5 +60,5 @@ End Terms.
  * TODO:
  * - Add module 
  * - Define smart constructors
- * - Define catamorphisms and defaulted catamorphisms
+ * - Define catamorphisms
  *)
