@@ -90,14 +90,14 @@ Module Kinds_Rules.
             ------------------------------------
             G |- t1 t2 :: k2
             *)            
-            (apply:=fun A l t => 
+            (apply:=fun A t1 t2 => 
                 let prop := Options.map (fun v => 
                     Kinds.fold v
                         (kind:=fun _ => False)
                         (arrow:=fun k1 k2 => 
-                            @Check_kind A c l (Kinds.arrow k1 k2) /\ @Check_kind A c t k1
+                            k = k2 /\ @Check_kind A c t1 (Kinds.arrow k1 k2) /\ @Check_kind A c t2 k1
                         )
-                    ) (@Infer_kind A c l) in 
+                    ) (@Infer_kind A c t1) in 
                 Options.fold prop (some:=id) (none:=fun tt => False)
             )
             (*  
