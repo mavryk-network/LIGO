@@ -1,10 +1,14 @@
 module I = Ast_unified
 module O = Ast_core
 
+(*
+I --p1-> I --p2--> I --p3--> I --p4--> I --trivial--> O 
+*)
+
 type syntax = unit (* TODO *)
 
 type 'a pass =
-  { name : string
+  { name : string (* useful ? *)
   ; compile : syntax -> 'a -> 'a
   ; decompile : syntax -> 'a -> 'a
   ; check_reductions : 'a -> bool (* mostly useful for debugging *)
@@ -12,7 +16,7 @@ type 'a pass =
 
 type 'a check =
   { name : string
-  ; f : 'a -> unit
+  ; f : syntax -> 'a -> unit
   }
 
 let trivial_compile_program : I.program -> O.program =
@@ -35,12 +39,14 @@ let compile_with_passes : type a. syntax_todo:syntax -> a pass list -> a check l
     let prg = pass.compile syntax_todo prg in
     if pass.check_reductions prg
     then
-      failwith
-        (Format.asprintf "pass number %d(%s) did not fully reduce" i pass.name);
+      failwith (Format.asprintf "pass number %d(%s) did not fully reduce" i pass.name);
     prg
   in
   let prg = List.foldi passes ~init:prg ~f in
-  List.iter checks ~f:(fun check -> check.f prg);
+  List.iter checks ~f:(fun check -> check.f syntax_todo prg);
+  List.iteri passes
+    ~f:(fun i pass ->
+      if pass.check_reductions prg then () else failwith (Format.asprintf "pass number %d(%s) did not fully reduce" i pass.name)) ;
   prg
 
 

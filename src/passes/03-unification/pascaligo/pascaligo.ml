@@ -10,13 +10,27 @@ module Region  = Simple_utils.Region
 
 open AST  (* Brings types and combinators functions *)
 
+module TODO_do_in_parsing = struct
+  let r_split = r_split (* could compute Location directly in Parser *)
+  let var ~loc var = Ligo_prim.Value_var.of_input_var var
+  let tvar ~loc var = Ligo_prim.Type_var.of_input_var var
+end
+module TODO_unify_in_cst = struct
+end
+
 let translate_attr_pascaligo : CST.Attr.t -> AST.attr_pascaligo = fun attr ->
   let key, value = attr in
   let value : string option = Option.map ~f:(fun (CST.Attr.String s) ->  s) value in
   {key; value}
 
-let extract_type_params : CST.type_params CST.chevrons CST.reg -> string nseq =
-  fun tp -> nseq_map w_fst @@ nsepseq_to_nseq @@ (r_fst tp).inside
+let extract_type_params : CST.type_params CST.chevrons CST.reg -> Ligo_prim.Type_var.t nseq =
+  fun tp ->
+    nseq_map
+      (fun x ->
+        let x,loc = w_split x in
+        TODO_do_in_parsing.tvar ~loc x
+      )
+      (nsepseq_to_nseq @@ (r_fst tp).inside)
 
 (* ========================== TYPES ======================================== *)
 
@@ -393,7 +407,7 @@ and compile_expression ~(raise: ('e, 'w) raise) : CST.expr -> AST.expr = fun e -
   return @@ match e with
   | E_Var var -> (
       let var, loc = w_split var in
-      e_uservar var ~loc ()
+      e_variable (TODO_do_in_parsing.var ~loc var) ~loc ()
     )
   | E_Par par -> (
       let par, loc = r_split par in

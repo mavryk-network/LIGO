@@ -9,6 +9,14 @@ module Option = Simple_utils.Option
 
 open AST  (* Brings types and combinators functions *)
 
+module TODO_do_in_parsing = struct
+  let r_split = r_split (* could compute Location directly in Parser *)
+  let var ~loc (var:string) = Ligo_prim.Value_var.of_input_var ~loc var
+  let tvar ~loc (var:string) = Ligo_prim.Type_var.of_input_var ~loc var
+end
+module TODO_unify_in_cst = struct
+  (**)
+end
 
 (* ========================== TYPES ======================================== *)
 
@@ -187,7 +195,7 @@ let translate_selection (sel : CST.selection) : Z.t AST.selection =
 
 let translate_projection : CST.projection -> AST.projection = fun proj ->
   let name, loc = r_split proj.struct_name in
-  let expr = e_uservar name ~loc () in
+  let expr = e_variable (TODO_do_in_parsing.var ~loc name) ~loc () in
   let field_path = nseq_map translate_selection @@ nsepseq_to_nseq proj.field_path in
   {expr; field_path}
 
@@ -241,8 +249,13 @@ let rec compile_expression ~raise : CST.expr -> AST.expr = fun e ->
     let updates = nseq_map (translate_field_path_assignment <@ r_fst) updates in
     {record_path; updates}
   in
-  let compile_type_params : CST.type_params CST.par CST.reg -> e_verbatim nseq =
-    fun tp -> nseq_map r_fst @@ (r_fst tp).inside.type_vars
+  let compile_type_params : CST.type_params CST.par CST.reg -> Ligo_prim.Type_var.t nseq =
+    fun tp ->
+      let lst = nseq_map
+        (fun (x:CST.variable) -> TODO_do_in_parsing.tvar ~loc:(Location.lift x.region) x.value)
+        (r_fst tp).inside.type_vars
+      in 
+      lst
   in
   let compile_rhs_type : CST.colon * CST.type_expr -> type_expr =
     fun (_, t) -> compile_type_expression t
@@ -250,7 +263,7 @@ let rec compile_expression ~raise : CST.expr -> AST.expr = fun e ->
   return @@ match e with
   | EVar var -> (
       let name, loc = r_split var in 
-      e_uservar name ~loc ()
+      e_variable (TODO_do_in_parsing.var ~loc name) ~loc ()
     )
   (* we keep parenthesis so that the backward pass which add parenthesis is done only once for all syntaxes (?) *)
   | EPar par -> (

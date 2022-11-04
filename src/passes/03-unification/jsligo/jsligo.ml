@@ -9,6 +9,13 @@ module Option = Simple_utils.Option
 
 open AST  (* Brings types and combinators functions *)
 
+module TODO_do_in_parsing = struct
+  let r_split = r_split (* could compute Location directly in Parser *)
+  let var ~loc var = Ligo_prim.Value_var.of_input_var var
+end
+module TODO_unify_in_cst = struct
+end
+
 let rec compile_val_binding ~(raise: ('e, 'w) raise) : CST.val_binding -> AST.let_binding = fun b ->
   let is_rec = false in
   let binders = List.Ne.singleton @@ compile_pattern ~raise b.binders in
@@ -306,7 +313,7 @@ and compile_expression ~(raise: ('e, 'w) raise) : CST.expr -> AST.expr = fun e -
   return @@ match e with
   | EVar var -> (
     let var, loc = r_split var in
-    e_uservar var ~loc ()
+    e_variable (TODO_do_in_parsing.var ~loc var) ~loc ()
   )
   | EPar par -> (
     let par, loc = r_split par in
@@ -369,7 +376,7 @@ and compile_expression ~(raise: ('e, 'w) raise) : CST.expr -> AST.expr = fun e -
       | Unit the_unit -> List.Ne.singleton @@ self (CST.EUnit the_unit)
       | Multiple args -> List.Ne.map self @@ nsepseq_to_nseq (r_fst args).inside
       in
-    e_calljsligo expr args ~loc ()
+    e_call expr args ~loc ()
   )
   | EConstr constr -> (
     let (constr, arg_opt), loc = r_split constr in
@@ -431,7 +438,7 @@ and compile_expression ~(raise: ('e, 'w) raise) : CST.expr -> AST.expr = fun e -
     let (e, _, te), loc = r_split a in
     let e = self e in
     let te = compile_type_expression ~raise te in
-    e_annotjsligo (e, te) ~loc ()
+    e_annot (e, te) ~loc ()
   )
 
   | ECodeInj ci -> (
