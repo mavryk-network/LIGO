@@ -577,8 +577,11 @@ rule scan state = parse
             | None -> fail state reg (File_not_found import_file) in
           let mangled_filename = mangle import_path in
           let () = print state @@ state.config#mk_mod mangled_filename imported_module in
+          let import_path_with_fwd_slashes =
+            Str.global_replace (Str.regexp_string "\\") "/" import_path
+          in
           let state  = {state with
-                          import = (import_path, mangled_filename)::state.import}
+                          import = (import_path_with_fwd_slashes, mangled_filename)::state.import}
           in scan state lexbuf
         else scan state lexbuf
     | "if" ->
