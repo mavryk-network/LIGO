@@ -12,12 +12,12 @@ Module Types.
         | S_type: sort
         .
 
-    Inductive type_classifier : Set :=
-        | C_poly : type_classifier
-        | C_mono : type_classifier
+    Inductive classifier : Set :=
+        | C_poly : classifier
+        | C_mono : classifier
         .
 
-    Inductive t : sort -> type_classifier -> Set := 
+    Inductive t : sort -> classifier -> Set := 
         (* Variables and basic types *)
         | Ty_exist {A} : string -> t S_type A
         | Ty_variable {A} : string -> t S_type A
@@ -31,12 +31,12 @@ Module Types.
         | Ty_product {A} : t_row A -> t S_type A
         | Ty_sum {A} : t_row A -> t S_type A
 
-    with t_row : type_classifier -> Set := 
+    with t_row : classifier -> Set := 
         (* Row type *)    
         | R_empty {A} : t_row A
         | R_multi {A} : string -> t S_type A -> t_row A -> t_row A.
 
-    Definition t_type : type_classifier -> Set := t S_type.
+    Definition t_type : classifier -> Set := t S_type.
 
     Definition exist {A} s : t_type A := Ty_exist s.
     Definition var {A} s : t_type A := Ty_variable s.
