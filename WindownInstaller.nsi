@@ -11,8 +11,18 @@ Section
   SetOutPath $INSTDIR
   # specify file to go in output path
   File /r *
+
   # Run postinstall.js
-  nsExec::Exec 'node ./postinstall.js'
+  System::Call 'Kernel32::SetEnvironmentVariable(t, t)i ("OCAML_VERSION", "n.00.0000").r0'
+  System::Call 'Kernel32::SetEnvironmentVariable(t, t)i ("OCAML_PKG_NAME", "ocaml").r0'
+  System::Call 'Kernel32::SetEnvironmentVariable(t, t)i ("ESY_RELEASE_REWRITE_PREFIX", "true").r0'
+  StrCmp $0 0 error
+  # ExecWait ProgThatReadsEnv.exe
+  nsExec::Exec 'node $INSTDIR\esyInstallRelease.js'
+  Goto done
+  error:
+    MessageBox MB_OK "Can't set environment variable"
+  done:
 
 
   EnVar::Check "NULL" "NULL"
