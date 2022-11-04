@@ -177,7 +177,7 @@ let rec expression : with_types:bool -> options:Compiler_options.middle_end -> t
       | E_application { lamb ; args } ->
         let defs, refs, tenv, scopes = expression tenv lamb  in
         let defs', refs', tenv, scopes' = expression tenv args in
-        let scopes_final = (scopes @ scopes') in
+        let scopes_final = merge_same_scopes (scopes @ scopes') in
         defs' @ defs, refs' @ refs, tenv, scopes_final
       | E_lambda { binder ; result ; output_type = _ } ->
         let var = Param.get_var binder in
