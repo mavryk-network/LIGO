@@ -1,8 +1,10 @@
 Set Implicit Arguments.
 
-From Coq Require Import String.
+From Coq Require Import List String.
 
 From ligo_coq_type_checker Require Import kinds.
+
+Import ListNotations.
 
 Module Types.
 
@@ -31,7 +33,7 @@ Module Types.
 
     with t_row : type_classifier -> Set := 
         (* Row type *)    
-        | R_single {A} : string -> t S_type A -> t_row A
+        | R_empty {A} : t_row A
         | R_multi {A} : string -> t S_type A -> t_row A -> t_row A.
 
     Definition t_type : type_classifier -> Set := t S_type.
@@ -46,7 +48,7 @@ Module Types.
     Definition product {A} r : t_type A := Ty_product r.
     Definition sum {A} r : t_type A := Ty_sum r.
 
-    Definition single {A} s v : t_row A := R_single s v.
+    Definition empty {A} : t_row A := R_empty.
     Definition row {A} s v r : t_row A := R_multi s v r.
 
     Definition fold {R A B} (v:t R A) {exist} {var} {one} {arrow} {for_all} {lambda} {apply} {product} {sum} : B :=
@@ -62,15 +64,15 @@ Module Types.
         | @Ty_sum A r => sum A r
         end.
 
-    Definition fold_row {A B} (v:t_row A) {single} {row} : B :=
+    Definition fold_row {A B} (v:t_row A) {empty} {row} : B :=
         match v with        
-        | @R_single A s v => single A s v
+        | @R_empty A => empty tt
         | @R_multi A s v r => row A s v r
         end.
 
-End Types.
+    Fixpoint domain {A} (v:t_row A) : list string :=
+        fold_row v
+            (empty:=fun _ => [])
+            (row:=fun _ s _ r => s :: (domain r)).
 
-(**
- * TODO:
- * - Define defaulted catamorphisms
- *)
+End Types.

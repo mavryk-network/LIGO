@@ -7,7 +7,7 @@ Module Kinds.
     .
 
     Definition kind := K_Kind.
-    Definition apply d c := K_Arrow d c.
+    Definition arrow d c := K_Arrow d c.
 
     Definition fold {B} (v:t) {kind} {arrow} : B :=
         match v with
@@ -15,7 +15,7 @@ Module Kinds.
         | K_Arrow l r => arrow l r
         end.
 
-    Definition isKind (v:t) : Prop :=
+    Definition Is_Kind (v:t) : Prop :=
         fold v
             (kind:=fun _ => True) 
             (arrow:=fun _ _ => False).

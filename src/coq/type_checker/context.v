@@ -2,6 +2,7 @@ Set Implicit Arguments.
 From Coq Require Import String List.
 
 From ligo_coq_type_checker Require Import assertions.
+From ligo_coq_type_checker Require Import kinds.
 
 Import ListNotations.
 
@@ -33,6 +34,16 @@ Module Context.
 
     Definition In_domain (c:t) (v:string) : Prop :=
         In v (domain c).
+
+    Fixpoint Find_kind (c:t) (v:string) : option Kinds.t := 
+        fold c
+            (empty  := fun _ => None) 
+            (assertion := fun c a => 
+                match Assertions.Get_kind a v with
+                | Some v => Some v
+                | None => Find_kind c v
+                end
+            ).
 
 End Context.
 

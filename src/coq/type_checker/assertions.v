@@ -2,6 +2,7 @@ Set Implicit Arguments.
 From Coq Require Import String List.
 
 Import ListNotations.
+
 From ligo_coq_type_checker Require Import kinds.
 From ligo_coq_type_checker Require Import types.
 
@@ -43,6 +44,17 @@ Module Assertions.
             (kind_inferable := fun n _ => [n])
             (kind_bound_inferable := fun n _ _ => [n])
         .
+
+    Definition Get_kind (a:t) (v:string) : option Kinds.t :=
+        fold a
+            (type_variable := fun _ _ => None) 
+            (kind_variable := fun n k =>  if string_dec n v then Some k else None)
+            (kind_bound_variable := fun n k _ => if string_dec n v then Some k else None)
+            (exist_marker := fun _ => None)
+            (kind_inferable := fun n k => if string_dec n v then Some k else None)
+            (kind_bound_inferable := fun n k _ => if string_dec n v then Some k else None)
+        .
+
 
 End Assertions.
 
