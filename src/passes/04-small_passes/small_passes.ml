@@ -5,7 +5,7 @@ type syntax = unit (* TODO *)
 
 type 'a pass =
   { name : string
-  ; compile : 'a -> 'a
+  ; compile : syntax -> 'a -> 'a
   ; decompile : syntax -> 'a -> 'a
   ; check_reductions : 'a -> bool (* mostly useful for debugging *)
   }
@@ -28,11 +28,11 @@ let trivial_compile_program : I.program -> O.program =
 
 let trivial_compile_expression : I.expression -> O.expression = failwith ""
 
-let compile_with_passes : type a. a pass list -> a check list -> a -> a =
- fun passes checks prg ->
+let compile_with_passes : type a. syntax_todo:syntax -> a pass list -> a check list -> a -> a =
+ fun ~syntax_todo passes checks prg ->
   let f : int -> a -> a pass -> a =
    fun i prg pass ->
-    let prg = pass.compile prg in
+    let prg = pass.compile syntax_todo prg in
     if pass.check_reductions prg
     then
       failwith
@@ -44,9 +44,9 @@ let compile_with_passes : type a. a pass list -> a check list -> a -> a =
   prg
 
 
-let compile ~raise : I.program -> O.program =
+let compile ~syntax_todo ~raise : I.program -> O.program =
  fun x ->
-  let x = compile_with_passes [] [] x in
+  let x = compile_with_passes ~syntax_todo [] [] x in
   (* TODO:
     at this point, all the "passes" reductions must have happened and the compilation to the targetted AST should be trivial
     add a [@final] on AST nodes that we accept as "trivially compiled" to detect errors
@@ -54,7 +54,7 @@ let compile ~raise : I.program -> O.program =
   trivial_compile_program x
 
 
-let compile_expression ~raise : I.expression -> O.expression =
+let compile_expression ~syntax_todo ~raise : I.expression -> O.expression =
  fun x ->
-  let x = compile_with_passes [] [] x in
+  let x = compile_with_passes ~syntax_todo [] [] x in
   trivial_compile_expression x
