@@ -72,9 +72,9 @@ Module Context_Rules.
     Fixpoint Check (c:Context.t) : Prop :=
         Context.fold c 
             (*  
-            G |- A :: *
+
             --------------
-            G |- x : A ctx
+            . ctx
             *)            
             (empty := fun a => 
                 True
