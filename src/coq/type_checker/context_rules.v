@@ -20,8 +20,8 @@ Module Context_Rules.
     Definition Check_assertion (a:Assertions.t) (c:Context.t) : Prop :=
         Assertions.fold a
             (*  
-            G |- A :: *   x not in domain(G)
-            --------------------------------
+            x not in domain(G)    G |- A :: *   
+            ---------------------------------
             G |- (x : A) ctx
             *)
             (type_variable := fun n t => 
@@ -36,15 +36,15 @@ Module Context_Rules.
                 not (Context.In_domain c n)
             ) 
             (*  
-            G |- A :: *   a not in domain(G)
-            --------------------------------
+            a not in domain(G)    G |- A :: *   
+            ---------------------------------
             G |- (a :: k = A) ctx
             *)
             (kind_bound_variable := fun n k t => 
                 not (Context.In_domain c n) /\ Kinds_Rules.Check_kind c t k
             )
             (*  
-            |> a^ not in G    a not in domain(G)
+            a not in domain(G)    |> a^ not in G
             ------------------------------------
             G |- |> a^ ctx
             *)
