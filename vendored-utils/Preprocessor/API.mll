@@ -556,6 +556,7 @@ rule scan state = parse
         let mangle str =
           let name =
               Str.global_replace (Str.regexp_string ".") "____" str
+            |> Str.global_replace (Str.regexp_string "\\") "/"
             |> Str.global_replace (Str.regexp_string "/") "__"
             |> Str.global_replace (Str.regexp_string "@") "_"
             |> Str.global_replace (Str.regexp_string "-") "_"
