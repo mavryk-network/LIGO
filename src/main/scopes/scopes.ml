@@ -180,6 +180,8 @@ let rec expression : with_types:bool -> options:Compiler_options.middle_end -> t
         let scopes_final = merge_same_scopes (scopes @ scopes') in
         defs' @ defs, refs' @ refs, tenv, scopes_final
       | E_lambda { binder ; result ; output_type = _ } ->
+        let binder_loc = Value_var.get_location (Param.get_var binder) in
+        let binder_scope = [binder_loc, []] in
         let var = Param.get_var binder in
         let core_type = Param.get_ascr binder in
         let def =
@@ -189,7 +191,8 @@ let rec expression : with_types:bool -> options:Compiler_options.middle_end -> t
         in
         let defs_result, refs_result, tenv, scopes = expression tenv result in
         let defs, refs_result = update_references refs_result def in
-        defs_result @ defs, refs_result, tenv, add_defs_to_scopes def scopes
+        let scopes = add_defs_to_scopes def scopes in
+        defs_result @ defs, refs_result, tenv, binder_scope @ scopes
       | E_type_abstraction { result ; _ } -> expression tenv result
       | E_constructor { element ; _ } -> expression tenv element
       | E_accessor { struct_ ; _ } -> expression tenv struct_
@@ -244,7 +247,7 @@ let rec expression : with_types:bool -> options:Compiler_options.middle_end -> t
     let defs, refs, tenv, scopes = expression tenv e in
     defs, refs @ refs', tenv, scopes
   | E_let_in
-      { let_binder = _
+      { let_binder
       ; rhs = { expression_content = E_recursive _; _ } as rhs
       ; let_result
       ; _
@@ -252,14 +255,18 @@ let rec expression : with_types:bool -> options:Compiler_options.middle_end -> t
     (* For recursive functions we don't need to add a def for [let_binder]
         becase it will be added by the [E_recursive] case we just need to extract it
         out of the [defs_rhs] *)
+        let binder_loc = Value_var.get_location (Binder.get_var let_binder) in
+        let binder_scope = [binder_loc, []] in
         let defs_rhs, refs_rhs, tenv, scopes = expression tenv rhs in
         let def, defs_rhs = drop_last defs_rhs in
         let defs_result, refs_result, tenv, scopes' = expression tenv let_result in
         let scopes' = add_defs_to_scopes [def] scopes' in
         let defs, refs_result = update_references refs_result [def] in
-        defs_result @ defs_rhs @ defs, refs_result @ refs_rhs, tenv, scopes @ scopes'
+        defs_result @ defs_rhs @ defs, refs_result @ refs_rhs, tenv, binder_scope @ scopes @ scopes'
       | E_let_mut_in { let_binder ; rhs ; let_result ; _ }
       | E_let_in { let_binder ; rhs ; let_result ; _ } ->
+        let binder_loc = Value_var.get_location (Binder.get_var let_binder) in
+        let binder_scope = [binder_loc, []] in
         let var = Binder.get_var let_binder in
         let core_type = Binder.get_ascr let_binder in
         let defs_binder =
@@ -271,7 +278,7 @@ let rec expression : with_types:bool -> options:Compiler_options.middle_end -> t
         let defs_result, refs_result, tenv, scopes' = expression tenv let_result in
         let scopes' = add_defs_to_scopes defs_binder scopes' in
         let defs, refs_result = update_references refs_result defs_binder in
-        defs_result @ defs_rhs @ defs, refs_result @ refs_rhs, tenv, scopes @ scopes'
+        defs_result @ defs_rhs @ defs, refs_result @ refs_rhs, tenv, binder_scope @ scopes @ scopes'
       | E_recursive { fun_name ; fun_type ; lambda = { binder ; result ; _ } } ->
         let def_fun =
           let binder_loc =  VVar.get_location fun_name in
@@ -425,22 +432,27 @@ and declaration
   | D_type { type_attr = { hidden; _ }; _ }
     when hidden -> [], [], tenv, []
   | D_value
-      { binder = _
+      { binder
       ; expr = { expression_content = E_recursive _; _ } as expr
       ; _
       } ->
     (* For recursive functions we don't need to add a def for [binder]
         becase it will be added by the [E_recursive] case we just need to extract it
         out of the [defs_expr] *)
+    let binder_loc = Value_var.get_location (Binder.get_var binder) in
+    let binder_scope = [binder_loc, []] in
     let defs_expr, refs_rhs, tenv, scopes =
       expression ~with_types ~options tenv expr
     in
     let def, defs_expr = drop_last defs_expr in
-    defs_expr @ [ def ], refs_rhs, tenv, scopes
+    defs_expr @ [ def ], refs_rhs, tenv, binder_scope @ scopes
   | D_value { binder; expr; _ } ->
+    let binder_loc = Value_var.get_location (Binder.get_var binder) in
+    let binder_scope = [binder_loc, []] in
     let var = Binder.get_var binder in
     let core_type = Binder.get_ascr binder in
-    declaration_expression ~with_types ~options ?core_type tenv var expr
+    let defs, refs, tenv, scopes = declaration_expression ~with_types ~options ?core_type tenv var expr in
+    defs, refs, tenv, binder_scope @ scopes
   | D_type { type_binder; type_expr; _ } ->
     let def = type_expression type_binder Global type_expr in
     [ def ], [], tenv, []
