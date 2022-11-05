@@ -794,7 +794,6 @@ let rec expression ~raise :
               local_set_s item;
       
               local_get_s result;
-      (* load; *)
               local_get_s next_item;
               load;
               const 0l;
@@ -802,19 +801,64 @@ let rec expression ~raise :
               br_if 0l;
             ]
           );
-          
-
-          
-         
         ]
-        
         )
         [
           data_symbol "C_LIST_EMPTY"
         ];
       ]
       
-  | E_iterator (kind, ((item_name, item_type), body), col) -> 
+  | E_iterator (C_ITER, ((item_name, item_type), body), col) -> 
+    let item = var_to_string item_name in
+    let next_item = unique_name "next_item" in
+
+    let env = add_locals env [(item, T.NumType I32Type); (next_item, T.NumType I32Type)] in
+    let w, env, col = expression ~raise w env col in
+    let w, env, body = expression ~raise w env body in
+    
+    w, env, 
+      col 
+      @
+      [
+      local_set_s item;     
+      
+      loop (ValBlockType None) 
+      (
+        [
+          
+          (* get the next item *)
+          local_get_s item;
+          const 4l;
+          i32_add;
+          load;
+          local_set_s next_item;
+
+
+          local_get_s item;         
+          load;
+          local_set_s item;
+        ]
+        @
+        body
+        @
+        [
+          drop at;
+
+          (* check to see if the loop needs to continue *)
+          local_get_s next_item;
+          local_set_s item;
+  
+          local_get_s next_item;
+          load;
+          const 0l;
+          i32_ne;
+          br_if 0l;
+        ]
+      );
+      const 0l;
+    ]
+
+  | E_iterator (_, ((item_name, item_type), body), col) -> 
     raise.error (not_supported e)
   | E_fold (((name, tv), body), ({type_expression = {type_content = T_list _; _}; _} as col), initial) -> 
     let item = unique_name "item" in

@@ -63,8 +63,7 @@ let main ((_, _s):(parameter * storage)) =
   (* revisit e_fold_right as it's broken in the version with self_michelson... *)
   let a12 = List.fold_right xz a13 10 in
 
-
-  // let _ = assert(5 = 5) in
+  let a13 = List.iter (fun x -> assert (x < 10)) [3;5;7;9] in
 
   let a = 
     4 + 5 +  (* 9 *)
