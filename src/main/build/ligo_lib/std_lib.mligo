@@ -3,7 +3,7 @@
   let failwith (type a b) = [%Michelson ({|{ FAILWITH }|} : a -> b)]
 #endif
 #if WASM
-  let failwith (type a b) = [%Wasm ({| drop unreachable |} : a -> b)]
+  let failwith (type a b) (a: a) = [%Wasm ({| unreachable |} : a -> b)] (a) (* TODO: print an error message - but requires more from the runtime *)
 #endif
 
 module Tezos = struct

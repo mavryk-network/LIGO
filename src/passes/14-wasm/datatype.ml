@@ -71,6 +71,24 @@ let bin_op: (S.region -> A.instr list) -> Env.t -> A.instr list -> A.instr list 
     store;
     local_get_s name
   ]
+  
+let compare_bin_op: (S.region -> A.instr list) -> Env.t -> A.instr list -> A.instr list -> Env.t * A.instr list = fun op env a b ->
+  let at        = cover_region a b in
+  let load      = load at in
+  env, 
+  a
+  @
+  [
+    load
+  ]
+  @
+  b
+  @
+  [
+    load;
+  ]
+  @ 
+  op at
 
 module Int = struct
 
@@ -91,12 +109,12 @@ module Int = struct
   let lsr_ = bin_op (fun at -> [i32_lsr at])
 
   (* Comparator *)
-  let eq  = bin_op (fun at -> [i32_eq  at])
-  let ne  = bin_op (fun at -> [i32_ne  at])
-  let lt  = bin_op (fun at -> [i32_lt  at])
-  let gt  = bin_op (fun at -> [i32_gt  at])
-  let le  = bin_op (fun at -> [i32_le  at])
-  let ge  = bin_op (fun at -> [i32_ge  at])
+  let eq  = compare_bin_op (fun at -> [i32_eq  at])
+  let ne  = compare_bin_op (fun at -> [i32_ne  at])
+  let lt  = compare_bin_op (fun at -> [i32_lt  at])
+  let gt  = compare_bin_op (fun at -> [i32_gt  at])
+  let le  = compare_bin_op (fun at -> [i32_le  at])
+  let ge  = compare_bin_op (fun at -> [i32_ge  at])
 
 end
 

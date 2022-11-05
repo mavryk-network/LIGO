@@ -1028,30 +1028,15 @@ let rec expression ~raise :
     let w, env, t = expression ~raise w env t in
     let w, env, f = expression ~raise w env f in
     let return_type = Some (T.NumType I32Type) in (* TODO properly get this *)
-    w, env, [
-      S.{it = A.Block (ValBlockType return_type, 
-        [
-          {it = A.Block (ValBlockType return_type,
-            test 
-            @
-            [
-              br_if 0l
-            ]
-            @ 
-            f
-            @ 
-            [
-              br_if 1l
-            ]
-          );
-          at
-          }
-        ]
-        @ 
-        t
-      );
-      at
-      }
+    w, env,
+    test
+    @
+    [
+      
+     if_
+      (ValBlockType return_type)
+      t
+      f  
     ]
   | E_if_none (test, none_e, ((some_arg, some_arg_type), some_e)) -> 
     (* TODO: check handling of locals *)
@@ -1212,7 +1197,38 @@ let rec expression ~raise :
     let env = add_local env (name, T.NumType I32Type) in
     let w, env, e2 = expression ~raise w env e2 in
     (w, env, e1 @ [local_set_s name] @ e2)
-  | E_tuple _ -> raise.error (not_supported e)
+  | E_tuple el -> 
+    let tuple_name = var_to_string (Value_var.fresh ~name:"let_tuple" ()) in
+    let t =  [ 
+      const (Int32.of_int_exn (List.length el));
+      const 4l;
+      i32_mul;  
+      call_s "malloc"; 
+      local_set_s tuple_name
+    ] in
+    let env = add_local env (tuple_name, T.NumType I32Type) in
+    let w, env, e =
+      List.foldi
+        ~f:(fun i (w, env, all) e ->
+          let w, env, e = expression ~raise w env e in
+          w, env, (all
+            @ [
+              local_get_s tuple_name;
+              const Int32.(4l * Int32.of_int_exn i);
+              i32_add;
+              load;
+            ]
+            @
+            e
+            @
+            [
+              store;
+            ]
+          )
+        )
+        ~init:(w, env, []) el
+    in
+    (w, env, t @ e @ [local_get_s tuple_name])
   | E_let_tuple (tuple, (values, rhs)) ->
     let w, env, tuple = expression ~raise w env tuple in
     let tuple_name = var_to_string (Value_var.fresh ~name:"let_tuple" ()) in
@@ -1248,7 +1264,6 @@ let rec expression ~raise :
     ]
   | E_update (_,_,_,_) -> raise.error (not_supported e)
   | E_raw_wasm (local_symbols, code, args) -> 
-    
     let w, env, args = List.fold_left ~f:(fun (w, env, e) i -> 
       let w, env, expr = expression ~raise w env i in
       w, env, e @ expr
@@ -1329,15 +1344,8 @@ let rec toplevel_bindings ~raise :
     let w, env, body = expression ~raise w env body in
     let env = Validation.check w env body in
     let type_arg = List.map ~f:(fun _ -> T.NumType I32Type) arguments in
-    let return_type =
-      match type_.type_content with
-      | I.T_function (_, {type_content = I.T_base TB_unit; _}) -> 
-        assert(Poly.equal env.operand_stack None);
-        []
-      | _ -> 
-        assert(Poly.equal env.operand_stack (Some (T.NumType I32Type, Next None)));
-        [T.NumType I32Type]
-    in
+    assert(Poly.equal env.operand_stack (Some (T.NumType I32Type, Next None)));
+    let return_type = [T.NumType I32Type] in
     let w =
       {
         w with
