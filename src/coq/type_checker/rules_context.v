@@ -3,7 +3,7 @@ From Coq Require Import String List.
 
 From ligo_coq_type_checker Require Import kinds.
 From ligo_coq_type_checker Require Import types.
-From ligo_coq_type_checker Require Import kinds_rules.
+From ligo_coq_type_checker Require Import rules_kinds.
 From ligo_coq_type_checker Require Import assertions.
 From ligo_coq_type_checker Require Import context.
 
