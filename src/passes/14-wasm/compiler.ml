@@ -433,6 +433,63 @@ let rec expression ~raise :
   | E_constant {cons_name = C_LIST_LITERAL; arguments = [e1] } -> raise.error (not_supported e)
   | E_constant {cons_name = C_LIST_ITER; arguments = [func; list]  } -> raise.error (not_supported e)
   | E_constant {cons_name = C_LIST_MAP; arguments = [func; list] } -> raise.error (not_supported e)
+  | E_constant {cons_name = C_LIST_SIZE; arguments = [list_] } -> 
+    let counter = unique_name "counter" in
+    let return = unique_name "return" in
+    let list = unique_name "list" in
+    let env = add_locals env [(list, T.NumType I32Type); (counter, T.NumType I32Type); (return, (T.NumType I32Type))] in
+    let w, env, list_e = expression ~raise w env list_ in
+    w, env, 
+    list_e
+    @
+    [
+      local_set_s list;
+
+      const 4l;
+      call_s "malloc";
+      local_set_s return;
+
+      local_get_s list;
+      data_symbol "C_LIST_EMPTY";
+      i32_eq;
+      if_ 
+        (ValBlockType None)
+        [
+          local_get_s return;
+          const 0l;
+          store;
+        ]
+        [
+          const 0l;
+          local_set_s counter;
+          loop 
+            (ValBlockType None)
+            [
+
+              local_get_s counter;
+              const 1l;
+              i32_add;
+              local_set_s counter;
+
+              (* get the next item *)
+              local_get_s list;
+              const 4l;
+              i32_add;
+              load;
+              local_set_s list;
+
+              local_get_s list;
+              data_symbol "C_LIST_EMPTY";
+              i32_ne;
+              br_if 0l;
+            ];
+          local_get_s return;
+          local_get_s counter;
+          store;
+        ];
+
+      local_get_s return;
+    ]
   | E_constant {cons_name = C_LIST_FOLD; arguments = [func; list; init] } -> raise.error (not_supported e)
   | E_constant {cons_name = C_LIST_FOLD_LEFT; arguments = [func; init; list]  } -> raise.error (not_supported e)
   | E_constant {cons_name = C_LIST_FOLD_RIGHT; arguments = [func; list; init] } -> raise.error (not_supported e)

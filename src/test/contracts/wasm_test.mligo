@@ -60,11 +60,30 @@ let main ((_, _s):(parameter * storage)) =
   let a13 = [3; 2; 1; 0] in
   let xz (i, a) = a - i in
 
-  (* revisit e_fold_right as it's broken in the version with self_michelson... *)
   let a12 = List.fold_right xz a13 10 in
 
   let a13 = List.iter (fun x -> assert (x < 10)) [3;5;7;9] in
 
+  let a14 = List.tail_opt ([]: string list) in
+  let a15 = match a14 with 
+    Some x -> 55
+  | _ -> 44
+  in
+  let a16 = match List.tail_opt [2; 4] with 
+    Some x -> 
+      (
+        match x with 
+          [i] -> if i = 4 then 55 else 22
+        | _ -> 33
+      )
+  | _ -> 44
+  in
+  let a17 = List.head_opt [9;7;8;9;10] in
+  let a17 = match a17 with 
+    Some s -> s
+  | None -> 0
+  in
+  let a18 = List.length [3; 4; 5; 6; 7] in
   let a = 
     4 + 5 +  (* 9 *)
     40 / 5 + (* 9 + 8 = 17 *)
@@ -79,8 +98,11 @@ let main ((_, _s):(parameter * storage)) =
     a8 +     (* 74 + 15 = 89 *)
     a9 +     (* 89 + 5 = 94 *)
     a10 +    (* 94 + 266 = 360 *)
-    a12 // +    (* 360 + 4 = 364 *)
-
+    a12 +    (* 360 + 4 = 364 *)
+    a15 +     (* 364 + 44 = 408 *)
+    a16 +    (* 408 + 55 = 463 *)
+    a17 +     (* 463 + 9 = 472 *)
+    a18       (* 472 + 5 = 477 *)
     // 1000 
     // 0
   in 
