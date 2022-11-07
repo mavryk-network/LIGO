@@ -2,7 +2,7 @@ open Simple_utils.Trace
 open Test_helpers
 open Main_errors
 
-let () = Core_unix.putenv ~key:"LIGO_FORCE_NEW_TYPER" ~data:"false"
+let () = Unix.putenv "LIGO_FORCE_NEW_TYPER" "false"
 type syntax = string
 type group_name = string
 type lang = Meta | Object (* Object = normal LIGO code ; Meta = ligo test framework code *)
@@ -153,7 +153,7 @@ let get_all_md_files () =
   let exclude_files = [
     "./gitlab-pages/docs/demo/ligo-snippet.md" ;
   ] in
-  let ic = Core_unix.open_process_in "find ./gitlab-pages/docs -iname \"*.md\"" in
+  let ic = Unix.open_process_in "find ./gitlab-pages/docs -iname \"*.md\"" in
   let all_input = ref [] in
   let () =
     try
@@ -171,7 +171,7 @@ let get_all_md_files () =
   !all_input
 
 let main =
-  Sys_unix.chdir "../.." ;
+  Unix.chdir "../.." ;
   test_suite "Markdown files" @@
     List.map
       ~f:(fun md_file ->

@@ -298,5 +298,5 @@ let main (raw_options : Raw_options.t) display_format now amount balance sender 
       try
         loop ~raw_options syntax display_format term history state 1
       with | LTerm_read_line.Interrupt -> Ok("","")
-           | Sys_unix.Break -> Ok("","")
+           | Unix.Break -> Ok("","")
     end

@@ -1,9 +1,9 @@
 module Constants = Cli_helpers.Constants
 
 let does_json_manifest_exist () =
-  let cwd = Sys_unix.getcwd () in
+  let cwd = Unix.getcwd () in
   let package_json = Filename.concat cwd "package.json" in
-  match Sys_unix.file_exists package_json with
+  match Unix.file_exists package_json with
    `Yes -> 
     (try 
       let _ = Yojson.Safe.from_file package_json in

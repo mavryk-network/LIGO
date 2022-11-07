@@ -19,8 +19,8 @@
   alcotest
   tezos-utils
   tezos-crypto
-  ligo_api
-  core_unix.filename_unix))
+  unix
+  ligo_api))
 
 (rule
  (alias doc-test)
