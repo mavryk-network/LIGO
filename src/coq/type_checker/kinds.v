@@ -15,6 +15,12 @@ Module Kinds.
         | K_Arrow l r => arrow l r
         end.
 
+    Definition fold_opt {B} (v:t) {kind_opt} {arrow_opt} : option B :=
+        match v with
+        | K_Kind => kind_opt tt
+        | K_Arrow l r => arrow_opt l r
+        end.
+
     Definition Is_Kind (v:t) : Prop :=
         fold v
             (kind:=fun _ => True) 

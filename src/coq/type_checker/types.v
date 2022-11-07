@@ -19,8 +19,8 @@ Module Types.
 
     Inductive t : sort -> classifier -> Set := 
         (* Variables and basic types *)
-        | Ty_exist {C} : string -> t S_type C
-        | Ty_variable {C} : string -> t S_type C
+        | Ty_exist : string -> t S_type C_mono
+        | Ty_variable : string -> t S_type C_poly
         | Ty_one {C} : t S_type C
         (* Function, universal quantification and application *)
         | Ty_arrow {C} : t S_type C -> t S_type C -> t S_type C
@@ -38,8 +38,8 @@ Module Types.
 
     Definition t_type : classifier -> Set := t S_type.
 
-    Definition exist {C} s : t_type C := Ty_exist s.
-    Definition var {C} s : t_type C := Ty_variable s.
+    Definition exist s : t_type C_mono := Ty_exist s.
+    Definition var s : t_type C_poly := Ty_variable s.
     Definition one {C} : t_type C := Ty_one.
     Definition arrow {C} l r : t_type C := Ty_arrow l r.
     Definition for_all s k l : t_type C_poly := Ty_for_all s k l.
@@ -53,8 +53,8 @@ Module Types.
 
     Definition fold {S C}
         {B : sort -> classifier -> Type} (v:t S C) 
-        {exist: forall (C:classifier), string -> B S_type C} 
-        {var: forall (C:classifier), string -> B S_type C} 
+        {exist: string -> B S_type C_mono} 
+        {var: string -> B S_type C_poly} 
         {one: forall (C:classifier), B S_type C} 
         {arrow: forall (C:classifier), t S_type C -> t S_type C -> B S_type C} 
         {for_all: string -> Kinds.t -> t S_type C_poly -> B S_type C_poly}
@@ -64,8 +64,8 @@ Module Types.
         {sum: forall (C:classifier), t_row C -> B S_type C} 
         : B S C :=
         match v with
-        | @Ty_exist C s => exist C s
-        | @Ty_variable C v => var C v
+        | Ty_exist s => exist s
+        | Ty_variable v => var v
         | @Ty_one C => one C
         | @Ty_arrow C l r => arrow C l r
         | Ty_for_all s k l => for_all s k l

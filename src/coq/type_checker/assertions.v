@@ -56,4 +56,14 @@ Module Assertions.
         .
 
 
+    Definition Get_type (a:t) (v:string) : option (Types.t_type Types.C_poly) :=
+        fold a
+            (type_variable := fun _ _ => None) 
+            (kind_variable := fun n k =>  None)
+            (kind_bound_variable := fun n _ t => if string_dec n v then Some t else None)
+            (exist_marker := fun _ => None)
+            (kind_inferable := fun n k => None)
+            (kind_bound_inferable := fun n k _ => None)
+        .
+
 End Assertions.

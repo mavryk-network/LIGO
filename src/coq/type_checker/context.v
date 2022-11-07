@@ -3,6 +3,7 @@ From Coq Require Import String List.
 
 From ligo_coq_type_checker Require Import assertions.
 From ligo_coq_type_checker Require Import kinds.
+From ligo_coq_type_checker Require Import types.
 
 Import ListNotations.
 
@@ -37,6 +38,16 @@ Module Context.
                 match Assertions.Get_kind a v with
                 | Some v => Some v
                 | None => Find_kind c v
+                end
+            ).
+
+    Fixpoint Find_type (c:t) (v:string) : option (Types.t_type Types.C_poly) := 
+        fold c
+            (empty  := fun _ => None) 
+            (assertion := fun c a => 
+                match Assertions.Get_type a v with
+                | Some v => Some v
+                | None => Find_type c v
                 end
             ).
 

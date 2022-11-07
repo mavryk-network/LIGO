@@ -12,9 +12,9 @@ Module Kinds_Rules.
 
     (* Basic inference used for applications *)
     Fixpoint Infer_kind {C} (c:Context.t) (t:Types.t Types.S_type C) : option Kinds.t :=
-        Types.fold t (B:=fun S C => option Kinds.t)
-            (exist:=fun _ n => Context.Find_kind c n)
-            (var:=fun _ n => Context.Find_kind c n)
+        Types.fold t (B:=fun _ _ => option Kinds.t)
+            (exist:=fun n => Context.Find_kind c n)
+            (var:=fun n => Context.Find_kind c n)
             (one:=fun _ => Some Kinds.kind)
             (arrow:=fun C t1 t2 => Some Kinds.kind)
             (for_all:=fun _ _ _ => Some Kinds.kind)
@@ -43,13 +43,13 @@ Module Kinds_Rules.
             ------------
             G |- a^ :: k
             *)            
-            (exist:=fun _ n => Options.Is_Some (Context.Find_kind c n)) 
+            (exist:=fun n => Options.Is_Some (Context.Find_kind c n)) 
             (*  
             a :: k in G     a :: k = A in G
             -----------     ---------------
             G |- a :: k .   G |- a :: k
             *)            
-            (var:=fun _ n => Options.Is_Some (Context.Find_kind c n)) 
+            (var:=fun n => Options.Is_Some (Context.Find_kind c n)) 
             (*  
 
             -----------
