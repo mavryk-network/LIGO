@@ -14,6 +14,17 @@ module TODO_do_in_parsing = struct
   let var ~loc var = Ligo_prim.Value_var.of_input_var var
 end
 module TODO_unify_in_cst = struct
+  let conv_attr (attr:CST.attributes) =
+    List.map attr ~f:(fun attr_reg ->
+      let key,loc = r_split attr_reg in
+      AST.{ key ; value = None },loc
+      )
+  let s_attach_attr (attr:CST.attributes) (e:AST.statement_jsligo) : AST.statement_jsligo =
+    List.fold (conv_attr attr) ~init:e ~f:(fun e (attr,loc) -> s_attrjs ~loc attr e ())
+  let p_attach_attr (attr:CST.attributes) (e:AST.pattern) : AST.pattern =
+    List.fold (conv_attr attr) ~init:e ~f:(fun e (attr,loc) -> p_attr ~loc attr e ())
+  let t_attach_attr (attr:CST.attributes) (e:AST.type_expr) : AST.type_expr =
+    List.fold (conv_attr attr) ~init:e ~f:(fun e (attr,loc) -> t_attr ~loc attr e ())
 end
 
 let rec compile_val_binding ~(raise: ('e, 'w) raise) : CST.val_binding -> AST.let_binding = fun b ->
@@ -41,8 +52,8 @@ and compile_type_expression ~(raise: ('e, 'w) raise) : CST.type_expr -> AST.type
     nseq_map (compile_field_decl <@ r_fst) @@ nsepseq_to_nseq obj.ne_elements
   in
   match te with
-  | TProd t -> (
-    let t, loc = r_split t.inside in
+  | TProd {inside ; attributes} -> (
+    let t, loc = r_split inside in
     let t = List.Ne.map self @@ nsepseq_to_nseq t.inside in
     t_prod t ~loc ()
   )
@@ -60,17 +71,19 @@ and compile_type_expression ~(raise: ('e, 'w) raise) : CST.type_expr -> AST.type
     t_sumjsligo variants ~loc ()
   )
   | TObject t -> (
-    let _, loc = r_split t in
-    let t = compile_obj_type t in
-    t_object t ~loc ()
+    let obj, loc = r_split t in
+    let compile_field_decl : CST.field_decl -> AST.type_expr option AST.field_assign =
+      fun { field_name; field_type ; attributes = _ ; _ } ->
+      { name = r_fst field_name ; expr = Some (self field_type) }
+    in
+    let fields = List.map ~f:(compile_field_decl <@ r_fst) @@ nsepseq_to_list obj.ne_elements in
+    t_record ~loc fields ()
   )
   | TApp t -> (
     let t, loc = r_split t in
     let constr, args = t in
     let constr : string = r_fst constr in
-    let type_args : type_expr nseq =
-      List.Ne.map self @@ nsepseq_to_nseq (r_fst args).inside
-    in
+    let type_args = List.Ne.map self @@ nsepseq_to_nseq (r_fst args).inside in
     t_app {constr; type_args} ~loc ()
   )
   | TFun t -> (
@@ -139,9 +152,11 @@ and compile_pattern ~(raise: ('e, 'w) raise) : CST.pattern -> AST.pattern = fun 
     p_assign {property; value} ~loc ()
   )
   | PVar      p -> (
-    let p, loc = r_split p in
-    let s = r_fst p.variable in
-    p_var s ~loc ()
+    let CST.{variable ; attributes}, loc = r_split p in
+    let s = r_fst variable in
+    TODO_unify_in_cst.p_attach_attr attributes (
+      p_var s ~loc ()
+    )
   )
   | PConstr   p -> (
     let s, loc = r_split p in
@@ -197,21 +212,27 @@ and compile_statement ~(raise: ('e, 'w) raise) : CST.statement -> AST.statement_
     s_return expr_opt ~loc ()
   )
   | SLet s -> (
-    let s, loc = r_split s in
-    let bindings = List.Ne.map (compile_val_binding ~raise <@ r_fst) @@ nsepseq_to_nseq s.bindings in
-    s_let bindings ~loc ()
+    let CST.{bindings ; attributes ; kwd_let = _}, loc = r_split s in
+    let bindings = List.Ne.map (compile_val_binding ~raise <@ r_fst) @@ nsepseq_to_nseq bindings in
+    TODO_unify_in_cst.s_attach_attr attributes (
+      s_let bindings ~loc ()
+    )
   )
   | SConst s -> (
-    let s, loc = r_split s in
-    let bindings = List.Ne.map (compile_val_binding ~raise <@ r_fst) @@ nsepseq_to_nseq s.bindings in
-    s_const bindings ~loc ()
+    let CST.{bindings ; attributes}, loc = r_split s in
+    let bindings = List.Ne.map (compile_val_binding ~raise <@ r_fst) @@ nsepseq_to_nseq bindings in
+    TODO_unify_in_cst.s_attach_attr attributes (
+      s_const bindings ~loc ()
+    )
   )
   | SType s -> (
-    let s, loc = r_split s in
-    let name      = r_fst s.name in
-    let params    = Option.map ~f:extract_type_vars s.params in
-    let type_expr = compile_type_expression ~raise s.type_expr in
-    s_type {name; params; type_expr} ~loc ()
+    let CST.{attributes ; name ; params ; type_expr }, loc = r_split s in
+    let name      = r_fst name in
+    let params    = Option.map ~f:extract_type_vars params in
+    let type_expr = compile_type_expression ~raise type_expr in
+    TODO_unify_in_cst.s_attach_attr attributes (
+      s_type {name; params; type_expr} ~loc ()
+    )
   )
   | SSwitch s -> (
     let s, loc = r_split s in
@@ -239,12 +260,14 @@ and compile_statement ~(raise: ('e, 'w) raise) : CST.statement -> AST.statement_
   )
   | SNamespace s -> (
     let s, loc = r_split s in
-    let (_, module_name, statements, _) = s in
+    let (_, module_name, statements, attributes) = s in
     let module_name       = r_fst module_name in
     let namespace_content =
       List.Ne.map self @@ nsepseq_to_nseq (r_fst statements).inside
     in
-    s_namespace {module_name; namespace_content} ~loc ()
+    TODO_unify_in_cst.s_attach_attr attributes (
+      s_namespace {module_name; namespace_content} ~loc ()
+    )
   )
   | SExport s -> (
     let (_, s), loc = r_split s in

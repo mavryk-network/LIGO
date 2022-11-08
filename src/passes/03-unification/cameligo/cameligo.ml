@@ -15,7 +15,16 @@ module TODO_do_in_parsing = struct
   let tvar ~loc (var:string) = Ligo_prim.Type_var.of_input_var ~loc var
 end
 module TODO_unify_in_cst = struct
-  (**)
+  let conv_attr (attr:CST.attributes) =
+    List.map attr ~f:(fun attr_reg ->
+      let (key,value_opt),loc = r_split attr_reg in
+      let value : string option = Option.map ~f:(function String x -> x) value_opt in
+      AST.{ key ; value },loc
+      )
+  let attach_attr (attr:CST.attributes) (e:AST.expr) : AST.expr =
+    List.fold (conv_attr attr) ~init:e ~f:(fun e (attr,loc) -> e_attr ~loc (attr,e) ())
+  let d_attach_attr (attr:CST.attributes) (e:AST.decl) : AST.decl =
+    List.fold (conv_attr attr) ~init:e ~f:(fun e (attr,loc) -> d_attr ~loc (attr,e) ())
 end
 
 (* ========================== TYPES ======================================== *)
@@ -44,14 +53,13 @@ let rec compile_type_expression : CST.type_expr -> AST.type_expr = fun te ->
     let t, loc = r_split t in
     let t =
       let field_decls : CST.field_decl nseq = nseq_map r_fst @@ nsepseq_to_nseq t.ne_elements in
-      let compile_field_decl : CST.field_decl -> AST.type_expr AST.field_assign = fun fd ->
-        let name : string = r_fst fd.field_name in
-        let expr : type_expr = self fd.field_type in
-        {name; expr}
+      let compile_field_decl : CST.field_decl -> AST.type_expr option AST.field_assign =
+       fun {field_name ; field_type } ->
+        { name = r_fst field_name ; expr = Some (self field_type) }
       in
-      nseq_map compile_field_decl field_decls
+      List.map ~f:compile_field_decl (nseq_to_list field_decls)
     in
-    t_recordcameligo t ~loc ()
+    t_record t ~loc ()
   )
   | TApp t -> (
     let t, loc = r_split t in
@@ -423,7 +431,7 @@ let rec compile_expression ~raise : CST.expr -> AST.expr = fun e ->
     )
   | ELetIn li -> (
       let li, loc = r_split li in
-      let {kwd_let=_; kwd_rec; binding; kwd_in=_; body; attributes=_} : CST.let_in = li in
+      let {kwd_let=_; kwd_rec; binding; kwd_in=_; body; attributes} : CST.let_in = li in
       let {type_params; binders; rhs_type; eq=_; let_rhs} : CST.let_binding = binding in
       let is_rec      = match kwd_rec with Some _ -> true | None -> false in
       let type_params = Option.map ~f:compile_type_params type_params in
@@ -431,7 +439,9 @@ let rec compile_expression ~raise : CST.expr -> AST.expr = fun e ->
       let rhs_type    = Option.map ~f:compile_rhs_type rhs_type in
       let let_rhs     = self let_rhs in
       let body        = self body in
-      e_letincameligo {is_rec; type_params; binders; rhs_type; let_rhs; body} ~loc ()
+      TODO_unify_in_cst.attach_attr attributes (
+        e_let_in {is_rec; type_params; binders; rhs_type; let_rhs; body} ~loc ()
+      )
     )
   | ETypeIn ti -> (
       let ti, loc = r_split ti in
@@ -476,7 +486,7 @@ and compile_declaration ~raise : CST.declaration -> AST.declaration = fun decl -
     d_directive d ~loc ()
   )
   | Let e -> (
-    let (_kwd_let, kwd_rec, e, _attr), loc = r_split e in
+    let (_kwd_let, kwd_rec, e, attributes), loc = r_split e in
     let is_rec = match kwd_rec with None -> false | Some _ -> true in
     let type_params =
       let compile_type_params : CST.type_params CST.par CST.reg -> string nseq =
@@ -487,7 +497,9 @@ and compile_declaration ~raise : CST.declaration -> AST.declaration = fun decl -
     let binders = nseq_map compile_pattern e.binders in
     let rhs_type = Option.map ~f:(compile_type_expression <@ snd) e.rhs_type in
     let let_rhs = compile_expression ~raise e.let_rhs in
-    d_let {is_rec; type_params; binders; rhs_type; let_rhs} ~loc ()
+    TODO_unify_in_cst.d_attach_attr attributes (
+      d_let {is_rec; type_params; binders; rhs_type; let_rhs} ~loc ()
+    )
   )
   | TypeDecl d -> (
     let d, loc = r_split d in

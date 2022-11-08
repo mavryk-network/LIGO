@@ -18,7 +18,7 @@ end
 module TODO_unify_in_cst = struct
 end
 
-let translate_attr_pascaligo : CST.Attr.t -> AST.attr_pascaligo = fun attr ->
+let translate_attr_pascaligo : CST.Attr.t -> AST.attr = fun attr ->
   let key, value = attr in
   let value : string option = Option.map ~f:(fun (CST.Attr.String s) ->  s) value in
   {key; value}
@@ -55,8 +55,8 @@ let rec compile_type_expression ~(raise: ('e, 'w) raise) : CST.type_expr -> AST.
   | T_Cart    t -> (
     let (te, _, tes), loc = r_split t in
     let te = self te in
-    let tes = List.Ne.map self @@ nsepseq_to_nseq tes in
-    t_cart (te, tes) ~loc ()
+    let hd,tl = List.Ne.map self @@ nsepseq_to_nseq tes in
+    t_prod (te, hd::tl) ~loc ()
   )
   | T_Fun t -> (
     let (te1, _, te2), loc = r_split t in
@@ -81,7 +81,7 @@ let rec compile_type_expression ~(raise: ('e, 'w) raise) : CST.type_expr -> AST.
   )
   | T_Record  t -> (
     let t, loc = r_split t in
-    let t : type_record_opt =
+    let t =
       let compile_field_decl : CST.field_decl -> AST.type_expr option AST.field_assign = fun fd ->
         let name : string = w_fst fd.field_name in
         let expr : type_expr option = Option.map ~f:(self <@ snd) fd.field_type in
@@ -89,7 +89,7 @@ let rec compile_type_expression ~(raise: ('e, 'w) raise) : CST.type_expr -> AST.
       in
       List.map ~f:(compile_field_decl <@ r_fst) @@ sepseq_to_list t.elements
     in
-    t_recordpascaligo t ~loc ()
+    t_record t ~loc ()
   )
   | T_String  t -> (
     let t, loc = w_split t in

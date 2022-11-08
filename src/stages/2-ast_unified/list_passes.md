@@ -1,12 +1,8 @@
-(*
+## unpar
+- remove: E_par
+- add: .
+remove parenthesis, trivial in forward pass, useful in backward pass
 
-  pass 'unpar' :
-    remove: E_par
-    add: -
-
-    (remove parenthesis, trivial in forward pass, useful in backward pass)
-    rule :
-    A. unpar @@ E_Par e = e
   =============================================================================
   pass 'freeze_operator' : bin_op , ternop ?
     remove : E_arith_binary_operator
@@ -715,4 +711,3 @@
   <pattern_destructN> = .. ;
   ```
 
-*)

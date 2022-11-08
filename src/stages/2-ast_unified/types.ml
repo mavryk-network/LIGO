@@ -15,6 +15,7 @@
 
 (* include Stage_common.Types *)
 open Ligo_prim
+open Temp_prim
 
 module Location = Simple_utils.Location
 module List = Simple_utils.List
@@ -39,7 +40,7 @@ module Directive = struct
     fun _ -> Error "JSON parsing of directive is not supported"
 end
 
-type attr_pascaligo = {
+type attr = {
   key      : string;
   value    : string option;
 } [@@deriving yojson]
@@ -49,10 +50,8 @@ type ('lhs, 'rhs) field =
 | Complete of ('lhs * 'rhs)
   [@@deriving yojson]
 
-type 'a field_assign = {
-  name : string;
-  expr : 'a; 
-} [@@deriving yojson]
+type 'a field_assign = 'a Type_record.field_assign
+[@@deriving yojson]
 
 (* ========================== TYPES ======================================== *)
 
@@ -64,8 +63,6 @@ and type_expr_content = type_expression_content
 and type_expr         = type_expression
   [@@deriving yojson]
 
-and cartesian = type_expr nseq
-and cartesian_pascaligo = type_expr * type_expr nseq
 
 and 'a variant'   = {
   constr  : string;
@@ -94,7 +91,7 @@ and 'a module_path = {
 
 and type_record     = type_expr        field_assign list
 and type_ne_record  = type_expr        field_assign nseq
-and type_record_opt = type_expr option field_assign list
+(* and type_record_opt = type_expr option field_assign list *)
 
 and fun_type_arg = {
   name      : string;
@@ -103,12 +100,7 @@ and fun_type_arg = {
 and fun_type_args = fun_type_arg nseq
 
 and type_expression_content =
-| T_Record  of type_record
-(* *)
-(* Above variants are produced by nanopasses, not directly by unification *)
-(* Below variants are produced by directly unification pass *)
-(* Shared *)
-| T_Prod    of cartesian
+| T_Prod    of type_expr nseq
 | T_Sum     of sum_type
 | T_App     of string type_app
 | T_Fun     of type_expr * type_expr
@@ -118,18 +110,12 @@ and type_expression_content =
 | T_Int     of string * Z.t
 | T_ModA    of type_expr module_access
 | T_Arg     of string
-(* Cameligo *)
-| T_RecordCameligo  of type_ne_record
-(* Jsligo *)
-| T_Object          of type_ne_record
 | T_FunJsligo       of fun_type_args * type_expr
 | T_Disc            of type_ne_record nseq
 | T_SumJsligo       of sum_type_jsligo
-(* Pascaligo *)
-| T_RecordPascaligo of type_record_opt             (* CST.T_Record *)
-| T_Attr            of attr_pascaligo * type_expr  (* CST.T_Attr *)
-| T_AppPascaligo    of type_expr type_app          (* CST.T_App *)
-| T_Cart            of cartesian_pascaligo         (* CST.T_Cart *)
+| T_Record          of type_expr option Type_record.t
+| T_Attr            of attr * type_expr
+| T_AppPascaligo    of type_expr type_app
 | T_ModPath         of type_expr module_path
 
 (* ========================== PATTERNS ===================================== *)
@@ -182,7 +168,7 @@ and pattern_content =
 | P_RecordCameligo   of ptrn field_assign nseq
 (* Pascaligo *)
 | P_App      of ptrn * ptrn nseq option
-| P_Attr     of attr_pascaligo * ptrn
+| P_Attr     of attr * ptrn
 | P_ModPath  of ptrn module_path
 | P_Mutez    of string * Int64.t
 | P_Nil
@@ -307,7 +293,7 @@ and var_decl = {
 }
 
 and statement_pascaligo_content =
-| S_Attr      of (attr_pascaligo * statement_pascaligo) 
+| S_Attr      of (attr * statement_pascaligo) 
 | S_Decl      of declaration
 | S_Instr     of instruction
 | S_VarDecl   of var_decl
@@ -379,6 +365,7 @@ and statement_jsligo_content =
 | S_Import     of import
 | S_While      of while_stmt_jsligo
 | S_ForOf      of for_of
+| S_Attrjs       of attr * statement_jsligo 
 
 (* ========================== DECLARATIONS ================================= *)
 
@@ -423,7 +410,7 @@ and module_alias = {
 
 and declaration_content =
 | D_Directive      of Directive.t
-| D_Attr           of (attr_pascaligo * declaration)
+| D_Attr           of (attr * declaration)
 | D_ToplevelJsligo of statement_jsligo
 | D_Let            of let_binding
 | D_Const          of let_binding
@@ -529,7 +516,7 @@ and map_lookup = {
   keys : expr nseq;
 }
 
-and let_in_cameligo = {
+and let_in = {
   is_rec       : bool;
   type_params  : Type_var.t nseq option;
   binders      : pattern nseq;
@@ -676,7 +663,7 @@ and expression_content =
   | E_BigMap of (expr * expr) list
 
   (* Let in *)
-  | E_LetInCameligo of let_in_cameligo    (* let x = 42 in x + 1 *)
+  | E_Let_in of let_in                    (* let x = 42 in x + 1 *)
   | E_TypeIn        of type_in            (* type t = int in let x : t = 42 *)
   | E_ModIn         of mod_in             (* module M = struct let x = 42 end in M.x *)
   | E_ModAlias      of mod_alias          (* module M = N.P in M.x *) 
@@ -691,8 +678,8 @@ and expression_content =
   (* Block *)                             (* function f ... is { const res = a + b; } with res *)
   | E_BlockPascaligo of block_with_pascaligo
 
-  (* Attributes (PascaLigo) *)
-  | E_Attr of (attr_pascaligo * expr)     (* [@a] (x,y)      *)
+  (* Attributes *)
+  | E_Attr of (attr * expr)     (* [@a] (x,y)      *)
 
   (* Assign jsligo *)
   | E_AssignJsligo of assign_jsligo
