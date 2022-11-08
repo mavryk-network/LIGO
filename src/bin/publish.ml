@@ -187,7 +187,7 @@ let os_type =
   | _ -> Gz.Unix
 
 let gzip fname fd =
-  let file_size = Int.of_int64_exn (Ligo_unix.stat fname).st_size in
+  let file_size = Int.of_int64_exn (Caml.Unix.stat fname).st_size in
   let level = 4 in
   let buffer_len = De.io_buffer_size in
   let time () = Int32.of_float (Unix.gettimeofday ()) in
@@ -245,10 +245,10 @@ let rec get_all_files : string -> string list Lwt.t = fun file_or_dir ->
   Lwt.return files
 
 let from_dir ~dir f =
-  let pwd = Unix.getcwd () in
-  let () = Unix.chdir dir in
+  let pwd = Caml.Sys.getcwd () in
+  let () = Caml.Sys.chdir dir in
   let result = f () in
-  let () = Unix.chdir pwd in
+  let () = Caml.Sys.chdir pwd in
   result
 
 let tar_gzip ~name ~version dir = 

@@ -1,6 +1,6 @@
 open Cli_expect
 
-let () = Unix.chdir "../../test/projects/"
+let () = Caml.Sys.chdir "../../test/projects/"
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test" ; "originate_contract/test.mligo" ; "--project-root" ; "originate_contract" ; "--no-warn" ] ;
@@ -21,8 +21,8 @@ let%expect_test _ =
       2 |
     File "tezos-ligo-fa2" not found. |}]
 
-let pwd = Unix.getcwd ()
-let () = Unix.chdir "using_scope_pkg_project"
+let pwd = Caml.Sys.getcwd ()
+let () = Caml.Sys.chdir "using_scope_pkg_project"
 let%expect_test _ =
   run_ligo_good [ "run"; "test" ; "src/a/b/c/contract.test.mligo" ; "--project-root" ; "." ] ;
   [%expect{|
@@ -34,43 +34,43 @@ let%expect_test _ =
   [%expect{|
     Everything at the top-level was executed.
     - test_originate exited with value (). |}]
-let () = Unix.chdir pwd
+let () = Caml.Sys.chdir pwd
 
-let pwd = Unix.getcwd ()
-let () = Unix.chdir "using_scope_pkg_project/src/a/b/c"
+let pwd = Caml.Sys.getcwd ()
+let () = Caml.Sys.chdir "using_scope_pkg_project/src/a/b/c"
 let%expect_test _ =
   run_ligo_good [ "run"; "test" ; "contract.test.mligo" ] ;
   [%expect{|
     Everything at the top-level was executed.
     - test_originate exited with value (). |}]
-let () = Unix.chdir pwd
+let () = Caml.Sys.chdir pwd
 
-let pwd = Unix.getcwd ()
-let () = Unix.chdir "using_scope_pkg_project/src/a/b"
+let pwd = Caml.Sys.getcwd ()
+let () = Caml.Sys.chdir "using_scope_pkg_project/src/a/b"
 let%expect_test _ =
   run_ligo_good [ "run"; "test" ; "c/contract.test.mligo" ] ;
   [%expect{|
     Everything at the top-level was executed.
     - test_originate exited with value (). |}]
-let () = Unix.chdir pwd
+let () = Caml.Sys.chdir pwd
 
-let pwd = Unix.getcwd ()
-let () = Unix.chdir "using_scope_pkg_project/src/a"
+let pwd = Caml.Sys.getcwd ()
+let () = Caml.Sys.chdir "using_scope_pkg_project/src/a"
 let%expect_test _ =
   run_ligo_good [ "run"; "test" ; "b/c/contract.test.mligo" ] ;
   [%expect{|
     Everything at the top-level was executed.
     - test_originate exited with value (). |}]
-let () = Unix.chdir pwd
+let () = Caml.Sys.chdir pwd
 
-let pwd = Unix.getcwd ()
-let () = Unix.chdir "using_scope_pkg_project/src"
+let pwd = Caml.Sys.getcwd ()
+let () = Caml.Sys.chdir "using_scope_pkg_project/src"
 let%expect_test _ =
   run_ligo_good [ "run"; "test" ; "a/b/c/contract.test.mligo" ] ;
   [%expect{|
     Everything at the top-level was executed.
     - test_originate exited with value (). |}]
-let () = Unix.chdir pwd
+let () = Caml.Sys.chdir pwd
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test" ; "using_scope_pkg_project/src/a/b/c/contract.test.mligo" ; "--project-root" ; "using_scope_pkg_project" ] ;
@@ -85,15 +85,15 @@ let%expect_test _ =
       storage (option nat) ;
       code { DROP ; SENDER ; UNIT ; VIEW "total_supply" nat ; NIL operation ; PAIR } } |}]
 
-let pwd = Unix.getcwd ()
-let () = Unix.chdir "dao_path_bug"
+let pwd = Caml.Sys.getcwd ()
+let () = Caml.Sys.chdir "dao_path_bug"
 let%expect_test _ =
   run_ligo_good [ "compile"; "contract" ; "main.mligo" ] ;
   [%expect{|
     { parameter unit ;
       storage (option nat) ;
       code { DROP ; SENDER ; UNIT ; VIEW "total_supply" nat ; NIL operation ; PAIR } } |}]
-let () = Unix.chdir pwd
+let () = Caml.Sys.chdir pwd
 
 let%expect_test _ =
   run_ligo_good [ "compile"; "contract" ; "include_include/main.mligo" ; "--project-root" ; "include_include" ] ;
@@ -107,8 +107,8 @@ let%expect_test _ =
              NIL operation ;
              PAIR } } |}]
 
-let pwd = Unix.getcwd ()
-let () = Unix.chdir "include_include"
+let pwd = Caml.Sys.getcwd ()
+let () = Caml.Sys.chdir "include_include"
 let%expect_test _ =
   run_ligo_good [ "compile"; "contract" ; "main.mligo" ] ;
   [%expect{|
@@ -120,7 +120,7 @@ let%expect_test _ =
              CONCAT ;
              NIL operation ;
              PAIR } } |}]
-let () = Unix.chdir pwd
+let () = Caml.Sys.chdir pwd
 
 let%expect_test _ =
   run_ligo_good [ "compile"; "contract" ; "include_import/main.mligo" ; "--project-root" ; "include_import" ] ;
@@ -137,8 +137,8 @@ let%expect_test _ =
              NIL operation ;
              PAIR } } |}]
 
-let pwd = Unix.getcwd ()
-let () = Unix.chdir "include_import"
+let pwd = Caml.Sys.getcwd ()
+let () = Caml.Sys.chdir "include_import"
 let%expect_test _ =
   run_ligo_good [ "compile"; "contract" ; "main.mligo" ] ;
   [%expect{|
@@ -153,7 +153,7 @@ let%expect_test _ =
              CONCAT ;
              NIL operation ;
              PAIR } } |}]
-let () = Unix.chdir pwd
+let () = Caml.Sys.chdir pwd
 
 let%expect_test _ =
   run_ligo_good [ "compile"; "contract" ; "import_import/main.mligo" ; "--project-root" ; "import_import" ] ;
@@ -170,8 +170,8 @@ let%expect_test _ =
              NIL operation ;
              PAIR } } |}]
 
-let pwd = Unix.getcwd ()
-let () = Unix.chdir "import_import"
+let pwd = Caml.Sys.getcwd ()
+let () = Caml.Sys.chdir "import_import"
 let%expect_test _ =
   run_ligo_good [ "compile"; "contract" ; "main.mligo" ] ;
   [%expect{|
@@ -186,7 +186,7 @@ let%expect_test _ =
              CONCAT ;
              NIL operation ;
              PAIR } } |}]
-let () = Unix.chdir pwd
+let () = Caml.Sys.chdir pwd
 
 let%expect_test _ =
   run_ligo_good [ "compile"; "contract" ; "import_include/main.mligo" ; "--project-root" ; "import_include" ] ;
@@ -206,8 +206,8 @@ let%expect_test _ =
              NIL operation ;
              PAIR } } |}]
 
-let pwd = Unix.getcwd ()
-let () = Unix.chdir "import_include"
+let pwd = Caml.Sys.getcwd ()
+let () = Caml.Sys.chdir "import_include"
 let%expect_test _ =
   run_ligo_good [ "compile"; "contract" ; "main.mligo" ] ;
   [%expect{|
@@ -225,4 +225,4 @@ let%expect_test _ =
              CONCAT ;
              NIL operation ;
              PAIR } } |}]
-let () = Unix.chdir pwd
+let () = Caml.Sys.chdir pwd

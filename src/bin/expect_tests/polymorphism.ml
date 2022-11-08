@@ -1,8 +1,8 @@
 open Cli_expect
 
 let test basename = "./" ^ basename
-let pwd = Unix.getcwd ()
-let () = Unix.chdir "../../test/contracts/polymorphism/"
+let pwd = Caml.Sys.getcwd ()
+let () = Caml.Sys.chdir "../../test/contracts/polymorphism/"
 
 let%expect_test _ =
   run_ligo_good [ "compile" ; "expression" ; "pascaligo" ; "zip(list [1;2;3], list [4n;5n;6n])" ; "--init-file" ; (test "comb.ligo") ] ;
@@ -369,8 +369,8 @@ let%expect_test _ =
   run_ligo_good [ "compile" ; "expression" ; "cameligo" ; "x" ; "--init-file" ; (test "same_vars.mligo") ] ;
   [%expect{| 4 |}]
 
-let () = Unix.chdir pwd ;
-         Unix.chdir "../../test/contracts/negative/polymorphism/"
+let () = Caml.Sys.chdir pwd ;
+         Caml.Sys.chdir "../../test/contracts/negative/polymorphism/"
 
 let%expect_test _ =
   run_ligo_bad [ "print" ; "ast-typed" ; (test "annotate2.mligo") ] ;
@@ -457,4 +457,4 @@ let%expect_test _ =
     Underspecified type list (^gen#5).
     Please add additional annotations. |}]
 
-let () = Unix.chdir pwd
+let () = Caml.Sys.chdir pwd

@@ -171,7 +171,7 @@ let get_all_md_files () =
   !all_input
 
 let main =
-  Unix.chdir "../.." ;
+  Caml.Sys.chdir "../.." ;
   test_suite "Markdown files" @@
     List.map
       ~f:(fun md_file ->

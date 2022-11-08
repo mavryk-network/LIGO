@@ -1,7 +1,7 @@
 open Cli_expect
 
-let pwd = Unix.getcwd ()
-let () = Unix.chdir "../../test/contracts/include/test1"
+let pwd = Caml.Sys.getcwd ()
+let () = Caml.Sys.chdir "../../test/contracts/include/test1"
 
 let%expect_test _ =
   run_ligo_good [ "print" ; "preprocessed" ;  "root.ligo" ; "--lib" ; "includes" ] ;
@@ -25,8 +25,8 @@ let%expect_test _ =
 
     # 2 "root.ligo" 2 |}]
 
-let () = Unix.chdir pwd ;
-         Unix.chdir "../../test/contracts/include/test2"
+let () = Caml.Sys.chdir pwd ;
+         Caml.Sys.chdir "../../test/contracts/include/test2"
 
 let%expect_test _ =
   run_ligo_good [ "print" ; "preprocessed" ;  "Root.mligo" ; "--lib" ; "bug" ] ;
@@ -41,8 +41,8 @@ let%expect_test _ =
 
     # 2 "Root.mligo" 2 |}]
 
-let () = Unix.chdir pwd ;
-         Unix.chdir "../../test/contracts/include/test3"        
+let () = Caml.Sys.chdir pwd ;
+         Caml.Sys.chdir "../../test/contracts/include/test3"        
 
 let%expect_test _ =
   run_ligo_good [ "print" ; "preprocessed" ;  "B1.ligo" ; "--lib" ; "B2" ] ;
@@ -60,8 +60,8 @@ let%expect_test _ =
 
     const b1 = b2 * 2 + b3 |}]
 
-let () = Unix.chdir pwd ;
-         Unix.chdir "../../test/contracts/include/test4/current"
+let () = Caml.Sys.chdir pwd ;
+         Caml.Sys.chdir "../../test/contracts/include/test4/current"
 
 let%expect_test _ =
   run_ligo_good [ "print" ; "preprocessed" ;  "../Root.ligo" ; "--lib" ; "../bug" ] ;
@@ -76,4 +76,4 @@ let%expect_test _ =
 
     # 2 "../Root.ligo" 2 |}]
 
-let () = Unix.chdir pwd
+let () = Caml.Sys.chdir pwd
