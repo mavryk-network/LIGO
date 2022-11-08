@@ -23,7 +23,6 @@ include:
 
 .submodule-clone:
   before_script:
-    - sed -i 's;without-tests;prometheansacrifice/v12.0-ligo-windows-compat;' .git/modules/vendors/tezos-ligo/config
     - git submodule sync --recursive
     - git submodule update --init --recursive --remote
 
@@ -49,7 +48,7 @@ esy-windows:
     # - $env:GIT_TRACE = 1
     # - $env:GIT_TRACE_PACKET = 1
     - git config http.postBuffer 1048576000
-    - npm i -g esy@beta --force
+    - npm i -g @esy-nightly/esy --force
     - $env:PATH = 'C:\Users\gitlabrunner\AppData\Roaming\npm;' + $env:PATH
     - $env:HOME = 'C:/Users/gitlabrunner'
     - esy i
