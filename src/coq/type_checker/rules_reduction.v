@@ -10,14 +10,14 @@ From ligo_coq_type_checker Require Import context.
 
 Module Reduction_Rules.
 
-    (* G |- A --> B *)
+    (* G |- A ~~> B *)
     Fixpoint Reduce_type {C:Types.classifier} (c:Context.t) (t:Types.t Types.S_type C) : bool * Types.t Types.S_type C :=
         Types.fold (B:=fun S C => prod bool (Types.t S C))
             t
             (*  
 
             ------------
-            G |- a --> a
+            G |- a ~~> a
             *)            
             (exist:=fun n =>
                 (false, Types.exist n)
@@ -25,7 +25,7 @@ Module Reduction_Rules.
             (*  
                             
             ------------    ------------------------
-            G |- v --> v    G, v :: k = A |- v --> v
+            G |- v ~~> v    G, v :: k = A |- v ~~> A
             *)            
             (var:=fun n => 
                 match Context.Find_type c n with
@@ -36,15 +36,15 @@ Module Reduction_Rules.
             (*  
 
             ------------
-            G |- 1 --> 1
+            G |- 1 ~~> 1
             *)            
             (one:=fun _ => 
                 (false, Types.one)
             )
             (*  
-            G |- t1 --> t1'                G |- t2 --> t2'
+            G |- t1 ~~> t1'                G |- t2 ~~> t2'
             ---------------------------    ---------------------------    
-            G |- t1 -> t2 --> t1' -> t2    G |- t1 -> t2 --> t1 -> t2'
+            G |- t1 -> t2 ~~> t1' -> t2    G |- t1 -> t2 ~~> t1 -> t2'
             *)            
             (arrow:=fun C t1 t2 => 
                 let (m1, t1') := @Reduce_type C c t1 in
@@ -52,27 +52,27 @@ Module Reduction_Rules.
                 (m2, @Types.arrow C t1' t2')
             )
             (*  
-            G |- t --> t'
+            G |- t ~~> t'
             ---------------------------------------
-            G |- forall(s::k).t --> forall(s::k).t'
+            G |- forall(s::k).t ~~> forall(s::k).t'
             *)            
             (for_all:=fun s k t => 
                 let (m, t') := Reduce_type c t in
                 (m, Types.for_all s k t')
             )
             (*  
-            G |- t --> t'
+            G |- t ~~> t'
             ---------------------------------------
-            G |- lambda(s::k).t --> lambda(s::k).t'
+            G |- lambda(s::k).t ~~> lambda(s::k).t'
             *)            
             (lambda:=fun C s k t => 
                 let (m, t') := @Reduce_type C c t in
                 (m, @Types.lambda C s k t')
             )
             (*  
-            G |- t1 --> t1'          G |- t2 --> t2'
+            G |- t1 ~~> t1'          G |- t2 ~~> t2'
             ---------------------    ---------------------    
-            G |- t1 t2 --> t1' t2    G |- t1 t2 --> t1 t2'
+            G |- t1 t2 ~~> t1' t2    G |- t1 t2 ~~> t1 t2'
             *)            
             (apply:=fun C t1 t2 => 
                 let (m1, t1') := @Reduce_type C c t1 in
@@ -80,31 +80,37 @@ Module Reduction_Rules.
                 (m2, @Types.apply C t1' t2')            
             )
             (*  
+            G |- r ~~> r'
+            -------------------
+            G |- Pi r ~~> Pi r'
             *)            
             (product:=fun C r => 
                 let (m, l) := @Reduce_row C c r in
                 (m, @Types.product C l)
             )
             (*  
+            G |- r ~~> r'
+            ---------------------
+            G |- Sum r ~~> Sum r'
             *)            
             (sum:=fun C r => 
                 let (m, l) := @Reduce_row C c r in
                 (m, @Types.sum C l)
             )
 
-    (* G |- r --> r' *)
+    (* G |- r ~~> r' *)
     with Reduce_row {C} (c:Context.t) (v:Types.t_row C) : bool * Types.t_row C :=
         Types.fold_row v
             (*  
 
             ------------
-            G |- . --> .
+            G |- . ~~> .
             *)                        
             (empty:=fun _ => (false, Types.empty))
             (*  
-            G |- t --> t'                      G |- r -> r'
+            G |- t ~~> t'                      G |- r -> r'
             -------------------------------    -------------------------------
-            G |- v : t :: r --> v : t' :: r    G |- v : t :: r --> v : t :: r'
+            G |- v : t :: r ~~> v : t' :: r    G |- v : t :: r ~~> v : t :: r'
             *)            
             (row:=fun C v t r => 
                 let (m1, t') := @Reduce_type C c t in

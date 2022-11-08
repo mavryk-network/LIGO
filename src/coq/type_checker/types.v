@@ -17,7 +17,7 @@ Module Types.
         | C_mono : classifier
         .
 
-    Inductive t : sort -> classifier -> Set := 
+    Inductive t : sort -> classifier -> Set :=         
         (* Variables and basic types *)
         | Ty_exist : string -> t S_type C_mono
         | Ty_variable : string -> t S_type C_poly
