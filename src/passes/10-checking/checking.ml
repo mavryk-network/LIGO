@@ -94,6 +94,19 @@ let rec evaluate_type ~raise ~(ctx : Context.t) (type_ : I.type_expression)
   let loc = type_.location in
   let self ?(ctx = ctx) = evaluate_type ~raise ~ctx in
   let return content = make_t ~loc:type_.location content (Some type_) in
+  let is_fully_applied location (t : O.type_expression) =
+    match t.type_content with
+    | T_abstraction x ->
+      let rec aux : O.type_expression * int -> O.type_expression * int =
+       fun (t, i) ->
+        match t.type_content with
+        | T_abstraction x -> aux (x.type_, i + 1)
+        | _ -> t, i
+      in
+      let expected = snd @@ aux (x.type_, 1) in
+      raise.error (type_app_wrong_arity None expected 0 location)
+    | _ -> ()
+  in
   match type_.type_content with
   | T_arrow { type1; type2 } ->
     let ctx, type1 = self ~ctx type1 in
@@ -107,7 +120,9 @@ let rec evaluate_type ~raise ~(ctx : Context.t) (type_ : I.type_expression)
     ctx, return @@ T_record row
   | T_variable name ->
     (match Context.get_type ctx name with
-    | Some type_ref -> ctx, { type_ref with location = type_.location }
+    | Some type_ref ->
+      is_fully_applied type_.location type_ref ;
+      ctx, { type_ref with location = type_.location }
     | None ->
       (match Context.get_type_var ctx name with
       | Some _ -> ctx, return @@ T_variable name
@@ -117,19 +132,6 @@ let rec evaluate_type ~raise ~(ctx : Context.t) (type_ : I.type_expression)
     let operator =
       trace_option ~raise (unbound_type_variable type_operator type_.location)
       @@ Context.get_type ctx type_operator
-    in
-    let is_fully_applied location (t : O.type_expression) =
-      match t.type_content with
-      | T_abstraction x ->
-        let rec aux : O.type_expression * int -> O.type_expression * int =
-         fun (t, i) ->
-          match t.type_content with
-          | T_abstraction x -> aux (x.type_, i + 1)
-          | _ -> t, i
-        in
-        let expected = snd @@ aux (x.type_, 1) in
-        raise.error (type_app_wrong_arity None expected 0 location)
-      | _ -> ()
     in
     let ctx, arguments =
       List.fold_map arguments ~init:ctx ~f:(fun ctx type_ ->
