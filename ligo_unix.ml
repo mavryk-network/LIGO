@@ -8,3 +8,4 @@ let home_directory () =
                           | Some _, home_drive, home_path -> home_drive ^ home_path
                           | _ -> "")
   | None -> ""
+
