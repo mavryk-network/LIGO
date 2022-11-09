@@ -2,22 +2,29 @@
 
 type storage = int;
 
-/* variant defining pseudo multi-entrypoint actions */
-type parameter =
-| ["Increment", int]
-| ["Decrement", int];
+type parameter = 
+  { kind: "Increment", value: int}
+| { kind: "Decrement", value: int}
+| { kind: "Reset"};
 
-let add = ([a,b]: [int, int]): int => a + b;
-let sub = ([a,b]: [int, int]): int => a - b;
+type return_ = [list<operation>, storage];
 
-/* real entrypoint that re-routes the flow based on the parameter provided */
+/* Two entrypoints */
+const add = (store: storage, delta: int) : storage => store + delta;
+const sub = (store: storage, delta: int) : storage => store - delta;
 
-let main = ([p, storage]: [parameter, storage]):[list<operation>, int] => {
-  let storage2 = match(p, {
-    Increment: (n: int) => add ([storage, n]),
-    Decrement: (n: int) => sub ([storage, n]) 
-  });
-  return [(list([]) as list <operation>), storage2];
+/* Main access point that dispatches to the entrypoints according to
+   the smart contract parameter. */
+const main = (action : parameter, store: storage) : return_ => {
+  const noop = list([]);
+  switch(action.kind){
+    case "Increment": 
+      return [noop, add(store, action.value)];
+    case "Decrement": 
+      return [noop, sub(store, action.value)];
+    case "Reset": 
+      return [noop, 0];
+  }
 };
 
 /* IF YOU CHANGE THIS, CHANGE THE EXAMPLE ON THE FRONT PAGE OF THE WEBSITE */
