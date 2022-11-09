@@ -115,6 +115,38 @@ module Int = struct
   let gt  = compare_bin_op (fun at -> [i32_gt  at])
   let le  = compare_bin_op (fun at -> [i32_le  at])
   let ge  = compare_bin_op (fun at -> [i32_ge  at])
+  
+
+  let compare env a b = 
+    let if_ = if_ at in
+    let const = const at in
+    (* let call_s = call_s at in *)
+    (* let load = load at in *)
+    (* let local_get_s = local_get_s at in *)
+    let env, eq = eq env a b in
+    let env, lt = lt env a b in
+    env, 
+    eq
+    @
+    [
+      if_ 
+        (ValBlockType (Some (T.NumType I32Type)))
+        [
+          const 0l;
+        ]
+        (lt
+        @
+        [
+          if_ 
+            (ValBlockType (Some (T.NumType I32Type)))
+            [
+              const (-1l);
+            ]
+            [
+              const 1l;
+            ]
+        ])
+    ]
 
 end
 

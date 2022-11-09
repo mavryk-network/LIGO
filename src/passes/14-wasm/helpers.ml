@@ -133,9 +133,13 @@ let i32_gt at = {it = Compare (I32 GtS); at}
 let i32_le at = {it = Compare (I32 LeS); at}
 let i32_ge at = {it = Compare (I32 GeS); at}
 
+let unreachable at = {it = Unreachable; at}
+
 let data_symbol at symbol = {it = DataSymbol symbol; at}
 
 let func_symbol at symbol = ({it = FuncSymbol symbol; at}: instr)
+
+let memory_copy at = {it = MemoryCopy; at }
 
 let elem at i = {it = 
   { 
