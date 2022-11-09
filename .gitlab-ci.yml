@@ -50,12 +50,14 @@ esy-windows:
     # - $env:GIT_TRACE_PACKET = 1
     - git config http.postBuffer 1048576000
     - npm i -g @esy-nightly/esy --force
-    - $env:PATH = 'C:\Program Files\Git\bin;C:\Users\gitlabrunner\AppData\Roaming\npm;' + $env:PATH
+    - $env:PATH = 'C:\Program Files (x86)\NSIS;C:\Program Files\Git\bin;C:\Users\gitlabrunner\AppData\Roaming\npm;' + $env:PATH
     - $env:HOME = 'C:/Users/gitlabrunner'
     - esy i
     - bash -c "esy release || esy release || esy release"
     - rm -Recurse -Force _esy
-    - mv _release platform-windows-x64
+    - mv ./WindowsInstaller.nsi _release
+    - cd _release; makensis .\WindowsInstaller.nsi
+    - cd .. ; mv _release platform-windows-x64
   artifacts:
     paths:
       - platform-windows-x64
