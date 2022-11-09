@@ -1,6 +1,6 @@
 
 type 'a result = Ok of 'a | Error of string
-type t = result
+type 'a t = 'a result
 
 let ret (type a) (x : a) : a result =
   Ok x
@@ -8,7 +8,7 @@ let ret (type a) (x : a) : a result =
 let fail (type a) (x : string) : a result =
   Error x
 
-type t = result
+type 'a t = 'a result
 
 let bind (type a b) (x : a result) (f : a -> b result) : b result =
   match x with

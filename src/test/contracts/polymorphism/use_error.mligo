@@ -1,6 +1,7 @@
 #import "error_monad.mligo" "M"
 
 type t = M.t
+type 'a t = 'a t
 
 let foo (x : int t) (y : int t) =
   M.bind x (fun (x : int) ->

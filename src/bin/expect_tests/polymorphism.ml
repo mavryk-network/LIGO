@@ -423,7 +423,12 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_bad [ "compile" ; "expression" ; "cameligo" ; "bar 0" ; "--init-file" ; (test "use_error.mligo") ] ;
   [%expect{|
-    An error occurred while evaluating an expression: "Division by zero" |}]
+    File "error_monad.mligo", line 3, characters 9-15:
+      2 | type 'a result = Ok of 'a | Error of string
+      3 | type t = result
+      4 |
+
+    Type is applied to a wrong number of arguments, expected: 1 got: 0 |}]
 
 (* Unresolved polymorphism *)
 
