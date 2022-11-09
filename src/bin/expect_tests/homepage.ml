@@ -52,8 +52,12 @@ let%expect_test _ =
     { parameter (or (or (int %decrement) (int %increment)) (unit %reset)) ;
       storage int ;
       code { UNPAIR ;
-             IF_LEFT { IF_LEFT { SWAP ; SUB } { ADD } } { DROP 2 ; PUSH int 0 } ;
              NIL operation ;
+             SWAP ;
+             IF_LEFT
+               { IF_LEFT { DIG 2 ; SUB } { DIG 2 ; ADD } }
+               { DIG 2 ; DROP 2 ; PUSH int 0 } ;
+             SWAP ;
              PAIR } } |}]
 
 let%expect_test _ =
