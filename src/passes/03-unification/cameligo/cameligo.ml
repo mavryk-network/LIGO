@@ -15,16 +15,18 @@ module TODO_do_in_parsing = struct
   let tvar ~loc (var:string) = Ligo_prim.Type_var.of_input_var ~loc var
 end
 module TODO_unify_in_cst = struct
-  let conv_attr (attr:CST.attributes) =
+  let conv_attr (attr:CST.attributes) : (AST.attribute * Location.t) list =
     List.map attr ~f:(fun attr_reg ->
       let (key,value_opt),loc = r_split attr_reg in
       let value : string option = Option.map ~f:(function String x -> x) value_opt in
-      AST.{ key ; value },loc
+      Temp_prim.Attribute.{ key ; value },loc
       )
   let attach_attr (attr:CST.attributes) (e:AST.expr) : AST.expr =
     List.fold (conv_attr attr) ~init:e ~f:(fun e (attr,loc) -> e_attr ~loc (attr,e) ())
   let d_attach_attr (attr:CST.attributes) (e:AST.decl) : AST.decl =
     List.fold (conv_attr attr) ~init:e ~f:(fun e (attr,loc) -> d_attr ~loc (attr,e) ())
+  let t_attach_attr (attr:CST.attributes) (e:AST.type_expr) : AST.type_expr =
+    List.fold (conv_attr attr) ~init:e ~f:(fun e (attr,loc) -> t_attr ~loc attr e ())
 end
 
 (* ========================== TYPES ======================================== *)
@@ -50,16 +52,25 @@ let rec compile_type_expression : CST.type_expr -> AST.type_expr = fun te ->
     t_sum variants ~loc ()
   )
   | TRecord t -> (
-    let t, loc = r_split t in
-    let t =
-      let field_decls : CST.field_decl nseq = nseq_map r_fst @@ nsepseq_to_nseq t.ne_elements in
-      let compile_field_decl : CST.field_decl -> AST.type_expr option AST.field_assign =
-       fun {field_name ; field_type } ->
-        { name = r_fst field_name ; expr = Some (self field_type) }
+    let CST.{attributes ; ne_elements}, loc = r_split t in
+    let fields =
+      let field_decls : CST.field_decl nseq = nseq_map r_fst @@ nsepseq_to_nseq ne_elements in
+      let open Ligo_prim in
+      let compile_field_decl : int -> CST.field_decl -> AST.type_expr option Temp_prim.Non_linear_rows.row =
+       fun i {field_name ; field_type ; attributes } ->
+        let l = Label.of_string (r_fst field_name) in
+        let rows = Temp_prim.Non_linear_rows.{
+            decl_pos = i
+          ; associated_type = Some (self field_type)
+          ; attributes = List.map (TODO_unify_in_cst.conv_attr attributes) ~f:fst }
+        in
+        l,rows
       in
-      List.map ~f:compile_field_decl (nseq_to_list field_decls)
+      List.mapi ~f:compile_field_decl (nseq_to_list field_decls)
     in
-    t_record t ~loc ()
+    TODO_unify_in_cst.t_attach_attr attributes (
+      t_record_raw ~loc fields ()
+    )
   )
   | TApp t -> (
     let t, loc = r_split t in

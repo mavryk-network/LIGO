@@ -3,7 +3,7 @@
  (public_name ligo.temp_prim)
  (instrumentation
   (backend bisect_ppx))
- (libraries simple-utils hex)
+ (libraries simple-utils hex ligo_prim)
  (inline_tests)
  (preprocess
   (pps

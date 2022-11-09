@@ -17,14 +17,27 @@ module TODO_unify_in_cst = struct
   let conv_attr (attr:CST.attributes) =
     List.map attr ~f:(fun attr_reg ->
       let key,loc = r_split attr_reg in
-      AST.{ key ; value = None },loc
-      )
+      Temp_prim.Attribute.{ key ; value = None },loc
+    )
   let s_attach_attr (attr:CST.attributes) (e:AST.statement_jsligo) : AST.statement_jsligo =
     List.fold (conv_attr attr) ~init:e ~f:(fun e (attr,loc) -> s_attrjs ~loc attr e ())
   let p_attach_attr (attr:CST.attributes) (e:AST.pattern) : AST.pattern =
     List.fold (conv_attr attr) ~init:e ~f:(fun e (attr,loc) -> p_attr ~loc attr e ())
   let t_attach_attr (attr:CST.attributes) (e:AST.type_expr) : AST.type_expr =
     List.fold (conv_attr attr) ~init:e ~f:(fun e (attr,loc) -> t_attr ~loc attr e ())
+
+  
+  let compile_rows lst =
+    let compile_row
+        :  int -> string * AST.type_expr option * AST.attribute list
+        -> AST.type_expr option Temp_prim.Non_linear_rows.row
+      = fun i (label, associated_type, attributes) ->
+      let open Ligo_prim in
+      let l = Label.of_string label in
+      let rows = Temp_prim.Non_linear_rows.{ decl_pos = i; associated_type; attributes } in
+      l, rows
+    in
+    List.mapi ~f:compile_row lst
 end
 
 let rec compile_val_binding ~(raise: ('e, 'w) raise) : CST.val_binding -> AST.let_binding = fun b ->
@@ -60,15 +73,16 @@ and compile_type_expression ~(raise: ('e, 'w) raise) : CST.type_expr -> AST.type
   | TSum t -> (
     let t, loc = r_split t in
     let variants =
-      let compile_variant : CST.variant -> AST.variant_jsligo = fun v ->
-        let v = (r_fst v.tuple).inside in
-        let constr  = r_fst v.constr in
-        let arg_opt : type_expr nseq option = Option.map ~f:(List.Ne.map self <@ nsepseq_to_nseq <@ snd) v.params in
-        {constr; arg_opt}
+      let destruct : CST.variant -> _ = fun {tuple ; attributes} ->
+        let v = (r_fst tuple).inside in
+        r_fst v.constr,
+        Option.map ~f:(List.Ne.map self <@ nsepseq_to_nseq <@ snd) v.params,
+        List.map (TODO_unify_in_cst.conv_attr attributes) ~f:fst
       in
-      List.Ne.map (compile_variant <@ r_fst) @@ nsepseq_to_nseq @@ r_fst t.variants
+      let lst = List.map (nsepseq_to_list (r_fst t.variants)) ~f:(destruct <@ r_fst) in
+      TODO_unify_in_cst.compile_rows lst
     in
-    t_sumjsligo variants ~loc ()
+    t_sum_raw variants ~loc ()
   )
   | TObject t -> (
     let obj, loc = r_split t in

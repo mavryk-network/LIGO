@@ -24,6 +24,7 @@ module Z = Literal_value.Z
 
 type 'a nseq = 'a Simple_utils.List.Ne.t
   [@@deriving yojson]
+type attribute = Attribute.t
 
 (* The preprocessor directives are left unchanged during unification pass.
    So, the type of a directive is Preprocessor.Directive.t
@@ -40,18 +41,11 @@ module Directive = struct
     fun _ -> Error "JSON parsing of directive is not supported"
 end
 
-type attr = {
-  key      : string;
-  value    : string option;
-} [@@deriving yojson]
 
 type ('lhs, 'rhs) field =
 | Punned of 'lhs
 | Complete of ('lhs * 'rhs)
   [@@deriving yojson]
-
-type 'a field_assign = 'a Type_record.field_assign
-[@@deriving yojson]
 
 (* ========================== TYPES ======================================== *)
 
@@ -62,17 +56,6 @@ type type_expression = {
 and type_expr_content = type_expression_content
 and type_expr         = type_expression
   [@@deriving yojson]
-
-
-and 'a variant'   = {
-  constr  : string;
-  arg_opt : 'a option;
-}
-and variant          = type_expr      variant'
-and variant_jsligo   = type_expr nseq variant'
-
-and sum_type         = variant        nseq
-and sum_type_jsligo  = variant_jsligo nseq
 
 and 'constr type_app = {
   constr     : 'constr;
@@ -89,10 +72,6 @@ and 'a module_path = {
   field       : 'a;
 }
 
-and type_record     = type_expr        field_assign list
-and type_ne_record  = type_expr        field_assign nseq
-(* and type_record_opt = type_expr option field_assign list *)
-
 and fun_type_arg = {
   name      : string;
   type_expr : type_expr
@@ -100,23 +79,22 @@ and fun_type_arg = {
 and fun_type_args = fun_type_arg nseq
 
 and type_expression_content =
-| T_Prod    of type_expr nseq
-| T_Sum     of sum_type
-| T_App     of string type_app
-| T_Fun     of type_expr * type_expr
-| T_Par     of type_expr
-| T_Var     of string
-| T_String  of string
-| T_Int     of string * Z.t
-| T_ModA    of type_expr module_access
-| T_Arg     of string
-| T_FunJsligo       of fun_type_args * type_expr
-| T_Disc            of type_ne_record nseq
-| T_SumJsligo       of sum_type_jsligo
-| T_Record          of type_expr option Type_record.t
-| T_Attr            of attr * type_expr
-| T_AppPascaligo    of type_expr type_app
-| T_ModPath         of type_expr module_path
+| T_Prod         of type_expr nseq
+(* | T_Sum          of sum_type *)
+| T_App          of string type_app
+| T_Fun          of type_expr * type_expr
+| T_NamedFun     of fun_type_args * type_expr
+| T_Par          of type_expr
+| T_Var          of string
+| T_String       of string
+| T_Int          of string * Z.t
+| T_ModA         of type_expr module_access
+| T_Arg          of string
+| T_Sum_raw      of type_expr option Non_linear_rows.t
+| T_Record_raw   of type_expr option Non_linear_rows.t
+| T_Attr         of Attribute.t * type_expr
+| T_AppPascaligo of type_expr type_app
+| T_ModPath      of type_expr module_path
 
 (* ========================== PATTERNS ===================================== *)
 
@@ -150,6 +128,12 @@ and destruct = {
   target    : let_binding;
 }
 
+and 'a field_assign = {
+  name : string;
+  expr : 'a; 
+} [@@deriving yojson]
+
+
 and pattern_content =
 (* Shared *)
 | P_Constr   of string * ptrn option
@@ -168,7 +152,7 @@ and pattern_content =
 | P_RecordCameligo   of ptrn field_assign nseq
 (* Pascaligo *)
 | P_App      of ptrn * ptrn nseq option
-| P_Attr     of attr * ptrn
+| P_Attr     of Attribute.t * ptrn
 | P_ModPath  of ptrn module_path
 | P_Mutez    of string * Int64.t
 | P_Nil
@@ -293,7 +277,7 @@ and var_decl = {
 }
 
 and statement_pascaligo_content =
-| S_Attr      of (attr * statement_pascaligo) 
+| S_Attr      of (Attribute.t * statement_pascaligo) 
 | S_Decl      of declaration
 | S_Instr     of instruction
 | S_VarDecl   of var_decl
@@ -365,7 +349,7 @@ and statement_jsligo_content =
 | S_Import     of import
 | S_While      of while_stmt_jsligo
 | S_ForOf      of for_of
-| S_Attrjs       of attr * statement_jsligo 
+| S_Attrjs     of Attribute.t * statement_jsligo 
 
 (* ========================== DECLARATIONS ================================= *)
 
@@ -410,7 +394,7 @@ and module_alias = {
 
 and declaration_content =
 | D_Directive      of Directive.t
-| D_Attr           of (attr * declaration)
+| D_Attr           of (Attribute.t * declaration)
 | D_ToplevelJsligo of statement_jsligo
 | D_Let            of let_binding
 | D_Const          of let_binding
@@ -679,7 +663,7 @@ and expression_content =
   | E_BlockPascaligo of block_with_pascaligo
 
   (* Attributes *)
-  | E_Attr of (attr * expr)     (* [@a] (x,y)      *)
+  | E_Attr of (Attribute.t * expr)     (* [@a] (x,y)      *)
 
   (* Assign jsligo *)
   | E_AssignJsligo of assign_jsligo

@@ -16,9 +16,21 @@ module TODO_do_in_parsing = struct
   let tvar ~loc var = Ligo_prim.Type_var.of_input_var var
 end
 module TODO_unify_in_cst = struct
+  let compile_rows lst =
+    let compile_row
+        :  int -> string * AST.type_expr option * AST.attribute list
+        -> AST.type_expr option Temp_prim.Non_linear_rows.row
+      = fun i (label, associated_type, attributes) ->
+      let open Ligo_prim in
+      let l = Label.of_string label in
+      let rows = Temp_prim.Non_linear_rows.{ decl_pos = i; associated_type; attributes } in
+      l, rows
+    in
+    List.mapi ~f:compile_row lst
+
 end
 
-let translate_attr_pascaligo : CST.Attr.t -> AST.attr = fun attr ->
+let translate_attr_pascaligo : CST.Attr.t -> AST.attribute = fun attr ->
   let key, value = attr in
   let value : string option = Option.map ~f:(fun (CST.Attr.String s) ->  s) value in
   {key; value}
@@ -79,33 +91,37 @@ let rec compile_type_expression ~(raise: ('e, 'w) raise) : CST.type_expr -> AST.
     let t = self t.inside in
     t_par t ~loc ()
   )
-  | T_Record  t -> (
+  | T_Record t -> (
     let t, loc = r_split t in
-    let t =
-      let compile_field_decl : CST.field_decl -> AST.type_expr option AST.field_assign = fun fd ->
-        let name : string = w_fst fd.field_name in
-        let expr : type_expr option = Option.map ~f:(self <@ snd) fd.field_type in
-        {name; expr}
+    let fields =
+      let destruct =
+       fun CST.{field_type ; field_name ; attributes } ->
+        w_fst field_name,
+        Option.map ~f:(self <@ snd) field_type,
+        List.map attributes ~f:(translate_attr_pascaligo <@ r_fst)
       in
-      List.map ~f:(compile_field_decl <@ r_fst) @@ sepseq_to_list t.elements
+      let lst = List.map ~f:(destruct <@ r_fst) @@ sepseq_to_list t.elements in
+      TODO_unify_in_cst.compile_rows lst
     in
-    t_record t ~loc ()
+    t_record_raw fields ~loc ()
   )
   | T_String  t -> (
     let t, loc = w_split t in
     t_string t ~loc ()
   )
-  | T_Sum     t -> (
+  | T_Sum t -> (
     let t, loc = r_split t in
     let variants =
-      let compile_variant : CST.variant -> AST.variant = fun v ->
-        let constr  = w_fst v.ctor in
-        let arg_opt = Option.map ~f:(self <@ snd) v.ctor_args in
-        {constr; arg_opt}
+      let destruct =
+       fun CST.{ctor ; ctor_args ; attributes} ->
+        w_fst ctor,
+        Option.map ~f:(self <@ snd) ctor_args,
+        List.map attributes ~f:(translate_attr_pascaligo <@ r_fst)
       in
-      List.Ne.map (compile_variant <@ r_fst) @@ nsepseq_to_nseq t.variants
+      let lst = List.map ~f:(destruct <@ r_fst) (nsepseq_to_list t.variants) in
+      TODO_unify_in_cst.compile_rows lst
     in
-    t_sum variants ~loc ()
+    t_sum_raw variants ~loc ()
   )
   | T_Var     t -> (
     let t, loc = w_split t in
