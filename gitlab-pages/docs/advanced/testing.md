@@ -51,6 +51,12 @@ The storage of a deployed contract can be queried using the
 `Test.get_storage` function, that given a typed address `('parameter,
 'storage) typed_address`, returns the `'storage` value.
 
+<!--
+```cameligo test-ligo group=log
+let _log (s :string) : unit = Test.log s
+```
+-->
+
 As a concrete example, suppose we have the following contract:
 <Syntax syntax="pascaligo">
 
