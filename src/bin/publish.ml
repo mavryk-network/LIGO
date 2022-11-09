@@ -1,4 +1,4 @@
-module Caml_unix = Unix
+module Caml_unix = Ligo_unix
 (* 
 
 TODO Checklist:
@@ -187,10 +187,10 @@ let os_type =
   | _ -> Gz.Unix
 
 let gzip fname fd =
-  let file_size = Int.of_int64_exn (Caml.Unix.stat fname).st_size in
+  let file_size = (Ligo_unix.stat fname).st_size in
   let level = 4 in
   let buffer_len = De.io_buffer_size in
-  let time () = Int32.of_float (Unix.gettimeofday ()) in
+  let time () = Int32.of_float (Ligo_unix.gettimeofday ()) in
   let i = De.bigstring_create buffer_len in
   let o = De.bigstring_create buffer_len in
   let w = De.Lz77.make_window ~bits:15 in
@@ -254,11 +254,11 @@ let from_dir ~dir f =
 let tar_gzip ~name ~version dir = 
   let open Lwt.Syntax in
   let* files = from_dir ~dir (fun () -> get_all_files ".") in
-  let fname = Filename_unix.temp_file name version in
-  let fd = Caml_unix.openfile fname [ Unix.O_CREAT ; Unix.O_RDWR ] 0o666 in
+  let fname = Caml.Filename.temp_file name version in
+  let fd = Caml_unix.openfile fname [ Caml_unix.O_CREAT ; Caml_unix.O_RDWR ] 0o666 in
   let () = Tar_unix.Archive.create files fd in
   let () = Caml_unix.close fd in
-  let fd = Caml_unix.openfile fname [ Unix.O_RDWR ] 0o666 in
+  let fd = Caml_unix.openfile fname [ Caml_unix.O_RDWR ] 0o666 in
   let buf = gzip fname fd in
   let () = Caml_unix.close fd in
   Lwt.return (Buffer.contents_bytes buf)

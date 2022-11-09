@@ -27,9 +27,3 @@
  (preprocess
   (pps ppx_deriving_yojson ppx_inline_test)))
 
-(library
- (name ligo_unix)
- (modules ligo_unix)
- (flags (:standard))
- (libraries core unix)
- (public_name ligo.unix))

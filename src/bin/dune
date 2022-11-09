@@ -6,7 +6,10 @@
   simple-utils
   cmdliner
   ligo
+  ligo.unix
   ligo_compile
+  core_kernel.version_util
+  core_kernel.caml_threads
   build
   repl
   install
@@ -15,7 +18,7 @@
   cli_helpers
   daemon
   ligo_api)
- (modules cli version))
+ (modules cli command_unx version))
 
 
 (library
