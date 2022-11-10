@@ -12,6 +12,7 @@ open AST  (* Brings types and combinators functions *)
 module TODO_do_in_parsing = struct
   let r_split = r_split (* could compute Location directly in Parser *)
   let var ~loc var = Ligo_prim.Value_var.of_input_var var
+  let tvar ~loc var = Ligo_prim.Type_var.of_input_var var
   let t_disc_locs (objs: (CST.obj_type, CST.vbar) nsepseq) =
     (* The region of the discriminated union TDisc
     is the union of all its objects' regions *)
@@ -97,14 +98,14 @@ and compile_type_expression ~(raise: ('e, 'w) raise) : CST.type_expr -> AST.type
   | TFun t -> (
     let (fta, _, te2), loc = r_split t in
     let fun_type_args =
-      let compile_fun_type_arg : CST.fun_type_arg -> AST.fun_type_arg = fun fta ->
+      let compile_fun_type_arg : CST.fun_type_arg -> _ AST.Named_fun.fun_type_arg = fun fta ->
         let name = r_fst fta.name in
         let type_expr = self fta.type_expr in
         {name; type_expr}
       in
-      List.Ne.map compile_fun_type_arg @@ nsepseq_to_nseq fta.inside in
+      List.map ~f:compile_fun_type_arg (nsepseq_to_list fta.inside) in
     let type_expr = self te2 in
-    t_named_fun fun_type_args type_expr ~loc ()
+    t_named_fun (fun_type_args, type_expr) ~loc ()
   )
   | TPar t -> (
     let t, loc = r_split t in
@@ -113,7 +114,7 @@ and compile_type_expression ~(raise: ('e, 'w) raise) : CST.type_expr -> AST.type
   )
   | TVar t -> (
     let t, loc = r_split t in
-    t_var t ~loc ()
+    t_var (TODO_do_in_parsing.tvar ~loc t) ~loc ()
   )
   | TString t -> (
     let t, loc = r_split t in

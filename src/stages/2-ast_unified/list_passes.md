@@ -336,6 +336,10 @@ remove parenthesis, trivial in forward pass, useful in backward pass
     E_ArrayJsligo (Expr_entry e1, Expr_entry e2) |-> E_Array [e1, e2]
     E_ArrayJsligo (Expr_entry e1, Rest_entry e2) |-> raise exception
 
+  T_Named_fun
+  ============================================================================
+  check named_fun names are linear
+  T_named_fun -> T_fun (we do not support named args in typer etc ..)
   E_Array
   =============================================================================
   pass 'abstract_array'
@@ -423,7 +427,7 @@ remove parenthesis, trivial in forward pass, useful in backward pass
     | EAssign _ as e ->
   
   
-  D_Type
+  D_Type / T_Arg
   =============================================================================
   pass 'd_type'
     remove : D_TypeDecl
@@ -431,16 +435,16 @@ remove parenthesis, trivial in forward pass, useful in backward pass
 
     The goal is to remove the type parameters in the D_TypeDecl node
     and inject them as T_Abstraction.
-
+    
     D_TypeDecl
       name : my_type_name
       parameters : [ alpha ]
-      type_expression : T_xxx
+      type_expression : T_xxx (T_arg alpha)
     |->
     D_Type
       binder : my_type_name
       type_expresion :
-        T_abstraction( alpha, T_xxx )
+        T_abstraction( (T_var alpha) , T_xxx (T_var alpha) )
 
   D_Let
   =============================================================================
@@ -503,12 +507,6 @@ remove parenthesis, trivial in forward pass, useful in backward pass
   pass 't_var'
       remove : T_Var
       add    : AST_I.T_variable
-  pass 't_arg'
-      remove : T_Arg
-      add    : AST_I.T_variable
-      T_xxx (T_arg 'a) |-> T_Abstraction('a, T_xxx (T_var 'a) )
-      The 'd_type' pass take care of wrapping the type into a T_Abstraction
-      This pass just takes care of T_arg 'a |-> T_Var 'a
   pass 't_record' :
       remove : T_Record
       add    : AST_I.T_Record
@@ -622,10 +620,10 @@ remove parenthesis, trivial in forward pass, useful in backward pass
     Some te -> te
     None    -> T_unit
   
-  T_SumJsligo
+  T_Arg_sum_raw
   =============================================================================
-  pass 't_sum_jsligo'
-    remove : T_SumJsligo
+  pass 'T_Arg_sum_raw'
+    remove : T_Arg_sum_raw
     add    : T_Sum
 
     In other syntaxes, when there are several types associated with a variant,
@@ -635,7 +633,7 @@ remove parenthesis, trivial in forward pass, useful in backward pass
     and have a list of types [int; string; tez].
     Here, we put those types in a tuple, for unification with other syntaxes.
 
-    T_SumJsligo [int; string; tez]  |->  T_Sum (T_Tuple [int; string; tez])
+    T_Arg_sum_raw [int; string; tez]  |->  T_Sum (T_Tuple [int; string; tez])
   
   T_Object
   =============================================================================

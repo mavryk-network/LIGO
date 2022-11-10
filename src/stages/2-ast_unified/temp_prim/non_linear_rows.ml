@@ -11,10 +11,10 @@ module Make (Row_lhs : Row_lhs) = struct
     ; attributes : Attribute.t list
     ; decl_pos : int
     }
-  [@@deriving yojson]
+  [@@deriving yojson, map]
 
-  type 'ty row = Row_lhs.t * 'ty row_element [@@deriving yojson]
-  type 'ty t = 'ty row list [@@deriving yojson]
+  type 'ty row = Row_lhs.t * 'ty row_element [@@deriving yojson, map]
+  type 'ty t = 'ty row list [@@deriving yojson, map]
 
   let make : type ty. (Row_lhs.t * ty * Attribute.t list) list -> ty t =
    fun lst ->

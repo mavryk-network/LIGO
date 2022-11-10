@@ -3,4 +3,5 @@
  (public_name ligo.small_passes)
  (instrumentation
   (backend bisect_ppx))
- (libraries ast_unified ast_core))
+ (libraries ast_unified ast_core)
+ (preprocess (pps ppx_deriving.map)))

@@ -13,7 +13,16 @@
   (in above example, record_a's body and record_b's body should have the same type)
 *)
 
-open Ligo_prim
+module Temp_prim = Temp_prim
+
+module Location = Simple_utils.Location
+module List = Simple_utils.List
+module Label = Ligo_prim.Label
+module Variable = Ligo_prim.Value_var
+module Ty_variable = Ligo_prim.Type_var
+module Module_access = Ligo_prim.Module_access
+module Literal_value = Ligo_prim.Literal_value
+module Constant = Ligo_prim.Constant
 
 module Non_linear_rows = Temp_prim.Non_linear_rows(Label)
 module Empty_label = struct
@@ -25,12 +34,10 @@ module Empty_label = struct
 end
 module Non_linear_disc_rows = Temp_prim.Non_linear_rows(Empty_label)
 module Attribute = Temp_prim.Attribute
+module Named_fun = Temp_prim.Named_fun
 
-module Location = Simple_utils.Location
-module List = Simple_utils.List
-module Label = Ligo_prim.Label
 
-module Z = Literal_value.Z
+module Z = Ligo_prim.Literal_value.Z
 
 type 'a nseq = 'a Simple_utils.List.Ne.t
   [@@deriving yojson]
@@ -82,26 +89,19 @@ and 'a module_path = {
   field       : 'a;
 }
 
-and fun_type_arg = {
-  name      : string;
-  type_expr : type_expr
-}
-and fun_type_args = fun_type_arg nseq
-
 and type_expression_content =
 | T_Prod         of type_expr nseq
 | T_App          of string type_app
 | T_Fun          of type_expr * type_expr
-| T_Named_fun     of fun_type_args * type_expr
+| T_Named_fun    of type_expr Named_fun.t
 | T_Par          of type_expr
-| T_Var          of string
+| T_Var          of Ty_variable.t
 | T_String       of string
 | T_Int          of string * Z.t
 | T_ModA         of type_expr module_access
 | T_Arg          of string
 | T_Sum_raw      of type_expr option Non_linear_rows.t
-(* "curried" sum-type ["Ctor", arg1, arg2, arg3 ]*)
-| T_Arg_sum_raw  of type_expr list option Non_linear_rows.t
+| T_Arg_sum_raw  of type_expr list option Non_linear_rows.t (* "curried" sum-type ["Ctor", arg1, arg2, arg3 ]*)
 | T_Record_raw   of type_expr option Non_linear_rows.t
 | T_Disc_union   of type_expr Non_linear_disc_rows.t
 | T_Attr         of Attribute.t * type_expr
@@ -283,7 +283,7 @@ and stmt_pascaligo         = statement_pascaligo
 
 and var_decl = {
   pattern     : pattern;
-  type_params : Type_var.t nseq option;
+  type_params : Ty_variable.t nseq option;
   var_type    : type_expression option;
   init        : expr;
 }
@@ -484,14 +484,14 @@ and update = {
 }
 
 and fun_expr_cameligo = {
-  type_params  : Type_var.t nseq option;
+  type_params  : Ty_variable.t nseq option;
   binders      : pattern nseq;
   rhs_type     : type_expr option;
   body         : expr;
 }
 
 and fun_expr_pascaligo = {
-  type_params : Type_var.t nseq option;
+  type_params : Ty_variable.t nseq option;
   parameters  : param_decl list;
   ret_type    : type_expr option;
   return      : expr;
@@ -514,7 +514,7 @@ and map_lookup = {
 
 and let_in = {
   is_rec       : bool;
-  type_params  : Type_var.t nseq option;
+  type_params  : Ty_variable.t nseq option;
   binders      : pattern nseq;
   rhs_type     : type_expr option;
   let_rhs      : expr;
@@ -593,7 +593,7 @@ and expression_content =
   | E_Par      of expr                    (* ( my_expression ) *)
 
   (* Variables *)
-  | E_variable of Value_var.t             (* x *)
+  | E_variable of Variable.t             (* x *)
 
   (* Strings *)
   | E_Cat      of expr * expr             (* "hello" ^ "world" *)

@@ -112,9 +112,9 @@ let rec compile_type_expression ~(raise: ('e, 'w) raise) : CST.type_expr -> AST.
     in
     t_sum_raw variants ~loc ()
   )
-  | T_Var     t -> (
+  | T_Var t -> (
     let t, loc = w_split t in
-    t_var t ~loc ()
+    t_var (TODO_do_in_parsing.tvar ~loc t) ~loc ()
   )
 
 (* ========================== PATTERNS ===================================== *)

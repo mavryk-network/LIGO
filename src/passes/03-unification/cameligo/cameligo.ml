@@ -99,7 +99,7 @@ let rec compile_type_expression : CST.type_expr -> AST.type_expr = fun te ->
   )
   | TVar t -> (
     let t, loc = r_split t in
-    t_var t ~loc ()
+    t_var (TODO_do_in_parsing.tvar ~loc t) ~loc ()
   )
   | TString t -> (
     let t, loc = r_split t in
