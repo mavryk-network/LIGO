@@ -645,12 +645,11 @@ remove parenthesis, trivial in forward pass, useful in backward pass
   
   T_Disc
   =============================================================================
-  pass 't_disc'
+  pass 't_disc' (or 'uncurry_sum_type')
     remove : T_Disc [("a", Some b); ("c", Some d); ("e", None)]
     add    : T_Sum  [("a",      b); ("c",      d); ("e", unit)] | exception
 
     See handling of TDisc in JsLIGO abstractor
-
   S_VarDecl
   =============================================================================
   pass 's_var_decl'

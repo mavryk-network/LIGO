@@ -13,18 +13,28 @@
   (in above example, record_a's body and record_b's body should have the same type)
 *)
 
-(* include Stage_common.Types *)
 open Ligo_prim
-open Temp_prim
+
+module Non_linear_rows = Temp_prim.Non_linear_rows(Label)
+module Empty_label = struct
+  type t = unit [@@deriving eq, compare, yojson, hash]
+  let t_of_sexp _ = ()
+  let sexp_of_t _ = failwith "wait"
+  let of_string _ = ()
+  let to_string () = "unlabeled"
+end
+module Non_linear_disc_rows = Temp_prim.Non_linear_rows(Empty_label)
+module Attribute = Temp_prim.Attribute
 
 module Location = Simple_utils.Location
 module List = Simple_utils.List
+module Label = Ligo_prim.Label
 
 module Z = Literal_value.Z
 
 type 'a nseq = 'a Simple_utils.List.Ne.t
   [@@deriving yojson]
-type attribute = Attribute.t
+type attribute = Temp_prim.Attribute.t
 
 (* The preprocessor directives are left unchanged during unification pass.
    So, the type of a directive is Preprocessor.Directive.t
@@ -80,10 +90,9 @@ and fun_type_args = fun_type_arg nseq
 
 and type_expression_content =
 | T_Prod         of type_expr nseq
-(* | T_Sum          of sum_type *)
 | T_App          of string type_app
 | T_Fun          of type_expr * type_expr
-| T_NamedFun     of fun_type_args * type_expr
+| T_Named_fun     of fun_type_args * type_expr
 | T_Par          of type_expr
 | T_Var          of string
 | T_String       of string
@@ -91,7 +100,10 @@ and type_expression_content =
 | T_ModA         of type_expr module_access
 | T_Arg          of string
 | T_Sum_raw      of type_expr option Non_linear_rows.t
+(* "curried" sum-type ["Ctor", arg1, arg2, arg3 ]*)
+| T_Arg_sum_raw  of type_expr list option Non_linear_rows.t
 | T_Record_raw   of type_expr option Non_linear_rows.t
+| T_Disc_union   of type_expr Non_linear_disc_rows.t
 | T_Attr         of Attribute.t * type_expr
 | T_AppPascaligo of type_expr type_app
 | T_ModPath      of type_expr module_path

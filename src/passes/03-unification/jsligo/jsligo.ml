@@ -12,6 +12,11 @@ open AST  (* Brings types and combinators functions *)
 module TODO_do_in_parsing = struct
   let r_split = r_split (* could compute Location directly in Parser *)
   let var ~loc var = Ligo_prim.Value_var.of_input_var var
+  let t_disc_locs (objs: (CST.obj_type, CST.vbar) nsepseq) =
+    (* The region of the discriminated union TDisc
+    is the union of all its objects' regions *)
+    let locations = List.Ne.map (fun obj -> snd @@ r_split obj) (nsepseq_to_nseq objs) in
+    List.Ne.fold_left locations ~init:Location.dummy ~f:Location.cover
 end
 module TODO_unify_in_cst = struct
   let conv_attr (attr:CST.attributes) =
@@ -25,19 +30,8 @@ module TODO_unify_in_cst = struct
     List.fold (conv_attr attr) ~init:e ~f:(fun e (attr,loc) -> p_attr ~loc attr e ())
   let t_attach_attr (attr:CST.attributes) (e:AST.type_expr) : AST.type_expr =
     List.fold (conv_attr attr) ~init:e ~f:(fun e (attr,loc) -> t_attr ~loc attr e ())
-
-  
-  let compile_rows lst =
-    let compile_row
-        :  int -> string * AST.type_expr option * AST.attribute list
-        -> AST.type_expr option Temp_prim.Non_linear_rows.row
-      = fun i (label, associated_type, attributes) ->
-      let open Ligo_prim in
-      let l = Label.of_string label in
-      let rows = Temp_prim.Non_linear_rows.{ decl_pos = i; associated_type; attributes } in
-      l, rows
-    in
-    List.mapi ~f:compile_row lst
+  let compile_rows = Non_linear_rows.make
+  let compile_disc_rows = Non_linear_disc_rows.make
 end
 
 let rec compile_val_binding ~(raise: ('e, 'w) raise) : CST.val_binding -> AST.let_binding = fun b ->
@@ -54,44 +48,44 @@ let rec compile_val_binding ~(raise: ('e, 'w) raise) : CST.val_binding -> AST.le
 
 and compile_type_expression ~(raise: ('e, 'w) raise) : CST.type_expr -> AST.type_expr = fun te ->
   let self = compile_type_expression ~raise in
-  (* This function is declared here on top because it's used by both TObject and TDisc *)
-  let compile_obj_type : CST.obj_type -> AST.type_ne_record = fun obj ->
-    let obj = r_fst obj in
-    let compile_field_decl : CST.field_decl -> AST.type_expr AST.field_assign = fun fd ->
-      let name : string = r_fst fd.field_name in
-      let expr : type_expr = self fd.field_type in
-      {name; expr}
-    in
-    nseq_map (compile_field_decl <@ r_fst) @@ nsepseq_to_nseq obj.ne_elements
-  in
   match te with
   | TProd {inside ; attributes} -> (
     let t, loc = r_split inside in
     let t = List.Ne.map self @@ nsepseq_to_nseq t.inside in
-    t_prod t ~loc ()
+    TODO_unify_in_cst.t_attach_attr attributes (
+      t_prod t ~loc ()
+    )
   )
   | TSum t -> (
-    let t, loc = r_split t in
+    let CST.{variants ; attributes}, loc = r_split t in
     let variants =
       let destruct : CST.variant -> _ = fun {tuple ; attributes} ->
-        let v = (r_fst tuple).inside in
-        r_fst v.constr,
-        Option.map ~f:(List.Ne.map self <@ nsepseq_to_nseq <@ snd) v.params,
-        List.map (TODO_unify_in_cst.conv_attr attributes) ~f:fst
+        let CST.{constr ; params} = (r_fst tuple).inside in
+        ( Label.of_string (r_fst constr),
+        Option.map ~f:(List.map ~f:self <@ nsepseq_to_list <@ snd) params,
+        List.map (TODO_unify_in_cst.conv_attr attributes) ~f:fst )
       in
-      let lst = List.map (nsepseq_to_list (r_fst t.variants)) ~f:(destruct <@ r_fst) in
+      let lst = List.map (nsepseq_to_list (r_fst variants)) ~f:(destruct <@ r_fst) in
       TODO_unify_in_cst.compile_rows lst
     in
-    t_sum_raw variants ~loc ()
+    TODO_unify_in_cst.t_attach_attr attributes (
+      t_arg_sum_raw variants ~loc ()
+    )
   )
   | TObject t -> (
-    let obj, loc = r_split t in
-    let compile_field_decl : CST.field_decl -> AST.type_expr option AST.field_assign =
-      fun { field_name; field_type ; attributes = _ ; _ } ->
-      { name = r_fst field_name ; expr = Some (self field_type) }
+    let CST.{ne_elements ; attributes ; _}, loc = r_split t in
+    let fields =
+      let destruct = fun CST.{ field_name; field_type ; attributes ; _ } ->
+        ( Label.of_string (r_fst field_name),
+        Some (self field_type),
+        List.map (TODO_unify_in_cst.conv_attr attributes) ~f:fst )
+      in
+      let lst = List.map ~f:(destruct <@ r_fst) @@ nsepseq_to_list ne_elements in
+      TODO_unify_in_cst.compile_rows lst
     in
-    let fields = List.map ~f:(compile_field_decl <@ r_fst) @@ nsepseq_to_list obj.ne_elements in
-    t_record ~loc fields ()
+    TODO_unify_in_cst.t_attach_attr attributes (
+      t_record_raw ~loc fields ()
+    )
   )
   | TApp t -> (
     let t, loc = r_split t in
@@ -110,7 +104,7 @@ and compile_type_expression ~(raise: ('e, 'w) raise) : CST.type_expr -> AST.type
       in
       List.Ne.map compile_fun_type_arg @@ nsepseq_to_nseq fta.inside in
     let type_expr = self te2 in
-    t_funjsligo fun_type_args type_expr ~loc ()
+    t_named_fun fun_type_args type_expr ~loc ()
   )
   | TPar t -> (
     let t, loc = r_split t in
@@ -136,15 +130,24 @@ and compile_type_expression ~(raise: ('e, 'w) raise) : CST.type_expr -> AST.type
     t_moda {module_name; field} ~loc ()
   )
   | TDisc t -> (
-    let objs = nsepseq_to_nseq t in
-    let loc =
-      (* The region of the discriminated union TDisc
-      is the union of all its objects' regions *)
-      let locations = List.Ne.map (fun obj -> snd @@ r_split obj) objs in
-      List.Ne.fold_left locations ~init:Location.dummy ~f:Location.cover
+    let loc = TODO_do_in_parsing.t_disc_locs t in
+    let fields =
+      let destruct_field CST.{field_name ; field_type; attributes} =
+        ( Label.of_string (r_fst field_name),
+        Some (self field_type),
+        List.map (TODO_unify_in_cst.conv_attr attributes) ~f:fst )
+      in
+      let destruct_obj = fun (x:CST.obj_type) ->
+        let CST.{ attributes ; ne_elements ; _ },loc = r_split x in
+        let lst = List.map ~f:(destruct_field <@ r_fst) (nsepseq_to_list ne_elements) in
+        ( ()
+        , t_record_raw ~loc (TODO_unify_in_cst.compile_rows lst) ()
+        , List.map (TODO_unify_in_cst.conv_attr attributes) ~f:fst )
+      in
+      let lst = List.map ~f:destruct_obj (nsepseq_to_list t) in
+      TODO_unify_in_cst.compile_disc_rows lst
     in
-    let t = List.Ne.map compile_obj_type objs in
-    t_disc t ~loc ()
+    t_disc_union fields ~loc ()
   )
 
 

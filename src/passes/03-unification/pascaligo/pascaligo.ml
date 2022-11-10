@@ -16,18 +16,7 @@ module TODO_do_in_parsing = struct
   let tvar ~loc var = Ligo_prim.Type_var.of_input_var var
 end
 module TODO_unify_in_cst = struct
-  let compile_rows lst =
-    let compile_row
-        :  int -> string * AST.type_expr option * AST.attribute list
-        -> AST.type_expr option Temp_prim.Non_linear_rows.row
-      = fun i (label, associated_type, attributes) ->
-      let open Ligo_prim in
-      let l = Label.of_string label in
-      let rows = Temp_prim.Non_linear_rows.{ decl_pos = i; associated_type; attributes } in
-      l, rows
-    in
-    List.mapi ~f:compile_row lst
-
+  let compile_rows = Non_linear_rows.make
 end
 
 let translate_attr_pascaligo : CST.Attr.t -> AST.attribute = fun attr ->
@@ -96,9 +85,9 @@ let rec compile_type_expression ~(raise: ('e, 'w) raise) : CST.type_expr -> AST.
     let fields =
       let destruct =
        fun CST.{field_type ; field_name ; attributes } ->
-        w_fst field_name,
-        Option.map ~f:(self <@ snd) field_type,
-        List.map attributes ~f:(translate_attr_pascaligo <@ r_fst)
+        ( Label.of_string (w_fst field_name)
+        , Option.map ~f:(self <@ snd) field_type
+        , List.map attributes ~f:(translate_attr_pascaligo <@ r_fst) )
       in
       let lst = List.map ~f:(destruct <@ r_fst) @@ sepseq_to_list t.elements in
       TODO_unify_in_cst.compile_rows lst
@@ -114,9 +103,9 @@ let rec compile_type_expression ~(raise: ('e, 'w) raise) : CST.type_expr -> AST.
     let variants =
       let destruct =
        fun CST.{ctor ; ctor_args ; attributes} ->
-        w_fst ctor,
-        Option.map ~f:(self <@ snd) ctor_args,
-        List.map attributes ~f:(translate_attr_pascaligo <@ r_fst)
+        ( Label.of_string (w_fst ctor)
+        , Option.map ~f:(self <@ snd) ctor_args
+        , List.map attributes ~f:(translate_attr_pascaligo <@ r_fst) )
       in
       let lst = List.map ~f:(destruct <@ r_fst) (nsepseq_to_list t.variants) in
       TODO_unify_in_cst.compile_rows lst

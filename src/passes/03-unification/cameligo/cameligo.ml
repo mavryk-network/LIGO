@@ -27,6 +27,8 @@ module TODO_unify_in_cst = struct
     List.fold (conv_attr attr) ~init:e ~f:(fun e (attr,loc) -> d_attr ~loc (attr,e) ())
   let t_attach_attr (attr:CST.attributes) (e:AST.type_expr) : AST.type_expr =
     List.fold (conv_attr attr) ~init:e ~f:(fun e (attr,loc) -> t_attr ~loc attr e ())
+  let compile_rows = Non_linear_rows.make
+  let compile_disc_rows = Non_linear_disc_rows.make
 end
 
 (* ========================== TYPES ======================================== *)
@@ -42,24 +44,25 @@ let rec compile_type_expression : CST.type_expr -> AST.type_expr = fun te ->
   | TSum t -> (
     let t, loc = r_split t in
     let variants =
-      let compile_variant : CST.variant -> AST.variant = fun v ->
-        let constr  = r_fst v.constr in
-        let arg_opt = Option.map ~f:(self <@ snd) v.arg in
-        {constr; arg_opt}
+      let compile_variant = fun CST.{constr ; arg ; attributes} ->
+        ( Label.of_string (r_fst constr)
+        , Option.map ~f:(self <@ snd) arg
+        , List.map (TODO_unify_in_cst.conv_attr attributes) ~f:fst )
       in
-      List.Ne.map (compile_variant <@ r_fst) @@ nsepseq_to_nseq t.variants
+      let lst = List.map (nsepseq_to_list t.variants) ~f:(compile_variant <@ r_fst) in
+      TODO_unify_in_cst.compile_rows lst
     in
-    t_sum variants ~loc ()
+    t_sum_raw variants ~loc ()
   )
   | TRecord t -> (
     let CST.{attributes ; ne_elements}, loc = r_split t in
     let fields =
       let field_decls : CST.field_decl nseq = nseq_map r_fst @@ nsepseq_to_nseq ne_elements in
       let open Ligo_prim in
-      let compile_field_decl : int -> CST.field_decl -> AST.type_expr option Temp_prim.Non_linear_rows.row =
+      let compile_field_decl : int -> CST.field_decl -> AST.type_expr option Non_linear_rows.row =
        fun i {field_name ; field_type ; attributes } ->
         let l = Label.of_string (r_fst field_name) in
-        let rows = Temp_prim.Non_linear_rows.{
+        let rows = Non_linear_rows.{
             decl_pos = i
           ; associated_type = Some (self field_type)
           ; attributes = List.map (TODO_unify_in_cst.conv_attr attributes) ~f:fst }
