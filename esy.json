@@ -46,14 +46,14 @@
       "@opam/tezos-micheline": "*",
       "@opam/tezos-client-015-PtLimaPt": "*",
       "@opam/tezos-hacl": "*",
-      "@opam/tezos-015-PtLimaPt-test-helpers": "*",
+      "@opam/tz015-test-helpers": "*",
       "esy-libffi": "*"
     },
     "resolutions": {
       "@opam/lwt": "opam:5.6.0",
       "@opam/tar": "opam:2.1.0",
       "@opam/tar-unix": "opam:2.1.0",
-      "@opam/tezos-015-PtLimaPt-test-helpers": "./vendors/tezos-ligo",
+      "@opam/tz015-test-helpers": "./vendors/tezos-ligo",
       "@opam/tezos-base": "./vendors/tezos-ligo",
       "@opam/tezos-lazy-containers": "./vendors/tezos-ligo",
       "@opam/tezos-crypto-dal": "./vendors/tezos-ligo",
