@@ -51,6 +51,7 @@ let compile_with_passes : type a. syntax_todo:syntax -> a pass list -> a check l
 
 
 let compile ~syntax_todo ~raise : I.program -> O.program =
+ let () = ignore raise in
  fun x ->
   let x = compile_with_passes ~syntax_todo [] [] x in
   (* TODO:
@@ -61,6 +62,7 @@ let compile ~syntax_todo ~raise : I.program -> O.program =
 
 
 let compile_expression ~syntax_todo ~raise : I.expression -> O.expression =
+ let () = ignore raise in
  fun x ->
   let x = compile_with_passes ~syntax_todo [] [] x in
   trivial_compile_expression x

@@ -17,9 +17,9 @@ module TODO_do_in_parsing = struct
     | CST.PVar var -> Label.of_string var.value.variable.value 
     | _ -> failwith "impossible??"
   let r_split = r_split (* could compute Location directly in Parser *)
-  let var ~loc var = Ligo_prim.Value_var.of_input_var var
-  let tvar ~loc var = Ligo_prim.Type_var.of_input_var var
-  let mvar ~loc var = Ligo_prim.Module_var.of_input_var var
+  let var ~loc var = Ligo_prim.Value_var.of_input_var ~loc var
+  let tvar ~loc var = Ligo_prim.Type_var.of_input_var ~loc var
+  let mvar ~loc var = Ligo_prim.Module_var.of_input_var ~loc var
   let t_disc_locs (objs: (CST.obj_type, CST.vbar) nsepseq) =
     (* The region of the discriminated union TDisc
     is the union of all its objects' regions *)
@@ -66,7 +66,7 @@ and compile_type_expression ~(raise: ('e, 'w) raise) : CST.type_expr -> AST.type
     )
   )
   | TSum t -> (
-    let CST.{variants ; attributes}, loc = r_split t in
+    let CST.{variants ; attributes ; _}, loc = r_split t in
     let variants =
       let destruct : CST.variant -> _ = fun {tuple ; attributes} ->
         let CST.{constr ; params} = (r_fst tuple).inside in
@@ -142,7 +142,7 @@ and compile_type_expression ~(raise: ('e, 'w) raise) : CST.type_expr -> AST.type
   | TDisc t -> (
     let loc = TODO_do_in_parsing.t_disc_locs t in
     let fields =
-      let destruct_field CST.{field_name ; field_type; attributes} =
+      let destruct_field CST.{field_name ; field_type; attributes ; _} =
         ( Label.of_string (r_fst field_name),
         Some (self field_type),
         List.map (TODO_unify_in_cst.conv_attr attributes) ~f:fst )
@@ -168,9 +168,9 @@ and compile_pattern ~(raise: ('e, 'w) raise) : CST.pattern -> AST.pattern = fun 
   let self = compile_pattern ~raise in
   let pat ~loc p = Location.wrap ~loc p in
   match p with
-  | PConstr p -> TODO_do_in_parsing.unused_node ()
-  | PAssign   p -> TODO_do_in_parsing.unused_node ()
-  | PDestruct p -> TODO_do_in_parsing.unused_node ()
+  | PConstr _p -> TODO_do_in_parsing.unused_node ()
+  | PAssign   _p -> TODO_do_in_parsing.unused_node ()
+  | PDestruct _p -> TODO_do_in_parsing.unused_node ()
   | PRest p -> (
     let (p : CST.rest_pattern), loc = r_split p in
     let s = r_fst p.rest in
@@ -237,14 +237,14 @@ and compile_statement ~(raise: ('e, 'w) raise) : CST.statement -> AST.statement_
     )
   )
   | SConst s -> (
-    let CST.{bindings ; attributes}, loc = r_split s in
+    let CST.{bindings ; attributes ; _}, loc = r_split s in
     let bindings = List.Ne.map (compile_val_binding ~raise <@ r_fst) @@ nsepseq_to_nseq bindings in
     TODO_unify_in_cst.s_attach_attr attributes (
       s_const bindings ~loc ()
     )
   )
   | SType s -> (
-    let CST.{attributes ; name ; params ; type_expr }, loc = r_split s in
+    let CST.{attributes ; name ; params ; type_expr ; _ }, loc = r_split s in
     let name      = r_fst name in
     let params    = Option.map ~f:extract_type_vars params in
     let type_expr = compile_type_expression ~raise type_expr in

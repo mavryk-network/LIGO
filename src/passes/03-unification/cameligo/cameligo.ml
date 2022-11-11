@@ -10,7 +10,7 @@ module Option = Simple_utils.Option
 open AST  (* Brings types and combinators functions *)
 
 module TODO_do_in_parsing = struct
-  let r_split = r_split (* could compute Location directly in Parser *)
+  let _r_split = r_split (* could compute Location directly in Parser *)
   let var ~loc (var:string) = Ligo_prim.Value_var.of_input_var ~loc var
   let tvar ~loc (var:string) = Ligo_prim.Type_var.of_input_var ~loc var
   let mvar ~loc (var:string) = Ligo_prim.Module_var.of_input_var ~loc var
@@ -30,7 +30,7 @@ module TODO_unify_in_cst = struct
   let t_attach_attr (attr:CST.attributes) (e:AST.type_expr) : AST.type_expr =
     List.fold (conv_attr attr) ~init:e ~f:(fun e (attr,loc) -> t_attr ~loc attr e ())
   let compile_rows = Non_linear_rows.make
-  let compile_disc_rows = Non_linear_disc_rows.make
+  let _compile_disc_rows = Non_linear_disc_rows.make
 end
 
 (* ========================== TYPES ======================================== *)
@@ -57,12 +57,12 @@ let rec compile_type_expression : CST.type_expr -> AST.type_expr = fun te ->
     t_sum_raw variants ~loc ()
   )
   | TRecord t -> (
-    let CST.{attributes ; ne_elements}, loc = r_split t in
+    let CST.{attributes ; ne_elements ; compound=_ ; terminator=_ }, loc = r_split t in
     let fields =
       let field_decls : CST.field_decl nseq = nseq_map r_fst @@ nsepseq_to_nseq ne_elements in
-      let open Ligo_prim in
+      (* let open Ligo_prim in *)
       let compile_field_decl : int -> CST.field_decl -> AST.type_expr option Non_linear_rows.row =
-       fun i {field_name ; field_type ; attributes } ->
+       fun i {field_name ; field_type ; attributes; _ } ->
         let l = TODO_do_in_parsing.labelize (r_fst field_name) in
         let rows = Non_linear_rows.{
             decl_pos = i
@@ -150,11 +150,11 @@ let rec compile_pattern : CST.pattern -> AST.pattern = fun p ->
     pat ~loc (P_literal (Literal_int z))
   )
   | PNat p -> (
-    let (s, z), loc = r_split p in
+    let (_s, z), loc = r_split p in
     pat ~loc (P_literal (Literal_nat z))
   )
   | PBytes p -> (
-    let (s, hex), loc = r_split p in
+    let (_s, hex), loc = r_split p in
     let bytes_ = Hex.to_bytes hex in
     pat ~loc (P_literal (Literal_bytes bytes_))
   )

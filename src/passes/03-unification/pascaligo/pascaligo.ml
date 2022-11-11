@@ -14,10 +14,10 @@ module type X = module type of AST.Combinators
 
 module TODO_do_in_parsing = struct
   let r_split = r_split (* could compute Location directly in Parser *)
-  let lift = Location.lift
-  let var ~loc var = Ligo_prim.Value_var.of_input_var var
-  let tvar ~loc var = Ligo_prim.Type_var.of_input_var var
-  let mvar ~loc var = Ligo_prim.Module_var.of_input_var var
+  let _lift = Location.lift
+  let var ~loc var = Ligo_prim.Value_var.of_input_var ~loc var
+  let tvar ~loc var = Ligo_prim.Type_var.of_input_var ~loc var
+  let mvar ~loc var = Ligo_prim.Module_var.of_input_var ~loc var
   let need_rework _ y = (*most probably a node that we should avoid, maybe ?*) failwith y
   let six_to_z x = Z.of_int64 x (* not sure who's right ? *)
   let rec compile_pattern_record_lhs (p:CST.pattern) : CST.variable =
@@ -172,7 +172,7 @@ and compile_pattern ~(raise: ('e, 'w) raise) : CST.pattern -> AST.pattern = fun 
     pat ~loc (P_attr (attr,ptrn))
   )
   | P_Bytes p -> (
-    let (s, hex), loc = w_split p in
+    let (_s, hex), loc = w_split p in
     let b = Hex.to_bytes hex in
     pat ~loc (P_literal (Literal_bytes b))
   )
@@ -201,11 +201,11 @@ and compile_pattern ~(raise: ('e, 'w) raise) : CST.pattern -> AST.pattern = fun 
     pat ~loc (P_mod_access Mod_access.{module_path; field})
   )
   | P_Mutez p -> (
-    let (s, z), loc = w_split p in
+    let (_s, z), loc = w_split p in
     pat ~loc (P_literal (Literal_mutez (TODO_do_in_parsing.six_to_z z)))
   )
   | P_Nat p -> (
-    let (s, z), loc = w_split p in
+    let (_s, z), loc = w_split p in
     pat ~loc (P_literal (Literal_nat z))
   )
   | P_Nil p -> (
