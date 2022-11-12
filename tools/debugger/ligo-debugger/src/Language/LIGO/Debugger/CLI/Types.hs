@@ -300,6 +300,11 @@ newtype LigoType = LigoType { unLigoType :: Maybe LigoTypeExpression }
 pattern LigoTypeResolved :: LigoTypeExpression -> LigoType
 pattern LigoTypeResolved typ = LigoType (Just typ)
 
+pattern LigoTypeUnresolved :: LigoType
+pattern LigoTypeUnresolved = LigoType Nothing
+
+{-# COMPLETE LigoTypeResolved, LigoTypeUnresolved #-}
+
 -- | Prints type in Cameligo.
 --
 -- This is restricted for internal use only to avoid using it for producing

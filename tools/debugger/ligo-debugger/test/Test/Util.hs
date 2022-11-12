@@ -1,5 +1,3 @@
-{-# LANGUAGE UndecidableInstances #-}
-
 module Test.Util
   ( -- * Shared helpers
     (</>)

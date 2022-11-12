@@ -4,12 +4,15 @@ module Language.LIGO.DAP.Variables
   , runBuilder
   , buildVariable
   , insertToIndex
+  , buildLambdaInfo
   ) where
 
 import Control.Lens hiding ((...))
+import Data.Default (def)
 import Data.HashMap.Strict qualified as HM
 import Data.Map qualified as M
 import Fmt (pretty)
+import Text.Interpolation.Nyan
 
 import Morley.Debugger.Core (DebugPrintMode (DpmEvaluated, DpmNormal), debugBuild)
 import Morley.Debugger.Protocol.DAP (Variable)
@@ -21,6 +24,7 @@ import Morley.Michelson.Untyped.Entrypoints (isDefEpName)
 
 import Language.LIGO.AST (Lang)
 import Language.LIGO.Debugger.CLI
+import Language.LIGO.Debugger.Functions
 
 -- | For a given stack generate its representation as a tree of 'DAP.Variable's.
 --
@@ -62,6 +66,8 @@ createVariable name varText lang typ menuContext evaluateName = DAP.defaultVaria
   }
 
 buildVariable :: Lang -> LigoOrMichValue -> String -> VariableBuilder Variable
+buildVariable lang (MichValue typ (SomeValue v@VLam{})) name =
+  buildLambdaInfo lang name typ (view lambdaMetaL v ?: def)
 buildVariable lang v name = do
   let
     varText = pretty $ debugBuild DpmNormal (lang, v)
@@ -200,3 +206,56 @@ buildSubVars lang = \case
   where
     toLigoValue :: (SingI t) => LigoType -> Value t -> LigoOrMichValue
     toLigoValue typ = MichValue typ . SomeValue
+
+{- | Build a lambda variable.
+
+In a trivial case this results in one variable, value of which indicates
+a function in abstract way.
+
+In the case when function is a partial application to another function or even
+a cascade of partial applications (e.g. @add5 = add2 3@, @add2 = add 2@), to each
+such lambda we add children variables:
+
+* One variable for the function that we partially applied to.
+  This can recursively have grand children.
+* A number of applied arguments.
+
+-}
+buildLambdaInfo :: Lang -> String -> LigoType -> LambdaMeta -> VariableBuilder Variable
+buildLambdaInfo lang = \name typ meta ->
+  processFunc name "<lambda>" typ $ skipTrivialName name $ lmGroupByName meta
+  where
+    processFunc
+      :: String -> String -> LigoType
+      -> [(LambdaNamedInfo 'Unique, [LambdaArg])]
+      -> VariableBuilder Variable
+    processFunc varName varValue varType subFuncs = do
+      subVarsRef <- processSubFuncs subFuncs
+      return (createVariable varName varValue lang varType Nothing Nothing)
+        { DAP.variablesReferenceVariable = subVarsRef ?: 0
+        }
+
+    processSubFuncs
+      :: [(LambdaNamedInfo 'Unique, [LambdaArg])]
+      -> VariableBuilder (Maybe Int)
+    processSubFuncs = \case
+      [] -> pure Nothing
+      (namedInfo, args) : subFuncs' -> Just <$> do
+        funVar <- processFunc (toString funConst) (pretty $ lniName namedInfo) (lniType namedInfo) subFuncs'
+        argVars <- forM (zip [1 :: Word ..] args)
+          \(i, LambdaArg{ laValue = val, laType = ty }) ->
+            buildVariable lang (MichValue ty val) [int||arg#{i}|]
+        insertVars (funVar : argVars)
+
+    -- If I have a variable @func@, the first event there will likely be naming
+    -- with @func@, with no argument applications followed.
+    -- This makes sense, but it is also an unnecessary repetition in practice,
+    -- and this function strips it.
+    skipTrivialName varName = \case
+      (namedInfo, []) : others
+        | pretty (lniName namedInfo) == varName -> others
+      allInfo -> allInfo
+
+-- | Variable value shown for functions.
+funConst :: Text
+funConst = "<fun>"

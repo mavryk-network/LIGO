@@ -200,3 +200,9 @@ By default the debugger will do 1000 steps and after that will assume that a con
 
 ### From some moment I see `%field% {AskOnStart} does not exist` error
 We changed command braces from `{` and `}` to `(*@` and `@*)` because the previous ones were conflicting with LIGO record notation. So, now you need to write `(*@AskOnStart@*)` instead of `{AskOnStart}`.
+
+### I see many some children of my lambda in `VARIABLES` pane, how?
+
+We try to display when a function is a partial application of another function.
+
+Old names of the function are also presented via the same mechanism (they can be treated as partial applications with 0 arguments).
