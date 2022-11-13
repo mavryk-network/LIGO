@@ -41,3 +41,11 @@ let rec fold_expr
   (f:'a type_expr -> 'a)
   (t:fix_type_expr) : 'a =
   f (map_type_expr (fold_expr f) t)
+
+let pass_t_arg : fix_type_expr -> fix_type_expr = fun te ->
+  let f : fix_type_expr -> fix_type_expr = function
+  | `T_Arg (s, loc) -> `T_Var (Ty_variable.of_input_var s, loc)
+  | _ as common -> common
+  in
+  fold_expr f te
+
