@@ -27,6 +27,7 @@ module Language.LIGO.Debugger.Snapshots
 
   , isStatusL
   , isStackFramesL
+  , isActiveStackFrameL
 
   , csInterpreterStateL
   , csStackFramesL
@@ -272,6 +273,17 @@ makeLensesWith postfixLFields ''CollectorState
 stripSuffixHashFromSnapshots :: InterpretSnapshot 'Unique -> InterpretSnapshot 'Concise
 stripSuffixHashFromSnapshots snap =
   snap & isStackFramesL . each . sfStackL . each . siLigoDescL %~ stripSuffixHashLigoStackEntry
+
+-- | Lens giving an access to the top-most frame - which is also
+-- the only active one.
+isActiveStackFrameL :: Lens' (InterpretSnapshot u) (StackFrame u)
+isActiveStackFrameL = isStackFramesL . __head
+  where
+    __head :: Lens' (NonEmpty a) a
+    __head = lens head setHead
+      where
+        setHead :: NonEmpty a -> a -> NonEmpty a
+        setHead (_ :| xs) x' = x' :| xs
 
 -- | Lens giving an access to the top-most frame - which is also
 -- the only active one.

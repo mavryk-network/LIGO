@@ -1,5 +1,6 @@
 {-# LANGUAGE DeriveDataTypeable, StandaloneKindSignatures, UndecidableInstances #-}
 
+
 -- | Types coming from @ligo@ executable.
 module Language.LIGO.Debugger.CLI.Types
   ( module Language.LIGO.Debugger.CLI.Types

@@ -1,6 +1,7 @@
 -- This code is copypasted from Morley.Debugger.DAP.Variables
 module Language.LIGO.DAP.Variables
   ( createVariables
+  , insertVars
   , runBuilder
   , buildVariable
   , insertToIndex

@@ -2,27 +2,29 @@ module Test.Variables
   ( test_Variables
   ) where
 
-import Data.Map qualified as M
-import Fmt (pretty)
 import Unsafe (fromJust)
 
+import Data.Default (def)
+import Data.Map qualified as M
+import Fmt (pretty)
 import Morley.Debugger.Protocol.DAP (Variable (..))
 import Morley.Michelson.Typed
   (Constrained (SomeValue), EpAddress (EpAddress'), EpName (UnsafeEpName),
   MkEntrypointCallRes (MkEntrypointCallRes), ParamNotes (pnRootAnn), SingI,
   SomeEntrypointCallT (SomeEpc), T (TUnit), Value,
-  Value' (VAddress, VContract, VList, VOption, VUnit), mkEntrypointCall, sepcPrimitive,
+  Value' (VAddress, VContract, VInt, VList, VOption, VUnit), mkEntrypointCall, sepcPrimitive,
   tyImplicitAccountParam)
 import Morley.Michelson.Untyped (Annotation (UnsafeAnnotation), pattern DefEpName)
 import Morley.Tezos.Address (parseAddress)
+import Text.Interpolation.Nyan
 
-import Test.HUnit ((@?=))
 import Test.Tasty (TestTree, testGroup)
-import Test.Tasty.HUnit (testCase)
 
-import Language.LIGO.AST (Lang (Caml))
-import Language.LIGO.DAP.Variables (createVariables, runBuilder)
+import Language.LIGO.DAP.Variables (buildLambdaInfo, createVariables, runBuilder)
 import Language.LIGO.Debugger.CLI
+import Language.LIGO.Debugger.Functions
+
+import Test.Util
 
 mkDummyValue :: LigoOrMichValue -> Maybe (Name 'Concise) -> (Text, LigoOrMichValue)
 mkDummyValue v nameMb =
@@ -36,12 +38,17 @@ mkDummyMichValue v = mkDummyValue (MichValue (LigoType Nothing) $ SomeValue v)
 mkDummyLigoValue :: LigoValue -> Maybe (Name 'Concise) -> (Text, LigoOrMichValue)
 mkDummyLigoValue v = mkDummyValue (LigoValue (LigoType Nothing) v)
 
+-- | Create a dummy constant type.
+varTy :: Text -> LigoType
+varTy = LigoTypeResolved . mkSimpleConstantType
+
 test_Variables :: TestTree
 test_Variables = testGroup "variables"
   [ testOption
   , testList
   , testContracts
   , testAddresses
+  , testLambdas
   ]
 
 testAddresses :: TestTree
@@ -428,4 +435,210 @@ testList = testGroup "list"
               ]
             )
           ]
+  ]
+
+testLambdas :: TestTree
+testLambdas = testGroup "lambdas"
+  let
+    lambdaNamedEvent :: Text -> LambdaEvent u
+    lambdaNamedEvent name = LambdaNamed LambdaNamedInfo
+      { lniName = Name name
+      , lniType = varTy [int||type of #{name}|]
+      }
+    lambdaAppliedNum :: Integer -> LambdaEvent u
+    lambdaAppliedNum i = LambdaApplied LambdaArg
+      { laValue = SomeValue (VInt i)
+      , laType = varTy [int||type of #{i}|]
+      }
+  in
+  [ testCase "complex case" do
+      let (rootVar, referredVars) = runBuilder do
+            buildLambdaInfo Caml "the var" (varTy "f") $
+              LambdaMeta
+              [ lambdaNamedEvent "add11"
+              , lambdaAppliedNum 5
+              , lambdaNamedEvent "addTwo"
+              , lambdaNamedEvent "add2"
+              , lambdaAppliedNum 3
+              , lambdaAppliedNum 2
+              , lambdaAppliedNum 1
+              , lambdaNamedEvent "add"
+              ]
+
+      rootVar @?=
+        Variable
+          { nameVariable = "the var"
+          , valueVariable = "<lambda>"
+          , typeVariable = "f"
+          , presentationHintVariable = Nothing
+          , evaluateNameVariable = Nothing
+          , variablesReferenceVariable = 4
+          , namedVariablesVariable = Nothing
+          , indexedVariablesVariable = Nothing
+          , __vscodeVariableMenuContextVariable = Nothing
+          }
+      M.lookup 5 referredVars @?= Nothing
+      M.lookup 4 referredVars @?= Just
+        [ Variable
+            { nameVariable = "func"
+            , valueVariable = "add11"
+            , typeVariable = "type of add11"
+            , presentationHintVariable = Nothing
+            , evaluateNameVariable = Nothing
+            , variablesReferenceVariable = 3
+            , namedVariablesVariable = Nothing
+            , indexedVariablesVariable = Nothing
+            , __vscodeVariableMenuContextVariable = Nothing
+            }
+        ]
+      M.lookup 3 referredVars @?= Just
+        [ Variable
+            { nameVariable = "func"
+            , valueVariable = "addTwo"
+            , typeVariable = "type of addTwo"
+            , presentationHintVariable = Nothing
+            , evaluateNameVariable = Nothing
+            , variablesReferenceVariable = 2
+            , namedVariablesVariable = Nothing
+            , indexedVariablesVariable = Nothing
+            , __vscodeVariableMenuContextVariable = Nothing
+            }
+        , Variable
+            { nameVariable = "arg1"
+            , valueVariable = "5"
+            , typeVariable = "type of 5"
+            , presentationHintVariable = Nothing
+            , evaluateNameVariable = Just "5"
+            , variablesReferenceVariable = 0
+            , namedVariablesVariable = Nothing
+            , indexedVariablesVariable = Nothing
+            , __vscodeVariableMenuContextVariable = Nothing
+            }
+        ]
+      M.lookup 2 referredVars @?= Just
+        [ Variable
+            { nameVariable = "func"
+            , valueVariable = "add2"
+            , typeVariable = "type of add2"
+            , presentationHintVariable = Nothing
+            , evaluateNameVariable = Nothing
+            , variablesReferenceVariable = 1
+            , namedVariablesVariable = Nothing
+            , indexedVariablesVariable = Nothing
+            , __vscodeVariableMenuContextVariable = Nothing
+            }
+        ]
+      M.lookup 1 referredVars @?= Just
+        [ Variable
+            { nameVariable = "func"
+            , valueVariable = "add"
+            , typeVariable = "type of add"
+            , presentationHintVariable = Nothing
+            , evaluateNameVariable = Nothing
+            , variablesReferenceVariable = 0
+            , namedVariablesVariable = Nothing
+            , indexedVariablesVariable = Nothing
+            , __vscodeVariableMenuContextVariable = Nothing
+            }
+        , Variable
+            { nameVariable = "arg1"
+            , valueVariable = "1"
+            , typeVariable = "type of 1"
+            , presentationHintVariable = Nothing
+            , evaluateNameVariable = Just "1"
+            , variablesReferenceVariable = 0
+            , namedVariablesVariable = Nothing
+            , indexedVariablesVariable = Nothing
+            , __vscodeVariableMenuContextVariable = Nothing
+            }
+        , Variable
+            { nameVariable = "arg2"
+            , valueVariable = "2"
+            , typeVariable = "type of 2"
+            , presentationHintVariable = Nothing
+            , evaluateNameVariable = Just "2"
+            , variablesReferenceVariable = 0
+            , namedVariablesVariable = Nothing
+            , indexedVariablesVariable = Nothing
+            , __vscodeVariableMenuContextVariable = Nothing
+            }
+        , Variable
+            { nameVariable = "arg3"
+            , valueVariable = "3"
+            , typeVariable = "type of 3"
+            , presentationHintVariable = Nothing
+            , evaluateNameVariable = Just "3"
+            , variablesReferenceVariable = 0
+            , namedVariablesVariable = Nothing
+            , indexedVariablesVariable = Nothing
+            , __vscodeVariableMenuContextVariable = Nothing
+            }
+        ]
+
+  , testCase "applications before the first naming do not wreak havoc" do
+      let (rootVar, referredVars) = runBuilder do
+            buildLambdaInfo Caml "the var" (varTy "f") $
+              LambdaMeta
+              [ lambdaAppliedNum 1
+              , lambdaNamedEvent "add"
+              , lambdaAppliedNum (-1)
+              ]
+
+      rootVar @?=
+        Variable
+          { nameVariable = "the var"
+          , valueVariable = "<lambda>"
+          , typeVariable = "f"
+          , presentationHintVariable = Nothing
+          , evaluateNameVariable = Nothing
+          , variablesReferenceVariable = 1
+          , namedVariablesVariable = Nothing
+          , indexedVariablesVariable = Nothing
+          , __vscodeVariableMenuContextVariable = Nothing
+          }
+      M.lookup 2 referredVars @?= Nothing
+      M.lookup 1 referredVars @?= Just
+        [ Variable
+            { nameVariable = "func"
+            , valueVariable = "add"
+            , typeVariable = "type of add"
+            , presentationHintVariable = Nothing
+            , evaluateNameVariable = Nothing
+            , variablesReferenceVariable = 0
+            , namedVariablesVariable = Nothing
+            , indexedVariablesVariable = Nothing
+            , __vscodeVariableMenuContextVariable = Nothing
+            }
+        , Variable
+            { nameVariable = "arg1"
+            , valueVariable = "1"
+            , typeVariable = "type of 1"
+            , presentationHintVariable = Nothing
+            , evaluateNameVariable = Just "1"
+            , variablesReferenceVariable = 0
+            , namedVariablesVariable = Nothing
+            , indexedVariablesVariable = Nothing
+            , __vscodeVariableMenuContextVariable = Nothing
+            }
+        ]
+
+  , testCase "empty meta works too" do
+      let (rootVar, referredVars) = runBuilder do
+            buildLambdaInfo Caml "the var" (varTy "f") def
+
+      rootVar @?=
+        Variable
+          { nameVariable = "the var"
+          , valueVariable = "<lambda>"
+          , typeVariable = "f"
+          , presentationHintVariable = Nothing
+          , evaluateNameVariable = Nothing
+          , variablesReferenceVariable = 0
+          , namedVariablesVariable = Nothing
+          , indexedVariablesVariable = Nothing
+          , __vscodeVariableMenuContextVariable = Nothing
+          }
+
+      referredVars @?= mempty
+
   ]

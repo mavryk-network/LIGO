@@ -21,6 +21,7 @@ module Test.Util
   , getStackFrameNames
   , getVariableNamesFromStackFrame
   , renderNoLineLengthLimit
+  , getActiveStackFrameLambdaMetas
     -- * Generators
   , genStepGranularity
     -- * Helpers for breakpoints
@@ -57,7 +58,7 @@ module Test.Util
   , intType
   ) where
 
-import Control.Lens (each)
+import Control.Lens (_Just, each, traversed)
 import Data.Default (def)
 import Data.Singletons (demote)
 import Data.Singletons.Decide (decideEquality)
@@ -92,11 +93,13 @@ import Duplo hiding (int, (<.>))
 import Language.LIGO.AST.Skeleton qualified as AST
 import Language.LIGO.Debugger.CLI
 import Language.LIGO.Debugger.Common
+import Language.LIGO.Debugger.Functions
 import Language.LIGO.Debugger.Handlers.Helpers
 import Language.LIGO.Debugger.Handlers.Impl
 import Language.LIGO.Debugger.Michelson
 import Language.LIGO.Debugger.Navigate
 import Language.LIGO.Debugger.Snapshots
+import "ligo-debugger" Util
 
 contractsDir :: FilePath
 contractsDir = "test" </> "contracts"
@@ -381,6 +384,15 @@ isPermutationOf xs ys = sort xs == sort ys
 getStackFrameNames :: InterpretSnapshot u -> [Text]
 getStackFrameNames snap =
   snap ^.. isStackFramesL . each . sfNameL
+
+getActiveStackFrameLambdaMetas
+  :: (MonadReader (DebuggerState (InterpretSnapshot 'Unique)) m)
+  => m [(Name 'Concise, LambdaMeta)]
+getActiveStackFrameLambdaMetas = curSnapshot <&> \snap -> do
+  stackItem <- snap ^.. isActiveStackFrameL . sfStackL . traversed
+  Just varName <- pure $ stackItem ^? siLigoDescL . _LigoStackEntry . leseDeclarationL . _Just
+  Just meta <- pure $ stackItem ^? siValueL . someValueL mLambdaMetaL . _Just
+  return (pretty varName, meta)
 
 -- These functions are needed to strip hashes from variables
 -- E.g. varName#123 -> varName

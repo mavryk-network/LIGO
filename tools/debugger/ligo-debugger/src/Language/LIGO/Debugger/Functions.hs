@@ -13,6 +13,7 @@ module Language.LIGO.Debugger.Functions
   , lmActualFuncName
   , lmGroupByName
   , lambdaMetaL
+  , mLambdaMetaL
   , internalStackFrameName
   , embedFunctionNames
   , embedFunctionNameIntoLambda

@@ -18,11 +18,13 @@ module Util
   , textToLazyBytes
   , (<<&>>)
   , TextualNumber (..)
+  , someValueL
 
   -- * Debugging utilities
   , validate
   ) where
 
+import Control.Lens (LensLike')
 import Data.Aeson (FromJSON)
 import Data.Aeson qualified as Aeson
 import Data.Aeson.Key qualified as Key
@@ -47,6 +49,8 @@ import TH.RelativePaths (qReadFileText)
 import Text.Interpolation.Nyan.Core (RMode (..))
 
 import Duplo (Cofree ((:<)), Lattice (leq))
+
+import Morley.Michelson.Typed qualified as T
 
 groupByKey :: Ord k => (a -> k) -> (a -> v) -> [a] -> [(k, [v])]
 groupByKey f g =
@@ -207,3 +211,11 @@ instance Integral a => FromJSON (TextualNumber a) where
       fromIntegralNoOverflow i
         & either (fail . displayException) (pure . TextualNumber)
     other -> Aeson.unexpected other
+
+-- | Lens to look into 'T.SomeValue'.
+--
+-- Note that lens which will consume the 'T.Value' is passed to this method,
+-- not composed with it with @(.)@ (this would be hard to express in our
+-- type system).
+someValueL :: Functor f => (forall t. LensLike' f (T.Value t) r) -> LensLike' f T.SomeValue r
+someValueL l f (T.SomeValue v) = T.SomeValue <$> l f v
