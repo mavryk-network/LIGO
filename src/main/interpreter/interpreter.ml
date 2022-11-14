@@ -906,6 +906,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
   | C_TEST_BOX, [ v ] ->
     return v
   | C_TEST_BOX, _ -> fail @@ error_type ()
+  | C_TEST_APP, _ -> fail @@ error_type ()
   | C_TEST_ADDRESS, [ V_Ct (C_contract { address; entrypoint = _ }) ] ->
     return (V_Ct (C_address address))
   | C_TEST_ADDRESS, _ -> fail @@ error_type ()

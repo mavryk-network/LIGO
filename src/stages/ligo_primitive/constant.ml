@@ -99,6 +99,7 @@ type constant' =
   | C_CHECK_ENTRYPOINT
   (* Tests - ligo interpreter only *)
   | C_TEST_BOX [@only_interpreter]
+  | C_TEST_APP [@only_interpreter]
   | C_TEST_ADDRESS [@only_interpreter]
   | C_TEST_SIZE [@only_interpreter]
   | C_TEST_ORIGINATE [@only_interpreter]
