@@ -550,6 +550,6 @@ let%expect_test _ =
       5 |   //              ^^^    ^^^    ^^^    ^^^
 
     Invalid type(s)
-    Cannot unify int with nat. |}]
+    Cannot unify tez with int -> nat. |}]
 
 

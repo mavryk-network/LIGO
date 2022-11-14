@@ -71,7 +71,7 @@ let all_view ~raise command_line_views main_name prg =
       View_passes.check_view_type ~raise ~err_data:(main_name,view_binder) contract_type view_type
   in
   let () = List.iter ~f prg in
-  Contract_passes.remove_unused_for_views prg
+  prg
 
 let all = [
   Recursion.check_tail_expression

@@ -224,7 +224,26 @@ let%expect_test _ =
       3 | const { b } = { b : Tezos.create_ticket("one", 10 as nat) }
       4 |
     :
-    Warning: variable "b" cannot be used more than once. |}]
+    Warning: variable "b" cannot be used more than once.
+
+    File "../../test/contracts/top_level_patterns/negative/jsligo/ticket_record.jsligo", line 3, characters 8-9:
+      2 |
+      3 | const { b } = { b : Tezos.create_ticket("one", 10 as nat) }
+      4 |
+    :
+    Warning: variable "b" cannot be used more than once.
+    { parameter unit ;
+      storage (ticket string) ;
+      code { DROP ;
+             PUSH nat 10 ;
+             PUSH string "one" ;
+             TICKET ;
+             DUP ;
+             PAIR ;
+             JOIN_TICKETS ;
+             IF_NONE { PUSH string "option is None" ; FAILWITH } {} ;
+             NIL operation ;
+             PAIR } } |}]
 
 let%expect_test _ =
   run_ligo_bad [ "compile" ; "contract" ; contract "jsligo/ticket_tuple.jsligo" ; "--werror" ; "--disable-michelson-typechecking" ] ;
@@ -233,4 +252,25 @@ let%expect_test _ =
       1 | const [b, _] = [Tezos.create_ticket("one", 10 as nat), 1]
       2 |
     :
-    Warning: variable "b" cannot be used more than once. |}]
+    Warning: variable "b" cannot be used more than once.
+
+    File "../../test/contracts/top_level_patterns/negative/jsligo/ticket_tuple.jsligo", line 1, characters 7-8:
+      1 | const [b, _] = [Tezos.create_ticket("one", 10 as nat), 1]
+      2 |
+    :
+    Warning: variable "b" cannot be used more than once.
+    { parameter unit ;
+      storage (ticket string) ;
+      code { DROP ;
+             PUSH int 1 ;
+             PUSH nat 10 ;
+             PUSH string "one" ;
+             TICKET ;
+             SWAP ;
+             DROP ;
+             DUP ;
+             PAIR ;
+             JOIN_TICKETS ;
+             IF_NONE { PUSH string "option is None" ; FAILWITH } {} ;
+             NIL operation ;
+             PAIR } } |}]

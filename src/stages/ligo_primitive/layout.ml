@@ -25,3 +25,6 @@ let pp ppf (t : t) =
   | L_tree -> Format.fprintf ppf "tree"
   | L_comb -> Format.fprintf ppf "comb"
   | L_variable lvar -> Format.fprintf ppf "^%a" Layout_var.pp lvar
+
+let default_layout : t = L_tree
+let default_view : view = L_tree

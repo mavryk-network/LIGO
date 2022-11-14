@@ -438,7 +438,26 @@ let%expect_test _ =
       3 | const record[ b ] = record[ b = Tezos.create_ticket ("one", 10n) ]
       4 |
     :
-    Warning: variable "b" cannot be used more than once. |}]
+    Warning: variable "b" cannot be used more than once.
+
+    File "../../test/contracts/top_level_patterns/negative/pascaligo/ticket_record.ligo", line 3, characters 14-15:
+      2 |
+      3 | const record[ b ] = record[ b = Tezos.create_ticket ("one", 10n) ]
+      4 |
+    :
+    Warning: variable "b" cannot be used more than once.
+    { parameter unit ;
+      storage (ticket string) ;
+      code { DROP ;
+             PUSH nat 10 ;
+             PUSH string "one" ;
+             TICKET ;
+             DUP ;
+             PAIR ;
+             JOIN_TICKETS ;
+             IF_NONE { PUSH string "option is None" ; FAILWITH } {} ;
+             NIL operation ;
+             PAIR } } |}]
 
 let%expect_test _ =
   run_ligo_bad [ "compile" ; "contract" ; contract "pascaligo/ticket_tuple.ligo" ; "--werror" ; "--disable-michelson-typechecking" ] ;
@@ -447,7 +466,28 @@ let%expect_test _ =
       1 | const (b, _) = (Tezos.create_ticket ("one", 10n), 1)
       2 |
     :
-    Warning: variable "b" cannot be used more than once. |}]
+    Warning: variable "b" cannot be used more than once.
+
+    File "../../test/contracts/top_level_patterns/negative/pascaligo/ticket_tuple.ligo", line 1, characters 7-8:
+      1 | const (b, _) = (Tezos.create_ticket ("one", 10n), 1)
+      2 |
+    :
+    Warning: variable "b" cannot be used more than once.
+    { parameter unit ;
+      storage (ticket string) ;
+      code { DROP ;
+             PUSH int 1 ;
+             PUSH nat 10 ;
+             PUSH string "one" ;
+             TICKET ;
+             SWAP ;
+             DROP ;
+             DUP ;
+             PAIR ;
+             JOIN_TICKETS ;
+             IF_NONE { PUSH string "option is None" ; FAILWITH } {} ;
+             NIL operation ;
+             PAIR } } |}]
 
 let%expect_test _ =
   run_ligo_bad [ "compile" ; "contract" ; contract "pascaligo/constr_record_destructuring.ligo" ; "--werror" ; "--disable-michelson-typechecking" ] ;
