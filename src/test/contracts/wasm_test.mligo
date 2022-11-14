@@ -84,6 +84,11 @@ let main ((_, _s):(parameter * storage)) =
   | None -> 0
   in
   let a18 = List.length [3; 4; 5; 6; 7] in
+  let s1 = Set.literal [20; 30; 50] in
+  let m1 = Map.literal [(3, 40); (5, 50)] in
+  let xx = Set.cardinal s1 + Map.size m1 in
+  
+  let a19: int = int xx in
   let a = 
     4 + 5 +  (* 9 *)
     40 / 5 + (* 9 + 8 = 17 *)
@@ -102,7 +107,8 @@ let main ((_, _s):(parameter * storage)) =
     a15 +     (* 364 + 44 = 408 *)
     a16 +    (* 408 + 55 = 463 *)
     a17 +     (* 463 + 9 = 472 *)
-    a18       (* 472 + 5 = 477 *)
+    a18 +      (* 472 + 5 = 477 *)
+    a19      (* 477 + 5 = 482 *)
     // 1000 
     // 0
   in 

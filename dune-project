@@ -6,5 +6,5 @@
 
 (package 
  (name ligo)
- (sites (lib ligo_runtime) (lib ligo_wasi))
+ (sites (lib ligo_runtime) (lib ligo_wasi) (lib ligo_helpers))
 )

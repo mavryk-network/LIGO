@@ -5,6 +5,7 @@ module S = W.Source
 
 open W.Source
 open W.Ast
+open W.Types
 
 let at = no_region
 
@@ -235,3 +236,44 @@ let find_missing e =
     | [] -> env
   in 
   aux { missing_arguments = []; missing_locals = []; missing_functions = []; arguments = []; locals = []; functions = []} e
+
+let add_function w (_env: Env.t) helper_fn_name f_body = 
+  let local_get_s = local_get_s at in
+  let required = find_missing (f_body []) in
+  let required_arguments = (
+    List.fold_left 
+      ~f:(fun a s -> 
+          a @ 
+          [
+            local_get_s s              
+          ]
+        ) 
+      ~init:[] 
+      required.missing_arguments
+  )
+  in
+  let f_body = f_body required_arguments in
+  let required_locals = List.map ~f:(fun f -> (f, NumType I32Type)) required.missing_arguments @ List.map ~f:(fun f -> (f, NumType I32Type)) required.missing_locals in
+  let f = FuncSymbol {
+    name   = helper_fn_name;
+    ftype  = helper_fn_name ^ "_type";
+    locals = required_locals;
+    body = f_body
+  } 
+  in
+
+  let f = S.{it = f; at} in
+  
+  let t = TypeSymbol {
+    tname = helper_fn_name ^ "_type";
+    tdetails = FuncType (List.map ~f:(fun _ -> NumType I32Type) required.missing_arguments, [NumType I32Type])
+  } 
+  in
+  let t = S.{ it = t; at } in
+    let w = {
+      w with
+        types   = t :: w.types;
+        funcs   = f :: w.funcs;
+    }
+  in 
+  w, required_arguments

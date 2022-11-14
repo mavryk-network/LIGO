@@ -30,7 +30,9 @@ let find_file name locations =
 let link files output =
   let libligo_wasi_share_dir = find_file "lib" Ligo_runtime.Sites.ligo_wasi in
   let libligo_wasi = find_file "libclang_rt.builtins-wasm32.a" Ligo_runtime.Sites.ligo_wasi in
+  let libligo_helpers = find_file "wat_helpers.wasm" Ligo_runtime.Sites.ligo_helpers in
   let libligo_runtime_location = find_file "libligo_runtime.a" Ligo_runtime.Sites.ligo_runtime in
+  
   let command =
     sprintf
       "wasm-ld -m wasm32 --import-undefined -L%s -lc %s -lc %s %s --stack-first --fatal-warnings \
@@ -38,7 +40,7 @@ let link files output =
       libligo_wasi_share_dir
       libligo_wasi
       libligo_runtime_location
-      (String.concat ?sep:(Some " ") files)
+      (String.concat ?sep:(Some " ") (libligo_helpers :: files))
       output
   in
   Sys_unix.command_exn command

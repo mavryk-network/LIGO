@@ -121,6 +121,7 @@ module Int = struct
     let if_ = if_ at in
     let const = const at in
     (* let call_s = call_s at in *)
+    (* let call_s = call_s at in *)
     (* let load = load at in *)
     (* let local_get_s = local_get_s at in *)
     let env, eq = eq env a b in
@@ -132,6 +133,10 @@ module Int = struct
       if_ 
         (ValBlockType (Some (T.NumType I32Type)))
         [
+          (* const 2222l;
+          call_s "print";
+          const 0l;
+          call_s "print"; *)
           const 0l;
         ]
         (lt
@@ -140,10 +145,20 @@ module Int = struct
           if_ 
             (ValBlockType (Some (T.NumType I32Type)))
             [
+              (* const 2222l;
+              call_s "print";
+              const 0l;
+              call_s "print"; *)
+              
               const (-1l);
             ]
             [
               const 1l;
+              (* const 2222l;
+          call_s "print";
+          const 1l;
+          call_s "print"; *)
+          (* const 0l; *)
             ]
         ])
     ]

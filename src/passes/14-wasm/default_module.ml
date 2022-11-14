@@ -51,6 +51,21 @@ let mod_ : module_ =
               ~typedef:(FuncType ([], [NumType I32Type]));
             type_ ~name:"ffi_sender_type"
               ~typedef:(FuncType ([], [NumType I32Type]));
+
+
+            (* helpers *)
+            type_ ~name:"right_rotate_type"
+              ~typedef:(FuncType ([NumType I32Type], [NumType I32Type]));
+            type_ ~name:"c_set_add_insert_value_type"
+              ~typedef:(FuncType ([NumType I32Type; NumType I32Type; NumType I32Type; NumType I32Type], []));
+            type_ ~name:"c_set_left_child_type"
+              ~typedef:(FuncType ([NumType I32Type], [NumType I32Type]));
+            type_ ~name:"to_int_type"
+              ~typedef:(FuncType ([NumType I32Type], [NumType I32Type]));
+            type_ ~name:"__ligo_internal__set_size_type"
+              ~typedef:(FuncType ([NumType I32Type], [NumType I32Type]));
+              
+            
           ];
         imports =
           [
@@ -74,6 +89,14 @@ let mod_ : module_ =
             import ~item:"ffi_self_" ~desc:(FuncImport_symbol "ffi_self__type");
             import ~item:"ffi_source" ~desc:(FuncImport_symbol "ffi_source_type");
             import ~item:"ffi_sender" ~desc:(FuncImport_symbol "ffi_sender_type");
+
+
+            (* helper functions *)
+            import ~item:"right_rotate" ~desc:(FuncImport_symbol "right_rotate_type");
+            import ~item:"c_set_add_insert_value" ~desc:(FuncImport_symbol "c_set_add_insert_value_type");
+            import ~item:"c_set_left_child" ~desc:(FuncImport_symbol "c_set_left_child_type");
+            import ~item:"to_int" ~desc:(FuncImport_symbol "to_int_type");
+            import ~item:"__ligo_internal__set_size" ~desc:(FuncImport_symbol "__ligo_internal__set_size_type");
           ];
         symbols =
           [
@@ -99,6 +122,15 @@ let mod_ : module_ =
             symbol ~name:"ffi_self_" ~details:(Import       ([], [NumType I32Type]));
             symbol ~name:"ffi_source" ~details:(Import      ([], [NumType I32Type]));
             symbol ~name:"ffi_sender" ~details:(Import      ([], [NumType I32Type]));
+
+            (* helper functions *)
+            symbol ~name:"right_rotate"           ~details:(Import ([NumType I32Type], [NumType I32Type]));
+            symbol ~name:"c_set_add_insert_value" ~details:(Import ([NumType I32Type; NumType I32Type; NumType I32Type; NumType I32Type], []));
+            symbol ~name:"c_set_left_child" ~details:(Import ([NumType I32Type], [NumType I32Type]));
+            symbol ~name:"to_int" ~details:(Import ([NumType I32Type], [NumType I32Type]));
+            symbol ~name:"__ligo_internal__set_size"
+              ~details:(Import ([NumType I32Type], [NumType I32Type]));
+            
           ];
           tables = [{
             it = {ttype = TableType ({min = 0l; max = Some 0l}, FuncRefType)}; at 

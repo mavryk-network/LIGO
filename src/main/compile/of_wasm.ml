@@ -13,8 +13,9 @@ let compile_contract ~raise : options:Compiler_options.t -> expression -> string
   (* give warnings / errors on certain command line options... *)
   (* ignore options; *)
   (* print_endline "before:";
-  Mini_c.PP.expression_with_type Format.std_formatter e; *)
-  (* Format.pp_print_flush Format.std_formatter (); *)
+  Mini_c.PP.expression_with_type Format.std_formatter e;
+  Format.pp_print_flush Format.std_formatter ();
+   *)
   let e = Closure_conversion.toplevel entrypoint e in
   Format.pp_print_flush Format.std_formatter ();
   print_endline "\n\nafter:";

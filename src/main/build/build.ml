@@ -279,7 +279,7 @@ and build_wasm_code ~raise : options:Compiler_options.t -> string -> Source_inpu
     let channel = Out_channel.create ("temp.wasm") in (* TODO: remove file after linking *)
     Out_channel.output_string channel wasm;
     Out_channel.close channel; 
-    Ligo_compile.Of_wasm.link [("temp.wasm")] output_file
+    Ligo_compile.Of_wasm.link ["temp.wasm"] output_file
 
 and build_aggregated_views ~raise :
   options:Compiler_options.t -> Ast_typed.program -> (Value_var.t list * Ast_aggregated.expression) option =

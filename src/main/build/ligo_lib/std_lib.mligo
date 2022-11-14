@@ -382,7 +382,14 @@ let is_nat (i : int) : nat option = [%Michelson ({| { ISNAT } |} : int -> nat op
 let true : bool = [%external ("TRUE")]
 let false : bool = [%external ("FALSE")]
 let unit : unit = [%external ("UNIT")]
-let int (type a) (v : a) : a external_int = [%Michelson ({| { INT } |} : a -> a external_int)] v
+#if MICHELSON
+  let int (type a) (v : a) : a external_int = [%Michelson ({| { INT } |} : a -> a external_int)] v
+#endif
+#if WASM
+  let intx (type a) (v : a) : a external_int =
+    [%Wasm ({| call "to_int" |} : a -> a external_int )] v
+  let int a = intx a
+#endif
 let ignore (type a) (_ : a) : unit = ()
 
 #if CURRY
