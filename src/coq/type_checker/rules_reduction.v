@@ -48,9 +48,9 @@ Module Reduction_Rules.
             G |- t1 -> t2 ~~> t1' -> t2    G |- t1 -> t2 ~~> t1 -> t2'
             *)            
             (arrow:=fun C t1 t2 => 
-                let* (m1,t1') := @Reduce_type C c t1 in
-                let+ (m2,t2') := if m1 then Some (m1,t2) else @Reduce_type C c t2 in
-                (m2, @Types.arrow C t1 t2')
+                let* (m,t1) := @Reduce_type C c t1 in
+                let+ (m,t2) := if m then Some (m,t2) else @Reduce_type C c t2 in
+                (m, @Types.arrow C t1 t2)
             )
 
             (*  
@@ -59,8 +59,8 @@ Module Reduction_Rules.
             G |- forall(s::k).t ~~> forall(s::k).t'
             *)            
             (for_all:=fun s k t => 
-                let+ (m, t') := Reduce_type c t in
-                (m, Types.for_all s k t')
+                let+ (m, t) := Reduce_type c t in
+                (m, Types.for_all s k t)
             )
             (*  
             G |- t ~~> t'
@@ -68,8 +68,8 @@ Module Reduction_Rules.
             G |- lambda(s::k).t ~~> lambda(s::k).t'
             *)            
             (lambda:=fun C s k t => 
-                let+ (m, t') := @Reduce_type C c t in
-                (m, @Types.lambda C s k t')
+                let+ (m, t) := @Reduce_type C c t in
+                (m, @Types.lambda C s k t)
             )
             (*  
             G |- t1 ~~> t1'          G |- t2 ~~> t2'
@@ -77,9 +77,9 @@ Module Reduction_Rules.
             G |- t1 t2 ~~> t1' t2    G |- t1 t2 ~~> t1 t2'
             *)            
             (apply:=fun C t1 t2 => 
-                let* (m1, t1') := @Reduce_type C c t1 in
-                let+ (m2, t2') := if m1 then Some (m1, t2) else @Reduce_type C c t2 in
-                (m2, @Types.apply C t1' t2')            
+                let* (m, t1) := @Reduce_type C c t1 in
+                let+ (m, t2) := if m then Some (m, t2) else @Reduce_type C c t2 in
+                (m, @Types.apply C t1 t2)            
             )
             (*  
             G |- r ~~> r'
