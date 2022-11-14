@@ -19,3 +19,11 @@ Module Options.
         fold a (some:=fun _ => True) (none:=fun _ => False).
 
 End Options.
+
+(* Notation extensions corner *)
+
+Notation "'let*' pat := ma 'in' fa" := (Options.bind ma (fun e => let pat := e in fa)) 
+    (at level 61, pat pattern, fa at next level, right associativity).
+
+Notation "'let+' pat := ma 'in' fa" := (Options.map (fun e => let pat := e in fa) ma) 
+    (at level 61, pat pattern, fa at next level, right associativity).
