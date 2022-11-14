@@ -44,9 +44,11 @@
       "esy-libev": "*",
       "@opam/tezos-base": "*",
       "@opam/tezos-micheline": "*",
+      "@opam/tezos-client-014-PtKathma": "*",
       "@opam/tezos-client-015-PtLimaPt": "*",
       "@opam/tezos-hacl": "*",
       "@opam/tz015-test-helpers": "*",
+      "@opam/tezos-014-PtKathma-test-helpers": "*",
       "esy-libffi": "*"
     },
     "resolutions": {
@@ -54,12 +56,17 @@
       "@opam/tar": "opam:2.1.0",
       "@opam/tar-unix": "opam:2.1.0",
       "@opam/tz015-test-helpers": "./vendors/tezos-ligo",
+      "@opam/tezos-014-PtKathma-test-helpers": "./vendors/tezos-ligo",
       "@opam/tezos-base": "./vendors/tezos-ligo",
       "@opam/tezos-lazy-containers": "./vendors/tezos-ligo",
       "@opam/tezos-crypto-dal": "./vendors/tezos-ligo",
       "@opam/tezos-tree-encoding": "./vendors/tezos-ligo",
+      "@opam/tezos-client-014-PtKathma": "./vendors/tezos-ligo",
+      "@opam/tezos-protocol-014-PtKathma@": "./vendors/tezos-ligo",
       "@opam/tezos-client-015-PtLimaPt": "./vendors/tezos-ligo",
       "@opam/tezos-client-base": "./vendors/tezos-ligo",
+      "@opam/tezos-protocol-plugin-014-PtKathma": "./vendors/tezos-ligo",
+      "@opam/tezos-protocol-014-PtKathma": "./vendors/tezos-ligo",
       "@opam/tezos-client-base-unix": "./vendors/tezos-ligo",
       "@opam/tezos-client-commands": "./vendors/tezos-ligo",
       "@opam/tezos-context": "./vendors/tezos-ligo",
@@ -196,6 +203,7 @@
       "@opam/crunch": "mirage/ocaml-crunch:crunch.opam#e18888ce1f30ed6559ba977d405af2084812cbca",
       "@opam/dune": "opam:3.4.1",
       "@opam/dune-configurator": "opam:3.4.1",
+      "@opam/dune-rpc": "opam:3.4.1",
       "esy-gmp": "esy-packages/esy-gmp#d687430bc25447529f2d215ca65c21a824cfef92",
       "@opam/terminal_size": "DiningPhilosophersCo/terminal_size:terminal_size.opam#4fa00d7e812a59e669bfc0392d6539252afa5fb",
       "@opam/mtime": {
@@ -245,6 +253,18 @@
       },
       "@opam/expect_test_helpers_core": {
         "version": "opam:v0.15.0",
+        "override": {
+          "build": ["true"]
+        }
+      },
+      "@opam/ocamlformat-rpc": {
+        "source": "no-source:",
+        "override": {
+          "build": ["true"]
+        }
+      },
+      "@opam/ocaml-lsp-server": {
+        "source": "no-source:",
         "override": {
           "build": ["true"]
         }
