@@ -364,6 +364,7 @@ module Test = struct
 
 
   let box (type a) (x : a) : a boxed = [%external ("TEST_BOX", x)]
+  let unbox (type a) (v : a boxed) : a = [%external ("TEST_UNBOX", v)]
   let compile_value (type a) (x : a) : michelson_program = eval x
   let get_total_voting_power (_u : unit) : nat = [%external ("TEST_GET_TOTAL_VOTING_POWER", ())]
   let failwith (type a b) (v : a) : b = [%external ("TEST_FAILWITH", v)]
@@ -463,7 +464,6 @@ module Test = struct
   end
 
 #if CURRY
-  let app (type a b) (f : (a -> b) boxed) (x : a boxed) : b boxed = [%external ("TEST_APP", f, x)]
   let get_last_events_from (type a p s) (addr : (p,s) typed_address) (rtag: string) : a list =
     let addr = Tezos.address (to_contract addr) in
     let event_map : (address * a) list = [%external ("TEST_LAST_EVENTS", rtag)] in
@@ -591,7 +591,6 @@ module Test = struct
 #endif
 
 #if UNCURRY
-  let app (type a b) ((f, x) : (a -> b) boxed * a boxed) : b boxed = [%external ("TEST_APP", f, x)]
   let get_last_events_from (type a p s) ( (addr,rtag) : (p,s) typed_address * string) : a list =
     let addr = Tezos.address (to_contract addr) in
     let event_map : (address * a) list = [%external ("TEST_LAST_EVENTS", rtag)] in
