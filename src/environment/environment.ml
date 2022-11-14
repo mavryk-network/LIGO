@@ -110,6 +110,7 @@ let meta_ligo_types : (Type_var.t * type_expression) list -> (Type_var.t * type_
     (v_gen                , t_abstraction1 Gen star               ) ;
     (v_int64              , t_constant Int64                    []) ;
     (v_boxed              , t_abstraction1 Boxed star             ) ;
+    (v_eboxed             , t_constant EBoxed                   []) ;
   ]
 
 let of_list_type : (Type_var.t * type_expression) list -> t =

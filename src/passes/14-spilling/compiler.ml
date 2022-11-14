@@ -106,7 +106,7 @@ let rec compile_type ~raise (t:AST.type_expression) : type_expression =
       | T_base TB_nat, T_base TB_nat -> return (T_base TB_nat)
       | T_base TB_int, T_base TB_nat -> return (T_base TB_nat)
       | _ -> raise.error (corner_case ~loc:__LOC__ "invalid external_(ediv|u_ediv) application"))
-    | ((Michelson_or               | Chest_opening_result | Sapling_transaction |
+    | ((Michelson_or    | EBoxed   | Chest_opening_result | Sapling_transaction |
         Ticket          | Int64    | Sapling_state        | Michelson_contract  |
         Contract        | Map      | Big_map              | Typed_address       |
         Michelson_pair  | Set      | Mutation             | Ast_contract        |
@@ -126,7 +126,7 @@ let rec compile_type ~raise (t:AST.type_expression) : type_expression =
       Never        | Chest_key | Ast_contract         |
       Bytes        | Mutation  | Typed_address        |
       Boxed        | List      | External _           |
-      Tx_rollup_l2_address ), _::_) -> raise.error @@ corner_case ~loc:__LOC__ (Format.asprintf "wrong constant\n%a\n" Ast_aggregated.PP.type_expression t)
+      EBoxed       | Tx_rollup_l2_address ), _::_) -> raise.error @@ corner_case ~loc:__LOC__ (Format.asprintf "wrong constant\n%a\n" Ast_aggregated.PP.type_expression t)
   )
   | T_sum _ when Option.is_some (AST.get_t_bool t) ->
     return (T_base TB_bool)

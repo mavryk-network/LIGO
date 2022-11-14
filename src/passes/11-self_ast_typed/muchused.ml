@@ -56,6 +56,7 @@ let rec is_dup (t : type_expression) =
     Gen                 |
     Int64               |
     Boxed               |
+    EBoxed              |
     (* Externals are dup *)
     External _
   ); _} ->

@@ -413,6 +413,7 @@ let rec decompile_value
          | Chest_opening_result
          | External _
          | Boxed
+         | EBoxed
          | Tx_rollup_l2_address )
        , _ ) -> v)
   | T_sum _ when Option.is_some (Ast_aggregated.get_t_bool t) -> v
