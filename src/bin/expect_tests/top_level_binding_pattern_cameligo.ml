@@ -1,9 +1,12 @@
 open Cli_expect
+
 let contract file = test ("top_level_patterns/contracts/" ^ file)
 
 let%expect_test _ =
-  run_ligo_good [ "compile" ; "contract" ; contract "cameligo/nested_record.mligo" ] ;
-  [%expect{|
+  run_ligo_good
+    [ "compile"; "contract"; contract "cameligo/nested_record.mligo" ];
+  [%expect
+    {|
     { parameter unit ;
       storage (pair (pair nat int) string) ;
       code { DROP ;
@@ -46,8 +49,10 @@ let%expect_test _ =
              PAIR } } |}]
 
 let%expect_test _ =
-  run_ligo_good [ "compile" ; "contract" ; contract "cameligo/nested_tuple.mligo" ] ;
-  [%expect{|
+  run_ligo_good
+    [ "compile"; "contract"; contract "cameligo/nested_tuple.mligo" ];
+  [%expect
+    {|
     { parameter unit ;
       storage (pair (pair nat int) string) ;
       code { DROP ;
@@ -90,8 +95,10 @@ let%expect_test _ =
              PAIR } } |}]
 
 let%expect_test _ =
-  run_ligo_good [ "compile" ; "contract" ; contract "cameligo/record_tuple.mligo" ] ;
-  [%expect{|
+  run_ligo_good
+    [ "compile"; "contract"; contract "cameligo/record_tuple.mligo" ];
+  [%expect
+    {|
     { parameter unit ;
       storage (pair (pair nat int) string) ;
       code { DROP ;
@@ -134,8 +141,9 @@ let%expect_test _ =
              PAIR } } |}]
 
 let%expect_test _ =
-  run_ligo_good [ "compile" ; "contract" ; contract "cameligo/record.mligo" ] ;
-  [%expect{|
+  run_ligo_good [ "compile"; "contract"; contract "cameligo/record.mligo" ];
+  [%expect
+    {|
     { parameter unit ;
       storage (pair (pair nat int) string) ;
       code { DROP ;
@@ -154,8 +162,10 @@ let%expect_test _ =
              PAIR } } |}]
 
 let%expect_test _ =
-  run_ligo_good [ "compile" ; "contract" ; contract "cameligo/ticket_record.mligo" ] ;
-  [%expect{|
+  run_ligo_good
+    [ "compile"; "contract"; contract "cameligo/ticket_record.mligo" ];
+  [%expect
+    {|
     { parameter unit ;
       storage (pair (pair (ticket int) (ticket string)) (ticket nat)) ;
       code { DROP ;
@@ -199,8 +209,10 @@ let%expect_test _ =
              PAIR } } |}]
 
 let%expect_test _ =
-  run_ligo_good [ "compile" ; "contract" ; contract "cameligo/ticket_tuple.mligo" ] ;
-  [%expect{|
+  run_ligo_good
+    [ "compile"; "contract"; contract "cameligo/ticket_tuple.mligo" ];
+  [%expect
+    {|
     { parameter unit ;
       storage (pair (pair (ticket int) (ticket string)) (ticket nat)) ;
       code { DROP ;
@@ -244,8 +256,10 @@ let%expect_test _ =
              PAIR } } |}]
 
 let%expect_test _ =
-  run_ligo_good [ "compile" ; "contract" ; contract "cameligo/tuple_record.mligo" ] ;
-  [%expect{|
+  run_ligo_good
+    [ "compile"; "contract"; contract "cameligo/tuple_record.mligo" ];
+  [%expect
+    {|
     { parameter unit ;
       storage (pair (pair nat int) string) ;
       code { DROP ;
@@ -288,8 +302,9 @@ let%expect_test _ =
              PAIR } } |}]
 
 let%expect_test _ =
-  run_ligo_good [ "compile" ; "contract" ; contract "cameligo/tuple.mligo" ] ;
-  [%expect{|
+  run_ligo_good [ "compile"; "contract"; contract "cameligo/tuple.mligo" ];
+  [%expect
+    {|
     { parameter unit ;
       storage (pair (pair nat int) string) ;
       code { DROP ;
@@ -308,8 +323,13 @@ let%expect_test _ =
              PAIR } } |}]
 
 let%expect_test _ =
-  run_ligo_good [ "compile" ; "contract" ; contract "cameligo/constr_tuple_destructuring.mligo" ] ;
-  [%expect{|
+  run_ligo_good
+    [ "compile"
+    ; "contract"
+    ; contract "cameligo/constr_tuple_destructuring.mligo"
+    ];
+  [%expect
+    {|
     { parameter unit ;
       storage int ;
       code { DROP ;
@@ -323,8 +343,13 @@ let%expect_test _ =
              PAIR } } |}]
 
 let%expect_test _ =
-  run_ligo_good [ "compile" ; "contract" ; contract "cameligo/constr_record_destructuring.mligo" ] ;
-  [%expect{|
+  run_ligo_good
+    [ "compile"
+    ; "contract"
+    ; contract "cameligo/constr_record_destructuring.mligo"
+    ];
+  [%expect
+    {|
     { parameter unit ;
       storage int ;
       code { DROP ;
@@ -342,57 +367,67 @@ let%expect_test _ =
 let test_ file = test ("top_level_patterns/interpreter/" ^ file)
 
 let%expect_test _ =
-  run_ligo_good [ "run" ; "test" ; test_ "cameligo/nested_record.mligo" ] ;
-  [%expect{|
+  run_ligo_good [ "run"; "test"; test_ "cameligo/nested_record.mligo" ];
+  [%expect
+    {|
     "Once"
     Everything at the top-level was executed.
     - test exited with value (). |}]
 
 let%expect_test _ =
-  run_ligo_good [ "run" ; "test" ; test_ "cameligo/nested_tuple.mligo" ] ;
-  [%expect{|
+  run_ligo_good [ "run"; "test"; test_ "cameligo/nested_tuple.mligo" ];
+  [%expect
+    {|
     "Once"
     Everything at the top-level was executed.
     - test exited with value (). |}]
 
 let%expect_test _ =
-  run_ligo_good [ "run" ; "test" ; test_ "cameligo/record_tuple.mligo" ] ;
-  [%expect{|
+  run_ligo_good [ "run"; "test"; test_ "cameligo/record_tuple.mligo" ];
+  [%expect
+    {|
     "Once"
     Everything at the top-level was executed.
     - test exited with value (). |}]
 
 let%expect_test _ =
-  run_ligo_good [ "run" ; "test" ; test_ "cameligo/tuple_record.mligo" ] ;
-  [%expect{|
-    "Once"
-    Everything at the top-level was executed.
-    - test exited with value (). |}]
-    
-let%expect_test _ =
-  run_ligo_good [ "run" ; "test" ; test_ "cameligo/record.mligo" ] ;
-  [%expect{|
+  run_ligo_good [ "run"; "test"; test_ "cameligo/tuple_record.mligo" ];
+  [%expect
+    {|
     "Once"
     Everything at the top-level was executed.
     - test exited with value (). |}]
 
 let%expect_test _ =
-  run_ligo_good [ "run" ; "test" ; test_ "cameligo/tuple.mligo" ] ;
-  [%expect{|
+  run_ligo_good [ "run"; "test"; test_ "cameligo/record.mligo" ];
+  [%expect
+    {|
     "Once"
     Everything at the top-level was executed.
     - test exited with value (). |}]
-    
+
 let%expect_test _ =
-    run_ligo_good [ "run" ; "test" ; test_ "cameligo/constr_tuple_destructuring.mligo" ] ;
-    [%expect{|
+  run_ligo_good [ "run"; "test"; test_ "cameligo/tuple.mligo" ];
+  [%expect
+    {|
+    "Once"
+    Everything at the top-level was executed.
+    - test exited with value (). |}]
+
+let%expect_test _ =
+  run_ligo_good
+    [ "run"; "test"; test_ "cameligo/constr_tuple_destructuring.mligo" ];
+  [%expect
+    {|
       "Once"
       Everything at the top-level was executed.
       - test exited with value (). |}]
 
 let%expect_test _ =
-  run_ligo_good [ "run" ; "test" ; test_ "cameligo/constr_record_destructuring.mligo" ] ;
-  [%expect{|
+  run_ligo_good
+    [ "run"; "test"; test_ "cameligo/constr_record_destructuring.mligo" ];
+  [%expect
+    {|
     "Once"
     Everything at the top-level was executed.
     - test exited with value (). |}]
@@ -402,8 +437,10 @@ let%expect_test _ =
 let contract file = test ("top_level_patterns/negative/" ^ file)
 
 let%expect_test _ =
-  run_ligo_bad [ "compile" ; "contract" ; contract "cameligo/nested_record.mligo" ] ;
-  [%expect{|
+  run_ligo_bad
+    [ "compile"; "contract"; contract "cameligo/nested_record.mligo" ];
+  [%expect
+    {|
     File "../../test/contracts/top_level_patterns/negative/cameligo/nested_record.mligo", line 8, character 4 to line 11, character 5:
       7 |         }
       8 | let { a = { c = c1 ; d = d1 ; e = e1 }
@@ -415,8 +452,9 @@ let%expect_test _ =
     Hint: Change the name. |}]
 
 let%expect_test _ =
-  run_ligo_bad [ "compile" ; "contract" ; contract "cameligo/nested_tuple.mligo" ] ;
-  [%expect{|
+  run_ligo_bad [ "compile"; "contract"; contract "cameligo/nested_tuple.mligo" ];
+  [%expect
+    {|
     File "../../test/contracts/top_level_patterns/negative/cameligo/nested_tuple.mligo", line 2, characters 5-45:
       1 | let r = ((1n, 1, "H"), (2n, 2, "E"), (3n, 3, "Hello"))
       2 | let ((a1, a2, a3), (b1, a2, b3), (c1, c2, c3)) = r
@@ -425,8 +463,9 @@ let%expect_test _ =
     Hint: Change the name. |}]
 
 let%expect_test _ =
-  run_ligo_bad [ "compile" ; "contract" ; contract "cameligo/record.mligo" ] ;
-  [%expect{|
+  run_ligo_bad [ "compile"; "contract"; contract "cameligo/record.mligo" ];
+  [%expect
+    {|
     File "../../test/contracts/top_level_patterns/negative/cameligo/record.mligo", line 4, characters 4-21:
       3 | let r = { a = 1n ; b = 1 ; c = "Hello" }
       4 | let { a ; b = a ; c } = r
@@ -435,8 +474,9 @@ let%expect_test _ =
     Hint: Change the name. |}]
 
 let%expect_test _ =
-  run_ligo_bad [ "compile" ; "contract" ; contract "cameligo/tuple.mligo" ] ;
-  [%expect{|
+  run_ligo_bad [ "compile"; "contract"; contract "cameligo/tuple.mligo" ];
+  [%expect
+    {|
     File "../../test/contracts/top_level_patterns/negative/cameligo/tuple.mligo", line 2, characters 5-12:
       1 | let r = (1n, 1, "Hello")
       2 | let (a, a, c) = r
@@ -445,8 +485,9 @@ let%expect_test _ =
     Hint: Change the name. |}]
 
 let%expect_test _ =
-  run_ligo_bad [ "compile" ; "contract" ; contract "cameligo/record_tuple.mligo" ] ;
-  [%expect{|
+  run_ligo_bad [ "compile"; "contract"; contract "cameligo/record_tuple.mligo" ];
+  [%expect
+    {|
     File "../../test/contracts/top_level_patterns/negative/cameligo/record_tuple.mligo", line 10, character 4 to line 13, character 5:
       9 |         }
      10 | let { a = (a1, a2, a3)
@@ -458,8 +499,9 @@ let%expect_test _ =
     Hint: Change the name. |}]
 
 let%expect_test _ =
-  run_ligo_bad [ "compile" ; "contract" ; contract "cameligo/tuple_record.mligo" ] ;
-  [%expect{|
+  run_ligo_bad [ "compile"; "contract"; contract "cameligo/tuple_record.mligo" ];
+  [%expect
+    {|
     File "../../test/contracts/top_level_patterns/negative/cameligo/tuple_record.mligo", line 7, character 6 to line 9, character 34:
       6 |         )
       7 | let ( { a = a1 ; b = b1 ; c = c1 }
@@ -473,8 +515,15 @@ let%expect_test _ =
 (* Negative - much use *)
 
 let%expect_test _ =
-  run_ligo_bad [ "compile" ; "contract" ; contract "cameligo/ticket_record.mligo" ; "--werror" ; "--disable-michelson-typechecking" ] ;
-  [%expect{|
+  run_ligo_bad
+    [ "compile"
+    ; "contract"
+    ; contract "cameligo/ticket_record.mligo"
+    ; "--werror"
+    ; "--disable-michelson-typechecking"
+    ];
+  [%expect
+    {|
     File "../../test/contracts/top_level_patterns/negative/cameligo/ticket_record.mligo", line 3, characters 6-7:
       2 |
       3 | let { b } = { b = Tezos.create_ticket "one" 10n }
@@ -502,8 +551,15 @@ let%expect_test _ =
              PAIR } } |}]
 
 let%expect_test _ =
-  run_ligo_bad [ "compile" ; "contract" ; contract "cameligo/ticket_tuple.mligo" ; "--werror" ; "--disable-michelson-typechecking" ] ;
-  [%expect{|
+  run_ligo_bad
+    [ "compile"
+    ; "contract"
+    ; contract "cameligo/ticket_tuple.mligo"
+    ; "--werror"
+    ; "--disable-michelson-typechecking"
+    ];
+  [%expect
+    {|
     File "../../test/contracts/top_level_patterns/negative/cameligo/ticket_tuple.mligo", line 1, characters 5-6:
       1 | let (b, _) = (Tezos.create_ticket "one" 10n, 1)
       2 |
@@ -532,8 +588,15 @@ let%expect_test _ =
              PAIR } } |}]
 
 let%expect_test _ =
-  run_ligo_bad [ "compile" ; "contract" ; contract "cameligo/constr_record_destructuring.mligo" ; "--werror" ; "--disable-michelson-typechecking" ] ;
-  [%expect{|
+  run_ligo_bad
+    [ "compile"
+    ; "contract"
+    ; contract "cameligo/constr_record_destructuring.mligo"
+    ; "--werror"
+    ; "--disable-michelson-typechecking"
+    ];
+  [%expect
+    {|
     File "../../test/contracts/top_level_patterns/negative/cameligo/constr_record_destructuring.mligo", line 4, characters 4-26:
       3 |
       4 | let { a ; b = (Foo x) ; c} = { a = 1 ; b = Foo 2 ; c = "hey" }
@@ -544,8 +607,15 @@ let%expect_test _ =
     - {c = _; b = Bar; a = _} |}]
 
 let%expect_test _ =
-  run_ligo_bad [ "compile" ; "contract" ; contract "cameligo/constr_tuple_destructuring.mligo" ; "--werror" ; "--disable-michelson-typechecking" ] ;
-  [%expect{|
+  run_ligo_bad
+    [ "compile"
+    ; "contract"
+    ; contract "cameligo/constr_tuple_destructuring.mligo"
+    ; "--werror"
+    ; "--disable-michelson-typechecking"
+    ];
+  [%expect
+    {|
     File "../../test/contracts/top_level_patterns/negative/cameligo/constr_tuple_destructuring.mligo", line 3, characters 5-19:
       2 |
       3 | let (a,  (Foo x), c) = (1, Foo 2, "hey")
@@ -556,8 +626,9 @@ let%expect_test _ =
     - (_, Bar, _) |}]
 
 let%expect_test _ =
-  run_ligo_bad [ "run" ; "test" ; contract "cameligo/constr_let_in.mligo" ] ;
-  [%expect{|
+  run_ligo_bad [ "run"; "test"; contract "cameligo/constr_let_in.mligo" ];
+  [%expect
+    {|
     File "../../test/contracts/top_level_patterns/negative/cameligo/constr_let_in.mligo", line 4, characters 6-7:
       3 | let test =
       4 |   let B = B in
@@ -568,8 +639,9 @@ let%expect_test _ =
     - A |}]
 
 let%expect_test _ =
-  run_ligo_bad [ "run" ; "test" ; contract "cameligo/constr_let_in2.mligo" ] ;
-  [%expect{|
+  run_ligo_bad [ "run"; "test"; contract "cameligo/constr_let_in2.mligo" ];
+  [%expect
+    {|
     File "../../test/contracts/top_level_patterns/negative/cameligo/constr_let_in2.mligo", line 2, characters 6-10:
       1 | let test =
       2 |   let True = true in

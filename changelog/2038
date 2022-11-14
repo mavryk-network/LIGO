@@ -1,0 +1,11 @@
+author: lesenechal.remi
+description: '\n<!--- Keep Changelog details: which is used by the pipeline to generate
+  description ---> \n<!--- Section under changelog details will be added to your changelog
+  description. --->\n\nFix a bug where top-level let destructuring were causing code
+  to be executed multiple time, as in:```\nlet (a,a) =\n let () = Test.log \"hello\"
+  in\n (1,2)\n```\nFix a bug where type parameters were not found ([https://gitlab.com/ligolang/ligo/-/issues/1482](https://gitlab.com/ligolang/ligo/-/issues/1482))proxy_tickets
+  code has been changed (see [https://ligolang.org/docs/advanced/testing/#transfers-and-originations-with-tickets](https://ligolang.org/docs/advanced/testing/#transfers-and-originations-with-tickets))Will
+  fix (Polymorphic type not found in lambda) [https://gitlab.com/ligolang/ligo/-/issues/1482](https://gitlab.com/ligolang/ligo/-/issues/1482)\n'
+merge_request: '2038'
+title: Keep pattern
+type: fixed

@@ -120,7 +120,6 @@ let t_option ?loc typ : type_expression =
   ]
 
 let t_record ?loc ~layout fields  : type_expression = make_t ?loc (T_record {fields;layout})
-let default_layout = Layout.L_tree
 let ez_t_record ?loc ?(layout=Layout.default_layout) lst : type_expression =
   let m = Record.of_list lst in
   t_record ?loc ~layout m

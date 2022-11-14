@@ -984,20 +984,19 @@ let init ?env () =
   | None -> empty
   | Some env ->
     Environment.fold env ~init:empty ~f:(fun ctx decl ->
-      (* Format.printf "%d: %a\n" i (Ast_typed.PP.declaration ~use_hidden:false) decl; *)
-      match Location.unwrap decl with
-      | D_value { binder; expr; attr = _ } ->
-        add_imm ctx (Binder.get_var binder) expr.type_expression
-      | D_pattern { pattern; expr = _; attr = _ } ->
-        List.fold (Ast_typed.Pattern.binders pattern)
-          ~init:ctx
-          ~f:(fun ctx x -> add_imm ctx (Binder.get_var x) (Binder.get_ascr x))
-      | D_type { type_binder; type_expr; type_attr = _ } ->
-        add_type ctx type_binder type_expr
-      | D_module { module_binder; module_; module_attr = _ } ->
-        let sig_ = signature_of_module_expr ~ctx module_ in
-        add_module ctx module_binder sig_
-    )
+        (* Format.printf "%d: %a\n" i (Ast_typed.PP.declaration ~use_hidden:false) decl; *)
+        match Location.unwrap decl with
+        | D_value { binder; expr; attr = _ } ->
+          add_imm ctx (Binder.get_var binder) expr.type_expression
+        | D_pattern { pattern; expr = _; attr = _ } ->
+          List.fold (Ast_typed.Pattern.binders pattern)
+            ~init:ctx
+            ~f:(fun ctx x -> add_imm ctx (Binder.get_var x) (Binder.get_ascr x))
+        | D_type { type_binder; type_expr; type_attr = _ } ->
+          add_type ctx type_binder type_expr
+        | D_module { module_binder; module_; module_attr = _ } ->
+          let sig_ = signature_of_module_expr ~ctx module_ in
+          add_module ctx module_binder sig_)
 
 
 module Well_formed : sig
