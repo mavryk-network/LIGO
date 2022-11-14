@@ -14,6 +14,7 @@ module TODO_do_in_parsing = struct
   let r_split = r_split (* could compute Location directly in Parser *)
   let var ~loc var = Ligo_prim.Value_var.of_input_var var
   let tvar ~loc var = Ligo_prim.Type_var.of_input_var var
+  let mvar ~loc var = Ligo_prim.Module_var.of_input_var var
 end
 module TODO_unify_in_cst = struct
   let compile_rows = Non_linear_rows.make
@@ -63,7 +64,7 @@ let rec compile_type_expression ~(raise: ('e, 'w) raise) : CST.type_expr -> AST.
     let (te1, _, te2), loc = r_split t in
     let te1 = self te1 in
     let te2 = self te2 in
-    t_fun te1 te2 ~loc ()
+    t_fun ~loc (te1, te2) ()
   )
   | T_Int     t -> (
     let (s, z), loc = w_split t in
@@ -71,7 +72,12 @@ let rec compile_type_expression ~(raise: ('e, 'w) raise) : CST.type_expr -> AST.
   )
   | T_ModPath t -> (
     let t, loc = r_split t in
-    let module_path : string nseq = List.Ne.map w_fst @@ nsepseq_to_nseq t.module_path in
+    let module_path = List.Ne.map
+      (fun t ->
+        let x, loc = w_split t in
+        TODO_do_in_parsing.mvar ~loc x)
+        (nsepseq_to_nseq t.module_path)
+    in
     let field : type_expr = self t.field in
     t_modpath {module_path; field} ~loc ()
   )

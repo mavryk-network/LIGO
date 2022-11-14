@@ -13,6 +13,7 @@ module TODO_do_in_parsing = struct
   let r_split = r_split (* could compute Location directly in Parser *)
   let var ~loc (var:string) = Ligo_prim.Value_var.of_input_var ~loc var
   let tvar ~loc (var:string) = Ligo_prim.Type_var.of_input_var ~loc var
+  let mvar ~loc (var:string) = Ligo_prim.Module_var.of_input_var ~loc var
 end
 module TODO_unify_in_cst = struct
   let conv_attr (attr:CST.attributes) : (AST.attribute * Location.t) list =
@@ -90,7 +91,7 @@ let rec compile_type_expression : CST.type_expr -> AST.type_expr = fun te ->
     let (te1, _, te2), loc = r_split t in
     let te1 = self te1 in
     let te2 = self te2 in
-    t_fun te1 te2 ~loc ()
+    t_fun ~loc (te1, te2) ()
   )
   | TPar t -> (
     let t, loc = r_split t in
@@ -111,9 +112,12 @@ let rec compile_type_expression : CST.type_expr -> AST.type_expr = fun te ->
   )
   | TModA t -> (
     let t, loc = r_split t in
-    let module_name = r_fst t.module_name in
+    let module_path =
+      let x,loc = r_split t.module_name in
+      TODO_do_in_parsing.mvar ~loc x
+    in
     let field = self t.field in
-    t_moda {module_name; field} ~loc ()
+    t_moda {module_path; field} ~loc ()
   )
   | TArg t -> (
     let t, loc = r_split t in

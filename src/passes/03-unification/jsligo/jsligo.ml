@@ -13,6 +13,7 @@ module TODO_do_in_parsing = struct
   let r_split = r_split (* could compute Location directly in Parser *)
   let var ~loc var = Ligo_prim.Value_var.of_input_var var
   let tvar ~loc var = Ligo_prim.Type_var.of_input_var var
+  let mvar ~loc var = Ligo_prim.Module_var.of_input_var var
   let t_disc_locs (objs: (CST.obj_type, CST.vbar) nsepseq) =
     (* The region of the discriminated union TDisc
     is the union of all its objects' regions *)
@@ -126,9 +127,12 @@ and compile_type_expression ~(raise: ('e, 'w) raise) : CST.type_expr -> AST.type
   )
   | TModA t -> (
     let t, loc = r_split t in
-    let module_name = r_fst t.module_name in
+    let module_path =
+      let x,loc = r_split t.module_name in
+      TODO_do_in_parsing.mvar ~loc x
+    in
     let field = self t.field in
-    t_moda {module_name; field} ~loc ()
+    t_moda {module_path; field} ~loc ()
   )
   | TDisc t -> (
     let loc = TODO_do_in_parsing.t_disc_locs t in

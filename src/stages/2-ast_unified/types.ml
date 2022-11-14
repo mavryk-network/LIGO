@@ -20,6 +20,7 @@ module List = Simple_utils.List
 module Label = Ligo_prim.Label
 module Variable = Ligo_prim.Value_var
 module Ty_variable = Ligo_prim.Type_var
+module Mod_variable = Ligo_prim.Module_var
 module Module_access = Ligo_prim.Module_access
 module Literal_value = Ligo_prim.Literal_value
 module Constant = Ligo_prim.Constant
@@ -35,7 +36,10 @@ end
 module Non_linear_disc_rows = Temp_prim.Non_linear_rows(Empty_label)
 module Attribute = Temp_prim.Attribute
 module Named_fun = Temp_prim.Named_fun
-
+module Prod = Temp_prim.Prod
+module Type_app = Temp_prim.Type_app
+module Arrow = Temp_prim.Arrow
+module Mod_access = Temp_prim.Mod_access
 
 module Z = Ligo_prim.Literal_value.Z
 
@@ -74,39 +78,24 @@ and type_expr_content = type_expression_content
 and type_expr         = type_expression
   [@@deriving yojson]
 
-and 'constr type_app = {
-  constr     : 'constr;
-  type_args  : type_expr nseq;
-}
-
-and 'a module_access = {
-  module_name : string;
-  field       : 'a;
-}
-
-and 'a module_path = {
-  module_path : string nseq;
-  field       : 'a;
-}
-
 and type_expression_content =
-| T_Prod         of type_expr nseq
-| T_App          of string type_app
-| T_Fun          of type_expr * type_expr
+| T_Var          of Ty_variable.t
+| T_Prod         of type_expr Prod.t
+| T_App          of (string,type_expr) Type_app.t
+| T_Fun          of type_expr Arrow.t
 | T_Named_fun    of type_expr Named_fun.t
 | T_Par          of type_expr
-| T_Var          of Ty_variable.t
 | T_String       of string
 | T_Int          of string * Z.t
-| T_ModA         of type_expr module_access
+| T_ModA         of (Mod_variable.t, type_expr) Mod_access.t
+| T_ModPath      of (Mod_variable.t Simple_utils.List.Ne.t, type_expr) Mod_access.t
 | T_Arg          of string
 | T_Sum_raw      of type_expr option Non_linear_rows.t
 | T_Arg_sum_raw  of type_expr list option Non_linear_rows.t (* "curried" sum-type ["Ctor", arg1, arg2, arg3 ]*)
 | T_Record_raw   of type_expr option Non_linear_rows.t
 | T_Disc_union   of type_expr Non_linear_disc_rows.t
 | T_Attr         of Attribute.t * type_expr
-| T_AppPascaligo of type_expr type_app
-| T_ModPath      of type_expr module_path
+| T_AppPascaligo of (type_expr, type_expr) Type_app.t
 
 (* ========================== PATTERNS ===================================== *)
 
@@ -145,6 +134,15 @@ and 'a field_assign = {
   expr : 'a; 
 } [@@deriving yojson]
 
+and 'a module_access = {
+  module_name : string;
+  field       : 'a;
+}
+
+and 'a module_path = {
+  module_path : string nseq;
+  field       : 'a;
+}
 
 and pattern_content =
 (* Shared *)
