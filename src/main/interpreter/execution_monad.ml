@@ -83,6 +83,31 @@ let clean_locations ty =
     (Tezos_micheline.Micheline.strip_locations ty)
 
 
+let rec is_obj_value (v : LT.value) : bool =
+  let self = is_obj_value in
+  match v with
+  | V_Ct _ -> true
+  | V_List xs -> xs |> List.for_all ~f:self
+  | V_Record m -> m |> Record.to_list |> List.map ~f:snd |> List.for_all ~f:self
+  | V_Map m -> m |> List.for_all ~f:(fun (v, w) -> self v && self w)
+  | V_Set xs -> xs |> List.for_all ~f:self
+  | V_Construct (_, v) -> self v
+  | V_Func_val { env ; orig_lambda ; _ } ->
+    let f (_, ({ item = { eval_term ; _ } ; _ } : LT.env_item)) = self eval_term in
+    List.for_all ~f env &&
+    try_with
+      (fun ~raise ~catch:_ -> Self_ast_aggregated.expression_obj ~raise orig_lambda; true)
+      (fun ~catch:_ _ -> false)
+  | V_Michelson _
+  | V_Mutation _
+  | V_Michelson_contract _
+  | V_Ast_contract _
+  | V_Gen _
+  | V_Location _
+  | V_Typed_address _ ->
+    false
+
+
 (* Command should _only_ contains instruction that needs or modify the *tezos* state *)
 module Command = struct
   type 'a tezos_command =

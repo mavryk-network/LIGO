@@ -463,6 +463,7 @@ module Test = struct
   end
 
 #if CURRY
+  let app (type a b) (f : (a -> b) boxed) (x : a boxed) : b boxed = [%external ("TEST_APP", f, x)]
   let get_last_events_from (type a p s) (addr : (p,s) typed_address) (rtag: string) : a list =
     let addr = Tezos.address (to_contract addr) in
     let event_map : (address * a) list = [%external ("TEST_LAST_EVENTS", rtag)] in
@@ -590,6 +591,7 @@ module Test = struct
 #endif
 
 #if UNCURRY
+  let app (type a b) ((f, x) : (a -> b) boxed * a boxed) : b boxed = [%external ("TEST_APP", f, x)]
   let get_last_events_from (type a p s) ( (addr,rtag) : (p,s) typed_address * string) : a list =
     let addr = Tezos.address (to_contract addr) in
     let event_map : (address * a) list = [%external ("TEST_LAST_EVENTS", rtag)] in

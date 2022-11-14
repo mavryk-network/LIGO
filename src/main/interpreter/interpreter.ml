@@ -904,8 +904,13 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
     >>>>>>>>
     *)
   | C_TEST_BOX, [ v ] ->
-    return v
+    if is_obj_value v then
+      return v
+    else
+      fail @@ Errors.generic_error loc "Cannot box a non-object LIGO value"
   | C_TEST_BOX, _ -> fail @@ error_type ()
+  | C_TEST_APP, [ f ; v ] ->
+    eval_app ~raise ~steps ~options ~location:loc f v calltrace
   | C_TEST_APP, _ -> fail @@ error_type ()
   | C_TEST_ADDRESS, [ V_Ct (C_contract { address; entrypoint = _ }) ] ->
     return (V_Ct (C_address address))
@@ -1429,6 +1434,72 @@ and eval_literal : Ligo_prim.Literal_value.t -> value Monad.t = function
      | None ->
        Monad.fail @@ Errors.literal Location.generated (Literal_bls12_381_fr b))
   | l -> Monad.fail @@ Errors.literal Location.generated l
+
+and eval_app ~raise ~steps ~options ~location =
+  fun f args calltrace ->
+  let eval_ligo ?(steps = steps - 1) v =
+    let v = replace_loc_if_blank v location in
+    eval_ligo ~raise ~steps ~options v
+  in
+  let open Monad in
+  match f with
+  | V_Func_val
+      { arg_binder; arg_mut_flag; body; env; rec_name = None; orig_lambda }
+    ->
+    let Arrow.{ type1 = in_ty; type2 = _ } =
+      AST.get_t_arrow_exn orig_lambda.type_expression
+    in
+    bind_param env arg_binder arg_mut_flag (in_ty, args) ~in_:(fun f_env' ->
+        eval_ligo
+          { body with location }
+          (location :: calltrace)
+          f_env')
+  | V_Func_val
+      { arg_binder
+      ; arg_mut_flag
+      ; body
+      ; env
+      ; rec_name = Some fun_name
+      ; orig_lambda
+      } ->
+    let Arrow.{ type1 = in_ty; type2 = _ } =
+      AST.get_t_arrow_exn orig_lambda.type_expression
+    in
+    let f_env' = Env.extend env fun_name (orig_lambda.type_expression, f) in
+    bind_param
+      f_env'
+      arg_binder
+      arg_mut_flag
+      (in_ty, args)
+      ~in_:(fun f_env'' ->
+          eval_ligo
+            { body with location }
+            (location :: calltrace)
+            f_env'')
+  (* | V_Michelson *)
+  (*     (Ty_code { micheline_repr = { code; code_ty = _ }; ast_ty = _ }) -> *)
+  (*   let () = *)
+  (*     match code with *)
+  (*     | Seq (_, [ Prim (_, "FAILWITH", _, _) ]) -> *)
+  (*       raise.warning (`Use_meta_ligo location) *)
+  (*     | _ -> () *)
+  (*   in *)
+  (*   let>> v = *)
+  (*     Run_Michelson *)
+  (*       ( location *)
+  (*       , calltrace *)
+  (*       , code *)
+  (*       , term.type_expression *)
+  (*       , args' *)
+  (*       , args.type_expression ) *)
+  (*   in *)
+  (*   return v *)
+  | _ ->
+    fail
+    @@ Errors.generic_error
+      location
+      "Trying to apply on something that is not a function?"
+
 
 
 and eval_ligo ~raise ~steps ~options
