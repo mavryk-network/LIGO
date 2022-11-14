@@ -1047,6 +1047,11 @@ let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
                ; t_int64 () ^-> t_nat () ^~> t_int64 ()
                ]) )
       (* Tests *)
+    ; ( C_TEST_BOX
+      , of_type
+          (for_all "a"
+          @@ fun a ->
+          create ~mode_annot:[ Checked ] ~types:[ a ^~> t_boxed a ]) )
     ; ( C_TEST_ADDRESS
       , of_type
           (for_all "a"
