@@ -11,5 +11,6 @@
    ppx_compare
    ppx_hash
    ppx_deriving_yojson
+   ppx_sexp_conv
   ))
 )
