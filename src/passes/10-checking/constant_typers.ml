@@ -1056,7 +1056,7 @@ let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
       , of_type
           (for_all "a"
           @@ fun a ->
-          create ~mode_annot:[ Checked ; Checked ] ~types:[ t_boxed a ^~> a ]) )
+          create ~mode_annot:[ Checked ] ~types:[ t_boxed a ^~> a ]) )
     ; ( C_TEST_ADDRESS
       , of_type
           (for_all "a"
