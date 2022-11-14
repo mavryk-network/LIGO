@@ -6,9 +6,9 @@
  (preprocess
   (pps ppx_here))
  (libraries
-  tezos-014-PtKathma-test-helpers
   ast_aggregated
   ligo_interpreter
+  tezos-memory-proto-alpha
   main_errors
   ligo_compile
   build
