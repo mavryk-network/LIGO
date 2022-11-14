@@ -20,7 +20,8 @@ Module Reduction_Rules.
             G |- a ~~> a
             *)            
             (exist:=fun n =>
-                Some (false, Types.exist n)
+                let+ _ := Context.Find_kind c n in
+                (false, Types.exist n)
             )
             (*  
                             
@@ -28,10 +29,10 @@ Module Reduction_Rules.
             G |- v ~~> v    G, v :: k = A |- v ~~> A
             *)            
             (var:=fun n => 
-                match Context.Find_type c n with
-                | Some t => Some (true, t)
-                | None => Some (false, Types.var n)
-                end
+                let+ _ := Context.Find_kind c n in
+                    Options.fold (Context.Find_type c n)
+                    (some:=fun t => (true, t))
+                    (none:=fun _ => (false, Types.var n))                    
             )
             (*  
 
