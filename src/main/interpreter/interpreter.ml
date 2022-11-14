@@ -903,6 +903,9 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
       Test operators
     >>>>>>>>
     *)
+  | C_TEST_BOX, [ v ] ->
+    return v
+  | C_TEST_BOX, _ -> fail @@ error_type ()
   | C_TEST_ADDRESS, [ V_Ct (C_contract { address; entrypoint = _ }) ] ->
     return (V_Ct (C_address address))
   | C_TEST_ADDRESS, _ -> fail @@ error_type ()
@@ -1376,7 +1379,6 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
       | C_BIG_MAP
       | C_BIG_MAP_LITERAL
       | C_CREATE_CONTRACT
-      | C_TEST_BOX
       | C_GLOBAL_CONSTANT )
     , _ ) -> fail @@ Errors.generic_error loc "Unbound primitive."
 
