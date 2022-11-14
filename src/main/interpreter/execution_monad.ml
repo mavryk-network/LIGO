@@ -93,7 +93,7 @@ let rec is_obj_value (v : LT.value) : bool =
   | V_Set xs -> xs |> List.for_all ~f:self
   | V_Construct (_, v) -> self v
   | V_Func_val { env ; orig_lambda ; _ } ->
-    let f (_, ({ item = { eval_term ; _ } ; _ } : LT.env_item)) = self eval_term in
+    let f (_, LT.{ item = { eval_term ; _ } ; _ }) = self eval_term in
     List.for_all ~f env &&
     try_with
       (fun ~raise ~catch:_ -> Self_ast_aggregated.expression_obj ~raise orig_lambda; true)

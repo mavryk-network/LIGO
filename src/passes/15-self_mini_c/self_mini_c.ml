@@ -92,6 +92,8 @@ let is_pure_constant : Constant.constant' -> bool =
   (* Test - ligo interpreter, should never end up here *)
   | C_TEST_BOX
   | C_TEST_UNBOX
+  | C_TEST_EBOX
+  | C_TEST_UNEBOX
   | C_TEST_ADDRESS
   | C_TEST_SIZE
   | C_TEST_ORIGINATE
