@@ -364,7 +364,9 @@ module Test = struct
 
 
   let box (type a) (x : a) : a boxed = [%external ("TEST_BOX", x)]
+  let ebox (type a) (v : a boxed) : eboxed = [%external ("TEST_EBOX", v)]
   let unbox (type a) (v : a boxed) : a = [%external ("TEST_UNBOX", v)]
+  let unebox (type a) (v : eboxed) : a boxed = [%external ("TEST_UNEBOX", v)]
   let compile_value (type a) (x : a) : michelson_program = eval x
   let get_total_voting_power (_u : unit) : nat = [%external ("TEST_GET_TOTAL_VOTING_POWER", ())]
   let failwith (type a b) (v : a) : b = [%external ("TEST_FAILWITH", v)]
