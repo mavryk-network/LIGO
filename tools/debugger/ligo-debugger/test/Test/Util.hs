@@ -7,7 +7,6 @@ module Test.Util
   , AST.allLangs
   , AST.langExtension
   , pattern SomeLorentzValue
-
     -- * Test utilities
   , (@?=)
   , (@@?=)
@@ -122,8 +121,8 @@ newtype TestBuildable a = TB
 rmode'tb :: Buildable (TestBuildable a) => RMode a
 rmode'tb = RMode (build . TB)
 
-instance {-# OVERLAPPABLE #-} Buildable a => Buildable (TestBuildable a) where
-  build = build . unTB
+instance {-# OVERLAPPABLE #-} (ForInternalUse => Buildable a) => Buildable (TestBuildable a) where
+  build = itIsForInternalUse $ build . unTB
 
 instance Buildable (TestBuildable a) => Buildable (TestBuildable [a]) where
   build (TB l) = pretty $ blockListF' "-" (build . TB) l

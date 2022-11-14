@@ -1,6 +1,7 @@
 -- | Checking snapshots collection.
 module Test.Snapshots
   ( test_Snapshots
+  , test_Lambdas
   , test_Contracts_are_sensible
   ) where
 
@@ -12,6 +13,7 @@ import Control.Monad.Writer (listen)
 import Data.Coerce (coerce)
 import Data.Default (Default (def))
 import Data.HashMap.Strict qualified as HM
+import Data.List qualified as List
 import Data.List.NonEmpty qualified as NE
 import Data.Map qualified as M
 import Fmt (pretty)
@@ -31,6 +33,7 @@ import Morley.Debugger.Core
   SrcLoc (..), curSnapshot, frozen, matchesSrcType, move, moveTill, tsAfterInstrs, tsAllVisited)
 import Morley.Debugger.Core.Breakpoint qualified as N
 import Morley.Debugger.DAP.Types.Morley ()
+import Morley.Debugger.Protocol.DAP qualified as DAP
 import Morley.Michelson.ErrorPos (ErrorSrcPos (ErrorSrcPos), Pos (Pos), SrcPos (SrcPos))
 import Morley.Michelson.Interpret
   (MichelsonFailed (MichelsonExt), MichelsonFailureWithStack (MichelsonFailureWithStack),
@@ -44,8 +47,10 @@ import Lorentz qualified as L
 import Lorentz.Value (mt)
 
 import Language.LIGO.AST (scanContracts)
+import Language.LIGO.DAP.Variables qualified as Vars
 import Language.LIGO.Debugger.CLI
 import Language.LIGO.Debugger.Common
+import Language.LIGO.Debugger.Functions
 import Language.LIGO.Debugger.Handlers.Helpers
 import Language.LIGO.Debugger.Handlers.Impl (convertMichelsonValuesToLigo)
 import Language.LIGO.Debugger.Michelson
@@ -1081,12 +1086,13 @@ test_Snapshots = testGroup "Snapshots collection"
             }
 
       testWithSnapshots runData do
-        moveTill Forward $ isAtLine 7
+        moveTill Forward $ isAtLine 8
 
         liftIO $ step [int||Check stack frames in inner "act"|]
 
         -- The same as in the test above.
-        checkSnapshot ((@=?) ["act", "f", "f", "applyOnce", "applyTwice", "applyThrice", "apply", "main"] . getStackFrameNames)
+        -- TODO [LIGO-916] Get rid of duplication of @f@
+        checkSnapshot ((@=?) ["act", "f", "f", "applyOnce", "applyTwice", "applyTwiceDuplicated", "applyThrice", "apply", "main"] . getStackFrameNames)
 
         moveTill Forward $
           goesAfter (SrcLoc 10 0)
@@ -1998,6 +2004,139 @@ test_Snapshots = testGroup "Snapshots collection"
 
               expected @?= actual
           snap -> unexpectedSnapshot snap
+  ]
+
+test_Lambdas :: TestTree
+test_Lambdas = testGroup "Lambdas meta and display as variable" $
+  [ testCaseSteps "Complex case" \step -> do
+      let file = contractsDir </> "advanced-curry.mligo"
+      let runData = ContractRunData
+            { crdProgram = file
+            , crdEntrypoint = Nothing
+            , crdParam = ()
+            , crdStorage = 0 :: Integer
+            }
+
+      testWithSnapshots runData do
+        moveTill Forward $
+          goesBetween (SrcLoc 5 0) (SrcLoc 6 0)
+        liftIO $ step [int||Check lambda meta for applyThrice|]
+
+        do
+          foundMetas <- frozen getActiveStackFrameLambdaMetas
+
+          applyThriceMeta <- case List.lookup "applyThrice" foundMetas of
+            Nothing -> liftIO $ assertFailure "Function meta not found unexpectedly"
+            Just x -> pure x
+
+          map stripSuffixLambdaEvent (lmEvents applyThriceMeta) @?=
+            [ LambdaNamed $ LambdaNamedInfo
+                "applyThrice"
+                (LigoTypeResolved $ intType' ~> intType')
+            , LambdaApplied $ LambdaArg
+                (SomeLorentzValue (3 :: Integer))
+                LigoTypeUnresolved
+            , LambdaNamed $ LambdaNamedInfo
+                "applyTwiceDuplicated"
+                (LigoTypeResolved $ intType' ~> intType' ~> intType')
+            , LambdaNamed $ LambdaNamedInfo
+                "applyTwice"
+                (LigoTypeResolved $ intType' ~> intType' ~> intType')
+            , LambdaApplied $ LambdaArg
+                (SomeLorentzValue (2 :: Integer))
+                LigoTypeUnresolved
+            , LambdaNamed $ LambdaNamedInfo
+                "applyOnce"
+                (LigoTypeResolved $ intType' ~> intType' ~> intType' ~> intType')
+            , LambdaApplied $ LambdaArg
+                (SomeLorentzValue (0 :: Integer))
+                LigoTypeUnresolved
+            , LambdaNamed $ LambdaNamedInfo
+                "f"
+                (LigoTypeResolved $ intType' ~> intType' ~> intType' ~> intType' ~> intType')
+            , -- TODO [LIGO-916] Get rid of this duplication
+              LambdaNamed $ LambdaNamedInfo
+                "f"
+                (LigoTypeResolved $ intType' ~> intType' ~> intType' ~> intType' ~> intType')
+            , LambdaNamed $ LambdaNamedInfo
+                "act"
+                (LigoTypeResolved $ intType' ~> intType' ~> intType' ~> intType' ~> intType')
+            ]
+
+          let (rootVar, refVarsMap) = Vars.runBuilder $
+                Vars.buildLambdaInfo Caml "applyThrice" LigoTypeUnresolved applyThriceMeta
+          rootVar @?= DAP.defaultVariable
+            { DAP.nameVariable = "applyThrice"
+            , DAP.valueVariable = "<lambda>"
+            , DAP.variablesReferenceVariable = 6
+            }
+          M.lookup 6 refVarsMap @?= Just
+            [ DAP.defaultVariable
+              { DAP.nameVariable = "func"
+              , DAP.valueVariable = "applyTwiceDuplicated"
+              , DAP.typeVariable = "int -> int -> int"
+              , DAP.variablesReferenceVariable = 5
+              }
+            , DAP.defaultVariable
+              { DAP.nameVariable = "arg1"
+              , DAP.valueVariable = "3"
+              , DAP.typeVariable = ""
+                  -- TODO: we don't yet carry enough information
+                  -- in the interpreter to get a type here
+              , DAP.evaluateNameVariable = Just "3"
+              }
+            ]
+          M.lookup 5 refVarsMap @?= Just
+            [ DAP.defaultVariable
+              { DAP.nameVariable = "func"
+              , DAP.valueVariable = "applyTwice"
+              , DAP.typeVariable = "int -> int -> int"
+              , DAP.variablesReferenceVariable = 4
+              }
+            ]
+          M.lookup 4 refVarsMap @?= Just
+            [ DAP.defaultVariable
+              { DAP.nameVariable = "func"
+              , DAP.valueVariable = "applyOnce"
+              , DAP.typeVariable = "int -> int -> int -> int"
+              , DAP.variablesReferenceVariable = 3
+              }
+            , DAP.defaultVariable
+              { DAP.nameVariable = "arg1"
+              , DAP.valueVariable = "2"
+              , DAP.evaluateNameVariable = Just "2"
+              }
+            ]
+          M.lookup 3 refVarsMap @?= Just
+            [ DAP.defaultVariable
+              { DAP.nameVariable = "func"
+              , DAP.valueVariable = "f"
+              , DAP.typeVariable = "int -> int -> int -> int -> int"
+              , DAP.variablesReferenceVariable = 2
+              }
+            , DAP.defaultVariable
+              { DAP.nameVariable = "arg1"
+              , DAP.valueVariable = "0"
+              , DAP.evaluateNameVariable = Just "0"
+              }
+            ]
+          -- TODO [LIGO-916]: a temporary sadness
+          M.lookup 2 refVarsMap @?= Just
+            [ DAP.defaultVariable
+              { DAP.nameVariable = "func"
+              , DAP.valueVariable = "f"
+              , DAP.typeVariable = "int -> int -> int -> int -> int"
+              , DAP.variablesReferenceVariable = 1
+              }
+            ]
+          M.lookup 1 refVarsMap @?= Just
+            [ DAP.defaultVariable
+              { DAP.nameVariable = "func"
+              , DAP.valueVariable = "act"
+              , DAP.typeVariable = "int -> int -> int -> int -> int"
+              }
+            ]
+
   ]
 
 -- | Special options for checking contract.

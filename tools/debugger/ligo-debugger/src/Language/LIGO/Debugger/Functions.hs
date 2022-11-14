@@ -5,6 +5,7 @@
 module Language.LIGO.Debugger.Functions
   ( LambdaMeta (..)
   , LambdaEvent (..)
+  , lmEventsL
   , matchesUniqueLambdaName
   , LambdaArg (..)
   , LambdaNamedInfo (..)
@@ -14,6 +15,8 @@ module Language.LIGO.Debugger.Functions
   , lmGroupByName
   , lambdaMetaL
   , mLambdaMetaL
+  , stripSuffixLambdaNamedInfo
+  , stripSuffixLambdaEvent
   , internalStackFrameName
   , embedFunctionNames
   , embedFunctionNameIntoLambda
@@ -25,7 +28,7 @@ import Control.Lens (AsEmpty (..), lens, makeLensesWith, makePrisms, non', prism
 import Data.Default (Default (..))
 import Data.Singletons (SingI)
 import Data.Vinyl (Rec (RNil, (:&)))
-import Fmt (Buildable (..), genericF)
+import Fmt (Buildable (..), genericF, pretty)
 import Text.Interpolation.Nyan
 
 import Morley.Michelson.Interpret (StkEl (StkEl))
@@ -61,7 +64,7 @@ matchesUniqueLambdaName n1 = \case
 data LambdaArg = LambdaArg
   { laValue :: T.SomeValue
   , laType :: LigoType
-  } deriving stock (Show, Generic)
+  } deriving stock (Eq, Show, Generic)
     deriving anyclass (NFData)
 
 instance ForInternalUse => Buildable LambdaArg where
@@ -74,8 +77,14 @@ data LambdaNamedInfo u = LambdaNamedInfo
   } deriving stock (Show, Generic)
     deriving anyclass (NFData)
 
+deriving stock instance Eq (LambdaNamedInfo 'Concise)
+
 instance (SingI u, ForInternalUse) => Buildable (LambdaNamedInfo u) where
   build (LambdaNamedInfo name typ) = [int||Named as "#{name}" of type #{typ}|]
+
+stripSuffixLambdaNamedInfo :: LambdaNamedInfo 'Unique -> LambdaNamedInfo 'Concise
+stripSuffixLambdaNamedInfo LambdaNamedInfo{..} = LambdaNamedInfo
+  { lniName = pretty lniName, .. }
 
 -- | An event happening to lambda.
 data LambdaEvent u
@@ -90,10 +99,17 @@ data LambdaEvent u
   deriving stock (Show, Generic)
   deriving anyclass (NFData)
 
+deriving stock instance Eq (LambdaEvent 'Concise)
+
 instance (SingI u, ForInternalUse) => Buildable (LambdaEvent u) where
   build = genericF
 
 makePrisms ''LambdaEvent
+
+stripSuffixLambdaEvent :: LambdaEvent 'Unique -> LambdaEvent 'Concise
+stripSuffixLambdaEvent = \case
+  LambdaApplied arg -> LambdaApplied arg
+  LambdaNamed named -> LambdaNamed (stripSuffixLambdaNamedInfo named)
 
 -- | A meta that we carry along with lambda values when
 -- interpreting a contract.
