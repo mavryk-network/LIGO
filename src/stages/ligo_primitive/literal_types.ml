@@ -42,6 +42,7 @@ type t =
   | External of string
   | Gen
   | Int64
+  | Boxed
   [@@deriving ord, eq, yojson, hash]
 
 let to_string = function
@@ -87,6 +88,7 @@ let to_string = function
   | External s           -> "external_" ^ s
   | Gen                  -> "pbt_gen"
   | Int64                -> "int64"
+  | Boxed                -> "boxed"
 
   let of_string = function
   | "string"               -> String
@@ -135,6 +137,7 @@ let to_string = function
   | "int64"                -> Int64
   | "external_and"         -> External "and"
   | "external_u_and"       -> External "u_and"
+  | "boxed"                -> Boxed
   | _ -> failwith "Forgot to add constant name in constant.ml?"
 
 let pp ppf l = Format.fprintf ppf "%s" (to_string l)
@@ -183,6 +186,7 @@ let external_ediv        = External "ediv"
 let external_u_ediv      = External "u_ediv"
 let gen                  = Gen
 let int64                = Int64
+let boxed                = Boxed
 
 let v_bool                 : Var.Type_var.t = Var.Type_var.of_input_var ("bool")
 let v_string               : Var.Type_var.t = Var.Type_var.of_input_var (to_string String)
@@ -232,3 +236,4 @@ let v_external_and         : Var.Type_var.t = Var.Type_var.of_input_var (to_stri
 let v_external_u_and       : Var.Type_var.t = Var.Type_var.of_input_var (to_string @@ External "u_and")
 let v_gen                  : Var.Type_var.t = Var.Type_var.of_input_var (to_string @@ Gen)
 let v_int64                : Var.Type_var.t = Var.Type_var.of_input_var (to_string @@ Int64)
+let v_boxed                : Var.Type_var.t = Var.Type_var.of_input_var (to_string Boxed)
