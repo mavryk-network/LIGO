@@ -93,23 +93,32 @@ and signature_of_module
   | decl :: module_ ->
     let public, sig_item = signature_item_of_decl ~ctx decl in
     let sig_ =
-      signature_of_module ~ctx:(Context.add_signature_item ctx sig_item) module_
+      signature_of_module
+        ~ctx:(Context.add_signature_items ctx sig_item)
+        module_
     in
-    if public then sig_item :: sig_ else sig_
+    if public then sig_item @ sig_ else sig_
 
 
 and signature_item_of_decl
-    : ctx:Context.t -> Ast_typed.decl -> bool * Context.Signature.item
+    : ctx:Context.t -> Ast_typed.decl -> bool * Context.Signature.item list
   =
  fun ~ctx decl ->
   match Location.unwrap decl with
   | D_value { binder; expr; attr = { public; _ } } ->
-    public, S_value (Binder.get_var binder, encode expr.type_expression)
+    public, [ S_value (Binder.get_var binder, encode expr.type_expression) ]
   | D_type { type_binder = tvar; type_expr = type_; type_attr = { public; _ } }
-    -> public, S_type (tvar, encode type_)
+    -> public, [ S_type (tvar, encode type_) ]
   | D_module { module_binder = mvar; module_; module_attr = { public; _ } } ->
     let sig_' = signature_of_module_expr ~ctx module_ in
-    public, S_module (mvar, sig_')
+    public, [ S_module (mvar, sig_') ]
+  | D_pattern { pattern; expr = _ ; attr = { public; _ } } ->
+    let sigs =
+      List.map (Ast_typed.Pattern.binders pattern) ~f:(fun b ->
+          Context.Signature.S_value
+            (Binder.get_var b, encode @@ Binder.get_ascr b))
+    in
+    public, sigs
 
 
 (* Load context from the outside declarations *)
@@ -120,6 +129,15 @@ let ctx_init ?env () =
     Environment.foldi env ~init:Context.empty ~f:(fun _i ctx decl ->
         (* Format.printf "%d: %a\n" i (Ast_typed.PP.declaration ~use_hidden:false) decl; *)
         match Location.unwrap decl with
+        | D_pattern { pattern; expr = _; attr = _ } ->
+          List.fold
+            (Ast_typed.Pattern.binders pattern)
+            ~init:ctx
+            ~f:(fun ctx x ->
+              Context.add_imm
+                ctx
+                (Binder.get_var x)
+                (encode @@ Binder.get_ascr x))
         | D_value { binder; expr; attr = _ } ->
           Context.add_imm
             ctx
