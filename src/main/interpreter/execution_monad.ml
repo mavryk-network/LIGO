@@ -87,6 +87,7 @@ let rec is_obj_value (v : LT.value) : bool =
   let self = is_obj_value in
   match v with
   | V_Ct _ -> true
+  | V_Michelson _ -> true
   | V_List xs -> xs |> List.for_all ~f:self
   | V_Record m -> m |> Record.to_list |> List.map ~f:snd |> List.for_all ~f:self
   | V_Map m -> m |> List.for_all ~f:(fun (v, w) -> self v && self w)
@@ -98,7 +99,6 @@ let rec is_obj_value (v : LT.value) : bool =
     try_with
       (fun ~raise ~catch:_ -> Self_ast_aggregated.expression_obj ~raise orig_lambda; true)
       (fun ~catch:_ _ -> false)
-  | V_Michelson _
   | V_Mutation _
   | V_Michelson_contract _
   | V_Ast_contract _

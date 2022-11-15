@@ -1083,7 +1083,7 @@ let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
           create
             ~mode_annot:[ Inferred ]
             ~types:
-              [ (t_pair a b @-> t_pair (t_list (t_operation ())) b)
+              [ t_boxed (t_pair a b @-> t_pair (t_list (t_operation ())) b)
                 ^~> t_ast_contract ()
               ]) )
     ; ( C_TEST_COMPILE_AST_CONTRACT

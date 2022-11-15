@@ -430,31 +430,31 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_bad [ "compile" ; "contract" ; (test "unresolved/contract.mligo") ] ;
   [%expect{xxx|
-    Underspecified type list (^gen#496) -> nat.
+    Underspecified type list (^gen#507) -> nat.
     Please add additional annotations. |xxx}]
 
 let%expect_test _ =
   run_ligo_bad [ "compile" ; "contract" ; (test "unresolved/contract2.mligo") ] ;
   [%expect{xxx|
-    Underspecified type list (^gen#494) -> nat.
+    Underspecified type list (^gen#505) -> nat.
     Please add additional annotations. |xxx}]
 
 let%expect_test _ =
   run_ligo_bad [ "compile" ; "storage" ; (test "unresolved/storage.mligo") ; "s" ] ;
   [%expect{xxx|
-    Underspecified type list (^gen#491) -> nat.
+    Underspecified type list (^gen#502) -> nat.
     Please add additional annotations. |xxx}]
 
 let%expect_test _ =
   run_ligo_bad [ "compile" ; "parameter" ; (test "unresolved/parameter.mligo") ; "p" ] ;
   [%expect{xxx|
-    Underspecified type list (^gen#491).
+    Underspecified type list (^gen#502).
     Please add additional annotations. |xxx}]
 
 let%expect_test _ =
   run_ligo_bad [ "compile" ; "expression" ; "cameligo" ; "[]" ] ;
   [%expect{|
-    Underspecified type list (^gen#5).
+    Underspecified type list (^gen#6).
     Please add additional annotations. |}]
 
 let () = Sys_unix.chdir pwd

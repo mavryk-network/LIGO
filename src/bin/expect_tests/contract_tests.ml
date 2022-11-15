@@ -1924,7 +1924,7 @@ let%expect_test _ =
       1 | let x = (Bytes.unpack (Bytes.pack "hello") : string)
 
     Invalid type(s)
-    Cannot unify option (^gen#491) with string. |}]
+    Cannot unify option (^gen#502) with string. |}]
 
 (* check annotations' capitalization *)
 let%expect_test _ =
