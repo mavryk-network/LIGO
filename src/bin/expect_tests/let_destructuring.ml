@@ -68,11 +68,11 @@ let%expect_test _ =
   run_ligo_bad ["run"; "interpret" ; "type t = {a:int;b:int} in let x = {a=2;b=3} in let {a} = x in a" ; "--syntax" ; "cameligo" ] ;
   [%expect{|
     Invalid type(s)
-    Cannot unify record[a -> ^gen#6] with record[a -> int , b -> int]. |}] ;
+    Cannot unify record[a -> ^gen#5] with record[a -> int , b -> int]. |}] ;
   run_ligo_bad ["run"; "interpret" ; "type t = {a:int;b:int} in let x = {a=2;b=3} in let {a ; b ; c} = x in a" ; "--syntax" ; "cameligo" ] ;
   [%expect{|
     Invalid type(s)
-    Cannot unify record[a -> ^gen#6 , b -> ^gen#7 , c -> ^gen#8] with record[a -> int , b -> int]. |}];
+    Cannot unify record[a -> ^gen#5 , b -> ^gen#6 , c -> ^gen#7] with record[a -> int , b -> int]. |}];
 
   run_ligo_good ["run"; "interpret" ; "t1" ; "--init-file";(test "let_destructuring.jsligo") ] ;
   [%expect{| 1 |}] ;

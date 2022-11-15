@@ -66,7 +66,7 @@ let%expect_test _ =
       1 | let foo = ([a,b,c,d] : [int,int,int]) : int => a + b + c + d;
 
     Invalid type(s)
-    Cannot unify ( ^gen#541 * ^gen#542 * ^gen#543 * ^gen#544 ) with ( int * int * int ). |}]
+    Cannot unify ( ^gen#539 * ^gen#540 * ^gen#541 * ^gen#542 ) with ( int * int * int ). |}]
 
 let%expect_test _ =
   run_ligo_good [ "run" ; "interpret" ; "t2([Nil(), Nil()])" ; "--init-file" ; (test "/deep_pattern_matching/pm_test.jsligo") ] ;

@@ -597,7 +597,7 @@ let%expect_test _ =
     ];
   [%expect
     {|
-    File "../../test/contracts/top_level_patterns/negative/cameligo/constr_record_destructuring.mligo", line 4, characters 4-26:
+    File "../../test/contracts/top_level_patterns/negative/cameligo/constr_record_destructuring.mligo", line 4, characters 0-62:
       3 |
       4 | let { a ; b = (Foo x) ; c} = { a = 1 ; b = Foo 2 ; c = "hey" }
       5 |
@@ -616,7 +616,7 @@ let%expect_test _ =
     ];
   [%expect
     {|
-    File "../../test/contracts/top_level_patterns/negative/cameligo/constr_tuple_destructuring.mligo", line 3, characters 5-19:
+    File "../../test/contracts/top_level_patterns/negative/cameligo/constr_tuple_destructuring.mligo", line 3, characters 0-40:
       2 |
       3 | let (a,  (Foo x), c) = (1, Foo 2, "hey")
       4 |
@@ -629,7 +629,7 @@ let%expect_test _ =
   run_ligo_bad [ "run"; "test"; contract "cameligo/constr_let_in.mligo" ];
   [%expect
     {|
-    File "../../test/contracts/top_level_patterns/negative/cameligo/constr_let_in.mligo", line 4, characters 6-7:
+    File "../../test/contracts/top_level_patterns/negative/cameligo/constr_let_in.mligo", line 4, character 2 to line 5, character 4:
       3 | let test =
       4 |   let B = B in
       5 |   ()
@@ -642,7 +642,7 @@ let%expect_test _ =
   run_ligo_bad [ "run"; "test"; contract "cameligo/constr_let_in2.mligo" ];
   [%expect
     {|
-    File "../../test/contracts/top_level_patterns/negative/cameligo/constr_let_in2.mligo", line 2, characters 6-10:
+    File "../../test/contracts/top_level_patterns/negative/cameligo/constr_let_in2.mligo", line 2, character 2 to line 3, character 4:
       1 | let test =
       2 |   let True = true in
       3 |   42

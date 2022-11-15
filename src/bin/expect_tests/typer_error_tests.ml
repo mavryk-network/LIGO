@@ -170,7 +170,7 @@ let%expect_test _ =
      46 |   in
 
     Invalid type(s)
-    Cannot unify record[controller -> address , owner -> address , profile -> bytes] with option (^gen#545). |}]
+    Cannot unify record[controller -> address , owner -> address , profile -> bytes] with option (^gen#542). |}]
 
 (*
   This test is here to ensure compatibility with comparable pairs introduced in carthage
@@ -489,12 +489,14 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_bad [ "compile" ; "contract" ; "--no-colour" ; "../../test/contracts/negative/typer_unify_error_diff/arrow_vs_arrow.mligo" ] ;
   [%expect {|
-    File "../../test/contracts/negative/typer_unify_error_diff/arrow_vs_arrow.mligo", line 4, characters 45-46:
+    File "../../test/contracts/negative/typer_unify_error_diff/arrow_vs_arrow.mligo", line 3, character 2 to line 6, character 26:
+      2 | let main (_p, s : int * int) : operation list * int =
       3 |   let  x : int -> nat -> nat -> tez        = (fun _x _y _z -> 1tez) in
       4 |   let _y : int -> int -> int -> int -> nat = x in
       5 |   //              ^^^    ^^^    ^^^    ^^^
+      6 |   ([] : operation list), s
 
     Invalid type(s)
-    Cannot unify tez with int -> nat. |}]
+    Cannot unify int -> nat -> nat -> tez with ∀ gen#544 : * . gen#544 -> ∀ gen#543 : * . gen#543 -> ∀ gen#542 : * . gen#542 -> tez. |}]
 
 

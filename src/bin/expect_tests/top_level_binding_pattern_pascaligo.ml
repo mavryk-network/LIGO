@@ -541,7 +541,7 @@ let%expect_test _ =
     ];
   [%expect
     {|
-    File "../../test/contracts/top_level_patterns/negative/pascaligo/constr_record_destructuring.ligo", line 4, characters 6-37:
+    File "../../test/contracts/top_level_patterns/negative/pascaligo/constr_record_destructuring.ligo", line 4, characters 0-81:
       3 |
       4 | const record[ a ; b = (Foo (x)) ; c ] = record[ a = 1 ; b = Foo (2) ; c = "hey" ]
       5 |
@@ -560,7 +560,7 @@ let%expect_test _ =
     ];
   [%expect
     {|
-    File "../../test/contracts/top_level_patterns/negative/pascaligo/constr_tuple_destructuring.ligo", line 3, characters 6-23:
+    File "../../test/contracts/top_level_patterns/negative/pascaligo/constr_tuple_destructuring.ligo", line 3, characters 0-45:
       2 |
       3 | const (a, (Foo (x)), c) = (1, Foo (2), "hey")
       4 |

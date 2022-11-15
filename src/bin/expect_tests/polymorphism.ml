@@ -434,7 +434,7 @@ let%expect_test _ =
       5 |     let b                = List.length ys in
       6 |     [], (a + b + List.length [])
 
-    Underspecified type ^gen#548.
+    Underspecified type ^gen#546.
     Please add additional annotations. |xxx}]
 
 let%expect_test _ =
@@ -444,7 +444,7 @@ let%expect_test _ =
       3 | let main (_, _ : int list * nat) : (operation list * nat) =
       4 |     [], (one [])
 
-    Underspecified type ^gen#544.
+    Underspecified type ^gen#542.
     Please add additional annotations. |xxx}]
 
 let%expect_test _ =
@@ -454,7 +454,7 @@ let%expect_test _ =
       1 | let s = List.length []
       2 |
 
-    Underspecified type ^gen#543.
+    Underspecified type ^gen#541.
     Please add additional annotations. |xxx}]
 
 let%expect_test _ =
@@ -464,7 +464,7 @@ let%expect_test _ =
       1 | let p = []
       2 |
 
-    Underspecified type ^gen#541.
+    Underspecified type ^gen#539.
     Please add additional annotations. |xxx}]
 
 let%expect_test _ =
