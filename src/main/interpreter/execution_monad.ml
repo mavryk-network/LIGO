@@ -1064,14 +1064,13 @@ let rec bind_list = function
 
 
 let bind_map_list f lst = bind_list (List.map ~f lst)
-
-let bind_fold_list f init lst =
+let bind_iter_list ~f lst = let _ = bind_map_list (fun x -> let* () = f x in return ()) lst in return ()
+let bind_fold_list ~f ~init lst =
   let aux x y =
     let* x = x in
     f x y
   in
   List.fold_left ~f:aux ~init:(return init) lst
-
 
 let bind_fold_right_list f init lst =
   let aux y x =

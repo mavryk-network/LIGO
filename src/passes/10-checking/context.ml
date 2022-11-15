@@ -298,6 +298,8 @@ let item_of_signature_item (sig_item : Signature.item) : item =
 let add_signature_item t (sig_item : Signature.item) =
   add t (item_of_signature_item sig_item)
 
+let add_signature_items t (sig_items : Signature.item list) =
+  List.fold ~f:add_signature_item ~init:t (List.rev sig_items)
 
 let get_value =
   memoize2
@@ -1564,12 +1566,12 @@ module Elaboration = struct
         ; fun_type = t_apply ctx fun_type
         ; lambda = lambda_apply ctx lambda
         }
-    | E_let_in { let_binder; rhs; let_result; attr } ->
+    | E_let_in { let_binder; rhs; let_result; attributes } ->
       E_let_in
-        { let_binder = binder_apply ctx let_binder
+        { let_binder = pattern_apply ctx let_binder
         ; rhs = self rhs
         ; let_result = self let_result
-        ; attr
+        ; attributes
         }
     | E_mod_in { module_binder; rhs; let_result } ->
       E_mod_in
@@ -1593,12 +1595,12 @@ module Elaboration = struct
     | E_update { struct_; path; update } ->
       E_update { struct_ = self struct_; path; update = self update }
     | E_module_accessor mod_access -> E_module_accessor mod_access
-    | E_let_mut_in { let_binder; rhs; let_result; attr } ->
+    | E_let_mut_in { let_binder; rhs; let_result; attributes } ->
       E_let_mut_in
-        { let_binder = binder_apply ctx let_binder
+        { let_binder = pattern_apply ctx let_binder
         ; rhs = self rhs
         ; let_result = self let_result
-        ; attr
+        ; attributes
         }
     | E_deref var -> E_deref var
     | E_while while_loop -> E_while (While_loop.map self while_loop)
@@ -1619,10 +1621,7 @@ module Elaboration = struct
 
   and param_apply ctx (param : 'a Param.t) = Param.map (t_apply ctx) param
   and binder_apply ctx (binder : 'a Binder.t) = Binder.map (t_apply ctx) binder
-
-  and binder_apply_opt ctx (binder : 'a option Binder.t) =
-    Binder.map (Option.map ~f:(t_apply ctx)) binder
-
+  and pattern_apply ctx (binder : 'a Ast_typed.Pattern.t) = Pattern.map (t_apply ctx) binder
 
   and matching_expr_apply ctx match_exprs =
     List.map
@@ -1640,7 +1639,15 @@ module Elaboration = struct
     | D_value { binder; expr; attr } ->
       return
       @@ D_value
-           { binder = binder_apply_opt ctx binder
+           { binder = binder_apply ctx binder
+           ; expr = e_apply ctx expr
+           ; attr
+           }
+    | D_pattern { pattern; expr; attr } ->
+      let pattern = Ast_typed.Pattern.map (t_apply ctx) pattern in 
+      return
+      @@ D_pattern
+           { pattern
            ; expr = e_apply ctx expr
            ; attr
            }
@@ -1710,7 +1717,7 @@ module Elaboration = struct
       type_pass ~raise fun_type;
       lambda_pass ~raise lambda
     | E_let_in { let_binder; rhs; let_result; _ } ->
-      binder_pass ~raise let_binder;
+      pattern_pass ~raise let_binder;
       self rhs;
       self let_result
     | E_mod_in { rhs; let_result; _ } ->
@@ -1733,7 +1740,7 @@ module Elaboration = struct
       self update
     | E_module_accessor _mod_access -> ()
     | E_let_mut_in { let_binder; rhs; let_result; _ } ->
-      binder_pass ~raise let_binder;
+      pattern_pass ~raise let_binder;
       self rhs;
       self let_result
     | E_deref _var -> ()
@@ -1765,11 +1772,8 @@ module Elaboration = struct
 
   and binder_pass ~raise (binder : _ Binder.t) =
     type_pass ~raise @@ Binder.get_ascr binder
-
-
-  and binder_pass_opt ~raise (binder : _ option Binder.t) =
-    Option.iter (Binder.get_ascr binder) ~f:(type_pass ~raise)
-
+  and pattern_pass ~raise (pattern : _ Pattern.t) =
+    List.iter (Pattern.binders pattern) ~f:(fun ty -> binder_pass ~raise ty) 
 
   and matching_expr_pass ~raise match_exprs =
     List.iter
@@ -1786,7 +1790,10 @@ module Elaboration = struct
     match decl.wrap_content with
     | D_type decl_type -> type_pass ~raise decl_type.type_expr
     | D_value { binder; expr; _ } ->
-      binder_pass_opt ~raise binder;
+      binder_pass ~raise binder;
+      expression_pass ~raise expr
+    | D_pattern { pattern ; expr; _ } ->
+      pattern_pass ~raise pattern;
       expression_pass ~raise expr
     | D_module { module_; _ } -> module_expr_pass ~raise module_
 

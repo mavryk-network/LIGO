@@ -88,6 +88,34 @@ let%expect_test _  =
     "2042-01-01T00:00:29Z" |}]
 
 let%expect_test _ =
+  run_ligo_good [ "compile" ; "contract" ; contract "const.mligo" ] ;
+  [%expect{|
+    File "../../test/contracts/const.mligo", line 1, characters 31-32:
+      1 | let const = fun (type a b) (a, b : a * b) : a -> a
+      2 |
+    :
+    Warning: unused variable "b".
+    Hint: replace it by "_b" to prevent this warning.
+
+    { parameter unit ;
+      storage unit ;
+      code { DROP ; UNIT ; NIL operation ; PAIR } } |}]
+  
+let%expect_test _ =
+  run_ligo_good [ "compile" ; "contract" ; contract "const1.mligo" ] ;
+  [%expect{|
+    { parameter unit ;
+      storage unit ;
+      code { DROP ; UNIT ; NIL operation ; PAIR } } |}]
+
+let%expect_test _ =
+  run_ligo_good [ "compile" ; "contract" ; contract "const2.mligo" ] ;
+  [%expect{|
+    { parameter unit ;
+      storage unit ;
+      code { DROP ; UNIT ; NIL operation ; PAIR } } |}]
+
+let%expect_test _ =
   run_ligo_good [ "compile" ; "contract" ; contract "coase.ligo" ] ;
   [%expect{|
     { parameter
@@ -1202,7 +1230,8 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_bad [ "compile" ; "contract" ; bad_contract "create_contract_toplevel.mligo" ] ;
   [%expect {|
-File "../../test/contracts/negative/create_contract_toplevel.mligo", line 5, characters 10-11:
+File "../../test/contracts/negative/create_contract_toplevel.mligo", line 4, character 35 to line 8, character 8:
+  3 | let main (_, store : string * string) : return =
   4 |   let toto : operation * address = Tezos.create_contract
   5 |     (fun (p, s : nat * string) -> (([] : operation list), store))
   6 |     (None: key_hash option)

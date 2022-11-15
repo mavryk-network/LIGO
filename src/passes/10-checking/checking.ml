@@ -423,12 +423,14 @@ and infer_expression (expr : I.expression)
         let%bind rhs_type = decode rhs_type in
         let%bind rhs = rhs
         and let_result = let_result in
+        let%bind raise = Elaboration.raise in
+        let () = check_pattern_anomalies ~raise ~options let_binder rhs_type in
         return
         @@ O.E_let_in
              { let_binder = Binder.set_ascr let_binder rhs_type
              ; rhs
              ; let_result
-             ; attr
+             ; attributes
              })
       res_type
   | E_type_in { type_binder = tvar; rhs; let_result } ->
@@ -1285,6 +1287,17 @@ and check_cases
   in
   cases |> List.map ~f:check_case |> all >>| E.all
 
+and check_pattern_anomalies
+    ~raise
+    ~options
+    pattern
+    rhs_type
+    : unit
+    = 
+    let loc = Location.get_location pattern in
+    let syntax = options.Compiler_options.syntax_for_errors in
+    let eqs = [pattern, rhs_type] in
+    Pattern_anomalies.check_anomalies ~raise ~syntax ~loc eqs rhs_type
 
 and def_frag frag ~on_exit ~in_ =
   let open C in

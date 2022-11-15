@@ -78,4 +78,3 @@ let all = [
 ]
 
 let remove_unused_expression = Contract_passes.remove_unused_expression
-let remove_unused_for_views = Contract_passes.remove_unused_for_views
