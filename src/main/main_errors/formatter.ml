@@ -89,11 +89,14 @@ let rec error_ppformat : display_format:string display_format ->
       Format.fprintf f "@[Error(s) occurred while translating to Michelson:@.%a@]"
       (Memory_proto_alpha.Client.Michelson_v1_error_reporter.report_errors ~details:true ~show_source:true ?parsed:(None)) errs
 
-    | `Main_typecheck_contract_tracer (_c,err_l) ->
+    | `Main_typecheck_contract_tracer (protocol, _c, err_l) when Environment.Protocols.(equal protocol in_use) ->
       let errs = List.map ~f:( fun e -> match e with `Tezos_alpha_error a -> a) err_l in
       Format.fprintf f "@[<hv>Error(s) occurred while type checking the contract:@.%a@]"
       (Memory_proto_alpha.Client.Michelson_v1_error_reporter.report_errors ~details:true ~show_source:true ?parsed:(None)) errs
-
+    | `Main_typecheck_contract_tracer (_protocol, _c, err_l) ->
+      let errs = List.map ~f:( fun e -> match e with `Tezos_alpha_error a -> a) err_l in
+      Format.fprintf f "@[<hv>Error(s) occurred while type checking the contract:@.%a@]"
+      (Memory_proto_pre_alpha.Client.Michelson_v1_error_reporter.report_errors ~details:true ~show_source:true ?parsed:(None)) errs
     | `Main_could_not_serialize errs ->
       let errs = List.map ~f:( fun e -> match e with `Tezos_alpha_error a -> a) errs in
       Format.fprintf f "@[<hv>Error(s) occurred while serializing Michelson code:@.%a @]"
@@ -309,7 +312,7 @@ let rec error_json : Types.all -> Simple_utils.Error.t list = fun a ->
   | `Main_unparse_tracer _ ->
     let content = make_content ~message:"could not unparse michelson type" () in
     [make ~stage:"michelson contract build" ~content]
-  | `Main_typecheck_contract_tracer (_c,_) ->
+  | `Main_typecheck_contract_tracer (_p,_c,_) ->
     let content = make_content ~message:"Could not typecheck michelson code" () in
     [make ~stage:"michelson contract build" ~content]
   | `Main_could_not_serialize _errs ->

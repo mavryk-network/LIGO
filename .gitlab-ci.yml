@@ -55,7 +55,8 @@ esy-windows:
     - esy i
     - bash -c "esy release || esy release || esy release"
     - rm -Recurse -Force _esy
-    - mv ./WindowsInstaller.nsi _release
+    - cp *.dll _release/bin/
+    - cp ./WindowsInstaller.nsi _release
     - cd _release; makensis .\WindowsInstaller.nsi
     - cd .. ; mv _release platform-windows-x64
   artifacts:
@@ -301,6 +302,7 @@ pages-attempt:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       changes:
         - gitlab-pages/**/*
+        - changelog/*
       when: on_success
 
 deploy_website_preview:
