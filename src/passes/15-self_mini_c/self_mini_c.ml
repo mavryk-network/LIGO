@@ -147,6 +147,7 @@ let is_pure_constant : Constant.constant' -> bool =
   | C_TEST_LAST_EVENTS
   | C_TEST_TRY_WITH
   | C_TEST_SET_PRINT_VALUES
+  | C_TEST_MUTATE_MICHELSON
   | C_ABS
   | C_INT
     -> false

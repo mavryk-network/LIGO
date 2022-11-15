@@ -3,6 +3,74 @@ module Var = Simple_utils.Var
 open Simple_utils.Trace
 open Simple_utils.Option
 
+module Mutation = struct
+  open Tezos_utils.Michelson
+  open Tezos_utils.Micheline.Micheline
+
+  let transform_int =
+    let const0 _ = 0 in
+    let negative n = -n in
+    let incr n = n + 1 in
+    let pred n = n - 1 in
+    let prod n = 2 * n in
+    [const0; negative; incr; pred; prod]
+
+  let transform_nat =
+    let const0 _ = 0 in
+    let incr n = n + 1 in
+    let prod n = 2 * n in
+    [const0; incr; prod]
+
+  let transform_string =
+    let constn _ = "" in
+    let double s = s ^ s in
+    [String.capitalize; String.uncapitalize; String.lowercase; String.uppercase; constn; double]
+
+  type mutation_data = unit
+  type loc = unit
+  type oracle_typer = unit (* canonical_location -> (canonical_location, string) node list *)
+
+  let combine : 'a -> ('a * mutation_data option) list -> 'b -> ('b * mutation_data option) list -> ('a * 'b * mutation_data option) list =
+    fun a al b bl ->
+    List.map ~f:(fun (b, m) -> (a, b, m)) bl @ List.map ~f:(fun (a, m) -> (a, b, m)) al
+
+  let combine_list : 'a list -> (('a * mutation_data option) list) list -> ('a list * mutation_data option) list =
+    fun a al ->
+    List.concat @@ List.mapi ~f:(fun i ali ->
+      List.map ~f:(fun (v, m) -> (List.take a i @ [ v ] @ List.drop a (i + 1),  m)) ali) al
+
+  let (let+) x f = List.map ~f x
+  let (let*) x f = List.concat (List.map ~f x)
+  let return x = [x]
+
+  let rec generate ~(oracle:oracle_typer) (code : loc michelson) : (loc michelson * mutation_data option) list =
+    let self = generate ~oracle in
+    ignore oracle;
+    match (code : _ node) with
+    | Seq (l, ns) ->
+      let* ns, mutation = combine_list ns (List.map ~f:self ns) in
+      return @@ (Seq (l, ns), mutation)
+    | Prim (l, "PUSH", [ Prim (l1, "int", [], ann1) ; Int (l2, z) ], ann) ->
+      let z = Z.to_int z in
+      let* t = transform_int in
+      let z_mut = t z in
+      let mutation = if z_mut <> z then Some () else None in
+      return @@ (Prim (l, "PUSH", [ Prim (l1, "int", [], ann1) ; Int (l2, Z.of_int z_mut) ], ann), mutation)
+    | Prim (l, "PUSH", [ Prim (l1, "nat", [], ann1) ; Int (l2, z) ], ann) ->
+      let z = Z.to_int z in
+      let* t = transform_nat in
+      let z_mut = t z in
+      let mutation = if z_mut <> z then Some () else None in
+      return @@ (Prim (l, "PUSH", [ Prim (l1, "nat", [], ann1) ; Int (l2, Z.of_int z_mut) ], ann), mutation)
+    | Prim (l, "PUSH", [ Prim (l1, "string", [], ann1) ; String (l2, z) ], ann) ->
+      let* t = transform_string in
+      let z_mut = t z in
+      let mutation = if not String.(equal z_mut z) then Some () else None in
+      return @@ (Prim (l, "PUSH", [ Prim (l1, "string", [], ann1) ; String (l2, z_mut) ], ann), mutation)
+    | _ ->
+      return @@ (code, None)
+end
+
 let storage_retreival_dummy_ty = Tezos_utils.Michelson.prim "int"
 
 let int_of_mutez t =

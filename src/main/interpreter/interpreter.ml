@@ -903,6 +903,13 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
       Test operators
     >>>>>>>>
     *)
+  | C_TEST_MUTATE_MICHELSON, [ V_Michelson (Untyped_code m | Ty_code { micheline_repr = { code = m ; _ } ; _ }) ] ->
+    let ms = Michelson_backend.Mutation.generate ~oracle:() m in
+    List.iter ~f:(fun (m, _) ->
+        print_endline (Format.asprintf "%a" Tezos_utils.Michelson.pp m)) ms;
+    ignore ms ;
+    return @@ v_unit ()
+  | C_TEST_MUTATE_MICHELSON, _ -> fail @@ error_type ()
   | C_TEST_ADDRESS, [ V_Ct (C_contract { address; entrypoint = _ }) ] ->
     return (V_Ct (C_address address))
   | C_TEST_ADDRESS, _ -> fail @@ error_type ()
