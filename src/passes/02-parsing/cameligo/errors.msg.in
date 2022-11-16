@@ -3657,7 +3657,7 @@ interactive_expr: LBRACE Ident WILD
 
 Ill-formed record expression or record update.
 At this point, one of the following is expected:
-  * a semicolon ';', followed by another assignment;  
+  * a semicolon ';', followed by another assignment;
   * the assignment symbol '=' followed by an expression, if defining
     a record (as opposed to a record update);
   * the keyword 'with' followed by field updates (assignments);
@@ -9462,3 +9462,15 @@ At this point, if there are no more parameters, one of the following
 is expected:
   * an arrow '->', followed by the body as an expression;
   * a type annotation for the body, starting with a colon ':'.
+
+contract: Open With
+##
+## Ends in an error in state: 104.
+##
+## module_open -> Open . nsepseq(module_name,DOT) [ Type Open Module Let End EOF Directive Attr ]
+##
+## The known suffix of the stack is as follows:
+## Open
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
