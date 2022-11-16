@@ -506,11 +506,15 @@ and infer_expression ~(raise : raise) ~options ~ctx (expr : I.expression)
         infer ~ctx:Context.(ctx |:: C_type (tvar, rhs)) let_result
       in
       ctx, res_type, lift let_result
-    | E_raw_code { language; code = { expression_content = m ; _ } } when Option.is_some (S.get_e_tuple m) ->
+    | E_raw_code { language; code = { expression_content = m; _ } }
+      when Option.is_some (S.get_e_tuple m) ->
       let tuple = Option.value ~default:[] (S.get_e_tuple m) in
-      let code, args = match tuple with
-        | [] -> raise.error (corner_case "expected non-empty tuple in %Michelson")
-        | hd :: tl -> hd, tl in
+      let code, args =
+        match tuple with
+        | [] ->
+          raise.error (corner_case "expected non-empty tuple in %Michelson")
+        | hd :: tl -> hd, tl
+      in
       let code, code_type =
         trace_option ~raise (not_annotated loc)
         @@ I.get_e_ascription code.expression_content
@@ -518,17 +522,20 @@ and infer_expression ~(raise : raise) ~options ~ctx (expr : I.expression)
       let ctx, code_type = evaluate_type ~raise ~ctx code_type in
       let ctx, _code_type, code = infer ~ctx code in
       let ctx, args =
-        List.fold_map
-          args
-          ~init:ctx
-          ~f:(fun ctx expr ->
-              let expr, type_expression =
-                trace_option ~raise (not_annotated loc)
-                @@ I.get_e_ascription expr.expression_content in
-              let ctx, _expr_type, expr = infer ~ctx expr in
-              let ctx, type_expression = evaluate_type ~raise ~ctx type_expression in
-              let expr = let%bind expr = expr in return expr.expression_content type_expression in
-              ctx, expr)
+        List.fold_map args ~init:ctx ~f:(fun ctx expr ->
+            let expr, type_expression =
+              trace_option ~raise (not_annotated loc)
+              @@ I.get_e_ascription expr.expression_content
+            in
+            let ctx, _expr_type, expr = infer ~ctx expr in
+            let ctx, type_expression =
+              evaluate_type ~raise ~ctx type_expression
+            in
+            let expr =
+              let%bind expr = expr in
+              return expr.expression_content type_expression
+            in
+            ctx, expr)
       in
       let args = Elaboration.all_list args in
       ( ctx
@@ -1094,7 +1101,12 @@ and infer_application ~raise ~loc ~options ~ctx lamb_type args
           let ret_type = Context.apply ctx ret_type in
           match ret_type.type_content with
           | T_constant { injection = External "int"; parameters; _ } ->
-            Constant_typers.External_types.int_types ~raise ~options ~loc ~ctx parameters
+            Constant_typers.External_types.int_types
+              ~raise
+              ~options
+              ~loc
+              ~ctx
+              parameters
           | T_constant
               { injection = External ("ediv" | "u_ediv"); parameters; _ } ->
             Constant_typers.External_types.ediv_types
@@ -1105,7 +1117,12 @@ and infer_application ~raise ~loc ~options ~ctx lamb_type args
               parameters
           | T_constant { injection = External ("and" | "u_and"); parameters; _ }
             ->
-            Constant_typers.External_types.and_types ~raise ~options ~loc ~ctx parameters
+            Constant_typers.External_types.and_types
+              ~raise
+              ~options
+              ~loc
+              ~ctx
+              parameters
           | _ -> ctx, ret_type)
         (fun ~catch:_ _ -> ctx, ret_type)
     in
@@ -1298,9 +1315,7 @@ and infer_pattern
     ( ctx
     , record_type
     , let%bind pats = Elaboration.all pats in
-      return
-      @@ P_record (Record.of_list (List.zip_exn labels pats))
-    )
+      return @@ P_record (Record.of_list (List.zip_exn labels pats)) )
 
 
 and check_pattern
@@ -1386,8 +1401,7 @@ and check_pattern
       let labels, pats = List.unzip (Record.LMap.values record_pat) in
       ( ctx
       , let%bind pats = Elaboration.all pats in
-        return
-        @@ P_record (Record.of_list (List.zip_exn labels pats)) )
+        return @@ P_record (Record.of_list (List.zip_exn labels pats)) )
     | _ ->
       let ctx, type_', pat = infer ~ctx pat in
       let ctx, _f =
@@ -1427,7 +1441,9 @@ and check_cases
         if debug
         then
           Format.printf "Matchee type: %a\n" O.PP.type_expression matchee_type;
-        let ctx, pattern = check_pattern ~raise ~options ~ctx pattern matchee_type in
+        let ctx, pattern =
+          check_pattern ~raise ~options ~ctx pattern matchee_type
+        in
         let ctx, body = check_expression ~raise ~options ~ctx body ret_type in
         ( Context.drop_until ctx ~pos
         , let%map pattern = pattern
@@ -1551,6 +1567,7 @@ and infer_declaration ~(raise : raise) ~options ~ctx (decl : I.declaration)
         return
         @@ D_module { module_binder; module_; module_attr = { public; hidden } }
       )
+    | D_open _ -> failwith "not implemented yet"
   in
   if debug
   then

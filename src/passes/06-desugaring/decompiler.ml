@@ -76,9 +76,9 @@ and decompile_row ({ fields; layout } : O.rows) : _ I.non_linear_rows =
     fields
     |> Record.map
          ~f:(fun
-           ({ associated_type; decl_pos; michelson_annotation } :
-             _ Rows.row_element_mini_c)
-         ->
+              ({ associated_type; decl_pos; michelson_annotation } :
+                _ Rows.row_element_mini_c)
+            ->
            let associated_type = decompile_type_expression associated_type in
            let attributes =
              decompile_row_elem_attributes michelson_annotation
@@ -225,7 +225,7 @@ and decompile_pattern : _ O.Pattern.t -> _ I.Pattern.t =
     Location.wrap ~loc (I.Pattern.P_tuple ps)
   | P_record lps ->
     let lps = Record.map ~f:decompile_pattern lps in
-    let lps = Record.to_list lps  in
+    let lps = Record.to_list lps in
     Location.wrap ~loc (I.Pattern.P_record lps)
 
 
@@ -246,6 +246,9 @@ and decompile_declaration : O.declaration -> I.declaration =
     let module_ = decompile_module_expr module_ in
     let module_attr = decompile_module_attributes module_attr in
     return @@ D_module { module_binder; module_; module_attr }
+  | D_open { module_ } ->
+    let module_ = decompile_module_expr module_ in
+    return @@ D_open { module_ }
 
 
 and decompile_module_expr : O.module_expr -> I.module_expr =

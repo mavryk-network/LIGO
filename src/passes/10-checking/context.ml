@@ -59,7 +59,7 @@ let memoize2
       result
 
 
-(* 
+(*
 let rec_memoize2
   (type a b c)
   ?(size = 100)
@@ -972,6 +972,7 @@ and signature_item_of_decl : ctx:t -> Ast_typed.decl -> bool * Signature.item =
   | D_module { module_binder = mvar; module_; module_attr = { public; _ } } ->
     let sig_' = signature_of_module_expr ~ctx module_ in
     public, S_module (mvar, sig_')
+  | D_open _ -> failwith "niy"
 
 
 (* Load context from the outside declarations *)
@@ -988,7 +989,8 @@ let init ?env () =
           add_type ctx type_binder type_expr
         | D_module { module_binder; module_; module_attr = _ } ->
           let sig_ = signature_of_module_expr ~ctx module_ in
-          add_module ctx module_binder sig_)
+          add_module ctx module_binder sig_
+        | D_open _ -> failwith "niy")
 
 
 module Well_formed : sig
@@ -1379,6 +1381,7 @@ module Elaboration = struct
            ; module_ = module_expr_apply ctx module_
            ; module_attr
            }
+    | D_open _ -> failwith "niy"
 
 
   and module_apply ctx module_ : module_ = List.map ~f:(decl_apply ctx) module_
@@ -1517,6 +1520,7 @@ module Elaboration = struct
       binder_pass_opt ~raise binder;
       expression_pass ~raise expr
     | D_module { module_; _ } -> module_expr_pass ~raise module_
+    | D_open _ -> failwith "niy"
 
 
   and module_pass ~raise module_ = List.iter ~f:(decl_pass ~raise) module_

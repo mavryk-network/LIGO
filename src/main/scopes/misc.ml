@@ -5,13 +5,13 @@ module Bindings_map = Simple_utils.Map.Make (Value_var)
 type bindings_map = Ast_typed.type_expression Bindings_map.t
 
 let rec extract_variable_types
-  : bindings_map -> Ast_typed.declaration_content -> bindings_map
+    : bindings_map -> Ast_typed.declaration_content -> bindings_map
   =
  fun prev decl ->
   let add env b =
     let aux
-      :  Ast_typed.expression_variable * Ast_typed.type_expression
-      -> Ast_typed.expression_variable * Ast_typed.type_expression
+        :  Ast_typed.expression_variable * Ast_typed.type_expression
+        -> Ast_typed.expression_variable * Ast_typed.type_expression
       =
      fun (v, t) ->
       let t' =
@@ -62,12 +62,14 @@ let rec extract_variable_types
       return [ fun_name, fun_type; Param.get_var binder, in_t ]
     | E_let_in { let_binder; rhs; _ } ->
       return [ Binder.get_var let_binder, rhs.type_expression ]
-    | E_matching { matchee=_; cases } ->
-      let bindings = List.concat @@ List.map cases 
-        ~f:(fun {pattern;_} -> 
-            let binders = Ast_typed.Pattern.binders pattern in
-            List.map binders ~f:(fun b -> Binder.get_var b, Binder.get_ascr b)  
-          ) in
+    | E_matching { matchee = _; cases } ->
+      let bindings =
+        List.concat
+        @@ List.map cases ~f:(fun { pattern; _ } ->
+               let binders = Ast_typed.Pattern.binders pattern in
+               List.map binders ~f:(fun b ->
+                   Binder.get_var b, Binder.get_ascr b))
+      in
       return bindings
     | E_module_accessor { element = e; _ } -> return [ e, exp.type_expression ]
     (* TODO, is this semantically correct? *)
@@ -85,10 +87,12 @@ let rec extract_variable_types
       else if Ast_typed.is_t_list type_
       then return [ binder, Ast_typed.get_t_list_exn type_ ]
       else if Ast_typed.is_t_map type_
-      then 
-        let (k, v) = Ast_typed.get_t_map_exn type_ in
-        return [ binder, Ast_typed.t_pair k v ]
-      else failwith "E_for_each type with 1 binder should have map, set or list type"
+      then (
+        let k, v = Ast_typed.get_t_map_exn type_ in
+        return [ binder, Ast_typed.t_pair k v ])
+      else
+        failwith
+          "E_for_each type with 1 binder should have map, set or list type"
   in
   match decl with
   | D_value { attr = { hidden = true; _ }; _ } -> prev
@@ -98,11 +102,18 @@ let rec extract_variable_types
   | D_type _ -> prev
   | D_module { module_; _ } ->
     (match module_.wrap_content with
-     | M_variable _ -> prev
-     | M_module_path _ -> prev
-     | M_struct ds ->
-       List.fold_left ds ~init:prev ~f:(fun prev d ->
-         extract_variable_types prev d.wrap_content))
+    | M_variable _ -> prev
+    | M_module_path _ -> prev
+    | M_struct ds ->
+      List.fold_left ds ~init:prev ~f:(fun prev d ->
+          extract_variable_types prev d.wrap_content))
+  | D_open { module_ } ->
+    (match module_.wrap_content with
+    | M_variable _ -> prev
+    | M_module_path _ -> prev
+    | M_struct ds ->
+      List.fold_left ds ~init:prev ~f:(fun prev d ->
+          extract_variable_types prev d.wrap_content))
 
 
 let resolve_if : with_types:bool -> bindings_map -> Value_var.t -> type_case =
@@ -117,8 +128,8 @@ let resolve_if : with_types:bool -> bindings_map -> Value_var.t -> type_case =
 
 
 let make_v_def
-  :  with_types:bool -> ?core_type:Ast_core.type_expression -> bindings_map
-  -> def_type -> Value_var.t -> Location.t -> Location.t -> def
+    :  with_types:bool -> ?core_type:Ast_core.type_expression -> bindings_map
+    -> def_type -> Value_var.t -> Location.t -> Location.t -> def
   =
  fun ~with_types ?core_type bindings def_type var range body_range ->
   let type_case =

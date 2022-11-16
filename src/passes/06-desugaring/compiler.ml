@@ -6,7 +6,6 @@ module I = Ast_imperative
 module O = Ast_core
 
 let is_layout = String.chop_prefix ~prefix:"layout:"
-
 let is_michelson_annotation = String.chop_prefix ~prefix:"annot:"
 
 let compile_row_elem_attributes : string list -> string option =
@@ -426,6 +425,9 @@ and compile_declaration ~raise : I.declaration -> O.declaration =
     let module_ = compile_module_expr ~raise module_ in
     let module_attr = compile_module_attributes module_attr in
     return @@ D_module { module_binder; module_; module_attr }
+  | D_open { module_ } ->
+    let module_ = compile_module_expr ~raise module_ in
+    return @@ D_open { module_ }
 
 
 and compile_module_expr ~raise : I.module_expr -> O.module_expr =
