@@ -223,7 +223,7 @@ let rec get_all_files : string -> string list Lwt.t = fun file_or_dir ->
   | S_DIR ->
     if SSet.mem ignore_dirs (Filename.basename file_or_dir) 
     then Lwt.return [] else 
-    let all = Sys_unix.ls_dir file_or_dir in
+    let all = Caml.Sys.ls_dir file_or_dir in
     let* files = 
     Lwt_list.fold_left_s (fun acc f -> 
       let* fs = get_all_files (Filename.concat file_or_dir f) in
@@ -245,9 +245,9 @@ let rec get_all_files : string -> string list Lwt.t = fun file_or_dir ->
 
 let from_dir ~dir f =
   let pwd = Core_unix.getcwd () in
-  let () = Sys_unix.chdir dir in
+  let () = Caml.Sys.chdir dir in
   let result = f () in
-  let () = Sys_unix.chdir pwd in
+  let () = Caml.Sys.chdir pwd in
   result
 
 let tar_gzip ~name ~version dir = 
