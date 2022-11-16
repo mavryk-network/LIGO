@@ -14,8 +14,10 @@
   user
   cli_helpers
   daemon
+  core_kernel.version_util
+  core_kernel.caml_threads
   ligo_api)
- (modules cli version))
+ (modules command_unx cli version))
 
 
 (library
@@ -37,7 +39,7 @@
  (instrumentation
   (backend bisect_ppx))
  (libraries cli_helpers simple-utils lwt lwt.unix tar tar-unix decompress.gz
-   bigstringaf base64 cohttp-lwt-unix yojson digestif unix)
+   bigstringaf base64 cohttp-lwt-unix yojson digestif ligo.unix)
  (preprocess (pps ppx_deriving_yojson))
  (modules publish))
 
