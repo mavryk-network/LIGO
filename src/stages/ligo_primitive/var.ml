@@ -91,13 +91,13 @@ module Internal () = struct
   let is_name var name = String.equal var.name name
 
   (* PP *)
-  let _pp ppf v =
+  let pp ppf v =
     if v.counter <> 0
     then Format.fprintf ppf "%s#%d" v.name v.counter
     else Format.fprintf ppf "%s" v.name
 
 
-  let pp ppf v = Format.fprintf ppf "%s#%d" v.name v.counter
+  let _pp ppf v = Format.fprintf ppf "%s#%d" v.name v.counter
 
   let wildcard =
     { name = "_"; counter = 0; location = Location.dummy; generated = false }
