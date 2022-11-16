@@ -11,7 +11,7 @@ From ligo_coq_type_checker Require Import context.
 Module Reduction_Rules.
 
     (* G |- A ~~> B *)
-    Fixpoint Reduce_type {C:Types.classifier} (c:Context.t) (t:Types.t Types.S_type C) : option (bool * Types.t Types.S_type C) :=
+    Fixpoint Reduce_type {C:Types.classifier} (c:Context.t) (t:Types.t_type C) : option (bool * Types.t_type C) :=
         Types.fold (B:=fun S C => option (prod bool (Types.t S C)))
             t
             (*  

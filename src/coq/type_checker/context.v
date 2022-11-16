@@ -1,6 +1,7 @@
 Set Implicit Arguments.
 From Coq Require Import String List.
 
+From ligo_coq_type_checker Require Import options.
 From ligo_coq_type_checker Require Import assertions.
 From ligo_coq_type_checker Require Import kinds.
 From ligo_coq_type_checker Require Import types.
@@ -23,6 +24,14 @@ Module Context.
         | Co_assertion c a => assertion c a
         end.
 
+    Fixpoint Concat (c:t) (v:t) : t :=
+        fold v
+            (empty := fun _ => c)
+            (assertion := fun v a' => assertion (Concat c v) a').    
+
+    Definition Add_first (c:t) (a:Assertions.t) : t :=
+        Concat (assertion empty a) c.
+
     Fixpoint domain (c:t) : list string :=
         fold c 
             (empty  := fun _ => []) 
@@ -31,24 +40,31 @@ Module Context.
     Definition In_domain (c:t) (v:string) : Prop :=
         In v (domain c).
 
-    Fixpoint Find_kind (c:t) (v:string) : option Kinds.t := 
+    Fixpoint Find_assertion (c:t) (v:string) : option Assertions.t := 
         fold c
             (empty  := fun _ => None) 
             (assertion := fun c a => 
-                match Assertions.Get_kind a v with
-                | Some v => Some v
-                | None => Find_kind c v
-                end
+                Options.fold (Assertions.Get_type a v)
+                    (some := fun _ => Some a)
+                    (none := fun _ => Find_assertion c v)
             ).
 
-    Fixpoint Find_type (c:t) (v:string) : option (Types.t_type Types.C_poly) := 
+    Definition Find_kind (c:t) (v:string) : option Kinds.t := 
+        Options.bind (Find_assertion c v) (fun a => Assertions.Get_kind a v).
+
+    Definition Find_type (c:t) (v:string) : option (Types.t_type Types.C_poly) := 
+        Options.bind (Find_assertion c v) (fun a => Assertions.Get_type a v).
+
+    Fixpoint Split (c:t) (v:string) : option (t * Assertions.t * t) :=
         fold c
-            (empty  := fun _ => None) 
+            (empty := fun _ => None) 
             (assertion := fun c a => 
-                match Assertions.Get_type a v with
-                | Some v => Some v
-                | None => Find_type c v
-                end
+                Options.fold (Find_assertion c v)
+                    (some := fun a => Some (c,a,empty))
+                    (none := fun _ => 
+                        let+ (c,a',c') := Split c v in 
+                        (c,a',Add_first c' a)
+                    )
             ).
 
 End Context.
