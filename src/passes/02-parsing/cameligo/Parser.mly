@@ -181,6 +181,7 @@ declaration:
 | let_declaration {         Let $1 }
 | module_decl     {  ModuleDecl $1 }
 | module_alias    { ModuleAlias $1 }
+| module_open     {  ModuleOpen $1 }
 | "<directive>"   {   Directive $1 }
 
 (* Type declarations *)
@@ -233,6 +234,15 @@ module_alias:
                   alias       = $2;
                   eq;
                   binders     = $4}
+    in {region; value} }
+
+module_open:
+  "open" nsepseq(module_name,".") {
+    let kwd_open = $1 in
+    let stop   = nsepseq_to_region (fun x -> x.region) $2 in
+    let region = cover kwd_open#region stop in
+    let value  = {kwd_open;
+                  binders = $2}
     in {region; value} }
 
 type_expr:
@@ -910,7 +920,7 @@ field_path_assignment:
   field_name {
      let region = $1.region
       and value  = Path_punned_property $1
-        in {region; value} 
+        in {region; value}
   }
 | path "=" expr {
     let region = cover (path_to_region $1) (expr_to_region $3)
@@ -921,7 +931,7 @@ field_assignment:
   field_name {
     let region = $1.region
     and value  = Punned_property $1
-      in {region; value} 
+      in {region; value}
   }
 | field_name "=" expr {
     let region = cover $1.region (expr_to_region $3)

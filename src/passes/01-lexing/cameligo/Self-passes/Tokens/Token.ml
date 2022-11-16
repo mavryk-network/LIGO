@@ -99,6 +99,7 @@ module T =
     | Match     of lexeme Wrap.t  (* match  *)
     | Mod       of lexeme Wrap.t  (* mod    *)
     | Module    of lexeme Wrap.t  (* module *)
+    | Open      of lexeme Wrap.t  (* open   *)
     | Not       of lexeme Wrap.t  (* not    *)
     | Of        of lexeme Wrap.t  (* of     *)
     | Or        of lexeme Wrap.t  (* or     *)
@@ -184,6 +185,7 @@ module T =
     | Match  t
     | Mod    t
     | Module t
+    | Open   t
     | Not    t
     | Of     t
     | Or     t
@@ -216,6 +218,7 @@ module T =
     let wrap_lsl    = wrap "lsl"
     let wrap_lsr    = wrap "lsr"
     let wrap_module = wrap "module"
+    let wrap_open   = wrap "open"
     let wrap_not    = wrap "not"
     let wrap_of     = wrap "of"
     let wrap_or     = wrap "or"
@@ -241,6 +244,7 @@ module T =
     let mk_Match  region = Match  (wrap_match  region)
     let mk_Mod    region = Mod    (wrap_mod    region)
     let mk_Module region = Module (wrap_module region)
+    let mk_Open   region = Open   (wrap_open   region)
     let mk_Not    region = Not    (wrap_not    region)
     let mk_Of     region = Of     (wrap_of     region)
     let mk_Or     region = Or     (wrap_or     region)
@@ -268,6 +272,7 @@ module T =
       mk_Match;
       mk_Mod;
       mk_Module;
+      mk_Open;
       mk_Not;
       mk_Of;
       mk_Or;
@@ -306,6 +311,7 @@ module T =
     let ghost_match  = wrap_match  Region.ghost
     let ghost_mod    = wrap_mod    Region.ghost
     let ghost_module = wrap_module Region.ghost
+    let ghost_open   = wrap_open   Region.ghost
     let ghost_not    = wrap_not    Region.ghost
     let ghost_of     = wrap_of     Region.ghost
     let ghost_or     = wrap_or     Region.ghost
@@ -330,6 +336,7 @@ module T =
     let ghost_Match  = Match  ghost_match
     let ghost_Mod    = Mod    ghost_mod
     let ghost_Module = Module ghost_module
+    let ghost_Open   = Open   ghost_module
     let ghost_Not    = Not    ghost_not
     let ghost_Of     = Of     ghost_of
     let ghost_Or     = Or     ghost_or
@@ -626,6 +633,7 @@ module T =
     | "Match"  -> ghost_match#payload
     | "Mod"    -> ghost_mod#payload
     | "Module" -> ghost_module#payload
+    | "Open"   -> ghost_open#payload
     | "Not"    -> ghost_not#payload
     | "Of"     -> ghost_of#payload
     | "Or"     -> ghost_or#payload
@@ -728,6 +736,7 @@ module T =
     | Match  t -> t#region, "Match"
     | Mod    t -> t#region, "Mod"
     | Module t -> t#region, "Module"
+    | Open   t -> t#region, "Open"
     | Not    t -> t#region, "Not"
     | Of     t -> t#region, "Of"
     | Or     t -> t#region, "Or"

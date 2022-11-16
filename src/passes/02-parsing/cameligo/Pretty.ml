@@ -27,6 +27,7 @@ and pp_declaration = function
 | TypeDecl    decl -> pp_type_decl    decl ^^ hardline
 | ModuleDecl  decl -> pp_module_decl  decl ^^ hardline
 | ModuleAlias decl -> pp_module_alias decl ^^ hardline
+| ModuleOpen  decl -> pp_module_open  decl ^^ hardline
 | Directive   dir  -> string (Directive.to_lexeme dir).Region.value
 
 (* Variables *)
@@ -187,6 +188,10 @@ and pp_module_alias decl =
   string "module " ^^ pp_ident alias ^^ string " ="
   ^^ group (nest 0 (break 1 ^^ pp_nsepseq "." pp_ident binders))
 
+and pp_module_open (decl : module_open reg) =
+  string "open "
+  ^^ group (nest 0 (break 1 ^^ pp_nsepseq "." pp_ident decl.value.binders))
+
 and pp_expr = function
   ECase       e -> pp_case_expr e
 | ECond       e -> group (pp_cond_expr e)
@@ -330,8 +335,8 @@ and pp_constr_expr {value; _} =
 and pp_record_expr ne_inj = group (pp_ne_injection pp_field_assign ne_inj)
 
 and pp_field_assign {value; _} =
-  match value with 
-    Property {field_name; field_expr; _} -> 
+  match value with
+    Property {field_name; field_expr; _} ->
       prefix 2 1 (pp_ident field_name ^^ string " =") (pp_expr field_expr)
   | Punned_property field_name ->
     pp_ident field_name
@@ -391,9 +396,9 @@ and pp_code_inj {value; _} =
   string "[%" ^^ language ^/^ code ^^ string "]"
 
 and pp_field_path_assign {value; _} =
-  match value with 
+  match value with
     Path_property {field_path; field_expr; _} ->
-      let path = pp_path field_path in 
+      let path = pp_path field_path in
       prefix 2 1 (path ^^ string " =") (pp_expr field_expr)
   | Path_punned_property field_name ->
     pp_ident field_name

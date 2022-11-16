@@ -109,6 +109,7 @@
 %token <string Wrap.t> Match  "match"  [@recover.expr Token.wrap_match   $loc]
 %token <string Wrap.t> Mod    "mod"    [@recover.expr Token.wrap_mod     $loc]
 %token <string Wrap.t> Module "module" [@recover.expr Token.wrap_module  $loc]
+%token <string Wrap.t> Open   "open"   [@recover.expr Token.wrap_open    $loc]
 %token <string Wrap.t> Not    "not"    [@recover.expr Token.wrap_not     $loc]
 %token <string Wrap.t> Of     "of"     [@recover.expr Token.wrap_of      $loc]
 %token <string Wrap.t> Or     "or"     [@recover.expr Token.wrap_or      $loc]
