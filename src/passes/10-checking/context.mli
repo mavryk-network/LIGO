@@ -22,6 +22,7 @@ module Signature : sig
     | S_value of expression_variable * type_expression
     | S_type of type_variable * type_expression
     | S_module of module_variable * t
+    | S_open of t
 
   val get_value : t -> expression_variable -> type_expression option
   val get_type : t -> type_variable -> type_expression option
@@ -50,7 +51,7 @@ and item =
   | C_marker of exists_variable
   | C_module of module_variable * Signature.t
   | C_pos of pos
-      (** A mutable position denotes a position in which we cannot search 
+      (** A mutable position denotes a position in which we cannot search
       for mutable variables behind. This is a slightly hacky solution to
       ensure lambdas don't contain captured mutable variables. *)
   | C_mut_pos of pos
@@ -131,9 +132,7 @@ module Elaboration : sig
     :  ('a, 'err, 'wrn) t Rows.LMap.t
     -> ('a Rows.LMap.t, 'err, 'wrn) t
 
-  val all_list
-    :  (('a, 'err, 'wrn) t) list
-    -> ('a list, 'err, 'wrn) t
+  val all_list : ('a, 'err, 'wrn) t list -> ('a list, 'err, 'wrn) t
 
   val run_expr
     :  (expression, ([> error ] as 'err), 'wrn) t

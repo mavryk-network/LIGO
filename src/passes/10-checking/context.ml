@@ -94,6 +94,7 @@ module Signature = struct
       | S_value of expression_variable * type_expression
       | S_type of type_variable * type_expression
       | S_module of module_variable * t
+      | S_open of t
     [@@deriving hash]
   end
 
@@ -182,6 +183,7 @@ module Signature = struct
         Format.fprintf ppf "type %a = %a" Type_var.pp tvar type_expression type_
       | S_module (mvar, sig_) ->
         Format.fprintf ppf "module %a = %a" Module_var.pp mvar pp sig_
+      | S_open sig_ -> Format.fprintf ppf "open %a" pp sig_
 
 
     and pp ppf t = Format.fprintf ppf "@[<v>sig@,%a@,end@]" (list ~pp:pp_item) t
@@ -388,12 +390,15 @@ let add_exists_var t evar kind = t |:: C_exists_var (evar, kind)
 let add_marker t evar = t |:: C_marker evar
 let add_module t mvar mctx = t |:: C_module (mvar, mctx)
 
-let add_signature_item t (sig_item : Signature.item) =
+let rec add_signature_item t (sig_item : Signature.item) =
   match sig_item with
   | S_value (var, type_) -> add_imm t var type_
   | S_type (tvar, type_) -> add_type t tvar type_
   | S_module (mvar, sig_) -> add_module t mvar sig_
+  | S_open sig_ -> add_open t sig_
 
+
+and add_open t mctx = List.fold_left ~f:add_signature_item ~init:t mctx
 
 let get_value =
   memoize2
@@ -687,6 +692,7 @@ let rec signature_item_apply t (sig_item : Signature.item) : Signature.item =
   | S_type (tvar, type_) -> S_type (tvar, apply t type_)
   | S_value (var, type_) -> S_value (var, apply t type_)
   | S_module (mvar, sig_) -> S_module (mvar, signature_apply t sig_)
+  | S_open sig_ -> S_open (signature_apply t sig_)
 
 
 and signature_apply t (sig_ : Signature.t) : Signature.t =
@@ -972,7 +978,9 @@ and signature_item_of_decl : ctx:t -> Ast_typed.decl -> bool * Signature.item =
   | D_module { module_binder = mvar; module_; module_attr = { public; _ } } ->
     let sig_' = signature_of_module_expr ~ctx module_ in
     public, S_module (mvar, sig_')
-  | D_open _ -> failwith "niy"
+  | D_open { module_ } ->
+    let sig_' = signature_of_module_expr ~ctx module_ in
+    false, S_open sig_'
 
 
 (* Load context from the outside declarations *)
@@ -990,7 +998,9 @@ let init ?env () =
         | D_module { module_binder; module_; module_attr = _ } ->
           let sig_ = signature_of_module_expr ~ctx module_ in
           add_module ctx module_binder sig_
-        | D_open _ -> failwith "niy")
+        | D_open { module_ } ->
+          let sig_ = signature_of_module_expr ~ctx module_ in
+          add_open ctx sig_)
 
 
 module Well_formed : sig
@@ -1150,6 +1160,7 @@ end = struct
       | Some _ -> true
       | _ -> false)
     | S_module (_mvar, sig_) -> signature ~ctx sig_
+    | S_open sig_ -> signature ~ctx sig_
 end
 
 module Hashes = struct
@@ -1381,7 +1392,8 @@ module Elaboration = struct
            ; module_ = module_expr_apply ctx module_
            ; module_attr
            }
-    | D_open _ -> failwith "niy"
+    | D_open { module_ } ->
+      return @@ D_open { module_ = module_expr_apply ctx module_ }
 
 
   and module_apply ctx module_ : module_ = List.map ~f:(decl_apply ctx) module_
@@ -1520,7 +1532,7 @@ module Elaboration = struct
       binder_pass_opt ~raise binder;
       expression_pass ~raise expr
     | D_module { module_; _ } -> module_expr_pass ~raise module_
-    | D_open _ -> failwith "niy"
+    | D_open { module_ } -> module_expr_pass ~raise module_
 
 
   and module_pass ~raise module_ = List.iter ~f:(decl_pass ~raise) module_

@@ -1567,7 +1567,12 @@ and infer_declaration ~(raise : raise) ~options ~ctx (decl : I.declaration)
         return
         @@ D_module { module_binder; module_; module_attr = { public; hidden } }
       )
-    | D_open _ -> failwith "not implemented yet"
+    | D_open { module_ } ->
+      let ctx, sig_, module_ = infer_module_expr ~raise ~options ~ctx module_ in
+      ( ctx
+      , S_open sig_
+      , let%bind module_ = module_ in
+        return @@ D_open { module_ } )
   in
   if debug
   then
