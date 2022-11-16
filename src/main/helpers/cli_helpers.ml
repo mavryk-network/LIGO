@@ -94,7 +94,7 @@ let run_command (cmd : command) =
     (fun p -> Lwt.map  
       (fun status -> 
         match status with
-          WEXITED 0 -> Ok ()
+          Unix.WEXITED 0 -> Ok ()
         | _ -> Error ("unknown error"))
         p#status) in
   Lwt_main.run status
