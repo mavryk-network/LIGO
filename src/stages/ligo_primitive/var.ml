@@ -58,6 +58,7 @@ module Internal () = struct
   let fresh_exists ?(loc = Location.dummy) () =
     fresh ~loc ~name:exists_prefix ()
 
+
   (* should be removed in favor of a lift pass before ast_imperative *)
   let of_input_var ?(loc = Location.dummy) name =
     if String.equal name "_"
@@ -75,11 +76,9 @@ module Internal () = struct
 
 
   (* TODO remove this *)
-  let internal_get_name_and_counter var = (var.name, var.counter)
-
+  let internal_get_name_and_counter var = var.name, var.counter
   let get_location var = var.location
-  let set_location location var = {var with location}
-
+  let set_location location var = { var with location }
   let is_generated var = var.generated
 
   let is_exists { name; generated; _ } =
@@ -92,14 +91,16 @@ module Internal () = struct
   let is_name var name = String.equal var.name name
 
   (* PP *)
-  let pp ppf v =
+  let _pp ppf v =
     if v.counter <> 0
     then Format.fprintf ppf "%s#%d" v.name v.counter
     else Format.fprintf ppf "%s" v.name
 
 
-  let _pp ppf v = Format.fprintf ppf "%s#%d" v.name v.counter
-  let wildcard = { name = "_"; counter = 0; location = Location.dummy; generated = false }
+  let pp ppf v = Format.fprintf ppf "%s#%d" v.name v.counter
+
+  let wildcard =
+    { name = "_"; counter = 0; location = Location.dummy; generated = false }
 end
 
 module Module_var = Internal ()

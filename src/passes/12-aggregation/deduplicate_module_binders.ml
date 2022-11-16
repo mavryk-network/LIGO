@@ -196,8 +196,9 @@ and compile_declaration scope (d : AST.declaration) : Scope.t * AST.declaration 
       Scope.new_module_var scope module_binder mod_scope
     in
     return scope @@ AST.D_module { module_binder; module_; module_attr }
-  | D_open { module_ = _ } ->
-    failwith "open should be resolved in self-ast-typed"
+  | D_open { module_ } ->
+    let _mod_scope, module_ = compile_module_expr scope module_ in
+    return scope @@ AST.D_open { module_ }
 
 
 and compile_program scope (program : AST.program) : Scope.t * AST.program =

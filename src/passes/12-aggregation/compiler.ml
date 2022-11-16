@@ -552,8 +552,9 @@ and compile_declaration
     in
     let scope = Scope.push_module scope module_binder path' mod_scope in
     scope, decl_list
-  | D_open { module_ = _ } ->
-    failwith "open should be resolved in self-ast-typed"
+  | D_open { module_ } ->
+    let mod_scope, _decl_list = compile_module_expr ~raise path scope module_ in
+    mod_scope, []
 
 
 and compile_declaration_list
@@ -654,8 +655,20 @@ and compile_module_expr
 
 
 let preprocess_program program =
+  (* Format.printf
+    "Compiling %a\n%!"
+    (Ast_typed.PP.program ~use_hidden:true)
+    program;*)
   let scope, program = Deduplicate_module_binders.program program in
+  (* Format.printf
+    "Deduplicated %a\n%!"
+    (Ast_typed.PP.program ~use_hidden:true)
+    program; *)
   let aliases, program = Resolve_module_aliases.program program in
+  (* Format.printf
+    "Aliase removed %a\n%!"
+    (Ast_typed.PP.program ~use_hidden:true)
+    program;*)
   scope, aliases, program
 
 

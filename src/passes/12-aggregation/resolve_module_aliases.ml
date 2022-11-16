@@ -176,8 +176,6 @@ and compile_declaration aliases (d : AST.declaration)
     let expr = expression aliases expr in
     let binder = Binder.map (Option.map ~f:(type_expression aliases)) binder in
     return_s aliases @@ AST.D_value { binder; expr; attr }
-  | D_open { module_ = _ } ->
-    failwith "open should be resolved in self-ast-typed"
   | D_type { type_binder; type_expr; type_attr } ->
     let type_expr = type_expression aliases type_expr in
     return_s aliases @@ AST.D_type { type_binder; type_expr; type_attr }
@@ -188,6 +186,19 @@ and compile_declaration aliases (d : AST.declaration)
     | None -> return_n aliases
     | Some module_ ->
       return_s aliases @@ AST.D_module { module_binder; module_; module_attr })
+  | D_open { module_ } ->
+    let _mod_aliases, path, module_' = compile_module_expr aliases module_ in
+    (match path, module_' with
+    | None, Some module_ -> return_s aliases @@ AST.D_open { module_ }
+    | Some path, None ->
+      return_s aliases
+      @@ AST.D_open
+           { module_ =
+               { module_ with
+                 wrap_content = M_module_path (List.Ne.of_list path)
+               }
+           }
+    | _, _ -> failwith "impossible case")
 
 
 and compile_declaration_list aliases (program : AST.program)
