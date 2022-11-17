@@ -14,7 +14,7 @@
   (targets wat_helpers.wasm)
   (action 
     (progn 
-      (run wabt/wat2wasm wat_helpers.wat -r -o wat_helpers.wasm)
+      (run wabt/wat2wasm wat_helpers.wat -r --disable-reference-types -o  wat_helpers.wasm)
       ; (run touch foo.ml)
     )
   )

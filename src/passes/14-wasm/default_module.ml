@@ -64,7 +64,8 @@ let mod_ : module_ =
               ~typedef:(FuncType ([NumType I32Type], [NumType I32Type]));
             type_ ~name:"__ligo_internal__set_size_type"
               ~typedef:(FuncType ([NumType I32Type], [NumType I32Type]));
-              
+            type_ ~name:"__ligo_internal__set_remove_type"
+              ~typedef:(FuncType ([NumType I32Type; NumType I32Type; NumType I32Type], [NumType I32Type]));
             
           ];
         imports =
@@ -97,9 +98,11 @@ let mod_ : module_ =
             import ~item:"c_set_left_child" ~desc:(FuncImport_symbol "c_set_left_child_type");
             import ~item:"to_int" ~desc:(FuncImport_symbol "to_int_type");
             import ~item:"__ligo_internal__set_size" ~desc:(FuncImport_symbol "__ligo_internal__set_size_type");
+            import ~item:"__ligo_internal__set_remove" ~desc:(FuncImport_symbol "__ligo_internal__set_remove_type");
           ];
         symbols =
           [
+            
             symbol_data ~name:"C_SET_EMPTY" ~index:0l ~size:4l ~offset:0l;
             symbol_data ~name:"C_LIST_EMPTY" ~index:1l ~size:4l ~offset:4l;
             symbol_data ~name:"C_MAP_EMPTY" ~index:2l ~size:4l ~offset:8l;
@@ -130,11 +133,10 @@ let mod_ : module_ =
             symbol ~name:"to_int" ~details:(Import ([NumType I32Type], [NumType I32Type]));
             symbol ~name:"__ligo_internal__set_size"
               ~details:(Import ([NumType I32Type], [NumType I32Type]));
+            symbol ~name:"__ligo_internal__set_remove"
+              ~details:(Import ([NumType I32Type; NumType I32Type; NumType I32Type], [NumType I32Type]));
             
           ];
-          tables = [{
-            it = {ttype = TableType ({min = 0l; max = Some 0l}, FuncRefType)}; at 
-          }];
       };
     at;
   }

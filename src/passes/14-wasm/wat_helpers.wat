@@ -1,8 +1,12 @@
 (module 
     (type (;0;) (func (param i32) (result i32)))
-    (type (;0;) (func (param i32) ))
+    (type (;1;) (func (param i32) ))
+    (type  (func (param i32 i32) (result i32)))
     (import "env" "malloc" (func $malloc (type 0)))
     (import "host" "print" (func $print (type 1)))
+    (import "env" "__indirect_function_table" (table $table 0 funcref))
+    ;; (import "env" "")
+
     (func $right_rotate (param $child i32) (result i32) 
         (local $grand_parent i32)
         (local $parent i32)
@@ -127,12 +131,27 @@
         i32.add
     )
 
-    (func $__ligo_internal_set_remove (param $set i32) (param $key i32) (result i32)
+    (func $__ligo_internal__set_remove (param $set i32) (param $key i32) (param $compare i32) (result i32)
         ;; TODO: clone etc. here.
-        i32.const 1
+        local.get $set 
+        i32.const 0
+        i32.eq 
+        if 
+            ;; do nothing ?
+            i32.const 5555
+            call $print
+        else 
+            local.get $set
+            local.get $key            
+            local.get $compare            
+            call_indirect 0 (type 2)
+            call $print
+        end
+
+        i32.const 2
     )
 
-    (func $__ligo_internal_set_fold (param $set i32) (result i32)
+    (func $__ligo_internal__set_fold (param $set i32) (result i32)
         i32.const 2
     )
 
@@ -452,7 +471,8 @@
         local.get $value
     )
 
-    (table (;0;) 1 1 funcref)
+    ;; (table (;0;) 2 2 funcref)
+    ;; (elem (;0;) (i32.const 1) func $compare_fn)
     (memory (;0;) 129)
     (export "right_rotate" (func $right_rotate))
 )

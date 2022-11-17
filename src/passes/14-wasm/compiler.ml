@@ -527,6 +527,25 @@ module Red_black_tree = struct
       let env = Env.add_locals env [(result, T.NumType I32Type)] in
       w, env, [const 4l; call_s "malloc"; local_tee_s result] @ e @ [call_s "__ligo_internal__set_size"; store; local_get_s result]
 
+    let remove ~raise w env at type_expression (key_e: A.instr list) (set_e: A.instr list) = 
+      let func_symbol = func_symbol at in
+      let call_s = call_s at in
+      let remove_helper_name = unique_name "remove_helper" in
+      let key_s = unique_name "remove_key" in
+      let set_s = unique_name "remove_set" in
+      let env = Env.add_locals env [(remove_helper_name, T.NumType I32Type); (key_s, T.NumType I32Type); (set_s, T.NumType I32Type)] in
+      let env, compare = build_comparator env type_expression at key_s set_s in
+      let f_body args = 
+        (* [
+          local_get_s at set_s;
+          local_get_s at key_s;
+        ] *)
+        (* @ *)
+        compare
+      in
+      let w, _required_arguments = add_function w remove_helper_name f_body in
+ 
+      w, env, [const at 1234321l; call_s "print"] @ set_e @ key_e @ [func_symbol remove_helper_name] @ [call_s "__ligo_internal__set_remove"] @ [const at 1234321l; call_s "print"]
 end
 
 (* The data offset. This indicates where a block of data should be placed in the linear memory. *)
@@ -809,7 +828,11 @@ let rec expression ~raise :
     let w, env, s = expression ~raise w env s in
     Red_black_tree.size ~raise w env at s
   | E_constant {cons_name = C_SET_REMOVE; arguments = [item; set] } -> 
-    host_call ~fn:"c_set_remove" ~response_size:4l ~instructions:[item; set]
+    let w, env, item_e = expression ~raise w env item in
+    let w, env, set_e = expression ~raise w env set in
+    Red_black_tree.remove ~raise w env at item.type_expression item_e set_e
+    
+    
   | E_constant {cons_name = C_SET_ITER; arguments = [func; set] } -> raise.error (not_supported e)
   | E_constant {cons_name = C_SET_FOLD; arguments = [func; set; init] } -> raise.error (not_supported e)
   | E_constant {cons_name = C_SET_FOLD_DESC; arguments = [func; set; init] } -> raise.error (not_supported e)
@@ -1013,6 +1036,7 @@ let rec expression ~raise :
           )
           else (
             let func_name, w = Partial_call.create_helper w at ~name ~no_of_args in 
+            
             let env, func_alloc_name, e = Partial_call.create_memory_block env at ~f:[func_symbol func_name] ~no_of_args ~current_args:result_vars in
             w, env,
             e
@@ -1054,7 +1078,11 @@ let rec expression ~raise :
 
           ({w with 
             types = w.types @ 
-              [type_ ~name:indirect_name ~typedef:(FuncType ([NumType I32Type], [NumType I32Type]))]
+              [type_ ~name:indirect_name ~typedef:(FuncType ([NumType I32Type], [NumType I32Type]))];
+            (* symbols = w.symbols @ 
+              [
+                symbol ~name:indirect_name ~details:Function;
+              ]  *)
           }, 
           env, 
           [
@@ -1120,7 +1148,9 @@ let rec expression ~raise :
 
                 local_get_s dest;
                 load;
+                
                 call_indirect_s indirect_name;
+                
               ]
               [
                 local_get_s dest
@@ -1401,14 +1431,7 @@ let rec expression ~raise :
     let w, env, col = expression ~raise w env collection in
     let w, env, body = expression ~raise w env body in
 
-    (* create a helper function here *)
-    let s = A.{
-      name    = helper_fn_name;
-      details = Function;
-    }
-    in
-    let s = S.{ it = s; at } in
-    let w = {w with symbols = s :: w.symbols } in
+    (* create a helper function here *)   
     let hd  = unique_name "hd" in
     let tl = unique_name "tl" in
     let w, env, tuple = Datatype.Pair.create w env [local_get_s hd; load] [local_get_s init] in
@@ -1463,7 +1486,7 @@ let rec expression ~raise :
     in
     
     (* add the function *)
-    let w, required_arguments = add_function w env helper_fn_name f_body in
+    let w, required_arguments = add_function w helper_fn_name f_body in
 
     (* call the helper function here *)    
     w, 
@@ -1913,17 +1936,21 @@ let compile ~raise : I.expression -> string -> string -> W.Ast.module_ =
   let w = toplevel_bindings ~raise e entrypoint w.it in
   let elems_i = List.mapi ~f:(fun i _ -> elem at i) (List.filter ~f:(fun f -> match f.it.idesc.it with FuncImport _ | FuncImport_symbol _ -> true | _ -> false) w.imports) in
   let elems = List.mapi ~f:(fun i _ -> elem at (List.length elems_i + i)) w.funcs in
+  let elems = List.mapi ~f:(fun i _ -> elem at i)  w.types in
+  (* let elems = List.mapi ~f:(fun i _ -> elem at (List.length elems_i + i)) w.types in *)
   let w = {w with 
-    elems = elems_i @ elems;
-    symbols = w.symbols @ [
-      {it = {
-        name = "table";
-        details = Table
-      };
-      at
-      }
-
-    ]
+    elems; 
+     (* = elems_i @ elems; *)
+    (* tables = [{
+      it = {ttype = TableType ({min = 1l; max = None}, FuncRefType)}; at 
+    }]; *)
+    imports = [
+      import ~item:"__indirect_function_table" ~desc:(TableImport (TableType ({min = 1l; max = None}, FuncRefType)));
+    ] @ w.imports;
+    (* symbols = [symbol ~name:"__indirect_function_table" ~details:Table] @ w.symbols; *)
+    (* exports = [export ~name:"__indirect_function_table" ~desc:(TableExport {it = 0l; at})] @ w.exports; *)
+    (* symbols = [symbol ~name:"__indirect_function_table" ~details:Table] @ w.symbols; *)
+    (* exports = [export ~name:"table" ~desc:(TableExport {it = 0l; at})] @ w.exports; *)
   } in
   S.{it = w; at}
  

@@ -77,6 +77,17 @@ let import_m ?module_name ~item ~desc () =
 let import ~item ~desc =
   import_m ~item ~desc ()
 
+let export ~name ~desc = 
+  {
+    it = {
+      name = xname name;
+      edesc = {
+        it = desc;
+        at
+      }
+    };
+    at;
+  }  
 
 let symbol ~name ~details = {it = {name; details}; at}
 
@@ -237,7 +248,7 @@ let find_missing e =
   in 
   aux { missing_arguments = []; missing_locals = []; missing_functions = []; arguments = []; locals = []; functions = []} e
 
-let add_function w (_env: Env.t) helper_fn_name f_body = 
+let add_function w helper_fn_name f_body = 
   let local_get_s = local_get_s at in
   let required = find_missing (f_body []) in
   let required_arguments = (
@@ -269,11 +280,14 @@ let add_function w (_env: Env.t) helper_fn_name f_body =
     tdetails = FuncType (List.map ~f:(fun _ -> NumType I32Type) required.missing_arguments, [NumType I32Type])
   } 
   in
+  let s = {name = helper_fn_name; details = Function} in
+  let s = S.{it = s; at } in
   let t = S.{ it = t; at } in
     let w = {
       w with
         types   = t :: w.types;
         funcs   = f :: w.funcs;
+        symbols = s :: w.symbols;
     }
   in 
   w, required_arguments

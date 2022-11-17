@@ -11,7 +11,8 @@ let data_index (data: data_segment list) symbol =
 let func_index (funcs: Ast.func list) (imports: Ast.import list) symbol = 
   let rec find_import imports count = 
     match imports with
-    | Source.{it = {item_name; _};_} :: remaining when (Ast.string_of_name item_name) = symbol -> count
+    | Source.{it = {item_name; _};_} :: remaining when (Ast.string_of_name item_name) = symbol -> 
+      count
     | _ :: remaining -> find_import remaining (Int32.add count 1l) 
     | [] -> (-1l)
   in
@@ -19,13 +20,15 @@ let func_index (funcs: Ast.func list) (imports: Ast.import list) symbol =
   if result = (-1l) then 
     let rec find_func funcs count = 
       match funcs with
-      | Source.{it = FuncSymbol {name; ftype; _}; _} :: remaining when name = symbol -> count
+      | Source.{it = FuncSymbol {name; ftype; _}; _} :: remaining when name = symbol -> 
+        count
       | _ :: remaining -> find_func remaining (Int32.add count 1l)
       | [] -> failwith ("Could not find function: " ^ symbol)
     in
     find_func funcs (Int32.of_int (List.length imports))
-  else 
-  result
+  else (
+    result
+  )
 
 let find_type types x = 
   let rec iter result = function
