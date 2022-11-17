@@ -65,7 +65,7 @@ let mod_ : module_ =
             type_ ~name:"__ligo_internal__set_size_type"
               ~typedef:(FuncType ([NumType I32Type], [NumType I32Type]));
             type_ ~name:"__ligo_internal__set_remove_type"
-              ~typedef:(FuncType ([NumType I32Type; NumType I32Type; NumType I32Type], [NumType I32Type]));
+              ~typedef:(FuncType ([NumType I32Type; NumType I32Type; NumType I32Type; NumType I32Type; NumType I32Type;], [NumType I32Type]));
             
           ];
         imports =
@@ -134,7 +134,7 @@ let mod_ : module_ =
             symbol ~name:"__ligo_internal__set_size"
               ~details:(Import ([NumType I32Type], [NumType I32Type]));
             symbol ~name:"__ligo_internal__set_remove"
-              ~details:(Import ([NumType I32Type; NumType I32Type; NumType I32Type], [NumType I32Type]));
+              ~details:(Import ([NumType I32Type; NumType I32Type; NumType I32Type; NumType I32Type; NumType I32Type;], [NumType I32Type]));
             
           ];
       };

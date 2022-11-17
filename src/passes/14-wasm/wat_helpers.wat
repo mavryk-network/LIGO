@@ -131,24 +131,250 @@
         i32.add
     )
 
-    (func $__ligo_internal__set_remove (param $set i32) (param $key i32) (param $compare i32) (result i32)
-        ;; TODO: clone etc. here.
+    (func $__ligo_internal__set_remove (param $set i32) (param $key i32) (param $compare i32) (param $SIZE i32) (param $C_SET_EMPTY i32) (result i32)
+        (local $compare_result i32)
+        (local $result i32)
+        (local $new_item i32)
+        (local $current_item i32)
+        (local $parent i32)
+        (local $new_item_parent i32)
+        (local $left_child i32)
+        (local $right_child i32)
+        (local $new_child i32)
+        
         local.get $set 
-        i32.const 0
+        local.get $C_SET_EMPTY
         i32.eq 
-        if 
-            ;; do nothing ?
-            i32.const 5555
-            call $print
+        if (result i32)
+            ;; no collection, so nothing to delete
+            local.get $C_SET_EMPTY
         else 
-            local.get $set
-            local.get $key            
-            local.get $compare            
-            call_indirect 0 (type 2)
+            i32.const 919191
             call $print
-        end
 
-        i32.const 2
+            local.get $SIZE
+            call $malloc
+            local.set $result 
+
+            local.get $result
+            local.set $new_item 
+
+            local.get $set 
+            local.set $current_item
+
+            ;; loop to find the right node to delete
+            loop (result i32)
+                local.get $new_item 
+                local.get $current_item 
+                local.get $SIZE
+                memory.copy 
+
+                local.get $new_item 
+                i32.const 4
+                i32.add
+                local.get $parent 
+                i32.store
+
+                local.get $parent
+                local.set $new_item_parent
+
+                local.get $new_item 
+                local.set $parent
+    
+                local.get $current_item 
+                i32.const 8
+                i32.add 
+                i32.load 
+                local.set $left_child
+
+                local.get $current_item 
+                i32.const 12
+                i32.add 
+                i32.load 
+                local.set $right_child  
+    
+                local.get $left_child 
+                call $print
+                local.get $right_child 
+                call $print
+
+                ;; do comparison of the nodes
+                local.get $current_item
+                local.get $key                
+                local.get $compare            
+                call_indirect 0 (type 2)
+                local.tee $compare_result
+                if (result i32) 
+                    i32.const 9191912
+                    call $print
+                    local.get $compare_result
+                    call $print
+
+                    local.get $compare_result
+                    i32.const -1
+                    i32.eq
+                    if (result i32)
+                        local.get $left_child 
+                        if (result i32)
+                            i32.const 321321
+                            call $print
+
+                            ;; proceed with the left child 
+                            local.get $SIZE
+                            call $malloc
+                            local.set $new_child
+
+                            local.get $new_item 
+                            i32.const 8
+                            i32.add 
+                            local.get $new_child
+                            i32.store
+
+                            local.get $new_child
+                            local.set $new_item
+
+                            local.get $left_child
+                            local.set $current_item 
+                            br 3
+                        else 
+                            i32.const 3213212
+                            call $print
+                            local.get $result
+                        end
+                    else 
+                        local.get $right_child 
+                        if (result i32)   
+                            i32.const 123123
+                            call $print
+
+                            ;; proceed with the right child
+                            local.get $SIZE
+                            call $malloc
+                            local.set $new_child
+
+                            local.get $new_item 
+                            i32.const 12
+                            i32.add 
+                            local.get $new_child
+                            i32.store
+
+                            local.get $new_child
+                            local.set $new_item
+
+                            local.get $right_child
+                            local.set $current_item 
+                            br 3
+                        else 
+                            i32.const 1231232
+                            call $print
+                            local.get $result
+                        end
+                    end                                        
+                else 
+                    ;; found the node to replace
+                    local.get $left_child
+                    i32.const 0
+                    i32.eq
+                    local.get $right_child 
+                    i32.const 0 
+                    i32.ne
+                    i32.and
+                    if (result i32)
+                        ;; can replace with right_child
+                        local.get $new_item_parent 
+                        i32.const 8
+                        i32.add 
+                        i32.load 
+                        local.get $new_item 
+                        i32.eq
+                        if (result i32)
+                            local.get $new_item_parent 
+                            i32.const 8 
+                            i32.add 
+                            local.get $right_child 
+                            i32.store
+                            local.get $result
+                        else 
+                            local.get $new_item_parent 
+                            i32.const 12 
+                            i32.add 
+                            local.get $right_child 
+                            i32.store
+                            local.get $result
+                        end
+                    else 
+                        local.get $left_child
+                        i32.const 0
+                        i32.ne
+                        local.get $right_child 
+                        i32.const 0 
+                        i32.eq
+                        i32.and
+                        if (result i32)
+                            ;; can replace with left_child
+                            local.get $new_item_parent 
+                            i32.const 8
+                            i32.add 
+                            i32.load 
+                            local.get $new_item 
+                            i32.eq
+                            if (result i32)
+                                local.get $new_item_parent 
+                                i32.const 8 
+                                i32.add 
+                                local.get $left_child 
+                                i32.store
+                                local.get $result
+                            else 
+                                local.get $new_item_parent 
+                                i32.const 12 
+                                i32.add 
+                                local.get $left_child 
+                                i32.store
+                                local.get $result
+                            end
+                        else 
+                            local.get $left_child
+                            i32.const 0
+                            i32.eq
+                            local.get $right_child 
+                            i32.const 0 
+                            i32.eq
+                            i32.and
+                            if (result i32)
+                                ;; there is no child
+                                local.get $new_item_parent 
+                                i32.const 8
+                                i32.add 
+                                i32.load
+                                local.get $new_item
+                                i32.eq
+                                if 
+                                    local.get $new_item_parent
+                                    i32.const 8 
+                                    i32.add 
+                                    i32.const 0
+                                    i32.store
+                                else 
+                                    local.get $new_item_parent 
+                                    i32.const 12
+                                    i32.add 
+                                    i32.const 0
+                                    i32.store
+                                end 
+                                local.get $result
+                            else
+                                ;; i32.const 0
+                                ;; TODO: implement this!
+                                unreachable
+                                ;; local.get $result
+                                ;; TODO: take the most left leaf of the right child and promote it up
+                            end
+                        end
+                    end 
+                end
+            end
+        end  
     )
 
     (func $__ligo_internal__set_fold (param $set i32) (result i32)

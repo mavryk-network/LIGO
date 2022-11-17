@@ -89,9 +89,10 @@ let main ((_, _s):(parameter * storage)) =
   let xx = Set.cardinal s1 + Map.size m1 in
   
   let a19: int = int xx in
-  let a20 = Set.remove 50 s1 in
+  let a20 = Set.remove 30 s1 in
   // let a21 = Map.remove 50 (Map.literal [(20, 1); (50, 2); (30, 3)]) in
   let a22 = Set.cardinal a20 in 
+  let a24 = Set.cardinal s1 in
   // let a23 = Map.size a21 in 
   let a23 = 0 in
   let a = 
@@ -115,8 +116,9 @@ let main ((_, _s):(parameter * storage)) =
     a18 +      (* 472 + 5 = 477 *)
     a19 +    (* 477 + 5 = 482 *)
     a22 +    (* 482 + 2 = 484 *)
-    a23      (* 484 + 2 = 486 *)
+    a23 +     (* 484 + 2 = 486 *)
+    a24 +     (*     + 3 = *)
     // 1000 
-    // 0
+    0
   in 
   ([]: operation list), a

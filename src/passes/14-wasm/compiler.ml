@@ -528,7 +528,10 @@ module Red_black_tree = struct
       w, env, [const 4l; call_s "malloc"; local_tee_s result] @ e @ [call_s "__ligo_internal__set_size"; store; local_get_s result]
 
     let remove ~raise w env at type_expression (key_e: A.instr list) (set_e: A.instr list) = 
+      let size = 20l in
       let func_symbol = func_symbol at in
+      let const = const at in
+      let data_symbol = data_symbol at in
       let call_s = call_s at in
       let remove_helper_name = unique_name "remove_helper" in
       let key_s = unique_name "remove_key" in
@@ -545,7 +548,7 @@ module Red_black_tree = struct
       in
       let w, _required_arguments = add_function w remove_helper_name f_body in
  
-      w, env, [const at 1234321l; call_s "print"] @ set_e @ key_e @ [func_symbol remove_helper_name] @ [call_s "__ligo_internal__set_remove"] @ [const at 1234321l; call_s "print"]
+      w, env, set_e @ key_e @ [func_symbol remove_helper_name; const size; data_symbol "C_SET_EMPTY"; call_s "__ligo_internal__set_remove"]
 end
 
 (* The data offset. This indicates where a block of data should be placed in the linear memory. *)
