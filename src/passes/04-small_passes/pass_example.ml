@@ -67,7 +67,7 @@ type 't type_expr = [
   location                : int
 } *)
 
-type fix_type_expr = fix_type_expr type_expr
+type fix_type_expr = fix_type_expr type_expr [@@deriving sexp]
 
 
 let rec fold_expr
@@ -75,10 +75,23 @@ let rec fold_expr
   (t:fix_type_expr) : 'a =
   f (map_type_expr (fold_expr f) t)
 
-let pass_t_arg : fix_type_expr -> fix_type_expr = fun te ->
-  let f : fix_type_expr -> fix_type_expr = function
-  | `T_Arg (s, loc) -> `T_Var (Ty_variable.of_input_var s, loc)
-  | _ as common -> common
+
+let pass_t_arg : fix_type_expr Small_passes.pass =
+  let name = "pass_remove_t_arg" in
+  let compile : Small_passes.syntax -> fix_type_expr -> fix_type_expr =
+    fun _syntax te ->
+    let f : fix_type_expr -> fix_type_expr = function
+    | `T_Arg (s, loc) -> `T_Var (Ty_variable.of_input_var s, loc)
+    | _ as common -> common
+    in
+    fold_expr f te
   in
-  fold_expr f te
+  let decompile : Small_passes.syntax -> fix_type_expr -> fix_type_expr =
+    fun _syntax t -> t
+  in
+  let check_reductions : fix_type_expr -> bool =
+    fun _ -> true
+  in
+  {name; compile; decompile; check_reductions}
+
 
