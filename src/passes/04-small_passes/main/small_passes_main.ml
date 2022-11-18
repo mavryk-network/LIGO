@@ -34,12 +34,27 @@ type te_pass = te SP.pass
 let passes_list =
   let open PE in
   [ pass_t_arg
+  ; pass_t_named_fun
   ]
 
+let ghost_loc : 'a -> 'a PE.Loc.t = fun x -> (x, 0)
+
+let tvar_of_str = AST.Types.Ty_variable.of_input_var
+
+let my_fun : te =
+  let args : te AST.Named_fun.fun_type_args = 
+    [ { name = "arg_1" ; type_expr = `T_Var (ghost_loc @@ tvar_of_str "a1") }
+    ; { name = "arg_2" ; type_expr = `T_Var (ghost_loc @@ tvar_of_str "a2") }
+    ; { name = "arg_3" ; type_expr = `T_Var (ghost_loc @@ tvar_of_str "a3") }
+    ]
+  in
+  let f : te = `T_Var (ghost_loc @@ tvar_of_str "f") in
+  `T_Named_fun (ghost_loc (args, f))
+
 let inputs : (string * te) list =
-  let ghost_loc x = (x, 0) in
   [ "simple_arg", `T_Arg (ghost_loc "my_arg")
-  ; "simple_var", `T_Var (ghost_loc @@ AST.Types.Ty_variable.of_input_var "my_var")
+  ; "simple_var", `T_Var (ghost_loc @@ tvar_of_str "my_var")
+  ; "named_fun", my_fun
   ]
 
 let test_input (passes : te_pass list) (test_name, input : string * te) =

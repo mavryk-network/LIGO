@@ -84,23 +84,46 @@ let rec fold_expr
   (t:fix_type_expr) : 'a =
   f (map_type_expr (fold_expr f) t)
 
+let default_compile : Small_passes.syntax -> fix_type_expr -> fix_type_expr =
+  fun _syntax te -> te
+
+let default_decompile = default_compile
+
+let default_check_reduction : fix_type_expr -> bool = fun _ -> true
+
+(* Helper used to factor out the common part of all passes' compile functions *)
+let wrap_compile (core_compile : fix_type_expr -> fix_type_expr)
+  : Small_passes.syntax -> fix_type_expr -> fix_type_expr =
+  fun _syntax te -> fold_expr core_compile te
 
 let pass_t_arg : fix_type_expr Small_passes.pass =
   let name = "pass_remove_t_arg" in
-  let compile : Small_passes.syntax -> fix_type_expr -> fix_type_expr =
-    fun _syntax te ->
-    let f : fix_type_expr -> fix_type_expr = function
-    | `T_Arg (s, loc) -> `T_Var (Ty_variable.of_input_var s, loc)
-    | _ as common -> common
-    in
-    fold_expr f te
+  let core_compile : fix_type_expr -> fix_type_expr = function
+  | `T_Arg (s, loc) -> `T_Var (Ty_variable.of_input_var s, loc)
+  | _ as common -> common
   in
-  let decompile : Small_passes.syntax -> fix_type_expr -> fix_type_expr =
-    fun _syntax t -> t
+  let compile = wrap_compile core_compile in
+  let decompile = default_decompile in
+  let check_reductions = default_check_reduction in
+  {name; compile; decompile; check_reductions}
+
+let pass_t_named_fun : fix_type_expr Small_passes.pass =
+  let name = "pass_remove_t_named_fun" in
+  let core_compile : fix_type_expr -> fix_type_expr = function
+  | `T_Named_fun ((args, f), loc) ->
+    let remove_name (t : fix_type_expr Named_fun.fun_type_arg) = t.type_expr in
+    let args : fix_type_expr list = List.map ~f:remove_name args in
+    (* We have `f`, we have `args = [a1; a2; an]`
+       we want T_fun f (T_fun a1 (T_fun a2 an))
+       hence the below fold over [a2; a1; f] starting with `an` *)
+       let (an, l) : fix_type_expr nseq = List.Ne.rev (f, args) in
+       let res = List.fold ~init:an ~f:(fun acc t -> `T_Fun ((t, acc), loc)) l in
+       res
+  | _ as common -> common
   in
-  let check_reductions : fix_type_expr -> bool =
-    fun _ -> true
-  in
+  let compile = wrap_compile core_compile in
+  let decompile = default_decompile in
+  let check_reductions = default_check_reduction in
   {name; compile; decompile; check_reductions}
 
 
