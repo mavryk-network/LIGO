@@ -9,6 +9,7 @@ let r_fst x = fst (r_split x)
 let w_split (x: 'a Lexing_shared.Wrap.t) : 'a * Location.t =
   (x#payload, Location.lift x#region)
 let w_fst x = fst (w_split x)
+let w_snd x = snd (w_split x)
 
 let filter_opt : 'a . 'a option list -> 'a list = fun decls ->
   List.fold

@@ -10,11 +10,44 @@ module Region  = Simple_utils.Region
 
 open AST  (* Brings types and combinators functions *)
 
+module type X = module type of AST.Combinators
+
 module TODO_do_in_parsing = struct
   let r_split = r_split (* could compute Location directly in Parser *)
+  let lift = Location.lift
   let var ~loc var = Ligo_prim.Value_var.of_input_var var
   let tvar ~loc var = Ligo_prim.Type_var.of_input_var var
   let mvar ~loc var = Ligo_prim.Module_var.of_input_var var
+  let need_rework _ y = (*most probably a node that we should avoid, maybe ?*) failwith y
+  let six_to_z x = Z.of_int64 x (* not sure who's right ? *)
+  let rec compile_pattern_record_lhs (p:CST.pattern) : CST.variable =
+    match p with
+    | CST.P_Par x -> compile_pattern_record_lhs x.value.inside
+    | CST.P_Var x -> x
+    | _ -> failwith "CST.field_pattern is wrong ?  should be '(string, pattern) field' ?"
+  let weird_attributes _ =
+    (* I don't know what to do with those attributes *)
+    ()
+  let extract_arg_from_app self p =
+    (* other syntax do not have the App thing ?
+       also have an optional 'carg' ?
+    *)
+    let ((constr,p_opt), loc) = r_split p in
+    let pat ~loc p = Location.wrap ~loc p in
+    let rec get_ctor : CST.pattern -> string option = function
+      | P_Par x -> get_ctor x.value.inside
+      | P_Ctor x -> Some x#payload
+      | _ -> None
+    in
+    match get_ctor constr with
+    | Some "Unit" -> pat ~loc P_unit
+    | Some label ->
+      let carg = match p_opt with
+        | Some p -> self (CST.P_Tuple p)
+        | None -> pat ~loc P_unit
+      in
+      pat ~loc @@ P_variant (Label label, Some carg)
+    | None -> failwith "impossible ?"
 end
 module TODO_unify_in_cst = struct
   let compile_rows = Non_linear_rows.make
@@ -82,9 +115,7 @@ let rec compile_type_expression ~(raise: ('e, 'w) raise) : CST.type_expr -> AST.
     t_modpath {module_path; field} ~loc ()
   )
   | T_Par     t -> (
-    let t, loc = r_split t in
-    let t = self t.inside in
-    t_par t ~loc ()
+    self (r_fst t).inside
   )
   | T_Record t -> (
     let t, loc = r_split t in
@@ -127,103 +158,102 @@ let rec compile_type_expression ~(raise: ('e, 'w) raise) : CST.type_expr -> AST.
 
 and compile_pattern ~(raise: ('e, 'w) raise) : CST.pattern -> AST.pattern = fun p ->
   let self = compile_pattern ~raise in
+  let pat ~loc p = Location.wrap ~loc p in
   match p with
-  | P_App      p -> (
-    let (p, pt_opt), loc = r_split p in
-    let p : pattern = self p in
-    let pt_opt : pattern nseq option = Option.map ~f:(fun (v : CST.pattern CST.tuple) ->
-      nseq_map self @@ nsepseq_to_nseq v.value.inside
-    ) pt_opt
-    in
-    p_app p pt_opt ~loc ()
+  | P_Ctor p -> TODO_do_in_parsing.need_rework p "never emited alone"
+  | P_App p -> (
+    TODO_do_in_parsing.extract_arg_from_app self p
   )
-  | P_Attr     p -> (
+  | P_Attr p -> (
     let attr, ptrn = p in
     let attr, loc = r_split attr in
     let attr = translate_attr_pascaligo attr in
     let ptrn = self ptrn in
-    p_attr attr ptrn ~loc ()
+    pat ~loc (P_attr (attr,ptrn))
   )
-  | P_Bytes    p -> (
+  | P_Bytes p -> (
     let (s, hex), loc = w_split p in
     let b = Hex.to_bytes hex in
-    p_bytes s b ~loc ()
+    pat ~loc (P_literal (Literal_bytes b))
   )
-  | P_Cons     p -> (
+  | P_Cons p -> (
     let (p1, _, p2), loc = r_split p in
     let p1 = self p1 in
     let p2 = self p2 in
-    p_list (AST.PCons (p1, p2)) ~loc ()
+    pat ~loc (P_list (Cons (p1, p2)))
   )
-  | P_Ctor     p -> (
-    let s, loc = w_split p in
-    p_constr s None ~loc ()
+  | P_Int p -> (
+    let (_s, z), loc = w_split p in
+    pat ~loc (P_literal (Literal_int z))
   )
-  | P_Int      p -> (
-    let (s, z), loc = w_split p in
-    p_int s z ~loc ()
-  )
-  | P_List     p -> (
+  | P_List p -> (
     let p, loc = r_split p in
-    let p : pattern list = List.map ~f:self @@ sepseq_to_list p.elements in
-    p_list (AST.PListComp p) ~loc ()
+    let ps = List.map ~f:self (sepseq_to_list p.elements) in
+    pat ~loc (P_list (List ps))
   )
-  | P_ModPath  p -> (
+  | P_ModPath p -> (
     let p, loc = r_split p in
-    let module_path : string nseq = List.Ne.map w_fst @@ nsepseq_to_nseq p.module_path in
-    let field : ptrn = self p.field in
-    p_modpath {module_path; field} ~loc ()
+    let module_path = List.Ne.map
+      (fun x -> let x,loc = w_split x in TODO_do_in_parsing.mvar ~loc x)
+      (nsepseq_to_nseq p.module_path)
+    in
+    let field = self p.field in
+    pat ~loc (P_mod_access Mod_access.{module_path; field})
   )
-  | P_Mutez    p -> (
+  | P_Mutez p -> (
     let (s, z), loc = w_split p in
-    p_mutez s z ~loc ()
+    pat ~loc (P_literal (Literal_mutez (TODO_do_in_parsing.six_to_z z)))
   )
-  | P_Nat      p -> (
+  | P_Nat p -> (
     let (s, z), loc = w_split p in
-    p_nat s z ~loc ()
+    pat ~loc (P_literal (Literal_nat z))
   )
-  | P_Nil      p -> (
+  | P_Nil p -> (
     let _, loc = w_split p in
-    p_nil ~loc ()
+    pat ~loc (P_list (List []))
   )
-  | P_Par      p -> (
-    let p, loc = r_split p in
-    let p = self p.inside in
-    p_par p ~loc ()
+  | P_Par p -> (
+    self (r_fst p).inside
   )
-  | P_Record   p -> (
+  | P_Record p -> (
     let p, loc = r_split p in
     let fields =
-      let translate_field_assign : (CST.pattern, CST.pattern) CST.field -> (ptrn, ptrn) AST.field = function
-      | Punned    p -> Punned (self p.pun)
-      | Complete  c -> Complete (self c.field_lhs, self c.field_rhs)
+      let translate_field_assign : CST.field_pattern -> (Label.t, AST.pattern) AST.field = function
+      | Punned { pun; attributes } ->
+        TODO_do_in_parsing.weird_attributes attributes;
+        let pun,_ = w_split (TODO_do_in_parsing.compile_pattern_record_lhs pun) in
+        Punned (Label.of_string pun)
+      | Complete { field_lhs; field_lens = _ ; field_rhs; attributes } ->
+        TODO_do_in_parsing.weird_attributes attributes;
+        let lhs,_ = w_split (TODO_do_in_parsing.compile_pattern_record_lhs field_lhs) in
+        Complete (Label.of_string lhs, self field_rhs)
       in
       List.map ~f:(translate_field_assign <@ r_fst) @@ sepseq_to_list p.elements
     in
-    p_recordpascaligo fields ~loc ()
+    pat ~loc (P_pun_record fields)
   )
-  | P_String   p -> (
+  | P_String p -> (
     let s, loc = w_split p in
-    p_string s ~loc ()
+    pat ~loc (P_literal (Literal_string (Standard s)))
   )
   | P_Tuple    p -> (
     let p, loc = r_split p in
-    let p : ptrn nseq = List.Ne.map self @@ nsepseq_to_nseq p.inside in
-    p_tuple p ~loc ()
+    let p = List.map ~f:self (nsepseq_to_list p.inside) in
+    pat ~loc (P_tuple p)
   )
   | P_Typed    p -> (
     let p, loc = r_split p in
     let ptrn = self p.pattern in
-    let te_opt = Some( compile_type_expression ~raise @@ snd p.type_annot ) in
-    p_typed ptrn te_opt ~loc ()
+    let ty = compile_type_expression ~raise @@ snd p.type_annot in
+    pat ~loc (P_typed (ty,ptrn))
   )
   | P_Var      p -> (
     let s, loc = w_split p in
-    p_var s ~loc ()
+    pat ~loc (P_var (TODO_do_in_parsing.var ~loc s))
   )
   | P_Verbatim p -> (
     let s, loc = w_split p in
-    p_verbatim s ~loc ()
+    pat ~loc (P_literal (Literal_string (Standard s)))
   )
 
 (* ========================== INSTRUCTIONS ================================= *)
@@ -695,9 +725,12 @@ and compile_module ~(raise: ('e, 'w) raise) : CST.module_expr -> AST.module_ = f
   )
   | M_Path m -> (
     let m, loc = r_split m in
-    let module_path = nseq_map w_fst @@ nsepseq_to_nseq m.module_path in
-    let field = w_fst m.field in
-    m_path {module_path; field} ~loc ()
+    let module_path = List.Ne.map
+      (fun t -> TODO_do_in_parsing.mvar ~loc:(w_snd t) (w_fst t))
+      (nsepseq_to_nseq m.module_path)
+    in
+    let field = TODO_do_in_parsing.mvar ~loc:(w_snd m.field) (w_fst m.field) in
+    m_path (List.Ne.append module_path (field,[])) ~loc ()
   )
   | M_Var  m -> (
     let s, loc = w_split m in

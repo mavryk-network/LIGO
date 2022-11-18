@@ -14,6 +14,7 @@ module TODO_do_in_parsing = struct
   let var ~loc (var:string) = Ligo_prim.Value_var.of_input_var ~loc var
   let tvar ~loc (var:string) = Ligo_prim.Type_var.of_input_var ~loc var
   let mvar ~loc (var:string) = Ligo_prim.Module_var.of_input_var ~loc var
+  let labelize x = Label.of_string x
 end
 module TODO_unify_in_cst = struct
   let conv_attr (attr:CST.attributes) : (AST.attribute * Location.t) list =
@@ -46,7 +47,7 @@ let rec compile_type_expression : CST.type_expr -> AST.type_expr = fun te ->
     let t, loc = r_split t in
     let variants =
       let compile_variant = fun CST.{constr ; arg ; attributes} ->
-        ( Label.of_string (r_fst constr)
+        ( TODO_do_in_parsing.labelize (r_fst constr)
         , Option.map ~f:(self <@ snd) arg
         , List.map (TODO_unify_in_cst.conv_attr attributes) ~f:fst )
       in
@@ -62,7 +63,7 @@ let rec compile_type_expression : CST.type_expr -> AST.type_expr = fun te ->
       let open Ligo_prim in
       let compile_field_decl : int -> CST.field_decl -> AST.type_expr option Non_linear_rows.row =
        fun i {field_name ; field_type ; attributes } ->
-        let l = Label.of_string (r_fst field_name) in
+        let l = TODO_do_in_parsing.labelize (r_fst field_name) in
         let rows = Non_linear_rows.{
             decl_pos = i
           ; associated_type = Some (self field_type)
@@ -94,9 +95,7 @@ let rec compile_type_expression : CST.type_expr -> AST.type_expr = fun te ->
     t_fun ~loc (te1, te2) ()
   )
   | TPar t -> (
-    let t, loc = r_split t in
-    let t = self t.inside in
-    t_par t ~loc ()
+    self (r_fst t).inside
   )
   | TVar t -> (
     let t, loc = r_split t in
@@ -129,86 +128,81 @@ let rec compile_type_expression : CST.type_expr -> AST.type_expr = fun te ->
 
 let rec compile_pattern : CST.pattern -> AST.pattern = fun p ->
   let self = compile_pattern in
+  let pat ~loc p = Location.wrap ~loc p in
   match p with
-  | PConstr   p -> (
-    let (ctor, ptrn_opt), loc = r_split p in
-    let ctor = ctor.value in
-    let ptrn_opt = Option.map ~f:self ptrn_opt in
-    p_constr ctor ptrn_opt ~loc ()
+  | PConstr p -> (
+    let (ctor, p_opt), loc = r_split p in
+    let ctor = TODO_do_in_parsing.labelize ctor.value in
+    let p_opt = Option.map ~f:self p_opt in
+    pat ~loc (P_variant (ctor,p_opt))
   )
-  | PUnit     p -> (
+  | PUnit p -> (
     let _, loc = r_split p in
-    p_unit ~loc ()
+    pat ~loc (P_unit)
   )
-  | PVar      p -> (
+  | PVar p -> (
     let p, loc = r_split p in
     let v  = r_fst p.variable in
-    p_var v ~loc ()
+    pat ~loc (P_var (TODO_do_in_parsing.var ~loc v))
   )
-  | PInt      p -> (
+  | PInt p -> (
+    let (_s, z), loc = r_split p in
+    pat ~loc (P_literal (Literal_int z))
+  )
+  | PNat p -> (
     let (s, z), loc = r_split p in
-    p_int s z ~loc ()
+    pat ~loc (P_literal (Literal_nat z))
   )
-  | PNat      p -> (
-    let (s, z), loc = r_split p in
-    p_nat s z ~loc ()
-  )
-  | PBytes    p -> (
+  | PBytes p -> (
     let (s, hex), loc = r_split p in
     let bytes_ = Hex.to_bytes hex in
-    p_bytes s bytes_ ~loc ()
+    pat ~loc (P_literal (Literal_bytes bytes_))
   )
-  | PString   p -> (
+  | PString p -> (
     let s, loc = r_split p in
-    p_string s ~loc ()
+    pat ~loc (P_literal (Literal_string (Simple_utils.Ligo_string.standard s)))
   )
   | PVerbatim p -> (
     let s, loc = r_split p in
-    p_verbatim s ~loc ()
+    pat ~loc (P_literal (Literal_string (Simple_utils.Ligo_string.verbatim s)))
   )
-  | PList     p -> (
+  | PList p -> (
     let p, loc = match p with
-    | CST.PListComp p -> (
+    | CST.PListComp p ->
       let p, loc = r_split p in
-      let ps : pattern list = List.map ~f:self @@ sepseq_to_list p.elements in
-      AST.PListComp ps, loc
-    )
-    | CST.PCons p -> (
+      let ps = List.map ~f:self (sepseq_to_list p.elements) in
+      List ps, loc
+    | CST.PCons p ->
       let (p1, _, p2), loc = r_split p in
       let p1 = self p1 in
       let p2 = self p2 in
-      AST.PCons (p1, p2), loc
-    )
+      Cons (p1, p2), loc
     in
-    p_list p ~loc ()
+    pat ~loc (P_list p)
   )
-  | PTuple    p -> (
+  | PTuple p -> (
     let p, loc = r_split p in
-    let p = List.Ne.map self @@ nsepseq_to_nseq p in
-    p_tuple p ~loc ()
+    let p = List.map ~f:self (nsepseq_to_list p) in
+    pat ~loc (P_tuple p)
   )
-  | PPar      p -> (
-    let p, loc = r_split p in
-    let p = self p.inside in
-    p_par p ~loc ()
+  | PPar p -> (
+    self (r_fst p).inside
   )
-  | PRecord   p -> (
+  | PRecord p -> (
     let p, loc = r_split p in
     let p =
-      let compile_field_pattern : CST.field_pattern -> AST.ptrn AST.field_assign = fun fp -> 
-        { name = r_fst fp.field_name
-        ; expr = self fp.pattern
-        }
+      let compile_field_pattern : CST.field_pattern -> (Label.t, AST.pattern) field = fun fp -> 
+        Complete (TODO_do_in_parsing.labelize (r_fst fp.field_name), self fp.pattern)
       in
-      nseq_map (compile_field_pattern <@ r_fst) @@ nsepseq_to_nseq p.ne_elements
+      List.map ~f:(compile_field_pattern <@ r_fst) (nsepseq_to_list p.ne_elements)
     in
-    p_recordcameligo p ~loc ()
+    pat ~loc (P_pun_record p)
   )
   | PTyped    p -> (
     let p, loc = r_split p in
-    let ptrn = self p.pattern in
-    let te_opt = Some (compile_type_expression p.type_expr) in
-    p_typed ptrn te_opt ~loc ()
+    let ty = compile_type_expression p.type_expr in
+    let p = self p.pattern in
+    pat ~loc (P_typed (ty,p))
   )
 
 
@@ -387,9 +381,9 @@ let rec compile_expression ~raise : CST.expr -> AST.expr = fun e ->
     )
   | EModA ma -> (
       let ma, loc = r_split ma in
-      let module_name = r_fst ma.module_name in
+      let module_path = r_fst ma.module_name in
       let field = self ma.field in
-      e_moda {module_name; field} ~loc ()
+      e_moda {module_path; field} ~loc ()
     )
   | EUpdate up -> (
       let up, loc = r_split up in

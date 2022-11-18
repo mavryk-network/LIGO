@@ -10,6 +10,12 @@ module Option = Simple_utils.Option
 open AST  (* Brings types and combinators functions *)
 
 module TODO_do_in_parsing = struct
+  let unused_node () = failwith "unused node, can we clean ?"
+  let labelize x = Label.of_string x
+  let labelize_pattern p = match p with
+    (* would be better to emit a label/string directly ? *)
+    | CST.PVar var -> Label.of_string var.value.variable.value 
+    | _ -> failwith "impossible??"
   let r_split = r_split (* could compute Location directly in Parser *)
   let var ~loc var = Ligo_prim.Value_var.of_input_var var
   let tvar ~loc var = Ligo_prim.Type_var.of_input_var var
@@ -29,7 +35,8 @@ module TODO_unify_in_cst = struct
   let s_attach_attr (attr:CST.attributes) (e:AST.statement_jsligo) : AST.statement_jsligo =
     List.fold (conv_attr attr) ~init:e ~f:(fun e (attr,loc) -> s_attrjs ~loc attr e ())
   let p_attach_attr (attr:CST.attributes) (e:AST.pattern) : AST.pattern =
-    List.fold (conv_attr attr) ~init:e ~f:(fun e (attr,loc) -> p_attr ~loc attr e ())
+    List.fold (conv_attr attr) ~init:e ~f:(fun e (attr,loc) ->
+      Location.wrap ~loc (P_attr (attr, e)))
   let t_attach_attr (attr:CST.attributes) (e:AST.type_expr) : AST.type_expr =
     List.fold (conv_attr attr) ~init:e ~f:(fun e (attr,loc) -> t_attr ~loc attr e ())
   let compile_rows = Non_linear_rows.make
@@ -63,7 +70,7 @@ and compile_type_expression ~(raise: ('e, 'w) raise) : CST.type_expr -> AST.type
     let variants =
       let destruct : CST.variant -> _ = fun {tuple ; attributes} ->
         let CST.{constr ; params} = (r_fst tuple).inside in
-        ( Label.of_string (r_fst constr),
+        ( TODO_do_in_parsing.labelize (r_fst constr),
         Option.map ~f:(List.map ~f:self <@ nsepseq_to_list <@ snd) params,
         List.map (TODO_unify_in_cst.conv_attr attributes) ~f:fst )
       in
@@ -78,7 +85,7 @@ and compile_type_expression ~(raise: ('e, 'w) raise) : CST.type_expr -> AST.type
     let CST.{ne_elements ; attributes ; _}, loc = r_split t in
     let fields =
       let destruct = fun CST.{ field_name; field_type ; attributes ; _ } ->
-        ( Label.of_string (r_fst field_name),
+        ( TODO_do_in_parsing.labelize (r_fst field_name),
         Some (self field_type),
         List.map (TODO_unify_in_cst.conv_attr attributes) ~f:fst )
       in
@@ -109,9 +116,7 @@ and compile_type_expression ~(raise: ('e, 'w) raise) : CST.type_expr -> AST.type
     t_named_fun (fun_type_args, type_expr) ~loc ()
   )
   | TPar t -> (
-    let t, loc = r_split t in
-    let t = self t.inside in
-    t_par t ~loc ()
+    self (r_fst t).inside
   )
   | TVar t -> (
     let t, loc = r_split t in
@@ -161,45 +166,36 @@ and compile_type_expression ~(raise: ('e, 'w) raise) : CST.type_expr -> AST.type
 
 and compile_pattern ~(raise: ('e, 'w) raise) : CST.pattern -> AST.pattern = fun p ->
   let self = compile_pattern ~raise in
+  let pat ~loc p = Location.wrap ~loc p in
   match p with
-  | PRest     p -> (
-    let p, loc = r_split p in
+  | PConstr p -> TODO_do_in_parsing.unused_node ()
+  | PAssign   p -> TODO_do_in_parsing.unused_node ()
+  | PDestruct p -> TODO_do_in_parsing.unused_node ()
+  | PRest p -> (
+    let (p : CST.rest_pattern), loc = r_split p in
     let s = r_fst p.rest in
-    p_rest s ~loc ()
-  )
-  | PAssign   p -> (
-    let p, loc = r_split p in
-    let property = r_fst p.property in
-    let value = compile_expression ~raise p.value in
-    p_assign {property; value} ~loc ()
+    pat ~loc (P_rest (TODO_do_in_parsing.labelize s))
   )
   | PVar      p -> (
     let CST.{variable ; attributes}, loc = r_split p in
     let s = r_fst variable in
     TODO_unify_in_cst.p_attach_attr attributes (
-      p_var s ~loc ()
+      pat ~loc (P_var (TODO_do_in_parsing.var ~loc s))
     )
   )
-  | PConstr   p -> (
-    let s, loc = r_split p in
-    let ptrn_opt = None in (* Only CameLIGO PConstr have an associated pattern *)
-    p_constr s ptrn_opt ~loc ()
+  | PObject p -> (
+    let (record, loc) = r_split p in
+    let lps = List.map
+      ~f:(fun p ->  
+        let l = TODO_do_in_parsing.labelize_pattern p in
+        Punned l)
+      (Utils.nsepseq_to_list record.inside) in
+    Location.wrap ~loc (P_pun_record lps)
   )
-  | PDestruct p -> (
+  | PArray p -> (
     let p, loc = r_split p in
-    let property = r_fst p.property in
-    let target = compile_val_binding ~raise @@ r_fst p.target in
-    p_destruct {property; target} ~loc ()
-  )
-  | PObject   p -> (
-    let p, loc = r_split p in
-    let p = nseq_map self @@ nsepseq_to_nseq p.inside in
-    p_object p ~loc ()
-  )
-  | PArray    p -> (
-    let p, loc = r_split p in
-    let p = nseq_map self @@ nsepseq_to_nseq p.inside in
-    p_array p ~loc ()
+    let p = List.map ~f:self (nsepseq_to_list p.inside) in
+    pat ~loc (P_tuple p)
   )
 
 (* ========================== STATEMENTS ================================= *)
@@ -462,9 +458,9 @@ and compile_expression ~(raise: ('e, 'w) raise) : CST.expr -> AST.expr = fun e -
   )
   | EModA ma -> (
     let ma, loc = r_split ma in
-    let module_name = r_fst ma.module_name in
+    let module_path = r_fst ma.module_name in
     let field = self ma.field in
-    e_moda {module_name; field} ~loc ()
+    e_moda {module_path; field} ~loc ()
   )
   | EFun f -> (
     let f, loc = r_split f in

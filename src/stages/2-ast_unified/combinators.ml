@@ -77,17 +77,6 @@ type instruction_content = [%import: Types.instruction_content]
       wrap_get = ("statement_content" , get) ;
     } ]
 
-type pattern_content = [%import: Types.pattern_content]
-[@@deriving ez {
-      prefixes = [
-        ("make_p" , fun ?(loc = Location.generated) pattern_content ->
-                  ({ pattern_content ; location = loc } : pattern)) ;
-        ("get" , fun x -> x.pattern_content) ;
-      ] ;
-      wrap_constructor = ("pattern_content" , (fun pattern_content ?loc () -> make_p ?loc pattern_content)) ;
-      wrap_get = ("statement_content" , get) ;
-    } ]
-
 let e_literal ?loc l : expression = make_e ?loc @@ E_Literal l
 let e__type_ ?loc p : expression = make_e ?loc @@ E_Literal (Literal__type_ p)
 [@@map (_type_, ("address", "signature", "key", "key_hash", "chain_id"))]

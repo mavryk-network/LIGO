@@ -63,11 +63,6 @@ module Directive = struct
 end
 
 
-type ('lhs, 'rhs) field =
-| Punned of 'lhs
-| Complete of ('lhs * 'rhs)
-  [@@deriving yojson]
-
 (* ========================== TYPES ======================================== *)
 
 type type_expression = {
@@ -84,7 +79,6 @@ and type_expression_content =
 | T_App          of (string,type_expr) Type_app.t
 | T_Fun          of type_expr Arrow.t
 | T_Named_fun    of type_expr Named_fun.t
-| T_Par          of type_expr
 | T_String       of string
 | T_Int          of string * Z.t
 | T_ModA         of (Mod_variable.t, type_expr) Mod_access.t
@@ -99,84 +93,30 @@ and type_expression_content =
 
 (* ========================== PATTERNS ===================================== *)
 
-and pattern = {
-  pattern_content : pattern_content;
-  location        : Location.t
-}
-and ptrn_content = pattern_content
-and ptrn         = pattern
+and ('lhs, 'rhs) field =
+  | Punned of 'lhs
+  | Complete of ('lhs * 'rhs)
+  [@@deriving yojson]
+and 'ty list_pattern =
+  | Cons of 'ty p * 'ty p
+  | List of 'ty p list
+and 'ty pc =
+  | P_unit
+  | P_typed of 'ty * 'ty p
+  | P_literal of Literal_value.t
+  | P_var of Variable.t
+  | P_list of 'ty list_pattern
+  | P_variant of Label.t * 'ty p option
+  | P_tuple of 'ty p list
+  | P_pun_record of (Label.t, 'ty p) field list
+  | P_rest of Label.t
+  | P_attr of Attribute.t * 'ty p
+  | P_mod_access of (Mod_variable.t nseq, 'ty p) Mod_access.t
+and 'ty p = 'ty pc Location.wrap
+and pattern_content = type_expr pc 
+and pattern = type_expr p
   [@@deriving yojson]
 
-and list_pattern =
-| PListComp of pattern list
-| PCons     of pattern * pattern
-
-and assign_pattern = {
-  property  : string;
-  value     : expr
-}
-
-and let_binding = {
-  is_rec      : bool;
-  type_params : string nseq option;
-  binders     : pattern nseq;
-  rhs_type    : type_expr option;
-  let_rhs     : expression;
-}
-
-and destruct = {
-  property  : string;
-  target    : let_binding;
-}
-
-and 'a field_assign = {
-  name : string;
-  expr : 'a; 
-} [@@deriving yojson]
-
-and 'a module_access = {
-  module_name : string;
-  field       : 'a;
-}
-
-and 'a module_path = {
-  module_path : string nseq;
-  field       : 'a;
-}
-
-and pattern_content =
-(* Shared *)
-| P_Constr   of string * ptrn option
-| P_Unit
-| P_Var      of string
-| P_Int      of string * Z.t
-| P_Nat      of string * Z.t
-| P_Bytes    of string * bytes (* No [Hex.to_yojson], hence [bytes] instead *)
-| P_String   of string
-| P_Verbatim of string
-| P_List     of list_pattern
-| P_Tuple    of ptrn nseq
-| P_Par      of ptrn
-| P_Typed    of ptrn * type_expr option
-(* Cameligo *)
-| P_RecordCameligo   of ptrn field_assign nseq
-(* Pascaligo *)
-| P_App      of ptrn * ptrn nseq option
-| P_Attr     of Attribute.t * ptrn
-| P_ModPath  of ptrn module_path
-| P_Mutez    of string * Int64.t
-| P_Nil
-| P_Ctor     of string
-| P_RecordPascaligo   of (ptrn, ptrn) field list
-(* Jsligo *)
-| P_Rest     of string
-| P_Assign   of assign_pattern
-| P_Destruct of destruct
-| P_Object   of ptrn nseq
-| P_Array    of ptrn nseq
-
-(* P_App (P_Ctor x, ...) |-> P_Constr (x, ...)
-P_RecordCameligo |-> P_Record  // ne-list into list *)
 
 (* ========================== INSTRUCTIONS ================================= *)
 and instruction = {
@@ -344,6 +284,13 @@ and for_of = {
   for_stmt   : statement_jsligo;
 }
 
+and let_binding = {
+  is_rec      : bool;
+  type_params : string nseq option;
+  binders     : pattern nseq;
+  rhs_type    : type_expr option;
+  let_rhs     : expression;
+}
 and statement_jsligo_content =
 | S_Block      of statement_jsligo nseq
 | S_Expr       of expr
@@ -425,7 +372,7 @@ and mod_ = module_
 
 and module_content =
 | M_Body of declaration nseq
-| M_Path of string module_path
+| M_Path of Mod_variable.t nseq
 | M_Var  of string
 
 (* ========================== EXPRESSIONS ================================== *)
@@ -618,8 +565,8 @@ and expression_content =
   | E_ProjJsligo of projection_jsligo     (* x.y.z   Nested version of E_Proj, with only 1 selector *)
 
   (* Module access *)                     (* M.N.a *)
-  | E_ModA    of expr module_access       (* nested version, E_ModA( M, E_ModA( N, E_Var var ) ) *)
-  | E_ModPath of expr module_path         (* flat version,   E_ModAccess { [M, N], E_var var } *)
+  | E_ModA    of (string, expr) Mod_access.t (* nested version, E_ModA( M, E_ModA( N, E_Var var ) ) *)
+  | E_ModPath of (string nseq, expr) Mod_access.t (* flat version,   E_ModAccess { [M, N], E_var var } *)
 
   (* Updates *)
   | E_UpdateCameligo  of update_cameligo  (* { my_record with field1 = a; field2 = b } *)
