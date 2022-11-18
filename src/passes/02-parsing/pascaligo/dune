@@ -61,7 +61,7 @@
 (rule
   (targets Parser.msg)
   (deps
-   (:script_messages ../../../../vendors/ligo-utils/simple-utils/messages.sh)
+   (:script_messages ../../../../vendored-dune/ligo-utils/simple-utils/messages.sh)
    Parser.mly ParToken.mly)
   (action
     (run %{script_messages} --lex-tokens=Token.mli --par-tokens=ParToken.mly
@@ -81,7 +81,7 @@
 (rule
   (targets all.ligo)
   (deps
-    (:script_cover ../../../../vendors/ligo-utils/simple-utils/cover.sh)
+    (:script_cover ../../../../vendored-dune/ligo-utils/simple-utils/cover.sh)
     Parser.mly
     ParToken.mly
     Parser.msg)
