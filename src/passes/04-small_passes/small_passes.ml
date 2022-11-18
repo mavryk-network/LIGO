@@ -20,6 +20,7 @@ type 'a check =
   }
 
 let trivial_compile_program : I.program -> O.program =
+  fun _ ->
   (*
     should be as trivial as:
 
@@ -30,14 +31,15 @@ let trivial_compile_program : I.program -> O.program =
   failwith "TODO12"
 
 
-let trivial_compile_expression : I.expression -> O.expression = failwith ""
+let trivial_compile_expression : I.expression -> O.expression = fun _ -> failwith ""
 
 let compile_with_passes : type a. syntax_todo:syntax -> a pass list -> a check list -> a -> a =
  fun ~syntax_todo passes checks prg ->
+
   let f : int -> a -> a pass -> a =
    fun i prg pass ->
     let prg = pass.compile syntax_todo prg in
-    if pass.check_reductions prg
+    if not (pass.check_reductions prg)
     then
       failwith (Format.asprintf "pass number %d(%s) did not fully reduce" i pass.name);
     prg
