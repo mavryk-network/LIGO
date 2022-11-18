@@ -42,6 +42,15 @@ end
 module Loc = struct
   type location = int [@@deriving sexp]
   type 'a t = 'a * location [@@deriving map, sexp]
+
+  (* Just don't print locations for readability *)
+  (* TODO : How to add an option to toggle printing of locations on sexp ? *)
+  let sexp_of_t : ('a -> Sexp.t) -> 'a t -> Sexplib0.Sexp.t =
+    fun sexp_of_a t ->
+      match sexp_of_t sexp_of_a t with
+      | Sexplib0.Sexp.List [sexp_a; _sexp_loc] -> sexp_a
+      | _ as other -> other
+
 end
 
 type 't type_expr = [
