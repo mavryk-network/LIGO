@@ -47,12 +47,12 @@ end
 type 't type_expr = [
 | `T_Prod         of unit Loc.t
 | `T_App          of unit Loc.t
-| `T_Fun          of 't * 't Loc.t
+| `T_Fun          of ('t * 't) Loc.t
 | `T_Named_fun    of 't Named_fun.t Loc.t
 | `T_Par          of 't Loc.t
 | `T_Var          of Ty_variable_with_sexp.t Loc.t
 | `T_String       of string Loc.t
-| `T_Int          of string * Z_with_sexp.t Loc.t
+| `T_Int          of (string * Z_with_sexp.t) Loc.t
 | `T_ModA         of unit
 | `T_Arg          of string Loc.t
 | `T_Sum_raw      of 't option Non_linear_rows.t Loc.t
