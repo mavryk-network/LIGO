@@ -1,6 +1,6 @@
 (library
- (name small_passes)
- (public_name ligo.small_passes)
+ (name small_passes_lib)
+ (public_name ligo.small_passes_lib)
  (instrumentation
   (backend bisect_ppx))
  (libraries ast_unified ast_core)
