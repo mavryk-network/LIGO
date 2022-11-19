@@ -87,8 +87,8 @@
         (local $right_child i32)
         (local $left_value i32)
         (local $right_value i32)
+        (local $temp i32)
 
-        
         local.get $set 
         i32.const 8
         i32.add
@@ -101,7 +101,7 @@
         if 
             i32.const 0
             local.set $left_value
-        else 
+        else
             local.get $left_child
             call $__ligo_internal__set_size
             local.set $left_value
@@ -119,7 +119,7 @@
             i32.const 0
             local.set $right_value
         else 
-            local.get $left_child
+            local.get $right_child
             call $__ligo_internal__set_size
             local.set $right_value
         end
@@ -129,7 +129,7 @@
         local.get $right_value 
         i32.add
         i32.add
-    )
+)
 
     (func $__ligo_internal__set_remove (param $set i32) (param $key i32) (param $compare i32) (param $SIZE i32) (param $C_SET_EMPTY i32) (result i32)
         (local $compare_result i32)
@@ -141,7 +141,11 @@
         (local $left_child i32)
         (local $right_child i32)
         (local $new_child i32)
+        (local $temp i32)
+        (local $most_left i32)
+        (local $check_left i32)
         
+
         local.get $set 
         local.get $C_SET_EMPTY
         i32.eq 
@@ -149,8 +153,7 @@
             ;; no collection, so nothing to delete
             local.get $C_SET_EMPTY
         else 
-            i32.const 919191
-            call $print
+            
 
             local.get $SIZE
             call $malloc
@@ -164,6 +167,7 @@
 
             ;; loop to find the right node to delete
             loop (result i32)
+
                 local.get $new_item 
                 local.get $current_item 
                 local.get $SIZE
@@ -188,27 +192,30 @@
                 local.set $left_child
 
                 local.get $current_item 
+                i32.const 4
+                i32.add 
+                local.get $new_item
+                i32.store
+
+                local.get $new_item 
                 i32.const 12
                 i32.add 
                 i32.load 
                 local.set $right_child  
-    
-                local.get $left_child 
-                call $print
-                local.get $right_child 
-                call $print
 
+                local.get $right_child 
+                i32.const 4
+                i32.add 
+                local.get $new_item
+                i32.store
+    
                 ;; do comparison of the nodes
-                local.get $current_item
+                local.get $new_item
                 local.get $key                
                 local.get $compare            
                 call_indirect 0 (type 2)
                 local.tee $compare_result
                 if (result i32) 
-                    i32.const 9191912
-                    call $print
-                    local.get $compare_result
-                    call $print
 
                     local.get $compare_result
                     i32.const -1
@@ -216,9 +223,7 @@
                     if (result i32)
                         local.get $left_child 
                         if (result i32)
-                            i32.const 321321
-                            call $print
-
+                            
                             ;; proceed with the left child 
                             local.get $SIZE
                             call $malloc
@@ -237,15 +242,11 @@
                             local.set $current_item 
                             br 3
                         else 
-                            i32.const 3213212
-                            call $print
                             local.get $result
                         end
                     else 
                         local.get $right_child 
                         if (result i32)   
-                            i32.const 123123
-                            call $print
 
                             ;; proceed with the right child
                             local.get $SIZE
@@ -265,8 +266,6 @@
                             local.set $current_item 
                             br 3
                         else 
-                            i32.const 1231232
-                            call $print
                             local.get $result
                         end
                     end                                        
@@ -280,6 +279,21 @@
                     i32.ne
                     i32.and
                     if (result i32)
+                        local.get $SIZE
+                        call $malloc 
+                        local.set $new_child
+
+                        local.get $new_child 
+                        local.get $right_child 
+                        local.get $SIZE
+                        memory.copy 
+
+                        local.get $new_child
+                        i32.const 4
+                        i32.add 
+                        local.get $new_item_parent
+                        i32.store
+
                         ;; can replace with right_child
                         local.get $new_item_parent 
                         i32.const 8
@@ -291,14 +305,14 @@
                             local.get $new_item_parent 
                             i32.const 8 
                             i32.add 
-                            local.get $right_child 
+                            local.get $new_child 
                             i32.store
                             local.get $result
                         else 
                             local.get $new_item_parent 
                             i32.const 12 
                             i32.add 
-                            local.get $right_child 
+                            local.get $new_child 
                             i32.store
                             local.get $result
                         end
@@ -311,6 +325,21 @@
                         i32.eq
                         i32.and
                         if (result i32)
+                            local.get $SIZE
+                            call $malloc 
+                            local.set $new_child
+
+                            local.get $new_child 
+                            local.get $left_child 
+                            local.get $SIZE
+                            memory.copy 
+
+                            local.get $new_child
+                            i32.const 4
+                            i32.add 
+                            local.get $new_item_parent
+                            i32.store
+
                             ;; can replace with left_child
                             local.get $new_item_parent 
                             i32.const 8
@@ -322,14 +351,14 @@
                                 local.get $new_item_parent 
                                 i32.const 8 
                                 i32.add 
-                                local.get $left_child 
+                                local.get $new_child 
                                 i32.store
                                 local.get $result
                             else 
                                 local.get $new_item_parent 
                                 i32.const 12 
                                 i32.add 
-                                local.get $left_child 
+                                local.get $new_child 
                                 i32.store
                                 local.get $result
                             end
@@ -364,11 +393,100 @@
                                 end 
                                 local.get $result
                             else
-                                ;; i32.const 0
-                                ;; TODO: implement this!
-                                unreachable
-                                ;; local.get $result
-                                ;; TODO: take the most left leaf of the right child and promote it up
+                                local.get $SIZE
+                                call $malloc 
+                                local.set $most_left
+
+                                local.get $most_left
+                                local.get $right_child 
+                                local.get $SIZE
+                                memory.copy
+
+                                local.get $most_left 
+                                i32.const 4
+                                i32.add 
+                                local.get $new_item
+                                i32.store
+
+                                local.get $new_item
+                                i32.const 12
+                                i32.add 
+                                local.get $most_left
+                                i32.store
+
+                                loop                                   
+                                    local.get $most_left
+                                    i32.const 8
+                                    i32.add
+                                    i32.load 
+                                    local.tee $temp
+                                    if 
+                                        local.get $SIZE
+                                        call $malloc 
+                                        local.tee $new_child
+
+                                        local.get $new_child 
+                                        local.get $temp 
+                                        local.get $SIZE
+                                        memory.copy 
+
+                                        local.get $most_left 
+                                        local.set $parent
+
+                                        local.get $new_child 
+                                        i32.const 4
+                                        i32.add 
+                                        local.get $most_left 
+                                        i32.store
+
+                                        local.get $most_left
+                                        i32.const 8 
+                                        i32.add 
+                                        local.get $new_child
+                                        i32.store
+
+                                        local.get $temp
+                                        local.set $most_left 
+
+                                        i32.const 1
+                                        local.set $check_left
+                                        br 1
+                                    else
+                                        local.get $most_left
+                                        br 0
+                                    end
+
+                                end 
+
+                                local.get $new_item
+                                local.get $most_left 
+                                i32.load
+                                i32.store
+                                
+                                
+
+                                local.get $check_left 
+                                if 
+                                    local.get $parent 
+                                    i32.const 8 
+                                    i32.add 
+                                    local.get $most_left 
+                                    i32.const 12
+                                    i32.add
+                                    i32.load 
+                                    i32.store
+                                else 
+                                    local.get $parent 
+                                    i32.const 12
+                                    i32.add 
+                                    local.get $most_left 
+                                    i32.const 12
+                                    i32.add
+                                    i32.load 
+                                    i32.store
+                                end
+                                local.get $result
+                                br 6
                             end
                         end
                     end 

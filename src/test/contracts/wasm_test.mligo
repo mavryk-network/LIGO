@@ -84,17 +84,24 @@ let main ((_, _s):(parameter * storage)) =
   | None -> 0
   in
   let a18 = List.length [3; 4; 5; 6; 7] in
-  let s1 = Set.literal [20; 30; 50] in
+(*
+           50
+      30 
+  20        40
+    25   35     45
+      
+*)
+
+  let s1 = Set.literal [45; 35; 25; 20; 40; 30; 50] in
   let m1 = Map.literal [(3, 40); (5, 50)] in
   let xx = Set.cardinal s1 + Map.size m1 in
-  
   let a19: int = int xx in
   let a20 = Set.remove 30 s1 in
-  // let a21 = Map.remove 50 (Map.literal [(20, 1); (50, 2); (30, 3)]) in
+  // // let a21 = Map.remove 50 (Map.literal [(20, 1); (50, 2); (30, 3)]) in
   let a22 = Set.cardinal a20 in 
-  let a24 = Set.cardinal s1 in
-  // let a23 = Map.size a21 in 
-  let a23 = 0 in
+  // let a24 = Set.cardinal s1 in
+  // // let a23 = Map.size a21 in 
+  // let a23 = 0 in
   let a = 
     4 + 5 +  (* 9 *)
     40 / 5 + (* 9 + 8 = 17 *)
@@ -114,10 +121,10 @@ let main ((_, _s):(parameter * storage)) =
     a16 +    (* 408 + 55 = 463 *)
     a17 +     (* 463 + 9 = 472 *)
     a18 +      (* 472 + 5 = 477 *)
-    a19 +    (* 477 + 5 = 482 *)
-    a22 +    (* 482 + 2 = 484 *)
-    a23 +     (* 484 + 2 = 486 *)
-    a24 +     (*     + 3 = *)
+    a19 +    (* 477 + 9 = 486 *)
+    a22 +    (* 486 + 6 = 492 *)
+    // a23 +     (* 484 + 2 = 486 *)
+    // a24 +     (*     + 3 = *)
     // 1000 
     0
   in 

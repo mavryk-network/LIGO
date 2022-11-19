@@ -334,7 +334,7 @@ module Red_black_tree = struct
             [
               local_tee_s comparison_result;
 
-              if_ (ValBlockType (Some (NumType I32Type))) [                       
+              if_ (ValBlockType (Some (NumType I32Type))) [   
 
                 local_get_s comparison_result;
                 const (-1l);
@@ -358,9 +358,6 @@ module Red_black_tree = struct
                     const 8l;                  (* child offset *)
                     const size;
                     call_s "c_set_add_insert_value";
-
-                    (* TODO *)
-                    (* call "c_set_left_balancing"; *)
 
                     local_get_s result;
                     br 4l;
@@ -449,7 +446,7 @@ module Red_black_tree = struct
 
 
 
-        const 99999999l;
+        (* const 99999999l;
         call_s "print";
 
         local_get_s result;
@@ -457,26 +454,47 @@ module Red_black_tree = struct
         load; 
         call_s "print";
 
-        local_get_s result;
-        const 20l;
-        i32_add;
-        load;
-        load; 
-        call_s "print";
-(* 
         local_get_s result;
         const 8l;
         i32_add;
         load;
-        load;
+        load; 
         load;
         call_s "print";
 
         local_get_s result;
+        const 8l;
+        i32_add;
+        load;
+        const 8l;
+        i32_add;
+        load;
+        load; 
+        load;
+        call_s "print";
+
+        local_get_s result;
+        const 8l;
+        i32_add;
+        load;
+        const 8l;
+        i32_add;
+        load;
+        const 12l;
+        i32_add;
+        load;        
+        load; 
+        load;
+        call_s "print";
+
+        local_get_s result;
+        const 8l;
+        i32_add;
+        load;
         const 12l;
         i32_add;
         load;
-        load;
+        load; 
         load;
         call_s "print";
 
@@ -484,35 +502,30 @@ module Red_black_tree = struct
         const 8l;
         i32_add;
         load;
+        const 12l;
+        i32_add;
+        load;
         const 8l;
         i32_add;
         load;
+        load; 
         load;
-        load;
-        call_s "print";
-
-      *)
-
-
-(* 
-        local_get_s result;
-        const 8l;
-        i32_add;
-        load;
-        load;
-        (* load; *)
         call_s "print";
 
         local_get_s result;
         const 8l;
         i32_add;
         load;
-        const 8l;
+        const 12l;
         i32_add;
         load;
+        const 12l;
+        i32_add;
         load;
+        load; 
         load;
         call_s "print"; *)
+
 
         local_get_s result;
       ]
@@ -1943,17 +1956,9 @@ let compile ~raise : I.expression -> string -> string -> W.Ast.module_ =
   (* let elems = List.mapi ~f:(fun i _ -> elem at (List.length elems_i + i)) w.types in *)
   let w = {w with 
     elems; 
-     (* = elems_i @ elems; *)
-    (* tables = [{
-      it = {ttype = TableType ({min = 1l; max = None}, FuncRefType)}; at 
-    }]; *)
     imports = [
       import ~item:"__indirect_function_table" ~desc:(TableImport (TableType ({min = 1l; max = None}, FuncRefType)));
     ] @ w.imports;
-    (* symbols = [symbol ~name:"__indirect_function_table" ~details:Table] @ w.symbols; *)
-    (* exports = [export ~name:"__indirect_function_table" ~desc:(TableExport {it = 0l; at})] @ w.exports; *)
-    (* symbols = [symbol ~name:"__indirect_function_table" ~details:Table] @ w.symbols; *)
-    (* exports = [export ~name:"table" ~desc:(TableExport {it = 0l; at})] @ w.exports; *)
   } in
   S.{it = w; at}
  
