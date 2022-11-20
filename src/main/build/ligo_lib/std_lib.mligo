@@ -3,7 +3,91 @@
   let failwith (type a b) = [%Michelson ({|{ FAILWITH }|} : a -> b)]
 #endif
 #if WASM
-  let failwith (type a b) (a: a) = [%Wasm ({| unreachable |} : a -> b)] (a) (* TODO: print an error message - but requires more from the runtime *)
+
+  let logx (type a b) (v: a) = [%Wasm ({|     
+    local.get 0
+    local.set "str_info"
+    local.get "str_info"
+    
+    local.set "str_size"
+    local.get "str_info"
+    i32.const 4
+    i32.add
+    local.set "str"
+
+    i32.const 8
+    call "malloc"
+    
+    local.tee "iov"
+    local.get "str"
+    i32.store
+    local.get "iov"
+    i32.const 4
+    i32.add
+    local.get "str_size"
+    i32.load
+    i32.store
+    
+    local.get "str_size"
+    call "malloc"
+    local.set "nwritten"
+
+    (call "fd_write"
+        (i32.const 1) ;; file_descriptor - 1 for stdout
+        (local.get "iov") ;; *iovs - The pointer to the iov array, which is stored at memory location 0
+        (i32.const 1) ;; iovs_len - We're printing 1 string stored in an iov - so one.
+        (local.get "nwritten") ;; nwritten - A place in memory to store the number of bytes written
+    )
+    
+    drop
+  |} : a -> b)] (v) 
+
+// let log (x: bool) = log x
+
+  let log (x:string): unit  = 
+    let logx : string -> unit = logx in
+    let () = logx x in 
+    let () = logx "" in 
+    ()
+  
+  let failwith (type a b) (a: a) = [%Wasm ({| 
+    local.set "str_info"
+    local.get "str_info"
+    
+    local.set "str_size"
+    local.get "str_info"
+    i32.const 4
+    i32.add
+    local.set "str"
+
+    i32.const 8
+    call "malloc"
+    
+    local.tee "iov"
+    local.get "str"
+    i32.store
+    local.get "iov"
+    i32.const 4
+    i32.add
+    local.get "str_size"
+    i32.load
+    i32.store
+    
+    local.get "str_size"
+    call "malloc"
+    local.set "nwritten"
+
+    (call "fd_write"
+        (i32.const 1) ;; file_descriptor - 1 for stdout
+        (local.get "iov") ;; *iovs - The pointer to the iov array, which is stored at memory location 0
+        (i32.const 1) ;; iovs_len - We're printing 1 string stored in an iov - so one.
+        (local.get "nwritten") ;; nwritten - A place in memory to store the number of bytes written
+    )
+    
+    drop
+    unreachable
+  |} : a -> b)] (a) (* TODO: print an error message - but requires more from the runtime *)
+
 #endif
 
 module Tezos = struct

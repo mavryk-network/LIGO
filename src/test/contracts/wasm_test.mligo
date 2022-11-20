@@ -15,6 +15,7 @@ let other_c2 (a, b) =
   a + b
 
 let main ((_, _s):(parameter * storage)) =
+  let () = log ("foo " ^ "bar" ^ "!\n") in
   let b = [2; 3; 6] in
   let x = match b with
   | hd :: x :: y :: _  -> hd + x + y

@@ -495,7 +495,9 @@
         end  
     )
 
-    (func $__ligo_internal__set_fold (param $set i32) (result i32)
+    (func $__ligo_internal__set_fold (param $set i32) (param $fn i32) (param $SIZE i32) (param $C_SET_EMPTY i32) (result i32)
+        
+
         i32.const 2
     )
 

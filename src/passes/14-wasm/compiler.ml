@@ -540,8 +540,11 @@ module Red_black_tree = struct
       let env = Env.add_locals env [(result, T.NumType I32Type)] in
       w, env, [const 4l; call_s "malloc"; local_tee_s result] @ e @ [call_s "__ligo_internal__set_size"; store; local_get_s result]
 
-    let remove ~raise w env at type_expression (key_e: A.instr list) (set_e: A.instr list) = 
-      let size = 20l in
+    let remove ?value ~raise w env at type_expression (key_e: A.instr list) (set_e: A.instr list)  = 
+      let size = match value with 
+        Some _ -> 24l
+      | None -> 20l
+      in
       let func_symbol = func_symbol at in
       let const = const at in
       let data_symbol = data_symbol at in
@@ -551,20 +554,14 @@ module Red_black_tree = struct
       let set_s = unique_name "remove_set" in
       let env = Env.add_locals env [(remove_helper_name, T.NumType I32Type); (key_s, T.NumType I32Type); (set_s, T.NumType I32Type)] in
       let env, compare = build_comparator env type_expression at key_s set_s in
-      let f_body args = 
-        (* [
-          local_get_s at set_s;
-          local_get_s at key_s;
-        ] *)
-        (* @ *)
-        compare
-      in
+      let f_body args = compare in
       let w, _required_arguments = add_function w remove_helper_name f_body in
  
       w, env, set_e @ key_e @ [func_symbol remove_helper_name; const size; data_symbol "C_SET_EMPTY"; call_s "__ligo_internal__set_remove"]
 end
 
 (* The data offset. This indicates where a block of data should be placed in the linear memory. *)
+(* TODO: move this to env *)
 let global_offset = ref 0l
 
 (**
@@ -680,12 +677,16 @@ let rec expression ~raise :
     (w, env, [data_symbol name])
   in
   let string_like name s = 
+    (* need the size of the string as well*)
     let name = unique_name name in
-    let data = [data ~offset:!global_offset ~init:{name; detail = [String s]}] in
+    let s_len = Int32.of_int_exn (String.length s) in
+    let a_len = String.length s + 1 in
+    let a_len = Int32.of_int_exn a_len in
+    let data = [data ~offset:!global_offset ~init:{name; detail = [Int32 s_len; String s]}] in
     let symbols =
-      [symbol_data ~name ~index:0l ~size:(Int32.of_int_exn(String.length s)) ~offset:!global_offset]
+      [symbol_data ~name ~index:0l ~size:a_len ~offset:!global_offset]
     in
-    global_offset := Int32.(!global_offset + Int32.of_int_exn (String.length s));
+    global_offset := Int32.(!global_offset + a_len);
     let w = {w with datas = w.datas @ data; symbols = w.symbols @ symbols } in
     (w, env, [data_symbol name])
   in
@@ -774,7 +775,97 @@ let rec expression ~raise :
 
   (* Bytes/ String *)
   | E_constant {cons_name = C_CONCAT; arguments = [e1; e2] } -> 
-    host_call ~fn:"c_concat" ~response_size:4l ~instructions:[e1; e2]
+    let t = unique_name "c_concat" in 
+    let right = unique_name "c_concat" in 
+    let left = unique_name "c_concat" in 
+    let right_size = unique_name "c_concat" in 
+    let left_size = unique_name "c_concat" in 
+    let right_source = unique_name "c_concat" in 
+    let left_source = unique_name "c_concat" in 
+    let new_size = unique_name "c_concat" in 
+    let env = Env.add_locals env [
+      (t, T.NumType I32Type);
+      (right, T.NumType I32Type);
+      (left, T.NumType I32Type);
+      (right_size, T.NumType I32Type);
+      (left_size, T.NumType I32Type);
+      (right_source, T.NumType I32Type);
+      (left_source, T.NumType I32Type);
+      (new_size, T.NumType I32Type);
+
+
+      
+  ] in
+    let w, env, e1 = expression ~raise w env e1 in
+    let w, env, e2 = expression ~raise w env e2 in
+    w, env, 
+    e1
+    @
+    [
+      local_set_s left;
+    ]
+    @
+    e2
+    @
+    [
+      local_set_s right;
+      
+      local_get_s left;
+      load;
+      local_set_s left_size;
+
+      local_get_s left;
+      const 4l;
+      i32_add;
+      (* load; *)
+      local_set_s left_source;
+
+      local_get_s right;
+      load;
+      local_set_s right_size;
+      
+      local_get_s right;
+      const 4l;
+      i32_add;
+      (* load; *)
+      local_set_s right_source;
+      
+      local_get_s left_size;
+      local_get_s right_size;
+      i32_add;
+      local_set_s new_size;
+      
+      local_get_s new_size;
+      const 4l;
+      i32_add;
+      call_s "malloc";
+      local_set_s t;
+
+      local_get_s t;
+      local_get_s new_size;
+      store;
+
+      local_get_s t;
+      const 4l;
+      i32_add;
+      local_get_s left_source;
+      local_get_s left_size;
+      memory_copy;
+
+      local_get_s t;
+      const 4l;
+      i32_add;
+      local_get_s left_size;
+      i32_add;
+      local_get_s right_source;
+      local_get_s right_size;
+      memory_copy;
+
+   
+      local_get_s t
+    ]
+
+    
   | E_constant {cons_name = C_CONS; arguments = [l1; l2]} ->
     let cons = var_to_string (Value_var.fresh ~name:"C_CONS" ()) in
     let w, env, l1 = expression ~raise w env l1 in
@@ -846,8 +937,7 @@ let rec expression ~raise :
   | E_constant {cons_name = C_SET_REMOVE; arguments = [item; set] } -> 
     let w, env, item_e = expression ~raise w env item in
     let w, env, set_e = expression ~raise w env set in
-    Red_black_tree.remove ~raise w env at item.type_expression item_e set_e
-    
+    Red_black_tree.remove ~raise w env at item.type_expression item_e set_e    
     
   | E_constant {cons_name = C_SET_ITER; arguments = [func; set] } -> raise.error (not_supported e)
   | E_constant {cons_name = C_SET_FOLD; arguments = [func; set; init] } -> raise.error (not_supported e)
@@ -935,7 +1025,11 @@ let rec expression ~raise :
   | E_constant {cons_name = C_MAP_SIZE; arguments = [m] } ->
     let w, env, m = expression ~raise w env m in
     Red_black_tree.size ~raise w env at m
-  | E_constant {cons_name = C_MAP_REMOVE; arguments = [key; map] } -> raise.error (not_supported e)
+  | E_constant {cons_name = C_MAP_REMOVE; arguments = [key; map] } -> 
+    let w, env, key_e = expression ~raise w env key in
+    let w, env, map_e = expression ~raise w env map in
+    Red_black_tree.remove ~raise w env at key.type_expression key_e map_e ~value:1
+
   | E_constant {cons_name = C_MAP_UPDATE; arguments = [key; value; map] } -> raise.error (not_supported e)
   | E_constant {cons_name = C_MAP_ITER; arguments = [func; map] } -> raise.error (not_supported e)
   | E_constant {cons_name = C_MAP_MAP; arguments = [func; map] } -> raise.error (not_supported e)
@@ -1359,6 +1453,9 @@ let rec expression ~raise :
     ]
 
   | E_iterator (_, ((item_name, item_type), body), col) -> 
+    raise.error (not_supported e)
+  | E_fold (((name, tv), body), ({type_expression = {type_content = T_set _; _}; _} as col), initial) -> 
+    print_endline "yes this one";
     raise.error (not_supported e)
   | E_fold (((name, tv), body), ({type_expression = {type_content = T_list _; _}; _} as col), initial) -> 
     let item = unique_name "item" in
@@ -1930,8 +2027,8 @@ let rec toplevel_bindings ~raise :
                         i32_add;
                         load;
                         load;
-                        
-                        call_s "print";
+                        drop;
+                        (* call_s "print"; *)
                         
                         local_get_s "result";
                       ];

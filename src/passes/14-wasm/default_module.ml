@@ -28,9 +28,16 @@ let mod_ : module_ =
             type_ ~name:"c_add_i32_type"
               ~typedef:(FuncType ([NumType I32Type; NumType I32Type], [NumType I32Type]));
 
+
+            (* type_ ~name:"write_debug_type" ~typedef:[NumType I32Type; NumType I32Type], [NumType I32Type] *)
+
             (* for testing *)
-            type_ ~name:"print_type"
-              ~typedef:(FuncType ([NumType I32Type], []));
+            (* type_ ~name:"print_type"
+              ~typedef:(FuncType ([NumType I32Type], [])); *)
+
+            (* wasi *)
+            type_ ~name:"fd_write_type"
+              ~typedef:(FuncType ([NumType I32Type; NumType I32Type; NumType I32Type; NumType I32Type], [NumType I32Type]));
 
             (* deku specific *)
             type_ ~name:"ffi_read_ticket_type"
@@ -78,7 +85,10 @@ let mod_ : module_ =
             import ~item:"c_add_i32" ~desc:(FuncImport_symbol "c_add_i32_type");
 
             (* for testing *)
-            import_m ~module_name:"host" ~item:"print" ~desc:(FuncImport_symbol "print_type") ();
+            (* import_m ~module_name:"host" ~item:"print" ~desc:(FuncImport_symbol "print_type") (); *)
+
+            (* wasi *)
+            import_m ~module_name:"wasi_unstable" ~item:"fd_write" ~desc:(FuncImport_symbol "fd_write_type") ();
 
             (* deku specific *)
             import ~item:"ffi_read_ticket" ~desc:(FuncImport_symbol "ffi_read_ticket_type");
@@ -113,7 +123,10 @@ let mod_ : module_ =
               ~details:(Import ([NumType I32Type; NumType I32Type], [NumType I32Type]));
 
             (* for testing *)
-            symbol ~name:"print" ~details:(Import ([NumType I32Type], []));
+            (* symbol ~name:"print" ~details:(Import ([NumType I32Type], [])); *)
+
+            (* wasi *)
+            symbol ~name:"fd_write" ~details:(Import ([NumType I32Type; NumType I32Type; NumType I32Type; NumType I32Type; ], [NumType I32Type]));
 
             (* deku specific *)
             symbol ~name:"ffi_read_ticket" ~details:(Import ([NumType I32Type], [NumType I32Type]));
