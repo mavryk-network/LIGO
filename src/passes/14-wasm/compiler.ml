@@ -775,97 +775,35 @@ let rec expression ~raise :
 
   (* Bytes/ String *)
   | E_constant {cons_name = C_CONCAT; arguments = [e1; e2] } -> 
-    let t = unique_name "c_concat" in 
-    let right = unique_name "c_concat" in 
-    let left = unique_name "c_concat" in 
-    let right_size = unique_name "c_concat" in 
-    let left_size = unique_name "c_concat" in 
-    let right_source = unique_name "c_concat" in 
-    let left_source = unique_name "c_concat" in 
-    let new_size = unique_name "c_concat" in 
-    let env = Env.add_locals env [
-      (t, T.NumType I32Type);
-      (right, T.NumType I32Type);
-      (left, T.NumType I32Type);
-      (right_size, T.NumType I32Type);
-      (left_size, T.NumType I32Type);
-      (right_source, T.NumType I32Type);
-      (left_source, T.NumType I32Type);
-      (new_size, T.NumType I32Type);
-
-
-      
-  ] in
     let w, env, e1 = expression ~raise w env e1 in
     let w, env, e2 = expression ~raise w env e2 in
     w, env, 
     e1
     @
-    [
-      local_set_s left;
-    ]
-    @
     e2
     @
     [
-      local_set_s right;
-      
-      local_get_s left;
-      load;
-      local_set_s left_size;
-
-      local_get_s left;
-      const 4l;
-      i32_add;
-      (* load; *)
-      local_set_s left_source;
-
-      local_get_s right;
-      load;
-      local_set_s right_size;
-      
-      local_get_s right;
-      const 4l;
-      i32_add;
-      (* load; *)
-      local_set_s right_source;
-      
-      local_get_s left_size;
-      local_get_s right_size;
-      i32_add;
-      local_set_s new_size;
-      
-      local_get_s new_size;
-      const 4l;
-      i32_add;
-      call_s "malloc";
-      local_set_s t;
-
-      local_get_s t;
-      local_get_s new_size;
-      store;
-
-      local_get_s t;
-      const 4l;
-      i32_add;
-      local_get_s left_source;
-      local_get_s left_size;
-      memory_copy;
-
-      local_get_s t;
-      const 4l;
-      i32_add;
-      local_get_s left_size;
-      i32_add;
-      local_get_s right_source;
-      local_get_s right_size;
-      memory_copy;
-
-   
-      local_get_s t
+      call_s "__ligo_internal__string_concat"
     ]
+  | E_constant {cons_name = C_SLICE; arguments = [offset; len; str]} ->
+    let w, env, offset = expression ~raise w env offset in
+    let w, env, len = expression ~raise w env len in
+    let w, env, str = expression ~raise w env str in
+    w, env, offset 
+    @
+    len
+    @
+    str
+    @
+    [
+      call_s "__ligo_internal__string_slice"
+    ]
+  | E_constant {cons_name = C_SIZE; arguments = [s]} -> 
+    let w, env, s = expression ~raise w env s in
+    w, env, 
+    s 
+   
 
-    
   | E_constant {cons_name = C_CONS; arguments = [l1; l2]} ->
     let cons = var_to_string (Value_var.fresh ~name:"C_CONS" ()) in
     let w, env, l1 = expression ~raise w env l1 in

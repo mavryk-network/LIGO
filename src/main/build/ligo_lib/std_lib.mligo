@@ -42,14 +42,146 @@
     drop
   |} : a -> b)] (v) 
 
-// let log (x: bool) = log x
-
   let log (x:string): unit  = 
     let logx : string -> unit = logx in
     let () = logx x in 
     let () = logx "" in 
     ()
-  
+
+  let no_of_digits (x: int): int = 
+    [%Wasm ({|
+      i32.load
+      local.set "number"
+
+      i32.const 0
+      local.set "result"
+
+      loop
+        local.get "number"
+        i32.const 10
+        i32.div_u
+        local.tee "number"
+        i32.const 0 
+        i32.gt_s
+        if
+          local.get "result" 
+          i32.const 1
+          i32.add
+          local.set "result"
+          br 1
+        else 
+          br 0
+        end
+      end
+
+      i32.const 4
+      call "malloc"
+      local.tee "r"
+      local.get "result"
+      i32.const 1 
+      i32.add
+      i32.store
+
+      local.get "r"
+    |}: int -> int)](x)
+
+  let string_of_int (x: int): string = 
+    [%Wasm ({| 
+      local.tee "int"
+      i32.load
+      local.set "number"
+
+      i32.const 0
+      local.set "no_of_digits"
+
+      loop
+        local.get "number"
+        i32.const 10
+        i32.div_u
+        local.tee "number"
+        i32.const 0 
+        i32.gt_s
+        if
+          local.get "no_of_digits" 
+          i32.const 1
+          i32.add
+          local.set "no_of_digits"
+          br 1
+        else 
+          br 0
+        end
+      end
+
+      local.get "no_of_digits"
+      i32.const 1 
+      i32.add
+      local.set "no_of_digits"
+
+      i32.const 1
+      local.set "counter"
+
+      local.get "no_of_digits"
+      i32.const 4
+      i32.mul
+      i32.const 4
+      i32.add
+      call "malloc"
+      local.tee "new_string"
+      local.get "no_of_digits"
+      i32.const 4
+      i32.mul
+      i32.store
+
+      local.get "no_of_digits"
+      i32.const 4
+      i32.mul
+      
+      local.set "offset"
+
+
+      local.get "int"
+      i32.load
+      local.set "val"
+
+      loop
+        local.get "new_string"
+        local.get "offset"
+        i32.add
+
+        local.get "val"
+        i32.const 10
+        i32.rem_u
+        i32.const 48
+        i32.add
+        ;; drop
+
+        ;;  i32.const 49
+
+        i32.store
+      
+        local.get "offset"
+        i32.const 4
+        i32.ne
+        if 
+        
+          local.get "val"
+          i32.const 10 
+          i32.div_u
+          local.set "val"
+
+          local.get "offset"
+          i32.const 4
+          i32.sub
+          local.set "offset"
+          br 1
+        else        
+        end
+      end
+
+      local.get "new_string"
+      ;; i32.const 0 
+    |}: int -> string )] (x)
+
   let failwith (type a b) (a: a) = [%Wasm ({| 
     local.set "str_info"
     local.get "str_info"

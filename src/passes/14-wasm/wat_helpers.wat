@@ -496,8 +496,6 @@
     )
 
     (func $__ligo_internal__set_fold (param $set i32) (param $fn i32) (param $SIZE i32) (param $C_SET_EMPTY i32) (result i32)
-        
-
         i32.const 2
     )
 
@@ -815,6 +813,138 @@
 
     (func $to_int (param $value i32) (result i32)
         local.get $value
+    )
+
+    (func $__ligo_internal__string_concat (param $left i32) (param $right i32) (result i32)
+      (local $left_size i32)
+      (local $left_source i32)
+      (local $right_size i32)
+      (local $right_source i32)
+      (local $new_size i32)
+      (local $new_string i32)
+
+      local.get $left
+      i32.load
+      local.set $left_size
+
+      local.get $left
+      i32.const 4
+      i32.add
+      local.set $left_source
+
+      local.get $right
+      i32.load
+      local.set $right_size
+      
+      local.get $right
+      i32.const 4
+      i32.add
+      local.set $right_source
+      
+      local.get $left_size
+      local.get $right_size
+      i32.add
+      local.set $new_size
+      
+      local.get $new_size
+      i32.const 4
+      i32.add
+      call $malloc
+      local.set $new_string
+
+      local.get $new_string
+      local.get $new_size
+      i32.store
+
+      local.get $new_string
+      i32.const 4
+      i32.add
+      local.get $left_source
+      local.get $left_size
+      memory.copy
+
+      local.get $new_string
+      i32.const 4
+      i32.add
+      local.get $left_size
+      i32.add
+      local.get $right_source
+      local.get $right_size
+      memory.copy
+
+   
+      local.get $new_string
+    )
+
+    (func $__ligo_internal__string_slice 
+        (param $offset i32)
+        (param $len i32)
+        (param $str i32)
+        (result i32)
+
+        (local $new_string i32)
+        (local $str_size i32)
+
+        local.get $str
+        i32.load
+        local.tee $str_size
+
+        local.get $offset
+        i32.load
+        local.tee $offset
+        i32.lt_u
+        if (result i32)
+            i32.const 0
+        else             
+            local.get $len
+            i32.load
+            local.set $len
+
+            local.get $str_size
+            local.get $len
+            local.get $offset 
+            i32.add
+            i32.lt_u
+            if 
+                local.get $str_size 
+                local.get $offset 
+                i32.sub
+                local.set $len
+            end
+
+            local.get $len
+            i32.const 4
+            i32.add
+            call $malloc
+            local.set $new_string
+
+            local.get $new_string
+            local.get $len
+            i32.store
+
+            local.get $new_string
+            i32.const 4
+            i32.add
+
+            local.get $str
+            i32.const 4
+            i32.add
+            local.get $offset 
+            i32.add
+            
+            local.get $len
+            
+
+            memory.copy
+            ;; local.get $offset
+            ;; i32.load
+            ;; i32.add 
+            ;; local.get $len
+            ;; i32.load
+            ;; memory.copy
+
+            local.get $new_string
+        end
     )
 
     ;; (table (;0;) 2 2 funcref)

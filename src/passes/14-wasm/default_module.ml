@@ -73,7 +73,10 @@ let mod_ : module_ =
               ~typedef:(FuncType ([NumType I32Type], [NumType I32Type]));
             type_ ~name:"__ligo_internal__set_remove_type"
               ~typedef:(FuncType ([NumType I32Type; NumType I32Type; NumType I32Type; NumType I32Type; NumType I32Type;], [NumType I32Type]));
-            
+            type_ ~name:"__ligo_internal__string_concat_type"
+              ~typedef:(FuncType ([NumType I32Type; NumType I32Type], [NumType I32Type]));
+            type_ ~name:"__ligo_internal__string_slice_type"
+              ~typedef:(FuncType ([NumType I32Type; NumType I32Type; NumType I32Type], [NumType I32Type]));
           ];
         imports =
           [
@@ -109,6 +112,8 @@ let mod_ : module_ =
             import ~item:"to_int" ~desc:(FuncImport_symbol "to_int_type");
             import ~item:"__ligo_internal__set_size" ~desc:(FuncImport_symbol "__ligo_internal__set_size_type");
             import ~item:"__ligo_internal__set_remove" ~desc:(FuncImport_symbol "__ligo_internal__set_remove_type");
+            import ~item:"__ligo_internal__string_concat" ~desc:(FuncImport_symbol "__ligo_internal__string_concat_type");
+            import ~item:"__ligo_internal__string_slice" ~desc:(FuncImport_symbol "__ligo_internal__string_slice_type");
           ];
         symbols =
           [
@@ -148,6 +153,10 @@ let mod_ : module_ =
               ~details:(Import ([NumType I32Type], [NumType I32Type]));
             symbol ~name:"__ligo_internal__set_remove"
               ~details:(Import ([NumType I32Type; NumType I32Type; NumType I32Type; NumType I32Type; NumType I32Type;], [NumType I32Type]));
+            symbol ~name:"__ligo_internal__string_concat"
+              ~details:(Import ([NumType I32Type; NumType I32Type], [NumType I32Type]));
+            symbol ~name:"__ligo_internal__string_slice"
+              ~details:(Import ([NumType I32Type; NumType I32Type; NumType I32Type], [NumType I32Type]));              
             
           ];
       };
