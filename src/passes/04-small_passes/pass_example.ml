@@ -84,6 +84,10 @@ type 't type_expr = [
 | `T_Disc_union   of ('t Non_linear_disc_rows.t) Loc.t
 | `T_Attr         of (Attribute.t * 't) Loc.t
 | `T_AppPascaligo of (('t, 't) Type_app.t) Loc.t
+
+| `T_Michelson_or of ('t * 't) Loc.t
+| `T_Michelson_pair of ('t * 't) Loc.t
+
 ]  [@@deriving map, sexp]
 
 (* and 't type_expr = {
@@ -110,6 +114,15 @@ let default_check_reduction : fix_type_expr -> bool = fun _ -> true
 let wrap_compile (core_compile : fix_type_expr -> fix_type_expr)
   : Small_passes.syntax -> fix_type_expr -> fix_type_expr =
   fun _syntax te -> fold_expr core_compile te
+
+let make_pass
+  ~(name : string)
+  ?(compile = default_compile)
+  ?(decompile = default_decompile)
+  ?(check_reductions = default_check_reduction)
+  (_ : unit)
+  : fix_type_expr Small_passes.pass =
+  {name; compile; decompile; check_reductions}
 
 let pass_t_arg : fix_type_expr Small_passes.pass =
   let name = "pass_remove_t_arg" in
@@ -141,4 +154,30 @@ let pass_t_named_fun : fix_type_expr Small_passes.pass =
   let check_reductions = default_check_reduction in
   {name; compile; decompile; check_reductions}
 
+let pass_t_app_michelson_types =
+  let name = "pass_t_app_michelson_types" in
+  let compile = wrap_compile @@ function
+  | `T_App ({constr; type_args}, loc) as t -> (
+    match constr with
+    | "michelson_or" -> (
+      match List.Ne.to_list type_args with
+      | [te_left; te_right] -> `T_Michelson_or ((te_left, te_right), loc)
+      | _ -> failwith "Wrong number of arguments for michelson_or"
+      )
+    | "michelson_pair" -> (
+      match List.Ne.to_list type_args with
+      | [te_left; te_right] -> `T_Michelson_pair ((te_left, te_right), loc)
+      | _ -> failwith "Wrong number of arguments for michelson_pair"
+      )
+    | _ -> t
+    )
+  | _ as common -> common
+  in
+  make_pass ~name ~compile ()
 
+
+(*
+Still relevant ?
+T_RecordCameligo
+T_AppPascaligo
+*)
