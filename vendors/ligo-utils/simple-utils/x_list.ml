@@ -51,7 +51,7 @@ let repeat x n =
 module Ne = struct
 
   type 'a t = 'a * 'a list
-    [@@deriving eq,compare,yojson,hash]
+    [@@deriving eq,compare,yojson,hash,sexp]
 
   let unzip ((hd, tl): _ t) =
     let (a, b) = hd and (la, lb) = unzip tl in
