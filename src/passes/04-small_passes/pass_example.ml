@@ -53,22 +53,37 @@ module Loc = struct
 
 end
 
+module Mod_variable_with_sexp = struct
+  include Mod_variable
+  
+  let t_of_sexp : Sexp.t -> t = fun t ->
+    Sexplib0.Sexp_conv_error.no_matching_variant_found "Unsupported sexp" t
+  
+  let sexp_of_t : t -> Sexp.t = fun te ->
+    Sexp.List
+      [ Sexp.List [ Sexp.Atom "name" ; Sexp.Atom (to_name_exn te) ]
+      (* ; Sexp.List [ Sexp.Atom "counter" ; Sexp.Atom (Int.to_string te.counter) ] *)
+      ; Sexp.List [ Sexp.Atom "generated" ; Sexp.Atom (Bool.to_string @@ is_generated te) ]
+      ]
+end
+
 type 't type_expr = [
-| `T_Prod         of unit Loc.t
-| `T_App          of unit Loc.t
-| `T_Fun          of ('t * 't) Loc.t
-| `T_Named_fun    of 't Named_fun.t Loc.t
-| `T_Par          of 't Loc.t
-| `T_Var          of Ty_variable_with_sexp.t Loc.t
-| `T_String       of string Loc.t
+| `T_Var          of (Ty_variable_with_sexp.t) Loc.t
+| `T_Prod         of ('t Prod.t) Loc.t
+| `T_App          of ((string,'t) Type_app.t) Loc.t
+| `T_Fun          of ('t Arrow.t) Loc.t
+| `T_Named_fun    of ('t Named_fun.t) Loc.t
+| `T_String       of (string) Loc.t
 | `T_Int          of (string * Z_with_sexp.t) Loc.t
-| `T_ModA         of unit
-| `T_Arg          of string Loc.t
-| `T_Sum_raw      of 't option Non_linear_rows.t Loc.t
-| `T_Arg_sum_raw  of 't list option Non_linear_rows.t Loc.t
-| `T_Record_raw   of 't option Non_linear_rows.t Loc.t
-| `T_Disc_union   of 't Non_linear_disc_rows.t Loc.t
-| `T_Attr         of Attribute.t * 't Loc.t
+| `T_ModA         of ((Mod_variable_with_sexp.t, 't) Mod_access.t) Loc.t
+| `T_ModPath      of ((Mod_variable_with_sexp.t Simple_utils.List.Ne.t, 't) Mod_access.t) Loc.t
+| `T_Arg          of (string) Loc.t
+| `T_Sum_raw      of ('t option Non_linear_rows.t) Loc.t
+| `T_Arg_sum_raw  of ('t list option Non_linear_rows.t (* "curried" sum-type ["Ctor", arg1, arg2, arg3 ]*)) Loc.t
+| `T_Record_raw   of ('t option Non_linear_rows.t) Loc.t
+| `T_Disc_union   of ('t Non_linear_disc_rows.t) Loc.t
+| `T_Attr         of (Attribute.t * 't) Loc.t
+| `T_AppPascaligo of (('t, 't) Type_app.t) Loc.t
 ]  [@@deriving map, sexp]
 
 (* and 't type_expr = {

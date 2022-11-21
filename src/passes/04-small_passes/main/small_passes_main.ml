@@ -12,7 +12,7 @@ let () = Format.printf "Hello world from small_passes_main@."
 (* Some little tests *)
 
 let titi_1 : PE.fix_type_expr =
-  `T_Prod ((), 42)
+  `T_Arg ("titi", 42)
 
 let titi_2 : PE.fix_type_expr =
   let rhs : PE.fix_type_expr option AST.Types.Non_linear_rows.row_element =

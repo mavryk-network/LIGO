@@ -1,1 +1,1 @@
-type 'ty t = 'ty * 'ty [@@deriving yojson, map]
+type 'ty t = 'ty * 'ty [@@deriving yojson, map, sexp]
