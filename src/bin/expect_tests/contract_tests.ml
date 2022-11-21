@@ -14,11 +14,11 @@ let%expect_test _ =
 
   run_ligo_good [ "info" ; "measure-contract" ; contract "multisig.ligo" ] ;
   [%expect{|
-    547 bytes |}] ;
+    533 bytes |}] ;
 
   run_ligo_good [ "info" ; "measure-contract" ; contract "multisig-v2.ligo" ] ;
   [%expect{|
-    1511 bytes |}] ;
+    1509 bytes |}] ;
 
   run_ligo_good [ "info" ; "measure-contract" ; contract "vote.mligo" ] ;
   [%expect{|
@@ -318,35 +318,34 @@ let%expect_test _ =
       storage (pair (pair (list %auth key) (nat %counter)) (string %id) (nat %threshold)) ;
       code { UNPAIR ;
              SWAP ;
-             DUP 2 ;
+             DUP ;
              CAR ;
              CDR ;
-             DUP 2 ;
-             CAR ;
-             CDR ;
-             DUP 4 ;
+             DUP 3 ;
              CAR ;
              CAR ;
              COMPARE ;
              NEQ ;
-             IF { DIG 2 ; DROP ; PUSH string "Counters does not match" ; FAILWITH }
+             IF { PUSH string "Counters does not match" ; FAILWITH }
                 { CHAIN_ID ;
-                  DUP 3 ;
+                  DUP 2 ;
                   CDR ;
                   CAR ;
                   PAIR ;
+                  DUP 3 ;
+                  CAR ;
+                  CAR ;
                   DUP 4 ;
                   CAR ;
-                  CAR ;
-                  DUP 3 ;
+                  CDR ;
                   PAIR ;
                   PAIR ;
                   PACK ;
                   PUSH nat 0 ;
-                  DUP 4 ;
+                  DUP 3 ;
                   CAR ;
                   CAR ;
-                  DIG 5 ;
+                  DUP 5 ;
                   CDR ;
                   ITER { DUP 2 ;
                          IF_CONS
@@ -371,18 +370,18 @@ let%expect_test _ =
                            { DROP } } ;
                   DIG 2 ;
                   DROP 2 ;
-                  DUP 3 ;
+                  DUP 2 ;
                   CDR ;
                   CDR ;
                   SWAP ;
                   COMPARE ;
                   LT ;
                   IF { PUSH string "Not enough signatures passed the check" ; FAILWITH }
-                     { DUP 2 ;
+                     { DUP ;
                        DUP ;
                        CDR ;
                        PUSH nat 1 ;
-                       DIG 4 ;
+                       DIG 3 ;
                        CAR ;
                        CDR ;
                        ADD ;
@@ -390,11 +389,11 @@ let%expect_test _ =
                        CAR ;
                        CAR ;
                        PAIR ;
-                       PAIR ;
-                       SWAP } } ;
-             SWAP ;
+                       PAIR } } ;
              UNIT ;
              DIG 2 ;
+             CAR ;
+             CDR ;
              SWAP ;
              EXEC ;
              PAIR } } |} ]
@@ -424,10 +423,9 @@ let%expect_test _ =
                      MEM ;
                      NOT ;
                      IF { PUSH string "Unauthorized address" ; FAILWITH } {} ;
-                     SWAP ;
-                     DUP ;
+                     DUP 2 ;
                      PACK ;
-                     DUP 3 ;
+                     DUP 2 ;
                      CAR ;
                      CAR ;
                      CDR ;
@@ -436,14 +434,14 @@ let%expect_test _ =
                      COMPARE ;
                      GT ;
                      IF { PUSH string "Message size exceed maximum limit" ; FAILWITH } {} ;
-                     DUP 3 ;
+                     DUP 2 ;
                      CAR ;
                      CDR ;
                      CDR ;
                      DUP 2 ;
                      GET ;
                      IF_NONE
-                       { DUP 3 ;
+                       { DUP 2 ;
                          DUP ;
                          CDR ;
                          CDR ;
@@ -451,12 +449,12 @@ let%expect_test _ =
                          CDR ;
                          CAR ;
                          CDR ;
-                         DUP 6 ;
+                         DUP 5 ;
                          CDR ;
                          CAR ;
                          CAR ;
                          PUSH nat 1 ;
-                         DIG 7 ;
+                         DIG 6 ;
                          CDR ;
                          CAR ;
                          CAR ;
@@ -474,7 +472,7 @@ let%expect_test _ =
                          SWAP ;
                          CAR ;
                          PAIR ;
-                         DUG 2 ;
+                         SWAP ;
                          EMPTY_SET address ;
                          SENDER ;
                          PUSH bool True ;
@@ -484,7 +482,7 @@ let%expect_test _ =
                          SENDER ;
                          MEM ;
                          IF {}
-                            { DUP 4 ;
+                            { DUP 3 ;
                               DUP ;
                               CDR ;
                               CDR ;
@@ -492,12 +490,12 @@ let%expect_test _ =
                               CDR ;
                               CAR ;
                               CDR ;
-                              DUP 7 ;
+                              DUP 6 ;
                               CDR ;
                               CAR ;
                               CAR ;
                               PUSH nat 1 ;
-                              DIG 8 ;
+                              DIG 7 ;
                               CDR ;
                               CAR ;
                               CAR ;
@@ -515,19 +513,19 @@ let%expect_test _ =
                               SWAP ;
                               CAR ;
                               PAIR ;
-                              DUG 3 } ;
+                              DUG 2 } ;
                          SENDER ;
                          PUSH bool True ;
                          SWAP ;
                          UPDATE } ;
-                     DUP 4 ;
+                     DUP 3 ;
                      CDR ;
                      CAR ;
                      CAR ;
                      SENDER ;
                      GET ;
                      IF_NONE { PUSH string "MAP FIND" ; FAILWITH } {} ;
-                     DUP 5 ;
+                     DUP 4 ;
                      CAR ;
                      CDR ;
                      CAR ;
@@ -536,7 +534,7 @@ let%expect_test _ =
                      GT ;
                      IF { PUSH string "Maximum number of proposal reached" ; FAILWITH } {} ;
                      NIL operation ;
-                     DUP 5 ;
+                     DUP 4 ;
                      CDR ;
                      CDR ;
                      DUP 3 ;
@@ -544,10 +542,10 @@ let%expect_test _ =
                      COMPARE ;
                      GE ;
                      IF { DROP ;
-                          DUP 4 ;
+                          DUP 3 ;
                           DUP ;
                           CDR ;
-                          DIG 5 ;
+                          DIG 4 ;
                           CAR ;
                           CDR ;
                           CDR ;
@@ -565,12 +563,12 @@ let%expect_test _ =
                           CAR ;
                           PAIR ;
                           PAIR ;
-                          DUG 3 ;
-                          DUP 4 ;
+                          DUG 2 ;
+                          DUP 3 ;
                           CDR ;
                           CAR ;
                           CDR ;
-                          DIG 3 ;
+                          DIG 4 ;
                           SWAP ;
                           EXEC ;
                           DUP 4 ;
@@ -632,7 +630,7 @@ let%expect_test _ =
                                     { DROP 2 } } ;
                           SWAP ;
                           DROP }
-                        { DIG 3 ;
+                        { DIG 4 ;
                           DROP ;
                           DUP 4 ;
                           DUP ;
@@ -1180,6 +1178,24 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_bad [ "compile" ; "contract" ; bad_contract "self_in_lambda.mligo" ] ;
   [%expect{| "Tezos.self" must be used directly and cannot be used via another function. |}]
+
+let%expect_test _ =
+  run_ligo_bad [ "compile" ; "contract" ; bad_contract "not_comparable.mligo" ] ;
+  [%expect{|
+    File "../../test/contracts/negative/not_comparable.mligo", line 1, characters 21-28:
+      1 | let main ((_u, s) : (int set) set * unit) : operation list * unit = ([] : operation list), s
+      2 |
+
+    The set constructor needs a comparable type argument, but it was given a non-comparable one. |}]
+
+let%expect_test _ =
+  run_ligo_bad [ "compile" ; "contract" ; bad_contract "not_comparable.mligo" ; "-e" ; "main2" ] ;
+  [%expect{|
+    File "../../test/contracts/negative/not_comparable.mligo", line 3, characters 22-29:
+      2 |
+      3 | let main2 ((_u, s) : (int set) ticket * unit) : operation list * unit = ([] : operation list), s
+
+    The ticket constructor needs a comparable type argument, but it was given a non-comparable one. |}]
 
 let%expect_test _ =
   run_ligo_good [ "compile" ; "storage" ; contract "big_map.ligo" ; "(big_map1,unit)" ] ;

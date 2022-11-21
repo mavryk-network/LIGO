@@ -920,7 +920,11 @@ and infer_application (lamb_type : Type.t) (args : I.expression)
           fun hole ->
             let%bind texists = decode texists in
             let%bind lamb_type = decode lamb_type in
-            f (O.e_type_inst { forall = hole; type_ = texists } lamb_type))
+            let e_type_inst =
+              O.e_type_inst { forall = hole; type_ = texists } lamb_type
+            in
+            let e_type_inst = { e_type_inst with location = hole.location } in
+            f e_type_inst)
       , args )
   | T_arrow { type1 = arg_type; type2 = ret_type } ->
     let%bind args = check_expression args arg_type in
@@ -1275,10 +1279,13 @@ and check_cases
   in
   cases |> List.map ~f:check_case |> all >>| E.all
 
+
 and def_frag
-    : type a . C.With_frag.fragment -> on_exit:a C.exit
-    -> in_:(a, typer_error, Main_warnings.all) C.t
-    -> (a, typer_error, Main_warnings.all) C.t
+    : type a.
+      C.With_frag.fragment
+      -> on_exit:a C.exit
+      -> in_:(a, typer_error, Main_warnings.all) C.t
+      -> (a, typer_error, Main_warnings.all) C.t
   =
  fun frag ~on_exit ~in_ ->
   let open C in
@@ -1286,6 +1293,7 @@ and def_frag
     (List.map frag ~f:(fun (var, mut_flag, type_) -> var, mut_flag, type_))
     ~on_exit
     ~in_
+
 
 and compile_match (matchee : O.expression E.t) cases matchee_type
     : (O.expression_content E.t, _, _) C.t
@@ -1386,7 +1394,7 @@ and infer_declaration (decl : I.declaration)
             expr.type_expression
         in
         return @@ O.D_pattern { pattern; expr; attr })
-      (List.map ~f:(fun (v,_,ty) -> Context.Signature.S_value (v,ty)) frags)
+      (List.map ~f:(fun (v, _, ty) -> Context.Signature.S_value (v, ty)) frags)
   | D_type { type_binder; type_expr; type_attr = { public; hidden } } ->
     let%bind type_expr = evaluate_type type_expr in
     let type_expr = { type_expr with orig_var = Some type_binder } in
@@ -1395,7 +1403,7 @@ and infer_declaration (decl : I.declaration)
         let%bind type_expr = decode type_expr in
         return
         @@ O.D_type { type_binder; type_expr; type_attr = { public; hidden } })
-      [S_type (type_binder, type_expr)]
+      [ S_type (type_binder, type_expr) ]
   | D_value { binder; attr; expr } ->
     let var = Binder.get_var binder in
     let ascr = Binder.get_ascr binder in
@@ -1412,7 +1420,7 @@ and infer_declaration (decl : I.declaration)
         and expr = expr in
         return
         @@ O.D_value { binder = Binder.set_ascr binder expr_type; expr; attr })
-      [S_value (var, expr_type)]
+      [ S_value (var, expr_type) ]
   | D_module { module_binder; module_; module_attr = { public; hidden } } ->
     let%bind sig_, module_ = infer_module_expr module_ in
     const
@@ -1421,7 +1429,7 @@ and infer_declaration (decl : I.declaration)
         return
         @@ O.D_module
              { module_binder; module_; module_attr = { public; hidden } })
-      [S_module (module_binder, sig_)]
+      [ S_module (module_binder, sig_) ]
 
 
 and infer_module (module_ : I.module_) : (Signature.t * O.module_ E.t, _, _) C.t

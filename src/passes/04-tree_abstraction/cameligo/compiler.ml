@@ -476,6 +476,15 @@ let rec compile_expression ~raise : CST.expr -> AST.expr = fun e ->
         )
       in
       let pattern = compile_pattern ~raise pattern in
+      let pattern = 
+        (match Location.unwrap pattern with
+        | P_var binder ->
+          let loc = pattern.location in
+          let binder = Binder.set_ascr binder rhs_type in
+          let pattern = Location.wrap ~loc (AST.Pattern.P_var binder) in
+          pattern
+        | _ -> pattern) 
+      in
       e_let_in ~loc pattern let_attr matchee body
     | _, _ -> (* function *)
       let let_binder, fun_ = compile_binder ~raise pattern in
@@ -853,9 +862,18 @@ and compile_declaration ~raise : CST.declaration -> AST.declaration option = fun
       *)
       let attr = compile_attributes attributes in
       let pattern = compile_pattern ~raise pattern in
-      (* For patterns, we annotate the rhs : let <pattern> : <type> = <expr> |-> let <pattern> = <expr> : <type> *)
-      let let_rhs = Option.value_map rhs_type ~default:let_rhs ~f:(fun ty -> e_annotation ~loc:let_rhs.location let_rhs ty) in
-      return region (D_pattern {pattern ; attr ; expr = let_rhs})
+      (match Location.unwrap pattern with
+      | P_var binder ->
+        let loc = pattern.location in
+        let binder = Binder.set_ascr binder rhs_type in
+        let pattern = Location.wrap ~loc (AST.Pattern.P_var binder) in
+        (* For patterns, we annotate the rhs : let <pattern> : <type> = <expr> |-> let <pattern> = <expr> : <type> *)
+        let let_rhs = Option.value_map rhs_type ~default:let_rhs ~f:(fun ty -> e_annotation ~loc:let_rhs.location let_rhs ty) in
+        return region (D_pattern {pattern ; attr ; expr = let_rhs})
+      | _ ->
+        (* For patterns, we annotate the rhs : let <pattern> : <type> = <expr> |-> let <pattern> = <expr> : <type> *)
+        let let_rhs = Option.value_map rhs_type ~default:let_rhs ~f:(fun ty -> e_annotation ~loc:let_rhs.location let_rhs ty) in
+        return region (D_pattern {pattern ; attr ; expr = let_rhs}))
     | _ , _ -> (* function *)
       let binder,_fun_ = compile_binder ~raise pattern in
       let params = List.map ~f:(compile_parameter ~raise) args in
