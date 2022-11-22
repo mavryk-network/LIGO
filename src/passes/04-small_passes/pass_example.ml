@@ -87,6 +87,8 @@ type 't type_expr = [
 
 | `T_Michelson_or of ('t * 't) Loc.t
 | `T_Michelson_pair of ('t * 't) Loc.t
+| `T_Sapling_state       of 't Loc.t
+| `T_Sapling_transaction of 't Loc.t
 
 ]  [@@deriving map, sexp]
 
@@ -168,6 +170,18 @@ let pass_t_app_michelson_types =
       match List.Ne.to_list type_args with
       | [te_left; te_right] -> `T_Michelson_pair ((te_left, te_right), loc)
       | _ -> failwith "Wrong number of arguments for michelson_pair"
+      )
+    | "sapling_state" -> (
+      match List.Ne.to_list type_args with
+      | [`T_Int _ as te] -> `T_Sapling_state (te, loc)
+      | [_] -> failwith "Expect a T_int as argument to the T_Sapling_state"
+      | _ -> failwith "Wrong number of arguments for sapling_state"
+      )
+    | "sapling_transaction" -> (
+      match List.Ne.to_list type_args with
+      | [`T_Int _ as te] -> `T_Sapling_transaction (te, loc)
+      | [_] -> failwith "Expect a T_int as argument to the T_Sapling_state"
+      | _ -> failwith "Wrong number of arguments for sapling_transaction"
       )
     | _ -> t
     )

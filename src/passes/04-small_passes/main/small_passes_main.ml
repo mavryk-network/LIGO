@@ -73,6 +73,44 @@ let my_michelson_3uple : te =
   in
   `T_App ({constr; type_args}, loc)
 
+let my_michelson_or : te =
+  let loc = 42 in
+  let constr = "michelson_or" in
+  let type_args : te Simple_utils.List.Ne.t =
+    ( `T_Var (ghost_loc @@ tvar_of_str "my_first_arg"),
+    [ `T_Var (ghost_loc @@ tvar_of_str "my_second_arg")
+    ])
+  in
+  `T_App ({constr; type_args}, loc)
+
+let my_sapling_state : te =
+  let loc = 0 in
+  let t_int = `T_Int (ghost_loc ("annot", Z.of_int 42)) in
+  let type_args = Simple_utils.List.Ne.singleton t_int in
+  let constr = "sapling_state" in
+  `T_App ({constr; type_args}, loc)
+
+let my_sapling_state_wrong : te =
+  let loc = 0 in
+  let not_t_int = `T_Var (ghost_loc @@ tvar_of_str "i_should_be_a_t_int") in
+  let type_args = Simple_utils.List.Ne.singleton not_t_int in
+  let constr = "sapling_state" in
+  `T_App ({constr; type_args}, loc)
+
+let my_sapling_transaction : te =
+  let loc = 0 in
+  let t_int = `T_Int (ghost_loc ("annot", Z.of_int 42)) in
+  let type_args = Simple_utils.List.Ne.singleton t_int in
+  let constr = "sapling_transaction" in
+  `T_App ({constr; type_args}, loc)
+
+let my_sapling_transaction_wrong : te =
+  let loc = 0 in
+  let not_t_int = `T_Var (ghost_loc @@ tvar_of_str "i_should_be_a_t_int") in
+  let type_args = Simple_utils.List.Ne.singleton not_t_int in
+  let constr = "sapling_transaction" in
+  `T_App ({constr; type_args}, loc)
+
 
 let inputs : (string * te) list =
   [ "simple_arg", `T_Arg (ghost_loc "my_arg")
@@ -80,6 +118,11 @@ let inputs : (string * te) list =
   ; "named_fun", my_fun
   ; "michelson_pair", my_michelson_pair
   (* ; "michelson_3uple", my_michelson_3uple *)
+  ; "michelson_or", my_michelson_or
+  ; "my_sapling_state", my_sapling_state
+  ; "my_sapling_state_wrong", my_sapling_state_wrong
+  ; "my_sapling_transaction", my_sapling_transaction
+  ; "my_sapling_transaction_wrong", my_sapling_transaction_wrong
   ]
 
 let test_input (passes : te_pass list) (test_name, input : string * te) =
