@@ -85,10 +85,10 @@ type 't type_expr = [
 | `T_Attr         of (Attribute.t * 't) Loc.t
 | `T_AppPascaligo of (('t, 't) Type_app.t) Loc.t
 
-| `T_Michelson_or of ('t * 't) Loc.t
-| `T_Michelson_pair of ('t * 't) Loc.t
-| `T_Sapling_state       of 't Loc.t
-| `T_Sapling_transaction of 't Loc.t
+| `T_Michelson_or        of (string * 't * string * 't) Loc.t
+| `T_Michelson_pair      of (string * 't * string * 't) Loc.t
+| `T_Sapling_state       of (string * Z_with_sexp.t) Loc.t
+| `T_Sapling_transaction of (string * Z_with_sexp.t) Loc.t
 
 ]  [@@deriving map, sexp]
 
@@ -163,24 +163,26 @@ let pass_t_app_michelson_types =
     match constr with
     | "michelson_or" -> (
       match List.Ne.to_list type_args with
-      | [te_left; te_right] -> `T_Michelson_or ((te_left, te_right), loc)
+      | [ te_left ; `T_String (s_left, _loc) ; te_right ; `T_String (s_right, _loc2)] ->
+          `T_Michelson_or ((s_left, te_left, s_right, te_right), loc)
       | _ -> failwith "Wrong number of arguments for michelson_or"
       )
     | "michelson_pair" -> (
       match List.Ne.to_list type_args with
-      | [te_left; te_right] -> `T_Michelson_pair ((te_left, te_right), loc)
+      | [ te_left ; `T_String (s_left, _loc) ; te_right ; `T_String (s_right, _loc2)] ->
+          `T_Michelson_pair ((s_left, te_left, s_right, te_right), loc)
       | _ -> failwith "Wrong number of arguments for michelson_pair"
       )
     | "sapling_state" -> (
       match List.Ne.to_list type_args with
-      | [`T_Int _ as te] -> `T_Sapling_state (te, loc)
+      | [`T_Int ((annot, z), loc)] -> `T_Sapling_state ((annot, z), loc)
       | [_] -> failwith "Expect a T_int as argument to the T_Sapling_state"
       | _ -> failwith "Wrong number of arguments for sapling_state"
       )
     | "sapling_transaction" -> (
       match List.Ne.to_list type_args with
-      | [`T_Int _ as te] -> `T_Sapling_transaction (te, loc)
-      | [_] -> failwith "Expect a T_int as argument to the T_Sapling_state"
+      | [`T_Int ((annot, z), loc)] -> `T_Sapling_transaction ((annot, z), loc)
+      | [_] -> failwith "Expect a T_int as argument to the T_Sapling_transaction"
       | _ -> failwith "Wrong number of arguments for sapling_transaction"
       )
     | _ -> t
@@ -189,9 +191,32 @@ let pass_t_app_michelson_types =
   in
   make_pass ~name ~compile ()
 
+let pass_t_string_and_int_unsupported =
+  let name = "pass_t_string_and_int_unsupported" in
+  let compile = wrap_compile @@ function
+  | `T_Int _ -> failwith "Invalid type T_Int at this stage"
+  | `T_String _ -> failwith "Invalid type T_String at this stage"
+  | _ as other -> other
+  in
+  make_pass ~name ~compile ()
 
 (*
-Still relevant ?
-T_RecordCameligo
-T_AppPascaligo
+From [cat list_passes.md | grep "pass 't_"]
+[ ]  pass 't_sum'
+[ ]  pass 't_prod'
+[ ]  pass 't_fun'
+[ ]  pass 't_var'
+[ ]  pass 't_record'
+[O]  pass 't_recordcameligo'
+[O]  pass 't_par'
+[O]  pass 't_app_pascaligo' (are these 3 passes still relevant ?)
+[X]  pass 't_app_michelson_types'
+[ ]  pass 't_app'
+[X]  pass 't_string_and_int_unsupported' :
+[ ]  pass 't_moda'
+[ ]  pass 't_modpath'
+[ ]  pass 't_attr'
+[ ]  pass 't_record_pascaligo'
+[ ]  pass 't_object'
+[ ]  pass 't_disc' (or 'uncurry_sum_type')
 *)

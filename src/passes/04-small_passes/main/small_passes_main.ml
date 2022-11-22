@@ -36,6 +36,7 @@ let passes_list =
   [ pass_t_arg
   ; pass_t_named_fun
   ; pass_t_app_michelson_types
+  ; pass_t_string_and_int_unsupported 
   ]
 
 let ghost_loc : 'a -> 'a PE.Loc.t = fun x -> (x, 0)
@@ -111,6 +112,8 @@ let my_sapling_transaction_wrong : te =
   let constr = "sapling_transaction" in
   `T_App ({constr; type_args}, loc)
 
+let single_t_int : te = `T_Int (ghost_loc ("toto", Z.of_int 42))
+let single_t_string : te = `T_String (ghost_loc "i_should_be_in_michelson_type_or_t_disc")
 
 let inputs : (string * te) list =
   [ "simple_arg", `T_Arg (ghost_loc "my_arg")
@@ -123,6 +126,8 @@ let inputs : (string * te) list =
   ; "my_sapling_state_wrong", my_sapling_state_wrong
   ; "my_sapling_transaction", my_sapling_transaction
   ; "my_sapling_transaction_wrong", my_sapling_transaction_wrong
+  ; "single_t_int", single_t_int
+  ; "single_t_string", single_t_string
   ]
 
 let test_input (passes : te_pass list) (test_name, input : string * te) =
