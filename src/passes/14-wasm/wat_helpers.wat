@@ -2,6 +2,7 @@
     (type (;0;) (func (param i32) (result i32)))
     (type (;1;) (func (param i32) ))
     (type  (func (param i32 i32) (result i32)))
+    
     (import "env" "malloc" (func $malloc (type 0)))
     (import "host" "print" (func $print (type 1)))
     (import "env" "__indirect_function_table" (table $table 0 funcref))
@@ -51,7 +52,7 @@
         
     )
 
-    (func $c_set_add_insert_value (param $value i32) (param $parent i32) (param $position i32) (param $size i32)
+    (func $c_set_add_insert_value (param $value i32) (param $parent i32) (param $position i32) (param $size i32) (result i32)
         (local $child i32)
         
         local.get $size
@@ -78,6 +79,8 @@
         i32.add
         i32.const 1
         i32.store
+
+        local.get $child
 
     )
 
@@ -498,6 +501,124 @@
     (func $__ligo_internal__set_fold (param $set i32) (param $fn i32) (param $SIZE i32) (param $C_SET_EMPTY i32) (result i32)
         i32.const 2
     )
+
+    (func $__ligo_internal__set_iter (param $set i32) (param $fn i32) (param $C_SET_EMPTY i32) (result i32)
+        (local $left_child i32)
+        (local $right_child i32)
+        (local $temp i32)
+        local.get $set 
+        local.get $C_SET_EMPTY
+        i32.eq
+        if (result i32)
+            i32.const 0
+        else 
+            local.get $set 
+            i32.const 8
+            i32.add
+            i32.load
+            local.tee $left_child
+            if (result i32)
+                local.get $left_child
+                local.get $fn
+                local.get $C_SET_EMPTY
+                call $__ligo_internal__set_iter
+            else
+                i32.const 0
+            end
+            drop
+
+            local.get $set
+            i32.load
+            local.get $fn
+            call_indirect 0 (type 0) 
+            drop
+
+            local.get $set 
+            i32.const 12
+            i32.add
+            i32.load
+            local.tee $right_child
+            if (result i32)
+                local.get $right_child
+                local.get $fn
+                local.get $C_SET_EMPTY
+                call $__ligo_internal__set_iter
+            else
+                i32.const 0
+            end
+            drop
+            i32.const 0
+        end
+    )
+
+    (func $__ligo_internal__map_iter (param $set i32) (param $fn i32) (param $C_SET_EMPTY i32) (result i32)
+        (local $left_child i32)
+        (local $right_child i32)
+        (local $tuple i32)
+        local.get $set 
+        local.get $C_SET_EMPTY
+        i32.eq
+        if (result i32)
+            i32.const 0
+        else 
+            local.get $set 
+            i32.const 8
+            i32.add
+            i32.load
+            local.tee $left_child
+            if (result i32)
+                local.get $left_child
+                local.get $fn
+                local.get $C_SET_EMPTY
+                call $__ligo_internal__map_iter
+            else
+                i32.const 0
+            end
+            drop
+
+            ;; TODO: move key and value next to each other to avoid doing this
+            i32.const 8
+            call $malloc
+            local.set $tuple
+
+            local.get $tuple
+            local.get $set 
+            i32.load
+            i32.store
+
+            local.get $tuple
+            i32.const 4
+            i32.add
+
+            local.get $set            
+            i32.const 20
+            i32.add
+            i32.load
+            
+            i32.store
+            
+            local.get $tuple
+            local.get $fn
+            call_indirect 0 (type 0) 
+            drop
+
+            local.get $set 
+            i32.const 12
+            i32.add
+            i32.load
+            local.tee $right_child
+            if (result i32)
+                local.get $right_child
+                local.get $fn
+                local.get $C_SET_EMPTY
+                call $__ligo_internal__map_iter
+            else
+                i32.const 0
+            end
+            
+        end
+    )
+    
 
     (func $c_set_left_balancing 
         (param $child i32)

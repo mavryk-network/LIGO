@@ -32,8 +32,8 @@ let mod_ : module_ =
             (* type_ ~name:"write_debug_type" ~typedef:[NumType I32Type; NumType I32Type], [NumType I32Type] *)
 
             (* for testing *)
-            (* type_ ~name:"print_type"
-              ~typedef:(FuncType ([NumType I32Type], [])); *)
+            type_ ~name:"print_type"
+              ~typedef:(FuncType ([NumType I32Type], []));
 
             (* wasi *)
             type_ ~name:"fd_write_type"
@@ -64,7 +64,7 @@ let mod_ : module_ =
             type_ ~name:"right_rotate_type"
               ~typedef:(FuncType ([NumType I32Type], [NumType I32Type]));
             type_ ~name:"c_set_add_insert_value_type"
-              ~typedef:(FuncType ([NumType I32Type; NumType I32Type; NumType I32Type; NumType I32Type], []));
+              ~typedef:(FuncType ([NumType I32Type; NumType I32Type; NumType I32Type; NumType I32Type], [NumType I32Type]));
             type_ ~name:"c_set_left_child_type"
               ~typedef:(FuncType ([NumType I32Type], [NumType I32Type]));
             type_ ~name:"to_int_type"
@@ -77,6 +77,11 @@ let mod_ : module_ =
               ~typedef:(FuncType ([NumType I32Type; NumType I32Type], [NumType I32Type]));
             type_ ~name:"__ligo_internal__string_slice_type"
               ~typedef:(FuncType ([NumType I32Type; NumType I32Type; NumType I32Type], [NumType I32Type]));
+            type_ ~name:"__ligo_internal__set_iter_type"
+              ~typedef:(FuncType ([NumType I32Type; NumType I32Type; NumType I32Type], [NumType I32Type]));
+            type_ ~name:"__ligo_internal__map_iter_type"
+              ~typedef:(FuncType ([NumType I32Type; NumType I32Type; NumType I32Type], [NumType I32Type]));
+              
           ];
         imports =
           [
@@ -88,7 +93,7 @@ let mod_ : module_ =
             import ~item:"c_add_i32" ~desc:(FuncImport_symbol "c_add_i32_type");
 
             (* for testing *)
-            (* import_m ~module_name:"host" ~item:"print" ~desc:(FuncImport_symbol "print_type") (); *)
+            import_m ~module_name:"host" ~item:"print" ~desc:(FuncImport_symbol "print_type") ();
 
             (* wasi *)
             import_m ~module_name:"wasi_unstable" ~item:"fd_write" ~desc:(FuncImport_symbol "fd_write_type") ();
@@ -114,6 +119,8 @@ let mod_ : module_ =
             import ~item:"__ligo_internal__set_remove" ~desc:(FuncImport_symbol "__ligo_internal__set_remove_type");
             import ~item:"__ligo_internal__string_concat" ~desc:(FuncImport_symbol "__ligo_internal__string_concat_type");
             import ~item:"__ligo_internal__string_slice" ~desc:(FuncImport_symbol "__ligo_internal__string_slice_type");
+            import ~item:"__ligo_internal__set_iter" ~desc:(FuncImport_symbol "__ligo_internal__set_iter_type");
+            import ~item:"__ligo_internal__map_iter" ~desc:(FuncImport_symbol "__ligo_internal__map_iter_type");
           ];
         symbols =
           [
@@ -128,7 +135,7 @@ let mod_ : module_ =
               ~details:(Import ([NumType I32Type; NumType I32Type], [NumType I32Type]));
 
             (* for testing *)
-            (* symbol ~name:"print" ~details:(Import ([NumType I32Type], [])); *)
+            symbol ~name:"print" ~details:(Import ([NumType I32Type], []));
 
             (* wasi *)
             symbol ~name:"fd_write" ~details:(Import ([NumType I32Type; NumType I32Type; NumType I32Type; NumType I32Type; ], [NumType I32Type]));
@@ -146,7 +153,7 @@ let mod_ : module_ =
 
             (* helper functions *)
             symbol ~name:"right_rotate"           ~details:(Import ([NumType I32Type], [NumType I32Type]));
-            symbol ~name:"c_set_add_insert_value" ~details:(Import ([NumType I32Type; NumType I32Type; NumType I32Type; NumType I32Type], []));
+            symbol ~name:"c_set_add_insert_value" ~details:(Import ([NumType I32Type; NumType I32Type; NumType I32Type; NumType I32Type], [NumType I32Type]));
             symbol ~name:"c_set_left_child" ~details:(Import ([NumType I32Type], [NumType I32Type]));
             symbol ~name:"to_int" ~details:(Import ([NumType I32Type], [NumType I32Type]));
             symbol ~name:"__ligo_internal__set_size"
@@ -156,8 +163,12 @@ let mod_ : module_ =
             symbol ~name:"__ligo_internal__string_concat"
               ~details:(Import ([NumType I32Type; NumType I32Type], [NumType I32Type]));
             symbol ~name:"__ligo_internal__string_slice"
-              ~details:(Import ([NumType I32Type; NumType I32Type; NumType I32Type], [NumType I32Type]));              
-            
+              ~details:(Import ([NumType I32Type; NumType I32Type; NumType I32Type], [NumType I32Type]));
+            symbol ~name:"__ligo_internal__set_iter"
+              ~details:(Import ([NumType I32Type; NumType I32Type; NumType I32Type], [NumType I32Type]));
+            symbol ~name:"__ligo_internal__map_iter"
+              ~details:(Import ([NumType I32Type; NumType I32Type; NumType I32Type], [NumType I32Type]));
+              
           ];
       };
     at;

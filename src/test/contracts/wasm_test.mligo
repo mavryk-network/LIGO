@@ -16,6 +16,8 @@ let other_c2 (a, b) =
 
 let main ((_, _s):(parameter * storage)) =
   let () = log ("foo " ^ "bar" ^ "!\n") in
+  let () = log ((String.sub 0n 200n "abcd") ^ "\n") in
+  let () = log "oh hai" in
   let b = [2; 3; 6] in
   let x = match b with
   | hd :: x :: y :: _  -> hd + x + y
@@ -94,7 +96,7 @@ let main ((_, _s):(parameter * storage)) =
 *)
 
   let s1 = Set.literal [45; 35; 25; 20; 40; 30; 50] in
-  let m1 = Map.literal [(3, 40); (5, 50)] in
+  let m1 = Map.literal [(3, 55); (5, 50); (444, 242)] in
   let xx = Set.cardinal s1 + Map.size m1 in
   let a19: int = int xx in
   let a20 = Set.remove 30 s1 in
@@ -103,6 +105,25 @@ let main ((_, _s):(parameter * storage)) =
   // let a24 = Set.cardinal s1 in
   // // let a23 = Map.size a21 in 
   // let a23 = 0 in
+  let a25 = String.length "12" in 
+  let () = if a25 = 2n then 
+     log "yes 2 "
+  else 
+    log "not two"
+  in
+  let () = if (no_of_digits 5535) = 4 then 
+    log "\noooh\n"
+  else 
+    log "\nnooo!\n"
+  in
+  let _ = Set.iter (fun f -> 
+    log ("s1 item: " ^ string_of_int f ^ "\n")
+  ) s1
+  in 
+  let _ = Map.iter (fun (f, a) -> 
+    log ("m1 item: " ^ string_of_int f ^ " = " ^ string_of_int a ^ "\n")
+  ) m1
+  in
   let a = 
     4 + 5 +  (* 9 *)
     40 / 5 + (* 9 + 8 = 17 *)
@@ -124,9 +145,12 @@ let main ((_, _s):(parameter * storage)) =
     a18 +      (* 472 + 5 = 477 *)
     a19 +    (* 477 + 9 = 486 *)
     a22 +    (* 486 + 6 = 492 *)
+    a25 +    (* 492 + 2 = 494 *)
     // a23 +     (* 484 + 2 = 486 *)
     // a24 +     (*     + 3 = *)
     // 1000 
+    
     0
   in 
+  let () =  log ("Result:" ^ string_of_int a ^ "\n") in
   ([]: operation list), a

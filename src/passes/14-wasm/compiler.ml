@@ -275,11 +275,12 @@ module Red_black_tree = struct
       if_ 
         (ValBlockType (Some (NumType I32Type))) 
         ([
+
           const size;
           call_s "malloc";
           local_tee_s result;
-          local_get_s insert_key; 
-          store;
+          local_get_s insert_key;
+          store;             
         ]
         @
         (match value with 
@@ -350,7 +351,7 @@ module Red_black_tree = struct
                   const 0l;
                   i32_eq;
 
-                  if_ (ValBlockType (Some (NumType I32Type))) [
+                  if_ (ValBlockType (Some (NumType I32Type))) ([
                     
                   
                     local_get_s insert_key;    (* value  *)
@@ -359,9 +360,26 @@ module Red_black_tree = struct
                     const size;
                     call_s "c_set_add_insert_value";
 
+                  ]
+                  @
+                  (match value with 
+                    Some _ -> 
+                      [
+                        (* local_get_s new_item; *)
+                        const 20l;
+                        i32_add;
+                        local_get_s insert_value;
+                        store
+                      ]
+                  | None -> [
+                    drop at
+                  ])
+                  @
+                  [
+                    
                     local_get_s result;
                     br 4l;
-                  ]
+                  ])
                   [
                     (* clone right item *)
                     const size;
@@ -398,7 +416,7 @@ module Red_black_tree = struct
                   const 0l;
                   i32_eq;
 
-                  if_ (ValBlockType (Some (NumType I32Type))) [
+                  if_ (ValBlockType (Some (NumType I32Type))) ([
 
                     
                     (* not a right child so insert it here *)
@@ -408,10 +426,25 @@ module Red_black_tree = struct
                     const size;
                     call_s "c_set_add_insert_value";
 
+                  ]
+                  @
+                  (match value with 
+                    Some _ -> 
+                      [
+                        (* local_get_s new_item; *)
+                        const 20l;
+                        i32_add;
+                        local_get_s insert_value;
+                        store
+                      ]
+                  | None -> [drop at])
+                  @
+                  [
+                    
                     local_get_s result;
                     br 4l;
                     
-                  ]
+                  ])
                   [
                     (* clone right item *)
                     const size;
@@ -1340,7 +1373,7 @@ let rec expression ~raise :
         ];
       ]
       
-  | E_iterator (C_ITER, ((item_name, item_type), body), col) -> 
+  | E_iterator (C_ITER, ((item_name, item_type), body), ({type_expression = {type_content = T_list _; _}; _} as col)) -> 
     let item = var_to_string item_name in
     let next_item = unique_name "next_item" in
 
@@ -1389,7 +1422,25 @@ let rec expression ~raise :
       );
       const 0l;
     ]
-
+  | E_iterator (C_ITER, ((item_name, item_type), body), ({type_expression = {type_content = T_set _; _}; _} as col)) -> 
+    let env = add_locals env [(var_to_string item_name, T.NumType I32Type)] in
+    let w, env, iter_body = expression ~raise w env body in
+    let w, env, col = expression ~raise w env col in
+    let iter_body_name = unique_name "iter_body" in
+    
+    let w, required_args = add_function w iter_body_name (fun _ -> iter_body) in
+    
+    w, env, col @ [func_symbol iter_body_name; data_symbol "C_SET_EMPTY"; call_s "__ligo_internal__set_iter"]
+  | E_iterator (C_ITER, ((item_name, item_type), body), ({type_expression = {type_content = T_map _; _}; _} as col)) -> 
+    let env = add_locals env [(var_to_string item_name, T.NumType I32Type)] in
+    let w, env, iter_body = expression ~raise w env body in
+    let w, env, col = expression ~raise w env col in
+    let iter_body_name = unique_name "iter_body" in
+      
+    let w, required_args = add_function w iter_body_name (fun _ -> iter_body) in
+    
+    w, env, col @ [func_symbol iter_body_name; data_symbol "C_SET_EMPTY"; call_s "__ligo_internal__map_iter"]
+    
   | E_iterator (_, ((item_name, item_type), body), col) -> 
     raise.error (not_supported e)
   | E_fold (((name, tv), body), ({type_expression = {type_content = T_set _; _}; _} as col), initial) -> 
