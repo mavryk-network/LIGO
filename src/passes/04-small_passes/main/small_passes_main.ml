@@ -117,7 +117,7 @@ let inputs : (string * te) list =
   ; "simple_var", `T_Var (ghost_loc @@ tvar_of_str "my_var")
   ; "named_fun", my_fun
   ; "michelson_pair", my_michelson_pair
-  (* ; "michelson_3uple", my_michelson_3uple *)
+  ; "michelson_3uple", my_michelson_3uple
   ; "michelson_or", my_michelson_or
   ; "my_sapling_state", my_sapling_state
   ; "my_sapling_state_wrong", my_sapling_state_wrong
