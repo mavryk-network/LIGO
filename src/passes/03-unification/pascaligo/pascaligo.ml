@@ -380,7 +380,7 @@ and compile_instruction ~(raise: ('e, 'w) raise) : CST.instruction -> AST.instru
 
 (* ========================== STATEMENTS ================================= *)
 
-and compile_statement ~raise : CST.statement -> AST.statement_pascaligo = fun s ->
+and compile_statement ~raise : CST.statement -> AST.statement= fun s ->
   let self = compile_statement ~raise in
   match s with
   | S_Attr (attr, stmt) -> (
@@ -739,7 +739,7 @@ and compile_module ~(raise: ('e, 'w) raise) : CST.module_expr -> AST.module_ = f
 
 (* ========================== PROGRAM ===================================== *)
 let compile_program ~raise : CST.t -> AST.program = fun t ->
-  let declarations :                           CST.declaration  list = nseq_to_list t.decl in
-  let declarations : (raise: ('e, 'w) raise -> AST.declaration) list = List.map ~f:(fun a ~raise -> compile_declaration ~raise a) declarations in
-  let declarations :                           AST.declaration  list = Simple_utils.Trace.collect ~raise declarations in
-  declarations
+  let declarations = nseq_to_list t.decl in
+  let declarations = List.map ~f:(fun a ~raise -> compile_declaration ~raise a) declarations in
+  let declarations = Simple_utils.Trace.collect ~raise declarations in
+  List.map ~f:(fun x -> P_Declaration x) declarations

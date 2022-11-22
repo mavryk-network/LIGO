@@ -33,26 +33,15 @@ type declaration_content = [%import: Types.declaration_content]
       wrap_get = ("declaration_content" , get) ;
     } ]
 
-type statement_pascaligo_content = [%import: Types.statement_pascaligo_content]
+type statement_content = [%import: Types.statement_content]
 [@@deriving ez {
       prefixes = [
-        ("make_s" , fun ?(loc = Location.generated) statement_pascaligo_content ->
-                  ({ statement_pascaligo_content ; location = loc } : statement_pascaligo)) ;
-        ("get" , fun x -> x.statement_pascaligo_content) ;
+        ("make_s" , fun ?(loc = Location.generated) statement_content ->
+                  ({ statement_content ; location = loc } : statement)) ;
+        ("get" , fun x -> x.statement_content) ;
       ] ;
-      wrap_constructor = ("statement_pascaligo_content" , (fun statement_pascaligo_content ?loc () -> make_s ?loc statement_pascaligo_content)) ;
-      wrap_get = ("statement_pascaligo_content" , get) ;
-    } ]
-
-type statement_jsligo_content = [%import: Types.statement_jsligo_content]
-[@@deriving ez {
-      prefixes = [
-        ("make_s" , fun ?(loc = Location.generated) statement_jsligo_content ->
-                  ({ statement_jsligo_content ; location = loc } : statement_jsligo)) ;
-        ("get" , fun x -> x.statement_jsligo_content) ;
-      ] ;
-      wrap_constructor = ("statement_jsligo_content" , (fun statement_jsligo_content ?loc () -> make_s ?loc statement_jsligo_content)) ;
-      wrap_get = ("statement_jsligo_content" , get) ;
+      wrap_constructor = ("statement_content" , (fun statement_content ?loc () -> make_s ?loc statement_content)) ;
+      wrap_get = ("statement_content" , get) ;
     } ]
 
 type module_content = [%import: Types.module_content]
@@ -74,7 +63,7 @@ type instruction_content = [%import: Types.instruction_content]
         ("get" , fun x -> x.instruction_content) ;
       ] ;
       wrap_constructor = ("instruction_content" , (fun instruction_content ?loc () -> make_i ?loc instruction_content)) ;
-      wrap_get = ("statement_content" , get) ;
+      wrap_get = ("instruction_content" , get) ;
     } ]
 
 let e_literal ?loc l : expression = make_e ?loc @@ E_Literal l

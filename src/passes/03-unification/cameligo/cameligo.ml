@@ -553,8 +553,8 @@ and compile_module ~raise : CST.t -> AST.module_ = fun m ->
   m_body ds ~loc ()
 
 let compile_program ~raise : CST.ast -> AST.program = fun t ->
-  let declarations :                           CST.declaration  list = nseq_to_list t.decl in
-  let declarations : (raise: ('e, 'w) raise -> AST.declaration) list = List.map ~f:(fun a ~raise -> compile_declaration ~raise a) declarations in
-  let declarations :                           AST.declaration  list = Simple_utils.Trace.collect ~raise declarations in
-  declarations
+  let declarations = nseq_to_list t.decl in
+  let declarations = List.map ~f:(fun a ~raise -> compile_declaration ~raise a) declarations in
+  let declarations = Simple_utils.Trace.collect ~raise declarations in
+  List.map ~f:(fun x -> P_Declaration x) declarations
 

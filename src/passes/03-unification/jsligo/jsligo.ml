@@ -32,8 +32,8 @@ module TODO_unify_in_cst = struct
       let key,loc = r_split attr_reg in
       Temp_prim.Attribute.{ key ; value = None },loc
     )
-  let s_attach_attr (attr:CST.attributes) (e:AST.statement_jsligo) : AST.statement_jsligo =
-    List.fold (conv_attr attr) ~init:e ~f:(fun e (attr,loc) -> s_attrjs ~loc attr e ())
+  let s_attach_attr (attr:CST.attributes) (e:AST.statement) : AST.statement =
+    List.fold (conv_attr attr) ~init:e ~f:(fun e (attr,loc) -> s_attr ~loc (attr, e) ())
   let p_attach_attr (attr:CST.attributes) (e:AST.pattern) : AST.pattern =
     List.fold (conv_attr attr) ~init:e ~f:(fun e (attr,loc) ->
       Location.wrap ~loc (P_attr (attr, e)))
@@ -41,16 +41,26 @@ module TODO_unify_in_cst = struct
     List.fold (conv_attr attr) ~init:e ~f:(fun e (attr,loc) -> t_attr ~loc attr e ())
   let compile_rows = Non_linear_rows.make
   let compile_disc_rows = Non_linear_disc_rows.make
+  let instr_as_stmt ~loc (x:AST.instruction) = AST.s_instr ~loc x ()
+  let test_clause_branch x = ClauseBlock (List.Ne.singleton x)
+  let let_as_decl ~loc x = s_decl ~loc (d_multi_let ~loc x ()) ()
+  let const_as_decl ~loc x = s_decl ~loc (d_multi_const ~loc x ()) ()
+  let ty_as_decl ~loc x = s_decl ~loc (d_type ~loc x ()) ()
+  let export_as_decl ~loc x = s_decl ~loc (d_export ~loc x ()) ()
+  let import_as_decl ~loc x = s_decl ~loc (d_import ~loc x ()) ()
+  let namespace_decl ~loc name statements =
+    s_decl ~loc (d_module ~loc {name ; mod_expr = m_body_statements ~loc statements ()} ()) ()
 end
 
-let rec compile_val_binding ~(raise: ('e, 'w) raise) : CST.val_binding -> AST.let_binding = fun b ->
+let rec compile_val_binding ~(raise: ('e, 'w) raise) : CST.val_binding -> AST.let_binding =
+ fun { binders; type_params; lhs_type; eq = _; expr } ->
   let is_rec = false in
-  let binders = List.Ne.singleton @@ compile_pattern ~raise b.binders in
-  let type_params = Option.map b.type_params ~f:(fun (tp : CST.type_generics) ->
+  let binders = List.Ne.singleton @@ compile_pattern ~raise binders in
+  let type_params = Option.map type_params ~f:(fun (tp : CST.type_generics) ->
     List.Ne.map r_fst @@ nsepseq_to_nseq (r_fst tp).inside)
   in
-  let rhs_type = Option.map ~f:(compile_type_expression ~raise <@ snd) b.lhs_type in
-  let let_rhs = compile_expression ~raise b.expr in
+  let rhs_type = Option.map ~f:(compile_type_expression ~raise <@ snd) lhs_type in
+  let let_rhs = compile_expression ~raise expr in
   {is_rec; type_params; binders; rhs_type; let_rhs}
 
 (* ========================== TYPES ======================================== *)
@@ -200,47 +210,87 @@ and compile_pattern ~(raise: ('e, 'w) raise) : CST.pattern -> AST.pattern = fun 
 
 (* ========================== STATEMENTS ================================= *)
 
-and compile_statement ~(raise: ('e, 'w) raise) : CST.statement -> AST.statement_jsligo = fun s ->
+and compile_statement ~(raise: ('e, 'w) raise) : CST.statement -> AST.statement = fun s ->
   let self = compile_statement ~raise in
   let () = ignore (self, raise) in
   let extract_type_vars : CST.type_vars -> string nseq = fun tv ->
     List.Ne.map r_fst @@ nsepseq_to_nseq (r_fst tv).inside
   in
   match s with
+  | SNamespace s ->
+    let s, loc = r_split s in
+    let (_, module_name, statements, attributes) = s in
+    let name = r_fst module_name in
+    let stmts = List.Ne.map self (nsepseq_to_nseq (r_fst statements).inside) in
+    TODO_unify_in_cst.s_attach_attr attributes (
+      TODO_unify_in_cst.namespace_decl ~loc name stmts
+    )
+  | SImport s ->
+    let s, loc = r_split s in
+    let import = match s with
+    | CST.Import_rename s -> (
+      let alias       = r_fst s.alias in
+      let module_path = List.Ne.map r_fst @@ nsepseq_to_nseq s.module_path in
+      AST.Import_rename {alias; module_path}
+    )
+    | CST.Import_all_as s -> (
+      let alias      = r_fst s.alias in
+      let module_str = r_fst s.module_path in
+      AST.Import_all_as {alias; module_str}
+    )  
+    | CST.Import_selected s -> (
+      let imported   = List.Ne.map r_fst @@ nsepseq_to_nseq (r_fst s.imported).inside in
+      let module_str = r_fst s.module_path in
+      AST.Import_selected {imported; module_str}
+    )
+    in
+    TODO_unify_in_cst.import_as_decl ~loc import
+  | SExport e ->
+    let ((_, statement), loc) = r_split e in
+    TODO_unify_in_cst.export_as_decl ~loc (self statement)
   | SBlock s -> (
     let s, loc = r_split s in
     let statements = List.Ne.map self @@ nsepseq_to_nseq s.inside in
-    s_block statements ~loc ()
+    TODO_unify_in_cst.instr_as_stmt ~loc (
+      i_block ~loc statements ()
+    )
   )
   | SExpr s -> (
     let expr = compile_expression ~raise s in
     let loc = expr.location in
-    s_expr expr ~loc ()
+    TODO_unify_in_cst.instr_as_stmt ~loc (
+      i_expr ~loc expr ()
+    )
   )
   | SCond s -> (
     let s, loc = r_split s in
     let test = compile_expression ~raise s.test.inside in
-    let ifso = self s.ifso in
-    let ifnot = Option.map ~f:(self <@ snd) s.ifnot in
-    s_cond {test; ifso; ifnot} ~loc ()
+    let ifso = TODO_unify_in_cst.test_clause_branch (self s.ifso) in
+    let ifnot = Option.map ~f:(TODO_unify_in_cst.test_clause_branch <@ self <@ snd) s.ifnot in
+    TODO_unify_in_cst.instr_as_stmt ~loc (
+      i_cond {test; ifso; ifnot} ~loc ()
+    )
   )
   | SReturn s -> (
     let s, loc = r_split s in
     let expr_opt = Option.map ~f:(compile_expression ~raise) s.expr in
-    s_return expr_opt ~loc ()
+    TODO_unify_in_cst.instr_as_stmt ~loc (
+      i_return expr_opt ~loc ()
+    )
   )
   | SLet s -> (
     let CST.{bindings ; attributes ; kwd_let = _}, loc = r_split s in
-    let bindings = List.Ne.map (compile_val_binding ~raise <@ r_fst) @@ nsepseq_to_nseq bindings in
+    let bindings = List.Ne.map (compile_val_binding ~raise <@ r_fst) (nsepseq_to_nseq bindings) in
+    (* let decl_stmts = List.Ne.map (TODO_unify_in_cst.let_as_decl ~loc) bindings in *)
     TODO_unify_in_cst.s_attach_attr attributes (
-      s_let bindings ~loc ()
+      TODO_unify_in_cst.let_as_decl ~loc bindings
     )
   )
   | SConst s -> (
     let CST.{bindings ; attributes ; _}, loc = r_split s in
     let bindings = List.Ne.map (compile_val_binding ~raise <@ r_fst) @@ nsepseq_to_nseq bindings in
     TODO_unify_in_cst.s_attach_attr attributes (
-      s_const bindings ~loc ()
+      TODO_unify_in_cst.const_as_decl ~loc bindings
     )
   )
   | SType s -> (
@@ -249,7 +299,7 @@ and compile_statement ~(raise: ('e, 'w) raise) : CST.statement -> AST.statement_
     let params    = Option.map ~f:extract_type_vars params in
     let type_expr = compile_type_expression ~raise type_expr in
     TODO_unify_in_cst.s_attach_attr attributes (
-      s_type {name; params; type_expr} ~loc ()
+      TODO_unify_in_cst.ty_as_decl ~loc {name; params; type_expr}
     )
   )
   | SSwitch s -> (
@@ -270,65 +320,31 @@ and compile_statement ~(raise: ('e, 'w) raise) : CST.statement -> AST.statement_
       in
       List.Ne.map translate_switch_case s.cases
     in
-    s_switch {switch_expr; switch_cases} ~loc ()
+    TODO_unify_in_cst.instr_as_stmt ~loc (
+      i_switch {switch_expr; switch_cases} ~loc ()
+    )
   )
   | SBreak s -> (
     let _, loc = w_split s  in
-    s_break ~loc ()
-  )
-  | SNamespace s -> (
-    let s, loc = r_split s in
-    let (_, module_name, statements, attributes) = s in
-    let module_name       = r_fst module_name in
-    let namespace_content =
-      List.Ne.map self @@ nsepseq_to_nseq (r_fst statements).inside
-    in
-    TODO_unify_in_cst.s_attach_attr attributes (
-      s_namespace {module_name; namespace_content} ~loc ()
-    )
-  )
-  | SExport s -> (
-    let (_, s), loc = r_split s in
-    let s = self s in
-    s_export s ~loc ()
-  )
-  | SImport s -> (
-    let s, loc = r_split s in
-    let s : AST.import = match s with
-    | CST.Import_rename s -> (
-      let alias       = r_fst s.alias in
-      let module_path = List.Ne.map r_fst @@ nsepseq_to_nseq s.module_path in
-      AST.Import_rename {alias; module_path}
-    )
-    | CST.Import_all_as s -> (
-      let alias      = r_fst s.alias in
-      let module_str = r_fst s.module_path in
-      AST.Import_all_as {alias; module_str}
-    )  
-    | CST.Import_selected s -> (
-      let imported   = List.Ne.map r_fst @@ nsepseq_to_nseq (r_fst s.imported).inside in
-      let module_str = r_fst s.module_path in
-      AST.Import_selected {imported; module_str}
-    )
-    in
-    s_import s ~loc ()
+    TODO_unify_in_cst.instr_as_stmt ~loc (i_break ~loc ())
   )
   | SWhile s -> (
     let s, loc = r_split s in
-    let expr       = compile_expression ~raise s.expr in
-    let while_body = self s.statement in
-    s_while {expr; while_body } ~loc ()
+    let cond = compile_expression ~raise s.expr in
+    let while_body = List.Ne.singleton (self s.statement) in
+    TODO_unify_in_cst.instr_as_stmt ~loc (
+      i_while {cond; block = while_body } ~loc ()
+    )
   )
   | SForOf s -> (
-    let s, loc = r_split s in
-    let index_kind = match s.index_kind with
-      | `Let   _ -> AST.Let
-      | `Const _ -> AST.Const
-    in
-    let index = r_fst s.index in
-    let expr  = compile_expression ~raise s.expr in
-    let for_stmt = self s.statement in
-    s_forof {index_kind; index; expr; for_stmt} ~loc ()
+    let CST.{ index_kind; index; expr; statement ; _ }, loc = r_split s in
+    let index_kind = match index_kind with `Let _ -> `Let | `Const _ -> `Const in
+    let index = TODO_do_in_parsing.var ~loc:(r_snd index) (r_fst index) in
+    let expr  = compile_expression ~raise expr in
+    let for_stmt = self statement in
+    TODO_unify_in_cst.instr_as_stmt ~loc (
+      i_forof {index_kind; index; expr; for_stmt} ~loc ()
+    )
   )
 
 (* ========================== EXPRESSIONS ================================== *)
@@ -523,20 +539,15 @@ and compile_expression ~(raise: ('e, 'w) raise) : CST.expr -> AST.expr = fun e -
 
 (* ========================== DECLARATIONS ================================= *)
 
-let compile_toplevel_statement ~(raise: ('e, 'w) raise) : CST.toplevel_statement -> AST.declaration = fun s -> 
+let rec compile_toplevel_statement ~(raise: ('e, 'w) raise) : CST.toplevel_statement -> AST.program_entry = fun s -> 
   match s with
-  | Directive d -> (
-    let loc = Simple_utils.Location.lift (Preprocessor.Directive.to_region d) in
-    d_directive d ~loc ()
-  )
-  | TopLevel (statement, _semicolon_opt) -> (
+  | Directive d -> P_Directive d
+  | TopLevel (statement, _semicolon_opt) ->
     let statement = compile_statement ~raise statement in
-    let loc = statement.location in
-    d_topleveljsligo statement ~loc ()
-  )
-  
+    P_Top_level_statement statement
+
 let compile_program ~raise : CST.t -> AST.program = fun t ->
-  let declarations :                    CST.toplevel_statement  list = nseq_to_list t.statements in
-  let declarations : (raise: ('e, 'w) raise -> AST.declaration) list = List.map ~f:(fun a ~raise -> compile_toplevel_statement ~raise a) declarations in
-  let declarations :                           AST.declaration  list = Simple_utils.Trace.collect ~raise declarations in
+  let declarations = nseq_to_list t.statements in
+  let declarations = List.map ~f:(fun a ~raise -> compile_toplevel_statement ~raise a) declarations in
+  let declarations = Simple_utils.Trace.collect ~raise declarations in
   declarations

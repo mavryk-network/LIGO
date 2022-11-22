@@ -127,7 +127,7 @@ and instr_content = instruction_content
 and instr         = instruction
   [@@deriving yojson]
 
-and block_pascaligo = statement_pascaligo nseq
+and block_pascaligo = statement nseq
 
 and 'clause case_clause = {
   pattern : pattern;
@@ -196,6 +196,21 @@ and while_loop = {
   block     : block_pascaligo;
 }
 
+and switch_case =
+| Switch_case          of (expr * statement nseq option)
+| Switch_default_case  of statement nseq option
+
+and switch = {
+  switch_expr  : expr;
+  switch_cases : switch_case nseq;
+}
+
+and for_of = {
+  index_kind : [ `Let | `Const ];
+  index      : Variable.t;
+  expr       : expr;
+  for_stmt   : statement;
+}
 and instruction_content =
 | I_Assign of assignment
 | I_Call   of expr * expr list
@@ -203,19 +218,29 @@ and instruction_content =
 | I_Cond   of test_clause cond
 | I_For    of for_int
 | I_ForIn  of for_in
+| I_ForOf  of for_of
 | I_Patch  of patch
 | I_Remove of removal
 | I_Skip
 | I_While  of while_loop
+| I_Block  of statement nseq
+| I_Expr   of expr
+| I_Return of expr option
+| I_Switch of switch
+| I_break
 
 (* ========================== STATEMENTS PASCALIGO ========================= *)
 
-and statement_pascaligo = {
-  statement_pascaligo_content : statement_pascaligo_content;
+and statement = {
+  statement_content : statement_content;
   location                    : Location.t
 }
-and stmt_pascaligo_content = statement_pascaligo_content
-and stmt_pascaligo         = statement_pascaligo
+and statement_content =
+| S_Attr      of (Attribute.t * statement)
+| S_Instr     of instruction
+| S_Decl      of declaration
+| S_VarDecl   of var_decl
+and stmt = statement
   [@@deriving yojson]
 
 
@@ -226,63 +251,7 @@ and var_decl = {
   init        : expr;
 }
 
-and statement_pascaligo_content =
-| S_Attr      of (Attribute.t * statement_pascaligo) 
-| S_Decl      of declaration
-| S_Instr     of instruction
-| S_VarDecl   of var_decl
 
-(* ========================== STATEMENTS JSLIGO ============================ *)
-
-and statement_jsligo = {
-  statement_jsligo_content : statement_jsligo_content;
-  location                 : Location.t
-}
-and stmt_jsligo_content = statement_jsligo_content
-and stmt_jsligo         = statement_jsligo
-  [@@deriving yojson]
-
-and switch_case =
-| Switch_case          of (expr * statement_jsligo nseq option)
-| Switch_default_case  of statement_jsligo nseq option
-
-and switch = {
-  switch_expr  : expr;
-  switch_cases : switch_case nseq;
-}
-
-and namespace_statement_jsligo = {
-  module_name        : string;
-  namespace_content  : statement_jsligo nseq;
-}
-
-and import =
-| Import_rename of {
-  alias       : string;
-  module_path : string nseq;
-}
-| Import_all_as of {
-  alias       : string;
-  module_str  : string;
-}
-| Import_selected of {
-  imported    : string nseq;
-  module_str  : string;
-}
-
-and while_stmt_jsligo = {
-  expr        : expr;
-  while_body  : statement_jsligo;
-}
-
-and index_kind = Let | Const
-
-and for_of = {
-  index_kind : index_kind;
-  index      : string;
-  expr       : expr;
-  for_stmt   : statement_jsligo;
-}
 
 and let_binding = {
   is_rec      : bool;
@@ -291,22 +260,6 @@ and let_binding = {
   rhs_type    : type_expr option;
   let_rhs     : expression;
 }
-and statement_jsligo_content =
-| S_Block      of statement_jsligo nseq
-| S_Expr       of expr
-| S_Cond       of statement_jsligo cond
-| S_Return     of expr option
-| S_Let        of let_binding nseq
-| S_Const      of let_binding nseq
-| S_Type       of type_decl
-| S_Switch     of switch (* TODO : Use [case] record instead ? *)
-| S_Break
-| S_Namespace  of namespace_statement_jsligo
-| S_Export     of statement_jsligo
-| S_Import     of import
-| S_While      of while_stmt_jsligo
-| S_ForOf      of for_of
-| S_Attrjs     of Attribute.t * statement_jsligo 
 
 (* ========================== DECLARATIONS ================================= *)
 
@@ -349,12 +302,29 @@ and module_alias = {
   binders : string nseq;
 }
 
+and import =
+| Import_rename of {
+  alias       : string;
+  module_path : string nseq;
+}
+| Import_all_as of {
+  alias       : string;
+  module_str  : string;
+}
+| Import_selected of {
+  imported    : string nseq;
+  module_str  : string;
+}
+
 and declaration_content =
 | D_Directive      of Directive.t
 | D_Attr           of (Attribute.t * declaration)
-| D_ToplevelJsligo of statement_jsligo
+| D_Import         of import
+| D_Export         of statement 
 | D_Let            of let_binding
+| D_Multi_let      of let_binding nseq
 | D_Const          of let_binding
+| D_Multi_const    of let_binding nseq
 | D_Type           of type_decl
 | D_Module         of module_decl
 | D_ModuleAlias    of module_alias
@@ -371,6 +341,7 @@ and mod_ = module_
   [@@deriving yojson]
 
 and module_content =
+| M_Body_statements of statement nseq
 | M_Body of declaration nseq
 | M_Path of Mod_variable.t nseq
 | M_Var  of string
@@ -443,7 +414,7 @@ and fun_expr_pascaligo = {
 }
 
 and body_jsligo =
-| FunctionBody   of statement_jsligo nseq
+| FunctionBody   of statement nseq
 | ExpressionBody of expr
 
 and fun_expr_jsligo = {
@@ -634,9 +605,9 @@ and constant =
 
 (* ========================== PROGRAM ====================================== *)
 
-type program = declaration list
+type program_entry =
+  | P_Declaration of declaration
+  | P_Top_level_statement of statement
+  | P_Directive of Directive.t
+and program = program_entry list
   [@@deriving yojson]
-(* let program_to_yojson : program -> Yojson.Safe.t = fun _p -> `String "DUMMY" *)
-
-(* ========================== NANOPASS TODO ================================ *)
-

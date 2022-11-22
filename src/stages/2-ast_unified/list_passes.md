@@ -708,3 +708,14 @@ remove parenthesis, trivial in forward pass, useful in backward pass
   <pattern_destructN> = .. ;
   ```
 
+## attribify
+
+- remove : D_Export
+
+D_Export -> D_attr "private"/"public"
+
+## restrict_top_level
+
+- remove : M_Body_statements
+
+convert statements to declaration when possible, or throw error
