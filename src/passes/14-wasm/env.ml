@@ -31,3 +31,9 @@ let add_local (env: t) (local: string * T.value_type) =
 
 let add_locals (env: t) (locals: locals) = 
   {env with locals = env.locals @ locals}
+
+let equal a b = 
+  Poly.(fst a = fst b)
+
+let find_local env name = 
+  List.mem env.locals name ~equal

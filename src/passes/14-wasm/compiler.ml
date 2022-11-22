@@ -1463,8 +1463,22 @@ let rec expression ~raise :
   | E_iterator (_, ((item_name, item_type), body), col) -> 
     raise.error (not_supported e)
   | E_fold (((name, tv), body), ({type_expression = {type_content = T_set _; _}; _} as col), initial) -> 
-    print_endline "yes this one";
-    raise.error (not_supported e)
+    let fold_body_name = unique_name "fold_body" in
+    let env = add_locals env [(var_to_string name, T.NumType I32Type)] in
+    let w, env, col = expression ~raise w env col in
+    let w, env, init = expression ~raise w env initial in
+    let w, env, iter_body = expression ~raise w env body in
+    let _ = W.Print.instr_list stdout 89 iter_body  in
+    let w, required_args = add_function w fold_body_name (fun _ -> iter_body) in
+    w, env, col @ init @ [func_symbol fold_body_name; data_symbol "C_SET_EMPTY"; call_s "__ligo_internal__set_fold"]
+  | E_fold_right (((name , tv) , body) , (({type_expression = {type_content = T_set _; _}; _} as col), elem_tv) , initial) -> 
+    let fold_body_name = unique_name "fold_body" in
+    let env = add_locals env [(var_to_string name, T.NumType I32Type)] in
+    let w, env, col = expression ~raise w env col in
+    let w, env, init = expression ~raise w env initial in
+    let w, env, iter_body = expression ~raise w env body in
+    let w, required_args = add_function w fold_body_name (fun _ -> iter_body) in
+    w, env, col @ init @ [func_symbol fold_body_name; data_symbol "C_SET_EMPTY"; call_s "__ligo_internal__set_fold_right"]
   | E_fold (((name, tv), body), ({type_expression = {type_content = T_list _; _}; _} as col), initial) -> 
     let item = unique_name "item" in
     let init = unique_name "init" in

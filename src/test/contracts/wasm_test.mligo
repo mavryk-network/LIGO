@@ -134,7 +134,11 @@ let main ((_, _s):(parameter * storage)) =
   else 
     log "found no item :("
   in
-
+  let sum (acc, i : int * int) : int = acc + i in
+  let a26 : int = Set.fold sum s1 0 in
+  let a28: int = Set.fold sum (Set.literal [1;2;3]) 0 in
+  // let sum2 (acc, i : int * int) : int = acc + i in
+  let a27 : int = Set.fold_desc sum (Set.literal [1;2;3;4;5]) 0 in
   let a = 
     4 + 5 +  (* 9 *)
     40 / 5 + (* 9 + 8 = 17 *)
@@ -157,6 +161,9 @@ let main ((_, _s):(parameter * storage)) =
     a19 +    (* 477 + 9 = 486 *)
     a22 +    (* 486 + 6 = 492 *)
     a25 +    (* 492 + 2 = 494 *)
+    a26 +    (* 494 + 245 = 739 *)
+    a27 +    (* 739 + 15 = 754 *)
+    a28 +   (* 754 + 6 = 760 *)
     // a23 +     (* 484 + 2 = 486 *)
     // a24 +     (*     + 3 = *)
     // 1000 

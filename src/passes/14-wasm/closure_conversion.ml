@@ -64,7 +64,8 @@ let rec lift : env -> expression -> env * expression =
     let env = { 
       env2 with 
         variables = 
-            (v, e.type_expression) :: env.variables
+            (v, e.type_expression) :: env.variables;
+        exported_funcs = env.exported_funcs;
     } 
     in
     let export_func remaining =
@@ -324,7 +325,6 @@ let rec toplevel_inner : env -> string -> expression -> expression =
       ( ({content = E_closure {binder; body}; _} as e1),
         inline,
         ((var_name, type_expression), e2) ) ->  
-    
     let rec aux b =
       match b.content with
       | E_closure {binder; body} ->

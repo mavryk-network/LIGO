@@ -254,6 +254,8 @@ let add_function w helper_fn_name f_body =
   let required_arguments = (
     List.fold_left 
       ~f:(fun a s -> 
+          print_endline ("missing argument:" ^ s);
+          print_endline ("missing argument2:" ^ helper_fn_name);
           a @ 
           [
             local_get_s s              
