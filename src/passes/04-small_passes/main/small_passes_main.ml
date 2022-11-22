@@ -83,18 +83,22 @@ let inputs : (string * te) list =
   ]
 
 let test_input (passes : te_pass list) (test_name, input : string * te) =
-  let print_te_with_header header_str te =
+  let ppf = Format.std_formatter in
+  let () = Ansi.add_ansi_marking ppf in
+  let print_te_with_header ppf header_str te =
     let sexp = PE.sexp_of_fix_type_expr te in
-    Format.fprintf Format.std_formatter "@[<v 2>%s :@,%a@]@."
+    Format.fprintf ppf "@[<v 2>%s :@,%a@]@."
       header_str
       (Sexplib0.Sexp.pp_hum)
       sexp
   in
-  Format.printf "@.Test : %s@." test_name;
-  print_te_with_header "Input" input;
-  let output = SP.compile_with_passes ~syntax_todo:() passes [] input in
-  print_te_with_header "Output" output;
-  ()
+  Format.fprintf ppf "@.@{<bold>@{<underline>Test : %s@}@}@." test_name;
+  print_te_with_header ppf "Input" input;
+  try
+    let output = SP.compile_with_passes ~syntax_todo:() passes [] input in
+    print_te_with_header ppf "Output" output
+  with e ->
+    Format.fprintf ppf "Exception : %s@." (Exn.to_string e)
 
 
 let () = List.iter ~f:(test_input passes_list) inputs

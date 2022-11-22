@@ -8,4 +8,4 @@
     ligo_prim
     ;; Third party
     )
-  (modules Small_passes_main))
+  (modules Small_passes_main ansi))
