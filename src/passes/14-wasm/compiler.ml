@@ -913,8 +913,17 @@ let rec expression ~raise :
   | E_constant {cons_name = C_SET_ITER; arguments = [func; set] } -> raise.error (not_supported e)
   | E_constant {cons_name = C_SET_FOLD; arguments = [func; set; init] } -> raise.error (not_supported e)
   | E_constant {cons_name = C_SET_FOLD_DESC; arguments = [func; set; init] } -> raise.error (not_supported e)
-  | E_constant {cons_name = C_SET_MEM; arguments = [item; set] } -> 
-    host_call ~fn:"c_set_mem" ~response_size:4l ~instructions:[item; set]
+  | E_constant {cons_name = C_SET_MEM; arguments = [key; set] } -> 
+    let w, env, key_e = expression ~raise w env key in
+    let w, env, set_e = expression ~raise w env set in
+    let key_s = unique_name "mem_key" in
+    let set_s = unique_name "mem_set" in
+    let env = Env.add_locals env [(key_s, T.NumType I32Type); (set_s, T.NumType I32Type)] in
+    let compare_name = unique_name "mem_compare" in
+    let env, compare = Red_black_tree.build_comparator env key.type_expression at key_s set_s in
+    let f_body args = compare in
+    let w, _required_arguments = add_function w compare_name f_body in
+    w, env, set_e @ key_e @ [func_symbol compare_name; data_symbol "C_SET_EMPTY"; call_s "__ligo_internal__set_mem"]
   | E_constant {cons_name = C_SET_UPDATE; arguments = [item; boolean; set] } -> 
     host_call ~fn:"c_set_update" ~response_size:4l ~instructions:[item; boolean; set]
     
@@ -1000,7 +1009,17 @@ let rec expression ~raise :
     let w, env, key_e = expression ~raise w env key in
     let w, env, map_e = expression ~raise w env map in
     Red_black_tree.remove ~raise w env at key.type_expression key_e map_e ~value:1
-
+  | E_constant {cons_name = C_MAP_MEM; arguments = [key; set] } -> 
+    let w, env, key_e = expression ~raise w env key in
+    let w, env, set_e = expression ~raise w env set in
+    let key_s = unique_name "mem_key" in
+    let set_s = unique_name "mem_set" in
+    let env = Env.add_locals env [(key_s, T.NumType I32Type); (set_s, T.NumType I32Type)] in
+    let compare_name = unique_name "mem_compare" in
+    let env, compare = Red_black_tree.build_comparator env key.type_expression at key_s set_s in
+    let f_body args = compare in
+    let w, _required_arguments = add_function w compare_name f_body in
+    w, env, set_e @ key_e @ [func_symbol compare_name; data_symbol "C_SET_EMPTY"; call_s "__ligo_internal__set_mem"]
   | E_constant {cons_name = C_MAP_UPDATE; arguments = [key; value; map] } -> raise.error (not_supported e)
   | E_constant {cons_name = C_MAP_ITER; arguments = [func; map] } -> raise.error (not_supported e)
   | E_constant {cons_name = C_MAP_MAP; arguments = [func; map] } -> raise.error (not_supported e)

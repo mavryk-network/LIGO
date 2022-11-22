@@ -96,7 +96,7 @@ let main ((_, _s):(parameter * storage)) =
 *)
 
   let s1 = Set.literal [45; 35; 25; 20; 40; 30; 50] in
-  let m1 = Map.literal [(3, 55); (5, 50); (444, 242)] in
+  let m1 = Map.literal [(3, 55); (5, 50)] in
   let xx = Set.cardinal s1 + Map.size m1 in
   let a19: int = int xx in
   let a20 = Set.remove 30 s1 in
@@ -124,6 +124,17 @@ let main ((_, _s):(parameter * storage)) =
     log ("m1 item: " ^ string_of_int f ^ " = " ^ string_of_int a ^ "\n")
   ) m1
   in
+  let _ = if (Set.mem 334 (Set.literal [34; 3; 33;])) then 
+    log "found an item!"
+  else 
+    log "found no item :("
+  in
+  let _ = if Map.mem 5 m1 then 
+    log "found an item!"
+  else 
+    log "found no item :("
+  in
+
   let a = 
     4 + 5 +  (* 9 *)
     40 / 5 + (* 9 + 8 = 17 *)

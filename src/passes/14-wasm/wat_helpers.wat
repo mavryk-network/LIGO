@@ -132,7 +132,76 @@
         local.get $right_value 
         i32.add
         i32.add
-)
+    )
+
+    (func $__ligo_internal__set_mem (param $set i32) (param $m i32) (param $compare i32) (param $C_SET_EMPTY i32) (result i32)
+        (local $count i32)
+        (local $left_child i32)
+        (local $right_child i32)
+        (local $left_value i32)
+        (local $right_value i32)
+        (local $temp i32)
+        (local $comparison_result i32)
+        
+        local.get $set
+        local.get $C_SET_EMPTY
+        i32.eq
+        if (result i32)        
+            i32.const 0
+            br 0
+        else 
+            loop (result i32)
+                
+                local.get $set
+                local.get $m 
+                local.get $compare
+                call_indirect 0 (type 2)
+                local.tee $comparison_result
+                i32.const 0
+                i32.eq
+                if (result i32)
+                
+                    i32.const 1
+                    br 3
+                else 
+                    local.get $comparison_result 
+                    i32.const -1
+                    i32.eq
+                    if  (result i32)
+                        local.get $set 
+                        i32.const 8
+                        i32.add
+                        i32.load
+                        local.tee $left_child
+                        if (result i32)
+                            local.get $left_child
+                            local.set $set 
+                            br 3
+                        else 
+                            i32.const 0
+                            br 4
+                        end
+                    else 
+                        local.get $set 
+                        i32.const 12
+                        i32.add
+                        i32.load
+                        local.tee $right_child
+                        if (result i32)
+                            local.get $right_child
+                            local.set $set 
+                            br 3
+                        else 
+                            i32.const 0
+                            br 4
+                        end
+                    end
+                end
+                
+
+            end
+        end
+    )
 
     (func $__ligo_internal__set_remove (param $set i32) (param $key i32) (param $compare i32) (param $SIZE i32) (param $C_SET_EMPTY i32) (result i32)
         (local $compare_result i32)
@@ -550,6 +619,7 @@
             i32.const 0
         end
     )
+    
 
     (func $__ligo_internal__map_iter (param $set i32) (param $fn i32) (param $C_SET_EMPTY i32) (result i32)
         (local $left_child i32)

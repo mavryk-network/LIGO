@@ -1,7 +1,3 @@
-(**
-  TODO: move to Rust.
-**)
-
 module W = WasmObjectFile
 open W.Source
 open W.Ast
@@ -79,6 +75,8 @@ let mod_ : module_ =
               ~typedef:(FuncType ([NumType I32Type; NumType I32Type; NumType I32Type], [NumType I32Type]));
             type_ ~name:"__ligo_internal__set_iter_type"
               ~typedef:(FuncType ([NumType I32Type; NumType I32Type; NumType I32Type], [NumType I32Type]));
+            type_ ~name:"__ligo_internal__set_mem_type"
+              ~typedef:(FuncType ([NumType I32Type; NumType I32Type; NumType I32Type; NumType I32Type], [NumType I32Type]));
             type_ ~name:"__ligo_internal__map_iter_type"
               ~typedef:(FuncType ([NumType I32Type; NumType I32Type; NumType I32Type], [NumType I32Type]));
               
@@ -120,7 +118,9 @@ let mod_ : module_ =
             import ~item:"__ligo_internal__string_concat" ~desc:(FuncImport_symbol "__ligo_internal__string_concat_type");
             import ~item:"__ligo_internal__string_slice" ~desc:(FuncImport_symbol "__ligo_internal__string_slice_type");
             import ~item:"__ligo_internal__set_iter" ~desc:(FuncImport_symbol "__ligo_internal__set_iter_type");
+            import ~item:"__ligo_internal__set_mem" ~desc:(FuncImport_symbol "__ligo_internal__set_mem_type");
             import ~item:"__ligo_internal__map_iter" ~desc:(FuncImport_symbol "__ligo_internal__map_iter_type");
+            
           ];
         symbols =
           [
@@ -166,6 +166,8 @@ let mod_ : module_ =
               ~details:(Import ([NumType I32Type; NumType I32Type; NumType I32Type], [NumType I32Type]));
             symbol ~name:"__ligo_internal__set_iter"
               ~details:(Import ([NumType I32Type; NumType I32Type; NumType I32Type], [NumType I32Type]));
+            symbol ~name:"__ligo_internal__set_mem"
+              ~details:(Import ([NumType I32Type; NumType I32Type; NumType I32Type; NumType I32Type], [NumType I32Type]));
             symbol ~name:"__ligo_internal__map_iter"
               ~details:(Import ([NumType I32Type; NumType I32Type; NumType I32Type], [NumType I32Type]));
               
