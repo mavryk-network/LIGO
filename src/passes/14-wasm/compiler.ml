@@ -932,9 +932,19 @@ let rec expression ~raise :
     let f_body args = compare in
     let w, _required_arguments = add_function w compare_name f_body in
     w, env, set_e @ key_e @ [func_symbol compare_name; data_symbol "C_SET_EMPTY"; call_s "__ligo_internal__set_mem"]
-  | E_constant {cons_name = C_SET_UPDATE; arguments = [item; boolean; set] } -> 
-    host_call ~fn:"c_set_update" ~response_size:4l ~instructions:[item; boolean; set]
+  | E_constant {cons_name = C_SET_UPDATE; arguments = [key; boolean; set] } -> 
+    let w, env, key_e = expression ~raise w env key in
+    let w, env, set_e = expression ~raise w env set in
+    let w, env, boolean_e = expression ~raise w env boolean in
     
+    let key_s = unique_name "set_add_key" in
+    let set_s = unique_name "set_add_set" in
+    let env = Env.add_locals env [(key_s, T.NumType I32Type); (set_s, T.NumType I32Type)] in
+    let compare_name = unique_name "set_update_compare" in
+    let env, compare = Red_black_tree.build_comparator env key.type_expression at key_s set_s in
+    let f_body args = compare in
+    let w, _required_arguments = add_function w compare_name f_body in
+    w, env, set_e @ boolean_e @ key_e @ [func_symbol compare_name; const 20l; data_symbol "C_SET_EMPTY"; call_s "__ligo_internal__set_update"]
   
   (* List *)
   | E_constant {cons_name = C_LIST_EMPTY; arguments = []} -> (w, env, [data_symbol "C_LIST_EMPTY"])

@@ -708,6 +708,24 @@
         end  
     )
 
+    (func $__ligo_internal__set_update (param $set i32) (param $bool i32) (param $key i32) (param $compare i32) (param $SIZE i32) (param $C_SET_EMPTY i32) (result i32)
+        local.get $bool
+        if (result i32)
+            local.get $set 
+            local.get $key
+            local.get $compare 
+            local.get $C_SET_EMPTY
+            call $__ligo_internal__set_add
+        else
+            local.get $set
+            local.get $key
+            local.get $compare 
+            local.get $SIZE
+            local.get $C_SET_EMPTY
+            call $__ligo_internal__set_remove
+        end
+    )
+
     (func $__ligo_internal__set_iter (param $set i32) (param $fn i32) (param $C_SET_EMPTY i32) (result i32)
         (local $left_child i32)
         (local $right_child i32)
@@ -1398,6 +1416,7 @@
         end
     )
 
+    
     ;; (table (;0;) 2 2 funcref)
     ;; (elem (;0;) (i32.const 1) func $compare_fn)
     (memory (;0;) 1)
