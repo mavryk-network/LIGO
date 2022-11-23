@@ -60,7 +60,8 @@ let rec lift : env -> expression -> env * expression =
     in
     let env, body = find_body env2 body in
     
-    let v = Value_var.fresh () in
+    let v = Value_var.fresh () ~name: "moved_function" in
+
     let env = { 
       env2 with 
         variables = 
@@ -112,6 +113,7 @@ let rec lift : env -> expression -> env * expression =
         missing = env.missing;
       }
     in
+
     let e = { e with content = E_variable v} in
     (env, e)
 
@@ -129,9 +131,10 @@ let rec lift : env -> expression -> env * expression =
     let env, e2 = lift env e2 in
     let env, e1 =
       match
-        List.find env.replacements ~f:(fun (r, _) -> Value_var.equal r v)
+        List.find env.replacements ~f:(fun (r, _) ->  Value_var.equal r v)
       with
-      | Some (_, x) -> lift env x
+      | Some (_, x) -> 
+        lift env x
       | None -> (env, e1)
     in
     ( env,
@@ -257,16 +260,26 @@ let rec lift : env -> expression -> env * expression =
     let env, e2 = lift env e2 in 
     (env, {e with content = E_let_mut_in (e1, (b, e2))})
   | E_let_in     (e1, inline, ((var_name, type_expression), e2)) ->
-    let env =
-      {env with variables = (var_name, type_expression) :: env.variables}
-    in
     let env, e1 = lift env e1 in
+    let env = 
+      (match e1.content with 
+        E_variable _v ->
+          {env with replacements = (var_name, e1) :: env.replacements}
+      | _ ->
+        env
+      )
+    in
     let env, e2 = lift env e2 in
-    ( env,
+    env, (match e1.content with 
+      E_variable _ ->
+        e2
+    | _ -> 
       {
         e with
         content = E_let_in (e1, inline, ((var_name, type_expression), e2));
-      } )
+      }
+    );
+    
   | E_tuple l ->
     let env, l =
       List.fold_left
@@ -330,7 +343,7 @@ let rec toplevel_inner : env -> string -> expression -> expression =
       | E_closure {binder; body} ->
         let env, body = aux body in
         env, {b with content = E_closure {binder; body} }
-      | _  -> 
+      | _  ->         
         lift {empty_env with functions = var_name :: env.functions; variables = (binder, type_expression) :: env.variables} b
     in
     let env, body = aux body in 

@@ -100,10 +100,10 @@ let main ((_, _s):(parameter * storage)) =
   let xx = Set.cardinal s1 + Map.size m1 in
   let a19: int = int xx in
   let a20 = Set.remove 30 s1 in
-  // // let a21 = Map.remove 50 (Map.literal [(20, 1); (50, 2); (30, 3)]) in
+  let a21 = Map.remove 50 (Map.literal [(20, 1); (50, 2); (30, 3)]) in
   let a22 = Set.cardinal a20 in 
-  // let a24 = Set.cardinal s1 in
-  // // let a23 = Map.size a21 in 
+  let a24 = Set.cardinal s1 in
+  let a23 = Map.size a21 in 
   // let a23 = 0 in
   let a25 = String.length "12" in 
   let () = if a25 = 2n then 
@@ -137,7 +137,6 @@ let main ((_, _s):(parameter * storage)) =
   let sum (acc, i : int * int) : int = acc + i in
   let a26 : int = Set.fold sum s1 0 in
   let a28: int = Set.fold sum (Set.literal [1;2;3]) 0 in
-  // let sum2 (acc, i : int * int) : int = acc + i in
   let a27 : int = Set.fold_desc sum (Set.literal [1;2;3;4;5]) 0 in
   let a = 
     4 + 5 +  (* 9 *)
@@ -164,8 +163,8 @@ let main ((_, _s):(parameter * storage)) =
     a26 +    (* 494 + 245 = 739 *)
     a27 +    (* 739 + 15 = 754 *)
     a28 +   (* 754 + 6 = 760 *)
-    // a23 +     (* 484 + 2 = 486 *)
-    // a24 +     (*     + 3 = *)
+    a23 +     (* 484 + 2 = 762 *)
+    a24 +     (*     + 7 = 769 *)
     // 1000 
     
     0

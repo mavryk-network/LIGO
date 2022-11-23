@@ -381,7 +381,7 @@ module Red_black_tree = struct
                     br 4l;
                   ])
                   [
-                    (* clone right item *)
+                    (* clone left item *)
                     const size;
                     call_s "malloc"; 
                     local_set_s new_child;
@@ -898,10 +898,18 @@ let rec expression ~raise :
   | E_constant {cons_name = C_SET_EMPTY; arguments = [] } -> w, env, [data_symbol "C_SET_EMPTY"]
   | E_constant {cons_name = C_SET_LITERAL; arguments = [e1] } -> 
     host_call ~fn:"c_set_literal" ~response_size:4l ~instructions:[e1]
-  | E_constant {cons_name = C_SET_ADD; arguments = [item; set] } -> 
+  | E_constant {cons_name = C_SET_ADD; arguments = [key; set] } ->     
+    let w, env, key_e = expression ~raise w env key in
     let w, env, set_e = expression ~raise w env set in
-    let w, env, item_e = expression ~raise w env item in
-    Red_black_tree.insert_value ~raise w env at item.type_expression set_e item_e ()
+    let key_s = unique_name "set_add_key" in
+    let set_s = unique_name "set_add_set" in
+    let env = Env.add_locals env [(key_s, T.NumType I32Type); (set_s, T.NumType I32Type)] in
+    let compare_name = unique_name "set_add_compare" in
+    let env, compare = Red_black_tree.build_comparator env key.type_expression at key_s set_s in
+    let f_body args = compare in
+    let w, _required_arguments = add_function w compare_name f_body in
+    w, env, set_e @ key_e @ [func_symbol compare_name; data_symbol "C_SET_EMPTY"; call_s "__ligo_internal__set_add"]
+  
   | E_constant {cons_name = C_SET_SIZE; arguments = [s] } -> 
     let w, env, s = expression ~raise w env s in
     Red_black_tree.size ~raise w env at s
@@ -1002,6 +1010,7 @@ let rec expression ~raise :
     let w, env, key_e = expression ~raise w env key in
     let w, env, value_e = expression ~raise w env value in
     Red_black_tree.insert_value ~raise w env at key.type_expression map_e key_e ~insert_value_e:value_e ()
+
   | E_constant {cons_name = C_MAP_SIZE; arguments = [m] } ->
     let w, env, m = expression ~raise w env m in
     Red_black_tree.size ~raise w env at m

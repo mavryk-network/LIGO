@@ -83,6 +83,9 @@ let mod_ : module_ =
               ~typedef:(FuncType ([NumType I32Type; NumType I32Type; NumType I32Type; NumType I32Type], [NumType I32Type]));
             type_ ~name:"__ligo_internal__map_iter_type"
               ~typedef:(FuncType ([NumType I32Type; NumType I32Type; NumType I32Type], [NumType I32Type]));
+            type_ ~name:"__ligo_internal__set_add_type"
+              ~typedef:(FuncType ([NumType I32Type; NumType I32Type; NumType I32Type; NumType I32Type], [NumType I32Type]));
+
               
           ];
         imports =
@@ -124,6 +127,7 @@ let mod_ : module_ =
             import ~item:"__ligo_internal__set_iter" ~desc:(FuncImport_symbol "__ligo_internal__set_iter_type");
             import ~item:"__ligo_internal__set_mem" ~desc:(FuncImport_symbol "__ligo_internal__set_mem_type");
             import ~item:"__ligo_internal__set_fold" ~desc:(FuncImport_symbol "__ligo_internal__set_fold_type");
+            import ~item:"__ligo_internal__set_add" ~desc:(FuncImport_symbol "__ligo_internal__set_add_type");
             import ~item:"__ligo_internal__set_fold_right" ~desc:(FuncImport_symbol "__ligo_internal__set_fold_right_type");
             import ~item:"__ligo_internal__map_iter" ~desc:(FuncImport_symbol "__ligo_internal__map_iter_type");
             
@@ -177,6 +181,8 @@ let mod_ : module_ =
             symbol ~name:"__ligo_internal__set_fold"
               ~details:(Import ([NumType I32Type; NumType I32Type; NumType I32Type; NumType I32Type], [NumType I32Type]));
             symbol ~name:"__ligo_internal__set_fold_right"
+              ~details:(Import ([NumType I32Type; NumType I32Type; NumType I32Type; NumType I32Type], [NumType I32Type]));
+            symbol ~name:"__ligo_internal__set_add"
               ~details:(Import ([NumType I32Type; NumType I32Type; NumType I32Type; NumType I32Type], [NumType I32Type]));
             symbol ~name:"__ligo_internal__map_iter"
               ~details:(Import ([NumType I32Type; NumType I32Type; NumType I32Type], [NumType I32Type]));
