@@ -360,14 +360,14 @@ let rec compile_expression ~raise path scope (expr : I.expression) =
     return @@ E_assign {binder;expression}
   | E_for { binder; start; final; incr; f_body } ->
     let start = self start
-    and final = self final 
+    and final = self final
     and incr = self incr in
     let scope = Scope.push_func_or_case_binder scope binder in
     let f_body = self ~scope f_body in
     return @@ E_for { binder; start; final; incr; f_body }
   | E_for_each { fe_binder = binder1, binder2 as fe_binder; collection; collection_type; fe_body } ->
     let collection = self collection in
-    let scope = 
+    let scope =
       List.fold_left (binder1 :: Option.to_list binder2) ~init:scope ~f:Scope.push_func_or_case_binder
     in
     let fe_body = self ~scope fe_body in

@@ -7,7 +7,7 @@ let%expect_test _ =
       1 | let main (a:int) : unit = a
 
     Invalid type(s)
-    Cannot unify int with unit. |}];
+    Cannot unify "int" with "unit". |}];
 
   run_ligo_bad [ "compile" ; "contract" ; "--no-colour" ;  "../../test/contracts/negative/error_function_annotation_2.mligo"; "--entry-point"; "f"];
   [%expect {|
@@ -16,7 +16,7 @@ let%expect_test _ =
       2 | let g (x, y : int * int) : int = f (x, y)
 
     Invalid type(s)
-    Cannot unify ( int * int ) -> int with int. |}];
+    Cannot unify "( int * int ) -> int" with "int". |}];
 
   run_ligo_bad [ "compile" ; "contract" ; "--no-colour" ;  "../../test/contracts/negative/error_function_annotation_3.mligo"; "--entry-point"; "f"];
   [%expect {|
@@ -26,7 +26,7 @@ let%expect_test _ =
       9 |   | Sub si -> Sub si
 
     Invalid type(s)
-    Cannot unify sum[Add -> int , Sub -> int] with ( list (operation) * sum[Add -> int , Sub -> int] ). |}];
+    Cannot unify "op" with "( list (operation) * op )". |}];
 
   run_ligo_bad [ "compile" ; "contract" ; "--no-colour" ;  "../../test/contracts/negative/error_no_tail_recursive_function.mligo"; "--entry-point"; "unvalid"];
   [%expect {|
@@ -45,7 +45,7 @@ let%expect_test _ =
       3 | const foo : nat = 42 + "bar"
 
     Invalid type(s)
-    Cannot unify int with string. |} ] ;
+    Cannot unify "int" with "string". |} ] ;
 
   run_ligo_bad [ "compile" ; "contract" ; "--no-colour" ;  "../../test/contracts/negative/error_type_record_access.mligo" ] ;
   [%expect {|
@@ -55,7 +55,7 @@ let%expect_test _ =
       7 |   42
 
     Invalid type(s)
-    Cannot unify int with bool. |} ] ;
+    Cannot unify "int" with "bool". |} ] ;
 
   run_ligo_bad [ "compile" ; "contract" ; "--no-colour" ;  "../../test/contracts/negative/error_type_record_update.mligo" ] ;
   [%expect {|
@@ -65,7 +65,7 @@ let%expect_test _ =
       8 |   x
 
     Invalid type(s)
-    Cannot unify bool with int. |} ] ;
+    Cannot unify "bool" with "int". |} ] ;
 
   run_ligo_bad [ "compile" ; "contract" ; "--no-colour" ;  "../../test/contracts/negative/error_typer_1.mligo" ] ;
   [%expect {|
@@ -75,7 +75,7 @@ let%expect_test _ =
       4 |
 
     Invalid type(s)
-    Cannot unify int with string. |} ] ;
+    Cannot unify "int" with "string". |} ] ;
 
   run_ligo_bad [ "compile" ; "contract" ; "--no-colour" ;  "../../test/contracts/negative/error_typer_2.mligo" ] ;
   [%expect {|
@@ -85,7 +85,7 @@ let%expect_test _ =
       4 |
 
     Invalid type(s)
-    Cannot unify option (int) with list (string). |} ] ;
+    Cannot unify "toto" with "list (string)". |} ] ;
 
   run_ligo_bad [ "compile" ; "contract" ; "--no-colour" ;  "../../test/contracts/negative/error_typer_3.mligo" ] ;
   [%expect {|
@@ -95,7 +95,12 @@ let%expect_test _ =
       4 |
 
     Invalid type(s)
-    Cannot unify ( int * string ) with ( int * string * sum[False -> unit , True -> unit] ). |} ] ;
+    Cannot unify "toto" with "( int * string * bool )".
+
+    Difference between the types:
+      int
+      string
+    + bool |} ] ;
 
   run_ligo_bad [ "compile" ; "contract" ; "--no-colour" ;  "../../test/contracts/negative/error_typer_4.mligo" ] ;
   [%expect {|
@@ -105,8 +110,7 @@ let%expect_test _ =
       5 |
 
     Invalid type(s)
-    Cannot unify record[a -> int , b -> string , c -> sum[False -> unit , True -> unit]] with
-    record[a -> int , c -> sum[False -> unit , True -> unit] , d -> string]. |} ] ;
+    Cannot unify "toto" with "tata". |} ] ;
 
   run_ligo_bad [ "compile" ; "contract" ; "--no-colour" ;  "../../test/contracts/negative/error_typer_5.mligo" ] ;
   [%expect {|
@@ -123,7 +127,7 @@ let%expect_test _ =
       2 | let main (p:int) (storage : int) =
 
     Invalid type(s)
-    Cannot unify bool with string. |} ] ;
+    Cannot unify "bool" with "string". |} ] ;
 
   run_ligo_bad [ "compile" ; "contract" ; "--no-colour" ;  "../../test/contracts/negative/error_typer_7.mligo" ] ;
   [%expect {|
@@ -132,7 +136,7 @@ let%expect_test _ =
       4 | let foo : tata = ({a = 1 ; b = "foo" ; c = true} : toto)
       5 |
 
-    Mismatching record labels. Expected record of type record[a -> int , b -> string]. |} ] ;
+    Mismatching record labels. Expected record of type "toto". |} ] ;
 
   run_ligo_bad [ "compile" ; "contract" ; "--no-colour" ;  "../../test/contracts/negative/error_typer_1.jsligo" ] ;
   [%expect {|
@@ -160,7 +164,7 @@ let%expect_test _ =
      11 |     return [list([]) as list<operation>, newStorage];
 
     Invalid type(s)
-    Cannot unify ( nat * nat ) with nat. |} ] ;
+    Cannot unify "( nat * nat )" with "nat". |} ] ;
 
   run_ligo_bad [ "compile" ; "contract" ; "--no-colour" ;  "../../test/contracts/negative/id.mligo" ] ;
   [%expect {|
@@ -170,7 +174,7 @@ let%expect_test _ =
      46 |   in
 
     Invalid type(s)
-    Cannot unify record[controller -> address , owner -> address , profile -> bytes] with option (^gen#542). |}]
+    Cannot unify "id_details" with "option (^gen#545)". |}]
 
 (*
   This test is here to ensure compatibility with comparable pairs introduced in carthage
@@ -209,7 +213,7 @@ let%expect_test _ =
       8 |         Some (contract) -> contract
 
     Invalid type
-    Ill formed type funtype _a#18 : * . contract (_a#18). |}]
+    Ill formed type "contract".Hint: you might be missing some type arguments. |}]
 
 let%expect_test _ =
   run_ligo_bad [ "compile" ; "contract" ; "../../test/contracts/negative/double_for_each.ligo" ] ;
@@ -231,7 +235,7 @@ let%expect_test _ =
       5 | } with s
 
     Invalid type(s)
-    Cannot unify int with ( list (operation) * int ). |}]
+    Cannot unify "int" with "return". |}]
 
 let%expect_test _ =
   run_ligo_bad [ "compile" ; "contract" ; "../../test/contracts/negative/wrong_return2.ligo" ] ;
@@ -241,7 +245,7 @@ let%expect_test _ =
       3 | function updateAdmin(const _new_admin: address; var s: int): return is s
 
     Invalid type(s)
-    Cannot unify int with ( list (operation) * int ). |}]
+    Cannot unify "int" with "return". |}]
 
 
 (* Compiles due to inference ;) *)
@@ -271,7 +275,7 @@ let%expect_test _ =
       5 |   ([] : operation list), s
 
     Invalid type(s)
-    Cannot unify int with nat. |}]
+    Cannot unify "int" with "nat". |}]
 
 (* In this case, one of the types is a tuple but not the other
    no diff should be displayed *)
@@ -284,7 +288,7 @@ let%expect_test _ =
       5 |   ([] : operation list), s
 
     Invalid type(s)
-    Cannot unify int with ( nat * int * string ). |}]
+    Cannot unify "int" with "( nat * int * string )". |}]
 
 (*
   Here, the two tuples have no types in common and different sizes.
@@ -325,7 +329,16 @@ let%expect_test _ =
       5 |   ([] : operation list), s
 
     Invalid type(s)
-    Cannot unify ( string * int * int * string ) with ( tez * nat * tez ). |}]
+    Cannot unify "( string * int * int * string )" with "( tez * nat * tez )".
+
+    Difference between the types:
+    - string
+    + tez
+    - int
+    + nat
+    - int
+    + tez
+    - string |}]
 
 (*
   Here, the two tuples have some changes (1 change, 1 addition, 1 deletion)
@@ -341,7 +354,7 @@ let%expect_test _ =
       5 |   //       ^^^^^^         ^^^         ^^^
 
     Invalid type(s)
-    Cannot unify string with tez. |}]
+    Cannot unify "string" with "tez". |}]
 
 (*
   Here, the two tuples have 4 changes and different sizes.
@@ -356,7 +369,17 @@ let%expect_test _ =
       5 |   //       ^^^^^^         ^^^         ^^^            ^^^
 
     Invalid type(s)
-    Cannot unify ( string * int * nat * tez * string * int ) with ( tez * int * tez * nat * string ). |}]
+    Cannot unify "( string * int * nat * tez * string * int )" with "( tez * int * tez * nat * string )".
+
+    Difference between the types:
+    - string
+    + tez
+      int
+    - nat
+      tez
+    + nat
+      string
+    - int |}]
 
 (* Yet another example, with longer tuples this time *)
 let%expect_test _ =
@@ -368,7 +391,19 @@ let%expect_test _ =
       5 | //               ^^^   ^^^^^^               ^^^^^^^         ^^^
 
     Invalid type(s)
-    Cannot unify ( int * nat * int * nat * int * nat ) with ( int * tez * string * nat * int * address * int * tez * nat ). |}]
+    Cannot unify "( int * nat * int * nat * int * nat )" with "( int * tez * string * nat * int * address * int * tez * nat )".
+
+    Difference between the types:
+      int
+    + tez
+    + string
+      nat
+      int
+    - nat
+    + address
+      int
+    + tez
+      nat |}]
 
 (*
   Here we have a tuple nested inside another
@@ -415,7 +450,16 @@ let%expect_test _ =
       5 |   //             ^^^^^^                ^^^    ^^^^^^         ^^^^^^^
 
     Invalid type(s)
-    Cannot unify ( int * string * ( nat * tez * nat ) * tez ) with ( int * ( nat * tez * int ) * string * tez * address ). |}]
+    Cannot unify "( int * string * ( nat * tez * nat ) * tez )" with "( int * ( nat * tez * int ) * string * tez * address )".
+
+    Difference between the types:
+      int
+    - string
+    - ( nat * tez * nat )
+    + ( nat * tez * int )
+    + string
+      tez
+    + address |}]
 
 (*
   In this case, the tuple is itself composed of several
@@ -439,7 +483,16 @@ let%expect_test _ =
      10 |   ([] : operation list), s
 
     Invalid type(s)
-    Cannot unify ( int * ( nat * tez * tez * nat ) * nat ) with ( int * ( string * address * string * tez ) * ( address * int * int * int ) * ( nat * tez * int * nat ) * ( address * int * int * int ) * nat ). |}]
+    Cannot unify "( int * s * nat )" with "( int * s1 * s2 * s_close * s2 * nat )".
+
+    Difference between the types:
+      int
+    + ( string * address * string * tez )
+    + ( address * int * int * int )
+    - ( nat * tez * tez * nat )
+    + ( nat * tez * int * nat )
+    + ( address * int * int * int )
+      nat |}]
 
 (*
   When two mismatching tuples are within lists,
@@ -458,7 +511,17 @@ let%expect_test _ =
       5 |   //       ^^^^^^         ^^^         ^^^            ^^^
 
     Invalid type(s)
-    Cannot unify ( string * int * nat * int * string * int ) with ( tez * int * tez * nat * string ). |}]
+    Cannot unify "( string * int * nat * int * string * int )" with "( tez * int * tez * nat * string )".
+
+    Difference between the types:
+    - string
+    + tez
+      int
+    + tez
+      nat
+    - int
+      string
+    - int |}]
 
 (*
   In this case,
@@ -481,7 +544,7 @@ let%expect_test _ =
       5 |   //                                ^^^^^^
 
     Invalid type(s)
-    Cannot unify string with nat. |}]
+    Cannot unify "string" with "nat". |}]
 
 (*
   In this case, the two records DON'T have the same field labels.
@@ -498,8 +561,8 @@ let%expect_test _ =
       5 |   //                                ^^^^^^    ^^^^^^^^^^^^^^^^^
 
     Invalid type(s)
-    Cannot unify record[bar -> ( nat * string ) , foo -> int , third_field -> tez] with
-    record[bar -> ( nat * nat ) , foo -> int]. |}]
+    Cannot unify "record[bar -> ( nat * string ) , foo -> int , third_field -> tez]" with "
+    record[bar -> ( nat * nat ) , foo -> int]". |}]
 
 (*
   In this case, the typer will stop at the first mismatch
@@ -520,6 +583,6 @@ let%expect_test _ =
       6 |   ([] : operation list), s
 
     Invalid type(s)
-    Cannot unify int -> nat -> nat -> tez with ∀ gen#544 : * . gen#544 -> ∀ gen#543 : * . gen#543 -> ∀ gen#542 : * . gen#542 -> tez. |}]
+    Cannot unify "int" with "nat". |}]
 
 
