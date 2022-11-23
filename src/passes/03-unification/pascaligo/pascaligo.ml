@@ -51,6 +51,9 @@ module TODO_do_in_parsing = struct
 end
 module TODO_unify_in_cst = struct
   let compile_rows = Non_linear_rows.make
+  let vardecl_as_decl ~loc x =
+    (* https://tezos-dev.slack.com/archives/GMHV0U3Q9/p1669146559008189 *)
+    s_decl ~loc (d_var ~loc x ()) ()
 end
 
 let translate_attr_pascaligo : CST.Attr.t -> AST.attribute = fun attr ->
@@ -380,7 +383,7 @@ and compile_instruction ~(raise: ('e, 'w) raise) : CST.instruction -> AST.instru
 
 (* ========================== STATEMENTS ================================= *)
 
-and compile_statement ~raise : CST.statement -> AST.statement= fun s ->
+and compile_statement ~raise : CST.statement -> AST.statement = fun s ->
   let self = compile_statement ~raise in
   match s with
   | S_Attr (attr, stmt) -> (
@@ -403,9 +406,9 @@ and compile_statement ~raise : CST.statement -> AST.statement= fun s ->
     let s, loc = r_split s in
     let pattern     = compile_pattern ~raise s.pattern in
     let type_params = Option.map ~f:extract_type_params s.type_params in
-    let var_type    = Option.map ~f:(compile_type_expression ~raise <@ snd) s.var_type in
-    let init        = compile_expression ~raise s.init in
-    s_vardecl {pattern; type_params; var_type; init} ~loc ()
+    let rhs_type    = Option.map ~f:(compile_type_expression ~raise <@ snd) s.var_type in
+    let let_rhs        = compile_expression ~raise s.init in
+    TODO_unify_in_cst.vardecl_as_decl ~loc {pattern; is_rec = () ; type_params; rhs_type; let_rhs ; body = ()}
   )
 
 (* ========================== EXPRESSIONS ================================== *)
@@ -651,8 +654,11 @@ and compile_expression ~(raise: ('e, 'w) raise) : CST.expr -> AST.expr = fun e -
 
 and compile_declaration ~(raise: ('e, 'w) raise) : CST.declaration -> AST.declaration = fun decl ->
   let self = compile_declaration ~raise in
-  let compile_type_params : CST.type_params CST.chevrons Region.reg -> string nseq =
-    fun tp -> nseq_map w_fst @@ nsepseq_to_nseq (r_fst tp).inside
+  let compile_type_params : CST.type_params CST.chevrons Region.reg -> AST.Ty_variable.t nseq =
+     fun tp ->
+      nseq_map
+        (fun x -> TODO_do_in_parsing.tvar ~loc:(w_snd x) (w_fst x))
+        (nsepseq_to_nseq (r_fst tp).inside)
   in
   match decl with
   | D_Directive d -> (
@@ -671,12 +677,11 @@ and compile_declaration ~(raise: ('e, 'w) raise) : CST.declaration -> AST.declar
   )
   | D_Const d -> (
     let d, loc = r_split d in
-    let is_rec = false in
     let type_params = Option.map ~f:compile_type_params d.type_params in
-    let binders = List.Ne.singleton @@ compile_pattern ~raise d.pattern in
+    let pattern = compile_pattern ~raise d.pattern in
     let rhs_type = Option.map ~f:(compile_type_expression ~raise <@ snd) d.const_type in
     let let_rhs = compile_expression ~raise d.init in
-    d_const {is_rec; type_params; binders; rhs_type; let_rhs} ~loc ()
+    d_const ~loc {pattern; is_rec = () ; type_params; rhs_type; let_rhs ; body = ()} ()
   )
   | D_Attr d -> (
     let attr, decl = d in

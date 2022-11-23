@@ -43,7 +43,7 @@ module TODO_unify_in_cst = struct
   let compile_disc_rows = Non_linear_disc_rows.make
   let instr_as_stmt ~loc (x:AST.instruction) = AST.s_instr ~loc x ()
   let test_clause_branch x = ClauseBlock (List.Ne.singleton x)
-  let let_as_decl ~loc x = s_decl ~loc (d_multi_let ~loc x ()) ()
+  let let_as_decl ~loc x = s_decl ~loc (d_multi_var ~loc x ()) ()
   let const_as_decl ~loc x = s_decl ~loc (d_multi_const ~loc x ()) ()
   let ty_as_decl ~loc x = s_decl ~loc (d_type ~loc x ()) ()
   let export_as_decl ~loc x = s_decl ~loc (d_export ~loc x ()) ()
@@ -52,16 +52,15 @@ module TODO_unify_in_cst = struct
     s_decl ~loc (d_module ~loc {name ; mod_expr = m_body_statements ~loc statements ()} ()) ()
 end
 
-let rec compile_val_binding ~(raise: ('e, 'w) raise) : CST.val_binding -> AST.let_binding =
+let rec compile_val_binding ~(raise: ('e, 'w) raise) : CST.val_binding -> (unit,pattern,unit) AST.let_binding =
  fun { binders; type_params; lhs_type; eq = _; expr } ->
-  let is_rec = false in
-  let binders = List.Ne.singleton @@ compile_pattern ~raise binders in
+  let pattern = compile_pattern ~raise binders in
   let type_params = Option.map type_params ~f:(fun (tp : CST.type_generics) ->
-    List.Ne.map r_fst @@ nsepseq_to_nseq (r_fst tp).inside)
+    List.Ne.map (fun x -> TODO_do_in_parsing.tvar ~loc:(r_snd x) (r_fst x)) (nsepseq_to_nseq (r_fst tp).inside))
   in
   let rhs_type = Option.map ~f:(compile_type_expression ~raise <@ snd) lhs_type in
   let let_rhs = compile_expression ~raise expr in
-  {is_rec; type_params; binders; rhs_type; let_rhs}
+  {is_rec = () ; type_params; pattern; rhs_type; let_rhs ; body = ()}
 
 (* ========================== TYPES ======================================== *)
 
@@ -542,9 +541,16 @@ and compile_expression ~(raise: ('e, 'w) raise) : CST.expr -> AST.expr = fun e -
 let rec compile_toplevel_statement ~(raise: ('e, 'w) raise) : CST.toplevel_statement -> AST.program_entry = fun s -> 
   match s with
   | Directive d -> P_Directive d
-  | TopLevel (statement, _semicolon_opt) ->
+  | TopLevel (statement, _semicolon_opt) -> (
     let statement = compile_statement ~raise statement in
-    P_Top_level_statement statement
+    let rec aux s =
+      match  s.statement_content with
+      | S_Instr instr -> P_Top_level_instruction instr
+      | S_Decl declaration -> P_Declaration declaration
+      | S_Attr (attr,x) -> P_Attr (attr, aux x)
+    in
+    aux statement
+  )
 
 let compile_program ~raise : CST.t -> AST.program = fun t ->
   let declarations = nseq_to_list t.statements in

@@ -447,12 +447,12 @@ let rec compile_expression ~raise : CST.expr -> AST.expr = fun e ->
       let {type_params; binders; rhs_type; eq=_; let_rhs} : CST.let_binding = binding in
       let is_rec      = match kwd_rec with Some _ -> true | None -> false in
       let type_params = Option.map ~f:compile_type_params type_params in
-      let binders     = nseq_map compile_pattern binders in
+      let pattern     = nseq_map compile_pattern binders in
       let rhs_type    = Option.map ~f:compile_rhs_type rhs_type in
       let let_rhs     = self let_rhs in
       let body        = self body in
       TODO_unify_in_cst.attach_attr attributes (
-        e_let_in {is_rec; type_params; binders; rhs_type; let_rhs; body} ~loc ()
+        e_let_in {is_rec; type_params; pattern; rhs_type; let_rhs; body} ~loc ()
       )
     )
   | ETypeIn ti -> (
@@ -501,16 +501,16 @@ and compile_declaration ~raise : CST.declaration -> AST.declaration = fun decl -
     let (_kwd_let, kwd_rec, e, attributes), loc = r_split e in
     let is_rec = match kwd_rec with None -> false | Some _ -> true in
     let type_params =
-      let compile_type_params : CST.type_params CST.par CST.reg -> string nseq =
-        fun tp -> nseq_map r_fst (r_fst tp).inside.type_vars
+      let compile_type_params : CST.type_params CST.par CST.reg -> AST.Ty_variable.t nseq =
+        fun tp -> nseq_map (fun x -> TODO_do_in_parsing.tvar ~loc:(r_snd x) (r_fst x)) (r_fst tp).inside.type_vars
       in
       Option.map ~f:compile_type_params e.type_params
     in
-    let binders = nseq_map compile_pattern e.binders in
+    let pattern = nseq_map compile_pattern e.binders in
     let rhs_type = Option.map ~f:(compile_type_expression <@ snd) e.rhs_type in
     let let_rhs = compile_expression ~raise e.let_rhs in
     TODO_unify_in_cst.d_attach_attr attributes (
-      d_let {is_rec; type_params; binders; rhs_type; let_rhs} ~loc ()
+      d_let {is_rec; type_params; pattern; rhs_type; let_rhs ; body = ()} ~loc ()
     )
   )
   | TypeDecl d -> (

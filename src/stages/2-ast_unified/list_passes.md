@@ -719,3 +719,20 @@ D_Export -> D_attr "private"/"public"
 - remove : M_Body_statements
 
 convert statements to declaration when possible, or throw error
+
+## multi lets
+
+- remove : D_multi_var , D_multi_const
+
+compile mutli var/const declarations to single var/const declaration
+
+
+## simplify let_syntax
+
+- remove : D_Let
+- add    : D_Let_find_a_name
+
+let <pattern list> <type params> : <type> = ..
+|->
+
+let <pattern> = (fun  

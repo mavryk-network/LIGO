@@ -117,7 +117,6 @@ and pattern_content = type_expr pc
 and pattern = type_expr p
   [@@deriving yojson]
 
-
 (* ========================== INSTRUCTIONS ================================= *)
 and instruction = {
   instruction_content : instruction_content;
@@ -229,7 +228,7 @@ and instruction_content =
 | I_Switch of switch
 | I_break
 
-(* ========================== STATEMENTS PASCALIGO ========================= *)
+(* ========================== STATEMENTS ========================= *)
 
 and statement = {
   statement_content : statement_content;
@@ -239,7 +238,6 @@ and statement_content =
 | S_Attr      of (Attribute.t * statement)
 | S_Instr     of instruction
 | S_Decl      of declaration
-| S_VarDecl   of var_decl
 and stmt = statement
   [@@deriving yojson]
 
@@ -251,14 +249,13 @@ and var_decl = {
   init        : expr;
 }
 
-
-
-and let_binding = {
-  is_rec      : bool;
-  type_params : string nseq option;
-  binders     : pattern nseq;
-  rhs_type    : type_expr option;
+and ('is_rec,'lhs,'body) let_binding = {
+  is_rec      : 'is_rec;
+  type_params : Ty_variable.t nseq option;
+  pattern     : 'lhs;
+  rhs_type   : type_expr option;
   let_rhs     : expression;
+  body : 'body;
 }
 
 (* ========================== DECLARATIONS ================================= *)
@@ -280,7 +277,7 @@ and param_decl = {
 and fun_decl = {
   is_rec      : bool;
   fun_name    : string;
-  type_params : string nseq option;
+  type_params : Ty_variable.t nseq option;
   parameters  : param_decl list;
   ret_type    : type_expression option;
   return      : expression;
@@ -321,10 +318,11 @@ and declaration_content =
 | D_Attr           of (Attribute.t * declaration)
 | D_Import         of import
 | D_Export         of statement 
-| D_Let            of let_binding
-| D_Multi_let      of let_binding nseq
-| D_Const          of let_binding
-| D_Multi_const    of let_binding nseq
+| D_Let            of (bool,pattern nseq,unit) let_binding
+| D_Var            of (unit,pattern,unit) let_binding
+| D_Multi_var      of (unit,pattern,unit) let_binding nseq
+| D_Const          of (unit,pattern,unit) let_binding
+| D_Multi_const    of (unit,pattern,unit) let_binding nseq
 | D_Type           of type_decl
 | D_Module         of module_decl
 | D_ModuleAlias    of module_alias
@@ -428,14 +426,14 @@ and map_lookup = {
   keys : expr nseq;
 }
 
-and let_in = {
+(* and let_in = {
   is_rec       : bool;
   type_params  : Ty_variable.t nseq option;
   binders      : pattern nseq;
   rhs_type     : type_expr option;
   let_rhs      : expr;
   body         : expr;
-}
+} *)
 
 and type_in = {
   type_binder : string;
@@ -575,7 +573,7 @@ and expression_content =
   | E_BigMap of (expr * expr) list
 
   (* Let in *)
-  | E_Let_in of let_in                    (* let x = 42 in x + 1 *)
+  | E_Let_in of (bool,pattern nseq,expr) let_binding                    (* let x = 42 in x + 1 *)
   | E_TypeIn        of type_in            (* type t = int in let x : t = 42 *)
   | E_ModIn         of mod_in             (* module M = struct let x = 42 end in M.x *)
   | E_ModAlias      of mod_alias          (* module M = N.P in M.x *) 
@@ -606,8 +604,9 @@ and constant =
 (* ========================== PROGRAM ====================================== *)
 
 type program_entry =
+  | P_Attr of Attribute.t * program_entry
   | P_Declaration of declaration
-  | P_Top_level_statement of statement
+  | P_Top_level_instruction of instruction
   | P_Directive of Directive.t
 and program = program_entry list
   [@@deriving yojson]
