@@ -138,6 +138,8 @@ let main ((_, _s):(parameter * storage)) =
   let a26 : int = Set.fold sum s1 0 in
   let a28: int = Set.fold sum (Set.literal [1;2;3]) 0 in
   let a27 : int = Set.fold_desc sum (Set.literal [1;2;3;4;5]) 0 in
+
+  let _ = Set.iter (fun f -> log ("update test: " ^ string_of_int f ^ "\n")) (Set.update 5 false (Set.literal [4; 5; 6])) in
   let a = 
     4 + 5 +  (* 9 *)
     40 / 5 + (* 9 + 8 = 17 *)
