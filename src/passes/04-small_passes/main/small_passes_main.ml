@@ -35,6 +35,7 @@ let passes_list =
   let open PE in
   [ pass_t_arg
   ; pass_t_named_fun
+  ; pass_t_app_pascaligo
   ; pass_t_app_michelson_types
   ; pass_t_string_and_int_unsupported 
   ]
@@ -52,6 +53,28 @@ let my_fun : te =
   in
   let f : te = `T_Var (ghost_loc @@ tvar_of_str "f") in
   `T_Named_fun (ghost_loc (args, f))
+
+let my_app_pascaligo : te =
+  let loc = 0 in
+  let constr = `T_Var (ghost_loc @@ tvar_of_str "f") in
+  let type_args : te Simple_utils.List.Ne.t =
+    ( `T_Var (ghost_loc @@ tvar_of_str "x"),
+    [ `T_Var (ghost_loc @@ tvar_of_str "y")
+    ; `T_Var (ghost_loc @@ tvar_of_str "z")
+    ])
+  in
+  `T_App_pascaligo ({constr; type_args}, loc)
+
+let my_app_pascaligo_wrong : te =
+  let loc = 0 in
+  let constr = my_app_pascaligo in
+  let type_args : te Simple_utils.List.Ne.t =
+    ( `T_Var (ghost_loc @@ tvar_of_str "a"),
+    [ `T_Var (ghost_loc @@ tvar_of_str "b")
+    ; `T_Var (ghost_loc @@ tvar_of_str "c")
+    ])
+  in
+  `T_App_pascaligo ({constr; type_args}, loc)
 
 let my_michelson_pair : te =
   let loc = 42 in
@@ -119,6 +142,8 @@ let inputs : (string * te) list =
   [ "simple_arg", `T_Arg (ghost_loc "my_arg")
   ; "simple_var", `T_Var (ghost_loc @@ tvar_of_str "my_var")
   ; "named_fun", my_fun
+  ; "my_app_pascaligo", my_app_pascaligo
+  ; "my_app_pascaligo_wrong", my_app_pascaligo_wrong
   ; "michelson_pair", my_michelson_pair
   ; "michelson_3uple", my_michelson_3uple
   ; "michelson_or", my_michelson_or
@@ -130,24 +155,46 @@ let inputs : (string * te) list =
   ; "single_t_string", single_t_string
   ]
 
-let test_input (passes : te_pass list) (test_name, input : string * te) =
+let test_input (passes : 'a SP.pass list) (sexp_of_t : 'a -> Sexp.t) (test_name, input : string * 'a) =
   let ppf = Format.std_formatter in
   let () = Ansi.add_ansi_marking ppf in
-  let print_te_with_header ppf header_str te =
-    let sexp = PE.sexp_of_fix_type_expr te in
+  let print_sexp_with_header ppf sexp_of_t header_str t =
+    let sexp = sexp_of_t t in
     Format.fprintf ppf "@[<v 2>%s :@,%a@]@."
       header_str
       (Sexplib0.Sexp.pp_hum)
       sexp
   in
   Format.fprintf ppf "@.@{<bold>@{<underline>Test : %s@}@}@." test_name;
-  print_te_with_header ppf "Input" input;
+  print_sexp_with_header ppf sexp_of_t "Input" input;
   try
     let output = SP.compile_with_passes ~syntax_todo:() passes [] input in
-    print_te_with_header ppf "Output" output
+    print_sexp_with_header ppf sexp_of_t "Output" output
   with e ->
     Format.fprintf ppf "Exception : %s@." (Exn.to_string e)
 
 
-let () = List.iter ~f:(test_input passes_list) inputs
 
+
+
+let dummy_p = `P_Var (ghost_loc @@ PE.Variable_with_sexp.of_input_var "dummy_p")
+
+let my_typed_p =
+  `P_Typed (ghost_loc
+    ( `T_Arg ("my_arg", 42)
+    , dummy_p
+    )
+  )
+
+let p_inputs : (string * PE.fix_pattern) list =
+  [ "dummy_p", dummy_p
+  ; "typed_p", my_typed_p
+  ]
+
+let p_passes_list : PE.fix_pattern SP.pass list =
+  let open PE in
+  [ pass_p_typed_toy 
+  ]
+
+let () = List.iter ~f:(test_input passes_list PE.sexp_of_fix_type_expr) inputs
+let () = List.iter ~f:(test_input p_passes_list PE.sexp_of_fix_pattern) p_inputs

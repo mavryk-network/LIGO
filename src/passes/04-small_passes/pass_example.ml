@@ -3,6 +3,7 @@ module AST = Ast_unified
 type 'a expr = AST.expr
 type fix_expr (*dummy ... after we have AST.types == polyvariants *)
 
+type 'a nseq = 'a Simple_utils.List.Ne.t [@@deriving map, sexp]
 
 (* type ty_variable = [%import: Ty_variable.t] [@@deriving sexp] *)
 
@@ -10,6 +11,10 @@ type fix_expr (*dummy ... after we have AST.types == polyvariants *)
 
 
 open AST
+
+(* ========================================================================= *)
+(* ======== Loc and modules with sexp ====================================== *)
+(* ========================================================================= *)
 
 module Ty_variable_with_sexp = struct
   include Ty_variable
@@ -58,7 +63,7 @@ module Mod_variable_with_sexp = struct
   
   let t_of_sexp : Sexp.t -> t = fun t ->
     Sexplib0.Sexp_conv_error.no_matching_variant_found "Unsupported sexp" t
-  
+
   let sexp_of_t : t -> Sexp.t = fun te ->
     Sexp.List
       [ Sexp.List [ Sexp.Atom "name" ; Sexp.Atom (to_name_exn te) ]
@@ -66,6 +71,35 @@ module Mod_variable_with_sexp = struct
       ; Sexp.List [ Sexp.Atom "generated" ; Sexp.Atom (Bool.to_string @@ is_generated te) ]
       ]
 end
+
+module Literal_value_with_sexp = struct
+  include Literal_value
+
+  let t_of_sexp : Sexp.t -> t = fun t ->
+    Sexplib0.Sexp_conv_error.no_matching_variant_found "Unsupported sexp" t
+
+  let sexp_of_t : t -> Sexplib0.Sexp.t = fun t ->
+    let s = Format.asprintf "%a" Literal_value.pp t in
+    Sexp.List [ Sexp.Atom "Literal_value" ; Sexplib0.Sexp.Atom s ]
+    
+end
+
+module Variable_with_sexp = struct
+  include Variable
+
+  let t_of_sexp : Sexp.t -> t = fun t ->
+    Sexplib0.Sexp_conv_error.no_matching_variant_found "Unsupported sexp" t
+
+  let sexp_of_t : t -> Sexplib0.Sexp.t = fun t ->
+    let s = Format.asprintf "%a" Variable.pp t in
+    Sexp.List [ Sexp.Atom "Variable" ; Sexplib0.Sexp.Atom s ]
+end
+
+
+
+(* ========================================================================= *)
+(* ======== Polymorphic AST unified ======================================== *)
+(* ========================================================================= *)
 
 type 't type_expr = [
 | `T_Var          of (Ty_variable_with_sexp.t) Loc.t
@@ -83,7 +117,7 @@ type 't type_expr = [
 | `T_Record_raw   of ('t option Non_linear_rows.t) Loc.t
 | `T_Disc_union   of ('t Non_linear_disc_rows.t) Loc.t
 | `T_Attr         of (Attribute.t * 't) Loc.t
-| `T_AppPascaligo of (('t, 't) Type_app.t) Loc.t
+| `T_App_pascaligo of (('t, 't) Type_app.t) Loc.t
 
 | `T_Michelson_or        of (string * 't * string * 't) Loc.t
 | `T_Michelson_pair      of (string * 't * string * 't) Loc.t
@@ -92,30 +126,74 @@ type 't type_expr = [
 
 ]  [@@deriving map, sexp]
 
-(* and 't type_expr = {
-  type_expression_content : 't type_expression_content;
-  location                : int
-} *)
 
-type fix_type_expr = fix_type_expr type_expr [@@deriving sexp]
+type ('lhs, 'rhs) field =
+  | Punned of 'lhs
+  | Complete of ('lhs * 'rhs)
+  [@@deriving map, sexp]
+
+type 'p list_pattern =
+  | Cons of 'p * 'p
+  | List of 'p list
+  [@@deriving map, sexp]
+
+type ('ty, 'p) pattern = [
+| `P_Unit       of ( unit                                   ) Loc.t
+| `P_Typed      of ( 'ty * 'p                               ) Loc.t
+| `P_Literal    of ( Literal_value_with_sexp.t              ) Loc.t
+| `P_Var        of ( Variable_with_sexp.t                   ) Loc.t
+| `P_List       of ( 'p list_pattern                        ) Loc.t
+| `P_Variant    of ( Label.t * 'p option                    ) Loc.t
+| `P_Tuple      of ( 'p list                                ) Loc.t
+| `P_Pun_record of ( (Label.t, 'p) field list               ) Loc.t
+| `P_Rest       of ( Label.t                                ) Loc.t
+| `P_Attr       of ( Attribute.t * 'p                       ) Loc.t
+| `P_Mod_access of ( (Mod_variable_with_sexp.t nseq, 'p) Mod_access.t ) Loc.t
+] [@@deriving map, sexp]
+
+(* ========================================================================= *)
+(* ======== Fixpoints and fold ============================================= *)
+(* ========================================================================= *)
+
+type fix_type_expr  = fix_type_expr                type_expr 
+and  fix_pattern    = (fix_type_expr, fix_pattern) pattern    
+[@@deriving sexp]
+
+let rec fold_type_expr
+  (f:'t type_expr -> 't)
+  (t:fix_type_expr) : 't =
+  f (map_type_expr (fold_type_expr f) t)
+
+let rec fold_pattern
+  (ft : 't      type_expr -> 't)
+  (fp : ('t,'p) pattern   -> 'p)
+  (p  : fix_pattern) : 'p =
+    let fold_p : fix_pattern   -> 'p = fold_pattern   ft fp in
+    let fold_t : fix_type_expr -> 't = fold_type_expr ft    in
+    fp (map_pattern fold_t fold_p p)
 
 
-let rec fold_expr
-  (f:'a type_expr -> 'a)
-  (t:fix_type_expr) : 'a =
-  f (map_type_expr (fold_expr f) t)
+(* ========================================================================= *)
+(* ======== Small passes and helpers ======================================= *)
+(* ========================================================================= *)
 
-let default_compile : Small_passes.syntax -> fix_type_expr -> fix_type_expr =
-  fun _syntax te -> te
+let default_compile : Small_passes.syntax -> 'a -> 'a =
+  fun _syntax a -> a
 
 let default_decompile = default_compile
 
-let default_check_reduction : fix_type_expr -> bool = fun _ -> true
+let default_check_reduction : 'a -> bool = fun _ -> true
 
 (* Helper used to factor out the common part of all passes' compile functions *)
-let wrap_compile (core_compile : fix_type_expr -> fix_type_expr)
+let wrap_compile_t (core_compile : fix_type_expr -> fix_type_expr)
   : Small_passes.syntax -> fix_type_expr -> fix_type_expr =
-  fun _syntax te -> fold_expr core_compile te
+  fun _syntax te -> fold_type_expr core_compile te
+
+let wrap_compile_p
+  (core_compile_t : fix_type_expr -> fix_type_expr)
+  (core_compile_p : fix_pattern -> fix_pattern)
+  : Small_passes.syntax -> fix_pattern -> fix_pattern =
+  fun _syntax p -> fold_pattern core_compile_t core_compile_p p
 
 let make_pass
   ~(name : string)
@@ -123,7 +201,7 @@ let make_pass
   ?(decompile = default_decompile)
   ?(check_reductions = default_check_reduction)
   (_ : unit)
-  : fix_type_expr Small_passes.pass =
+  : 'a Small_passes.pass =
   {name; compile; decompile; check_reductions}
 
 let pass_t_arg : fix_type_expr Small_passes.pass =
@@ -132,7 +210,7 @@ let pass_t_arg : fix_type_expr Small_passes.pass =
   | `T_Arg (s, loc) -> `T_Var (Ty_variable.of_input_var s, loc)
   | _ as common -> common
   in
-  let compile = wrap_compile core_compile in
+  let compile = wrap_compile_t core_compile in
   let decompile = default_decompile in
   let check_reductions = default_check_reduction in
   {name; compile; decompile; check_reductions}
@@ -151,14 +229,28 @@ let pass_t_named_fun : fix_type_expr Small_passes.pass =
        res
   | _ as common -> common
   in
-  let compile = wrap_compile core_compile in
+  let compile = wrap_compile_t core_compile in
   let decompile = default_decompile in
   let check_reductions = default_check_reduction in
   {name; compile; decompile; check_reductions}
 
+let pass_t_app_pascaligo =
+  let name = "pass_t_app_pascaligo" in
+  let compile = wrap_compile_t @@ function
+  | `T_App_pascaligo ({constr; type_args}, loc) -> (
+    match constr with
+    | `T_Var (tv, _loc2) ->
+      let constr = Ty_variable_with_sexp.to_name_exn tv in
+      `T_App ({constr; type_args}, loc)
+    | _ -> failwith "field 'constr' of T_App_pascaligo should be a T_Var"
+    )
+  | _ as other -> other
+  in
+  make_pass ~name ~compile ()
+
 let pass_t_app_michelson_types =
   let name = "pass_t_app_michelson_types" in
-  let compile = wrap_compile @@ function
+  let compile = wrap_compile_t @@ function
   | `T_App ({constr; type_args}, loc) as t -> (
     match constr with
     | "michelson_or" -> (
@@ -193,12 +285,40 @@ let pass_t_app_michelson_types =
 
 let pass_t_string_and_int_unsupported =
   let name = "pass_t_string_and_int_unsupported" in
-  let compile = wrap_compile @@ function
+  let compile = wrap_compile_t @@ function
   | `T_Int _ -> failwith "Invalid type T_Int at this stage"
   | `T_String _ -> failwith "Invalid type T_String at this stage"
   | _ as other -> other
   in
   make_pass ~name ~compile ()
+
+
+(* First dummy passes on patterns *)
+
+let identity : 'a -> 'a = fun x -> x
+let default_compile_t = identity
+
+(*
+  This example tests what happens when we touch both the patterns and types in a same AST unified instance
+  The compile_t and compile_p do random dummy stuffs on type_expression and patterns, independently of each other.
+  On an AST with a typed pattern, we should observe the two transformations performed.
+*)
+let pass_p_typed_toy =
+  let name = "pass_p_typed_toy" in
+  let compile_t : fix_type_expr -> fix_type_expr = function
+  | `T_Arg (s, loc) -> `T_Var (Ty_variable_with_sexp.of_input_var s, loc)
+  | _ as other -> other
+  in
+  let compile_p : fix_pattern -> fix_pattern = function
+  | `P_Var (_, loc) -> `P_Var (Variable_with_sexp.of_input_var "renamed_toto", loc)
+  | _ as other -> other
+  in
+  let compile = wrap_compile_p compile_t compile_p in
+  make_pass ~name ~compile ()
+
+(* ========================================================================= *)
+(* ======== Small passes TODO list form list_passes.md ===================== *)
+(* ========================================================================= *)
 
 (*
 From [cat list_passes.md | grep "pass 't_"]
@@ -209,7 +329,7 @@ From [cat list_passes.md | grep "pass 't_"]
 [ ]  pass 't_record'
 [O]  pass 't_recordcameligo'
 [O]  pass 't_par'
-[O]  pass 't_app_pascaligo' (are these 3 passes still relevant ?)
+[X]  pass 't_app_pascaligo'
 [X]  pass 't_app_michelson_types'
 [ ]  pass 't_app'
 [X]  pass 't_string_and_int_unsupported' :
