@@ -177,17 +177,23 @@ let rec fold_pattern
 (* ======== Small passes and helpers ======================================= *)
 (* ========================================================================= *)
 
-let default_compile : Small_passes.syntax -> fix_type_expr -> fix_type_expr =
-  fun _syntax te -> te
+let default_compile : Small_passes.syntax -> 'a -> 'a =
+  fun _syntax a -> a
 
 let default_decompile = default_compile
 
-let default_check_reduction : fix_type_expr -> bool = fun _ -> true
+let default_check_reduction : 'a -> bool = fun _ -> true
 
 (* Helper used to factor out the common part of all passes' compile functions *)
-let wrap_compile (core_compile : fix_type_expr -> fix_type_expr)
+let wrap_compile_t (core_compile : fix_type_expr -> fix_type_expr)
   : Small_passes.syntax -> fix_type_expr -> fix_type_expr =
   fun _syntax te -> fold_type_expr core_compile te
+
+let wrap_compile_p
+  (core_compile_t : fix_type_expr -> fix_type_expr)
+  (core_compile_p : fix_pattern -> fix_pattern)
+  : Small_passes.syntax -> fix_pattern -> fix_pattern =
+  fun _syntax p -> fold_pattern core_compile_t core_compile_p p
 
 let make_pass
   ~(name : string)
@@ -195,7 +201,7 @@ let make_pass
   ?(decompile = default_decompile)
   ?(check_reductions = default_check_reduction)
   (_ : unit)
-  : fix_type_expr Small_passes.pass =
+  : 'a Small_passes.pass =
   {name; compile; decompile; check_reductions}
 
 let pass_t_arg : fix_type_expr Small_passes.pass =
@@ -204,7 +210,7 @@ let pass_t_arg : fix_type_expr Small_passes.pass =
   | `T_Arg (s, loc) -> `T_Var (Ty_variable.of_input_var s, loc)
   | _ as common -> common
   in
-  let compile = wrap_compile core_compile in
+  let compile = wrap_compile_t core_compile in
   let decompile = default_decompile in
   let check_reductions = default_check_reduction in
   {name; compile; decompile; check_reductions}
@@ -223,14 +229,14 @@ let pass_t_named_fun : fix_type_expr Small_passes.pass =
        res
   | _ as common -> common
   in
-  let compile = wrap_compile core_compile in
+  let compile = wrap_compile_t core_compile in
   let decompile = default_decompile in
   let check_reductions = default_check_reduction in
   {name; compile; decompile; check_reductions}
 
 let pass_t_app_pascaligo =
   let name = "pass_t_app_pascaligo" in
-  let compile = wrap_compile @@ function
+  let compile = wrap_compile_t @@ function
   | `T_App_pascaligo ({constr; type_args}, loc) -> (
     match constr with
     | `T_Var (tv, _loc2) ->
@@ -244,7 +250,7 @@ let pass_t_app_pascaligo =
 
 let pass_t_app_michelson_types =
   let name = "pass_t_app_michelson_types" in
-  let compile = wrap_compile @@ function
+  let compile = wrap_compile_t @@ function
   | `T_App ({constr; type_args}, loc) as t -> (
     match constr with
     | "michelson_or" -> (
@@ -279,13 +285,36 @@ let pass_t_app_michelson_types =
 
 let pass_t_string_and_int_unsupported =
   let name = "pass_t_string_and_int_unsupported" in
-  let compile = wrap_compile @@ function
+  let compile = wrap_compile_t @@ function
   | `T_Int _ -> failwith "Invalid type T_Int at this stage"
   | `T_String _ -> failwith "Invalid type T_String at this stage"
   | _ as other -> other
   in
   make_pass ~name ~compile ()
 
+
+(* First dummy passes on patterns *)
+
+let identity : 'a -> 'a = fun x -> x
+let default_compile_t = identity
+
+(*
+  This example tests what happens when we touch both the patterns and types in a same AST unified instance
+  The compile_t and compile_p do random dummy stuffs on type_expression and patterns, independently of each other.
+  On an AST with a typed pattern, we should observe the two transformations performed.
+*)
+let pass_p_typed_toy =
+  let name = "pass_p_typed_toy" in
+  let compile_t : fix_type_expr -> fix_type_expr = function
+  | `T_Arg (s, loc) -> `T_Var (Ty_variable_with_sexp.of_input_var s, loc)
+  | _ as other -> other
+  in
+  let compile_p : fix_pattern -> fix_pattern = function
+  | `P_Var (_, loc) -> `P_Var (Variable_with_sexp.of_input_var "renamed_toto", loc)
+  | _ as other -> other
+  in
+  let compile = wrap_compile_p compile_t compile_p in
+  make_pass ~name ~compile ()
 
 (* ========================================================================= *)
 (* ======== Small passes TODO list form list_passes.md ===================== *)

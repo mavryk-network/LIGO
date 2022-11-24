@@ -155,24 +155,46 @@ let inputs : (string * te) list =
   ; "single_t_string", single_t_string
   ]
 
-let test_input (passes : te_pass list) (test_name, input : string * te) =
+let test_input (passes : 'a SP.pass list) (sexp_of_t : 'a -> Sexp.t) (test_name, input : string * 'a) =
   let ppf = Format.std_formatter in
   let () = Ansi.add_ansi_marking ppf in
-  let print_te_with_header ppf header_str te =
-    let sexp = PE.sexp_of_fix_type_expr te in
+  let print_sexp_with_header ppf sexp_of_t header_str t =
+    let sexp = sexp_of_t t in
     Format.fprintf ppf "@[<v 2>%s :@,%a@]@."
       header_str
       (Sexplib0.Sexp.pp_hum)
       sexp
   in
   Format.fprintf ppf "@.@{<bold>@{<underline>Test : %s@}@}@." test_name;
-  print_te_with_header ppf "Input" input;
+  print_sexp_with_header ppf sexp_of_t "Input" input;
   try
     let output = SP.compile_with_passes ~syntax_todo:() passes [] input in
-    print_te_with_header ppf "Output" output
+    print_sexp_with_header ppf sexp_of_t "Output" output
   with e ->
     Format.fprintf ppf "Exception : %s@." (Exn.to_string e)
 
 
-let () = List.iter ~f:(test_input passes_list) inputs
 
+
+
+let dummy_p = `P_Var (ghost_loc @@ PE.Variable_with_sexp.of_input_var "dummy_p")
+
+let my_typed_p =
+  `P_Typed (ghost_loc
+    ( `T_Arg ("my_arg", 42)
+    , dummy_p
+    )
+  )
+
+let p_inputs : (string * PE.fix_pattern) list =
+  [ "dummy_p", dummy_p
+  ; "typed_p", my_typed_p
+  ]
+
+let p_passes_list : PE.fix_pattern SP.pass list =
+  let open PE in
+  [ pass_p_typed_toy 
+  ]
+
+let () = List.iter ~f:(test_input passes_list PE.sexp_of_fix_type_expr) inputs
+let () = List.iter ~f:(test_input p_passes_list PE.sexp_of_fix_pattern) p_inputs
