@@ -149,430 +149,6 @@ end
 
 module Red_black_tree = struct 
 
-  let build_comparator env (te: I.type_expression) at a b = 
-    let local_get_s = local_get_s at in
-    let call_s = call_s at in
-    let const = const at in
-    let load = load at in
-    let a = [local_get_s a] in
-    let b = [local_get_s b; load] in
-    match te.type_content with 
-      T_base TB_int                   -> Datatype.Int.compare env a b
-    | T_tuple li                      -> failwith "not implemented yet"
-    | T_or o                          -> failwith "not implemented yet"
-    | T_base TB_bool                  -> failwith "not implemented yet"
-    | T_base TB_string                -> failwith "not implemented yet"
-    | T_base TB_bytes                 -> failwith "not implemented yet"
-    | T_base TB_nat                   -> failwith "not implemented yet"
-    | T_base TB_mutez                 -> failwith "not implemented yet"
-    | T_base TB_operation             -> failwith "not implemented yet"
-    | T_base TB_address               -> failwith "not implemented yet"
-    | T_base TB_key                   -> failwith "not implemented yet"
-    | T_base TB_key_hash              -> failwith "not implemented yet"
-    | T_base TB_chain_id              -> failwith "not implemented yet"
-    | T_base TB_signature             -> failwith "not implemented yet"
-    | T_base TB_timestamp             -> failwith "not implemented yet"
-    | T_base TB_baker_hash            -> failwith "not implemented yet"
-    | T_base TB_pvss_key              -> failwith "not implemented yet"
-    | T_base TB_baker_operation       -> failwith "not implemented yet"
-    | T_base TB_bls12_381_g1          -> failwith "not implemented yet"
-    | T_base TB_bls12_381_g2          -> failwith "not implemented yet"
-    | T_base TB_bls12_381_fr          -> failwith "not implemented yet"
-    | T_base TB_never                 -> failwith "not implemented yet"
-    | T_base TB_chest                 -> failwith "not implemented yet"
-    | T_base TB_chest_key             -> failwith "not implemented yet"
-    | T_base TB_tx_rollup_l2_address  -> failwith "not implemented yet"
-    | T_base TB_type_int _            -> failwith "not implemented yet"
-    | _ -> failwith "cannot use for compare"
-  
-
-  let insert_value ~raise w env at type_expression set_e key_e ?insert_value_e () =
-    let value = insert_value_e in
-    let size = match value with 
-      Some _ -> 24l
-    | None -> 20l
-    in
-    let load = load at in
-    let local_set_s = local_set_s at in
-    let local_get_s = local_get_s at in
-    let data_symbol = data_symbol at in
-    let i32_eq = i32_eq at in
-    let const = const at in 
-    let call_s = call_s at in
-    let local_tee_s = local_tee_s at in
-    let store = store at in
-    let if_ = if_ at in
-    let memory_copy = memory_copy at in
-    let i32_add = i32_add at in
-    let br = br at in
-    let loop = loop at in
-
-    let add_locals = Env.add_locals in
-    (* let w, env, set_e = expression ~raise w env collection in *)
-    (* let i = key in *)
-    (* let w, env, item_e = expression ~raise w env key in *)
-
-    let set = unique_name "set" in
-    let insert_key = unique_name "insert_key" in
-
-    let env = add_locals env [(set, T.NumType I32Type); (insert_key, T.NumType I32Type)] in
-
-    
-    let current_item = unique_name "current" in (* current item of the existing set *)
-    let env, compare = build_comparator env type_expression at insert_key current_item in
-    let comparison_result = unique_name "comparison_result" in
-    
-    let result = unique_name "result" in (* the end result *)
-    let new_item = unique_name "new" in (* current new item in the new result *)
-    let new_child = unique_name "new_child" in (* new child *)
-    let left_child = unique_name "left_child" in (* left child *)
-    let right_child = unique_name "right_child" in (* right child *)
-    let parent_color = unique_name "parent_color" in
-    let grand_parent = unique_name "grand_parent" in
-    let grand_parent_parent = unique_name "grand_parent_parent" in
-    let parent = unique_name "parent" in
-    let uncle = unique_name "uncle" in
-    let temp = unique_name "temp" in
-    let insert_value = unique_name "insert_value" in
-    let env = add_locals env [
-      (current_item, T.NumType I32Type);
-      (comparison_result, T.NumType I32Type); 
-      (result, T.NumType I32Type);
-      (new_item, T.NumType I32Type);
-      (new_child, T.NumType I32Type);  
-      (left_child, T.NumType I32Type);  
-      (right_child, T.NumType I32Type);  
-      (parent_color, T.NumType I32Type);
-      (grand_parent, T.NumType I32Type);
-      (grand_parent_parent, T.NumType I32Type);
-      (uncle, T.NumType I32Type);
-      (parent, T.NumType I32Type);
-      (temp, T.NumType I32Type);
-      (insert_value, T.NumType I32Type);
-    ] in
-    let insert_value_e = match insert_value_e with 
-      Some v -> v
-    | None -> []
-    in
-    w, env,
-    set_e
-    @
-    [
-      local_set_s set;
-    ]
-    @
-    key_e
-    @
-    (match value with 
-      Some v -> [local_set_s insert_key] @ insert_value_e @ [local_set_s insert_value]
-    | None -> [local_set_s insert_key]
-    )        
-    @
-    [
-      local_get_s set;
-      data_symbol "C_SET_EMPTY";
-      i32_eq;
-      if_ 
-        (ValBlockType (Some (NumType I32Type))) 
-        ([
-
-          const size;
-          call_s "malloc";
-          local_tee_s result;
-          local_get_s insert_key;
-          store;             
-        ]
-        @
-        (match value with 
-          Some _ -> 
-            [
-              local_get_s result;
-              const 20l;
-              i32_add;
-              local_get_s insert_value;
-              store
-            ]
-        | None -> [])
-        @
-        [
-          local_get_s result
-        ]
-        )
-        [
-          const size;
-          call_s "malloc";
-          local_set_s result;
-
-          local_get_s result;
-          local_set_s new_item;
-
-          local_get_s set;
-          local_set_s current_item;
-
-          (* find correct position where to insert item *)
-          loop (ValBlockType (Some (NumType I32Type))) (    
-            [
-              
-              (* clone the current item because of immutability *)
-              local_get_s new_item;
-              local_get_s current_item;
-              const size;
-              memory_copy;
-              
-              local_get_s new_item;
-              const 4l;
-              i32_add;
-              local_get_s parent;
-              store;
-
-              local_get_s new_item; 
-              local_set_s parent;
-
-            ]             
-            @       
-            compare 
-            @
-            [
-              local_tee_s comparison_result;
-
-              if_ (ValBlockType (Some (NumType I32Type))) [   
-
-                local_get_s comparison_result;
-                const (-1l);
-                i32_eq;
-                if_ (ValBlockType (Some (NumType I32Type))) [
-
-                  (* is there no left child? *)
-                  local_get_s current_item;
-                  call_s "c_set_left_child";
-
-                  local_tee_s left_child;
-                  (* local_get_s left_child; *)
-                  const 0l;
-                  i32_eq;
-
-                  if_ (ValBlockType (Some (NumType I32Type))) ([
-                    
-                  
-                    local_get_s insert_key;    (* value  *)
-                    local_get_s new_item;      (* parent *)
-                    const 8l;                  (* child offset *)
-                    const size;
-                    call_s "c_set_add_insert_value";
-
-                  ]
-                  @
-                  (match value with 
-                    Some _ -> 
-                      [
-                        (* local_get_s new_item; *)
-                        const 20l;
-                        i32_add;
-                        local_get_s insert_value;
-                        store
-                      ]
-                  | None -> [
-                    drop at
-                  ])
-                  @
-                  [
-                    
-                    local_get_s result;
-                    br 4l;
-                  ])
-                  [
-                    (* clone left item *)
-                    const size;
-                    call_s "malloc"; 
-                    local_set_s new_child;
-
-                    (* attach cloned item to parent *)
-                    local_get_s new_item;
-                    const 8l;
-                    i32_add;
-                    local_get_s new_child;
-                    store;
-
-                    (* set new item to new child*)
-                    local_get_s new_child;
-                    local_set_s new_item;
-                    
-                    local_get_s left_child;
-                    local_set_s current_item;
-
-                    (* local_get_s new_item; 
-                    local_set_s parent; *)
-
-                    br 3l
-                  ]
-                ]
-                [
-                  (* is there no right child *)
-                  local_get_s current_item;
-                  const 12l;
-                  i32_add;
-                  load;
-                  local_tee_s right_child;
-                  const 0l;
-                  i32_eq;
-
-                  if_ (ValBlockType (Some (NumType I32Type))) ([
-
-                    
-                    (* not a right child so insert it here *)
-                    local_get_s insert_key;
-                    local_get_s new_item;
-                    const 12l;
-                    const size;
-                    call_s "c_set_add_insert_value";
-
-                  ]
-                  @
-                  (match value with 
-                    Some _ -> 
-                      [
-                        (* local_get_s new_item; *)
-                        const 20l;
-                        i32_add;
-                        local_get_s insert_value;
-                        store
-                      ]
-                  | None -> [drop at])
-                  @
-                  [
-                    
-                    local_get_s result;
-                    br 4l;
-                    
-                  ])
-                  [
-                    (* clone right item *)
-                    const size;
-                    call_s "malloc"; 
-                    local_set_s new_child;
-
-                    (* attach cloned item to parent *)
-                    local_get_s new_item;
-                    const 12l;
-                    i32_add;
-                    local_get_s new_child;
-                    store;
-
-                    (* set new item to new child*)
-                    local_get_s new_child;
-                    local_set_s new_item;
-                    
-                    local_get_s right_child;
-                    local_set_s current_item;
-
-
-                    br 3l
-                  ]
-                ]
-              ]
-              [
-                local_get_s new_item
-              ]
-            ]);
-        ];
-        local_set_s result;
-        (* const 8l;
-        call_s "malloc";
-        local_tee_s temp;
-        const 0l;
-        store;
-        local_get_s temp;
-        const 4l;
-        i32_add;
-        local_get_s result;
-        store; *)
-
-
-
-        (* const 99999999l;
-        call_s "print";
-
-        local_get_s result;
-        load;
-        load; 
-        call_s "print";
-
-        local_get_s result;
-        const 8l;
-        i32_add;
-        load;
-        load; 
-        load;
-        call_s "print";
-
-        local_get_s result;
-        const 8l;
-        i32_add;
-        load;
-        const 8l;
-        i32_add;
-        load;
-        load; 
-        load;
-        call_s "print";
-
-        local_get_s result;
-        const 8l;
-        i32_add;
-        load;
-        const 8l;
-        i32_add;
-        load;
-        const 12l;
-        i32_add;
-        load;        
-        load; 
-        load;
-        call_s "print";
-
-        local_get_s result;
-        const 8l;
-        i32_add;
-        load;
-        const 12l;
-        i32_add;
-        load;
-        load; 
-        load;
-        call_s "print";
-
-        local_get_s result;
-        const 8l;
-        i32_add;
-        load;
-        const 12l;
-        i32_add;
-        load;
-        const 8l;
-        i32_add;
-        load;
-        load; 
-        load;
-        call_s "print";
-
-        local_get_s result;
-        const 8l;
-        i32_add;
-        load;
-        const 12l;
-        i32_add;
-        load;
-        const 12l;
-        i32_add;
-        load;
-        load; 
-        load;
-        call_s "print"; *)
-
-
-        local_get_s result;
-      ]
-
     let size ~raise w env at e = 
       let call_s = call_s at in
       let const = const at in
@@ -604,24 +180,6 @@ module Red_black_tree = struct
           local_get_s result
         ]
 
-    let remove ?value ~raise w env at type_expression (key_e: A.instr list) (set_e: A.instr list)  = 
-      let size = match value with 
-        Some _ -> 24l
-      | None -> 20l
-      in
-      let func_symbol = func_symbol at in
-      let const = const at in
-      let data_symbol = data_symbol at in
-      let call_s = call_s at in
-      let remove_helper_name = unique_name "remove_helper" in
-      let key_s = unique_name "remove_key" in
-      let set_s = unique_name "remove_set" in
-      let env = Env.add_locals env [(remove_helper_name, T.NumType I32Type); (key_s, T.NumType I32Type); (set_s, T.NumType I32Type)] in
-      let env, compare = build_comparator env type_expression at key_s set_s in
-      let f_body args = compare in
-      let w, _required_arguments = add_function w remove_helper_name f_body in
- 
-      w, env, set_e @ key_e @ [func_symbol remove_helper_name; const size; data_symbol "C_SET_EMPTY"; call_s "__ligo_internal__set_remove"]
 end
 
 (* The data offset. This indicates where a block of data should be placed in the linear memory. *)
@@ -949,14 +507,7 @@ let rec expression ~raise :
   | E_constant {cons_name = C_SET_ADD; arguments = [key; set] } ->     
     let w, env, key_e = expression ~raise w env key in
     let w, env, set_e = expression ~raise w env set in
-    let key_s = unique_name "set_add_key" in
-    let set_s = unique_name "set_add_set" in
-    let env = Env.add_locals env [(key_s, T.NumType I32Type); (set_s, T.NumType I32Type)] in
-    let compare_name = unique_name "set_add_compare" in
-    let env, compare = Red_black_tree.build_comparator env key.type_expression at key_s set_s in
-    let f_body args = compare in
-    let w, _required_arguments = add_function w compare_name f_body in
-    w, env, set_e @ key_e @ [func_symbol compare_name; data_symbol "C_SET_EMPTY"; call_s "__ligo_internal__set_add"]
+    w, env, set_e @ key_e @ [data_symbol "C_SET_EMPTY"; call_s "__ligo_internal__set_add"]
   
   | E_constant {cons_name = C_SET_SIZE; arguments = [s] } -> 
     let w, env, s = expression ~raise w env s in
@@ -964,35 +515,20 @@ let rec expression ~raise :
   | E_constant {cons_name = C_SET_REMOVE; arguments = [item; set] } -> 
     let w, env, item_e = expression ~raise w env item in
     let w, env, set_e = expression ~raise w env set in
-    Red_black_tree.remove ~raise w env at item.type_expression item_e set_e    
+    w, env, set_e @ item_e @ [const 20l; data_symbol "C_SET_EMPTY"; call_s "__ligo_internal__set_remove"]
     
   | E_constant {cons_name = C_SET_ITER; arguments = [func; set] } -> raise.error (not_supported e)
   | E_constant {cons_name = C_SET_FOLD; arguments = [func; set; init] } -> raise.error (not_supported e)
   | E_constant {cons_name = C_SET_FOLD_DESC; arguments = [func; set; init] } -> raise.error (not_supported e)
   | E_constant {cons_name = C_SET_MEM; arguments = [key; set] } -> 
     let w, env, key_e = expression ~raise w env key in
-    let w, env, set_e = expression ~raise w env set in
-    let key_s = unique_name "mem_key" in
-    let set_s = unique_name "mem_set" in
-    let env = Env.add_locals env [(key_s, T.NumType I32Type); (set_s, T.NumType I32Type)] in
-    let compare_name = unique_name "mem_compare" in
-    let env, compare = Red_black_tree.build_comparator env key.type_expression at key_s set_s in
-    let f_body args = compare in
-    let w, _required_arguments = add_function w compare_name f_body in
-    w, env, set_e @ key_e @ [func_symbol compare_name; data_symbol "C_SET_EMPTY"; call_s "__ligo_internal__set_mem"]
+    let w, env, set_e = expression ~raise w env set in    
+    w, env, set_e @ key_e @ [data_symbol "C_SET_EMPTY"; call_s "__ligo_internal__set_mem"]
   | E_constant {cons_name = C_SET_UPDATE; arguments = [key; boolean; set] } -> 
     let w, env, key_e = expression ~raise w env key in
     let w, env, set_e = expression ~raise w env set in
-    let w, env, boolean_e = expression ~raise w env boolean in
-    
-    let key_s = unique_name "set_add_key" in
-    let set_s = unique_name "set_add_set" in
-    let env = Env.add_locals env [(key_s, T.NumType I32Type); (set_s, T.NumType I32Type)] in
-    let compare_name = unique_name "set_update_compare" in
-    let env, compare = Red_black_tree.build_comparator env key.type_expression at key_s set_s in
-    let f_body args = compare in
-    let w, _required_arguments = add_function w compare_name f_body in
-    w, env, set_e @ boolean_e @ key_e @ [func_symbol compare_name; const 20l; data_symbol "C_SET_EMPTY"; call_s "__ligo_internal__set_update"]
+    let w, env, boolean_e = expression ~raise w env boolean in    
+    w, env, set_e @ boolean_e @ key_e @ [const 20l; data_symbol "C_SET_EMPTY"; call_s "__ligo_internal__set_update"]
   
   (* List *)
   | E_constant {cons_name = C_LIST_EMPTY; arguments = []} -> (w, env, [data_symbol "C_LIST_EMPTY"])
@@ -1071,11 +607,11 @@ let rec expression ~raise :
   (* Maps *)
   | E_constant {cons_name = C_MAP_EMPTY; arguments = [] } -> w, env, [data_symbol "C_SET_EMPTY"]    
   | E_constant {cons_name = C_MAP_LITERAL; arguments = [e1] } -> raise.error (not_supported e)
-  | E_constant {cons_name = C_MAP_ADD; arguments = [key; value; map] } -> 
+  | E_constant {cons_name = C_MAP_ADD; arguments = [key; value; map] } ->     
     let w, env, map_e = expression ~raise w env map in
     let w, env, key_e = expression ~raise w env key in
     let w, env, value_e = expression ~raise w env value in
-    Red_black_tree.insert_value ~raise w env at key.type_expression map_e key_e ~insert_value_e:value_e ()
+    w, env, map_e @ key_e @ value_e @ [data_symbol "C_SET_EMPTY"; call_s "__ligo_internal__map_add"]
 
   | E_constant {cons_name = C_MAP_SIZE; arguments = [m] } ->
     let w, env, m = expression ~raise w env m in
@@ -1083,18 +619,11 @@ let rec expression ~raise :
   | E_constant {cons_name = C_MAP_REMOVE; arguments = [key; map] } -> 
     let w, env, key_e = expression ~raise w env key in
     let w, env, map_e = expression ~raise w env map in
-    Red_black_tree.remove ~raise w env at key.type_expression key_e map_e ~value:1
+    w, env, map_e @ key_e @ [const 24l; data_symbol "C_SET_EMPTY"; call_s "__ligo_internal__set_remove"]
   | E_constant {cons_name = C_MAP_MEM; arguments = [key; set] } -> 
     let w, env, key_e = expression ~raise w env key in
     let w, env, set_e = expression ~raise w env set in
-    let key_s = unique_name "mem_key" in
-    let set_s = unique_name "mem_set" in
-    let env = Env.add_locals env [(key_s, T.NumType I32Type); (set_s, T.NumType I32Type)] in
-    let compare_name = unique_name "mem_compare" in
-    let env, compare = Red_black_tree.build_comparator env key.type_expression at key_s set_s in
-    let f_body args = compare in
-    let w, _required_arguments = add_function w compare_name f_body in
-    w, env, set_e @ key_e @ [func_symbol compare_name; data_symbol "C_SET_EMPTY"; call_s "__ligo_internal__set_mem"]
+    w, env, set_e @ key_e @ [data_symbol "C_SET_EMPTY"; call_s "__ligo_internal__set_mem"]
   | E_constant {cons_name = C_MAP_UPDATE; arguments = [key; value; map] } -> raise.error (not_supported e)
   | E_constant {cons_name = C_MAP_ITER; arguments = [func; map] } -> raise.error (not_supported e)
   | E_constant {cons_name = C_MAP_MAP; arguments = [func; map] } -> raise.error (not_supported e)
