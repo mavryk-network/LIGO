@@ -13,6 +13,7 @@
   simple-utils
   tezos-memory-proto-alpha
   ligo
+  ligo.unix
   bos
   repl
   interpreter
