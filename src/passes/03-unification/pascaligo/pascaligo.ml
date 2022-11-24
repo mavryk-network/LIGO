@@ -266,20 +266,20 @@ and compile_block ~(raise: ('e, 'w) raise) : CST.block -> AST.block_pascaligo = 
 
 and compile_test_clause : raise:_ -> CST.test_clause -> AST.test_clause = fun ~raise c ->
   match c with
-  | CST.ClauseInstr i -> AST.ClauseInstr (compile_instruction ~raise i)
-  | CST.ClauseBlock b -> AST.ClauseBlock (compile_block ~raise @@ r_fst b)
+  | CST.ClauseInstr i -> ClauseInstr (compile_instruction ~raise i)
+  | CST.ClauseBlock b -> ClauseBlock (compile_block ~raise @@ r_fst b)
 
-and compile_case_clause : 'a 'b. raise:_ -> ('a -> 'b) -> 'a CST.case_clause -> 'b AST.case_clause = fun ~raise f c ->
+and compile_case_clause : type a b . raise:_ -> (a -> b) -> a CST.case_clause -> (b,_) AST.Case.clause = fun ~raise f c ->
   let pattern = compile_pattern ~raise c.pattern in
   let rhs     = f c.rhs in
   {pattern; rhs}
 
-and compile_case : 'a 'b. raise:_ -> ('a -> 'b) -> 'a CST.case -> 'b AST.case = fun ~raise f c ->
+and compile_case : type a b . raise:_ -> (a -> b) -> a CST.case -> (_,b,_) AST.Case.t = fun ~raise f c ->
   let expr = compile_expression ~raise c.expr in
   let cases = List.Ne.map (compile_case_clause ~raise f <@ r_fst) @@ nsepseq_to_nseq c.cases in
   {expr; cases}
 
-and compile_cond : 'a 'b. raise:_ -> ('a -> 'b) -> 'a CST.conditional -> 'b AST.cond = fun ~raise f c ->
+and compile_cond : 'a 'b. raise:_ -> ('a -> 'b) -> 'a CST.conditional -> (_,'b) AST.Cond.t = fun ~raise f c ->
   let test  = compile_expression ~raise c.test in
   let ifso  = f c.if_so in
   let ifnot = Option.map ~f:(f <@ snd) c.if_not in
@@ -311,23 +311,23 @@ and compile_instruction ~(raise: ('e, 'w) raise) : CST.instruction -> AST.instru
     let i, loc = r_split i in
     let lhs_expr = compile_expr i.lhs in
     let rhs_expr = compile_expr i.rhs in
-    i_assign {lhs_expr; rhs_expr} ~loc ()
+    i_struct_assign {lhs_expr; rhs_expr} ~loc ()
   )
   | I_Call i -> (
     let i, loc = r_split i in
     let f, args = i in
     let f = compile_expression ~raise f in
     let args : expr list = List.map ~f:compile_expr @@ sepseq_to_list (r_fst args).inside in
-    i_call f args ~loc ()
+    i_call ~loc (f, args) ()
   )
   | I_Case i -> (
     let i, loc = r_split i in
-    let i : test_clause case = compile_case ~raise (compile_test_clause ~raise) i in
+    let i = compile_case ~raise (compile_test_clause ~raise) i in
     i_case i ~loc ()
   )
   | I_Cond i -> (
     let i, loc = r_split i in
-    let i : test_clause cond = compile_cond ~raise (compile_test_clause ~raise) i in
+    let i = compile_cond ~raise (compile_test_clause ~raise) i in
     i_cond i ~loc ()
   )
   | I_For i -> (

@@ -40,6 +40,11 @@ module Prod = Temp_prim.Prod
 module Type_app = Temp_prim.Type_app
 module Arrow = Temp_prim.Arrow
 module Mod_access = Temp_prim.Mod_access
+module Struct_assign = Temp_prim.Struct_assign
+module Instruction_call = Temp_prim.Instruction_call
+module Case = Temp_prim.Case
+module Test_clause = Temp_prim.Test_clause
+module Cond = Temp_prim.Cond
 
 module Z = Ligo_prim.Literal_value.Z
 
@@ -128,31 +133,6 @@ and instr         = instruction
 
 and block_pascaligo = statement nseq
 
-and 'clause case_clause = {
-  pattern : pattern;
-  rhs     : 'clause;
-}
-
-and test_clause =
-| ClauseInstr of instruction
-| ClauseBlock of block_pascaligo
-
-and 'clause case = {
-  expr         : expr;
-  cases        : 'clause case_clause nseq;
-}
-
-and assignment = {
-  lhs_expr : expr;
-  rhs_expr : expr;
-}
-
-and 'branch cond = {
-  test         : expr;
-  ifso         : 'branch;
-  ifnot        : 'branch option;
-}
-
 and for_int = {
   index   : string;
   init    : expr;
@@ -210,11 +190,14 @@ and for_of = {
   expr       : expr;
   for_stmt   : statement;
 }
+
+and test_clause = (instruction,block_pascaligo) Test_clause.t
+
 and instruction_content =
-| I_Assign of assignment
-| I_Call   of expr * expr list
-| I_Case   of test_clause case
-| I_Cond   of test_clause cond
+| I_struct_assign of expr Struct_assign.t
+| I_Call   of expr Instruction_call.t
+| I_Case   of (expr,test_clause,pattern) Case.t
+| I_Cond   of (expr,test_clause) Cond.t
 | I_For    of for_int
 | I_ForIn  of for_in
 | I_ForOf  of for_of
@@ -426,14 +409,6 @@ and map_lookup = {
   keys : expr nseq;
 }
 
-(* and let_in = {
-  is_rec       : bool;
-  type_params  : Ty_variable.t nseq option;
-  binders      : pattern nseq;
-  rhs_type     : type_expr option;
-  let_rhs      : expr;
-  body         : expr;
-} *)
 
 and type_in = {
   type_binder : string;
@@ -550,13 +525,13 @@ and expression_content =
   | E_Constr of (string * expr option)    (* let x = MyCtor 42 *)
   | E_App of (expr * expr nseq option)    (* MyCtor (42, 43, 44), PascaLigo only *)
 
-  | E_Case of expr case                   (* match e with | A -> ... | B -> ... *)
+  | E_Case of (expr, expr, pattern) Case.t (* match e with | A -> ... | B -> ... *)
 
   (* Type annotation *)
   | E_Annot       of (expr * type_expr)   (* 42 : int *)
 
   (* Conditionals *)
-  | E_Cond of expr cond                   (* if b then 42 else 24 *)
+  | E_Cond of (expr,expr) Cond.t          (* if b then 42 else 24 *)
 
   (* Lists *)
   | E_List of expr list                   (* [ 1; 2; 3; 4; 5] *)

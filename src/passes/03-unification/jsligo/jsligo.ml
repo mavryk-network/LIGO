@@ -42,7 +42,7 @@ module TODO_unify_in_cst = struct
   let compile_rows = Non_linear_rows.make
   let compile_disc_rows = Non_linear_disc_rows.make
   let instr_as_stmt ~loc (x:AST.instruction) = AST.s_instr ~loc x ()
-  let test_clause_branch x = ClauseBlock (List.Ne.singleton x)
+  let test_clause_branch x = AST.Test_clause.ClauseBlock (List.Ne.singleton x)
   let let_as_decl ~loc x = s_decl ~loc (d_multi_var ~loc x ()) ()
   let const_as_decl ~loc x = s_decl ~loc (d_multi_const ~loc x ()) ()
   let ty_as_decl ~loc x = s_decl ~loc (d_type ~loc x ()) ()
@@ -50,6 +50,9 @@ module TODO_unify_in_cst = struct
   let import_as_decl ~loc x = s_decl ~loc (d_import ~loc x ()) ()
   let namespace_decl ~loc name statements =
     s_decl ~loc (d_module ~loc {name ; mod_expr = m_body_statements ~loc statements ()} ()) ()
+  let i_expr ~loc expr () =
+    (* IIUC, this can be a return or a call ? could we parse it as such ?*)
+    i_expr ~loc expr ()
 end
 
 let rec compile_val_binding ~(raise: ('e, 'w) raise) : CST.val_binding -> (unit,pattern,unit) AST.let_binding =
@@ -258,7 +261,7 @@ and compile_statement ~(raise: ('e, 'w) raise) : CST.statement -> AST.statement 
     let expr = compile_expression ~raise s in
     let loc = expr.location in
     TODO_unify_in_cst.instr_as_stmt ~loc (
-      i_expr ~loc expr ()
+      TODO_unify_in_cst.i_expr ~loc expr ()
     )
   )
   | SCond s -> (

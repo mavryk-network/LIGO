@@ -732,7 +732,24 @@ compile mutli var/const declarations to single var/const declaration
 - remove : D_Let
 - add    : D_Let_find_a_name
 
+```
 let <pattern list> <type params> : <type> = ..
 |->
+let <pattern> = (fun  ...)
+```
 
-let <pattern> = (fun  
+## structural assignments
+
+- remove : I_struct_assign
+- add    : I_assign
+
+map["blabla"].x := toto
+|->
+...
+
+
+## end statements
+
+- remove : I_Expr
+
+I_expr can be I_call or I_return
