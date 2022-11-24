@@ -50,6 +50,8 @@
 
   let no_of_digits (x: int): int = 
     [%Wasm ({|
+    i32.const 4 
+    i32.add
       i32.load
       local.set "number"
 
@@ -74,9 +76,15 @@
         end
       end
 
-      i32.const 4
+      i32.const 8
       call "malloc"
       local.tee "r"
+      i32.const 0 
+      i32.store
+      
+      local.get "r"
+      i32.const 4
+      i32.add
       local.get "result"
       i32.const 1 
       i32.add

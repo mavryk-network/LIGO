@@ -632,11 +632,11 @@ let global_offset = ref 0l
  * Convert a Zarith number (used by LIGO and Tezos) to a wasm memory representation.
  *)
 let convert_to_memory :
-  S.region -> string -> Z.t -> A.data_segment list * A.sym_info list =
- fun at name z ->
+  S.region -> int32 -> string -> Z.t -> A.data_segment list * A.sym_info list =
+ fun at header name z ->
   let z = Z.to_int32 z in
   let open Int32 in
-  let data = A.[data ~offset:!global_offset ~init:{name; detail = [Int32 0l; Int32 z]}] in (* 0 indicates an int *)
+  let data = A.[data ~offset:!global_offset ~init:{name; detail = [Int32 header; Int32 z]}] in (* 0 indicates an int *)
   let symbols =
     A.[symbol_data ~name ~index:0l ~size:8l ~offset:!global_offset]
   in
@@ -734,9 +734,9 @@ let rec expression ~raise :
     let name = var_to_string unique_name in
     name
   in
-  let int_like name z = 
+  let int_like name header z = 
     let name = unique_name name in
-    let data, symbols = convert_to_memory name z in
+    let data, symbols = convert_to_memory header name  z in
     let w = {w with datas = w.datas @ data; symbols = w.symbols @ symbols} in
     (w, env, [data_symbol name])
   in
@@ -766,10 +766,10 @@ let rec expression ~raise :
   in
   match e.content with
   | E_literal Literal_unit                  -> (w, env, [const 0l])
-  | E_literal (Literal_int z)               -> int_like "Literal_int" z
-  | E_literal (Literal_nat z)               -> int_like "Literal_nat" z
-  | E_literal (Literal_timestamp z)         -> int_like "Literal_timestamp" z
-  | E_literal (Literal_mutez z)             -> int_like "Literal_mutez" z
+  | E_literal (Literal_int z)               -> int_like "Literal_int" 0l z
+  | E_literal (Literal_nat z)               -> int_like "Literal_nat" 1l z
+  | E_literal (Literal_timestamp z)         -> int_like "Literal_timestamp" 2l z
+  | E_literal (Literal_mutez z)             -> int_like "Literal_mutez" 3l z
   | E_literal (Literal_string (Standard s)) -> string_like "Literal_string" s
   | E_literal (Literal_string (Verbatim s)) -> string_like "Literal_string" s
   | E_literal (Literal_bytes b)             -> bytes_like "Literal_bytes" b
@@ -2061,7 +2061,7 @@ let rec toplevel_bindings ~raise :
         ((name, _type), e2) ) ->
     (* we convert these to in memory values *)
     let name = var_to_string name in
-    let data, symbols = convert_to_memory name z in
+    let data, symbols = convert_to_memory 0l name z in
     toplevel_bindings ~raise e2 entrypoint
       {w with datas = w.datas @ data; symbols = w.symbols @ symbols}
   | E_variable entrypoint ->
