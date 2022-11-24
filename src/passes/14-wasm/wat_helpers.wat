@@ -1281,7 +1281,24 @@
     ;; ) 
 
     (func $to_int (param $value i32) (result i32)
+        (local $new_int i32)
+
+        i32.const 8
+        call $malloc
+        local.tee $new_int
+        i32.const 0
+        i32.store
+
+        local.get $new_int
+        i32.const 4
+        i32.add
         local.get $value
+        i32.const 4
+        i32.add
+        i32.load
+        i32.store
+
+        local.get $new_int
     )
 
     (func $__ligo_internal__string_concat (param $left i32) (param $right i32) (result i32)
@@ -1359,6 +1376,8 @@
         local.tee $str_size
 
         local.get $offset
+        i32.const 4
+        i32.add
         i32.load
         local.tee $offset
         i32.lt_u
@@ -1366,7 +1385,10 @@
             i32.const 0
         else             
             local.get $len
-            i32.load
+            
+            i32.const 4
+            i32.add
+                i32.load
             local.set $len
 
             local.get $str_size

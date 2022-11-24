@@ -98,13 +98,13 @@ let main ((_, _s):(parameter * storage)) =
   let s1 = Set.literal [45; 35; 25; 20; 40; 30; 50] in
   let m1 = Map.literal [(3, 55); (5, 50)] in
   let xx = Set.cardinal s1 + Map.size m1 in
+  // let xx = Map.size m1 in
   let a19: int = int xx in
   let a20 = Set.remove 30 s1 in
   let a21 = Map.remove 50 (Map.literal [(20, 1); (50, 2); (30, 3)]) in
   let a22 = Set.cardinal a20 in 
   let a24 = Set.cardinal s1 in
   let a23 = Map.size a21 in 
-  // let a23 = 0 in
   let a25 = String.length "12" in 
   let () = if a25 = 2n then 
      log "yes 2 "

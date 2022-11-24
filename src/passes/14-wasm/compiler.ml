@@ -476,6 +476,16 @@ module Red_black_tree = struct
             ]);
         ];
         local_set_s result;
+        (* const 8l;
+        call_s "malloc";
+        local_tee_s temp;
+        const 0l;
+        store;
+        local_get_s temp;
+        const 4l;
+        i32_add;
+        local_get_s result;
+        store; *)
 
 
 
@@ -568,10 +578,31 @@ module Red_black_tree = struct
       let const = const at in
       let local_tee_s = local_tee_s at in
       let local_get_s = local_get_s at in
+      let i32_add = i32_add at in
       let store = store at in
+      let load = load at in
       let result = unique_name "result_size" in
       let env = Env.add_locals env [(result, T.NumType I32Type)] in
-      w, env, [const 4l; call_s "malloc"; local_tee_s result] @ e @ [call_s "__ligo_internal__set_size"; store; local_get_s result]
+      w, env, [
+        const 8l; 
+        call_s "malloc";
+         local_tee_s result; 
+         const 0l; 
+         store; 
+         
+         local_get_s 
+         result; 
+         const 4l; 
+         i32_add
+        ] 
+        @ 
+        e 
+        @ 
+        [
+          call_s "__ligo_internal__set_size"; 
+          store; 
+          local_get_s result
+        ]
 
     let remove ?value ~raise w env at type_expression (key_e: A.instr list) (set_e: A.instr list)  = 
       let size = match value with 
@@ -605,11 +636,11 @@ let convert_to_memory :
  fun at name z ->
   let z = Z.to_int32 z in
   let open Int32 in
-  let data = A.[data ~offset:!global_offset ~init:{name; detail = [Int32 z]}] in
+  let data = A.[data ~offset:!global_offset ~init:{name; detail = [Int32 0l; Int32 z]}] in (* 0 indicates an int *)
   let symbols =
-    A.[symbol_data ~name ~index:0l ~size:4l ~offset:!global_offset]
+    A.[symbol_data ~name ~index:0l ~size:8l ~offset:!global_offset]
   in
-  global_offset := !global_offset + 4l;
+  global_offset := !global_offset + 8l;
   (data, symbols)
 
 type locals = (string * T.value_type) list
@@ -833,10 +864,27 @@ let rec expression ~raise :
     ]
   | E_constant {cons_name = C_SIZE; arguments = [s]} -> 
     let w, env, s = expression ~raise w env s in
+    let size = unique_name "size" in
+    let env = add_locals env [(size, T.NumType I32Type)] in
     w, env, 
+    [
+      const 8l; 
+      call_s "malloc"; 
+      local_tee_s size; 
+      const 0l; 
+      store; 
+      local_get_s size; 
+      const 4l; 
+      i32_add
+    ] 
+    @ 
     s 
-   
-
+    @ 
+    [
+      load;
+      store; 
+      local_get_s size
+    ]
   | E_constant {cons_name = C_CONS; arguments = [l1; l2]} ->
     let cons = var_to_string (Value_var.fresh ~name:"C_CONS" ()) in
     let w, env, l1 = expression ~raise w env l1 in
@@ -963,9 +1011,13 @@ let rec expression ~raise :
     [
       local_set_s list;
 
-      const 4l;
+      const 8l;
       call_s "malloc";
       local_set_s return;
+
+      local_get_s return;
+      const 0l;
+      store;
 
       local_get_s list;
       data_symbol "C_LIST_EMPTY";
@@ -974,6 +1026,8 @@ let rec expression ~raise :
         (ValBlockType None)
         [
           local_get_s return;
+          const 4l;
+          i32_add;
           const 0l;
           store;
         ]
@@ -1002,10 +1056,12 @@ let rec expression ~raise :
               br_if 0l;
             ];
           local_get_s return;
+          const 4l;
+          i32_add;
           local_get_s counter;
           store;
         ];
-
+      
       local_get_s return;
     ]
   | E_constant {cons_name = C_LIST_FOLD; arguments = [func; list; init] } -> raise.error (not_supported e)
@@ -1361,18 +1417,11 @@ let rec expression ~raise :
                   local_set_s result_iter_next;
                 ];
 
-              (* store the item of the previous list in the new one *)  
               local_get_s result_iter;
+              
               local_get_s item;
               load;
-              load;
-              store;
-
-              local_get_s result_iter;
               local_set_s item;
-              
-              local_get_s result_iter;
-              
             ]
             @
             body
@@ -1388,9 +1437,6 @@ let rec expression ~raise :
               
               local_get_s result_iter_next;
               local_set_s result_iter;
-
-
-              
 
               (* check to see if the loop needs to continue *)
               local_get_s next_item;

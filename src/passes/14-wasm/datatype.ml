@@ -45,23 +45,34 @@ let bin_op: (S.region -> A.instr list) -> Env.t -> A.instr list -> A.instr list 
   let store     = store at in
   let local_tee_s = local_tee_s at in
   let local_get_s = local_get_s at in
+  let i32_add = i32_add at in
   let name  = unique_name "bin_op" in
   (Env.add_local env (name, T.NumType I32Type)), 
   [
-    const 4l;
+    const 8l;
     call_s "malloc";
     local_tee_s name;
+    const 0l;
+    store;
+    local_get_s name;
+    const 4l;
+    i32_add;
+
   ]
   @
   a
   @
   [
+    const 4l;
+    i32_add;
     load
   ]
   @
   b
   @
   [
+    const 4l;
+    i32_add;
     load;
   ]
   @ 
@@ -75,16 +86,22 @@ let bin_op: (S.region -> A.instr list) -> Env.t -> A.instr list -> A.instr list 
 let compare_bin_op: (S.region -> A.instr list) -> Env.t -> A.instr list -> A.instr list -> Env.t * A.instr list = fun op env a b ->
   let at        = cover_region a b in
   let load      = load at in
+  let const     = const at in
+  let i32_add   = i32_add at in
   env, 
   a
   @
   [
-    load
+    const 4l;
+    i32_add;
+    load;
   ]
   @
   b
   @
   [
+    const 4l;
+    i32_add;
     load;
   ]
   @ 

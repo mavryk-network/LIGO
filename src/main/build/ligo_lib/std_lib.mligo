@@ -87,7 +87,10 @@
 
   let string_of_int (x: int): string = 
     [%Wasm ({| 
+      i32.const 4
+      i32.add
       local.tee "int"
+      
       i32.load
       local.set "number"
 
