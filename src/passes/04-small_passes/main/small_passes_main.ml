@@ -35,6 +35,7 @@ let passes_list =
   let open PE in
   [ pass_t_arg
   ; pass_t_named_fun
+  ; pass_t_app_pascaligo
   ; pass_t_app_michelson_types
   ; pass_t_string_and_int_unsupported 
   ]
@@ -52,6 +53,28 @@ let my_fun : te =
   in
   let f : te = `T_Var (ghost_loc @@ tvar_of_str "f") in
   `T_Named_fun (ghost_loc (args, f))
+
+let my_app_pascaligo : te =
+  let loc = 0 in
+  let constr = `T_Var (ghost_loc @@ tvar_of_str "f") in
+  let type_args : te Simple_utils.List.Ne.t =
+    ( `T_Var (ghost_loc @@ tvar_of_str "x"),
+    [ `T_Var (ghost_loc @@ tvar_of_str "y")
+    ; `T_Var (ghost_loc @@ tvar_of_str "z")
+    ])
+  in
+  `T_App_pascaligo ({constr; type_args}, loc)
+
+let my_app_pascaligo_wrong : te =
+  let loc = 0 in
+  let constr = my_app_pascaligo in
+  let type_args : te Simple_utils.List.Ne.t =
+    ( `T_Var (ghost_loc @@ tvar_of_str "a"),
+    [ `T_Var (ghost_loc @@ tvar_of_str "b")
+    ; `T_Var (ghost_loc @@ tvar_of_str "c")
+    ])
+  in
+  `T_App_pascaligo ({constr; type_args}, loc)
 
 let my_michelson_pair : te =
   let loc = 42 in
@@ -119,6 +142,8 @@ let inputs : (string * te) list =
   [ "simple_arg", `T_Arg (ghost_loc "my_arg")
   ; "simple_var", `T_Var (ghost_loc @@ tvar_of_str "my_var")
   ; "named_fun", my_fun
+  ; "my_app_pascaligo", my_app_pascaligo
+  ; "my_app_pascaligo_wrong", my_app_pascaligo_wrong
   ; "michelson_pair", my_michelson_pair
   ; "michelson_3uple", my_michelson_3uple
   ; "michelson_or", my_michelson_or

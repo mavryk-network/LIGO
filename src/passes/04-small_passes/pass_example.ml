@@ -83,7 +83,7 @@ type 't type_expr = [
 | `T_Record_raw   of ('t option Non_linear_rows.t) Loc.t
 | `T_Disc_union   of ('t Non_linear_disc_rows.t) Loc.t
 | `T_Attr         of (Attribute.t * 't) Loc.t
-| `T_AppPascaligo of (('t, 't) Type_app.t) Loc.t
+| `T_App_pascaligo of (('t, 't) Type_app.t) Loc.t
 
 | `T_Michelson_or        of (string * 't * string * 't) Loc.t
 | `T_Michelson_pair      of (string * 't * string * 't) Loc.t
@@ -156,6 +156,20 @@ let pass_t_named_fun : fix_type_expr Small_passes.pass =
   let check_reductions = default_check_reduction in
   {name; compile; decompile; check_reductions}
 
+let pass_t_app_pascaligo =
+  let name = "pass_t_app_pascaligo" in
+  let compile = wrap_compile @@ function
+  | `T_App_pascaligo ({constr; type_args}, loc) -> (
+    match constr with
+    | `T_Var (tv, _loc2) ->
+      let constr = Ty_variable_with_sexp.to_name_exn tv in
+      `T_App ({constr; type_args}, loc)
+    | _ -> failwith "field 'constr' of T_App_pascaligo should be a T_Var"
+    )
+  | _ as other -> other
+  in
+  make_pass ~name ~compile ()
+
 let pass_t_app_michelson_types =
   let name = "pass_t_app_michelson_types" in
   let compile = wrap_compile @@ function
@@ -209,7 +223,7 @@ From [cat list_passes.md | grep "pass 't_"]
 [ ]  pass 't_record'
 [O]  pass 't_recordcameligo'
 [O]  pass 't_par'
-[O]  pass 't_app_pascaligo' (are these 3 passes still relevant ?)
+[X]  pass 't_app_pascaligo'
 [X]  pass 't_app_michelson_types'
 [ ]  pass 't_app'
 [X]  pass 't_string_and_int_unsupported' :
