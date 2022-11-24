@@ -14,7 +14,7 @@ let validate_json_file file_name =
 
 let schema_test_positive ?(with_types=false) ?(speed=`Quick) source_file =
   let _test () =
-    let temp_file_name = Filename_unix.temp_file ~in_dir:"./" "get_scope_test" ".json" in
+    let temp_file_name = Filename.temp_file ~temp_dir:"./" "get_scope_test" ".json" in
     let write data = Out_channel.write_all temp_file_name ~data:data in
     let options = Raw_options.make
                       ~with_types ~protocol_version:"current" ()  in
@@ -27,7 +27,7 @@ let schema_test_positive ?(with_types=false) ?(speed=`Quick) source_file =
 let schema_test_negative ?(with_types=false) ?(speed=`Quick)
         ?(expected_status=Some true) ?error_cnt source_file =
   let _test () =
-    let temp_file_name = Filename_unix.temp_file ~in_dir:"./" "get_scope_test" ".json" in
+    let temp_file_name = Filename.temp_file ~temp_dir:"./" "get_scope_test" ".json" in
     let write data = Out_channel.write_all temp_file_name ~data:data in
     let options = Raw_options.make
                       ~with_types ~protocol_version:"current" ()  in
