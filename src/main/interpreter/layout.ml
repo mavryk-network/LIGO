@@ -5,11 +5,11 @@ open Ligo_interpreter.Types
 open Ligo_prim
 
 let extract_record
-  ~raise
-  ~(layout : Layout.t)
-  (v : value)
-  (lst : (Label.t * AST.type_expression) list)
-  : _ list
+    ~raise
+    ~(layout : Layout.t)
+    (v : value)
+    (lst : (Label.t * AST.type_expression) list)
+    : _ list
   =
   trace ~raise Main_errors.spilling_tracer
   @@ Spilling.Layout.extract_record
@@ -20,11 +20,11 @@ let extract_record
 
 
 let extract_constructor
-  ~raise
-  ~(layout : Layout.t)
-  (v : value)
-  (lst : (Label.t * AST.type_expression) list)
-  : Label.t * value * AST.type_expression
+    ~raise
+    ~(layout : Layout.t)
+    (v : value)
+    (lst : (Label.t * AST.type_expression) list)
+    : Label.t * value * AST.type_expression
   =
   trace ~raise Main_errors.spilling_tracer
   @@ Spilling.Layout.extract_constructor
@@ -36,25 +36,25 @@ let extract_constructor
 
 
 let constructor_to_lr
-  ~raise
-  ~(layout : Layout.t)
-  (ty : _)
-  (fields : AST.Types.row_element Record.t)
-  (ctor : Label.t)
-  : _
+    ~raise
+    ~(layout : Layout.t)
+    (ty : _)
+    (fields : AST.Types.row_element Record.t)
+    (ctor : Label.t)
+    : _
   =
   trace ~raise Main_errors.spilling_tracer
   @@ Spilling.Layout.constructor_to_lr ~layout ty fields ctor
 
 
 let record_to_pairs
-  ~raise
-  (compile_expression : _ -> 'exp)
-  e_pair
-  e_tuple
-  record_t
-  record
-  : _
+    ~raise
+    (compile_expression : _ -> 'exp)
+    e_pair
+    e_tuple
+    record_t
+    record
+    : _
   =
   trace ~raise Main_errors.spilling_tracer
   @@ Spilling.Layout.record_to_pairs

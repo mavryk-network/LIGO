@@ -87,7 +87,9 @@ let rec lift
     (type_ : type_expression)
     : Context.t * type_expression
   =
-  let self ?(ctx = ctx) ~mode = lift ~raise ~options ~loc ~ctx ~mode ~kind ~evar in
+  let self ?(ctx = ctx) ~mode =
+    lift ~raise ~options ~loc ~ctx ~mode ~kind ~evar
+  in
   let self_row ~ctx = lift_row ~raise ~options ~loc ~ctx ~kind ~evar in
   let return content = { type_ with type_content = content } in
   match type_.type_content with
@@ -246,7 +248,6 @@ let unify_layout
   | L_variable lvar, layout | layout, L_variable lvar ->
     let ctx, layout = lift_layout ~loc ~ctx ~lvar layout in
     Context.add_layout_eq ctx lvar layout
-  
 
 
 let rec unify
@@ -269,7 +270,9 @@ let rec unify
            ~raise
            (unbound_exists_variable (Exists_var.loc evar) evar)
     in
-    let ctx, type_ = lift ~raise ~options ~loc ~ctx ~mode:Invariant ~evar ~kind type_ in
+    let ctx, type_ =
+      lift ~raise ~options ~loc ~ctx ~mode:Invariant ~evar ~kind type_
+    in
     if not
          (match Well_formed.type_expr ~ctx type_ with
          | Some kind' -> Kind.equal kind kind'

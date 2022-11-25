@@ -17,9 +17,10 @@ let add_param p vars =
   | Mutable -> vars
   | Immutable -> var :: vars
 
+
 (* This might be dead -- Alistair *)
 let rec assign_expression ~raise
-  : ?vars:Value_var.t list -> expression -> expression
+    : ?vars:Value_var.t list -> expression -> expression
   =
  fun ?(vars = []) e ->
   let self = assign_expression ~raise in
@@ -30,9 +31,9 @@ let rec assign_expression ~raise
         | E_assign { binder; expression = _ } ->
           let var = Binder.get_var binder in
           (match List.find ~f:(Value_var.equal var) vars with
-           | Some (v : Value_var.t) ->
-             raise.error @@ const_assigned (Value_var.get_location v) var
-           | None -> true, vars, expr)
+          | Some (v : Value_var.t) ->
+            raise.error @@ const_assigned (Value_var.get_location v) var
+          | None -> true, vars, expr)
         | E_lambda { binder; output_type = _; result = _ } ->
           let vars = add_param binder vars in
           true, vars, expr

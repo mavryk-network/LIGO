@@ -54,7 +54,9 @@ module Comparable = struct
      returns type [bool] if argument types are of the form [ t1; t2 ]
      where [t1 = t2] and [t1, t2] in [ address ; bool ; bytes ; chain_id; int; key; key_hash; mutez; nat ; ... ].
   *)
-  let simple_comparator ~raise ~(options : Compiler_options.middle_end) : Location.t -> string -> t =
+  let simple_comparator ~raise ~(options : Compiler_options.middle_end)
+      : Location.t -> string -> t
+    =
     let simple_types =
       List.Ne.of_list
         [ t_address ()
@@ -205,8 +207,12 @@ module Comparable = struct
     let b_key, b_value =
       trace_option ~raise (comparator_composed loc b_map) @@ get_t_map b_map
     in
-    let ctx, _ = comparator ~cmp:s ~raise ~options ~test ~loc ~ctx a_key b_key in
-    let ctx, _ = comparator ~cmp:s ~raise ~options ~test ~loc ~ctx a_value b_value in
+    let ctx, _ =
+      comparator ~cmp:s ~raise ~options ~test ~loc ~ctx a_key b_key
+    in
+    let ctx, _ =
+      comparator ~cmp:s ~raise ~options ~test ~loc ~ctx a_value b_value
+    in
     ctx, t_bool ()
 
 
@@ -222,8 +228,12 @@ module Comparable = struct
     let b_key, b_value =
       trace_option ~raise (comparator_composed loc b_map) @@ get_t_big_map b_map
     in
-    let ctx, _ = comparator ~cmp:s ~raise ~options ~test ~loc ~ctx a_key b_key in
-    let ctx, _ = comparator ~cmp:s ~raise ~options ~test ~loc ~ctx a_value b_value in
+    let ctx, _ =
+      comparator ~cmp:s ~raise ~options ~test ~loc ~ctx a_key b_key
+    in
+    let ctx, _ =
+      comparator ~cmp:s ~raise ~options ~test ~loc ~ctx a_value b_value
+    in
     ctx, t_bool ()
 
 
@@ -811,15 +821,14 @@ let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
             ~types:[ (a @-> b) ^-> t_option a ^~> t_option b ]) )
     ; ( C_CHECK_ENTRYPOINT
       , of_type
-          (create
-            ~mode_annot:[ Checked ]
-            ~types:[ t_string () ^~> t_unit () ]) )
+          (create ~mode_annot:[ Checked ] ~types:[ t_string () ^~> t_unit () ])
+      )
     ; ( C_CHECK_SELF
       , of_type
           (for_all "a"
           @@ fun a ->
-          create ~mode_annot:[ Checked ] ~types:[ t_string () ^~> t_option a ]
-          ) )
+          create ~mode_annot:[ Checked ] ~types:[ t_string () ^~> t_option a ])
+      )
     ; ( C_CREATE_CONTRACT
       , of_type
           (for_all "a"
@@ -1161,7 +1170,9 @@ let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
       , of_type
           (for_all "a"
           @@ fun a ->
-          create ~mode_annot:[ Inferred; Checked ] ~types:[ a ^-> t_int () ^~> t_string () ]) )
+          create
+            ~mode_annot:[ Inferred; Checked ]
+            ~types:[ a ^-> t_int () ^~> t_string () ]) )
     ; ( C_TEST_UNESCAPE_STRING
       , of_type
           (create
@@ -1456,33 +1467,45 @@ let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
     ; ( C_LIST_SIZE
       , of_type
           (for_all "a"
-           @@  fun a ->
-           (create ~mode_annot:[ Inferred ] ~types:[ t_list a ^~> t_nat () ])))
+          @@ fun a ->
+          create ~mode_annot:[ Inferred ] ~types:[ t_list a ^~> t_nat () ]) )
     ; ( C_SET_SIZE
       , of_type
           (for_all "a"
-           @@  fun a ->
-           (create ~mode_annot:[ Inferred ] ~types:[ t_set a ^~> t_nat () ])))
+          @@ fun a ->
+          create ~mode_annot:[ Inferred ] ~types:[ t_set a ^~> t_nat () ]) )
     ; ( C_MAP_SIZE
       , of_type
           (for_all "a"
-           @@  fun a ->
-           for_all "b"
-           @@  fun b ->
-           (create ~mode_annot:[ Inferred ] ~types:[ t_map a b ^~> t_nat () ])))
+          @@ fun a ->
+          for_all "b"
+          @@ fun b ->
+          create ~mode_annot:[ Inferred ] ~types:[ t_map a b ^~> t_nat () ]) )
     ; ( C_SIZE
       , of_type
-          (create ~mode_annot:[ Inferred ] ~types:[ t_string () ^~> t_nat () ; t_bytes () ^~> t_nat () ]))
+          (create
+             ~mode_annot:[ Inferred ]
+             ~types:[ t_string () ^~> t_nat (); t_bytes () ^~> t_nat () ]) )
     ; ( C_SLICE
       , of_type
-          (create ~mode_annot:[ Checked ; Checked ; Inferred ] ~types:[ t_nat () ^-> t_nat () ^-> t_string () ^~> t_string () ; t_nat () ^-> t_nat () ^-> t_bytes () ^~> t_bytes () ]))
+          (create
+             ~mode_annot:[ Checked; Checked; Inferred ]
+             ~types:
+               [ t_nat () ^-> t_nat () ^-> t_string () ^~> t_string ()
+               ; t_nat () ^-> t_nat () ^-> t_bytes () ^~> t_bytes ()
+               ]) )
     ; ( C_MAP_MEM
       , of_type
           (for_all "a"
-           @@  fun a ->
-           for_all "b"
-           @@  fun b ->
-           (create ~mode_annot:[ Checked ; Inferred ] ~types:[ a ^-> t_map a b ^~> t_bool () ; a ^-> t_big_map a b ^~> t_bool () ])))
+          @@ fun a ->
+          for_all "b"
+          @@ fun b ->
+          create
+            ~mode_annot:[ Checked; Inferred ]
+            ~types:
+              [ a ^-> t_map a b ^~> t_bool ()
+              ; a ^-> t_big_map a b ^~> t_bool ()
+              ]) )
     ]
 
 

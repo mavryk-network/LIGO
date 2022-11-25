@@ -102,14 +102,14 @@ let counter_of_address : string -> int =
 
 
 let get_address
-  : value -> Tezos_protocol.Protocol.Alpha_context.Contract.t option
+    : value -> Tezos_protocol.Protocol.Alpha_context.Contract.t option
   = function
   | V_Ct (C_address x) -> Some x
   | _ -> None
 
 
 let get_michelson_contract
-  : value -> unit Tezos_utils.Michelson.michelson option
+    : value -> unit Tezos_utils.Michelson.michelson option
   = function
   | V_Michelson_contract x -> Some x
   | _ -> None
@@ -197,8 +197,8 @@ let get_pair : value -> (value * value) option =
   | V_Record lm ->
     let x = Record.LMap.to_kv_list lm in
     (match x with
-     | [ (Label "0", x); (Label "1", y) ] -> Some (x, y)
-     | _ -> None)
+    | [ (Label "0", x); (Label "1", y) ] -> Some (x, y)
+    | _ -> None)
   | _ -> None
 
 
@@ -254,10 +254,9 @@ let get_baker_policy : value -> _ option =
     Some
       (`Excluding
         (List.filter_map
-           ~f:
-             (function
-              | V_Ct (C_address pkh) -> Some pkh
-              | _ -> None)
+           ~f:(function
+             | V_Ct (C_address pkh) -> Some pkh
+             | _ -> None)
            l))
   | _ -> None
 
@@ -298,8 +297,8 @@ let compare_constant_val (c : constant_val) (c' : constant_val) : int =
   | ( C_contract { address = a; entrypoint = e }
     , C_contract { address = a'; entrypoint = e' } ) ->
     (match Tezos_protocol.Protocol.Alpha_context.Contract.compare a a' with
-     | 0 -> Option.compare String.compare e e'
-     | c -> c)
+    | 0 -> Option.compare String.compare e e'
+    | c -> c)
   | C_key_hash kh, C_key_hash kh' ->
     Tezos_crypto.Signature.Public_key_hash.compare kh kh'
   | C_key k, C_key k' -> Tezos_crypto.Signature.Public_key.compare k k'
@@ -397,18 +396,18 @@ let rec compare_value (v : value) (v' : value) : int =
       (List.dedup_and_sort ~compare:compare_value s')
   | V_Construct (c, l), V_Construct (c', l') ->
     (match String.compare c c' with
-     | 0 -> compare_value l l'
-     | c -> c)
+    | 0 -> compare_value l l'
+    | c -> c)
   | V_Michelson m, V_Michelson m' ->
     (match m, m' with
-     | Ty_code t, Ty_code t' -> Caml.compare t t'
-     | Untyped_code _, Ty_code _ -> -1
-     | Untyped_code c, Untyped_code c' -> Caml.compare c c'
-     | Ty_code _, Untyped_code _ -> 1)
+    | Ty_code t, Ty_code t' -> Caml.compare t t'
+    | Untyped_code _, Ty_code _ -> -1
+    | Untyped_code c, Untyped_code c' -> Caml.compare c c'
+    | Ty_code _, Untyped_code _ -> 1)
   | V_Mutation (l, e, _), V_Mutation (l', e', _) ->
     (match Location.compare l l' with
-     | 0 -> Caml.compare e e'
-     | c -> c)
+    | 0 -> Caml.compare e e'
+    | c -> c)
   | V_Michelson_contract c, V_Michelson_contract c' -> Caml.compare c c'
   | ( V_Ast_contract { main; views = _ }
     , V_Ast_contract { main = main'; views = _ } ) -> Caml.compare main main'

@@ -4,95 +4,153 @@ let () = Caml.Sys.chdir "../../test/projects/"
 let pwd = Caml.Sys.getcwd ()
 
 let%expect_test _ =
-  run_ligo_good [ "run"; "test" ; "originate_contract/test.mligo" ; "--project-root" ; "originate_contract" ; "--no-warn" ] ;
-  [%expect{|
+  run_ligo_good
+    [ "run"
+    ; "test"
+    ; "originate_contract/test.mligo"
+    ; "--project-root"
+    ; "originate_contract"
+    ; "--no-warn"
+    ];
+  [%expect
+    {|
     Everything at the top-level was executed.
     - test exited with value KT1QVWJTnMi6XJFPpnASjbfi53qokforNwdP(None). |}]
 
 let%expect_test _ =
-  run_ligo_good [ "info"; "measure-contract" ; "using_scope_pkg_project/src/a/b/c/contract.mligo" ; "--project-root" ; "using_scope_pkg_project" ] ;
-  [%expect{|
+  run_ligo_good
+    [ "info"
+    ; "measure-contract"
+    ; "using_scope_pkg_project/src/a/b/c/contract.mligo"
+    ; "--project-root"
+    ; "using_scope_pkg_project"
+    ];
+  [%expect {|
     95 bytes |}]
 
 let%expect_test _ =
-  run_ligo_bad [ "compile"; "contract" ; "originate_contract/main.mligo" ; "--project-root" ; "originate_contract" ] ;
-  [%expect{|
+  run_ligo_bad
+    [ "compile"
+    ; "contract"
+    ; "originate_contract/main.mligo"
+    ; "--project-root"
+    ; "originate_contract"
+    ];
+  [%expect
+    {|
     File "originate_contract/main.mligo", line 1, characters 0-30:
       1 | #import "tezos-ligo-fa2" "FA2"
       2 |
     File "tezos-ligo-fa2" not found. |}]
 
 let () = Caml.Sys.chdir "using_scope_pkg_project"
+
 let%expect_test _ =
-  run_ligo_good [ "run"; "test" ; "src/a/b/c/contract.test.mligo" ; "--project-root" ; "." ] ;
-  [%expect{|
+  run_ligo_good
+    [ "run"; "test"; "src/a/b/c/contract.test.mligo"; "--project-root"; "." ];
+  [%expect
+    {|
     Everything at the top-level was executed.
     - test_originate exited with value (). |}]
 
 let%expect_test _ =
-  run_ligo_good [ "run"; "test" ; "src/a/b/c/contract.test.mligo" ] ;
-  [%expect{|
+  run_ligo_good [ "run"; "test"; "src/a/b/c/contract.test.mligo" ];
+  [%expect
+    {|
     Everything at the top-level was executed.
     - test_originate exited with value (). |}]
+
 let () = Caml.Sys.chdir pwd
-
 let () = Caml.Sys.chdir "using_scope_pkg_project/src/a/b/c"
+
 let%expect_test _ =
-  run_ligo_good [ "run"; "test" ; "contract.test.mligo" ] ;
-  [%expect{|
+  run_ligo_good [ "run"; "test"; "contract.test.mligo" ];
+  [%expect
+    {|
     Everything at the top-level was executed.
     - test_originate exited with value (). |}]
-let () = Caml.Sys.chdir pwd
 
+let () = Caml.Sys.chdir pwd
 let () = Caml.Sys.chdir "using_scope_pkg_project/src/a/b"
+
 let%expect_test _ =
-  run_ligo_good [ "run"; "test" ; "c/contract.test.mligo" ] ;
-  [%expect{|
+  run_ligo_good [ "run"; "test"; "c/contract.test.mligo" ];
+  [%expect
+    {|
     Everything at the top-level was executed.
     - test_originate exited with value (). |}]
-let () = Caml.Sys.chdir pwd
 
+let () = Caml.Sys.chdir pwd
 let () = Caml.Sys.chdir "using_scope_pkg_project/src/a"
+
 let%expect_test _ =
-  run_ligo_good [ "run"; "test" ; "b/c/contract.test.mligo" ] ;
-  [%expect{|
+  run_ligo_good [ "run"; "test"; "b/c/contract.test.mligo" ];
+  [%expect
+    {|
     Everything at the top-level was executed.
     - test_originate exited with value (). |}]
-let () = Caml.Sys.chdir pwd
 
+let () = Caml.Sys.chdir pwd
 let () = Caml.Sys.chdir "using_scope_pkg_project/src"
+
 let%expect_test _ =
-  run_ligo_good [ "run"; "test" ; "a/b/c/contract.test.mligo" ] ;
-  [%expect{|
+  run_ligo_good [ "run"; "test"; "a/b/c/contract.test.mligo" ];
+  [%expect
+    {|
     Everything at the top-level was executed.
     - test_originate exited with value (). |}]
+
 let () = Caml.Sys.chdir pwd
 
 let%expect_test _ =
-  run_ligo_good [ "run"; "test" ; "using_scope_pkg_project/src/a/b/c/contract.test.mligo" ; "--project-root" ; "using_scope_pkg_project" ] ;
-  [%expect{|
+  run_ligo_good
+    [ "run"
+    ; "test"
+    ; "using_scope_pkg_project/src/a/b/c/contract.test.mligo"
+    ; "--project-root"
+    ; "using_scope_pkg_project"
+    ];
+  [%expect
+    {|
     Everything at the top-level was executed.
     - test_originate exited with value (). |}]
 
 let%expect_test _ =
-  run_ligo_good [ "compile"; "contract" ; "dao_path_bug/main.mligo" ; "--project-root" ; "dao_path_bug" ] ;
-  [%expect{|
+  run_ligo_good
+    [ "compile"
+    ; "contract"
+    ; "dao_path_bug/main.mligo"
+    ; "--project-root"
+    ; "dao_path_bug"
+    ];
+  [%expect
+    {|
     { parameter unit ;
       storage (option nat) ;
       code { DROP ; SENDER ; UNIT ; VIEW "total_supply" nat ; NIL operation ; PAIR } } |}]
 
 let () = Caml.Sys.chdir "dao_path_bug"
+
 let%expect_test _ =
-  run_ligo_good [ "compile"; "contract" ; "main.mligo" ] ;
-  [%expect{|
+  run_ligo_good [ "compile"; "contract"; "main.mligo" ];
+  [%expect
+    {|
     { parameter unit ;
       storage (option nat) ;
       code { DROP ; SENDER ; UNIT ; VIEW "total_supply" nat ; NIL operation ; PAIR } } |}]
+
 let () = Caml.Sys.chdir pwd
 
 let%expect_test _ =
-  run_ligo_good [ "compile"; "contract" ; "include_include/main.mligo" ; "--project-root" ; "include_include" ] ;
-  [%expect{|
+  run_ligo_good
+    [ "compile"
+    ; "contract"
+    ; "include_include/main.mligo"
+    ; "--project-root"
+    ; "include_include"
+    ];
+  [%expect
+    {|
     { parameter unit ;
       storage string ;
       code { DROP ;
@@ -103,9 +161,11 @@ let%expect_test _ =
              PAIR } } |}]
 
 let () = Caml.Sys.chdir "include_include"
+
 let%expect_test _ =
-  run_ligo_good [ "compile"; "contract" ; "main.mligo" ] ;
-  [%expect{|
+  run_ligo_good [ "compile"; "contract"; "main.mligo" ];
+  [%expect
+    {|
     { parameter unit ;
       storage string ;
       code { DROP ;
@@ -114,11 +174,19 @@ let%expect_test _ =
              CONCAT ;
              NIL operation ;
              PAIR } } |}]
+
 let () = Caml.Sys.chdir pwd
 
 let%expect_test _ =
-  run_ligo_good [ "compile"; "contract" ; "include_import/main.mligo" ; "--project-root" ; "include_import" ] ;
-  [%expect{|
+  run_ligo_good
+    [ "compile"
+    ; "contract"
+    ; "include_import/main.mligo"
+    ; "--project-root"
+    ; "include_import"
+    ];
+  [%expect
+    {|
     { parameter unit ;
       storage string ;
       code { DROP ;
@@ -132,9 +200,11 @@ let%expect_test _ =
              PAIR } } |}]
 
 let () = Caml.Sys.chdir "include_import"
+
 let%expect_test _ =
-  run_ligo_good [ "compile"; "contract" ; "main.mligo" ] ;
-  [%expect{|
+  run_ligo_good [ "compile"; "contract"; "main.mligo" ];
+  [%expect
+    {|
     { parameter unit ;
       storage string ;
       code { DROP ;
@@ -146,11 +216,19 @@ let%expect_test _ =
              CONCAT ;
              NIL operation ;
              PAIR } } |}]
+
 let () = Caml.Sys.chdir pwd
 
 let%expect_test _ =
-  run_ligo_good [ "compile"; "contract" ; "import_import/main.mligo" ; "--project-root" ; "import_import" ] ;
-  [%expect{|
+  run_ligo_good
+    [ "compile"
+    ; "contract"
+    ; "import_import/main.mligo"
+    ; "--project-root"
+    ; "import_import"
+    ];
+  [%expect
+    {|
     { parameter unit ;
       storage string ;
       code { DROP ;
@@ -164,9 +242,11 @@ let%expect_test _ =
              PAIR } } |}]
 
 let () = Caml.Sys.chdir "import_import"
+
 let%expect_test _ =
-  run_ligo_good [ "compile"; "contract" ; "main.mligo" ] ;
-  [%expect{|
+  run_ligo_good [ "compile"; "contract"; "main.mligo" ];
+  [%expect
+    {|
     { parameter unit ;
       storage string ;
       code { DROP ;
@@ -178,11 +258,19 @@ let%expect_test _ =
              CONCAT ;
              NIL operation ;
              PAIR } } |}]
+
 let () = Caml.Sys.chdir pwd
 
 let%expect_test _ =
-  run_ligo_good [ "compile"; "contract" ; "import_include/main.mligo" ; "--project-root" ; "import_include" ] ;
-  [%expect{|
+  run_ligo_good
+    [ "compile"
+    ; "contract"
+    ; "import_include/main.mligo"
+    ; "--project-root"
+    ; "import_include"
+    ];
+  [%expect
+    {|
     { parameter unit ;
       storage string ;
       code { DROP ;
@@ -199,9 +287,11 @@ let%expect_test _ =
              PAIR } } |}]
 
 let () = Caml.Sys.chdir "import_include"
+
 let%expect_test _ =
-  run_ligo_good [ "compile"; "contract" ; "main.mligo" ] ;
-  [%expect{|
+  run_ligo_good [ "compile"; "contract"; "main.mligo" ];
+  [%expect
+    {|
     { parameter unit ;
       storage string ;
       code { DROP ;
@@ -216,25 +306,37 @@ let%expect_test _ =
              CONCAT ;
              NIL operation ;
              PAIR } } |}]
+
 let () = Caml.Sys.chdir pwd
 
 let%expect_test _ =
-  run_ligo_good [ "run"; "test" ; "using_ligo_breathalyser/test.mligo" ; "--project-root" ; "using_ligo_breathalyser" ] ;
-  [%expect{|
+  run_ligo_good
+    [ "run"
+    ; "test"
+    ; "using_ligo_breathalyser/test.mligo"
+    ; "--project-root"
+    ; "using_ligo_breathalyser"
+    ];
+  [%expect
+    {|
     (1 , 2 , 3)
     Everything at the top-level was executed.
     - test exited with value (). |}]
 
 let () = Caml.Sys.chdir "using_ligo_breathalyser"
+
 let%expect_test _ =
-  run_ligo_good [ "run"; "test" ; "test.mligo" ] ;
-  [%expect{|
+  run_ligo_good [ "run"; "test"; "test.mligo" ];
+  [%expect
+    {|
     (1 , 2 , 3)
     Everything at the top-level was executed.
-    - test exited with value (). |}] ;
-  run_ligo_good [ "run"; "test" ; "test.mligo" ; "--project-root" ; "." ] ;
-  [%expect{|
+    - test exited with value (). |}];
+  run_ligo_good [ "run"; "test"; "test.mligo"; "--project-root"; "." ];
+  [%expect
+    {|
     (1 , 2 , 3)
     Everything at the top-level was executed.
     - test exited with value (). |}]
+
 let () = Caml.Sys.chdir pwd

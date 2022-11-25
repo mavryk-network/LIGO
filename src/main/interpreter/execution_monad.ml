@@ -239,13 +239,13 @@ module Command = struct
     | Set_print_values : bool -> bool t
 
   let eval_tezos
-    : type a.
-      raise:(Errors.interpreter_error, Main_warnings.all) raise
-      -> options:Compiler_options.t
-      -> a tezos_command
-      -> Tezos_state.context
-      -> execution_trace ref option
-      -> a * Tezos_state.context
+      : type a.
+        raise:(Errors.interpreter_error, Main_warnings.all) raise
+        -> options:Compiler_options.t
+        -> a tezos_command
+        -> Tezos_state.context
+        -> execution_trace ref option
+        -> a * Tezos_state.context
     =
    fun ~raise ~options command ctxt _log ->
     match command with
@@ -318,7 +318,7 @@ module Command = struct
     | Reset_state (loc, initial_timestamp, calltrace, n, amts) ->
       let initial_timestamp =
         Option.map initial_timestamp ~f:(fun x ->
-          Proto_alpha_utils.Time.Protocol.of_seconds (Z.to_int64 x))
+            Proto_alpha_utils.Time.Protocol.of_seconds (Z.to_int64 x))
       in
       let amts = trace_option ~raise (corner_case ()) @@ LC.get_list amts in
       let amts =
@@ -365,8 +365,8 @@ module Command = struct
           amt
       in
       (match x with
-       | Success (ctxt', gas_consumed) -> `Exec_ok gas_consumed, ctxt'
-       | Fail errs -> `Exec_failed errs, ctxt)
+      | Success (ctxt', gas_consumed) -> `Exec_ok gas_consumed, ctxt'
+      | Fail errs -> `Exec_failed errs, ctxt)
     | State_error_to_value errs ->
       let open Tezos_protocol.Protocol in
       let open Tezos_protocol_env in
@@ -385,53 +385,53 @@ module Command = struct
         fail_ctor rej
       in
       (match errs with
-       | Ecoproto_error
-           (Script_interpreter.Runtime_contract_error contract_failing)
-         :: rest ->
-         let contract_failing =
-           LT.V_Ct
-             (C_address (Tezos_state.contract_of_hash ~raise contract_failing))
-         in
-         (match rest with
-          | Ecoproto_error (Script_interpreter.Reject (_, x, _)) :: _ ->
-            let code = Tezos_state.canonical_to_ligo x in
-            let code_ty = Michelson_backend.storage_retreival_dummy_ty in
-            let v =
-              LT.V_Michelson
-                (Ty_code
-                   { micheline_repr = { code; code_ty }
-                   ; ast_ty = Ast_aggregated.t_int ()
-                   })
-            in
-            let rej = LC.v_ctor "Rejected" (LC.v_pair (v, contract_failing)) in
-            fail_ctor rej, ctxt
-          | Ecoproto_error (Script_interpreter.Bad_contract_parameter _addr)
-            :: _ -> fail_other (), ctxt
-          | _ -> fail_other (), ctxt)
-       (* this error is only caught because we have local modifications in tezos-ligo *)
-       | Ecoproto_error
-           (Contract_storage.Balance_too_low
-             (contract_too_low, contract_balance, spend_request))
-         :: _ ->
-         let contract_too_low : LT.Contract.t =
-           Michelson_backend.contract_to_contract contract_too_low
-         in
-         let contract_too_low = LT.V_Ct (C_address contract_too_low) in
-         let contract_balance, spend_request =
-           let contract_balance = Michelson_backend.tez_to_z contract_balance in
-           let spend_request = Michelson_backend.tez_to_z spend_request in
-           LT.V_Ct (C_mutez contract_balance), LT.V_Ct (C_mutez spend_request)
-         in
-         let rej_data =
-           LC.v_record
-             [ "contract_too_low", contract_too_low
-             ; "contract_balance", contract_balance
-             ; "spend_request", spend_request
-             ]
-         in
-         let rej = LC.v_ctor "Balance_too_low" rej_data in
-         fail_ctor rej, ctxt
-       | _ -> fail_other (), ctxt)
+      | Ecoproto_error
+          (Script_interpreter.Runtime_contract_error contract_failing)
+        :: rest ->
+        let contract_failing =
+          LT.V_Ct
+            (C_address (Tezos_state.contract_of_hash ~raise contract_failing))
+        in
+        (match rest with
+        | Ecoproto_error (Script_interpreter.Reject (_, x, _)) :: _ ->
+          let code = Tezos_state.canonical_to_ligo x in
+          let code_ty = Michelson_backend.storage_retreival_dummy_ty in
+          let v =
+            LT.V_Michelson
+              (Ty_code
+                 { micheline_repr = { code; code_ty }
+                 ; ast_ty = Ast_aggregated.t_int ()
+                 })
+          in
+          let rej = LC.v_ctor "Rejected" (LC.v_pair (v, contract_failing)) in
+          fail_ctor rej, ctxt
+        | Ecoproto_error (Script_interpreter.Bad_contract_parameter _addr) :: _
+          -> fail_other (), ctxt
+        | _ -> fail_other (), ctxt)
+      (* this error is only caught because we have local modifications in tezos-ligo *)
+      | Ecoproto_error
+          (Contract_storage.Balance_too_low
+            (contract_too_low, contract_balance, spend_request))
+        :: _ ->
+        let contract_too_low : LT.Contract.t =
+          Michelson_backend.contract_to_contract contract_too_low
+        in
+        let contract_too_low = LT.V_Ct (C_address contract_too_low) in
+        let contract_balance, spend_request =
+          let contract_balance = Michelson_backend.tez_to_z contract_balance in
+          let spend_request = Michelson_backend.tez_to_z spend_request in
+          LT.V_Ct (C_mutez contract_balance), LT.V_Ct (C_mutez spend_request)
+        in
+        let rej_data =
+          LC.v_record
+            [ "contract_too_low", contract_too_low
+            ; "contract_balance", contract_balance
+            ; "spend_request", spend_request
+            ]
+        in
+        let rej = LC.v_ctor "Balance_too_low" rej_data in
+        fail_ctor rej, ctxt
+      | _ -> fail_other (), ctxt)
     | Get_storage (loc, calltrace, addr, ty_expr) ->
       let addr = trace_option ~raise (corner_case ()) @@ LC.get_address addr in
       let storage', ty =
@@ -492,14 +492,14 @@ module Command = struct
       ret, ctxt
     | Get_size contract_code ->
       (match contract_code with
-       | LT.V_Michelson_contract contract_code ->
-         let s = Ligo_compile.Of_michelson.measure ~raise contract_code in
-         LT.V_Ct (C_int (Z.of_int s)), ctxt
-       | _ ->
-         raise.error
-         @@ Errors.generic_error
-              Location.generated
-              "Trying to measure a non-contract")
+      | LT.V_Michelson_contract contract_code ->
+        let s = Ligo_compile.Of_michelson.measure ~raise contract_code in
+        LT.V_Ct (C_int (Z.of_int s)), ctxt
+      | _ ->
+        raise.error
+        @@ Errors.generic_error
+             Location.generated
+             "Trying to measure a non-contract")
     | Compile_contract_from_file (source_file, entry_point, views, _mutation) ->
       let options = Compiler_options.set_entry_point options entry_point in
       let options = Compiler_options.set_views options views in
@@ -524,12 +524,12 @@ module Command = struct
          let contract = LT.V_Michelson_contract contract_code in
          contract, ctxt
        with
-       | Sys_error _ ->
-         raise.error
-         @@ generic_error ~calltrace loc
-         @@ "Could not open "
-         ^ source_file
-         ^ " for reading.")
+      | Sys_error _ ->
+        raise.error
+        @@ generic_error ~calltrace loc
+        @@ "Could not open "
+        ^ source_file
+        ^ " for reading.")
     | Run (loc, f, v) ->
       let open Ligo_interpreter.Types in
       let subst_lst = Michelson_backend.make_subst_ast_env_exp ~raise f.env in
@@ -602,20 +602,19 @@ module Command = struct
            value
            value_ty
        with
-       | Ok v -> v, ctxt
-       | Error data ->
-         let data_t = Michelson_backend.compile_type ~raise func_ty in
-         let data_opt =
-           to_option
-           @@ Michelson_to_value.decompile_to_untyped_value
-                ~bigmaps:[]
-                (clean_locations data_t)
-                (clean_locations data)
-         in
-         (match data_opt with
-          | Some data -> raise.error @@ Errors.meta_lang_eval loc calltrace data
-          | None ->
-            raise.error @@ Errors.target_lang_failwith loc calltrace data))
+      | Ok v -> v, ctxt
+      | Error data ->
+        let data_t = Michelson_backend.compile_type ~raise func_ty in
+        let data_opt =
+          to_option
+          @@ Michelson_to_value.decompile_to_untyped_value
+               ~bigmaps:[]
+               (clean_locations data_t)
+               (clean_locations data)
+        in
+        (match data_opt with
+        | Some data -> raise.error @@ Errors.meta_lang_eval loc calltrace data
+        | None -> raise.error @@ Errors.target_lang_failwith loc calltrace data))
     | Compile_contract (loc, v) ->
       let ast_aggregated =
         match v with
@@ -685,13 +684,13 @@ module Command = struct
       ret, ctxt
     | To_contract (loc, v, entrypoint, _ty_expr) ->
       (match v with
-       | LT.V_Typed_address address ->
-         let contract : LT.constant_val =
-           LT.C_contract { address; entrypoint }
-         in
-         LT.V_Ct contract, ctxt
-       | _ ->
-         raise.error @@ Errors.generic_error loc "Should be caught by the typer")
+      | LT.V_Typed_address address ->
+        let contract : LT.constant_val =
+          LT.C_contract { address; entrypoint }
+        in
+        LT.V_Ct contract, ctxt
+      | _ ->
+        raise.error @@ Errors.generic_error loc "Should be caught by the typer")
     | Check_storage_address (loc, addr, ty) ->
       let ligo_ty =
         trace_option
@@ -752,26 +751,26 @@ module Command = struct
     | Get_bootstrap (loc, calltrace, x) ->
       let x = trace_option ~raise (corner_case ()) @@ LC.get_int x in
       (match List.nth ctxt.internals.bootstrapped (Z.to_int x) with
-       | Some x ->
-         let sk, pk =
-           let pkh =
-             Tezos_state.implicit_account
-               ~raise
-               ~loc
-               ~calltrace
-               "The source address is not an implicit account"
-               x
-           in
-           Tezos_state.get_account ~raise ~loc ~calltrace pkh
-         in
-         let record =
-           LC.v_triple
-             LT.(V_Ct (C_address x), V_Ct (C_key pk), V_Ct (C_string sk))
-         in
-         record, ctxt
-       | None ->
-         raise.error
-           (Errors.generic_error loc "This bootstrap account do not exist"))
+      | Some x ->
+        let sk, pk =
+          let pkh =
+            Tezos_state.implicit_account
+              ~raise
+              ~loc
+              ~calltrace
+              "The source address is not an implicit account"
+              x
+          in
+          Tezos_state.get_account ~raise ~loc ~calltrace pkh
+        in
+        let record =
+          LC.v_triple
+            LT.(V_Ct (C_address x), V_Ct (C_key pk), V_Ct (C_string sk))
+        in
+        record, ctxt
+      | None ->
+        raise.error
+          (Errors.generic_error loc "This bootstrap account do not exist"))
     | Sign (loc, calltrace, sk, data) ->
       let signature = Tezos_state.sign_message ~raise ~loc ~calltrace data sk in
       LT.V_Ct (LT.C_signature signature), ctxt
@@ -959,26 +958,26 @@ module Command = struct
       (), ctxt
     | Pop_context () ->
       (match !Tezos_state.contexts with
-       | [] -> (), ctxt
-       | ctxt :: ctxts ->
-         Tezos_state.contexts := ctxts;
-         (), ctxt)
+      | [] -> (), ctxt
+      | ctxt :: ctxts ->
+        Tezos_state.contexts := ctxts;
+        (), ctxt)
     | Drop_context () ->
       (match !Tezos_state.contexts with
-       | [] -> (), ctxt
-       | _ :: ctxts ->
-         Tezos_state.contexts := ctxts;
-         (), ctxt)
+      | [] -> (), ctxt
+      | _ :: ctxts ->
+        Tezos_state.contexts := ctxts;
+        (), ctxt)
 
 
   let eval
-    : type a.
-      raise:(Errors.interpreter_error, Main_warnings.all) raise
-      -> options:Compiler_options.t
-      -> a t
-      -> state
-      -> execution_trace ref option
-      -> a * state
+      : type a.
+        raise:(Errors.interpreter_error, Main_warnings.all) raise
+        -> options:Compiler_options.t
+        -> a t
+        -> state
+        -> execution_trace ref option
+        -> a * state
     =
    fun ~raise ~options command state log ->
     match command with
@@ -1019,13 +1018,13 @@ type 'a t =
   | Try_or : 'a t * 'a t -> 'a t
 
 let rec eval
-  : type a.
-    raise:(Errors.interpreter_error, Main_warnings.all) raise
-    -> options:Compiler_options.t
-    -> a t
-    -> state
-    -> execution_trace ref option
-    -> a * state
+    : type a.
+      raise:(Errors.interpreter_error, Main_warnings.all) raise
+      -> options:Compiler_options.t
+      -> a t
+      -> state
+      -> execution_trace ref option
+      -> a * state
   =
  fun ~raise ~options e state log ->
   match e with
@@ -1058,7 +1057,7 @@ let ( let* ) o f = Bind (o, f)
 let rec bind_list = function
   | [] -> return []
   | hd :: tl ->
-    let* hd = hd in
+    let* hd in
     let* tl = bind_list tl in
     return @@ (hd :: tl)
 
@@ -1067,7 +1066,7 @@ let bind_map_list f lst = bind_list (List.map ~f lst)
 
 let bind_fold_list f init lst =
   let aux x y =
-    let* x = x in
+    let* x in
     f x y
   in
   List.fold_left ~f:aux ~init:(return init) lst
@@ -1075,7 +1074,7 @@ let bind_fold_list f init lst =
 
 let bind_fold_right_list f init lst =
   let aux y x =
-    let* x = x in
+    let* x in
     f y x
   in
   List.fold_right ~f:aux ~init:(return init) lst

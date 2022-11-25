@@ -9,23 +9,23 @@ let get_syntax ~raise syntax loc =
   | Some syntax -> syntax
   | None ->
     (match Location.get_file loc with
-     | None -> raise.error (Errors.generic_error loc "Could not detect syntax")
-     | Some r ->
-       let file = r#file in
-       let syntax =
-         Simple_utils.Trace.to_stdlib_result
-           (Syntax.of_string_opt (Syntax_types.Syntax_name "auto") (Some file))
-       in
-       (match syntax with
-        | Ok (r, _) -> r
-        | Error _ ->
-          raise.error (Errors.generic_error loc "Could not detect syntax")))
+    | None -> raise.error (Errors.generic_error loc "Could not detect syntax")
+    | Some r ->
+      let file = r#file in
+      let syntax =
+        Simple_utils.Trace.to_stdlib_result
+          (Syntax.of_string_opt (Syntax_types.Syntax_name "auto") (Some file))
+      in
+      (match syntax with
+      | Ok (r, _) -> r
+      | Error _ ->
+        raise.error (Errors.generic_error loc "Could not detect syntax")))
 
 
 let mutate_some_contract
-  :  raise:(interpreter_error, _) raise -> ?syntax:_ -> Z.t
-  -> Ast_aggregated.expression
-  -> (Ast_aggregated.expression * LT.mutation) option
+    :  raise:(interpreter_error, _) raise -> ?syntax:_ -> Z.t
+    -> Ast_aggregated.expression
+    -> (Ast_aggregated.expression * LT.mutation) option
   =
  fun ~raise ?syntax z main ->
   let n = Z.to_int z in
@@ -39,9 +39,9 @@ let mutate_some_contract
 
 
 let mutate_some_value
-  :  raise:(interpreter_error, _) raise -> ?syntax:_ -> Location.t -> Z.t
-  -> LT.value -> Ast_aggregated.type_expression
-  -> (Ast_aggregated.expression * LT.mutation) option
+    :  raise:(interpreter_error, _) raise -> ?syntax:_ -> Location.t -> Z.t
+    -> LT.value -> Ast_aggregated.type_expression
+    -> (Ast_aggregated.expression * LT.mutation) option
   =
  fun ~raise ?syntax loc z v v_type ->
   let n = Z.to_int z in
@@ -56,9 +56,9 @@ let mutate_some_value
 
 
 let mutate_all_value
-  :  raise:(interpreter_error, _) raise -> ?syntax:_ -> Location.t -> LT.value
-  -> Ast_aggregated.type_expression
-  -> (Ast_aggregated.expression * LT.mutation) list
+    :  raise:(interpreter_error, _) raise -> ?syntax:_ -> Location.t -> LT.value
+    -> Ast_aggregated.type_expression
+    -> (Ast_aggregated.expression * LT.mutation) list
   =
  fun ~raise ?syntax loc v v_type ->
   let expr = Michelson_backend.val_to_ast ~raise ~loc v v_type in
@@ -72,9 +72,9 @@ let mutate_all_value
 
 
 let rec value_gen
-  :  raise:(interpreter_error, _) raise -> ?small:bool
-  -> ?known_addresses:LT.Contract.t list -> Ast_aggregated.type_expression
-  -> LT.value QCheck.Gen.t
+    :  raise:(interpreter_error, _) raise -> ?small:bool
+    -> ?known_addresses:LT.Contract.t list -> Ast_aggregated.type_expression
+    -> LT.value QCheck.Gen.t
   =
  fun ~raise ?(small = true) ?known_addresses type_expr ->
   let open Ast_aggregated in

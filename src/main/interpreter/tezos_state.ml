@@ -64,28 +64,28 @@ and raw = block
 
 and transduced =
   { last_events : last_events
-      (* newly emited events caused by the last baking op *)
+        (* newly emited events caused by the last baking op *)
   ; last_originations : last_originations
-      (* newly orginated contracts caused by the last baking operation *)
+        (* newly orginated contracts caused by the last baking operation *)
   ; bigmaps : bigmaps (* context bigmaps state as ligo values *)
   }
 
 and internals =
   { protocol_version : Environment.Protocols.t
   ; baker_policy : Tezos_alpha_test_helpers.Block.baker_policy
-      (* baker to be used for the next transfer/origination *)
+        (* baker to be used for the next transfer/origination *)
   ; source : Memory_proto_alpha.Protocol.Alpha_context.Contract.t
-      (* source to be used for the next transfer/origination *)
+        (* source to be used for the next transfer/origination *)
   ; next_bootstrapped_contracts : bootstrap_contract list
-      (* next contracts to be injected as boostrap accounts in the next state reset *)
+        (* next contracts to be injected as boostrap accounts in the next state reset *)
   ; next_baker_accounts : baker_account list
-      (* next contracts to be injected as boostrap accounts in the next state reset *)
+        (* next contracts to be injected as boostrap accounts in the next state reset *)
   ; bootstrapped : Memory_proto_alpha.Protocol.Alpha_context.Contract.t list
-      (* addresses of boostrapped contracts *)
+        (* addresses of boostrapped contracts *)
   ; storage_tys : storage_tys
-      (* contract storage ligo types of all originated contracts *)
+        (* contract storage ligo types of all originated contracts *)
   ; parameter_tys : parameter_tys
-      (* contract parameter ligo types of bootstrapped contracts *)
+        (* contract parameter ligo types of bootstrapped contracts *)
   }
 
 let contexts : context list ref = ref []
@@ -99,7 +99,7 @@ let get_balance ~raise ~loc ~calltrace (ctxt : context) addr =
 
 
 let contract_exists
-  : context -> Memory_proto_alpha.Protocol.Alpha_context.Contract.t -> bool
+    : context -> Memory_proto_alpha.Protocol.Alpha_context.Contract.t -> bool
   =
  fun ctxt contract ->
   let info =
@@ -128,11 +128,11 @@ let get_total_voting_power ~raise ~loc ~calltrace (ctxt : context) =
 
 
 let implicit_account
-  ~raise
-  ~calltrace
-  ~loc
-  (msg : string)
-  (x : Memory_proto_alpha.Protocol.Alpha_context.Contract.t)
+    ~raise
+    ~calltrace
+    ~loc
+    (msg : string)
+    (x : Memory_proto_alpha.Protocol.Alpha_context.Contract.t)
   =
   match x with
   | Implicit x -> x
@@ -140,11 +140,11 @@ let implicit_account
 
 
 let originated_account
-  ~raise
-  ~calltrace
-  ~loc
-  (msg : string)
-  (x : Memory_proto_alpha.Protocol.Alpha_context.Contract.t)
+    ~raise
+    ~calltrace
+    ~loc
+    (msg : string)
+    (x : Memory_proto_alpha.Protocol.Alpha_context.Contract.t)
   =
   match x with
   | Implicit _ -> raise.error (generic_error ~calltrace loc msg)
@@ -168,8 +168,8 @@ type canonical_repr =
   Tezos_micheline.Micheline.canonical
 
 let ligo_to_canonical
-  :  raise:r -> loc:Location.t -> calltrace:calltrace -> ligo_repr
-  -> canonical_repr Data_encoding.lazy_t
+    :  raise:r -> loc:Location.t -> calltrace:calltrace -> ligo_repr
+    -> canonical_repr Data_encoding.lazy_t
   =
  fun ~raise ~loc ~calltrace x ->
   let open Tezos_micheline.Micheline in
@@ -202,21 +202,21 @@ let parse_constant ~raise ~loc ~calltrace code =
     | [] ->
       let code, errs = Micheline_parser.parse_expression ~check:false code in
       (match errs with
-       | _ :: _ ->
-         raise.error
-           (throw_obj_exc loc calltrace
-           @@ List.map ~f:(fun x -> `Tezos_alpha_error x) errs)
-       | [] -> map_node (fun _ -> ()) (fun x -> x) code)
+      | _ :: _ ->
+        raise.error
+          (throw_obj_exc loc calltrace
+          @@ List.map ~f:(fun x -> `Tezos_alpha_error x) errs)
+      | [] -> map_node (fun _ -> ()) (fun x -> x) code)
   in
   code
 
 
 (* REMITODO: NOT STATE RELATED, move out ? *)
 let get_contract_rejection_data
-  :  state_error
-  -> (Memory_proto_alpha.Protocol.Alpha_context.Contract.t
-     * unit Tezos_utils.Michelson.michelson)
-     option
+    :  state_error
+    -> (Memory_proto_alpha.Protocol.Alpha_context.Contract.t
+       * unit Tezos_utils.Michelson.michelson)
+       option
   =
  fun errs ->
   let open Tezos_protocol.Protocol in
@@ -236,13 +236,13 @@ let set_big_map ~raise (ctxt : context) id version k_ty v_ty =
   let key_type = strip_locations k_ty in
   let key_type =
     Proto_alpha_utils.Trace.trace_alpha_tzresult ~raise (fun _ ->
-      generic_error Location.generated "Cannot extract key type")
+        generic_error Location.generated "Cannot extract key type")
     @@ Tezos_protocol.Protocol.Michelson_v1_primitives.prims_of_strings key_type
   in
   let value_type = strip_locations v_ty in
   let value_type =
     Proto_alpha_utils.Trace.trace_alpha_tzresult ~raise (fun _ ->
-      generic_error Location.generated "Cannot extract value type")
+        generic_error Location.generated "Cannot extract value type")
     @@ Tezos_protocol.Protocol.Michelson_v1_primitives.prims_of_strings
          value_type
   in
@@ -322,8 +322,8 @@ let get_alpha_context ~raise ctxt =
 
 
 let unwrap_baker ~raise ~loc ~calltrace
-  :  Memory_proto_alpha.Protocol.Alpha_context.Contract.t
-  -> Tezos_crypto.Signature.Public_key_hash.t
+    :  Memory_proto_alpha.Protocol.Alpha_context.Contract.t
+    -> Tezos_crypto.Signature.Public_key_hash.t
   =
  fun x ->
   implicit_account
@@ -344,8 +344,8 @@ let baker_policy ~raise ~loc ~calltrace baker_policy =
 
 
 let unwrap_source ~raise ~loc ~calltrace
-  :  Memory_proto_alpha.Protocol.Alpha_context.Contract.t
-  -> Memory_proto_alpha.Protocol.Alpha_context.Contract.t
+    :  Memory_proto_alpha.Protocol.Alpha_context.Contract.t
+    -> Memory_proto_alpha.Protocol.Alpha_context.Contract.t
   =
  fun x ->
   let _ =
@@ -360,12 +360,12 @@ let unwrap_source ~raise ~loc ~calltrace
 
 
 let script_of_compiled_code
-  ~raise
-  ~loc
-  ~calltrace
-  (contract : unit Tezos_utils.Michelson.michelson)
-  (storage : unit Tezos_utils.Michelson.michelson)
-  : Tezos_protocol.Protocol.Alpha_context.Script.t
+    ~raise
+    ~loc
+    ~calltrace
+    (contract : unit Tezos_utils.Michelson.michelson)
+    (storage : unit Tezos_utils.Michelson.michelson)
+    : Tezos_protocol.Protocol.Alpha_context.Script.t
   =
   let open! Tezos_protocol.Protocol.Alpha_context.Script in
   let code = ligo_to_canonical ~raise ~loc ~calltrace contract in
@@ -374,11 +374,11 @@ let script_of_compiled_code
 
 
 let extract_origination_from_result
-  : type a.
-    raise:_
-    -> Memory_proto_alpha.Protocol.Alpha_context.Contract.t
-    -> a Tezos_protocol.Protocol.Apply_results.contents_result
-    -> last_originations
+    : type a.
+      raise:_
+      -> Memory_proto_alpha.Protocol.Alpha_context.Contract.t
+      -> a Tezos_protocol.Protocol.Apply_results.contents_result
+      -> last_originations
   =
  fun ~raise src x ->
   let open Tezos_raw_protocol in
@@ -413,8 +413,8 @@ let extract_origination_from_result
 
 
 let extract_event_from_result
-  : type a.
-    a Tezos_protocol.Protocol.Apply_results.contents_result -> last_events
+    : type a.
+      a Tezos_protocol.Protocol.Apply_results.contents_result -> last_events
   =
  fun x ->
   let open Tezos_raw_protocol in
@@ -441,9 +441,9 @@ let extract_event_from_result
 
 
 let extract_lazy_storage_diff_from_result
-  : type a.
-    a Tezos_raw_protocol.Apply_results.contents_result
-    -> Tezos_raw_protocol.Alpha_context.Lazy_storage.diffs option list
+    : type a.
+      a Tezos_raw_protocol.Apply_results.contents_result
+      -> Tezos_raw_protocol.Alpha_context.Lazy_storage.diffs option list
   =
  fun x ->
   let open Tezos_raw_protocol in
@@ -477,8 +477,8 @@ let extract_lazy_storage_diff_from_result
 
 
 let get_last_originations ~raise
-  :  Memory_proto_alpha.Protocol.Alpha_context.Contract.t
-  -> Tezos_protocol.Protocol.operation_receipt -> last_originations
+    :  Memory_proto_alpha.Protocol.Alpha_context.Contract.t
+    -> Tezos_protocol.Protocol.operation_receipt -> last_originations
   =
  fun top_src x ->
   let open Tezos_raw_protocol in
@@ -486,7 +486,7 @@ let get_last_originations ~raise
   | No_operation_metadata -> []
   | Operation_metadata { contents } ->
     let rec aux
-      : type a. a Apply_results.contents_result_list -> last_originations
+        : type a. a Apply_results.contents_result_list -> last_originations
       =
      fun x ->
       match x with
@@ -498,8 +498,8 @@ let get_last_originations ~raise
 
 
 let get_lazy_storage_diffs
-  :  Tezos_protocol.Protocol.operation_receipt
-  -> Tezos_raw_protocol.Alpha_context.Lazy_storage.diffs option list
+    :  Tezos_protocol.Protocol.operation_receipt
+    -> Tezos_raw_protocol.Alpha_context.Lazy_storage.diffs option list
   =
  fun x ->
   let open Tezos_raw_protocol in
@@ -532,7 +532,7 @@ let get_last_events : Tezos_protocol.Protocol.operation_receipt -> last_events =
 
 
 let convert_lazy_storage_diffs
-  (lazy_storage_diffs : Tezos_raw_protocol.Alpha_context.Lazy_storage.diffs)
+    (lazy_storage_diffs : Tezos_raw_protocol.Alpha_context.Lazy_storage.diffs)
   =
   let enc =
     Data_encoding.Binary.to_bytes_exn
@@ -545,8 +545,8 @@ let convert_lazy_storage_diffs
 
 
 let upd_bigmaps
-  :  raise:r -> bigmaps
-  -> Tezos_raw_protocol.Apply_results.packed_operation_metadata -> bigmaps
+    :  raise:r -> bigmaps
+    -> Tezos_raw_protocol.Apply_results.packed_operation_metadata -> bigmaps
   =
  fun ~raise bigmaps op ->
   let lazy_storage_diffs = get_lazy_storage_diffs op in
@@ -556,77 +556,80 @@ let upd_bigmaps
     Z.to_int (Tezos_raw_protocol.Lazy_storage_kind.Big_map.Id.unparse_to_z id)
   in
   List.fold_left lazy_storage_diffs ~init:bigmaps ~f:(fun bigmaps it ->
-    match it with
-    | Item (Big_map, id, Remove) ->
-      List.Assoc.remove bigmaps ~equal:Int.equal (get_id id)
-    | Item
-        (Big_map, id, Update { init = Alloc { key_type; value_type }; updates })
-      ->
-      let kv_diff =
-        List.map ~f:(fun { key; value; key_hash = _ } -> key, value) updates
-      in
-      let aux (kv : (value * value) list) (key, value) =
-        let key_value = Michelson_to_value.conv ~raise ~bigmaps key_type key in
-        match value with
-        | None -> List.Assoc.remove kv ~equal:equal_value key_value
-        | Some value ->
-          let value_value =
-            Michelson_to_value.conv ~raise ~bigmaps value_type value
-          in
-          List.Assoc.add kv ~equal:equal_value key_value value_value
-      in
-      let state = List.fold kv_diff ~init:[] ~f:aux in
-      let data = { key_type; value_type; version = state } in
-      List.Assoc.add bigmaps ~equal:Int.equal (get_id id) data
-    | Item (Big_map, id, Update { init = Copy { src }; updates }) ->
-      let kv_diff =
-        List.map ~f:(fun { key; value; key_hash = _ } -> key, value) updates
-      in
-      let data = List.Assoc.find_exn bigmaps ~equal:Int.equal (get_id src) in
-      let state = data.version in
-      let aux (kv : (value * value) list) (key, value) =
-        let key_value =
-          Michelson_to_value.conv ~raise ~bigmaps data.key_type key
+      match it with
+      | Item (Big_map, id, Remove) ->
+        List.Assoc.remove bigmaps ~equal:Int.equal (get_id id)
+      | Item
+          ( Big_map
+          , id
+          , Update { init = Alloc { key_type; value_type }; updates } ) ->
+        let kv_diff =
+          List.map ~f:(fun { key; value; key_hash = _ } -> key, value) updates
         in
-        match value with
-        | None -> List.Assoc.remove kv ~equal:equal_value key_value
-        | Some value ->
-          let value_value =
-            Michelson_to_value.conv ~raise ~bigmaps data.value_type value
+        let aux (kv : (value * value) list) (key, value) =
+          let key_value =
+            Michelson_to_value.conv ~raise ~bigmaps key_type key
           in
-          List.Assoc.add kv ~equal:equal_value key_value value_value
-      in
-      let state = List.fold kv_diff ~init:state ~f:aux in
-      let data = { data with version = state } in
-      List.Assoc.add bigmaps ~equal:Int.equal (get_id id) data
-    | Item (Big_map, id, Update { init = Existing; updates }) ->
-      let kv_diff =
-        List.map ~f:(fun { key; value; key_hash = _ } -> key, value) updates
-      in
-      let data = List.Assoc.find_exn bigmaps ~equal:Int.equal (get_id id) in
-      let state = data.version in
-      let aux (kv : (value * value) list) (key, value) =
-        let key_value =
-          Michelson_to_value.conv ~raise ~bigmaps data.key_type key
+          match value with
+          | None -> List.Assoc.remove kv ~equal:equal_value key_value
+          | Some value ->
+            let value_value =
+              Michelson_to_value.conv ~raise ~bigmaps value_type value
+            in
+            List.Assoc.add kv ~equal:equal_value key_value value_value
         in
-        match value with
-        | None -> List.Assoc.remove kv ~equal:equal_value key_value
-        | Some value ->
-          let value_value =
-            Michelson_to_value.conv ~raise ~bigmaps data.value_type value
+        let state = List.fold kv_diff ~init:[] ~f:aux in
+        let data = { key_type; value_type; version = state } in
+        List.Assoc.add bigmaps ~equal:Int.equal (get_id id) data
+      | Item (Big_map, id, Update { init = Copy { src }; updates }) ->
+        let kv_diff =
+          List.map ~f:(fun { key; value; key_hash = _ } -> key, value) updates
+        in
+        let data = List.Assoc.find_exn bigmaps ~equal:Int.equal (get_id src) in
+        let state = data.version in
+        let aux (kv : (value * value) list) (key, value) =
+          let key_value =
+            Michelson_to_value.conv ~raise ~bigmaps data.key_type key
           in
-          List.Assoc.add kv ~equal:equal_value key_value value_value
-      in
-      let state = List.fold kv_diff ~init:state ~f:aux in
-      let data = { data with version = state } in
-      List.Assoc.add bigmaps ~equal:Int.equal (get_id id) data
-    | _ -> bigmaps)
+          match value with
+          | None -> List.Assoc.remove kv ~equal:equal_value key_value
+          | Some value ->
+            let value_value =
+              Michelson_to_value.conv ~raise ~bigmaps data.value_type value
+            in
+            List.Assoc.add kv ~equal:equal_value key_value value_value
+        in
+        let state = List.fold kv_diff ~init:state ~f:aux in
+        let data = { data with version = state } in
+        List.Assoc.add bigmaps ~equal:Int.equal (get_id id) data
+      | Item (Big_map, id, Update { init = Existing; updates }) ->
+        let kv_diff =
+          List.map ~f:(fun { key; value; key_hash = _ } -> key, value) updates
+        in
+        let data = List.Assoc.find_exn bigmaps ~equal:Int.equal (get_id id) in
+        let state = data.version in
+        let aux (kv : (value * value) list) (key, value) =
+          let key_value =
+            Michelson_to_value.conv ~raise ~bigmaps data.key_type key
+          in
+          match value with
+          | None -> List.Assoc.remove kv ~equal:equal_value key_value
+          | Some value ->
+            let value_value =
+              Michelson_to_value.conv ~raise ~bigmaps data.value_type value
+            in
+            List.Assoc.add kv ~equal:equal_value key_value value_value
+        in
+        let state = List.fold kv_diff ~init:state ~f:aux in
+        let data = { data with version = state } in
+        List.Assoc.add bigmaps ~equal:Int.equal (get_id id) data
+      | _ -> bigmaps)
 
 
 (* upd_context_of_receipts *)
 let upd_transduced_data
-  :  raise:r -> context
-  -> Tezos_raw_protocol.Apply_results.packed_operation_metadata -> transduced
+    :  raise:r -> context
+    -> Tezos_raw_protocol.Apply_results.packed_operation_metadata -> transduced
   =
  fun ~raise ctxt op_data ->
   let last_originations =
@@ -649,32 +652,32 @@ let get_last_operations_result (incr : Tezos_alpha_test_helpers.Incremental.t) =
 
 
 let get_single_tx_result_gas
-  (x : Tezos_raw_protocol.Apply_results.packed_operation_metadata)
+    (x : Tezos_raw_protocol.Apply_results.packed_operation_metadata)
   =
   match x with
   | Operation_metadata
       ({ contents = Single_result y } :
         _ Tezos_raw_protocol.Apply_results.operation_metadata) ->
     (match y with
-     | Manager_operation_result
-         { operation_result =
-             Applied
-               ( Transaction_result
-                   (Transaction_to_contract_result { consumed_gas; _ })
-               | Transaction_result
-                   (Transaction_to_tx_rollup_result { consumed_gas; _ })
-               | Origination_result { consumed_gas; _ }
-               | Delegation_result { consumed_gas; _ }
-               | Register_global_constant_result { consumed_gas; _ } )
-         ; _
-         } -> Some consumed_gas
-     | _ -> None)
+    | Manager_operation_result
+        { operation_result =
+            Applied
+              ( Transaction_result
+                  (Transaction_to_contract_result { consumed_gas; _ })
+              | Transaction_result
+                  (Transaction_to_tx_rollup_result { consumed_gas; _ })
+              | Origination_result { consumed_gas; _ }
+              | Delegation_result { consumed_gas; _ }
+              | Register_global_constant_result { consumed_gas; _ } )
+        ; _
+        } -> Some consumed_gas
+    | _ -> None)
   | _ -> None
 
 
 let get_consumed_gas x =
   let fp_to_z (fp : Memory_proto_alpha.Protocol.Alpha_context.Gas.Arith.fp)
-    : Z.t
+      : Z.t
     =
     let open Data_encoding in
     (match
@@ -682,8 +685,8 @@ let get_consumed_gas x =
          Memory_proto_alpha.Protocol.Alpha_context.Gas.Arith.z_fp_encoding
          fp
      with
-     | Some x -> x
-     | None -> failwith "failed decoding gas")
+    | Some x -> x
+    | None -> failwith "failed decoding gas")
     |> Binary.of_bytes_exn z
   in
   match get_single_tx_result_gas x with
@@ -692,20 +695,20 @@ let get_consumed_gas x =
 
 
 let bake_ops
-  :  raise:r -> loc:Location.t -> calltrace:calltrace -> context
-  -> (Tezos_alpha_test_helpers.Incremental.t -> tezos_op) list
-  -> add_operation_outcome
+    :  raise:r -> loc:Location.t -> calltrace:calltrace -> context
+    -> (Tezos_alpha_test_helpers.Incremental.t -> tezos_op) list
+    -> add_operation_outcome
   =
  fun ~raise ~loc ~calltrace ctxt operation ->
   let open Tezos_alpha_test_helpers in
   (* First check if baker is going to be successfully selected *)
   let _ =
     Trace.trace_tzresult_lwt ~raise (fun _ ->
-      raise.error
-        (generic_error
-           ~calltrace
-           loc
-           "Baker cannot bake. Enough rolls? Enough cycles passed?"))
+        raise.error
+          (generic_error
+             ~calltrace
+             loc
+             "Baker cannot bake. Enough rolls? Enough cycles passed?"))
     @@ Block.(get_next_baker ~policy:ctxt.internals.baker_policy ctxt.raw)
   in
   let incr =
@@ -735,8 +738,8 @@ let bake_ops
 
 
 let bake_op
-  :  raise:r -> loc:Location.t -> calltrace:calltrace -> context -> tezos_op
-  -> add_operation_outcome
+    :  raise:r -> loc:Location.t -> calltrace:calltrace -> context -> tezos_op
+    -> add_operation_outcome
   =
  fun ~raise ~loc ~calltrace ctxt op ->
   bake_ops ~raise ~loc ~calltrace ctxt [ (fun _ -> op) ]
@@ -839,7 +842,7 @@ let add_account ~raise ~loc ~calltrace sk pk pkh : unit =
   let open Tezos_alpha_test_helpers in
   let sk =
     Trace.trace_tzresult ~raise (fun _ ->
-      Errors.generic_error ~calltrace loc "Cannot parse secret key")
+        Errors.generic_error ~calltrace loc "Cannot parse secret key")
     @@ Tezos_crypto.Signature.Secret_key.of_b58check sk
   in
   let account = Account.{ sk; pk; pkh } in
@@ -850,7 +853,7 @@ let get_account ~raise ~loc ~calltrace mc : string * Signature.public_key =
   let open Tezos_alpha_test_helpers in
   let account =
     Trace.trace_tzresult_lwt ~raise (fun _ ->
-      Errors.generic_error ~calltrace loc "Cannot find account")
+        Errors.generic_error ~calltrace loc "Cannot find account")
     @@ Account.find mc
   in
   let sk = Signature.Secret_key.to_b58check account.sk in
@@ -867,7 +870,7 @@ let new_account : unit -> string * Signature.public_key =
 
 
 let sign_message ~raise ~loc ~calltrace (packed_payload : bytes) sk
-  : Signature.t
+    : Signature.t
   =
   let open Tezos_crypto in
   let sk =
@@ -879,15 +882,15 @@ let sign_message ~raise ~loc ~calltrace (packed_payload : bytes) sk
 
 
 let transfer
-  ~raise
-  ~loc
-  ~calltrace
-  (ctxt : context)
-  ?entrypoint
-  dst
-  parameter
-  amt
-  : add_operation_outcome
+    ~raise
+    ~loc
+    ~calltrace
+    (ctxt : context)
+    ?entrypoint
+    dst
+    parameter
+    amt
+    : add_operation_outcome
   =
   let open Tezos_alpha_test_helpers in
   let source = unwrap_source ~raise ~loc ~calltrace ctxt.internals.source in
@@ -914,8 +917,8 @@ let transfer
 
 
 let originate_contract
-  :  raise:r -> loc:Location.t -> calltrace:calltrace -> context
-  -> value * value -> Z.t -> value * context
+    :  raise:r -> loc:Location.t -> calltrace:calltrace -> context
+    -> value * value -> Z.t -> value * context
   =
  fun ~raise ~loc ~calltrace ctxt (contract, storage) amt ->
   let contract =
@@ -973,28 +976,28 @@ let get_bootstrapped_contract ~raise (n : int) =
     Tezos_protocol.Protocol.Alpha_context.Contract.of_b58check contract
   in
   Trace.trace_alpha_tzresult ~raise (fun _ ->
-    generic_error Location.generated "Error parsing address")
+      generic_error Location.generated "Error parsing address")
   @@ contract
 
 
 let init
-  ?rng_state
-  ?commitments
-  ?(initial_balances = [])
-  ?(baker_accounts = [])
-  ?(consensus_threshold = 0)
-  ?min_proposal_quorum
-  ?bootstrap_contracts
-  ?level
-  ?cost_per_byte
-  ?liquidity_baking_subsidy
-  ?endorsing_reward_per_slot
-  ?baking_reward_bonus_per_slot
-  ?baking_reward_fixed_portion
-  ?origination_size
-  ?blocks_per_cycle
-  ?initial_timestamp
-  n
+    ?rng_state
+    ?commitments
+    ?(initial_balances = [])
+    ?(baker_accounts = [])
+    ?(consensus_threshold = 0)
+    ?min_proposal_quorum
+    ?bootstrap_contracts
+    ?level
+    ?cost_per_byte
+    ?liquidity_baking_subsidy
+    ?endorsing_reward_per_slot
+    ?baking_reward_bonus_per_slot
+    ?baking_reward_fixed_portion
+    ?origination_size
+    ?blocks_per_cycle
+    ?initial_timestamp
+    n
   =
   let open Tezos_alpha_test_helpers in
   let accounts = Account.generate_accounts ?rng_state ~initial_balances n in
@@ -1006,13 +1009,13 @@ let init
   in
   let baker_accounts =
     List.map baker_accounts ~f:(fun (sk, pk, amt) ->
-      let pkh = Signature.Public_key.hash pk in
-      let amt =
-        match amt with
-        | None -> Tez.of_mutez_exn 4_000_000_000_000L
-        | Some v -> Tez.of_mutez_exn v
-      in
-      Account.{ sk; pk; pkh }, amt, None)
+        let pkh = Signature.Public_key.hash pk in
+        let amt =
+          match amt with
+          | None -> Tez.of_mutez_exn 4_000_000_000_000L
+          | Some v -> Tez.of_mutez_exn v
+        in
+        Account.{ sk; pk; pkh }, amt, None)
   in
   let () =
     List.iter baker_accounts ~f:(fun (acc, _, _) -> Account.(add_account acc))
@@ -1039,15 +1042,15 @@ let init
 
 
 let init_ctxt
-  ~raise
-  ?(loc = Location.generated)
-  ?(calltrace = [])
-  ?(initial_balances = [])
-  ?initial_timestamp
-  ?(baker_accounts = [])
-  ?(n = 2)
-  protocol_version
-  bootstrapped_contracts
+    ~raise
+    ?(loc = Location.generated)
+    ?(calltrace = [])
+    ?(initial_balances = [])
+    ?initial_timestamp
+    ?(baker_accounts = [])
+    ?(n = 2)
+    protocol_version
+    bootstrapped_contracts
   =
   let open Tezos_raw_protocol in
   let rng_state = Caml.Random.State.make (Caml.Array.make 1 0) in
@@ -1083,7 +1086,7 @@ let init_ctxt
       ~f:(fun (sk, pk, amt) ->
         let sk =
           Trace.trace_tzresult ~raise (fun _ ->
-            Errors.generic_error ~calltrace loc "Cannot parse secret key")
+              Errors.generic_error ~calltrace loc "Cannot parse secret key")
           @@ Tezos_crypto.Signature.Secret_key.of_b58check sk
         in
         sk, pk, amt)
