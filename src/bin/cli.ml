@@ -1368,9 +1368,17 @@ let measure_contract =
 
 
 let get_scope =
-  let f source_file protocol_version libraries display_format with_types () =
+  let f
+      source_file
+      protocol_version
+      libraries
+      display_format
+      with_types
+      project_root
+      ()
+    =
     let raw_options =
-      Raw_options.make ~protocol_version ~libraries ~with_types ()
+      Raw_options.make ~protocol_version ~libraries ~with_types ~project_root ()
     in
     return_result ~return
     @@ Api.Info.get_scope raw_options source_file display_format
@@ -1388,7 +1396,8 @@ let get_scope =
     <*> protocol_version
     <*> libraries
     <*> display_format
-    <*> with_types)
+    <*> with_types
+    <*> project_root)
 
 
 let info_group =
