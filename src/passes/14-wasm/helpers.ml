@@ -264,6 +264,9 @@ let add_import_m w ~module_name ~name ~typedef =
 let add_import w ~name ~typedef = 
   add_import_m w ~module_name:"env" ~name ~typedef
 
+let add_imports w (i: (string * string * (result_type * result_type)) list) =
+  List.fold_left ~f:(fun w (module_name, name, typedef) -> add_import_m w ~module_name ~name ~typedef) ~init:w i 
+
 let add_function w helper_fn_name f_body = 
   let local_get_s = local_get_s at in
   let required = find_missing (f_body []) in
