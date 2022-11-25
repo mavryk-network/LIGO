@@ -411,7 +411,7 @@ and compile_statement ~raise : CST.statement -> AST.statement = fun s ->
     let type_params = Option.map ~f:extract_type_params s.type_params in
     let rhs_type    = Option.map ~f:(compile_type_expression ~raise <@ snd) s.var_type in
     let let_rhs        = compile_expression ~raise s.init in
-    TODO_unify_in_cst.vardecl_as_decl ~loc {pattern; is_rec = () ; type_params; rhs_type; let_rhs ; body = ()}
+    TODO_unify_in_cst.vardecl_as_decl ~loc {pattern; type_params; rhs_type; let_rhs}
   )
 
 (* ========================== EXPRESSIONS ================================== *)
@@ -670,9 +670,11 @@ and compile_declaration ~(raise: ('e, 'w) raise) : CST.declaration -> AST.declar
   )
   | D_Type d -> (
     let d, loc = r_split d in
-    let name = w_fst d.name in
+    let name = TODO_do_in_parsing.tvar ~loc:(w_snd d.name) (w_fst d.name) in
     let params = Option.map ~f:(fun (tp : _ CST.par CST.reg) ->
-      List.Ne.map w_fst @@ nsepseq_to_nseq (r_fst tp).inside
+      List.Ne.map
+        (fun x -> TODO_do_in_parsing.tvar ~loc:(w_snd x) (w_fst x))
+        (nsepseq_to_nseq (r_fst tp).inside)
       ) d.params
     in
     let type_expr = compile_type_expression ~raise d.type_expr in
@@ -684,7 +686,7 @@ and compile_declaration ~(raise: ('e, 'w) raise) : CST.declaration -> AST.declar
     let pattern = compile_pattern ~raise d.pattern in
     let rhs_type = Option.map ~f:(compile_type_expression ~raise <@ snd) d.const_type in
     let let_rhs = compile_expression ~raise d.init in
-    d_const ~loc {pattern; is_rec = () ; type_params; rhs_type; let_rhs ; body = ()} ()
+    d_const ~loc {pattern; type_params; rhs_type; let_rhs} ()
   )
   | D_Attr d -> (
     let attr, decl = d in
@@ -717,7 +719,7 @@ and compile_declaration ~(raise: ('e, 'w) raise) : CST.declaration -> AST.declar
   )
   | D_Module d -> (
     let d, loc = r_split d in
-    let name = w_fst d.name in
+    let name = TODO_do_in_parsing.mvar ~loc:(w_snd d.name) (w_fst d.name) in
     let mod_expr = compile_module ~raise d.module_expr in
     d_module {name; mod_expr} ~loc ()
   )
@@ -742,7 +744,8 @@ and compile_module ~(raise: ('e, 'w) raise) : CST.module_expr -> AST.module_ = f
   )
   | M_Var  m -> (
     let s, loc = w_split m in
-    m_var s ~loc ()
+    let v = TODO_do_in_parsing.mvar ~loc s in
+    m_var v ~loc ()
   )
 
 (* ========================== PROGRAM ===================================== *)

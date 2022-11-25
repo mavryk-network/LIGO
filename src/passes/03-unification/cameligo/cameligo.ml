@@ -33,7 +33,13 @@ module TODO_unify_in_cst = struct
   let _compile_disc_rows = Non_linear_disc_rows.make
   let type_operator ~loc v =
     (* could be a type expr ? or we could emit a type variable expression ? *)
-    t_var ~loc (TODO_do_in_parsing.tvar ~loc v) () 
+    t_var ~loc (TODO_do_in_parsing.tvar ~loc v) ()
+  let module_alias ~loc alias binders =
+    let loc_path = List.fold (nseq_to_list binders)
+      ~init:Location.generated
+      ~f:(fun acc (x:m_var) -> Location.cover acc (Ligo_prim.Module_var.get_location x))
+    in
+    d_module {name = alias ; mod_expr = m_path ~loc:loc_path binders ()} ~loc ()
 end
 
 (* ========================== TYPES ======================================== *)
@@ -513,20 +519,22 @@ and compile_declaration ~raise : CST.declaration -> AST.declaration = fun decl -
     let rhs_type = Option.map ~f:(compile_type_expression <@ snd) e.rhs_type in
     let let_rhs = compile_expression ~raise e.let_rhs in
     TODO_unify_in_cst.d_attach_attr attributes (
-      d_let {is_rec; type_params; pattern; rhs_type; let_rhs ; body = ()} ~loc ()
+      d_let ~loc {is_rec; type_params; pattern; rhs_type; let_rhs} ()
     )
   )
   | TypeDecl d -> (
     let d, loc = r_split d in
-    let name : string = r_fst d.name in
-    let params : string nseq option =
-      let compile_params : CST.type_vars -> string nseq = fun p ->
+    let name = TODO_do_in_parsing.tvar ~loc:(r_snd d.name) (r_fst d.name) in
+    let params : t_var nseq option =
+      let compile_params : CST.type_vars -> t_var nseq = fun p ->
         let p : CST.type_var nseq =
           match p with
           | QParam x      -> List.Ne.singleton (r_fst x)
           | QParamTuple x -> nseq_map r_fst @@ nsepseq_to_nseq x.value.inside
         in
-        nseq_map (fun (p : CST.type_var) -> r_fst p.name) p
+        nseq_map
+          (fun (p : CST.type_var) -> TODO_do_in_parsing.tvar ~loc:(r_snd p.name) (r_fst p.name))
+          p
       in
       Option.map ~f:compile_params d.params
     in
@@ -535,15 +543,18 @@ and compile_declaration ~raise : CST.declaration -> AST.declaration = fun decl -
   )
   | ModuleDecl d -> (
     let d, loc = r_split d in
-    let name : string = r_fst d.name in
+    let name = TODO_do_in_parsing.mvar ~loc:(r_snd d.name) (r_fst d.name) in
     let mod_expr : module_ = compile_module ~raise d.module_ in
     d_module {name; mod_expr} ~loc ()
   )
   | ModuleAlias d -> (
     let d, loc = r_split d in
-    let alias : string = r_fst d.alias in
-    let binders : string nseq = nseq_map r_fst @@ nsepseq_to_nseq d.binders in
-    d_modulealias {alias; binders} ~loc ()
+    let alias = TODO_do_in_parsing.mvar ~loc:(r_snd d.alias) (r_fst d.alias) in
+    let binders = nseq_map
+      (fun x -> TODO_do_in_parsing.mvar ~loc:(r_snd x) (r_fst x))
+      (nsepseq_to_nseq d.binders)
+    in
+    TODO_unify_in_cst.module_alias alias binders ~loc
   )
 
 and compile_module ~raise : CST.t -> AST.module_ = fun m ->

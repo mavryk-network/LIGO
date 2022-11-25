@@ -52,6 +52,12 @@ module For_of = Temp_prim.For_of
 module Removal = Temp_prim.Removal
 module While = Temp_prim.While
 module Switch = Temp_prim.Switch
+module Import = Temp_prim.Import
+module Let_decl = Temp_prim.Let_decl
+module Simple_decl = Temp_prim.Simple_decl
+module Fun_decl = Temp_prim.Fun_decl
+module Type_decl = Temp_prim.Type_decl
+module Mod_decl = Temp_prim.Mod_decl
 
 module Z = Ligo_prim.Literal_value.Z
 
@@ -187,75 +193,19 @@ and param_decl = {
   param_type : type_expression option
 }
 
-and fun_decl = {
-  is_rec      : bool;
-  fun_name    : string;
-  type_params : Ty_variable.t nseq option;
-  parameters  : param_decl list;
-  ret_type    : type_expression option;
-  return      : expression;
-}
-
-and type_decl = {
-  name        : string;
-  params      : string nseq option;
-  type_expr   : type_expr;
-}
-
-and module_decl = {
-  name     : string;
-  mod_expr : module_;
-}
-
-and module_alias = {
-  alias   : string;
-  binders : string nseq;
-}
-
-and import =
-| Import_rename of {
-  alias       : string;
-  module_path : string nseq;
-}
-| Import_all_as of {
-  alias       : string;
-  module_str  : string;
-}
-| Import_selected of {
-  imported    : string nseq;
-  module_str  : string;
-}
-
-and ('is_rec,'lhs,'body,'ty_expr) let_binding = {
-  is_rec      : 'is_rec;
-  type_params : Ty_variable.t nseq option;
-  pattern     : 'lhs;
-  rhs_type   : 'ty_expr option;
-  let_rhs     : expression;
-  body : 'body;
-}
-
-and var_decl = {
-  pattern     : pattern;
-  type_params : Ty_variable.t nseq option;
-  var_type    : type_expression option;
-  init        : expr;
-}
-
 and declaration_content =
 | D_Directive      of Directive.t
 | D_Attr           of (Attribute.t * declaration)
-| D_Import         of import
-| D_Export         of statement 
-| D_Let            of (bool,pattern nseq,unit,type_expr) let_binding
-| D_Var            of (unit,pattern,unit,type_expr) let_binding
-| D_Multi_var      of (unit,pattern,unit,type_expr) let_binding nseq
-| D_Const          of (unit,pattern,unit,type_expr) let_binding
-| D_Multi_const    of (unit,pattern,unit,type_expr) let_binding nseq
-| D_Type           of type_decl
-| D_Module         of module_decl
-| D_ModuleAlias    of module_alias
-| D_Fun            of fun_decl
+| D_Import         of Import.t
+| D_Export         of declaration
+| D_Let            of (expr,pattern nseq,type_expr) Let_decl.t (* let x = <..> ; let x (type a b) y (z:ty) = <..> *)
+| D_Var            of (pattern,expr,type_expr) Simple_decl.t (* var x = y *)
+| D_Multi_var      of (pattern,expr,type_expr) Simple_decl.t nseq (* var x = y , z = w*)
+| D_Const          of (pattern,expr,type_expr) Simple_decl.t (* const x = y *)
+| D_Multi_const    of (pattern,expr,type_expr) Simple_decl.t nseq (* const x = y , z = w *)
+| D_Fun            of (type_expr,expr,param_decl) Fun_decl.t
+| D_Type           of type_expr Type_decl.t
+| D_Module         of module_ Mod_decl.t
 
 (* ========================== MODULES ====================================== *)
 
@@ -270,8 +220,8 @@ and mod_ = module_
 and module_content =
 | M_Body_statements of statement nseq
 | M_Body of declaration nseq
-| M_Path of Mod_variable.t nseq
-| M_Var  of string
+| M_Path of Ligo_prim.Module_var.t nseq
+| M_Var  of Ligo_prim.Module_var.t
 
 (* ========================== EXPRESSIONS ================================== *)
 
@@ -418,6 +368,15 @@ and ternary = {
   test   : expr;
   truthy : expr;
   falsy  : expr;
+}
+
+and ('is_rec,'lhs,'body,'ty_expr) let_binding = {
+  is_rec      : 'is_rec;
+  type_params : Ligo_prim.Type_var.t nseq option;
+  pattern     : 'lhs;
+  rhs_type   : 'ty_expr option;
+  let_rhs     : expression;
+  body : 'body;
 }
 
 and expression_content = 

@@ -25,6 +25,14 @@ module TODO_do_in_parsing = struct
     is the union of all its objects' regions *)
     let locations = List.Ne.map (fun obj -> snd @@ r_split obj) (nsepseq_to_nseq objs) in
     List.Ne.fold_left locations ~init:Location.dummy ~f:Location.cover
+  let export_statement_to_decl s : declaration =
+    let rec aux s =
+      match  s.statement_content with
+      | S_Instr _ -> unused_node ()
+      | S_Decl declaration -> declaration
+      | S_Attr (attr,x) -> d_attr ~loc:x.location (attr, aux x) ()
+    in
+    aux s
 end
 module TODO_unify_in_cst = struct
   let conv_attr (attr:CST.attributes) =
@@ -46,7 +54,6 @@ module TODO_unify_in_cst = struct
   let let_as_decl ~loc x = s_decl ~loc (d_multi_var ~loc x ()) ()
   let const_as_decl ~loc x = s_decl ~loc (d_multi_const ~loc x ()) ()
   let ty_as_decl ~loc x = s_decl ~loc (d_type ~loc x ()) ()
-  let export_as_decl ~loc x = s_decl ~loc (d_export ~loc x ()) ()
   let import_as_decl ~loc x = s_decl ~loc (d_import ~loc x ()) ()
   let namespace_decl ~loc name statements =
     s_decl ~loc (d_module ~loc {name ; mod_expr = m_body_statements ~loc statements ()} ()) ()
@@ -55,10 +62,10 @@ module TODO_unify_in_cst = struct
     i_expr ~loc expr ()
   let type_operator ~loc v =
     (* could be a type expr ? or we could emit a type variable expression ? *)
-    t_var ~loc (TODO_do_in_parsing.tvar ~loc v) () 
+    t_var ~loc (TODO_do_in_parsing.tvar ~loc v) ()
 end
 
-let rec compile_val_binding ~(raise: ('e, 'w) raise) : CST.val_binding -> (unit,pattern,unit,type_expr) AST.let_binding =
+let rec compile_val_binding ~(raise: ('e, 'w) raise) : CST.val_binding -> (pattern,expr,type_expr) Simple_decl.t =
  fun { binders; type_params; lhs_type; eq = _; expr } ->
   let pattern = compile_pattern ~raise binders in
   let type_params = Option.map type_params ~f:(fun (tp : CST.type_generics) ->
@@ -66,7 +73,7 @@ let rec compile_val_binding ~(raise: ('e, 'w) raise) : CST.val_binding -> (unit,
   in
   let rhs_type = Option.map ~f:(compile_type_expression ~raise <@ snd) lhs_type in
   let let_rhs = compile_expression ~raise expr in
-  {is_rec = () ; type_params; pattern; rhs_type; let_rhs ; body = ()}
+  {type_params; pattern; rhs_type; let_rhs}
 
 (* ========================== TYPES ======================================== *)
 
@@ -218,14 +225,16 @@ and compile_pattern ~(raise: ('e, 'w) raise) : CST.pattern -> AST.pattern = fun 
 and compile_statement ~(raise: ('e, 'w) raise) : CST.statement -> AST.statement = fun s ->
   let self = compile_statement ~raise in
   let () = ignore (self, raise) in
-  let extract_type_vars : CST.type_vars -> string nseq = fun tv ->
-    List.Ne.map r_fst @@ nsepseq_to_nseq (r_fst tv).inside
+  let extract_type_vars : CST.type_vars -> _ nseq = fun tv ->
+    List.Ne.map
+      (fun x -> TODO_do_in_parsing.tvar ~loc:(r_snd x) (r_fst x))
+      (nsepseq_to_nseq (r_fst tv).inside)
   in
   match s with
   | SNamespace s ->
     let s, loc = r_split s in
     let (_, module_name, statements, attributes) = s in
-    let name = r_fst module_name in
+    let name = TODO_do_in_parsing.mvar ~loc:(r_snd module_name) (r_fst module_name) in
     let stmts = List.Ne.map self (nsepseq_to_nseq (r_fst statements).inside) in
     TODO_unify_in_cst.s_attach_attr attributes (
       TODO_unify_in_cst.namespace_decl ~loc name stmts
@@ -234,25 +243,33 @@ and compile_statement ~(raise: ('e, 'w) raise) : CST.statement -> AST.statement 
     let s, loc = r_split s in
     let import = match s with
     | CST.Import_rename s -> (
-      let alias       = r_fst s.alias in
-      let module_path = List.Ne.map r_fst @@ nsepseq_to_nseq s.module_path in
-      AST.Import_rename {alias; module_path}
+      let alias       = TODO_do_in_parsing.mvar ~loc:(r_snd s.alias) (r_fst s.alias) in
+      let module_path = List.Ne.map
+        (fun x -> TODO_do_in_parsing.mvar ~loc:(r_snd x) (r_fst x))
+        (nsepseq_to_nseq s.module_path)
+      in
+      Import.Import_rename {alias; module_path}
     )
     | CST.Import_all_as s -> (
-      let alias      = r_fst s.alias in
+      let alias = TODO_do_in_parsing.mvar ~loc:(r_snd s.alias) (r_fst s.alias) in
       let module_str = r_fst s.module_path in
-      AST.Import_all_as {alias; module_str}
+      Import.Import_all_as {alias; module_str}
     )  
     | CST.Import_selected s -> (
-      let imported   = List.Ne.map r_fst @@ nsepseq_to_nseq (r_fst s.imported).inside in
+      let imported   = List.Ne.map
+        (fun x -> TODO_do_in_parsing.var ~loc:(r_snd x) (r_fst x))
+        (nsepseq_to_nseq (r_fst s.imported).inside)
+      in
       let module_str = r_fst s.module_path in
-      AST.Import_selected {imported; module_str}
+      Import.Import_selected {imported; module_str}
     )
     in
     TODO_unify_in_cst.import_as_decl ~loc import
-  | SExport e ->
+  | SExport e -> (
     let ((_, statement), loc) = r_split e in
-    TODO_unify_in_cst.export_as_decl ~loc (self statement)
+    let statement = self statement in
+    s_decl ~loc (TODO_do_in_parsing.export_statement_to_decl statement) ()
+  )
   | SBlock s -> (
     let s, loc = r_split s in
     let statements = List.Ne.map self @@ nsepseq_to_nseq s.inside in
@@ -300,7 +317,7 @@ and compile_statement ~(raise: ('e, 'w) raise) : CST.statement -> AST.statement 
   )
   | SType s -> (
     let CST.{attributes ; name ; params ; type_expr ; _ }, loc = r_split s in
-    let name      = r_fst name in
+    let name      = TODO_do_in_parsing.tvar ~loc:(r_snd name) (r_fst name) in
     let params    = Option.map ~f:extract_type_vars params in
     let type_expr = compile_type_expression ~raise type_expr in
     TODO_unify_in_cst.s_attach_attr attributes (
