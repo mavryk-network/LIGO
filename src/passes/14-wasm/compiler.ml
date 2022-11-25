@@ -194,6 +194,8 @@ let rec expression ~raise :
   let i32_mul = i32_mul at in
   let i32_ne  = i32_ne at in
   let i32_eq  = i32_eq at in
+  let i32_lt  = i32_lt at in
+  let i32_gt  = i32_gt at in
   let data_symbol = data_symbol at in
   let func_symbol = func_symbol at in
   let elem = elem at in
@@ -203,6 +205,7 @@ let rec expression ~raise :
   let br = br at in
   let loop = loop at in 
   let nop = nop at in
+  let i32_eqz = i32_eqz at in
   let unreachable = unreachable at in
   let memory_copy = memory_copy at in
   let i32_and = i32_and at in
@@ -289,9 +292,9 @@ let rec expression ~raise :
   match e.content with
   | E_literal Literal_unit                  -> (w, env, [const 0l])
   | E_literal (Literal_int z)               -> int_like "Literal_int" 0l z
-  | E_literal (Literal_nat z)               -> int_like "Literal_nat" 1l z
-  | E_literal (Literal_timestamp z)         -> int_like "Literal_timestamp" 2l z
-  | E_literal (Literal_mutez z)             -> int_like "Literal_mutez" 3l z
+  | E_literal (Literal_nat z)               -> int_like "Literal_nat" 0l z
+  | E_literal (Literal_timestamp z)         -> int_like "Literal_timestamp" 0l z
+  | E_literal (Literal_mutez z)             -> int_like "Literal_mutez" 0l z
   | E_literal (Literal_string (Standard s)) -> string_like "Literal_string" 4l s
   | E_literal (Literal_string (Verbatim s)) -> string_like "Literal_string" 4l s
   | E_literal (Literal_bytes b)             -> bytes_like "Literal_bytes" b
@@ -346,18 +349,85 @@ let rec expression ~raise :
     bin_op Datatype.Int.lsr_ w env e1 e2
 
   (* COMPARATOR *)
-  | E_constant {cons_name = C_EQ;  arguments = [e1; e2]} -> 
-    bin_op Datatype.Int.eq w env e1 e2
+  | E_constant {cons_name = C_EQ;  arguments = [e1; e2]} ->
+    let w, env, e1 = expression ~raise w env e1 in
+    let w, env, e2 = expression ~raise w env e2 in
+    w, env,
+    e1
+    @
+    e2 
+    @
+    [
+      call_s "compare";
+      i32_eqz
+    ]    
   | E_constant {cons_name = C_NEQ; arguments = [e1; e2]} -> 
-    bin_op Datatype.Int.ne w env e1 e2
+    let w, env, e1 = expression ~raise w env e1 in
+    let w, env, e2 = expression ~raise w env e2 in
+    w, env,
+    e1
+    @
+    e2 
+    @
+    [
+      call_s "compare";
+      i32_eqz;
+      const 0l;
+      i32_eq
+      
+    ]
   | E_constant {cons_name = C_LT;  arguments = [e1; e2]} -> 
-    bin_op Datatype.Int.lt w env e1 e2
+    let w, env, e1 = expression ~raise w env e1 in
+    let w, env, e2 = expression ~raise w env e2 in
+    w, env,
+    e1
+    @
+    e2 
+    @
+    [
+      call_s "compare";
+      const (-1l);
+      i32_eq;
+    ]
   | E_constant {cons_name = C_GT;  arguments = [e1; e2]} ->
-    bin_op Datatype.Int.gt w env e1 e2
+    let w, env, e1 = expression ~raise w env e1 in
+    let w, env, e2 = expression ~raise w env e2 in
+    w, env,
+    e1
+    @
+    e2 
+    @
+    [
+      call_s "compare";
+      const 1l;
+      i32_eq;
+    ]
   | E_constant {cons_name = C_LE;  arguments = [e1; e2]} -> 
-    bin_op Datatype.Int.le w env e1 e2
+    let w, env, e1 = expression ~raise w env e1 in
+    let w, env, e2 = expression ~raise w env e2 in
+    w, env,
+    e1
+    @
+    e2 
+    @
+    [
+      call_s "compare";
+      const 1l;
+      i32_lt;
+    ]
   | E_constant {cons_name = C_GE;  arguments = [e1; e2]} -> 
-    bin_op Datatype.Int.ge w env e1 e2
+    let w, env, e1 = expression ~raise w env e1 in
+    let w, env, e2 = expression ~raise w env e2 in
+    w, env,
+    e1
+    @
+    e2 
+    @
+    [
+      call_s "compare";
+      const 0l;
+      i32_gt;
+    ]
 
   (* Bytes/ String *)
   | E_constant {cons_name = C_CONCAT; arguments = [e1; e2] } -> 

@@ -139,6 +139,7 @@ let i32_lsl at = {it = Binary (I32 Shl); at}
 let i32_lsr at = {it = Binary (I32 ShrS); at}
 
 let i32_eq at = {it = Compare (I32 Eq); at}
+let i32_eqz at = {it = Test   (I32 Eqz); at}
 let i32_ne at = {it = Compare (I32 Ne); at}
 let i32_lt at = {it = Compare (I32 LtS); at}
 let i32_gt at = {it = Compare (I32 GtS); at}

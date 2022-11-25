@@ -40,6 +40,7 @@ let mod_ : module_ =
 let mod_ = add_imports mod_ [
   (* general *)
   ("env", "malloc",                           ([NumType I32Type],                                                    [NumType I32Type]));
+  ("env", "compare",                          ([NumType I32Type; NumType I32Type],                                   [NumType I32Type]));
 
   (* toplevel *)
   ("env", "to_int",                           ([NumType I32Type],                                                    [NumType I32Type]));

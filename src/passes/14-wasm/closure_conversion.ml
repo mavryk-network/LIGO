@@ -101,20 +101,16 @@ let rec lift : env -> expression -> env * expression =
     let type_expression = export.type_expression in
     let export replacements (funcs: var_name list) e =
       
-      List.iter ~f:(fun (a, b) -> print_endline ("Check: " ^ var_to_string a ^ " with " ^ var_to_string  b ^ ".")) replacements;
       let v = match (List.find replacements ~f:(fun (_, r) ->  Value_var.equal r v)) with
       | Some (x, _) -> 
-        print_endline "YES HERE";
         x
       | None -> v
       in
       (match (List.find funcs ~f:(fun a -> Value_var.equal a v)) with
-      | Some s -> 
-        print_endline ("in funcs here:" ^ var_to_string s);
+      | Some _s -> 
         funcs, e
         
       | None -> 
-        print_endline ("not in funcs here:" ^ var_to_string v);
         v :: funcs, {        
         content = E_let_in (export, false, ((v, type_expression), e));
         type_expression;

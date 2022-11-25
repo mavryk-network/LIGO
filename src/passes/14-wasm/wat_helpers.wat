@@ -13,29 +13,34 @@
         (local $tag i32)
         (local $a_value i32)
         (local $b_value i32)
-
+        (local $a_size i32)
+        (local $b_size i32)
+        (local $counter i32)
+        (local $x1 i32)
+        (local $x12 i32)
+        (local $a_char i32)
+        (local $b_char i32)
 
         local.get $a
         i32.load 
         local.set $tag
 
-        local.get $a 
-        i32.const 4 
-        i32.add 
-        i32.load 
-        local.set $a_value
-
-        local.get $b
-        i32.const 4 
-        i32.add 
-        i32.load 
-        local.set $b_value
-
-        ;; INT values compare
         local.get $tag
-        i32.const 0
+        i32.const 0 ;; int tag
         i32.eq
         if (result i32)
+            local.get $a 
+            i32.const 4 
+            i32.add 
+            i32.load 
+            local.set $a_value
+
+            local.get $b
+            i32.const 4 
+            i32.add 
+            i32.load 
+            local.set $b_value
+
             local.get $a_value 
             local.get $b_value
             i32.eq
@@ -52,7 +57,141 @@
                 end
             end
         else 
-            unreachable
+            local.get $tag 
+            i32.const 4 ;; string tag
+            i32.eq 
+            if (result i32)
+                ;; do a lexical comparison
+                local.get $a 
+                i32.const 4 
+                i32.add 
+                i32.load 
+                local.set $a_size
+
+                local.get $b
+                i32.const 4 
+                i32.add 
+                i32.load 
+                local.set $b_size
+                
+                local.get $a
+                i32.const 8
+                i32.add 
+                local.set $a_value
+
+                local.get $b
+                i32.const 8
+                i32.add 
+                local.set $b_value
+
+                i32.const 0
+                local.set $counter
+                loop (result i32)
+                    local.get $a_value
+                    i32.load 
+                    local.set $a_char
+
+                    local.get $b_value
+                    i32.load 
+                    local.set $b_char
+                    
+                    local.get $a_char
+                    local.get $b_char 
+                    i32.lt_u
+                    if (result i32)
+                        i32.const -1
+                        ;; br 2
+                    else
+                        local.get $a_char 
+                        local.get $b_char 
+                        i32.gt_u
+                        if (result i32)
+                            i32.const 1
+                            ;; br 3
+                        else
+                            ;;  a < counter &&  counter < b -> continue
+                            ;;  a < counter && !counter < b -> -1
+                            ;; !a < counter &&  counter < b -> 1
+
+                            local.get $counter 
+                            local.get $a_size 
+                            i32.lt_u
+                            local.set $x1 
+
+                            local.get $counter 
+                            local.get $b_size 
+                            i32.lt_u
+                            local.set $x12
+                            
+                            local.get $x1 
+                            i32.const 1
+                            i32.eq
+                            local.get $x12
+                            i32.const 1 
+                            i32.eq 
+                            i32.and
+                            if (result i32)
+                                local.get $a_value
+                                i32.const 1 
+                                i32.add
+                                local.set $a_value
+
+                                local.get $b_value
+                                i32.const 1 
+                                i32.add
+                                local.set $b_value
+
+                                local.get $counter 
+                                i32.const 1 
+                                i32.add 
+                                local.set $counter
+
+                                br 3
+                            else 
+                                local.get $x1 
+                                i32.const 1
+                                i32.eq
+                                local.get $x12
+                                i32.const 0
+                                i32.eq 
+                                i32.and
+                                if (result i32)
+                                    i32.const -1
+                                    ;; br 4
+                                else 
+                                    local.get $x1 
+                                    i32.const 0
+                                    i32.eq
+                                    local.get $x12
+                                    i32.const 1
+                                    i32.eq 
+                                    i32.and
+                                    if (result i32)
+                                        i32.const 1 
+                                        ;; br 4
+                                    else 
+                                        i32.const 0
+                                        ;; br 4
+                                    end
+                                end
+                            end
+
+                        end
+                    end 
+                    ;; 
+
+                end
+
+                ;; while a < b 
+                  ;; check for each byte <, =, >,
+                  ;; if a_len > b return -1
+                
+
+                ;; compare a string here...
+
+            else 
+                unreachable
+            end
         end
 
         
