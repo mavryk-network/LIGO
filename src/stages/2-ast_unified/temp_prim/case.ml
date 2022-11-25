@@ -1,11 +1,11 @@
 
 
-type ('clause,'pattern) clause = {
+type ('pattern,'branch) clause = {
   pattern : 'pattern;
-  rhs     : 'clause;
+  rhs     : 'branch;
 }
 
-and ('expr,'clause,'pattern) t = {
+and ('expr,'pattern,'branch) t = {
   expr         : 'expr;
-  cases        : ('clause,'pattern) clause Simple_utils.List.Ne.t ;
+  cases        : ('pattern,'branch) clause Simple_utils.List.Ne.t ;
 } [@@deriving yojson, map, sexp]

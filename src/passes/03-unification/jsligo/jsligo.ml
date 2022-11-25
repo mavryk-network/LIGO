@@ -309,15 +309,15 @@ and compile_statement ~(raise: ('e, 'w) raise) : CST.statement -> AST.statement 
     let switch_expr = compile_expression ~raise s.expr in
     let switch_cases =
       let translate_statements_opt = Option.map ~f:(List.Ne.map self <@ nsepseq_to_nseq) in
-      let translate_switch_case : CST.switch_case -> AST.switch_case = function
+      let translate_switch_case : CST.switch_case -> (_,_) AST.Switch.case = function
       | CST.Switch_case c -> (
         let e     = compile_expression ~raise c.expr in
         let s_opt = translate_statements_opt c.statements in
-        AST.Switch_case (e, s_opt)
+        Switch.Switch_case (e, s_opt)
       )
       | CST.Switch_default_case c -> (
         let s_opt = translate_statements_opt c.statements in
-        AST.Switch_default_case s_opt
+        Switch.Switch_default_case s_opt
       )
       in
       List.Ne.map translate_switch_case s.cases

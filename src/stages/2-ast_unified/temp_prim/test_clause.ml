@@ -1,4 +1,4 @@
-type ('instruction,'block) t =
+type ('instruction,'statement) t =
   | ClauseInstr of 'instruction
-  | ClauseBlock of 'block
+  | ClauseBlock of 'statement Simple_utils.List.Ne.t
 [@@deriving yojson, map, sexp]

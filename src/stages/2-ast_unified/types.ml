@@ -45,6 +45,13 @@ module Instruction_call = Temp_prim.Instruction_call
 module Case = Temp_prim.Case
 module Test_clause = Temp_prim.Test_clause
 module Cond = Temp_prim.Cond
+module For_int = Temp_prim.For_int
+module For_collection = Temp_prim.For_collection
+module Patch = Temp_prim.Patch
+module For_of = Temp_prim.For_of
+module Removal = Temp_prim.Removal
+module While = Temp_prim.While
+module Switch = Temp_prim.Switch
 
 module Z = Ligo_prim.Literal_value.Z
 
@@ -131,84 +138,24 @@ and instr_content = instruction_content
 and instr         = instruction
   [@@deriving yojson]
 
-and block_pascaligo = statement nseq
-
-and for_int = {
-  index   : string;
-  init    : expr;
-  bound   : expr;
-  step    : expr option; (* [1] if [None] *)
-  block   : block_pascaligo;
-}
-
-and for_in =
-| ForMap       of for_map
-| ForSetOrList of for_set_or_list
-
-and for_map = {
-  binding    : string * string;
-  collection : expr;
-  block      : block_pascaligo;
-}
-
-and for_set_or_list = {
-  var        : string;
-  for_kind   : [`Set | `List];
-  collection : expr;
-  block      : block_pascaligo;
-}
-
-and patch = {
-  collection : expr;
-  patch_kind : [`Map | `Record | `Set];
-  patch      : expr;
-}
-
-and removal = {
-  item_expr   : expr;
-  remove_kind : [`Set | `Map];
-  collection  : expr;
-}
-
-and while_loop = {
-  cond      : expr;
-  block     : block_pascaligo;
-}
-
-and switch_case =
-| Switch_case          of (expr * statement nseq option)
-| Switch_default_case  of statement nseq option
-
-and switch = {
-  switch_expr  : expr;
-  switch_cases : switch_case nseq;
-}
-
-and for_of = {
-  index_kind : [ `Let | `Const ];
-  index      : Variable.t;
-  expr       : expr;
-  for_stmt   : statement;
-}
-
-and test_clause = (instruction,block_pascaligo) Test_clause.t
+and cond_branch = (instruction,statement) Test_clause.t
 
 and instruction_content =
 | I_struct_assign of expr Struct_assign.t
 | I_Call   of expr Instruction_call.t
-| I_Case   of (expr,test_clause,pattern) Case.t
-| I_Cond   of (expr,test_clause) Cond.t
-| I_For    of for_int
-| I_ForIn  of for_in
-| I_ForOf  of for_of
-| I_Patch  of patch
-| I_Remove of removal
+| I_Case   of (expr,pattern,cond_branch) Case.t
+| I_Cond   of (expr,cond_branch) Cond.t
+| I_For    of (expr,statement) For_int.t
+| I_ForIn  of (expr,statement) For_collection.t
+| I_ForOf  of (expr,statement) For_of.t
+| I_Patch  of expr Patch.t
+| I_Remove of expr Removal.t
 | I_Skip
-| I_While  of while_loop
-| I_Block  of statement nseq
+| I_While  of (expr,statement) While.t
+| I_Block  of statement Simple_utils.List.Ne.t
 | I_Expr   of expr
 | I_Return of expr option
-| I_Switch of switch
+| I_Switch of (expr,statement) Switch.t
 | I_break
 
 (* ========================== STATEMENTS ========================= *)
@@ -434,7 +381,7 @@ and raw_code = {
 }
 
 and block_with_pascaligo = {
-  block    : block_pascaligo;
+  block    : statement nseq;
   expr     : expr
 }
 
@@ -525,7 +472,7 @@ and expression_content =
   | E_Constr of (string * expr option)    (* let x = MyCtor 42 *)
   | E_App of (expr * expr nseq option)    (* MyCtor (42, 43, 44), PascaLigo only *)
 
-  | E_Case of (expr, expr, pattern) Case.t (* match e with | A -> ... | B -> ... *)
+  | E_Case of (expr, pattern, expr) Case.t (* match e with | A -> ... | B -> ... *)
 
   (* Type annotation *)
   | E_Annot       of (expr * type_expr)   (* 42 : int *)

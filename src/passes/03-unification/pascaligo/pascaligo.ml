@@ -54,6 +54,12 @@ module TODO_unify_in_cst = struct
   let vardecl_as_decl ~loc x =
     (* https://tezos-dev.slack.com/archives/GMHV0U3Q9/p1669146559008189 *)
     s_decl ~loc (d_var ~loc x ()) ()
+  let for_in compile_for_map compile_for_set_or_list i =
+    (* could be done directyu in Parser.mly *)
+    let open AST.For_collection in
+    match i with
+    | CST.ForMap       m -> let m, loc = r_split m in ForMap (compile_for_map m), loc
+    | CST.ForSetOrList s -> let s, loc = r_split s in ForSetOrList (compile_for_set_or_list s), loc
 end
 
 let translate_attr_pascaligo : CST.Attr.t -> AST.attribute = fun attr ->
@@ -261,20 +267,20 @@ and compile_pattern ~(raise: ('e, 'w) raise) : CST.pattern -> AST.pattern = fun 
 
 (* ========================== INSTRUCTIONS ================================= *)
 
-and compile_block ~(raise: ('e, 'w) raise) : CST.block -> AST.block_pascaligo = fun b ->
+and compile_block ~(raise: ('e, 'w) raise) : CST.block -> AST.statement nseq = fun b ->
   List.Ne.map (compile_statement ~raise) @@ nsepseq_to_nseq b.statements
 
-and compile_test_clause : raise:_ -> CST.test_clause -> AST.test_clause = fun ~raise c ->
+and compile_test_clause : raise:_ -> CST.test_clause -> (instruction,statement) AST.Test_clause.t = fun ~raise c ->
   match c with
   | CST.ClauseInstr i -> ClauseInstr (compile_instruction ~raise i)
   | CST.ClauseBlock b -> ClauseBlock (compile_block ~raise @@ r_fst b)
 
-and compile_case_clause : type a b . raise:_ -> (a -> b) -> a CST.case_clause -> (b,_) AST.Case.clause = fun ~raise f c ->
+and compile_case_clause : type a b . raise:_ -> (a -> b) -> a CST.case_clause -> (_,b) AST.Case.clause = fun ~raise f c ->
   let pattern = compile_pattern ~raise c.pattern in
   let rhs     = f c.rhs in
   {pattern; rhs}
 
-and compile_case : type a b . raise:_ -> (a -> b) -> a CST.case -> (_,b,_) AST.Case.t = fun ~raise f c ->
+and compile_case : type a b . raise:_ -> (a -> b) -> a CST.case -> (_,_,b) AST.Case.t = fun ~raise f c ->
   let expr = compile_expression ~raise c.expr in
   let cases = List.Ne.map (compile_case_clause ~raise f <@ r_fst) @@ nsepseq_to_nseq c.cases in
   {expr; cases}
@@ -285,23 +291,24 @@ and compile_cond : 'a 'b. raise:_ -> ('a -> 'b) -> 'a CST.conditional -> (_,'b) 
   let ifnot = Option.map ~f:(f <@ snd) c.if_not in
   {test; ifso; ifnot}
 
-and compile_for_map ~raise : CST.for_map -> AST.for_map = fun m ->
+and compile_for_map ~raise : CST.for_map -> (_,_) AST.For_collection.for_map = fun m ->
   let binding =
     let k, _, v = m.binding in
-    w_fst k, w_fst v
+    TODO_do_in_parsing.var ~loc:(w_snd k) (w_fst k),
+    TODO_do_in_parsing.var ~loc:(w_snd v) (w_fst v)
   in
   let collection = compile_expression ~raise m.collection in
   let block      = compile_block ~raise @@ r_fst m.block in
   {binding; collection; block}
 
-and compile_for_set_or_list ~raise : CST.for_set_or_list -> AST.for_set_or_list = fun s ->
-  let var = w_fst s.var in
+and compile_for_set_or_list ~raise : CST.for_set_or_list -> (_,_) AST.For_collection.for_set_or_list = fun s ->
+  let var = TODO_do_in_parsing.var ~loc:(w_snd s.var) (w_fst s.var) in
   let for_kind = match s.for_kind with
   | `Set  _ -> `Set
   | `List _ -> `List
   in
   let collection = compile_expression ~raise s.collection in
-  let block      = compile_block ~raise @@ r_fst s.block in
+  let block      = compile_block ~raise (r_fst s.block) in
   {var; for_kind; collection; block}
 
 and compile_instruction ~(raise: ('e, 'w) raise) : CST.instruction -> AST.instruction = fun i ->
@@ -332,19 +339,15 @@ and compile_instruction ~(raise: ('e, 'w) raise) : CST.instruction -> AST.instru
   )
   | I_For i -> (
     let i, loc = r_split i in
-    let index = w_fst i.index in
+    let index = TODO_do_in_parsing.var ~loc:(w_snd i.index) (w_fst i.index) in
     let init  = compile_expr i.init in
     let bound = compile_expr i.bound in
     let step = Option.map ~f:(compile_expr <@ snd) i.step in
     let block = compile_block ~raise @@ r_fst i.block in
-    i_for {index; init; bound; step; block} ~loc ()
+    i_for ~loc {index; init; bound; step; block} ()
   )
   | I_ForIn  i -> (
-    let i, loc =
-      match i with
-      | ForMap       m -> let m, loc = r_split m in ForMap (compile_for_map ~raise m), loc
-      | ForSetOrList s -> let s, loc = r_split s in ForSetOrList (compile_for_set_or_list ~raise s), loc
-    in
+    let i, loc = TODO_unify_in_cst.for_in (compile_for_map ~raise) (compile_for_set_or_list ~raise) i in
     i_forin i ~loc ()
   )
   | I_Patch  i -> (
@@ -633,7 +636,7 @@ and compile_expression ~(raise: ('e, 'w) raise) : CST.expr -> AST.expr = fun e -
     )
   | E_Block be -> (
       let be, loc = r_split be in
-      let block : block_pascaligo =
+      let block =
         nseq_map (compile_statement ~raise) @@ nsepseq_to_nseq (r_fst be.block).statements
       in
       let expr  = self be.expr in
