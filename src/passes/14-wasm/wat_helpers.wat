@@ -2,9 +2,11 @@
     (type (;0;) (func (param i32) (result i32)))
     (type (;1;) (func (param i32) ))
     (type  (func (param i32 i32) (result i32)))
+    (type  (func (param i32 i32 i32 i32) (result i32)))
     
     (import "env" "malloc" (func $malloc (type 0)))
     (import "host" "print" (func $print (type 1)))
+    (import "wasi_unstable" "fd_write" (func $fd_write (type 3)))
     (import "env" "__indirect_function_table" (table $table 0 funcref))
 
     (func $compare (param $a i32) (param $b i32) (result i32)
@@ -54,6 +56,49 @@
         end
 
     
+    )
+
+    (func $__ligo_internal__log (param $str_info i32) (result i32)
+        (local $str i32)
+        (local $str_size i32)
+        (local $iov i32)
+        (local $nwritten i32)
+
+
+        local.get $str_info
+        local.set $str_size
+
+        local.get $str_info
+        i32.const 4
+        i32.add
+        local.set $str
+
+        i32.const 8
+        call $malloc
+        
+        local.tee $iov
+        local.get $str
+        i32.store
+
+        local.get $iov
+        i32.const 4
+        i32.add
+        local.get $str_size
+        i32.load
+        i32.store
+        
+        local.get $str_size
+        call $malloc
+        local.set $nwritten
+
+        ;; local.get $nwritten
+        ;; i32.const 1
+        ;; local.get $iov
+        ;; i32.const 1 
+        ;; call $fd_write 
+       
+        ;; drop
+        i32.const 1
     )
 
     (func $right_rotate (param $child i32) (result i32) 

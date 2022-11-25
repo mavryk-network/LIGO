@@ -4,7 +4,7 @@
 #endif
 #if WASM
 
-  let logx (type a b) (v: a) = [%Wasm ({|     
+  let logx (type a b) (v: a) = [%Wasm ({|    
     local.get 0
     local.set "str_info"
     local.get "str_info"

@@ -42,8 +42,9 @@ let mod_ = add_imports mod_ [
   ("env", "malloc",                           ([NumType I32Type],                                                    [NumType I32Type]));
 
   (* toplevel *)
-  ("env", "to_int",                           ([NumType I32Type], [NumType I32Type]));
-
+  ("env", "to_int",                           ([NumType I32Type],                                                    [NumType I32Type]));
+  ("env", "__ligo_internal__log",             ([NumType I32Type],                                                    [NumType I32Type]));
+  
   (* for testing *)
   ("host", "print",                           ([NumType I32Type],                                                    []));
 

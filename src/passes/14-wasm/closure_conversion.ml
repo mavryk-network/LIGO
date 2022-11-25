@@ -4,11 +4,13 @@
 open Mini_c.Types
 module Value_var = Ligo_prim.Value_var
 
+type replacements = (var_name * var_name) list
+
 type env = {
   variables: (var_name * type_expression) list;
   missing: var_name list;
-  exported_funcs: (expression -> expression) list;
-  replacements: (var_name * expression) list;
+  exported_funcs: (replacements -> var_name list -> expression -> var_name list * expression) list;
+  replacements: replacements;
   functions: var_name list;
 }
 
@@ -97,12 +99,27 @@ let rec lift : env -> expression -> env * expression =
     let missing = List.filter ~f:(fun f -> not (in_function f)) missing in
     let export = export_func missing in
     let type_expression = export.type_expression in
-    let export e =
-      {
+    let export replacements (funcs: var_name list) e =
+      
+      List.iter ~f:(fun (a, b) -> print_endline ("Check: " ^ var_to_string a ^ " with " ^ var_to_string  b ^ ".")) replacements;
+      let v = match (List.find replacements ~f:(fun (_, r) ->  Value_var.equal r v)) with
+      | Some (x, _) -> 
+        print_endline "YES HERE";
+        x
+      | None -> v
+      in
+      (match (List.find funcs ~f:(fun a -> Value_var.equal a v)) with
+      | Some s -> 
+        print_endline ("in funcs here:" ^ var_to_string s);
+        funcs, e
+        
+      | None -> 
+        print_endline ("not in funcs here:" ^ var_to_string v);
+        v :: funcs, {        
         content = E_let_in (export, false, ((v, type_expression), e));
         type_expression;
         location = e.location;
-      }
+      })
     in
     let env =
       {
@@ -126,17 +143,9 @@ let rec lift : env -> expression -> env * expression =
         ~init:(env, []) (List.rev arguments)
     in
     (env, {e with content = E_constant {cons_name; arguments}})
-  | E_application (({content = E_variable v; _} as e1), e2) ->
+  | E_application (({content = E_variable _v; _} as e1), e2) ->
     let env, e1 = lift env e1 in
     let env, e2 = lift env e2 in
-    let env, e1 =
-      match
-        List.find env.replacements ~f:(fun (r, _) ->  Value_var.equal r v)
-      with
-      | Some (_, x) -> 
-        lift env x
-      | None -> (env, e1)
-    in
     ( env,
       {
         e with
@@ -263,8 +272,8 @@ let rec lift : env -> expression -> env * expression =
     let env, e1 = lift env e1 in
     let env = 
       (match e1.content with 
-        E_variable _v ->
-          {env with replacements = (var_name, e1) :: env.replacements}
+        E_variable v ->
+          {env with replacements = (var_name, v) :: env.replacements}
       | _ ->
         env
       )
@@ -347,18 +356,22 @@ let rec toplevel_inner : env -> string -> expression -> expression =
         lift {empty_env with functions = var_name :: env.functions; variables = (binder, type_expression) :: env.variables} b
     in
     let env, body = aux body in 
-    List.fold_left
-      ~f:(fun prev el -> el prev)
+    let _, r = List.fold_left
+      ~f:(fun (functions, prev) export -> 
+        export env.replacements functions prev
+      )
       ~init:
-        {
+        (env.functions, {
           e with
           content =
             E_let_in
               ( {e1 with content = E_closure {binder; body}},
                 inline,
                 ((var_name, type_expression), toplevel_inner env entrypoint e2) );
-        }
+        })
       env.exported_funcs
+    in 
+    r
   | E_let_in (e1, inline, ((var_name, type_expression), e2)) ->
     {
       e with
