@@ -141,6 +141,7 @@ let rec assert_type_expression_eq ((a, b) : type_expression * type_expression)
       assert_type_expression_eq (va, vb)
     in
     let* _ = assert_same_size sa' sb' in
+    let* _ = assert_eq sa.layout sb.layout in
     List.fold_left
       ~f:(fun acc p ->
         match acc with
@@ -167,6 +168,7 @@ let rec assert_type_expression_eq ((a, b) : type_expression * type_expression)
     in
     let* _ = assert_eq ra.layout rb.layout in
     let* _ = assert_same_size ra' rb' in
+    let* _ = assert_eq ra.layout rb.layout in
     List.fold_left
       ~f:(fun acc p ->
         match acc with

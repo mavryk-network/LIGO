@@ -1403,8 +1403,10 @@ let info_group =
 
 (** Print commands *)
 let preprocessed =
-  let f source_file syntax libraries display_format project_root () =
-    let raw_options = Raw_options.make ~syntax ~libraries ~project_root () in
+  let f source_file syntax libraries display_format project_root no_colour () =
+    let raw_options =
+      Raw_options.make ~syntax ~libraries ~project_root ~no_colour ()
+    in
     return_result ~return
     @@ Api.Print.preprocess raw_options source_file display_format
   in
@@ -1425,12 +1427,15 @@ let preprocessed =
      <*> syntax
      <*> libraries
      <*> display_format
-     <*> project_root)
+     <*> project_root
+     <*> no_colour)
 
 
 let pretty_print =
-  let f source_file syntax display_format warning_as_error () =
-    let raw_options = Raw_options.make ~syntax ~warning_as_error () in
+  let f source_file syntax display_format warning_as_error no_colour () =
+    let raw_options =
+      Raw_options.make ~syntax ~warning_as_error ~no_colour ()
+    in
     return_result ~return
     @@ Api.Print.pretty_print raw_options source_file display_format
   in
@@ -1441,12 +1446,12 @@ let pretty_print =
      (or 60 if it cannot be determined)."
   in
   Command.basic ~summary ~readme
-  @@ (f <$> source_file <*> syntax <*> display_format <*> werror)
+  @@ (f <$> source_file <*> syntax <*> display_format <*> werror <*> no_colour)
 
 
 let print_graph =
-  let f source_file syntax display_format project_root () =
-    let raw_options = Raw_options.make ~syntax ~project_root () in
+  let f source_file syntax display_format project_root no_colour () =
+    let raw_options = Raw_options.make ~syntax ~project_root ~no_colour () in
     return_result ~return
     @@ Api.Print.dependency_graph raw_options source_file display_format
   in
@@ -1460,12 +1465,17 @@ let print_graph =
      DFS strategy."
   in
   Command.basic ~summary ~readme
-  @@ (f <$> source_file <*> syntax <*> display_format <*> project_root)
+  @@ (f
+     <$> source_file
+     <*> syntax
+     <*> display_format
+     <*> project_root
+     <*> no_colour)
 
 
 let print_cst =
-  let f source_file syntax display_format () =
-    let raw_options = Raw_options.make ~syntax () in
+  let f source_file syntax display_format no_colour () =
+    let raw_options = Raw_options.make ~syntax ~no_colour () in
     return_result ~return
     @@ Api.Print.cst raw_options source_file display_format
   in
@@ -1478,12 +1488,12 @@ let print_cst =
      preprocessing and parsing."
   in
   Command.basic ~summary ~readme
-  @@ (f <$> source_file <*> syntax <*> display_format)
+  @@ (f <$> source_file <*> syntax <*> display_format <*> no_colour)
 
 
 let print_ast =
-  let f source_file syntax display_format () =
-    let raw_options = Raw_options.make ~syntax () in
+  let f source_file syntax display_format no_colour () =
+    let raw_options = Raw_options.make ~syntax ~no_colour () in
     return_result ~return
     @@ Api.Print.ast raw_options source_file display_format
   in
@@ -1496,12 +1506,14 @@ let print_ast =
      before desugaring step is applied."
   in
   Command.basic ~summary ~readme
-  @@ (f <$> source_file <*> syntax <*> display_format)
+  @@ (f <$> source_file <*> syntax <*> display_format <*> no_colour)
 
 
 let print_ast_core =
-  let f source_file syntax display_format self_pass project_root () =
-    let raw_options = Raw_options.make ~syntax ~self_pass ~project_root () in
+  let f source_file syntax display_format self_pass project_root no_colour () =
+    let raw_options =
+      Raw_options.make ~syntax ~self_pass ~project_root ~no_colour ()
+    in
     return_result ~return
     @@ Api.Print.ast_core raw_options source_file display_format
   in
@@ -1518,7 +1530,8 @@ let print_ast_core =
      <*> syntax
      <*> display_format
      <*> self_pass
-     <*> project_root)
+     <*> project_root
+     <*> no_colour)
 
 
 let print_ast_typed =
@@ -1531,6 +1544,7 @@ let print_ast_typed =
       project_root
       warn_unused_rec
       test
+      no_colour
       ()
     =
     let raw_options =
@@ -1541,6 +1555,7 @@ let print_ast_typed =
         ~project_root
         ~warn_unused_rec
         ~test
+        ~no_colour
         ()
     in
     return_result ~return
@@ -1564,7 +1579,8 @@ let print_ast_typed =
      <*> self_pass
      <*> project_root
      <*> warn_unused_rec
-     <*> test_mode)
+     <*> test_mode
+     <*> no_colour)
 
 
 let print_ast_aggregated =
@@ -1577,6 +1593,7 @@ let print_ast_aggregated =
       project_root
       warn_unused_rec
       test
+      no_colour
       ()
     =
     let raw_options =
@@ -1587,6 +1604,7 @@ let print_ast_aggregated =
         ~project_root
         ~warn_unused_rec
         ~test
+        ~no_colour
         ()
     in
     return_result ~return
@@ -1610,7 +1628,8 @@ let print_ast_aggregated =
     <*> self_pass
     <*> project_root
     <*> warn_unused_rec
-    <*> test_mode)
+    <*> test_mode
+    <*> no_colour)
 
 
 let print_mini_c =
@@ -1622,6 +1641,7 @@ let print_mini_c =
       optimize
       project_root
       warn_unused_rec
+      no_colour
       ()
     =
     let raw_options =
@@ -1630,6 +1650,7 @@ let print_mini_c =
         ~protocol_version
         ~project_root
         ~warn_unused_rec
+        ~no_colour
         ()
     in
     return_result ~return
@@ -1654,7 +1675,8 @@ let print_mini_c =
     <*> display_format
     <*> optimize
     <*> project_root
-    <*> warn_unused_rec)
+    <*> warn_unused_rec
+    <*> no_colour)
 
 
 let print_group =
@@ -1874,7 +1896,12 @@ let main =
 
 
 let run ?argv () =
-  Command_unix.run ~version:Version.version ?argv main;
+  let build_info =
+    Format.sprintf
+      "Protocol built-in: %s"
+      Environment.Protocols.(variant_to_string in_use)
+  in
+  Command_unix.run ~build_info ~version:Version.version ?argv main;
   (* Effect to error code *)
   match !return with
   | Done -> 0
