@@ -53,6 +53,9 @@ module TODO_unify_in_cst = struct
   let i_expr ~loc expr () =
     (* IIUC, this can be a return or a call ? could we parse it as such ?*)
     i_expr ~loc expr ()
+  let type_operator ~loc v =
+    (* could be a type expr ? or we could emit a type variable expression ? *)
+    t_var ~loc (TODO_do_in_parsing.tvar ~loc v) () 
 end
 
 let rec compile_val_binding ~(raise: ('e, 'w) raise) : CST.val_binding -> (unit,pattern,unit,type_expr) AST.let_binding =
@@ -111,7 +114,7 @@ and compile_type_expression ~(raise: ('e, 'w) raise) : CST.type_expr -> AST.type
   | TApp t -> (
     let t, loc = r_split t in
     let constr, args = t in
-    let constr : string = r_fst constr in
+    let constr = TODO_unify_in_cst.type_operator ~loc:(r_snd constr) (r_fst constr) in
     let type_args = List.Ne.map self @@ nsepseq_to_nseq (r_fst args).inside in
     t_app {constr; type_args} ~loc ()
   )

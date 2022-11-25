@@ -31,6 +31,9 @@ module TODO_unify_in_cst = struct
     List.fold (conv_attr attr) ~init:e ~f:(fun e (attr,loc) -> t_attr ~loc attr e ())
   let compile_rows = Non_linear_rows.make
   let _compile_disc_rows = Non_linear_disc_rows.make
+  let type_operator ~loc v =
+    (* could be a type expr ? or we could emit a type variable expression ? *)
+    t_var ~loc (TODO_do_in_parsing.tvar ~loc v) () 
 end
 
 (* ========================== TYPES ======================================== *)
@@ -80,7 +83,7 @@ let rec compile_type_expression : CST.type_expr -> AST.type_expr = fun te ->
   | TApp t -> (
     let t, loc = r_split t in
     let constr, args = t in
-    let constr : string = r_fst constr in
+    let constr = TODO_unify_in_cst.type_operator ~loc:(r_snd constr) (r_fst constr) in
     let type_args : type_expr nseq =
       match args with
       | CST.CArg te       -> List.Ne.singleton (self te)

@@ -88,7 +88,7 @@ and type_expr         = type_expression
 and type_expression_content =
 | T_Var          of Ty_variable.t
 | T_Prod         of type_expr Prod.t
-| T_App          of (string,type_expr) Type_app.t
+| T_App          of (type_expr,type_expr) Type_app.t
 | T_Fun          of type_expr Arrow.t
 | T_Named_fun    of type_expr Named_fun.t
 | T_String       of string
@@ -101,7 +101,6 @@ and type_expression_content =
 | T_Record_raw   of type_expr option Non_linear_rows.t
 | T_Disc_union   of type_expr Non_linear_disc_rows.t
 | T_Attr         of Attribute.t * type_expr
-| T_AppPascaligo of (type_expr, type_expr) Type_app.t
 
 (* ========================== PATTERNS ===================================== *)
 

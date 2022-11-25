@@ -87,7 +87,7 @@ let rec compile_type_expression ~(raise: ('e, 'w) raise) : CST.type_expr -> AST.
     let type_args : type_expr nseq =
       List.Ne.map self @@ nsepseq_to_nseq (r_fst ttuple).inside
     in
-    t_apppascaligo {constr; type_args} ~loc ()
+    t_app {constr; type_args} ~loc ()
   )
   | T_Attr    t -> (
     let attr, te = t in
@@ -696,7 +696,7 @@ and compile_declaration ~(raise: ('e, 'w) raise) : CST.declaration -> AST.declar
   | D_Fun d -> (
     let d, loc = r_split d in
     let is_rec = match d.kwd_recursive with Some _ -> true | None -> false in
-    let fun_name = w_fst d.fun_name in
+    let fun_name = TODO_do_in_parsing.var ~loc:(w_snd d.fun_name) (w_fst d.fun_name) in
     let type_params = Option.map ~f:compile_type_params d.type_params in
     let parameters =
       let compile_param_decl : CST.param_decl -> AST.param_decl = fun pd ->
