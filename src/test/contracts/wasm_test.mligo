@@ -66,6 +66,8 @@ let main ((_, _s):(parameter * storage)) =
   let a12 = List.fold_right xz a13 10 in
 
   let a13 = List.iter (fun x -> assert (x < 10)) [3;5;7;9] in
+  let _ = log "\n" in
+  let _ = List.iter (fun i -> log ("log test:" ^ string_of_int i ^ "\n")) [2;0; 4;6] in
 
   let a14 = List.tail_opt ([]: string list) in
   let a15 = match a14 with 
@@ -87,6 +89,7 @@ let main ((_, _s):(parameter * storage)) =
   | None -> 0
   in
   let a18 = List.length [3; 4; 5; 6; 7] in
+  let _ = log("List size:" ^ string_of_int (int(a18)) ^"\n") in
 (*
            50
       30 
@@ -120,6 +123,7 @@ let main ((_, _s):(parameter * storage)) =
     log ("s1 item: " ^ string_of_int f ^ "\n")
   ) s1
   in 
+  (* SOMETHING GOES WRONG HERE... *)
   let _ = Map.iter (fun (f, a) -> 
     log ("m1 item: " ^ string_of_int f ^ " = " ^ string_of_int a ^ "\n")
   ) m1

@@ -6,7 +6,6 @@
     (import "env" "malloc" (func $malloc (type 0)))
     (import "host" "print" (func $print (type 1)))
     (import "env" "__indirect_function_table" (table $table 0 funcref))
-    ;; (import "env" "")
 
     (func $compare (param $a i32) (param $b i32) (result i32)
         (local $tag i32)
@@ -133,7 +132,7 @@
 
     )
 
-    (func $__ligo_internal__set_size (param $set i32) (result i32)
+    (func $__ligo_internal__set_size_in (param $set i32) (result i32)
         (local $count i32)
         (local $left_child i32)
         (local $right_child i32)
@@ -155,7 +154,7 @@
             local.set $left_value
         else
             local.get $left_child
-            call $__ligo_internal__set_size
+            call $__ligo_internal__set_size_in
             local.set $left_value
         end
         local.get $set 
@@ -172,7 +171,7 @@
             local.set $right_value
         else 
             local.get $right_child
-            call $__ligo_internal__set_size
+            call $__ligo_internal__set_size_in
             local.set $right_value
         end
 
@@ -181,6 +180,24 @@
         local.get $right_value 
         i32.add
         i32.add
+    )
+
+    (func $__ligo_internal__set_size (param $set i32) (result i32)
+        (local $result i32)
+        i32.const 8
+        call $malloc
+        local.tee $result
+        i32.const 0
+        i32.store
+
+        local.get $result
+        i32.const 4
+        i32.add
+        local.get $set
+        call $__ligo_internal__set_size_in
+        i32.store
+
+        local.get $result
     )
 
     (func $__ligo_internal__set_mem (param $set i32) (param $m i32) (param $C_SET_EMPTY i32) (result i32)
@@ -413,7 +430,7 @@
             i32.store         
 
             local.get $result 
-            i32.const 4
+            i32.const 20
             i32.add
             local.get $value
             i32.store
@@ -1089,7 +1106,7 @@
                 local.get $init
                 local.get $fn
                 local.get $C_SET_EMPTY
-                call $__ligo_internal__set_fold
+                call $__ligo_internal__set_fold_right
                 local.set $init
             end
             
@@ -1640,8 +1657,249 @@
         end
     )
 
-    
-    ;; (table (;0;) 2 2 funcref)
-    ;; (elem (;0;) (i32.const 1) func $compare_fn)
+    (func $__ligo_internal__list_iter (param $list i32) (param $fn i32) (param $C_LIST_EMPTY i32) (result i32)
+        (local $next_item i32)
+        local.get $list 
+        local.get $C_LIST_EMPTY
+        i32.eq
+        if (result i32)
+            i32.const 0
+        else        
+            loop 
+                local.get $list
+                i32.const 4
+                i32.add
+                i32.load
+                local.set $next_item
+
+                local.get $list 
+                i32.load
+                local.set $list
+                
+                local.get $list
+                local.get $fn
+                call_indirect 0 (type 0)
+                drop
+
+                local.get $next_item 
+                local.set $list
+
+                local.get $next_item 
+                local.get $C_LIST_EMPTY
+                i32.ne
+                br_if 0
+            end
+            i32.const 0
+        end
+    )
+
+    (func $__ligo_internal__list_size (param $list i32) (param $C_LIST_EMPTY i32) (result i32)
+        (local $counter i32)
+        (local $return i32)
+
+        i32.const 8
+        call $malloc 
+        local.set $return 
+
+        local.get $return 
+        i32.const 0
+        i32.store
+
+        local.get $list 
+        local.get $C_LIST_EMPTY
+        i32.eq
+        if 
+            local.get $return 
+            i32.const 4
+            i32.add
+            i32.const 0 
+            i32.store
+        else 
+            i32.const 0 
+            local.set $counter 
+            loop 
+                local.get $counter
+                i32.const 1
+                i32.add 
+                local.set $counter 
+
+                local.get $list 
+                i32.const 4
+                i32.add 
+                i32.load 
+                local.set $list 
+
+                local.get $list 
+                local.get $C_LIST_EMPTY
+                i32.ne 
+                br_if 0
+            end
+            local.get $return 
+            i32.const 4
+            i32.add
+            local.get $counter
+            i32.store
+        end
+        local.get $return
+      
+    )
+
+    (func $__ligo_internal__list_map (param $list i32) (param $fn i32) (param $C_LIST_EMPTY i32) (result i32)
+        (local $result_iter i32)
+        (local $result i32)
+        (local $next_item i32)
+        (local $result_iter_next i32)
+
+
+        local.get $list 
+        if (result i32)
+            i32.const 8
+            call $malloc 
+            local.tee $result_iter
+            local.set $result
+            loop (result i32)
+                local.get $list
+                i32.const 4
+                i32.add
+                i32.load
+                local.set $next_item
+
+                local.get $next_item 
+                i32.load
+                if 
+                    i32.const 8 
+                    call $malloc 
+                    local.set $result_iter_next
+                else 
+                    local.get $C_LIST_EMPTY
+                    local.set $result_iter_next
+                end
+                local.get $result_iter
+
+
+
+                local.get $list
+                i32.load
+                local.get $fn
+                call_indirect 0 (type 0)
+                i32.store 
+
+                local.get $result_iter
+                i32.const 4 
+                i32.add 
+                local.get $result_iter_next
+                i32.store 
+
+                local.get $result_iter_next
+                local.set $result_iter
+
+                local.get $next_item 
+                local.set $list
+
+                local.get $result 
+                local.get $next_item 
+                i32.load
+                i32.const 0 
+                i32.ne 
+                br_if 0
+            end
+
+        else 
+            local.get $C_LIST_EMPTY
+        end
+    )
+
+    (func $__ligo_internal__list_fold (param $list i32) (param $init i32)  (param $fn i32) (param $C_LIST_EMPTY i32) (result i32)
+        (local $next_item i32)
+        (local $result i32)
+        (local $tuple i32)
+
+        local.get $list 
+        local.get $C_LIST_EMPTY
+        i32.eq 
+        if (result i32)
+            local.get $init
+        else
+            loop (result i32)
+                i32.const 8 
+                call $malloc 
+                local.tee $tuple 
+                local.get $init 
+                i32.store
+                local.get $tuple
+                i32.const 4
+                i32.add
+                local.get $list 
+                i32.load
+                i32.store
+
+                local.get $tuple 
+                local.get $fn
+                call_indirect 0 (type 0)
+                local.set $result
+
+                local.get $result 
+                local.set $init 
+
+                local.get $list
+                i32.const 4
+                i32.add
+                i32.load
+                local.set $next_item
+
+                local.get $next_item
+                local.set $list
+
+                local.get $result
+
+                local.get $list 
+                local.get $next_item
+                i32.load
+                i32.ne 
+                br_if 0 
+            end
+
+        end
+    )
+
+    (func $__ligo_internal__list_fold_right (param $list i32) (param $init i32) (param $fn i32) (param $C_LIST_EMPTY i32) (result i32)
+        (local $tuple i32)
+
+        local.get $list 
+        local.get $C_LIST_EMPTY 
+        i32.eq
+        if (result i32)
+            local.get $init 
+        else 
+            local.get $list 
+            i32.const 4
+            i32.add
+            i32.load
+            local.get $init
+            local.get $fn
+            local.get $C_LIST_EMPTY
+            call $__ligo_internal__list_fold_right 
+            local.set $init
+
+            i32.const 8
+            call $malloc 
+            local.tee $tuple 
+            local.get $list 
+            i32.load
+            i32.store
+
+            local.get $tuple 
+            i32.const 4
+            i32.add
+            local.get $init 
+            i32.store
+
+            local.get $tuple
+            local.get $fn
+            call_indirect 0 (type 0)
+        end 
+    )
+
+
     (memory (;0;) 1)
 )

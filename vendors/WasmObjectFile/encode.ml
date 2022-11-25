@@ -832,10 +832,10 @@ let encode (m: Ast.module_) =
       let p = pos s in
       code_relocations := !code_relocations @ [R_WASM_TABLE_INDEX_SLEB (Int32.of_int p, symbol)];
       let import_funcs = List.filter (fun i -> match i.it.idesc.it with FuncImport _ -> true | FuncImport_symbol _ -> true | _ -> false) m.it.imports in
-      print_endline ("FuncSymbol:" ^ symbol ^ " =" ^ Int32.to_string (Linking.func_index m.it.funcs import_funcs symbol));
+      (* print_endline ("FuncSymbol:" ^ symbol ^ " =" ^ Int32.to_string (Linking.func_index m.it.funcs import_funcs symbol)); *)
       vs32_fixed (Linking.func_index m.it.funcs import_funcs symbol)
     | DataSymbol symbol ->
-      print_endline ("symbol here:" ^ symbol);
+      (* print_endline ("symbol here:" ^ symbol); *)
       op 0x41;
       let p = pos s in
       let s, _ = Linking.find_symbol_index m.it.symbols (fun s -> match s.it.details with Function when s.it.name = symbol -> true |  Data _ when s.it.name = symbol -> true | _ -> false) in
@@ -1144,7 +1144,6 @@ let encode (m: Ast.module_) =
     let p = pos s in
     let import_funcs = List.filter (fun i -> match i.it.idesc.it with FuncImport _ | FuncImport_symbol _-> true | _ -> false) m.it.imports in
     u32 (Int32.of_int (List.length import_funcs + List.length m.it.funcs));
-    print_endline ("No of imports :" ^ string_of_int (List.length import_funcs));
     List.iteri (fun i import ->
       u32 (Int32.of_int i);
       string (Ast.string_of_name import.it.item_name)
@@ -1212,7 +1211,7 @@ let encode (m: Ast.module_) =
         )
       )
       | R_WASM_FUNCTION_INDEX_LEB (offset, symbol) ->
-        print_endline ("find:" ^ symbol);
+        (* print_endline ("find:" ^ symbol); *)
         let _, symbol_index = 
           Linking.find_symbol_index 
             m.it.symbols 
@@ -1226,7 +1225,7 @@ let encode (m: Ast.module_) =
         vu32_fixed symbol_index;
 
       | R_WASM_TYPE_INDEX_LEB (offset, symbol) ->
-        print_endline ("R_WASM_TYPE_INDEX_LEB:" ^ symbol);
+        (* print_endline ("R_WASM_TYPE_INDEX_LEB:" ^ symbol); *)
         byte 6;
         u32 (Int32.sub offset !code_pos); 
         vu32_fixed (Linking.find_type m.it.types symbol)
@@ -1240,19 +1239,19 @@ let encode (m: Ast.module_) =
       | R_WASM_TABLE_NUMBER_LEB (offset, symbol) -> (
         byte 20;
         u32 (Int32.sub offset !code_pos);
-        print_endline ("R_WASM_TABLE_NUMBER_LEB: " ^ symbol);
+        (* print_endline ("R_WASM_TABLE_NUMBER_LEB: " ^ symbol); *)
         let symbol_index = 
           let _, symbol_index = 
           Linking.find_symbol_index 
             m.it.symbols 
             (fun f -> 
               match f.it.details with 
-                Table when f.it.name = symbol -> print_endline "found a table yes"; true 
+                Table when f.it.name = symbol -> true 
               | _ -> false) 
             in
             symbol_index
         in
-        print_endline ("check:" ^ Int32.to_string symbol_index);
+        (* print_endline ("check:" ^ Int32.to_string symbol_index); *)
         vu32_fixed symbol_index
         )
     ) !code_relocations
@@ -1267,7 +1266,7 @@ let encode (m: Ast.module_) =
     List.iter (fun r ->
       match r with      
       | R_WASM_TABLE_INDEX_I32 (offset, symbol) -> ( 
-        print_endline "xxx223332";
+        (* print_endline "xxx223332"; *)
         let _, symbol_index = 
           Linking.find_symbol_index 
             m.it.symbols 

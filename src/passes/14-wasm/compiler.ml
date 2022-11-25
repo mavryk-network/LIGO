@@ -146,42 +146,6 @@ module Partial_call = struct
 
 end
 
-
-module Red_black_tree = struct 
-
-    let size ~raise w env at e = 
-      let call_s = call_s at in
-      let const = const at in
-      let local_tee_s = local_tee_s at in
-      let local_get_s = local_get_s at in
-      let i32_add = i32_add at in
-      let store = store at in
-      let load = load at in
-      let result = unique_name "result_size" in
-      let env = Env.add_locals env [(result, T.NumType I32Type)] in
-      w, env, [
-        const 8l; 
-        call_s "malloc";
-         local_tee_s result; 
-         const 0l; 
-         store; 
-         
-         local_get_s 
-         result; 
-         const 4l; 
-         i32_add
-        ] 
-        @ 
-        e 
-        @ 
-        [
-          call_s "__ligo_internal__set_size"; 
-          store; 
-          local_get_s result
-        ]
-
-end
-
 (* The data offset. This indicates where a block of data should be placed in the linear memory. *)
 (* TODO: move this to env *)
 let global_offset = ref 0l
@@ -508,10 +472,9 @@ let rec expression ~raise :
     let w, env, key_e = expression ~raise w env key in
     let w, env, set_e = expression ~raise w env set in
     w, env, set_e @ key_e @ [data_symbol "C_SET_EMPTY"; call_s "__ligo_internal__set_add"]
-  
   | E_constant {cons_name = C_SET_SIZE; arguments = [s] } -> 
     let w, env, s = expression ~raise w env s in
-    Red_black_tree.size ~raise w env at s
+    w, env, s @ [call_s "__ligo_internal__set_size" ]
   | E_constant {cons_name = C_SET_REMOVE; arguments = [item; set] } -> 
     let w, env, item_e = expression ~raise w env item in
     let w, env, set_e = expression ~raise w env set in
@@ -536,70 +499,8 @@ let rec expression ~raise :
   | E_constant {cons_name = C_LIST_ITER; arguments = [func; list]  } -> raise.error (not_supported e)
   | E_constant {cons_name = C_LIST_MAP; arguments = [func; list] } -> raise.error (not_supported e)
   | E_constant {cons_name = C_LIST_SIZE; arguments = [list_] } -> 
-    let counter = unique_name "counter" in
-    let return = unique_name "return" in
-    let list = unique_name "list" in
-    let env = add_locals env [(list, T.NumType I32Type); (counter, T.NumType I32Type); (return, (T.NumType I32Type))] in
     let w, env, list_e = expression ~raise w env list_ in
-    w, env, 
-    list_e
-    @
-    [
-      local_set_s list;
-
-      const 8l;
-      call_s "malloc";
-      local_set_s return;
-
-      local_get_s return;
-      const 0l;
-      store;
-
-      local_get_s list;
-      data_symbol "C_LIST_EMPTY";
-      i32_eq;
-      if_ 
-        (ValBlockType None)
-        [
-          local_get_s return;
-          const 4l;
-          i32_add;
-          const 0l;
-          store;
-        ]
-        [
-          const 0l;
-          local_set_s counter;
-          loop 
-            (ValBlockType None)
-            [
-
-              local_get_s counter;
-              const 1l;
-              i32_add;
-              local_set_s counter;
-
-              (* get the next item *)
-              local_get_s list;
-              const 4l;
-              i32_add;
-              load;
-              local_set_s list;
-
-              local_get_s list;
-              data_symbol "C_LIST_EMPTY";
-              i32_ne;
-              br_if 0l;
-            ];
-          local_get_s return;
-          const 4l;
-          i32_add;
-          local_get_s counter;
-          store;
-        ];
-      
-      local_get_s return;
-    ]
+    w, env, list_e @ [data_symbol "C_LIST_EMPTY"; call_s "__ligo_internal__list_size"]    
   | E_constant {cons_name = C_LIST_FOLD; arguments = [func; list; init] } -> raise.error (not_supported e)
   | E_constant {cons_name = C_LIST_FOLD_LEFT; arguments = [func; init; list]  } -> raise.error (not_supported e)
   | E_constant {cons_name = C_LIST_FOLD_RIGHT; arguments = [func; list; init] } -> raise.error (not_supported e)
@@ -615,7 +516,7 @@ let rec expression ~raise :
 
   | E_constant {cons_name = C_MAP_SIZE; arguments = [m] } ->
     let w, env, m = expression ~raise w env m in
-    Red_black_tree.size ~raise w env at m
+    w, env, m @ [call_s "__ligo_internal__set_size" ]
   | E_constant {cons_name = C_MAP_REMOVE; arguments = [key; map] } -> 
     let w, env, key_e = expression ~raise w env key in
     let w, env, map_e = expression ~raise w env map in
@@ -892,166 +793,35 @@ let rec expression ~raise :
       )
     )
   | E_iterator (C_MAP, ((item_name, item_type), body), ({type_expression = {type_content = T_list _; _}; _} as col)) -> 
-    let item = var_to_string item_name in
-    let next_item = unique_name "next_item" in
-    let result = unique_name "result" in
-    let result_iter = unique_name "result_iter" in
-    let result_iter_next = unique_name "result_iter_next" in
-
-    let env = add_locals env [(item, T.NumType I32Type); (result, T.NumType I32Type); (result_iter, T.NumType I32Type); (result_iter_next, T.NumType I32Type); (next_item, T.NumType I32Type)] in
+    let env = add_locals env [(var_to_string item_name, T.NumType I32Type)] in
     let w, env, col = expression ~raise w env col in
-    let w, env, body = expression ~raise w env body in
-    
-    w, env, 
-      col 
-      @
-      [
-      local_set_s item;
-
-      local_get_s item;
-      if_ 
-        (ValBlockType (Some (T.NumType I32Type)))
-        ([ 
-
-          (* allocate memory for the first block *)
-          const 8l;
-          call_s "malloc";
-          local_tee_s result_iter;
-          local_set_s result;
-          
-          loop (ValBlockType (Some (T.NumType I32Type))) 
-          (
-            [
-              
-              (* get the next item *)
-              local_get_s item;
-              const 4l;
-              i32_add;
-              load;
-              local_set_s next_item;
-
-
-              (* allocate memory for the next item in the list if necessary *)
-              local_get_s next_item;
-              load;
-              if_ 
-                (ValBlockType None)
-                [
-                  const 8l;
-                  call_s "malloc";
-                  local_set_s result_iter_next;
-                ]
-                [
-                  data_symbol "C_LIST_EMPTY";
-                  local_set_s result_iter_next;
-                ];
-
-              local_get_s result_iter;
-              
-              local_get_s item;
-              load;
-              local_set_s item;
-            ]
-            @
-            body
-            @
-            [
-              store;
-              
-              local_get_s result_iter;
-              const 4l; 
-              i32_add;
-              local_get_s result_iter_next;
-              store;
-              
-              local_get_s result_iter_next;
-              local_set_s result_iter;
-
-              (* check to see if the loop needs to continue *)
-              local_get_s next_item;
-              local_set_s item;
-      
-              local_get_s result;
-              local_get_s next_item;
-              load;
-              const 0l;
-              i32_ne;
-              br_if 0l;
-            ]
-          );
-        ]
-        )
-        [
-          data_symbol "C_LIST_EMPTY"
-        ];
-      ]
+    let w, env, iter_body = expression ~raise w env body in
+    let iter_body_name = unique_name "iter_body" in
+    let w, required_args = add_function w iter_body_name (fun _ -> iter_body) in    
+    w, env, col @ [func_symbol iter_body_name; data_symbol "C_LIST_EMPTY"; call_s "__ligo_internal__list_map"]
       
   | E_iterator (C_ITER, ((item_name, item_type), body), ({type_expression = {type_content = T_list _; _}; _} as col)) -> 
-    let item = var_to_string item_name in
-    let next_item = unique_name "next_item" in
-
-    let env = add_locals env [(item, T.NumType I32Type); (next_item, T.NumType I32Type)] in
+    let env = add_locals env [(var_to_string item_name, T.NumType I32Type)] in
     let w, env, col = expression ~raise w env col in
-    let w, env, body = expression ~raise w env body in
-    
-    w, env, 
-      col 
-      @
-      [
-      local_set_s item;     
-      
-      loop (ValBlockType None) 
-      (
-        [
-          
-          (* get the next item *)
-          local_get_s item;
-          const 4l;
-          i32_add;
-          load;
-          local_set_s next_item;
+    let w, env, iter_body = expression ~raise w env body in
+    let iter_body_name = unique_name "iter_body" in
+    let w, required_args = add_function w iter_body_name (fun _ -> iter_body) in    
+    w, env, col @ [func_symbol iter_body_name; data_symbol "C_LIST_EMPTY"; call_s "__ligo_internal__list_iter"]
 
-
-          local_get_s item;         
-          load;
-          local_set_s item;
-        ]
-        @
-        body
-        @
-        [
-          drop at;
-
-          (* check to see if the loop needs to continue *)
-          local_get_s next_item;
-          local_set_s item;
-  
-          local_get_s next_item;
-          load;
-          const 0l;
-          i32_ne;
-          br_if 0l;
-        ]
-      );
-      const 0l;
-    ]
   | E_iterator (C_ITER, ((item_name, item_type), body), ({type_expression = {type_content = T_set _; _}; _} as col)) -> 
     let env = add_locals env [(var_to_string item_name, T.NumType I32Type)] in
     let w, env, iter_body = expression ~raise w env body in
     let w, env, col = expression ~raise w env col in
-    let iter_body_name = unique_name "iter_body" in
-    
+    let iter_body_name = unique_name "iter_body" in    
     let w, required_args = add_function w iter_body_name (fun _ -> iter_body) in
-    
     w, env, col @ [func_symbol iter_body_name; data_symbol "C_SET_EMPTY"; call_s "__ligo_internal__set_iter"]
+
   | E_iterator (C_ITER, ((item_name, item_type), body), ({type_expression = {type_content = T_map _; _}; _} as col)) -> 
     let env = add_locals env [(var_to_string item_name, T.NumType I32Type)] in
     let w, env, iter_body = expression ~raise w env body in
     let w, env, col = expression ~raise w env col in
-    let iter_body_name = unique_name "iter_body" in
-      
+    let iter_body_name = unique_name "iter_body" in      
     let w, required_args = add_function w iter_body_name (fun _ -> iter_body) in
-    
     w, env, col @ [func_symbol iter_body_name; data_symbol "C_SET_EMPTY"; call_s "__ligo_internal__map_iter"]
     
   | E_iterator (_, ((item_name, item_type), body), col) -> 
@@ -1062,9 +832,9 @@ let rec expression ~raise :
     let w, env, col = expression ~raise w env col in
     let w, env, init = expression ~raise w env initial in
     let w, env, iter_body = expression ~raise w env body in
-    let _ = W.Print.instr_list stdout 89 iter_body  in
     let w, required_args = add_function w fold_body_name (fun _ -> iter_body) in
     w, env, col @ init @ [func_symbol fold_body_name; data_symbol "C_SET_EMPTY"; call_s "__ligo_internal__set_fold"]
+
   | E_fold_right (((name , tv) , body) , (({type_expression = {type_content = T_set _; _}; _} as col), elem_tv) , initial) -> 
     let fold_body_name = unique_name "fold_body" in
     let env = add_locals env [(var_to_string name, T.NumType I32Type)] in
@@ -1073,171 +843,27 @@ let rec expression ~raise :
     let w, env, iter_body = expression ~raise w env body in
     let w, required_args = add_function w fold_body_name (fun _ -> iter_body) in
     w, env, col @ init @ [func_symbol fold_body_name; data_symbol "C_SET_EMPTY"; call_s "__ligo_internal__set_fold_right"]
+
   | E_fold (((name, tv), body), ({type_expression = {type_content = T_list _; _}; _} as col), initial) -> 
-    let item = unique_name "item" in
-    let init = unique_name "init" in
-    let next_item = unique_name "next_item" in
-    let result = unique_name "result" in
-    let name = var_to_string name in
-    let env = add_locals env [
-      (name, T.NumType I32Type);  
-      (init, T.NumType I32Type); 
-      (item, T.NumType I32Type); 
-      (next_item, T.NumType I32Type);
-      (result, T.NumType I32Type);
-    ]
-    in
-    let w, env, initial = expression ~raise w env initial in
+    let fold_body_name = unique_name "fold_body" in
+    let env = add_locals env [(var_to_string name, T.NumType I32Type)] in
     let w, env, col = expression ~raise w env col in
-    let w, env, body = expression ~raise w env body in
-    let w, env, tuple = Datatype.Pair.create w env [local_get_s init] [local_get_s item; load]  in
-    w, env, 
-    initial 
-    @
-    [
-      local_set_s init;
-    ]
-    @
-    col 
-    @
-    [
-      local_set_s item;
+    let w, env, init = expression ~raise w env initial in
+    let w, env, iter_body = expression ~raise w env body in
+    let w, required_args = add_function w fold_body_name (fun _ -> iter_body) in
+    w, env, col @ init @ [func_symbol fold_body_name; data_symbol "C_LIST_EMPTY"; call_s "__ligo_internal__list_fold"]
 
-      loop (ValBlockType (Some (T.NumType I32Type))) 
-      (
-      tuple
-      @ 
-      [
-        local_set_s name;
-      ]
-      @
-      body 
-      @
-      [        
-        local_set_s result;
-        
-        local_get_s result;
-        local_set_s init;
-
-        (* check to see if the loop needs to continue *)
-        local_get_s item;
-        const 4l;
-        i32_add;
-        load;
-        local_set_s next_item;
-
-        local_get_s next_item;
-        local_set_s item;
-
-        local_get_s result;
-
-        local_get_s next_item;
-        load;
-        const 0l;
-        i32_ne;
-        br_if 0l;
-      ]);
-    ]
   | E_fold (((name, tv), body), ({type_expression = {type_content = _; _}; _} as col), init) -> 
     raise.error (not_supported e)
-  | E_fold_right (((name , tv) , body) , (({type_expression = {type_content = T_list _; _}; _} as collection), elem_tv) , initial) -> 
-    let col_item = unique_name "item" in
-    let init = unique_name "init" in
-    let helper_fn_name = unique_name "helper_fn" in
-    let helper_fn_name = unique_name "tl" in
-    let name = var_to_string name in
-    
-    let result = unique_name "result" in
-    let env = add_locals env [
-      (init, T.NumType I32Type);   
-      (col_item, T.NumType I32Type);         
-      (name, T.NumType I32Type);  
-     
-    ]
-    in
+  | E_fold_right (((name , tv) , body) , (({type_expression = {type_content = T_list _; _}; _} as col), elem_tv) , initial) -> 
+    let fold_body_name = unique_name "fold_body" in
+    let env = add_locals env [(var_to_string name, T.NumType I32Type)] in
+    let w, env, col = expression ~raise w env col in
+    let w, env, init = expression ~raise w env initial in
+    let w, env, iter_body = expression ~raise w env body in
+    let w, required_args = add_function w fold_body_name (fun _ -> iter_body) in
+    w, env, col @ init @ [func_symbol fold_body_name; data_symbol "C_LIST_EMPTY"; call_s "__ligo_internal__list_fold_right"]
 
-    let w, env, initial = expression ~raise w env initial in    
-    let w, env, col = expression ~raise w env collection in
-    let w, env, body = expression ~raise w env body in
-
-    (* create a helper function here *)   
-    let hd  = unique_name "hd" in
-    let tl = unique_name "tl" in
-    let w, env, tuple = Datatype.Pair.create w env [local_get_s hd; load] [local_get_s init] in
-
-    let f_body args = [
-      (* check if the item points to an empty list *)
-      local_get_s col_item;
-      data_symbol "C_LIST_EMPTY";
-      compare_eq;
-      if_ (ValBlockType (Some (NumType I32Type)))
-        [
-          local_get_s init
-        ]
-        (
-          [
-
-            local_get_s col_item;
-            local_set_s hd;
-
-            (* iterate through the items in the list from left to right *)
-            local_get_s col_item;
-            const 4l;
-            i32_add;
-            load;
-            local_set_s col_item;
-          ]
-          @
-          args 
-          @
-         [
-            call_s helper_fn_name;
-            local_set_s init;
-
-            local_get_s hd;
-            local_set_s col_item;            
-
-        ]
-        @
-        tuple
-        @ 
-        [
-          local_set_s name;
-        ]
-        @
-        body 
-        @
-        [
-          local_set_s result;     
-          local_get_s result;
-        ])
-    ]
-    in
-    
-    (* add the function *)
-    let w, required_arguments = add_function w helper_fn_name f_body in
-
-    (* call the helper function here *)    
-    w, 
-    env, 
-    initial 
-    @
-    [
-      local_set_s init;
-    ]
-    @
-    col 
-    @
-    [
-      local_set_s col_item;
-
-    ]
-    @
-    required_arguments
-    @
-    [
-      call_s helper_fn_name;
-    ]
   | E_fold_right _ ->
     raise.error (not_supported e)
   | E_if_bool (test, t, f) -> 

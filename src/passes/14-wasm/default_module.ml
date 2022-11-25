@@ -5,6 +5,7 @@ open Helpers
 
 let at = no_region
 
+
 let mod_ : module_ =
   {
     it =
@@ -65,8 +66,7 @@ let mod_ : module_ =
               ~typedef:(FuncType ([NumType I32Type], [NumType I32Type]));
             type_ ~name:"to_int_type"
               ~typedef:(FuncType ([NumType I32Type], [NumType I32Type]));
-            type_ ~name:"__ligo_internal__set_size_type"
-              ~typedef:(FuncType ([NumType I32Type], [NumType I32Type]));
+            
             type_ ~name:"__ligo_internal__set_remove_type"
               ~typedef:(FuncType ([NumType I32Type; NumType I32Type; NumType I32Type; NumType I32Type;], [NumType I32Type]));
             type_ ~name:"__ligo_internal__string_concat_type"
@@ -90,7 +90,9 @@ let mod_ : module_ =
             type_ ~name:"__ligo_internal__set_update_type"
               ~typedef:(FuncType ([NumType I32Type; NumType I32Type; NumType I32Type; NumType I32Type; NumType I32Type;], [NumType I32Type]));
             
-              
+            (* list *)
+            type_ ~name:"__ligo_internal__list_iter_type"
+              ~typedef:(FuncType ([NumType I32Type; NumType I32Type; NumType I32Type], [NumType I32Type]));  
               
           ];
         imports =
@@ -125,7 +127,7 @@ let mod_ : module_ =
             import ~item:"c_set_add_insert_value" ~desc:(FuncImport_symbol "c_set_add_insert_value_type");
             import ~item:"c_set_left_child" ~desc:(FuncImport_symbol "c_set_left_child_type");
             import ~item:"to_int" ~desc:(FuncImport_symbol "to_int_type");
-            import ~item:"__ligo_internal__set_size" ~desc:(FuncImport_symbol "__ligo_internal__set_size_type");
+            
             import ~item:"__ligo_internal__set_remove" ~desc:(FuncImport_symbol "__ligo_internal__set_remove_type");
             import ~item:"__ligo_internal__string_concat" ~desc:(FuncImport_symbol "__ligo_internal__string_concat_type");
             import ~item:"__ligo_internal__string_slice" ~desc:(FuncImport_symbol "__ligo_internal__string_slice_type");
@@ -139,6 +141,8 @@ let mod_ : module_ =
 
             import ~item:"__ligo_internal__set_update" ~desc:(FuncImport_symbol "__ligo_internal__set_update_type");
             
+            (* list *)
+            import ~item:"__ligo_internal__list_iter" ~desc:(FuncImport_symbol "__ligo_internal__list_iter_type");
           ];
         symbols =
           [
@@ -174,8 +178,7 @@ let mod_ : module_ =
             symbol ~name:"c_set_add_insert_value" ~details:(Import ([NumType I32Type; NumType I32Type; NumType I32Type; NumType I32Type], [NumType I32Type]));
             symbol ~name:"c_set_left_child" ~details:(Import ([NumType I32Type], [NumType I32Type]));
             symbol ~name:"to_int" ~details:(Import ([NumType I32Type], [NumType I32Type]));
-            symbol ~name:"__ligo_internal__set_size"
-              ~details:(Import ([NumType I32Type], [NumType I32Type]));
+            
             symbol ~name:"__ligo_internal__set_remove"
               ~details:(Import ([NumType I32Type; NumType I32Type; NumType I32Type; NumType I32Type;], [NumType I32Type]));
             symbol ~name:"__ligo_internal__string_concat"
@@ -198,11 +201,28 @@ let mod_ : module_ =
               ~details:(Import ([NumType I32Type; NumType I32Type; NumType I32Type], [NumType I32Type]));
             symbol ~name:"__ligo_internal__set_update"
               ~details:(Import ([NumType I32Type; NumType I32Type; NumType I32Type; NumType I32Type; NumType I32Type], [NumType I32Type]));
+            
+            (* list *)
+            symbol ~name:"__ligo_internal__list_iter"
+              ~details:(Import ([NumType I32Type; NumType I32Type; NumType I32Type], [NumType I32Type]));
               
                 
           ];
       };
     at;
   }
+
+(* set *)
+let mod_ = add_import mod_ ~name:"__ligo_internal__set_size" ~typedef:([NumType I32Type], [NumType I32Type])
+
+(* map *)
+
+(* list *)
+let mod_ = add_import mod_ ~name:"__ligo_internal__list_map" ~typedef:([NumType I32Type; NumType I32Type; NumType I32Type], [NumType I32Type])
+let mod_ = add_import mod_ ~name:"__ligo_internal__list_size" ~typedef:([NumType I32Type; NumType I32Type], [NumType I32Type])
+let mod_ = add_import mod_ ~name:"__ligo_internal__list_fold" ~typedef:([NumType I32Type; NumType I32Type; NumType I32Type; NumType I32Type], [NumType I32Type])
+let mod_ = add_import mod_ ~name:"__ligo_internal__list_fold_right" ~typedef:([NumType I32Type; NumType I32Type; NumType I32Type; NumType I32Type], [NumType I32Type])
+
+(* string *)
 
 let offset = 20l (* TODO: this needs to be made more robust *)

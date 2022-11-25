@@ -248,6 +248,22 @@ let find_missing e =
   in 
   aux { missing_arguments = []; missing_locals = []; missing_functions = []; arguments = []; locals = []; functions = []} e
 
+let add_import_m w ~module_name ~name ~typedef = 
+  let t = type_ ~name:(name ^ "_type") ~typedef:(FuncType (fst typedef, snd typedef)) in
+  let i = import_m ~module_name ~item:name ~desc:(FuncImport_symbol (name ^ "_type")) () in
+  let s = symbol ~name ~details:(Import (fst typedef, snd typedef)) in
+  {w with 
+   it = {
+      w.it with
+      types = w.it.types @ [t];
+      imports = w.it.imports @ [i];
+      symbols = w.it.symbols @ [s];
+    }
+  }
+
+let add_import w ~name ~typedef = 
+  add_import_m w ~module_name:"env" ~name ~typedef
+
 let add_function w helper_fn_name f_body = 
   let local_get_s = local_get_s at in
   let required = find_missing (f_body []) in
