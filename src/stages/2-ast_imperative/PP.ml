@@ -138,6 +138,7 @@ and declaration ppf (d : declaration) =
   | D_type td -> Types.Type_decl.pp type_expression ppf td
   | D_module md -> Types.Module_decl.pp module_expr ppf md
   | D_open o -> Open_module.pp module_expr ppf o
+  | D_include o -> Open_module.pp module_expr ppf o
 
 
 and decl ppf d = declaration ppf d

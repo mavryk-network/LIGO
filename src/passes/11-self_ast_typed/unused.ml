@@ -219,6 +219,9 @@ and unused_declaration ~raise (x : declaration) =
   | D_open { module_ } ->
     let _ = unused_map_module_expr ~raise module_ in
     ()
+  | D_include { module_ } ->
+    let _ = unused_map_module_expr ~raise module_ in
+    ()
 
 
 and unused_decl ~raise x = unused_declaration ~raise x

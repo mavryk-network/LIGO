@@ -10,6 +10,7 @@ module Signature : sig
     | S_type of Type_var.t * Type.t
     | S_module of Module_var.t * t
     | S_open of t
+    | S_include of t
 
   val get_value : t -> Value_var.t -> Type.t option
   val get_type : t -> Type_var.t -> Type.t option
@@ -63,6 +64,7 @@ val add_lexists_var : t -> Layout_var.t -> t
 val add_lexists_eq : t -> Layout_var.t -> Type.layout -> t
 val add_module : t -> Module_var.t -> Signature.t -> t
 val add_open : t -> Signature.t -> t
+val add_include : t -> Signature.t -> t
 
 val get_value
   :  t

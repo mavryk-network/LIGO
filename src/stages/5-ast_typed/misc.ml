@@ -275,7 +275,7 @@ let get_entry (lst : program) (name : Value_var.t) : expression option =
             }
         } ->
       if Binder.apply (Value_var.equal name) binder then Some expr else None
-    | D_type _ | D_module _ | D_open _ -> None
+    | D_type _ | D_module _ | D_open _ | D_include _ -> None
   in
   List.find_map ~f:aux (List.rev lst)
 

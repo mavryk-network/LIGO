@@ -9474,3 +9474,15 @@ contract: Open With
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
+
+contract: Include With
+##
+## Ends in an error in state: 1160.
+##
+## module_include -> Include . nsepseq(module_name,DOT) [ Type Open Module Let Include End EOF Directive Attr ]
+##
+## The known suffix of the stack is as follows:
+## Include
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>

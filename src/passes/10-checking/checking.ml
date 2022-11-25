@@ -1444,6 +1444,13 @@ and infer_declaration (decl : I.declaration)
         let%bind module_ = module_ in
         return @@ O.D_open { module_ })
       (S_open sig_)
+  | D_include { module_ } ->
+    let%bind sig_, module_ = infer_module_expr module_ in
+    const
+      E.(
+        let%bind module_ = module_ in
+        return @@ O.D_include { module_ })
+      (S_include sig_)
 
 
 and infer_module (module_ : I.module_) : (Signature.t * O.module_ E.t, _, _) C.t

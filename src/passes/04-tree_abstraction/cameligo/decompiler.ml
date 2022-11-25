@@ -976,6 +976,7 @@ and decompile_declaration : AST.declaration -> CST.declaration =
       in
       CST.ModuleAlias (wrap mod_alias))
   | D_open _ -> failwith "Not implemented yet"
+  | D_include _ -> failwith "Not implemented yet"
 
 
 and decompile_pattern : AST.type_expression option AST.Pattern.t -> CST.pattern =

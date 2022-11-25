@@ -78,6 +78,7 @@ and fold_expression_in_module_expr
         | D_value x -> self acc x.expr
         | D_module x -> fold_expression_in_module_expr self acc x.module_
         | D_open x -> fold_expression_in_module_expr self acc x.module_
+        | D_include x -> fold_expression_in_module_expr self acc x.module_
         | D_type _ -> acc)
       ~init:acc
       decls
@@ -114,6 +115,9 @@ and fold_module : 'a folder -> 'a -> module_ -> 'a =
       let res = fold_expression_in_module_expr f acc module_ in
       return @@ res
     | D_open { module_ } ->
+      let res = fold_expression_in_module_expr f acc module_ in
+      return @@ res
+    | D_include { module_ } ->
       let res = fold_expression_in_module_expr f acc module_ in
       return @@ res
   in
@@ -255,6 +259,9 @@ and map_declaration m (x : declaration) =
   | D_open { module_ } ->
     let module_ = map_expression_in_module_expr m module_ in
     return @@ D_open { module_ }
+  | D_include { module_ } ->
+    let module_ = map_expression_in_module_expr m module_ in
+    return @@ D_include { module_ }
 
 
 and map_decl m d = map_declaration m d
@@ -275,7 +282,7 @@ let fetch_entry_type ~raise : string -> program -> type_expression * Location.t 
       if Value_var.is_name (Binder.get_var binder) main_fname
       then Some p
       else None
-    | D_type _ | D_module _ | D_open _ -> None
+    | D_type _ | D_module _ | D_open _ | D_include _ -> None
   in
   let main_decl_opt = List.find_map ~f:aux @@ List.rev m in
   let main_decl =
@@ -301,7 +308,7 @@ let fetch_contract_type ~raise : Value_var.t -> program -> contract_type =
       if Value_var.equal (Binder.get_var binder) main_fname
       then Some p
       else None
-    | D_type _ | D_module _ | D_open _ -> None
+    | D_type _ | D_module _ | D_open _ | D_include _ -> None
   in
   let main_decl_opt = List.find_map ~f:aux @@ List.rev m in
   let main_decl =
@@ -614,6 +621,7 @@ end = struct
         get_fv_module_expr module_
       | D_type _t -> empty
       | D_open { module_ } -> get_fv_module_expr module_
+      | D_include { module_ } -> get_fv_module_expr module_
     in
     unions @@ List.map ~f:aux m
 

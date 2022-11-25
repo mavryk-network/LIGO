@@ -1214,7 +1214,7 @@ and decompile_declaration : AST.declaration -> CST.statement =
               ; kwd_import = Token.ghost_import
               ; equal = Token.ghost_eq
               })))
-  | D_open _ -> failwith "Not implemented yet"
+  | D_open _ | D_include _ -> failwith "Not implemented yet"
 
 
 and decompile_module : AST.module_ -> CST.ast =

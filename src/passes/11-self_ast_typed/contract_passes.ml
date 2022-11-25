@@ -310,6 +310,13 @@ and get_fv_program (env : env) acc : program -> _ * program = function
     let new_env, module_ = get_fv_module_expr env module_ in
     let env = merge_env env new_env in
     get_fv_program env ({ hd with wrap_content = D_open { module_ } } :: acc) tl
+  | ({ Location.wrap_content = D_include { module_ }; _ } as hd) :: tl ->
+    let new_env, module_ = get_fv_module_expr env module_ in
+    let env = merge_env env new_env in
+    get_fv_program
+      env
+      ({ hd with wrap_content = D_include { module_ } } :: acc)
+      tl
 
 
 let remove_unused ~raise : contract_pass_data -> program -> program =

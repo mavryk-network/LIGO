@@ -113,6 +113,9 @@ and signature_item_of_decl
   | D_open { module_ } ->
     let sig_' = signature_of_module_expr ~ctx module_ in
     false, S_open sig_'
+  | D_include { module_ } ->
+    let sig_' = signature_of_module_expr ~ctx module_ in
+    true, S_include sig_'
 
 
 (* Load context from the outside declarations *)
@@ -134,7 +137,10 @@ let ctx_init ?env () =
           Context.add_module ctx module_binder sig_
         | D_open { module_ } ->
           let sig_ = signature_of_module_expr ~ctx module_ in
-          Context.add_open ctx sig_)
+          Context.add_open ctx sig_
+        | D_include { module_ } ->
+          let sig_ = signature_of_module_expr ~ctx module_ in
+          Context.add_include ctx sig_)
 
 
 let run_elab t ~raise ~options ?env () =

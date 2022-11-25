@@ -38,6 +38,16 @@ let internalize_core (ds : Ast_core.program) : Ast_core.program =
   let open Ast_core in
   let rec f (d : declaration_content) : declaration_content =
     match d with
+    | D_include { module_ } ->
+      let module_ =
+        match module_ with
+        | { wrap_content = M_struct x; _ } ->
+          { module_ with
+            wrap_content = Ligo_prim.Module_expr.M_struct (module' x)
+          }
+        | _ -> module_
+      in
+      D_include { module_ }
     | D_open { module_ } ->
       let module_ =
         match module_ with

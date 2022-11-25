@@ -56,6 +56,7 @@ type kwd_with = lexeme wrap
 type kwd_module = lexeme wrap
 type kwd_struct = lexeme wrap
 type kwd_open = lexeme wrap
+type kwd_include = lexeme wrap
 
 (* Symbols *)
 
@@ -153,6 +154,7 @@ and declaration =
   | ModuleDecl of module_decl reg
   | ModuleAlias of module_alias reg
   | ModuleOpen of module_open reg
+  | ModuleInclude of module_include reg
   | Directive of Directive.t
 
 (* Non-recursive values *)
@@ -207,6 +209,11 @@ and module_alias =
 
 and module_open =
   { kwd_open : kwd_open
+  ; binders : (module_name, dot) nsepseq
+  }
+
+and module_include =
+  { kwd_include : kwd_include
   ; binders : (module_name, dot) nsepseq
   }
 

@@ -223,6 +223,20 @@ and compile_declaration path aliases (d : AST.declaration)
                  wrap_content = M_module_path (List.Ne.of_list path)
                }
            })
+  | D_include { module_ } ->
+    let _mod_aliases, path, module_' =
+      compile_module_expr path aliases module_
+    in
+    (match module_' with
+    | Some module_ -> return_s aliases @@ AST.D_include { module_ }
+    | None ->
+      return_s aliases
+      @@ AST.D_include
+           { module_ =
+               { module_ with
+                 wrap_content = M_module_path (List.Ne.of_list path)
+               }
+           })
 
 
 and compile_declaration_list path aliases (program : AST.program)

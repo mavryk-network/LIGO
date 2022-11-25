@@ -114,6 +114,13 @@ let rec extract_variable_types
     | M_struct ds ->
       List.fold_left ds ~init:prev ~f:(fun prev d ->
           extract_variable_types prev d.wrap_content))
+  | D_include { module_ } ->
+    (match module_.wrap_content with
+    | M_variable _ -> prev
+    | M_module_path _ -> prev
+    | M_struct ds ->
+      List.fold_left ds ~init:prev ~f:(fun prev d ->
+          extract_variable_types prev d.wrap_content))
 
 
 let resolve_if : with_types:bool -> bindings_map -> Value_var.t -> type_case =

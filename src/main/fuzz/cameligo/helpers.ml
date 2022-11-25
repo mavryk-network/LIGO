@@ -410,6 +410,9 @@ module Fold_helpers (M : Monad) = struct
     | ModuleOpen { value; region } ->
       let { kwd_open = _; binders = _ } = value in
       return @@ ModuleOpen { value; region }
+    | ModuleInclude { value; region } ->
+      let { kwd_include = _; binders = _ } = value in
+      return @@ ModuleInclude { value; region }
     | Directive _ as d -> return d
 
 

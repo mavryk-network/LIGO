@@ -395,6 +395,10 @@ and fold_map_declaration m acc (x : declaration) =
     let acc', module_ = (fold_map_expression_in_module_expr m) acc module_ in
     let wrap_content = D_open { module_ } in
     acc', { x with wrap_content }
+  | D_include { module_ } ->
+    let acc', module_ = (fold_map_expression_in_module_expr m) acc module_ in
+    let wrap_content = D_include { module_ } in
+    acc', { x with wrap_content }
 
 
 and fold_map_decl m = fold_map_declaration m

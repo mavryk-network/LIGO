@@ -99,6 +99,7 @@ end = struct
       | D_module { module_binder = _; module_; module_attr = _ } ->
         get_fv_module_expr module_.wrap_content
       | D_open { module_ } -> get_fv_module_expr module_.wrap_content
+      | D_include { module_ } -> get_fv_module_expr module_.wrap_content
     in
     unions @@ List.map ~f:aux p
 

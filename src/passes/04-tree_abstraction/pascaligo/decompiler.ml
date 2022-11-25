@@ -1114,7 +1114,7 @@ and decompile_declaration : AST.declaration -> CST.declaration =
       }
     in
     wrap_attr module_attr @@ CST.D_Module (Region.wrap_ghost module_decl)
-  | D_open _ -> failwith "Not implemented yet"
+  | D_open _ | D_include _ -> failwith "Not implemented yet"
 
 
 and decompile_decl : AST.decl -> CST.declaration =

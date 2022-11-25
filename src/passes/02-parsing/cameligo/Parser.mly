@@ -177,12 +177,13 @@ module_:
   nseq(declaration) { {decl=$1; eof=wrap "" Region.ghost} }
 
 declaration:
-  type_decl       {    TypeDecl $1 }
-| let_declaration {         Let $1 }
-| module_decl     {  ModuleDecl $1 }
-| module_alias    { ModuleAlias $1 }
-| module_open     {  ModuleOpen $1 }
-| "<directive>"   {   Directive $1 }
+  type_decl       {      TypeDecl $1 }
+| let_declaration {           Let $1 }
+| module_decl     {    ModuleDecl $1 }
+| module_alias    {   ModuleAlias $1 }
+| module_open     {    ModuleOpen $1 }
+| module_include  { ModuleInclude $1 }
+| "<directive>"   {     Directive $1 }
 
 (* Type declarations *)
 
@@ -242,6 +243,15 @@ module_open:
     let stop   = nsepseq_to_region (fun x -> x.region) $2 in
     let region = cover kwd_open#region stop in
     let value  = {kwd_open;
+                  binders = $2}
+    in {region; value} }
+
+module_include:
+  "include" nsepseq(module_name,".") {
+    let kwd_include = $1 in
+    let stop   = nsepseq_to_region (fun x -> x.region) $2 in
+    let region = cover kwd_include#region stop in
+    let value  = {kwd_include;
                   binders = $2}
     in {region; value} }
 

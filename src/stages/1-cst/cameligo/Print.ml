@@ -112,6 +112,9 @@ and print_declaration state = function
   | ModuleOpen { value; region } ->
     print_loc_node state "ModuleOpen" region;
     print_module_open state value
+  | ModuleInclude { value; region } ->
+    print_loc_node state "ModuleInclude" region;
+    print_module_include state value
   | Directive dir ->
     let region, string = Directive.project dir in
     print_loc_node state "Directive" region;
@@ -226,6 +229,13 @@ and print_module_alias state decl =
 
 
 and print_module_open state decl =
+  let binders = Utils.nsepseq_to_list decl.binders in
+  let len = List.length binders in
+  let apply len rank = print_ident (state#pad len rank) in
+  List.iteri ~f:(apply len) binders
+
+
+and print_module_include state decl =
   let binders = Utils.nsepseq_to_list decl.binders in
   let len = List.length binders in
   let apply len rank = print_ident (state#pad len rank) in

@@ -252,6 +252,7 @@ and declaration ?(use_hidden = true) ppf (d : declaration) =
     then ()
     else Types.Module_decl.pp module_expr ppf md
   | D_open o -> Open_module.pp module_expr ppf o
+  | D_include o -> Open_module.pp module_expr ppf o
 
 
 and decl ppf d = declaration ppf d

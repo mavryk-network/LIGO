@@ -179,6 +179,7 @@ and declaration_content =
   | D_type of ty_expr Type_decl.t
   | D_module of module_expr Module_decl.t
   | D_open of module_expr Open_module.t
+  | D_include of module_expr Open_module.t
 
 and declaration = declaration_content Location.wrap
 and decl = declaration [@@deriving eq, compare, yojson, hash]

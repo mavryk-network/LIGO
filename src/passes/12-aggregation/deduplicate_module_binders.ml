@@ -199,6 +199,9 @@ and compile_declaration scope (d : AST.declaration) : Scope.t * AST.declaration 
   | D_open { module_ } ->
     let _mod_scope, module_ = compile_module_expr scope module_ in
     return scope @@ AST.D_open { module_ }
+  | D_include { module_ } ->
+    let _mod_scope, module_ = compile_module_expr scope module_ in
+    return scope @@ AST.D_include { module_ }
 
 
 and compile_program scope (program : AST.program) : Scope.t * AST.program =

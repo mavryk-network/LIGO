@@ -261,6 +261,9 @@ and untype_declaration =
     | D_open do_ ->
       let do_ = untype_declaration_open do_ in
       return @@ D_open do_
+    | D_include do_ ->
+      let do_ = untype_declaration_open do_ in
+      return @@ D_include do_
 
 
 and untype_decl : O.decl -> I.decl = fun d -> Location.map untype_declaration d

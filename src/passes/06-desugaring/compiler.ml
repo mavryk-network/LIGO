@@ -428,6 +428,9 @@ and compile_declaration ~raise : I.declaration -> O.declaration =
   | D_open { module_ } ->
     let module_ = compile_module_expr ~raise module_ in
     return @@ D_open { module_ }
+  | D_include { module_ } ->
+    let module_ = compile_module_expr ~raise module_ in
+    return @@ D_include { module_ }
 
 
 and compile_module_expr ~raise : I.module_expr -> O.module_expr =

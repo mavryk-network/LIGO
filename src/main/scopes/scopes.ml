@@ -637,6 +637,7 @@ and declaration
     let defs, refs = update_references refs defs in
     defs, refs, env, scopes
   | D_open _ -> (* niy *) [], [], tenv, []
+  | D_include _ -> (* niy *) [], [], tenv, []
 
 
 and declarations

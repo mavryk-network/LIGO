@@ -28,6 +28,7 @@ and pp_declaration = function
 | ModuleDecl  decl -> pp_module_decl  decl ^^ hardline
 | ModuleAlias decl -> pp_module_alias decl ^^ hardline
 | ModuleOpen  decl -> pp_module_open  decl ^^ hardline
+| ModuleInclude  decl -> pp_module_include  decl ^^ hardline
 | Directive   dir  -> string (Directive.to_lexeme dir).Region.value
 
 (* Variables *)
@@ -190,6 +191,10 @@ and pp_module_alias decl =
 
 and pp_module_open (decl : module_open reg) =
   string "open "
+  ^^ group (nest 0 (break 1 ^^ pp_nsepseq "." pp_ident decl.value.binders))
+
+and pp_module_include (decl : module_include reg) =
+  string "include "
   ^^ group (nest 0 (break 1 ^^ pp_nsepseq "." pp_ident decl.value.binders))
 
 and pp_expr = function

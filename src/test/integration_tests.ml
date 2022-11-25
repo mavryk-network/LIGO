@@ -619,6 +619,19 @@ let open_module ~raise () : unit =
   ()
 
 
+let include_module ~raise () : unit =
+  let program = type_file ~raise "./contracts/include_modules.mligo" in
+  let () =
+    expect_eq
+      ~raise
+      program
+      "main"
+      (e_pair (e_unit ()) (e_int 0))
+      (e_pair (e_list []) (e_int 2))
+  in
+  ()
+
+
 let modules ~raise program : unit =
   let () = expect_eq_evaluate ~raise program "toto" (e_int 42) in
   expect_eq ~raise program "add" (e_pair (e_int 1) (e_int 2)) (e_int 3)
@@ -3818,4 +3831,5 @@ let main =
     ; test_w "switch_return (jsligo)" switch_return_jsligo
     ; test_w "transitive (jsligo)" transitive_jsligo
     ; test_w "open module (mligo)" open_module
+    ; test_w "include module (mligo)" include_mligo
     ]

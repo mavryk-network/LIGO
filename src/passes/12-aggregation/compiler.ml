@@ -555,6 +555,9 @@ and compile_declaration
   | D_open { module_ } ->
     let mod_scope, _decl_list = compile_module_expr ~raise path scope module_ in
     mod_scope, []
+  | D_include { module_ } ->
+    let mod_scope, _decl_list = compile_module_expr ~raise path scope module_ in
+    mod_scope, []
 
 
 and compile_declaration_list

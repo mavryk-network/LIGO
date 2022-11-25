@@ -1021,6 +1021,12 @@ and compile_declaration ~raise : CST.declaration -> _ =
       m_path ~loc:Location.generated path (* wrong location *)
     in
     return_1 region @@ D_open { module_ }
+  | ModuleInclude { value = { binders; _ }; region } ->
+    let module_ =
+      let path = List.Ne.map compile_mod_var @@ npseq_to_ne_list binders in
+      m_path ~loc:Location.generated path (* wrong location *)
+    in
+    return_1 region @@ D_include { module_ }
   | Let { value = _kwd_let, kwd_rec, let_binding, attributes; region } ->
     let attr = compile_attributes attributes in
     let ({ type_params; binders; rhs_type; eq = _; let_rhs } : CST.let_binding) =
