@@ -55,7 +55,7 @@
             unreachable
         end
 
-    
+        
     )
 
     (func $__ligo_internal__log (param $str_info i32) (result i32)
@@ -98,7 +98,7 @@
         ;; call $fd_write 
        
         ;; drop
-        i32.const 1
+        i32.const 0
     )
 
     (func $right_rotate (param $child i32) (result i32) 
@@ -1574,20 +1574,26 @@
       (local $new_string i32)
 
       local.get $left
+      i32.const 4
+      i32.add
       i32.load
+      
       local.set $left_size
 
       local.get $left
-      i32.const 4
+      i32.const 8
       i32.add
       local.set $left_source
 
       local.get $right
+      i32.const 4
+      i32.add
       i32.load
+      
       local.set $right_size
       
       local.get $right
-      i32.const 4
+      i32.const 8
       i32.add
       local.set $right_source
       
@@ -1597,24 +1603,30 @@
       local.set $new_size
       
       local.get $new_size
-      i32.const 4
+      i32.const 8
       i32.add
       call $malloc
       local.set $new_string
 
       local.get $new_string
+      i32.const 4 ;; string tag
+      i32.store
+
+      local.get $new_string
+      i32.const 4 
+      i32.add
       local.get $new_size
       i32.store
 
       local.get $new_string
-      i32.const 4
+      i32.const 8
       i32.add
       local.get $left_source
       local.get $left_size
       memory.copy
 
       local.get $new_string
-      i32.const 4
+      i32.const 8
       i32.add
       local.get $left_size
       i32.add
@@ -1622,7 +1634,6 @@
       local.get $right_size
       memory.copy
 
-   
       local.get $new_string
     )
 
@@ -1637,6 +1648,9 @@
 
         local.get $str
         i32.load
+        i32.const 4
+        i32.add
+        
         local.tee $str_size
 
         local.get $offset
@@ -1649,10 +1663,9 @@
             i32.const 0
         else             
             local.get $len
-            
             i32.const 4
             i32.add
-                i32.load
+            i32.load
             local.set $len
 
             local.get $str_size
@@ -1668,21 +1681,27 @@
             end
 
             local.get $len
-            i32.const 4
+            i32.const 8
             i32.add
             call $malloc
             local.set $new_string
 
             local.get $new_string
-            local.get $len
+            i32.const 4
             i32.store
 
             local.get $new_string
             i32.const 4
             i32.add
+            local.get $len
+            i32.store
+
+            local.get $new_string
+            i32.const 8
+            i32.add
 
             local.get $str
-            i32.const 4
+            i32.const 8
             i32.add
             local.get $offset 
             i32.add

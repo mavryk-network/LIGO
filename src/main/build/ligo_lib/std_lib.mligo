@@ -7,11 +7,14 @@
   let logx (type a b) (v: a) = [%Wasm ({|    
     local.get 0
     local.set "str_info"
-    local.get "str_info"
     
-    local.set "str_size"
     local.get "str_info"
-    i32.const 4
+    i32.const 4 
+    i32.add
+    local.set "str_size"
+
+    local.get "str_info"
+    i32.const 8
     i32.add
     local.set "str"
 
@@ -50,8 +53,8 @@
 
   let no_of_digits (x: int): int = 
     [%Wasm ({|
-    i32.const 4 
-    i32.add
+      i32.const 4 
+      i32.add
       i32.load
       local.set "number"
 
@@ -124,21 +127,26 @@
       end
 
       local.get "no_of_digits"
-      i32.const 1 
+      i32.const 2 ;; figure out why this is needed...
       i32.add
       local.set "no_of_digits"
-
-      i32.const 1
-      local.set "counter"
 
       local.get "no_of_digits"
       i32.const 4
       i32.mul
-      i32.const 4
+      i32.const 8
       i32.add
       call "malloc"
-      local.tee "new_string"
-      local.get "no_of_digits"
+      local.set "new_string"
+
+      local.get "new_string"
+      i32.const 4 ;; tag
+      i32.store
+
+      local.get "new_string"
+      i32.const 4 
+      i32.add
+      local.get "no_of_digits" ;; size of new string
       i32.const 4
       i32.mul
       i32.store
@@ -146,7 +154,6 @@
       local.get "no_of_digits"
       i32.const 4
       i32.mul
-      
       local.set "offset"
 
 
@@ -164,17 +171,13 @@
         i32.rem_u
         i32.const 48
         i32.add
-        ;; drop
-
-        ;;  i32.const 49
 
         i32.store
       
         local.get "offset"
-        i32.const 4
+        i32.const 8
         i32.ne
         if 
-        
           local.get "val"
           i32.const 10 
           i32.div_u
@@ -190,7 +193,6 @@
       end
 
       local.get "new_string"
-      ;; i32.const 0 
     |}: int -> string )] (x)
 
   let failwith (type a b) (a: a) = [%Wasm ({| 

@@ -15,6 +15,7 @@ let other_c2 (a, b) =
   a + b
 
 let main ((_, _s):(parameter * storage)) =
+  let () = log ("wat: " ^ string_of_int 123456 ^ "\n") in
   let () = log ("foo " ^ "bar" ^ "!\n") in
   let () = log ((String.sub 0n 200n "abcd") ^ "\n") in
   let () = log "oh hai" in
@@ -65,9 +66,9 @@ let main ((_, _s):(parameter * storage)) =
 
   let a12 = List.fold_right xz a13 10 in
 
-  let a13 = List.iter (fun x -> assert (x < 10)) [3;5;7;9] in
+  let a13 = List.iter (fun x -> assert (x < 10)) [3; 5; 7; 9] in
   let _ = log "\n" in
-  let _ = List.iter (fun i -> log ("log test:" ^ string_of_int i ^ "\n")) [2;0; 4;6] in
+  let _ = List.iter (fun i -> log ("log test:" ^ string_of_int i ^ "\n")) [2; 0; 4; 6] in
 
   let a14 = List.tail_opt ([]: string list) in
   let a15 = match a14 with 
@@ -83,7 +84,7 @@ let main ((_, _s):(parameter * storage)) =
       )
   | _ -> 44
   in
-  let a17 = List.head_opt [9;7;8;9;10] in
+  let a17 = List.head_opt [9; 7; 8; 9; 10] in
   let a17 = match a17 with 
     Some s -> s
   | None -> 0
@@ -101,7 +102,6 @@ let main ((_, _s):(parameter * storage)) =
   let s1 = Set.literal [45; 35; 25; 20; 40; 30; 50] in
   let m1 = Map.literal [(3, 55); (5, 50)] in
   let xx = Set.cardinal s1 + Map.size m1 in
-  // let xx = Map.size m1 in
   let a19: int = int xx in
   let a20 = Set.remove 30 s1 in
   let a21 = Map.remove 50 (Map.literal [(20, 1); (50, 2); (30, 3)]) in
@@ -140,8 +140,8 @@ let main ((_, _s):(parameter * storage)) =
   in
   let sum (acc, i : int * int) : int = acc + i in
   let a26 : int = Set.fold sum s1 0 in
-  let a28: int = Set.fold sum (Set.literal [1;2;3]) 0 in
-  let a27 : int = Set.fold_desc sum (Set.literal [1;2;3;4;5]) 0 in
+  let a28: int = Set.fold sum (Set.literal [1; 2; 3]) 0 in
+  let a27 : int = Set.fold_desc sum (Set.literal [1; 2; 3; 4; 5]) 0 in
 
   let _ = Set.iter (fun f -> log ("update test: " ^ string_of_int f ^ "\n")) (Set.update 5 false (Set.literal [4; 5; 6])) in
   let a = 
@@ -176,4 +176,4 @@ let main ((_, _s):(parameter * storage)) =
     0
   in 
   let () =  log ("Result:" ^ string_of_int a ^ "\n") in
-  ([]: operation list), a
+  ([]: operation list), 0

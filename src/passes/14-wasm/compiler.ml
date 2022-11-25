@@ -262,13 +262,13 @@ let rec expression ~raise :
     let w = {w with datas = w.datas @ data; symbols = w.symbols @ symbols} in
     (w, env, [data_symbol name])
   in
-  let string_like name s = 
+  let string_like name header s = 
     (* need the size of the string as well*)
     let name = unique_name name in
     let s_len = Int32.of_int_exn (String.length s) in
-    let a_len = String.length s + 1 in
+    let a_len = String.length s + 2 in
     let a_len = Int32.of_int_exn a_len in
-    let data = [data ~offset:!global_offset ~init:{name; detail = [Int32 s_len; String s]}] in
+    let data = [data ~offset:!global_offset ~init:{name; detail = [Int32 header; Int32 s_len; String s]}] in
     let symbols =
       [symbol_data ~name ~index:0l ~size:a_len ~offset:!global_offset]
     in
@@ -292,14 +292,14 @@ let rec expression ~raise :
   | E_literal (Literal_nat z)               -> int_like "Literal_nat" 1l z
   | E_literal (Literal_timestamp z)         -> int_like "Literal_timestamp" 2l z
   | E_literal (Literal_mutez z)             -> int_like "Literal_mutez" 3l z
-  | E_literal (Literal_string (Standard s)) -> string_like "Literal_string" s
-  | E_literal (Literal_string (Verbatim s)) -> string_like "Literal_string" s
+  | E_literal (Literal_string (Standard s)) -> string_like "Literal_string" 4l s
+  | E_literal (Literal_string (Verbatim s)) -> string_like "Literal_string" 4l s
   | E_literal (Literal_bytes b)             -> bytes_like "Literal_bytes" b
-  | E_literal (Literal_address s)           -> string_like "Literal_address" s
-  | E_literal (Literal_signature s)         -> string_like "Literal_signature" s
-  | E_literal (Literal_key s)               -> string_like "Literal_key" s
-  | E_literal (Literal_key_hash s)          -> string_like "Literal_key_hash" s
-  | E_literal (Literal_chain_id s)          -> string_like "Literal_chain_id" s
+  | E_literal (Literal_address s)           -> string_like "Literal_address" 4l s
+  | E_literal (Literal_signature s)         -> string_like "Literal_signature" 4l s
+  | E_literal (Literal_key s)               -> string_like "Literal_key" 4l s
+  | E_literal (Literal_key_hash s)          -> string_like "Literal_key_hash" 4l s
+  | E_literal (Literal_chain_id s)          -> string_like "Literal_chain_id" 4l s
   | E_literal (Literal_operation b)         -> bytes_like "Literal_operation" b
   | E_literal (Literal_bls12_381_g1 b)      -> bytes_like "Literal_bls12_381_g1" b
   | E_literal (Literal_bls12_381_g2 b)      -> bytes_like "Literal_bls12_381_g2" b
@@ -403,6 +403,8 @@ let rec expression ~raise :
     s 
     @ 
     [
+      const 4l;
+      i32_add;
       load;
       store; 
       local_get_s size
