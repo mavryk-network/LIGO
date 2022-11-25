@@ -164,29 +164,13 @@ and statement = {
   statement_content : statement_content;
   location                    : Location.t
 }
+
 and statement_content =
 | S_Attr      of (Attribute.t * statement)
 | S_Instr     of instruction
 | S_Decl      of declaration
-and stmt = statement
-  [@@deriving yojson]
+and stmt = statement [@@deriving yojson]
 
-
-and var_decl = {
-  pattern     : pattern;
-  type_params : Ty_variable.t nseq option;
-  var_type    : type_expression option;
-  init        : expr;
-}
-
-and ('is_rec,'lhs,'body) let_binding = {
-  is_rec      : 'is_rec;
-  type_params : Ty_variable.t nseq option;
-  pattern     : 'lhs;
-  rhs_type   : type_expr option;
-  let_rhs     : expression;
-  body : 'body;
-}
 
 (* ========================== DECLARATIONS ================================= *)
 
@@ -243,16 +227,32 @@ and import =
   module_str  : string;
 }
 
+and ('is_rec,'lhs,'body,'ty_expr) let_binding = {
+  is_rec      : 'is_rec;
+  type_params : Ty_variable.t nseq option;
+  pattern     : 'lhs;
+  rhs_type   : 'ty_expr option;
+  let_rhs     : expression;
+  body : 'body;
+}
+
+and var_decl = {
+  pattern     : pattern;
+  type_params : Ty_variable.t nseq option;
+  var_type    : type_expression option;
+  init        : expr;
+}
+
 and declaration_content =
 | D_Directive      of Directive.t
 | D_Attr           of (Attribute.t * declaration)
 | D_Import         of import
 | D_Export         of statement 
-| D_Let            of (bool,pattern nseq,unit) let_binding
-| D_Var            of (unit,pattern,unit) let_binding
-| D_Multi_var      of (unit,pattern,unit) let_binding nseq
-| D_Const          of (unit,pattern,unit) let_binding
-| D_Multi_const    of (unit,pattern,unit) let_binding nseq
+| D_Let            of (bool,pattern nseq,unit,type_expr) let_binding
+| D_Var            of (unit,pattern,unit,type_expr) let_binding
+| D_Multi_var      of (unit,pattern,unit,type_expr) let_binding nseq
+| D_Const          of (unit,pattern,unit,type_expr) let_binding
+| D_Multi_const    of (unit,pattern,unit,type_expr) let_binding nseq
 | D_Type           of type_decl
 | D_Module         of module_decl
 | D_ModuleAlias    of module_alias
@@ -495,7 +495,7 @@ and expression_content =
   | E_BigMap of (expr * expr) list
 
   (* Let in *)
-  | E_Let_in of (bool,pattern nseq,expr) let_binding                    (* let x = 42 in x + 1 *)
+  | E_Let_in of (bool,pattern nseq,expr,type_expr) let_binding                    (* let x = 42 in x + 1 *)
   | E_TypeIn        of type_in            (* type t = int in let x : t = 42 *)
   | E_ModIn         of mod_in             (* module M = struct let x = 42 end in M.x *)
   | E_ModAlias      of mod_alias          (* module M = N.P in M.x *) 

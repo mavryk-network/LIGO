@@ -55,7 +55,7 @@ module TODO_unify_in_cst = struct
     i_expr ~loc expr ()
 end
 
-let rec compile_val_binding ~(raise: ('e, 'w) raise) : CST.val_binding -> (unit,pattern,unit) AST.let_binding =
+let rec compile_val_binding ~(raise: ('e, 'w) raise) : CST.val_binding -> (unit,pattern,unit,type_expr) AST.let_binding =
  fun { binders; type_params; lhs_type; eq = _; expr } ->
   let pattern = compile_pattern ~raise binders in
   let type_params = Option.map type_params ~f:(fun (tp : CST.type_generics) ->
