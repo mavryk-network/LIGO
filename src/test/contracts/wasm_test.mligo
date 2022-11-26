@@ -15,6 +15,11 @@ let other_c2 (a, b) =
   a + b
 
 let main ((_, _s):(parameter * storage)) =
+  let _ = if (1, 2, "pleh") = (1, 2, "pleh") then 
+    log ("hi dog\n")
+  else 
+    log ("no dog\n")
+  in
   let _ = if "ca" > "cat" then 
     log ("hi cat\n")
   else 

@@ -9,10 +9,28 @@
     (import "wasi_unstable" "fd_write" (func $fd_write (type 3)))
     (import "env" "__indirect_function_table" (table $table 0 funcref))
 
+    (global $__false__tag  i32 (i32.const 0))
+    (global $__true__tag   i32 (i32.const 1))
     (global $__int__tag    i32 (i32.const 2))
     (global $__string__tag i32 (i32.const 4))
-    (global $__tuple__tag  i32 (i32.const 5))
+    (global $__pair__tag   i32 (i32.const 5)) 
+    
+;; Comparison only works on a class of types that we call comparable. The COMPARE instruction is defined in an ad hoc way for each comparable type, but the result of COMPARE is always an int, which can in turn be checked in a generic manner using the EQ, NEQ, LT, GT, LE and GE combinators.
 
+;; The result of COMPARE is 0 if the top two elements of the stack are equal, negative if the first element in the stack is less than the second, and positive otherwise.
+
+;; address values are compared as follows:
+;; addresses of implicit accounts are strictly less than addresses of originated accounts
+;; addresses of the same type are compared lexicographically
+
+;; option-al values are compared as follows:
+;; None is strictly less than any Some x,
+;; Some x and Some y are compared as x and y.
+;; values of union types built with or are compared as follows:
+;; any Left x is smaller than any Right y,
+;; Left x and Left y are compared as x and y,
+;; Right x and Right y are compared as x and y.
+;; comparison for type never is defined with no implementation as it is never executed.
     (func $compare (param $a i32) (param $b i32) (result i32)
         (local $tag i32)
         (local $a_value i32)
@@ -24,6 +42,7 @@
         (local $x12 i32)
         (local $a_char i32)
         (local $b_char i32)
+        (local $temp i32)
 
         local.get $a
         i32.load8_u
@@ -62,7 +81,7 @@
             end
         else 
             local.get $tag 
-            i32.const 4 ;; string tag
+            global.get $__string__tag ;; string tag
             i32.eq 
             if (result i32)
                 ;; do a lexical comparison
@@ -104,19 +123,13 @@
                     i32.lt_u
                     if (result i32)
                         i32.const -1
-                        ;; br 2
                     else
                         local.get $a_char 
                         local.get $b_char 
                         i32.gt_u
                         if (result i32)
                             i32.const 1
-                            ;; br 3
                         else
-                            ;;  a < counter &&  counter < b -> continue
-                            ;;  a < counter && !counter < b -> -1
-                            ;; !a < counter &&  counter < b -> 1
-
                             local.get $counter 
                             local.get $a_size 
                             i32.lt_u
@@ -185,16 +198,62 @@
                     ;; 
 
                 end
-
-                ;; while a < b 
-                  ;; check for each byte <, =, >,
-                  ;; if a_len > b return -1
-                
-
-                ;; compare a string here...
-
             else 
-                unreachable
+                local.get $tag
+                global.get $__pair__tag 
+                i32.eq
+                if (result i32)
+                    local.get $a
+                    i32.const 4
+                    i32.add 
+                    i32.load
+
+                    local.get $b
+                    i32.const 4
+                    i32.add 
+                    i32.load
+                    call $compare
+                    local.tee $temp
+                    i32.const -1
+                    i32.eq
+                    if (result i32)
+                        i32.const -1
+                    else 
+                        local.get $temp
+                        i32.const 1
+                        i32.eq
+                        if (result i32)
+                            i32.const 1 
+                        else 
+                            local.get $a
+                            i32.const 8
+                            i32.add 
+                            i32.load
+
+                            local.get $b
+                            i32.const 8
+                            i32.add 
+                            i32.load
+                            call $compare
+                        end
+                    end
+                else 
+                    local.get $tag
+                    global.get $__false__tag ;; or unit
+                    i32.eq 
+                    if (result i32)
+                        i32.const 0 
+                    else 
+                        local.get $tag
+                        global.get $__true__tag
+                        i32.eq 
+                        if (result i32)
+                            i32.const 1
+                        else 
+                            unreachable
+                        end 
+                    end
+                end
             end
         end    
     )
@@ -1208,7 +1267,7 @@
             i32.const 12
             call $malloc 
             local.tee $tuple
-            global.get $__tuple__tag
+            global.get $__pair__tag
             i32.store8
             local.get $tuple
             i32.const 4
@@ -1273,7 +1332,7 @@
             i32.const 12
             call $malloc 
             local.tee $tuple
-            global.get $__tuple__tag
+            global.get $__pair__tag
             i32.store8
 
             local.get $tuple
@@ -1346,7 +1405,7 @@
             local.set $tuple
 
             local.get $tuple
-            global.get $__tuple__tag
+            global.get $__pair__tag
             i32.store8
 
             local.get $tuple
@@ -2046,7 +2105,7 @@
                 i32.const 12 
                 call $malloc 
                 local.tee $tuple 
-                global.get $__tuple__tag
+                global.get $__pair__tag
                 i32.store8
                 local.get $tuple
                 i32.const 4
@@ -2111,7 +2170,7 @@
             i32.const 12
             call $malloc 
             local.tee $tuple 
-            global.get $__tuple__tag
+            global.get $__pair__tag
             i32.store8
 
             local.get $tuple 
