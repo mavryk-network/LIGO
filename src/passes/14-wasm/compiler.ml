@@ -158,7 +158,7 @@ let convert_to_memory :
  fun at header name z ->
   let z = Z.to_int32 z in
   let open Int32 in
-  let data = A.[data ~offset:!global_offset ~init:{name; detail = [Int32 header; Int32 z]}] in (* 0 indicates an int *)
+  let data = A.[data ~offset:!global_offset ~init:{name; detail = [Int32 header; Int32 z]}] in
   let symbols =
     A.[symbol_data ~name ~index:0l ~size:8l ~offset:!global_offset]
   in
@@ -524,9 +524,14 @@ let rec expression ~raise :
       [
         const 8l;
         call_s "malloc";
+        local_tee_s cons;
+        (* const 5l; tuple *)
+        (* store8; *)
 
         (* check if not 0 *)
-        local_tee_s cons;
+        (* local_get_s cons; *)
+        (* const 4l;
+        i32_add; *)
       ]
       @ 
       l1
@@ -556,7 +561,7 @@ let rec expression ~raise :
     let w, env, cons = expression ~raise w env cons in
     ( w,
       env,
-      cons @ [load]
+      cons @ [const 4l; i32_add; load]
     )
   | E_constant {cons_name = C_CDR; arguments = [cons]} ->
     (* TODO: move to Datatype.ml *)
@@ -565,7 +570,7 @@ let rec expression ~raise :
       env,
       cons
       @ [
-          const 4l;
+          const 8l;
           i32_add;
           load
         ] )
@@ -1148,7 +1153,7 @@ let rec expression ~raise :
     let env = add_local env (name, T.NumType I32Type) in
     let w, env, e2 = expression ~raise w env e2 in
     (w, env, e1 @ [local_set_s name] @ e2)
-  | E_tuple el -> 
+  | E_tuple el ->
     let tuple_name = var_to_string (Value_var.fresh ~name:"let_tuple" ()) in
     let t =  [ 
       const (Int32.of_int_exn (List.length el));
@@ -1193,9 +1198,10 @@ let rec expression ~raise :
             all
             @ [
               local_get_s tuple_name;
-              const Int32.(4l * Int32.of_int_exn i);
+              const Int32.(4l * Int32.of_int_exn Int.(i + 1));
               i32_add;
               load;
+              
               local_set_s name;
             ]
           )

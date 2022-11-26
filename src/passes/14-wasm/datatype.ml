@@ -230,12 +230,25 @@ module Pair = struct
     let local_set_s = local_set_s at in
     let local_get_s = local_get_s at in
     let store = store at in
+    let store8 = store8 at in
     let i32_add = i32_add at in
     let pair = var_to_string (Value_var.fresh ~name:"C_PAIR" ()) in
     let e =
-      [const 8l; call_s "malloc"; local_set_s pair; local_get_s pair]
+      [
+        const 12l; 
+        call_s "malloc"; 
+        local_set_s pair; 
+
+        local_get_s pair;
+        const 5l;
+        store8;
+
+        local_get_s pair;
+        const 4l;
+        i32_add;
+      ]
       @ e1
-      @ [store; local_get_s pair; const 4l; i32_add]
+      @ [store; local_get_s pair; const 8l; i32_add]
       @ e2
       @ [store; local_get_s pair]
     in

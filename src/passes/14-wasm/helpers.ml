@@ -124,7 +124,7 @@ let load at =
 let store at =
   {it = Store {ty = I32Type; align = 0; offset = 0l; pack = None}; at}
 let store8 at =
-  {it = Store {ty = I32Type; align = 0; offset = 0l; pack = None}; at}
+  {it = Store {ty = I32Type; align = 0; offset = 0l; pack = Some Pack8}; at}
   
 
 let i32_add at = {it = Binary (I32 Add); at}
@@ -277,8 +277,6 @@ let add_function w helper_fn_name f_body =
   let required_arguments = (
     List.fold_left 
       ~f:(fun a s -> 
-          print_endline ("missing argument:" ^ s);
-          print_endline ("missing argument2:" ^ helper_fn_name);
           a @ 
           [
             local_get_s s              

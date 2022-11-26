@@ -9,8 +9,9 @@
     (import "wasi_unstable" "fd_write" (func $fd_write (type 3)))
     (import "env" "__indirect_function_table" (table $table 0 funcref))
 
-    (global $__int__tag i32    (i32.const 2))
+    (global $__int__tag    i32 (i32.const 2))
     (global $__string__tag i32 (i32.const 4))
+    (global $__tuple__tag  i32 (i32.const 5))
 
     (func $compare (param $a i32) (param $b i32) (result i32)
         (local $tag i32)
@@ -195,9 +196,7 @@
             else 
                 unreachable
             end
-        end
-
-        
+        end    
     )
 
     (func $__ligo_internal__log (param $str_info i32) (result i32)
@@ -1206,13 +1205,18 @@
                 local.set $init
             end
             
-            i32.const 8 
+            i32.const 12
             call $malloc 
             local.tee $tuple
+            global.get $__tuple__tag
+            i32.store8
+            local.get $tuple
+            i32.const 4
+            i32.add
             local.get $init            
             i32.store
             local.get $tuple
-            i32.const 4
+            i32.const 8
             i32.add 
             local.get $set
             i32.load
@@ -1266,14 +1270,20 @@
                 local.set $init
             end
             
-            i32.const 8 
+            i32.const 12
             call $malloc 
             local.tee $tuple
+            global.get $__tuple__tag
+            i32.store8
+
+            local.get $tuple
+            i32.const 4
+            i32.add
             local.get $set
             i32.load          
             i32.store
             local.get $tuple
-            i32.const 4
+            i32.const 8
             i32.add 
             local.get $init  
             i32.store
@@ -1331,17 +1341,23 @@
             drop
 
             ;; TODO: move key and value next to each other to avoid doing this
-            i32.const 8
+            i32.const 12
             call $malloc
             local.set $tuple
 
             local.get $tuple
+            global.get $__tuple__tag
+            i32.store8
+
+            local.get $tuple
+            i32.const 4
+            i32.add
             local.get $set 
             i32.load
             i32.store
 
             local.get $tuple
-            i32.const 4
+            i32.const 8
             i32.add
 
             local.get $set            
@@ -2027,13 +2043,18 @@
             local.get $init
         else
             loop (result i32)
-                i32.const 8 
+                i32.const 12 
                 call $malloc 
                 local.tee $tuple 
+                global.get $__tuple__tag
+                i32.store8
+                local.get $tuple
+                i32.const 4
+                i32.add
                 local.get $init 
                 i32.store
                 local.get $tuple
-                i32.const 4
+                i32.const 8
                 i32.add
                 local.get $list 
                 i32.load
@@ -2087,15 +2108,21 @@
             call $__ligo_internal__list_fold_right 
             local.set $init
 
-            i32.const 8
+            i32.const 12
             call $malloc 
             local.tee $tuple 
+            global.get $__tuple__tag
+            i32.store8
+
+            local.get $tuple 
+            i32.const 4
+            i32.add
             local.get $list 
             i32.load
             i32.store
 
             local.get $tuple 
-            i32.const 4
+            i32.const 8
             i32.add
             local.get $init 
             i32.store
