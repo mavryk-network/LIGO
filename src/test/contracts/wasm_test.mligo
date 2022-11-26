@@ -15,6 +15,11 @@ let other_c2 (a, b) =
   a + b
 
 let main ((_, _s):(parameter * storage)) =
+  let _ = if "ca" > "cat" then 
+    log ("hi cat\n")
+  else 
+    log ("no cats\n")
+  in
   let () = log ("wat: " ^ string_of_int 123456 ^ "\n") in
   let () = log ("foo " ^ "bar" ^ "!\n") in
   let () = log ((String.sub 0n 200n "abcd") ^ "\n") in

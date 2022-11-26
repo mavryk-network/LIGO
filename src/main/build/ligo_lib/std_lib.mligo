@@ -82,8 +82,8 @@
       i32.const 8
       call "malloc"
       local.tee "r"
-      i32.const 0 
-      i32.store
+      i32.const 2 ;; int tag
+      i32.store8
       
       local.get "r"
       i32.const 4
@@ -141,7 +141,7 @@
 
       local.get "new_string"
       i32.const 4 ;; tag
-      i32.store
+      i32.store8
 
       local.get "new_string"
       i32.const 4 

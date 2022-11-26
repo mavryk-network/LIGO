@@ -205,6 +205,7 @@ let rec expression ~raise :
   let br = br at in
   let loop = loop at in 
   let nop = nop at in
+  let store8 = store8 at in
   let i32_eqz = i32_eqz at in
   let unreachable = unreachable at in
   let memory_copy = memory_copy at in
@@ -289,12 +290,47 @@ let rec expression ~raise :
     let w = {w with datas = w.datas @ data; symbols = w.symbols @ symbols } in
     (w, env, [data_symbol name])
   in
+  (*
+    TODO: change/add tags to:
+
+    false     = 0
+    true      = 1
+    int       = 2
+    string    = 4
+    tuple     = 5
+    list      = 6
+    set       = 7
+
+    packaging format
+    ===
+    tag + info
+
+
+    ---
+
+    nat       = 3
+    timestamp = 4
+    mutez     = 5
+    string    = 6
+    bytes     = 7 
+    address   = 8
+    signature = 9
+    key       = 10
+    key_hash  = 11
+    chain_id  = 12
+    operation = 13
+    bls12_381_g1 = 14
+    bls12_381_g2 = 15
+    bls12_381_fr = 16
+    chest = 17
+    chest_key = 18
+  *)
   match e.content with
   | E_literal Literal_unit                  -> (w, env, [const 0l])
-  | E_literal (Literal_int z)               -> int_like "Literal_int" 0l z
-  | E_literal (Literal_nat z)               -> int_like "Literal_nat" 0l z
-  | E_literal (Literal_timestamp z)         -> int_like "Literal_timestamp" 0l z
-  | E_literal (Literal_mutez z)             -> int_like "Literal_mutez" 0l z
+  | E_literal (Literal_int z)               -> int_like "Literal_int" 2l z
+  | E_literal (Literal_nat z)               -> int_like "Literal_nat" 2l z
+  | E_literal (Literal_timestamp z)         -> int_like "Literal_timestamp" 2l z
+  | E_literal (Literal_mutez z)             -> int_like "Literal_mutez" 2l z
   | E_literal (Literal_string (Standard s)) -> string_like "Literal_string" 4l s
   | E_literal (Literal_string (Verbatim s)) -> string_like "Literal_string" 4l s
   | E_literal (Literal_bytes b)             -> bytes_like "Literal_bytes" b
@@ -463,8 +499,8 @@ let rec expression ~raise :
       const 8l; 
       call_s "malloc"; 
       local_tee_s size; 
-      const 0l; 
-      store; 
+      const 2l; 
+      store8; 
       local_get_s size; 
       const 4l; 
       i32_add

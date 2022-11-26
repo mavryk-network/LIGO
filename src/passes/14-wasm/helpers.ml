@@ -123,6 +123,9 @@ let load at =
 
 let store at =
   {it = Store {ty = I32Type; align = 0; offset = 0l; pack = None}; at}
+let store8 at =
+  {it = Store {ty = I32Type; align = 0; offset = 0l; pack = None}; at}
+  
 
 let i32_add at = {it = Binary (I32 Add); at}
 

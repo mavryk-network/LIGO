@@ -45,6 +45,7 @@ let bin_op: (S.region -> A.instr list) -> Env.t -> A.instr list -> A.instr list 
   let store     = store at in
   let local_tee_s = local_tee_s at in
   let local_get_s = local_get_s at in
+  let store8 = store8 at in
   let i32_add = i32_add at in
   let name  = unique_name "bin_op" in
   (Env.add_local env (name, T.NumType I32Type)), 
@@ -52,8 +53,8 @@ let bin_op: (S.region -> A.instr list) -> Env.t -> A.instr list -> A.instr list 
     const 8l;
     call_s "malloc";
     local_tee_s name;
-    const 0l;
-    store;
+    const 2l;
+    store8;
     local_get_s name;
     const 4l;
     i32_add;

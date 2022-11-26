@@ -9,6 +9,9 @@
     (import "wasi_unstable" "fd_write" (func $fd_write (type 3)))
     (import "env" "__indirect_function_table" (table $table 0 funcref))
 
+    (global $__int__tag i32    (i32.const 2))
+    (global $__string__tag i32 (i32.const 4))
+
     (func $compare (param $a i32) (param $b i32) (result i32)
         (local $tag i32)
         (local $a_value i32)
@@ -22,11 +25,11 @@
         (local $b_char i32)
 
         local.get $a
-        i32.load 
+        i32.load8_u
         local.set $tag
 
         local.get $tag
-        i32.const 0 ;; int tag
+        global.get $__int__tag
         i32.eq
         if (result i32)
             local.get $a 
@@ -371,8 +374,8 @@
         i32.const 8
         call $malloc
         local.tee $result
-        i32.const 0
-        i32.store
+        global.get $__int__tag
+        i32.store8
 
         local.get $result
         i32.const 4
@@ -1689,8 +1692,8 @@
         i32.const 8
         call $malloc
         local.tee $new_int
-        i32.const 0
-        i32.store
+        global.get $__int__tag
+        i32.store8
 
         local.get $new_int
         i32.const 4
@@ -1749,7 +1752,7 @@
 
       local.get $new_string
       i32.const 4 ;; string tag
-      i32.store
+      i32.store8
 
       local.get $new_string
       i32.const 4 
@@ -1827,7 +1830,7 @@
 
             local.get $new_string
             i32.const 4
-            i32.store
+            i32.store8
 
             local.get $new_string
             i32.const 4
@@ -1905,8 +1908,8 @@
         local.set $return 
 
         local.get $return 
-        i32.const 0
-        i32.store
+        global.get $__int__tag
+        i32.store8
 
         local.get $list 
         local.get $C_LIST_EMPTY
