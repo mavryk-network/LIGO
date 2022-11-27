@@ -172,6 +172,10 @@ let main ((_, _s):(parameter * storage)) =
   else 
     log "wrong2\n"
   in
+  let _ = match (Map.find_opt 2 (Map.literal [(2, "yoho"); (3, "b"); (4, "c")])) with 
+    Some s -> log ("resultx:" ^ s ^ "\n")
+  | None   -> log "niks"
+  in
   let a = 
     4 + 5 +  (* 9 *)
     40 / 5 + (* 9 + 8 = 17 *)

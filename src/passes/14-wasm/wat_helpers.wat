@@ -650,6 +650,124 @@
         end
     )
 
+    (func $__ligo_internal__map_find_opt (param $set i32) (param $m i32) (param $C_SET_EMPTY i32) (result i32)
+        (local $count i32)
+        (local $left_child i32)
+        (local $right_child i32)
+        (local $left_value i32)
+        (local $right_value i32)
+        (local $temp i32)
+        (local $comparison_result i32)
+        (local $result i32)
+
+        
+        local.get $set
+        local.get $C_SET_EMPTY
+        i32.eq
+        if (result i32)  
+            i32.const 8 
+            call $malloc
+            local.tee $result
+            i32.const 6
+            i32.store
+            local.get $result 
+            i32.const 4
+            i32.add 
+            i32.const 0
+            i32.store      
+            local.get $result
+            br 0
+        else 
+            loop (result i32)
+                local.get $m 
+                local.get $set
+                i32.load                
+                call $compare
+                local.tee $comparison_result
+                i32.const 0
+                i32.eq
+                if (result i32)                
+                    i32.const 12
+                    call $malloc
+                    local.tee $result
+                    i32.const 6
+                    i32.store
+
+                    local.get $result 
+                    i32.const 4
+                    i32.add 
+                    i32.const 1
+                    i32.store
+
+                    local.get $result 
+                    i32.const 8
+                    i32.add 
+                    local.get $set
+                    i32.const 20
+                    i32.add
+                    i32.load   
+                    ;; i32.load
+                    i32.store      
+                    local.get $result
+                    br 3
+                else 
+                    local.get $comparison_result 
+                    i32.const -1
+                    i32.eq
+                    if  (result i32)
+                        local.get $set 
+                        i32.const 8
+                        i32.add
+                        i32.load
+                        local.tee $left_child
+                        if (result i32)
+                            local.get $left_child
+                            local.set $set 
+                            br 3
+                        else 
+                             i32.const 8 
+                            call $malloc
+                            local.tee $result
+                            i32.const 6
+                            i32.store
+                            local.get $result 
+                            i32.const 4
+                            i32.add 
+                            i32.const 0
+                            i32.store      
+                            local.get $result
+                            br 4
+                        end
+                    else 
+                        local.get $set 
+                        i32.const 12
+                        i32.add
+                        i32.load
+                        local.tee $right_child
+                        if (result i32)
+                            local.get $right_child
+                            local.set $set 
+                            br 3
+                        else 
+                            i32.const 8 
+                            call $malloc
+                            local.tee $result
+                            i32.const 6
+                            i32.store
+                            local.get $result 
+                            i32.const 4
+                            i32.add 
+                            i32.const 0
+                            i32.store      
+                            local.get $result
+                            br 4
+                        end
+                    end
+                end
+            end
+        end
+    )
+
    (func $__ligo_internal__set_add (param $set i32) (param $key i32) (param $C_SET_EMPTY i32) (result i32)
         (local $result i32)
         (local $new_item i32)

@@ -64,7 +64,8 @@ let mod_ = add_imports mod_ [
 
   (* map *)
   ("env", "__ligo_internal__map_iter",        ([NumType I32Type; NumType I32Type; NumType I32Type],                  [NumType I32Type]));
-  ("env", "__ligo_internal__map_add",    ([NumType I32Type; NumType I32Type; NumType I32Type; NumType I32Type], [NumType I32Type]));
+  ("env", "__ligo_internal__map_add",         ([NumType I32Type; NumType I32Type; NumType I32Type; NumType I32Type], [NumType I32Type]));
+  ("env", "__ligo_internal__map_find_opt",    ([NumType I32Type; NumType I32Type; NumType I32Type], [NumType I32Type]));
 
   (* list *)
   ("env", "__ligo_internal__list_map",        ([NumType I32Type; NumType I32Type; NumType I32Type],                  [NumType I32Type]));

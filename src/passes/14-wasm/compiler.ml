@@ -653,6 +653,11 @@ let rec expression ~raise :
     let w, env, value_e = expression ~raise w env value in
     w, env, map_e @ key_e @ value_e @ [data_symbol "C_SET_EMPTY"; call_s "__ligo_internal__map_add"]
 
+  | E_constant {cons_name = C_MAP_FIND_OPT; arguments = [key; map] } ->     
+    let w, env, key_e = expression ~raise w env key in
+    let w, env, map_e = expression ~raise w env map in
+    w, env, map_e @ key_e @ [data_symbol "C_SET_EMPTY"; call_s "__ligo_internal__map_find_opt"]
+
   | E_constant {cons_name = C_MAP_SIZE; arguments = [m] } ->
     let w, env, m = expression ~raise w env m in
     w, env, m @ [call_s "__ligo_internal__set_size" ]
@@ -669,7 +674,6 @@ let rec expression ~raise :
   | E_constant {cons_name = C_MAP_MAP; arguments = [func; map] } -> raise.error (not_supported e)
   | E_constant {cons_name = C_MAP_FOLD; arguments = [func; map] } -> raise.error (not_supported e)
   | E_constant {cons_name = C_MAP_FIND; arguments = [key; map] } -> raise.error (not_supported e)
-  | E_constant {cons_name = C_MAP_FIND_OPT; arguments = [key; map] } -> raise.error (not_supported e)
   | E_constant {cons_name = C_MAP_GET_AND_UPDATE; arguments = [key; value; map] } -> raise.error (not_supported e)
 
   (* Big Maps *)
