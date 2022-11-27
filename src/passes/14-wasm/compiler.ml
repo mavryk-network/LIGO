@@ -669,7 +669,12 @@ let rec expression ~raise :
     let w, env, key_e = expression ~raise w env key in
     let w, env, set_e = expression ~raise w env set in
     w, env, set_e @ key_e @ [data_symbol "C_SET_EMPTY"; call_s "__ligo_internal__set_mem"]
-  | E_constant {cons_name = C_MAP_UPDATE; arguments = [key; value; map] } -> raise.error (not_supported e)
+  | E_constant {cons_name = C_MAP_UPDATE; arguments = [key; value; map] } -> 
+    let w, env, key_e = expression ~raise w env key in
+    let w, env, value_e = expression ~raise w env value in
+    let w, env, map_e = expression ~raise w env map in
+    w, env, map_e @ key_e @ value_e @ [const 24l; data_symbol "C_SET_EMPTY"; call_s "__ligo_internal__map_update"]
+
   | E_constant {cons_name = C_MAP_ITER; arguments = [func; map] } -> raise.error (not_supported e)
   | E_constant {cons_name = C_MAP_MAP; arguments = [func; map] } -> raise.error (not_supported e)
   | E_constant {cons_name = C_MAP_FOLD; arguments = [func; map] } -> raise.error (not_supported e)

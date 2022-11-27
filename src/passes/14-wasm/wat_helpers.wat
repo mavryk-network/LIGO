@@ -1060,7 +1060,6 @@
         end
         drop
         local.get $result
-        ;; i32.const 0
     )
 
 
@@ -1438,6 +1437,173 @@
             call $__ligo_internal__set_add
         else
             local.get $set
+            local.get $key
+            local.get $SIZE
+            local.get $C_SET_EMPTY
+            call $__ligo_internal__set_remove
+        end
+    )
+
+(func $__ligo_internal__map_update_in (param $set i32) (param $key i32) (param $value i32) (param $C_SET_EMPTY i32) (result i32)
+        (local $result i32)
+        (local $new_item i32)
+        (local $current_item i32)
+        (local $parent i32)
+        (local $compare_result i32)
+        (local $new_child i32)
+        (local $left_child i32)
+        (local $right_child i32)
+
+        local.get $set 
+        local.get $C_SET_EMPTY
+        i32.eq
+        if (result i32)
+            i32.const 24
+            call $malloc 
+            local.tee $result
+            local.get $key 
+            i32.store         
+
+            local.get $result 
+            i32.const 20
+            i32.add
+            local.get $value
+            i32.store
+
+            local.get $result
+        else
+            i32.const 24
+            call $malloc 
+            local.set $result 
+
+            local.get $result 
+            local.set $new_item
+
+            local.get $set 
+            local.set $current_item
+
+            loop (result i32)
+                local.get $new_item
+                local.get $current_item 
+                i32.const 24
+                memory.copy 
+
+                local.get $new_item 
+                i32.const 4
+                i32.add 
+                local.get $parent
+                i32.store
+
+                local.get $new_item 
+                local.set $parent
+
+                
+                
+                local.get $key
+                local.get $current_item
+                i32.load             
+                call $compare
+                local.tee $compare_result
+                if (result i32)
+                    local.get $compare_result 
+                    i32.const -1
+                    i32.eq 
+                    if (result i32)
+                        
+                        local.get $current_item
+                        i32.const 8
+                        i32.add
+                        i32.load
+                        local.tee $left_child
+                        i32.const 0 
+                        i32.eq
+                        if (result i32) 
+                            local.get $result
+                            br 4
+                        else
+                            i32.const 24
+                            call $malloc
+                            local.set $new_child
+
+                            local.get $new_item
+                            i32.const 8 
+                            i32.add
+                            local.get $new_child
+                            i32.store 
+
+                            local.get $new_child
+                            local.set $new_item
+
+                            local.get $left_child
+                            local.set $current_item 
+
+                            br 3
+                        end
+                    else 
+                        local.get $current_item
+                        i32.const 12
+                        i32.add
+                        i32.load
+                        local.tee $right_child
+                        i32.const 0 
+                        i32.eq
+                        if (result i32)
+                            local.get $result 
+                            br 4
+                        else
+                            i32.const 24
+                            call $malloc
+                            local.set $new_child
+
+                            local.get $new_item
+                            i32.const 12
+                            i32.add
+                            local.get $new_child
+                            i32.store
+
+                            local.get $new_child
+                            local.set $new_item
+
+                            local.get $right_child
+                            local.set $current_item 
+
+                            br 3
+                        end                    
+                    end
+                else
+                    local.get $new_item
+                    i32.const 20
+                    i32.add
+                    local.get $value 
+                    i32.store
+
+                    local.get $result
+                end           
+            end
+        end
+        drop
+        local.get $result
+    )
+
+    (func $__ligo_internal__map_update (param $map i32) (param $key i32) (param $value i32) (param $SIZE i32) (param $C_SET_EMPTY i32) (result i32)
+        local.get $value
+        i32.const 4 
+        i32.add  
+        i32.load
+        i32.const 1
+        i32.eq
+        if (result i32)
+            local.get $map 
+            local.get $key
+            local.get $value
+            i32.const 8
+            i32.add  
+            i32.load
+            
+            local.get $C_SET_EMPTY
+            call $__ligo_internal__map_update_in
+        else
+            local.get $map
             local.get $key
             local.get $SIZE
             local.get $C_SET_EMPTY

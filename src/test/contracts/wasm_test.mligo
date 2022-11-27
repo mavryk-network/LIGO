@@ -176,6 +176,12 @@ let main ((_, _s):(parameter * storage)) =
     Some s -> log ("resultx:" ^ s ^ "\n")
   | None   -> log "niks"
   in
+  let mx = Map.literal [(3, 1); (2, 4); (7, 8)] in
+  let mx2 = Map.update 2 (Some 99) mx in
+  let _ = match (Map.find_opt 2 mx2) with 
+    Some s -> log ("resulty:" ^ string_of_int s ^ "\n")
+  | None   -> log "niks"
+  in
   let a = 
     4 + 5 +  (* 9 *)
     40 / 5 + (* 9 + 8 = 17 *)
