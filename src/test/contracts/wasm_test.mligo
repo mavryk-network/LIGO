@@ -159,6 +159,19 @@ let main ((_, _s):(parameter * storage)) =
   else 
     log "okay\n"
   in
+
+  type test_a = 
+    | A
+    | B
+    | C
+    | D of int 
+    | E
+  in 
+  let _ = if (D 1) < (D 3) then
+    log "okay1\n"
+  else 
+    log "wrong2\n"
+  in
   let a = 
     4 + 5 +  (* 9 *)
     40 / 5 + (* 9 + 8 = 17 *)

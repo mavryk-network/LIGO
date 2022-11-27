@@ -745,7 +745,7 @@ let rec expression ~raise :
       const 8l;
       call_s "malloc";
       local_tee_s c_left;
-      const 0l;
+      const 7l;
       store;
       local_get_s c_left;
       const 4l;
@@ -767,7 +767,7 @@ let rec expression ~raise :
       const 8l;
       call_s "malloc";
       local_tee_s c_right;
-      const 1l;
+      const 8l;
       store;
       local_get_s c_right;
       const 4l;

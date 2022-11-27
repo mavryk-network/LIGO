@@ -14,7 +14,10 @@
     (global $__int__tag    i32 (i32.const 2))
     (global $__string__tag i32 (i32.const 4))
     (global $__pair__tag   i32 (i32.const 5)) 
-    (global $__option__tag   i32 (i32.const 6)) 
+    (global $__option__tag  i32 (i32.const 6)) 
+    (global $__left__tag    i32 (i32.const 7))  ;; can't we optimize this more? 
+    (global $__right__tag   i32 (i32.const 8)) 
+
     
 ;; Comparison only works on a class of types that we call comparable. The COMPARE instruction is defined in an ad hoc way for each comparable type, but the result of COMPARE is always an int, which can in turn be checked in a generic manner using the EQ, NEQ, LT, GT, LE and GE combinators.
 
@@ -24,14 +27,6 @@
 ;; addresses of implicit accounts are strictly less than addresses of originated accounts
 ;; addresses of the same type are compared lexicographically
 
-;; option-al values are compared as follows:
-;; None is strictly less than any Some x,
-;; Some x and Some y are compared as x and y.
-;; values of union types built with or are compared as follows:
-;; any Left x is smaller than any Right y,
-;; Left x and Left y are compared as x and y,
-;; Right x and Right y are compared as x and y.
-;; comparison for type never is defined with no implementation as it is never executed.
     (func $compare (param $a i32) (param $b i32) (result i32)
         (local $tag i32)
         (local $a_value i32)
@@ -340,7 +335,58 @@
                                     end
                                 end
                             else 
-                                i32.const 0
+                                local.get $tag 
+                                global.get $__left__tag
+                                i32.eq
+                                local.get $tag 
+                                global.get $__right__tag
+                                i32.eq
+                                i32.or
+                                if (result i32)
+                                    
+
+                                    local.get $a 
+                                    i32.load
+                                    local.set $a_value
+
+                                    local.get $b 
+                                    i32.load
+                                    local.set $b_value
+
+                                    local.get $a_value 
+                                    local.get $b_value 
+
+                                    i32.lt_u
+                                    if (result i32)
+                                        i32.const -1
+                                    else 
+                                        local.get $a_value 
+                                        local.get $b_value 
+                                        i32.gt_u 
+                                        if (result i32)
+                                            i32.const 1 
+                                        else 
+                                            local.get $a 
+                                            i32.const 4 
+                                            i32.add
+                                            i32.load
+                                            local.set $a_value
+
+                                            local.get $b 
+                                            i32.const 4 
+                                            i32.add
+                                            i32.load
+                                            local.set $b_value
+
+                                            local.get $a_value
+                                            local.get $b_value 
+                                            call $compare
+                                            
+                                        end
+                                    end
+                                else 
+                                    i32.const 0 ;; unreachable... 
+                                end
                             end
                         end 
                     end
