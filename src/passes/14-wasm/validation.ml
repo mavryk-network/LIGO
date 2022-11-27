@@ -12,7 +12,7 @@ let find_local_type (env: Env.t) name =
   let l = List.find ~f:(fun (n, _) -> String.equal n name) env.locals in
   match l with 
     Some (_, t) -> t
-  | None -> failwith ("Not expected:" ^ name)
+  | None -> failwith ("Missing local:" ^ name)
 
 let find_type w symbol = 
   let t = List.find ~f:(fun f -> match f.it with TypeSymbol {tname;_ } -> String.equal tname symbol | _ -> false ) w.A.types in
@@ -51,8 +51,7 @@ let stack_pop (env: Env.t) (v2: T.value_type) =
   | Some (_, _) ->
       failwith "Bug for the developers. The item popped from the operand stack does not match the expected type, which should not happen."
   | None -> 
-    print_endline "Bug for the developers. There's nothing on the operand stack, which should not happen.";
-    env
+    failwith "Bug for the developers. There's nothing on the operand stack, which should not happen."
 
 let stack_pop_any (env: Env.t) = 
   match env.operand_stack with 

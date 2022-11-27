@@ -298,8 +298,10 @@ let rec expression ~raise :
     int       = 2
     string    = 4
     tuple     = 5
-    list      = 6
+    list      = 6 
     set       = 7
+
+    TODO: improve tuple handling, currently mostly a pair
 
     packaging format
     ===
@@ -555,7 +557,31 @@ let rec expression ~raise :
   | E_constant {cons_name = C_PAIR; arguments = [e1; e2]} ->
     let w, env, e1 = expression ~raise w env e1 in
     let w, env, e2 = expression ~raise w env e2 in
-    Datatype.Pair.create w env e1 e2
+    let pair = unique_name "c_pair" in
+    let env = add_locals env [(pair, T.NumType I32Type)] in
+    
+    let e =
+      [
+        const 12l; 
+        call_s "malloc"; 
+        local_set_s pair; 
+
+        local_get_s pair;
+        const 5l;
+        store8;
+
+        local_get_s pair;
+        const 4l;
+        i32_add;
+      ]
+      @ e1
+      @ [store; local_get_s pair; const 8l; i32_add]
+      @ e2
+      @ [store; local_get_s pair]
+    in
+    (w, env, e)
+
+    (* Datatype.Pair.create w env e1 e2 *)
   | E_constant {cons_name = C_CAR; arguments = [cons]} ->
     (* TODO: move to Datatype.ml *)
     let w, env, cons = expression ~raise w env cons in
@@ -667,18 +693,23 @@ let rec expression ~raise :
   (* | E_constant {cons_name = C_OPEN_CHEST; arguments = [chest_key; chest; n] } -> raise.error (not_supported e) *)
   (* | E_constant {cons_name = C_VIEW; arguments = [view_name; t; address] } -> raise.error (not_supported e) *)
   | E_constant {cons_name = C_SOME; arguments = [arg]} ->
-    let w, l, arg = expression ~raise w env arg in
+    let w, env, arg = expression ~raise w env arg in
     let some = unique_name "c_some" in  
     let env = Env.add_local env (some, T.NumType I32Type) in
     w, env, [ 
-      const 8l; 
+      const 12l; 
       call_s "malloc";
       local_tee_s some;
+      const 6l;
+      store8;
+      local_get_s some;
+      const 4l;
+      i32_add;
       const 1l;
       store;
       local_get_s some;
-      const 4l;
-      i32_add
+      const 8l;
+      i32_add;
     ]
     @ 
     arg
@@ -688,8 +719,22 @@ let rec expression ~raise :
       local_get_s some
     ] 
   | E_constant {cons_name = C_NONE; arguments = []} ->  
+    let none = unique_name "c_none" in  
+    let env = Env.add_local env (none, T.NumType I32Type) in
     w, env, [
+      const 8l;
+      call_s "malloc";
+      local_tee_s none;
+      const 6l;
+      store8;
+
+      local_get_s none;
+      const 4l;
+      i32_add;
       const 0l;
+      store;
+
+      local_get_s none
     ]
   | E_constant {cons_name = C_LEFT; arguments = [a]} -> 
     let c_left = unique_name "c_left" in
@@ -983,38 +1028,39 @@ let rec expression ~raise :
     let w, env, test = expression ~raise w env test in
     let w, env, t = expression ~raise w env t in
     let w, env, f = expression ~raise w env f in
-    let return_type = Some (T.NumType I32Type) in (* TODO properly get this *)
     w, env,
     test
     @
-    [
-      
+    [  
      if_
-      (ValBlockType return_type)
+      (ValBlockType (Some (T.NumType I32Type)))
       t
       f  
     ]
   | E_if_none (test, none_e, ((some_arg, some_arg_type), some_e)) -> 
-    (* TODO: check handling of locals *)
     let some_arg = var_to_string some_arg in
     let testing = unique_name "testing" in
     let env = Env.add_local env (some_arg, T.NumType I32Type) in
     let env = Env.add_local env (testing, T.NumType I32Type) in
+    
     let w, env, test = expression ~raise w env test in
     let w, env, none_e = expression ~raise w env none_e in
     let w, env, some_e = expression ~raise w env some_e in
     
-    let return_type = Some (T.NumType I32Type) in (* TODO properly get this *)
+    let return_type = Some (T.NumType I32Type) in
     w, env, 
       test 
       @
       [
+        const 4l;
+        i32_add;
         local_set_s testing;
         S.{it = A.Block (ValBlockType return_type, 
           [
             {it = A.Block (ValBlockType None,
               [
                 local_get_s testing;
+                load;
                 br_if 0l
               ]
               @ 

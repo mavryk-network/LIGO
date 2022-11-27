@@ -14,6 +14,7 @@
     (global $__int__tag    i32 (i32.const 2))
     (global $__string__tag i32 (i32.const 4))
     (global $__pair__tag   i32 (i32.const 5)) 
+    (global $__option__tag   i32 (i32.const 6)) 
     
 ;; Comparison only works on a class of types that we call comparable. The COMPARE instruction is defined in an ad hoc way for each comparable type, but the result of COMPARE is always an int, which can in turn be checked in a generic manner using the EQ, NEQ, LT, GT, LE and GE combinators.
 
@@ -242,15 +243,105 @@
                     global.get $__false__tag ;; or unit
                     i32.eq 
                     if (result i32)
-                        i32.const 0 
+                        local.get $a
+                        i32.load 
+                        local.set $a
+                        local.get $b
+                        i32.load
+                        local.set $b 
+                        local.get $a
+                        local.get $b
+                        i32.eq
+                        if (result i32)
+                            i32.const 0
+                        else 
+                            local.get $a
+                            local.get $b 
+                            i32.lt_u
+                            if (result i32)
+                                i32.const -1
+                            else 
+                                i32.const 1
+                            end
+                        end
                     else 
                         local.get $tag
                         global.get $__true__tag
                         i32.eq 
                         if (result i32)
-                            i32.const 1
+                            local.get $a
+                            local.get $b 
+                            i32.eq
+                            if (result i32)
+                                i32.const 0
+                            else 
+                                local.get $a
+                                local.get $b 
+                                i32.lt_u
+                                if (result i32)
+                                    i32.const -1
+                                else 
+                                    i32.const 1
+                                end
+                            end
+                            
                         else 
-                            unreachable
+                            local.get $tag
+                            global.get $__option__tag
+                            i32.eq 
+                            if (result i32)
+                                local.get $a
+                                i32.const 4
+                                i32.add 
+                                i32.load
+                                local.set $a_value
+
+                                local.get $b
+                                i32.const 4
+                                i32.add 
+                                i32.load
+                                local.set $b_value
+
+                                local.get $a_value 
+                                local.get $b_value 
+                                i32.eq 
+                                local.get $a_value 
+                                i32.const 0
+                                i32.eq 
+                                i32.and
+                                if (result i32)
+                                    i32.const 0 
+                                else 
+                                    local.get $a_value 
+                                    i32.const 0 
+                                    i32.eq
+                                    if (result i32)
+                                        i32.const -1
+                                    else 
+                                        local.get $a_value 
+                                        i32.const 0 
+                                        i32.eq
+                                        if (result i32)
+                                            i32.const 1
+                                        else
+                                            local.get $a
+                                            i32.const 8
+                                            i32.add 
+                                            i32.load
+                                            
+                                            local.get $b
+                                            i32.const 8
+                                            i32.add 
+                                            i32.load
+
+                                            ;; unreach able
+                                            call $compare
+                                        end
+                                    end
+                                end
+                            else 
+                                i32.const 0
+                            end
                         end 
                     end
                 end
