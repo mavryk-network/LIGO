@@ -38,7 +38,18 @@ module Aliases = struct
     { inside = MMap.add mvar (mod_aliases, path) aliases.inside }
 
 
-  let get aliases mvar = MMap.find mvar aliases.inside
+  let get aliases mvar =
+    Option.value ~default:(aliases, [ mvar ])
+    @@ MMap.find_opt mvar aliases.inside
+
+
+  (* use with open *)
+  let add aliases mod_aliase =
+    let inside =
+      MMap.union (fun _ _ b -> Some b) aliases.inside mod_aliase.inside
+    in
+    { inside }
+
 
   let diff_path path module_path =
     let path = List.rev path in
