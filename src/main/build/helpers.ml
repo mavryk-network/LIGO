@@ -28,8 +28,7 @@ let at_prefix (b : Ast_core.type_expression option Ligo_prim.Binder.t) =
   then (
     let name = Ligo_prim.Value_var.to_name_exn @@ Ligo_prim.Binder.get_var b in
     match String.chop_prefix name ~prefix:"@" with
-    | Some name ->
-      Ligo_prim.Binder.set_var b @@ Ligo_prim.Value_var.of_input_var name
+    | Some name -> Ligo_prim.Binder.set_var b @@ Ligo_prim.Value_var.of_input_var name
     | None -> b)
   else b
 
@@ -42,9 +41,7 @@ let internalize_core (ds : Ast_core.program) : Ast_core.program =
       let module_ =
         match module_ with
         | { wrap_content = M_struct x; _ } ->
-          { module_ with
-            wrap_content = Ligo_prim.Module_expr.M_struct (module' x)
-          }
+          { module_ with wrap_content = Ligo_prim.Module_expr.M_struct (module' x) }
         | _ -> module_
       in
       D_include { module_ }
@@ -52,9 +49,7 @@ let internalize_core (ds : Ast_core.program) : Ast_core.program =
       let module_ =
         match module_ with
         | { wrap_content = M_struct x; _ } ->
-          { module_ with
-            wrap_content = Ligo_prim.Module_expr.M_struct (module' x)
-          }
+          { module_ with wrap_content = Ligo_prim.Module_expr.M_struct (module' x) }
         | _ -> module_
       in
       D_open { module_ }
@@ -62,9 +57,7 @@ let internalize_core (ds : Ast_core.program) : Ast_core.program =
       let module_ =
         match module_ with
         | { wrap_content = M_struct x; _ } ->
-          { module_ with
-            wrap_content = Ligo_prim.Module_expr.M_struct (module' x)
-          }
+          { module_ with wrap_content = Ligo_prim.Module_expr.M_struct (module' x) }
         | _ -> module_
       in
       D_module { module_binder; module_; module_attr }
@@ -123,13 +116,10 @@ let get_aliases_prelude
   let get_ty_bindings acc d =
     let open Ast_typed in
     match Location.unwrap d with
-    | D_type { type_binder; type_attr; _ } when type_attr.public ->
-      type_binder :: acc
+    | D_type { type_binder; type_attr; _ } when type_attr.public -> type_binder :: acc
     | _ -> acc
   in
-  let module_attr =
-    Ast_core.TypeOrModuleAttr.{ public = true; hidden = true }
-  in
+  let module_attr = Ast_core.TypeOrModuleAttr.{ public = true; hidden = true } in
   let attr =
     Ast_core.ValueAttr.
       { inline = true
@@ -149,8 +139,7 @@ let get_aliases_prelude
       List.map mod_bindings ~f:(fun module_binder ->
           let module_ =
             Location.wrap
-            @@ Ligo_prim.Module_expr.M_module_path
-                 (mod_binder, [ module_binder ])
+            @@ Ligo_prim.Module_expr.M_module_path (mod_binder, [ module_binder ])
           in
           Location.wrap @@ D_module { module_binder; module_attr; module_ })
     in
@@ -168,8 +157,7 @@ let get_aliases_prelude
                  }
           in
           Location.wrap
-          @@ D_value
-               { binder = Ligo_prim.Binder.set_ascr binder None; attr; expr })
+          @@ D_value { binder = Ligo_prim.Binder.set_ascr binder None; attr; expr })
     in
     prelude
   in
@@ -179,11 +167,9 @@ let get_aliases_prelude
       List.map ty_bindings ~f:(fun type_binder ->
           let type_expr =
             make_t
-            @@ T_module_accessor
-                 { module_path = [ mod_binder ]; element = type_binder }
+            @@ T_module_accessor { module_path = [ mod_binder ]; element = type_binder }
           in
-          Location.wrap
-          @@ D_type { type_binder; type_expr; type_attr = module_attr })
+          Location.wrap @@ D_type { type_binder; type_expr; type_attr = module_attr })
     in
     prelude
   in
@@ -213,8 +199,7 @@ let inject_declaration ~options ~raise
     let d =
       Location.wrap
       @@ D_value
-           { binder =
-               Binder.make (Ligo_prim.Value_var.of_input_var "cli_arg") None
+           { binder = Binder.make (Ligo_prim.Value_var.of_input_var "cli_arg") None
            ; expr
            ; attr
            }

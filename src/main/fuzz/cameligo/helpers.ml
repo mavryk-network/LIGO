@@ -263,14 +263,7 @@ module Fold_helpers (M : Monad) = struct
       let value = { value with inside } in
       return @@ EPar { value; region }
     | ELetIn { value; region } ->
-      let { kwd_let = _
-          ; kwd_rec = _
-          ; binding
-          ; kwd_in = _
-          ; body
-          ; attributes = _
-          }
-        =
+      let { kwd_let = _; kwd_rec = _; binding; kwd_in = _; body; attributes = _ } =
         value
       in
       let { binders; type_params; rhs_type; eq; let_rhs } = binding in
@@ -288,9 +281,7 @@ module Fold_helpers (M : Monad) = struct
       return @@ ELetIn { value; region }
     | ETypeIn { value; region } ->
       let { type_decl; kwd_in; body } = value in
-      let { kwd_type = _; name = _; eq = _; type_expr; params = _ } =
-        type_decl
-      in
+      let { kwd_type = _; name = _; eq = _; type_expr; params = _ } = type_decl in
       let* type_expr = self_type type_expr in
       let* body = self body in
       let type_decl = { type_decl with type_expr } in
@@ -298,14 +289,7 @@ module Fold_helpers (M : Monad) = struct
       return @@ ETypeIn { value; region }
     | EModIn { value; region } ->
       let { mod_decl; kwd_in; body } = value in
-      let { kwd_module = _
-          ; name = _
-          ; eq = _
-          ; kwd_struct = _
-          ; module_
-          ; kwd_end = _
-          }
-        =
+      let { kwd_module = _; name = _; eq = _; kwd_struct = _; module_; kwd_end = _ } =
         mod_decl
       in
       let* module_ = self_module module_ in
@@ -391,14 +375,7 @@ module Fold_helpers (M : Monad) = struct
       let value = { value with type_expr } in
       return @@ TypeDecl { value; region }
     | ModuleDecl { value; region } ->
-      let { kwd_module = _
-          ; name = _
-          ; eq = _
-          ; kwd_struct = _
-          ; module_
-          ; kwd_end = _
-          }
-        =
+      let { kwd_module = _; name = _; eq = _; kwd_struct = _; module_; kwd_end = _ } =
         value
       in
       let* module_ = self_module module_ in

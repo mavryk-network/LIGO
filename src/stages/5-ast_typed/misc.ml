@@ -49,13 +49,9 @@ module Free_variables = struct
     | E_deref _ -> empty
     | E_for { binder; start; final; incr; f_body } ->
       let b' = union (singleton binder) b in
-      unions
-        [ self start; self final; expression b' incr; expression b' f_body ]
-    | E_for_each
-        { fe_binder = binder, None; collection; fe_body; collection_type = _ }
-      ->
-      unions
-        [ self collection; expression (union (singleton binder) b) fe_body ]
+      unions [ self start; self final; expression b' incr; expression b' f_body ]
+    | E_for_each { fe_binder = binder, None; collection; fe_body; collection_type = _ } ->
+      unions [ self collection; expression (union (singleton binder) b) fe_body ]
     | E_for_each { fe_binder = binder, Some binder'; collection; fe_body; _ } ->
       let b' = union [ binder; binder' ] b in
       unions [ self collection; expression b' fe_body ]
@@ -73,8 +69,8 @@ module Free_variables = struct
 
 
   and matching_case
-      :  (bindings -> expression -> bindings) -> bindings
-      -> _ Types.Match_expr.match_case -> bindings
+      :  (bindings -> expression -> bindings) -> bindings -> _ Types.Match_expr.match_case
+      -> bindings
     =
    fun f b m ->
     let b' = Types.Pattern.binders m.pattern |> List.map ~f:Binder.get_var in
@@ -93,10 +89,7 @@ module Free_variables = struct
 end
 
 let assert_eq a b = if Caml.( = ) a b then Some () else None
-
-let assert_same_size a b =
-  if List.length a = List.length b then Some () else None
-
+let assert_same_size a b = if List.length a = List.length b then Some () else None
 
 let rec assert_list_eq f a b =
   match a, b with
@@ -151,12 +144,9 @@ let rec assert_type_expression_eq ((a, b) : type_expression * type_expression)
       (List.zip_exn sa' sb')
   | T_sum _, _ -> None
   | T_record ra, T_record rb
-    when Bool.( <> ) (Record.is_tuple ra.fields) (Record.is_tuple rb.fields) ->
-    None
+    when Bool.( <> ) (Record.is_tuple ra.fields) (Record.is_tuple rb.fields) -> None
   | T_record ra, T_record rb ->
-    let sort_lmap r' =
-      List.sort ~compare:(fun (a, _) (b, _) -> Label.compare a b) r'
-    in
+    let sort_lmap r' = List.sort ~compare:(fun (a, _) (b, _) -> Label.compare a b) r' in
     let ra' = sort_lmap @@ Record.LMap.to_kv_list_rev ra.fields in
     let rb' = sort_lmap @@ Record.LMap.to_kv_list_rev rb.fields in
     let aux
@@ -199,8 +189,7 @@ let rec assert_type_expression_eq ((a, b) : type_expression * type_expression)
 
 and type_expression_eq ab = Option.is_some @@ assert_type_expression_eq ab
 
-and assert_literal_eq ((a, b) : Literal_value.t * Literal_value.t) : unit option
-  =
+and assert_literal_eq ((a, b) : Literal_value.t * Literal_value.t) : unit option =
   match a, b with
   | Literal_int a, Literal_int b when Z.equal a b -> Some ()
   | Literal_int _, Literal_int _ -> None
@@ -239,16 +228,13 @@ and assert_literal_eq ((a, b) : Literal_value.t * Literal_value.t) : unit option
   | Literal_chain_id _, _ -> None
   | Literal_operation _, Literal_operation _ -> None
   | Literal_operation _, _ -> None
-  | Literal_bls12_381_g1 a, Literal_bls12_381_g1 b when Bytes.equal a b ->
-    Some ()
+  | Literal_bls12_381_g1 a, Literal_bls12_381_g1 b when Bytes.equal a b -> Some ()
   | Literal_bls12_381_g1 _, Literal_bls12_381_g1 _ -> None
   | Literal_bls12_381_g1 _, _ -> None
-  | Literal_bls12_381_g2 a, Literal_bls12_381_g2 b when Bytes.equal a b ->
-    Some ()
+  | Literal_bls12_381_g2 a, Literal_bls12_381_g2 b when Bytes.equal a b -> Some ()
   | Literal_bls12_381_g2 _, Literal_bls12_381_g2 _ -> None
   | Literal_bls12_381_g2 _, _ -> None
-  | Literal_bls12_381_fr a, Literal_bls12_381_fr b when Bytes.equal a b ->
-    Some ()
+  | Literal_bls12_381_fr a, Literal_bls12_381_fr b when Bytes.equal a b -> Some ()
   | Literal_bls12_381_fr _, Literal_bls12_381_fr _ -> None
   | Literal_bls12_381_fr _, _ -> None
   | Literal_chest a, Literal_chest b when Bytes.equal a b -> Some ()
@@ -266,15 +252,8 @@ let get_entry (lst : program) (name : Value_var.t) : expression option =
         { binder
         ; expr
         ; attr =
-            { inline = _
-            ; no_mutation = _
-            ; view = _
-            ; public = _
-            ; hidden = _
-            ; thunk = _
-            }
-        } ->
-      if Binder.apply (Value_var.equal name) binder then Some expr else None
+            { inline = _; no_mutation = _; view = _; public = _; hidden = _; thunk = _ }
+        } -> if Binder.apply (Value_var.equal name) binder then Some expr else None
     | D_type _ | D_module _ | D_open _ | D_include _ -> None
   in
   List.find_map ~f:aux (List.rev lst)

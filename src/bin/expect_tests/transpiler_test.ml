@@ -1,8 +1,10 @@
 open Cli_expect
 
 let%expect_test _ =
-  run_ligo_good [ "transpile" ; "contract" ; "../../test/contracts/coase.ligo" ; "pascaligo" ] ;
-  [%expect{|
+  run_ligo_good
+    [ "transpile"; "contract"; "../../test/contracts/coase.ligo"; "pascaligo" ];
+  [%expect
+    {|
     type card_pattern_id is nat
 
     type card_pattern is
@@ -251,8 +253,10 @@ let%expect_test _ =
                                                  }. |}] *)
 
 let%expect_test _ =
-  run_ligo_good [ "transpile" ; "contract" ; "../../test/contracts/deep_access.ligo" ; "pascaligo" ] ;
-  [%expect{|
+  run_ligo_good
+    [ "transpile"; "contract"; "../../test/contracts/deep_access.ligo"; "pascaligo" ];
+  [%expect
+    {|
     type pii is int * int
 
     type ppi is record [x : pii; y : pii]
@@ -489,8 +493,10 @@ block {
 *)
 
 let%expect_test _ =
-  run_ligo_good [ "transpile" ; "contract" ; "../../test/contracts/failwith.ligo" ; "pascaligo" ] ;
-  [%expect{|
+  run_ligo_good
+    [ "transpile"; "contract"; "../../test/contracts/failwith.ligo"; "pascaligo" ];
+  [%expect
+    {|
     type parameter is Zero of nat | Pos of nat
 
     type storage is unit
@@ -624,8 +630,10 @@ let%expect_test _ =
                                                    }. |}] *)
 
 let%expect_test _ =
-  run_ligo_good [ "transpile" ; "contract" ; "../../test/contracts/recursion.ligo" ; "pascaligo" ] ;
-  [%expect {|
+  run_ligo_good
+    [ "transpile"; "contract"; "../../test/contracts/recursion.ligo"; "pascaligo" ];
+  [%expect
+    {|
     recursive function sum (const gen__parameters2 : int * int) is
       case gen__parameters2 of [
         (n, acc) ->
@@ -646,9 +654,12 @@ let%expect_test _ =
                Operator.add (n_1, n_0),
                n_1)
       ] |}]
+
 let%expect_test _ =
-  run_ligo_good [ "transpile" ; "contract" ; "../../test/contracts/recursion.ligo" ; "cameligo" ] ;
-  [%expect {|
+  run_ligo_good
+    [ "transpile"; "contract"; "../../test/contracts/recursion.ligo"; "cameligo" ];
+  [%expect
+    {|
     let rec sum : int * int -> int =
       (fun gen__parameters2 : int * int ->
          match gen__parameters2 with
@@ -662,9 +673,12 @@ let%expect_test _ =
              if (n < 2)
              then n_1
              else fibo (n - 1) (n_1 + n_0) n_1) |}]
+
 let%expect_test _ =
-  run_ligo_good [ "transpile" ; "contract" ; "../../test/contracts/recursion.ligo" ; "reasonligo" ] ;
-  [%expect {|
+  run_ligo_good
+    [ "transpile"; "contract"; "../../test/contracts/recursion.ligo"; "reasonligo" ];
+  [%expect
+    {|
     let rec sum: (int, int) => int =
       ((gen__parameters2: (int, int)): int =>
          switch  gen__parameters2 {
@@ -690,8 +704,10 @@ let%expect_test _ =
          }); |}]
 
 let%expect_test _ =
-  run_ligo_good [ "transpile" ; "contract" ; "../../test/contracts/transpiler_nested.ligo" ; "cameligo" ] ;
-  [%expect {|
+  run_ligo_good
+    [ "transpile"; "contract"; "../../test/contracts/transpiler_nested.ligo"; "cameligo" ];
+  [%expect
+    {|
     let f : nat -> nat = (fun x : nat -> x)
 
     let bar : nat -> nat = (fun x : nat -> f (f x))

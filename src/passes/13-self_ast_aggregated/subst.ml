@@ -33,27 +33,20 @@ let rec replace : expression -> Value_var.t -> Value_var.t -> expression =
     return @@ E_variable z
   | E_lambda { binder; output_type; result } ->
     let result =
-      if Param.is_imm binder && Param.get_var binder = x
-      then result
-      else replace result
+      if Param.is_imm binder && Param.get_var binder = x then result else replace result
     in
     return @@ E_lambda { binder; output_type; result }
-  | E_recursive { fun_name; fun_type; lambda = { binder; output_type; result } }
-    ->
+  | E_recursive { fun_name; fun_type; lambda = { binder; output_type; result } } ->
     let result =
       if (Param.is_imm binder && Param.get_var binder = x) || fun_name = x
       then result
       else replace result
     in
-    return
-    @@ E_recursive
-         { fun_name; fun_type; lambda = { binder; output_type; result } }
+    return @@ E_recursive { fun_name; fun_type; lambda = { binder; output_type; result } }
   | E_let_in { let_binder; rhs; let_result; attr } ->
     let rhs = replace rhs in
     let let_result =
-      if Binder.apply (( = ) x) let_binder
-      then let_result
-      else replace let_result
+      if Binder.apply (( = ) x) let_binder then let_result else replace let_result
     in
     return @@ E_let_in { let_binder; rhs; let_result; attr }
   | E_constant { cons_name; arguments } ->
@@ -83,14 +76,14 @@ let rec replace : expression -> Value_var.t -> Value_var.t -> expression =
     let matchee = replace matchee in
     let binders =
       List.map (Record.LMap.to_kv_list fields) ~f:(fun (_, b) ->
-        Binder.apply replace_var b)
+          Binder.apply replace_var b)
     in
     let body = if List.mem ~equal:( = ) binders x then body else replace body in
     return @@ E_matching { matchee; cases = Match_record { fields; body; tv } }
   | E_literal _ -> e
-  | E_raw_code { language ; code } ->
+  | E_raw_code { language; code } ->
     let code = replace code in
-    return @@ E_raw_code { language ; code }
+    return @@ E_raw_code { language; code }
   | E_record m ->
     let m = Record.map ~f:(fun x -> replace x) m in
     return @@ E_record m
@@ -126,16 +119,14 @@ let rec replace : expression -> Value_var.t -> Value_var.t -> expression =
       } ->
     let collection = replace collection in
     let binders = binder1 :: Option.to_list binder2 in
-    let fe_body =
-      if List.mem binders x ~equal:( = ) then fe_body else replace fe_body
-    in
+    let fe_body = if List.mem binders x ~equal:( = ) then fe_body else replace fe_body in
     return @@ E_for_each { fe_binder; collection; collection_type; fe_body }
 
 
 and replace_lambda
-  Lambda.{ binder; output_type; result }
-  (x : Value_var.t)
-  (y : Value_var.t)
+    Lambda.{ binder; output_type; result }
+    (x : Value_var.t)
+    (y : Value_var.t)
   =
   let result =
     if Param.is_imm binder && Value_var.equal (Param.get_var binder) x
@@ -149,20 +140,19 @@ and replace_lambda
    body, implements substitution on a binder (pair of bound variable
    and body) *)
 let subst_binder
-  : type body.
-    (body:body -> x:Value_var.t -> expr:expression -> body)
-    -> (body -> Value_var.t -> Value_var.t -> body)
-    -> body:Value_var.t * body
-    -> x:Value_var.t
-    -> expr:expression
-    -> Value_var.t * body
+    : type body.
+      (body:body -> x:Value_var.t -> expr:expression -> body)
+      -> (body -> Value_var.t -> Value_var.t -> body)
+      -> body:Value_var.t * body
+      -> x:Value_var.t
+      -> expr:expression
+      -> Value_var.t * body
   =
  fun subst replace ~body:(y, body) ~x ~expr ->
   (* if x is shadowed, binder doesn't change *)
   if Value_var.equal x y
   then y, body (* else, if no capture, subst in binder *)
-  else if not
-            (List.mem ~equal:Value_var.equal (Free_variables.expression expr) y)
+  else if not (List.mem ~equal:Value_var.equal (Free_variables.expression expr) y)
   then y, subst ~body ~x ~expr (* else, avoid capture and subst in binder *)
   else (
     let fresh = Value_var.fresh_like y in
@@ -174,13 +164,13 @@ let subst_binder
    body, implements substitution on a binder (pair of bound variable
    and body) *)
 let subst_binders
-  : type body.
-    (body:body -> x:Value_var.t -> expr:expression -> body)
-    -> (body -> Value_var.t -> Value_var.t -> body)
-    -> body:Value_var.t list * body
-    -> x:Value_var.t
-    -> expr:expression
-    -> Value_var.t list * body
+    : type body.
+      (body:body -> x:Value_var.t -> expr:expression -> body)
+      -> (body -> Value_var.t -> Value_var.t -> body)
+      -> body:Value_var.t list * body
+      -> x:Value_var.t
+      -> expr:expression
+      -> Value_var.t list * body
   =
  fun subst replace ~body:(ys, body) ~x ~expr ->
   (* if x is shadowed, binder doesn't change *)
@@ -204,7 +194,7 @@ let subst_binders
    Computes `body[x := expr]`.
 **)
 let rec subst_expression
-  : body:expression -> x:Value_var.t -> expr:expression -> expression
+    : body:expression -> x:Value_var.t -> expr:expression -> expression
   =
  fun ~body ~x ~expr ->
   let self body = subst_expression ~body ~x ~expr in
@@ -212,8 +202,7 @@ let rec subst_expression
   let return expression_content = { body with expression_content } in
   let subst_binder1 = subst_binder subst_expression replace in
   let subst_binder2 =
-    subst_binder subst_binder1 (fun (x, body) y z ->
-      replace_var x y z, replace body y z)
+    subst_binder subst_binder1 (fun (x, body) y z -> replace_var x y z, replace body y z)
   in
   let subst_lambda ~body:Lambda.{ binder; output_type; result } ~x ~expr =
     let var, result =
@@ -272,15 +261,13 @@ let rec subst_expression
       subst_binders subst_expression replace ~body:(binders, body) ~x ~expr
     in
     let fields = List.zip_exn fields binders in
-    let fields =
-      List.map fields ~f:(fun ((l, b), var) -> l, Binder.set_var b var)
-    in
+    let fields = List.map fields ~f:(fun ((l, b), var) -> l, Binder.set_var b var) in
     let fields = Record.LMap.of_list fields in
     return @@ E_matching { matchee; cases = Match_record { fields; body; tv } }
   | E_literal _ -> return_id
-  | E_raw_code { language ; code } ->
+  | E_raw_code { language; code } ->
     let code = self code in
-    return @@ E_raw_code { language ; code }
+    return @@ E_raw_code { language; code }
   | E_record m ->
     let m = Record.map ~f:self m in
     return @@ E_record m
@@ -308,27 +295,17 @@ let rec subst_expression
   | E_while while_loop ->
     let while_loop = While_loop.map self while_loop in
     return @@ E_while while_loop
-  | E_for_each
-      { fe_binder = binder, None; collection; collection_type; fe_body } ->
+  | E_for_each { fe_binder = binder, None; collection; collection_type; fe_body } ->
     let collection = self collection in
     let binder, fe_body = subst_binder1 ~body:(binder, fe_body) ~x ~expr in
     return
-    @@ E_for_each
-         { fe_binder = binder, None; collection; collection_type; fe_body }
-  | E_for_each
-      { fe_binder = binder1, Some binder2
-      ; collection
-      ; collection_type
-      ; fe_body
-      } ->
+    @@ E_for_each { fe_binder = binder, None; collection; collection_type; fe_body }
+  | E_for_each { fe_binder = binder1, Some binder2; collection; collection_type; fe_body }
+    ->
     let collection = self collection in
     let binder1, (binder2, fe_body) =
       subst_binder2 ~body:(binder1, (binder2, fe_body)) ~x ~expr
     in
     return
     @@ E_for_each
-         { fe_binder = binder1, Some binder2
-         ; collection
-         ; collection_type
-         ; fe_body
-         }
+         { fe_binder = binder1, Some binder2; collection; collection_type; fe_body }

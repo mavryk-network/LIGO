@@ -6,8 +6,7 @@ open Ligo_prim
 
 let get_pair m =
   match
-    ( Record.LMap.find_opt (Label.of_int 0) m
-    , Record.LMap.find_opt (Label.of_int 1) m )
+    Record.LMap.find_opt (Label.of_int 0) m, Record.LMap.find_opt (Label.of_int 1) m
   with
   | ( Some ({ associated_type = e1; _ } : row_element)
     , Some ({ associated_type = e2; _ } : row_element) ) -> Some (e1, e2)
@@ -83,9 +82,7 @@ let destruct_tuple (t : type_expression) =
   | _ -> [ t ]
 
 
-let destruct_tuples (t : type_expression list) =
-  List.concat_map ~f:destruct_tuple t
-
+let destruct_tuples (t : type_expression list) = List.concat_map ~f:destruct_tuple t
 
 (* This function takes an expression l and a list of arguments [e1; ...; en] and constructs `l e1 ... en`,
    but it checks that types make sense (i.e. l has a function type with enough arguments) *)
@@ -111,8 +108,7 @@ let rec build_type_abstractions e = function
   | abs_var :: abs_vars ->
     let e = build_type_abstractions e abs_vars in
     { e with
-      expression_content =
-        E_type_abstraction { type_binder = abs_var; result = e }
+      expression_content = E_type_abstraction { type_binder = abs_var; result = e }
     ; type_expression = Combinators.t_for_all abs_var Type e.type_expression
     }
 
@@ -143,15 +139,13 @@ let rec get_fv_type_expression : type_expression -> VarSet.t =
     List.fold_right ~f:VarSet.union ~init:VarSet.empty parameters
   | T_sum { fields; layout = _ } ->
     let content =
-      List.map ~f:(fun ({ associated_type; _ } : row_element) ->
-          self associated_type)
+      List.map ~f:(fun ({ associated_type; _ } : row_element) -> self associated_type)
       @@ Record.LMap.values fields
     in
     List.fold_right ~f:VarSet.union ~init:VarSet.empty content
   | T_record { fields; layout = _ } ->
     let content =
-      List.map ~f:(fun ({ associated_type; _ } : row_element) ->
-          self associated_type)
+      List.map ~f:(fun ({ associated_type; _ } : row_element) -> self associated_type)
       @@ Record.LMap.values fields
     in
     List.fold_right ~f:VarSet.union ~init:VarSet.empty content
@@ -175,8 +169,7 @@ let rec subst_type ?(fv = VarSet.empty) v t (u : type_expression) =
     let type_ = self ty_binder (Combinators.t_variable ty_binder' ()) type_ in
     let ty_binder = ty_binder' in
     self v t { u with type_content = T_abstraction { ty_binder; kind; type_ } }
-  | T_abstraction { ty_binder; kind; type_ }
-    when not (Type_var.equal ty_binder v) ->
+  | T_abstraction { ty_binder; kind; type_ } when not (Type_var.equal ty_binder v) ->
     let type_ = self v t type_ in
     { u with type_content = T_abstraction { ty_binder; kind; type_ } }
   | T_for_all { ty_binder; kind; type_ } when VarSet.mem ty_binder fv ->
@@ -184,8 +177,7 @@ let rec subst_type ?(fv = VarSet.empty) v t (u : type_expression) =
     let type_ = self ty_binder (Combinators.t_variable ty_binder' ()) type_ in
     let ty_binder = ty_binder' in
     self v t { u with type_content = T_for_all { ty_binder; kind; type_ } }
-  | T_for_all { ty_binder; kind; type_ } when not (Type_var.equal ty_binder v)
-    ->
+  | T_for_all { ty_binder; kind; type_ } when not (Type_var.equal ty_binder v) ->
     let type_ = self v t type_ in
     { u with type_content = T_for_all { ty_binder; kind; type_ } }
   | T_constant { language; injection; parameters } ->
@@ -196,10 +188,7 @@ let rec subst_type ?(fv = VarSet.empty) v t (u : type_expression) =
       Record.LMap.map
         (fun ({ associated_type; michelson_annotation; decl_pos } : row_element)
              : row_element ->
-          { associated_type = self v t associated_type
-          ; michelson_annotation
-          ; decl_pos
-          })
+          { associated_type = self v t associated_type; michelson_annotation; decl_pos })
         fields
     in
     { u with type_content = T_sum { fields; layout } }
@@ -208,10 +197,7 @@ let rec subst_type ?(fv = VarSet.empty) v t (u : type_expression) =
       Record.LMap.map
         (fun ({ associated_type; michelson_annotation; decl_pos } : row_element)
              : row_element ->
-          { associated_type = self v t associated_type
-          ; michelson_annotation
-          ; decl_pos
-          })
+          { associated_type = self v t associated_type; michelson_annotation; decl_pos })
         fields
     in
     { u with type_content = T_record { fields; layout } }
@@ -252,10 +238,7 @@ let rec psubst_type t (u : type_expression) =
       Record.LMap.map
         (fun ({ associated_type; michelson_annotation; decl_pos } : row_element)
              : row_element ->
-          { associated_type = self associated_type
-          ; michelson_annotation
-          ; decl_pos
-          })
+          { associated_type = self associated_type; michelson_annotation; decl_pos })
         fields
     in
     { u with type_content = T_sum { fields; layout } }
@@ -264,10 +247,7 @@ let rec psubst_type t (u : type_expression) =
       Record.LMap.map
         (fun ({ associated_type; michelson_annotation; decl_pos } : row_element)
              : row_element ->
-          { associated_type = self associated_type
-          ; michelson_annotation
-          ; decl_pos
-          })
+          { associated_type = self associated_type; michelson_annotation; decl_pos })
         fields
     in
     { u with type_content = T_record { fields; layout } }
@@ -279,9 +259,7 @@ module Pair = Simple_utils.Pair
 
 type 'a fold_mapper = 'a -> expression -> bool * 'a * expression
 
-let rec fold_map_expression
-    : 'a fold_mapper -> 'a -> expression -> 'a * expression
-  =
+let rec fold_map_expression : 'a fold_mapper -> 'a -> expression -> 'a * expression =
  fun f a e ->
   let self = fold_map_expression f in
   let self_type acc t = acc, t in
@@ -299,9 +277,7 @@ let rec fold_map_expression
       let res, struct_ = self init struct_ in
       res, return @@ E_accessor { struct_; path }
     | E_record m ->
-      let res, m' =
-        Record.LMap.fold_map ~f:(fun _ e res -> self res e) ~init m
-      in
+      let res, m' = Record.LMap.fold_map ~f:(fun _ e res -> self res e) ~init m in
       res, return @@ E_record m'
     | E_update { struct_; path; update } ->
       let res, struct_ = self init struct_ in
@@ -361,8 +337,7 @@ let rec fold_map_expression
 
 
 and fold_map_case
-    :  'a fold_mapper -> 'a
-    -> (expression, type_expression) Types.Match_expr.match_case
+    :  'a fold_mapper -> 'a -> (expression, type_expression) Types.Match_expr.match_case
     -> 'a * (expression, type_expression) Types.Match_expr.match_case
   =
  fun f init { pattern; body } ->
@@ -511,8 +486,7 @@ module IdMap = struct
     let merge : 'a t -> 'a t -> 'a t =
      fun m1 m2 ->
       let merger
-          :  key -> 'a id_wrapped option -> 'a id_wrapped option
-          -> 'a id_wrapped option
+          : key -> 'a id_wrapped option -> 'a id_wrapped option -> 'a id_wrapped option
         =
        fun _ v1 v2 ->
         match v1, v2 with
@@ -526,15 +500,13 @@ module IdMap = struct
 
     let to_kvi_list : 'a t -> (key * 'a * int) list =
      fun map ->
-      List.map ~f:(fun (key, value) -> key, value.value, value.id)
-      @@ Map.to_kv_list map
+      List.map ~f:(fun (key, value) -> key, value.value, value.id) @@ Map.to_kv_list map
 
 
     let sort_to_kv_list : (key * 'a * int) list -> (key * 'a) list =
      fun list ->
       let sorted_list =
-        List.sort list ~compare:(fun (_, _, id1) (_, _, id2) ->
-            Int.compare id2 id1)
+        List.sort list ~compare:(fun (_, _, id1) (_, _, id2) -> Int.compare id2 id1)
       in
       List.map ~f:(fun (k, v, _) -> k, v) sorted_list
 
@@ -582,8 +554,8 @@ end
 *)
 let add_shadowed_nested_t_sum tsum_list (tv, te) =
   let add_if_shadowed_t_sum
-      :  Type_var.t -> (Type_var.t * type_expression) list * bool
-      -> type_expression -> (Type_var.t * type_expression) list * bool
+      :  Type_var.t -> (Type_var.t * type_expression) list * bool -> type_expression
+      -> (Type_var.t * type_expression) list * bool
     =
    fun shadower_tv (accu, is_top) te ->
     let ret x = x, false in
@@ -593,15 +565,11 @@ let add_shadowed_nested_t_sum tsum_list (tv, te) =
       then ret ((tv, te) :: accu)
       else ret accu
     | T_sum _, None ->
-      ret accu
-      (* TODO : What should we do with those sum types with no binder ? *)
+      ret accu (* TODO : What should we do with those sum types with no binder ? *)
     | _ -> ret accu
   in
   let (nested_t_sums, _) : (Type_var.t * type_expression) list * bool =
-    fold_type_expression
-      te
-      ~init:(tsum_list, true)
-      ~f:(add_if_shadowed_t_sum tv)
+    fold_type_expression te ~init:(tsum_list, true) ~f:(add_if_shadowed_t_sum tv)
   in
   (tv, te) :: nested_t_sums
 
@@ -610,8 +578,7 @@ let add_shadowed_nested_t_sum tsum_list (tv, te) =
 let get_views : program -> (Value_var.t * Location.t) list =
  fun p ->
   let f
-      :  declaration -> (Value_var.t * Location.t) list
-      -> (Value_var.t * Location.t) list
+      : declaration -> (Value_var.t * Location.t) list -> (Value_var.t * Location.t) list
     =
    fun { wrap_content = decl; location = _ } acc ->
     match decl with
@@ -623,18 +590,13 @@ let get_views : program -> (Value_var.t * Location.t) list =
   List.fold_right ~init:[] ~f p
 
 
-let fetch_view_type
-    : declaration -> (type_expression * type_expression Binder.t) option
-  =
+let fetch_view_type : declaration -> (type_expression * type_expression Binder.t) option =
  fun declt ->
   match Location.unwrap declt with
   | D_value { binder; expr; attr } when attr.view ->
-    Some
-      (expr.type_expression, Binder.map (fun _ -> expr.type_expression) binder)
+    Some (expr.type_expression, Binder.map (fun _ -> expr.type_expression) binder)
   | _ -> None
 
 
-let fetch_views_in_program
-    : program -> (type_expression * type_expression Binder.t) list
-  =
+let fetch_views_in_program : program -> (type_expression * type_expression Binder.t) list =
  fun prg -> List.filter_map ~f:fetch_view_type prg

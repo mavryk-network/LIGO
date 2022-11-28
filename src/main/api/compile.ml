@@ -24,9 +24,7 @@ let read_file_constants ~raise file_constants =
     (try
        let buf = In_channel.read_all fn in
        let json = Yojson.Basic.from_string buf in
-       json
-       |> Yojson.Basic.Util.to_list
-       |> List.map ~f:Yojson.Basic.Util.to_string
+       json |> Yojson.Basic.Util.to_list |> List.map ~f:Yojson.Basic.Util.to_string
      with
     | Sys_error _ -> raise.Trace.error (`Main_cannot_open_global_constants fn)
     | Yojson.Json_error s ->
@@ -54,18 +52,10 @@ let contract
       Helpers.protocol_to_variant ~raise raw_options.protocol_version
     in
     let syntax =
-      Syntax.of_string_opt
-        ~raise
-        (Syntax_name raw_options.syntax)
-        (Some source_file)
+      Syntax.of_string_opt ~raise (Syntax_name raw_options.syntax) (Some source_file)
     in
     let has_env_comments = has_env_comments michelson_comments in
-    Compiler_options.make
-      ~raw_options
-      ~syntax
-      ~protocol_version
-      ~has_env_comments
-      ()
+    Compiler_options.make ~raw_options ~syntax ~protocol_version ~has_env_comments ()
   in
   let Compiler_options.
         { disable_michelson_typechecking = disable_typecheck
@@ -78,9 +68,7 @@ let contract
     options.backend
   in
   let Compiler_options.{ entry_point; _ } = options.frontend in
-  let code, views =
-    Build.build_contract ~raise ~options entry_point views source_file
-  in
+  let code, views = Build.build_contract ~raise ~options entry_point views source_file in
   let file_constants = read_file_constants ~raise file_constants in
   let constants = constants @ file_constants in
   Ligo_compile.Of_michelson.build_contract
@@ -108,9 +96,7 @@ let expression
     ~display_format
     (Formatter.Michelson_formatter.michelson_format michelson_format [])
   @@ fun ~raise ->
-  let syntax =
-    Syntax.of_string_opt ~raise (Syntax_name raw_options.syntax) init_file
-  in
+  let syntax = Syntax.of_string_opt ~raise (Syntax_name raw_options.syntax) init_file in
   let options =
     let protocol_version =
       Helpers.protocol_to_variant ~raise raw_options.protocol_version
@@ -149,24 +135,17 @@ let expression
         ; parameter_ty = None
         }
     in
-    Run.evaluate_expression
-      ~raise
-      ~options
-      compiled_exp.expr
-      compiled_exp.expr_ty)
+    Run.evaluate_expression ~raise ~options compiled_exp.expr compiled_exp.expr_ty)
 
 
-let constant (raw_options : Raw_options.t) constants init_file display_format ()
-  =
+let constant (raw_options : Raw_options.t) constants init_file display_format () =
   let warning_as_error = raw_options.warning_as_error in
   format_result
     ~warning_as_error
     ~display_format
     Formatter.Michelson_formatter.michelson_constant_format
   @@ fun ~raise ->
-  let syntax =
-    Syntax.of_string_opt ~raise (Syntax_name raw_options.syntax) init_file
-  in
+  let syntax = Syntax.of_string_opt ~raise (Syntax_name raw_options.syntax) init_file in
   let options =
     let protocol_version =
       Helpers.protocol_to_variant ~raise raw_options.protocol_version
@@ -179,9 +158,7 @@ let constant (raw_options : Raw_options.t) constants init_file display_format ()
       ()
   in
   let Compiler_options.{ without_run; _ } = options.backend in
-  let mini_c_exp, _ =
-    Build.build_expression ~raise ~options syntax constants init_file
-  in
+  let mini_c_exp, _ = Build.build_expression ~raise ~options syntax constants init_file in
   let compiled_exp =
     Ligo_compile.Of_mini_c.compile_expression ~raise ~options mini_c_exp
   in
@@ -216,10 +193,7 @@ let parameter
     Helpers.protocol_to_variant ~raise raw_options.protocol_version
   in
   let syntax =
-    Syntax.of_string_opt
-      ~raise
-      (Syntax_name raw_options.syntax)
-      (Some source_file)
+    Syntax.of_string_opt ~raise (Syntax_name raw_options.syntax) (Some source_file)
   in
   let options =
     Compiler_options.make
@@ -236,12 +210,7 @@ let parameter
   let entry_point = Value_var.of_input_var entry_point in
   let app_typed_prg = Build.qualified_typed ~raise ~options Env source_file in
   let typed_param =
-    Ligo_compile.Utils.type_expression
-      ~raise
-      ~options
-      syntax
-      expression
-      app_typed_prg
+    Ligo_compile.Utils.type_expression ~raise ~options syntax expression app_typed_prg
   in
   let typed_param, typed_prg =
     Self_ast_typed.remove_unused_expression typed_param app_typed_prg
@@ -257,9 +226,7 @@ let parameter
     let mini_c =
       Ligo_compile.Of_aggregated.compile_expression ~raise aggregated_contract
     in
-    let michelson =
-      Ligo_compile.Of_mini_c.compile_contract ~raise ~options mini_c
-    in
+    let michelson = Ligo_compile.Of_mini_c.compile_contract ~raise ~options mini_c in
     (* fails if the given entry point is not a valid contract *)
     Ligo_compile.Of_michelson.build_contract
       ~raise
@@ -297,11 +264,7 @@ let parameter
       { now; amount; balance; sender; source; parameter_ty = None }
   in
   no_comment
-    (Run.evaluate_expression
-       ~raise
-       ~options
-       compiled_param.expr
-       compiled_param.expr_ty)
+    (Run.evaluate_expression ~raise ~options compiled_param.expr compiled_param.expr_ty)
 
 
 let storage
@@ -327,10 +290,7 @@ let storage
     Helpers.protocol_to_variant ~raise raw_options.protocol_version
   in
   let syntax =
-    Syntax.of_string_opt
-      ~raise
-      (Syntax_name raw_options.syntax)
-      (Some source_file)
+    Syntax.of_string_opt ~raise (Syntax_name raw_options.syntax) (Some source_file)
   in
   let options =
     Compiler_options.make
@@ -349,12 +309,7 @@ let storage
     Build.qualified_typed ~raise ~options Ligo_compile.Of_core.Env source_file
   in
   let typed_param =
-    Ligo_compile.Utils.type_expression
-      ~raise
-      ~options
-      syntax
-      expression
-      app_typed_prg
+    Ligo_compile.Utils.type_expression ~raise ~options syntax expression app_typed_prg
   in
   let typed_param, typed_prg =
     Self_ast_typed.remove_unused_expression typed_param app_typed_prg
@@ -370,9 +325,7 @@ let storage
     let mini_c =
       Ligo_compile.Of_aggregated.compile_expression ~raise aggregated_contract
     in
-    let michelson =
-      Ligo_compile.Of_mini_c.compile_contract ~raise ~options mini_c
-    in
+    let michelson = Ligo_compile.Of_mini_c.compile_contract ~raise ~options mini_c in
     (* fails if the given entry point is not a valid contract *)
     Ligo_compile.Of_michelson.build_contract
       ~raise
@@ -410,8 +363,4 @@ let storage
       { now; amount; balance; sender; source; parameter_ty = None }
   in
   no_comment
-    (Run.evaluate_expression
-       ~raise
-       ~options
-       compiled_param.expr
-       compiled_param.expr_ty)
+    (Run.evaluate_expression ~raise ~options compiled_param.expr compiled_param.expr_ty)

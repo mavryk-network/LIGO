@@ -26,10 +26,7 @@ let rec fold_expression : 'a folder -> 'a -> expression -> 'a =
   | E_lambda { binder = _; output_type = _; result = e }
   | E_type_abstraction { type_binder = _; result = e }
   | E_recursive
-      { lambda = { result = e; output_type = _; binder = _ }
-      ; fun_name = _
-      ; fun_type = _
-      }
+      { lambda = { result = e; output_type = _; binder = _ }; fun_name = _; fun_type = _ }
   | E_constructor { element = e; constructor = _ } ->
     let res = self init e in
     res
@@ -66,9 +63,7 @@ let rec fold_expression : 'a folder -> 'a -> expression -> 'a =
   | E_while w -> While_loop.fold self init w
 
 
-and fold_expression_in_module_expr
-    : ('a -> expression -> 'a) -> 'a -> module_expr -> 'a
-  =
+and fold_expression_in_module_expr : ('a -> expression -> 'a) -> 'a -> module_expr -> 'a =
  fun self acc x ->
   match x.wrap_content with
   | M_struct decls ->
@@ -100,13 +95,7 @@ and fold_module : 'a folder -> 'a -> module_ -> 'a =
         { binder = _
         ; expr
         ; attr =
-            { inline = _
-            ; no_mutation = _
-            ; view = _
-            ; public = _
-            ; hidden = _
-            ; thunk = _
-            }
+            { inline = _; no_mutation = _; view = _; public = _; hidden = _; thunk = _ }
         } ->
       let res = fold_expression f acc expr in
       return @@ res
@@ -135,13 +124,9 @@ let rec iter_type_expression : ty_mapper -> type_expression -> unit =
   | T_variable _ -> ()
   | T_constant x -> List.iter ~f:self x.parameters
   | T_sum x ->
-    List.iter
-      ~f:(fun x -> self x.associated_type)
-      (Record.LMap.to_list x.fields)
+    List.iter ~f:(fun x -> self x.associated_type) (Record.LMap.to_list x.fields)
   | T_record x ->
-    List.iter
-      ~f:(fun x -> self x.associated_type)
-      (Record.LMap.to_list x.fields)
+    List.iter ~f:(fun x -> self x.associated_type) (Record.LMap.to_list x.fields)
   | T_arrow x ->
     let () = self x.type1 in
     self x.type2
@@ -196,12 +181,9 @@ let rec map_expression : 'err mapper -> expression -> expression =
   | E_type_inst { forall; type_ } ->
     let forall = self forall in
     return @@ E_type_inst { forall; type_ }
-  | E_recursive { fun_name; fun_type; lambda = { binder; output_type; result } }
-    ->
+  | E_recursive { fun_name; fun_type; lambda = { binder; output_type; result } } ->
     let result = self result in
-    return
-    @@ E_recursive
-         { fun_name; fun_type; lambda = { binder; output_type; result } }
+    return @@ E_recursive { fun_name; fun_type; lambda = { binder; output_type; result } }
   | E_constant c ->
     let args = List.map ~f:self c.arguments in
     return @@ E_constant { c with arguments = args }
@@ -239,11 +221,9 @@ and map_expression_in_module_expr
 
 
 and map_cases
-    :  'err mapper -> _ Match_expr.match_case list
-    -> _ Match_expr.match_case list
+    : 'err mapper -> _ Match_expr.match_case list -> _ Match_expr.match_case list
   =
- fun f m ->
-  List.map m ~f:(Match_expr.map_match_case (map_expression f) (fun t -> t))
+ fun f m -> List.map m ~f:(Match_expr.map_match_case (map_expression f) (fun t -> t))
 
 
 and map_declaration m (x : declaration) =
@@ -265,10 +245,7 @@ and map_declaration m (x : declaration) =
 
 
 and map_decl m d = map_declaration m d
-
-and map_module : 'err mapper -> module_ -> module_ =
- fun m -> List.map ~f:(map_decl m)
-
+and map_module : 'err mapper -> module_ -> module_ = fun m -> List.map ~f:(map_decl m)
 
 and map_program : 'err mapper -> program -> program =
  fun m -> List.map ~f:(map_declaration m)
@@ -279,16 +256,12 @@ let fetch_entry_type ~raise : string -> program -> type_expression * Location.t 
   let aux (declt : declaration) =
     match Location.unwrap declt with
     | D_value ({ binder; expr = _; attr = _ } as p) ->
-      if Value_var.is_name (Binder.get_var binder) main_fname
-      then Some p
-      else None
+      if Value_var.is_name (Binder.get_var binder) main_fname then Some p else None
     | D_type _ | D_module _ | D_open _ | D_include _ -> None
   in
   let main_decl_opt = List.find_map ~f:aux @@ List.rev m in
   let main_decl =
-    trace_option
-      ~raise
-      (corner_case ("Entrypoint '" ^ main_fname ^ "' does not exist"))
+    trace_option ~raise (corner_case ("Entrypoint '" ^ main_fname ^ "' does not exist"))
     @@ main_decl_opt
   in
   let Value_decl.{ binder = _; expr; attr = _ } = main_decl in
@@ -305,9 +278,7 @@ let fetch_contract_type ~raise : Value_var.t -> program -> contract_type =
   let aux declt =
     match Location.unwrap declt with
     | D_value ({ binder; expr = _; attr = _ } as p) ->
-      if Value_var.equal (Binder.get_var binder) main_fname
-      then Some p
-      else None
+      if Value_var.equal (Binder.get_var binder) main_fname then Some p else None
     | D_type _ | D_module _ | D_open _ | D_include _ -> None
   in
   let main_decl_opt = List.find_map ~f:aux @@ List.rev m in
@@ -315,8 +286,7 @@ let fetch_contract_type ~raise : Value_var.t -> program -> contract_type =
     trace_option
       ~raise
       (corner_case
-         (Format.asprintf "Entrypoint %a does not exist" Value_var.pp main_fname
-           : string))
+         (Format.asprintf "Entrypoint %a does not exist" Value_var.pp main_fname : string))
     @@ main_decl_opt
   in
   let Value_decl.{ binder; expr; attr = _ } = main_decl in
@@ -329,25 +299,17 @@ let fetch_contract_type ~raise : Value_var.t -> program -> contract_type =
         @@ Ast_typed.assert_t_list_operation listop
       in
       let () =
-        trace_option
-          ~raise
-          (expected_same_entry main_fname storage storage' expr)
+        trace_option ~raise (expected_same_entry main_fname storage storage' expr)
         @@ Ast_typed.assert_type_expression_eq (storage, storage')
       in
       (* TODO: on storage/parameter : asert_storable, assert_passable ? *)
       { parameter; storage }
     | _ ->
       raise.error
-      @@ bad_contract_io
-           main_fname
-           expr
-           (Value_var.get_location @@ Binder.get_var binder))
+      @@ bad_contract_io main_fname expr (Value_var.get_location @@ Binder.get_var binder))
   | _ ->
     raise.error
-    @@ bad_contract_io
-         main_fname
-         expr
-         (Value_var.get_location @@ Binder.get_var binder)
+    @@ bad_contract_io main_fname expr (Value_var.get_location @@ Binder.get_var binder)
 
 
 (* get_shadowed_decl [prg] [predicate] returns the location of the last shadowed annotated top-level declaration of program [prg] if any
@@ -355,18 +317,13 @@ let fetch_contract_type ~raise : Value_var.t -> program -> contract_type =
 *)
 let get_shadowed_decl : program -> (ValueAttr.t -> bool) -> Location.t option =
  fun prg predicate ->
-  let aux
-      ((seen, shadows) : Value_var.t list * Location.t list)
-      (x : declaration)
-    =
+  let aux ((seen, shadows) : Value_var.t list * Location.t list) (x : declaration) =
     match Location.unwrap x with
     | D_value { binder; attr; _ } ->
       (match List.find seen ~f:(Value_var.equal (Binder.get_var binder)) with
       | Some x -> seen, Value_var.get_location x :: shadows
       | None ->
-        if predicate attr
-        then Binder.get_var binder :: seen, shadows
-        else seen, shadows)
+        if predicate attr then Binder.get_var binder :: seen, shadows else seen, shadows)
     | _ -> seen, shadows
   in
   let _, shadows = List.fold ~f:aux ~init:([], []) prg in
@@ -381,9 +338,7 @@ let strip_view_annotations : program -> program =
   let aux (x : declaration) =
     match Location.unwrap x with
     | D_value ({ attr; _ } as decl) when attr.view ->
-      { x with
-        wrap_content = D_value { decl with attr = { attr with view = false } }
-      }
+      { x with wrap_content = D_value { decl with attr = { attr with view = false } } }
     | _ -> x
   in
   List.map ~f:aux m
@@ -400,31 +355,24 @@ let strip_view_annotations : program -> program =
     [@view] let b = <..>
     let c = <..>
 *)
-let annotate_with_view ~raise
-    : string list -> Ast_typed.program -> Ast_typed.program
-  =
+let annotate_with_view ~raise : string list -> Ast_typed.program -> Ast_typed.program =
  fun names prg ->
   let prg, not_found =
     List.fold_right
       prg
       ~init:([], names)
-      ~f:(fun (x : declaration) ((prg, views) : Ast_typed.program * string list)
-         ->
+      ~f:(fun (x : declaration) ((prg, views) : Ast_typed.program * string list) ->
         let continue = x :: prg, views in
         match Location.unwrap x with
         | D_value ({ binder; _ } as decl) ->
-          (match
-             List.find views ~f:(Value_var.is_name @@ Binder.get_var binder)
-           with
+          (match List.find views ~f:(Value_var.is_name @@ Binder.get_var binder) with
           | Some found ->
             let decorated =
               { x with
-                wrap_content =
-                  D_value { decl with attr = { decl.attr with view = true } }
+                wrap_content = D_value { decl with attr = { decl.attr with view = true } }
               }
             in
-            ( decorated :: prg
-            , List.remove_element ~compare:String.compare found views )
+            decorated :: prg, List.remove_element ~compare:String.compare found views
           | None -> continue)
         | _ -> continue)
   in
@@ -433,16 +381,13 @@ let annotate_with_view ~raise
     | [] -> ()
     | not_found :: _ ->
       raise.error
-        (corner_case
-           (Format.asprintf "View %s does not exist" not_found : string))
+        (corner_case (Format.asprintf "View %s does not exist" not_found : string))
   in
   prg
 
 
 module Free_variables : sig
-  val expression
-    :  expression
-    -> Module_var.t list * Value_var.t list * Value_var.t list
+  val expression : expression -> Module_var.t list * Value_var.t list * Value_var.t list
 end = struct
   module VarSet = Caml.Set.Make (Value_var)
   module ModVarSet = Caml.Set.Make (Module_var)
@@ -508,8 +453,7 @@ end = struct
       ; varSet = VarSet.empty
       ; mutSet = VarSet.empty
       }
-    | E_constant { cons_name = _; arguments } ->
-      unions @@ List.map ~f:self arguments
+    | E_constant { cons_name = _; arguments } -> unions @@ List.map ~f:self arguments
     | E_application { lamb; args } -> merge (self lamb) (self args)
     | E_type_inst { forall; type_ = _ } -> self forall
     | E_lambda { binder; output_type = _; result } ->
@@ -520,14 +464,12 @@ end = struct
       | Mutable ->
         { env with mutSet = VarSet.remove (Param.get_var binder) @@ env.mutSet })
     | E_type_abstraction { type_binder = _; result } -> self result
-    | E_recursive
-        { fun_name; lambda = { binder; output_type = _; result }; fun_type = _ }
+    | E_recursive { fun_name; lambda = { binder; output_type = _; result }; fun_type = _ }
       ->
       let { modVarSet; moduleEnv; varSet = fv; mutSet } = self result in
       { modVarSet
       ; moduleEnv
-      ; varSet =
-          VarSet.remove fun_name @@ VarSet.remove (Param.get_var binder) @@ fv
+      ; varSet = VarSet.remove fun_name @@ VarSet.remove (Param.get_var binder) @@ fv
       ; mutSet
       }
     | E_constructor { constructor = _; element } -> self element
@@ -536,8 +478,7 @@ end = struct
       let res = Record.map ~f:self m in
       let res = Record.LMap.to_list res in
       unions res
-    | E_update { struct_; update; path = _ } ->
-      merge (self struct_) (self update)
+    | E_update { struct_; update; path = _ } -> merge (self struct_) (self update)
     | E_accessor { struct_; path = _ } -> self struct_
     | E_let_in { let_binder; rhs; let_result; attr = _ } ->
       let { modVarSet; moduleEnv; varSet = fv2; mutSet } = self let_result in
@@ -565,8 +506,7 @@ end = struct
       unions [ self start; self final; self incr; f_body_fvs ]
     | E_for_each { fe_binder = binder1, binder2; collection; fe_body; _ } ->
       let binders =
-        binder1
-        :: Option.value_map binder2 ~f:(fun binder2 -> [ binder2 ]) ~default:[]
+        binder1 :: Option.value_map binder2 ~f:(fun binder2 -> [ binder2 ]) ~default:[]
         |> VarSet.of_list
       in
       let fe_body_fvs = self fe_body in
@@ -588,9 +528,7 @@ end = struct
     @@ List.map m ~f:(fun { pattern; body } ->
            let { modVarSet; moduleEnv; varSet; mutSet } = get_fv_expr body in
            let vars = Pattern.binders pattern |> List.map ~f:Binder.get_var in
-           let varSet =
-             List.fold vars ~init:varSet ~f:(fun vs v -> VarSet.remove v vs)
-           in
+           let varSet = List.fold vars ~init:varSet ~f:(fun vs v -> VarSet.remove v vs) in
            { modVarSet; moduleEnv; varSet; mutSet })
 
 

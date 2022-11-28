@@ -13,12 +13,7 @@ let sum_set_t value sep ppf m =
 
 let sum_set_t x = sum_set_t x (tag " ,@ ")
 
-let record_sep_t
-    value
-    sep
-    ppf
-    (m : (Label.t * type_expression Rows.row_element) list)
-  =
+let record_sep_t value sep ppf (m : (Label.t * type_expression Rows.row_element) list) =
   let attributes_2 (attr : string list) : string =
     List.map ~f:(fun s -> "[@@" ^ s ^ "]") attr |> String.concat
   in

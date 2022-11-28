@@ -15,8 +15,7 @@ end = struct
     let self = get_fv_expr in
     match e.expression_content with
     | E_variable v -> VarSet.singleton v
-    | E_literal _ | E_raw_code _ | E_skip _ | E_module_accessor _ ->
-      VarSet.empty
+    | E_literal _ | E_raw_code _ | E_skip _ | E_module_accessor _ -> VarSet.empty
     | E_list lst -> unions @@ List.map ~f:self lst
     | E_set lst -> unions @@ List.map ~f:self lst
     | E_map lst ->
@@ -60,27 +59,20 @@ end = struct
       VarSet.remove (Param.get_var binder) @@ self result
     | E_type_abstraction { type_binder = _; result } -> self result
     | E_recursive { fun_name; lambda = { binder; result; _ }; fun_type = _ } ->
-      VarSet.remove fun_name
-      @@ VarSet.remove (Param.get_var binder)
-      @@ self result
-    | E_constant { arguments; cons_name = _ } ->
-      unions @@ List.map ~f:self arguments
+      VarSet.remove fun_name @@ VarSet.remove (Param.get_var binder) @@ self result
+    | E_constant { arguments; cons_name = _ } -> unions @@ List.map ~f:self arguments
     | E_cond { condition; then_clause; else_clause } ->
       unions @@ [ self condition; self then_clause; self else_clause ]
     | E_sequence { expr1; expr2 } -> VarSet.union (self expr1) (self expr2)
     | E_assign { binder; expression } ->
       unions @@ [ VarSet.singleton (Binder.get_var binder); self expression ]
     | E_for { binder; start; final; incr; f_body } ->
-      VarSet.remove binder
-      @@ unions [ self start; self final; self incr; self f_body ]
-    | E_for_each
-        { fe_binder = binder, None; collection; fe_body; collection_type = _ }
-      -> unions [ self collection; VarSet.remove binder @@ self fe_body ]
+      VarSet.remove binder @@ unions [ self start; self final; self incr; self f_body ]
+    | E_for_each { fe_binder = binder, None; collection; fe_body; collection_type = _ } ->
+      unions [ self collection; VarSet.remove binder @@ self fe_body ]
     | E_for_each { fe_binder = binder, Some binder'; collection; fe_body; _ } ->
       unions
-        [ self collection
-        ; VarSet.remove binder @@ VarSet.remove binder' @@ self fe_body
-        ]
+        [ self collection; VarSet.remove binder @@ VarSet.remove binder' @@ self fe_body ]
     | E_while { cond; body } -> unions [ self cond; self body ]
 
 

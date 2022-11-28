@@ -26,8 +26,7 @@ module M (Params : Params) = struct
   type meta_data = Ligo_compile.Helpers.meta
 
   let preprocess
-      :  code_input
-      -> compilation_unit * meta_data * (file_name * module_name) list
+      : code_input -> compilation_unit * meta_data * (file_name * module_name) list
     =
    fun code_input ->
     let syntax =
@@ -48,11 +47,7 @@ module M (Params : Params) = struct
           ~options:options.frontend
           file_name
       | Raw { id = _; code } ->
-        Ligo_compile.Helpers.preprocess_string
-          ~raise
-          ~meta
-          ~options:options.frontend
-          code
+        Ligo_compile.Helpers.preprocess_string ~raise ~meta ~options:options.frontend code
     in
     c_unit, meta, deps
 
@@ -66,9 +61,7 @@ module M (Params : Params) = struct
      fun ast env -> Environment.append env ast
 
 
-    let add_module_to_env
-        : module_name -> environment -> environment -> environment
-      =
+    let add_module_to_env : module_name -> environment -> environment -> environment =
      fun module_name ast_typed_env env ->
       let module_name = Module_var.of_input_var module_name in
       Environment.add_module
@@ -92,34 +85,22 @@ module M (Params : Params) = struct
       Location.wrap
         Ast_typed.(
           D_module
-            { module_binder
-            ; module_
-            ; module_attr = { public = true; hidden = true }
-            })
+            { module_binder; module_; module_attr = { public = true; hidden = true } })
   end
 
   let lib_ast : unit -> AST.t =
-   fun () ->
-    std_lib.typed_mod_def @ Stdlib.select_prelude_typed top_level_syntax std_lib
+   fun () -> std_lib.typed_mod_def @ Stdlib.select_prelude_typed top_level_syntax std_lib
 
 
-  let compile
-      : AST.environment -> file_name -> meta_data -> compilation_unit -> AST.t
-    =
+  let compile : AST.environment -> file_name -> meta_data -> compilation_unit -> AST.t =
    fun env file_name meta c_unit ->
     let options = Compiler_options.set_init_env options env in
-    let core_c_unit =
-      Ligo_compile.Utils.to_core ~raise ~options ~meta c_unit file_name
-    in
+    let core_c_unit = Ligo_compile.Utils.to_core ~raise ~options ~meta c_unit file_name in
     let ast_core =
-      let syntax =
-        Syntax.of_string_opt ~raise (Syntax_name "auto") (Some file_name)
-      in
+      let syntax = Syntax.of_string_opt ~raise (Syntax_name "auto") (Some file_name) in
       Helpers.inject_declaration ~options ~raise syntax core_c_unit
     in
-    let is_syntax_switch =
-      not (Syntax_types.equal top_level_syntax meta.syntax)
-    in
+    let is_syntax_switch = not (Syntax_types.equal top_level_syntax meta.syntax) in
     let ast_core =
       if is_syntax_switch
       then (
@@ -128,11 +109,7 @@ module M (Params : Params) = struct
         prelude @ ast_core)
       else ast_core
     in
-    Ligo_compile.Of_core.typecheck
-      ~raise
-      ~options
-      Ligo_compile.Of_core.Env
-      ast_core
+    Ligo_compile.Of_core.typecheck ~raise ~options Ligo_compile.Of_core.Env ast_core
 end
 
 module Infer (Params : Params) = struct
@@ -145,9 +122,7 @@ module Infer (Params : Params) = struct
 
     let add_ast_to_env : t -> environment -> environment = fun _ () -> ()
 
-    let add_module_to_env
-        : module_name -> environment -> environment -> environment
-      =
+    let add_module_to_env : module_name -> environment -> environment -> environment =
      fun _ () () -> ()
 
 
@@ -160,33 +135,21 @@ module Infer (Params : Params) = struct
       Location.wrap
         Ast_core.(
           D_module
-            { module_binder
-            ; module_
-            ; module_attr = { public = true; hidden = true }
-            })
+            { module_binder; module_; module_attr = { public = true; hidden = true } })
   end
 
   let lib_ast : unit -> AST.t =
-   fun () ->
-    std_lib.core_mod_def @ Stdlib.select_prelude_core top_level_syntax std_lib
+   fun () -> std_lib.core_mod_def @ Stdlib.select_prelude_core top_level_syntax std_lib
 
 
-  let compile
-      : AST.environment -> file_name -> meta_data -> compilation_unit -> AST.t
-    =
+  let compile : AST.environment -> file_name -> meta_data -> compilation_unit -> AST.t =
    fun () file_name meta c_unit ->
+    let module_ = Ligo_compile.Utils.to_core ~raise ~options ~meta c_unit file_name in
     let module_ =
-      Ligo_compile.Utils.to_core ~raise ~options ~meta c_unit file_name
-    in
-    let module_ =
-      let syntax =
-        Syntax.of_string_opt ~raise (Syntax_name "auto") (Some file_name)
-      in
+      let syntax = Syntax.of_string_opt ~raise (Syntax_name "auto") (Some file_name) in
       Helpers.inject_declaration ~options ~raise syntax module_
     in
-    let is_syntax_switch =
-      not (Syntax_types.equal top_level_syntax meta.syntax)
-    in
+    let is_syntax_switch = not (Syntax_types.equal top_level_syntax meta.syntax) in
     if is_syntax_switch
     then (
       let prelude = Stdlib.select_prelude_core meta.syntax std_lib in
@@ -203,16 +166,14 @@ let get_top_level_syntax ~options ?filename () : Syntax_types.t =
   match Compiler_options.(options.frontend.syntax) with
   | Some x -> x
   | None ->
-    (match
-       Trace.to_option @@ Syntax.of_string_opt (Syntax_name "auto") filename
-     with
+    (match Trace.to_option @@ Syntax.of_string_opt (Syntax_name "auto") filename with
     | Some x -> x
     | None -> failwith "Top-level syntax not found")
 
 
 let dependency_graph ~raise
-    :  options:Compiler_options.t -> Ligo_compile.Of_core.form
-    -> Source_input.file_name -> _
+    :  options:Compiler_options.t -> Ligo_compile.Of_core.form -> Source_input.file_name
+    -> _
   =
  fun ~options _form filename ->
   let open Build_core (struct
@@ -241,8 +202,8 @@ let unqualified_core ~raise
 
 
 let unqualified_typed ~raise
-    :  options:Compiler_options.t -> Ligo_compile.Of_core.form
-    -> Source_input.file_name -> Ast_typed.program
+    :  options:Compiler_options.t -> Ligo_compile.Of_core.form -> Source_input.file_name
+    -> Ast_typed.program
   =
  fun ~options form filename ->
   (* let open Build_typed(struct
@@ -272,8 +233,8 @@ let qualified_core ~raise
 
 
 let qualified_typed ~raise
-    :  options:Compiler_options.t -> Ligo_compile.Of_core.form
-    -> Source_input.file_name -> Ast_typed.program
+    :  options:Compiler_options.t -> Ligo_compile.Of_core.form -> Source_input.file_name
+    -> Ast_typed.program
   =
  fun ~options form filename ->
   (* let std_lib = Stdlib.get ~options in
@@ -288,8 +249,7 @@ let qualified_typed ~raise
   Ligo_compile.Of_core.typecheck ~raise ~options form prg
 
 
-let qualified_typed_str ~raise
-    : options:Compiler_options.t -> string -> Ast_typed.program
+let qualified_typed_str ~raise : options:Compiler_options.t -> string -> Ast_typed.program
   =
  fun ~options code ->
   let std_lib = Stdlib.get ~options in
@@ -306,9 +266,7 @@ let qualified_typed_str ~raise
     | None -> "from_build"
   in
   let s = Source_input.Raw { code; id } in
-  let x =
-    trace ~raise build_error_tracer @@ from_result (compile_qualified s)
-  in
+  let x = trace ~raise build_error_tracer @@ from_result (compile_qualified s) in
   Ligo_compile.Of_core.typecheck ~raise ~options Env x
 
 
@@ -325,12 +283,7 @@ let build_expression ~raise
     Option.value_map file_name_opt ~f ~default
   in
   let typed_exp =
-    Ligo_compile.Utils.type_expression
-      ~raise
-      ~options
-      syntax
-      expression
-      init_prg
+    Ligo_compile.Utils.type_expression ~raise ~options syntax expression init_prg
   in
   let aggregated =
     Ligo_compile.Of_typed.compile_expression_in_context
@@ -339,21 +292,16 @@ let build_expression ~raise
       init_prg
       typed_exp
   in
-  let mini_c_exp =
-    Ligo_compile.Of_aggregated.compile_expression ~raise aggregated
-  in
+  let mini_c_exp = Ligo_compile.Of_aggregated.compile_expression ~raise aggregated in
   mini_c_exp, aggregated
 
 
 let rec build_contract_aggregated ~raise
-    :  options:Compiler_options.t -> string -> string list
-    -> Source_input.file_name -> _
+    : options:Compiler_options.t -> string -> string list -> Source_input.file_name -> _
   =
  fun ~options entry_point cli_views file_name ->
   let entry_point = Value_var.of_input_var entry_point in
-  let typed_prg =
-    qualified_typed ~raise ~options Ligo_compile.Of_core.Env file_name
-  in
+  let typed_prg = qualified_typed ~raise ~options Ligo_compile.Of_core.Env file_name in
   let typed_contract =
     trace ~raise self_ast_typed_tracer
     @@ Ligo_compile.Of_core.specific_passes
@@ -367,8 +315,7 @@ let rec build_contract_aggregated ~raise
         | [] -> None
         | x -> Some x
       in
-      Ligo_compile.Of_core.View
-        { command_line_views; contract_entry = entry_point }
+      Ligo_compile.Of_core.View { command_line_views; contract_entry = entry_point }
     in
     trace ~raise self_ast_typed_tracer
     @@ Ligo_compile.Of_core.specific_passes form typed_prg
@@ -386,8 +333,7 @@ let rec build_contract_aggregated ~raise
     trace_option
       ~raise
       (`Self_ast_aggregated_tracer
-        (Self_ast_aggregated.Errors.corner_case
-           "Could not recover types from contract"))
+        (Self_ast_aggregated.Errors.corner_case "Could not recover types from contract"))
       (let open Simple_utils.Option in
       let open Ast_aggregated in
       let* { type1 = input_ty; _ } =
@@ -399,8 +345,7 @@ let rec build_contract_aggregated ~raise
 
 
 and build_contract_stacking ~raise
-    :  options:Compiler_options.t -> string -> string list
-    -> Source_input.file_name
+    :  options:Compiler_options.t -> string -> string list -> Source_input.file_name
     -> (Stacking.compiled_expression * _)
        * ((Value_var.t * Stacking.compiled_expression) list * _)
   =
@@ -408,12 +353,8 @@ and build_contract_stacking ~raise
   let _, aggregated, agg_views =
     build_contract_aggregated ~raise ~options entry_point cli_views file_name
   in
-  let mini_c =
-    Ligo_compile.Of_aggregated.compile_expression ~raise aggregated
-  in
-  let contract =
-    Ligo_compile.Of_mini_c.compile_contract ~raise ~options mini_c
-  in
+  let mini_c = Ligo_compile.Of_aggregated.compile_expression ~raise aggregated in
+  let contract = Ligo_compile.Of_mini_c.compile_contract ~raise ~options mini_c in
   let views = build_views ~raise ~options agg_views in
   (contract, aggregated), (views, agg_views)
 
@@ -457,20 +398,16 @@ and build_aggregated_views ~raise
 
 
 and build_views ~raise
-    :  options:Compiler_options.t
-    -> (Value_var.t list * Ast_aggregated.expression) option
+    :  options:Compiler_options.t -> (Value_var.t list * Ast_aggregated.expression) option
     -> (Value_var.t * Stacking.compiled_expression) list
   =
  fun ~options lst_opt ->
   match lst_opt with
   | None -> []
   | Some (view_names, aggregated) ->
+    let mini_c = Ligo_compile.Of_aggregated.compile_expression ~raise aggregated in
     let mini_c =
-      Ligo_compile.Of_aggregated.compile_expression ~raise aggregated
-    in
-    let mini_c =
-      trace ~raise self_mini_c_tracer
-      @@ Self_mini_c.all_expression options mini_c
+      trace ~raise self_mini_c_tracer @@ Self_mini_c.all_expression options mini_c
     in
     let mini_c_tys =
       trace_option

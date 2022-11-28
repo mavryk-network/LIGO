@@ -36,9 +36,7 @@ and type_expression =
   }
 
 and ty_expr = type_expression [@@deriving eq, compare, yojson, hash]
-
-and type_expression_option = type_expression option
-[@@deriving eq, compare, yojson, hash]
+and type_expression_option = type_expression option [@@deriving eq, compare, yojson, hash]
 
 module ValueAttr = struct
   type t =
@@ -60,9 +58,7 @@ module ValueAttr = struct
 
   open Format
 
-  let pp_if_set str ppf attr =
-    if attr then fprintf ppf "[@@%s]" str else fprintf ppf ""
-
+  let pp_if_set str ppf attr = if attr then fprintf ppf "[@@%s]" str else fprintf ppf ""
 
   let pp ppf { inline; no_mutation; view; public; hidden; thunk } =
     fprintf
@@ -91,18 +87,10 @@ module TypeOrModuleAttr = struct
 
   open Format
 
-  let pp_if_set str ppf attr =
-    if attr then fprintf ppf "[@@%s]" str else fprintf ppf ""
-
+  let pp_if_set str ppf attr = if attr then fprintf ppf "[@@%s]" str else fprintf ppf ""
 
   let pp ppf { public; hidden } =
-    fprintf
-      ppf
-      "%a%a"
-      (pp_if_set "private")
-      (not public)
-      (pp_if_set "hidden")
-      hidden
+    fprintf ppf "%a%a" (pp_if_set "private") (not public) (pp_if_set "hidden") hidden
 end
 
 module Value_decl = Value_decl (ValueAttr)
@@ -184,9 +172,7 @@ and declaration_content =
 and declaration = declaration_content Location.wrap
 and decl = declaration [@@deriving eq, compare, yojson, hash]
 and module_expr_content = decl Module_expr.t
-
-and module_expr = module_expr_content Location.wrap
-[@@deriving eq, compare, yojson, hash]
+and module_expr = module_expr_content Location.wrap [@@deriving eq, compare, yojson, hash]
 
 type module_ = decl list [@@deriving eq, compare, yojson, hash]
 type program = declaration list [@@deriving eq, compare, yojson, hash]

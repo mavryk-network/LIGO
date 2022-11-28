@@ -28,10 +28,7 @@ open CST (* THE ONLY GLOBAL OPENING *)
 (* UTILITIES *)
 
 let sprintf = Printf.sprintf
-
-let compact state (region : Region.t) =
-  region#compact ~offsets:state#offsets state#mode
-
+let compact state (region : Region.t) = region#compact ~offsets:state#offsets state#mode
 
 let print_attribute state (node : Attr.t reg) =
   let key, val_opt = node.value in
@@ -46,9 +43,7 @@ let print_attribute state (node : Attr.t reg) =
 
 type label = Tree.label
 
-let print_list
-    : state -> ?region:Region.t -> label -> 'a Tree.printer -> 'a list -> unit
-  =
+let print_list : state -> ?region:Region.t -> label -> 'a Tree.printer -> 'a list -> unit =
  fun state ?region label print list ->
   let children = List.map ~f:(Tree.mk_child print) list in
   Tree.print ?region state label children
@@ -83,9 +78,7 @@ let print_verbatim state { value = name; region } =
   Buffer.add_string state#buffer node
 
 
-let print_loc_node state name region =
-  print_ident state { value = name; region }
-
+let print_loc_node state name region = print_ident state { value = name; region }
 
 let rec print_cst state { decl; _ } =
   let apply len rank = print_declaration (state#pad len rank) in
@@ -320,8 +313,7 @@ and print_list_pattern state = function
     else print_injection print_pattern state value
 
 
-and print_injection : 'a. (state -> 'a -> unit) -> state -> 'a injection -> unit
-  =
+and print_injection : 'a. (state -> 'a -> unit) -> state -> 'a injection -> unit =
  fun printer state inj ->
   let elements = Utils.sepseq_to_list inj.elements in
   let length = List.length elements in
@@ -329,9 +321,7 @@ and print_injection : 'a. (state -> 'a -> unit) -> state -> 'a injection -> unit
   List.iteri ~f:(apply length) elements
 
 
-and print_ne_injection :
-      'a. (state -> 'a -> unit) -> state -> 'a ne_injection -> unit
-  =
+and print_ne_injection : 'a. (state -> 'a -> unit) -> state -> 'a ne_injection -> unit =
  fun printer state inj ->
   let ne_elements = Utils.nsepseq_to_list inj.ne_elements in
   let length = List.length ne_elements in
@@ -446,8 +436,7 @@ and print_expr state = function
   | ERevApp { value; region } -> print_bin_op "ERevApp" region state value
 
 
-and print_module_access
-    : type a. (state -> a -> unit) -> state -> a module_access -> unit
+and print_module_access : type a. (state -> a -> unit) -> state -> a module_access -> unit
   =
  fun f state ma ->
   print_ident (state#pad 2 0) ma.module_name;
@@ -815,9 +804,7 @@ and print_case : 'a. (state -> 'a -> unit) -> state -> 'a case -> unit =
   List.iteri ~f:(apply arity) clauses
 
 
-and print_case_clause :
-      'a. (state -> 'a -> unit) -> state -> 'a case_clause -> unit
-  =
+and print_case_clause : 'a. (state -> 'a -> unit) -> state -> 'a case_clause -> unit =
  fun printer state clause ->
   print_node state "<clause>";
   print_pattern (state#pad 2 0) clause.pattern;
@@ -920,8 +907,7 @@ and print_variant state { constr; arg; attributes = attr } =
       rank + 1
   in
   let () =
-    if not (List.is_empty attr)
-    then print_attributes (state#pad arity rank) attr
+    if not (List.is_empty attr) then print_attributes (state#pad arity rank) attr
   in
   ()
 

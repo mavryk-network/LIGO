@@ -14,25 +14,17 @@ let rec untype_type_expression (t : O.type_expression) : I.type_expression =
   let return t = I.make_t t in
   match t.type_content with
   | O.T_sum { fields; layout } ->
-    let aux
-        ({ associated_type; michelson_annotation; decl_pos } : O.row_element)
-      =
+    let aux ({ associated_type; michelson_annotation; decl_pos } : O.row_element) =
       let associated_type = self associated_type in
-      let v' =
-        ({ associated_type; michelson_annotation; decl_pos } : I.row_element)
-      in
+      let v' = ({ associated_type; michelson_annotation; decl_pos } : I.row_element) in
       v'
     in
     let x' = Record.map ~f:aux fields in
     return @@ I.T_sum { fields = x'; layout = Some layout }
   | O.T_record { fields; layout } ->
-    let aux
-        ({ associated_type; michelson_annotation; decl_pos } : O.row_element)
-      =
+    let aux ({ associated_type; michelson_annotation; decl_pos } : O.row_element) =
       let associated_type = self associated_type in
-      let v' =
-        ({ associated_type; michelson_annotation; decl_pos } : I.row_element)
-      in
+      let v' = ({ associated_type; michelson_annotation; decl_pos } : I.row_element) in
       v'
     in
     let x' = Record.map ~f:aux fields in
@@ -43,9 +35,7 @@ let rec untype_type_expression (t : O.type_expression) : I.type_expression =
     return @@ I.T_arrow arr
   | O.T_constant { language = _; injection; parameters } ->
     let arguments = List.map ~f:self parameters in
-    let type_operator =
-      Type_var.fresh ~name:(Literal_types.to_string injection) ()
-    in
+    let type_operator = Type_var.fresh ~name:(Literal_types.to_string injection) () in
     return @@ I.T_app { type_operator; arguments }
   | O.T_singleton l -> return @@ I.T_singleton l
   | O.T_abstraction x ->
@@ -108,12 +98,7 @@ and untype_expression_content (ec : O.expression_content) : I.expression =
     let rhs = self rhs in
     let result = self let_result in
     let attr : ValueAttr.t = untype_value_attr attr in
-    return
-      (e_let_mut_in
-         (Binder.map (Fn.const @@ Some tv) let_binder)
-         rhs
-         result
-         attr)
+    return (e_let_mut_in (Binder.map (Fn.const @@ Some tv) let_binder) rhs result attr)
   | E_mod_in { module_binder; rhs; let_result } ->
     let rhs = untype_module_expr rhs in
     let result = self let_result in
@@ -131,8 +116,7 @@ and untype_expression_content (ec : O.expression_content) : I.expression =
     let rhs = self rhs in
     let result = self let_result in
     let attr : ValueAttr.t = untype_value_attr attr in
-    return
-      (e_let_in (Binder.map (Fn.const @@ Some tv) let_binder) rhs result attr)
+    return (e_let_in (Binder.map (Fn.const @@ Some tv) let_binder) rhs result attr)
   | E_assign a ->
     let a = Assign.map self self_type_opt a in
     return @@ make_e @@ E_assign a
@@ -156,9 +140,7 @@ and untype_expression_content (ec : O.expression_content) : I.expression =
       (* This case is used for external typers *)
       self forall
     | _ ->
-      failwith
-        "Impossible case: cannot untype a type instance of a non polymorphic \
-         type")
+      failwith "Impossible case: cannot untype a type instance of a non polymorphic type")
 
 
 and untype_match_expr

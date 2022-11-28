@@ -111,8 +111,7 @@ let rec defuse_of_expr defuse expr : defuse =
       [ defuse_of_expr defuse start
       ; defuse_of_expr defuse final
       ; defuse_of_expr defuse incr
-      ; defuse_of_binder defuse binder (fun defuse ->
-            defuse_of_expr defuse f_body)
+      ; defuse_of_binder defuse binder (fun defuse -> defuse_of_expr defuse f_body)
       ]
   | E_for_each { fe_binder = binder1, binder2; collection; fe_body; _ } ->
     (* Recover type of binders *)
@@ -120,13 +119,10 @@ let rec defuse_of_expr defuse expr : defuse =
     defuse_unions
       defuse
       [ defuse_of_expr defuse collection
-      ; defuse_of_binders defuse binders (fun defuse ->
-            defuse_of_expr defuse fe_body)
+      ; defuse_of_binders defuse binders (fun defuse -> defuse_of_expr defuse fe_body)
       ]
   | E_while { cond; body } ->
-    defuse_unions
-      defuse
-      [ defuse_of_expr defuse cond; defuse_of_expr defuse body ]
+    defuse_unions defuse [ defuse_of_expr defuse cond; defuse_of_expr defuse body ]
 
 
 and defuse_of_lambda defuse { binder; output_type = _; result } =
@@ -141,9 +137,7 @@ and defuse_of_binder defuse binder in_ =
 
 
 and defuse_of_binders defuse binders in_ =
-  let map =
-    List.fold_left ~f:(fun m v -> M.add v false m) ~init:defuse binders
-  in
+  let map = List.fold_left ~f:(fun m v -> M.add v false m) ~init:defuse binders in
   let binders' = List.map ~f:(fun v -> v, M.find_opt v defuse) binders in
   let defuse, unused = in_ map in
   let unused =
@@ -153,23 +147,15 @@ and defuse_of_binders defuse binders in_ =
       binders
   in
   let defuse =
-    List.fold_left
-      ~f:(fun m (v, v') -> replace_opt v v' m)
-      ~init:defuse
-      binders'
+    List.fold_left ~f:(fun m (v, v') -> replace_opt v v' m) ~init:defuse binders'
   in
   defuse, unused
 
 
 and defuse_of_cases defuse cases =
-  List.fold_left
-    cases
-    ~init:(defuse, [])
-    ~f:(fun (defuse, unused_) { pattern; body } ->
+  List.fold_left cases ~init:(defuse, []) ~f:(fun (defuse, unused_) { pattern; body } ->
       let vars = Pattern.binders pattern |> List.rev_map ~f:Binder.get_var in
-      let map =
-        List.fold_left ~f:(fun m v -> M.add v false m) ~init:defuse vars
-      in
+      let map = List.fold_left ~f:(fun m v -> M.add v false m) ~init:defuse vars in
       let vars' = List.map ~f:(fun v -> v, M.find_opt v defuse) vars in
       let defuse, unused = defuse_of_expr map body in
       let unused =
@@ -179,10 +165,7 @@ and defuse_of_cases defuse cases =
           vars
       in
       let defuse =
-        List.fold_left
-          ~f:(fun m (v, v') -> replace_opt v v' m)
-          ~init:defuse
-          vars'
+        List.fold_left ~f:(fun m (v, v') -> replace_opt v v' m) ~init:defuse vars'
       in
       defuse, unused_ @ unused)
 
@@ -199,16 +182,13 @@ let rec unused_map_module ~raise : module_ -> module_ = function
 
 
 and unused_declaration ~raise (x : declaration) =
-  let update_annotations annots =
-    List.iter ~f:raise.Simple_utils.Trace.warning annots
-  in
+  let update_annotations annots = List.iter ~f:raise.Simple_utils.Trace.warning annots in
   match Location.unwrap x with
   | D_value { expr; _ } ->
     let defuse, _ = defuse_neutral in
     let unused = defuse_of_expr defuse expr in
     let warn_var v =
-      `Self_ast_typed_warning_unused
-        (V.get_location v, Format.asprintf "%a" V.pp v)
+      `Self_ast_typed_warning_unused (V.get_location v, Format.asprintf "%a" V.pp v)
     in
     let () = update_annotations @@ List.map ~f:warn_var unused in
     ()

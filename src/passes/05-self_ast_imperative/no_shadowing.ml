@@ -51,8 +51,7 @@ let peephole_program ~raise : program -> program =
         then raise.error @@ no_shadowing location
         else aux vars types (mod_ :: mods) remaining
       | { wrap_content = D_open { module_ = _ }; location = _ } :: remaining
-      | { wrap_content = D_include { module_ = _ }; location = _ } :: remaining
-        ->
+      | { wrap_content = D_include { module_ = _ }; location = _ } :: remaining ->
         (*
         let vars', types', mods' = self module_ in
         let vars, types, mods = vars' @ vars, types' @ types, mods' @ mods in

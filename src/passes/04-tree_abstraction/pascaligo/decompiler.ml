@@ -42,11 +42,7 @@ let type_vars_of_list : CST.variable list -> CST.variable CST.tuple =
 
 
 let brackets a =
-  CST.
-    { lbracket = Token.ghost_lbracket
-    ; inside = a
-    ; rbracket = Token.ghost_rbracket
-    }
+  CST.{ lbracket = Token.ghost_lbracket; inside = a; rbracket = Token.ghost_rbracket }
 
 
 let prefix_colon a = Wrap.ghost "", a
@@ -66,9 +62,7 @@ let to_block a = CST.{ enclosing = block_enclosing; statements = a; terminator }
 
 let empty_block =
   to_block
-    (list_to_nsepseq
-       ~sep:Token.ghost_semi
-       [ CST.S_Instr (I_Skip Token.ghost_skip) ])
+    (list_to_nsepseq ~sep:Token.ghost_semi [ CST.S_Instr (I_Skip Token.ghost_skip) ])
 
 
 let rec t_attr attributes ty =
@@ -77,9 +71,7 @@ let rec t_attr attributes ty =
   | hd :: tl -> CST.T_Attr (hd, t_attr tl ty)
 
 
-let fun_decl ~is_rec fun_name parameters ret_type return terminator
-    : CST.fun_decl
-  =
+let fun_decl ~is_rec fun_name parameters ret_type return terminator : CST.fun_decl =
   let kwd_recursive = if is_rec then Some Token.ghost_recursive else None in
   (* functions are all specialized and removed at the moment so we'll never get any type parameter when decompiling*)
   let type_params = None in
@@ -104,8 +96,7 @@ module type X_var = sig
   val pp : Format.formatter -> t -> unit
 end
 
-let decompile_variable_abs (type a) (module X : X_var with type t = a)
-    : a -> CST.variable
+let decompile_variable_abs (type a) (module X : X_var with type t = a) : a -> CST.variable
   =
  fun var ->
   let var = Format.asprintf "%a" X.pp var in
@@ -113,8 +104,7 @@ let decompile_variable_abs (type a) (module X : X_var with type t = a)
   then (
     let var = String.split ~on:'#' var in
     Wrap.ghost @@ "gen__" ^ String.concat var)
-  else if String.length var > 4
-          && (String.equal "gen__" @@ String.sub var ~pos:0 ~len:5)
+  else if String.length var > 4 && (String.equal "gen__" @@ String.sub var ~pos:0 ~len:5)
   then Wrap.ghost @@ "user__" ^ var
   else Wrap.ghost var
 
@@ -131,8 +121,7 @@ let rec decompile_type_expr : AST.type_expression -> CST.type_expr =
     let attributes = Shared_helpers.decompile_attributes attributes in
     let aux
         ( Label.Label c
-        , ({ associated_type; attributes = row_attr; _ } : _ Rows.row_element)
-        )
+        , ({ associated_type; attributes = row_attr; _ } : _ Rows.row_element) )
       =
       let ctor = Wrap.ghost c in
       let arg = decompile_type_expr associated_type in
@@ -151,8 +140,7 @@ let rec decompile_type_expr : AST.type_expression -> CST.type_expr =
   | T_record { fields; attributes } ->
     let aux
         ( Label.Label c
-        , ({ associated_type; attributes = field_attr; _ } : _ Rows.row_element)
-        )
+        , ({ associated_type; attributes = field_attr; _ } : _ Rows.row_element) )
       =
       let field_name = Wrap.ghost c in
       let field_type = decompile_type_expr associated_type in
@@ -192,9 +180,7 @@ let rec decompile_type_expr : AST.type_expression -> CST.type_expr =
     let v = CST.T_Var (decompile_type_var type_operator) in
     let lst = List.map ~f:decompile_type_expr arguments in
     let lst = list_to_nsepseq ~sep:Token.ghost_comma lst in
-    let lst : _ CST.par =
-      { lpar = Wrap.ghost ""; inside = lst; rpar = Wrap.ghost "" }
-    in
+    let lst : _ CST.par = { lpar = Wrap.ghost ""; inside = lst; rpar = Wrap.ghost "" } in
     return @@ CST.T_App (Region.wrap_ghost (v, Region.wrap_ghost lst))
   | T_annoted _annot -> failwith "TODO: decompile T_annoted"
   | T_module_accessor { module_path; element } ->
@@ -203,8 +189,7 @@ let rec decompile_type_expr : AST.type_expression -> CST.type_expr =
     let field = CST.T_Var (decompile_type_var element) in
     return
     @@ CST.T_ModPath
-         (Region.wrap_ghost
-            CST.{ module_path; selector = Token.ghost_dot; field })
+         (Region.wrap_ghost CST.{ module_path; selector = Token.ghost_dot; field })
   | T_singleton x ->
     (match x with
     | Literal_int i ->
@@ -226,10 +211,7 @@ let get_e_variable : AST.expression -> _ =
   | E_variable var -> var
   | _ ->
     failwith
-    @@ Format.asprintf
-         "%a should be a variable expression"
-         AST.PP.expression
-         expr
+    @@ Format.asprintf "%a should be a variable expression" AST.PP.expression expr
 
 
 let rec get_e_accessor : AST.expression -> _ =
@@ -241,10 +223,7 @@ let rec get_e_accessor : AST.expression -> _ =
     var, lst @ path
   | _ ->
     failwith
-    @@ Format.asprintf
-         "%a should be a variable expression"
-         AST.PP.expression
-         expr
+    @@ Format.asprintf "%a should be a variable expression" AST.PP.expression expr
 
 
 let get_e_tuple : AST.expression -> _ =
@@ -258,8 +237,7 @@ let get_e_tuple : AST.expression -> _ =
   | E_application _
   | E_lambda _ -> [ expr ]
   | _ ->
-    failwith
-    @@ Format.asprintf "%a should be a tuple expression" AST.PP.expression expr
+    failwith @@ Format.asprintf "%a should be a tuple expression" AST.PP.expression expr
 
 
 type eos =
@@ -274,14 +252,13 @@ let rec decompile_expression : AST.expression -> CST.expr =
     (match block with
     | Some block ->
       let block = Region.wrap_ghost block in
-      CST.E_Block
-        (Region.wrap_ghost @@ CST.{ block; kwd_with = Wrap.ghost ""; expr })
+      CST.E_Block (Region.wrap_ghost @@ CST.{ block; kwd_with = Wrap.ghost ""; expr })
     | None -> expr)
   | None ->
     failwith
     @@ Format.asprintf
-         "An expression was expected, but this was decompiled to \
-          statements.@.Expr : %a@ @,\
+         "An expression was expected, but this was decompiled to statements.@.Expr : %a@ \
+          @,\
           Loc : %a"
          AST.PP.expression
          e
@@ -297,8 +274,7 @@ and decompile_statements : AST.expression -> _ =
   | None ->
     failwith
     @@ Format.asprintf
-         "Statements was expected, but this was decompiled to \
-          expression.@.Expr : %a@ @,\
+         "Statements was expected, but this was decompiled to expression.@.Expr : %a@ @,\
           Loc : %a"
          AST.PP.expression
          expr
@@ -363,9 +339,7 @@ and decompile_pattern : AST.type_expression option AST.Pattern.t -> CST.pattern 
     in
     let field_patterns = List.fold ~f:aux lps ~init:[] in
     let inj =
-      inject
-        Token.ghost_record
-        (list_to_sepseq ~sep:Token.ghost_semi field_patterns)
+      inject Token.ghost_record (list_to_sepseq ~sep:Token.ghost_semi field_patterns)
     in
     CST.P_Record (Region.wrap_ghost inj)
 
@@ -373,9 +347,7 @@ and decompile_pattern : AST.type_expression option AST.Pattern.t -> CST.pattern 
 and decompile_to_block : AST.expression -> CST.block option * CST.expr option =
  fun expr ->
   let stats, next = decompile_eos Expression expr in
-  let block =
-    Option.map ~f:(to_block <@ nelist_to_npseq ~sep:Token.ghost_semi) stats
-  in
+  let block = Option.map ~f:(to_block <@ nelist_to_npseq ~sep:Token.ghost_semi) stats in
   block, next
 
 
@@ -403,8 +375,7 @@ and decompile_eos
     return_expr @@ CST.E_Par (Region.wrap_ghost @@ par @@ expr)
   in
   let return_typed expr ty =
-    return_expr
-    @@ CST.E_Typed (Region.wrap_ghost @@ par (expr, (Token.ghost_colon, ty)))
+    return_expr @@ CST.E_Typed (Region.wrap_ghost @@ par (expr, (Token.ghost_colon, ty)))
   in
   let return_stat stat = return @@ (Some stat, None) in
   let return_stat_ez stat = return_stat @@ (stat, []) in
@@ -414,9 +385,7 @@ and decompile_eos
     let var = decompile_variable name in
     return_expr @@ CST.E_Var var
   | E_constant { cons_name; arguments } ->
-    let expr =
-      CST.E_Var (Wrap.ghost (Predefined.constant_to_string cons_name))
-    in
+    let expr = CST.E_Var (Wrap.ghost (Predefined.constant_to_string cons_name)) in
     (match arguments with
     | [] -> return_expr @@ expr
     | _ ->
@@ -429,8 +398,7 @@ and decompile_eos
     (* TODO: Check these new cases coming from dev *)
     (match literal with
     | Literal_unit ->
-      return_expr
-      @@ CST.E_App (Region.wrap_ghost (CST.E_Ctor (Wrap.ghost "Unit"), None))
+      return_expr @@ CST.E_App (Region.wrap_ghost (CST.E_Ctor (Wrap.ghost "Unit"), None))
     | Literal_int i -> return_expr @@ CST.E_Int (Wrap.ghost (Z.to_string i, i))
     | Literal_nat n -> return_expr @@ CST.E_Nat (Wrap.ghost (Z.to_string n, n))
     | Literal_timestamp time ->
@@ -446,10 +414,8 @@ and decompile_eos
     | Literal_mutez mtez ->
       let str = Z.to_string mtez in
       return_expr @@ CST.E_Mutez (Wrap.ghost (str, Z.to_int64 mtez))
-    | Literal_string (Standard str) ->
-      return_expr @@ CST.E_String (Wrap.ghost str)
-    | Literal_string (Verbatim ver) ->
-      return_expr @@ CST.E_Verbatim (Wrap.ghost ver)
+    | Literal_string (Standard str) -> return_expr @@ CST.E_String (Wrap.ghost str)
+    | Literal_string (Verbatim ver) -> return_expr @@ CST.E_Verbatim (Wrap.ghost ver)
     | Literal_bytes b ->
       let b = Hex.of_bytes b in
       let s = Hex.to_string b in
@@ -492,9 +458,7 @@ and decompile_eos
       let ty = decompile_type_expr @@ AST.t_bls12_381_fr () in
       return_typed b ty
     | Literal_chest _ | Literal_chest_key _ ->
-      failwith
-        "chest / chest_key not allowed in the syntax (only tests need this \
-         type)")
+      failwith "chest / chest_key not allowed in the syntax (only tests need this type)")
   | E_application { lamb; args } ->
     let lamb = decompile_expression lamb in
     let args = decompile_arguments @@ get_e_tuple args in
@@ -515,8 +479,7 @@ and decompile_eos
     return_expr_with_par @@ CST.E_Fun (Region.wrap_ghost @@ fun_expr)
   | E_type_abstraction _ -> failwith "type_abstraction not supported yet"
   | E_recursive _ ->
-    failwith
-      "corner case : annonymous recursive function" (* TODO : REMOVE THIS!! *)
+    failwith "corner case : annonymous recursive function" (* TODO : REMOVE THIS!! *)
   | E_let_in { let_binder; rhs; let_result; attributes } ->
     let lin = decompile_to_data_decl let_binder rhs attributes in
     let lst, expr = decompile_eos Expression let_result in
@@ -564,9 +527,7 @@ and decompile_eos
   | E_raw_code { language; code } ->
     let language = Region.wrap_ghost @@ Region.wrap_ghost @@ language in
     let code = decompile_expression code in
-    let ci : CST.code_inj =
-      { language; code; rbracket = Token.ghost_rbracket }
-    in
+    let ci : CST.code_inj = { language; code; rbracket = Token.ghost_rbracket } in
     return_expr @@ CST.E_CodeInj (Region.wrap_ghost ci)
   | E_constructor { constructor; element } ->
     let (Label constr) = constructor in
@@ -584,9 +545,7 @@ and decompile_eos
       =
       let pattern = decompile_pattern pattern in
       let rhs = decompile_f body in
-      let clause : _ CST.case_clause =
-        { pattern; arrow = Token.ghost_arrow; rhs }
-      in
+      let clause : _ CST.case_clause = { pattern; arrow = Token.ghost_arrow; rhs } in
       Region.wrap_ghost clause
     in
     (match output with
@@ -606,9 +565,7 @@ and decompile_eos
       return_expr @@ CST.E_Case (Region.wrap_ghost cases)
     | Statements ->
       let cases = List.map ~f:(aux decompile_if_clause) cases in
-      let cases
-          : (CST.test_clause CST.case_clause CST.reg, CST.vbar) Utils.nsepseq
-        =
+      let cases : (CST.test_clause CST.case_clause CST.reg, CST.vbar) Utils.nsepseq =
         list_to_nsepseq ~sep:Token.ghost_vbar cases
       in
       let cases : CST.test_clause CST.case =
@@ -662,18 +619,11 @@ and decompile_eos
     | Access_map e :: lst ->
       let path = List.rev lst in
       let field_path =
-        list_to_nsepseq ~sep:Token.ghost_dot
-        @@ List.map ~f:decompile_to_selection path
+        list_to_nsepseq ~sep:Token.ghost_dot @@ List.map ~f:decompile_to_selection path
       in
-      let struct_name =
-        CST.E_Var (decompile_variable @@ get_e_variable struct_)
-      in
+      let struct_name = CST.E_Var (decompile_variable @@ get_e_variable struct_) in
       let proj =
-        CST.
-          { record_or_tuple = struct_name
-          ; selector = Token.ghost_dot
-          ; field_path
-          }
+        CST.{ record_or_tuple = struct_name; selector = Token.ghost_dot; field_path }
       in
       let map = CST.E_Proj (Region.wrap_ghost proj) in
       let e = decompile_expression e in
@@ -682,15 +632,10 @@ and decompile_eos
       return_expr @@ CST.E_MapLookup (Region.wrap_ghost @@ mlu)
     | _ ->
       let field_path =
-        list_to_nsepseq ~sep:Token.ghost_dot
-        @@ List.map ~f:decompile_to_selection path
+        list_to_nsepseq ~sep:Token.ghost_dot @@ List.map ~f:decompile_to_selection path
       in
-      let record_or_tuple =
-        CST.E_Var (decompile_variable @@ get_e_variable struct_)
-      in
-      let proj =
-        CST.{ record_or_tuple; selector = Token.ghost_dot; field_path }
-      in
+      let record_or_tuple = CST.E_Var (decompile_variable @@ get_e_variable struct_) in
+      let proj = CST.{ record_or_tuple; selector = Token.ghost_dot; field_path } in
       return_expr @@ CST.E_Proj (Region.wrap_ghost proj))
   | E_update { struct_; path; update } ->
     let struct_ = decompile_expression struct_ in
@@ -702,16 +647,11 @@ and decompile_eos
         | Access_tuple z -> CST.Component (Wrap.ghost (Z.to_string z, z))
         | Access_map _ -> failwith "map access in struct_ update"
       in
-      let field_path =
-        list_to_nsepseq ~sep:Token.ghost_dot (List.map ~f:aux path)
-      in
+      let field_path = list_to_nsepseq ~sep:Token.ghost_dot (List.map ~f:aux path) in
       CST.(
         E_Proj
           (Region.wrap_ghost
-             { record_or_tuple = struct_
-             ; field_path
-             ; selector = Token.ghost_dot
-             }))
+             { record_or_tuple = struct_; field_path; selector = Token.ghost_dot }))
     in
     let upd = CST.{ structure; kwd_with = Token.ghost_with; update } in
     return_expr @@ CST.E_Update (Region.wrap_ghost upd)
@@ -726,20 +666,13 @@ and decompile_eos
     let field = CST.E_Var (decompile_variable element) in
     return_expr
     @@ CST.E_ModPath
-         (Region.wrap_ghost
-            CST.{ module_path; selector = Token.ghost_dot; field })
+         (Region.wrap_ghost CST.{ module_path; selector = Token.ghost_dot; field })
   | E_cond { condition; then_clause; else_clause } ->
     let test = decompile_expression condition in
     let decompile_conditional : type a. a -> a -> a CST.conditional =
      fun if_so if_not ->
       let if_not = Some (Token.ghost_else, if_not) in
-      CST.
-        { kwd_if = Token.ghost_if
-        ; test
-        ; kwd_then = Token.ghost_then
-        ; if_so
-        ; if_not
-        }
+      CST.{ kwd_if = Token.ghost_if; test; kwd_then = Token.ghost_then; if_so; if_not }
     in
     (match output with
     | Expression ->
@@ -771,9 +704,7 @@ and decompile_eos
       Region.wrap_ghost @@ binding
     in
     let map = list_to_sepseq ~sep:Token.ghost_semi @@ List.map ~f:aux map in
-    let compound : CST.binding CST.reg CST.compound =
-      inject Token.ghost_map map
-    in
+    let compound : CST.binding CST.reg CST.compound = inject Token.ghost_map map in
     return_expr @@ CST.E_Map (Region.wrap_ghost compound)
   | E_big_map big_map ->
     let big_map = List.map ~f:(Pair.map ~f:decompile_expression) big_map in
@@ -781,9 +712,7 @@ and decompile_eos
       let binding : CST.binding = { key; arrow = Token.ghost_arrow; value } in
       Region.wrap_ghost @@ binding
     in
-    let big_map =
-      list_to_sepseq ~sep:Token.ghost_semi @@ List.map ~f:aux big_map
-    in
+    let big_map = list_to_sepseq ~sep:Token.ghost_semi @@ List.map ~f:aux big_map in
     let compound : CST.binding CST.reg CST.compound =
       inject Token.ghost_big_map big_map
     in
@@ -866,24 +795,19 @@ and decompile_eos
              ; collection
              ; block
              })
-      | Any ->
-        failwith
-          "TODO : have the type of the collection propagated from AST_typed"
+      | Any -> failwith "TODO : have the type of the collection propagated from AST_typed"
     in
     return_inst @@ CST.I_ForIn for_in
   | E_while { cond; body } ->
     let cond = decompile_expression cond in
     let block, _next = decompile_to_block body in
     let block = Region.wrap_ghost @@ Option.value ~default:empty_block block in
-    let while_ : CST.while_loop =
-      { kwd_while = Token.ghost_while; cond; block }
-    in
+    let while_ : CST.while_loop = { kwd_while = Token.ghost_while; cond; block } in
     return_inst @@ CST.I_While (Region.wrap_ghost while_)
   | E_let_mut_in { let_binder; rhs; let_result; _ } ->
     let pattern = CST.P_Var (decompile_variable @@ Binder.get_var let_binder) in
     let var_type =
-      Option.map ~f:(prefix_colon <@ decompile_type_expr)
-      @@ Binder.get_ascr let_binder
+      Option.map ~f:(prefix_colon <@ decompile_type_expr) @@ Binder.get_ascr let_binder
     in
     let rhs = decompile_expression rhs in
     let var_decl =
@@ -923,8 +847,7 @@ and decompile_to_data_decl
  fun binder expr attributes ->
   let name = decompile_variable @@ Binder.get_var binder in
   let const_type =
-    Option.map ~f:(prefix_colon <@ decompile_type_expr)
-    @@ Binder.get_ascr binder
+    Option.map ~f:(prefix_colon <@ decompile_type_expr) @@ Binder.get_ascr binder
   in
   let attributes = Shared_helpers.decompile_attributes attributes in
   let fun_name = name in
@@ -941,9 +864,7 @@ and decompile_to_data_decl
   | E_recursive { lambda; _ } ->
     let lambda = Lambda.map Fun.id Option.return lambda in
     let parameters, ret_type, return = decompile_lambda lambda in
-    let fun_decl =
-      fun_decl ~is_rec:true fun_name parameters ret_type return terminator
-    in
+    let fun_decl = fun_decl ~is_rec:true fun_name parameters ret_type return terminator in
     wrap_attr @@ CST.D_Fun (Region.wrap_ghost fun_decl)
   | _ ->
     let init = decompile_expression expr in
@@ -969,9 +890,7 @@ and decompile_to_lhs : Value_var.t -> _ Access_path.t -> CST.expr =
     (match hd with
     | Access_map e ->
       let map = decompile_to_path var @@ List.rev tl in
-      let keys =
-        (Region.wrap_ghost <@ brackets) @@ decompile_expression e, []
-      in
+      let keys = (Region.wrap_ghost <@ brackets) @@ decompile_expression e, [] in
       let mlu : CST.map_lookup = { map; keys } in
       CST.E_MapLookup (Region.wrap_ghost @@ mlu)
     | Access_tuple _ | Access_record _ -> decompile_to_path var @@ access)
@@ -984,14 +903,10 @@ and decompile_to_path : Value_var.t -> _ Access_path.t -> CST.expr =
   | [] -> E_Var struct_name
   | lst ->
     let field_path =
-      list_to_nsepseq ~sep:Token.ghost_dot
-      @@ List.map ~f:decompile_to_selection lst
+      list_to_nsepseq ~sep:Token.ghost_dot @@ List.map ~f:decompile_to_selection lst
     in
     let projection : CST.projection =
-      { record_or_tuple = E_Var struct_name
-      ; selector = Token.ghost_dot
-      ; field_path
-      }
+      { record_or_tuple = E_Var struct_name; selector = Token.ghost_dot; field_path }
     in
     CST.E_Proj (Region.wrap_ghost @@ projection)
 
@@ -1002,8 +917,7 @@ and decompile_to_selection : _ Access_path.access -> CST.selection =
   | Access_tuple index -> CST.Component (Wrap.ghost (Z.to_string index, index))
   | Access_record str -> CST.FieldName (Wrap.ghost str)
   | Access_map _ ->
-    failwith
-      "Can't decompile access_map to selection" (* TODO : REMOVE THIS!! *)
+    failwith "Can't decompile access_map to selection" (* TODO : REMOVE THIS!! *)
 
 
 and decompile_lambda
@@ -1016,17 +930,11 @@ and decompile_lambda
     Option.map ~f:(prefix_colon <@ decompile_type_expr) @@ Param.get_ascr binder
   in
   let param_const : CST.param_decl =
-    { param_kind = `Const Token.ghost_const
-    ; pattern = CST.P_Var var
-    ; param_type
-    }
+    { param_kind = `Const Token.ghost_const; pattern = CST.P_Var var; param_type }
   in
   let parameters : CST.parameters =
     Region.wrap_ghost
-    @@ par
-         (list_to_sepseq
-            ~sep:Token.ghost_comma
-            [ Region.wrap_ghost param_const ])
+    @@ par (list_to_sepseq ~sep:Token.ghost_comma [ Region.wrap_ghost param_const ])
   in
   let result, ret_type =
     match result.expression_content with
@@ -1066,8 +974,7 @@ and decompile_declaration : AST.declaration -> CST.declaration =
     in
     let type_expr = decompile_type_expr type_expr in
     CST.D_Type
-      (Region.wrap_ghost
-         CST.{ kwd_type; name; kwd_is; type_expr; terminator; params })
+      (Region.wrap_ghost CST.{ kwd_type; name; kwd_is; type_expr; terminator; params })
   | D_value { binder; attr; expr } ->
     let attributes = Shared_helpers.decompile_attributes attr in
     let name = decompile_variable @@ Binder.get_var binder in
@@ -1088,8 +995,7 @@ and decompile_declaration : AST.declaration -> CST.declaration =
       wrap_attr attributes @@ CST.D_Fun (Region.wrap_ghost fun_decl)
     | _ ->
       let const_type =
-        Option.map ~f:(prefix_colon <@ decompile_type_expr)
-        @@ Binder.get_ascr binder
+        Option.map ~f:(prefix_colon <@ decompile_type_expr) @@ Binder.get_ascr binder
       in
       let init = decompile_expression expr in
       let const_decl : CST.const_decl =
@@ -1117,9 +1023,7 @@ and decompile_declaration : AST.declaration -> CST.declaration =
   | D_open _ | D_include _ -> failwith "Not implemented yet"
 
 
-and decompile_decl : AST.decl -> CST.declaration =
- fun d -> decompile_declaration d
-
+and decompile_decl : AST.decl -> CST.declaration = fun d -> decompile_declaration d
 
 and decompile_module : AST.module_ -> CST.declaration Utils.nseq =
  fun m ->
@@ -1133,10 +1037,7 @@ and decompile_module_expression : AST.module_expr -> CST.module_expr =
   | M_struct decls ->
     let declarations = decompile_module decls in
     let module_body =
-      CST.
-        { enclosing = BeginEnd (Token.ghost_begin, Token.ghost_end)
-        ; declarations
-        }
+      CST.{ enclosing = BeginEnd (Token.ghost_begin, Token.ghost_end); declarations }
     in
     CST.M_Body (Region.wrap_ghost module_body)
   | M_module_path path ->
@@ -1153,9 +1054,7 @@ and decompile_module_expression : AST.module_expr -> CST.module_expr =
            (hd, tl')
     in
     let field = Wrap.ghost (Module_var.to_name_exn field) in
-    CST.(
-      M_Path
-        (Region.wrap_ghost { module_path; field; selector = Token.ghost_dot }))
+    CST.(M_Path (Region.wrap_ghost { module_path; field; selector = Token.ghost_dot }))
   | M_variable v -> CST.M_Var (Wrap.ghost (Module_var.to_name_exn v))
 
 

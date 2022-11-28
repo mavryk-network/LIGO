@@ -30,9 +30,7 @@ and ty_expr = type_expression [@@deriving eq, compare, yojson, hash]
 type attributes = string list [@@deriving eq, compare, yojson, hash]
 
 let pp_attributes ppf lst =
-  let attr =
-    List.map ~f:(fun attr -> "[@@" ^ attr ^ "]") lst |> String.concat
-  in
+  let attr = List.map ~f:(fun attr -> "[@@" ^ attr ^ "]") lst |> String.concat in
   Format.fprintf ppf "%s" attr
 
 
@@ -40,9 +38,7 @@ module Attr = struct
   type t = string list [@@deriving eq, compare, yojson, hash]
 
   let pp ppf lst =
-    let attr =
-      List.map ~f:(fun attr -> "[@@" ^ attr ^ "]") lst |> String.concat
-    in
+    let attr = List.map ~f:(fun attr -> "[@@" ^ attr ^ "]") lst |> String.concat in
     Format.fprintf ppf "%s" attr
 end
 
@@ -96,8 +92,7 @@ type expression_content =
   | E_while of expr While_loop.t
 
 and 'exp constant =
-  { cons_name : Constant.rich_constant
-        (* this is at the end because it is huge *)
+  { cons_name : Constant.rich_constant (* this is at the end because it is huge *)
   ; arguments : 'exp list
   }
 
@@ -118,9 +113,7 @@ and declaration_content =
 and declaration = declaration_content Location.wrap
 and decl = declaration [@@deriving eq, compare, yojson, hash]
 and module_expr_content = decl Module_expr.t
-
-and module_expr = module_expr_content Location.wrap
-[@@deriving eq, compare, yojson, hash]
+and module_expr = module_expr_content Location.wrap [@@deriving eq, compare, yojson, hash]
 
 type module_ = decl list [@@deriving eq, compare, yojson, hash]
 type program = declaration list [@@deriving eq, compare, yojson, hash]

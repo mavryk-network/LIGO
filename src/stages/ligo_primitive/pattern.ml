@@ -35,19 +35,14 @@ module Make (Container : Container) () = struct
     | P_tuple of 'ty_exp t list
     | P_record of 'ty_exp t Container.t
 
-  and 't t = 't pattern_repr Location.wrap
-  [@@deriving eq, compare, yojson, hash]
+  and 't t = 't pattern_repr Location.wrap [@@deriving eq, compare, yojson, hash]
 
   let rec pp_list g ppf pl =
     let mpp = pp g in
     match pl with
     | Cons (pl, pr) -> Format.fprintf ppf "%a::%a" mpp pl mpp pr
     | List pl ->
-      Format.fprintf
-        ppf
-        "[%a]"
-        Simple_utils.PP_helpers.(list_sep mpp (tag " ; "))
-        pl
+      Format.fprintf ppf "[%a]" Simple_utils.PP_helpers.(list_sep mpp (tag " ; ")) pl
 
 
   and pp type_expression ppf p =
@@ -64,9 +59,7 @@ module Make (Container : Container) () = struct
         Simple_utils.PP_helpers.(list_sep (pp type_expression) (tag ","))
         pl
     | P_record lps ->
-      let aux ppf (l, p) =
-        fprintf ppf "%a = %a" Label.pp l (pp type_expression) p
-      in
+      let aux ppf (l, p) = fprintf ppf "%a = %a" Label.pp l (pp type_expression) p in
       fprintf
         ppf
         "{ %a }"

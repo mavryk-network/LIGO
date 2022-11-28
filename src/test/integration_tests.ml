@@ -237,12 +237,8 @@ let arithmetic ~raise f : unit =
       ]
   in
   let () = expect_eq_n_pos ~raise program "int_op" e_nat e_int in
-  let () =
-    expect_eq_n_pos ~raise program "mod_op" e_int (fun n -> e_nat (n mod 42))
-  in
-  let () =
-    expect_eq_n_pos ~raise program "div_op" e_int (fun n -> e_int (n / 2))
-  in
+  let () = expect_eq_n_pos ~raise program "mod_op" e_int (fun n -> e_nat (n mod 42)) in
+  let () = expect_eq_n_pos ~raise program "div_op" e_int (fun n -> e_int (n / 2)) in
   let () =
     expect_eq_n_pos ~raise program "ediv_op" e_int (fun n ->
         e_some (e_pair (e_int (n / 2)) (e_nat (n mod 2))))
@@ -274,15 +270,9 @@ let string_arithmetic ~raise f : unit =
   let program = type_file ~raise f in
   let () = expect_eq ~raise program "length_op" (e_string "tata") (e_nat 4) in
   let () = expect_eq ~raise program "length_op" (e_string "foo") (e_nat 3) in
-  let () =
-    expect_eq ~raise program "concat_op" (e_string "foo") (e_string "foototo")
-  in
-  let () =
-    expect_eq ~raise program "concat_op" (e_string "") (e_string "toto")
-  in
-  let () =
-    expect_eq ~raise program "sub_op" (e_string "tata") (e_string "at")
-  in
+  let () = expect_eq ~raise program "concat_op" (e_string "foo") (e_string "foototo") in
+  let () = expect_eq ~raise program "concat_op" (e_string "") (e_string "toto") in
+  let () = expect_eq ~raise program "sub_op" (e_string "tata") (e_string "at") in
   let () = expect_eq ~raise program "sub_op" (e_string "foo") (e_string "oo") in
   let () = expect_fail ~raise program "sub_op" (e_string "ba") in
   ()
@@ -290,24 +280,14 @@ let string_arithmetic ~raise f : unit =
 
 let bytes_arithmetic ~raise f : unit =
   let program = type_file ~raise f in
-  let foo =
-    trace_option ~raise (test_internal __LOC__) @@ e_bytes_hex_ez "0f00"
-  in
+  let foo = trace_option ~raise (test_internal __LOC__) @@ e_bytes_hex_ez "0f00" in
   let foototo =
     trace_option ~raise (test_internal __LOC__) @@ e_bytes_hex_ez "0f007070"
   in
-  let toto =
-    trace_option ~raise (test_internal __LOC__) @@ e_bytes_hex_ez "7070"
-  in
-  let empty =
-    trace_option ~raise (test_internal __LOC__) @@ e_bytes_hex_ez ""
-  in
-  let tata =
-    trace_option ~raise (test_internal __LOC__) @@ e_bytes_hex_ez "ff7a7aff"
-  in
-  let at =
-    trace_option ~raise (test_internal __LOC__) @@ e_bytes_hex_ez "7a7a"
-  in
+  let toto = trace_option ~raise (test_internal __LOC__) @@ e_bytes_hex_ez "7070" in
+  let empty = trace_option ~raise (test_internal __LOC__) @@ e_bytes_hex_ez "" in
+  let tata = trace_option ~raise (test_internal __LOC__) @@ e_bytes_hex_ez "ff7a7aff" in
+  let at = trace_option ~raise (test_internal __LOC__) @@ e_bytes_hex_ez "7a7a" in
   let ba = trace_option ~raise (test_internal __LOC__) @@ e_bytes_hex_ez "ba" in
   let () = expect_eq ~raise program "concat_op" foo foototo in
   let () = expect_eq ~raise program "concat_op" empty toto in
@@ -315,11 +295,7 @@ let bytes_arithmetic ~raise f : unit =
   let () = expect_fail ~raise program "slice_op" foo in
   let () = expect_fail ~raise program "slice_op" ba in
   let b1 =
-    Test_helpers.run_typed_program_with_imperative_input
-      ~raise
-      program
-      "hasherman"
-      foo
+    Test_helpers.run_typed_program_with_imperative_input ~raise program "hasherman" foo
   in
   let () = expect_eq_core ~raise program "hasherman" foo b1 in
   let b3 =
@@ -347,22 +323,16 @@ let comparable_mligo ~raise () : unit =
       (e_bool false)
   in
   let () = expect_eq ~raise program "bool_" (e_bool true) (e_bool false) in
-  let () =
-    expect_eq ~raise program "bytes_" (e_bytes_string "deadbeaf") (e_bool false)
-  in
+  let () = expect_eq ~raise program "bytes_" (e_bytes_string "deadbeaf") (e_bool false) in
   let () = expect_eq ~raise program "int_" (e_int 1) (e_bool false) in
   let () = expect_eq ~raise program "mutez_" (e_mutez 1) (e_bool false) in
   let () = expect_eq ~raise program "nat_" (e_nat 1) (e_bool false) in
-  let () =
-    expect_eq ~raise program "option_" (e_some (e_int 1)) (e_bool false)
-  in
+  let () = expect_eq ~raise program "option_" (e_some (e_int 1)) (e_bool false) in
   (*
   let () = expect_eq ~raise program "sum_" (e_constructor "A" (e_int 1)) (e_bool false) in
   *)
   let () = expect_eq ~raise program "string_" (e_string "foo") (e_bool false) in
-  let () =
-    expect_eq ~raise program "timestamp_" (e_timestamp 101112) (e_bool false)
-  in
+  let () = expect_eq ~raise program "timestamp_" (e_timestamp 101112) (e_bool false) in
   let () = expect_eq ~raise program "unit_" (e_unit ()) (e_bool false) in
   (*
   let () = expect_eq ~raise program "sum" (e_constructor "A" (e_int 1)) (e_bool false) in
@@ -370,25 +340,19 @@ let comparable_mligo ~raise () : unit =
   let open Tezos_crypto in
   let pkh, pk, sk = Signature.generate_key () in
   let key_hash = Signature.Public_key_hash.to_b58check @@ pkh in
-  let () =
-    expect_eq ~raise program "key_hash_" (e_key_hash key_hash) (e_bool false)
-  in
+  let () = expect_eq ~raise program "key_hash_" (e_key_hash key_hash) (e_bool false) in
   let key = Signature.Public_key.to_b58check @@ pk in
   let () = expect_eq ~raise program "key_" (e_key key) (e_bool false) in
   let signed =
     Signature.to_b58check @@ Signature.sign sk (Bytes.of_string "hello world")
   in
-  let () =
-    expect_eq ~raise program "signature_" (e_signature signed) (e_bool false)
-  in
+  let () = expect_eq ~raise program "signature_" (e_signature signed) (e_bool false) in
   let chain_id =
     Tezos_crypto.Base58.simple_encode
       Tezos_base__TzPervasives.Chain_id.b58check_encoding
       Tezos_base__TzPervasives.Chain_id.zero
   in
-  let () =
-    expect_eq ~raise program "chain_id_" (e_chain_id chain_id) (e_bool false)
-  in
+  let () = expect_eq ~raise program "chain_id_" (e_chain_id chain_id) (e_bool false) in
   let pair = e_pair (e_int 1) (e_int 2) in
   let () = expect_eq ~raise program "comp_pair" pair (e_bool false) in
   (* let tuple = e_tuple [e_int 1; e_int 2; e_int 3] in
@@ -402,18 +366,12 @@ let comparable_mligo ~raise () : unit =
 
 let crypto ~raise f : unit =
   let program = type_file ~raise f in
-  let foo =
-    trace_option ~raise (test_internal __LOC__) @@ e_bytes_hex_ez "0f00"
-  in
+  let foo = trace_option ~raise (test_internal __LOC__) @@ e_bytes_hex_ez "0f00" in
   let foototo =
     trace_option ~raise (test_internal __LOC__) @@ e_bytes_hex_ez "0f007070"
   in
   let b1 =
-    Test_helpers.run_typed_program_with_imperative_input
-      ~raise
-      program
-      "hasherman512"
-      foo
+    Test_helpers.run_typed_program_with_imperative_input ~raise program "hasherman512" foo
   in
   let () = expect_eq_core ~raise program "hasherman512" foo b1 in
   let b2 =
@@ -504,9 +462,7 @@ let set_arithmetic ~raise f : unit =
       ~raise
       program
       "remove_deep"
-      (e_pair
-         (e_set [ e_string "foo"; e_string "bar"; e_string "foobar" ])
-         (e_nat 42))
+      (e_pair (e_set [ e_string "foo"; e_string "bar"; e_string "foobar" ]) (e_nat 42))
       (e_pair (e_set [ e_string "foo"; e_string "bar" ]) (e_nat 42))
   in
   let () =
@@ -523,9 +479,7 @@ let set_arithmetic ~raise f : unit =
       program
       "patch_op_deep"
       (e_pair (e_set [ e_string "foo"; e_string "bar" ]) (e_nat 42))
-      (e_pair
-         (e_set [ e_string "foo"; e_string "bar"; e_string "foobar" ])
-         (e_nat 42))
+      (e_pair (e_set [ e_string "foo"; e_string "bar"; e_string "foobar" ]) (e_nat 42))
   in
   let () =
     expect_eq
@@ -544,12 +498,7 @@ let set_arithmetic ~raise f : unit =
       (e_bool false)
   in
   let () =
-    expect_eq
-      ~raise
-      program
-      "iter_op"
-      (e_set [ e_int 2; e_int 4; e_int 7 ])
-      (e_int 0)
+    expect_eq ~raise program "iter_op" (e_set [ e_int 2; e_int 4; e_int 7 ]) (e_int 0)
   in
   (* capture of non constant variable
   let () =
@@ -657,10 +606,7 @@ let modules_jsligo ~raise () : unit =
   modules ~raise program
 
 
-let record_ez_int names n =
-  e_record_ez @@ List.map ~f:(fun x -> x, e_int n) names
-
-
+let record_ez_int names n = e_record_ez @@ List.map ~f:(fun x -> x, e_int n) names
 let tuple_ez_int names n = e_tuple @@ List.map ~f:(fun _ -> e_int n) names
 
 let multiple_parameters ~raise f : unit =
@@ -752,9 +698,7 @@ let record ~raise f : unit =
   in
   let () =
     let make_input = record_ez_int [ "a"; "b"; "c" ] in
-    let make_expected n =
-      e_record_ez [ "a", e_int n; "b", e_int 2048; "c", e_int 42 ]
-    in
+    let make_expected n = e_record_ez [ "a", e_int n; "b", e_int 2048; "c", e_int 42 ] in
     expect_eq_n ~raise program "modify_abc" make_input make_expected
   in
   let () =
@@ -762,12 +706,9 @@ let record ~raise f : unit =
     expect_eq_evaluate ~raise program "br" expected
   in
   let () =
-    let make_input n =
-      e_record_ez [ "inner", record_ez_int [ "a"; "b"; "c" ] n ]
-    in
+    let make_input n = e_record_ez [ "inner", record_ez_int [ "a"; "b"; "c" ] n ] in
     let make_expected n =
-      e_record_ez
-        [ "inner", e_record_ez [ "a", e_int n; "b", e_int 2048; "c", e_int n ] ]
+      e_record_ez [ "inner", e_record_ez [ "a", e_int n; "b", e_int 2048; "c", e_int n ] ]
     in
     expect_eq_n ~raise program "modify_inner" make_input make_expected
   in
@@ -880,21 +821,11 @@ let map ~raise f : unit =
   in
   let () =
     let input_map = ez [ 23, 10; 42, 4 ] in
-    expect_eq
-      ~raise
-      program
-      "mem"
-      (e_tuple [ e_int 23; input_map ])
-      (e_bool true)
+    expect_eq ~raise program "mem" (e_tuple [ e_int 23; input_map ]) (e_bool true)
   in
   let () =
     let input_map = ez [ 23, 10; 42, 4 ] in
-    expect_eq
-      ~raise
-      program
-      "mem"
-      (e_tuple [ e_int 1000; input_map ])
-      (e_bool false)
+    expect_eq ~raise program "mem" (e_tuple [ e_int 1000; input_map ]) (e_bool false)
   in
   let () =
     expect_eq_evaluate
@@ -904,9 +835,7 @@ let map ~raise f : unit =
       (e_annotation (e_map []) (t_map (t_int ()) (t_int ())))
   in
   let () =
-    let expected =
-      ez @@ List.map ~f:(fun x -> x, 23) [ 144; 51; 42; 120; 421 ]
-    in
+    let expected = ez @@ List.map ~f:(fun x -> x, 23) [ 144; 51; 42; 120; 421 ] in
     expect_eq_evaluate ~raise program "map1" expected
   in
   let () =
@@ -1006,12 +935,7 @@ let list ~raise () : unit =
     expect_eq_evaluate ~raise program "bl" expected
   in
   let () =
-    expect_eq
-      ~raise
-      program
-      "fold_op"
-      (e_list [ e_int 2; e_int 4; e_int 7 ])
-      (e_int 23)
+    expect_eq ~raise program "fold_op" (e_list [ e_int 2; e_int 4; e_int 7 ]) (e_int 23)
   in
   (* not working since purification (problem with effect in out of iter
   let () =
@@ -1054,12 +978,7 @@ let eq_bool_common ~raise program =
   let _ =
     List.map
       ~f:(fun (a, b, expected) ->
-        expect_eq
-          ~raise
-          program
-          "main"
-          (e_pair (e_bool a) (e_bool b))
-          (e_int expected))
+        expect_eq ~raise program "main" (e_pair (e_bool a) (e_bool b)) (e_int expected))
       [ false, false, 999; false, true, 1; true, false, 1; true, true, 999 ]
   in
   ()
@@ -1233,8 +1152,8 @@ let loop15 ~raise () : unit =
       e_pair
         (e_int 24)
         (e_string
-           "1 one,two 2 one,two 3 one,two 1 one,two 2 one,two 3 one,two 1 \
-            one,two 2 one,two 3 one,two ")
+           "1 one,two 2 one,two 3 one,two 1 one,two 2 one,two 3 one,two 1 one,two 2 \
+            one,two 3 one,two ")
     in
     expect_eq ~raise program "nested_for_collection" input expected
   in
@@ -1360,8 +1279,8 @@ let loop ~raise () : unit =
       e_pair
         (e_int 24)
         (e_string
-           "1 one,two 2 one,two 3 one,two 1 one,two 2 one,two 3 one,two 1 \
-            one,two 2 one,two 3 one,two ")
+           "1 one,two 2 one,two 3 one,two 1 one,two 2 one,two 3 one,two 1 one,two 2 \
+            one,two 3 one,two ")
     in
     expect_eq ~raise program "nested_for_collection" input expected
   in
@@ -1577,15 +1496,9 @@ let matching ~raise () : unit =
     List.iter ~f:aux [ Some 0; Some 2; Some 42; Some 163; Some (-1); None ]
   in
   let () =
-    let aux lst =
-      e_annotation (e_list @@ List.map ~f:e_int lst) (t_list (t_int ()))
-    in
-    let () =
-      expect_eq ~raise program "match_expr_list" (aux [ 14; 2; 3 ]) (e_int 14)
-    in
-    let () =
-      expect_eq ~raise program "match_expr_list" (aux [ 13; 2; 3 ]) (e_int 13)
-    in
+    let aux lst = e_annotation (e_list @@ List.map ~f:e_int lst) (t_list (t_int ())) in
+    let () = expect_eq ~raise program "match_expr_list" (aux [ 14; 2; 3 ]) (e_int 14) in
+    let () = expect_eq ~raise program "match_expr_list" (aux [ 13; 2; 3 ]) (e_int 13) in
     let () = expect_eq ~raise program "match_expr_list" (aux []) (e_int (-1)) in
     ()
   in
@@ -1624,9 +1537,7 @@ let quote_declarations ~raise () : unit =
 let counter_contract ~raise f : unit =
   let program = type_file ~raise f in
   let make_input n = e_pair (e_int n) (e_int 42) in
-  let make_expected n =
-    e_pair (e_typed_list [] (t_operation ())) (e_int (42 + n))
-  in
+  let make_expected n = e_pair (e_typed_list [] (t_operation ())) (e_int (42 + n)) in
   expect_eq_n ~raise program "main" make_input make_expected
 
 
@@ -1672,9 +1583,7 @@ let failwith_ligo ~raise () : unit =
   let _ = should_work (e_pair (e_constructor "Pos" (e_nat 1)) (e_unit ())) in
   let _ = should_fail (e_pair (e_constructor "Pos" (e_nat 0)) (e_unit ())) in
   let should_fail input = expect_fail ~raise program "foobar" (e_int input) in
-  let should_work input n =
-    expect_eq ~raise program "foobar" (e_int input) (e_int n)
-  in
+  let should_work input n = expect_eq ~raise program "foobar" (e_int input) (e_int n) in
   let () = should_fail 10 in
   let () = should_fail @@ -10 in
   let () = should_work 5 6 in
@@ -1755,9 +1664,7 @@ let recursion_ligo ~raise f : unit =
 let guess_string_mligo ~raise () : unit =
   let program = type_file ~raise "./contracts/guess_string.mligo" in
   let make_input n = e_pair (e_int n) (e_int 42) in
-  let make_expected n =
-    e_pair (e_typed_list [] (t_operation ())) (e_int (42 + n))
-  in
+  let make_expected n = e_pair (e_typed_list [] (t_operation ())) (e_int (42 + n)) in
   expect_eq_n ~raise program "main" make_input make_expected
 
 
@@ -1776,15 +1683,11 @@ let let_in_mligo ~raise () : unit =
   let () =
     let make_input n = e_pair (e_int n) (e_pair (e_int 3) (e_int 5)) in
     let make_expected n =
-      e_pair
-        (e_typed_list [] (t_operation ()))
-        (e_pair (e_int (7 + n)) (e_int (3 + 5)))
+      e_pair (e_typed_list [] (t_operation ())) (e_pair (e_int (7 + n)) (e_int (3 + 5)))
     in
     expect_eq_n ~raise program "main" make_input make_expected
   in
-  let () =
-    expect_eq ~raise program "letin_nesting" (e_unit ()) (e_string "test")
-  in
+  let () = expect_eq ~raise program "letin_nesting" (e_unit ()) (e_string "test") in
   let () = expect_eq ~raise program "letin_nesting2" (e_int 4) (e_int 9) in
   ()
 
@@ -1794,15 +1697,11 @@ let let_in_religo ~raise () : unit =
   let () =
     let make_input n = e_pair (e_int n) (e_pair (e_int 3) (e_int 5)) in
     let make_expected n =
-      e_pair
-        (e_typed_list [] (t_operation ()))
-        (e_pair (e_int (7 + n)) (e_int (3 + 5)))
+      e_pair (e_typed_list [] (t_operation ())) (e_pair (e_int (7 + n)) (e_int (3 + 5)))
     in
     expect_eq_n ~raise program "main" make_input make_expected
   in
-  let () =
-    expect_eq ~raise program "letin_nesting" (e_unit ()) (e_string "test")
-  in
+  let () = expect_eq ~raise program "letin_nesting" (e_unit ()) (e_string "test") in
   let () = expect_eq ~raise program "letin_nesting2" (e_int 4) (e_int 9) in
   ()
 
@@ -1812,15 +1711,11 @@ let let_in_jsligo ~raise () : unit =
   let () =
     let make_input n = e_pair (e_int n) (e_pair (e_int 3) (e_int 5)) in
     let make_expected n =
-      e_pair
-        (e_typed_list [] (t_operation ()))
-        (e_pair (e_int (7 + n)) (e_int (3 + 5)))
+      e_pair (e_typed_list [] (t_operation ())) (e_pair (e_int (7 + n)) (e_int (3 + 5)))
     in
     expect_eq_n ~raise program "main" make_input make_expected
   in
-  let () =
-    expect_eq ~raise program "letin_nesting" (e_unit ()) (e_string "test")
-  in
+  let () = expect_eq ~raise program "letin_nesting" (e_unit ()) (e_string "test") in
   let () = expect_eq ~raise program "letin_nesting2" (e_int 4) (e_int 9) in
   ()
 
@@ -1839,9 +1734,7 @@ let match_variant ~raise () : unit =
   let program = type_file ~raise "./contracts/match.mligo" in
   let () =
     let make_input n = e_pair (e_constructor "Sub" (e_int n)) (e_int 3) in
-    let make_expected n =
-      e_pair (e_typed_list [] (t_operation ())) (e_int (3 - n))
-    in
+    let make_expected n = e_pair (e_typed_list [] (t_operation ())) (e_int (3 - n)) in
     expect_eq_n ~raise program "main" make_input make_expected
   in
   let () =
@@ -1875,71 +1768,50 @@ let match_variant ~raise () : unit =
 let match_variant_re ~raise () : unit =
   let program = type_file ~raise "./contracts/match.religo" in
   let make_input n = e_pair (e_constructor "Sub" (e_int n)) (e_int 3) in
-  let make_expected n =
-    e_pair (e_typed_list [] (t_operation ())) (e_int (3 - n))
-  in
+  let make_expected n = e_pair (e_typed_list [] (t_operation ())) (e_int (3 - n)) in
   expect_eq_n ~raise program "main" make_input make_expected
 
 
 let match_variant_js ~raise () : unit =
   let program = type_file ~raise "./contracts/match.jsligo" in
   let make_input n = e_pair (e_constructor "Sub" (e_int n)) (e_int 3) in
-  let make_expected n =
-    e_pair (e_typed_list [] (t_operation ())) (e_int (3 - n))
-  in
+  let make_expected n = e_pair (e_typed_list [] (t_operation ())) (e_int (3 - n)) in
   expect_eq_n ~raise program "main" make_input make_expected
 
 
 let match_matej ~raise () : unit =
   let program = type_file ~raise "./contracts/match_bis.mligo" in
   let make_input n = e_pair (e_constructor "Decrement" (e_int n)) (e_int 3) in
-  let make_expected n =
-    e_pair (e_typed_list [] (t_operation ())) (e_int (3 - n))
-  in
+  let make_expected n = e_pair (e_typed_list [] (t_operation ())) (e_int (3 - n)) in
   expect_eq_n ~raise program "main" make_input make_expected
 
 
 let match_matej_re ~raise () : unit =
   let program = type_file ~raise "./contracts/match_bis.religo" in
   let make_input n = e_pair (e_constructor "Decrement" (e_int n)) (e_int 3) in
-  let make_expected n =
-    e_pair (e_typed_list [] (t_operation ())) (e_int (3 - n))
-  in
+  let make_expected n = e_pair (e_typed_list [] (t_operation ())) (e_int (3 - n)) in
   expect_eq_n ~raise program "main" make_input make_expected
 
 
 let match_matej_js ~raise () : unit =
   let program = type_file ~raise "./contracts/match_bis.jsligo" in
   let make_input n = e_pair (e_constructor "Decrement" (e_int n)) (e_int 3) in
-  let make_expected n =
-    e_pair (e_typed_list [] (t_operation ())) (e_int (3 - n))
-  in
+  let make_expected n = e_pair (e_typed_list [] (t_operation ())) (e_int (3 - n)) in
   expect_eq_n ~raise program "main" make_input make_expected
 
 
 let mligo_list ~raise () : unit =
   let program = type_file ~raise "./contracts/list.mligo" in
   let () =
-    expect_eq
-      ~raise
-      program
-      "size_"
-      (e_list [ e_int 0; e_int 1; e_int 2 ])
-      (e_nat 3)
+    expect_eq ~raise program "size_" (e_list [ e_int 0; e_int 1; e_int 2 ]) (e_nat 3)
   in
   let aux lst = e_list @@ List.map ~f:e_int lst in
   let () = expect_eq ~raise program "fold_op" (aux [ 1; 2; 3 ]) (e_int 16) in
-  let () =
-    expect_eq ~raise program "fold_left" (aux [ 1; 2; 3 ]) (aux [ 3; 2; 1 ])
-  in
-  let () =
-    expect_eq ~raise program "fold_right" (aux [ 1; 2; 3 ]) (aux [ 1; 2; 3 ])
-  in
+  let () = expect_eq ~raise program "fold_left" (aux [ 1; 2; 3 ]) (aux [ 3; 2; 1 ]) in
+  let () = expect_eq ~raise program "fold_right" (aux [ 1; 2; 3 ]) (aux [ 1; 2; 3 ]) in
   let () =
     let make_input n =
-      e_pair
-        (e_list [ e_int n; e_int (2 * n) ])
-        (e_pair (e_int 3) (e_list [ e_int 8 ]))
+      e_pair (e_list [ e_int n; e_int (2 * n) ]) (e_pair (e_int 3) (e_list [ e_int 8 ]))
     in
     let make_expected n =
       e_pair
@@ -1950,49 +1822,30 @@ let mligo_list ~raise () : unit =
   in
   let () = expect_eq_evaluate ~raise program "x" (e_list []) in
   let () =
-    expect_eq_evaluate
-      ~raise
-      program
-      "y"
-      (e_list @@ List.map ~f:e_int [ 3; 4; 5 ])
+    expect_eq_evaluate ~raise program "y" (e_list @@ List.map ~f:e_int [ 3; 4; 5 ])
   in
   let () =
-    expect_eq_evaluate
-      ~raise
-      program
-      "z"
-      (e_list @@ List.map ~f:e_int [ 2; 3; 4; 5 ])
+    expect_eq_evaluate ~raise program "z" (e_list @@ List.map ~f:e_int [ 2; 3; 4; 5 ])
   in
   let () = expect_eq_evaluate ~raise program "find_x" (e_none ()) in
   let () = expect_eq_evaluate ~raise program "find_y4" (e_some (e_int 4)) in
   let () = expect_eq_evaluate ~raise program "find_y6" (e_none ()) in
   let () = expect_eq_evaluate ~raise program "find_z2" (e_some (e_int 2)) in
-  let () =
-    expect_eq ~raise program "map_op" (aux [ 2; 3; 4; 5 ]) (aux [ 3; 4; 5; 6 ])
-  in
-  let () =
-    expect_eq ~raise program "iter_op" (aux [ 2; 3; 4; 5 ]) (e_unit ())
-  in
+  let () = expect_eq ~raise program "map_op" (aux [ 2; 3; 4; 5 ]) (aux [ 3; 4; 5; 6 ]) in
+  let () = expect_eq ~raise program "iter_op" (aux [ 2; 3; 4; 5 ]) (e_unit ()) in
   ()
 
 
 let religo_list ~raise () : unit =
   let program = type_file ~raise "./contracts/list.religo" in
   let () =
-    expect_eq
-      ~raise
-      program
-      "size_"
-      (e_list [ e_int 0; e_int 1; e_int 2 ])
-      (e_nat 3)
+    expect_eq ~raise program "size_" (e_list [ e_int 0; e_int 1; e_int 2 ]) (e_nat 3)
   in
   let aux lst = e_list @@ List.map ~f:e_int lst in
   let () = expect_eq ~raise program "fold_op" (aux [ 1; 2; 3 ]) (e_int 16) in
   let () =
     let make_input n =
-      e_pair
-        (e_list [ e_int n; e_int (2 * n) ])
-        (e_pair (e_int 3) (e_list [ e_int 8 ]))
+      e_pair (e_list [ e_int n; e_int (2 * n) ]) (e_pair (e_int 3) (e_list [ e_int 8 ]))
     in
     let make_expected n =
       e_pair
@@ -2003,45 +1856,26 @@ let religo_list ~raise () : unit =
   in
   let () = expect_eq_evaluate ~raise program "x" (e_list []) in
   let () =
-    expect_eq_evaluate
-      ~raise
-      program
-      "y"
-      (e_list @@ List.map ~f:e_int [ 3; 4; 5 ])
+    expect_eq_evaluate ~raise program "y" (e_list @@ List.map ~f:e_int [ 3; 4; 5 ])
   in
   let () =
-    expect_eq_evaluate
-      ~raise
-      program
-      "z"
-      (e_list @@ List.map ~f:e_int [ 2; 3; 4; 5 ])
+    expect_eq_evaluate ~raise program "z" (e_list @@ List.map ~f:e_int [ 2; 3; 4; 5 ])
   in
-  let () =
-    expect_eq ~raise program "map_op" (aux [ 2; 3; 4; 5 ]) (aux [ 3; 4; 5; 6 ])
-  in
-  let () =
-    expect_eq ~raise program "iter_op" (aux [ 2; 3; 4; 5 ]) (e_unit ())
-  in
+  let () = expect_eq ~raise program "map_op" (aux [ 2; 3; 4; 5 ]) (aux [ 3; 4; 5; 6 ]) in
+  let () = expect_eq ~raise program "iter_op" (aux [ 2; 3; 4; 5 ]) (e_unit ()) in
   ()
 
 
 let jsligo_list ~raise () : unit =
   let program = type_file ~raise "./contracts/list.jsligo" in
   let () =
-    expect_eq
-      ~raise
-      program
-      "size_"
-      (e_list [ e_int 0; e_int 1; e_int 2 ])
-      (e_nat 3)
+    expect_eq ~raise program "size_" (e_list [ e_int 0; e_int 1; e_int 2 ]) (e_nat 3)
   in
   let aux lst = e_list @@ List.map ~f:e_int lst in
   let () = expect_eq ~raise program "fold_op" (aux [ 1; 2; 3 ]) (e_int 16) in
   let () =
     let make_input n =
-      e_pair
-        (e_list [ e_int n; e_int (2 * n) ])
-        (e_pair (e_int 3) (e_list [ e_int 8 ]))
+      e_pair (e_list [ e_int n; e_int (2 * n) ]) (e_pair (e_int 3) (e_list [ e_int 8 ]))
     in
     let make_expected n =
       e_pair
@@ -2052,29 +1886,17 @@ let jsligo_list ~raise () : unit =
   in
   let () = expect_eq_evaluate ~raise program "x" (e_list []) in
   let () =
-    expect_eq_evaluate
-      ~raise
-      program
-      "y"
-      (e_list @@ List.map ~f:e_int [ 3; 4; 5 ])
+    expect_eq_evaluate ~raise program "y" (e_list @@ List.map ~f:e_int [ 3; 4; 5 ])
   in
   let () =
-    expect_eq_evaluate
-      ~raise
-      program
-      "z"
-      (e_list @@ List.map ~f:e_int [ 2; 3; 4; 5 ])
+    expect_eq_evaluate ~raise program "z" (e_list @@ List.map ~f:e_int [ 2; 3; 4; 5 ])
   in
   let () = expect_eq_evaluate ~raise program "find_x" (e_none ()) in
   let () = expect_eq_evaluate ~raise program "find_y4" (e_some (e_int 4)) in
   let () = expect_eq_evaluate ~raise program "find_y6" (e_none ()) in
   let () = expect_eq_evaluate ~raise program "find_z2" (e_some (e_int 2)) in
-  let () =
-    expect_eq ~raise program "map_op" (aux [ 2; 3; 4; 5 ]) (aux [ 3; 4; 5; 6 ])
-  in
-  let () =
-    expect_eq ~raise program "iter_op" (aux [ 2; 3; 4; 5 ]) (e_unit ())
-  in
+  let () = expect_eq ~raise program "map_op" (aux [ 2; 3; 4; 5 ]) (aux [ 3; 4; 5; 6 ]) in
+  let () = expect_eq ~raise program "iter_op" (aux [ 2; 3; 4; 5 ]) (e_unit ()) in
   ()
 
 
@@ -2106,16 +1928,12 @@ let michelson_insertion ~raise program : unit =
   expect_eq_n_pos ~raise program "michelson_add" make_input make_expected
 
 
-let michelson_insertion ~raise f : unit =
-  michelson_insertion ~raise @@ type_file ~raise f
-
+let michelson_insertion ~raise f : unit = michelson_insertion ~raise @@ type_file ~raise f
 
 let website1_ligo ~raise () : unit =
   let program = type_file ~raise "./contracts/website1.ligo" in
   let make_input n = e_pair (e_int n) (e_int 42) in
-  let make_expected _n =
-    e_pair (e_typed_list [] (t_operation ())) (e_int (42 + 1))
-  in
+  let make_expected _n = e_pair (e_typed_list [] (t_operation ())) (e_int (42 + 1)) in
   expect_eq_n ~raise program "main" make_input make_expected
 
 
@@ -2138,11 +1956,7 @@ let tez_ligo ~raise () : unit =
   let _ = expect_eq_evaluate ~raise program "sub_tez" (e_some (e_mutez 1)) in
   let _ = expect_eq_evaluate ~raise program "sub_tez_none" (e_none ()) in
   let _ =
-    expect_eq_evaluate
-      ~raise
-      program
-      "not_enough_tez"
-      (e_mutez 4611686018427387903)
+    expect_eq_evaluate ~raise program "not_enough_tez" (e_mutez 4611686018427387903)
   in
   let _ = expect_eq_evaluate ~raise program "nat_mul_tez" (e_mutez 100) in
   let _ = expect_eq_evaluate ~raise program "tez_mul_nat" (e_mutez 1000) in
@@ -2161,15 +1975,9 @@ let tez_mligo ~raise () : unit =
   let _ = expect_eq_evaluate ~raise program "sub_tez" (e_some (e_mutez 1)) in
   let _ = expect_eq_evaluate ~raise program "sub_tez_none" (e_none ()) in
   let _ =
-    expect_eq_evaluate
-      ~raise
-      program
-      "not_enough_tez"
-      (e_mutez 4611686018427387903)
+    expect_eq_evaluate ~raise program "not_enough_tez" (e_mutez 4611686018427387903)
   in
-  let _ =
-    expect_eq_evaluate ~raise program "add_more_tez" (e_mutez 111111000)
-  in
+  let _ = expect_eq_evaluate ~raise program "add_more_tez" (e_mutez 111111000) in
   ()
 
 
@@ -2197,9 +2005,7 @@ let mligo_let_multiple ~raise () : unit =
   in
   let () =
     let input = e_unit () in
-    let expected =
-      e_tuple [ e_int 10; e_int 20; e_int 30; e_int 40; e_int 50 ]
-    in
+    let expected = e_tuple [ e_int 10; e_int 20; e_int 30; e_int 40; e_int 50 ] in
     expect_eq ~raise program "correct_values_big_tuple" input expected
   in
   let () =
@@ -2359,9 +2165,7 @@ let deep_access_ligo ~raise () : unit =
   let () =
     let make_input =
       e_record_ez
-        [ ( "nesty"
-          , e_record_ez [ "mymap", e_typed_map [] (t_int ()) (t_string ()) ] )
-        ]
+        [ "nesty", e_record_ez [ "mymap", e_typed_map [] (t_int ()) (t_string ()) ] ]
     in
     let make_expected = e_string "one" in
     expect_eq ~raise program "nested_record" make_input make_expected
@@ -2407,21 +2211,9 @@ let get_contract_ligo ~raise () : unit =
           make_options ~env:(test_environment ()) ~amount ())
       in
       let () =
-        expect_n_strict_pos_small
-          ~raise
-          ~options
-          program
-          "cb"
-          make_input
-          make_expected
+        expect_n_strict_pos_small ~raise ~options program "cb" make_input make_expected
       in
-      expect_n_strict_pos_small
-        ~raise
-        ~options
-        program
-        "cbo"
-        make_input
-        make_expected
+      expect_n_strict_pos_small ~raise ~options program "cbo" make_input make_expected
     in
     ()
   in
@@ -2473,9 +2265,7 @@ let check_signature ~raise f : unit =
       ]
   in
   let make_expected = e_bool true in
-  let () =
-    expect_eq ~raise program "check_signature" make_input make_expected
-  in
+  let () = expect_eq ~raise program "check_signature" make_input make_expected in
   ()
 
 
@@ -2506,60 +2296,38 @@ let type_tuple_destruct ~raise () : unit =
   let program = type_file ~raise "./contracts/type_tuple_destruct.mligo" in
   let () = expect_eq ~raise program "type_tuple_d" (e_unit ()) (e_int 35) in
   let () =
-    expect_eq
-      ~raise
-      program
-      "type_tuple_d_2"
-      (e_unit ())
-      (e_string "helloworld")
+    expect_eq ~raise program "type_tuple_d_2" (e_unit ()) (e_string "helloworld")
   in
   ()
 
 
 let tuple_param_destruct ~raise () : unit =
   let program = type_file ~raise "./contracts/tuple_param_destruct.mligo" in
+  let () = expect_eq ~raise program "sum" (e_tuple [ e_int 20; e_int 10 ]) (e_int 10) in
   let () =
-    expect_eq ~raise program "sum" (e_tuple [ e_int 20; e_int 10 ]) (e_int 10)
-  in
-  let () =
-    expect_eq
-      ~raise
-      program
-      "parentheses"
-      (e_tuple [ e_int 20; e_int 10 ])
-      (e_int 10)
+    expect_eq ~raise program "parentheses" (e_tuple [ e_int 20; e_int 10 ]) (e_int 10)
   in
   ()
 
 
 let tuple_param_destruct_religo ~raise () : unit =
   let program = type_file ~raise "./contracts/tuple_param_destruct.religo" in
+  let () = expect_eq ~raise program "sum" (e_tuple [ e_int 20; e_int 10 ]) (e_int 10) in
   let () =
-    expect_eq ~raise program "sum" (e_tuple [ e_int 20; e_int 10 ]) (e_int 10)
-  in
-  let () =
-    expect_eq
-      ~raise
-      program
-      "parentheses"
-      (e_tuple [ e_int 20; e_int 10 ])
-      (e_int 10)
+    expect_eq ~raise program "parentheses" (e_tuple [ e_int 20; e_int 10 ]) (e_int 10)
   in
   ()
 
 
 let let_in_multi_bind ~raise () : unit =
   let program = type_file ~raise "./contracts/let_in_multi_bind.mligo" in
-  let () =
-    expect_eq ~raise program "sum" (e_tuple [ e_int 10; e_int 10 ]) (e_int 20)
-  in
+  let () = expect_eq ~raise program "sum" (e_tuple [ e_int 10; e_int 10 ]) (e_int 20) in
   let () =
     expect_eq
       ~raise
       program
       "sum2"
-      (e_tuple
-         [ e_string "my"; e_string "name"; e_string "is"; e_string "bob" ])
+      (e_tuple [ e_string "my"; e_string "name"; e_string "is"; e_string "bob" ])
       (e_string "mynameisbob")
   in
   ()
@@ -2582,12 +2350,7 @@ let bytes_unpack ~raise f : unit =
     @@ (List.nth_exn (test_environment ()).identities 0).implicit_contract
   in
   let () =
-    expect_eq
-      ~raise
-      program
-      "id_address"
-      (e_address addr)
-      (e_some (e_address addr))
+    expect_eq ~raise program "id_address" (e_address addr) (e_some (e_address addr))
   in
   ()
 
@@ -2738,12 +2501,7 @@ let if_no_else_jsligo ~raise () : unit =
 
 let tuple_assignment_jsligo ~raise () : unit =
   let program = type_file ~raise "./contracts/tuple_assignment.jsligo" in
-  expect_eq
-    ~raise
-    program
-    "tuple_assignment"
-    (e_unit ())
-    (e_tuple [ e_int 2; e_int 5 ])
+  expect_eq ~raise program "tuple_assignment" (e_unit ()) (e_tuple [ e_int 2; e_int 5 ])
 
 
 let chained_assignment_jsligo ~raise () : unit =
@@ -2770,28 +2528,13 @@ let block_scope_jsligo ~raise () : unit =
 let assignment_operators_jsligo ~raise () : unit =
   let program = type_file ~raise "./contracts/assignment_operators.jsligo" in
   let _ =
-    expect_eq
-      ~raise
-      program
-      "addeq"
-      (e_unit ())
-      (e_tuple [ e_int 11; e_int 9; e_int 5 ])
+    expect_eq ~raise program "addeq" (e_unit ()) (e_tuple [ e_int 11; e_int 9; e_int 5 ])
   in
   let _ =
-    expect_eq
-      ~raise
-      program
-      "mineq"
-      (e_unit ())
-      (e_tuple [ e_int 15; e_int 15; e_int 1 ])
+    expect_eq ~raise program "mineq" (e_unit ()) (e_tuple [ e_int 15; e_int 15; e_int 1 ])
   in
   let _ =
-    expect_eq
-      ~raise
-      program
-      "diveq"
-      (e_unit ())
-      (e_tuple [ e_int 5; e_int 4; e_int 3 ])
+    expect_eq ~raise program "diveq" (e_unit ()) (e_tuple [ e_int 5; e_int 4; e_int 3 ])
   in
   let _ =
     expect_eq
@@ -2802,12 +2545,7 @@ let assignment_operators_jsligo ~raise () : unit =
       (e_tuple [ e_int 2000; e_int 100; e_int 12 ])
   in
   let _ =
-    expect_eq
-      ~raise
-      program
-      "resteq"
-      (e_unit ())
-      (e_tuple [ e_nat 2; e_nat 3; e_nat 1 ])
+    expect_eq ~raise program "resteq" (e_unit ()) (e_tuple [ e_nat 2; e_nat 3; e_nat 1 ])
   in
   ()
 
@@ -2815,86 +2553,35 @@ let assignment_operators_jsligo ~raise () : unit =
 let switch_cases_jsligo ~raise () : unit =
   let program = type_file ~raise "./contracts/switch_statement.jsligo" in
   let _ =
-    expect_eq
-      ~raise
-      program
-      "single_default_return"
-      (e_int 5)
-      (e_string "Hello!!")
+    expect_eq ~raise program "single_default_return" (e_int 5) (e_string "Hello!!")
   in
   let _ =
-    expect_eq
-      ~raise
-      program
-      "single_default_no_statements"
-      (e_int 5)
-      (e_string "Hello")
+    expect_eq ~raise program "single_default_no_statements" (e_int 5) (e_string "Hello")
   in
   let _ =
-    expect_eq
-      ~raise
-      program
-      "single_default_break_1"
-      (e_int 5)
-      (e_string "HelloWorld")
+    expect_eq ~raise program "single_default_break_1" (e_int 5) (e_string "HelloWorld")
   in
   let _ =
-    expect_eq
-      ~raise
-      program
-      "single_default_break_2"
-      (e_int 5)
-      (e_string "Hello World")
+    expect_eq ~raise program "single_default_break_2" (e_int 5) (e_string "Hello World")
   in
   let _ =
-    expect_eq
-      ~raise
-      program
-      "single_case_no_statements"
-      (e_int 1)
-      (e_string "Hello")
+    expect_eq ~raise program "single_case_no_statements" (e_int 1) (e_string "Hello")
   in
   let _ =
-    expect_eq
-      ~raise
-      program
-      "single_case_no_statements"
-      (e_int 2)
-      (e_string "Hello")
+    expect_eq ~raise program "single_case_no_statements" (e_int 2) (e_string "Hello")
+  in
+  let _ = expect_eq ~raise program "single_case_return" (e_int 1) (e_string "World") in
+  let _ = expect_eq ~raise program "single_case_return" (e_int 2) (e_string "Hello") in
+  let _ =
+    expect_eq ~raise program "single_case_fallthrough" (e_int 1) (e_string "Hello World")
   in
   let _ =
-    expect_eq ~raise program "single_case_return" (e_int 1) (e_string "World")
+    expect_eq ~raise program "single_case_fallthrough" (e_int 2) (e_string "Hello ")
   in
   let _ =
-    expect_eq ~raise program "single_case_return" (e_int 2) (e_string "Hello")
+    expect_eq ~raise program "single_case_break" (e_int 1) (e_string "Hello World")
   in
-  let _ =
-    expect_eq
-      ~raise
-      program
-      "single_case_fallthrough"
-      (e_int 1)
-      (e_string "Hello World")
-  in
-  let _ =
-    expect_eq
-      ~raise
-      program
-      "single_case_fallthrough"
-      (e_int 2)
-      (e_string "Hello ")
-  in
-  let _ =
-    expect_eq
-      ~raise
-      program
-      "single_case_break"
-      (e_int 1)
-      (e_string "Hello World")
-  in
-  let _ =
-    expect_eq ~raise program "single_case_break" (e_int 2) (e_string "Hello ")
-  in
+  let _ = expect_eq ~raise program "single_case_break" (e_int 2) (e_string "Hello ") in
   let _ =
     expect_eq
       ~raise
@@ -2912,20 +2599,10 @@ let switch_cases_jsligo ~raise () : unit =
       (e_string "Hello !!!")
   in
   let _ =
-    expect_eq
-      ~raise
-      program
-      "case_default_break_break"
-      (e_int 1)
-      (e_string "Hello World")
+    expect_eq ~raise program "case_default_break_break" (e_int 1) (e_string "Hello World")
   in
   let _ =
-    expect_eq
-      ~raise
-      program
-      "case_default_break_break"
-      (e_int 2)
-      (e_string "Hello !!!")
+    expect_eq ~raise program "case_default_break_break" (e_int 2) (e_string "Hello !!!")
   in
   let _ =
     expect_eq
@@ -2968,12 +2645,7 @@ let switch_cases_jsligo ~raise () : unit =
       (e_string "Hello World ???")
   in
   let _ =
-    expect_eq
-      ~raise
-      program
-      "case_default_break_return"
-      (e_int 2)
-      (e_string "Hello !!!")
+    expect_eq ~raise program "case_default_break_return" (e_int 2) (e_string "Hello !!!")
   in
   let _ =
     expect_eq
@@ -2984,12 +2656,7 @@ let switch_cases_jsligo ~raise () : unit =
       (e_string "Hello World")
   in
   let _ =
-    expect_eq
-      ~raise
-      program
-      "case_default_return_return"
-      (e_int 2)
-      (e_string "Hello !!!")
+    expect_eq ~raise program "case_default_return_return" (e_int 2) (e_string "Hello !!!")
   in
   let _ =
     expect_eq
@@ -3000,64 +2667,25 @@ let switch_cases_jsligo ~raise () : unit =
       (e_string "Hello World!!! ???")
   in
   let _ =
-    expect_eq
-      ~raise
-      program
-      "case_case_fallthrough"
-      (e_int 2)
-      (e_string "Hello !!! ???")
+    expect_eq ~raise program "case_case_fallthrough" (e_int 2) (e_string "Hello !!! ???")
   in
   let _ =
-    expect_eq
-      ~raise
-      program
-      "case_case_fallthrough"
-      (e_int 3)
-      (e_string "Hello  ???")
+    expect_eq ~raise program "case_case_fallthrough" (e_int 3) (e_string "Hello  ???")
   in
   let _ =
-    expect_eq
-      ~raise
-      program
-      "case_case_break"
-      (e_int 1)
-      (e_string "Hello World ???")
+    expect_eq ~raise program "case_case_break" (e_int 1) (e_string "Hello World ???")
   in
   let _ =
-    expect_eq
-      ~raise
-      program
-      "case_case_break"
-      (e_int 2)
-      (e_string "Hello !!! ???")
+    expect_eq ~raise program "case_case_break" (e_int 2) (e_string "Hello !!! ???")
+  in
+  let _ = expect_eq ~raise program "case_case_break" (e_int 3) (e_string "Hello  ???") in
+  let _ =
+    expect_eq ~raise program "case_case_return" (e_int 1) (e_string "Hello World")
   in
   let _ =
-    expect_eq ~raise program "case_case_break" (e_int 3) (e_string "Hello  ???")
+    expect_eq ~raise program "case_case_return" (e_int 2) (e_string "Hello !!! ???")
   in
-  let _ =
-    expect_eq
-      ~raise
-      program
-      "case_case_return"
-      (e_int 1)
-      (e_string "Hello World")
-  in
-  let _ =
-    expect_eq
-      ~raise
-      program
-      "case_case_return"
-      (e_int 2)
-      (e_string "Hello !!! ???")
-  in
-  let _ =
-    expect_eq
-      ~raise
-      program
-      "case_case_return"
-      (e_int 3)
-      (e_string "Hello  ???")
-  in
+  let _ = expect_eq ~raise program "case_case_return" (e_int 3) (e_string "Hello  ???") in
   let _ =
     expect_eq
       ~raise
@@ -3091,44 +2719,19 @@ let switch_cases_jsligo ~raise () : unit =
       (e_string "Hello World ???")
   in
   let _ =
-    expect_eq
-      ~raise
-      program
-      "case_case_break_break"
-      (e_int 2)
-      (e_string "Hello !!! ???")
+    expect_eq ~raise program "case_case_break_break" (e_int 2) (e_string "Hello !!! ???")
   in
   let _ =
-    expect_eq
-      ~raise
-      program
-      "case_case_break_break"
-      (e_int 3)
-      (e_string "Hello  ???")
+    expect_eq ~raise program "case_case_break_break" (e_int 3) (e_string "Hello  ???")
   in
   let _ =
-    expect_eq
-      ~raise
-      program
-      "case_case_return_break"
-      (e_int 1)
-      (e_string "Hello World")
+    expect_eq ~raise program "case_case_return_break" (e_int 1) (e_string "Hello World")
   in
   let _ =
-    expect_eq
-      ~raise
-      program
-      "case_case_return_break"
-      (e_int 2)
-      (e_string "Hello !!! ???")
+    expect_eq ~raise program "case_case_return_break" (e_int 2) (e_string "Hello !!! ???")
   in
   let _ =
-    expect_eq
-      ~raise
-      program
-      "case_case_return_break"
-      (e_int 3)
-      (e_string "Hello  ???")
+    expect_eq ~raise program "case_case_return_break" (e_int 3) (e_string "Hello  ???")
   in
   let _ =
     expect_eq
@@ -3163,44 +2766,19 @@ let switch_cases_jsligo ~raise () : unit =
       (e_string "Hello World ???")
   in
   let _ =
-    expect_eq
-      ~raise
-      program
-      "case_case_break_return"
-      (e_int 2)
-      (e_string "Hello !!!")
+    expect_eq ~raise program "case_case_break_return" (e_int 2) (e_string "Hello !!!")
   in
   let _ =
-    expect_eq
-      ~raise
-      program
-      "case_case_break_return"
-      (e_int 3)
-      (e_string "Hello  ???")
+    expect_eq ~raise program "case_case_break_return" (e_int 3) (e_string "Hello  ???")
   in
   let _ =
-    expect_eq
-      ~raise
-      program
-      "case_case_return_return"
-      (e_int 1)
-      (e_string "Hello World")
+    expect_eq ~raise program "case_case_return_return" (e_int 1) (e_string "Hello World")
   in
   let _ =
-    expect_eq
-      ~raise
-      program
-      "case_case_return_return"
-      (e_int 2)
-      (e_string "Hello !!!")
+    expect_eq ~raise program "case_case_return_return" (e_int 2) (e_string "Hello !!!")
   in
   let _ =
-    expect_eq
-      ~raise
-      program
-      "case_case_return_return"
-      (e_int 3)
-      (e_string "Hello  ???")
+    expect_eq ~raise program "case_case_return_return" (e_int 3) (e_string "Hello  ???")
   in
   let _ =
     expect_eq
@@ -3219,65 +2797,25 @@ let switch_cases_jsligo ~raise () : unit =
       (e_string "Hello !!!@@@ ???")
   in
   let _ =
-    expect_eq
-      ~raise
-      program
-      "case_all_fallthrough"
-      (e_int 3)
-      (e_string "Hello @@@ ???")
+    expect_eq ~raise program "case_all_fallthrough" (e_int 3) (e_string "Hello @@@ ???")
   in
   let _ =
-    expect_eq
-      ~raise
-      program
-      "case_all_fallthrough"
-      (e_int 4)
-      (e_string "Hello  ???")
+    expect_eq ~raise program "case_all_fallthrough" (e_int 4) (e_string "Hello  ???")
   in
   let _ =
-    expect_eq
-      ~raise
-      program
-      "case_all_break"
-      (e_int 1)
-      (e_string "Hello World ???")
+    expect_eq ~raise program "case_all_break" (e_int 1) (e_string "Hello World ???")
   in
   let _ =
-    expect_eq
-      ~raise
-      program
-      "case_all_break"
-      (e_int 2)
-      (e_string "Hello !!! ???")
+    expect_eq ~raise program "case_all_break" (e_int 2) (e_string "Hello !!! ???")
   in
   let _ =
-    expect_eq
-      ~raise
-      program
-      "case_all_break"
-      (e_int 3)
-      (e_string "Hello @@@ ???")
+    expect_eq ~raise program "case_all_break" (e_int 3) (e_string "Hello @@@ ???")
   in
-  let _ =
-    expect_eq ~raise program "case_all_break" (e_int 4) (e_string "Hello  ???")
-  in
-  let _ =
-    expect_eq
-      ~raise
-      program
-      "case_all_return"
-      (e_int 1)
-      (e_string "Hello World")
-  in
-  let _ =
-    expect_eq ~raise program "case_all_return" (e_int 2) (e_string "Hello !!!")
-  in
-  let _ =
-    expect_eq ~raise program "case_all_return" (e_int 3) (e_string "Hello @@@")
-  in
-  let _ =
-    expect_eq ~raise program "case_all_return" (e_int 4) (e_string "Hello  ???")
-  in
+  let _ = expect_eq ~raise program "case_all_break" (e_int 4) (e_string "Hello  ???") in
+  let _ = expect_eq ~raise program "case_all_return" (e_int 1) (e_string "Hello World") in
+  let _ = expect_eq ~raise program "case_all_return" (e_int 2) (e_string "Hello !!!") in
+  let _ = expect_eq ~raise program "case_all_return" (e_int 3) (e_string "Hello @@@") in
+  let _ = expect_eq ~raise program "case_all_return" (e_int 4) (e_string "Hello  ???") in
   let _ =
     expect_eq
       ~raise
@@ -3319,60 +2857,25 @@ let switch_cases_jsligo ~raise () : unit =
       (e_string "Hello World ???")
   in
   let _ =
-    expect_eq
-      ~raise
-      program
-      "case_default_all_break"
-      (e_int 2)
-      (e_string "Hello !!! ???")
+    expect_eq ~raise program "case_default_all_break" (e_int 2) (e_string "Hello !!! ???")
   in
   let _ =
-    expect_eq
-      ~raise
-      program
-      "case_default_all_break"
-      (e_int 3)
-      (e_string "Hello @@@ ???")
+    expect_eq ~raise program "case_default_all_break" (e_int 3) (e_string "Hello @@@ ???")
   in
   let _ =
-    expect_eq
-      ~raise
-      program
-      "case_default_all_break"
-      (e_int 4)
-      (e_string "Hello ### ???")
+    expect_eq ~raise program "case_default_all_break" (e_int 4) (e_string "Hello ### ???")
   in
   let _ =
-    expect_eq
-      ~raise
-      program
-      "case_default_all_return"
-      (e_int 1)
-      (e_string "Hello World")
+    expect_eq ~raise program "case_default_all_return" (e_int 1) (e_string "Hello World")
   in
   let _ =
-    expect_eq
-      ~raise
-      program
-      "case_default_all_return"
-      (e_int 2)
-      (e_string "Hello !!!")
+    expect_eq ~raise program "case_default_all_return" (e_int 2) (e_string "Hello !!!")
   in
   let _ =
-    expect_eq
-      ~raise
-      program
-      "case_default_all_return"
-      (e_int 3)
-      (e_string "Hello @@@")
+    expect_eq ~raise program "case_default_all_return" (e_int 3) (e_string "Hello @@@")
   in
   let _ =
-    expect_eq
-      ~raise
-      program
-      "case_default_all_return"
-      (e_int 4)
-      (e_string "Hello ###")
+    expect_eq ~raise program "case_default_all_return" (e_int 4) (e_string "Hello ###")
   in
   let _ =
     expect_eq
@@ -3463,36 +2966,16 @@ let switch_cases_jsligo ~raise () : unit =
       (e_string "Hello World")
   in
   let _ =
-    expect_eq
-      ~raise
-      program
-      "case_default_all_return_4"
-      (e_int 2)
-      (e_string "Hello !!!")
+    expect_eq ~raise program "case_default_all_return_4" (e_int 2) (e_string "Hello !!!")
   in
   let _ =
-    expect_eq
-      ~raise
-      program
-      "case_default_all_return_4"
-      (e_int 3)
-      (e_string "Hello @@@")
+    expect_eq ~raise program "case_default_all_return_4" (e_int 3) (e_string "Hello @@@")
   in
   let _ =
-    expect_eq
-      ~raise
-      program
-      "case_default_all_return_4"
-      (e_int 4)
-      (e_string "Hello ^^^")
+    expect_eq ~raise program "case_default_all_return_4" (e_int 4) (e_string "Hello ^^^")
   in
   let _ =
-    expect_eq
-      ~raise
-      program
-      "case_default_all_return_4"
-      (e_int 5)
-      (e_string "Hello ###")
+    expect_eq ~raise program "case_default_all_return_4" (e_int 5) (e_string "Hello ###")
   in
   ()
 
@@ -3546,61 +3029,44 @@ let while_and_for_loops_jsligo ~raise () : unit =
       (e_list [ e_int 1; e_int 2; e_int 3 ])
       (e_list [ e_int 6; e_int 4; e_int 2 ])
   in
-  let _ =
-    expect_eq ~raise program "while_single_statement" (e_int 10) (e_int 10)
-  in
-  let _ =
-    expect_eq ~raise program "while_multi_statements_1" (e_int 10) (e_int 55)
-  in
-  let _ =
-    expect_eq ~raise program "while_multi_statements_2" (e_int 10) (e_int 55)
-  in
+  let _ = expect_eq ~raise program "while_single_statement" (e_int 10) (e_int 10) in
+  let _ = expect_eq ~raise program "while_multi_statements_1" (e_int 10) (e_int 55) in
+  let _ = expect_eq ~raise program "while_multi_statements_2" (e_int 10) (e_int 55) in
   ()
 
 
 let disc_union_jsligo ~raise () : unit =
   let program = type_file ~raise "./contracts/disc_union.jsligo" in
   let data =
-    e_pair
-      (e_constructor "Increment" (e_record_ez [ "amount", e_int 42 ]))
-      (e_int 22)
+    e_pair (e_constructor "Increment" (e_record_ez [ "amount", e_int 42 ])) (e_int 22)
   in
   let _ = expect_eq ~raise program "main" data (e_int 64) in
   let data =
-    e_pair
-      (e_constructor "Decrement" (e_record_ez [ "amount", e_int 5 ]))
-      (e_int 22)
+    e_pair (e_constructor "Decrement" (e_record_ez [ "amount", e_int 5 ])) (e_int 22)
   in
   let _ = expect_eq ~raise program "main" data (e_int 17) in
   ()
 
 
 let func_object_destruct_jsligo ~raise () : unit =
-  let program =
-    type_file ~raise "./contracts/jsligo_destructure_object.jsligo"
-  in
+  let program = type_file ~raise "./contracts/jsligo_destructure_object.jsligo" in
   let data =
-    e_record_ez
-      [ "bar", e_record_ez [ "color", e_constructor "red" (e_unit ()) ] ]
+    e_record_ez [ "bar", e_record_ez [ "color", e_constructor "red" (e_unit ()) ] ]
   in
   let _ = expect_eq ~raise program "x" data (e_int 1) in
   let data =
-    e_record_ez
-      [ "bar", e_record_ez [ "color", e_constructor "white" (e_unit ()) ] ]
+    e_record_ez [ "bar", e_record_ez [ "color", e_constructor "white" (e_unit ()) ] ]
   in
   let _ = expect_eq ~raise program "x" data (e_int 2) in
   let data =
-    e_record_ez
-      [ "bar", e_record_ez [ "color", e_constructor "blue" (e_unit ()) ] ]
+    e_record_ez [ "bar", e_record_ez [ "color", e_constructor "blue" (e_unit ()) ] ]
   in
   let _ = expect_eq ~raise program "x" data (e_int 5) in
   ()
 
 
 let func_tuple_destruct_jsligo ~raise () : unit =
-  let program =
-    type_file ~raise "./contracts/jsligo_destructure_tuples.jsligo"
-  in
+  let program = type_file ~raise "./contracts/jsligo_destructure_tuples.jsligo" in
   let data =
     e_tuple
       [ e_tuple [ e_string "first"; e_tuple [ e_int 1; e_string "uno" ] ]
@@ -3639,20 +3105,10 @@ let transitive_jsligo ~raise () : unit =
   let program = type_file ~raise "./contracts/transitive.jsligo" in
   (* let data = e_constructor "Increment" (e_record_ez [("amount" , e_int 42)]) in *)
   let _ =
-    expect_eq
-      ~raise
-      program
-      "var"
-      (e_unit ())
-      (e_tuple [ e_int 2; e_int 2; e_int 2 ])
+    expect_eq ~raise program "var" (e_unit ()) (e_tuple [ e_int 2; e_int 2; e_int 2 ])
   in
   let _ =
-    expect_eq
-      ~raise
-      program
-      "tuple"
-      (e_unit ())
-      (e_tuple [ e_int 7; e_int 0; e_int 7 ])
+    expect_eq ~raise program "tuple" (e_unit ()) (e_tuple [ e_int 7; e_int 0; e_int 7 ])
   in
   ()
 
@@ -3793,12 +3249,8 @@ let main =
   @ test_w_all "website2" website2_ligo
   @ test_w_all "set delegate" set_delegate
   @ test_w_all "is_nat" is_nat
-  @ [ test_w
-        "tuples_sequences_functions (religo)"
-        tuples_sequences_functions_religo
-    ; test_w
-        "tuples_sequences_functions (jsligo)"
-        tuples_sequences_functions_jsligo
+  @ [ test_w "tuples_sequences_functions (religo)" tuples_sequences_functions_religo
+    ; test_w "tuples_sequences_functions (jsligo)" tuples_sequences_functions_jsligo
     ; test_w "simple_access (ligo)" simple_access_ligo
     ; test_w "deep_access (ligo)" deep_access_ligo
     ; test_w "curry (mligo)" curry

@@ -32,29 +32,13 @@ let tuple_sep value sep ppf m =
 
 (* Prints records which only contain the consecutive fields
    0..(cardinal-1) as tuples *)
-let tuple_or_record_sep
-    value
-    format_record
-    sep_record
-    format_tuple
-    sep_tuple
-    ppf
-    m
-  =
+let tuple_or_record_sep value format_record sep_record format_tuple sep_tuple ppf m =
   if Record.is_tuple m
   then fprintf ppf format_tuple (tuple_sep value (tag sep_tuple)) m
   else fprintf ppf format_record (record_sep value (tag sep_record)) m
 
 
-let tuple_or_record_sep_t
-    value
-    format_record
-    sep_record
-    format_tuple
-    sep_tuple
-    ppf
-    m
-  =
+let tuple_or_record_sep_t value format_record sep_record format_tuple sep_tuple ppf m =
   if Record.is_tuple m
   then fprintf ppf format_tuple (tuple_sep value (tag sep_tuple)) m
   else fprintf ppf format_record (record_sep value (tag sep_record)) m
@@ -75,11 +59,7 @@ let rec type_content : formatter -> type_content -> unit =
   match tc with
   | T_variable tv -> Type_var.pp ppf tv
   | T_sum m ->
-    fprintf
-      ppf
-      "@[<h>sum[%a]@]"
-      (lmap_sep_d row)
-      (Record.LMap.to_kv_list_rev m.fields)
+    fprintf ppf "@[<h>sum[%a]@]" (lmap_sep_d row) (Record.LMap.to_kv_list_rev m.fields)
   | T_record m -> fprintf ppf "%a" (tuple_or_record_sep_type row) m.fields
   | T_arrow a -> Arrow.pp type_expression ppf a
   | T_constant tc -> type_injection ppf tc
@@ -137,11 +117,7 @@ let rec type_content_orig : formatter -> type_content -> unit =
   match tc with
   | T_variable tv -> Type_var.pp ppf tv
   | T_sum m ->
-    fprintf
-      ppf
-      "@[<h>sum[%a]@]"
-      (lmap_sep_d row)
-      (Record.LMap.to_kv_list_rev m.fields)
+    fprintf ppf "@[<h>sum[%a]@]" (lmap_sep_d row) (Record.LMap.to_kv_list_rev m.fields)
   | T_record m -> fprintf ppf "%a" (tuple_or_record_sep_type row) m.fields
   | T_arrow a -> Arrow.pp type_expression ppf a
   | T_constant tc -> type_injection ppf tc
@@ -180,8 +156,7 @@ and expression_content ppf (ec : expression_content) =
   | E_type_abstraction e -> Type_abs.pp expression ppf e
   | E_matching m -> Types.Match_expr.pp expression type_expression ppf m
   | E_recursive r -> Recursive.pp expression type_expression ppf r
-  | E_let_in
-      { let_binder; rhs; let_result; attr = { hidden = false; _ } as attr } ->
+  | E_let_in { let_binder; rhs; let_result; attr = { hidden = false; _ } as attr } ->
     fprintf
       ppf
       "@[let %a =@;<1 2>%a%a in@ %a@]"
@@ -233,9 +208,7 @@ and type_inst ppf { forall; type_ } =
   fprintf ppf "%a@@{%a}" expression forall type_expression type_
 
 
-and option_inline ppf inline =
-  if inline then fprintf ppf "[@inline]" else fprintf ppf ""
-
+and option_inline ppf inline = if inline then fprintf ppf "[@inline]" else fprintf ppf ""
 
 and declaration ?(use_hidden = true) ppf (d : declaration) =
   match Location.unwrap d with
