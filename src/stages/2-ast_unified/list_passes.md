@@ -1,14 +1,48 @@
-## unpar
-- remove: E_par
-- add: .
-remove parenthesis, trivial in forward pass, useful in backward pass
+## pass 'freeze_operator' : bin_op , ternop ?
+  - remove : E_binary_op E_unary_op
+  - remove : E_set_membership
+  - add    : E_constant
+  
+  morph operators into hardcoded constants (later leave them be in the stdlib ?)
+  morph special syntax to constants
 
+---
+
+## pass 'array unify'
+
+  - remove : E_array
+  - add : .
+  ```
+  [1 , ..x] |-> error
+  list([1, 2]) |-> [ 1 ; 2 ]
+  list(1, ..x)) |-> 1::x
+  [1 , 2 , 3] |-> TUPLE (1,2,3)
+  list([]) |-> []
+  ```
+
+  The 'tuple_singleton' nanopass ensures E_Tuple never contains 1 element only ?
+
+  ```
+  [] |-> TUPLE ()
+  [ x ] |-> TUPLE x
+  ```
+---
+
+## pass 'restrict proj'
+
+  - remove : E_proj (.. Component_expr e)
+  - add : ..
+
+  check that `e` is an int literal (for now we don't have partial exec) 
+
+--
+
+
+  EObject
   =============================================================================
-  pass 'freeze_operator' : bin_op , ternop ?
-    remove : E_arith_binary_operator
-             E_logic_binary_operator
-    add    : E_constant
-  =============================================================================
+
+
+
   pass 'nosyntax' : [specific to.. jsligo ?]
     remove : -
     add : -
@@ -161,9 +195,9 @@ remove parenthesis, trivial in forward pass, useful in backward pass
   E_App
   =============================================================================
 
-  pass : ctor_apply                (gone if factorized CSTs ?)
+  pass : ctor_apply                (gone if factorized CSTs ? nope :()
     remove : E_App ( E_Ctor )
-    add    : E_Ctor | failwith
+    add    : E_Ctor2
   
     In CameLIGO and JsLIGO, MyCtor 42 becomes E_Ctor ( "MyCtor", 42 )
     In PascaLIGO, we have MyCtor (42) which becomes
@@ -325,42 +359,7 @@ remove parenthesis, trivial in forward pass, useful in backward pass
     because tuple singletons have been removed in [tuple_singleton] nanopass.
 
 
-  E_ArrayJsligo
-  =============================================================================
-  pass 'e_array_jsligo
-    remove : E_ArrayJsligo
-    add    : E_Array
 
-    Almost direct 1-to-1 mapping, except that we raise an exeption on the rest syntax
-
-    E_ArrayJsligo (Expr_entry e1, Expr_entry e2) |-> E_Array [e1, e2]
-    E_ArrayJsligo (Expr_entry e1, Rest_entry e2) |-> raise exception
-
-  T_Named_fun
-  ============================================================================
-  check named_fun names are linear
-  T_named_fun -> T_fun (we do not support named args in typer etc ..)
-  E_Array
-  =============================================================================
-  pass 'abstract_array'
-    remove : AST_U.E_Array
-    add    : AST_I.E_Tuple
-
-    AST Unified's E_Tuple and E_Array are both converted into AST Imperative's E_Tuple.
-    The difference is that ASTU.E_Tuple only contain several elements, indeed :
-    - E_Tuple take a expr option as arguments, so it cannot contain 0 element.
-    - The 'tuple_singleton' nanopass ensures E_Tuple never contains 1 element only.
-
-    Jsligo's arrays, however, can contain several, one, or even 0 elements.
-    Jsligo [1, 2, 3] |-> AST_I.E_Tuple [1, 2, 3]
-    Jsligo [1]       |-> AST_I.E_Tuple [1]
-    Jsligo []        |-> AST_I.E_Tuple []
-
-    If we convert CST.Jsligo.E_Tuple into ASTU.E_Tuple, the 0-uple and 1-uple
-    will disappear because of above reasons.
-
-  EObject
-  =============================================================================
   pass 'object_jsligo'
     remove : EObject
     add : E_Record | E_Update | exception

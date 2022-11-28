@@ -24,6 +24,7 @@ module Mod_variable = Ligo_prim.Module_var
 module Module_access = Ligo_prim.Module_access
 module Literal_value = Ligo_prim.Literal_value
 module Constant = Ligo_prim.Constant
+module Constructor = Ligo_prim.Constructor
 
 module Non_linear_rows = Temp_prim.Non_linear_rows(Label)
 module Empty_label = struct
@@ -58,12 +59,14 @@ module Simple_decl = Temp_prim.Simple_decl
 module Fun_decl = Temp_prim.Fun_decl
 module Type_decl = Temp_prim.Type_decl
 module Mod_decl = Temp_prim.Mod_decl
+module Operators = Temp_prim.Operators
+module Let_binding = Temp_prim.Let_binding
+module Rev_app = Temp_prim.Rev_app
 
 module Z = Ligo_prim.Literal_value.Z
 
 type 'a nseq = 'a Simple_utils.List.Ne.t
   [@@deriving yojson]
-type attribute = Temp_prim.Attribute.t
 
 (* The preprocessor directives are left unchanged during unification pass.
    So, the type of a directive is Preprocessor.Directive.t
@@ -212,10 +215,7 @@ and declaration_content =
 and module_ = {
   module_content : module_content;
   location       : Location.t;
-}
-
-and mod_ = module_
-  [@@deriving yojson]
+} [@@deriving yojson]
 
 and module_content =
 | M_Body_statements of statement nseq
@@ -233,47 +233,43 @@ and expr_content = expression_content
 and expr         = expression
   [@@deriving yojson]
 
-and rev_app = {
-  x : expr;
-  f : expr;
-}
-
-and 'a selection =
-| FieldName of string
-| Component of 'a
+and 'expr selection =
+| FieldName of Label.t
+| Component_num of (string * Z.t)
+| Component_expr of 'expr
 
 and projection = {
-  expr            : expr;
-  field_path      : Z.t selection nseq;
-}
-
-and projection_jsligo = {
   expr            : expr;
   selection       : expr selection;
 }
 
-and path =
-| Name of string
-| Path of projection
-
-and update_cameligo = {
-  record_path  : path;
-  updates : (path, expr) field nseq;
-}
-and update_pascaligo = {
-  structure : expr;
-  update    : expr; (* This expression should be a record *)
+and projection_ = {
+  expr            : expr;
+  field_path      : expr selection nseq;
 }
 
-and updates = {
-  record   : expr;
-  updates  : (path, expr) field nseq;
+and upd_field =
+  | Pun of Label.t * Attribute.t list
+  | Full_field of expr full_field
+
+and field_lens =
+    Lens_Id
+  | Lens_Add
+  | Lens_Sub
+  | Lens_Mult
+  | Lens_Div
+  | Lens_Fun
+
+and 'expr full_field = {
+  field_lhs  : 'expr selection list;
+  field_lens : field_lens;
+  field_rhs  : 'expr;
+  attributes : Attribute.t list
 }
 
 and update = {
-  record   : expr;
-  path     : expr Module_access.t nseq;
-  update   : expr;
+  structure : expr ;
+  update : upd_field list;
 }
 
 and fun_expr_cameligo = {
@@ -283,21 +279,21 @@ and fun_expr_cameligo = {
   body         : expr;
 }
 
-and fun_expr_pascaligo = {
+and poly_fun = {
   type_params : Ty_variable.t nseq option;
   parameters  : param_decl list;
   ret_type    : type_expr option;
-  return      : expr;
+  body      : expr;
 }
 
-and body_jsligo =
+and fun_block =
 | FunctionBody   of statement nseq
 | ExpressionBody of expr
 
-and fun_expr_jsligo = {
+and block_fun = {
   parameters : expr;
   lhs_type   : type_expr option;
-  body       : body_jsligo;
+  body       : fun_block;
 }
 
 and map_lookup = {
@@ -329,23 +325,23 @@ and raw_code = {
   code        : expression; (* Typically EAnnot( EString (raw code), TFun(signature) ) *)
 }
 
-and block_with_pascaligo = {
+and block_with = {
   block    : statement nseq;
   expr     : expr
 }
 
-and array_item_jsligo =
+and array_item =
 | Expr_entry of expr
 | Rest_entry of expr
 
-and array_jsligo = array_item_jsligo list
+and array = array_item list option
 
-and property_jsligo =
+and property =
 | Punned_property of expr
 | Property        of expr * expr
 | Property_rest   of expr
 
-and object_jsligo = property_jsligo nseq
+and object_ = property nseq
 
 and assignment_operator_jsligo =
   Times_eq
@@ -370,116 +366,62 @@ and ternary = {
   falsy  : expr;
 }
 
-and ('is_rec,'lhs,'body,'ty_expr) let_binding = {
-  is_rec      : 'is_rec;
-  type_params : Ligo_prim.Type_var.t nseq option;
-  pattern     : 'lhs;
-  rhs_type   : 'ty_expr option;
-  let_rhs     : expression;
-  body : 'body;
-}
-
 and expression_content = 
-
+  (* Attributes *)
+  | E_Attr of (Attribute.t * expr)     (* [@a] (x,y)      *)
   (* Base *)
   | E_Literal  of Literal_value.t         (* 42, 10tez *)
-  | E_Constant of constant                (* Cons hd tl) or (plus i j) *)
-  | E_Par      of expr                    (* ( my_expression ) *)
-
+  | E_Binary_op of expr Operators.binary_op
+  | E_Unary_op of expr Operators.unary_op
+  | E_Ternary of ternary                  (* x > 0 ? 42 : 24 *)
   (* Variables *)
   | E_variable of Variable.t             (* x *)
-
-  (* Strings *)
-  | E_Cat      of expr * expr             (* "hello" ^ "world" *)
-  | E_String   of string                  (* "hello" *)
-  | E_Verbatim of string                  (* {| hello |} *)
-
-  (* Function calls *)
-  | E_Call       of expr * expr nseq      (* f x y , calling f with arguments x and y *)
-
   (* Custom operators on functions *)
-  | E_RevApp of rev_app                   (* x |> f *)
-
+  | E_RevApp of expr Rev_app.t           (* x |> f *)
   (* Data structures *)
   | E_Tuple  of expr nseq                 (* (x, y, z) *)
-  | E_RecordPascaligo of (expr,   expr) field list (* { x = 10; y; z } *)
-  | E_RecordCameligo  of (string, expr) field nseq
-  | E_ArrayJsligo of array_jsligo         (* [1, 2, 3] or [42] or even [] *)
-  | E_Array  of expr list                 (* [1, 2, 3] or [42] or even [] *)
-
-  | E_ObjectJsligo of object_jsligo       (* {a : 1, b : 2} *)
-
+  | E_Record_pun of (Variable.t, expr) field list (* { x = 10; y; z } *)
+  | E_Array of array                      (* [1, 2, 3] , [42] , [] , [2 ...3] (specific to jsligo) *)
+  | E_Object of object_                   (* {a : 1, b : 2} *)
+  | E_List of expr list                   (* [ 1; 2; 3; 4; 5] *)
   (* Projections *)
   | E_Proj       of projection            (* x.y.1   y is a field name, 1 is a tuple component *)
-  | E_ProjJsligo of projection_jsligo     (* x.y.z   Nested version of E_Proj, with only 1 selector *)
-
   (* Module access *)                     (* M.N.a *)
   | E_ModA    of (string, expr) Mod_access.t (* nested version, E_ModA( M, E_ModA( N, E_Var var ) ) *)
   | E_ModPath of (string nseq, expr) Mod_access.t (* flat version,   E_ModAccess { [M, N], E_var var } *)
-
   (* Updates *)
-  | E_UpdateCameligo  of update_cameligo  (* { my_record with field1 = a; field2 = b } *)
-  | E_UpdatePascaligo of update_pascaligo (* myrec with record [field1 = 1; field2 = b] *)
-  | E_Updates         of updates          (* Record update (flat version) *)
-  | E_Update          of update           (* Record update (nested version) *)
-
-  | E_FunCameligo  of fun_expr_cameligo    (* (fun (x, y) z -> x + y - z) *)
-  | E_FunPascaligo of fun_expr_pascaligo
-  | E_FunJsligo    of fun_expr_jsligo
-
-  | E_Constr of (string * expr option)    (* let x = MyCtor 42 *)
+  | E_Update of update
+  (* functions *)
+  | E_Poly_fun  of poly_fun    (* (fun <type a b>(x, y) z -> x + y - z) *)
+  | E_Block_fun of block_fun
+  | E_Constr of expr option Constructor.t  (* let x = MyCtor 42 *)
   | E_App of (expr * expr nseq option)    (* MyCtor (42, 43, 44), PascaLigo only *)
-
+  | E_Call       of expr * expr nseq     (* f (x, y) ; f x y *)
   | E_Case of (expr, pattern, expr) Case.t (* match e with | A -> ... | B -> ... *)
-
   (* Type annotation *)
   | E_Annot       of (expr * type_expr)   (* 42 : int *)
-
   (* Conditionals *)
   | E_Cond of (expr,expr) Cond.t          (* if b then 42 else 24 *)
-
-  (* Lists *)
-  | E_List of expr list                   (* [ 1; 2; 3; 4; 5] *)
-  | E_Cons of (expr * expr)               (* head :: tail *)
-
   (* Sets *)
   | E_Set of expr list                    (* set [x; 1] *)
-
   (* Map lookup *)
   | E_MapLookup of map_lookup             (* M.m [i] *)
-
   (* Maps *)                              (* map [ "x" -> 1; "y" -> 2 ] *)
   | E_Map    of (expr * expr) list
   | E_BigMap of (expr * expr) list
-
   (* Let in *)
-  | E_Let_in of (bool,pattern nseq,expr,type_expr) let_binding                    (* let x = 42 in x + 1 *)
+  | E_Let_in of (pattern,expr,type_expr) Let_binding.t (* let x = 42 in x + 1 *)
   | E_TypeIn        of type_in            (* type t = int in let x : t = 42 *)
   | E_ModIn         of mod_in             (* module M = struct let x = 42 end in M.x *)
   | E_ModAlias      of mod_alias          (* module M = N.P in M.x *) 
-
   (* Code injection *)
   | E_RawCode of raw_code                 (* [%Michelson ({|...|} : nat -> nat) ] *)
-
   (* Sequences *)                         (* begin A; B; C end *)
-  | E_Seq      of expr list               (* flat version : E_Seq [A; B; C] *)
   | E_Sequence of (expr * expr)           (* nested version : E_Sequence (A, E_Sequence(B, C)) *)
-
   (* Block *)                             (* function f ... is { const res = a + b; } with res *)
-  | E_BlockPascaligo of block_with_pascaligo
-
-  (* Attributes *)
-  | E_Attr of (Attribute.t * expr)     (* [@a] (x,y)      *)
-
+  | E_Block_with of block_with
   (* Assign jsligo *)
   | E_AssignJsligo of assign_jsligo
-  
-  (* Ternary operator *)
-  | E_Ternary of ternary                  (* x > 0 ? 42 : 24 *)
-
-and constant =
-  { cons_name: Constant.rich_constant (* this is at the end because it is huge *)
-  ; arguments: expression list }
 
 (* ========================== PROGRAM ====================================== *)
 

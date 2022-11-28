@@ -12,6 +12,10 @@ open AST  (* Brings types and combinators functions *)
 
 module type X = module type of AST.Combinators
 
+let translate_attr_pascaligo : CST.Attr.t -> AST.Attribute.t = fun attr ->
+  let key, value = attr in
+  let value : string option = Option.map ~f:(fun (CST.Attr.String s) ->  s) value in
+  {key; value}
 module TODO_do_in_parsing = struct
   let r_split = r_split (* could compute Location directly in Parser *)
   let _lift = Location.lift
@@ -48,6 +52,11 @@ module TODO_do_in_parsing = struct
       in
       pat ~loc @@ P_variant (Label label, Some carg)
     | None -> failwith "impossible ?"
+  let rec expr_as_var (e:CST.expr) : Ligo_prim.Value_var.t =
+    match e with
+    | E_Var x -> Ligo_prim.Value_var.of_input_var ~loc:(w_snd x) (w_fst x)
+    | _ -> failwith "would not make sense ? tofix"
+
 end
 module TODO_unify_in_cst = struct
   let compile_rows = Non_linear_rows.make
@@ -60,12 +69,69 @@ module TODO_unify_in_cst = struct
     match i with
     | CST.ForMap       m -> let m, loc = r_split m in ForMap (compile_for_map m), loc
     | CST.ForSetOrList s -> let s, loc = r_split s in ForSetOrList (compile_for_set_or_list s), loc
+  let e_cat ~loc a b = e_binary_op ~loc AST.{operator = Location.wrap ~loc "^" ; left = a ; right = b}
+  let e_string ~loc s = e_literal ~loc (Literal_string (Simple_utils.Ligo_string.Standard s))
+  let e_verbatim ~loc s = e_literal ~loc (Literal_string (Simple_utils.Ligo_string.Verbatim s))
+  let better_as_binop ~loc kwd (left,right) =
+    let operator = Location.wrap ~loc:(w_snd kwd) (w_fst kwd) in
+    e_binary_op ~loc AST.{operator ; left ; right } ()
+
+  let nested_proj : AST.expr -> (CST.selection, CST.dot) nsepseq -> AST.expr = fun init field_path ->
+    (* projections could be nested ? *)
+    List.fold (nsepseq_to_list field_path)
+      ~init
+      ~f:(fun acc -> function
+        | FieldName name ->
+          let (name, loc) = w_split name in
+          e_proj ~loc { expr = acc ; selection = FieldName (Label.of_string name)} ()
+        | Component comp ->
+          let (index, loc) = w_split comp in
+          e_proj ~loc { expr = acc ; selection = Component_num index} ()
+      )
+  let update_rhs : (CST.expr -> AST.expr) -> CST.expr -> AST.upd_field list = fun self rhs ->
+    match rhs with
+    | E_Record record_lhs -> (
+      let f : (CST.expr, CST.expr) CST.field CST.reg -> AST.upd_field = fun x ->
+        match x.value with
+        | CST.Complete {field_lhs ; field_lens ; field_rhs ; attributes} -> (
+          let attributes =
+            TODO_do_in_parsing.weird_attributes attributes;
+            List.map attributes ~f:(translate_attr_pascaligo <@ r_fst) in
+          let field_lens = match field_lens with
+            | Lens_Id _ -> Lens_Id | Lens_Add _ -> Lens_Add
+            | Lens_Sub _ -> Lens_Sub | Lens_Mult _ -> Lens_Mult
+            | Lens_Div _ -> Lens_Div | Lens_Fun _ -> Lens_Fun
+          in
+          let field_lhs : AST.expr AST.selection list =
+            match field_lhs with
+            | CST.E_Var x -> (
+              let label = w_fst x in
+              [ AST.FieldName (Label.of_string label) ]
+            )
+            | CST.E_Proj {region ; value = {record_or_tuple = CST.E_Var v ; selector = _ ; field_path }} -> (
+              List.map (nsepseq_to_list field_path)
+                ~f:(function FieldName name -> AST.FieldName (Label.of_string (w_fst name))
+                            | Component x -> AST.Component_num (w_fst x))
+            )
+            | x -> failwith "raise.error (expected_field_or_access @@ CST.expr_to_region x)" 
+          in
+          let field_rhs = self field_rhs in
+          AST.Full_field {field_lhs;field_lens;field_rhs;attributes}
+        )
+        | CST.Punned {pun ; attributes} -> (
+          let attributes =
+            TODO_do_in_parsing.weird_attributes attributes;
+            List.map attributes ~f:(translate_attr_pascaligo <@ r_fst) in
+          match pun with
+          | CST.E_Var v ->Pun (Label.of_string (w_fst v), attributes)
+          | _ -> failwith "pun should be a string/label directly ?"
+        )
+      in
+      List.map (Utils.sepseq_to_list record_lhs.value.elements) ~f
+    )
+    | _ -> failwith "raise.error (wrong_functional_updator @@ CST.expr_to_region x)"
 end
 
-let translate_attr_pascaligo : CST.Attr.t -> AST.attribute = fun attr ->
-  let key, value = attr in
-  let value : string option = Option.map ~f:(fun (CST.Attr.String s) ->  s) value in
-  {key; value}
 
 let extract_type_params : CST.type_params CST.chevrons CST.reg -> Ligo_prim.Type_var.t nseq =
   fun tp ->
@@ -425,25 +491,19 @@ and extract_key : 'a. 'a CST.brackets CST.reg -> 'a =
 and compile_expression ~(raise: ('e, 'w) raise) : CST.expr -> AST.expr = fun e ->
   let self = compile_expression ~raise in
   let return e = e in
-  let e_constant_of_bin_op_reg (op_type : Ligo_prim.Constant.constant') (op : _ CST.bin_op CST.reg) =
-    let op, loc = r_split op in
-    let a = self op.arg1 in
-    let b = self op.arg2 in
-    e_constant ~loc (Const op_type) [a; b]
+  let compile_bin_op (op : _ CST.bin_op CST.reg) =
+    let CST.{op;arg1;arg2},loc = r_split op in
+    let (op,loc) = w_split op in
+    e_binary_op ~loc AST.{operator = Location.wrap ~loc op ; left = self arg1 ; right = self arg2} ()
   in
-  let e_constant_of_un_op_reg (op_type : Ligo_prim.Constant.constant') (op : _ CST.un_op CST.reg) =
-    let op, loc = r_split op in
-    let arg = self op.arg in
-    e_constant ~loc (Const op_type) [arg]
+  let compile_unary_op : (string CST.wrap) CST.un_op CST.reg -> AST.expr = fun op ->
+    let CST.{op;arg},loc = r_split op in
+    let (op,loc) = w_split op in
+    e_unary_op ~loc AST.{operator = Location.wrap ~loc op ; arg = self arg } ()
   in
-  let translate_selection : CST.selection -> AST.Z.t AST.selection = function
-  | FieldName name -> let (name, _)      = w_split name in FieldName name
-  | Component comp -> let ((_,index), _) = w_split comp in Component index
-  in
-  let translate_projection : CST.projection -> AST.projection = fun proj ->
+  let translate_projection : CST.projection -> AST.expr = fun proj ->
     let expr       = self proj.record_or_tuple in
-    let field_path = nseq_map translate_selection @@ nsepseq_to_nseq proj.field_path in
-    {expr; field_path}
+    TODO_unify_in_cst.nested_proj expr proj.field_path
   in
   let compile_param_decl : CST.param_decl -> AST.param_decl = fun p ->
     let param_kind = match p.param_kind with `Var _ -> `Var | `Const _ -> `Const in
@@ -456,48 +516,42 @@ and compile_expression ~(raise: ('e, 'w) raise) : CST.expr -> AST.expr = fun e -
       let var, loc = w_split var in
       e_variable (TODO_do_in_parsing.var ~loc var) ~loc ()
     )
-  | E_Par par -> (
+  | E_Par par ->
       let par, loc = r_split par in
-      let par = self par.inside in
-      e_par par ~loc ()
-    )
+      self par.inside
   | E_Bytes bytes_ -> (
       let bytes_, loc = w_split bytes_ in
       let (_s,b) = bytes_ in
       e_bytes_hex b ~loc
     )
-  | E_Cat cat -> (
-      let cat, loc = r_split cat in
-      let e1 = self cat.arg1 in
-      let e2 = self cat.arg2 in
-      e_cat e1 e2 ~loc ()
-    )
+
   | E_String str -> (
       let str, loc = w_split str in
-      e_string str ~loc ()
+      TODO_unify_in_cst.e_string str ~loc
     )
   | E_Verbatim str -> (
       let str, loc = w_split str in
-      e_verbatim str ~loc ()
+      TODO_unify_in_cst.e_verbatim str ~loc
     )
-  | E_Add plus   -> e_constant_of_bin_op_reg C_ADD plus
-  | E_Sub minus  -> e_constant_of_bin_op_reg C_POLYMORPHIC_SUB minus
-  | E_Mult times -> e_constant_of_bin_op_reg C_MUL times
-  | E_Div slash  -> e_constant_of_bin_op_reg C_DIV slash
-  | E_Mod mod_   -> e_constant_of_bin_op_reg C_MOD mod_
-  | E_Neg minus  -> e_constant_of_un_op_reg C_NEG minus
+  | E_Cat cat    -> compile_bin_op cat
+  | E_Add plus   -> compile_bin_op plus
+  | E_Sub minus  -> compile_bin_op minus
+  | E_Mult times -> compile_bin_op times
+  | E_Div slash  -> compile_bin_op slash
+  | E_Mod mod_   -> compile_bin_op mod_
+  | E_Neg minus  -> compile_unary_op minus
   | E_Int i      -> let (_,i), loc = w_split i in e_int_z   ~loc i
   | E_Nat n      -> let (_,n), loc = w_split n in e_nat_z   ~loc n
   | E_Mutez m    -> let (_,m), loc = w_split m in e_mutez_z ~loc (Z.of_int64 m)
-  | E_Or or_     -> e_constant_of_bin_op_reg C_OR  or_
-  | E_And and_   -> e_constant_of_bin_op_reg C_AND and_
-  | E_Not not_   -> e_constant_of_un_op_reg C_NOT not_
-  | E_Lt lt      -> e_constant_of_bin_op_reg C_LT  lt
-  | E_Leq le     -> e_constant_of_bin_op_reg C_LE  le
-  | E_Gt gt      -> e_constant_of_bin_op_reg C_GT  gt
-  | E_Geq ge     -> e_constant_of_bin_op_reg C_GE  ge
-  | E_Equal eq   -> e_constant_of_bin_op_reg C_EQ  eq
-  | E_Neq ne     -> e_constant_of_bin_op_reg C_NEQ ne
+  | E_Or or_     -> compile_bin_op or_
+  | E_And and_   -> compile_bin_op and_
+  | E_Not not_   -> compile_unary_op not_
+  | E_Lt lt      -> compile_bin_op lt
+  | E_Leq le     -> compile_bin_op le
+  | E_Gt gt      -> compile_bin_op gt
+  | E_Geq ge     -> compile_bin_op ge
+  | E_Equal eq   -> compile_bin_op eq
+  | E_Neq ne     -> compile_bin_op ne
   | E_Call call -> (
       let (func, args), loc = r_split call in
       let func = self func in
@@ -520,18 +574,17 @@ and compile_expression ~(raise: ('e, 'w) raise) : CST.expr -> AST.expr = fun e -
   | E_Record record -> (
       let record, loc = r_split record in
       let fields =
-        let translate_field_assign : (CST.expr, CST.expr) CST.field -> (expr, expr) AST.field = function
-        | Punned    p -> Punned (self p.pun)
-        | Complete  c -> Complete (self c.field_lhs, self c.field_rhs)
+        let translate_field_assign : (CST.expr, CST.expr) CST.field -> (_, expr) AST.field = function
+        | Punned    p -> Punned (TODO_do_in_parsing.expr_as_var p.pun)
+        | Complete  c -> Complete (TODO_do_in_parsing.expr_as_var c.field_lhs, self c.field_rhs)
         in
         List.map ~f:(translate_field_assign <@ r_fst) @@ sepseq_to_list record.elements
       in
-      e_recordpascaligo fields ~loc ()
+      e_record_pun fields ~loc ()
     )
   | E_Proj proj -> (
       let proj, loc = r_split proj in
-      let proj = translate_projection proj in
-      e_proj proj ~loc ()
+      translate_projection proj
     )
   | E_ModPath ma -> (
       let ma, loc = r_split ma in
@@ -542,8 +595,8 @@ and compile_expression ~(raise: ('e, 'w) raise) : CST.expr -> AST.expr = fun e -
   | E_Update up -> (
       let up, loc = r_split up in
       let structure = self up.structure in
-      let update    = self up.update in
-      e_updatepascaligo {structure; update} ~loc ()
+      let update    = TODO_unify_in_cst.update_rhs self up.update in
+      e_update {structure; update} ~loc ()
     )
   | E_Fun f -> (
       let f, loc = r_split f in
@@ -552,12 +605,12 @@ and compile_expression ~(raise: ('e, 'w) raise) : CST.expr -> AST.expr = fun e -
         @@ sepseq_to_list @@ (r_fst f.parameters).inside
       in
       let ret_type    = Option.map ~f:(compile_type_expression ~raise <@ snd) f.ret_type in
-      let return      = self f.return in
-      e_funpascaligo {type_params; parameters; ret_type; return} ~loc ()
+      let body      = self f.return in
+      e_poly_fun {type_params; parameters; ret_type; body} ~loc ()
     )
   | E_Ctor ctor -> (
       let ctor, loc = w_split ctor in
-      e_constr (ctor, None) ~loc ()
+      e_constr AST.Constructor.{constructor = Label.of_string ctor ; element = None} ~loc ()
     )
   | E_App app -> (
       let (func, args), loc = r_split app in
@@ -590,10 +643,10 @@ and compile_expression ~(raise: ('e, 'w) raise) : CST.expr -> AST.expr = fun e -
       e_list elements ~loc ()
     )
   | E_Cons cons -> (
-      let cons, loc = r_split cons in
-      let arg1 = self cons.arg1 in
-      let arg2 = self cons.arg2 in
-      e_cons (arg1, arg2) ~loc ()
+      let (CST.{op;arg1;arg2}, loc) = r_split cons in
+      let left  = self arg1 in
+      let right = self arg2 in
+      TODO_unify_in_cst.better_as_binop ~loc op (left,right)
     )
   | E_Set set -> (
       let set, loc = r_split set in
@@ -601,11 +654,11 @@ and compile_expression ~(raise: ('e, 'w) raise) : CST.expr -> AST.expr = fun e -
       e_set elements ~loc ()
     )
   | E_SetMem sm -> (
-      let (sm, loc) = r_split sm in
-      let set  = self sm.set in
-      let elem = self sm.element in
-      e_constant ~loc (Const C_SET_MEM) [elem;set]
-    )
+    let (sm, loc) = r_split sm in
+    let structure  = self sm.set in
+    let element = self sm.element in
+    TODO_unify_in_cst.better_as_binop ~loc sm.kwd_contains (structure,element)
+  )
   | E_MapLookup mlu -> (
       let mlu, loc = r_split mlu in
       let map  = self mlu.map in
@@ -640,7 +693,7 @@ and compile_expression ~(raise: ('e, 'w) raise) : CST.expr -> AST.expr = fun e -
         nseq_map (compile_statement ~raise) @@ nsepseq_to_nseq (r_fst be.block).statements
       in
       let expr  = self be.expr in
-      e_blockpascaligo {block; expr} ~loc ()
+      e_block_with {block; expr} ~loc ()
     )
   | E_Nil nil -> (
       let (_,loc) = w_split nil in

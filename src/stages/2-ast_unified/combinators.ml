@@ -80,5 +80,3 @@ let e_unit ?loc () : expression = make_e ?loc @@ E_Literal (Literal_unit)
 
 let e_bytes_raw ?loc (b: bytes) : expression = make_e ?loc @@ E_Literal (Literal_bytes b)
 let e_bytes_hex ?loc b : expression = e_bytes_raw ?loc @@ Hex.to_bytes b
-
-let e_constant ?loc name lst = make_e ?loc @@ E_Constant {cons_name=name ; arguments = lst}
