@@ -36,12 +36,10 @@
   TODO: This approach is naive, with a more sophisticated approach it is possible to descriminate between non-exhaustive/redundant/unused patterns
 *)
 
-let fold_map_expression = Ast_aggregated.Helpers.fold_map_expression
-let fold_expression = Helpers.fold_expression
-let map_expression = Helpers.map_expression
+let fold_map_expression = Ast_expanded.Helpers.fold_map_expression
 
 open Ligo_prim
-open Ast_aggregated
+open Ast_expanded
 module SimplMap = Simple_utils.Map.Make (Value_var)
 
 type simpl_map = (Label.t * Value_var.t) list SimplMap.t

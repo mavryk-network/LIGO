@@ -139,13 +139,18 @@ let apply_to_entrypoint_view ~raise ~options
   Self_ast_aggregated.remove_check_self e
 
 
-(* if only_ep, we only list the declarations with types fiting an entrypoint *)
+(*
+  if only_ep, we only list the declarations with types fiting an entrypoint
+  TODO (when we have module signature): extract declaration names from sig type
+*)
 let list_declarations (only_ep : bool) (m : Ast_typed.program) : Value_var.t list =
   List.fold_left
     ~f:(fun prev el ->
       let open Simple_utils.Location in
       match el.wrap_content with
-      | D_value { binder; attr; expr } when attr.public && not attr.hidden ->
+      | D_irrefutable_match { pattern = { wrap_content = P_var binder; _ }; attr; expr }
+      | D_value { binder; attr; expr }
+        when attr.public && not attr.hidden ->
         if only_ep
         then
           if is_some
@@ -153,7 +158,8 @@ let list_declarations (only_ep : bool) (m : Ast_typed.program) : Value_var.t lis
           then Binder.get_var binder :: prev
           else prev
         else Binder.get_var binder :: prev
-      | _ -> prev)
+      | D_value _ | D_irrefutable_match _ | D_type _ | D_module _ | D_open _ | D_include _
+        -> prev)
     ~init:[]
     m
 

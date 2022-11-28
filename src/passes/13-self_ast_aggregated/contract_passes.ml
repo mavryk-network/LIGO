@@ -14,8 +14,13 @@ let annotation_or_label annot label =
 
 
 let check_entrypoint_annotation_format ~raise ep (exp : expression) =
+  let allowed_annot_char c =
+    match c with
+    | 'a' .. 'z' | 'A' .. 'Z' | '_' | '.' | '%' | '@' | '0' .. '9' -> true
+    | _ -> false
+  in
   match String.split ~on:'%' ep with
-  | [ ""; ep' ] -> ep'
+  | [ ""; ep' ] when String.for_all ~f:allowed_annot_char ep' -> ep'
   | _ -> raise.error @@ Errors.bad_format_entrypoint_ann ep exp.location
 
 

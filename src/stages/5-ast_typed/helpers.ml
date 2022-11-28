@@ -290,10 +290,10 @@ let rec fold_map_expression : 'a fold_mapper -> 'a -> expression -> 'a * express
       let ab = lamb, args in
       let res, (a, b) = Pair.fold_map ~f:self ~init ab in
       res, return @@ E_application { lamb = a; args = b }
-    | E_let_in { let_binder; rhs; let_result; attr } ->
+    | E_let_in { let_binder; rhs; let_result; attributes } ->
       let res, rhs = self init rhs in
       let res, let_result = self res let_result in
-      res, return @@ E_let_in { let_binder; rhs; let_result; attr }
+      res, return @@ E_let_in { let_binder; rhs; let_result; attributes }
     | E_mod_in { module_binder; rhs; let_result } ->
       let res, let_result = self init let_result in
       let res, rhs = fold_map_expression_in_module_expr f res rhs in
@@ -319,10 +319,10 @@ let rec fold_map_expression : 'a fold_mapper -> 'a -> expression -> 'a * express
     | E_assign a ->
       let res, a = Assign.fold_map self self_type init a in
       res, return @@ E_assign a
-    | E_let_mut_in { let_binder; rhs; let_result; attr } ->
+    | E_let_mut_in { let_binder; rhs; let_result; attributes } ->
       let res, rhs = self init rhs in
       let res, let_result = self res let_result in
-      res, return @@ E_let_mut_in { let_binder; rhs; let_result; attr }
+      res, return @@ E_let_mut_in { let_binder; rhs; let_result; attributes }
     | E_for f ->
       let res, f = For_loop.fold_map self init f in
       res, return @@ E_for f
@@ -358,6 +358,10 @@ and fold_map_declaration m acc (x : declaration) =
   | D_value { binder; expr; attr } ->
     let acc', expr = fold_map_expression m acc expr in
     let wrap_content = D_value { binder; expr; attr } in
+    acc', { x with wrap_content }
+  | D_irrefutable_match { pattern; expr; attr } ->
+    let acc', expr = fold_map_expression m acc expr in
+    let wrap_content = D_irrefutable_match { pattern; expr; attr } in
     acc', { x with wrap_content }
   | D_type t ->
     let wrap_content = D_type t in
@@ -585,7 +589,13 @@ let get_views : program -> (Value_var.t * Location.t) list =
     | D_value { binder; expr = _; attr } when attr.view ->
       let var = Binder.get_var binder in
       (var, Value_var.get_location var) :: acc
-    | _ -> acc
+    | D_irrefutable_match { pattern = { wrap_content = P_var binder; _ }; expr = _; attr }
+      when attr.view ->
+      let var = Binder.get_var binder in
+      (var, Value_var.get_location var) :: acc
+    (* TODO: exhaustive here ... *)
+    | D_type _ | D_module _ | D_value _ | D_irrefutable_match _ | D_open _ | D_include _
+      -> acc
   in
   List.fold_right ~init:[] ~f p
 
@@ -593,9 +603,12 @@ let get_views : program -> (Value_var.t * Location.t) list =
 let fetch_view_type : declaration -> (type_expression * type_expression Binder.t) option =
  fun declt ->
   match Location.unwrap declt with
-  | D_value { binder; expr; attr } when attr.view ->
+  | D_value { binder; expr; attr }
+  | D_irrefutable_match { pattern = { wrap_content = P_var binder; _ }; expr; attr }
+    when attr.view ->
     Some (expr.type_expression, Binder.map (fun _ -> expr.type_expression) binder)
-  | _ -> None
+  | D_value _ | D_irrefutable_match _ | D_type _ | D_module _ | D_open _ | D_include _ ->
+    None
 
 
 let fetch_views_in_program : program -> (type_expression * type_expression Binder.t) list =

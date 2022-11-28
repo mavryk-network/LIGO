@@ -82,7 +82,8 @@ let error_ppformat
         f
         "@[<hv>%a@.Invalid entrypoint \"%s\". One of the following patterns is \
          expected:@.* \"%%bar\" is expected for entrypoint \"Bar\"@.* \"%%default\" when \
-         no entrypoint is used."
+         no entrypoint is used.@.Valid characters in annotation: ('a' .. 'z' | 'A' .. \
+         'Z' | '_' | '.' | '%%' | '@' | '0' .. '9')."
         Snippet.pp
         loc
         ep

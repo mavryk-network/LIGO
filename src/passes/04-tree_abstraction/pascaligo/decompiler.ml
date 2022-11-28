@@ -437,8 +437,8 @@ and decompile_eos
       let ty = decompile_type_expr @@ AST.t_key_hash () in
       return_typed kh ty
     | Literal_chain_id _ | Literal_operation _ ->
-      failwith "chain_id, operation are not created currently ?"
-      (* TODO : REMOVE THIS!! *)
+      failwith
+        "chain_id, operation are not created currently ?" (* TODO : REMOVE THIS!! *)
     | Literal_bls12_381_g1 b ->
       let b = Hex.of_bytes b in
       let s = Hex.to_string b in
@@ -481,7 +481,25 @@ and decompile_eos
   | E_recursive _ ->
     failwith "corner case : annonymous recursive function" (* TODO : REMOVE THIS!! *)
   | E_let_in { let_binder; rhs; let_result; attributes } ->
-    let lin = decompile_to_data_decl let_binder rhs attributes in
+    let lin =
+      let attributes = Shared_helpers.decompile_attributes attributes in
+      let wrap_attr x =
+        List.fold ~f:(fun acc attr -> CST.D_Attr (attr, acc)) ~init:x attributes
+      in
+      let pattern = decompile_pattern let_binder in
+      let init = decompile_expression rhs in
+      let const_decl : CST.const_decl =
+        { kwd_const = Token.ghost_const
+        ; pattern
+        ; type_params = None
+        ; const_type = None
+        ; equal = Token.ghost_eq
+        ; init
+        ; terminator
+        }
+      in
+      wrap_attr @@ CST.D_Const (Region.wrap_ghost const_decl)
+    in
     let lst, expr = decompile_eos Expression let_result in
     let lst =
       match lst with
@@ -805,15 +823,17 @@ and decompile_eos
     let while_ : CST.while_loop = { kwd_while = Token.ghost_while; cond; block } in
     return_inst @@ CST.I_While (Region.wrap_ghost while_)
   | E_let_mut_in { let_binder; rhs; let_result; _ } ->
-    let pattern = CST.P_Var (decompile_variable @@ Binder.get_var let_binder) in
-    let var_type =
-      Option.map ~f:(prefix_colon <@ decompile_type_expr) @@ Binder.get_ascr let_binder
+    let pattern =
+      match let_binder.wrap_content with
+      | P_var x -> Binder.get_ascr x
+      | P_unit | P_list _ | P_variant (_, _) | P_tuple _ | P_record _ -> None
     in
+    let var_type = Option.map ~f:(prefix_colon <@ decompile_type_expr) @@ pattern in
     let rhs = decompile_expression rhs in
     let var_decl =
       Region.wrap_ghost
       @@ { CST.kwd_var = Token.ghost_var
-         ; pattern
+         ; pattern = decompile_pattern let_binder
          ; type_params = None
          ; var_type
          ; assign = Token.ghost_ass
@@ -1009,6 +1029,21 @@ and decompile_declaration : AST.declaration -> CST.declaration =
         }
       in
       wrap_attr attributes @@ CST.D_Const (Region.wrap_ghost const_decl))
+  | D_irrefutable_match { pattern; attr; expr } ->
+    let attributes = Shared_helpers.decompile_attributes attr in
+    let pattern = decompile_pattern pattern in
+    let init = decompile_expression expr in
+    let const_decl : CST.const_decl =
+      { kwd_const = Token.ghost_const
+      ; pattern
+      ; type_params = None
+      ; const_type = None
+      ; equal = Token.ghost_eq
+      ; init
+      ; terminator
+      }
+    in
+    wrap_attr attributes @@ CST.D_Const (Region.wrap_ghost const_decl)
   | D_module { module_binder; module_; module_attr } ->
     let module_attr = Shared_helpers.decompile_attributes module_attr in
     let module_decl : CST.module_decl =

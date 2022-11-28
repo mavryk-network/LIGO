@@ -223,9 +223,10 @@ let parameter
         app_typed_prg
         entry_point
     in
-    let mini_c =
+    let expanded =
       Ligo_compile.Of_aggregated.compile_expression ~raise aggregated_contract
     in
+    let mini_c = Ligo_compile.Of_expanded.compile_expression ~raise expanded in
     let michelson = Ligo_compile.Of_mini_c.compile_contract ~raise ~options mini_c in
     (* fails if the given entry point is not a valid contract *)
     Ligo_compile.Of_michelson.build_contract
@@ -243,9 +244,10 @@ let parameter
       typed_prg
       typed_param
   in
-  let mini_c_param =
+  let expanded_param =
     Ligo_compile.Of_aggregated.compile_expression ~raise aggregated_param
   in
+  let mini_c_param = Ligo_compile.Of_expanded.compile_expression ~raise expanded_param in
   let compiled_param =
     Ligo_compile.Of_mini_c.compile_expression ~raise ~options mini_c_param
   in
@@ -322,9 +324,10 @@ let storage
         app_typed_prg
         entry_point
     in
-    let mini_c =
+    let expanded =
       Ligo_compile.Of_aggregated.compile_expression ~raise aggregated_contract
     in
+    let mini_c = Ligo_compile.Of_expanded.compile_expression ~raise expanded in
     let michelson = Ligo_compile.Of_mini_c.compile_contract ~raise ~options mini_c in
     (* fails if the given entry point is not a valid contract *)
     Ligo_compile.Of_michelson.build_contract
@@ -342,9 +345,10 @@ let storage
       typed_prg
       typed_param
   in
-  let mini_c_param =
+  let expanded_param =
     Ligo_compile.Of_aggregated.compile_expression ~raise aggregated_param
   in
+  let mini_c_param = Ligo_compile.Of_expanded.compile_expression ~raise expanded_param in
   let compiled_param =
     Ligo_compile.Of_mini_c.compile_expression ~raise ~options mini_c_param
   in

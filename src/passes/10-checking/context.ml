@@ -276,7 +276,11 @@ and add_include t mctx =
   List.fold_left ~f:(fun t ctx -> add_signature_item t ctx) ~init:t mctx
 
 
-let get_value t var =
+let add_signature_items t (sig_items : Signature.item list) =
+  List.fold ~f:add_signature_item ~init:t (List.rev sig_items)
+
+
+let get_value =
   memoize2
     hashable
     (module Value_var)
@@ -292,8 +296,6 @@ let get_value t var =
         | [] -> Error `Not_found
       in
       loop t)
-    t
-    var
 
 
 let get_imm =

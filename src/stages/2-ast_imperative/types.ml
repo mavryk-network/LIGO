@@ -40,6 +40,9 @@ module Attr = struct
   let pp ppf lst =
     let attr = List.map ~f:(fun attr -> "[@@" ^ attr ^ "]") lst |> String.concat in
     Format.fprintf ppf "%s" attr
+
+
+  let default_attributes = []
 end
 
 module Value_decl = Value_decl (Attr)
@@ -47,15 +50,17 @@ module Type_decl = Type_decl (Attr)
 module Module_decl = Module_decl (Attr)
 module Accessor = Accessor (Access_path)
 module Update = Update (Access_path)
-module Pattern = Pattern.Make (Label.Assoc) ()
+module Pattern = Non_linear_pattern
 module Match_expr = Match_expr.Make (Pattern)
+module Pattern_decl = Pattern_decl (Pattern) (Attr)
+module Let_in = Let_in.Make (Pattern) (Attr)
 
 type expression_content =
   (* Base *)
   | E_variable of Value_var.t
   | E_literal of Literal_value.t
-  | E_constant of expr constant
-    (* For language constants, like (Cons hd tl) or (plus i j) *)
+  | E_constant of
+      expr constant (* For language constants, like (Cons hd tl) or (plus i j) *)
   | E_application of expr Application.t
   | E_lambda of (expr, ty_expr option) Lambda.t
   | E_type_abstraction of expr Type_abs.t
@@ -105,6 +110,7 @@ and expr = expression [@@deriving eq, compare, yojson, hash]
 
 and declaration_content =
   | D_value of (expr, ty_expr option) Value_decl.t
+  | D_irrefutable_match of (expr, ty_expr option) Pattern_decl.t
   | D_type of ty_expr Type_decl.t
   | D_module of module_expr Module_decl.t
   | D_open of module_expr Open_module.t

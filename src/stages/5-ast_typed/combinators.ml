@@ -629,8 +629,8 @@ let e_a_application lamb args t = e_application { lamb; args } t
 let e_a_lambda l in_ty out_ty = e_lambda l (t_arrow in_ty out_ty ())
 let e_a_recursive l = e_recursive l l.fun_type
 
-let e_a_let_in let_binder rhs let_result attr =
-  e_let_in { let_binder; rhs; let_result; attr } (get_type let_result)
+let e_a_let_in let_binder rhs let_result attributes =
+  e_let_in { let_binder; rhs; let_result; attributes } (get_type let_result)
 
 
 let e_a_raw_code language code t = e_raw_code { language; code } t

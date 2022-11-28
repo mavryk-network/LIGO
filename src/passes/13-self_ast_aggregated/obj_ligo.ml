@@ -92,7 +92,9 @@ let check_obj_ligo ~raise ?(blacklist = []) (t : AST.expression) : unit =
 let check_obj_ligo_program ~raise ?(blacklist = []) ((ctxt, e) : AST.program) : unit =
   let f decl () =
     match Location.unwrap decl with
-    | AST.D_value { binder = _; expr; attr = _ } -> check_obj_ligo ~raise ~blacklist expr
+    | AST.D_value { binder = _; expr; attr = _ }
+    | AST.D_irrefutable_match { pattern = _; expr; attr = _ } ->
+      check_obj_ligo ~raise ~blacklist expr
   in
   let () = List.fold_right ctxt ~f ~init:() in
   check_obj_ligo ~raise ~blacklist e
@@ -121,7 +123,7 @@ let check_obj_ligo_program ~raise ?(blacklist = []) ((ctxt, e) : AST.program) : 
     ```
 
     when encountering the <rest>, [purge_meta_ligo] will fail on any meta-ligo constructors
-    
+
     e.g.
 
     ```
@@ -138,7 +140,7 @@ let check_obj_ligo_program ~raise ?(blacklist = []) ((ctxt, e) : AST.program) : 
     (fun _ -> 2) (Test.log y)
     ```
     | -> FAIL
-    
+
 *)
 let purge_meta_ligo_program ~raise ((ctxt, e) : AST.program) : AST.program =
   let f (blacklist, ctxt) decl =
@@ -147,6 +149,16 @@ let purge_meta_ligo_program ~raise ((ctxt, e) : AST.program) : AST.program =
       let expr_is_meta = not (Trace.to_bool (check_obj_ligo ~blacklist expr)) in
       let blacklist =
         if expr_is_meta then (binder, expr.location) :: blacklist else blacklist
+      in
+      if expr_is_meta then blacklist, ctxt else blacklist, decl :: ctxt
+    | AST.D_irrefutable_match { pattern; expr; attr = _ } ->
+      let expr_is_meta = not (Trace.to_bool (check_obj_ligo ~blacklist expr)) in
+      let blacklist =
+        if expr_is_meta
+        then
+          List.map (AST.Pattern.binders pattern) ~f:(fun b -> b, expr.location)
+          @ blacklist
+        else blacklist
       in
       if expr_is_meta then blacklist, ctxt else blacklist, decl :: ctxt
   in

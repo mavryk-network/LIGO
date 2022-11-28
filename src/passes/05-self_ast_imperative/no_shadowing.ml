@@ -8,12 +8,14 @@ open Simple_utils.Trace
 let rec check_block_scope ~raise vars types mods e =
   match e.expression_content with
   | E_let_in { let_binder; rhs; let_result; _ } ->
-    let var = Binder.get_var let_binder in
-    if List.mem ~equal:Value_var.equal vars var
-    then raise.error @@ no_shadowing e.location
-    else (
-      check_block_scope ~raise [] [] [] rhs;
-      check_block_scope ~raise (var :: vars) types mods let_result)
+    let binders = List.map ~f:Binder.get_var (Pattern.binders let_binder) in
+    let () =
+      List.iter binders ~f:(fun var ->
+          if List.mem ~equal:Value_var.equal vars var
+          then raise.error @@ no_shadowing e.location)
+    in
+    check_block_scope ~raise [] [] [] rhs;
+    check_block_scope ~raise (binders @ vars) types mods let_result
   | E_type_in { type_binder; let_result; _ } ->
     if List.mem ~equal:Type_var.equal types type_binder
     then raise.error @@ no_shadowing e.location
@@ -34,25 +36,34 @@ let peephole_expression ~raise : expression -> expression =
 
 let peephole_program ~raise : program -> program =
  fun m ->
-  let self (m : program) =
-    let rec aux vars types mods = function
-      | Location.{ wrap_content = D_value t; location } :: remaining ->
-        let var = Binder.get_var t.binder in
+  let rec aux vars types mods = function
+    | Location.{ wrap_content = D_value t; location } :: remaining ->
+      let var = Binder.get_var t.binder in
+      let () =
         if List.mem ~equal:Value_var.equal vars var
-        then raise.error @@ no_shadowing location
-        else aux (var :: vars) types mods remaining
-      | { wrap_content = D_type t; location } :: remaining ->
-        if List.mem ~equal:Type_var.equal types t.type_binder
-        then raise.error @@ no_shadowing location
-        else aux vars (t.type_binder :: types) mods remaining
-      | { wrap_content = D_module t; location } :: remaining ->
-        let mod_ = t.module_binder in
-        if List.mem ~equal:Module_var.equal mods mod_
-        then raise.error @@ no_shadowing location
-        else aux vars types (mod_ :: mods) remaining
-      | { wrap_content = D_open { module_ = _ }; location = _ } :: remaining
-      | { wrap_content = D_include { module_ = _ }; location = _ } :: remaining ->
-        (*
+        then raise.error (no_shadowing location)
+      in
+      aux (var :: vars) types mods remaining
+    | Location.{ wrap_content = D_irrefutable_match t; location } :: remaining ->
+      let pattern_vars = List.map ~f:Binder.get_var (Pattern.binders t.pattern) in
+      let () =
+        List.iter pattern_vars ~f:(fun var ->
+            if List.mem ~equal:Value_var.equal vars var
+            then raise.error (no_shadowing location))
+      in
+      aux (pattern_vars @ vars) types mods remaining
+    | { wrap_content = D_type t; location } :: remaining ->
+      if List.mem ~equal:Type_var.equal types t.type_binder
+      then raise.error @@ no_shadowing location
+      else aux vars (t.type_binder :: types) mods remaining
+    | { wrap_content = D_module t; location } :: remaining ->
+      let mod_ = t.module_binder in
+      if List.mem ~equal:Module_var.equal mods mod_
+      then raise.error @@ no_shadowing location
+      else aux vars types (mod_ :: mods) remaining
+    | { wrap_content = D_open { module_ = _ }; location = _ } :: remaining
+    | { wrap_content = D_include { module_ = _ }; location = _ } :: remaining ->
+      (*
         let vars', types', mods' = self module_ in
         let vars, types, mods = vars' @ vars, types' @ types, mods' @ mods in
         (match
@@ -63,11 +74,8 @@ let peephole_program ~raise : program -> program =
         | None, None, None -> aux vars types mods remaining
         | _, _, _ -> raise.error @@ no_shadowing location)
         *)
-        aux vars types mods remaining
-      | [] -> vars, types, mods
-    in
-    let vars, types, mods = aux [] [] [] m in
-    vars, types, mods
+      aux vars types mods remaining
+    | [] -> ()
   in
-  let _, _, _ = self m in
+  aux [] [] [] m;
   m

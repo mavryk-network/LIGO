@@ -2,7 +2,8 @@
 module Label = Label
 module Binder = Binder
 module Param = Param
-module Pattern = Pattern
+module Linear_pattern = Pattern.Linear_pattern
+module Non_linear_pattern = Pattern.Non_linear_pattern
 module Access_path = Access_path
 module Layout = Layout
 module Layout_var = Var.Layout_var
@@ -61,6 +62,9 @@ module Open_module = Open_module
 module Value_decl (Attr : Declaration.Attr) = Declaration.Value_decl (Attr)
 module Type_decl (Attr : Declaration.Attr) = Declaration.Type_decl (Attr)
 module Module_decl (Attr : Declaration.Attr) = Declaration.Module_decl (Attr)
+
+module Pattern_decl (Pattern : Pattern.S) (Attr : Declaration.Attr) =
+  Declaration.Pattern_decl (Pattern) (Attr)
 
 (* Misc *)
 module Error = Error

@@ -10,9 +10,8 @@ let decompile_value ~raise (output_type : Ast_aggregated.type_expression) (ty, v
   let aggregated =
     trace ~raise main_decompile_mini_c @@ Spilling.decompile mini_c output_type
   in
-  let typed =
-    trace ~raise main_decompile_aggregated @@ Aggregation.decompile aggregated
-  in
+  let pat = Expansion.decompile aggregated in
+  let typed = Aggregation.decompile pat in
   let core = Checking.untype_expression typed in
   core
 

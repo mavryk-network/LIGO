@@ -24,7 +24,7 @@ let pp h ppf = function
   | M_struct p ->
     Format.fprintf
       ppf
-      "@[<v>struct@,%a@,end @]"
+      "@[<v>struct@,%a@,end@]"
       Simple_utils.PP_helpers.(list_sep h (tag "@,"))
       p
   | M_variable x -> Var.Module_var.pp ppf x

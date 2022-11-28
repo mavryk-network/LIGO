@@ -59,7 +59,8 @@ let dry_run
       typed_prg
       entry_point
   in
-  let mini_c_prg = Compile.Of_aggregated.compile_expression ~raise aggregated_prg in
+  let expanded_prg = Compile.Of_aggregated.compile_expression ~raise aggregated_prg in
+  let mini_c_prg = Compile.Of_expanded.compile_expression ~raise expanded_prg in
   let compile_exp = Compile.Of_mini_c.compile_contract ~raise ~options mini_c_prg in
   let parameter_ty =
     (* fails if the given entry point is not a valid contract *)
@@ -174,7 +175,8 @@ let evaluate_call
       init_prog
       typed_app
   in
-  let app_mini_c = Compile.Of_aggregated.compile_expression ~raise app_aggregated in
+  let app_expanded = Compile.Of_aggregated.compile_expression ~raise app_aggregated in
+  let app_mini_c = Compile.Of_expanded.compile_expression ~raise app_expanded in
   let michelson = Compile.Of_mini_c.compile_expression ~raise ~options app_mini_c in
   let options =
     Run.make_dry_run_options
