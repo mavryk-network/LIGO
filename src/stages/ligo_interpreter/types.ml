@@ -63,9 +63,7 @@ module Generator = struct
 end
 
 type mcode = unit Tezos_utils.Michelson.michelson [@@deriving yojson]
-
-type mutation = Location.t * Ast_aggregated.expression * string
-[@@deriving yojson]
+type mutation = Location.t * Ast_aggregated.expression * string [@@deriving yojson]
 
 type contract =
   { address : Contract.t

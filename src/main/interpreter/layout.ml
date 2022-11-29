@@ -12,11 +12,7 @@ let extract_record
   : _ list
   =
   trace ~raise Main_errors.spilling_tracer
-  @@ Spilling.Layout.extract_record
-       ~layout
-       v
-       lst
-       Ligo_interpreter.Combinators.get_pair
+  @@ Spilling.Layout.extract_record ~layout v lst Ligo_interpreter.Combinators.get_pair
 
 
 let extract_constructor
@@ -47,19 +43,8 @@ let constructor_to_lr
   @@ Spilling.Layout.constructor_to_lr ~layout ty fields ctor
 
 
-let record_to_pairs
-  ~raise
-  (compile_expression : _ -> 'exp)
-  e_pair
-  e_tuple
-  record_t
-  record
+let record_to_pairs ~raise (compile_expression : _ -> 'exp) e_pair e_tuple record_t record
   : _
   =
   trace ~raise Main_errors.spilling_tracer
-  @@ Spilling.Layout.record_to_pairs
-       compile_expression
-       e_pair
-       e_tuple
-       record_t
-       record
+  @@ Spilling.Layout.record_to_pairs compile_expression e_pair e_tuple record_t record

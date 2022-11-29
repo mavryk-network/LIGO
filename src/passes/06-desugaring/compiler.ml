@@ -6,12 +6,10 @@ module I = Ast_imperative
 module O = Ast_core
 
 let is_layout = String.chop_prefix ~prefix:"layout:"
-
 let is_michelson_annotation = String.chop_prefix ~prefix:"annot:"
 
 let compile_row_elem_attributes : string list -> string option =
- fun attributes ->
-  List.find_map attributes ~f:(fun attr -> is_michelson_annotation attr)
+ fun attributes -> List.find_map attributes ~f:(fun attr -> is_michelson_annotation attr)
 
 
 let compile_value_attributes : I.Attr.t -> O.ValueAttr.t =
@@ -56,15 +54,13 @@ let compile_module_attributes = compile_type_attributes
 let compile_row_attributes : string list -> Layout.t option =
  fun attributes ->
   List.find_map attributes ~f:(fun attr ->
-      match is_layout attr with
-      | Some "tree" -> Some (Layout.L_tree : Layout.t)
-      | Some "comb" -> Some Layout.L_comb
-      | _ -> None)
+    match is_layout attr with
+    | Some "tree" -> Some (Layout.L_tree : Layout.t)
+    | Some "comb" -> Some Layout.L_comb
+    | _ -> None)
 
 
-let rec compile_type_expression ~raise (type_ : I.type_expression)
-    : O.type_expression
-  =
+let rec compile_type_expression ~raise (type_ : I.type_expression) : O.type_expression =
   let loc = type_.location in
   let compile_type_expression = compile_type_expression ~raise in
   let compile_row = compile_row ~raise in
@@ -86,12 +82,10 @@ let rec compile_type_expression ~raise (type_ : I.type_expression)
   | I.T_app { type_operator; arguments = [ l; r ] }
     when Type_var.equal Literal_types.v_michelson_or type_operator ->
     let l, l_ann =
-      trace_option ~raise (corner_case "not an annotated type")
-      @@ I.get_t_annoted l
+      trace_option ~raise (corner_case "not an annotated type") @@ I.get_t_annoted l
     in
     let r, r_ann =
-      trace_option ~raise (corner_case "not an annotated type")
-      @@ I.get_t_annoted r
+      trace_option ~raise (corner_case "not an annotated type") @@ I.get_t_annoted r
     in
     let l = compile_type_expression l in
     let r = compile_type_expression r in
@@ -99,12 +93,10 @@ let rec compile_type_expression ~raise (type_ : I.type_expression)
   | I.T_app { type_operator; arguments = [ l; r ] }
     when Type_var.equal Literal_types.v_michelson_pair type_operator ->
     let l, l_ann =
-      trace_option ~raise (corner_case "not an annotated type")
-      @@ I.get_t_annoted l
+      trace_option ~raise (corner_case "not an annotated type") @@ I.get_t_annoted l
     in
     let r, r_ann =
-      trace_option ~raise (corner_case "not an annotated type")
-      @@ I.get_t_annoted r
+      trace_option ~raise (corner_case "not an annotated type") @@ I.get_t_annoted r
     in
     let l = compile_type_expression l in
     let r = compile_type_expression r in
@@ -131,9 +123,9 @@ and compile_row ~raise ({ fields; attributes } : _ I.non_linear_rows) : O.rows =
            ({ associated_type; decl_pos; attributes } : _ Rows.row_element)
            : _ Rows.row_element_mini_c
          ->
-        let associated_type = compile_type_expression ~raise associated_type in
-        let michelson_annotation = compile_row_elem_attributes attributes in
-        { associated_type; decl_pos; michelson_annotation })
+      let associated_type = compile_type_expression ~raise associated_type in
+      let michelson_annotation = compile_row_elem_attributes attributes in
+      { associated_type; decl_pos; michelson_annotation })
     |> Record.of_list
   in
   let layout = compile_row_attributes attributes in
@@ -144,13 +136,10 @@ and desugar_tuple_to_row ~raise (tuple : I.type_expression list) : O.rows =
   let fields =
     tuple
     |> List.mapi ~f:(fun i type_ ->
-           let type_ = compile_type_expression ~raise type_ in
-           ( Label.of_int i
-           , ({ associated_type = type_
-              ; michelson_annotation = None
-              ; decl_pos = i
-              }
-               : _ Rows.row_element_mini_c) ))
+         let type_ = compile_type_expression ~raise type_ in
+         ( Label.of_int i
+         , ({ associated_type = type_; michelson_annotation = None; decl_pos = i }
+             : _ Rows.row_element_mini_c) ))
     |> Record.of_list
   in
   { fields; layout = None }
@@ -209,9 +198,7 @@ let rec compile_expression ~raise : I.expression -> O.expression =
     let match_expr = compile_match_expr ~raise match_expr in
     return @@ O.E_matching match_expr
   | I.E_record record ->
-    let record =
-      record |> List.map ~f:(fun (l, e) -> l, self e) |> Record.of_list
-    in
+    let record = record |> List.map ~f:(fun (l, e) -> l, self e) |> Record.of_list in
     return @@ O.E_record record
   | I.E_accessor { struct_; path } ->
     let struct_ = self struct_ in
@@ -263,11 +250,9 @@ let rec compile_expression ~raise : I.expression -> O.expression =
     list_expr
     |> List_expr.map self
     |> List.fold_right
-         ~init:
-           (return @@ E_constant { cons_name = C_LIST_EMPTY; arguments = [] })
+         ~init:(return @@ E_constant { cons_name = C_LIST_EMPTY; arguments = [] })
          ~f:(fun elem list ->
-           return
-           @@ E_constant { cons_name = C_CONS; arguments = [ elem; list ] })
+           return @@ E_constant { cons_name = C_CONS; arguments = [ elem; list ] })
   | I.E_set set_expr ->
     set_expr
     |> Set_expr.dedup_and_sort ~compare:I.compare_expression
@@ -275,8 +260,7 @@ let rec compile_expression ~raise : I.expression -> O.expression =
     |> List.fold
          ~init:(return @@ E_constant { cons_name = C_SET_EMPTY; arguments = [] })
          ~f:(fun set elem ->
-           return
-           @@ E_constant { cons_name = C_SET_ADD; arguments = [ elem; set ] })
+           return @@ E_constant { cons_name = C_SET_ADD; arguments = [ elem; set ] })
   | I.E_ascription ascr ->
     let ascr = Ascription.map self self_type ascr in
     return @@ O.E_ascription ascr
@@ -317,19 +301,19 @@ let rec compile_expression ~raise : I.expression -> O.expression =
 
 
 and compile_match_expr ~raise
-    :  (I.expression, I.type_expression option) I.Match_expr.t
-    -> (O.expression, O.type_expression option) O.Match_expr.t
+  :  (I.expression, I.type_expression option) I.Match_expr.t
+  -> (O.expression, O.type_expression option) O.Match_expr.t
   =
  fun { matchee; cases } ->
   let matchee = compile_expression ~raise matchee in
   let cases =
     List.map cases ~f:(fun { pattern; body } ->
-        let pattern =
-          I.Pattern.map (Option.map ~f:(compile_type_expression ~raise)) pattern
-        in
-        let pattern = compile_pattern ~raise pattern in
-        let body = compile_expression ~raise body in
-        O.Match_expr.{ pattern; body })
+      let pattern =
+        I.Pattern.map (Option.map ~f:(compile_type_expression ~raise)) pattern
+      in
+      let pattern = compile_pattern ~raise pattern in
+      let body = compile_expression ~raise body in
+      O.Match_expr.{ pattern; body })
   in
   O.Match_expr.{ matchee; cases }
 
@@ -369,8 +353,7 @@ and desugar_map_expr_to_consts ~loc ~(empty : Constant.constant') map_expr =
   |> List.fold_right
        ~init:(return @@ E_constant { cons_name = empty; arguments = [] })
        ~f:(fun (key, data) map ->
-         return
-         @@ E_constant { cons_name = C_MAP_ADD; arguments = [ key; data; map ] })
+         return @@ E_constant { cons_name = C_MAP_ADD; arguments = [ key; data; map ] })
 
 
 and desugar_cond_to_match ~loc condition then_clause else_clause =
@@ -439,9 +422,7 @@ and compile_module_expr ~raise : I.module_expr -> O.module_expr =
   | M_module_path mp -> return @@ M_module_path mp
 
 
-and compile_decl ~raise : I.decl -> O.decl =
- fun d -> compile_declaration ~raise d
-
+and compile_decl ~raise : I.decl -> O.decl = fun d -> compile_declaration ~raise d
 
 and compile_module ~raise : I.module_ -> O.module_ =
  fun m -> List.map ~f:(compile_decl ~raise) m

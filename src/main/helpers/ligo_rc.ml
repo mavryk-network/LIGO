@@ -20,20 +20,18 @@ let read ~ligorc_path =
     let r = Str.regexp "//\\(.*\\):_authToken=\"\\(.*\\)\"" in
     let entries =
       List.fold_left entries ~init:SMap.empty ~f:(fun lrc e ->
-          if Str.string_match r e 0
-          then (
-            let uri = Str.matched_group 1 e in
-            let token = Str.matched_group 2 e in
-            SMap.add uri token lrc)
-          else lrc)
+        if Str.string_match r e 0
+        then (
+          let uri = Str.matched_group 1 e in
+          let token = Str.matched_group 2 e in
+          SMap.add uri token lrc)
+        else lrc)
     in
     { entries; path = ligorc_path }
 
 
 let update_token ~registry_key ~token ligorc =
-  { ligorc with
-    entries = SMap.update registry_key (fun _ -> Some token) ligorc.entries
-  }
+  { ligorc with entries = SMap.update registry_key (fun _ -> Some token) ligorc.entries }
 
 
 let write ligorc =

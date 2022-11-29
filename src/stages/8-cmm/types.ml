@@ -2,7 +2,6 @@ open Ligo_prim
 module Location = Simple_utils.Location
 
 type 'a annotated = string option * 'a
-
 type symbol = string
 
 type type_content =
@@ -20,11 +19,11 @@ type type_content =
   | T_sapling_transaction of Z.t
   | T_option of type_expression
 
-and type_expression = {
-  type_content : type_content;
-  location : Location.t;
-  source_type : Ast_typed.type_expression option;
-}
+and type_expression =
+  { type_content : type_content
+  ; location : Location.t
+  ; source_type : Ast_typed.type_expression option
+  }
 
 and type_base =
   | TB_unit
@@ -54,9 +53,7 @@ and type_base =
   | TB_type_int of Z.t
 
 and environment_element = Value_var.t * type_expression
-
 and environment = environment_element list
-
 and var_name = Value_var.t
 and fun_name = Value_var.t
 
@@ -89,26 +86,35 @@ and selector = var_name list
 and expression_content =
   | C_store
   | C_load
-  | C_alloc 
+  | C_alloc
   | C_int of int32
   | C_symbol of symbol
   | C_sequence of expression * expression
-
   (* | E_literal of Literal_value.t *)
   | E_closure of anon_function
   | E_constant of constant
   | E_application of (expression * expression)
   | E_variable of var_name
-  | E_iterator of Constant.constant' * ((var_name * type_expression) * expression) * expression
-  | E_fold     of (((var_name * type_expression) * expression) * expression * expression)
-  | E_fold_right of (((var_name * type_expression) * expression) * (expression * type_expression) * expression)
-  | E_if_bool  of (expression * expression * expression)
-  | E_if_none  of expression * expression * ((var_name * type_expression) * expression)
-  | E_if_cons  of expression * expression * (((var_name * type_expression) * (var_name * type_expression)) * expression)
-  | E_if_left  of expression * ((var_name * type_expression) * expression) * ((var_name * type_expression) * expression)
-  | E_let_in   of expression * inline * ((var_name * type_expression) * expression)
+  | E_iterator of
+      Constant.constant' * ((var_name * type_expression) * expression) * expression
+  | E_fold of (((var_name * type_expression) * expression) * expression * expression)
+  | E_fold_right of
+      (((var_name * type_expression) * expression)
+      * (expression * type_expression)
+      * expression)
+  | E_if_bool of (expression * expression * expression)
+  | E_if_none of expression * expression * ((var_name * type_expression) * expression)
+  | E_if_cons of
+      expression
+      * expression
+      * (((var_name * type_expression) * (var_name * type_expression)) * expression)
+  | E_if_left of
+      expression
+      * ((var_name * type_expression) * expression)
+      * ((var_name * type_expression) * expression)
+  | E_let_in of expression * inline * ((var_name * type_expression) * expression)
   | E_tuple of expression list
-  | E_let_tuple of expression * (((var_name * type_expression) list) * expression)
+  | E_let_tuple of expression * ((var_name * type_expression) list * expression)
   (* E_proj (record, index, field_count): we use the field_count to
      know whether the index is the last field or not, since Michelson
      treats the last element of a comb differently than the rest. We
@@ -118,55 +124,60 @@ and expression_content =
   | E_proj of expression * int * int
   (* E_update (record, index, update, field_count): field_count as for E_proj *)
   | E_update of expression * int * expression * int
-  | E_raw_michelson of (Location.t, string) Tezos_micheline.Micheline.node list * expression list
-  | E_raw_wasm of (WasmObjectFile.Ast.symbol * WasmObjectFile.Types.value_type) list * WasmObjectFile.Ast.instr list * WasmObjectFile.Ast.instr list
+  | E_raw_michelson of
+      (Location.t, string) Tezos_micheline.Micheline.node list * expression list
+  | E_raw_wasm of
+      (WasmObjectFile.Ast.symbol * WasmObjectFile.Types.value_type) list
+      * WasmObjectFile.Ast.instr list
+      * WasmObjectFile.Ast.instr list
   (* E_global_constant (hash, args) *)
   | E_global_constant of string * expression list
-  | E_create_contract of type_expression * type_expression * ((var_name * type_expression) * expression) * expression list
+  | E_create_contract of
+      type_expression
+      * type_expression
+      * ((var_name * type_expression) * expression)
+      * expression list
 
-and expression = {
-  content : expression_content ;
-  type_expression : type_expression ;
-  location : Location.t;
-}
+and expression =
+  { content : expression_content
+  ; type_expression : type_expression
+  ; location : Location.t
+  }
 
-and constant = {
-  cons_name : Constant.constant';
-  arguments : expression list;
-}
+and constant =
+  { cons_name : Constant.constant'
+  ; arguments : expression list
+  }
 
-and anon_function = {
-  binder : Value_var.t ;
-  body : expression ;
-}
+and anon_function =
+  { binder : Value_var.t
+  ; body : expression
+  }
 
 (* backend expression metadata *)
 type binder_meta =
-  { location : Location.t;
-    name : string option;
-    source_type : Ast_typed.type_expression option;
+  { location : Location.t
+  ; name : string option
+  ; source_type : Ast_typed.type_expression option
   }
 
 type meta =
-  { location : Location.t;
-    (* source location on any node *)
-    env : binder_meta option list;
-    (* environment descriptor on special environment Seq nodes *)
-    binder : binder_meta option;
-    (* binder descriptor on the translated type of binders (since
+  { location : Location.t
+  ; (* source location on any node *)
+    env : binder_meta option list
+  ; (* environment descriptor on special environment Seq nodes *)
+    binder : binder_meta option
+      (* binder descriptor on the translated type of binders (since
        backend environments are lists of types) *)
   }
 
-let dummy_meta : meta =
-  { location = Location.dummy ;
-    env = [] ;
-    binder = None }
+let dummy_meta : meta = { location = Location.dummy; env = []; binder = None }
 
-type data_item = 
-  Cdefine_symbol of string
-| Cint of int32
-| Csymbol_address of string
-| Cstring of string
-| Cbigint of Z.t
+type data_item =
+  | Cdefine_symbol of string
+  | Cint of int32
+  | Csymbol_address of string
+  | Cstring of string
+  | Cbigint of Z.t
 
 type data = data_item list

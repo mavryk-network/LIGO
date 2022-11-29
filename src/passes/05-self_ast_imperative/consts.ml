@@ -17,10 +17,9 @@ let add_param p vars =
   | Mutable -> vars
   | Immutable -> var :: vars
 
+
 (* This might be dead -- Alistair *)
-let rec assign_expression ~raise
-  : ?vars:Value_var.t list -> expression -> expression
-  =
+let rec assign_expression ~raise : ?vars:Value_var.t list -> expression -> expression =
  fun ?(vars = []) e ->
   let self = assign_expression ~raise in
   let _ =
@@ -51,19 +50,15 @@ let rec assign_expression ~raise
             let all_pattern_vars =
               Pattern.binders pattern |> List.map ~f:Binder.get_var
             in
-            let vars =
-              List.fold_right ~f:remove_from all_pattern_vars ~init:vars
-            in
+            let vars = List.fold_right ~f:remove_from all_pattern_vars ~init:vars in
             self ~vars body
           in
           let _ = self ~vars matchee in
           let _ = List.map ~f cases in
           false, vars, expr
         | E_recursive
-            { lambda = { binder; output_type = _; result = _ }
-            ; fun_name
-            ; fun_type = _
-            } ->
+            { lambda = { binder; output_type = _; result = _ }; fun_name; fun_type = _ }
+          ->
           let var = fun_name in
           let vars = var :: remove_from var vars in
           let vars = add_param binder vars in
@@ -75,5 +70,4 @@ let rec assign_expression ~raise
   e
 
 
-let assign_expression ~raise : expression -> expression =
-  assign_expression ~raise
+let assign_expression ~raise : expression -> expression = assign_expression ~raise

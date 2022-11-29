@@ -6,19 +6,19 @@
  (libraries dune-site core)
  (modules ligo_runtime)
  ; (foreign_archives ligo_runtime)
-)
+ )
 
-(install 
- (section (site (ligo ligo_runtime)))
- (files 
-  (libligo_runtime.a as libligo_runtime.a)
- )  
-)
+(install
+ (section
+  (site
+   (ligo ligo_runtime)))
+ (files
+  (libligo_runtime.a as libligo_runtime.a)))
 
-(copy_files 
-(files src/target/wasm32-unknown-unknown/release/*)
+(copy_files
+ (files src/target/wasm32-unknown-unknown/release/*)
  ; (files src/target/wasm32-wasi/release/*)
-)
+ )
 
 (generate_sites_module
  (module ligo_runtime)
@@ -69,7 +69,7 @@
 ; ;     ./target/wasm32-unknown-unknown/release/libligo_runtime.a
 ; ;     ./libligo_runtime.a)
 ; ;     )
-    
+
 ; ;   ))
 
 ; ; ; (rule

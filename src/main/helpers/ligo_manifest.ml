@@ -43,8 +43,8 @@ let try_readme ~project_root =
   let ls = Sys_unix.ls_dir project_root in
   match
     List.find ls ~f:(fun d ->
-        String.equal "readme.md" (String.lowercase d)
-        || String.equal "readme" (String.lowercase d))
+      String.equal "readme.md" (String.lowercase d)
+      || String.equal "readme" (String.lowercase d))
   with
   | None -> "ERROR: No README data found!"
   | Some r ->
@@ -89,31 +89,38 @@ let read ~project_root =
          | _ -> failwith "No author field  in package.json"
        in
        let type_ =
-         try json |> Util.member "type" |> Util.to_string
-          |> (fun t ->
-                if String.(t = "contract" || t = "library") 
-                then t 
-                else failwith "Type can be either library or contract") with
-          | Failure s -> failwith s      
-          | _ -> "library"
+         try
+           json
+           |> Util.member "type"
+           |> Util.to_string
+           |> fun t ->
+           if String.(t = "contract" || t = "library")
+           then t
+           else failwith "Type can be either library or contract"
+         with
+         | Failure s -> failwith s
+         | _ -> "library"
        in
-       let storage_fn = 
-          try Some (json |> Util.member "storage_fn" |> Util.to_string) with
-          | _ -> None in
+       let storage_fn =
+         try Some (json |> Util.member "storage_fn" |> Util.to_string) with
+         | _ -> None
+       in
        let storage_arg =
-          try Some (json |> Util.member "storage_arg" |> Util.to_string) with
-          | _ -> None in
-       let () = 
-          match type_, storage_fn, storage_arg with
-            "contract", Some _, Some _ -> ()
-          | "contract", (None | Some _), (None | Some _) -> 
-            failwith "In case of a contract a `storage_fn` & `storage_arg` needs to provided"
-          | ("library" | _), _, _ -> ()
+         try Some (json |> Util.member "storage_arg" |> Util.to_string) with
+         | _ -> None
+       in
+       let () =
+         match type_, storage_fn, storage_arg with
+         | "contract", Some _, Some _ -> ()
+         | "contract", (None | Some _), (None | Some _) ->
+           failwith
+             "In case of a contract a `storage_fn` & `storage_arg` needs to provided"
+         | ("library" | _), _, _ -> ()
        in
        let repository =
          let repo =
            match json |> Util.member "repository" with
-            `Null -> failwith "No repository field in package.json"
+           | `Null -> failwith "No repository field in package.json"
            | repo -> repo
            | exception _ -> failwith "Invalid repository field in package.json"
          in
@@ -149,4 +156,4 @@ let read ~project_root =
          ; ligo_manifest_path
          }
      with
-    | Failure e -> Error e)
+     | Failure e -> Error e)

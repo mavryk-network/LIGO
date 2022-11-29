@@ -75,9 +75,7 @@ val add_module : t -> module_variable -> Signature.t -> t
 val get_value
   :  t
   -> expression_variable
-  -> ( mutable_flag * type_expression
-     , [> `Mut_var_captured | `Not_found ] )
-     Result.t
+  -> (mutable_flag * type_expression, [> `Mut_var_captured | `Not_found ]) Result.t
 
 val get_imm : t -> expression_variable -> type_expression option
 val get_mut : t -> expression_variable -> type_expression option
@@ -109,8 +107,7 @@ val get_record
 val get_sum
   :  Label.t
   -> t
-  -> (type_variable * type_variable list * type_expression * type_expression)
-     list
+  -> (type_variable * type_variable list * type_expression * type_expression) list
 
 module Well_formed : sig
   val context : t -> bool
@@ -126,14 +123,8 @@ module Elaboration : sig
   type error = [ `Typer_existential_found of Location.t * type_expression ]
 
   val raise : (('err, 'wrn) raise, 'err, 'wrn) t
-
-  val all_lmap
-    :  ('a, 'err, 'wrn) t Rows.LMap.t
-    -> ('a Rows.LMap.t, 'err, 'wrn) t
-
-  val all_list
-    :  (('a, 'err, 'wrn) t) list
-    -> ('a list, 'err, 'wrn) t
+  val all_lmap : ('a, 'err, 'wrn) t Rows.LMap.t -> ('a Rows.LMap.t, 'err, 'wrn) t
+  val all_list : ('a, 'err, 'wrn) t list -> ('a list, 'err, 'wrn) t
 
   val run_expr
     :  (expression, ([> error ] as 'err), 'wrn) t
@@ -172,10 +163,7 @@ val enter
   -> in_:(t -> t * type_expression * (expression, 'err, 'wrn) Elaboration.t)
   -> t * type_expression * (expression, 'err, 'wrn) Elaboration.t
 
-val decl_enter
-  :  ctx:t
-  -> in_:(t -> t * Signature.t * 'a)
-  -> t * Signature.t * 'a
+val decl_enter : ctx:t -> in_:(t -> t * Signature.t * 'a) -> t * Signature.t * 'a
 
 module Generalization : sig
   val enter
@@ -190,8 +178,5 @@ val init : ?env:Environment.t -> unit -> t
 module Hashes : sig
   val set_context : t -> unit
   val hash_types : unit -> unit
-
-  val find_type
-    :  type_expression
-    -> (module_variable list * type_variable) option
+  val find_type : type_expression -> (module_variable list * type_variable) option
 end

@@ -50,8 +50,8 @@
   (run ./parser_negative_tests.exe))
  (deps
   ../passes/02-parsing/pascaligo/all.ligo
-   ../passes/02-parsing/cameligo/all.mligo
-   ../passes/02-parsing/reasonligo/all.religo))
+  ../passes/02-parsing/cameligo/all.mligo
+  ../passes/02-parsing/reasonligo/all.religo))
 
 (rule
  (alias ligo-test)
@@ -95,8 +95,7 @@
   (glob_files error-recovery/simple/pascaligo/original/*.ligo)
   (glob_files error-recovery/simple/reasonligo/*.religo)
   (glob_files error-recovery/simple/reasonligo/original/*.religo)
-  (glob_files error-recovery/multiple_errors/*)
- )
+  (glob_files error-recovery/multiple_errors/*))
  (action
   (run ./get_scope_tests.exe -q -c)))
 
@@ -114,8 +113,7 @@
   (glob_files error-recovery/simple/pascaligo/original/*.ligo)
   (glob_files error-recovery/simple/reasonligo/*.religo)
   (glob_files error-recovery/simple/reasonligo/original/*.religo)
-  (glob_files error-recovery/multiple_errors/*)
- )
+  (glob_files error-recovery/multiple_errors/*))
  (action
   (run ./get_scope_tests.exe -c)))
 

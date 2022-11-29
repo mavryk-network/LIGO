@@ -4,23 +4,14 @@
  (libraries core)
  (c_library_flags
   (-lpthread -lc -lm))
-  (modules foo)
-  ; (foreign_archives)
+ (modules foo)
+ ; (foreign_archives)
  )
 
- (rule
- (targets 
-    foo.ml 
-    wat2wasm
-  )
- (deps 
-  build.sh 
-  wabt-1.0.30-macos-12.tar
-  wabt-1.0.30-ubuntu.tar
-  )
+(rule
+ (targets foo.ml wat2wasm)
+ (deps build.sh wabt-1.0.30-macos-12.tar wabt-1.0.30-ubuntu.tar)
  (action
-  (progn  
+  (progn
    (bash ./build.sh)
-   (run touch foo.ml)
-   ))
- )
+   (run touch foo.ml))))

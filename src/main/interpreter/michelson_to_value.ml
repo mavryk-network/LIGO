@@ -142,8 +142,7 @@ let rec decompile_to_untyped_value ~raise ~bigmaps
     V_Ct (C_key_hash (key_hash_of_string ~raise n))
   | Prim (_, "key_hash", [], _), Bytes (_, b) ->
     V_Ct (C_key_hash (key_hash_of_bytes ~raise b))
-  | Prim (_, "key", [], _), String (_, n) ->
-    V_Ct (C_key (key_of_string ~raise n))
+  | Prim (_, "key", [], _), String (_, n) -> V_Ct (C_key (key_of_string ~raise n))
   | Prim (_, "key", [], _), Bytes (_, b) -> V_Ct (C_key (key_of_bytes ~raise b))
   | Prim (_, "signature", [], _), String (_, n) ->
     V_Ct (C_signature (signature_of_string ~raise n))
@@ -256,20 +255,12 @@ let rec decompile_to_untyped_value ~raise ~bigmaps
     in
     let code_block = make_e (e_string (Ligo_string.verbatim u)) (t_string ()) in
     let insertion =
-      e_a_raw_code
-        Backend.Michelson.name
-        code_block
-        (t_arrow t_input t_output ())
+      e_a_raw_code Backend.Michelson.name code_block (t_arrow t_input t_output ())
     in
-    let body =
-      e_a_application insertion (e_a_variable arg_binder t_input) t_output
-    in
+    let body = e_a_application insertion (e_a_variable arg_binder t_input) t_output in
     let orig_lambda =
       e_a_lambda
-        { binder = Param.make arg_binder t_input
-        ; output_type = t_output
-        ; result = body
-        }
+        { binder = Param.make arg_binder t_input; output_type = t_output; result = body }
         t_input
         t_output
     in
@@ -342,12 +333,9 @@ let rec decompile_value
        V_Map map'
      | Big_map, [ k_ty; v_ty ] ->
        (match get_nat v with
-        | Some _ ->
-          raise.error @@ corner_case ~loc:"unspiller" "Big map id not supported"
+        | Some _ -> raise.error @@ corner_case ~loc:"unspiller" "Big map id not supported"
         | None ->
-          let big_map =
-            trace_option ~raise (wrong_mini_c_value t v) @@ get_map v
-          in
+          let big_map = trace_option ~raise (wrong_mini_c_value t v) @@ get_map v in
           let big_map' =
             let aux (k, v) =
               let key = self k k_ty in
@@ -425,8 +413,7 @@ let rec decompile_value
        v_some s')
   | T_sum { layout; fields } ->
     let lst =
-      List.map
-        ~f:(fun (k, ({ associated_type; _ } : _ Rows.row_element_mini_c)) ->
+      List.map ~f:(fun (k, ({ associated_type; _ } : _ Rows.row_element_mini_c)) ->
         k, associated_type)
       @@ Ast_aggregated.Helpers.kv_list_of_t_sum ~layout fields
     in
@@ -435,8 +422,7 @@ let rec decompile_value
     V_Construct (constructor, sub)
   | T_record { layout; fields } ->
     let lst =
-      List.map
-        ~f:(fun (k, ({ associated_type; _ } : _ Rows.row_element_mini_c)) ->
+      List.map ~f:(fun (k, ({ associated_type; _ } : _ Rows.row_element_mini_c)) ->
         k, associated_type)
       @@ Ast_aggregated.Helpers.kv_list_of_t_record_or_tuple ~layout fields
     in
@@ -447,14 +433,7 @@ let rec decompile_value
   | T_arrow { type1; type2 } ->
     (* We now patch the types *)
     (* Mut flag is ignored bcs not required in the case when we patch raw code to a function *)
-    let { arg_binder
-        ; arg_mut_flag = _
-        ; body
-        ; rec_name = _
-        ; orig_lambda = _
-        ; env = _
-        }
-      =
+    let { arg_binder; arg_mut_flag = _; body; rec_name = _; orig_lambda = _; env = _ } =
       trace_option ~raise (wrong_mini_c_value t v) @@ get_func v
     in
     (match body.expression_content with
@@ -464,15 +443,10 @@ let rec decompile_value
           let insertion =
             e_a_raw_code Backend.Michelson.name code (t_arrow type1 type2 ())
           in
-          let body =
-            e_a_application insertion (e_a_variable arg_binder type1) type2
-          in
+          let body = e_a_application insertion (e_a_variable arg_binder type1) type2 in
           let orig_lambda =
             e_a_lambda
-              { binder = Param.make arg_binder type1
-              ; output_type = type2
-              ; result = body
-              }
+              { binder = Param.make arg_binder type1; output_type = type2; result = body }
               type1
               type2
           in
