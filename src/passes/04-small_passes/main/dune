@@ -1,11 +1,10 @@
-
 (executable
-  (name small_passes_main)
-  (libraries
-    ;; LIGO
-    small_passes_lib
-    ast_unified
-    ligo_prim
-    ;; Third party
-    )
-  (modules Small_passes_main ansi))
+ (name small_passes_main)
+ (libraries
+  ;; LIGO
+  small_passes_lib
+  ast_unified
+  ligo_prim
+  ;; Third party
+  )
+ (modules Small_passes_main ansi))

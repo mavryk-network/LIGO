@@ -1,9 +1,11 @@
 open Cli_expect
+
 let contract file = test ("top_level_patterns/contracts/" ^ file)
 
 let%expect_test _ =
-  run_ligo_good [ "compile" ; "contract" ; contract "reasonligo/nested_record.religo" ] ;
-  [%expect{|
+  run_ligo_good [ "compile"; "contract"; contract "reasonligo/nested_record.religo" ];
+  [%expect
+    {|
     Reasonligo is depreacted, support will be dropped in a few versions.
 
     Reasonligo is depreacted, support will be dropped in a few versions.
@@ -52,8 +54,9 @@ let%expect_test _ =
              PAIR } } |}]
 
 let%expect_test _ =
-  run_ligo_good [ "compile" ; "contract" ; contract "reasonligo/nested_tuple.religo" ] ;
-  [%expect{|
+  run_ligo_good [ "compile"; "contract"; contract "reasonligo/nested_tuple.religo" ];
+  [%expect
+    {|
     Reasonligo is depreacted, support will be dropped in a few versions.
 
     Reasonligo is depreacted, support will be dropped in a few versions.
@@ -102,8 +105,9 @@ let%expect_test _ =
              PAIR } } |}]
 
 let%expect_test _ =
-  run_ligo_good [ "compile" ; "contract" ; contract "reasonligo/record_tuple.religo" ] ;
-  [%expect{|
+  run_ligo_good [ "compile"; "contract"; contract "reasonligo/record_tuple.religo" ];
+  [%expect
+    {|
     Reasonligo is depreacted, support will be dropped in a few versions.
 
     Reasonligo is depreacted, support will be dropped in a few versions.
@@ -152,8 +156,9 @@ let%expect_test _ =
              PAIR } } |}]
 
 let%expect_test _ =
-  run_ligo_good [ "compile" ; "contract" ; contract "reasonligo/record.religo" ] ;
-  [%expect{|
+  run_ligo_good [ "compile"; "contract"; contract "reasonligo/record.religo" ];
+  [%expect
+    {|
     Reasonligo is depreacted, support will be dropped in a few versions.
 
     Reasonligo is depreacted, support will be dropped in a few versions.
@@ -178,8 +183,9 @@ let%expect_test _ =
              PAIR } } |}]
 
 let%expect_test _ =
-  run_ligo_good [ "compile" ; "contract" ; contract "reasonligo/ticket_record.religo" ] ;
-  [%expect{|
+  run_ligo_good [ "compile"; "contract"; contract "reasonligo/ticket_record.religo" ];
+  [%expect
+    {|
     Reasonligo is depreacted, support will be dropped in a few versions.
 
     Reasonligo is depreacted, support will be dropped in a few versions.
@@ -229,8 +235,9 @@ let%expect_test _ =
              PAIR } } |}]
 
 let%expect_test _ =
-  run_ligo_good [ "compile" ; "contract" ; contract "reasonligo/ticket_tuple.religo" ] ;
-  [%expect{|
+  run_ligo_good [ "compile"; "contract"; contract "reasonligo/ticket_tuple.religo" ];
+  [%expect
+    {|
     Reasonligo is depreacted, support will be dropped in a few versions.
 
     Reasonligo is depreacted, support will be dropped in a few versions.
@@ -280,8 +287,9 @@ let%expect_test _ =
              PAIR } } |}]
 
 let%expect_test _ =
-  run_ligo_good [ "compile" ; "contract" ; contract "reasonligo/tuple_record.religo" ] ;
-  [%expect{|
+  run_ligo_good [ "compile"; "contract"; contract "reasonligo/tuple_record.religo" ];
+  [%expect
+    {|
     Reasonligo is depreacted, support will be dropped in a few versions.
 
     Reasonligo is depreacted, support will be dropped in a few versions.
@@ -330,8 +338,9 @@ let%expect_test _ =
              PAIR } } |}]
 
 let%expect_test _ =
-  run_ligo_good [ "compile" ; "contract" ; contract "reasonligo/tuple.religo" ] ;
-  [%expect{|
+  run_ligo_good [ "compile"; "contract"; contract "reasonligo/tuple.religo" ];
+  [%expect
+    {|
     Reasonligo is depreacted, support will be dropped in a few versions.
 
     Reasonligo is depreacted, support will be dropped in a few versions.

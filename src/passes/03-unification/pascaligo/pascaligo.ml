@@ -1,21 +1,21 @@
 open Simple_utils.Utils
 open Simple_utils.Trace
 open Unification_shared.Helpers
-
 module CST = Cst.Pascaligo
 module AST = Ast_unified
-
 module Option = Simple_utils.Option
-module Region  = Simple_utils.Region
-
-open AST  (* Brings types and combinators functions *)
+module Region = Simple_utils.Region
+open AST (* Brings types and combinators functions *)
 
 module type X = module type of AST.Combinators
 
-let translate_attr_pascaligo : CST.Attr.t -> AST.Attribute.t = fun attr ->
+let translate_attr_pascaligo : CST.Attr.t -> AST.Attribute.t =
+ fun attr ->
   let key, value = attr in
-  let value : string option = Option.map ~f:(fun (CST.Attr.String s) ->  s) value in
-  {key; value}
+  let value : string option = Option.map ~f:(fun (CST.Attr.String s) -> s) value in
+  { key; value }
+
+
 module TODO_do_in_parsing = struct
   let r_split = r_split (* could compute Location directly in Parser *)
   let _lift = Location.lift
@@ -24,19 +24,24 @@ module TODO_do_in_parsing = struct
   let mvar ~loc var = Ligo_prim.Module_var.of_input_var ~loc var
   let need_rework _ y = (*most probably a node that we should avoid, maybe ?*) failwith y
   let six_to_z x = Z.of_int64 x (* not sure who's right ? *)
-  let rec compile_pattern_record_lhs (p:CST.pattern) : CST.variable =
+
+  let rec compile_pattern_record_lhs (p : CST.pattern) : CST.variable =
     match p with
     | CST.P_Par x -> compile_pattern_record_lhs x.value.inside
     | CST.P_Var x -> x
     | _ -> failwith "CST.field_pattern is wrong ?  should be '(string, pattern) field' ?"
+
+
   let weird_attributes _ =
     (* I don't know what to do with those attributes *)
     ()
+
+
   let extract_arg_from_app self p =
     (* other syntax do not have the App thing ?
        also have an optional 'carg' ?
     *)
-    let ((constr,p_opt), loc) = r_split p in
+    let (constr, p_opt), loc = r_split p in
     let pat ~loc p = Location.wrap ~loc p in
     let rec get_ctor : CST.pattern -> string option = function
       | P_Par x -> get_ctor x.value.inside
@@ -46,157 +51,181 @@ module TODO_do_in_parsing = struct
     match get_ctor constr with
     | Some "Unit" -> pat ~loc P_unit
     | Some label ->
-      let carg = match p_opt with
+      let carg =
+        match p_opt with
         | Some p -> self (CST.P_Tuple p)
         | None -> pat ~loc P_unit
       in
       pat ~loc @@ P_variant (Label label, Some carg)
     | None -> failwith "impossible ?"
-  let rec expr_as_var (e:CST.expr) : Ligo_prim.Value_var.t =
+
+
+  let rec expr_as_var (e : CST.expr) : Ligo_prim.Value_var.t =
     match e with
     | E_Var x -> Ligo_prim.Value_var.of_input_var ~loc:(w_snd x) (w_fst x)
     | _ -> failwith "would not make sense ? tofix"
-
 end
+
 module TODO_unify_in_cst = struct
   let compile_rows = Non_linear_rows.make
+
   let vardecl_as_decl ~loc x =
     (* https://tezos-dev.slack.com/archives/GMHV0U3Q9/p1669146559008189 *)
     s_decl ~loc (d_var ~loc x ()) ()
+
+
   let for_in compile_for_map compile_for_set_or_list i =
     (* could be done directyu in Parser.mly *)
     let open AST.For_collection in
     match i with
-    | CST.ForMap       m -> let m, loc = r_split m in ForMap (compile_for_map m), loc
-    | CST.ForSetOrList s -> let s, loc = r_split s in ForSetOrList (compile_for_set_or_list s), loc
-  let e_cat ~loc a b = e_binary_op ~loc AST.{operator = Location.wrap ~loc "^" ; left = a ; right = b}
-  let e_string ~loc s = e_literal ~loc (Literal_string (Simple_utils.Ligo_string.Standard s))
-  let e_verbatim ~loc s = e_literal ~loc (Literal_string (Simple_utils.Ligo_string.Verbatim s))
-  let better_as_binop ~loc kwd (left,right) =
-    let operator = Location.wrap ~loc:(w_snd kwd) (w_fst kwd) in
-    e_binary_op ~loc AST.{operator ; left ; right } ()
+    | CST.ForMap m ->
+      let m, loc = r_split m in
+      ForMap (compile_for_map m), loc
+    | CST.ForSetOrList s ->
+      let s, loc = r_split s in
+      ForSetOrList (compile_for_set_or_list s), loc
 
-  let nested_proj : AST.expr -> (CST.selection, CST.dot) nsepseq -> AST.expr = fun init field_path ->
+
+  let e_cat ~loc a b =
+    e_binary_op ~loc AST.{ operator = Location.wrap ~loc "^"; left = a; right = b }
+
+
+  let e_string ~loc s =
+    e_literal ~loc (Literal_string (Simple_utils.Ligo_string.Standard s))
+
+
+  let e_verbatim ~loc s =
+    e_literal ~loc (Literal_string (Simple_utils.Ligo_string.Verbatim s))
+
+
+  let better_as_binop ~loc kwd (left, right) =
+    let operator = Location.wrap ~loc:(w_snd kwd) (w_fst kwd) in
+    e_binary_op ~loc AST.{ operator; left; right } ()
+
+
+  let nested_proj : AST.expr -> (CST.selection, CST.dot) nsepseq -> AST.expr =
+   fun init field_path ->
     (* projections could be nested ? *)
-    List.fold (nsepseq_to_list field_path)
-      ~init
-      ~f:(fun acc -> function
-        | FieldName name ->
-          let (name, loc) = w_split name in
-          e_proj ~loc { expr = acc ; selection = FieldName (Label.of_string name)} ()
-        | Component comp ->
-          let (index, loc) = w_split comp in
-          e_proj ~loc { expr = acc ; selection = Component_num index} ()
-      )
-  let update_rhs : (CST.expr -> AST.expr) -> CST.expr -> AST.upd_field list = fun self rhs ->
+    List.fold (nsepseq_to_list field_path) ~init ~f:(fun acc -> function
+      | FieldName name ->
+        let name, loc = w_split name in
+        e_proj ~loc { expr = acc; selection = FieldName (Label.of_string name) } ()
+      | Component comp ->
+        let index, loc = w_split comp in
+        e_proj ~loc { expr = acc; selection = Component_num index } ())
+
+
+  let update_rhs : (CST.expr -> AST.expr) -> CST.expr -> AST.upd_field list =
+   fun self rhs ->
     match rhs with
-    | E_Record record_lhs -> (
-      let f : (CST.expr, CST.expr) CST.field CST.reg -> AST.upd_field = fun x ->
+    | E_Record record_lhs ->
+      let f : (CST.expr, CST.expr) CST.field CST.reg -> AST.upd_field =
+       fun x ->
         match x.value with
-        | CST.Complete {field_lhs ; field_lens ; field_rhs ; attributes} -> (
+        | CST.Complete { field_lhs; field_lens; field_rhs; attributes } ->
           let attributes =
             TODO_do_in_parsing.weird_attributes attributes;
-            List.map attributes ~f:(translate_attr_pascaligo <@ r_fst) in
-          let field_lens = match field_lens with
-            | Lens_Id _ -> Lens_Id | Lens_Add _ -> Lens_Add
-            | Lens_Sub _ -> Lens_Sub | Lens_Mult _ -> Lens_Mult
-            | Lens_Div _ -> Lens_Div | Lens_Fun _ -> Lens_Fun
+            List.map attributes ~f:(translate_attr_pascaligo <@ r_fst)
+          in
+          let field_lens =
+            match field_lens with
+            | Lens_Id _ -> Lens_Id
+            | Lens_Add _ -> Lens_Add
+            | Lens_Sub _ -> Lens_Sub
+            | Lens_Mult _ -> Lens_Mult
+            | Lens_Div _ -> Lens_Div
+            | Lens_Fun _ -> Lens_Fun
           in
           let field_lhs : AST.expr AST.selection list =
             match field_lhs with
-            | CST.E_Var x -> (
+            | CST.E_Var x ->
               let label = w_fst x in
               [ AST.FieldName (Label.of_string label) ]
-            )
-            | CST.E_Proj {region ; value = {record_or_tuple = CST.E_Var v ; selector = _ ; field_path }} -> (
-              List.map (nsepseq_to_list field_path)
-                ~f:(function FieldName name -> AST.FieldName (Label.of_string (w_fst name))
-                            | Component x -> AST.Component_num (w_fst x))
-            )
-            | x -> failwith "raise.error (expected_field_or_access @@ CST.expr_to_region x)" 
+            | CST.E_Proj
+                { region
+                ; value = { record_or_tuple = CST.E_Var v; selector = _; field_path }
+                } ->
+              List.map (nsepseq_to_list field_path) ~f:(function
+                  | FieldName name -> AST.FieldName (Label.of_string (w_fst name))
+                  | Component x -> AST.Component_num (w_fst x))
+            | x ->
+              failwith "raise.error (expected_field_or_access @@ CST.expr_to_region x)"
           in
           let field_rhs = self field_rhs in
-          AST.Full_field {field_lhs;field_lens;field_rhs;attributes}
-        )
-        | CST.Punned {pun ; attributes} -> (
+          AST.Full_field { field_lhs; field_lens; field_rhs; attributes }
+        | CST.Punned { pun; attributes } ->
           let attributes =
             TODO_do_in_parsing.weird_attributes attributes;
-            List.map attributes ~f:(translate_attr_pascaligo <@ r_fst) in
-          match pun with
-          | CST.E_Var v ->Pun (Label.of_string (w_fst v), attributes)
-          | _ -> failwith "pun should be a string/label directly ?"
-        )
+            List.map attributes ~f:(translate_attr_pascaligo <@ r_fst)
+          in
+          (match pun with
+          | CST.E_Var v -> Pun (Label.of_string (w_fst v), attributes)
+          | _ -> failwith "pun should be a string/label directly ?")
       in
       List.map (Utils.sepseq_to_list record_lhs.value.elements) ~f
-    )
     | _ -> failwith "raise.error (wrong_functional_updator @@ CST.expr_to_region x)"
 end
 
+let extract_type_params
+    : CST.type_params CST.chevrons CST.reg -> Ligo_prim.Type_var.t nseq
+  =
+ fun tp ->
+  nseq_map
+    (fun x ->
+      let x, loc = w_split x in
+      TODO_do_in_parsing.tvar ~loc x)
+    (nsepseq_to_nseq @@ (r_fst tp).inside)
 
-let extract_type_params : CST.type_params CST.chevrons CST.reg -> Ligo_prim.Type_var.t nseq =
-  fun tp ->
-    nseq_map
-      (fun x ->
-        let x,loc = w_split x in
-        TODO_do_in_parsing.tvar ~loc x
-      )
-      (nsepseq_to_nseq @@ (r_fst tp).inside)
 
 (* ========================== TYPES ======================================== *)
 
-let rec compile_type_expression ~(raise: ('e, 'w) raise) : CST.type_expr -> AST.type_expr = fun te ->
+let rec compile_type_expression ~(raise : ('e, 'w) raise) : CST.type_expr -> AST.type_expr
+  =
+ fun te ->
   let self = compile_type_expression ~raise in
   match te with
-  | T_App     t -> (
+  | T_App t ->
     let (te, ttuple), loc = r_split t in
     let constr = self te in
     let type_args : type_expr nseq =
       List.Ne.map self @@ nsepseq_to_nseq (r_fst ttuple).inside
     in
-    t_app {constr; type_args} ~loc ()
-  )
-  | T_Attr    t -> (
+    t_app { constr; type_args } ~loc ()
+  | T_Attr t ->
     let attr, te = t in
     let attr, loc = r_split attr in
     let attr = translate_attr_pascaligo attr in
-    let te   = self te in
+    let te = self te in
     t_attr attr te ~loc ()
-  )
-  | T_Cart    t -> (
+  | T_Cart t ->
     let (te, _, tes), loc = r_split t in
     let te = self te in
-    let hd,tl = List.Ne.map self @@ nsepseq_to_nseq tes in
-    t_prod (te, hd::tl) ~loc ()
-  )
-  | T_Fun t -> (
+    let hd, tl = List.Ne.map self @@ nsepseq_to_nseq tes in
+    t_prod (te, hd :: tl) ~loc ()
+  | T_Fun t ->
     let (te1, _, te2), loc = r_split t in
     let te1 = self te1 in
     let te2 = self te2 in
     t_fun ~loc (te1, te2) ()
-  )
-  | T_Int     t -> (
+  | T_Int t ->
     let (s, z), loc = w_split t in
     t_int s z ~loc ()
-  )
-  | T_ModPath t -> (
+  | T_ModPath t ->
     let t, loc = r_split t in
-    let module_path = List.Ne.map
-      (fun t ->
-        let x, loc = w_split t in
-        TODO_do_in_parsing.mvar ~loc x)
+    let module_path =
+      List.Ne.map
+        (fun t ->
+          let x, loc = w_split t in
+          TODO_do_in_parsing.mvar ~loc x)
         (nsepseq_to_nseq t.module_path)
     in
     let field : type_expr = self t.field in
-    t_modpath {module_path; field} ~loc ()
-  )
-  | T_Par     t -> (
-    self (r_fst t).inside
-  )
-  | T_Record t -> (
+    t_modpath { module_path; field } ~loc ()
+  | T_Par t -> self (r_fst t).inside
+  | T_Record t ->
     let t, loc = r_split t in
     let fields =
-      let destruct =
-       fun CST.{field_type ; field_name ; attributes } ->
+      let destruct CST.{ field_type; field_name; attributes } =
         ( Label.of_string (w_fst field_name)
         , Option.map ~f:(self <@ snd) field_type
         , List.map attributes ~f:(translate_attr_pascaligo <@ r_fst) )
@@ -205,16 +234,13 @@ let rec compile_type_expression ~(raise: ('e, 'w) raise) : CST.type_expr -> AST.
       TODO_unify_in_cst.compile_rows lst
     in
     t_record_raw fields ~loc ()
-  )
-  | T_String  t -> (
+  | T_String t ->
     let t, loc = w_split t in
     t_string t ~loc ()
-  )
-  | T_Sum t -> (
+  | T_Sum t ->
     let t, loc = r_split t in
     let variants =
-      let destruct =
-       fun CST.{ctor ; ctor_args ; attributes} ->
+      let destruct CST.{ ctor; ctor_args; attributes } =
         ( Label.of_string (w_fst ctor)
         , Option.map ~f:(self <@ snd) ctor_args
         , List.map attributes ~f:(translate_attr_pascaligo <@ r_fst) )
@@ -223,212 +249,222 @@ let rec compile_type_expression ~(raise: ('e, 'w) raise) : CST.type_expr -> AST.
       TODO_unify_in_cst.compile_rows lst
     in
     t_sum_raw variants ~loc ()
-  )
-  | T_Var t -> (
+  | T_Var t ->
     let t, loc = w_split t in
     t_var (TODO_do_in_parsing.tvar ~loc t) ~loc ()
-  )
+
 
 (* ========================== PATTERNS ===================================== *)
 
-and compile_pattern ~(raise: ('e, 'w) raise) : CST.pattern -> AST.pattern = fun p ->
+and compile_pattern ~(raise : ('e, 'w) raise) : CST.pattern -> AST.pattern =
+ fun p ->
   let self = compile_pattern ~raise in
   let pat ~loc p = Location.wrap ~loc p in
   match p with
   | P_Ctor p -> TODO_do_in_parsing.need_rework p "never emited alone"
-  | P_App p -> (
-    TODO_do_in_parsing.extract_arg_from_app self p
-  )
-  | P_Attr p -> (
+  | P_App p -> TODO_do_in_parsing.extract_arg_from_app self p
+  | P_Attr p ->
     let attr, ptrn = p in
     let attr, loc = r_split attr in
     let attr = translate_attr_pascaligo attr in
     let ptrn = self ptrn in
-    pat ~loc (P_attr (attr,ptrn))
-  )
-  | P_Bytes p -> (
+    pat ~loc (P_attr (attr, ptrn))
+  | P_Bytes p ->
     let (_s, hex), loc = w_split p in
     let b = Hex.to_bytes hex in
     pat ~loc (P_literal (Literal_bytes b))
-  )
-  | P_Cons p -> (
+  | P_Cons p ->
     let (p1, _, p2), loc = r_split p in
     let p1 = self p1 in
     let p2 = self p2 in
     pat ~loc (P_list (Cons (p1, p2)))
-  )
-  | P_Int p -> (
+  | P_Int p ->
     let (_s, z), loc = w_split p in
     pat ~loc (P_literal (Literal_int z))
-  )
-  | P_List p -> (
+  | P_List p ->
     let p, loc = r_split p in
     let ps = List.map ~f:self (sepseq_to_list p.elements) in
     pat ~loc (P_list (List ps))
-  )
-  | P_ModPath p -> (
+  | P_ModPath p ->
     let p, loc = r_split p in
-    let module_path = List.Ne.map
-      (fun x -> let x,loc = w_split x in TODO_do_in_parsing.mvar ~loc x)
-      (nsepseq_to_nseq p.module_path)
+    let module_path =
+      List.Ne.map
+        (fun x ->
+          let x, loc = w_split x in
+          TODO_do_in_parsing.mvar ~loc x)
+        (nsepseq_to_nseq p.module_path)
     in
     let field = self p.field in
-    pat ~loc (P_mod_access Mod_access.{module_path; field})
-  )
-  | P_Mutez p -> (
+    pat ~loc (P_mod_access Mod_access.{ module_path; field })
+  | P_Mutez p ->
     let (_s, z), loc = w_split p in
     pat ~loc (P_literal (Literal_mutez (TODO_do_in_parsing.six_to_z z)))
-  )
-  | P_Nat p -> (
+  | P_Nat p ->
     let (_s, z), loc = w_split p in
     pat ~loc (P_literal (Literal_nat z))
-  )
-  | P_Nil p -> (
+  | P_Nil p ->
     let _, loc = w_split p in
     pat ~loc (P_list (List []))
-  )
-  | P_Par p -> (
-    self (r_fst p).inside
-  )
-  | P_Record p -> (
+  | P_Par p -> self (r_fst p).inside
+  | P_Record p ->
     let p, loc = r_split p in
     let fields =
-      let translate_field_assign : CST.field_pattern -> (Label.t, AST.pattern) AST.field = function
-      | Punned { pun; attributes } ->
-        TODO_do_in_parsing.weird_attributes attributes;
-        let pun,_ = w_split (TODO_do_in_parsing.compile_pattern_record_lhs pun) in
-        Punned (Label.of_string pun)
-      | Complete { field_lhs; field_lens = _ ; field_rhs; attributes } ->
-        TODO_do_in_parsing.weird_attributes attributes;
-        let lhs,_ = w_split (TODO_do_in_parsing.compile_pattern_record_lhs field_lhs) in
-        Complete (Label.of_string lhs, self field_rhs)
+      let translate_field_assign : CST.field_pattern -> (Label.t, AST.pattern) AST.field
+        = function
+        | Punned { pun; attributes } ->
+          TODO_do_in_parsing.weird_attributes attributes;
+          let pun, _ = w_split (TODO_do_in_parsing.compile_pattern_record_lhs pun) in
+          Punned (Label.of_string pun)
+        | Complete { field_lhs; field_lens = _; field_rhs; attributes } ->
+          TODO_do_in_parsing.weird_attributes attributes;
+          let lhs, _ =
+            w_split (TODO_do_in_parsing.compile_pattern_record_lhs field_lhs)
+          in
+          Complete (Label.of_string lhs, self field_rhs)
       in
       List.map ~f:(translate_field_assign <@ r_fst) @@ sepseq_to_list p.elements
     in
     pat ~loc (P_pun_record fields)
-  )
-  | P_String p -> (
+  | P_String p ->
     let s, loc = w_split p in
     pat ~loc (P_literal (Literal_string (Standard s)))
-  )
-  | P_Tuple    p -> (
+  | P_Tuple p ->
     let p, loc = r_split p in
     let p = List.map ~f:self (nsepseq_to_list p.inside) in
     pat ~loc (P_tuple p)
-  )
-  | P_Typed    p -> (
+  | P_Typed p ->
     let p, loc = r_split p in
     let ptrn = self p.pattern in
     let ty = compile_type_expression ~raise @@ snd p.type_annot in
-    pat ~loc (P_typed (ty,ptrn))
-  )
-  | P_Var      p -> (
+    pat ~loc (P_typed (ty, ptrn))
+  | P_Var p ->
     let s, loc = w_split p in
     pat ~loc (P_var (TODO_do_in_parsing.var ~loc s))
-  )
-  | P_Verbatim p -> (
+  | P_Verbatim p ->
     let s, loc = w_split p in
     pat ~loc (P_literal (Literal_string (Standard s)))
-  )
+
 
 (* ========================== INSTRUCTIONS ================================= *)
 
-and compile_block ~(raise: ('e, 'w) raise) : CST.block -> AST.statement nseq = fun b ->
-  List.Ne.map (compile_statement ~raise) @@ nsepseq_to_nseq b.statements
+and compile_block ~(raise : ('e, 'w) raise) : CST.block -> AST.statement nseq =
+ fun b -> List.Ne.map (compile_statement ~raise) @@ nsepseq_to_nseq b.statements
 
-and compile_test_clause : raise:_ -> CST.test_clause -> (instruction,statement) AST.Test_clause.t = fun ~raise c ->
+
+and compile_test_clause
+    : raise:_ -> CST.test_clause -> (instruction, statement) AST.Test_clause.t
+  =
+ fun ~raise c ->
   match c with
   | CST.ClauseInstr i -> ClauseInstr (compile_instruction ~raise i)
   | CST.ClauseBlock b -> ClauseBlock (compile_block ~raise @@ r_fst b)
 
-and compile_case_clause : type a b . raise:_ -> (a -> b) -> a CST.case_clause -> (_,b) AST.Case.clause = fun ~raise f c ->
+
+and compile_case_clause
+    : type a b. raise:_ -> (a -> b) -> a CST.case_clause -> (_, b) AST.Case.clause
+  =
+ fun ~raise f c ->
   let pattern = compile_pattern ~raise c.pattern in
-  let rhs     = f c.rhs in
-  {pattern; rhs}
+  let rhs = f c.rhs in
+  { pattern; rhs }
 
-and compile_case : type a b . raise:_ -> (a -> b) -> a CST.case -> (_,_,b) AST.Case.t = fun ~raise f c ->
+
+and compile_case : type a b. raise:_ -> (a -> b) -> a CST.case -> (_, _, b) AST.Case.t =
+ fun ~raise f c ->
   let expr = compile_expression ~raise c.expr in
-  let cases = List.Ne.map (compile_case_clause ~raise f <@ r_fst) @@ nsepseq_to_nseq c.cases in
-  {expr; cases}
+  let cases =
+    List.Ne.map (compile_case_clause ~raise f <@ r_fst) @@ nsepseq_to_nseq c.cases
+  in
+  { expr; cases }
 
-and compile_cond : 'a 'b. raise:_ -> ('a -> 'b) -> 'a CST.conditional -> (_,'b) AST.Cond.t = fun ~raise f c ->
-  let test  = compile_expression ~raise c.test in
-  let ifso  = f c.if_so in
+
+and compile_cond :
+      'a 'b. raise:_ -> ('a -> 'b) -> 'a CST.conditional -> (_, 'b) AST.Cond.t
+  =
+ fun ~raise f c ->
+  let test = compile_expression ~raise c.test in
+  let ifso = f c.if_so in
   let ifnot = Option.map ~f:(f <@ snd) c.if_not in
-  {test; ifso; ifnot}
+  { test; ifso; ifnot }
 
-and compile_for_map ~raise : CST.for_map -> (_,_) AST.For_collection.for_map = fun m ->
+
+and compile_for_map ~raise : CST.for_map -> (_, _) AST.For_collection.for_map =
+ fun m ->
   let binding =
     let k, _, v = m.binding in
-    TODO_do_in_parsing.var ~loc:(w_snd k) (w_fst k),
-    TODO_do_in_parsing.var ~loc:(w_snd v) (w_fst v)
+    ( TODO_do_in_parsing.var ~loc:(w_snd k) (w_fst k)
+    , TODO_do_in_parsing.var ~loc:(w_snd v) (w_fst v) )
   in
   let collection = compile_expression ~raise m.collection in
-  let block      = compile_block ~raise @@ r_fst m.block in
-  {binding; collection; block}
+  let block = compile_block ~raise @@ r_fst m.block in
+  { binding; collection; block }
 
-and compile_for_set_or_list ~raise : CST.for_set_or_list -> (_,_) AST.For_collection.for_set_or_list = fun s ->
+
+and compile_for_set_or_list ~raise
+    : CST.for_set_or_list -> (_, _) AST.For_collection.for_set_or_list
+  =
+ fun s ->
   let var = TODO_do_in_parsing.var ~loc:(w_snd s.var) (w_fst s.var) in
-  let for_kind = match s.for_kind with
-  | `Set  _ -> `Set
-  | `List _ -> `List
+  let for_kind =
+    match s.for_kind with
+    | `Set _ -> `Set
+    | `List _ -> `List
   in
   let collection = compile_expression ~raise s.collection in
-  let block      = compile_block ~raise (r_fst s.block) in
-  {var; for_kind; collection; block}
+  let block = compile_block ~raise (r_fst s.block) in
+  { var; for_kind; collection; block }
 
-and compile_instruction ~(raise: ('e, 'w) raise) : CST.instruction -> AST.instruction = fun i ->
+
+and compile_instruction ~(raise : ('e, 'w) raise) : CST.instruction -> AST.instruction =
+ fun i ->
   let compile_expr = compile_expression ~raise in
   match i with
-  | I_Assign i -> (
+  | I_Assign i ->
     let i, loc = r_split i in
     let lhs_expr = compile_expr i.lhs in
     let rhs_expr = compile_expr i.rhs in
-    i_struct_assign {lhs_expr; rhs_expr} ~loc ()
-  )
-  | I_Call i -> (
+    i_struct_assign { lhs_expr; rhs_expr } ~loc ()
+  | I_Call i ->
     let i, loc = r_split i in
     let f, args = i in
     let f = compile_expression ~raise f in
-    let args : expr list = List.map ~f:compile_expr @@ sepseq_to_list (r_fst args).inside in
+    let args : expr list =
+      List.map ~f:compile_expr @@ sepseq_to_list (r_fst args).inside
+    in
     i_call ~loc (f, args) ()
-  )
-  | I_Case i -> (
+  | I_Case i ->
     let i, loc = r_split i in
     let i = compile_case ~raise (compile_test_clause ~raise) i in
     i_case i ~loc ()
-  )
-  | I_Cond i -> (
+  | I_Cond i ->
     let i, loc = r_split i in
     let i = compile_cond ~raise (compile_test_clause ~raise) i in
     i_cond i ~loc ()
-  )
-  | I_For i -> (
+  | I_For i ->
     let i, loc = r_split i in
     let index = TODO_do_in_parsing.var ~loc:(w_snd i.index) (w_fst i.index) in
-    let init  = compile_expr i.init in
+    let init = compile_expr i.init in
     let bound = compile_expr i.bound in
     let step = Option.map ~f:(compile_expr <@ snd) i.step in
     let block = compile_block ~raise @@ r_fst i.block in
-    i_for ~loc {index; init; bound; step; block} ()
-  )
-  | I_ForIn  i -> (
-    let i, loc = TODO_unify_in_cst.for_in (compile_for_map ~raise) (compile_for_set_or_list ~raise) i in
+    i_for ~loc { index; init; bound; step; block } ()
+  | I_ForIn i ->
+    let i, loc =
+      TODO_unify_in_cst.for_in (compile_for_map ~raise) (compile_for_set_or_list ~raise) i
+    in
     i_forin i ~loc ()
-  )
-  | I_Patch  i -> (
+  | I_Patch i ->
     let i, loc = r_split i in
     let collection = compile_expr i.collection in
     let patch_kind =
       match i.patch_kind with
-      | `Map    _ -> `Map
+      | `Map _ -> `Map
       | `Record _ -> `Record
-      | `Set    _ -> `Set
+      | `Set _ -> `Set
     in
     let patch = compile_expr i.patch in
-    i_patch {collection; patch_kind; patch} ~loc ()
-  )
-  | I_Remove i -> (
+    i_patch { collection; patch_kind; patch } ~loc ()
+  | I_Remove i ->
     let i, loc = r_split i in
     let item_expr = compile_expr i.item in
     let remove_kind =
@@ -437,373 +473,379 @@ and compile_instruction ~(raise: ('e, 'w) raise) : CST.instruction -> AST.instru
       | `Map _ -> `Map
     in
     let collection = compile_expr i.collection in
-    i_remove {item_expr; remove_kind; collection} ~loc ()
-  )
-  | I_Skip   i -> (
+    i_remove { item_expr; remove_kind; collection } ~loc ()
+  | I_Skip i ->
     let _, loc = w_split i in
     i_skip ~loc ()
-  )
-  | I_While  i -> (
+  | I_While i ->
     let i, loc = r_split i in
     let cond = compile_expr i.cond in
     let block = compile_block ~raise @@ r_fst i.block in
-    i_while {cond; block} ~loc ()
-  )
+    i_while { cond; block } ~loc ()
+
 
 (* ========================== STATEMENTS ================================= *)
 
-and compile_statement ~raise : CST.statement -> AST.statement = fun s ->
+and compile_statement ~raise : CST.statement -> AST.statement =
+ fun s ->
   let self = compile_statement ~raise in
   match s with
-  | S_Attr (attr, stmt) -> (
+  | S_Attr (attr, stmt) ->
     let attr, loc = r_split attr in
     let attr = translate_attr_pascaligo attr in
     let stmt = self stmt in
     s_attr (attr, stmt) ~loc ()
-  )
-  | S_Decl s -> (
+  | S_Decl s ->
     let s = compile_declaration ~raise s in
     let loc = s.location in
     s_decl s ~loc ()
-  )
-  | S_Instr s -> (
+  | S_Instr s ->
     let s = compile_instruction ~raise s in
     let loc = s.location in
     s_instr s ~loc ()
-  )
-  | S_VarDecl s -> (
+  | S_VarDecl s ->
     let s, loc = r_split s in
-    let pattern     = compile_pattern ~raise s.pattern in
+    let pattern = compile_pattern ~raise s.pattern in
     let type_params = Option.map ~f:extract_type_params s.type_params in
-    let rhs_type    = Option.map ~f:(compile_type_expression ~raise <@ snd) s.var_type in
-    let let_rhs        = compile_expression ~raise s.init in
-    TODO_unify_in_cst.vardecl_as_decl ~loc {pattern; type_params; rhs_type; let_rhs}
-  )
+    let rhs_type = Option.map ~f:(compile_type_expression ~raise <@ snd) s.var_type in
+    let let_rhs = compile_expression ~raise s.init in
+    TODO_unify_in_cst.vardecl_as_decl ~loc { pattern; type_params; rhs_type; let_rhs }
+
 
 (* ========================== EXPRESSIONS ================================== *)
 
 and extract_tuple : 'a. ('a, CST.comma) nsepseq CST.par CST.reg -> 'a nseq =
-  fun t -> nsepseq_to_nseq (r_fst t).inside
+ fun t -> nsepseq_to_nseq (r_fst t).inside
 
-and extract_key : 'a. 'a CST.brackets CST.reg -> 'a =
-  fun k -> (r_fst k).inside
 
-and compile_expression ~(raise: ('e, 'w) raise) : CST.expr -> AST.expr = fun e ->
+and extract_key : 'a. 'a CST.brackets CST.reg -> 'a = fun k -> (r_fst k).inside
+
+and compile_expression ~(raise : ('e, 'w) raise) : CST.expr -> AST.expr =
+ fun e ->
   let self = compile_expression ~raise in
   let return e = e in
   let compile_bin_op (op : _ CST.bin_op CST.reg) =
-    let CST.{op;arg1;arg2},loc = r_split op in
-    let (op,loc) = w_split op in
-    e_binary_op ~loc AST.{operator = Location.wrap ~loc op ; left = self arg1 ; right = self arg2} ()
+    let CST.{ op; arg1; arg2 }, loc = r_split op in
+    let op, loc = w_split op in
+    e_binary_op
+      ~loc
+      AST.{ operator = Location.wrap ~loc op; left = self arg1; right = self arg2 }
+      ()
   in
-  let compile_unary_op : (string CST.wrap) CST.un_op CST.reg -> AST.expr = fun op ->
-    let CST.{op;arg},loc = r_split op in
-    let (op,loc) = w_split op in
-    e_unary_op ~loc AST.{operator = Location.wrap ~loc op ; arg = self arg } ()
+  let compile_unary_op : string CST.wrap CST.un_op CST.reg -> AST.expr =
+   fun op ->
+    let CST.{ op; arg }, loc = r_split op in
+    let op, loc = w_split op in
+    e_unary_op ~loc AST.{ operator = Location.wrap ~loc op; arg = self arg } ()
   in
-  let translate_projection : CST.projection -> AST.expr = fun proj ->
-    let expr       = self proj.record_or_tuple in
+  let translate_projection : CST.projection -> AST.expr =
+   fun proj ->
+    let expr = self proj.record_or_tuple in
     TODO_unify_in_cst.nested_proj expr proj.field_path
   in
-  let compile_param_decl : CST.param_decl -> AST.param_decl = fun p ->
-    let param_kind = match p.param_kind with `Var _ -> `Var | `Const _ -> `Const in
-    let pattern    = compile_pattern ~raise p.pattern in
+  let compile_param_decl : CST.param_decl -> AST.param_decl =
+   fun p ->
+    let param_kind =
+      match p.param_kind with
+      | `Var _ -> `Var
+      | `Const _ -> `Const
+    in
+    let pattern = compile_pattern ~raise p.pattern in
     let param_type = Option.map ~f:(compile_type_expression ~raise <@ snd) p.param_type in
-    {param_kind; pattern; param_type}
+    { param_kind; pattern; param_type }
   in
-  return @@ match e with
-  | E_Var var -> (
-      let var, loc = w_split var in
-      e_variable (TODO_do_in_parsing.var ~loc var) ~loc ()
-    )
+  return
+  @@
+  match e with
+  | E_Var var ->
+    let var, loc = w_split var in
+    e_variable (TODO_do_in_parsing.var ~loc var) ~loc ()
   | E_Par par ->
-      let par, loc = r_split par in
-      self par.inside
-  | E_Bytes bytes_ -> (
-      let bytes_, loc = w_split bytes_ in
-      let (_s,b) = bytes_ in
-      e_bytes_hex b ~loc
-    )
-
-  | E_String str -> (
-      let str, loc = w_split str in
-      TODO_unify_in_cst.e_string str ~loc
-    )
-  | E_Verbatim str -> (
-      let str, loc = w_split str in
-      TODO_unify_in_cst.e_verbatim str ~loc
-    )
-  | E_Cat cat    -> compile_bin_op cat
-  | E_Add plus   -> compile_bin_op plus
-  | E_Sub minus  -> compile_bin_op minus
+    let par, loc = r_split par in
+    self par.inside
+  | E_Bytes bytes_ ->
+    let bytes_, loc = w_split bytes_ in
+    let _s, b = bytes_ in
+    e_bytes_hex b ~loc
+  | E_String str ->
+    let str, loc = w_split str in
+    TODO_unify_in_cst.e_string str ~loc
+  | E_Verbatim str ->
+    let str, loc = w_split str in
+    TODO_unify_in_cst.e_verbatim str ~loc
+  | E_Cat cat -> compile_bin_op cat
+  | E_Add plus -> compile_bin_op plus
+  | E_Sub minus -> compile_bin_op minus
   | E_Mult times -> compile_bin_op times
-  | E_Div slash  -> compile_bin_op slash
-  | E_Mod mod_   -> compile_bin_op mod_
-  | E_Neg minus  -> compile_unary_op minus
-  | E_Int i      -> let (_,i), loc = w_split i in e_int_z   ~loc i
-  | E_Nat n      -> let (_,n), loc = w_split n in e_nat_z   ~loc n
-  | E_Mutez m    -> let (_,m), loc = w_split m in e_mutez_z ~loc (Z.of_int64 m)
-  | E_Or or_     -> compile_bin_op or_
-  | E_And and_   -> compile_bin_op and_
-  | E_Not not_   -> compile_unary_op not_
-  | E_Lt lt      -> compile_bin_op lt
-  | E_Leq le     -> compile_bin_op le
-  | E_Gt gt      -> compile_bin_op gt
-  | E_Geq ge     -> compile_bin_op ge
-  | E_Equal eq   -> compile_bin_op eq
-  | E_Neq ne     -> compile_bin_op ne
-  | E_Call call -> (
-      let (func, args), loc = r_split call in
-      let func = self func in
-      let args : expr nseq =
-        let args, loc = r_split args in
-        let compile_args : CST.expr list -> expr nseq = function
-        | []      -> e_unit ~loc (), []
-        | [e]     -> self e, []
+  | E_Div slash -> compile_bin_op slash
+  | E_Mod mod_ -> compile_bin_op mod_
+  | E_Neg minus -> compile_unary_op minus
+  | E_Int i ->
+    let (_, i), loc = w_split i in
+    e_int_z ~loc i
+  | E_Nat n ->
+    let (_, n), loc = w_split n in
+    e_nat_z ~loc n
+  | E_Mutez m ->
+    let (_, m), loc = w_split m in
+    e_mutez_z ~loc (Z.of_int64 m)
+  | E_Or or_ -> compile_bin_op or_
+  | E_And and_ -> compile_bin_op and_
+  | E_Not not_ -> compile_unary_op not_
+  | E_Lt lt -> compile_bin_op lt
+  | E_Leq le -> compile_bin_op le
+  | E_Gt gt -> compile_bin_op gt
+  | E_Geq ge -> compile_bin_op ge
+  | E_Equal eq -> compile_bin_op eq
+  | E_Neq ne -> compile_bin_op ne
+  | E_Call call ->
+    let (func, args), loc = r_split call in
+    let func = self func in
+    let args : expr nseq =
+      let args, loc = r_split args in
+      let compile_args : CST.expr list -> expr nseq = function
+        | [] -> e_unit ~loc (), []
+        | [ e ] -> self e, []
         | e :: es -> nseq_map self (e, es)
-        in
-        compile_args @@ sepseq_to_list args.inside
       in
-      e_call func args ~loc ()
-  )
-  | E_Tuple lst -> (
-      let npseq, loc = r_split lst in
-      let nseq = nseq_map self (nsepseq_to_nseq npseq.inside) in
-      e_tuple nseq ~loc ()
-    )
-  | E_Record record -> (
-      let record, loc = r_split record in
-      let fields =
-        let translate_field_assign : (CST.expr, CST.expr) CST.field -> (_, expr) AST.field = function
-        | Punned    p -> Punned (TODO_do_in_parsing.expr_as_var p.pun)
-        | Complete  c -> Complete (TODO_do_in_parsing.expr_as_var c.field_lhs, self c.field_rhs)
-        in
-        List.map ~f:(translate_field_assign <@ r_fst) @@ sepseq_to_list record.elements
+      compile_args @@ sepseq_to_list args.inside
+    in
+    e_call func args ~loc ()
+  | E_Tuple lst ->
+    let npseq, loc = r_split lst in
+    let nseq = nseq_map self (nsepseq_to_nseq npseq.inside) in
+    e_tuple nseq ~loc ()
+  | E_Record record ->
+    let record, loc = r_split record in
+    let fields =
+      let translate_field_assign : (CST.expr, CST.expr) CST.field -> (_, expr) AST.field
+        = function
+        | Punned p -> Punned (TODO_do_in_parsing.expr_as_var p.pun)
+        | Complete c ->
+          Complete (TODO_do_in_parsing.expr_as_var c.field_lhs, self c.field_rhs)
       in
-      e_record_pun fields ~loc ()
-    )
-  | E_Proj proj -> (
-      let proj, loc = r_split proj in
-      translate_projection proj
-    )
-  | E_ModPath ma -> (
-      let ma, loc = r_split ma in
-      let module_path = nseq_map w_fst @@ nsepseq_to_nseq ma.module_path in
-      let field       = self ma.field in
-      e_modpath {module_path; field} ~loc ()
-    )
-  | E_Update up -> (
-      let up, loc = r_split up in
-      let structure = self up.structure in
-      let update    = TODO_unify_in_cst.update_rhs self up.update in
-      e_update {structure; update} ~loc ()
-    )
-  | E_Fun f -> (
-      let f, loc = r_split f in
-      let type_params = Option.map ~f:extract_type_params f.type_params in
-      let parameters  = List.map ~f:(compile_param_decl <@ r_fst)
-        @@ sepseq_to_list @@ (r_fst f.parameters).inside
-      in
-      let ret_type    = Option.map ~f:(compile_type_expression ~raise <@ snd) f.ret_type in
-      let body      = self f.return in
-      e_poly_fun {type_params; parameters; ret_type; body} ~loc ()
-    )
-  | E_Ctor ctor -> (
-      let ctor, loc = w_split ctor in
-      e_constr AST.Constructor.{constructor = Label.of_string ctor ; element = None} ~loc ()
-    )
-  | E_App app -> (
-      let (func, args), loc = r_split app in
-      let func = self func in
-      let args = Option.map ~f:(nseq_map self <@ extract_tuple) args in
-      e_app (func, args) ~loc ()
-    )
-  | E_Case case -> (
-      let case, loc = r_split case in
-      let case = compile_case ~raise self case in
-      e_case case ~loc ()
-    )
-  | E_Typed annot -> (
-      let annot, loc = r_split annot in
-      let e, (_, te) = annot.inside in
-      let e = self e in
-      let te = compile_type_expression ~raise te in
-      e_annot (e, te) ~loc ()
-    )
-  | E_Cond cond -> (
-      let cond, loc = r_split cond in
-      let test = self cond.test in
-      let ifso = self cond.if_so in
-      let ifnot = Option.map ~f:(self <@ snd) cond.if_not in
-      e_cond {test; ifso; ifnot} ~loc ()
-    )
-  | E_List list -> (
-      let list, loc = r_split list in
-      let elements = List.map ~f:self @@ sepseq_to_list list.elements in
-      e_list elements ~loc ()
-    )
-  | E_Cons cons -> (
-      let (CST.{op;arg1;arg2}, loc) = r_split cons in
-      let left  = self arg1 in
-      let right = self arg2 in
-      TODO_unify_in_cst.better_as_binop ~loc op (left,right)
-    )
-  | E_Set set -> (
-      let set, loc = r_split set in
-      let elements = List.map ~f:self @@ sepseq_to_list set.elements in
-      e_set elements ~loc ()
-    )
-  | E_SetMem sm -> (
-    let (sm, loc) = r_split sm in
-    let structure  = self sm.set in
+      List.map ~f:(translate_field_assign <@ r_fst) @@ sepseq_to_list record.elements
+    in
+    e_record_pun fields ~loc ()
+  | E_Proj proj ->
+    let proj, loc = r_split proj in
+    translate_projection proj
+  | E_ModPath ma ->
+    let ma, loc = r_split ma in
+    let module_path = nseq_map w_fst @@ nsepseq_to_nseq ma.module_path in
+    let field = self ma.field in
+    e_modpath { module_path; field } ~loc ()
+  | E_Update up ->
+    let up, loc = r_split up in
+    let structure = self up.structure in
+    let update = TODO_unify_in_cst.update_rhs self up.update in
+    e_update { structure; update } ~loc ()
+  | E_Fun f ->
+    let f, loc = r_split f in
+    let type_params = Option.map ~f:extract_type_params f.type_params in
+    let parameters =
+      List.map ~f:(compile_param_decl <@ r_fst)
+      @@ sepseq_to_list
+      @@ (r_fst f.parameters).inside
+    in
+    let ret_type = Option.map ~f:(compile_type_expression ~raise <@ snd) f.ret_type in
+    let body = self f.return in
+    e_poly_fun { type_params; parameters; ret_type; body } ~loc ()
+  | E_Ctor ctor ->
+    let ctor, loc = w_split ctor in
+    e_constr
+      AST.Constructor.{ constructor = Label.of_string ctor; element = None }
+      ~loc
+      ()
+  | E_App app ->
+    let (func, args), loc = r_split app in
+    let func = self func in
+    let args = Option.map ~f:(nseq_map self <@ extract_tuple) args in
+    e_app (func, args) ~loc ()
+  | E_Case case ->
+    let case, loc = r_split case in
+    let case = compile_case ~raise self case in
+    e_case case ~loc ()
+  | E_Typed annot ->
+    let annot, loc = r_split annot in
+    let e, (_, te) = annot.inside in
+    let e = self e in
+    let te = compile_type_expression ~raise te in
+    e_annot (e, te) ~loc ()
+  | E_Cond cond ->
+    let cond, loc = r_split cond in
+    let test = self cond.test in
+    let ifso = self cond.if_so in
+    let ifnot = Option.map ~f:(self <@ snd) cond.if_not in
+    e_cond { test; ifso; ifnot } ~loc ()
+  | E_List list ->
+    let list, loc = r_split list in
+    let elements = List.map ~f:self @@ sepseq_to_list list.elements in
+    e_list elements ~loc ()
+  | E_Cons cons ->
+    let CST.{ op; arg1; arg2 }, loc = r_split cons in
+    let left = self arg1 in
+    let right = self arg2 in
+    TODO_unify_in_cst.better_as_binop ~loc op (left, right)
+  | E_Set set ->
+    let set, loc = r_split set in
+    let elements = List.map ~f:self @@ sepseq_to_list set.elements in
+    e_set elements ~loc ()
+  | E_SetMem sm ->
+    let sm, loc = r_split sm in
+    let structure = self sm.set in
     let element = self sm.element in
-    TODO_unify_in_cst.better_as_binop ~loc sm.kwd_contains (structure,element)
-  )
-  | E_MapLookup mlu -> (
-      let mlu, loc = r_split mlu in
-      let map  = self mlu.map in
-      let keys = nseq_map (self <@ extract_key) mlu.keys in
-      e_maplookup {map; keys} ~loc ()
-    )
-  | E_Map m -> (
-      let m, loc = r_split m in
-      let elements : (expr * expr) list =
-        let compile_binding = fun (b : CST.binding) -> self b.key, self b.value in
-        List.map ~f:(compile_binding <@ r_fst) @@ sepseq_to_list m.elements
-      in
-      e_map elements ~loc ()
-    ) 
-  | E_BigMap m -> (
+    TODO_unify_in_cst.better_as_binop ~loc sm.kwd_contains (structure, element)
+  | E_MapLookup mlu ->
+    let mlu, loc = r_split mlu in
+    let map = self mlu.map in
+    let keys = nseq_map (self <@ extract_key) mlu.keys in
+    e_maplookup { map; keys } ~loc ()
+  | E_Map m ->
     let m, loc = r_split m in
     let elements : (expr * expr) list =
-      let compile_binding = fun (b : CST.binding) -> self b.key, self b.value in
+      let compile_binding (b : CST.binding) = self b.key, self b.value in
       List.map ~f:(compile_binding <@ r_fst) @@ sepseq_to_list m.elements
     in
     e_map elements ~loc ()
-    ) 
-  | E_CodeInj ci -> (
-      let ci, loc = r_split ci in
-      let language = r_fst @@ r_fst ci.language in
-      let code = self ci.code in
-      e_rawcode {language; code} ~loc ()
-    )
-  | E_Block be -> (
-      let be, loc = r_split be in
-      let block =
-        nseq_map (compile_statement ~raise) @@ nsepseq_to_nseq (r_fst be.block).statements
-      in
-      let expr  = self be.expr in
-      e_block_with {block; expr} ~loc ()
-    )
-  | E_Nil nil -> (
-      let (_,loc) = w_split nil in
-      e_list [] ~loc ()
-    )
-  | E_Attr (attr, expr) -> (
-      let attr, loc = r_split attr in
-      let attr = translate_attr_pascaligo attr in
-      let expr = self expr in
-      e_attr (attr, expr) ~loc ()
-    )
+  | E_BigMap m ->
+    let m, loc = r_split m in
+    let elements : (expr * expr) list =
+      let compile_binding (b : CST.binding) = self b.key, self b.value in
+      List.map ~f:(compile_binding <@ r_fst) @@ sepseq_to_list m.elements
+    in
+    e_map elements ~loc ()
+  | E_CodeInj ci ->
+    let ci, loc = r_split ci in
+    let language = r_fst @@ r_fst ci.language in
+    let code = self ci.code in
+    e_rawcode { language; code } ~loc ()
+  | E_Block be ->
+    let be, loc = r_split be in
+    let block =
+      nseq_map (compile_statement ~raise) @@ nsepseq_to_nseq (r_fst be.block).statements
+    in
+    let expr = self be.expr in
+    e_block_with { block; expr } ~loc ()
+  | E_Nil nil ->
+    let _, loc = w_split nil in
+    e_list [] ~loc ()
+  | E_Attr (attr, expr) ->
+    let attr, loc = r_split attr in
+    let attr = translate_attr_pascaligo attr in
+    let expr = self expr in
+    e_attr (attr, expr) ~loc ()
+
 
 (* ========================== DECLARATIONS ================================= *)
 
-and compile_declaration ~(raise: ('e, 'w) raise) : CST.declaration -> AST.declaration = fun decl ->
+and compile_declaration ~(raise : ('e, 'w) raise) : CST.declaration -> AST.declaration =
+ fun decl ->
   let self = compile_declaration ~raise in
-  let compile_type_params : CST.type_params CST.chevrons Region.reg -> AST.Ty_variable.t nseq =
-     fun tp ->
-      nseq_map
-        (fun x -> TODO_do_in_parsing.tvar ~loc:(w_snd x) (w_fst x))
-        (nsepseq_to_nseq (r_fst tp).inside)
+  let compile_type_params
+      : CST.type_params CST.chevrons Region.reg -> AST.Ty_variable.t nseq
+    =
+   fun tp ->
+    nseq_map
+      (fun x -> TODO_do_in_parsing.tvar ~loc:(w_snd x) (w_fst x))
+      (nsepseq_to_nseq (r_fst tp).inside)
   in
   match decl with
-  | D_Directive d -> (
+  | D_Directive d ->
     let loc = Simple_utils.Location.lift (Preprocessor.Directive.to_region d) in
     d_directive d ~loc ()
-  )
-  | D_Type d -> (
+  | D_Type d ->
     let d, loc = r_split d in
     let name = TODO_do_in_parsing.tvar ~loc:(w_snd d.name) (w_fst d.name) in
-    let params = Option.map ~f:(fun (tp : _ CST.par CST.reg) ->
-      List.Ne.map
-        (fun x -> TODO_do_in_parsing.tvar ~loc:(w_snd x) (w_fst x))
-        (nsepseq_to_nseq (r_fst tp).inside)
-      ) d.params
+    let params =
+      Option.map
+        ~f:(fun (tp : _ CST.par CST.reg) ->
+          List.Ne.map
+            (fun x -> TODO_do_in_parsing.tvar ~loc:(w_snd x) (w_fst x))
+            (nsepseq_to_nseq (r_fst tp).inside))
+        d.params
     in
     let type_expr = compile_type_expression ~raise d.type_expr in
-    d_type {name; params; type_expr} ~loc ()
-  )
-  | D_Const d -> (
+    d_type { name; params; type_expr } ~loc ()
+  | D_Const d ->
     let d, loc = r_split d in
     let type_params = Option.map ~f:compile_type_params d.type_params in
     let pattern = compile_pattern ~raise d.pattern in
     let rhs_type = Option.map ~f:(compile_type_expression ~raise <@ snd) d.const_type in
     let let_rhs = compile_expression ~raise d.init in
-    d_const ~loc {pattern; type_params; rhs_type; let_rhs} ()
-  )
-  | D_Attr d -> (
+    d_const ~loc { pattern; type_params; rhs_type; let_rhs } ()
+  | D_Attr d ->
     let attr, decl = d in
     let attr, loc = r_split attr in
     let attr = translate_attr_pascaligo attr in
     let decl = self decl in
     d_attr (attr, decl) ~loc ()
-  )
-  | D_Fun d -> (
+  | D_Fun d ->
     let d, loc = r_split d in
-    let is_rec = match d.kwd_recursive with Some _ -> true | None -> false in
+    let is_rec =
+      match d.kwd_recursive with
+      | Some _ -> true
+      | None -> false
+    in
     let fun_name = TODO_do_in_parsing.var ~loc:(w_snd d.fun_name) (w_fst d.fun_name) in
     let type_params = Option.map ~f:compile_type_params d.type_params in
     let parameters =
-      let compile_param_decl : CST.param_decl -> AST.param_decl = fun pd ->
-        let param_kind = (
+      let compile_param_decl : CST.param_decl -> AST.param_decl =
+       fun pd ->
+        let param_kind =
           match pd.param_kind with
           | `Const _ -> `Const
-          | `Var   _ -> `Var
-        ) in
+          | `Var _ -> `Var
+        in
         let pattern = compile_pattern ~raise pd.pattern in
-        let param_type = Option.map ~f:(compile_type_expression ~raise <@ snd) pd.param_type in
-        {param_kind; pattern; param_type}
+        let param_type =
+          Option.map ~f:(compile_type_expression ~raise <@ snd) pd.param_type
+        in
+        { param_kind; pattern; param_type }
       in
-      List.map ~f:(compile_param_decl <@ r_fst) @@ sepseq_to_list (r_fst d.parameters).inside
+      List.map ~f:(compile_param_decl <@ r_fst)
+      @@ sepseq_to_list (r_fst d.parameters).inside
     in
     let ret_type = Option.map ~f:(compile_type_expression ~raise <@ snd) d.ret_type in
     let return = compile_expression ~raise d.return in
-    d_fun {is_rec; fun_name; type_params; parameters; ret_type; return} ~loc ()
-  )
-  | D_Module d -> (
+    d_fun { is_rec; fun_name; type_params; parameters; ret_type; return } ~loc ()
+  | D_Module d ->
     let d, loc = r_split d in
     let name = TODO_do_in_parsing.mvar ~loc:(w_snd d.name) (w_fst d.name) in
     let mod_expr = compile_module ~raise d.module_expr in
-    d_module {name; mod_expr} ~loc ()
-  )
+    d_module { name; mod_expr } ~loc ()
+
 
 (* ========================== MODULES ===================================== *)
 
-and compile_module ~(raise: ('e, 'w) raise) : CST.module_expr -> AST.module_ = fun m ->
+and compile_module ~(raise : ('e, 'w) raise) : CST.module_expr -> AST.module_ =
+ fun m ->
   match m with
-  | M_Body m -> (
+  | M_Body m ->
     let m, loc = r_split m in
     let ds = nseq_map (compile_declaration ~raise) m.declarations in
     m_body ds ~loc ()
-  )
-  | M_Path m -> (
+  | M_Path m ->
     let m, loc = r_split m in
-    let module_path = List.Ne.map
-      (fun t -> TODO_do_in_parsing.mvar ~loc:(w_snd t) (w_fst t))
-      (nsepseq_to_nseq m.module_path)
+    let module_path =
+      List.Ne.map
+        (fun t -> TODO_do_in_parsing.mvar ~loc:(w_snd t) (w_fst t))
+        (nsepseq_to_nseq m.module_path)
     in
     let field = TODO_do_in_parsing.mvar ~loc:(w_snd m.field) (w_fst m.field) in
-    m_path (List.Ne.append module_path (field,[])) ~loc ()
-  )
-  | M_Var  m -> (
+    m_path (List.Ne.append module_path (field, [])) ~loc ()
+  | M_Var m ->
     let s, loc = w_split m in
     let v = TODO_do_in_parsing.mvar ~loc s in
     m_var v ~loc ()
-  )
+
 
 (* ========================== PROGRAM ===================================== *)
-let compile_program ~raise : CST.t -> AST.program = fun t ->
+let compile_program ~raise : CST.t -> AST.program =
+ fun t ->
   let declarations = nseq_to_list t.decl in
-  let declarations = List.map ~f:(fun a ~raise -> compile_declaration ~raise a) declarations in
+  let declarations =
+    List.map ~f:(fun a ~raise -> compile_declaration ~raise a) declarations
+  in
   let declarations = Simple_utils.Trace.collect ~raise declarations in
   List.map ~f:(fun x -> P_Declaration x) declarations

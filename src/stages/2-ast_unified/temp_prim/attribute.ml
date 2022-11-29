@@ -1,4 +1,5 @@
-type t = {
-  key      : string;
-  value    : string option;
-} [@@deriving yojson, sexp]
+type t =
+  { key : string
+  ; value : string option
+  }
+[@@deriving yojson, sexp]

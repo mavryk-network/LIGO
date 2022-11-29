@@ -54,9 +54,7 @@ module Internal () = struct
 
 
   let exists_prefix = "^gen"
-
-  let fresh_exists ?(loc = Location.dummy) () =
-    fresh ~loc ~name:exists_prefix ()
+  let fresh_exists ?(loc = Location.dummy) () = fresh ~loc ~name:exists_prefix ()
 
   (* should be removed in favor of a lift pass before ast_imperative *)
   let of_input_var ?(loc = Location.dummy) name =
@@ -75,11 +73,9 @@ module Internal () = struct
 
 
   (* TODO remove this *)
-  let internal_get_name_and_counter var = (var.name, var.counter)
-
+  let internal_get_name_and_counter var = var.name, var.counter
   let get_location var = var.location
-  let set_location location var = {var with location}
-
+  let set_location location var = { var with location }
   let is_generated var = var.generated
 
   let is_exists { name; generated; _ } =
