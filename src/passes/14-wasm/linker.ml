@@ -1,17 +1,21 @@
-    
 (**
  * Find a file in the given locations.
- *) 
-let find_file name locations = 
+ *)
+let find_file name locations =
   let rec aux filename = function
-  | [] -> failwith "Linker could not find: " ^ name ^ ". Most likely it was not installed yet. "
-  | dir::dirs ->
-    let filename' = Filename.concat dir filename in
-    match Sys_unix.file_exists filename' with 
-    | `No ->  aux filename dirs
-    | `Unknown -> aux filename dirs
-    | `Yes -> filename'
-  in aux name locations
+    | [] ->
+      failwith "Linker could not find: "
+      ^ name
+      ^ ". Most likely it was not installed yet. "
+    | dir :: dirs ->
+      let filename' = Filename.concat dir filename in
+      (match Sys_unix.file_exists filename' with
+       | `No -> aux filename dirs
+       | `Unknown -> aux filename dirs
+       | `Yes -> filename')
+  in
+  aux name locations
+
 
 (**
  * Link the generated WebAssembly object file with:
@@ -29,14 +33,17 @@ let find_file name locations =
  *)
 let link files output =
   let libligo_wasi_share_dir = find_file "lib" Ligo_runtime.Sites.ligo_wasi in
-  let libligo_wasi = find_file "libclang_rt.builtins-wasm32.a" Ligo_runtime.Sites.ligo_wasi in
+  let libligo_wasi =
+    find_file "libclang_rt.builtins-wasm32.a" Ligo_runtime.Sites.ligo_wasi
+  in
   let libligo_helpers = find_file "wat_helpers.wasm" Ligo_runtime.Sites.ligo_helpers in
-  let libligo_runtime_location = find_file "libligo_runtime.a" Ligo_runtime.Sites.ligo_runtime in
-  
+  let libligo_runtime_location =
+    find_file "libligo_runtime.a" Ligo_runtime.Sites.ligo_runtime
+  in
   let command =
     sprintf
-      "wasm-ld -m wasm32 --import-undefined -L%s -lc %s -lc %s %s --stack-first --fatal-warnings \
-       -z stack-size=8388608 -o %s --export=entrypoint"
+      "wasm-ld -m wasm32 --import-undefined -L%s -lc %s -lc %s %s --stack-first \
+       --fatal-warnings -z stack-size=8388608 -o %s --export=entrypoint"
       libligo_wasi_share_dir
       libligo_wasi
       libligo_runtime_location

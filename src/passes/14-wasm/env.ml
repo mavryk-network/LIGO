@@ -10,30 +10,23 @@ module Location = Simple_utils.Location
 type locals = (string * T.value_type) list
 
 type operand_stack = (T.value_type * operand_stack_next) option
- and operand_stack_next = Next of operand_stack
+and operand_stack_next = Next of operand_stack
 
-type t = {
-  locals: locals;
-  blocks: A.block_type list;  
-  operand_stack: operand_stack;
-  linear_memory_offset: int32;
-}
+type t =
+  { locals : locals
+  ; blocks : A.block_type list
+  ; operand_stack : operand_stack
+  ; linear_memory_offset : int32
+  }
 
-let make_env () = {
-  locals               = [];
-  blocks               = [];
-  operand_stack        = None;
-  linear_memory_offset = 0l;
-}
+let make_env () =
+  { locals = []; blocks = []; operand_stack = None; linear_memory_offset = 0l }
 
-let add_local (env: t) (local: string * T.value_type) = 
-  { env with locals = env.locals @ [local]}
 
-let add_locals (env: t) (locals: locals) = 
-  {env with locals = env.locals @ locals}
+let add_local (env : t) (local : string * T.value_type) =
+  { env with locals = env.locals @ [ local ] }
 
-let equal a b = 
-  Poly.(fst a = fst b)
 
-let find_local env name = 
-  List.mem env.locals name ~equal
+let add_locals (env : t) (locals : locals) = { env with locals = env.locals @ locals }
+let equal a b = Poly.(fst a = fst b)
+let find_local env name = List.mem env.locals name ~equal
