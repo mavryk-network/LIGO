@@ -73,7 +73,7 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_good [ "compile"; "contract"; contract "view_import_and_alias.mligo" ];
   [%expect
-    {| 
+    {|
     { parameter unit ;
       storage int ;
       code { CDR ; NIL operation ; PAIR } ;
@@ -82,14 +82,7 @@ let%expect_test _ =
 (* view restrictions on primitives *)
 let%expect_test _ =
   run_ligo_bad
-    [ "compile"
-    ; "contract"
-    ; contract "view_restrictions.mligo"
-    ; "--views"
-    ; "bad_view1"
-    ; "--protocol"
-    ; "jakarta"
-    ];
+    [ "compile"; "contract"; contract "view_restrictions.mligo"; "--views"; "bad_view1" ];
   [%expect
     {| 
     File "../../test/contracts/view_restrictions.mligo", line 7, characters 10-70:
@@ -103,14 +96,7 @@ let%expect_test _ =
 
 let%expect_test _ =
   run_ligo_bad
-    [ "compile"
-    ; "contract"
-    ; contract "view_restrictions.mligo"
-    ; "--views"
-    ; "bad_view2"
-    ; "--protocol"
-    ; "jakarta"
-    ];
+    [ "compile"; "contract"; contract "view_restrictions.mligo"; "--views"; "bad_view2" ];
   [%expect
     {| 
     View rule violated:
@@ -169,51 +155,20 @@ let%expect_test _ =
     This declaration holds an annotation and is later shadowed. |}]
 
 let%expect_test _ =
+  run_ligo_bad [ "compile"; "contract"; bad_test "views_shadow_top_pat.mligo" ];
+  [%expect
+    {|
+    File "../../test/contracts/negative/views_shadow_top_pat.mligo", line 3, characters 12-14:
+      2 |
+      3 | [@view] let v1 = fun (n,s: int * int) : int -> s + n + 1
+      4 | let v1 = fun (n,s: int * int) : int -> s + n + 111111
+
+    This declaration holds an annotation and is later shadowed. |}]
+
+let%expect_test _ =
   run_ligo_good [ "compile"; "contract"; contract "views_using_view.jsligo" ];
   [%expect
     {|
-    File "../../test/contracts/views_using_view.jsligo", line 23, characters 0-98:
-     22 | // @view
-     23 | let super_not_funny = ([_,s]:[unit, storage]): storage => not_funny(unit, s) + get_storage(unit,s);
-     24 |
-
-    Toplevel let declaration are silently change to const declaration.
-
-    File "../../test/contracts/views_using_view.jsligo", line 20, characters 0-73:
-     19 | // @view
-     20 | let get_address = ([_,_s]:[unit, storage]): address => Tezos.get_sender();
-     21 |
-
-    Toplevel let declaration are silently change to const declaration.
-
-    File "../../test/contracts/views_using_view.jsligo", line 17, characters 0-59:
-     16 | // @view
-     17 | let get_storage = ([_,s]:[unit, storage]): storage => x + s;
-     18 |
-
-    Toplevel let declaration are silently change to const declaration.
-
-    File "../../test/contracts/views_using_view.jsligo", line 14, characters 0-83:
-     13 | // @view
-     14 | let not_funny = ([_,s]:[unit, storage]): storage => basic(Tezos.get_sender(),x + s);
-     15 |
-
-    Toplevel let declaration are silently change to const declaration.
-
-    File "../../test/contracts/views_using_view.jsligo", line 11, characters 0-57:
-     10 | // @view
-     11 | let basic = ([_a,s]:[address, storage]): storage => x + s;
-     12 |
-
-    Toplevel let declaration are silently change to const declaration.
-
-    File "../../test/contracts/views_using_view.jsligo", line 6, characters 0-9:
-      5 |
-      6 | let x = 0
-      7 |
-
-    Toplevel let declaration are silently change to const declaration.
-
     { parameter unit ;
       storage int ;
       code { DROP ; PUSH int 0 ; NIL operation ; PAIR } ;
@@ -241,216 +196,6 @@ let%expect_test _ =
   run_ligo_good [ "run"; "test"; contract "views_using_view.test.mligo" ];
   [%expect
     {|
-    File "../../test/contracts/views_using_view.jsligo", line 23, characters 0-98:
-     22 | // @view
-     23 | let super_not_funny = ([_,s]:[unit, storage]): storage => not_funny(unit, s) + get_storage(unit,s);
-     24 |
-
-    Toplevel let declaration are silently change to const declaration.
-
-    File "../../test/contracts/views_using_view.jsligo", line 20, characters 0-73:
-     19 | // @view
-     20 | let get_address = ([_,_s]:[unit, storage]): address => Tezos.get_sender();
-     21 |
-
-    Toplevel let declaration are silently change to const declaration.
-
-    File "../../test/contracts/views_using_view.jsligo", line 17, characters 0-59:
-     16 | // @view
-     17 | let get_storage = ([_,s]:[unit, storage]): storage => x + s;
-     18 |
-
-    Toplevel let declaration are silently change to const declaration.
-
-    File "../../test/contracts/views_using_view.jsligo", line 14, characters 0-83:
-     13 | // @view
-     14 | let not_funny = ([_,s]:[unit, storage]): storage => basic(Tezos.get_sender(),x + s);
-     15 |
-
-    Toplevel let declaration are silently change to const declaration.
-
-    File "../../test/contracts/views_using_view.jsligo", line 11, characters 0-57:
-     10 | // @view
-     11 | let basic = ([_a,s]:[address, storage]): storage => x + s;
-     12 |
-
-    Toplevel let declaration are silently change to const declaration.
-
-    File "../../test/contracts/views_using_view.jsligo", line 6, characters 0-9:
-      5 |
-      6 | let x = 0
-      7 |
-
-    Toplevel let declaration are silently change to const declaration.
-
-    File "../../test/contracts/views_using_view.jsligo", line 23, characters 0-98:
-     22 | // @view
-     23 | let super_not_funny = ([_,s]:[unit, storage]): storage => not_funny(unit, s) + get_storage(unit,s);
-     24 |
-
-    Toplevel let declaration are silently change to const declaration.
-
-    File "../../test/contracts/views_using_view.jsligo", line 20, characters 0-73:
-     19 | // @view
-     20 | let get_address = ([_,_s]:[unit, storage]): address => Tezos.get_sender();
-     21 |
-
-    Toplevel let declaration are silently change to const declaration.
-
-    File "../../test/contracts/views_using_view.jsligo", line 17, characters 0-59:
-     16 | // @view
-     17 | let get_storage = ([_,s]:[unit, storage]): storage => x + s;
-     18 |
-
-    Toplevel let declaration are silently change to const declaration.
-
-    File "../../test/contracts/views_using_view.jsligo", line 14, characters 0-83:
-     13 | // @view
-     14 | let not_funny = ([_,s]:[unit, storage]): storage => basic(Tezos.get_sender(),x + s);
-     15 |
-
-    Toplevel let declaration are silently change to const declaration.
-
-    File "../../test/contracts/views_using_view.jsligo", line 11, characters 0-57:
-     10 | // @view
-     11 | let basic = ([_a,s]:[address, storage]): storage => x + s;
-     12 |
-
-    Toplevel let declaration are silently change to const declaration.
-
-    File "../../test/contracts/views_using_view.jsligo", line 6, characters 0-9:
-      5 |
-      6 | let x = 0
-      7 |
-
-    Toplevel let declaration are silently change to const declaration.
-
-    File "../../test/contracts/views_using_view.jsligo", line 23, characters 0-98:
-     22 | // @view
-     23 | let super_not_funny = ([_,s]:[unit, storage]): storage => not_funny(unit, s) + get_storage(unit,s);
-     24 |
-
-    Toplevel let declaration are silently change to const declaration.
-
-    File "../../test/contracts/views_using_view.jsligo", line 20, characters 0-73:
-     19 | // @view
-     20 | let get_address = ([_,_s]:[unit, storage]): address => Tezos.get_sender();
-     21 |
-
-    Toplevel let declaration are silently change to const declaration.
-
-    File "../../test/contracts/views_using_view.jsligo", line 17, characters 0-59:
-     16 | // @view
-     17 | let get_storage = ([_,s]:[unit, storage]): storage => x + s;
-     18 |
-
-    Toplevel let declaration are silently change to const declaration.
-
-    File "../../test/contracts/views_using_view.jsligo", line 14, characters 0-83:
-     13 | // @view
-     14 | let not_funny = ([_,s]:[unit, storage]): storage => basic(Tezos.get_sender(),x + s);
-     15 |
-
-    Toplevel let declaration are silently change to const declaration.
-
-    File "../../test/contracts/views_using_view.jsligo", line 11, characters 0-57:
-     10 | // @view
-     11 | let basic = ([_a,s]:[address, storage]): storage => x + s;
-     12 |
-
-    Toplevel let declaration are silently change to const declaration.
-
-    File "../../test/contracts/views_using_view.jsligo", line 6, characters 0-9:
-      5 |
-      6 | let x = 0
-      7 |
-
-    Toplevel let declaration are silently change to const declaration.
-
-    File "../../test/contracts/views_using_view.jsligo", line 23, characters 0-98:
-     22 | // @view
-     23 | let super_not_funny = ([_,s]:[unit, storage]): storage => not_funny(unit, s) + get_storage(unit,s);
-     24 |
-
-    Toplevel let declaration are silently change to const declaration.
-
-    File "../../test/contracts/views_using_view.jsligo", line 20, characters 0-73:
-     19 | // @view
-     20 | let get_address = ([_,_s]:[unit, storage]): address => Tezos.get_sender();
-     21 |
-
-    Toplevel let declaration are silently change to const declaration.
-
-    File "../../test/contracts/views_using_view.jsligo", line 17, characters 0-59:
-     16 | // @view
-     17 | let get_storage = ([_,s]:[unit, storage]): storage => x + s;
-     18 |
-
-    Toplevel let declaration are silently change to const declaration.
-
-    File "../../test/contracts/views_using_view.jsligo", line 14, characters 0-83:
-     13 | // @view
-     14 | let not_funny = ([_,s]:[unit, storage]): storage => basic(Tezos.get_sender(),x + s);
-     15 |
-
-    Toplevel let declaration are silently change to const declaration.
-
-    File "../../test/contracts/views_using_view.jsligo", line 11, characters 0-57:
-     10 | // @view
-     11 | let basic = ([_a,s]:[address, storage]): storage => x + s;
-     12 |
-
-    Toplevel let declaration are silently change to const declaration.
-
-    File "../../test/contracts/views_using_view.jsligo", line 6, characters 0-9:
-      5 |
-      6 | let x = 0
-      7 |
-
-    Toplevel let declaration are silently change to const declaration.
-
-    File "../../test/contracts/views_using_view.jsligo", line 23, characters 0-98:
-     22 | // @view
-     23 | let super_not_funny = ([_,s]:[unit, storage]): storage => not_funny(unit, s) + get_storage(unit,s);
-     24 |
-
-    Toplevel let declaration are silently change to const declaration.
-
-    File "../../test/contracts/views_using_view.jsligo", line 20, characters 0-73:
-     19 | // @view
-     20 | let get_address = ([_,_s]:[unit, storage]): address => Tezos.get_sender();
-     21 |
-
-    Toplevel let declaration are silently change to const declaration.
-
-    File "../../test/contracts/views_using_view.jsligo", line 17, characters 0-59:
-     16 | // @view
-     17 | let get_storage = ([_,s]:[unit, storage]): storage => x + s;
-     18 |
-
-    Toplevel let declaration are silently change to const declaration.
-
-    File "../../test/contracts/views_using_view.jsligo", line 14, characters 0-83:
-     13 | // @view
-     14 | let not_funny = ([_,s]:[unit, storage]): storage => basic(Tezos.get_sender(),x + s);
-     15 |
-
-    Toplevel let declaration are silently change to const declaration.
-
-    File "../../test/contracts/views_using_view.jsligo", line 11, characters 0-57:
-     10 | // @view
-     11 | let basic = ([_a,s]:[address, storage]): storage => x + s;
-     12 |
-
-    Toplevel let declaration are silently change to const declaration.
-
-    File "../../test/contracts/views_using_view.jsligo", line 6, characters 0-9:
-      5 |
-      6 | let x = 0
-      7 |
-
-    Toplevel let declaration are silently change to const declaration.
-
     Everything at the top-level was executed.
     - test_basic exited with value true.
     - test_not_funny exited with value true.

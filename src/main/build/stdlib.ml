@@ -90,7 +90,7 @@ let get : options:Compiler_options.t -> unit -> t =
   in
   let std =
     match options.middle_end.protocol_version with
-    | Environment.Protocols.Jakarta -> def "JAKARTA"
+    | Environment.Protocols.Lima -> def "LIMA"
     | Environment.Protocols.Kathmandu -> def "KATHMANDU"
   in
   let lib = Ligo_lib.get () in

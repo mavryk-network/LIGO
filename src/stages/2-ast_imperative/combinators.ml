@@ -241,7 +241,6 @@ let e_recursive ?loc fun_name fun_type lambda =
   make_e ?loc @@ E_recursive { fun_name; fun_type; lambda }
 
 
-(* let e_recursive_ez ?loc fun_name fun_type lambda = e_recursive ?loc (Var.of_input_var fun_name) fun_type lambda *)
 let e_let_in ?loc let_binder attributes rhs let_result =
   make_e ?loc @@ E_let_in { let_binder; rhs; let_result; attributes }
 
@@ -251,13 +250,12 @@ let e_let_mut_in ?loc let_binder attributes rhs let_result =
 
 
 let e_let_in_ez ?loc var ?ascr ?(mut = false) attributes rhs let_result =
-  let binder = Ligo_prim.Binder.make var ascr in
+  let binder = Pattern.var (Ligo_prim.Binder.make var ascr) in
   if mut
   then e_let_mut_in ?loc binder attributes rhs let_result
   else e_let_in ?loc binder attributes rhs let_result
 
 
-(* let e_let_in_ez ?loc binder ascr inline rhs let_result = e_let_in ?loc (Var.of_input_var binder, ascr) inline rhs let_result *)
 let e_type_in ?loc type_binder rhs let_result =
   make_e ?loc @@ E_type_in { type_binder; rhs; let_result }
 
@@ -307,7 +305,7 @@ let e_param_matching_tuple ?loc matchee (params : _ Param.t list) body : express
         | Mutable ->
           e_let_mut_in
             ?loc
-            (Param.to_binder param)
+            (Location.wrap (Pattern.P_var (Param.to_binder param)))
             []
             (e_variable ?loc @@ Param.get_var param)
             body)
@@ -338,7 +336,7 @@ let e_param_matching_record ?loc matchee (params : (string * _ Param.t) list) bo
         | Mutable ->
           e_let_mut_in
             ?loc
-            (Param.to_binder param)
+            (Location.wrap (Pattern.P_var (Param.to_binder param)))
             []
             (e_variable ?loc @@ Param.get_var param)
             body)

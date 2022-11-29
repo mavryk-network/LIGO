@@ -23,6 +23,7 @@ version.ml
 /*.jsligo
 /wasi
 
+env/
 _esy
 node_modules
 /src/main/build/ligo_lib/loaded.ml

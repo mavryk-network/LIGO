@@ -130,6 +130,8 @@ and record ppf kvl =
 and declaration ppf (d : declaration) =
   match Location.unwrap d with
   | D_value vd -> Types.Value_decl.pp expression type_expression_option ppf vd
+  | D_irrefutable_match pd ->
+    Types.Pattern_decl.pp expression type_expression_option ppf pd
   | D_type td -> Types.Type_decl.pp type_expression ppf td
   | D_module md -> Types.Module_decl.pp module_expr ppf md
 
@@ -140,4 +142,5 @@ and module_expr ppf (me : module_expr) : unit =
   Location.pp_wrap (Module_expr.pp decl) ppf me
 
 
-let program ppf (p : program) = list_sep declaration (tag "@,") ppf p
+let program ppf (p : program) =
+  Format.fprintf ppf "@[<v>%a@]" (list_sep declaration (tag "@,")) p

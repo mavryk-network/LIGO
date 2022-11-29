@@ -134,12 +134,13 @@ let rec error_ppformat
       Format.fprintf
         f
         "@[Error(s) occurred while translating to Michelson:@.%a@]"
-        (Tezos_client_014_PtKathma.Michelson_v1_error_reporter.report_errors
+        (Memory_proto_alpha.Client.Michelson_v1_error_reporter.report_errors
            ~details:true
            ~show_source:true
            ?parsed:None)
         errs
-    | `Main_typecheck_contract_tracer (_c, err_l) ->
+    | `Main_typecheck_contract_tracer (protocol, _c, err_l)
+      when Environment.Protocols.(equal protocol in_use) ->
       let errs =
         List.map
           ~f:(fun e ->
@@ -150,7 +151,23 @@ let rec error_ppformat
       Format.fprintf
         f
         "@[<hv>Error(s) occurred while type checking the contract:@.%a@]"
-        (Tezos_client_014_PtKathma.Michelson_v1_error_reporter.report_errors
+        (Memory_proto_alpha.Client.Michelson_v1_error_reporter.report_errors
+           ~details:true
+           ~show_source:true
+           ?parsed:None)
+        errs
+    | `Main_typecheck_contract_tracer (_protocol, _c, err_l) ->
+      let errs =
+        List.map
+          ~f:(fun e ->
+            match e with
+            | `Tezos_alpha_error a -> a)
+          err_l
+      in
+      Format.fprintf
+        f
+        "@[<hv>Error(s) occurred while type checking the contract:@.%a@]"
+        (Memory_proto_pre_alpha.Client.Michelson_v1_error_reporter.report_errors
            ~details:true
            ~show_source:true
            ?parsed:None)
@@ -166,7 +183,7 @@ let rec error_ppformat
       Format.fprintf
         f
         "@[<hv>Error(s) occurred while serializing Michelson code:@.%a @]"
-        (Tezos_client_014_PtKathma.Michelson_v1_error_reporter.report_errors
+        (Memory_proto_alpha.Client.Michelson_v1_error_reporter.report_errors
            ~details:true
            ~show_source:true
            ?parsed:None)
@@ -273,7 +290,7 @@ let rec error_ppformat
       Format.fprintf
         f
         "@[<hv>Error(s) occurred while unparsing the Michelson result:@.%a @]"
-        (Tezos_client_014_PtKathma.Michelson_v1_error_reporter.report_errors
+        (Memory_proto_alpha.Client.Michelson_v1_error_reporter.report_errors
            ~details:true
            ~show_source:true
            ?parsed:None)
@@ -293,7 +310,7 @@ let rec error_ppformat
       Format.fprintf
         f
         "@[<hv>Error(s) occurred while parsing the Michelson input:@.%a @]"
-        (Tezos_client_014_PtKathma.Michelson_v1_error_reporter.report_errors
+        (Memory_proto_alpha.Client.Michelson_v1_error_reporter.report_errors
            ~details:true
            ~show_source:true
            ?parsed:None)
@@ -309,7 +326,7 @@ let rec error_ppformat
       Format.fprintf
         f
         "@[<hv>Error(s) occurred while checking the contract:@.%a @]"
-        (Tezos_client_014_PtKathma.Michelson_v1_error_reporter.report_errors
+        (Memory_proto_alpha.Client.Michelson_v1_error_reporter.report_errors
            ~details:true
            ~show_source:true
            ?parsed:None)
@@ -325,7 +342,7 @@ let rec error_ppformat
       Format.fprintf
         f
         "@[<hv>Error(s) occurred while executing the contract:@.%a @]"
-        (Tezos_client_014_PtKathma.Michelson_v1_error_reporter.report_errors
+        (Memory_proto_alpha.Client.Michelson_v1_error_reporter.report_errors
            ~details:true
            ~show_source:true
            ?parsed:None)
@@ -370,7 +387,7 @@ let rec error_ppformat
         "@[<v 4>%a@.An uncaught error occured:@.%a@]"
         Snippet.pp
         loc
-        (Tezos_client_014_PtKathma.Michelson_v1_error_reporter.report_errors
+        (Memory_proto_alpha.Client.Michelson_v1_error_reporter.report_errors
            ~details:true
            ~show_source:true
            ?parsed:None)
@@ -383,7 +400,7 @@ let rec error_ppformat
           "@[<v 4>%a@.An uncaught error occured:@.%a@.Trace:@.%a@]"
           Snippet.pp
           loc
-          (Tezos_client_014_PtKathma.Michelson_v1_error_reporter.report_errors
+          (Memory_proto_alpha.Client.Michelson_v1_error_reporter.report_errors
              ~details:true
              ~show_source:true
              ?parsed:None)
@@ -396,7 +413,7 @@ let rec error_ppformat
           "@[<v 4>%a@.An uncaught error occured:@.%a@.Trace:@.%a@.%a@]"
           Snippet.pp
           loc
-          (Tezos_client_014_PtKathma.Michelson_v1_error_reporter.report_errors
+          (Memory_proto_alpha.Client.Michelson_v1_error_reporter.report_errors
              ~details:true
              ~show_source:true
              ?parsed:None)
@@ -520,8 +537,6 @@ let rec error_ppformat
         loc
     | `Main_decompile_michelson e -> Stacking.Errors.error_ppformat ~display_format f e
     | `Main_decompile_mini_c e -> Spilling.Errors.error_ppformat ~display_format f e
-    | `Main_decompile_aggregated e ->
-      Aggregation.Errors.error_ppformat ~display_format f e
     | `Main_decompile_typed e -> Checking.Errors.error_ppformat ~display_format f e
     | `Main_view_rule_violated loc ->
       Format.fprintf
@@ -587,7 +602,7 @@ let rec error_json : Types.all -> Simple_utils.Error.t list =
   | `Main_unparse_tracer _ ->
     let content = make_content ~message:"could not unparse michelson type" () in
     [ make ~stage:"michelson contract build" ~content ]
-  | `Main_typecheck_contract_tracer (_c, _) ->
+  | `Main_typecheck_contract_tracer (_p, _c, _) ->
     let content = make_content ~message:"Could not typecheck michelson code" () in
     [ make ~stage:"michelson contract build" ~content ]
   | `Main_could_not_serialize _errs ->

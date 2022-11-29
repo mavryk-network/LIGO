@@ -164,7 +164,8 @@ let pack_payload
     let aggregated =
       Ligo_compile.Of_typed.compile_expression ~raise ~options:options.middle_end typed
     in
-    let mini_c = Ligo_compile.Of_aggregated.compile_expression ~raise aggregated in
+    let expanded = Ligo_compile.Of_aggregated.compile_expression ~raise aggregated in
+    let mini_c = Ligo_compile.Of_expanded.compile_expression ~raise expanded in
     Ligo_compile.Of_mini_c.compile_expression ~raise ~options mini_c
   in
   let payload_ty = code.expr_ty in
@@ -223,7 +224,8 @@ let typed_program_to_michelson ~raise (program, env) =
   let aggregated =
     Ligo_compile.Of_typed.compile_expression ~raise ~options:options.middle_end program
   in
-  let mini_c = Ligo_compile.Of_aggregated.compile_expression ~raise aggregated in
+  let expanded = Ligo_compile.Of_aggregated.compile_expression ~raise aggregated in
+  let mini_c = Ligo_compile.Of_expanded.compile_expression ~raise expanded in
   let michelson = Ligo_compile.Of_mini_c.compile_expression ~raise ~options mini_c in
   let michelson =
     Ligo_compile.Of_michelson.build_contract ~disable_typecheck:false michelson
@@ -252,7 +254,8 @@ let typed_program_with_imperative_input_to_michelson
       program
       typed_app
   in
-  let mini_c = Ligo_compile.Of_aggregated.compile_expression ~raise aggregated in
+  let expanded = Ligo_compile.Of_aggregated.compile_expression ~raise aggregated in
+  let mini_c = Ligo_compile.Of_expanded.compile_expression ~raise expanded in
   ( Ligo_compile.Of_mini_c.compile_expression ~raise ~options mini_c
   , aggregated.type_expression )
 
@@ -344,7 +347,8 @@ let expect_evaluate ~raise (program : Ast_typed.program) entry_point expecter =
       program
       entry_point
   in
-  let mini_c = Ligo_compile.Of_aggregated.compile_expression ~raise aggregated in
+  let expanded = Ligo_compile.Of_aggregated.compile_expression ~raise aggregated in
+  let mini_c = Ligo_compile.Of_expanded.compile_expression ~raise expanded in
   let michelson_value =
     Ligo_compile.Of_mini_c.compile_expression ~raise ~options mini_c
   in
@@ -489,7 +493,8 @@ let compile_main ~raise f () =
       (get_program ~raise f ())
     @@ Ligo_prim.Value_var.of_input_var "main"
   in
-  let mini_c = Ligo_compile.Of_aggregated.compile_expression ~raise agg in
+  let expanded = Ligo_compile.Of_aggregated.compile_expression ~raise agg in
+  let mini_c = Ligo_compile.Of_expanded.compile_expression ~raise expanded in
   let michelson_prg = Ligo_compile.Of_mini_c.compile_contract ~raise ~options mini_c in
   let _contract : _ Tezos_utils.Michelson.michelson =
     (* fails if the given entry point is not a valid contract *)

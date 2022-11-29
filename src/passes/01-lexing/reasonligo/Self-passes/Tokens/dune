@@ -25,14 +25,8 @@
  (deps
   (:ParToken ../../../../02-parsing/reasonligo/ParToken.mly))
  (action
-  (run
-   menhir
-   %{ParToken}
-   --only-tokens
-   --inspection
-   --table
-   --base
-   MenhirToken)))
+  (run menhir %{ParToken} --only-tokens --inspection --table --base
+    MenhirToken)))
 
 (library
  (name menhir_reasonligo_tokens)
@@ -76,19 +70,9 @@
  (action
   (with-stdout-to
    %{targets}
-   (run
-    menhir
-    --unused-tokens
-    --update-errors
-    es6fun_errors.msg.in
-    --table
-    --strict
-    --external-tokens
-    Token
-    --base
-    PreParser.mly
-    %{ParToken}
-    PreParser.mly))))
+   (run menhir --unused-tokens --update-errors es6fun_errors.msg.in --table
+     --strict --external-tokens Token --base PreParser.mly %{ParToken}
+     PreParser.mly))))
 
 (rule
  (target es6fun_errors.msg.new)
@@ -98,18 +82,8 @@
  (action
   (with-stdout-to
    %{target}
-   (run
-    menhir
-    --unused-tokens
-    --list-errors
-    --table
-    --strict
-    --external-tokens
-    Token
-    --base
-    PreParser.mly
-    %{ParToken}
-    PreParser.mly))))
+   (run menhir --unused-tokens --list-errors --table --strict
+     --external-tokens Token --base PreParser.mly %{ParToken} PreParser.mly))))
 
 (rule
  (alias runtest)
@@ -118,21 +92,9 @@
   es6fun_errors.msg.new
   (:ParToken ../../../../02-parsing/reasonligo/ParToken.mly))
  (action
-  (run
-   menhir
-   --unused-tokens
-   --table
-   --strict
-   --external-tokens
-   Token
-   --base
-   PreParser.mly
-   %{ParToken}
-   PreParser.mly
-   --compare-errors
-   es6fun_errors.msg.new
-   --compare-errors
-   es6fun_errors.msg)))
+  (run menhir --unused-tokens --table --strict --external-tokens Token --base
+    PreParser.mly %{ParToken} PreParser.mly --compare-errors
+    es6fun_errors.msg.new --compare-errors es6fun_errors.msg)))
 
 (rule
  (targets PreParErr.ml)
@@ -143,16 +105,6 @@
  (action
   (with-stdout-to
    %{targets}
-   (run
-    menhir
-    --unused-tokens
-    --table
-    --strict
-    --external-tokens
-    Token
-    --base
-    PreParser.mly
-    %{ParToken}
-    PreParser.mly
-    --compile-errors
-    es6fun_errors.msg.in))))
+   (run menhir --unused-tokens --table --strict --external-tokens Token
+     --base PreParser.mly %{ParToken} PreParser.mly --compile-errors
+     es6fun_errors.msg.in))))

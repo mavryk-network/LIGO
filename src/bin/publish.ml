@@ -40,6 +40,12 @@ module LigoManifest = Cli_helpers.LigoManifest
 module RepositoryUrl = Cli_helpers.RepositoryUrl
 module SMap = Caml.Map.Make (String)
 
+type object_ = (string * string) list
+
+let object__to_yojson o =
+  `Assoc (List.fold o ~init:[] ~f:(fun kvs (k, v) -> (k, `String v) :: kvs))
+
+
 type sem_ver = string [@@deriving to_yojson]
 type dist_tag = { latest : sem_ver } [@@deriving to_yojson]
 
@@ -62,7 +68,9 @@ type version =
   ; repository : RepositoryUrl.t
   ; version : sem_ver
   ; description : string
-  ; scripts : (string * string) list
+  ; scripts : object_
+  ; dependencies : object_
+  ; dev_dependencies : object_ [@key "devDependencies"]
   ; readme : string
   ; id : string [@key "_id"]
   ; dist : dist
@@ -119,6 +127,8 @@ let body
     ~sha1
     ~gzipped_tarball
     ~scripts
+    ~dependencies
+    ~dev_dependencies
   =
   { id = name
   ; name
@@ -137,6 +147,8 @@ let body
         ; version
         ; description
         ; scripts
+        ; dependencies
+        ; dev_dependencies
         ; readme
         ; id = Format.sprintf "%s@%s" name version
         ; dist =
@@ -165,6 +177,8 @@ let http ~token ~sha1 ~sha512 ~gzipped_tarball ~ligo_registry ~manifest =
         ; version
         ; main
         ; scripts
+        ; dependencies
+        ; dev_dependencies
         ; description
         ; readme
         ; author
@@ -195,6 +209,8 @@ let http ~token ~sha1 ~sha512 ~gzipped_tarball ~ligo_registry ~manifest =
       ~repository
       ~version
       ~scripts
+      ~dependencies
+      ~dev_dependencies
       ~main
       ~description
       ~readme

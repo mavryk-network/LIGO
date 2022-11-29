@@ -273,6 +273,13 @@ let now =
   flag ~doc name spec
 
 
+let no_colour =
+  let open Command.Param in
+  let name = "--no-colour" in
+  let doc = "disable coloring in CLI output" in
+  flag ~doc name no_arg
+
+
 let display_format =
   let open Command.Param in
   let open Simple_utils.Display in
@@ -491,6 +498,7 @@ let compile_file =
       output_file
       show_warnings
       warning_as_error
+      no_colour
       michelson_comments
       constants
       file_constants
@@ -510,6 +518,7 @@ let compile_file =
         ~enable_typed_opt
         ~no_stdlib
         ~warning_as_error
+        ~no_colour
         ~constants
         ~file_constants
         ~project_root
@@ -556,10 +565,10 @@ let compile_file =
     <*> enable_michelson_typed_opt
     <*> no_stdlib
     <*> michelson_code_format
-    <*> wasm_code_format
     <*> output_file
     <*> warn
     <*> werror
+    <*> no_colour
     <*> michelson_comments
     <*> constants
     <*> file_constants
@@ -954,7 +963,6 @@ let test =
       syntax
       steps
       cli_expr_inj
-      protocol_version
       display_format
       show_warnings
       project_root
@@ -965,7 +973,6 @@ let test =
       Raw_options.make
         ~syntax
         ~steps
-        ~protocol_version
         ~project_root
         ~warn_unused_rec
         ~cli_expr_inj
@@ -989,7 +996,6 @@ let test =
     <*> syntax
     <*> steps
     <*> cli_expr_inj
-    <*> protocol_version
     <*> display_format
     <*> warn
     <*> project_root
@@ -1338,8 +1344,10 @@ let measure_contract =
 
 
 let get_scope =
-  let f source_file protocol_version libraries display_format with_types () =
-    let raw_options = Raw_options.make ~protocol_version ~libraries ~with_types () in
+  let f source_file protocol_version libraries display_format with_types project_root () =
+    let raw_options =
+      Raw_options.make ~protocol_version ~libraries ~with_types ~project_root ()
+    in
     return_result ~return @@ Api.Info.get_scope raw_options source_file display_format
   in
   let summary = "return the JSON encoded environment for a given file." in
@@ -1355,7 +1363,8 @@ let get_scope =
     <*> protocol_version
     <*> libraries
     <*> display_format
-    <*> with_types)
+    <*> with_types
+    <*> project_root)
 
 
 let info_group =
@@ -1370,8 +1379,8 @@ let info_group =
 
 (** Print commands *)
 let preprocessed =
-  let f source_file syntax libraries display_format project_root () =
-    let raw_options = Raw_options.make ~syntax ~libraries ~project_root () in
+  let f source_file syntax libraries display_format project_root no_colour () =
+    let raw_options = Raw_options.make ~syntax ~libraries ~project_root ~no_colour () in
     return_result ~return @@ Api.Print.preprocess raw_options source_file display_format
   in
   let summary =
@@ -1386,12 +1395,18 @@ let preprocessed =
      by this sub-command."
   in
   Command.basic ~summary ~readme
-  @@ (f <$> source_file <*> syntax <*> libraries <*> display_format <*> project_root)
+  @@ (f
+     <$> source_file
+     <*> syntax
+     <*> libraries
+     <*> display_format
+     <*> project_root
+     <*> no_colour)
 
 
 let pretty_print =
-  let f source_file syntax display_format warning_as_error () =
-    let raw_options = Raw_options.make ~syntax ~warning_as_error () in
+  let f source_file syntax display_format warning_as_error no_colour () =
+    let raw_options = Raw_options.make ~syntax ~warning_as_error ~no_colour () in
     return_result ~return @@ Api.Print.pretty_print raw_options source_file display_format
   in
   let summary = "pretty-print the source file." in
@@ -1401,12 +1416,12 @@ let pretty_print =
      it cannot be determined)."
   in
   Command.basic ~summary ~readme
-  @@ (f <$> source_file <*> syntax <*> display_format <*> werror)
+  @@ (f <$> source_file <*> syntax <*> display_format <*> werror <*> no_colour)
 
 
 let print_graph =
-  let f source_file syntax display_format project_root () =
-    let raw_options = Raw_options.make ~syntax ~project_root () in
+  let f source_file syntax display_format project_root no_colour () =
+    let raw_options = Raw_options.make ~syntax ~project_root ~no_colour () in
     return_result ~return
     @@ Api.Print.dependency_graph raw_options source_file display_format
   in
@@ -1419,12 +1434,12 @@ let print_graph =
      explores all imported source files (recursively) following a DFS strategy."
   in
   Command.basic ~summary ~readme
-  @@ (f <$> source_file <*> syntax <*> display_format <*> project_root)
+  @@ (f <$> source_file <*> syntax <*> display_format <*> project_root <*> no_colour)
 
 
 let print_cst =
-  let f source_file syntax display_format () =
-    let raw_options = Raw_options.make ~syntax () in
+  let f source_file syntax display_format no_colour () =
+    let raw_options = Raw_options.make ~syntax ~no_colour () in
     return_result ~return @@ Api.Print.cst raw_options source_file display_format
   in
   let summary =
@@ -1434,12 +1449,13 @@ let print_cst =
     "This sub-command prints the source file in the CST stage, obtained after \
      preprocessing and parsing."
   in
-  Command.basic ~summary ~readme @@ (f <$> source_file <*> syntax <*> display_format)
+  Command.basic ~summary ~readme
+  @@ (f <$> source_file <*> syntax <*> display_format <*> no_colour)
 
 
 let print_ast =
-  let f source_file syntax display_format () =
-    let raw_options = Raw_options.make ~syntax () in
+  let f source_file syntax display_format no_colour () =
+    let raw_options = Raw_options.make ~syntax ~no_colour () in
     return_result ~return @@ Api.Print.ast raw_options source_file display_format
   in
   let summary =
@@ -1450,12 +1466,13 @@ let print_ast =
     "This sub-command prints the source file in the AST imperative stage, before \
      desugaring step is applied."
   in
-  Command.basic ~summary ~readme @@ (f <$> source_file <*> syntax <*> display_format)
+  Command.basic ~summary ~readme
+  @@ (f <$> source_file <*> syntax <*> display_format <*> no_colour)
 
 
 let print_ast_core =
-  let f source_file syntax display_format self_pass project_root () =
-    let raw_options = Raw_options.make ~syntax ~self_pass ~project_root () in
+  let f source_file syntax display_format self_pass project_root no_colour () =
+    let raw_options = Raw_options.make ~syntax ~self_pass ~project_root ~no_colour () in
     return_result ~return @@ Api.Print.ast_core raw_options source_file display_format
   in
   let summary =
@@ -1464,7 +1481,13 @@ let print_ast_core =
   in
   let readme () = "This sub-command prints the source file in the AST core stage." in
   Command.basic ~summary ~readme
-  @@ (f <$> source_file <*> syntax <*> display_format <*> self_pass <*> project_root)
+  @@ (f
+     <$> source_file
+     <*> syntax
+     <*> display_format
+     <*> self_pass
+     <*> project_root
+     <*> no_colour)
 
 
 let print_ast_typed =
@@ -1477,6 +1500,7 @@ let print_ast_typed =
       project_root
       warn_unused_rec
       test
+      no_colour
       ()
     =
     let raw_options =
@@ -1487,6 +1511,7 @@ let print_ast_typed =
         ~project_root
         ~warn_unused_rec
         ~test
+        ~no_colour
         ()
     in
     return_result ~return @@ Api.Print.ast_typed raw_options source_file display_format
@@ -1509,10 +1534,60 @@ let print_ast_typed =
      <*> self_pass
      <*> project_root
      <*> warn_unused_rec
-     <*> test_mode)
+     <*> test_mode
+     <*> no_colour)
 
 
 let print_ast_aggregated =
+  let f
+      source_file
+      syntax
+      protocol_version
+      display_format
+      self_pass
+      project_root
+      warn_unused_rec
+      test
+      no_colour
+      ()
+    =
+    let raw_options =
+      Raw_options.make
+        ~syntax
+        ~protocol_version
+        ~self_pass
+        ~project_root
+        ~warn_unused_rec
+        ~test
+        ~no_colour
+        ()
+    in
+    return_result ~return
+    @@ Api.Print.ast_aggregated raw_options source_file display_format
+  in
+  let summary =
+    "print the contract after aggregation.\n\
+    \ Warning: Intended for development of LIGO and can break at any time."
+  in
+  let readme () =
+    "This sub-command prints the source file in the AST aggregated stage."
+  in
+  Command.basic
+    ~summary
+    ~readme
+    (f
+    <$> source_file
+    <*> syntax
+    <*> protocol_version
+    <*> display_format
+    <*> self_pass
+    <*> project_root
+    <*> warn_unused_rec
+    <*> test_mode
+    <*> no_colour)
+
+
+let print_ast_expanded =
   let f
       source_file
       syntax
@@ -1534,8 +1609,7 @@ let print_ast_aggregated =
         ~test
         ()
     in
-    return_result ~return
-    @@ Api.Print.ast_aggregated raw_options source_file display_format
+    return_result ~return @@ Api.Print.ast_expanded raw_options source_file display_format
   in
   let summary =
     "print the contract after aggregation.\n\
@@ -1567,10 +1641,17 @@ let print_mini_c =
       optimize
       project_root
       warn_unused_rec
+      no_colour
       ()
     =
     let raw_options =
-      Raw_options.make ~syntax ~protocol_version ~project_root ~warn_unused_rec ()
+      Raw_options.make
+        ~syntax
+        ~protocol_version
+        ~project_root
+        ~warn_unused_rec
+        ~no_colour
+        ()
     in
     return_result ~return
     @@ Api.Print.mini_c raw_options source_file display_format optimize
@@ -1593,7 +1674,8 @@ let print_mini_c =
     <*> display_format
     <*> optimize
     <*> project_root
-    <*> warn_unused_rec)
+    <*> warn_unused_rec
+    <*> no_colour)
 
 
 let print_group =
@@ -1610,6 +1692,7 @@ let print_group =
      ; "ast-core", print_ast_core
      ; "ast-typed", print_ast_typed
      ; "ast-aggregated", print_ast_aggregated
+     ; "ast-expanded", print_ast_expanded
      ; "mini-c", print_mini_c
      ]
 
@@ -1789,7 +1872,12 @@ let main =
 
 
 let run ?argv () =
-  Command_unix.run ~version:Version.version ?argv main;
+  let build_info =
+    Format.sprintf
+      "Protocol built-in: %s"
+      Environment.Protocols.(variant_to_string in_use)
+  in
+  Command_unix.run ~build_info ~version:Version.version ?argv main;
   (* Effect to error code *)
   match !return with
   | Done -> 0

@@ -44,7 +44,7 @@ let rec fold_expression : 'a folder -> 'a -> expression -> 'a =
   | E_accessor { struct_; path = _ } ->
     let res = self init struct_ in
     res
-  | E_let_in { let_binder = _; rhs; let_result; attr = _ } ->
+  | E_let_in { let_binder = _; rhs; let_result; attributes = _ } ->
     let res = self init rhs in
     let res = self res let_result in
     res
@@ -52,7 +52,7 @@ let rec fold_expression : 'a folder -> 'a -> expression -> 'a =
     let res = fold_expression_in_module_expr self init rhs in
     let res = self res let_result in
     res
-  | E_let_mut_in { let_binder = _; rhs; let_result; attr = _ } ->
+  | E_let_mut_in { let_binder = _; rhs; let_result; attributes = _ } ->
     let res = self init rhs in
     let res = self res let_result in
     res
@@ -71,6 +71,7 @@ and fold_expression_in_module_expr : ('a -> expression -> 'a) -> 'a -> module_ex
       ~f:(fun acc x ->
         match x.wrap_content with
         | D_value x -> self acc x.expr
+        | D_irrefutable_match x -> self acc x.expr
         | D_module x -> fold_expression_in_module_expr self acc x.module_
         | D_type _ -> acc)
       ~init:acc
@@ -91,6 +92,14 @@ and fold_module : 'a folder -> 'a -> module_ -> 'a =
     match Location.unwrap x with
     | D_value
         { binder = _
+        ; expr
+        ; attr =
+            { inline = _; no_mutation = _; view = _; public = _; hidden = _; thunk = _ }
+        } ->
+      let res = fold_expression f acc expr in
+      return @@ res
+    | D_irrefutable_match
+        { pattern = _
         ; expr
         ; attr =
             { inline = _; no_mutation = _; view = _; public = _; hidden = _; thunk = _ }
@@ -156,10 +165,10 @@ let rec map_expression : 'err mapper -> expression -> expression =
     let ab = lamb, args in
     let a, b = Pair.map ~f:self ab in
     return @@ E_application { lamb = a; args = b }
-  | E_let_in { let_binder; rhs; let_result; attr } ->
+  | E_let_in { let_binder; rhs; let_result; attributes } ->
     let rhs = self rhs in
     let let_result = self let_result in
-    return @@ E_let_in { let_binder; rhs; let_result; attr }
+    return @@ E_let_in { let_binder; rhs; let_result; attributes }
   | E_mod_in { module_binder; rhs; let_result } ->
     let rhs = map_expression_in_module_expr f rhs in
     let let_result = self let_result in
@@ -192,10 +201,10 @@ let rec map_expression : 'err mapper -> expression -> expression =
   | E_while w ->
     let w = While_loop.map self w in
     return @@ E_while w
-  | E_let_mut_in { let_binder; rhs; let_result; attr } ->
+  | E_let_mut_in { let_binder; rhs; let_result; attributes } ->
     let rhs = self rhs in
     let let_result = self let_result in
-    return @@ E_let_mut_in { let_binder; rhs; let_result; attr }
+    return @@ E_let_mut_in { let_binder; rhs; let_result; attributes }
   | (E_deref _ | E_literal _ | E_variable _ | E_raw_code _) as e' -> return e'
 
 
@@ -224,6 +233,9 @@ and map_declaration m (x : declaration) =
   | D_value { binder; expr; attr } ->
     let expr = map_expression m expr in
     return @@ D_value { binder; expr; attr }
+  | D_irrefutable_match { pattern; expr; attr } ->
+    let expr = map_expression m expr in
+    return @@ D_irrefutable_match { pattern; expr; attr }
   | D_type t -> return @@ D_type t
   | D_module { module_binder; module_; module_attr } ->
     let module_ = map_expression_in_module_expr m module_ in
@@ -241,16 +253,16 @@ let fetch_entry_type ~raise : string -> program -> type_expression * Location.t 
  fun main_fname m ->
   let aux (declt : declaration) =
     match Location.unwrap declt with
-    | D_value ({ binder; expr = _; attr = _ } as p) ->
-      if Value_var.is_name (Binder.get_var binder) main_fname then Some p else None
-    | D_type _ | D_module _ -> None
+    | D_value { binder; expr; attr = _ }
+    | D_irrefutable_match { pattern = { wrap_content = P_var binder; _ }; expr; attr = _ }
+      -> if Value_var.is_name (Binder.get_var binder) main_fname then Some expr else None
+    | D_irrefutable_match _ | D_type _ | D_module _ -> None
   in
   let main_decl_opt = List.find_map ~f:aux @@ List.rev m in
-  let main_decl =
+  let expr =
     trace_option ~raise (corner_case ("Entrypoint '" ^ main_fname ^ "' does not exist"))
     @@ main_decl_opt
   in
-  let Value_decl.{ binder = _; expr; attr = _ } = main_decl in
   expr.type_expression, expr.location
 
 
@@ -263,9 +275,11 @@ let fetch_contract_type ~raise : Value_var.t -> program -> contract_type =
  fun main_fname m ->
   let aux declt =
     match Location.unwrap declt with
-    | D_value ({ binder; expr = _; attr = _ } as p) ->
-      if Value_var.equal (Binder.get_var binder) main_fname then Some p else None
-    | D_type _ | D_module _ -> None
+    | D_value { binder = { var; _ }; expr; attr = _ }
+    | D_irrefutable_match
+        { pattern = { wrap_content = P_var { var; _ }; _ }; expr; attr = _ } ->
+      if Value_var.equal var main_fname then Some (var, expr) else None
+    | D_irrefutable_match _ | D_type _ | D_module _ -> None
   in
   let main_decl_opt = List.find_map ~f:aux @@ List.rev m in
   let main_decl =
@@ -275,7 +289,7 @@ let fetch_contract_type ~raise : Value_var.t -> program -> contract_type =
          (Format.asprintf "Entrypoint %a does not exist" Value_var.pp main_fname : string))
     @@ main_decl_opt
   in
-  let Value_decl.{ binder; expr; attr = _ } = main_decl in
+  let var, expr = main_decl in
   match expr.type_expression.type_content with
   | T_arrow { type1; type2 } ->
     (match Ast_typed.Combinators.(get_t_pair type1, get_t_pair type2) with
@@ -290,12 +304,8 @@ let fetch_contract_type ~raise : Value_var.t -> program -> contract_type =
       in
       (* TODO: on storage/parameter : asert_storable, assert_passable ? *)
       { parameter; storage }
-    | _ ->
-      raise.error
-      @@ bad_contract_io main_fname expr (Value_var.get_location @@ Binder.get_var binder))
-  | _ ->
-    raise.error
-    @@ bad_contract_io main_fname expr (Value_var.get_location @@ Binder.get_var binder)
+    | _ -> raise.error @@ bad_contract_io main_fname expr (Value_var.get_location var))
+  | _ -> raise.error @@ bad_contract_io main_fname expr (Value_var.get_location var)
 
 
 (* get_shadowed_decl [prg] [predicate] returns the location of the last shadowed annotated top-level declaration of program [prg] if any
@@ -310,7 +320,12 @@ let get_shadowed_decl : program -> (ValueAttr.t -> bool) -> Location.t option =
       | Some x -> seen, Value_var.get_location x :: shadows
       | None ->
         if predicate attr then Binder.get_var binder :: seen, shadows else seen, shadows)
-    | _ -> seen, shadows
+    | D_irrefutable_match { pattern = { wrap_content = P_var binder; _ }; attr; _ } ->
+      (match List.find seen ~f:(Value_var.equal (Binder.get_var binder)) with
+      | Some x -> seen, Value_var.get_location x :: shadows
+      | None ->
+        if predicate attr then Binder.get_var binder :: seen, shadows else seen, shadows)
+    | D_irrefutable_match _ | D_type _ | D_module _ -> seen, shadows
   in
   let _, shadows = List.fold ~f:aux ~init:([], []) prg in
   match shadows with
@@ -325,7 +340,11 @@ let strip_view_annotations : program -> program =
     match Location.unwrap x with
     | D_value ({ attr; _ } as decl) when attr.view ->
       { x with wrap_content = D_value { decl with attr = { attr with view = false } } }
-    | _ -> x
+    | D_irrefutable_match ({ attr; _ } as decl) when attr.view ->
+      { x with
+        wrap_content = D_irrefutable_match { decl with attr = { attr with view = false } }
+      }
+    | D_module _ | D_type _ | D_value _ | D_irrefutable_match _ -> x
   in
   List.map ~f:aux m
 
@@ -335,6 +354,11 @@ let strip_view_annotations : program -> program =
 
    e.g:
     annotate_with_view [p] ["a";"b"]
+
+    let a = <..>
+    let b = <..>
+    let b = <..>
+    let c = <..>
       |->
     [@view] let a = <..>
     let b = <..>
@@ -360,7 +384,19 @@ let annotate_with_view ~raise : string list -> Ast_typed.program -> Ast_typed.pr
             in
             decorated :: prg, List.remove_element ~compare:String.compare found views
           | None -> continue)
-        | _ -> continue)
+        | D_irrefutable_match
+            ({ pattern = { wrap_content = P_var binder; _ }; _ } as decl) ->
+          (match List.find views ~f:(Value_var.is_name @@ Binder.get_var binder) with
+          | Some found ->
+            let decorated =
+              { x with
+                wrap_content =
+                  D_irrefutable_match { decl with attr = { decl.attr with view = true } }
+              }
+            in
+            decorated :: prg, List.remove_element ~compare:String.compare found views
+          | None -> continue)
+        | D_irrefutable_match _ | D_type _ | D_module _ -> continue)
   in
   let () =
     match not_found with
@@ -372,6 +408,7 @@ let annotate_with_view ~raise : string list -> Ast_typed.program -> Ast_typed.pr
   prg
 
 
+(* TODO: this is unused ; used this instead of Contract_passes.get_fv_program I think??? *)
 module Free_variables : sig
   val expression : expression -> Module_var.t list * Value_var.t list * Value_var.t list
 end = struct
@@ -466,9 +503,12 @@ end = struct
       unions res
     | E_update { struct_; update; path = _ } -> merge (self struct_) (self update)
     | E_accessor { struct_; path = _ } -> self struct_
-    | E_let_in { let_binder; rhs; let_result; attr = _ } ->
+    | E_let_in { let_binder; rhs; let_result; attributes = _ } ->
       let { modVarSet; moduleEnv; varSet = fv2; mutSet } = self let_result in
-      let fv2 = VarSet.remove (Binder.get_var let_binder) fv2 in
+      let binders = Pattern.binders let_binder in
+      let fv2 =
+        List.fold binders ~init:fv2 ~f:(fun fv2 b -> VarSet.remove (Binder.get_var b) fv2)
+      in
       merge (self rhs) { modVarSet; moduleEnv; varSet = fv2; mutSet }
     | E_mod_in { module_binder; rhs; let_result } ->
       let { modVarSet; moduleEnv; varSet; mutSet } = self let_result in
@@ -502,9 +542,12 @@ end = struct
       unions [ self collection; fe_body_fvs ]
     | E_while { cond; body } -> unions [ self cond; self body ]
     | E_deref mut_var -> { empty with mutSet = VarSet.singleton mut_var }
-    | E_let_mut_in { let_binder; rhs; let_result; attr = _ } ->
+    | E_let_mut_in { let_binder; rhs; let_result; attributes = _ } ->
       let { modVarSet; moduleEnv; varSet; mutSet = fv2 } = self let_result in
-      let fv2 = VarSet.remove (Binder.get_var let_binder) fv2 in
+      let binders = Pattern.binders let_binder in
+      let fv2 =
+        List.fold binders ~init:fv2 ~f:(fun fv2 b -> VarSet.remove (Binder.get_var b) fv2)
+      in
       merge (self rhs) { modVarSet; moduleEnv; varSet; mutSet = fv2 }
 
 
@@ -541,6 +584,7 @@ end = struct
     let aux x =
       match Location.unwrap x with
       | D_value { binder = _; expr; attr = _ } -> get_fv_expr expr
+      | D_irrefutable_match { pattern = _; expr; attr = _ } -> get_fv_expr expr
       | D_module { module_binder = _; module_; module_attr = _ } ->
         get_fv_module_expr module_
       | D_type _t -> empty

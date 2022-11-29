@@ -72,6 +72,11 @@ let rec usage_in_expr (f : Value_var.t) (expr : expression) : usage =
   let self_binder vars e =
     if List.mem ~equal:Value_var.equal vars f then Unused else usage_in_expr f e
   in
+  let self_cases : _ Match_expr.match_case list -> usage list =
+   fun cases ->
+    List.map cases ~f:(fun { pattern; body } ->
+        self_binder (List.map ~f:Binder.get_var (Pattern.binders pattern)) body)
+  in
   match expr.expression_content with
   (* interesting cases: *)
   | E_variable x ->
@@ -97,28 +102,20 @@ let rec usage_in_expr (f : Value_var.t) (expr : expression) : usage =
   | E_recursive { fun_name; fun_type = _; lambda = { binder; result } } ->
     let binders = fun_name :: Param.(if is_imm binder then [ get_var binder ] else []) in
     self_binder binders result
-  | E_let_in { let_binder; rhs; let_result; attr = _ } ->
-    usages [ self rhs; self_binder [ Binder.get_var let_binder ] let_result ]
+  | E_let_in { let_binder; rhs; let_result; attributes = _ } ->
+    usages
+      [ self rhs
+      ; self_binder (List.map ~f:Binder.get_var (Pattern.binders let_binder)) let_result
+      ]
   | E_raw_code _ -> Unused
   | E_constructor { constructor = _; element } -> self element
-  | E_matching { matchee; cases = Ast_aggregated.Match_variant { cases; tv = _ } } ->
-    usages
-      (self matchee
-      :: List.map
-           ~f:(fun { constructor = _; pattern; body } -> self_binder [ pattern ] body)
-           cases)
-  | E_matching { matchee; cases = Ast_aggregated.Match_record { fields; body; tv = _ } }
-    ->
-    usages
-      [ self matchee
-      ; self_binder (List.map ~f:Binder.get_var (Record.LMap.to_list fields)) body
-      ]
+  | E_matching { matchee; cases } -> usages (self matchee :: self_cases cases)
   | E_record fields -> usages (List.map ~f:self (Record.LMap.to_list fields))
   | E_accessor { struct_; path = _ } -> self struct_
   | E_update { struct_; path = _; update } -> usages [ self struct_; self update ]
   | E_type_inst { forall; type_ = _ } -> self forall
   | E_assign { expression; _ } -> self expression
-  | E_let_mut_in { let_binder = _; rhs; let_result; attr = _ } ->
+  | E_let_mut_in { let_binder = _; rhs; let_result; attributes = _ } ->
     usages [ self rhs; self let_result ]
   | E_while { cond; body } -> usages [ self cond; self body ]
   | E_for { binder; start; final; incr; f_body } ->
@@ -168,7 +165,6 @@ let uncurry_rhs (depth : int) (expr : expression) =
   let vars, body = uncurry_lambda depth expr in
   let binder = Value_var.fresh () in
   let labels = uncurried_labels depth in
-  let rows = uncurried_rows depth arg_types in
   let record_type = uncurried_record_type depth arg_types in
   let matchee =
     { expression_content = E_variable binder
@@ -178,7 +174,10 @@ let uncurry_rhs (depth : int) (expr : expression) =
   in
   let fields =
     try
-      Record.of_list (List.zip_exn labels (List.map2_exn ~f:Binder.make vars arg_types))
+      let f : e_variable -> type_expression -> _ Pattern.t =
+       fun v ty -> Pattern.var ~loc:Location.generated (Binder.make v ty)
+      in
+      Record.of_list (List.zip_exn labels (List.map2_exn ~f vars arg_types))
     with
     | _ ->
       failwith
@@ -189,16 +188,9 @@ let uncurry_rhs (depth : int) (expr : expression) =
            PP.type_expression
            expr.type_expression
   in
-  let record_tv =
-    { type_content = T_record rows
-    ; orig_var = None
-    ; location = Location.generated
-    ; source_type = None
-    }
-  in
+  let pattern = Location.wrap (Pattern.P_record fields) in
   let result =
-    { expression_content =
-        E_matching { matchee; cases = Match_record { fields; body; tv = record_tv } }
+    { expression_content = E_matching { matchee; cases = [ { pattern; body } ] }
     ; location = Location.generated
     ; type_expression = body.type_expression
     }
@@ -222,6 +214,19 @@ let rec uncurry_in_expression ~raise (f : Value_var.t) (depth : int) (expr : exp
     if List.mem ~equal:Value_var.equal vars f
     then e
     else uncurry_in_expression ~raise f depth e
+  in
+  let self_cases
+      : ('a, 'b) Match_expr.match_case list -> ('a, 'b) Match_expr.match_case list
+    =
+   fun cases ->
+    let f : _ Match_expr.match_case -> _ Match_expr.match_case =
+     fun { pattern; body } ->
+      let body =
+        self_binder (List.map ~f:Binder.get_var (Pattern.binders pattern)) body
+      in
+      { pattern; body }
+    in
+    List.map cases ~f
   in
   let return e' = { expr with expression_content = e' } in
   let return_id = return expr.expression_content in
@@ -272,30 +277,20 @@ let rec uncurry_in_expression ~raise (f : Value_var.t) (depth : int) (expr : exp
   | E_recursive { fun_name; fun_type; lambda = { binder; output_type; result } } ->
     let result = self_binder [ fun_name ] (self_param binder result) in
     return (E_recursive { fun_name; fun_type; lambda = { binder; output_type; result } })
-  | E_let_in { let_binder; rhs; let_result; attr } ->
+  | E_let_in { let_binder; rhs; let_result; attributes } ->
     let rhs = self rhs in
-    let let_result = self_binder [ Binder.get_var let_binder ] let_result in
-    return (E_let_in { let_binder; rhs; let_result; attr })
+    let let_result =
+      self_binder (List.map ~f:Binder.get_var (Pattern.binders let_binder)) let_result
+    in
+    return (E_let_in { let_binder; rhs; let_result; attributes })
   | E_raw_code _ -> return_id
   | E_constructor { constructor; element } ->
     let element = self element in
     return (E_constructor { constructor; element })
-  | E_matching { matchee; cases = Match_variant { cases; tv } } ->
+  | E_matching { matchee; cases } ->
     let matchee = self matchee in
-    let cases =
-      List.map
-        ~f:(fun { constructor; pattern; body } ->
-          let body = self_binder [ pattern ] body in
-          { constructor; pattern; body })
-        cases
-    in
-    return (E_matching { matchee; cases = Match_variant { cases; tv } })
-  | E_matching { matchee; cases = Match_record { fields; body; tv } } ->
-    let matchee = self matchee in
-    let body =
-      self_binder (List.map ~f:Binder.get_var (Record.LMap.to_list fields)) body
-    in
-    return (E_matching { matchee; cases = Match_record { fields; body; tv } })
+    let cases = self_cases cases in
+    return (E_matching { matchee; cases })
   | E_record fields ->
     let fields = Record.map ~f:self fields in
     return (E_record fields)
@@ -312,10 +307,10 @@ let rec uncurry_in_expression ~raise (f : Value_var.t) (depth : int) (expr : exp
   | E_assign { expression; binder } ->
     let expression = self expression in
     return @@ E_assign { binder; expression }
-  | E_let_mut_in { let_binder; rhs; let_result; attr } ->
+  | E_let_mut_in { let_binder; rhs; let_result; attributes } ->
     let rhs = self rhs in
     let let_result = self let_result in
-    return @@ E_let_mut_in { let_binder; rhs; let_result; attr }
+    return @@ E_let_mut_in { let_binder; rhs; let_result; attributes }
   | E_while { cond; body } ->
     let cond = self cond in
     let body = self body in
@@ -432,7 +427,11 @@ let uncurry_expression (expr : expression) : expression =
             in
             (* Construct the let *)
             let result =
-              e_a_let_in (Binder.make fun_name rhs.type_expression) rhs result attr
+              e_a_let_in
+                (Pattern.var (Binder.make fun_name rhs.type_expression))
+                rhs
+                result
+                attr
             in
             let f (var, t) result =
               let binder = Param.make var t in

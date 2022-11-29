@@ -166,7 +166,7 @@ let run_contract
     (exp_type : _ Michelson.t)
     (input_michelson : _ Michelson.t)
   =
-  let open! Tezos_raw_protocol_014_PtKathma in
+  let open! Memory_proto_alpha.Protocol in
   let input_ty, output_ty = fetch_lambda_types ~raise exp_type in
   let input_ty =
     Trace.trace_tzresult_lwt ~raise Errors.parsing_input_tracer
@@ -244,8 +244,7 @@ let run_contract
   | Memory_proto_alpha.Fail expr ->
     let expr =
       Tezos_micheline.Micheline.root
-      @@ Tezos_protocol_014_PtKathma.Protocol.Michelson_v1_primitives.strings_of_prims
-           expr
+      @@ Memory_proto_alpha.Protocol.Michelson_v1_primitives.strings_of_prims expr
     in
     Fail expr
 
@@ -257,7 +256,7 @@ let run_function
     (exp_type : _ Michelson.t)
     (input_michelson : _ Michelson.t)
   =
-  let open! Tezos_raw_protocol_014_PtKathma in
+  let open! Memory_proto_alpha.Protocol in
   let input_ty, output_ty = fetch_lambda_types ~raise exp_type in
   let input_ty =
     Trace.trace_tzresult_lwt ~raise Errors.parsing_input_tracer
@@ -316,8 +315,7 @@ let run_function
   | Memory_proto_alpha.Fail expr ->
     let expr =
       Tezos_micheline.Micheline.root
-      @@ Tezos_protocol_014_PtKathma.Protocol.Michelson_v1_primitives.strings_of_prims
-           expr
+      @@ Memory_proto_alpha.Protocol.Michelson_v1_primitives.strings_of_prims expr
     in
     Fail expr
 
@@ -329,7 +327,7 @@ let run_expression
     (exp : _ Michelson.t)
     (exp_type : _ Michelson.t)
   =
-  let open! Tezos_raw_protocol_014_PtKathma in
+  let open! Memory_proto_alpha.Protocol in
   let exp_type =
     Trace.trace_tzresult_lwt ~raise Errors.parsing_input_tracer
     @@ Memory_proto_alpha.prims_of_strings exp_type
@@ -370,8 +368,7 @@ let run_expression
   | Memory_proto_alpha.Fail expr ->
     let expr =
       Tezos_micheline.Micheline.root
-      @@ Tezos_protocol_014_PtKathma.Protocol.Michelson_v1_primitives.strings_of_prims
-           expr
+      @@ Memory_proto_alpha.Protocol.Michelson_v1_primitives.strings_of_prims expr
     in
     Fail expr
 

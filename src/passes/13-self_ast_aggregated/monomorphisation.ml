@@ -102,17 +102,12 @@ let apply_table_expr table (expr : AST.expression) =
           let fun_type = apply_table_type fun_type in
           let lambda = Lambda.map Fn.id apply_table_type lambda in
           return @@ E_recursive { fun_name; fun_type; lambda }
-        | E_matching { matchee; cases = Match_variant { cases; tv } } ->
-          return
-          @@ E_matching
-               { matchee; cases = Match_variant { cases; tv = apply_table_type tv } }
-        | E_matching { matchee; cases = Match_record { fields; body; tv } } ->
-          let fields = Record.map ~f:(Binder.map apply_table_type) fields in
-          return
-          @@ E_matching
-               { matchee
-               ; cases = Match_record { fields; body; tv = apply_table_type tv }
-               }
+        | E_matching { matchee; cases } ->
+          let f : _ AST.Match_expr.match_case -> _ AST.Match_expr.match_case =
+           fun { pattern; body } ->
+            { pattern = AST.Pattern.map apply_table_type pattern; body }
+          in
+          return @@ E_matching { matchee; cases = List.map cases ~f }
         | E_assign { binder; expression } ->
           let binder = Binder.map apply_table_type binder in
           return @@ E_assign { binder; expression }
@@ -130,12 +125,12 @@ let apply_table_expr table (expr : AST.expression) =
               types
           in
           false, (), expr
-        | E_let_in { let_binder; rhs; let_result; attr } ->
-          let let_binder = Binder.map apply_table_type let_binder in
-          return @@ E_let_in { let_binder; rhs; let_result; attr }
-        | E_let_mut_in { let_binder; rhs; let_result; attr } ->
-          let let_binder = Binder.map apply_table_type let_binder in
-          return @@ E_let_mut_in { let_binder; rhs; let_result; attr }
+        | E_let_in { let_binder; rhs; let_result; attributes } ->
+          let let_binder = AST.Pattern.map apply_table_type let_binder in
+          return @@ E_let_in { let_binder; rhs; let_result; attributes }
+        | E_let_mut_in { let_binder; rhs; let_result; attributes } ->
+          let let_binder = AST.Pattern.map apply_table_type let_binder in
+          return @@ E_let_mut_in { let_binder; rhs; let_result; attributes }
         | E_raw_code { language; code = { expression_content = m; _ } as expr }
           when Option.is_some (AST.get_e_tuple m) ->
           let tuple = Option.value ~default:[] (AST.get_e_tuple m) in
@@ -240,19 +235,12 @@ let subst_external_term et t (e : AST.expression) =
         | E_recursive { fun_name; fun_type; lambda } ->
           let fun_type = subst_external_type et t fun_type in
           return @@ E_recursive { fun_name; fun_type; lambda }
-        | E_matching { matchee; cases = Match_variant { cases; tv } } ->
-          return
-          @@ E_matching
-               { matchee
-               ; cases = Match_variant { cases; tv = subst_external_type et t tv }
-               }
-        | E_matching { matchee; cases = Match_record { fields; body; tv } } ->
-          let fields = Record.map ~f:(Binder.map (subst_external_type et t)) fields in
-          return
-          @@ E_matching
-               { matchee
-               ; cases = Match_record { fields; body; tv = subst_external_type et t tv }
-               }
+        | E_matching { matchee; cases } ->
+          let f : _ AST.Match_expr.match_case -> _ AST.Match_expr.match_case =
+           fun { pattern; body } ->
+            { pattern = AST.Pattern.map (subst_external_type et t) pattern; body }
+          in
+          return @@ E_matching { matchee; cases = List.map cases ~f }
         | E_assign { binder; expression } ->
           let binder = Binder.map (subst_external_type et t) binder in
           return @@ E_assign { binder; expression }
@@ -326,11 +314,18 @@ let rec mono_polymorphic_expression ~raise
     ( data
     , return
         (E_recursive { fun_name; fun_type; lambda = { binder; output_type; result } }) )
-  | E_let_in { let_binder; rhs; let_result; attr } ->
-    let rhs = AST.Combinators.forall_expand rhs in
+  | E_let_in { let_binder; rhs; let_result; attributes } ->
+    let rhs =
+      Trace.trace_option ~raise (Errors.monomorphisation_non_for_all rhs)
+      @@ AST.Combinators.forall_expand_opt rhs
+    in
     let type_vars, rhs = AST.Combinators.get_type_abstractions rhs in
     let data, let_result = self data let_result in
-    let binder_instances = Data.instances_lookup (Binder.get_var let_binder) data in
+    let binder_instances =
+      List.concat
+      @@ List.map (AST.Pattern.binders let_binder) ~f:(fun binder ->
+             Data.instances_lookup (Binder.get_var binder) data)
+    in
     let build_let
         (lid : Value_var.t)
         Instance.{ vid; type_instances; type_ }
@@ -363,21 +358,28 @@ let rec mono_polymorphic_expression ~raise
       let rhs = { rhs with type_expression = type_ } in
       ( data
       , AST.e_a_let_in
-          (Binder.make let_binder rhs.type_expression)
+          (AST.Pattern.var (Binder.make let_binder rhs.type_expression))
           rhs
           let_result
-          { attr with hidden = false } )
+          { attributes with hidden = false } )
     in
     let data, expr =
       match type_vars with
       | [] ->
         let data, rhs = self data rhs in
-        data, return (E_let_in { let_binder; rhs; let_result; attr })
+        data, return (E_let_in { let_binder; rhs; let_result; attributes })
       | _ ->
-        List.fold_right
-          binder_instances
-          ~f:(build_let @@ Binder.get_var let_binder)
-          ~init:(data, let_result)
+        AST.Pattern.fold_pattern
+          (fun (data, instances) pattern ->
+            match pattern.wrap_content with
+            | P_var binder ->
+              List.fold_right
+                binder_instances
+                ~f:(build_let (Binder.get_var binder))
+                ~init:(data, let_result)
+            | _ -> data, instances)
+          (data, let_result)
+          let_binder
     in
     data, expr
   | E_constructor { constructor; element } ->
@@ -402,10 +404,7 @@ let rec mono_polymorphic_expression ~raise
       match e.expression_content with
       | E_type_inst { forall; type_ } -> aux (type_ :: type_insts) forall
       | E_variable variable -> List.rev type_insts, variable
-      | _ ->
-        raise.Trace.error
-          (Errors.corner_case
-             "Monomorphisation: cannot resolve non-variables with instantiations")
+      | _ -> raise.Trace.error (Errors.monomorphisation_non_var expr)
     in
     let type_instances, lid = aux [] expr in
     let type_ = expr.type_expression in
@@ -417,10 +416,10 @@ let rec mono_polymorphic_expression ~raise
   | E_assign { binder; expression } ->
     let data, expression = self data expression in
     data, return (E_assign { binder; expression })
-  | E_let_mut_in { let_binder; rhs; let_result; attr } ->
+  | E_let_mut_in { let_binder; rhs; let_result; attributes } ->
     let data, rhs = self data rhs in
     let data, let_result = self data let_result in
-    data, return @@ E_let_mut_in { let_binder; rhs; let_result; attr }
+    data, return @@ E_let_mut_in { let_binder; rhs; let_result; attributes }
   | E_while while_loop ->
     let data, while_loop = While_loop.fold_map self data while_loop in
     data, return @@ E_while while_loop
@@ -433,20 +432,13 @@ let rec mono_polymorphic_expression ~raise
 
 
 and mono_polymorphic_cases ~raise
-    : Data.t -> AST.matching_expr -> Data.t * AST.matching_expr
+    :  Data.t -> _ AST.Match_expr.match_case list
+    -> Data.t * _ AST.Match_expr.match_case list
   =
- fun data m ->
-  match m with
-  | Match_variant { tv; cases } ->
-    let aux { AST.constructor; pattern; body } (data, r) =
+ fun data cases ->
+  List.fold_map cases ~init:data ~f:(fun data { pattern; body } ->
       let data, body = mono_polymorphic_expression ~raise data body in
-      data, { AST.constructor; pattern; body } :: r
-    in
-    let data, cases = List.fold_right cases ~f:aux ~init:(data, []) in
-    data, Match_variant { tv; cases }
-  | Match_record { tv; body; fields } ->
-    let data, body = mono_polymorphic_expression ~raise data body in
-    data, Match_record { tv; body; fields }
+      data, ({ pattern; body } : _ AST.Match_expr.match_case))
 
 
 let check_if_polymorphism_present ~raise e =

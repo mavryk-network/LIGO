@@ -11,8 +11,6 @@ module ModRes = Preprocessor.ModRes
 
 type interpreter_error = Errors.interpreter_error
 
-let not_comparable_string = v_string "Not comparable"
-
 (* [resolve_contract_file ~mod_res ~source_file ~contract_file] tries to resolve
    [contract_file] w.r.t. to process directory
    if that fails it tries to resolve it as a relative path w.r.t. directory of [source_file]
@@ -29,6 +27,132 @@ let resolve_contract_file ~mod_res ~source_file ~contract_file =
       | `Yes -> s
       | `No | `Unknown -> ModRes.Helpers.resolve ~file:contract_file mod_res)
     | None -> ModRes.Helpers.resolve ~file:contract_file mod_res)
+
+
+(*
+pattern_env_extend_ [locs,env] [pattern] [ty] [value]
+  For a [pattern] of type [ty] matched with [value] will recursively destruct [value]
+  to extend the environment with corresponding binders
+
+  Bounded variable in [pattern] can also be mutable -- in which case locations are push through
+  the execution monad
+*)
+let rec pattern_env_extend_ ~(attributes : ValueAttr.t) ~(mut : bool)
+    :  location list * env -> _ AST.Pattern.t -> AST.type_expression -> value
+    -> (location list * env) Monad.t
+  =
+ fun (locs, env) pattern ty value ->
+  let open Monad in
+  let error_type () =
+    Errors.generic_error
+      pattern.location
+      AST.(
+        Format.asprintf
+          "Type error: evaluating pattern %a with value:@.%a : %a@."
+          (Pattern.pp PP.type_expression)
+          pattern
+          Ligo_interpreter.PP.pp_value
+          value
+          PP.type_expression
+          ty)
+  in
+  let self = pattern_env_extend_ ~attributes ~mut in
+  let get_prod_ty ty label =
+    match AST.get_record_field_type ty label with
+    | Some s -> return s
+    | None -> fail @@ error_type ()
+  in
+  let get_sum_ty ty label =
+    match AST.get_variant_field_type ty label with
+    | Some s -> return s
+    | None -> fail @@ error_type ()
+  in
+  let get_t_list ty =
+    match AST.get_t_list ty with
+    | Some s -> return s
+    | None -> fail @@ error_type ()
+  in
+  match pattern.wrap_content, value with
+  | P_variant (Label "True", _), V_Ct (C_bool true)
+  | P_variant (Label "False", _), V_Ct (C_bool false)
+  | P_unit, V_Ct C_unit -> return (locs, env)
+  | P_var x, v ->
+    let* locs, v =
+      if mut
+      then
+        let@ loc = Alloc v in
+        return (loc :: locs, V_Location loc)
+      else return (locs, v)
+    in
+    return
+      ( locs
+      , Env.extend
+          env
+          (Binder.get_var x)
+          ?inline:(if mut then None else Some attributes.inline)
+          ?no_mutation:(if mut then None else Some attributes.no_mutation)
+          (Binder.get_ascr x, v) )
+  | P_variant (label, p), V_Construct (label', value) ->
+    if not (Label.equal label (Label label'))
+    then fail @@ error_type ()
+    else
+      let* ty = get_sum_ty ty label in
+      self (locs, env) p ty value
+  | P_record pf, V_Record vf ->
+    let* lst =
+      match List.zip (Record.to_list pf) (Record.to_list vf) with
+      | Ok pf -> return pf
+      | Unequal_lengths -> fail @@ error_type ()
+    in
+    bind_fold_list
+      lst
+      ~init:(locs, env)
+      ~f:(fun (locs, env) ((label, pattern), (label', value)) ->
+        if not (Label.equal label label')
+        then fail @@ error_type ()
+        else
+          let* ty = get_prod_ty ty label in
+          self (locs, env) pattern ty value)
+  | P_tuple tups, V_Record vf ->
+    let pf = List.mapi ~f:(fun i x -> Label.of_int i, x) tups in
+    let* lst =
+      match List.zip pf (Record.to_list vf) with
+      | Ok pf -> return pf
+      | Unequal_lengths -> fail @@ error_type ()
+    in
+    bind_fold_list
+      lst
+      ~init:(locs, env)
+      ~f:(fun (locs, env) ((label, pattern), (label', value)) ->
+        if not (Label.equal label label')
+        then fail @@ error_type ()
+        else
+          let* ty = get_prod_ty ty label in
+          self (locs, env) pattern ty value)
+  | P_list (Cons (phd, ptl)), V_List (vhd :: vtl) ->
+    let* locs, env =
+      let* ty = get_t_list ty in
+      self (locs, env) phd ty vhd
+    in
+    self (locs, env) ptl ty (V_List vtl)
+  | P_list (List ps), V_List vs ->
+    (match List.zip ps vs with
+    | Ok lst ->
+      let* ty = get_t_list ty in
+      bind_fold_list lst ~init:(locs, env) ~f:(fun (locs, env) (pattern, value) ->
+          self (locs, env) pattern ty value)
+    | Unequal_lengths -> fail @@ error_type ())
+  | _ -> fail @@ error_type ()
+
+
+and pattern_env_extend_mut ~attributes env pattern ty value =
+  pattern_env_extend_ ~attributes ~mut:true ([], env) pattern ty value
+
+
+and pattern_env_extend ~attributes env pattern ty value =
+  let open Monad in
+  let* _, env = pattern_env_extend_ ~attributes ~mut:false ([], env) pattern ty value in
+  return env
 
 
 let get_file_from_location loc =
@@ -70,131 +194,176 @@ let wrap_compare_result comp cmpres loc calltrace =
   | C_LE -> return (cmpres <= 0)
   | C_GT -> return (cmpres > 0)
   | C_GE -> return (cmpres >= 0)
-  | _ -> fail @@ Errors.meta_lang_eval loc calltrace not_comparable_string
+  | _ ->
+    fail
+    @@ Errors.meta_lang_eval loc calltrace
+    @@ v_string "Only valid comparisons are: EQ, NEQ, LT, LE, GT, GE"
 
 
-let compare_constants c o1 o2 loc calltrace =
-  let open Monad in
-  match c, [ o1; o2 ] with
-  | comp, [ V_Ct (C_int64 a'); V_Ct (C_int64 b') ] ->
-    let cmpres = Int64.compare a' b' in
-    let* x = wrap_compare_result comp cmpres loc calltrace in
-    return @@ v_bool x
-  | comp, [ V_Ct (C_int a'); V_Ct (C_int b') ]
-  | comp, [ V_Ct (C_mutez a'); V_Ct (C_mutez b') ]
-  | comp, [ V_Ct (C_timestamp a'); V_Ct (C_timestamp b') ]
-  | comp, [ V_Ct (C_nat a'); V_Ct (C_nat b') ] ->
-    let cmpres = Z.compare a' b' in
-    let* x = wrap_compare_result comp cmpres loc calltrace in
-    return @@ v_bool x
-  | comp, [ V_Ct (C_bool b); V_Ct (C_bool a) ] ->
-    let cmpres = Bool.compare b a in
-    let* x = wrap_compare_result comp cmpres loc calltrace in
-    return @@ v_bool x
-  | comp, [ V_Ct (C_address b); V_Ct (C_address a) ] ->
-    let cmpres = Tezos_state.compare_account b a in
-    let* x = wrap_compare_result comp cmpres loc calltrace in
-    return @@ v_bool x
-  | comp, [ V_Ct (C_key_hash b); V_Ct (C_key_hash a) ] ->
-    let cmpres = Tezos_crypto.Signature.Public_key_hash.compare b a in
-    let* x = wrap_compare_result comp cmpres loc calltrace in
-    return @@ v_bool x
-  | comp, [ V_Ct C_unit; V_Ct C_unit ] ->
-    let* x =
-      match comp with
-      | C_EQ -> return true
-      | C_NEQ -> return false
-      | C_LT -> return false
-      | C_LE -> return true
-      | C_GT -> return false
-      | C_GE -> return true
-      | _ -> fail @@ Errors.meta_lang_eval loc calltrace not_comparable_string
+let compare_constants ~raise o1 o2 loc calltrace =
+  match o1, o2 with
+  | V_Ct (C_int64 a'), V_Ct (C_int64 b') -> Int64.compare a' b'
+  | V_Ct (C_int a'), V_Ct (C_int b')
+  | V_Ct (C_mutez a'), V_Ct (C_mutez b')
+  | V_Ct (C_timestamp a'), V_Ct (C_timestamp b')
+  | V_Ct (C_nat a'), V_Ct (C_nat b') -> Z.compare a' b'
+  | V_Ct (C_bool a), V_Ct (C_bool b) -> Bool.compare a b
+  | V_Ct (C_address a), V_Ct (C_address b) -> Tezos_state.compare_account a b
+  | V_Ct (C_key_hash a), V_Ct (C_key_hash b) ->
+    Tezos_crypto.Signature.Public_key_hash.compare a b
+  | V_Ct C_unit, V_Ct C_unit -> 0
+  | V_Ct (C_string a'), V_Ct (C_string b') -> String.compare a' b'
+  | V_Ct (C_bytes a'), V_Ct (C_bytes b') -> Bytes.compare a' b'
+  | ( V_Ct (C_contract { address = addr1; entrypoint = entr1 })
+    , V_Ct (C_contract { address = addr2; entrypoint = entr2 }) ) ->
+    Tuple2.compare
+      ~cmp1:Tezos_state.compare_account
+      ~cmp2:(Option.compare String.compare)
+      (addr1, entr1)
+      (addr2, entr2)
+  | operand, operand' ->
+    let msg =
+      Format.asprintf
+        "Comparison not supported: %a"
+        (PP_helpers.pair Ligo_interpreter.PP.pp_value Ligo_interpreter.PP.pp_value)
+        (operand, operand')
     in
-    return @@ v_bool x
-  | comp, [ V_Ct (C_string a'); V_Ct (C_string b') ] ->
-    let* f_cmp = return @@ fun a b -> String.compare a b in
-    let* cmpres = return @@ f_cmp a' b' in
-    let* x = wrap_compare_result comp cmpres loc calltrace in
-    Monad.return @@ v_bool x
-  | comp, [ V_Ct (C_bytes a'); V_Ct (C_bytes b') ] ->
-    let* f_cmp = return @@ fun a b -> Bytes.compare a b in
-    let* cmpres = return @@ f_cmp a' b' in
-    let* x = wrap_compare_result comp cmpres loc calltrace in
-    Monad.return @@ v_bool x
-  | ( comp
-    , [ V_Ct (C_contract { address = addr1; entrypoint = entr1 })
-      ; V_Ct (C_contract { address = addr2; entrypoint = entr2 })
-      ] ) ->
-    let compare_opt_strings o1 o2 =
-      match o1, o2 with
-      | Some s1, Some s2 -> String.equal s1 s2
-      | _ -> false
-    in
-    let cmpres = Tezos_state.compare_account addr1 addr2 in
-    let* x =
-      match comp with
-      | C_EQ -> return (cmpres = 0 && compare_opt_strings entr1 entr2)
-      | C_NEQ -> return (cmpres <> 0 && compare_opt_strings entr1 entr2)
-      | _ -> fail @@ Errors.meta_lang_eval loc calltrace not_comparable_string
-    in
-    return @@ v_bool x
-  | _, l ->
-    print_endline
-      (Format.asprintf "%a" (PP_helpers.list_sep_d Ligo_interpreter.PP.pp_value) l);
-    fail @@ Errors.meta_lang_eval loc calltrace not_comparable_string
+    raise.error @@ Errors.meta_lang_eval loc calltrace @@ v_string msg
 
 
-let rec apply_comparison
-    :  Location.t -> calltrace -> Ligo_prim.Constant.constant' -> value list
-    -> value Monad.t
+let rec apply_comparison ~raise
+    : Location.t -> calltrace -> Ast_aggregated.type_expression -> value -> value -> int
   =
- fun loc calltrace c operands ->
-  let open Monad in
-  match c, operands with
-  | C_EQ, [ (V_Michelson _ as a); (V_Michelson _ as b) ] ->
-    let>> b = Michelson_equal (loc, a, b) in
-    return @@ v_bool b
-  | C_NEQ, [ (V_Michelson _ as a); (V_Michelson _ as b) ] ->
-    let>> b = Michelson_equal (loc, a, b) in
-    return @@ v_bool (not b)
-  | comp, [ (V_Ct _ as v1); (V_Ct _ as v2) ] -> compare_constants comp v1 v2 loc calltrace
-  | comp, [ (V_List _ as xs); (V_List _ as ys) ]
-  | comp, [ (V_Set _ as xs); (V_Set _ as ys) ]
-  | comp, [ (V_Map _ as xs); (V_Map _ as ys) ]
-  | comp, [ (V_Record _ as xs); (V_Record _ as ys) ] ->
-    let c = Ligo_interpreter.Combinators.equal_value xs ys in
-    let* v =
-      match comp with
-      | C_EQ -> return @@ v_bool c
-      | C_NEQ -> return @@ v_bool (not c)
-      | _ -> fail @@ Errors.meta_lang_eval loc calltrace not_comparable_string
+ fun loc calltrace type_ operand operand' ->
+  match operand, operand' with
+  | (V_Michelson _ as a), (V_Michelson _ as b) ->
+    Michelson_backend.compare_michelson ~raise loc a b
+  | (V_Ct _ as v1), (V_Ct _ as v2) -> compare_constants ~raise v1 v2 loc calltrace
+  | V_List xs, V_List ys ->
+    let type_ =
+      trace_option ~raise (Errors.generic_error ~calltrace loc "Expected list type")
+      @@ AST.get_t_list type_
     in
-    return v
-  | comp, [ V_Construct (ctor_a, args_a); V_Construct (ctor_b, args_b) ] ->
-    (match comp with
-    | C_EQ ->
-      if String.equal ctor_a ctor_b
-      then
-        let* r = apply_comparison loc calltrace c [ args_a; args_b ] in
-        Monad.return @@ v_bool @@ is_true r
-      else Monad.return @@ v_bool false
-    | C_NEQ ->
-      if not (String.equal ctor_a ctor_b)
-      then Monad.return @@ v_bool true
-      else
-        let* r = apply_comparison loc calltrace c [ args_a; args_b ] in
-        Monad.return @@ v_bool @@ is_true r
-    | _ -> fail @@ Errors.meta_lang_eval loc calltrace not_comparable_string)
-  | _, l ->
-    (* TODO: Don't know how to compare these *)
-    (* V_Func_val *)
-    (* V_Mutation *)
-    (* V_Failure *)
-    (* V_Michelson *)
-    (* V_BigMap *)
-    print_endline
-      (Format.asprintf "%a" (PP_helpers.list_sep_d Ligo_interpreter.PP.pp_value) l);
-    fail @@ Errors.meta_lang_eval loc calltrace not_comparable_string
+    List.compare (apply_comparison ~raise loc calltrace type_) xs ys
+  | V_Set s, V_Set s' ->
+    let type_ =
+      trace_option ~raise (Errors.generic_error ~calltrace loc "Expected set type")
+      @@ AST.get_t_set type_
+    in
+    List.compare
+      (apply_comparison ~raise loc calltrace type_)
+      (List.dedup_and_sort ~compare:(apply_comparison ~raise loc calltrace type_) s)
+      (List.dedup_and_sort ~compare:(apply_comparison ~raise loc calltrace type_) s')
+  | V_Map m, V_Map m' ->
+    let type_key, type_value =
+      trace_option
+        ~raise
+        (Errors.generic_error ~calltrace loc "Expected map or big_map type")
+      @@ AST.get_t_map_or_big_map type_
+    in
+    let compare_key = apply_comparison ~raise loc calltrace type_key in
+    let compare_value = apply_comparison ~raise loc calltrace type_value in
+    let compare_kv = Tuple2.compare ~cmp1:compare_key ~cmp2:compare_value in
+    let m = List.sort ~compare:compare_kv m in
+    let m' = List.sort ~compare:compare_kv m' in
+    List.compare compare_kv m m'
+  | V_Record r, V_Record r' ->
+    let { fields : row_element Record.t; layout } =
+      trace_option
+        ~raise
+        (Errors.generic_error ~calltrace loc "Expected a record type")
+        (AST.get_t_record type_)
+    in
+    let row_kv = AST.Helpers.kv_list_of_t_record_or_tuple ~layout fields in
+    let rec aux (row_kv : (Label.t * row_element) list) =
+      match row_kv with
+      | [] -> 0
+      | (label, ({ associated_type; _ } : row_element)) :: row_kv ->
+        let value_a = Record.LMap.find label r in
+        let value_b = Record.LMap.find label r' in
+        (match apply_comparison ~raise loc calltrace associated_type value_a value_b with
+        | 0 -> aux row_kv
+        | c -> c)
+    in
+    aux row_kv
+  | V_Construct (ctor_a, args_a), V_Construct (ctor_b, args_b) ->
+    let { fields : row_element Record.t; layout } =
+      trace_option
+        ~raise
+        (Errors.generic_error ~calltrace loc "Expected a sum type")
+        (AST.get_t_sum type_)
+    in
+    let order = AST.Helpers.kv_list_of_t_sum ~layout fields |> List.map ~f:fst in
+    let ith_a, _ = List.findi_exn order ~f:(fun _i (Label l) -> String.equal l ctor_a) in
+    let ith_b, _ = List.findi_exn order ~f:(fun _i (Label l) -> String.equal l ctor_b) in
+    (match Int.compare ith_a ith_b with
+    | 0 ->
+      let ({ associated_type; _ } : row_element) =
+        Record.LMap.find (Label ctor_a) fields
+      in
+      apply_comparison ~raise loc calltrace associated_type args_a args_b
+    | c -> c)
+  | V_Func_val _, V_Func_val _
+  | V_Gen _, V_Gen _
+  | V_Location _, V_Location _
+  | V_Typed_address _, V_Typed_address _
+  | V_Ast_contract _, V_Ast_contract _
+  | V_Mutation _, V_Mutation _
+  | V_Michelson_contract _, V_Michelson_contract _ ->
+    (* NOTE: These are not comparable, either meta-LIGO or not supporting natural comparison *)
+    let msg =
+      Format.asprintf
+        "Comparison not supported: %a"
+        (PP_helpers.pair Ligo_interpreter.PP.pp_value Ligo_interpreter.PP.pp_value)
+        (operand, operand')
+    in
+    raise.error @@ Errors.meta_lang_eval loc calltrace @@ v_string msg
+  | ( ( V_Ct _
+      | V_List _
+      | V_Record _
+      | V_Map _
+      | V_Set _
+      | V_Construct _
+      | V_Michelson _
+      | V_Mutation _
+      | V_Func_val _
+      | V_Michelson_contract _
+      | V_Ast_contract _
+      | V_Gen _
+      | V_Location _
+      | V_Typed_address _ )
+    , ( V_Ct _
+      | V_List _
+      | V_Record _
+      | V_Map _
+      | V_Set _
+      | V_Construct _
+      | V_Michelson _
+      | V_Mutation _
+      | V_Func_val _
+      | V_Michelson_contract _
+      | V_Ast_contract _
+      | V_Gen _
+      | V_Location _
+      | V_Typed_address _ ) ) ->
+    let msg =
+      Format.asprintf
+        "Different value types, cannot be compared: %a"
+        (PP_helpers.pair Ligo_interpreter.PP.pp_value Ligo_interpreter.PP.pp_value)
+        (operand, operand')
+    in
+    raise.error @@ Errors.meta_lang_eval loc calltrace @@ v_string msg
+
+
+let apply_comparison ~raise
+    :  Location.t -> calltrace -> Ast_aggregated.type_expression
+    -> Ligo_prim.Constant.constant' -> value -> value -> value Monad.t
+  =
+ fun loc calltrace type_ c operand operand' ->
+  let open Monad in
+  let cmpres = apply_comparison ~raise loc calltrace type_ operand operand' in
+  let* b = wrap_compare_result c cmpres loc calltrace in
+  return @@ v_bool b
 
 
 let bind_param
@@ -214,6 +383,18 @@ let bind_param
       let@ () = Free loc in
       return result
 
+
+(* 
+let deref_env env =
+  let open Monad in
+  bind_map_list
+    (fun (x, y) ->
+      match y.item.eval_term with
+      | V_Location loc ->
+        let* v = Call (Deref loc) in
+        return (x, { y with item = { y.item with eval_term = v } })
+      | _ -> return (x, y))
+    env *)
 
 let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
     :  Location.t -> calltrace -> AST.type_expression -> env -> Constant.constant'
@@ -299,11 +480,17 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
            (v_string @@ Predefined.Tree_abstraction.pseudo_module_to_string c))
   | C_MAP_FIND, _ -> fail @@ error_type ()
   (* binary *)
-  | (C_EQ | C_NEQ | C_LT | C_LE | C_GT | C_GE), _ ->
-    apply_comparison loc calltrace c operands
+  | (C_EQ | C_NEQ | C_LT | C_LE | C_GT | C_GE), [ operand; operand' ] ->
+    (* we use the type of the first argument to guide comparison *)
+    let type_ = nth_type 0 in
+    apply_comparison ~raise loc calltrace type_ c operand operand'
+  | (C_EQ | C_NEQ | C_LT | C_LE | C_GT | C_GE), _ -> fail @@ error_type ()
   | C_SUB, [ V_Ct (C_int64 a'); V_Ct (C_int64 b') ] -> return @@ v_int64 Int64.(a' - b')
   | C_SUB, [ V_Ct (C_int a' | C_nat a'); V_Ct (C_int b' | C_nat b') ] ->
     return @@ v_int (Z.sub a' b')
+  | C_SUB, [ V_Ct (C_timestamp a'); V_Ct (C_timestamp b') ] ->
+    let res = Michelson_backend.Tezos_eq.timestamp_sub a' b' in
+    return @@ v_int res
   | C_SUB, [ V_Ct (C_int a' | C_timestamp a'); V_Ct (C_timestamp b' | C_int b') ] ->
     let res = Michelson_backend.Tezos_eq.timestamp_sub a' b' in
     return @@ v_timestamp res
@@ -522,10 +709,10 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
       @@ AST.get_t_list lst_ty
     in
     Monad.bind_fold_list
-      (fun _ elt ->
+      ~f:(fun _ elt ->
         bind_param env arg_binder arg_mut_flag (ty, elt) ~in_:(fun env ->
             eval_ligo body calltrace env))
-      (v_unit ())
+      ~init:(v_unit ())
       elts
   | C_LIST_ITER, _ -> fail @@ error_type ()
   | ( C_MAP_ITER
@@ -538,14 +725,14 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
       @@ AST.get_t_map map_ty
     in
     Monad.bind_fold_list
-      (fun _ kv ->
+      ~f:(fun _ kv ->
         bind_param
           env
           arg_binder
           arg_mut_flag
           (AST.t_pair k_ty v_ty, v_pair kv)
           ~in_:(fun env -> eval_ligo body calltrace env))
-      (v_unit ())
+      ~init:(v_unit ())
       elts
   | C_MAP_ITER, _ -> fail @@ error_type ()
   (* ternary *)
@@ -580,7 +767,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
       @@ AST.get_t_list lst_ty
     in
     Monad.bind_fold_list
-      (fun prev elt ->
+      ~f:(fun prev elt ->
         let fold_args = v_pair (prev, elt) in
         bind_param
           env
@@ -588,7 +775,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
           arg_mut_flag
           (AST.t_pair acc_ty ty, fold_args)
           ~in_:(fun env' -> eval_ligo body calltrace env'))
-      init
+      ~init
       elts
   | C_LIST_FOLD_LEFT, _ -> fail @@ error_type ()
   | ( C_FOLD
@@ -608,7 +795,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
       @@ AST.get_t_list lst_ty
     in
     Monad.bind_fold_list
-      (fun prev elt ->
+      ~f:(fun prev elt ->
         let fold_args = v_pair (prev, elt) in
         bind_param
           env
@@ -616,7 +803,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
           arg_mut_flag
           (AST.t_pair acc_ty ty, fold_args)
           ~in_:(fun env' -> eval_ligo body calltrace env'))
-      init
+      ~init
       elts
   | ( C_FOLD
     , [ V_Func_val { arg_binder; arg_mut_flag; body; env; rec_name = _; orig_lambda = _ }
@@ -635,7 +822,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
       @@ AST.get_t_set set_ty
     in
     Monad.bind_fold_list
-      (fun prev elt ->
+      ~f:(fun prev elt ->
         let fold_args = v_pair (prev, elt) in
         bind_param
           env
@@ -643,7 +830,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
           arg_mut_flag
           (AST.(t_pair acc_ty ty), fold_args)
           ~in_:(fun env' -> eval_ligo body calltrace env'))
-      init
+      ~init
       elts
   | C_FOLD, _ -> fail @@ error_type ()
   | C_LIST_FOLD, _ -> fail @@ error_type ()
@@ -687,7 +874,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
       @@ AST.get_t_map map_ty
     in
     Monad.bind_fold_list
-      (fun prev kv ->
+      ~f:(fun prev kv ->
         let fold_args = v_pair (prev, v_pair kv) in
         bind_param
           env
@@ -695,7 +882,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
           arg_mut_flag
           (AST.(t_pair acc_ty (t_pair k_ty v_ty)), fold_args)
           ~in_:(fun env' -> eval_ligo body calltrace env'))
-      init
+      ~init
       kvs
   | C_MAP_FOLD, _ -> fail @@ error_type ()
   | C_MAP_ADD, [ k; v; V_Map kvs ] ->
@@ -769,10 +956,10 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
       @@ AST.get_t_set set_ty
     in
     Monad.bind_fold_list
-      (fun _ elt ->
+      ~f:(fun _ elt ->
         bind_param env arg_binder arg_mut_flag (ty, elt) ~in_:(fun env' ->
             eval_ligo body calltrace env'))
-      (v_unit ())
+      ~init:(v_unit ())
       elts
   | C_SET_ITER, _ -> fail @@ error_type ()
   | C_SET_MEM, [ v; V_Set elts ] ->
@@ -1078,6 +1265,11 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
     in
     let>> v = Decompile (code, code_ty, expr_ty) in
     return v
+  | C_TEST_DECOMPILE, [ V_Michelson (Untyped_code code) ] ->
+    let code_ty = Michelson_backend.compile_type ~raise expr_ty in
+    let code_ty = Tezos_micheline.Micheline.map_node (fun _ -> ()) (fun s -> s) code_ty in
+    let>> v = Decompile (code, code_ty, expr_ty) in
+    return v
   | C_TEST_DECOMPILE, _ -> fail @@ error_type ()
   | C_TEST_COMPILE_CONTRACT, [ contract ] ->
     let>> code = Compile_contract (loc, contract) in
@@ -1297,6 +1489,10 @@ and eval_literal : Ligo_prim.Literal_value.t -> value Monad.t = function
     (match Bls12_381.Fr.of_bytes_opt b with
     | Some t -> Monad.return @@ v_bls12_381_fr t
     | None -> Monad.fail @@ Errors.literal Location.generated (Literal_bls12_381_fr b))
+  | Literal_chain_id c ->
+    (match Tezos_crypto.Chain_id.of_b58check_opt c with
+    | Some t -> Monad.return @@ v_chain_id t
+    | None -> Monad.fail @@ Errors.literal Location.generated (Literal_chain_id c))
   | l -> Monad.fail @@ Errors.literal Location.generated l
 
 
@@ -1363,6 +1559,7 @@ and eval_ligo ~raise ~steps ~options : AST.expression -> calltrace -> env -> val
   | E_lambda { binder; output_type = _; result } ->
     let fv = Self_ast_aggregated.Helpers.Free_variables.expression term in
     let env = List.filter ~f:(fun (v, _) -> List.mem fv v ~equal:Value_var.equal) env in
+    (* let* env = deref_env env in *)
     return
     @@ V_Func_val
          { rec_name = None
@@ -1372,22 +1569,10 @@ and eval_ligo ~raise ~steps ~options : AST.expression -> calltrace -> env -> val
          ; body = result
          ; env
          }
-  | E_let_in
-      { let_binder
-      ; rhs
-      ; let_result
-      ; attr = { no_mutation; inline; view = _; public = _; hidden = _; thunk = _ }
-      } ->
+  | E_let_in { let_binder; rhs; let_result; attributes } ->
     let* rhs' = eval_ligo rhs calltrace env in
-    eval_ligo
-      let_result
-      calltrace
-      (Env.extend
-         env
-         (Binder.get_var let_binder)
-         ~inline
-         ~no_mutation
-         (rhs.type_expression, rhs'))
+    let* env = pattern_env_extend ~attributes env let_binder rhs.type_expression rhs' in
+    eval_ligo let_result calltrace env
   | E_literal l -> eval_literal l
   | E_variable var ->
     let fst (a, _, _) = a in
@@ -1459,80 +1644,32 @@ and eval_ligo ~raise ~steps ~options : AST.expression -> calltrace -> env -> val
     let* v' = eval_ligo element calltrace env in
     return @@ V_Construct (c, v')
   | E_matching { matchee; cases } ->
-    let* e' = eval_ligo matchee calltrace env in
-    (match cases, e' with
-    | Match_variant { cases; _ }, V_List [] ->
-      let { constructor = _; pattern = _; body } =
-        List.find_exn
-          ~f:(fun { constructor = Label c; pattern = _; body = _ } ->
-            String.equal "Nil" c)
-          cases
+    let* matchee' = eval_ligo matchee calltrace env in
+    let* body, env =
+      (* find pattern matching the matchee value *)
+      let rec aux cases =
+        match cases with
+        | [] -> fail (Errors.generic_error ~calltrace term.location "No pattern matched")
+        | AST.Match_expr.{ pattern; body } :: tl ->
+          try_or
+            (let* env =
+               pattern_env_extend
+                 ~attributes:ValueAttr.default_attributes
+                 env
+                 pattern
+                 matchee.type_expression
+                 matchee'
+             in
+             return (body, env))
+            (aux tl)
       in
-      eval_ligo body calltrace env
-    | Match_variant { cases; tv }, V_List lst ->
-      let { constructor = _; pattern; body } =
-        List.find_exn
-          ~f:(fun { constructor = Label c; pattern = _; body = _ } ->
-            String.equal "Cons" c)
-          cases
-      in
-      let ty = AST.get_t_list_exn tv in
-      let hd = List.hd_exn lst in
-      let tl = V_List (List.tl_exn lst) in
-      let proj = v_pair (hd, tl) in
-      let env' = Env.extend env pattern (ty, proj) in
-      eval_ligo body calltrace env'
-    | Match_variant { cases; _ }, V_Ct (C_bool b) ->
-      let ctor_body (case : _ matching_content_case) = case.constructor, case.body in
-      let cases = Record.of_list (List.map ~f:ctor_body cases) in
-      let get_case c = Record.LMap.find (Label c) cases in
-      let match_true = get_case "True" in
-      let match_false = get_case "False" in
-      if b
-      then eval_ligo match_true calltrace env
-      else eval_ligo match_false calltrace env
-    | Match_variant { cases; tv }, V_Construct (matched_c, proj) ->
-      let* tv =
-        match AST.get_t_sum_opt tv with
-        | Some tv ->
-          let ({ associated_type; michelson_annotation = _; decl_pos = _ } : row_element) =
-            Record.LMap.find (Label matched_c) tv.fields
-          in
-          return associated_type
-        | None ->
-          (match AST.get_t_option tv with
-          | Some tv -> return tv
-          | None -> fail @@ Errors.generic_error tv.location "Expected sum")
-      in
-      let { constructor = _; pattern; body } =
-        List.find_exn
-          ~f:(fun { constructor = Label c; pattern = _; body = _ } ->
-            String.equal matched_c c)
-          cases
-      in
-      (* TODO-er: check *)
-      let env' = Env.extend env pattern (tv, proj) in
-      eval_ligo body calltrace env'
-    | Match_record { fields; body; tv = _ }, V_Record rv ->
-      let aux : Label.t -> _ Binder.t -> env -> env =
-       fun l b env ->
-        let iv =
-          match Record.LMap.find_opt l rv with
-          | Some x -> x
-          | None -> failwith "label do not match"
-        in
-        Env.extend env (Binder.get_var b) (Binder.get_ascr b, iv)
-      in
-      let env' = Record.LMap.fold aux fields env in
-      eval_ligo body calltrace env'
-    | _, v ->
-      failwith
-        ("not yet supported case "
-        ^ Format.asprintf "%a" Ligo_interpreter.PP.pp_value v
-        ^ Format.asprintf "%a" AST.PP.expression term))
+      aux cases
+    in
+    eval_ligo body calltrace env
   | E_recursive { fun_name; fun_type = _; lambda } ->
     let fv = Self_ast_aggregated.Helpers.Free_variables.expression term in
     let env = List.filter ~f:(fun (v, _) -> List.mem fv v ~equal:Value_var.equal) env in
+    (* let* env = deref_env env in *)
     return
     @@ V_Func_val
          { rec_name = Some fun_name
@@ -1686,16 +1823,17 @@ and eval_ligo ~raise ~steps ~options : AST.expression -> calltrace -> env -> val
     in
     let@ val_ = Deref loc in
     return val_
-  | E_let_mut_in { let_binder; rhs; let_result; attr = _ } ->
+  | E_let_mut_in { let_binder; rhs; let_result; attributes } ->
     let* rhs' = eval_ligo rhs calltrace env in
-    let@ loc = Alloc rhs' in
-    let* let_result =
-      eval_ligo
-        let_result
-        calltrace
-        (Env.extend env (Binder.get_var let_binder) (rhs.type_expression, V_Location loc))
+    let* locs, env =
+      pattern_env_extend_mut ~attributes env let_binder rhs.type_expression rhs'
     in
-    let@ () = Free loc in
+    let* let_result = eval_ligo let_result calltrace env in
+    let* () =
+      bind_iter_list locs ~f:(fun loc ->
+          let@ () = Free loc in
+          return ())
+    in
     return let_result
   | E_while { cond; body } ->
     let rec loop () =
@@ -1717,11 +1855,11 @@ and eval_ligo ~raise ~steps ~options : AST.expression -> calltrace -> env -> val
     (match collection with
     | V_Map elts ->
       Monad.bind_fold_list
-        (fun _ (k_val, v_val) ->
+        ~f:(fun _ (k_val, v_val) ->
           let env = Env.extend env binder1 (k_ty, k_val) in
           let env = Env.extend env binder2 (v_ty, v_val) in
           eval_ligo fe_body calltrace env)
-        (v_unit ())
+        ~init:(v_unit ())
         elts
     | _ -> failwith (Format.asprintf "Expected map value for for-each loop"))
   | E_for_each { fe_binder = binder1, None; collection; fe_body; _ } ->
@@ -1737,10 +1875,10 @@ and eval_ligo ~raise ~steps ~options : AST.expression -> calltrace -> env -> val
     (match collection with
     | V_Set elts | V_List elts ->
       Monad.bind_fold_list
-        (fun _ v_val ->
+        ~f:(fun _ v_val ->
           let env = Env.extend env binder1 (v_ty, v_val) in
           eval_ligo fe_body calltrace env)
-        (v_unit ())
+        ~init:(v_unit ())
         elts
     | _ -> failwith (Format.asprintf "Expected list or set value for for-each loop"))
   | E_for { binder; start; final; incr; f_body } ->
@@ -1802,6 +1940,8 @@ let eval_test ~raise ~steps ~options : Ast_typed.program -> bool * (string * val
   let aux decl r =
     let ds, defs = r in
     match decl.Location.wrap_content with
+    | Ast_typed.D_irrefutable_match
+        { pattern = { wrap_content = P_var binder; _ }; expr; _ }
     | Ast_typed.D_value { binder; expr; _ } ->
       let var = Binder.get_var binder in
       if (not (Value_var.is_generated var))

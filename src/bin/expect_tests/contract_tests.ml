@@ -13,10 +13,10 @@ let%expect_test _ =
     1097 bytes |}];
   run_ligo_good [ "info"; "measure-contract"; contract "multisig.ligo" ];
   [%expect {|
-    547 bytes |}];
+    533 bytes |}];
   run_ligo_good [ "info"; "measure-contract"; contract "multisig-v2.ligo" ];
   [%expect {|
-    1511 bytes |}];
+    1509 bytes |}];
   run_ligo_good [ "info"; "measure-contract"; contract "vote.mligo" ];
   [%expect {|
     420 bytes |}];
@@ -110,6 +110,37 @@ let%expect_test _ =
     Hint: replace it by "_s" to prevent this warning.
 
     "2042-01-01T00:00:29Z" |}]
+
+let%expect_test _ =
+  run_ligo_good [ "compile"; "contract"; contract "const.mligo" ];
+  [%expect
+    {|
+    File "../../test/contracts/const.mligo", line 1, characters 31-32:
+      1 | let const = fun (type a b) (a, b : a * b) : a -> a
+      2 |
+    :
+    Warning: unused variable "b".
+    Hint: replace it by "_b" to prevent this warning.
+
+    { parameter unit ;
+      storage unit ;
+      code { DROP ; UNIT ; NIL operation ; PAIR } } |}]
+
+let%expect_test _ =
+  run_ligo_good [ "compile"; "contract"; contract "const1.mligo" ];
+  [%expect
+    {|
+    { parameter unit ;
+      storage unit ;
+      code { DROP ; UNIT ; NIL operation ; PAIR } } |}]
+
+let%expect_test _ =
+  run_ligo_good [ "compile"; "contract"; contract "const2.mligo" ];
+  [%expect
+    {|
+    { parameter unit ;
+      storage unit ;
+      code { DROP ; UNIT ; NIL operation ; PAIR } } |}]
 
 let%expect_test _ =
   run_ligo_good [ "compile"; "contract"; contract "coase.ligo" ];
@@ -316,35 +347,34 @@ let%expect_test _ =
       storage (pair (pair (list %auth key) (nat %counter)) (string %id) (nat %threshold)) ;
       code { UNPAIR ;
              SWAP ;
-             DUP 2 ;
+             DUP ;
              CAR ;
              CDR ;
-             DUP 2 ;
-             CAR ;
-             CDR ;
-             DUP 4 ;
+             DUP 3 ;
              CAR ;
              CAR ;
              COMPARE ;
              NEQ ;
-             IF { DIG 2 ; DROP ; PUSH string "Counters does not match" ; FAILWITH }
+             IF { PUSH string "Counters does not match" ; FAILWITH }
                 { CHAIN_ID ;
-                  DUP 3 ;
+                  DUP 2 ;
                   CDR ;
                   CAR ;
                   PAIR ;
+                  DUP 3 ;
+                  CAR ;
+                  CAR ;
                   DUP 4 ;
                   CAR ;
-                  CAR ;
-                  DUP 3 ;
+                  CDR ;
                   PAIR ;
                   PAIR ;
                   PACK ;
                   PUSH nat 0 ;
-                  DUP 4 ;
+                  DUP 3 ;
                   CAR ;
                   CAR ;
-                  DIG 5 ;
+                  DUP 5 ;
                   CDR ;
                   ITER { DUP 2 ;
                          IF_CONS
@@ -369,18 +399,18 @@ let%expect_test _ =
                            { DROP } } ;
                   DIG 2 ;
                   DROP 2 ;
-                  DUP 3 ;
+                  DUP 2 ;
                   CDR ;
                   CDR ;
                   SWAP ;
                   COMPARE ;
                   LT ;
                   IF { PUSH string "Not enough signatures passed the check" ; FAILWITH }
-                     { DUP 2 ;
+                     { DUP ;
                        DUP ;
                        CDR ;
                        PUSH nat 1 ;
-                       DIG 4 ;
+                       DIG 3 ;
                        CAR ;
                        CDR ;
                        ADD ;
@@ -388,11 +418,11 @@ let%expect_test _ =
                        CAR ;
                        CAR ;
                        PAIR ;
-                       PAIR ;
-                       SWAP } } ;
-             SWAP ;
+                       PAIR } } ;
              UNIT ;
              DIG 2 ;
+             CAR ;
+             CDR ;
              SWAP ;
              EXEC ;
              PAIR } } |}]
@@ -423,10 +453,9 @@ let%expect_test _ =
                      MEM ;
                      NOT ;
                      IF { PUSH string "Unauthorized address" ; FAILWITH } {} ;
-                     SWAP ;
-                     DUP ;
+                     DUP 2 ;
                      PACK ;
-                     DUP 3 ;
+                     DUP 2 ;
                      CAR ;
                      CAR ;
                      CDR ;
@@ -435,14 +464,14 @@ let%expect_test _ =
                      COMPARE ;
                      GT ;
                      IF { PUSH string "Message size exceed maximum limit" ; FAILWITH } {} ;
-                     DUP 3 ;
+                     DUP 2 ;
                      CAR ;
                      CDR ;
                      CDR ;
                      DUP 2 ;
                      GET ;
                      IF_NONE
-                       { DUP 3 ;
+                       { DUP 2 ;
                          DUP ;
                          CDR ;
                          CDR ;
@@ -450,12 +479,12 @@ let%expect_test _ =
                          CDR ;
                          CAR ;
                          CDR ;
-                         DUP 6 ;
+                         DUP 5 ;
                          CDR ;
                          CAR ;
                          CAR ;
                          PUSH nat 1 ;
-                         DIG 7 ;
+                         DIG 6 ;
                          CDR ;
                          CAR ;
                          CAR ;
@@ -473,7 +502,7 @@ let%expect_test _ =
                          SWAP ;
                          CAR ;
                          PAIR ;
-                         DUG 2 ;
+                         SWAP ;
                          EMPTY_SET address ;
                          SENDER ;
                          PUSH bool True ;
@@ -483,7 +512,7 @@ let%expect_test _ =
                          SENDER ;
                          MEM ;
                          IF {}
-                            { DUP 4 ;
+                            { DUP 3 ;
                               DUP ;
                               CDR ;
                               CDR ;
@@ -491,12 +520,12 @@ let%expect_test _ =
                               CDR ;
                               CAR ;
                               CDR ;
-                              DUP 7 ;
+                              DUP 6 ;
                               CDR ;
                               CAR ;
                               CAR ;
                               PUSH nat 1 ;
-                              DIG 8 ;
+                              DIG 7 ;
                               CDR ;
                               CAR ;
                               CAR ;
@@ -514,19 +543,19 @@ let%expect_test _ =
                               SWAP ;
                               CAR ;
                               PAIR ;
-                              DUG 3 } ;
+                              DUG 2 } ;
                          SENDER ;
                          PUSH bool True ;
                          SWAP ;
                          UPDATE } ;
-                     DUP 4 ;
+                     DUP 3 ;
                      CDR ;
                      CAR ;
                      CAR ;
                      SENDER ;
                      GET ;
                      IF_NONE { PUSH string "MAP FIND" ; FAILWITH } {} ;
-                     DUP 5 ;
+                     DUP 4 ;
                      CAR ;
                      CDR ;
                      CAR ;
@@ -535,7 +564,7 @@ let%expect_test _ =
                      GT ;
                      IF { PUSH string "Maximum number of proposal reached" ; FAILWITH } {} ;
                      NIL operation ;
-                     DUP 5 ;
+                     DUP 4 ;
                      CDR ;
                      CDR ;
                      DUP 3 ;
@@ -543,10 +572,10 @@ let%expect_test _ =
                      COMPARE ;
                      GE ;
                      IF { DROP ;
-                          DUP 4 ;
+                          DUP 3 ;
                           DUP ;
                           CDR ;
-                          DIG 5 ;
+                          DIG 4 ;
                           CAR ;
                           CDR ;
                           CDR ;
@@ -564,12 +593,12 @@ let%expect_test _ =
                           CAR ;
                           PAIR ;
                           PAIR ;
-                          DUG 3 ;
-                          DUP 4 ;
+                          DUG 2 ;
+                          DUP 3 ;
                           CDR ;
                           CAR ;
                           CDR ;
-                          DIG 3 ;
+                          DIG 4 ;
                           SWAP ;
                           EXEC ;
                           DUP 4 ;
@@ -631,7 +660,7 @@ let%expect_test _ =
                                     { DROP 2 } } ;
                           SWAP ;
                           DROP }
-                        { DIG 3 ;
+                        { DIG 4 ;
                           DROP ;
                           DUP 4 ;
                           DUP ;
@@ -932,7 +961,8 @@ let%expect_test _ =
                      PAIR } } } } } |}]
 
 let%expect_test _ =
-  run_ligo_good [ "compile"; "contract"; contract "ticket_builder.mligo" ];
+  run_ligo_good
+    [ "compile"; "contract"; contract "ticket_builder.mligo"; "--protocol"; "lima" ];
   [%expect
     {|
 File "../../test/contracts/ticket_builder.mligo", line 29, characters 28-34:
@@ -973,6 +1003,7 @@ Hint: replace it by "_ticket" to prevent this warning.
              CDR ;
              UNIT ;
              TICKET ;
+             IF_NONE { PUSH string "option is None" ; FAILWITH } {} ;
              SWAP ;
              CAR ;
              PUSH mutez 0 ;
@@ -1055,12 +1086,7 @@ let%expect_test _ =
     { parameter bool ;
       storage (lambda unit mutez) ;
       code { CAR ;
-             IF { AMOUNT ;
-                  LAMBDA (pair mutez unit) mutez { CAR } ;
-                  DUP 2 ;
-                  APPLY ;
-                  SWAP ;
-                  DROP }
+             IF { LAMBDA unit mutez { DROP ; AMOUNT } }
                 { LAMBDA unit mutez { DROP ; AMOUNT } } ;
              NIL operation ;
              PAIR } } |}]
@@ -1075,7 +1101,12 @@ let%expect_test _ =
 
     Reasonligo is depreacted, support will be dropped in a few versions.
 
-    Warning: Error(s) occurred while type checking the produced michelson contract:
+    Reasonligo is depreacted, support will be dropped in a few versions.
+
+    Reasonligo is depreacted, support will be dropped in a few versions.
+
+    Reasonligo is depreacted, support will be dropped in a few versions.
+    Error(s) occurred while type checking the contract:
     Ill typed contract:
       1: { parameter int ;
       2:   storage address ;
@@ -1085,29 +1116,7 @@ let%expect_test _ =
     { "id": "proto.014-PtKathma.destination_repr.invalid_b58check",
       "description":
         "Failed to read a valid destination from a b58check_encoding data",
-      "data": { "input": "KT1badaddr" } }
-    Note: You compiled your contract with protocol jakarta although we internally use protocol kathmandu to typecheck the produced Michelson contract
-    so you might want to ignore this error if related to a breaking change in protocol kathmandu
-
-    Reasonligo is depreacted, support will be dropped in a few versions.
-
-    Reasonligo is depreacted, support will be dropped in a few versions.
-
-    Reasonligo is depreacted, support will be dropped in a few versions.
-
-    Warning: Error(s) occurred while type checking the produced michelson contract:
-    Ill typed contract:
-      1: { parameter int ;
-      2:   storage address ;
-      3:   code { DROP /* [] */ ; PUSH address "KT1badaddr" ; NIL operation ; PAIR } }
-    At line 3 characters 38 to 50, value "KT1badaddr"
-    is invalid for type address.
-    { "id": "proto.014-PtKathma.destination_repr.invalid_b58check",
-      "description":
-        "Failed to read a valid destination from a b58check_encoding data",
-      "data": { "input": "KT1badaddr" } }
-    Note: You compiled your contract with protocol jakarta although we internally use protocol kathmandu to typecheck the produced Michelson contract
-    so you might want to ignore this error if related to a breaking change in protocol kathmandu |}]
+      "data": { "input": "KT1badaddr" } } |}]
 
 let%expect_test _ =
   run_ligo_bad [ "compile"; "contract"; contract "bad_timestamp.ligo" ];
@@ -1209,6 +1218,27 @@ let%expect_test _ =
     {| "Tezos.self" must be used directly and cannot be used via another function. |}]
 
 let%expect_test _ =
+  run_ligo_bad [ "compile"; "contract"; bad_contract "not_comparable.mligo" ];
+  [%expect
+    {|
+    File "../../test/contracts/negative/not_comparable.mligo", line 1, characters 21-28:
+      1 | let main ((_u, s) : (int set) set * unit) : operation list * unit = ([] : operation list), s
+      2 |
+
+    The set constructor needs a comparable type argument, but it was given a non-comparable one. |}]
+
+let%expect_test _ =
+  run_ligo_bad
+    [ "compile"; "contract"; bad_contract "not_comparable.mligo"; "-e"; "main2" ];
+  [%expect
+    {|
+    File "../../test/contracts/negative/not_comparable.mligo", line 3, characters 22-29:
+      2 |
+      3 | let main2 ((_u, s) : (int set) ticket * unit) : operation list * unit = ([] : operation list), s
+
+    The ticket constructor needs a comparable type argument, but it was given a non-comparable one. |}]
+
+let%expect_test _ =
   run_ligo_good [ "compile"; "storage"; contract "big_map.ligo"; "(big_map1,unit)" ];
   [%expect {|
     (Pair { Elt 23 0 ; Elt 42 0 } Unit) |}]
@@ -1275,41 +1305,16 @@ let%expect_test _ =
   run_ligo_bad [ "compile"; "contract"; bad_contract "create_contract_toplevel.mligo" ];
   [%expect
     {|
-File "../../test/contracts/negative/create_contract_toplevel.mligo", line 5, characters 10-11:
+File "../../test/contracts/negative/create_contract_toplevel.mligo", line 4, character 35 to line 8, character 8:
+  3 | let main (_, store : string * string) : return =
   4 |   let toto : operation * address = Tezos.create_contract
-  5 |     (fun (p, s : nat * string) -> (([] : operation list), store))
-  6 |     (None: key_hash option)
-:
-Warning: unused variable "p".
-Hint: replace it by "_p" to prevent this warning.
-
-File "../../test/contracts/negative/create_contract_toplevel.mligo", line 5, characters 13-14:
-  4 |   let toto : operation * address = Tezos.create_contract
-  5 |     (fun (p, s : nat * string) -> (([] : operation list), store))
-  6 |     (None: key_hash option)
-:
-Warning: unused variable "s".
-Hint: replace it by "_s" to prevent this warning.
-
-File "../../test/contracts/negative/create_contract_toplevel.mligo", line 3, characters 10-16:
-  2 |
-  3 | let main (action, store : string * string) : return =
-  4 |   let toto : operation * address = Tezos.create_contract
-:
-Warning: unused variable "action".
-Hint: replace it by "_action" to prevent this warning.
-
-File "../../test/contracts/negative/create_contract_toplevel.mligo", line 4, character 2 to line 10, character 19:
-  3 | let main (action, store : string * string) : return =
-  4 |   let toto : operation * address = Tezos.create_contract
-  5 |     (fun (p, s : nat * string) -> (([] : operation list), store))
+  5 |     (fun (_p, _s : nat * string) -> (([] : operation list), store))
   6 |     (None: key_hash option)
   7 |     300tz
   8 |     "un"
   9 |   in
- 10 |   ([toto.0], store)
 
-Not all free variables could be inlined in Tezos.create_contract usage: gen#24. |}];
+Not all free variables could be inlined in Tezos.create_contract usage: gen#174. |}];
   run_ligo_good [ "compile"; "contract"; contract "create_contract_var.mligo" ];
   [%expect
     {|
@@ -1381,7 +1386,7 @@ Not all free variables could be inlined in Tezos.create_contract usage: gen#24. 
     Warning: unused variable "action".
     Hint: replace it by "_action" to prevent this warning.
 
-    File "../../test/contracts/negative/create_contract_modfv.mligo", line 7, character 2 to line 13, character 19:
+    File "../../test/contracts/negative/create_contract_modfv.mligo", line 7, character 35 to line 11, character 8:
       6 |   end in
       7 |   let toto : operation * address = Tezos.create_contract
       8 |     (fun (p, s : nat * string) -> (([] : operation list), Foo.store))
@@ -1389,9 +1394,8 @@ Not all free variables could be inlined in Tezos.create_contract usage: gen#24. 
      10 |     300tz
      11 |     "un"
      12 |   in
-     13 |   ([toto.0], store)
 
-    Not all free variables could be inlined in Tezos.create_contract usage: gen#26. |}];
+    Not all free variables could be inlined in Tezos.create_contract usage: gen#175. |}];
   run_ligo_bad [ "compile"; "contract"; bad_contract "create_contract_no_inline.mligo" ];
   [%expect
     {|
@@ -1440,7 +1444,7 @@ Not all free variables could be inlined in Tezos.create_contract usage: gen#24. 
       9 |   let (op, addr) = Tezos.create_contract dummy_contract ((None: key_hash option)) 300tz 1 in
      10 |   let toto : operation list = [ op ] in
 
-    Not all free variables could be inlined in Tezos.create_contract usage: foo#35. |}];
+    Not all free variables could be inlined in Tezos.create_contract usage: foo#185. |}];
   run_ligo_good [ "compile"; "contract"; contract "create_contract.mligo" ];
   [%expect
     {|
@@ -1543,7 +1547,7 @@ let%expect_test _ =
     Warning: unused variable "p".
     Hint: replace it by "_p" to prevent this warning.
 
-    File "../../test/contracts/self_type_annotation_warn.ligo", line 8, characters 4-64:
+    File "../../test/contracts/self_type_annotation_warn.ligo", line 8, characters 41-64:
       7 |   {
       8 |     const self_contract: contract(int) = Tezos.self ("%default");
       9 |   }
@@ -1689,14 +1693,15 @@ File "../../test/contracts/negative/self_bad_entrypoint_format.ligo", line 6, ch
 Warning: unused variable "p".
 Hint: replace it by "_p" to prevent this warning.
 
-File "../../test/contracts/negative/self_bad_entrypoint_format.ligo", line 8, characters 4-59:
+File "../../test/contracts/negative/self_bad_entrypoint_format.ligo", line 8, characters 41-59:
   7 |   {
   8 |     const self_contract: contract(int) = Tezos.self("Toto") ;
   9 |     const op : operation = Tezos.transaction (2, 300tz, self_contract) ;
 
 Invalid entrypoint "Toto". One of the following patterns is expected:
 * "%bar" is expected for entrypoint "Bar"
-* "%default" when no entrypoint is used. |}];
+* "%default" when no entrypoint is used.
+Valid characters in annotation: ('a' .. 'z' | 'A' .. 'Z' | '_' | '.' | '%' | '@' | '0' .. '9'). |}];
   run_ligo_bad [ "compile"; "contract"; bad_contract "nested_bigmap_1.religo" ];
   [%expect
     {|
@@ -1875,7 +1880,7 @@ let%expect_test _ =
     Warning: layout attribute only applying to B, probably ignored.
 
 
-    Warning: The type of this value is ambiguous: Inferred type is parameter_ok but could be of type parameter_warns.
+    Warning: The type of "B(+42)" is ambiguous: Inferred type is "parameter_ok" but could be of type "parameter_warns".
     Hint: You might want to add a type annotation.
 
     (Left 42)
@@ -1992,7 +1997,8 @@ let%expect_test _ =
 
     Invalid entrypoint "foo". One of the following patterns is expected:
     * "%bar" is expected for entrypoint "Bar"
-    * "%default" when no entrypoint is used. |}]
+    * "%default" when no entrypoint is used.
+    Valid characters in annotation: ('a' .. 'z' | 'A' .. 'Z' | '_' | '.' | '%' | '@' | '0' .. '9'). |}]
 
 (* using test in compilation *)
 let%expect_test _ =
@@ -2044,7 +2050,8 @@ let%expect_test _ =
       1 | let x = (Bytes.unpack (Bytes.pack "hello") : string)
 
     Invalid type(s)
-    Cannot unify option (^gen#491) with string. |}]
+    Cannot unify "option (^a)" with "string".
+    Hint: "^a" represent placeholder type(s). |}]
 
 (* check annotations' capitalization *)
 let%expect_test _ =
@@ -2289,20 +2296,20 @@ let%expect_test _ =
              LAMBDA
                unit
                unit
-               { { /* x#9 */ } }
+               { { /* x#151 */ } }
              /* File "../../test/contracts/noop.mligo", line 2, characters 9-10 */ ;
-             { /* f#8, _ */ } ;
+             { /* f#150, _ */ } ;
              SWAP ;
              DUP 2 ;
              SWAP ;
              EXEC ;
-             { /* s2#10, f#8 */ } ;
+             { /* s2#152, f#150 */ } ;
              DUP 2 ;
              SWAP ;
              EXEC ;
-             { /* s3#11, f#8 */ } ;
+             { /* s3#153, f#150 */ } ;
              EXEC ;
-             { /* s#12 */ } ;
+             { /* s#154 */ } ;
              NIL operation
                  /* File "../../test/contracts/noop.mligo", line 6, characters 3-24 */
              /* File "../../test/contracts/noop.mligo", line 6, characters 3-24 */ ;
@@ -2366,13 +2373,13 @@ let%expect_test _ =
                 { "start":
                     { "byte":
                         { "pos_fname": "../../test/contracts/noop.mligo",
-                          "pos_lnum": "3", "pos_bol": "1", "pos_cnum": "18" },
-                      "point_num": "184", "point_bol": "166" },
+                          "pos_lnum": "2", "pos_bol": "1", "pos_cnum": "21" },
+                      "point_num": "154", "point_bol": "133" },
                   "stop":
                     { "byte":
                         { "pos_fname": "../../test/contracts/noop.mligo",
-                          "pos_lnum": "3", "pos_bol": "1", "pos_cnum": "21" },
-                      "point_num": "187", "point_bol": "166" } } ] },
+                          "pos_lnum": "2", "pos_bol": "1", "pos_cnum": "25" },
+                      "point_num": "158", "point_bol": "133" } } ] },
           { "type_content":
               [ "T_constant",
                 { "language": "Michelson", "injection": [ "Unit" ],
@@ -2382,13 +2389,13 @@ let%expect_test _ =
                 { "start":
                     { "byte":
                         { "pos_fname": "../../test/contracts/noop.mligo",
-                          "pos_lnum": "4", "pos_bol": "1", "pos_cnum": "18" },
-                      "point_num": "209", "point_bol": "191" },
+                          "pos_lnum": "3", "pos_bol": "1", "pos_cnum": "11" },
+                      "point_num": "177", "point_bol": "166" },
                   "stop":
                     { "byte":
                         { "pos_fname": "../../test/contracts/noop.mligo",
-                          "pos_lnum": "4", "pos_bol": "1", "pos_cnum": "22" },
-                      "point_num": "213", "point_bol": "191" } } ] },
+                          "pos_lnum": "3", "pos_bol": "1", "pos_cnum": "15" },
+                      "point_num": "181", "point_bol": "166" } } ] },
           { "type_content":
               [ "T_constant",
                 { "language": "Michelson", "injection": [ "Unit" ],
@@ -2398,13 +2405,13 @@ let%expect_test _ =
                 { "start":
                     { "byte":
                         { "pos_fname": "../../test/contracts/noop.mligo",
-                          "pos_lnum": "5", "pos_bol": "1", "pos_cnum": "10" },
-                      "point_num": "227", "point_bol": "217" },
+                          "pos_lnum": "4", "pos_bol": "1", "pos_cnum": "11" },
+                      "point_num": "202", "point_bol": "191" },
                   "stop":
                     { "byte":
                         { "pos_fname": "../../test/contracts/noop.mligo",
-                          "pos_lnum": "5", "pos_bol": "1", "pos_cnum": "14" },
-                      "point_num": "231", "point_bol": "217" } } ] },
+                          "pos_lnum": "4", "pos_bol": "1", "pos_cnum": "15" },
+                      "point_num": "206", "point_bol": "191" } } ] },
           { "type_content":
               [ "T_arrow",
                 { "type1":
@@ -2451,147 +2458,19 @@ let%expect_test _ =
                                     "pos_lnum": "2", "pos_bol": "1",
                                     "pos_cnum": "25" }, "point_num": "158",
                                 "point_bol": "133" } } ] } } ],
-            "type_meta":
-              { "type_content":
-                  [ "T_arrow",
-                    { "type1":
-                        { "type_content":
-                            [ "T_variable",
-                              { "name": "unit", "counter": "0",
-                                "generated": false,
-                                "location": [ "Virtual", "dummy" ] } ],
-                          "sugar":
-                            { "type_content":
-                                [ "T_variable",
-                                  { "name": "unit", "counter": "0",
-                                    "generated": false,
-                                    "location": [ "Virtual", "dummy" ] } ],
-                              "location":
-                                [ "File",
-                                  { "start":
-                                      { "byte":
-                                          { "pos_fname":
-                                              "../../test/contracts/noop.mligo",
-                                            "pos_lnum": "2", "pos_bol": "1",
-                                            "pos_cnum": "13" },
-                                        "point_num": "146", "point_bol": "133" },
-                                    "stop":
-                                      { "byte":
-                                          { "pos_fname":
-                                              "../../test/contracts/noop.mligo",
-                                            "pos_lnum": "2", "pos_bol": "1",
-                                            "pos_cnum": "17" },
-                                        "point_num": "150", "point_bol": "133" } } ] },
-                          "location":
-                            [ "File",
-                              { "start":
-                                  { "byte":
-                                      { "pos_fname":
-                                          "../../test/contracts/noop.mligo",
-                                        "pos_lnum": "2", "pos_bol": "1",
-                                        "pos_cnum": "13" }, "point_num": "146",
-                                    "point_bol": "133" },
-                                "stop":
-                                  { "byte":
-                                      { "pos_fname":
-                                          "../../test/contracts/noop.mligo",
-                                        "pos_lnum": "2", "pos_bol": "1",
-                                        "pos_cnum": "17" }, "point_num": "150",
-                                    "point_bol": "133" } } ] },
-                      "type2":
-                        { "type_content":
-                            [ "T_variable",
-                              { "name": "unit", "counter": "0",
-                                "generated": false,
-                                "location": [ "Virtual", "dummy" ] } ],
-                          "sugar":
-                            { "type_content":
-                                [ "T_variable",
-                                  { "name": "unit", "counter": "0",
-                                    "generated": false,
-                                    "location": [ "Virtual", "dummy" ] } ],
-                              "location":
-                                [ "File",
-                                  { "start":
-                                      { "byte":
-                                          { "pos_fname":
-                                              "../../test/contracts/noop.mligo",
-                                            "pos_lnum": "2", "pos_bol": "1",
-                                            "pos_cnum": "21" },
-                                        "point_num": "154", "point_bol": "133" },
-                                    "stop":
-                                      { "byte":
-                                          { "pos_fname":
-                                              "../../test/contracts/noop.mligo",
-                                            "pos_lnum": "2", "pos_bol": "1",
-                                            "pos_cnum": "25" },
-                                        "point_num": "158", "point_bol": "133" } } ] },
-                          "location":
-                            [ "File",
-                              { "start":
-                                  { "byte":
-                                      { "pos_fname":
-                                          "../../test/contracts/noop.mligo",
-                                        "pos_lnum": "2", "pos_bol": "1",
-                                        "pos_cnum": "21" }, "point_num": "154",
-                                    "point_bol": "133" },
-                                "stop":
-                                  { "byte":
-                                      { "pos_fname":
-                                          "../../test/contracts/noop.mligo",
-                                        "pos_lnum": "2", "pos_bol": "1",
-                                        "pos_cnum": "25" }, "point_num": "158",
-                                    "point_bol": "133" } } ] } } ],
-                "sugar":
-                  { "type_content":
-                      [ "T_arrow",
-                        { "type1":
-                            { "type_content":
-                                [ "T_variable",
-                                  { "name": "unit", "counter": "0",
-                                    "generated": false,
-                                    "location": [ "Virtual", "dummy" ] } ],
-                              "location":
-                                [ "File",
-                                  { "start":
-                                      { "byte":
-                                          { "pos_fname":
-                                              "../../test/contracts/noop.mligo",
-                                            "pos_lnum": "2", "pos_bol": "1",
-                                            "pos_cnum": "13" },
-                                        "point_num": "146", "point_bol": "133" },
-                                    "stop":
-                                      { "byte":
-                                          { "pos_fname":
-                                              "../../test/contracts/noop.mligo",
-                                            "pos_lnum": "2", "pos_bol": "1",
-                                            "pos_cnum": "17" },
-                                        "point_num": "150", "point_bol": "133" } } ] },
-                          "type2":
-                            { "type_content":
-                                [ "T_variable",
-                                  { "name": "unit", "counter": "0",
-                                    "generated": false,
-                                    "location": [ "Virtual", "dummy" ] } ],
-                              "location":
-                                [ "File",
-                                  { "start":
-                                      { "byte":
-                                          { "pos_fname":
-                                              "../../test/contracts/noop.mligo",
-                                            "pos_lnum": "2", "pos_bol": "1",
-                                            "pos_cnum": "21" },
-                                        "point_num": "154", "point_bol": "133" },
-                                    "stop":
-                                      { "byte":
-                                          { "pos_fname":
-                                              "../../test/contracts/noop.mligo",
-                                            "pos_lnum": "2", "pos_bol": "1",
-                                            "pos_cnum": "25" },
-                                        "point_num": "158", "point_bol": "133" } } ] } } ],
-                    "location": [ "Virtual", "generated" ] },
-                "location": [ "Virtual", "generated" ] }, "orig_var": null,
-            "location": [ "Virtual", "generated" ] } ],
+            "type_meta": null, "orig_var": null,
+            "location":
+              [ "File",
+                { "start":
+                    { "byte":
+                        { "pos_fname": "../../test/contracts/noop.mligo",
+                          "pos_lnum": "2", "pos_bol": "1", "pos_cnum": "9" },
+                      "point_num": "142", "point_bol": "133" },
+                  "stop":
+                    { "byte":
+                        { "pos_fname": "../../test/contracts/noop.mligo",
+                          "pos_lnum": "2", "pos_bol": "1", "pos_cnum": "10" },
+                      "point_num": "143", "point_bol": "133" } } ] } ],
       "michelson":
         { "expression":
             [ { "prim": "parameter", "args": [ { "prim": "unit" } ] },
@@ -2620,17 +2499,17 @@ let%expect_test _ =
                     "stop":
                       { "file": "../../test/contracts/noop.mligo", "line": "2",
                         "col": "10" } } }, {}, {}, {},
-              { "environment": [ { "name": "x#9", "source_type": "1" } ] },
+              { "environment": [ { "name": "x#151", "source_type": "1" } ] },
               { "environment":
-                  [ { "name": "f#8", "source_type": "5" },
+                  [ { "name": "f#150", "source_type": "5" },
                     { "source_type": "0" } ] }, {}, {}, {}, {}, {},
               { "environment":
-                  [ { "name": "s2#10", "source_type": "2" },
-                    { "name": "f#8", "source_type": "5" } ] }, {}, {}, {}, {},
+                  [ { "name": "s2#152", "source_type": "3" },
+                    { "name": "f#150", "source_type": "5" } ] }, {}, {}, {}, {},
               { "environment":
-                  [ { "name": "s3#11", "source_type": "3" },
-                    { "name": "f#8", "source_type": "5" } ] }, {},
-              { "environment": [ { "name": "s#12", "source_type": "4" } ] },
+                  [ { "name": "s3#153", "source_type": "4" },
+                    { "name": "f#150", "source_type": "5" } ] }, {},
+              { "environment": [ { "name": "s#154", "source_type": "2" } ] },
               { "location":
                   { "start":
                       { "file": "../../test/contracts/noop.mligo", "line": "6",
@@ -3007,7 +2886,7 @@ let%expect_test _ =
     {|
     { parameter (or (pair %one (nat %x) (int %y)) (pair %two (nat %x) (int %y))) ;
       storage nat ;
-      code { CAR ; IF_LEFT {} {} ; CAR ; NIL operation ; PAIR } }  |}]
+      code { CAR ; IF_LEFT { CAR } { CAR } ; NIL operation ; PAIR } }  |}]
 
 let%expect_test _ =
   run_ligo_good
@@ -3022,7 +2901,7 @@ let%expect_test _ =
     {|
     { parameter (or (pair %onee (nat %x) (int %y)) (pair %three (nat %x) (int %z))) ;
       storage nat ;
-      code { CAR ; IF_LEFT {} {} ; CAR ; NIL operation ; PAIR } }
+      code { CAR ; IF_LEFT { CAR } { CAR } ; NIL operation ; PAIR } }
            |}]
 
 let%expect_test _ =
@@ -3272,6 +3151,41 @@ let%expect_test _ =
     ];
   [%expect {| { True ; True ; True } |}]
 
+let%expect_test _ =
+  run_ligo_good
+    [ "compile"
+    ; "expression"
+    ; "jsligo"
+    ; "tests"
+    ; "--init-file"
+    ; contract "bytes_literals.jsligo"
+    ];
+  [%expect {| (Pair (Pair True True) True) |}]
+
+let%expect_test _ =
+  run_ligo_good
+    [ "compile"
+    ; "expression"
+    ; "jsligo"
+    ; "realistic"
+    ; "--init-file"
+    ; contract "bytes_literals.jsligo"
+    ];
+  [%expect
+    {| 0x0a202020207b0a20202020226e616d65223a226e616d65222c0a20202020226465736372697074696f6e223a226465736372697074696f6e222c0a202020202276657273696f6e223a22302e302e30222c0a20202020226c6963656e7365223a7b226e616d65223a226c696e616d65227d2c0a2020202022617574686f7273223a5b22617574686f7273225d2c0a2020202022686f6d6570616765223a22222c0a2020202022736f75726365223a7b22746f6f6c73223a5b22746f6f6c73225d2c20226c6f636174696f6e223a226c6f636174696f6e227d2c0a2020202022696e7465726661636573223a5b22545a4950225d2c0a20202020226572726f7273223a5b5d2c0a20202020227669657773223a5b5d0a202020207d0a2020 |}]
+
+let%expect_test _ =
+  run_ligo_bad [ "print"; "ast-typed"; bad_contract "bytes_literals.jsligo" ];
+  [%expect
+    {|
+    File "../../test/contracts/negative/bytes_literals.jsligo", line 2, characters 18-23:
+      1 | const shame = () => {
+      2 |   const x = bytes `foo` as nat;
+      3 |   return x
+
+    Invalid type(s).
+    Expected "nat", but got: "bytes". |}]
+
 (* get_entrypoint_opt in uncurried language *)
 let%expect_test _ =
   run_ligo_good [ "compile"; "contract"; contract "get_entrypoint.jsligo" ];
@@ -3296,3 +3210,17 @@ let%expect_test _ =
 let%expect_test _ =
   run_ligo_good [ "compile"; "storage"; contract "self_annotations.mligo"; "()" ];
   [%expect {| Unit |}]
+
+(* check tag in Tezos.emit *)
+let%expect_test _ =
+  run_ligo_bad [ "compile"; "contract"; bad_contract "emit_bad_tag.mligo" ];
+  [%expect
+    {|
+    File "../../test/contracts/negative/emit_bad_tag.mligo", line 2, characters 3-31:
+      1 | let main (_,_ : unit * string ) : operation list * string =
+      2 |   [Tezos.emit "%hello world" 12], "bye"
+
+    Invalid entrypoint "%hello world". One of the following patterns is expected:
+    * "%bar" is expected for entrypoint "Bar"
+    * "%default" when no entrypoint is used.
+    Valid characters in annotation: ('a' .. 'z' | 'A' .. 'Z' | '_' | '.' | '%' | '@' | '0' .. '9'). |}]

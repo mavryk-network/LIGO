@@ -292,7 +292,8 @@ let build_expression ~raise
       init_prg
       typed_exp
   in
-  let mini_c_exp = Ligo_compile.Of_aggregated.compile_expression ~raise aggregated in
+  let expanded_exp = Ligo_compile.Of_aggregated.compile_expression ~raise aggregated in
+  let mini_c_exp = Ligo_compile.Of_expanded.compile_expression ~raise expanded_exp in
   mini_c_exp, aggregated
 
 
@@ -353,7 +354,8 @@ and build_contract_stacking ~raise
   let _, aggregated, agg_views =
     build_contract_aggregated ~raise ~options entry_point cli_views file_name
   in
-  let mini_c = Ligo_compile.Of_aggregated.compile_expression ~raise aggregated in
+  let expanded = Ligo_compile.Of_aggregated.compile_expression ~raise aggregated in
+  let mini_c = Ligo_compile.Of_expanded.compile_expression ~raise expanded in
   let contract = Ligo_compile.Of_mini_c.compile_contract ~raise ~options mini_c in
   let views = build_views ~raise ~options agg_views in
   (contract, aggregated), (views, agg_views)
@@ -441,10 +443,6 @@ and build_aggregated_views ~raise
   match view_names with
   | [] -> None
   | _ ->
-    let contract =
-      trace ~raise self_ast_typed_tracer
-      @@ Self_ast_typed.remove_unused_for_views ~view_names contract
-    in
     let aggregated =
       Ligo_compile.Of_typed.apply_to_entrypoint_view
         ~raise:{ raise with warning = (fun _ -> ()) }
@@ -462,7 +460,8 @@ and build_views ~raise
   match lst_opt with
   | None -> []
   | Some (view_names, aggregated) ->
-    let mini_c = Ligo_compile.Of_aggregated.compile_expression ~raise aggregated in
+    let expanded = Ligo_compile.Of_aggregated.compile_expression ~raise aggregated in
+    let mini_c = Ligo_compile.Of_expanded.compile_expression ~raise expanded in
     let mini_c =
       trace ~raise self_mini_c_tracer @@ Self_mini_c.all_expression options mini_c
     in

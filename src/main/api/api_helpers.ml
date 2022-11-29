@@ -32,7 +32,7 @@ let toplevel
   in
   let warns_str = String.concat ~sep:"\n" warns in
   if (not (List.is_empty warns)) && warning_as_error
-  then Error (warns_str, warns_str)
+  then Error (warns_str ^ as_str, warns_str)
   else (
     match value with
     | Ok _ -> Ok (as_str, warns_str)

@@ -12,7 +12,7 @@ type all =
   | `Main_invalid_protocol_version of string list * string
   | `Main_unparse_tracer of tezos_alpha_error list
   | `Main_typecheck_contract_tracer of
-    int Tezos_utils.Michelson.michelson * tezos_alpha_error list
+    Environment.Protocols.t * int Tezos_utils.Michelson.michelson * tezos_alpha_error list
   | `Main_could_not_serialize of tezos_alpha_error list
   | `Check_typed_arguments_tracer of Simple_utils.Runned_result.check_type * all
   | `Main_unknown
@@ -64,7 +64,6 @@ type all =
     Location.t * Memory_proto_alpha.Protocol.Alpha_context.Tez.tez
   | `Main_decompile_michelson of Stacking.Errors.stacking_error
   | `Main_decompile_mini_c of Spilling.Errors.spilling_error
-  | `Main_decompile_aggregated of Aggregation.Errors.aggregation_error
   | `Main_decompile_typed of Checking.Errors.typer_error
   | `Main_entrypoint_not_a_function
   | `Main_entrypoint_not_found

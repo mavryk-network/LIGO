@@ -11,7 +11,7 @@ let%expect_test _ =
   [%expect
     {|
              Invalid type(s).
-             Expected: "nat", but got: "int".
+             Expected "int", but got: "nat".
              |}]
 
 (* Record_update *)
@@ -21,7 +21,7 @@ let%expect_test _ =
   [%expect
     {|
              Invalid type(s).
-             Expected: "nat", but got: "int".
+             Expected "int", but got: "nat".
              |}]
 
 (* Constructor *)
@@ -35,5 +35,5 @@ let%expect_test _ =
   [%expect
     {|
              Invalid type(s).
-             Expected: "nat", but got: "int".
+             Expected "int", but got: "nat".
              |}]

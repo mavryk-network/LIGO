@@ -36,6 +36,7 @@ let get_proto p =
 
 
 let current_proto = get_proto "current"
+let in_use_proto = Environment.Protocols.in_use
 
 (*
   Binds the snippets by (syntax, group_name).
@@ -85,23 +86,10 @@ let get_groups md_file : snippetsmap =
             | None -> Some (Object, String.concat ~sep:"\n" el.contents))
           grp_map
       | [ Md.Field "skip" ] -> grp_map
-      | [ Md.Field "test-ligo"
-        ; Md.NameValue ("group", name)
-        ; Md.NameValue ("protocol", x)
-        ] ->
-        let lang = Meta in
-        SnippetsGroup.update
-          (s, name, get_proto x)
-          (fun arg_content ->
-            match arg_content with
-            | Some (lang', ct) when Caml.( = ) lang lang' ->
-              Some (lang, String.concat ~sep:"\n" (ct :: el.contents))
-            | _ -> Some (lang, String.concat ~sep:"\n" el.contents))
-          grp_map
       | [ Md.Field "test-ligo"; Md.NameValue ("group", name) ] ->
         let lang = Meta in
         SnippetsGroup.update
-          (s, name, current_proto)
+          (s, name, in_use_proto)
           (fun arg_content ->
             match arg_content with
             | Some (lang', ct) when Caml.( = ) lang lang' ->
@@ -167,7 +155,7 @@ let compile_groups ~raise filename grp_list =
       in
       let options = Compiler_options.set_test_flag options true in
       let typed = Build.qualified_typed_str ~raise ~options contents in
-      Format.printf "Typed AST: %a\n" (Ast_typed.PP.program ~use_hidden:true) typed;
+      (* Format.printf "Typed AST: %a\n" (Ast_typed.PP.program ~use_hidden:true) typed; *)
       let (_ : bool * (group_name * Ligo_interpreter.Types.value) list) =
         Interpreter.eval_test ~options ~raise ~steps:5000 typed
       in
@@ -181,10 +169,11 @@ let compile_groups ~raise filename grp_list =
           typed
           (Ast_typed.e_a_unit ())
       in
-      let mini_c =
+      let expanded =
         Ligo_compile.Of_aggregated.compile_expression ~raise aggregated_with_unit
       in
-      Format.printf "Mini_c AST: %a\n" Mini_c.PP.expression mini_c;
+      let mini_c = Ligo_compile.Of_expanded.compile_expression ~raise expanded in
+      (* Format.printf "Mini_c AST: %a\n" (Mini_c.PP.expression) mini_c; *)
       let _michelson : Stacking__Compiler_program.compiled_expression =
         Ligo_compile.Of_mini_c.compile_expression ~raise ~options mini_c
       in

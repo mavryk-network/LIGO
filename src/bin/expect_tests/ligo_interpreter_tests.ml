@@ -4,10 +4,19 @@ let test basename = "./" ^ basename
 let pwd = Sys_unix.getcwd ()
 let () = Sys_unix.chdir "../../test/contracts/interpreter_tests/"
 
+(* test comparison on sum/record types *)
+let%expect_test _ =
+  run_ligo_good [ "run"; "test"; test "test_compare.mligo" ];
+  [%expect
+    {|
+    Everything at the top-level was executed.
+    - test_cmp exited with value ().
+    - test_cmp_list exited with value ().
+    - test_cmp_record exited with value (). |}]
+
 (* events payload being records and not decompiled to pairs in the interpreter *)
 let%expect_test _ =
-  run_ligo_good
-    [ "run"; "test"; test "test_events_pair_vs_record.mligo"; "--protocol"; "kathmandu" ];
+  run_ligo_good [ "run"; "test"; test "test_events_pair_vs_record.mligo" ];
   [%expect
     {|
     Everything at the top-level was executed.
@@ -81,6 +90,7 @@ let%expect_test _ =
     - test_add_mutez exited with value ().
     - test_sub_mutez exited with value ().
     - test_div_mutez exited with value ().
+    - test_sub_timestamp exited with value ().
     - test_list_fold_left_sum exited with value ().
     - test_bytes_sub exited with value ().
     - test_with_error exited with value ().
@@ -98,7 +108,8 @@ let%expect_test _ =
     - test_key_hash exited with value ().
     - test_check exited with value ().
     - test_int_bls exited with value ().
-    - test_not exited with value (). |}]
+    - test_not exited with value ().
+    - test_chain_id exited with value (). |}]
 
 let%expect_test _ =
   (* This tests a possible regression on the way modules are evaluated. It is possible that the number of element in the environment explodes. *)
@@ -110,13 +121,6 @@ let%expect_test _ =
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "views_test.mligo" ];
-  [%expect
-    {|
-    Everything at the top-level was executed.
-    - test exited with value (). |}]
-
-let%expect_test _ =
-  run_ligo_good [ "run"; "test"; test "test_timelock.mligo" ];
   [%expect
     {|
     Everything at the top-level was executed.
@@ -323,11 +327,10 @@ let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_mutate_from_file.mligo" ];
   [%expect
     {|
-    File "./test_mutate_from_file.mligo", line 7, character 2 to line 8, character 4:
+    File "./test_mutate_from_file.mligo", line 7, characters 11-65:
       6 |   let _ = Test.transfer_exn a (Test.eval 1) 0tez in
       7 |   let () = assert (Test.get_storage_of_address a = (Test.eval 1)) in
       8 |   ()
-      9 |
 
     You are using Michelson failwith primitive (loaded from standard library).
     Consider using `Test.failwith` for throwing a testing framework failure.
@@ -540,7 +543,7 @@ let%expect_test _ =
   [%expect
     {|
     Everything at the top-level was executed.
-    - test exited with value (1802n , 1985n , 1985n). |}]
+    - test exited with value (2136n , 2331n , 2331n). |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_implicit_account.jsligo" ];
@@ -617,7 +620,8 @@ let%expect_test _ =
   [%expect
     {|
     Everything at the top-level was executed.
-    - test_sub exited with value (). |}]
+    - test_sub exited with value ().
+    - test_get_time exited with value (). |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_context.mligo" ];
@@ -656,10 +660,10 @@ let%expect_test _ =
   [%expect
     {|
     Everything at the top-level was executed.
-    - test_x exited with value (KT1XhV1uDy9VDHHMCFwS6BaoY9yEhMxpZecN , { parameter unit ;
+    - test_x exited with value (KT19hFZZxPTue1oBw7cc46L1p6pJ3xTo3vRF , { parameter unit ;
       storage
         (pair (pair (big_map %metadata string bytes) (set %participants address))
-              (map %secrets address chest)) ;
+              (map %secrets address bool)) ;
       code { CDR ;
              PUSH bool True ;
              DUP 2 ;
@@ -690,8 +694,10 @@ let%expect_test _ =
   [%expect
     {|
     KT1KAUcMCQs7Q4mxLzoUZVH9yCCLETERrDtj
+    [1 -> "hi"]
     Everything at the top-level was executed.
-    - test_foo exited with value (). |}]
+    - test_foo exited with value ().
+    - test_bar exited with value (). |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "cli_arg.mligo"; "--arg"; "[ 1 ; 2 ; 3]" ];
@@ -728,6 +734,14 @@ let%expect_test _ =
   [%expect
     {|
     42
+    42
+    Everything at the top-level was executed.
+    - test exited with value (). |}]
+
+let%expect_test _ =
+  run_ligo_good [ "run"; "test"; test "test_create2.mligo" ];
+  [%expect
+    {|
     42
     Everything at the top-level was executed.
     - test exited with value (). |}]
@@ -776,13 +790,13 @@ let%expect_test _ =
     {|
     edpkuPiWEAMNmxsNYRNnjnHgpox275MR1svXTB9hbeshMUkTZwrB1P
     Everything at the top-level was executed.
-    - test exited with value Success (2796n). |}]
+    - test exited with value Success (2797n). |}]
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_tickets_and_bigmaps.mligo" ];
   [%expect
     {|
-    Success (3497n)
+    Success (3504n)
     Everything at the top-level was executed.
     - test_one exited with value (). |}]
 
@@ -803,6 +817,13 @@ let%expect_test _ =
     {|
     ["typed_address","KT1Eip4VjDintiWphUf9fAM7cCikw3NajBAG"]
     ["record",{"foo":["constant",["int","42"]],"bar":["list",[["constant",["string","hello"]],["constant",["string","world"]]]]}] |}]
+
+let%expect_test _ =
+  run_ligo_good [ "run"; "test"; test "test_imm.ligo" ];
+  [%expect
+    {xxx|
+    Everything at the top-level was executed.
+    - test_orig exited with value (). |xxx}]
 
 (* do not remove that :) *)
 let () = Sys_unix.chdir pwd
@@ -864,14 +885,14 @@ let%expect_test _ =
   run_ligo_bad [ "run"; "test"; bad_test "test_failure1.mligo" ];
   [%expect
     {|
-    File "../../test/contracts/negative//interpreter_tests/test_failure1.mligo", line 1, character 0 to line 2, character 25:
+    File "../../test/contracts/negative//interpreter_tests/test_failure1.mligo", line 2, characters 2-25:
       1 | let test : unit =
       2 |   failwith "I am failing"
 
     You are using Michelson failwith primitive (loaded from standard library).
     Consider using `Test.failwith` for throwing a testing framework failure.
 
-    File "../../test/contracts/negative//interpreter_tests/test_failure1.mligo", line 1, character 0 to line 2, character 25:
+    File "../../test/contracts/negative//interpreter_tests/test_failure1.mligo", line 2, characters 2-25:
       1 | let test : unit =
       2 |   failwith "I am failing"
 
@@ -916,7 +937,7 @@ let%expect_test _ =
       3 |   Test.originate f () 0tez
 
     Invalid type(s)
-    Cannot unify unit with ( list (operation) * unit ). |}]
+    Cannot unify "unit" with "( list (operation) * unit )". |}]
 
 let%expect_test _ =
   run_ligo_bad [ "run"; "test"; bad_test "test_trace.mligo" ];
@@ -944,6 +965,7 @@ let%expect_test _ =
     File "../../test/contracts/negative//interpreter_tests/test_trace.mligo", line 5, characters 4-13 ,
     File "../../test/contracts/negative//interpreter_tests/test_trace.mligo", line 5, characters 4-13 ,
     File "../../test/contracts/negative//interpreter_tests/test_trace.mligo", line 9, characters 14-49 ,
+    File "../../test/contracts/negative//interpreter_tests/test_trace.mligo", line 9, characters 14-49 ,
     File "../../test/contracts/negative//interpreter_tests/test_trace.mligo", line 9, characters 14-49 |}]
 
 let%expect_test _ =
@@ -965,16 +987,14 @@ let%expect_test _ =
   run_ligo_bad [ "run"; "test"; bad_test "test_mutation_loop.mligo"; "--steps"; "1000" ];
   [%expect
     {|
-    File "../../test/contracts/negative//interpreter_tests/test_mutation_loop.mligo", line 17, character 28 to line 18, character 83:
-     16 |     | None -> ()
+    File "../../test/contracts/negative//interpreter_tests/test_mutation_loop.mligo", line 18, characters 36-83:
      17 |     | Some (_, mutation) -> let () = Test.log(mutation) in
      18 |                                     failwith "Some mutation also passes the tests!"
 
     You are using Michelson failwith primitive (loaded from standard library).
     Consider using `Test.failwith` for throwing a testing framework failure.
 
-    File "../../test/contracts/negative//interpreter_tests/test_mutation_loop.mligo", line 17, character 28 to line 18, character 83:
-     16 |     | None -> ()
+    File "../../test/contracts/negative//interpreter_tests/test_mutation_loop.mligo", line 18, characters 36-83:
      17 |     | Some (_, mutation) -> let () = Test.log(mutation) in
      18 |                                     failwith "Some mutation also passes the tests!"
 
@@ -1021,7 +1041,7 @@ let%expect_test _ =
       3 |
 
     Invalid type(s)
-    Cannot unify record[property -> string] with record[field -> int]. |}]
+    Cannot unify "record[property -> string]" with "record[field -> int]". |}]
 
 let%expect_test _ =
   run_ligo_bad [ "run"; "test"; bad_test "test_run_types2.jsligo" ];
@@ -1032,7 +1052,7 @@ let%expect_test _ =
       2 | const bar = Test.run(foo, "toto");
 
     Invalid type(s)
-    Cannot unify string with record[b -> int]. |}]
+    Cannot unify "string" with "record[b -> int]". |}]
 
 let%expect_test _ =
   run_ligo_bad [ "run"; "test"; bad_test "test_run_types3.jsligo" ];
@@ -1043,7 +1063,7 @@ let%expect_test _ =
       2 | const bar = Test.run(foo, {field: "toto"});
 
     Invalid type(s)
-    Cannot unify record[field -> string] with int. |}]
+    Cannot unify "record[field -> string]" with "int". |}]
 
 let%expect_test _ =
   run_ligo_bad [ "run"; "test"; bad_test "test_decompile.mligo" ];
@@ -1068,16 +1088,6 @@ let%expect_test _ =
     "STARTING BALANCE AND VOTING POWER"
     95000000000mutez
     100000000000n |}]
-
-let%expect_test _ =
-  run_ligo_bad [ "run"; "test"; bad_test "test_create.mligo" ];
-  [%expect
-    {|
-    File "../../test/contracts/negative//interpreter_tests/test_create.mligo", line 11, characters 12-44:
-     10 |   let addr : address = Option.unopt (List.head_opt (Test.get_storage fact_ta)) in
-     11 |   Test.log (Test.get_storage_of_address addr)
-
-    Not supported (yet) when the provided account has been fetched from Test.get_last_originations |}]
 
 let pwd = Sys_unix.getcwd ()
 let () = Sys_unix.chdir "../../test/contracts/negative/interpreter_tests/"
@@ -1105,14 +1115,10 @@ let%expect_test _ =
   run_ligo_bad [ "run"; "test"; bad_test "test_michelson_non_func.mligo" ];
   [%expect
     {xxx|
-    File "../../test/contracts/negative//interpreter_tests/test_michelson_non_func.mligo", line 2, character 2 to line 7, character 5:
+    File "../../test/contracts/negative//interpreter_tests/test_michelson_non_func.mligo", line 2, characters 16-55:
       1 | let test =
       2 |   let x : int = [%Michelson ({|{ PUSH int 1 }|} : int)] in
       3 |   begin
-      4 |     Test.log x;
-      5 |     assert (x = x);
-      6 |     assert (x = 1)
-      7 |   end
 
     Embedded raw code can only have a functional type |xxx}]
 
@@ -1136,4 +1142,5 @@ let%expect_test _ =
     An uncaught error occured:
     Failwith: "foo"
     Trace:
+    File "../../test/contracts/negative//interpreter_tests/get_contract.mligo", line 15, characters 10-66 ,
     File "../../test/contracts/negative//interpreter_tests/get_contract.mligo", line 15, characters 10-66 |}]

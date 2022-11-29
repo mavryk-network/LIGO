@@ -34,7 +34,12 @@ module Free_variables = struct
     | E_matching { matchee; cases; _ } ->
       union (self matchee) (matching_expression b cases)
     | E_let_in { let_binder; rhs; let_result; _ } ->
-      let b' = union (Binder.apply singleton let_binder) b in
+      let b' =
+        List.fold
+          (Types.Pattern.binders let_binder)
+          ~f:(fun b pb -> union (Binder.apply singleton pb) b)
+          ~init:b
+      in
       union (expression b' let_result) (self rhs)
     | E_type_abstraction { type_binder = _; result } -> self result
     | E_mod_in { module_binder = _; rhs = _; let_result } -> self let_result
@@ -134,6 +139,7 @@ let rec assert_type_expression_eq ((a, b) : type_expression * type_expression)
       assert_type_expression_eq (va, vb)
     in
     let* _ = assert_same_size sa' sb' in
+    let* _ = assert_eq sa.layout sb.layout in
     List.fold_left
       ~f:(fun acc p ->
         match acc with
@@ -157,6 +163,7 @@ let rec assert_type_expression_eq ((a, b) : type_expression * type_expression)
     in
     let* _ = assert_eq ra.layout rb.layout in
     let* _ = assert_same_size ra' rb' in
+    let* _ = assert_eq ra.layout rb.layout in
     List.fold_left
       ~f:(fun acc p ->
         match acc with
@@ -252,7 +259,7 @@ let get_entry (lst : program) (name : Value_var.t) : expression option =
         ; attr =
             { inline = _; no_mutation = _; view = _; public = _; hidden = _; thunk = _ }
         } -> if Binder.apply (Value_var.equal name) binder then Some expr else None
-    | D_type _ | D_module _ -> None
+    | D_irrefutable_match _ | D_type _ | D_module _ -> None
   in
   List.find_map ~f:aux (List.rev lst)
 

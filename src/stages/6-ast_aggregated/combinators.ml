@@ -341,6 +341,18 @@ let get_t_big_map (t : type_expression) : (type_expression * type_expression) op
   | _ -> None
 
 
+let get_t_map_or_big_map (t : type_expression)
+    : (type_expression * type_expression) option
+  =
+  match t.type_content with
+  | T_constant { language = _; injection; parameters = [ k; v ] }
+    when Ligo_prim.Literal_types.equal injection Ligo_prim.Literal_types.Big_map ->
+    Some (k, v)
+  | T_constant { language = _; injection; parameters = [ k; v ] }
+    when Ligo_prim.Literal_types.equal injection Ligo_prim.Literal_types.Map -> Some (k, v)
+  | _ -> None
+
+
 let get_t__type__exn t =
   match get_t__type_ t with
   | Some x -> x
@@ -531,10 +543,11 @@ let e_a_application lamb args t = e_application { lamb; args } t
 let e_a_lambda l in_ty out_ty = e_lambda l (t_arrow in_ty out_ty ())
 let e_a_recursive l = e_recursive l l.fun_type
 
-let e_a_let_in let_binder rhs let_result attr =
-  e_let_in { let_binder; rhs; let_result; attr } (get_type let_result)
+let e_a_let_in let_binder rhs let_result attributes =
+  e_let_in { let_binder; rhs; let_result; attributes } (get_type let_result)
 
 
+let e_a_matching matchee cases t = e_matching { matchee; cases } t
 let e_a_raw_code language code t = e_raw_code { language; code } t
 let e_a_type_inst forall type_ u = e_type_inst { forall; type_ } u
 let e_a_bool b = make_e (e_bool b) (t_bool ())
@@ -626,6 +639,17 @@ let get_record_field_type (t : type_expression) (label : Label.t) : type_express
     | Some row_element -> Some row_element.associated_type)
 
 
+let get_variant_field_type (t : type_expression) (label : Label.t)
+    : type_expression option
+  =
+  match get_t_sum_opt t with
+  | None -> None
+  | Some struct_ ->
+    (match Record.LMap.find_opt label struct_.fields with
+    | None -> None
+    | Some row_element -> Some row_element.associated_type)
+
+
 let get_type_abstractions (e : expression) =
   let rec aux tv e =
     match get_e_type_abstraction e with
@@ -652,27 +676,31 @@ let build_type_abstractions init =
 (* This function re-builds a term prefixed with E_type_inst:
    given an expression e and a list of type variables [t1; ...; tn],
    it constructs an expression e@{t1}@...@{tn} *)
-let build_type_insts init =
+let build_type_insts_opt init =
+  let open Simple_utils.Option in
   let f av forall =
-    let Abstraction.{ ty_binder; type_ = t; kind = _ } =
-      Option.value_exn @@ get_t_for_all forall.type_expression
+    let* forall in
+    let* Abstraction.{ ty_binder; type_ = t; kind = _ } =
+      get_t_for_all forall.type_expression
     in
     let type_ = t_variable av () in
-    make_e (E_type_inst { forall; type_ }) (Helpers.subst_type ty_binder type_ t)
+    return (make_e (E_type_inst { forall; type_ }) (Helpers.subst_type ty_binder type_ t))
   in
-  List.fold_right ~init ~f
+  List.fold_right ~init:(return init) ~f
+
 
 
 (* This function expands a function with a type T_for_all but not with
    the same amount of E_type_abstraction *)
-let forall_expand (e : expression) =
+let forall_expand_opt (e : expression) =
+  let open Simple_utils.Option in
   let tvs, _ = Helpers.destruct_for_alls e.type_expression in
   let evs, e_without_type_abs = get_type_abstractions e in
   if List.equal Ligo_prim.Type_var.equal tvs evs
-  then e
-  else (
-    let e = build_type_insts e_without_type_abs tvs in
-    build_type_abstractions e tvs)
+  then return e
+  else
+    let* e = build_type_insts_opt e_without_type_abs tvs in
+    return @@ build_type_abstractions e tvs
 
 
 let context_decl
@@ -685,13 +713,24 @@ let context_decl
   [ Location.wrap ~loc @@ D_value { binder; expr; attr } ]
 
 
+let context_decl_pattern
+    ?(loc = Location.generated)
+    (pattern : type_expression Pattern.t)
+    (expr : expression)
+    (attr : ValueAttr.t)
+    : context
+  =
+  [ Location.wrap ~loc @@ D_irrefutable_match { pattern; expr; attr } ]
+
+
 let context_id : context = []
 let context_append (l : context) (r : context) : context = l @ r
 
 let context_apply (p : context) (e : expression) : expression =
   let f d e =
     match Location.unwrap d with
-    | D_value { binder; expr; attr } -> e_a_let_in binder expr e attr
+    | D_value { binder; expr; attr } -> e_a_let_in (Types.Pattern.var binder) expr e attr
+    | D_irrefutable_match { pattern; expr; attr } -> e_a_let_in pattern expr e attr
   in
   List.fold_right ~f ~init:e p
 

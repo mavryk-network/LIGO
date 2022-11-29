@@ -2,19 +2,8 @@
  (name cli)
  (instrumentation
   (backend bisect_ppx))
- (libraries
-  simple-utils
-  cmdliner
-  ligo
-  ligo_compile
-  build
-  repl
-  install
-  publish
-  user
-  cli_helpers
-  daemon
-  ligo_api)
+ (libraries simple-utils cmdliner ligo ligo_compile build repl install
+   publish user cli_helpers daemon ligo_api)
  (modules cli version))
 
 (library
@@ -35,22 +24,9 @@
  (name publish)
  (instrumentation
   (backend bisect_ppx))
- (libraries
-  cli_helpers
-  simple-utils
-  lwt
-  lwt.unix
-  tar
-  tar-unix
-  decompress.gz
-  bigstringaf
-  base64
-  cohttp-lwt-unix
-  yojson
-  digestif
-  core_unix
-  core_unix.command_unix
-  core_unix.filename_unix)
+ (libraries cli_helpers simple-utils lwt lwt.unix tar tar-unix decompress.gz
+   bigstringaf base64 cohttp-lwt-unix yojson digestif core_unix
+   core_unix.command_unix core_unix.filename_unix)
  (preprocess
   (pps ppx_deriving_yojson))
  (modules publish))
@@ -59,14 +35,8 @@
  (name user)
  (instrumentation
   (backend bisect_ppx))
- (libraries
-  cli_helpers
-  simple-utils
-  lwt
-  lwt.unix
-  base64
-  cohttp-lwt-unix
-  lambda-term)
+ (libraries cli_helpers simple-utils lwt lwt.unix base64 cohttp-lwt-unix
+   lambda-term)
  ;Remove unused libs
  (preprocess
   (pps ppx_deriving_yojson))

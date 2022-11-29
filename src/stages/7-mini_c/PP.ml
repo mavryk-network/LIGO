@@ -281,7 +281,7 @@ and expression_content ppf (e : expression_content) =
   | E_create_contract (p, s, ((x, a), code), args) ->
     fprintf
       ppf
-      "@[create_contract(%a,@ %a,@ fun (%a : %a) -> %a,@ %a)@]"
+      "@[create_contract(%a,@ %a,@ (fun (%a : %a) -> %a),@ (%a))@]"
       type_expression
       p
       type_expression

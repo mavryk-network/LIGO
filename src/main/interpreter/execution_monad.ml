@@ -7,9 +7,9 @@ open Simple_utils.Trace
 module LT = Ligo_interpreter.Types
 module LC = Ligo_interpreter.Combinators
 module Exc = Ligo_interpreter_exc
-module Tezos_protocol = Tezos_protocol_014_PtKathma
-module Tezos_protocol_env = Tezos_protocol_environment_014_PtKathma
-module Tezos_client = Tezos_client_014_PtKathma
+module Tezos_protocol = Memory_proto_alpha
+module Tezos_protocol_env = Memory_proto_alpha.Alpha_environment
+module Tezos_client = Memory_proto_alpha.Client
 module Location = Simple_utils.Location
 module ModRes = Preprocessor.ModRes
 open Ligo_prim
@@ -111,12 +111,6 @@ module Command = struct
         * Z.t
         -> [ `Exec_failed of Tezos_state.state_error | `Exec_ok of Z.t ] tezos_command
     | State_error_to_value : Tezos_state.state_error -> LT.value tezos_command
-    | Get_storage :
-        Location.t
-        * Ligo_interpreter.Types.calltrace
-        * LT.value
-        * Ast_aggregated.type_expression
-        -> LT.value tezos_command
     | Get_storage_of_address :
         Location.t * Ligo_interpreter.Types.calltrace * LT.value
         -> LT.value tezos_command
@@ -175,7 +169,6 @@ module Command = struct
     | Add_cast :
         Location.t * LT.Contract.t * Ast_aggregated.type_expression
         -> unit tezos_command
-    | Michelson_equal : Location.t * LT.value * LT.value -> bool tezos_command
     | Implicit_account :
         Tezos_protocol.Protocol.Alpha_context.public_key_hash
         -> LT.value tezos_command
@@ -393,29 +386,6 @@ module Command = struct
         let rej = LC.v_ctor "Balance_too_low" rej_data in
         fail_ctor rej, ctxt
       | _ -> fail_other (), ctxt)
-    | Get_storage (loc, calltrace, addr, ty_expr) ->
-      let addr = trace_option ~raise (corner_case ()) @@ LC.get_address addr in
-      let storage', ty = Tezos_state.get_storage ~raise ~loc ~calltrace ctxt addr in
-      let storage =
-        storage'
-        |> Tezos_protocol.Protocol.Michelson_v1_primitives.strings_of_prims
-        |> Tezos_micheline.Micheline.inject_locations (fun _ -> ())
-      in
-      let ret =
-        Michelson_to_value.decompile_to_untyped_value
-          ~raise
-          ~bigmaps:ctxt.transduced.bigmaps
-          ty
-          storage
-      in
-      let ret =
-        Michelson_to_value.decompile_value
-          ~raise
-          ~bigmaps:ctxt.transduced.bigmaps
-          ret
-          ty_expr
-      in
-      ret, ctxt
     | Get_balance (loc, calltrace, addr) ->
       let addr = trace_option ~raise (corner_case ()) @@ LC.get_address addr in
       let balance = Tezos_state.get_balance ~raise ~loc ~calltrace ctxt addr in
@@ -430,21 +400,14 @@ module Command = struct
         |> Tezos_protocol.Protocol.Michelson_v1_primitives.strings_of_prims
         |> Tezos_micheline.Micheline.inject_locations (fun _ -> ())
       in
-      let ast_ty =
-        trace_option
-          ~raise
-          (Errors.generic_error
-             loc
-             "Not supported (yet) when the provided account has been fetched from \
-              Test.get_last_originations")
-        @@ List.Assoc.find
-             ~equal:Tezos_state.equal_account
-             ctxt.internals.storage_tys
-             addr
-      in
       let ret =
-        LT.V_Michelson
-          (Ty_code { micheline_repr = { code = storage; code_ty = ty }; ast_ty })
+        match
+          List.Assoc.find ~equal:Tezos_state.equal_account ctxt.internals.storage_tys addr
+        with
+        | Some ast_ty ->
+          LT.V_Michelson
+            (Ty_code { micheline_repr = { code = storage; code_ty = ty }; ast_ty })
+        | None -> LT.V_Michelson (Untyped_code storage)
       in
       ret, ctxt
     | Get_size contract_code ->
@@ -493,7 +456,13 @@ module Command = struct
         @@ Ast_aggregated.get_t_arrow f.orig_lambda.type_expression
       in
       let func_typed_exp =
-        Michelson_backend.make_function in_ty out_ty f.arg_binder f.body subst_lst
+        Michelson_backend.make_function
+          f.arg_mut_flag
+          in_ty
+          out_ty
+          f.arg_binder
+          f.body
+          subst_lst
       in
       let _ =
         trace ~raise Main_errors.self_ast_aggregated_tracer
@@ -570,6 +539,7 @@ module Command = struct
           Michelson_backend.build_ast
             ~raise
             subst_lst
+            Immutable
             arg_binder
             rec_name
             in_ty
@@ -705,16 +675,6 @@ module Command = struct
       in
       let internals = { ctxt.internals with storage_tys } in
       (), { ctxt with internals }
-    | Michelson_equal (loc, a, b) ->
-      let ({ micheline_repr = { code; _ }; _ } : LT.typed_michelson_code) =
-        trace_option ~raise (Errors.generic_error loc "Can't compare contracts")
-        @@ LC.get_michelson_expr a
-      in
-      let ({ micheline_repr = { code = code'; _ }; _ } : LT.typed_michelson_code) =
-        trace_option ~raise (Errors.generic_error loc "Can't compare contracts")
-        @@ LC.get_michelson_expr b
-      in
-      Caml.( = ) code code', ctxt
     | Get_last_originations () ->
       let aux (src, lst) =
         let src = LC.v_address src in
@@ -934,6 +894,7 @@ let rec eval
         | `Main_interpret_target_lang_error _
         | `Main_interpret_target_lang_failwith _
         | `Main_interpret_meta_lang_eval _
+        | `Main_interpret_generic _
         | `Main_interpret_meta_lang_failwith _ -> eval ~raise ~options handler state log
         | e -> raise.error e)
 
@@ -956,7 +917,18 @@ let rec bind_list = function
 
 let bind_map_list f lst = bind_list (List.map ~f lst)
 
-let bind_fold_list f init lst =
+let bind_iter_list ~f lst =
+  let _ =
+    bind_map_list
+      (fun x ->
+        let* () = f x in
+        return ())
+      lst
+  in
+  return ()
+
+
+let bind_fold_list ~f ~init lst =
   let aux x y =
     let* x in
     f x y

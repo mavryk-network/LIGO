@@ -45,6 +45,7 @@ depends: [
   # PPXs
   "ppx_deriving"
   "ppx_deriving_yojson"
+  "ppx_yojson_conv"
   "ppx_expect"
   "ppx_import"
   "ppx_inline_test"
@@ -53,6 +54,7 @@ depends: [
   "bisect_ppx" {>= "2.3"}
   "irmin"
   "cmdliner" {= "1.1.0"}
+  "ocaml-compiler-libs"
   # work around upstream in-place update
   "ocaml-migrate-parsetree" { = "2.3.0" }
   # dependencies of vendored dependencies
@@ -69,6 +71,13 @@ depends: [
   "class_group_vdf"
   "tezos-plonk"
   "dune-site"
+  # dev dependencies (not labels as { dev } since this feature doesn't work 
+  # currently https://github.com/ocaml/opam/issues/5177).
+  # Also sticking to 0.21.0 for ocamlformat since ocamlformat-rpc doesn't have a
+  # 0.24.1 release
+  "ocamlformat" { = "0.21.0" }
+  "ocamlformat-rpc" { = "0.21.0" }
+  "ocaml-lsp-server" { >= "1.14.0" }
 ]
 build: [
   [ "dune" "build" "-p" name "-j" jobs ]
