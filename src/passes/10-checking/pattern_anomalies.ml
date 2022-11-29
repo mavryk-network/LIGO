@@ -170,7 +170,6 @@ and to_original_pattern ~raise ~loc simple_patterns (ty : AST.type_expression) =
     | _ -> raise.error @@ Errors.corner_case "edge case: not a record/tuple" ty.location)
 
 
-
 let print_matrix matrix =
   let () = Format.printf "matrix: \n" in
   let () =

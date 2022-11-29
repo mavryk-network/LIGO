@@ -177,5 +177,6 @@ and type_inst ppf { forall; type_ } =
 
 
 and option_inline ppf inline = if inline then fprintf ppf "[@inline]" else fprintf ppf ""
+
 let program ppf : program -> unit =
  fun (prg, exp) -> fprintf ppf "%a" expression Combinators.(context_apply prg exp)

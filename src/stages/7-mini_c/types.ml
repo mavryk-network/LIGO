@@ -110,8 +110,10 @@ and expression_content =
   | E_update of expression * int * expression * int
   | E_raw_michelson of
       ((Location.t, string) Tezos_micheline.Micheline.node list * expression list)
-  | E_raw_wasm of (WasmObjectFile.Ast.symbol * WasmObjectFile.Types.value_type) list * WasmObjectFile.Ast.instr list * expression list
-
+  | E_raw_wasm of
+      (WasmObjectFile.Ast.symbol * WasmObjectFile.Types.value_type) list
+      * WasmObjectFile.Ast.instr list
+      * expression list
   (* E_global_constant (hash, args) *)
   | E_global_constant of string * expression list
   | E_create_contract of

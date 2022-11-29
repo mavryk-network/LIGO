@@ -689,7 +689,6 @@ let build_type_insts_opt init =
   List.fold_right ~init:(return init) ~f
 
 
-
 (* This function expands a function with a type T_for_all but not with
    the same amount of E_type_abstraction *)
 let forall_expand_opt (e : expression) =

@@ -770,6 +770,7 @@ let rec pattern_to_region = function
   | P_Tuple { region; _ } | P_Typed { region; _ } -> region
   | P_Var t | P_Verbatim t -> t#region
 
+
 let selection_to_region = function
   | FieldName name -> name#region
   | Component w -> w#region

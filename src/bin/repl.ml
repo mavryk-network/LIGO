@@ -37,7 +37,6 @@ let get_declarations_core (core_prg : Ast_core.program) =
   func_declarations @ lhs_pattern_declarations @ type_declarations @ mod_declarations
 
 
-
 let get_declarations_typed (typed_prg : Ast_typed.program) =
   List.concat
   @@ List.filter_map

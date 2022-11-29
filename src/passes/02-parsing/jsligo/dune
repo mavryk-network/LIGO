@@ -3,8 +3,16 @@
 (menhir
  (merge_into Parser)
  (modules ParToken Parser)
- (flags -la 1 --table --strict --explain --inspection --cmly
-   --external-tokens Lexing_jsligo.Token))
+ (flags
+  -la
+  1
+  --table
+  --strict
+  --explain
+  --inspection
+  --cmly
+  --external-tokens
+  Lexing_jsligo.Token))
 
 (rule
  (targets RecoverParser.ml)
@@ -70,8 +78,11 @@
   Parser.mly
   ParToken.mly)
  (action
-  (run %{script_messages} --lex-tokens=Token.mli --par-tokens=ParToken.mly
-    Parser.mly)))
+  (run
+   %{script_messages}
+   --lex-tokens=Token.mli
+   --par-tokens=ParToken.mly
+   Parser.mly)))
 
 (rule
  (targets Parser_msg.ml)
@@ -80,7 +91,7 @@
   (with-stdout-to
    %{targets}
    (bash
-     "menhir --compile-errors Parser.msg --external-tokens Token --base Parser ParToken.mly Parser.mly"))))
+    "menhir --compile-errors Parser.msg --external-tokens Token --base Parser ParToken.mly Parser.mly"))))
 
 ;; Build of all the LIGO source file that cover all error states
 
@@ -92,9 +103,16 @@
   ParToken.mly
   Parser.msg)
  (action
-  (run %{script_cover} --lex-tokens=Token.mli --par-tokens=ParToken.mly
-    --ext=jsligo --unlexer=%{exe:../../01-lexing/jsligo/Unlexer.exe}
-    --messages=Parser.msg --dir=. --concatenate Parser.mly)))
+  (run
+   %{script_cover}
+   --lex-tokens=Token.mli
+   --par-tokens=ParToken.mly
+   --ext=jsligo
+   --unlexer=%{exe:../../01-lexing/jsligo/Unlexer.exe}
+   --messages=Parser.msg
+   --dir=.
+   --concatenate
+   Parser.mly)))
 
 ;; Error messages
 
@@ -104,9 +122,19 @@
  (action
   (with-stdout-to
    %{targets}
-   (run menhir --unused-tokens --update-errors errors.msg.in --table --strict
-     --external-tokens Lexer_jsligo.Token --base Parser.mly ParToken.mly
-     Parser.mly))))
+   (run
+    menhir
+    --unused-tokens
+    --update-errors
+    errors.msg.in
+    --table
+    --strict
+    --external-tokens
+    Lexer_jsligo.Token
+    --base
+    Parser.mly
+    ParToken.mly
+    Parser.mly))))
 
 (rule
  (target errors.msg.new)
@@ -114,17 +142,38 @@
  (action
   (with-stdout-to
    %{target}
-   (run menhir --unused-tokens --list-errors --table --strict
-     --external-tokens Lexer_jsligo.Token --base Parser.mly ParToken.mly
-     Parser.mly))))
+   (run
+    menhir
+    --unused-tokens
+    --list-errors
+    --table
+    --strict
+    --external-tokens
+    Lexer_jsligo.Token
+    --base
+    Parser.mly
+    ParToken.mly
+    Parser.mly))))
 
 (rule
  (alias runtest)
  (deps errors.msg errors.msg.new)
  (action
-  (run menhir --unused-tokens --table --strict --external-tokens
-    Lexer_jsligo.Token --base Parser.mly ParToken.mly Parser.mly
-    --compare-errors errors.msg.new --compare-errors errors.msg)))
+  (run
+   menhir
+   --unused-tokens
+   --table
+   --strict
+   --external-tokens
+   Lexer_jsligo.Token
+   --base
+   Parser.mly
+   ParToken.mly
+   Parser.mly
+   --compare-errors
+   errors.msg.new
+   --compare-errors
+   errors.msg)))
 
 (rule
  (targets ParErr.ml)
@@ -132,6 +181,16 @@
  (action
   (with-stdout-to
    %{targets}
-   (run menhir --unused-tokens --table --strict --external-tokens
-     Lexer_jsligo.Token --base Parser.mly ParToken.mly Parser.mly
-     --compile-errors errors.msg.in))))
+   (run
+    menhir
+    --unused-tokens
+    --table
+    --strict
+    --external-tokens
+    Lexer_jsligo.Token
+    --base
+    Parser.mly
+    ParToken.mly
+    Parser.mly
+    --compile-errors
+    errors.msg.in))))

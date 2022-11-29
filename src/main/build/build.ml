@@ -418,7 +418,6 @@ and build_wasm_code ~raise
   let mini_c =
     trace ~raise self_mini_c_tracer @@ Self_mini_c.all_expression options mini_c
   in
-
   let mini_c = Ligo_compile.Of_wasm.Closure_conversion.toplevel entry_point_orig mini_c in
   let wasm =
     Ligo_compile.Of_wasm.compile_contract
