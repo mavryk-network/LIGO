@@ -1,7 +1,7 @@
 module Location = Simple_utils.Location
 
 module type VAR = sig
-  type t [@@deriving eq, compare, yojson, hash]
+  type t [@@deriving compare, yojson, hash, sexp]
 
   (* Create a compiler generated variable *)
   val reset_counter : unit -> unit
@@ -22,16 +22,23 @@ module type VAR = sig
 
   (* Prints vars as %s or %s#%d *)
   val pp : Format.formatter -> t -> unit
+
+  include Comparable.S with type t := t
 end
 
 module Internal () = struct
-  type t =
-    { name : string
-    ; counter : int
-    ; generated : bool
-    ; location : Location.t [@equal.ignore] [@compare.ignore] [@hash.ignore]
-    }
-  [@@deriving equal, compare, yojson, hash]
+  module T = struct
+    type t =
+      { name : string
+      ; counter : int
+      ; generated : bool
+      ; location :
+          (Location.t[@equal.ignore] [@compare.ignore] [@hash.ignore] [@sexp.opaque])
+      }
+    [@@deriving equal, compare, yojson, hash, sexp]
+  end
+
+  include T
 
   let global_counter = ref 1
   let reset_counter () = global_counter := 1
@@ -96,8 +103,11 @@ module Internal () = struct
 
   let _pp ppf v = Format.fprintf ppf "%s#%d" v.name v.counter
   let wildcard = { name = "_"; counter = 0; location = Location.dummy; generated = false }
+
+  include Comparable.Make (T)
 end
 
 module Module_var = Internal ()
 module Value_var = Internal ()
 module Type_var = Internal ()
+module Layout_var = Internal ()

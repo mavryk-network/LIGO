@@ -48,7 +48,6 @@ let rec fold_expression : 'a folder -> 'a -> expression -> 'a =
     let res = self init rhs in
     let res = self res let_result in
     res
-  (* | E_let_pattern_in x -> Let_pattern_in.fold self (fun a _ -> a) init x *)
   | E_mod_in { module_binder = _; rhs; let_result } ->
     let res = fold_expression_in_module_expr self init rhs in
     let res = self res let_result in
@@ -72,7 +71,7 @@ and fold_expression_in_module_expr : ('a -> expression -> 'a) -> 'a -> module_ex
       ~f:(fun acc x ->
         match x.wrap_content with
         | D_value x -> self acc x.expr
-        | D_pattern x -> self acc x.expr
+        | D_irrefutable_match x -> self acc x.expr
         | D_module x -> fold_expression_in_module_expr self acc x.module_
         | D_type _ -> acc)
       ~init:acc
@@ -99,7 +98,7 @@ and fold_module : 'a folder -> 'a -> module_ -> 'a =
         } ->
       let res = fold_expression f acc expr in
       return @@ res
-    | D_pattern
+    | D_irrefutable_match
         { pattern = _
         ; expr
         ; attr =
@@ -170,10 +169,6 @@ let rec map_expression : 'err mapper -> expression -> expression =
     let rhs = self rhs in
     let let_result = self let_result in
     return @@ E_let_in { let_binder; rhs; let_result; attributes }
-  (* | E_let_pattern_in x -> (
-    let x = Let_pattern_in.map self Fun.id x in
-    return @@ E_let_pattern_in x
-  ) *)
   | E_mod_in { module_binder; rhs; let_result } ->
     let rhs = map_expression_in_module_expr f rhs in
     let let_result = self let_result in
@@ -238,9 +233,9 @@ and map_declaration m (x : declaration) =
   | D_value { binder; expr; attr } ->
     let expr = map_expression m expr in
     return @@ D_value { binder; expr; attr }
-  | D_pattern { pattern; expr; attr } ->
+  | D_irrefutable_match { pattern; expr; attr } ->
     let expr = map_expression m expr in
-    return @@ D_pattern { pattern; expr; attr }
+    return @@ D_irrefutable_match { pattern; expr; attr }
   | D_type t -> return @@ D_type t
   | D_module { module_binder; module_; module_attr } ->
     let module_ = map_expression_in_module_expr m module_ in
@@ -258,11 +253,10 @@ let fetch_entry_type ~raise : string -> program -> type_expression * Location.t 
  fun main_fname m ->
   let aux (declt : declaration) =
     match Location.unwrap declt with
-    | D_value { binder; expr; attr = _ } ->
-      if Value_var.is_name (Binder.get_var binder) main_fname then Some expr else None
-    | D_pattern { pattern = { wrap_content = P_var binder; _ }; expr; attr = _ } ->
-      if Value_var.is_name (Binder.get_var binder) main_fname then Some expr else None
-    | D_pattern _ | D_type _ | D_module _ -> None
+    | D_value { binder; expr; attr = _ }
+    | D_irrefutable_match { pattern = { wrap_content = P_var binder; _ }; expr; attr = _ }
+      -> if Value_var.is_name (Binder.get_var binder) main_fname then Some expr else None
+    | D_irrefutable_match _ | D_type _ | D_module _ -> None
   in
   let main_decl_opt = List.find_map ~f:aux @@ List.rev m in
   let expr =
@@ -282,9 +276,10 @@ let fetch_contract_type ~raise : Value_var.t -> program -> contract_type =
   let aux declt =
     match Location.unwrap declt with
     | D_value { binder = { var; _ }; expr; attr = _ }
-    | D_pattern { pattern = { wrap_content = P_var { var; _ }; _ }; expr; attr = _ } ->
+    | D_irrefutable_match
+        { pattern = { wrap_content = P_var { var; _ }; _ }; expr; attr = _ } ->
       if Value_var.equal var main_fname then Some (var, expr) else None
-    | D_pattern _ | D_type _ | D_module _ -> None
+    | D_irrefutable_match _ | D_type _ | D_module _ -> None
   in
   let main_decl_opt = List.find_map ~f:aux @@ List.rev m in
   let main_decl =
@@ -325,12 +320,12 @@ let get_shadowed_decl : program -> (ValueAttr.t -> bool) -> Location.t option =
       | Some x -> seen, Value_var.get_location x :: shadows
       | None ->
         if predicate attr then Binder.get_var binder :: seen, shadows else seen, shadows)
-    | D_pattern { pattern = { wrap_content = P_var binder; _ }; attr; _ } ->
+    | D_irrefutable_match { pattern = { wrap_content = P_var binder; _ }; attr; _ } ->
       (match List.find seen ~f:(Value_var.equal (Binder.get_var binder)) with
       | Some x -> seen, Value_var.get_location x :: shadows
       | None ->
         if predicate attr then Binder.get_var binder :: seen, shadows else seen, shadows)
-    | D_pattern _ | D_type _ | D_module _ -> seen, shadows
+    | D_irrefutable_match _ | D_type _ | D_module _ -> seen, shadows
   in
   let _, shadows = List.fold ~f:aux ~init:([], []) prg in
   match shadows with
@@ -345,9 +340,11 @@ let strip_view_annotations : program -> program =
     match Location.unwrap x with
     | D_value ({ attr; _ } as decl) when attr.view ->
       { x with wrap_content = D_value { decl with attr = { attr with view = false } } }
-    | D_pattern ({ attr; _ } as decl) when attr.view ->
-      { x with wrap_content = D_pattern { decl with attr = { attr with view = false } } }
-    | D_module _ | D_type _ | D_value _ | D_pattern _ -> x
+    | D_irrefutable_match ({ attr; _ } as decl) when attr.view ->
+      { x with
+        wrap_content = D_irrefutable_match { decl with attr = { attr with view = false } }
+      }
+    | D_module _ | D_type _ | D_value _ | D_irrefutable_match _ -> x
   in
   List.map ~f:aux m
 
@@ -387,18 +384,19 @@ let annotate_with_view ~raise : string list -> Ast_typed.program -> Ast_typed.pr
             in
             decorated :: prg, List.remove_element ~compare:String.compare found views
           | None -> continue)
-        | D_pattern ({ pattern = { wrap_content = P_var binder; _ }; _ } as decl) ->
+        | D_irrefutable_match
+            ({ pattern = { wrap_content = P_var binder; _ }; _ } as decl) ->
           (match List.find views ~f:(Value_var.is_name @@ Binder.get_var binder) with
           | Some found ->
             let decorated =
               { x with
                 wrap_content =
-                  D_pattern { decl with attr = { decl.attr with view = true } }
+                  D_irrefutable_match { decl with attr = { decl.attr with view = true } }
               }
             in
             decorated :: prg, List.remove_element ~compare:String.compare found views
           | None -> continue)
-        | D_pattern _ | D_type _ | D_module _ -> continue)
+        | D_irrefutable_match _ | D_type _ | D_module _ -> continue)
   in
   let () =
     match not_found with
@@ -586,7 +584,7 @@ end = struct
     let aux x =
       match Location.unwrap x with
       | D_value { binder = _; expr; attr = _ } -> get_fv_expr expr
-      | D_pattern { pattern = _; expr; attr = _ } -> get_fv_expr expr
+      | D_irrefutable_match { pattern = _; expr; attr = _ } -> get_fv_expr expr
       | D_module { module_binder = _; module_; module_attr = _ } ->
         get_fv_module_expr module_
       | D_type _t -> empty

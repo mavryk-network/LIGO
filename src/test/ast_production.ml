@@ -116,6 +116,11 @@ let mini_c_file f =
   test_case f (mini_c_file_ f false None)
 
 
+let compile_file_ f =
+  let f = "./contracts/" ^ f in
+  test_case f (Test_helpers.compile_main f)
+
+
 let typed_prod =
   Test_helpers.test_suite
     "Ast-typed productions"
@@ -135,6 +140,7 @@ let typed_prod =
     ; type_file "modules_and_free_vars/nested_modules_with_free_vars.mligo"
     ; type_file "deep_pattern_matching/pm_test.religo"
     ; type_tfile "pattern_match4.jsligo"
+    ; type_file "layout.pligo"
     ; lex_file "add_semi.jsligo" (* not sure about this one *)
     ]
 
@@ -182,6 +188,50 @@ let mini_c_prod =
   Test_helpers.test_suite
     "Mini-c productions"
     [ mini_c_file "build/D.mligo"
-    ; mini_c_file
-        "modules_env.mligo" (* Module being defined does not type with its own type *)
+    ; mini_c_file "modules_env.mligo"
+      (* Module being defined does not type with its own type *)
+    ; mini_c_file "aggregation/nested_modules.mligo"
+    ]
+
+
+let contract_prod =
+  Test_helpers.test_suite
+    "Contract productions"
+    [ (*                 Toplevel patterns                 *)
+      compile_file_ "top_level_patterns/contracts/cameligo/nested_record.mligo"
+    ; compile_file_ "top_level_patterns/contracts/cameligo/nested_tuple.mligo"
+    ; compile_file_ "top_level_patterns/contracts/cameligo/record_tuple.mligo"
+    ; compile_file_ "top_level_patterns/contracts/cameligo/record.mligo"
+    ; compile_file_ "top_level_patterns/contracts/cameligo/ticket_record.mligo"
+    ; compile_file_ "top_level_patterns/contracts/cameligo/ticket_tuple.mligo"
+    ; compile_file_ "top_level_patterns/contracts/cameligo/tuple_record.mligo"
+    ; compile_file_ "top_level_patterns/contracts/cameligo/tuple.mligo"
+    ; compile_file_
+        "top_level_patterns/contracts/cameligo/constr_tuple_destructuring.mligo"
+    ; compile_file_
+        "top_level_patterns/contracts/cameligo/constr_record_destructuring.mligo"
+      (* ; compile_file_ "top_level_patterns/contracts/jsligo/nested_record.jsligo" *)
+    ; compile_file_ "top_level_patterns/contracts/jsligo/nested_tuple.jsligo"
+      (* ; compile_file_ "top_level_patterns/contracts/jsligo/record_tuple.jsligo" *)
+      (* ; compile_file_ "top_level_patterns/contracts/jsligo/record.jsligo" *)
+      (* ; compile_file_ "top_level_patterns/contracts/jsligo/ticket_record.jsligo" *)
+    ; compile_file_ "top_level_patterns/contracts/jsligo/ticket_tuple.jsligo"
+      (* ; compile_file_ "top_level_patterns/contracts/jsligo/tuple_record.jsligo" *)
+    ; compile_file_ "top_level_patterns/contracts/jsligo/tuple.jsligo"
+    ; compile_file_ "top_level_patterns/contracts/pascaligo/nested_record.ligo"
+    ; compile_file_ "top_level_patterns/contracts/pascaligo/nested_tuple.ligo"
+    ; compile_file_ "top_level_patterns/contracts/pascaligo/record_tuple.ligo"
+    ; compile_file_ "top_level_patterns/contracts/pascaligo/record.ligo"
+    ; compile_file_ "top_level_patterns/contracts/pascaligo/ticket_record.ligo"
+    ; compile_file_ "top_level_patterns/contracts/pascaligo/ticket_tuple.ligo"
+    ; compile_file_ "top_level_patterns/contracts/pascaligo/tuple_record.ligo"
+    ; compile_file_ "top_level_patterns/contracts/pascaligo/tuple.ligo"
+    ; compile_file_ "top_level_patterns/contracts/reasonligo/nested_record.religo"
+    ; compile_file_ "top_level_patterns/contracts/reasonligo/nested_tuple.religo"
+    ; compile_file_ "top_level_patterns/contracts/reasonligo/record_tuple.religo"
+    ; compile_file_ "top_level_patterns/contracts/reasonligo/record.religo"
+    ; compile_file_ "top_level_patterns/contracts/reasonligo/ticket_record.religo"
+    ; compile_file_ "top_level_patterns/contracts/reasonligo/ticket_tuple.religo"
+    ; compile_file_ "top_level_patterns/contracts/reasonligo/tuple_record.religo"
+    ; mini_c_file "top_level_patterns/contracts/reasonligo/tuple.religo"
     ]

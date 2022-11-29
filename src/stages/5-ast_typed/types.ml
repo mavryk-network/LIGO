@@ -102,7 +102,7 @@ and expr = expression [@@deriving eq, compare, yojson, hash]
 
 and declaration_content =
   | D_value of (expr, ty_expr) Value_decl.t
-  | D_pattern of (expr, ty_expr) Pattern_decl.t
+  | D_irrefutable_match of (expr, ty_expr) Pattern_decl.t
   | D_type of ty_expr Type_decl.t
   | D_module of module_expr Module_decl.t
 

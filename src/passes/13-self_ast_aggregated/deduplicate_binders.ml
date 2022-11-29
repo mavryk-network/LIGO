@@ -308,10 +308,11 @@ let swap_declaration : Scope.swapper -> declaration -> declaration =
     let binder = swap_binder swaper binder in
     let expr = swap_expression swaper expr in
     Location.wrap ~loc:(Location.get_location decl) @@ D_value { binder; expr; attr }
-  | D_pattern { pattern; expr; attr } ->
+  | D_irrefutable_match { pattern; expr; attr } ->
     let pattern = swap_pattern swaper pattern in
     let expr = swap_expression swaper expr in
-    Location.wrap ~loc:(Location.get_location decl) @@ D_pattern { pattern; expr; attr }
+    Location.wrap ~loc:(Location.get_location decl)
+    @@ D_irrefutable_match { pattern; expr; attr }
 
 
 let rec type_expression : Scope.t -> type_expression -> type_expression =
@@ -564,12 +565,12 @@ let declaration : Scope.t -> declaration -> Scope.t * declaration =
     let _, expr = expression scope expr in
     ( scope
     , Location.wrap ~loc:(Location.get_location decl) @@ D_value { binder; expr; attr } )
-  | D_pattern { pattern; expr; attr } ->
+  | D_irrefutable_match { pattern; expr; attr } ->
     let scope, pattern = pattern_new scope pattern in
     let _, expr = expression scope expr in
     ( scope
-    , Location.wrap ~loc:(Location.get_location decl) @@ D_pattern { pattern; expr; attr }
-    )
+    , Location.wrap ~loc:(Location.get_location decl)
+      @@ D_irrefutable_match { pattern; expr; attr } )
 
 
 let program_ : program -> program =

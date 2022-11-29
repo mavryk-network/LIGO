@@ -10,13 +10,15 @@ module LMap = struct
 
 
   let of_yojson _f _lmap = failwith "TODO"
+  let sexp_of_t _ _ = failwith "todo"
+  let t_of_sexp _ _ = failwith "todo"
 end
 
 module LSet = Caml.Set.Make (struct
   type t = Label.t [@@deriving compare]
 end)
 
-type 'a t = 'a LMap.t [@@deriving eq, yojson, hash]
+type 'a t = 'a LMap.t [@@deriving eq, yojson, hash, sexp]
 
 let cmp2 f a1 b1 g a2 b2 =
   match f a1 b1 with

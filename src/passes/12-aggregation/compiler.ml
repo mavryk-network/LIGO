@@ -481,7 +481,7 @@ and compile_declaration
     let scope, var = Scope.add_path_to_var scope path @@ Binder.get_var binder in
     let binder = Binder.set_var binder var in
     scope, O.context_decl binder expr attr
-  | D_pattern { pattern; expr; attr } ->
+  | D_irrefutable_match { pattern; expr; attr } ->
     let attr =
       { attr with
         hidden = attr.hidden || super_attr.hidden

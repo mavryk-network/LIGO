@@ -12,7 +12,7 @@ type all =
   | `Main_invalid_protocol_version of string list * string
   | `Main_unparse_tracer of tezos_alpha_error list
   | `Main_typecheck_contract_tracer of
-    int Tezos_utils.Michelson.michelson * tezos_alpha_error list
+    Environment.Protocols.t * int Tezos_utils.Michelson.michelson * tezos_alpha_error list
   | `Main_could_not_serialize of tezos_alpha_error list
   | `Check_typed_arguments_tracer of Simple_utils.Runned_result.check_type * all
   | `Main_unknown
@@ -32,7 +32,6 @@ type all =
   | `Cit_cameligo_tracer of Tree_abstraction.Cameligo.Errors.abs_error list
   | `Cit_reasonligo_tracer of Tree_abstraction.Reasonligo.Errors.abs_error list
   | `Cit_jsligo_tracer of Tree_abstraction.Jsligo.Errors.abs_error list
-  | `Unification_tracer of Unification.Errors.unification_error list
   | `Self_ast_imperative_tracer of Self_ast_imperative.Errors.self_ast_imperative_error
   | `Desugaring_tracer of Desugaring.Errors.desugaring_error
   | `Checking_tracer of Checking.Errors.typer_error

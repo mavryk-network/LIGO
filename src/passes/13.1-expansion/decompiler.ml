@@ -29,7 +29,7 @@ let rec decompile_expression : I.expression -> O.expression =
   | E_matching { matchee; cases = Match_record { fields; body; tv = _ } } ->
     let rhs = self matchee in
     let let_result = self body in
-    let fields = Record.map fields ~f:O.Pattern.var_pattern in
+    let fields = Record.map fields ~f:O.Pattern.var in
     let let_binder = O.Pattern.record_pattern ~loc:exp.location fields in
     return (O.E_let_in { let_binder; rhs; let_result; attributes = default_attr })
   | E_matching
@@ -39,9 +39,7 @@ let rec decompile_expression : I.expression -> O.expression =
     let rhs = self matchee in
     let let_result = self body in
     let let_binder =
-      let v =
-        O.Pattern.var_pattern (Binder.make pattern (I.get_sum_type tv constructor))
-      in
+      let v = O.Pattern.var (Binder.make pattern (I.get_sum_type tv constructor)) in
       O.Pattern.variant_pattern ~loc:exp.location (constructor, v)
     in
     return (O.E_let_in { let_binder; rhs; let_result; attributes = default_attr })
@@ -50,9 +48,7 @@ let rec decompile_expression : I.expression -> O.expression =
     let f I.{ constructor; pattern; body } =
       let body = self body in
       let pattern =
-        let v =
-          O.Pattern.var_pattern (Binder.make pattern (I.get_sum_type tv constructor))
-        in
+        let v = O.Pattern.var (Binder.make pattern (I.get_sum_type tv constructor)) in
         O.Pattern.variant_pattern ~loc:exp.location (constructor, v)
       in
       O.Match_expr.{ pattern; body }
@@ -62,12 +58,12 @@ let rec decompile_expression : I.expression -> O.expression =
   | E_let_in { let_binder; rhs; let_result; attributes } ->
     let rhs = self rhs in
     let let_result = self let_result in
-    let let_binder = O.Pattern.var_pattern let_binder in
+    let let_binder = O.Pattern.var let_binder in
     return (O.E_let_in { let_binder; rhs; let_result; attributes })
   | E_let_mut_in { let_binder; rhs; let_result; attributes } ->
     let rhs = self rhs in
     let let_result = self let_result in
-    let let_binder = O.Pattern.var_pattern let_binder in
+    let let_binder = O.Pattern.var let_binder in
     return (O.E_let_mut_in { let_binder; rhs; let_result; attributes })
   | E_record m ->
     let m = Record.map ~f:self m in

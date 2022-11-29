@@ -315,7 +315,10 @@ let rec mono_polymorphic_expression ~raise
     , return
         (E_recursive { fun_name; fun_type; lambda = { binder; output_type; result } }) )
   | E_let_in { let_binder; rhs; let_result; attributes } ->
-    let rhs = AST.Combinators.forall_expand rhs in
+    let rhs =
+      Trace.trace_option ~raise (Errors.monomorphisation_non_for_all rhs)
+      @@ AST.Combinators.forall_expand_opt rhs
+    in
     let type_vars, rhs = AST.Combinators.get_type_abstractions rhs in
     let data, let_result = self data let_result in
     let binder_instances =
@@ -355,7 +358,7 @@ let rec mono_polymorphic_expression ~raise
       let rhs = { rhs with type_expression = type_ } in
       ( data
       , AST.e_a_let_in
-          (AST.Pattern.var_pattern (Binder.make let_binder rhs.type_expression))
+          (AST.Pattern.var (Binder.make let_binder rhs.type_expression))
           rhs
           let_result
           { attributes with hidden = false } )
@@ -401,10 +404,7 @@ let rec mono_polymorphic_expression ~raise
       match e.expression_content with
       | E_type_inst { forall; type_ } -> aux (type_ :: type_insts) forall
       | E_variable variable -> List.rev type_insts, variable
-      | _ ->
-        raise.Trace.error
-          (Errors.corner_case
-             "Monomorphisation: cannot resolve non-variables with instantiations")
+      | _ -> raise.Trace.error (Errors.monomorphisation_non_var expr)
     in
     let type_instances, lid = aux [] expr in
     let type_ = expr.type_expression in

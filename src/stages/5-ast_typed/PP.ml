@@ -211,7 +211,7 @@ and declaration ?(use_hidden = true) ppf (d : declaration) =
     if vd.attr.hidden && use_hidden
     then ()
     else Types.Value_decl.pp expression type_expression_annot ppf vd
-  | D_pattern pd ->
+  | D_irrefutable_match pd ->
     if pd.attr.hidden && use_hidden
     then ()
     else Types.Pattern_decl.pp expression type_expression_annot ppf pd

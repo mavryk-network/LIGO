@@ -1,321 +1,5 @@
 open Cli_expect
 
-let contract file = test ("top_level_patterns/contracts/" ^ file)
-
-let%expect_test _ =
-  run_ligo_good [ "compile"; "contract"; contract "pascaligo/nested_record.ligo" ];
-  [%expect
-    {|
-    { parameter unit ;
-      storage (pair (pair nat int) string) ;
-      code { DROP ;
-             PUSH string "O" ;
-             PUSH string "O" ;
-             CONCAT ;
-             PUSH string "L" ;
-             CONCAT ;
-             PUSH string "L" ;
-             CONCAT ;
-             PUSH string "E" ;
-             CONCAT ;
-             PUSH string "H" ;
-             CONCAT ;
-             PUSH int 6 ;
-             PUSH int 5 ;
-             PUSH int 4 ;
-             PUSH int 3 ;
-             PUSH int 2 ;
-             PUSH int 1 ;
-             ADD ;
-             ADD ;
-             ADD ;
-             ADD ;
-             ADD ;
-             PUSH nat 6 ;
-             PUSH nat 5 ;
-             PUSH nat 4 ;
-             PUSH nat 3 ;
-             PUSH nat 2 ;
-             PUSH nat 1 ;
-             ADD ;
-             ADD ;
-             ADD ;
-             ADD ;
-             ADD ;
-             PAIR ;
-             PAIR ;
-             NIL operation ;
-             PAIR } } |}]
-
-let%expect_test _ =
-  run_ligo_good [ "compile"; "contract"; contract "pascaligo/nested_tuple.ligo" ];
-  [%expect
-    {|
-    { parameter unit ;
-      storage (pair (pair nat int) string) ;
-      code { DROP ;
-             PUSH string "World" ;
-             PUSH string "O" ;
-             CONCAT ;
-             PUSH string "L" ;
-             CONCAT ;
-             PUSH string "Hello" ;
-             CONCAT ;
-             PUSH string "E" ;
-             CONCAT ;
-             PUSH string "H" ;
-             CONCAT ;
-             PUSH int 6 ;
-             PUSH int 5 ;
-             PUSH int 4 ;
-             PUSH int 3 ;
-             PUSH int 2 ;
-             PUSH int 1 ;
-             ADD ;
-             ADD ;
-             ADD ;
-             ADD ;
-             ADD ;
-             PUSH nat 6 ;
-             PUSH nat 5 ;
-             PUSH nat 4 ;
-             PUSH nat 3 ;
-             PUSH nat 2 ;
-             PUSH nat 1 ;
-             ADD ;
-             ADD ;
-             ADD ;
-             ADD ;
-             ADD ;
-             PAIR ;
-             PAIR ;
-             NIL operation ;
-             PAIR } } |}]
-
-let%expect_test _ =
-  run_ligo_good [ "compile"; "contract"; contract "pascaligo/record_tuple.ligo" ];
-  [%expect
-    {|
-    { parameter unit ;
-      storage (pair (pair nat int) string) ;
-      code { DROP ;
-             PUSH string "Hello" ;
-             PUSH string "E" ;
-             CONCAT ;
-             PUSH string "H" ;
-             CONCAT ;
-             PUSH string "H" ;
-             CONCAT ;
-             PUSH string "E" ;
-             CONCAT ;
-             PUSH string "Hello" ;
-             CONCAT ;
-             PUSH int 6 ;
-             PUSH int 5 ;
-             PUSH int 4 ;
-             PUSH int 3 ;
-             PUSH int 2 ;
-             PUSH int 1 ;
-             ADD ;
-             ADD ;
-             ADD ;
-             ADD ;
-             ADD ;
-             PUSH nat 6 ;
-             PUSH nat 5 ;
-             PUSH nat 4 ;
-             PUSH nat 3 ;
-             PUSH nat 2 ;
-             PUSH nat 1 ;
-             ADD ;
-             ADD ;
-             ADD ;
-             ADD ;
-             ADD ;
-             PAIR ;
-             PAIR ;
-             NIL operation ;
-             PAIR } } |}]
-
-let%expect_test _ =
-  run_ligo_good [ "compile"; "contract"; contract "pascaligo/record.ligo" ];
-  [%expect
-    {|
-    { parameter unit ;
-      storage (pair (pair nat int) string) ;
-      code { DROP ;
-             PUSH string "World" ;
-             PUSH string "Hello" ;
-             CONCAT ;
-             PUSH int 2 ;
-             PUSH int 1 ;
-             ADD ;
-             PUSH nat 2 ;
-             PUSH nat 1 ;
-             ADD ;
-             PAIR ;
-             PAIR ;
-             NIL operation ;
-             PAIR } } |}]
-
-let%expect_test _ =
-  run_ligo_good [ "compile"; "contract"; contract "pascaligo/ticket_record.ligo" ];
-  [%expect
-    {|
-    { parameter unit ;
-      storage (pair (pair (ticket int) (ticket string)) (ticket nat)) ;
-      code { DROP ;
-             PUSH nat 10 ;
-             PUSH nat 1 ;
-             TICKET ;
-             PUSH nat 10 ;
-             PUSH string "one" ;
-             TICKET ;
-             PUSH nat 10 ;
-             PUSH int 1 ;
-             TICKET ;
-             PUSH nat 10 ;
-             PUSH nat 3 ;
-             TICKET ;
-             PUSH nat 10 ;
-             PUSH string "TWO" ;
-             TICKET ;
-             PUSH nat 10 ;
-             PUSH int 2 ;
-             TICKET ;
-             DIG 3 ;
-             PAIR ;
-             JOIN_TICKETS ;
-             IF_NONE { PUSH string "option is None" ; FAILWITH } {} ;
-             SWAP ;
-             DIG 3 ;
-             PAIR ;
-             JOIN_TICKETS ;
-             IF_NONE { PUSH string "option is None" ; FAILWITH } {} ;
-             DIG 2 ;
-             DIG 3 ;
-             PAIR ;
-             JOIN_TICKETS ;
-             IF_NONE { PUSH string "option is None" ; FAILWITH } {} ;
-             SWAP ;
-             DIG 2 ;
-             PAIR ;
-             PAIR ;
-             NIL operation ;
-             PAIR } } |}]
-
-let%expect_test _ =
-  run_ligo_good [ "compile"; "contract"; contract "pascaligo/ticket_tuple.ligo" ];
-  [%expect
-    {|
-    { parameter unit ;
-      storage (pair (pair (ticket int) (ticket string)) (ticket nat)) ;
-      code { DROP ;
-             PUSH nat 10 ;
-             PUSH nat 1 ;
-             TICKET ;
-             PUSH nat 10 ;
-             PUSH string "one" ;
-             TICKET ;
-             PUSH nat 10 ;
-             PUSH int 1 ;
-             TICKET ;
-             PUSH nat 10 ;
-             PUSH nat 3 ;
-             TICKET ;
-             PUSH nat 10 ;
-             PUSH string "TWO" ;
-             TICKET ;
-             PUSH nat 10 ;
-             PUSH int 2 ;
-             TICKET ;
-             DIG 3 ;
-             PAIR ;
-             JOIN_TICKETS ;
-             IF_NONE { PUSH string "option is None" ; FAILWITH } {} ;
-             SWAP ;
-             DIG 3 ;
-             PAIR ;
-             JOIN_TICKETS ;
-             IF_NONE { PUSH string "option is None" ; FAILWITH } {} ;
-             DIG 2 ;
-             DIG 3 ;
-             PAIR ;
-             JOIN_TICKETS ;
-             IF_NONE { PUSH string "option is None" ; FAILWITH } {} ;
-             SWAP ;
-             DIG 2 ;
-             PAIR ;
-             PAIR ;
-             NIL operation ;
-             PAIR } } |}]
-
-let%expect_test _ =
-  run_ligo_good [ "compile"; "contract"; contract "pascaligo/tuple_record.ligo" ];
-  [%expect
-    {|
-    { parameter unit ;
-      storage (pair (pair nat int) string) ;
-      code { DROP ;
-             PUSH string "O" ;
-             PUSH string "L" ;
-             CONCAT ;
-             PUSH string "L" ;
-             CONCAT ;
-             PUSH string "L" ;
-             CONCAT ;
-             PUSH string "E" ;
-             CONCAT ;
-             PUSH string "H" ;
-             CONCAT ;
-             PUSH int 6 ;
-             PUSH int 5 ;
-             PUSH int 4 ;
-             PUSH int 3 ;
-             PUSH int 2 ;
-             PUSH int 1 ;
-             ADD ;
-             ADD ;
-             ADD ;
-             ADD ;
-             ADD ;
-             PUSH nat 6 ;
-             PUSH nat 5 ;
-             PUSH nat 4 ;
-             PUSH nat 3 ;
-             PUSH nat 2 ;
-             PUSH nat 1 ;
-             ADD ;
-             ADD ;
-             ADD ;
-             ADD ;
-             ADD ;
-             PAIR ;
-             PAIR ;
-             NIL operation ;
-             PAIR } } |}]
-
-let%expect_test _ =
-  run_ligo_good [ "compile"; "contract"; contract "pascaligo/tuple.ligo" ];
-  [%expect
-    {|
-    { parameter unit ;
-      storage (pair (pair nat int) string) ;
-      code { DROP ;
-             PUSH string "World" ;
-             PUSH string "Hello" ;
-             CONCAT ;
-             PUSH int 2 ;
-             PUSH int 1 ;
-             ADD ;
-             PUSH nat 2 ;
-             PUSH nat 1 ;
-             ADD ;
-             PAIR ;
-             PAIR ;
-             NIL operation ;
-             PAIR } } |}]
-
 (* Testing *)
 
 let test_ file = test ("top_level_patterns/interpreter/" ^ file)
@@ -466,7 +150,26 @@ let%expect_test _ =
       3 | const record[ b ] = record[ b = Tezos.create_ticket ("one", 10n) ]
       4 |
     :
-    Warning: variable "b" cannot be used more than once. |}]
+    Warning: variable "b" cannot be used more than once.
+
+    File "../../test/contracts/top_level_patterns/negative/pascaligo/ticket_record.ligo", line 3, characters 14-15:
+      2 |
+      3 | const record[ b ] = record[ b = Tezos.create_ticket ("one", 10n) ]
+      4 |
+    :
+    Warning: variable "b" cannot be used more than once.
+    { parameter unit ;
+      storage (ticket string) ;
+      code { DROP ;
+             PUSH nat 10 ;
+             PUSH string "one" ;
+             TICKET ;
+             DUP ;
+             PAIR ;
+             JOIN_TICKETS ;
+             IF_NONE { PUSH string "option is None" ; FAILWITH } {} ;
+             NIL operation ;
+             PAIR } } |}]
 
 let%expect_test _ =
   run_ligo_bad
@@ -482,7 +185,28 @@ let%expect_test _ =
       1 | const (b, _) = (Tezos.create_ticket ("one", 10n), 1)
       2 |
     :
-    Warning: variable "b" cannot be used more than once. |}]
+    Warning: variable "b" cannot be used more than once.
+
+    File "../../test/contracts/top_level_patterns/negative/pascaligo/ticket_tuple.ligo", line 1, characters 7-8:
+      1 | const (b, _) = (Tezos.create_ticket ("one", 10n), 1)
+      2 |
+    :
+    Warning: variable "b" cannot be used more than once.
+    { parameter unit ;
+      storage (ticket string) ;
+      code { DROP ;
+             PUSH int 1 ;
+             PUSH nat 10 ;
+             PUSH string "one" ;
+             TICKET ;
+             SWAP ;
+             DROP ;
+             DUP ;
+             PAIR ;
+             JOIN_TICKETS ;
+             IF_NONE { PUSH string "option is None" ; FAILWITH } {} ;
+             NIL operation ;
+             PAIR } } |}]
 
 let%expect_test _ =
   run_ligo_bad
@@ -494,7 +218,7 @@ let%expect_test _ =
     ];
   [%expect
     {|
-    File "../../test/contracts/top_level_patterns/negative/pascaligo/constr_record_destructuring.ligo", line 4, characters 6-37:
+    File "../../test/contracts/top_level_patterns/negative/pascaligo/constr_record_destructuring.ligo", line 4, characters 0-81:
       3 |
       4 | const record[ a ; b = (Foo (x)) ; c ] = record[ a = 1 ; b = Foo (2) ; c = "hey" ]
       5 |
@@ -513,7 +237,7 @@ let%expect_test _ =
     ];
   [%expect
     {|
-    File "../../test/contracts/top_level_patterns/negative/pascaligo/constr_tuple_destructuring.ligo", line 3, characters 6-23:
+    File "../../test/contracts/top_level_patterns/negative/pascaligo/constr_tuple_destructuring.ligo", line 3, characters 0-45:
       2 |
       3 | const (a, (Foo (x)), c) = (1, Foo (2), "hey")
       4 |

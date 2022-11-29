@@ -47,4 +47,24 @@ let peephole_expression ~raise : expression -> expression =
     let str = Simple_utils.Ligo_string.extract code in
     let e' = e_bytes_string str in
     return e'.expression_content
+  | E_raw_code
+      { language
+      ; code =
+          { expression_content =
+              E_ascription
+                { anno_expr =
+                    { expression_content = E_literal (Literal_string code)
+                    ; location = lcode
+                    }
+                ; type_annotation
+                }
+          ; _
+          }
+      }
+    when String.equal language "bytes" ->
+    let str = Simple_utils.Ligo_string.extract code in
+    e_ascription
+      ~loc:e.location
+      { anno_expr = e_bytes_string ~loc:lcode str; type_annotation }
+      ()
   | e -> return e

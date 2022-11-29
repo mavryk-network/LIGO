@@ -359,9 +359,9 @@ and fold_map_declaration m acc (x : declaration) =
     let acc', expr = fold_map_expression m acc expr in
     let wrap_content = D_value { binder; expr; attr } in
     acc', { x with wrap_content }
-  | D_pattern { pattern; expr; attr } ->
+  | D_irrefutable_match { pattern; expr; attr } ->
     let acc', expr = fold_map_expression m acc expr in
-    let wrap_content = D_pattern { pattern; expr; attr } in
+    let wrap_content = D_irrefutable_match { pattern; expr; attr } in
     acc', { x with wrap_content }
   | D_type t ->
     let wrap_content = D_type t in
@@ -581,12 +581,12 @@ let get_views : program -> (Value_var.t * Location.t) list =
     | D_value { binder; expr = _; attr } when attr.view ->
       let var = Binder.get_var binder in
       (var, Value_var.get_location var) :: acc
-    | D_pattern { pattern = { wrap_content = P_var binder; _ }; expr = _; attr }
+    | D_irrefutable_match { pattern = { wrap_content = P_var binder; _ }; expr = _; attr }
       when attr.view ->
       let var = Binder.get_var binder in
       (var, Value_var.get_location var) :: acc
     (* TODO: exhaustive here ... *)
-    | D_type _ | D_module _ | D_value _ | D_pattern _ -> acc
+    | D_type _ | D_module _ | D_value _ | D_irrefutable_match _ -> acc
   in
   List.fold_right ~init:[] ~f p
 
@@ -595,10 +595,10 @@ let fetch_view_type : declaration -> (type_expression * type_expression Binder.t
  fun declt ->
   match Location.unwrap declt with
   | D_value { binder; expr; attr }
-  | D_pattern { pattern = { wrap_content = P_var binder; _ }; expr; attr }
+  | D_irrefutable_match { pattern = { wrap_content = P_var binder; _ }; expr; attr }
     when attr.view ->
     Some (expr.type_expression, Binder.map (fun _ -> expr.type_expression) binder)
-  | D_value _ | D_pattern _ | D_type _ | D_module _ -> None
+  | D_value _ | D_irrefutable_match _ | D_type _ | D_module _ -> None
 
 
 let fetch_views_in_program : program -> (type_expression * type_expression Binder.t) list =

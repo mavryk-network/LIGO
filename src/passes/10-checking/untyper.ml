@@ -94,11 +94,10 @@ and untype_expression_content (ec : O.expression_content) : I.expression =
     let I.Match_expr.{ matchee; cases } = untype_match_expr m in
     return (e_matching matchee cases)
   | E_let_in { let_binder; rhs; let_result; attributes } ->
-    let tv = self_type rhs.type_expression in
     let rhs = self rhs in
     let result = self let_result in
     let attr : ValueAttr.t = untype_value_attr attributes in
-    let let_binder = O.Pattern.map (Fn.const @@ Some tv) let_binder in
+    let let_binder = O.Pattern.map (Fn.const None) let_binder in
     return (e_let_mut_in let_binder rhs result attr)
   | E_mod_in { module_binder; rhs; let_result } ->
     let rhs = untype_module_expr rhs in
@@ -113,11 +112,10 @@ and untype_expression_content (ec : O.expression_content) : I.expression =
     return @@ e_recursive fun_name fun_type lambda
   | E_module_accessor ma -> return @@ I.make_e @@ E_module_accessor ma
   | E_let_mut_in { let_binder; rhs; let_result; attributes } ->
-    let tv = self_type rhs.type_expression in
     let rhs = self rhs in
     let result = self let_result in
     let attr : ValueAttr.t = untype_value_attr attributes in
-    let let_binder = O.Pattern.map (Fn.const @@ Some tv) let_binder in
+    let let_binder = O.Pattern.map (Fn.const None) let_binder in
     return (e_let_in let_binder rhs result attr)
   | E_assign a ->
     let a = Assign.map self self_type_opt a in
@@ -214,7 +212,7 @@ and untype_declaration_pattern
   =
  fun untype_expression { pattern; expr; attr } ->
   let ty = untype_type_expression expr.O.type_expression in
-  let pattern = O.Pattern.map (Fn.const @@ Some ty) pattern in
+  let pattern = O.Pattern.map (Fn.const None) pattern in
   let expr = untype_expression expr in
   let expr = I.e_ascription expr ty in
   let attr = untype_value_attr attr in
@@ -242,9 +240,9 @@ and untype_declaration =
     | D_value dc ->
       let dc = untype_declaration_constant untype_expression dc in
       return @@ D_value dc
-    | D_pattern x ->
+    | D_irrefutable_match x ->
       let x = untype_declaration_pattern untype_expression x in
-      return @@ D_pattern x
+      return @@ D_irrefutable_match x
     | D_type dt ->
       let dt = untype_declaration_type dt in
       return @@ D_type dt

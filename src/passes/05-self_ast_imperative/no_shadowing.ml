@@ -44,7 +44,7 @@ let peephole_program ~raise : program -> program =
         then raise.error (no_shadowing location)
       in
       aux (var :: vars) types mods remaining
-    | Location.{ wrap_content = D_pattern t; location } :: remaining ->
+    | Location.{ wrap_content = D_irrefutable_match t; location } :: remaining ->
       let pattern_vars = List.map ~f:Binder.get_var (Pattern.binders t.pattern) in
       let () =
         List.iter pattern_vars ~f:(fun var ->

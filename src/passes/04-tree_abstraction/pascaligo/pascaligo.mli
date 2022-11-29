@@ -3,6 +3,7 @@
 module CST = Cst.Pascaligo
 module AST = Ast_imperative
 module Errors = Errors
+module Decompiler = Decompiler
 
 (** Convert a concrete PascaLIGO expression CST to the imperative
     expression AST used by the compiler. *)

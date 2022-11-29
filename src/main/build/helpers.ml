@@ -47,7 +47,7 @@ let internalize_core (ds : Ast_core.program) : Ast_core.program =
       D_module { module_binder; module_; module_attr }
     | D_type { type_binder; type_expr; type_attr } ->
       D_type { type_binder; type_expr; type_attr }
-    | D_pattern x -> D_pattern x
+    | D_irrefutable_match x -> D_irrefutable_match x
     | D_value x ->
       let binder = sap_for_all x.binder in
       let binder = at_prefix binder in
@@ -90,22 +90,22 @@ let get_aliases_prelude
     match Location.unwrap d with
     | D_module { module_binder; module_attr; _ }
       when TypeOrModuleAttr.(module_attr.public) -> module_binder :: acc
-    | D_type _ | D_module _ | D_value _ | D_pattern _ -> acc
+    | D_type _ | D_module _ | D_value _ | D_irrefutable_match _ -> acc
   in
   let get_val_bindings acc d =
     let open Ast_typed in
     match Location.unwrap d with
     | D_value { binder; attr; _ } when ValueAttr.(attr.public) -> binder :: acc
-    | D_pattern { pattern; attr; _ } when ValueAttr.(attr.public) ->
+    | D_irrefutable_match { pattern; attr; _ } when ValueAttr.(attr.public) ->
       let binders = Pattern.binders pattern in
       binders @ acc
-    | D_type _ | D_module _ | D_value _ | D_pattern _ -> acc
+    | D_type _ | D_module _ | D_value _ | D_irrefutable_match _ -> acc
   in
   let get_ty_bindings acc d =
     let open Ast_typed in
     match Location.unwrap d with
     | D_type { type_binder; type_attr; _ } when type_attr.public -> type_binder :: acc
-    | D_type _ | D_module _ | D_value _ | D_pattern _ -> acc
+    | D_type _ | D_module _ | D_value _ | D_irrefutable_match _ -> acc
   in
   let module_attr = Ast_core.TypeOrModuleAttr.{ public = true; hidden = true } in
   let attr =

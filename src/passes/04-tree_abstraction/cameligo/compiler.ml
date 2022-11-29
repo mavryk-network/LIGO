@@ -496,8 +496,8 @@ let rec compile_expression ~raise : CST.expr -> AST.expr =
     let let_rhs = compile_expression ~raise let_rhs in
     let rhs_type = Option.map ~f:(compile_type_expression ~raise <@ snd) rhs_type in
     let pattern, args = binders in
-    (match args, type_params with
-    | [], None when not (is_e_lambda let_rhs) ->
+    (match args, type_params, kwd_rec with
+    | [], None, None ->
       let matchee =
         match rhs_type with
         | Some t -> e_annotation ~loc:let_rhs.location let_rhs t
@@ -507,8 +507,17 @@ let rec compile_expression ~raise : CST.expr -> AST.expr =
           | _ -> let_rhs)
       in
       let pattern = compile_pattern ~raise pattern in
+      let pattern =
+        Location.map
+          (function
+            | Pattern.P_var binder ->
+              let binder = Binder.set_ascr binder rhs_type in
+              AST.Pattern.P_var binder
+            | x -> x)
+          pattern
+      in
       e_let_in ~loc pattern let_attr matchee body
-    | _, _ ->
+    | _, _, _ ->
       (* function *)
       let let_binder, fun_ = compile_binder ~raise pattern in
       let binders = List.map ~f:(compile_parameter ~raise) args in
@@ -580,9 +589,7 @@ let rec compile_expression ~raise : CST.expr -> AST.expr =
           type_params
       in
       let pattern =
-        Pattern.var_pattern
-          ~loc:(Location.lift (CST.pattern_to_region pattern))
-          let_binder
+        Pattern.var ~loc:(Location.lift (CST.pattern_to_region pattern)) let_binder
       in
       return @@ e_let_in ~loc pattern let_attr let_rhs @@ fun_ body)
   | ETypeIn ti ->
@@ -959,8 +966,8 @@ and compile_declaration ~raise : CST.declaration -> AST.declaration option =
       let x = ..
       let (x,y) = ..   
     *)
-    (match args, type_params with
-    | [], None ->
+    (match kwd_rec, args, type_params with
+    | None, [], None ->
       (* not function *)
       (*
         let x : ty = body
@@ -968,13 +975,25 @@ and compile_declaration ~raise : CST.declaration -> AST.declaration option =
       *)
       let attr = compile_attributes attributes in
       let pattern = compile_pattern ~raise pattern in
-      (* For patterns, we annotate the rhs : let <pattern> : <type> = <expr> |-> let <pattern> = <expr> : <type> *)
-      let let_rhs =
-        Option.value_map rhs_type ~default:let_rhs ~f:(fun ty ->
-            e_annotation ~loc:let_rhs.location let_rhs ty)
-      in
-      return region (D_pattern { pattern; attr; expr = let_rhs })
-    | _, _ ->
+      (match Location.unwrap pattern with
+      | P_var binder ->
+        let loc = pattern.location in
+        let binder = Binder.set_ascr binder rhs_type in
+        let pattern = Location.wrap ~loc (AST.Pattern.P_var binder) in
+        (* For patterns, we annotate the rhs : let <pattern> : <type> = <expr> |-> let <pattern> = <expr> : <type> *)
+        let let_rhs =
+          Option.value_map rhs_type ~default:let_rhs ~f:(fun ty ->
+              e_annotation ~loc:let_rhs.location let_rhs ty)
+        in
+        return region (D_irrefutable_match { pattern; attr; expr = let_rhs })
+      | _ ->
+        (* For patterns, we annotate the rhs : let <pattern> : <type> = <expr> |-> let <pattern> = <expr> : <type> *)
+        let let_rhs =
+          Option.value_map rhs_type ~default:let_rhs ~f:(fun ty ->
+              e_annotation ~loc:let_rhs.location let_rhs ty)
+        in
+        return region (D_irrefutable_match { pattern; attr; expr = let_rhs }))
+    | _, _, _ ->
       (* function *)
       let binder, _fun_ = compile_binder ~raise pattern in
       let params = List.map ~f:(compile_parameter ~raise) args in

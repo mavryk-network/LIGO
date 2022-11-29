@@ -148,7 +148,7 @@ let list_declarations (only_ep : bool) (m : Ast_typed.program) : Value_var.t lis
     ~f:(fun prev el ->
       let open Simple_utils.Location in
       match el.wrap_content with
-      | D_pattern { pattern = { wrap_content = P_var binder; _ }; attr; expr }
+      | D_irrefutable_match { pattern = { wrap_content = P_var binder; _ }; attr; expr }
       | D_value { binder; attr; expr }
         when attr.public && not attr.hidden ->
         if only_ep
@@ -158,7 +158,7 @@ let list_declarations (only_ep : bool) (m : Ast_typed.program) : Value_var.t lis
           then Binder.get_var binder :: prev
           else prev
         else Binder.get_var binder :: prev
-      | D_value _ | D_pattern _ | D_type _ | D_module _ -> prev)
+      | D_value _ | D_irrefutable_match _ | D_type _ | D_module _ -> prev)
     ~init:[]
     m
 

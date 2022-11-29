@@ -1,7 +1,7 @@
 open Types
 open Ligo_prim
 
-let kv_list_of_t_sum ?(layout = Layout.L_tree) (m : row_element Record.t) =
+let kv_list_of_t_sum ?(layout : Layout.t = Layout.L_tree) (m : row_element Record.t) =
   let lst = Record.LMap.to_kv_list m in
   match layout with
   | L_tree -> lst
@@ -15,7 +15,10 @@ let kv_list_of_t_sum ?(layout = Layout.L_tree) (m : row_element Record.t) =
     List.sort ~compare:aux lst
 
 
-let kv_list_of_t_record_or_tuple ?(layout = Layout.L_tree) (m : row_element Record.t) =
+let kv_list_of_t_record_or_tuple
+    ?(layout : Layout.t = Layout.L_tree)
+    (m : row_element Record.t)
+  =
   let lst =
     if Record.is_tuple m then Record.tuple_of_record m else Record.LMap.to_kv_list m
   in
@@ -31,13 +34,13 @@ let kv_list_of_t_record_or_tuple ?(layout = Layout.L_tree) (m : row_element Reco
     List.sort ~compare:aux lst
 
 
-let kv_list_of_record_or_tuple ~layout record_t_content record =
+let kv_list_of_record_or_tuple ~(layout : Layout.t) record_t_content record =
   let exps =
     if Record.is_tuple record
     then Record.tuple_of_record record
     else Record.LMap.to_kv_list record
   in
-  match (layout : Layout.t) with
+  match layout with
   | L_tree -> List.map ~f:snd exps
   | L_comb ->
     let types =

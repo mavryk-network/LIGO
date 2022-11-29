@@ -18,9 +18,12 @@ let no_lock_file ~raise:_ () =
 
 
 let working_project ~raise:_ () =
-  let t = ModRes.make "projects/working_project" in
+  let project_root = "projects/working_project" in
+  let t = ModRes.make project_root in
+  let pwd = Sys_unix.getcwd () in
+  let relative p = Filename.concat (Filename.concat pwd project_root) p in
   let inclusion_paths =
-    ModRes.get_dependencies ~file:"/foo/projects/ligo-foo/main.mligo" t
+    ModRes.get_dependencies ~file:"projects/working_project/main.mligo" t
   in
   let () =
     assert (
@@ -28,8 +31,8 @@ let working_project ~raise:_ () =
         ModRes.equal_paths
         inclusion_paths
         ModRes.
-          [ Path "/foo/.esy/source/i/ligo_list_helpers__1.0.0__bf074147"
-          ; Path "/foo/.esy/source/i/ligo_set_helpers__1.0.2__5cd724a1"
+          [ Path (relative ".ligo/source/i/ligo_list_helpers__1.0.0__bf074147")
+          ; Path (relative ".ligo/source/i/ligo_set_helpers__1.0.2__5cd724a1")
           ])
   in
   let list_helpers_path =
@@ -38,7 +41,7 @@ let working_project ~raise:_ () =
   let () =
     assert (
       option_eq
-        "/foo/.esy/source/i/ligo_list_helpers__1.0.0__bf074147/list.mligo"
+        (relative ".ligo/source/i/ligo_list_helpers__1.0.0__bf074147/list.mligo")
         list_helpers_path)
   in
   let set_helpers_path =
@@ -46,14 +49,17 @@ let working_project ~raise:_ () =
   in
   assert (
     option_eq
-      "/foo/.esy/source/i/ligo_set_helpers__1.0.2__5cd724a1/set.mligo"
+      (relative ".ligo/source/i/ligo_set_helpers__1.0.2__5cd724a1/set.mligo")
       set_helpers_path)
 
 
 let complex_project ~raise:_ () =
-  let t = ModRes.make "projects/complex_project" in
+  let project_root = "projects/complex_project" in
+  let t = ModRes.make project_root in
+  let pwd = Sys_unix.getcwd () in
+  let relative p = Filename.concat (Filename.concat pwd project_root) p in
   let base_inclusion_paths =
-    ModRes.get_dependencies ~file:"/foo/projects/ligo-main/main.mligo" t
+    ModRes.get_dependencies ~file:"projects/complex_project/main.mligo" t
   in
   let () =
     assert (
@@ -61,11 +67,11 @@ let complex_project ~raise:_ () =
         ModRes.equal_paths
         base_inclusion_paths
         ModRes.
-          [ Path "/foo/.esy/source/i/ligo__test__1__1.0.0__a381d5ee"
-          ; Path "/foo/.esy/source/i/ligo_foo__1.0.6__2355cc08"
-          ; Path "/foo/.esy/source/i/ligo_list_helpers__1.0.1__6233bebd"
-          ; Path "/foo/.esy/source/i/ligo_test__2__1.0.0__d841d05a"
-          ; Path "/foo/.esy/source/i/webpack__5.68.0__95002730"
+          [ Path (relative ".ligo/source/i/ligo__test__1__1.0.0__a381d5ee")
+          ; Path (relative ".ligo/source/i/ligo_foo__1.0.6__2355cc08")
+          ; Path (relative ".ligo/source/i/ligo_list_helpers__1.0.1__6233bebd")
+          ; Path (relative ".ligo/source/i/ligo_test__2__1.0.0__d841d05a")
+          ; Path (relative ".ligo/source/i/webpack__5.68.0__95002730")
           ])
   in
   let list_helpers_path =
@@ -76,7 +82,7 @@ let complex_project ~raise:_ () =
   let () =
     assert (
       option_eq
-        "/foo/.esy/source/i/ligo_list_helpers__1.0.1__6233bebd/list.mligo"
+        (relative ".ligo/source/i/ligo_list_helpers__1.0.1__6233bebd/list.mligo")
         list_helpers_path)
   in
   let set_helpers_path =
@@ -87,7 +93,7 @@ let complex_project ~raise:_ () =
   let () = assert (Option.equal String.equal set_helpers_path None) in
   let foo_inclusion_paths =
     ModRes.get_dependencies
-      ~file:"/foo/.esy/source/i/ligo_foo__1.0.6__2355cc08/main.mligo"
+      ~file:(relative ".ligo/source/i/ligo_foo__1.0.6__2355cc08/main.mligo")
       t
   in
   let list_helpers_path =
@@ -98,7 +104,7 @@ let complex_project ~raise:_ () =
   let () =
     assert (
       option_eq
-        "/foo/.esy/source/i/ligo_list_helpers__1.0.0__bf074147/list.mligo"
+        (relative ".ligo/source/i/ligo_list_helpers__1.0.0__bf074147/list.mligo")
         list_helpers_path)
   in
   let set_helpers_path =
@@ -109,7 +115,7 @@ let complex_project ~raise:_ () =
   let () =
     assert (
       option_eq
-        "/foo/.esy/source/i/ligo_set_helpers__1.0.3__6998bccf/set.mligo"
+        (relative ".ligo/source/i/ligo_set_helpers__1.0.3__6998bccf/set.mligo")
         set_helpers_path)
   in
   let set_helpers_path =

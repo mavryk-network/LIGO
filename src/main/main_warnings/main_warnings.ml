@@ -6,7 +6,13 @@ type all =
   [ `Self_ast_typed_warning_unused of Location.t * string
   | `Self_ast_typed_warning_muchused of Location.t * string
   | `Self_ast_typed_warning_unused_rec of Location.t * string
-  | `Checking_ambiguous_constructor of Location.t * Type_var.t * Type_var.t
+  | `Checking_ambiguous_constructor_expr of
+    Ast_core.expression * Type_var.t * Type_var.t * Location.t
+  | `Checking_ambiguous_constructor_pat of
+    Ast_core.type_expression option Ast_core.Pattern.t
+    * Type_var.t
+    * Type_var.t
+    * Location.t
   | `Self_ast_imperative_warning_layout of Location.t * Label.t
   | `Self_ast_imperative_warning_deprecated_polymorphic_variable of
     Location.t * Type_var.t
@@ -52,7 +58,7 @@ let pp : display_format:string display_format -> Format.formatter -> all -> unit
          internally use protocol %s to typecheck the produced Michelson contract@.so you \
          might want to ignore this error if related to a breaking change in protocol \
          %s@.@]"
-        (Tezos_client_014_PtKathma.Michelson_v1_error_reporter.report_errors
+        (Memory_proto_alpha.Client.Michelson_v1_error_reporter.report_errors
            ~details:true
            ~show_source:true
            ?parsed:None)
@@ -60,13 +66,29 @@ let pp : display_format:string display_format -> Format.formatter -> all -> unit
         (variant_to_string user_proto)
         (variant_to_string in_use)
         (variant_to_string in_use)
-    | `Checking_ambiguous_constructor (loc, tv_chosen, tv_possible) ->
+    | `Checking_ambiguous_constructor_expr (expr, tv_chosen, tv_possible, loc) ->
       Format.fprintf
         f
-        "@[<hv>%a@ Warning: The type of this value is ambiguous: Inferred type is %a but \
-         could be of type %a.@ Hint: You might want to add a type annotation. @.@]"
+        "@[<hv>%a@ Warning: The type of \"%a\" is ambiguous: Inferred type is \"%a\" but \
+         could be of type \"%a\".@ Hint: You might want to add a type annotation. @.@]"
         Snippet.pp
         loc
+        Ast_core.PP.expression
+        expr
+        Type_var.pp
+        tv_chosen
+        Type_var.pp
+        tv_possible
+    | `Checking_ambiguous_constructor_pat (pat, tv_chosen, tv_possible, loc) ->
+      Format.fprintf
+        f
+        "@[<hv>%a@ Warning: The type the pattern of \"%a\" is ambiguous: Inferred type \
+         is \"%a\" but could be of type \"%a\".@ Hint: You might want to add a type \
+         annotation. @.@]"
+        Snippet.pp
+        loc
+        Ast_core.(Pattern.pp PP.type_expression_option)
+        pat
         Type_var.pp
         tv_chosen
         Type_var.pp
@@ -192,7 +214,7 @@ let to_warning : all -> Simple_utils.Warning.t =
          internally use protocol %s to typecheck the produced Michelson contract@.so you \
          might want to ignore this error if related to a breaking change in protocol \
          %s@.@]"
-        (Tezos_client_014_PtKathma.Michelson_v1_error_reporter.report_errors
+        (Memory_proto_alpha.Client.Michelson_v1_error_reporter.report_errors
            ~details:true
            ~show_source:true
            ?parsed:None)
@@ -204,11 +226,27 @@ let to_warning : all -> Simple_utils.Warning.t =
     let location = Location.dummy in
     let content = make_content ~message ~location () in
     make ~stage:"michelson typecheck" ~content
-  | `Checking_ambiguous_constructor (location, tv_chosen, tv_possible) ->
+  | `Checking_ambiguous_constructor_expr (expr, tv_chosen, tv_possible, location) ->
     let message =
       Format.asprintf
-        "Warning: The type of this value is ambiguous: Inferred type is %a but could be \
-         of type %a.@ Hint: You might want to add a type annotation. @."
+        "Warning: The type of \"%a\" is ambiguous: Inferred type is \"%a\" but could be \
+         of type \"%a\".@ Hint: You might want to add a type annotation. @."
+        Ast_core.PP.expression
+        expr
+        Type_var.pp
+        tv_chosen
+        Type_var.pp
+        tv_possible
+    in
+    let content = make_content ~message ~location () in
+    make ~stage:"typer" ~content
+  | `Checking_ambiguous_constructor_pat (pat, tv_chosen, tv_possible, location) ->
+    let message =
+      Format.asprintf
+        "Warning: The type the pattern of \"%a\" is ambiguous: Inferred type is \"%a\" \
+         but could be of type \"%a\".@ Hint: You might want to add a type annotation. @."
+        Ast_core.(Pattern.pp PP.type_expression_option)
+        pat
         Type_var.pp
         tv_chosen
         Type_var.pp

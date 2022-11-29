@@ -219,9 +219,9 @@ and map_declaration_content (m : abs_mapper) (x : declaration_content)
   | D_module dm, Expression _ ->
     let dm = Types.Module_decl.map (Location.map @@ Module_expr.map (map_decl m)) dm in
     D_module dm
-  | D_pattern dp, Expression m' ->
+  | D_irrefutable_match dp, Expression m' ->
     let dp = Types.Pattern_decl.map (map_expression m') (fun a -> a) dp in
-    D_pattern dp
+    D_irrefutable_match dp
   | decl, _ -> decl
 
 

@@ -47,7 +47,7 @@ let get_declarations_typed (typed_prg : Ast_typed.program) =
              |> function
              | D_value a when not a.attr.hidden ->
                Option.return @@ [ `Value (Binder.get_var a.binder) ]
-             | D_pattern a when not a.attr.hidden ->
+             | D_irrefutable_match a when not a.attr.hidden ->
                let binders = Pattern.binders a.pattern in
                let values = List.map binders ~f:(fun b -> `Value (Binder.get_var b)) in
                Option.return @@ values
@@ -55,7 +55,7 @@ let get_declarations_typed (typed_prg : Ast_typed.program) =
                Option.return @@ [ `Type a.type_binder ]
              | D_module a when not a.module_attr.hidden ->
                Option.return @@ [ `Module a.module_binder ]
-             | D_value _ | D_pattern _ | D_type _ | D_module _ -> None)
+             | D_value _ | D_irrefutable_match _ | D_type _ | D_module _ -> None)
   @@ typed_prg
 
 

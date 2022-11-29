@@ -133,8 +133,8 @@ and map_program : 'err mapper -> program -> program =
       (function
         | D_value { binder; expr; attr } ->
           D_value { binder; expr = map_expression g expr; attr }
-        | D_pattern { pattern; expr; attr } ->
-          D_pattern { pattern; expr = map_expression g expr; attr })
+        | D_irrefutable_match { pattern; expr; attr } ->
+          D_irrefutable_match { pattern; expr = map_expression g expr; attr })
       d
   in
   let ctxt = List.map ~f ctxt in

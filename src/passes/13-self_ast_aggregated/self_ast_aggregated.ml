@@ -54,12 +54,15 @@ let inline_thunk : bool ref -> Ast_aggregated.expression -> Ast_aggregated.expre
     e
   in
   match e.expression_content with
-  | E_let_in { let_binder; rhs; let_result; attributes = { thunk = true; _ } } ->
+  | E_let_in
+      { let_binder = { wrap_content = P_var let_binder; _ }
+      ; rhs
+      ; let_result
+      ; attributes = { thunk = true; _ }
+      } ->
     let rhs = make_forced rhs in
-    let binders = Ast_aggregated.Pattern.binders let_binder in
     let e =
-      List.fold binders ~init:let_result ~f:(fun let_result let_binder ->
-          Subst.subst_expression ~body:let_result ~x:(Binder.get_var let_binder) ~expr:rhs)
+      Subst.subst_expression ~body:let_result ~x:(Binder.get_var let_binder) ~expr:rhs
     in
     return_changed e
   | E_application { lamb = { expression_content = E_lambda { binder; result }; _ }; args }

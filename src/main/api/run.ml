@@ -9,6 +9,11 @@ open Ligo_prim
 let test (raw_options : Raw_options.t) source_file display_format () =
   format_result ~display_format Ligo_interpreter.Formatter.tests_format
   @@ fun ~raise ->
+  let raw_options =
+    { raw_options with
+      protocol_version = Environment.Protocols.(variant_to_string in_use)
+    }
+  in
   let protocol_version =
     Helpers.protocol_to_variant ~raise raw_options.protocol_version
   in

@@ -62,12 +62,10 @@ let rec extract_variable_types
       in
       return [ fun_name, fun_type; Param.get_var binder, in_t ]
     | E_let_in { let_binder; rhs = _; _ } ->
-      let x =
-        List.map
-          ~f:(fun binder -> Binder.get_var binder, Binder.get_ascr binder)
-          (Pattern.binders let_binder)
-      in
-      return x
+      return
+      @@ List.map
+           ~f:(fun binder -> Binder.get_var binder, Binder.get_ascr binder)
+           (Pattern.binders let_binder)
     | E_matching { matchee = _; cases } ->
       let bindings =
         List.concat
@@ -97,11 +95,11 @@ let rec extract_variable_types
   in
   match decl with
   | D_value { attr = { hidden = true; _ }; _ } -> prev
-  | D_pattern { attr = { hidden = true; _ }; _ } -> prev
+  | D_irrefutable_match { attr = { hidden = true; _ }; _ } -> prev
   | D_value { binder; expr; _ } ->
     let prev = add prev [ Binder.get_var binder, expr.type_expression ] in
     Self_ast_typed.Helpers.fold_expression aux prev expr
-  | D_pattern { pattern; expr; _ } ->
+  | D_irrefutable_match { pattern; expr; _ } ->
     let prev =
       let f acc binder = add acc [ Binder.get_var binder, expr.type_expression ] in
       List.fold (Pattern.binders pattern) ~f ~init:prev

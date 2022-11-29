@@ -24,8 +24,3 @@ let compile_contract_input ~raise
 
 let pretty_print_cst = pretty_print_cst
 let pretty_print = pretty_print
-
-let compile_to_unified ~raise ~meta (c_unit : Buffer.t) (source_filename : string)
-    : Ast_unified.program
-  =
-  parse_and_unify ~raise ~meta c_unit source_filename

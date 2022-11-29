@@ -117,7 +117,7 @@ let t_record ?loc ?sugar ?layout fields : type_expression =
   make_t ?loc ?sugar @@ T_record { fields; layout }
 
 
-let default_layout = Layout.L_tree
+let default_layout : Layout.t = Layout.L_tree
 
 let make_t_ez_record ?loc ?sugar ?layout (lst : (string * type_expression) list)
     : type_expression
@@ -337,7 +337,7 @@ let e_lambda_ez ?loc var ?ascr ?mut_flag output_type result : expression =
 
 
 let e_let_in_ez ?loc var ?ascr ?(mut = false) attributes rhs let_result =
-  let binder = Types.Pattern.var_pattern (Binder.make var ascr) in
+  let binder = Types.Pattern.var (Binder.make var ascr) in
   if mut
   then e_let_mut_in ?loc binder attributes rhs let_result
   else e_let_in ?loc binder attributes rhs let_result

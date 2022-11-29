@@ -175,7 +175,7 @@ let uncurry_rhs (depth : int) (expr : expression) =
   let fields =
     try
       let f : e_variable -> type_expression -> _ Pattern.t =
-       fun v ty -> Pattern.var_pattern ~loc:Location.generated (Binder.make v ty)
+       fun v ty -> Pattern.var ~loc:Location.generated (Binder.make v ty)
       in
       Record.of_list (List.zip_exn labels (List.map2_exn ~f vars arg_types))
     with
@@ -428,7 +428,7 @@ let uncurry_expression (expr : expression) : expression =
             (* Construct the let *)
             let result =
               e_a_let_in
-                (Pattern.var_pattern (Binder.make fun_name rhs.type_expression))
+                (Pattern.var (Binder.make fun_name rhs.type_expression))
                 rhs
                 result
                 attr

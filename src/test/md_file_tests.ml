@@ -36,6 +36,7 @@ let get_proto p =
 
 
 let current_proto = get_proto "current"
+let in_use_proto = Environment.Protocols.in_use
 
 (*
   Binds the snippets by (syntax, group_name).
@@ -85,23 +86,10 @@ let get_groups md_file : snippetsmap =
             | None -> Some (Object, String.concat ~sep:"\n" el.contents))
           grp_map
       | [ Md.Field "skip" ] -> grp_map
-      | [ Md.Field "test-ligo"
-        ; Md.NameValue ("group", name)
-        ; Md.NameValue ("protocol", x)
-        ] ->
-        let lang = Meta in
-        SnippetsGroup.update
-          (s, name, get_proto x)
-          (fun arg_content ->
-            match arg_content with
-            | Some (lang', ct) when Caml.( = ) lang lang' ->
-              Some (lang, String.concat ~sep:"\n" (ct :: el.contents))
-            | _ -> Some (lang, String.concat ~sep:"\n" el.contents))
-          grp_map
       | [ Md.Field "test-ligo"; Md.NameValue ("group", name) ] ->
         let lang = Meta in
         SnippetsGroup.update
-          (s, name, current_proto)
+          (s, name, in_use_proto)
           (fun arg_content ->
             match arg_content with
             | Some (lang', ct) when Caml.( = ) lang lang' ->

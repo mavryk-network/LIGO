@@ -664,7 +664,7 @@ and compile_let_binding ~raise ?kwd_rec attributes binding =
         ?fun_rec:(Option.map ~f:(fun _ -> fun_binder) kwd_rec)
         let_rhs
     in
-    let pattern = Pattern.var_pattern (Binder.make fun_binder lhs_type) in
+    let pattern = Pattern.var (Binder.make fun_binder lhs_type) in
     let expr =
       Option.value_map lhs_type ~default:expr ~f:(fun ty ->
           e_annotation ~loc:expr.location expr ty)
@@ -800,7 +800,7 @@ and compile_declaration ~raise : CST.declaration -> AST.declaration option =
     in
     (match expr.expression_content, pattern.wrap_content with
     | E_lambda _, P_var binder -> return region @@ D_value { binder; attr; expr }
-    | _, _ -> return region @@ D_pattern { pattern; attr; expr })
+    | _, _ -> return region @@ D_irrefutable_match { pattern; attr; expr })
 
 
 and compile_module ~raise : CST.ast -> AST.module_ =

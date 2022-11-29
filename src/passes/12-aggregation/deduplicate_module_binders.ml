@@ -178,10 +178,10 @@ and compile_declaration scope (d : AST.declaration) : Scope.t * AST.declaration 
   | D_value { binder; expr; attr } ->
     let expr = expression scope expr in
     return scope @@ AST.D_value { binder; expr; attr }
-  | D_pattern { pattern; expr; attr } ->
+  | D_irrefutable_match { pattern; expr; attr } ->
     let expr = expression scope expr in
     let pattern = AST.Pattern.map (type_expression scope) pattern in
-    return scope @@ AST.D_pattern { pattern; expr; attr }
+    return scope @@ AST.D_irrefutable_match { pattern; expr; attr }
   | D_type { type_binder; type_expr; type_attr } ->
     let type_expr = type_expression scope type_expr in
     return scope @@ AST.D_type { type_binder; type_expr; type_attr }

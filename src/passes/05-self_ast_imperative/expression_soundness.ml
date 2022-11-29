@@ -42,7 +42,7 @@ let linearity_prg ~raise : program -> program =
   let f : declaration -> unit =
    fun x ->
     match x.wrap_content with
-    | D_pattern { pattern; _ } -> check_linearity_pattern ~raise pattern
+    | D_irrefutable_match { pattern; _ } -> check_linearity_pattern ~raise pattern
     | D_value _ | D_type _ | D_module _ -> ()
   in
   List.iter ~f x;
@@ -50,7 +50,5 @@ let linearity_prg ~raise : program -> program =
 
 
 let linearity ~raise m =
-  (fun x ->
-    checks_linearity ~raise x;
-    x)
-    m
+  checks_linearity ~raise m;
+  m

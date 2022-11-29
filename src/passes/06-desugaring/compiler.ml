@@ -6,16 +6,6 @@ module I = Ast_imperative
 module O = Ast_core
 
 let is_layout = String.chop_prefix ~prefix:"layout:"
-
-let get_layout : string list -> Layout.t option =
- fun attributes ->
-  List.find_map attributes ~f:(fun attr ->
-      match is_layout attr with
-      | Some "tree" -> Some Layout.L_tree
-      | Some "comb" -> Some Layout.L_comb
-      | _ -> None)
-
-
 let is_michelson_annotation = String.chop_prefix ~prefix:"annot:"
 
 let compile_row_elem_attributes : string list -> string option =
@@ -65,7 +55,7 @@ let compile_row_attributes : string list -> Layout.t option =
  fun attributes ->
   List.find_map attributes ~f:(fun attr ->
       match is_layout attr with
-      | Some "tree" -> Some Layout.L_tree
+      | Some "tree" -> Some (Layout.L_tree : Layout.t)
       | Some "comb" -> Some Layout.L_comb
       | _ -> None)
 
@@ -386,9 +376,6 @@ and desugar_cond_to_match ~loc condition then_clause else_clause =
 
 
 and desugar_sequence_to_let ~loc expr1 expr2 =
-  let expr1 =
-    if O.is_e_ascription expr1 then expr1 else O.e_ascription expr1 (O.t_unit ~loc ())
-  in
   O.e_let_in_ez
     (Value_var.fresh ~loc ~name:"()" ())
     ~ascr:(O.t_unit ~loc ())
@@ -416,12 +403,12 @@ and compile_declaration ~raise : I.declaration -> O.declaration =
     let expr = compile_expression ~raise expr in
     let attr = compile_value_attributes attr in
     return @@ D_value { binder; expr; attr }
-  | D_pattern { pattern; expr; attr } ->
+  | D_irrefutable_match { pattern; expr; attr } ->
     let pattern = I.Pattern.map (compile_type_expression_option ~raise) pattern in
     let pattern = compile_pattern ~raise pattern in
     let expr = compile_expression ~raise expr in
     let attr = compile_value_attributes attr in
-    return @@ D_pattern { pattern; expr; attr }
+    return @@ D_irrefutable_match { pattern; expr; attr }
   | D_type { type_binder; type_expr; type_attr } ->
     let type_expr = compile_type_expression ~raise type_expr in
     let type_attr = compile_type_attributes type_attr in

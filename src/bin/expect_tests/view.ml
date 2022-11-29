@@ -82,14 +82,7 @@ let%expect_test _ =
 (* view restrictions on primitives *)
 let%expect_test _ =
   run_ligo_bad
-    [ "compile"
-    ; "contract"
-    ; contract "view_restrictions.mligo"
-    ; "--views"
-    ; "bad_view1"
-    ; "--protocol"
-    ; "jakarta"
-    ];
+    [ "compile"; "contract"; contract "view_restrictions.mligo"; "--views"; "bad_view1" ];
   [%expect
     {| 
     File "../../test/contracts/view_restrictions.mligo", line 7, characters 10-70:
@@ -103,16 +96,9 @@ let%expect_test _ =
 
 let%expect_test _ =
   run_ligo_bad
-    [ "compile"
-    ; "contract"
-    ; contract "view_restrictions.mligo"
-    ; "--views"
-    ; "bad_view2"
-    ; "--protocol"
-    ; "jakarta"
-    ];
+    [ "compile"; "contract"; contract "view_restrictions.mligo"; "--views"; "bad_view2" ];
   [%expect
-    {|
+    {| 
     View rule violated:
           - Tezos.create_contract ; Tezos.set_delegate and Tezos.transaction cannot be used because they are stateful (expect in lambdas)
           - Tezos.self can't be used because the entry-point does not make sense in a view |}]

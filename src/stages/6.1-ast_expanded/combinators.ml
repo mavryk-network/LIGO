@@ -191,8 +191,6 @@ let get_t__type__exn t =
       , "chest" )]
 
 
-let default_layout = Layout.L_tree
-
 let t_arrow param result ?loc ?source_type () : type_expression =
   t_arrow ?loc ?source_type { type1 = param; type2 = result } ()
 
@@ -203,7 +201,7 @@ let t_record ?loc ~layout fields : type_expression =
 
 let make_t_ez_record
     ?loc
-    ?(layout = default_layout)
+    ?(layout = Layout.default_layout)
     (lst : (string * type_expression) list)
     : type_expression
   =
@@ -264,7 +262,10 @@ let get_sum_type (t : type_expression) (label : Label.t) : type_expression =
 
 let t_sum ?loc ~layout fields : type_expression = make_t ?loc (T_sum { fields; layout })
 
-let t_sum_ez ?loc ?(layout = default_layout) (lst : (string * type_expression) list)
+let t_sum_ez
+    ?loc
+    ?(layout = Layout.default_layout)
+    (lst : (string * type_expression) list)
     : type_expression
   =
   let lst =
@@ -295,9 +296,7 @@ let t_record ?loc ~layout fields : type_expression =
   make_t ?loc (T_record { fields; layout })
 
 
-let default_layout = Layout.L_tree
-
-let ez_t_record ?loc ?(layout = default_layout) lst : type_expression =
+let ez_t_record ?loc ?(layout = Layout.default_layout) lst : type_expression =
   let m = Record.of_list lst in
   t_record ?loc ~layout m
 
@@ -330,7 +329,7 @@ let is_michelson_pair (t : row_element Record.t) : (row_element * row_element) o
   | _ -> None
 
 
-let kv_list_of_t_sum ?(layout = Layout.L_tree) (m : row_element Record.t) =
+let kv_list_of_t_sum ?(layout = Layout.default_layout) (m : row_element Record.t) =
   let lst = Record.LMap.to_kv_list m in
   match layout with
   | L_tree -> lst
@@ -344,7 +343,10 @@ let kv_list_of_t_sum ?(layout = Layout.L_tree) (m : row_element Record.t) =
     List.sort ~compare:aux lst
 
 
-let kv_list_of_t_record_or_tuple ?(layout = Layout.L_tree) (m : row_element Record.t) =
+let kv_list_of_t_record_or_tuple
+    ?(layout = Layout.default_layout)
+    (m : row_element Record.t)
+  =
   let lst =
     if Record.is_tuple m then Record.tuple_of_record m else Record.LMap.to_kv_list m
   in

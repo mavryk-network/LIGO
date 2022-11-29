@@ -230,12 +230,12 @@ and decompile_declaration : O.declaration -> I.declaration =
     let expr = decompile_expression expr in
     let attr = decompile_value_attributes attr in
     return @@ D_value { binder; expr; attr }
-  | D_pattern { pattern; expr; attr } ->
+  | D_irrefutable_match { pattern; expr; attr } ->
     let pattern = O.Pattern.map (Option.map ~f:decompile_type_expression) pattern in
     let pattern = decompile_pattern pattern in
     let expr = decompile_expression expr in
     let attr = decompile_value_attributes attr in
-    return @@ D_pattern { pattern; expr; attr }
+    return @@ D_irrefutable_match { pattern; expr; attr }
   | D_type { type_binder; type_expr; type_attr } ->
     let type_expr = decompile_type_expression type_expr in
     let type_attr = decompile_type_attributes type_attr in

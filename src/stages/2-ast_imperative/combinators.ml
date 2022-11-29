@@ -250,7 +250,7 @@ let e_let_mut_in ?loc let_binder attributes rhs let_result =
 
 
 let e_let_in_ez ?loc var ?ascr ?(mut = false) attributes rhs let_result =
-  let binder = Pattern.var_pattern (Ligo_prim.Binder.make var ascr) in
+  let binder = Pattern.var (Ligo_prim.Binder.make var ascr) in
   if mut
   then e_let_mut_in ?loc binder attributes rhs let_result
   else e_let_in ?loc binder attributes rhs let_result

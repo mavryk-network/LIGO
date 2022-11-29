@@ -173,7 +173,7 @@ let rec unused_map_module ~raise : module_ -> module_ = function
 and unused_declaration ~raise (x : declaration) =
   let update_annotations annots = List.iter ~f:raise.Simple_utils.Trace.warning annots in
   match Location.unwrap x with
-  | D_pattern { expr; _ } | D_value { expr; _ } ->
+  | D_irrefutable_match { expr; _ } | D_value { expr; _ } ->
     let defuse, _ = defuse_neutral in
     let unused = defuse_of_expr defuse expr in
     let warn_var v =

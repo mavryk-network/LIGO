@@ -1260,7 +1260,7 @@ and compile_let_binding ~raise
   match lhs with
   | `Fun binder -> Location.wrap ~loc:expr.location (AST.D_value { binder; attr; expr })
   | `Val pattern ->
-    Location.wrap ~loc:expr.location (AST.D_pattern { pattern; attr; expr })
+    Location.wrap ~loc:expr.location (AST.D_irrefutable_match { pattern; attr; expr })
 
 
 and compile_let_in_binding ~raise
@@ -1324,7 +1324,7 @@ and compile_statement ?(wrap = false) ~raise : CST.statement -> statement_result
     statements
   | SBlock { value = { inside; _ }; region = _ } ->
     let block_scope_var = Value_var.fresh () in
-    let block_binder = Pattern.var_pattern (Binder.make block_scope_var None) in
+    let block_binder = Pattern.var (Binder.make block_scope_var None) in
     let statements = self_statements ~wrap:true inside in
     let statements_e = statement_result_to_expression statements in
     let let_in = e_let_in block_binder [] statements_e in
@@ -1458,15 +1458,15 @@ and compile_statement ?(wrap = false) ~raise : CST.statement -> statement_result
         Binding
           (fun x ->
             e_let_mut_in
-              (Pattern.var_pattern dummy_binder)
+              (Pattern.var dummy_binder)
               []
               switch_expr
               (* this is done so that in case of only default we don't the un-used variable warning *)
               (e_let_mut_in
-                 (Pattern.var_pattern fallthrough_binder)
+                 (Pattern.var fallthrough_binder)
                  []
                  (e_false ())
-                 (e_let_mut_in (Pattern.var_pattern found_case_binder) [] (e_false ()) x)))
+                 (e_let_mut_in (Pattern.var found_case_binder) [] (e_false ()) x)))
       in
       let cases = Utils.nseq_to_list s.cases in
       let fallthrough_assign_false = e_assign fallthrough_binder (e_false ()) in

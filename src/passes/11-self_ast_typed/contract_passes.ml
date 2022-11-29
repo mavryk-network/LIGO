@@ -218,7 +218,8 @@ and get_fv_module (env : env) acc = function
         :: acc)
         tl
     | None -> get_fv_module env acc tl)
-  | ({ Location.wrap_content = D_pattern { pattern; expr; attr }; _ } as hd) :: tl ->
+  | ({ Location.wrap_content = D_irrefutable_match { pattern; expr; attr }; _ } as hd)
+    :: tl ->
     let binders =
       List.filter (Pattern.binders pattern) ~f:(fun binder' ->
           VVarSet.mem (Binder.get_var binder') env.used_var)
@@ -234,7 +235,7 @@ and get_fv_module (env : env) acc = function
       let env = merge_env env @@ env' in
       get_fv_module
         env
-        ({ hd with wrap_content = D_pattern { pattern; expr; attr } } :: acc)
+        ({ hd with wrap_content = D_irrefutable_match { pattern; expr; attr } } :: acc)
         tl)
   | hd :: tl -> get_fv_module env (hd :: acc) tl
 
@@ -261,7 +262,8 @@ and get_fv_module_expr env x =
 
 and get_fv_program (env : env) acc : program -> _ * program = function
   | [] -> env, acc
-  | ({ Location.wrap_content = D_pattern { pattern; expr; attr }; _ } as hd) :: tl ->
+  | ({ Location.wrap_content = D_irrefutable_match { pattern; expr; attr }; _ } as hd)
+    :: tl ->
     let binders =
       List.filter (Pattern.binders pattern) ~f:(fun binder' ->
           VVarSet.mem (Binder.get_var binder') env.used_var)
@@ -277,7 +279,7 @@ and get_fv_program (env : env) acc : program -> _ * program = function
       let env = merge_env env @@ env' in
       get_fv_program
         env
-        ({ hd with wrap_content = D_pattern { pattern; expr; attr } } :: acc)
+        ({ hd with wrap_content = D_irrefutable_match { pattern; expr; attr } } :: acc)
         tl)
   | ({ Location.wrap_content = D_value { binder; expr; attr }; _ } as hd) :: tl ->
     let binder' = binder in
@@ -317,9 +319,9 @@ let remove_unused ~raise : contract_pass_data -> program -> program =
   let aux (decl : declaration) =
     match decl.wrap_content with
     | D_value { binder = { var; _ }; _ }
-    | D_pattern { pattern = { wrap_content = P_var { var; _ }; _ }; _ } ->
+    | D_irrefutable_match { pattern = { wrap_content = P_var { var; _ }; _ }; _ } ->
       not (Value_var.equal var contract_pass_data.main_name)
-    | D_pattern _ | D_type _ | D_module _ -> true
+    | D_irrefutable_match _ | D_type _ | D_module _ -> true
   in
   (* Remove the definition after the main entry_point (can't be relevant), mostly remove the test *)
   let prg_decls = List.drop_while prg_decls ~f:aux in
@@ -334,7 +336,7 @@ let remove_unused ~raise : contract_pass_data -> program -> program =
     | D_value dc ->
       let env, _ = get_fv dc.expr in
       Some env
-    | D_pattern dc ->
+    | D_irrefutable_match dc ->
       let env, _ = get_fv dc.expr in
       Some env
     | D_type _ | D_module _ -> None
@@ -348,7 +350,7 @@ let remove_unused_for_views : program -> program =
   (* Process declaration in reverse order *)
   let is_view (decl : declaration) =
     match decl.wrap_content with
-    | D_value { attr; _ } | D_pattern { attr; _ } -> attr.view
+    | D_value { attr; _ } | D_irrefutable_match { attr; _ } -> attr.view
     | D_type _ | D_module _ -> false
   in
   (* Remove the definition after the last view (can't be relevant), mostly remove the test *)
@@ -363,7 +365,7 @@ let remove_unused_for_views : program -> program =
             { empty_env with used_var = VVarSet.of_list [ Binder.get_var dc.binder ] }
           in
           Some (lhs_env, rhs_env)
-        | D_pattern dc when dc.attr.view ->
+        | D_irrefutable_match dc when dc.attr.view ->
           let rhs_env, _ = get_fv dc.expr in
           let lhs_env =
             { empty_env with
@@ -372,7 +374,7 @@ let remove_unused_for_views : program -> program =
             }
           in
           Some (lhs_env, rhs_env)
-        | D_value _ | D_pattern _ | D_type _ | D_module _ -> None)
+        | D_value _ | D_irrefutable_match _ | D_type _ | D_module _ -> None)
   in
   (* lhs_envs = variables bound by declaration ; rhs_envs = free variables in declaration rhs *)
   let lhs_envs, rhs_envs = List.unzip envs in

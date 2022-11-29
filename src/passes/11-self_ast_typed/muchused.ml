@@ -259,7 +259,7 @@ let rec get_all_declarations (module_name : Module_var.t)
           name, t
         in
         recs |> List.map ~f:add_module_name
-      | D_pattern { pattern; _ } ->
+      | D_irrefutable_match { pattern; _ } ->
         let binders = Pattern.binders pattern in
         List.map binders ~f:(fun binder ->
             let name =
@@ -288,7 +288,7 @@ and muchuse_declaration (x : declaration) s =
     muchuse_union
       (muchuse_of_expr expr)
       (muchuse_of_binder (Binder.get_var binder) expr.type_expression s)
-  | D_pattern { expr; pattern; _ } ->
+  | D_irrefutable_match { expr; pattern; _ } ->
     let binders = Pattern.binders pattern in
     let muchuse_expr = muchuse_of_expr expr in
     let muchuse_pattern =

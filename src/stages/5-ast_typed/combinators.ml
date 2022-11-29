@@ -137,7 +137,7 @@ let t_record ?loc ?core ~layout fields : type_expression =
   t_record ?loc { fields; layout } ?type_meta:core ()
 
 
-let default_layout = Layout.L_tree
+let default_layout : Layout.t = Layout.L_tree
 
 let make_t_ez_record
     ?loc

@@ -93,7 +93,7 @@ let check_obj_ligo_program ~raise ?(blacklist = []) ((ctxt, e) : AST.program) : 
   let f decl () =
     match Location.unwrap decl with
     | AST.D_value { binder = _; expr; attr = _ }
-    | AST.D_pattern { pattern = _; expr; attr = _ } ->
+    | AST.D_irrefutable_match { pattern = _; expr; attr = _ } ->
       check_obj_ligo ~raise ~blacklist expr
   in
   let () = List.fold_right ctxt ~f ~init:() in
@@ -151,7 +151,7 @@ let purge_meta_ligo_program ~raise ((ctxt, e) : AST.program) : AST.program =
         if expr_is_meta then (binder, expr.location) :: blacklist else blacklist
       in
       if expr_is_meta then blacklist, ctxt else blacklist, decl :: ctxt
-    | AST.D_pattern { pattern; expr; attr = _ } ->
+    | AST.D_irrefutable_match { pattern; expr; attr = _ } ->
       let expr_is_meta = not (Trace.to_bool (check_obj_ligo ~blacklist expr)) in
       let blacklist =
         if expr_is_meta
