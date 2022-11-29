@@ -21,9 +21,4 @@ let fold_map : ('acc -> 'a -> 'acc * 'b) -> 'acc -> 'a t -> 'acc * 'b t =
   let acc, ascr = f acc ascr in
   acc, { var; ascr }
 
-let fold_map : ('acc -> 'a -> 'acc * 'b) -> 'acc -> 'a t -> 'acc * 'b t =
- fun f acc { var; ascr } ->
-  let acc, ascr = f acc ascr in
-  acc, { var; ascr }
-
 let pp g ppf { var; ascr } = Format.fprintf ppf "%a%a" Var.Value_var.pp var g ascr

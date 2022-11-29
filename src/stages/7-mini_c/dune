@@ -3,7 +3,8 @@
  (public_name ligo.mini_c)
  (instrumentation
   (backend bisect_ppx))
- (libraries simple-utils tezos-utils ligo_prim ast_expanded)
+ (libraries simple-utils tezos-utils ligo_prim ast_expanded WasmObjectFile core_unix.filename_unix 
+  core_unix.command_unix)
  (inline_tests)
  (preprocess
   (pps ppx_expect)))

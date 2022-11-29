@@ -565,6 +565,7 @@ let compile_file =
     <*> enable_michelson_typed_opt
     <*> no_stdlib
     <*> michelson_code_format
+    <*> wasm_code_format
     <*> output_file
     <*> warn
     <*> werror

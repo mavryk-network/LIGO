@@ -413,10 +413,12 @@ and build_wasm_code ~raise
     trace ~raise self_ast_aggregated_tracer
     @@ Self_ast_aggregated.all_contract parameter_ty storage_ty aggregated_contract
   in
-  let mini_c = Ligo_compile.Of_aggregated.compile_expression ~raise aggregated in
+  let expanded = Ligo_compile.Of_aggregated.compile_expression ~raise aggregated in
+  let mini_c = Ligo_compile.Of_expanded.compile_expression ~raise expanded in
   let mini_c =
     trace ~raise self_mini_c_tracer @@ Self_mini_c.all_expression options mini_c
   in
+
   let mini_c = Ligo_compile.Of_wasm.Closure_conversion.toplevel entry_point_orig mini_c in
   let wasm =
     Ligo_compile.Of_wasm.compile_contract

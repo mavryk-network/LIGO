@@ -331,6 +331,7 @@ module Tezos = struct
     i64.load32_u
     call "ffi_mint_ticket"
   |} : a * nat -> a ticket)] (v, n)
+#endif
 #if KATHMANDU
   let create_ticket (type a) (v : a) (n : nat) : a ticket = [%Michelson ({| { UNPAIR ; TICKET } |} : a * nat -> a ticket)] (v, n)
 #endif
