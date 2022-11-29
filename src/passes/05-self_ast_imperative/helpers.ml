@@ -203,7 +203,7 @@ and map_module : abs_mapper -> module_ -> module_ =
 
 
 and map_declaration_content (m : abs_mapper) (x : declaration_content)
-  : declaration_content
+    : declaration_content
   =
   match x, m with
   | D_value dc, Expression m' ->
@@ -236,7 +236,7 @@ let map_program m (p : program) =
 type ('a, 'err) fold_mapper = 'a -> expression -> bool * 'a * expression
 
 let rec fold_map_expression
-  : ('a, 'err) fold_mapper -> 'a -> expression -> 'a * expression
+    : ('a, 'err) fold_mapper -> 'a -> expression -> 'a * expression
   =
  fun f a e ->
   let self = fold_map_expression f in

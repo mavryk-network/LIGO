@@ -63,8 +63,8 @@ let find_variant (fields : (string * string) list) =
     | disc_union :: tl ->
       let result = is_disc_union disc_union fields in
       (match result with
-       | Some s -> Some s
-       | None -> aux tl)
+      | Some s -> Some s
+      | None -> aux tl)
     | [] -> None
   in
   aux !disc_unions
@@ -121,7 +121,7 @@ let get_shared_field ~raise (n : (CST.obj_type, CST.vbar) Utils.nsepseq) =
                      shared_fields
                      (field_name, s.value)
                      ~equal:(fun (a, a_value) (b, b_value) ->
-                     String.equal a b && not (String.equal a_value b_value)) ->
+                       String.equal a b && not (String.equal a_value b_value)) ->
               (field_name, s.value) :: shared_fields
             | _ -> shared_fields)
           shared_fields

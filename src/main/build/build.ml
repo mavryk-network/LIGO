@@ -26,7 +26,7 @@ module M (Params : Params) = struct
   type meta_data = Ligo_compile.Helpers.meta
 
   let preprocess
-    : code_input -> compilation_unit * meta_data * (file_name * module_name) list
+      : code_input -> compilation_unit * meta_data * (file_name * module_name) list
     =
    fun code_input ->
     let syntax =
@@ -34,8 +34,8 @@ module M (Params : Params) = struct
         ~raise
         (Syntax_name "auto")
         (match code_input with
-         | From_file file_name -> Some file_name
-         | Raw { id; _ } -> Some id)
+        | From_file file_name -> Some file_name
+        | Raw { id; _ } -> Some id)
     in
     let meta = Ligo_compile.Of_source.extract_meta syntax in
     let c_unit, deps =
@@ -167,12 +167,13 @@ let get_top_level_syntax ~options ?filename () : Syntax_types.t =
   | Some x -> x
   | None ->
     (match Trace.to_option @@ Syntax.of_string_opt (Syntax_name "auto") filename with
-     | Some x -> x
-     | None -> failwith "Top-level syntax not found")
+    | Some x -> x
+    | None -> failwith "Top-level syntax not found")
 
 
 let dependency_graph ~raise
-  : options:Compiler_options.t -> Ligo_compile.Of_core.form -> Source_input.file_name -> _
+    :  options:Compiler_options.t -> Ligo_compile.Of_core.form -> Source_input.file_name
+    -> _
   =
  fun ~options _form filename ->
   let open Build_core (struct
@@ -186,7 +187,7 @@ let dependency_graph ~raise
 
 (* unqualified usages : list-declaration ; print *)
 let unqualified_core ~raise
-  : options:Compiler_options.t -> Source_input.file_name -> Ast_core.program
+    : options:Compiler_options.t -> Source_input.file_name -> Ast_core.program
   =
  fun ~options filename ->
   let std_lib = Stdlib.get ~options in
@@ -201,8 +202,8 @@ let unqualified_core ~raise
 
 
 let unqualified_typed ~raise
-  :  options:Compiler_options.t -> Ligo_compile.Of_core.form -> Source_input.file_name
-  -> Ast_typed.program
+    :  options:Compiler_options.t -> Ligo_compile.Of_core.form -> Source_input.file_name
+    -> Ast_typed.program
   =
  fun ~options form filename ->
   (* let open Build_typed(struct
@@ -218,7 +219,7 @@ let unqualified_typed ~raise
 
 
 let qualified_core ~raise
-  : options:Compiler_options.t -> Source_input.file_name -> Ast_core.program
+    : options:Compiler_options.t -> Source_input.file_name -> Ast_core.program
   =
  fun ~options filename ->
   let open Build_core (struct
@@ -232,8 +233,8 @@ let qualified_core ~raise
 
 
 let qualified_typed ~raise
-  :  options:Compiler_options.t -> Ligo_compile.Of_core.form -> Source_input.file_name
-  -> Ast_typed.program
+    :  options:Compiler_options.t -> Ligo_compile.Of_core.form -> Source_input.file_name
+    -> Ast_typed.program
   =
  fun ~options form filename ->
   (* let std_lib = Stdlib.get ~options in
@@ -270,8 +271,8 @@ let qualified_typed_str ~raise : options:Compiler_options.t -> string -> Ast_typ
 
 
 let build_expression ~raise
-  :  options:Compiler_options.t -> Syntax_types.t -> string
-  -> Source_input.file_name option -> _
+    :  options:Compiler_options.t -> Syntax_types.t -> string
+    -> Source_input.file_name option -> _
   =
  fun ~options syntax expression file_name_opt ->
   let init_prg =
@@ -296,7 +297,7 @@ let build_expression ~raise
 
 
 let rec build_contract_aggregated ~raise
-  : options:Compiler_options.t -> string -> string list -> Source_input.file_name -> _
+    : options:Compiler_options.t -> string -> string list -> Source_input.file_name -> _
   =
  fun ~options entry_point cli_views file_name ->
   let entry_point = Value_var.of_input_var entry_point in
@@ -344,9 +345,9 @@ let rec build_contract_aggregated ~raise
 
 
 and build_contract_stacking ~raise
-  :  options:Compiler_options.t -> string -> string list -> Source_input.file_name
-  -> (Stacking.compiled_expression * _)
-     * ((Value_var.t * Stacking.compiled_expression) list * _)
+    :  options:Compiler_options.t -> string -> string list -> Source_input.file_name
+    -> (Stacking.compiled_expression * _)
+       * ((Value_var.t * Stacking.compiled_expression) list * _)
   =
  fun ~options entry_point cli_views file_name ->
   let _, aggregated, agg_views =
@@ -375,7 +376,7 @@ and build_contract_meta_ligo ~raise ~options entry_point views file_name =
 
 
 and build_wasm_code ~raise
-  : options:Compiler_options.t -> string -> Source_input.file_name -> string -> unit
+    : options:Compiler_options.t -> string -> Source_input.file_name -> string -> unit
   =
  fun ~options entry_point file_name output_file ->
   let entry_point_orig = entry_point in
@@ -432,8 +433,8 @@ and build_wasm_code ~raise
 
 
 and build_aggregated_views ~raise
-  :  options:Compiler_options.t -> Ast_typed.program
-  -> (Value_var.t list * Ast_aggregated.expression) option
+    :  options:Compiler_options.t -> Ast_typed.program
+    -> (Value_var.t list * Ast_aggregated.expression) option
   =
  fun ~options contract ->
   let view_names = List.map ~f:fst (Ast_typed.Helpers.get_views contract) in
@@ -454,8 +455,8 @@ and build_aggregated_views ~raise
 
 
 and build_views ~raise
-  :  options:Compiler_options.t -> (Value_var.t list * Ast_aggregated.expression) option
-  -> (Value_var.t * Stacking.compiled_expression) list
+    :  options:Compiler_options.t -> (Value_var.t list * Ast_aggregated.expression) option
+    -> (Value_var.t * Stacking.compiled_expression) list
   =
  fun ~options lst_opt ->
   match lst_opt with

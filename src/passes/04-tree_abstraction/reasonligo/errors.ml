@@ -22,67 +22,67 @@ type abs_error =
 [@@deriving poly_constructor { prefix = "concrete_reasonligo_" }]
 
 let error_ppformat
-  : display_format:string display_format -> Format.formatter -> abs_error -> unit
+    : display_format:string display_format -> Format.formatter -> abs_error -> unit
   =
  fun ~display_format f a ->
   match display_format with
   | Human_readable | Dev ->
     (match a with
-     | `Concrete_reasonligo_expected_access_to_variable reg ->
-       Format.fprintf f "@[<hv>%a@.Expected access to a variable.@]" Snippet.pp_lift reg
-     | `Concrete_reasonligo_unknown_constant (s, loc) ->
-       Format.fprintf f "@[<hv>%a@.Unknown constant: %s" Snippet.pp loc s
-     | `Concrete_reasonligo_untyped_recursive_fun loc ->
-       Format.fprintf
-         f
-         "@[<hv>%a@.Invalid function declaration.@.Recursive functions are required to \
-          have a type annotation (for now). @]"
-         Snippet.pp
-         loc
-     | `Concrete_reasonligo_unsupported_pattern_type pl ->
-       Format.fprintf
-         f
-         "@[<hv>%a@.Invalid pattern matching.@.Can't match on values. @]"
-         Snippet.pp_lift
-         ((fun a p -> Region.cover a (Raw.pattern_to_region p)) Region.ghost pl)
-     | `Concrete_reasonligo_unsupported_string_singleton te ->
-       Format.fprintf
-         f
-         "@[<hv>%a@.Invalid type. @.It's not possible to assign a string to a type. @]"
-         Snippet.pp_lift
-         (Raw.type_expr_to_region te)
-     | `Concrete_reasonligo_recursion_on_non_function reg ->
-       Format.fprintf
-         f
-         "@[<hv>%a@.Invalid let declaration.@.Only functions can be recursive. @]"
-         Snippet.pp
-         reg
-     | `Concrete_reasonligo_michelson_type_wrong (loc, name) ->
-       Format.fprintf
-         f
-         "@[<hv>%a@.Invalid \"%s\" type.@.At this point, an annotation, in the form of a \
-          string, is expected for the preceding type. @]"
-         Snippet.pp
-         loc
-         name
-     | `Concrete_reasonligo_michelson_type_wrong_arity (loc, name) ->
-       Format.fprintf
-         f
-         "@[<hv>%a@.Invalid \"%s\" type.@.An even number of 2 or more arguments is \
-          expected, where each odd item is a type annotated by the following string. @]"
-         Snippet.pp
-         loc
-         name
-     | `Concrete_reasonligo_funarg_tuple_type_mismatch (region, pattern, texpr) ->
-       let p = Parsing.pretty_print_pattern pattern |> Buffer.contents in
-       let t = Parsing.pretty_print_type_expr texpr |> Buffer.contents in
-       Format.fprintf
-         f
-         "@[<hv>%a@.The tuple \"%s\" does not have the expected type \"%s\". @]"
-         Snippet.pp_lift
-         region
-         p
-         t)
+    | `Concrete_reasonligo_expected_access_to_variable reg ->
+      Format.fprintf f "@[<hv>%a@.Expected access to a variable.@]" Snippet.pp_lift reg
+    | `Concrete_reasonligo_unknown_constant (s, loc) ->
+      Format.fprintf f "@[<hv>%a@.Unknown constant: %s" Snippet.pp loc s
+    | `Concrete_reasonligo_untyped_recursive_fun loc ->
+      Format.fprintf
+        f
+        "@[<hv>%a@.Invalid function declaration.@.Recursive functions are required to \
+         have a type annotation (for now). @]"
+        Snippet.pp
+        loc
+    | `Concrete_reasonligo_unsupported_pattern_type pl ->
+      Format.fprintf
+        f
+        "@[<hv>%a@.Invalid pattern matching.@.Can't match on values. @]"
+        Snippet.pp_lift
+        ((fun a p -> Region.cover a (Raw.pattern_to_region p)) Region.ghost pl)
+    | `Concrete_reasonligo_unsupported_string_singleton te ->
+      Format.fprintf
+        f
+        "@[<hv>%a@.Invalid type. @.It's not possible to assign a string to a type. @]"
+        Snippet.pp_lift
+        (Raw.type_expr_to_region te)
+    | `Concrete_reasonligo_recursion_on_non_function reg ->
+      Format.fprintf
+        f
+        "@[<hv>%a@.Invalid let declaration.@.Only functions can be recursive. @]"
+        Snippet.pp
+        reg
+    | `Concrete_reasonligo_michelson_type_wrong (loc, name) ->
+      Format.fprintf
+        f
+        "@[<hv>%a@.Invalid \"%s\" type.@.At this point, an annotation, in the form of a \
+         string, is expected for the preceding type. @]"
+        Snippet.pp
+        loc
+        name
+    | `Concrete_reasonligo_michelson_type_wrong_arity (loc, name) ->
+      Format.fprintf
+        f
+        "@[<hv>%a@.Invalid \"%s\" type.@.An even number of 2 or more arguments is \
+         expected, where each odd item is a type annotated by the following string. @]"
+        Snippet.pp
+        loc
+        name
+    | `Concrete_reasonligo_funarg_tuple_type_mismatch (region, pattern, texpr) ->
+      let p = Parsing.pretty_print_pattern pattern |> Buffer.contents in
+      let t = Parsing.pretty_print_type_expr texpr |> Buffer.contents in
+      Format.fprintf
+        f
+        "@[<hv>%a@.The tuple \"%s\" does not have the expected type \"%s\". @]"
+        Snippet.pp_lift
+        region
+        p
+        t)
 
 
 let error_json : abs_error -> Simple_utils.Error.t =

@@ -51,11 +51,11 @@ let list ~kind ~display_format () =
 
 
 let new_project'
-  ~(raise : (Main_errors.all, Main_warnings.all) Trace.raise)
-  ~kind
-  ~template
-  ~project_name
-  ~version
+    ~(raise : (Main_errors.all, Main_warnings.all) Trace.raise)
+    ~kind
+    ~template
+    ~project_name
+    ~version
   =
   let project_url =
     match Map.find (determine_map ~kind) template with

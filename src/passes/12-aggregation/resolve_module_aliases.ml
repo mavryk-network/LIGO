@@ -11,15 +11,15 @@ module Aliases = struct
       ppf
       "%a"
       (PP_helpers.list_sep_d (fun ppf (k, (t, v)) ->
-         Format.fprintf
-           ppf
-           "%a => (%a,%a)"
-           Module_var.pp
-           k
-           pp
-           t
-           PP_helpers.(option (list_sep_d Module_var.pp))
-           v))
+           Format.fprintf
+             ppf
+             "%a => (%a,%a)"
+             Module_var.pp
+             k
+             pp
+             t
+             PP_helpers.(option (list_sep_d Module_var.pp))
+             v))
     @@ MMap.to_kv_list inside
 
 
@@ -122,13 +122,13 @@ let rec expression : Aliases.t -> AST.expression -> AST.expression =
     let aliases = Aliases.push aliases module_binder mod_aliases path in
     let let_result = self ~aliases let_result in
     (match rhs with
-     | None -> let_result
-     | Some rhs -> return @@ E_mod_in { module_binder; rhs; let_result })
+    | None -> let_result
+    | Some rhs -> return @@ E_mod_in { module_binder; rhs; let_result })
   | E_module_accessor { module_path; element } ->
     let _, module_path =
       List.fold ~init:(aliases, []) module_path ~f:(fun (a, module_path) mvar ->
-        let aliases, path = Aliases.get_opt a mvar in
-        aliases, Option.value ~default:(mvar :: module_path) path)
+          let aliases, path = Aliases.get_opt a mvar in
+          aliases, Option.value ~default:(mvar :: module_path) path)
     in
     let module_path = List.rev module_path in
     return @@ E_module_accessor { module_path; element }
@@ -154,8 +154,8 @@ let rec expression : Aliases.t -> AST.expression -> AST.expression =
 
 
 and matching_cases
-  :  Aliases.t -> (AST.expression, AST.type_expression) AST.Match_expr.match_case list
-  -> (AST.expression, AST.type_expression) AST.Match_expr.match_case list
+    :  Aliases.t -> (AST.expression, AST.type_expression) AST.Match_expr.match_case list
+    -> (AST.expression, AST.type_expression) AST.Match_expr.match_case list
   =
  fun scope me ->
   let self ?(scope = scope) = expression scope in
@@ -179,9 +179,9 @@ and compile_declaration aliases (d : AST.declaration) : Aliases.t * AST.declarat
     let mod_aliases, path, module_ = compile_module_expr aliases module_ in
     let aliases = Aliases.push aliases module_binder mod_aliases path in
     (match module_ with
-     | None -> return_n aliases
-     | Some module_ ->
-       return_s aliases @@ AST.D_module { module_binder; module_; module_attr })
+    | None -> return_n aliases
+    | Some module_ ->
+      return_s aliases @@ AST.D_module { module_binder; module_; module_attr })
 
 
 and compile_declaration_list aliases (program : AST.program) : Aliases.t * AST.program =
@@ -201,8 +201,8 @@ and compile_module aliases (m : AST.module_) : Aliases.t * AST.module_ =
 
 
 and compile_module_expr
-  :  Aliases.t -> AST.module_expr
-  -> Aliases.t * Module_var.t list option * AST.module_expr option
+    :  Aliases.t -> AST.module_expr
+    -> Aliases.t * Module_var.t list option * AST.module_expr option
   =
  fun aliases mexpr ->
   match mexpr.wrap_content with
@@ -215,8 +215,8 @@ and compile_module_expr
   | M_module_path (hd, tl) ->
     let aliases, module_path =
       List.fold ~init:(aliases, []) (hd :: tl) ~f:(fun (a, module_path) mvar ->
-        let aliases, path = Aliases.get_opt a mvar in
-        aliases, Option.value ~default:(mvar :: module_path) path)
+          let aliases, path = Aliases.get_opt a mvar in
+          aliases, Option.value ~default:(mvar :: module_path) path)
     in
     aliases, Some module_path, None
 

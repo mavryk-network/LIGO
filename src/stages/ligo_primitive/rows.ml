@@ -23,15 +23,15 @@ let cmp3 f a1 b1 g a2 b2 h a3 b3 =
   match f a1 b1 with
   | 0 ->
     (match g a2 b2 with
-     | 0 -> h a3 b3
-     | c -> c)
+    | 0 -> h a3 b3
+    | c -> c)
   | c -> c
 
 
 let compare_row_element_mini_c
-  f
-  { associated_type = aa; michelson_annotation = ma; decl_pos = da }
-  { associated_type = ab; michelson_annotation = mb; decl_pos = db }
+    f
+    { associated_type = aa; michelson_annotation = ma; decl_pos = da }
+    { associated_type = ab; michelson_annotation = mb; decl_pos = db }
   =
   cmp3 f aa ab (Option.compare String.compare) ma mb Int.compare da db
 

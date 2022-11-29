@@ -302,26 +302,26 @@ let e_param_matching_tuple ?loc matchee (params : _ Param.t list) body : express
   let pattern = Location.wrap ?loc @@ Pattern.P_tuple pv_lst in
   let body =
     List.fold_left params ~init:body ~f:(fun body param ->
-      match Param.get_mut_flag param with
-      | Immutable -> body
-      | Mutable ->
-        e_let_mut_in
-          ?loc
-          (Param.to_binder param)
-          []
-          (e_variable ?loc @@ Param.get_var param)
-          body)
+        match Param.get_mut_flag param with
+        | Immutable -> body
+        | Mutable ->
+          e_let_mut_in
+            ?loc
+            (Param.to_binder param)
+            []
+            (e_variable ?loc @@ Param.get_var param)
+            body)
   in
   let cases = [ Match_expr.{ pattern; body } ] in
   make_e ?loc @@ E_matching { matchee; cases }
 
 
 let e_matching_record ?loc matchee (binders : (string * _ Binder.t) list) body
-  : expression
+    : expression
   =
   let lps =
     List.map binders ~f:(fun (l, b) ->
-      Label.of_string l, Location.wrap ?loc (Pattern.P_var b))
+        Label.of_string l, Location.wrap ?loc (Pattern.P_var b))
   in
   let pattern = Location.wrap ?loc (Pattern.P_record lps) in
   let cases = [ Match_expr.{ pattern; body } ] in
@@ -329,23 +329,23 @@ let e_matching_record ?loc matchee (binders : (string * _ Binder.t) list) body
 
 
 let e_param_matching_record ?loc matchee (params : (string * _ Param.t) list) body
-  : expression
+    : expression
   =
   let body =
     List.fold_left params ~init:body ~f:(fun body (_, param) ->
-      match Param.get_mut_flag param with
-      | Immutable -> body
-      | Mutable ->
-        e_let_mut_in
-          ?loc
-          (Param.to_binder param)
-          []
-          (e_variable ?loc @@ Param.get_var param)
-          body)
+        match Param.get_mut_flag param with
+        | Immutable -> body
+        | Mutable ->
+          e_let_mut_in
+            ?loc
+            (Param.to_binder param)
+            []
+            (e_variable ?loc @@ Param.get_var param)
+            body)
   in
   let lps =
     List.map params ~f:(fun (l, p) ->
-      Label.of_string l, Location.wrap ?loc (Pattern.P_var (Param.to_binder p)))
+        Label.of_string l, Location.wrap ?loc (Pattern.P_var (Param.to_binder p)))
   in
   let pattern = Location.wrap ?loc @@ Types.Pattern.P_record lps in
   let cases = [ Match_expr.{ pattern; body } ] in

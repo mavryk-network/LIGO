@@ -30,7 +30,7 @@ and row_element = type_expression Rows.row_element_mini_c
 and type_expression =
   { type_content : type_content
   ; source_type : Ast_typed.type_expression option
-       [@equal.ignore] [@compare.ignore] [@hash.ignore]
+        [@equal.ignore] [@compare.ignore] [@hash.ignore]
   ; location : Location.t [@equal.ignore] [@compare.ignore] [@hash.ignore]
   ; orig_var : Type_var.t option [@equal.ignore] [@compare.ignore] [@hash.ignore]
   }

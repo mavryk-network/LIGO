@@ -13,7 +13,7 @@ type expression_content = [%import: Types.expression_content]
     { prefixes =
         [ ( "make_e"
           , fun ?(location = Location.generated) expression_content type_expression
-              : expression ->
+                : expression ->
               { expression_content; location; type_expression } )
         ; ("get", fun x -> x.expression_content)
         ; ("get_type", fun x -> x.type_expression)
@@ -140,11 +140,11 @@ let t_record ?loc ?core ~layout fields : type_expression =
 let default_layout : Layout.t = Layout.L_tree
 
 let make_t_ez_record
-  ?loc
-  ?core
-  ?(layout = default_layout)
-  (lst : (string * type_expression) list)
-  : type_expression
+    ?loc
+    ?core
+    ?(layout = default_layout)
+    (lst : (string * type_expression) list)
+    : type_expression
   =
   let lst =
     List.mapi
@@ -201,7 +201,7 @@ let t_sum ?loc ?core ~layout fields : type_expression =
 
 
 let t_sum_ez ?loc ?core ?(layout = default_layout) (lst : (string * type_expression) list)
-  : type_expression
+    : type_expression
   =
   let lst =
     List.mapi
@@ -216,11 +216,11 @@ let t_sum_ez ?loc ?core ?(layout = default_layout) (lst : (string * type_express
 
 
 let t_record_ez
-  ?loc
-  ?core
-  ?(layout = default_layout)
-  (lst : (string * type_expression) list)
-  : type_expression
+    ?loc
+    ?core
+    ?(layout = default_layout)
+    (lst : (string * type_expression) list)
+    : type_expression
   =
   let lst =
     List.mapi
@@ -320,17 +320,17 @@ let get_t_option (t : type_expression) : type_expression option =
   | T_sum { fields; _ } ->
     let keys = Record.LMap.keys fields in
     (match keys with
-     | [ a; b ]
-       when (Label.equal a l_none && Label.equal b l_some)
-            || (Label.equal a l_some && Label.equal b l_none) ->
-       let some = Record.LMap.find l_some fields in
-       Some some.Rows.associated_type
-     | _ -> None)
+    | [ a; b ]
+      when (Label.equal a l_none && Label.equal b l_some)
+           || (Label.equal a l_some && Label.equal b l_none) ->
+      let some = Record.LMap.find l_some fields in
+      Some some.Rows.associated_type
+    | _ -> None)
   | _ -> None
 
 
 let get_param_inj (t : type_expression)
-  : (string * Literal_types.t * type_expression list) option
+    : (string * Literal_types.t * type_expression list) option
   =
   match t.type_content with
   | T_constant { language; injection; parameters } ->
@@ -358,7 +358,7 @@ let get_t_unary_inj (t : type_expression) (v : Literal_types.t) : type_expressio
 
 
 let get_t_binary_inj (t : type_expression) (v : Literal_types.t)
-  : (type_expression * type_expression) option
+    : (type_expression * type_expression) option
   =
   match get_t_inj t v with
   | Some [ a; b ] -> Some (a, b)
@@ -415,8 +415,8 @@ let get_t_pair (t : type_expression) : (type_expression * type_expression) optio
   | T_record m ->
     let lst = tuple_of_record m.fields in
     (match lst with
-     | [ fst; snd ] -> Some (fst, snd)
-     | _ -> None)
+    | [ fst; snd ] -> Some (fst, snd)
+    | _ -> None)
   | _ -> None
 
 
@@ -428,9 +428,9 @@ let get_t_or (t : type_expression) : (type_expression * type_expression) option 
       @@ Record.LMap.to_kv_list m.fields
     in
     (match lst with
-     | [ (Label "left", l); (Label "right", r) ]
-     | [ (Label "right", r); (Label "left", l) ] -> Some (l, r)
-     | _ -> None)
+    | [ (Label "left", l); (Label "right", r) ]
+    | [ (Label "right", r); (Label "left", l) ] -> Some (l, r)
+    | _ -> None)
   | _ -> None
 
 
@@ -689,8 +689,8 @@ let get_record_field_type (t : type_expression) (label : Label.t) : type_express
   | None -> None
   | Some record ->
     (match Record.LMap.find_opt label record.fields with
-     | None -> None
-     | Some row_element -> Some row_element.Rows.associated_type)
+    | None -> None
+    | Some row_element -> Some row_element.Rows.associated_type)
 
 
 let get_record_fields (t : type_expression) : (Label.t * type_expression) list option =
@@ -712,8 +712,8 @@ let get_sum_label_type (t : type_expression) (label : Label.t) : type_expression
   | None -> None
   | Some s ->
     (match Record.LMap.find_opt label s.fields with
-     | None -> None
-     | Some row_element -> Some row_element.Rows.associated_type)
+    | None -> None
+    | Some row_element -> Some row_element.Rows.associated_type)
 
 
 (* getter for a function of the form p * s -> ret *)
@@ -721,6 +721,6 @@ let get_view_form ty =
   match get_t_arrow ty with
   | Some { type1 = tin; type2 = return } ->
     (match get_t_tuple tin with
-     | Some [ arg; storage ] -> Some (arg, storage, return)
-     | _ -> None)
+    | Some [ arg; storage ] -> Some (arg, storage, return)
+    | _ -> None)
   | None -> None

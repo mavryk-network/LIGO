@@ -75,9 +75,9 @@ module Inspector (PE : PAYLOAD_EXTRACT) = struct
     | Ptype_variant _ | Ptype_record _ | Ptype_open -> raise_unsupported ~loc
     | Ptype_abstract ->
       (match td.ptype_manifest with
-       | Some { ptyp_desc = Ptyp_variant (rfs, Closed, None); _ } ->
-         List.map rfs ~f:(row_field ~loc)
-       | _ -> raise_unsupported ~loc)
+      | Some { ptyp_desc = Ptyp_variant (rfs, Closed, None); _ } ->
+        List.map rfs ~f:(row_field ~loc)
+      | _ -> raise_unsupported ~loc)
 end
 
 module Gen_str = struct
@@ -93,20 +93,20 @@ module Gen_str = struct
   let constructors ?prefix loc constructors =
     let open Constructor in
     List.map constructors ~f:(fun c ->
-      let name =
-        Option.value ~default:(constructor_to_string ~prefix c.constructor) c.payload
-      in
-      let args = to_args c in
-      let constructed_value =
-        let arg = pexp_tuple_opt ~loc (List.map args ~f:(fun (_, v) -> evar ~loc v)) in
-        pexp_variant ~loc c.constructor arg
-      in
-      let expr =
-        List.fold_right args ~init:constructed_value ~f:(fun (label, v) e ->
-          pexp_fun ~loc label None (pvar ~loc v) e)
-      in
-      let value_binding = value_binding ~loc ~pat:(pvar ~loc name) ~expr in
-      pstr_value ~loc Nonrecursive [ value_binding ])
+        let name =
+          Option.value ~default:(constructor_to_string ~prefix c.constructor) c.payload
+        in
+        let args = to_args c in
+        let constructed_value =
+          let arg = pexp_tuple_opt ~loc (List.map args ~f:(fun (_, v) -> evar ~loc v)) in
+          pexp_variant ~loc c.constructor arg
+        in
+        let expr =
+          List.fold_right args ~init:constructed_value ~f:(fun (label, v) e ->
+              pexp_fun ~loc label None (pvar ~loc v) e)
+        in
+        let value_binding = value_binding ~loc ~pat:(pvar ~loc name) ~expr in
+        pstr_value ~loc Nonrecursive [ value_binding ])
 
 
   let generate ~loc ~path:_ (_, tds) prefix =

@@ -13,7 +13,7 @@ let compile_string ~raise : meta:meta -> c_unit -> Ast_imperative.program =
 
 
 let compile_contract_input ~raise
-  : meta:meta -> c_unit -> c_unit -> Ast_imperative.expression
+    : meta:meta -> c_unit -> c_unit -> Ast_imperative.expression
   =
  fun ~meta storage parameter ->
   let storage, parameter =

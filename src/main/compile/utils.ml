@@ -1,11 +1,11 @@
 module Trace = Simple_utils.Trace
 
 let to_imperative
-  ~(raise : (Main_errors.all, Main_warnings.all) Trace.raise)
-  ~options
-  ~meta
-  (c_unit : Buffer.t)
-  file_path
+    ~(raise : (Main_errors.all, Main_warnings.all) Trace.raise)
+    ~options
+    ~meta
+    (c_unit : Buffer.t)
+    file_path
   =
   let () = ignore options in
   let imperative = Of_c_unit.compile ~raise ~meta c_unit file_path in

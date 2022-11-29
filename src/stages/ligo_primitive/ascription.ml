@@ -9,8 +9,8 @@ let pp f g ppf { anno_expr; type_annotation } =
 
 
 let fold_map
-  :  ('acc -> 'a -> 'acc * 'b) -> ('acc -> 'c -> 'acc * 'd) -> 'acc -> ('a, 'c) t
-  -> 'acc * ('b, 'd) t
+    :  ('acc -> 'a -> 'acc * 'b) -> ('acc -> 'c -> 'acc * 'd) -> 'acc -> ('a, 'c) t
+    -> 'acc * ('b, 'd) t
   =
  fun f g acc { anno_expr; type_annotation } ->
   let acc, anno_expr = f acc anno_expr in

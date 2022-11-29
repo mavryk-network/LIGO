@@ -54,10 +54,10 @@ let compile_module_attributes = compile_type_attributes
 let compile_row_attributes : string list -> Layout.t option =
  fun attributes ->
   List.find_map attributes ~f:(fun attr ->
-    match is_layout attr with
-    | Some "tree" -> Some (Layout.L_tree : Layout.t)
-    | Some "comb" -> Some Layout.L_comb
-    | _ -> None)
+      match is_layout attr with
+      | Some "tree" -> Some (Layout.L_tree : Layout.t)
+      | Some "comb" -> Some Layout.L_comb
+      | _ -> None)
 
 
 let rec compile_type_expression ~raise (type_ : I.type_expression) : O.type_expression =
@@ -123,9 +123,9 @@ and compile_row ~raise ({ fields; attributes } : _ I.non_linear_rows) : O.rows =
            ({ associated_type; decl_pos; attributes } : _ Rows.row_element)
            : _ Rows.row_element_mini_c
          ->
-      let associated_type = compile_type_expression ~raise associated_type in
-      let michelson_annotation = compile_row_elem_attributes attributes in
-      { associated_type; decl_pos; michelson_annotation })
+        let associated_type = compile_type_expression ~raise associated_type in
+        let michelson_annotation = compile_row_elem_attributes attributes in
+        { associated_type; decl_pos; michelson_annotation })
     |> Record.of_list
   in
   let layout = compile_row_attributes attributes in
@@ -136,10 +136,10 @@ and desugar_tuple_to_row ~raise (tuple : I.type_expression list) : O.rows =
   let fields =
     tuple
     |> List.mapi ~f:(fun i type_ ->
-         let type_ = compile_type_expression ~raise type_ in
-         ( Label.of_int i
-         , ({ associated_type = type_; michelson_annotation = None; decl_pos = i }
-             : _ Rows.row_element_mini_c) ))
+           let type_ = compile_type_expression ~raise type_ in
+           ( Label.of_int i
+           , ({ associated_type = type_; michelson_annotation = None; decl_pos = i }
+               : _ Rows.row_element_mini_c) ))
     |> Record.of_list
   in
   { fields; layout = None }
@@ -301,19 +301,19 @@ let rec compile_expression ~raise : I.expression -> O.expression =
 
 
 and compile_match_expr ~raise
-  :  (I.expression, I.type_expression option) I.Match_expr.t
-  -> (O.expression, O.type_expression option) O.Match_expr.t
+    :  (I.expression, I.type_expression option) I.Match_expr.t
+    -> (O.expression, O.type_expression option) O.Match_expr.t
   =
  fun { matchee; cases } ->
   let matchee = compile_expression ~raise matchee in
   let cases =
     List.map cases ~f:(fun { pattern; body } ->
-      let pattern =
-        I.Pattern.map (Option.map ~f:(compile_type_expression ~raise)) pattern
-      in
-      let pattern = compile_pattern ~raise pattern in
-      let body = compile_expression ~raise body in
-      O.Match_expr.{ pattern; body })
+        let pattern =
+          I.Pattern.map (Option.map ~f:(compile_type_expression ~raise)) pattern
+        in
+        let pattern = compile_pattern ~raise pattern in
+        let body = compile_expression ~raise body in
+        O.Match_expr.{ pattern; body })
   in
   O.Match_expr.{ matchee; cases }
 

@@ -186,17 +186,17 @@ module Mutator = struct
   open Literal_value
 
   let combine
-    :  'a -> ('a * (Location.t * expression) option) list -> 'b
-    -> ('b * (Location.t * expression) option) list
-    -> ('a * 'b * (Location.t * expression) option) list
+      :  'a -> ('a * (Location.t * expression) option) list -> 'b
+      -> ('b * (Location.t * expression) option) list
+      -> ('a * 'b * (Location.t * expression) option) list
     =
    fun a al b bl ->
     List.map ~f:(fun (b, m) -> a, b, m) bl @ List.map ~f:(fun (a, m) -> a, b, m) al
 
 
   let combine_list
-    :  'a list -> ('a * (Location.t * expression) option) list list
-    -> ('a list * (Location.t * expression) option) list
+      :  'a list -> ('a * (Location.t * expression) option) list list
+      -> ('a list * (Location.t * expression) option) list
     =
    fun a al ->
     List.concat
@@ -249,7 +249,7 @@ module Mutator = struct
 
 
   let rec mutate_expression
-    : expression -> (expression * (Location.t * expression) option) list
+      : expression -> (expression * (Location.t * expression) option) list
     =
    fun e' ->
     let return expression_content = { e' with expression_content } in
@@ -338,7 +338,7 @@ module Mutator = struct
 
 
   and mutate_cases
-    : matching_expr -> (matching_expr * (Location.t * expression) option) list
+      : matching_expr -> (matching_expr * (Location.t * expression) option) list
     =
    fun m ->
     match m with

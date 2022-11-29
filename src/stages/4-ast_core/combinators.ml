@@ -120,7 +120,7 @@ let t_record ?loc ?sugar ?layout fields : type_expression =
 let default_layout : Layout.t = Layout.L_tree
 
 let make_t_ez_record ?loc ?sugar ?layout (lst : (string * type_expression) list)
-  : type_expression
+    : type_expression
   =
   let lst =
     List.mapi
@@ -189,10 +189,10 @@ let get_t_option (t : type_expression) : type_expression option =
   | T_sum { fields; _ } ->
     let keys = Record.LMap.keys fields in
     (match keys with
-     | [ Label "Some"; Label "None" ] | [ Label "None"; Label "Some" ] ->
-       let some = Record.LMap.find (Label "Some") fields in
-       Some some.associated_type
-     | _ -> None)
+    | [ Label "Some"; Label "None" ] | [ Label "None"; Label "Some" ] ->
+      let some = Record.LMap.find (Label "Some") fields in
+      Some some.associated_type
+    | _ -> None)
   | _ -> None
 
 
@@ -216,8 +216,8 @@ let get_t_pair (t : type_expression) : (type_expression * type_expression) optio
   | T_record m ->
     let lst = tuple_of_record m.fields in
     (match List.(length lst = 2) with
-     | true -> Some List.(nth_exn lst 0, nth_exn lst 1)
-     | false -> None)
+    | true -> Some List.(nth_exn lst 0, nth_exn lst 1)
+    | false -> None)
   | _ -> None
 
 
@@ -390,9 +390,9 @@ let get_e_pair t =
   | E_record r ->
     let lst = Record.LMap.to_kv_list_rev r in
     (match lst with
-     | [ (Label "O", a); (Label "1", b) ] | [ (Label "1", b); (Label "0", a) ] ->
-       Some (a, b)
-     | _ -> None)
+    | [ (Label "O", a); (Label "1", b) ] | [ (Label "1", b); (Label "0", a) ] ->
+      Some (a, b)
+    | _ -> None)
   | _ -> None
 
 
@@ -420,8 +420,8 @@ let get_record_field_type (t : type_expression) (label : Label.t) : type_express
   | None -> None
   | Some struct_ ->
     (match Record.LMap.find_opt label struct_.fields with
-     | None -> None
-     | Some row_element -> Some row_element.associated_type)
+    | None -> None
+    | Some row_element -> Some row_element.associated_type)
 
 
 let get_e_ascription a =
@@ -446,9 +446,9 @@ let extract_pair : expression -> (expression * expression) option =
   | E_record r ->
     let lst = Record.LMap.to_kv_list_rev r in
     (match lst with
-     | [ (Label "O", a); (Label "1", b) ] | [ (Label "1", b); (Label "0", a) ] ->
-       Some (a, b)
-     | _ -> None)
+    | [ (Label "O", a); (Label "1", b) ] | [ (Label "1", b); (Label "0", a) ] ->
+      Some (a, b)
+    | _ -> None)
   | _ -> None
 
 

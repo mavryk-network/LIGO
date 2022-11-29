@@ -24,8 +24,8 @@ module Free_variables = struct
     | E_constant { arguments; _ } -> unions @@ List.map ~f:self arguments
     | E_variable name ->
       (match mem b name with
-       | true -> empty
-       | false -> singleton name)
+      | true -> empty
+      | false -> singleton name)
     | E_application { lamb; args } -> unions @@ List.map ~f:self [ lamb; args ]
     | E_constructor { element; _ } -> self element
     | E_record m -> unions @@ List.map ~f:self @@ Record.LMap.to_list m
@@ -69,8 +69,8 @@ module Free_variables = struct
 
 
   and matching_case
-    :  (bindings -> expression -> bindings) -> bindings -> _ Types.Match_expr.match_case
-    -> bindings
+      :  (bindings -> expression -> bindings) -> bindings -> _ Types.Match_expr.match_case
+      -> bindings
     =
    fun f b m ->
     let b' = Types.Pattern.binders m.pattern |> List.map ~f:Binder.get_var in
@@ -79,8 +79,8 @@ module Free_variables = struct
 
 
   and matching
-    :  (bindings -> expression -> bindings) -> bindings
-    -> _ Types.Match_expr.match_case list -> bindings
+      :  (bindings -> expression -> bindings) -> bindings
+      -> _ Types.Match_expr.match_case list -> bindings
     =
    fun f b ms -> List.fold_left ms ~init:b ~f:(matching_case f)
 
@@ -105,7 +105,7 @@ let rec assert_list_eq f a b =
 let constant_compare ia ib = Literal_types.compare ia ib
 
 let rec assert_type_expression_eq ((a, b) : type_expression * type_expression)
-  : unit option
+    : unit option
   =
   let open Option in
   match a.type_content, b.type_content with
@@ -127,8 +127,8 @@ let rec assert_type_expression_eq ((a, b) : type_expression * type_expression)
     let sa' = Record.LMap.to_kv_list_rev sa.fields in
     let sb' = Record.LMap.to_kv_list_rev sb.fields in
     let aux
-      ( (ka, ({ associated_type = va; _ } : row_element))
-      , (kb, ({ associated_type = vb; _ } : row_element)) )
+        ( (ka, ({ associated_type = va; _ } : row_element))
+        , (kb, ({ associated_type = vb; _ } : row_element)) )
       =
       let* _ = assert_eq ka kb in
       assert_type_expression_eq (va, vb)
@@ -149,8 +149,8 @@ let rec assert_type_expression_eq ((a, b) : type_expression * type_expression)
     let ra' = sort_lmap @@ Record.LMap.to_kv_list_rev ra.fields in
     let rb' = sort_lmap @@ Record.LMap.to_kv_list_rev rb.fields in
     let aux
-      ( (ka, ({ associated_type = va; _ } : row_element))
-      , (kb, ({ associated_type = vb; _ } : row_element)) )
+        ( (ka, ({ associated_type = va; _ } : row_element))
+        , (kb, ({ associated_type = vb; _ } : row_element)) )
       =
       let* _ = assert_eq ka kb in
       assert_type_expression_eq (va, vb)
@@ -261,14 +261,14 @@ let get_type_of_contract ty =
   match ty with
   | T_arrow { type1; type2 } ->
     (match type1.type_content, type2.type_content with
-     | T_record tin, T_record tout
-       when Record.is_tuple tin.fields && Record.is_tuple tout.fields ->
-       let open Simple_utils.Option in
-       let* parameter, storage = Combinators.get_t_pair type1 in
-       let* listop, storage' = Combinators.get_t_pair type2 in
-       let* () = Combinators.assert_t_list_operation listop in
-       let* () = assert_type_expression_eq (storage, storage') in
-       (* TODO: on storage/parameter : asert_storable, assert_passable ? *)
-       return (parameter, storage)
-     | _ -> None)
+    | T_record tin, T_record tout
+      when Record.is_tuple tin.fields && Record.is_tuple tout.fields ->
+      let open Simple_utils.Option in
+      let* parameter, storage = Combinators.get_t_pair type1 in
+      let* listop, storage' = Combinators.get_t_pair type2 in
+      let* () = Combinators.assert_t_list_operation listop in
+      let* () = assert_type_expression_eq (storage, storage') in
+      (* TODO: on storage/parameter : asert_storable, assert_passable ? *)
+      return (parameter, storage)
+    | _ -> None)
   | _ -> None

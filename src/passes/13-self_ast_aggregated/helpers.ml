@@ -145,8 +145,8 @@ and map_program : 'err mapper -> program -> program =
   let f d =
     Location.map
       (function
-       | D_value { binder; expr; attr } ->
-         D_value { binder; expr = map_expression g expr; attr })
+        | D_value { binder; expr; attr } ->
+          D_value { binder; expr = map_expression g expr; attr })
       d
   in
   let ctxt = List.map ~f ctxt in

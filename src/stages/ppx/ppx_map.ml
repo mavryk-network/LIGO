@@ -87,13 +87,13 @@ let map_exprs =
           let expr = super#value_binding expr in
           let attr =
             List.find_map expr.pvb_attributes ~f:(function
-              | { attr_name; attr_payload; _ } when String.equal attr_name.txt "map" ->
-                Some attr_payload
-              | _ -> None)
+                | { attr_name; attr_payload; _ } when String.equal attr_name.txt "map" ->
+                  Some attr_payload
+                | _ -> None)
           in
           let attr = Option.bind attr ~f:extract_payload in
           Option.value_map attr ~default:[ expr ] ~f:(fun (id, ids) ->
-            List.map ids ~f:(fun new_id -> (replace_exprs id new_id)#value_binding expr))
+              List.map ids ~f:(fun new_id -> (replace_exprs id new_id)#value_binding expr))
         in
         let exprs = List.concat_map exprs ~f in
         Pstr_value (flg, exprs)

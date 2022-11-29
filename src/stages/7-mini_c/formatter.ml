@@ -11,8 +11,8 @@ let program_ppformat ~display_format f p =
   match display_format with
   | Human_readable | Dev ->
     (match p with
-     | Optimized e -> PP.expression f e
-     | Raw e -> PP.expression f e)
+    | Optimized e -> PP.expression f e
+    | Raw e -> PP.expression f e)
 
 
 let program_jsonformat p : json =

@@ -66,8 +66,8 @@ let import_m ?module_name ~item ~desc () =
   { it =
       { module_name =
           (match module_name with
-           | Some n -> xname n
-           | None -> xname "env")
+          | Some n -> xname n
+          | None -> xname "env")
       ; item_name = xname item
       ; idesc = { it = desc; at }
       }
@@ -167,24 +167,24 @@ let find_missing e =
     | Some _ -> true
     | None ->
       (match List.find ~f:(fun func -> String.equal v func) env.missing_functions with
-       | Some _ -> true
-       | None -> false)
+      | Some _ -> true
+      | None -> false)
   in
   let argument_exists env v =
     match List.find ~f:(fun var -> String.equal v var) env.arguments with
     | Some _ -> true
     | None ->
       (match List.find ~f:(fun func -> String.equal v func) env.missing_arguments with
-       | Some _ -> true
-       | None -> false)
+      | Some _ -> true
+      | None -> false)
   in
   let local_exists env v =
     match List.find ~f:(fun var -> String.equal v var) env.locals with
     | Some _ -> true
     | None ->
       (match List.find ~f:(fun func -> String.equal v func) env.missing_locals with
-       | Some _ -> true
-       | None -> argument_exists env v)
+      | Some _ -> true
+      | None -> argument_exists env v)
   in
   let rec aux env e =
     match e with

@@ -22,17 +22,17 @@ let test (raw_options : Raw_options.t) source_file display_format () =
 
 
 let dry_run
-  (raw_options : Raw_options.t)
-  source_file
-  parameter
-  storage
-  amount
-  balance
-  sender
-  source
-  now
-  display_format
-  ()
+    (raw_options : Raw_options.t)
+    source_file
+    parameter
+    storage
+    amount
+    balance
+    sender
+    source
+    now
+    display_format
+    ()
   =
   let warning_as_error = raw_options.warning_as_error in
   format_result ~warning_as_error ~display_format Decompile.Formatter.expression_format
@@ -93,16 +93,16 @@ let dry_run
 
 
 let interpret
-  (raw_options : Raw_options.t)
-  expression
-  init_file
-  amount
-  balance
-  sender
-  source
-  now
-  display_format
-  ()
+    (raw_options : Raw_options.t)
+    expression
+    init_file
+    amount
+    balance
+    sender
+    source
+    now
+    display_format
+    ()
   =
   format_result ~display_format Decompile.Formatter.expression_format
   @@ fun ~raise ->
@@ -129,16 +129,16 @@ let interpret
 
 
 let evaluate_call
-  (raw_options : Raw_options.t)
-  source_file
-  parameter
-  amount
-  balance
-  sender
-  source
-  now
-  display_format
-  ()
+    (raw_options : Raw_options.t)
+    source_file
+    parameter
+    amount
+    balance
+    sender
+    source
+    now
+    display_format
+    ()
   =
   let warning_as_error = raw_options.warning_as_error in
   format_result ~warning_as_error ~display_format Decompile.Formatter.expression_format
@@ -181,15 +181,15 @@ let evaluate_call
 
 
 let evaluate_expr
-  (raw_options : Raw_options.t)
-  source_file
-  amount
-  balance
-  sender
-  source
-  now
-  display_format
-  ()
+    (raw_options : Raw_options.t)
+    source_file
+    amount
+    balance
+    sender
+    source
+    now
+    display_format
+    ()
   =
   let warning_as_error = raw_options.warning_as_error in
   format_result ~warning_as_error ~display_format Decompile.Formatter.expression_format

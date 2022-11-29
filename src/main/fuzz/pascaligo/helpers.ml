@@ -467,10 +467,10 @@ module Fold_helpers (M : Monad) = struct
 
 
   and matching_cases
-    : type b.
-      (b -> b monad)
-      -> (b case_clause reg, vbar) Utils.nsepseq
-      -> (b case_clause reg, vbar) Utils.nsepseq monad
+      : type b.
+        (b -> b monad)
+        -> (b case_clause reg, vbar) Utils.nsepseq
+        -> (b case_clause reg, vbar) Utils.nsepseq monad
     =
    fun self cases ->
     let case_clause self (case_clause : _ case_clause reg) =

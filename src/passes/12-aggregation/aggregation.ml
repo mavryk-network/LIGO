@@ -5,7 +5,7 @@ let compile_expression ~raise : Ast_typed.expression -> Ast_aggregated.expressio
 
 
 let compile_program ~raise
-  : Ast_typed.expression -> Ast_typed.program -> Ast_aggregated.program
+    : Ast_typed.expression -> Ast_typed.program -> Ast_aggregated.program
   =
  fun hole program ->
   let scope, deduplicate_scope, aliases, decls =
@@ -17,7 +17,7 @@ let compile_program ~raise
 
 (* compile_expression_in_context [filler] [context] : let .. = .. in let .. = .. in [filler'] *)
 let compile_expression_in_context ~raise
-  : Ast_typed.expression -> Ast_typed.program -> Ast_aggregated.expression
+    : Ast_typed.expression -> Ast_typed.program -> Ast_aggregated.expression
   =
  fun hole program ->
   let decls, init = compile_program ~raise hole program in

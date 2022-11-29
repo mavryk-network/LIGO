@@ -199,16 +199,16 @@ end = struct
       ppf
       "{value : %a; type_ : %a; module_ : %a; name_map :%a}\n%!"
       (PP_helpers.list_sep_d (fun ppf (a, b) ->
-         Format.fprintf ppf "(%a -> %a)" Value_var.pp a Path.pp b))
+           Format.fprintf ppf "(%a -> %a)" Value_var.pp a Path.pp b))
       (ValueVMap.to_kv_list scope.value)
       (PP_helpers.list_sep_d (fun ppf (a, b) ->
-         Format.fprintf ppf "(%a -> %a)" Type_var.pp a Path.pp b))
+           Format.fprintf ppf "(%a -> %a)" Type_var.pp a Path.pp b))
       (TypeVMap.to_kv_list scope.type_)
       (PP_helpers.list_sep_d (fun ppf (a, (b, s)) ->
-         Format.fprintf ppf "(%a -> (%a,%a)" Module_var.pp a Path.pp b pp s))
+           Format.fprintf ppf "(%a -> (%a,%a)" Module_var.pp a Path.pp b pp s))
       (ModuleVMap.to_kv_list scope.module_)
       (PP_helpers.list_sep_d (fun ppf ((a, b), s) ->
-         Format.fprintf ppf "(%a,%a) -> %a)" Path.pp a Value_var.pp b Value_var.pp s))
+           Format.fprintf ppf "(%a,%a) -> %a)" Path.pp a Value_var.pp b Value_var.pp s))
       (PathVarMap.to_kv_list scope.name_map)
 
 
@@ -276,7 +276,7 @@ let compile_value_attr : I.ValueAttr.t -> O.ValueAttr.t =
 
 
 let rec compile_type_expression ~raise path scope (type_expression : I.type_expression)
-  : O.type_expression
+    : O.type_expression
   =
   let self ?(path = path) ?(scope = scope) = compile_type_expression ~raise path scope in
   let return type_content =
@@ -398,14 +398,14 @@ let rec compile_expression ~raise path scope (expr : I.expression) =
     O.context_apply rhs let_result
   | E_module_accessor { module_path; element } ->
     (match module_path with
-     | [] -> failwith "Corner case : E_module_accessor with empty module_path"
-     | hd :: tl ->
-       (* Look up the path in the scope for the first module and add the following ones *)
-       let path, _scope = Scope.find_module scope hd in
-       let path2 = Path.get_from_module_path tl in
-       let path = Path.append path2 path in
-       let _, element = Scope.add_path_to_var scope path element in
-       return @@ E_variable element)
+    | [] -> failwith "Corner case : E_module_accessor with empty module_path"
+    | hd :: tl ->
+      (* Look up the path in the scope for the first module and add the following ones *)
+      let path, _scope = Scope.find_module scope hd in
+      let path2 = Path.get_from_module_path tl in
+      let path = Path.append path2 path in
+      let _, element = Scope.add_path_to_var scope path element in
+      return @@ E_variable element)
   | E_let_mut_in { let_binder; rhs; let_result; attr } ->
     let let_binder = Binder.map self_type let_binder in
     let rhs = self rhs in
@@ -452,11 +452,11 @@ and compile_cases ~raise ~loc path scope matchee cases : O.expression_content =
   let matchee_type = matchee.type_expression in
   let eqs =
     List.map cases ~f:(fun { pattern; body } ->
-      let pattern = I.Pattern.map (compile_type_expression ~raise path scope) pattern in
-      let binders = I.Pattern.binders pattern |> List.map ~f:Binder.get_var in
-      let scope = List.fold binders ~init:scope ~f:Scope.push_func_or_case_binder in
-      let body = compile_expression ~raise path scope body in
-      pattern, matchee_type, body)
+        let pattern = I.Pattern.map (compile_type_expression ~raise path scope) pattern in
+        let binders = I.Pattern.binders pattern |> List.map ~f:Binder.get_var in
+        let scope = List.fold binders ~init:scope ~f:Scope.push_func_or_case_binder in
+        let body = compile_expression ~raise path scope body in
+        pattern, matchee_type, body)
   in
   match matchee.expression_content with
   | E_variable var ->
@@ -481,11 +481,11 @@ and compile_cases ~raise ~loc path scope matchee cases : O.expression_content =
 
 
 and compile_declaration
-  ~raise
-  ~(super_attr : O.ModuleAttr.t)
-  path
-  scope
-  (d : I.declaration)
+    ~raise
+    ~(super_attr : O.ModuleAttr.t)
+    path
+    scope
+    (d : I.declaration)
   =
   match Location.unwrap d with
   | D_value { binder; expr; attr } ->
@@ -518,12 +518,12 @@ and compile_declaration
 
 
 and compile_declaration_list
-  ~raise
-  ~super_attr
-  (path : Path.t)
-  scope
-  (program : I.program)
-  : Scope.t * O.context
+    ~raise
+    ~super_attr
+    (path : Path.t)
+    scope
+    (program : I.program)
+    : Scope.t * O.context
   =
   let scope, current =
     List.fold_map ~init:scope ~f:(compile_declaration ~raise ~super_attr path) program
@@ -535,7 +535,7 @@ and compile_declaration_list
 and compile_decl ~raise path scope (d : I.decl) = compile_declaration ~raise path scope d
 
 and compile_module ~raise ~super_attr (path : Path.t) scope (program : I.module_)
-  : Scope.t * O.context
+    : Scope.t * O.context
   =
   let scope, current =
     List.fold_map ~init:scope ~f:(compile_decl ~raise ~super_attr path) program
@@ -545,28 +545,28 @@ and compile_module ~raise ~super_attr (path : Path.t) scope (program : I.module_
 
 
 and compile_module_expr ~raise ?(module_attr = { public = true; hidden = false })
-  : Path.t -> Scope.t -> I.module_expr -> Scope.t * O.context
+    : Path.t -> Scope.t -> I.module_expr -> Scope.t * O.context
   =
  fun path scope mexpr ->
   let rec get_declarations_from_scope scope new_path old_path =
     let dcls = Scope.get_declarations scope in
     let module_ =
       List.fold_left ~init:O.context_id dcls ~f:(fun f dcl ->
-        match dcl with
-        | Value (binder, ty, attr) ->
-          let variable =
-            O.e_a_variable
-              (snd @@ Scope.add_path_to_var scope old_path @@ Binder.get_var binder)
-              ty
-          in
-          let _, var = Scope.add_path_to_var scope new_path @@ Binder.get_var binder in
-          O.(context_append (context_decl (Binder.set_var binder var) variable attr) f)
-        | Module var ->
-          let _, scope = Scope.find_module scope var in
-          let old_path = Path.add_to_path old_path var in
-          let new_path = Path.add_to_path new_path var in
-          let module_ = get_declarations_from_scope scope new_path old_path in
-          O.context_append module_ f)
+          match dcl with
+          | Value (binder, ty, attr) ->
+            let variable =
+              O.e_a_variable
+                (snd @@ Scope.add_path_to_var scope old_path @@ Binder.get_var binder)
+                ty
+            in
+            let _, var = Scope.add_path_to_var scope new_path @@ Binder.get_var binder in
+            O.(context_append (context_decl (Binder.set_var binder var) variable attr) f)
+          | Module var ->
+            let _, scope = Scope.find_module scope var in
+            let old_path = Path.add_to_path old_path var in
+            let new_path = Path.add_to_path new_path var in
+            let module_ = get_declarations_from_scope scope new_path old_path in
+            O.context_append module_ f)
     in
     module_
   in
@@ -605,11 +605,11 @@ let preprocess_expression ?scope ?aliases e =
 
 
 let compile_program ~raise
-  :  I.program
-  -> Scope.t
-     * Deduplicate_module_binders.Scope.t
-     * Resolve_module_aliases.Aliases.t
-     * O.context
+    :  I.program
+    -> Scope.t
+       * Deduplicate_module_binders.Scope.t
+       * Resolve_module_aliases.Aliases.t
+       * O.context
   =
  fun program ->
   let deduplicate_scope, aliases, program = preprocess_program program in
@@ -625,7 +625,7 @@ let compile_program ~raise
 
 
 let compile_expression ~raise ?(scope = Scope.empty) ?deduplicate_scope ?aliases
-  : I.expression -> O.expression
+    : I.expression -> O.expression
   =
  fun e ->
   let e = preprocess_expression ?scope:deduplicate_scope ?aliases e in

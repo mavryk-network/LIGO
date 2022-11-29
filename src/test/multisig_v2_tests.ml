@@ -46,7 +46,7 @@ type st_type =
   }
 
 let storage
-  { state_hash; threshold; max_proposal; max_msg_size; id_counter_list; msg_store_list }
+    { state_hash; threshold; max_proposal; max_msg_size; id_counter_list; msg_store_list }
   =
   let auth_set, counter_store =
     List.fold_left

@@ -26,7 +26,7 @@ let rec pp_env ppf env =
     ppf
     "{env: %a;used_var: %a}"
     (Simple_utils.PP_helpers.list_sep_d (fun ppf (k, v) ->
-       Format.fprintf ppf "(%a,%a)" Module_var.pp k pp_env v))
+         Format.fprintf ppf "(%a,%a)" Module_var.pp k pp_env v))
     (MVarMap.to_kv_list env.env)
     (Simple_utils.PP_helpers.list_sep_d Value_var.pp)
     (VVarSet.elements env.used_var)
@@ -34,8 +34,8 @@ let rec pp_env ppf env =
 
 (* Detect and remove unesed declaration *)
 let rec merge_env
-  { env = x1; used_var = y1; used_mut_var = z1 }
-  { env = x2; used_var = y2; used_mut_var = z2 }
+    { env = x1; used_var = y1; used_mut_var = z1 }
+    { env = x2; used_var = y2; used_mut_var = z2 }
   =
   let aux _ a b = Some (merge_env a b) in
   { env = MVarMap.union aux x1 x2
@@ -57,12 +57,12 @@ and get_fv expr =
   let get_fv_lambda Lambda.{ binder; output_type; result } =
     let env, result = self result in
     ( (match Param.get_mut_flag binder with
-       | Immutable ->
-         { env with used_var = VVarSet.remove (Param.get_var binder) @@ env.used_var }
-       | Mutable ->
-         { env with
-           used_mut_var = VVarSet.remove (Param.get_var binder) @@ env.used_mut_var
-         })
+      | Immutable ->
+        { env with used_var = VVarSet.remove (Param.get_var binder) @@ env.used_var }
+      | Mutable ->
+        { env with
+          used_mut_var = VVarSet.remove (Param.get_var binder) @@ env.used_mut_var
+        })
     , Lambda.{ binder; output_type; result } )
   in
   match expr.expression_content with
@@ -120,11 +120,11 @@ and get_fv expr =
   | E_mod_in { module_binder; rhs; let_result } ->
     let env, let_result = self let_result in
     (match MVarMap.find_opt module_binder env.env with
-     | Some env' ->
-       let env = { env with env = MVarMap.remove module_binder env.env } in
-       let env', rhs = get_fv_module_expr env' rhs in
-       return (merge_env env env') @@ E_mod_in { module_binder; rhs; let_result }
-     | None -> env, let_result)
+    | Some env' ->
+      let env = { env with env = MVarMap.remove module_binder env.env } in
+      let env', rhs = get_fv_module_expr env' rhs in
+      return (merge_env env env') @@ E_mod_in { module_binder; rhs; let_result }
+    | None -> env, let_result)
   | E_module_accessor { module_path; element } ->
     let init = { empty_env with used_var = VVarSet.singleton element } in
     let env =
@@ -179,11 +179,11 @@ and get_fv_cases : _ Match_expr.match_case list -> env * _ Match_expr.match_case
  fun ms ->
   let envs =
     List.map ms ~f:(fun { pattern; body } ->
-      let env, _ = get_fv body in
-      let binders = Pattern.binders pattern |> List.map ~f:Binder.get_var in
-      let used_var = List.fold_right binders ~init:env.used_var ~f:VVarSet.remove in
-      let env = { env with used_var } in
-      env)
+        let env, _ = get_fv body in
+        let binders = Pattern.binders pattern |> List.map ~f:Binder.get_var in
+        let used_var = List.fold_right binders ~init:env.used_var ~f:VVarSet.remove in
+        let env = { env with used_var } in
+        env)
   in
   unions envs, ms
 
@@ -208,16 +208,16 @@ and get_fv_module (env : env) acc = function
     hd)
     :: tl ->
     (match MVarMap.find_opt module_binder env.env with
-     | Some env' ->
-       let new_env, module_ = get_fv_module_expr env' module_ in
-       let env = { env with env = MVarMap.remove module_binder env.env } in
-       let env = merge_env env new_env in
-       get_fv_module
-         env
-         ({ hd with wrap_content = D_module { module_binder; module_; module_attr } }
-         :: acc)
-         tl
-     | None -> get_fv_module env acc tl)
+    | Some env' ->
+      let new_env, module_ = get_fv_module_expr env' module_ in
+      let env = { env with env = MVarMap.remove module_binder env.env } in
+      let env = merge_env env new_env in
+      get_fv_module
+        env
+        ({ hd with wrap_content = D_module { module_binder; module_; module_attr } }
+        :: acc)
+        tl
+    | None -> get_fv_module env acc tl)
   | hd :: tl -> get_fv_module env (hd :: acc) tl
 
 
@@ -260,16 +260,16 @@ and get_fv_program (env : env) acc : program -> _ * program = function
     hd)
     :: tl ->
     (match MVarMap.find_opt module_binder env.env with
-     | Some env' ->
-       let new_env, module_ = get_fv_module_expr env' module_ in
-       let env = { env with env = MVarMap.remove module_binder env.env } in
-       let env = merge_env env new_env in
-       get_fv_program
-         env
-         ({ hd with wrap_content = D_module { module_binder; module_; module_attr } }
-         :: acc)
-         tl
-     | None -> get_fv_program env acc tl)
+    | Some env' ->
+      let new_env, module_ = get_fv_module_expr env' module_ in
+      let env = { env with env = MVarMap.remove module_binder env.env } in
+      let env = merge_env env new_env in
+      get_fv_program
+        env
+        ({ hd with wrap_content = D_module { module_binder; module_; module_attr } }
+        :: acc)
+        tl
+    | None -> get_fv_program env acc tl)
   | hd :: tl -> get_fv_program env (hd :: acc) tl
 
 
@@ -322,20 +322,20 @@ let remove_unused_for_views ~raise ~(view_names : Value_var.t list) : program ->
   let view_decls =
     List.rev
     @@ List.filter_map prg_decls ~f:(fun decl ->
-         match decl with
-         | { Location.wrap_content = D_value dc; _ }
-           when is_view_name @@ Binder.get_var dc.binder -> Some dc
-         | _ -> None)
+           match decl with
+           | { Location.wrap_content = D_value dc; _ }
+             when is_view_name @@ Binder.get_var dc.binder -> Some dc
+           | _ -> None)
   in
   let env, _ =
     List.fold view_decls ~init:(empty_env, []) ~f:(fun (env, decls) view_decl ->
-      let env', _ = get_fv view_decl.expr in
-      let used_var =
-        List.fold_right decls ~init:env'.used_var ~f:(fun decl_var used_var ->
-          VVarSet.remove decl_var used_var)
-      in
-      let env' = { env' with used_var } in
-      merge_env env env', Binder.get_var view_decl.binder :: decls)
+        let env', _ = get_fv view_decl.expr in
+        let used_var =
+          List.fold_right decls ~init:env'.used_var ~f:(fun decl_var used_var ->
+              VVarSet.remove decl_var used_var)
+        in
+        let env' = { env' with used_var } in
+        merge_env env env', Binder.get_var view_decl.binder :: decls)
   in
   let view_decls = List.map view_decls ~f:(fun decl -> Location.wrap (D_value decl)) in
   let _, prg_decls =

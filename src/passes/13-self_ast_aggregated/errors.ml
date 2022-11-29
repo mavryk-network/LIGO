@@ -25,98 +25,98 @@ type self_ast_aggregated_error =
 [@@deriving poly_constructor { prefix = "self_ast_aggregated_" }]
 
 let error_ppformat
-  :  display_format:string display_format -> Format.formatter -> self_ast_aggregated_error
-  -> unit
+    :  display_format:string display_format -> Format.formatter
+    -> self_ast_aggregated_error -> unit
   =
  fun ~display_format f a ->
   match display_format with
   | Human_readable | Dev ->
     (match a with
-     | `Self_ast_aggregated_expected_obj_ligo loc ->
-       Format.fprintf
-         f
-         "@[<hv>%a@.Invalid usage of a Test primitive or type in object ligo.@]"
-         Snippet.pp
-         loc
-     | `Self_ast_aggregated_polymorphism_unresolved loc ->
-       Format.fprintf
-         f
-         "@[<hv>%a@.Can't infer the type of this value, please add a type annotation.@]"
-         Snippet.pp
-         loc
-     | `Self_ast_aggregated_fvs_in_create_contract_lambda (e, v) ->
-       Format.fprintf
-         f
-         "@[<hv>%a@.Free variable usage is not allowed in call to \
-          Tezos.create_contract:@.%a@]"
-         Snippet.pp
-         e.location
-         Snippet.pp
-         (Value_var.get_location v)
-     | `Self_ast_aggregated_create_contract_lambda (_cst, e) ->
-       Format.fprintf
-         f
-         "@[<hv>%a@.Invalid usage of Tezos.create_contract.@.The first argument must be \
-          an inline function. @]"
-         Snippet.pp
-         e.location
-     | `Self_ast_aggregated_bad_format_entrypoint_ann (ep, loc) ->
-       Format.fprintf
-         f
-         "@[<hv>%a@.Invalid entrypoint \"%s\". One of the following patterns is \
-          expected:@.* \"%%bar\" is expected for entrypoint \"Bar\"@.* \"%%default\" \
-          when no entrypoint is used."
-         Snippet.pp
-         loc
-         ep
-     | `Self_ast_aggregated_entrypoint_ann_not_literal loc ->
-       Format.fprintf
-         f
-         "@[<hv>%a@.Invalid entrypoint value.@.The entrypoint value must be a string \
-          literal. @]"
-         Snippet.pp
-         loc
-     | `Self_ast_aggregated_emit_tag_not_literal loc ->
-       Format.fprintf
-         f
-         "@[<hv>%a@.Invalid event tag.@.The tag must be a string literal. @]"
-         Snippet.pp
-         loc
-     | `Self_ast_aggregated_unmatched_entrypoint loc ->
-       Format.fprintf
-         f
-         "@[<hv>%a@.Invalid entrypoint value.@.The entrypoint value does not match a \
-          constructor of the contract parameter. @]"
-         Snippet.pp
-         loc
-     | `Self_ast_aggregated_corner_case desc ->
-       Format.fprintf f "@[<hv>Internal error: %s @]" desc
-     | `Self_ast_aggregated_bad_single_arity (c, e) ->
-       Format.fprintf
-         f
-         "@[<hv>%a@ Ill-formed \"%a\" expression@.One function argument is expected. @]"
-         Snippet.pp
-         e.location
-         Constant.pp_constant'
-         c
-     | `Self_ast_aggregated_bad_map_param_type (c, e) ->
-       Format.fprintf
-         f
-         "@[<hv>%a@ Ill-formed \"%a\" expression.@.A list of pair parameters is \
-          expected.@]"
-         Snippet.pp
-         e.location
-         Constant.pp_constant'
-         c
-     | `Self_ast_aggregated_bad_set_param_type (c, e) ->
-       Format.fprintf
-         f
-         "@[<hv>%a@ Ill-formed \"%a\" expression.@.A list of pair parameters is \
-          expected.@]"
-         Snippet.pp
-         e.location
-         Constant.pp_constant'
-         c)
+    | `Self_ast_aggregated_expected_obj_ligo loc ->
+      Format.fprintf
+        f
+        "@[<hv>%a@.Invalid usage of a Test primitive or type in object ligo.@]"
+        Snippet.pp
+        loc
+    | `Self_ast_aggregated_polymorphism_unresolved loc ->
+      Format.fprintf
+        f
+        "@[<hv>%a@.Can't infer the type of this value, please add a type annotation.@]"
+        Snippet.pp
+        loc
+    | `Self_ast_aggregated_fvs_in_create_contract_lambda (e, v) ->
+      Format.fprintf
+        f
+        "@[<hv>%a@.Free variable usage is not allowed in call to \
+         Tezos.create_contract:@.%a@]"
+        Snippet.pp
+        e.location
+        Snippet.pp
+        (Value_var.get_location v)
+    | `Self_ast_aggregated_create_contract_lambda (_cst, e) ->
+      Format.fprintf
+        f
+        "@[<hv>%a@.Invalid usage of Tezos.create_contract.@.The first argument must be \
+         an inline function. @]"
+        Snippet.pp
+        e.location
+    | `Self_ast_aggregated_bad_format_entrypoint_ann (ep, loc) ->
+      Format.fprintf
+        f
+        "@[<hv>%a@.Invalid entrypoint \"%s\". One of the following patterns is \
+         expected:@.* \"%%bar\" is expected for entrypoint \"Bar\"@.* \"%%default\" when \
+         no entrypoint is used."
+        Snippet.pp
+        loc
+        ep
+    | `Self_ast_aggregated_entrypoint_ann_not_literal loc ->
+      Format.fprintf
+        f
+        "@[<hv>%a@.Invalid entrypoint value.@.The entrypoint value must be a string \
+         literal. @]"
+        Snippet.pp
+        loc
+    | `Self_ast_aggregated_emit_tag_not_literal loc ->
+      Format.fprintf
+        f
+        "@[<hv>%a@.Invalid event tag.@.The tag must be a string literal. @]"
+        Snippet.pp
+        loc
+    | `Self_ast_aggregated_unmatched_entrypoint loc ->
+      Format.fprintf
+        f
+        "@[<hv>%a@.Invalid entrypoint value.@.The entrypoint value does not match a \
+         constructor of the contract parameter. @]"
+        Snippet.pp
+        loc
+    | `Self_ast_aggregated_corner_case desc ->
+      Format.fprintf f "@[<hv>Internal error: %s @]" desc
+    | `Self_ast_aggregated_bad_single_arity (c, e) ->
+      Format.fprintf
+        f
+        "@[<hv>%a@ Ill-formed \"%a\" expression@.One function argument is expected. @]"
+        Snippet.pp
+        e.location
+        Constant.pp_constant'
+        c
+    | `Self_ast_aggregated_bad_map_param_type (c, e) ->
+      Format.fprintf
+        f
+        "@[<hv>%a@ Ill-formed \"%a\" expression.@.A list of pair parameters is \
+         expected.@]"
+        Snippet.pp
+        e.location
+        Constant.pp_constant'
+        c
+    | `Self_ast_aggregated_bad_set_param_type (c, e) ->
+      Format.fprintf
+        f
+        "@[<hv>%a@ Ill-formed \"%a\" expression.@.A list of pair parameters is \
+         expected.@]"
+        Snippet.pp
+        e.location
+        Constant.pp_constant'
+        c)
 
 
 let error_json : self_ast_aggregated_error -> Simple_utils.Error.t =

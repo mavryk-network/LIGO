@@ -149,12 +149,12 @@ let rec decompile_type_expr : AST.type_expression -> _ =
     return @@ aux module_path (fun x -> x)
   | T_singleton x ->
     (match x with
-     | Literal_int i ->
-       let z : CST.type_expr =
-         CST.TInt { region = Region.ghost; value = Z.to_string i, i }
-       in
-       return z
-     | _ -> failwith "unsupported singleton")
+    | Literal_int i ->
+      let z : CST.type_expr =
+        CST.TInt { region = Region.ghost; value = Z.to_string i, i }
+      in
+      return z
+    | _ -> failwith "unsupported singleton")
   | T_abstraction x -> decompile_type_expr x.type_
   | T_for_all x -> decompile_type_expr x.type_
 
@@ -235,87 +235,86 @@ let rec decompile_expression : AST.expression -> CST.expr =
     return_expr @@ CST.EVar var
   | E_constant { cons_name; arguments } ->
     (match arguments with
-     | [] ->
-       let expr = CST.EVar (wrap @@ Predefined.constant_to_string cons_name) in
-       return_expr @@ expr
-     | _ ->
-       let arguments =
-         List.Ne.of_list
-         @@ List.map ~f:(fun x -> CST.EPar (wrap @@ par @@ x))
-         @@ List.map ~f:decompile_expression arguments
-       in
-       (match decompile_operator cons_name arguments with
-        | None ->
-          let expr = CST.EVar (wrap @@ Predefined.constant_to_string cons_name) in
-          let arguments =
-            (fun xs -> CST.Multiple (wrap (par xs)))
-            @@ (fun (hd, tl) -> hd, List.map ~f:(fun x -> ghost, x) tl)
-            @@ arguments
-          in
-          let const = wrap (expr, arguments) in
-          return_expr_with_par @@ CST.ECall const
-        | Some expr -> return_expr_with_par @@ expr))
+    | [] ->
+      let expr = CST.EVar (wrap @@ Predefined.constant_to_string cons_name) in
+      return_expr @@ expr
+    | _ ->
+      let arguments =
+        List.Ne.of_list
+        @@ List.map ~f:(fun x -> CST.EPar (wrap @@ par @@ x))
+        @@ List.map ~f:decompile_expression arguments
+      in
+      (match decompile_operator cons_name arguments with
+      | None ->
+        let expr = CST.EVar (wrap @@ Predefined.constant_to_string cons_name) in
+        let arguments =
+          (fun xs -> CST.Multiple (wrap (par xs)))
+          @@ (fun (hd, tl) -> hd, List.map ~f:(fun x -> ghost, x) tl)
+          @@ arguments
+        in
+        let const = wrap (expr, arguments) in
+        return_expr_with_par @@ CST.ECall const
+      | Some expr -> return_expr_with_par @@ expr))
   | E_literal literal ->
     (match literal with
-     | Literal_unit -> return_expr @@ CST.EUnit (wrap (ghost, ghost))
-     | Literal_int i -> return_expr @@ CST.EArith (Int (wrap ("", i)))
-     | Literal_nat n -> return_expr @@ CST.EArith (Nat (wrap ("", n)))
-     | Literal_timestamp time ->
-       let time =
-         Tezos_utils.Time.Protocol.to_notation
-         @@ Tezos_utils.Time.Protocol.of_seconds
-         @@ Z.to_int64 time
-       in
-       (* TODO combinators for CSTs. *)
-       let ty = decompile_type_expr @@ AST.t_timestamp () in
-       let time = CST.EString (String (wrap time)) in
-       return_expr_with_par @@ CST.EAnnot (wrap @@ (time, ghost, ty))
-     | Literal_mutez mtez ->
-       return_expr @@ CST.EArith (Mutez (wrap ("", Z.to_int64 mtez)))
-     | Literal_string (Standard str) -> return_expr @@ CST.EString (String (wrap str))
-     | Literal_string (Verbatim ver) -> return_expr @@ CST.EString (Verbatim (wrap ver))
-     | Literal_bytes b ->
-       let b = Hex.of_bytes b in
-       let s = Hex.to_string b in
-       return_expr @@ CST.EBytes (wrap (s, b))
-     | Literal_address addr ->
-       let addr = CST.EString (String (wrap addr)) in
-       let ty = decompile_type_expr @@ AST.t_address () in
-       return_expr_with_par @@ CST.EAnnot (wrap @@ (addr, ghost, ty))
-     | Literal_signature sign ->
-       let sign = CST.EString (String (wrap sign)) in
-       let ty = decompile_type_expr @@ AST.t_signature () in
-       return_expr_with_par @@ CST.EAnnot (wrap @@ (sign, ghost, ty))
-     | Literal_key k ->
-       let k = CST.EString (String (wrap k)) in
-       let ty = decompile_type_expr @@ AST.t_key () in
-       return_expr_with_par @@ CST.EAnnot (wrap @@ (k, ghost, ty))
-     | Literal_key_hash kh ->
-       let kh = CST.EString (String (wrap kh)) in
-       let ty = decompile_type_expr @@ AST.t_key_hash () in
-       return_expr_with_par @@ CST.EAnnot (wrap @@ (kh, ghost, ty))
-     | Literal_chain_id _ | Literal_operation _ ->
-       failwith "chain_id, operation are not created currently ?"
-     | Literal_bls12_381_g1 b ->
-       let b = Hex.of_bytes b in
-       let s = Hex.to_string b in
-       let b = CST.EBytes (wrap (s, b)) in
-       let ty = decompile_type_expr @@ AST.t_bls12_381_g1 () in
-       return_expr @@ CST.EAnnot (wrap @@ (b, ghost, ty))
-     | Literal_bls12_381_g2 b ->
-       let b = Hex.of_bytes b in
-       let s = Hex.to_string b in
-       let b = CST.EBytes (wrap (s, b)) in
-       let ty = decompile_type_expr @@ AST.t_bls12_381_g2 () in
-       return_expr @@ CST.EAnnot (wrap @@ (b, ghost, ty))
-     | Literal_bls12_381_fr b ->
-       let b = Hex.of_bytes b in
-       let s = Hex.to_string b in
-       let b = CST.EBytes (wrap (s, b)) in
-       let ty = decompile_type_expr @@ AST.t_bls12_381_fr () in
-       return_expr @@ CST.EAnnot (wrap @@ (b, ghost, ty))
-     | Literal_chest _ | Literal_chest_key _ ->
-       failwith "chest / chest_key not allowed in the syntax (only tests need this type)")
+    | Literal_unit -> return_expr @@ CST.EUnit (wrap (ghost, ghost))
+    | Literal_int i -> return_expr @@ CST.EArith (Int (wrap ("", i)))
+    | Literal_nat n -> return_expr @@ CST.EArith (Nat (wrap ("", n)))
+    | Literal_timestamp time ->
+      let time =
+        Tezos_utils.Time.Protocol.to_notation
+        @@ Tezos_utils.Time.Protocol.of_seconds
+        @@ Z.to_int64 time
+      in
+      (* TODO combinators for CSTs. *)
+      let ty = decompile_type_expr @@ AST.t_timestamp () in
+      let time = CST.EString (String (wrap time)) in
+      return_expr_with_par @@ CST.EAnnot (wrap @@ (time, ghost, ty))
+    | Literal_mutez mtez -> return_expr @@ CST.EArith (Mutez (wrap ("", Z.to_int64 mtez)))
+    | Literal_string (Standard str) -> return_expr @@ CST.EString (String (wrap str))
+    | Literal_string (Verbatim ver) -> return_expr @@ CST.EString (Verbatim (wrap ver))
+    | Literal_bytes b ->
+      let b = Hex.of_bytes b in
+      let s = Hex.to_string b in
+      return_expr @@ CST.EBytes (wrap (s, b))
+    | Literal_address addr ->
+      let addr = CST.EString (String (wrap addr)) in
+      let ty = decompile_type_expr @@ AST.t_address () in
+      return_expr_with_par @@ CST.EAnnot (wrap @@ (addr, ghost, ty))
+    | Literal_signature sign ->
+      let sign = CST.EString (String (wrap sign)) in
+      let ty = decompile_type_expr @@ AST.t_signature () in
+      return_expr_with_par @@ CST.EAnnot (wrap @@ (sign, ghost, ty))
+    | Literal_key k ->
+      let k = CST.EString (String (wrap k)) in
+      let ty = decompile_type_expr @@ AST.t_key () in
+      return_expr_with_par @@ CST.EAnnot (wrap @@ (k, ghost, ty))
+    | Literal_key_hash kh ->
+      let kh = CST.EString (String (wrap kh)) in
+      let ty = decompile_type_expr @@ AST.t_key_hash () in
+      return_expr_with_par @@ CST.EAnnot (wrap @@ (kh, ghost, ty))
+    | Literal_chain_id _ | Literal_operation _ ->
+      failwith "chain_id, operation are not created currently ?"
+    | Literal_bls12_381_g1 b ->
+      let b = Hex.of_bytes b in
+      let s = Hex.to_string b in
+      let b = CST.EBytes (wrap (s, b)) in
+      let ty = decompile_type_expr @@ AST.t_bls12_381_g1 () in
+      return_expr @@ CST.EAnnot (wrap @@ (b, ghost, ty))
+    | Literal_bls12_381_g2 b ->
+      let b = Hex.of_bytes b in
+      let s = Hex.to_string b in
+      let b = CST.EBytes (wrap (s, b)) in
+      let ty = decompile_type_expr @@ AST.t_bls12_381_g2 () in
+      return_expr @@ CST.EAnnot (wrap @@ (b, ghost, ty))
+    | Literal_bls12_381_fr b ->
+      let b = Hex.of_bytes b in
+      let s = Hex.to_string b in
+      let b = CST.EBytes (wrap (s, b)) in
+      let ty = decompile_type_expr @@ AST.t_bls12_381_fr () in
+      return_expr @@ CST.EAnnot (wrap @@ (b, ghost, ty))
+    | Literal_chest _ | Literal_chest_key _ ->
+      failwith "chest / chest_key not allowed in the syntax (only tests need this type)")
   | E_application { lamb; args } ->
     let lamb = decompile_expression lamb in
     let args =
@@ -368,41 +367,41 @@ let rec decompile_expression : AST.expression -> CST.expr =
   | E_mod_in { module_binder; rhs; let_result } ->
     let name = decompile_mod_var module_binder in
     (match rhs.wrap_content with
-     | M_struct prg ->
-       let module_ = decompile_module prg in
-       let mod_decl : CST.module_decl =
-         { kwd_module = Token.ghost_module
-         ; name
-         ; eq = Token.ghost_eq
-         ; lbrace = Token.ghost_lbrace
-         ; module_
-         ; rbrace = Token.ghost_rbrace
-         }
-       in
-       let body = decompile_expression let_result in
-       let min : CST.mod_in = { mod_decl; semi = Token.ghost_semi; body } in
-       return_expr @@ CST.EModIn (wrap min)
-     | M_variable v ->
-       let alias = name in
-       let binders = decompile_mod_var v, [] in
-       let mod_alias : CST.module_alias =
-         { kwd_module = Token.ghost_module; alias; eq = Token.ghost_eq; binders }
-       in
-       let body = decompile_expression let_result in
-       let mod_alias : CST.mod_alias = { mod_alias; semi = Token.ghost_semi; body } in
-       return_expr @@ CST.EModAlias (wrap mod_alias)
-     | M_module_path path ->
-       let alias = name in
-       let binders =
-         nelist_to_npseq ~sep:Token.ghost_dot
-         @@ List.Ne.map (fun x -> wrap (Format.asprintf "%a" Module_var.pp x)) path
-       in
-       let mod_alias : CST.module_alias =
-         { kwd_module = Token.ghost_module; alias; eq = Token.ghost_eq; binders }
-       in
-       let body = decompile_expression let_result in
-       let mod_alias : CST.mod_alias = { mod_alias; semi = Token.ghost_semi; body } in
-       return_expr @@ CST.EModAlias (wrap mod_alias))
+    | M_struct prg ->
+      let module_ = decompile_module prg in
+      let mod_decl : CST.module_decl =
+        { kwd_module = Token.ghost_module
+        ; name
+        ; eq = Token.ghost_eq
+        ; lbrace = Token.ghost_lbrace
+        ; module_
+        ; rbrace = Token.ghost_rbrace
+        }
+      in
+      let body = decompile_expression let_result in
+      let min : CST.mod_in = { mod_decl; semi = Token.ghost_semi; body } in
+      return_expr @@ CST.EModIn (wrap min)
+    | M_variable v ->
+      let alias = name in
+      let binders = decompile_mod_var v, [] in
+      let mod_alias : CST.module_alias =
+        { kwd_module = Token.ghost_module; alias; eq = Token.ghost_eq; binders }
+      in
+      let body = decompile_expression let_result in
+      let mod_alias : CST.mod_alias = { mod_alias; semi = Token.ghost_semi; body } in
+      return_expr @@ CST.EModAlias (wrap mod_alias)
+    | M_module_path path ->
+      let alias = name in
+      let binders =
+        nelist_to_npseq ~sep:Token.ghost_dot
+        @@ List.Ne.map (fun x -> wrap (Format.asprintf "%a" Module_var.pp x)) path
+      in
+      let mod_alias : CST.module_alias =
+        { kwd_module = Token.ghost_module; alias; eq = Token.ghost_eq; binders }
+      in
+      let body = decompile_expression let_result in
+      let mod_alias : CST.mod_alias = { mod_alias; semi = Token.ghost_semi; body } in
+      return_expr @@ CST.EModAlias (wrap mod_alias))
   | E_raw_code { language; code } ->
     let language = wrap @@ wrap @@ language in
     let code = decompile_expression code in
@@ -442,8 +441,8 @@ let rec decompile_expression : AST.expression -> CST.expr =
     return_expr @@ CST.ERecord (wrap record)
   | E_accessor { struct_; path } ->
     let rec aux
-      :  AST.expression -> AST.expression Access_path.t
-      -> AST.expression * AST.expression Access_path.t
+        :  AST.expression -> AST.expression Access_path.t
+        -> AST.expression * AST.expression Access_path.t
       =
      fun e acc_path ->
       match e.expression_content with
@@ -452,24 +451,24 @@ let rec decompile_expression : AST.expression -> CST.expr =
     in
     let struct_, path = aux struct_ path in
     (match List.rev path with
-     | Access_map e :: [] ->
-       let map = decompile_expression struct_ in
-       let e = decompile_expression e in
-       let arg = CST.Multiple (wrap (par (e, [ ghost, map ]))) in
-       return_expr @@ CST.ECall (wrap (CST.EVar (wrap "Map.find_opt"), arg))
-     | Access_map e :: lst ->
-       let path = List.rev lst in
-       let field_path = list_to_nsepseq @@ List.map ~f:decompile_to_selection path in
-       let struct_name = decompile_variable @@ get_e_variable struct_ in
-       let proj : CST.projection = { struct_name; selector = ghost; field_path } in
-       let e = decompile_expression e in
-       let arg = CST.Multiple (wrap (par (e, [ ghost, CST.EProj (wrap proj) ]))) in
-       return_expr @@ CST.ECall (wrap (CST.EVar (wrap "Map.find_opt"), arg))
-     | _ ->
-       let field_path = list_to_nsepseq @@ List.map ~f:decompile_to_selection path in
-       let struct_name = decompile_variable @@ get_e_variable struct_ in
-       let proj : CST.projection = { struct_name; selector = ghost; field_path } in
-       return_expr @@ CST.EProj (wrap proj))
+    | [ Access_map e ] ->
+      let map = decompile_expression struct_ in
+      let e = decompile_expression e in
+      let arg = CST.Multiple (wrap (par (e, [ ghost, map ]))) in
+      return_expr @@ CST.ECall (wrap (CST.EVar (wrap "Map.find_opt"), arg))
+    | Access_map e :: lst ->
+      let path = List.rev lst in
+      let field_path = list_to_nsepseq @@ List.map ~f:decompile_to_selection path in
+      let struct_name = decompile_variable @@ get_e_variable struct_ in
+      let proj : CST.projection = { struct_name; selector = ghost; field_path } in
+      let e = decompile_expression e in
+      let arg = CST.Multiple (wrap (par (e, [ ghost, CST.EProj (wrap proj) ]))) in
+      return_expr @@ CST.ECall (wrap (CST.EVar (wrap "Map.find_opt"), arg))
+    | _ ->
+      let field_path = list_to_nsepseq @@ List.map ~f:decompile_to_selection path in
+      let struct_name = decompile_variable @@ get_e_variable struct_ in
+      let proj : CST.projection = { struct_name; selector = ghost; field_path } in
+      return_expr @@ CST.EProj (wrap proj))
   (* Update on multiple field of the same record. may be removed by adding sugar *)
   | E_update { struct_ = { expression_content = E_update _; _ } as struct_; path; update }
     ->
@@ -505,8 +504,8 @@ let rec decompile_expression : AST.expression -> CST.expr =
     return_expr @@ CST.EUpdate (wrap @@ update)
   | E_update { struct_; path; update } ->
     let rec aux
-      :  AST.expression -> AST.expression Access_path.t
-      -> AST.expression * AST.expression Access_path.t
+        :  AST.expression -> AST.expression Access_path.t
+        -> AST.expression * AST.expression Access_path.t
       =
      fun e acc_path ->
       match e.expression_content with
@@ -518,92 +517,88 @@ let rec decompile_expression : AST.expression -> CST.expr =
     let field_expr = decompile_expression update in
     let struct_name, field_path = List.Ne.of_list path in
     (match field_path with
-     | [] ->
-       (match struct_name with
-        | Access_record name ->
-          let record : CST.path = Name struct_ in
-          let field_path = CST.Name (wrap name) in
-          let update : CST.field_path_assignment =
-            { field_path; assignment = ghost; field_expr }
-          in
-          let updates = wrap @@ ne_inject ~attr:[] braces @@ (wrap update, []) in
-          let update : CST.update =
-            { lbrace = ghost
-            ; record
-            ; ellipsis = ghost
-            ; comma = ghost
-            ; updates
-            ; rbrace = ghost
-            }
-          in
-          return_expr @@ CST.EUpdate (wrap update)
-        | Access_tuple i ->
-          let record : CST.path = Name struct_ in
-          let field_path = CST.Name (wrap @@ Z.to_string i) in
-          let update : CST.field_path_assignment =
-            { field_path; assignment = ghost; field_expr }
-          in
-          let updates = wrap @@ ne_inject ~attr:[] braces @@ (wrap update, []) in
-          let update : CST.update =
-            { lbrace = ghost
-            ; record
-            ; ellipsis = ghost
-            ; comma = ghost
-            ; updates
-            ; rbrace = ghost
-            }
-          in
-          return_expr @@ CST.EUpdate (wrap update)
-        | Access_map e ->
-          let e = decompile_expression e in
-          let arg =
-            CST.Multiple (wrap (par (field_expr, [ ghost, e; ghost, CST.EVar struct_ ])))
-          in
-          return_expr @@ CST.ECall (wrap (CST.EVar (wrap "Map.add"), arg)))
-     | _ ->
-       let struct_name =
-         match struct_name with
-         | Access_record name -> wrap name
-         | Access_tuple i -> wrap @@ Z.to_string i
-         | Access_map _ ->
-           failwith @@ Format.asprintf "invalid map update %a" AST.PP.expression expr
-       in
-       (match List.rev field_path with
-        | Access_map e :: lst ->
-          let field_path = List.rev lst in
-          let field_path = List.map ~f:decompile_to_selection field_path in
-          let field_path = list_to_nsepseq field_path in
-          let field_path : CST.projection =
-            { struct_name; selector = ghost; field_path }
-          in
-          let field_path = CST.EProj (wrap @@ field_path) in
-          let e = decompile_expression e in
-          let arg =
-            CST.Multiple (wrap (par (field_expr, [ ghost, e; ghost, field_path ])))
-          in
-          return_expr @@ CST.ECall (wrap (CST.EVar (wrap "Map.add"), arg))
-        | _ ->
-          let field_path = List.map ~f:decompile_to_selection field_path in
-          let field_path = list_to_nsepseq field_path in
-          let field_path : CST.projection =
-            { struct_name; selector = ghost; field_path }
-          in
-          let field_path = CST.Path (wrap @@ field_path) in
-          let record : CST.path = Name struct_ in
-          let update : CST.field_path_assignment =
-            { field_path; assignment = ghost; field_expr }
-          in
-          let updates = wrap @@ ne_inject ~attr:[] braces @@ (wrap update, []) in
-          let update : CST.update =
-            { lbrace = ghost
-            ; record
-            ; ellipsis = ghost
-            ; comma = ghost
-            ; updates
-            ; rbrace = ghost
-            }
-          in
-          return_expr @@ CST.EUpdate (wrap update)))
+    | [] ->
+      (match struct_name with
+      | Access_record name ->
+        let record : CST.path = Name struct_ in
+        let field_path = CST.Name (wrap name) in
+        let update : CST.field_path_assignment =
+          { field_path; assignment = ghost; field_expr }
+        in
+        let updates = wrap @@ ne_inject ~attr:[] braces @@ (wrap update, []) in
+        let update : CST.update =
+          { lbrace = ghost
+          ; record
+          ; ellipsis = ghost
+          ; comma = ghost
+          ; updates
+          ; rbrace = ghost
+          }
+        in
+        return_expr @@ CST.EUpdate (wrap update)
+      | Access_tuple i ->
+        let record : CST.path = Name struct_ in
+        let field_path = CST.Name (wrap @@ Z.to_string i) in
+        let update : CST.field_path_assignment =
+          { field_path; assignment = ghost; field_expr }
+        in
+        let updates = wrap @@ ne_inject ~attr:[] braces @@ (wrap update, []) in
+        let update : CST.update =
+          { lbrace = ghost
+          ; record
+          ; ellipsis = ghost
+          ; comma = ghost
+          ; updates
+          ; rbrace = ghost
+          }
+        in
+        return_expr @@ CST.EUpdate (wrap update)
+      | Access_map e ->
+        let e = decompile_expression e in
+        let arg =
+          CST.Multiple (wrap (par (field_expr, [ ghost, e; ghost, CST.EVar struct_ ])))
+        in
+        return_expr @@ CST.ECall (wrap (CST.EVar (wrap "Map.add"), arg)))
+    | _ ->
+      let struct_name =
+        match struct_name with
+        | Access_record name -> wrap name
+        | Access_tuple i -> wrap @@ Z.to_string i
+        | Access_map _ ->
+          failwith @@ Format.asprintf "invalid map update %a" AST.PP.expression expr
+      in
+      (match List.rev field_path with
+      | Access_map e :: lst ->
+        let field_path = List.rev lst in
+        let field_path = List.map ~f:decompile_to_selection field_path in
+        let field_path = list_to_nsepseq field_path in
+        let field_path : CST.projection = { struct_name; selector = ghost; field_path } in
+        let field_path = CST.EProj (wrap @@ field_path) in
+        let e = decompile_expression e in
+        let arg =
+          CST.Multiple (wrap (par (field_expr, [ ghost, e; ghost, field_path ])))
+        in
+        return_expr @@ CST.ECall (wrap (CST.EVar (wrap "Map.add"), arg))
+      | _ ->
+        let field_path = List.map ~f:decompile_to_selection field_path in
+        let field_path = list_to_nsepseq field_path in
+        let field_path : CST.projection = { struct_name; selector = ghost; field_path } in
+        let field_path = CST.Path (wrap @@ field_path) in
+        let record : CST.path = Name struct_ in
+        let update : CST.field_path_assignment =
+          { field_path; assignment = ghost; field_expr }
+        in
+        let updates = wrap @@ ne_inject ~attr:[] braces @@ (wrap update, []) in
+        let update : CST.update =
+          { lbrace = ghost
+          ; record
+          ; ellipsis = ghost
+          ; comma = ghost
+          ; updates
+          ; rbrace = ghost
+          }
+        in
+        return_expr @@ CST.EUpdate (wrap update)))
   | E_ascription { anno_expr; type_annotation } ->
     let expr = decompile_expression anno_expr in
     let ty = decompile_type_expr type_annotation in
@@ -648,21 +643,21 @@ let rec decompile_expression : AST.expression -> CST.expr =
     let aux (k, v) = CST.ETuple (wrap (k, [ ghost, v ])) in
     let map = List.map ~f:aux map in
     (match map with
-     | [] -> return_expr @@ CST.EVar (wrap "Big_map.empty")
-     | hd :: tl ->
-       let var = CST.EVar (wrap "Map.literal") in
-       let args = CST.Multiple (wrap (par (hd, List.map ~f:(fun x -> ghost, x) tl))) in
-       return_expr @@ CST.ECall (wrap @@ (var, args)))
+    | [] -> return_expr @@ CST.EVar (wrap "Big_map.empty")
+    | hd :: tl ->
+      let var = CST.EVar (wrap "Map.literal") in
+      let args = CST.Multiple (wrap (par (hd, List.map ~f:(fun x -> ghost, x) tl))) in
+      return_expr @@ CST.ECall (wrap @@ (var, args)))
   | E_big_map big_map ->
     let big_map = List.map ~f:(Pair.map ~f:decompile_expression) big_map in
     let aux (k, v) = CST.ETuple (wrap (k, [ ghost, v ])) in
     let big_map = List.map ~f:aux big_map in
     (match big_map with
-     | [] -> return_expr @@ CST.EVar (wrap "Big_map.empty")
-     | hd :: tl ->
-       let var = CST.EVar (wrap "Big_map.literal") in
-       let args = CST.Multiple (wrap (par (hd, List.map ~f:(fun x -> ghost, x) tl))) in
-       return_expr @@ CST.ECall (wrap @@ (var, args)))
+    | [] -> return_expr @@ CST.EVar (wrap "Big_map.empty")
+    | hd :: tl ->
+      let var = CST.EVar (wrap "Big_map.literal") in
+      let args = CST.Multiple (wrap (par (hd, List.map ~f:(fun x -> ghost, x) tl))) in
+      return_expr @@ CST.ECall (wrap @@ (var, args)))
   | E_list lst ->
     let lst = List.map ~f:decompile_expression lst in
     let lst = list_to_sepseq lst in
@@ -768,54 +763,54 @@ and decompile_declaration : AST.declaration -> CST.declaration =
       Option.map ~f:(prefix_colon <@ decompile_type_expr) @@ Binder.get_ascr binder
     in
     (match expr.expression_content with
-     | E_lambda lambda ->
-       let let_rhs = decompile_expression @@ AST.make_e @@ AST.E_lambda lambda in
-       let let_binding : CST.let_binding = { binders; lhs_type; eq = ghost; let_rhs } in
-       let let_decl = wrap (ghost, None, let_binding, attributes) in
-       CST.ConstDecl let_decl
-     | E_recursive { lambda; _ } ->
-       let lambda = Lambda.map Fun.id Option.return lambda in
-       let let_rhs = decompile_expression @@ AST.make_e @@ AST.E_lambda lambda in
-       let let_binding : CST.let_binding = { binders; lhs_type; eq = ghost; let_rhs } in
-       let let_decl = wrap (ghost, Some ghost, let_binding, attributes) in
-       CST.ConstDecl let_decl
-     | _ ->
-       let let_rhs = decompile_expression expr in
-       let let_binding : CST.let_binding = { binders; lhs_type; eq = ghost; let_rhs } in
-       let let_decl = wrap (ghost, None, let_binding, attributes) in
-       CST.ConstDecl let_decl)
+    | E_lambda lambda ->
+      let let_rhs = decompile_expression @@ AST.make_e @@ AST.E_lambda lambda in
+      let let_binding : CST.let_binding = { binders; lhs_type; eq = ghost; let_rhs } in
+      let let_decl = wrap (ghost, None, let_binding, attributes) in
+      CST.ConstDecl let_decl
+    | E_recursive { lambda; _ } ->
+      let lambda = Lambda.map Fun.id Option.return lambda in
+      let let_rhs = decompile_expression @@ AST.make_e @@ AST.E_lambda lambda in
+      let let_binding : CST.let_binding = { binders; lhs_type; eq = ghost; let_rhs } in
+      let let_decl = wrap (ghost, Some ghost, let_binding, attributes) in
+      CST.ConstDecl let_decl
+    | _ ->
+      let let_rhs = decompile_expression expr in
+      let let_binding : CST.let_binding = { binders; lhs_type; eq = ghost; let_rhs } in
+      let let_decl = wrap (ghost, None, let_binding, attributes) in
+      CST.ConstDecl let_decl)
   | D_module { module_binder; module_; module_attr = _ } ->
     let name = decompile_mod_var module_binder in
     (match module_.wrap_content with
-     | M_struct prg ->
-       let module_ = decompile_module prg in
-       let module_decl : CST.module_decl =
-         { kwd_module = Token.ghost_module
-         ; name
-         ; eq = Token.ghost_eq
-         ; rbrace = Token.ghost_rbrace
-         ; module_
-         ; lbrace = Token.ghost_lbrace
-         }
-       in
-       CST.ModuleDecl (wrap @@ module_decl)
-     | M_variable v ->
-       let alias = name in
-       let binders = decompile_mod_var v, [] in
-       let mod_alias : CST.module_alias =
-         { kwd_module = Token.ghost_module; alias; eq = Token.ghost_eq; binders }
-       in
-       CST.ModuleAlias (wrap mod_alias)
-     | M_module_path path ->
-       let alias = name in
-       let binders =
-         nelist_to_npseq ~sep:Token.ghost_dot
-         @@ List.Ne.map (fun x -> wrap (Format.asprintf "%a" Module_var.pp x)) path
-       in
-       let mod_alias : CST.module_alias =
-         { kwd_module = Token.ghost_module; alias; eq = Token.ghost_eq; binders }
-       in
-       CST.ModuleAlias (wrap mod_alias))
+    | M_struct prg ->
+      let module_ = decompile_module prg in
+      let module_decl : CST.module_decl =
+        { kwd_module = Token.ghost_module
+        ; name
+        ; eq = Token.ghost_eq
+        ; rbrace = Token.ghost_rbrace
+        ; module_
+        ; lbrace = Token.ghost_lbrace
+        }
+      in
+      CST.ModuleDecl (wrap @@ module_decl)
+    | M_variable v ->
+      let alias = name in
+      let binders = decompile_mod_var v, [] in
+      let mod_alias : CST.module_alias =
+        { kwd_module = Token.ghost_module; alias; eq = Token.ghost_eq; binders }
+      in
+      CST.ModuleAlias (wrap mod_alias)
+    | M_module_path path ->
+      let alias = name in
+      let binders =
+        nelist_to_npseq ~sep:Token.ghost_dot
+        @@ List.Ne.map (fun x -> wrap (Format.asprintf "%a" Module_var.pp x)) path
+      in
+      let mod_alias : CST.module_alias =
+        { kwd_module = Token.ghost_module; alias; eq = Token.ghost_eq; binders }
+      in
+      CST.ModuleAlias (wrap mod_alias))
 
 
 and decompile_pattern : AST.type_expression option AST.Pattern.t -> CST.pattern =
@@ -835,40 +830,40 @@ and decompile_pattern : AST.type_expression option AST.Pattern.t -> CST.pattern 
   | P_list pl ->
     let ret x = CST.PList x in
     (match pl with
-     | Cons (pa, pb) ->
-       let pa = decompile_pattern pa in
-       let pb = decompile_pattern pb in
-       let cons : CST.cons_pattern =
-         { lbracket = ghost
-         ; lpattern = pa
-         ; comma = ghost
-         ; ellipsis = ghost
-         ; rpattern = pb
-         ; rbracket = ghost
-         }
-       in
-       ret (PCons (wrap cons))
-     | List [] ->
-       let nil = list_to_sepseq [] in
-       let injection = wrap @@ inject brackets nil in
-       ret (PListComp injection)
-     | List plst ->
-       let plst = List.map ~f:decompile_pattern plst in
-       let plst = list_to_sepseq plst in
-       let injection = wrap @@ inject brackets plst in
-       ret (PListComp injection))
+    | Cons (pa, pb) ->
+      let pa = decompile_pattern pa in
+      let pb = decompile_pattern pb in
+      let cons : CST.cons_pattern =
+        { lbracket = ghost
+        ; lpattern = pa
+        ; comma = ghost
+        ; ellipsis = ghost
+        ; rpattern = pb
+        ; rbracket = ghost
+        }
+      in
+      ret (PCons (wrap cons))
+    | List [] ->
+      let nil = list_to_sepseq [] in
+      let injection = wrap @@ inject brackets nil in
+      ret (PListComp injection)
+    | List plst ->
+      let plst = List.map ~f:decompile_pattern plst in
+      let plst = list_to_sepseq plst in
+      let injection = wrap @@ inject brackets plst in
+      ret (PListComp injection))
   | P_variant (constructor, p) ->
     (match constructor with
-     | Label constructor ->
-       let p =
-         if is_unit_pattern p
-         then None
-         else (
-           let p = decompile_pattern p in
-           Some p)
-       in
-       let constr = wrap (wrap constructor, p) in
-       CST.PConstr constr)
+    | Label constructor ->
+      let p =
+        if is_unit_pattern p
+        then None
+        else (
+          let p = decompile_pattern p in
+          Some p)
+      in
+      let constr = wrap (wrap constructor, p) in
+      CST.PConstr constr)
   | P_tuple lst ->
     let pl = List.map ~f:decompile_pattern lst in
     let pl = list_to_nsepseq pl in

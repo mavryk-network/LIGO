@@ -43,7 +43,7 @@ let rec lift : env -> expression -> env * expression =
   | E_closure { binder; body } ->
     let env2 =
       { empty_env with
-        variables = (binder, e.type_expression) :: []
+        variables = [ binder, e.type_expression ]
       ; replacements = env.replacements
       ; functions = env.functions
       ; exported_funcs = env.exported_funcs
@@ -230,9 +230,9 @@ let rec lift : env -> expression -> env * expression =
     let env, e2 = lift env e2 in
     ( env
     , (match e1.content with
-       | E_variable _ -> e2
-       | _ ->
-         { e with content = E_let_in (e1, inline, ((var_name, type_expression), e2)) }) )
+      | E_variable _ -> e2
+      | _ -> { e with content = E_let_in (e1, inline, ((var_name, type_expression), e2)) })
+    )
   | E_tuple l ->
     let env, l =
       List.fold_left

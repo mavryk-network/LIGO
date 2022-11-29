@@ -119,7 +119,7 @@ let rec swap_type_expression : Scope.swapper -> type_expression -> type_expressi
       Record.map
         ~f:
           (fun ({ associated_type; michelson_annotation; decl_pos } : row_element)
-             : row_element ->
+               : row_element ->
           let associated_type = self associated_type in
           { associated_type; michelson_annotation; decl_pos })
         fields
@@ -130,7 +130,7 @@ let rec swap_type_expression : Scope.swapper -> type_expression -> type_expressi
       Record.map
         ~f:
           (fun ({ associated_type; michelson_annotation; decl_pos } : row_element)
-             : row_element ->
+               : row_element ->
           let associated_type = self associated_type in
           { associated_type; michelson_annotation; decl_pos })
         fields
@@ -315,7 +315,7 @@ let rec type_expression : Scope.t -> type_expression -> type_expression =
       Record.map
         ~f:
           (fun ({ associated_type; michelson_annotation; decl_pos } : row_element)
-             : row_element ->
+               : row_element ->
           let associated_type = self associated_type in
           { associated_type; michelson_annotation; decl_pos })
         fields
@@ -326,7 +326,7 @@ let rec type_expression : Scope.t -> type_expression -> type_expression =
       Record.map
         ~f:
           (fun ({ associated_type; michelson_annotation; decl_pos } : row_element)
-             : row_element ->
+               : row_element ->
           let associated_type = self associated_type in
           { associated_type; michelson_annotation; decl_pos })
         fields

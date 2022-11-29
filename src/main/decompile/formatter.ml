@@ -5,9 +5,9 @@ let expression_ppformat ~display_format f runned_result =
   match display_format with
   | Human_readable | Dev ->
     (match runned_result with
-     | Fail (fail_res : (int, string) Tezos_micheline.Micheline.node) ->
-       Format.printf "failed with: %a" Tezos_utils.Michelson.pp fail_res
-     | Success typed -> Ast_core.PP.expression f typed)
+    | Fail (fail_res : (int, string) Tezos_micheline.Micheline.node) ->
+      Format.printf "failed with: %a" Tezos_utils.Michelson.pp fail_res
+    | Success typed -> Ast_core.PP.expression f typed)
 
 
 let expression_jsonformat runned_result : json =

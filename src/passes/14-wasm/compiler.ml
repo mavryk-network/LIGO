@@ -138,7 +138,7 @@ let global_offset = ref 0l
  * Convert a Zarith number (used by LIGO and Tezos) to a wasm memory representation.
  *)
 let convert_to_memory
-  : S.region -> int32 -> string -> Z.t -> A.data_segment list * A.sym_info list
+    : S.region -> int32 -> string -> Z.t -> A.data_segment list * A.sym_info list
   =
  fun at header name z ->
   let z = Z.to_int32 z in
@@ -172,13 +172,13 @@ let func_symbol_type w symbol =
         w.A.types
     in
     (match t with
-     | Some t -> Some (fs, t.it)
-     | None -> None)
+    | Some t -> Some (fs, t.it)
+    | None -> None)
   | _ -> None
 
 
 let rec expression ~raise
-  : A.module_' -> Env.t -> I.expression -> A.module_' * Env.t * A.instr list
+    : A.module_' -> Env.t -> I.expression -> A.module_' * Env.t * A.instr list
   =
  fun w env e ->
   let at = location_to_region e.location in
@@ -214,8 +214,8 @@ let rec expression ~raise
   let add_local = Env.add_local in
   let add_locals = Env.add_locals in
   let host_call
-    :  fn:string -> response_size:int32 -> instructions:I.expression list
-    -> A.module_' * Env.t * A.instr list
+      :  fn:string -> response_size:int32 -> instructions:I.expression list
+      -> A.module_' * Env.t * A.instr list
     =
    fun ~fn ~response_size ~instructions ->
     let new_value = var_to_string (Value_var.fresh ~name:fn ()) in
@@ -714,11 +714,11 @@ let rec expression ~raise
       @ [ store; local_get_s c_right ] )
   | E_application _ ->
     let rec aux
-      w
-      env
-      (result : A.instr list)
-      (result_vars : string list)
-      (expr : I.expression)
+        w
+        env
+        (result : A.instr list)
+        (result_vars : string list)
+        (expr : I.expression)
       =
       match expr.I.content with
       | E_application (func, e) ->
@@ -729,129 +729,129 @@ let rec expression ~raise
       | E_variable v ->
         let name = var_to_string v in
         (match func_symbol_type w name with
-         | Some (FuncSymbol fs, TypeSymbol { tdetails = FuncType (input, output); _ }) ->
-           let no_of_args = List.length input in
-           if no_of_args = List.length result_vars
-           then
-             ( w
-             , env
-             , result @ List.map ~f:(fun s -> local_get_s s) result_vars @ [ call_s name ]
-             )
-           else (
-             let func_name, w = Partial_call.create_helper w at ~name ~no_of_args in
-             let env, func_alloc_name, e =
-               Partial_call.create_memory_block
-                 env
-                 at
-                 ~f:[ func_symbol func_name ]
-                 ~no_of_args
-                 ~current_args:result_vars
-             in
-             ( w
-             , env
-             , e
-               @ result
-               @ (let a, i =
-                    List.fold_left
-                      ~f:(fun (all, index) f ->
-                        ( all
-                          @ [ local_get_s func_alloc_name
-                            ; const Int32.(index * 4l)
-                            ; i32_add
-                            ; local_get_s f
-                            ; store
-                            ]
-                        , Int32.(index + 1l) ))
-                      ~init:([], 3l)
-                      result_vars
-                  in
-                  a)
-               @ [ local_get_s func_alloc_name ] ))
-         | _ ->
-           let indirect_name = unique_name "call_indirect" in
-           let total_args_length = unique_name "total_args_length" in
-           let current_args_length = unique_name "current_args_length" in
-           let counter = unique_name "counter" in
-           let dest = unique_name "dest" in
-           let env =
-             add_locals
-               env
-               [ total_args_length, NumType I32Type
-               ; current_args_length, NumType I32Type
-               ; counter, NumType I32Type
-               ; dest, NumType I32Type
-               ]
-           in
-           ( { w with
-               types =
-                 w.types
-                 @ [ type_
-                       ~name:indirect_name
-                       ~typedef:(FuncType ([ NumType I32Type ], [ NumType I32Type ]))
-                   ]
-                 (* symbols = w.symbols @ 
+        | Some (FuncSymbol fs, TypeSymbol { tdetails = FuncType (input, output); _ }) ->
+          let no_of_args = List.length input in
+          if no_of_args = List.length result_vars
+          then
+            ( w
+            , env
+            , result @ List.map ~f:(fun s -> local_get_s s) result_vars @ [ call_s name ]
+            )
+          else (
+            let func_name, w = Partial_call.create_helper w at ~name ~no_of_args in
+            let env, func_alloc_name, e =
+              Partial_call.create_memory_block
+                env
+                at
+                ~f:[ func_symbol func_name ]
+                ~no_of_args
+                ~current_args:result_vars
+            in
+            ( w
+            , env
+            , e
+              @ result
+              @ (let a, i =
+                   List.fold_left
+                     ~f:(fun (all, index) f ->
+                       ( all
+                         @ [ local_get_s func_alloc_name
+                           ; const Int32.(index * 4l)
+                           ; i32_add
+                           ; local_get_s f
+                           ; store
+                           ]
+                       , Int32.(index + 1l) ))
+                     ~init:([], 3l)
+                     result_vars
+                 in
+                 a)
+              @ [ local_get_s func_alloc_name ] ))
+        | _ ->
+          let indirect_name = unique_name "call_indirect" in
+          let total_args_length = unique_name "total_args_length" in
+          let current_args_length = unique_name "current_args_length" in
+          let counter = unique_name "counter" in
+          let dest = unique_name "dest" in
+          let env =
+            add_locals
+              env
+              [ total_args_length, NumType I32Type
+              ; current_args_length, NumType I32Type
+              ; counter, NumType I32Type
+              ; dest, NumType I32Type
+              ]
+          in
+          ( { w with
+              types =
+                w.types
+                @ [ type_
+                      ~name:indirect_name
+                      ~typedef:(FuncType ([ NumType I32Type ], [ NumType I32Type ]))
+                  ]
+                (* symbols = w.symbols @ 
               [
                 symbol ~name:indirect_name ~details:Function;
               ]  *)
-             }
-           , env
-           , [ local_get_s name
-             ; const 4l
-             ; i32_add
-             ; load
-             ; local_set_s total_args_length
-             ; local_get_s name
-             ; const 8l
-             ; i32_add
-             ; load
-             ; local_set_s current_args_length
-             ]
-             @ Partial_call.memory_copy env at ~func_name:name ~total_args_length ~dest
-             @ result
-             @ (let a, i =
-                  List.fold_left
-                    ~f:(fun (all, index) f ->
-                      ( all
-                        @ [ local_get_s dest
-                          ; local_get_s current_args_length
-                          ; const index
-                          ; i32_add
-                          ; const 4l
-                          ; i32_mul
-                          ; i32_add
-                          ; local_get_s f
-                          ; store
-                          ]
-                      , Int32.(index + 1l) ))
-                    ~init:([], 3l)
-                    result_vars
-                in
-                a)
-             @ [ (* update the current args *)
-                 local_get_s dest
-               ; const 8l
-               ; i32_add
-               ; local_get_s current_args_length
-               ; const (Int32.of_int_exn (List.length result_vars))
-               ; i32_add
-               ; store
-               ; (* check to see if all the arguments are entered, if not: still a partial *)
-                 local_get_s current_args_length
-               ; const (Int32.of_int_exn (List.length result_vars))
-               ; i32_add
-               ; local_get_s total_args_length
-               ; i32_eq
-               ; if_
-                   (ValBlockType (Some (NumType I32Type)))
-                   [ local_get_s dest
-                   ; const 12l
-                   ; i32_add
-                   ; local_get_s dest
-                   ; load
-                   ; call_indirect_s indirect_name
-                   ]
-                   [ local_get_s dest ]
-               ] ))
+            }
+          , env
+          , [ local_get_s name
+            ; const 4l
+            ; i32_add
+            ; load
+            ; local_set_s total_args_length
+            ; local_get_s name
+            ; const 8l
+            ; i32_add
+            ; load
+            ; local_set_s current_args_length
+            ]
+            @ Partial_call.memory_copy env at ~func_name:name ~total_args_length ~dest
+            @ result
+            @ (let a, i =
+                 List.fold_left
+                   ~f:(fun (all, index) f ->
+                     ( all
+                       @ [ local_get_s dest
+                         ; local_get_s current_args_length
+                         ; const index
+                         ; i32_add
+                         ; const 4l
+                         ; i32_mul
+                         ; i32_add
+                         ; local_get_s f
+                         ; store
+                         ]
+                     , Int32.(index + 1l) ))
+                   ~init:([], 3l)
+                   result_vars
+               in
+               a)
+            @ [ (* update the current args *)
+                local_get_s dest
+              ; const 8l
+              ; i32_add
+              ; local_get_s current_args_length
+              ; const (Int32.of_int_exn (List.length result_vars))
+              ; i32_add
+              ; store
+              ; (* check to see if all the arguments are entered, if not: still a partial *)
+                local_get_s current_args_length
+              ; const (Int32.of_int_exn (List.length result_vars))
+              ; i32_add
+              ; local_get_s total_args_length
+              ; i32_eq
+              ; if_
+                  (ValBlockType (Some (NumType I32Type)))
+                  [ local_get_s dest
+                  ; const 12l
+                  ; i32_add
+                  ; local_get_s dest
+                  ; load
+                  ; call_indirect_s indirect_name
+                  ]
+                  [ local_get_s dest ]
+              ] ))
       | E_raw_wasm (local_symbols, code, args) ->
         let args =
           List.fold_left ~f:(fun e i -> e @ [ local_get_s i ]) ~init:[] result_vars
@@ -865,22 +865,22 @@ let rec expression ~raise
   | E_variable name ->
     let name = var_to_string name in
     (match List.find ~f:(fun (n, _) -> String.equal n name) env.locals with
-     | Some _ -> w, env, [ local_get_s name ]
-     | None ->
-       (match func_symbol_type w name with
-        | Some (FuncSymbol fs, TypeSymbol { tdetails = FuncType (input, output); _ }) ->
-          let no_of_args = List.length input in
-          let func_name, w = Partial_call.create_helper w at ~name ~no_of_args in
-          let env, func_alloc_name, e =
-            Partial_call.create_memory_block
-              env
-              at
-              ~f:[ func_symbol func_name ]
-              ~no_of_args
-              ~current_args:[]
-          in
-          w, env, e @ [ local_get_s func_alloc_name ]
-        | _ -> w, env, [ data_symbol name ]))
+    | Some _ -> w, env, [ local_get_s name ]
+    | None ->
+      (match func_symbol_type w name with
+      | Some (FuncSymbol fs, TypeSymbol { tdetails = FuncType (input, output); _ }) ->
+        let no_of_args = List.length input in
+        let func_name, w = Partial_call.create_helper w at ~name ~no_of_args in
+        let env, func_alloc_name, e =
+          Partial_call.create_memory_block
+            env
+            at
+            ~f:[ func_symbol func_name ]
+            ~no_of_args
+            ~current_args:[]
+        in
+        w, env, e @ [ local_get_s func_alloc_name ]
+      | _ -> w, env, [ data_symbol name ]))
   | E_iterator
       ( C_MAP
       , ((item_name, item_type), body)
@@ -1266,7 +1266,7 @@ let func I.{ binder; body } =
 
 
 let rec toplevel_bindings ~raise
-  : I.expression -> string -> W.Ast.module_' -> W.Ast.module_'
+    : I.expression -> string -> W.Ast.module_' -> W.Ast.module_'
   =
  fun e entrypoint w ->
   let at = location_to_region e.location in

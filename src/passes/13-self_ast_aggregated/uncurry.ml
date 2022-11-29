@@ -14,7 +14,7 @@ let rec uncurry_lambda (depth : int) (expr : expression) : Value_var.t list * ex
 
 
 let rec uncurry_arrow (depth : int) (type_ : type_expression)
-  : type_expression list * type_expression
+    : type_expression list * type_expression
   =
   match type_.type_content with
   | T_arrow { type1; type2 } when depth > 0 ->
@@ -143,13 +143,13 @@ let uncurried_rows (depth : int) (args : type_expression list) : rows =
            , ({ associated_type = ty; michelson_annotation = None; decl_pos = i }
                : row_element) ))
          (match List.zip labels args with
-          | Ok x -> x
-          | _ ->
-            failwith
-            @@ Format.asprintf
-                 "uncurried_rows: args length : %i expected %i\n%!"
-                 (List.length args)
-                 depth))
+         | Ok x -> x
+         | _ ->
+           failwith
+           @@ Format.asprintf
+                "uncurried_rows: args length : %i expected %i\n%!"
+                (List.length args)
+                depth))
   in
   { fields; layout = L_comb }
 
@@ -207,7 +207,7 @@ let uncurry_rhs (depth : int) (expr : expression) =
 
 
 let rec uncurry_in_expression ~raise (f : Value_var.t) (depth : int) (expr : expression)
-  : expression
+    : expression
   =
   let self = uncurry_in_expression ~raise f depth in
   let self_param param e =
@@ -352,100 +352,98 @@ let uncurry_expression (expr : expression) : expression =
       | E_recursive { fun_name; fun_type; lambda = { binder = _; result } as lambda } ->
         let inner_lambda = { expr with expression_content = E_lambda lambda } in
         (match usage_in_expr fun_name result with
-         | Unused | Other -> expr
-         | Application depth ->
-           if curried_depth_in_lambda inner_lambda >= depth && depth > 1
-           then (
-             (* Prepare the lambda *)
-             let var, result, arg_types, record_type, ret_type =
-               uncurry_rhs depth inner_lambda
-             in
-             (* Uncurry calls inside the expression *)
-             let result = uncurry_in_expression ~raise fun_name depth result in
-             (* Generate binders for each argument: x1', ..., xn' *)
-             let binder_types = List.map ~f:(fun t -> Value_var.fresh (), t) arg_types in
-             (* An variable for each function argument *)
-             let args = List.map ~f:(fun (b, t) -> e_a_variable b t) binder_types in
-             (* Generate tupled argument (x1', ..., xn') *)
-             let record =
-               E_record
-                 (Record.of_list
-                 @@
-                 match List.zip (uncurried_labels depth) args with
-                 | Ok x -> x
-                 | _ ->
-                   failwith
-                   @@ Format.asprintf
-                        "Uncurry: mismatching number of arguments, expr: %a, type %a\n%!"
-                        PP.expression
-                        expr
-                        PP.type_expression
-                        expr.type_expression)
-             in
-             let args =
-               { expression_content = record
-               ; location = Location.generated
-               ; type_expression = uncurried_record_type depth arg_types
-               }
-             in
-             (* the source type is now wrong... but still useful? *)
-             let fun_type =
-               t_arrow
-                 ~loc:fun_type.location
-                 ?source_type:fun_type.source_type
-                 record_type
-                 ret_type
-                 ()
-             in
-             (* Generate the rhs for the new let: (rec(f, (x1, x2, ..., xn)).E[x1, x2, ..., xn]) *)
-             let rhs =
-               { expr with
-                 expression_content =
-                   E_recursive
-                     { fun_name
-                     ; fun_type
-                     ; lambda =
-                         { binder = Param.make var record_type
-                         ; output_type = ret_type
-                         ; result
-                         }
-                     }
-               ; type_expression =
-                   { type_content = T_arrow { type1 = record_type; type2 = ret_type }
-                   ; orig_var = None
-                   ; location = Location.generated
-                   ; source_type = None
-                   }
-               }
-             in
-             (* Apply function to tuple: f(x1', x2', ..., xn') *)
-             let result =
-               e_a_application (e_a_variable fun_name fun_type) args ret_type
-             in
-             let attr =
-               ValueAttr.
-                 { inline = true
-                 ; no_mutation = false
-                 ; view = false
-                 ; public = true
-                 ; hidden = false
-                 ; thunk = false
-                 }
-             in
-             (* Construct the let *)
-             let result =
-               e_a_let_in (Binder.make fun_name rhs.type_expression) rhs result attr
-             in
-             let f (var, t) result =
-               let binder = Param.make var t in
-               e_a_lambda
-                 { binder; output_type = result.type_expression; result }
-                 t
-                 result.type_expression
-             in
-             (* Add the external lambdas *)
-             let lambda = List.fold_right ~f ~init:result binder_types in
-             lambda)
-           else expr)
+        | Unused | Other -> expr
+        | Application depth ->
+          if curried_depth_in_lambda inner_lambda >= depth && depth > 1
+          then (
+            (* Prepare the lambda *)
+            let var, result, arg_types, record_type, ret_type =
+              uncurry_rhs depth inner_lambda
+            in
+            (* Uncurry calls inside the expression *)
+            let result = uncurry_in_expression ~raise fun_name depth result in
+            (* Generate binders for each argument: x1', ..., xn' *)
+            let binder_types = List.map ~f:(fun t -> Value_var.fresh (), t) arg_types in
+            (* An variable for each function argument *)
+            let args = List.map ~f:(fun (b, t) -> e_a_variable b t) binder_types in
+            (* Generate tupled argument (x1', ..., xn') *)
+            let record =
+              E_record
+                (Record.of_list
+                @@
+                match List.zip (uncurried_labels depth) args with
+                | Ok x -> x
+                | _ ->
+                  failwith
+                  @@ Format.asprintf
+                       "Uncurry: mismatching number of arguments, expr: %a, type %a\n%!"
+                       PP.expression
+                       expr
+                       PP.type_expression
+                       expr.type_expression)
+            in
+            let args =
+              { expression_content = record
+              ; location = Location.generated
+              ; type_expression = uncurried_record_type depth arg_types
+              }
+            in
+            (* the source type is now wrong... but still useful? *)
+            let fun_type =
+              t_arrow
+                ~loc:fun_type.location
+                ?source_type:fun_type.source_type
+                record_type
+                ret_type
+                ()
+            in
+            (* Generate the rhs for the new let: (rec(f, (x1, x2, ..., xn)).E[x1, x2, ..., xn]) *)
+            let rhs =
+              { expr with
+                expression_content =
+                  E_recursive
+                    { fun_name
+                    ; fun_type
+                    ; lambda =
+                        { binder = Param.make var record_type
+                        ; output_type = ret_type
+                        ; result
+                        }
+                    }
+              ; type_expression =
+                  { type_content = T_arrow { type1 = record_type; type2 = ret_type }
+                  ; orig_var = None
+                  ; location = Location.generated
+                  ; source_type = None
+                  }
+              }
+            in
+            (* Apply function to tuple: f(x1', x2', ..., xn') *)
+            let result = e_a_application (e_a_variable fun_name fun_type) args ret_type in
+            let attr =
+              ValueAttr.
+                { inline = true
+                ; no_mutation = false
+                ; view = false
+                ; public = true
+                ; hidden = false
+                ; thunk = false
+                }
+            in
+            (* Construct the let *)
+            let result =
+              e_a_let_in (Binder.make fun_name rhs.type_expression) rhs result attr
+            in
+            let f (var, t) result =
+              let binder = Param.make var t in
+              e_a_lambda
+                { binder; output_type = result.type_expression; result }
+                t
+                result.type_expression
+            in
+            (* Add the external lambdas *)
+            let lambda = List.fold_right ~f ~init:result binder_types in
+            lambda)
+          else expr)
       | _ -> expr)
     expr

@@ -35,140 +35,139 @@ let pp : display_format:string display_format -> Format.formatter -> all -> unit
   match display_format with
   | Human_readable | Dev ->
     (match a with
-     | `Use_meta_ligo loc ->
-       Format.fprintf
-         f
-         "@[<hv>%a@ You are using Michelson failwith primitive (loaded from standard \
-          library).@.Consider using `Test.failwith` for throwing a testing framework \
-          failure.@.@]"
-         Snippet.pp
-         loc
-     | `Michelson_typecheck_failed_with_different_protocol (user_proto, errs) ->
-       let open Environment.Protocols in
-       Format.fprintf
-         f
-         "@[<hv>Warning: Error(s) occurred while type checking the produced michelson \
-          contract:@.%a@.Note: You compiled your contract with protocol %s although we \
-          internally use protocol %s to typecheck the produced Michelson contract@.so \
-          you might want to ignore this error if related to a breaking change in \
-          protocol %s@.@]"
-         (Tezos_client_014_PtKathma.Michelson_v1_error_reporter.report_errors
-            ~details:true
-            ~show_source:true
-            ?parsed:None)
-         errs
-         (variant_to_string user_proto)
-         (variant_to_string in_use)
-         (variant_to_string in_use)
-     | `Checking_ambiguous_constructor (loc, tv_chosen, tv_possible) ->
-       Format.fprintf
-         f
-         "@[<hv>%a@ Warning: The type of this value is ambiguous: Inferred type is %a \
-          but could be of type %a.@ Hint: You might want to add a type annotation. @.@]"
-         Snippet.pp
-         loc
-         Type_var.pp
-         tv_chosen
-         Type_var.pp
-         tv_possible
-     | `Main_view_ignored loc ->
-       Format.fprintf
-         f
-         "@[<hv>%a@ Warning: This view will be ignored, command line option override [@ \
-          view] annotation@.@]"
-         Snippet.pp
-         loc
-     | `Self_ast_typed_warning_unused (loc, s) ->
-       Format.fprintf
-         f
-         "@[<hv>%a:@.Warning: unused variable \"%s\".@.Hint: replace it by \"_%s\" to \
-          prevent this warning.\n\
-          @]"
-         Snippet.pp
-         loc
-         s
-         s
-     | `Self_ast_typed_warning_muchused (loc, s) ->
-       Format.fprintf
-         f
-         "@[<hv>%a:@.Warning: variable \"%s\" cannot be used more than once.\n@]"
-         Snippet.pp
-         loc
-         s
-     | `Self_ast_typed_warning_unused_rec (loc, s) ->
-       Format.fprintf
-         f
-         "@[<hv>%a:@.Warning: unused recursion .@.Hint: remove recursion from the \
-          function \"%s\" to prevent this warning.\n\
-          @]"
-         Snippet.pp
-         loc
-         s
-     | `Self_ast_imperative_warning_layout (loc, Label s) ->
-       Format.fprintf
-         f
-         "@[<hv>%a@ Warning: layout attribute only applying to %s, probably ignored.@.@]"
-         Snippet.pp
-         loc
-         s
-     | `Self_ast_imperative_warning_deprecated_polymorphic_variable (loc, name) ->
-       Format.fprintf
-         f
-         "@[<hv>%a@ Warning: %a is not recognize as a polymorphic variable anymore. If \
-          you want to make a polymorphic function, please consult the online \
-          documentation @.@]"
-         Snippet.pp
-         loc
-         Type_var.pp
-         name
-     | `Self_ast_imperative_warning_deprecated_constant (l, curr, alt, ty) ->
-       Format.fprintf
-         f
-         "@[<hv>%a@ Warning: the constant %a is soon to be deprecated. Use instead %a : \
-          %a. @]"
-         Snippet.pp
-         l
-         Ast_imperative.PP.expression
-         curr
-         Ast_imperative.PP.expression
-         alt
-         Ast_imperative.PP.type_expression
-         ty
-     | `Jsligo_deprecated_failwith_no_return loc ->
-       Format.fprintf
-         f
-         "@[<hv>%a@.Deprecated `failwith` without `return`: `failwith` is just a \
-          function.@.Please add an explicit `return` before `failwith` if you meant the \
-          built-in `failwith`.@.For now, compilation proceeds adding such `return` \
-          automatically.@.@]"
-         Snippet.pp
-         loc
-     | `Jsligo_deprecated_toplevel_let loc ->
-       Format.fprintf
-         f
-         "@[<hv>%a@.Toplevel let declaration are silently change to const \
-          declaration.@.@]"
-         Snippet.pp
-         loc
-     | `Jsligo_unreachable_code loc ->
-       Format.fprintf f "@[<hv>%a@ Warning: Unreachable code. @]" Snippet.pp loc
-     | `Self_ast_aggregated_warning_bad_self_type (got, expected, loc) ->
-       Format.fprintf
-         f
-         "@[<hv>%a@ Warning: Tezos.self type annotation.@.Annotation \"%a\" was given, \
-          but contract being compiled would expect \"%a\".@.Note that \"Tezos.self\" \
-          refers to the current contract, so the parameters should be generally the \
-          same. @]"
-         Snippet.pp
-         loc
-         Ast_aggregated.PP.type_expression
-         got
-         Ast_aggregated.PP.type_expression
-         expected
-     | `Deprecated_reasonligo ->
-       Format.fprintf
-         f
-         "@[Reasonligo is depreacted, support will be dropped in a few versions.@.@]")
+    | `Use_meta_ligo loc ->
+      Format.fprintf
+        f
+        "@[<hv>%a@ You are using Michelson failwith primitive (loaded from standard \
+         library).@.Consider using `Test.failwith` for throwing a testing framework \
+         failure.@.@]"
+        Snippet.pp
+        loc
+    | `Michelson_typecheck_failed_with_different_protocol (user_proto, errs) ->
+      let open Environment.Protocols in
+      Format.fprintf
+        f
+        "@[<hv>Warning: Error(s) occurred while type checking the produced michelson \
+         contract:@.%a@.Note: You compiled your contract with protocol %s although we \
+         internally use protocol %s to typecheck the produced Michelson contract@.so you \
+         might want to ignore this error if related to a breaking change in protocol \
+         %s@.@]"
+        (Tezos_client_014_PtKathma.Michelson_v1_error_reporter.report_errors
+           ~details:true
+           ~show_source:true
+           ?parsed:None)
+        errs
+        (variant_to_string user_proto)
+        (variant_to_string in_use)
+        (variant_to_string in_use)
+    | `Checking_ambiguous_constructor (loc, tv_chosen, tv_possible) ->
+      Format.fprintf
+        f
+        "@[<hv>%a@ Warning: The type of this value is ambiguous: Inferred type is %a but \
+         could be of type %a.@ Hint: You might want to add a type annotation. @.@]"
+        Snippet.pp
+        loc
+        Type_var.pp
+        tv_chosen
+        Type_var.pp
+        tv_possible
+    | `Main_view_ignored loc ->
+      Format.fprintf
+        f
+        "@[<hv>%a@ Warning: This view will be ignored, command line option override [@ \
+         view] annotation@.@]"
+        Snippet.pp
+        loc
+    | `Self_ast_typed_warning_unused (loc, s) ->
+      Format.fprintf
+        f
+        "@[<hv>%a:@.Warning: unused variable \"%s\".@.Hint: replace it by \"_%s\" to \
+         prevent this warning.\n\
+         @]"
+        Snippet.pp
+        loc
+        s
+        s
+    | `Self_ast_typed_warning_muchused (loc, s) ->
+      Format.fprintf
+        f
+        "@[<hv>%a:@.Warning: variable \"%s\" cannot be used more than once.\n@]"
+        Snippet.pp
+        loc
+        s
+    | `Self_ast_typed_warning_unused_rec (loc, s) ->
+      Format.fprintf
+        f
+        "@[<hv>%a:@.Warning: unused recursion .@.Hint: remove recursion from the \
+         function \"%s\" to prevent this warning.\n\
+         @]"
+        Snippet.pp
+        loc
+        s
+    | `Self_ast_imperative_warning_layout (loc, Label s) ->
+      Format.fprintf
+        f
+        "@[<hv>%a@ Warning: layout attribute only applying to %s, probably ignored.@.@]"
+        Snippet.pp
+        loc
+        s
+    | `Self_ast_imperative_warning_deprecated_polymorphic_variable (loc, name) ->
+      Format.fprintf
+        f
+        "@[<hv>%a@ Warning: %a is not recognize as a polymorphic variable anymore. If \
+         you want to make a polymorphic function, please consult the online \
+         documentation @.@]"
+        Snippet.pp
+        loc
+        Type_var.pp
+        name
+    | `Self_ast_imperative_warning_deprecated_constant (l, curr, alt, ty) ->
+      Format.fprintf
+        f
+        "@[<hv>%a@ Warning: the constant %a is soon to be deprecated. Use instead %a : \
+         %a. @]"
+        Snippet.pp
+        l
+        Ast_imperative.PP.expression
+        curr
+        Ast_imperative.PP.expression
+        alt
+        Ast_imperative.PP.type_expression
+        ty
+    | `Jsligo_deprecated_failwith_no_return loc ->
+      Format.fprintf
+        f
+        "@[<hv>%a@.Deprecated `failwith` without `return`: `failwith` is just a \
+         function.@.Please add an explicit `return` before `failwith` if you meant the \
+         built-in `failwith`.@.For now, compilation proceeds adding such `return` \
+         automatically.@.@]"
+        Snippet.pp
+        loc
+    | `Jsligo_deprecated_toplevel_let loc ->
+      Format.fprintf
+        f
+        "@[<hv>%a@.Toplevel let declaration are silently change to const declaration.@.@]"
+        Snippet.pp
+        loc
+    | `Jsligo_unreachable_code loc ->
+      Format.fprintf f "@[<hv>%a@ Warning: Unreachable code. @]" Snippet.pp loc
+    | `Self_ast_aggregated_warning_bad_self_type (got, expected, loc) ->
+      Format.fprintf
+        f
+        "@[<hv>%a@ Warning: Tezos.self type annotation.@.Annotation \"%a\" was given, \
+         but contract being compiled would expect \"%a\".@.Note that \"Tezos.self\" \
+         refers to the current contract, so the parameters should be generally the same. \
+         @]"
+        Snippet.pp
+        loc
+        Ast_aggregated.PP.type_expression
+        got
+        Ast_aggregated.PP.type_expression
+        expected
+    | `Deprecated_reasonligo ->
+      Format.fprintf
+        f
+        "@[Reasonligo is depreacted, support will be dropped in a few versions.@.@]")
 
 
 let to_warning : all -> Simple_utils.Warning.t =

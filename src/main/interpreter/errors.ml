@@ -3,29 +3,29 @@ module Location = Simple_utils.Location
 type interpreter_error = Main_errors.all
 
 let target_lang_failwith
-  :  Location.t -> Ligo_interpreter.Types.calltrace
-  -> (int, string) Tezos_micheline.Micheline.node -> interpreter_error
+    :  Location.t -> Ligo_interpreter.Types.calltrace
+    -> (int, string) Tezos_micheline.Micheline.node -> interpreter_error
   =
  fun loc calltrace e -> `Main_interpret_target_lang_failwith (loc, calltrace, e)
 
 
 let target_lang_error
-  :  Location.t -> Ligo_interpreter.Types.calltrace
-  -> Tezos_error_monad__TzCore.error list -> interpreter_error
+    :  Location.t -> Ligo_interpreter.Types.calltrace
+    -> Tezos_error_monad__TzCore.error list -> interpreter_error
   =
  fun loc calltrace e -> `Main_interpret_target_lang_error (loc, calltrace, e)
 
 
 let meta_lang_eval
-  :  Location.t -> Ligo_interpreter.Types.calltrace -> Ligo_interpreter.Types.value
-  -> interpreter_error
+    :  Location.t -> Ligo_interpreter.Types.calltrace -> Ligo_interpreter.Types.value
+    -> interpreter_error
   =
  fun loc calltrace v -> `Main_interpret_meta_lang_eval (loc, calltrace, v)
 
 
 let meta_lang_failwith
-  :  Location.t -> Ligo_interpreter.Types.calltrace -> Ligo_interpreter.Types.value
-  -> interpreter_error
+    :  Location.t -> Ligo_interpreter.Types.calltrace -> Ligo_interpreter.Types.value
+    -> interpreter_error
   =
  fun loc calltrace v -> `Main_interpret_meta_lang_failwith (loc, calltrace, v)
 
@@ -49,7 +49,7 @@ let generic_error ?(calltrace = []) : Location.t -> string -> interpreter_error 
 
 
 let not_enough_initial_accounts
-  : Location.t -> Memory_proto_alpha.Protocol.Alpha_context.Tez.tez -> interpreter_error
+    : Location.t -> Memory_proto_alpha.Protocol.Alpha_context.Tez.tez -> interpreter_error
   =
  fun loc max -> `Main_interpret_not_enough_initial_accounts (loc, max)
 

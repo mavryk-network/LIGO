@@ -39,7 +39,8 @@ module Fold_helpers (M : Monad) = struct
 
 
   let let_in
-    : ('a -> 'b monad) -> ('c -> 'd monad) -> ('a, 'c) Let_in.t -> ('b, 'd) Let_in.t monad
+      :  ('a -> 'b monad) -> ('c -> 'd monad) -> ('a, 'c) Let_in.t
+      -> ('b, 'd) Let_in.t monad
     =
    fun f g { let_binder; rhs; let_result; attributes } ->
     let* let_binder = binder g let_binder in
@@ -49,8 +50,8 @@ module Fold_helpers (M : Monad) = struct
 
 
   let type_in
-    :  ('a -> 'b monad) -> ('c -> 'd monad) -> ('a, 'c) Type_in.t
-    -> ('b, 'd) Type_in.t monad
+      :  ('a -> 'b monad) -> ('c -> 'd monad) -> ('a, 'c) Type_in.t
+      -> ('b, 'd) Type_in.t monad
     =
    fun f g { type_binder; rhs; let_result } ->
     let* rhs = g rhs in
@@ -59,7 +60,8 @@ module Fold_helpers (M : Monad) = struct
 
 
   let lambda
-    : ('a -> 'b monad) -> ('c -> 'd monad) -> ('a, 'c) Lambda.t -> ('b, 'd) Lambda.t monad
+      :  ('a -> 'b monad) -> ('c -> 'd monad) -> ('a, 'c) Lambda.t
+      -> ('b, 'd) Lambda.t monad
     =
    fun f g { binder = b; output_type; result } ->
     let* binder = param g b in
@@ -89,8 +91,8 @@ module Fold_helpers (M : Monad) = struct
 
 
   let recursive
-    :  ('a -> 'b monad) -> ('c -> 'd monad) -> ('a, 'c) Recursive.t
-    -> ('b, 'd) Recursive.t monad
+      :  ('a -> 'b monad) -> ('c -> 'd monad) -> ('a, 'c) Recursive.t
+      -> ('b, 'd) Recursive.t monad
     =
    fun f g { fun_name; fun_type; lambda = l } ->
     let* fun_type = g fun_type in
@@ -121,8 +123,8 @@ module Fold_helpers (M : Monad) = struct
 
 
   let ascription
-    :  ('a -> 'b monad) -> ('c -> 'd monad) -> ('a, 'c) Ascription.t
-    -> ('b, 'd) Ascription.t monad
+      :  ('a -> 'b monad) -> ('c -> 'd monad) -> ('a, 'c) Ascription.t
+      -> ('b, 'd) Ascription.t monad
     =
    fun f g { anno_expr; type_annotation } ->
     let* anno_expr = f anno_expr in
@@ -139,7 +141,8 @@ module Fold_helpers (M : Monad) = struct
 
 
   let assign
-    : ('a -> 'b monad) -> ('c -> 'd monad) -> ('a, 'c) Assign.t -> ('b, 'd) Assign.t monad
+      :  ('a -> 'b monad) -> ('c -> 'd monad) -> ('a, 'c) Assign.t
+      -> ('b, 'd) Assign.t monad
     =
    fun f g { binder = b; expression } ->
     let* binder = binder g b in
@@ -175,8 +178,8 @@ module Fold_helpers (M : Monad) = struct
 
 
   let declaration_constant
-    :  ('a -> 'b monad) -> ('c -> 'd monad) -> ('a, 'c) Value_decl.t
-    -> ('b, 'd) Value_decl.t monad
+      :  ('a -> 'b monad) -> ('c -> 'd monad) -> ('a, 'c) Value_decl.t
+      -> ('b, 'd) Value_decl.t monad
     =
    fun f g { binder = b; attr; expr } ->
     let* binder = binder g b in
@@ -185,7 +188,7 @@ module Fold_helpers (M : Monad) = struct
 
 
   let rec declaration_module
-    : ('a -> 'b monad) -> 'a Module_decl.t -> 'b Module_decl.t monad
+      : ('a -> 'b monad) -> 'a Module_decl.t -> 'b Module_decl.t monad
     =
    fun f { module_binder; module_; module_attr } ->
     let* module_ = f module_ in
@@ -199,16 +202,17 @@ module Fold_helpers (M : Monad) = struct
     let open Module_expr in
     bind_map_location
       (function
-       | M_struct prg ->
-         let* prg = module' f prg in
-         ok (M_struct prg)
-       | M_variable x -> ok (M_variable x)
-       | M_module_path path -> ok (M_module_path path))
+        | M_struct prg ->
+          let* prg = module' f prg in
+          ok (M_struct prg)
+        | M_variable x -> ok (M_variable x)
+        | M_module_path path -> ok (M_module_path path))
       mexp
 
 
   let mod_in
-    : ('a -> 'b monad) -> ('c -> 'd monad) -> ('a, 'c) Mod_in.t -> ('b, 'd) Mod_in.t monad
+      :  ('a -> 'b monad) -> ('c -> 'd monad) -> ('a, 'c) Mod_in.t
+      -> ('b, 'd) Mod_in.t monad
     =
    fun f g { module_binder; rhs; let_result } ->
     let* rhs = g rhs in

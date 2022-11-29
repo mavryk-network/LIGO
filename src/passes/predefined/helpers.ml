@@ -25,6 +25,6 @@ module Michelson = struct
       (fun _ -> loc)
       (fun p -> p)
       (match pred with
-       | Simple code -> code
-       | Special code -> code apply_args)
+      | Simple code -> code
+      | Special code -> code apply_args)
 end

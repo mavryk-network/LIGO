@@ -31,14 +31,14 @@ let check_linearity_patterns ~raise : expression -> unit =
       | P_record lps -> Label.Assoc.fold ~f:aux ~init:vlst lps
     in
     List.iter _patterns ~f:(fun p ->
-      let lst = aux [] p in
-      if List.contains_dup ~compare:Value_var.compare lst
-      then raise.error (non_linear_pattern p))
+        let lst = aux [] p in
+        if List.contains_dup ~compare:Value_var.compare lst
+        then raise.error (non_linear_pattern p))
   | _ -> ()
 
 
 let checks_linearity
-  : raise:([< Errors.self_ast_imperative_error ], _) Trace.raise -> expression -> unit
+    : raise:([< Errors.self_ast_imperative_error ], _) Trace.raise -> expression -> unit
   =
  fun ~raise x ->
   check_linearity_record_fields ~raise x;

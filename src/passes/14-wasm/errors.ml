@@ -20,26 +20,26 @@ type wasm_error =
 let stage = "wasm_pass"
 
 let error_ppformat
-  : display_format:string display_format -> Format.formatter -> wasm_error -> unit
+    : display_format:string display_format -> Format.formatter -> wasm_error -> unit
   =
  fun ~display_format f a ->
   match display_format with
   | Human_readable | Dev ->
     (match a with
-     | `Wasm_pass_michelson_insertion l ->
-       Format.fprintf
-         f
-         "@[<v>%a@.Michelson insertion can't be used when targeting WebAssembly. @]"
-         Snippet.pp
-         l
-     | `Wasm_pass_invalid_utf8 l ->
-       Format.fprintf f "@[<v>%a@.Invalid utf8. @]" Snippet.pp l
-     | `Wasm_pass_not_supported e ->
-       Format.fprintf
-         f
-         "@[<v>%a@.Not supported/implemented at the moment. @]"
-         Mini_c.PP.expression
-         e)
+    | `Wasm_pass_michelson_insertion l ->
+      Format.fprintf
+        f
+        "@[<v>%a@.Michelson insertion can't be used when targeting WebAssembly. @]"
+        Snippet.pp
+        l
+    | `Wasm_pass_invalid_utf8 l ->
+      Format.fprintf f "@[<v>%a@.Invalid utf8. @]" Snippet.pp l
+    | `Wasm_pass_not_supported e ->
+      Format.fprintf
+        f
+        "@[<v>%a@.Not supported/implemented at the moment. @]"
+        Mini_c.PP.expression
+        e)
 
 
 let error_json : wasm_error -> Simple_utils.Error.t =

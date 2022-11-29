@@ -143,8 +143,8 @@ module Generate (Params : PARAMS) = struct
 
 
   let e_match
-    :  polymorphic:bool -> P.expression -> (string * string list * P.expression) list
-    -> P.expression
+      :  polymorphic:bool -> P.expression -> (string * string list * P.expression) list
+      -> P.expression
     =
    fun ~polymorphic matchee lst ->
     let case : string * string list * P.expression -> P.case =
@@ -178,14 +178,14 @@ module Generate (Params : PARAMS) = struct
     match si.pstr_desc with
     | Pstr_type (_, [ single ]) ->
       (match single.ptype_params, single.ptype_cstrs, single.ptype_manifest with
-       | [], [], Some ty ->
-         let name = single.ptype_name.txt in
-         (match ty.ptyp_desc with
-          | Ptyp_constr (ident, _) ->
-            (match ident.txt with
-             | Lident var -> String.equal name var
-             | _ -> false)
+      | [], [], Some ty ->
+        let name = single.ptype_name.txt in
+        (match ty.ptyp_desc with
+        | Ptyp_constr (ident, _) ->
+          (match ident.txt with
+          | Lident var -> String.equal name var
           | _ -> false)
-       | _ -> false)
+        | _ -> false)
+      | _ -> false)
     | _ -> false
 end

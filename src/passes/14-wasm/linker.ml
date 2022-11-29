@@ -10,9 +10,9 @@ let find_file name locations =
     | dir :: dirs ->
       let filename' = Filename.concat dir filename in
       (match Sys_unix.file_exists filename' with
-       | `No -> aux filename dirs
-       | `Unknown -> aux filename dirs
-       | `Yes -> filename')
+      | `No -> aux filename dirs
+      | `Unknown -> aux filename dirs
+      | `Yes -> filename')
   in
   aux name locations
 

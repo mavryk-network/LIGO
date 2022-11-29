@@ -81,7 +81,7 @@ let internalize_core (ds : Ast_core.program) : Ast_core.program =
     ```
 *)
 let get_aliases_prelude
-  : Ast_typed.module_variable -> Ast_typed.program -> Ast_core.program
+    : Ast_typed.module_variable -> Ast_typed.program -> Ast_core.program
   =
  fun mod_binder prg ->
   let get_mod_bindings acc d =
@@ -121,11 +121,11 @@ let get_aliases_prelude
     let open Ast_core in
     let prelude =
       List.map mod_bindings ~f:(fun module_binder ->
-        let module_ =
-          Location.wrap
-          @@ Ligo_prim.Module_expr.M_module_path (mod_binder, [ module_binder ])
-        in
-        Location.wrap @@ D_module { module_binder; module_attr; module_ })
+          let module_ =
+            Location.wrap
+            @@ Ligo_prim.Module_expr.M_module_path (mod_binder, [ module_binder ])
+          in
+          Location.wrap @@ D_module { module_binder; module_attr; module_ })
     in
     prelude
   in
@@ -133,13 +133,15 @@ let get_aliases_prelude
     let open Ast_core in
     let prelude =
       List.map val_bindings ~f:(fun binder ->
-        let expr =
-          make_e
-          @@ E_module_accessor
-               { module_path = [ mod_binder ]; element = Ligo_prim.Binder.get_var binder }
-        in
-        Location.wrap
-        @@ D_value { binder = Ligo_prim.Binder.set_ascr binder None; attr; expr })
+          let expr =
+            make_e
+            @@ E_module_accessor
+                 { module_path = [ mod_binder ]
+                 ; element = Ligo_prim.Binder.get_var binder
+                 }
+          in
+          Location.wrap
+          @@ D_value { binder = Ligo_prim.Binder.set_ascr binder None; attr; expr })
     in
     prelude
   in
@@ -147,11 +149,11 @@ let get_aliases_prelude
     let open Ast_core in
     let prelude =
       List.map ty_bindings ~f:(fun type_binder ->
-        let type_expr =
-          make_t
-          @@ T_module_accessor { module_path = [ mod_binder ]; element = type_binder }
-        in
-        Location.wrap @@ D_type { type_binder; type_expr; type_attr = module_attr })
+          let type_expr =
+            make_t
+            @@ T_module_accessor { module_path = [ mod_binder ]; element = type_binder }
+          in
+          Location.wrap @@ D_type { type_binder; type_expr; type_attr = module_attr })
     in
     prelude
   in
@@ -162,7 +164,7 @@ let get_aliases_prelude
          on top of an existing core program
 *)
 let inject_declaration ~options ~raise
-  : Syntax_types.t -> Ast_core.program -> Ast_core.program
+    : Syntax_types.t -> Ast_core.program -> Ast_core.program
   =
  fun syntax prg ->
   let inject_arg_declaration arg =

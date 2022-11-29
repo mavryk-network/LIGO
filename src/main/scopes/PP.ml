@@ -19,7 +19,7 @@ let rec definitions : Format.formatter -> def list -> unit =
  fun f defs ->
   let defs =
     List.sort defs ~compare:(fun d1 d2 ->
-      String.compare (get_def_uid d1) (get_def_uid d2))
+        String.compare (get_def_uid d1) (get_def_uid d2))
   in
   let refs ppf locs =
     let locs = LSet.elements locs in
@@ -50,33 +50,31 @@ let rec definitions : Format.formatter -> def list -> unit =
   in
   let variables, types_modules =
     List.partition_tf
-      ~f:
-        (function
-         | Type _ | Module _ -> false
-         | Variable _ -> true)
+      ~f:(function
+        | Type _ | Module _ -> false
+        | Variable _ -> true)
       defs
   in
   let types, modules =
     List.partition_tf
-      ~f:
-        (function
-         | Type _ -> true
-         | _ -> false)
+      ~f:(function
+        | Type _ -> true
+        | _ -> false)
       types_modules
   in
   let pp_def f =
     List.iter ~f:(fun def ->
-      Format.fprintf
-        f
-        "(%s -> %s) @ Range: %a @ Body Range: %a @ Content: %a@ "
-        (get_def_uid def)
-        (get_def_name def)
-        Location.pp
-        (get_range def)
-        Location.pp
-        (get_body_range def)
-        pp_content
-        def)
+        Format.fprintf
+          f
+          "(%s -> %s) @ Range: %a @ Body Range: %a @ Content: %a@ "
+          (get_def_uid def)
+          (get_def_name def)
+          Location.pp
+          (get_range def)
+          Location.pp
+          (get_body_range def)
+          pp_content
+          def)
   in
   Format.fprintf
     f
@@ -142,18 +140,18 @@ and defs_json (defs : def list) : Yojson.Safe.t =
   let get_defs defs =
     let variables, types_modules =
       List.partition_tf defs ~f:(function
-        | Variable _ -> true
-        | Type _ | Module _ -> false)
+          | Variable _ -> true
+          | Type _ | Module _ -> false)
     in
     let types, modules =
       List.partition_tf types_modules ~f:(function
-        | Type _ -> true
-        | Variable _ | Module _ -> false)
+          | Type _ -> true
+          | Variable _ | Module _ -> false)
     in
     let modules, module_aliases =
       List.partition_tf modules ~f:(function
-        | Module { mod_case = Def _; _ } -> true
-        | Variable _ | Type _ | Module { mod_case = Alias _; _ } -> false)
+          | Module { mod_case = Def _; _ } -> true
+          | Variable _ | Type _ | Module { mod_case = Alias _; _ } -> false)
     in
     [ "variables", `Assoc (List.map ~f:(fun def -> def_to_yojson def) variables)
     ; "types", `Assoc (List.map ~f:(fun def -> def_to_yojson def) types)
@@ -171,13 +169,13 @@ let scopes_json (scopes : scopes) : Yojson.Safe.t =
          let loc, defs = scope in
          let variables, types_modules =
            List.partition_tf defs ~f:(function
-             | Type _ | Module _ -> false
-             | Variable _ -> true)
+               | Type _ | Module _ -> false
+               | Variable _ -> true)
          in
          let types, modules =
            List.partition_tf types_modules ~f:(function
-             | Type _ -> true
-             | Module _ | Variable _ -> false)
+               | Type _ -> true
+               | Module _ | Variable _ -> false)
          in
          let vs = List.map ~f:(fun def -> `String (get_def_uid def)) variables in
          let ts = List.map ~f:(fun def -> `String (get_def_uid def)) types in

@@ -10,5 +10,5 @@ let pp_big_map f ppf = pp' "big_map" f ppf
 
 let dedup_and_sort t ~compare =
   List.dedup_and_sort t ~compare:(fun (t11, t12) (t21, t22) ->
-    let compare_1 = compare t11 t21 in
-    if compare_1 = 0 then compare t12 t22 else compare_1)
+      let compare_1 = compare t11 t21 in
+      if compare_1 = 0 then compare t12 t22 else compare_1)

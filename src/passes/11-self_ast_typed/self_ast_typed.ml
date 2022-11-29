@@ -50,8 +50,8 @@ let all_view ~raise command_line_views main_name prg =
     | None -> ()
     | Some command_line_views ->
       List.iter user_views ~f:(fun (x, loc) ->
-        if Option.is_none (List.find ~f:(Value_var.is_name x) command_line_views)
-        then Simple_utils.Trace.(raise.warning (`Main_view_ignored loc)))
+          if Option.is_none (List.find ~f:(Value_var.is_name x) command_line_views)
+          then Simple_utils.Trace.(raise.warning (`Main_view_ignored loc)))
   in
   let () =
     match

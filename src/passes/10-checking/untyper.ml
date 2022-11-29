@@ -132,29 +132,29 @@ and untype_expression_content (ec : O.expression_content) : I.expression =
   | E_deref var -> return @@ I.make_e @@ E_variable var
   | E_type_inst { forall; type_ = type_inst } ->
     (match forall.type_expression.type_content with
-     | T_for_all { ty_binder; type_; kind = _ } ->
-       let type_ = Ast_typed.Helpers.subst_type ty_binder type_inst type_ in
-       let forall = { forall with type_expression = type_ } in
-       self forall
-     | T_arrow _ ->
-       (* This case is used for external typers *)
-       self forall
-     | _ ->
-       failwith "Impossible case: cannot untype a type instance of a non polymorphic type")
+    | T_for_all { ty_binder; type_; kind = _ } ->
+      let type_ = Ast_typed.Helpers.subst_type ty_binder type_inst type_ in
+      let forall = { forall with type_expression = type_ } in
+      self forall
+    | T_arrow _ ->
+      (* This case is used for external typers *)
+      self forall
+    | _ ->
+      failwith "Impossible case: cannot untype a type instance of a non polymorphic type")
 
 
 and untype_match_expr
-  :  (O.expression, O.type_expression) O.Match_expr.t
-  -> (I.expression, I.type_expression option) I.Match_expr.t
+    :  (O.expression, O.type_expression) O.Match_expr.t
+    -> (I.expression, I.type_expression option) I.Match_expr.t
   =
  fun { matchee; cases } ->
   let matchee = untype_expression matchee in
   let cases =
     List.map cases ~f:(fun { pattern; body } ->
-      let pattern = O.Pattern.map untype_type_expression_option pattern in
-      let pattern = untype_pattern pattern in
-      let body = untype_expression body in
-      I.Match_expr.{ pattern; body })
+        let pattern = O.Pattern.map untype_type_expression_option pattern in
+        let pattern = untype_pattern pattern in
+        let body = untype_expression body in
+        I.Match_expr.{ pattern; body })
   in
   I.Match_expr.{ matchee; cases }
 
@@ -196,7 +196,7 @@ and untype_module_expr : O.module_expr -> I.module_expr =
 
 
 and untype_declaration_constant
-  : (O.expression -> I.expression) -> _ O.Value_decl.t -> _ I.Value_decl.t
+    : (O.expression -> I.expression) -> _ O.Value_decl.t -> _ I.Value_decl.t
   =
  fun untype_expression { binder; expr; attr } ->
   let ty = untype_type_expression expr.O.type_expression in

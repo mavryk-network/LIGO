@@ -7,7 +7,7 @@ type form =
   | Contract of Value_var.t
   | View of
       { command_line_views : string list option
-          (* views declared as command line arguments if any *)
+            (* views declared as command line arguments if any *)
       ; contract_entry : Value_var.t (* contract main function name                     *)
       }
   | Env
@@ -21,7 +21,7 @@ let specific_passes ~raise cform prg =
 
 
 let typecheck ~raise ~(options : Compiler_options.t) (cform : form) (p : Ast_core.program)
-  : Ast_typed.program
+    : Ast_typed.program
   =
   let typed =
     trace ~raise checking_tracer
@@ -45,11 +45,11 @@ let typecheck ~raise ~(options : Compiler_options.t) (cform : form) (p : Ast_cor
 
 
 let compile_expression
-  ~raise
-  ~(options : Compiler_options.t)
-  ~(init_prog : Ast_typed.program)
-  (expr : Ast_core.expression)
-  : Ast_typed.expression
+    ~raise
+    ~(options : Compiler_options.t)
+    ~(init_prog : Ast_typed.program)
+    (expr : Ast_core.expression)
+    : Ast_typed.expression
   =
   let Compiler_options.{ init_env; _ } = options.middle_end in
   let env = Environment.append init_env init_prog in
@@ -67,7 +67,7 @@ let compile_expression
 
 
 let compile_program ~raise ~(options : Compiler_options.t) (prg : Ast_core.program)
-  : Ast_typed.program
+    : Ast_typed.program
   =
   let Compiler_options.{ init_env; _ } = options.middle_end in
   let typed =

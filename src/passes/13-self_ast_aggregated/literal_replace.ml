@@ -34,45 +34,45 @@ let expression ~raise : expression -> expression =
   match expr.expression_content with
   | E_constant { cons_name = cst; arguments = lst } ->
     (match cst with
-     | C_MAP_LITERAL ->
-       let elt =
-         trace_option ~raise (Errors.bad_single_arity cst expr) @@ List.to_singleton lst
-       in
-       let k_ty, v_ty =
-         trace_option ~raise (Errors.bad_map_param_type cst expr)
-         @@ get_t_map expr.type_expression
-       in
-       let lst = list_expression ~raise elt in
-       let aux p = pair_expression ~raise p in
-       let pairs = List.map ~f:aux lst in
-       List.fold_right
-         pairs
-         ~f:(fun (k, v) m -> e_a_map_add k v m)
-         ~init:(e_a_map_empty k_ty v_ty)
-     | C_BIG_MAP_LITERAL ->
-       let elt =
-         trace_option ~raise (Errors.bad_single_arity cst expr) @@ List.to_singleton lst
-       in
-       let k_ty, v_ty =
-         trace_option ~raise (Errors.bad_map_param_type cst expr)
-         @@ get_t_big_map expr.type_expression
-       in
-       let lst = list_expression ~raise elt in
-       let aux p = pair_expression ~raise p in
-       let pairs = List.map ~f:aux lst in
-       List.fold_right
-         pairs
-         ~f:(fun (k, v) m -> e_a_big_map_add k v m)
-         ~init:(e_a_big_map_empty k_ty v_ty)
-     | C_SET_LITERAL ->
-       let elt =
-         trace_option ~raise (Errors.bad_single_arity cst expr) @@ List.to_singleton lst
-       in
-       let v_ty =
-         trace_option ~raise (Errors.bad_set_param_type cst expr)
-         @@ get_t_set expr.type_expression
-       in
-       let lst = list_expression ~raise elt in
-       List.fold_right lst ~f:(fun v s -> e_a_set_add v s) ~init:(e_a_set_empty v_ty)
-     | _ -> expr)
+    | C_MAP_LITERAL ->
+      let elt =
+        trace_option ~raise (Errors.bad_single_arity cst expr) @@ List.to_singleton lst
+      in
+      let k_ty, v_ty =
+        trace_option ~raise (Errors.bad_map_param_type cst expr)
+        @@ get_t_map expr.type_expression
+      in
+      let lst = list_expression ~raise elt in
+      let aux p = pair_expression ~raise p in
+      let pairs = List.map ~f:aux lst in
+      List.fold_right
+        pairs
+        ~f:(fun (k, v) m -> e_a_map_add k v m)
+        ~init:(e_a_map_empty k_ty v_ty)
+    | C_BIG_MAP_LITERAL ->
+      let elt =
+        trace_option ~raise (Errors.bad_single_arity cst expr) @@ List.to_singleton lst
+      in
+      let k_ty, v_ty =
+        trace_option ~raise (Errors.bad_map_param_type cst expr)
+        @@ get_t_big_map expr.type_expression
+      in
+      let lst = list_expression ~raise elt in
+      let aux p = pair_expression ~raise p in
+      let pairs = List.map ~f:aux lst in
+      List.fold_right
+        pairs
+        ~f:(fun (k, v) m -> e_a_big_map_add k v m)
+        ~init:(e_a_big_map_empty k_ty v_ty)
+    | C_SET_LITERAL ->
+      let elt =
+        trace_option ~raise (Errors.bad_single_arity cst expr) @@ List.to_singleton lst
+      in
+      let v_ty =
+        trace_option ~raise (Errors.bad_set_param_type cst expr)
+        @@ get_t_set expr.type_expression
+      in
+      let lst = list_expression ~raise elt in
+      List.fold_right lst ~f:(fun v s -> e_a_set_add v s) ~init:(e_a_set_empty v_ty)
+    | _ -> expr)
   | _ -> expr

@@ -18,8 +18,8 @@ let pp f g ppf { type_binder; rhs; let_result } =
 
 
 let fold_map
-  :  ('acc -> 'a -> 'acc * 'b) -> ('acc -> 'c -> 'acc * 'd) -> 'acc -> ('a, 'c) t
-  -> 'acc * ('b, 'd) t
+    :  ('acc -> 'a -> 'acc * 'b) -> ('acc -> 'c -> 'acc * 'd) -> 'acc -> ('a, 'c) t
+    -> 'acc * ('b, 'd) t
   =
  fun f g acc { type_binder; rhs; let_result } ->
   let acc, rhs = g acc rhs in

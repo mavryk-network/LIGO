@@ -18,8 +18,8 @@ let pp f g ppf { fun_name; fun_type; lambda = l } =
 
 
 let fold_map
-  :  ('acc -> 'a -> 'acc * 'b) -> ('acc -> 'c -> 'acc * 'd) -> 'acc -> ('a, 'c) t
-  -> 'acc * ('b, 'd) t
+    :  ('acc -> 'a -> 'acc * 'b) -> ('acc -> 'c -> 'acc * 'd) -> 'acc -> ('a, 'c) t
+    -> 'acc * ('b, 'd) t
   =
  fun f g acc { fun_name; fun_type; lambda } ->
   let acc, fun_type = g acc fun_type in

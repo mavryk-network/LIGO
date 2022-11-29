@@ -123,11 +123,11 @@ module Michelson_formatter = struct
                  ~pp_sep:(fun ppf () -> Format.pp_print_string ppf ", ")
                  Format.pp_print_string)
               (List.map env ~f:(function
-                | None -> "_"
-                | Some meta ->
-                  (match meta.name with
-                   | None -> "_"
-                   | Some name -> name)))
+                  | None -> "_"
+                  | Some meta ->
+                    (match meta.name with
+                    | None -> "_"
+                    | Some name -> name)))
           else ""
         in
         let comment = loc ^ env in
@@ -161,14 +161,14 @@ module Michelson_formatter = struct
 
 
   let json_object (vals : (string * Data_encoding.Json.t option) list)
-    : Data_encoding.Json.t
+      : Data_encoding.Json.t
     =
     `O
       (List.concat
          (List.map vals ~f:(fun (k, v) ->
-            match v with
-            | None -> []
-            | Some v -> [ k, v ])))
+              match v with
+              | None -> []
+              | Some v -> [ k, v ])))
 
 
   module TypeOrd = struct
@@ -181,10 +181,10 @@ module Michelson_formatter = struct
   open Tezos_micheline
 
   let rec fold_micheline
-    (node : _ Micheline.node)
-    ~(f : 'acc -> _ Micheline.node -> 'acc)
-    ~(init : 'acc)
-    : 'acc
+      (node : _ Micheline.node)
+      ~(f : 'acc -> _ Micheline.node -> 'acc)
+      ~(init : 'acc)
+      : 'acc
     =
     let init = f init node in
     match node with
@@ -207,11 +207,11 @@ module Michelson_formatter = struct
             Tezos_micheline.Micheline.location node
           in
           List.fold_left env ~init ~f:(fun init binder_meta ->
-            match binder_meta with
-            | None -> init
-            | Some { location = _; name = _; source_type = None } -> init
-            | Some { location = _; name = _; source_type = Some source_type } ->
-              TypeSet.add source_type init))
+              match binder_meta with
+              | None -> init
+              | Some { location = _; name = _; source_type = None } -> init
+              | Some { location = _; name = _; source_type = Some source_type } ->
+                TypeSet.add source_type init))
         ~init:TypeSet.empty
     in
     (* hmm *)
@@ -231,7 +231,10 @@ module Michelson_formatter = struct
             List.map
               ~f:
                 (Option.map ~f:(fun Mini_c.{ location; name; source_type } ->
-                   { location; name; source_type = Option.map ~f:type_index source_type }))
+                     { location
+                     ; name
+                     ; source_type = Option.map ~f:type_index source_type
+                     }))
               env
           in
           { location; env })
@@ -266,8 +269,8 @@ module Michelson_formatter = struct
                   Some
                     (`A
                       (List.map env ~f:(function
-                        | None -> `Null
-                        | Some binder_meta -> variable_meta_to_json binder_meta))) )
+                          | None -> `Null
+                          | Some binder_meta -> variable_meta_to_json binder_meta))) )
             ])
         (fun _s -> failwith ("internal error: not implemented @ " ^ __LOC__))
         Data_encoding.json)
@@ -294,11 +297,11 @@ module Michelson_formatter = struct
 
 
   let result_ppformat
-    michelson_format
-    michelson_comments
-    ~display_format
-    f
-    (a : shrunk_result)
+      michelson_format
+      michelson_comments
+      ~display_format
+      f
+      (a : shrunk_result)
     =
     let mich_pp michelson_format michelson_comments =
       match michelson_format with
@@ -334,22 +337,22 @@ module Michelson_formatter = struct
 
 
   let convert_michelson_comments
-    : [> `All | `Env | `Location | `Source ] list -> michelson_comments
+      : [> `All | `Env | `Location | `Source ] list -> michelson_comments
     =
     let none = { location = false; source = false; env = false } in
     let all = { location = true; source = true; env = true } in
     List.fold_left ~init:none ~f:(fun config option ->
-      let config2 =
-        match option with
-        | `All -> all
-        | `Env -> { none with env = true }
-        | `Location -> { none with location = true }
-        | `Source -> { none with source = true }
-      in
-      { location = config.location || config2.location
-      ; source = config.source || config2.source
-      ; env = config.env || config2.env
-      })
+        let config2 =
+          match option with
+          | `All -> all
+          | `Env -> { none with env = true }
+          | `Location -> { none with location = true }
+          | `Source -> { none with source = true }
+        in
+        { location = config.location || config2.location
+        ; source = config.source || config2.source
+        ; env = config.env || config2.env
+        })
 
 
   let shrunk_result_format : michelson_format -> _ -> shrunk_result format =
@@ -360,7 +363,7 @@ module Michelson_formatter = struct
 
 
   let michelson_format
-    : michelson_format -> _ -> (Mini_c.meta, string) Micheline.node format
+      : michelson_format -> _ -> (Mini_c.meta, string) Micheline.node format
     =
    fun michelson_format michelson_comments ->
     Display.map ~f:shrink (shrunk_result_format michelson_format michelson_comments)
@@ -402,9 +405,9 @@ module Michelson_formatter = struct
 
 
   let michelson_constant_format
-    : (Proto_alpha_utils.Memory_proto_alpha.Protocol.Script_expr_hash.t
-      * (int, string) Micheline.node)
-    format
+      : (Proto_alpha_utils.Memory_proto_alpha.Protocol.Script_expr_hash.t
+        * (int, string) Micheline.node)
+      format
     =
     { pp = michelson_constant_ppformat
     ; to_json = (fun (_, a) -> michelson_constant_jsonformat `Text a)

@@ -214,8 +214,8 @@ and type_inst ppf { forall; type_ } =
 and option_inline ppf inline = if inline then fprintf ppf "[@inline]" else fprintf ppf ""
 
 and matching_variant_case
-  :  (formatter -> expression -> unit) -> formatter -> expression matching_content_case
-  -> unit
+    :  (formatter -> expression -> unit) -> formatter -> expression matching_content_case
+    -> unit
   =
  fun f ppf { constructor = c; pattern; body } ->
   fprintf ppf "@[<v 2>| %a %a ->@ %a@]" Label.pp c Value_var.pp pattern f body

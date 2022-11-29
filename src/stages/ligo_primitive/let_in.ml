@@ -42,8 +42,8 @@ let pp_mut f g ppf { let_binder; rhs; let_result; attributes = attr } =
 
 
 let fold_map
-  :  ('acc -> 'a -> 'acc * 'b) -> ('acc -> 'c -> 'acc * 'd) -> 'acc -> ('a, 'c) t
-  -> 'acc * ('b, 'd) t
+    :  ('acc -> 'a -> 'acc * 'b) -> ('acc -> 'c -> 'acc * 'd) -> 'acc -> ('a, 'c) t
+    -> 'acc * ('b, 'd) t
   =
  fun f g acc { let_binder; rhs; let_result; attributes } ->
   let acc, let_binder = Binder.fold_map g acc let_binder in

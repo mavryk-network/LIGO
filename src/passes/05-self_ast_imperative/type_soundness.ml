@@ -8,8 +8,8 @@ open Ligo_prim
 let predefined_data_constructor = [ "Some"; "None"; "Unit" ]
 
 let linearity_type_parameters
-  :  raise:([< Errors.self_ast_imperative_error ], _) Trace.raise -> type_expression
-  -> unit
+    :  raise:([< Errors.self_ast_imperative_error ], _) Trace.raise -> type_expression
+    -> unit
   =
  fun ~raise x ->
   match x.type_content with
@@ -37,8 +37,8 @@ let linearity_type_parameters
 
 
 let linearity_rows
-  :  raise:([< Errors.self_ast_imperative_error ], _) Trace.raise -> type_expression
-  -> unit
+    :  raise:([< Errors.self_ast_imperative_error ], _) Trace.raise -> type_expression
+    -> unit
   =
  fun ~raise x ->
   match x.type_content with
@@ -49,8 +49,8 @@ let linearity_rows
 
 
 let predefined_data_constructor
-  :  raise:([< Errors.self_ast_imperative_error ], _) Trace.raise -> type_expression
-  -> unit
+    :  raise:([< Errors.self_ast_imperative_error ], _) Trace.raise -> type_expression
+    -> unit
   =
  fun ~raise x ->
   match x.type_content with
@@ -59,14 +59,14 @@ let predefined_data_constructor
     (match
        List.find_a_dup ~compare:String.compare (lst @ predefined_data_constructor)
      with
-     | Some s -> raise.error (reserved_name s x.location)
-     | None -> ())
+    | Some s -> raise.error (reserved_name s x.location)
+    | None -> ())
   | _ -> ()
 
 
 let checks_linearity
-  :  raise:([< Errors.self_ast_imperative_error ], _) Trace.raise -> type_expression
-  -> unit
+    :  raise:([< Errors.self_ast_imperative_error ], _) Trace.raise -> type_expression
+    -> unit
   =
  fun ~raise x ->
   linearity_type_parameters ~raise x;
@@ -74,8 +74,8 @@ let checks_linearity
 
 
 let checks_predefined
-  :  raise:([< Errors.self_ast_imperative_error ], _) Trace.raise -> type_expression
-  -> unit
+    :  raise:([< Errors.self_ast_imperative_error ], _) Trace.raise -> type_expression
+    -> unit
   =
  fun ~raise x -> predefined_data_constructor ~raise x
 

@@ -89,8 +89,8 @@ type return =
   | Exception of exn
 
 let return_result
-  :  return:return ref -> ?show_warnings:bool -> ?output_file:string
-  -> (unit -> ('value, _) result) -> unit
+    :  return:return ref -> ?show_warnings:bool -> ?output_file:string
+    -> (unit -> ('value, _) result) -> unit
   =
  fun ~return ?(show_warnings = false) ?output_file f ->
   try
@@ -126,11 +126,11 @@ let does_command_exist (cmd : string) =
 let run_command (cmd : command) =
   let status =
     Lwt_process.with_process_none ~stdout:`Keep ~stderr:`Keep cmd (fun p ->
-      Lwt.map
-        (fun status ->
-          match status with
-          | Caml_unix.WEXITED 0 -> Ok ()
-          | _ -> Error "unknown error")
-        p#status)
+        Lwt.map
+          (fun status ->
+            match status with
+            | Caml_unix.WEXITED 0 -> Ok ()
+            | _ -> Error "unknown error")
+          p#status)
   in
   Lwt_main.run status

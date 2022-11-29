@@ -76,68 +76,67 @@ let get_groups md_file : snippetsmap =
           el.arguments
       in
       (match el.arguments with
-       | [ Md.Field "" ] ->
-         SnippetsGroup.update
-           (s, "ungrouped", current_proto)
-           (fun arg_content ->
-             match arg_content with
-             | Some (lang, ct) -> Some (lang, String.concat ~sep:"\n" (ct :: el.contents))
-             | None -> Some (Object, String.concat ~sep:"\n" el.contents))
-           grp_map
-       | [ Md.Field "skip" ] -> grp_map
-       | [ Md.Field "test-ligo"
-         ; Md.NameValue ("group", name)
-         ; Md.NameValue ("protocol", x)
-         ] ->
-         let lang = Meta in
-         SnippetsGroup.update
-           (s, name, get_proto x)
-           (fun arg_content ->
-             match arg_content with
-             | Some (lang', ct) when Caml.( = ) lang lang' ->
-               Some (lang, String.concat ~sep:"\n" (ct :: el.contents))
-             | _ -> Some (lang, String.concat ~sep:"\n" el.contents))
-           grp_map
-       | [ Md.Field "test-ligo"; Md.NameValue ("group", name) ] ->
-         let lang = Meta in
-         SnippetsGroup.update
-           (s, name, current_proto)
-           (fun arg_content ->
-             match arg_content with
-             | Some (lang', ct) when Caml.( = ) lang lang' ->
-               Some (lang, String.concat ~sep:"\n" (ct :: el.contents))
-             | _ -> Some (lang, String.concat ~sep:"\n" el.contents))
-           grp_map
-       | [ Md.NameValue ("group", name); Md.NameValue ("protocol", x) ] ->
-         let lang = Object in
-         SnippetsGroup.update
-           (s, name, get_proto x)
-           (fun arg_content ->
-             match arg_content with
-             | Some (lang', ct) when Caml.( = ) lang lang' ->
-               Some (lang, String.concat ~sep:"\n" (ct :: el.contents))
-             | _ -> Some (lang, String.concat ~sep:"\n" el.contents))
-           grp_map
-       | [ Md.NameValue ("group", name) ] ->
-         let lang = Object in
-         SnippetsGroup.update
-           (s, name, current_proto)
-           (fun arg_content ->
-             match arg_content with
-             | Some (lang', ct) when Caml.( = ) lang lang' ->
-               Some (lang, String.concat ~sep:"\n" (ct :: el.contents))
-             | _ -> Some (lang, String.concat ~sep:"\n" el.contents))
-           grp_map
-       | args ->
-         let () =
-           List.iter
-             ~f:
-               (function
-                | Md.NameValue (x, y) -> Format.printf "NamedValue %s %s\n" x y
-                | Md.Field x -> Format.printf "%s\n" x)
-             args
-         in
-         failwith "Block arguments (above) not supported")
+      | [ Md.Field "" ] ->
+        SnippetsGroup.update
+          (s, "ungrouped", current_proto)
+          (fun arg_content ->
+            match arg_content with
+            | Some (lang, ct) -> Some (lang, String.concat ~sep:"\n" (ct :: el.contents))
+            | None -> Some (Object, String.concat ~sep:"\n" el.contents))
+          grp_map
+      | [ Md.Field "skip" ] -> grp_map
+      | [ Md.Field "test-ligo"
+        ; Md.NameValue ("group", name)
+        ; Md.NameValue ("protocol", x)
+        ] ->
+        let lang = Meta in
+        SnippetsGroup.update
+          (s, name, get_proto x)
+          (fun arg_content ->
+            match arg_content with
+            | Some (lang', ct) when Caml.( = ) lang lang' ->
+              Some (lang, String.concat ~sep:"\n" (ct :: el.contents))
+            | _ -> Some (lang, String.concat ~sep:"\n" el.contents))
+          grp_map
+      | [ Md.Field "test-ligo"; Md.NameValue ("group", name) ] ->
+        let lang = Meta in
+        SnippetsGroup.update
+          (s, name, current_proto)
+          (fun arg_content ->
+            match arg_content with
+            | Some (lang', ct) when Caml.( = ) lang lang' ->
+              Some (lang, String.concat ~sep:"\n" (ct :: el.contents))
+            | _ -> Some (lang, String.concat ~sep:"\n" el.contents))
+          grp_map
+      | [ Md.NameValue ("group", name); Md.NameValue ("protocol", x) ] ->
+        let lang = Object in
+        SnippetsGroup.update
+          (s, name, get_proto x)
+          (fun arg_content ->
+            match arg_content with
+            | Some (lang', ct) when Caml.( = ) lang lang' ->
+              Some (lang, String.concat ~sep:"\n" (ct :: el.contents))
+            | _ -> Some (lang, String.concat ~sep:"\n" el.contents))
+          grp_map
+      | [ Md.NameValue ("group", name) ] ->
+        let lang = Object in
+        SnippetsGroup.update
+          (s, name, current_proto)
+          (fun arg_content ->
+            match arg_content with
+            | Some (lang', ct) when Caml.( = ) lang lang' ->
+              Some (lang, String.concat ~sep:"\n" (ct :: el.contents))
+            | _ -> Some (lang, String.concat ~sep:"\n" el.contents))
+          grp_map
+      | args ->
+        let () =
+          List.iter
+            ~f:(function
+              | Md.NameValue (x, y) -> Format.printf "NamedValue %s %s\n" x y
+              | Md.Field x -> Format.printf "%s\n" x)
+            args
+        in
+        failwith "Block arguments (above) not supported")
     | None | Some _ -> grp_map
   in
   List.fold_left ~f:aux ~init:SnippetsGroup.empty code_blocks

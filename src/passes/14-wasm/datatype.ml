@@ -26,8 +26,8 @@ let uni_op : (S.region -> A.instr list) -> Env.t -> A.instr list -> Env.t * A.in
 
 
 let bin_op
-  :  (S.region -> A.instr list) -> Env.t -> A.instr list -> A.instr list
-  -> Env.t * A.instr list
+    :  (S.region -> A.instr list) -> Env.t -> A.instr list -> A.instr list
+    -> Env.t * A.instr list
   =
  fun op env a b ->
   let at = cover_region a b in
@@ -59,8 +59,8 @@ let bin_op
 
 
 let compare_bin_op
-  :  (S.region -> A.instr list) -> Env.t -> A.instr list -> A.instr list
-  -> Env.t * A.instr list
+    :  (S.region -> A.instr list) -> Env.t -> A.instr list -> A.instr list
+    -> Env.t * A.instr list
   =
  fun op env a b ->
   let at = cover_region a b in

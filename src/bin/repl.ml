@@ -68,18 +68,15 @@ open Simple_utils.Display
 let repl_result_ppformat ~display_format f = function
   | Expression_value expr ->
     (match display_format with
-     | Human_readable | Dev -> Ast_core.PP.expression f expr)
+    | Human_readable | Dev -> Ast_core.PP.expression f expr)
   | Defined_values_core program ->
     (match display_format with
-     | Human_readable | Dev ->
-       Simple_utils.PP_helpers.list_sep_d pp_declaration f (get_declarations_core program))
+    | Human_readable | Dev ->
+      Simple_utils.PP_helpers.list_sep_d pp_declaration f (get_declarations_core program))
   | Defined_values_typed program ->
     (match display_format with
-     | Human_readable | Dev ->
-       Simple_utils.PP_helpers.list_sep_d
-         pp_declaration
-         f
-         (get_declarations_typed program))
+    | Human_readable | Dev ->
+      Simple_utils.PP_helpers.list_sep_d pp_declaration f (get_declarations_typed program))
   | Just_ok -> Simple_utils.PP_helpers.string f "Done."
 
 
@@ -160,7 +157,7 @@ let try_eval ~raise ~raw_options state s =
 
 
 let concat_modules ~declaration (m1 : Ast_typed.program) (m2 : Ast_typed.program)
-  : Ast_typed.program
+    : Ast_typed.program
   =
   let () = if declaration then assert (List.length m2 = 1) in
   m1 @ m2
@@ -370,12 +367,12 @@ class read_phrase ~term ~history ~n =
         let input_utf8 = Zed_string.to_utf8 input in
         let result = Str.split_delim (Str.regexp ";;") input_utf8 in
         (match result with
-         | [] | [ _ ] ->
-           self#insert (Uchar.of_char '\n');
-           self#exec ~keys actions
-         | hd :: _ ->
-           LTerm_history.add history input;
-           Lwt.return @@ LTerm_read_line.Result (Zed_string.of_utf8 hd))
+        | [] | [ _ ] ->
+          self#insert (Uchar.of_char '\n');
+          self#exec ~keys actions
+        | hd :: _ ->
+          LTerm_history.add history input;
+          Lwt.return @@ LTerm_read_line.Result (Zed_string.of_utf8 hd))
       | actions -> super_term#exec actions
 
     initializer self#set_prompt (React.S.const (make_prompt n))
@@ -391,15 +388,15 @@ let rec loop ~raw_options syntax display_format term history state n =
 
 
 let main
-  (raw_options : Raw_options.t)
-  display_format
-  now
-  amount
-  balance
-  sender
-  source
-  init_file
-  ()
+    (raw_options : Raw_options.t)
+    display_format
+    now
+    amount
+    balance
+    sender
+    source
+    init_file
+    ()
   =
   let protocol =
     Environment.Protocols.protocols_to_variant raw_options.protocol_version
@@ -435,5 +432,5 @@ let main
     in
     Lwt_main.run (LTerm.fprintls term (LTerm_text.eval [ S welcome_msg ]));
     (try loop ~raw_options syntax display_format term history state 1 with
-     | LTerm_read_line.Interrupt -> Ok ("", "")
-     | Sys_unix.Break -> Ok ("", ""))
+    | LTerm_read_line.Interrupt -> Ok ("", "")
+    | Sys_unix.Break -> Ok ("", ""))

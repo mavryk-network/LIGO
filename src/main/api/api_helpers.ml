@@ -3,8 +3,8 @@ open Simple_utils
 module Trace = Simple_utils.Trace
 
 let toplevel
-  :  ?warning_as_error:bool -> display_format:ex_display_format -> displayable
-  -> ('value * 'w, _) result -> _
+    :  ?warning_as_error:bool -> display_format:ex_display_format -> displayable
+    -> ('value * 'w, _) result -> _
   =
  fun ?(warning_as_error = false) ~display_format disp value ->
   let (Ex_display_format t) = display_format in
@@ -21,14 +21,14 @@ let toplevel
   in
   let warns =
     List.map warns ~f:(fun value ->
-      match t with
-      | (Human_readable | Dev) as s ->
-        convert ~display_format:s (Displayable { value; format = Main_warnings.format })
-      | Json ->
-        Yojson.Safe.pretty_to_string
-        @@ convert
-             ~display_format:t
-             (Displayable { value; format = Main_warnings.format }))
+        match t with
+        | (Human_readable | Dev) as s ->
+          convert ~display_format:s (Displayable { value; format = Main_warnings.format })
+        | Json ->
+          Yojson.Safe.pretty_to_string
+          @@ convert
+               ~display_format:t
+               (Displayable { value; format = Main_warnings.format }))
   in
   let warns_str = String.concat ~sep:"\n" warns in
   if (not (List.is_empty warns)) && warning_as_error
@@ -40,8 +40,8 @@ let toplevel
 
 
 let format_result
-  :  ?warning_as_error:bool -> display_format:ex_display_format -> 'value format
-  -> (raise:(Main_errors.all, Main_warnings.all) Trace.raise -> 'value) -> _
+    :  ?warning_as_error:bool -> display_format:ex_display_format -> 'value format
+    -> (raise:(Main_errors.all, Main_warnings.all) Trace.raise -> 'value) -> _
   =
  fun ?(warning_as_error = false) ~display_format value_format value ->
   let format = bind_format value_format Main_errors.Formatter.error_format in

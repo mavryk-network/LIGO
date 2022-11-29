@@ -45,7 +45,7 @@ let rec type_expression : Scope.t -> AST.type_expression -> AST.type_expression 
       Record.map
         ~f:
           (fun ({ associated_type; michelson_annotation; decl_pos } : AST.row_element)
-             : AST.row_element ->
+               : AST.row_element ->
           let associated_type = self associated_type in
           { associated_type; michelson_annotation; decl_pos })
         fields
@@ -56,7 +56,7 @@ let rec type_expression : Scope.t -> AST.type_expression -> AST.type_expression 
       Record.map
         ~f:
           (fun ({ associated_type; michelson_annotation; decl_pos } : AST.row_element)
-             : AST.row_element ->
+               : AST.row_element ->
           let associated_type = self associated_type in
           { associated_type; michelson_annotation; decl_pos })
         fields
@@ -163,8 +163,8 @@ let rec expression : Scope.t -> AST.expression -> AST.expression =
 
 
 and matching_cases
-  :  Scope.t -> (AST.expression, AST.type_expression) AST.Match_expr.match_case list
-  -> (AST.expression, AST.type_expression) AST.Match_expr.match_case list
+    :  Scope.t -> (AST.expression, AST.type_expression) AST.Match_expr.match_case list
+    -> (AST.expression, AST.type_expression) AST.Match_expr.match_case list
   =
  fun scope me ->
   let self ?(scope = scope) = expression scope in

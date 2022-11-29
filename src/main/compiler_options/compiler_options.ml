@@ -40,7 +40,7 @@ type backend =
   ; file_constants : string option
   ; backend : Raw_options.backend
   ; has_env_comments : bool
-      (* true if --michelson-comments env. if
+        (* true if --michelson-comments env. if
                                true, empty seqs {} with comments will
                                not be erased during optimisation *)
   }
@@ -60,8 +60,8 @@ let warn_unused_rec ~syntax should_warn =
 
 
 let make
-  :  raw_options:Raw_options.t -> ?syntax:Syntax_types.t -> ?protocol_version:Protocols.t
-  -> ?has_env_comments:bool -> unit -> t
+    :  raw_options:Raw_options.t -> ?syntax:Syntax_types.t
+    -> ?protocol_version:Protocols.t -> ?has_env_comments:bool -> unit -> t
   =
  fun ~raw_options
      ?syntax

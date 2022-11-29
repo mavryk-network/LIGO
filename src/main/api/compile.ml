@@ -13,8 +13,8 @@ let no_comment node =
 let has_env_comments michelson_comments =
   Option.is_some
     (List.find michelson_comments ~f:(function
-      | `Env -> true
-      | _ -> false))
+        | `Env -> true
+        | _ -> false))
 
 
 let read_file_constants ~raise file_constants =
@@ -26,18 +26,18 @@ let read_file_constants ~raise file_constants =
        let json = Yojson.Basic.from_string buf in
        json |> Yojson.Basic.Util.to_list |> List.map ~f:Yojson.Basic.Util.to_string
      with
-     | Sys_error _ -> raise.Trace.error (`Main_cannot_open_global_constants fn)
-     | Yojson.Json_error s ->
-       raise.Trace.error (`Main_cannot_parse_global_constants (fn, s)))
+    | Sys_error _ -> raise.Trace.error (`Main_cannot_open_global_constants fn)
+    | Yojson.Json_error s ->
+      raise.Trace.error (`Main_cannot_parse_global_constants (fn, s)))
 
 
 let contract
-  (raw_options : Raw_options.t)
-  source_file
-  display_format
-  michelson_code_format
-  michelson_comments
-  ()
+    (raw_options : Raw_options.t)
+    source_file
+    display_format
+    michelson_code_format
+    michelson_comments
+    ()
   =
   let warning_as_error = raw_options.warning_as_error in
   format_result
@@ -83,12 +83,12 @@ let contract
 
 
 let contract_wasm
-  (raw_options : Raw_options.t)
-  source_file
-  output_file
-  display_format
-  wasm_code_format
-  ()
+    (raw_options : Raw_options.t)
+    source_file
+    output_file
+    display_format
+    wasm_code_format
+    ()
   =
   let warning_as_error = raw_options.warning_as_error in
   format_result
@@ -115,12 +115,12 @@ let contract_wasm
 
 
 let expression
-  (raw_options : Raw_options.t)
-  expression
-  init_file
-  display_format
-  michelson_format
-  ()
+    (raw_options : Raw_options.t)
+    expression
+    init_file
+    display_format
+    michelson_format
+    ()
   =
   let warning_as_error = raw_options.warning_as_error in
   format_result
@@ -203,17 +203,17 @@ let constant (raw_options : Raw_options.t) constants init_file display_format ()
 
 
 let parameter
-  (raw_options : Raw_options.t)
-  source_file
-  expression
-  amount
-  balance
-  sender
-  source
-  now
-  display_format
-  michelson_format
-  ()
+    (raw_options : Raw_options.t)
+    source_file
+    expression
+    amount
+    balance
+    sender
+    source
+    now
+    display_format
+    michelson_format
+    ()
   =
   let warning_as_error = raw_options.warning_as_error in
   format_result
@@ -300,17 +300,17 @@ let parameter
 
 
 let storage
-  (raw_options : Raw_options.t)
-  source_file
-  expression
-  amount
-  balance
-  sender
-  source
-  now
-  display_format
-  michelson_format
-  ()
+    (raw_options : Raw_options.t)
+    source_file
+    expression
+    amount
+    balance
+    sender
+    source
+    now
+    display_format
+    michelson_format
+    ()
   =
   let warning_as_error = raw_options.warning_as_error in
   format_result

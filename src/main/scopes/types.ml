@@ -129,7 +129,7 @@ let make_t_def : string -> def_type -> Location.t -> Ast_core.type_expression ->
 
 
 let make_m_def
-  : range:Location.t -> body_range:Location.t -> string -> def_type -> def list -> def
+    : range:Location.t -> body_range:Location.t -> string -> def_type -> def list -> def
   =
  fun ~range ~body_range name def_type members ->
   let uid = make_def_id name in
@@ -138,7 +138,8 @@ let make_m_def
 
 
 let make_m_alias_def
-  : range:Location.t -> body_range:Location.t -> string -> def_type -> string list -> def
+    :  range:Location.t -> body_range:Location.t -> string -> def_type -> string list
+    -> def
   =
  fun ~range ~body_range name def_type alias ->
   let uid = make_def_id name in

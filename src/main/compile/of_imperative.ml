@@ -8,8 +8,8 @@ let compile ~raise (p : program) : Ast_core.program =
 
 
 let compile_expression
-  ~(raise : (Main_errors.all, Main_warnings.all) raise)
-  (e : expression)
-  : Ast_core.expression
+    ~(raise : (Main_errors.all, Main_warnings.all) raise)
+    (e : expression)
+    : Ast_core.expression
   =
   trace ~raise desugaring_tracer @@ compile_expression e

@@ -8,8 +8,8 @@ open Errors
   check_view_type checks against michelson restriction (usually defined in tezos/src/proto_alpha/lib_protocol/script_ir_translator.ml)
 **)
 let check_view_type ~raise
-  :  err_data:Value_var.t * Ast_typed.type_expression Binder.t -> contract_type
-  -> Ast_typed.type_expression -> unit
+    :  err_data:Value_var.t * Ast_typed.type_expression Binder.t -> contract_type
+    -> Ast_typed.type_expression -> unit
   =
  fun ~err_data:(main_name, view_binder) { storage = c_storage; _ } view_ty ->
   let view_loc = Value_var.get_location @@ Binder.get_var view_binder in
@@ -17,8 +17,8 @@ let check_view_type ~raise
     match Ast_typed.get_t_arrow view_ty with
     | Some { type1 = tin; type2 = return } ->
       (match Ast_typed.get_t_tuple tin with
-       | Some [ arg; storage ] -> arg, storage, return
-       | _ -> raise.error (expected_pair_in_view view_loc))
+      | Some [ arg; storage ] -> arg, storage, return
+      | _ -> raise.error (expected_pair_in_view view_loc))
     | None -> raise.error @@ bad_view_io main_name view_loc
   in
   let () =

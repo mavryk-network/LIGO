@@ -33,7 +33,7 @@ let wrap_test_w name f =
     (fun ~raise ~catch ->
       let () = f ~raise () in
       List.iter ~f:(fun w ->
-        Format.printf "%a\n" (Main_warnings.pp ~display_format:Dev) w)
+          Format.printf "%a\n" (Main_warnings.pp ~display_format:Dev) w)
       @@ catch.warnings ())
     (fun ~catch error ->
       let value = Error (test_err_tracer name error) in
@@ -41,7 +41,7 @@ let wrap_test_w name f =
       let disp = Simple_utils.Display.Displayable { value; format } in
       let s = Simple_utils.Display.convert ~display_format:Dev disp in
       List.iter ~f:(fun w ->
-        Format.printf "%a\n" (Main_warnings.pp ~display_format:Dev) w)
+          Format.printf "%a\n" (Main_warnings.pp ~display_format:Dev) w)
       @@ catch.warnings ();
       Format.printf "%s\n" s;
       Stdlib.raise Alcotest.Test_error)
@@ -136,9 +136,9 @@ let core_file ~raise f options = Build.qualified_core ~raise ~options f
 
 let get_program ~raise ?(st = "auto") f entry =
   wrap_ref f (fun s ->
-    let program = type_file ~raise ~st f entry options in
-    s := Some (program, f);
-    program)
+      let program = type_file ~raise ~st f entry options in
+      s := Some (program, f);
+      program)
 
 
 let get_program f ?st =
@@ -151,10 +151,10 @@ let expression_to_core ~raise expression =
 
 
 let pack_payload
-  ~raise
-  (program : Ast_typed.program)
-  (payload : Ast_imperative.expression)
-  : bytes
+    ~raise
+    (program : Ast_typed.program)
+    (payload : Ast_imperative.expression)
+    : bytes
   =
   let code =
     let core = Ligo_compile.Of_imperative.compile_expression ~raise payload in
@@ -175,11 +175,11 @@ let pack_payload
 
 
 let sign_message
-  ~raise
-  (program : Ast_typed.program)
-  (payload : Ast_imperative.expression)
-  sk
-  : string
+    ~raise
+    (program : Ast_typed.program)
+    (payload : Ast_imperative.expression)
+    sk
+    : string
   =
   let open Tezos_crypto in
   let packed_payload = pack_payload ~raise program payload in
@@ -232,11 +232,11 @@ let typed_program_to_michelson ~raise (program, env) =
 
 
 let typed_program_with_imperative_input_to_michelson
-  ~raise
-  (program : Ast_typed.program)
-  (entry_point : string)
-  (input : Ast_imperative.expression)
-  : Stacking.compiled_expression * Ast_aggregated.type_expression
+    ~raise
+    (program : Ast_typed.program)
+    (entry_point : string)
+    (input : Ast_imperative.expression)
+    : Stacking.compiled_expression * Ast_aggregated.type_expression
   =
   Printexc.record_backtrace true;
   let core = Ligo_compile.Of_imperative.compile_expression ~raise input in
@@ -258,12 +258,12 @@ let typed_program_with_imperative_input_to_michelson
 
 
 let run_typed_program_with_imperative_input
-  ~raise
-  ?options
-  (program : Ast_typed.program)
-  (entry_point : string)
-  (input : Ast_imperative.expression)
-  : Ast_core.expression
+    ~raise
+    ?options
+    (program : Ast_typed.program)
+    (entry_point : string)
+    (input : Ast_imperative.expression)
+    : Ast_core.expression
   =
   let michelson_program, ty =
     typed_program_with_imperative_input_to_michelson ~raise program entry_point input
@@ -403,13 +403,13 @@ let expect_eq_n_trace_aux ~raise ?options lst program entry_point make_input mak
 
 
 let expect_eq_exp_trace_aux
-  ~raise
-  ?options
-  explst
-  program
-  entry_point
-  make_input
-  make_expected
+    ~raise
+    ?options
+    explst
+    program
+    entry_point
+    make_input
+    make_expected
   =
   let aux exp =
     let input = make_input exp in
@@ -422,13 +422,13 @@ let expect_eq_exp_trace_aux
 
 
 let expect_failwith_exp_trace_aux
-  ~raise
-  ?options
-  explst
-  program
-  entry_point
-  make_input
-  make_expected_failwith
+    ~raise
+    ?options
+    explst
+    program
+    entry_point
+    make_input
+    make_expected_failwith
   =
   let aux exp =
     let input = make_input exp in

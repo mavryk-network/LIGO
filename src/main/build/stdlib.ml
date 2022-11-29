@@ -1,7 +1,7 @@
 type t =
   { curry : lib
   ; uncurry : lib
-      (* typed and untyped version of both curry and uncurry libraries wrapped into a module:
+        (* typed and untyped version of both curry and uncurry libraries wrapped into a module:
    module Curry = struct
      let x = <..>
      let y = <..>
@@ -19,7 +19,7 @@ and lib =
   { (* preludes to be prepended X_mod_def's at top-level and within imported modules *)
     prelude_core : Ast_core.program
   ; prelude_typed : Ast_typed.program
-      (* typed version of std_lib.mligo . Usage: repl (where the syntax is fixed) *)
+        (* typed version of std_lib.mligo . Usage: repl (where the syntax is fixed) *)
   ; content_typed : Ast_typed.program
   }
 

@@ -7,7 +7,7 @@ let wrap_test_w name f =
     (fun ~raise ~catch ->
       let () = f ~raise () in
       List.iter ~f:(fun w ->
-        Format.printf "%a\n" (Main_warnings.pp ~display_format:Dev) w)
+          Format.printf "%a\n" (Main_warnings.pp ~display_format:Dev) w)
       @@ catch.warnings ())
     (fun ~catch error ->
       let value = Error (test_err_tracer name error) in
@@ -15,7 +15,7 @@ let wrap_test_w name f =
       let disp = Simple_utils.Display.Displayable { value; format } in
       let s = Simple_utils.Display.convert ~display_format:Dev disp in
       List.iter ~f:(fun w ->
-        Format.printf "%a\n" (Main_warnings.pp ~display_format:Dev) w)
+          Format.printf "%a\n" (Main_warnings.pp ~display_format:Dev) w)
       @@ catch.warnings ();
       Format.printf "%s\n" s;
       Stdlib.raise Alcotest.Test_error)

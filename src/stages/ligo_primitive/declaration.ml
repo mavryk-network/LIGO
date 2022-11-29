@@ -16,8 +16,8 @@ module Value_decl (Attr : Attr) = struct
   [@@deriving eq, compare, yojson, hash, fold, map]
 
   let fold_map
-    :  ('acc -> 'a -> 'acc * 'b) -> ('acc -> 'c -> 'acc * 'd) -> 'acc -> ('a, 'c) t
-    -> 'acc * ('b, 'd) t
+      :  ('acc -> 'a -> 'acc * 'b) -> ('acc -> 'c -> 'acc * 'd) -> 'acc -> ('a, 'c) t
+      -> 'acc * ('b, 'd) t
     =
    fun f g acc { binder; attr; expr } ->
     let acc, binder = Binder.fold_map g acc binder in

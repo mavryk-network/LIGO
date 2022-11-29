@@ -35,17 +35,17 @@ let rec type_content : formatter -> type_content -> unit =
   | T_sum m ->
     let s ppf = fprintf ppf "@[<hv 4>sum[%a]@]" (sum_set_t type_expression) in
     (match m.attributes with
-     | [] -> fprintf ppf "%a" s m.fields
-     | _ ->
-       let attr = attributes_1 m.attributes in
-       fprintf ppf "(%a %s)" s m.fields attr)
+    | [] -> fprintf ppf "%a" s m.fields
+    | _ ->
+      let attr = attributes_1 m.attributes in
+      fprintf ppf "(%a %s)" s m.fields attr)
   | T_record m ->
     let r = record_sep_t type_expression (const ";") in
     (match m.attributes with
-     | [] -> fprintf ppf "{%a}" r m.fields
-     | _ ->
-       let attr : string = attributes_1 m.attributes in
-       fprintf ppf "({%a} %s)" r m.fields attr)
+    | [] -> fprintf ppf "{%a}" r m.fields
+    | _ ->
+      let attr : string = attributes_1 m.attributes in
+      fprintf ppf "({%a} %s)" r m.fields attr)
   | T_variable tv -> Type_var.pp ppf tv
   | T_tuple t -> Rows.PP.type_tuple type_expression ppf t
   | T_arrow a -> Arrow.pp type_expression ppf a

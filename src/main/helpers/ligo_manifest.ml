@@ -43,8 +43,8 @@ let try_readme ~project_root =
   let ls = Sys_unix.ls_dir project_root in
   match
     List.find ls ~f:(fun d ->
-      String.equal "readme.md" (String.lowercase d)
-      || String.equal "readme" (String.lowercase d))
+        String.equal "readme.md" (String.lowercase d)
+        || String.equal "readme" (String.lowercase d))
   with
   | None -> "ERROR: No README data found!"
   | Some r ->
@@ -156,4 +156,4 @@ let read ~project_root =
          ; ligo_manifest_path
          }
      with
-     | Failure e -> Error e)
+    | Failure e -> Error e)

@@ -53,8 +53,8 @@ let is_generated_partial_match : expression -> bool =
   | E_application { lamb = { expression_content = E_variable v; _ }; args = e }
     when String.equal "failwith" (Format.asprintf "%a" Value_var.pp v) ->
     (match get_a_string e with
-     | Some fw -> String.equal fw (Ligo_string.extract Backend.Michelson.fw_partial_match)
-     | None -> false)
+    | Some fw -> String.equal fw (Ligo_string.extract Backend.Michelson.fw_partial_match)
+    | None -> false)
   | _ -> false
 
 
@@ -93,32 +93,32 @@ let compress_matching : expression -> expression =
     | E_matching m ->
       let matchee_var = get_e_variable_opt m.matchee in
       (match m.cases with
-       | Match_variant cases ->
-         (match matchee_var with
-          | Some v ->
-            (match SimplMap.find_opt v smap with
-             | Some le ->
-               let fw, no_fw =
-                 List.partition_tf
-                   ~f:(fun (case : _ matching_content_case) ->
-                     is_generated_partial_match case.body)
-                   cases.cases
-               in
-               (match no_fw, fw with
-                | [ { constructor = Label constructor; pattern; body } ], lst
-                  when List.length lst >= 1 ->
-                  let _, proj =
-                    List.find_exn
-                      ~f:(fun (Label constructor', _) ->
-                        String.equal constructor' constructor)
-                      le
-                  in
-                  let body' = substitute_var_in_body pattern proj body in
-                  stop body'
-                | _, _ -> continue smap)
-             | None -> continue (SimplMap.add v (make_le cases) smap))
-          | None -> continue smap)
-       | _ -> continue smap)
+      | Match_variant cases ->
+        (match matchee_var with
+        | Some v ->
+          (match SimplMap.find_opt v smap with
+          | Some le ->
+            let fw, no_fw =
+              List.partition_tf
+                ~f:(fun (case : _ matching_content_case) ->
+                  is_generated_partial_match case.body)
+                cases.cases
+            in
+            (match no_fw, fw with
+            | [ { constructor = Label constructor; pattern; body } ], lst
+              when List.length lst >= 1 ->
+              let _, proj =
+                List.find_exn
+                  ~f:(fun (Label constructor', _) ->
+                    String.equal constructor' constructor)
+                  le
+              in
+              let body' = substitute_var_in_body pattern proj body in
+              stop body'
+            | _, _ -> continue smap)
+          | None -> continue (SimplMap.add v (make_le cases) smap))
+        | None -> continue smap)
+      | _ -> continue smap)
     | _ -> continue smap
   in
   let simplify exp =

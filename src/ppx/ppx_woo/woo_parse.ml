@@ -9,12 +9,12 @@ let get_default_value_opt : P.attribute -> P.expression option =
   (if String.equal name.txt "default" then Some () else None)
   >>? fun () ->
   (match pl with
-   | P.PStr items -> Some items
-   | _ -> None)
+  | P.PStr items -> Some items
+  | _ -> None)
   >>? fun items ->
   (match items with
-   | [ default ] -> Some default
-   | _ -> None)
+  | [ default ] -> Some default
+  | _ -> None)
   >>? fun default ->
   match default.pstr_desc with
   | Pstr_eval (expr, _) -> Some expr
@@ -58,9 +58,9 @@ let type_declaration ?non_recursive : P.type_declaration -> W.type_declaration =
     | P.Ptype_record lds -> record lds
     | P.Ptype_abstract ->
       (match td.ptype_manifest with
-       | Some ct -> W.T_core ct
-       | None ->
-         failwith "parse_type_declaration: unknown case PType_abstract and no manifest")
+      | Some ct -> W.T_core ct
+      | None ->
+        failwith "parse_type_declaration: unknown case PType_abstract and no manifest")
     | P.Ptype_open -> failwith "parse_type_declaration: unknown case PType_open"
   in
   W.type_declaration ?non_recursive (label, body)

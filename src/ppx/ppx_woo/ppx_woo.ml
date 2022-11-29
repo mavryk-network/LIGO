@@ -16,7 +16,7 @@ module Make (Params : Woo_helpers.PARAMS) = struct
     let declaration_of_prefix (name, body) = Helpers.declaration ~name ~body
 
     let str ~prefixes ?wrap_constructor ?wrap_get ?wrap_map ?default_get
-      : P.rec_flag * P.type_declaration list -> P.structure_item list
+        : P.rec_flag * P.type_declaration list -> P.structure_item list
       =
      fun (rec_flag, tds) ->
       let non_recursive = Parse.non_recursive rec_flag in
@@ -104,15 +104,15 @@ let args =
 let deriver =
   let str_type_decl =
     let generate
-      ~loc
-      ~path:_
-      input
-      prefix
-      prefixes
-      wrap_constructor
-      wrap_get
-      wrap_map
-      default_get
+        ~loc
+        ~path:_
+        input
+        prefix
+        prefixes
+        wrap_constructor
+        wrap_get
+        wrap_map
+        default_get
       =
       let prefixes =
         let prefix =

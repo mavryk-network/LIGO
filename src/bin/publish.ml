@@ -104,21 +104,21 @@ type body =
 [@@deriving to_yojson]
 
 let body
-  ~name
-  ~author
-  ~type_
-  ~storage_fn
-  ~storage_arg
-  ~repository
-  ~main
-  ~readme
-  ~version
-  ~ligo_registry
-  ~description
-  ~sha512
-  ~sha1
-  ~gzipped_tarball
-  ~scripts
+    ~name
+    ~author
+    ~type_
+    ~storage_fn
+    ~storage_arg
+    ~repository
+    ~main
+    ~readme
+    ~version
+    ~ligo_registry
+    ~description
+    ~sha512
+    ~sha1
+    ~gzipped_tarball
+    ~scripts
   =
   { id = name
   ; name
@@ -353,10 +353,10 @@ let publish ~ligo_registry ~ligorc_path ~project_root =
     let registry_key = LigoRC.registry_key ligo_registry in
     let token = LigoRC.get_token ~registry_key ligorc in
     (match token with
-     | None -> Error ("\nUser not logged in.\nHint: Use ligo login or ligo add-user", "")
-     | Some token ->
-       let project_root = Option.value_exn project_root in
-       let response, body =
-         Lwt_main.run (publish ~project_root ~token ~ligo_registry ~manifest)
-       in
-       handle_server_response ~name:manifest.name response body)
+    | None -> Error ("\nUser not logged in.\nHint: Use ligo login or ligo add-user", "")
+    | Some token ->
+      let project_root = Option.value_exn project_root in
+      let response, body =
+        Lwt_main.run (publish ~project_root ~token ~ligo_registry ~manifest)
+      in
+      handle_server_response ~name:manifest.name response body)

@@ -200,7 +200,7 @@ let rec map_expression : 'err mapper -> expression -> expression =
 
 
 and map_expression_in_module_expr
-  : (expression -> expression) -> module_expr -> module_expr
+    : (expression -> expression) -> module_expr -> module_expr
   =
  fun self x ->
   let return wrap_content : module_expr = { x with wrap_content } in
@@ -213,7 +213,7 @@ and map_expression_in_module_expr
 
 
 and map_cases
-  : 'err mapper -> _ Match_expr.match_case list -> _ Match_expr.match_case list
+    : 'err mapper -> _ Match_expr.match_case list -> _ Match_expr.match_case list
   =
  fun f m -> List.map m ~f:(Match_expr.map_match_case (map_expression f) (fun t -> t))
 
@@ -279,20 +279,20 @@ let fetch_contract_type ~raise : Value_var.t -> program -> contract_type =
   match expr.type_expression.type_content with
   | T_arrow { type1; type2 } ->
     (match Ast_typed.Combinators.(get_t_pair type1, get_t_pair type2) with
-     | Some (parameter, storage), Some (listop, storage') ->
-       let () =
-         trace_option ~raise (expected_list_operation main_fname listop expr)
-         @@ Ast_typed.assert_t_list_operation listop
-       in
-       let () =
-         trace_option ~raise (expected_same_entry main_fname storage storage' expr)
-         @@ Ast_typed.assert_type_expression_eq (storage, storage')
-       in
-       (* TODO: on storage/parameter : asert_storable, assert_passable ? *)
-       { parameter; storage }
-     | _ ->
-       raise.error
-       @@ bad_contract_io main_fname expr (Value_var.get_location @@ Binder.get_var binder))
+    | Some (parameter, storage), Some (listop, storage') ->
+      let () =
+        trace_option ~raise (expected_list_operation main_fname listop expr)
+        @@ Ast_typed.assert_t_list_operation listop
+      in
+      let () =
+        trace_option ~raise (expected_same_entry main_fname storage storage' expr)
+        @@ Ast_typed.assert_type_expression_eq (storage, storage')
+      in
+      (* TODO: on storage/parameter : asert_storable, assert_passable ? *)
+      { parameter; storage }
+    | _ ->
+      raise.error
+      @@ bad_contract_io main_fname expr (Value_var.get_location @@ Binder.get_var binder))
   | _ ->
     raise.error
     @@ bad_contract_io main_fname expr (Value_var.get_location @@ Binder.get_var binder)
@@ -307,9 +307,9 @@ let get_shadowed_decl : program -> (ValueAttr.t -> bool) -> Location.t option =
     match Location.unwrap x with
     | D_value { binder; attr; _ } ->
       (match List.find seen ~f:(Value_var.equal (Binder.get_var binder)) with
-       | Some x -> seen, Value_var.get_location x :: shadows
-       | None ->
-         if predicate attr then Binder.get_var binder :: seen, shadows else seen, shadows)
+      | Some x -> seen, Value_var.get_location x :: shadows
+      | None ->
+        if predicate attr then Binder.get_var binder :: seen, shadows else seen, shadows)
     | _ -> seen, shadows
   in
   let _, shadows = List.fold ~f:aux ~init:([], []) prg in
@@ -348,19 +348,19 @@ let annotate_with_view ~raise : string list -> Ast_typed.program -> Ast_typed.pr
       prg
       ~init:([], names)
       ~f:(fun (x : declaration) ((prg, views) : Ast_typed.program * string list) ->
-      let continue = x :: prg, views in
-      match Location.unwrap x with
-      | D_value ({ binder; _ } as decl) ->
-        (match List.find views ~f:(Value_var.is_name @@ Binder.get_var binder) with
-         | Some found ->
-           let decorated =
-             { x with
-               wrap_content = D_value { decl with attr = { decl.attr with view = true } }
-             }
-           in
-           decorated :: prg, List.remove_element ~compare:String.compare found views
-         | None -> continue)
-      | _ -> continue)
+        let continue = x :: prg, views in
+        match Location.unwrap x with
+        | D_value ({ binder; _ } as decl) ->
+          (match List.find views ~f:(Value_var.is_name @@ Binder.get_var binder) with
+          | Some found ->
+            let decorated =
+              { x with
+                wrap_content = D_value { decl with attr = { decl.attr with view = true } }
+              }
+            in
+            decorated :: prg, List.remove_element ~compare:String.compare found views
+          | None -> continue)
+        | _ -> continue)
   in
   let () =
     match not_found with
@@ -397,8 +397,8 @@ end = struct
 
 
   let rec merge
-    { modVarSet = x1; moduleEnv = y1; varSet = z1; mutSet = m1 }
-    { modVarSet = x2; moduleEnv = y2; varSet = z2; mutSet = m2 }
+      { modVarSet = x1; moduleEnv = y1; varSet = z1; mutSet = m1 }
+      { modVarSet = x2; moduleEnv = y2; varSet = z2; mutSet = m2 }
     =
     let aux : Module_var.t -> moduleEnv' -> moduleEnv' -> moduleEnv' option =
      fun _ a b -> Some (merge a b)
@@ -445,10 +445,10 @@ end = struct
     | E_lambda { binder; output_type = _; result } ->
       let env = self result in
       (match Param.get_mut_flag binder with
-       | Immutable ->
-         { env with varSet = VarSet.remove (Param.get_var binder) @@ env.varSet }
-       | Mutable ->
-         { env with mutSet = VarSet.remove (Param.get_var binder) @@ env.mutSet })
+      | Immutable ->
+        { env with varSet = VarSet.remove (Param.get_var binder) @@ env.varSet }
+      | Mutable ->
+        { env with mutSet = VarSet.remove (Param.get_var binder) @@ env.mutSet })
     | E_type_abstraction { type_binder = _; result } -> self result
     | E_recursive { fun_name; lambda = { binder; output_type = _; result }; fun_type = _ }
       ->
@@ -512,10 +512,10 @@ end = struct
    fun m ->
     unions
     @@ List.map m ~f:(fun { pattern; body } ->
-         let { modVarSet; moduleEnv; varSet; mutSet } = get_fv_expr body in
-         let vars = Pattern.binders pattern |> List.map ~f:Binder.get_var in
-         let varSet = List.fold vars ~init:varSet ~f:(fun vs v -> VarSet.remove v vs) in
-         { modVarSet; moduleEnv; varSet; mutSet })
+           let { modVarSet; moduleEnv; varSet; mutSet } = get_fv_expr body in
+           let vars = Pattern.binders pattern |> List.map ~f:Binder.get_var in
+           let varSet = List.fold vars ~init:varSet ~f:(fun vs v -> VarSet.remove v vs) in
+           { modVarSet; moduleEnv; varSet; mutSet })
 
 
   and get_fv_module_expr : module_expr -> moduleEnv' =

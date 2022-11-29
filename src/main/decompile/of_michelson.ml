@@ -21,9 +21,9 @@ let decompile_value ~raise (output_type : Ast_aggregated.type_expression) (ty, v
    is done at michelson level (i.e. pushing the arguments onto the stack).
 *)
 let decompile_value_from_contract_execution
-  ~raise
-  (output_type : Ast_aggregated.type_expression)
-  runned_result
+    ~raise
+    (output_type : Ast_aggregated.type_expression)
+    runned_result
   =
   match runned_result with
   | Fail s -> Fail s
@@ -37,9 +37,9 @@ let decompile_value_from_contract_execution
 
 
 let decompile_expression
-  ~raise
-  (type_value : Ast_aggregated.type_expression)
-  runned_result
+    ~raise
+    (type_value : Ast_aggregated.type_expression)
+    runned_result
   =
   match runned_result with
   | Fail s -> Fail s

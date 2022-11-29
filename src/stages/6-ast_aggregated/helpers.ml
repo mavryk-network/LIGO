@@ -7,8 +7,8 @@ let kv_list_of_t_sum ?(layout : Layout.t = Layout.L_tree) (m : row_element Recor
   | L_tree -> lst
   | L_comb ->
     let aux
-      (_, ({ associated_type = _; decl_pos = a; _ } : row_element))
-      (_, ({ associated_type = _; decl_pos = b; _ } : row_element))
+        (_, ({ associated_type = _; decl_pos = a; _ } : row_element))
+        (_, ({ associated_type = _; decl_pos = b; _ } : row_element))
       =
       Int.compare a b
     in
@@ -16,8 +16,8 @@ let kv_list_of_t_sum ?(layout : Layout.t = Layout.L_tree) (m : row_element Recor
 
 
 let kv_list_of_t_record_or_tuple
-  ?(layout : Layout.t = Layout.L_tree)
-  (m : row_element Record.t)
+    ?(layout : Layout.t = Layout.L_tree)
+    (m : row_element Record.t)
   =
   let lst =
     if Record.is_tuple m then Record.tuple_of_record m else Record.LMap.to_kv_list m
@@ -26,8 +26,8 @@ let kv_list_of_t_record_or_tuple
   | L_tree -> lst
   | L_comb ->
     let aux
-      (_, ({ associated_type = _; decl_pos = a; _ } : row_element))
-      (_, ({ associated_type = _; decl_pos = b; _ } : row_element))
+        (_, ({ associated_type = _; decl_pos = a; _ } : row_element))
+        (_, ({ associated_type = _; decl_pos = b; _ } : row_element))
       =
       Int.compare a b
     in
@@ -163,9 +163,9 @@ let assert_same_size a b = if List.length a = List.length b then Some () else No
 (* ~unforged_tickets allows type containing tickets to be decompiled to 'unforged' tickets (e.g. `int * int ticket` |-> `int * {ticketer : address ; value : int ; amount : nat }
    TODO: we could think of a better way to inject those "comparison expeptions" to assert_type_expression `*)
 let rec assert_type_expression_eq
-  ?(unforged_tickets = false)
-  ((a, b) : type_expression * type_expression)
-  : unit option
+    ?(unforged_tickets = false)
+    ((a, b) : type_expression * type_expression)
+    : unit option
   =
   let open Simple_utils.Option in
   match a.type_content, b.type_content with
@@ -194,8 +194,8 @@ let rec assert_type_expression_eq
     let sa' = Record.LMap.to_kv_list_rev sa.fields in
     let sb' = Record.LMap.to_kv_list_rev sb.fields in
     let aux
-      ( (ka, ({ associated_type = va; _ } : row_element))
-      , (kb, ({ associated_type = vb; _ } : row_element)) )
+        ( (ka, ({ associated_type = va; _ } : row_element))
+        , (kb, ({ associated_type = vb; _ } : row_element)) )
       =
       let* _ = assert_eq ka kb in
       assert_type_expression_eq ~unforged_tickets (va, vb)
@@ -216,8 +216,8 @@ let rec assert_type_expression_eq
     let ra' = sort_lmap @@ Record.LMap.to_kv_list_rev ra.fields in
     let rb' = sort_lmap @@ Record.LMap.to_kv_list_rev rb.fields in
     let aux
-      ( (ka, ({ associated_type = va; _ } : row_element))
-      , (kb, ({ associated_type = vb; _ } : row_element)) )
+        ( (ka, ({ associated_type = va; _ } : row_element))
+        , (kb, ({ associated_type = vb; _ } : row_element)) )
       =
       let* _ = assert_eq ka kb in
       assert_type_expression_eq ~unforged_tickets (va, vb)

@@ -12,7 +12,7 @@ type expression_content = [%import: Types.expression_content]
     { prefixes =
         [ ( "make_e"
           , fun ?(location = Location.generated) expression_content type_expression
-              : expression ->
+                : expression ->
               { expression_content; location; type_expression } )
         ; ("get", fun x -> x.expression_content)
         ; ("get_type", fun x -> x.type_expression)
@@ -90,10 +90,10 @@ let t_record ?loc ~layout fields : type_expression =
 let default_layout : Layout.t = Layout.L_tree
 
 let make_t_ez_record
-  ?loc
-  ?(layout = default_layout)
-  (lst : (string * type_expression) list)
-  : type_expression
+    ?loc
+    ?(layout = default_layout)
+    (lst : (string * type_expression) list)
+    : type_expression
   =
   let lst =
     List.mapi
@@ -143,7 +143,7 @@ let t_unforged_ticket ?loc ty : type_expression =
 let t_sum ?loc ~layout fields : type_expression = make_t ?loc (T_sum { fields; layout })
 
 let t_sum_ez ?loc ?(layout = default_layout) (lst : (string * type_expression) list)
-  : type_expression
+    : type_expression
   =
   let lst =
     List.mapi
@@ -212,17 +212,17 @@ let get_t_option (t : type_expression) : type_expression option =
   | T_sum { fields; _ } ->
     let keys = Record.LMap.keys fields in
     (match keys with
-     | [ a; b ]
-       when (Label.equal a l_none && Label.equal b l_some)
-            || (Label.equal a l_some && Label.equal b l_none) ->
-       let some = Record.LMap.find l_some fields in
-       Some some.Rows.associated_type
-     | _ -> None)
+    | [ a; b ]
+      when (Label.equal a l_none && Label.equal b l_some)
+           || (Label.equal a l_some && Label.equal b l_none) ->
+      let some = Record.LMap.find l_some fields in
+      Some some.Rows.associated_type
+    | _ -> None)
   | _ -> None
 
 
 let get_param_inj (t : type_expression)
-  : (string * Ligo_prim.Literal_types.t * type_expression list) option
+    : (string * Ligo_prim.Literal_types.t * type_expression list) option
   =
   match t.type_content with
   | T_constant { language; injection; parameters } ->
@@ -231,7 +231,7 @@ let get_param_inj (t : type_expression)
 
 
 let get_t_inj (t : type_expression) (v : Ligo_prim.Literal_types.t)
-  : type_expression list option
+    : type_expression list option
   =
   match t.type_content with
   | T_constant { language = _; injection; parameters }
@@ -246,7 +246,7 @@ let get_t_base_inj (t : type_expression) (v : Ligo_prim.Literal_types.t) : unit 
 
 
 let get_t_unary_inj (t : type_expression) (v : Ligo_prim.Literal_types.t)
-  : type_expression option
+    : type_expression option
   =
   match get_t_inj t v with
   | Some [ a ] -> Some a
@@ -254,7 +254,7 @@ let get_t_unary_inj (t : type_expression) (v : Ligo_prim.Literal_types.t)
 
 
 let get_t_binary_inj (t : type_expression) (v : Ligo_prim.Literal_types.t)
-  : (type_expression * type_expression) option
+    : (type_expression * type_expression) option
   =
   match get_t_inj t v with
   | Some [ a; b ] -> Some (a, b)
@@ -312,8 +312,8 @@ let get_t_pair (t : type_expression) : (type_expression * type_expression) optio
   | T_record m ->
     let lst = tuple_of_record m.fields in
     (match List.(length lst = 2) with
-     | true -> Some List.(nth_exn lst 0, nth_exn lst 1)
-     | false -> None)
+    | true -> Some List.(nth_exn lst 0, nth_exn lst 1)
+    | false -> None)
   | _ -> None
 
 
@@ -378,8 +378,8 @@ let is_t_bool t =
   match t.type_content with
   | T_sum { fields; _ } ->
     (match Record.LMap.keys fields with
-     | [ Label "True"; Label "False" ] -> true
-     | _ -> false)
+    | [ Label "True"; Label "False" ] -> true
+    | _ -> false)
   | _ -> false
 
 
@@ -622,8 +622,8 @@ let get_record_field_type (t : type_expression) (label : Label.t) : type_express
   | None -> None
   | Some struct_ ->
     (match Record.LMap.find_opt label struct_.fields with
-     | None -> None
-     | Some row_element -> Some row_element.associated_type)
+    | None -> None
+    | Some row_element -> Some row_element.associated_type)
 
 
 let get_type_abstractions (e : expression) =
@@ -676,11 +676,11 @@ let forall_expand (e : expression) =
 
 
 let context_decl
-  ?(loc = Location.generated)
-  (binder : type_expression Binder.t)
-  (expr : expression)
-  (attr : ValueAttr.t)
-  : context
+    ?(loc = Location.generated)
+    (binder : type_expression Binder.t)
+    (expr : expression)
+    (attr : ValueAttr.t)
+    : context
   =
   [ Location.wrap ~loc @@ D_value { binder; expr; attr } ]
 

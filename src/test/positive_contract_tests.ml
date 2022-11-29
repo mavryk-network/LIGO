@@ -14,12 +14,12 @@ let positive_contract_tests =
   String.split
     ~on:' '
     (match Sys.getenv "POSITIVE_CONTRACTS" with
-     | Some e -> e
-     | None -> "")
+    | Some e -> e
+    | None -> "")
   |> List.filter ~f:(fun path -> not (ends_with ".md" path))
   |> List.map ~f:(fun path ->
-       let run ~raise () = Test_helpers.compile_main ~raise path () in
-       test_w ("src/test/" ^ path) run)
+         let run ~raise () = Test_helpers.compile_main ~raise path () in
+         test_w ("src/test/" ^ path) run)
 
 
 let main = test_suite "Positive contracts" positive_contract_tests

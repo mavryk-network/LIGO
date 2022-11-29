@@ -8,8 +8,8 @@ module Wasm = Wasm_pass.Compiler
 module Linker = Wasm_pass.Linker
 
 let compile_contract ~raise
-  :  options:Compiler_options.t -> expression -> string -> string
-  -> WasmObjectFile.Ast.module_
+    :  options:Compiler_options.t -> expression -> string -> string
+    -> WasmObjectFile.Ast.module_
   =
  fun ~options e filename entrypoint ->
   print_endline "MINI C:";

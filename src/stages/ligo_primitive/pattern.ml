@@ -88,8 +88,8 @@ module Make (Container : Container) () = struct
     | P_var _ -> f acc p
     | P_list lp ->
       (match lp with
-       | Cons (pa, pb) -> fold_pattern f (fold_pattern f acc pb) pa
-       | List lp -> List.fold_left ~f:(fold_pattern f) ~init:acc lp)
+      | Cons (pa, pb) -> fold_pattern f (fold_pattern f acc pb) pa
+      | List lp -> List.fold_left ~f:(fold_pattern f) ~init:acc lp)
     | P_variant (_, p) -> fold_pattern f acc p
     | P_tuple lp -> List.fold_left ~f:(fold_pattern f) ~init:acc lp
     | P_record lps -> Container.fold ~f:(fold_pattern f) ~init:acc lps
@@ -102,8 +102,8 @@ module Make (Container : Container) () = struct
     | P_var b -> Binder.fold f acc b
     | P_list lp ->
       (match lp with
-       | Cons (pa, pb) -> fold f (fold f acc pb) pa
-       | List lp -> List.fold_left ~f:(fold f) ~init:acc lp)
+      | Cons (pa, pb) -> fold f (fold f acc pb) pa
+      | List lp -> List.fold_left ~f:(fold f) ~init:acc lp)
     | P_variant (_, p) -> fold f acc p
     | P_tuple lp -> List.fold_left ~f:(fold f) ~init:acc lp
     | P_record lps -> Container.fold ~f:(fold f) ~init:acc lps

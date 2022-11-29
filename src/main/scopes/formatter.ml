@@ -24,14 +24,14 @@ let warn_format = Main_warnings.format
 let pp_get_scope_output : get_scope_output pp =
  fun ~display_format f { errors; warns; info } ->
   (match info with
-   | Some info -> scope_ppformat ~display_format f info
-   | None -> ());
+  | Some info -> scope_ppformat ~display_format f info
+  | None -> ());
   List.iter errors ~f:(fun err ->
-    error_format.pp ~display_format f err;
-    Format.fprintf f "\n");
+      error_format.pp ~display_format f err;
+      Format.fprintf f "\n");
   List.iter warns ~f:(fun warn ->
-    warn_format.pp ~display_format f warn;
-    Format.fprintf f "\n")
+      warn_format.pp ~display_format f warn;
+      Format.fprintf f "\n")
 
 
 let to_errors list =

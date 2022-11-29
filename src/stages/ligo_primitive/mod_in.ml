@@ -6,8 +6,8 @@ type ('e, 'dcl) t =
 [@@deriving eq, compare, yojson, hash, fold, map]
 
 let fold_map
-  :  ('acc -> 'a -> 'acc * 'b) -> ('acc -> 'c -> 'acc * 'd) -> 'acc -> ('a, 'c) t
-  -> 'acc * ('b, 'd) t
+    :  ('acc -> 'a -> 'acc * 'b) -> ('acc -> 'c -> 'acc * 'd) -> 'acc -> ('a, 'c) t
+    -> 'acc * ('b, 'd) t
   =
  fun f h acc { module_binder; rhs; let_result } ->
   let acc, rhs = h acc rhs in

@@ -35,8 +35,8 @@ module Mutator (M : Monad) = struct
     match expr with
     | E_Typed { value = { inside = _, (_, T_Var a); lpar = _; rpar = _ }; region = _ } ->
       (match a#payload with
-       | "address" -> false_return expr
-       | _ -> return expr)
+      | "address" -> false_return expr
+      | _ -> return expr)
     | E_Add op | E_Sub op | E_Mult op | E_Div op | E_Mod op ->
       let* ctor = arith_bin_op_ctor |> map_return |> oneof in
       return (ctor op)
@@ -55,12 +55,12 @@ module Mutator (M : Monad) = struct
     | E_Mutez i ->
       let s, z = i#payload in
       (match Int64.to_int z with
-       | Some z ->
-         let* z = mutate_nat z in
-         let* f = transform_nat |> map_return |> oneof in
-         let z = Int64.of_int (f z) in
-         return (E_Mutez (Wrap.wrap ~attributes:i#attributes (s, z) i#region))
-       | None -> return (E_Mutez i))
+      | Some z ->
+        let* z = mutate_nat z in
+        let* f = transform_nat |> map_return |> oneof in
+        let z = Int64.of_int (f z) in
+        return (E_Mutez (Wrap.wrap ~attributes:i#attributes (s, z) i#region))
+      | None -> return (E_Mutez i))
     | E_Lt op | E_Leq op | E_Gt op | E_Geq op | E_Equal op | E_Neq op ->
       let* ctor = comp_bin_op_ctor |> map_return |> oneof in
       return (ctor op)

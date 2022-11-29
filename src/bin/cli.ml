@@ -345,9 +345,9 @@ let michelson_comments =
   flag ~doc name
   @@ listed
   @@ Command.Arg_type.create (function
-       | "location" -> `Location
-       | "env" -> `Env
-       | s -> failwithf "unexpected value for --%s: %s" name s ())
+         | "location" -> `Location
+         | "env" -> `Env
+         | s -> failwithf "unexpected value for --%s: %s" name s ())
 
 
 let optimize =
@@ -426,8 +426,8 @@ let project_root =
   let spec = optional string in
   let spec =
     map_flag spec ~f:(function
-      | None -> Cli_helpers.find_project_root ()
-      | Some x -> Some x)
+        | None -> Cli_helpers.find_project_root ()
+        | Some x -> Some x)
   in
   flag ~doc name spec
 
@@ -476,28 +476,28 @@ let reset_return () = return := Done
 
 let compile_file =
   let f
-    source_file
-    entry_point
-    views
-    syntax
-    protocol_version
-    display_format
-    disable_michelson_typechecking
-    experimental_disable_optimizations_for_debugging
-    enable_typed_opt
-    no_stdlib
-    michelson_format
-    wasm_format
-    output_file
-    show_warnings
-    warning_as_error
-    michelson_comments
-    constants
-    file_constants
-    project_root
-    warn_unused_rec
-    backend
-    ()
+      source_file
+      entry_point
+      views
+      syntax
+      protocol_version
+      display_format
+      disable_michelson_typechecking
+      experimental_disable_optimizations_for_debugging
+      enable_typed_opt
+      no_stdlib
+      michelson_format
+      wasm_format
+      output_file
+      show_warnings
+      warning_as_error
+      michelson_comments
+      constants
+      file_constants
+      project_root
+      warn_unused_rec
+      backend
+      ()
     =
     let raw_options =
       Raw_options.make
@@ -570,26 +570,26 @@ let compile_file =
 
 let compile_parameter =
   let f
-    source_file
-    entry_point
-    expression
-    syntax
-    protocol_version
-    amount
-    balance
-    sender
-    source
-    now
-    display_format
-    michelson_format
-    output_file
-    show_warnings
-    warning_as_error
-    constants
-    file_constants
-    project_root
-    warn_unused_rec
-    ()
+      source_file
+      entry_point
+      expression
+      syntax
+      protocol_version
+      amount
+      balance
+      sender
+      source
+      now
+      display_format
+      michelson_format
+      output_file
+      show_warnings
+      warning_as_error
+      constants
+      file_constants
+      project_root
+      warn_unused_rec
+      ()
     =
     let raw_options =
       Raw_options.make
@@ -649,21 +649,21 @@ let compile_parameter =
 
 let compile_expression =
   let f
-    syntax
-    expression
-    protocol_version
-    init_file
-    display_format
-    without_run
-    no_stdlib
-    michelson_format
-    show_warnings
-    warning_as_error
-    constants
-    file_constants
-    project_root
-    warn_unused_rec
-    ()
+      syntax
+      expression
+      protocol_version
+      init_file
+      display_format
+      without_run
+      no_stdlib
+      michelson_format
+      show_warnings
+      warning_as_error
+      constants
+      file_constants
+      project_root
+      warn_unused_rec
+      ()
     =
     let raw_options =
       Raw_options.make
@@ -714,26 +714,26 @@ let compile_expression =
 
 let compile_storage =
   let f
-    source_file
-    expression
-    entry_point
-    syntax
-    protocol_version
-    amount
-    balance
-    sender
-    source
-    now
-    display_format
-    michelson_format
-    output_file
-    show_warnings
-    warning_as_error
-    constants
-    file_constants
-    project_root
-    warn_unused_rec
-    ()
+      source_file
+      expression
+      entry_point
+      syntax
+      protocol_version
+      amount
+      balance
+      sender
+      source
+      now
+      display_format
+      michelson_format
+      output_file
+      show_warnings
+      warning_as_error
+      constants
+      file_constants
+      project_root
+      warn_unused_rec
+      ()
     =
     let raw_options =
       Raw_options.make
@@ -793,17 +793,17 @@ let compile_storage =
 
 let compile_constant =
   let f
-    syntax
-    expression
-    protocol_version
-    init_file
-    display_format
-    without_run
-    show_warnings
-    warning_as_error
-    project_root
-    warn_unused_rec
-    ()
+      syntax
+      expression
+      protocol_version
+      init_file
+      display_format
+      without_run
+      show_warnings
+      warning_as_error
+      project_root
+      warn_unused_rec
+      ()
     =
     let raw_options =
       Raw_options.make
@@ -950,16 +950,16 @@ let mutate_group =
 (** Run commands *)
 let test =
   let f
-    source_file
-    syntax
-    steps
-    cli_expr_inj
-    protocol_version
-    display_format
-    show_warnings
-    project_root
-    warn_unused_rec
-    ()
+      source_file
+      syntax
+      steps
+      cli_expr_inj
+      protocol_version
+      display_format
+      show_warnings
+      project_root
+      warn_unused_rec
+      ()
     =
     let raw_options =
       Raw_options.make
@@ -998,23 +998,23 @@ let test =
 
 let dry_run =
   let f
-    source_file
-    parameter
-    storage
-    entry_point
-    amount
-    balance
-    sender
-    source
-    now
-    syntax
-    protocol_version
-    display_format
-    show_warnings
-    warning_as_error
-    project_root
-    warn_unused_rec
-    ()
+      source_file
+      parameter
+      storage
+      entry_point
+      amount
+      balance
+      sender
+      source
+      now
+      syntax
+      protocol_version
+      display_format
+      show_warnings
+      warning_as_error
+      project_root
+      warn_unused_rec
+      ()
     =
     let raw_options =
       Raw_options.make
@@ -1069,22 +1069,22 @@ let dry_run =
 
 let evaluate_call =
   let f
-    source_file
-    parameter
-    entry_point
-    amount
-    balance
-    sender
-    source
-    now
-    syntax
-    protocol_version
-    display_format
-    show_warnings
-    warning_as_error
-    project_root
-    warn_unused_rec
-    ()
+      source_file
+      parameter
+      entry_point
+      amount
+      balance
+      sender
+      source
+      now
+      syntax
+      protocol_version
+      display_format
+      show_warnings
+      warning_as_error
+      project_root
+      warn_unused_rec
+      ()
     =
     let raw_options =
       Raw_options.make
@@ -1137,21 +1137,21 @@ let evaluate_call =
 
 let evaluate_expr =
   let f
-    source_file
-    entry_point
-    amount
-    balance
-    sender
-    source
-    now
-    syntax
-    protocol_version
-    display_format
-    show_warnings
-    warning_as_error
-    project_root
-    warn_unused_rec
-    ()
+      source_file
+      entry_point
+      amount
+      balance
+      sender
+      source
+      now
+      syntax
+      protocol_version
+      display_format
+      show_warnings
+      warning_as_error
+      project_root
+      warn_unused_rec
+      ()
     =
     let raw_options =
       Raw_options.make
@@ -1202,19 +1202,19 @@ let evaluate_expr =
 
 let interpret =
   let f
-    expression
-    init_file
-    syntax
-    protocol_version
-    amount
-    balance
-    sender
-    source
-    now
-    display_format
-    project_root
-    warn_unused_rec
-    ()
+      expression
+      init_file
+      syntax
+      protocol_version
+      amount
+      balance
+      sender
+      source
+      now
+      display_format
+      project_root
+      warn_unused_rec
+      ()
     =
     let raw_options =
       Raw_options.make ~syntax ~protocol_version ~project_root ~warn_unused_rec ()
@@ -1287,18 +1287,18 @@ let list_declarations =
 
 let measure_contract =
   let f
-    source_file
-    entry_point
-    views
-    syntax
-    protocol_version
-    display_format
-    enable_typed_opt
-    show_warnings
-    warning_as_error
-    project_root
-    warn_unused_rec
-    ()
+      source_file
+      entry_point
+      views
+      syntax
+      protocol_version
+      display_format
+      enable_typed_opt
+      show_warnings
+      warning_as_error
+      project_root
+      warn_unused_rec
+      ()
     =
     let raw_options =
       Raw_options.make
@@ -1469,15 +1469,15 @@ let print_ast_core =
 
 let print_ast_typed =
   let f
-    source_file
-    syntax
-    protocol_version
-    display_format
-    self_pass
-    project_root
-    warn_unused_rec
-    test
-    ()
+      source_file
+      syntax
+      protocol_version
+      display_format
+      self_pass
+      project_root
+      warn_unused_rec
+      test
+      ()
     =
     let raw_options =
       Raw_options.make
@@ -1514,15 +1514,15 @@ let print_ast_typed =
 
 let print_ast_aggregated =
   let f
-    source_file
-    syntax
-    protocol_version
-    display_format
-    self_pass
-    project_root
-    warn_unused_rec
-    test
-    ()
+      source_file
+      syntax
+      protocol_version
+      display_format
+      self_pass
+      project_root
+      warn_unused_rec
+      test
+      ()
     =
     let raw_options =
       Raw_options.make
@@ -1560,14 +1560,14 @@ let print_ast_aggregated =
 
 let print_mini_c =
   let f
-    source_file
-    syntax
-    protocol_version
-    display_format
-    optimize
-    project_root
-    warn_unused_rec
-    ()
+      source_file
+      syntax
+      protocol_version
+      display_format
+      optimize
+      project_root
+      warn_unused_rec
+      ()
     =
     let raw_options =
       Raw_options.make ~syntax ~protocol_version ~project_root ~warn_unused_rec ()
@@ -1677,17 +1677,17 @@ let changelog =
 
 let repl =
   let f
-    syntax
-    protocol_version
-    amount
-    balance
-    sender
-    source
-    now
-    display_format
-    init_file
-    project_root
-    ()
+      syntax
+      protocol_version
+      amount
+      balance
+      sender
+      source
+      now
+      display_format
+      init_file
+      project_root
+      ()
     =
     let raw_options = Raw_options.make ~syntax ~protocol_version ~project_root () in
     return_result ~return
@@ -1802,5 +1802,5 @@ let run ?argv () =
       2
     in
     (match exn with
-     | Failure msg -> message msg
-     | exn -> message (Exn.to_string exn))
+    | Failure msg -> message msg
+    | exn -> message (Exn.to_string exn))

@@ -89,7 +89,7 @@ module Monad_context (M : Monad) = struct
   let rec bind_list = function
     | [] -> return []
     | hd :: tl ->
-      let* hd = hd in
+      let* hd in
       let* tl = bind_list tl in
       return @@ (hd :: tl)
 
@@ -106,15 +106,15 @@ module Monad_context (M : Monad) = struct
   let bind_map_location f x = bind_location (Location.map f x)
 
   let bind_and (a, b) =
-    let* a = a in
-    let* b = b in
+    let* a in
+    let* b in
     return (a, b)
 
 
   let bind_and3 (a, b, c) =
-    let* a = a in
-    let* b = b in
-    let* c = c in
+    let* a in
+    let* b in
+    let* c in
     return (a, b, c)
 
 
@@ -123,7 +123,7 @@ module Monad_context (M : Monad) = struct
 
   let bind_fold_list f init lst =
     let aux x y =
-      let* x = x in
+      let* x in
       f x y
     in
     List.fold_left ~f:aux ~init:(return init) lst
@@ -131,14 +131,14 @@ module Monad_context (M : Monad) = struct
 
   let bind_fold_ne_list f init lst =
     let aux x y =
-      let* x = x in
+      let* x in
       f x y
     in
     Simple_utils.List.Ne.fold_left ~f:aux ~init:(return init) lst
 
 
   let bind_ne_list (hd, tl) =
-    let* hd = hd in
+    let* hd in
     let* tl = bind_list tl in
     return @@ (hd, tl)
 
@@ -148,7 +148,7 @@ module Monad_context (M : Monad) = struct
 
 
   let map f x =
-    let* x = x in
+    let* x in
     return (f x)
 
 
@@ -161,8 +161,8 @@ module Monad_context (M : Monad) = struct
   let ( let+ ) x f = map f x
 
   let ( and+ ) x y =
-    let* x = x in
-    let* y = y in
+    let* x in
+    let* y in
     return @@ (x, y)
 
 

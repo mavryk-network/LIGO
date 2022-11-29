@@ -10,7 +10,8 @@ type t = program
 let pp ppf m = PP.module_ ppf @@ m
 
 let add_module
-  : ?public:unit -> ?hidden:unit -> Ligo_prim.Module_var.t -> Ast_typed.module_ -> t -> t
+    :  ?public:unit -> ?hidden:unit -> Ligo_prim.Module_var.t -> Ast_typed.module_ -> t
+    -> t
   =
  fun ?public ?hidden module_binder module_ env ->
   let module_ = Location.wrap @@ Module_expr.M_struct module_ in
@@ -119,7 +120,7 @@ let base = basic_types @ michelson_base
 let jakarta_types = base
 
 let meta_ligo_types
-  : (Type_var.t * type_expression) list -> (Type_var.t * type_expression) list
+    : (Type_var.t * type_expression) list -> (Type_var.t * type_expression) list
   =
  fun proto_types ->
   proto_types
@@ -135,8 +136,8 @@ let meta_ligo_types
 
 let of_list_type : (Type_var.t * type_expression) list -> t =
   List.map ~f:(fun (type_binder, type_expr) ->
-    Location.wrap
-    @@ D_type { type_binder; type_expr; type_attr = { public = true; hidden = false } })
+      Location.wrap
+      @@ D_type { type_binder; type_expr; type_attr = { public = true; hidden = false } })
 
 
 let default : Protocols.t -> t = function

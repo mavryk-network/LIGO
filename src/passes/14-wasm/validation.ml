@@ -53,8 +53,8 @@ let func_type w symbol =
   | Some { it = FuncSymbol { ftype; _ }; _ } ->
     let t = find_type w ftype in
     (match t with
-     | Some t -> Some t
-     | None -> find_type w symbol)
+    | Some t -> Some t
+    | None -> find_type w symbol)
   | _ -> find_import_type w symbol
 
 

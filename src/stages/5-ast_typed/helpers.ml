@@ -187,7 +187,7 @@ let rec subst_type ?(fv = VarSet.empty) v t (u : type_expression) =
     let fields =
       Record.LMap.map
         (fun ({ associated_type; michelson_annotation; decl_pos } : row_element)
-           : row_element ->
+             : row_element ->
           { associated_type = self v t associated_type; michelson_annotation; decl_pos })
         fields
     in
@@ -196,7 +196,7 @@ let rec subst_type ?(fv = VarSet.empty) v t (u : type_expression) =
     let fields =
       Record.LMap.map
         (fun ({ associated_type; michelson_annotation; decl_pos } : row_element)
-           : row_element ->
+             : row_element ->
           { associated_type = self v t associated_type; michelson_annotation; decl_pos })
         fields
     in
@@ -218,8 +218,8 @@ let rec psubst_type t (u : type_expression) =
   match u.type_content with
   | T_variable v' ->
     (match TMap.find_opt v' t with
-     | Some t -> t
-     | None -> u)
+    | Some t -> t
+    | None -> u)
   | T_arrow { type1; type2 } ->
     let type1 = self type1 in
     let type2 = self type2 in
@@ -237,7 +237,7 @@ let rec psubst_type t (u : type_expression) =
     let fields =
       Record.LMap.map
         (fun ({ associated_type; michelson_annotation; decl_pos } : row_element)
-           : row_element ->
+             : row_element ->
           { associated_type = self associated_type; michelson_annotation; decl_pos })
         fields
     in
@@ -246,7 +246,7 @@ let rec psubst_type t (u : type_expression) =
     let fields =
       Record.LMap.map
         (fun ({ associated_type; michelson_annotation; decl_pos } : row_element)
-           : row_element ->
+             : row_element ->
           { associated_type = self associated_type; michelson_annotation; decl_pos })
         fields
     in
@@ -337,8 +337,8 @@ let rec fold_map_expression : 'a fold_mapper -> 'a -> expression -> 'a * express
 
 
 and fold_map_case
-  :  'a fold_mapper -> 'a -> (expression, type_expression) Types.Match_expr.match_case
-  -> 'a * (expression, type_expression) Types.Match_expr.match_case
+    :  'a fold_mapper -> 'a -> (expression, type_expression) Types.Match_expr.match_case
+    -> 'a * (expression, type_expression) Types.Match_expr.match_case
   =
  fun f init { pattern; body } ->
   let init, body = fold_map_expression f init body in
@@ -346,9 +346,9 @@ and fold_map_case
 
 
 and fold_map_cases
-  :  'a fold_mapper -> 'a
-  -> (expression, type_expression) Types.Match_expr.match_case list
-  -> 'a * (expression, type_expression) Types.Match_expr.match_case list
+    :  'a fold_mapper -> 'a
+    -> (expression, type_expression) Types.Match_expr.match_case list
+    -> 'a * (expression, type_expression) Types.Match_expr.match_case list
   =
  fun f init ms -> List.fold_map ms ~init ~f:(fold_map_case f)
 
@@ -375,7 +375,7 @@ and fold_map_module : 'a fold_mapper -> 'a -> module_ -> 'a * module_ =
 
 
 and fold_map_expression_in_module_expr
-  : 'a fold_mapper -> 'a -> module_expr -> 'a * module_expr
+    : 'a fold_mapper -> 'a -> module_expr -> 'a * module_expr
   =
  fun fold_mapper acc x ->
   let return r wrap_content = r, { x with wrap_content } in
@@ -392,7 +392,7 @@ let fold_map_program : 'a fold_mapper -> 'a -> program -> 'a * program =
 
 
 let rec fold_type_expression
-  : type a. type_expression -> init:a -> f:(a -> type_expression -> a) -> a
+    : type a. type_expression -> init:a -> f:(a -> type_expression -> a) -> a
   =
  fun te ~init ~f ->
   let self te = fold_type_expression te ~f in
@@ -458,7 +458,7 @@ module IdMap = struct
 
     type 'a id_wrapped =
       { id : int
-          (* This is is used in [filter_values], to return a list of matching values in chronological order *)
+            (* This is is used in [filter_values], to return a list of matching values in chronological order *)
       ; value : 'a
       }
 
@@ -478,7 +478,7 @@ module IdMap = struct
     let merge : 'a t -> 'a t -> 'a t =
      fun m1 m2 ->
       let merger
-        : key -> 'a id_wrapped option -> 'a id_wrapped option -> 'a id_wrapped option
+          : key -> 'a id_wrapped option -> 'a id_wrapped option -> 'a id_wrapped option
         =
        fun _ v1 v2 ->
         match v1, v2 with
@@ -546,8 +546,8 @@ end
 *)
 let add_shadowed_nested_t_sum tsum_list (tv, te) =
   let add_if_shadowed_t_sum
-    :  Type_var.t -> (Type_var.t * type_expression) list * bool -> type_expression
-    -> (Type_var.t * type_expression) list * bool
+      :  Type_var.t -> (Type_var.t * type_expression) list * bool -> type_expression
+      -> (Type_var.t * type_expression) list * bool
     =
    fun shadower_tv (accu, is_top) te ->
     let ret x = x, false in
@@ -570,7 +570,7 @@ let add_shadowed_nested_t_sum tsum_list (tv, te) =
 let get_views : program -> (Value_var.t * Location.t) list =
  fun p ->
   let f
-    : declaration -> (Value_var.t * Location.t) list -> (Value_var.t * Location.t) list
+      : declaration -> (Value_var.t * Location.t) list -> (Value_var.t * Location.t) list
     =
    fun { wrap_content = decl; location = _ } acc ->
     match decl with

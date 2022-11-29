@@ -76,7 +76,7 @@ let rec replace : expression -> Value_var.t -> Value_var.t -> expression =
     let matchee = replace matchee in
     let binders =
       List.map (Record.LMap.to_kv_list fields) ~f:(fun (_, b) ->
-        Binder.apply replace_var b)
+          Binder.apply replace_var b)
     in
     let body = if List.mem ~equal:( = ) binders x then body else replace body in
     return @@ E_matching { matchee; cases = Match_record { fields; body; tv } }
@@ -124,9 +124,9 @@ let rec replace : expression -> Value_var.t -> Value_var.t -> expression =
 
 
 and replace_lambda
-  Lambda.{ binder; output_type; result }
-  (x : Value_var.t)
-  (y : Value_var.t)
+    Lambda.{ binder; output_type; result }
+    (x : Value_var.t)
+    (y : Value_var.t)
   =
   let result =
     if Param.is_imm binder && Value_var.equal (Param.get_var binder) x
@@ -140,13 +140,13 @@ and replace_lambda
    body, implements substitution on a binder (pair of bound variable
    and body) *)
 let subst_binder
-  : type body.
-    (body:body -> x:Value_var.t -> expr:expression -> body)
-    -> (body -> Value_var.t -> Value_var.t -> body)
-    -> body:Value_var.t * body
-    -> x:Value_var.t
-    -> expr:expression
-    -> Value_var.t * body
+    : type body.
+      (body:body -> x:Value_var.t -> expr:expression -> body)
+      -> (body -> Value_var.t -> Value_var.t -> body)
+      -> body:Value_var.t * body
+      -> x:Value_var.t
+      -> expr:expression
+      -> Value_var.t * body
   =
  fun subst replace ~body:(y, body) ~x ~expr ->
   (* if x is shadowed, binder doesn't change *)
@@ -164,13 +164,13 @@ let subst_binder
    body, implements substitution on a binder (pair of bound variable
    and body) *)
 let subst_binders
-  : type body.
-    (body:body -> x:Value_var.t -> expr:expression -> body)
-    -> (body -> Value_var.t -> Value_var.t -> body)
-    -> body:Value_var.t list * body
-    -> x:Value_var.t
-    -> expr:expression
-    -> Value_var.t list * body
+    : type body.
+      (body:body -> x:Value_var.t -> expr:expression -> body)
+      -> (body -> Value_var.t -> Value_var.t -> body)
+      -> body:Value_var.t list * body
+      -> x:Value_var.t
+      -> expr:expression
+      -> Value_var.t list * body
   =
  fun subst replace ~body:(ys, body) ~x ~expr ->
   (* if x is shadowed, binder doesn't change *)
@@ -194,7 +194,7 @@ let subst_binders
    Computes `body[x := expr]`.
 **)
 let rec subst_expression
-  : body:expression -> x:Value_var.t -> expr:expression -> expression
+    : body:expression -> x:Value_var.t -> expr:expression -> expression
   =
  fun ~body ~x ~expr ->
   let self body = subst_expression ~body ~x ~expr in

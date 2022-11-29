@@ -27,11 +27,11 @@ let schema_test_positive ?(with_types = false) ?(speed = `Quick) source_file =
 
 
 let schema_test_negative
-  ?(with_types = false)
-  ?(speed = `Quick)
-  ?(expected_status = Some true)
-  ?error_cnt
-  source_file
+    ?(with_types = false)
+    ?(speed = `Quick)
+    ?(expected_status = Some true)
+    ?error_cnt
+    source_file
   =
   let _test () =
     let temp_file_name = Filename_unix.temp_file ~in_dir:"./" "get_scope_test" ".json" in
@@ -56,10 +56,10 @@ let schema_test_negative
       Yojson.Safe.pretty_print Format.std_formatter errors;
       let errors = errors |> Util.to_list in
       (match error_cnt with
-       | None ->
-         if List.is_empty errors then Alcotest.fail "Expect non empty list of errors"
-       | Some error_cnt ->
-         Alcotest.(check int) "Count of errors" error_cnt (List.length errors))
+      | None ->
+        if List.is_empty errors then Alcotest.fail "Expect non empty list of errors"
+      | Some error_cnt ->
+        Alcotest.(check int) "Count of errors" error_cnt (List.length errors))
   in
   Alcotest.test_case (Filename.basename source_file) speed _test
 
@@ -68,9 +68,9 @@ let files_in_dir dir_path =
   Sys_unix.readdir dir_path
   |> Array.to_list
   |> List.filter ~f:(fun x ->
-       match Filename.split_extension x with
-       | _, Some "mligo" | _, Some "jsligo" | _, Some "ligo" | _, Some "religo" -> true
-       | _ -> false)
+         match Filename.split_extension x with
+         | _, Some "mligo" | _, Some "jsligo" | _, Some "ligo" | _, Some "religo" -> true
+         | _ -> false)
   |> List.map ~f:(fun x -> dir_path ^ "/" ^ x)
 
 

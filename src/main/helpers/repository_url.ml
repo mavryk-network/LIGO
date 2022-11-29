@@ -85,23 +85,22 @@ let parse_specific_short_url short =
   match String.split short ~on:':' with
   | [ "gist"; suffix ] ->
     (match String.split suffix ~on:'/' with
-     | [ hash ] -> gist ~hash ()
-     | [ user; hash ] -> gist ~user ~hash ()
-     | _ -> None)
+    | [ hash ] -> gist ~hash ()
+    | [ user; hash ] -> gist ~user ~hash ()
+    | _ -> None)
   | [ short_url ] ->
     (match String.split short_url ~on:'/' with
-     | [ user; repo ] -> Some (github ~user ~repo)
-     | _ -> None)
+    | [ user; repo ] -> Some (github ~user ~repo)
+    | _ -> None)
   | [ prefix; user_repo ] ->
     (match String.split user_repo ~on:'/' with
-     | [ user; repo ] ->
-       (match prefix with
-        | "github" -> Some (github ~user ~repo)
-        | "gitlab" -> Some (gitlab ~user ~repo)
-        | "bitbucket" -> Some (bitbucket ~user ~repo)
-        | unsupported_prefix ->
-          failwith ("Unsupported URI shorthand: " ^ unsupported_prefix))
-     | _ -> None)
+    | [ user; repo ] ->
+      (match prefix with
+      | "github" -> Some (github ~user ~repo)
+      | "gitlab" -> Some (gitlab ~user ~repo)
+      | "bitbucket" -> Some (bitbucket ~user ~repo)
+      | unsupported_prefix -> failwith ("Unsupported URI shorthand: " ^ unsupported_prefix))
+    | _ -> None)
   | _ -> None
 
 
@@ -111,14 +110,14 @@ let parse_url url =
   | None when String.is_prefix url ~prefix:"git@" ->
     let repo_short = String.chop_prefix_exn url ~prefix:"git@" in
     (match String.split repo_short ~on:':' with
-     | [ host; user_repo ] ->
-       let url = Format.sprintf "https://%s/%s" host user_repo in
-       Some url
-     | _ -> None)
+    | [ host; user_repo ] ->
+      let url = Format.sprintf "https://%s/%s" host user_repo in
+      Some url
+    | _ -> None)
   | None ->
     (match parse_specific_short_url url with
-     | Some url -> Some url
-     | None -> None)
+    | Some url -> Some url
+    | None -> None)
 
 
 let parse' j : t option =
@@ -131,23 +130,23 @@ let parse' j : t option =
   | Error _ ->
     let short = Util.to_string_option j in
     (match short with
-     | Some short ->
-       let type_ = "git" in
-       let url = parse_url short in
-       Option.map url ~f:(fun url : t -> { type_; url; directory })
-     | None -> None)
+    | Some short ->
+      let type_ = "git" in
+      let url = parse_url short in
+      Option.map url ~f:(fun url : t -> { type_; url; directory })
+    | None -> None)
 
 
 let parse j : (t, string) result =
   match type_url_directory_of_yojson j with
   | Ok { type_; url; directory } ->
     (match parse_uri_with_scheme url with
-     | Some _ -> Ok { type_; url; directory = Some directory }
-     | None -> Error "repository url is invalid")
+    | Some _ -> Ok { type_; url; directory = Some directory }
+    | None -> Error "repository url is invalid")
   | Error _ ->
     (match parse' j with
-     | Some t -> Ok t
-     | None -> Error "repository url is invalid")
+    | Some t -> Ok t
+    | None -> Error "repository url is invalid")
 
 
 let%test _ =

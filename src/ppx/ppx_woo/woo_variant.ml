@@ -13,7 +13,7 @@ module Make (Params : Woo_helpers.PARAMS) = struct
     let lts = SMap.to_kv_list constructor_declarations in
     let vars = lts |> List.map ~f:(fun (l, _tes) -> l) |> List.map ~f:String.lowercase in
     let single_case
-      : W.label * W.type_expression list -> string * string list * P.expression
+        : W.label * W.type_expression list -> string * string list * P.expression
       =
      fun (lbl, tes) ->
       let l = List.length tes in
@@ -37,7 +37,7 @@ module Make (Params : Woo_helpers.PARAMS) = struct
     let lts = SMap.to_kv_list constructor_declarations in
     let vars = lts |> List.map ~f:(fun (l, _tes) -> l) |> List.map ~f:String.lowercase in
     let single_case
-      : W.label * W.type_expression list -> string * string list * P.expression
+        : W.label * W.type_expression list -> string * string list * P.expression
       =
      fun (lbl, tes) ->
       let l = List.length tes in

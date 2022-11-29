@@ -154,20 +154,20 @@ and defuse_of_binders defuse binders in_ =
 
 and defuse_of_cases defuse cases =
   List.fold_left cases ~init:(defuse, []) ~f:(fun (defuse, unused_) { pattern; body } ->
-    let vars = Pattern.binders pattern |> List.rev_map ~f:Binder.get_var in
-    let map = List.fold_left ~f:(fun m v -> M.add v false m) ~init:defuse vars in
-    let vars' = List.map ~f:(fun v -> v, M.find_opt v defuse) vars in
-    let defuse, unused = defuse_of_expr map body in
-    let unused =
-      List.fold_left
-        ~f:(fun m v -> add_if_not_generated v m (M.find v defuse))
-        ~init:unused
-        vars
-    in
-    let defuse =
-      List.fold_left ~f:(fun m (v, v') -> replace_opt v v' m) ~init:defuse vars'
-    in
-    defuse, unused_ @ unused)
+      let vars = Pattern.binders pattern |> List.rev_map ~f:Binder.get_var in
+      let map = List.fold_left ~f:(fun m v -> M.add v false m) ~init:defuse vars in
+      let vars' = List.map ~f:(fun v -> v, M.find_opt v defuse) vars in
+      let defuse, unused = defuse_of_expr map body in
+      let unused =
+        List.fold_left
+          ~f:(fun m v -> add_if_not_generated v m (M.find v defuse))
+          ~init:unused
+          vars
+      in
+      let defuse =
+        List.fold_left ~f:(fun m (v, v') -> replace_opt v v' m) ~init:defuse vars'
+      in
+      defuse, unused_ @ unused)
 
 
 let defuse_of_expr defuse expr =
@@ -204,9 +204,9 @@ and unused_map_module_expr ~raise : module_expr -> module_expr = function
   | m ->
     let return wrap_content : module_expr = { m with wrap_content } in
     (match Location.unwrap m with
-     | M_struct x -> return @@ M_struct (unused_map_module ~raise x)
-     | M_variable _ -> m
-     | M_module_path _ -> m)
+    | M_struct x -> return @@ M_struct (unused_map_module ~raise x)
+    | M_variable _ -> m
+    | M_module_path _ -> m)
 
 
 let unused_map_program ~raise : program -> program = function

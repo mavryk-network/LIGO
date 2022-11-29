@@ -125,8 +125,8 @@ let rec muchuse_of_expr expr : muchuse =
     muchuse_union (muchuse_of_expr lamb) (muchuse_of_expr args)
   | E_lambda _ ->
     (match get_lambda_with_type expr with
-     | None -> muchuse_neutral (* something's wrong in the tree? *)
-     | Some (l, (t, _)) -> muchuse_of_lambda t l)
+    | None -> muchuse_neutral (* something's wrong in the tree? *)
+    | Some (l, (t, _)) -> muchuse_of_lambda t l)
   | E_type_abstraction { result; _ } -> muchuse_of_expr result
   | E_let_in { let_binder; rhs; let_result; _ } ->
     muchuse_union
@@ -217,17 +217,17 @@ and muchuse_of_lambda t { binder; output_type = _; result } =
 and muchuse_of_cases cases =
   muchuse_maxs
   @@ List.map cases ~f:(fun { pattern; body } ->
-       let muchuse = muchuse_of_expr body in
-       let binders = Pattern.binders pattern in
-       let muchuse =
-         List.fold_left binders ~init:muchuse ~f:(fun muchuse b ->
-           muchuse_of_binder (Binder.get_var b) (Binder.get_ascr b) muchuse)
-       in
-       muchuse)
+         let muchuse = muchuse_of_expr body in
+         let binders = Pattern.binders pattern in
+         let muchuse =
+           List.fold_left binders ~init:muchuse ~f:(fun muchuse b ->
+               muchuse_of_binder (Binder.get_var b) (Binder.get_ascr b) muchuse)
+         in
+         muchuse)
 
 
 let rec get_all_declarations (module_name : Module_var.t)
-  : module_ -> (Value_var.t * type_expression) list
+    : module_ -> (Value_var.t * type_expression) list
   = function
   | m ->
     let aux ({ wrap_content = x; location } : decl) =

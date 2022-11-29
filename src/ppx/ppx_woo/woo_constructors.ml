@@ -31,7 +31,7 @@ module Make (Params : Woo_helpers.PARAMS) = struct
 
 
   let constructor ?wrap_constructor polymorphic
-    : W.labelled_types -> P.structure_item list
+      : W.labelled_types -> P.structure_item list
     =
    fun lts ->
     let label, tys = lts in

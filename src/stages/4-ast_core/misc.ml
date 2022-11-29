@@ -41,11 +41,11 @@ let rec assert_value_eq ((a, b) : expression * expression) : unit option =
     else None
   | E_update ura, E_update urb ->
     (match assert_value_eq (ura.struct_, urb.struct_) with
-     | None -> None
-     | Some () ->
-       let aux (a, b) = assert (Label.equal a b) in
-       let () = aux (ura.path, urb.path) in
-       assert_value_eq (ura.update, urb.update))
+    | None -> None
+    | Some () ->
+      let aux (a, b) = assert (Label.equal a b) in
+      let () = aux (ura.path, urb.path) in
+      assert_value_eq (ura.update, urb.update))
   | E_update _, _ -> None
   | E_ascription a, _b' -> assert_value_eq (a.anno_expr, b)
   | _a', E_ascription b -> assert_value_eq (a, b.anno_expr)

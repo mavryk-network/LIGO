@@ -15,9 +15,9 @@ let eta_reduce : Ast_aggregated.expression -> Ast_aggregated.expression option =
   | E_lambda { binder; result = { expression_content = E_application { lamb; args }; _ } }
     ->
     (match Ast_aggregated.get_e_variable args with
-     | Some y when Param.is_imm binder && Value_var.equal (Param.get_var binder) y ->
-       Some lamb
-     | _ -> None)
+    | Some y when Param.is_imm binder && Value_var.equal (Param.get_var binder) y ->
+      Some lamb
+    | _ -> None)
   | _ -> None
 
 
@@ -44,7 +44,7 @@ let accessor_reduce : Ast_aggregated.expression -> Ast_aggregated.expression =
 
 
 let replace_location
-  : Location.t -> Ast_aggregated.expression -> Ast_aggregated.expression
+    : Location.t -> Ast_aggregated.expression -> Ast_aggregated.expression
   =
  fun location ->
   let f (e : Ast_aggregated.expression) = { e with location } in
@@ -125,9 +125,9 @@ let all_expression ~raise ~(options : Compiler_options.middle_end) e =
 
 
 let all_program
-  ~raise
-  ~(options : Compiler_options.middle_end)
-  (prg : Ast_aggregated.program)
+    ~raise
+    ~(options : Compiler_options.middle_end)
+    (prg : Ast_aggregated.program)
   =
   let prg = Helpers.map_program Polymorphic_replace.expression prg in
   let prg = simplify_pattern_matching prg in
@@ -153,7 +153,7 @@ let all_contract ~raise parameter storage prg =
   let contract_type : Contract_passes.contract_type = { parameter; storage } in
   let all_p =
     List.map ~f:(fun pass ->
-      Ast_aggregated.Helpers.fold_map_expression pass contract_type)
+        Ast_aggregated.Helpers.fold_map_expression pass contract_type)
     @@ contract_passes ~raise
   in
   let prg = List.fold ~f:(fun x f -> snd @@ f x) all_p ~init:prg in

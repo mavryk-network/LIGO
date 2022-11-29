@@ -3,8 +3,8 @@ open Simple_utils
 module Trace = Simple_utils.Trace
 
 let format_result
-  :  display_format:ex_display_format
-  -> (raise:(Main_errors.all, _) Trace.raise -> 'value) -> _
+    :  display_format:ex_display_format
+    -> (raise:(Main_errors.all, _) Trace.raise -> 'value) -> _
   =
  fun ~display_format value ->
   let errors, warns, info =

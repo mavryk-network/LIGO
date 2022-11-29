@@ -148,7 +148,7 @@ and decompile_type ~raise : Ast_aggregated.type_expression -> Ast_typed.type_exp
     return (O.T_constant { language; injection; parameters })
   | T_sum { fields; layout } ->
     let f ({ associated_type; michelson_annotation; decl_pos } : I.row_element)
-      : O.row_element
+        : O.row_element
       =
       let associated_type = decompile_type ~raise associated_type in
       { associated_type; michelson_annotation; decl_pos }
@@ -157,7 +157,7 @@ and decompile_type ~raise : Ast_aggregated.type_expression -> Ast_typed.type_exp
     return (O.T_sum { fields; layout })
   | T_record { fields; layout } ->
     let f ({ associated_type; michelson_annotation; decl_pos } : I.row_element)
-      : O.row_element
+        : O.row_element
       =
       let associated_type = decompile_type ~raise associated_type in
       { associated_type; michelson_annotation; decl_pos }

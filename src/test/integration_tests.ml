@@ -241,7 +241,7 @@ let arithmetic ~raise f : unit =
   let () = expect_eq_n_pos ~raise program "div_op" e_int (fun n -> e_int (n / 2)) in
   let () =
     expect_eq_n_pos ~raise program "ediv_op" e_int (fun n ->
-      e_some (e_pair (e_int (n / 2)) (e_nat (n mod 2))))
+        e_some (e_pair (e_int (n / 2)) (e_nat (n mod 2))))
   in
   let () = expect_eq_evaluate ~raise program "mul_woo" (e_unit ()) in
   ()
@@ -1445,8 +1445,8 @@ let matching ~raise () : unit =
       let expected =
         e_int
           (match n with
-           | Some s -> s
-           | None -> 23)
+          | Some s -> s
+          | None -> 23)
       in
       expect_eq ~raise program "match_option" input expected
     in
@@ -1462,8 +1462,8 @@ let matching ~raise () : unit =
       let expected =
         e_int
           (match n with
-           | Some s -> s
-           | None -> 42)
+          | Some s -> s
+          | None -> 42)
       in
       expect_eq ~raise program "match_expr_option" input expected
     in

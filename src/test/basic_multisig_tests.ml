@@ -59,7 +59,7 @@ let op_list ~raise =
       }
   in
   let internal_operation
-    : Memory_proto_alpha.Protocol.Script_typed_ir.packed_internal_operation
+      : Memory_proto_alpha.Protocol.Script_typed_ir.packed_internal_operation
     =
     Memory_proto_alpha.Protocol.Script_typed_ir.(
       Internal_operation { source; operation; nonce = 0 })

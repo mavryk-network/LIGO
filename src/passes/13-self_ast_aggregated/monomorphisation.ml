@@ -57,10 +57,10 @@ module Data = struct
 
 
   let instance_lookup_opt
-    (lid : Value_var.t)
-    (type_instances' : AST.type_expression list)
-    (type_' : AST.type_expression)
-    (data : t)
+      (lid : Value_var.t)
+      (type_instances' : AST.type_expression list)
+      (type_' : AST.type_expression)
+      (data : t)
     =
     let aux { Instance.vid; type_instances; type_ } =
       if AST.equal_type_expression type_ type_'
@@ -119,8 +119,8 @@ let apply_table_expr table (expr : AST.expression) =
         | E_variable _var when AST.equal_expression e expr ->
           let _, types =
             List.fold_map ~init:e.type_expression table ~f:(fun te (v, t) ->
-              let te = AST.Helpers.subst_type v t te in
-              te, te)
+                let te = AST.Helpers.subst_type v t te in
+                te, te)
           in
           let expr =
             List.fold2_exn
@@ -150,7 +150,7 @@ let apply_table_expr table (expr : AST.expression) =
                 let te = t.type_expression in
                 let te =
                   List.fold ~init:te table ~f:(fun te (v, t) ->
-                    AST.Helpers.subst_type v t te)
+                      AST.Helpers.subst_type v t te)
                 in
                 { t with type_expression = te })
               args
@@ -295,7 +295,7 @@ let evaluate_external_typer typed rhs =
 
 
 let rec mono_polymorphic_expression ~raise
-  : Data.t -> AST.expression -> Data.t * AST.expression
+    : Data.t -> AST.expression -> Data.t * AST.expression
   =
  fun data expr ->
   let self = mono_polymorphic_expression ~raise in
@@ -305,8 +305,8 @@ let rec mono_polymorphic_expression ~raise
   | E_constant { cons_name; arguments } ->
     let data, arguments =
       List.fold_right arguments ~init:(data, []) ~f:(fun arg (data, args) ->
-        let data, arg = self data arg in
-        data, arg :: args)
+          let data, arg = self data arg in
+          data, arg :: args)
     in
     data, return (E_constant { cons_name; arguments })
   | E_application { lamb; args } ->
@@ -332,9 +332,9 @@ let rec mono_polymorphic_expression ~raise
     let data, let_result = self data let_result in
     let binder_instances = Data.instances_lookup (Binder.get_var let_binder) data in
     let build_let
-      (lid : Value_var.t)
-      Instance.{ vid; type_instances; type_ }
-      (data, let_result)
+        (lid : Value_var.t)
+        Instance.{ vid; type_instances; type_ }
+        (data, let_result)
       =
       let let_binder = vid in
       let table = List.zip_exn type_vars type_instances in
@@ -433,7 +433,7 @@ let rec mono_polymorphic_expression ~raise
 
 
 and mono_polymorphic_cases ~raise
-  : Data.t -> AST.matching_expr -> Data.t * AST.matching_expr
+    : Data.t -> AST.matching_expr -> Data.t * AST.matching_expr
   =
  fun data m ->
   match m with
@@ -456,7 +456,7 @@ let check_if_polymorphism_present ~raise e =
     | T_variable _ -> show_error loc
     | T_constant { parameters; _ } ->
       List.fold_left parameters ~init:() ~f:(fun () te ->
-        ignore @@ check_type_expression ~loc te)
+          ignore @@ check_type_expression ~loc te)
     | T_record { fields; _ } | T_sum { fields; _ } ->
       Record.LMap.iter
         (fun _ (re : AST.row_element) -> check_type_expression ~loc re.associated_type)

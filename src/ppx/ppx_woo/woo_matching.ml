@@ -32,7 +32,7 @@ module Make (Params : Woo_helpers.PARAMS) = struct
 
 
   let generic_case ~polymorphic ~base_label rhs
-    : string * W.type_expression list -> P.case
+      : string * W.type_expression list -> P.case
     =
    fun (current_label, tys) ->
     let variable_name = "_ppx_match_variable" in

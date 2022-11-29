@@ -7,11 +7,11 @@ module Var = Simple_utils.Var
 module SMap = Map.Make (String)
 
 let compile_expression_in_context
-  ~raise
-  ~options
-  ?(self_pass = true)
-  ?(contract_pass = false)
-  : Ast_typed.program -> Ast_typed.expression -> Ast_aggregated.expression
+    ~raise
+    ~options
+    ?(self_pass = true)
+    ?(contract_pass = false)
+    : Ast_typed.program -> Ast_typed.expression -> Ast_aggregated.expression
   =
  fun ctxt exp ->
   let ctxt, exp =
@@ -61,7 +61,7 @@ let compile_expression ~raise ~options : Ast_typed.expression -> Ast_aggregated.
 
 
 let apply_to_entrypoint_contract ~raise ~options ?(contract_pass = false)
-  : Ast_typed.program -> Value_var.t -> Ast_aggregated.expression
+    : Ast_typed.program -> Value_var.t -> Ast_aggregated.expression
   =
  fun prg entrypoint ->
   let Self_ast_typed.Helpers.{ parameter = p_ty; storage = s_ty } =
@@ -74,7 +74,7 @@ let apply_to_entrypoint_contract ~raise ~options ?(contract_pass = false)
 
 
 let apply_to_entrypoint ~raise ~options
-  : Ast_typed.program -> string -> Ast_aggregated.expression
+    : Ast_typed.program -> string -> Ast_aggregated.expression
   =
  fun prg entrypoint ->
   let v = Value_var.of_input_var entrypoint in
@@ -87,25 +87,25 @@ let apply_to_entrypoint ~raise ~options
 
 
 let assert_equal_contract_type ~raise
-  :  Simple_utils.Runned_result.check_type -> Value_var.t -> Ast_typed.program
-  -> Ast_typed.expression -> unit
+    :  Simple_utils.Runned_result.check_type -> Value_var.t -> Ast_typed.program
+    -> Ast_typed.expression -> unit
   =
  fun c entry contract param ->
   let entry_point =
     trace_option ~raise main_entrypoint_not_found (Ast_typed.get_entry contract entry)
   in
   trace ~raise (check_typed_arguments_tracer c) (fun ~raise ->
-    match entry_point.type_expression.type_content with
-    | T_arrow { type1 = args; type2 = _ } ->
-      (match args.type_content with
-       | T_record m when Record.LMap.cardinal m.fields = 2 ->
-         let ({ associated_type = param_exp; _ } : row_element) =
-           Record.LMap.find (Label "0") m.fields
-         in
-         let ({ associated_type = storage_exp; _ } : row_element) =
-           Record.LMap.find (Label "1") m.fields
-         in
-         (match c with
+      match entry_point.type_expression.type_content with
+      | T_arrow { type1 = args; type2 = _ } ->
+        (match args.type_content with
+        | T_record m when Record.LMap.cardinal m.fields = 2 ->
+          let ({ associated_type = param_exp; _ } : row_element) =
+            Record.LMap.find (Label "0") m.fields
+          in
+          let ({ associated_type = storage_exp; _ } : row_element) =
+            Record.LMap.find (Label "1") m.fields
+          in
+          (match c with
           | Check_parameter ->
             trace ~raise checking_tracer
             @@ Checking.assert_type_expression_eq
@@ -116,12 +116,12 @@ let assert_equal_contract_type ~raise
             @@ Checking.assert_type_expression_eq
                  entry_point.location
                  (storage_exp, param.type_expression))
-       | _ -> raise.error @@ main_entrypoint_not_a_function)
-    | _ -> raise.error @@ main_entrypoint_not_a_function)
+        | _ -> raise.error @@ main_entrypoint_not_a_function)
+      | _ -> raise.error @@ main_entrypoint_not_a_function)
 
 
 let apply_to_entrypoint_view ~raise ~options
-  : Ast_typed.program -> Ast_aggregated.expression
+    : Ast_typed.program -> Ast_aggregated.expression
   =
  fun prg ->
   let views_info = Ast_typed.Helpers.fetch_views_in_program prg in

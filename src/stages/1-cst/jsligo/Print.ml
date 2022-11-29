@@ -92,8 +92,8 @@ and print_statement state = function
   | SReturn { value = { expr; _ }; region } ->
     print_loc_node state "SReturn" region;
     (match expr with
-     | Some e -> print_expr (state#pad 1 0) e
-     | None -> ())
+    | Some e -> print_expr (state#pad 1 0) e
+    | None -> ())
   | SLet stmt -> print_let_stmt state stmt
   | SConst stmt -> print_const_stmt state stmt
   | SType { value; region } ->
@@ -195,19 +195,19 @@ and print_case state = function
     print_node state "<case>";
     print_expr state expr;
     (match statements with
-     | Some statements ->
-       let statements = Utils.nsepseq_to_list statements in
-       let apply len rank = print_statement (state#pad len rank) in
-       List.iteri ~f:(List.length statements |> apply) statements
-     | None -> ())
+    | Some statements ->
+      let statements = Utils.nsepseq_to_list statements in
+      let apply len rank = print_statement (state#pad len rank) in
+      List.iteri ~f:(List.length statements |> apply) statements
+    | None -> ())
   | Switch_default_case { statements; _ } ->
     print_node state "<default>";
     (match statements with
-     | Some statements ->
-       let statements = Utils.nsepseq_to_list statements in
-       let apply len rank = print_statement (state#pad len rank) in
-       List.iteri ~f:(List.length statements |> apply) statements
-     | None -> ())
+    | Some statements ->
+      let statements = Utils.nsepseq_to_list statements in
+      let apply len rank = print_statement (state#pad len rank) in
+      List.iteri ~f:(List.length statements |> apply) statements
+    | None -> ())
 
 
 and print_val_binding state (node : val_binding reg) =
@@ -328,11 +328,11 @@ and print_expr state = function
   | EArray { value = { inside; _ }; region } ->
     print_loc_node state "EArray" region;
     (match inside with
-     | Some inside ->
-       let items = Utils.nsepseq_to_list inside in
-       let apply len rank = print_array_item (state#pad len rank) in
-       List.iteri ~f:(List.length items |> apply) items
-     | None -> print_loc_node state "<empty>" region)
+    | Some inside ->
+      let items = Utils.nsepseq_to_list inside in
+      let apply len rank = print_array_item (state#pad len rank) in
+      List.iteri ~f:(List.length items |> apply) items
+    | None -> print_loc_node state "<empty>" region)
   | EConstr e_constr ->
     print_node state "EConstr";
     print_constr_expr (state#pad 1 0) e_constr
@@ -349,14 +349,14 @@ and print_expr state = function
     (* let state = state#pad 2 0 in *)
     print_expr (state#pad 2 0) expr;
     (match selection with
-     | FieldName { value = { value; _ }; region } ->
-       let state = state#pad 2 1 in
-       print_loc_node state "<fieldname>" region;
-       print_ident (state#pad 1 0) value
-     | Component { value = { inside; _ }; region } ->
-       let state = state#pad 2 1 in
-       print_loc_node state "<component>" region;
-       print_expr (state#pad 1 0) inside)
+    | FieldName { value = { value; _ }; region } ->
+      let state = state#pad 2 1 in
+      print_loc_node state "<fieldname>" region;
+      print_ident (state#pad 1 0) value
+    | Component { value = { inside; _ }; region } ->
+      let state = state#pad 2 1 in
+      print_loc_node state "<component>" region;
+      print_expr (state#pad 1 0) inside)
   | EModA { value; region } ->
     print_loc_node state "EModA" region;
     print_module_access print_expr state value

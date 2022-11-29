@@ -20,11 +20,11 @@ let parse_constant ~raise code =
     | [] ->
       let code, errs = Micheline_parser.parse_expression ~check:false code in
       (match errs with
-       | _ :: _ ->
-         raise.error
-           (Errors.unparsing_michelson_tracer
-           @@ List.map ~f:(fun x -> `Tezos_alpha_error x) errs)
-       | [] -> map_node (fun _ -> ()) (fun x -> x) code)
+      | _ :: _ ->
+        raise.error
+          (Errors.unparsing_michelson_tracer
+          @@ List.map ~f:(fun x -> `Tezos_alpha_error x) errs)
+      | [] -> map_node (fun _ -> ()) (fun x -> x) code)
   in
   Trace.trace_alpha_tzresult ~raise Errors.unparsing_michelson_tracer
   @@ Memory_proto_alpha.node_to_canonical code
@@ -34,7 +34,7 @@ type options = Memory_proto_alpha.options
 
 type dry_run_options =
   { parameter_ty : (Stacking.Program.meta, string) Tezos_micheline.Micheline.node option
-      (* added to allow dry-running contract using `Tezos.self` *)
+        (* added to allow dry-running contract using `Tezos.self` *)
   ; amount : string
   ; balance : string
   ; now : string option
@@ -44,7 +44,7 @@ type dry_run_options =
 
 (* Shouldn't this be done by the cli parser ? *)
 let make_dry_run_options ~raise ?tezos_context ?(constants = []) (opts : dry_run_options)
-  : options
+    : options
   =
   let open Proto_alpha_utils.Trace in
   let open Proto_alpha_utils.Memory_proto_alpha in
@@ -88,8 +88,8 @@ let make_dry_run_options ~raise ?tezos_context ?(constants = []) (opts : dry_run
     | None -> None
     | Some st ->
       (match Memory_proto_alpha.Protocol.Script_timestamp.of_string st with
-       | Some t -> Some t
-       | None -> raise.error @@ Errors.main_invalid_timestamp st)
+      | Some t -> Some t
+      | None -> raise.error @@ Errors.main_invalid_timestamp st)
   in
   let parameter_ty =
     match opts.parameter_ty with
@@ -160,11 +160,11 @@ let fetch_lambda_types ~raise (contract_ty : _ Michelson.t) =
 
 
 let run_contract
-  ~raise
-  ?options
-  (exp : _ Michelson.t)
-  (exp_type : _ Michelson.t)
-  (input_michelson : _ Michelson.t)
+    ~raise
+    ?options
+    (exp : _ Michelson.t)
+    (exp_type : _ Michelson.t)
+    (input_michelson : _ Michelson.t)
   =
   let open! Tezos_raw_protocol_014_PtKathma in
   let input_ty, output_ty = fetch_lambda_types ~raise exp_type in
@@ -251,11 +251,11 @@ let run_contract
 
 
 let run_function
-  ~raise
-  ?options
-  (exp : _ Michelson.t)
-  (exp_type : _ Michelson.t)
-  (input_michelson : _ Michelson.t)
+    ~raise
+    ?options
+    (exp : _ Michelson.t)
+    (exp_type : _ Michelson.t)
+    (input_michelson : _ Michelson.t)
   =
   let open! Tezos_raw_protocol_014_PtKathma in
   let input_ty, output_ty = fetch_lambda_types ~raise exp_type in
@@ -323,11 +323,11 @@ let run_function
 
 
 let run_expression
-  ~raise
-  ?options
-  ?legacy
-  (exp : _ Michelson.t)
-  (exp_type : _ Michelson.t)
+    ~raise
+    ?options
+    ?legacy
+    (exp : _ Michelson.t)
+    (exp_type : _ Michelson.t)
   =
   let open! Tezos_raw_protocol_014_PtKathma in
   let exp_type =
@@ -377,7 +377,7 @@ let run_expression
 
 
 let run_failwith ~raise ?options (exp : _ Michelson.t) (exp_type : _ Michelson.t)
-  : (int, string) Tezos_micheline.Micheline.node
+    : (int, string) Tezos_micheline.Micheline.node
   =
   let expr = run_expression ~raise ?options exp exp_type in
   match expr with

@@ -46,7 +46,7 @@ let compile_type e =
 
 
 let compile_contract ~raise
-  : options:Compiler_options.t -> expression -> Stacking.compiled_expression
+    : options:Compiler_options.t -> expression -> Stacking.compiled_expression
   =
  fun ~options e ->
   let input_ty, contract = optimize_for_contract ~raise options e in
@@ -65,7 +65,7 @@ let compile_contract ~raise
 
 
 let compile_view ~raise
-  : options:Compiler_options.t -> expression -> Stacking.compiled_expression
+    : options:Compiler_options.t -> expression -> Stacking.compiled_expression
   =
  fun ~options e ->
   let input_ty, output_ty =
@@ -100,7 +100,7 @@ let compile_view ~raise
 
 
 let compile_expression ~raise
-  : options:Compiler_options.t -> expression -> compiled_expression
+    : options:Compiler_options.t -> expression -> compiled_expression
   =
  fun ~options e ->
   let e = trace ~raise self_mini_c_tracer @@ Self_mini_c.all_expression options e in

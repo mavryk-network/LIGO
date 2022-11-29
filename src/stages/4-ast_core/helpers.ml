@@ -37,14 +37,14 @@ module Free_type_variables = struct
       let fields =
         Record.LMap.to_list fields
         |> List.map ~f:(fun ({ associated_type; _ } : _ Rows.row_element_mini_c) ->
-             self associated_type)
+               self associated_type)
       in
       unions fields
     | T_record { fields; _ } ->
       let fields =
         Record.LMap.to_list fields
         |> List.map ~f:(fun ({ associated_type; _ } : _ Rows.row_element_mini_c) ->
-             self associated_type)
+               self associated_type)
       in
       unions fields
     | T_arrow { type1; type2 } -> VarSet.union (self type1) (self type2)
