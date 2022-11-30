@@ -118,7 +118,7 @@ and signature_item_of_decl : ctx:Context.t -> Ast_typed.decl -> bool * Context.S
     false, [ S_open sig_' ]
   | D_include { module_ } ->
     let sig_' = signature_of_module_expr ~ctx module_ in
-    true, [ S_include sig_' ]
+    true, sig_'
 
 
 (* Load context from the outside declarations *)

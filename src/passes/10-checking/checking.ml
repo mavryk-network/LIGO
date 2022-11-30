@@ -1360,7 +1360,7 @@ and infer_declaration (decl : I.declaration)
       E.(
         let%bind module_ = module_ in
         return @@ O.D_include { module_ })
-      [ S_include sig_ ]
+      sig_
 
 
 and infer_module (module_ : I.module_) : (Signature.t * O.module_ E.t, _, _) C.t =

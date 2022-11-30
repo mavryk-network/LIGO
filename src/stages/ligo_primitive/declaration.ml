@@ -105,7 +105,7 @@ module Module_decl (Attr : Attr) = struct
   let pp h ppf { module_binder; module_; module_attr } =
     Format.fprintf
       ppf
-      "@[<2>module %a =@ %a%a@]"
+      "@[<2>module %a =@ %a%a@.@]"
       Var.Module_var.pp
       module_binder
       h

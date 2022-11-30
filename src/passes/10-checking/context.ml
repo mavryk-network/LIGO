@@ -52,7 +52,6 @@ module Signature = struct
       | S_type of Type_var.t * Type.t
       | S_module of Module_var.t * t
       | S_open of t
-      | S_include of t
     [@@deriving hash]
   end
 
@@ -101,7 +100,6 @@ module Signature = struct
     | S_module (mvar1, sig1), S_module (mvar2, sig2) ->
       Module_var.equal mvar1 mvar2 && equal sig1 sig2
     | S_open sig1, S_open sig2 -> equal sig1 sig2
-    | S_include sig1, S_include sig2 -> equal sig1 sig2
     | _, _ -> false
 
 
@@ -161,7 +159,6 @@ module Signature = struct
       | S_module (mvar, sig_) ->
         Format.fprintf ppf "module %a = %a" Module_var.pp mvar pp sig_
       | S_open sig_ -> Format.fprintf ppf "open %a" pp sig_
-      | S_include sig_ -> Format.fprintf ppf "include %a" pp sig_
 
 
     and pp ppf t = Format.fprintf ppf "@[<v>sig@,%a@,end@]" (list ~pp:pp_item) t
@@ -263,8 +260,6 @@ let rec items_of_signature_item ?(nested = false) (sig_item : Signature.item) : 
     if nested
     then []
     else List.concat_map (List.rev sig_) ~f:(items_of_signature_item ~nested:true)
-  | S_include sig_ ->
-    List.concat_map (List.rev sig_) ~f:(items_of_signature_item ~nested:true)
 
 
 let rec add_signature_item t (sig_item : Signature.item) =
@@ -467,7 +462,6 @@ module Apply = struct
     | S_value (var, type') -> S_value (var, type_ ctx type')
     | S_module (mvar, sig') -> S_module (mvar, sig_ ctx sig')
     | S_open sig' -> S_open (sig_ ctx sig')
-    | S_include sig' -> S_include (sig_ ctx sig')
 
 
   and sig_ ctx (sig_ : Signature.t) : Signature.t = List.map sig_ ~f:(sig_item ctx)
@@ -1003,7 +997,6 @@ end = struct
       | _ -> false)
     | S_module (_mvar, sig_) -> signature ~ctx sig_
     | S_open sig_ -> signature ~ctx sig_
-    | S_include sig_ -> signature ~ctx sig_
 end
 
 module Hashes = struct
