@@ -938,19 +938,19 @@ and compile_declaration ~raise : CST.declaration -> AST.declaration option =
     let module_binder = compile_mod_var alias in
     let module_ =
       let path = List.Ne.map compile_mod_var @@ npseq_to_ne_list binders in
-      m_path ~loc:Location.generated path (* wrong location *)
+      m_path ~loc:(Location.lift region) path
     in
     return region @@ D_module { module_binder; module_; module_attr = [] }
   | ModuleOpen { value = { binders; _ }; region } ->
     let module_ =
       let path = List.Ne.map compile_mod_var @@ npseq_to_ne_list binders in
-      m_path ~loc:Location.generated path (* wrong location *)
+      m_path ~loc:(Location.lift region) path
     in
     return region @@ D_open { module_ }
   | ModuleInclude { value = { binders; _ }; region } ->
     let module_ =
       let path = List.Ne.map compile_mod_var @@ npseq_to_ne_list binders in
-      m_path ~loc:Location.generated path (* wrong location *)
+      m_path ~loc:(Location.lift region) path
     in
     return region @@ D_include { module_ }
   | Let { value = _kwd_let, kwd_rec, let_binding, attributes; region } ->
