@@ -262,12 +262,14 @@ let rec items_of_signature_item ?(nested = false) (sig_item : Signature.item) : 
     (* Do not recursively add items from an open if we're already inside an open / include *)
     if nested
     then []
-    else List.concat_map sig_ ~f:(items_of_signature_item ~nested:true)
-  | S_include sig_ -> List.concat_map sig_ ~f:(items_of_signature_item ~nested:true)
+    else List.concat_map (List.rev sig_) ~f:(items_of_signature_item ~nested:true)
+  | S_include sig_ ->
+    List.concat_map (List.rev sig_) ~f:(items_of_signature_item ~nested:true)
 
 
 let rec add_signature_item t (sig_item : Signature.item) =
-  List.fold_right ~f:(fun item t -> add t item) ~init:t @@ items_of_signature_item sig_item
+  List.fold_right ~f:(fun item t -> add t item) ~init:t
+  @@ items_of_signature_item sig_item
 
 
 and add_open t mctx =
