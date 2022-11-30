@@ -102,6 +102,15 @@ let mod_ =
           ; NumType I32Type
           ]
         , [ NumType I32Type ] ) )
+    ; ( "env"
+      , "__ligo_internal__map_get_update"
+      , ( [ NumType I32Type
+          ; NumType I32Type
+          ; NumType I32Type
+          ; NumType I32Type
+          ; NumType I32Type
+          ]
+        , [ NumType I32Type ] ) )
     ; (* list *)
       ( "env"
       , "__ligo_internal__list_map"

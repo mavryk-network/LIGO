@@ -197,8 +197,14 @@
 
   let failwith (type a b) (a: a) = [%Wasm ({| 
     local.set "str_info"
-    local.get "str_info"
     
+
+    local.get "str_info"
+    i32.const 4
+    i32.add
+    local.set "str_info"
+    
+    local.get "str_info"
     local.set "str_size"
     local.get "str_info"
     i32.const 4

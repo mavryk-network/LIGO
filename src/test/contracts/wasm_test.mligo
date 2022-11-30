@@ -133,7 +133,6 @@ let main ((_, _s):(parameter * storage)) =
     log ("s1 item: " ^ string_of_int f ^ "\n")
   ) s1
   in 
-  (* SOMETHING GOES WRONG HERE... *)
   let _ = Map.iter (fun (f, a) -> 
     log ("m1 item: " ^ string_of_int f ^ " = " ^ string_of_int a ^ "\n")
   ) m1
@@ -181,6 +180,16 @@ let main ((_, _s):(parameter * storage)) =
   let _ = match (Map.find_opt 2 mx2) with 
     Some s -> log ("resulty:" ^ string_of_int s ^ "\n")
   | None   -> log "niks"
+  in
+  let (old, mx3) = Map.get_and_update 2 None mx in 
+  let _ = match old with 
+    Some s -> let _ = log ("Old is: " ^ string_of_int s ^ "\n") in if s = 4 then log "old one is correct\n" else failwith "old one is NOT correct\n"
+  | None -> log "nope\n"
+  in
+  let _ = Map.iter (fun (a, b) -> log ("Changed map check:" ^ string_of_int a ^ " = " ^ string_of_int b ^  "\n")) mx3 in
+  let _ = match (Map.find_opt 2 mx2) with 
+    Some s -> log ("resulty2:" ^ string_of_int s ^ "\n")
+  | None   -> log "niks2"
   in
   let a = 
     4 + 5 +  (* 9 *)
